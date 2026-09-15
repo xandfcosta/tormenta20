@@ -20,37 +20,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// O app Datastar (ALE-219): a superfície "Mesa" do jogador renderizada pelo
-// SERVIDOR, ao lado da SPA e no mesmo binário.
-//
-// Ela mora fora do `Router()` de propósito. O `Router()` é montado sob `/api`
-// em produção, e isto não é API — é uma PÁGINA, e ela precisa de uma URL que o
-// jogador possa abrir e favoritar.
-//
-// Autenticação é a MESMA e sem uma linha nova: o `requireAuth` já lê o cookie
-// `t20_session` antes do Bearer (account_middleware.go), e o cookie ignora porta, então
-// a sessão criada pela SPA vale aqui.
-//
-// > Aqui havia um lembrete de "saída do app" mandando apagar `api/mesa*`, a
-// > linha do `buildMux` e a entrada de proxy num `vite.config.ts` — arquivo que
-// > nunca existiu com esse nome. A saída aconteceu (ALE-280, as cenas subiram
-// > para a raiz) e o proxy morreu com a SPA (ALE-321).
-// Routes registra as rotas da Mesa (ALE-278) e as do RASCUNHO DE LUGAR (ALE-292).
-//
-// Aqui dizia "as vinte rotas", e o número já não batia quando a ALE-292 chegou —
-// são 85 registros hoje. Ele saiu em vez de ser corrigido: uma contagem escrita
-// à mão sobre uma lista que cresce a cada fatia envelhece sem ninguém mexer
-// nela, e o `grep` é a fonte.
-//
-// Elas moravam dentro do `WebRouter` — o roteador do app INTEIRO —, que também
-// vivia neste arquivo por acidente de história: a Mesa foi a primeira cena do
-// piloto, então o mux nasceu no arquivo dela e as onze cenas seguintes foram
-// sendo penduradas ali. O roteador ficou no `api`, que é quem monta o app; o
-// que veio para cá é só o grupo da Mesa.
+// Routes registra as rotas da Mesa e as do RASCUNHO DE LUGAR.
 //
 // O `requirePage` NÃO está aqui: quem decide que esta cena exige sessão é o
 // hospedeiro, no grupo em que ela é montada. Uma cena que se autoprotegesse
-// daria a impressão de que a fronteira é dela, e ela não é.
+// daria a impressão de que a fronteira é dela.
 func Routes(r chi.Router, s Scene) {
 	r.Get("/mesa/{campaignId}/{sessionId}", s.handleTablePage)
 	r.Get("/mesa/{campaignId}/{sessionId}/fluxo", s.handleTableStream)
@@ -73,15 +47,13 @@ func Routes(r chi.Router, s Scene) {
 	s.CastRoutes(r)
 	s.RoutesNpc(r)
 	s.RoutesEditorNpc(r)
-	// O RASCUNHO DE LUGAR (ALE-292) entra por aqui apesar de o endereço dele ser
-	// `/campanhas/…`: quem o desenha é o TABULEIRO, que é desta cena, e montá-lo
-	// no grupo das campanhas exigiria que aquele pacote alcançasse este.
+	// O RASCUNHO DE LUGAR entra por aqui apesar de o endereço dele ser
+	// `/campanhas/…`: quem o desenha é o TABULEIRO, que é desta cena.
 	s.DraftRoutes(r)
 }
 
-// O endereço da Mesa mora em `web/routes` desde a ALE-278 (`routes.Table`): a
-// cena das campanhas o cita, e depois de virar pacote ela não alcança mais uma
-// função daqui. É o critério de lá reclassificando pela terceira vez.
+// O ENDEREÇO da Mesa mora em `web/routes` (`routes.Table`), e não aqui: a cena
+// das campanhas o cita, e ela não alcança uma função deste pacote.
 
 // tableParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
 // resposta é uma frase e não um JSON: quem está do outro lado é um navegador

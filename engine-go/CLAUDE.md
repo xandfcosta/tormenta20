@@ -756,6 +756,14 @@ As cenas são `.templ` compiladas para `.go` por `go tool templ generate`. O
 `.templ` e o `_templ.go` andam juntos, e o CI recusa o par desencontrado. O que
 segue foi todo descoberto errando — está aqui para ninguém redescobrir:
 
+- **`else if` NÃO existe numa lista de atributos, e o templ não reclama.** Ele
+  fecha o primeiro `if`, escreve a palavra ` else` como TEXTO dentro das aspas do
+  elemento e abre um `if` INDEPENDENTE — então os DOIS ramos saem, e o HTML tem
+  um atributo chamado `else` mais o seu repetido duas vezes. Nada estoura:
+  atributo repetido não existe no DOM, o navegador guarda o PRIMEIRO e descarta o
+  resto em silêncio, e o segundo ramo fica morto sem deixar rastro. **A escolha
+  entre dois atributos volta para o Go**, onde `else if` é `else if` — exclusão
+  por CONSTRUÇÃO, e não dois blocos que se prometem exclusivos.
 - **Comentário NÃO vive na lista de atributos de um elemento.** `// ...` entre
   dois atributos derruba o parser, e a mensagem aponta OUTRA linha — nunca a do
   comentário. Já aconteceu **oito** vezes; as três últimas foram na mesma sessão,
