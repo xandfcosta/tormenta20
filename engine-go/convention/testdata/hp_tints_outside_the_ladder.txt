@@ -20,22 +20,22 @@
 # uma lista que envelhece sozinha é a que alguém apaga.
 
 # A ESCADA em pessoa, mais a folha que a demonstra.
-engine-go/web/ui/vitals.go
-engine-go/web/grimoire/scene.templ
+engine-go/serve/web/ui/vitals.go
+engine-go/serve/web/grimoire/scene.templ
 
 # PRESENÇA e confirmação, em verde: nada disso é vida.
-engine-go/web/ui/invite.templ
-engine-go/web/admin/scene.templ
-engine-go/web/table/cast.templ
-engine-go/web/campaigns/one.templ
+engine-go/serve/web/ui/invite.templ
+engine-go/serve/web/admin/scene.templ
+engine-go/serve/web/table/cast.templ
+engine-go/serve/web/campaigns/one.templ
 
 # A Mesa: o ponto do "Ao vivo", o crachá de presença e o de condição.
-engine-go/web/table/table.templ
+engine-go/serve/web/table/table.templ
 
 # A CARGA da mochila estoura em vermelho, e ela conta espaços e não PV — o
 # comentário de lá já separa a BARRA (crítico) do aviso (texto).
-engine-go/web/sheetui/bag.templ
+engine-go/serve/web/sheetui/bag.templ
 
 # A dificuldade do encontro: cinco degraus do livro (p281), e eles são OUTRA
 # escada — de "calmo" a "mortal", sobre o nível do grupo e não sobre vida.
-engine-go/web/master/encounters_view.go
+engine-go/serve/web/master/encounters_view.go

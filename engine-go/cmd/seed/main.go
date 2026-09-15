@@ -28,12 +28,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"t20engine/api"
-	"t20engine/catalog"
-	"t20engine/db"
-	"t20engine/engine"
-	"t20engine/platform"
-	"t20engine/sheet"
+	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
+	"t20engine/infra/db"
+	"t20engine/infra/platform"
+	"t20engine/serve/api"
 )
 
 //go:embed seed-data.json

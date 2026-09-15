@@ -4,7 +4,7 @@
 # Roda a partir de `engine-go/`, que é onde a folha e as dependências dela
 # passaram a morar (ALE-272, fatia 10c). Antes ela rodava de `frontend/`, porque
 # a folha da casa importava a da SPA inteira — com a SPA saindo, o `index.css`
-# veio para `api/assets/src` e este pacote ganhou o próprio `node_modules`.
+# veio para `serve/api/assets/src` e este pacote ganhou o próprio `node_modules`.
 #
 # O resultado é embutido no binário pelo `go:embed`, então ESTE SCRIPT PRECISA
 # RODAR ANTES DO `go build`.
@@ -14,6 +14,6 @@ cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # script de instalação está pendente de aprovação — irrelevante para gerar CSS.
 # O binário direto não tem essa porta.
 exec ./node_modules/.bin/tailwindcss \
-  --input ./api/assets/app.src.css \
-  --output ./api/assets/static/app.css \
+  --input ./serve/api/assets/app.src.css \
+  --output ./serve/api/assets/static/app.css \
   --minify

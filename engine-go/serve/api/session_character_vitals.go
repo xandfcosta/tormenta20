@@ -1,0 +1,146 @@
+package api
+
+import (
+	"context"
+	"t20engine/domain/live"
+	"t20engine/domain/sheet"
+	"t20engine/infra/db/sqlcgen"
+	"t20engine/infra/platform"
+)
+
+// O PV do rastreador É o PV da ficha (ALE-122) — e agora atravessa uma PORTA.
+//
+// Este arquivo implementa `live.SheetVitals` (ALE-254). Os três métodos
+// eram do `sessionStore`, e o compilador apontou o problema quando o regime
+// virou pacote: eles usam `applyDamagePlan` e `live.ClampVital`, que são regras da
+// FICHA. Um pacote do regime não pode conhecê-las.
+//
+// A troca é a que a issue pedia: o regime declara o que precisa, e quem entrega
+// fica deste lado. Quando o contexto `ficha` nascer, ele assume este tipo sem
+// que uma linha de `live/` mude.
+//
+// Antes desta fatia havia dois PV para o mesmo personagem: o socket escrevia num
+// blob (`sessions.runtimeState`) e o HTTP escrevia na linha do personagem. A
+// mesma tela mostrava 52/95 na iniciativa e 57/95 no card do grupo, e a ficha do
+// jogador — ao lado do rastreador dele — continuava no valor antigo. O espelho
+// existia, mas atrás de uma variável de ambiente que não estava em `.env`
+// nenhum, nem em produção.
+//
+// E o caminho do socket ignorava PV TEMPORÁRIOS: bater 5 num personagem com
+// Armadura Arcana cobrava dos PV reais, enquanto o mesmo 5 pela ficha drenava o
+// pool primeiro. Duas regras para a mesma pancada.
+//
+// Agora a linha do personagem é a fonte: o dano percorre a MESMA regra do
+// `POST /personagens/{id}/damage` e a entrada da iniciativa espelha o que foi
+// gravado. NPC continua vivendo só no rastreador — não há ficha atrás dele.
+
+// sheetVitals é quem cumpre a porta. Guarda só o que precisa — as queries —
+// em vez de um `*Server` inteiro: uma porta que recebesse o servidor não seria
+// porta, seria o acoplamento de antes com outro nome.
+type sheetVitals struct{ q *sqlcgen.Queries }
+
+// applyDamagePlan runs the book's damage order — temporary pools first, biggest
+// first — persisting the drained pools and the new PV. Returns the plan so the
+// HTTP handler can report what was absorbed.
+//
+// Shared by POST /personagens/{id}/damage and the live tracker: uma pancada
+// digitada na sessão e a mesma pancada digitada na ficha não podem discordar.
+func applyDamagePlan(
+	ctx context.Context, q *sqlcgen.Queries, row sqlcgen.Character, amount int,
+) (sheet.DamagePlan, error) {
+	effects, err := q.ListActiveEffectsByCharacter(ctx, row.ID)
+	if err != nil {
+		return sheet.DamagePlan{}, err
+	}
+	plan := sheet.PlanDamage(sheet.ParseTempHpPools(effects), int(row.Hpcurrent), amount)
+	for _, u := range plan.Updates {
+		if err := q.UpdateEffectModifiers(ctx, sqlcgen.UpdateEffectModifiersParams{
+			Modifiers: u.Modifiers, ID: u.EffectID,
+		}); err != nil {
+			return sheet.DamagePlan{}, err
+		}
+	}
+	for _, delID := range plan.DeleteIDs {
+		if err := q.DeleteEffectByID(ctx, delID); err != nil {
+			return sheet.DamagePlan{}, err
+		}
+	}
+	if plan.HpCurrent != int(row.Hpcurrent) {
+		if err := q.SetHpCurrent(ctx, sqlcgen.SetHpCurrentParams{
+			HpCurrent: int64(plan.HpCurrent), UpdatedAt: platform.NowISO(), ID: row.ID,
+		}); err != nil {
+			return sheet.DamagePlan{}, err
+		}
+	}
+	return plan, nil
+}
+
+// ApplyDelta moves a character's PV/PM by a delta and persists it,
+// returning the values the tracker entry must mirror. Damage (negative PV) goes
+// through applyDamagePlan; healing and PM are clamped to the character's maxes.
+func (v sheetVitals) ApplyDelta(
+	ctx context.Context, charID int64, hpDelta, mpDelta *int64,
+) (*int64, *int64, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return nil, nil, err
+	}
+	hp, healed := row.Hpcurrent, false
+	if hpDelta != nil && *hpDelta < 0 {
+		plan, err := applyDamagePlan(ctx, v.q, row, int(-*hpDelta))
+		if err != nil {
+			return nil, nil, err
+		}
+		hp = int64(plan.HpCurrent) // já persistido pelo plano
+	} else if hpDelta != nil {
+		hp, healed = live.ClampVital(row.Hpcurrent+*hpDelta, &row.Hpmax), true
+	}
+	mp := row.Mpcurrent
+	if mpDelta != nil {
+		mp = live.ClampVital(row.Mpcurrent+*mpDelta, &row.Mpmax)
+	}
+	return v.persistVitals(ctx, charID, hp, healed, mp, mpDelta != nil)
+}
+
+// ApplyAbsolute sets absolute PV/PM on the character (the tracker's
+// "vitals-patch"). An absolute value is a statement about the total, not a hit,
+// so it does NOT drain temporary pools — that rule belongs to damage.
+func (v sheetVitals) ApplyAbsolute(
+	ctx context.Context, charID int64, hpCurrent, mpCurrent *int64,
+) (*int64, *int64, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return nil, nil, err
+	}
+	hp := row.Hpcurrent
+	if hpCurrent != nil {
+		hp = live.ClampVital(*hpCurrent, &row.Hpmax)
+	}
+	mp := row.Mpcurrent
+	if mpCurrent != nil {
+		mp = live.ClampVital(*mpCurrent, &row.Mpmax)
+	}
+	return v.persistVitals(ctx, charID, hp, hpCurrent != nil, mp, mpCurrent != nil)
+}
+
+// persistVitals writes only what changed and hands back BOTH values for the
+// entry to mirror — inclusive o que não foi escrito, senão o rastreador voltaria
+// a mostrar um número que a ficha não tem. `writeHp` é falso quando o plano de
+// dano já gravou o PV.
+func (v sheetVitals) persistVitals(
+	ctx context.Context, charID, hp int64, writeHp bool, mp int64, writeMp bool,
+) (*int64, *int64, error) {
+	if writeHp || writeMp {
+		params := sqlcgen.UpdateVitalsParams{UpdatedAt: platform.NowISO(), ID: charID}
+		if writeHp {
+			params.HpCurrent = nullInt(&hp)
+		}
+		if writeMp {
+			params.MpCurrent = nullInt(&mp)
+		}
+		if _, err := v.q.UpdateVitals(ctx, params); err != nil {
+			return nil, nil, err
+		}
+	}
+	return &hp, &mp, nil
+}

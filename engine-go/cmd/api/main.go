@@ -26,10 +26,10 @@ import (
 	"syscall"
 	"time"
 
-	"t20engine/api"
-	"t20engine/db"
-	"t20engine/engine"
-	"t20engine/platform"
+	"t20engine/domain/engine"
+	"t20engine/infra/db"
+	"t20engine/infra/platform"
+	"t20engine/serve/api"
 )
 
 // SONDA DE SAÚDE, para o contêiner ter como se examinar (ALE-273).

@@ -232,7 +232,7 @@ dois — é o mesmo binário (ALE-119):
 **O env do processo vence o arquivo**, então dá pra desviar sem editar nada:
 `PORT=4000 pnpm dev`. E `ENV_FILE=/caminho/outro.env` troca o arquivo inteiro.
 
-Variáveis (defaults em `engine-go/platform/config.go`):
+Variáveis (defaults em `engine-go/infra/platform/config.go`):
 
 | var | default | o que faz |
 |---|---|---|

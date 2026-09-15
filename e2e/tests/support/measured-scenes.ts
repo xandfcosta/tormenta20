@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs'
  *
  * # O registro não mora aqui, e a razão foi MEDIDA
  *
- * Ele é `engine-go/web/appearance_scenes.json`, e este arquivo só o lê. Duas
+ * Ele é `engine-go/serve/web/appearance_scenes.json`, e este arquivo só o lê. Duas
  * razões, e a segunda mordeu:
  *
  * 1. Quais cenas existem e em que endereço é fato do APP, e o app é Go. O e2e é
@@ -58,7 +58,7 @@ export type MeasuredScene = {
   visits: MeasuredVisit[]
 }
 
-const REGISTRY = new URL('../../../engine-go/web/appearance_scenes.json', import.meta.url)
+const REGISTRY = new URL('../../../engine-go/serve/web/appearance_scenes.json', import.meta.url)
 
 export const MEASURED_SCENES: Record<string, MeasuredScene> = JSON.parse(
   readFileSync(REGISTRY, 'utf8'),

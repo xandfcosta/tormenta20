@@ -1,0 +1,314 @@
+package admin
+
+import (
+	"fmt"
+	"t20engine/serve/web/ui"
+)
+
+// A tela de administração desenhada (ALE-219; em templ pela ALE-227).
+
+templ adminScene(v adminView) {
+	<main class="w-full space-y-4">
+		// Uma coluna no telefone, duas a partir de lg com os jogadores — a lista
+		// que cresce — na maior. Mesma repartição da tela da SPA.
+		// REGIÃO de conteúdo, `grid` porque a repartição é bidimensional de
+		// verdade: os jogadores numa coluna larga, convites e servidor empilhados
+		// na outra. Com `column` a seta para o lado não teria como atravessar.
+		//
+		// Uma região só para os três painéis, e não uma por painel: o que o
+		// driver move é o FOCO entre itens por geometria, e três regiões
+		// obrigariam a cruzar borda para andar entre coisas que estão lado a
+		// lado na mesma tela.
+		<div data-nav-region="content" data-nav-layout="grid" class="grid w-full items-start gap-4 lg:grid-cols-[3fr_2fr]">
+			@playersPanel(v)
+			<div class="flex flex-col gap-4">
+				@invitesPanel(v)
+				@serverPanel(v)
+			</div>
+		</div>
+		@confirmDialog()
+		@resetDialog()
+		// O MESMO componente do Hub, e não uma segunda cópia: cunhar convite é
+		// uma coisa só, e duas versões dela divergiriam sem ninguém notar — é a
+		// razão pela qual o `mintAccountInvite` saiu do manipulador HTTP. Fica
+		// aqui porque este é o lugar natural da ação, ao lado da LISTA que ela
+		// muda; a entrada do Hub continua valendo para quem já está lá.
+		@ui.InviteDialog("/admin/convites")
+		<p class="text-sm text-destructive-ink" data-show="$error != ''" data-text="$error"></p>
+	</main>
+}
+
+templ playersPanel(v adminView) {
+	<section id="players-panel" class="border border-grimorio-iron bg-grimorio-panel p-3">
+		<h2 class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>
+			Jogadores ({ fmt.Sprint(len(v.Players)) })
+		</h2>
+		<ul class="mt-3 divide-y divide-grimorio-iron/60">
+			for _, j := range v.Players {
+				<li class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+					<span class="min-w-0 flex-1">
+						<span class="block truncate font-heading text-sm tracking-wide">{ j.Name }</span>
+						<span class="block truncate text-xs text-muted-foreground">{ j.Email }</span>
+					</span>
+					<span class="text-xs text-muted-foreground">{ j.Belongings }</span>
+					// Redefinir vale para TODA conta, inclusive a sua: o admin que
+					// esqueceu a própria senha usa a mesma porta. É só apagar que
+					// tem a guarda do `EhEu`, porque essa não tem volta.
+					//
+					// O `#reset-link` é LIMPO ao abrir, e isso não é zelo: sem
+					// limpar, gerar um link para a Ana, fechar, e abrir a caixa da
+					// Bia mostraria o link da ANA sob o nome da BIA — um link de
+					// redefinição entregue à pessoa errada.
+					<button
+						type="button"
+						data-id={ fmt.Sprint(j.ID) }
+						data-nome={ j.Name }
+						data-on:click="$target_id = el.dataset.id; $target_name = el.dataset.nome; $copied = ''; document.getElementById('reset-link').innerHTML = ''; $reset_dialog.showModal()"
+						aria-label={ "Redefinir a senha de " + j.Name }
+						class="shrink-0 border border-grimorio-iron-light bg-secondary px-2 py-1 text-secondary-foreground outline-none hover:bg-accent"
+					>
+						@ui.Icon("KeyRound", "size-4")
+					</button>
+					if !j.IsMe {
+						// O nome e o custo viajam em `data-*` e NUNCA dentro da
+						// expressão. Interpolar o nome num `data-on:click` seria injetar
+						// texto de usuário em JavaScript: o escape é para contexto de
+						// ATRIBUTO, não sabe que ali dentro há uma expressão, e um nome
+						// com aspas fecharia a string. O Datastar põe `el` no escopo,
+						// então o dataset resolve isso sem abrir a porta.
+						<button
+							type="button"
+							data-id={ fmt.Sprint(j.ID) }
+							data-nome={ j.Name }
+							data-custo={ j.Cost }
+							data-on:click="$target_id = el.dataset.id; $target_name = el.dataset.nome; $target_cost = el.dataset.custo; $confirm_dialog.showModal()"
+							aria-label={ "Apagar a conta de " + j.Name }
+							class="shrink-0 border border-destructive/60 bg-destructive px-2 py-1 text-xs font-semibold text-white outline-none hover:opacity-90"
+						>
+							Apagar
+						</button>
+					}
+				</li>
+			}
+		</ul>
+	</section>
+}
+
+templ invitesPanel(v adminView) {
+	<section id="invites-panel" class="border border-grimorio-iron bg-grimorio-panel p-3">
+		<div class="flex items-center justify-between gap-2">
+			<h2 class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>
+				Convites abertos ({ fmt.Sprint(len(v.Invites)) })
+			</h2>
+			<button
+				type="button"
+				data-on:click="$copied = ''; document.getElementById('invite-link').innerHTML = ''; $invite_dialog.showModal()"
+				class="inline-flex shrink-0 items-center gap-1 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent"
+			>
+				@ui.Icon("UserPlus", "size-4")
+				Convidar
+			</button>
+		</div>
+		if len(v.Invites) == 0 {
+			<p class="mt-3 text-sm text-muted-foreground">
+				Nenhum convite pendente. Todo mundo que foi convidado já entrou.
+			</p>
+		} else {
+			<ul class="mt-3 space-y-3">
+				for _, c := range v.Invites {
+					<li class="flex items-center gap-2">
+						<span class="min-w-0 flex-1">
+							<span class="block truncate font-mono text-xs">{ c.Label }</span>
+							<span class="block text-xs text-muted-foreground">Expira em { c.Expires }.</span>
+						</span>
+						// A área de transferência é API do NAVEGADOR — não há como o
+						// servidor copiar por ele. É o primeiro lugar do app onde a
+						// expressão faz trabalho de verdade em vez de disparar um
+						// pedido, e o resultado é uma linha: o Datastar não é "sem
+						// JavaScript", é "sem BUNDLE".
+						<button
+							type="button"
+							data-url={ c.URL }
+							data-on:click="navigator.clipboard.writeText(location.origin + el.dataset.url); $copied = el.dataset.url"
+							aria-label={ "Copiar o " + c.Label }
+							class="shrink-0 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent"
+						>
+							Copiar
+						</button>
+					</li>
+				}
+			</ul>
+			// `aria-live` porque copiar não muda nada visível sozinho: sem isto,
+			// quem não vê a tela não recebe confirmação nenhuma de que o clique
+			// fez algo.
+			<p class="mt-2 text-xs text-hp-full" aria-live="polite" data-show="$copied != ''">Link copiado.</p>
+		}
+	</section>
+}
+
+templ serverPanel(v adminView) {
+	<section id="server-panel" class="border border-grimorio-iron bg-grimorio-panel p-3">
+		<h2 class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>Servidor</h2>
+		<dl class="mt-3 space-y-1 text-sm">
+			<div class="flex justify-between gap-3">
+				<dt class="text-muted-foreground">Ambiente</dt>
+				<dd>{ v.Machine.Environment }</dd>
+			</div>
+			<div class="flex justify-between gap-3">
+				<dt class="shrink-0 text-muted-foreground">Banco</dt>
+				<dd class="truncate">{ v.Machine.Database } · { v.Machine.DatabaseSize }</dd>
+			</div>
+			<div class="flex justify-between gap-3">
+				<dt class="shrink-0 text-muted-foreground">Conteúdo</dt>
+				<dd class="text-right">{ v.Machine.Contents }</dd>
+			</div>
+		</dl>
+		<div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+			<p class="text-xs text-muted-foreground">{ v.Machine.LastBackup }</p>
+			// Sem stream nenhum nesta tela: quem redesenha é a RESPOSTA do POST, que
+			// volta com o remendo deste painel. É a diferença central entre as duas
+			// superfícies das cenas — a Mesa tinha um SSE aberto para isso.
+			<button
+				type="button"
+				data-indicator:saving
+				data-attr:disabled="$saving"
+				data-on:click="@post('/admin/backup')"
+				class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent disabled:opacity-50"
+			>
+				Fazer backup
+			</button>
+		</div>
+	</section>
+}
+
+// confirmDialog é o DESTRUTIVO, e a pergunta que esta superfície existe para
+// responder: confirmação acessível SEM Kobalte.
+//
+// A resposta é o `<dialog>` nativo com `showModal()`, e ele entrega de graça o
+// que a biblioteca entregava: foco movido para dentro, foco preso enquanto
+// aberto, `Esc` fecha, o resto da página fica inerte, e o `::backdrop` existe.
+// O que ele NÃO entrega sozinho é o nome acessível — daí o `aria-labelledby` —
+// nem a restauração do foco ao fechar, que o navegador faz por conta em
+// `showModal()` mas só porque o `<dialog>` guarda o elemento que o abriu.
+//
+// UM diálogo para todas as linhas, e não um por jogador: o conteúdo vem de
+// sinais, e um por linha seria N cópias de DOM para um que se usa por vez. Por
+// isso ele não recebe a view — não há nada dela para desenhar.
+//
+// `m-auto` na caixa porque o PREFLIGHT do Tailwind zera a margem, e é ela que
+// centraliza um `<dialog>` aberto por `showModal()`. Sem isso ele encosta no
+// canto superior esquerdo — o navegador estava certo e a folha de reset é que
+// tirou. Medido: apareceu no canto na primeira abertura.
+templ confirmDialog() {
+	<dialog
+		id="confirm"
+		data-ref="confirm_dialog"
+		aria-labelledby="confirm-title"
+		aria-describedby="confirm-cost"
+		class="m-auto max-w-sm border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="confirm-title" class="font-heading text-base">
+			Apagar a conta de <span data-text="$target_name"></span>?
+		</h2>
+		<p id="confirm-cost" class="mt-2 text-sm text-muted-foreground" data-text="$target_cost"></p>
+		<div class="mt-4 flex justify-end gap-2">
+			// `method="dialog"` fecha sem JavaScript nenhum — e é o que faz o botão
+			// de cancelar continuar funcionando se a expressão do Datastar falhar.
+			<form method="dialog">
+				<button
+					type="submit"
+					class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent"
+				>
+					Cancelar
+				</button>
+			</form>
+			<button
+				type="button"
+				data-on:click="@post('/admin/usuarios/' + $target_id + '/apagar'); $confirm_dialog.close()"
+				class="bg-destructive px-3 py-1.5 text-sm font-semibold text-white outline-none hover:opacity-90"
+			>
+				Apagar conta
+			</button>
+		</div>
+	</dialog>
+}
+
+// resetDialog entrega o link de uso único que troca a senha de UMA conta
+// (ALE-120): o admin gera e manda, e quem recebe escolhe a própria senha — o
+// admin nunca vê nem digita senha de ninguém.
+//
+// Mesma mecânica do convite do Hub, e pela mesma razão: o token chega por
+// REMENDO do servidor (`#reset-link`) e não por sinal. Sinal de cliente viaja
+// de volta ao servidor em toda requisição seguinte da página, e um token de uso
+// único que abre uma conta EXISTENTE é a última coisa que se quer nesse
+// caminho.
+templ resetDialog() {
+	<dialog
+		id="reset"
+		data-ref="reset_dialog"
+		aria-labelledby="reset-title"
+		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="reset-title" class="flex items-center gap-2 font-heading text-base">
+			@ui.Icon("KeyRound", "size-4 text-grimorio-gold")
+			Redefinir senha
+		</h2>
+		<p class="mt-2 text-sm text-muted-foreground">
+			Envie o link para <span data-text="$target_name"></span>. Vale uma vez só, expira em 24 horas, e quem recebe escolhe a própria senha — você não digita senha nenhuma.
+		</p>
+		<div id="reset-link" class="mt-3"></div>
+		<div class="mt-4 flex justify-end gap-2">
+			<form method="dialog">
+				<button type="submit" class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent">
+					Fechar
+				</button>
+			</form>
+			<button
+				type="button"
+				data-indicator:generating
+				data-attr:disabled="$generating"
+				data-on:click="@post('/admin/usuarios/' + $target_id + '/redefinir')"
+				class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent disabled:opacity-50"
+			>
+				Gerar link
+			</button>
+		</div>
+	</dialog>
+}
+
+// mintedReset é o remendo que volta do POST, e carrega o CAMINHO — nunca a URL
+// inteira. A origem é do NAVEGADOR, e isso é conserto de um defeito medido: com
+// o `r.Host` o link nascia apontando para a porta errada sempre que houvesse
+// qualquer coisa reescrevendo o cabeçalho no caminho. Link de redefinição existe
+// para ser MANDADO, então host errado é link morto — ver `ui.MintedInvite`, que
+// carrega a medição.
+//
+// `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
+// "copiar" do teclado, e copiar é a única coisa que se faz com ele.
+templ mintedReset(caminho string) {
+	<div id="reset-link" class="mt-3 space-y-2">
+		<label for="reset-url" class={ ui.FieldLabelClasses("muted", "block") }>
+			Link de redefinição
+		</label>
+		<div class="flex gap-2">
+			<input
+				id="reset-url"
+				readonly
+				data-caminho={ caminho }
+				data-init="el.value = location.origin + el.dataset.caminho"
+				class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 font-mono text-xs outline-none"
+			/>
+			<button
+				type="button"
+				data-on:click="navigator.clipboard.writeText(document.getElementById('reset-url').value); $copied = true"
+				class="shrink-0 border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent"
+			>
+				Copiar
+			</button>
+		</div>
+		<p class="text-xs text-hp-full" aria-live="polite" style="display:none" data-show="$copied">Link copiado.</p>
+		<p class="text-xs text-muted-foreground">
+			Enquanto o link não for usado, a senha atual continua valendo.
+		</p>
+	</div>
+}

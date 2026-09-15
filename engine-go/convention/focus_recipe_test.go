@@ -126,7 +126,7 @@ func TestNoHandwrittenFocusRing(t *testing.T) {
 	// existe uma GLOBAL. No dia em que alguém apagar a global, proibir a cópia
 	// deixa o app inteiro sem realce — e o guarda precisa falhar junto, em vez de
 	// seguir cobrando uma regra cuja razão sumiu.
-	folha, err := os.ReadFile("../api/assets/src/index.css")
+	folha, err := os.ReadFile("../serve/api/assets/src/index.css")
 	if err != nil {
 		t.Fatalf("ler a folha-fonte: %v", err)
 	}

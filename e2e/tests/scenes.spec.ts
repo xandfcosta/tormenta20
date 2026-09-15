@@ -34,7 +34,7 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 // `CLAUDE.md` já nomeia o preço dela desde a ALE-252: a cena que alguém
 // esquecer nasce sem medição, em silêncio, que é a marca desta família.
 //
-// A medição virou um laço sobre `engine-go/web/appearance_scenes.json`, em
+// A medição virou um laço sobre `engine-go/serve/web/appearance_scenes.json`, em
 // `appearance.spec.ts`, e quem força o registro a estar completo é o
 // `convention.TestEveryPageSceneIsMeasuredForAppearance`: ele deriva do código
 // quem desenha página inteira e falha com o NOME da cena que ficou de fora.
