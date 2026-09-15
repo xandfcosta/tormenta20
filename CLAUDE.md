@@ -37,6 +37,36 @@ e a regra tem um lugar só.
 - **Releia a documentação que a sua mudança tocou** — o `.md` do pacote e o
   `GLOSSARY.md`. Não "atualize se mudou o comportamento": **releia**. Ver
   "Documentação".
+- **Mexeu em tela? OLHE a tela** antes de fechar — é passo, não zelo, e o
+  detalhe está logo abaixo.
+
+### O último passo é OLHAR
+
+A fatura está na ALE-319: a decomposição da perícia mentiu na tela por meses,
+com 193 casos verdes e 75 guardas no ar. O dado estava certo e o defeito era
+100% de APRESENTAÇÃO — e não havia, em lugar nenhum deste repositório, um passo
+que mandasse abrir a cena e julgar.
+
+**A divisão de trabalho É a regra.** A MÁQUINA julga LIMIAR e LIGAÇÃO: contraste
+abaixo do AA, Cinzel abaixo do piso, alvo de toque, sinal escrito sem leitor, id
+apontado que não existe. O OLHO julga COMPOSIÇÃO e HIERARQUIA: o que salta
+primeiro e se era para saltar, o que ficou apertado, o que ficou solto, o que
+desalinha. Nenhum limiar responde a essas quatro, e é por isso que este passo é
+humano — não porque a suíte seja fraca.
+
+- **Quais cenas:** as que a mudança TOCA, e os endereços delas estão em
+  `engine-go/serve/web/appearance_scenes.json` — o registro que o
+  `TestEveryPageSceneIsMeasuredForAppearance` mantém completo. Não escreva uma
+  segunda lista aqui: ela envelheceria sozinha, que é o remendo da ALE-252.
+- **Em que larguras:** **390px e desktop, no mínimo** — a casa chaveia por
+  LARGURA, então são as duas pontas que decidem. E cena que ramifica pelo DADO
+  (mestre e jogador, quem conjura e quem não) pede uma passada por ramo.
+- **Sem digitar senha:** a sessão do e2e já está em `e2e/.auth/`, e um script de
+  Playwright com `storageState` entra autenticado sem ninguém digitar nada.
+- **O que você viu vira o quê:** conserto, ou linha na issue. E se o olho pegar
+  coisa de LIMIAR, o conserto não é olhar melhor da próxima vez — é escrever o
+  guarda, pela mesma razão que a seção "Documentação" dá para não restaurar
+  narrativa.
 
 ## Estilo de código
 
