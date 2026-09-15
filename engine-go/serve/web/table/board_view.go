@@ -10,15 +10,16 @@ import (
 	"t20engine/serve/web/routes"
 )
 
-// O TABULEIRO como dado (ALE-263) — a fatia que se OLHA.
+// O TABULEIRO como dado. Puro de propósito: o handler busca, este arquivo
+// decide, o template só desenha.
 //
-// Puro de propósito, como a `View`: o handler busca, este arquivo decide, o
-// template só desenha.
+// **Nenhuma regra nova nasce aqui.** A aparência da peça mora no `board`, e o
+// estado já chega REDIGIDO pelo `BoardForRole` — reescrever a redação aqui
+// mediria a reescrita.
 //
-// Nenhuma regra NOVA nasce aqui. A moldura e a aparência da peça moram no
-// `tabuleiro`, e o estado já chega redigido pelo `BoardForRole` — que é o mesmo
-// gargalo por papel que o `StateForRole` é para a fila. Um piloto que
-// reescrevesse a redação mediria a reescrita.
+// As coordenadas são ABSOLUTAS do plano, sempre. Não há moldura, e não há um
+// segundo par relativo a ela: duas coordenadas para a mesma peça seriam duas
+// chances de usar a errada.
 
 // BoardView é o tabuleiro de uma mesa, pronto para desenhar.
 type BoardView struct {
@@ -40,14 +41,8 @@ type BoardView struct {
 	// Chao é a APARÊNCIA do lugar (pedra, taverna, cripta…), e não o terreno
 	// difícil, que é regra de movimento e vive no `Dificil`. Ver GLOSSARY.md.
 	Chao string
-	// A MOLDURA SAIU na ALE-203 (decisão do dono: o tabuleiro é infinito para o
-	// usuário). O servidor não tem mais `X0`, `Colunas` nem `Linhas` — ele manda
-	// o que EXISTE, em Coordinate ABSOLUTA do plano, e quem decide o que aparece
-	// é a JANELA, que mora no navegador ao lado do zoom.
-	//
-	// O que isso conserta, medido: a moldura CRESCIA ao pintar perto da borda, e
-	// `X0` mudava — o mesmo ponto da tela virava outro quadrado entre dois
-	// cliques. Foi uma das duas causas de "apaguei e não apagou".
+	// O servidor manda o que EXISTE; quem decide o que APARECE é a janela, que
+	// mora no navegador ao lado do zoom. O tabuleiro é infinito para quem usa.
 	Pecas      []boardToken
 	Marcadores []boardMarker
 	// Candidatos é a fila oferecida ao diálogo "Pôr no mapa", e ela é DO MESTRE:
@@ -56,14 +51,10 @@ type BoardView struct {
 	// cortina e o `hidden` existem para não contar — o vazamento não apareceria na
 	// tela, só no "ver código-fonte".
 	Candidatos []candidatoAoMapa
-	// Terreno são os quadrados pintados, de TODAS as espécies, já em Coordinate
-	// da tela e cada um sabendo qual é a sua (T20 p238).
-	//
-	// UMA lista com a espécie dentro, e não quatro irmãs como no estado: lá elas
-	// são separadas porque só o difícil alimenta o motor e a assimetria tem de
-	// ficar à vista; aqui todas fazem a MESMA coisa — viram um `<div>` com uma
-	// classe —, e quatro laços idênticos no templ seriam a repetição sem a razão
-	// que a justifica do outro lado.
+	// Terreno são os quadrados pintados de TODAS as espécies (T20 p238), numa
+	// lista só com a espécie dentro. No ESTADO elas são quatro listas separadas,
+	// porque só o difícil alimenta o motor; aqui todas viram um `<div>` com uma
+	// classe, e quatro laços idênticos seriam repetição sem razão.
 	Terreno []terrainSquare
 	// Movimento é o proposto e ainda não confirmado, ou nil.
 	Movimento *moveView
@@ -73,23 +64,17 @@ type BoardView struct {
 	// alvo que não faz nada é pior que a ausência dele.
 	AlvoDoMovimento string
 	RotuloDoAlvo    string
-	// Alcance são as casas que a peça alcança com a AÇÃO DE MOVIMENTO, para
-	// PINTAR na cor de "cabe na ação de movimento". Vazio fora de combate: sem vez não há ação de movimento, não
-	// há teto, e desenhar um seria inventá-lo.
+	// Alcance são as casas que cabem na AÇÃO DE MOVIMENTO. Vazio fora de
+	// combate: sem vez não há ação, não há teto, e desenhar um seria inventá-lo.
 	Alcance []boardSquare
-	// AlcanceSegundo são as casas que ela só alcança gastando também a AÇÃO
-	// PADRÃO (T20 p233), pintadas na segunda cor.
-	//
-	// Faixa própria e não uma lista só, porque a pergunta que a mesa faz não é
-	// "dá para chegar?" e sim "chegar aí me custa o turno inteiro?" — e essa é a
-	// diferença entre as duas cores. O que passa das duas ações não é desenhado:
-	// não há terceira ação de movimento para gastar.
+	// AlcanceSegundo são as que só se alcançam gastando também a AÇÃO PADRÃO
+	// (T20 p233), na segunda cor. Faixa própria porque a pergunta da mesa não é
+	// "dá para chegar?" e sim "chegar aí custa o turno inteiro?". O que passa
+	// das duas não é desenhado — não há terceira ação de movimento.
 	AlcanceSegundo []boardSquare
-	// Fantasma é a peça DESENHADA na origem do movimento proposto, ou nil.
-	//
-	// Ela é a peça inteira e não um marcador genérico porque é o monogram e o
-	// selo que dizem QUEM saiu dali: com três zumbis em campo, um disco vazio na
-	// casa não responde qual deles está a caminho.
+	// Fantasma é a peça DESENHADA na origem do movimento proposto, ou nil. Ela é
+	// a peça INTEIRA e não um disco genérico: com três zumbis em campo, só o
+	// monograma responde qual deles está a caminho.
 	Fantasma *boardToken
 	// ArrastaAPeca liga o gesto na PEÇA. Com proposta aberta ela é a mesma peça,
 	// desenhada no fim do caminho — ver `dropWasWhereLandsToken`.
@@ -97,12 +82,9 @@ type BoardView struct {
 	// CampaignID e SessionID moram aqui porque o tabuleiro escreve as próprias
 	// rotas, como a `View` faz com as dela.
 	CampaignID, SessionID int64
-	// Base é ONDE os gestos deste tabuleiro postam, sem barra no fim (ALE-292).
-	//
-	// Ela existe porque o mesmo desenho serve a DUAS superfícies: a cena que a
-	// mesa está jogando (`/mesa/…/tabuleiro`) e o RASCUNHO de um lugar do
-	// acervo (`/campanhas/…/lugares/…/tabuleiro`), que o mestre monta fora da
-	// sessão. Sem ela, cada uma das vinte e cinco chamadas teria de escolher o
+	// Base é ONDE os gestos deste tabuleiro postam, sem barra no fim: o mesmo
+	// desenho serve a DUAS superfícies — a mesa jogando e o RASCUNHO de um lugar
+	// do acervo. Sem ela, cada uma das vinte e cinco chamadas escolheria o
 	// caminho, e a que alguém esquecesse postaria na mesa o gesto do rascunho.
 	//
 	// Escrita SÓ pelo `tableBoardBase` e pelo `placeDraftBase`.
@@ -110,31 +92,24 @@ type BoardView struct {
 	// TabuleiroID é qual tabuleiro ESTA view desenha, e ele viaja para a tela
 	// porque o COPIAR precisa registrar de onde a peça saiu (ALE-206).
 	TabuleiroID string
-	// Rascunho é a cena sendo montada NO ACERVO, fora da sessão (ALE-292).
+	// Rascunho é a cena sendo montada NO ACERVO, fora da sessão. É um MODO
+	// declarado, e não `SessionID == 0`: zero também acontece por engano, e
+	// decidir por ele atenderia um estado inválido como se fosse recurso.
 	//
-	// Ela é um MODO e não a ausência de sessão, e a diferença importa: `SessionID
-	// == 0` também acontece por engano, e um desenho que decidisse por ele
-	// atenderia a um estado inválido como se fosse um recurso. Aqui o modo é
-	// declarado por quem monta a view, e o que ele governa é o que NÃO existe
-	// fora da sessão — cortina, lente, abas, acervo, encerrar, pôr na fila — mais
-	// o significado do arrasto.
-	//
-	// O ARRASTO é a diferença que se sente: na mesa ele PROPÕE um movimento, com
-	// custo e vez, e alguém confirma; no rascunho ele põe a peça onde ela foi
-	// solta e acabou. Não há vez para gastar nem mesa para avisar, e uma proposta
-	// pendurada num rascunho seria um movimento que ninguém pode confirmar.
+	// O que ele governa é o que não existe fora da sessão — cortina, lente,
+	// abas, encerrar, pôr na fila — mais o ARRASTO: na mesa ele PROPÕE um
+	// movimento que alguém confirma; no rascunho põe a peça onde foi solta e
+	// acabou, porque não há vez para gastar nem mesa para avisar.
 	Rascunho bool
-	// Mestre é quem MONTA e DESMONTA a cena. Sai do mesmo `quem.Role` que a
-	// redação usa, e não de um parâmetro novo: duas fontes para o papel é como
-	// nasce a tela que esconde o botão de quem pode e o mostra para quem não.
+	// Mestre sai do mesmo `quem.Role` que a REDAÇÃO usa: duas fontes para o
+	// papel é como nasce a tela que esconde o botão de quem pode e o mostra para
+	// quem não.
 	Mestre bool
-	// Lente é o mestre vendo a cena COMO A MESA (ALE-193). Ela não muda o que ele
-	// PODE — os controles continuam dele —, só o que ele VÊ: o tabuleiro chega
-	// redigido pelo mesmo `BoardForRole` que a mesa recebe.
+	// Lente é o mestre vendo a cena COMO A MESA. Ela não muda o que ele PODE, só
+	// o que ele VÊ — o tabuleiro chega pelo mesmo `BoardForRole` da mesa.
 	Lente bool
-	// PecasEscondidas é quantas peças a mesa NÃO vê, e é a pergunta que trouxe o
-	// mestre até aqui ("a emboscada está mesmo invisível?"). Contar o que sobrou
-	// na tela não responderia: ele não sabe o que não está vendo.
+	// PecasEscondidas responde "a emboscada está mesmo invisível?". Contar o que
+	// sobrou na tela não responde: ele não sabe o que não está vendo.
 	PecasEscondidas int
 	// Abas são os tabuleiros ABERTOS da sessão (ALE-205), e a barra só existe a
 	// partir de dois: com um só não há o que trocar, e a tira de fichas seria
@@ -145,34 +120,25 @@ type BoardView struct {
 	// É o único aviso desta cena que fala de uma mudança que quem lê NÃO fez: a
 	// cortina e a lente são modos que o dono da tela ligou. Ver `removePull`.
 	Puxado *pullScreen
-	// Acervo são os LUGARES guardados da campanha (ALE-124, fatia 5). Só o
-	// mestre tem — a mesa não escolhe onde joga.
-	//
-	// Vem no RETRATO e não por pedido sob demanda, ao contrário da SPA: lá o
-	// acervo estava fora do instantâneo do socket e custava uma ida ao
-	// servidor; aqui a página inteira JÁ é servida pelo servidor, e uma segunda
-	// viagem para buscar o que ele já tem na mão seria inventar a latência que a
-	// migração existe para tirar. O custo por tique do fluxo está medido.
+	// Acervo são os LUGARES guardados da campanha, e só o mestre tem — a mesa não
+	// escolhe onde joga. Vem no retrato e não sob demanda: a página inteira já é
+	// servida pelo servidor, e uma segunda viagem para buscar o que ele tem na
+	// mão inventaria latência.
 	Acervo []lugarDoAcervo
 }
 
-// lugarDoAcervo é uma cena guardada, pronta para listar.
-//
-// A CONTAGEM de peças e não a lista: o acervo serve para escolher onde jogar, e
-// mandar a cena inteira de cada lugar seria mandar a crônica toda a cada
-// abertura de menu. A cena chega ao REABRIR.
+// lugarDoAcervo é uma cena guardada, pronta para listar. A CONTAGEM de peças e
+// não a lista: mandar a cena inteira de cada lugar seria mandar a crônica toda a
+// cada abertura de menu. A cena chega ao REABRIR.
 type lugarDoAcervo struct {
 	ID     int64
 	Nome   string
 	Pecas  int
 	Quando string
-	// AbertaEm é a aba em que este lugar JÁ ESTÁ na mesa, ou vazio (ALE-205,
-	// fatia 3). É o que faz a lista distinguir o que se REABRE do que se VÊ.
-	//
-	// Sem ele o mestre não tinha como saber qual das 148 linhas é a cena que está
-	// na tela dele agora — o papercut que o dono levantou —, e "Reabrir" a que já
-	// está aberta abriria uma segunda aba da mesma cena, com duas verdades sobre
-	// onde as peças estão.
+	// AbertaEm é a aba em que este lugar JÁ ESTÁ na mesa, ou vazio: é o que faz a
+	// lista distinguir o que se REABRE do que se VÊ. Sem ele, "Reabrir" a que já
+	// está aberta daria duas abas da mesma cena, com duas verdades sobre onde as
+	// peças estão.
 	AbertaEm string
 }
 
@@ -180,25 +146,18 @@ type lugarDoAcervo struct {
 type boardToken struct {
 	ID     string
 	Rotulo string
-	// X e Y são o lugar no PLANO, com sinal: é de onde o arrasto conta o
-	// deslocamento, e o CSS os multiplica pelo `--quadrado` depois de descontar a
-	// janela. Havia um segundo par (`Col`/`Lin`) relativo à moldura, e ele saiu
-	// com ela na ALE-203 — duas coordenadas para a mesma peça eram duas chances
-	// de usar a errada.
-	//
-	// O `Onde` é a mesma coisa escrita para gente ler, e é o que o nome acessível
-	// diz.
+	// X e Y são o lugar no PLANO, com sinal: o CSS os multiplica pelo
+	// `--quadrado` depois de descontar a janela. `Onde` é o mesmo escrito para
+	// gente ler, e é o que o nome acessível diz.
 	X, Y int
 	Onde string
-	// SaiuDe é a casa GRAVADA da peça enquanto há movimento proposto, escrita
-	// para gente ler, e vazia quando não há. Ela existe porque desde a ALE-203
-	// (item 4) o `X`/`Y` acima é onde a peça é DESENHADA — o fim do caminho —, e
-	// sem esta linha o leitor de tela perderia de onde a peça saiu: ele receberia
-	// a peça já na parada proposta, como se ela tivesse andado.
+	// SaiuDe é a casa gravada enquanto há movimento proposto, e vazia quando não
+	// há: o `X`/`Y` acima é onde a peça é DESENHADA — o fim do caminho —, então
+	// sem ela o leitor de tela receberia a peça já na parada, como se ela
+	// tivesse andado.
 	//
-	// Texto e não um segundo par de coordenadas, e a diferença é o que a torna
-	// segura: ninguém calcula com ela. O par `Col`/`Lin` saiu com a moldura
-	// justamente por ser a segunda chance de usar a Coordinate errada.
+	// TEXTO e não um segundo par de coordenadas, e é isso que a torna segura:
+	// ninguém calcula com ela.
 	SaiuDe string
 	Pegada int
 	// Monograma, Instancia e Matiz vêm da regra da ALE-179: a cor é da ESPÉCIE e
@@ -206,37 +165,29 @@ type boardToken struct {
 	Monograma string
 	Instancia string
 	Matiz     int
-	// NaVez acende o anel dourado, que é o MESMO sinal que a fila usa. Duas
-	// cores para "a vez" fariam a mesa procurar duas coisas.
+	// NaVez acende o anel dourado, o MESMO sinal que a fila usa: duas cores para
+	// "a vez" fariam a mesa procurar duas coisas.
 	NaVez bool
-	// TemBloco: este combatente tem bloco de criatura do mestre, e por isso o
-	// menu pode oferecer o "com bloco próprio" (ALE-206). Falso para o herói e
-	// para o NPC digitado à mão — nos dois não há bloco a copiar.
+	// TemBloco: há bloco de criatura para COPIAR, então o menu pode oferecer o
+	// "com bloco próprio". Falso para o herói e para o NPC digitado à mão.
 	TemBloco bool
 	// PV é a porcentagem restante, ou nil quando não há número para mostrar —
-	// inclusive para o JOGADOR quando o mestre ocultou os PV (ALE-188). É assim
-	// que a redação por papel chega até a peça.
+	// inclusive para o jogador quando o mestre ocultou os PV. É assim que a
+	// redação por papel chega até a peça.
 	PV *int
-	// DeOndeVeio é onde ela estava antes do último pouso, e é o que decide se o
-	// menu oferece "voltar para onde estava" (ALE-206). Nil quando ela não foi
-	// movida nesta cena — e aí o verbo não é desenhado, porque um botão que não
+	// DeOndeVeio decide se o menu oferece "voltar para onde estava". Nil quando a
+	// peça não foi movida nesta cena, e aí o verbo não é desenhado: botão que não
 	// faz nada é pior que nenhum.
 	DeOndeVeio *engine.Square
 	// Oculta é a peça que o mestre escondeu da mesa. Ela só existe na view dele:
 	// o `BoardForRole` já a tirou da do jogador.
 	Oculta bool
-	// IsObject desenha a peça QUADRADA em vez de redonda (ALE-291).
+	// IsObject desenha a peça QUADRADA em vez de redonda: redondo é criatura em
+	// toda mesa de VTT, e uma porta redonda pede tradução.
 	//
-	// A forma e não a cor, e a escolha tem duas razões que se somam. A primeira é
-	// de leitura: redondo é criatura em toda mesa de VTT, e uma porta redonda
-	// pede tradução. A segunda é de medição — tinta nova entra na conta do
-	// medidor de contraste, e uma variante que só aparece com uma peça de
-	// cenário no mapa nasceria SEM medição, que é a família que o
-	// `engine-go/CLAUDE.md` cataloga em "um guarda só mede o que ele VISITA".
-	//
-	// O nome sai em inglês porque o conceito é NOVO: a regra de idioma manda o
-	// identificador novo em inglês, e os vizinhos em português desta struct são
-	// passivo, não alvo.
+	// A FORMA e não a cor, e a segunda razão é de medição: tinta nova entra na
+	// conta do medidor de contraste, e uma variante que só aparece com peça de
+	// cenário no mapa nasceria sem medição.
 	IsObject bool
 }
 
@@ -244,15 +195,11 @@ type boardMarker struct {
 	ID    string
 	Texto string
 	Cor   string
-	// X e Y são a casa no PLANO, em Coordinate absoluta — como todo o resto do
-	// tabuleiro desde a ALE-203. Eram `Col`/`Lin`, relativos à moldura, e a
-	// moldura saiu.
-	X, Y int
-	Onde string
-	// Escondido só chega ao MESTRE — para a mesa o marcador escondido nem existe
-	// (o `BoardForRole` o retira). Sem este campo o mestre revelava e a tela dele
-	// não mudava: ele não tinha como saber o que a mesa estava vendo, que é a
-	// pergunta que o gesto de revelar existe para responder.
+	X, Y  int
+	Onde  string
+	// Escondido só chega ao MESTRE — para a mesa o marcador nem existe. Sem ele o
+	// mestre revelava e a tela dele não mudava, e revelar existe justamente para
+	// responder "o que a mesa está vendo?".
 	Escondido bool
 }
 
@@ -263,12 +210,8 @@ type terrainSquare struct {
 	Especie string
 }
 
-// boardSquare é uma casa, em Coordinate ABSOLUTA do plano.
-//
-// Ela tinha `Col`/`Lin` — o lugar dentro da moldura — e a moldura saiu na
-// ALE-203. Agora há um par de números só, e ele é o mesmo que o servidor guarda:
-// nada precisa ser traduzido para desenhar, e nada se desloca quando a cena
-// cresce.
+// boardSquare é uma casa, no mesmo par de números que o servidor guarda: nada
+// se traduz para desenhar, e nada se desloca quando a cena cresce.
 type boardSquare struct {
 	X, Y int
 }
@@ -360,27 +303,15 @@ func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, saude map[st
 // dropWasWhereLandsToken leva a peça proposta para o FIM do caminho e devolve o
 // FANTASMA que fica na origem, ou nil quando não há movimento.
 //
-// As palavras do dono: *"ao soltar a peça, ela vai ser renderizada no lugar que
-// foi solta e o início mostra a peça transparente para marcar o início do
-// movimento."* Antes disto a peça voltava para o começo ao soltar, e o que
-// marcava o destino era um losango — o gesto acabava desfazendo a si mesmo aos
-// olhos de quem arrastou.
+// A peça segue com UM par de coordenadas, e ele passa a ser onde ela é
+// DESENHADA — guardar os dois lugares nela daria duas chances de usar o errado.
+// Quem precisa da casa gravada é o fantasma, que é uma peça à parte. É também o
+// que faz o deslocamento continuar contando do lugar certo sem ninguém somar
+// nada: o `dropFor` recebe o `X`/`Y` desenhado.
 //
-// A peça continua com UM par de coordenadas, e ele passa a ser onde ela é
-// DESENHADA. Guardar os dois lugares nela seria refazer o par `Col`/`Lin` que
-// saiu com a moldura, e pela mesma razão: quem lê escolhe o errado. Quem precisa
-// da casa gravada é o fantasma, e ele é uma peça à parte.
-//
-// O que se ARRASTA é a peça no fim do caminho, e é por isso que o deslocamento
-// continua contando do lugar certo sem ninguém somar nada: o `dropFor` recebe
-// o `X`/`Y` desenhado.
-//
-// PARA O MESTRE É O CONTRÁRIO, e é decisão do dono: a peça SÓLIDA fica onde ela
-// realmente está e o FANTASMA vai para o fim do caminho. A inversão diz de quem
-// é a decisão — o jogador está mostrando onde ele QUER estar, e para ele o
-// destino é o fato; o mestre está olhando a cena que ele ainda não mudou, e para
-// ele o fato é onde a peça está. Quem confirma vê o mundo como ele é; quem pede
-// vê o mundo como ele quer.
+// **PARA O MESTRE É O CONTRÁRIO**: a peça sólida fica onde ela realmente está e
+// o fantasma vai para o fim do caminho. A inversão diz de quem é a decisão —
+// quem confirma vê o mundo como ele é; quem pede vê o mundo como ele quer.
 func dropWasWhereLandsToken(pecas []boardToken, mov *moveView, mestre bool) *boardToken {
 	if mov == nil {
 		return nil
@@ -658,24 +589,18 @@ func moveTerrain(b *board.BoardState) engine.MoveTerrain {
 
 // reachAndTarget é a peça que quem olha pode COMEÇAR a mover agora, ou "".
 //
-// Uma só, e não uma lista, porque a Mesa move uma peça por vez: com um
-// movimento em curso a resposta é vazia — quem tem um proposto confirma ou
-// cancela antes de pegar outra.
+// Uma só e não uma lista: a Mesa move uma peça por vez, e com um movimento em
+// curso a resposta é vazia.
 //
-// A pergunta é respondida pelo `tabuleiro` e não aqui: quem sabe se é a vez, se
-// a peça é sua e quanto sobra de deslocamento é o `board.CanMove`, que é o mesmo
-// `assertMovable` que a escrita usa. Perguntar de outro jeito na TELA é como
-// nasce um botão que existe e o servidor recusa.
+// **Quem responde é o `board.CanMove`, não esta função** — é o mesmo
+// `assertMovable` que a ESCRITA usa. Perguntar de outro jeito na tela é como
+// nasce um botão que existe e o servidor recusa. E o estado da sessão tem de ir
+// junto: sem ele o `assertMovable` lê "fora de combate" e libera, e a tela
+// ofereceria mover a peça do jogador fora da vez dele.
 //
-// O ESTADO DA SESSÃO tem de ir junto, e a primeira versão mandava nil: sem ele o
-// `assertMovable` lê "fora de combate" e devolve que pode: a tela ofereceria
-// mover a peça do jogador FORA DA VEZ dele, e a recusa só viria no clique.
-// O RESTANTE sai daqui junto com as casas porque é a MESMA conta: `Alcance` e
-// `Restante` são os dois valores que `reachAndTarget` devolve de uma
-// chamada só. A primeira versão chamava a função duas vezes com os mesmos
-// argumentos, cada sítio jogando fora a metade que não usava — e duas contas da
-// mesma regra é como este repositório já mostrou dois números diferentes para o
-// mesmo combatente em duas telas (ALE-122).
+// O `Restante` sai daqui junto com as casas porque é a MESMA conta. Duas
+// chamadas com os mesmos argumentos, cada uma jogando fora metade, é como este
+// repositório já mostrou dois números diferentes para o mesmo combatente.
 func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, quem board.Mover, meus map[int64]bool) boardReach {
 	if b == nil {
 		return boardReach{}
@@ -897,23 +822,19 @@ func clickedPointStop(v BoardView) string {
 	)
 }
 
-// ── o ARRASTO, puramente em CSS (ALE-266) ────────────────────────────────────
+// ── o ARRASTO, puramente em CSS ──────────────────────────────────────────────
 //
-// A escolha do dono: o arrasto é VISUAL até soltar, e não toca no DOM que o
-// servidor governa. Enquanto o dedo está em cima, o que muda é um `transform`
-// alimentado por SINAIS; a posição de verdade só muda quando a parada é aceita.
+// O arrasto é VISUAL até soltar e não toca no DOM que o servidor governa:
+// enquanto o dedo está em cima, o que muda é um `transform` alimentado por
+// SINAIS, e a posição de verdade só muda quando a parada é aceita.
 //
-// Os sinais vivem no `#table`, que é a única raiz que o remendo NUNCA toca desde
-// que a cena virou regiões — as variáveis CSS descem por herança até a peça. Se
-// morassem no plano ou na peça, o primeiro remendo de outro jogador as apagaria
-// no meio do gesto, que é exatamente o defeito que o dono nomeou.
+// **Os sinais vivem no `#table`**, que é a única raiz que o remendo nunca toca —
+// as variáveis CSS descem por herança até a peça. No plano ou na peça, o
+// primeiro remendo de outro jogador as apagaria no meio do gesto.
 //
-// O QUE SE ARRASTA é sempre a PEÇA, e ela conta do lugar onde está DESENHADA.
-// Havia um segundo alvo — o losango do destino —, porque a peça voltava para a
-// origem ao soltar e o fim da trilha precisava de alguém que o representasse.
-// Com a peça pousando onde foi solta (ALE-203, item 4) o losango virou um alvo
-// em cima do outro, e a regra do `nextStepOrigin` passou a se cumprir sozinha: a
-// próxima parada conta do fim da trilha porque é lá que a peça está.
+// O que se arrasta é sempre a PEÇA, contando do lugar onde ela está DESENHADA.
+// Por isso a próxima parada conta do fim da trilha sem ninguém somar nada: é lá
+// que a peça está.
 
 // startsTheDrag escreve o `pointerdown`: marca quem está sendo arrastado e
 // guarda o ponto de partida.
@@ -1057,31 +978,13 @@ func dropFor(v BoardView, quem string, x, y int) string {
 
 // ── QUEM RECEBE O GESTO DA PEÇA, decidido em GO ──────────────────────────────
 //
-// As três funções abaixo existem por um defeito MUDO do templ, e ele custa caro
-// porque o código-fonte parecia certo:
+// As três funções abaixo existem porque **o templ não aceita `else if` numa
+// lista de atributos** e não reclama: os dois ramos saem, o navegador guarda o
+// primeiro e o outro morre em silêncio. A armadilha está no `engine-go/CLAUDE.md`,
+// seção "templ".
 //
-//	if v.ArrastaAPeca == p.ID {
-//	    data-on:pointerdown={ startsTheDrag(p.ID) }
-//	} else if v.Mestre {
-//	    data-on:pointerdown={ partyTakes(p.ID) }
-//	}
-//
-// **O templ NÃO aceita `else if` numa lista de atributos.** Ele fecha o primeiro
-// `if`, escreve a palavra ` else` como TEXTO no meio das aspas do elemento e abre
-// um `if` INDEPENDENTE — então os dois ramos saíam juntos, e o HTML servido tinha
-// um atributo literalmente chamado `else` e `data-on:pointerdown` DUAS VEZES.
-//
-// Nada estourava: atributo repetido não existe no DOM, o navegador guarda o
-// PRIMEIRO e descarta o resto em silêncio. O ramo do grupo estava morto em toda
-// peça que era alvo do movimento, e só não se percebeu porque o `dropFor` já
-// escolhe o grupo por conta própria quando a peça está marcada — a decisão certa
-// chegava pelo outro caminho. O aviso já estava escrito duas linhas abaixo, no
-// `tokenStyling`: *"UM `data-class` só porque atributo repetido não existe"*.
-//
-// A escolha volta para o Go, onde `else if` é `else if`, e o elemento passa a ter
-// UMA lista de atributos. É a mesma forma que a fatia 1 desta issue usou para as
-// ferramentas: **exclusão por CONSTRUÇÃO**, e não por dois blocos que se
-// prometem exclusivos.
+// A escolha entre os dois gestos volta para o Go, e o elemento passa a ter UMA
+// lista de atributos: exclusão por CONSTRUÇÃO.
 
 // tokenReceivesGesture diz se ela escuta o ponteiro.
 //
