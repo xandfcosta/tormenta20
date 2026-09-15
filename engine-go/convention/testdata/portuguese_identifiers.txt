@@ -246,7 +246,6 @@ sinalQueAbre
 sinalQueFecha
 stanceRepeatedSem
 suffixStepSem
-SUPERFICIES_COM_TINTA
 tabuleiroCom
 tavernaDoJavali
 temAlgumaClasse

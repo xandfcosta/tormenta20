@@ -4,7 +4,7 @@ import type { Page } from '@playwright/test'
  * O MEDIDOR DE CONTRASTE da casa, e ele mora aqui desde a fatia 3 da ALE-272
  * porque passou a ter DOIS chamadores: as cenas e a ficha.
  *
- * Ele vivia dentro do `scenes.spec.ts` como função privada, e é por
+ * Ele vivia dentro do spec das cenas como função privada, e é por
  * isso que a ficha nasceu sem medição nenhuma de contraste nas fatias 1 e 2 —
  * não por decisão, mas porque o medidor não era alcançável de outro arquivo. É a
  * família da ALE-237 e da ALE-252 uma vez mais: a cobertura é função de onde o

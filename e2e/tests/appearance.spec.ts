@@ -14,10 +14,10 @@ import { expectCinzelAcimaDoPiso } from './support/typography'
  * # Este arquivo substitui uma ENUMERAÇÃO
  *
  * A medição vivia espalhada: catorze cópias de `nenhum texto fica abaixo do
- * mínimo de contraste do AA`, uma por bloco `describe` do
- * `scenes.spec.ts`, mais avulsas no `piloto-sheet`, no `piloto-forge` e
- * no `grimorio`. Dezoito endereços escritos à mão, e nada cobrando a cena que
- * nascesse amanhã — o regime que o `CLAUDE.md` chama de remendo na ALE-252.
+ * mínimo de contraste do AA`, uma por bloco `describe` de um spec de cenas só,
+ * mais avulsas no `sheet.spec.ts`, no `forge.spec.ts` e no `grimorio.spec.ts`.
+ * Dezoito endereços escritos à mão, e nada cobrando a cena que nascesse amanhã —
+ * o regime que o `CLAUDE.md` chama de remendo na ALE-252.
  *
  * Aqui o laço é sobre o REGISTRO, e quem força o registro a estar completo é o
  * `convention.TestEveryPageSceneIsMeasuredForAppearance`, em Go. Cena nova sem

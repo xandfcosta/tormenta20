@@ -8,8 +8,8 @@ import { readFileSync } from 'node:fs'
  * camada tem como fazer. Por isso a medição roda aqui.
  *
  * O que mudou é o REGIME. Ela morava enumerada: dezoito endereços escritos um a
- * um, catorze cópias do mesmo caso espalhadas pelos `describe` do
- * `scenes.spec.ts`, e nada cobrando a cena que nascesse amanhã. O
+ * um, catorze cópias do mesmo caso espalhadas pelos `describe` de um spec de
+ * cenas só, e nada cobrando a cena que nascesse amanhã. O
  * `CLAUDE.md` chama isso de remendo desde a ALE-252 e nomeia o conserto: um
  * guarda que FORÇA a varredura, em vez de uma lista que alguém lembra de manter.
  *
