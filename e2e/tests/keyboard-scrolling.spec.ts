@@ -16,7 +16,7 @@ import { expect, test } from '@playwright/test'
  * transborda?", e transbordo é LEIAUTE REAL. Em jsdom `scrollHeight` e
  * `clientHeight` são zero, então a condição nunca dispara e o guarda passaria
  * verde sobre todas as telas, sempre — a pior forma de teste, o que afirma o
- * oposto do que mede. É o mesmo argumento do `scenes.spec.ts`, que
+ * oposto do que mede. É o mesmo argumento do `appearance.spec.ts`, que
  * precisa do navegador para converter oklch.
  *
  * AMOSTRAGEM e não enumeração: o guarda percorre as cenas e, dentro de cada uma,
@@ -27,7 +27,7 @@ import { expect, test } from '@playwright/test'
 
 // O estado de login é o do MESTRE: quatro das seis cenas são da Mesa do Mestre
 // e as outras duas ele também alcança. É o mesmo `storageState` que o
-// `scenes.spec.ts` usa para a tela de admin.
+// `admin.spec.ts` usa.
 test.use({ storageState: '.auth/user.json' })
 
 const CENAS = [

@@ -57,7 +57,7 @@ async function openTheTracker(page: Page): Promise<void> {
   )
 }
 
-test.describe('O rodapé do mestre (piloto Datastar)', () => {
+test.describe('O rodapé do mestre', () => {
   /**
    * O DEFEITO QUE SÓ O NAVEGADOR MOSTRA (ALE-263).
    *
