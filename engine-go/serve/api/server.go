@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"database/sql"
 	"net/http"
 	"strconv"
@@ -13,8 +12,6 @@ import (
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 	"t20engine/infra/platform"
-	"t20engine/serve/web/hub"
-	"t20engine/serve/web/routes"
 	"t20engine/serve/web/table"
 
 	"github.com/go-chi/chi/v5"
@@ -101,6 +98,11 @@ func (s *Server) WaitForBackground() {
 // A busca é por sessão VIVA e só as que têm o personagem na fila: avisar mesa
 // que não tem aquele combatente mandaria todo cliente da casa refazer busca a
 // cada ficha salva.
+// ELE É DO `sheetRules` E MORA NO ARQUIVO DO `Server`, e isso é decisão e não
+// descuido (ALE-330): ele é metade do mecanismo de serialização de escrita por
+// personagem — a trava, o middleware e o id vêm logo abaixo e são do `Server`.
+// Partir por RECEPTOR partiria o mecanismo em dois arquivos que ninguém lê
+// junto, e o mecanismo é a coisa que tem uma razão para mudar.
 func (sr sheetRules) characterChanged(characterID int64) {
 	// O AVISO PARA AS CENAS DO SERVIDOR (ALE-275, no barramento desde a ALE-279).
 	// Ele é por PERSONAGEM e não por sessão: quem escuta é o stream da Mesa de
@@ -295,45 +297,3 @@ func (s *Server) Router() http.Handler {
 	})
 	return r
 }
-
-// O HUB, com adaptador próprio (ALE-278, fatia 6).
-//
-// Das seis assinaturas que ele pede, duas são do núcleo e quatro estão aqui. O
-// que o adaptador carrega além do núcleo é a CONFIGURAÇÃO, e só ela: cunhar
-// convite já é função de pacote sobre as consultas, e as outras duas não leem
-// estado nenhum.
-type hubHost struct {
-	sceneCore
-	cfg platform.Config
-}
-
-func (s *Server) hubHost() hubHost { return hubHost{sceneCore: s.sceneCore(), cfg: s.cfg} }
-
-// CurrentViewer traduz quem está pedindo para a língua do HUB (ALE-278).
-//
-// A tradução é o preço da fronteira, e ela é barata: quatro campos. O que ela
-// compra é o hub não conhecer o `AuthUser` — e portanto não importar este
-// pacote, que o importa de volta para montar rota.
-func (h hubHost) CurrentViewer(r *http.Request) hub.Viewer {
-	eu := currentUser(r)
-	return hub.Viewer{ID: eu.ID, Email: eu.Email, Name: eu.Name, IsAdmin: eu.IsAdmin}
-}
-
-// MintAccountInvite e ExpiredSessionCookie são o que o hub pede da CASA: cunhar
-// convite e apagar a sessão dependem de configuração e de política, e nenhuma
-// das duas é da tela.
-func (h hubHost) MintAccountInvite(ctx context.Context, byUserID int64) (sqlcgen.AccountInvite, error) {
-	return mintAccountInvite(ctx, h.queries, byUserID)
-}
-
-func (h hubHost) ExpiredSessionCookie() *http.Cookie { return sessionCookie(h.cfg, "", -1) }
-
-// TableRoute é o endereço de uma sessão ao vivo. Quem sabe onde cada cena está
-// montada é quem monta.
-func (h hubHost) TableRoute(campaignID, sessionID int64) string {
-	return routes.Table(campaignID, sessionID)
-}
-
-// Asset é o endereço versionado de um estático, para as cenas que carregam
-// bundle próprio. Ele já era injetado na casca (`ui.Page.Asset`); aqui ele vira
-// método porque uma cena inteira o pede.

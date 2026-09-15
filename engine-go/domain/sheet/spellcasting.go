@@ -9,7 +9,7 @@ import (
 
 // AS DUAS REGRAS DE CONJURAÇÃO que a ficha e a rota JSON leem juntas (ALE-278).
 //
-// Elas moravam no `api/character_cast.go`, e a cena da ficha as lia de lá
+// Elas moravam no `api/sheet_character_cast.go`, e a cena da ficha as lia de lá
 // enquanto tudo era um pacote só. Vieram para cá pela dependência: uma é uma
 // tabela sem dependência nenhuma, a outra pergunta sobre `[]ClassDTO` — nenhuma
 // das duas toca HTTP, catálogo ou banco.

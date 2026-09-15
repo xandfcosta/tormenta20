@@ -28,7 +28,7 @@ import (
 // jogador possa abrir e favoritar.
 //
 // Autenticação é a MESMA e sem uma linha nova: o `requireAuth` já lê o cookie
-// `t20_session` antes do Bearer (middleware.go), e o cookie ignora porta, então
+// `t20_session` antes do Bearer (account_middleware.go), e o cookie ignora porta, então
 // a sessão criada pela SPA vale aqui.
 //
 // > Aqui havia um lembrete de "saída do app" mandando apagar `api/mesa*`, a

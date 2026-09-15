@@ -19,8 +19,8 @@ import (
 // Por isso ele varre em vez de conferir um caso: uma revisão nomeia um arquivo,
 // e a correção é TODO arquivo com a mesma forma. A `aAbaPadrao` é da tela ANTIGA,
 // que não tem abas: ela morava em `board_commands.go`, apagado na ALE-277, e em
-// `board_rules.go`, que ficou. O que sobrou dela é a constante em
-// `live_publish.go`, e lá ela mudou de significado — a Mesa em Datastar TEM
+// `table_board_rules.go`, que ficou. O que sobrou dela é a constante em
+// `table_live_publish.go`, e lá ela mudou de significado — a Mesa em Datastar TEM
 // abas, então "a padrão" virou o quadro que quem fechou uma aba não escolheu.
 // **Ele veio para cá na ALE-278**, e a razão é a que o guarda do foco já tinha
 // pago: ele varria `piloto_*.go` do PRÓPRIO diretório, o que era a fonte inteira

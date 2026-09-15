@@ -77,7 +77,7 @@ var arquivosAusentesDePROPOSITO = map[string]bool{
 	// traduziam o socket da SPA para HTTP na ALE-253 — 36 manipuladores, mil
 	// linhas — e ficaram sem um único chamador quando as cenas em Datastar
 	// passaram a mutar o estado pela porta delas. Quem os cita é quem explica o
-	// que SOBROU: as regras que eles chamavam ficaram, e o `live_publish.go`
+	// que SOBROU: as regras que eles chamavam ficaram, e o `table_live_publish.go`
 	// carrega a publicação.
 	"board_commands.go":   true,
 	"session_commands.go": true,
@@ -93,6 +93,16 @@ var arquivosAusentesDePROPOSITO = map[string]bool{
 	// fluxo da SPA. O `live/stream.go` o cita para dizer de onde o laço de
 	// entrega veio — e por que o transporte NÃO veio junto.
 	"sse_events.go": true,
+
+	// OS DOIS FÓSSEIS DAS ROTAS JSON, apagados na ALE-330. Eles eram o corpo
+	// das mutações que a SPA chamava, morreram com as rotas na ALE-277, e
+	// atravessaram a reestruturação inteira sem um único chamador — o
+	// compilador do Go não acusa função de PACOTE sem uso, e por isso nada
+	// reclamou. Cada um é citado pelo arquivo que herdou o seu único símbolo
+	// vivo: o `boolToInt` foi para o `character_create.go` e o `nullInt` para o
+	// `session_character_vitals.go`.
+	"character_spells.go":    true,
+	"character_mutations.go": true,
 }
 
 // oCaminhoCitado casa o que parece um arquivo DESTE repositório: um nome com
@@ -101,7 +111,7 @@ var arquivosAusentesDePROPOSITO = map[string]bool{
 // SÓ `.go` E `.templ`, e essa restrição é o que torna o guarda possível. Medido
 // na ALE-285: com as extensões todas ele acusa 325 citações, e a esmagadora
 // maioria — 181 `.ts`, 20 `.js`, 17 `.tsx` — é a prática de PROCEDÊNCIA que esta
-// casa valoriza. Quando o `api/auth.go` cita o `auth-user.type.ts` do Nest, ele
+// casa valoriza. Quando o `api/account_auth.go` cita o `auth-user.type.ts` do Nest, ele
 // está dizendo de onde a regra veio, e está certo; o arquivo nunca vai voltar a
 // existir. Um guarda com 325 exceções é um guarda que alguém apaga.
 //
@@ -126,7 +136,8 @@ var oCaminhoCitado = regexp.MustCompile(
 // ALE-278 moveu famílias inteiras para pacotes novos. Os arquivos mudaram de
 // nome; os comentários que apontavam para eles, não. O `sessao_ciclo` era citado
 // em QUATRO lugares como o endereço da regra do ciclo da sessão — "a regra mora
-// no ..." — e o arquivo se chama `session_lifecycle.go` desde a ALE-283. O
+// no ..." — e ele virou `session_lifecycle` na ALE-283 e
+// `table_session_lifecycle.go` na ALE-330, que lhe deu o prefixo do dono. O
 // `vista`, o `terreno`, o `chao`, o `aviso`, a `busca`, a `cortina`, os
 // `enderecos_antigos`: a mesma história catorze vezes.
 //

@@ -2,15 +2,12 @@ package api
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
-	"t20engine/infra/platform"
 
-	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/infra/platform"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -73,51 +70,6 @@ func (s *Server) characterFor(w http.ResponseWriter, r *http.Request) (sqlcgen.C
 	return row, true
 }
 
-// authorizedCharacter loads a character and enforces the read/mutation guard
-// (owner or campaign GM). Returns the row, or an HTTP status + error to emit.
-func (tr tableRules) authorizedCharacter(ctx context.Context, user AuthUser, id int64) (sqlcgen.Character, int, error) {
-	row, err := tr.queries.GetCharacter(ctx, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return row, http.StatusNotFound, fmt.Errorf("Character %d not found", id)
-	}
-	if err != nil {
-		return row, http.StatusInternalServerError, errors.New("Could not load character")
-	}
-	// The admin passes the same door as the owner and the campaign's GM: a table
-	// they administer includes the sheets in it (ALE-120).
-	if row.Ownerid == user.ID || user.IsAdmin {
-		return row, http.StatusOK, nil
-	}
-	isGm, err := tr.queries.IsCampaignGmForCharacter(ctx, sqlcgen.IsCampaignGmForCharacterParams{
-		Characterid: id,
-		Ownerid:     user.ID,
-	})
-	if err != nil {
-		return row, http.StatusInternalServerError, errors.New("Could not check access")
-	}
-	if !isGm {
-		return row, http.StatusForbidden, fmt.Errorf("Character %d belongs to another user", id)
-	}
-	return row, http.StatusOK, nil
-}
-
-// assertCharacterOwner is the strict owner-only check
-// the WS vitals gate uses: a player may edit only a character they own. Transport-agnostic.
-func (tr tableRules) assertCharacterOwner(ctx context.Context, userID, characterID int64) (int, error) {
-	owner, err := tr.queries.GetCharacterOwner(ctx, characterID)
-	if errors.Is(err, sql.ErrNoRows) {
-		return http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
-	}
-	if err != nil {
-		return http.StatusInternalServerError, errors.New("Could not load character")
-	}
-	if owner != userID {
-		return http.StatusForbidden, fmt.Errorf(
-			"Caller %d can only edit their own character's vitals (character %d)", userID, characterID)
-	}
-	return http.StatusOK, nil
-}
-
 // intParam parses a chi :id-style path param, writing a 400 (like ParseIntPipe)
 // and returning false on a non-numeric value.
 func intParam(w http.ResponseWriter, r *http.Request, name string) (int64, bool) {
@@ -127,17 +79,4 @@ func intParam(w http.ResponseWriter, r *http.Request, name string) (int64, bool)
 		return 0, false
 	}
 	return int64(n), true
-}
-
-// Os três invólucros abaixo existem para os chamadores de dentro do `api` não
-// mudarem junto com a extração (ALE-278): a lógica mora no `sheet`, e aqui só
-// se passa o que o `Server` tem na mão. Eles somem quando cada cena receber as
-// dependências dela por construtor.
-
-func (sr sheetRules) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sheet.CharacterDTO, error) {
-	return sheet.Load(ctx, sr.queries, c)
-}
-
-func (sr sheetRules) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
-	return sheet.LoadAndCompute(ctx, sr.queries, sr.catalogs, row)
 }

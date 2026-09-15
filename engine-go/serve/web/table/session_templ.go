@@ -15,7 +15,7 @@ import (
 
 // O CICLO DA SESSÃO na tela (ALE-269, superfícies 3, 4 e 11).
 //
-// A regra mora no `session_lifecycle.go` e o caminho no `session.go`;
+// A regra mora no `table_session_lifecycle.go` e o caminho no `session.go`;
 // aqui é o desenho.
 
 // O botão que abre as configurações, e o SAIR ao lado dele.

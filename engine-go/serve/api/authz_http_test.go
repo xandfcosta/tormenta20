@@ -90,7 +90,7 @@ func TestRequireAuthRejectsMissingAndBrokenCredentials(t *testing.T) {
 		}
 	})
 
-	// The rule `middleware.go:29` exists on purpose — a token outliving its user
+	// The rule `account_middleware.go:29` exists on purpose — a token outliving its user
 	// must not authenticate. Nothing covered it before.
 	t.Run("JWT válido de usuário deletado", func(t *testing.T) {
 		ghost := seedUser(t, s, "fantasma@t20.local")

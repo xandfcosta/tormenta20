@@ -3,11 +3,13 @@
 #
 abilities
 accents
+access
 account
 action
 actions
 activates
 activations
+adapter
 address
 addresses
 admin
@@ -77,6 +79,7 @@ collection
 color
 colors
 combat
+combatants
 commands
 compose
 conditions
@@ -257,7 +260,6 @@ money
 move
 movement
 moves
-mutations
 name
 names
 nav

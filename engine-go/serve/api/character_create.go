@@ -192,3 +192,17 @@ func derefF64(p *float64, def float64) float64 {
 	}
 	return *p
 }
+
+// O `prepared` da magia é INTEGER no SQLite e `bool` em Go, e é só isso.
+//
+// Ele morava no `character_spells.go` junto com o DTO das rotas JSON da SPA.
+// Aquelas rotas morreram na ALE-277 e o arquivo virou fóssil inteiro — o
+// compilador do Go não acusa função de pacote sem uso, então ele atravessou a
+// reestruturação em silêncio. Isto aqui é o que sobreviveu, e mora com o único
+// chamador que tem (ALE-330).
+func boolToInt(b bool) int64 {
+	if b {
+		return 1
+	}
+	return 0
+}
