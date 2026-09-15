@@ -19,38 +19,25 @@ import (
 	"github.com/go-chi/cors"
 )
 
-// Server holds the API dependencies (config, DB handle, typed queries, primed
-// rules catalogs) and builds the router.
+// Server é a RAIZ DE COMPOSIÇÃO: ele guarda o que o app inteiro precisa e
+// cumpre a porta de cada cena.
 type Server struct {
 	cfg      platform.Config
 	db       *sql.DB
 	queries  *sqlcgen.Queries
-	catalogs *engine.Catalogs       // nil if the catalog snapshot failed to Load
-	sessions *live.SessionStore     // in-memory realtime tracker state (B.6)
-	boards   *board.BoardStore      // tabuleiros táticos vivos por sessão (ALE-124, vários na ALE-205)
-	presence *live.PresenceRegistry // who's-online per session room (B.6)
-	sse      *live.SSEHub           // leitores SSE por sessão e papel (ALE-253)
-	// bus é o barramento de eventos da casa (ALE-279): o que acontece numa mesa
-	// vira notícia tipada aqui, e quem desenha cena escuta.
-	//
-	// Aqui morava `fichas live.CharacterWatch`, o terceiro dos avisos que este
-	// barramento substituiu.
+	catalogs *engine.Catalogs       // nulo se o despejo do catálogo não carregou
+	sessions *live.SessionStore     // a fila e a cena de cada sessão, em memória
+	boards   *board.BoardStore      // os tabuleiros táticos vivos por sessão
+	presence *live.PresenceRegistry // quem está online em cada sala
+	sse      *live.SSEHub           // os leitores SSE por sessão e papel
+	// bus é o barramento: o que acontece numa mesa vira notícia tipada, e quem
+	// desenha cena escuta.
 	bus   *events.Bus
-	livro livroServido // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
-	// tableScene é a cena da Mesa, montada uma vez (ALE-278). Ver o construtor.
+	livro livroServido // o PDF do livro, quando `LIVRO_PDF` aponta para um
+	// tableScene é a cena da Mesa, montada UMA vez — ver o construtor.
 	tableScene table.Scene
-	// Aqui moravam a LENTE (ALE-193, ALE-269) e as ABAS ESCOLHIDAS (ALE-205),
-	// e elas foram para a `table.Scene` na ALE-278.
-	//
-	// O argumento delas não mudou: as duas moram no SERVIDOR e não num sinal do
-	// navegador porque o stream não pergunta nada a ninguém — um modo em
-	// `data-show` seria desfeito pelo primeiro quadro do SSE. O que mudou foi o
-	// DONO: a pergunta "quem está vendo como a mesa vê" e "que tabuleiro cada um
-	// está olhando" só existe numa tela, e um campo do `*Server` dizia o
-	// contrário. Por isso a cena é montada UMA vez, no registro das rotas.
-	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
-	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
-	// updates. Mirrors the per-session lock used by the realtime store.
+	// charMu serializa as escritas por personagem (id → *sync.Mutex), para
+	// cliques rápidos de dano e vitais não se perderem no ler-computar-gravar.
 	charMu sync.Map
 	// emSegundoPlano conta o trabalho que continua DEPOIS da resposta, e hoje é
 	// um só: a persistência do estado da sessão, disparada em goroutine para o
@@ -75,29 +62,16 @@ func (s *Server) WaitForBackground() {
 	s.emSegundoPlano.Wait()
 }
 
-// characterChanged avisa as mesas AO VIVO que a ficha de um personagem mudou
-// por HTTP (ALE-245).
+// characterChanged avisa as mesas AO VIVO que uma ficha mudou.
 //
-// O mestre aplica "Caído" num PC pela ficha do combatente, e sem isto a tela do
-// jogador não fica sabendo. É pior que o chip faltando: o motor deriva Defesa e
-// perícias da condição (ALE-28), então os dois passam a ver números diferentes
-// do mesmo personagem, sem nada na tela dizendo que discordam.
-//
-// Era um GANCHO (`notifyCharacterChanged`) preenchido pelo `SocketHandler()`, e
-// tinha de ser: o gateway do socket guardava `s *Server`, e o ponteiro nunca ia
-// na direção contrária — nenhum handler HTTP conseguia falar com a sala. Com
-// SSE o hub é campo do próprio `Server`, então a indireção sumiu junto com o
-// socket (ALE-253).
-//
-// E ela era um risco real, não só uma volta a mais: apagar o gateway deixou o
-// gancho SEM QUEM O LIGASSE, o Go inteiro seguiu verde — porque nulo era
-// caminho normal e havia teste afirmando isso — e quem acusou foi o e2e de dois
-// clientes. Um campo que precisa ser preenchido por outro arquivo para o
-// recurso existir é um recurso que nasce desligado.
+// Sem ele, o mestre aplica "Caído" pela ficha do combatente e a tela do jogador
+// não fica sabendo — e o motor deriva Defesa e perícias da condição, então os
+// dois passam a ver números diferentes do mesmo personagem sem nada dizer que
+// discordam.
 //
 // A busca é por sessão VIVA e só as que têm o personagem na fila: avisar mesa
-// que não tem aquele combatente mandaria todo cliente da casa refazer busca a
-// cada ficha salva.
+// que não o tem mandaria todo cliente da casa refazer busca a cada ficha salva.
+//
 // ELE É DO `sheetRules` E MORA NO ARQUIVO DO `Server`, e isso é decisão e não
 // descuido (ALE-330): ele é metade do mecanismo de serialização de escrita por
 // personagem — a trava, o middleware e o id vêm logo abaixo e são do `Server`.
@@ -114,7 +88,7 @@ func (sr sheetRules) characterChanged(characterID int64) {
 	}
 }
 
-// lockCharacter acquires the per-character write lock, returning the unlock func.
+// lockCharacter toma a trava de escrita deste personagem e devolve como soltar.
 func (s *Server) lockCharacter(id int64) func() {
 	m, _ := s.charMu.LoadOrStore(id, &sync.Mutex{})
 	Mu := m.(*sync.Mutex)
@@ -122,9 +96,9 @@ func (s *Server) lockCharacter(id int64) func() {
 	return Mu.Unlock
 }
 
-// serializeCharacterWrites serializes mutating requests (POST/PATCH/DELETE) per character,
-// so concurrent read-modify-write handlers (damage, vitals, items, effects…) don't race on
-// Load→compute→save and drop updates. Reads pass straight through.
+// serializeCharacterWrites serializa POST/PATCH/DELETE por personagem, para
+// dois handlers de ler-computar-gravar não perderem uma atualização. Leitura
+// passa direto.
 func (s *Server) serializeCharacterWrites(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet || r.Method == http.MethodHead {
@@ -139,8 +113,8 @@ func (s *Server) serializeCharacterWrites(next http.Handler) http.Handler {
 	})
 }
 
-// characterIDFromPath extracts the {id} from /personagens/{id}/... — used to key the write
-// lock. Returns false for paths without a numeric id (e.g. POST /characters create).
+// characterIDFromPath tira o {id} de `/personagens/{id}/…` para chavear a
+// trava. Falso quando não há id numérico no caminho.
 func characterIDFromPath(path string) (int64, bool) {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 	for i, seg := range parts {
@@ -153,13 +127,12 @@ func characterIDFromPath(path string) (int64, bool) {
 	return 0, false
 }
 
-// NewServer wires the API server. The DB is already opened + migrated (db.Open);
-// catalogs may be nil (best-effort) — rule-heavy handlers guard on it.
+// NewServer monta o servidor. O banco já chega aberto e migrado pelo `db.Open`;
+// `catalogs` pode ser nulo, e quem depende de regra confere.
 func NewServer(cfg platform.Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
 	q := sqlcgen.New(database)
-	// UM barramento para os dois stores e para o servidor (ALE-279). Compartilhar
-	// é o ponto: um por store devolveria o problema que a issue veio resolver,
-	// que é quem escuta ter de juntar as peças de novo.
+	// UM barramento para os dois stores e para o servidor: um por store faria
+	// quem escuta juntar as peças de novo.
 	bus := &events.Bus{}
 	srv := &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
@@ -172,94 +145,48 @@ func NewServer(cfg platform.Config, database *sql.DB, catalogs *engine.Catalogs)
 		presence: live.NewPresenceRegistry(),
 		sse:      live.NewSSEHub(),
 	}
-	// A CENA DA MESA é montada UMA vez, e o servidor a guarda.
-	//
-	// Ela tem estado — a LENTE (quem está vendo como a mesa vê) e a ABA que cada
-	// pessoa escolheu —, e um `table.New` por requisição daria um estado novo a
-	// cada pedido: metade da mesa não veria a lente da outra metade, e o gesto de
-	// mostrar à mesa nunca chegaria. Isso não é hipótese — foi o que oito testes
-	// acusaram quando o estado saiu daqui e virou campo da cena (ALE-278).
-	//
-	// O DONO continua sendo a cena; o servidor só guarda a instância, como
-	// guarda um store.
+	// A CENA DA MESA é montada UMA vez e o servidor guarda a instância: ela tem
+	// estado — a lente e a aba que cada pessoa escolheu —, e um `table.New` por
+	// requisição daria um estado novo a cada pedido.
 	srv.primeCatalogs(catalogs)
 	return srv
 }
 
-// primeCatalogs troca o motor e RECONSTRÓI a cena da Mesa.
-//
-// As duas coisas andam juntas, e é por isso que elas têm um nome: desde a fatia
-// 6 o adaptador da Mesa COPIA o `*engine.Catalogs` quando é montado, e a cena
-// da Mesa é montada uma vez só (ver acima). Trocar o campo sem reconstruir
-// deixa a Mesa com o motor de antes.
-//
-// Isso não é hipótese — foi medido. A bancada de teste prima os catálogos
-// DEPOIS do `NewServer`, e sete casos da Mesa passaram a estourar com nulo
-// dentro do motor: o painel do combatente pedia a ficha computada a um
-// `*Catalogs` que nunca tinha chegado à cena. Em produção o motor chega pelo
-// construtor e nunca muda, então o defeito só existia no teste — mas a
-// invariante é a mesma nos dois, e um campo que exige um segundo passo é um
-// campo que alguém vai trocar sozinho.
+// primeCatalogs troca o motor e RECONSTRÓI a cena da Mesa, e as duas coisas
+// andam juntas: o adaptador da Mesa COPIA o `*engine.Catalogs` quando é
+// montado, então trocar o campo sem reconstruir deixa a Mesa com o motor de
+// antes. A bancada prima DEPOIS do `NewServer`, e é lá que isso aparece.
 func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
 	s.tableScene = table.New(s.tableHost())
 }
 
-// sceneCore monta o núcleo que as cenas compartilham (ALE-278, fatia 6).
-//
-// Ele é montado por chamada e não guardado num campo: são três ponteiros
+// sceneCore é montado por chamada e não guardado num campo: são três ponteiros
 // copiados, e um campo daria ao `*Server` mais uma coisa para manter
 // consistente com ele mesmo.
 func (s *Server) sceneCore() sceneCore {
 	return sceneCore{queries: s.queries, catalogs: s.catalogs, livro: s.livro.endereco}
 }
 
-// Router monta o manipulador HTTP: middleware compartilhado e as rotas de
-// domínio. Elas NÃO carregam o prefixo `/api` — quem o põe é o `cmd/api`, com um
-// `http.StripPrefix("/api")`, em todo ambiente.
+// Router é o que sobrou da API JSON: SETE rotas, e nenhuma cena as chama — as
+// cenas leem o banco pelo `Queries` da porta delas e desenham HTML. Elas NÃO
+// carregam o prefixo `/api`: quem o põe é o `cmd/api`.
 //
-// > Aqui dizia que em desenvolvimento "o proxy do Vite tira o prefixo". Tirava,
-// > enquanto houve proxy; hoje os dois ambientes montam do mesmo jeito, e o
-// > `buildMux` explica por que isso é melhor que dois endereços (ALE-321).
-// Router é o que sobrou da API JSON depois da ALE-277: SETE rotas.
+// `/health` é INFRAESTRUTURA — quem bate nele é o `healthcheck` do compose e o
+// `-health` do próprio binário. É o contra-exemplo que esta casa já pagou uma
+// vez: "rota sem consumidor" se decide perguntando quem pergunta DE FORA.
 //
-// # Ela foi escrita para a SPA, e a SPA morreu
-//
-// Eram 76 rotas e 113 handlers. Medido antes do corte: **nenhuma cena chama
-// `/api/*`** — as onze cenas em Datastar leem o banco pelo `Queries` da porta
-// delas e desenham HTML. O único consumidor que sobrou é a SUÍTE DE E2E, e ela
-// usa seis endereços; o sétimo é o `/health`.
-//
-// # O que ficou, e por quê cada um
-//
-//   - `/health` é INFRAESTRUTURA, e é o contra-exemplo que esta casa já pagou
-//     uma vez: ele parece rota de API e quem bate nele é o `healthcheck` do
-//     compose e o `-health` do próprio binário. Tirar "rota sem consumidor" sem
-//     perguntar quem pergunta DE FORA foi o defeito que o CI pegou na ALE-272.
-//   - As seis restantes são a bancada do e2e: listar e apagar campanha de teste,
-//     listar ficha e limpar condição que uma execução anterior deixou, e montar
-//     a mesa descartável do spec do tabuleiro. Elas não são produto — são o que
-//     faz a suíte ser REPETÍVEL, e a alternativa (montar tudo pela tela) troca
-//     segundos de setup por minutos.
-//
-// # O que saiu junto, e que não aparece nesta função
-//
-// O `mountLiveRoutes` e o `/events`: dezoito rotas do tempo real da SPA. A Mesa
-// em Datastar tem stream próprio (`/mesa/{campanha}/{sessao}/fluxo`) e escreve
-// pelos comandos dela — medido, ninguém abria o `EventSource` daqui.
-//
-// E os quinze `*_http_test.go`, com 71 casos. Teste verde sobre código que
-// ninguém usa é a pior dívida: cobra manutenção e não protege nada.
+// As outras seis são a bancada do e2e, e é o que faz a suíte ser REPETÍVEL —
+// montar tudo pela tela troca segundos de setup por minutos.
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
-	// No configured origin → no CORS middleware at all, which is production: the
-	// binary serves the SPA itself, so every call is same-origin and no other
-	// site has business reaching it. Mounting it with []string{""} would deny
-	// the same requests, but says it by accident; the guard also keeps a future
-	// list-valued CORS_ORIGIN away from go-chi's empty-list default, which is
-	// "allow ALL origins" — with credentials on, that is every website (ALE-119).
+	// Sem origem configurada, NENHUM middleware de CORS — que é produção: o
+	// binário serve as cenas, então toda chamada é da mesma origem. Montá-lo com
+	// `[]string{""}` negaria as mesmas requisições, mas por acidente; e este
+	// guarda mantém um `CORS_ORIGIN` vazio longe do padrão do go-chi para lista
+	// vazia, que é liberar TODA origem — com credenciais ligadas, todo site.
 	if len(s.cfg.CORSOrigins) > 0 {
 		r.Use(cors.Handler(cors.Options{
 			AllowedOrigins:   s.cfg.CORSOrigins,

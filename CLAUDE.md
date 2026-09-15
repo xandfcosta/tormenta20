@@ -119,6 +119,12 @@ humano — não porque a suíte seja fraca.
   ser verdade é defeito entregue, igual a um `.md` errado — e quem o pega é a
   releitura, não o compilador. O `TestNoCitationNamesAMissingSymbol` cobre uma
   fatia: citação a símbolo que não existe mais.
+- **Não repita no comentário a regra que o guia já tem.** Medido na ALE-333:
+  "uma porta que devolve tipo do hospedeiro não é porta" estava escrita por
+  extenso em QUATRO `deps.go` — e no `engine-go/CLAUDE.md`, que é o dono dela.
+  Cinco cópias envelhecem em cinco velocidades, e a do guia é a única que alguém
+  procura. No código fica o que é específico DAQUELE arquivo; a regra fica no
+  guia, e o comentário no máximo aponta para ele.
 - Docstring em função pública: intenção e um exemplo de uso.
 
 > Aqui mandava **preservar** os comentários existentes e nunca apagá-los num

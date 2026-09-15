@@ -1,13 +1,9 @@
-// O comando api é o servidor HTTP do app, e ele é o processo INTEIRO: abre e
-// migra o SQLite, e serve as cenas em templ, a API JSON sob `/api/` e o fluxo ao
-// vivo por SSE — tudo na mesma porta, em todo ambiente.
+// O comando api é o processo INTEIRO: ele abre e migra o SQLite e serve as
+// cenas em templ, a API JSON sob `/api/` e o fluxo ao vivo por SSE — tudo na
+// mesma porta, em todo ambiente.
 //
-// > Aqui dizia que ele servia "as rotas de domínio que o front consome — pelo
-// > proxy do Vite em desenvolvimento, e ao lado da SPA buildada em produção
-// > (STATIC_DIR)". Nada disso existe desde a ALE-272 (ALE-321).
-//
-// The environment comes from `.env.<APP_ENV>` next to the package (ALE-119):
-// `air` boots it as development, `pnpm start` as production.
+// O ambiente vem do `.env.<APP_ENV>` ao lado do pacote: o `air` sobe como
+// desenvolvimento, o `pnpm start` como produção.
 package main
 
 import (
@@ -16,13 +12,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"mime"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
-	"strings"
 	"syscall"
 	"time"
 
@@ -32,16 +25,11 @@ import (
 	"t20engine/serve/api"
 )
 
-// SONDA DE SAÚDE, para o contêiner ter como se examinar (ALE-273).
+// SONDA DE SAÚDE: a imagem é `distroless` e não tem shell, `curl` nem `wget`,
+// então o `HEALTHCHECK` do compose chama o próprio binário com `-health`.
 //
-// A imagem é `distroless`: não tem shell, `curl` nem `wget`, e é por isso que a
-// sonda mora AQUI. O `HEALTHCHECK` do compose chama o próprio binário com
-// `-health`, ele bate no `/health` de si mesmo e sai 0 ou 1.
-//
-// Não é um segundo modo do programa: é uma requisição HTTP e um código de saída,
-// e ela lê a MESMA `PORT` que o servidor escuta — apontar para uma porta escrita
-// à mão daria uma sonda que reprova um servidor saudável no dia em que a porta
-// mudasse.
+// Ela lê a MESMA `PORT` que o servidor escuta — uma porta escrita à mão daria
+// uma sonda que reprova servidor saudável no dia em que a porta mudasse.
 func healthProbe(cfg platform.Config) int {
 	cliente := &http.Client{Timeout: 3 * time.Second}
 	resp, err := cliente.Get(fmt.Sprintf("http://127.0.0.1:%s/health", cfg.Port))
@@ -68,8 +56,8 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "-health" {
 		os.Exit(healthProbe(cfg))
 	}
-	// Fatal, not a warning: a production boot with a forgeable signing key is
-	// worse than no boot at all, and a warning scrolls away.
+	// Fatal e não aviso: subir em produção com chave de assinatura forjável é
+	// pior que não subir, e aviso rola para fora da tela.
 	if err := cfg.Validate(); err != nil {
 		log.Fatalf("config: %v", err)
 	}
@@ -97,16 +85,11 @@ func main() {
 		log.Fatalf("listen: %v", err)
 	}
 	// O `Shutdown` do `net/http` espera as REQUISIÇÕES, e a gravação do estado
-	// da sessão NÃO é uma: ela é disparada em goroutine depois da resposta, para
-	// o mestre não esperar o disco no meio do turno. Sem esta linha o último
-	// estado da noite pode ser cortado pelo `defer database.Close()` lá em cima
-	// — justamente a gravação que a janela de 10s do `serve` existe para deixar
-	// terminar, e que ela não alcança.
+	// da sessão não é uma: ela roda em goroutine depois da resposta. Sem esta
+	// linha, o último estado da noite é cortado pelo `defer database.Close()`.
 	//
-	// Aqui e não dentro do `serve`: o `defer` do banco é de MAIN, e esperar tem
-	// de acontecer antes dele. `log.Fatalf` acima pula os defers de qualquer
-	// forma, mas esse caminho é o de erro de listener — não há mesa no ar para
-	// perder.
+	// Aqui e não dentro do `serve` porque o `defer` do banco é de MAIN, e
+	// esperar tem de acontecer antes dele.
 	srv.WaitForBackground()
 }
 
@@ -163,13 +146,10 @@ func serve(ctx context.Context, cfg platform.Config, mux http.Handler) error {
 	return nil
 }
 
-// escutar sobe o listener: HTTPS quando o par de certificados está configurado,
-// HTTP puro quando não (ALE-118). Os dois caminhos são o MESMO processo servindo
-// SPA, API e fluxo de eventos — o TLS não acrescenta um segundo runtime.
-//
-// Um pedido `http://` chegando numa porta com TLS recebe "Client sent an HTTP
-// request to an HTTPS server" do próprio net/http. Feio, mas VISÍVEL — que é o
-// oposto do que acontecia se a configuração caísse para HTTP em silêncio.
+// escutar sobe o listener: HTTPS quando há par de certificados, HTTP puro
+// quando não. Um pedido `http://` numa porta com TLS recebe "Client sent an
+// HTTP request to an HTTPS server" do próprio net/http — feio, mas VISÍVEL, que
+// é o oposto de cair para HTTP em silêncio.
 func escutar(server *http.Server, cfg platform.Config) error {
 	if !cfg.TLSEnabled() {
 		return server.ListenAndServe()
@@ -180,8 +160,8 @@ func escutar(server *http.Server, cfg platform.Config) error {
 	return server.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
 }
 
-// primeCatalogs loads the rules catalogs for the mutation validators, best
-// effort: auth + read + vitals work without them; item/creation writes need them.
+// primeCatalogs carrega os catálogos de regra, em melhor esforço: entrar, ler e
+// mexer em vitais funciona sem eles; criar e equipar, não.
 func primeCatalogs(path string) *engine.Catalogs {
 	raw, err := os.ReadFile(path)
 	if err != nil {
@@ -197,52 +177,28 @@ func primeCatalogs(path string) *engine.Catalogs {
 	return catalogs
 }
 
-// buildMux monta o binário único: as cenas, a API em `/api/` e os
-// endereços antigos, tudo na mesma porta.
-//
-// Ele já teve DOIS formatos — um de produção, que servia o `dist` da SPA na
-// raiz, e um de desenvolvimento, em que o Vite servia o front e tirava o `/api`
-// antes de encaminhar para cá. A SPA saiu na ALE-272 (fatia 10c) e os dois
-// viraram um: não há mais front para servir nem proxy para atravessar, e o
-// `STATIC_DIR` deixou de existir junto com o `spaHandler`.
-//
-// O socket.io também teve caminho PRÓPRIO aqui ("/socket.io/"), fora do
-// `Router()` e por isso fora do CORS e do `requireAuth`. Com SSE o tempo real é
-// uma rota como as outras e essa exceção sumiu (ALE-253). O padrão se repete:
-// toda exceção neste mux acabou saindo.
+// buildMux monta o binário único: as cenas, os estáticos e a API em `/api/`,
+// tudo na mesma porta e em todo ambiente.
 func buildMux(srv *api.Server) *http.ServeMux {
 	mux := http.NewServeMux()
-	// AS CENAS, na RAIZ (ALE-280). Elas viviam sob `/piloto/` — o nome de uma
-	// migração que acabou quando a SPA saiu (ALE-272) —, e o prefixo ficou onde
-	// mais custa: no endereço que o jogador favorita.
-	//
-	// O `"/"` casa tudo que não tiver padrão mais específico, e é o que dá o
-	// CORTE SECO de graça: `/piloto/mesa/1/5` cai aqui e o roteador das cenas
-	// responde 404, sem redirecionamento nenhum a manter. Decisão do dono — o app
-	// nunca foi usado numa mesa real, então não há link de jogador a proteger.
-	//
-	// Os padrões abaixo continuam ganhando dele porque são mais específicos, e é
-	// o `ServeMux` do Go que decide: `/api/`, `/health`, `/fonts/` e o favicon.
-	// A porta da frente deixou de precisar de redireção — a raiz É o Hub agora.
+	// AS CENAS atendem na RAIZ, e o `"/"` casa tudo que não tiver padrão mais
+	// específico. Os de baixo ganham dele por serem mais específicos — é o
+	// `http.ServeMux` que decide.
 	mux.Handle("/", srv.WebRouter())
-	// As FONTES que a folha pede por caminho absoluto (`/fonts/…`). Elas eram
-	// servidas pelo `dist` da SPA em produção, e é por isso que o binário sem
-	// SPA desenhava toda tela com uma serifada do sistema.
+	// As FONTES, que a folha pede por caminho absoluto (`/fonts/…`).
 	mux.Handle("/fonts/", srv.FontsHandler())
 	mux.Handle("/favicon.svg", srv.FaviconHandler())
-	// A SAÚDE responde na RAIZ além de `/api/health`: quem pergunta ali é a
-	// infraestrutura, e ela não sabe de prefixo. Ver `HealthProbe`.
+	// A SAÚDE responde na RAIZ além de `/api/health`: quem pergunta é a
+	// infraestrutura, e ela não sabe de prefixo.
 	mux.Handle("/health", srv.HealthProbe())
-	// A API JSON fica sob `/api/`, e agora em TODO ambiente. Ela vivia na raiz
-	// em desenvolvimento porque o Vite tirava o prefixo antes de encaminhar; sem
-	// Vite, dois endereços para a mesma API seriam duas coisas para lembrar.
+	// A API JSON fica sob `/api/`. Dois endereços para a mesma API seriam duas
+	// coisas para lembrar.
 	mux.Handle("/api/", http.StripPrefix("/api", srv.Router()))
 	return mux
 }
 
-// announce diz onde apontar o navegador, com os endereços da REDE junto: os
-// jogadores abrem o app das máquinas deles, e sem esta linha o dono da mesa
-// teria de ir ler `ip addr` (ALE-119).
+// announce diz onde apontar o navegador, com os endereços da REDE junto: sem
+// eles o dono da mesa teria de ir ler `ip addr` para repassar à mesa.
 func announce(cfg platform.Config) {
 	log.Printf("t20 %s server listening on :%s (%s, db=%s)", cfg.AppEnv, cfg.Port, cfg.Scheme(), cfg.DatabasePath)
 	if cfg.TLSEnabled() && !cfg.CookieSecure {
@@ -253,13 +209,11 @@ func announce(cfg platform.Config) {
 	}
 }
 
-// lanURLs lists this host's non-loopback IPv4 addresses as URLs. The server
-// binds every interface, so these already work — they are just not discoverable
-// from the log line above.
+// lanURLs lista os IPv4 não-loopback desta máquina. O servidor já escuta em
+// todas as interfaces; o que falta é serem descobríveis.
 //
-// O esquema vem da config, e não é detalhe: este log É o endereço que o mestre
-// lê e repassa para a mesa. Com TLS ligado e `http://` impresso, os quatro
-// telefones batem num 400 e o sintoma parece do app (ALE-118).
+// O ESQUEMA vem da config, e não é detalhe: com TLS ligado e `http://`
+// impresso, os telefones da mesa batem num 400 e o sintoma parece do app.
 func lanURLs(cfg platform.Config) []string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
@@ -275,45 +229,4 @@ func lanURLs(cfg platform.Config) []string {
 		urls = append(urls, fmt.Sprintf("%s://%s:%s", cfg.Scheme(), ipNet.IP, cfg.Port))
 	}
 	return urls
-}
-
-// extraMimeTypes são as extensões que a tabela do `mime` do Go não conhece e que
-// este servidor precisa acertar. Uma tabela nossa, e não `mime.AddExtensionType`
-// no boot, porque o `mime` também lê o `/etc/mime.types` do HOST: o mesmo
-// binário responderia diferente em duas máquinas, e o teste passaria verde na
-// que tem o arquivo (ALE-118).
-var extraMimeTypes = map[string]string{
-	// Sem isto o manifest sai como `text/plain`, adivinhado pelo CONTEÚDO. O
-	// Chromium engole isso — medido: servido como `text/plain` ele mesmo assim
-	// parseia o manifest inteiro, sem erro. O tipo entra aqui porque é o que a
-	// especificação exige (um tipo de JSON) e porque não é o Chrome que decide
-	// sozinho: quem depende do manifest é também o Safari e o Firefox, e um
-	// `text/plain` é a diferença entre "funciona" e "funciona neste navegador".
-	".webmanifest": "application/manifest+json",
-}
-
-// contentTypeFor devolve o tipo do arquivo pelo nome, preferindo a tabela da
-// casa à do sistema.
-func contentTypeFor(file string) string {
-	ext := filepath.Ext(file)
-	if ctype, ok := extraMimeTypes[ext]; ok {
-		return ctype
-	}
-	return mime.TypeByExtension(ext)
-}
-
-// cacheControlFor decide por quanto tempo o navegador pode guardar (ALE-157).
-//
-// O Vite carimba um hash no nome de cada asset (`admin-BvY0grFM.js`), então
-// aquele arquivo NUNCA muda: mudar o conteúdo muda o nome. Isso é o que
-// autoriza `immutable` por um ano — sem hash no nome seria mentira, e um
-// jogador ficaria com a versão velha até limpar o cache.
-//
-// O resto revalida a cada carga, porque não é hasheado — a revalidação custa um
-// 304 vazio, que o `ServeFile` já responde pelo `Last-Modified`.
-func cacheControlFor(file string) string {
-	if strings.Contains(filepath.ToSlash(file), "/assets/") {
-		return "public, max-age=31536000, immutable"
-	}
-	return "no-cache"
 }
