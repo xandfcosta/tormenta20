@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 	"t20engine/serve/web/campaigns"
 )
 
@@ -36,7 +36,7 @@ func TestACampaignBornOnScreenLetsAPlayerIn(t *testing.T) {
 	jogador := seedUser(t, s, "jogador@t20.local")
 	heroi := seedCharacter(t, s, jogador, "Visitante", 10, 10, 0, 0)
 
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	c, err := s.campaignRules().createCampaign(context.Background(), sqlcgen.CreateCampaignParams{
 		Ownerid: mestre, Name: "Mesa Nova", Createdat: agora, Updatedat: agora,
 	})
@@ -65,7 +65,7 @@ func TestALinkOnlyOpensItsOwnTable(t *testing.T) {
 	jogador := seedUser(t, s, "jogador@t20.local")
 	heroi := seedCharacter(t, s, jogador, "Visitante", 10, 10, 0, 0)
 
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	minha, err := s.campaignRules().createCampaign(context.Background(), sqlcgen.CreateCampaignParams{
 		Ownerid: mestre, Name: "A minha", Createdat: agora, Updatedat: agora,
 	})

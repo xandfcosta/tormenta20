@@ -1,4 +1,4 @@
-package platform
+package wire
 
 // ptrInt64 acompanha o `OptInt`: sem ele o ajudante não consegue devolver
 // "ausente" distinto de "zero", que é a razão de ele existir.

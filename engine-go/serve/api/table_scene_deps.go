@@ -8,9 +8,9 @@ import (
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
-	"t20engine/infra/platform"
 	"t20engine/serve/web/sheetui"
 	"t20engine/serve/web/table"
 )
@@ -174,7 +174,7 @@ func (h tableHost) CloneCreatureBlock(ctx context.Context, creatureID, campaignI
 	if origem.Campaignid != campaignID {
 		return 0, fmt.Errorf("o bloco %d é de outra campanha", creatureID)
 	}
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	copia, err := h.rules.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
 		Campaignid: campaignID, Name: nome, Block: origem.Block,
 		Createdat: agora, Updatedat: agora,

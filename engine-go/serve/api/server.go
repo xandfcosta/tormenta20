@@ -9,9 +9,9 @@ import (
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
+	"t20engine/infra/config"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
-	"t20engine/infra/platform"
 	"t20engine/serve/web/table"
 
 	"github.com/go-chi/chi/v5"
@@ -22,7 +22,7 @@ import (
 // Server é a RAIZ DE COMPOSIÇÃO: ele guarda o que o app inteiro precisa e
 // cumpre a porta de cada cena.
 type Server struct {
-	cfg      platform.Config
+	cfg      config.Config
 	db       *sql.DB
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs       // nulo se o despejo do catálogo não carregou
@@ -128,7 +128,7 @@ func characterIDFromPath(path string) (int64, bool) {
 
 // NewServer monta o servidor. O banco já chega aberto e migrado pelo `db.Open`;
 // `catalogs` pode ser nulo, e quem depende de regra confere.
-func NewServer(cfg platform.Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
+func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
 	q := sqlcgen.New(database)
 	// UM barramento para os dois stores e para o servidor: um por store faria
 	// quem escuta juntar as peças de novo.

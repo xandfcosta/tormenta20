@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 	"testing"
 )
 
@@ -20,7 +20,7 @@ func arcanista(t *testing.T) (sceneFixture, int64) {
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: `{"Arcanista":{"caminho":"bruxo"}}`,
-		PowerChoices: "{}", CreatedAt: platform.NowISO(), UpdatedAt: platform.NowISO(),
+		PowerChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear a conjuradora: %v", err)
@@ -128,7 +128,7 @@ func TestWithoutMpTheCastIsRefused(t *testing.T) {
 	f, id := arcanista(t)
 	spell(t, f, id, "aprende/bola-de-fogo")
 	if err := f.s.sceneCore().Queries().SetMpCurrent(context.Background(), sqlcgen.SetMpCurrentParams{
-		MpCurrent: 1, UpdatedAt: platform.NowISO(), ID: id,
+		MpCurrent: 1, UpdatedAt: dbvalue.NowISO(), ID: id,
 	}); err != nil {
 		t.Fatalf("zerar o PM: %v", err)
 	}
@@ -193,7 +193,7 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}",
 		PowerChoices: `{"class.barbaro.totem-espiritual":["corvo"]}`,
-		CreatedAt:    platform.NowISO(), UpdatedAt: platform.NowISO(),
+		CreatedAt:    dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o totemista: %v", err)

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 
 	"t20engine/domain/engine"
 	"t20engine/infra/db/sqlcgen"
@@ -531,7 +531,7 @@ func (bs *BoardStore) Persist(ctx context.Context, sessionID int64, tabuleiroID 
 	// das abas na tela sai daquela coluna.
 	err = bs.q.SaveOpenBoard(ctx, sqlcgen.SaveOpenBoardParams{
 		Sessionid: sessionID, Boardid: b.ID, State: string(blob),
-		Openseq: b.Seq, Updatedat: platform.NowISO(),
+		Openseq: b.Seq, Updatedat: dbvalue.NowISO(),
 	})
 
 	bs.Mu.Lock()

@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // expertiseDef is one builtin perícia (name + keying attribute). Ordered as
@@ -53,10 +53,10 @@ func (h forgeHost) InsertCharacter(ctx context.Context, ownerID int64, name stri
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := h.queries.WithTx(tx)
-	now := platform.NowISO()
+	now := dbvalue.NowISO()
 
 	id, err := q.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
-		OwnerId: ownerID, Name: name, Origin: body.Origin, God: platform.NullString(body.God),
+		OwnerId: ownerID, Name: name, Origin: body.Origin, God: dbvalue.NullString(body.God),
 		GodPower: derefStr(body.GodPower, ""), Tibar: derefF64(body.Tibar, 0), Level: totalLevel,
 		HpMax: body.HpMax, HpCurrent: body.HpCurrent, MpMax: body.MpMax, MpCurrent: body.MpCurrent,
 		Strength: body.Strength, Dexterity: body.Dexterity, Constitution: body.Constitution,
@@ -93,9 +93,9 @@ func (h forgeHost) InsertCharacter(ctx context.Context, ownerID int64, name stri
 	}
 	for _, it := range body.Items {
 		if _, err := q.CreateItem(ctx, sqlcgen.CreateItemParams{
-			Characterid: id, Catalogid: platform.NullString(it.CatalogID), Name: derefStr(it.Name, ""),
+			Characterid: id, Catalogid: dbvalue.NullString(it.CatalogID), Name: derefStr(it.Name, ""),
 			Quantity: live.DerefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
-			Equipped: platform.NullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
+			Equipped: dbvalue.NullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
 		}); err != nil {
 			return 0, err
 		}
@@ -153,7 +153,7 @@ func (h forgeHost) recomputeVitals(
 	}
 	if err := h.queries.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{
 		HpMax: next.HpMax, HpCurrent: next.HpCurrent, MpMax: next.MpMax, MpCurrent: next.MpCurrent,
-		UpdatedAt: platform.NowISO(), ID: id,
+		UpdatedAt: dbvalue.NowISO(), ID: id,
 	}); err != nil {
 		return err
 	}

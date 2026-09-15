@@ -3,8 +3,8 @@ package sheet
 import (
 	"encoding/json"
 	"t20engine/domain/engine"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // CharacterDTO é o agregado do personagem que a fronteira JSON entrega. O sqlc
@@ -113,7 +113,7 @@ func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 		OwnerID:              c.Ownerid,
 		Name:                 c.Name,
 		Origin:               c.Origin,
-		God:                  platform.NullToPtr(c.God),
+		God:                  dbvalue.NullToPtr(c.God),
 		GodPower:             c.Godpower,
 		Tibar:                c.Tibar,
 		Level:                c.Level,

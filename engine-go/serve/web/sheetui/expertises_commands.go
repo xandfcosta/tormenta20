@@ -9,8 +9,8 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/engine"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // OS COMANDOS DAS ABAS PERÍCIAS E PROFICIÊNCIAS.
@@ -42,7 +42,7 @@ func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) 
 		}
 		depois := e.Trained == 0
 		_, err := s.deps.Queries().UpdateExpertise(r.Context(), sqlcgen.UpdateExpertiseParams{
-			Trained: platform.NullBool(&depois), CharacterId: row.ID, Name: nome,
+			Trained: dbvalue.NullBool(&depois), CharacterId: row.ID, Name: nome,
 		})
 		return err
 	}
@@ -61,7 +61,7 @@ func swapAttribute(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) e
 	}
 	nome := expertiseName(r)
 	_, err := s.deps.Queries().UpdateExpertise(r.Context(), sqlcgen.UpdateExpertiseParams{
-		Attribute: platform.NullString(&atributo), CharacterId: row.ID, Name: nome,
+		Attribute: dbvalue.NullString(&atributo), CharacterId: row.ID, Name: nome,
 	})
 	if err != nil {
 		return fmt.Errorf("a perícia %q não é desta ficha", nome)

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"t20engine/domain/account"
 	"t20engine/infra/db"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 	"testing"
 	"time"
 
@@ -163,7 +163,7 @@ func TestExpiredInviteIsRejected(t *testing.T) {
 	admin := seedUser(t, s, adminEmail)
 	past := time.Now().Add(-time.Minute)
 	invite, err := s.queries.CreateAccountInvite(context.Background(), sqlcgen.CreateAccountInviteParams{
-		Token: "convite-vencido", Createdby: admin, Createdat: platform.IsoAt(past), Expiresat: platform.IsoAt(past),
+		Token: "convite-vencido", Createdby: admin, Createdat: dbvalue.IsoAt(past), Expiresat: dbvalue.IsoAt(past),
 	})
 	if err != nil {
 		t.Fatalf("semear convite: %v", err)

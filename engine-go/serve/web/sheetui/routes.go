@@ -9,8 +9,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 	"t20engine/serve/web/ui"
 )
 
@@ -230,7 +230,7 @@ func touchesVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) er
 		return fmt.Errorf("vital %q não existe: são 'pv' e 'pm'", qual)
 	}
 	return s.deps.Queries().SetVitalsCurrent(r.Context(), sqlcgen.SetVitalsCurrentParams{
-		HpCurrent: hp, MpCurrent: mp, UpdatedAt: platform.NowISO(), ID: row.ID,
+		HpCurrent: hp, MpCurrent: mp, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 	})
 }
 

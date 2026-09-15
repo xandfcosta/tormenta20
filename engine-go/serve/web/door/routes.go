@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/domain/account"
-	"t20engine/infra/platform"
+	"t20engine/infra/wire"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
@@ -102,7 +102,7 @@ func (s Scene) handleSignUpSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	v := signUpView{
-		Email:  platform.NormalizeEmail(r.PostFormValue("email")),
+		Email:  wire.NormalizeEmail(r.PostFormValue("email")),
 		Name:   strings.TrimSpace(r.PostFormValue("nome")),
 		Invite: r.PostFormValue("convite"),
 	}
@@ -202,7 +202,7 @@ func (s Scene) handleResetSubmit(w http.ResponseWriter, r *http.Request) {
 // dizer isso de cara é melhor que falhar no envio com a senha já digitada duas
 // vezes.
 func (s Scene) linkView(r *http.Request, token string) resetView {
-	v := resetView{Token: token, Errors: platform.FieldErrorMap{}}
+	v := resetView{Token: token, Errors: wire.FieldErrorMap{}}
 	email, ok := s.deps.ResetLinkOwner(r.Context(), token)
 	if !ok {
 		return v
@@ -264,13 +264,13 @@ func requestedDestination(bruto string) string {
 	return bruto
 }
 
-// withFormFieldNames traduz as chaves do `platform.FieldErrorMap` da API (`password`)
+// withFormFieldNames traduz as chaves do `wire.FieldErrorMap` da API (`password`)
 // para os nomes dos campos DESTE formulário (`senha`).
 //
-// A tradução é aqui e não no validador porque o `platform.FieldErrorMap` é contrato de
+// A tradução é aqui e não no validador porque o `wire.FieldErrorMap` é contrato de
 // fio da API JSON — renomear a chave lá quebraria o cliente que a lê.
-func withFormFieldNames(fields platform.FieldErrorMap) platform.FieldErrorMap {
-	out := platform.FieldErrorMap{}
+func withFormFieldNames(fields wire.FieldErrorMap) wire.FieldErrorMap {
+	out := wire.FieldErrorMap{}
 	nomes := map[string]string{"password": "senha", "name": "nome", "email": "email"}
 	for chave, msgs := range fields {
 		if nome, ok := nomes[chave]; ok {

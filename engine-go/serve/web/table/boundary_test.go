@@ -54,7 +54,7 @@ var permitidos = map[string]bool{
 	"t20engine/domain/engine":     true, // a medição de área e a ficha computada
 	"t20engine/infra/events":      true, // o barramento, para o stream saber o que houve
 	"t20engine/domain/markdown":   true, // as notas do mestre, que saíram daqui na fatia 1
-	"t20engine/infra/platform":    true, // o carimbo ISO e o envelope de resposta
+	"t20engine/infra/db/dbvalue":  true,
 	"t20engine/domain/board":      true, // o mapa: peça, marcador, terreno, lugar
 	"t20engine/serve/web/bookui":  true, // o endereço do livro que o bestiário linka
 	"t20engine/serve/web/master":  true, // o MESMO desenho do bestiário do mestre

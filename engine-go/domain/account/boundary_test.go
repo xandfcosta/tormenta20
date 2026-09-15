@@ -25,7 +25,7 @@ import (
 // É a mesma lição que o `search` documenta com o `Fold`, e a única diferença é
 // que lá a cópia estava errada na CONTA e aqui na FRASE. As duas compilam.
 var permitidos = map[string]bool{
-	"t20engine/infra/platform": true, // o mapa de erro por campo, e nada mais
+	"t20engine/infra/wire": true,
 }
 
 func TestTheAccountRulesStayALeaf(t *testing.T) {

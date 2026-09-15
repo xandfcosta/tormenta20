@@ -8,8 +8,9 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
+	"t20engine/infra/wire"
 )
 
 // O NASCIMENTO DO HERÓI.
@@ -49,8 +50,8 @@ type forgeAnswers struct {
 // Devolve TODAS as recusas de uma vez, e não a primeira: quem preencheu a folha
 // inteira merece ver tudo o que falta numa passada, e não descobrir o segundo
 // erro depois de consertar o primeiro.
-func forgeRefusals(folha forgeAnswers) platform.FieldErrorMap {
-	erros := platform.FieldErrorMap{}
+func forgeRefusals(folha forgeAnswers) wire.FieldErrorMap {
+	erros := wire.FieldErrorMap{}
 	if nome := strings.TrimSpace(folha.Name); nome == "" || len([]rune(nome)) > heroNameMax {
 		erros["name"] = []string{fmt.Sprintf(
 			"O nome é obrigatório e cabe em %d caracteres.", heroNameMax)}
@@ -91,7 +92,7 @@ func choiceRefusal(valor, oQueFalta, oQueE string) string {
 // nasceria desarmado sem ter escolhido isso; mandar o que o kit NÃO oferece
 // também é, porque é o cliente concedendo a si mesmo uma brunea que a classe
 // não sabe vestir.
-func gearRefusals(folha forgeAnswers, kit engine.StartingKit, erros platform.FieldErrorMap) {
+func gearRefusals(folha forgeAnswers, kit engine.StartingKit, erros wire.FieldErrorMap) {
 	if erro := weaponFitsKit(folha.SimpleWeapon, "weapon-simple", true); erro != "" {
 		erros["weaponSimple"] = []string{erro}
 	}
@@ -244,7 +245,7 @@ func (s Scene) fillPools(r *http.Request, id int64) error {
 	}
 	return s.deps.Queries().SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
 		HpMax: dto.HpMax, HpCurrent: dto.HpMax, MpMax: dto.MpMax, MpCurrent: dto.MpMax,
-		UpdatedAt: platform.NowISO(), ID: id,
+		UpdatedAt: dbvalue.NowISO(), ID: id,
 	})
 }
 

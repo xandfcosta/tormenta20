@@ -7,8 +7,8 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/catalog"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // OS COMANDOS DA ABA MAGIAS (ALE-272, fatia 6).
@@ -20,7 +20,7 @@ func learnSpell(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 		return fmt.Errorf("a magia %q não existe no livro", id)
 	}
 	_, err := s.deps.Queries().CreateSpell(r.Context(), sqlcgen.CreateSpellParams{
-		Characterid: row.ID, Catalogspellid: id, Prepared: 0, Learnedat: platform.NowISO(),
+		Characterid: row.ID, Catalogspellid: id, Prepared: 0, Learnedat: dbvalue.NowISO(),
 	})
 	return err
 }

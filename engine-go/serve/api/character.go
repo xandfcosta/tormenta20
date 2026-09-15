@@ -7,7 +7,7 @@ import (
 
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
+	"t20engine/infra/httpio"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -17,10 +17,10 @@ import (
 func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 	out, err := s.characterList(r.Context(), currentUser(r).ID)
 	if err != nil {
-		platform.WriteError(w, http.StatusInternalServerError, "Could not list characters")
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not list characters")
 		return
 	}
-	platform.WriteJSON(w, http.StatusOK, out)
+	httpio.WriteJSON(w, http.StatusOK, out)
 }
 
 // characterList é o elenco de quem chama, agregado.
@@ -64,7 +64,7 @@ func (s *Server) characterFor(w http.ResponseWriter, r *http.Request) (sqlcgen.C
 	}
 	row, status, err := s.tableRules().authorizedCharacter(r.Context(), currentUser(r), id)
 	if err != nil {
-		platform.WriteError(w, status, err.Error())
+		httpio.WriteError(w, status, err.Error())
 		return sqlcgen.Character{}, false
 	}
 	return row, true
@@ -73,9 +73,9 @@ func (s *Server) characterFor(w http.ResponseWriter, r *http.Request) (sqlcgen.C
 // intParam parses a chi :id-style path param, writing a 400 (like ParseIntPipe)
 // and returning false on a non-numeric value.
 func intParam(w http.ResponseWriter, r *http.Request, name string) (int64, bool) {
-	n, err := platform.ParseInt(chi.URLParam(r, name))
+	n, err := httpio.ParseInt(chi.URLParam(r, name))
 	if err != nil {
-		platform.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Validation failed (numeric string is expected for %q)", name))
+		httpio.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Validation failed (numeric string is expected for %q)", name))
 		return 0, false
 	}
 	return int64(n), true

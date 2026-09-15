@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // O PV do rastreador É o PV da ficha, e ele atravessa uma PORTA.
@@ -58,7 +58,7 @@ func applyDamagePlan(
 	}
 	if plan.HpCurrent != int(row.Hpcurrent) {
 		if err := q.SetHpCurrent(ctx, sqlcgen.SetHpCurrentParams{
-			HpCurrent: int64(plan.HpCurrent), UpdatedAt: platform.NowISO(), ID: row.ID,
+			HpCurrent: int64(plan.HpCurrent), UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 		}); err != nil {
 			return sheet.DamagePlan{}, err
 		}
@@ -122,7 +122,7 @@ func (v sheetVitals) persistVitals(
 	ctx context.Context, charID, hp int64, writeHp bool, mp int64, writeMp bool,
 ) (*int64, *int64, error) {
 	if writeHp || writeMp {
-		params := sqlcgen.UpdateVitalsParams{UpdatedAt: platform.NowISO(), ID: charID}
+		params := sqlcgen.UpdateVitalsParams{UpdatedAt: dbvalue.NowISO(), ID: charID}
 		if writeHp {
 			params.HpCurrent = nullInt(&hp)
 		}

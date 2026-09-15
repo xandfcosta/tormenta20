@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"strings"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 )
 
 // setBuilder acumula um UPDATE parcial: as colunas que o corpo do PATCH de fato
@@ -56,7 +56,7 @@ func (b *setBuilder) exec(ctx context.Context, db *sql.DB, prefix string, id int
 func (b *setBuilder) execTouched(ctx context.Context, db *sql.DB, prefix string, id int64) error {
 	stamped := setBuilder{
 		columns: append(append([]string{}, b.columns...), "updatedAt = ?"),
-		args:    append(append([]any{}, b.args...), platform.NowISO()),
+		args:    append(append([]any{}, b.args...), dbvalue.NowISO()),
 	}
 	return stamped.exec(ctx, db, prefix, id)
 }

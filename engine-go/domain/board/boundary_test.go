@@ -32,7 +32,8 @@ var permitidos = map[string]bool{
 	// compartilhada de propósito.
 	"t20engine/domain/live": true,
 	// Não é domínio nenhum; a direção é de mão única e o guarda de lá garante.
-	"t20engine/infra/platform": true,
+	"t20engine/infra/db/dbvalue": true,
+	"t20engine/infra/wire":       true,
 	// A persistência do mapa é do tabuleiro: `session_boards` é tabela dele.
 	"t20engine/infra/db/sqlcgen": true,
 	// As regras de alcance e deslocamento do LIVRO já vivem em `engine/board_*`,

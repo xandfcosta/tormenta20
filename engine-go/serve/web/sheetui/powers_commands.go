@@ -11,8 +11,8 @@ import (
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // OS COMANDOS DA ABA PODERES.
@@ -124,7 +124,7 @@ func (s Scene) chargePm(r *http.Request, row sqlcgen.Character, quanto int) erro
 		depois = 0
 	}
 	return s.deps.Queries().SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{
-		MpCurrent: depois, UpdatedAt: platform.NowISO(), ID: row.ID,
+		MpCurrent: depois, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 	})
 }
 

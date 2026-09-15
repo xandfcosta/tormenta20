@@ -11,7 +11,7 @@ import (
 // ENTRAR NUMA MESA, como regra e não como manipulador HTTP.
 //
 // As sete checagens viviam dentro de um `http.HandlerFunc`, misturadas a
-// `platform.WriteError`. Uma segunda tela que precisasse delas só teria duas
+// `httpio.WriteError`. Uma segunda tela que precisasse delas só teria duas
 // saídas: chamar a própria rota por dentro, ou copiar as sete.
 //
 // Cada recusa tem ERRO PRÓPRIO, e não uma string, porque cada uma vira uma

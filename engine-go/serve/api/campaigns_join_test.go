@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 	"t20engine/serve/web/campaigns"
 	"t20engine/serve/web/ui"
 	"testing"
@@ -56,7 +56,7 @@ func postaCarta(t *testing.T, s *Server, userID int64, form url.Values) *httptes
 
 func seedCampanha(t *testing.T, s *Server, dono int64, nome, convite string) int64 {
 	t.Helper()
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	c, err := s.queries.CreateCampaign(context.Background(), sqlcgen.CreateCampaignParams{
 		Ownerid: dono, Name: nome, Createdat: agora, Updatedat: agora,
 	})

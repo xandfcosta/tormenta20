@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/httpio"
+	"t20engine/infra/wire"
 
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -59,7 +61,7 @@ func (sr sheetRules) syncLevelVitals(r *http.Request, id int64, dto sheet.Charac
 	if changed {
 		if err := sr.queries.SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
 			HpMax: next.HpMax, HpCurrent: next.HpCurrent, MpMax: next.MpMax, MpCurrent: next.MpCurrent,
-			UpdatedAt: platform.NowISO(), ID: id,
+			UpdatedAt: dbvalue.NowISO(), ID: id,
 		}); err != nil {
 			return stored, err
 		}
@@ -81,11 +83,11 @@ func (e classLevelError) Error() string { return e.Frase }
 func writeLevelFailure(w http.ResponseWriter, err error) {
 	var recusa classLevelError
 	if errors.As(err, &recusa) {
-		platform.WriteFieldError(w, http.StatusBadRequest, recusa.Frase,
-			platform.FieldErrorMap{recusa.Campo: {recusa.Frase}})
+		httpio.WriteFieldError(w, http.StatusBadRequest, recusa.Frase,
+			wire.FieldErrorMap{recusa.Campo: {recusa.Frase}})
 		return
 	}
-	platform.WriteError(w, http.StatusInternalServerError, "Could not update class level")
+	httpio.WriteError(w, http.StatusInternalServerError, "Could not update class level")
 }
 
 // applyClassLevel é A REGRA do degrau de nível, e ela é UMA para as duas telas.
@@ -136,7 +138,7 @@ func (sr sheetRules) applyClassLevel(
 		return dto, nil, 0, storedVitals{}, err
 	}
 	if err := sr.queries.SetCharacterLevel(r.Context(), sqlcgen.SetCharacterLevelParams{
-		Level: total, UpdatedAt: platform.NowISO(), ID: row.ID,
+		Level: total, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 	}); err != nil {
 		return dto, nil, 0, storedVitals{}, err
 	}

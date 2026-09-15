@@ -12,7 +12,7 @@ import (
 	"t20engine/serve/web/bookui"
 	"t20engine/serve/web/routes"
 
-	"t20engine/infra/platform"
+	"t20engine/infra/config"
 )
 
 // O LIVRO servido pela mesa: o Tormenta 20 em PDF, entregue pelo próprio
@@ -44,7 +44,7 @@ type livroServido struct {
 // `no-store`, e quem carrega versão é o PDF que ela pede.
 
 // A divisão com `web/reader` é por DEPENDÊNCIA e não por tamanho: o que ficou
-// aqui lê `platform.Config`, chama `os.Stat` e devolve um `http.Handler` sobre
+// aqui lê `config.Config`, chama `os.Stat` e devolve um `http.Handler` sobre
 // um arquivo do disco do dono da mesa. Uma cena que recebesse a `Config` para
 // saber onde o PDF está teria o hospedeiro dentro dela.
 
@@ -54,7 +54,7 @@ type livroServido struct {
 // sem o livro, e derrubar o servidor por causa de um botão seria trocar um
 // problema pequeno por um grande. O aviso vai para o log com o caminho que
 // falhou, porque configurar e não ver o botão é o sintoma sem explicação.
-func abreOLivro(cfg platform.Config) livroServido {
+func abreOLivro(cfg config.Config) livroServido {
 	if cfg.LivroPDF == "" {
 		return livroServido{}
 	}

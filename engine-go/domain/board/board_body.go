@@ -1,13 +1,12 @@
 package board
 
-import "t20engine/infra/platform"
+import "t20engine/infra/wire"
 
 // Leitura dos campos do corpo que são do TABULEIRO (ALE-254).
 //
-// Saíram do `body_fields.go` quando o `platform/` nasceu: aqueles leem campo
-// genérico e não sabem o que é peça; estes leem PEÇA, e peça é conceito do
-// jogo. A linha do glossário sobre `platform` diz exatamente isto — se um
-// conceito do jogo entrar lá, a fronteira está errada.
+// Eles são os irmãos dos leitores do `infra/wire`: aqueles leem campo genérico
+// e não sabem o que é peça; estes leem PEÇA, e peça é conceito do jogo. Se um
+// conceito do jogo entrar na infraestrutura, a fronteira está errada.
 
 // Aqui morava o `ParseBoardToken`, que lia a peça do CORPO da mensagem — e que
 // nunca teve chamador, nem de produção nem de teste (ALE-291).
@@ -36,15 +35,15 @@ func ParseTokenPatch(raw any) tokenPatch {
 	if hidden, ok := m["hidden"].(bool); ok {
 		patch.Hidden = &hidden
 	}
-	if footprint, ok := platform.IntField(m, "footprint"); ok {
+	if footprint, ok := wire.IntField(m, "footprint"); ok {
 		side := int(footprint)
 		patch.Footprint = &side
 	}
-	if x, ok := platform.IntField(m, "x"); ok {
+	if x, ok := wire.IntField(m, "x"); ok {
 		col := int(x)
 		patch.X = &col
 	}
-	if y, ok := platform.IntField(m, "y"); ok {
+	if y, ok := wire.IntField(m, "y"); ok {
 		row := int(y)
 		patch.Y = &row
 	}

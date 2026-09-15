@@ -10,8 +10,8 @@ import (
 
 	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // OS COMANDOS DA ABA EFEITOS.
@@ -46,7 +46,7 @@ func toggleBookCondition(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 	}
 	blob := sheet.MarshalStrings(&depois)
 	if err := s.deps.Queries().UpdateConditions(r.Context(), sqlcgen.UpdateConditionsParams{
-		ActiveConditions: blob, UpdatedAt: platform.NowISO(), ID: row.ID,
+		ActiveConditions: blob, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 	}); err != nil {
 		return err
 	}

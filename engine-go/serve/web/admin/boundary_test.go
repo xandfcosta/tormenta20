@@ -22,7 +22,7 @@ import (
 var permitidos = map[string]bool{
 	"t20engine/serve/web/ui":     true, // o kit de apresentação e a casca
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco
-	"t20engine/infra/platform":   true, // não é domínio nenhum: aqui, o carimbo ISO
+	"t20engine/infra/db/dbvalue": true,
 }
 
 func TestTheAdminDoesNotImportItsHost(t *testing.T) {

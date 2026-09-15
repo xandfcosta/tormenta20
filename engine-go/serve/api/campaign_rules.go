@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 
 	"t20engine/infra/db/sqlcgen"
 )
@@ -45,7 +45,7 @@ func (rules campaignRules) saveIgnoredRules(ctx context.Context, campanhaID int6
 	if err := rules.queries.ClearIgnoredRulesForCampaign(ctx, campanhaID); err != nil {
 		return err
 	}
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	for _, regra := range regras {
 		if err := rules.queries.IgnoreRuleInCampaign(ctx, sqlcgen.IgnoreRuleInCampaignParams{
 			Campaignid: campanhaID, Rule: regra, Updatedat: agora,

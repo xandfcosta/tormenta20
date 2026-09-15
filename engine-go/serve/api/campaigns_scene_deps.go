@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 
 	"t20engine/domain/board"
 	"t20engine/domain/live"
@@ -155,7 +155,7 @@ func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUs
 func (h campaignsHost) OpenTable(
 	ctx context.Context, donoID int64, nome, descricao string,
 ) (int64, error) {
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	c, err := h.rules.createCampaign(ctx, sqlcgen.CreateCampaignParams{
 		Ownerid: donoID, Name: nome, Description: descricaoOuNulo(descricao),
 		Createdat: agora, Updatedat: agora,

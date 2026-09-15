@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"t20engine/infra/config"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 	"t20engine/serve/web/hub"
 	"t20engine/serve/web/routes"
 )
@@ -18,7 +18,7 @@ import (
 // estado nenhum.
 type hubHost struct {
 	sceneCore
-	cfg platform.Config
+	cfg config.Config
 }
 
 func (s *Server) hubHost() hubHost { return hubHost{sceneCore: s.sceneCore(), cfg: s.cfg} }

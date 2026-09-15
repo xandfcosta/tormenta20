@@ -7,7 +7,7 @@ import (
 	"strings"
 	"t20engine/domain/catalog"
 	"t20engine/domain/live"
-	"t20engine/infra/platform"
+	"t20engine/infra/wire"
 )
 
 // As regras da iniciativa e do descanso, fora de qualquer transporte: quem as
@@ -84,55 +84,55 @@ func (tr tableRules) populateParty(sessionID int64, combatants []combatant) (*li
 // (rótulo mais iniciativa) ou um personagem (nome e vitais buscados pelo
 // `resolveCombatant`, com sobreposições opcionais do cliente).
 func (tr tableRules) materializeEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (live.InitiativeEntry, error) {
-	if _, hasChar := platform.IntField(input, "characterId"); !hasChar {
+	if _, hasChar := wire.IntField(input, "characterId"); !hasChar {
 		return materializeNpcEntry(input)
 	}
 	return tr.materializeCharacterEntry(ctx, callerID, campaignID, input)
 }
 
 func materializeNpcEntry(input map[string]any) (live.InitiativeEntry, error) {
-	label := strings.TrimSpace(platform.StringField(input, "label"))
+	label := strings.TrimSpace(wire.StringField(input, "label"))
 	if label == "" {
 		return live.InitiativeEntry{}, errors.New("entry.label is required for NPC entries")
 	}
-	initiative, hasInit := platform.IntField(input, "initiative")
+	initiative, hasInit := wire.IntField(input, "initiative")
 	if !hasInit {
 		return live.InitiativeEntry{}, errors.New("entry.initiative is required")
 	}
 	typ := "npc"
-	if t := platform.StringField(input, "type"); t != "" {
+	if t := wire.StringField(input, "type"); t != "" {
 		typ = t
 	}
 	// O PV vai junto quando o cliente o semeia (um monstro vindo do bestiário
 	// sabe o próprio pool). Ausente continua ausente: um NPC pelado não tem vida
 	// a acompanhar, e uma barra zerada diria algo que não é o caso.
 	entry := live.InitiativeEntry{Label: label, Initiative: int(initiative), Type: typ}
-	if hp, ok := platform.IntField(input, "hpCurrent"); ok {
+	if hp, ok := wire.IntField(input, "hpCurrent"); ok {
 		entry.HpCurrent = &hp
 	}
-	if hp, ok := platform.IntField(input, "hpMax"); ok {
+	if hp, ok := wire.IntField(input, "hpMax"); ok {
 		entry.HpMax = &hp
 	}
 	// O id do bestiário vem do cliente porque é ele que escolheu o verbete; o
 	// servidor não valida contra o catálogo de propósito — um id desconhecido
 	// vira "sem bloco" na tela, não um erro que derruba a adição no meio do
 	// combate.
-	if monsterID := strings.TrimSpace(platform.StringField(input, "monsterId")); monsterID != "" {
+	if monsterID := strings.TrimSpace(wire.StringField(input, "monsterId")); monsterID != "" {
 		entry.MonsterID = &monsterID
 	}
 	// O bloco de criatura do mestre. Mesma escolha do `monsterId`: o servidor não
 	// confere se a criatura existe, porque um id órfão vira "sem bloco" na tela e
 	// não um erro no meio do combate. Quem confere o dono é a rota HTTP que serve
 	// o bloco, e ela só responde ao mestre.
-	if creatureID, ok := platform.IntField(input, "creatureId"); ok && creatureID > 0 {
+	if creatureID, ok := wire.IntField(input, "creatureId"); ok && creatureID > 0 {
 		entry.CreatureID = &creatureID
 	}
 	return entry, nil
 }
 
 func (tr tableRules) materializeCharacterEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (live.InitiativeEntry, error) {
-	charID, _ := platform.IntField(input, "characterId")
-	initiative, hasInit := platform.IntField(input, "initiative")
+	charID, _ := wire.IntField(input, "characterId")
+	initiative, hasInit := wire.IntField(input, "initiative")
 	if !hasInit {
 		return live.InitiativeEntry{}, errors.New("entry.initiative is required")
 	}
@@ -141,7 +141,7 @@ func (tr tableRules) materializeCharacterEntry(ctx context.Context, callerID, ca
 		return live.InitiativeEntry{}, err
 	}
 	label := stats.name
-	if l := strings.TrimSpace(platform.StringField(input, "label")); l != "" {
+	if l := strings.TrimSpace(wire.StringField(input, "label")); l != "" {
 		label = l
 	}
 	cid := charID
@@ -168,7 +168,7 @@ func parseEntryPatch(v any) live.EntryPatch {
 	if s, ok := m["type"].(string); ok {
 		p.Type = &s
 	}
-	if i, ok := platform.IntField(m, "initiative"); ok {
+	if i, ok := wire.IntField(m, "initiative"); ok {
 		n := int(i)
 		p.Initiative = &n
 	}
@@ -186,7 +186,7 @@ func parseEntryPatch(v any) live.EntryPatch {
 		// numa lista escrita à mão.
 		{"creatureId", &p.CreatureID},
 	} {
-		if i, ok := platform.IntField(m, f.key); ok {
+		if i, ok := wire.IntField(m, f.key); ok {
 			v := i
 			*f.dst = &v
 		}
@@ -201,7 +201,7 @@ func parseEntryPatch(v any) live.EntryPatch {
 // overrideInt devolve o valor do corpo para a chave quando ele existe, senão o
 // padrão — como ponteiro.
 func overrideInt(m map[string]any, key string, def int64) *int64 {
-	if v, ok := platform.IntField(m, key); ok {
+	if v, ok := wire.IntField(m, key); ok {
 		return live.PtrInt64(v)
 	}
 	return live.PtrInt64(def)

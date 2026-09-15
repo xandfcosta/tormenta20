@@ -1,4 +1,4 @@
-package platform
+package httpio
 
 import (
 	"compress/gzip"

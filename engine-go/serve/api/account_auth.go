@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/domain/account"
-	"t20engine/infra/platform"
+	"t20engine/infra/config"
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/httpio"
+	"t20engine/infra/wire"
 	"time"
 
 	"t20engine/infra/db"
@@ -54,7 +57,7 @@ func (a accountRules) createAccount(ctx context.Context, body account.RegisterBo
 	// linha escreveria `DONO@` como uma SEGUNDA linha em `users`, sem colidir com
 	// `dono@` e com direito a dispensar convite: dois administradores onde só
 	// cabe um. É idempotente para quem já normaliza.
-	body.Email = platform.NormalizeEmail(body.Email)
+	body.Email = wire.NormalizeEmail(body.Email)
 	invite, err := a.registrationInvite(ctx, body.Email, body.InviteToken)
 	if err != nil {
 		return sqlcgen.User{}, err
@@ -63,10 +66,10 @@ func (a accountRules) createAccount(ctx context.Context, body account.RegisterBo
 	if err != nil {
 		return sqlcgen.User{}, err
 	}
-	now := platform.NowISO()
+	now := dbvalue.NowISO()
 	return a.createUser(ctx, sqlcgen.CreateUserParams{
 		Email:        body.Email,
-		Name:         platform.NullString(body.Name),
+		Name:         dbvalue.NullString(body.Name),
 		Passwordhash: string(hash),
 		Createdat:    now,
 		Updatedat:    now,
@@ -97,11 +100,11 @@ func (a accountRules) registrationInvite(
 func writeRegisterError(w http.ResponseWriter, err error, email string) {
 	switch {
 	case db.IsUniqueViolation(err):
-		platform.WriteError(w, http.StatusConflict, "Email already registered: "+email)
+		httpio.WriteError(w, http.StatusConflict, "Email already registered: "+email)
 	case errors.Is(err, errInviteRejected), errors.Is(err, errInviteSpent):
-		platform.WriteError(w, http.StatusForbidden, inviteRejected)
+		httpio.WriteError(w, http.StatusForbidden, inviteRejected)
 	default:
-		platform.WriteError(w, http.StatusInternalServerError, "Could not create user")
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not create user")
 	}
 }
 
@@ -117,7 +120,7 @@ var errBadCredentials = errors.New("invalid credentials")
 // comparação do bcrypt mesmo com e-mail desconhecido seria o próximo degrau: hoje
 // ela não roda, e isso é um oráculo de tempo.
 func (a accountRules) authenticate(ctx context.Context, email, password string) (sqlcgen.User, error) {
-	user, err := a.queries.GetUserByEmail(ctx, platform.NormalizeEmail(email))
+	user, err := a.queries.GetUserByEmail(ctx, wire.NormalizeEmail(email))
 	if err != nil {
 		return sqlcgen.User{}, errBadCredentials
 	}
@@ -132,7 +135,7 @@ func (a accountRules) authenticate(ctx context.Context, email, password string) 
 func (a accountRules) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 	token, err := a.signToken(user)
 	if err != nil {
-		platform.WriteError(w, http.StatusInternalServerError, "Could not sign session")
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not sign session")
 		return false
 	}
 	http.SetCookie(w, sessionCookie(a.cfg, token, int(sessionTTL.Seconds())))
@@ -178,7 +181,7 @@ func (a accountRules) verifyToken(tokenStr string) (int64, error) {
 
 // Ela recebe a CONFIGURAÇÃO em vez de pendurar no `*Server`: uma função que só
 // precisa de dois campos não tem razão para exigir um servidor inteiro.
-func sessionCookie(cfg platform.Config, value string, maxAge int) *http.Cookie {
+func sessionCookie(cfg config.Config, value string, maxAge int) *http.Cookie {
 	return &http.Cookie{
 		Name:     cfg.CookieName,
 		Value:    value,
@@ -197,7 +200,7 @@ func parseExpiry(s string) time.Duration {
 		return sessionTTL
 	}
 	unit := s[len(s)-1]
-	n, err := platform.ParseInt(s[:len(s)-1])
+	n, err := httpio.ParseInt(s[:len(s)-1])
 	if err != nil {
 		return sessionTTL
 	}
