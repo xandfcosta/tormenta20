@@ -1,5 +1,5 @@
 /**
- * Gera `engine-go/web/ui/icons.templ` a partir do lucide INSTALADO (ALE-231).
+ * Gera `engine-go/serve/web/ui/icons.templ` a partir do lucide INSTALADO (ALE-231).
  *
  * Por que gerar em vez de transcrever: as cenas precisam do SVG embutido, e
  * copiar `d="M19 17V5a2 2..."` à mão setenta vezes é transcrição — a mesma
@@ -23,11 +23,14 @@ import { fileURLToPath } from 'node:url'
 
 const AQUI = dirname(fileURLToPath(import.meta.url))
 const LUCIDE = resolve(AQUI, '../node_modules/lucide/dist/esm')
-// O destino MUDOU de lugar e o gerador não tinha ido junto (ALE-230): ele ainda
-// escrevia `api/piloto_icones.templ`, um arquivo que não existe mais no
-// repositório, enquanto o arquivo VIVO é `web/ui/icons.templ`. Rodá-lo criava um
-// órfão não rastreado e deixava o ícone novo de fora, sem erro nenhum.
-const SAIDA = resolve(AQUI, '../web/ui/icons.templ')
+// O destino MUDOU de lugar DUAS vezes e o gerador não foi junto nenhuma delas.
+// Na ALE-230 ele escrevia `api/piloto_icones.templ` e criava um órfão não
+// rastreado, sem erro nenhum; na ALE-329, quando os pacotes viraram quatro
+// grupos, ele ficou apontando para `web/ui/` e passou a ESTOURAR a CI com
+// `ENOENT`. Os irmãos `build-css.sh` e `build-js.sh` foram atualizados na
+// mesma issue — este não, porque o caminho dele é uma constante de JS e não
+// uma linha de shell que aparece na busca por `serve/api`.
+const SAIDA = resolve(AQUI, '../serve/web/ui/icons.templ')
 
 /** Os ícones que as cenas pedem. Acrescentar aqui e rodar o gerador. */
 const QUERIDOS = [
