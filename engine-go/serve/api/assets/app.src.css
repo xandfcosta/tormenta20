@@ -26,6 +26,14 @@
  * (`mesaView`, `adminJogador`) e o `templ` gera Go no pacote do diretório, então
  * um pacote `tmpl` não as enxergaria. É por isso que a divisão é por CENA — a
  * view viaja junto com o template — e não por camada. */
+/* A FOLHA COMPILADA É EXCLUÍDA DA VARREDURA, e sem esta linha o build não
+ * converge numa passada: a saída (`static/app.css`) mora dentro da pasta que o
+ * Tailwind detecta sozinho, então ele LÊ O PRÓPRIO PRODUTO e mantém viva a
+ * classe que acabou de sair do código. A utilidade some na primeira passada e a
+ * variável de tema dela só na segunda — e quem rodar o script UMA vez commita
+ * uma folha que o CI vai recusar por obsoleta. */
+@source not "./static";
+
 @source "../*.templ";
 @source "../../web/ui/*.templ";
 /* O KIT (ALE-278, fatia 4). Ele saiu de `api/` para `web/ui/`, e o glob acima é
