@@ -81,7 +81,7 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
  * Crescer a janela nunca tira uma coluna do bestiário (ALE-172).
  *
  * O gate das duas colunas olhava a JANELA (`lg:`), e a coluna de ferramentas
- * do `/gm` devolve largura à direita conforme a janela encolhe. O resultado
+ * do mestre devolve largura à direita conforme a janela encolhe. O resultado
  * era invertido: numa janela de 1024 o palco recebia 800px e mostrava DUAS
  * colunas, e numa de 1000 recebia 968px e mostrava UMA. O mestre alargava a
  * janela e perdia o painel de detalhe.
@@ -112,7 +112,7 @@ test('alargar a janela nunca tira uma coluna do bestiário', async ({ page }) =>
  * As colunas do catálogo seguem o PAINEL, e alargar nunca tira uma (ALE-170).
  *
  * Mesma classe de defeito que a ALE-172 consertou no bestiário, e por isso o
- * mesmo guarda: a ferramenta divide a tela com a trilha do `/gm`, então largura
+ * mesmo guarda: a ferramenta divide a tela com a trilha do mestre, então largura
  * de janela mente por centenas de pixels sobre quanto espaço o painel tem.
  *
  * A segunda asserção é a que só o browser faz. Numa lista VIRTUALIZADA "três

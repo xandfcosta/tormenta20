@@ -358,12 +358,4 @@ test.describe('Grimório — a folha de especificação', () => {
   // servidor, e HTML de servidor não tem shadow root para esconder o Tailwind
   // dentro (ALE-314).
 
-  // Aqui morava `o endereço antigo /grimorio encaminha para a folha nova`.
-  //
-  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
-  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
-  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
-  // preservação de parâmetro que este caso guardava:
-  //     a tabela `legacyAddresses`, varrida por inteiro
-  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })

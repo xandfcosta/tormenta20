@@ -23,19 +23,6 @@ import (
 //
 // Sem autorização própria e pelo mesmo motivo do bestiário: o catálogo é o
 // LIVRO, igual para todo mundo. O `requirePage` do grupo já exige sessão.
-// handleOldCollection manda o endereço antigo para a cena da aba pedida,
-// preservando busca e entrada — um redirecionamento que perde a consulta
-// devolveria a pessoa a uma tela que não é a que ela pediu.
-func (s Scene) handleOldCollection(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	destino := "/mestre/" + knownTab(q.Get("aba"))
-	q.Del("aba")
-	if resto := q.Encode(); resto != "" {
-		destino += "?" + resto
-	}
-	http.Redirect(w, r, destino, http.StatusMovedPermanently)
-}
-
 func (s Scene) handleCollection(w http.ResponseWriter, r *http.Request) {
 	v := loadCollection(collectionCriteriaFromRequest(r), s.deps.BookAddress())
 

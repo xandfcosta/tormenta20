@@ -17,15 +17,6 @@ test.describe('Administração', () => {
    * E2E porque nada disto existe em jsdom: não há `showModal`, não há
    * `:modal`, e o foco é uma ficção.
    */
-  // Aqui morava `o endereço antigo /admin encaminha para a cena nova`, que
-  // media o desvio de `/admin` para `/piloto/admin`. As cenas subiram para a
-  // raiz na ALE-280 e os dois endereços viraram um só: não há desvio para medir,
-  // e o que sobrava era "a cena de administração abre" — sem mecanismo que só um
-  // navegador tenha, que é a única justificativa de e2e que o guia aceita.
-  //
-  // Quem prende que a rota existe e é do administrador é o Go
-  // (`web/admin/admin_test.go`), e a decisão de o endereço VELHO responder 404 está
-  // em `TestTheOldPilotPrefixIsGone`.
 
   /**
    * O LINK DE UMA PESSOA NÃO PODE APARECER SOB O NOME DE OUTRA (ALE-242).

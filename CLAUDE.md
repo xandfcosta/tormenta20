@@ -404,11 +404,8 @@ domínio e infraestrutura.
 
 **A ROTA é a exceção da fronteira, e fica em PORTUGUÊS** (decisão do dono,
 ALE-303): o endereço é a única parte da fronteira que **o cliente VÊ**. Duas
-ressalvas: `/health` e `/static/*` ficam em inglês — são a sonda do compose e a
-pasta dos estáticos, convenção que ferramenta de fora reconhece —, e os
-endereços da SPA morta (`/campaigns/new`) também, porque não são rota, são
-LÁPIDE: traduzi-los faria cada um desviar para si mesmo
-(`TestEveryLegacyAddressLandsOnAScene`).
+ressalva: `/health` e `/static/*` ficam em inglês — são a sonda do compose e a
+pasta dos estáticos, convenção que ferramenta de fora reconhece.
 
 Os quatro casos que ficavam de fora da lista, e cada um já foi decidido por
 palpite pelo menos uma vez:

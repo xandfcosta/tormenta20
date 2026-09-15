@@ -29,9 +29,6 @@
 // Não é o mapa de rotas do app: quem registra rota é cada cena, no `Routes` dela
 // (ALE-278). Aqui ficam só os endereços CITADOS, e a diferença importa — uma
 // cena pode atender vinte rotas e não aparecer aqui nenhuma vez.
-//
-// E ele não substitui o `legacy_addresses.go`, que é outra coisa: aquele guarda
-// os endereços ANTIGOS, publicados pela SPA, e o desvio de cada um.
 package routes
 
 import (

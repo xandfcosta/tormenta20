@@ -38,7 +38,7 @@ test.describe('Detalhe da campanha', () => {
  * `TestADeadInviteBecomesASentenceAndNotABrokenPage` —, mais a
  * `invite.spec.ts` para o que só o browser vê. A prévia do convite continua em
  * (`entities/queries.test.ts`), esse sobreviveu, e a
- * página `/campaigns/join` continua sendo carregada nos seis formatos pelo
+ * página `/campanhas/entrar` continua sendo carregada nos seis formatos pelo
  * bloco responsivo abaixo.
  */
 test.describe('Abrir e fechar uma campanha', () => {
@@ -46,7 +46,7 @@ test.describe('Abrir e fechar uma campanha', () => {
     page,
   }) => {
     const name = `E2E Descartável ${Date.now()}`
-    await page.goto('/campaigns/new')
+    await page.goto('/campanhas/nova')
 
     await page.getByLabel('Nome').fill(name)
     await page.getByLabel('Descrição').fill('Criada e excluída pelo E2E.')
@@ -60,10 +60,9 @@ test.describe('Abrir e fechar uma campanha', () => {
     await page.goto(`${new URL(page.url()).pathname}?tab=config`)
     await page.getByRole('button', { name: /Excluir campanha/ }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Excluir' }).click()
-    // Volta para a LISTA, e o que se afirma é a lista — não a URL dela. Desde a
-    // ALE-234 a cena é do servidor e `/campaigns` encaminha para
-    // `/campanhas`; prender o teste ao endereço faria ele quebrar de novo
-    // quando o prefixo `/` cair, sem que nada de verdade tivesse mudado.
+    // Volta para a LISTA, e o que se afirma é a LISTA e não a URL dela: prender
+    // o teste ao endereço o faria quebrar num renome de rota que não muda nada
+    // para quem usa.
     await expect(page.getByRole('listbox', { name: 'Campanhas' })).toBeVisible()
     await expect(page.getByRole('option', { name: new RegExp(name) })).toHaveCount(0)
   })
@@ -135,7 +134,7 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
   test('o respiro da folha não muda quando o teclado abre, e o deitado continua cabendo', async ({
     page,
   }) => {
-    await page.goto('/campaigns/new')
+    await page.goto('/campanhas/nova')
     await expect(page.getByRole('heading', { name: /Abrir nova campanha/i })).toBeVisible()
 
     // A testemunha é o RESPIRO da folha, e ele se lê no valor computado e não
@@ -285,14 +284,6 @@ test.describe('A folha em branco', () => {
     )
   })
 
-  // Aqui morava `o endereço antigo /campaigns/new encaminha para a folha nova`.
-  //
-  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
-  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
-  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
-  // preservação de parâmetro que este caso guardava:
-  //     {"/campaigns/new", "/campanhas/nova"}
-  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })
 
 test.describe('A crônica', () => {
@@ -373,12 +364,4 @@ test.describe('A crônica', () => {
     )
   })
 
-  // Aqui morava `o endereço antigo /campanhas/:id encaminha COM a seção`.
-  //
-  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
-  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
-  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
-  // preservação de parâmetro que este caso guardava:
-  //     {"/campaigns/12?tab=config", "/campanhas/12?tab=config"}
-  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })

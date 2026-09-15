@@ -171,7 +171,6 @@ mesaComTaverna
 mesaEmCombate
 meusNaFaixa
 montaOLeitor
-muxComOsEnderecosAntigos
 naoASCII
 novaCena
 novaCenaDeHerois

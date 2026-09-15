@@ -273,7 +273,7 @@ test.describe('As superfícies da casa', () => {
    * branco, com `net::ERR_INSUFFICIENT_RESOURCES` no console. A folha puxa o
    * sistema de desenho inteiro como módulos soltos no servidor de
    * desenvolvimento, e o Chromium estoura o limite de recursos por página.
-   * Isolado em quatro combinações: `/campaigns` sozinho e `/` → `/campaigns`
+   * Isolado em quatro combinações: a lista de campanhas sozinha e `/` → a lista
    * montam; qualquer caminho que comece na folha e navegue duas vezes, não.
    * É artefato do dev server — em produção a SPA sai empacotada —, mas ele
    * mente igual, e um `expect` cansado dentro de um teste desses acusaria o

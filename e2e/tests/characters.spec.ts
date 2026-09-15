@@ -202,12 +202,4 @@ test.describe('A cena de personagens', () => {
     await expectNoHorizontalOverflow(page, VIEWPORTS)
   })
 
-  // Aqui morava `o endereço antigo /characters encaminha para a cena nova`.
-  //
-  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
-  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
-  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
-  // preservação de parâmetro que este caso guardava:
-  //     {"/characters/13?tab=bag", "/personagens/13?tab=bag"}
-  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })

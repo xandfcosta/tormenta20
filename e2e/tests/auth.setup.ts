@@ -24,7 +24,7 @@ const PLAYER_EMAIL = process.env.E2E_PLAYER_EMAIL ?? 'jogador@t20.local'
  * Vite's dependency re-optimization reload and made the suite flaky.
  */
 async function signIn(page: Page, email: string, file: string): Promise<void> {
-  await page.goto('/login')
+  await page.goto('/entrar')
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Senha').fill(PASSWORD)
   await page.getByRole('button', { name: 'Entrar' }).click()

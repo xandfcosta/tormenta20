@@ -441,7 +441,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **concessão** (de postura) | `grant` | `web/sheetui/powers_grants.go` (ALE-301), e `granted-powers.json` já usava |
 | **pendência** | `pending` | `web/sheetui/powers_pending.go` (ALE-301). O arquivo tinha "escolhas" no nome e falava de PENDÊNCIA, não de escolha — o renome corrigiu o nome junto com a língua, porque `powers_choices.go` já existia ao lado com o outro conceito |
 | **tinta** (da casa) | `ink` | `api/ink_test.go` (ALE-301) — a cor escrita num `.templ` que precisa existir na folha compilada |
-| **virada** (de fatia) | `switchover` | `api/switchover_test.go` (ALE-301) — o guarda de que todo endereço antigo leva ao app |
+| **virada** (de fatia) | `switchover` | `api/switchover_test.go` — o guarda de que toda PORTA para uma sessão leva à Mesa em Datastar |
 | **deus** | `gods` | `catalog/data/gods.json` (ALE-301) |
 | **devoto** | `devotee` | `catalog/data/devotee-terms.json` (ALE-301) |
 
