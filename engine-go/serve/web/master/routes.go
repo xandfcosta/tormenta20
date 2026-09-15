@@ -27,20 +27,14 @@ func Routes(r chi.Router, s Scene) {
 	})
 	r.Get(routes.MasterBestiary, s.handleBestiary)
 	r.Post("/mestre/bestiario/tipo/{tipo}", s.handleBestiaryType)
-	// CADA CATÁLOGO tem endereço próprio desde a ALE-264: eles viraram paradas do
-	// trilho, e parada de trilho é uma cena. `/mestre/condicoes` em vez de
-	// `/mestre/catalogos?aba=condicoes` — o mesmo handler, com a aba vindo
-	// do CAMINHO.
-	//
-	// O laço sobre `collectionTabs` e não nove linhas escritas: o catálogo que
-	// entrar amanhã ganha rota sozinho, e uma lista de rotas à mão é a que fica
-	// para trás em silêncio.
+	// Cada catálogo é uma parada do trilho, e parada de trilho é uma cena: a aba
+	// vem do CAMINHO. O laço, e não dez linhas escritas, para o catálogo que
+	// entrar amanhã ganhar rota sozinho.
 	for _, aba := range collectionTabs {
 		r.Get("/mestre/"+aba.ID, s.handleCollection)
 	}
 	// O endereço VELHO continua respondendo, redirecionando: ele foi o único por
 	// duas fatias desta issue, e pode estar colado no chat de alguma mesa.
-	r.Get("/mestre/catalogos", s.handleOldCollection)
 	r.Get("/mestre/encontros", s.handleEncounters)
 	r.Post("/mestre/encontros/adicionar/{id}", s.handleEncounterAdd)
 	r.Post("/mestre/encontros/mais/{id}", s.handleEncounterAdd)

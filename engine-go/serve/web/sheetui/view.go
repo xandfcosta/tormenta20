@@ -156,18 +156,10 @@ func Tabs() []Tab {
 	}
 }
 
-// AskedTab resolve o que veio na URL contra as sete que existem.
-//
-// DUAS traduções de endereço antigo, herdadas do `AskedTab` da SPA:
-// `inventory` e `equipment` viram `bag`. Elas existem porque a Mochila já se
-// chamou assim, e um favorito daquela época não pode cair numa aba que não
-// existe — cair no padrão seria abrir a ficha noutra seção sem dizer por quê.
-//
-// Valor desconhecido cai na PRIMEIRA, que é o mesmo que a SPA faz.
+// AskedTab resolve o que veio na URL contra as sete que existem. Valor
+// desconhecido cai na PRIMEIRA, em vez de dar 404: `?tab=` é endereço, e alguém
+// o digita errado.
 func AskedTab(bruto string) string {
-	if bruto == "inventory" || bruto == "equipment" {
-		return "bag"
-	}
 	for _, aba := range Tabs() {
 		if aba.Valor == bruto {
 			return bruto

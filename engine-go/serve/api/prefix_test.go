@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
@@ -17,8 +16,6 @@ import (
 //
 // Decisão do dono: CORTE SECO. O app nunca foi usado numa mesa real, não há
 // link de jogador a proteger, e um desvio a menos é uma exceção a menos no mux.
-// Os dezessete endereços da SPA em `legacy_addresses.go` continuam desviando —
-// aqueles foram publicados de verdade.
 //
 // # Por que este guarda existe
 //
@@ -72,23 +69,6 @@ func TestTheNewAddressesAnswer(t *testing.T) {
 		// não pode acontecer é 404.
 		if rec.Code == http.StatusNotFound {
 			t.Errorf("%s deu 404 — o controle deste arquivo caiu, e o guarda de cima passou a medir nada", scene)
-		}
-	}
-}
-
-// A TABELA dos endereços antigos não pode ganhar uma entrada com o prefixo.
-//
-// É a outra metade da decisão: `/piloto/x` não vira linha de desvio. Um `grep`
-// não serviria — o que se quer proibir é o VALOR em tempo de execução, e ele
-// pode ser montado por concatenação.
-func TestNoLegacyAddressMentionsThePilot(t *testing.T) {
-	for _, endereco := range legacyAddresses {
-		if strings.Contains(endereco.Padrao, "/piloto") {
-			t.Errorf("a tabela tem %q: o prefixo velho não é endereço, é 404", endereco.Padrao)
-		}
-		destino := endereco.Destino(httptest.NewRequest(http.MethodGet, "/x", nil))
-		if strings.Contains(destino, "/piloto") {
-			t.Errorf("%s desvia para %q, que não existe mais", endereco.Padrao, destino)
 		}
 	}
 }

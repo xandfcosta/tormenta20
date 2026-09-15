@@ -225,9 +225,6 @@ func buildMux(srv *api.Server) *http.ServeMux {
 	// o `ServeMux` do Go que decide: `/api/`, `/health`, `/fonts/` e o favicon.
 	// A porta da frente deixou de precisar de redireção — a raiz É o Hub agora.
 	mux.Handle("/", srv.WebRouter())
-	// OS ENDEREÇOS ANTIGOS (ALE-272, fatia 10a). Eram cascas da SPA — um
-	// `beforeLoad` que mandava para o app — e nessa forma morreriam com ela.
-	api.MountLegacyAddresses(mux)
 	// As FONTES que a folha pede por caminho absoluto (`/fonts/…`). Elas eram
 	// servidas pelo `dist` da SPA em produção, e é por isso que o binário sem
 	// SPA desenhava toda tela com uma serifada do sistema.

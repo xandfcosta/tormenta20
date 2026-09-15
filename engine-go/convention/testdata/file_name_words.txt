@@ -11,7 +11,6 @@ activates
 activations
 adapter
 address
-addresses
 admin
 agrees
 air
@@ -228,7 +227,6 @@ ladder
 language
 latin
 layout
-legacy
 lens
 level
 lifecycle

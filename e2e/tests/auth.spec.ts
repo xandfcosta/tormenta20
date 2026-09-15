@@ -25,7 +25,7 @@ import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 test.describe('A porta do jogo', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
-  for (const rota of ['/login', '/redefinir-senha']) {
+  for (const rota of ['/entrar', '/redefinir-senha']) {
     test(`${rota} é escura como a mesa`, async ({ page }) => {
       await page.goto(rota)
       await expect(page.getByRole('heading', { name: 'Tormenta 20' })).toBeVisible()
@@ -75,7 +75,7 @@ test.describe('A porta do jogo', () => {
   // tentar'. Afirmar UI não move a fronteira de segurança.
 
   test('a porta cabe nos seis formatos', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/entrar')
     await expect(page.getByRole('heading', { name: 'Tormenta 20' })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)

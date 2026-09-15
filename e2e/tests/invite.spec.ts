@@ -51,12 +51,4 @@ test.describe('A carta de convite', () => {
     await expect(page.getByRole('button', { name: 'Entrar na mesa' })).toHaveCount(0)
   })
 
-  // Aqui morava `o endereço antigo /campaigns/join encaminha COM o token`.
-  //
-  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
-  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
-  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
-  // preservação de parâmetro que este caso guardava:
-  //     {"/campaigns/join?token=abc-123", "/campanhas/entrar?token=abc-123"}
-  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })

@@ -12,8 +12,6 @@ import (
 func TestTheSheetTabAddressSurvives(t *testing.T) {
 	for _, caso := range []struct{ pedido, esperado string }{
 		{"abilities", "abilities"},
-		{"inventory", "bag"},
-		{"equipment", "bag"},
 		{"", "expertises"},
 		{"nao-existe", "expertises"},
 	} {

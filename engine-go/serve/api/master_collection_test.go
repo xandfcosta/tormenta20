@@ -10,11 +10,6 @@ import (
 
 // Os guardas dos CATÁLOGOS (ALE-258).
 
-// TestACatalogSceneDrawsTheWholeCatalog.
-//
-// O endereço mudou na ALE-264: cada catálogo virou uma parada do trilho e ganhou
-// cena própria (`/mestre/condicoes`). Este guarda passou a pedir a cena
-// direto — quem cobra o endereço VELHO é o `TestTheOldCollectionAddressRedirects`.
 func TestACatalogSceneDrawsTheWholeCatalog(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -77,26 +72,5 @@ func TestSearchingSweepsTheEightCatalogsFromAnyScene(t *testing.T) {
 	so := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes", "").Body.String()
 	if strings.Contains(so, "Bola de Fogo") {
 		t.Error("sem busca a cena das condições trouxe magia")
-	}
-}
-
-// TestTheOldCollectionAddressRedirects: `?aba=` foi o único endereço por duas
-// fatias desta issue, e pode estar colado no chat de alguma mesa.
-func TestTheOldCollectionAddressRedirects(t *testing.T) {
-	s := newTestServer(t)
-	eu := seedUser(t, s, "mestre@t20.local")
-
-	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/catalogos?aba=magias&busca=fogo", "")
-	if rec.Code != http.StatusMovedPermanently {
-		t.Fatalf("o endereço velho respondeu %d", rec.Code)
-	}
-	destino := rec.Header().Get("Location")
-	if !strings.HasPrefix(destino, "/mestre/magias") {
-		t.Errorf("levou para %q", destino)
-	}
-	// A CONSULTA sobrevive: um redirecionamento que perde a busca devolve a
-	// pessoa a uma tela que não é a que ela pediu.
-	if !strings.Contains(destino, "busca=fogo") {
-		t.Errorf("o redirecionamento perdeu a busca: %q", destino)
 	}
 }
