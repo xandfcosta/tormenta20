@@ -223,7 +223,6 @@ label
 labels
 ladder
 language
-last
 latin
 layout
 legacy
@@ -343,7 +342,6 @@ rows
 rule
 ruler
 rules
-run
 scene
 scenes
 schema
