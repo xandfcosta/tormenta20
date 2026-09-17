@@ -273,7 +273,7 @@ func TestEverySheetTabDrawsSomething(t *testing.T) {
 		titulo, sabe := panelTitle[aba.Valor]
 		if !sabe {
 			t.Errorf("a aba %q não tem título esperado neste guarda — acrescente a "+
-				"linha ao mapa `oTituloDoPainel`", aba.Valor)
+				"linha ao mapa `panelTitle`", aba.Valor)
 			continue
 		}
 		visitadas++

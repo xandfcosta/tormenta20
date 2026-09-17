@@ -141,7 +141,7 @@ func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 }
 
 // A ficha embutida não é região do stream, então o que a mantém em dia é um par:
-// o servidor escreve `fichaversao` num sinal, e um ouvinte na cena repede a
+// o servidor escreve `sheet_version` num sinal, e um ouvinte na cena repede a
 // ficha. As duas pontas estão em arquivos diferentes e nenhuma delas falha
 // sozinha de forma visível — sem o ouvinte, o sinal chega e ninguém escuta;
 // sem o filtro, o ouvinte dispara em qualquer remendo de sinal e a ficha é
