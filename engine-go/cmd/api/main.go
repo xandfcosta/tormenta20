@@ -24,6 +24,7 @@ import (
 	"t20engine/infra/db"
 	"t20engine/infra/httpio"
 	"t20engine/serve/api"
+	"t20engine/serve/web/assets"
 )
 
 // SONDA DE SAÚDE: a imagem é `distroless` e não tem shell, `curl` nem `wget`,
@@ -187,8 +188,8 @@ func buildMux(srv *api.Server) *http.ServeMux {
 	// `http.ServeMux` que decide.
 	mux.Handle("/", srv.WebRouter())
 	// As FONTES, que a folha pede por caminho absoluto (`/fonts/…`).
-	mux.Handle("/fonts/", srv.FontsHandler())
-	mux.Handle("/favicon.svg", srv.FaviconHandler())
+	mux.Handle("/fonts/", assets.FontsHandler())
+	mux.Handle("/favicon.svg", assets.FaviconHandler())
 	// A SAÚDE responde na RAIZ além de `/api/health`: quem pergunta é a
 	// infraestrutura, e ela não sabe de prefixo.
 	mux.Handle("/health", srv.HealthProbe())

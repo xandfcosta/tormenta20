@@ -16384,7 +16384,7 @@ globalThis._pdfjsTestingUtils = { HighlightOutliner: ki }, globalThis.pdfjsLib =
 	XfaLayer: xe
 };
 //#endregion
-//#region serve/api/assets/src/reader.ts
+//#region serve/web/assets/src/reader.ts
 var na = .5, ra = 3, ia = 1100, aa = 2;
 function oa(e) {
 	return {

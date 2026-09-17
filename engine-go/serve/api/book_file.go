@@ -13,6 +13,8 @@ import (
 	"t20engine/serve/web/routes"
 
 	"t20engine/infra/config"
+
+	"t20engine/infra/httpio"
 )
 
 // O LIVRO servido pela mesa: o Tormenta 20 em PDF, entregue pelo próprio
@@ -55,22 +57,22 @@ type livroServido struct {
 // problema pequeno por um grande. O aviso vai para o log com o caminho que
 // falhou, porque configurar e não ver o botão é o sintoma sem explicação.
 func abreOLivro(cfg config.Config) livroServido {
-	if cfg.LivroPDF == "" {
+	if cfg.BookPDF == "" {
 		return livroServido{}
 	}
-	info, err := os.Stat(cfg.LivroPDF)
+	info, err := os.Stat(cfg.BookPDF)
 	if err != nil || info.IsDir() {
-		log.Printf("livro: %s não serve como PDF (%v) — o botão de abrir no livro não vai aparecer", cfg.LivroPDF, err)
+		log.Printf("livro: %s não serve como PDF (%v) — o botão de abrir no livro não vai aparecer", cfg.BookPDF, err)
 		return livroServido{}
 	}
-	avisaSeNaoLinearizado(cfg.LivroPDF)
+	avisaSeNaoLinearizado(cfg.BookPDF)
 	digito := digitoDoLivro(info)
 	return livroServido{
-		caminho: cfg.LivroPDF,
+		caminho: cfg.BookPDF,
 		digito:  digito,
 		endereco: bookui.BookAddress{
 			Base:     routes.Book + "?v=" + digito,
-			Abertura: cfg.LivroAbertura,
+			Abertura: cfg.BookPageOffset,
 		},
 	}
 }
@@ -139,7 +141,7 @@ func (s *Server) BookFileHandler() http.Handler {
 	if s.livro.caminho == "" {
 		return http.NotFoundHandler()
 	}
-	return comCacheVersionado(s.livro.digito, "private", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return httpio.WithVersionedCache(s.livro.digito, "private", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, s.livro.caminho)
 	}))
 }

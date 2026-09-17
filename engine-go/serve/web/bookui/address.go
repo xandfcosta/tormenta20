@@ -25,12 +25,12 @@ type BookAddress struct {
 // Aponta para o LEITOR e não para o PDF cru, e a troca é medida: o visualizador
 // do Chrome obedece `#page=N` e IGNORA `#search=` — não há como pedir destaque
 // por URL —, e ainda transfere o arquivo inteiro para mostrar uma página (85 MiB
-// contados no loopback). O leitor da casa (`api/assets/src/reader.ts`)
+// contados no loopback). O leitor da casa (`serve/web/assets/src/reader.ts`)
 // resolve os dois: destaca o termo e pede faixas.
 //
 // A ABERTURA não entra aqui: quem soma é o leitor, que fala em página impressa
 // com quem lê e em página de arquivo com o pdf.js. Ver
-// `config.Config.LivroAbertura` para a medição do 6.
+// `config.Config.BookPageOffset` para a medição do 6.
 func (l BookAddress) AtPage(pagina int, termo string) string {
 	if l.Base == "" || pagina <= 0 {
 		return ""

@@ -70,7 +70,7 @@ alguém já usou e que não voltam.
 | **leitor** | `reader` | ~~visualizador~~, ~~viewer~~ | A cena que abre o PDF do livro na página do verbete e o DESTACA (ALE-264). **Não é o visualizador do navegador**, que continua a um clique de distância ("abrir fora") — a distinção importa porque os dois existem lado a lado: o leitor mostra uma página por vez com o termo marcado, o visualizador tem busca, miniaturas e impressão. Ele existe por medição: o Chrome ignora `#search=` e transfere o arquivo inteiro (85 MiB) para abrir uma página; o leitor destaca e custou 1 MiB. |
 | **página do livro** | `BookPage` | ~~folha~~ | O número IMPRESSO no rodapé, que é o que o catálogo grava e o que a ficha mostra ("p289"). **Não é a página do ARQUIVO**, que é a que `#page=N` conta — ver `abertura` abaixo. |
 | **abertura** | `LivroAbertura` | ~~offset~~, ~~deslocamento~~ | Quantas páginas o arquivo tem ANTES da página impressa 1: 6 no PDF da casa, medido pelo rodapé. `deslocamento` está proibido porque em T20 é o quanto uma criatura anda. |
-| **tela cheia** | `api/assets/src/scene.ts` | ~~fullscreen~~ (na tela) | O gesto do menu do Hub que estica a janela ATUAL pela Fullscreen API. Some quando a aba fecha, e o iPhone não o tem. Continua sendo a saída de quem não instalou (ALE-118). |
+| **tela cheia** | `serve/web/assets/src/scene.ts` | ~~fullscreen~~ (na tela) | O gesto do menu do Hub que estica a janela ATUAL pela Fullscreen API. Some quando a aba fecha, e o iPhone não o tem. Continua sendo a saída de quem não instalou (ALE-118). |
 
 ## B. O combate
 
@@ -325,6 +325,7 @@ ver as linhas deles na tabela abaixo.
 | -- | -- | -- | -- |
 | **ao vivo** | `live/`, `live*` | ~~mesa~~ (como pacote), ~~tempo real~~ | **O REGIME: a sessão enquanto está acontecendo.** O que existe só enquanto há gente conectada — o estado da fila em memória, a entrega por SSE, a presença, e a autorização de quem está na sessão. Nomeia o regime e não as pessoas, o que o distingue de `mesa`, e não a linha do banco, o que o distingue de `sessão`. O código já dizia `mountLiveRoutes`, `liveAccess` e `liveCtx` antes de a palavra existir aqui. |
 | **configuração** | `config/` | ~~env~~, ~~settings~~ | O que o ambiente diz: `.env`, as variáveis, os administradores, o segredo de assinatura. Lido no boot e nunca depois. |
+| **estáticos** | `assets/` | ~~public~~, ~~dist~~, ~~bundle~~ | O FRONT que não é `.templ`: a folha, as ilhas de JS, as fontes e o favicon, mais o `go:embed` que os leva para dentro do binário. Mora em `serve/web` porque o `go:embed` só alcança o que está ABAIXO do pacote — quem embute é quem hospeda. |
 | **borda HTTP** | `httpio/` | ~~util~~, ~~common~~, ~~shared~~ | Escrever resposta, ler corpo, comprimir. **Conhece `net/http`, e por isso o domínio NÃO o alcança** — é essa a linha que o separa do `wire`. |
 | **fio** | `wire/` | ~~dto~~, ~~shared~~ | O vocabulário da fronteira SEM transporte: ler um campo do corpo já decodificado, recusar um campo pelo nome, a grafia única de um e-mail. É folha, e é o que o domínio alcança. |
 | **valor de coluna** | `dbvalue/` | ~~util~~, ~~sqlhelpers~~ | A tradução entre o valor Go e a forma que a COLUNA guarda: `sql.Null*` nos dois sentidos e o carimbo ISO. Mora ao lado do `sqlcgen` e não dentro do `db` porque aquele importa o driver, e o domínio carimba a hora sem querer um driver junto. |

@@ -19,7 +19,7 @@ import (
 // alguém acrescentar amanhã já nasce medido — não há uma entrada por caso aqui
 // para alguém esquecer de escrever.
 func TestEveryOfferedGroundCanBePainted(t *testing.T) {
-	css, err := os.ReadFile("assets/app.src.css")
+	css, err := os.ReadFile("../web/assets/app.src.css")
 	if err != nil {
 		t.Fatalf("ler o CSS da casa: %v", err)
 	}
@@ -57,7 +57,7 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 // pega é a regressão exata e provável — alguém arrastar a regra de volta para
 // dentro do `@layer` numa arrumação, achando que camada é organização.
 func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
-	folha, err := os.ReadFile("assets/app.src.css")
+	folha, err := os.ReadFile("../web/assets/app.src.css")
 	if err != nil {
 		t.Fatalf("ler o CSS da casa: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
 // Cinzel cai para uma serifada do sistema em toda tela, que é um defeito de
 // aparência que ninguém liga à causa.
 func TestTheStylesheetFontsExist(t *testing.T) {
-	fontes, err := os.ReadDir("assets/static/fonts")
+	fontes, err := os.ReadDir("../web/assets/static/fonts")
 	if err != nil {
 		t.Fatalf("ler as fontes embutidas: %v", err)
 	}

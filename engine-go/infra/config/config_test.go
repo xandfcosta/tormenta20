@@ -120,10 +120,10 @@ func TestLoadConfigDefaultsCORSPerEnvironment(t *testing.T) {
 // uma origem VAZIA é pior que nenhuma, porque o go-chi lê lista vazia como
 // "aceite TODAS".
 func TestCORSOriginParsesAList(t *testing.T) {
-	casos := []struct {
-		nome string
+	cases := []struct {
+		name string
 		raw  string
-		quer []string
+		want []string
 	}{
 		{"uma só", "http://localhost:5173", []string{"http://localhost:5173"}},
 		{
@@ -134,15 +134,15 @@ func TestCORSOriginParsesAList(t *testing.T) {
 		{"vírgula sobrando", "http://localhost:5173,,", []string{"http://localhost:5173"}},
 		{"vazio não vira origem vazia", "  ,  ", nil},
 	}
-	for _, caso := range casos {
-		t.Run(caso.nome, func(t *testing.T) {
-			got := SplitOrigins(caso.raw)
-			if len(got) != len(caso.quer) {
-				t.Fatalf("SplitOrigins(%q) = %q, queria %q", caso.raw, got, caso.quer)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := SplitOrigins(tc.raw)
+			if len(got) != len(tc.want) {
+				t.Fatalf("SplitOrigins(%q) = %q, queria %q", tc.raw, got, tc.want)
 			}
-			for i, origem := range caso.quer {
-				if got[i] != origem {
-					t.Errorf("origem %d = %q, queria %q", i, got[i], origem)
+			for i, origin := range tc.want {
+				if got[i] != origin {
+					t.Errorf("origem %d = %q, queria %q", i, got[i], origin)
 				}
 			}
 		})
@@ -156,25 +156,25 @@ func TestCORSOriginParsesAList(t *testing.T) {
 // login não conclui, não há erro em lugar nenhum, e a tela só volta ao início —
 // e quem procura o defeito procura no login, não no `.env`.
 func TestValidateRefusesHalfConfiguredTLS(t *testing.T) {
-	casos := []struct {
-		nome, cert, key string
-		querErro        bool
+	cases := []struct {
+		name, cert, key string
+		wantErr         bool
 	}{
-		{nome: "os dois vazios é HTTP puro, o padrão", cert: "", key: "", querErro: false},
-		{nome: "o par inteiro é HTTPS", cert: "/etc/t20/cert.pem", key: "/etc/t20/key.pem", querErro: false},
-		{nome: "certificado sem chave", cert: "/etc/t20/cert.pem", key: "", querErro: true},
-		{nome: "chave sem certificado", cert: "", key: "/etc/t20/key.pem", querErro: true},
+		{name: "os dois vazios é HTTP puro, o padrão", cert: "", key: "", wantErr: false},
+		{name: "o par inteiro é HTTPS", cert: "/etc/t20/cert.pem", key: "/etc/t20/key.pem", wantErr: false},
+		{name: "certificado sem chave", cert: "/etc/t20/cert.pem", key: "", wantErr: true},
+		{name: "chave sem certificado", cert: "", key: "/etc/t20/key.pem", wantErr: true},
 	}
-	for _, tc := range casos {
-		t.Run(tc.nome, func(t *testing.T) {
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
 			// Desenvolvimento de propósito: é onde alguém experimenta HTTPS pela
 			// primeira vez, e onde a validação de produção não olharia.
 			cfg := Config{AppEnv: EnvDevelopment, TLSCertFile: tc.cert, TLSKeyFile: tc.key}
 
 			err := cfg.Validate()
 
-			if tc.querErro != (err != nil) {
-				t.Fatalf("Validate() = %v, querErro %v", err, tc.querErro)
+			if tc.wantErr != (err != nil) {
+				t.Fatalf("Validate() = %v, querErro %v", err, tc.wantErr)
 			}
 			if err == nil {
 				return
@@ -184,8 +184,8 @@ func TestValidateRefusesHalfConfiguredTLS(t *testing.T) {
 			if !strings.Contains(err.Error(), "TLS_CERT_FILE") || !strings.Contains(err.Error(), "TLS_KEY_FILE") {
 				t.Errorf("o erro tem de nomear as duas variáveis, veio %q", err)
 			}
-			if preenchido := tc.cert + tc.key; !strings.Contains(err.Error(), preenchido) {
-				t.Errorf("o erro tem de mostrar o caminho já escrito (%q), veio %q", preenchido, err)
+			if filled := tc.cert + tc.key; !strings.Contains(err.Error(), filled) {
+				t.Errorf("o erro tem de mostrar o caminho já escrito (%q), veio %q", filled, err)
 			}
 		})
 	}
@@ -194,13 +194,13 @@ func TestValidateRefusesHalfConfiguredTLS(t *testing.T) {
 // O esquema é derivado do par, e não uma segunda variável que possa discordar
 // dele: um `SCHEME=https` com TLS desligado seria mentira anunciada no log.
 func TestSchemeFollowsTheCertificatePair(t *testing.T) {
-	semTLS := Config{}
-	comTLS := Config{TLSCertFile: "/etc/t20/cert.pem", TLSKeyFile: "/etc/t20/key.pem"}
+	withoutTLS := Config{}
+	withTLS := Config{TLSCertFile: "/etc/t20/cert.pem", TLSKeyFile: "/etc/t20/key.pem"}
 
-	if got := semTLS.Scheme(); got != "http" {
+	if got := withoutTLS.Scheme(); got != "http" {
 		t.Errorf("Scheme() = %q sem certificado, esperava http", got)
 	}
-	if got := comTLS.Scheme(); got != "https" {
+	if got := withTLS.Scheme(); got != "https" {
 		t.Errorf("Scheme() = %q com o par completo, esperava https", got)
 	}
 }

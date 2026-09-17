@@ -84,7 +84,7 @@ type Config struct {
 	// estes dois vazios, mantém `COOKIE_SECURE=true` e continua funcionando.
 	TLSCertFile string
 	TLSKeyFile  string
-	// LivroPDF é o caminho do Tormenta 20 em PDF que o servidor entrega em
+	// BookPDF é o caminho do Tormenta 20 em PDF que o servidor entrega em
 	// `/livro`, e VAZIO é o padrão: sem ele o botão "abrir no livro"
 	// simplesmente não existe, e nada é servido.
 	//
@@ -92,13 +92,13 @@ type Config struct {
 	// (`../t20-book.pdf`, e ignorado pelo git) e o `go:embed` não o alcança. E
 	// servir o livro é decisão do dono da mesa — a rota publica o arquivo para
 	// quem entrou na rede local.
-	LivroPDF string
-	// LivroAbertura é quantas páginas o ARQUIVO tem antes da página impressa 1.
+	BookPDF string
+	// BookPageOffset é quantas páginas o ARQUIVO tem antes da página impressa 1.
 	//
 	// Ela existe porque `#page=N` conta páginas do ARQUIVO e o catálogo grava a
 	// página IMPRESSA (`bookPage`). Sem ela o botão abre seis páginas antes, no
 	// MESMO capítulo, que é o tipo de erro que parece certo.
-	LivroAbertura int
+	BookPageOffset int
 }
 
 // LoadConfig lê o `.env.<APP_ENV>` (ou o ENV_FILE, quando escrito) e o
@@ -112,23 +112,23 @@ func LoadConfig() (Config, error) {
 		return Config{}, err
 	}
 	return Config{
-		AppEnv:        appEnv,
-		AdminEmails:   splitEmails(os.Getenv("ADMIN_EMAILS")),
-		Port:          env("PORT", "3001"),
-		DatabasePath:  stripFilePrefix(env("DATABASE_URL", "file:./data/t20-dev.db")),
-		JWTSecret:     os.Getenv("JWT_SECRET"),
-		JWTExpiresIn:  env("JWT_EXPIRES_IN", "7d"),
-		CookieName:    env("COOKIE_NAME", "t20_session"),
-		CookieSecure:  os.Getenv("COOKIE_SECURE") == "true",
-		CORSOrigins:   SplitOrigins(env("CORS_ORIGIN", "")),
-		BackupDir:     env("BACKUP_DIR", "../backups"),
-		BackupEvery:   envDuration("BACKUP_EVERY", 24*time.Hour),
-		BackupKeep:    envInt("BACKUP_KEEP", 7),
-		CatalogPath:   env("CATALOG_PATH", "parity/_catalogs.json"),
-		TLSCertFile:   os.Getenv("TLS_CERT_FILE"),
-		TLSKeyFile:    os.Getenv("TLS_KEY_FILE"),
-		LivroPDF:      env("LIVRO_PDF", ""),
-		LivroAbertura: envInt("LIVRO_ABERTURA", 6),
+		AppEnv:         appEnv,
+		AdminEmails:    splitEmails(os.Getenv("ADMIN_EMAILS")),
+		Port:           env("PORT", "3001"),
+		DatabasePath:   stripFilePrefix(env("DATABASE_URL", "file:./data/t20-dev.db")),
+		JWTSecret:      os.Getenv("JWT_SECRET"),
+		JWTExpiresIn:   env("JWT_EXPIRES_IN", "7d"),
+		CookieName:     env("COOKIE_NAME", "t20_session"),
+		CookieSecure:   os.Getenv("COOKIE_SECURE") == "true",
+		CORSOrigins:    SplitOrigins(env("CORS_ORIGIN", "")),
+		BackupDir:      env("BACKUP_DIR", "../backups"),
+		BackupEvery:    envDuration("BACKUP_EVERY", 24*time.Hour),
+		BackupKeep:     envInt("BACKUP_KEEP", 7),
+		CatalogPath:    env("CATALOG_PATH", "parity/_catalogs.json"),
+		TLSCertFile:    os.Getenv("TLS_CERT_FILE"),
+		TLSKeyFile:     os.Getenv("TLS_KEY_FILE"),
+		BookPDF:        env("LIVRO_PDF", ""),
+		BookPageOffset: envInt("LIVRO_ABERTURA", 6),
 	}, nil
 }
 
@@ -185,13 +185,13 @@ func (c Config) validateTLS() error {
 	if (c.TLSCertFile == "") == (c.TLSKeyFile == "") {
 		return nil
 	}
-	faltando, presente, valor := "TLS_KEY_FILE", "TLS_CERT_FILE", c.TLSCertFile
+	missing, present, value := "TLS_KEY_FILE", "TLS_CERT_FILE", c.TLSCertFile
 	if c.TLSCertFile == "" {
-		faltando, presente, valor = "TLS_CERT_FILE", "TLS_KEY_FILE", c.TLSKeyFile
+		missing, present, value = "TLS_CERT_FILE", "TLS_KEY_FILE", c.TLSKeyFile
 	}
 	return fmt.Errorf(
 		"%s está vazio e %s=%q — o HTTPS precisa dos DOIS caminhos; deixe os dois vazios para servir HTTP",
-		faltando, presente, valor,
+		missing, present, value,
 	)
 }
 

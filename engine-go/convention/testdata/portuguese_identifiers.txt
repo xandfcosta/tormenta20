@@ -9,7 +9,6 @@ abreOLivro
 aceitaAClasse
 aceitaAFamilia
 aceitaMelhoria
-aCena
 aFichaDoPrimeiro
 aFolhaConhece
 aFolhaPreenchida
@@ -71,7 +70,6 @@ classeDoCatalogo
 colaNaAba
 colheChaves
 combatenteDeFicha
-comCacheVersionado
 comHorda
 comLivro
 comPrefixo
@@ -95,7 +93,6 @@ deformidadeModifiers
 deformidadeSkillIDs
 deformidadeStored
 digitoDoLivro
-digitoDosEstaticos
 edicaoDosSinais
 editarCombatente
 ehLinearizado
@@ -188,8 +185,6 @@ paradasDaProposta
 paraNoQuadrado
 paraOFormulario
 pede
-pedeCom
-pedeEstatico
 pedeHub
 pedeNaCena
 pedeNaCenaComLivro
@@ -276,10 +271,8 @@ trocaNaLista
 trocaNoItem
 ultimaDeConteudo
 ultimoQuadro
-vaiComprimir
 variantSwappedCom
 varrerCondicoesDeTeste
 varrerCronicasDeTeste
-versaoDosEstaticos
 virgulaCom
 zoomPeloTeclado

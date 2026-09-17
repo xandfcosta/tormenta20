@@ -1,4 +1,4 @@
-//#region serve/api/assets/src/lib/turn-juice.ts
+//#region serve/web/assets/src/lib/turn-juice.ts
 function e(e) {
 	return !!e && typeof e.animate == "function";
 }
