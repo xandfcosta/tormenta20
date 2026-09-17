@@ -12,12 +12,12 @@ import (
 
 // TODO ESTÁTICO PEDIDO EXISTE NA PASTA (ALE-301).
 //
-// O `AssetURL` monta o endereço por CONCATENAÇÃO — `"/static/" +
-// arquivo + "?v=" + digito` —, então um nome que não existe produz uma URL de
-// aparência perfeita e um 404 só na hora do pedido. O modo de falhar é o pior
+// O `assets.URL` monta o endereço por CONCATENAÇÃO — `"/static/" + arquivo +
+// "?v=" + digito` —, então um nome que não existe produz uma URL de aparência
+// perfeita e um 404 só na hora do pedido. O modo de falhar é o pior
 // desta casa: a ilha de JS não instala, a cena funciona QUASE toda (sem a
 // animação, sem o leitor, sem o deslize da peça) e nada no Go acusa. O
-// `go:embed assets/static/*` é curinga e compila do mesmo jeito; o
+// `go:embed static/*` é curinga e compila do mesmo jeito; o
 // `TestEveryStaticAddressOnThePageIsVersioned` mede a VERSÃO no endereço e
 // passaria verde sobre um 404.
 //
@@ -30,7 +30,7 @@ import (
 var assetCall = regexp.MustCompile(`Asset\("([^"]+)"\)`)
 
 func TestEveryAssetAskedForExists(t *testing.T) {
-	staticDir := filepath.Join("..", "serve", "api", "assets", "static")
+	staticDir := filepath.Join("..", "serve", "web", "assets", "static")
 	if _, err := os.Stat(staticDir); err != nil {
 		t.Fatalf("a pasta dos estáticos não está em %s: %v", staticDir, err)
 	}
@@ -88,7 +88,7 @@ func TestEveryAssetAskedForExists(t *testing.T) {
 	}
 	sort.Strings(missing)
 	if len(missing) > 0 {
-		t.Errorf("estático pedido que NÃO existe em api/assets/static — %d de %d:\n  %s\n"+
+		t.Errorf("estático pedido que NÃO existe em serve/web/assets/static — %d de %d:\n  %s\n"+
 			"O endereço sai montado do mesmo jeito e o navegador leva 404: a ilha de JS não "+
 			"instala e a cena funciona quase toda, em silêncio. Se o nome mudou, mude os CINCO "+
 			"elos — fonte, `vite.config.ts`, artefato, `Asset(…)` e o `<script src>` — e "+

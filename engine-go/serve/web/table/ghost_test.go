@@ -90,7 +90,7 @@ func TestTheArrowWithoutStopsJoinsBothEndsOfThePath(t *testing.T) {
 // esse o modo de falhar que não dá erro (ver o `engine-go/CLAUDE.md`).
 func classesThatReceiveBox(t *testing.T) map[string]bool {
 	t.Helper()
-	folha, err := os.ReadFile("assets/static/app.css")
+	folha, err := os.ReadFile("../assets/static/app.css")
 	if err != nil {
 		t.Fatalf("ler a folha compilada: %v", err)
 	}

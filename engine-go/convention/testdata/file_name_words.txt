@@ -23,6 +23,7 @@ area
 ascii
 # AS PALAVRAS QUE UM NOME DE ARQUIVO PODE USAR (ALE-301).
 asset
+assets
 attribute
 attributes
 audio
@@ -436,6 +437,7 @@ undo
 unified
 users
 v2
+versioned
 view
 viewport
 viewports

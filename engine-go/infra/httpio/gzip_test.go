@@ -17,20 +17,20 @@ import (
 // O que eles prendem não é "comprime" — é o conjunto de casos em que comprimir
 // está ERRADO, e um deles não deixa erro para trás.
 
-// aCena é um handler que responde como as cenas respondem.
+// scene é um handler que responde como as cenas respondem.
 //
 // Ela declara o `Content-Length`, como faz todo handler que serve conteúdo de
 // tamanho conhecido. Sem essa linha não há o que apagar, e a asserção sobre o
 // cabeçalho passa verde com o `Header().Del("Content-Length")` sabotado.
-func aCena(corpo string) http.Handler {
+func scene(body string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Header().Set("Content-Length", strconv.Itoa(len(corpo)))
-		_, _ = io.WriteString(w, corpo)
+		w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+		_, _ = io.WriteString(w, body)
 	})
 }
 
-func pedeCom(t *testing.T, h http.Handler, accept string) *http.Response {
+func requestWith(t *testing.T, h http.Handler, accept string) *http.Response {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodGet, "/personagens/1", nil)
 	if accept != "" {
@@ -43,8 +43,8 @@ func pedeCom(t *testing.T, h http.Handler, accept string) *http.Response {
 
 // A CENA VIAJA COMPRIMIDA, e o corpo continua sendo o mesmo depois de inflado.
 func TestTheRenderedSceneTravelsCompressed(t *testing.T) {
-	corpo := strings.Repeat("<div class=\"caixa\">Defesa 22</div>", 400)
-	resp := pedeCom(t, aCena(corpo), "gzip")
+	body := strings.Repeat("<div class=\"caixa\">Defesa 22</div>", 400)
+	resp := requestWith(t, scene(body), "gzip")
 
 	if got := resp.Header.Get("Content-Encoding"); got != "gzip" {
 		t.Fatalf("Content-Encoding = %q, quer gzip: a cena saiu crua", got)
@@ -62,11 +62,11 @@ func TestTheRenderedSceneTravelsCompressed(t *testing.T) {
 	if err != nil {
 		t.Fatalf("o corpo não é gzip válido: %v", err)
 	}
-	inflado, err := io.ReadAll(zr)
+	inflated, err := io.ReadAll(zr)
 	if err != nil {
 		t.Fatalf("inflar: %v", err)
 	}
-	if string(inflado) != corpo {
+	if string(inflated) != body {
 		t.Error("o corpo inflado não é igual ao original")
 	}
 }
@@ -80,16 +80,16 @@ func TestWhoeverDoesNotAcceptGzipGetsItRaw(t *testing.T) {
 	// TAMANHO em vez de pela negociação, e continuaria verde com a leitura do
 	// `Accept-Encoding` quebrada. Um teste que pode passar por dois motivos não
 	// prende nenhum dos dois.
-	corpo := strings.Repeat("<p>o texto cru</p>", 200)
+	body := strings.Repeat("<p>o texto cru</p>", 200)
 	for _, accept := range []string{"", "identity", "gzip;q=0", "br"} {
 		t.Run(fmt.Sprintf("accept=%q", accept), func(t *testing.T) {
-			resp := pedeCom(t, aCena(corpo), accept)
+			resp := requestWith(t, scene(body), accept)
 			if got := resp.Header.Get("Content-Encoding"); got != "" {
 				t.Errorf("com Accept-Encoding %q a resposta saiu %q", accept, got)
 			}
-			lido, _ := io.ReadAll(resp.Body)
-			if string(lido) != corpo {
-				t.Errorf("o corpo cru não sobreviveu: %d bytes", len(lido))
+			read, _ := io.ReadAll(resp.Body)
+			if string(read) != body {
+				t.Errorf("o corpo cru não sobreviveu: %d bytes", len(read))
 			}
 		})
 	}
@@ -105,18 +105,18 @@ func TestWhoeverDoesNotAcceptGzipGetsItRaw(t *testing.T) {
 // pelo TIPO, então um caso escrito com ele passaria pelo motivo errado e ficaria
 // VERDE com a regra do `Content-Encoding` sabotada.
 func TestWhatArrivesCompressedPassesThroughIntact(t *testing.T) {
-	jaComprimido := "\x1f\x8b conteudo ja em gzip"
+	alreadyGzipped := "\x1f\x8b conteudo ja em gzip"
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Content-Encoding", "gzip")
-		_, _ = io.WriteString(w, jaComprimido)
+		_, _ = io.WriteString(w, alreadyGzipped)
 	})
-	resp := pedeCom(t, handler, "gzip")
+	resp := requestWith(t, handler, "gzip")
 
-	corpo, _ := io.ReadAll(resp.Body)
-	if string(corpo) != jaComprimido {
+	body, _ := io.ReadAll(resp.Body)
+	if string(body) != alreadyGzipped {
 		t.Errorf("o corpo mudou: o middleware embrulhou de novo o que já vinha "+
-			"comprimido, e o navegador desinflaria uma camada só — corpo = %q", corpo)
+			"comprimido, e o navegador desinflaria uma camada só — corpo = %q", body)
 	}
 }
 
@@ -133,28 +133,28 @@ func TestWhatArrivesCompressedPassesThroughIntact(t *testing.T) {
 // O caso escreve UM quadro, esvazia, e exige que ele chegue inflado ANTES de o
 // handler retornar. Sem o `Flush` atravessando, ele estoura no tempo.
 func TestTheLiveStreamCrossesTheGzip(t *testing.T) {
-	quadroEscrito := make(chan struct{})
-	segura := make(chan struct{})
+	frameWritten := make(chan struct{})
+	holds := make(chan struct{})
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.WriteHeader(http.StatusOK)
 		_, _ = io.WriteString(w, "event: patch\ndata: <p>a mesa mexeu</p>\n\n")
 		w.(http.Flusher).Flush()
-		close(quadroEscrito)
-		<-segura // a conexão continua ABERTA, como um SSE de verdade
+		close(frameWritten)
+		<-holds // a conexão continua ABERTA, como um SSE de verdade
 	})
 
-	servidor := httptest.NewServer(Gzip(handler))
-	defer servidor.Close()
-	defer close(segura)
+	server := httptest.NewServer(Gzip(handler))
+	defer server.Close()
+	defer close(holds)
 
-	req, _ := http.NewRequest(http.MethodGet, servidor.URL, nil)
+	req, _ := http.NewRequest(http.MethodGet, server.URL, nil)
 	req.Header.Set("Accept-Encoding", "gzip")
 	// `DisableCompression`: sem isto o próprio cliente do Go põe o
 	// `Accept-Encoding` e infla sozinho, e o caso mediria o transporte em vez do
 	// middleware.
-	cliente := &http.Client{Transport: &http.Transport{DisableCompression: true}}
-	resp, err := cliente.Do(req)
+	client := &http.Client{Transport: &http.Transport{DisableCompression: true}}
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("abrir o fluxo: %v", err)
 	}
@@ -164,24 +164,24 @@ func TestTheLiveStreamCrossesTheGzip(t *testing.T) {
 		t.Fatalf("Content-Encoding = %q: o fluxo não foi comprimido, e o caso não "+
 			"mediria a travessia do Flush", got)
 	}
-	<-quadroEscrito
+	<-frameWritten
 
-	chegou := make(chan string, 1)
+	arrived := make(chan string, 1)
 	go func() {
 		zr, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			chegou <- "ERRO ao abrir o gzip: " + err.Error()
+			arrived <- "ERRO ao abrir o gzip: " + err.Error()
 			return
 		}
 		buf := make([]byte, 256)
 		n, _ := zr.Read(buf)
-		chegou <- string(buf[:n])
+		arrived <- string(buf[:n])
 	}()
 
 	select {
-	case texto := <-chegou:
-		if !strings.Contains(texto, "a mesa mexeu") {
-			t.Errorf("o quadro chegou como %q", texto)
+	case text := <-arrived:
+		if !strings.Contains(text, "a mesa mexeu") {
+			t.Errorf("o quadro chegou como %q", text)
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("o quadro NÃO chegou com a conexão aberta: o `Flush` não atravessa o " +
@@ -224,17 +224,17 @@ func TestAFlushBeforeTheWriteAlreadyDecidesTheEnvelope(t *testing.T) {
 	if err != nil {
 		t.Fatalf("o corpo não é gzip válido: %v", err)
 	}
-	corpo, _ := io.ReadAll(zr)
-	if !strings.Contains(string(corpo), "<p>oi</p>") {
-		t.Errorf("o remendo não sobreviveu: %q", corpo)
+	body, _ := io.ReadAll(zr)
+	if !strings.Contains(string(body), "<p>oi</p>") {
+		t.Errorf("o remendo não sobreviveu: %q", body)
 	}
 }
 
 // A REGRA de quem comprime, exercitada direto.
 func TestOnlyTheTypesWorthItAreCompressed(t *testing.T) {
-	casos := []struct {
-		tipo string
-		quer bool
+	cases := []struct {
+		kind string
+		want bool
 	}{
 		{"text/html; charset=utf-8", true},
 		{"text/event-stream", true},
@@ -246,37 +246,37 @@ func TestOnlyTheTypesWorthItAreCompressed(t *testing.T) {
 		{"application/wasm", false},
 		{"", false},
 	}
-	for _, caso := range casos {
+	for _, tc := range cases {
 		h := http.Header{}
-		if caso.tipo != "" {
-			h.Set("Content-Type", caso.tipo)
+		if tc.kind != "" {
+			h.Set("Content-Type", tc.kind)
 		}
-		if got := vaiComprimir(h, http.StatusOK); got != caso.quer {
-			t.Errorf("vaiComprimir(%q) = %v, quer %v", caso.tipo, got, caso.quer)
+		if got := willCompress(h, http.StatusOK); got != tc.want {
+			t.Errorf("willCompress(%q) = %v, esperado %v", tc.kind, got, tc.want)
 		}
 	}
 	// RESPOSTA PEQUENA sai crua: comprimir 19 bytes produziu 43 no contêiner.
 	// O corte usa o `Content-Length` DECLARADO, e por isso um fluxo — que nunca
 	// declara tamanho — continua passando.
-	pequena := http.Header{}
-	pequena.Set("Content-Type", "text/html")
-	pequena.Set("Content-Length", "19")
-	if vaiComprimir(pequena, http.StatusOK) {
+	small := http.Header{}
+	small.Set("Content-Type", "text/html")
+	small.Set("Content-Length", "19")
+	if willCompress(small, http.StatusOK) {
 		t.Error("uma resposta de 19 bytes foi comprimida: o envelope do gzip a deixa MAIOR")
 	}
-	fluxo := http.Header{}
-	fluxo.Set("Content-Type", "text/event-stream")
-	if !vaiComprimir(fluxo, http.StatusOK) {
+	stream := http.Header{}
+	stream.Set("Content-Type", "text/event-stream")
+	if !willCompress(stream, http.StatusOK) {
 		t.Error("o fluxo não passou pelo corte de tamanho: ele não declara " +
 			"`Content-Length`, e tratá-lo como pequeno mataria a compressão do tempo real")
 	}
 
 	// SEM CORPO não leva envelope: um gzip vazio sobre um 304 é lixo que alguns
 	// clientes recusam.
-	semCorpo := http.Header{}
-	semCorpo.Set("Content-Type", "text/html")
+	noBody := http.Header{}
+	noBody.Set("Content-Type", "text/html")
 	for _, status := range []int{http.StatusNoContent, http.StatusNotModified} {
-		if vaiComprimir(semCorpo, status) {
+		if willCompress(noBody, status) {
 			t.Errorf("o status %d não tem corpo e mesmo assim levou envelope gzip", status)
 		}
 	}

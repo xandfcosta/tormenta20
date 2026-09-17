@@ -5,7 +5,7 @@ valem; o que está aqui estende ou sobrepõe.
 
 `engine-go` é o app inteiro: a API HTTP na :3001, o motor de regras, e as CENAS
 em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
-`serve/api/assets/src`, e o kit de apresentação em `serve/web/ui`. Um processo serve tudo, e
+`serve/web/assets/src`, e o kit de apresentação em `serve/web/ui`. Um processo serve tudo, e
 desde a ALE-273 ele também sobe por `docker compose up -d --build`, com o banco
 em bind mount. **O compose não trouxe um segundo runtime**: continua sendo UM
 serviço. O proxy que normalmente viria junto foi considerado e recusado — ele
@@ -28,6 +28,8 @@ engine-go/
 ├── serve/        O QUE RESPONDE HTTP
 │   ├── api/      a RAIZ DE COMPOSIÇÃO: monta o roteador e cumpre as portas
 │   └── web/      as quinze cenas, cada uma com a porta dela
+│       └── assets/  o FRONT que não é `.templ`: a folha, as ilhas de JS,
+│                    as fontes e o favicon — e o `go:embed` deles
 ├── infra/        O QUE NÃO É DOMÍNIO
 │   ├── db/       migrações e as consultas do sqlc
 │   ├── config/   o que o ambiente diz, lido no boot
@@ -51,6 +53,7 @@ entrada é decisão, não conveniência.
 | quanto de PV este herói tem | `domain/engine` |
 | como a ficha é montada do banco | `domain/sheet` |
 | o que a tela desenha | `serve/web/<cena>` |
+| a folha, uma ilha de JS, uma fonte | `serve/web/assets` |
 | quem cumpre o que a cena pede | `serve/api` |
 | onde o dado é gravado | `infra/db` |
 | por que a suíte reprovou uma convenção | `convention` |
@@ -854,7 +857,7 @@ segue foi todo descoberto errando — está aqui para ninguém redescobrir:
   com a cor HERDADA — o crachá de contagem dos Efeitos saiu dourado sobre
   dourado, 1,53:1, e atravessou uma fatia inteira. O
   `TestEveryHouseTintExistsInTheStylesheet` cobra cada token contra a folha
-  compilada; a paleta mora no `@theme` do `serve/api/assets/src/index.css`, e é
+  compilada; a paleta mora no `@theme` do `serve/web/assets/src/index.css`, e é
   lá que se confere antes de inventar um nome.
   **Ele varre o DIRETÓRIO e não um padrão de nome, e isso custou duas vezes**: o
   glob era um padrão de NOME, e ele deixou de casar duas vezes: quando o kit
@@ -1236,7 +1239,7 @@ existe para conseguir.
 - `Overlays []templ.Component` — o livro, o verbete e o buscador, que leem
   catálogo. A casca só reserva o lugar.
 
-Quem preenche é o `scene_render.go`, o ÚNICO lugar do projeto que monta uma
+Quem preenche é o `scene_core.go`, o ÚNICO lugar do projeto que monta uma
 página. Pôr esses campos em cada `ui.Page{…}` seria repetir dezoito vezes o que
 não varia.
 

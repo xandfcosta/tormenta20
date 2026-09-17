@@ -1,5 +1,5 @@
 import { i as e, n as t, r as n, t as r } from "./turn-juice.js";
-//#region serve/api/assets/src/lib/token-move.ts
+//#region serve/web/assets/src/lib/token-move.ts
 function i(e) {
 	if (!e) return null;
 	let t = /--col:\s*(-?\d+)/.exec(e), n = /--lin:\s*(-?\d+)/.exec(e);
@@ -17,7 +17,7 @@ function a(e, t, r, i) {
 	});
 }
 //#endregion
-//#region serve/api/assets/src/table.ts
+//#region serve/web/assets/src/table.ts
 var o = "(prefers-reduced-motion: reduce)";
 function s(e) {
 	new MutationObserver((t) => {

@@ -102,3 +102,40 @@ func WriteValidationError(w http.ResponseWriter, fields wire.FieldErrorMap) {
 
 // ParseInt lê um parâmetro numérico de rota, tolerando espaço em volta.
 func ParseInt(s string) (int, error) { return strconv.Atoi(strings.TrimSpace(s)) }
+
+// WithVersionedCache embrulha um handler com a política de cache por URL
+// VERSIONADA.
+//
+// COM a versão certa na consulta: um ano e `immutable`, porque a URL identifica
+// o conteúdo — se o conteúdo mudar, o dígito muda e a URL é outra. A escolha é
+// essa e não um `max-age` curto porque `max-age` curto ainda paga revalidação, e
+// revalidar folha bloqueante ainda atrasa a primeira pintura.
+//
+// SEM ela: `no-cache`, e é deliberado ser o pior caso. Um endereço sem versão
+// pode ter sido guardado antes de um deploy, e servi-lo como eterno prenderia a
+// pessoa numa folha velha sem gesto nenhum que a resgate.
+//
+// O `scope` é `public` ou `private`, e não é detalhe: `public` autoriza um
+// cache COMPARTILHADO a guardar a resposta, o que está certo para a folha e as
+// fontes (saem sem sessão) e errado para o que só sai depois do `requirePage`.
+func WithVersionedCache(version, scope string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("v") == version {
+			w.Header().Set("Cache-Control", scope+", max-age=31536000, immutable")
+		} else {
+			w.Header().Set("Cache-Control", "no-cache")
+		}
+		// O `ETag` sai nos DOIS casos: ele é o que dá 304 a quem chega sem
+		// versão, e é a única coisa que o `embed` não oferece sozinho (modtime
+		// zero). Forte e entre aspas, como manda o RFC.
+		w.Header().Set("ETag", `"`+version+`"`)
+		// A versão VAZIA é conferida à parte porque `strings.Contains(x, "")` é
+		// VERDADEIRO: sem esta guarda, um dígito vazio responderia 304 a
+		// qualquer pedido e o corpo nunca sairia.
+		if version != "" && strings.Contains(r.Header.Get("If-None-Match"), version) {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}

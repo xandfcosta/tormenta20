@@ -1,5 +1,5 @@
 import { i as e, n as t } from "./turn-juice.js";
-//#region serve/api/assets/src/grimorio.ts
+//#region serve/web/assets/src/grimorio.ts
 function n(e) {
 	return e.closest("figure, [data-par]")?.querySelector("[data-amostra]") ?? null;
 }

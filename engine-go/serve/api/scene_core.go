@@ -8,6 +8,7 @@ import (
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/serve/web/assets"
 	"t20engine/serve/web/bookui"
 	"t20engine/serve/web/finder"
 	"t20engine/serve/web/ui"
@@ -40,7 +41,7 @@ func (c sceneCore) Catalogs() *engine.Catalogs { return c.catalogs }
 func (c sceneCore) BookAddress() bookui.BookAddress { return c.livro }
 
 // Asset monta o endereço versionado de um estático.
-func (c sceneCore) Asset(arquivo string) string { return AssetURL(arquivo) }
+func (c sceneCore) Asset(arquivo string) string { return assets.URL(arquivo) }
 
 // CurrentUserID lê quem está pedindo do contexto que o `requirePage` escreveu.
 //
@@ -78,7 +79,7 @@ func (c sceneCore) WritePage(
 	// A CASCA RECEBE o que ela não pode conhecer: o endereço dos estáticos e as
 	// três sobreposições. Este é o único lugar que monta uma página, e pôr os
 	// campos em cada `ui.Page{…}` seria repetir dezoito vezes o que não varia.
-	p.Asset = AssetURL
+	p.Asset = assets.URL
 	p.Overlays = []templ.Component{finder.Dialog(), bookui.BookDialog(), bookui.EntryDialog()}
 	if err := ui.Layout(p, corpo).Render(r.Context(), &buf); err != nil {
 		// Em buffer e não direto no `w`: um erro no meio da renderização já

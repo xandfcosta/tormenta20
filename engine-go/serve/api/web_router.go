@@ -1,9 +1,9 @@
 package api
 
 import (
-	"io/fs"
 	"net/http"
 	"t20engine/serve/web/admin"
+	"t20engine/serve/web/assets"
 	"t20engine/serve/web/campaigns"
 	"t20engine/serve/web/characters"
 	"t20engine/serve/web/door"
@@ -27,7 +27,7 @@ func (s *Server) WebRouter() http.Handler {
 	r := chi.NewRouter()
 	// Os estáticos são ANÔNIMOS: são o bundle do Datastar e a folha de estilo, e
 	// exigir sessão para eles só quebraria o cache.
-	r.Handle("/static/*", http.StripPrefix("/static/", assetsHandler()))
+	r.Handle("/static/*", http.StripPrefix("/static/", assets.Handler()))
 	// A PORTA é anônima por necessidade: é ela que cria a sessão. Ela fica FORA
 	// do grupo com `requirePage` — não por ordem de casamento, que o chi resolve
 	// por rota, mas porque dentro dele ela seria inalcançável para exatamente
@@ -73,13 +73,4 @@ func (s *Server) WebRouter() http.Handler {
 		admin.Routes(r, admin.New(s.adminHost()))
 	})
 	return r
-}
-
-// assetsHandler serve o bundle e a folha embutidos.
-func assetsHandler() http.Handler {
-	sub, err := fs.Sub(assetsFS, "assets/static")
-	if err != nil {
-		panic("piloto: static embutido ausente: " + err.Error())
-	}
-	return comCacheVersionado(versaoDosEstaticos, "public", http.FileServer(http.FS(sub)))
 }

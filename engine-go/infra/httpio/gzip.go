@@ -29,11 +29,11 @@ import (
 //
 // Por isso o `Flush` daqui esvazia o gzip ANTES de esvaziar quem está embaixo.
 
-// tiposComprimiveis são os `Content-Type` que valem a pena.
+// compressibleTypes são os `Content-Type` que valem a pena.
 //
 // A lista é de PREFIXOS porque o cabeçalho carrega charset (`text/html;
 // charset=utf-8`), e comparar a string inteira acertaria zero vezes.
-var tiposComprimiveis = []string{
+var compressibleTypes = []string{
 	"text/",                  // html, css, plain, event-stream
 	"application/json",       // a API
 	"application/javascript", // o `scene.js` do app
@@ -64,29 +64,29 @@ func Gzip(next http.Handler) http.Handler {
 // que o handler já escreveu o `Content-Type`.
 type gzipEnvelope struct {
 	http.ResponseWriter
-	gz       *gzip.Writer
-	decidido bool
-	uma      sync.Once
+	gz      *gzip.Writer
+	decided bool
+	one     sync.Once
 }
 
-// poolDeGzip reaproveita os escritores: um `gzip.NewWriter` aloca ~260 KB de
+// gzipPool reaproveita os escritores: um `gzip.NewWriter` aloca ~260 KB de
 // janela, e a ficha faz um por toque no PV.
-var poolDeGzip = sync.Pool{
+var gzipPool = sync.Pool{
 	New: func() any { return gzip.NewWriter(nil) },
 }
 
 func (e *gzipEnvelope) WriteHeader(status int) {
-	e.decide(status)
+	e.decides(status)
 	e.ResponseWriter.WriteHeader(status)
 }
 
 // decide resolve, uma vez, se esta resposta vai comprimida.
-func (e *gzipEnvelope) decide(status int) {
-	if e.decidido {
+func (e *gzipEnvelope) decides(status int) {
+	if e.decided {
 		return
 	}
-	e.decidido = true
-	if !vaiComprimir(e.Header(), status) {
+	e.decided = true
+	if !willCompress(e.Header(), status) {
 		return
 	}
 	e.Header().Set("Content-Encoding", "gzip")
@@ -94,12 +94,12 @@ func (e *gzipEnvelope) decide(status int) {
 	// `Content-Length` do texto cru faria o cliente esperar bytes que nunca
 	// chegam, ou cortar o corpo no meio.
 	e.Header().Del("Content-Length")
-	e.gz = poolDeGzip.Get().(*gzip.Writer)
+	e.gz = gzipPool.Get().(*gzip.Writer)
 	e.gz.Reset(e.ResponseWriter)
 }
 
-// vaiComprimir é a REGRA, separada para o guarda poder exercitá-la direto.
-func vaiComprimir(h http.Header, status int) bool {
+// willCompress é a REGRA, separada para o guarda poder exercitá-la direto.
+func willCompress(h http.Header, status int) bool {
 	// Já vem comprimido rio acima — não recomprimir.
 	if h.Get("Content-Encoding") != "" {
 		return false
@@ -117,26 +117,26 @@ func vaiComprimir(h http.Header, status int) bool {
 	// limiar de verdade precisaria BUFERIZAR até saber o tamanho, e bufferizar é
 	// exatamente o que mata o SSE; um fluxo nunca declara `Content-Length`, então
 	// ele não passa por aqui.
-	if n, err := strconv.Atoi(h.Get("Content-Length")); err == nil && n < umMTU {
+	if n, err := strconv.Atoi(h.Get("Content-Length")); err == nil && n < oneMTU {
 		return false
 	}
-	tipo := h.Get("Content-Type")
-	for _, prefixo := range tiposComprimiveis {
-		if strings.HasPrefix(tipo, prefixo) {
+	kind := h.Get("Content-Type")
+	for _, prefix := range compressibleTypes {
+		if strings.HasPrefix(kind, prefix) {
 			return true
 		}
 	}
 	return false
 }
 
-// umMTU é o piso abaixo do qual comprimir só acrescenta bytes.
-const umMTU = 1400
+// oneMTU é o piso abaixo do qual comprimir só acrescenta bytes.
+const oneMTU = 1400
 
 func (e *gzipEnvelope) Write(b []byte) (int, error) {
-	if !e.decidido {
+	if !e.decided {
 		// Handler que escreve sem chamar `WriteHeader`: o `net/http` assume 200,
 		// e a decisão tem de acontecer aqui, ANTES do primeiro byte.
-		e.decide(http.StatusOK)
+		e.decides(http.StatusOK)
 	}
 	if e.gz == nil {
 		return e.ResponseWriter.Write(b)
@@ -159,14 +159,14 @@ func (e *gzipEnvelope) Flush() {
 	// ele, e o corpo vai comprimido mesmo assim: o cliente lê bytes de gzip como
 	// texto puro, os remendos param de ser aplicados, e nada falha em lugar
 	// nenhum.
-	if !e.decidido {
-		e.decide(http.StatusOK)
+	if !e.decided {
+		e.decides(http.StatusOK)
 	}
 	if e.gz != nil {
 		_ = e.gz.Flush()
 	}
-	if quemEsvazia, ok := e.ResponseWriter.(http.Flusher); ok {
-		quemEsvazia.Flush()
+	if flusher, ok := e.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
 	}
 }
 
@@ -181,12 +181,12 @@ func (e *gzipEnvelope) Unwrap() http.ResponseWriter {
 }
 
 func (e *gzipEnvelope) Close() {
-	e.uma.Do(func() {
+	e.one.Do(func() {
 		if e.gz == nil {
 			return
 		}
 		_ = e.gz.Close()
-		poolDeGzip.Put(e.gz)
+		gzipPool.Put(e.gz)
 		e.gz = nil
 	})
 }

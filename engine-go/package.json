@@ -2,7 +2,7 @@
   "name": "@tormenta20/engine-go",
   "version": "0.0.0",
   "private": true,
-  "description": "Go API + motor de regras + as CENAS em Datastar, fontes e tudo. `dev` roda air (recarga a quente do cmd/api :3001) lendo .env.development; `build` compila o binário de produção e `start` o sobe com .env.production, servindo as cenas, a API e o stream de UM processo. Produção é esse processo num contêiner: `docker compose up -d --build` na raiz, banco em bind mount no hospedeiro e NENHUM proxy na frente (ALE-273). As fontes das cenas — a folha e as ilhas de JS — moram em api/assets/src desde a ALE-272 (fatia 10c), quando saíram de dentro da SPA; o `prebuild` as compila para api/assets/static, que o go:embed leva para dentro do binário.",
+  "description": "Go API + motor de regras + as CENAS em Datastar, fontes e tudo. `dev` roda air (recarga a quente do cmd/api :3001) lendo .env.development; `build` compila o binário de produção e `start` o sobe com .env.production, servindo as cenas, a API e o stream de UM processo. Produção é esse processo num contêiner: `docker compose up -d --build` na raiz, banco em bind mount no hospedeiro e NENHUM proxy na frente (ALE-273). As fontes das cenas — a folha e as ilhas de JS — moram em serve/web/assets/src desde a ALE-272 (fatia 10c), quando saíram de dentro da SPA; o `prebuild` as compila para serve/web/assets/static, que o go:embed leva para dentro do binário.",
   "scripts": {
     "dev": "air",
     "build": "go build -o ./bin/t20-api ./cmd/api",
