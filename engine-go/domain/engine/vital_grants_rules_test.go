@@ -13,13 +13,10 @@ import (
 //	 nos pontos de mana, assim como um bucaneiro/nobre não soma duas vezes seu
 //	 Carisma na Defesa."
 //
-// Este é o pedaço da fatia 1 que precisava dos catálogos primados: as
-// concessões vivem no catálogo, e a regra está em COMO elas são somadas
-// (ALE-105). A cobertura vinha só do oráculo de paridade.
+// As concessões vivem no catálogo, e a regra está em COMO elas são somadas.
 //
 // A metade da DEFESA da mesma regra (bucaneiro/nobre e o Carisma) NÃO está
-// implementada — o `resolveStack` agrupa por `bonusType`, não por atributo. É um
-// dos itens da ALE-110.
+// implementada — o `resolveStack` agrupa por `bonusType`, não por atributo.
 
 func vitalCatalogs(t *testing.T) *Catalogs {
 	t.Helper()

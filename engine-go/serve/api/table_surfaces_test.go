@@ -23,13 +23,6 @@ func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
 	}
 }
 
-// TestTheSelectorHasTheThreeSurfaces.
-//
-// Por duas fatias foram DUAS, e a asserção aqui era a negativa: a ficha era a
-// última tela da migração e a aba dela nasceria junto com ela (decisão do dono).
-// A ficha nasceu na fatia 8 e ganhou link na 10a; a aba entra na 10b, antes de a
-// SPA ser apagada, para a migração não tirar da mesa o que ela tinha.
-//
 // A asserção é sobre o RÓTULO que o usuário leria, e não sobre um id interno: é
 // o rótulo que promete.
 func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
@@ -46,15 +39,13 @@ func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
 			t.Errorf("o seletor não oferece %q", rotulo)
 		}
 	}
-	// E a ficha chega DESENHADA, não prometida: a aba sem conteúdo atrás é
-	// exatamente o que a decisão do dono evitava enquanto ela não existia.
+	// E a ficha chega DESENHADA, não prometida: aba com rótulo e sem conteúdo
+	// atrás é promessa quebrada.
 	if !strings.Contains(html, `id="sheet-scene"`) {
 		t.Error("a aba Ficha está na tela e a ficha não veio junto")
 	}
 }
 
-// TestTheSheetInTheSessionDoesNotNavigateOutOfIt.
-//
 // Dentro da sessão as abas da ficha são COMANDO e não link. Um `<a href>` ali
 // tiraria o jogador da mesa no meio do combate — e o modo de errar é silencioso,
 // porque o link funciona: ele leva para uma tela legítima, só que a errada.
@@ -78,8 +69,6 @@ func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 	}
 }
 
-// TestEmbeddedSheetNamesItsCharacter.
-//
 // A ficha embutida abre direto nas sete abas, e nenhuma delas diz o nome: a
 // barra de cima é pulada porque o ‹ Voltar dela levaria o jogador para fora da
 // mesa. Pular a barra inteira pulou junto o NOME — o crachá do rodapé diz a raça
@@ -109,8 +98,6 @@ func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 	}
 }
 
-// TestTheGmDoesNotGetTheSelector.
-//
 // Ele tem o PALCO — faixa, trilhos e tabuleiro ao mesmo tempo —, e é essa a
 // diferença entre as duas formas. Um seletor na tela dele esconderia atrás de uma
 // aba o que a forma do mestre existe para mostrar junto.
@@ -130,8 +117,6 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 	}
 }
 
-// TestTheOpeningSurfaceIsDerivedAndNotTyped.
-//
 // O padrão é a MESA (decisão do dono), e ele é escrito num lugar só: a página
 // semeia o sinal a partir da mesma constante que a lista de superfícies usa.
 // Digitar 'mesa' no `data-signals` seria a segunda cópia, e a que fica para trás
@@ -155,8 +140,6 @@ func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 	}
 }
 
-// TestTheSheetInTheSessionHasAWayToKnowItChanged (ALE-275).
-//
 // A ficha embutida não é região do stream, então o que a mantém em dia é um par:
 // o servidor escreve `fichaversao` num sinal, e um ouvinte na cena repede a
 // ficha. As duas pontas estão em arquivos diferentes e nenhuma delas falha

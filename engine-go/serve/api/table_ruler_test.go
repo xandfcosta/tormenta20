@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// TestThePlayerTemplateDoesNotCountTheHiddenToken — o guarda que mais importa.
+// O guarda que mais importa desta superfície.
 //
 // Esconder a peça é o gesto com que o mestre guarda a emboscada. Um gabarito que
 // respondesse "Pega 2 peças: Arwen, Ogro" entregaria a emboscada pela porta dos
@@ -41,7 +41,7 @@ func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 	}
 }
 
-// TestMeasuringDoesNotPatchTheScene.
+// A régua não remenda a cena.
 //
 // A régua não muda a cena, e a resposta dela tem de ser do tamanho disso. Uma
 // medição que devolvesse as nove regiões trocaria o mapa debaixo de quem está
@@ -54,8 +54,8 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	// As paradas vêm nos SINAIS desde a ALE-203: com número variável de pernas,
-	// um caminho com as pontas dentro seria uma rota que muda de forma.
+	// As paradas vêm nos SINAIS: com número variável de pernas, um caminho com
+	// as pontas dentro seria uma rota que muda de forma.
 	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/regua",
 		`{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
 	if !strings.Contains(resposta, "ruler_text") {
@@ -66,7 +66,7 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 	}
 }
 
-// TestTheTemplateRefusesAShapeTheBookDoesNotHave.
+// O gabarito recusa uma forma que o livro não tem.
 //
 // O id vem do CLIENTE, e uma forma inventada não pode virar um desenho — nem
 // cair calada na esfera, que desenharia uma área que ninguém pediu no lugar de
@@ -85,28 +85,17 @@ func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 	}
 }
 
-// TestWhoIsNotAtTheTableDoesNotMeasureItsScene.
+// Quem não está na mesa não mede a cena dela.
 //
 // Medir é de todo mundo que joga — "dá para acertar daqui?" é pergunta de quem
 // ataca —, e por isso a rota não exige o papel de mestre. A trava que sobra é a
 // de sempre, e ela é do SERVIDOR: o gabarito devolve os NOMES das peças, então
 // uma rota aberta seria a lista do bestiário da cena para quem tiver a URL.
 //
-// # ELE FOI VERDE SOBRE NADA POR UMA ISSUE INTEIRA (ALE-311)
-//
-// Ele postava em `/tabuleiro/regua/0/0/3/0`, e a única rota de régua registrada
-// é `/tabuleiro/regua`, SEM parâmetros — as paradas passaram a viajar nos sinais
-// na ALE-203 e o caso ficou postando no endereço velho. O chi devolvia 404, e a
-// asserção era `!= 200`: verde.
-//
-// Medido: removida a trava de autorização INTEIRA do handler, ele continuava
-// passando. Um caso que afirma só "não foi 200" não distingue "o servidor
-// recusou" de "este endereço não existe", e as duas coisas são a mesma linha no
-// terminal.
-//
-// Por isso agora ele afirma o 403 EXATO, e o CONTROLE ao lado é o que impede a
-// forma de voltar: quem está na mesa mede pelo MESMO endereço e recebe 200. Sem
-// ele, um endereço morto passaria nos dois.
+// O 403 é afirmado EXATO, e não como `!= 200`: postando num endereço que já não
+// existe, um caso frouxo lê o 404 do chi como recusa e fica verde com a trava de
+// autorização INTEIRA removida. O CONTROLE ao lado é o que impede a forma de
+// voltar — quem está na mesa mede pelo MESMO endereço e recebe 200.
 func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -126,11 +115,8 @@ func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 	}
 }
 
-// TestTheRailOffersTheRulerToThePlayer.
-//
-// Antes desta fatia o trilho inteiro era do mestre, porque só ele tinha modo —
-// pintar e marcar. A régua é de quem ataca, e a cena do jogador não desenhava
-// trilho nenhum: a ferramenta existiria e não teria onde ser ligada.
+// A régua é de quem ATACA, e por isso o jogador ganha trilho: sem ele a
+// ferramenta existiria e não teria onde ser ligada.
 //
 // E o que continua sendo do mestre segue sendo: o pincel de terreno pinta a
 // cena, e a trava de verdade é a rota (o `gmBoardCommand`) — isto

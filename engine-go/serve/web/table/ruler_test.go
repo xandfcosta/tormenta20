@@ -8,7 +8,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// Os guardas da RÉGUA e do GABARITO na Mesa (ALE-269, superfície 8).
+// Os guardas da RÉGUA e do GABARITO na Mesa.
 //
 // A ARITMÉTICA não é medida aqui: `engine.Measure` e `engine.AreaSquares` têm
 // guarda de regra próprio, escrito contra a figura da p225 e a tabela da p224.
@@ -19,8 +19,6 @@ import (
 // LISTA de quem o gabarito pega obedece à redação por papel, e que medir NÃO
 // remenda a cena.
 
-// TestTheRulerSentenceSaysTheBookRangeBand.
-//
 // A faixa é o que a régua tem de mais útil: "10,5m" obriga o jogador a lembrar
 // que curto são 9m, enquanto "alcance médio" já é a resposta. E o "além" não é
 // uma faixa com nome — ele é a ausência de uma —, então a frase dele é outra.
@@ -29,8 +27,7 @@ func TestTheRulerSentenceSaysTheBookRangeBand(t *testing.T) {
 		de, ate  engine.Square
 		esperado string
 	}{
-		// Um quadrado no singular. A frase é lida em voz alta na mesa, e
-		// "1 quadrados" apareceu na tela na primeira medição da SPA.
+		// Um quadrado no SINGULAR: a frase é lida em voz alta na mesa.
 		{engine.Square{}, engine.Square{X: 1}, "1 quadrado (1,5m) · alcance curto"},
 		// 6 quadrados são os 9m do alcance curto (p224), e o limite é INCLUSIVO.
 		{engine.Square{}, engine.Square{X: 6}, "6 quadrados (9,0m) · alcance curto"},
@@ -48,8 +45,6 @@ func TestTheRulerSentenceSaysTheBookRangeBand(t *testing.T) {
 	}
 }
 
-// TestTheTemplateDirectionHasADeadZone.
-//
 // Sem a zona morta, um pixel de diferença no clique trocaria a forma inteira do
 // gabarito debaixo do dedo: um clique quase em linha viraria diagonal e o cone
 // mudaria de lado enquanto a pessoa tenta acertar a casa.
@@ -83,9 +78,7 @@ func TestTheTemplateDirectionHasADeadZone(t *testing.T) {
 	}
 }
 
-// TestTheTemplatePathUsesThePlaneCoordinate.
-//
-// Com sinal, e é isso que faz o desenho caber num sinal em vez de num remendo: o
+// A COORDENADA DO PLANO, com sinal, e é isso que faz o desenho caber num sinal em vez de num remendo: o
 // `transform` do grupo — que o servidor redesenha — é quem tira a quina da
 // moldura. Se o caminho já viesse relativo à moldura, uma moldura que crescesse
 // deslocaria o gabarito sem que nada mudasse na tela.
@@ -100,8 +93,6 @@ func TestTheTemplatePathUsesThePlaneCoordinate(t *testing.T) {
 	}
 }
 
-// TestTheTemplateCatchesTheLargeTokenByItsBody.
-//
 // Uma Colossal ocupa 6×6 (p107), e exigir que ela caiba inteira na área deixaria
 // o dragão de fora do próprio incêndio. Basta UM quadrado do corpo cair dentro.
 func TestTheTemplateCatchesTheLargeTokenByItsBody(t *testing.T) {
@@ -128,8 +119,6 @@ func TestTheTemplateCatchesTheLargeTokenByItsBody(t *testing.T) {
 	}
 }
 
-// TestTheTemplateSizeClampsInsteadOfRefusing.
-//
 // O número vem de uma caixa que a pessoa está DIGITANDO, e apagar o conteúdo
 // dela passa por zero e por vazio no caminho. Recusar com uma frase acenderia um
 // erro no meio da digitação; travar desenha o menor gabarito e segue.
@@ -153,8 +142,6 @@ func TestTheTemplateSizeClampsInsteadOfRefusing(t *testing.T) {
 	}
 }
 
-// TestTheSceneCenterFramesTheLargeTokenBody (ALE-269, item 9).
-//
 // Num plano sem bordas, "voltar ao começo" não significa nada — o gesto tem de
 // achar o GRUPO. E o corpo entra na conta e não só a âncora: uma Colossal ocupa
 // 6×6 (p107), e enquadrar pela quina dela deixaria metade do dragão fora da
@@ -169,9 +156,8 @@ func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 	if x, y := centerScene(v); x != 7 || y != 7 {
 		t.Errorf("o centro saiu (%d,%d), esperado (7,7) — o corpo da peça grande ficou fora da conta", x, y)
 	}
-	// SEM PEÇA o alvo é a ORIGEM do plano (ALE-203). Era o meio da MOLDURA, e a
-	// moldura saiu: num plano infinito e vazio, o (0,0) é o único lugar sobre o
-	// qual duas pessoas concordam.
+	// SEM PEÇA o alvo é a ORIGEM do plano: num plano infinito e vazio, o (0,0) é
+	// o único lugar sobre o qual duas pessoas concordam.
 	vazia := BoardView{}
 	if x, y := centerScene(vazia); x != 0 || y != 0 {
 		t.Errorf("a cena vazia mirou (%d,%d), esperado a origem do plano (0,0)", x, y)
@@ -183,11 +169,9 @@ func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 	}
 }
 
-// TestThePaintLayerOnlyLightsUpWithABrush.
-//
-// A pergunta antiga era `$tool != ” && != 'marcador'`, e ela era VERDADE
-// para toda ferramenta que ainda não existia: com a régua ligada, a camada de
-// pintar cobriria o mapa e roubaria o clique da medida — um defeito que não dá
+// Uma condição por EXCLUSÃO — "qualquer ferramenta que não seja o marcador" — é
+// verdade para toda ferramenta que ainda não existe: com a régua ligada, a camada
+// de pintar cobriria o mapa e roubaria o clique da medida — um defeito que não dá
 // erro em lugar nenhum, só faz a régua não medir.
 //
 // A lista sai das espécies e nunca de um literal, e é isso que este guarda

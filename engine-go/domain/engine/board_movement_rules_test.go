@@ -2,10 +2,9 @@ package engine
 
 import "testing"
 
-// Movimento no mapa de batalha — a regra vem do livro e o teste cita a página
-// (ALE-124). O que se prova aqui é aritmética de mesa: o mestre e o jogador
-// discordarem sobre "cabe ou não cabe" é a discussão que o app existe para
-// encerrar.
+// Movimento no mapa de batalha — a regra vem do livro e o teste cita a página.
+// O que se prova aqui é aritmética de mesa: o mestre e o jogador discordarem
+// sobre "cabe ou não cabe" é a discussão que o app existe para encerrar.
 
 func path(steps ...Square) []Square { return steps }
 
@@ -202,9 +201,8 @@ func TestDifficultTerrainShrinksTheReach(t *testing.T) {
 }
 
 // A CONTAGEM das dobras existe para a tela poder nomear a regra que produziu o
-// número (ALE-190), e por isso ela sai do mesmo laço que cobrou o caminho: um
-// texto escrito à mão no cliente poderia divergir do motor, que é a classe de
-// defeito que a ALE-104 matou.
+// número, e por isso ela sai do mesmo laço que cobrou o caminho: um texto
+// escrito à mão no cliente divergiria do motor.
 func TestPathCostCountsWhichRuleDoubledEachStep(t *testing.T) {
 	brejo := MoveTerrain{Difficult: map[Square]bool{{X: 2, Y: 0}: true}}
 
@@ -249,11 +247,7 @@ func TestStraightCleanPathCountsNoDoubling(t *testing.T) {
 	}
 }
 
-// ── o caminho entre dois quadrados (ALE-264) ─────────────────────────────────
-//
-// Os casos são os que a suíte da SPA (`board-path.test.ts`) já nomeava: as
-// bordas não mudaram com a linguagem, e reescrevê-las de cabeça seria escrever
-// outro teste com o mesmo nome.
+// ── o caminho entre dois quadrados ───────────────────────────────────────────
 
 func TestThePathStartsAtTheOriginAndEndsAtTheDestination(t *testing.T) {
 	caminho := PathBetween(Square{X: 0, Y: 0}, Square{X: 3, Y: 1})
@@ -307,7 +301,7 @@ func TestThePathWalksIntoNegativeCoordinates(t *testing.T) {
 	}
 }
 
-// ── o movimento por PARADAS (ALE-266) ────────────────────────────────────────
+// ── o movimento por PARADAS ──────────────────────────────────────────────────
 
 // A EMENDA não repete o quadrado da parada: ele é o fim de um segmento e o
 // começo do outro, e repeti-lo poria no meio do caminho um passo que não anda —
@@ -338,13 +332,9 @@ func TestARepeatedStopAddsNoStep(t *testing.T) {
 	}
 }
 
-// A ROTA É ESCOLHA DE QUEM JOGA, e ela custa o que custar — este é o teste que
-// diz por que as paradas existem.
-//
-// Do (0,0) ao (4,0) em linha reta são 4 quadrados. Passando por (2,2) — o
-// contorno que alguém faria para não passar ao lado de um inimigo — são 8, pelas
-// quatro diagonais. O caminho mais caro é legítimo, e antes das paradas ele era
-// IMPOSSÍVEL de expressar: o cliente desenhava a reta e pronto.
+// A ROTA É ESCOLHA DE QUEM JOGA, e ela custa o que custar — é por isso que as
+// paradas existem: sem elas o cliente desenha a reta e pronto, e o contorno que
+// alguém faria para não passar ao lado de um inimigo não tem como ser expresso.
 func TestGoingAroundCostsMoreAndThatIsThePoint(t *testing.T) {
 	reto := PathThroughStops([]Square{{X: 0, Y: 0}, {X: 4, Y: 0}})
 	contornando := PathThroughStops([]Square{{X: 0, Y: 0}, {X: 2, Y: 2}, {X: 4, Y: 0}})
@@ -356,17 +346,14 @@ func TestGoingAroundCostsMoreAndThatIsThePoint(t *testing.T) {
 	}
 }
 
-// E COM TERRENO DIFÍCIL o desvio pode custar MENOS que a reta — que é a
-// desigualdade que o `board-path.ts` da SPA dizia não existir enquanto o terreno
-// difícil não chegasse. Chegou.
+// E COM TERRENO DIFÍCIL o desvio pode custar MENOS que a reta.
 func TestInDifficultTerrainTheDetourCanCostLessThanTheStraightLine(t *testing.T) {
 	// Lama exatamente sobre a reta de (0,0) a (4,0).
 	lama := MoveTerrain{Difficult: map[Square]bool{{X: 1, Y: 0}: true, {X: 2, Y: 0}: true, {X: 3, Y: 0}: true}}
 
-	// O desvio sobe UMA fileira e anda por fora, em vez de cortar em diagonal: a
-	// primeira versão deste teste desviou por (2,1) e saiu MAIS caro que a lama
-	// (8 contra 7), porque as diagonais custam 2 cada e eu tinha posto quatro
-	// delas. O caminho estava certo; o meu exemplo é que não evitava nada.
+	// O desvio sobe UMA fileira e anda por fora, em vez de cortar em diagonal:
+	// quatro diagonais custam 2 cada e sairiam mais caras que atravessar a lama —
+	// o exemplo não mediria evitar nada.
 	reto := PathThroughStops([]Square{{X: 0, Y: 0}, {X: 4, Y: 0}})
 	desviando := PathThroughStops([]Square{{X: 0, Y: 0}, {X: 1, Y: 1}, {X: 3, Y: 1}, {X: 4, Y: 0}})
 
@@ -452,10 +439,9 @@ func TestTheTwoReachBandsDoNotOverlap(t *testing.T) {
 			t.Errorf("a casa %+v foi pintada nas duas faixas", q)
 		}
 	}
-	// OS NÚMEROS SÃO ESCRITOS À MÃO, e antes eles saíam de uma segunda chamada à
-	// implementação — o `ReachableSquares`, apagado na ALE-289. Comparar duas
-	// funções da mesma casa é o "esperado calculado" que o CLAUDE.md proíbe: um
-	// erro na conta sairia dos DOIS lados e o guarda ficaria verde.
+	// OS NÚMEROS SÃO ESCRITOS À MÃO: derivá-los de uma segunda chamada à
+	// implementação é o "esperado calculado" que o CLAUDE.md proíbe — um erro na
+	// conta sairia dos DOIS lados e o guarda ficaria verde.
 	//
 	// A conta vem da REGRA. Com a diagonal custando o dobro (T20 p238), um passo
 	// diagonal (2) vale dois ortogonais (1+1), então o custo até (dx,dy) é

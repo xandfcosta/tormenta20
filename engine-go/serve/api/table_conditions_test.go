@@ -19,7 +19,7 @@ func rowConditions(t *testing.T, f sceneFixture, entryID string) []string {
 	return nil
 }
 
-// TestTheBadgeSaysTheBookWordAndNotTheId — o defeito que estava na tela.
+// O defeito que estava na tela.
 //
 // O crachá desenhava o `id` cru e o `uppercase` do CSS disfarçava: 31 das 35
 // condições saem iguais em maiúsculas, e as outras quatro apareciam como CAIDO,
@@ -66,7 +66,7 @@ func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 	}
 }
 
-// TestTogglingTurnsTheConditionOnAndOff.
+// O clique ALTERNA a condição.
 //
 // O clique carrega a INTENÇÃO ("mexe nesta") e não o conjunto: quem monta a
 // lista nova é o servidor, lendo a atual. Uma tela que mandasse o conjunto
@@ -100,7 +100,7 @@ func TestTogglingTurnsTheConditionOnAndOff(t *testing.T) {
 	}
 }
 
-// TestTheNewSetComesBackInTheSignal.
+// O conjunto novo volta no SINAL.
 //
 // Sem isto o diálogo aberto MENTE: os crachás dele são pintados a partir do
 // sinal que a abertura escreveu, e depois de um clique aquele sinal descreve o
@@ -118,11 +118,9 @@ func TestTheNewSetComesBackInTheSignal(t *testing.T) {
 	}
 }
 
-// TestAnInventedConditionIsRefusedWithThePage.
-//
-// A validação é do CATÁLOGO e não de uma lista escrita aqui: a API já teve 34
-// ids ao lado das 35 do catálogo, e a que faltava — `enfeitiçado` — dava 400 ao
-// ser aplicada (ALE-122). Uma cópia da tabela do livro é uma cópia que desvia.
+// A validação é do CATÁLOGO e não de uma lista escrita à mão: uma lista assim já
+// teve 34 ids para as 35 do catálogo, e a que faltava dava 400 ao ser aplicada.
+// Cópia da tabela do livro é cópia que desvia.
 func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -137,9 +135,8 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 		t.Errorf("a condição inventada entrou na linha: %v", c)
 	}
 
-	// O CONTROLE, e ele é o que a ALE-122 pagou: a condição que a lista à mão
-	// esquecia É aceita. Sem ele, "recusou a inventada" seria verdade também
-	// numa validação que recusa tudo.
+	// O CONTROLE: a condição que a lista à mão esquecia É aceita. Sem ele,
+	// "recusou a inventada" seria verdade também numa validação que recusa tudo.
 	if !catalog.IsCondition("enfeiticado") {
 		t.Fatal("o catálogo não tem `enfeiticado` — o controle está medindo outra coisa")
 	}
@@ -149,7 +146,7 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	}
 }
 
-// TestThePlayerDoesNotApplyAConditionButton — a trava é do servidor.
+// A trava é do servidor.
 func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -166,7 +163,7 @@ func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
 	}
 }
 
-// TestTheDialogOffersTheCatalogConditions, por AMOSTRAGEM sobre o catálogo.
+// Por AMOSTRAGEM sobre o catálogo.
 //
 // A condição que entrar no livro amanhã já nasce oferecida — não há uma lista
 // aqui para alguém esquecer de atualizar.

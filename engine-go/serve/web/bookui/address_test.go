@@ -2,23 +2,17 @@ package bookui
 
 import "testing"
 
-// O ENDEREÇO DO LEITOR, provado onde ele é montado (ALE-278).
-//
-// Estes dois casos vieram do `api/book_file_test.go` junto com o tipo. O
-// resto de lá continua no `api`, porque serve o PDF de verdade por HTTP — outra
-// camada, outra pergunta.
+// O ENDEREÇO DO LEITOR, provado onde ele é montado. Servir o PDF de verdade por
+// HTTP é outra camada e outra pergunta, e continua no `api`.
 //
 // O que se prende aqui é a REGRA do endereço: livro não configurado não produz
 // link nenhum (e não um link quebrado), e o termo entra escapado para o leitor
 // destacar.
 
-// TestTheButtonOpensTheReaderAtThePrintedPageWithTheTerm.
-//
-// O endereço mudou na segunda fatia desta issue: ele apontava para o PDF cru com
-// `#page=N`, e passou a apontar para o LEITOR da casa. A troca é medida — o
-// visualizador do Chrome ignora `#search=` (não há destaque possível por URL) e
-// transfere o arquivo inteiro; o leitor destaca o termo e custou 1 MiB contra
-// 85 MiB, contados na interface de loopback.
+// O endereço aponta para o LEITOR da casa e não para o PDF cru com `#page=N`, e
+// a troca foi medida: o visualizador do Chrome ignora `#search=` (não há destaque
+// possível por URL) e transfere o arquivo inteiro — 85 MiB contra 1 MiB do
+// leitor, contados na interface de loopback.
 func TestTheButtonOpensTheReaderAtThePrintedPageWithTheTerm(t *testing.T) {
 	livro := BookAddress{Base: "/livro?v=abc", Abertura: 6}
 	if got := livro.AtPage(289, "Lobo"); got != "/livro/ler?p=289&t=Lobo" {
@@ -36,7 +30,7 @@ func TestTheButtonOpensTheReaderAtThePrintedPageWithTheTerm(t *testing.T) {
 	}
 }
 
-// TestWithoutAConfiguredBookThereIsNoAddress: o zero valor não produz link quebrado.
+// O zero valor não produz link quebrado.
 func TestWithoutAConfiguredBookThereIsNoAddress(t *testing.T) {
 	if got := (BookAddress{}).AtPage(289, "Lobo"); got != "" {
 		t.Errorf("sem livro o endereço devia ser vazio, e foi %q", got)

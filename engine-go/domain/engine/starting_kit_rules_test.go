@@ -20,9 +20,7 @@ var (
 	ladino    = []string{}
 )
 
-// TestTheStartingKitFollowsTheProficiencies — p140.
-//
-// O kit é um só; o que a classe muda são a arma marcial, a brunea e o escudo.
+// p140. O kit é um só; o que a classe muda são a arma marcial, a brunea e o escudo.
 func TestTheStartingKitFollowsTheProficiencies(t *testing.T) {
 	casos := []struct {
 		nome          string
@@ -97,12 +95,9 @@ func TestTheStartingKitFollowsTheProficiencies(t *testing.T) {
 	}
 }
 
-// TestTheBruneaIsAChoiceAndNotASwap — p140, e é a divergência que o porte corrigiu.
-//
-// "Se você tiver proficiência com armaduras pesadas, em vez disso PODE começar
-// com uma brunea": quem usa pesadas escolhe entre QUATRO. O
-// `class-starting-kits.ts` devolvia `armor: 'brunea'` e apagava as três leves,
-// de modo que um guerreiro que quisesse gibão de peles não tinha como pedir.
+// p140: "Se você tiver proficiência com armaduras pesadas, em vez disso PODE
+// começar com uma brunea" — quem usa pesadas escolhe entre QUATRO. Trocar a
+// lista pela brunea deixaria o guerreiro que quer gibão de peles sem como pedir.
 func TestTheBruneaIsAChoiceAndNotASwap(t *testing.T) {
 	kit := StartingKitFor("Guerreiro", guerreiro)
 	if len(kit.Armors) != 4 {
@@ -113,7 +108,7 @@ func TestTheBruneaIsAChoiceAndNotASwap(t *testing.T) {
 	}
 }
 
-// TestEveryStartingKitItemExistsInTheCatalog é guarda de varredura: o kit concede
+// Guarda de varredura: o kit concede
 // por ID, e um ID que não casa não estoura — ele concede NADA, em silêncio, e o
 // herói nasce sem mochila sem ninguém ver.
 func TestEveryStartingKitItemExistsInTheCatalog(t *testing.T) {

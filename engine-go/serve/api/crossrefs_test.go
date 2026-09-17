@@ -7,15 +7,15 @@ import (
 	"testing"
 )
 
-// O guarda dos ELOS entre entradas (ALE-264).
+// O guarda dos ELOS entre entradas.
 //
 // O que se protege é uma REDE: a condição cita o tipo de efeito, agrava para
 // outra condição, e a descrição dela nomeia uma terceira. Cada elo é um `href`
 // montado a partir de dois catálogos diferentes, e um deles mudar de nome
 // quebraria o elo em silêncio — a palavra continuaria na tela, só que morta.
 
-// TestTheConditionEffectTypeBecameALink: o caso que o dono pediu com todas as
-// letras — "a palavra Medo na página de catálogo é um link para mostrar o Medo".
+// A palavra do tipo de efeito, na página de condições, é um elo para o verbete
+// dele.
 func TestTheConditionEffectTypeBecameALink(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -30,9 +30,8 @@ func TestTheConditionEffectTypeBecameALink(t *testing.T) {
 	if !strings.Contains(corpo, ">Medo.<") {
 		t.Error("a tag saiu com a cara de chave em vez do nome do tipo")
 	}
-	// E ela vem DEPOIS da explicação, não colada no nome: o dono leu "Abalado
-	// Medo" como se as duas palavras fossem o mesmo verbete. A ordem no HTML é
-	// a prova — a descrição primeiro, o tipo em seguida.
+	// E ela vem DEPOIS da explicação, não colada no nome: "Abalado Medo" se lê
+	// como se as duas palavras fossem o mesmo verbete.
 	abalado := corpo[strings.Index(corpo, ">Abalado<"):]
 	if strings.Index(abalado, "em testes de perícia") > strings.Index(abalado, ">Medo.<") {
 		t.Error("o tipo de efeito voltou para antes da explicação")
@@ -43,11 +42,10 @@ func TestTheConditionEffectTypeBecameALink(t *testing.T) {
 	}
 }
 
-// TestTheConditionCitedInTheDescriptionBecameALink, e o que ela NÃO faz.
+// A citação vira elo, e o que ela NÃO faz.
 //
-// O controle é a segunda metade: uma condição não vira elo para SI MESMA. Um
-// elo que aponta para a página em que já se está é ruído com cara de saída, e
-// era o que a primeira varredura fazia.
+// O controle é a segunda metade: uma condição não vira elo para SI MESMA — um
+// elo que aponta para a página em que já se está é ruído com cara de saída.
 func TestTheConditionCitedInTheDescriptionBecameALink(t *testing.T) {
 	pedacos := book.WithConditionLinks("Desprevenido e imóvel; -2 em ataques", "Agarrado")
 	if len(pedacos) < 2 || pedacos[0].Texto != "Desprevenido" || pedacos[0].Aba != "condicoes" {
@@ -65,8 +63,6 @@ func TestTheConditionCitedInTheDescriptionBecameALink(t *testing.T) {
 	}
 }
 
-// TestTheLinkRespectsWholeWordsAndCase.
-//
 // Duas regras numa: no texto do livro a condição vem com MAIÚSCULA ("fica
 // Abalado") e a palavra comum não ("um efeito de medo"). Casar sem caixa, ou
 // casar pedaço de palavra, encheria a tela de elos que não são citação.
@@ -94,8 +90,6 @@ func TestTheLinkRespectsWholeWordsAndCase(t *testing.T) {
 	}
 }
 
-// TestTheGodLinksOnlyPointAtWhoHasAnEntry.
-//
 // "Quaisquer" é devoto de Aharadak e não é raça nem classe; "Elfos" vem no
 // PLURAL e a raça é "Elfo". Elo que aponta para o vazio é pior que texto puro:
 // ele promete uma página que não existe.
@@ -117,7 +111,7 @@ func TestTheGodLinksOnlyPointAtWhoHasAnEntry(t *testing.T) {
 	}
 }
 
-// TestEveryConditionTagHasAnEffectType: a rede não pode ter ponta solta.
+// A rede não pode ter ponta solta.
 //
 // O `scripts/book-pages.py` já recusa gravar com tag órfã; este guarda
 // cobra o mesmo do lado de cá, porque quem edita `conditions.json` à mão não
@@ -139,12 +133,9 @@ func TestEveryConditionTagHasAnEffectType(t *testing.T) {
 	}
 }
 
-// TestTheLinkAddressesAnEntryAndNotASearch (ALE-264).
-//
-// PROVADO VERMELHO contra a primeira versão: o elo apontava para
-// `?aba=efeitos&busca=Medo`, e busca com termo faz a cena mostrar os OITO grupos
-// agrupados — quem clicava em "Medo" caía numa lista para procurar o que já
-// tinha escolhido. O dono viu e disse: "aparece na quarta seção da busca".
+// O elo endereça o VERBETE e não uma busca: com `?busca=Medo` a cena mostra os
+// oito grupos agrupados, e quem clica em "Medo" cai numa lista para procurar o
+// que já tinha escolhido.
 func TestTheLinkAddressesAnEntryAndNotASearch(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -158,7 +149,7 @@ func TestTheLinkAddressesAnEntryAndNotASearch(t *testing.T) {
 	}
 }
 
-// TestAnEntryAddressShowsOnlyThatEntry, e oferece a saída.
+// O endereço do verbete mostra só ele, e oferece a saída.
 func TestAnEntryAddressShowsOnlyThatEntry(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -179,7 +170,7 @@ func TestAnEntryAddressShowsOnlyThatEntry(t *testing.T) {
 	}
 }
 
-// TestTheEntryBoxCarriesTheWholeCard: o remendo que o elo pede.
+// A caixa do verbete traz o cartão INTEIRO — é o remendo que o elo pede.
 func TestTheEntryBoxCarriesTheWholeCard(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -204,10 +195,7 @@ func TestTheEntryBoxCarriesTheWholeCard(t *testing.T) {
 	}
 }
 
-// TestTheDevotoInThePluralFindsTheEntry (ALE-264).
-//
-// PROVADO VERMELHO: a primeira versão tentava só tirar "s" e "es", e o dono viu
-// os buracos. Os quatro casos abaixo são os que faltavam, cada um por um motivo
+// Tirar só "s" e "es" não dá conta: os casos abaixo falham cada um por um motivo
 // diferente do português — ou por não ser plural nenhum.
 func TestTheDevotoInThePluralFindsTheEntry(t *testing.T) {
 	racas, _, _ := book.CharacterCatalogs()
@@ -241,8 +229,7 @@ func TestTheDevotoInThePluralFindsTheEntry(t *testing.T) {
 	}
 }
 
-// TestAPageReferenceInTheTextBecomesALink: o livro se cita, e o número levava a
-// lugar nenhum.
+// O livro se cita, e o número tem de levar a algum lugar.
 func TestAPageReferenceInTheTextBecomesALink(t *testing.T) {
 	pedacos := book.WithLinks("Reduz os PV do alvo. Efeitos deste tipo são subdivididos em tipos de dano (veja a página 230).")
 	var achou *book.Chunk
@@ -272,7 +259,7 @@ func TestAPageReferenceInTheTextBecomesALink(t *testing.T) {
 	}
 }
 
-// TestALooseNumberDoesNotBecomeAPage: o controle da varredura.
+// O controle da varredura: número solto não vira página.
 func TestALooseNumberDoesNotBecomeAPage(t *testing.T) {
 	for _, texto := range []string{"causa 3d6 de dano", "recebe +2 na Defesa e 230 de alcance", "20% de chance"} {
 		for _, p := range book.WithLinks(texto) {
@@ -283,7 +270,7 @@ func TestALooseNumberDoesNotBecomeAPage(t *testing.T) {
 	}
 }
 
-// TestAugmentsOpenInTheBox: eram uma contagem que não se podia ler.
+// Os aprimoramentos abrem na caixa, em vez de serem uma contagem ilegível.
 func TestAugmentsOpenInTheBox(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -310,17 +297,8 @@ func TestAugmentsOpenInTheBox(t *testing.T) {
 	}
 }
 
-// TestEveryGodLinksThePowersItGrants (ALE-264).
-//
-// PROVADO VERMELHO: o dono mandou três cartões — Valkaria, Wynna e Thwor — em
-// que a maior parte dos poderes concedidos era texto morto. A causa não estava
-// no elo: o acervo lia o `granted-powers` (36 nomes) e não o `divine-powers`
-// (72), por causa de um comentário que afirmava que os divinos "não têm texto de
-// regra". Eles têm.
-//
-// AMOSTRAGEM sobre os VINTE deuses e não sobre os três que o dono viu: a lacuna
-// era invisível na tela — a palavra continuava lá, só não levava a lugar nenhum
-// —, e conferir só os relatados deixaria os outros dezessete no escuro.
+// AMOSTRAGEM sobre os VINTE deuses, e não sobre os que alguém relatou: a lacuna
+// é invisível na tela — a palavra continua lá, só não leva a lugar nenhum.
 func TestEveryGodLinksThePowersItGrants(t *testing.T) {
 	_, _, deuses := book.CharacterCatalogs()
 	if len(deuses) < 20 {
@@ -342,7 +320,7 @@ func TestEveryGodLinksThePowersItGrants(t *testing.T) {
 	}
 }
 
-// TestEveryDevotoThatIsAnEntryBecomesALink: o outro lado do cartão do deus.
+// O outro lado do cartão do deus.
 //
 // Os três que ficam de fora estão NOMEADOS porque são exatamente os que não são
 // verbete de nada — e prendê-los é o que faz o guarda acusar no dia em que um

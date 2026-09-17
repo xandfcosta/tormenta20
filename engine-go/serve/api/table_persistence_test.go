@@ -12,31 +12,20 @@ import (
 //
 // Importar a constante da cena faria o teste andar junto com o defeito: trocar
 // a frase nos dois lugares deixaria o guarda verde sobre um texto que ninguém
-// escolheu. É a mesma razão pela qual a bancada da porta copia o parser em vez
-// de importá-lo.
+// escolheu.
 const avisoDeGravacao = "não está sendo salva"
 
-// O MESTRE É AVISADO QUANDO A GRAVAÇÃO FALHA (ALE-288).
+// O MESTRE É AVISADO QUANDO A GRAVAÇÃO FALHA.
 //
 // A mesa roda de MEMÓRIA e grava no disco a cada mutação. Quando essa gravação
 // falha — disco cheio, banco fechado, permissão — os dois stores marcam a
 // sessão como suja e continuam servindo o estado da memória: a tela fica certa,
-// o jogo segue, e o disco não tem nada.
+// o jogo segue, e o disco não tem nada. Já custou um dia inteiro de mesa vivendo
+// só em memória, com cada gravação falhando numa linha de log que ninguém lê.
 //
-// Isso já aconteceu neste repositório: o tabuleiro passou um dia inteiro
-// vivendo só em memória, cada gravação falhando numa linha de log que ninguém
-// lê (ALE-154). O que existia como remédio era um `persistence-warning` emitido
-// no `SSEHub` — e o hub não tem ouvinte em produção desde a ALE-272, quando a
-// SPA (a única coisa que abria conexão nele) foi apagada. **O aviso ia para o
-// vazio, e a Mesa em Datastar não desenhava nada.**
-//
-// # Por que ESTADO e não evento
-//
-// Um aviso perdido é um aviso que não existiu, e este precisa valer enquanto
-// durar: quem abre a aba dez minutos depois da primeira falha merece vê-lo. A
-// verdade mora no store (é ele quem sabe se a última gravação deu certo), e a
-// tela a LÊ a cada quadro — que é a regra que o próprio barramento de eventos
-// desta casa escreve: *o evento é a notícia, a verdade está no store.*
+// ESTADO e não evento: um aviso perdido é um aviso que não existiu, e este
+// precisa valer enquanto durar — quem abre a aba dez minutos depois da primeira
+// falha merece vê-lo. A verdade mora no store, e a tela a LÊ a cada quadro.
 func TestTheGmIsWarnedWhenSavingFails(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -78,16 +67,10 @@ func TestThePlayerIsNotWarnedAboutSaving(t *testing.T) {
 
 // quebraAGravacao faz a TABELA do tabuleiro sumir debaixo do store.
 //
-// É a reprodução literal da ALE-154, e ela foi escolhida depois de duas
-// tentativas piores:
-//
-//   - `boards.Persist` com o fixture cru não tentava escrever nada — o
-//     `f.scene(t)` abre a cena e enche a fila, mas não abre tabuleiro. O store
-//     não achava o que gravar, devolvia `changed=false`, e o teste DISSE isso em
-//     vez de passar;
-//   - fechar o `*sql.DB` reproduz a falha de escrita e mata a LEITURA junto,
-//     então a página nem renderiza. O defeito de verdade não é esse: é escrita
-//     falhando com leitura funcionando, que é como ele fica invisível.
+// As duas sabotagens óbvias não servem: sem tabuleiro aberto o `Persist` não
+// tenta escrever nada e devolve `changed=false`, e fechar o `*sql.DB` mata a
+// LEITURA junto, então a página nem renderiza. O defeito de verdade é escrita
+// falhando com leitura FUNCIONANDO, que é como ele fica invisível.
 //
 // Derrubar uma tabela dá exatamente isso — o `sessions`, o `users` e os membros
 // continuam lá, a mesa desenha normalmente, e só a gravação do tabuleiro falha.
@@ -106,21 +89,12 @@ func quebraAGravacao(t *testing.T, f sceneFixture) {
 	}
 }
 
-// UMA MUTAÇÃO PELA CENA CHEGA AO DISCO (ALE-288).
+// UMA MUTAÇÃO PELA CENA CHEGA AO DISCO.
 //
-// Este é o guarda que faltava, e a ausência dele é o que tornava um acidente
-// possível. Os casos do `board_store_test.go` dirigem o STORE direto
-// (`bs.Open`, `bs.Persist`); nenhum media o caminho inteiro — comando da Mesa,
-// regra, disco.
-//
-// Sem ele, apagar a gravação não quebra teste nenhum. E apagá-la era a leitura
-// NATURAL do código de antes: a linha que gravava vivia dentro do
-// `publishBoardState`, cujo canal (`SSEHub`) não tem ouvinte em produção desde a
-// ALE-272 — "isto emite para ninguém, pode sair" levaria o disco junto, e a mesa
-// passaria a viver só em memória. É literalmente a ALE-154, que custou um dia.
-//
-// A separação em `saveBoard` e `publishBoardState` tornou o engano difícil; este
-// caso o torna impossível de passar despercebido.
+// Os casos do `board_store_test.go` dirigem o STORE direto (`bs.Open`,
+// `bs.Persist`); nenhum mede o caminho inteiro — comando da Mesa, regra, disco.
+// Sem este, apagar a gravação não quebra teste nenhum, e a mesa passa a viver só
+// em memória.
 func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -141,8 +115,7 @@ func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 //
 // A gravação é em GOROUTINE de propósito — o mestre não espera o disco no meio
 // do turno —, então ler uma vez logo depois do comando é uma corrida. Sondagem e
-// não `sleep` fixo, pela razão de sempre: um tempo escolhido nesta máquina é o
-// teste que pisca na de outra pessoa.
+// não `sleep` fixo: um tempo escolhido nesta máquina pisca na de outra pessoa.
 func esperaOTabuleiroNoDisco(t *testing.T, f sceneFixture) {
 	t.Helper()
 	limite := time.Now().Add(2 * time.Second)

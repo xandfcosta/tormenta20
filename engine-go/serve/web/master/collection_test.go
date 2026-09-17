@@ -7,19 +7,13 @@ import (
 	"testing"
 )
 
-// Os guardas dos CATÁLOGOS (ALE-258).
+// Os guardas dos CATÁLOGOS.
 
-// TestEveryBookValueHasALabel é o guarda GENÉRICO que a fatia do bestiário me
-// ensinou a escrever, e é a resposta certa ao defeito de lá.
-//
-// Naquela fatia um `sed` trocou a chave de um mapa de rótulos e 27 criaturas
-// passaram a mostrar o dado cru; sete guardas não pegaram porque todos usavam o
-// MESMO valor de exemplo. O remendo de lá foi um guarda por tabela — enumeração,
-// que é o regime que o CLAUDE.md chama de remendo.
-//
-// Aqui a forma é outra: UM guarda percorre o DADO e cobra rótulo para cada valor
-// distinto que ele encontra. Ele cresce sozinho quando o livro ganha uma escola
-// de magia nova, e não depende de alguém lembrar de acrescentar um caso.
+// AMOSTRAGEM e não enumeração: UM guarda percorre o DADO e cobra rótulo para
+// cada valor distinto que encontra, então ele cresce sozinho quando o livro ganha
+// uma escola de magia nova. Um guarda por tabela deixa passar o valor que
+// ninguém lembrou de exemplificar — foi assim que 27 criaturas passaram a mostrar
+// o dado cru com sete guardas no ar, todos usando o MESMO valor de exemplo.
 //
 // Provado VERMELHO removendo a linha "catalyst" do `book.categoryLabel`.
 func TestEveryBookValueHasALabel(t *testing.T) {
@@ -54,8 +48,8 @@ func TestEveryBookValueHasALabel(t *testing.T) {
 	cobra("categoria", categorias, book.CategoryName)
 }
 
-// TestTheSearchRequiresEveryTerm: "luz cur" só casa com o que carrega as duas
-// coisas. É a regra que separa esta busca da das outras cenas.
+// "luz cur" só casa com o que carrega as duas coisas. É a regra que separa esta
+// busca da das outras cenas.
 func TestTheSearchRequiresEveryTerm(t *testing.T) {
 	campos := []string{"Curar Ferimentos", "Restaura pontos de vida ao toque."}
 	casos := []struct {
@@ -82,7 +76,7 @@ func TestTheSearchRequiresEveryTerm(t *testing.T) {
 	}
 }
 
-// TestAnAccentDoesNotSplitTheSearch: ninguém digita til no meio da sessão.
+// Ninguém digita til no meio da sessão.
 func TestAnAccentDoesNotSplitTheSearch(t *testing.T) {
 	campos := []string{"Ilusão Lacerante", "Cria uma imagem que fere."}
 	for _, busca := range []string{"ilusao", "Ilusão", "ILUSAO", "imagem"} {
@@ -92,11 +86,9 @@ func TestAnAccentDoesNotSplitTheSearch(t *testing.T) {
 	}
 }
 
-// TestSearchingSweepsTheFourCatalogs, e não só a aba aberta.
-//
-// É a ALE-22: a versão em React filtrava só a aba ativa, então "bola de fogo"
-// digitado na aba Condições dizia "nada encontrado" com a magia existindo. A
-// aba é para NAVEGAR sem termo; com termo, o assunto é o acervo inteiro.
+// Buscar varre os catálogos, e não só a aba aberta: filtrar só a aba ativa faz
+// "bola de fogo" digitado em Condições dizer "nada encontrado" com a magia
+// existindo. A aba é para NAVEGAR sem termo; com termo, o assunto é o acervo.
 func TestSearchingSweepsTheFourCatalogs(t *testing.T) {
 	v := loadCollection(collectionCriteria{Term: "fogo", Aba: "condicoes"}, bookui.BookAddress{})
 	if !v.Searching() {
@@ -116,7 +108,7 @@ func TestSearchingSweepsTheFourCatalogs(t *testing.T) {
 	}
 }
 
-// TestWithoutASearchOnlyTheOpenTabShows: sem termo a cena é um catálogo por vez.
+// Sem termo a cena é um catálogo por vez.
 func TestWithoutASearchOnlyTheOpenTabShows(t *testing.T) {
 	a := book.Catalogs()
 	for _, caso := range []struct {
@@ -144,8 +136,8 @@ func TestWithoutASearchOnlyTheOpenTabShows(t *testing.T) {
 	}
 }
 
-// TestAnInventedTabFallsBackToTheFirst: o `?aba=` é endereço e alguém o digita errado
-// — cair em tela vazia leria como catálogo quebrado.
+// O `?aba=` é endereço e alguém o digita errado — cair em tela vazia leria como
+// catálogo quebrado.
 func TestAnInventedTabFallsBackToTheFirst(t *testing.T) {
 	v := loadCollection(collectionCriteria{Term: "", Aba: "grimorios-proibidos"}, bookui.BookAddress{})
 	if v.Aba != "condicoes" {
@@ -156,7 +148,7 @@ func TestAnInventedTabFallsBackToTheFirst(t *testing.T) {
 	}
 }
 
-// TestPowersComeFromTheThreeCatalogs achatados, com a fonte preservada.
+// Os poderes vêm dos três catálogos achatados, com a fonte preservada.
 //
 // O achatamento é o ponto da ferramenta — o livro espalha poder por três
 // lugares e o mestre quer uma lista só —, e o que ele não pode perder é DE ONDE
@@ -181,14 +173,11 @@ func TestPowersComeFromTheThreeCatalogs(t *testing.T) {
 			t.Errorf("nenhum poder de %q — um dos três catálogos não entrou", esperada)
 		}
 	}
-	// Os DIVINOS são 72 e eram 36 (ALE-264): o acervo lia o `granted-powers`,
-	// que é metade dos nomes, porque um comentário afirmava que os poderes
-	// divinos não têm texto de regra. Eles têm — os 80 do `divine-powers` vêm
-	// com descrição completa, e 80 viram 72 ao juntar por nome os que vários
-	// deuses concedem ("Coragem Total" aparece quatro vezes).
-	//
-	// O número está preso porque a lacuna era INVISÍVEL: o cartão do deus
-	// mostrava os poderes como texto e ninguém via que metade não virava elo.
+	// O número dos DIVINOS está preso porque a lacuna é INVISÍVEL: o cartão do
+	// deus mostra os poderes como texto, e ler a lista errada (o `granted-powers`,
+	// que é metade dos nomes) deixa metade sem virar elo sem ninguém ver. São 72
+	// porque os 80 do `divine-powers` juntam por nome os que vários deuses
+	// concedem — "Coragem Total" aparece quatro vezes.
 	if fontes["divino"] != 72 {
 		t.Errorf("%d poderes divinos no acervo — eram 72 quando isto foi escrito", fontes["divino"])
 	}
@@ -196,20 +185,14 @@ func TestPowersComeFromTheThreeCatalogs(t *testing.T) {
 
 // ── a cena pelo fio ──────────────────────────────────────────────────────────
 
-// TestTheSearchInTheUrlHoldsOnAColdLoad: `?busca=` é endereço, e um link colado no chat
-// da mesa tem de abrir já filtrado.
+// `?busca=` é endereço, e um link colado no chat da mesa tem de abrir já
+// filtrado.
 func TestTheSearchInTheUrlHoldsOnAColdLoad(t *testing.T) {
 	corpo := pedeNaCena(t, "/mestre/condicoes?busca=fogo").Body.String()
 
 	// A prova de que a página abriu FILTRADA é o que ela MOSTRA, e não uma
-	// contagem colhida da mesma função que a desenhou.
-	//
-	// A versão anterior fazia isso: chamava `loadCollection` com os mesmos
-	// critérios e afirmava que a página continha o número devolvido por ela. Um
-	// erro na busca sairia dos DOIS lados e o guarda ficaria verde. É o que o
-	// CLAUDE.md chama de derivar o esperado do código sob teste, e quem o expôs
-	// foi a fronteira desta fatia, ao tirar a função do alcance do `api`
-	// (ALE-278).
+	// contagem colhida do `loadCollection` — a mesma função que a desenhou. Um
+	// erro na busca sairia dos DOIS lados e o guarda ficaria verde.
 	if !strings.Contains(corpo, "Bola de Fogo") {
 		t.Error("buscar fogo na cena das condições não trouxe a magia — a busca não varreu os oito")
 	}
@@ -221,11 +204,8 @@ func TestTheSearchInTheUrlHoldsOnAColdLoad(t *testing.T) {
 	}
 }
 
-// TestEveryCollectionTabOffersTheBook (ALE-264).
-//
 // AMOSTRAGEM e não enumeração: o teste percorre `collectionTabs`, então a aba que
-// entrar amanhã já nasce medida. Foi a lição da ALE-252 — guarda que nomeia cada
-// caso deixa o próximo nascer sem medição, em silêncio.
+// entrar amanhã já nasce medida.
 //
 // O CONTROLE é a segunda metade: sem livro configurado, a mesma cena não pode
 // trazer link nenhum. Sem ele, "achei `#page=`" seria verdade sobre um endereço

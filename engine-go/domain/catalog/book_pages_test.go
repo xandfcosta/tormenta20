@@ -7,17 +7,13 @@ import (
 	"testing"
 )
 
-// O guarda das PÁGINAS DO LIVRO (ALE-264).
+// O guarda das PÁGINAS DO LIVRO.
 //
-// As 745 páginas que o `scripts/book-pages.py` derivou vieram do Índice
-// Remissivo do próprio livro, e cada uma foi conferida contra o texto da página
-// antes de entrar. Este teste não repete a conferência — ele não tem o PDF, que
-// vive fora do repositório e é ignorado pelo git.
-//
-// O que ele prende é o que sobrevive sem o livro na mão: FAIXA. Foi assim que o
-// script foi pego devolvendo a página 396 para uma condição — 396 é a primeira
-// página do índice remissivo, onde todo nome aparece porque aquilo é uma lista
-// de nomes. A conferência passava e o botão abriria o índice.
+// Ele não repete a conferência contra o texto da página — não tem o PDF, que
+// vive fora do repositório. O que ele prende é o que sobrevive sem o livro na
+// mão: FAIXA. Foi assim que o extrator foi pego devolvendo a p396 para uma
+// condição — 396 é a primeira página do índice remissivo, onde todo nome
+// aparece porque aquilo é uma lista de nomes, e a conferência passava.
 
 // ultimaDeConteudo é a última página impressa antes do Índice Remissivo.
 //
@@ -26,9 +22,8 @@ import (
 // em branco ou a contracapa.
 const ultimaDeConteudo = 395
 
-// TestNoPageFallsOutsideTheContent varre TODO catálogo embutido por
-// AMOSTRAGEM: quem passar a ter `bookPage` amanhã nasce medido, sem entrada
-// nova aqui.
+// Varre TODO catálogo embutido por AMOSTRAGEM: quem passar a ter `bookPage`
+// amanhã nasce medido, sem entrada nova aqui.
 func TestNoPageFallsOutsideTheContent(t *testing.T) {
 	arquivos, err := fs.Glob(files, "data/*.json")
 	if err != nil {
@@ -61,8 +56,8 @@ func TestNoPageFallsOutsideTheContent(t *testing.T) {
 	}
 }
 
-// TestEveryConditionKnowsItsPage: as 35 estão na mesma lista do apêndice, então
-// "algumas sem página" é defeito e não lacuna do livro.
+// As condições estão todas na mesma lista do apêndice, então "algumas sem
+// página" é defeito, e não lacuna do livro.
 func TestEveryConditionKnowsItsPage(t *testing.T) {
 	bruto, ok := Resource("conditions")
 	if !ok {
@@ -129,8 +124,8 @@ func entradasComNome(t *testing.T, arquivo string, bruto []byte) []entradaComPag
 	return nil
 }
 
-// TestEveryClassKnowsItsPage: o catálogo de classes nasceu na ALE-264 com três
-// campos, e a PÁGINA é o motivo dele existir — sem ela, ele não teria por quê.
+// A PÁGINA é o motivo de o catálogo de classes existir — sem ela, ele não teria
+// por quê.
 func TestEveryClassKnowsItsPage(t *testing.T) {
 	bruto, ok := Resource("classes")
 	if !ok {
@@ -153,16 +148,14 @@ func TestEveryClassKnowsItsPage(t *testing.T) {
 	}
 }
 
-// TestTheThreeBlocksThatOpenOnePageLater (ALE-264).
+// A ARMADILHA da tabela, e não a tabela inteira: estas três criaturas caem com
+// facilidade na página que as CITA em vez da que abre o bloco delas — a p289
+// fala de "lobos-das-cavernas" no texto corrido, e uma conferência por substring
+// aprova, com o botão abrindo uma página antes, no mesmo capítulo.
 //
-// A TRAP da tabela, e não a tabela inteira: estas três criaturas tinham no
-// catálogo a página que as CITA, não a que abre o bloco delas. A p289 fala de
-// "lobos-das-cavernas" no texto corrido, e a conferência por substring aprovava
-// — o botão abria uma página antes, no mesmo capítulo, parecendo certo.
-//
-// Quem consertou foi a assinatura `<nome> nd <valor>`, que é como o livro
-// imprime o começo de todo bloco. Fica preso aqui porque uma regeneração
-// desatenta do catálogo os traria de volta em silêncio.
+// Quem separa é a assinatura `<nome> nd <valor>`, que é como o livro imprime o
+// começo de todo bloco. Uma regeneração desatenta do catálogo traz as três de
+// volta em silêncio.
 func TestTheThreeBlocksThatOpenOnePageLater(t *testing.T) {
 	bruto, ok := Resource("bestiary")
 	if !ok {
@@ -192,11 +185,9 @@ func TestTheThreeBlocksThatOpenOnePageLater(t *testing.T) {
 	}
 }
 
-// TestNoExtractedEntryCarriesPageDirt (ALE-264).
-//
 // Os tipos de efeito e as escolas de magia são EXTRAÍDOS do PDF pelo
-// `scripts/book-pages.py`, e as duas formas de sujeira que o extrator já
-// deixou passar estão aqui — as duas vistas na tela, nenhuma detectada por ele:
+// `scripts/book-pages.py`, e as duas formas de sujeira que o extrator já deixou
+// passar estão aqui — as duas vistas na tela, nenhuma detectada por ele:
 //
 //   - o HÍFEN de quebra de linha, que virou "impede convoca- ções";
 //   - a MOBÍLIA da página colada no último verbete: uma citação decorativa na

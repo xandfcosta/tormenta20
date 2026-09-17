@@ -14,8 +14,7 @@ import (
 // no `LoadView` — o HTML passou a carregar "12/130", os PV que o mestre
 // escondeu, para dentro da tela do jogador.
 // A vez é MINHA quando a linha na vez é de um personagem meu — e é "de outro"
-// quando não é. Tradução literal do `playerTurnState` da SPA; duas escadas
-// divergiriam em silêncio.
+// quando não é. A escada mora num lugar só: duas divergiriam em silêncio.
 func TestTableTurnOf(t *testing.T) {
 	meu, alheio := int64(7), int64(9)
 	fila := []live.InitiativeEntry{
@@ -53,29 +52,23 @@ func TestTableTurnOf(t *testing.T) {
 	}
 }
 
-// Aqui morava o `TestHpToneAtTheThresholds`, que prendia os limiares da cor do
-// PV. A regra foi para `web/ui` na ALE-316 e o guarda foi junto, agora como
-// `TestTheHpLadderTurnsAtTheThresholds`: a escada deixou de ser da Mesa, porque
-// as quatro superfícies que pintam PV leem a mesma — e guarda mora onde a regra
-// mora.
+// Os limiares da cor do PV NÃO se prendem aqui: a escada deixou de ser da Mesa
+// — as quatro superfícies que pintam PV leem a mesma —, e quem a guarda é o
+// `TestTheHpLadderTurnsAtTheThresholds`, em `web/ui`.
 //
-// (O nome novo fica numa LINHA SÓ de propósito: quebrado em duas, o guarda de
-// citação leu o pedaço de cima como um teste inexistente. Foi ele que acusou.)
+// (Esse nome fica numa LINHA SÓ de propósito: quebrado em duas, o guarda de
+// citação lê o pedaço de cima como um teste inexistente.)
 
-// O campo vazio não pode virar um total (ALE-236).
+// O campo vazio não pode virar um total.
 //
 // MEDIDO no navegador: o `data-bind` do Datastar escreve ZERO no sinal quando
 // um `<input type=number>` esvazia — digitar 7, apagar, e o sinal vai a 0. Sem
 // guarda, apagar para redigitar mostra "Total previsto 8" com bônus 8 e dado
-// nenhum: um total que não existe, lido no instante da decisão. Mesma família
-// da ALE-224, onde a prévia era o que impedia o erro silencioso.
+// nenhum: um total que não existe, lido no instante da decisão.
 //
-// Este guarda pina a EXPRESSÃO, e digo isso em vez de fingir que ele pina o
-// comportamento. O teste comportamental exigiria a cena EM JOGO com o jogador
-// tendo personagem nela, e montar esse estado no e2e é entrar exatamente na
-// armadilha que a ALE-238 documenta: asserção que depende do estado do combate
-// mede o banco, não o app. A prova do comportamento foi a medição no navegador,
-// que está descrita acima e é reproduzível em três linhas.
+// Este guarda pina a EXPRESSÃO, e não o comportamento. O comportamental
+// exigiria a cena EM JOGO com o jogador tendo personagem nela, e montar esse
+// estado no e2e mede o banco, não o app.
 func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 	bonus := int64(8)
 	html, err := ui.RenderFragment(t.Context(), tableScene(View{
@@ -88,9 +81,7 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 	}
 
 	// LITERAL e não escapado: o atributo é CONSTANTE, e o templ só escapa os
-	// dinâmicos — foi o que a ALE-227 mediu ao comparar as duas saídas byte a
-	// byte. Escrevi a forma escapada primeiro e o guarda nasceu vermelho por
-	// isso, o que ao menos provou que ele lê o HTML de verdade.
+	// dinâmicos. Procurar a forma ESCAPADA aqui reprova com o guarda certo.
 	const faixa = "$d20 >= 1 && $d20 <= 20"
 	if !strings.Contains(html, faixa) {
 		t.Errorf("a prévia não é condicionada à faixa do dado — campo vazio vira um total inventado")
@@ -103,12 +94,11 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 	}
 }
 
-// A FAIXA DE QUEM VEM DEPOIS (ALE-290).
+// A FAIXA DE QUEM VEM DEPOIS.
 //
-// O `live.UpcomingTurns` existia desde a ALE-179 com cinco guardas e ZERO
-// telas — a conta da ordem circular no ar, e ninguém desenhando quem vem depois.
-// Estes casos prendem a TRADUÇÃO dela para a tela; a regra circular continua
-// presa lá, e reafirmá-la aqui seria a mesma fronteira duas vezes.
+// Estes casos prendem a TRADUÇÃO do `live.UpcomingTurns` para a tela; a regra
+// da ordem circular continua presa lá, e reafirmá-la aqui seria a mesma
+// fronteira duas vezes.
 //
 // O que é desta camada, e só desta: onde a RODADA VIRA, e qual das três é
 // minha. As duas são fatos de apresentação — a regra não sabe quem está olhando
@@ -135,8 +125,8 @@ func TestTheTurnStripSaysWhoIsNextAndWhereTheRoundTurns(t *testing.T) {
 			turnIndex: 0, rotulos: []string{"Ogro", "Arwen", "Zumbi 1"}, meu: 1, viraEm: -1,
 		},
 		{
-			// O CASO QUE A ALE-179 NOMEIA: no último da rodada, "quem vem depois"
-			// está no TOPO da lista, e é justamente quando a pergunta mais importa.
+			// O CASO QUE IMPORTA: no último da rodada, "quem vem depois" está no
+			// TOPO da lista, e é justamente quando a pergunta mais pesa.
 			nome:      "no último da rodada ela DÁ A VOLTA",
 			turnIndex: 3, rotulos: []string{"Zumbi 2", "Ogro", "Arwen"}, meu: 2, viraEm: 1,
 		},
@@ -208,19 +198,16 @@ func TestTheTurnStripShowsNothingOutOfCombatAndNeverRepeats(t *testing.T) {
 	}
 }
 
-// "VOCÊ" SÓ QUANDO É UM (ALE-290, decisão do dono depois da medição no navegador).
+// "VOCÊ" SÓ QUANDO É UM (decisão do dono).
 //
-// A faixa dizia "você" em toda linha de quem olha, e no navegador isso saiu como
-// **"você › Tanque Placas Nv10 › ⟲ você"** — a pessoa com dois personagens na
-// fila não sabe qual é qual, e a faixa existe justamente para responder "quanto
-// falta para MIM".
+// Dizer "você" em toda linha de quem olha sai como **"você › Tanque Placas Nv10
+// › ⟲ você"**: a pessoa com dois personagens na fila não sabe qual é qual, e a
+// faixa existe justamente para responder "quanto falta para MIM".
 //
 // A regra é desambiguar quando precisa: com UM meu na faixa, "você" responde
 // direto e não custa largura; com dois ou mais, o nome volta. A cor dourada
-// marca os dois casos.
-//
-// O defeito não aparecia em teste nenhum porque a bancada semeia UM personagem
-// por pessoa — foi a seed, com o dono levando vários, que o mostrou.
+// marca os dois casos, e por isso o caso PRECISA de dois personagens meus —
+// uma bancada que semeie um por pessoa não enfrenta o ramo.
 func TestTheStripSaysYourNameWhenMoreThanOneIsYours(t *testing.T) {
 	meu, outroMeu := int64(7), int64(8)
 	meus := map[int64]bool{meu: true, outroMeu: true}

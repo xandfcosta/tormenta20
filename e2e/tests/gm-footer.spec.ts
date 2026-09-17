@@ -1,12 +1,8 @@
 import { expect, type Page, test } from '@playwright/test'
 
 /**
- * O RODAPÉ DO MESTRE na Mesa em Datastar (ALE-263).
- *
- * Três guardas, e cada um está aqui porque o navegador é a ÚNICA testemunha —
- * que é o padrão de justificativa que o `CLAUDE.md` exige de e2e. "É jornada do
- * usuário" não seria motivo: jornada sai mais barata e mais firme em teste de
- * integração.
+ * O RODAPÉ DO MESTRE na Mesa. Cada caso está aqui porque o navegador é a ÚNICA
+ * testemunha:
  *
  *  1. **O nome do sinal.** Nome de ATRIBUTO é minusculado pelo analisador de
  *     HTML, e nenhuma outra camada faz isso. O teste de handler manda um corpo
@@ -15,10 +11,6 @@ import { expect, type Page, test } from '@playwright/test'
  *     zero e diria verde sobre um rodapé enrolado em três fileiras.
  *  3. **A centralização do `<dialog>`.** Depende da margem que o `preflight` do
  *     Tailwind zera e da camada de topo do navegador.
- *
- * A página é do Go, não da SPA: é o proxy `/` que a alcança em dev, e o
- * mesmo binário a serve no alvo de build. Se o app for apagado, este arquivo
- * vai junto.
  */
 
 test.use({ storageState: '.auth/user.json' })
@@ -28,23 +20,17 @@ const MESA = '/mesa/1/4'
 const rodape = 'section[aria-label="Controles do mestre"]'
 
 /**
- * Abre a GAVETA da fila, que é onde a lista inteira passou a morar (ALE-269).
- *
- * A forma do mestre virou SHELL: o trilho de 80px responde "de quem é a vez", e
- * dano, ordem, condição, "+ Combatente" e "Adicionar grupo" desceram para uma
- * gaveta pela esquerda — a mesma decisão que a ALE-198 tomou na SPA, onde a
- * fila inteira vive num `SidePanel`.
+ * Abre a GAVETA da fila, onde moram dano, ordem, condição, "+ Combatente" e
+ * "Adicionar grupo".
  *
  * Sem este passo os botões existem no HTML dentro de um `<dialog>` FECHADO, que
  * o navegador esconde com `display:none`. O sintoma não é "não achei o botão":
- * é um TIMEOUT de clique em cima de um seletor que casou — que foi exatamente
- * como estes casos apareceram no CI.
+ * é um TIMEOUT de clique em cima de um seletor que casou.
  *
  * UM seletor nas duas larguras: acima de 1024 quem abre é o ⤢ do trilho, abaixo
  * é o botão da fileira de consultas, e os dois têm o mesmo prefixo de nome
  * acessível de propósito. O `visible` é o que escolhe entre eles — o outro está
  * no DOM com `display:none`, e sem o filtro o `.first()` acertaria o escondido.
- * É o caso de 390px deste arquivo que exercita a segunda metade.
  */
 async function openTheTracker(page: Page): Promise<void> {
   await page
@@ -59,16 +45,14 @@ async function openTheTracker(page: Page): Promise<void> {
 
 test.describe('O rodapé do mestre', () => {
   /**
-   * O DEFEITO QUE SÓ O NAVEGADOR MOSTRA (ALE-263).
+   * O DEFEITO QUE SÓ O NAVEGADOR MOSTRA.
    *
    * Uma chave de atributo escrita em camelCase chega ao Datastar MINÚSCULA,
    * porque nome de atributo é minusculado pelo analisador — e ele então liga um
-   * sinal NOVO com esse nome. Medido antes do conserto: o fio levava os DOIS, o
-   * declarado em camelCase com `"normal"` (que ninguém tocou) e o minúsculo com
-   * `"luxuosa"` (a escolha real), e o servidor lia o primeiro. O mestre escolhia
-   * Luxuosa e o grupo descansava em normal — um número plausível no lugar do
-   * certo. Hoje o sinal é `rest_quality`, e o `_` atravessa o parser intacto
-   * (ALE-301).
+   * sinal NOVO com esse nome. O fio passa a levar os DOIS, o declarado com o
+   * valor intocado e o minúsculo com a escolha real, e o servidor lê o primeiro:
+   * um número plausível no lugar do certo. O `_` de `rest_quality` atravessa o
+   * parser intacto.
    *
    * O guarda Go ao lado NÃO pega isto: ele monta o corpo à mão e por isso
    * afirma o servidor, não a página. Este afirma o FIO.
@@ -107,16 +91,11 @@ test.describe('O rodapé do mestre', () => {
   })
 
   /**
-   * A ECONOMIA DA ALE-146, medida (ALE-263).
-   *
    * A recuperação e o encerrar cena descem para a gaveta quando o palco é
-   * baixo, e quem os move é a consulta de contêiner — a tradução do `palcoBaixo`
-   * da SPA, que decide leiaute a partir de altura MEDIDA e por isso não tinha
-   * como nascer no Go.
-   *
-   * Os dois formatos são os que aquela issue nomeou: no celular DEITADO cada
-   * fileira de cromo a menos é uma linha de combatente a mais; em PÉ há altura
-   * de sobra e esconder seria custo sem troca.
+   * baixo, e quem os move é a consulta de contêiner: leiaute decidido a partir
+   * de altura MEDIDA, que por isso não tinha como nascer no Go. No celular
+   * DEITADO cada fileira de cromo a menos é uma linha de combatente a mais; em
+   * PÉ há altura de sobra e esconder seria custo sem troca.
    *
    * `toBeVisible` e não `getBoundingClientRect`: medido, um filho de `<details>`
    * fechado ainda DEVOLVE retângulo (o navegador usa `content-visibility`), e
@@ -131,11 +110,10 @@ test.describe('O rodapé do mestre', () => {
     const gaveta = page.locator(`${rodape} details.stage-drawer`)
 
     // Localizador de CSS e não `getByRole('button')`: `<summary>` não expõe o
-    // papel de botão, então aquele localizador não achava nada — e `toBeHidden`
-    // sobre o que não existe passa VERDE. A primeira metade deste teste estava
-    // passando por vácuo, e só a segunda denunciou, porque "não achei" e "está
-    // escondido" são a mesma linha para o `toBeHidden`. Este casa o elemento nas
-    // DUAS alturas, e aí a visibilidade responde pela consulta de contêiner.
+    // papel de botão, então aquele localizador não acha nada — e `toBeHidden`
+    // sobre o que não existe passa VERDE, porque "não achei" e "está escondido"
+    // são a mesma linha para ele. Este casa o elemento nas DUAS alturas, e aí a
+    // visibilidade responde pela consulta de contêiner.
     const abrir = page.locator('summary[aria-label="Mais comandos da mesa"]')
 
     await page.setViewportSize({ width: 390, height: 844 })
@@ -167,8 +145,7 @@ test.describe('O rodapé do mestre', () => {
   })
 
   /**
-   * A LINHA DA FILA com os quatro verbos do mestre, nos dois formatos de celular
-   * (ALE-263).
+   * A LINHA DA FILA com os quatro verbos do mestre.
    *
    * Quatro alvos de 36px mais o número da iniciativa mais o nome, numa tela de
    * 390: é o formato onde a fileira estoura, e estourar aqui significa a lixeira
@@ -192,11 +169,8 @@ test.describe('O rodapé do mestre', () => {
     await expect(linha).toBeVisible()
     await expect(linha.getByRole('button', { name: /^Ferir / })).toBeVisible()
     // E a linha medida TEM o crachá, senão a medida é de outra linha que não a
-    // que corre risco. Ele passou de `PC` (2 letras) para `Ficha` (5) quando o
-    // termo proibido saiu, e é o mesmo selo que a SPA registra ter transbordado
-    // uma vez — "o e2e da cena pegou isso com quatro 'PC' pintados fora do pai"
-    // (`initiative-card.tsx`). Sem esta linha, o teste mediria uma fileira sem
-    // crachá e diria verde sobre o caso que importa.
+    // que corre risco: o selo de 5 letras é o que empurra os verbos, e uma
+    // fileira sem ele passaria verde sobre o caso que importa.
     await expect(linha.getByText('Ficha', { exact: true })).toBeVisible()
 
     const medida = await linha.evaluate((el) => {
@@ -215,26 +189,20 @@ test.describe('O rodapé do mestre', () => {
   })
 
   /**
-   * O COMANDO REMENDA A CENA SOZINHO, sem depender do stream (ALE-263).
+   * O COMANDO REMENDA A CENA SOZINHO, sem depender do stream.
    *
-   * A primeira versão deste teste ia medir "o remendo chega antes do batimento",
-   * e ela seria VÁCUO: o `sessionStore` avisa quem escuta a cada mutação
-   * (`Assinar`), então o stream acorda na hora e entregaria a mesma tela
-   * igualmente rápido — o teste passaria verde com o remendo REMOVIDO, medindo o
-   * caminho que ele existe para dispensar.
-   *
-   * O que o remendo compra de verdade é INDEPENDÊNCIA: a cena de quem clicou é
-   * redesenhada pela resposta do PRÓPRIO comando. Então a forma honesta de
-   * medi-lo é cortar o stream e ver se o clique ainda funciona — com o canal
-   * fechado, o único caminho possível para o DOM mudar é a resposta do POST.
+   * Medir "o remendo chega antes do batimento" seria VÁCUO: o stream acorda a
+   * cada mutação e entregaria a mesma tela igualmente rápido, então o teste
+   * passaria verde com o remendo REMOVIDO. O que o remendo compra é
+   * INDEPENDÊNCIA — então a forma honesta de medi-lo é cortar o stream: com o
+   * canal fechado, o único caminho possível para o DOM mudar é a resposta do
+   * POST.
    *
    * O verbo escolhido é o OLHO e não o avanço, e isso é deliberado: dois cliques
-   * o devolvem ao estado original, e a sessão 1/4 é compartilhada por seis
-   * specs. Iniciar cena para medir o avanço deixaria estado ligado para os
-   * outros — e encerrá-la expira os efeitos de duração cena das fichas do grupo,
-   * que é um efeito colateral bem maior que o teste. O avanço tem guarda de fio
-   * no Go (`TestTheCommandPatchesTheSceneRightAway`); o que falta a ele é só o navegador,
-   * e o mecanismo é o mesmo caminho de código.
+   * o devolvem ao estado original, e a sessão é compartilhada por seis specs.
+   * Iniciar cena deixaria estado ligado para os outros, e encerrá-la expira os
+   * efeitos de duração cena das fichas do grupo. O avanço tem guarda de fio no
+   * Go (`TestTheCommandPatchesTheSceneRightAway`), pelo mesmo caminho de código.
    */
   test('o comando redesenha a cena mesmo com o stream cortado', async ({ page }) => {
     // Cortado ANTES da carga: o `data-init` abre o stream ao montar a página, e
@@ -242,9 +210,9 @@ test.describe('O rodapé do mestre', () => {
     // fazer o teste passar pelo motivo errado.
     // REGEX e não glob: o `@get` do Datastar anexa os sinais da página como
     // query string, então a URL é `.../fluxo?datastar={...}` e um glob
-    // terminado em `/fluxo` não casa. Foi o controle abaixo que denunciou —
-    // sem ele este teste teria passado verde com o stream ABERTO, medindo
-    // exatamente o caminho que ele existe para excluir.
+    // terminado em `/fluxo` não casa — o teste passaria verde com o stream
+    // ABERTO, medindo exatamente o caminho que ele existe para excluir. Quem
+    // denuncia isso é o controle abaixo.
     let tentouAbrir = 0
     await page.route(/\/mesa\/\d+\/\d+\/fluxo(\?|$)/, async (rota) => {
       tentouAbrir++
@@ -279,17 +247,15 @@ test.describe('O rodapé do mestre', () => {
   })
 
   /**
-   * NENHUM DIÁLOGO FECHADO ROUBA O CLIQUE DA CENA (ALE-263).
+   * NENHUM DIÁLOGO FECHADO ROUBA O CLIQUE DA CENA.
    *
    * O navegador dá `display:none` a `<dialog>` fechado, e um `flex` utilitário
-   * do Tailwind SOBREPÕE isso — o painel do bestiário fechado ocupava a tela
-   * inteira e engolia o clique de todo botão da Mesa. Foi pego como efeito
-   * colateral (dois testes deste arquivo estouraram por timeout, com o log
-   * dizendo que o clique caía num `<span>` de dentro do diálogo), e este guarda
-   * existe para que o próximo apareça NOMEADO em vez de como dois timeouts.
+   * do Tailwind SOBREPÕE isso: o diálogo fechado ocupa a tela inteira e engole o
+   * clique de todo botão da Mesa. Sem este guarda o sintoma é um punhado de
+   * timeouts em outros casos; com ele, o defeito aparece NOMEADO.
    *
-   * Ele vale para os TRÊS diálogos da cena e para os que vierem, porque varre
-   * `dialog:not([open])` em vez de citar ids — é amostragem e não enumeração.
+   * Ele varre `dialog:not([open])` em vez de citar ids — amostragem e não
+   * enumeração, então vale para o diálogo que nascer amanhã.
    *
    * Só o navegador responde: é a folha do agente do usuário disputando
    * especificidade com a folha compilada, e nem jsdom nem teste de handler têm
@@ -313,12 +279,11 @@ test.describe('O rodapé do mestre', () => {
   })
 
   /**
-   * O `<dialog>` modal centralizado (ALE-263).
+   * O `<dialog>` modal centralizado.
    *
    * O `preflight` do Tailwind zera a margem de TODO elemento, e a centralização
    * do `<dialog>` modal é justamente a `margin: auto` que o navegador aplica
-   * sobre `inset: 0`. Medido antes do conserto: `top: 0, left: 0` numa janela de
-   * 1916×907 — o diálogo nascia grudado no canto.
+   * sobre `inset: 0` — sem o conserto, o diálogo nasce grudado no canto.
    *
    * Nenhuma camada abaixo desta enxerga isso: é regra do agente do usuário
    * combinada com a folha compilada, e a camada de topo só existe no navegador.

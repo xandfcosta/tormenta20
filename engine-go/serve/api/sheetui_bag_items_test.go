@@ -224,13 +224,10 @@ func use(t *testing.T, f sceneFixture, id, item int64, corpo string) string {
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
 }
 
-// A MELHORIA QUE NÃO CABE É RECUSADA PELO SERVIDOR — e esta é a fronteira que
-// a fatia fecha.
+// A MELHORIA QUE NÃO CABE É RECUSADA PELO SERVIDOR.
 //
-// A compatibilidade vivia só no filtro do diálogo da SPA: o Go tinha o campo
-// `appliesTo` e não o lia, e o próprio `handleAddItem` registra a dívida em
-// comentário. Filtro de tela não recusa nada — um pedido montado à mão punha
-// corda de arco num escudo, e o servidor gravava.
+// Filtro de tela não recusa nada: com a compatibilidade só no diálogo, um
+// pedido montado à mão põe corda de arco num escudo e o servidor grava.
 func TestAnImprovementThatDoesNotFitIsRefusedByTheServer(t *testing.T) {
 	f, id := fighterFixture(t)
 	escudo := itemSemeia(t, f, id, "escudo-leve", "Escudo leve", "")

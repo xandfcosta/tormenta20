@@ -12,8 +12,8 @@ import (
 //	 (todo dano que sofre é reduzido em 2). A cada três níveis, sua RD aumenta
 //	 em 2, até um máximo de RD 10 no 17º nível."
 //
-// A progressão vinha coberta só pelos oráculos de paridade. O que se fixa aqui é
-// a regra do livro: os patamares, o passo de três níveis e o teto (ALE-105).
+// O que se fixa aqui é a regra do livro: os patamares, o passo de três níveis e
+// o teto.
 func TestBarbaroRdProgression(t *testing.T) {
 	// Um caso por FRONTEIRA, não um por nível: o que quebra numa tabela de
 	// patamares é o limite, não o meio da faixa.
@@ -58,10 +58,9 @@ func TestBarbaroRdStepsEveryThreeLevels(t *testing.T) {
 // "Especialização em Armadura" — Cavaleiro p54, Guerreiro p65: poder ESCOLHIDO
 // com pré-requisito de 12º nível na classe, RD 5 fixa, só com armadura pesada.
 //
-// O motor dava ao Guerreiro a progressão do BÁRBARO a partir do 5º nível, o que
-// não existe no livro: todo Guerreiro de 5 a 11 tinha RD que não deveria ter, e
-// do 12º em diante tinha o valor errado (ALE-111). Estes testes fixam a regra
-// certa, e não o comportamento antigo.
+// Dar ao Guerreiro a progressão do BÁRBARO a partir do 5º nível não existe no
+// livro: todo Guerreiro de 5 a 11 ficaria com RD que não devia ter, e do 12º em
+// diante com o valor errado.
 func TestEspecializacaoEmArmadura(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	catalogs := primeFromDump(t, dir)
@@ -145,8 +144,8 @@ func TestEspecializacaoEmArmadura(t *testing.T) {
 }
 
 // "PETRIFICADO. O personagem fica inconsciente e recebe redução de dano 8."
-// (p394). A RD 8 não era modelável enquanto não existia alvo de modificador para
-// redução de dano — a do motor vinha só de classe (ALE-115).
+// (p394). Ela exige alvo de modificador para redução de dano: RD que vem só de
+// classe não modela isto.
 func TestPetrificadoGrantsDamageReduction(t *testing.T) {
 	rd := func(conds []string, classes ...CharacterClass) RdBreakdown {
 		mods := []Modifier{}
@@ -192,8 +191,8 @@ func TestPetrificadoGrantsDamageReduction(t *testing.T) {
 // dá o exemplo trabalhado ali mesmo: "um bucaneiro de 2º nível com Car 3 soma
 // +2 na Defesa. Quando subir para o 3º nível, passará a somar +3."
 //
-// Estava no catálogo SEM MODIFICADOR NENHUM: a habilidade aparecia na ficha e
-// não mexia na Defesa (ALE-115).
+// Uma habilidade catalogada SEM MODIFICADOR aparece na ficha e não mexe na
+// Defesa, que é o modo silencioso de errar isto.
 func TestInsolenciaAddsCarismaCappedByClassLevel(t *testing.T) {
 	bucaneiro := func(level, carisma int, flags map[string]bool, conds string) DefenseBreakdown {
 		ch := Character{

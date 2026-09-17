@@ -7,13 +7,12 @@ import (
 	"testing"
 )
 
-// O guarda do CACHE dos estáticos (ALE-264).
+// O guarda do CACHE dos estáticos.
 //
 // O defeito que ele prende é de EXPERIÊNCIA e volta em SILÊNCIO: sem validador
 // nem `Cache-Control`, o navegador rebaixa 113KB de CSS bloqueante de
 // renderização a cada troca de página, o documento novo não pinta até a folha
-// chegar, e o navegador mostra o branco entre as duas telas. Nada estoura. O
-// dono viu antes de qualquer teste, e é assim que esta classe é descoberta.
+// chegar, e aparece o branco entre as duas telas. Nada estoura.
 //
 // Por que HANDLER e não e2e: a garantia é sobre CABEÇALHO, e cabeçalho é a
 // camada mais barata que a segura. Um e2e que medisse "não piscou" seria caro,
@@ -32,7 +31,7 @@ func pedeEstatico(t *testing.T, alvo string, cabecalhos map[string]string) *http
 	return rec
 }
 
-// TestTheVersionedAddressDoesNotComeBack: um ano e `immutable`.
+// Um ano e `immutable`.
 //
 // É o caminho que TIRA a ida à rede, e é ele que conserta o clarão — revalidar
 // ainda atrasaria a primeira pintura, porque a folha bloqueia a renderização.
@@ -51,8 +50,6 @@ func TestTheVersionedAddressDoesNotComeBack(t *testing.T) {
 	}
 }
 
-// TestTheUnversionedAddressIsNotEternal.
-//
 // A outra metade, e ela é deliberadamente o pior caso: um endereço sem versão
 // pode ter sido guardado antes de um deploy, e servi-lo como eterno prenderia a
 // pessoa numa folha velha sem nenhum gesto que a resgate — nem recarregar.
@@ -69,8 +66,6 @@ func TestTheUnversionedAddressIsNotEternal(t *testing.T) {
 	}
 }
 
-// TestWhoeverAlreadyHasTheStylesheetGets304.
-//
 // É o que o `embed` não podia dar sozinho: arquivo embutido tem modtime ZERO, e
 // o `http.ServeContent` não emite `Last-Modified` de um tempo nulo nem inventa
 // `ETag`. O `http.FileServer` estava certo; o sistema de arquivos por baixo é
@@ -96,8 +91,6 @@ func TestWhoeverAlreadyHasTheStylesheetGets304(t *testing.T) {
 	}
 }
 
-// TestTheDigestIsStableBetweenReads.
-//
 // Ele decide invalidação de cache: se variasse entre dois boots do MESMO
 // binário, todo reinício jogaria fora o cache de todo mundo — e o clarão
 // voltaria uma vez por deploy sem ninguém entender por quê.
@@ -115,9 +108,7 @@ func TestTheDigestIsStableBetweenReads(t *testing.T) {
 	}
 }
 
-// TestEveryStaticAddressOnThePageIsVersioned.
-//
-// A regressão silenciosa desta fatia: caminho cru continua funcionando, e é
+// A regressão silenciosa: caminho cru continua funcionando, e é
 // servido SEM cache. A página que escrever um à mão volta a piscar, sozinha, e
 // ninguém liga uma coisa à outra — o sintoma aparece em UMA tela e a causa está
 // noutro arquivo.

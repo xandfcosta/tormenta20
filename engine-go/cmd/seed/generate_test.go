@@ -9,27 +9,14 @@ import (
 
 // O GERADOR DA SEED CONTINUA GERANDO, e o que ele gera é o que está commitado.
 //
-// # Por que este guarda existe
+// O gerador já parou de rodar inteiro **sem que nada acusasse**: ele alcança o
+// que usa por CAMINHO EM STRING, então o `go build` fica verde e uma varredura
+// de órfãs por SÍMBOLO não alcança. Por isso o caso RODA o gerador de verdade
+// num arquivo temporário e compara com o `seed.sql` do repositório — o defeito
+// não é de compilação nem de asserção, é o programa inteiro não terminar.
 //
-// O `cmd/seed` dirigia os manipuladores HTTP em processo. A ALE-277 apagou as
-// SETE rotas que ele usava por não terem consumidor, e ele parou de rodar —
-// **sem que nada acusasse**. O `go build` fica verde: ele chamava por CAMINHO EM
-// STRING, e uma varredura de órfãs por SÍMBOLO não alcança isso.
-//
-// O defeito ficou escondido uma issue inteira. Quem o encontrou foi um desvio
-// acidental — rodar o gerador para simular uma migração —, e não uma revisão.
-//
-// # O que ele mede, e o que isso custa
-//
-// Ele RODA o gerador de verdade num arquivo temporário e compara com o
-// `seed.sql` do repositório. É a única forma que pega esta família: o defeito
-// não era de compilação nem de asserção, era o programa inteiro não terminar.
-//
-// Custa ~1s — migra um SQLite descartável e prima o catálogo, exatamente como o
-// gerador faz. Vale o preço porque o `seed.sql` é como uma máquina nova ganha
-// dado, e um gerador quebrado só aparece no dia em que alguém precisa dele.
-//
-// # A dupla função
+// Custa ~1s, e vale: o `seed.sql` é como uma máquina nova ganha dado, e um
+// gerador quebrado só aparece no dia em que alguém precisa dele.
 //
 // Ele também prende que o gerador é DETERMINÍSTICO. As datas são constantes e o
 // despejo normaliza carimbos justamente para isso; se alguém escrever um

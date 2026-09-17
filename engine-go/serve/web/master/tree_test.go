@@ -14,35 +14,26 @@ import (
 	"golang.org/x/net/html/atom"
 )
 
-// A ÁRVORE QUE O NAVEGADOR MONTA, e não a string que o servidor escreveu
-// (ALE-262).
+// A ÁRVORE QUE O NAVEGADOR MONTA, e não a string que o servidor escreveu.
 //
-// Este guarda existe por causa de uma assimetria que a sessão irmã nomeou ao
-// varrer a SPA atrás do mesmo defeito e não achar: **o compilador do Solid
-// AVISA sobre aninhamento inválido** ("The HTML provided is malformed and will
-// yield unexpected output when evaluated by a browser"), porque ele compila JSX
-// para clonagem de `<template>` e vê a marcação antes do navegador.
+// A marcação é STRING montada no servidor, e não há compilador olhando: o
+// `templ` confere se as tags fecham, não o modelo de conteúdo delas. O parser do
+// navegador conserta o aninhamento inválido em silêncio, e ninguém escreve nada
+// em lugar nenhum — foi assim que 24 parágrafos vazios atravessaram compilador,
+// typecheck e guarda de contraste.
 //
-// Aqui a marcação é STRING montada no servidor. Não há compilador olhando: o
-// `templ` confere se as tags fecham, não o modelo de conteúdo delas. O parser
-// do navegador conserta em silêncio, e ninguém escreve nada em lugar nenhum —
-// foi por isso que 24 parágrafos vazios atravessaram compilador, typecheck e
-// guarda de contraste.
-//
-// A barreira que falta se constrói com o `x/net/html`, que implementa o MESMO
-// algoritmo de correção do navegador. Se a árvore que ele monta não é a que o
-// template descreve, o navegador também vai discordar.
+// A barreira se constrói com o `x/net/html`, que implementa o MESMO algoritmo de
+// correção do navegador: se a árvore que ele monta não é a que o template
+// descreve, o navegador também vai discordar.
 //
 // Ele é mais largo que o guarda de grep do `@ui.SectionLabel`: aquele conhece um
 // componente, este mede o RESULTADO de qualquer cena.
 
 // sceneAddresses são as cenas que este guarda visita.
 //
-// A lista é enumeração, e enumeração é remendo — o CLAUDE.md diz isso e está
-// certo. Ela existe porque renderizar uma cena exige montar a view dela, e não
-// há como descobrir isso por reflexão. **Cena nova que não entrar aqui nasce
-// sem medição**, que é a marca desta família de defeito; o comentário fica para
-// quem acrescentar a próxima saber que precisa vir aqui.
+// A lista é ENUMERAÇÃO, e enumeração é remendo. Ela existe porque renderizar uma
+// cena exige montar a view dela, e não há como descobrir isso por reflexão.
+// **Cena nova que não entrar aqui nasce sem medição.**
 func sceneAddresses(t *testing.T) map[string]string {
 	t.Helper()
 	fora := map[string]string{}
@@ -78,8 +69,6 @@ func sceneAddresses(t *testing.T) map[string]string {
 	return fora
 }
 
-// TestTheBrowserDoesNotHaveToFixTheMarkup.
-//
 // O sinal é o PARÁGRAFO VAZIO: quando o parser encontra conteúdo de fluxo
 // dentro de um `<p>`, ele fecha o parágrafo antes do intruso e o hoista — e
 // sobra uma casca sem texto que o template nunca pediu. Um `<p>` deliberadamente

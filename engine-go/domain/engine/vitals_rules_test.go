@@ -4,12 +4,11 @@ import "testing"
 
 // PV/PM pools — livro p35 ("Subindo de Nível" e "Multiclasse").
 //
-// These pools were once covered only by the parity oracles: byte-equal against a
-// snapshot, which proves the engine did not CHANGE but never that it matches the
-// book. With a single engine the oracle regenerates from Go itself, so the rule
-// is pinned against the BOOK here, in the engine that runs it (ALE-105).
+// Oráculo de paridade prova que o motor não MUDOU, e nunca que ele bate com o
+// livro — ainda mais depois que o oráculo passou a ser gerado do próprio Go. Por
+// isso a regra é presa contra o LIVRO aqui, no motor que a roda.
 //
-// The two rules with a worked example in the text:
+// As duas regras que o texto traz com exemplo resolvido:
 //
 //	"Some sua Constituição aos PV que ganha por nível (mas você sempre ganha
 //	 pelo menos 1 PV ao subir de nível)."

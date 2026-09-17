@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+// counter gera ids determinísticos ("e1", "e2", …) para que as asserções sobre
+// ORDEM e TURNO não dependam de UUID sorteado.
 func counter() func() string {
 	n := 0
 	return func() string {
@@ -12,9 +14,6 @@ func counter() func() string {
 		return "e" + itoa(n)
 	}
 }
-
-// Counter returns a deterministic id generator ("e1", "e2", …) so tests can assert on
-// order/turn behavior without random UUIDs.
 
 func itoa(n int) string {
 	if n == 0 {
@@ -28,9 +27,9 @@ func itoa(n int) string {
 	return string(b)
 }
 
-// cenaEmCurso é o rastreador de uma cena JÁ INICIADA (ALE-210). Turno só existe
-// dentro de cena, e é o que quase todo teste daqui fala — o padrão de
-// `EmptyRuntimeState` é fora de cena, que é o estado de uma sessão recém-aberta.
+// cenaEmCurso é o rastreador de uma cena JÁ INICIADA. Turno só existe dentro de
+// cena, e é o que quase todo teste daqui fala — o padrão de `EmptyRuntimeState`
+// é fora de cena, que é o estado de uma sessão recém-aberta.
 func cenaEmCurso() *SessionRuntimeState {
 	st := EmptyRuntimeState()
 	StartScene(st)
@@ -311,7 +310,7 @@ func TestRewindTurn(t *testing.T) {
 }
 
 // Saber que o ogro está com 12 de 130 muda a decisão de quem está na mesa: essa
-// é informação do MESTRE, e ele decide linha a linha (ALE-122).
+// é informação do MESTRE, e ele decide linha a linha.
 func TestRedactForPlayers(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
@@ -322,9 +321,8 @@ func TestRedactForPlayers(t *testing.T) {
 	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &hpCurrent, &hpMax
 	st.Initiative[0].HpHidden = &hidden
 	st.Initiative[1].HpCurrent, st.Initiative[1].HpMax = &hpCurrent, &hpMax
-	// O `nao` EXPLÍCITO é o que mudou na ALE-211: o Bandido é NPC, e desde
-	// aquela issue o PV de NPC nasce escondido. "Linha aberta" deixou de ser o
-	// padrão e passou a ser uma escolha do mestre — o guarda do padrão novo é o
+	// O `revealed` EXPLÍCITO é obrigatório: o Bandido é NPC, e PV de NPC nasce
+	// ESCONDIDO. "Linha aberta" é escolha do mestre, e o padrão está no
 	// `TestTheTableSeesThePartyHpAndNothingElseByDefault`, abaixo.
 	st.Initiative[1].HpHidden = &revealed
 
@@ -347,16 +345,11 @@ func TestRedactForPlayers(t *testing.T) {
 	}
 }
 
-// O PADRÃO da mesa é ver o PV do GRUPO e mais nada (ALE-211).
+// O PADRÃO da mesa é ver o PV do GRUPO e mais nada (decisão do dono).
 //
-// Decisão do dono, 2026-09-04: "pv e pm aparecem pro mestre; para os jogadores,
-// só podem ver o pv do grupo por padrão, o resto o mestre escolhe quando podem
-// ver."
-//
-// Isso INVERTE o padrão do NPC. Até aqui o PV dele nascia visível e o mestre
-// escondia linha a linha — falhar ABERTO, que na prática entrega o número do
-// ogro toda vez que o mestre esquece de clicar, e o esquecimento não deixa
-// marca. O padrão passa a ser o seguro; revelar é que é o ato deliberado.
+// O padrão do NPC é FECHADO de propósito: nascer visível é falhar aberto, e na
+// prática entrega o número do ogro toda vez que o mestre esquece de clicar — um
+// esquecimento que não deixa marca. Revelar é que é o ato deliberado.
 func TestTheTableSeesThePartyHpAndNothingElseByDefault(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
@@ -381,7 +374,7 @@ func TestTheTableSeesThePartyHpAndNothingElseByDefault(t *testing.T) {
 		t.Error("o PM vazou: ele é do mestre até ele decidir o contrário, e vale para o grupo também")
 	}
 	// A MARCA sobrevive, senão "sem barra" e "escondido" viram a mesma coisa na
-	// tela do jogador — e a segunda é informação (ALE-210).
+	// tela do jogador — e a segunda é informação.
 	if npcRow.HpHidden == nil || !*npcRow.HpHidden {
 		t.Error("o NPC oculto chegou sem a marca: a tela não teria como dizer que existe PV ali")
 	}
@@ -414,7 +407,7 @@ func TestTheGmRevealsAPoolLineByLine(t *testing.T) {
 
 // O broadcast não é o único caminho: o `ack` do `get-state` é como o cliente
 // HIDRATA a tela, e ele responde a quem pediu — inclusive jogador. Redigir só o
-// broadcast deixaria o PV oculto sair inteiro na primeira carga (ALE-122).
+// broadcast deixaria o PV oculto sair inteiro na primeira carga.
 func TestStateForRole(t *testing.T) {
 	st := cenaEmCurso()
 	_ = AddEntry(st, npc("Ogro", 12), counter())
@@ -505,10 +498,9 @@ func TestPatchAndDeltaVitals(t *testing.T) {
 	})
 }
 
-// O contador de turnos do combate (ALE-142). Ele é CONTADO e não derivado, e
-// este teste é a razão: rodada × tamanho da lista mente assim que a lista muda
-// no meio do combate — e mudar no meio é o normal numa mesa, porque capanga
-// morre e reforço chega.
+// O contador de turnos é CONTADO e não derivado, e este teste é a razão: rodada
+// × tamanho da lista mente assim que a lista muda no meio do combate — e mudar
+// no meio é o normal numa mesa, porque capanga morre e reforço chega.
 func TestTurnsTakenSurvivesTheListChanging(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
@@ -578,13 +570,11 @@ func TestResetClearsTheTurns(t *testing.T) {
 	}
 }
 
-// A cópia do estado é o que vai para o socket e para o banco — o valor na
-// memória do servidor não é o que a mesa vê. Quando o `cloneState` listava os
-// campos um a um, o `TurnsTaken` novo ficou de fora e a cópia zerava o contador
-// em silêncio, com tudo compilando (ALE-142).
+// A cópia do estado é o que vai para o socket e para o banco. Um `cloneState`
+// que liste os campos um a um perde o campo NOVO em silêncio, com tudo
+// compilando.
 //
-// Este teste não confere um campo: confere que NENHUM se perde na cópia, que é
-// a garantia que a lista-de-campos não dava.
+// Este teste não confere um campo: confere que NENHUM se perde na cópia.
 func TestCloneStatePreservesEveryField(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
@@ -607,10 +597,9 @@ func TestCloneStatePreservesEveryField(t *testing.T) {
 	}
 }
 
-// "Detalhar este NPC" (ALE-137): o bloco nasce depois de a linha já existir, e
-// a ligação é uma correção da linha — sem isto o mestre teria de remover o
-// combatente e adicioná-lo de novo, perdendo PV e condições no caminho, que é
-// exatamente o atalho que a ALE-122 aboliu.
+// "Detalhar este NPC": o bloco nasce depois de a linha já existir, e a ligação é
+// uma correção da linha — sem isto o mestre teria de remover o combatente e
+// adicioná-lo de novo, perdendo PV e condições no caminho.
 func TestLinkingACreatureBlockToAnEntryThatAlreadyExists(t *testing.T) {
 	st := EmptyRuntimeState()
 	id := counter()
@@ -630,8 +619,7 @@ func TestLinkingACreatureBlockToAnEntryThatAlreadyExists(t *testing.T) {
 	}
 }
 
-// A CENA como estado explícito (ALE-210): fora dela o jogador não recebe fila
-// NENHUMA. É a trava do servidor, e ela mora em `RedactForPlayers` de propósito
+// A CENA é estado explícito: fora dela o jogador não recebe fila NENHUMA. É a trava do servidor, e ela mora em `RedactForPlayers` de propósito
 // — não mandar é diferente de não desenhar, e esta função é o gargalo pelo qual
 // os dois caminhos do estado passam (o broadcast por sala e o ack do get-state).
 func TestOffSceneTheTrackerDoesNotReachTheTable(t *testing.T) {

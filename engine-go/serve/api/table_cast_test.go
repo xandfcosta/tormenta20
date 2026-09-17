@@ -29,9 +29,8 @@ func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 	}
 }
 
-// TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet é o buraco que o "Adicionar grupo" não cobre:
-// ele traz o grupo INTEIRO, e a cena em que só um desce na cripta não tinha
-// gesto nenhum.
+// O "Adicionar grupo" traz o grupo INTEIRO, e a cena em que só um desce na
+// cripta não tinha gesto nenhum.
 //
 // A linha tem de nascer LIGADA À FICHA (`characterId`), que é a diferença entre
 // este caminho e o mestre digitar o nome à mão: sem o id ela fica fora do
@@ -51,8 +50,6 @@ func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 	}
 }
 
-// TestAddingItTwiceDoesNotDuplicateTheEntry.
-//
 // O elenco esconde o botão de quem já está na fila, mas isso é UX: dois cliques
 // rápidos, duas abas, ou um remendo atrasado chegam ao servidor do mesmo jeito.
 // Quem garante é o `populateParty`, e este guarda é o que afirma que o caminho
@@ -69,7 +66,7 @@ func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 	}
 }
 
-// TestThePlayerPutsNobodyInTheTracker — o papel, no servidor.
+// O papel, no servidor.
 func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -81,7 +78,7 @@ func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
 	}
 }
 
-// TestTheCastSaysWhoIsAlreadyInTheTracker prende a marca que decide o que a tela OFERECE.
+// Prende a marca que decide o que a tela OFERECE.
 //
 // Oferecer "pôr na iniciativa" a quem já está lá é desenhar um gesto que só
 // pode não fazer nada — a mesma regra que trava os verbos do ciclo da sessão.
@@ -118,17 +115,15 @@ func (f sceneFixture) castMember(t *testing.T, characterID int64) table.Member {
 	return table.Member{}
 }
 
-// O ELENCO FERE E CURA QUEM NÃO ESTÁ NA FILA, que é o buraco desta fatia
-// (ALE-211).
+// O ELENCO FERE E CURA QUEM NÃO ESTÁ NA FILA.
 //
-// As rotas de vital da fila são por `entryId`, e o elenco existe justamente
-// para quem NÃO tem linha na iniciativa — o mestre curando a Arwen entre duas
-// brigas é o caso comum, não a exceção. Antes disto o único caminho era pôr o
-// herói na fila só para poder mexer nele, e tirar depois.
+// As rotas de vital da fila são por `entryId`, e o elenco existe justamente para
+// quem NÃO tem linha na iniciativa — o mestre curando a Arwen entre duas brigas
+// é o caso comum, não a exceção.
 //
 // A asserção é sobre a FICHA, e não sobre a fila: escrever só na entrada
 // compilaria, deixaria o painel com um número plausível, e a ficha do jogador
-// continuaria com o PV de antes (ALE-122).
+// continuaria com o PV de antes.
 func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
@@ -173,7 +168,7 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 }
 
 // A MESMA TRAVA do "pôr na fila" vale para ferir, e é por isso que ela virou
-// função (ALE-211).
+// função.
 //
 // O id vem do CAMINHO, e o caminho é digitável: sem a conferência contra o
 // roster, o mestre de uma mesa feriria o personagem de OUTRA campanha — que é
@@ -205,7 +200,7 @@ func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
 }
 
 // COM linha na fila, ela ESPELHA o que o elenco fez — senão as duas telas
-// mostram números diferentes do mesmo herói, que é a ALE-122 literal.
+// mostram números diferentes do mesmo herói.
 func TestTheCastVitalsMirrorIntoTheTrackerWhenThereIsALine(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)

@@ -4,10 +4,9 @@ import (
 	"testing"
 )
 
-// ── a aparência da peça (ALE-179, portada na ALE-263) ────────────────────────
+// ── a aparência da peça ──────────────────────────────────────────────────────
 //
-// A regra: a cor é da ESPÉCIE e o número é da INSTÂNCIA. Os casos são os que a
-// suíte da SPA já nomeava, porque as bordas não mudaram com o transporte.
+// A regra: a cor é da ESPÉCIE e o número é da INSTÂNCIA.
 
 func TestEqualsComeOutEqualAndTheNumberStaysOutOfTheColor(t *testing.T) {
 	um, tres := AppearanceOf("Zumbi 1"), AppearanceOf("Zumbi 3")
@@ -63,22 +62,16 @@ func TestDifferentKindsStayDistinct(t *testing.T) {
 	}
 }
 
-// O MATIZ É O MESMO DA SPA, e tem de continuar sendo: a peça do tabuleiro e o
-// retrato do herói mostram a mesma criatura, e duas fórmulas dariam duas cores
-// para ela em duas telas.
+// O MATIZ é o mesmo para a mesma criatura em toda tela: duas fórmulas dariam
+// duas cores para ela.
 //
-// Os números foram RODADOS no `hueFromName` da SPA com node e transcritos, e é
-// isso que faz deste um guarda de contrato entre as duas linguagens. Derivá-los
-// de um hash reescrito na asserção compararia a função consigo mesma — que foi
-// a primeira versão deste teste, e ela passava sem provar nada.
+// Os números estão TRANSCRITOS à mão. Derivá-los de um hash reescrito na
+// asserção compararia a função consigo mesma — foi a primeira versão deste
+// teste, e ela passava sem provar nada.
 //
-// O "Ácido" está aqui de propósito: o JavaScript percorre PONTOS DE CÓDIGO
-// (`for ch of name`), e um port que iterasse BYTES daria outro número em todo
-// nome acentuado. É a única entrada da lista que pega esse erro.
-//
-// A doc do `hueFromName` diz `hueFromName('Thorvald') // => 214`, e ELA ESTÁ
-// ERRADA: rodado, o valor é 186. Foi este teste que descobriu, porque nada no
-// front afirma aquele exemplo. Avisada a sessão que cuida da SPA.
+// O "Ácido" está aqui de propósito: quem percorre PONTOS DE CÓDIGO e quem
+// percorre BYTES dão números diferentes em todo nome acentuado, e é a única
+// entrada da lista que pega esse erro.
 func TestTheHueIsTheSameAsTheHeroPortrait(t *testing.T) {
 	casos := map[string]int{
 		"Thorvald": 186,

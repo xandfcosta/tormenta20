@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// O GESTO DE UMA PEÇA NÃO PODE RESPONDER POR OUTRA (ALE-299).
+// O GESTO DE UMA PEÇA NÃO PODE RESPONDER POR OUTRA.
 //
 // Cada peça pendura o próprio `pointermove__window` e `pointerup__window`, e a
 // janela entrega o evento a TODOS eles. A única coisa que separa um gesto do
@@ -16,11 +16,10 @@ import (
 // já encerrado. Pegar o Beta movia o Alfa, que corria atrás do dedo desde o
 // primeiro quadro.
 //
-// Com UMA peça o primeiro do DOM É o arrastado, e o defeito não aparece — a
-// suíte do tabuleiro media exatamente esse caso, com `toHaveCount(1)`. É a forma
-// que o CLAUDE.md da raiz chama de "o guarda visita todas as telas e um só
-// DADO": percorrer a navegação não é cobertura quando a tela ramifica pelo
-// número de itens.
+// Com UMA peça o primeiro do DOM É o arrastado, e o defeito não aparece: um
+// guarda com `toHaveCount(1)` mede a metade em que ele é invisível por
+// construção. Percorrer a navegação não é cobertura quando a tela ramifica pelo
+// NÚMERO de itens.
 //
 // ESTE GUARDA VARRE OS QUATRO PEDAÇOS DO GESTO — pegar, seguir, soltar e
 // deslocar na tela — porque eles têm de concordar, e já divergiram: o
@@ -84,10 +83,9 @@ func TestNoTokenGestureAnswersForAnotherToken(t *testing.T) {
 	}
 }
 
-// TestEveryTokenThatDragsItselfIsGuardedByItsOwnId é a metade POSITIVA, e ela não
-// é decoração: o guarda de cima passaria verde sobre uma expressão que não
-// mencionasse `$dragging` nenhuma vez — um gesto morto e um gesto correto se
-// parecem numa lista de violações vazia.
+// A metade POSITIVA, e ela não é decoração: o guarda de cima passa verde sobre
+// uma expressão que não mencione `$dragging` nenhuma vez — um gesto morto e um
+// gesto correto se parecem numa lista de violações vazia.
 func TestEveryTokenThatDragsItselfIsGuardedByItsOwnId(t *testing.T) {
 	pecas := []boardToken{
 		{ID: "alfa-1111", Rotulo: "Alfa", X: 3, Y: 3, Onde: "3, 3"},

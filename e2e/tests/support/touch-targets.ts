@@ -16,10 +16,9 @@ import type { Page } from '@playwright/test'
  * qualquer um abre a mesma decomposição.
  *
  * Contar só o tamanho infla o número com alvos que a norma aceita, e isso não é
- * detalhe de purista: a ALE-177 nasceu de uma contagem assim, propondo esconder
- * a derivação das perícias para comprar espaço. **Eram 58 pequenos e quatro
- * reprovando** — o conserto teria mexido na densidade da tela mais densa do app
- * por 54 alvos que a norma já aceita.
+ * detalhe de purista: uma contagem assim mediu 58 alvos pequenos onde quatro
+ * reprovavam, e o "conserto" proposto mexia na densidade da tela mais densa do
+ * app por 54 alvos que a norma já aceita.
  *
  * # O que este medidor NÃO vê
  *
@@ -28,9 +27,9 @@ import type { Page } from '@playwright/test'
  * conta como "texto corrido".
  *
  * E ALVO DENTRO DE ALVO seria falso positivo: o círculo do filho cruza a caixa
- * do pai por construção. Não acontece hoje — nenhum dos 136 alvos da ficha
- * aninha outro —, e o dia em que acontecer o guarda acusa um defeito que não
- * existe. Quem for depurar uma falha estranha olhe isto primeiro.
+ * do pai por construção. Não acontece hoje, e o dia em que acontecer o guarda
+ * acusa um defeito que não existe. Quem for depurar uma falha estranha olhe isto
+ * primeiro.
  *
  * Devolve `medidos` junto com as falhas, sempre: lista vazia e seletor que não
  * casa com nada se parecem no terminal.

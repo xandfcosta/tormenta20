@@ -8,20 +8,17 @@ import (
 )
 
 // sinalQueAbre é o `data-signals` que o SERVIDOR redeclara no mesmo remendo do
-// conteúdo, e não a palavra solta: procurar `fichaAberta` cru acha o `data-show`
-// do diálogo, que está sempre lá. A primeira versão deste guarda procurava a
-// palavra, achava o atributo, e passava verde afirmando uma ordem que nunca
-// mediu — quem denunciou foi o guarda da busca, falhando pelo mesmo motivo.
+// conteúdo, e não a palavra solta: procurar o nome do sinal cru acha o
+// `data-show` do diálogo, que está sempre lá, e o guarda passa verde afirmando
+// uma ordem que nunca mediu.
 const sinalQueAbre = `sheet_open: true`
 const sinalQueFecha = `sheet_open: false`
 
-// O guarda da FICHA que abre na hora certa (ALE-264).
+// O guarda da FICHA que abre na hora certa.
 //
-// O defeito foi visto pelo dono e medido depois: clicar numa linha NÃO
-// selecionada abria a ficha na hora com a criatura ANTERIOR e trocava um quadro
-// adiante. Amostrado no navegador — a 0ms dizia "Bandido", a 16ms dizia "Lobo".
-// Clicar na linha JÁ selecionada não piscava, e foi essa diferença que isolou a
-// causa: lá o conteúdo já estava certo, então não havia troca para ver.
+// Clicar numa linha NÃO selecionada abria a ficha na hora com a criatura
+// ANTERIOR e trocava um quadro adiante (a 0ms "Bandido", a 16ms "Lobo"); na
+// linha JÁ selecionada não piscava, porque o conteúdo já estava certo.
 //
 // A garantia é sobre ORDEM no fluxo, e é por isso que ela cabe num teste de
 // handler: o conteúdo tem de sair ANTES do sinal que abre. Invertido, a ficha
@@ -40,15 +37,12 @@ func fluxoDaFicha(t *testing.T, f sceneFixture, alvo string) string {
 	return rec.Body.String()
 }
 
-// TestTheEntryCardIsBornOpenInTheSamePatchAsItsContent.
-//
-// A garantia é de ATOMICIDADE e não de ordem, e a diferença foi medida: a
-// primeira versão do conserto mandava um EVENTO DE SINAL depois do conteúdo, e
-// ele não funcionava — o `data-signals` que abre a ficha mora no `#bestiary`,
-// que É o elemento remendado, e o remendo redeclarava `sheet_open: false` por
-// cima. O fio levava `{"sheet_open":true}` e o diálogo continuava
-// `display:none`. Com o servidor redeclarando o valor CERTO, o conteúdo e o
-// estado de aberto chegam juntos e não existe janela entre eles.
+// A garantia é de ATOMICIDADE e não de ordem: mandar um EVENTO DE SINAL depois
+// do conteúdo não funciona, porque o `data-signals` que abre a ficha mora no
+// `#bestiary`, que É o elemento remendado — o remendo redeclara
+// `sheet_open: false` por cima, o fio leva `{"sheet_open":true}` e o diálogo
+// continua `display:none`. Com o servidor redeclarando o valor CERTO, o conteúdo
+// e o estado de aberto chegam juntos e não existe janela entre eles.
 func TestTheEntryCardIsBornOpenInTheSamePatchAsItsContent(t *testing.T) {
 	f := newSceneFixture(t)
 	corpo := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&abrir=1")
@@ -68,8 +62,6 @@ func TestTheEntryCardIsBornOpenInTheSamePatchAsItsContent(t *testing.T) {
 	}
 }
 
-// TestSearchAndFilterDoNotOpenTheEntryCard.
-//
 // A metade que faz a de cima significar alguma coisa. A MESMA rota serve a
 // busca e os filtros de tipo, e os dois mandam os sinais TODOS — inclusive o
 // `criatura` já escolhido. Se a decisão de abrir viesse de um sinal em vez da
@@ -91,8 +83,6 @@ func TestSearchAndFilterDoNotOpenTheEntryCard(t *testing.T) {
 	}
 }
 
-// TestClickingTheRowDoesNotOpenTheEntryCardOnItsOwn.
-//
 // A regressão silenciosa deste conserto: devolver `$sheet_open = true` à
 // expressão do clique faz a ficha voltar a abrir antes do conteúdo, e nada
 // estoura — o defeito reaparece como um quadro piscando, que é o que ninguém
@@ -111,28 +101,3 @@ func TestClickingTheRowDoesNotOpenTheEntryCardOnItsOwn(t *testing.T) {
 		t.Error("o clique não pede ao servidor para abrir a ficha")
 	}
 }
-
-// TestNoFocusAsksTheServerWithoutAKeyboardGuard — a VARREDURA de um defeito
-// que só aparece em máquina carregada, e que o CI pegou duas vezes seguidas
-// enquanto a bancada passava verde (ALE-272).
-//
-// O clique do mouse TAMBÉM foca. Um nó que pede ao servidor no foco E no clique
-// manda DOIS pedidos por um gesto só, e os dois remendam a mesma cena — que
-// redeclara os sinais dela a cada remendo. Quem chega por último manda, e a
-// ordem de chegada não é a de saída: no bestiário o pedido do foco não leva
-// `abrir=1`, então chegando por último ele FECHAVA a ficha que o clique tinha
-// aberto. A criatura ficava escolhida e a ficha não abria.
-//
-// É a família "duas escritas no mesmo lugar sem ordem garantida", prima do
-// `data-show` com `data-attr:style` — e como aquela, não deixa erro nenhum
-// para trás.
-//
-// A REGRA: pedido disparado por FOCO é afordância de TECLADO, e por isso ele
-// pede `:focus-visible`. Medido no navegador: o clique dá `false`, o Tab dá
-// `true`, e o foco PROGRAMÁTICO do driver de setas também dá `true` — o guarda
-// preserva a prévia da seta e tira só o pedido que o mouse mandava à toa.
-//
-// Ele varre a FONTE e não uma cena servida de propósito. A lição da ALE-237 e
-// da ALE-252 é que um guarda só mede o que ele VISITA, e enumerar cena por cena
-// deixaria a próxima nascer sem medição, em silêncio. Como a regra cabe num
-// atributo só, a fonte inteira é alcançável de uma vez.

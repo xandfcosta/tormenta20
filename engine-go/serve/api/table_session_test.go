@@ -44,8 +44,6 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 	}
 }
 
-// TestThePlayerHasNoLifecycleButHasTheWayOut.
-//
 // Sair não é do mestre: quem entrou numa mesa precisa poder sair dela.
 func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 	f := newSceneFixture(t)
@@ -70,8 +68,6 @@ func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 	}
 }
 
-// TestTheTitleSavesAndMayStayBlank.
-//
 // Vazio é legítimo: a identidade da sessão é o NÚMERO, e o título é o apelido da
 // noite. Obrigar a um faria o mestre inventar texto para poder salvar.
 func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
@@ -91,8 +87,6 @@ func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
 	}
 }
 
-// TestRestartingFromTheScreenEmptiesTheLiveTracker.
-//
 // O guarda da regra já cobre o `Forget`; este cobre o CAMINHO — que o comando da
 // Mesa recarrega a fila depois, senão o `GetState` recria um estado vazio sem
 // passar pelo banco e a próxima carga fria discordaria desta.
@@ -112,8 +106,6 @@ func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 	}
 }
 
-// TestDeletingErasesAndSendsTheGmToTheCampaign.
-//
 // O destino importa: voltar para a mesa apagada seria mandar o mestre para uma
 // porta que não existe mais.
 func TestDeletingErasesAndSendsTheGmToTheCampaign(t *testing.T) {

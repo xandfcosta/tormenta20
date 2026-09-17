@@ -98,9 +98,9 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 
 // REABRIR RESPEITA O TETO, e a recusa diz o que fazer.
 //
-// É a porta que faltava: o teto vive no `Open`, e o acervo entrou por outro
-// caminho. Sem ele, um mestre com oito cenas abertas passaria da nona pela lista
-// de lugares — que é justamente onde há 148 botões para clicar.
+// O teto vive no `Open`, e o acervo é OUTRO caminho até ele: sem esta ligação,
+// um mestre com oito cenas abertas passa da nona pela lista de lugares — que é
+// justamente onde há uma centena de botões para clicar.
 func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")

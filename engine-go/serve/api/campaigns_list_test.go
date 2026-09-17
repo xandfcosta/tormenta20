@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// Os guardas da cena de CAMPANHAS (ALE-234).
+// Os guardas da cena de CAMPANHAS.
 //
 // O que se protege é o que o SERVIDOR decide: quem entra na lista, qual
 // campanha aparece ao vivo, e que o cursor nasce numa que existe. O desenho é
@@ -40,13 +40,6 @@ func (f cenaFixture) eu(t *testing.T) AuthUser {
 
 // ── a lista ──────────────────────────────────────────────────────────────────
 
-// Os guardas da cena de CAMPANHAS (ALE-234).
-//
-// O que se protege é o que o SERVIDOR decide: quem entra na lista, qual
-// campanha aparece ao vivo, e que o cursor nasce numa que existe. O desenho é
-// do e2e — ele mede contraste e o cursor andando, que são as coisas que só o
-// navegador testemunha.
-
 func (f cenaFixture) campanha(t *testing.T, nome, sinopse string) int64 {
 	t.Helper()
 	c, err := f.s.queries.CreateCampaign(context.Background(), sqlcgen.CreateCampaignParams{
@@ -66,7 +59,7 @@ func (f cenaFixture) campanha(t *testing.T, nome, sinopse string) int64 {
 
 // A busca é do SERVIDOR nesta cena, e a regra é a mesma do `casaBusca`. Este
 // guarda é a costura: que a cena de fato APLICA a regra, sobre o nome E a
-// sinopse, que são os dois campos que a SPA indexa.
+// sinopse.
 func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
@@ -131,9 +124,9 @@ func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
 
 // ── a sessão viva ────────────────────────────────────────────────────────────
 
-// A consulta única substituiu uma fan-out de N+1 (a SEGUNDA da migração), e o
-// que ela tem de acertar é ATRIBUIR a sessão à campanha certa: trocar duas
-// faria o "Continuar" levar para a mesa errada.
+// A consulta única substitui uma fan-out de N+1, e o que ela tem de acertar é
+// ATRIBUIR a sessão à campanha certa: trocar duas faz o "Continuar" levar para a
+// mesa errada.
 func TestALiveSessionGoesToTheRightCampaign(t *testing.T) {
 	f := novaCena(t)
 	parada := f.campanha(t, "A Queda de Tauron", "")

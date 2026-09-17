@@ -7,18 +7,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Redefinição de senha (ALE-120). O que precisa ser verdade: o link troca a
+// Redefinição de senha. O que precisa ser verdade: o link troca a
 // senha DE VERDADE (a antiga para de valer), serve uma vez só, e nada disso
 // depende de estar logado — quem esqueceu a senha não consegue autenticar.
 
-// resetLinkFor cunha o link pela REGRA, e não pela rota do admin.
-//
-// As duas rotas que estes casos dirigiam — `POST /admin/users/{id}/password-reset`
-// e `POST /auth/reset-password` — saíram na ALE-277. O que eles prendem nunca foi
-// o transporte: é o link valer UMA vez, a corrida de dois pedidos gastá-lo uma
-// vez só, e a senha fraca ser recusada no SERVIDOR. A porta em Datastar troca a
-// senha pelo mesmo `ResetPassword`, e a administração cunha pelo mesmo
-// `mintPasswordReset`.
+// resetLinkFor cunha o link pela REGRA, e não pela rota do admin: o que estes
+// casos prendem nunca foi o transporte — é o link valer UMA vez e a corrida de
+// dois pedidos gastá-lo uma vez só. A porta troca a senha pelo mesmo
+// `ResetPassword`, e a administração cunha pelo mesmo `mintPasswordReset`.
 func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 	t.Helper()
 	reset, err := s.adminHost().mintPasswordReset(context.Background(), UserID, adminID)
@@ -132,13 +128,9 @@ func TestResolvingAResetLinkNamesTheAccount(t *testing.T) {
 	}
 }
 
-// Aqui morava o TestAResetRefusesAWeakPassword. A rota `POST /auth/reset-password`
-// saiu na ALE-277, e a garantia está em DUAS camadas que não morreram: a regra é
-// do `account` (`ValidatePassword`, com a frase em pt-BR), e quem a chama antes
-// de trocar é a PORTA — `TestTheDoorSaysValidationRefusalsInPortuguese` e
-// `TestTheDoorRefusesPasswordsThatDoNotMatchOnTheServer`.
-//
-// Vale dizer o que isso significa para o `ResetPassword` da porta: ele NÃO valida
-// força de senha, e nunca validou — quem valida é quem chama. Um segundo
-// chamador que esquecesse disso trocaria a senha por "123", e é por isso que a
-// linha fica escrita aqui em vez de sumir com o teste.
+// A RECUSA DE SENHA FRACA não se prende aqui, e a razão importa: o
+// `ResetPassword` NÃO valida força de senha, e nunca validou — quem valida é quem
+// CHAMA. A regra é do `account` (`ValidatePassword`), e quem a chama antes de
+// trocar é a porta (`TestTheDoorSaysValidationRefusalsInPortuguese` e
+// `TestTheDoorRefusesPasswordsThatDoNotMatchOnTheServer`). Um segundo chamador
+// que esquecesse disso trocaria a senha por "123".

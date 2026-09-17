@@ -16,20 +16,11 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// A BANCADA HTTP do `api`, lida por 49 arquivos de teste.
+// A BANCADA HTTP do `api`, lida por dezenas de arquivos de teste.
 //
-// Ela morava em `fixture_test.go` — o arquivo da CENA — e isso não era
-// arrumação: era a fatia 2 da ALE-278 acontecendo pela metade. O molde do
-// BANCO virou pacote (`db/testdb`) antes da primeira cena sair; esta bancada,
-// que monta um `Server` de verdade e fala HTTP, ficou onde estava porque o
-// tipo `api.Server` a prende aqui — um pacote de bancada que o importasse
-// seria importado de volta pelos testes dele, que é o ciclo que a divisão
-// existe para evitar.
-//
-// O que a mudança de arquivo conserta é o nome: quando a Mesa virou
-// `web/table` (ALE-278), a bancada do repositório INTEIRO teria ido junto por
-// acidente de prefixo. É a mesma família do guarda que media o próprio
-// diretório e encolheu ao mudar de casa.
+// Ela fica no pacote e não num `testdb` irmão porque o tipo `api.Server` a
+// prende aqui: um pacote de bancada que o importasse seria importado de volta
+// pelos testes dele, que é o ciclo que a divisão existe para evitar.
 
 type sceneFixture struct {
 	s          *Server
@@ -40,19 +31,19 @@ type sceneFixture struct {
 	charID     int64
 }
 
-// A mesa do app: mestre, um jogador com PC de nível 8 COM a perícia
-// Iniciativa (sem ela o bônus cai em zero e o teste do d20 nasce vácuo — a
-// armadilha que a ALE-213 registrou), e um NPC para o mestre esconder.
+// A mesa do app: mestre, um jogador com PC de nível 8 COM a perícia Iniciativa
+// (sem ela o bônus cai em zero e o teste do d20 nasce vácuo), e um NPC para o
+// mestre esconder.
 func newSceneFixture(t *testing.T) sceneFixture {
 	t.Helper()
 	s := newTestServer(t)
 	// O CATÁLOGO É O DE VERDADE, e não um `{"items":[]}`.
 	//
-	// Ele era vazio, e isso fazia regra sumir do TESTE sem sumir da produção: a
-	// fatia 7 mediu um escudo sendo VESTIDO porque o eixo de equipar não achava
-	// o item, e a fatia 8 mediu a distribuição de atributo do humano passando com
-	// três vezes o mesmo, porque a raça não estava no catálogo primado. Um
-	// fixture que desliga validação em silêncio é pior que um fixture lento.
+	// Catálogo vazio faz regra sumir do TESTE sem sumir da produção: um escudo
+	// passa a ser VESTIDO porque o eixo de equipar não acha o item, e a
+	// distribuição de atributo do humano aceita três vezes o mesmo porque a raça
+	// não está primada. Fixture que desliga validação em silêncio é pior que
+	// fixture lento.
 	bruto, err := os.ReadFile(filepath.Join("..", "..", "parity", "_catalogs.json"))
 	if err != nil {
 		t.Fatalf("ler catálogos: %v (gere com `go run ./cmd/genoracle`)", err)
@@ -74,12 +65,6 @@ func newSceneFixture(t *testing.T) sceneFixture {
 	}); err != nil {
 		t.Fatalf("semear perícia: %v", err)
 	}
-	// Aqui havia um `_ = s.SocketHandler()`, e o comentário dele dizia que
-	// montar o gateway punha "a PONTE entre os dois transportes debaixo do
-	// teste, porque ela é o custo central do app". A ALE-253 tirou o socket
-	// do projeto e a ponte junto: há um caminho de publicação só, o hub SSE, e
-	// ele existe desde o `newServer`. O custo central do app deixou de
-	// existir em vez de deixar de ser testado.
 	return sceneFixture{s: s, mestre: mestre, jogador: jogador, campaignID: campaignID, sessionID: sessionID, charID: charID}
 }
 
@@ -168,13 +153,9 @@ func (f sceneFixture) scene(t *testing.T) {
 	}
 }
 
-// seedClasse põe uma classe na ficha, e ela é a bancada de SEIS arquivos.
-//
-// Morava no `character_race_choices_http_test`, que saiu na ALE-277 com a rota
-// que ele provava — e levaria junto a semente de meia dúzia de casos que não
-// têm nada a ver com raça. É a mesma forma da bancada que morava no arquivo da
-// Mesa: um ajudante compartilhado hospedado no arquivo de UM caso só aparece
-// quando esse caso morre.
+// seedClasse põe uma classe na ficha, e ela é a bancada de SEIS arquivos — por
+// isso mora aqui. Ajudante compartilhado hospedado no arquivo de UM caso só
+// aparece quando esse caso morre.
 func seedClasse(t *testing.T, s *Server, characterID int64, nome string, nivel int64) {
 	t.Helper()
 	err := s.queries.CreateClass(context.Background(), sqlcgen.CreateClassParams{

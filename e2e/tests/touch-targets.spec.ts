@@ -2,26 +2,20 @@ import { expect, test } from '@playwright/test'
 import { touchTargets } from './support/touch-targets'
 
 /**
- * O PISO DE TOQUE DA FICHA NO TELEFONE — WCAG 2.5.8, AA (ALE-177).
+ * O PISO DE TOQUE DA FICHA NO TELEFONE — WCAG 2.5.8, AA.
  *
  * E2E porque a pergunta é sobre GEOMETRIA RENDERIZADA: quanto um alvo mede
  * depois de o texto quebrar, e a que distância ele ficou do vizinho. Em jsdom
  * todo elemento mede zero e a resposta seria "conforme" para qualquer código —
  * que é a pior forma de verde.
  *
- * # O que a issue dizia, e o que a medição achou
+ * **Contar `< 24px` NÃO é medir a norma**: isso responde "quantos são pequenos"
+ * quando a pergunta é "quantos reprovam", e infla o resultado em ordens de
+ * grandeza. A norma tem duas exceções — espaçamento e equivalente —, e quem as
+ * mede é o `support/touch-targets.ts`.
  *
- * A ALE-177 media a ficha da SPA e contou 98 de 175 alvos (56%) abaixo de 24×24.
- * Refeita na ficha em Datastar, a 390px, nas SETE abas e em dois heróis — um que
- * conjura e um que não —, a conta dá outra coisa: 58 alvos são menores que 24px
- * e **quatro** reprovavam de fato.
- *
- * A diferença não é a tela ter melhorado 90%: é que contar tamanho responde
- * "quantos são pequenos" quando a pergunta é "quantos reprovam". A norma tem
- * duas exceções, e as duas valem aqui — ver `support/touch-targets.ts`, que as mede.
- *
- * O conserto foi o `ui.BadgeClasses`, e quem impede a receita de ser reescrita à
- * mão é o `TestNoHandwrittenBadgeRecipe`, em Go, que é mais barato. **Este guarda
+ * Quem impede a receita de crachá de ser reescrita à mão é o
+ * `TestNoHandwrittenBadgeRecipe`, em Go, que é mais barato. **Este guarda
  * responde a outra pergunta**: que o piso de fato DESENHA. Um `min-h-6` que não
  * chegasse à folha compilada passaria naquele e reprovaria neste.
  */
@@ -37,10 +31,10 @@ const ABAS = [
   'spells',
 ] as const
 
-// DOIS heróis, e não um: a ficha RAMIFICA pelo dado. Metade do painel de Combate
-// só existe para quem conjura, e foram justamente as abas do arcanista — Mochila
-// e Magias — que continham as quatro reprovações. Medir só o guerreiro teria
-// dado verde sobre a tela que estava errada (a lição da ALE-272).
+// DOIS heróis, e não um: a ficha RAMIFICA pelo dado. Metade do painel de
+// Combate só existe para quem conjura, e foram as abas do arcanista — Mochila e
+// Magias — que continham as reprovações. Medir só o guerreiro dá verde sobre a
+// tela que está errada.
 const HEROES = [
   { id: 1, quem: 'o guerreiro' },
   { id: 3, quem: 'quem conjura' },
@@ -85,17 +79,17 @@ for (const heroi of HEROES) {
 
     for (const aba of ABAS) {
       await page.goto(`/personagens/${heroi.id}?tab=${aba}`)
-      // A ESPERA É PELA ABA PEDIDA, e não por `networkidle`: o nome errado do
-      // parâmetro (foi `?aba=` na primeira sonda) desenha a primeira aba em
-      // silêncio, e sete medições da MESMA página passam com cara de sete abas.
-      // O `networkidle` também não serve na Mesa, onde o SSE nunca fecha.
+      // A ESPERA É PELA ABA PEDIDA, e não por `networkidle`: um parâmetro com o
+      // nome errado desenha a primeira aba em SILÊNCIO, e sete medições da mesma
+      // página passam com cara de sete abas. O `networkidle` também não serve na
+      // Mesa, onde o SSE nunca fecha.
       await expect(page.locator('[aria-current="page"]')).toBeVisible()
 
       const { medidos, alvos } = await touchTargets(page)
 
       // O DENOMINADOR: sem alvo medido, a asserção final é verde sobre uma
-      // página que não carregou. Aconteceu na bancada desta issue — a Mesa fora
-      // de cena devolveu `medidos=4` e passou.
+      // página que não carregou — uma cena fora de cena devolve `medidos=4` e
+      // passa.
       expect(medidos, `a aba ${aba} mediu ${medidos} alvos: ela não desenhou`).toBeGreaterThan(15)
 
       for (const a of alvos.filter((x) => x.reprova)) {

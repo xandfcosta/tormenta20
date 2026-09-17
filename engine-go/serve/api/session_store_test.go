@@ -33,7 +33,7 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 	if _, err := store.Load(ctx, sid); err != nil {
 		t.Fatalf("initial Load: %v", err)
 	}
-	// A cena precisa estar iniciada para o turno andar (ALE-210).
+	// A cena precisa estar iniciada para o turno andar.
 	if _, err := store.StartScene(sid); err != nil {
 		t.Fatalf("live.StartScene: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestStoreHydrateFromBlob(t *testing.T) {
 	if len(loaded.Initiative) != 1 || loaded.Initiative[0].Label != "Boss" || loaded.Round != 2 {
 		t.Errorf("hydrated %+v, want Boss/round 2", loaded)
 	}
-	// O blob é de ANTES da ALE-210 e não traz `sceneActive`; o zero de um bool é
+	// O blob é ANTIGO e não traz `sceneActive`; o zero de um bool é
 	// `false`, e sem esta dedução a mesa que parou na rodada 2 reabriria fora de
 	// cena e a fila sumiria dos jogadores até o mestre clicar em iniciar. O turno
 	// em curso é prova de que a cena estava ligada.
@@ -118,7 +118,8 @@ func TestStoreRefreshCharacterMaxes(t *testing.T) {
 	if _, err := store.Load(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	// Entry carries STALE maxes + a live current the refresh must not touch.
+	// A entrada carrega máximos VELHOS e um atual vivo que o refresh não pode
+	// tocar.
 	e := sheetCombatant("A", 12, charID)
 	stale, cur := int64(1), int64(4)
 	e.HpMax, e.HpCurrent = &stale, &cur
@@ -191,8 +192,9 @@ func TestStoreDirtyOnPersistFailure(t *testing.T) {
 }
 
 func TestForgetPreservesDirtyForRecovery(t *testing.T) {
-	// Forget (clear-tracker) must NOT drop the Dirty flag: a session left Dirty still
-	// needs to Emit persistence-warning{Dirty:false} on the next successful Persist.
+	// O esquecer NÃO pode largar a flag `Dirty`: uma sessão deixada suja ainda
+	// precisa emitir `persistence-warning{Dirty:false}` no próximo `Persist` que
+	// der certo.
 	store := newTestServer(t).sessions
 	sid := int64(42)
 	store.Mu.Lock()
@@ -206,11 +208,8 @@ func TestForgetPreservesDirtyForRecovery(t *testing.T) {
 	}
 }
 
-// O PV do rastreador É o PV da ficha (ALE-122). O mestre batia -5 na iniciativa
-// e a mesma tela mostrava 52/95 ali e 57/95 no card do grupo, porque o socket
-// escrevia num blob e só a ficha era lida. Substitui os testes da flag
-// `WS_VITALS_WRITETHROUGH_LIVE`, que protegiam um espelho opcional — e que
-// estava desligado em produção.
+// O PV do rastreador É o PV da ficha. Escrever num blob à parte e ler da ficha
+// faz a MESMA tela mostrar 52/95 na iniciativa e 57/95 no card do grupo.
 func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
@@ -251,8 +250,7 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 }
 
 // A pancada da sessão drena PV TEMPORÁRIOS antes dos reais, como a da ficha
-// sempre fez — antes o socket cobrava direto dos PV reais de quem estava sob
-// Armadura Arcana.
+// sempre fez: sem isso, quem está sob Armadura Arcana paga direto nos PV reais.
 func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
@@ -299,7 +297,8 @@ func seedTempHpPool(t *testing.T, s *Server, charID int64, amount int) {
 	}
 }
 
-// Concurrent mutations on one session must not race (run with -race) and must all land.
+// Mutações concorrentes na mesma sessão não podem correr entre si (rode com
+// `-race`) e todas têm de chegar.
 func TestStoreConcurrentMutations(t *testing.T) {
 	s := newTestServer(t)
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))

@@ -7,20 +7,13 @@ import (
 	"testing"
 )
 
-// O ORÁCULO DO MARKDOWN (ALE-269).
+// O ORÁCULO DO MARKDOWN.
 //
-// Ele nasceu como PARIDADE com o `markdown.ts` da SPA: as duas telas desenhavam
-// a mesma nota do banco, e a gramática tem divergências deliberadas do markdown
-// padrão que uma biblioteca desfaria — a quebra de linha da ALE-122 é a maior.
-// O esperado era MEDIDO rodando o TypeScript de verdade, e não digitado aqui,
-// para não ser uma segunda transcrição da gramática.
-//
-// Com a SPA apagada (ALE-272, fatia 10c) não há segundo lado: o script que
-// gerava o arquivo saiu, e o oráculo virou uma LINHA DE BASE congelada — ele
-// acusa qualquer árvore que mude sem ter sido pedido, e deixou de provar que
-// duas implementações concordam. É a mesma perda que o `genoracle` documenta no
-// `engine-go/CLAUDE.md`, e a mitigação é a mesma: o diff de um oráculo se
-// revisa contra o que se queria mudar, nunca se aceita porque "ficou verde".
+// A gramática tem divergências deliberadas do markdown padrão que uma biblioteca
+// desfaria, e o oráculo é a LINHA DE BASE congelada que as protege: ele acusa
+// qualquer árvore que mude sem ter sido pedido. Ele NÃO prova que duas
+// implementações concordam — não há segunda —, então o diff dele se revisa
+// contra o que se queria mudar, nunca se aceita porque "ficou verde".
 //
 // O oráculo é comparado como ÁRVORE e não como texto JSON: chave fora de ordem
 // ou campo omitido são detalhe de serialização, e um teste que os prendesse
@@ -95,11 +88,10 @@ func TestTogglingATaskMatchesTheJs(t *testing.T) {
 // telas escreveu ainda — e é aqui que este port pode quebrar sozinho.
 //
 // `ToggleTask` recebe uma LINHA vinda de um clique do navegador, e o cliente
-// pode estar um remendo atrás do servidor. Um índice negativo, ou além do fim,
-// é caminho NORMAL e não erro: a resposta certa é devolver a nota intacta, e a
-// errada é entrar em pânico e derrubar o handler que estava salvando o texto de
-// alguém. O JS devolve `undefined` do array e cai no mesmo lugar; em Go isso é
-// um `index out of range`, e por isso a guarda existe e é testada.
+// pode estar um remendo atrás do servidor. Um índice negativo, ou além do fim, é
+// caminho NORMAL e não erro: a resposta certa é devolver a nota intacta, e a
+// errada é um `index out of range` derrubando o handler que estava salvando o
+// texto de alguém.
 func TestTogglingATaskDoesNotPanicOnAnOutOfRangeLine(t *testing.T) {
 	nota := "- [ ] dar XP"
 	for _, linha := range []int{-1, 1, 99} {

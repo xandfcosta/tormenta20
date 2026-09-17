@@ -2,38 +2,34 @@ import { expect, type Page, test } from '@playwright/test'
 import { openTheBoard, closeTheTracker, disposableTable, putACombatantInTheTracker } from './support/table'
 
 /**
- * A FILA EXPLICA O QUE MUDOU: a piscada do vital e o pulso da vez (ALE-174).
+ * A FILA EXPLICA O QUE MUDOU: a piscada do vital e o pulso da vez.
  *
- * A issue nasceu de uma auditoria cujo veredito contraria a intuição: *"o CSS
- * de animação deste app é disciplinado e barato; nenhuma animação existente
- * compromete um frame"*. O problema não era polir o que existe — era o que
- * falta. **Numa lista de nove combatentes um número troca sozinho e ninguém viu
- * QUEM sangrou.**
+ * O que estes casos protegem é o que FALTA quando nada anima: **numa lista de
+ * nove combatentes um número troca sozinho e ninguém viu QUEM sangrou.**
  *
  * E2E porque a pergunta é sobre a LINHA DO TEMPO de uma animação disparada por
  * um remendo do servidor. Em jsdom não há `Element.animate`, não há duração e
  * não há morph.
  *
- * # O que se mede é o EFEITO, e a lição custou dois guardas na fatia anterior
+ * # O que se mede é o EFEITO
  *
  * A piscada é um véu com `opacity` animada, e o pulso é `transform` + sombra.
  * Nenhum dos dois muda a geometria da linha — então a amostragem de posição que
- * serve para a peça não serve aqui. O que se amostra é o `opacity` computado do
- * véu (que existe SÓ durante a animação) e a contagem de `getAnimations()` da
- * linha, quadro a quadro.
+ * serve para a peça não serve aqui. O que se amostra é o véu (que existe SÓ
+ * durante a animação) e a contagem de `getAnimations()` da linha, quadro a
+ * quadro.
  *
  * **Capturar tela não serviria**: o `screenshot()` do Playwright desliga
- * animação por padrão e FINALIZA as finitas antes de fotografar (medido na
- * ALE-174, três quadros byte a byte idênticos).
+ * animação por padrão e FINALIZA as finitas antes de fotografar — três quadros
+ * byte a byte idênticos.
  */
 test.use({ storageState: '.auth/user.json' })
 
 /**
  * Amostra, quadro a quadro, o que está ANIMANDO na fila.
  *
- * Armada DEPOIS do arranjo e imediatamente antes do gesto, pela lição da fatia
- * anterior: uma sonda de vida longa mede tudo o que acontece na janela dela, e a
- * janela é parte do desenho.
+ * Armada DEPOIS do arranjo e imediatamente antes do gesto: uma sonda de vida
+ * longa mede tudo o que acontece na janela dela, e a janela é parte do desenho.
  */
 async function trackerAnimations(
   page: Page,
@@ -83,25 +79,22 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
     // A COR do véu diz o sinal, e é a única coisa que separa "levei 12" de
     // "curei 12". Medida no véu que está no ar durante a cura.
     //
-    // # Ela ESPERA O ZERO antes do gesto, e o orçamento é em TEMPO (ALE-322)
+    // # Ela ESPERA O ZERO antes do gesto, e o orçamento é em TEMPO
     //
-    // A primeira versão guardava `antes = veus.length` e esperava `> antes`. Duas
-    // fragilidades de desenho, independentes de qual delas mordeu:
+    // Guardar `antes = veus.length` e esperar `> antes` tem duas fragilidades:
     //
     //   - se um véu SAI e outro ENTRA, a contagem não sobe e o sucesso passa por
     //     ausência — é o "mostrador cujo REPOUSO é igual ao sucesso" do guia,
     //     com um contador no lugar do rótulo;
-    //   - o orçamento eram 40 QUADROS (~0,67s), mas o que se espera é uma ida ao
-    //     SERVIDOR: clique, POST, remendo SSE, morph. São relógios diferentes, e
-    //     o de quadros não estica quando o outro fica lento.
+    //   - um orçamento em QUADROS não é o relógio do que se espera, que é uma
+    //     ida ao SERVIDOR: clique, POST, remendo SSE, morph. O de quadros não
+    //     estica quando o outro fica lento.
     //
-    // Esperar a contagem chegar a ZERO torna o "apareceu" inequívoco, e o
-    // orçamento em tempo acompanha o que de fato se espera.
+    // Esperar a contagem chegar a ZERO torna o "apareceu" inequívoco.
     //
-    // A CAUSA RAIZ SEGUE ABERTA: esta reprovação apareceu em duas de quatro
-    // execuções cheias e nunca isolada, e não foi reproduzida sob instrumentação.
-    // Por isso a mensagem de falha carrega o estado — a próxima ocorrência chega
-    // diagnosticada em vez de exigir outra caçada.
+    // A CAUSA RAIZ DA INTERMITÊNCIA SEGUE ABERTA — nunca reproduzida sob
+    // instrumentação —, e é por isso que a mensagem de falha carrega o estado:
+    // a próxima ocorrência chega diagnosticada em vez de exigir outra caçada.
     const medida = await page.evaluate(async () => {
       const veus = () => [...document.querySelectorAll('#table-tracker li > div[aria-hidden="true"]')]
       const quadro = () => new Promise((p) => requestAnimationFrame(p))
@@ -180,9 +173,9 @@ test('entrar na vez pulsa a linha do combatente que entrou', async ({ page }) =>
 })
 
 /**
- * A CONDIÇÃO que chega SURGE (ALE-174, P4).
+ * A CONDIÇÃO que chega SURGE.
  *
- * É a única dos cinco disparos que é de mount de verdade, e o guarda mede o que
+ * É o único dos cinco disparos que é de mount de verdade, e o guarda mede o que
  * a mesa vê: o crachá é pintado com opacidade crescente durante 150ms. Contar
  * `getAnimations()` nele responde a pergunta sem depender de qual keyframe foi
  * escolhido.

@@ -79,13 +79,11 @@ func TestTheStripShowsTheTwoCeilingsFromPage141(t *testing.T) {
 	}
 }
 
-// O ITEM ACIMA DO TETO NÃO SOME — e este é o defeito que o porte conserta.
+// O ITEM ACIMA DO TETO NÃO SOME.
 //
-// A ficha antiga desenha `wielded[0]` e `wielded[1]` e para por aí: um terceiro
-// item empunhado — que o banco tem, porque a semente escreveu direto — não
-// aparecia em lugar nenhum. Nem na tira, nem na grade do guardado, porque ele
-// está equipado. Medido na bancada contra a tela antiga: o Escudo leve do Thal
-// existia no banco e não existia na tela.
+// Uma tira que desenha `wielded[0]` e `wielded[1]` e para por aí esconde o
+// terceiro item empunhado — que o banco tem — de TODA a tela: nem na tira, nem
+// na grade do guardado, porque ele está equipado.
 func TestAnItemAboveTheCeilingDoesNotVanishFromTheScreen(t *testing.T) {
 	f, id := fighterFixture(t)
 	itemSemeia(t, f, id, "espada-longa", "Espada longa", "wielded")
@@ -226,7 +224,7 @@ func TestMoneyIsReceivedSpentAndCorrected(t *testing.T) {
 // DÍVIDA NÃO EXISTE na ficha, e a razão é a carga.
 //
 // Saldo negativo viraria carga de moeda NEGATIVA, que COMPRARIA espaço na
-// mochila em vez de ocupar (ALE-215). Por isso o piso é zero, e não um aviso.
+// mochila em vez de ocupar. Por isso o piso é zero, e não um aviso.
 func TestMoneyNeverGoesNegative(t *testing.T) {
 	f, id := fighterFixture(t)
 	if err := f.s.sceneCore().Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{

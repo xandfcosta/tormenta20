@@ -9,27 +9,18 @@ import (
 	"t20engine/serve/web/campaigns"
 )
 
-// UMA MESA CRIADA PELA TELA ACEITA GENTE (ALE-287).
+// UMA MESA CRIADA PELA TELA ACEITA GENTE.
 //
-// Ela não aceitava, e não por falta de gesto: o `CreateCampaign` não escrevia
-// `inviteToken`, então a mesa nascia com a coluna NULA — e o `joinTable` recusa
-// quem não é o dono já no `!c.Invitetoken.Valid`, antes de olhar o que a pessoa
-// digitou. Com convite vazio ou com um token qualquer, as duas tentativas
-// devolviam `JoinNeedsInvite` e a mesa ficava com ZERO membros.
+// Se o `CreateCampaign` não escrever `inviteToken`, a mesa nasce com a coluna
+// NULA — e o `joinTable` recusa quem não é o dono já no `!c.Invitetoken.Valid`,
+// antes de olhar o que a pessoa digitou. A mesa fica com ZERO membros, com
+// convite vazio ou com um token qualquer.
 //
-// As únicas mesas em que alguém entrava eram as seis da `seed.sql`, que trazem
-// `seedtoken-0N` escrito à mão.
-//
-// # Por que a suíte inteira passava por cima disto
-//
-// A bancada semeia campanha com o token DADO (`seedCampanha(t, s, dono, nome,
-// convite)`), e todos os casos de entrar usavam essa porta. O teste fornecia o
-// que a produção nunca fornecia — é a família do "esperado calculado", com o
-// arranjo no lugar do valor esperado: um dado de fixture que o código sob teste
-// não sabe produzir esconde exatamente o defeito de quem o produz.
-//
-// Por isso este caso chama o `CreateCampaign` do jeito que a CENA chama, com os
-// mesmos parâmetros e mais nada.
+// Por que uma suíte inteira passa por cima disto: a bancada semeia campanha com
+// o token DADO, e todo caso de entrar usa essa porta. Um dado de fixture que o
+// código sob teste não sabe produzir esconde exatamente o defeito de quem o
+// produz. Por isso este caso chama o `CreateCampaign` do jeito que a CENA chama,
+// com os mesmos parâmetros e mais nada.
 func TestACampaignBornOnScreenLetsAPlayerIn(t *testing.T) {
 	s := newTestServer(t)
 	mestre := seedUser(t, s, "mestre@t20.local")

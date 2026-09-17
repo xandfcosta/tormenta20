@@ -8,15 +8,12 @@ import (
 	"testing"
 )
 
-// A BUSCA NÃO IMPORTA NADA DO PROJETO (ALE-278).
+// A BUSCA NÃO IMPORTA NADA DO PROJETO.
 //
-// Lista de permitidos VAZIA, como a do `creature`. Ela não é aspiração: o
-// arquivo já importava só `strings`, `unicode` e a normalização de acento quando
-// morava no `api`, e foi isso que provou que ele saía inteiro.
+// Lista de permitidos VAZIA, e ela não é aspiração: este pacote importa só
+// `strings`, `unicode` e a normalização de acento.
 //
-// # Por que este guarda importa mais que a média
-//
-// Este pacote existe para APAGAR UMA CÓPIA. O `Fold` — que desacentua para
+// Ele existe para APAGAR UMA CÓPIA. O `Fold` — que desacentua para
 // comparação — morava em dois lugares porque o `book` precisava dele e não podia
 // importar o `api`; a segunda cópia foi escrita errada e a classe deixou de
 // ligar a perícia que treina, sem erro nenhum.

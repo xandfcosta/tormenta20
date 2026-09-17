@@ -8,7 +8,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// Os guardas do painel de EFEITOS (ALE-272, fatia 5).
+// Os guardas do painel de EFEITOS.
 //
 // O que eles prendem é o que separa este painel de uma lista bonita: a condição
 // MOVE os números, a mesa é avisada, e a fronteira de cada gesto é do servidor.
@@ -18,18 +18,16 @@ type responseRecorderLike struct {
 	Body string
 }
 
-// A CONDIÇÃO AVISA A MESA AO VIVO, e isto é a ALE-245 sobrevivendo ao porte.
+// A CONDIÇÃO AVISA A MESA AO VIVO.
 //
 // O motor deriva Defesa e perícias da condição, então uma aplicada sem aviso faz
 // o jogador e o mestre verem números DIFERENTES do mesmo personagem, sem nada na
-// tela dizendo que discordam. O `handleUpdateConditions` da API JSON é o único
-// outro lugar que avisa — se a ficha em Datastar não avisasse, o porte teria
-// REGREDIDO o conserto sem que nenhum teste percebesse.
+// tela dizendo que discordam.
 func TestAConditionAnnouncesItselfToTheLiveTable(t *testing.T) {
 	// O guarda lê a FONTE do handler, e não um evento no fio: montar uma sessão
 	// viva com este personagem na fila para ouvir um SSE é caro, e o que se quer
-	// prender é que a CHAMADA não some — que é como a ALE-245 foi perdida da
-	// primeira vez (um gancho que ninguém preenchia).
+	// prender é que a CHAMADA não some — é assim que um aviso se perde, num
+	// gancho que ninguém preenche.
 	fonte := lerFonte(t, "effects_commands.go")
 	corpo := functionSlice(t, fonte, "func toggleBookCondition")
 	if !strings.Contains(corpo, "s.deps.CharacterChanged(row.ID)") {
@@ -44,10 +42,8 @@ func TestAConditionAnnouncesItselfToTheLiveTable(t *testing.T) {
 
 // AS POSTURAS SAEM DO CATÁLOGO, e a flag vem do PODER de mesmo id.
 //
-// A SPA guarda um `FLAG_ACTIVATIONS` escrito à mão; as duas posturas já estavam
-// no `activations.json` como `kind: "stance"`. Derivar a flag do último pedaço
-// do id acertaria as duas de hoje e erraria calado na terceira — por isso ela sai
-// do `condition.flag` dos modificadores do poder.
+// Derivar a flag do último pedaço do id acerta as duas de hoje e erra calado na
+// terceira — por isso ela sai do `condition.flag` dos modificadores do poder.
 func TestStancesComeFromTheCatalogWithThePowerFlag(t *testing.T) {
 	posturas := stancesFromCatalog()
 	if len(posturas) < 2 {

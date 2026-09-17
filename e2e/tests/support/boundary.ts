@@ -9,22 +9,13 @@ import { expect, type Page } from '@playwright/test'
  * cujo preenchimento se confunde com a cena passa por ele sem reclamar, porque
  * a letra continua legível.
  *
- * # O caso que o escreveu (ALE-250)
- *
- * O `secondary` do servidor tem uma borda que o da SPA não tinha, e a folha de
- * especificação media isso como divergência de 2px — "o errado é o nome, não a
- * borda". Medindo o limite, a conclusão virou:
- *
- *   preenchimento do `secondary` contra o fundo da cena   1,30:1   ✗
- *   a borda (`--grimorio-iron-light`)                     3,57:1   ✓
- *
- * **A borda é o conserto, não a divergência** — e o que ela conserta é um
- * defeito que a SPA tinha e ninguém tinha medido. Sem este guarda, alguém tira
- * a borda amanhã em nome da fidelidade e nada acusa: o botão continua clicável,
- * o texto continua legível, e o que se perde é a fronteira.
+ * Medido no `secondary`: o preenchimento contra o fundo da cena dá 1,30:1, e a
+ * borda (`--grimorio-iron-light`) dá 3,57:1. **A borda é o conserto** — sem este
+ * guarda, tirá-la não acusa nada: o botão continua clicável, o texto continua
+ * legível, e o que se perde é a fronteira.
  *
  * Por que browser: resolver `oklch` para sRGB é coisa que só o navegador faz —
- * a mesma razão que prende o medidor de contraste (ver `contraste.ts`).
+ * a mesma razão que prende o medidor de contraste (ver `contrast.ts`).
  */
 
 /** Uma medição: o que reprovou, e QUANTOS componentes foram olhados. */
@@ -78,12 +69,9 @@ export async function medeOLimiteDosBotoes(page: Page): Promise<MedicaoDeLimite>
       return rgb(getComputedStyle(document.body).backgroundColor)
     }
 
-    // OS BOTÕES QUE A CASA PINTA, e o escopo é o guarda inteiro.
-    //
-    // A primeira versão mediu todo `<button>` da página e reprovou sete que
-    // estavam certos: a coluna-MUSEU da folha, que desenha as variantes da SPA
-    // de propósito para comparar, e os botões de demonstração sem classe
-    // nenhuma. Guarda que reprova o que está certo é guarda que alguém desliga.
+    // OS BOTÕES QUE A CASA PINTA, e o escopo é o guarda inteiro: medir todo
+    // `<button>` da página reprova botão de demonstração sem classe nenhuma, e
+    // guarda que reprova o que está certo é guarda que alguém desliga.
     //
     // O critério é o PREENCHIMENTO da casa (`bg-primary`, `bg-secondary`,
     // `bg-destructive`), que é o que `ui.ButtonClasses` emite — e ele pega tanto

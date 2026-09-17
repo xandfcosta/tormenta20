@@ -8,18 +8,14 @@ import (
 	"testing"
 )
 
-// A CENA NÃO IMPORTA O HOSPEDEIRO (ALE-278).
+// A CENA NÃO IMPORTA O HOSPEDEIRO.
 //
 // Este é o guarda que faz a PORTA valer alguma coisa. A porta declara em
 // `deps.go` o que precisa, e o `api` cumpre.
 //
 // Importar o `api` daqui o COMPILADOR já recusa — é ciclo, porque o `api`
-// importa esta cena de volta para montar rota. O valor deste guarda é o resto,
-// e nesta cena o resto era grande: ela alcançava o `bcrypt` para gerar hash de
-// senha, o `db` para reconhecer violação de unicidade, e dois sentinelas de erro
-// do `api` para saber se um convite tinha sido recusado ou gasto.
-//
-// As três saíram, e nenhuma por regra de estilo:
+// importa esta cena de volta para montar rota. O valor deste guarda é o RESTO,
+// e três coisas ficaram de fora, nenhuma por regra de estilo:
 //
 //   - o BCRYPT porque o custo criptográfico é decisão de segurança do servidor,
 //     e a cena estaria carregando a constante dele para fazer trabalho que não é

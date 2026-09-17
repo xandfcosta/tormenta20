@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * A ENTRADA DO PALCO nas DUAS cenas de seleção (ALE-235, ALE-297).
+ * A ENTRADA DO PALCO nas DUAS cenas de seleção.
  *
  * E2E, e só e2e: linha do tempo de animação é coisa que só o navegador tem —
  * em jsdom não há `animationstart`, nem duração, nem atraso. O que o servidor
@@ -9,26 +9,23 @@ import { expect, test } from '@playwright/test'
  * barato; o que sobra para cá é a única pergunta que o Go não responde — **a
  * animação TOCA quando o cursor anda?**
  *
- * Por que ela precisava de issue própria: na SPA quem animava era `animate-in`,
- * que dispara no MOUNT, e o `<Show keyed>` reconstruía o nó a cada troca
- * justamente para isso (ALE-97). Aqui a cena inteira é desenhada e o cursor só
- * alterna `data-show` — nada nunca monta. O que substitui o mount é a CLASSE
- * entrando num nó que não a tinha.
+ * Nada MONTA aqui: a cena inteira é desenhada e o cursor só alterna
+ * `data-show`. O que substitui o mount é a CLASSE entrando num nó que não a
+ * tinha, e é por ela que a escuta espera.
  *
  * O CLIQUE É REAL de ponta a ponta, e isso não é preciosismo: `element.click()`
  * por JS **não move o foco**, então ele dispara só o `click` e não o `focusin`.
- * Foi assim que o defeito da direção passou despercebido na primeira medição —
- * com os dois eventos, a segunda passagem do gesto recalculava o sentido com o
- * índice já atualizado e o palco entrava sempre "adiante".
+ * Com os dois eventos, a segunda passagem do gesto recalcula o sentido com o
+ * índice já atualizado e o palco entra sempre "adiante" — que foi o defeito de
+ * direção que a medição por JS não viu.
  *
  * # POR QUE DUAS CENAS, E POR QUE NÃO A MESMA COISA DUAS VEZES
  *
- * A ALE-297 tirou o livro de couro das campanhas e pôs o mesmo palco lá. O
- * mecanismo é UM só e ele é prendido UMA vez — o caso da direção e o do atraso
- * medem o CSS, e o CSS é o mesmo para as duas. O que cada cena tem de provar
- * separado é a LIGAÇÃO: que ela escreve a classe no nó certo e que o cursor de
- * verdade a faz tocar. Por isso o primeiro caso varre as duas e o segundo, que
- * mede os 80ms e a opacidade final, roda numa só.
+ * O mecanismo é UM só e ele é prendido UMA vez — o caso da direção e o do
+ * atraso medem o CSS, e o CSS é o mesmo para as duas. O que cada cena tem de
+ * provar separado é a LIGAÇÃO: que ela escreve a classe no nó certo e que o
+ * cursor de verdade a faz tocar. Por isso o primeiro caso varre as duas e o
+ * segundo, que mede os 80ms e a opacidade final, roda numa só.
  */
 test.use({ storageState: '.auth/user.json' })
 
@@ -83,21 +80,18 @@ for (const cena of SCENES_WITH_A_STAGE) {
 }
 
 /**
- * O PALCO NÃO DANÇA AO ANDAR NO TRILHO (ALE-99, e de novo na ALE-297).
+ * O PALCO NÃO DANÇA AO ANDAR NO TRILHO.
  *
  * A capa tem de pousar no MESMO y em toda posição do cursor. Quando ela não
  * pousa, andar no trilho faz a cena inteira saltar debaixo do ponteiro — e o
  * salto é pequeno o bastante para ninguém chamar de defeito e grande o bastante
  * para cansar.
  *
- * ESTE GUARDA NASCEU VERMELHO, na bancada e contra a seed de verdade: a capa
- * pousava em y=126 nas quatro campanhas de sinopse com duas linhas e em y=136
- * nas três de uma linha. A causa era a sinopse ser texto do mestre, de altura
- * livre, num palco que é coluna centralizada — cada linha a mais empurra tudo
- * em volta. O conserto foi a caixa de duas linhas fixas (`synopsisBox`).
- *
- * Ele varre as DUAS cenas porque a forma é a mesma e o risco também: qualquer
- * campo de altura livre entre a capa e as ações reabre o defeito.
+ * O GUARDA NASCEU VERMELHO contra a seed de verdade: a sinopse é texto do
+ * mestre, de altura livre, num palco que é coluna centralizada, e cada linha a
+ * mais empurrava a capa 10px. Quem segura é a caixa de duas linhas fixas
+ * (`synopsisBox`), e o guarda varre as DUAS cenas porque qualquer campo de
+ * altura livre entre a capa e as ações reabre o defeito.
  *
  * E2E porque a pergunta é sobre LEIAUTE REAL — quantas linhas um texto ocupa
  * numa largura, e onde isso põe os irmãos. Em jsdom todo elemento mede zero e a
@@ -160,7 +154,7 @@ test('sob movimento reduzido o palco troca sem animar', async ({ browser }) => {
       const quadros = page.locator('[role="option"]')
       return await animacoesDoGesto(page, () => quadros.nth(2).click())
     } finally {
-      // Limpeza com `catch`: ela não pode falar mais alto que o defeito (ALE-245).
+      // Limpeza com `catch`: ela não pode falar mais alto que o defeito.
       await ctx.close().catch(() => {})
     }
   }

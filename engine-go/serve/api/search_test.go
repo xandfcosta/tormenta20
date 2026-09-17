@@ -5,11 +5,10 @@ import (
 	"testing"
 )
 
-// A regra da busca (ALE-234), portada do `fuzzy-filter.ts` da SPA.
+// A regra da busca, portada do `match-sorter`.
 //
-// Os casos acentuados são os que o comentário do arquivo original cita por
-// nome: eles existem porque o domínio é pt-BR e ninguém digita "Anão" com til
-// no meio de uma sessão.
+// Os casos acentuados existem porque o domínio é pt-BR e ninguém digita "Anão"
+// com til no meio de uma sessão.
 
 func TestSearchIgnoresAccents(t *testing.T) {
 	casos := []struct {
@@ -29,8 +28,7 @@ func TestSearchIgnoresAccents(t *testing.T) {
 	}
 }
 
-// A tolerância a typo é o que o comentário do original chama de "a parte que de
-// fato importava".
+// A tolerância a typo é a metade que de fato importa.
 func TestSearchToleratesAMissingLetter(t *testing.T) {
 	if !search.Matches([]string{"Necromante"}, "ncromante") {
 		t.Error("uma letra pulada derrubou a busca — é o typo que se comete digitando rápido")
@@ -55,18 +53,17 @@ func TestSearchAcceptsNeitherASwappedNorAnExtraLetter(t *testing.T) {
 // Uma letra casa por SUBSTRING, em qualquer posição — e isso não é palpite: é o
 // que o `match-sorter` faz, medido rodando a biblioteca de verdade.
 //
-// Eu tinha escrito o contrário aqui, "uma letra exige prefixo", raciocinando
-// que subsequência de uma letra devolveria a lista toda. O raciocínio estava
-// certo e a conclusão errada: quem devolve a lista toda é o `Contains`, e ele é
-// o comportamento ORIGINAL. Portar a minha versão "melhorada" teria mudado a
-// busca em silêncio, e a única forma de saber foi rodar a biblioteca:
+// "Uma letra exige prefixo" é a conclusão intuitiva e ERRADA: parece que
+// subsequência de uma letra devolveria a lista toda, mas quem devolve a lista
+// toda é o `Contains`, e ele é o comportamento original. Todo caso deste
+// arquivo foi conferido contra a biblioteca, um a um, e é assim que se confere
+// o próximo:
 //
 //	node -e "const {rankItem}=require('@tanstack/match-sorter-utils');
 //	         console.log(rankItem('Sombras','a').passed)"  // true
 //
-// Os sete casos deste arquivo foram conferidos assim, um a um, e o port
-// concorda com a biblioteca em todos — inclusive nos dois que RECUSAM
-// ("nzcromante", "anaox"), que são os que provam que ele não ficou frouxo.
+// Os dois que RECUSAM ("nzcromante", "anaox") são os que provam que o port não
+// ficou frouxo.
 func TestASingleLetterSearchMatchesAtAnyPosition(t *testing.T) {
 	for _, campo := range []string{"Anão", "Sombras"} {
 		if !search.Matches([]string{campo}, "a") {
@@ -98,20 +95,15 @@ func TestSearchLooksAtEveryField(t *testing.T) {
 	}
 }
 
-// O caso que me assustou na tela e que a biblioteca CONFIRMOU (ALE-234).
-//
-// Buscando "tauron" na cena, três das seis campanhas ficaram — e a terceira,
-// "Segredos de Wynlla", não tem "tauron" em lugar nenhum. Achei que meu port
-// tinha ficado frouxo. Não tinha: "t-a-u-r-o-n" É subsequência da sinopse dela
-// ("in*t*riga *a*rcana ... *u*m nec*r*omante"), e o `match-sorter` casa
-// exatamente igual:
+// O caso que assusta na tela e que a biblioteca CONFIRMA: buscar "tauron" traz
+// "Segredos de Wynlla", que não tem "tauron" em lugar nenhum — mas
+// "t-a-u-r-o-n" É subsequência da sinopse ("in*t*riga *a*rcana ... *u*m
+// nec*r*omante"), e o `match-sorter` casa igual:
 //
 //	rankItem(sinopseDeWynlla, 'tauron').passed  // true
 //
-// Fica FIXADO como está, e não "consertado". A busca difusa sobre sinopse longa
-// é frouxa nos DOIS lados, e apertar só o lado novo faria as duas telas
-// responderem coisas diferentes para a mesma busca — que é a divergência que
-// esta migração inteira existe para evitar. Se um dia apertar, aperta nos dois.
+// Fica FIXADO como está, e não "consertado": a busca difusa sobre sinopse longa
+// é frouxa por construção, e apertá-la é decisão de produto, não conserto.
 func TestSearchStaysLooseOverALongSynopsisAsItAlwaysDid(t *testing.T) {
 	wynlla := "Campanha de intriga arcana na Academia Arcana de Wynlla — segredos proibidos e um necromante à espreita."
 

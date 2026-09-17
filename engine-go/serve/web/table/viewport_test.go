@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// Os guardas da JANELA sobre o plano infinito (ALE-203).
+// Os guardas da JANELA sobre o plano infinito.
 //
 // O que se prende aqui é o que a moldura protegia por construção e passou a
 // depender de uma CONVENÇÃO: enquanto o servidor desenhava um retângulo, "onde o
@@ -12,18 +12,13 @@ import (
 // conta sobre a JANELA — o ponto do clique mais a vista, dividido pelo zoom — e
 // ela aparece em cinco camadas de clique.
 
-// TestNoLayerReadsThePointWithoutAddingTheViewport.
-//
-// Este é o guarda da FAMÍLIA e não de um defeito: a conta do clique tinha CINCO
-// cópias, uma por camada, e o comentário de cada uma dizia que a repetição era
-// deliberada. Sem moldura, todas as cinco ganharam a janela dentro delas — e uma
-// que ficasse para trás clicaria no quadrado errado, sem erro nenhum, com o
-// desvio crescendo à medida que a pessoa arrasta a vista.
+// O guarda da FAMÍLIA e não de um defeito: a conta do clique tem CINCO cópias,
+// uma por camada, e todas precisam da janela dentro delas. Uma que fique para
+// trás clica no quadrado errado, sem erro nenhum, com o desvio crescendo à
+// medida que a pessoa arrasta a vista.
 //
 // Ele varre o HTML SERVIDO e não o código: é a única forma de alcançar a camada
 // que alguém escrever amanhã sem ler nada disto.
-// TestTheShortcutDoesNotShiftWhenAGmToolLeavesTheRail.
-//
 // É a promessa que o cabeçalho do trilho faz: quem aprendeu `4 = gabarito`
 // mestrando continua com `4 = gabarito` jogando. Ela vale porque o número sai da
 // posição na lista COMPLETA, e o filtro por papel acontece DEPOIS.
@@ -51,8 +46,6 @@ func TestTheShortcutDoesNotShiftWhenAGmToolLeavesTheRail(t *testing.T) {
 	}
 }
 
-// TestEachToolHasAKeyOfItsOwn.
-//
 // Duas ferramentas com o mesmo número não dão erro: a segunda simplesmente nunca
 // liga, porque o `railKeyboard` monta um ternário encadeado e o primeiro
 // ramo vence. Foi o defeito que os números escritos à mão convidavam, e é o
@@ -71,8 +64,6 @@ func TestEachToolHasAKeyOfItsOwn(t *testing.T) {
 	}
 }
 
-// TestThePanHandBelongsToBothRoles.
-//
 // Sem moldura não há rolagem nativa, então arrastar a vista deixou de ser
 // conforto: é o único gesto de ponteiro que leva alguém ao outro lado do plano.
 // Um trilho de jogador sem a mão seria um jogador preso no enquadramento em que

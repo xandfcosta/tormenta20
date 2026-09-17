@@ -2,8 +2,8 @@ package engine
 
 import "testing"
 
-// The resolution core, case by case.
-// Catalog-free: every ActiveItem is built inline.
+// O núcleo da resolução, caso a caso. Sem catálogo: todo `ActiveItem` é montado
+// aqui dentro.
 
 func strp(s string) *string { return &s }
 
@@ -26,10 +26,9 @@ func TestTargetKeyDistinguishesAttackScopes(t *testing.T) {
 }
 
 // A chave é o que decide o que COMPETE com o que na resolução: mesma chave,
-// mesmo tipo de bônus → só o maior vale. O teste antigo transcrevia os 28 braços
-// do `switch`, incluindo os vinte que devolvem o próprio nome (uma re-escrita da
-// implementação, que só falha se alguém renomear os dois lados junto), e deixava
-// de fora o ÚNICO braço que carrega regra do livro.
+// mesmo tipo de bônus → só o maior vale. Só os braços que COMPÕEM a chave com
+// outro campo entram — transcrever os que devolvem o próprio nome reescreveria
+// a implementação, e só falharia se alguém renomeasse os dois lados junto.
 func TestTargetKeyComposition(t *testing.T) {
 	// Os que COMPÕEM a chave com outro campo: é aqui que um esquecimento faria
 	// duas coisas diferentes competirem como se fossem a mesma.
@@ -54,11 +53,10 @@ func TestTargetKeyComposition(t *testing.T) {
 	}
 }
 
-// A Defesa DIRECIONAL do Caído (p394: "-5 na Defesa contra ataques corpo a corpo",
-// cumulativa com outras condições) precisa de chave PRÓPRIA: se caísse na mesma
-// chave da Defesa geral, as duas competiriam pelo maior e uma sumiria — que é o
-// oposto do que o livro manda. Era o único braço do `switch` com regra atrás, e
-// o único que o teste anterior não cobria.
+// A Defesa DIRECIONAL do Caído (p394: "-5 na Defesa contra ataques corpo a
+// corpo", cumulativa com outras condições) precisa de chave PRÓPRIA: se caísse
+// na mesma chave da Defesa geral, as duas competiriam pelo maior e uma sumiria
+// — o oposto do que o livro manda. É o único braço do `switch` com regra atrás.
 func TestDirectionalDefenseDoesNotCompeteWithTheGeneralOne(t *testing.T) {
 	geral := targetKey(ModifierTarget{K: "defense"})
 	todos := targetKey(ModifierTarget{K: "defense", Scope: "all"})
@@ -184,14 +182,13 @@ func TestEquipGating(t *testing.T) {
 	w := func() *ModifierCondition { return &ModifierCondition{C: "wielded"} }
 	v := func() *ModifierCondition { return &ModifierCondition{C: "vested"} }
 
-	// wielded mod on a vested item → ignored.
 	if StatFor(ComputeItemEffects([]ActiveItem{
 		vested("weapon-on-belt", Modifier{Target: damageThisTarget, Amount: 1, BonusType: "untyped", Condition: w()}),
 	}), damageThisTarget).Total != 0 {
 		t.Error("wielded mod applied on vested item")
 	}
 
-	// equipped=null → whole item ignored.
+	// `equipped` nulo apaga o item INTEIRO, e não só o modificador.
 	nullItem := ActiveItem{Source: "pack", Equipped: nil, Modifiers: []Modifier{
 		{Target: defenseTarget, Amount: 5, BonusType: "armor", Condition: v()},
 	}}
@@ -199,7 +196,7 @@ func TestEquipGating(t *testing.T) {
 		t.Error("null-equipped item contributed")
 	}
 
-	// wielded2 counts as wielded.
+	// A segunda mão conta como empunhada.
 	offHand := ActiveItem{Source: "off-hand", Equipped: strp("wielded2"), Modifiers: []Modifier{
 		{Target: damageThisTarget, Amount: 1, BonusType: "untyped", Condition: w()},
 	}}
@@ -207,7 +204,7 @@ func TestEquipGating(t *testing.T) {
 		t.Error("wielded2 did not count as wielded")
 	}
 
-	// vested mod on a wielded item → ignored (symmetric).
+	// E o simétrico.
 	if StatFor(ComputeItemEffects([]ActiveItem{
 		wielded("vest-and-blade", Modifier{Target: defenseTarget, Amount: 2, BonusType: "armor", Condition: v()}),
 	}), defenseTarget).Total != 0 {
@@ -235,7 +232,7 @@ func TestAlwaysCondition(t *testing.T) {
 	if StatFor(ComputeItemEffects([]ActiveItem{nullItem}), defenseTarget).Total != 0 {
 		t.Error("always on null-equipped item should be suppressed")
 	}
-	// no condition at all → falls back to always.
+	// Sem condição nenhuma, o padrão é "sempre".
 	if StatFor(ComputeItemEffects([]ActiveItem{
 		vested("ring", Modifier{Target: defenseTarget, Amount: 1, BonusType: "untyped"}),
 	}), defenseTarget).Total != 1 {
@@ -278,7 +275,7 @@ func TestFlagOff(t *testing.T) {
 	if StatFor(ComputeItemEffects([]ActiveItem{peleDeFerro(), brunea()}), defenseTarget).Total != 5 {
 		t.Error("flagOff should switch off with heavy armor (only brunea)")
 	}
-	// order-independent (pre-pass collects flags first).
+	// Independente da ORDEM: a passagem prévia junta as flags antes.
 	if StatFor(ComputeItemEffects([]ActiveItem{brunea(), peleDeFerro()}), defenseTarget).Total != 5 {
 		t.Error("flagOff result should be order-independent")
 	}
@@ -290,7 +287,6 @@ func TestFlagOff(t *testing.T) {
 // ─── conditional opt-ins ──────────────────────────────────────────────
 
 func TestConditionalDeferral(t *testing.T) {
-	// against → deferred, no numeric total.
 	effA := ComputeItemEffects([]ActiveItem{
 		wielded("material-aco-rubi", Modifier{Target: damageThisTarget, Amount: 2, BonusType: "enhancement", Condition: &ModifierCondition{C: "against", Trait: "vivos"}, Note: "+2 dano vs vivos"}),
 	})
@@ -298,7 +294,6 @@ func TestConditionalDeferral(t *testing.T) {
 		t.Error("against condition should defer to conditional list")
 	}
 
-	// terrain → note "terreno: floresta".
 	effT := ComputeItemEffects([]ActiveItem{
 		vested("explorador-boots", Modifier{Target: ModifierTarget{K: "expertise", Name: "Sobrevivência"}, Amount: 2, BonusType: "item", Condition: &ModifierCondition{C: "terrain", Type: "floresta"}}),
 	})
@@ -306,7 +301,6 @@ func TestConditionalDeferral(t *testing.T) {
 		t.Errorf("terrain note = %q", effT.Conditional[0].Note)
 	}
 
-	// context → note from payload.
 	effC := ComputeItemEffects([]ActiveItem{
 		vested("item", Modifier{Target: defenseTarget, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "context", Note: "ao usar manobra"}}),
 	})
@@ -314,7 +308,6 @@ func TestConditionalDeferral(t *testing.T) {
 		t.Errorf("context note = %q", effC.Conditional[0].Note)
 	}
 
-	// flagOn → carries flag + label note.
 	effF := ComputeItemEffects([]ActiveItem{
 		wielded("amulet", Modifier{Target: damageThisTarget, Amount: 2, BonusType: "untyped", Condition: &ModifierCondition{C: "flagOn", Flag: "enraged", Label: "Enfurecido"}}),
 	})
@@ -322,7 +315,7 @@ func TestConditionalDeferral(t *testing.T) {
 		t.Errorf("flagOn conditional = %+v", effF.Conditional[0])
 	}
 
-	// describeCondition non-empty wins over modifier.note.
+	// A descrição da condição, quando existe, vence o `note` do modificador.
 	effFb := ComputeItemEffects([]ActiveItem{
 		vested("item", Modifier{Target: defenseTarget, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "against", Trait: ""}, Note: "fallback"}),
 	})
@@ -343,13 +336,11 @@ func TestApplyActiveConditionals(t *testing.T) {
 		t.Errorf("fold failed: total=%d remaining=%d", StatFor(next, damageThisTarget).Total, len(next.Conditional))
 	}
 
-	// no active ids → original returned.
 	same := ApplyActiveConditionals(base, map[string]bool{})
 	if len(same.Conditional) != len(base.Conditional) {
 		t.Error("empty active set should return original")
 	}
 
-	// unmatched conditional stays in remaining.
 	multi := ComputeItemEffects([]ActiveItem{
 		wielded("a",
 			Modifier{Target: damageThisTarget, Amount: 2, BonusType: "enhancement", Condition: &ModifierCondition{C: "against", Trait: "vivos"}},
@@ -434,23 +425,15 @@ func TestResolveConditionalDisplayUntypedStacks(t *testing.T) {
 
 // ─── statFor / conditionalId ──────────────────────────────────────────
 
-// Dois testes de 'entrada vazia, saída vazia' saíram na ALE-187
-// (`TestResolveConditionalDisplayEmpty` e `TestStatForAbsentTarget`): eles
-// afirmavam que uma lista vazia produz lista vazia e que alvo ausente soma
-// zero. O `TestEmptyInputs` logo abaixo já cobre a família inteira num caso
-// só, e o resto era encanamento.
-//
-// O `TestTargetKeyDistinguishesAttackScopes` lá em cima NÃO saiu, apesar de
-// listado: o comentário dele conta que ele já É a versão podada — o teste
-// antigo transcrevia os 28 braços do `switch`, e este pinou o que importa,
-// que é a chave decidir o que compete com o quê.
+// Não há caso próprio para "lista vazia produz lista vazia" nem para "alvo
+// ausente soma zero", e é de propósito: o `TestEmptyInputs` logo abaixo cobre a
+// família inteira num caso só, e o resto é encanamento.
 
 func TestConditionalIDDivergence(t *testing.T) {
-	// A linha da "estabilidade" saiu na ALE-187: ela comparava `ConditionalID(a)`
-	// com ELE MESMO, e só falharia se a função virasse aleatória. O que este
-	// teste protege é a DIVERGÊNCIA — dois conditionais diferentes que colidam
-	// na mesma chave viram um só na resolução, e o jogador perde um bônus sem
-	// aviso.
+	// O que se protege é a DIVERGÊNCIA, e não a "estabilidade": comparar
+	// `ConditionalID(a)` com ELE MESMO só falharia se a função virasse
+	// aleatória. Dois conditionais diferentes que colidam na mesma chave viram
+	// um só na resolução, e o jogador perde um bônus sem aviso.
 	a := ConditionalEffect{Source: "a", BonusType: "untyped", Amount: 2, Note: "n", Target: defenseTarget}
 	diffs := []ConditionalEffect{
 		{Source: "b", BonusType: "untyped", Amount: 2, Note: "n", Target: defenseTarget},

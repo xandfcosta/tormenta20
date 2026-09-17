@@ -19,9 +19,9 @@ import (
 	"t20engine/domain/engine"
 )
 
-// O tabuleiro sobrevive ao reinício do servidor — a memória é a verdade da
+// O tabuleiro sobrevive ao reinício do servidor: a memória é a verdade da
 // sessão, mas o servidor cai, e uma mesa que perde as posições no meio da noite
-// perde a cena inteira (ALE-124).
+// perde a cena inteira.
 
 func TestBoardPersistsAndComesBack(t *testing.T) {
 	s := newTestServer(t)
@@ -86,16 +86,15 @@ func TestClosingBoardErasesItFromDiskToo(t *testing.T) {
 	}
 }
 
-// Abrir um tabuleiro com outro aberto ACRESCENTA uma aba (ALE-205).
+// Abrir um tabuleiro com outro aberto ACRESCENTA uma aba.
 //
-// Aqui morava `TestReopeningKeepsVersionMovingForward`, que prendia a regra
-// oposta: abrir SUBSTITUÍA a cena, e a versão do novo tinha de continuar a do
-// velho para o cliente não descartar o quadro como atrasado. Essa regra deixou
-// de existir com a issue — são dois tabuleiros, com dois contadores —, e um
-// teste sobre ela ficaria verde afirmando um mundo que não é este.
+// A regra OPOSTA — abrir SUBSTITUI a cena, e a versão do novo continua a do
+// velho para o cliente não descartar o quadro como atrasado — já valeu aqui e
+// não vale mais: são dois tabuleiros, com dois contadores. Um teste sobre ela
+// ficaria verde afirmando um mundo que não é este.
 //
-// O que ficou no lugar é a garantia que a mesa nota: a taverna continua aberta,
-// com as peças onde estavam, e a masmorra nasce vazia.
+// O que se prende é a garantia que a mesa nota: a taverna continua aberta, com
+// as peças onde estavam, e a masmorra nasce vazia.
 func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
@@ -128,17 +127,16 @@ func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 	}
 }
 
-// AS DUAS CENAS voltam do banco, e na ORDEM em que foram abertas (ALE-205).
+// AS DUAS CENAS voltam do banco, e na ORDEM em que foram abertas.
 //
 // A ordem não é enfeite: ela é a ordem das abas na tela e a primeira é a PADRÃO
 // de quem ainda não escolheu. Se a hidratação embaralhasse, um reinício no meio
 // da noite poria a mesa inteira numa cena diferente da que ela estava olhando —
 // e a coluna que a segura é o `openSeq`.
 //
-// ESTE CASO NASCEU VERMELHO E ACHOU UM DEFEITO DE VERDADE. A primeira versão
-// ordenava por um `openedAt` em milissegundos, e as duas cenas do teste abrem no
-// MESMO milissegundo: o empate caía no `boardId`, que é um UUID, e o reinício
-// devolvia as abas na ordem do sorteio. O contador não empata.
+// O caso NASCEU VERMELHO contra um `openedAt` em milissegundos: as duas cenas
+// abrem no MESMO milissegundo, o empate caía no `boardId` (um UUID) e o
+// reinício devolvia as abas na ordem do sorteio. O contador não empata.
 func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
@@ -174,12 +172,11 @@ func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 	}
 }
 
-// FECHAR A DO MEIO não pode fazer a próxima nascer empatada (ALE-205).
+// FECHAR A DO MEIO não pode fazer a próxima nascer empatada.
 //
-// É o caso que separa `max(openSeq) + 1` de `len + 1`, e ele acontece numa noite
-// normal: o mestre encerra a ponte e abre a cripta. Por `len`, a cripta nasceria
-// com o número que a taverna já tem — e duas abas com o mesmo número é o empate
-// que esta coluna existe para não ter, com a ordem caindo no desempate do
+// É o caso que separa `max(openSeq) + 1` de `len + 1`, e ele acontece numa
+// noite normal: o mestre encerra a ponte e abre a cripta. Por `len`, a cripta
+// nasceria com o número que a taverna já tem, e a ordem cairia no desempate do
 // SQLite.
 func TestClosingATabDoesNotMakeTheNextOneTie(t *testing.T) {
 	s := newTestServer(t)
@@ -199,7 +196,7 @@ func TestClosingATabDoesNotMakeTheNextOneTie(t *testing.T) {
 	}
 }
 
-// O TETO de abertos (ALE-205, decisão do dono: oito).
+// O TETO de abertos (oito, decisão do dono).
 //
 // Sem ele o estado cresce sem limite e toda hidratação e toda gravação o
 // carregam — o mesmo argumento do teto de peças que já estava no código.
@@ -239,13 +236,11 @@ func abre(t *testing.T, s *Server, sid int64, lugar, chao string) *board.BoardSt
 	return b
 }
 
-// Gravação que falha PARA DE SER SILENCIOSA (ALE-124).
+// Gravação que falha PARA DE SER SILENCIOSA.
 //
-// Este teste existe por um defeito de verdade: a tabela do tabuleiro sumiu do
-// banco de desenvolvimento — a migração constava aplicada, a tabela não existia
-// — e o tabuleiro passou um dia inteiro vivendo só em memória. A tela estava
-// impecável, e cada gravação falhava numa linha de log que ninguém lê. O que
-// faltava não era a gravação: era a mesa SABER que ela parou.
+// Com a tabela do tabuleiro ausente do banco, a cena vive só em memória: a tela
+// fica impecável e cada gravação falha numa linha de log que ninguém lê. O que
+// falta não é a gravação — é a mesa SABER que ela parou.
 //
 // A transição é o que importa: avisa quando começa a falhar e avisa quando
 // volta, e não a cada mensagem — um aviso por tique de peça viraria ruído e
@@ -284,12 +279,11 @@ func TestBoardPersistFailureIsReported(t *testing.T) {
 }
 
 // Um erro TRANSIENTE de leitura não pode virar "esta sessão não tem tabuleiro"
-// até o processo reiniciar (ALE-155).
+// até o processo reiniciar.
 //
-// Este é o gêmeo do defeito da gravação, e o mecanismo é o mesmo: o
-// `hydrateLocked` marcava a sessão como já consultada ANTES da query, então uma
-// falha de banco na primeira leitura ficava cacheada. A mesa via um tabuleiro
-// vazio, o mestre reabria, e o de verdade continuava no disco.
+// Marcar a sessão como já consultada ANTES da query deixa a falha de banco da
+// primeira leitura cacheada: a mesa vê um tabuleiro vazio, o mestre reabre, e o
+// de verdade continua no disco.
 func TestATransientReadFailureIsRetried(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
@@ -348,7 +342,7 @@ func TestNoBoardIsStillCached(t *testing.T) {
 
 // Encerrar o tabuleiro também avisa quando a gravação falha: sem isso a memória
 // diz "fechado", o banco mantém a linha, e no próximo boot o tabuleiro fantasma
-// volta com as peças de uma cena que a mesa já encerrou (ALE-155).
+// volta com as peças de uma cena que a mesa já encerrou.
 func TestClosingReportsAFailedDelete(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
@@ -366,12 +360,11 @@ func TestClosingReportsAFailedDelete(t *testing.T) {
 	}
 }
 
-// O `/health` conta a degradação em vez de dizer "ok" sempre (ALE-155).
+// O `/health` conta a degradação em vez de dizer "ok" sempre.
 //
 // O boot é best-effort de propósito — sem catálogo, autenticação, leitura e
-// vitais continuam de pé —, mas a degradação só existia numa linha de log
-// enquanto os handlers que precisam do catálogo devolviam 503 no meio de uma
-// jogada.
+// vitais continuam de pé —, mas sem o anúncio a degradação vira uma linha de
+// log enquanto os handlers do catálogo devolvem 503 no meio de uma jogada.
 func TestHealthReportsADegradedBoot(t *testing.T) {
 	// O servidor de teste sobe SEM catálogo — que é exatamente o estado
 	// degradado que o boot de produção assume quando o arquivo falta.
@@ -409,12 +402,11 @@ func healthBody(t *testing.T, s *Server) map[string]any {
 	return body
 }
 
-// O descanso do grupo CONTA quem não descansou (ALE-155).
+// O descanso do grupo CONTA quem não descansou.
 //
 // Best-effort por personagem continua certo — uma ficha que falha não pode
-// impedir o descanso das outras quatro. O que estava errado era o silêncio: o
-// encerrar-cena era `_, _ =` e nem entrava na conta, então o mestre lia
-// "descansou" enquanto duas de cinco fichas não tinham descansado.
+// impedir o descanso das outras quatro. O que não pode é o silêncio: engolir o
+// erro faz o mestre ler "descansou" com duas de cinco fichas de fora.
 func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	s := newTestServer(t)
 	gm := seedUser(t, s, "gm@t.com")
@@ -446,11 +438,10 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	}
 }
 
-// O backup automático guarda os N últimos e apaga o resto (ALE-157).
+// O backup automático guarda os N últimos e apaga o resto.
 //
-// O backup manual já fazia a coisa certa; o que faltava era ele não depender de
-// alguém lembrar. E a retenção é parte do recurso: sem ela, backup diário enche
-// o disco do dono em silêncio, o que é uma forma nova de perder a mesa.
+// A retenção é parte do recurso: sem ela, backup diário enche o disco do dono
+// em silêncio, o que é uma forma nova de perder a mesa.
 func TestBackupPruningKeepsTheNewest(t *testing.T) {
 	s := newTestServer(t)
 	s.cfg.BackupDir = t.TempDir()

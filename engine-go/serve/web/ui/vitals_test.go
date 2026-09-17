@@ -5,17 +5,14 @@ import "testing"
 // Os LIMIARES da escada, e SÓ eles: a tabela inteira de porcentagens seria a
 // implementação reescrita.
 //
-// 25 e 50 são os mesmos do `hpFillVar` da SPA, e os números estão escritos à
-// mão de propósito — derivá-los de `hpCritical`/`hpHurt` faria a asserção andar
-// junto com o defeito.
+// Os números 25 e 50 estão escritos à mão de propósito: derivá-los de
+// `hpCritical`/`hpHurt` faria a asserção andar junto com o defeito.
 //
 // # Cada degrau tem as DUAS bordas
 //
-// Aqui morava a versão da Mesa, com seis casos. Ela prendia `{25, crítico}` e
-// `{26, ferido}`, o que é a fronteira de baixo — e não tinha nada em 51: um
-// `pct <= 51` no ramo do ferido passaria verde. Esta versão fecha os dois lados
-// de cada degrau, que é a lição que a ALE-315 deixou escrita sobre o teto do
-// traço.
+// Prender `{25, crítico}` e `{26, ferido}` fecha só a fronteira de BAIXO: sem
+// nada em 51, um `pct <= 51` no ramo do ferido passa verde. Cada degrau é
+// afirmado dos dois lados.
 func TestTheHpLadderTurnsAtTheThresholds(t *testing.T) {
 	for _, c := range []struct {
 		pct   int
@@ -32,9 +29,9 @@ func TestTheHpLadderTurnsAtTheThresholds(t *testing.T) {
 		if got := HpFillTone(c.pct); got != c.tom {
 			t.Errorf("HpFillTone(%d) = %q, queria %q", c.pct, got, c.tom)
 		}
-		// A TINTA é outra escada, e ela diverge da de preencher em UM degrau
-		// (ALE-240): o crítico escreve com a tinta de perigo da casa, porque o
-		// `--hp-critical` dá 4,11:1 como letra pequena.
+		// A TINTA é outra escada, e ela diverge da de preencher em UM degrau: o
+		// crítico escreve com a tinta de perigo da casa, porque o `--hp-critical`
+		// dá 4,11:1 como letra pequena.
 		if got := HpInkTone(c.pct); got != c.tinta {
 			t.Errorf("HpInkTone(%d) = %q, queria %q", c.pct, got, c.tinta)
 		}

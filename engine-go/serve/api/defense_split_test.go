@@ -7,18 +7,16 @@ import (
 	"testing"
 )
 
-// A DEFESA DO ALVO CAÍDO aparece PARTIDA nas duas telas que a mostram (ALE-274).
+// A DEFESA DO ALVO CAÍDO aparece PARTIDA nas duas telas que a mostram.
 //
 // O Caído dá −5 na Defesa contra ataques corpo a corpo e +5 contra ataques à
 // distância (T20 p394), então um personagem caído não tem "a Defesa": tem duas.
-// O motor sempre calculou as duas; nenhuma tela as dizia, e o jogador só as
-// descobria abrindo o diálogo de decomposição — que ninguém abre para conferir
-// um número que a tela já mostra com confiança.
+// O motor calcula as duas, e uma tela que mostre um número só mente com
+// confiança — ninguém abre o diálogo de decomposição para conferir.
 //
 // AS DUAS TELAS NO MESMO CASO, e é isso que o torna honesto: afirmar só a ficha
 // não distingue "o mestre não vê" de "ninguém vê", e afirmar só o elenco
-// passaria verde sobre uma ficha que continuou mentindo. Elas mostram o MESMO
-// herói, e a ALE-122 já pagou o preço de duas telas discordando sobre ele.
+// passaria verde sobre uma ficha que continuou mentindo.
 func TestTheProneDefenseIsSplitOnTheSheetAndInTheCast(t *testing.T) {
 	f := newSceneFixture(t)
 	heroi := strconv.FormatInt(f.charID, 10)
@@ -48,8 +46,7 @@ func TestTheProneDefenseIsSplitOnTheSheetAndInTheCast(t *testing.T) {
 	}
 }
 
-// A LISTA DE HERÓIS mantém o número único, e a assimetria é deliberada
-// (ALE-274).
+// A LISTA DE HERÓIS mantém o número único, e a assimetria é deliberada.
 //
 // Decisão do dono: o cartão é CATÁLOGO fora da sessão — ninguém está resolvendo
 // ataque ali, e um par de números onde se comparam heróis é ruído. O crachá da

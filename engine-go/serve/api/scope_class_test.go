@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// A CLASSE DE ESCOPO NÃO É TINTA, E POR ISSO ELA ESCAPOU (ALE-283).
+// A CLASSE DE ESCOPO NÃO É TINTA, E POR ISSO ELA ESCAPA.
 //
 // `scene-grimorio` é o escopo em que os tokens da paleta existem: o
 // `@custom-variant dark` do `index.css` é `&:is(.dark *, .scene-grimorio, …)`.
@@ -17,15 +17,12 @@ import (
 //
 // Ela escapou do `TestEveryHouseTintExistsInTheStylesheet` porque aquele mede
 // TINTA (`text-grimorio-gold`, `bg-grimorio-panel`), e a classe de escopo não é
-// uma tinta: é a CONDIÇÃO para as tintas valerem. O guarda de tinta seguiu verde
-// afirmando que todas as 21 existem, o `go build` seguiu verde, o `templ
-// generate` seguiu verde — e quem denunciou foi o e2e, com oito casos vermelhos
-// de leiaute e de contraste que só existem porque alguém abre um navegador.
+// uma tinta: é a CONDIÇÃO para as tintas valerem. Perdê-la deixa o guarda de
+// tinta, o `go build` e o `templ generate` todos VERDES, e só o e2e denuncia.
 //
-// O caso que o escreveu: a varredura de identificadores para inglês trocou
-// `grimorio` por `grimoire`, e o HÍFEN é fronteira de palavra — então
-// `scene-grimorio` virou `scene-grimoire` junto com o resto. Uma entrada de
-// mapa, três estragos de naturezas diferentes, e este era o silencioso.
+// O gesto que a perde é banal: uma varredura de identificadores para inglês —
+// o HÍFEN é fronteira de palavra, então `scene-grimorio` vira `scene-grimoire`
+// junto com o resto.
 func TestEveryScopeClassExistsInTheStylesheet(t *testing.T) {
 	folha := compiledStylesheet(t)
 

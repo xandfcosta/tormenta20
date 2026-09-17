@@ -13,8 +13,6 @@ import (
 // uma não mexe nas outras. É a garantia que um mapa com chave de string não
 // daria — lá `"elevated"` contra `"elevated"` viraria lista vazia em silêncio.
 
-// TestEachKindHasItsOwnList.
-//
 // Amostragem e não enumeração: percorre `TerrainKinds`, então a quinta
 // espécie que alguém acrescentar já nasce medida, e não há uma entrada por caso
 // para alguém esquecer de escrever.
@@ -42,7 +40,7 @@ func TestEachKindHasItsOwnList(t *testing.T) {
 	}
 }
 
-// TestTheBrushIsIdempotentForEachKind: o arraste passa duas vezes pela mesma
+// O pincel é IDEMPOTENTE em cada espécie: o arraste passa duas vezes pela mesma
 // casa, e alternar faria ela piscar debaixo do dedo. Quem apaga é a borracha.
 func TestTheBrushIsIdempotentForEachKind(t *testing.T) {
 	casa := engine.Square{X: -2, Y: 7}
@@ -67,8 +65,6 @@ func TestTheBrushIsIdempotentForEachKind(t *testing.T) {
 	}
 }
 
-// TestAnInventedKindPaintsNothingAndDoesNotCrash.
-//
 // O id vem do CLIENTE. Uma espécie que a tela não oferece só chega por posse do
 // fio, e a resposta não pode ser nem pânico nem pintar a lista errada.
 func TestAnInventedKindPaintsNothingAndDoesNotCrash(t *testing.T) {
@@ -93,8 +89,6 @@ func TestAnInventedKindPaintsNothingAndDoesNotCrash(t *testing.T) {
 	}
 }
 
-// TestTheStrokesSurviveTheArchive.
-//
 // O Lugar guardado é `json.Marshal` do estado inteiro, e reabrir é `Unmarshal`.
 // Uma espécie sem tag JSON, ou com tag repetida, sumiria na ida e volta — e o
 // sintoma seria a taverna reabrindo parecendo certa, com o pântano virando chão
@@ -123,8 +117,6 @@ func TestTheStrokesSurviveTheArchive(t *testing.T) {
 	}
 }
 
-// TestOnlyDifficultTerrainCountsForMovement.
-//
 // A assimetria que a forma de quatro listas existe para deixar à vista: o
 // difícil alimenta o MOTOR, os outros três alimentam o olho. Cobertura no
 // caminho não pode encarecer o passo — seria inventar uma regra que o livro não

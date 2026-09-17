@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// O hub SSE (ALE-253). O que se prende aqui é o que o socket dava e que não
+// O hub SSE. O que se prende aqui é o que o socket dava e que não
 // pode ser perdido na troca: recorte por PAPEL, e um leitor lento não derrubar
 // a mesa.
 
@@ -38,7 +38,7 @@ func TestTheFrameLeavesInTheWireFormat(t *testing.T) {
 	}
 }
 
-// O ESTADO SAI DUAS VEZES, e o recorte é por papel (ALE-122): inteiro para o
+// O ESTADO SAI DUAS VEZES, e o recorte é por papel: inteiro para o
 // mestre, redigido para os jogadores. Um hub que ignorasse o papel entregaria a
 // fila inteira à mesa e passaria por todo teste que só conta mensagens.
 func TestTheRoleNarrowsTheRecipient(t *testing.T) {

@@ -137,16 +137,17 @@ var unescapeHTML = strings.NewReplacer(
 // addressesInHTML acha toda chamada do Datastar que pede um endereço.
 //
 // `ilegiveis` é a outra metade do resultado e não é descarte: uma expressão que
-// o extrator não consegue resolver NÃO é uma expressão limpa, e a casa já
-// pagou por um parser que descartava em silêncio o que não sabia ler (ALE-294).
+// o extrator não consegue resolver NÃO é uma expressão limpa, e um parser que
+// descarta em silêncio o que não sabe ler produz lista de falhas com cara de
+// descoberta.
 func addressesInHTML(origem, html string) (achados []datastarAddress, ilegiveis []string) {
 	texto := unescapeHTML.Replace(html)
-	// `window.open(` É UM ENDEREÇO QUE A CENA ESCREVE (ALE-218), e ele entrou
-	// aqui em vez de ganhar guarda próprio porque o defeito é o mesmo: um
-	// caminho morto num `@post` não faz nada e não avisa; num `window.open` ele
-	// abre uma janela com um 404 dentro, que é pior de ler e igualmente mudo no
-	// console de quem clicou. O `firstArgument` já para na primeira vírgula de
-	// topo, então o NOME da janela e as `features` ficam de fora sozinhos.
+	// `window.open(` É UM ENDEREÇO QUE A CENA ESCREVE, e ele entrou aqui em vez
+	// de ganhar guarda próprio porque o defeito é o mesmo: um caminho morto num
+	// `@post` não faz nada e não avisa; num `window.open` ele abre uma janela com
+	// um 404 dentro, igualmente mudo no console de quem clicou. O `firstArgument`
+	// já para na primeira vírgula de topo, então o NOME da janela e as `features`
+	// ficam de fora sozinhos.
 	//
 	// O método é GET porque é navegação: o que se pergunta ao chi é se existe
 	// uma página naquele caminho.
@@ -288,8 +289,7 @@ func TestTheExtractorStopsAtThePayload(t *testing.T) {
 // A lista é enumeração, e ela é o limite conhecido deste guarda: cena que não
 // está aqui não é medida, e a ausência dela tem a mesma cor do verde. Não há
 // amostragem possível — o endereço só existe RESOLVIDO, depois que o `templ`
-// juntou a base, o id e o verbo, e ler isso do código-fonte é o parser que a
-// ALE-307 já mostrou não saber ler `base :=`.
+// juntou a base, o id e o verbo, e um parser estático não sabe ler `base :=`.
 //
 // Duas exclusões DELIBERADAS: a porta (`/entrar`, `/criar-conta`,
 // `/redefinir-senha`) não escreve endereço nenhum — ela é `<form method="post">`
@@ -326,9 +326,9 @@ func scenesThatWriteAddresses(t *testing.T, f sceneFixture) []struct {
 		{"mesa do mestre", mesa, f.mestre},
 		{"mesa do jogador", mesa, f.jogador},
 		{"tabuleiro do jogador", mesa + "?superficie=tabuleiro", f.jogador},
-		// AS NOTAS NUMA JANELA (ALE-218): cena própria, endereço próprio, e o
-		// `@post` de salvar sai dela também. Cena nova entra nesta lista no
-		// MESMO commit que a cria, ou ela nasce sem medição.
+		// AS NOTAS NUMA JANELA: cena própria, endereço próprio, e o `@post` de
+		// salvar sai dela também. Cena nova entra nesta lista no MESMO commit que
+		// a cria, ou ela nasce sem medição.
 		{"notas em janela", mesa + "/notas", f.mestre},
 	}
 	// AS SETE ABAS da ficha, e o `?embutida=1` que a Mesa encaixa.
@@ -358,15 +358,13 @@ func scenesThatWriteAddresses(t *testing.T, f sceneFixture) []struct {
 	return cenas
 }
 
-// A MESA VIVA é pré-requisito, e descobri isso pelo caminho mais barato que
-// existe: a primeira versão deste guarda passou VERDE sobre o defeito que ela
+// A MESA VIVA é pré-requisito, senão o guarda passa VERDE sobre o defeito que
 // veio pegar.
 //
-// O `‹` do rodapé nasce `disabled` quando `PodeAvancar` é falso — e ele é
+// Os comandos do rodapé nascem `disabled` quando `PodeAvancar` é falso — e ele é
 // `st.SceneActive && len(st.Initiative) > 0`. Na bancada recém-montada a cena
 // está fria e a fila vazia, então o botão sai SEM o `data-on:click`: o endereço
-// morto simplesmente não está no HTML. É a armadilha do ramo, medida no guarda
-// que existe para medir ramos.
+// morto simplesmente não está no HTML.
 func openTheLiveTable(t *testing.T, f sceneFixture) {
 	t.Helper()
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
@@ -381,19 +379,12 @@ func openTheLiveTable(t *testing.T, f sceneFixture) {
 	}
 }
 
-// TODO ENDEREÇO QUE UM `@post` ESCREVE EXISTE NO ROTEADOR (ALE-308).
+// TODO ENDEREÇO QUE UM `@post` ESCREVE EXISTE NO ROTEADOR.
 //
-// # O defeito que o fez nascer
-//
-// A ALE-304 traduziu as rotas para português e deixou o `‹` do rodapé da mesa
-// postando em `/mesa/{c}/{s}/initiative/previous-turn`, que não existe — a rota
-// é `iniciativa/vez-anterior`. O endereço é montado em DUAS METADES
-// (`tableCommand(v, "POST", "initiative/"+rota)`, com `rota` chegando de outra
-// linha), e por isso nenhum `grep` por `/iniciativa/` nem por um caminho
-// inteiro o encontrava.
-//
-// E o Datastar DESCARTA o remendo de qualquer resposta não-2xx: o clique morria
-// sem console, sem frase e sem nada na tela.
+// O defeito é o endereço montado em DUAS METADES — um helper que recebe o
+// sufixo, com o sufixo chegando de outra linha —, que nenhum `grep` por um
+// caminho inteiro encontra. E o Datastar DESCARTA o remendo de toda resposta
+// não-2xx: o clique morre sem console, sem frase e sem nada na tela.
 //
 // # Por que ele RENDERIZA em vez de ler o código
 //
@@ -467,10 +458,9 @@ func TestEveryAddressAPostWritesExistsInTheRouter(t *testing.T) {
 			"não deixa erro na tela, no console nem em lugar nenhum: o gesto simplesmente não acontece.",
 			len(faltando), len(medidos), strings.Join(faltando, "\n  "))
 	}
-	// A ÚLTIMA LINHA NÃO PODE DESMENTIR O VEREDITO. Os dois guardas da ALE-307
-	// escrevem o `t.Logf` de sucesso depois do `t.Errorf`, e o que se lê antes
-	// do FAIL é "nenhuma com coordenada no caminho" — a família do `finally` da
-	// ALE-245, dentro do guarda que existe para combatê-la.
+	// A ÚLTIMA LINHA NÃO PODE DESMENTIR O VEREDITO: um `t.Logf` de sucesso escrito
+	// depois do `t.Errorf` é o que se lê logo antes do FAIL, e ele diz o
+	// contrário.
 	if !t.Failed() {
 		t.Logf("endereços: %d distintos em %d cenas, todos no roteador", len(medidos), cenasLidas)
 	}

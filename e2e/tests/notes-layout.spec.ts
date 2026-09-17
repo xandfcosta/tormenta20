@@ -2,12 +2,9 @@ import { expect, type Page, test } from '@playwright/test'
 import { openTheBoard, disposableTable } from './support/table'
 
 /**
- * AS FORMAS DAS NOTAS DA SESSÃO (ALE-218).
+ * AS FORMAS DAS NOTAS DA SESSÃO.
  *
- * A coluna tinha três modos e uma largura FIXA em 40% do palco (ALE-198). Ela
- * ganhou uma quarta forma — empilhado — e uma divisa que se arrasta.
- *
- * E2E porque as duas garantias são de LEIAUTE REAL: quantas trilhas a grade tem
+ * E2E porque as garantias são de LEIAUTE REAL: quantas trilhas a grade tem
  * depois de o navegador resolver uma consulta de contêiner, e quantos pixels a
  * coluna mede depois de um arrasto. Em jsdom nenhuma folha se aplica e as duas
  * respostas seriam zero.
@@ -119,16 +116,11 @@ test('a largura sobrevive ao recarregar', async ({ page }) => {
 })
 
 /**
- * AS NOTAS FLUTUANDO SOBRE O MAPA (ALE-218), e o que ele prende é que o mapa
- * NÃO ENCOLHE.
+ * AS NOTAS FLUTUANDO SOBRE O MAPA, e o que se prende é que o mapa NÃO ENCOLHE.
  *
  * Essa é a diferença inteira entre as duas formas, e ela é geométrica: encostada
  * a coluna toma largura do tabuleiro; flutuando ela passa por cima. Um guarda
  * que só afirmasse "a coluna está posicionada" mediria CSS em vez do efeito.
- *
- * O cabeçalho do `notes.templ` registra que a coluna que EMPURRA é o desenho
- * certo para narrar olhando o tabuleiro — ela continua sendo o padrão, e este
- * caso começa provando isso.
  */
 test('flutuar as notas não encolhe o mapa, e encostar volta a encolher', async ({ page }) => {
   const { apagar } = await withTheNotesOpen(page)
@@ -155,10 +147,10 @@ test('flutuar as notas não encolhe o mapa, e encostar volta a encolher', async 
     await flutuar.click()
     await page.waitForTimeout(250)
     const flutuando = await mapa()
-    // O ALVO É O MAPA FECHADO, e não "maior que antes": a primeira versão deste
-    // guarda cobrava só crescimento, e passou verde sobre uma coluna que ficou
-    // no fluxo — o mapa crescia 18px em vez de 728, porque só a DIVISA tinha
-    // flutuado. "Cresceu um pouco" e "saiu do caminho" são coisas diferentes.
+    // O ALVO É O MAPA FECHADO, e não "maior que antes": cobrando só crescimento,
+    // o guarda passa verde sobre uma coluna que ficou no fluxo e só teve a DIVISA
+    // flutuando — 18px devolvidos em vez de 728. "Cresceu um pouco" e "saiu do
+    // caminho" são coisas diferentes.
     expect(
       flutuando,
       `flutuar devolveu só ${flutuando - encostada}px ao mapa; fechada ela mede ${semNotas}`,
@@ -167,10 +159,10 @@ test('flutuar as notas não encolhe o mapa, e encostar volta a encolher', async 
     // E as notas continuam à mostra POR CIMA: flutuar não é fechar.
     await expect(page.locator('#table-notes')).toBeVisible()
 
-    // DO LADO CERTO, e este pedaço existe porque a primeira versão do guarda
-    // não o tinha: o painel foi parar na ESQUERDA do mapa — a classe base traz
-    // `inset-0`, que põe `left: 0`, e com os dois lados definidos o navegador
-    // resolve pelo left. O mapa media certo e a tela estava errada.
+    // DO LADO CERTO: a classe base traz `inset-0`, que põe `left: 0`, e com os
+    // dois lados definidos o navegador resolve pelo left — o painel vai parar na
+    // ESQUERDA do mapa. A medida do mapa acima continua certa e a tela está
+    // errada, por isso a geometria é afirmada à parte.
     const [naDireita, meio] = await page.evaluate(() => {
       const n = document.getElementById('table-notes')!.getBoundingClientRect()
       return [Math.round(n.x + n.width), Math.round(innerWidth / 2)]
@@ -186,7 +178,7 @@ test('flutuar as notas não encolhe o mapa, e encostar volta a encolher', async 
 })
 
 /**
- * A JANELA PRÓPRIA, e ela é EXCLUSIVA com a coluna (ALE-218).
+ * A JANELA PRÓPRIA, e ela é EXCLUSIVA com a coluna.
  *
  * E2E porque a garantia atravessa DOIS documentos: uma janela anuncia por
  * `localStorage` que tomou as notas, e a outra fecha a coluna ao ouvir o evento
@@ -230,11 +222,9 @@ test('destacar as notas abre uma janela e FECHA a coluna; fechá-la devolve as d
 
     // A JANELA SALVA sozinha, pelo mesmo autosave da coluna.
     //
-    // A asserção é o POST e não a faixa dizer "Salvo": ela JÁ dizia "Salvo"
-    // antes de alguém digitar — `$notes` e `$notes_saved` nascem iguais —, e a
-    // primeira versão deste caso passou verde sem que nada tivesse sido gravado.
-    // Arranjar o dublê para devolver X e afirmar X é o que o guia chama de mock
-    // echo; aqui o equivalente era afirmar o estado de repouso.
+    // A asserção é o POST e não a faixa dizer "Salvo": ela JÁ diz "Salvo" antes
+    // de alguém digitar, porque `$notes` e `$notes_saved` nascem iguais. Um
+    // mostrador cujo REPOUSO é igual ao sucesso não testemunha o sucesso.
     const gravou = janela.waitForResponse(
       (r) => r.url().includes('/notas') && r.request().method() === 'POST' && r.ok(),
     )

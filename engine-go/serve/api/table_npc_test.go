@@ -37,8 +37,8 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 	}
 }
 
-// TestAnEmptyNameFallsBackToTheBookName — guardar "Ogro" como "Ogro" é o caso comum, e
-// obrigar a digitar faria o mestre repetir o que a tela já mostra.
+// Guardar "Ogro" como "Ogro" é o caso comum, e obrigar a digitar faria o mestre
+// repetir o que a tela já mostra.
 func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -53,8 +53,6 @@ func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 	}
 }
 
-// TestTheCastBelongsToTheCampaignAndNotToTheSession é a separação que a ALE-212 nomeia.
-//
 // "Os NPCs voltam semana que vem" só é verdade se eles não morrerem com a
 // sessão. Guardado numa sessão, o NPC tem de aparecer na OUTRA da mesma
 // campanha — e um guarda que olhasse só a sessão de origem passaria verde sobre
@@ -75,9 +73,7 @@ func TestTheCastBelongsToTheCampaignAndNotToTheSession(t *testing.T) {
 	}
 }
 
-// TestTheGmDoesNotReachAnotherCampaignsCast — o id vem do CAMINHO.
-//
-// O elenco guarda a PREPARAÇÃO da campanha, que é o material mais privado que o
+// O id vem do CAMINHO, e o elenco guarda a PREPARAÇÃO da campanha, que é o material mais privado que o
 // mestre tem: o chefe da semana que vem está ali. Alcançar o de outra mesa é
 // pior que ver a fila dela.
 func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
@@ -104,7 +100,7 @@ func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	}
 }
 
-// TestDeletingFromTheCastDoesNotRemoveFromTheTracker é a outra separação: elenco não é fila.
+// A outra separação: elenco não é fila.
 //
 // Apagar o NPC do elenco e tirar a linha do combate respondem a duas perguntas
 // — "ele não volta mais" e "ele saiu desta cena". Juntá-las faria o mestre
@@ -129,7 +125,7 @@ func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 	}
 }
 
-// TestThePlayerDoesNotTouchTheCampaignCast — o papel, no servidor.
+// O papel, no servidor.
 func TestThePlayerDoesNotTouchTheCampaignCast(t *testing.T) {
 	f := newSceneFixture(t)
 

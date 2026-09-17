@@ -11,13 +11,12 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O que a POÇÃO faz, pelo router de verdade (ALE-186, bloco 1).
+// O que a POÇÃO faz.
 //
-// `sheet_consume.go` não tinha teste nenhum, e é onde mora a decisão registrada em
-// [[spell_engine_deferred]]: catalisador é DECREMENTO INSTANTÂNEO até o motor
-// de magias chegar. O que se prova aqui é o que a mesa observa — a poção some
-// do inventário, o PV sobe e para no máximo, e o inventário é de quem o abriu.
-// A conta do dado (2d4 → média 5) pertence ao `rollAverage` e está provada lá.
+// A decisão que mora no `sheet_consume.go`: catalisador é DECREMENTO INSTANTÂNEO
+// até o motor de magias chegar. O que se prova aqui é o que a mesa observa — a
+// poção some do inventário, o PV sobe e para no máximo, e o inventário é de quem
+// o abriu. A conta do dado (2d4 → média 5) pertence ao `rollAverage`.
 
 func seedConsumable(t *testing.T, s *Server, charID int64, catalogID, name string, qty int64) int64 {
 	t.Helper()
@@ -33,12 +32,10 @@ func seedConsumable(t *testing.T, s *Server, charID int64, catalogID, name strin
 
 // consumeItem chama a REGRA direto, e não a rota.
 //
-// Ela batia em `POST /personagens/{id}/items/{itemId}/consume`, que saiu na
-// ALE-277 com as outras sessenta e nove rotas sem consumidor. O que estes casos
-// prendem nunca foi o transporte: é a baixa de UMA dose, a cura presa no
-// máximo, o efeito de cena e a porção diária. **Teste de regra vive junto da
-// regra**, e o caminho é o mesmo que a Mochila da ficha usa pelo `ConsumeItem`
-// da porta.
+// O que estes casos prendem nunca foi o transporte: é a baixa de UMA dose, a
+// cura presa no máximo, o efeito de cena e a porção diária. **Teste de regra
+// vive junto da regra**, e o caminho é o mesmo que a Mochila da ficha usa pelo
+// `ConsumeItem` da porta.
 func consumeItem(t *testing.T, s *Server, charID, itemID int64, pv, pm *int64) (doseUsed, error) {
 	t.Helper()
 	row, err := s.queries.GetCharacter(context.Background(), charID)
@@ -162,9 +159,8 @@ func TestConsumeCreatesTheSceneEffect(t *testing.T) {
 	}
 }
 
-// Aqui morava o TestConsumeRejectsAStranger, que provava o 403 de quem não é
-// dono da mochila. Ele morreu com a rota na ALE-277, e a garantia não: a POSSE é
-// do TRANSPORTE, e a cena da ficha a prende no próprio comando — o
+// Não há caso aqui para o 403 de quem não é dono da mochila, e é de propósito:
+// a POSSE é do TRANSPORTE, e a cena da ficha a prende no próprio comando — o
 // `characterFor` é o gargalo único por onde toda rota de personagem passa. Uma
 // regra, uma camada.
 
@@ -217,8 +213,8 @@ func TestConsumeAllowsThePortionAgainAfterTheDayEnds(t *testing.T) {
 	//
 	// Chama o HELPER de domínio e não a rota HTTP: o que este teste protege é o
 	// marcador do consumível, e a rota carrega uma autorização que não é assunto
-	// dele — desde a ALE-223 ela pede um MESTRE em sessão viva, e montar uma
-	// mesa aqui só para encerrar um dia mediria a regra errada.
+	// dele — ela pede um MESTRE em sessão viva, e montar uma mesa aqui só para
+	// encerrar um dia mediria a regra errada.
 	if status, err := s.tableRules().endDay(context.Background(), AuthUser{ID: owner}, char); err != nil {
 		t.Fatalf("encerrar o dia falhou: %d (%v)", status, err)
 	}

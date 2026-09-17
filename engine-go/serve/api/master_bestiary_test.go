@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// O bestiário do livro lido pelo servidor (ALE-257).
+// O bestiário do livro lido pelo servidor.
 //
 // O guia manda validar catálogo por SCHEMA no despejo e prender só a EXCEÇÃO —
 // a armadilha da tabela —, nunca repetir a tabela inteira num `expect` por
@@ -41,8 +41,8 @@ func pedeNoMestre(t *testing.T, s *Server, userID int64, metodo, caminho string,
 	return rec
 }
 
-// TestTheBestiaryOpensWithTheWholeBook: a carga fria desenha a lista, e o painel
-// já vem com uma criatura. Painel vazio ao lado de lista cheia parece defeito.
+// A carga fria desenha a lista, e o painel já vem com uma criatura. Painel vazio
+// ao lado de lista cheia parece defeito.
 func TestTheBestiaryOpensWithTheWholeBook(t *testing.T) {
 	s := newTestServer(t)
 	quemQuerQueSeja := seedUser(t, s, "mestre@t20.local")
@@ -65,8 +65,8 @@ func TestTheBestiaryOpensWithTheWholeBook(t *testing.T) {
 	}
 }
 
-// TestTheSearchIsAnAddress: `?busca=` na URL tem de valer na carga FRIA, senão o
-// link colado no chat da mesa abre o bestiário inteiro.
+// `?busca=` na URL tem de valer na carga FRIA, senão o link colado no chat da
+// mesa abre o bestiário inteiro.
 func TestTheSearchIsAnAddress(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -85,9 +85,8 @@ func TestTheSearchIsAnAddress(t *testing.T) {
 	}
 }
 
-// TestAnInventedTypeIsRefusedByTheGesture: no POST a recusa é DURA, porque ali
-// alguém está agindo. Na URL o tipo desconhecido é só descartado — ver
-// `creatureTiposNaOrdem`.
+// No POST a recusa é DURA, porque ali alguém está agindo. Na URL o tipo
+// desconhecido é só descartado — ver `creatureTiposNaOrdem`.
 func TestAnInventedTypeIsRefusedByTheGesture(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -101,8 +100,8 @@ func TestAnInventedTypeIsRefusedByTheGesture(t *testing.T) {
 	}
 }
 
-// TestTheTypeBadgeTogglesWithoutNavigating: o POST devolve um REMENDO (SSE), não uma
-// página — recarregar no meio de uma lista perderia a posição de quem lê.
+// O POST devolve um REMENDO (SSE), não uma página: recarregar no meio de uma
+// lista perderia a posição de quem lê.
 func TestTheTypeBadgeTogglesWithoutNavigating(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -121,8 +120,8 @@ func TestTheTypeBadgeTogglesWithoutNavigating(t *testing.T) {
 	}
 }
 
-// TestTurningTheBadgeOffGoesBackToTheWholeBook: a álgebra do conjunto é do servidor,
-// e o crachá aceso que chega nos sinais tem de SAIR.
+// A álgebra do conjunto é do servidor, e o crachá aceso que chega nos sinais tem
+// de SAIR.
 func TestTurningTheBadgeOffGoesBackToTheWholeBook(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -137,8 +136,7 @@ func TestTurningTheBadgeOffGoesBackToTheWholeBook(t *testing.T) {
 	}
 }
 
-// TestTheGmAloneStillReachesTheBestiary: `/mestre` não é tela — a trilha sempre tem
-// uma ferramenta em cena, e é a mesma que a SPA abre.
+// `/mestre` não é tela: a trilha sempre tem uma ferramenta em cena.
 func TestTheGmAloneStillReachesTheBestiary(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")

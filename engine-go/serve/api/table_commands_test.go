@@ -8,12 +8,8 @@ import (
 	"testing"
 )
 
-// TestOnlyTheGmCommandsTheTable é o guarda que importa desta fatia.
-//
 // Esconder o botão do jogador é UX; a trava é o servidor. Este teste posta na
-// mão, como quem abre o console — e é exatamente o que a ALE-144 registrou ao
-// tirar três asserções de AUSÊNCIA da suíte: botão ausente nunca foi prova de
-// trava, e a garantia mora na camada mais barata que a sustenta.
+// mão, como quem abre o console: botão ausente nunca foi prova de trava.
 func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -42,10 +38,9 @@ func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 	}
 }
 
-// TestTheCommandPatchesTheSceneRightAway, em vez de esperar o tique do stream.
-//
-// O avanço é o botão mais clicado da sessão: esperar até 200ms por um tique que
-// vai calar (o hash não muda depois do remendo) seria pagar latência por nada.
+// O comando remenda a cena na resposta, em vez de esperar o tique do stream: o
+// avanço é o botão mais clicado da sessão, e o tique vai calar de todo jeito
+// porque o hash não muda depois do remendo.
 func TestTheCommandPatchesTheSceneRightAway(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -63,8 +58,8 @@ func TestTheCommandPatchesTheSceneRightAway(t *testing.T) {
 	}
 }
 
-// TestTheCommandAnnouncesToTheWholeTable: enquanto as duas telas existirem, uma escrita
-// pelo app tem de chegar na SPA.
+// Uma escrita pela cena tem de chegar ao HUB: quem está ouvindo o stream fica
+// com o estado velho se ela não chegar.
 func TestTheCommandAnnouncesToTheWholeTable(t *testing.T) {
 	f := newSceneFixture(t)
 	conn := f.s.sse.Add(f.sessionID, "espia", "gm")
@@ -91,17 +86,11 @@ func TestTheCommandAnnouncesToTheWholeTable(t *testing.T) {
 	}
 }
 
-// TestEndingTheSceneFromTheTableExpiresThePartyBlessings — a REGRESSÃO da ALE-220,
-// reaberta pelo app.
-//
-// O "Encerrar cena" da API passa pelo `endSceneForTable`, que é o caminho ÚNICO
-// desde aquela issue: ele expira a duração "cena" de toda ficha do grupo ANTES
-// de desligar a cena. O app chamava `sessions.EndScene` direto, que só mexe
-// no rastreador — a fila zerava na tela e a bênção de duração "cena" continuava
-// viva na ficha, que é a colisão C1 do glossário com outro botão.
-//
-// O gesto tem de ser o MESMO nos dois transportes, e a forma de garantir isso
-// não é repetir a sequência aqui: é chamar o mesmo helper.
+// O "Encerrar cena" passa pelo `endSceneForTable`, que expira a duração "cena"
+// de toda ficha do grupo ANTES de desligar a cena. Chamar `sessions.EndScene`
+// direto só mexe no rastreador: a fila zera na tela e a bênção de duração
+// "cena" segue viva na ficha. O que se prende é a chamada ao mesmo helper, e
+// não a sequência repetida aqui.
 func TestEndingTheSceneFromTheTableExpiresThePartyBlessings(t *testing.T) {
 	f := newSceneFixture(t)
 	seedEffect(t, f.s, f.charID, "bencao", "scene")
@@ -121,12 +110,9 @@ func TestEndingTheSceneFromTheTableExpiresThePartyBlessings(t *testing.T) {
 	}
 }
 
-// TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged.
-//
 // O `session-state` não serve para isto: as fichas não estão no estado do
-// rastreador. Sem o `session-rest`, a SPA de quem está com a ficha aberta
-// continuaria mostrando o efeito morto e o "usado 1/cena" gasto até alguém
-// recarregar — a metade invisível do mesmo defeito.
+// rastreador. Sem o `session-rest`, quem está com a ficha aberta continuaria
+// vendo o efeito morto e o "usado 1/cena" gasto até recarregar.
 func TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged(t *testing.T) {
 	f := newSceneFixture(t)
 	conn := f.s.sse.Add(f.sessionID, "espia", "gm")
@@ -140,9 +126,8 @@ func TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged(t *testing.T) {
 	}
 
 	// O CONTROLE contra ler ausência como evidência: o `session-state` sai
-	// sempre, então achá-lo prova que o canal está aberto e que a busca sabe
-	// olhar. Sem ele, "não achei o session-rest" e "o canal não existe" seriam
-	// a mesma linha no terminal.
+	// sempre, então achá-lo prova que o canal está aberto. Sem ele, "não achei
+	// o session-rest" e "o canal não existe" seriam a mesma linha no terminal.
 	var viuEstado, viuFichas bool
 	for {
 		select {
@@ -166,24 +151,17 @@ func TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged(t *testing.T) {
 	}
 }
 
-// TestTheRefusedCommandReachesTheGm.
-//
-// Os comandos respondiam `http.Error`, e isso era um beco: o Datastar não
-// desenha corpo de resposta 4xx, então a recusa não chegava a lugar nenhum e o
-// mestre clicava olhando para uma tela que não mudava. É o MESMO defeito que a
-// ALE-213 anotou no socket, onde o cliente não escutava o `exception`.
-//
-// Ele ficou urgente com o conserto da ALE-220 acima: não alcançar as fichas do
-// grupo ABORTA o encerrar-cena de propósito e deixa a cena LIGADA. Sem frase, o
-// mestre vê a cena aberta depois de mandar encerrá-la e não tem como saber por
-// quê.
+// O Datastar não desenha corpo de resposta 4xx, então recusar por `http.Error`
+// é um beco: a frase não chega a lugar nenhum e o mestre clica olhando para uma
+// tela que não muda. E não alcançar as fichas do grupo ABORTA o encerrar-cena
+// de propósito, deixando a cena LIGADA — sem frase, não há como saber por quê.
 func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 	f := newSceneFixture(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	// A mesma sabotagem do `table_initiative_rules_test.go`: sem o roster não há como
-	// alcançar as fichas, e o gesto inteiro tem de recusar.
+	// A sabotagem: sem o roster não há como alcançar as fichas, e o gesto
+	// inteiro tem de recusar.
 	if _, err := f.s.db.Exec("DROP TABLE campaign_members"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
@@ -198,12 +176,10 @@ func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 	}
 }
 
-// E o sinal do comando é OUTRO que o `$error` do registrar (ALE-263).
-//
-// Um sinal só faria a recusa de "Adicionar grupo" acender a frase vermelha
-// dentro da caixa "Registrar iniciativa" do mestre que também joga — a frase
-// certa no lugar errado, que é como se lê um defeito. Uma palavra por conceito
-// vale para sinal de página como vale para identificador.
+// O sinal do comando é OUTRO que o `$error` do registrar: um sinal só faria a
+// recusa de "Adicionar grupo" acender a frase vermelha dentro da caixa
+// "Registrar iniciativa" do mestre que também joga — a frase certa no lugar
+// errado.
 func TestTheCommandErrorDoesNotInvadeTheRecordError(t *testing.T) {
 	f := newSceneFixture(t)
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -212,13 +188,9 @@ func TestTheCommandErrorDoesNotInvadeTheRecordError(t *testing.T) {
 	}
 }
 
-// TestAddPartyBringsTheCharactersAndCanBeClickedAgain.
-//
-// As duas metades são o gesto: trazer o grupo, e o segundo clique NÃO duplicar.
-// A idempotência é o que sustenta o botão continuar clicável — o mestre que
-// aceitou um jogador atrasado clica de novo e leva só o que faltava. Sem ela o
-// desenho certo seria apagar o botão, e a fila teria Arwen duas vezes até
-// alguém notar.
+// As duas metades são o gesto: trazer o grupo, e o segundo clique NÃO
+// duplicar. A idempotência é o que sustenta o botão continuar clicável — o
+// mestre que aceitou um jogador atrasado clica de novo e leva só o que faltava.
 func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -254,18 +226,13 @@ func TestThePlayerDoesNotGetAddPartyInTheHtml(t *testing.T) {
 
 // ── a recuperação (T20 p105) ─────────────────────────────────────────────────
 
-// TestTheDayRestUsesTheQualityTheGmChose.
+// O guarda que carrega a REGRA, e ele mira o desfecho mais silencioso: o
+// `restMultiplier` cai em "normal" quando não reconhece a palavra, então uma
+// qualidade que não chegasse ao servidor não daria erro nenhum.
 //
-// Este é o guarda que carrega a REGRA, e ele mira o desfecho mais silencioso
-// possível: o `restMultiplier` do motor cai em "normal" quando não reconhece a
-// palavra, então uma qualidade que não chegasse ao servidor não daria erro
-// nenhum — o grupo descansaria em "normal" enquanto o mestre pediu outra coisa,
-// e ninguém veria a diferença.
-//
-// Por isso a asserção é sobre o NÚMERO e a qualidade escolhida é "ruim", que é a
-// única que se distingue do padrão: nível 8 recupera 4 em "ruim" e 8 em
-// "normal", então 24 de PV prova que o sinal atravessou e 28 provaria que ele se
-// perdeu no caminho.
+// Por isso a asserção é sobre o NÚMERO, com a qualidade "ruim": nível 8
+// recupera 4 em "ruim" e 8 em "normal", então 24 de PV prova que o sinal
+// atravessou e 28 provaria que ele se perdeu no caminho.
 func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -283,13 +250,9 @@ func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 	}
 }
 
-// E uma qualidade que não existe é RECUSADA, não rebaixada em silêncio.
-//
-// O motor cai em "normal" por conta própria, e para o app isso não serve: um
-// sinal adulterado faria o grupo descansar em "normal" enquanto a tela dizia
-// "luxuosa". Um número plausível no lugar do certo é o desfecho que esta
-// migração mais paga para evitar — e a frase nomeia o valor ofensivo e a forma
-// esperada, como o CLAUDE.md pede.
+// E uma qualidade que não existe é RECUSADA, não rebaixada em silêncio: o
+// motor cai em "normal" por conta própria, e um sinal adulterado faria o grupo
+// descansar em "normal" enquanto a tela dizia "luxuosa".
 func TestAnInventedQualityIsRefused(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -312,10 +275,8 @@ func TestAnInventedQualityIsRefused(t *testing.T) {
 }
 
 // A recuperação de CENA é o mesmo gesto do encerrar cena sem desligar a cena:
-// expira a duração "cena" das fichas do grupo, e avisa que elas mudaram.
-//
-// É o `expirePartyScene` dos dois lados desde a ALE-220 — o que se prende aqui é
-// que a cena chama ELE, e não uma sequência própria.
+// expira a duração "cena" das fichas do grupo e avisa que elas mudaram. O que
+// se prende é a chamada ao `expirePartyScene`, e não uma sequência própria.
 func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 	f := newSceneFixture(t)
 	seedEffect(t, f.s, f.charID, "bencao", "scene")
@@ -339,7 +300,7 @@ func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 	}
 }
 
-// ── os verbos da LINHA (ALE-263) ─────────────────────────────────────────────
+// ── os verbos da LINHA ───────────────────────────────────────────────────────
 
 // tracker põe o grupo na fila e devolve o id do combatente do personagem.
 func (f sceneFixture) tracker(t *testing.T) string {
@@ -356,12 +317,8 @@ func (f sceneFixture) tracker(t *testing.T) string {
 	return ""
 }
 
-// TestWoundingARowGoesThroughTheSheet — o guarda de composição desta fatia.
-//
 // Com personagem atrás da linha, quem manda é a FICHA: o dano é aplicado lá (é
-// ela quem sabe drenar PV temporários) e a entrada ESPELHA o resultado — a regra
-// que a ALE-122 pagou caro para ter num lugar só, depois de duas telas mostrarem
-// 52/95 e 57/95 do mesmo combatente.
+// ela quem sabe drenar PV temporários) e a entrada ESPELHA o resultado.
 //
 // Por isso a asserção é sobre a FICHA e não sobre a linha: escrever só na
 // entrada compilaria, deixaria a fila com um número plausível, e a ficha do
@@ -383,7 +340,7 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 		t.Errorf("a FICHA ficou com %d PV; 20-5 = 15 — o dano não chegou nela", ficha.Hpcurrent)
 	}
 	// E a linha espelha, senão a fila mostraria o número velho ao lado da ficha
-	// certa, que é a ALE-122 pelo outro lado.
+	// certa.
 	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		if e.ID == entryID && (e.HpCurrent == nil || *e.HpCurrent != 15) {
 			t.Errorf("a linha não espelhou a ficha: %v", e.HpCurrent)
@@ -391,10 +348,9 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 	}
 }
 
-// TestTheVitalStepComesFromThePathAndThereAreOnlyTwo.
-//
 // O passo não é dado que a página manda: são duas rotas por verbo. Um passo
-// inventado não casa rota nenhuma, e a recusa nomeia o valor e a forma esperada.
+// inventado não casa rota nenhuma, e a recusa nomeia o valor e a forma
+// esperada.
 func TestTheVitalStepComesFromThePathAndThereAreOnlyTwo(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
@@ -413,8 +369,6 @@ func TestTheVitalStepComesFromThePathAndThereAreOnlyTwo(t *testing.T) {
 	}
 }
 
-// TestTheEyeInvertsTheStateTheServerKeeps.
-//
 // Dois cliques voltam ao começo, e é isso que prova que quem decide é o
 // SERVIDOR: se a página mandasse o valor desejado, duas abas do mestre com o
 // remendo atrasado mandariam "esconder" duas vezes e a segunda desfaria a
@@ -450,13 +404,9 @@ func TestTheEyeInvertsTheStateTheServerKeeps(t *testing.T) {
 	}
 }
 
-// O MANA passa pelo mesmo caminho do PV, e chega na FICHA (ALE-211).
-//
-// A fila mandava `nil` no lugar do mana em todo clique, para todo combatente —
-// o `DeltaVitals` sempre soube dos dois e ninguém pedia o segundo. O caminho da
-// ficha por baixo também já era o mesmo, então a asserção é sobre ELA: escrever
-// só na entrada compilaria e deixaria a fila com um número plausível ao lado de
-// uma ficha que não gastou mana (ALE-122, pelo outro lado).
+// O MANA passa pelo mesmo caminho do PV, e a asserção é sobre a FICHA:
+// escrever só na entrada compilaria e deixaria a fila com um número plausível
+// ao lado de uma ficha que não gastou mana.
 func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
@@ -488,18 +438,13 @@ func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
 	}
 }
 
-// O PRIMEIRO clique do olho num NPC REVELA, porque ele já nasce escondido
-// (ALE-211).
+// O PRIMEIRO clique do olho num NPC REVELA, porque ele já nasce escondido.
+// Alternar a partir do PONTEIRO gravaria "esconder" sobre uma linha já
+// escondida, e o mestre clicaria sem a tela mudar nada.
 //
-// É a armadilha que o padrão por pool criou. Enquanto nulo significava
-// "visível", alternar a partir do PONTEIRO estava certo; com o PV do NPC
-// nascendo oculto, o mesmo código gravaria "esconder" sobre uma linha já
-// escondida — o mestre clica e a tela não muda nada, que é o defeito mais
-// difícil de reportar porque o botão parece morto em vez de errado.
-//
-// A asserção é sobre O QUE A MESA VÊ e não sobre a flag, e essa é a diferença
-// que importa: com padrão por pool os dois DIVERGEM, e um caso que lesse
-// `HpHidden` continuaria verde exatamente no caso que ele veio medir.
+// A asserção é sobre O QUE A MESA VÊ e não sobre a flag: com padrão por pool
+// os dois DIVERGEM, e um caso que lesse `HpHidden` continuaria verde
+// exatamente no caso que ele veio medir.
 func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 	f := newSceneFixture(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
@@ -541,9 +486,9 @@ func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 	}
 }
 
-// TestTheRowVerbsBelongToTheGm: a trava é o 403, e o HTML do jogador nem os
-// tem. As duas coisas são medidas juntas porque uma sem a outra engana — botão
-// ausente nunca foi prova de trava (ALE-144).
+// A trava é o 403, e o HTML do jogador nem tem os verbos. As duas coisas são
+// medidas juntas porque uma sem a outra engana: botão ausente nunca foi prova
+// de trava.
 func TestTheRowVerbsBelongToTheGm(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
@@ -551,9 +496,8 @@ func TestTheRowVerbsBelongToTheGm(t *testing.T) {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
-	// Os DOIS pools entram na varredura desde a ALE-211: um verbo novo que
-	// nascesse aberto ao jogador seria exatamente o que este guarda existe para
-	// impedir, e enumerar só o `hp` deixaria o `mp` nascer sem medição.
+	// Os DOIS pools entram na varredura: enumerar só o `hp` deixaria um verbo
+	// novo do `mp` nascer aberto ao jogador e sem medição.
 	for _, acao := range []string{
 		"vitais/hp/ferir/1", "vitais/hp/curar/1", "vitais/hp/oculto",
 		"vitais/mp/ferir/1", "vitais/mp/curar/1", "vitais/mp/oculto",
@@ -578,7 +522,6 @@ func TestTheRowVerbsBelongToTheGm(t *testing.T) {
 	}
 }
 
-// TestRemoveTakesTheCombatantOutOfTheTracker.
 func TestRemoveTakesTheCombatantOutOfTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
@@ -594,30 +537,15 @@ func TestRemoveTakesTheCombatantOutOfTheTracker(t *testing.T) {
 	}
 }
 
-// ── a presença no cartão do Grupo (ALE-263) ──────────────────────────────────
+// ── a presença no cartão do Grupo ────────────────────────────────────────────
 
-// TestBothTheGmAndThePlayerSeeWhoIsAtTheTable.
-//
 // A regra de QUEM está conectado já tem guarda no `live`; o que se prende aqui
 // é a LIGAÇÃO — que o cartão do Grupo é casado com a presença pelo id do
 // personagem, e que ela chega às DUAS telas.
 //
-// # A metade do jogador era o CONTRÁRIO, e a decisão foi revista (ALE-214)
-//
-// Aqui morava "…AndThePlayerDoesNot", com o precedente da SPA: presença por
-// personagem era do mestre, e um anel apagado na tela do jogador diria "fora da
-// mesa" sobre um colega a quem ele não tem por que vigiar.
-//
-// O dono reviu em 2026-09-08, e o argumento que venceu é o da ALE-214: **saber
-// quem caiu é o que faz a mesa ESPERAR em vez de continuar sem alguém.** Isso
-// vale mais que a discrição — e a discrição protegia pouco, porque quem está na
-// chamada de voz já sabe quem sumiu.
-//
-// O custo de manter a decisão antiga estava escondido e apareceu junto: o
-// `cardsParty` desenhava o ponto de presença dentro de um `if m.Presenca != nil`
-// que NUNCA era verdadeiro para o único consumidor dele. Ramo morto que desenha
-// uma funcionalidade responde "sim" a quem procura — foi lendo aquele `if` que
-// eu afirmei, errado, que a ALE-214 já estava metade entregue.
+// A metade do JOGADOR é decisão do dono (ALE-214), e é o contrário do que a
+// discrição sugeriria: saber quem caiu é o que faz a mesa ESPERAR em vez de
+// continuar sem alguém. Quem inverter vai achar que ela é descuido.
 func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -640,8 +568,8 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 		t.Error("o dono do personagem entrou e o cartão dele não acendeu")
 	}
 
-	// E O JOGADOR RECEBE A MESMA COISA (ALE-214). A frase é o que se prende, e
-	// não a cor: cor não existe para quem usa leitor de tela (ALE-212).
+	// E O JOGADOR RECEBE A MESMA COISA. A frase é o que se prende, e não a cor:
+	// cor não existe para quem usa leitor de tela.
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "Arcanista") {
 		t.Fatal("o jogador não viu o cartão do Grupo; o que vem abaixo não provaria nada")
@@ -651,10 +579,8 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 	}
 }
 
-// ── acrescentar combatente (ALE-263) ─────────────────────────────────────────
+// ── acrescentar combatente ───────────────────────────────────────────────────
 
-// TestAddingACombatantBuildsTheEntryThroughTheHousePath.
-//
 // O que se prende é a COMPOSIÇÃO: que a cena chama o `materializeEntry` e a
 // validação do `live`, em vez de montar a linha por conta própria. As duas
 // metades do PV são o ponto — digitado ele vira pool cheio, e ZERO fica de fora
@@ -714,7 +640,7 @@ func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {
 	}
 }
 
-// E acrescentar é do MESTRE, com as duas metades medidas juntas (ALE-144).
+// E acrescentar é do MESTRE, com as duas metades medidas juntas.
 func TestAddingACombatantBelongsToTheGm(t *testing.T) {
 	f := newSceneFixture(t)
 	corpo := `{"new_name":"Intruso","new_initiative":10,"new_hp":0,"new_type":"npc"}`
@@ -731,16 +657,9 @@ func TestAddingACombatantBelongsToTheGm(t *testing.T) {
 	}
 }
 
-// TestTheFormOnlyClearsWhenTheServerAccepts.
-//
-// As duas metades são o gesto, e a segunda é a que importa: limpar no clique
-// custaria o que a pessoa digitou toda vez que a validação recusasse, e a recusa
-// mais comum é sobre o nome — o campo mais caro de redigitar no meio de um
-// combate.
-//
-// Sem a primeira metade, o nome fica no campo e o clique seguinte acrescenta o
-// MESMO capanga de novo; ninguém confere a fila antes de clicar durante uma
-// luta.
+// As duas metades são o gesto. Limpar no clique custaria o que a pessoa
+// digitou toda vez que a validação recusasse; não limpar no aceite deixa o nome
+// no campo, e o clique seguinte acrescenta o MESMO capanga de novo.
 func TestTheFormOnlyClearsWhenTheServerAccepts(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -768,12 +687,9 @@ func TestTheFormOnlyClearsWhenTheServerAccepts(t *testing.T) {
 	}
 }
 
-// TestEditingFixesInitiativeAndHpAtOnce.
-//
-// A iniciativa é o gesto que a ALE-122 nomeou e deixou sem saída: "Adicionar
-// grupo" entra com 0 e não havia como consertar, então a única saída era remover
-// e acrescentar de novo — perdendo PV e condições no caminho. Por isso o teste
-// confere que a linha continua sendo A MESMA depois da edição.
+// "Adicionar grupo" entra com iniciativa 0; sem editar, a única saída seria
+// remover e acrescentar de novo, perdendo PV e condições no caminho. Por isso o
+// teste confere que a linha continua sendo A MESMA depois da edição.
 func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
@@ -798,8 +714,8 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 	if fila[0].HpCurrent == nil || *fila[0].HpCurrent != 7 {
 		t.Errorf("o PV da linha ficou %v", fila[0].HpCurrent)
 	}
-	// E o PV passou pela FICHA, como o ferir/curar: a linha espelha, ela não é a
-	// autoridade (ALE-122).
+	// E o PV passou pela FICHA, como o ferir/curar: a linha espelha, ela não é
+	// a autoridade.
 	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
 	if err != nil {
 		t.Fatalf("reler a ficha: %v", err)
@@ -809,11 +725,7 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 	}
 }
 
-// A validação da iniciativa é a MESMA de acrescentar, e agora ela tem um dono só.
-//
-// Na SPA eram duas constantes copiadas em dois componentes, com um comentário em
-// cada dizendo "a mesma do formulário de adicionar" — duas cópias que só um
-// comentário mantinha juntas.
+// A validação da iniciativa é a MESMA de acrescentar, e tem um dono só.
 func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
@@ -828,8 +740,6 @@ func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 	}
 }
 
-// TestEditingInventsNoPoolOnALifelessEntry.
-//
 // Quem decide se há PV para editar é o SERVIDOR olhando a linha, e não um sinal
 // que a página mande junto: uma tela defasada diria "tem" sobre um combatente
 // que acabou de perder a barra, e a escrita inventaria um pool onde não havia.
@@ -867,8 +777,6 @@ func TestEditingBelongsToTheGm(t *testing.T) {
 	}
 }
 
-// TestACombatantWithAQuoteInTheNameDoesNotBreakTheExpression.
-//
 // O rótulo é digitado pelo MESTRE e vai parar DENTRO de uma expressão do
 // Datastar, que é JavaScript. Um combatente chamado `O'Brien` fecharia a aspa e
 // o resto viraria sintaxe — o `templ` escapa o ATRIBUTO (a aspa vira `&#39;`),
@@ -889,15 +797,11 @@ func TestACombatantWithAQuoteInTheNameDoesNotBreakTheExpression(t *testing.T) {
 	}
 }
 
-// TestTheTrackerBadgeSaysSheetAndNeverPc.
+// Um teste sobre uma PALAVRA, porque nenhuma outra camada afirma o texto do
+// crachá — o e2e cobre o LEIAUTE do selo, não a palavra.
 //
-// Um teste sobre uma PALAVRA, e ele se justifica por uma lacuna medida: a sessão
-// irmã trocou este mesmo crachá na SPA e 260 testes passaram sem piscar, porque
-// nada afirmava o texto — o e2e cobre o LEIAUTE do selo, não a palavra.
-//
-// A palavra carrega regra: o GLOSSARY bane `PC` sem qualificador de escopo, e o
-// canônico aqui é `ficha` e não "personagem" porque a tabela de colisões diz
-// qual pergunta o `type == "character"` responde — "esta linha é ficha ou é
+// A palavra carrega regra: o GLOSSARY bane `PC`, e o canônico é `ficha` porque
+// a pergunta que o `type == "character"` responde é "esta linha é ficha ou é
 // NPC?". As duas metades ficam juntas de propósito: afirmar só a nova deixaria
 // passar uma tela que diz as duas coisas.
 func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
@@ -918,8 +822,8 @@ func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
 	}
 }
 
-// A LINHA da fila desenha UM POOL POR BARRA, com os verbos de cada um ao lado —
-// e cada papel lê o que a redação lhe deixou (ALE-211).
+// A LINHA da fila desenha UM POOL POR BARRA, com os verbos de cada um ao lado,
+// e cada papel lê o que a redação lhe deixou.
 //
 // O caso mede os dois lados no mesmo estado, e é isso que o torna honesto:
 // afirmar só o do mestre não distingue "o jogador não vê o PM" de "o PM não foi
@@ -953,8 +857,8 @@ func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
 	if !strings.Contains(doJogador, "PM ocultos pelo mestre") {
 		t.Error("a mesa não foi avisada de que existe PM escondido: 'sem barra' e 'escondido' viraram a mesma coisa")
 	}
-	// E o jogador não recebe verbo nenhum — a trava é o 403, mas o HTML também
-	// não os tem, e as duas coisas se medem juntas (ALE-144).
+	// E o jogador não recebe verbo nenhum: a trava é o 403, mas o HTML também
+	// não os tem, e as duas coisas se medem juntas.
 	if strings.Contains(doJogador, "/vitais/mp/ferir/") || strings.Contains(doJogador, "Ocultar os PM de ") {
 		t.Error("os verbos do mana vazaram para o HTML do jogador")
 	}

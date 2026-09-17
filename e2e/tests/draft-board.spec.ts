@@ -1,14 +1,13 @@
 import { expect, type Page, test } from '@playwright/test'
 
 /**
- * O ARRASTO DA PEÇA NO RASCUNHO (ALE-299).
+ * O ARRASTO DA PEÇA NO RASCUNHO, com DUAS peças de propósito.
  *
- * O rascunho não tinha um único caso de e2e, e é onde o defeito estava: com DUAS
- * peças no mapa, pegar qualquer uma movia a PRIMEIRA. A causa é que
- * `$dragging` guardava o literal `'peca'` — igual para todas —, então todo
- * `pointerup__window` passava na guarda e o primeiro do DOM vencia e zerava o
- * sinal. Com uma peça só, o primeiro do DOM É o arrastado, e o defeito não
- * aparece: a suíte do tabuleiro media exatamente esse caso (`toHaveCount(1)`).
+ * O defeito que isto prende precisa de duas: com `$dragging` guardando um
+ * literal igual para todas, todo `pointerup__window` passa na guarda e o
+ * primeiro do DOM vence — pegar qualquer peça move a PRIMEIRA. Com uma peça só,
+ * o primeiro do DOM É o arrastado e o gesto certo e o errado dão o mesmo
+ * resultado.
  *
  * E2E porque só o navegador tem o gesto: ponteiro com passos intermediários,
  * a ORDEM em que N ouvintes de janela disparam, e a peça desenhada por
@@ -49,7 +48,8 @@ async function aDraftWith(
   await page.locator('.board-scene').waitFor({ timeout: 10_000 })
   return {
     endereco,
-    // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO (ALE-245).
+    // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO: um `finally` que estoura
+    // substitui o erro de verdade.
     apagar: async () => {
       try {
         await page.request.delete(`/api/campanhas/${campanha}`)
@@ -102,9 +102,9 @@ test('no rascunho, arrastar a segunda peça move a SEGUNDA — e nenhuma outra',
     // PASSOS INTERMEDIÁRIOS: um salto direto não atravessa casa nenhuma.
     for (let i = 1; i <= 6; i++) await page.mouse.move(meio.x + (quadrado * 2 * i) / 6, meio.y)
 
-    // QUEM DESLIZA SOB O DEDO, e este pedaço é metade do defeito: antes do
-    // conserto quem ganhava a classe era o ALFA, que ninguém tinha pegado — a
-    // peça errada corria atrás do dedo desde o primeiro quadro.
+    // QUEM DESLIZA SOB O DEDO, e este pedaço é metade do defeito: com ele no
+    // lugar quem ganha a classe é o ALFA, que ninguém pegou — a peça errada
+    // corre atrás do dedo desde o primeiro quadro.
     expect(await whoIsSlidingNow(page), 'a peça que desliza não é a que foi pega').toEqual(['Beta'])
 
     await page.mouse.up()

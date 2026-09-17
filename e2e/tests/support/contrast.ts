@@ -1,27 +1,20 @@
 import type { Page } from '@playwright/test'
 
 /**
- * O MEDIDOR DE CONTRASTE da casa, e ele mora aqui desde a fatia 3 da ALE-272
- * porque passou a ter DOIS chamadores: as cenas e a ficha.
- *
- * Ele vivia dentro do spec das cenas como função privada, e é por
- * isso que a ficha nasceu sem medição nenhuma de contraste nas fatias 1 e 2 —
- * não por decisão, mas porque o medidor não era alcançável de outro arquivo. É a
- * família da ALE-237 e da ALE-252 uma vez mais: a cobertura é função de onde o
- * guarda CHEGA.
+ * O MEDIDOR DE CONTRASTE da casa, e ele mora num arquivo PRÓPRIO de propósito:
+ * instrumento que vive dentro de um chamador tem exatamente um chamador, e foi
+ * assim que a ficha atravessou duas fatias sem uma única medição.
  *
  * Contraste exige converter oklch para sRGB, e só o navegador faz isso: em jsdom
  * o `getComputedStyle` devolve o oklch cru, e ler aqueles três números como RGB
  * dá razão inventada. É o que prende esta medição ao browser.
  *
- * # Ele mede o que está ESCONDIDO POR UM ANCESTRAL, e isso é para saber
- *
- * O descarte olha o `display`/`visibility` do PRÓPRIO nó, e um filho de um pai
- * com `display: none` tem `display: block` seu. Então todo diálogo da cena —
- * que o Datastar esconde pelo `data-show` do pai — já entra na conta com a
- * caixa fechada. Isso é bom para a cobertura e péssimo para quem quiser usar
- * `medidos` como prova de que um diálogo ABRIU: o número não muda. Medido na
- * ficha (ALE-272, fatia 6): 809 antes e 809 depois do clique.
+ * ELE MEDE O QUE ESTÁ ESCONDIDO POR UM ANCESTRAL, e isso é para saber: o
+ * descarte olha o `display`/`visibility` do PRÓPRIO nó, e um filho de um pai com
+ * `display: none` tem `display: block` seu. Todo diálogo que o Datastar esconde
+ * pelo `data-show` do pai já entra na conta com a caixa fechada — bom para a
+ * cobertura, e péssimo para quem quiser usar `medidos` como prova de que um
+ * diálogo ABRIU: o número não muda.
  */
 
 /** Uma medição: o que reprovou, e QUANTOS textos foram olhados. */
@@ -88,10 +81,9 @@ export async function medeOContraste(page: Page): Promise<MedicaoDeContraste> {
         if (cs.visibility === 'hidden' || cs.display === 'none') return null
         // Texto DECORATIVO não entra na conta, e isto não é afrouxar o guarda:
         // o WCAG isenta texto que não é exposto, e `aria-hidden` é exatamente
-        // essa declaração. O caso que trouxe a regra foi o monogram do livro
-        // de campanhas — as iniciais gigantes em `text-white/15` sobre o emblema
-        // são um substituto de ARTE, com o nome da campanha escrito ao lado em
-        // texto de verdade. Medi-las é medir a ilustração.
+        // essa declaração. As iniciais gigantes em `text-white/15` sobre um
+        // emblema são substituto de ARTE, com o nome escrito ao lado em texto de
+        // verdade — medi-las é medir a ilustração.
         //
         // O perigo aqui é esconder defeito atrás de `aria-hidden`, e a proteção
         // é a regra que já vale: se o texto CARREGA informação, escondê-lo do

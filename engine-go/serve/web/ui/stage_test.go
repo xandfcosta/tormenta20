@@ -7,19 +7,10 @@ import (
 
 // Os unitários da gramática da cena de seleção.
 //
-// Eles vieram de `web/characters` na ALE-297, junto com o código que medem: as
-// duas perguntas são sobre ÍNDICE e sobre a FORMA da expressão, e nenhuma das
-// duas precisa de banco, de servidor ou de uma cena em particular. O que exige
-// a página montada — que a cena de fato ESCREVE estes gestos — continua no
-// `api`, onde há um roteador de verdade.
-
-// TestNoNeighborIsInventedOutsideTheRail (ALE-278).
-//
-// Ele nasceu de um caso do hospedeiro que afirmava DUAS coisas: que o
-// `NeighborAt` devolve nulo fora do trilho, e que o HTML do herói único não
-// desenha um "Próximo". A segunda é o que a pessoa vê e ficou lá; a primeira é
-// regra interna e mora aqui, onde não precisa de banco nem de servidor para uma
-// pergunta que é sobre índice.
+// UNITÁRIO porque as duas perguntas são sobre ÍNDICE e sobre a FORMA da
+// expressão, e nenhuma precisa de banco, de servidor ou de uma cena em
+// particular. Que a cena de fato ESCREVA estes gestos continua no `api`, onde há
+// um roteador de verdade.
 func TestNoNeighborIsInventedOutsideTheRail(t *testing.T) {
 	um := []Neighbor{{ID: 1, Name: "Thalen"}}
 	if NeighborAt(um, -1) != nil {
@@ -42,10 +33,9 @@ func TestNoNeighborIsInventedOutsideTheRail(t *testing.T) {
 // certo e escreve o índice; a SEGUNDA recalcula com o índice já atualizado —
 // `N >= N` é sempre verdade — e o palco entra "adiante" mesmo andando para trás.
 //
-// Eu não vi isso na primeira medição porque cliquei por `element.click()`, que
-// NÃO move o foco: só o gesto de verdade dispara os dois eventos. É a mesma
-// família do evento sintético que o guia do pacote registra — a sonda que não
-// reproduz o gesto mede outra coisa.
+// Uma sonda por `element.click()` NÃO vê isso: ela não move o foco, e só o gesto
+// de verdade dispara os dois eventos. Sonda que não reproduz o gesto mede outra
+// coisa.
 func TestTheCursorGestureDoesNotRecomputeTheDirectionTwice(t *testing.T) {
 	// A guarda tem de estar na expressão, e ela é o que torna a segunda passagem
 	// um nada. Sem `if`, rodar duas vezes é o defeito.

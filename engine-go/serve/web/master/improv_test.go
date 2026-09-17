@@ -8,13 +8,13 @@ import (
 	"testing"
 )
 
-// Os guardas do IMPROVISO (ALE-261).
+// Os guardas do IMPROVISO.
 //
 // O dado em si é do `engine` e tem teste lá. O que se prende aqui é a tradução
 // da linha do livro para a tela — que é onde um campo trocado passa por dado
 // plausível.
 
-// TestEveryDieFaceHitsARow, nas quatro tabelas.
+// TODA face do dado cai numa linha, nas quatro tabelas.
 //
 // É a única forma honesta de testar tabela de rolagem: em vez de repetir a
 // tabela num `expect` por linha — que é a transcrição que o guia proíbe —,
@@ -61,11 +61,10 @@ func (e erroDeFace) Error() string {
 }
 func errFaceSemLinha(f int) error { return erroDeFace(f) }
 
-// TestTheEventTypeAndNotTheExample prende a manchete da perseguição.
+// A manchete da perseguição é o TIPO do evento, e não o exemplo.
 //
-// A primeira versão punha o EXEMPLO em cima e perdia o tipo inteiro; a rolagem 4
-// saía como "4 —", porque na faixa "nenhum evento" o exemplo do livro é um
-// travessão. Só apareceu ao olhar a captura de tela.
+// Com o exemplo em cima, a rolagem 4 sai como "4 —": na faixa "nenhum evento" o
+// exemplo do livro é um travessão, e o tipo se perde inteiro.
 func TestTheEventTypeAndNotTheExample(t *testing.T) {
 	tab, _ := book.ImprovTables()
 	vistos := map[string]bool{}
@@ -88,7 +87,7 @@ func TestTheEventTypeAndNotTheExample(t *testing.T) {
 	}
 }
 
-// TestTheHistoryKeepsFiveAndThrowsTheSixthAway.
+// O histórico guarda cinco e joga o sexto fora.
 func TestTheHistoryKeepsFiveAndThrowsTheSixthAway(t *testing.T) {
 	var h []roll
 	for i := 1; i <= 8; i++ {
@@ -107,7 +106,7 @@ func TestTheHistoryKeepsFiveAndThrowsTheSixthAway(t *testing.T) {
 	}
 }
 
-// TestTheDungeonSkeletonFollowsTheBook: uma ameaça a cada três salas (p263),
+// O esqueleto da masmorra segue o livro: uma ameaça a cada três salas (p263),
 // arredondando PARA CIMA — sete salas dão três ameaças, não duas.
 func TestTheDungeonSkeletonFollowsTheBook(t *testing.T) {
 	casos := map[int]struct {
@@ -134,7 +133,7 @@ func TestTheDungeonSkeletonFollowsTheBook(t *testing.T) {
 	}
 }
 
-// TestAboveTheCeilingIsNotAnError: o livro recomenda parar, e a tela diz isso em vez de
+// Acima do teto não é erro: o livro recomenda parar, e a tela diz isso em vez de
 // esconder o campo ou fingir um tamanho.
 func TestAboveTheCeilingIsNotAnError(t *testing.T) {
 	v := loadImprov(improvView{Salas: 120})
@@ -153,14 +152,11 @@ func TestAboveTheCeilingIsNotAnError(t *testing.T) {
 
 // ── pelo fio ─────────────────────────────────────────────────────────────────
 
-// TestTheTrailSlugsAreUnique — a rota resolve por eles.
+// Os slugs do trilho são ÚNICOS — a rota resolve por eles.
 //
-// Herdado do `gm-tools.test.ts` da SPA, apagado na virada da ALE-264 — o
-// original se lê com
-// `git show 7956b59:frontend/src/features/gm-tools/gm-tools.test.ts`. Slug repetido não
-// quebra compilação nem teste nenhum: as duas entradas viram links para o mesmo
-// endereço, e a segunda ferramenta fica inalcançável — com o trilho mostrando
-// as duas, o que é pior que faltar uma.
+// Slug repetido não quebra compilação nem teste nenhum: as duas entradas viram
+// links para o mesmo endereço, e a segunda ferramenta fica inalcançável — com o
+// trilho mostrando as duas, o que é pior que faltar uma.
 func TestTheTrailSlugsAreUnique(t *testing.T) {
 	vistos := map[string]string{}
 	for _, f := range railStops {
@@ -175,16 +171,10 @@ func TestTheTrailSlugsAreUnique(t *testing.T) {
 	}
 }
 
-// TestTheRailOffersEveryStop — e cada uma responde.
+// O trilho oferece TODA parada, e cada uma responde.
 //
-// É o guarda da VIRADA: a `/gm` só pode ser apagada quando as ferramentas
-// estiverem de pé, e "de pé" é responder 200, não existir no trilho.
-//
-// Eram QUATRO até a ALE-264, quando o dono viu que "o bestiário conta como
-// catálogo": o trilho virou duas seções e cada catálogo ganhou parada e cena
-// próprias. São 13 — duas ferramentas e ONZE catálogos, os últimos a chegar
-// sendo as escolas de magia e as perícias. O número fica preso porque uma parada
-// que perde a rota some do trilho sem erro nenhum.
+// "De pé" é responder 200, não existir no trilho: uma parada que perde a rota
+// some do trilho sem erro nenhum, e por isso o número fica preso.
 func TestTheRailOffersEveryStop(t *testing.T) {
 	if len(railStops) != 13 {
 		t.Fatalf("o trilho tem %d paradas", len(railStops))
@@ -207,15 +197,7 @@ func TestTheRailOffersEveryStop(t *testing.T) {
 	}
 }
 
-// TestClearingResetsOnlyThatTable.
+// Limpar zera UMA tabela.
 //
-// Esta feature quase se perdeu no porte: a SPA tem um botão "Limpar" por tabela
-// e a minha primeira versão rolava e acumulava sem como zerar. O que a
-// denunciou foi comparar o teste ÓRFÃO da SPA (`roll-history.test.ts` em
-// 7956b59, "limpar
-// esvazia o histórico") com o substituto em Go ANTES de apagá-lo — apagar
-// primeiro teria levado a testemunha junto, que é o que o checklist da virada
-// existe para impedir.
-//
-// O guarda mede o ISOLAMENTO e não só o zeramento: limpar a ruína não pode
-// levar junto o evento de perseguição que o mestre acabou de tirar.
+// O guarda mede o ISOLAMENTO e não só o zeramento: limpar a ruína não pode levar
+// junto o evento de perseguição que o mestre acabou de tirar.

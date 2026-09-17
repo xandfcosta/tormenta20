@@ -5,11 +5,10 @@ import (
 	"testing"
 )
 
-// A conta do encontro contra o LIVRO (ALE-259).
+// A conta do encontro contra o LIVRO.
 //
-// Os casos vêm dos exemplos escritos no próprio texto da regra (p282) e das
-// armadilhas que a SPA já pagou. Não é uma transcrição de tabela: é o
-// comportamento nas bordas, que é o que quebra.
+// Os casos vêm dos exemplos escritos no próprio texto da regra (p282). Não é uma
+// transcrição de tabela: é o comportamento nas bordas, que é o que quebra.
 
 func TestThePartyChallengeLevelFollowsTheBook(t *testing.T) {
 	casos := []struct {
@@ -41,19 +40,15 @@ func TestThePartyChallengeLevelFollowsTheBook(t *testing.T) {
 	}
 }
 
-// TestAFractionalDifferenceDoesNotFallIntoHard é a ALE-25, e é a razão de a
-// diferença ser arredondada ANTES de escolher a faixa.
+// A razão de a diferença ser arredondada ANTES de escolher a faixa.
 //
 // Uma criatura de ND 1/4 contra um grupo de nível 1 dá diferença −0,75, que
-// escapa do `<= -1` e do `== 0` e caía em "Difícil" — o oposto da verdade.
+// escapa do `<= -1` e do `== 0` e cai em "Difícil" — o oposto da verdade.
 // Arredondada, ela vira −1 e cai em "Fácil", que é a leitura certa.
 //
-// Eu escrevi este teste esperando "Médio" e ele falhou. O errado era a minha
-// expectativa, não a regra: `Round(-0,75)` é −1 tanto em Go quanto em JS, e
-// uma criatura de ND 1/4 contra um grupo inteiro de nível 1 é fácil mesmo. Fica
-// registrado porque o que o teste protege é a FAIXA CALMA, não um rótulo
-// específico — se alguém trocar o arredondamento, o sintoma volta a ser
-// "Difícil" e é isso que tem de acusar.
+// O que se protege é a FAIXA CALMA e não um rótulo específico: se alguém trocar
+// o arredondamento, o sintoma volta a ser "Difícil", e é isso que tem de
+// acusar.
 func TestAFractionalDifferenceDoesNotFallIntoHard(t *testing.T) {
 	d := EncounterDifficulty(PartyChallengeLevel(0.25, 1) - 1)
 	if d.Rotulo != "Fácil" {
@@ -86,7 +81,7 @@ func TestTheDifficultyBands(t *testing.T) {
 	}
 }
 
-// TestAnIrrelevantChallengeIsWorthNoXp: cinco degraus abaixo do nível do grupo e o
+// Cinco degraus abaixo do nível do grupo e o
 // combate não ensina nada (p326).
 func TestAnIrrelevantChallengeIsWorthNoXp(t *testing.T) {
 	if xp := EncounterXP(2, 7, 4, Vitoria); xp != 0 {

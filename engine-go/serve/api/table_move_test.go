@@ -20,11 +20,8 @@ func (f sceneFixture) onBoard(t *testing.T) string {
 	return posto.Tokens[len(posto.Tokens)-1].ID
 }
 
-// TestTheStopsAccumulateInsteadOfReplacingEachOther — o coração desta fatia.
-//
 // Uma parada por clique, e o caminho ESTENDE. Se cada clique recomeçasse do
-// lugar da peça, o contorno seria impossível de expressar — que é exatamente o
-// defeito da SPA que a ALE-266 abriu.
+// lugar da peça, o contorno seria impossível de expressar.
 func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
@@ -56,9 +53,8 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 	}
 }
 
-// TestTheMoveOnlyLandsOnConfirm: a peça não anda enquanto o movimento é
-// proposta. É o que deixa a pessoa contornar em vários cliques sem a mesa ver a
-// peça pulando de casa em casa.
+// A peça não anda enquanto o movimento é proposta: é o que deixa a pessoa
+// contornar em vários cliques sem a mesa ver a peça pulando de casa em casa.
 func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
@@ -108,8 +104,8 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 	}
 }
 
-// TestThePlayerDoesNotMoveSomeoneElsesToken — a autorização é do `tabuleiro`, e a recusa
-// vem com a FRASE que a regra escreve.
+// A autorização é do `tabuleiro`, e a recusa vem com a FRASE que a regra
+// escreve.
 //
 // Não é 403: quem chega aqui é da mesa e podia estar movendo a própria peça. A
 // diferença importa porque a frase é o que a pessoa lê — "a peça não é sua" diz
@@ -134,11 +130,8 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	}
 }
 
-// TestTheReachOnlyShowsWhenThereIsABudget.
-//
 // Quem tem teto é o jogador NA VEZ dele. O mestre move sem orçamento (-1), e
-// desenhar alcance para ele seria inventar um limite que a regra não põe — foi
-// isto que fez a casa alcançável deixar de ser o alvo do clique e virar pintura.
+// desenhar alcance para ele seria inventar um limite que a regra não põe.
 func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	f := newSceneFixture(t)
 	f.onBoard(t)
@@ -159,17 +152,14 @@ func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 		t.Error("é a vez do jogador e ele não viu até onde pode andar")
 	}
 	// AS DUAS FAIXAS (T20 p233): ouro é o que a ação de movimento alcança, azul é
-	// o que só se alcança gastando a ação padrão junto. É a resposta de relance à
-	// pergunta do dono — "se ele precisa gastar a ação de movimento e a ação
-	// principal" — sem desenhar caminho nenhum.
+	// o que só se alcança gastando a ação padrão junto.
 	if !strings.Contains(doJogador, "board-range-second") {
 		t.Error("o jogador não viu até onde chega gastando a ação principal também")
 	}
 
-	// O MESTRE VÊ O MESMO SOMBREADO (decisão do dono: "o mestre não tem limite,
-	// mas a parte visual serve para todos"). Ele não é barrado por ele — a trava
-	// saiu do servidor —, e esconder as faixas dele tiraria da pessoa que decide
-	// exatamente o que a mesa está lendo.
+	// O MESTRE VÊ O MESMO SOMBREADO sem ser barrado por ele (decisão do dono):
+	// esconder as faixas dele tiraria da pessoa que decide exatamente o que a
+	// mesa está lendo.
 	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, "board-range-second") {
 		t.Error("o mestre não viu as faixas de alcance da peça que ele move")
@@ -197,23 +187,13 @@ func TestOutOfCombatNobodySeesReach(t *testing.T) {
 	}
 }
 
-// TestARefusedStopSpeaksOnTheBoard.
-//
-// O arrasto (ALE-264) quebrou a invariante em que este arquivo se apoiava: com
-// CLIQUE só se acerta casa oferecida, mas soltar acontece onde o dedo estiver,
-// inclusive fora do alcance. A recusa passou a ser alcançável de verdade — e
-// ela saía em `command_error`, que é o sinal do RODAPÉ DO MESTRE. O jogador não
-// renderiza rodapé nenhum: a frase existia no fio e não tinha onde pousar, e a
-// parada era engolida em silêncio.
-//
-// A ALE-203 mudou QUAL comando recusa — a parada cara passou a ser aceita e
-// desenhada, e quem barra é o confirmar —, e não mudou nada do que este guarda
-// prende: a frase continua tendo de sair no sinal do MOVIMENTO e a região do
-// jogador continua tendo de ter onde acendê-la. Trocar o gatilho e manter as
-// duas asserções é o que separa "o guarda ainda mede" de "o guarda ficou verde".
+// A recusa é alcançável de verdade porque soltar acontece onde o dedo estiver,
+// inclusive fora do alcance. Se ela sair em `command_error` — o sinal do RODAPÉ
+// DO MESTRE —, a frase existe no fio e não tem onde pousar, porque o jogador não
+// renderiza rodapé nenhum: a recusa é engolida em silêncio.
 //
 // Prende as DUAS metades, porque uma sem a outra não é o conserto: que a frase
-// sai no sinal certo, e que a região do tabuleiro tem onde acendê-la.
+// sai no sinal do MOVIMENTO, e que a região do tabuleiro tem onde acendê-la.
 func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
@@ -233,8 +213,8 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 		t.Fatal("o tabuleiro do jogador não tem onde acender a recusa de uma parada")
 	}
 
-	// O deslocamento padrão são 6 quadrados (T20 p106); 9 não cabem — e desde a
-	// ALE-203 a PARADA os aceita, porque é o desenho que conta à pessoa onde ela
+	// O deslocamento padrão são 6 quadrados (T20 p106); 9 não cabem — e a PARADA
+	// os aceita de propósito, porque é o desenho que conta à pessoa onde ela
 	// estourou. Quem recusa é o CONFIRMAR, e é a recusa dele que precisa pousar
 	// aqui.
 	proposta := f.pede(t, f.jogador, "POST", base+"/parada", `{"from":{"X":9,"Y":0}}`)
@@ -262,15 +242,13 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	}
 }
 
-// TestWhatIsLeftOfTheDisplacementAppearsInWriting.
+// Sem o número escrito a pessoa empilha paradas que no fim somam mais do que ela
+// anda, e descobre no bloqueio sem saber o que desfazer. O alcance desenhado é o
+// aviso mudo; este número é o falado.
 //
-// A realimentação que o dono pediu por nome: sem ela a pessoa empilha paradas
-// que no fim somam mais do que ela anda, e descobre no bloqueio sem saber o que
-// desfazer. O alcance desenhado é o aviso mudo; este número é o falado.
-//
-// Guarda também a CONTA, que estava sem dono: `Alcance` e `Restante` são os dois
-// valores de UMA chamada de `reachAndTarget`, e enquanto ninguém
-// afirmava o segundo dava para movê-lo de lugar sem nenhum teste piscar.
+// Guarda também a CONTA: `Alcance` e `Restante` são os dois valores de UMA
+// chamada de `reachAndTarget`, e sem ninguém afirmando o segundo dá para
+// movê-lo de lugar sem nenhum teste piscar.
 func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
@@ -313,8 +291,6 @@ func (f sceneFixture) turnPlayer(t *testing.T) {
 	}
 }
 
-// TestTheArrowComesOutInTwoColorsWhenThePathOverruns (ALE-203, item 13).
-//
 // A COMPOSIÇÃO, que é o que nenhum dos guardas de unidade alcança: que o caminho
 // caro chega até o HTML do JOGADOR com o trecho vermelho desenhado, com a ponta
 // da cor dele, e com os metros de cada perna escritos por cima.
@@ -364,15 +340,15 @@ func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 		t.Error("a seta não diz a distância da perna em metros")
 	}
 	// E o rodapé NÃO repete a conta em metros: com dois limiares, "4,5m além do
-	// deslocamento" ficou ambíguo — além de qual dos dois? — e dizia a mesma coisa
-	// que a frase das ações ao lado. O metro por perna continua sobre a seta, que
-	// é onde ele explica a cor.
+	// deslocamento" é ambíguo — além de qual dos dois? — e diz a mesma coisa que a
+	// frase das ações ao lado. O metro por perna fica sobre a seta, que é onde ele
+	// explica a cor.
 	if strings.Contains(tela, "além do deslocamento") {
 		t.Error("o rodapé voltou a medir o excesso em metros, ao lado da frase que já o nomeia")
 	}
 }
 
-// TestTheControlForTheTwoColorArrow: o caminho que CABE sai inteiro dourado.
+// O CONTROLE da seta de duas cores: o caminho que CABE sai inteiro dourado.
 //
 // Sem ele, "a tela tem `board-move-beyond`" não se distingue de "a tela
 // tem sempre", e o vermelho poderia aparecer em todo movimento sem nenhum guarda

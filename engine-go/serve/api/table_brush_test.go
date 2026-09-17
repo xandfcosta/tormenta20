@@ -23,9 +23,8 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	casas := board.SquaresOf(b, "dificil")
 
-	// DEZ, escrito à mão (ALE-311). Aqui estava
-	// `esperadas := board.StrokeSquares(…)` — a MESMA função que o handler chama
-	// —, e uma contagem derivada do código sob teste anda junto com o defeito.
+	// DEZ, escrito à mão: derivar a contagem de `board.StrokeSquares` — a MESMA
+	// função que o handler chama — anda junto com o defeito.
 	//
 	// O traço é SUPERCOVER e não Bresenham: ele inclui a casa de antes e a de
 	// depois em cada degrau, porque um pincel que pula deixa buraco. De (2,2) a
@@ -52,17 +51,14 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	}
 }
 
-// TestTheEraserStrokeClearsTheWholeSegment: o irmão do de cima, e ele existe
-// porque as duas rotas são caminhos diferentes — a da borracha não tem espécie,
-// e foi justamente ela que ficou para trás na primeira versão desta superfície.
+// O irmão do de cima, e ele existe porque as duas rotas são caminhos diferentes:
+// a da borracha não tem espécie.
 func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	// A ORIGEM NÃO É (0,0), e isso é o conserto de um defeito do próprio caso
-	// (ALE-311): ele apagava de (0,0) a (6,6), e (0,0) é o VALOR-ZERO do struct.
-	// Um `from` que parasse de ser lido — a tag `json:"from"` trocada, o corpo
-	// chegando vazio — decodifica exatamente para (0,0), e o caso continuaria
-	// passando. Ele era estruturalmente incapaz de detectar o que veio medir.
+	// A ORIGEM NÃO É (0,0), porque (0,0) é o VALOR-ZERO do struct: um `from` que
+	// parasse de ser lido — a tag `json:"from"` trocada, o corpo chegando vazio —
+	// decodifica exatamente para (0,0), e o caso passaria sem medir nada.
 	if rec := f.pede(t, f.mestre, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("cobertura", 4, 4, 6, 6)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
@@ -97,8 +93,6 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	}
 }
 
-// TestAForgedStrokeIsRefused.
-//
 // O teto é do domínio e a recusa chega como FRASE, não como 500: um traço de dez
 // milhões de casas só vem de um pedido montado à mão, e a resposta certa é dizer
 // o que houve.
@@ -117,16 +111,13 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 	}
 }
 
-// TestTheBrushDoesNotReturnTheWholeTable — o guarda dos 353 KB.
-//
-// Medido no navegador antes do conserto: uma casa pintada devolvia **353 KB**,
-// porque o `respondGm` repinta TODAS as regiões. Num gesto de clique isso
-// era caro; num gesto CONTÍNUO é proibitivo — um traço de vinte casas mandaria
-// sete megabytes, e o mestre está arrastando o dedo enquanto isso chega.
+// O guarda dos 353 KB: repintar TODAS as regiões a cada casa é proibitivo num
+// gesto CONTÍNUO — um traço de vinte casas mandaria sete megabytes enquanto o
+// mestre ainda arrasta o dedo.
 //
 // A asserção nomeia as duas metades: a região do mapa TEM de vir (senão o traço
-// não aparece) e a do acervo NÃO pode (é a maior da Mesa, com 147 lugares, e ela
-// não muda quando alguém pinta uma casa).
+// não aparece) e a do acervo NÃO pode (é a maior da Mesa e não muda quando
+// alguém pinta uma casa).
 func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -144,16 +135,12 @@ func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 	}
 }
 
-// TestTheScreenWiresTheStrokeToTheRightButton.
-//
 // Uma afirmação sobre a FORMA do que a página serve, e é o único jeito de
 // alcançar os três gestos de uma vez: `pointerdown`/`pointermove`/`pointerup` na
-// camada de pintura, a rota com `/ate/` (e não a de um ponto só), e o botão 2
-// caindo no caminho da borracha.
+// camada de pintura e o botão 2 caindo no caminho da borracha.
 //
 // Se algum deles voltar a ser um `data-on:click`, o traço morre em silêncio — a
-// tela continua pintando um quadrado por clique, que é exatamente o estado que o
-// dono relatou.
+// tela continua pintando um quadrado por clique.
 func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -164,10 +151,8 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 		"data-on:pointermove",
 		"data-on:pointerup",
 		"data-on:contextmenu",
-		// O TRAÇO viaja no corpo desde a ALE-305, então o que a cena mostra é
-		// o par de cantos montado como payload, em inglês — não mais um `/ate/` na URL.
-		// A chave é MINÚSCULA desde a ALE-313: é a grafia que o `engine.Square`
-		// declara (`json:"x"`) e a que está gravada no acervo.
+		// O par de cantos viaja no CORPO, não na URL. A chave é minúscula
+		// porque é a grafia que o `engine.Square` declara (`json:"x"`).
 		"to: {x: ",
 		"evt.button === 2",
 	} {
@@ -181,8 +166,8 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 	}
 }
 
-// TestThePaintedSquareCarriesTheKindIcon: a ponta que só o HTML servido responde —
-// o ícone chega à casa, e o trilho mostra o MESMO.
+// A ponta que só o HTML servido responde: o ícone chega à casa, e o trilho
+// mostra o MESMO.
 func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -193,9 +178,8 @@ func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CANTO vai escrito à mão ("sudeste" é o da camuflagem na tabela do
-	// desenho). Ler o valor do `drawing` da cena faria o esperado sair do código
-	// sob teste, e os dois andariam juntos com o defeito — é o que o CLAUDE.md
-	// proíbe com todas as letras.
+	// desenho): ler o valor do `drawing` da cena faria o esperado sair do código
+	// sob teste, e os dois andariam juntos com o defeito.
 	if !strings.Contains(tela, "terrain-corner-southeast") {
 		t.Error("a casa de camuflagem não veste o canto sudeste")
 	}
@@ -208,12 +192,10 @@ func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 	}
 }
 
-// TestTheRectangleFillsTheWholeArea (ALE-203, item 10).
-//
 // A rota do retângulo é IRMÃ da do traço e chama a mesma gravação — o que muda é
 // quais casas o par de cantos nomeia. O guarda mede as duas pontas que só esta
 // camada responde: a área inteira pintada, e a borracha usando o caminho SEM
-// espécie (o conserto da fatia 1, que não pode se perder numa rota nova).
+// espécie.
 func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -238,17 +220,13 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	}
 }
 
-// TestTheWholeViewportFitsInOneRectangle — o SUBSTITUTO do caso do teto.
+// NÃO existe teto de área no retângulo, e isso é decisão do dono (ALE-315): o
+// app roda local, e um teto mordia gesto de verdade — no zoom mínimo o tabuleiro
+// visível tem 68×29 = 1.972 casas.
 //
-// Aqui morava o `TestAForgedRectangleIsRefusedByTheRoute`, que provava que um
-// retângulo de mil casas para cima era recusado. **O teto saiu por decisão do
-// dono (ALE-315)**: o app roda local, e ele mordia gesto de verdade — no zoom
-// mínimo o tabuleiro visível tem 68×29 = 1.972 casas, e "pinte tudo o que estou
-// vendo" não passava.
-//
-// O caso não some, ele INVERTE: o que se prende agora é que o gesto grande
-// CHEGA, e chega inteiro. Sem ele, alguém que devolvesse um teto qualquer não
-// teria nada discordando.
+// Este caso é a INVERSA do guarda de teto: ele prende que o gesto grande chega,
+// e chega inteiro. Sem ele, alguém que repusesse um teto qualquer não teria nada
+// discordando.
 func TestTheWholeViewportFitsInOneRectangle(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -265,8 +243,6 @@ func TestTheWholeViewportFitsInOneRectangle(t *testing.T) {
 	}
 }
 
-// TestTheScreenWiresTheRectangleShift.
-//
 // O `Shift` é o que separa o TRAÇO do RETÂNGULO, e a decisão acontece no
 // `pointerdown` para valer o gesto inteiro: soltar a tecla no meio do arrasto não
 // pode trocar o que ele está fazendo, porque o dedo já está a caminho de um canto.
@@ -282,18 +258,13 @@ func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 	}
 }
 
-// TestNoNodeHasDataShowAndDataAttrStyleTogether — o guarda de um defeito que
-// CONGELA A ABA, e que não deixa erro nenhum para trás.
+// O guarda de um defeito que CONGELA A ABA e não deixa erro nenhum para trás.
 //
 // Os dois escrevem no MESMO lugar: o `data-show` põe `el.style.display` e o
 // `data-attr:style` reescreve o atributo `style` inteiro, apagando o `display`
 // que o outro acabou de pôr — que faz o outro pôr de novo. O renderizador entra
-// em laço.
-//
-// Medido na bancada, e o sintoma é o pior possível: a aba para de responder a
-// TUDO. Sem console, sem exceção, sem sequer conseguir navegar para fora — a
-// própria ferramenta de medir some junto, e o que sobra é "o navegador travou",
-// que não aponta para lugar nenhum.
+// em laço, e a aba para de responder a TUDO: sem console, sem exceção, sem
+// conseguir navegar para fora. A ferramenta de medir some junto.
 //
 // O conserto é sempre o mesmo: quem ESCONDE é um nó, quem POSICIONA é outro.
 func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
@@ -320,16 +291,9 @@ func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
 	}
 }
 
-// A COORDENADA NEGATIVA ATRAVESSA O CORPO (ALE-305).
-//
-// Ela é a razão ESCRITA para as pontas do traço não virarem sinal da página — o
-// plano não tem bordas, então (−3,−5) é lugar legítimo — e nunca teve teste: o
-// caminho a carregava por acaso, porque `/-3/-5` é segmento válido e ninguém
-// tinha medido.
-//
-// O corte da ALE-305 tirou as pontas do caminho e pôs no corpo. Se a travessia
-// não preservasse o sinal negativo, o pincel pintaria no quadrante errado e o
-// mapa pareceria vazio — o mestre pinta e nada acontece onde ele olhou.
+// A COORDENADA NEGATIVA ATRAVESSA O CORPO: o plano não tem bordas, então
+// (−3,−5) é lugar legítimo. Se a travessia perdesse o sinal, o pincel pintaria
+// no quadrante errado e o mestre veria a casa não acender onde ele olhou.
 func TestAStrokeInTheNegativeQuadrantPaintsThere(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -355,33 +319,27 @@ func TestAStrokeInTheNegativeQuadrantPaintsThere(t *testing.T) {
 	}
 }
 
-// TestEveryGestureThatReadsPointsRefusesABrokenBody é guarda de varredura sobre
-// o caminho de RECUSA (ALE-311).
-//
-// Nenhuma das vinte rotas convertidas na ALE-305/306/307 tinha caso aqui.
-// Medido: apagado o `if err != nil` do `pointsFromBody` — que serve QUATORZE
-// delas —, a suíte inteira ficava verde, e as sete frases de recusa tinham ZERO
-// ocorrências em `api/*_test.go`, `web/table/*_test.go` e `e2e/`.
+// Guarda de varredura sobre o caminho de RECUSA. Provado vermelho: apagado o
+// `if err != nil` do `pointsFromBody` — que serve quatorze rotas —, a suíte
+// inteira ficava verde e as frases de recusa não tinham leitor nenhum.
 //
 // O corpo quebrado é o caso REAL desta borda: o `payload` do `@post` é calculado
 // no instante do gesto, e um sinal indefinido no meio da expressão manda
 // `undefined` — que não é JSON. O que não pode acontecer é o servidor decidir
 // sozinho que o gesto foi na origem.
 //
-// # O que ele afirma é a FRASE, e não o status
+// # Ele afirma a FRASE, e não o status
 //
-// As nove rotas se dividem em duas famílias com contratos diferentes, e a
-// primeira versão deste caso reprovou quatro delas por medir o contrato errado:
+// As rotas se dividem em duas famílias com contratos diferentes:
 //
 //   - as que respondem SÓ SINAIS (`marcar-area`, `gabarito`, `regua`) recusam
 //     em 400, porque não há cena para redesenhar;
 //   - as que são COMANDO (terreno, retângulo, peça avulsa, grupo) recusam em
-//     200 com a frase no `$command_error`, que é o padrão da casa — o Datastar
-//     DESCARTA o remendo de toda resposta não-2xx, então uma recusa em 4xx aqui
-//     não apareceria na tela.
+//     200 com a frase no `$command_error` — o Datastar DESCARTA o remendo de
+//     toda resposta não-2xx, então uma recusa em 4xx não apareceria na tela.
 //
-// O que as duas famílias têm em comum é a única coisa que importa para quem
-// está na mesa: a frase CHEGA. É por isso que o guarda prende a frase.
+// O que as duas têm em comum é a única coisa que importa para quem está na mesa:
+// a frase CHEGA.
 //
 // # O CONTROLE
 //
@@ -393,8 +351,7 @@ func TestAStrokeInTheNegativeQuadrantPaintsThere(t *testing.T) {
 // Corpo VAZIO não é recusa, e isso é desenho: `{}` decodifica para (0,0) em
 // silêncio, porque `from` ausente e `from` em (0,0) são indistinguíveis num
 // struct de inteiros. Prender isso exigiria ponteiro em todo campo de
-// coordenada, e a decisão fica registrada aqui em vez de virar um caso que
-// afirma o contrário do produto.
+// coordenada.
 func TestEveryGestureThatReadsPointsRefusesABrokenBody(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")

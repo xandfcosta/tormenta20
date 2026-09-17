@@ -7,17 +7,12 @@ import (
 	"testing"
 )
 
-// TODO ícone pedido por uma cena EXISTE no gerado (ALE-255).
+// TODO ícone pedido por uma cena EXISTE no gerado.
 //
-// O `switch` do `icone` não tem `default`, então um nome que ninguém gerou
-// rende um `<svg>` VAZIO — sem erro de compilação, sem aviso, sem nada na tela
-// além de um buraco do tamanho do ícone. Foi o que aconteceu com `Trash2` e
-// `Flame` nesta fatia: eu os escrevi na cena, o Go compilou, e o botão de
-// excluir ficou sem o desenho.
-//
-// É a mesma família do seeder que aceita id de item inexistente em silêncio
-// (ALE-222): a peça nasce incompleta e nada reclama. O guarda é grep, e é
-// barato — ele lê os mesmos arquivos que o gerador escreve.
+// O `switch` do `icone` não tem `default`, então um nome que ninguém gerou rende
+// um `<svg>` VAZIO — sem erro de compilação, sem aviso, sem nada na tela além de
+// um buraco do tamanho do ícone. O guarda é grep, e é barato: ele lê os mesmos
+// arquivos que o gerador escreve.
 //
 // LIMITE DELE, e vale saber antes de confiar: ele só enxerga o nome ESCRITO no
 // template, `@icone("Skull")`. Uma cena que passa o nome por variável —

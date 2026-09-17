@@ -17,8 +17,6 @@ import (
 // composição — o total é a soma das pernas —, o formato do rótulo, e a família de
 // armadilha que esta superfície descobriu no Datastar.
 
-// TestTheTotalIsTheSumOfTheLegs.
-//
 // A polilinha mede um CAMINHO, e o caminho é a soma dos trechos. Com DUAS
 // paradas ela é uma reta e o total é a régua de sempre, que é o caso que não
 // pode ter mudado.
@@ -58,8 +56,6 @@ func TestTheLegLabelComesInMetres(t *testing.T) {
 	}
 }
 
-// TestAZeroLengthLegHasNoLabel.
-//
 // O instante logo depois de um clique tem a MIRA em cima da parada que acabou de
 // nascer. Um "0,0m" piscando sob o dedo é ruído sobre o gesto que a pessoa está
 // fazendo, e o vazio é o que apaga o nó (ver `existsLabel`).

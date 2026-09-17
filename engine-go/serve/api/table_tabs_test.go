@@ -19,10 +19,9 @@ func (f sceneFixture) openSecond(t *testing.T, nome string) *board.BoardState {
 
 // A BARRA só nasce quando há o que trocar.
 //
-// Com uma cena aberta ela seria uma ficha só flutuando sobre o mapa — enfeite
-// ocupando o que a ALE-203 acabou de ganhar de altura. E a ATIVA é o `<h2>` da
-// região: um `<h2>` por aba faria o leitor de tela anunciar três títulos para
-// uma região que desenha uma cena.
+// Com uma cena aberta ela seria uma ficha só flutuando sobre o mapa. E a ATIVA é
+// o `<h2>` da região: um `<h2>` por aba faria o leitor de tela anunciar três
+// títulos para uma região que desenha uma cena.
 func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -43,9 +42,8 @@ func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	}
 	// A ativa é o cabeçalho, e as outras são botões: UM `<h2>` na barra inteira.
 	//
-	// A primeira versão desta asserção contava `<h2` na PÁGINA e esperava 1 — a
-	// Mesa tem quinze, uma por região, e o que ela media era a página e não a
-	// barra. Instrumento que responde outra pergunta.
+	// Contar `<h2` na PÁGINA responde outra pergunta: a Mesa tem quinze, uma por
+	// região. O seletor tem de ser o da BARRA.
 	if n := strings.Count(duas, `<h2 class="board-tab`); n != 1 {
 		t.Errorf("a barra tem %d abas como cabeçalho, esperado 1 (as outras são botões)", n)
 	}
@@ -53,8 +51,8 @@ func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 
 // TROCAR DE ABA É DE QUEM CLICOU, e de mais ninguém.
 //
-// É o coração da issue: o jogador que desceu na cripta abre a aba da cripta
-// porque QUER, e o mestre continua montando a taverna. Uma troca que viajasse
+// O jogador que desceu na cripta abre a aba da cripta porque QUER, e o mestre
+// continua montando a taverna. Uma troca que viajasse
 // para a mesa faria cada clique de um jogador arrastar a tela dos outros cinco —
 // e no meio de um combate ninguém entenderia por que o mapa mudou.
 func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
@@ -126,10 +124,8 @@ func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
 	}
 
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	// A frase é a DO JOGADOR, copiada do `.templ`. Duas correções aqui, e as
-	// duas eram o mesmo erro: eu tinha escrito uma paráfrase minha ("não há
-	// tabuleiro"), que não existe na página; e depois a frase do MESTRE, que o
-	// jogador nunca lê — as duas passariam SEMPRE, verdes sobre o defeito exato
+	// A frase é a DO JOGADOR, copiada do `.templ`: uma paráfrase, ou a frase do
+	// MESTRE (que o jogador nunca lê), passa SEMPRE — verde sobre o defeito exato
 	// que este guarda nomeia.
 	if strings.Contains(doJogador, "O mestre ainda não abriu um tabuleiro") {
 		t.Fatal("o jogador ficou sem mapa porque a aba dele foi fechada, com outra cena aberta na mesa")
@@ -141,9 +137,9 @@ func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
 
 // O NOME NÃO ATRAVESSA A CORTINA, nem na barra de abas.
 //
-// A decisão do dono foi que a aba sob cortina APARECE para o jogador — sumir e
-// voltar trocaria a aba debaixo do dedo de quem estava olhando. O preço disso é
-// este guarda: a ficha existe e não pode dizer COMO A CENA SE CHAMA. "Cripta do
+// A aba sob cortina APARECE para o jogador (decisão do dono) — sumir e voltar
+// trocaria a aba debaixo do dedo de quem estava olhando. O preço é este guarda:
+// a ficha existe e não pode dizer COMO A CENA SE CHAMA. "Cripta do
 // Rei Caolho" no HTML de quem não pode saber que há uma cripta é o vazamento que
 // não aparece na tela — só no ver-código-fonte.
 func TestATabUnderTheCurtainDoesNotTellThePlayerTheSceneName(t *testing.T) {

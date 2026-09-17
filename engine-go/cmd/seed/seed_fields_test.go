@@ -7,7 +7,7 @@ import (
 )
 
 // TODO CAMPO DO `create` É CLASSIFICADO: ou ele aponta para o catálogo e é
-// conferido, ou ele não aponta e está escrito aqui (ALE-226).
+// conferido, ou ele não aponta e está escrito aqui.
 //
 // # Por que a lista de campos não basta
 //
@@ -21,13 +21,9 @@ import (
 // lado ele está. Classificar é uma linha; descobrir que o seed mentiu é uma
 // tarde.
 //
-// # Ele já pagou por si
-//
-// Escrevendo a lista abaixo apareceram DOIS campos que o validador não conferia
-// e eu não tinha visto: o `size` — o catálogo tem a lista de tamanhos — e as
-// CHAVES do `classChoices`, que são nomes de classe (`{"Arcanista": {…}}`).
-// Referência escondida em chave de objeto não se parece com referência, e foi
-// justamente a que escapou.
+// A referência que mais escapa é a escondida em CHAVE de objeto — as do
+// `classChoices` são nomes de classe (`{"Arcanista": {…}}`) —, porque ela não se
+// parece com referência.
 func TestEveryCreateFieldOfTheSeedIsClassified(t *testing.T) {
 	// APONTAM para o catálogo, e o `validateCatalogRefs` confere cada um.
 	// Mexeu aqui? Mexa lá — e o `TestTheSeedRefusesEveryUnknownCatalogReference`

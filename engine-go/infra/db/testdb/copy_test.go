@@ -7,19 +7,13 @@ import (
 	"testing"
 )
 
-// A CÓPIA DO MOLDE FALHA ALTO, ONDE ELA ACONTECE (ALE-268).
+// A CÓPIA DO MOLDE FALHA ALTO, ONDE ELA ACONTECE.
 //
-// # O sintoma apontava para o lugar errado
+// O SINTOMA APONTA PARA O LUGAR ERRADO: uma cópia parcial reprova com
+// `no such table: session_boards`, que é a frase de um banco NÃO MIGRADO — e a
+// migração está lá e é aplicada, então quem procurar por migração não acha nada.
 //
-// O CI reprovou uma vez com `no such table: session_boards` acompanhado de
-// `disk I/O error (1802)`. "No such table" é a frase de um banco NÃO MIGRADO, e
-// a migração está lá e é aplicada — quem procurar por migração não vai achar
-// nada. Medido em 2026-09-08: uma ocorrência em 100 corridas de CI, contra a
-// primeira estimativa de 1 em 13.
-//
-// # O que a cópia escondia
-//
-// Duas coisas, e as duas são silenciosas:
+// O que a cópia escondia, e as duas são silenciosas:
 //
 //   - o erro do `Close` era DESCARTADO (`defer func() { _ = destino.Close() }()`),
 //     e é no `Close` que uma escrita com buffer reporta falha;

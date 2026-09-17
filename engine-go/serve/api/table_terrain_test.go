@@ -13,8 +13,8 @@ func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 
 	for i, pincel := range board.TerrainKinds {
-		// O caminho é o TRAÇO desde a ALE-203, e um clique parado é um traço de
-		// uma casa: a mesma casa nas duas pontas.
+		// O caminho é um TRAÇO, e um clique parado é um traço de uma casa: a mesma
+		// casa nas duas pontas.
 		rec := f.pede(t, f.mestre, "POST",
 			f.tableUrl()+"/tabuleiro/terreno", stroke(string(pincel.ID), i, 0, i, 0))
 		if rec.Code != http.StatusOK {
@@ -31,7 +31,7 @@ func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
 	}
 }
 
-// TestTheEraserClearsOnlyTheChosenKind.
+// A borracha limpa SÓ a espécie escolhida.
 //
 // É por isso que ela é um MODO e não uma espécie: numa casa com duas, uma
 // "espécie borracha" teria de decidir qual apagar, e a resposta certa — a que
@@ -60,8 +60,6 @@ func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
 	}
 }
 
-// TestTheFourKindsAreDrawnDistinctly.
-//
 // O guarda de leiaute que esta casa cobra: um traço pintado que não vira classe
 // própria some no desenho das outras, e o mestre lê a cena errada sem nada
 // estourar. Amostragem sobre a lista.
@@ -88,8 +86,6 @@ func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
 	}
 }
 
-// TestTheRailSaysTheEffectOfEachKind.
-//
 // "Cobertura" sozinho não lembra ninguém de que são +5 na Defesa, e o mestre que
 // precisa da regra sai da mesa para procurá-la no livro. É a mesma razão de o
 // diálogo de abrir dizer que um quadrado são 1,5m.
@@ -98,10 +94,9 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	// "Ferramentas do mapa" e não mais "Pincel de terreno": o trilho deixou de
-	// ser só do pincel quando MARCAR entrou nele (ALE-264, item 5), e um grupo
-	// que se anuncia como pincel enquanto carrega outra ferramenta mente para
-	// quem navega por leitor de tela. O guarda acusou a troca e foi ATUALIZADO.
+	// "Ferramentas do mapa" e não "Pincel de terreno": o trilho carrega mais que
+	// o pincel, e um grupo que se anuncia como pincel mente para quem navega por
+	// leitor de tela.
 	if !strings.Contains(tela, "Ferramentas do mapa") {
 		t.Fatal("o mestre não tem trilho de ferramentas na cena aberta")
 	}
@@ -109,10 +104,8 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	// guarda o ID, e o leitor de tela anunciaria "Pintar dificil" sem acento.
 	// Quem diz qual é a espécie é o botão `aria-pressed` do trilho.
 	//
-	// O sinal chama-se `$tool` desde a ALE-264 — e esta linha é um lembrete
-	// caro: ela citava `$pincel`, que deixou de existir, e uma asserção de
-	// AUSÊNCIA sobre um nome morto passa verde sobre nada. Nome de sinal em
-	// asserção negativa envelhece em silêncio.
+	// O sinal chama-se `$tool`, e o nome importa aqui: asserção de AUSÊNCIA sobre
+	// um nome de sinal MORTO passa verde sobre nada, e envelhece em silêncio.
 	if strings.Contains(tela, "'Pintar ' + $tool") {
 		t.Error("o nome acessível da camada monta o rótulo com o id da ferramenta")
 	}
@@ -127,14 +120,9 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 		t.Error("o trilho não cita a página da regra")
 	}
 
-	// E o pincel é do MESTRE: o jogador não pinta chão.
-	//
-	// A asserção mudou de alvo na ALE-269 e vale dizer por quê: ela era sobre o
-	// TRILHO inteiro ("Ferramentas do mapa"), que era do mestre porque só ele
-	// tinha modo. A régua é de quem ataca, então o trilho passou a existir para
-	// os dois papéis e o que ficou do mestre foram os PINCÉIS dentro dele. Fosse
-	// mantida como estava, esta linha teria falhado dizendo a coisa errada — e
-	// fosse apagada, o vazamento do pincel deixaria de ser medido.
+	// E o pincel é do MESTRE: o jogador não pinta chão. A asserção é sobre os
+	// PINCÉIS e não sobre o trilho, que existe para os dois papéis porque a régua
+	// é de quem ataca.
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	for _, pincel := range board.TerrainKinds {
 		if strings.Contains(doJogador, pincel.Efeito) {
@@ -146,7 +134,7 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	}
 }
 
-// TestOnlyTheGmPaints: a trava é do servidor, e não o botão escondido.
+// A trava do pincel é do SERVIDOR, e não o botão escondido.
 func TestOnlyTheGmPaints(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -161,8 +149,6 @@ func TestOnlyTheGmPaints(t *testing.T) {
 	}
 }
 
-// TestPaintingWithoutABoardRefusesWithASentence.
-//
 // Não é 500 nem silêncio: pintar chão de uma cena que não está na mesa não tem
 // onde acontecer, e a recusa fala no `command_error` do rodapé do mestre.
 func TestPaintingWithoutABoardRefusesWithASentence(t *testing.T) {

@@ -10,10 +10,6 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// Gestão de membros pelo ROUTER real. `PATCH /campanhas/{cid}/members/{id}` promove
-// alguém a mestre da mesa, e só tinha o 401 anônimo da tabela de rotas — nada provava
-// que um membro comum não se promove sozinho, nem que um id de OUTRA mesa é recusado.
-
 // memberFixture: uma mesa do dono, um jogador membro, e uma segunda mesa com o membro
 // dela — o vizinho que os testes usam para tentar atravessar a fronteira.
 type memberFixture struct {
@@ -59,18 +55,10 @@ func newMemberFixture(t *testing.T) memberFixture {
 	}
 }
 
-// Aqui morava o TestUpdateMemberRole, e ele merece uma linha porque o que saiu
-// não foi só um teste.
-//
-// `PATCH /campanhas/{id}/members/{id}` era o ÚNICO caminho para promover um
-// jogador a mestre, e nenhuma cena em Datastar oferece o gesto — medido antes de
-// apagar. Ou seja: a capacidade já estava inalcançável desde que a SPA morreu
-// (ALE-272), e a rota só sobrevivia porque ninguém tinha ido conferir. Apagá-la
-// não tirou nada de quem usa o app; o que ela tirou foi a ILUSÃO de que a
-// funcionalidade existia.
-//
-// Se ela voltar a ser desejada, volta como GESTO na cena das campanhas, com a
-// regra no `joinTable` que já sabe o que é um papel válido.
+// NÃO existe caso sobre promover um jogador a mestre porque NÃO existe o gesto:
+// a rota que o fazia era inalcançável de qualquer cena, e foi apagada. Se a
+// capacidade voltar a ser desejada, ela volta como gesto na cena das campanhas,
+// com a regra no `joinTable`, que já sabe o que é um papel válido.
 
 func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 	f := newMemberFixture(t)
@@ -128,22 +116,17 @@ func TestJoiningStillWorks(t *testing.T) {
 	if err := f.addMember(t, f.owner, outraMesa, heroi); err != nil {
 		t.Fatalf("entrada legítima foi recusada: %v", err)
 	}
-	// E a cópia de mesa nasceu junto: é ela que entra, não o original (ALE-33).
+	// E a cópia de mesa nasceu junto: é ela que entra, não o original.
 	if copias := copiesOf(t, f.s, heroi); copias != 1 {
 		t.Errorf("a mesa ficou com %d cópias do herói, esperava 1", copias)
 	}
 }
 
-// addMember chama a REGRA direto, e não a rota.
+// addMember chama a REGRA direto, e não a rota: o que estes casos prendem é a
+// TRAVA DE UNICIDADE do `joinTable`, que nunca foi do transporte — a cena das
+// campanhas grava pela mesma porta.
 //
-// Ela batia em `POST /campanhas/{id}/members`, que saiu na ALE-277 com as outras
-// sem consumidor. O que estes casos prendem é a TRAVA DE UNICIDADE do
-// `joinTable` — a decisão do `_txlock=immediate` da ALE-156, que é o que faz
-// dois pedidos simultâneos criarem UM membro em vez de um 500. Isso nunca foi
-// do transporte, e a cena das campanhas grava pelo mesmo `joinTable`, pela porta.
-//
-// Devolve ERRO em vez de status: era o handler que traduzia cada sentinela em
-// código HTTP, e a cena traduz em FRASE.
+// Devolve ERRO em vez de status porque é a cena que traduz sentinela em FRASE.
 func (f memberFixture) addMember(t *testing.T, caller, campaignID, characterID int64) error {
 	t.Helper()
 	_, err := f.s.campaignRules().joinTable(context.Background(), joinRequest{
@@ -171,7 +154,7 @@ func copiesOf(t *testing.T, s *Server, sourceID int64) int {
 	return n
 }
 
-// Dois cliques ao mesmo tempo não fazem dois personagens (ALE-156).
+// Dois cliques ao mesmo tempo não fazem dois personagens.
 //
 // A trava de unicidade é decidida no CÓDIGO, não no schema: uma pergunta ao
 // banco seguida de uma escrita. Sem cuidado, dois pedidos simultâneos fazem as
@@ -227,15 +210,13 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	if copias := copiesOf(t, f.s, heroi); copias != 1 {
 		t.Errorf("sobraram %d cópias do herói, esperava 1", copias)
 	}
-	// Quem perde a corrida merece uma RECUSA, e não um erro de banco. O handler
-	// traduzia os sentinelas em 409 e o resto em 500; com a rota fora (ALE-277)
-	// o que se afirma são os sentinelas.
+	// Quem perde a corrida merece uma RECUSA, e não um erro de banco.
 	//
-	// São DOIS, e não um, porque a corrida se perde em dois lugares: quem chega
-	// atrasado na checagem de fora leva `errJaTemPersonagem`, e quem passa por
-	// ela e perde a releitura DENTRO da transação leva `errAlreadyInCampaign` —
-	// que é a trava dupla da ALE-156 funcionando, e não um descuido. Prender só
-	// o primeiro fazia este teste reprovar em três de dez corridas.
+	// São DOIS sentinelas, e não um, porque a corrida se perde em dois lugares:
+	// quem chega atrasado na checagem de fora leva `errJaTemPersonagem`, e quem
+	// passa por ela e perde a releitura DENTRO da transação leva
+	// `errAlreadyInCampaign` — a trava dupla funcionando, e não um descuido.
+	// Prender só o primeiro fazia este teste reprovar em três de dez corridas.
 	for _, err := range erros {
 		if err != nil && !errors.Is(err, errJaTemPersonagem) && !errors.Is(err, errAlreadyInCampaign) {
 			t.Errorf("um perdedor recebeu um erro que não é recusa nenhuma: %v", err)
@@ -244,10 +225,6 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	}
 }
 
-// Aqui moravam o TestAnOversizedBodyIsRefusedBySize e o TestANormalBodyStillPasses,
-// sobre o teto de 1 MB do corpo e o 413 próprio (ALE-157). Eles dirigiam
-// `POST /campanhas/{id}/members`, que saiu na ALE-277.
-//
-// A garantia não é da rota e sim do `httpio.DecodeJSON`, que continua no ar
-// e é chamado por todo comando de cena — o teto e a mensagem são de lá, e é lá
-// que eles devem ser presos se alguém quiser um guarda deles.
+// NÃO há caso aqui sobre o teto de 1 MB do corpo: a garantia não é da rota e sim
+// do `httpio.DecodeJSON`, chamado por todo comando de cena. É lá que ela deve ser
+// presa se alguém quiser um guarda dela.

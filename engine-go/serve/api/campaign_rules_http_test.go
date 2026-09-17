@@ -8,7 +8,7 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// As regras opcionais pelo ROUTER real (ALE-221).
+// As regras opcionais pelo ROUTER real.
 //
 // Duas coisas se provam aqui e em lugar nenhum mais: que a chave é do MESTRE, e
 // que a ficha resolve a mesa dela sozinha. A segunda é a que não cabe no motor —
@@ -50,16 +50,10 @@ func (f rulesFixture) Join(t *testing.T, campaignID int64) {
 	}
 }
 
-// putRules chama a REGRA direto, e não a rota.
-//
-// Ela batia em `PUT /campanhas/{id}/rules`, que saiu na ALE-277 com as outras
-// sem consumidor. O que estes casos prendem nunca foi o transporte: é a mais
-// ESTRITA vencendo entre duas mesas, e a ficha avulsa aplicando tudo. A cena das
-// campanhas grava pelo mesmo `saveIgnoredRules`, pela porta.
-//
-// O `caller` sai da assinatura junto com a rota: a AUTORIZAÇÃO era do handler, e
-// a cena tem a dela (`RequesterIsAdmin` e o dono da campanha). Uma regra, uma
-// camada.
+// putRules chama a REGRA direto, e não uma rota: o que estes casos prendem nunca
+// foi o transporte — é a mais ESTRITA vencendo entre duas mesas, e a ficha
+// avulsa aplicando tudo. A cena das campanhas grava pelo mesmo
+// `saveIgnoredRules`, pela porta, e a AUTORIZAÇÃO é dela. Uma regra, uma camada.
 func (f rulesFixture) putRules(t *testing.T, campaignID int64, regras ...string) error {
 	t.Helper()
 	return f.s.campaignRules().saveIgnoredRules(context.Background(), campaignID, regras)
@@ -110,14 +104,10 @@ func TestReplaceCampaignRules(t *testing.T) {
 		}
 	})
 
-	// Aqui morava o subcaso "o jogador não desliga regra nenhuma". Ele provava a
-	// AUTORIZAÇÃO do handler, que saiu com a rota na ALE-277 — e a garantia
-	// continua onde ela é usada: a cena das campanhas só desenha os
-	// interruptores para o dono, e o comando dela confere. Uma regra, uma camada.
-
-	// Aqui morava o subcaso "regra desconhecida é recusada nomeando o valor". Ele
-	// media o 400 de uma rota JSON que saiu na ALE-277, e a garantia desceu para
-	// onde a regra MORA: `campaign.TestAnUnknownRuleIsRefusedNamingTheValue`.
+	// Não há subcaso de AUTORIZAÇÃO nem de REGRA DESCONHECIDA aqui de propósito:
+	// a primeira é da cena das campanhas, que só desenha os interruptores para o
+	// dono, e a segunda mora onde a regra mora
+	// (`campaign.TestAnUnknownRuleIsRefusedNamingTheValue`).
 }
 
 // A ficha pode pertencer a mais de uma campanha, e as duas podem discordar. A
@@ -153,7 +143,6 @@ func TestASheetWithoutACampaignAppliesEveryRule(t *testing.T) {
 	}
 }
 
-// Aqui morava o TestTheCampaignDetailLoadsTheRules, que lia as regras pelo
-// `GET /campanhas/{id}` — rota que saiu na ALE-277. A garantia é da cena das
+// Não há caso de LEITURA das regras por rota aqui: a garantia é da cena das
 // campanhas, que desenha os interruptores no estado real na primeira pintura, e
-// ela tem guarda lá.
+// tem guarda lá.

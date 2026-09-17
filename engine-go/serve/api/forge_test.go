@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// A FORJA CURTA (ALE-272, fatia 9).
+// A FORJA CURTA.
 //
 // Os testes batem no roteador de verdade com formulário de verdade, porque é
 // isso que o navegador manda: a folha é um `<form method="post">` e o redesenho
@@ -37,8 +37,7 @@ func aFolhaPreenchida() url.Values {
 	}
 }
 
-// TestEveryBookRaceAndClassHasACardInTheForge é guarda de varredura: a folha não
-// pode ter lista escrita à mão.
+// Guarda de varredura: a folha não pode ter lista escrita à mão.
 //
 // O regime é AMOSTRAGEM e não enumeração — a folha desenha o que o catálogo
 // tem, então uma raça nova aparece sozinha. O que este guarda pega é a
@@ -65,8 +64,7 @@ func TestEveryBookRaceAndClassHasACardInTheForge(t *testing.T) {
 	}
 }
 
-// TestTheFormOnlyOffersEquipmentAfterTheClass: o kit de p140 se conhece pela
-// classe, e antes dela a seção não existe.
+// O kit de p140 se conhece pela classe, e antes dela a seção não existe.
 func TestTheFormOnlyOffersEquipmentAfterTheClass(t *testing.T) {
 	f := newSceneFixture(t)
 	vazia := f.pede(t, f.jogador, http.MethodGet, "/personagens/nova", "").Body.String()
@@ -81,8 +79,8 @@ func TestTheFormOnlyOffersEquipmentAfterTheClass(t *testing.T) {
 	}
 }
 
-// TestTheOfferedEquipmentFollowsTheClass — p140, e é o mesmo par de casos do
-// teste de regra do motor, agora atravessando a cena.
+// p140, o mesmo par de casos do teste de regra do motor, agora atravessando a
+// cena.
 func TestTheOfferedEquipmentFollowsTheClass(t *testing.T) {
 	f := newSceneFixture(t)
 	casos := []struct {
@@ -121,8 +119,7 @@ func TestTheOfferedEquipmentFollowsTheClass(t *testing.T) {
 	}
 }
 
-// TestTheForgeRefusesWhatTheKitDoesNotOffer: a tela esconde, o servidor RECUSA. É a
-// fronteira que a rota JSON de criar personagem deixou aberta por escrito.
+// A tela esconde, o servidor RECUSA: a fronteira de segurança é o handler.
 func TestTheForgeRefusesWhatTheKitDoesNotOffer(t *testing.T) {
 	f := newSceneFixture(t)
 	casos := []struct {
@@ -179,8 +176,7 @@ func TestTheForgeRefusesWhatTheKitDoesNotOffer(t *testing.T) {
 	}
 }
 
-// TestTheRefusalGivesBackWhatWasAnswered: a folha volta preenchida. Redigitar o
-// que estava certo é o castigo que a campanha nova já evitava (ALE-246).
+// A folha volta PREENCHIDA: redigitar o que estava certo é castigo.
 func TestTheRefusalGivesBackWhatWasAnswered(t *testing.T) {
 	f := newSceneFixture(t)
 	campos := aFolhaPreenchida()
@@ -198,7 +194,7 @@ func TestTheRefusalGivesBackWhatWasAnswered(t *testing.T) {
 	}
 }
 
-// TestTheHeroIsBornDressedAndWithAPurse é o teste do NASCIMENTO inteiro (p140).
+// O NASCIMENTO inteiro (p140).
 func TestTheHeroIsBornDressedAndWithAPurse(t *testing.T) {
 	f := newSceneFixture(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
@@ -263,8 +259,8 @@ func TestTheHeroIsBornDressedAndWithAPurse(t *testing.T) {
 	}
 }
 
-// TestTheHeroIsBornWithWhatTheClassTrainsAndUses: as perícias FIXAS da classe e as
-// proficiências dela. O que se ESCOLHE não nasce escolhido — vira pendência.
+// As perícias FIXAS da classe e as proficiências dela. O que se ESCOLHE não
+// nasce escolhido — vira pendência.
 func TestTheHeroIsBornWithWhatTheClassTrainsAndUses(t *testing.T) {
 	f := newSceneFixture(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
@@ -299,7 +295,7 @@ func TestTheHeroIsBornWithWhatTheClassTrainsAndUses(t *testing.T) {
 	}
 }
 
-// TestTheForgePointBuyRefusesWhatTheBookForbids — p17, Tabela 1-1.
+// p17, Tabela 1-1.
 func TestTheForgePointBuyRefusesWhatTheBookForbids(t *testing.T) {
 	f := newSceneFixture(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
@@ -339,8 +335,7 @@ func TestTheForgePointBuyRefusesWhatTheBookForbids(t *testing.T) {
 	}
 }
 
-// TestTheForgeAttributesBelongToTheOwner: a posse é conferida como em toda rota de
-// personagem.
+// A posse é conferida como em toda rota de personagem.
 func TestTheForgeAttributesBelongToTheOwner(t *testing.T) {
 	f := newSceneFixture(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
@@ -357,10 +352,9 @@ func TestTheForgeAttributesBelongToTheOwner(t *testing.T) {
 
 // oIDDoDestino tira o id de "/personagens/7/atributos".
 //
-// Ele lia `partes[2]` porque o endereço começava em `/piloto`, e o prefixo saiu
-// na ALE-280. Contar segmento por POSIÇÃO é o que quebra quando a rota muda de
-// profundidade, e o modo de falhar é ruim: `ParseInt("atributos")` não diz que o
-// endereço mudou, diz que um número está mal escrito.
+// Ele confere o SEGMENTO em vez de contar posição: contar quebra quando a rota
+// muda de profundidade, e o modo de falhar é ruim — `ParseInt("atributos")` não
+// diz que o endereço mudou, diz que um número está mal escrito.
 func oIDDoDestino(t *testing.T, destino string) int64 {
 	t.Helper()
 	partes := strings.Split(strings.Trim(destino, "/"), "/")
@@ -383,8 +377,8 @@ func quantosHerois(t *testing.T, f sceneFixture) int {
 	return len(lista)
 }
 
-// TestTheBlankFormAsksForTheChoiceInsteadOfBlamingAnEmptyValue: "não escolheu" e
-// "escolheu o que não existe" chegam no mesmo campo e não são a mesma coisa.
+// "Não escolheu" e "escolheu o que não existe" chegam no mesmo campo e não são a
+// mesma coisa.
 func TestTheBlankFormAsksForTheChoiceInsteadOfBlamingAnEmptyValue(t *testing.T) {
 	f := newSceneFixture(t)
 	campos := url.Values{"name": {"Sem escolhas"}}

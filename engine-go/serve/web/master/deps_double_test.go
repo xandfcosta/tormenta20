@@ -36,11 +36,10 @@ func (semLivro) BookAddress() bookui.BookAddress { return bookui.BookAddress{} }
 // que ela tem guarda. O que os casos deste pacote afirmam mora no corpo: o
 // trilho, os rótulos das paradas, os cartões do acervo.
 //
-// Escrever NADA aqui seria pior que não ter o dublê: a resposta sairia 200 com
-// corpo vazio, e todo `strings.Contains` passaria a medir a ausência da casca
-// em vez do conteúdo da cena. Foi o que aconteceu na primeira versão, e onze
-// subcasos reprovaram de uma vez dizendo "a cena não desenha o próprio nome"
-// quando a cena estava inteira.
+// Escrever NADA aqui seria pior que não ter o dublê: a resposta sai 200 com
+// corpo vazio, e todo `strings.Contains` passa a medir a ausência da CASCA em
+// vez do conteúdo da cena — dezenas de subcasos reprovando com "a cena não
+// desenha o próprio nome" sobre uma cena inteira.
 func (semLivro) WritePage(
 	w http.ResponseWriter, r *http.Request, status int, _ ui.Page, corpo templ.Component,
 ) {

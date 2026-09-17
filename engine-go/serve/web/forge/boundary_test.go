@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// A CENA NÃO IMPORTA O HOSPEDEIRO (ALE-278).
+// A CENA NÃO IMPORTA O HOSPEDEIRO.
 //
 // Este é o guarda que faz a PORTA valer alguma coisa. A forja declara em
 // `deps.go` o que precisa, e o `api` cumpre.

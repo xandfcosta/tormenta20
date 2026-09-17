@@ -5,8 +5,7 @@ import (
 	"testing"
 )
 
-// O bestiário — 80 verbetes transcritos do livro, e nenhuma validação até a
-// ALE-151.
+// O bestiário — 80 verbetes transcritos do livro.
 //
 // A regra da casa para catálogo é SCHEMA no dump, não um `expect` por campo
 // repetindo o mesmo número: prender a tabela inteira só transcreve o erro para
@@ -92,9 +91,9 @@ func TestBestiarySchema(t *testing.T) {
 				t.Errorf("%q: %s ausente — nenhum verbete do livro omite isso", m.Name, nome)
 			}
 		}
-		// As linhas do bloco impresso que a ALE-151 devolveu. Iniciativa,
-		// Percepção e Tesouro existem em TODO verbete do livro; perícias e
-		// equipamento existem como CAMPO em todos, vazios em quem não tem.
+		// Iniciativa, Percepção e Tesouro existem em TODO verbete do livro;
+		// perícias e equipamento existem como CAMPO em todos, vazios em quem não
+		// tem.
 		for nome, v := range map[string]any{
 			"iniciativa": m.Iniciativa, "percepcao": m.Percepcao,
 		} {

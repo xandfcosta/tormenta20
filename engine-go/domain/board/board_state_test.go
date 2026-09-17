@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// O tabuleiro tático da sessão (ALE-124). O que se prova aqui é o que alguém na
+// O tabuleiro tático da sessão. O que se prova aqui é o que alguém na
 // mesa notaria quebrar: peça que sai da grade, peça escondida que vaza para o
 // jogador, e "adicionar grupo" duplicando quem já está no tabuleiro.
 
@@ -26,7 +26,7 @@ func openBoard(t *testing.T) *BoardState {
 }
 
 // O plano NÃO tem bordas: quadrado negativo é lugar legítimo, e é para lá que a
-// cena cresce quando o mestre empurra a briga para a esquerda (ALE-124).
+// cena cresce quando o mestre empurra a briga para a esquerda.
 func TestBoardHasNoEdges(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
@@ -81,7 +81,7 @@ func TestBoardVersionRisesOnEveryAcceptedChange(t *testing.T) {
 
 // A peça escondida some INTEIRA da cópia do jogador. É a assimetria deliberada
 // em relação ao `hpHidden` da iniciativa, onde a linha sobrevive sem os números:
-// aqui a existência da peça é a emboscada (ALE-124).
+// aqui a existência da peça é a emboscada.
 func TestHiddenTokenVanishesForPlayers(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
@@ -130,15 +130,10 @@ func TestPopulateBoardIsIdempotent(t *testing.T) {
 }
 
 /*
-Duplicar peça (ALE-192).
+Duplicar peça: "mais um zumbi" é a operação mais repetida ao montar encontro.
 
-"Mais um zumbi" é a operação mais repetida ao montar encontro, e até agora ela
-custava abrir a forma, digitar o nome, escolher o tamanho e posicionar — para
-uma criatura idêntica à que já está ali ao lado.
-
-A tabela de exemplos aqui é a MESMA de `token-appearance.test.ts`, no front: as
-duas pontas carregam a convenção "espécie + número", e se elas divergirem a
-cópia nasce com um nome que o desenho colore como outra espécie.
+A convenção do nome é "espécie + número", e o desenho COLORE por espécie — uma
+cópia que numere errado nasce pintada como outra criatura.
 */
 
 func tabuleiroCom(labels ...string) *BoardState {
@@ -188,8 +183,7 @@ func TestTheCopyGetsTheNextFreeNumber(t *testing.T) {
 }
 
 // SEM LAÇO a cópia é um PEÃO MUDO: leva o corpo e deixa os dois vínculos para
-// trás. É o que a ALE-192 fazia, e continua sendo o certo para cenário e para a
-// peça que vai entrar na fila depois.
+// trás, que é o certo para cenário e para a peça que vai entrar na fila depois.
 func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
 	entrada := "e7"
@@ -219,11 +213,10 @@ func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
 // COM LAÇO a cópia entra na fila junto: os dois zumbis compartilham a linha, e
 // por isso a mesma barra de PV.
 //
-// É a distinção inteira da ALE-206, e o eixo dela é a LINHA e não a ficha: o
-// `board_view` indexa a barra por `entryId` (`saude[*t.EntryID]`), então é a
-// linha que decide se um dano aparece nas duas peças ou só numa. O exemplo que a
-// issue usa — o zumbi — sequer TEM ficha: NPC entra na fila com `characterId`
-// nulo por construção.
+// O eixo é a LINHA e não a ficha: o `board_view` indexa a barra por `entryId`
+// (`saude[*t.EntryID]`), então é a linha que decide se um dano aparece nas duas
+// peças ou só numa. Um zumbi sequer TEM ficha — NPC entra na fila com
+// `characterId` nulo por construção.
 func TestTheCopyWithALoopSharesTheQueueLine(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
 	entrada := "e7"
@@ -269,7 +262,7 @@ func TestTheCopyTakesTheSheetFromTheLineAndNotFromTheOriginal(t *testing.T) {
 	}
 }
 
-// COLAR pousa onde se está OLHANDO, e não colado na original (ALE-206).
+// COLAR pousa onde se está OLHANDO, e não colado na original.
 //
 // É a diferença inteira para o duplicar: o colar existe para pôr a cópia longe,
 // noutra parte do mapa ou noutra aba.
@@ -356,7 +349,7 @@ func novoIDFixo() func() string {
 }
 
 /*
-O lugar marcado no mapa (ALE-195).
+O lugar marcado no mapa.
 
 Nem tudo que importa é criatura ou móvel: a armadilha, a porta que range, o
 ponto de encontro. Até aqui o mestre só tinha a saída de criar uma PEÇA
@@ -447,8 +440,6 @@ func TestRevealingTheMarkerHandsItToTheTable(t *testing.T) {
 // número, então um teto trocado por outro tem de reprovar. É a lição que a
 // ALE-311 registrou sobre esperado que não prende.
 
-// TestTheBoardAcceptsTwoHundredTokensAndRefusesTheNextOne.
-//
 // O 200 sai da docstring — *"vinte tokens é uma mesa cheia; 200 é um acidente"* —
 // e a frase carrega o valor ofensor, que é o que a casa cobra de toda recusa.
 func TestTheBoardAcceptsTwoHundredTokensAndRefusesTheNextOne(t *testing.T) {

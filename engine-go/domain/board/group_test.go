@@ -6,7 +6,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// Os guardas do GRUPO (ALE-203, item 10).
+// Os guardas do GRUPO.
 //
 // Duas regras, e as duas só aparecem com peça GRANDE ou com lista suja — que é
 // justamente o que ninguém testa clicando.
@@ -19,8 +19,6 @@ func comHorda() *BoardState {
 	}}
 }
 
-// TestTheLassoCatchesTheTokenByItsBody.
-//
 // A REGRA: uma Colossal ocupa 6×6 (p107), e o laço que toca QUALQUER casa do
 // corpo dela a marca. Marcar só pela âncora faria o mestre desenhar em volta do
 // dragão e não pegar o dragão — e ele concluiria que a ferramenta não funciona
@@ -39,8 +37,6 @@ func TestTheLassoCatchesTheTokenByItsBody(t *testing.T) {
 	}
 }
 
-// TestTheGroupMovesTogetherOrDoesNotMove.
-//
 // A REGRA: coordenada absurda no meio da lista NÃO pode deixar metade do grupo
 // movida. É o pior estado possível porque PARECE que o gesto funcionou — o
 // mestre vê três zumbis andarem e três ficarem, e não tem como saber se foi
@@ -53,10 +49,9 @@ func TestTheGroupMovesTogetherOrDoesNotMove(t *testing.T) {
 	}
 
 	// O DELTA É ESCOLHIDO PARA A PEÇA QUE ESTOURA NÃO SER A PRIMEIRA, e isso é o
-	// que faz o caso medir alguma coisa. A primeira versão usava um delta
-	// gigantesco e passava VERDE sobre a sabotagem: com ele o rato (a primeira da
-	// lista) já falhava, o gesto voltava antes de escrever nada, e a passada
-	// dupla nunca era exercitada.
+	// que faz o caso medir alguma coisa: com um delta gigantesco a primeira da
+	// lista já falha, o gesto volta antes de escrever nada, e a passada dupla
+	// nunca é exercitada.
 	//
 	// Rato em (1,1) e Ogro em (40,40), limite de 5000: com +4990 o rato cabe
 	// (4991) e o Ogro não (5030). Uma passada só moveria o rato e recusaria
@@ -71,10 +66,8 @@ func TestTheGroupMovesTogetherOrDoesNotMove(t *testing.T) {
 	}
 }
 
-// TestTheGroupMovesOnlyWhoWasMarkedAndRemembersWhereFrom.
-//
-// O `DeOndeVeio` é o que faz o "voltar para onde estava" do menu (ALE-206)
-// funcionar depois de um movimento de grupo. Sem ele o verbo aparece e não faz
+// O `DeOndeVeio` é o que faz o "voltar para onde estava" do menu funcionar
+// depois de um movimento de grupo. Sem ele o verbo aparece e não faz
 // nada, ou pior: devolve a peça a um lugar de duas cenas atrás.
 func TestTheGroupMovesOnlyWhoWasMarkedAndRemembersWhereFrom(t *testing.T) {
 	b := comHorda()
@@ -96,7 +89,7 @@ func TestTheGroupMovesOnlyWhoWasMarkedAndRemembersWhereFrom(t *testing.T) {
 	}
 }
 
-// TestTheGroupIgnoresATokenThatVanished: entre marcar e arrastar, o stream pode trazer a
+// Entre marcar e arrastar, o stream pode trazer a
 // remoção de uma delas por outra pessoa. Recusar o movimento das outras cinco
 // por causa disso é punir o mestre por uma corrida que não é dele.
 func TestTheGroupIgnoresATokenThatVanished(t *testing.T) {

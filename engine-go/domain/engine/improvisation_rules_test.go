@@ -2,10 +2,8 @@ package engine
 
 import "testing"
 
-// As regras do improviso contra o livro (ALE-261).
+// As regras do improviso, conferidas contra o livro.
 
-// TestTheDieCoversEveryFaceAndNoneBeyondThem.
-//
 // Aleatoriedade se testa pela FAIXA e pela cobertura, não por um valor
 // esperado: um gerador que devolvesse sempre 1 passaria num teste de "está
 // entre 1 e 6", e um que devolvesse 0 ou 7 quebraria a tabela em silêncio.
@@ -35,8 +33,8 @@ func TestTheDieCoversEveryFaceAndNoneBeyondThem(t *testing.T) {
 	}
 }
 
-// TestADieWithoutFacesIsRefused: um `RolaDado(0)` viria de um catálogo torto, e
-// `rand.Int` com máximo zero entra em pânico. Recusar é dizer o que houve.
+// Um `RolaDado(0)` viria de um catálogo torto, e `rand.Int` com máximo zero
+// entra em pânico. Recusar é dizer o que houve.
 func TestADieWithoutFacesIsRefused(t *testing.T) {
 	for _, faces := range []int{0, 1, -3} {
 		if _, err := RollDie(faces); err == nil {
@@ -45,7 +43,7 @@ func TestADieWithoutFacesIsRefused(t *testing.T) {
 	}
 }
 
-// TestOneThreatEveryThreeRooms, arredondando PARA CIMA (p263).
+// Uma ameaça a cada três salas, arredondando PARA CIMA (p263).
 //
 // O arredondamento é a regra e não um detalhe: sete salas com uma ameaça a cada
 // três dão TRÊS, não duas. Duas deixariam a última salinha sem nada, e a regra
@@ -73,8 +71,8 @@ func TestADungeonWithoutRoomsIsRefused(t *testing.T) {
 	}
 }
 
-// TestAnUncoveredRollIsAnError: tabela com buraco devolveria a linha errada ou
-// nenhuma, e o mestre leria o resultado de outra faixa como se fosse o dele.
+// Tabela com buraco devolveria a linha errada ou nenhuma, e o mestre leria o
+// resultado de outra faixa como se fosse o dele.
 func TestAnUncoveredRollIsAnError(t *testing.T) {
 	linhas := []faixaDeTeste{{1, 2}, {5, 6}}
 	if _, err := RowForRoll(linhas, 1, "teste"); err != nil {

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// O SEED QUE MENTE É CARO DE UM JEITO ESPECÍFICO (ALE-226).
+// O SEED QUE MENTE É CARO DE UM JEITO ESPECÍFICO.
 //
 // Ele não quebra nada: ele produz um personagem QUASE certo. O relato que abriu
 // a issue foi `machado-de-batalha` no lugar de `machado-batalha` — o personagem

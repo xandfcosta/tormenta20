@@ -8,14 +8,14 @@ import (
 	"t20engine/domain/engine"
 )
 
-// Os guardas do painel de COMBATE (ALE-272, fatia 3).
+// Os guardas do painel de COMBATE.
 //
 // O que eles prendem é a REGRA e a DECISÃO: que os condicionais ligados entram
 // na conta, que as linhas de um diálogo somam o total que ele mostra, e quem vê
 // cada bloco. Os NÚMEROS em si são do motor e já têm o oráculo de paridade —
 // repetir aqui a ficha inteira seria a mesma tabela escrita duas vezes.
 
-// TestTheDefenseRowsAddUpToTheTotal é uma ficha com atributos e perícias de VERDADE.
+// Uma ficha com atributos e perícias de VERDADE.
 //
 // O `seedCharacterAtLevel` deixa todo atributo em zero, e sobre zeros um painel
 // de combate inteiro fica indistinguível de um painel vazio: "+0" em toda caixa

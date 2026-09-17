@@ -1,18 +1,18 @@
 import { type Page, expect } from '@playwright/test'
 
 /**
- * Asserções de RELAÇÃO entre caixas (ALE-144).
+ * Asserções de RELAÇÃO entre caixas.
  *
- * A suíte só sabia afirmar duas coisas, ambas GLOBAIS e NEGATIVAS: a página não
- * rola de lado, a página não rola para baixo. Elas só disparam quando a quebra
- * chega ao elemento raiz — e todo defeito que o dono achou por print quebrou
- * DENTRO de um contêiner. Pior: a cena é feita de `overflow-hidden` e `min-h-0`
- * postos ali justamente para a página não rolar, e cada um deles ABSORVE o
- * sintoma. Os consertos que fazem a asserção passar são os mesmos que a cegam.
+ * As asserções globais e negativas — a página não rola de lado, não rola para
+ * baixo — só disparam quando a quebra chega ao elemento RAIZ, e todo defeito
+ * achado por print quebrou DENTRO de um contêiner. Pior: a cena é feita de
+ * `overflow-hidden` e `min-h-0` postos ali justamente para a página não rolar,
+ * e cada um deles ABSORVE o sintoma — os consertos que fazem a asserção passar
+ * são os mesmos que a cegam.
  *
  * O que falta é relação: alinhamento, proporção, preenchimento, containment.
- * Cada primitiva daqui nasceu de um defeito real, e o nome dele está no
- * docstring — nenhuma foi inventada por simetria.
+ * Cada primitiva daqui nasceu de um defeito real, e o docstring dela cita qual
+ * — nenhuma foi inventada por simetria.
  *
  * Todas medem por `getBoundingClientRect` num `evaluate` só (~1ms), sem
  * screenshot: são determinísticas e não têm baseline para apodrecer.
@@ -51,7 +51,7 @@ async function medir(page: Page, seletor: string): Promise<Caixa[]> {
  * O conteúdo pode variar por linha com razão — o olho de ocultar PV só existe
  * em linha com vida —, mas a POSIÇÃO não pode variar junto: sem lugar
  * reservado a fileira encolhe, e o `+` de uma linha cai onde está o lápis de
- * outra. Medido antes do conserto: "Curar" em dois X, 256 e 220.
+ * outra.
  *
  * @example await expectFormaColuna(page, 'button[aria-label^="Curar "]')
  */
@@ -69,10 +69,9 @@ export async function expectFormaColuna(page: Page, seletor: string, folga = 1):
 /**
  * A caixa tem a PROPORÇÃO que promete (ALE-126).
  *
- * O retrato do combatente era `w-24` de largura fixa esticado pela altura do
- * cartão: virava uma tira vertical com as iniciais perdidas no meio, e lia como
- * erro de layout em vez de retrato. Proporção é invariante — depois que alguém
- * decidiu que é um círculo, 1:1 vale para sempre.
+ * Proporção é invariante: depois que alguém decidiu que o retrato é um
+ * círculo, 1:1 vale para sempre. Largura fixa esticada pela altura do cartão
+ * vira uma tira vertical que lê como erro de layout.
  *
  * @example await expectProporcao(page, '[data-slot=portrait]', 0.9, 1.1)
  */
@@ -98,9 +97,7 @@ export async function expectProporcao(
  * Os filhos ENCHEM a largura do pai (ALE-138).
  *
  * O oposto do containment: aqui o defeito é sobrar espaço morto, não faltar.
- * Uma fileira de abas que para no meio do cartão deixa uma faixa vazia que o
- * olho lê como coisa quebrada, e a regra da casa é que a cena preencha o espaço
- * que recebe.
+ * A regra da casa é que a cena preencha o espaço que recebe.
  *
  * @example await expectEnchePai(page, '[role=tablist]', '[role=tab]')
  */
@@ -138,10 +135,10 @@ export async function expectEnchePai(
 /**
  * NADA é pintado para fora da caixa do próprio pai (ALE-125, ALE-148).
  *
- * A relação é filho contra PAI, e não contra a cena: o crachá de bônus vazava
- * 6px do cartão dele e era desenhado sobre o vizinho, muito antes de chegar
- * perto da borda da coluna. A primeira versão desta asserção media contra a
- * coluna e passava VERDE sobre o defeito.
+ * A relação é filho contra PAI, e não contra a cena: um crachá que vaza 6px do
+ * cartão é desenhado sobre o vizinho muito antes de chegar perto da borda da
+ * coluna, e a primeira versão desta asserção — que media contra a coluna —
+ * passava VERDE sobre o defeito.
  *
  * Ignora `position: absolute` (que sai do fluxo de propósito — o ✕ de
  * desequipar) e pais que rolam na horizontal (onde transbordar é a função).
@@ -175,12 +172,11 @@ export async function expectNadaEscapa(page: Page, pai: string, filhos = '*'): P
 /**
  * Nada que se possa CLICAR fica fora da janela sem caminho até ele (ALE-160).
  *
- * Esta é a irmã que faltava ao `expectNadaEscapa`, e a lacuna era estrutural:
- * aquela pula, DE PROPÓSITO, todo pai cujo `overflow-x` não é `visible` —
- * porque ali transbordar é a função. Só que a cena inteira é feita de
- * `overflow-x-hidden`, e foi por baixo dele que o botão "Convite" foi parar em
- * x=392 numa tela de 390: fora da tela, sem rolagem que chegasse nele, com
- * `document.scrollWidth` jurando que não havia estouro nenhum.
+ * É a irmã do `expectNadaEscapa`, e a lacuna era estrutural: aquele pula, DE
+ * PROPÓSITO, todo pai cujo `overflow-x` não é `visible`, porque ali transbordar
+ * é a função. Só que a cena inteira é feita de `overflow-x-hidden`, e por baixo
+ * dele um botão vai parar em x=392 numa tela de 390 — fora da tela, sem rolagem
+ * que chegue nele, com `document.scrollWidth` jurando que não há estouro.
  *
  * A diferença que faz a asserção funcionar é `rolavel`: estar fora da viewport
  * é NORMAL — é o que acontece com tudo abaixo da dobra de uma lista. O defeito
@@ -233,15 +229,12 @@ export async function expectDentroDaJanela(page: Page, raiz = 'body'): Promise<v
  *
  * A regra da casa é que a cena não rola horizontalmente, e o
  * `expectNoHorizontalOverflow` a afirma — só que na RAIZ. Quando o estouro
- * acontece num painel interno, a raiz continua limpa e a asserção passa: é o
- * mesmo ponto cego que já custou o `expectNadaEscapa` e o `expectDentroDaJanela`.
+ * acontece num painel interno, a raiz continua limpa e a asserção passa.
  *
- * O caso que trouxe esta aqui: com o tabuleiro povoado a 390px, a fileira de
- * controles do cabeçalho empurrava o ✕ de encerrar para x=466 numa tela de 390.
- * Ele não estava inalcançável — o painel rolava, `scrollWidth` 545 contra 390 de
- * largura —, mas rolar de lado para achar o botão de fechar é a experiência que
- * a regra existe para impedir. O `expectDentroDaJanela` passava verde com razão,
- * porque pela definição dele havia como chegar lá.
+ * E o `expectDentroDaJanela` também não pega: um ✕ de encerrar empurrado para
+ * x=466 numa tela de 390 é ALCANÇÁVEL se o painel rola, então aquele guarda
+ * passa verde com razão. Rolar de lado para achar o botão de fechar é
+ * justamente a experiência que esta asserção existe para impedir.
  *
  * Ignora quem rola de lado DE PROPÓSITO, marcado com `data-rola-lado`.
  *
@@ -272,28 +265,21 @@ export async function expectNadaRolaDeLado(page: Page, raiz = 'body'): Promise<v
 /**
  * O palco não deixa BANDA VAZIA embaixo do que ele mostra (ALE-175).
  *
- * A regra da casa — "uma cena preenche o espaço que recebe" — nunca teve
- * asserção VERTICAL: o `expectEnchePai` mede largura, e o defeito da ALE-175
- * era altura. A lista do bestiário tinha uma tampa de `45vh` e, num tablet em
- * pé, mostrava 459px de 5216 de conteúdo com 243px mortos embaixo — um quarto
- * da tela pintada de nada, com a lista transbordando logo acima.
+ * A regra da casa — "uma cena preenche o espaço que recebe" — só tinha
+ * asserção de LARGURA no `expectEnchePai`. Esta mede a banda vazia DEPOIS do
+ * último elemento do palco, que é onde mora o sintoma de altura: uma lista com
+ * tampa de `45vh` transborda por cima e pinta um quarto da tela de nada.
  *
- * Mede a banda vazia DEPOIS do último elemento do palco. Tinta é definida por
- * exclusão de contêiner: conta a caixa de quem tem texto próprio, de quem é
- * interativo e de quem é gráfico. Um `div` de arranjo não conta, porque é
- * justamente ele quem se estica por cima da faixa morta e faria a medição
- * jurar que o espaço está ocupado.
- *
- * Vão INTERNO não entra, e isso é decisão e não descuido: medida no bestiário,
- * a cena tem 22px entre dois blocos, que é o `gap` do arranjo. Acusar isso
- * seria brigar com o sistema de espaçamento; o defeito da ALE-175 nunca esteve
- * no meio, eram 243px depois do fim da lista.
+ * Tinta é definida por exclusão de contêiner: conta a caixa de quem tem texto
+ * próprio, de quem é interativo e de quem é gráfico. Um `div` de arranjo não
+ * conta, porque é justamente ele quem se estica por cima da faixa morta e faria
+ * a medição jurar que o espaço está ocupado.
  *
  * O que este guarda NÃO faz é prender altura. Altura é consequência do formato
  * e prendê-la seria prender o número errado; o que a cena promete é não deixar
  * banda vazia depois do último elemento.
  *
- * Cuidados que a medição exige, os dois aprendidos na ALE-175:
+ * Cuidados que a medição exige:
  * - o palco tem de estar TRANSBORDANDO, senão a faixa vazia é uma lista que
  *   coube e a asserção não prova nada. Quem chama afirma isso antes.
  * - ignora caixa de 1px, que é `sr-only` por definição e existe em toda tela.
@@ -347,12 +333,9 @@ export async function expectSemFaixaMorta(
 
       if (tinta.length === 0) return { faixa: Math.round(caixa.height), onde: 'o palco inteiro' }
 
-      // Mede a sobra DEPOIS do último elemento, e só ela. Vão INTERNO não entra
-      // de propósito: medido nesta mesma cena, há 22px entre y 301 e 323, que
-      // é o `gap` do arranjo — respiro que o design pede. Uma primitiva que o
-      // acusasse brigaria com o sistema de espaçamento em vez de proteger a
-      // cena, e o defeito da ALE-175 nunca esteve no meio: eram 243px depois
-      // do fim da lista.
+      // Mede a sobra DEPOIS do último elemento, e só ela. Vão INTERNO não
+      // entra de propósito: ele é o `gap` do arranjo, e acusá-lo seria brigar
+      // com o sistema de espaçamento em vez de proteger a cena.
       const fim = tinta.reduce((maior, f) => Math.max(maior, f.base), caixa.top)
       return {
         faixa: Math.round(Math.max(0, caixa.bottom - fim)),
@@ -372,15 +355,12 @@ export async function expectSemFaixaMorta(
 /**
  * Crescer o contêiner nunca pode CUSTAR uma coluna (ALE-172).
  *
- * A contagem de colunas não é monotônica na JANELA — o `frontend/CLAUDE.md`
- * já avisa disso, e por bom motivo: abaixo de `lg` um catálogo fica com o
- * palco inteiro e precisa de MAIS colunas do que em `lg`, onde ele divide com
- * um painel. Mas ela tem de ser monotônica no CONTÊINER, que é o espaço que a
- * grade de fato recebe.
- *
- * O defeito que a batizou: no bestiário, um contêiner de 800px dava DUAS
- * colunas e um de 968px dava UMA, porque o gate olhava a janela e a coluna de
- * ferramentas devolve largura à direita conforme a janela encolhe.
+ * A contagem de colunas não é monotônica na JANELA, e isso é correto: abaixo
+ * de `lg` um catálogo fica com o palco inteiro e precisa de MAIS colunas do que
+ * em `lg`, onde ele divide com um painel. Mas ela tem de ser monotônica no
+ * CONTÊINER, que é o espaço que a grade de fato recebe — um gate que olha a
+ * janela dá DUAS colunas num contêiner de 800px e UMA num de 968px, porque a
+ * coluna de ferramentas devolve largura à direita conforme a janela encolhe.
  *
  * Varre LARGURAS com a altura FIXA, e isso é essencial: a decisão "cabe painel
  * lateral?" tem duas dimensões, então um mesmo contêiner de 812px responde

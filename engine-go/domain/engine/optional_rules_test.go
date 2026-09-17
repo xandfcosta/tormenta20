@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// As regras opcionais (ALE-221), do lado do motor.
+// As regras opcionais, do lado do motor.
 //
 // p141, no quadro "Carga: Bastidores": "O mestre pode ignorar essa regra, desde
 // que os jogadores não abusem. Nada de sair por aí com 50 essências de mana!"

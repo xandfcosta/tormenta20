@@ -6,14 +6,12 @@ import (
 	"t20engine/domain/engine"
 )
 
-// Os guardas do TRAÇO (ALE-203).
+// Os guardas do TRAÇO.
 //
 // A regra que eles prendem é uma só e é a que o defeito ensinou: **o traço não
 // tem buraco**. Um muro de taverna com um quadrado vazio no meio é uma passagem
 // que o mestre não desenhou, e ela só aparece na hora em que alguém atravessa.
 
-// TestTheStrokeHasNoGap.
-//
 // Casas VIZINHAS de ponta a ponta, no sentido do rei do xadrez: cada casa do
 // traço encosta na anterior. É o invariante, e não uma lista esperada escrita à
 // mão — uma lista à mão seria a implementação copiada, e ela passaria verde com
@@ -44,13 +42,10 @@ func TestTheStrokeHasNoGap(t *testing.T) {
 	}
 }
 
-// TestTheStrokeDoesNotGoDiagonalWhenItGrazes.
-//
-// O CASO que motivou a supercobertura: num traço quase horizontal, o Bresenham
-// clássico troca de linha ANDANDO NA DIAGONAL, e a casa roçada não entra. O
-// guarda acima já recusaria o pulo diagonal (ele exige `dx+dy` de exatamente um
-// passo em UM eixo? não — ele aceita a diagonal), então este aqui é o que separa
-// os dois algoritmos: nenhum passo do traço mexe nos DOIS eixos ao mesmo tempo.
+// Num traço quase horizontal, o Bresenham clássico troca de linha ANDANDO NA
+// DIAGONAL, e a casa roçada não entra. O guarda acima ACEITA a diagonal, então é
+// este que separa os dois algoritmos: nenhum passo mexe nos DOIS eixos ao mesmo
+// tempo.
 func TestTheStrokeDoesNotGoDiagonalWhenItGrazes(t *testing.T) {
 	casas := StrokeSquares(engine.Square{}, engine.Square{X: 2, Y: 1})
 	for i := 1; i < len(casas); i++ {
@@ -67,15 +62,14 @@ func TestTheStrokeDoesNotGoDiagonalWhenItGrazes(t *testing.T) {
 	}
 }
 
-// TestAPossessedStrokeIsRefused: o teto existe contra o pedido forjado, não contra
-// o dedo. Num quadro de 16ms nenhum gesto atravessa cem casas.
+// O teto existe contra o pedido FORJADO, não contra o dedo: num quadro de 16ms
+// nenhum gesto atravessa cem casas.
 //
-// # A FRONTEIRA, e não "absurdo é recusado" (ALE-315)
+// # A FRONTEIRA, e não "absurdo é recusado"
 //
-// Aqui estavam só `9999999` contra o teto de 100 e um traço de nove aceito. Entre
-// nove e dez milhões cabe qualquer coisa: **trocar o `strokeFits` para 10 passava
-// verde nos dois**. O caso protegia contra o pedido forjado — que é o que o nome
-// promete — e não contra alguém mexer no teto.
+// Com só um `9999999` contra o teto de 100, entre nove e dez milhões cabe
+// qualquer coisa: **trocar o `strokeFits` para 10 passa verde**. Prender a
+// fronteira é o que protege o TETO, e não só o pedido forjado.
 //
 // O predicado é `max(|dx|,|dy|) < strokeFits`, então o teto é de EXTENSÃO e não de
 // contagem de casas: 99 de extensão passa, 100 não. Os números estão escritos à
@@ -102,8 +96,6 @@ func TestAPossessedStrokeIsRefused(t *testing.T) {
 	}
 }
 
-// TestTheRectangleIsTheSameInAllFourDirections.
-//
 // A REGRA: arrastar da direita para a esquerda, ou de baixo para cima, desenha o
 // MESMO retângulo — porque é o que o dedo faz. Sem o `min`/`max` um arrasto "para
 // trás" devolveria vazio, e a pessoa concluiria que a ferramenta falha às vezes,

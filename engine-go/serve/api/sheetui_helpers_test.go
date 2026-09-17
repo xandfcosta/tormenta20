@@ -7,14 +7,11 @@ import (
 	"testing"
 )
 
-// Os ajudantes de leitura da cena da ficha, COPIADOS de `web/sheetui`
-// (ALE-278).
+// Os ajudantes de leitura da cena da ficha, COPIADOS de `web/sheetui`.
 //
-// A cópia é deliberada e tem precedente nesta épica: importar o ajudante
-// do pacote que está sendo testado faz o teste andar junto com o defeito
-// — foi a regra que a fatia da porta deixou escrita, e o que a cena de
-// personagens fez com o `corpoDoBotao`. Eles leem HTML servido e não
-// dependem de uma linha da cena.
+// A cópia é deliberada: importar o ajudante do pacote que está sendo testado faz
+// o teste andar junto com o defeito. Eles leem HTML servido e não dependem de
+// uma linha da cena.
 
 // sceneAlert acha a frase da recusa: a cena responde 200 com a página inteira
 // redesenhada, e a única marca do "não deu" é o `role="alert"`. Ver a armadilha

@@ -12,12 +12,11 @@ import (
 )
 
 /*
-O RASCUNHO DE LUGAR (ALE-292): a cena montada FORA da sessão.
+O RASCUNHO DE LUGAR: a cena montada FORA da sessão.
 
-A capacidade existia no domínio desde a ALE-191 e nenhum caminho chegava até
-ela. O que estes casos prendem é o CAMINHO — a superfície do tabuleiro apontada
-para o acervo — e as três coisas que ele não pode errar: quem entra, para onde
-os gestos postam, e o que a tela promete sobre gravar.
+O que estes casos prendem é o CAMINHO — a superfície do tabuleiro apontada para
+o acervo — e as três coisas que ele não pode errar: quem entra, para onde os
+gestos postam, e o que a tela promete sobre gravar.
 
 Integração e não unitário porque é COMPOSIÇÃO que se está provando: a rota, a
 trava, a view do tabuleiro reusada e a gravação no acervo. A regra de cada
@@ -43,8 +42,8 @@ func (f sceneFixture) draftUrl(placeID int64) string {
 // diz, na tarja, que ninguém está vendo.
 //
 // A tarja é a razão de este caso existir: o mapa do rascunho é IGUALZINHO ao da
-// mesa, e sem uma linha dizendo o contrário o mestre monta a emboscada sem saber
-// de que lado do tempo ele está. É a lição da cortina (ALE-202) aplicada aqui.
+// mesa, e sem uma linha dizendo o contrário o mestre monta a emboscada sem
+// saber de que lado do tempo ele está.
 func TestTheDraftDrawsTheBoardAndSaysNobodyIsWatching(t *testing.T) {
 	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
@@ -259,15 +258,14 @@ func TestTheDraftMovesThePieceWithoutAProposal(t *testing.T) {
 }
 
 /*
-MEDIR o rascunho (ALE-293).
+MEDIR o rascunho.
 
-A régua e o gabarito eram DESENHADAS no rascunho desde a ALE-292 — elas não são
-só-do-mestre, e o trilho inteiro veio junto com o tabuleiro — e as rotas não
-existiam lá. O gesto oferecido que o servidor não atende é o pior defeito desta
-casa: 404, tela que não muda, e nada explicando por quê.
+A régua e o gabarito são desenhadas no rascunho junto com o trilho do
+tabuleiro, e um gesto oferecido que o servidor não atende é o pior defeito
+desta casa: 404, tela que não muda, e nada explicando por quê.
 
-As duas continuam sendo LEITURA. O que se prende aqui é que elas medem a cena
-GUARDADA, que a resposta não mexe no acervo, e que um estranho não as alcança.
+As duas são LEITURA. O que se prende aqui é que elas medem a cena GUARDADA, que
+a resposta não mexe no acervo, e que um estranho não as alcança.
 */
 
 // A régua mede no rascunho, e a resposta é só SINAL.
@@ -385,12 +383,11 @@ func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 	}
 }
 
-// ── OS CINCO GESTOS DE TERRENO E MARCADOR DO RASCUNHO (ALE-311) ──────────────
+// ── OS CINCO GESTOS DE TERRENO E MARCADOR DO RASCUNHO ────────────────────────
 //
 // `draftPaintsTerrain`, `draftClearsTerrain`, `draftFillsRect`, `draftClearsRect`
-// e `draftMarksTheSpot` não tinham teste NENHUM. Medido: transformados em
-// `return nil` puro, a suíte inteira ficava verde — só o `go vet` reclamou de
-// linha morta.
+// e `draftMarksTheSpot` já estiveram sem teste nenhum: transformados em `return
+// nil` puro, a suíte inteira ficava verde.
 //
 // Eles são as rotas irmãs das da Mesa, e o que se prende aqui é o que cada
 // gêmeo tem de próprio: a coordenada chega pelo CORPO e pousa no ACERVO, não
@@ -406,8 +403,6 @@ func (f sceneFixture) draftScene(t *testing.T, placeID int64) *board.BoardState 
 	return cena
 }
 
-// TestTheDraftBrushPaintsWhereTheBodySays.
-//
 // A coordenada é o assunto: uma tag `json:"from"` quebrada faz o corpo
 // decodificar para (0,0) em SILÊNCIO, e o traço inteiro pousa na quina. Por isso
 // nenhuma ponta deste caso é a origem.
@@ -437,8 +432,7 @@ func TestTheDraftBrushPaintsWhereTheBodySays(t *testing.T) {
 	}
 }
 
-// TestTheDraftEraserClearsOnlyWhatItCrosses: a borracha do rascunho, e a
-// testemunha de fora.
+// A borracha do rascunho, com a testemunha de fora do traço.
 func TestTheDraftEraserClearsOnlyWhatItCrosses(t *testing.T) {
 	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
@@ -464,8 +458,6 @@ func TestTheDraftEraserClearsOnlyWhatItCrosses(t *testing.T) {
 	}
 }
 
-// TestTheDraftRectangleFillsTheBoxAndTheEraserEmptiesIt.
-//
 // O retângulo é o gesto que o Shift liga, e os dois cantos vêm no corpo. Um
 // canto perdido não estoura: ele vira (0,0), e a caixa cresce até a quina
 // levando junto tudo que estiver no caminho.
@@ -500,8 +492,6 @@ func TestTheDraftRectangleFillsTheBoxAndTheEraserEmptiesIt(t *testing.T) {
 	}
 }
 
-// TestTheDraftMarkerLandsWhereTheBodySaysAndIsBornHidden.
-//
 // Duas afirmações, e a segunda é a razão de o marcador existir: ele nasce
 // ESCONDIDO, porque marcar a armadilha na frente da mesa entrega a armadilha.
 func TestTheDraftMarkerLandsWhereTheBodySaysAndIsBornHidden(t *testing.T) {

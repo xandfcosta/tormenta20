@@ -5,23 +5,13 @@ import { fileURLToPath } from 'node:url'
 import { expect, test as semear } from '@playwright/test'
 
 /**
- * A SEMENTE DO BANCO DO E2E (ALE-269).
+ * A SEMENTE DO BANCO DO E2E.
  *
- * A suíte passou a rodar contra um banco PRÓPRIO (`data/e2e.db`), apagado e
- * recriado a cada corrida — e não mais contra o `t20-dev.db`, que é o mesmo
- * arquivo que se usa ao conferir qualquer coisa no navegador.
- *
- * O PROBLEMA QUE ISTO MATA, e ele mordeu duas vezes na mesma issue:
- *
- *   - um tabuleiro aberto à mão fez o `faixa-unica` quebrar com `strict mode
- *     violation`, porque a região do mapa desenha um `<header>` próprio e o
- *     seletor passou a casar com dois;
- *   - um NPC deixado na fila fez o `os verbos da linha cabem na fila a 390px`
- *     medir a primeira linha e achar um crachá `NPC` onde ele esperava `Ficha`.
- *
- * Nos dois casos o vermelho apareceu logo depois de um commit e tinha CARA DE
- * REGRESSÃO — o teste que quebra não tem relação com o que mudou, e a suíte
- * estava verde antes. É a pior forma de um defeito de ambiente aparecer.
+ * A suíte roda contra um banco PRÓPRIO (`data/e2e.db`), apagado e recriado a
+ * cada corrida, e não contra o banco de desenvolvimento — um tabuleiro aberto à
+ * mão ou um NPC deixado na fila fazem specs sem relação nenhuma com a mudança
+ * ficarem vermelhos logo depois de um commit, com CARA DE REGRESSÃO. É a pior
+ * forma de um defeito de ambiente aparecer.
  *
  * POR QUE AQUI E NÃO NO `webServer`: a seed é SÓ INSERT (`seed.sql` não tem
  * DDL), então ela precisa de um banco já MIGRADO — e quem migra é a API ao

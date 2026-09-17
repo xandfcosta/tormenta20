@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-// As regras do rastreador (ALE-265). Os casos são as BORDAS que a história de
-// cada issue nomeia — não uma transcrição do comportamento.
+// As regras do rastreador. Os casos são as BORDAS, e não uma transcrição do
+// comportamento.
 
 func fila(nomes ...string) []InitiativeEntry {
 	fora := make([]InitiativeEntry, 0, len(nomes))
@@ -36,7 +36,7 @@ func iguais(a, b []string) bool {
 	return true
 }
 
-// TestTheTurnStripIsCircular é a ALE-179, e a borda é o ÚLTIMO da fila.
+// A borda é o ÚLTIMO da fila.
 //
 // Cortar no fim deixaria a tira vazia justamente no turno em que saber "quem vem
 // depois" mais importa — o último antes de virar a rodada.
@@ -63,7 +63,7 @@ func TestTheTurnStripIsCircular(t *testing.T) {
 	}
 }
 
-// TestTheButtonSaysWhereItGoes é a ALE-184: o mestre lia "▶" e contava a lista.
+// O botão diz PARA ONDE vai: com "▶", o mestre tem de contar a lista.
 func TestTheButtonSaysWhereItGoes(t *testing.T) {
 	f := fila("Arwen", "Ogro")
 
@@ -89,8 +89,8 @@ func TestTheButtonSaysWhereItGoes(t *testing.T) {
 	}
 }
 
-// TestTheCounterHasFourStates, e a ordem entre eles é regra: a cena existe
-// antes da fila, e a fila existe antes do turno (ALE-210).
+// O contador tem quatro estados, e a ORDEM entre eles é regra: a cena existe
+// antes da fila, e a fila existe antes do turno.
 func TestTheCounterHasFourStates(t *testing.T) {
 	casos := []struct {
 		nome      string
@@ -115,8 +115,6 @@ func TestTheCounterHasFourStates(t *testing.T) {
 	}
 }
 
-// TestAMemberWithoutACharacterDoesNotEnterPresence.
-//
 // Não é que ele esteja offline: é que não há personagem para marcar, e um zero
 // na lista viraria "o personagem 0 está online" na tela.
 func TestAMemberWithoutACharacterDoesNotEnterPresence(t *testing.T) {
@@ -138,8 +136,6 @@ func TestAMemberWithoutACharacterDoesNotEnterPresence(t *testing.T) {
 	}
 }
 
-// TestTheGmEyeWatchesTheTrackerNotTheRole.
-//
 // Numa fila só de PCs não há vitais para reservar, e a tela não deve mudar de
 // forma por causa de um papel que ali não muda nada.
 func TestTheGmEyeWatchesTheTrackerNotTheRole(t *testing.T) {
@@ -158,11 +154,9 @@ func TestTheGmEyeWatchesTheTrackerNotTheRole(t *testing.T) {
 	}
 }
 
-// TestValidatingANewCombatantPinsTheFourEdges.
-//
-// Uma por campo, e cada uma é a que a tela sozinha não segurava: os limites
-// viviam como atributos dos campos do formulário da SPA, que é UI — quem
-// postasse na mão passava por cima dos quatro.
+// Uma borda por campo, e cada uma é a que a tela sozinha não segura: limite que
+// vive como atributo de campo de formulário é UI, e quem posta na mão passa por
+// cima dos quatro.
 func TestValidatingANewCombatantPinsTheFourEdges(t *testing.T) {
 	bom := CombatantDraft{Label: "Ogro", Initiative: 12, HP: 45, Kind: "npc"}
 	if err := ValidateCombatantDraft(bom); err != nil {

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// A CORTINA esconde a CENA, não a peça (ALE-202). O teste afirma as duas
+// A CORTINA esconde a CENA, não a peça. O teste afirma as duas
 // direções do risco: o que a mesa NÃO pode receber (peça visível, marcador
 // visível, nome do lugar — tudo que denuncia o que está sendo montado) e o que
 // ela PRECISA receber (que existe uma cortina, senão o jogador não sabe que vem
@@ -65,7 +65,7 @@ func TestWithoutTheCurtainTheTableKeepsSeeingTheBoard(t *testing.T) {
 	}
 }
 
-// A lista de peças vai VAZIA e não nula (ALE-202). Fatia nil vira `null` no
+// A lista de peças vai VAZIA e não nula. Fatia nil vira `null` no
 // JSON, e o cabeçalho do cliente indexa `tokens.length`: a cortina derrubaria a
 // tela da mesa em vez de escondê-la — um defeito que aparece como página branca
 // e não como cena escondida, e ninguém ia ligar uma coisa à outra.

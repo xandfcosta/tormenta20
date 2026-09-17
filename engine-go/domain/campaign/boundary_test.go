@@ -8,13 +8,12 @@ import (
 	"testing"
 )
 
-// O PACOTE É FOLHA, e a lista é de UM (ALE-278).
+// O PACOTE É FOLHA, e a lista é de UM.
 //
 // Irmão gêmeo do `account/boundary_test.go`, e a semelhança não é estilo: os
 // dois pacotes nasceram do mesmo defeito. Uma regra de PRODUTO — o que é um
-// e-mail aceitável, o que é um nome de campanha aceitável — morava dentro do
-// `api`, era lida por uma tela E por uma rota JSON, e as duas divergiram na
-// FRASE, com a rota respondendo em inglês.
+// e-mail aceitável, o que é um nome de campanha aceitável — dentro do `api`, é
+// lida por uma tela E por uma rota JSON, e as duas divergem na FRASE.
 //
 // A lista curta é a razão de o pacote existir. No dia em que estas funções
 // alcançarem banco, catálogo ou HTTP, o próximo lado que precisar da regra não
@@ -26,23 +25,20 @@ import (
 // produto carregava o tipo do banco. Quem grava é que traduz vazio para NULL.
 var permitidos = map[string]bool{
 	"t20engine/infra/wire": true,
-	// O `engine` entrou com o `NormalizeIgnoredRules` (ALE-278), e ele é a
-	// exceção que a lista curta suporta: a pergunta "esta regra opcional existe?"
-	// é de domínio para domínio, o `engine` é folha, e não há ciclo nem HTTP no
-	// caminho. A alternativa era o chamador passar a lista de regras conhecidas —
-	// o que faria cada tela carregar um dado que ela não usa para nada além de
-	// repassar.
+	// O `engine` é a exceção que a lista curta suporta: a pergunta "esta regra
+	// opcional existe?" é de domínio para domínio, o `engine` é folha, e não há
+	// ciclo nem HTTP no caminho. A alternativa era o chamador passar a lista de
+	// regras conhecidas — o que faria cada tela carregar um dado que ela não usa
+	// para nada além de repassar.
 	"t20engine/domain/engine": true,
 }
 
 // recusadosDaPadrao são pacotes da BIBLIOTECA PADRÃO que este pacote não pode
 // tocar, e a lista existe por um vermelho.
 //
-// A prosa acima chamava o `database/sql` de "tentação nomeada", e o guarda não
-// o via: ele só olhava `t20engine/*`. Sabotei com `var _ = sql.NullString{}`, o
-// build passou E o guarda passou — a docstring afirmava uma garantia que não
-// existia, que é exatamente o que o CLAUDE.md quer dizer com **comentário não é
-// correção**.
+// Um guarda que só olhasse `t20engine/*` deixa passar `var _ = sql.NullString{}`
+// — sabotado assim, o build passa E o guarda passa, com a docstring afirmando
+// uma garantia que não existe. **Comentário não é correção.**
 //
 // Só `database/sql` por enquanto, e não uma lista de tudo que é infraestrutura:
 // esta é a tentação MEDIDA — a versão anterior do `Description` devolvia

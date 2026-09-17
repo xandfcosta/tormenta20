@@ -3,17 +3,15 @@ import { expect, test } from '@playwright/test'
 /**
  * TODA cena do app declara a gramática de teclado da casa.
  *
- * O defeito que isto prende foi contado antes de ser consertado: 6 das 20 cenas
- * declaravam alguma `data-nav-region` e 14 não declaravam nenhuma. O motor
- * estava no ar em todas, sem nada para dirigir. E ninguém viu porque o guarda
- * que prova a tese exercita as setas em `/` e não entra em mais nenhuma
- * tela — "um guarda só mede o que ele VISITA" (ALE-237, ALE-252).
+ * O defeito que isto prende é a cena que carrega o driver e não declara nenhuma
+ * `data-nav-region`: o motor no ar sem nada para dirigir. Ele é invisível para
+ * um guarda que exercita as setas em `/` e não entra em mais nenhuma tela — um
+ * guarda só mede o que ele VISITA.
  *
- * Este é o guarda que troca "visita o Hub" por "percorre a lista": cena nova
- * entra aqui e nasce medida. Continua sendo ENUMERAÇÃO de cenas, e isso é
- * honesto de dizer — o que restauraria amostragem de verdade seria a casca
- * declarar a região, e ela só pode declarar a que é dela (o `rail`). O miolo
- * cada cena tem de nomear, porque só ela sabe a própria forma.
+ * Continua sendo ENUMERAÇÃO de cenas, e isso é honesto de dizer: o que
+ * restauraria amostragem de verdade seria a casca declarar a região, e ela só
+ * pode declarar a que é dela (o `rail`). O miolo cada cena tem de nomear, porque
+ * só ela sabe a própria forma.
  *
  * E2E porque `data-nav-region` sozinho não prova nada: o driver só liga em `≥xl`
  * com ponteiro fino, e a região tem de ter ÁREA (o `hasArea` do driver) — em
@@ -27,9 +25,9 @@ const CENAS = [
   { nome: 'personagens', url: '/personagens' },
   { nome: 'grimório', url: '/grimorio' },
   { nome: 'bestiário', url: '/mestre/bestiario' },
-    // Os catálogos viraram NOVE cenas na ALE-264 — cada uma é uma parada do
-  // trilho. Duas amostram as nove: elas passam pelos mesmos componentes, e a
-  // que fugir disso é a que este guarda existe para pegar.
+  // Os catálogos são nove cenas, uma por parada do trilho, e duas amostram as
+  // nove: elas passam pelos mesmos componentes, e a que fugir disso é a que este
+  // guarda existe para pegar.
   { nome: 'condições', url: '/mestre/condicoes' },
   { nome: 'deuses', url: '/mestre/deuses' },
   { nome: 'encontros', url: '/mestre/encontros' },

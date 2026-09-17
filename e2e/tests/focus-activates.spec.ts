@@ -130,12 +130,10 @@ test('com o foco na ficha, as setas rolam o painel', async ({ page }) => {
   // o controle abaixo acusa "não transborda" quando a verdade é "não está na
   // tela". A 680 o palco mede 536 e a ficha esconde 111px.
   //
-  // 1200 de LARGURA e não 1400, e este número também é medido — ele nasceu de o
-  // guarda ficar vermelho dizendo "a ficha não transborda". O `dec9d01` (ALE-264)
-  // deu à ficha do monstro DUAS COLUNAS quando o bloco passa de 46rem, e duas
-  // colunas cabem sem rolar: a 1400 o bloco mede 750px e esconde 0. A 1200 ele
-  // mede 550, empilha, e esconde 211px. O guarda perdeu a PREMISSA, não a
-  // garantia — e ele mesmo denunciou isso, em vez de passar verde sobre nada.
+  // 1200 de LARGURA e não 1400, e este número também é medido: a ficha do
+  // monstro ganha DUAS COLUNAS quando o bloco passa de 46rem, e duas colunas
+  // cabem sem rolar — a 1400 o bloco mede 750px e esconde 0. A 1200 ele mede
+  // 550, empilha, e esconde 211px.
   await page.setViewportSize({ width: 1200, height: 680 })
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
@@ -170,15 +168,12 @@ test('com o foco na ficha, as setas rolam o painel', async ({ page }) => {
  * A seta CRUZA entre a lista e os filtros.
  *
  * O defeito que isto prende: declarar UMA região e não a vizinha deixa a seta
- * presa lá dentro. A lista virou região antes dos filtros, e o efeito foi o dono
- * dizendo "não consigo chegar nos botões ou inputs de filtro com o teclado" —
- * enquanto o TAB chegava normalmente, o que torna o defeito invisível para quem
- * testa com TAB.
+ * presa lá dentro — e o TAB continua chegando normalmente, o que torna o defeito
+ * invisível para quem testa com TAB.
  *
- * É a garantia que a filosofia chama de "cross to a neighbouring region at the
- * edge", e ela só existe se as DUAS pontas forem declaradas. Meia gramática é
- * pior que nenhuma: sem região nenhuma a seta rola a página, e com uma só ela
- * prende.
+ * Cruzar para a região vizinha na borda só existe se as DUAS pontas forem
+ * declaradas. Meia gramática é pior que nenhuma: sem região nenhuma a seta rola
+ * a página, e com uma só ela prende.
  */
 test('a seta sobe da lista para os filtros e volta', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
@@ -234,16 +229,10 @@ test('a seta chega na ficha sem nenhum TAB', async ({ page }) => {
     'a seta para a direita não cruzou da lista para a ficha',
   ).toBe(true)
 
-  // E DÁ PARA SAIR dela só com setas, senão a ficha vira o beco que ela deixou
-  // de ser. O caminho medido é `← filtros ↓↓ lista`, e não `← lista` como era:
-  // o `dec9d01` (ALE-264) encurtou a ficha ao dar-lhe duas colunas, o centro
-  // dela subiu, e o vizinho à esquerda naquela altura passou a ser a fileira de
-  // filtros. O driver cruza REGIÕES por geometria, então quem mudou o caminho
-  // foi o leiaute e não a navegação.
-  //
-  // A asserção é sobre a GARANTIA (não é beco) e não sobre uma tecla: prender
-  // "uma seta para a esquerda" de novo faria o guarda quebrar no próximo
-  // ajuste de altura, sem nada ter piorado para quem usa.
+  // E DÁ PARA SAIR dela só com setas, senão a ficha vira um beco. A asserção é
+  // sobre a GARANTIA (não é beco) e não sobre uma tecla: o driver cruza REGIÕES
+  // por geometria, então prender "uma seta para a esquerda" faria o guarda
+  // quebrar no próximo ajuste de altura, sem nada ter piorado para quem usa.
   await page.keyboard.press('ArrowLeft')
   expect(
     await page.evaluate(() => !!document.activeElement?.closest('[data-nav-region="ficha"]')),
@@ -287,15 +276,11 @@ test('a legenda de teclado aparece no laptop e some no telefone', async ({ page 
 /**
  * UM cursor só, e ele fica na MOLDURA da ficha — não por dentro do que rola.
  *
- * Duas formas erradas antes desta, as duas vistas pelo dono na tela: anel no
- * miolo desenhava por dentro do scroll (acompanha a rolagem, some no corte), e
- * anel na moldura via `:has()` deixou DOIS, porque o miolo continuava pegando a
- * regra global de foco do `index.css`.
- *
- * A causa é uma convenção da casa que eu não seguia: item dentro de
- * `[data-nav-region]` não usa anel de navegador, usa a linguagem de
- * "selecionado" (borda dourada e brilho) — e o seletor dela pede
- * `a`, `button` ou `data-nav-item`. Um `[tabindex]` puro cai na regra geral.
+ * Anel no miolo desenha por dentro do scroll: acompanha a rolagem e some no
+ * corte. E a convenção da casa é que item dentro de `[data-nav-region]` não usa
+ * anel de navegador e sim a linguagem de "selecionado" (borda dourada e brilho)
+ * — mas o seletor dela pede `a`, `button` ou `data-nav-item`, então um
+ * `[tabindex]` puro cai na regra global de foco e acendem DOIS cursores.
  *
  * E2E porque cascata com `:has()`, camadas e duas folhas só o navegador resolve.
  */
@@ -337,10 +322,8 @@ test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
  * O foco SOBREVIVE à troca de ferramenta pelo teclado.
  *
  * O trilho é feito de LINKS, e trocar de ferramenta NAVEGA: documento novo, foco
- * no `body`, e quem andava de seta recomeça do primeiro item — relatado pelo
- * dono como "preciso começar na tab de bestiário de novo". A SPA não sofre disso
- * porque lá a troca não descarta o documento; é um custo do transporte que a
- * migração escolheu, e por isso o conserto mora no app.
+ * no `body`, e quem andava de seta recomeça do primeiro item. É um custo do
+ * transporte, e por isso o conserto mora no app.
  *
  * E as duas metades importam: restaurar quando veio do teclado, e NÃO restaurar
  * quando veio do mouse — focar o trilho em toda carga roubaria o foco de quem
@@ -351,12 +334,9 @@ test('trocar de ferramenta pelo teclado mantém o foco no trilho', async ({ page
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
-  // O DESTINO SAI DO TRILHO, não do meu dedo. Este guarda escrevia
-  // `/mestre/encontros` à mão e ficou vermelho quando o `aa3edc9`
-  // (ALE-264) reordenou o trilho em Ferramentas + Catálogos: a segunda parada
-  // passou a ser `improviso`. Manutenção cobrada sem nada protegido — a
-  // garantia é "o foco sobrevive à troca", e qual é a parada vizinha não
-  // importa. Lendo o trilho, a reordenação de amanhã não quebra nada.
+  // O DESTINO SAI DO TRILHO, e não escrito à mão: a garantia é "o foco sobrevive
+  // à troca", e qual é a parada vizinha não importa. Escrito à mão, reordenar o
+  // trilho deixa o guarda vermelho sem nada ter piorado.
   const paradas = page.locator('[data-nav-region="rail"] a')
   const segunda = await paradas.nth(1).getAttribute('href')
   expect(segunda, 'o trilho não tem uma segunda parada para onde ir').toBeTruthy()

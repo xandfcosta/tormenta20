@@ -45,8 +45,6 @@ func umHeroiForjado(t *testing.T, f sceneFixture) (int64, string) {
 	return id, "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
 }
 
-// TestTheAttributeStepDoesNotHealTheHero (ALE-309).
-//
 // A cena de atributos chamava `fillPools` no fim de TODO passo bem-sucedido, e
 // `fillPools` grava `HpCurrent = HpMax`. O guarda da cena confere id, existência
 // e posse — e nada mais: não há checagem nenhuma de que o herói ainda está sendo
@@ -87,8 +85,7 @@ func TestTheAttributeStepDoesNotHealTheHero(t *testing.T) {
 	}
 }
 
-// TestTheAttributeStepWalksTheWoundedPoolWithTheMax é a outra metade: o atual
-// ACOMPANHA o delta do máximo, nos dois sentidos.
+// A outra metade: o atual ACOMPANHA o delta do máximo, nos dois sentidos.
 //
 // É a mesma regra que a mudança de NÍVEL já usa (`levelVitalsNext`), e ela tem
 // de ser a mesma: com "prende na faixa" só para baixo, o ciclo `−` e `+` devolve
@@ -127,7 +124,7 @@ func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 	}
 }
 
-// TestTheNewbornStillLeavesTheForgeWithFullPools é o CONTROLE do conserto.
+// O CONTROLE do conserto.
 //
 // A razão escrita no chamador — "o herói ainda está sendo forjado, então ele
 // fica com os poços CHEIOS" — continua valendo, e é ela que impede alguém de

@@ -6,16 +6,13 @@ import { medeATipografia } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
- * A FICHA em Datastar (ALE-272, fatia 1) — a casca, as abas e o crachá.
+ * A FICHA — o que só o navegador mede: LEIAUTE REAL nos seis formatos.
  *
- * O que o servidor escreve está preso em Go, que é mais barato: o endereço das
- * abas, a posse, o degrau de nível e a faixa dos vitais. O que sobra para cá é o
- * que só o navegador mede — LEIAUTE REAL nos seis formatos.
- *
- * E leiaute aqui não é enfeite: o crachá é uma fileira com retrato, identidade,
- * nível e oito botões de vital, e a barra de abas tem sete itens. As duas são
- * exatamente a forma que já transbordou nesta casa (ALE-162, ALE-178) — um
- * controle que sai da janela não é feio, é inalcançável.
+ * O que o servidor escreve está preso em Go, que é mais barato: endereço das
+ * abas, posse, degrau de nível, faixa dos vitais. Sobra para cá a geometria: o
+ * crachá é uma fileira com retrato, identidade, nível e oito botões de vital, e
+ * a barra de abas tem sete itens — um controle que sai da janela não é feio, é
+ * inalcançável.
  */
 test.use({ storageState: '.auth/user.json' })
 
@@ -50,16 +47,10 @@ test('a ficha cabe nos seis formatos, e nenhum botão do crachá sai da janela',
 /**
  * O MESMO OLHAR, EM TODA ABA — e ele caminha pela barra em vez de ter uma lista.
  *
- * A primeira versão deste arquivo media só a aba padrão, que na fatia 1 era um
- * aviso de duas linhas. Quando o painel de Proficiências chegou (fatia 2), o
- * guarda continuou verde sem nunca ter aberto o painel novo: é exatamente a
- * forma da ALE-237 e da ALE-252, onde a cobertura é função de onde o teste
- * NAVEGA e não de quantas asserções ele tem.
- *
- * Ele lê os `href` da barra em vez de trazer uma lista escrita, e essa é a
- * diferença entre AMOSTRAGEM e ENUMERAÇÃO: o painel da fatia 6 vai ser medido
- * sem ninguém lembrar de vir aqui. Uma lista escrita à mão nasce incompleta na
- * primeira vez que alguém esquece.
+ * Ler os `href` da barra é AMOSTRAGEM; uma lista escrita à mão é ENUMERAÇÃO, e
+ * nasce incompleta na primeira vez que alguém acrescenta um painel e esquece de
+ * vir aqui. Cobertura é função de onde o teste NAVEGA, não de quantas asserções
+ * ele tem.
  */
 test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
   await aFichaDoPrimeiro(page)
@@ -80,18 +71,13 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
     // acima: pela definição dele, há como chegar lá. O painel da ficha rola na
     // vertical, e `overflow-y: auto` faz o navegador computar o `overflow-x`
     // como `auto` junto — então um bloco de 500px numa janela de 390 passa
-    // por ele em silêncio. Provei sabotando: o caso ficou VERDE com o bloco
-    // largo no ar, e só o `expectNadaRolaDeLado` o viu. É a mesma lacuna que
-    // a ALE-178 nomeou.
+    // por ele em silêncio. Provado por sabotagem: o caso ficou VERDE com o
+    // bloco largo no ar, e só o `expectNadaRolaDeLado` o viu.
     await expectNadaRolaDeLado(page)
 
     // O CONTRASTE entra no MESMO caminhar, e não num caso à parte com uma lista
-    // de abas: à parte ele seria enumeração, e a aba da fatia 6 nasceria sem
-    // medição. A ficha atravessou as fatias 1 e 2 sem medição nenhuma de
-    // contraste — não por decisão, mas porque o medidor era função privada de
-    // outro spec (ver `support/contrast.ts`). O painel de Combate estreia a
-    // paleta ARCANA na ficha, que é tinta clara sobre painel escuro e
-    // exatamente a forma dos dois defeitos que este medidor já pegou.
+    // de abas: à parte ele seria enumeração, e a aba que nascer amanhã ficaria
+    // sem medição.
     const contraste = await medeOContraste(page)
     // O DENOMINADOR: sem ele, uma lista de falhas vazia é indistinguível de "o
     // seletor não achou nada", e as duas se parecem no terminal. Trinta é bem
@@ -103,10 +89,7 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
     ).toBeGreaterThan(30)
     expect(contraste.falhas, `texto abaixo do AA em ${endereco}`).toEqual([])
 
-    // A TIPOGRAFIA entra no MESMO caminhar, e pela mesma razão que o contraste
-    // entrou: à parte ela seria enumeração, e a aba que alguém acrescentar
-    // amanhã nasceria sem medição. Quatro violações da Cinzel viveram nesta
-    // ficha com o guarda no ar (ALE-252) — ele só visitava `/grimorio`.
+    // A TIPOGRAFIA entra no MESMO caminhar, pela mesma razão que o contraste.
     const tipografia = await medeATipografia(page)
     expect(
       tipografia.medidos,
@@ -115,34 +98,15 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
     expect(tipografia.falhas, `Cinzel abaixo do piso de leitura em ${endereco}`).toEqual([])
 
     // E O ANEL DE FOCO entra no MESMO caminhar, pela terceira vez e pela mesma
-    // razão (ALE-318): à parte ele seria enumeração. O guarda que existia media
-    // `/grimorio` e mais nada, e foi a ficha — 136 focáveis só nas Perícias —
-    // que produziu a medição que virou a issue.
+    // razão: à parte ele seria enumeração.
     await expectOneFocusRing(page, `em ${endereco}`, 10)
   }
 })
 
 /**
- * O PAINEL RAMIFICA POR PERSONAGEM, e caminhar pelas abas não alcança isso.
- *
- * O caso acima abre as sete abas de UM herói, e o primeiro do elenco é um
- * guerreiro. A tripla mágica do Combate — Limite PM, CD Magia, Custo PM — só
- * existe para quem conjura por classe, e ela usa a paleta ARCANA, que é outra
- * tinta sobre o mesmo painel. Medida só no guerreiro, ela nunca foi medida.
- *
- * É a ALE-237 um nível abaixo: lá a cobertura era função de onde o teste
- * NAVEGA; aqui é função de QUEM ele abre. A saída continua sendo amostragem e
- * não lista — o herói é escolhido lendo o elenco, e o caso falha alto se o
- * elenco deixar de ter um conjurador, em vez de medir o vazio.
- */
-/**
- * O id de um herói, pelo NOME e pela busca da cena. O elenco é um palco de um
- * herói por vez, ordenado por última alteração, então "o primeiro do elenco"
- * muda conforme o spec que rodou antes.
- *
- * Este era o `openSheetFromRoster` do `support/roster.ts`, que saiu na fatia 10
- * junto com os specs da ficha da SPA: com o elenco apontando para a ficha do
- * servidor, ele ficou sem nenhum outro chamador.
+ * O id de um herói, pelo NOME e pela busca da cena. O elenco é ordenado por
+ * última alteração, então "o primeiro do elenco" muda conforme o spec que rodou
+ * antes — buscar pelo nome é o que torna os casos abaixo independentes.
  */
 async function oIdDoHeroi(page: import('@playwright/test').Page, nome: string) {
   await page.goto('/personagens')
@@ -155,6 +119,12 @@ async function oIdDoHeroi(page: import('@playwright/test').Page, nome: string) {
 
 const oIdDoConjurador = (page: import('@playwright/test').Page) => oIdDoHeroi(page, CONJURADOR)
 
+/**
+ * O PAINEL RAMIFICA PELO DADO, e caminhar pelas abas não alcança isso: o caso
+ * acima abre as sete abas de um guerreiro. A tripla mágica do Combate — Limite
+ * PM, CD Magia, Custo PM — só existe para quem conjura por classe, e ela usa a
+ * paleta ARCANA, outra tinta sobre o mesmo painel.
+ */
 test('a paleta arcana do Combate é legível para quem conjura', async ({ page }) => {
   const id = await oIdDoConjurador(page)
 
@@ -175,15 +145,10 @@ test('a paleta arcana do Combate é legível para quem conjura', async ({ page }
 /**
  * O GRIMÓRIO ABERTO — e os dois diálogos que só existem para quem conjura.
  *
- * O caminhar pelas sete abas mede a de Magias do PRIMEIRO herói do elenco, que
- * é um guerreiro: sem classe conjuradora o painel é uma frase. Nada do que a
- * fatia 6 desenhou — o ouro do grimório, o cadeado do aprimoramento fora de
- * alcance, o contador de pilha — passa por lá. É a mesma lição da ALE-237 no
- * nível de baixo: a cobertura é função de QUEM o teste abre.
- *
- * E os diálogos justificam o navegador por conta própria: o de aprender leva as
- * ~198 magias do Capítulo 4 numa caixa que rola dentro de si, que é a forma que
- * já transbordou nesta casa (ALE-178) e que o jsdom mede como zero.
+ * Sem classe conjuradora o painel é uma frase, então o caminhar pelas abas do
+ * guerreiro não vê nada disto. E os diálogos justificam o navegador por conta
+ * própria: o de aprender leva as ~198 magias do Capítulo 4 numa caixa que rola
+ * dentro de si, que o jsdom mede como zero.
  */
 test('o grimório e os diálogos de conjurar e aprender cabem no telefone', async ({ page }) => {
   const id = await oIdDoConjurador(page)
@@ -200,13 +165,12 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
   expect(noPainel.medidos, 'o medidor não achou texto no grimório').toBeGreaterThan(30)
   expect(noPainel.falhas, 'texto abaixo do AA no grimório').toEqual([])
 
-  // O DENOMINADOR DE UM DIÁLOGO NÃO É COMPARATIVO, e a primeira versão disto
-  // errou: `medidos` deu 809 com o diálogo fechado e 809 com ele aberto. O
-  // medidor descarta o nó que ESCONDE A SI MESMO, não o que está debaixo de um
-  // ancestral escondido — e a cena do Datastar esconde por `data-show` no pai.
-  // Quem prova que o diálogo abriu é o `toBeVisible` de dentro dele; o que os
-  // dois blocos abaixo acrescentam é LEIAUTE REAL com a caixa no ar, que é o
-  // que nenhuma medição de cor alcança.
+  // O DENOMINADOR DE UM DIÁLOGO NÃO É COMPARATIVO: `medidos` dá o mesmo número
+  // com o diálogo fechado e com ele aberto, porque o medidor descarta o nó que
+  // ESCONDE A SI MESMO e não o que está debaixo de um ancestral escondido — e a
+  // cena do Datastar esconde por `data-show` no pai. Quem prova que o diálogo
+  // abriu é o `toBeVisible` de dentro dele; o que os dois blocos abaixo
+  // acrescentam é LEIAUTE REAL com a caixa no ar.
 
   // O DIÁLOGO DE CONJURAR é onde mora o contador de pilha e o cadeado do
   // aprimoramento fora de alcance — o Necromante é nível 12, alcança o 3º
@@ -227,11 +191,10 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
 /**
  * A MOCHILA ABERTA, com a ficha de um item e o catálogo do Capítulo 3.
  *
- * O caminhar pelas sete abas mede a Mochila do primeiro herói do elenco, e isso
- * cobre a tira e a grade — mas nenhum dos DIÁLOGOS, que é onde a fatia 7 pôs o
- * equipar, o usar, as melhorias e as ~160 linhas do catálogo. Eles justificam o
+ * O caminhar pelas sete abas cobre a tira e a grade, mas nenhum dos DIÁLOGOS —
+ * equipar, usar, melhorias e as ~160 linhas do catálogo. Eles justificam o
  * navegador por conta própria: são caixas que rolam dentro de si numa tela de
- * 390px, que é a forma que já transbordou nesta casa (ALE-178).
+ * 390px.
  */
 test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', async ({ page }) => {
   const id = await oIdDoHeroi(page, TANQUE)
@@ -267,11 +230,9 @@ test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', asy
 /**
  * A ABA PODERES ABERTA, com o diálogo de escolher.
  *
- * O caminhar pelas sete abas mede a lista do primeiro herói do elenco. O que ele
- * não alcança é o DIÁLOGO — que leva os ~93 poderes eletivos de uma classe numa
- * caixa que rola dentro de si, e é a forma que já transbordou nesta casa
- * (ALE-178). E o contador de degraus da postura, que só existe para quem tem
- * uma.
+ * O caminhar pelas sete abas mede a lista; o que ele não alcança é o DIÁLOGO,
+ * que leva os ~93 poderes eletivos de uma classe numa caixa que rola dentro de
+ * si — e o contador de degraus da postura, que só existe para quem tem uma.
  */
 test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({ page }) => {
   const id = await oIdDoHeroi(page, TANQUE)
@@ -300,31 +261,14 @@ test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({
   await expectNadaRolaDeLado(page)
 })
 
-// Aqui morava `as sete abas são endereços, e a ativa se anuncia` (ALE-320).
-//
-// As três coisas que ele afirmava desceram para o Go, que é mais barato e varre
-// mais do que ele varria:
-//
-//   - o ENDEREÇO da aba, o alias `inventory`/`equipment` e o nome inválido caindo
-//     na primeira: `TestTheSheetTabAddressSurvives`, cinco casos de tabela;
-//   - as SETE abas desenhando painel: `TestEverySheetTabDrawsSomething`, com
-//     controle de `visitadas != 7`;
-//   - e o `aria-current` na aba pedida, que era a única parte sem substituto —
-//     ela foi ESCRITA no guarda acima antes de este caso sair, e provada por duas
-//     sabotagens: sete marcas em vez de uma, e uma marca no link errado.
-//
-// Nenhuma delas usa mecanismo que só um navegador tenha: recarregar é outro GET,
-// e `aria-current` é HTML que o servidor escreve.
+// O endereço das abas, o alias `inventory`/`equipment`, o nome inválido caindo
+// na primeira, as sete abas desenhando painel e o `aria-current` na aba pedida
+// NÃO têm caso aqui de propósito: nenhum usa mecanismo que só um navegador
+// tenha, e todos estão presos em Go (`TestTheSheetTabAddressSurvives`,
+// `TestEverySheetTabDrawsSomething`).
 
 /**
- * O CELULAR DEITADO, e o orçamento do crachá (ALE-230).
- *
- * A 844×390 a ficha gastava **366 dos 390px em cromo** e sobravam 24 para a
- * lista — meia magia. A conta, medida camada por camada com a partição fechando
- * em 390: barra 69, abas 57, cabeçalho do painel 49, **crachá 205**, lista 24.
- *
- * O crachá sozinho comia 53% da tela, mais que a barra e as abas juntas, e os
- * 205px eram iguais nos seis personagens da semente — estrutura, não dado.
+ * O CELULAR DEITADO, e o orçamento do crachá.
  *
  * O TETO É O CRACHÁ e não a lista, e isso é deliberado: ele é a única peça
  * COMPARTILHADA pelas sete abas, então uma regra presa aqui cobre as sete sem
@@ -335,17 +279,12 @@ test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({
  * O TETO é ARITMÉTICA e não um número redondo: duas fileiras de alvo de toque
  * mais o respiro entre elas. Duas e não uma porque a fileira ENROLA de
  * propósito — os oito passos de vital são 44px de alvo mínimo cada, e
- * espremê-los para caber numa linha só trocaria este defeito pelo da ALE-177.
- *
- * Escrito como conta e não como constante porque a primeira versão dizia 96 e
- * estava errada: eu tinha somado 2×44 e chamado o resto de "respiro", esquecendo
- * o `gap-y` e a borda de cima. O crachá mede 101, e 101 é o que duas fileiras
- * CUSTAM. Um teto redondo esconde de qual conta ele saiu, e some no dia em que
- * alguém precisa saber se pode mexer nele.
+ * espremê-los numa linha só trocaria este defeito por um de alvo de toque.
+ * Escrito como conta para dizer de qual soma o teto saiu; um número redondo some
+ * no dia em que alguém precisa saber se pode mexer nele.
  *
  * Só um navegador testemunha: a chave é `max-lg:landscape:`, que é largura MAIS
- * orientação. Em jsdom não há orientação, e a asserção passaria verde sobre o
- * crachá de 205px.
+ * orientação, e em jsdom não há orientação.
  */
 test('deitado, o crachá do jogador não come metade da tela', async ({ page }) => {
   await aFichaDoPrimeiro(page)

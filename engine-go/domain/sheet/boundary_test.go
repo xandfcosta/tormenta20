@@ -8,20 +8,11 @@ import (
 	"testing"
 )
 
-// A FICHA E AS REGRAS DELA, e nenhum contexto (ALE-278).
+// A FICHA E AS REGRAS DELA, e nenhum contexto.
 //
-// Irmão dos `boundary_test.go` do `live`, do `tabuleiro`, da `platform`, do
-// `events` e do `creature`. A lista aqui não é vazia como a do `creature`: três
-// entradas foram medidas antes da extração — o `character_dto.go` já importava
-// exatamente aquelas e mais nada, o que foi o que provou que ele saía inteiro.
-//
-// **A quarta mudou o que este pacote é, e a prosa mudou junto.** Aqui morava "A
-// FICHA É FORMA DE DADO", com a promessa de que quem precisasse de algo de fora
-// receberia o dado por PARÂMETRO. Ela valeu enquanto o pacote guardava só os
-// DTOs; deixou de valer quando as regras da ficha vieram morar aqui — equipar e
-// PV temporário na fatia anterior, as escolhas e o círculo alcançável nesta —, e
-// as duas últimas leem o LIVRO. Passá-lo por parâmetro seria fazer cada chamador
-// montar a tabela do catálogo para entregá-la de volta.
+// Este pacote não é só FORMA DE DADO: as regras da ficha moram aqui, e duas
+// delas leem o LIVRO. Passá-lo por parâmetro faria cada chamador montar a tabela
+// do catálogo para entregá-la de volta.
 //
 // O que a lista IMPEDE continua sendo o que importa: `api` (que é HTTP),
 // `catalog` (que é o arquivo cru) e `web/*` (que é tela). O livro entra TIPADO,
@@ -36,20 +27,14 @@ var permitidos = map[string]bool{
 	// Não é domínio nenhum, então depender dela não cria fronteira errada — a
 	// mesma justificativa dos irmãos.
 	"t20engine/infra/db/dbvalue": true,
-	// O LIVRO entrou na ALE-278, e é a única entrada desta lista que mudou o que
-	// este pacote É. Decisão do dono.
+	// O LIVRO é a entrada que mudou o que este pacote É (decisão do dono): duas
+	// regras — quantas vagas de poder o nível abre e qual círculo o personagem
+	// alcança — leem o CATÁLOGO e a FICHA ao mesmo tempo, e o `book` não pode
+	// importar daqui.
 	//
-	// Duas regras não cabiam em lugar nenhum: quantas vagas de poder o nível
-	// abre e qual círculo o personagem alcança leem o CATÁLOGO e a FICHA ao mesmo
-	// tempo, e o `book` não pode importar daqui (ele é consultado por treze
-	// famílias). Ficar no `api` era devolver regra ao pacote que a épica está
-	// esvaziando; ficar na cena era a rota JSON ler regra de um pacote de
-	// apresentação.
-	//
-	// O que isto CUSTA, escrito para quem vier depois: toda cena que importa a
-	// ficha alcança o livro de graça. O preço é pequeno porque oito das dez já
-	// importam `book` direto — mas ele é real, e a próxima entrada nesta lista
-	// merece a mesma conta.
+	// O que isto CUSTA: toda cena que importa a ficha alcança o livro de graça. O
+	// preço é pequeno porque quase todas já importam `book` direto — mas ele é
+	// real, e a próxima entrada nesta lista merece a mesma conta.
 	"t20engine/domain/book": true,
 }
 

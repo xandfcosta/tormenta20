@@ -14,15 +14,15 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// A tela de administração (ALE-120), pelo router real. O que está aqui são as
+// A tela de administração, pelo router real. O que está aqui são as
 // consequências: apagar uma conta MOVE as mesas dela, o backup é um snapshot
 // que abre, e nada disso responde a quem não é admin.
 
-// Aqui morava o TestAdminScreenRoutesRejectEveryoneElse. A rota saiu na ALE-277 e a garantia
-// está em `TestANonAdminDoesNotReachTheInviteRoute`, na cena.
+// A recusa a quem não é admin NÃO se prende aqui: ela é do
+// `TestANonAdminDoesNotReachTheInviteRoute`, na cena.
 
-// Aqui morava o TestAdminUserListCountsWhatEachAccountOwns. A rota saiu na ALE-277 e a garantia
-// está em `TestHoldingsAndHowTheyRead`, no `web/admin`.
+// A contagem do que cada conta possui é do `TestHoldingsAndHowTheyRead`, no
+// `web/admin`.
 
 func TestDeletingAnAccountMovesItsCampaignsToTheAdmin(t *testing.T) {
 	s := newTestServer(t, adminEmail)
@@ -30,9 +30,8 @@ func TestDeletingAnAccountMovesItsCampaignsToTheAdmin(t *testing.T) {
 	player := seedUser(t, s, "jogador@t20.local")
 	campaign := seedCampaign(t, s, player)
 
-	// A REGRA direto, e não a rota: `DELETE /admin/users/{id}` saiu na ALE-277,
-	// e o que este caso prende é para onde vão as MESAS de quem some — que é
-	// decisão de produto e não de transporte.
+	// A REGRA direto, e não a rota: o que este caso prende é para onde vão as
+	// MESAS de quem some, que é decisão de produto e não de transporte.
 	movidas, _, err := s.adminHost().deleteAccount(httptest.NewRequest(http.MethodDelete, "/", nil), player, admin)
 	if err != nil {
 		t.Fatalf("apagar a conta falhou: %v", err)
@@ -52,8 +51,8 @@ func TestDeletingAnAccountMovesItsCampaignsToTheAdmin(t *testing.T) {
 	}
 }
 
-// Aqui morava o TestTheAdminCannotDeleteThemselves. A rota saiu na ALE-277 e a garantia
-// está em `TestThePanelDoesNotOfferDeletingYourOwnAccount`, no `web/admin`.
+// O admin não apagar a si mesmo é do
+// `TestThePanelDoesNotOfferDeletingYourOwnAccount`, no `web/admin`.
 
 func TestTheBackupIsADatabaseThatOpens(t *testing.T) {
 	s := newTestServer(t, adminEmail)
@@ -71,15 +70,9 @@ func TestTheBackupIsADatabaseThatOpens(t *testing.T) {
 	// "o backup de antes do descanso" acha pelo carimbo, e a poda depende dos
 	// nomes serem distintos por segundo.
 	//
-	// A asserção nasceu de um defeito acontecido (ALE-278, fatia 6): uma
-	// substituição de `s.` por `h.` acertou o `%s.db` do `fmt.Sprintf` e o
-	// carimbo virou `%!h(string=…)`. Quem acusou foi o `go vet`, e não um teste
-	// — todos usavam o nome DEVOLVIDO e nenhum olhava para ele.
-	//
-	// **Este caso não protege contra AQUELE defeito**, e vale dizer por quê: o
-	// `vet` roda dentro do `go test`, então o verbo errado nem compila a suíte.
-	// O que ele protege é a família que o `vet` ACEITA — trocar o layout da
-	// data. Sabotado com `time.RFC3339`, o nome sai
+	// O que ele protege é a família que o `go vet` ACEITA — trocar o LAYOUT da
+	// data. (Verbo errado no `fmt.Sprintf` o próprio `vet` pega, e ele roda
+	// dentro do `go test`.) Sabotado com `time.RFC3339`, o nome sai
 	// `t20--2026-09-04T10:36:07-03:00.db`: dois-pontos em nome de arquivo, e a
 	// poda, que ordena por nome, deixa de ordenar por tempo.
 	//
@@ -103,8 +96,8 @@ func TestTheBackupIsADatabaseThatOpens(t *testing.T) {
 	}
 }
 
-// Aqui morava o TestAdminStatusReportsTheRunningServer. A rota saiu na ALE-277 e a garantia
-// está em o painel da administração, que desenha o mesmo estado.
+// O estado do servidor em execução é desenhado pelo painel da administração, e é
+// lá que ele se prende.
 
 func usersInDatabase(t *testing.T, path string) int {
 	t.Helper()
@@ -120,8 +113,8 @@ func usersInDatabase(t *testing.T, path string) int {
 	return count
 }
 
-// openSQLite is the raw driver, not db.Open: the backup must be readable as it
-// came out, with no migration run over it to paper a problem.
+// openSQLite é o driver cru, e não o `db.Open`: o backup tem de ser legível como
+// saiu, sem migração rodando por cima para tapar um problema.
 func openSQLite(path string) (*sql.DB, error) {
 	return sql.Open("sqlite", path)
 }

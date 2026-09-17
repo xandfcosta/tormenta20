@@ -7,16 +7,11 @@ import (
 	"time"
 )
 
-// OS GUARDAS DA REGRA DA TELA DE ADMINISTRAÇÃO (ALE-278).
+// OS GUARDAS DA REGRA DA TELA DE ADMINISTRAÇÃO.
 //
-// Eles vieram do `api`, onde o arquivo misturava duas camadas: estes, que
-// exercitam funções puras — a frase de belongings, o custo de apagar, o prazo do
-// convite, e os painéis desenhados a partir de uma view montada à mão — e os que
-// precisam do servidor de verdade, que ficaram lá.
-//
-// O `expiryLabel` merece o unitário mais que os outros, e o comentário dele
-// explica por quê: a migração PERDEU essa regra uma vez, renderizando o ISO cru,
-// e as asserções que a guardavam na SPA teriam pego na hora.
+// Aqui moram só os que exercitam função PURA — a frase de belongings, o custo de
+// apagar, o prazo do convite — e os painéis desenhados a partir de uma view
+// montada à mão. Os que precisam do servidor de verdade estão no `api`.
 
 func TestExpiresIn(t *testing.T) {
 	agora := time.Date(2026, 8, 23, 12, 0, 0, 0, time.UTC)
@@ -57,9 +52,6 @@ func TestHoldingsAndHowTheyRead(t *testing.T) {
 		t.Errorf("belongings de admin = %q", got)
 	}
 }
-
-// O aviso tem de dizer o preço DESTA conta: um texto genérico não distingue
-// apagar uma conta vazia de apagar a do jogador que mestra duas campanhas.
 
 // O aviso tem de dizer o preço DESTA conta: um texto genérico não distingue
 // apagar uma conta vazia de apagar a do jogador que mestra duas campanhas.
@@ -104,11 +96,6 @@ func TestThePanelDoesNotOfferDeletingYourOwnAccount(t *testing.T) {
 // propriedade do MARCADOR: o botão da linha só abre o diálogo, e quem posta é o
 // botão de dentro dele. Afirmar isso aqui é barato; o e2e irmão prova o
 // comportamento no navegador.
-
-// O primeiro clique NÃO pode ser irreversível, e no Datastar isso é uma
-// propriedade do MARCADOR: o botão da linha só abre o diálogo, e quem posta é o
-// botão de dentro dele. Afirmar isso aqui é barato; o e2e irmão prova o
-// comportamento no navegador.
 func TestTheRowButtonOpensTheDialogInsteadOfDeleting(t *testing.T) {
 	view := adminView{Players: []playerRow{{ID: 2, Name: "Outro", IsMe: false}}}
 	linha, err := ui.RenderFragment(t.Context(), playersPanel(view))
@@ -131,12 +118,7 @@ func TestTheRowButtonOpensTheDialogInsteadOfDeleting(t *testing.T) {
 	}
 }
 
-// ── o link de redefinição (ALE-242) ──────────────────────────────────────────
-
-// Redefinir vale para TODA conta, inclusive a de quem está olhando — e é aí que
-// ele se separa do Apagar, que tem a guarda do `IsMe`. O admin que esqueceu a
-// própria senha usa esta mesma porta; sem isto ele fica de fora da única saída
-// que o app oferece.
+// ── o link de redefinição ────────────────────────────────────────────────────
 
 // Redefinir vale para TODA conta, inclusive a de quem está olhando — e é aí que
 // ele se separa do Apagar, que tem a guarda do `IsMe`. O admin que esqueceu a
@@ -199,14 +181,9 @@ func TestTheResetButtonOpensTheDialogAndClearsThePreviousLink(t *testing.T) {
 }
 
 // O remendo carrega o CAMINHO e nunca a URL inteira: quem prefixa a origem é o
-// navegador. Com o `r.Host`, o link nasce apontando para a porta da API porque
-// o proxy do Vite reescreve o `Host` em desenvolvimento — e link de redefinição
-// existe para ser MANDADO, então host errado é link morto.
-
-// O remendo carrega o CAMINHO e nunca a URL inteira: quem prefixa a origem é o
-// navegador. Com o `r.Host`, o link nasce apontando para a porta da API porque
-// o proxy do Vite reescreve o `Host` em desenvolvimento — e link de redefinição
-// existe para ser MANDADO, então host errado é link morto.
+// navegador. Com o `r.Host`, o link nasce apontando para o host que o proxy
+// reescreveu — e link de redefinição existe para ser MANDADO, então host errado
+// é link morto.
 func TestTheResetPatchCarriesNoOrigin(t *testing.T) {
 	html, err := ui.RenderFragment(t.Context(), mintedReset("/redefinir-senha?token=abc"))
 	if err != nil {
@@ -219,15 +196,3 @@ func TestTheResetPatchCarriesNoOrigin(t *testing.T) {
 		t.Error("ninguém prefixa a origem no navegador — o campo ficaria com um caminho solto")
 	}
 }
-
-// Cunhar convite pela ADMINISTRAÇÃO remenda DUAS coisas: o link e o painel.
-//
-// O segundo é a diferença entre esta rota e a do Hub, e ele não é enfeite:
-// aqui a lista de convites está a três centímetros do botão, e sem remendá-la a
-// tela diz "Invites abertos (0)" logo depois de a pessoa abrir um. No Hub não
-// existe essa lista, e por isso lá basta o link.
-//
-// O guarda é em Go e não no navegador de propósito: cunhar grava uma linha que
-// a TELA não sabe revogar, então um e2e desta garantia deixaria lixo permanente
-// no banco de desenvolvimento a cada corrida — que é a família de problema da
-// ALE-238. Aqui o banco é descartável.

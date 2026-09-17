@@ -11,24 +11,18 @@ import (
 	"time"
 )
 
-// ABRIR A MESA REGISTRA A PRESENÇA (ALE-287).
+// ABRIR A MESA REGISTRA A PRESENÇA.
 //
-// O anel de cada carta do elenco dizia quem está com a aba aberta, e ficava
-// CINZA para sempre: quem preenchia o registro era o handshake da rota
-// `/events` da SPA, apagada na ALE-277 por não ter consumidor. Ninguém em
-// produção chamava `Join` desde que a SPA saiu (ALE-272), então o mestre lia a
-// mesa deserta com três jogadores conectados — e "todos fora" tem cara de
-// medição, não de ausência de medição.
+// Sem alguém chamando `Join` em produção, o anel do elenco fica CINZA para
+// sempre e o mestre lê a mesa deserta com três jogadores conectados — "todos
+// fora" tem cara de medição, e é ausência de medição.
 //
 // # Por que este caso não é o mesmo que o do anel
 //
-// Já havia um guarda do DESENHO (`TestBothTheGmAndThePlayerSeeWhoIsAtTheTable`)
-// e ele passava: só que ele chamava `Presence().Join` ele mesmo, arranjando um
-// estado que a produção não sabia produzir. É a terceira vez nesta issue que um
-// verde vinha da bancada e não do app.
-//
-// Por isso este caso ANDA pelo fluxo de verdade: servidor HTTP real, o
-// `/stream` aberto, e a pergunta feita ao registro — sem tocar no `Join`.
+// O guarda do DESENHO (`TestBothTheGmAndThePlayerSeeWhoIsAtTheTable`) chama o
+// `Presence().Join` ele mesmo, arranjando um estado que a produção pode não
+// saber produzir. Por isso este ANDA pelo fluxo de verdade: servidor HTTP real,
+// o `/stream` aberto, e a pergunta feita ao registro — sem tocar no `Join`.
 func TestOpeningTheTableStreamRegistersPresence(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -47,7 +41,7 @@ func TestOpeningTheTableStreamRegistersPresence(t *testing.T) {
 	// `srv.Close()` do defer de cima espera por ele PARA SEMPRE. O caso deixa de
 	// reprovar e passa a TRAVAR — foi o que aconteceu ao sabotar o `Join`: o
 	// veredito virou "test timed out after 1m0s", que não diz nada sobre
-	// presença. Limpeza não pode falar mais alto que o defeito (ALE-245).
+	// presença. Limpeza não pode falar mais alto que o defeito.
 	ctx, fechar := context.WithCancel(context.Background())
 	defer fechar()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+f.tableUrl()+"/fluxo", nil)
@@ -100,7 +94,7 @@ func esperaOPrimeiroQuadro(t *testing.T, resp *http.Response) {
 // ateSumir espera a goroutine do stream perceber o cancelamento.
 //
 // Sondagem e não `sleep` fixo: o `defer` do lado do servidor roda quando o
-// runtime escalona a goroutine, e um tempo fixo escolhido na minha máquina é
+// runtime escalona a goroutine, e um tempo fixo escolhido numa máquina é
 // exatamente o teste que pisca na de outra pessoa.
 func ateSumir(t *testing.T, f sceneFixture) {
 	t.Helper()

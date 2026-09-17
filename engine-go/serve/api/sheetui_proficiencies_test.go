@@ -74,15 +74,14 @@ func TestTheProficienciesPanelSaysWhatTheClassGrants(t *testing.T) {
 
 // ARMADURA PESADA CONCEDE A LEVE — e isso o LIVRO NÃO DIZ.
 //
-// Conferi a p148: ela define as duas categorias e a penalidade por não
-// proficiência, e não há linha dizendo que uma implica a outra. É decisão de
-// produto, herdada da SPA, e está presa aqui porque é a que NÃO machuca: sem
-// ela, "restaurar o padrão de classe" tiraria a armadura leve de um guerreiro, e
-// o motor passaria a aplicar a penalidade da p148 num personagem treinado em
-// algo mais pesado.
+// A p148 define as duas categorias e a penalidade por não proficiência, e não há
+// linha dizendo que uma implica a outra: é decisão de produto, e é a que NÃO
+// machuca. Sem ela, "restaurar o padrão de classe" tiraria a armadura leve de um
+// guerreiro e o motor aplicaria a penalidade da p148 a quem é treinado em algo
+// mais pesado.
 //
 // Este caso existe para a decisão ser REVISTA de propósito e não redescoberta
-// como defeito: se alguém decidir seguir o livro à risca, é aqui que ele quebra.
+// como defeito: quem decidir seguir o livro à risca quebra aqui.
 func TestHeavyArmorGrantsTheLightOne(t *testing.T) {
 	f, id := guerreiro(t)
 
@@ -181,10 +180,10 @@ func TestAProficiencyOutsideTheCatalogIsNotSaved(t *testing.T) {
 
 // VARREDURA: nenhuma escrita da ficha aceita quem não é dono.
 //
-// A trava mora no `sheetCommand`, e a fatia 1 já a prende uma vez. O que ESTE
-// guarda prende é outra coisa, e é a que a lista de rotas vai quebrar: uma rota
-// nova registrada FORA do gateway. Ela funcionaria, passaria nos testes do painel
-// dela, e deixaria a ficha de qualquer pessoa aberta para qualquer conta.
+// A trava mora no `sheetCommand` e já é presa uma vez. O que ESTE guarda prende
+// é outra coisa: uma rota nova registrada FORA do gateway — ela funcionaria,
+// passaria nos testes do painel dela, e deixaria a ficha de qualquer pessoa
+// aberta para qualquer conta.
 //
 // Ele varre as rotas de verdade, do roteador de verdade, e **falha se encontrar
 // um parâmetro que não sabe preencher** — é isso que força a varredura: a fatia
@@ -206,18 +205,16 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 		// cliente nunca chama.
 		"nome":     url.PathEscape("Atuação"),
 		"atributo": "charisma",
-		// Os quatro da aba Efeitos (fatia 5). Todos PLAUSÍVEIS: o 403 tem de vir
-		// antes de qualquer validação de conteúdo, e um valor impossível
-		// esconderia uma rota que valida primeiro e barra depois.
+		// Os quatro da aba Efeitos.
 		"cond":   "caido",
 		"magia":  "armadura-arcana",
 		"efeito": "1",
 		"flag":   "furia",
-		// Os três da Mochila (fatia 7).
+		// Os três da Mochila.
 		"item":     "1",
 		"slot":     "vested",
 		"catalogo": "adaga",
-		// Os dos Poderes (fatia 8) — a `flag` já entrou com os Efeitos.
+		// Os dos Poderes — a `flag` já entrou com os Efeitos.
 		"poder":       "class.barbaro.brado-assustador",
 		"beneficio":   "origin-batedor-pericia-Furtividade",
 		"variante":    "suraggel-aggelus",
@@ -261,8 +258,7 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 		t.Fatalf("varrer as rotas: %v", err)
 	}
 	// CONTROLE: sem ele, um filtro que não casa com rota nenhuma passaria verde
-	// afirmando que zero rotas estão seguras. É a lição da ALE-238 — provar que o
-	// canal existe antes de ler o silêncio como resultado.
+	// afirmando que zero rotas estão seguras.
 	if visitadas < 4 {
 		t.Fatalf("a varredura achou %d rotas de escrita da ficha, e existem pelo menos 4: "+
 			"o filtro parou de casar com o roteador", visitadas)
@@ -286,10 +282,9 @@ func TestEverySheetTabDrawsSomething(t *testing.T) {
 		if !strings.Contains(tela, ">"+titulo+"</h2>") {
 			t.Errorf("a aba %q não desenhou painel nenhum", aba.Valor)
 		}
-		// E ELA SE ANUNCIA. Esta asserção desceu de um e2e do `piloto-sheet`
-		// (ALE-320): ler `aria-current` é ler HTML, e HTML o servidor escreve —
-		// a camada mais barata que a segura é esta. Lá ela media UMA aba; aqui
-		// ela varre as sete, que é o que a mudança de camada comprou.
+		// E ELA SE ANUNCIA: ler `aria-current` é ler HTML, e HTML o servidor
+		// escreve — a camada mais barata que segura isto é esta, e aqui ela varre
+		// as sete abas em vez de uma.
 		//
 		// O par CONTA + LUGAR é o guarda inteiro: uma aba ativa a mais não
 		// estoura nada na tela, ela só põe duas seções acesas ao mesmo tempo.
@@ -312,21 +307,14 @@ func TestEverySheetTabDrawsSomething(t *testing.T) {
 
 // VARREDURA: nenhum comando da ficha perde a aba aberta.
 //
-// # O defeito que este guarda existe para não voltar
-//
 // Todo `@post` da ficha responde redesenhando a CENA INTEIRA, e o handler
 // descobre em que seção redesenhar lendo `?tab=` da própria requisição. Um
 // comando escrito sem o `?tab=` faz o `AskedTab` cair na primeira aba: o
 // jogador mexe no PV com a Mochila aberta e a ficha pula para Perícias — parece
 // que ela se fechou sozinha.
 //
-// Foi ENTREGUE na fatia 1 e ninguém viu, porque com todas as abas mostrando o
-// mesmo aviso de "vive na ficha antiga" o salto não tinha aparência. O primeiro
-// painel portado o denunciou no primeiro clique da bancada.
-//
-// Ele varre as SETE abas e falha nomeando o comando que saiu sem o `?tab=`. É
-// mecanizável com o que já roda, então virou guarda em vez de parágrafo — e cada
-// fatia nova ganha a cobertura de graça, porque o que ele lê é o HTML.
+// Ele varre as SETE abas e falha nomeando o comando que saiu sem o `?tab=`.
+// Cada painel novo ganha a cobertura de graça, porque o que ele lê é o HTML.
 func TestNoSheetCommandLosesTheTab(t *testing.T) {
 	f, id := guerreiro(t)
 	// Multiclasse: é o que faz o diálogo do degrau existir, e os comandos DELE
@@ -335,9 +323,8 @@ func TestNoSheetCommandLosesTheTab(t *testing.T) {
 
 	// O APÓSTROFO SAI ESCAPADO: valor de atributo DINÂMICO passa pelo escape de
 	// HTML do templ (`&#39;`), enquanto uma constante sai literal — a armadilha
-	// está no `engine-go/CLAUDE.md`. A primeira versão desta expressão procurava
-	// a aspa crua e achou ZERO comandos; foi o CONTROLE abaixo que disse isso, em
-	// vez de o teste passar verde afirmando que nada estava errado.
+	// está no `engine-go/CLAUDE.md`. Procurar só a aspa crua acha ZERO comandos,
+	// e quem denuncia isso é o CONTROLE lá embaixo.
 	postados := regexp.MustCompile(`@post\((?:&#39;|')([^'&]+)(?:&#39;|')\)`)
 	var vistos int
 	for _, aba := range sheetui.Tabs() {

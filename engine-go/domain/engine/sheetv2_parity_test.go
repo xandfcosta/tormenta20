@@ -6,20 +6,16 @@ import (
 	"testing"
 )
 
-// TestSheetV2Parity proves the ported breakdown layer (ComputeSheetV2) on real
-// data: for each seed character it primes the catalogs, computes the full sheet
-// and asserts every breakdown matches o oráculo (`sheetV2`, dumped by the
-// gerado por `go run ./cmd/genoracle`) semantically. This is slice 3 / task #5's target
-// — the collection (slice 2) + resolution (slice 1) tests cover the upstream
-// halves.
+// A camada de decomposição (`ComputeSheetV2`) sobre dado REAL: para cada
+// personagem da semente, prima os catálogos, computa a ficha inteira e afirma
+// que toda decomposição bate com o oráculo (`sheetV2`) semanticamente.
 //
-// Each character is checked TWICE: with no opt-in toggled, and with every
-// conditional ON. The second pass is the only golden coverage of
-// `ApplyActiveConditionals` — the fold that re-runs `resolveStack` per target —
-// which ran on synthetic data only until ALE-106. It bites immediately on
-// `bardo-versatil-nv7`, whose two Inspiração opt-ins hit the same target with
-// the same bonusType: +1 and +2 must resolve to +2 across all 29 perícias, not
-// +3.
+// Cada personagem é conferido DUAS vezes: sem nenhum condicional ligado, e com
+// todos ligados. A segunda passada é a única cobertura de oráculo do
+// `ApplyActiveConditionals` — a dobra que reroda o `resolveStack` por alvo —, e
+// ela morde no `bardo-versatil-nv7`, cujos dois condicionais de Inspiração caem
+// no mesmo alvo com o mesmo `bonusType`: +1 e +2 têm de resolver para +2 nas 29
+// perícias, e não para +3.
 //
 // Regenere o oráculo quando a regra mudar:
 //
@@ -45,10 +41,10 @@ func TestSheetV2Parity(t *testing.T) {
 				diffReport(t, "sheetV2", got, oracle.SheetV2)
 			}
 
-			// A segunda passada só EXISTE para exercitar `ApplyActiveConditionals`,
-			// e 15 dos 18 personagens não têm condicional nenhum: ali ela repetia a
-			// primeira e contava como cobertura. Rodar só onde há o que ligar deixa
-			// claro quantos realmente exercitam a dobra.
+			// A segunda passada só EXISTE para exercitar `ApplyActiveConditionals`:
+			// num personagem sem condicional nenhum ela repete a primeira e conta
+			// como cobertura. Rodar só onde há o que ligar deixa claro quantos
+			// realmente exercitam a dobra.
 			if len(oracle.ActiveConditionals) == 0 {
 				return
 			}
@@ -61,9 +57,9 @@ func TestSheetV2Parity(t *testing.T) {
 		})
 	}
 
-	// A dobra dos condicionais é o que pegou a Inspiração dupla do bardo
-	// (ALE-106): se um dia NENHUM oráculo tiver condicional, a cobertura dela
-	// vira zero em silêncio — e é isso que esta linha impede.
+	// A dobra dos condicionais é o que pega a Inspiração dupla do bardo: se um
+	// dia NENHUM oráculo tiver condicional, a cobertura dela vira zero em
+	// silêncio — e é isso que esta linha impede.
 	if comConditionais == 0 {
 		t.Error("nenhum oráculo exercitou ApplyActiveConditionals — a dobra ficou sem prova")
 	}

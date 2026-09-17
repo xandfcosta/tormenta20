@@ -7,8 +7,8 @@ import (
 )
 
 // O boot recusa um banco a que falta tabela — mesmo com a migração constando
-// aplicada (ALE-154). É o guarda da classe de defeito que deixou o tabuleiro um
-// dia inteiro vivendo só em memória.
+// aplicada. É o guarda da classe de defeito que deixa o tabuleiro vivendo só em
+// memória, com a tela impecável.
 
 func TestOpenAcceptsAFreshDatabase(t *testing.T) {
 	sqlDB, err := Open(filepath.Join(t.TempDir(), "novo.db"))
@@ -64,12 +64,10 @@ func TestExpectedTablesComesFromTheMigrations(t *testing.T) {
 	if contains(tables, "goose_db_version") {
 		t.Error("a tabela de controle do goose entrou na lista de esperadas")
 	}
-	// E a DERRUBADA na seção Up tem de tirar da lista (ALE-205). A `session_boards`
-	// nasceu na 00005 e morreu na 00010, quando o tabuleiro deixou de ser um por
-	// sessão; enquanto o guarda lia só os `CREATE`, ele exigia para sempre toda
-	// tabela que qualquer migração já tivesse criado — e o servidor recusaria
-	// subir sobre um banco CORRETO, nomeando como faltante justamente a tabela
-	// que a migração acabou de derrubar de propósito.
+	// E a DERRUBADA na seção Up tem de tirar da lista. Lendo só os `CREATE`, o
+	// guarda exige para sempre toda tabela que qualquer migração já tenha criado
+	// — e o servidor recusa subir sobre um banco CORRETO, nomeando como faltante
+	// justamente a tabela que a migração acabou de derrubar de propósito.
 	if contains(tables, "session_boards") {
 		t.Error("a tabela derrubada pela 00010 continua sendo exigida: o guarda ignora o DROP da seção Up")
 	}

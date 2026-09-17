@@ -5,11 +5,9 @@ import (
 	"testing"
 )
 
-// As quatro tabelas que passaram a ser AUTORADAS aqui (ALE-102/ALE-107) — antes
-// viviam em TS e entravam no bundle do front. Sem um pacote TS por cima, o que
-// protege contra erro de digitação é validação de SCHEMA no dado servido, e não
-// um `expect` por campo repetindo o mesmo número: o risco de dado transcrito é
-// typo, não regressão.
+// As quatro tabelas AUTORADAS aqui. O que protege dado transcrito é validação de
+// SCHEMA e de invariante, e não um `expect` por campo repetindo o mesmo número:
+// o risco é typo, não regressão.
 //
 // O que cada teste cobre é a FORMA e os invariantes que quebram uma tela —
 // faixa de rolagem com buraco, perícia fora da lista, rótulo faltando. Os

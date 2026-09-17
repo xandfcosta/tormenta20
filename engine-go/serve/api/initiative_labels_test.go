@@ -5,16 +5,14 @@ import (
 	"testing"
 )
 
-// O REPETIDO NA FILA GANHA NÚMERO (ALE-208).
+// O REPETIDO NA FILA GANHA NÚMERO.
 //
-// Quatro ogros davam quatro linhas chamadas "Ogro", e a fila nomeia os botões
-// dela pelo rótulo — "Remover Ogro" quatro vezes. Nem o mestre nem um leitor de
-// tela separam isso. O defeito apareceu ao dar quantidade ao diálogo do
-// bestiário, mas já existia: mandar quatro ogros do Montar encontro fazia igual.
+// Quatro ogros dão quatro linhas chamadas "Ogro", e a fila nomeia os botões dela
+// pelo rótulo — "Remover Ogro" quatro vezes. Nem o mestre nem um leitor de tela
+// separam isso.
 //
-// Quem numera é o SERVIDOR, pela mesma razão do tabuleiro (ALE-192): achar o
-// próximo livre é decisão sobre o estado, e duas telas adivinhando produziriam
-// dois "Ogro 2".
+// Quem numera é o SERVIDOR, pela mesma razão do tabuleiro: achar o próximo livre
+// é decisão sobre o ESTADO, e duas telas adivinhando produziriam dois "Ogro 2".
 
 func addNpcs(t *testing.T, labels ...string) *live.SessionRuntimeState {
 	t.Helper()

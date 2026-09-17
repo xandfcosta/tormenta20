@@ -1,15 +1,12 @@
 import { expect, type Page } from '@playwright/test'
 
 /**
- * A MESA DESCARTÁVEL e os passos que chegam ao tabuleiro (ALE-264, extraídos na
- * ALE-174).
+ * A MESA DESCARTÁVEL e os passos que chegam ao tabuleiro.
  *
- * Eles moravam dentro do `board.spec.ts`, privados, e mudaram de casa
- * quando o segundo spec precisou chegar ao mesmo lugar — o guarda do deslize da
- * peça. É a lição do `CLAUDE.md` acontecendo de novo: **instrumento que mora
- * dentro de um chamador tem exatamente um chamador**, e a alternativa era
- * copiar sessenta linhas de jornada, que divergem no primeiro dia em que um
- * rótulo da tela mudar.
+ * Eles moram AQUI e não dentro de um spec porque **instrumento que mora dentro
+ * de um chamador tem exatamente um chamador**: a alternativa era copiar
+ * sessenta linhas de jornada, que divergem no primeiro dia em que um rótulo da
+ * tela mudar.
  */
 
 /** Uma mesa só desta corrida. Devolve o endereço e como se livrar dela. */
@@ -19,11 +16,8 @@ export async function disposableTable(page: Page): Promise<{ mesa: string; apaga
   // A FIXTURE vai pela API e não pela tela, de propósito: montar campanha e
   // sessão clicando gastaria meia dúzia de navegações em cada caso para chegar
   // ao que se quer medir, e nenhuma delas é o assunto deste arquivo. O que é
-  // medido — o tabuleiro — vai pela tela inteiro.
-  //
-  // Estas rotas JSON estão na lista de órfãs da ALE-247. Quando elas caírem,
-  // esta fixture troca de caminho e nenhum dos casos abaixo muda: eles só
-  // precisam de um endereço de mesa.
+  // medido — o tabuleiro — vai pela tela inteiro. Os casos abaixo só precisam
+  // de um endereço de mesa, então trocar este caminho não mexe em nenhum.
   const criada = await page.request.post('/api/campanhas', {
     data: { name: nome, description: 'Criada e apagada pelo E2E do tabuleiro.' },
   })
@@ -38,12 +32,10 @@ export async function disposableTable(page: Page): Promise<{ mesa: string; apaga
 
   return {
     mesa: `/mesa/${campanha}/${sid}`,
-    // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO (ALE-245), e eu aprendi
-    // isto de novo na primeira corrida deste arquivo: sem o `catch`, um caso que
-    // falhou no meio deixa a página num estado em que o `delete` estoura, e o
-    // relatório mostra o erro da FAXINA no lugar do erro do teste — com a linha
-    // apontando para o `finally`. A campanha órfã custa uma linha na lista; o
-    // defeito escondido custa uma sessão inteira.
+    // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO: sem o `catch`, um caso
+    // que falhou no meio deixa a página num estado em que o `delete` estoura, e
+    // o relatório mostra o erro da FAXINA no lugar do erro do teste. A campanha
+    // órfã custa uma linha na lista; o defeito escondido custa uma sessão.
     apagar: async () => {
       try {
         await page.request.delete(`/api/campanhas/${campanha}`)
@@ -55,12 +47,11 @@ export async function disposableTable(page: Page): Promise<{ mesa: string; apaga
 }
 
 /**
- * Abre a GAVETA da fila, que é onde a lista inteira passou a morar (ALE-269).
+ * Abre a GAVETA da fila, que é onde a lista inteira mora.
  *
- * A forma do mestre virou SHELL: o trilho de 80px responde "de quem é a vez", e
- * dano, ordem, condição, "+ Combatente" e "Adicionar grupo" desceram para uma
- * gaveta pela esquerda — a mesma decisão que a ALE-198 tomou na SPA, onde a
- * fila inteira vive num `SidePanel`.
+ * A forma do mestre é uma SHELL: o trilho de 80px responde "de quem é a vez", e
+ * dano, ordem, condição, "+ Combatente" e "Adicionar grupo" ficam numa gaveta
+ * pela esquerda.
  *
  * Sem este passo os botões existem no HTML dentro de um `<dialog>` FECHADO, que
  * o navegador esconde com `display:none`. O sintoma não é "não achei o botão":
@@ -97,21 +88,12 @@ export async function openTheTracker(page: Page): Promise<void> {
 }
 
 /**
- * Põe UMA peça no mapa, e este passo não é enfeite: a camada de MOVER — a que
- * cobria o marcador — só é desenhada quando existe algo movível
- * (`v.AlvoDoMovimento != ""`). Num tabuleiro vazio ela não nasce, e um teste de
- * empilhamento sobre um tabuleiro vazio não enfrenta o que veio guardar.
- *
- * Descobri isto SABOTANDO: tirei o `z-index` do marcador e o caso continuou
- * verde. Ele media um palco onde nada cobria nada.
- */
-/**
  * Acrescenta UM combatente à fila, com a gaveta ABERTA no fim.
  *
  * O `pv` é opcional porque o formulário o trata assim, e a diferença importa:
  * sem ele a linha não desenha barra de vital nenhuma (`trackerBar` só desenha
  * `if b != nil`), e um guarda que precise ver o número mudar mediria uma linha
- * que não tem número. Foi assim que a sonda da ALE-174 não achou o "Ferir".
+ * que não tem número.
  */
 export async function putACombatantInTheTracker(
   page: Page,
@@ -127,21 +109,25 @@ export async function putACombatantInTheTracker(
   if ((await abrir.getAttribute('aria-expanded')) !== 'true') {
     await abrir.click()
   }
-  // `exact` porque `getByLabel` casa por SUBSTRING: desde o editor de bloco
-  // (ALE-269) a mesma cena tem "Nome do NPC", e `'Nome'` passou a resolver para
-  // dois campos. É a segunda vez nesta fatia que um seletor único por acidente
-  // deixa de ser — a outra foi a camada de clique.
+  // `exact` porque `getByLabel` casa por SUBSTRING, e a mesma cena tem "Nome do
+  // NPC": sem ele, `'Nome'` resolve para dois campos.
   await page.getByLabel('Nome', { exact: true }).fill(nome)
   if (pv !== undefined) {
     // Pelo ID e não pelo rótulo: `PV` resolve para DOIS campos nesta cena — este
     // e o ajuste do bestiário —, e o `exact` não desempata porque os dois se
-    // chamam exatamente "PV". É a terceira vez que um seletor único por acidente
-    // deixa de ser aqui, depois de `Nome` e de `Lugar`.
+    // chamam exatamente "PV".
     await page.locator('#novo-pv').fill(String(pv))
   }
   await page.getByRole('button', { name: 'Acrescentar' }).click()
 }
 
+/**
+ * Põe UMA peça no mapa, e este passo não é enfeite: a camada de MOVER — a que
+ * cobre o marcador — só é desenhada quando existe algo movível. Num tabuleiro
+ * vazio ela não nasce, e um teste de empilhamento sobre um tabuleiro vazio não
+ * enfrenta o que veio guardar: tirar o `z-index` do marcador deixa o caso
+ * VERDE, medindo um palco onde nada cobre nada.
+ */
 export async function putATokenOnTheMap(page: Page): Promise<void> {
   await putACombatantInTheTracker(page, 'Ogro do E2E')
   // A GAVETA FECHA ANTES de o teste voltar ao mapa, e esta ordem é a jornada de
@@ -165,14 +151,14 @@ export async function openTheBoard(page: Page, mesa: string): Promise<void> {
   await page.goto(mesa, { waitUntil: 'domcontentloaded' })
   await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
   // `exact` porque `getByLabel` casa por SUBSTRING, e o diálogo do acervo se
-  // chama "Lugares da campanha" — com acervo na mesa, `'Lugar'` resolve para
-  // DOIS e o helper estoura em strict mode (ALE-271). O sintoma não aponta para
-  // a causa: ele diz "waiting for getByLabel('Lugar')" num campo que está lá.
+  // chama "Lugares da campanha": com acervo na mesa, `'Lugar'` resolve para
+  // DOIS e o helper estoura em strict mode. O sintoma não aponta para a causa —
+  // ele diz "waiting for getByLabel('Lugar')" num campo que está lá.
   await page.getByLabel('Lugar', { exact: true }).fill('Taverna do E2E')
   await page.getByRole('button', { name: 'Abrir', exact: true }).click()
-  // A CENA e não o PLANO: desde a ALE-203 o plano é uma ORIGEM de tamanho zero
-  // num plano infinito, e o Playwright chama de invisível todo elemento sem
-  // caixa. Quem tem o retângulo agora é a janela que recorta.
+  // A CENA e não o PLANO: o plano é uma ORIGEM de tamanho zero num plano
+  // infinito, e o Playwright chama de invisível todo elemento sem caixa. Quem
+  // tem o retângulo é a janela que recorta.
   await page.locator('.board-scene').waitFor({ timeout: 10_000 })
 }
 

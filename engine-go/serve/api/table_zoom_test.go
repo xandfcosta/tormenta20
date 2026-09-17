@@ -19,13 +19,9 @@ func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	// O CONTROLE: os controles estão na página. Sem isto, as buscas abaixo
-	// falhariam por motivo errado e "não achei o limite" leria como "o limite
-	// sumiu" quando a verdade seria "a cena não desenhou o zoom".
-	// O nome do grupo virou "Enquadrar o mapa" na ALE-269, quando o centralizar
-	// entrou ao lado do zoom: "Aproximar e afastar" descrevia dois dos três
-	// botões. O CONTROLE continua sendo o mesmo — provar que a faixa está na
-	// página antes de procurar coisa dentro dela.
+	// O CONTROLE: a faixa está na página. Sem isto, as buscas abaixo falhariam
+	// por motivo errado e "não achei o limite" leria como "o limite sumiu"
+	// quando a verdade seria "a cena não desenhou o zoom".
 	if !strings.Contains(tela, "Enquadrar o mapa") {
 		t.Fatal("a cena não desenhou os controles de enquadramento")
 	}
@@ -40,13 +36,12 @@ func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	//
 	// A busca é pela EXPRESSÃO inteira e não pelo número: procurar "20" numa
 	// página HTML acha vinte coisas — uma classe, um tamanho, um id — e a
-	// asserção passaria verde com o limite trocado. Foi assim que ela nasceu, e
-	// eu a apertei antes de confiar nela.
+	// asserção passaria verde com o limite trocado.
 	//
 	// E ela vai ESCAPADA: `<=` sai como `&lt;=` porque o valor do atributo é
 	// DINÂMICO, e só valor constante sai literal (está no guia do pacote). No
 	// navegador não muda nada — o parser desfaz o escape —, mas um teste que lê
-	// HTML cru compara com a forma do fio. Medido antes de escrever.
+	// HTML cru compara com a forma do fio.
 	for _, expressao := range []string{table.ZoomAtLimit(-table.ZoomStep), table.ZoomAtLimit(table.ZoomStep)} {
 		if !strings.Contains(tela, html.EscapeString(expressao)) {
 			t.Errorf("a expressão de limite %q não está na cena", expressao)

@@ -1,16 +1,15 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * O LEITOR DO LIVRO: o verbete aberto na página certa e DESTACADO (ALE-264).
+ * O LEITOR DO LIVRO: o verbete aberto na página certa e DESTACADO.
  *
  * E2E porque não há outra testemunha. O que se afirma aqui é que o pdf.js
  * carregou num WORKER, pediu faixas de um PDF de 89 MB, desenhou uma página num
  * CANVAS e posicionou as marcas sobre o texto — nada disso existe em jsdom, onde
  * canvas mede zero e worker não roda.
  *
- * Ele nasceu porque o visualizador do navegador não serve: medido, o Chrome
- * IGNORA `#search=` (o dono conferiu na tela) e transfere o arquivo inteiro para
- * abrir uma página.
+ * O visualizador nativo do navegador não serve: o Chrome IGNORA `#search=` e
+ * transfere o arquivo inteiro para abrir uma página.
  */
 test.use({ storageState: '.auth/user.json' })
 
@@ -25,10 +24,9 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
   // número que eu teria de lembrar de atualizar.
   // `count()` ANTES de `getAttribute`, e a ordem é o conserto: `getAttribute`
   // ESPERA o elemento aparecer, então numa bancada sem `LIVRO_PDF` — onde o
-  // botão não existe e nunca vai existir — ele consumia os 30s do teste e
-  // estourava por timeout. O `test.skip` logo abaixo era código INALCANÇÁVEL,
-  // e o modo de falhar mentia sobre a causa: parecia leitor quebrado, era
-  // bancada sem livro. `count()` resolve na hora, com zero.
+  // botão não existe e nunca vai existir — ele consome os 30s e estoura por
+  // timeout, deixando o `test.skip` abaixo INALCANÇÁVEL. E o modo de falhar
+  // mente sobre a causa: parece leitor quebrado, é bancada sem livro.
   const botao = page.locator('a[href*="/livro/ler"]').first()
 
   if ((await botao.count()) === 0) {
@@ -46,10 +44,9 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
 
   // O CONTROLE de que o pdf.js de fato desenhou: um canvas com área. Sem ele,
   // "achei a marca" poderia ser verdade sobre uma página em branco.
-  // Esperar o `data-pronto` e não só a visibilidade: um `<canvas>` sem
-  // desenhar mede 300×150 (o default do elemento) e passa por "visível". A
-  // primeira versão deste guarda mediu exatamente isso e reprovou uma página
-  // que estava certa — o instrumento chegou antes do render.
+  // Esperar o `data-pronto` e não só a visibilidade: um `<canvas>` sem desenhar
+  // mede 300×150 (o default do elemento) e passa por "visível" — o instrumento
+  // chega antes do render e reprova uma página que está certa.
   const leitor = page.locator('#reader[data-pronto]')
   await expect(leitor).toBeAttached({ timeout: 30_000 })
 
@@ -107,9 +104,7 @@ test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ pag
   expect(await dialogo.locator('iframe').getAttribute('src')).toBeNull()
 
   // DUAS aberturas seguidas, e não uma: a segunda é a que prova que fechar não
-  // deixou o leitor num estado que impede a próxima. Sondando por CDP eu vi a
-  // segunda falhar e quase consertei um defeito que não existia — o que estava
-  // quebrado era a página em que eu tinha mexido à mão.
+  // deixou o leitor num estado que impede a próxima.
   for (const indice of [0, 3]) {
     await page.locator('a[href*="/livro/ler"]').nth(indice).click()
     expect(await dialogo.evaluate((d: HTMLDialogElement) => d.open)).toBe(true)

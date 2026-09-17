@@ -7,33 +7,24 @@ import (
 	"testing"
 )
 
-// A MESA AO VIVO PRECISA SABER QUE A FICHA MUDOU (ALE-245).
+// A MESA AO VIVO PRECISA SABER QUE A FICHA MUDOU.
 //
-// O mestre aplica "Caído" num PC pela ficha do combatente e a tela do jogador
-// não ficava sabendo. Pior que o chip faltando: o motor deriva Defesa e
-// perícias da condição (ALE-28), então os dois viam números diferentes do mesmo
-// personagem, sem nada na tela dizendo que discordavam. É a família da ALE-122.
+// O mestre aplica "Caído" num PC pela ficha do combatente, e o motor deriva
+// Defesa e perícias da condição: sem o aviso, os dois veem números diferentes
+// do mesmo personagem, sem nada na tela dizendo que discordam.
 //
-// Este teste mudou de FORMA na ALE-253, e o motivo vale mais que ele. Antes ele
-// prendia um GANCHO: `characterChanged` chamava `s.notifyCharacterChanged` se
-// não fosse nulo, e havia um caso afirmando que NULO NÃO DERRUBA. Aquilo estava
-// certo para o socket — o gateway nascia noutro arquivo e o `Server` existia
-// sem ele. Só que apagar o gateway deixou o gancho sem quem o preenchesse, o Go
-// inteiro seguiu VERDE, e quem acusou foi o e2e de dois clientes.
-//
-// Um teste que afirma "desligado é caminho normal" não distingue desligado de
-// QUEBRADO. Agora o hub é campo do `Server`, não há nulo a tolerar, e o que se
-// prende é o que a mesa recebe.
+// O que se prende é O QUE A MESA RECEBE, e não um GANCHO opcional. Um caso
+// afirmando que "nulo não derruba" não distingue desligado de QUEBRADO — foi
+// assim que o gancho ficou sem quem o preenchesse com o Go inteiro VERDE, e
+// quem acusou foi o e2e de dois clientes.
 
-// TestTheSheetThatChangedReachesTheTable exercita o caminho inteiro contra o hub de
-// verdade — o mesmo que o handler usa.
+// O caminho inteiro contra o hub de verdade, o mesmo que o handler usa.
 func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	s := &Server{
-		// O barramento é OBRIGATÓRIO, e um `Server` montado à mão sem ele
-		// explode no primeiro `characterChanged` (ALE-279). É o desenho: nulo
-		// que EXPLODE é melhor que nulo tolerado — a segunda forma foi o gancho
-		// que este arquivo conta ter nascido desligado.
+		// O barramento é OBRIGATÓRIO, e um `Server` montado à mão sem ele explode
+		// no primeiro `characterChanged`. É o desenho: nulo que EXPLODE é melhor
+		// que nulo tolerado, que é como o gancho acima nasceu desligado.
 		bus: &events.Bus{},
 		sse: live.NewSSEHub(),
 		sessions: &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
@@ -60,10 +51,6 @@ func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
 func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	s := &Server{
-		// O barramento é OBRIGATÓRIO, e um `Server` montado à mão sem ele
-		// explode no primeiro `characterChanged` (ALE-279). É o desenho: nulo
-		// que EXPLODE é melhor que nulo tolerado — a segunda forma foi o gancho
-		// que este arquivo conta ter nascido desligado.
 		bus: &events.Bus{},
 		sse: live.NewSSEHub(),
 		sessions: &live.SessionStore{States: map[int64]*live.SessionRuntimeState{

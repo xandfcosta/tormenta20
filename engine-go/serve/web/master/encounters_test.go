@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// Os guardas do CONSTRUTOR DE ENCONTROS (ALE-259).
+// Os guardas do CONSTRUTOR DE ENCONTROS.
 //
 // A conta em si é do `engine` e tem os testes dela lá, contra o livro. O que se
 // prende aqui é a ÁLGEBRA DO RASCUNHO e a tradução do gesto — que é onde um
@@ -17,7 +17,7 @@ func encontroDe(t *testing.T, linhas []encounterRow) encountersView {
 	return loadEncounters(nivelPadrao, grupoPadrao, linhas, "")
 }
 
-// TestTheSameCreatureRaisesTheCount, e não vira uma segunda linha.
+// A mesma criatura SOBE A CONTAGEM, e não vira uma segunda linha.
 //
 // Duas linhas do mesmo verbete calculariam cada uma o próprio ND de grupo, e a
 // regra da dobra (p282) só significa alguma coisa sobre UM grupo: dois grupos
@@ -45,7 +45,7 @@ func TestTheSameCreatureRaisesTheCount(t *testing.T) {
 	}
 }
 
-// TestTheLastOneRemovedTakesTheRow: um grupo de zero criaturas não é um grupo, e
+// Um grupo de zero criaturas não é um grupo, e
 // deixar a linha com 0 mostraria "ND 0" numa linha que ainda parece parte do
 // encontro.
 func TestTheLastOneRemovedTakesTheRow(t *testing.T) {
@@ -60,8 +60,8 @@ func TestTheLastOneRemovedTakesTheRow(t *testing.T) {
 	}
 }
 
-// TestAnEntryThatVanishedDoesNotBecomeAnEmptyRow. Um id velho colado numa URL
-// renderizaria uma linha sem nome com quantidade viva.
+// Um id velho colado numa URL renderizaria uma linha sem nome com quantidade
+// viva.
 func TestAnEntryThatVanishedDoesNotBecomeAnEmptyRow(t *testing.T) {
 	v := encontroDe(t, []encounterRow{
 		{ID: "ogro", Qtd: 1},
@@ -75,7 +75,7 @@ func TestAnEntryThatVanishedDoesNotBecomeAnEmptyRow(t *testing.T) {
 	}
 }
 
-// TestTheCopiedLinkReopensTheEncounter é o ciclo inteiro: montar, copiar, colar.
+// O ciclo inteiro: montar, copiar, colar.
 //
 // Ele existe porque o formato do link é escrito num lugar e lido em outro, e é
 // exatamente aí que um `:` vira `-` e o encontro chega vazio do outro lado sem
@@ -115,8 +115,7 @@ func TestTheCopiedLinkReopensTheEncounter(t *testing.T) {
 	}
 }
 
-// TestACrookedLinkDoesNotCostTheWholeEncounter: ele chega por chat, e um caractere a
-// mais não pode zerar o que veio junto.
+// O link chega por chat, e um caractere a mais não pode zerar o que veio junto.
 func TestACrookedLinkDoesNotCostTheWholeEncounter(t *testing.T) {
 	linhas := rowsFromURL("ogro:2,lixo,goblin-salteador:x,,cascavel:3")
 	if len(linhas) != 2 {
@@ -127,8 +126,8 @@ func TestACrookedLinkDoesNotCostTheWholeEncounter(t *testing.T) {
 	}
 }
 
-// TestAnAbsurdLevelAndSizeFallBackToTheDefault. Os dois vêm da URL, que qualquer um
-// edita à mão, e um nível 999 mudaria a dificuldade sem mudar o encontro.
+// Nível e tamanho vêm da URL, que qualquer um edita à mão, e um nível 999
+// mudaria a dificuldade sem mudar o encontro.
 func TestAnAbsurdLevelAndSizeFallBackToTheDefault(t *testing.T) {
 	v := loadEncounters(999, -3, nil, "")
 	if v.Nivel != nivelPadrao || v.Grupo != grupoPadrao {
@@ -137,9 +136,8 @@ func TestAnAbsurdLevelAndSizeFallBackToTheDefault(t *testing.T) {
 	}
 }
 
-// TestTheSearchPanelOnlyShowsWithATerm: mostrar as 80 criaturas abaixo da
-// composição empurraria o VEREDITO para fora da tela, e o veredito é o assunto
-// da ferramenta (ALE-170).
+// Mostrar as 80 criaturas abaixo da composição empurraria o VEREDITO para fora
+// da tela, e o veredito é o assunto da ferramenta.
 func TestTheSearchPanelOnlyShowsWithATerm(t *testing.T) {
 	if got := loadEncounters(1, 4, nil, "").Achados; len(got) != 0 {
 		t.Errorf("sem termo vieram %d criaturas", len(got))
@@ -151,7 +149,7 @@ func TestTheSearchPanelOnlyShowsWithATerm(t *testing.T) {
 
 // ── pelo fio ─────────────────────────────────────────────────────────────────
 
-// TestTheEncounterInTheUrlHoldsOnAColdLoad — é o link colado no chat abrindo montado.
+// O link colado no chat abre montado, numa carga fria.
 func TestTheEncounterInTheUrlHoldsOnAColdLoad(t *testing.T) {
 	rec := pedeNaCena(t, "/mestre/encontros?nivel=3&grupo=4&c=ogro:2")
 	if rec.Code != http.StatusOK {
@@ -161,24 +159,15 @@ func TestTheEncounterInTheUrlHoldsOnAColdLoad(t *testing.T) {
 	if !strings.Contains(corpo, "Ogro") {
 		t.Error("o encontro do link não foi desenhado")
 	}
-	// A dificuldade vai ESCRITA À MÃO e não colhida de `loadEncounters`.
-	//
-	// A versão anterior chamava a mesma função que a página chama e afirmava
-	// que a página continha o resultado dela — o que passa verde mesmo se a
-	// conta estiver errada, porque os dois lados erram junto. É o que o
-	// CLAUDE.md chama de derivar o esperado do código sob teste, e a fronteira
-	// desta fatia o expôs ao tirar a função do alcance do `api` (ALE-278).
 	// A dificuldade vai CALCULADA À MÃO pelo livro, e não colhida de
 	// `loadEncounters`:
 	//
 	//	ogro ND 4, dois deles → 4 + 2·log2(2) = ND 6 (p282)
 	//	6 − nível 3 = diferença 3 → acima da faixa "Difícil" → Mortal (p281)
 	//
-	// A versão anterior chamava a mesma função que a página chama e afirmava
-	// que a página continha o resultado dela — o que fica verde mesmo com a
-	// conta errada, porque os dois lados erram junto. É o que o CLAUDE.md chama
-	// de derivar o esperado do código sob teste, e quem o expôs foi a fronteira
-	// desta fatia, ao tirar a função do alcance do `api` (ALE-278).
+	// Chamar a mesma função que a página chama e afirmar que a página contém o
+	// resultado dela fica verde mesmo com a conta errada, porque os dois lados
+	// erram junto.
 	const dificuldadeEsperada = "Mortal"
 	if !strings.Contains(corpo, dificuldadeEsperada) {
 		t.Errorf("dois ogros contra um grupo de nível 3 são %q pelo livro, e a página não diz",

@@ -6,12 +6,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// TODA FERRAMENTA DESENHADA NO RASCUNHO TEM ROTA NELE (ALE-293).
+// TODA FERRAMENTA DESENHADA NO RASCUNHO TEM ROTA NELE.
 //
 // O rascunho reusa o `boardTable` inteiro, e com ele o TRILHO inteiro: as
-// ferramentas que não são `SoMestre` — a régua e o gabarito — aparecem lá
-// numeradas, com atalho de teclado, sem ninguém as ter escolhido para aquela
-// tela. Foi assim que a ALE-292 entregou dois gestos que caíam em 404.
+// ferramentas que não são `SoMestre` aparecem lá numeradas e com atalho de
+// teclado, sem ninguém as ter escolhido para aquela tela.
 //
 // **O modo de falha é o pior desta casa: o gesto oferecido que o servidor não
 // atende.** Nada estoura, nada aparece no console do servidor além de um 404, e
@@ -45,10 +44,9 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 	for _, f := range rail(true) {
 		caminho, declarada := posta[f.ID]
 		if !declarada {
-			// O PINCEL de terreno: TODOS na mesma rota desde a ALE-305, porque a
-			// espécie viaja no corpo. O laço continua percorrendo a lista de
-			// espécies — o que ele afirma agora é que nenhuma delas ficou sem
-			// rota, e não mais que cada uma tem a sua.
+			// O PINCEL de terreno: TODOS na mesma rota, porque a espécie viaja no
+			// corpo. O laço percorre a lista de espécies para afirmar que nenhuma
+			// delas ficou sem rota.
 			caminho = base + "/terreno"
 		}
 		if caminho == "" {
@@ -68,7 +66,7 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 	}
 
 	// O DENOMINADOR. Uma lista de reprovados vazia e um trilho que não devolveu
-	// ferramenta nenhuma se parecem no terminal. Eram dez em setembro de 2026.
+	// ferramenta nenhuma se parecem no terminal.
 	if medidas < 8 {
 		t.Fatalf("só %d ferramentas medidas — o guarda ficou cego", medidas)
 	}

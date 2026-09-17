@@ -1,22 +1,15 @@
 import { type Browser, type Page, expect, test } from '@playwright/test'
 
 /**
- * O REALTIME COM DOIS CLIENTES na Mesa em Datastar (ALE-272, fatia 10b).
+ * O REALTIME COM DOIS CLIENTES na Mesa.
  *
- * Este arquivo é o porte do `session-realtime.spec.ts`, que dirigia a sessão da
- * SPA e morre com ela. A GARANTIA não morre junto: ela é do servidor — o que o
- * mestre faz aparece na tela do jogador sem ninguém recarregar nada —, e
- * continuaria valendo com a SPA apagada e sem testemunha nenhuma.
+ * Por que e2e — e é o fluxo AO VIVO ENTRE DOIS CLIENTES, a justificativa que o
+ * guia da casa nomeia: um handler que publicasse para a sala errada, ou para o
+ * próprio remetente, passaria por todo teste de handler em Go e por todo caso de
+ * uma aba só. O mestre veria a própria ação e o jogador não veria nada.
  *
- * É a única justificativa de e2e que o guia da casa nomeia e que nada mais
- * cobre: o que existe prova que UM cliente aperta a mão com o stream. Um handler
- * que publicasse para a sala errada — ou para o próprio remetente — passaria por
- * todo teste de handler em Go e por todo caso de uma aba só: o mestre veria a
- * própria ação e o jogador não veria nada.
- *
- * SERIAL, e na sessão 5: estes casos escrevem uns sobre os outros, e a sessão 5
- * é a que o spec da SPA usava justamente para não atropelar a 4, que é a das
- * outras suítes.
+ * SERIAL, e numa sessão só destes casos: eles escrevem uns sobre os outros, e a
+ * 5 não é a das outras suítes.
  */
 test.describe.configure({ mode: 'serial' })
 
@@ -39,7 +32,7 @@ async function asDuasTelas(browser: Browser) {
     telaDoMestre,
     telaDoJogador,
     // `catch` na limpeza, sempre: fechar contexto pode lançar e SUBSTITUIR o
-    // erro de verdade do caso (ALE-245).
+    // erro de verdade do caso.
     fecha: async () => {
       await mestre.close().catch(() => {})
       await jogador.close().catch(() => {})
@@ -48,7 +41,7 @@ async function asDuasTelas(browser: Browser) {
 }
 
 /**
- * A gaveta da fila, que é onde o mestre comanda (ALE-269).
+ * A gaveta da fila, que é onde o mestre comanda.
  *
  * IDEMPOTENTE, e não é conveniência: a gaveta é MODAL, então com ela já aberta o
  * botão que a abre fica atrás dela. O sintoma não é "não achei o botão" — é um
@@ -186,8 +179,8 @@ test('a condição que o mestre aplica aparece na fila do jogador', async ({ bro
 })
 
 /**
- * A CENA como cortina (ALE-210): o mestre encerra e a fila SOME da mesa,
- * enquanto continua inteira na tela dele.
+ * A CENA como cortina: o mestre encerra e a fila SOME da mesa, enquanto
+ * continua inteira na tela dele.
  *
  * As duas metades importam. Sumir da mesa é a regra; CONTINUAR na tela do
  * mestre é o que separa "redigi o que vai para a mesa" de "apaguei a fila" — e a
@@ -228,10 +221,9 @@ test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ brow
 })
 
 /**
- * O TABULEIRO atravessa a mesa (ALE-124), e a CORTINA o esconde sem apagá-lo
- * (ALE-202). Os dois no mesmo caso porque são o mesmo mecanismo — estado que sai
- * REDIGIDO por papel — e montar um tabuleiro custa caro demais para pagar duas
- * vezes.
+ * O TABULEIRO atravessa a mesa, e a CORTINA o esconde sem apagá-lo. Os dois no
+ * mesmo caso porque são o mesmo mecanismo — estado que sai REDIGIDO por papel —
+ * e montar um tabuleiro custa caro demais para pagar duas vezes.
  */
 test('o tabuleiro que o mestre abre aparece na tela do jogador, e a cortina o esconde', async ({
   browser,
@@ -282,17 +274,17 @@ test('o tabuleiro que o mestre abre aparece na tela do jogador, e a cortina o es
 })
 
 /**
- * O DANO DO MESTRE CHEGA NA FICHA QUE O JOGADOR ESTÁ OLHANDO (ALE-275).
+ * O DANO DO MESTRE CHEGA NA FICHA QUE O JOGADOR ESTÁ OLHANDO.
  *
  * A superfície "Ficha" não é região do stream — a ficha é sete painéis
  * computados, e recomputá-los a cada tique custaria o preço mais caro da página
  * para descobrir que nada mudou. O que o servidor manda é um SINAL de uma linha
- * (`fichaversao`), e quem repede a ficha é o cliente.
+ * (`sheet_version`), e quem repede a ficha é o cliente.
  *
  * As duas metades importam, e a segunda é a que o desenho podia ter perdido:
  * a ficha atualiza, E o jogador continua na seção em que estava. O servidor não
  * sabe qual é — ela viaja na query dos comandos da ficha, e este stream abriu
- * antes de qualquer clique —, então quem a guarda é o sinal `fichatab`. Sem ele
+ * antes de qualquer clique —, então quem a guarda é o sinal `sheet_tab`. Sem ele
  * o repedido devolveria a aba padrão, e quem estivesse lendo Combate no meio de
  * um turno seria jogado de volta para a primeira seção a cada golpe recebido.
  */

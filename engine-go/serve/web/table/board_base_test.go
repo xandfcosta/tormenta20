@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// NENHUM GESTO DO TABULEIRO ESCREVE O PRÓPRIO CAMINHO (ALE-292).
+// NENHUM GESTO DO TABULEIRO ESCREVE O PRÓPRIO CAMINHO.
 //
 // O tabuleiro tem DUAS superfícies desde o rascunho de lugar: a cena que a mesa
 // está jogando e a cena que o mestre monta no acervo, fora da sessão. O mesmo
@@ -21,9 +21,9 @@ import (
 // `/mesa/12/0/tabuleiro/…`, um endereço que existe, responde 404 ou 403, e
 // devolve uma tela que não mudou. Pintar não pinta, e nada explica por quê.
 //
-// É a forma da seção "Como uma convenção passa a valer": a regra é mecanizável
-// com o que já roda, então ela é guarda e não parágrafo — e falha com o nome do
-// arquivo e da linha, que é a diferença entre "conserte isto" e "procure".
+// A regra é mecanizável com o que já roda, então ela é guarda e não parágrafo —
+// e falha com o nome do arquivo e da linha, que é a diferença entre "conserte
+// isto" e "procure".
 func TestNoBoardRouteIsHandwritten(t *testing.T) {
 	// Os dois ÚNICOS lugares onde o caminho do tabuleiro pode ser escrito. Eles
 	// são a definição do prefixo; proibi-los seria proibir a regra de existir.
