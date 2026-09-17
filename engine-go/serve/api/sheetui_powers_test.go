@@ -110,7 +110,7 @@ func TestActionsComeSortedAndPassivesComeApart(t *testing.T) {
 // A SEÇÃO DE AÇÕES FICA MESMO VAZIA, e a frase depende de quem lê.
 //
 // Um arcanista de nível 20 tem ZERO ações ativáveis — 26 habilidades, todas
-// passivas (medido na ALE-217). Sumir com a seção faria a tela mudar de forma
+// passivas. Sumir com a seção faria a tela mudar de forma
 // por classe; e mandar às Magias quem não conjura seria mandá-lo a uma aba
 // vazia.
 func TestWithoutActionsTheScreenExplainsInsteadOfShowingAVoid(t *testing.T) {

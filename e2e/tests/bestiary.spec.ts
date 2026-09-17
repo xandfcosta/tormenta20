@@ -54,20 +54,17 @@ test.describe('O bestiário', () => {
   })
 
   /**
-   * A CORRIDA ENTRE OS DOIS PEDIDOS DE UM CLIQUE SÓ (ALE-272).
+   * A CORRIDA ENTRE OS DOIS PEDIDOS DE UM CLIQUE SÓ.
    *
-   * O clique do mouse também FOCA, e por uma fatia inteira a linha saía com dois
-   * pedidos: o do foco, que só pré-visualiza e não leva `abrir=1`, e o do
-   * clique, que leva. Os dois remendam o `#bestiary`, que redeclara
-   * `fichaAberta` a cada remendo — então quem CHEGA por último manda, e a ordem
-   * de chegada não é a de saída. Na bancada o do clique chegava depois e a ficha
-   * abria; no CI a ordem inverteu e o teste acima pegou a criatura escolhida com
-   * a ficha fechada, duas vezes seguidas.
+   * O clique do mouse também FOCA, e a linha pode sair com dois pedidos: o do
+   * foco, que só pré-visualiza e não leva `abrir=1`, e o do clique, que leva. Os
+   * dois remendam o `#bestiary`, que redeclara `sheet_open` a cada remendo —
+   * então quem CHEGA por último manda, e a ordem de chegada não é a de saída.
    *
-   * O teste acima NÃO segura isto: ele passa por sorte de cronometragem, que é o
-   * que o deixou verde aqui enquanto o CI ficava vermelho. Este aqui INVERTE a
-   * ordem de propósito — atrasa a resposta do pedido sem `abrir` — e aí a
-   * garantia deixa de depender de quem é mais rápido.
+   * O teste acima NÃO segura isto: ele passa por sorte de cronometragem, verde na
+   * bancada e vermelho num CI mais lento. Este INVERTE a ordem de propósito —
+   * atrasa a resposta do pedido sem `abrir` — e a garantia deixa de depender de
+   * quem é mais rápido.
    *
    * Browser é a única testemunha possível: são dois `fetch` em voo disparados
    * pelo MESMO gesto de ponteiro, e é o `:focus-visible` do navegador que separa
@@ -79,7 +76,7 @@ test.describe('O bestiário', () => {
     await expect(page.getByRole('listitem').first()).toBeVisible()
 
     // Só o pedido SEM `abrir=1` é atrasado: é o do foco, e é ele que chegaria
-    // por último para redeclarar `fichaAberta: false` por cima do clique.
+    // por último para redeclarar `sheet_open: false` por cima do clique.
     await page.route('**/mestre/bestiario?*', async (route) => {
       if (new URL(route.request().url()).searchParams.has('abrir')) {
         await route.continue()
@@ -91,13 +88,11 @@ test.describe('O bestiário', () => {
 
     await page.getByRole('listitem').first().getByRole('link').click()
 
-    // O ESTADO ASSENTADO, e não o primeiro quadro — e esta espera é a diferença
-    // entre um teste e um teste que mente. Medido: com o defeito no lugar a
-    // ficha ABRE com a resposta do clique e só fecha 600ms depois, quando a do
-    // foco chega. Um `toBeVisible` cru passa dentro dessa janela, e a primeira
-    // versão deste teste nasceu VERDE sobre o defeito que ela existia para
-    // pegar. A janela é de 600ms porque é ESTE teste que a injeta acima, então
-    // esperar mais que ela é determinístico e não um palpite de cronometragem.
+    // O ESTADO ASSENTADO, e não o primeiro quadro: com o defeito no lugar a ficha
+    // ABRE com a resposta do clique e só fecha 600ms depois, quando a do foco
+    // chega — um `toBeVisible` cru passa dentro dessa janela e nasce VERDE sobre
+    // o defeito que veio pegar. A janela é de 600ms porque é ESTE teste que a
+    // injeta acima, então esperar mais é determinístico e não palpite.
     await page.waitForTimeout(1500)
 
     // O CLIQUE ATERRISSOU: sem isto, um seletor que um dia pare de achar a

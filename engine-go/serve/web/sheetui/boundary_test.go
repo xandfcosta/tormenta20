@@ -8,21 +8,15 @@ import (
 	"testing"
 )
 
-// A CENA NÃO IMPORTA O HOSPEDEIRO (ALE-278).
+// A CENA NÃO IMPORTA O HOSPEDEIRO.
 //
-// Décima cena, e a maior de todas: 36 arquivos de produção, sete abas, mais de
-// trinta mutações. A porta tem dezoito métodos — cinco deles ESCRITA —, e o
-// guarda existe para que ela pare de crescer pela tabela em vez de pela
-// pergunta.
+// É a maior cena do app — 36 arquivos de produção, sete abas, mais de trinta
+// mutações —, e o guarda existe para a porta parar de crescer pela TABELA em vez
+// de pela PERGUNTA.
 //
-// A tentação tem nome, e aqui ela não é hipótese: **o `s.db`**. Esta cena
-// montava `setBuilder` + `"UPDATE character_items"` e `"UPDATE characters"` em
-// QUATRO lugares, e um deles abria a transação inteira — `BeginTx`, plano,
-// escritas, `Commit`. Cena que compõe SQL é cena com o banco dentro. As quatro
-// viraram `SaveItemOverlays`, `SaveChoices` e `ApplyPowerTempHp`, e a última
-// desfez de quebra uma transação escrita DUAS vezes: o `applyPool` da rota JSON
-// tinha a mesma sequência. (A rota foi apagada na ALE-277 e o `applyPool` com
-// ela — o que sobrou é a cópia única, aqui.)
+// A tentação tem nome: **o `s.db`**. Cena que compõe SQL é cena com o banco
+// dentro, e o remédio é um método que nomeia a pergunta (`SaveItemOverlays`,
+// `SaveChoices`, `ApplyPowerTempHp`).
 //
 // O `Queries` continua permitido — as sete abas leem e escrevem a mesma linha de
 // personagem, e é a concessão da forja, da administração e das campanhas. O
@@ -43,21 +37,16 @@ var permitidos = map[string]bool{
 	"t20engine/serve/web/ui":         true, // o kit, a casca e a identidade visual
 }
 
-// O `catalog` está na lista, e a razão é MEDIDA e não confortável.
+// O `catalog` está na lista, e a linha é entre LEITURA CRUA e ACESSOR TIPADO.
 //
-// O que saiu daqui nesta fatia foram as TRÊS leituras cruas — `Resource("class-powers")`
-// duas vezes e `Resource("activations")` uma —, que são a forma que o `items.go`
-// da forja e o improviso do trilho do mestre já tinham mostrado: quem lê o
-// catálogo é do livro. Elas viraram `book.ClassPowerFlags`,
+// `Resource(…)` não entra: quem lê o catálogo cru é o `domain/book`, e as
+// leituras que existiam aqui viraram `book.ClassPowerFlags`,
 // `book.PowersThatTeachSpells` e `book.Activations`.
 //
-// O que FICOU são três chamadas de `catalog.LookupSpell` e uma de
-// `catalog.IsCondition`, mais os tipos `catalog.Spell` e `catalog.Augment` em
-// três assinaturas. Elas não são a mesma coisa: são o acessor tipado,
-// e o HOSPEDEIRO usa exatamente o mesmo — o `validateAugments` recebe um
-// `catalog.Spell`. Unificá-lo com o `book.Spell`, que existe e tem outros
-// campos, é trabalho próprio e mexe nos dois lados; fingir que ele coube aqui
-// seria pior. Fica contado: **quatro chamadas e três assinaturas.**
+// O que fica são `catalog.LookupSpell`, `catalog.IsCondition` e os tipos
+// `catalog.Spell` e `catalog.Augment` em três assinaturas — o mesmo acessor que
+// o HOSPEDEIRO usa (o `validateAugments` recebe um `catalog.Spell`). Unificá-lo
+// com o `book.Spell` é trabalho próprio, que mexe nos dois lados.
 func TestTheSheetSceneDoesNotImportItsHost(t *testing.T) {
 	arquivos, err := os.ReadDir(".")
 	if err != nil {

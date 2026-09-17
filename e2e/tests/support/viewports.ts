@@ -1,10 +1,10 @@
 import { type Page, expect } from '@playwright/test'
 
 // As asserções de RELAÇÃO (alinhamento, proporção, containment, alcance) moram
-// em `geometry.ts` desde a ALE-144. Aqui ficam a lista de formatos e as duas
-// asserções de DOCUMENTO, que são de outra natureza: globais e negativas.
+// em `geometry.ts`. Aqui ficam a lista de formatos e as duas asserções de
+// DOCUMENTO, que são de outra natureza: globais e negativas.
 
-/** The six form factors `frontend/CLAUDE.md` requires every scene to survive. */
+/** Os seis formatos que toda cena da casa tem de sobreviver. */
 export const VIEWPORTS = [
   { name: 'desktop', width: 1920, height: 1080 },
   { name: 'laptop', width: 1440, height: 900 },
@@ -14,22 +14,21 @@ export const VIEWPORTS = [
   { name: 'mobile-portrait', width: 390, height: 844 },
 ] as const
 
-/** Laptop and up — where the keyboard layer answers (`≥xl` + `pointer: fine`). */
+/** Do laptop para cima — onde a camada de teclado responde (`≥xl` + `pointer: fine`). */
 export const DESK_VIEWPORTS = VIEWPORTS.filter((v) => v.width >= 1280)
 
 /**
- * Resizes through every form factor on the CURRENT page and fails on the first
- * one that makes the document scroll sideways.
+ * Redimensiona por todos os formatos na página ATUAL e falha no primeiro em que
+ * o documento rola para o lado.
  *
- * One `goto`, six resizes — not six navigations. The house rule is that media
- * queries switch on WIDTH only (`frontend/CLAUDE.md`), so the layout re-flows
- * live and there is nothing to re-fetch between sizes. The old shape paid a
- * full page load per viewport per scene: 26 tests and 198s, 48% of the whole
- * E2E suite, for one repeated expression.
+ * Um `goto` e seis redimensionamentos, e não seis navegações: as consultas de
+ * mídia da casa chaveiam só por LARGURA, então o leiaute se refaz ao vivo e não
+ * há o que rebuscar entre os tamanhos. Uma carga de página por formato por cena
+ * custava 198s — 48% da suíte e2e inteira — por uma expressão repetida.
  *
- * Honest about what it proves: only that the BODY doesn't scroll horizontally.
- * It does not prove content isn't clipped inside a container, and it does not
- * prove the scene "fills the screen" — that would be a different assertion.
+ * Honesto sobre o que prova: só que o BODY não rola na horizontal. Ele não prova
+ * que o conteúdo não é recortado dentro de um contêiner, nem que a cena "preenche
+ * a tela" — isso seria outra asserção.
  *
  * @example await expectNoHorizontalOverflow(page, VIEWPORTS)
  */
@@ -50,10 +49,7 @@ export async function expectNoHorizontalOverflow(
  * Falha no primeiro formato em que a PÁGINA rola verticalmente.
  *
  * Isto é premissa de produto, não estética: a cena de jogo mostra tudo numa
- * tela e o mestre não caça informação rolando no meio do combate. Estava
- * afirmada em mensagem de commit ("verificado: não rola em 1920, 1024 nem
- * 390") e em lugar nenhum que rodasse de novo — a próxima mudança de layout a
- * quebraria em silêncio.
+ * tela e o mestre não caça informação rolando no meio do combate.
  *
  * Só um browser testemunha: em jsdom `scrollHeight` e `clientHeight` são ambos
  * zero e a asserção passaria verde sobre uma cena de três telas de altura.

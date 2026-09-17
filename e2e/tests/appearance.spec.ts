@@ -4,22 +4,16 @@ import { MEASURED_SCENES, SESSION_FILE } from './support/measured-scenes'
 import { expectCinzelAcimaDoPiso } from './support/typography'
 
 /**
- * A APARÊNCIA DE TODA CENA QUE DESENHA PÁGINA (ALE-320).
+ * A APARÊNCIA DE TODA CENA QUE DESENHA PÁGINA.
  *
  * E2E porque não há outra testemunha: contraste exige converter oklch para sRGB,
  * e tipografia exige saber em que tamanho a Cinzel foi DESENHADA — herança de
  * CSS, não o que está escrito na `class=`. Em jsdom o `getComputedStyle` devolve
  * o oklch cru e todo elemento mede zero.
  *
- * # Este arquivo substitui uma ENUMERAÇÃO
+ * # AMOSTRAGEM, e não uma lista de endereços
  *
- * A medição vivia espalhada: catorze cópias de `nenhum texto fica abaixo do
- * mínimo de contraste do AA`, uma por bloco `describe` de um spec de cenas só,
- * mais avulsas no `sheet.spec.ts`, no `forge.spec.ts` e no `grimorio.spec.ts`.
- * Dezoito endereços escritos à mão, e nada cobrando a cena que nascesse amanhã —
- * o regime que o `CLAUDE.md` chama de remendo na ALE-252.
- *
- * Aqui o laço é sobre o REGISTRO, e quem força o registro a estar completo é o
+ * O laço é sobre o REGISTRO, e quem força o registro a estar completo é o
  * `convention.TestEveryPageSceneIsMeasuredForAppearance`, em Go. Cena nova sem
  * linha no registro é vermelho lá, com o nome dela na mensagem.
  *
@@ -34,9 +28,9 @@ import { expectCinzelAcimaDoPiso } from './support/typography'
  *
  * A cena em UM estado: a que abre no endereço, sem diálogo aberto nem dado que
  * ramifique. As telas que RAMIFICAM pelo dado continuam precisando do caso
- * próprio, e a lição está escrita na ALE-272: o caminhar pelas sete abas da
- * ficha media sempre um guerreiro, e metade do painel de Combate só existe para
- * quem conjura. Este arquivo é o PISO, não o teto.
+ * próprio — o caminhar pelas sete abas da ficha mede sempre um guerreiro, e
+ * metade do painel de Combate só existe para quem conjura. Este arquivo é o
+ * PISO, não o teto.
  */
 
 // O PISO DE TEXTO MEDIDO, e ele é MEDIDO e não escolhido.
@@ -50,10 +44,9 @@ import { expectCinzelAcimaDoPiso } from './support/typography'
 //   /campanhas/nova        12 textos   ← a cena mais enxuta do app
 //   qualquer 404            1 texto
 //
-// Oito fica abaixo da cena mais magra e oito vezes acima da página de erro. A
-// primeira versão cravou 15 por palpite e reprovou `/campanhas/nova`, que estava
-// perfeita: um controle mal calibrado vira ruído, e ruído é o que faz um guarda
-// ser desligado na segunda semana.
+// Oito fica abaixo da cena mais magra e oito vezes acima da página de erro. Um
+// número cravado por palpite reprova cena que está perfeita, e ruído é o que faz
+// um guarda ser desligado na segunda semana.
 //
 // Ele é GLOBAL de propósito. Um número por cena seria uma segunda lista para
 // envelhecer, e o que este controle precisa pegar é a página que não carregou —

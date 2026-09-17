@@ -12,7 +12,7 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// Os guardas do HUB (ALE-231).
+// Os guardas do HUB.
 //
 // O que vale proteger aqui não é o desenho — o e2e mede contraste e o teclado,
 // que são as coisas que só o navegador testemunha. É o que o servidor DECIDE:

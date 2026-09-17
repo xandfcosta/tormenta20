@@ -4,9 +4,9 @@ import "t20engine/domain/live"
 
 import "testing"
 
-// entryIDByLabel devolve o ID que `live.AddEntry` sorteou para uma linha. A escolha
-// viaja por ID e nunca por rótulo (ALE-204/192): dois goblins têm o mesmo nome
-// até o servidor numerá-los.
+// entryIDByLabel devolve o ID que `live.AddEntry` sorteou para uma linha. A
+// escolha viaja por ID e nunca por rótulo: dois goblins têm o mesmo nome até o
+// servidor numerá-los.
 func entryIDByLabel(t *testing.T, st *live.SessionRuntimeState, label string) string {
 	t.Helper()
 	for _, entry := range st.Initiative {
@@ -18,13 +18,12 @@ func entryIDByLabel(t *testing.T, st *live.SessionRuntimeState, label string) st
 	return ""
 }
 
-// A EMBOSCADA (ALE-204).
+// A EMBOSCADA.
 //
-// "Trazer a iniciativa" punha no tabuleiro a fila inteira, e a fila inclui quem
-// o mestre montou para aparecer no terceiro turno: num clique a surpresa virava
-// peça na tela da mesa, e desfazer era peça por peça. Quem não foi escolhido
-// não nasce — nem escondido, porque peça que não existe não vaza por bug de
-// redação.
+// A fila inclui quem o mestre montou para aparecer no terceiro turno: trazê-la
+// inteira num clique põe a surpresa na tela da mesa, e desfazer é peça por
+// peça. Quem não foi escolhido não nasce — nem escondido, porque peça que não
+// existe não vaza por bug de redação.
 func TestPopulateBringsOnlyTheChosen(t *testing.T) {
 	st := live.EmptyRuntimeState()
 	id := ContadorDeIds()
@@ -47,9 +46,9 @@ func TestPopulateBringsOnlyTheChosen(t *testing.T) {
 	}
 }
 
-// "Não escolhi" não é "escolhi ninguém", e a diferença é o que separa uma aba
-// aberta antes da ALE-204 (que manda `board-Populate` pelado e espera a fila
-// inteira) de um mestre que desmarcou todo mundo no diálogo.
+// "Não escolhi" não é "escolhi ninguém", e a diferença separa um cliente antigo
+// (que manda `board-Populate` pelado e espera a fila inteira) de um mestre que
+// desmarcou todo mundo no diálogo.
 func TestChosenEntriesTellsAbsentFromEmpty(t *testing.T) {
 	if ausente := ChosenEntries(map[string]any{}, "entryIds"); ausente != nil {
 		t.Errorf("corpo sem entryIds virou seleção %v — o cliente antigo pararia de trazer alguém", ausente)
@@ -75,13 +74,13 @@ func TestChosenEntriesTellsAbsentFromEmpty(t *testing.T) {
 	}
 }
 
-// A PEÇA NÃO NASCE DEBAIXO DO CROMO (ALE-294).
+// A PEÇA NÃO NASCE DEBAIXO DO CROMO.
 //
 // A janela do mapa nasce com o quadrado (0,0) na quina de cima da tela, e o
-// painel de verbos da cena flutua ali. Medido a 390×844 na `73658909`: a peça
-// nova saía em (3,0) com 82% da área sob o painel, e o clique direito nela ia
-// para o botão "Afastar o mapa" em vez de abrir o menu dela. Qualquer gesto
-// naquela faixa era do painel — pintar terreno, largar marcador, pegar a peça.
+// painel de verbos da cena flutua ali. Medido a 390×844: uma peça em (3,0) fica
+// com 82% da área sob o painel, e o clique direito nela vai para o botão
+// "Afastar o mapa" em vez de abrir o menu dela. Qualquer gesto naquela faixa é
+// do painel — pintar terreno, largar marcador, pegar a peça.
 //
 // A regra prende as DUAS pontas: nenhuma peça na faixa do cromo, e nenhuma
 // longe demais para a janela mostrar. Nascer na fileira 40 também resolveria a

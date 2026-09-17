@@ -6,14 +6,13 @@ import (
 	"testing"
 )
 
-// O guarda dos FILTROS de cada catálogo (ALE-264).
+// O guarda dos FILTROS de cada catálogo.
 //
 // O que se protege é a regra de COMBINAÇÃO — OU dentro de um filtro, E entre
 // eles — e o fato de que cada catálogo oferece os seus. Um filtro que some da
 // cena não estoura nada: a lista continua desenhando, só que inteira.
 
-// TestEachCatalogOffersItsOwnFilters: AMOSTRAGEM sobre as abas, para o
-// catálogo que entrar amanhã nascer medido.
+// AMOSTRAGEM sobre as abas, para o catálogo que entrar amanhã nascer medido.
 func TestEachCatalogOffersItsOwnFilters(t *testing.T) {
 	esperado := map[string][]string{
 		"condicoes": {"efeito"},
@@ -48,7 +47,7 @@ func TestEachCatalogOffersItsOwnFilters(t *testing.T) {
 	}
 }
 
-// TestTheFilterAddsWithinAndMultipliesAcross: a regra de combinação.
+// A regra de combinação: soma dentro do filtro, multiplica entre filtros.
 //
 // Medido na tela: 198 magias, 39 no 3º círculo, 6 no 3º círculo E da escola de
 // evocação. Os números ficam presos porque são o que separa "filtrou" de
@@ -81,12 +80,9 @@ func quantasMagias(filtros map[string][]string) int {
 	return v.Achados
 }
 
-// TestExoticRacesSayTheyAreExotic.
-//
-// PROVADO VERMELHO: o código procurava `exotica` e o dado guarda `extra`, então
-// o `else` devolvia "Comum" para as DEZESSETE — inclusive as nove exóticas. Só
-// apareceu ao medir o dado para montar o filtro; na tela era um rótulo plausível
-// em todo cartão.
+// PROVADO VERMELHO: procurar `exotica` onde o dado guarda `extra` faz o `else`
+// devolver "Comum" para as DEZESSETE raças — inclusive as nove exóticas. Na tela
+// é um rótulo plausível em todo cartão.
 func TestExoticRacesSayTheyAreExotic(t *testing.T) {
 	racas, _, _ := book.CharacterCatalogs()
 	contagem := map[string]int{}
@@ -98,12 +94,11 @@ func TestExoticRacesSayTheyAreExotic(t *testing.T) {
 	}
 }
 
-// TestTheSpellSchoolHasAnEntryAndBecomesALink (ALE-264).
+// A escola de magia tem verbete e vira ELO.
 //
-// O filtro de escola nasceu antes do catálogo, e por duas horas o app teve DUAS
-// listas das mesmas oito escolas: uma tabela de rótulos no código e o dado das
-// magias. Pior: a escola decidia o filtro e não estava escrita em cartão nenhum
-// — o mestre filtrava por evocação e as magias não diziam que eram de evocação.
+// Sem isso, a escola decide o filtro e não está escrita em cartão nenhum — o
+// mestre filtra por evocação e as magias não dizem que são de evocação. E duas
+// listas das mesmas oito escolas (uma tabela de rótulos e o dado) divergem.
 func TestTheSpellSchoolHasAnEntryAndBecomesALink(t *testing.T) {
 	escolas := book.SpellSchools()
 	if len(escolas) != 8 {
@@ -125,10 +120,7 @@ func TestTheSpellSchoolHasAnEntryAndBecomesALink(t *testing.T) {
 	}
 }
 
-// TestTheExpertiseCarriesWhatTheBookPrintsBesideTheName (ALE-264).
-//
-// As perícias existiam como lista de NOME e ATRIBUTO dentro do `options.json` —
-// sem página, sem as duas regras da Tabela 2-1 e sem lugar para um elo apontar.
+// A perícia carrega o que o livro imprime ao lado do nome.
 //
 // O CONTROLE que vale mais que os números: o atributo do catálogo novo é
 // comparado com o do `options.json`, que é o que o motor usa para ROLAR. As duas

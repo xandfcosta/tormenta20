@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// O bestiário do livro lido pelo servidor (ALE-257).
+// O bestiário do livro lido pelo servidor.
 //
 // O guia manda validar catálogo por SCHEMA no despejo e prender só a EXCEÇÃO —
 // a armadilha da tabela —, nunca repetir a tabela inteira num `expect` por
@@ -16,18 +16,17 @@ import (
 // é invisível: um `int` recebendo `null` vira 0, "+0" é um número plausível, e
 // a tela fica mentindo sem erro em lugar nenhum.
 
-// TestTheEmDashSurvivesTheParse: ausência de atributo NÃO é zero.
+// Ausência de atributo NÃO é zero.
 //
 // Provado VERMELHO por sabotagem, e o vermelho aqui é de COMPILAÇÃO, que é o
 // melhor tipo: trocar `Inteligencia *int` por `int` em `verbete` faz este
 // arquivo parar de compilar (`invalid operation: m.Inteligencia == nil`). O
 // guarda transforma uma perda silenciosa — `null` virando 0 e "+0" afirmando
-// que o Zumbi tem a média de um humano (ALE-151) — num erro que impede o build.
+// que o Zumbi tem a média de um humano — num erro que impede o build.
 //
-// Tentei primeiro provar o vermelho mudando a struct E o teste junto, para o
-// teste continuar compilando com `int`. Não vale: o contador ficava zero por
-// construção do meu próprio remendo, não pelo parse. Sabotar só o lado medido é
-// o que faz a sabotagem significar alguma coisa.
+// Sabotar só o LADO MEDIDO é o que faz a sabotagem significar alguma coisa:
+// mudar a struct e o teste junto deixa o contador em zero por construção do
+// próprio remendo, e não pelo parse.
 func TestTheEmDashSurvivesTheParse(t *testing.T) {
 	semInteligencia := 0
 	semForca := 0
@@ -51,7 +50,7 @@ func TestTheEmDashSurvivesTheParse(t *testing.T) {
 	}
 }
 
-// TestTheFieldsTheEmbedWouldLoseAreThere: `bookPage`, `equipamento` e `tesouro`
+// `bookPage`, `equipamento` e `tesouro`
 // não existem no `CreatureBlock` (ou existem com OUTRO nome), e o
 // `encoding/json` os deixaria vazios em silêncio.
 func TestTheFieldsTheEmbedWouldLoseAreThere(t *testing.T) {
@@ -83,7 +82,7 @@ func TestTheFieldsTheEmbedWouldLoseAreThere(t *testing.T) {
 	}
 }
 
-// TestTheOrderIsByChallengeAndThenByName: a ordem é REGRA, não apresentação — o
+// A ordem é REGRA, não apresentação — o
 // mestre procura nível de ameaça primeiro.
 func TestTheOrderIsByChallengeAndThenByName(t *testing.T) {
 	fora := book.FilterCreatures(book.Creatures(), book.CreatureFilter{NDMin: book.CRMin, NDMax: book.CRMax})
@@ -99,7 +98,7 @@ func TestTheOrderIsByChallengeAndThenByName(t *testing.T) {
 	}
 }
 
-// TestAnAbsurdRangeDoesNotEmptyTheBestiary: a faixa vem da URL, que qualquer um
+// A faixa vem da URL, que qualquer um
 // edita à mão. Um 999 ou um texto esconderia TODAS as criaturas, e a tela leria
 // como "bestiário vazio" em vez de "filtro absurdo".
 func TestAnAbsurdRangeDoesNotEmptyTheBestiary(t *testing.T) {
@@ -120,12 +119,11 @@ func TestAnAbsurdRangeDoesNotEmptyTheBestiary(t *testing.T) {
 	}
 }
 
-// TestAnInvertedRangeReturnsEmpty prende o PORTE, não uma melhoria.
+// Min 10 e max 2 devolve lista VAZIA, e a tela diz "Nenhuma criatura casa com os
+// filtros".
 //
-// Min 10 e max 2 devolve lista vazia, e a tela diz "Nenhuma criatura casa com
-// os filtros". A primeira versão desta camada "consertava" isso devolvendo a
-// faixa inteira — o que faz o filtro MENTIR: pedir 10..2 e receber as 80 é pior
-// que receber nenhuma. Se alguém quiser mudar, que mude nas DUAS telas.
+// "Consertar" isso devolvendo a faixa inteira faz o filtro MENTIR: pedir 10..2 e
+// receber as 80 é pior que receber nenhuma.
 func TestAnInvertedRangeReturnsEmpty(t *testing.T) {
 	min, max := book.CRRange("10", "2")
 	fora := book.FilterCreatures(book.Creatures(), book.CreatureFilter{NDMin: min, NDMax: max})
@@ -134,7 +132,7 @@ func TestAnInvertedRangeReturnsEmpty(t *testing.T) {
 	}
 }
 
-// TestAnEmptyTypeMeansEveryType, não nenhum: sem crachá aceso o filtro não filtra
+// Tipo vazio quer dizer TODO tipo, não nenhum: sem crachá aceso o filtro não filtra
 // por tipo, e tratar vazio como "nenhum" mostraria bestiário vazio a quem não
 // escolheu nada.
 func TestAnEmptyTypeMeansEveryType(t *testing.T) {
@@ -154,7 +152,7 @@ func TestAnEmptyTypeMeansEveryType(t *testing.T) {
 	}
 }
 
-// TestAChallengeBelowOneComesOutAsAFraction: "ND 0.25" não existe em Tormenta 20 — a mesa
+// "ND 0.25" não existe em Tormenta 20 — a mesa
 // diz "ND 1/4", e um decimal na linha lê como artefato de arredondamento.
 func TestAChallengeBelowOneComesOutAsAFraction(t *testing.T) {
 	casos := map[float64]string{0.25: "1/4", 0.5: "1/2", 1: "1", 3: "3", 20: "20"}
@@ -167,18 +165,13 @@ func TestAChallengeBelowOneComesOutAsAFraction(t *testing.T) {
 
 // ── a cena pelo fio ──────────────────────────────────────────────────────────
 
-// TestEveryBookTypeIsOnTheRailAndHasALabel — o guarda que faltava, e que teria pego um
-// defeito que os outros sete não pegaram.
+// TODO tipo que o livro usa está no trilho e tem rótulo.
 //
-// Um `sed` meu de renomear tipo (`monstro` → `verbete`, para seguir o
-// glossário) casou DENTRO das strings e trocou a chave do mapa de rótulos e a
-// entrada do trilho. Efeito: 27 das 80 criaturas — um terço do bestiário —
-// passaram a mostrar o tipo em caixa baixa, e o crachá "Monstro" filtrava por
-// um tipo que nenhuma criatura tem, devolvendo bestiário vazio.
-//
-// Nenhum dos guardas existentes pegou, e o motivo é instrutivo: todos usavam
-// "animal" como tipo de exemplo. **Um guarda só mede o que ele VISITA**, e
-// nenhum visitava a tabela inteira.
+// O defeito é um renome que casa DENTRO das strings e troca a chave do mapa de
+// rótulos: o crachá passa a filtrar por um tipo que nenhuma criatura tem e
+// devolve bestiário vazio. Nenhum guarda que use "animal" como tipo de exemplo
+// pega isso — **um guarda só mede o que ele VISITA**, e a tabela inteira é o que
+// precisa ser visitada.
 //
 // A direção da asserção importa. Não é "todo tipo do trilho tem criatura" —
 // `planar` existe no domínio e tem ZERO verbetes hoje, e exigir criatura o
@@ -212,8 +205,6 @@ func TestEveryBookTypeIsOnTheRailAndHasALabel(t *testing.T) {
 	}
 }
 
-// TestTheBestiaryBaseHasNoDefault.
-//
 // Uma base vazia produz `@get(”)`, que o navegador resolve para a página ATUAL:
 // o filtro pareceria funcionar — a página recarrega — e não filtraria nada. É o
 // defeito silencioso desta forma, e a resposta é recusar em vez de escolher um
@@ -227,8 +218,8 @@ func TestTheBestiaryBaseHasNoDefault(t *testing.T) {
 	_ = BestiaryView{}.BestiaryBase()
 }
 
-// E a cena do mestre continua falando para a rota dela: o refator trocou o
-// literal por um campo, e este guarda prende que o campo chegou preenchido.
+// E a cena do mestre continua falando para a rota dela: o campo tem de chegar
+// preenchido, senão cai no caso de cima.
 func TestTheGmSceneTalksToTheGmRoute(t *testing.T) {
 	v := cenaSemLivro().loadBestiary(BestiaryCriteria{CRMax: 20})
 	if v.Base != routes.MasterBestiary {
@@ -236,13 +227,11 @@ func TestTheGmSceneTalksToTheGmRoute(t *testing.T) {
 	}
 }
 
-// TestTheRailHasOneStopPerCatalog: o trilho lista TODOS os catálogos.
+// O trilho lista TODOS os catálogos.
 //
-// Por AMOSTRAGEM sobre `collectionTabs` e não por lista escrita à mão: o e2e que
-// media isto contava "onze paradas", e as duas que nasceram depois (escolas e
-// perícias) só o denunciaram quando ele ficou vermelho por um número velho.
-// Aqui o catálogo novo entra medido no dia em que entra na lista — que é o que
-// devolve a amostragem no lugar da enumeração.
+// Por AMOSTRAGEM sobre `collectionTabs` e não por lista escrita à mão: um número
+// de paradas escrito à mão fica vermelho por envelhecer, e não por defeito. Aqui
+// o catálogo novo entra medido no dia em que entra na lista.
 //
 // A GEOMETRIA (nenhuma parada escapa da janela, em qualquer largura) fica no
 // e2e: é caixa contra caixa, e em jsdom todo elemento mede zero.
@@ -254,7 +243,7 @@ func TestTheRailHasOneStopPerCatalog(t *testing.T) {
 			t.Errorf("o catálogo %q não tem parada no trilho", a.ID)
 		}
 	}
-	// O bestiário é catálogo como os outros (ALE-264), e as duas ferramentas
+	// O bestiário é catálogo como os outros, e as duas ferramentas
 	// são a outra seção do trilho — se alguma sumir, o mestre perde a porta.
 	for _, parada := range []string{"bestiario", "encontros", "improviso"} {
 		if !strings.Contains(corpo, `href="/mestre/`+parada+`"`) {

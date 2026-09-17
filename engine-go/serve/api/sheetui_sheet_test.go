@@ -21,23 +21,9 @@ func TestTheSheetTabAddressSurvives(t *testing.T) {
 	}
 }
 
-// A ABA NÃO PORTADA DIZ ISSO, e leva para a ficha antiga.
-//
-// Enquanto os painéis não chegam, a casca não pode fingir: uma seção vazia é
-// lida como defeito, e mandar a pessoa procurar sozinha o endereço velho é pior
-// do que dar o link. Este guarda morre junto com a última fatia — quando não
-
-// Aqui moravam DOIS testes que a fatia 10 aposentou.
-//
-// O `TestAAbaAindaNaoPortadaLevaParaAFichaAntiga` abria uma aba sem painel e
-// afirmava que ela mandava para a ficha velha; ele perdeu o alvo na fatia 8,
-// quando deixou de existir aba sem painel.
-//
-// O `TestTodaAbaDaFichaEstaPortada` era o placar da migração — ele autorizava
-// esta fatia a apagar a ficha antiga, e cumpriu isso. O `oPainelJaPortado` que
-// ele lia não existe mais, porque "portada" deixou de ser uma pergunta. O que
-// segue valendo é `TestEverySheetTabDrawsSomething`, que cobra painel de TODA
-// aba — a mesma garantia, sem o placar.
+// Não há caso de "aba ainda não portada" nem placar de migração aqui de
+// propósito: não existe mais aba sem painel, e quem cobra painel de TODA aba é o
+// `TestEverySheetTabDrawsSomething`.
 
 func sheetOf(t *testing.T, nome string, nivel int64) (sceneFixture, int64) {
 	t.Helper()
@@ -49,14 +35,11 @@ func sheetOf(t *testing.T, nome string, nivel int64) (sceneFixture, int64) {
 
 // O NÍVEL É DA CLASSE, e o do personagem é a SOMA — guarda de regressão.
 //
-// A primeira versão deste comando escrevia direto no nível do personagem, e o
-// defeito é silencioso do pior jeito: a ficha passa a dizer 13 com as classes
-// somando 12, e os pools de PV e PM — que derivam das CLASSES — não se mexem. O
-// número sobe e o personagem não fica mais forte.
-//
-// Eu não achei isso lendo o código: achei comparando com a SPA no navegador,
-// onde o degrau chama `PATCH /classes/level`. Por isso o caso prende as DUAS
-// metades: a soma bater, e o pool passar a dizer o que o livro diz.
+// Escrever direto no nível do personagem falha em silêncio do pior jeito: a
+// ficha passa a dizer 13 com as classes somando 12, e os pools de PV e PM — que
+// derivam das CLASSES — não se mexem. O número sobe e o personagem não fica mais
+// forte. Por isso o caso prende as DUAS metades: a soma bater, e o pool passar a
+// dizer o que o livro diz.
 func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	f, id := sheetOf(t, "Arcanista Nv3", 3)
 	ctx := context.Background()
@@ -93,11 +76,9 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	// PV inicial 8 e +2 por nível (T20 p36, a tabela da classe; a regra da soma
 	// está em p34), então no nível 4 com Constituição 0 são 8 + 3×2 = **14**.
 	//
-	// A primeira versão deste caso afirmava "o PV máximo CRESCEU", e ela estava
-	// errada de um jeito instrutivo: o personagem semeado tinha 20 gravados, que
-	// não é um número do motor — sincronizar o BAIXOU para 14, e "cresceu" falhou
-	// sobre um app correto. O que a sincronização garante não é crescer: é a
-	// ficha passar a dizer o que o livro diz.
+	// Afirmar "o PV máximo CRESCEU" seria errado: o personagem semeado tem 20
+	// gravados, que não é um número do motor, e sincronizar o BAIXA para 14. O que
+	// a sincronização garante não é crescer — é a ficha dizer o que o livro diz.
 	if depois.Hpmax != 14 {
 		t.Errorf("o PV máximo do Arcanista 4 ficou em %d, e o livro dá 14 (8 inicial + 3×2, p36)", depois.Hpmax)
 	}
@@ -178,10 +159,10 @@ func TestSomeoneElsesSheetDoesNotOpen(t *testing.T) {
 
 // A RECUSA VOLTA PELA CENA, e não por um status que o cliente descarta.
 //
-// Medido no navegador (ALE-272, fatia 7): com `http.Error(400)` o cliente do
-// Datastar não aplicava o remendo, e a única marca da recusa era uma linha
-// vermelha no CONSOLE. Na tela o gesto simplesmente não acontecia — gastar mais
-// do que se tem fechava o diálogo e deixava o saldo igual, sem uma palavra.
+// Com `http.Error(400)` o cliente do Datastar não aplica o remendo, e a única
+// marca da recusa é uma linha vermelha no CONSOLE: na tela o gesto simplesmente
+// não acontece — gastar mais do que se tem fecha o diálogo e deixa o saldo
+// igual, sem uma palavra.
 //
 // Este guarda prende as TRÊS coisas que fazem a recusa chegar: o status que o
 // cliente aceita, a frase, e a cena INTEIRA junto — é ela que mostra o estado
@@ -204,31 +185,18 @@ func TestTheRefusalComesBackInTheSceneAndNotInAnErrorStatus(t *testing.T) {
 	}
 }
 
-// A COR da barra de PV diz "quão mal", e não só a largura (ALE-316).
+// A COR da barra de PV diz "quão mal", e não só a largura.
 //
-// # O defeito, e por que ele sobreviveu à migração inteira
-//
-// A `VitalBar` da SPA pintava por uma escada de três degraus (`hpFillVar`:
-// crítico até 25%, ferido até 50%, cheio acima). A Mesa portou a escada —
-// `hpToneOf`, com guarda de limiares desde a ALE-214 — e a FICHA não: ela
-// escrevia `--hp-full` num `templ.KV` preso ao rótulo ser "PV", sem nenhum
-// outro ramo possível.
-//
-// O resultado, MEDIDO no navegador antes deste caso existir: o herói 18 a
-// **10/57 (17,5%)** desenhava `oklch(0.6 0.17 145)` — o verde de vida cheia —
-// com a barra a 146px. O mesmo herói, na mesma sessão, sai vermelho na Mesa.
-//
-// Nenhum guarda podia pegar: os casos de vital afirmavam o NÚMERO, e o número
-// sempre esteve certo. A largura também. O que estava errado era a única coisa
-// que ninguém media.
-//
-// # Por que os TRÊS degraus, e por que as fronteiras
+// A escada tem três degraus — crítico até 25%, ferido até 50%, cheio acima — e a
+// ficha já pintou `--hp-full` sempre, com o herói a 17,5% saindo verde enquanto
+// a Mesa o pintava de vermelho. Nenhum guarda pegava: os casos de vital afirmam
+// o NÚMERO, e o número sempre esteve certo. A largura também.
 //
 // Um caso só no crítico passaria verde sobre uma barra que pintasse crítico
-// SEMPRE — é o inverso exato do defeito, e igualmente invisível. Os degraus
-// são afirmados na descida, nas porcentagens de FRONTEIRA (75, 50, 25), com os
-// tons escritos à mão: derivá-los de `ui.HpFillTone` faria a asserção andar
-// junto com o defeito.
+// SEMPRE — o inverso exato do defeito, e igualmente invisível. Por isso os
+// degraus são afirmados na descida, nas porcentagens de FRONTEIRA (75, 50, 25),
+// com os tons escritos à mão: derivá-los de `ui.HpFillTone` faria a asserção
+// andar junto com o defeito.
 func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 	f, id := sheetOf(t, "Ferido", 3)
 	url := fmt.Sprintf("/personagens/%d/vitais/pv/-5", id)

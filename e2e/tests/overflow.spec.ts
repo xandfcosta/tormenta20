@@ -1,13 +1,9 @@
 import { expect, type Page, test } from '@playwright/test'
 
 /**
- * NADA transborda o cartão (ALE-264).
- *
- * O defeito foi visto pelo dono na tela: a magia "Sopro da Salvação" lista as
- * condições que ela remove como UM TOKEN sem espaço —
- * `(abalado/atordoado/apavorado/…)` com 100 caracteres —, e a barra não é
- * oportunidade de quebra de linha para o navegador. Medido: 1.343px de conteúdo
- * numa coluna de 540px, pintando POR CIMA dos cartões vizinhos.
+ * NADA transborda o cartão. O caso real é a barra sem espaço — a magia que lista
+ * `(abalado/atordoado/apavorado/…)` em 100 caracteres —, que o navegador não
+ * trata como oportunidade de quebra e pinta POR CIMA dos cartões vizinhos.
  *
  * E2E porque a pergunta é de LEIAUTE REAL: quebra de linha depende da fonte, da
  * largura da coluna e do algoritmo do navegador. Em jsdom todo elemento mede
@@ -18,12 +14,9 @@ import { expect, type Page, test } from '@playwright/test'
 test.use({ storageState: '.auth/user.json' })
 
 /**
- * As cenas a visitar saem do TRILHO, lidas da página — não de uma lista aqui.
- *
- * A lista escrita à mão tinha oito entradas e o trilho ganhou duas (escolas de
- * magia e perícias) sem que ela soubesse: as duas cenas novas nasceriam sem
- * medição, em silêncio, que é a marca desta família (ALE-252). Lendo o trilho, a
- * décima primeira já entra medida.
+ * As cenas a visitar saem do TRILHO, lidas da página — não de uma lista aqui:
+ * uma lista escrita à mão não sabe da parada que nasceu ontem, e a cena nova
+ * ficaria sem medição em silêncio.
  */
 async function cenasDosCatalogos(page: Page): Promise<string[]> {
   await page.goto('/mestre/condicoes')
@@ -190,20 +183,19 @@ test('a cena de campanhas tem a mesma forma da de personagens: palco em cima, li
 })
 
 /**
- * O CRACHÁ DA DEFESA cabe no rodapé da ficha a 390px, com o alvo CAÍDO (ALE-274).
+ * O CRACHÁ DA DEFESA cabe no rodapé da ficha a 390px, com o alvo CAÍDO.
  *
- * O Caído parte a Defesa em duas (p394), e desde a ALE-274 o crachá mostra as
- * duas: `10` vira `5 CaC · 15 Dist`, três vezes mais largo. Ele é `shrink-0` num
- * flex ao lado do nome do herói, que TRUNCA — então o risco não é o crachá
- * transbordar, é ele espremer o nome até sumir.
+ * O Caído parte a Defesa em duas (p394), e o crachá mostra as duas: `10` vira
+ * `5 CaC · 15 Dist`, três vezes mais largo. Ele é `shrink-0` num flex ao lado do
+ * nome do herói, que TRUNCA — então o risco não é o crachá transbordar, é ele
+ * espremer o nome até sumir.
  *
  * E2E porque a pergunta é de LEIAUTE REAL: quanto o nome trunca depende da
  * fonte e do algoritmo do navegador, e em jsdom tudo mede zero.
  *
- * E VISITAR O CASO É METADE DO GUARDA. A suíte já rodava verde com esta mudança
- * dentro, porque a seed não tem ninguém caído — o guarda de transbordo media o
- * crachá curto e dizia "passou". É a família que o guia cataloga em "um guarda
- * só mede o que ele VISITA": a cena estava na lista, o DADO não.
+ * O caso APLICA a condição, e isso é metade do guarda: a seed não tem ninguém
+ * caído, então o guarda de transbordo media o crachá curto e dizia "passou". A
+ * cena estava na lista; o DADO não.
  */
 test('o crachá da Defesa partida cabe no rodapé da ficha a 390px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })

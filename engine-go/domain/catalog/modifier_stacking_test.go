@@ -21,14 +21,12 @@ import (
 // a p226 lista (`armor`, `shield`, `item`, `training`, `morale`, `enhancement`,
 // `condition`), e o `untyped` ficou para o que genuinamente acumula.
 //
-// O que sustenta isso é esta invariante, que até agora ninguém tinha escrito:
-// UMA ENTIDADE NÃO DECLARA DOIS MODIFICADORES NÃO-CONDICIONAIS NO MESMO ALVO E
-// TIPO. Quebrá-la faz o motor somar dois efeitos da MESMA habilidade, que é
-// exatamente o que a p226 proíbe — e entraria em silêncio, porque nenhum teste
-// de regra olha o catálogo (ALE-110).
+// O que sustenta isso é esta invariante: UMA ENTIDADE NÃO DECLARA DOIS
+// MODIFICADORES NÃO-CONDICIONAIS NO MESMO ALVO E TIPO. Quebrá-la faz o motor
+// somar dois efeitos da MESMA habilidade, que é exatamente o que a p226 proíbe
+// — e entraria em silêncio, porque nenhum teste de regra olha o catálogo.
 //
-// Duas exceções, e as duas são modelagem legítima que este teste ACHOU ao ser
-// escrito, corrigindo a regra que eu tinha em mente:
+// Duas exceções, e as duas são modelagem legítima:
 //
 //   - CONDICIONAIS descrevem situações distintas ("+2 se em terreno natural"), e
 //     é assim que o catálogo modela o "os bônus dobram" da Força da Natureza.

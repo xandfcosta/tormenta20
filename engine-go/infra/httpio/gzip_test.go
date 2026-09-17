@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// Os guardas da COMPRESSÃO das cenas renderizadas (ALE-273).
+// Os guardas da COMPRESSÃO das cenas renderizadas.
 //
 // O que eles prendem não é "comprime" — é o conjunto de casos em que comprimir
 // está ERRADO, e um deles não deixa erro para trás.
@@ -21,8 +21,7 @@ import (
 //
 // Ela declara o `Content-Length`, como faz todo handler que serve conteúdo de
 // tamanho conhecido. Sem essa linha não há o que apagar, e a asserção sobre o
-// cabeçalho passaria sobre o vazio — provado sabotando: a primeira versão deste
-// arquivo ficou VERDE com o `Header().Del("Content-Length")` apagado.
+// cabeçalho passa verde com o `Header().Del("Content-Length")` sabotado.
 func aCena(corpo string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -75,12 +74,12 @@ func TestTheRenderedSceneTravelsCompressed(t *testing.T) {
 // QUEM NÃO ACEITA GZIP RECEBE O TEXTO CRU, e `q=0` é uma RECUSA.
 //
 // O `q=0` é o caso que ninguém lembra de tratar, e um `strings.Contains` o leria
-// como aceitação — a mesma armadilha que a ALE-159 registrou do outro lado.
+// como aceitação.
 func TestWhoeverDoesNotAcceptGzipGetsItRaw(t *testing.T) {
 	// GRANDE de propósito: com um corpo curto este caso passaria pelo corte de
-	// TAMANHO em vez de pela negociação, e continuaria verde no dia em que a
-	// leitura do `Accept-Encoding` quebrasse. Um teste que pode passar por dois
-	// motivos não prende nenhum dos dois.
+	// TAMANHO em vez de pela negociação, e continuaria verde com a leitura do
+	// `Accept-Encoding` quebrada. Um teste que pode passar por dois motivos não
+	// prende nenhum dos dois.
 	corpo := strings.Repeat("<p>o texto cru</p>", 200)
 	for _, accept := range []string{"", "identity", "gzip;q=0", "br"} {
 		t.Run(fmt.Sprintf("accept=%q", accept), func(t *testing.T) {
@@ -98,15 +97,13 @@ func TestWhoeverDoesNotAcceptGzipGetsItRaw(t *testing.T) {
 
 // O QUE JÁ VEM COMPRIMIDO DO BUILD NÃO É RECOMPRIMIDO.
 //
-// Os assets da SPA saem do build com irmão `.br`/`.gz` e o handler serve a
-// variante com `Content-Encoding` próprio (ALE-153). Reembrulhar aquilo gastaria
-// CPU para produzir bytes MAIORES, e o navegador desinflaria uma camada só.
+// Um estático que sai do build com irmão `.br`/`.gz` é servido com
+// `Content-Encoding` próprio; reembrulhá-lo gastaria CPU para produzir bytes
+// MAIORES, e o navegador desinflaria uma camada só.
 //
-// O tipo é `text/html`, e ISSO É O CASO: um `application/wasm` não é
-// comprimível pelo TIPO, então um caso escrito com ele passaria pelo motivo
-// errado — provado sabotando, a primeira versão deste teste ficou VERDE com a
-// regra do `Content-Encoding` apagada. O `index.html.gz` da SPA é exatamente
-// isto: comprimível pelo tipo, e já comprimido.
+// O tipo é `text/html`, e ISSO É O CASO: um `application/wasm` não é comprimível
+// pelo TIPO, então um caso escrito com ele passaria pelo motivo errado e ficaria
+// VERDE com a regra do `Content-Encoding` sabotada.
 func TestWhatArrivesCompressedPassesThroughIntact(t *testing.T) {
 	jaComprimido := "\x1f\x8b conteudo ja em gzip"
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -124,8 +121,6 @@ func TestWhatArrivesCompressedPassesThroughIntact(t *testing.T) {
 }
 
 // O FLUXO AO VIVO ATRAVESSA O GZIP, e este é o guarda que justifica o arquivo.
-//
-// # O defeito que ele existe para não deixar acontecer
 //
 // A Mesa é um SSE de conexão longa, e a resposta de todo comando do Datastar
 // também é `text/event-stream` — ela usa o envelope de SSE para mandar UM
@@ -196,8 +191,6 @@ func TestTheLiveStreamCrossesTheGzip(t *testing.T) {
 
 // O FLUSH ANTES DO PRIMEIRO WRITE COMPROMETE OS CABEÇALHOS.
 //
-// # O defeito que este caso existe para não deixar voltar
-//
 // O `datastar-go` monta o fluxo assim, nesta ordem: escreve o `Content-Type`,
 // chama `rc.Flush()` para MANDAR OS CABEÇALHOS, e só então escreve o primeiro
 // remendo. Um envelope que decide comprimir apenas no `Write` chega tarde: os
@@ -207,8 +200,7 @@ func TestTheLiveStreamCrossesTheGzip(t *testing.T) {
 // O sintoma não aponta para lugar nenhum: nenhuma requisição falha, nenhum
 // status muda, e o que se vê é que os remendos do Datastar simplesmente PARAM de
 // ser aplicados — busca que não filtra, seta que não anda, diálogo que não abre.
-// Custou 27 casos vermelhos no e2e, e os guardas unitários daqui estavam TODOS
-// verdes porque escreviam o cabeçalho antes de esvaziar.
+// Um guarda que escreva o cabeçalho ANTES de esvaziar fica verde sobre isto.
 func TestAFlushBeforeTheWriteAlreadyDecidesTheEnvelope(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// A ORDEM É A DO DATASTAR, e ela é o caso inteiro.

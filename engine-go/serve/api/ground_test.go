@@ -8,13 +8,12 @@ import (
 	"t20engine/domain/board"
 )
 
-// O guarda do CHÃO do lugar (ALE-264): a lista que a tela OFERECE e o CSS que a
-// PINTA têm de andar juntas.
+// O guarda do CHÃO do lugar: a lista que a tela OFERECE e o CSS que a PINTA têm
+// de andar juntas.
 //
-// A lista nasceu porque o mesmo conjunto já existia duas vezes — `.chao-*` aqui
-// e `TERRAIN_LABEL` na SPA — e uma terceira cópia à mão no templ é como nasce a
-// opção escolhível que o navegador desenha em branco. O defeito não estoura:
-// ele pinta o chão errado, em silêncio, que é a marca desta família.
+// Uma cópia à mão do conjunto no templ é como nasce a opção escolhível que o
+// navegador desenha em branco. O defeito não estoura: ele pinta o chão errado,
+// em silêncio, que é a marca desta família.
 //
 // Amostragem e não enumeração: o guarda percorre a LISTA, então o chão que
 // alguém acrescentar amanhã já nasce medido — não há uma entrada por caso aqui
@@ -45,20 +44,13 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 	}
 }
 
-// TestTheRuleThatHidesTheDialogStaysOutOfTheLayer.
-//
 // Guarda de CASCATA, e ele prende a COLOCAÇÃO porque é ela o defeito.
 //
-// A regra viveu dentro de `@layer components` e nunca valeu: o elemento carrega
-// a utilitária `flex` do Tailwind, que mora numa camada POSTERIOR, e camada
-// posterior ganha de anterior independentemente de especificidade. O efeito era
-// o pior possível — numa tela larga apareciam OS DOIS, o painel lateral com a
-// ficha e o modal por cima dela. O dono viu e perguntou por que havia diálogo se
-// a ficha já abre ao lado; o comentário do código afirmava que não havia.
-//
-// Medido antes do conserto: contêiner de 1276×566, as duas condições da consulta
-// casando, e `display: flex`. A MESMA regra injetada sem camada devolveu
-// `display: none` — o experimento que fecha a causa.
+// Dentro de `@layer components` a regra NÃO VALE: o elemento carrega a
+// utilitária `flex` do Tailwind, que mora numa camada POSTERIOR, e camada
+// posterior ganha de anterior independentemente de especificidade. O efeito é o
+// pior possível — numa tela larga aparecem OS DOIS, o painel lateral com a ficha
+// e o modal por cima dela.
 //
 // O que este guarda NÃO faz: ele não resolve cascata, ele lê TEXTO. Cascata de
 // verdade só um navegador resolve, e um e2e para uma linha seria caro. O que ele
@@ -92,17 +84,10 @@ func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
 	}
 }
 
-// TestTheStylesheetFontsExist.
-//
-// Aqui morava o `TestAsFontesEmbutidasSaoAsMesmasDaSPA`, que comparava as woff2
-// embutidas com as da SPA byte a byte: `go:embed` não alcançava
-// `../frontend/public/fonts`, então a fonte vivia em dois lugares e o guarda era
-// o que tornava a cópia dívida em vez de armadilha.
-//
-// Com a SPA apagada (ALE-272, fatia 10c) não há segundo lado: estas SÃO as
-// fontes. O que sobra para prender é a presença — a folha pede `/fonts/…` por
-// caminho absoluto, e sem arquivo a Cinzel cai para uma serifada do sistema em
-// toda tela, que é um defeito de aparência que ninguém liga à causa.
+// Estas SÃO as fontes: não há segundo lado para comparar. O que se prende é a
+// PRESENÇA — a folha pede `/fonts/…` por caminho absoluto, e sem arquivo a
+// Cinzel cai para uma serifada do sistema em toda tela, que é um defeito de
+// aparência que ninguém liga à causa.
 func TestTheStylesheetFontsExist(t *testing.T) {
 	fontes, err := os.ReadDir("assets/static/fonts")
 	if err != nil {

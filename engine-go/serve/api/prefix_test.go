@@ -6,11 +6,7 @@ import (
 	"testing"
 )
 
-// O PREFIXO `/piloto` SAIU DO ENDEREÇO, e o velho não responde (ALE-280).
-//
-// Ele era o nome de uma migração — a SPA de um lado, as cenas em Datastar do
-// outro — e ficou onde mais custa: no endereço que o jogador favorita. A SPA
-// saiu na ALE-272 e o prefixo perdeu a razão de existir.
+// O PREFIXO `/piloto` SAIU DO ENDEREÇO, e o velho não responde.
 //
 // # Por que 404 e não desvio
 //

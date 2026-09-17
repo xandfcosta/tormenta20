@@ -11,16 +11,14 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// newTestServer spins a migrated temp SQLite + a catalog-less Server. The domain
-// helpers under test (authz + combatant resolution) never touch the engine, so a nil
-// catalog snapshot is fine — this is the seam the WS gateway will reuse.
-// newTestServer boots the real server on a throwaway migrated DB. adminEmails
-// is variadic so the dozens of callers that don't care about the Role keep
-// reading as before (ALE-120).
+// newTestServer sobe o servidor de verdade sobre um SQLite descartável já
+// migrado, com catálogo nulo: os helpers de domínio daqui (autorização e
+// resolução de combatente) não tocam o motor. O `adminEmails` é variádico para
+// as dezenas de chamadores que não se importam com o papel seguirem iguais.
 func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	t.Helper()
-	// Copiado do molde já migrado, e não migrado do zero: ver o molde em `db/testdb`
-	// (ALE-260). São ~3.400 migrações a menos na suíte.
+	// Copiado do molde já migrado, e não migrado do zero (ver `db/testdb`): são
+	// ~3.400 migrações a menos na suíte.
 	path := bancoDeTeste(t)
 	database, err := db.Open(path)
 	if err != nil {
@@ -28,18 +26,16 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	}
 	// O fecho do banco é registrado DEPOIS do servidor existir, mais abaixo: ele
 	// precisa esperar o trabalho de segundo plano antes de fechar.
-	// `synchronous=OFF` só no TESTE, e é o resto do conserto da ALE-260: o que
-	// sobrava depois do molde eram os `fsync` das escritas dos próprios testes,
-	// um por transação. Durabilidade é o que um banco de teste não tem o que
-	// proteger — ele morre no fim do caso, e uma queda de energia no meio da
-	// suíte não tem nada a salvar. Fica AQUI e não no `db.Open` porque em
-	// produção essa linha seria perda de dados do mestre.
+	// `synchronous=OFF` só no TESTE: o que sobra depois do molde são os `fsync`
+	// das escritas dos próprios casos, um por transação. Durabilidade é o que um
+	// banco de teste não tem o que proteger. Fica AQUI e não no `db.Open` porque
+	// em produção essa linha seria perda de dados do mestre.
 	if _, err := database.Exec("PRAGMA synchronous=OFF"); err != nil {
 		t.Fatalf("PRAGMA synchronous=OFF: %v", err)
 	}
-	// DatabasePath carries the file actually opened, so the config does not lie
-	// about it — /admin/status reports it, and reporting a path that is not the
-	// one in use would send the owner looking at the wrong file (ALE-120).
+	// O `DatabasePath` carrega o arquivo que foi REALMENTE aberto: o
+	// `/admin/status` o reporta, e um caminho que não é o em uso mandaria o dono
+	// olhar o arquivo errado.
 	cfg := config.Config{
 		JWTSecret: "test-secret", CookieName: "t20_session",
 		AdminEmails: adminEmails, DatabasePath: path,
@@ -53,9 +49,9 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	// `RemoveAll`. O teste falha falando de LIMPEZA, e o caso que estourou não
 	// tem nada a ver com o que ele mede.
 	//
-	// Só aparece sob CPU escassa: verde em 8 núcleos, vermelho nos 2 vCPUs do
-	// CI, no `TestTheRefusedCommandReachesTheGm` — que derruba uma tabela de
-	// propósito e por isso GARANTE a falha de persistência que abre a janela.
+	// Só aparece sob CPU escassa — verde em 8 núcleos, vermelho em 2 —, e no caso
+	// que derruba uma tabela de propósito, porque ele GARANTE a falha de
+	// persistência que abre a janela.
 	t.Cleanup(func() {
 		srv.WaitForBackground()
 		_ = database.Close()
@@ -85,8 +81,8 @@ func seedCampaign(t *testing.T, s *Server, ownerID int64) int64 {
 	return c.ID
 }
 
-// seedCharacter inserts a minimal valid character (JSON columns defaulted) with the given
-// owner + vitals, returning its id.
+// seedCharacter insere o personagem válido mínimo (colunas JSON no padrão) com o
+// dono e os vitais dados, e devolve o id dele.
 func seedCharacter(t *testing.T, s *Server, ownerID int64, name string, hpCur, hpMax, mpCur, mpMax int64) int64 {
 	t.Helper()
 	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
@@ -125,11 +121,10 @@ func seedCharacterAtLevel(
 
 // seedMember senta um personagem à mesa.
 //
-// Ele recebia um PAPEL e escrevia na coluna `role`, apagada na ALE-287 — e essa
-// assinatura era a origem de dois verdes falsos: a produção sempre escreveu
-// `'player'`, então todo caso que semeava `"gm"` media um estado que só a
-// bancada sabia produzir. Quem mestra é o DONO da campanha, e o jeito de dizer
-// isso a um teste é semear o personagem com o dono certo.
+// Ele NÃO recebe papel, e a ausência é deliberada: a coluna `role` foi apagada
+// porque a produção só escrevia `'player'`, e todo caso que semeava `"gm"` media
+// um estado que só a bancada sabia produzir. Quem mestra é o DONO da campanha, e
+// o jeito de dizer isso a um teste é semear o personagem com o dono certo.
 func seedMember(t *testing.T, s *Server, campaignID, characterID int64) {
 	t.Helper()
 	if _, err := s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
@@ -158,8 +153,8 @@ func TestResolveRole(t *testing.T) {
 		{"owner is gm", AuthUser{ID: gm}, "gm", 200},
 		{"member is player", AuthUser{ID: player}, "player", 200},
 		{"stranger forbidden", AuthUser{ID: stranger}, "", 403},
-		// The admin enters any mesa as gm, and this is the rule the WS gateway
-		// runs too — it is what lets them Join a live session (ALE-120).
+		// O administrador entra em qualquer mesa como mestre: é o que o deixa
+		// participar de uma sessão ao vivo.
 		{"admin is gm anywhere", AuthUser{ID: stranger, IsAdmin: true}, "gm", 200},
 	}
 	for _, c := range cases {
@@ -382,14 +377,9 @@ func TestListMemberHelpers(t *testing.T) {
 	seedMember(t, s, campaignID, pcB)
 	seedMember(t, s, campaignID, npc)
 
-	// TRÊS e não dois, e o número mudou sem a produção mudar (ALE-287).
-	//
-	// Aqui se esperava 2, com o NPC de fora, porque o `listPlayerCombatants`
-	// filtrava `m.Role != "player"` e a bancada semeava o NPC como `"gm"`. **A
-	// produção nunca escreveu `"gm"` nessa coluna** — o único escritor fixava
-	// `'player'` —, então o filtro nunca excluiu ninguém e esta função sempre
-	// devolveu todos os membros. O 2 era um verde sobre um estado que só a
-	// bancada sabia montar.
+	// TRÊS e não dois, e o NPC entra: não há filtro por papel. A coluna `role`
+	// nunca teve outro valor além de `'player'` em produção, e esperar 2 seria um
+	// verde sobre um estado que só a bancada sabia montar.
 	players, err := s.tableRules().listPlayerCombatants(ctx, campaignID)
 	if err != nil || len(players) != 3 {
 		t.Fatalf("players=%d err=%v, want 3", len(players), err)

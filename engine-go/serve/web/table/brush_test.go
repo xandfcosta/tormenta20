@@ -7,7 +7,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// Os guardas do GESTO CONTÍNUO do pincel (ALE-203, itens 8 e 9 do dono).
+// Os guardas do GESTO CONTÍNUO do pincel.
 //
 // A aritmética do traço não é medida aqui: `board.StrokeSquares` tem guarda
 // próprio, e ele prende a regra ("o traço não tem buraco") no lugar mais barato.
@@ -15,15 +15,13 @@ import (
 // SEGMENTO numa gravação só, que a resposta não devolve a Mesa inteira, e que a
 // tela liga os gestos que fazem o traço acontecer.
 
-// TestTheStrokePaintsTheWholeSegment.
+// O caso mede o SEGMENTO, e não o número de gravações.
 //
-// O caso mede o SEGMENTO, e não o número de gravações. Eu tinha escrito uma
-// segunda asserção sobre a `Version` do tabuleiro — "uma versão a mais, senão a
-// mesa recebe um quadro por casa" — e ela media a coisa errada: o `PaintTerrain`
-// sobe a versão POR CASA, então um traço de dez casas sobe dez, dentro de um
-// `apply` só. Quem garante a gravação única é a estrutura (`PaintStroke` chama
-// `apply` uma vez, e o `boardCommand` publica uma vez), não um contador —
-// e um teste que afirma o contrário fica vermelho sobre um app correto.
+// Uma asserção sobre a `Version` do tabuleiro mediria a coisa errada: o
+// `PaintTerrain` sobe a versão POR CASA, então um traço de dez casas sobe dez,
+// dentro de um `apply` só. Quem garante a gravação única é a estrutura
+// (`PaintStroke` chama `apply` uma vez, e o `boardCommand` publica uma vez), e
+// um teste que afirme o contrário fica vermelho sobre um app correto.
 func contem(casas []engine.Square, alvo engine.Square) bool {
 	for _, c := range casas {
 		if c == alvo {
@@ -33,8 +31,6 @@ func contem(casas []engine.Square, alvo engine.Square) bool {
 	return false
 }
 
-// TestEveryKindHasADrawing.
-//
 // O guarda que paga o preço de o desenho morar fora do domínio: `drawing`
 // entra em pânico numa espécie sem entrada, e este caso faz o pânico acontecer
 // na suíte em vez de na mesa. Sem ele, a quinta espécie nasceria com uma casa

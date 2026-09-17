@@ -8,14 +8,13 @@ import (
 	"golang.org/x/net/html"
 )
 
-// O CROMO DO MAPA NÃO PODE ROUBAR O CLIQUE DO QUE NÃO É BOTÃO (ALE-294), e a
-// forma de não roubar tem uma armadilha que este guarda existe para prender.
+// O CROMO DO MAPA NÃO PODE ROUBAR O CLIQUE DO QUE NÃO É BOTÃO, e a forma de não
+// roubar tem uma armadilha que este guarda existe para prender.
 //
-// Os painéis que flutuam sobre a cena são CAIXAS: eles recebiam o clique na
-// faixa inteira que ocupam, inclusive nos vãos entre os ícones. Medido a 390px
-// na `73658909`: dos 864 pontos do painel de verbos, 328 — 38% — caíam no fundo
-// dele, e ali pintar terreno, largar marcador ou pegar uma peça era um gesto que
-// sumia sem nada na tela para explicar.
+// Os painéis que flutuam sobre a cena são CAIXAS: sem tratamento, eles recebem o
+// clique na faixa inteira que ocupam, inclusive nos vãos entre os ícones — e ali
+// pintar terreno ou pegar uma peça é um gesto que some sem nada na tela para
+// explicar.
 //
 // O remédio é `pointer-events: none` no contêiner com `auto` em cada controle, e
 // ele só é seguro se TODO controle reativar: um que fique de fora vira botão

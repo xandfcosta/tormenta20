@@ -5,10 +5,7 @@ import (
 	"testing"
 )
 
-// Os guardas das regras da CAMPANHA (ALE-246; o pacote é da ALE-278).
-//
-// O que se protege aqui é o que a virada quase perdeu: o limite da DESCRIÇÃO
-// morava só no `campaign-schema.ts` da SPA, e a tela nova é do servidor.
+// Os guardas das regras da CAMPANHA.
 
 // O nome é aparado ANTES de medido, e é isso que faz um nome de puros espaços
 // ser recusado em vez de virar campanha sem título no livro.
@@ -45,9 +42,8 @@ func TestTheLimitsCountCharactersAndNotBytes(t *testing.T) {
 	}
 }
 
-// A LACUNA QUE ESTA FATIA FECHOU: o teto de 2000 do texto existia só na SPA, e
-// o servidor aceitava qualquer tamanho. Com a tela virando do servidor, a regra
-// teria sumido junto com o formulário que a carregava.
+// O teto de 2000 do texto é do SERVIDOR: uma regra que mora só no formulário
+// some junto com ele.
 func TestTheDescriptionCeilingIsOnTheServerAndNotOnlyOnTheScreen(t *testing.T) {
 	longa := strings.Repeat("a", MaxDescriptionLength+1)
 	if _, erros := Description(&longa); len(erros) == 0 {
@@ -80,10 +76,9 @@ func TestAnEmptyDescriptionIsNullAndNotAnEmptyString(t *testing.T) {
 // Identificador que o motor não implementa não entra no banco: ele ficaria lá
 // sem interruptor na tela que o desfizesse.
 //
-// Ela veio do `api/campaign_rules_http_test.go` na ALE-277. Lá ela media o 400
-// de uma rota JSON; a rota saiu com as outras sem consumidor, e a garantia
-// desceu para onde a regra MORA — que é onde a cena das campanhas também a
-// chama, no comando que grava os interruptores.
+// A garantia mora aqui, onde a REGRA está, e não num teste de status de rota: é
+// daqui que a cena das campanhas a chama, no comando que grava os
+// interruptores.
 func TestAnUnknownRuleIsRefusedNamingTheValue(t *testing.T) {
 	aceitas, msg := NormalizeIgnoredRules([]string{"munição"})
 

@@ -12,9 +12,9 @@ import (
 )
 
 // O patch que chega do socket é montado por uma LISTA de campos escrita à mão,
-// e uma lista assim envelhece: ao entrar o `creatureId` (ALE-137) o cliente
-// passou a mandá-lo e o servidor a descartá-lo em silêncio, com tudo
-// compilando. Este teste percorre os campos em vez de conferir um.
+// e uma lista assim envelhece: um campo novo que o cliente manda e o servidor
+// não lê é descartado em SILÊNCIO, com tudo compilando. Por isso o teste
+// percorre os campos em vez de conferir um.
 func TestParseEntryPatchLosesNoField(t *testing.T) {
 	patch := parseEntryPatch(map[string]any{
 		"label":       "Chefe bandido",
@@ -58,16 +58,12 @@ func TestParseEntryPatchLosesNoField(t *testing.T) {
 	}
 }
 
-// Condição em NPC (ALE-122, destravada pela ALE-137). A lista vem do CATÁLOGO
-// e não de uma cópia escrita aqui: a cópia anterior desviou do livro — faltava
-// `enfeitiçado`, e aplicá-la dava 400 para todo mundo.
+// Condição em NPC. A lista vem do CATÁLOGO e não de uma cópia escrita aqui:
+// cópia desvia do livro, e a que faltava um id dava 400 para todo mundo.
 func TestParseConditionsFiltersByTheCatalog(t *testing.T) {
-	// O `enfeiticado` é o id que já derrubou a aplicação com 400 quando a API
-	// tinha a lista de condições escrita à mão ao lado das 35 do catálogo. Ele
-	// era `enfeitiçado`, com cedilha — o único dos 35 fora do padrão —, e a
-	// grafia irregular é o que fazia toda cópia errar NELE. Normalizado na
-	// ALE-152, junto com outros dois, e agora há guarda:
-	// `catalog.TestNoCatalogIDIsAccented`.
+	// O `enfeiticado` está no caso de propósito: ele era `enfeitiçado`, com
+	// cedilha, e a grafia irregular fazia toda cópia da lista errar NELE. Quem
+	// segura a forma hoje é o `catalog.TestNoCatalogIDIsAccented`.
 	list := parseConditions([]any{"caido", "inventada", "enfeiticado", "atordoado"})
 
 	if len(list) != 3 {
@@ -115,12 +111,9 @@ func TestAConditionEntersAndLeavesTheEntry(t *testing.T) {
 	}
 }
 
-// A iniciativa do jogador é somada pelo SERVIDOR (ALE-213).
-//
-// Antes o cliente mandava o total já pronto e quem decidia o bônus da perícia
-// era o navegador — uma segunda implementação de regra do livro, livre para
-// divergir do motor, que é exatamente o que a ALE-104 apagou. Agora ele manda o
-// d20 e o Go pergunta à ficha COMPUTADA.
+// A iniciativa do jogador é somada pelo SERVIDOR: o cliente manda o d20 e o Go
+// pergunta o bônus à ficha COMPUTADA. Quem decidisse o bônus no navegador seria
+// uma segunda implementação de regra do livro, livre para divergir do motor.
 //
 // O d20 continua vindo de fora, e de propósito: a mesa que rola dado FÍSICO
 // digita o número, e nesse caminho não existe dado para o servidor rolar.
@@ -222,7 +215,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 	}
 }
 
-// Encerrar a cena EXPIRA os efeitos de duração "cena" do grupo (ALE-220).
+// Encerrar a cena EXPIRA os efeitos de duração "cena" do grupo.
 //
 // O livro não deixa margem: "Cena. A habilidade dura uma cena inteira,
 // encerrando-se quando esse momento da história acaba" (p227), e o começo e o
@@ -304,8 +297,8 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 }
 
 // Não alcançar as fichas do grupo ABORTA o gesto inteiro: a cena continua
-// ligada. Desligá-la assim mesmo devolveria o defeito da ALE-220 com o botão
-// parecendo ter funcionado — fila zerada na tela e as bênçãos vivas na ficha.
+// ligada. Desligá-la assim mesmo deixaria o botão parecendo ter funcionado —
+// fila zerada na tela e as bênçãos vivas na ficha.
 func TestEndingTheSceneDoesNotTurnItOffIfItDidNotReachTheSheets(t *testing.T) {
 	f := newEndSceneFixture(t)
 	if _, err := f.srv.db.Exec("DROP TABLE campaign_members"); err != nil {

@@ -175,13 +175,12 @@ func TestTheAttributeSwitchesAndOnlyAcceptsTheSix(t *testing.T) {
 	}
 }
 
-// O OFÍCIO ACEITA TREINO E ATRIBUTO, e este guarda é o conserto de um defeito
-// que a ficha ANTIGA carrega até hoje (ALE-272).
+// O OFÍCIO ACEITA TREINO E ATRIBUTO.
 //
-// O `handleUpdateExpertise` exigia que o nome fosse uma das 29 do livro, e a SPA
-// desenhava o botão de treino e o seletor em toda linha — nos ofícios os dois
-// davam 400. Promessa de tela que o servidor não cumpria, e ninguém tinha
-// notado porque nenhum teste mexia num ofício depois de criá-lo.
+// Exigir que o nome seja uma das 29 do livro recusa todo ofício com 400, e a
+// tela desenha o botão de treino e o seletor em TODA linha — promessa de tela
+// que o servidor não cumpre, invisível para quem não mexe num ofício depois de
+// criá-lo.
 func TestACraftAcceptsTrainingAndAnAttribute(t *testing.T) {
 	f, id := expertiseFixture(t)
 
@@ -223,7 +222,7 @@ func TestACraftIsBornTrainedAndOnlyItCanBeRemoved(t *testing.T) {
 	}
 }
 
-// A REGRA DO NOME É UMA SÓ para a API JSON e para a ficha (ALE-272).
+// A REGRA DO NOME É UMA SÓ.
 //
 // Um ofício não pode ROUBAR o nome de uma das 29: a ficha passaria a ter duas
 // linhas com o mesmo nome, e a decomposição de uma cairia sobre a outra.

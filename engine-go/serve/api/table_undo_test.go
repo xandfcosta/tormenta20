@@ -17,8 +17,6 @@ func boardStops(t *testing.T, f sceneFixture) []engine.Square {
 	return b.Pending.Stops
 }
 
-// TestUndoTakesTheLastLegAndRecomputesTheCost.
-//
 // Reconstruir pelas paradas que sobraram e não cortar o fim do caminho: o número
 // de quadrados de um trecho não se deduz das paradas sem redesenhá-lo. O CUSTO é
 // a asserção que importa — um desfazer que tirasse os quadrados e deixasse o
@@ -57,8 +55,6 @@ func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 	}
 }
 
-// TestUndoingTheLastStopCancelsTheMove.
-//
 // Uma proposta sem perna nenhuma não é proposta: deixar um provisório de custo
 // zero na mesa seria oferecer um "Confirmar" que não move ninguém, e a peça
 // ficaria presa num estado que só o Cancelar resolveria.
@@ -82,8 +78,6 @@ func TestUndoingTheLastStopCancelsTheMove(t *testing.T) {
 	}
 }
 
-// TestWithNoLegToUndoTheButtonDoesNotAppear.
-//
 // Um botão que não faz nada é pior que nenhum, e com UMA perna desfazer já é
 // cancelar — que está ali do lado dizendo isso com a palavra certa.
 func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
@@ -119,12 +113,8 @@ func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 	}
 }
 
-// TestTheStopsSurviveAPageReload.
-//
-// É a divergência DELIBERADA em relação à SPA, e vale registrar: lá a lista mora
-// no navegador e o `board-region` documenta a consequência aceita — quem recarrega
-// no meio de uma proposta perde o desfazer de UMA. Aqui o estado é do servidor,
-// então recarregar não perde nada. A cena que se abre do zero é a mesma que já
+// As paradas são estado do SERVIDOR, e não do navegador: recarregar no meio de
+// uma proposta não perde nada, e a cena que se abre do zero é a mesma que já
 // estava aberta.
 func TestTheStopsSurviveAPageReload(t *testing.T) {
 	f := newSceneFixture(t)
@@ -143,8 +133,6 @@ func TestTheStopsSurviveAPageReload(t *testing.T) {
 	}
 }
 
-// TestSomeoneElsesProposalDoesNotExtendMine.
-//
 // Duas mãos empilhando pernas no mesmo movimento é o estado que o `ByUserID`
 // existe para evitar. Sem a conferência, o clique de um segundo jogador
 // continuaria o caminho que o primeiro está montando — e quem confirmasse

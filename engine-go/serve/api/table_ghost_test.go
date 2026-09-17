@@ -22,11 +22,8 @@ func (f sceneFixture) onBoardAt(t *testing.T, x, y int) string {
 	return posto.Tokens[len(posto.Tokens)-1].ID
 }
 
-// TestTheTokenIsDrawnWhereItWasDropped — o coração do item 4.
-//
-// O dono descreveu o defeito como "ela volta para o início do movimento": o
-// gesto acabava se desfazendo aos olhos de quem arrastou, e o que marcava o
-// destino era um losango que não parecia a peça.
+// A peça é DESENHADA onde foi solta, em vez de voltar para o início do
+// movimento aos olhos de quem arrastou.
 //
 // O CONTROLE vem antes: sem ele, "achei a peça em 3,1" não distingue "a peça
 // andou" de "eu procurei a coisa errada e casei com outro nó".
@@ -73,9 +70,7 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	}
 }
 
-// TestTheGhostMarksTheOriginWithTheTokenMonogram.
-//
-// Ele é a peça e não um disco genérico: com três zumbis em campo, uma sombra
+// O fantasma é a PEÇA e não um disco genérico: com três zumbis em campo, uma sombra
 // anônima na casa não responde qual deles está a caminho.
 func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 	f := newSceneFixture(t)
@@ -100,7 +95,7 @@ func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 		t.Errorf("o fantasma está em %q, e a peça saiu de 4,2", fantasma["style"])
 	}
 	// Ele veste a PEÇA, e é o `--matiz` que prova: sem ele o disco sairia cinza,
-	// e a cor da espécie é metade de quem ele diz que é (ALE-179).
+	// e a cor da espécie é metade de quem ele diz que é.
 	if !strings.Contains(fantasma["style"], "--matiz:") {
 		t.Errorf("o fantasma saiu sem a cor da espécie: %q", fantasma["style"])
 	}
@@ -146,8 +141,6 @@ func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
 	}
 }
 
-// TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge.
-//
 // Duas afirmações num caso só porque elas são a MESMA decisão vista de dois
 // lados: a seta é o GESTO (dobra onde a pessoa clicou) e não a trilha (que dobra
 // em cada casa), e ela para antes do centro para apontar a peça em vez de riscá-la.
@@ -181,8 +174,7 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 	}
 }
 
-// TestEveryClassPositionedByColAndRowHasABox — o guarda da FAMÍLIA de um defeito
-// que o CSS não denuncia.
+// O guarda da FAMÍLIA de um defeito que o CSS não denuncia.
 //
 // `posicaoNoPlano` escreve `--col`/`--lin`/`--pegada` no `style`, e quem os
 // transforma em pixels é UMA regra da folha, com a lista das classes que a
@@ -191,16 +183,13 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 // `static`, a caixa tem área zero, e uma tinta de área zero simplesmente não
 // desenha. Nada no DOM diz "isto está sem caixa".
 //
-// Medido no navegador (ALE-203): a TRILHA do movimento e o ALCANCE estavam assim
-// desde que a moldura saiu — o caminho proposto e as casas alcançáveis não
-// apareciam para ninguém. A `.board-stop` escapou por ter copiado a
-// geometria para dentro de si, que é o remendo que fecha um buraco e deixa a
-// família aberta.
+// Já aconteceu com a TRILHA do movimento e com o ALCANCE ao mesmo tempo: o
+// caminho proposto e as casas alcançáveis não apareciam para ninguém. Copiar a
+// geometria para dentro de UMA classe fecha um buraco e deixa a família aberta.
 //
 // Ele cruza as duas pontas: o HTML SERVIDO diz quem é posicionado por `--col`, e
-// a FOLHA COMPILADA diz quem recebe caixa. É a mesma forma do
-// `TestNoLayerReadsThePointWithoutAddingTheViewport`, e é por AMOSTRAGEM: quem escrever
-// a classe nova amanhã cai aqui sem acrescentar uma linha, porque a pergunta é
+// a FOLHA COMPILADA diz quem recebe caixa. É por AMOSTRAGEM: quem escrever a
+// classe nova amanhã cai aqui sem acrescentar uma linha, porque a pergunta é
 // sobre o `--col` e não sobre um nome.
 func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 	f := newSceneFixture(t)
@@ -258,18 +247,16 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 	}
 }
 
-// TestNoElementRepeatsAnAttribute — o guarda da FAMÍLIA, e ele não é sobre o
-// movimento.
+// O guarda da FAMÍLIA, e ele não é sobre o movimento.
 //
 // O templ NÃO aceita `else if` numa lista de atributos: ele fecha o primeiro
 // `if`, escreve ` else` como TEXTO entre os atributos e abre um `if`
-// INDEPENDENTE. Os dois ramos saem juntos, e a peça do tabuleiro serviu
-// `data-on:pointerdown` DUAS VEZES durante toda a ALE-203 — o navegador guarda o
-// primeiro e descarta o resto sem uma linha no console.
+// INDEPENDENTE. Os dois ramos saem juntos — a peça do tabuleiro já serviu
+// `data-on:pointerdown` DUAS VEZES por meses —, e o navegador guarda o primeiro
+// e descarta o resto sem uma linha no console.
 //
 // Ele varre o HTML SERVIDO e não o código, que é a única forma de alcançar quem
-// escrever `else if` num atributo amanhã sem ler nada disto. É o mesmo molde do
-// `TestNoLayerReadsThePointWithoutAddingTheViewport`.
+// escrever `else if` num atributo amanhã sem ler nada disto.
 func TestNoElementRepeatsAnAttribute(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)

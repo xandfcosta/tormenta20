@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// O ENDPOINT SSE de ponta a ponta (ALE-253).
+// O ENDPOINT SSE de ponta a ponta.
 //
 // O hub tem teste próprio; o que se prende aqui é o que só aparece quando há um
 // servidor HTTP de verdade do outro lado: os cabeçalhos que fazem o navegador

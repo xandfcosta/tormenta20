@@ -27,10 +27,9 @@ import (
 // na classe que fornece a habilidade (mas você sempre pode usar a habilidade em
 // seu CUSTO MÍNIMO)".
 //
-// O handler de conjurar não tinha um único teste — era a maior regra do capítulo
-// 4 sem rede (ALE-105). O exemplo trabalhado da p171 exercita a composição toda
-// de uma vez, e é o que separa "o teto vale sobre o TOTAL" de "o teto vale só
-// sobre os aprimoramentos".
+// O exemplo trabalhado da p171 exercita a composição toda de uma vez, e é o que
+// separa "o teto vale sobre o TOTAL" de "o teto vale só sobre os
+// aprimoramentos".
 
 func newCastServer(t *testing.T) *Server {
 	t.Helper()
@@ -50,8 +49,8 @@ func newCastServer(t *testing.T) *Server {
 	return NewServer(config.Config{JWTSecret: "test-secret", CookieName: "t20_session"}, database, catalogs)
 }
 
-// seedCaster inserts a caster with the class level, PM and one learned spell —
-// the three inputs every rule below turns on.
+// seedCaster insere um conjurador com o nível de classe, os PM e uma magia
+// aprendida — as três entradas de que toda regra abaixo depende.
 func seedCaster(t *testing.T, s *Server, ownerID int64, className string, classLevel, mpCurrent int, spellID string) int64 {
 	t.Helper()
 	return seedCasterWithPowers(t, s, ownerID, className, classLevel, mpCurrent, spellID, "[]")
@@ -88,15 +87,13 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 
 // castSpell chama a REGRA direto, e não uma rota.
 //
-// Ela batia em `POST /personagens/{id}/spells/{id}/cast`, que saiu na ALE-277
-// junto com as outras sessenta e nove rotas sem consumidor. O que estes cinco
-// casos prendem nunca foi o transporte: é o teto de PM da p171, o empilhamento
-// de aprimoramento da p224 e a ressalva do custo mínimo. **Teste de regra vive
-// junto da regra**, e o caminho até ela é o mesmo que a cena da ficha usa —
-// `castSpellForCharacter`, pelo `CastSpell` da porta.
+// O que estes casos prendem nunca foi o transporte: é o teto de PM da p171, o
+// empilhamento de aprimoramento da p224 e a ressalva do custo mínimo. **Teste de
+// regra vive junto da regra**, e o caminho até ela é o mesmo que a cena da ficha
+// usa — `castSpellForCharacter`, pelo `CastSpell` da porta.
 //
-// Devolve ERRO em vez de status: a recusa aqui é uma frase para uma pessoa, e
-// era o handler que a traduzia em 400.
+// Devolve ERRO em vez de status: a recusa aqui é uma frase para uma pessoa, e é
+// o handler que a traduz em 400.
 func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body string) error {
 	t.Helper()
 	var corpo struct {
@@ -126,9 +123,8 @@ func mpOf(t *testing.T, s *Server, characterID int64) int64 {
 	return row.Mpcurrent
 }
 
-// Aqui morava o TestSpellBasePmCostTable, que prendia a Tabela 4-1 contra a
-// p170. Ele foi com a tabela para o `sheet` na ALE-278 — os cinco casos que
-// sobraram montam um `Server` de verdade e são de outra camada.
+// A Tabela 4-1 (p170) é prendida no `sheet`, junto da tabela — aqui ficam só os
+// casos que montam um `Server` de verdade.
 
 // O exemplo trabalhado do livro, p171 (quadro "Aprimoramentos Cumulativos"):
 //
@@ -254,10 +250,10 @@ func TestCastRefusedWithoutEnoughPm(t *testing.T) {
 // "Reduções de Custo. Reduções no custo de PM não são cumulativas. Uma
 // habilidade nunca pode ter seu custo reduzido para menos de 1 PM." (p226)
 //
-// O motor CALCULAVA o modificador de custo — a ficha tem um mosaico "Custo PM"
-// alimentado por ele — e o portão de conjurar o IGNORAVA por completo: um Druida
-// de 20º nível com Força da Natureza ("diminui o custo de todas as suas magias
-// em −2 PM", p63) pagava preço cheio, e a ficha dizia o contrário (ALE-110).
+// O defeito que isto prende é o portão de conjurar IGNORAR o modificador de
+// custo que o motor calcula: um Druida de 20º nível com Força da Natureza
+// ("diminui o custo de todas as suas magias em −2 PM", p63) paga preço cheio, e
+// o mosaico "Custo PM" da ficha diz o contrário.
 func TestPmCostReductionIsAppliedAndFloored(t *testing.T) {
 	s := newCastServer(t)
 	owner := seedUser(t, s, "druida@t20.local")

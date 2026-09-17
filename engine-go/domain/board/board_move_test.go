@@ -7,16 +7,15 @@ import (
 	"t20engine/domain/engine"
 )
 
-// combatenteDeFicha monta uma entrada de PC. Helper de teste local: o do
-// `live` mudou de pacote na ALE-254 e teste não exporta para o vizinho.
+// combatenteDeFicha monta uma entrada de PC. Helper local porque teste não
+// exporta para o pacote vizinho.
 func combatenteDeFicha(label string, init int, charID int64) live.InitiativeEntry {
 	c := charID
 	return live.InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
 }
 
-// ContadorDeIds gera ids previsíveis para o teste. Era um helper compartilhado
-// no `session_state_test.go`; quando aquele arquivo mudou de pacote (ALE-254) o
-// helper foi junto, e teste não exporta para o vizinho — cada pacote tem o seu.
+// ContadorDeIds gera ids previsíveis para o teste. Cada pacote tem o seu, pelo
+// mesmo motivo: teste não exporta para o vizinho.
 func ContadorDeIds() func() string {
 	n := 0
 	return func() string { n++; return "e" + itoaLocal(n) }
@@ -34,9 +33,9 @@ func itoaLocal(n int) string {
 	return string(b)
 }
 
-// Mover peça no tabuleiro (ALE-124, fatia 3). O que se prova aqui é o que a mesa
-// notaria quebrar: o jogador andando na vez de outro, a peça furando o
-// deslocamento do livro, e o mestre impedido de fazer o que o mestre faz.
+// Mover peça no tabuleiro. O que se prova aqui é o que a mesa notaria quebrar:
+// o jogador andando na vez de outro, a peça furando o deslocamento do livro, e
+// o mestre impedido de fazer o que o mestre faz.
 //
 // A conta em si (diagonal custa o dobro, T20 p238) é do motor e está provada em
 // `engine/board_movement_rules_test.go` — repeti-la aqui seria a terceira cópia
@@ -110,10 +109,10 @@ func TestAPlayerDrawsWithTheirOwnTokenOnTheirOwnTurn(t *testing.T) {
 // para o mestre e outros jogadores entenderem o que ele quer fazer"*. Quem muda
 // o estado do tabuleiro é o mestre, e só ele.
 //
-// Isto SUBSTITUI a trava de deslocamento que morava aqui. Ela existia porque o
-// jogador chegava direto ao estado da cena e precisava de um guarda no servidor;
-// com o confirmar sendo do mestre, o guarda perdeu o objeto — e o deslocamento
-// virou desenho (as três faixas da seta), não recusa.
+// Não procure aqui uma trava de DESLOCAMENTO para o jogador: ela existia
+// enquanto ele chegava direto ao estado da cena, e com o confirmar sendo do
+// mestre o guarda perdeu o objeto — o deslocamento virou desenho (as três
+// faixas da seta), não recusa.
 func TestThePlayerDrawsButDoesNotLandTheToken(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
@@ -143,8 +142,8 @@ func TestThePlayerDrawsButDoesNotLandTheToken(t *testing.T) {
 //
 // As palavras do dono: *"o mestre não tem limite, ele faz o que quiser no
 // tabuleiro, mas a parte visual serve para todos"*. Quatro diagonais custam 8
-// (T20 p238) sobre um deslocamento de 6 — antes esta era a recusa, e agora é um
-// pouso com a seta contando a história em azul.
+// (T20 p238) sobre um deslocamento de 6, e isso é um pouso com a seta contando
+// a história em azul, não uma recusa.
 func TestTheGmLandsTheTokenBeyondTheDisplacement(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
@@ -211,10 +210,9 @@ func TestAPlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 // O mestre move qualquer peça, a qualquer hora, SEM ser barrado — é a saída para
 // voo, empurrão, teleporte e "pode ir" — e mesmo assim VÊ o deslocamento dela.
 //
-// As duas metades são a frase do dono inteira: *"o mestre não tem limite, ele faz
-// o que quiser no tabuleiro, mas a parte visual serve para todos"*. O orçamento
-// deixou de ser permissão e virou desenho, então mandá-lo como -1 aqui apagaria
-// da tela do mestre as três faixas que a mesa está lendo.
+// As duas metades são a frase do dono inteira. O orçamento não é permissão, é
+// desenho: mandá-lo como -1 aqui apagaria da tela do mestre as três faixas que
+// a mesa está lendo.
 func TestTheGmMovesWithoutALimitButSeesTheTokenDisplacement(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
@@ -334,11 +332,10 @@ func TestThePathMustStartAtTheToken(t *testing.T) {
 func intPtr(v int) *int    { return &v }
 func boolPtr(v bool) *bool { return &v }
 
-// "Trazer a iniciativa" entrega uma CENA, não uma fila (ALE-166).
-//
-// Antes todos caíam numa fileira única no meio do mapa, e esse é o estado em
-// que o mestre encontra o tabuleiro no segundo em que o combate começa: ele
-// tinha de arrastar nove peças antes de a cena servir para alguma coisa.
+// "Trazer a iniciativa" entrega uma CENA, não uma fila: é o estado em que o
+// mestre encontra o tabuleiro no segundo em que o combate começa, e uma fileira
+// única no meio do mapa o obriga a arrastar nove peças antes de a cena servir
+// para alguma coisa.
 func TestPopulateStartsTheSidesApart(t *testing.T) {
 	st := live.EmptyRuntimeState()
 	id := ContadorDeIds()
@@ -413,14 +410,10 @@ func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
 }
 
 /*
-Aqui morava o TestLoosePiecesDoNotStack, que prendia o `nextFreeSpot`: três
-peças avulsas criadas seguidas não podiam nascer na mesma casa (ALE-166).
-
-A regra saiu com a causa dela (ALE-291). O "+ Peça" da ALE-178 não tinha onde
-pôr a peça, então ela nascia num lugar combinado; o gesto que chegou POSICIONA,
-e o `TestALoosePieceIsBornOnTheSquareTheGmClicked` afirma coisa mais forte —
-não que duas não se empilhem, mas que cada uma nasce EXATAMENTE onde o mestre
-clicou, inclusive em coordenada negativa.
+Não há caso aqui prendendo o `nextFreeSpot` ("peças avulsas seguidas não nascem
+na mesma casa"), e é de propósito: a regra saiu com a causa dela. Hoje o gesto
+POSICIONA, e o `TestALoosePieceIsBornOnTheSquareTheGmClicked` afirma coisa mais
+forte — cada peça nasce EXATAMENTE onde o mestre clicou.
 */
 func TestPaintedTerrainMakesThePathCostMore(t *testing.T) {
 	b, st := mesaEmCombate(t)
@@ -476,11 +469,10 @@ func TestPaintingAndErasingAreExplicitAndIdempotent(t *testing.T) {
 	}
 }
 
-// O provisório carrega a CONTA, não só o total (ALE-190): quantos passos
-// dobraram por diagonal e quantos por terreno difícil. É esse estado que deixa
-// a tela NOMEAR a regra do livro em vez de refazer a aritmética em JavaScript —
-// uma segunda implementação livre para divergir do motor é a classe de defeito
-// que a ALE-104 apagou.
+// O provisório carrega a CONTA, não só o total: quantos passos dobraram por
+// diagonal e quantos por terreno difícil. É esse estado que deixa a tela NOMEAR
+// a regra do livro em vez de refazer a aritmética em JavaScript, que seria uma
+// segunda implementação livre para divergir do motor.
 func TestThePendingMoveCarriesTheArithmeticThatProducedTheCost(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	b.Difficult = []engine.Square{{X: 1, Y: 0}}

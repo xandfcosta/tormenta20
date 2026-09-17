@@ -13,13 +13,10 @@ import (
 	"golang.org/x/net/html"
 )
 
-// Os ajudantes de leitura da cena da Mesa, COPIADOS de `web/table`
-// (ALE-278).
+// Os ajudantes de leitura da cena da Mesa, COPIADOS de `web/table`.
 //
-// A cópia tem precedente e razão: importar o ajudante do pacote que está
-// sendo testado faz o teste andar junto com o defeito. Foi a regra que a
-// fatia da porta deixou escrita, e o que a cena de personagens fez com o
-// `corpoDoBotao`.
+// A cópia é deliberada: importar o ajudante do pacote que está sendo testado faz
+// o teste andar junto com o defeito.
 
 const blocoMinimo = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":10,` +
 	`"deslocamento":"9m (6q)","attacks":[],"skills":[],"specialAbilities":[]`
@@ -148,10 +145,10 @@ func quadrados(pares ...[2]int) []engine.Square {
 
 // responseDraft extrai o rascunho do quadro de sinais do SSE.
 //
-// Ler a CHAVE e não procurar o texto solto na resposta, e isto custou uma
-// sabotagem para descobrir: `Contains(resposta, "Ogro Capitão")` passa verde com
-// o sinal renomeado, porque o nome continua no corpo — ligado a coisa nenhuma. O
-// que a tela precisa é do valor sob `rascunho`, e é isso que se afirma.
+// Ler a CHAVE e não procurar o texto solto na resposta: `Contains(resposta,
+// "Ogro Capitão")` passa verde com o sinal renomeado, porque o nome continua no
+// corpo — ligado a coisa nenhuma. O que a tela precisa é do valor sob
+// `rascunho`.
 func responseDraft(t *testing.T, resposta string) map[string]any {
 	t.Helper()
 	const marca = "data: signals "
@@ -178,11 +175,10 @@ func responseDraft(t *testing.T, resposta string) map[string]any {
 // signals escreve os sinais do jeito que o Datastar os manda num GET: um
 // parâmetro `datastar` com o JSON inteiro.
 //
-// A primeira versão deste teste usava query params soltos (`?criatura=zumbi`), e
-// eles NÃO são a mesma coisa: o `master.BestiaryCriteriaFromRequest` lê os dois, mas o
-// `rascunhode` só existe como sinal — então o teste mandava um pedido que o
-// navegador nunca manda, e o painel semeava por não achar o rascunho. O teste
-// acusou o código por um defeito que era dele.
+// Query param solto (`?criatura=zumbi`) NÃO é a mesma coisa: o
+// `master.BestiaryCriteriaFromRequest` lê os dois, mas o rascunho só existe como
+// SINAL — um pedido que o navegador nunca manda, e o painel semeia por não achar
+// o rascunho. O teste acusaria o código por um defeito dele mesmo.
 func signals(json string) string {
 	return "?datastar=" + url.QueryEscape(json)
 }
@@ -236,13 +232,13 @@ func trechoDeSinais(corpo string) string {
 	return "(nenhuma linha de sinais na resposta)"
 }
 
-// ── editar o combatente (ALE-263) ────────────────────────────────────────────
+// ── editar o combatente ─────────────────────────────────────────────────────
 
-// stroke monta o CORPO de um gesto de pincel (ALE-305).
+// stroke monta o CORPO de um gesto de pincel.
 //
 // Espécie vazia é a BORRACHA, que não nomeia espécie nenhuma — nem no caminho
-// nem no corpo. Era a espécie que a fazia apagar a coisa errada em silêncio
-// (ALE-203), e o corpo não devolve esse campo de graça.
+// nem no corpo. É a espécie que a faz apagar a coisa errada em silêncio, e o
+// corpo não devolve esse campo de graça.
 func stroke(especie string, x, y, x2, y2 int) string {
 	if especie == "" {
 		return fmt.Sprintf(`{"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`, x, y, x2, y2)
@@ -260,9 +256,9 @@ func strokeErasing(especie string, x, y, x2, y2 int) string {
 		especie, x, y, x2, y2)
 }
 
-// templateBody monta o CORPO do gabarito (ALE-305): a forma, o tamanho, a origem e a
-// mira. Os dois pontos usam os mesmos `from`/`to` do traço — um formato só para
-// o tabuleiro inteiro.
+// templateBody monta o CORPO do gabarito: a forma, o tamanho, a origem e a mira.
+// Os dois pontos usam os mesmos `from`/`to` do traço — um formato só para o
+// tabuleiro inteiro.
 func templateBody(forma, tamanho string, x, y, mx, my int) string {
 	return fmt.Sprintf(`{"shape":%q,"size":%q,"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`,
 		forma, tamanho, x, y, mx, my)

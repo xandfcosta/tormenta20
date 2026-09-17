@@ -25,10 +25,8 @@ func sceneIds(t *testing.T, f sceneFixture) (ficha, npc string) {
 	return ficha, npc
 }
 
-// TestPopulateBringsOnlyWhoWasChosen — o coração da ALE-204.
-//
-// A fila inteira num clique punha no mapa o vilão montado para aparecer no
-// terceiro turno, e desfazer era peça por peça. O guarda tem CONTROLE: ele
+// A fila inteira num clique põe no mapa o vilão montado para aparecer no
+// terceiro turno, e desfazer é peça por peça. O guarda tem CONTROLE: ele
 // afirma que o NPC estava na fila antes de afirmar que ele não chegou ao mapa —
 // senão "o ogro não veio" seria verdade sobre uma fila vazia.
 func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
@@ -53,10 +51,8 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 	}
 }
 
-// TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone.
-//
-// `EntrySelection` nil significa TODAS no `populateBoard`, e é exatamente o
-// padrão inseguro que a ALE-204 tirou do app. Um sinal perdido no caminho não
+// `EntrySelection` nil significa TODAS no `populateBoard`, e é o padrão
+// inseguro que não pode voltar: um sinal perdido no caminho não
 // pode virar "traz todo mundo": a diferença entre recusar e trazer a fila
 // inteira é o vilão do terceiro turno aparecendo na tela da mesa.
 func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) {
@@ -76,8 +72,6 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 	}
 }
 
-// TestTheTokenIsBornWithADisplacement — a metade que se perde num porte apressado.
-//
 // O `Populate` cria a peça e o `SetSpeeds` grava o orçamento de movimento dela.
 // Sem o segundo a peça nasce no mapa sem deslocamento, o alcance não acende e o
 // jogador vê uma peça que não anda — um meio-recurso que ninguém reporta porque
@@ -99,16 +93,14 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 	}
 }
 
-// TestThePopulateDialogDoesNotReachThePlayer.
-//
 // A lista de candidatos é a fila INTEIRA, inclusive quem o mestre ainda não pôs
 // em cena. Ela é montada só quando `v.Mestre`, e este guarda prende isso onde
 // dói: no HTML que sai para o jogador. O vazamento não apareceria na tela — o
 // diálogo nasce fechado —, só em "ver código-fonte".
 //
 // O CONTROLE vem primeiro e é obrigatório: sem afirmar que o diálogo EXISTE na
-// página do mestre, "não achei no HTML do jogador" seria igualmente verdade se
-// eu tivesse errado o seletor, e o guarda passaria verde sobre nada.
+// página do mestre, "não achei no HTML do jogador" seria igualmente verdade com
+// o seletor errado, e o guarda passaria verde sobre nada.
 func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -125,7 +117,7 @@ func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 	}
 }
 
-// TestThePlayerDoesNotPopulateTheMap — a trava é do SERVIDOR e não do desenho.
+// A trava é do SERVIDOR e não do desenho.
 //
 // O botão escondido é cortesia; quem postar na mão leva 403. É a mesma regra do
 // `gmBoardCommand`, afirmada aqui porque esta rota é nova e a trava
@@ -147,8 +139,6 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	}
 }
 
-// TestTheCandidatesSayWhoIsAlreadyOnTheMap.
-//
 // A linha de quem já tem peça continua aparecendo, marcada e travada. Esconder
 // faria o mestre procurar um nome que ele acabou de ver na fila; oferecer faria
 // um clique que o servidor ignora, que é pior — parece que não funcionou.
@@ -187,9 +177,9 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	}
 }
 
-// TestPopulateDoesNotPaintTerrain é um controle de vizinhança: este
-// arquivo mexe no mesmo `BoardState` que o pincel, e as peças novas nascem em
-// posições calculadas. Se pôr no mapa passasse a pintar chão, ninguém veria.
+// Um controle de VIZINHANÇA: este arquivo mexe no mesmo `BoardState` que o
+// pincel, e as peças novas nascem em posições calculadas. Se pôr no mapa
+// passasse a pintar chão, ninguém veria.
 func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)

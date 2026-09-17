@@ -1,23 +1,19 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * A ROLAGEM POR TECLADO nas cenas das cenas em Datastar (ALE-264).
+ * A ROLAGEM POR TECLADO nas cenas em Datastar.
  *
- * O defeito, achado pelo dono na tela de catálogos do mestre: a casca do app
- * é `h-dvh` com `overflow-hidden`, então o DOCUMENTO não rola — quem rola são
- * caixas aninhadas. Uma dessas caixas cujo conteúdo é só TEXTO não tem nenhum
- * descendente focável, e sem `tabindex` o foco nunca entra nela. Seta, PageDown,
- * Home e End não fazem nada, e o conteúdo escondido fica inalcançável sem mouse.
- *
- * Medido antes do conserto: **1263px presos** nos catálogos e 69px na ficha do
- * bestiário, os dois com ZERO focáveis dentro.
+ * A casca do app é `h-dvh` com `overflow-hidden`, então o DOCUMENTO não rola —
+ * quem rola são caixas aninhadas. Uma dessas caixas cujo conteúdo é só TEXTO não
+ * tem nenhum descendente focável, e sem `tabindex` o foco nunca entra nela: seta,
+ * PageDown, Home e End não fazem nada, e o conteúdo escondido fica inalcançável
+ * sem mouse.
  *
  * Por que E2E, que nesta casa precisa se justificar: a pergunta é "isto
  * transborda?", e transbordo é LEIAUTE REAL. Em jsdom `scrollHeight` e
  * `clientHeight` são zero, então a condição nunca dispara e o guarda passaria
  * verde sobre todas as telas, sempre — a pior forma de teste, o que afirma o
- * oposto do que mede. É o mesmo argumento do `appearance.spec.ts`, que
- * precisa do navegador para converter oklch.
+ * oposto do que mede.
  *
  * AMOSTRAGEM e não enumeração: o guarda percorre as cenas e, dentro de cada uma,
  * TODA caixa que rola — não há uma asserção por caixa conhecida. Cena nova entra
@@ -25,9 +21,8 @@ import { expect, test } from '@playwright/test'
  * é medida sem tocar no arquivo.
  */
 
-// O estado de login é o do MESTRE: quatro das seis cenas são da Mesa do Mestre
-// e as outras duas ele também alcança. É o mesmo `storageState` que o
-// `admin.spec.ts` usa.
+// O estado de login é o do MESTRE: quatro das seis cenas são da Mesa do Mestre e
+// as outras duas ele também alcança.
 test.use({ storageState: '.auth/user.json' })
 
 const CENAS = [

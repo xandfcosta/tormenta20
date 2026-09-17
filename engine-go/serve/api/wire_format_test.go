@@ -9,56 +9,38 @@ import (
 	"testing"
 )
 
-// A GRAFIA DO FIO É MINÚSCULA, e isto é contrato com o cliente (ALE-263).
+// A GRAFIA DO FIO É MINÚSCULA, e isto é contrato com o cliente.
 //
-// A ALE-254 renomeou identificadores ao partir o `api/` em quatro pacotes, e a
-// renomeação varreu a STRING da tag junto: `role` virou `Role` dentro de
-// `json:"role"` em sete lugares. O efeito no produto foi que o
-// `GET /campanhas/{id}` passou a mandar `Role`, a SPA continuou lendo `role`, e
-// o `isGm()` do rastreador virou SEMPRE FALSO — o mestre recebia a visão de
-// jogador na mesa ao vivo. Um dos sete era corpo de ENTRADA, então trocar papel
-// de membro também parou.
+// O defeito é uma renomeação de identificador que varre a STRING da tag junto:
+// `role` vira `Role` dentro de `json:"role"`, o servidor passa a mandar `Role`,
+// o cliente continua lendo `role`, e o campo vira SEMPRE o zero. Nada quebra o
+// build.
 //
-// Três barreiras existiam e nenhuma pegou:
-//
-//   - os testes Go foram atualizados JUNTO, e passaram a ler "Role": teste que
-//     muda com a mudança não pode acusá-la;
-//   - o gerador de tipos da fronteira cobre só o que o WASM troca, não os DTOs
-//     HTTP;
-//   - o e2e afirma efeitos visíveis nas DUAS visões — condição, fila,
-//     tabuleiro —, e nenhuma asserção diz "o mestre vê os controles do mestre".
-//
-// Este guarda é o barato que pega a FAMÍLIA: um e2e da visão do mestre custaria
-// minutos e cobriria um caso; isto custa milissegundos e cobre toda tag futura.
+// Nenhuma barreira óbvia pega isso: teste Go atualizado JUNTO com a mudança
+// passa a ler "Role" e não pode acusá-la, e o e2e afirma efeitos visíveis sem
+// nunca dizer "o mestre vê os controles do mestre". Este guarda é o barato que
+// pega a FAMÍLIA inteira, hoje e nas tags futuras.
 func TestTheWireSpellingIsLowercase(t *testing.T) {
 	t.Run("tags JSON", agrafiaDasTags)
 	t.Run("caminhos de rota", agrafiaDasRotas)
 }
 
-// agrafiaDasRotas — a MESMA varredura pegou os caminhos, e o guarda das tags
-// sozinho não os via.
+// agrafiaDasRotas — a MESMA varredura pega os CAMINHOS, que o guarda das tags
+// sozinho não vê.
 //
-// Oito sítios: `/Populate`, `/Places`, `/Reopen` e, o pior, `/Reset-password`.
-// O chi casa caminho com sensibilidade a caixa, então cada um era um 404. O da
-// senha é o que dói: é o caminho de quem perdeu o acesso, e ninguém o exercita
-// até precisar.
-//
-// Sete dos oito o `realtime-wire.test.ts` acusou — ele compara o que o cliente
-// chama com o que o roteador registra, e foi por isso que a ALE-253 o trocou de
-// "nome de evento" para "método + caminho". O oitavo escapou porque ele só
-// cobre rotas de sessão. Este aqui varre o repositório inteiro.
+// O chi casa caminho com sensibilidade a caixa, então `/Reset-password` é um
+// 404 — e é o caminho de quem perdeu o acesso, que ninguém exercita até
+// precisar.
 //
 // Repare no que a varredura de renomeação ACERTA: o que se parece com
 // identificador dentro de string. Na mesma linha, `/Places/{placeId}/scene`
-// virou maiúsculo em `Places` e ficou intacto em `scene` e em `{placeId}`.
+// vira maiúsculo em `Places` e fica intacto em `scene` e em `{placeId}`.
 func agrafiaDasRotas(t *testing.T) {
 	rota := regexp.MustCompile(`r\.(?:Get|Post|Put|Delete|Patch|Head|Options|Route|Handle|HandleFunc)\("(/[^"]*)"`)
 	var sitios int
-	// CAMINHA A ÁRVORE desde a ALE-277. A lista enumerava cinco pacotes e as
-	// rotas do app já não moravam em nenhum deles: elas estão nos
-	// `web/*/routes.go` desde a ALE-278, e o `api` ficou com sete. O piso de 40
-	// derrubou o guarda, que é exatamente o que um piso existe para fazer —
-	// enumerar é remendo, e o que restaura a amostragem é a caminhada.
+	// CAMINHA A ÁRVORE em vez de enumerar pacotes: as rotas mudam de casa, e uma
+	// lista escrita à mão passa a varrer diretório vazio em silêncio. É o piso
+	// abaixo que denuncia — enumerar é remendo, a caminhada é a amostragem.
 	{
 		var arquivos []string
 		raizDoModulo, err := os.Getwd()
@@ -106,9 +88,9 @@ func agrafiaDasRotas(t *testing.T) {
 }
 
 func agrafiaDasTags(t *testing.T) {
-	// A lista de raízes saiu na ALE-277: ela enumerava quatro pacotes, e as
-	// rotas do app mudaram de casa para os `web/*` na ALE-278. Enumerar é
-	// remendo; o que restaura a amostragem é a caminhada.
+	// Caminha a árvore em vez de enumerar pacotes, pela mesma razão do guarda
+	// acima: enumerar é remendo, e o pacote que muda de casa sai da medição em
+	// silêncio.
 	raizes := []string{"."}
 	// A tag pode vir com opções (`json:"nome,omitempty"`); o que importa é a
 	// primeira letra do NOME. `json:"-"` é descarte e não é nome.
@@ -129,9 +111,7 @@ func agrafiaDasTags(t *testing.T) {
 			for i, linha := range strings.Split(string(conteudo), "\n") {
 				// Comentário fora antes de medir: o cabeçalho acima cita
 				// `json:"role"` para explicar o defeito, e um guarda que lê a
-				// fonte crua acusaria a própria explicação. A sessão irmã
-				// entregou um guarda irmão VERMELHO sobre o próprio texto hoje,
-				// e só a prova de vermelho revelou.
+				// fonte crua acusaria a própria explicação.
 				if j := strings.Index(linha, "//"); j >= 0 {
 					linha = linha[:j]
 				}
@@ -150,12 +130,9 @@ func agrafiaDasTags(t *testing.T) {
 	}
 	// CONTROLE: sem ele, um regex que parou de casar diria verde sobre nada.
 	//
-	// O PISO DESCEU DE 100 PARA 60 na ALE-330, e o motivo é o terreno e não o
-	// instrumento: os quatro fósseis das rotas JSON da SPA foram apagados e
-	// levaram 27 tags junto. Medido dos DOIS lados, que é o que separa um
-	// controle calibrado de um palpite — são 91 tags hoje, e um regex que
-	// parasse de casar daria ZERO. Sessenta fica acima da metade do que existe
-	// e muito longe do zero, com folga para os fósseis que ainda vão sair.
+	// O piso é CALIBRADO dos dois lados e não chutado: são 91 tags hoje, e um
+	// regex que parasse de casar daria ZERO. Sessenta fica acima da metade do que
+	// existe e muito longe do zero, com folga para o que ainda vai sair.
 	if sitios < 60 {
 		t.Fatalf("só %d tags JSON em %d arquivos — o padrão parou de casar e o verde "+
 			"não significa nada", sitios, visitados)

@@ -6,15 +6,12 @@ import (
 	"testing"
 )
 
-// TestTheGmStageHasEveryRegionExactlyOnce é o guarda central da virada de
-// forma: o mestre deixou de receber a coluna e passou a receber o palco, e o que
-// não pode mudar é QUE REGIÕES existem no documento dele.
+// QUE REGIÕES existem no documento do mestre, e cada uma UMA VEZ SÓ.
 //
-// "Uma vez só" é metade do teste e é a metade que pega o erro provável: mover
-// uma região para o trilho e esquecer de tirá-la de onde estava deixa DUAS
-// raízes com o mesmo id. O `PatchElements` acerta a primeira, a segunda envelhece
-// na tela, e as duas discordam sobre a mesma fila — que é exatamente o defeito
-// da ALE-122, agora em HTML.
+// "Uma vez só" é a metade que pega o erro provável: mover uma região e esquecer
+// de tirá-la de onde estava deixa DUAS raízes com o mesmo id. O `PatchElements`
+// acerta a primeira, a segunda envelhece na tela, e as duas discordam sobre a
+// mesma fila.
 func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -29,14 +26,11 @@ func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
 	}
 }
 
-// TestThePlayerColumnDidNotGetTheGmRail é o outro lado, e o que ele
-// afirma sobreviveu à forma do jogador (ALE-269) mesmo com o nome envelhecendo:
-// o jogador deixou de estar numa coluna e passou a ter duas SUPERFÍCIES, mas o
-// trilho continua não sendo dele.
+// O outro lado: o trilho não é do jogador.
 //
 // O trilho de 80px é do mestre, e mandá-lo ao jogador seria mandar a fila
-// inteira para quem o `redactForPlayers` acabou de esvaziá-la — a trava da
-// ALE-210 furada por leiaute.
+// inteira para quem o `redactForPlayers` acabou de esvaziá-la — a trava da cena
+// furada por leiaute.
 func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -53,8 +47,7 @@ func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
 	}
 }
 
-// TestTheStreamOnlySendsTheRegionTheDocumentHas prende as DUAS pontas juntas, que é
-// onde a divergência nasce: a lista de regiões do stream e a página são escritas
+// As DUAS pontas juntas, que é onde a divergência nasce: a lista de regiões do stream e a página são escritas
 // em lugares diferentes e têm de concordar sobre quem existe.
 //
 // Discordar não dá erro em lugar nenhum — o remendo simplesmente não pousa —,

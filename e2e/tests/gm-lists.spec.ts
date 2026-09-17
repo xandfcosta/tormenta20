@@ -8,49 +8,18 @@ import {
 /**
  * As listas do MESTRE — bestiário e catálogos, nas cenas.
  *
- * O arquivo nasceu medindo a `VirtualList` da SPA: ela mede as linhas para
- * saber quais existem, e em jsdom todo elemento mede zero — a lista renderiza
- * NENHUMA linha e um teste de unidade passa verde sobre a tela vazia. Foi assim
- * que a ALE-84 entrou em produção com a suíte inteira verde.
- *
- * Quatro casos foram embora com a SPA (ALE-272, fatia 10c): os que dirigiam a
- * sessão dela e a ficha antiga. O que ficou mede as cenas do servidor, e a
- * razão de serem e2e mudou de nome sem mudar de natureza — não é mais
- * virtualização, é LEIAUTE REAL: coluna que some ao alargar a janela e faixa
- * morta no tablet não existem em HTML nenhum.
+ * Por que e2e: LEIAUTE REAL. Coluna que some ao alargar a janela e faixa morta
+ * no tablet não existem em HTML nenhum.
  *
  * Só leitura: filtra e navega, nunca escreve.
  */
 test.describe('As listas do mestre', () => {
 
-  // Aqui morava `a ferramenta Bestiário pinta a lista e abre a criatura
-  // escolhida` (ALE-320).
-  //
-  // Ele foi REAPONTADO duas vezes — nasceu medindo a `VirtualList` da SPA, que
-  // em jsdom renderiza zero linhas, e foi portado para a cena do servidor na
-  // ALE-264. O que ninguém releu na segunda vez foi a JUSTIFICATIVA: a
-  // virtualização saiu junto, e `collection_view.go` diz por quê — "a cena do
-  // servidor manda TUDO, por decisão do dono". Sem lista virtual, o caso passou
-  // a medir HTML renderizado pelo servidor, que é a camada de baixo.
-  //
-  // Quem o cobre hoje: `TestTheBestiaryOpensWithTheWholeBook` (a lista pinta) e
-  // `TestTheSearchIsAnAddress` (a busca filtra, e o filtro é endereço).
-  //
-  // O RESTO DESTE ARQUIVO FICA, e por outro motivo: coluna que some ao alargar a
-  // janela e faixa morta no tablet são LEIAUTE REAL, e disso o navegador é a
-  // única testemunha.
+  // NÃO existe aqui um caso "a ferramenta Bestiário pinta a lista e abre a
+  // criatura escolhida": sem virtualização ele mede HTML do servidor, que é a
+  // camada de baixo. Quem cobre: `TestTheBestiaryOpensWithTheWholeBook` e
+  // `TestTheSearchIsAnAddress`.
 
-
-  /**
-   * A sexta e última lista virtualizada da auditoria: o pool de poderes gerais,
-   * dentro da ficha. Ele só pinta com o card da classe ABERTO, e o card abre
-   * sozinho quando há escolha pendente — por isso o teste CRIA um Guerreiro de
-   * 6º nível sem poder escolhido (três vagas em aberto) em vez de usar um
-   * personagem da seed, onde as vagas já estão gastas e a lista fica fechada.
-   *
-   * O herói é criado pela API na primeira rodada e REUSADO nas seguintes: o app
-   * não apaga personagem, então criar um por rodada entulharia o elenco.
-   */
 test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 })
   await page.goto('/mestre/bestiario')
@@ -65,33 +34,19 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
   )
   expect(transbordou, 'a lista não transbordou — o teste não mediu nada').toBe(true)
 
-  // A tolerância sobe de 8 para 12 px, e a razão é do INSTRUMENTO e não do
-  // defeito: a primitiva mede o último elemento com TEXTO, e a lista da SPA era
-  // virtualizada — linhas posicionadas exatamente, sem espaço próprio embaixo.
-  // Sem virtualização (ALE-257) cada linha tem `p-2`, então o texto da última
-  // fica legitimamente ~10px acima do fim do contêiner. Medido: 11px.
-  //
-  // Isto NÃO cega o guarda, e a diferença é de duas ordens de grandeza: o
-  // defeito da ALE-175 eram 243px de banda morta. Provado — recolocar uma tampa
-  // de altura na lista deixa este teste VERMELHO com a tolerância em 12.
+  // Tolerância de 12 e não 8, e a razão é do INSTRUMENTO: a primitiva mede o
+  // último elemento com TEXTO, e cada linha tem `p-2`, então o texto da última
+  // fica ~11px acima do fim do contêiner. Não cega o guarda — a banda morta que
+  // ele caça mede centenas de pixels, e recolocar uma tampa de altura na lista
+  // o deixa VERMELHO com a tolerância em 12.
   await expectSemFaixaMorta(page, '[aria-labelledby=table-bestiary-panel]', 12)
 })
 
 /**
- * Crescer a janela nunca tira uma coluna do bestiário (ALE-172).
- *
- * O gate das duas colunas olhava a JANELA (`lg:`), e a coluna de ferramentas
- * do mestre devolve largura à direita conforme a janela encolhe. O resultado
- * era invertido: numa janela de 1024 o palco recebia 800px e mostrava DUAS
- * colunas, e numa de 1000 recebia 968px e mostrava UMA. O mestre alargava a
- * janela e perdia o painel de detalhe.
- *
- * A varredura é de LARGURA com altura fixa de propósito. A decisão real ali é
- * "cabe painel lateral?", que tem duas dimensões: o mesmo contêiner de 812px
- * cabe num tablet deitado (768px de altura) e não cabe num celular deitado
- * (390px, onde a lista sobraria com 41px — menos que uma linha). Por isso o
- * conserto é `container-type: size` com as duas condições, e por isso comparar
- * caixas de alturas diferentes acusaria como defeito a exceção que É o
+ * A varredura é de LARGURA com altura fixa de propósito. A decisão real é "cabe
+ * painel lateral?", e ela tem duas dimensões: o mesmo contêiner de 812px cabe
+ * num tablet deitado (768px de altura) e não cabe num celular deitado (390px).
+ * Comparar caixas de alturas diferentes acusaria como defeito a exceção que É o
  * conserto.
  *
  * Por que e2e: media/container query só resolve em browser de verdade. Em
@@ -109,23 +64,11 @@ test('alargar a janela nunca tira uma coluna do bestiário', async ({ page }) =>
 })
 
 /**
- * As colunas do catálogo seguem o PAINEL, e alargar nunca tira uma (ALE-170).
- *
- * Mesma classe de defeito que a ALE-172 consertou no bestiário, e por isso o
- * mesmo guarda: a ferramenta divide a tela com a trilha do mestre, então largura
- * de janela mente por centenas de pixels sobre quanto espaço o painel tem.
- *
- * A segunda asserção é a que só o browser faz. Numa lista VIRTUALIZADA "três
- * colunas" não é grade de CSS — é o agrupamento dos dados antes de entregá-los.
- * A grade pode declarar três colunas com um cartão só em cada fileira, e a tela
- * fica com dois terços de vazio à direita enquanto o CSS jura que está certo.
- * Contar os cartões DENTRO da fileira é o que separa as duas metades.
+ * A ferramenta divide a tela com a trilha do mestre, então largura de JANELA
+ * mente por centenas de pixels sobre quanto espaço o painel tem — por isso o
+ * mesmo guarda do bestiário.
  */
 test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => {
-  // A lista deixou de ser VIRTUALIZADA na ALE-258 — são 992 entradas e o
-  // servidor manda todas —, então o alvo passa a ser a grade de verdade e não
-  // a fileira que o virtualizador montava. A garantia é a mesma: alargar a
-  // janela nunca pode tirar uma coluna.
   await page.goto('/mestre/condicoes')
   await expect(page.locator('.collection-in-columns').first()).toBeVisible()
 
@@ -135,18 +78,9 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
     [1920, 1440, 1200, 1100, 1024, 1000, 900, 844, 768, 600, 390],
   )
 
-  // A segunda metade MUDOU DE PERGUNTA com a virada, e vale dizer por quê.
-  //
-  // Na lista virtualizada, "três colunas" não era grade de CSS — era o
-  // agrupamento dos dados antes de entregá-los, e a grade podia declarar três
-  // com um cartão só na fileira, deixando dois terços de vazio enquanto o CSS
-  // jurava estar certo. Contar cartões DENTRO da fileira separava as duas
-  // metades.
-  //
-  // Sem virtualização a grade é nativa e preenche sozinha, então essa
-  // discrepância não pode existir. O que PODE existir é o oposto, e é o que se
-  // afirma agora: a grade declarando MAIS colunas do que cabem — foi o defeito
-  // medido na ALE-258, quatro colunas a 1920 onde o teto de leitura é três.
+  // A grade é nativa e preenche sozinha, então fileira com vazio à direita não
+  // pode existir. O risco é o oposto, e é o que se afirma: a grade declarando
+  // MAIS colunas do que cabem para ler.
   await page.setViewportSize({ width: 1920, height: 1080 })
   const colunas = await page.evaluate(() => {
     const grade = document.querySelector('.collection-in-columns')
@@ -158,60 +92,38 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
 })
 
 /**
- * As abas do catálogo DIVIDEM a faixa que recebem (ALE-138).
- *
- * `Condições | Magias | Poderes | Itens` ficavam encolhidas à esquerda com a
- * faixa inteira sobrando à direita. O gatilho do kit já nasce `flex-1`, mas o
- * `TabsList` nasce `inline-flex w-fit`: sem largura, o `flex-1` não tem o que
- * dividir. O print do dono mostrava a barra de cima ocupando tudo e a de dentro
- * não — mesma tela, dois comportamentos.
- *
- * A segunda asserção é a armadilha da ALE-122: junto de `flex-1` o `min-w-0` é
- * obrigatório, porque um item flex não encolhe abaixo do conteúdo e o rótulo
- * mais longo empurra a última parada para FORA do trilho. Ela NÃO reproduz um
- * defeito de hoje. Ela protege o próximo: um rótulo mais longo, uma parada a
- * mais, e o trilho estoura sem ninguém ver.
- *
- * As duas larguras não são simetria: a régua é o CONTÊINER, e a mesma janela dá
- * a largura inteira na Mesa e ~384px na gaveta da sessão (ALE-138, ALE-172).
+ * `expectNadaEscapa` NÃO reproduz um defeito de hoje: junto de `flex-1` o
+ * `min-w-0` é obrigatório, porque um item flex não encolhe abaixo do conteúdo e
+ * o rótulo mais longo empurra a última parada para FORA do trilho. Ela protege
+ * o próximo rótulo mais longo.
  *
  * Por que e2e: é caixa contra caixa. Em jsdom todo elemento mede zero e
  * `expectNadaEscapa` passaria verde sobre qualquer arranjo.
  */
 test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ page }) => {
-  // Uma navegação só, redimensionando depois — o mesmo padrão dos guardas de
-  // coluna aqui do lado. Recarregar por largura paga o portão dos catálogos
-  // (18 buscas antes da primeira tela) a cada volta, e foi assim que a versão
-  // anterior deste teste estourou o timeout sem que nada estivesse errado.
-  // A FILEIRA DE ABAS que este guarda media não existe mais: na ALE-264 cada
-  // catálogo virou uma parada do TRILHO, e ter as duas coisas seria o mesmo
-  // estado desenhado em dois lugares. A garantia não foi apagada — ela MUDOU DE
-  // ENDEREÇO junto com o risco: eram quatro abas numa faixa, são treze paradas
-  // num trilho que no telefone rola na horizontal.
+  // Uma navegação só, redimensionando depois: recarregar por largura paga o
+  // portão dos catálogos (18 buscas antes da primeira tela) a cada volta, e foi
+  // assim que a versão anterior deste teste estourou o timeout sem que nada
+  // estivesse errado.
   await page.goto('/mestre/condicoes')
   const trilho = 'nav[aria-label="Ferramentas do mestre"]'
   await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 
-  // A CONTAGEM saiu daqui e virou `TestTheRailHasOneStopPerCatalog` no Go,
-  // por amostragem sobre `abasDoAcervo`. Ela estava escrita como o número onze,
-  // e as duas paradas nascidas depois (escolas, perícias) só apareceram quando
-  // ele ficou vermelho por um número velho — enumeração cobrando manutenção sem
-  // proteger nada. Aqui fica o que só o navegador testemunha: a geometria.
+  // A CONTAGEM de paradas não mora aqui: ela é `TestTheRailHasOneStopPerCatalog`
+  // no Go, por amostragem sobre `abasDoAcervo`. Escrita aqui como número, ela
+  // ficava vermelha por parada nova sem proteger nada. Aqui fica só a geometria,
+  // que é o que o navegador testemunha.
   let referencia = 0
 
   for (const largura of [1920, 1024, 768, 390]) {
     await page.setViewportSize({ width: largura, height: 900 })
     await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 
-    // Nenhuma parada escapa do trilho — a da ALE-122: `flex-1` não encolhe
-    // abaixo do conteúdo, e sem `min-w-0` o rótulo mais longo empurra a última
-    // para fora.
+    // Nenhuma parada escapa do trilho.
     await expectNadaEscapa(page, trilho)
 
-    // E TODAS continuam alcançáveis: no laptop em coluna, no telefone
-    // rolando. Uma parada que some da tela é uma ferramenta que deixou de
-    // existir para quem está naquela largura — o defeito da ALE-178, que fez o
-    // ✕ de encerrar ficar inalcançável a 390px.
+    // E TODAS continuam alcançáveis: uma parada que some da tela é uma
+    // ferramenta que deixou de existir para quem está naquela largura.
     const alcancaveis = await page.locator(`${trilho} a`).count()
     if (largura === 1920) referencia = alcancaveis
     expect(alcancaveis, `a ${largura}px o trilho perdeu paradas`).toBe(referencia)
@@ -220,32 +132,23 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
 })
 
 /**
- * A GAVETA DE FILTROS do celular deitado (ALE-230).
+ * A GAVETA DE FILTROS do celular deitado.
  *
- * A 844×390 o bestiário dava 11px para a lista de criaturas — 0,2 de uma linha
- * de 49px. O maior consumidor da cena NÃO era navegação: eram 124px de ND
- * mínimo, ND máximo e sete crachás de tipo. Deitado eles viram gaveta, e a
- * lista passou a 69px (1,41 criatura). Nos catálogos a mesma gaveta devolveu 43
- * dos 18px de miolo que Magias, Perícias e Poderes tinham.
- *
- * O CASO MEDE OS DOIS LADOS, e o segundo não é redundância — é o controle. Uma
+ * O CASO MEDE OS DOIS LADOS, e o segundo não é redundância — é o CONTROLE. Uma
  * gaveta que se fecha em toda forma passaria com folga numa asserção só de
  * altura, e o custo seria os filtros sumirem da tela larga, que é onde eles mais
- * servem. Este é exatamente o modo de falha que a folha da casa tenta evitar
- * escrevendo DUAS regras de abertura (`display: revert` e `::details-content`),
- * porque os motores escondem o miolo de um `<details>` fechado de dois jeitos
- * diferentes e um deles pode não existir.
+ * servem. A folha da casa escreve DUAS regras de abertura (`display: revert` e
+ * `::details-content`) porque os motores escondem o miolo de um `<details>`
+ * fechado de dois jeitos diferentes e um deles pode não existir.
  *
  * Só um browser testemunha: a chave é `(max-width: 1023px) and (orientation:
  * landscape)`, e orientação não existe em jsdom. Pior: o miolo de um `<details>`
  * FECHADO ainda devolve `boundingClientRect` — o navegador o esconde por
  * `content-visibility` —, então a medição é da CAIXA e a visibilidade vem de
- * `checkVisibility`. Medir o filho foi o que mentiu na primeira sonda desta
- * issue.
+ * `checkVisibility`. Medir o filho foi o que mentiu na primeira sonda.
  *
  * Ele CAMINHA pelo trilho em vez de trazer uma lista de paradas: a parada que
- * entrar amanhã já nasce medida. Uma lista escrita à mão nasce incompleta na
- * primeira vez que alguém esquece.
+ * entrar amanhã já nasce medida.
  */
 test('deitado os filtros viram gaveta, e em toda outra forma eles ficam abertos', async ({ page }) => {
   await page.goto('/mestre/bestiario')
@@ -314,16 +217,12 @@ test('deitado os filtros viram gaveta, e em toda outra forma eles ficam abertos'
 })
 
 /**
- * O PISO DO ÚTIL, deitado: uma criatura INTEIRA (ALE-230).
+ * O PISO DO ÚTIL, deitado: uma criatura INTEIRA. O caso prende o RESULTADO e não
+ * o mecanismo — a gaveta é uma forma de chegar lá, e amanhã pode ser outra.
  *
- * A issue chama uma linha inteira de piso do útil, e o bestiário era o caso que
- * mais longe estava dele: 11px de lista para uma linha de 49. Este caso prende o
- * resultado, e não o mecanismo — a gaveta é uma forma de chegar lá, e amanhã
- * pode ser outra.
- *
- * Nos catálogos o piso NÃO é alcançável cortando cromo, e vale saber por quê: um
- * cartão de magia mede 205px dos 390 da tela, então mesmo com cromo ZERO ele
- * mal caberia. Ali o que não cabe é o CARTÃO, e isso é outra decisão.
+ * Nos catálogos não há caso equivalente de propósito: um cartão de magia mede
+ * 205px dos 390 da tela, então nem com cromo ZERO o piso seria alcançável ali.
+ * O que não cabe é o CARTÃO, e isso é outra decisão.
  */
 test('deitado, a lista do bestiário mostra uma criatura inteira', async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 })

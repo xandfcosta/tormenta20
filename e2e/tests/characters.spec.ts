@@ -60,11 +60,8 @@ test.describe('A cena de personagens', () => {
   })
 
   /**
-   * O ⏎ leva à FICHA, e desde a fatia 10 da ALE-272 a ficha é a do servidor: a
-   * costura entre os dois stacks que a ALE-239 criou deixou de existir. O caso
-   * fica porque a garantia é a mesma — a tecla que abre a ficha tem de abrir a
-   * ficha —, e nenhuma outra camada a vê: o guarda em Go conhece só o HTML de
-   * um lado.
+   * O ⏎ leva à FICHA, e nenhuma outra camada vê essa garantia: o guarda em Go
+   * conhece só o HTML de um lado.
    */
   test('⏎ no trilho abre a ficha do herói em cena', async ({ page }) => {
     await page.goto('/personagens')
@@ -79,21 +76,19 @@ test.describe('A cena de personagens', () => {
   })
 
   /**
-   * ALE-98: a vaga de criar é POSIÇÃO DE CURSOR, e a seta chega nela. O guarda
-   * em Go afirma que ela declara `role=option` e escreve o cursor; que a SETA
-   * de fato pare ali e que o ⏎ leve à Forja é do teclado, e teclado é do
-   * navegador.
+   * A vaga de criar é POSIÇÃO DE CURSOR, e a seta chega nela. O guarda em Go
+   * afirma que ela declara `role=option` e escreve o cursor; que a SETA de fato
+   * pare ali e que o ⏎ leve à Forja é do teclado, e teclado é do navegador.
    *
    * Sem o ⏎ aqui a gramática morre na última posição: a tecla que abriu tudo
    * até então não faz nada justamente onde não há ficha para abrir.
    */
   test('a seta alcança a vaga de criar e ⏎ leva à Forja', async ({ page }) => {
     await page.goto('/personagens')
-    // "Forjar um herói", e não "…um NOVO herói": desde a ALE-181 o marcador
-    // MOSTRA o rótulo em vez de o esconder num `aria-label`, então ele passou a
-    // ser o mesmo texto do título do palco. O retrato tracejado do palco segue
-    // dizendo "novo" — lá a palavra distingue a vaga das capas ao redor, e aqui
-    // ela só truncaria em 208px.
+    // "Forjar um herói", e não "…um NOVO herói": o marcador MOSTRA o rótulo em
+    // vez de o esconder num `aria-label`, e ele é o mesmo texto do título do
+    // palco. O retrato tracejado segue dizendo "novo" — lá a palavra distingue a
+    // vaga das capas ao redor, e aqui ela só truncaria em 208px.
     const vaga = page.getByRole('option', { name: 'Forjar um herói' })
     await expect(vaga).toBeVisible()
 
@@ -108,10 +103,9 @@ test.describe('A cena de personagens', () => {
   })
 
   /**
-   * O NOME do vizinho fica sempre à mostra. A versão original escondia a
-   * legenda atrás de `group-hover`, e hover não existe no toque nem sob
-   * navegação por teclado — que são os dois modos em que duas iniciais não
-   * dizem quem vem a seguir.
+   * O NOME do vizinho fica sempre à mostra: esconder a legenda atrás de
+   * `group-hover` a apaga no toque e sob navegação por teclado, que são os dois
+   * modos em que duas iniciais não dizem quem vem a seguir.
    *
    * E2E porque a garantia é de CSS COMPUTADO: em jsdom nenhuma folha se aplica,
    * e o guarda em Go só sabe que o texto está no HTML — texto no HTML com
@@ -132,24 +126,22 @@ test.describe('A cena de personagens', () => {
   })
 
   /**
-   * ALE-99: o retrato não escorrega nas pontas do elenco.
+   * O retrato não escorrega nas pontas do elenco.
    *
    * No primeiro herói não há vizinho à esquerda, e a caixa vazia entra no lugar
    * dele — sem ela o retrato desliza para a esquerda ao chegar ali, e o palco
-   * dança a cada passo. É LAYOUT medido, e por isso é aqui: o guarda em Go que
-   * eu tinha escrito primeiro contava `div`s por classe, que é afirmar a forma
-   * do DOM e não a garantia.
+   * dança a cada passo. É LAYOUT medido, e por isso é aqui: contar `div`s por
+   * classe num guarda de Go afirmaria a forma do DOM e não a garantia.
    */
   test('o retrato fica no mesmo lugar nas pontas do elenco', async ({ page }) => {
     await page.goto('/personagens')
     const retratoVisivel = () =>
       page.locator('a[aria-label^="Abrir ficha de"]:visible').first().boundingBox()
 
-    // A ENTRADA DO PALCO (ALE-235) desloca o retrato por 220ms de propósito, e
-    // isso não afrouxa esta garantia: ela é sobre a posição em REPOUSO — o
-    // retrato não pode ASSENTAR em lugar diferente ao sair da ponta. Sem a
-    // espera, a medição pega o meio de uma animação e mede um instante que
-    // ninguém vê parado.
+    // A ENTRADA DO PALCO desloca o retrato por 220ms de propósito, e isso não
+    // afrouxa esta garantia: ela é sobre a posição em REPOUSO. Sem a espera, a
+    // medição pega o meio de uma animação e mede um instante que ninguém vê
+    // parado.
     //
     // A espera é pelas animações DESTA cena, pelo nome: `document.getAnimations()`
     // devolve também os `animate-pulse` da tela, que são INFINITOS — esperar
@@ -179,8 +171,8 @@ test.describe('A cena de personagens', () => {
 
     // E a VAGA de criar ocupa a mesma posição de um herói. Ela não tem nome
     // longo, nem vitais, nem resumo — e sem fileiras invisíveis do tamanho
-    // deles a coluna centralizada puxa o retrato para cima. Medido antes do
-    // conserto: 74px. Este é o passo em que o palco dançava mais.
+    // deles a coluna centralizada puxa o retrato 74px para cima, que é o maior
+    // salto do trilho inteiro.
     for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
     await palcoAssentado()
     const vaga = await page

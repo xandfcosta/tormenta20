@@ -24,18 +24,13 @@ func TestOnlyTheGmMarksAGroup(t *testing.T) {
 	}
 }
 
-// TestTheLassoMarksOnlyWhatIsInsideIt — o PREDICADO, que é a regra inteira deste
-// gesto (ALE-311).
+// O PREDICADO, que é a regra inteira deste gesto.
 //
-// O laço decide QUAIS peças o arrasto do grupo vai mover, e até aqui nenhum caso
-// afirmava isso. Os dois que cobriam a rota olhavam 403-vs-200 e o TAMANHO da
-// resposta, e um deles posta `{}` — sem coordenada nenhuma.
-//
-// Medido: sabotado o handler para ignorar os dois cantos e marcar TODAS as
-// peças, a suíte ficava verde. É literalmente o caso que o `CLAUDE.md` descreve
-// em "quando o PREDICADO decide quem é afetado, prenda o predicado" — arranjar o
-// resultado por ordem de chamada diz o que acontece *com* as linhas achadas e
-// nada sobre *quais* linhas são essas.
+// O laço decide QUAIS peças o arrasto do grupo vai mover. Os casos que olham
+// 403-vs-200 e o TAMANHO da resposta ficam verdes com o handler sabotado para
+// ignorar os dois cantos e marcar TODAS as peças: arranjar o resultado por ordem
+// de chamada diz o que acontece *com* as linhas achadas e nada sobre *quais*
+// linhas são essas.
 //
 // As três peças são o mínimo que distingue: uma DENTRO, uma FORA pelo eixo x e
 // uma FORA pelo eixo y. Com uma fora só, um predicado que testasse um eixo e
@@ -83,8 +78,7 @@ func (f sceneFixture) seedToken(t *testing.T, rotulo string, x, y int) string {
 	return ""
 }
 
-// TestTheLassoReadsTheCornersInAnyOrder: arrastar da direita para a esquerda é o
-// mesmo laço.
+// Arrastar da direita para a esquerda é o mesmo laço.
 //
 // O canto onde o dedo DESCEU vira `from`, e o de cima-à-esquerda não é sempre
 // ele. Um predicado escrito como `de.X <= p.X && p.X <= ate.X` marca ZERO peças
@@ -102,8 +96,6 @@ func TestTheLassoReadsTheCornersInAnyOrder(t *testing.T) {
 	}
 }
 
-// TestMarkingDoesNotPatchTheScene — o irmão do guarda da régua.
-//
 // Marcar não muda a cena de ninguém, e a resposta tem de ser do tamanho disso.
 // Uma marcação que devolvesse as regiões trocaria o mapa debaixo de quem está
 // arrastando — que é exatamente o gesto que acabou de acontecer.
@@ -120,8 +112,8 @@ func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 	}
 }
 
-// TestAGroupWithNoMarkedTokenRefusesWithASentence: o gesto que não tem sobre o que agir
-// diz isso, em vez de gravar uma versão nova sem mudar nada.
+// O gesto que não tem sobre o que agir diz isso, em vez de gravar uma versão
+// nova sem mudar nada.
 func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -132,11 +124,9 @@ func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 	}
 }
 
-// TestTheGroupMovesThemAllInOneResponse.
-//
 // Duas afirmações: as peças andam pelo delta, e a resposta é a do gesto contínuo
 // (só o mapa). A segunda importa porque mover um grupo é um arrasto, e devolver
-// a Mesa inteira no meio dele é o defeito de 353 KB que a fatia 3 mediu.
+// a Mesa inteira no meio dele troca o elemento debaixo do dedo.
 func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -162,11 +152,9 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	}
 }
 
-// TestTheRestingLayerServesBothGestures.
-//
-// UMA camada e não duas, e isto é conserto de um defeito medido: as duas se
-// mostravam com `$tool === ”`, e a que vem DEPOIS no DOM cobria a outra —
-// o dedo nunca chegava ao laço, e o gesto simplesmente não acontecia.
+// UMA camada de repouso e não duas: com as duas se mostrando pela mesma
+// condição, a que vem DEPOIS no DOM cobre a outra — o dedo nunca chega ao laço,
+// e o gesto simplesmente não acontece.
 //
 // O `engoleoclique` entra na lista pela mesma razão: o navegador dispara `click`
 // depois de um `pointerdown` + `pointerup` no mesmo elemento INCLUSIVE quando o
@@ -184,8 +172,8 @@ func TestTheRestingLayerServesBothGestures(t *testing.T) {
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O valor é CONSTANTE no `.templ`, então ele sai LITERAL no HTML — só o
-	// dinâmico é escapado. A primeira versão deste guarda procurava a forma
-	// escapada, achava zero, e acusava "0 camadas" sobre uma cena correta.
+	// dinâmico é escapado. Procurar a forma escapada acha zero e acusa
+	// "0 camadas" sobre uma cena correta.
 	if quantas := strings.Count(tela, `data-show="$tool === ''"`); quantas != 1 {
 		t.Errorf("há %d camadas de repouso; com mais de uma a de baixo nunca recebe o dedo", quantas)
 	}

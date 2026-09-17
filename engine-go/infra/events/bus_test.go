@@ -36,7 +36,7 @@ func TestOnlyInterestedListenersReceive(t *testing.T) {
 }
 
 // O interesse por PERSONAGEM atravessa a sessão, e é isso que faz a ficha dentro
-// da mesa se atualizar quando o dono a edita de OUTRO lugar (ALE-275).
+// da mesa se atualizar quando o dono a edita de OUTRO lugar.
 func TestCharacterInterestIgnoresSession(t *testing.T) {
 	var b Bus
 	ficha, parar := b.Subscribe(OfCharacter(14))
@@ -72,8 +72,8 @@ func TestOneSubscriptionWithTwoInterests(t *testing.T) {
 
 // O VITAL de quem tem ficha alcança OS DOIS interesses com um evento só.
 //
-// É o caso que a ALE-275 resolveu com um canal à parte: o mestre fere pela fila,
-// a mesa inteira precisa saber, e a ficha daquele jogador também.
+// O mestre fere pela fila, a mesa inteira precisa saber, e a ficha daquele
+// jogador também — com UM evento, e não um canal por ouvinte.
 func TestVitalsWithSheetReachBothTableAndSheet(t *testing.T) {
 	var b Bus
 	mesa, pararMesa := b.Subscribe(OfSession(7))

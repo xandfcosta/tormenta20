@@ -17,12 +17,11 @@ func mapMarkers(t *testing.T, f sceneFixture) []board.BoardMarker {
 	return b.Markers
 }
 
-// TestTheMarkerIsBornHiddenAndWithTheFreeLetter — as duas garantias da ALE-195.
+// O marcador nasce ESCONDIDO e com a primeira letra LIVRE.
 //
-// ESCONDIDO é a razão de o marcador existir: marcar a armadilha na frente da
-// mesa entrega a armadilha. E a LETRA vem do servidor, não da tela: na SPA era o
-// cliente que escolhia "A", "B", "C", e duas telas escolhendo por conta própria
-// é como nasce o segundo "C" no mesmo mapa.
+// Escondido é a razão de ele existir: marcar a armadilha na frente da mesa
+// entrega a armadilha. E a LETRA vem do servidor, não da tela — duas telas
+// escolhendo por conta própria é como nasce o segundo "C" no mesmo mapa.
 func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -54,8 +53,6 @@ func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 	}
 }
 
-// TestRevealTogglesInsteadOfOnlyRevealing.
-//
 // O mestre que revelou cedo demais precisa poder esconder de volta, e um segundo
 // botão para desfazer o primeiro seria a mesma decisão em dois lugares.
 func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
@@ -81,8 +78,6 @@ func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
 	}
 }
 
-// TestAColorOutsideTheListIsRefusedWithASentence.
-//
 // O `UpdateMarker` IGNORA cor desconhecida, e ignorar em silêncio é um clique
 // que não faz nada e não diz nada — o mestre lê como tela travada. A recusa
 // nomeia o valor recebido E o esperado, que é a regra da casa para mensagem de
@@ -99,15 +94,15 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 
 	corpo := f.posta(t, f.mestre, base+"/"+id+"/cor/gold", "")
 
-	// A FRASE INTEIRA e não as palavras soltas, e esta linha custou uma
-	// sabotagem: procurar "gold" e "Carmim" no corpo passava VERDE mesmo com a
-	// recusa apagada, porque as duas aparecem no HTML por acidente — a classe
-	// `grimorio-gold` e o `title` do botão de cor. Asserção sobre substring
-	// comum mede a página, não a mensagem.
-	// AS ASPAS VÊM ESCAPADAS, e isto foi MEDIDO e não suposto: a recusa viaja
-	// dentro do sinal `command_error`, num `data: signals {...}` JSON, então o
-	// `%q` do servidor chega como `\"gold\"`. Procurar a frase com aspas
-	// normais falhava sobre uma recusa que estava lá.
+	// A FRASE INTEIRA e não as palavras soltas, provado por sabotagem: procurar
+	// "gold" e "Carmim" no corpo passa VERDE com a recusa apagada, porque as duas
+	// aparecem no HTML por acidente — a classe `grimorio-gold` e o `title` do
+	// botão de cor. Asserção sobre substring comum mede a página, não a mensagem.
+	//
+	// AS ASPAS VÊM ESCAPADAS: a recusa viaja dentro do sinal `command_error`, num
+	// `data: signals {...}` JSON, então o `%q` do servidor chega como
+	// `\"gold\"`. Procurar a frase com aspas normais falha sobre uma recusa que
+	// está lá.
 	if !strings.Contains(corpo, `\"gold\" não existe`) {
 		t.Errorf("a recusa não nomeou a cor recebida; resposta: %.400s", corpo)
 	}
@@ -128,7 +123,7 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 	}
 }
 
-// TestThePlayerDoesNotTouchTheMarkers — a trava é do servidor.
+// A trava dos marcadores é do SERVIDOR.
 //
 // Os três gestos numa varredura só: o botão escondido é cortesia, e cada rota
 // nova é uma linha de registro que alguém pode trocar sem perceber.
@@ -153,8 +148,6 @@ func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 	}
 }
 
-// TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne.
-//
 // Duas garantias que se parecem: a mesa não recebe o marcador escondido (isso o
 // `BoardForRole` já fazia), e o MESTRE precisa distinguir o que ele vê do que a
 // mesa vê — senão ele revela e a tela dele não muda, que é justamente a pergunta
@@ -192,7 +185,7 @@ func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) 
 	}
 }
 
-// TestDeleteRemovesTheMarkerAndAnInventedIdIsRefused: apagar tira o marcador do mapa, e um id inventado RECUSA em vez de sumir.
+// Apagar tira o marcador do mapa, e um id inventado RECUSA em vez de sumir.
 //
 // A recusa importa porque a alternativa é uma mutação que não acha ninguém e
 // responde 200: a tela diria que apagou algo que continua lá.

@@ -14,24 +14,12 @@ import (
 	"testing"
 )
 
-// Os guardas da CARTA DE CONVITE (ALE-249).
+// Os guardas da CARTA DE CONVITE.
 //
 // O caminho feliz mora AQUI e não no navegador de propósito: entrar numa mesa
-// grava um membro e uma CÓPIA do personagem (ALE-33), e a tela não sabe
-// desfazer isso. Um e2e do caminho feliz deixaria lixo permanente no banco de
-// desenvolvimento a cada corrida — a família de problema da ALE-238. Aqui o
-// banco é descartável.
-//
-// O que fica no navegador é só o que só ele testemunha: a recusa NATIVA do
-// grupo de rádios sem escolha.
-
-// Os guardas da CARTA DE CONVITE (ALE-249).
-//
-// O caminho feliz mora AQUI e não no navegador de propósito: entrar numa mesa
-// grava um membro e uma CÓPIA do personagem (ALE-33), e a tela não sabe
-// desfazer isso. Um e2e do caminho feliz deixaria lixo permanente no banco de
-// desenvolvimento a cada corrida — a família de problema da ALE-238. Aqui o
-// banco é descartável.
+// grava um membro e uma CÓPIA do personagem, e a tela não sabe desfazer isso. Um
+// e2e do caminho feliz deixaria lixo permanente no banco de desenvolvimento a
+// cada corrida; aqui o banco é descartável.
 //
 // O que fica no navegador é só o que só ele testemunha: a recusa NATIVA do
 // grupo de rádios sem escolha.
@@ -87,8 +75,7 @@ func TestTheOwnerEntersTheirOwnTableWithoutAnInvite(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303\n%s", rec.Code, rec.Body.String())
 	}
-	// O destino é a CRÔNICA DO SERVIDOR desde a ALE-255: quem acabou de sentar
-	// à mesa cai na página dela, e ela deixou de ser da SPA.
+	// O destino é a CRÔNICA: quem acabou de sentar à mesa cai na página dela.
 	if destino := rec.Header().Get("Location"); destino != "/campanhas/"+strconv.FormatInt(campanha, 10) {
 		t.Errorf("destino = %q", destino)
 	}
@@ -178,8 +165,7 @@ func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 }
 
 // Convite morto é uma RESPOSTA e não um erro de página: a carta diz isso em voz
-// alta, para a pessoa pedir outro link em vez de olhar um botão que não envia
-// (ALE-80).
+// alta, para a pessoa pedir outro link em vez de olhar um botão que não envia.
 func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	s := newTestServer(t)
 	visitante := seedUser(t, s, "visitante@t20.local")

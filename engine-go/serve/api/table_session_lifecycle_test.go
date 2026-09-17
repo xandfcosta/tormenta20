@@ -6,14 +6,10 @@ import (
 	"testing"
 )
 
-// O CICLO DE VIDA DA SESSÃO (ALE-269).
+// O CICLO DE VIDA DA SESSÃO: três estados, cada um querendo dizer outra coisa.
 //
-// Estes guardas nasceram junto com a EXTRAÇÃO da regra para fora do handler
-// HTTP, e a razão de nascerem é que ela não tinha nenhum: uma varredura por
-// `start`, `end`, `ReopenSession` e a frase da recusa achou só testes de
-// AUTORIZAÇÃO. A regra — três estados, cada um querendo dizer outra coisa —
-// atravessou o repositório inteiro sem rede, e eu a movi de arquivo antes de
-// perceber isso.
+// O que existia antes destes guardas era só teste de AUTORIZAÇÃO — a regra
+// atravessava o repositório inteiro sem rede.
 
 // sessaoDoBanco relê a linha, que é onde o estado mora de verdade.
 func sessaoDoBanco(t *testing.T, f sceneFixture) (status string, comeco bool) {
@@ -25,7 +21,7 @@ func sessaoDoBanco(t *testing.T, f sceneFixture) (status string, comeco bool) {
 	return s.Status, s.Startedat.Valid
 }
 
-// TestStartingMeansThreeThings — é por isto que a regra merece função própria.
+// Iniciar quer dizer TRÊS coisas — é por isto que a regra merece função própria.
 func TestStartingMeansThreeThings(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
@@ -73,8 +69,6 @@ func TestStartingMeansThreeThings(t *testing.T) {
 	}
 }
 
-// TestEndingASessionThatNeverStartedIsRefused.
-//
 // A recusa é DIFERENTE do "já ativa" do caso acima, e a diferença é o ponto:
 // encerrar uma planejada não é um clique repetido, é um gesto sobre a coisa
 // errada. Carimbar um fim numa noite que não teve início deixaria o histórico
@@ -115,8 +109,6 @@ func TestEndingASessionThatNeverStartedIsRefused(t *testing.T) {
 	}
 }
 
-// TestRestartingCombatEmptiesTheTrackerAndNothingElse.
-//
 // Reiniciar NÃO é encerrar: a sessão continua ao vivo, o que some é a ordem e
 // os turnos. Os dois verbos morando na mesma tela, um do lado do outro, é
 // exatamente onde a confusão custaria a noite de alguém.
@@ -134,14 +126,13 @@ func TestRestartingCombatEmptiesTheTrackerAndNothingElse(t *testing.T) {
 		t.Fatalf("reiniciar: %v", err)
 	}
 
-	// A LEITURA É DA FILA AO VIVO, e esta escolha custou uma sabotagem: eu tinha
-	// escrito a asserção contra o BANCO, e ela era verdadeira ANTES do reset —
-	// a fila mora em memória e o banco ainda tinha o `initiative:[]` do início.
-	// O guarda media um canal onde o evento nunca passa.
+	// A LEITURA É DA FILA AO VIVO e não do banco: a fila mora em memória, e o
+	// banco ainda tem o `initiative:[]` do início — uma asserção contra ele é
+	// verdadeira ANTES do reset, e mede um canal onde o evento nunca passa.
 	//
-	// Foi essa medição errada que escondeu o defeito de verdade: a extração da
-	// regra tinha PERDIDO o `sessions.Forget`, sem o qual o cache continua
-	// servindo a fila velha e o reinício não muda nada na tela.
+	// É essa medição errada que esconde o defeito de verdade: sem o
+	// `sessions.Forget`, o cache continua servindo a fila velha e o reinício não
+	// muda nada na tela.
 	if n := len(f.s.sessions.GetState(f.sessionID).Initiative); n != 0 {
 		t.Errorf("a fila ao vivo continua com %d combatentes depois do reinício", n)
 	}

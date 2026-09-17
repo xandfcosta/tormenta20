@@ -8,23 +8,16 @@ import (
 	"unicode"
 )
 
-// NENHUM ID DE CATÁLOGO CARREGA ACENTO (ALE-152).
+// NENHUM ID DE CATÁLOGO CARREGA ACENTO.
 //
-// # Por que isto não é preciosismo
+// A grafia irregular é o que faz toda cópia, toda URL e todo teste escrito de
+// memória errarem NAQUELE id e em nenhum outro: entre 35 condições, 34
+// normalizadas e um `enfeitiçado` com cedilha produziram uma lista de 34 escrita
+// à mão ao lado das 35 do catálogo, e a condição que faltava dava 400 para o
+// jogador e para o mestre.
 //
-// Dos 35 ids das condições, 34 nasceram normalizados — `caido` e não "caído",
-// `desprevenido`, `esmorecido` — e UM não: `enfeitiçado`, com cedilha. É a
-// grafia irregular que faz toda cópia, toda URL e todo teste escrito de memória
-// errarem NAQUELE id e em nenhum outro.
-//
-// E ele já quebrou: a API tinha uma lista de 34 ids escrita à mão ao lado das 35
-// do catálogo, e a que faltava era justo essa — aplicá-la dava 400 para o
-// jogador e para o mestre (ALE-122). O teste que a issue escreveu para reproduzir
-// também errou, escrevendo `enfeiticado`.
-//
-// # O que ele NÃO cobra
-//
-// O `name` e a `description` são texto que uma pessoa LÊ, e lá o acento é
+// O que ele NÃO cobra: o `name` e a `description` são texto que uma pessoa LÊ, e
+// lá o acento é
 // obrigatório: "Enfeitiçado" continua com cedilha na tela. A regra é do
 // IDENTIFICADOR, que é o que viaja em URL, em JSON gravado e em código.
 //
@@ -40,8 +33,8 @@ func TestNoCatalogIDIsAccented(t *testing.T) {
 		for _, id := range idsDe(t, nome, bruto) {
 			// SÓ O QUE É SLUG. Metade dos catálogos é chaveada pelo NOME de
 			// exibição — `origins` tem "Acólito", `gods` tem "Allihanna" —, e ali o
-			// acento é o texto do livro, não grafia de identificador. A primeira
-			// versão deste guarda reprovou 30 desses de uma vez.
+			// acento é o texto do livro, não grafia de identificador: sem a linha
+			// abaixo, trinta nomes reprovam de uma vez.
 			//
 			// A linha entre os dois é mecânica e não uma lista: slug é minúsculo e
 			// sem espaço. `enfeitiçado` é slug e por isso entra; "Acólito" tem

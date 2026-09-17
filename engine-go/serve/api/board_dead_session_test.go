@@ -8,14 +8,14 @@ import (
 )
 
 /*
-O TABULEIRO DE UMA SESSÃO QUE JÁ MORREU (ALE-270).
+O TABULEIRO DE UMA SESSÃO QUE JÁ MORREU.
 
 O tabuleiro vive em MEMÓRIA num mapa por sessão, e o `Persist` grava o blob em
 `open_boards`, cuja chave estrangeira aponta para a sessão. Quando a sessão é
 APAGADA, o mapa em memória continua lá — e a gravação seguinte bate na FK.
 
-O estrago não é a linha de log. É o `Dirty`: ele existe desde a ALE-154 para a
-mesa SABER quando parou de gravar, e só um `Persist` bem-sucedido o apaga.
+O estrago não é a linha de log. É o `Dirty`: ele existe para a mesa SABER
+quando parou de gravar, e só um `Persist` bem-sucedido o apaga.
 Nenhum vai suceder, porque a sessão não volta a existir. **Um alarme construído
 para gritar "PARE, não estou gravando" passa a gritar por um tabuleiro que
 ninguém quer que seja gravado** — e um alarme que toca sozinho é como se aprende
@@ -107,9 +107,8 @@ func TestADeletedCampaignLeavesNoBoardBehind(t *testing.T) {
 //
 // O `Close` apaga a linha de `open_boards` com o contexto que recebeu, e na
 // produção esse é o contexto da REQUISIÇÃO — cancelado quando quem clicou vai
-// embora. A linha ficava no banco, o `Dirty` acendia, e não havia quem tentasse
-// de novo: `board delete failed (context canceled)` foi medido numa corrida de
-// e2e (ALE-270).
+// embora. A linha fica no banco, o `Dirty` acende, e não há quem tente de novo:
+// `board delete failed (context canceled)` foi medido numa corrida de e2e.
 func TestClosingABoardSurvivesTheClientLeaving(t *testing.T) {
 	s, _, sessao := deadSessionBoard(t)
 	cancelado, cancela := context.WithCancel(context.Background())

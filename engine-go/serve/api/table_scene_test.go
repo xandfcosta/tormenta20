@@ -40,9 +40,6 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 	}
 }
 
-// TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault:
-// lugar em branco VIRA cena, e chão desconhecido cai no padrão.
-//
 // Os dois defaults são a mesma decisão: o mestre que só quer a grade não deve
 // ser barrado por um campo, e um chão que a tela não oferece só chega por posse
 // do fio — a resposta a isso é desenhar pedra, não discutir.
@@ -64,7 +61,7 @@ func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *test
 	}
 }
 
-// TestOnlyTheGmBuildsAndTearsDownTheScene: a trava é do servidor.
+// A trava é do SERVIDOR.
 //
 // O botão escondido é cortesia para quem não pode; quem postar na mão leva 403.
 // Este guarda é de HANDLER e não uma asserção de que o botão sumiu, porque a
@@ -88,8 +85,6 @@ func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 	}
 }
 
-// TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive.
-//
 // As duas metades juntas porque uma sem a outra não é o gesto: encerrar sem
 // arquivar perde a noite de trabalho, e arquivar sem tirar deixa a mesa presa
 // numa cena que já acabou.
@@ -116,12 +111,9 @@ func TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive(t *testing.T) {
 	}
 }
 
-// TestAnEmptySceneSaysDifferentThingsToEachOfThem.
-//
 // Não é a mesma frase com um botão a mais: o jogador não tem o que fazer além de
 // esperar, e o mestre tem. "O mestre abre quando a cena tiver lugar" DITO AO
-// PRÓPRIO MESTRE é a tela mandando ele fazer o que ela não deixa — que foi
-// exatamente o texto que o app carregou até esta fatia.
+// PRÓPRIO MESTRE é a tela mandando ele fazer o que ela não deixa.
 func TestAnEmptySceneSaysDifferentThingsToEachOfThem(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -149,11 +141,9 @@ func TestAnEmptySceneSaysDifferentThingsToEachOfThem(t *testing.T) {
 	}
 }
 
-// Os guardas do ACERVO de lugares (ALE-264, item 4).
+// Os guardas do ACERVO de lugares.
 
-// TestTheArchiveListsWhatWasEnded, com a contagem de peças.
-//
-// A contagem é o que separa a cena montada da cena aberta e abandonada, e é por
+// A contagem de peças é o que separa a cena montada da cena aberta e abandonada, e é por
 // ela que o mestre decide o que reabrir e o que apagar.
 func TestTheArchiveListsWhatWasEnded(t *testing.T) {
 	f := newSceneFixture(t)
@@ -166,9 +156,8 @@ func TestTheArchiveListsWhatWasEnded(t *testing.T) {
 	if !strings.Contains(tela, "Lugares da campanha · 1") {
 		t.Errorf("o acervo não apareceu com a cena encerrada")
 	}
-	// LITERAL e nunca `ui.TokenCount(1)`: o esperado derivado da produção
-	// afirmaria o defeito junto com a regra, e foi assim que "1 peças" chegou à
-	// tela na primeira medição.
+	// LITERAL e nunca `ui.TokenCount(1)`: o esperado derivado da produção afirma o
+	// defeito junto com a regra — foi assim que "1 peças" chegou à tela.
 	if !strings.Contains(tela, "1 peça") {
 		t.Errorf("o acervo não diz quantas peças a cena guardada tem")
 	}
@@ -183,8 +172,6 @@ func TestTheArchiveListsWhatWasEnded(t *testing.T) {
 	}
 }
 
-// TestWithoutAStoredPlaceThereIsNoArchiveButton.
-//
 // Um botão que abre uma lista vazia ensina que o acervo não serve para nada. É a
 // metade que faz o guarda acima significar alguma coisa — sem ela, "o acervo
 // apareceu" seria verdade sobre um botão que aparece sempre.
@@ -199,17 +186,11 @@ func TestWithoutAStoredPlaceThereIsNoArchiveButton(t *testing.T) {
 	}
 }
 
-// TestReopeningAddsATabAndSwapsNothing (ALE-205, fatia 3).
+// Reabrir ACRESCENTA uma aba, e não troca nada.
 //
-// Aqui morava `TestReabrirTrocaACenaEGuardaAQueEstavaNaMesa`, que prendia a
-// regra da ALE-191: reabrir ARQUIVAVA a cena que estava na mesa e entrava no
-// lugar dela. Aquilo existia porque a sessão tinha UM tabuleiro — o
-// arquivamento preventivo era o que impedia a taverna de se perder quando a
-// cripta entrava.
-//
-// Com abas, o problema que ele resolvia deixou de existir: nada é substituído,
-// então não há o que guardar antes. Um teste sobre a regra antiga ficaria verde
-// afirmando um mundo que não é este.
+// Não há mais arquivamento preventivo: ele existia porque a sessão tinha UM
+// tabuleiro, e era o que impedia a taverna de se perder quando a cripta entrava.
+// Com abas nada é substituído, então não há o que guardar antes.
 func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
@@ -262,8 +243,6 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 	}
 }
 
-// TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable.
-//
 // O `removeOLugar` devolve o tabuleiro ATUAL e não nil, e é por isso: nil faria
 // o caminho publicar "não há tabuleiro" para a mesa inteira — o mestre limparia
 // o acervo e a mesa perderia a cena em que estava jogando.
@@ -293,7 +272,7 @@ func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 	}
 }
 
-// TestOnlyTheGmTouchesTheArchive: a trava é do servidor.
+// A trava do acervo é do SERVIDOR.
 func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")
@@ -318,8 +297,6 @@ func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 	}
 }
 
-// TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch.
-//
 // "0 peças" descreve mal o que a linha é. Cena aberta e abandonada é justamente
 // o que o mestre procura quando abre o acervo para limpar, e a linha tem de
 // dizer isso em vez de fazer ele contar zeros.
@@ -348,12 +325,11 @@ func TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch(t *testing.T) {
 }
 
 /*
-A FAIXA DE QUEM VEM DEPOIS na tela (ALE-290).
+A FAIXA DE QUEM VEM DEPOIS na tela.
 
-O `live.UpcomingTurns` estava no ar desde a ALE-179 com cinco guardas e
-nenhuma tela. Os casos de tradução moram no `web/table`; o que se prende aqui é
-que ela CHEGA ao HTML dos dois papéis, e que a do jogador obedece à mesma
-redação que o resto da Mesa.
+Os casos de tradução moram no `web/table`; o que se prende aqui é que ela CHEGA
+ao HTML dos dois papéis, e que a do jogador obedece à mesma redação que o resto
+da Mesa.
 */
 
 // A faixa desenha os três, e o jogador se lê como "você".
@@ -365,9 +341,9 @@ func TestTheTurnStripReachesBothScreens(t *testing.T) {
 	// avanço que o inicia — pela porta de verdade, que é o botão mais clicado da
 	// sessão.
 	//
-	// DOIS avanços, e o segundo é o caso que a ALE-179 nomeia: a fila tem dois,
-	// então o segundo turno é o ÚLTIMO da rodada, e "quem vem depois" está no
-	// TOPO da lista. É o turno em que ler de cima para baixo não acha ninguém.
+	// DOIS avanços, e o segundo é o caso difícil: a fila tem dois, então o segundo
+	// turno é o ÚLTIMO da rodada, e "quem vem depois" está no TOPO da lista. É o
+	// turno em que ler de cima para baixo não acha ninguém.
 	f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/proxima-vez", "")
 	f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/proxima-vez", "")
 

@@ -11,15 +11,8 @@ import (
 )
 
 /*
-Lugares da crônica (ALE-124, fatia 5).
-
-Até esta fatia, encerrar o tabuleiro DESTRUÍA a scene: o `Close` apagava a linha
-e a taverna que o mestre montou peça por peça morria junto. A épica prometia o
-contrário — "encerrar ARQUIVA, e devolve o tabuleiro à lista de Lugares da
-crônica" —, e era a única promessa que o código contradizia.
-
-O que se prova aqui é o ciclo que a table vive: montar, encerrar, voltar semana
-que vem e achar tudo onde estava.
+Lugares da crônica: o ciclo que a mesa vive — montar, encerrar, voltar semana que
+vem e achar tudo onde estava.
 */
 
 func mesaComTaverna(t *testing.T) (*Server, int64, int64) {
@@ -154,29 +147,16 @@ func TestAPlaceFromAnotherCampaignCannotBeDeleted(t *testing.T) {
 }
 
 /*
-Aqui moravam o TestSwitchingScenesArchivesTheOneOnTheTable e o
-TestASceneFromAnotherCampaignCannotReachTheTable, os dois dirigindo o `ShowPlace`
-(ALE-191) — a porta que a ALE-205 aposentou e que nenhuma rota chamava havia três
-fatias.
-
-O PRIMEIRO é a razão de esta lápide existir. Ele afirmava, EM VERDE, que trocar
-de cena arquiva a que estava na mesa; o GLOSSARY diz o contrário desde a
-ALE-205 — "Reabrir não troca mais nada de lugar: ele acrescenta uma aba, e a
-cena que estava na mesa continua onde estava". Ele não ficou obsoleto junto com
-a porta que dirigia: passou a afirmar o OPOSTO do produto, e continuou verde
-porque a porta morta ainda respondia. É a forma mais cara desta família — o
-teste não avisa que envelheceu, ele mente com cara de cobertura (ALE-289).
-
-O SEGUNDO prendia uma regra VIVA na porta errada, e por isso mudou de casa em
-vez de morrer: virou o TestASceneFromAnotherCampaignCannotReachTheTableThroughOpenPlace,
-logo abaixo, com o controle que ele não tinha.
+NÃO existe aqui um caso "trocar de cena arquiva a que estava na mesa". Ele
+existiu e afirmava o OPOSTO do produto — reabrir acrescenta uma ABA, e a cena da
+mesa continua onde estava —, e ficava verde porque dirigia uma porta morta
+(`ShowPlace`) que ainda respondia. Quem for recriá-lo está recriando a mentira.
 */
 // O id do lugar vem do cliente, e o `OpenPlace` é a porta VIVA: sem conferir a
 // crônica, um mestre puxaria para a própria mesa a cena de OUTRA campanha.
 //
-// Ele existe porque a regra estava presa só no `ShowPlace`, que nenhuma rota
-// chama desde a ALE-205 — o verde era sobre a porta MORTA, e apagá-la como
-// código morto levaria junto a única prova da regra (ALE-289).
+// A regra já esteve presa só no `ShowPlace`, que rota nenhuma chama: o verde era
+// sobre a porta MORTA, e apagá-la como código morto levaria junto a única prova.
 func TestASceneFromAnotherCampaignCannotReachTheTableThroughOpenPlace(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
@@ -216,17 +196,9 @@ func placeNamed(t *testing.T, lugares []board.Place, nome string) board.Place {
 }
 
 /*
-Montar o lugar sem pôr nada na mesa (ALE-191, fatia 2).
-
-As duas portas de baixo — ler a cena guardada e gravá-la — são o que o
-`EditPlace` usa para aplicar um gesto do rascunho (ALE-292).
-
-Aqui morava a afirmação de que este era "o único ponto do tabuleiro onde o
-estado inteiro chega pelo CLIENTE", com o argumento de que um handler por gesto
-seria protocolo para nada. Ela caducou quando o gesto chegou: o rascunho é a
-MESMA superfície do tabuleiro apontada para o acervo, e ele já tem um handler
-por gesto. A conferência do `SavePlaceScene` continua valendo — ver a docstring
-dele para o que ela protege agora.
+Montar o lugar sem pôr nada na mesa. As duas portas de baixo — ler a cena
+guardada e gravá-la — são o que o `EditPlace` usa para aplicar um gesto do
+rascunho.
 */
 
 // A cena montada volta inteira na próxima vez que o mestre a abrir — e a peça
@@ -310,16 +282,13 @@ func TestAPlaceFromAnotherCampaignCannotBeBuilt(t *testing.T) {
 }
 
 /*
-O RASCUNHO DE LUGAR (ALE-292): montar a próxima cena FORA da sessão.
-
-A capacidade estava no ar desde a ALE-191 — `PlaceScene` e `SavePlaceScene`, com
-teste em cima — e sem um único caminho até ela. A decisão do dono é que o
-rascunho convive com a CORTINA e não a substitui: a cortina é durante a sessão,
-com a mesa presente; o rascunho é na quinta-feira, sem ninguém conectado.
+O RASCUNHO DE LUGAR: montar a próxima cena FORA da sessão. Ele convive com a
+CORTINA e não a substitui — a cortina é durante a sessão, com a mesa presente; o
+rascunho é na quinta-feira, sem ninguém conectado.
 
 O gesto do rascunho é o MESMO gesto do tabuleiro vivo, apontado para o acervo em
-vez de para a mesa. Por isso ele não ganhou um protocolo próprio: cada gesto lê
-a cena guardada, aplica a MESMA função pura que a mesa aplica, e grava de volta.
+vez de para a mesa. Por isso ele não ganhou protocolo próprio: cada gesto lê a
+cena guardada, aplica a MESMA função pura que a mesa aplica, e grava de volta.
 */
 
 // O gesto do rascunho muda o acervo e NÃO toca na mesa — que é a issue inteira.
@@ -525,8 +494,6 @@ func TestANewPlaceWithAnExistingNameOpensThatOne(t *testing.T) {
 	}
 }
 
-// CRIAR UM LUGAR COM UM CHAO QUE NAO EXISTE NAO GRAVA AQUELE CHAO (ALE-301).
-//
 // Este caso nasceu VERMELHO: o `NewPlace` gravava o `terrain` que chegasse do
 // formulário sem passar pelo catálogo, e a cena — que filtra — só corrigia o
 // que ELA desenhava. Um cliente velho postando `pedra` gravava `pedra`, e a

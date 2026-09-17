@@ -6,20 +6,7 @@ test.describe('Administração', () => {
   test.use({ storageState: '.auth/user.json' })
 
   /**
-   * A confirmação do DESTRUTIVO é um modal de verdade — sem Kobalte.
-   *
-   * Esta é a pergunta que a segunda superfície existe para responder, e o
-   * guarda afirma as quatro propriedades que a biblioteca dava e que o
-   * `<dialog>` nativo devolve: ele é `:modal` (o resto da página fica inerte),
-   * o foco entra nele, ele tem nome acessível, e ao fechar o foco VOLTA para o
-   * gatilho.
-   *
-   * E2E porque nada disto existe em jsdom: não há `showModal`, não há
-   * `:modal`, e o foco é uma ficção.
-   */
-
-  /**
-   * O LINK DE UMA PESSOA NÃO PODE APARECER SOB O NOME DE OUTRA (ALE-242).
+   * O LINK DE UMA PESSOA NÃO PODE APARECER SOB O NOME DE OUTRA.
    *
    * O token chega por remendo do servidor num `<div>` fixo (`#reset-link`), e o
    * diálogo é UM só reaproveitado por todas as linhas. Sem limpar ao abrir,
@@ -59,6 +46,16 @@ test.describe('Administração', () => {
     await expect(campo, 'o link do primeiro jogador sobreviveu na caixa do segundo').toHaveCount(0)
   })
 
+  /**
+   * A confirmação do DESTRUTIVO é um modal de verdade.
+   *
+   * O guarda afirma as quatro propriedades do `<dialog>` nativo: ele é `:modal`
+   * (o resto da página fica inerte), o foco entra nele, ele tem nome acessível,
+   * e ao fechar o foco VOLTA para o gatilho.
+   *
+   * E2E porque nada disto existe em jsdom: não há `showModal`, não há `:modal`,
+   * e o foco é uma ficção.
+   */
   test('o diálogo de apagar conta é modal, nomeado, e devolve o foco', async ({ page }) => {
     await page.goto('/admin')
     const gatilho = page.getByRole('button', { name: /^Apagar a conta de/ }).first()

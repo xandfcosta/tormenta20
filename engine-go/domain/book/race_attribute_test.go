@@ -2,18 +2,10 @@ package book
 
 import "testing"
 
-// Os dois guardas do que a RAÇA escreve na tela (ALE-264).
-//
-// Eles vieram do `api` na ALE-278, e o caminho conta uma coisa: o arquivo que
-// os hospedava se dividiu em TRÊS camadas nesta fatia — dois casos de regra
-// pura vieram para cá, um de renderização ficou no `web/master`, e dois de
-// composição por HTTP ficaram no `api`. É a quinta vez seguida que a fronteira
-// separa um arquivo de teste que misturava camadas, e a primeira em que ele
-// misturava três.
+// Os guardas de REGRA PURA do que a raça escreve na tela. A renderização é do
+// `web/master` e a composição por HTTP é do `api`.
 
-// TestModifiersComeOutInTheBookOrder.
-//
-// O defeito que ele prende não é de conteúdo, é de DETERMINISMO: os
+// O defeito que este prende não é de conteúdo, é de DETERMINISMO: os
 // modificadores vêm num `map[string]int`, e a ordem de um mapa em Go é aleatória
 // por projeto. Imprimir direto do mapa daria uma ordem diferente a cada render —
 // a mesma página mudando sozinha entre dois pedidos iguais, e qualquer teste
@@ -34,7 +26,7 @@ func TestModifiersComeOutInTheBookOrder(t *testing.T) {
 	}
 }
 
-// TestAFreeChoiceDoesNotBecomeThreeInventedAttributes: as duas formas do livro.
+// As duas formas do livro.
 
 func TestAFreeChoiceDoesNotBecomeThreeInventedAttributes(t *testing.T) {
 	humano := RaceAttribute{Kind: "floating", Count: 3, Value: 1}
@@ -43,4 +35,4 @@ func TestAFreeChoiceDoesNotBecomeThreeInventedAttributes(t *testing.T) {
 	}
 }
 
-// TestTheUnifiedSearchReachesTheThreeNewOnes: a busca sem aba varre os SETE.
+// A busca sem aba varre os SETE.

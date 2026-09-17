@@ -15,7 +15,7 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// Os guardas da PORTA (ALE-229).
+// Os guardas da PORTA.
 //
 // O que vale proteger aqui não é o desenho: é que a tela nova obedece às mesmas
 // recusas que a API obedece, e que a senha não vira estado de cliente. Guarda de
@@ -88,13 +88,11 @@ func hasSessionCookie(f doorFixture, rec *httptest.ResponseRecorder) bool {
 
 // A recusa é a metade que importa: uma porta que devolve 200 e uma tela sem
 // aviso deixa o jogador achando que entrou.
-// OS GUARDAS DA PORTA FICAM NO HOSPEDEIRO, e isso é o precedente da forja.
 //
-// A cena virou `web/door` na ALE-278, e só o guarda de fronteira foi junto.
-// Estes casos montam um `api.Server` de VERDADE e dirigem o roteador de
-// verdade — é o que a seção "Testes" chama de integração, e é a faixa que pega
-// defeito de composição. Um pacote de cena que os hospedasse teria de importar
-// o `api`, que importa a cena de volta para montar rota: ciclo.
+// OS GUARDAS DA PORTA FICAM NO HOSPEDEIRO. Estes casos montam um `api.Server` de
+// VERDADE e dirigem o roteador de verdade, que é a faixa que pega defeito de
+// composição. Um pacote de cena que os hospedasse teria de importar o `api`, que
+// importa a cena de volta para montar rota: ciclo.
 //
 // As FRASES são escritas à mão, e não importadas das constantes da cena. Elas
 // são inalcançáveis daqui, e isso é uma sorte: importar o valor de quem está
@@ -152,13 +150,12 @@ func TestTheDoorSignsInAndSendsToTheDestination(t *testing.T) {
 	}
 }
 
-// O `?redirect=` da SPA vira campo oculto aqui, e um destino EXTERNO
-// transformaria a porta em redirecionamento aberto: o link sai do nosso
-// domínio, o jogador confia nele, e a página que recebe pode imitar esta.
-// Aqui morava o TestTheRequestedDestinationOnlyAcceptsAnInternalPath, que
-// prendia o redirecionamento aberto. Ele foi para `web/door/routes_test.go`
-// junto com a função: a regra é da CENA, e um teste unitário dela não alcança
-// função não exportada de outro pacote (ALE-278).
+// O destino pedido vira campo oculto aqui, e um destino EXTERNO transformaria a
+// porta em redirecionamento aberto: o link sai do nosso domínio, o jogador
+// confia nele, e a página que recebe pode imitar esta.
+//
+// A regra é da CENA e está presa em `web/door/routes_test.go` — um teste
+// unitário dela não alcança função não exportada de outro pacote.
 
 func TestTheDoorSendsWhoAlreadyHasASessionAwayFromTheSignInScreen(t *testing.T) {
 	f := newDoor(t)
@@ -170,8 +167,8 @@ func TestTheDoorSendsWhoAlreadyHasASessionAwayFromTheSignInScreen(t *testing.T) 
 
 // ── criar conta ──────────────────────────────────────────────────────────────
 
-// A porta já era fechada (o servidor responde 403), mas a TELA ficava aberta e
-// parecia um cadastro comum (ALE-120).
+// A porta já é fechada no servidor (403); o que se prende aqui é a TELA não
+// parecer um cadastro comum para quem não tem convite.
 func TestTheDoorDoesNotOpenSignUpWithoutAnInvite(t *testing.T) {
 	f := newDoor(t)
 	rec := f.bate(t, "/criar-conta", nil, "")
@@ -220,8 +217,8 @@ func TestTheDoorRefusesPasswordsThatDoNotMatchOnTheServer(t *testing.T) {
 	}
 }
 
-// A mensagem do validador é a que o jogador lê, e ela era em INGLÊS: a SPA
-// escondia isso validando com Zod antes de chamar.
+// A mensagem do validador é a que o jogador lê, e ela tem de estar em PORTUGUÊS:
+// não há validação de cliente na frente dela para esconder o texto.
 func TestTheDoorSaysValidationRefusalsInPortuguese(t *testing.T) {
 	f := newDoor(t)
 	rec := f.bate(t, "/entrar", url.Values{

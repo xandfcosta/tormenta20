@@ -7,7 +7,7 @@ import (
 	"t20engine/serve/web/bookui"
 )
 
-// As duas REGRAS do leitor, presas onde elas moram (ALE-278).
+// As duas REGRAS do leitor, presas onde elas moram.
 //
 // O endereço dele é COMPARTILHÁVEL — o mestre manda "olha na p289" no chat da
 // mesa —, então ele se digita à mão e chega torto. As duas decisões abaixo são
@@ -19,8 +19,6 @@ import (
 // diferentes: aquela prende que a rota está montada e desenha; esta prende o
 // VALOR, e por isso pode cobrar os casos de borda um por um sem subir um banco.
 
-// TestGarbageInThePageFallsBackToTheFirst.
-//
 // Nunca 404 e nunca erro: derrubar a cena por um número torto na URL trocaria um
 // incômodo pequeno por uma tela quebrada, e a primeira página é uma resposta
 // honesta a "não entendi qual você quis".
@@ -46,8 +44,6 @@ func TestGarbageInThePageFallsBackToTheFirst(t *testing.T) {
 	}
 }
 
-// TestAForeignRefererDoesNotBecomeABackLink.
-//
 // O link de VOLTAR sai do `Referer`, e aceitar qualquer um poria o endereço de
 // um terceiro na barra de quem está na nossa mesa. Quem chegou por um link
 // colado volta para o Hub, que é o destino honesto de "não sei de onde você

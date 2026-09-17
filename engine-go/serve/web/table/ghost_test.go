@@ -11,15 +11,12 @@ import (
 	"t20engine/domain/engine"
 )
 
-// Os guardas do FANTASMA e da SETA (ALE-203, item 4 da lista do dono).
+// Os guardas do FANTASMA e da SETA.
 //
-// As palavras dele: *"Movimentar a peça arrastando somente cria um ponto para o
-// primeiro movimento. Logo ao soltar a peça, ela voltar para o início do
-// movimento. A ideia é, ao soltar a peça, ela vai ser renderizada no lugar que
-// foi solta e o início mostra a peça transparente para marcar o início do
-// movimento. A seta da régua conecta os dois pontos."*
+// O pedido do dono: ao soltar a peça ela é desenhada onde foi solta, o início do
+// movimento fica marcado por uma peça transparente, e a seta liga os dois pontos.
 //
-// O que se prende aqui é a DIVISA que a fatia abriu: a peça é DESENHADA no fim
+// O que se prende aqui é a DIVISA: a peça é DESENHADA no fim
 // do caminho e continua GRAVADA na origem. As duas metades precisam de guarda,
 // porque cada uma sozinha passa verde sobre o defeito da outra — desenhar sem
 // gravar seria a peça andando sem confirmação, e gravar sem desenhar é o defeito
@@ -60,8 +57,6 @@ func element(t *testing.T, tela, atributo, trecho string) map[string]string {
 	}
 }
 
-// TestTheArrowWithoutStopsJoinsBothEndsOfThePath.
-//
 // `Stops` NULO é valor legítimo: o `ProposeMove` deixa o caminho pronto sem
 // passar por paradas. Deduzir as dobras do `Path` não é possível — um trecho
 // legítimo já dobra sozinho, porque a diagonal vem primeiro —, então a seta vira
@@ -75,8 +70,8 @@ func TestTheArrowWithoutStopsJoinsBothEndsOfThePath(t *testing.T) {
 		t.Fatalf("as dobras de um caminho sem paradas saíram %+v", dobras)
 	}
 	// A perna anda 3 e a ponta recua meio quadrado: de 0,5 até 3,0. Sem orçamento
-	// (-1) ela sai inteira de dourado — o vermelho do item 13 tem guarda próprio
-	// em `move_drawing_test.go`.
+	// (-1) ela sai inteira de dourado — o vermelho tem guarda próprio em
+	// `move_drawing_test.go`.
 	if fio, _, _ := moveWires(dobras, []int{3}, -1); fio != "M 0.5 0.5 L 3 0.5" {
 		t.Errorf("a seta reta saiu %q", fio)
 	}

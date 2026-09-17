@@ -8,13 +8,13 @@ import (
 	"testing"
 )
 
-// A FRONTEIRA DO TABULEIRO (ALE-254).
+// A FRONTEIRA DO TABULEIRO.
 //
-// Terceiro guarda desta família, e a regra é sempre a mesma: um bounded context
-// vale pelo que o compilador IMPEDE. A lista aqui admite o REGIME porque o
-// tabuleiro só existe DENTRO de uma sessão ao vivo — as peças vêm da fila, e a
-// regra de numerar repetidos é a mesma das duas superfícies para elas não
-// numerarem diferente (ALE-192). A direção contrária seria o erro: se o regime
+// A regra da família é sempre a mesma: um bounded context vale pelo que o
+// compilador IMPEDE. A lista aqui admite o REGIME porque o tabuleiro só existe
+// DENTRO de uma sessão ao vivo — as peças vêm da fila, e a regra de numerar
+// repetidos é a mesma das duas superfícies para elas não numerarem diferente. A
+// direção contrária seria o erro: se o regime
 // precisasse do tabuleiro, o ciclo apareceria e diria que a fronteira está no
 // lugar errado.
 //
@@ -40,7 +40,7 @@ var permitidos = map[string]bool{
 	// e é de lá que elas devem vir — reimplementá-las aqui seria a segunda
 	// definição que o oráculo existe para impedir.
 	"t20engine/domain/engine": true,
-	// O VOCABULÁRIO DA MESA é shared kernel, e não um contexto (ALE-279).
+	// O VOCABULÁRIO DA MESA é shared kernel, e não um contexto.
 	//
 	// Ele entra nesta lista sabendo do aviso que está escrito acima — que
 	// acrescentar import aqui transforma a porta em enfeite —, e a diferença

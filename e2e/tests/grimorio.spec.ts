@@ -5,7 +5,7 @@ import { expectCinzelAcimaDoPiso } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
- * O Grimório é a folha de especificação viva do sistema de desenho (ALE-173).
+ * O Grimório é a folha de especificação viva do sistema de desenho.
  *
  * Ele não é uma cena de jogo, então o que se afirma aqui não é jornada: é que a
  * folha continua DIZENDO A VERDADE. Uma folha de desenho que apodrece é pior
@@ -13,24 +13,21 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
  *
  * O que ele NÃO é: a varredura das superfícies da casa. A lista de cenas que
  * escrevem tinta semântica, e as duas medições que a percorrem, moram no
- * `surfaces.spec.ts` — elas visitam o app inteiro, e enterradas aqui a
- * instrução "cena nova entra na lista" só alcançava quem já tivesse aberto o
- * arquivo da folha (ALE-320).
+ * `surfaces.spec.ts` — enterradas aqui, a instrução "cena nova entra na lista"
+ * só alcançaria quem já tivesse aberto o arquivo da folha.
  */
 
 test.describe('Grimório — a folha de especificação', () => {
   /**
    * A ladeira do raio é estritamente crescente e começa em zero.
    *
-   * Este é o defeito que a página nasceu documentando: a escala do shadcn é
-   * derivada de `--radius` por `sm = R−4`, e com o R antigo, de 4px, `sm` caía
-   * em ZERO — passando a significar "quadrado", que é trabalho do
-   * `rounded-none`. Ninguém conseguia prever, lendo o TSX, se `rounded-sm` ia
-   * desenhar canto.
+   * A escala do shadcn é derivada de `--radius` por `sm = R−4`: com um R de 4px,
+   * `sm` cai em ZERO e passa a significar "quadrado", que é trabalho do
+   * `rounded-none`. Dois degraus valendo a mesma coisa não se enxerga lendo o
+   * código.
    *
    * A asserção é a FORMA da ladeira e não os números: prender 2/4/6/10 seria
-   * prender uma decisão de desenho que pode mudar. O que não pode voltar é dois
-   * degraus valendo a mesma coisa.
+   * prender uma decisão de desenho que pode mudar.
    *
    * Por que e2e: `--radius` só resolve em browser. Em jsdom não há `calc` de
    * variável CSS e todo degrau mede zero.
@@ -65,10 +62,8 @@ test.describe('Grimório — a folha de especificação', () => {
    * A ladeira de tamanho é estritamente decrescente, sem dois degraus iguais.
    *
    * A casa acrescentou três tamanhos abaixo do piso do shadcn (`text-xs`, de
-   * 12px, pensado para formulário) porque a mesa é densa. Eles eram 321 valores
-   * arbitrários sem nome, e é justamente enquanto um degrau não tem nome que
-   * ninguém percebe quando dois passam a valer a mesma coisa — foi o que
-   * aconteceu com o raio antes da ALE-173.
+   * 12px, pensado para formulário) porque a mesa é densa. Enquanto um degrau não
+   * tem nome, ninguém percebe quando dois passam a valer a mesma coisa.
    *
    * A asserção é a FORMA e não os números, pela mesma razão do guarda do raio.
    */
@@ -101,9 +96,9 @@ test.describe('Grimório — a folha de especificação', () => {
    * As legendas vêm do navegador, não da mão de quem escreveu a página.
    *
    * Se uma amostra ficar sem cor resolvida, o utilitário que ela desenha deixou
-   * de existir no CSS — o sintoma exato da armadilha registrada no guia, a de
-   * que classe usada só num arquivo NOVO não entra no bundle até o servidor
-   * reiniciar. A folha ficaria bonita e vazia, e foi assim que ela nasceu.
+   * de existir no CSS — o sintoma da armadilha do guia: classe usada só num
+   * arquivo NOVO não entra no bundle até o servidor reiniciar, e a folha fica
+   * bonita e vazia.
    */
   test('nenhuma amostra de cor fica sem valor', async ({ page }) => {
     await page.goto('/grimorio')
@@ -122,13 +117,11 @@ test.describe('Grimório — a folha de especificação', () => {
   })
 
   /**
-   * Toda TINTA alcança 4.5:1 contra o painel (ALE-173, P3).
+   * Toda TINTA alcança 4.5:1 contra o painel.
    *
-   * Esta é a razão de os quatro papéis terem duas cores. As de bloco foram
-   * afinadas para preencher — barra de vida, fundo de botão — e ficam entre
-   * 3,2 e 4,6:1, abaixo do mínimo da WCAG para texto pequeno. Era por isso que
-   * a cena escrevia com 74 cores CRUAS do Tailwind: não era desleixo, era
-   * compensação, e nenhuma delas tinha nome.
+   * Esta é a razão de os quatro papéis terem duas cores: as de BLOCO foram
+   * afinadas para preencher — barra de vida, fundo de botão — e ficam abaixo do
+   * mínimo da WCAG para texto pequeno.
    *
    * O guarda afirma só a metade que é REGRA — tinta serve de texto. Não prende
    * o valor de nenhuma: a paleta pode mudar de matiz, de croma ou de
@@ -183,22 +176,17 @@ test.describe('Grimório — a folha de especificação', () => {
   })
 
   /**
-   * Todo botão PREENCHIDO é legível sobre o próprio preenchimento (ALE-200).
+   * Todo botão PREENCHIDO é legível sobre o próprio preenchimento.
    *
    * O guarda vizinho afirma que a TINTA alcança texto contra o painel. Este
-   * afirma a outra metade, que ninguém estava olhando: quando o botão tem fundo
-   * próprio, quem decide a legibilidade é o par fundo+texto DELE, não o painel
-   * atrás.
-   *
-   * Foi assim que o destrutivo passou despercebido. Branco sobre o
-   * crimson-bright dava **3,72:1** — abaixo dos 4,5 do AA —, e ele é o único
-   * vermelho da tela: o botão que APAGA era o menos legível do app. Trocado o
-   * preenchimento para o crimson base, o mesmo branco dá 5,35:1.
+   * afirma a outra metade: quando o botão tem fundo próprio, quem decide a
+   * legibilidade é o par fundo+texto DELE, não o painel atrás. Foi assim que o
+   * botão destrutivo — o único vermelho da tela, e o que APAGA — passou anos
+   * abaixo dos 4,5 do AA.
    *
    * Afirma a REGRA e não os valores: a paleta pode mudar de matiz, de croma ou
-   * de luminosidade sem deixar de ser legível. Prender o oklch tornaria
-   * qualquer repintura impossível sem tocar no teste — foi o cuidado que a
-   * ALE-173 registrou no guarda das tintas, e vale igual aqui.
+   * de luminosidade sem deixar de ser legível, e prender o oklch tornaria
+   * qualquer repintura impossível sem tocar no teste.
    *
    * Por que e2e: converter oklch para sRGB é trabalho do navegador. Em jsdom o
    * `getComputedStyle` devolve a variável CRUA, e ler aqueles três números como
@@ -250,17 +238,15 @@ test.describe('Grimório — a folha de especificação', () => {
   })
 
   /**
-   * A Cinzel não desce abaixo de 14px (ALE-173).
+   * A Cinzel não desce abaixo do piso de 14px.
    *
-   * O MEDIDOR SAIU DAQUI e virou `support/typography.ts` (ALE-252), e a mudança
-   * é a issue inteira: ele vivia inline neste `test()`, então visitava um
-   * endereço só — e quatro violações minhas viveram em três cenas com ele no ar
-   * o tempo todo. Instrumento que mora dentro de um chamador tem exatamente um
-   * chamador, e isso não aparece em revisão de diff nenhuma.
+   * O medidor mora em `support/typography.ts` e não aqui dentro: instrumento que
+   * vive dentro de um chamador tem exatamente um chamador, e enquanto ele era
+   * inline neste `test()` visitava um endereço só — quatro violações viveram em
+   * três cenas com ele no ar o tempo todo.
    *
-   * Este caso FICA, e não virou redundante: a folha é a superfície onde a
-   * decisão foi tomada, com o dono olhando para ela. Ele agora é uma das cenas
-   * medidas em vez de a única.
+   * Este caso FICA e não virou redundante: a folha é a superfície onde a decisão
+   * foi tomada, e ele é uma das cenas medidas em vez de a única.
    */
   test('a Cinzel não desce abaixo do piso de leitura', async ({ page }) => {
     await page.goto('/grimorio')
@@ -270,19 +256,16 @@ test.describe('Grimório — a folha de especificação', () => {
   })
 
   /**
-   * TODO BOTÃO TEM LIMITE VISÍVEL contra o fundo (WCAG 1.4.11) — ALE-250.
+   * TODO BOTÃO TEM LIMITE VISÍVEL contra o fundo (WCAG 1.4.11).
    *
    * Ele mora aqui, e o lugar é o argumento: a folha de especificação desenha
-   * TODAS as variantes e TODOS os tamanhos lado a lado. Medir esta tela é medir
-   * a família inteira por AMOSTRAGEM — o oposto da enumeração que a ALE-252
-   * pagou caro para conseguir.
+   * TODAS as variantes e TODOS os tamanhos lado a lado, então medir esta tela é
+   * medir a família inteira por AMOSTRAGEM em vez de por enumeração.
    *
-   * O que ele prende é uma decisão que quase foi desfeita: o `secondary` do
-   * servidor tem borda e o da SPA não tinha, e a issue propunha tirá-la em nome
-   * da fidelidade. Medido: o preenchimento sozinho dá 1,30:1 contra o fundo da
-   * cena, e a borda dá 3,57:1. **A borda é o conserto, não a divergência** — e
-   * sem este guarda, tirá-la não quebra nada que alguém veja: o botão continua
-   * clicável e o texto continua legível. O que some é a fronteira.
+   * O que ele prende é a BORDA do `secondary`: o preenchimento sozinho dá 1,30:1
+   * contra o fundo da cena e a borda dá 3,57:1. Sem este guarda, tirá-la não
+   * quebra nada que alguém veja — o botão continua clicável e o texto continua
+   * legível, e o que some é a fronteira.
    */
   test('todo botão tem limite visível contra o fundo', async ({ page }) => {
     await page.goto('/grimorio')
@@ -303,21 +286,11 @@ test.describe('Grimório — a folha de especificação', () => {
   })
 
   /**
-   * A CELA TRAZ MEDIDA, e este guarda existe por causa de um defeito real: a
-   * primeira versão desta seção comparava o servidor com a SPA e não passava o
-   * tamanho ao elemento customizado dela, então a linha "xs" media um xs do
-   * servidor contra um default da SPA.
+   * A CELA TRAZ MEDIDA, e a LADEIRA CRESCE.
    *
-   * O instrumento MENTIA — e instrumento que mente é pior que instrumento
-   * nenhum, porque produz confiança em vez de dúvida. Um guarda que só
-   * checasse "a seção existe" não teria pego; este exige que a cela traga
-   * MEDIDA, e que a ladeira de tamanhos seja estritamente crescente.
-   *
-   * Aqui morava o `a coluna dupla mede os DOIS stacks, e a ladeira cresce nos
-   * dois`, que afirmava as duas colunas. A da SPA saiu na ALE-314 junto com o
-   * Solid; a garantia que sobrevive é a desta — a ladeira é o que pega uma
-   * coluna constante, e uma coluna constante era exatamente o sintoma do
-   * defeito original.
+   * Um guarda que só checasse "a seção existe" passaria verde sobre uma coluna
+   * CONSTANTE, que foi o sintoma do defeito original: a legenda dizia 36/36/36
+   * para xs/sm/lg porque o tamanho nunca chegava ao elemento medido.
    *
    * E2E porque a legenda é escrita com `getBoundingClientRect` e
    * `getComputedStyle` depois do layout assentar — nada disso existe sem
@@ -346,16 +319,15 @@ test.describe('Grimório — a folha de especificação', () => {
       expect(celas.length, `a linha ${nome} não tem exatamente uma cela medida`).toBe(1)
       expect(celas[0], `a cela de ${nome} não mediu`).toBeGreaterThan(0)
     }
-    // A ladeira é o que pega a coluna CONSTANTE: com o defeito antigo os três
-    // tamanhos vinham 36/36/36, e nenhuma asserção de "mediu" os separaria.
+    // A ladeira é o que pega a coluna CONSTANTE: nenhuma asserção de "mediu"
+    // separa 36/36/36 de três tamanhos de verdade.
     expect(alturas.xs[0], 'xs não é menor que sm').toBeLessThan(alturas.sm[0] as number)
     expect(alturas.sm[0], 'sm não é menor que lg').toBeLessThan(alturas.lg[0] as number)
   })
 
-  // Aqui morava o `as peças da SPA montam SEM shadow root, senão o Tailwind não
-  // as alcança`. Ele prendia o `noShadowDOM()` dos elementos customizados da
-  // SPA, e não há substituto: as peças desta folha são `templ` renderizado no
-  // servidor, e HTML de servidor não tem shadow root para esconder o Tailwind
-  // dentro (ALE-314).
+  // Não há caso de SHADOW ROOT aqui de propósito: ele prendia o `noShadowDOM()`
+  // dos elementos customizados da SPA, e as peças desta folha são `templ`
+  // renderizado no servidor — HTML de servidor não tem shadow root onde
+  // esconder o Tailwind.
 
 })

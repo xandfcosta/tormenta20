@@ -32,13 +32,9 @@ func nowBoard(t *testing.T, f sceneFixture) *board.BoardState {
 	return b
 }
 
-// TestHidingTheTokenIsTheGestureThatWasMissing — o buraco que esta fatia fecha.
-//
-// A capacidade estava no `BoardStore` desde a ALE-178 e não tinha rota nenhuma na
-// Mesa em Datastar: a mesma forma da cortina, no ar e invisível. E a ausência
-// dela deixava OUTRA superfície mentindo — "ver como jogador" (ALE-193) existe
-// para conferir a emboscada, e sem um gesto de esconder ela respondia sempre
-// "nenhuma peça escondida nesta cena".
+// Esconder a peça é o que faz "ver como jogador" dizer alguma coisa: sem um
+// gesto de esconder, aquela superfície responde sempre "nenhuma peça escondida
+// nesta cena".
 func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
@@ -69,11 +65,8 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	}
 }
 
-// TestTakingOffTheMapDoesNotTakeOutOfCombat — a separação que a cena promete.
-//
 // São duas perguntas diferentes — "ele saiu do mapa" e "ele saiu do combate" —, e
-// juntá-las faria o mestre perder o combatente ao arrumar a cena. É a mesma
-// separação que o elenco e a fila já têm (superfície 6b).
+// juntá-las faria o mestre perder o combatente ao arrumar a cena.
 func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -102,8 +95,6 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	}
 }
 
-// TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo.
-//
 // Um botão que não faz nada é pior que nenhum, e aqui ele seria pior ainda:
 // "voltar para onde estava" numa peça que nunca se moveu promete desfazer algo
 // que ninguém lembra de ter feito.
@@ -152,12 +143,9 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 	}
 }
 
-// TestUndoSurvivesAReload.
-//
-// É a divergência DELIBERADA em relação à SPA: lá o desfazer do posicionamento
-// mora na memória da aba e morre no F5 (`ondeEstava`, em `board-region`). O gesto
-// que ele conserta — "arrastei o dragão para o lugar errado na frente de seis
-// pessoas" — é justamente o que se quer desfazer de qualquer tela.
+// O desfazer mora no SERVIDOR e não na memória da aba: o gesto que ele conserta
+// — "arrastei o dragão para o lugar errado na frente de seis pessoas" — é
+// justamente o que se quer desfazer de qualquer tela, inclusive depois do F5.
 func TestUndoSurvivesAReload(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -179,8 +167,6 @@ func TestUndoSurvivesAReload(t *testing.T) {
 	}
 }
 
-// TestDuplicateNumbersOnTheServer (ALE-192).
-//
 // Duas telas escolhendo o número por conta própria é como nasce o segundo
 // "Zumbi 3" no mesmo mapa. E a cópia nasce AO LADO da original: quem duplica o
 // zumbi do canto espera o irmão dele ali, não na fileira de entrada.
@@ -206,7 +192,7 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 	}
 }
 
-// ── OS TRÊS DUPLICARES (ALE-206) ─────────────────────────────────────────────
+// ── OS TRÊS DUPLICARES ───────────────────────────────────────────────────────
 //
 // A distinção é o que a cópia faz com a LINHA DA FILA, e ela se prova AQUI e não
 // no `tabuleiro`: a regra de qual vínculo a cópia leva já está presa lá, e o que
@@ -237,8 +223,6 @@ func tokenOnTheQueue(t *testing.T, f sceneFixture, rotulo string) (string, strin
 	return posto.Tokens[len(posto.Tokens)-1].ID, linha
 }
 
-// TestTheCopyWithItsOwnLineEntersTheQueueWhole.
-//
 // É o "mais um zumbi" de montar encontro, e o número que importa é o PV: o ogro
 // da bancada está com 12 de 130, e o segundo ogro chega INTEIRO. Copiar o PV
 // atual daria um irmão que já nasce sangrando pela porrada que o primeiro levou
@@ -284,7 +268,7 @@ func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
 	}
 }
 
-// TestTheCopySharingTheLineAddsNoLine: as duas peças, uma barra só.
+// As duas peças, uma barra só.
 func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -307,8 +291,6 @@ func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
 	}
 }
 
-// TestTheModesThatNeedALineRefuseALoosePiece.
-//
 // Peça de cenário não tem PV, e os dois modos que falam de PV não têm o que
 // fazer com ela. A recusa é ESCRITA porque o silêncio ali produziria uma cópia
 // idêntica à do peão mudo com outro nome — o mestre clicaria em "com PV próprio"
@@ -335,8 +317,6 @@ func TestTheModesThatNeedALineRefuseALoosePiece(t *testing.T) {
 	}
 }
 
-// TestEditingRefusesASizeTheBookDoesNotHave.
-//
 // O livro define 1, 2, 3 e 6 (T20 p107, Tab. 1-21) — não existe 4 nem 5. O
 // número vem do cliente, e uma peça de lado 4 mentiria sobre quem o gabarito pega
 // e sobre onde cabe passar.
@@ -363,10 +343,8 @@ func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	}
 }
 
-// TestOnlyTheGmTouchesTheToken: a trava é do servidor, e não o menu escondido.
-//
-// O menu é do mestre porque quem monta a mesa é ele, e o botão que o jogador não
-// vê nunca foi prova de trava — quem postar na mão leva 403.
+// A trava é do SERVIDOR: o botão que o jogador não vê nunca foi prova de trava —
+// quem postar na mão leva 403.
 func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -388,7 +366,7 @@ func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 	}
 }
 
-// ── COPIAR E COLAR (ALE-206) ─────────────────────────────────────────────────
+// ── COPIAR E COLAR ───────────────────────────────────────────────────────────
 //
 // O colar faz três coisas que o duplicar não faz: repete sem perguntar de novo,
 // pousa onde a pessoa está OLHANDO, e ATRAVESSA AS ABAS. A terceira é a que não
@@ -402,8 +380,6 @@ func colaNaAba(t *testing.T, f sceneFixture, deOndeVeio, peca, modo string, x, y
 	return f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/colar", area)
 }
 
-// TestThePasteCrossesTheTabs.
-//
 // Copiar o zumbi na Cripta e colá-lo na Taverna. O servidor procura a original
 // no tabuleiro que a ÁREA nomeia, e não no que está na tela — são diferentes
 // justamente quando o colar mais serve.
@@ -451,9 +427,7 @@ func TestThePasteCrossesTheTabs(t *testing.T) {
 	}
 }
 
-// TestThePasteWithoutAClipboardSaysSo: a recusa é escrita.
-//
-// `CTRL + V` sem nada na área é o gesto mais provável de todos — a tecla existe
+// A recusa é ESCRITA: `CTRL + V` sem nada na área é o gesto mais provável de todos — a tecla existe
 // no dedo de quem usa qualquer outro programa. O silêncio ali seria a mesma tela
 // de antes, e a pessoa apertaria de novo.
 func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
@@ -466,8 +440,6 @@ func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
 	}
 }
 
-// TestThePasteOfAPieceThatIsGoneSaysSo.
-//
 // A área é do CLIENTE e vive mais que a peça: o mestre copia o zumbi, tira o
 // zumbi do mapa, e aperta CTRL+V. Sem esta frase o colar sairia calado.
 func TestThePasteOfAPieceThatIsGoneSaysSo(t *testing.T) {
@@ -480,11 +452,9 @@ func TestThePasteOfAPieceThatIsGoneSaysSo(t *testing.T) {
 	}
 }
 
-// TestThePasteWithItsOwnLineAlsoFillsTheQueue: o modo grudado na área vale
-// igual no colar.
-//
-// Ele é o mesmo `bondForMode` do duplicar, e este caso é quem prova que os dois
-// verbos concordam sobre o que "com PV próprio" significa.
+// O modo grudado na área vale igual no colar: é o mesmo `bondForMode` do
+// duplicar, e este caso prova que os dois verbos concordam sobre o que "com PV
+// próprio" significa.
 func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -520,10 +490,8 @@ func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 	}
 }
 
-// ── O CHEFE QUE GANHA NOME (ALE-206) ─────────────────────────────────────────
+// ── O CHEFE QUE GANHA NOME ───────────────────────────────────────────────────
 
-// TestTheCopyWithItsOwnBlockClonesTheCreature.
-//
 // Duas linhas dividem um bloco sem problema — ele é um MOLDE. Clonar só importa
 // quando o mestre vai EDITAR uma das duas: sem a cópia, dar 30 PV a mais ao
 // chefe daria aos outros três zumbis também.
@@ -595,10 +563,8 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	}
 }
 
-// TestTheOwnBlockModeRefusesWhoHasNone: herói e NPC digitado à mão não têm bloco.
-//
-// O menu já esconde o verbo nesses casos; a trava é do servidor, e o botão
-// escondido nunca foi prova de trava.
+// Herói e NPC digitado à mão não têm bloco. O menu já esconde o verbo nesses
+// casos; a trava é do servidor, e o botão escondido nunca foi prova de trava.
 func TestTheOwnBlockModeRefusesWhoHasNone(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)

@@ -20,8 +20,7 @@ func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
 	}
 }
 
-// TestTheNoteAutosaveReachesTheDatabase é o caminho feliz, ponta a ponta pelo
-// roteador de verdade.
+// O caminho feliz, ponta a ponta pelo roteador de verdade.
 func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -32,12 +31,12 @@ func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 	}
 }
 
-// TestTheNoteIsNotTrimmedMidTyping.
+// A nota NÃO é aparada no meio da digitação.
 //
-// O handler JSON da SPA passa o texto por `trimOrNull` porque salva UMA vez, ao
-// fechar. Este salva a cada 1,2 s de pausa, e aparar aqui comeria a linha em
-// branco que o mestre acabou de abrir para escrever o próximo parágrafo — o
-// cursor pularia para o fim da frase anterior no meio da noite.
+// Aparar faz sentido em quem salva UMA vez, ao fechar. Este salva a cada 1,2 s
+// de pausa, e aparar aqui comeria a linha em branco que o mestre acabou de abrir
+// para o próximo parágrafo — o cursor pularia para o fim da frase anterior no
+// meio da noite.
 func TestTheNoteIsNotTrimmedMidTyping(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -48,7 +47,7 @@ func TestTheNoteIsNotTrimmedMidTyping(t *testing.T) {
 	}
 }
 
-// TestTheTaskCheckboxRewritesTheNote é o gesto que faz o checkbox valer.
+// O gesto que faz o checkbox valer.
 //
 // O estado do quadrinho mora NA NOTA, não ao lado dela: sem esta reescrita o
 // controle seria enfeite e a marcação não sobreviveria a um F5. A linha viaja no
@@ -75,8 +74,8 @@ func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 	}
 }
 
-// TestUncheckingBringsTheCheckboxBack — o par do de cima. Sem ele o guarda mediria um
-// interruptor de mão única e chamaria de alternância.
+// O par do de cima. Sem ele o guarda mediria um interruptor de mão única e
+// chamaria de alternância.
 func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -87,8 +86,6 @@ func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 	}
 }
 
-// TestAnOutOfRangeLineDoesNotBringTheHandlerDown.
-//
 // A linha vem de um CLIQUE, e o cliente pode estar um remendo atrás do
 // servidor — a nota mudou noutra aba e a tela ainda mostra a lista antiga. Isso
 // é caminho NORMAL, não ataque: a resposta certa é devolver a nota intacta, e a
@@ -121,21 +118,19 @@ func (f sceneFixture) dbNote(t *testing.T) string {
 	return sess.Notes.String
 }
 
-// TestThePatchedPreviewCarriesTheTableIds prende um defeito MEDIDO no navegador.
+// A prévia REMENDADA carrega os ids da mesa.
 //
-// A prévia da resposta era montada a partir de uma `View` SINTÉTICA, criada
-// só com o texto — e uma struct nova nasce com `CampaignID` e `SessionID` em
-// ZERO. Cada quadrinho do fragmento saía apontando para
-// `/mesa/0/0/notas/tarefa/N/marcar`.
+// Montá-la a partir de uma `View` SINTÉTICA, criada só com o texto, faz cada
+// quadrinho do fragmento apontar para `/mesa/0/0/notas/tarefa/N/marcar`: struct
+// nova nasce com `CampaignID` e `SessionID` em ZERO.
 //
-// O SINTOMA É DA PIOR FAMÍLIA DESTA BASE, e é por isso que ele merece guarda: o
-// PRIMEIRO clique funcionava, porque acontece sobre o HTML da carga fria, que
-// tem os ids certos. Do segundo em diante a tela ficava MUDA — botão no lugar,
-// `aria-checked` desenhado, nenhum erro em canto nenhum, e o banco parando de
-// mudar. Foi preciso ler o `data-on:click` do nó vivo para ver o `0/0`.
+// O sintoma é mudo, e é por isso que ele merece guarda: o PRIMEIRO clique
+// funciona, porque acontece sobre o HTML da carga fria, que tem os ids certos.
+// Do segundo em diante a tela não muda — botão no lugar, `aria-checked`
+// desenhado, nenhum erro em canto nenhum, e o banco parando de mudar.
 //
-// Um guarda que só afirmasse "a resposta traz a prévia" passaria verde sobre
-// isto: o fragmento ESTAVA lá, e estava errado por dentro.
+// Um guarda que só afirmasse "a resposta traz a prévia" passaria verde: o
+// fragmento ESTÁ lá, e está errado por dentro.
 func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -155,9 +150,9 @@ func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 	}
 }
 
-// ── A JANELA PRÓPRIA (ALE-218) ──────────────────────────────────────────────
+// ── A JANELA PRÓPRIA ────────────────────────────────────────────────────────
 
-// TestTheNotesWindowIsTheGmsAlone: a cena tem a MESMA trava do comando.
+// A cena tem a MESMA trava do comando.
 //
 // Ela é um endereço que o mestre pode favoritar, então ela é um endereço que
 // qualquer um pode digitar — e as notas da sessão não são do jogador. O guarda
@@ -181,13 +176,10 @@ func TestTheNotesWindowIsTheGmsAlone(t *testing.T) {
 	}
 }
 
-// TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt.
-//
 // Três coisas na mesma asserção, e nenhuma é redundante: a cena traz o TEXTO
 // (senão a janela abre vazia sobre uma nota que existe), traz a PRÉVIA já
 // desenhada (é o markdown, não o cru), e traz o endereço de SALVAR com os ids
-// certos — que é o defeito que o `TestThePatchedPreviewCarriesTheTableIds`
-// pegou uma vez, com a `View` sintética nascendo em `0/0`.
+// certos — a mesma armadilha do `TestThePatchedPreviewCarriesTheTableIds`.
 func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
 	f := newSceneFixture(t)
 	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro **fugiu**"}`)
@@ -209,8 +201,6 @@ func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
 	}
 }
 
-// TestTheNotesWindowAndTheColumnCannotBothHoldTheNotes.
-//
 // As duas escrevem a MESMA coluna `sessions.notes`, e o autosave é de 1,2 s:
 // com as duas abertas, quem salvar por último apaga o parágrafo do outro sem
 // aviso, com as duas faixas dizendo "Salvo". A exclusão é um pacto entre

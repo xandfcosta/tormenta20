@@ -43,7 +43,7 @@ func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 //
 // Ele não é regra do livro — é o que impede a fila de encher e o mestre ter de
 // desfazer linha por linha. E o `min`/`max` do campo não é a trava: digitar
-// passa direto pelo spinner (ALE-236).
+// passa direto pelo spinner.
 func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 	f := newSceneFixture(t)
 
@@ -73,8 +73,6 @@ func TestAnInventedCreatureIsRefused(t *testing.T) {
 	}
 }
 
-// TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens.
-//
 // O painel é o DONO do rascunho: PV, iniciativa e quantas nascem do bloco do
 // livro a cada criatura ABERTA. Sem isso, o PV que o mestre baixou para um ogro
 // reapareceria no próximo bicho e ele não teria como saber que carregou.
@@ -113,9 +111,7 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 	}
 }
 
-// TestTheTableBestiaryBelongsToTheGm, nas duas metades (ALE-144).
-//
-// A lista diz o PV e a defesa de cada bicho — é exatamente o que o olho da linha
+// Nas duas metades: a lista diz o PV e a defesa de cada bicho — é exatamente o que o olho da linha
 // esconde da mesa —, então a trava é do painel INTEIRO e não só do enviar.
 func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 	f := newSceneFixture(t)

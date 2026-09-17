@@ -152,10 +152,14 @@ func TestNoCitationNamesAMissingTest(t *testing.T) {
 	}
 
 	// O denominador. Sem ele, "nenhuma citação pendurada" e "o regex não casou
-	// com nada" são a mesma linha verde. Eram 485 em setembro de 2026, e o piso
-	// está longe dele de propósito: o que ele pega é a varredura QUEBRAR, não a
-	// prosa encolher.
-	if medidas < 300 {
+	// com nada" são a mesma linha verde.
+	//
+	// O PISO DESCEU DE 300 PARA 150, e o motivo é o que ele mesmo dizia existir
+	// para tolerar: a prosa encolheu. A poda de comentários levou as citações de
+	// 485 para 264, e um piso de 300 passou a reprovar exatamente o caso que ele
+	// NÃO quer pegar. Medido dos dois lados — 264 hoje, ZERO se o regex parar de
+	// casar —, e 150 fica longe das duas pontas.
+	if medidas < 150 {
 		t.Fatalf("só %d citações lidas — o guarda ficou cego", medidas)
 	}
 }

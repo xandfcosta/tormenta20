@@ -12,11 +12,9 @@ import (
 )
 
 /*
-A ABA "LUGARES" da crônica (ALE-292): de onde se chega ao rascunho.
-
-Ela é o caminho que faltava. A capacidade de montar a cena fora da sessão existia
-no domínio desde a ALE-191, e o que a mantinha inalcançável não era regra
-faltando — era não haver tela nenhuma que levasse até ela.
+A ABA "LUGARES" da crônica: de onde se chega ao rascunho. O que se prende aqui
+é o CAMINHO — sem uma tela que leve até ele, montar a cena fora da sessão é uma
+capacidade do domínio que ninguém alcança.
 */
 
 func placesTabUrl(campanha int64) string {
@@ -214,11 +212,11 @@ func TestRemovingAPlaceReturnsToTheList(t *testing.T) {
 
 // O acervo NÃO é LIDO fora da aba dele.
 //
-// Este caso mede a VIEW e não o HTML, e a diferença foi medida: a primeira
-// versão procurava o nome do lugar na visão geral, e ele nunca aparece ali de
-// qualquer jeito — nenhuma outra aba desenha lugar. Sabotar o `if` que segura a
-// leitura deixou o guarda VERDE, porque ele afirmava "não é lido" e media "não é
-// desenhado". Duas frases que soam iguais e não são.
+// Este caso mede a VIEW e não o HTML, e a diferença foi provada por sabotagem:
+// procurar o nome do lugar na visão geral deixa o guarda VERDE com o `if` que
+// segura a leitura removido, porque ele afirma "não é lido" e mede "não é
+// desenhado" — nenhuma outra aba desenha lugar de qualquer jeito. Duas frases
+// que soam iguais e não são.
 //
 // Uma crônica de dois anos tem dezenas de lugares, e ler o acervo para desenhar
 // três sinetes é o custo que a condição existe para não pagar.

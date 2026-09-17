@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// A FRONTEIRA DO REGIME (ALE-254).
+// A FRONTEIRA DO REGIME.
 //
 // O irmão deste guarda vive em `platform/` e a regra é a mesma: um bounded
 // context vale pelo que o compilador IMPEDE. A lista aqui é maior porque o
@@ -35,7 +35,7 @@ var permitidos = map[string]bool{
 	// A plataforma não é domínio nenhum, então depender dela não cria fronteira
 	// errada nenhuma. É a direção que o guarda de lá garante ser de mão única.
 	"t20engine/infra/db/dbvalue": true,
-	// O VOCABULÁRIO DA MESA é shared kernel, e não um contexto (ALE-279).
+	// O VOCABULÁRIO DA MESA é shared kernel, e não um contexto.
 	//
 	// Ele entra nesta lista sabendo do aviso que está escrito acima — que
 	// acrescentar import aqui transforma a porta em enfeite —, e a diferença

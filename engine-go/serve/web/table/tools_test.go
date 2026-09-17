@@ -8,7 +8,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// Os guardas do TRILHO DE FERRAMENTAS (ALE-203), em Datastar.
+// Os guardas do TRILHO DE FERRAMENTAS.
 //
 // A forma — vertical, sobreposto — é do CSS e não se afirma aqui: o que um teste
 // de render pode dizer sobre leiaute é pouco, e o que importa dela está no
@@ -16,8 +16,6 @@ import (
 // botões e o TECLADO concordam sobre quais ferramentas existem, e que a borracha
 // deixou de apagar a coisa errada.
 
-// TestTheKeyboardAndTheRailAgreeOnWhatExists.
-//
 // Os dois saem do mesmo `rail`, e este guarda existe porque a alternativa —
 // uma tabela de teclas escrita à mão — falharia em silêncio dos dois jeitos: uma
 // tecla que liga uma ferramenta sem botão, e um botão que a tecla não alcança.
@@ -44,8 +42,6 @@ func TestTheKeyboardAndTheRailAgreeOnWhatExists(t *testing.T) {
 	}
 }
 
-// TestTheShortcutIsFixedPerTool.
-//
 // Numerar por POSIÇÃO faria a mesma ferramenta trocar de tecla entre os dois
 // papéis — o trilho do jogador tem três entradas e o do mestre tem nove. Quem
 // aprendeu `3 = gabarito` mestrando tem de continuar com `3 = gabarito` jogando.
@@ -71,8 +67,6 @@ func TestTheShortcutIsFixedPerTool(t *testing.T) {
 	}
 }
 
-// TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping.
-//
 // Sem a guarda, digitar "5" no PV de um combatente trocaria a ferramenta do mapa
 // atrás do formulário. Já aconteceu com o `-` do zoom, e é por isso que a guarda
 // é uma constante compartilhada em vez de três cópias.
@@ -98,8 +92,6 @@ func TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping(t *testing.T) {
 	}
 }
 
-// TestClearingAnAlreadyCleanSquareReturnsFalse.
-//
 // A versão do tabuleiro é o que acorda a mesa inteira pelo stream. Subir por um
 // clique em chão limpo mandaria um quadro para seis pessoas para dizer que nada
 // mudou — e o `writeTable` compara o HTML depois, mas o trabalho de renderizar

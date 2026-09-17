@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-// Os guardas da CRÔNICA (ALE-255).
+// Os guardas da CRÔNICA.
 
 func pedeNaCronica(t *testing.T, s *Server, userID int64, metodo, caminho, corpo string) *httptest.ResponseRecorder {
 	t.Helper()
@@ -36,9 +36,9 @@ func pedeNaCronica(t *testing.T, s *Server, userID int64, metodo, caminho, corpo
 }
 
 // AS SESSÕES RECENTES SÃO AS RECENTES. O `ListSessions` ordena por número
-// CRESCENTE, e a primeira versão desta cena pegava as três primeiras — que são
-// as mais ANTIGAS. O defeito não aparece numa mesa com três sessões, só numa
-// que já jogou bastante, e a tela não tem como avisar que está mentindo.
+// CRESCENTE, então pegar as três PRIMEIRAS dá as mais ANTIGAS — um defeito que
+// não aparece numa mesa com três sessões, só numa que já jogou bastante, e a
+// tela não tem como avisar que está mentindo.
 func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
@@ -63,24 +63,15 @@ func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 	}
 }
 
-// O MESTRE VEM PRIMEIRO no elenco. É a regra do `sortRoster` da SPA, e ela é o
-// que faz o grupo se ler como grupo em vez de fila.
+// O MESTRE VEM PRIMEIRO no elenco: é o que faz o grupo se ler como grupo em vez
+// de fila.
 //
-// # Ela nunca aconteceu, e este caso passava mesmo assim (ALE-287)
+// Quem mestra é o DONO da mesa, e é por isso que os dois personagens precisam de
+// donos DIFERENTES: com os dois pertencendo ao mesmo usuário, os dois são do
+// mestre, e não haveria fila para ordenar.
 //
-// A ordenação comparava a coluna `campaign_members.role`, que valia `'player'`
-// em toda linha que a produção escreveu — o único escritor fixava a string. O
-// comparador devolvia zero para todo par e a lista saía na ordem de entrada; a
-// coroa ao lado do nome nunca foi desenhada.
-//
-// O que fazia este caso passar era a BANCADA: o `seedMember` recebia um papel e
-// escrevia `"gm"`, um estado que só ela sabia produzir. Verde sobre dado que a
-// produção não tem é a mesma família do convite desta issue — e as duas moravam
-// no mesmo arquivo de fixture.
-//
-// Hoje quem mestra é o DONO da mesa, e é por isso que os dois personagens
-// precisam de donos DIFERENTES: com os dois pertencendo ao mesmo usuário, os
-// dois são do mestre, e não haveria fila para ordenar.
+// A BANCADA é o risco aqui: uma semente que escreva um papel que a PRODUÇÃO
+// nunca escreve deixa o caso verde sobre uma ordenação que nunca aconteceu.
 func TestTheGmComesFirstInTheCast(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")

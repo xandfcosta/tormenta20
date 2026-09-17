@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-// Whoever holds the signing key can mint a token for any account, so an empty
-// or public key in production is an open door on the LAN — the boot dies (ALE-119).
+// Quem tem a chave de assinatura cunha token para qualquer conta, então chave
+// vazia ou pública em produção é porta aberta na rede local — o boot morre.
 func TestValidateRefusesProductionWithoutItsOwnSecret(t *testing.T) {
 	cases := []struct {
 		name, secret string
@@ -31,8 +31,8 @@ func TestValidateRefusesProductionWithoutItsOwnSecret(t *testing.T) {
 	}
 }
 
-// Registration needs an invite and only an admin issues one, so a production
-// server with no admin is one nobody could ever join (ALE-120).
+// Cadastro exige convite e só um admin cunha, então servidor de produção sem
+// admin é servidor em que ninguém jamais entra.
 func TestValidateRefusesProductionWithoutAnAdmin(t *testing.T) {
 	cfg := Config{AppEnv: EnvProduction, JWTSecret: "6f1c1a0d9e2b"}
 
@@ -85,17 +85,13 @@ func TestLoadConfigReadsTheEnvironmentFile(t *testing.T) {
 }
 
 // NENHUM ambiente libera origem por fábrica, e o teste existe para prender que os
-// DOIS concordam (ALE-321).
+// DOIS concordam.
 //
-// Ele já afirmou o contrário: o desenvolvimento vinha com `http://localhost:5173`
-// liberado, porque a SPA era servida pelo Vite naquela porta. A SPA saiu na
-// ALE-272 e o default sobreviveu a ela — um middleware de CORS concedendo
-// credenciais a uma origem que ninguém é dono.
-//
-// O caso ficou porque a invariante é melhor do que era: um ambiente de
-// desenvolvimento MAIS PERMISSIVO que o de produção esconde defeito, e é isso
-// que este teste passa a cobrar. Um processo só serve tudo na mesma porta nos
-// dois ambientes, então mesma-origem é a resposta certa nos dois.
+// Um desenvolvimento MAIS PERMISSIVO que a produção esconde defeito — e um
+// default sobrevive ao motivo que o criou: uma porta liberada para um servidor
+// de front que não existe mais é CORS concedendo credenciais a uma origem que
+// ninguém é dono. Um processo só serve tudo na mesma porta nos dois ambientes,
+// então mesma-origem é a resposta certa nos dois.
 func TestLoadConfigDefaultsCORSPerEnvironment(t *testing.T) {
 	cases := map[AppEnv]string{
 		EnvProduction:  "",
@@ -119,10 +115,10 @@ func TestLoadConfigDefaultsCORSPerEnvironment(t *testing.T) {
 	}
 }
 
-// A lista existe para quem PRECISAR de origem externa — ela deixou de ter valor
-// de fábrica na ALE-321, e não deixou de ser lida. Espaço em branco e vírgula
-// sobrando somem: uma origem VAZIA seria pior que nenhuma, porque o go-chi lê
-// lista vazia como "aceite TODAS" (ALE-119).
+// A lista existe para quem PRECISAR de origem externa: ela não tem valor de
+// fábrica, e continua sendo lida. Espaço em branco e vírgula sobrando somem —
+// uma origem VAZIA é pior que nenhuma, porque o go-chi lê lista vazia como
+// "aceite TODAS".
 func TestCORSOriginParsesAList(t *testing.T) {
 	casos := []struct {
 		nome string
@@ -153,7 +149,7 @@ func TestCORSOriginParsesAList(t *testing.T) {
 	}
 }
 
-// Meio par de TLS derruba o boot, em QUALQUER ambiente (ALE-118).
+// Meio par de TLS derruba o boot, em QUALQUER ambiente.
 //
 // Cair para HTTP em silêncio é o pior dos mundos: quem escreveu meio par ligou
 // `COOKIE_SECURE=true` junto, e aí o navegador DESCARTA o cookie de sessão. O

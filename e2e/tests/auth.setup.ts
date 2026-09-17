@@ -1,27 +1,23 @@
 import { type Page, expect, test as setup } from '@playwright/test'
 
 // Contas da SEED (`engine-go/seed.sql`), aplicada pelo projeto `semente` num
-// banco recriado a cada corrida — `data/e2e.db`, e não mais o `t20-dev.db` da
-// bancada (ALE-269). O mestre é dono da campanha 1; o jogador é só membro dela
-// — o par de que os specs de papel precisam (ALE-24).
+// banco recriado a cada corrida (`data/e2e.db`). O mestre é dono da campanha 1;
+// o jogador é só membro dela — o par de que os specs de papel precisam.
 //
-// AS DUAS VARREDURAS ABAIXO ficaram REDUNDANTES com o banco novo por corrida:
-// não há o que varrer num arquivo que acabou de nascer. Ficam por ora porque
-// custam ~1,5s e a ordem de corte da casa é "escrever o substituto, ver
-// verde, DEPOIS apagar" — o substituto é o banco isolado, e este é o primeiro
-// dia dele.
+// AS DUAS VARREDURAS ABAIXO são REDUNDANTES com o banco novo por corrida: não
+// há o que varrer num arquivo que acabou de nascer. Ficam porque custam ~1,5s e
+// a ordem de corte da casa é "escrever o substituto, ver verde, DEPOIS apagar".
 const PASSWORD = process.env.E2E_PASSWORD ?? 'mestre123456'
 const GM_EMAIL = process.env.E2E_EMAIL ?? 'mestre@t20.local'
 const PLAYER_EMAIL = process.env.E2E_PLAYER_EMAIL ?? 'jogador@t20.local'
 
 /**
- * Logs in through the real UI and persists the session (localStorage token +
- * cookies) so the specs start on an authenticated context — the
- * framework-agnostic way to handle auth (survives the Solid migration).
+ * Entra pela TELA de verdade e guarda a sessão (token e cookies), para os specs
+ * começarem num contexto autenticado.
  *
- * Done ONCE per role here rather than in a beforeEach: signing in inside every
- * test adds a full page load per test, and against the dev server that raced
- * Vite's dependency re-optimization reload and made the suite flaky.
+ * UMA vez por papel, e não num `beforeEach`: entrar dentro de cada teste custa
+ * uma carga de página por teste, e a suíte inteira paga por uma garantia que
+ * não muda entre eles.
  */
 async function signIn(page: Page, email: string, file: string): Promise<void> {
   await page.goto('/entrar')
@@ -29,7 +25,7 @@ async function signIn(page: Page, email: string, file: string): Promise<void> {
   await page.getByLabel('Senha').fill(PASSWORD)
   await page.getByRole('button', { name: 'Entrar' }).click()
 
-  // Landed on the Hub (the game's main menu).
+  // Caiu no Hub, que é o menu principal do jogo.
   await expect(page.getByText('Meus Heróis')).toBeVisible()
   await page.context().storageState({ path: file })
 }
@@ -38,12 +34,9 @@ async function signIn(page: Page, email: string, file: string): Promise<void> {
  * Varre campanhas de teste que sobraram de uma execução anterior.
  *
  * O único spec que ESCREVE de verdade cria uma "E2E Descartável <timestamp>" e
- * a apaga no fim. Quando ele morre no meio — ou quando alguém interrompe a
- * suíte —, a campanha sobrevive, e ela não fica quieta: rouba o holofote da
- * lista de Campanhas, e quem falha é OUTRO spec, o que espera "Continuar a
- * sessão" da campanha 1, com um "element(s) not found" que não aponta para
- * lugar nenhum. O banco de desenvolvimento não é recriado entre execuções,
- * então o resto de ontem derruba a suíte de hoje.
+ * a apaga no fim. Quando ele morre no meio, a campanha sobrevive e não fica
+ * quieta: ela rouba o holofote da lista de Campanhas, e quem falha é OUTRO
+ * spec, com um "element(s) not found" que não aponta para lugar nenhum.
  *
  * Mora aqui dentro do login, e não num `setup` irmão, porque precisa da sessão
  * já feita: com dois workers no CI dois setups irmãos podem correr juntos, e
@@ -74,10 +67,9 @@ async function varrerCronicasDeTeste(page: Page): Promise<void> {
  * Varre no SETUP, que roda antes de tudo e não depende de nenhum teste ter
  * terminado bem. Mesma escolha da varredura de campanhas acima.
  *
- * Roda nas DUAS sessões, e isso custou uma tentativa: `/api/personagens` lista
- * só o que a sessão POSSUI, e a ficha que o spec suja — o Arcanista Erudito —
- * é do JOGADOR. Varrendo só com o mestre a limpeza achava zero e ia embora
- * dizendo que tinha limpado.
+ * Roda nas DUAS sessões: `/api/personagens` lista só o que a sessão POSSUI, e a
+ * ficha que o spec suja é do JOGADOR. Varrendo só com o mestre, a limpeza acha
+ * zero e vai embora dizendo que limpou.
  */
 async function varrerCondicoesDeTeste(page: Page): Promise<void> {
   const lista = await page.request.get('/api/personagens')

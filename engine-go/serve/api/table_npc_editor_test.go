@@ -38,8 +38,6 @@ func dbNpc(t *testing.T, f sceneFixture, nome string) creature.Block {
 	return creature.Block{}
 }
 
-// TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped — o coração desta superfície.
-//
 // Acrescentar um ataque PRECISA do servidor (Datastar não tem laço no cliente),
 // e é aí que mora o risco: se o gesto gravasse, "Cancelar desfaz de verdade"
 // seria mentira; se ele não devolvesse o rascunho inteiro, o nome que estava
@@ -57,11 +55,10 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	if elenco := f.s.tableScene.CampaignCast(context.Background(), f.campaignID); len(elenco) != 0 {
 		t.Errorf("acrescentar um ataque GRAVOU no elenco: %+v", elenco)
 	}
-	// O nome volta DENTRO de `rascunho`, e a asserção lê a chave em vez de
-	// procurar o texto na resposta inteira. A primeira versão procurava
-	// `Contains(resposta, "Ogro Capitão")` e passou verde com o sinal renomeado
-	// para `naoerascunho` — o texto estava lá, ligado a coisa nenhuma, e o teste
-	// não sabia a diferença.
+	// O nome volta DENTRO de `rascunho`, e a asserção lê a CHAVE em vez de
+	// procurar o texto na resposta inteira: `Contains(resposta, "Ogro Capitão")`
+	// passa verde com o sinal renomeado, porque o texto continua no corpo — ligado
+	// a coisa nenhuma.
 	if nome := responseDraft(t, resposta)["nome"]; nome != "Ogro Capitão" {
 		t.Errorf("o rascunho voltou com nome %v, esperado o que estava sendo digitado:\n%s", nome, resposta)
 	}
@@ -77,8 +74,6 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	}
 }
 
-// TestRemovingARowRemovesThatRow.
-//
 // Índice fora por um é a classe de erro clássica desta operação, e o sintoma na
 // mesa é o pior possível: o mestre clica no lixo do terceiro ataque e some o
 // segundo, que ele acabou de escrever.
@@ -99,8 +94,6 @@ func TestRemovingARowRemovesThatRow(t *testing.T) {
 	}
 }
 
-// TestARowThatDoesNotExistRefusesInsteadOfBlowingUp.
-//
 // O índice vem do BOTÃO, e o botão pode ser de uma tela velha — outra aba já
 // tirou a linha. Um `panic` aqui derrubaria a resposta inteira; a recusa com o
 // número diz o que aconteceu.
@@ -114,8 +107,6 @@ func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
 	}
 }
 
-// TestTheAbsenceOfManaSurvivesTheForm.
-//
 // A linha de PM só existe em quem conjura — o Centauro Xamã tem 20 PM (p290), o
 // Bandido não tem linha nenhuma —, e um zero ali diria "tem mana e está sem", que
 // é outro estado e o errado na hora de gastar.
@@ -142,11 +133,9 @@ func TestTheAbsenceOfManaSurvivesTheForm(t *testing.T) {
 	}
 }
 
-// TestTheFormIsNotBornWithTheWordUndefined.
-//
-// Medido no navegador antes de virar teste: campo opcional com `omitempty` sai
-// AUSENTE do sinal, e um `data-bind` para um caminho ausente escreve a palavra
-// "undefined" dentro da caixa — que o mestre então salva como o efeito do ataque.
+// Campo opcional com `omitempty` sai AUSENTE do sinal, e um `data-bind` para um
+// caminho ausente escreve a palavra "undefined" dentro da caixa — que o mestre
+// então salva como o efeito do ataque.
 //
 // O guarda é sobre o que o servidor MANDA: os campos opcionais têm de estar lá,
 // com valor vazio, e não faltando.
@@ -166,15 +155,12 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 	}
 }
 
-// TestSavingWithoutANameSpeaksInsideTheEditor.
+// A recusa do `gmCommand` sai por padrão no `command_error`, que é o rodapé do
+// mestre — e o editor é um DIÁLOGO por cima dele. Salvar sem nome não diria
+// absolutamente nada, porque a frase ficaria atrás do painel.
 //
-// A recusa do `gmCommand` sai por padrão no `command_error`, que é o rodapé
-// do mestre — e o editor é um DIÁLOGO por cima dele. Medido no navegador: salvar
-// sem nome não dizia absolutamente nada, porque a frase estava atrás do painel.
-//
-// E a frase é em PORTUGUÊS: ela era inglesa enquanto o formulário sempre foi
-// português, e "creature name is required" ao lado de uma caixa escrita "Nome"
-// manda o mestre procurar um campo que não existe.
+// E a frase é em PORTUGUÊS: "creature name is required" ao lado de uma caixa
+// escrita "Nome" manda o mestre procurar um campo que não existe.
 func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 	f := newSceneFixture(t)
 	resposta := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
@@ -188,8 +174,6 @@ func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 	}
 }
 
-// TestTheEditorDoesNotReachAnotherCampaignsCast — a trava que mais importa.
-//
 // O id vem do RASCUNHO, que vem do navegador: sem a conferência de campanha, o
 // mestre de uma mesa reescreveria a preparação de outra. É a mesma trava que o
 // `campaignNpc` já fazia para o caminho, e o editor tinha de reusá-la em vez
@@ -223,7 +207,7 @@ func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	}
 }
 
-// TestOnlyTheGmTouchesTheCast: a trava é do servidor, e não o botão escondido.
+// A trava é do SERVIDOR, e não o botão escondido.
 func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 	f := newSceneFixture(t)
 	for _, caminho := range []string{
@@ -239,8 +223,6 @@ func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 	}
 }
 
-// TestCreatingFromScratchAndEditingAreTheSameForm.
-//
 // Dois caminhos com duas telas seriam duas telas para envelhecer, e o defeito
 // apareceria como "criar do zero não tem a aba de perícias". A prova é que os
 // dois abrem devolvendo a MESMA forma de rascunho — o que muda é a semente.

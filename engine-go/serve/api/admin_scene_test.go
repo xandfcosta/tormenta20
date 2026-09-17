@@ -10,12 +10,12 @@ import (
 	"time"
 )
 
-// OS GUARDAS DE COMPOSIÇÃO DA ADMINISTRAÇÃO (ALE-278).
+// OS GUARDAS DE COMPOSIÇÃO DA ADMINISTRAÇÃO.
 //
-// A cena virou `web/admin` e os casos de REGRA foram junto. Estes ficam porque
-// montam um `api.Server` de verdade e dirigem o roteador de verdade — é onde se
-// prova que a rota existe, que o `requireAdmin` recusa quem não é dono, e que o
-// remendo volta com os painéis certos.
+// Os casos de REGRA moram em `web/admin`; estes ficam aqui porque montam um
+// `api.Server` de verdade e dirigem o roteador de verdade — é onde se prova que
+// a rota existe, que o `requireAdmin` recusa quem não é dono, e que o remendo
+// volta com os painéis certos.
 
 // O prazo é 24h e não os 7 dias do convite, e a diferença é de RISCO: o convite
 // abre uma conta que ainda não existe; este abre uma que já existe e tem fichas
@@ -40,12 +40,8 @@ func TestTheResetLinkLastsTwentyFourHours(t *testing.T) {
 }
 
 // Conta inexistente devolve um erro NOMEADO, e não um erro qualquer: é o que
-// deixa quem chama escolher a resposta. A rota JSON traduz para 404, a cena do
-// piloto para um aviso na tela — e nenhuma das duas repete a consulta.
-
-// Conta inexistente devolve um erro NOMEADO, e não um erro qualquer: é o que
-// deixa quem chama escolher a resposta. A rota JSON traduz para 404, a cena do
-// piloto para um aviso na tela — e nenhuma das duas repete a consulta.
+// deixa quem chama escolher a resposta. A rota JSON traduz para 404, a cena
+// para um aviso na tela — e nenhuma das duas repete a consulta.
 func TestMintingForAMissingAccountSaysItIsMissing(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
@@ -74,8 +70,7 @@ func TestMintingForAMissingAccountSaysItIsMissing(t *testing.T) {
 //
 // O guarda é em Go e não no navegador de propósito: cunhar grava uma linha que
 // a TELA não sabe revogar, então um e2e desta garantia deixaria lixo permanente
-// no banco de desenvolvimento a cada corrida — que é a família de problema da
-// ALE-238. Aqui o banco é descartável.
+// no banco a cada corrida. Aqui o banco é descartável.
 func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	chefe := seedUser(t, s, "chefe@t20.local")
@@ -96,11 +91,11 @@ func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 
 // A trava é do SERVIDOR: quem não administra não cunha, mesmo postando na mão.
 // A tela nem oferece o botão, mas isso é UX — a fronteira é aqui.
-// O caso ANÔNIMO entrou na ALE-277, vindo do `TestOnlyAnAdminIssuesInvites`
-// que media a rota JSON `/admin/invites`. Ele não repete o de cima: sem sessão
-// a cena MANDA para a porta (303, `requirePage`), e com sessão sem coroa ela
-// RECUSA (403, `requireAdmin`) — dois middlewares diferentes, e trocar um pelo
-// outro deixaria o servidor pedindo login a quem já está logado.
+//
+// O caso ANÔNIMO não repete o de cima: sem sessão a cena MANDA para a porta
+// (303, `requirePage`), e com sessão sem coroa ela RECUSA (403,
+// `requireAdmin`) — dois middlewares diferentes, e trocar um pelo outro
+// deixaria o servidor pedindo login a quem já está logado.
 func TestANonAdminDoesNotReachTheInviteRoute(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	seedUser(t, s, "chefe@t20.local")

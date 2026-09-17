@@ -3,47 +3,35 @@ import { expectDentroDaJanela } from './support/geometry'
 import { openTheBoard, disposableTable, putATokenOnTheMap } from './support/table'
 
 /**
- * O TABULEIRO da Mesa em Datastar (ALE-264, item 7).
+ * O TABULEIRO da Mesa em Datastar.
  *
- * Por que E2E, e este arquivo tem de justificar cada caso porque e2e é a faixa
- * mais cara do repositório: tudo que o SERVIDOR decide já está preso em Go —
- * quem pode pintar, quem pode marcar, a letra do marcador, o deslocamento da
- * peça que nasce. O que sobra aqui é o que só um navegador tem: LEIAUTE REAL
- * (o plano muda de tamanho de verdade quando o zoom muda), EMPILHAMENTO (um
- * elemento coberto por outro não aparece em HTML nenhum) e o REMENDO DO SSE
- * chegando por cima de um estado que mora no cliente.
+ * Por que E2E, e cada caso aqui tem de justificar o gasto: tudo que o SERVIDOR
+ * decide já está preso em Go — quem pode pintar, quem pode marcar, a letra do
+ * marcador, o deslocamento da peça que nasce. O que sobra é o que só um
+ * navegador tem: LEIAUTE REAL (o plano muda de tamanho de verdade quando o zoom
+ * muda), EMPILHAMENTO (um elemento coberto por outro não aparece em HTML
+ * nenhum) e o REMENDO DO SSE chegando por cima de um estado que mora no
+ * cliente. Nenhum caso é "a jornada do mestre" — jornada é mais barata e mais
+ * firme como teste de integração.
  *
- * Os três casos abaixo são exatamente esses três mecanismos. Nenhum deles é
- * "a jornada do mestre" — jornada é mais barata e mais firme como teste de
- * integração, e a regra da casa proíbe gastá-la aqui.
- *
- * TABULEIRO DESCARTÁVEL, e não é preciosismo: abrir tabuleiro na sessão 1 ou 4
- * mexeria em estado que seis specs compartilham, e o resto de um deles derruba
- * a suíte do dia seguinte por um caminho que não aponta para lugar nenhum
- * (está escrito no `auth.setup.ts`). Cada caso cria a própria campanha e a
- * apaga no fim; apagar a campanha leva a sessão e o tabuleiro junto.
+ * TABULEIRO DESCARTÁVEL: abrir tabuleiro numa sessão compartilhada mexeria em
+ * estado de seis specs, e o resto de um deles derruba a suíte do dia seguinte
+ * por um caminho que não aponta para lugar nenhum. Cada caso cria a própria
+ * campanha e a apaga no fim; apagar a campanha leva a sessão e o tabuleiro
+ * junto.
  */
 
 test.use({ storageState: '.auth/user.json' })
 
 /**
- * As camadas de clique são TRÊS empilhadas — pintar, marcar e mover — e só uma
- * está visível por vez. Achá-las por posição (`.first()`) pega a errada assim
- * que a ferramenta muda, e o erro sai como "elemento não visível", que não
- * aponta para a causa. O nome acessível existe justamente para dizer qual é
- * qual, e é por ele que se pergunta.
- */
-/**
  * A CAMADA de clique, e não qualquer botão com aquele nome.
  *
- * O papel + nome sozinho deixou de bastar na ALE-269, quando o trilho ganhou
- * "Mover a peça" e "Régua" para o jogador: `/Mover/` passou a casar com o botão
- * do trilho E com a camada ("Mover Ogro — escolha a casa"), e o caso morreu em
- * `strict mode violation` — que é o modo certo de descobrir isso, porque a
- * alternativa seria o clique cair no botão errado e o teste medir outra coisa.
- *
- * A classe é o que define a camada e é o que ela sempre teve; o nome sozinho é
- * um prefixo que qualquer ferramenta nova pode voltar a colidir.
+ * São TRÊS camadas empilhadas — pintar, marcar e mover — e só uma está visível
+ * por vez: achá-las por posição (`.first()`) pega a errada assim que a
+ * ferramenta muda, e o erro sai como "elemento não visível", que não aponta
+ * para a causa. Papel + nome também não basta, porque o nome do botão do trilho
+ * é PREFIXO do nome da camada ("Mover" casa com o trilho E com "Mover Ogro —
+ * escolha a casa"). A classe é o que define a camada.
  */
 const camadaDe = (page: Page, gesto: RegExp) =>
   page.locator('.board-squares').and(page.getByRole('button', { name: gesto }))
@@ -51,29 +39,22 @@ const camadaDe = (page: Page, gesto: RegExp) =>
 /**
  * A FERRAMENTA no trilho, e não qualquer botão com aquele nome.
  *
- * Terceira vez que um seletor por nome deixa de ser único nesta cena, e a lição
- * é sempre a mesma: nome de botão é um PREFIXO que a próxima ferramenta pode
- * colidir. Aqui o `exact: true` também parou de servir — o trilho passou a dizer
- * a tecla no nome acessível ("Marcar (tecla 4)"), de propósito, para quem navega
- * por teclado descobrir o atalho.
- *
- * Perguntar DENTRO do trilho resolve os dois: o número pode mudar de lugar e o
- * caso continua apontando para a ferramenta que ele quer.
+ * `exact: true` não serve: o trilho diz a tecla no nome acessível ("Marcar
+ * (tecla 4)"), de propósito, para quem navega por teclado descobrir o atalho.
+ * Perguntar DENTRO do trilho resolve o prefixo e o número ao mesmo tempo.
  */
 const ferramenta = (page: Page, nome: string) =>
   page.getByRole('navigation', { name: 'Ferramentas do mapa' }).getByRole('button', { name: nome })
 
 /**
- * O `--quadrado` mudou de dono na ALE-203: o PALCO era a caixa que rolava, e ela
- * saiu junto com a moldura — num plano infinito não há `scrollWidth` para o
- * navegador prender. Quem guarda o enquadramento agora é a CENA, que é a janela
- * que recorta.
+ * Quem guarda o enquadramento é a CENA, a janela que recorta — e não o palco:
+ * num plano infinito não há `scrollWidth` para o navegador prender.
  */
 const quadrado = (page: Page) =>
   page.locator('.board-scene').evaluate((e) => getComputedStyle(e).getPropertyValue('--quadrado').trim())
 
 /**
- * O ZOOM SOBREVIVE AO REMENDO — e esta é A aposta da fatia inteira.
+ * O ZOOM SOBREVIVE AO REMENDO.
  *
  * O enquadramento não está no HTML de propósito: ele vive em `--quadrado`, no
  * cliente, para o servidor poder redesenhar as peças sem que o mestre perca
@@ -83,8 +64,7 @@ const quadrado = (page: Page) =>
  *
  * O CONTROLE vem antes da asserção: o remendo tem de ter ACONTECIDO. Sem ele,
  * "o zoom não mudou" seria igualmente verdade numa cena que não recebeu nada, e
- * o caso passaria verde sobre um stream morto — que é a família de defeito que
- * o CLAUDE.md desta casa persegue.
+ * o caso passaria verde sobre um stream morto.
  */
 test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => {
   const { mesa, apagar } = await disposableTable(page)
@@ -122,8 +102,7 @@ test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => 
  *
  * O quadrado clicado sai do PONTO do clique dividido pelo tamanho da casa, e o
  * tamanho da casa é o mesmo número que o zoom move. Se um dos dois andar sem o
- * outro, o mestre pinta uma casa e outra acende — e a distância entre elas
- * cresce com o zoom, o que faz o defeito parecer "só na hora do combate".
+ * outro, o mestre pinta uma casa e outra acende.
  *
  * A asserção é um INVARIANTE GEOMÉTRICO e não uma conta refeita: a casa que
  * apareceu tem de CONTER o ponto clicado. Recalcular `floor(x / quadrado)` no
@@ -169,12 +148,8 @@ test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ 
 /**
  * DEPOIS DE ARRASTAR A VISTA, A CASA CONTINUA SENDO A QUE ESTÁ SOB O DEDO.
  *
- * É o mesmo invariante do caso acima, com o gesto que a ALE-203 trouxe. Ele é
- * outro caso e não uma repetição porque o que pode quebrar é outro: ali é o
- * ZOOM entrando na divisão, aqui é a JANELA entrando na soma — e a janela é
- * exatamente o termo que a moldura escondia. O defeito que o dono relatou
- * ("apaguei e não apagou") era esta soma errada, com a moldura crescendo
- * debaixo do ponteiro.
+ * É o mesmo invariante do caso acima, e não uma repetição: ali é o ZOOM
+ * entrando na divisão, aqui é a JANELA entrando na soma.
  *
  * Por que e2e: o deslocamento é um `transform` de CSS sobre um plano de tamanho
  * ZERO, e a conta do clique é `offsetX + $viewport_x` num elemento IRMÃO desse
@@ -239,13 +214,13 @@ test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', as
 
 /**
  * O DESENHO DA MEDIDA CABE NO SVG QUE O CARREGA — o guarda de um recorte que não
- * acusa (ALE-203).
+ * acusa.
  *
  * O `<svg>` MAIS EXTERNO recorta pelo viewport dele, e `overflow: visible` não
- * levanta esse recorte. Quando a régua e o gabarito passaram a viver dentro de um
- * plano de tamanho ZERO, o viewport virou 0×0 e os dois PARARAM DE APARECER — com
- * o `<path>` no DOM, com a caixa certa no lugar certo, com o `fill` certo e com
- * `display: block`. Nada acusava, e a suíte inteira ficou verde por cima disso.
+ * levanta esse recorte. Com a régua e o gabarito dentro de um plano de tamanho
+ * ZERO, o viewport vira 0×0 e os dois PARAM DE APARECER — com o `<path>` no DOM,
+ * com a caixa certa no lugar certo, com o `fill` certo e com `display: block`.
+ * Nada acusa.
  *
  * O `toBeVisible` do Playwright também não pega: o `<path>` TEM caixa. Então a
  * asserção é a que descreve o defeito: o desenho tem de estar DENTRO da caixa do
@@ -288,15 +263,13 @@ test('o gabarito desenhado cabe dentro do SVG que o carrega', async ({ page }) =
 })
 
 /**
- * A JANELA VAI ATRÁS DO FOCO, e sem isto a ALE-203 teria embutido uma regressão
- * de teclado.
+ * A JANELA VAI ATRÁS DO FOCO.
  *
- * A rolagem nativa trazia o elemento focado para a vista de graça. Ela saiu com
- * a moldura: a cena recorta com `overflow: hidden` e a página não rola, então
- * não existe mais ancestral rolável — o navegador TENTA e não tem o que rolar.
- * Medido vermelho antes do conserto: com a peça em (-2039,-1268) e a janela em
- * (92,97,1756×807), focar a peça deixava tudo exatamente onde estava. Quem
- * navega por teclado podia focar uma peça que nunca ia conseguir ver.
+ * A rolagem nativa trazia o elemento focado para a vista de graça, e ela saiu
+ * com a moldura: a cena recorta com `overflow: hidden` e a página não rola,
+ * então não existe mais ancestral rolável — o navegador TENTA e não tem o que
+ * rolar. Sem o conserto, focar uma peça distante deixa tudo onde estava, e quem
+ * navega por teclado alcança uma peça que nunca vai conseguir ver.
  *
  * Por que e2e: são FOCO e GEOMETRIA REAL ao mesmo tempo, num elemento cuja
  * posição vem de um `transform` de CSS. Em jsdom todo retângulo é zero e a
@@ -343,7 +316,7 @@ test('a janela vai atrás do foco quando a peça está fora dela', async ({ page
 })
 
 /**
- * SHIFT + ARRASTO ENCHE O RETÂNGULO (ALE-203, item 10 do dono).
+ * SHIFT + ARRASTO ENCHE O RETÂNGULO.
  *
  * O gesto é browser puro e não tem onde ser medido mais barato: `Shift` decidido
  * no `pointerdown`, `setPointerCapture`, o laço posicionado por uma expressão de
@@ -404,12 +377,8 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
  *
  * As camadas de clique cobrem o plano inteiro e vêm depois no DOM; a de MOVER é
  * a ativa por padrão. O marcador ficava debaixo dela e o clique nunca chegava —
- * com o HTML inteiro correto, os seis guardas de handler verdes, e nada em
- * lugar nenhum dizendo que havia um elemento coberto. Só o navegador vê isso, e
- * é a definição de quando gastar e2e.
- *
- * O gesto é o do mestre no meio da cena: sem trocar de ferramenta, clicar no
- * ponto que ele marcou e mexer nele.
+ * com o HTML inteiro correto, os guardas de handler verdes, e nada em lugar
+ * nenhum dizendo que havia um elemento coberto. Só o navegador vê isso.
  */
 test('o marcador continua clicável por baixo da camada de mover', async ({ page }) => {
   const { mesa, apagar } = await disposableTable(page)
@@ -417,9 +386,6 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
     await openTheBoard(page, mesa)
     await putATokenOnTheMap(page)
 
-    // `exact` porque o nome do botão do trilho é PREFIXO do nome da camada de
-    // clique ("Marcar um lugar — escolha a casa"), e sem ele o seletor casa com
-    // os dois.
     await ferramenta(page, 'Marcar').click()
     await camadaDe(page, /Marcar um lugar/).click({ position: { x: 90, y: 90 } })
     const marcador = page.locator('.board-marker')
@@ -431,8 +397,7 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
 
     // O CONTROLE do empilhamento: a camada que cobria o marcador tem de estar NO
     // AR. Sem ele, "o clique chegou" é verdade num palco onde nada cobria nada —
-    // que foi exatamente o estado em que este caso passou verde com o `z-index`
-    // removido, antes de a peça entrar na fixture.
+    // e o caso passa verde até com o `z-index` removido.
     await expect(
       camadaDe(page, /Mover/),
       'a camada de mover não está no ar — o caso não enfrenta o empilhamento que veio medir',
@@ -454,24 +419,20 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
 })
 
 /**
- * A PRÉVIA DO ARRASTO: a seta e a distância aparecem ENQUANTO o dedo arrasta
- * (ALE-203, pedido do dono: "durante o drag do token, mostre a seta apontando
- * para o token movimentando e mostre a distância na seta").
+ * A PRÉVIA DO ARRASTO: a seta e a distância aparecem ENQUANTO o dedo arrasta.
  *
- * POR QUE E2E, que é a faixa mais cara e precisa se justificar: o que se mede
- * aqui só existe DENTRO de um gesto de ponteiro com movimentos intermediários.
- * O Go prova o que a rota `/previa/` responde — quatro guardas, um deles provado
- * vermelho — e nada mais: a ligação entre o `pointermove` e aquela rota mora
- * numa string de expressão do Datastar, que nenhum compilador lê e nenhum teste
- * de handler exercita. Quebrada, ela não dá erro: o atributo continua no HTML,
- * inteiro e com cara de certo, e o arrasto simplesmente não desenha nada.
+ * POR QUE E2E: o que se mede só existe DENTRO de um gesto de ponteiro com
+ * movimentos intermediários. O Go prova o que a rota `/previa/` responde e nada
+ * mais — a ligação entre o `pointermove` e aquela rota mora numa string de
+ * expressão do Datastar, que nenhum compilador lê e nenhum teste de handler
+ * exercita. Quebrada, ela não dá erro: o atributo continua no HTML, inteiro e
+ * com cara de certo, e o arrasto simplesmente não desenha nada.
  *
- * CENTRALIZAR ANTES DE ARRASTAR não é arrumação, e esta linha custou uma
- * investigação inteira: a peça pode cair debaixo do trilho de ferramentas, o
- * `boundingBox` devolve a caixa de um elemento COBERTO sem reclamar, e o
- * `mouse.down` acerta o trilho. O gesto não acontece, e a leitura vira "a prévia
- * não funciona" — apontando para o código que está certo. Antes de ler o
- * silêncio como defeito, o caso confere que a peça TEM o gesto pendurado.
+ * CENTRALIZAR ANTES DE ARRASTAR não é arrumação: a peça pode cair debaixo do
+ * trilho de ferramentas, o `boundingBox` devolve a caixa de um elemento COBERTO
+ * sem reclamar, e o `mouse.down` acerta o trilho. O gesto não acontece, e a
+ * leitura vira "a prévia não funciona" — apontando para o código que está
+ * certo.
  */
 test('a seta e a distância aparecem durante o arrasto da peça', async ({ page }) => {
   const { mesa, apagar } = await disposableTable(page)
@@ -527,21 +488,16 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
 })
 
 /**
- * O PAINEL DE VERBOS CABE NO TELEFONE, COM ACERVO (ALE-271).
+ * O PAINEL DE VERBOS CABE NO TELEFONE, COM ACERVO.
  *
- * Por que e2e, e este arquivo cobra a justificativa de cada caso: o que estoura
- * é LARGURA REAL de texto renderizado. O servidor não mede caixa — ele escreve
- * "Lugares da campanha · 3" e não sabe que aquilo dá 144px numa janela de 390.
- * Só o navegador sabe, e o defeito é exatamente a soma das larguras.
+ * Por que e2e: o que estoura é LARGURA REAL de texto renderizado. O servidor não
+ * mede caixa — ele escreve "Lugares da campanha · 3" e não sabe quanto aquilo dá
+ * numa janela de 390. O defeito é exatamente a soma das larguras.
  *
  * O ESTADO é o assunto, e é por isso que o caso semeia lugares: o painel sem
- * acervo não tem o botão largo, e medi-lo assim é medir outro painel. Foi essa a
- * lacuna que deixou o defeito viver — a cena estava nas listas dos guardas, e o
- * estado que a quebra não estava em lugar nenhum.
- *
- * MEDIDO antes do conserto, com a Mesa a 390px: o painel começava em x = −122 e
- * "Centralizar o mapa" (x = −117) e "Afastar o mapa" (x = −72) ficavam fora da
- * janela — inalcançáveis, e o zoom é de TODO MUNDO.
+ * acervo não tem o botão largo, e medi-lo assim é medir outro painel — foi essa
+ * a lacuna que deixou o defeito viver, com a cena nas listas dos guardas e o
+ * estado que a quebra em lugar nenhum.
  */
 test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ page }) => {
   const { mesa, apagar } = await disposableTable(page)
@@ -576,21 +532,20 @@ test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ pag
 })
 
 /**
- * A SEGUNDA CAMADA do menu da peça só aparece quando pedida (ALE-206).
+ * A SEGUNDA CAMADA do menu da peça só aparece quando pedida.
  *
- * Ela é POPOVER NATIVO desde a fatia do colar, e a mudança de mecanismo é o que
- * este caso protege: como camada `absolute` ela media 314×325 e passava 122px da
- * janela a 844×390, com quatro dos seis modos inalcançáveis; `position: fixed`
- * não resolvia porque o plano tem `transform`, que vira bloco de contenção.
+ * Ela é POPOVER NATIVO, e o mecanismo é o que este caso protege: como camada
+ * `absolute` ela passava da borda da janela a 844×390, com quatro dos seis modos
+ * inalcançáveis, e `position: fixed` não resolve porque o plano tem `transform`,
+ * que vira bloco de contenção.
  *
- * O que se mede aqui é o FECHADO: um popover escondido não pode deixar botão no
- * caminho do teclado. São seis por peça, e dez zumbis dariam sessenta paradas de
+ * O que se mede é o FECHADO: um popover escondido não pode deixar botão no
+ * caminho do teclado. São seis por peça, e dez peças dariam sessenta paradas de
  * Tab sobre um mapa em que nenhuma se vê.
  *
- * A primeira versão deste caso media com o MENU fechado e passou verde com o
- * submenu sabotado — um filho de pai `display:none` é invisível de qualquer
- * jeito. Ele afirmava no nome uma coisa e media outra. Por isso o menu é aberto
- * antes: é a linha que separa um guarda de um enfeite.
+ * O MENU tem de estar ABERTO na hora de medir o submenu fechado: com o menu
+ * fechado, o submenu é invisível pela herança do pai (`display:none`) e o caso
+ * passa verde com ele sabotado.
  *
  * Por que e2e: `display` computado, a top layer e `checkVisibility` só existem
  * num navegador. Em jsdom todo elemento mede zero e o caso passaria verde sobre
@@ -633,23 +588,17 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
       })
       .toBe(6)
 
-    // E ele CABE na janela em toda forma, que é o que o popover comprou: a
-    // camada `absolute` de antes passava 122px da borda a 844×390.
+    // E ele CABE na janela nos DOIS formatos.
     //
     // REABERTO em cada formato, e não redimensionado com ele no ar: quem
     // posiciona é o `ancora()` no `beforetoggle`, e ele não roda de novo num
     // `resize`. Medir sem reabrir mede a conta do formato ANTERIOR — deu 9px de
     // estouro num painel que, reaberto, sobra 8.
-    // OS DOIS FORMATOS desde a ALE-294, e o EM PÉ é o que prende aquela issue.
     //
-    // Aqui morava "só o deitado", porque a 390px de LARGURA a peça nascia em
-    // (3,0) — debaixo do painel de verbos — e o clique direito ia para o botão
-    // de afastar em vez de abrir o menu dela. A peça passou a nascer abaixo da
-    // faixa do cromo (`tabuleiro.TopChromeRows`), e é este caso que mantém
-    // aquele número honesto: painel mais alto ou zoom padrão menor põem a peça
-    // de volta debaixo do painel, o menu não abre e o `.board-token-copy`
-    // não existe para medir. É a única testemunha possível — quem cobre um
-    // elemento e quem recebe o clique só existem num navegador.
+    // O formato EM PÉ é também o que mantém o `tabuleiro.TopChromeRows` honesto:
+    // painel mais alto ou zoom padrão menor põem a peça de volta debaixo do
+    // painel de verbos, o clique direito vai para o botão de afastar, o menu não
+    // abre e o `.board-token-copy` não existe para medir.
     for (const [nome, w, h] of [
       ['deitado', 844, 390],
       ['em pé', 390, 844],
@@ -683,16 +632,14 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
 })
 
 /**
- * COPIAR guarda a decisão, e cada CTRL+V repete (ALE-206).
+ * COPIAR guarda a decisão, e cada CTRL+V repete.
  *
- * A issue pedia a pergunta no momento de COLAR; perguntar a cada tecla mataria o
- * valor do teclado, que é repetir. Decisão do dono: a pergunta é feita uma vez,
- * no menu, e o colar só executa.
+ * A pergunta é feita uma vez, no menu, e o colar só executa — perguntar a cada
+ * tecla mataria o valor do teclado, que é repetir (decisão do dono).
  *
- * Por que e2e, e este arquivo cobra a justificativa: o `CTRL + V` é um atalho de
- * TECLADO competindo com o colar do navegador, e o quadrado de destino é o centro
- * da JANELA — uma conta de pixels que só existe com zoom e vista reais. Nada
- * disso tem testemunha fora de um navegador.
+ * Por que e2e: o `CTRL + V` é um atalho de TECLADO competindo com o colar do
+ * navegador, e o quadrado de destino é o centro da JANELA — uma conta de pixels
+ * que só existe com zoom e vista reais.
  *
  * O caso NÃO reprova a regra de PV, que já está presa em Go (`bondForMode`): o
  * que ele prende é a ligação — copiar enche a área, a tecla dispara, e o segundo

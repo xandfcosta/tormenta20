@@ -1,38 +1,26 @@
 import { expect, type Page } from '@playwright/test'
 
 /**
- * O MEDIDOR DO ANEL DE FOCO da casa: uma receita só, em toda cena (ALE-318).
+ * O MEDIDOR DO ANEL DE FOCO da casa: uma receita só, em toda cena.
  *
- * A regra é global e mora no `index.css` desde a ALE-173 (P4) — `2px solid
- * var(--grimorio-gold)` a `outline-offset: 1px`, sobre tudo que recebe foco
- * dentro de uma cena. O offset é 1px por medição: a ALE-150 trocou `box-shadow`
- * por `outline` porque o contêiner que rola cortava o anel, e offset grande
- * sofre o mesmo corte.
+ * A regra é global e mora no `index.css` — `2px solid var(--grimorio-gold)` a
+ * `outline-offset: 1px`, sobre tudo que recebe foco dentro de uma cena. O offset
+ * é 1px por medição: o anel é `outline` e não `box-shadow` porque o contêiner que
+ * rola corta o realce, e offset grande sofre o mesmo corte.
  *
- * # Ele mora aqui porque o anterior media UMA página
- *
- * A versão anterior era um `test()` dentro do `grimorio.spec.ts` que abria
- * `/grimorio` e mais nada — a folha de especificação, onde tudo passa pelo kit
- * por construção. É a família da ALE-237, da ALE-252 e da ALE-272 pela terceira
- * vez: **instrumento que mora dentro de um chamador tem exatamente um
- * chamador**, e a cobertura é função de onde o guarda CHEGA.
+ * Ele mora AQUI e não dentro de um spec: instrumento que mora dentro de um
+ * chamador tem exatamente um chamador, e cobertura é função de onde o guarda
+ * CHEGA.
  *
  * # A TRANSIÇÃO é medida como transição, e não adivinhada por um INSTANTE
- *
- * O guarda anterior injetava `transition: none` antes de medir, com o
- * comentário explicando que as peças do kit têm `transition-all` e o contorno
- * "vai mudando de alfa no caminho". O diagnóstico estava certo, e o preço de
- * ele morar num comentário de teste apareceu na ALE-316: uma medição nova da
- * ficha leu o computado no instante do foco, achou TRÊS anéis diferentes em 131
- * botões, e virou issue de alta prioridade. Os três eram o MESMO anel em três
- * instantes do trajeto.
  *
  * Escolher um instante não resolve, e as duas pontas foram medidas: ler na
  * mesma tarefa do `focus()` devolve o valor de PARTIDA de toda propriedade em
  * transição — um botão do kit responde `3px solid off:0px`, que ele nunca
  * pinta —, e ler no quadro seguinte ainda pega a primeira amostra de uma
  * transição de 150ms. Todo corte no tempo produz lista de falhas com cara de
- * descoberta.
+ * descoberta: uma medição assim já acusou TRÊS anéis diferentes em 131 botões,
+ * e os três eram o MESMO anel em três instantes do trajeto.
  *
  * O que este medidor faz é PERGUNTAR ao navegador se existe transição:
  * `getAnimations()` devolve uma `CSSTransition` por propriedade, com o nome
@@ -40,17 +28,16 @@ import { expect, type Page } from '@playwright/test'
  * transições de contorno são FINALIZADAS antes da leitura da aparência, para
  * que a divergência de cara e a de tempo não se contaminem.
  *
- * O conserto da ALE-318 foi tirar o trajeto: o repouso do `outline-color` era
- * ouro a 50% (o `* { outline-ring/50 }` que o shadcn traz), então havia o que
- * interpolar. Medido com o repouso devolvido ao que era, este medidor acusa
- * `outline-color` em 29 de 40 focáveis da aba de Perícias — o controle positivo
- * que torna o silêncio dele evidência.
+ * O CONTROLE POSITIVO conhecido: devolvendo o repouso do `outline-color` ao ouro
+ * a 50% que o shadcn traz (`* { outline-ring/50 }`), este medidor acusa
+ * `outline-color` em 29 de 40 focáveis da aba de Perícias. É isso que torna o
+ * silêncio dele evidência.
  *
- * # O que ele mede que o anterior não media
+ * # Os três pontos cegos que ele fecha
  *
- *   - **O nó SEM anel nenhum.** O anterior tinha `if (outlineStyle === 'none')
- *     continue` — um botão que não recebe realce era PULADO, e é o pior caso
- *     desta família: quem navega por teclado perde o lugar (WCAG 2.4.7).
+ *   - **O nó SEM anel nenhum**, que um `if (outlineStyle === 'none') continue`
+ *     pularia — o pior caso da família: quem navega por teclado perde o lugar
+ *     (WCAG 2.4.7).
  *   - **O anel que mora no ANCESTRAL.** A carta de rádio da forja e a de entrar
  *     na mesa escondem o `<input>` com `sr-only` e desenham o realce no
  *     `<label>` com `has-[:focus-visible]:outline-*`. Um sweep de focáveis
@@ -63,13 +50,10 @@ import { expect, type Page } from '@playwright/test'
  * Uma medição: o que reprovou, quantas paradas de foco foram olhadas, e as caras
  * achadas.
  *
- * As TRÊS CHAVES seguem a grafia dos outros medidores da casa
- * (`support/contrast.ts`, `support/typography.ts`, `support/touch-targets.ts`),
- * que é a que o `CLAUDE.md` da raiz nomeia ao descrever o denominador
- * obrigatório. Os identificadores deste arquivo nascem em inglês, como a regra
- * de idioma manda; renomear só estas três aqui forkaria a convenção em duas
- * grafias, que é pior — trocá-las é varredura das 56 ocorrências em dez
- * arquivos, e essa é decisão própria.
+ * As TRÊS CHAVES ficam em português, contra a regra de idioma, porque é a
+ * grafia dos outros medidores da casa (`contrast.ts`, `typography.ts`,
+ * `touch-targets.ts`): renomear só estas forkaria a convenção em duas grafias,
+ * que é pior. Trocá-las é varredura, e essa é decisão própria.
  */
 export type FocusRingMeasurement = { falhas: string[]; medidos: number; caras: string[] }
 
@@ -121,15 +105,15 @@ export async function measureFocusRing(page: Page): Promise<FocusRingMeasurement
 
       // O CURSOR DE NAVEGAÇÃO é outro estado — "você está pilotando por aqui" —
       // e diz isso com brilho em vez de contorno (`[data-nav-region]` no
-      // `index.css`). Ele não fica de fora da medição: o que se cobra dele é o
-      // brilho, senão "sem anel" e "sem realce nenhum" ficariam iguais.
+      // `index.css`). Ele não fica de fora: o que se cobra dele é o brilho,
+      // senão "sem anel" e "sem realce nenhum" ficariam iguais.
       //
       // A condição COPIA o seletor do `index.css` em vez de aproximá-lo por
-      // "está dentro de um trilho", e a diferença não é teórica: a primeira
-      // versão dizia só `closest('[data-nav-region]')` e acusou 37 nós na folha
-      // da forja — os rádios `sr-only` das cartas e o próprio contêiner
-      // rolável, que estão dentro do trilho, não são item dele e recebem o anel
-      // normal da casa. Guarda que aproxima um seletor mede outro seletor.
+      // "está dentro de um trilho", e a diferença não é teórica: só
+      // `closest('[data-nav-region]')` acusava 37 nós na folha da forja — os
+      // rádios `sr-only` das cartas e o contêiner rolável estão dentro do trilho
+      // mas não são item dele, e recebem o anel normal. Guarda que aproxima um
+      // seletor mede outro seletor.
       if (target.closest('[data-nav-region]') && target.matches('a, button, [data-nav-item]')) {
         if (getComputedStyle(target).boxShadow === 'none') {
           failures.push(`${describe(target)} está num trilho de navegação e não acende nem anel nem brilho`)

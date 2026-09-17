@@ -11,7 +11,7 @@ import (
 	"t20engine/infra/config"
 )
 
-// O guarda do LIVRO servido (ALE-264).
+// O guarda do LIVRO servido.
 //
 // O defeito que ele prende é o que MAIS parece certo: `#page=N` conta páginas do
 // ARQUIVO e o catálogo grava a página IMPRESSA. Sem somar a abertura, o botão
@@ -53,7 +53,7 @@ func TestAMissingBookDoesNotBringTheServerDown(t *testing.T) {
 	}
 }
 
-// TestLinearizationIsRecognizedAtTheStartOfTheFile: os dois lados da marca.
+// Os dois lados da marca de linearizado.
 //
 // A marca vive no PRIMEIRO objeto do arquivo por definição da especificação —
 // procurá-la no arquivo inteiro seria ler 89 MB no boot para responder um aviso.
@@ -66,7 +66,7 @@ func TestLinearizationIsRecognizedAtTheStartOfTheFile(t *testing.T) {
 	}
 }
 
-// TestTheBookRouteServesRanges: é o que faz o navegador pedir só a página.
+// O `Range` é o que faz o navegador pedir só a página.
 //
 // `Range` é a metade do arranjo que a linearização usa; sem ele o visualizador
 // baixa o arquivo inteiro por mais linearizado que ele esteja. O controle é o
@@ -93,7 +93,7 @@ func TestTheBookRouteServesRanges(t *testing.T) {
 	}
 }
 
-// TestTheBookLeavesWithAPrivateCache: ele passa pelo `requirePage`.
+// O livro sai com cache PRIVADO, porque ele passa pelo `requirePage`.
 //
 // `public` autorizaria um cache compartilhado a guardar a resposta de quem
 // entrou e reentregá-la a quem não entrou. A folha e as fontes são `public` de
@@ -109,7 +109,7 @@ func TestTheBookLeavesWithAPrivateCache(t *testing.T) {
 	}
 }
 
-// TestTheBookDoesNotLeaveWithoutASession: a rota está atrás da mesma porta do resto.
+// A rota está atrás da mesma porta do resto.
 func TestTheBookDoesNotLeaveWithoutASession(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 
@@ -121,7 +121,7 @@ func TestTheBookDoesNotLeaveWithoutASession(t *testing.T) {
 	}
 }
 
-// TestWithoutConfigurationTheBookRouteGives404: nada é servido por acidente.
+// Nada é servido por acidente.
 func TestWithoutConfigurationTheBookRouteGives404(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -151,7 +151,7 @@ func pedeOLivro(t *testing.T, s *Server, userID int64, faixa string) *httptest.R
 	return rec
 }
 
-// TestTheBestiarySceneOpensTheBookAtTheCreaturePage: o botão, ponta a ponta.
+// O botão, ponta a ponta.
 //
 // É INTEGRAÇÃO e não asserção de componente porque o que se quer proteger é a
 // composição — o endereço nasce na configuração, atravessa o `Server`, a view e
@@ -188,7 +188,7 @@ func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
 	}
 }
 
-// TestTheBookReaderLoadsWhatTheSceneNeeds (ALE-264).
+// O contrato entre a cena e o leitor.
 //
 // O leitor é JavaScript: o pdf.js lê o PDF, desenha o canvas e posiciona as
 // marcas. Nada disso cabe num teste de handler, e é o `e2e/tests/book-reader.spec.ts`
@@ -221,7 +221,7 @@ func TestTheBookReaderLoadsWhatTheSceneNeeds(t *testing.T) {
 	}
 }
 
-// TestWithoutABookThereIsNoReader: a cena não existe sem o arquivo, como a rota do PDF.
+// A cena não existe sem o arquivo, como a rota do PDF.
 func TestWithoutABookThereIsNoReader(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
@@ -231,7 +231,7 @@ func TestWithoutABookThereIsNoReader(t *testing.T) {
 	}
 }
 
-// TestTheReaderPageRefusesGarbage: o endereço é compartilhável e se digita à mão.
+// O endereço é compartilhável e se digita à mão.
 func TestTheReaderPageRefusesGarbage(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")

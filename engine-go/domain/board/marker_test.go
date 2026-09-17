@@ -2,12 +2,10 @@ package board
 
 import "testing"
 
-// A regra da LETRA do marcador (ALE-195), agora no motor.
+// A regra da LETRA do marcador.
 //
-// Ela vivia só na SPA (`nextMarkerText`), onde o cliente escolhia a letra e
-// mandava pronta — e "qual letra está livre?" é pergunta sobre o ESTADO DO
-// TABULEIRO, que é o que este pacote guarda. Com ela aqui, as duas telas nomeiam
-// igual.
+// Ela mora no motor porque "qual letra está livre?" é pergunta sobre o ESTADO DO
+// TABULEIRO: com o cliente escolhendo, duas telas nomeiam diferente.
 //
 // O que se prende é a ARMADILHA e não a tabela: que ela pula o que já foi usado
 // (e não conta quantos existem) e o que acontece quando as 26 acabam.
@@ -42,8 +40,6 @@ func TestWithTheLettersSpentTheLabelGivesUp(t *testing.T) {
 	}
 }
 
-// TestTheColorPredicateFollowsTheList.
-//
 // Ele NÃO repete o `TestTheMarkerColorComesFromAClosedSet`, que é dono do
 // caminho da gravação (e cobre o patch, que é a porta dos fundos). O que se
 // prende aqui é o que a estrutura nova acrescenta: a lista e o predicado saíram

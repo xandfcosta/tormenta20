@@ -7,23 +7,17 @@ import (
 	"testing"
 )
 
-// Os guardas da ENTRADA DO PALCO (ALE-235, entregue na ALE-239) — nas DUAS
-// cenas de seleção desde a ALE-297.
+// Os guardas da ENTRADA DO PALCO, nas DUAS cenas de seleção.
 //
-// A animação em si é do navegador e só o e2e a vê — linha do tempo, `animationstart`
-// e duração não existem fora dele. O que se prende AQUI é o que o servidor
-// escreve: as classes que substituem o mount e o gesto que diz o sentido. É a
-// divisão de sempre — a regra na camada mais barata que a segura.
+// A animação em si é do navegador e só o e2e a vê — linha do tempo,
+// `animationstart` e duração não existem fora dele. O que se prende AQUI é o que
+// o servidor escreve: as classes que substituem o mount e o gesto que diz o
+// sentido.
 //
-// # POR QUE ELES VARREM AS DUAS CENAS
-//
-// Enquanto o elenco era a única com palco, pedir `/personagens` era cobertura.
-// No dia em que a campanha virou palco, o MESMO guarda passou a medir metade do
-// terreno — e um gesto sem sentido nasceria em campanhas sem ninguém acusar. É a
-// forma exata do "um guarda só mede o que ele VISITA", e a saída barata aqui é
-// enumeração: são duas cenas, elas estão nesta tabela, e a terceira que nascer
-// precisa entrar. Enumerar é remendo; o que restauraria a amostragem seria a
-// cena nova não poder existir fora desta lista, e isso não é verdade hoje.
+// Varrer as DUAS cenas é a regra: com uma só, um gesto sem sentido nasceria na
+// outra sem ninguém acusar. A saída aqui é ENUMERAÇÃO e ela é remendo — a
+// terceira cena de seleção precisa entrar nesta tabela à mão, porque nada a
+// impede de existir fora dela.
 
 // stageScene é uma cena de seleção montada e pronta para ser pedida.
 type stageScene struct {
@@ -156,12 +150,11 @@ func TestEverySelectionSceneDeclaresTheSignalsTheGestureWrites(t *testing.T) {
 	}
 }
 
-// O LIVRO DE COURO NÃO VOLTA (ALE-297).
+// O LIVRO DE COURO NÃO VOLTA.
 //
-// A campanha em foco era um tomo aberto, e ele saiu por decisão do dono. As
-// classes dele foram apagadas da folha junto, então um `class="grimorio-book"`
+// As classes dele foram apagadas da folha, então um `class="grimorio-book"`
 // escrito de novo não desenharia livro nenhum — desenharia uma caixa sem estilo,
-// em silêncio, que é a família do "tinta sem caixa não desenha" pelo avesso.
+// em silêncio.
 //
 // O `ui.TomeSheet` NÃO é isto e continua de pé: ele é a folha das telas de
 // FORMULÁRIO (abrir campanha, entrar, forjar, a ficha), e é a identidade delas.
@@ -176,20 +169,15 @@ func TestNoSelectionSceneDrawsTheLeatherBook(t *testing.T) {
 	}
 }
 
-// O MARCADOR DO TRILHO DIZ O NOME, e não só as iniciais (ALE-181).
+// O MARCADOR DO TRILHO DIZ O NOME, e não só as iniciais.
 //
-// O elenco identificava nove heróis por um monogram de 48px — `TP CD NN DN MG
-// PS LN BV IG` — e achar alguém ali era navegar às cegas. **As iniciais nem
-// precisavam colidir**: medido na seed, elas são todas distintas e continuam
-// não sendo nomes.
+// Um monogram de duas letras é navegar às cegas, e iniciais distintas continuam
+// não sendo nomes. O que este guarda prende é que o nome está no CONTEÚDO do
+// marcador e não só num `aria-label`: rótulo acessível serve quem usa leitor de
+// tela, e o defeito é de quem OLHA — mouse e teclado com a tela à frente.
 //
-// O que este guarda prende é que o nome está no CONTEÚDO do marcador e não só
-// num `aria-label`. A diferença importa: rótulo acessível serve quem usa leitor
-// de tela, e o defeito era de quem OLHA — mouse e teclado com a tela à frente.
-//
-// Ele varre as duas cenas pela razão de sempre, e aqui ela tem história: as duas
-// já divergiram neste ponto exato depois da ALE-297, que deu o marcador com nome
-// às campanhas e deixou o elenco com o monogram.
+// As duas cenas já divergiram neste ponto exato, e é por isso que ele varre as
+// duas.
 func TestEveryRailMarkerSaysTheName(t *testing.T) {
 	for _, cena := range stageScenes(t) {
 		screen := cena.screen(t)

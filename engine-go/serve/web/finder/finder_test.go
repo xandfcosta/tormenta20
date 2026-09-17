@@ -8,18 +8,13 @@ import (
 	"testing"
 )
 
-// OS GUARDAS DA REGRA DE BUSCA, no pacote onde a regra mora (ALE-278).
+// OS GUARDAS DA REGRA DE BUSCA, no pacote onde a regra mora.
 //
-// Eles vieram do antigo `api/piloto_buscador`, que misturava duas camadas: sete
-// casos que exercitam o casamento e o RANQUEAMENTO — funções puras — e dois que
-// precisam do servidor de verdade para provar que a rota lê o sinal e que a
-// porta não desenha o buscador. Aqueles dois ficaram no `api`.
-//
-// A divisão é a regra da casa: unitário para o que carrega REGRA, integração
-// para composição. Aqui a regra é qual achado vem primeiro, e ela não precisa de
-// HTTP para ser provada.
+// UNITÁRIO porque aqui a regra é qual achado vem primeiro, e ela não precisa de
+// HTTP para ser provada. O que precisa do servidor — a rota lendo o sinal, a
+// porta não desenhando o buscador — mora no `api`.
 
-// TestTheRightEntryComesFirst: a escada de pontuação, do nome inteiro ao typo.
+// A escada de pontuação, do nome inteiro ao typo.
 func TestTheRightEntryComesFirst(t *testing.T) {
 	escada := []struct {
 		nome, busca string
@@ -39,17 +34,9 @@ func TestTheRightEntryComesFirst(t *testing.T) {
 	}
 }
 
-// TestTwoTermsFindTheWholeName.
-//
-// PROVADO VERMELHO com a versão de um termo só: "bola fogo" devolvia ZERO —
-// o nome não começa com a frase, não a contém, e pular o "de " estoura a folga
-// do quase-igual. Digitar duas palavras do que se lembra é o gesto normal.
-
-// TestTwoTermsFindTheWholeName.
-//
-// PROVADO VERMELHO com a versão de um termo só: "bola fogo" devolvia ZERO —
-// o nome não começa com a frase, não a contém, e pular o "de " estoura a folga
-// do quase-igual. Digitar duas palavras do que se lembra é o gesto normal.
+// PROVADO VERMELHO com a versão de um termo só: "bola fogo" devolvia ZERO — o
+// nome não começa com a frase, não a contém, e pular o "de " estoura a folga do
+// quase-igual. Digitar duas palavras do que se lembra é o gesto normal.
 func TestTwoTermsFindTheWholeName(t *testing.T) {
 	v := searchTheBook("bola fogo")
 	if !hasHit(v, "Bola de Fogo") {
@@ -60,22 +47,11 @@ func TestTwoTermsFindTheWholeName(t *testing.T) {
 	}
 }
 
-// TestTheRuleBodyOnlyEntersWhenNoNameMatches.
-//
 // PROVADO VERMELHO com o corpo valendo sempre: "abal" devolvia 282 entradas —
 // 139 poderes cujo texto diz "Abalado" — e a condição "Abalado", que era o que
-// se procurava, saía num grupo de seis ao lado de "Naja" e "Jiboia".
+// se procurava, saía num grupo de seis.
 //
-// O controle é o segundo caso: quem NÃO sabe o nome ("chance de falha") continua
-// achando, e a tela diz que aquilo é menção e não nome.
-
-// TestTheRuleBodyOnlyEntersWhenNoNameMatches.
-//
-// PROVADO VERMELHO com o corpo valendo sempre: "abal" devolvia 282 entradas —
-// 139 poderes cujo texto diz "Abalado" — e a condição "Abalado", que era o que
-// se procurava, saía num grupo de seis ao lado de "Naja" e "Jiboia".
-//
-// O controle é o segundo caso: quem NÃO sabe o nome ("chance de falha") continua
+// O CONTROLE é o segundo caso: quem NÃO sabe o nome ("chance de falha") continua
 // achando, e a tela diz que aquilo é menção e não nome.
 func TestTheRuleBodyOnlyEntersWhenNoNameMatches(t *testing.T) {
 	porNome := searchTheBook("abal")
@@ -98,9 +74,7 @@ func TestTheRuleBodyOnlyEntersWhenNoNameMatches(t *testing.T) {
 	}
 }
 
-// TestTheCutoffSaysHowMuchIsLeftAndOffersAWayOut: corte silencioso ensina que não existe.
-
-// TestTheCutoffSaysHowMuchIsLeftAndOffersAWayOut: corte silencioso ensina que não existe.
+// Corte silencioso ensina que não existe.
 func TestTheCutoffSaysHowMuchIsLeftAndOffersAWayOut(t *testing.T) {
 	v := searchTheBook("arma")
 	poderes := groupNamed(v, "Poderes")
@@ -118,11 +92,8 @@ func TestTheCutoffSaysHowMuchIsLeftAndOffersAWayOut(t *testing.T) {
 	}
 }
 
-// TestAHitKnowsWhereToLead: cada linha é um endereço, e eles diferem por
-// ferramenta — criatura vai ao bestiário, o resto ao acervo.
-
-// TestAHitKnowsWhereToLead: cada linha é um endereço, e eles diferem por
-// ferramenta — criatura vai ao bestiário, o resto ao acervo.
+// Cada linha é um endereço, e eles diferem por ferramenta — criatura vai ao
+// bestiário, o resto ao acervo.
 func TestAHitKnowsWhereToLead(t *testing.T) {
 	criatura := firstOfGroup(t, searchTheBook("lobo"), "Criaturas")
 	if !strings.HasPrefix(criatura.Destino, routes.MasterBestiary+"?criatura=") {
@@ -136,12 +107,6 @@ func TestAHitKnowsWhereToLead(t *testing.T) {
 		t.Errorf("a condição leva para %q", condicao.Destino)
 	}
 }
-
-// TestTheFinderRouteReadsTheSignal: o caminho que o navegador usa de verdade.
-//
-// Pelo SINAL e não por `?busca=`: é assim que o `@get` do Datastar manda o que
-// foi digitado, e a URL é só o caminho de quem abre o endereço à mão. Um guarda
-// que só medisse a URL passaria verde com o sinal quebrado.
 
 func groupNamed(v finderView, rotulo string) *finderGroup {
 	for i := range v.Grupos {
@@ -172,21 +137,10 @@ func hasHit(v finderView, nome string) bool {
 	return false
 }
 
-// TestTheBestHitComesInTheFirstGroup (ALE-264).
-//
-// PROVADO VERMELHO contra a ordem fixa: os grupos saíam na ordem da FILEIRA DE
-// ABAS, e o dono viu o efeito — digitando "medo", o verbete "Medo" (nome
-// inteiro, nota máxima) aparecia no sexto grupo, abaixo de criaturas que só têm
-// a palavra no nome. A ordem da fileira é a certa para NAVEGAR e a errada para
-// BUSCAR.
-
-// TestTheBestHitComesInTheFirstGroup (ALE-264).
-//
-// PROVADO VERMELHO contra a ordem fixa: os grupos saíam na ordem da FILEIRA DE
-// ABAS, e o dono viu o efeito — digitando "medo", o verbete "Medo" (nome
-// inteiro, nota máxima) aparecia no sexto grupo, abaixo de criaturas que só têm
-// a palavra no nome. A ordem da fileira é a certa para NAVEGAR e a errada para
-// BUSCAR.
+// PROVADO VERMELHO contra a ordem fixa: com os grupos na ordem da FILEIRA DE
+// ABAS, "medo" punha o verbete "Medo" (nome inteiro, nota máxima) no sexto
+// grupo, abaixo de criaturas que só têm a palavra no nome. A ordem da fileira é
+// a certa para NAVEGAR e a errada para BUSCAR.
 func TestTheBestHitComesInTheFirstGroup(t *testing.T) {
 	casos := []struct{ termo, grupo, achado string }{
 		{"medo", "Efeitos", "Medo"},
@@ -207,17 +161,9 @@ func TestTheBestHitComesInTheFirstGroup(t *testing.T) {
 	}
 }
 
-// TestATieKeepsTheOrderOfTheRow: a ordenação é ESTÁVEL.
-//
-// A ordem das abas tem razão registrada — condição primeiro porque é a consulta
-// do combate — e ela continua valendo quando dois grupos têm achados igualmente
-// bons. Sem estabilidade, a mesma busca poderia sair em ordens diferentes.
-
-// TestATieKeepsTheOrderOfTheRow: a ordenação é ESTÁVEL.
-//
-// A ordem das abas tem razão registrada — condição primeiro porque é a consulta
-// do combate — e ela continua valendo quando dois grupos têm achados igualmente
-// bons. Sem estabilidade, a mesma busca poderia sair em ordens diferentes.
+// A ordenação é ESTÁVEL: a ordem das abas — condição primeiro, porque é a
+// consulta do combate — continua valendo quando dois grupos têm achados
+// igualmente bons. Sem estabilidade, a mesma busca sairia em ordens diferentes.
 func TestATieKeepsTheOrderOfTheRow(t *testing.T) {
 	grupos := []finderGroup{
 		{Rotulo: "Condições", Achados: []finderHit{{Nome: "a", ponto: 40}}},

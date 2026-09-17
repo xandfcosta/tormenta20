@@ -8,13 +8,12 @@ import (
 	"testing"
 )
 
-// A CENA NÃO IMPORTA O HOSPEDEIRO (ALE-278).
+// A CENA NÃO IMPORTA O HOSPEDEIRO.
 //
-// Nona cena, e a de porta mais larga: ONZE métodos. O guarda existe para que a
-// largura pare aqui, e a tentação tem nome — **o `s.db`**.
+// É a cena de porta mais larga — ONZE métodos —, e o guarda existe para que a
+// largura pare aqui. A tentação tem nome: **o `s.db`**, porque o caminho curto
+// para qualquer coluna nova é pedir o banco cru de volta.
 //
-// Esta cena montava `setBuilder` + `execTouched` + `"UPDATE campaigns"` à mão,
-// e o caminho curto para qualquer coluna nova é pedir o banco cru de volta.
 // A resposta certa é a PERGUNTA: `SaveText` existe porque o hospedeiro é que
 // sabe o nome da coluna, que vazio é NULL e que a linha tem um `updatedAt` a
 // tocar. O `Queries` continua permitido porque três das quatro telas leem e
@@ -39,17 +38,14 @@ var permitidos = map[string]bool{
 
 // SEM lista de recusa da biblioteca padrão, e a ausência é uma decisão.
 //
-// O guarda irmão do `campaign` ganhou uma, com UMA entrada, porque lá havia uma
-// tentação MEDIDA: a versão anterior devolvia `sql.NullString` de verdade. Aqui
-// eu escrevi uma recusando `os` e `path/filepath` por precaução — e ela reprovou
-// o PRÓPRIO guarda, que importa `os` para ler o diretório.
+// O guarda irmão do `campaign` tem uma, com UMA entrada, porque lá a tentação
+// foi MEDIDA. Uma escrita aqui por precaução, recusando `os` e `path/filepath`,
+// reprova o PRÓPRIO guarda — que importa `os` para ler o diretório. **Lista de
+// perigo imaginado envelhece; lista de defeito acontecido, não.**
 //
-// Fica registrado porque é a regra que eu mesmo tinha acabado de escrever
-// falhando na fatia seguinte: **lista de perigo imaginado envelhece; lista de
-// defeito acontecido, não.** O `database/sql` desta cena, aliás, é legítimo —
-// ela GRAVA, e o `trimOrNull` traduz vazio para NULL. O que ela não pode é
-// montar a instrução, e isso não é um import: é uma decisão que só a leitura do
-// `SaveText` mostra.
+// O `database/sql` desta cena é legítimo: ela GRAVA, e o `trimOrNull` traduz
+// vazio para NULL. O que ela não pode é montar a instrução, e isso não é um
+// import — é uma decisão que só a leitura do `SaveText` mostra.
 
 func TestTheCampaignsSceneDoesNotImportItsHost(t *testing.T) {
 	arquivos, err := os.ReadDir(".")

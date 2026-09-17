@@ -11,12 +11,11 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// A VIRADA (ALE-269): entrar numa sessão passa a ser entrar na Mesa em Datastar.
+// Entrar numa sessão é entrar na Mesa em Datastar.
 //
-// Este é o guarda de uma linha só de produção — quatro `href` — e ainda assim o
-// mais fácil de perder: a Mesa nova FUNCIONAVA havia semanas e não era alcançável
-// por gesto nenhum, só por URL digitada. Um caminho que existe e ninguém percorre
-// é indistinguível de um que não existe.
+// É o guarda de uma linha só de produção — quatro `href` — e ainda assim o mais
+// fácil de perder: um caminho que existe e que gesto nenhum percorre é
+// indistinguível de um que não existe.
 //
 // O que se prende é a NEGATIVA junto com a positiva: achar `/mesa/` numa
 // página não prova que o link velho saiu — as duas rotas cabem no mesmo HTML, e
@@ -34,7 +33,6 @@ func asPortasParaASessao(campanha int64) []struct{ Nome, Caminho string } {
 	}
 }
 
-// TestEveryDoorLeadsToTheDatastarTable.
 func TestEveryDoorLeadsToTheDatastarTable(t *testing.T) {
 	s, dono := hubFixture(t)
 	campanha := seedCampaign(t, s, dono)
@@ -67,8 +65,6 @@ func TestEveryDoorLeadsToTheDatastarTable(t *testing.T) {
 	}
 }
 
-// TestTheCampaignRowLeadsThereToo.
-//
 // A crônica tem DOIS caminhos para a sessão e eles são diferentes: o botão
 // "Continuar a sessão" (só com uma viva) e a LINHA da linha do tempo (toda
 // sessão, viva ou não). O de cima cobre o primeiro; este cobre o segundo, que é o

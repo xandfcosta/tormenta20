@@ -12,9 +12,8 @@ import (
 )
 
 // corpoDoBotao é uma CÓPIA do helper do `web/characters`, e não um símbolo
-// exportado de lá. É a decisão que a fatia da porta deixou escrita: a bancada do
-// hospedeiro escreve o que ela afirma, porque importar do que está sendo testado
-// faz o teste andar junto com o defeito. São nove linhas de parse.
+// exportado de lá: importar do que está sendo testado faz o teste andar junto
+// com o defeito. São nove linhas de parse.
 func corpoDoBotao(t *testing.T, html, rotulo string) string {
 	t.Helper()
 	i := strings.Index(html, `aria-label="`+rotulo+`"`)
@@ -29,12 +28,8 @@ func corpoDoBotao(t *testing.T, html, rotulo string) string {
 	return resto[:j]
 }
 
-// Os guardas da cena de PERSONAGENS (ALE-239).
-//
-// O que se protege é o que o SERVIDOR passou a fazer e a SPA pedia por
-// requisição: a Defesa saindo da mesma `ComputeSheetV2` da ficha, e os textos
-// de raça saindo do catálogo embutido. Mais a gramática do cursor, que é o que
-// a ALE-98 estabeleceu e que um porte distraído quebra sem perceber.
+// Os guardas da cena de PERSONAGENS: a Defesa saindo da mesma conta da ficha, os
+// textos de raça saindo do catálogo embutido, e a gramática do cursor.
 
 func novaCenaDeHerois(t *testing.T) (*Server, AuthUser) {
 	t.Helper()
@@ -94,9 +89,7 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 
 // Sem motor a Defesa vira TRAVESSÃO, e nunca zero: zero é um valor plausível de
 // Defesa, então mostrá-lo seria mentir com um número redondo. E travessão em vez
-// de omitir porque uma coluna que some faz o palco dançar ao trocar de herói
-// (ALE-99) — é o que a SPA faz, e eu tinha escrito "some" antes de comparar as
-// duas telas.
+// de omitir porque uma coluna que some faz o palco dançar ao trocar de herói.
 func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
@@ -146,7 +139,7 @@ func TestWithAnEmptyCastTheCreateSlotIsWhatIsLeft(t *testing.T) {
 	}
 }
 
-// A vaga é POSIÇÃO DE CURSOR e não um link solto (ALE-98): ela declara
+// A vaga é POSIÇÃO DE CURSOR e não um link solto: ela declara
 // `role=option` e escreve o cursor no foco, como qualquer herói. Um `<a>` no
 // fim da fita pareceria igual e as setas o pulariam.
 func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
@@ -172,14 +165,11 @@ func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
 
 // ── a busca ──────────────────────────────────────────────────────────────────
 
-// Os QUATRO campos que a SPA indexa: nome, classe primária, origem e raças.
+// Os QUATRO campos indexados: nome, classe primária, origem e raças.
 //
-// A primeira versão deste teste chamava a busca de "pela CLASSE" e seedava um
-// personagem chamado "Guerreiro" SEM linha de classe nenhuma — ele casava pelo
-// NOME, e teria continuado verde com a classe fora do índice. Aqui o nome e a
-// classe são propositalmente disjuntos, e cada campo é buscado pelo termo que
-// só ELE contém; é isso que faz o teste morrer se algum sair de
-// `searchFields`.
+// O nome e a classe são propositalmente DISJUNTOS, e cada campo é buscado pelo
+// termo que só ELE contém: com um personagem chamado "Guerreiro" o caso casaria
+// pelo nome e ficaria verde com a classe fora de `searchFields`.
 func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	id := seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
@@ -229,9 +219,7 @@ func TestTheCountSaysFilteredOutOfTotal(t *testing.T) {
 
 // ── os vizinhos que ladeiam o palco ──────────────────────────────────────────
 
-// O peek foi PORTADO na virada, e não reescrito: apagar a tela antiga levaria
-// junto os retratos apagados dos vizinhos se ninguém os trouxesse. Aqui se
-// afirma o que eles carregam de regra — o nome legível e o caminho de volta.
+// O que os vizinhos carregam de regra: o nome legível e o caminho de volta.
 func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
@@ -258,9 +246,9 @@ func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 		t.Errorf("o palco de %q não mostra %q como anterior", segundo, primeiro)
 	}
 	// O NOME vai no CORPO do botão, e não só no rótulo: duas iniciais não dizem
-	// quem vem a seguir, e é para os olhos que ele existe. A primeira versão
-	// deste guarda contava o nome no HTML inteiro e sobrevivia à sabotagem —
-	// o nome também está no `title`, no `h2` do palco e no rótulo do filme.
+	// quem vem a seguir, e é para os olhos que ele existe. Procurá-lo no HTML
+	// INTEIRO sobrevive à sabotagem — o nome também está no `title`, no `h2` do
+	// palco e no rótulo do filme.
 	if corpo := corpoDoBotao(t, html, "Próximo: "+segundo); !strings.Contains(corpo, segundo) {
 		t.Errorf("o peek de %q não mostra o nome na tela, só em atributo: %q", segundo, corpo)
 	}
@@ -292,9 +280,8 @@ func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
 
 // Nas PONTAS não há vizinho, e o palco não pode inventar um. Que a CAIXA vazia
 // continue ocupando a largura — para o retrato não escorregar ao chegar no
-// primeiro herói, família de defeito da ALE-99 — é garantia de LAYOUT, e layout
-// só existe num navegador: está no `characters.spec.ts`. Aqui fica só o
-// que é verdade de dado.
+// primeiro herói — é garantia de LAYOUT, e layout só existe num navegador: está
+// no `characters.spec.ts`. Aqui fica só o que é verdade de dado.
 func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
@@ -312,24 +299,16 @@ func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
 	}
 }
 
-// O TRILHO mostra quem está mal, e não o elenco inteiro com cara de saudável
-// (ALE-316).
+// O TRILHO mostra quem está mal, e não o elenco inteiro com cara de saudável.
 //
-// Esta é a tela em que se ESCOLHE quem jogar, e até esta issue ela pintava todo
-// PV com `--hp-full` fixo: o herói a 2/20 e o herói a 20/20 saíam da mesma cor,
-// com só a fração separando os dois.
-//
-// # Aqui a escada é a de ESCREVER, e ela diverge da de preencher
-//
-// Na ficha o vital é uma FAIXA e o tom é o de preencher; aqui ele é um NÚMERO,
-// e o crítico não pode usar `--hp-critical`, que dá 4,11:1 como letra pequena —
-// é a medição da ALE-240, que a ALE-292 repetiu no marcador do tabuleiro. Por
-// isso o caso afirma a tinta de perigo da casa e não o vermelho da barra: um
-// guarda que aceitasse `text-hp-critical` estaria prendendo o defeito.
+// A escada aqui é a de ESCREVER, e ela diverge da de preencher: na ficha o vital
+// é uma FAIXA, aqui ele é um NÚMERO, e o crítico não pode usar `--hp-critical`,
+// que dá 4,11:1 como letra pequena. Por isso o caso afirma a tinta de perigo da
+// casa e não o vermelho da barra — um guarda que aceitasse `text-hp-critical`
+// estaria prendendo o defeito.
 //
 // Os três heróis vão num elenco SÓ, e de propósito: com um por vez, um cartão
-// que ignorasse o herói e lesse o primeiro do elenco passaria nos três — é a
-// lição de cardinalidade da ALE-299.
+// que ignorasse o herói e lesse o primeiro do elenco passaria nos três.
 func TestTheCastPaintsEachHeroByHowBadlyHurtHeIs(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Inteiro", 5, 20, 20, 3, 8)

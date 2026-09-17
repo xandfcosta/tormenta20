@@ -7,8 +7,7 @@ import (
 	"testing"
 )
 
-// TestNoExpressionIndexesTheListSignal — o guarda da FAMÍLIA, e ele existe
-// porque a armadilha custou duas rodadas na bancada.
+// O guarda da FAMÍLIA de uma armadilha que não deixa erro para trás.
 //
 // O sinal do Datastar é um PROXY REATIVO: ler um índice que não existe o CRIA.
 // Com a reserva de doze rótulos no ar, `$ruler_points[i]` encheu o sinal de
@@ -38,12 +37,10 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	// um `[...$lista]`, que é a CÓPIA). Qualquer outra coisa — `[`, `.`, `;` — é
 	// acesso ao proxy, e o proxy cria.
 	//
-	// A primeira versão deste guarda procurava só `$lista[`, e ela passou VERDE
-	// sobre a segunda forma do mesmo defeito: `const lista = $ruler_points;` põe o
-	// PROXY na constante, e `lista[12]` cria o índice do mesmo jeito. Provado na
-	// bancada sabotando as duas formas — a primeira acusou, a segunda não. Por
-	// isso a regra é sobre o que PODE vir depois, e não sobre uma forma errada
-	// conhecida.
+	// Procurar só `$lista[` passa VERDE sobre a segunda forma do mesmo defeito:
+	// `const lista = $ruler_points;` põe o PROXY na constante, e `lista[12]` cria
+	// o índice do mesmo jeito. Por isso a regra é sobre o que PODE vir depois, e
+	// não sobre uma forma errada conhecida.
 	for _, lista := range []string{"ruler_points", "ruler_labels"} {
 		acessos := regexp.MustCompile(`\$`+lista+`\s*(.)`).FindAllStringSubmatch(tela, -1)
 		if len(acessos) == 0 {
@@ -59,8 +56,6 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	}
 }
 
-// TestTheScreenWiresTheFourRulerGestures.
-//
 // Uma afirmação sobre a FORMA do que a página serve, e é o único jeito de
 // alcançar os quatro de uma vez: clique acrescenta, duplo clique congela, botão
 // direito apaga, e o ponteiro leva a perna viva atrás do dedo.
@@ -86,8 +81,8 @@ func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
 	}
 }
 
-// TestAForgedRulerIsRefused: o teto de paradas é o tamanho da RESERVA de nós no
-// `.templ`, e uma polilinha maior teria pernas medidas que ninguém desenha.
+// O teto de paradas é o tamanho da RESERVA de nós no `.templ`, e uma polilinha
+// maior teria pernas medidas que ninguém desenha.
 func TestAForgedRulerIsRefused(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -107,7 +102,7 @@ func TestAForgedRulerIsRefused(t *testing.T) {
 	}
 }
 
-// TestTheSphereIsBornAtTheIntersection — REGRA DO LIVRO, não escolha de tela.
+// REGRA DO LIVRO, não escolha de tela.
 //
 // p225, conferido no PDF p231:
 //
@@ -115,17 +110,16 @@ func TestAForgedRulerIsRefused(t *testing.T) {
 //	 direções até o limite de seu raio."
 //	"Quadrado. Surge NO QUADRADO ou quadrados escolhidos."
 //
-// O dono pediu uma escolha de "montar esfera centralizada" e o livro respondeu
-// que escolha não há. O `engine.sphereSquares` já desenhava a partir do CANTO —
-// quem errava era a tela, que mandava o quadrado do `floor` do clique: até meio
-// quadrado entre onde o dedo estava e onde a bola caía, e nada dizendo por quê.
+// Não há escolha de "centralizar": o `engine.sphereSquares` desenha a partir do
+// CANTO, e uma tela que mandasse o quadrado do `floor` do clique põe até meio
+// quadrado entre onde o dedo estava e onde a bola cai, sem dizer por quê.
 //
 // O guarda prende as DUAS pontas — a regra e o gesto — porque separadas elas já
 // divergiram uma vez.
 func TestTheSphereIsBornAtTheIntersection(t *testing.T) {
-	// A metade da REGRA — só a esfera nasce na interseção — mora em `web/table`
-	// desde a ALE-278: ela é função pura e não precisa de banco. Este caso ficou
-	// com a metade que só um servidor montado prova, e as duas continuam presas.
+	// A metade da REGRA — só a esfera nasce na interseção — mora em `web/table`,
+	// porque é função pura e não precisa de banco. Aqui fica a metade que só um
+	// servidor montado prova.
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()

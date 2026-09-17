@@ -18,18 +18,18 @@ import (
 // AS ROTAS DE ESCOPO DA FICHA (`/end-scene`, `/end-day`).
 //
 // Decisão do dono (ALE-223): encerrar cena e encerrar dia são do MESTRE e só
-// existem DURANTE uma sessão. Isto INVERTE a regra da ALE-216, que recusava com
-// mesa em curso e liberava fora dela — os botões saíram da ficha, e o servidor
-// passou a pedir exatamente o contrário do que pedia.
+// existem DURANTE uma sessão. É o INVERSO da regra anterior, que recusava com
+// mesa em curso e liberava fora dela — quem esperar a antiga vai achar que
+// estes casos estão trocados.
 //
 // Duas coisas se provam aqui e em lugar nenhum mais: a autorização, e a
 // PRECISÃO da pergunta — mestre de uma mesa em curso DESTE personagem, não
 // mestre de qualquer coisa com uma sessão viva em algum lugar.
 
-// endScopeRouter mounts only the two scope-expiring routes, injecting `user`
-// the way requireAuth would. The domain side of EndScene/endDay is covered by
-// TestEndSceneEndDay; what this file pins is the HTTP contract — who may call,
-// and the `clearedScopes` delta the caller uses to drop cached effects.
+// endScopeRouter monta só as duas rotas de expirar escopo, injetando o `user`
+// como o `requireAuth` faria. O lado de domínio está no `TestEndSceneEndDay`; o
+// que este arquivo prende é o contrato HTTP — quem pode chamar, e o
+// `clearedScopes` que o chamador usa para descartar efeito em cache.
 func endScopeRouter(s *Server, user AuthUser) http.Handler {
 	r := chi.NewRouter()
 	r.Use(func(next http.Handler) http.Handler {
@@ -61,9 +61,9 @@ func clearedScopes(t *testing.T, rec *httptest.ResponseRecorder) []string {
 	return body.ClearedScopes
 }
 
-// seedLiveSession puts the character at a table with a session RUNNING: a
-// campaign it is a member of, holding a session moved to status 'active'.
-// Returns the GM's user id, which is the only caller the routes now accept.
+// seedLiveSession põe o personagem numa mesa com sessão EM CURSO: uma campanha
+// de que ele é membro, com uma sessão em status 'active'. Devolve o id do
+// mestre, que é o único chamador que as rotas aceitam.
 func seedLiveSession(t *testing.T, s *Server, gmID, charID int64) int64 {
 	t.Helper()
 	campaign := seedCampaign(t, s, gmID)
@@ -113,8 +113,8 @@ func TestEndDayRouteClearsBothScopes(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200 (body %q)", rec.Code, rec.Body.String())
 	}
-	// Both scopes, so the caller drops day effects too — reporting only "day"
-	// would Leave the cleared scene buffs painted on the sheet.
+	// Os DOIS escopos, para o chamador descartar também os de dia: reportar só
+	// "day" deixaria os efeitos de cena já expirados pintados na ficha.
 	got := clearedScopes(t, rec)
 	if len(got) != 2 || got[0] != "scene" || got[1] != "day" {
 		t.Errorf("clearedScopes = %v, want [scene day]", got)

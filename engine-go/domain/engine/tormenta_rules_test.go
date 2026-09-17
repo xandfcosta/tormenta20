@@ -8,9 +8,7 @@ import (
 // Poderes da Tormenta, p136: "Quando escolhe um poder da Tormenta, você perde 1 de
 // Carisma. Para cada dois outros poderes da Tormenta, você perde mais 1 de Carisma."
 //
-// A regra vivia SÓ na cópia TS de `derived.ts`, que a produção não executa mais desde
-// a ALE-104 — o teste de lá provava que o código morto estava certo. Aqui ela é
-// afirmada onde o motor decide.
+// Afirmada onde o MOTOR decide, que é onde a produção a executa.
 
 func TestCarismaLossFromPowers(t *testing.T) {
 	// Um e dois poderes: a frase do livro não deixa margem. Com um poder, perde-se 1;
@@ -86,7 +84,7 @@ func TestDeformidadeSkillIDs(t *testing.T) {
 
 // Qual raça CARREGA a deformidade: o Lefou pode entrar como raça secundária, e uma
 // raça sem a habilidade não pode ganhar o bônus de tabela por ter a escolha gravada
-// na ficha — era a última coisa que só a cópia TS cobria.
+// na ficha.
 func TestRaceWithDeformidade(t *testing.T) {
 	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity")))
 

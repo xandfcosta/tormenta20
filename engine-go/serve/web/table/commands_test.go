@@ -7,7 +7,7 @@ import (
 	"t20engine/domain/live"
 )
 
-// Os guardas do RASTREADOR DO MESTRE (ALE-265).
+// Os guardas do RASTREADOR DO MESTRE.
 //
 // As regras têm teste próprio no `live`, contra as bordas que cada issue
 // nomeia. O que se prende aqui é a COMPOSIÇÃO — que a cena pergunta a coisa
@@ -19,8 +19,6 @@ func estadoDe(cenaAtiva bool, rodada, turno int, fila ...live.InitiativeEntry) *
 	}
 }
 
-// TestAdvanceOnlyLightsUpWithASceneAndATracker.
-//
 // Separar "não há para onde ir" de "o botão está quebrado" é o ponto: um botão
 // aceso que recusa é pior que um apagado que explica. E são DOIS motivos
 // diferentes de estar apagado — sem cena, e em cena sem ninguém na fila —, que
@@ -46,9 +44,7 @@ func TestAdvanceOnlyLightsUpWithASceneAndATracker(t *testing.T) {
 	}
 }
 
-// TestTheCounterAndTheAdvanceTellTheSameStory.
-//
-// Este é o guarda da COMPOSIÇÃO, e ele existe porque as duas regras recebem os
+// O guarda da COMPOSIÇÃO: as duas regras recebem os
 // mesmos argumentos e é fácil trocar um: passar `Round` onde vai `TurnIndex`
 // compila, e a tela mente com números plausíveis. Aqui se afirma que as duas
 // concordam sobre o estado.
@@ -79,8 +75,7 @@ func TestTheCounterAndTheAdvanceTellTheSameStory(t *testing.T) {
 	}
 }
 
-// TestVitalsFollowTheTrackerAndTheRole — as duas condições, e a da fila é a que
-// costuma ser esquecida.
+// As duas condições, e a da fila é a que costuma ser esquecida.
 func TestVitalsFollowTheTrackerAndTheRole(t *testing.T) {
 	pv := int64(30)
 	comNPC := estadoDe(true, 1, 0, live.InitiativeEntry{Label: "Ogro", HpMax: &pv})
@@ -97,8 +92,8 @@ func TestVitalsFollowTheTrackerAndTheRole(t *testing.T) {
 	}
 }
 
-// TestPresenceReachesTheScene: quem está com a aba aberta aparece marcado, e quem
-// não tem personagem ligado não vira "personagem 0 online".
+// Quem está com a aba aberta aparece marcado, e quem não tem personagem ligado
+// não vira "personagem 0 online".
 func TestPresenceReachesTheScene(t *testing.T) {
 	membros := []live.TableMember{
 		{CharacterID: 10, OwnerID: 1},
@@ -127,7 +122,7 @@ func trechoDeSinais(corpo string) string {
 	return "(nenhuma linha de sinais na resposta)"
 }
 
-// ── editar o combatente (ALE-263) ────────────────────────────────────────────
+// ── editar o combatente ──────────────────────────────────────────────────────
 
 // trechoDaSemeadura tira só o pedaço da expressão que semeia o nome, porque a
 // página inteira enterra a asserção em vários KB de HTML.

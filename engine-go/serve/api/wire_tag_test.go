@@ -11,73 +11,33 @@ import (
 
 // A TAG JSON É CONTRATO COM O CLIENTE, E ELA COMEÇA EM MINÚSCULA.
 //
-// Este guarda nasceu de um defeito que chegou à `main` e que nenhuma das
-// barreiras existentes viu (ALE-254). O laço que exportava símbolos durante a
-// extração dos contextos renomeou `role` para `Role` — e a expressão casou
-// DENTRO da string da tag, virando a grafia capitalizada em sete lugares.
+// O mecanismo que ele caça: um rename automático casa DENTRO da string da tag e
+// capitaliza o campo. O efeito é silencioso — o cliente lê a grafia minúscula e
+// recebe `undefined`, sem erro em lugar nenhum —, e nenhum teste de Go acusa,
+// porque o mesmo laço renomeia as asserções junto. Teste que muda com a mudança
+// não acusa a mudança.
 //
-// O efeito era grave e silencioso: a SPA lê `campanha.role` em 22 pontos, e com
-// a tag capitalizada o campo chega `undefined`. O `isGm()` passava a ser SEMPRE
-// falso, então o MESTRE recebia a visão de jogador na mesa ao vivo. Um deles
-// era corpo de ENTRADA — o DTO de membro, que morreu junto com a rota na
-// ALE-277 —, então trocar o papel de um membro simplesmente parava de
-// funcionar.
+// A regra é do glossário: **a fronteira fala inglês**, e o cliente foi escrito
+// contra a grafia minúscula. Trocar a caixa quebra cliente e migração por zero.
 //
-// POR QUE NADA PEGOU, e é isto que justifica um guarda novo em vez de confiar
-// nos que existem:
-//
-//   - Os testes Go foram renomeados PELO MESMO laço. O `authz_http_test.go`
-//     afirmava o campo em minúscula e passou a afirmá-lo capitalizado — ele
-//     teria pegado o defeito e foi cegado junto com ele. Teste que muda com a
-//     mudança não acusa a mudança.
-//   - O gerador de tipos da fronteira não alcança: o `engine-types.ts` cobre o
-//     que o WASM devolve e recebe, e os DTOs HTTP ficam de fora.
-//   - Entre os dois não havia nada.
-//
-// O guarda é uma leitura de fonte e pega a FAMÍLIA inteira: o próximo rename
-// que varrer uma tag junto morre aqui, com o nome do arquivo e do campo. Não há
-// lista de campos a manter — amostragem e não enumeração.
-//
-// A regra é do glossário: **a fronteira fala inglês** — nome de tabela, campo
-// JSON, evento SSE e rota HTTP — e o cliente foi escrito contra a grafia
-// minúscula. Trocar a caixa quebra cliente e migração, e o ganho é zero.
-//
-// ELE CAMINHA A ÁRVORE, e não uma lista de pacotes (ALE-278).
-//
-// A versão anterior enumerava quatro — `api`, `live`, `tabuleiro`,
-// `platform` —, e isso já era a correção de uma que varria só o `api`. A
-// enumeração quebrou do jeito previsto: quando a Mesa virou `web/table` as tags
-// dela saíram da lista, a contagem caiu abaixo do piso e o guarda falhou ALTO.
-// Foi sorte de o piso existir; sem ele, o guarda teria seguido verde medindo
-// menos.
-//
-// **Enumerar é remendo, e o que restaura a amostragem é a caminhada.** A tag
-// JSON é contrato com o cliente em qualquer pacote que a escreva, e o pacote
-// novo nasce medido.
+// ELE CAMINHA A ÁRVORE, e não uma lista de pacotes: a versão que enumerava
+// quatro perdeu as tags da Mesa no dia em que ela virou `web/table`, e só não
+// seguiu verde medindo menos porque o piso existia. Enumerar é remendo; o que
+// restaura a amostragem é a caminhada, e o pacote novo nasce medido.
 
 // A ROTA TAMBÉM É FIO, E TAMBÉM COMEÇA EM MINÚSCULA.
 //
-// O mesmo laço da ALE-254 que capitalizou as tags capitalizou OITO ROTAS, e
-// isto só apareceu depois — porque no commit daquele trabalho eu rodei a suíte
-// Go e não a do front, e quem acusa rota errada é o `realtime-wire.test.ts`,
-// que compara o roteador do chi com a tabela de comandos do cliente.
-//
-// O estrago era maior que o das tags: `/Populate`, `/Places` e companhia
-// quebram sete comandos da mesa ao vivo, e o `/Reset-password` do `server.go`
-// quebra REDEFINIR SENHA — uma rota que ninguém exercita no dia a dia e que só
-// falha quando alguém precisa dela.
-//
-// Fica no mesmo arquivo que o guarda das tags de propósito: é a mesma família
-// (rename que varre uma STRING junto) e a mesma resposta (conserte a string,
-// não o guarda). Separá-los faria parecer que são dois problemas.
+// Mesma família (rename que varre uma STRING junto) e mesma resposta (conserte a
+// string, não o guarda), e por isso mesmo arquivo — separá-los faria parecer que
+// são dois problemas. O estrago é maior que o das tags: uma rota capitalizada
+// vira 404, e o 404 chega à tela como funcionalidade que sumiu — inclusive em
+// rotas que ninguém exercita no dia a dia, como redefinir senha.
 func TestAWireRouteStartsLowercase(t *testing.T) {
 	rota := regexp.MustCompile(`r\.(?:Get|Post|Put|Patch|Delete|Route)\("(/[^"]*)"`)
 
-	// ELE TAMBÉM CAMINHA A ÁRVORE desde a ALE-277, e pela razão que o irmão de
-	// baixo já tinha pago: ele varria o `api`, e o `api` tinha as rotas. Quando
-	// as sessenta e nove sem consumidor saíram, sobraram SETE — e o piso de 40
-	// derrubou o guarda, que é o que um piso existe para fazer. As rotas do app
-	// moram nos `web/*/routes.go` desde a ALE-278; é lá que a grafia importa.
+	// ELE TAMBÉM CAMINHA A ÁRVORE, e pela razão que o irmão de baixo já tinha
+	// pago: varrer só o `api` deixou de alcançar as rotas quando elas passaram a
+	// morar nos `web/*/routes.go`.
 	var arquivos []string
 	{
 		raiz, err := os.Getwd()
@@ -113,11 +73,10 @@ func TestAWireRouteStartsLowercase(t *testing.T) {
 					if pedaco == "" || strings.HasPrefix(pedaco, "{") {
 						continue
 					}
-					// Qualquer maiúscula, não só a primeira: o defeito real
-					// incluía `password-Reset`, onde o segmento COMEÇA minúsculo e
-					// a varredura capitalizou a palavra depois do hífen. Um guarda
-					// que olhasse só a inicial passaria verde sobre ele — e passou,
-					// até o `grep` manual achar a nona rota.
+					// Qualquer maiúscula, e não só a primeira: em
+					// `password-Reset` o segmento COMEÇA minúsculo e a
+					// capitalização caiu depois do hífen. Um guarda que olhasse
+					// só a inicial passaria verde sobre ele.
 					if strings.ContainsAny(pedaco, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
 						t.Errorf("%s:%d: a rota %q tem segmento em MAIÚSCULA (%q).\n"+
 							"O cliente chama a grafia minúscula; capitalizar vira 404, e o\n"+
@@ -185,10 +144,10 @@ func TestAWireTagStartsLowercase(t *testing.T) {
 		}
 	}
 
-	// Ausência não é aprovação. O piso é medido e não redondo: os quatro
-	// pacotes tinham ~600 tags quando este guarda foi escrito, então 300 é
-	// metade — folga para o código encolher, e barulho na hora em que o padrão
-	// parar de casar. Um guarda que varre zero arquivos passa verde sobre nada.
+	// Ausência não é aprovação. O piso é a METADE das tags medidas quando o
+	// guarda foi escrito: folga para o código encolher, e barulho na hora em que
+	// o padrão parar de casar. Um guarda que varre zero arquivos passa verde
+	// sobre nada.
 	if visitados == 0 || achadas < 300 {
 		t.Fatalf("guarda cego: %d arquivos, %d tags — o padrão parou de casar", visitados, achadas)
 	}

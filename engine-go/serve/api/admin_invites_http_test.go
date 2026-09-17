@@ -13,16 +13,13 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// Registration stopped being Open when the table moved to the LAN (ALE-120).
+// O cadastro deixou de ser aberto quando a mesa foi para a rede local.
 //
-// Estes casos batiam em `POST /auth/register` e `POST /admin/invites`, que
-// saíram na ALE-277 junto com as outras rotas JSON sem consumidor. O que eles
-// prendem nunca foi o transporte: é o convite valer UMA vez, a corrida de dois
-// cadastros gastá-lo uma só, o vencido ser recusado, e o e-mail do dono
-// dispensar convite. Cada um agora chama a REGRA — a mesma que a PORTA em
-// Datastar chama por `CreateAccount`. A AUTORIZAÇÃO continua medida pela rota,
-// porque ela é da rota: `POST /admin/convites` é o endereço que a administração
-// atende hoje.
+// O que estes casos prendem nunca foi o transporte: é o convite valer UMA vez, a
+// corrida de dois cadastros gastá-lo uma só, o vencido ser recusado, e o e-mail
+// do dono dispensar convite. Cada um chama a REGRA — a mesma que a PORTA em
+// Datastar chama por `CreateAccount`. A AUTORIZAÇÃO continua medida pela ROTA,
+// porque ela é da rota.
 
 const adminEmail = "dono@t20.local"
 
@@ -44,15 +41,11 @@ func inviteFrom(t *testing.T, s *Server, adminID int64) string {
 	return convite.Token
 }
 
-// LÁPIDE — `POST /admin/invites` saiu na ALE-277, e com ela o
-// `TestOnlyAnAdminIssuesInvites`.
-//
-// A autorização que ele media já estava medida no endereço que a administração
-// atende de verdade: `TestANonAdminDoesNotReachTheInviteRoute` prende o 403 do
-// não-admin e o 303 de quem não tem sessão, e
-// `TestMintingFromAdminPatchesThePanelToo` prende o dono cunhando — os dois em
-// `admin_scene_test.go`, pelo `WebRouter`. O que sobrou aqui é a única parte
-// que não era da rota: o tamanho do token.
+// A autorização de quem CUNHA não é medida aqui de propósito: ela mora no
+// endereço que a administração atende de verdade
+// (`TestANonAdminDoesNotReachTheInviteRoute` e
+// `TestMintingFromAdminPatchesThePanelToo`, em `admin_scene_test.go`). O que
+// sobra para este arquivo é o que nunca foi da rota.
 
 // Um convite é um link que anda por fora do app, então adivinhá-lo é entrar na
 // mesa. O piso não é estética de URL: é o espaço de busca.
@@ -151,13 +144,10 @@ func TestAFailedRegistrationKeepsTheInviteSpendable(t *testing.T) {
 	}
 }
 
-// LÁPIDE — `GET /account-invites/{token}` saiu na ALE-277.
-//
-// A rota existia para a tela de cadastro da SPA distinguir "peça um convite" de
-// "esse link já foi usado" ANTES de a pessoa mandar o formulário. A porta em
-// Datastar não pergunta: ela prefixa o campo com o `?convite=` e deixa o
-// `CreateAccount` recusar (`web/door/routes.go`). O prazo do convite continua
-// preso aqui embaixo, do lado que decide.
+// NÃO há rota que pergunte se um convite ainda vale, e a ausência é deliberada:
+// a porta prefixa o campo com o `?convite=` e deixa o `CreateAccount` recusar
+// (`web/door/routes.go`). O prazo continua preso aqui embaixo, do lado que
+// decide.
 func TestExpiredInviteIsRejected(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 	admin := seedUser(t, s, adminEmail)
@@ -188,10 +178,9 @@ func TestTheAdminEmailRegistersWithoutAnInvite(t *testing.T) {
 // normalized: `DONO@` could register WITHOUT an invite as a second account and
 // be admin too. Normalization makes it the same row, so it collides instead.
 //
-// Quem normalizava era o MANIPULADOR, e cada chamador repetia a linha. Com a
-// rota JSON fora (ALE-277) sobrou um chamador só — e uma garantia que morava no
-// transporte é uma garantia que o próximo chamador esquece. Ela desceu para o
-// `createAccount`, que é onde a decisão de "quem é admin" já era tomada.
+// A normalização mora no `createAccount`, e não no manipulador: garantia que
+// mora no TRANSPORTE é garantia que o próximo chamador esquece, e é aqui que a
+// decisão de "quem é admin" já era tomada.
 func TestACaseVariantCannotBecomeASecondAdmin(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 	if err := registra(t, s, adminEmail, ""); err != nil {
@@ -208,12 +197,10 @@ func TestACaseVariantCannotBecomeASecondAdmin(t *testing.T) {
 	}
 }
 
-// LÁPIDE — `TestMeCarriesTheAdminFlag` saiu com o `GET /auth/me` (ALE-277).
-//
-// Ele afirmava que o `isAdmin` do `ADMIN_EMAILS` chega em quem pergunta. A
-// mesma derivação continua medida, e por um caminho que a tela usa de verdade:
-// no `TestOnlyAnAdminIssuesInvites` o dono passa pelo `requireAdmin` e o
-// jogador leva 403, e os dois lêem o flag do mesmo `authUser`.
+// NÃO há caso afirmando que o `isAdmin` do `ADMIN_EMAILS` chega em quem
+// pergunta, e a ausência é deliberada: a mesma derivação está medida por um
+// caminho que a tela usa de verdade — o dono passa pelo `requireAdmin` e o
+// jogador leva 403, os dois lendo o flag do mesmo `authUser`.
 
 func countUsers(t *testing.T, s *Server) int {
 	t.Helper()

@@ -25,13 +25,13 @@ func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 		t.Errorf("os PV ocultos do mestre vazaram para o HTML do jogador")
 	}
 	// A flag sobrevive à redação de propósito: "sem barra" e "escondido" são
-	// coisas diferentes, e a segunda é informação (ALE-210).
+	// coisas diferentes, e a segunda é informação.
 	if !strings.Contains(corpo, "PV ocultos pelo mestre") {
 		t.Errorf("a linha oculta não DISSE que está oculta — vira 'sem vida' na tela")
 	}
 }
 
-// A outra metade da ALE-210: fora de cena o jogador não recebe fila NENHUMA.
+// Fora de cena o jogador não recebe fila NENHUMA.
 // Não desenhar seria UX; não mandar é a trava.
 //
 // Provado VERMELHO com o mesmo desvio do teste acima: sem cena o HTML passou a
@@ -61,9 +61,8 @@ func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 	}
 }
 
-// A recusa tem de CHEGAR NA TELA, e é isto que o app ganha de graça sobre o
-// socket: a ALE-213 deixou anotado que o cliente não escuta o `exception`, então
-// lá um d20 fora da faixa some em silêncio.
+// A recusa tem de CHEGAR NA TELA: uma que saia por um canal que o cliente não
+// escuta faz um d20 fora da faixa sumir em silêncio.
 //
 // Provado VERMELHO devolvendo `http.Error` no lugar do patch de sinal: o corpo
 // virou texto solto que o Datastar descarta, e a tela não muda.
@@ -90,7 +89,7 @@ func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 // O bônus do fixture é 3 (nível 8, perícia Iniciativa treinada em Destreza),
 // então mandar d20=14 tem de gravar 17. Sem a perícia semeada o bônus seria
 // zero e 14 == 14 — o teste passaria verde sobre uma tela que somou sozinha,
-// que é exatamente o defeito que ele mira (a armadilha da ALE-213).
+// que é exatamente o defeito que ele mira.
 func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -159,11 +158,10 @@ func TestTheTableStreamCompresses(t *testing.T) {
 	if err != nil {
 		t.Fatalf("o corpo não é gzip: %v", err)
 	}
-	// PROCURA a fila entre os quadros em vez de assumi-la no primeiro, e isso
-	// mudou com as REGIÕES (ALE-264): a carga fria manda um quadro por região —
-	// cabeçalho, registrar, grupo, tabuleiro, fila, comandos —, então a fila é o
-	// quinto. Ler só o primeiro afirmaria a ordem interna do render, que não é
-	// promessa nenhuma; o que o teste quer saber é que ela CHEGA comprimida.
+	// PROCURA a fila entre os quadros em vez de assumi-la no primeiro: a carga
+	// fria manda um quadro por REGIÃO, e ler só o primeiro afirmaria a ordem
+	// interna do render, que não é promessa nenhuma. O que o teste quer saber é
+	// que ela CHEGA comprimida.
 	//
 	// Ler um buffer de tamanho fixo continua não servindo: um buffer curto corta
 	// o fragmento no meio, e um longo bloquearia esperando quadros que só o
@@ -198,10 +196,9 @@ func TestTheTableStreamCompresses(t *testing.T) {
 // torna o aviso confiável: `apply` é o funil das treze mutações da fila, então
 // nenhuma delas pode escapar sem virar notícia.
 //
-// Desde a ALE-279 a invariante é mais forte, e não é este teste que a segura: o
-// `apply` recebe o EVENTO por parâmetro, então uma mutação sem notícia não
-// compila. O que sobrou aqui para medir é que a notícia certa chega a quem
-// escuta — que abrir a cena publique `SceneStarted`, e não um sino genérico que
+// Não é este teste que segura a invariante: o `apply` recebe o EVENTO por
+// parâmetro, então uma mutação sem notícia não compila. O que sobrou aqui para
+// medir é que a notícia certa chega a quem escuta — que abrir a cena publique `SceneStarted`, e não um sino genérico que
 // serviria igualmente para o encerramento.
 func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 	f := newSceneFixture(t)

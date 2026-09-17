@@ -10,19 +10,16 @@ import (
 	"testing"
 )
 
-// Authorization through the REAL router, with a REAL signed session.
+// Autorização pelo roteador DE VERDADE, com uma sessão assinada DE VERDADE.
 //
-// Every other HTTP test in this package mounts its own chi router and injects
-// the user by hand, so `requireAuth` had never once executed under test and 53
-// of 56 handlers had never seen a request. What protected the app from a player
-// calling the API directly was a Playwright spec asserting that a BUTTON is
-// absent — the file itself calls that "the UX half".
-//
-// These go through `s.Router()` so the middleware, the route table and the
-// handler are all in the path: a route registered outside the protected group,
-// or a handler that forgets its authorization helper, fails here.
+// Os outros testes HTTP deste pacote montam o próprio roteador e injetam o
+// usuário na mão, então o `requireAuth` nunca executa neles. Estes passam pelo
+// `s.Router()`, com o middleware, a tabela de rotas e o handler no caminho: uma
+// rota registrada fora do grupo protegido, ou um handler que esquece o ajudante
+// de autorização, reprova aqui.
 
-// authed issues a real JWT for the user and sends the request as they would.
+// authed emite um JWT de verdade para o usuário e manda o pedido como ele
+// mandaria.
 func authed(t *testing.T, s *Server, UserID int64, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	user, err := s.queries.GetUserByID(context.Background(), UserID)
@@ -36,7 +33,7 @@ func authed(t *testing.T, s *Server, UserID int64, method, path, body string) *h
 	return sendRaw(t, s, method, path, body, "Bearer "+token)
 }
 
-// anon sends the request with no credentials at all.
+// anon manda o pedido sem credencial nenhuma.
 func anon(t *testing.T, s *Server, method, path string) *httptest.ResponseRecorder {
 	t.Helper()
 	return sendRaw(t, s, method, path, "", "")
@@ -90,8 +87,8 @@ func TestRequireAuthRejectsMissingAndBrokenCredentials(t *testing.T) {
 		}
 	})
 
-	// The rule `account_middleware.go:29` exists on purpose — a token outliving its user
-	// must not authenticate. Nothing covered it before.
+	// A regra do `account_middleware.go` existe de propósito: um token que
+	// sobrevive ao dono não pode autenticar.
 	t.Run("JWT válido de usuário deletado", func(t *testing.T) {
 		ghost := seedUser(t, s, "fantasma@t20.local")
 		user, err := s.queries.GetUserByID(context.Background(), ghost)
@@ -114,15 +111,13 @@ func TestRequireAuthRejectsMissingAndBrokenCredentials(t *testing.T) {
 	})
 }
 
-// Every route under `requireAuth` must answer 401 without credentials — never
-// 200, and never 404, which would mean the route sits outside the guarded group.
+// Toda rota sob o `requireAuth` responde 401 sem credencial — nunca 200, e nunca
+// 404, que significaria a rota estar fora do grupo protegido.
 func TestProtectedRoutesRejectAnonymous(t *testing.T) {
 	s := newTestServer(t)
 
-	// As SETE que sobraram da ALE-277. A lista era de trinta e seis, e ela
-	// encolheu com as rotas — não por alguém ter tirado casos, mas porque o que
-	// elas protegiam deixou de existir. O `/health` fica de fora de propósito:
-	// ele é anônimo por desenho, e é o `healthcheck` do compose que bate nele.
+	// O `/health` fica de fora de propósito: ele é anônimo por desenho, e é o
+	// `healthcheck` do compose que bate nele.
 	protected := []struct{ method, path string }{
 		{http.MethodGet, "/campanhas"},
 		{http.MethodPost, "/campanhas"},
@@ -142,15 +137,10 @@ func TestProtectedRoutesRejectAnonymous(t *testing.T) {
 
 // A ÚNICA escrita de ficha que sobrou na API responde 403 para um estranho.
 //
-// Aqui morava um guarda de VARREDURA — o `TestEveryCharacterRouteRejectsAnIntruder`
-// lia as rotas de `/characters` do `server.go` e cobrava um 403 de cada uma
-// (ALE-186). Ele saiu na ALE-277 com as 24 rotas que mediam, e o sucessor dele
-// não é este caso: é o `TestNoSheetWriteAcceptsAStranger`, que faz a MESMA
-// varredura no roteador das cenas, que é onde a ficha se escreve hoje.
-//
-// Este caso existe porque a varredura de lá não alcança a rota que ficou aqui:
-// ela filtra por `/personagens/{id}/`, e esta atende em `/characters`. Uma rota
-// só, então enumerar não é remendo — é o conjunto inteiro.
+// A VARREDURA das escritas de ficha é o `TestNoSheetWriteAcceptsAStranger`, no
+// roteador das cenas — mas ela filtra por `/personagens/{id}/` e não alcança esta
+// rota, que atende em `/characters`. Uma rota só, então enumerar aqui não é
+// remendo: é o conjunto inteiro.
 func TestTheSurvivingCharacterWriteRejectsAStranger(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
@@ -166,14 +156,6 @@ func TestTheSurvivingCharacterWriteRejectsAStranger(t *testing.T) {
 	}
 }
 
-// Aqui morava o TestGetCampaignAuthorization, sobre a leitura de UMA campanha. A rota saiu na ALE-277.
-
-// Aqui morava o TestCampaignWritesRejectNonOwner, sobre o PATCH e o convite da campanha. A rota saiu na ALE-277.
-
-// Aqui morava o TestSessionRoutesRejectCrossCampaignAndNonOwner, sobre as rotas de sessão. A rota saiu na ALE-277.
-
 func id64(v int64) string {
 	return strconv.FormatInt(v, 10)
 }
-
-// Aqui morava o TestCampaignDescriptionBlankIsTheSameEitherWay, sobre a descrição em branco. A rota saiu na ALE-277.

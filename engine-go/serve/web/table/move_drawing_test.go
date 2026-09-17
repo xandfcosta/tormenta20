@@ -6,7 +6,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// Os guardas da SETA em TRÊS faixas (ALE-203).
+// Os guardas da SETA em TRÊS faixas.
 //
 // O pedido do dono: *"mostrar a distância possível em amarelo, em azul quando
 // ultrapassa o deslocamento e está gastando a ação principal, e vermelho quando

@@ -5,17 +5,9 @@ import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 const CAMPAIGN = '/campanhas/1' // Snapshot Test ALE-33 (seed)
 
 test.describe('Detalhe da campanha', () => {
-  // 'troca de aba mostra o roster de membros' saiu na ALE-187: clique numa aba
-  // e nomes na tela, sem medida que precise de browser.
-  //
-  // O DESTINO que aquela issue escreveu era `campaign-detail-page.test.tsx`, e
-  // ele NÃO existe mais nesta branch: a migração apagou a página da SPA que ele
-  // montava, porque a crônica virou cena do servidor (ALE-255). O ponteiro
-  // quebrou no merge que trouxe a poda, e ficaria mandando procurar num arquivo
-  // ausente — que é a forma mais cara de perder um guarda, porque parece que ele
-  // existe.
-  //
-  // Aqui a garantia está partida em duas, cada metade na camada que a sustenta:
+  // 'troca de aba mostra o roster de membros' saiu daqui de propósito: clique
+  // numa aba e nomes na tela não pedem browser nenhum. A garantia está partida
+  // em duas, cada metade na camada que a sustenta:
   //   - a SEÇÃO É ENDEREÇO (link, URL, e o botão voltar) tem e2e próprio no
   //     bloco `A crônica`, no fim deste arquivo — histórico é do navegador e
   //     jsdom não o tem;
@@ -24,22 +16,14 @@ test.describe('Detalhe da campanha', () => {
 })
 
 /**
- * Criar e excluir uma campanha (ALE-79, ALE-80): o único caso daqui que ESCREVE
- * de verdade, e por isso ele apaga o que criou — a seed é compartilhada com
- * todos os specs e uma execução que deixa campanha para trás envenena a
- * próxima.
+ * Criar e excluir uma campanha: o único caso daqui que ESCREVE de verdade, e
+ * por isso ele apaga o que criou — a seed é compartilhada com todos os specs, e
+ * uma execução que deixa campanha para trás envenena a próxima.
  *
- * O bloco "Entrar por convite" saiu na ALE-144, e DOIS dos três destinos que ela
- * escreveu não existem mais nesta branch: a carta de convite virou cena do
- * servidor, e com ela foram embora o `entities/campaign/join-target.test.ts` e o
- * `features/campaign-join/hero-picker.test.tsx`. Quem responde agora é o
- * `api/campaigns_join_test.go` — a resolução do alvo em
- * `TestWithoutAnInviteSomeoneElsesTableIsRefusedWithTheNextStep` e o convite morto em
- * `TestADeadInviteBecomesASentenceAndNotABrokenPage` —, mais a
- * `invite.spec.ts` para o que só o browser vê. A prévia do convite continua em
- * (`entities/queries.test.ts`), esse sobreviveu, e a
- * página `/campanhas/entrar` continua sendo carregada nos seis formatos pelo
- * bloco responsivo abaixo.
+ * Entrar por convite NÃO mora aqui de propósito: quem responde é o
+ * `api/campaigns_join_test.go`, mais a `invite.spec.ts` para o que só o browser
+ * vê. A página `/campanhas/entrar` continua sendo carregada nos seis formatos
+ * pelo bloco responsivo abaixo.
  */
 test.describe('Abrir e fechar uma campanha', () => {
   test('criar leva direto para a nova campanha, e excluir traz de volta', async ({
@@ -52,11 +36,10 @@ test.describe('Abrir e fechar uma campanha', () => {
     await page.getByLabel('Descrição').fill('Criada e excluída pelo E2E.')
     await page.getByRole('button', { name: 'Abrir campanha' }).click()
 
-    // Landed on the new chronicle's own page — a do SERVIDOR desde a ALE-255.
     await expect(page).toHaveURL(/\/campanhas\/\d+/)
     await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible()
 
-    // Clean up through the UI, which also exercises the ALE-79 delete path.
+    // A limpeza é pela tela, que de quebra exercita o caminho de exclusão.
     await page.goto(`${new URL(page.url()).pathname}?tab=config`)
     await page.getByRole('button', { name: /Excluir campanha/ }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Excluir' }).click()
@@ -69,11 +52,10 @@ test.describe('Abrir e fechar uma campanha', () => {
 })
 
 /**
- * One test per scene, six viewports inside each — not one test per pair. The
- * layout answers `setViewportSize` live (media queries are width-only, a house
- * rule), so paying a full page load per viewport bought nothing: this block was
- * 18 tests and 134s. See `support/viewports.ts` for what it does and does not
- * prove.
+ * Um teste por cena, com os seis formatos DENTRO dele — e não um teste por par.
+ * O leiaute responde ao `setViewportSize` na hora (media query é só de largura,
+ * regra da casa), então pagar uma carga de página por formato não comprava
+ * nada. Ver `support/viewports.ts` para o que isto prova e o que não prova.
  */
 const SCENES = [
   { name: 'detalhe', path: `${CAMPAIGN}?tab=membros`, heading: /Snapshot Test ALE-33/i },
@@ -92,15 +74,11 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
   }
 
   /**
-   * O defeito da ALE-160: a 390px os painéis da visão geral eram pintados 169px
-   * fora do pai, e o botão "Convite" ia parar em x 392–487 numa tela de 390 —
-   * fora da janela e sem eixo que rolasse até ele. A causa é `min-width: auto`
-   * em item de grid, que dimensiona a trilha pelo MIN-CONTENT: 457px numa caixa
-   * de 288.
-   *
-   * O `expectNoHorizontalOverflow` acima passava VERDE sobre isso, e não por
-   * descuido: o `overflow-x-hidden` da cena zera o `scrollWidth` da raiz. É
-   * preciso medir contra a JANELA, e é o que a asserção nova faz.
+   * O `expectNoHorizontalOverflow` acima passa VERDE sobre um botão pintado
+   * fora da janela, e não por descuido: o `overflow-x-hidden` da cena zera o
+   * `scrollWidth` da raiz. É preciso medir contra a JANELA, e é o que esta
+   * asserção faz. (A causa típica é `min-width: auto` em item de grid, que
+   * dimensiona a trilha pelo MIN-CONTENT.)
    */
   test('nada clicável fica fora da janela na campanha, em nenhum formato', async ({ page }) => {
     await page.goto(`${CAMPAIGN}?tab=visao`)
@@ -113,21 +91,17 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
   })
 
   /**
-   * ALE-176. A folha do grimório apertava o respiro por `max-height: 520px`, e
-   * essa consulta casa DUAS situações diferentes: o celular deitado, que é
-   * quem ela queria atender, e o celular EM PÉ com o teclado virtual aberto
-   * (390x844 vira ~390x494). Estas folhas hospedam campo de texto — "nova
-   * campanha" e o convite —, então o respiro encolhia debaixo do dedo no meio
-   * da digitação. É por isso que a regra da casa manda chavear por LARGURA.
+   * Apertar o respiro por `max-height` casa DUAS situações diferentes: o
+   * celular deitado, que é quem a consulta quer atender, e o celular EM PÉ com
+   * o teclado virtual aberto (390x844 vira ~390x494). Estas folhas hospedam
+   * campo de texto, então o respiro encolheria debaixo do dedo no meio da
+   * digitação. É por isso que a regra da casa manda chavear por LARGURA.
    *
-   * O teste afirma as DUAS metades de propósito. Só a primeira passaria verde
-   * com a tampa simplesmente APAGADA, que é o conserto errado: medido no
-   * deitado, com a tampa aparecem 89% do botão "Abrir campanha" e sem ela
-   * apenas 31% (y=379,6..412,7 numa janela de 390). O limiar de 0,8 fica com
-   * folga dos dois lados desse vão, e não é número mágico: está aqui porque a
-   * tampa não faz o botão CABER — ela o traz de quase escondido para quase
-   * inteiro, e prender `ratio: 1` seria exigir zero pixel de sobra, que é o
-   * tipo de asserção que a ALE-184 mostrou depender da fonte instalada.
+   * O teste afirma as DUAS metades de propósito: só a primeira passaria verde
+   * com a tampa simplesmente APAGADA, que é o conserto errado. Medido no
+   * deitado, com a tampa aparecem 89% do botão e sem ela apenas 31% — o limiar
+   * de 0,8 fica com folga dos dois lados desse vão. `ratio: 1` seria exigir
+   * zero pixel de sobra, que é asserção que depende da fonte instalada.
    *
    * Só e2e: em jsdom não há viewport e nenhuma media query resolve.
    */
@@ -207,25 +181,18 @@ test.describe('A cena de campanhas', () => {
   })
 
   /**
-   * A busca é do SERVIDOR, e o guarda que comparava as DUAS telas lado a lado
-   * morreu com a virada (ALE-234): a tela da SPA não existe mais, então não há
-   * segundo lado para comparar.
-   *
-   * A garantia não ficou órfã — ela desceu para onde é mais barata e mais
-   * exata. Os sete casos de `api/search_test.go` foram conferidos um a um rodando o
-   * `match-sorter` de verdade, incluindo o que mais surpreende: "tauron" casa
-   * "Segredos de Wynlla" por subsequência na sinopse, e a biblioteca faz igual.
-   * Comparar duas telas era a forma cara de afirmar isso enquanto as duas
-   * existiam.
+   * A busca é do SERVIDOR, e quem prende o RESULTADO dela é o
+   * `api/search_test.go` — inclusive o caso que mais surpreende, "tauron"
+   * casando "Segredos de Wynlla" por subsequência na sinopse.
    *
    * O que sobra aqui é o que só o navegador vê: que a busca de fato FILTRA a
    * lista renderizada.
    */
   test('a busca filtra a lista que o servidor desenhou', async ({ page }) => {
     await page.goto('/campanhas')
-    // A VAGA conta como opção no trilho (ALE-297) e ela nunca é filtrada — o
-    // que se conta aqui são as CAMPANHAS, então ela sai do número. Contar o
-    // trilho inteiro faria o guarda medir "3 achados" onde a busca achou 2.
+    // A VAGA conta como opção no trilho e nunca é filtrada, então ela sai do
+    // número: contar o trilho inteiro faria o guarda medir "3 achados" onde a
+    // busca achou 2.
     const campanhas = page.getByRole('option').filter({ hasNotText: 'Folha em branco' })
     expect(await campanhas.count(), 'a seed precisa de mais de duas campanhas').toBeGreaterThan(2)
 
@@ -241,10 +208,9 @@ test.describe('A cena de campanhas', () => {
 test.describe('A folha em branco', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  // Tela nova se valida nos seis formatos. Aqui importa mais que de costume: a
-  // folha hospeda campos de texto, e o espaçamento dela encolhe com a
-  // ORIENTAÇÃO justamente porque num telefone deitado o botão de enviar caía
-  // para fora da tela (ALE-176).
+  // Tela nova se valida nos seis formatos, e aqui importa mais que de costume:
+  // a folha hospeda campos de texto, e num telefone deitado o botão de enviar
+  // é o primeiro a cair para fora da tela.
   test('a folha cabe nos seis formatos', async ({ page }) => {
     await page.goto('/campanhas/nova')
     await expect(page.getByRole('button', { name: 'Abrir campanha' })).toBeVisible()
@@ -261,9 +227,8 @@ test.describe('A folha em branco', () => {
    * porque envolve o `maxlength` NATIVO e o envio de verdade do formulário.
    *
    * O guarda em Go afirma o mesmo pelo lado do servidor. O que se acrescenta
-   * aqui é que o navegador PARA a digitação no limite em vez de deixar escrever
-   * 3000 caracteres e recusar no fim: ver a pessoa chegar ao fim enquanto
-   * escreve é melhor que perder o texto ao enviar.
+   * aqui é que o navegador PARA a digitação no limite, em vez de deixar
+   * escrever 3000 caracteres e recusar no fim.
    */
   test('a recusa devolve o texto, e o limite avisa enquanto se escreve', async ({ page }) => {
     await page.goto('/campanhas/nova')
@@ -303,12 +268,9 @@ test.describe('A crônica', () => {
   })
 
   /**
-   * A ABA É ENDEREÇO, e é essa a decisão que a cena inteira apoia.
-   *
-   * Na SPA o `?tab=` já era o estado, mas a versão em React precisava espelhá-lo
-   * num `useState` com dois efeitos e um debounce de 250ms para a troca não
-   * travar. Aqui o parâmetro chega com o pedido — e o que se afirma é a
-   * consequência disso para quem usa: o link é colável e o histórico funciona.
+   * A ABA É ENDEREÇO, e é essa a decisão que a cena inteira apoia: o `?tab=`
+   * chega com o pedido, e o que se afirma é a consequência disso para quem usa
+   * — o link é colável e o histórico funciona.
    *
    * E2E porque histórico é do navegador: `goBack` não existe em jsdom.
    */
@@ -335,7 +297,7 @@ test.describe('A crônica', () => {
    *
    * Ele DEVOLVE o interruptor ao estado original no fim: a regra é do banco de
    * desenvolvimento, e deixá-la desligada mudaria a carga de todo personagem da
-   * campanha 1 para o próximo teste — a família de problema da ALE-238.
+   * campanha 1 para o próximo teste.
    */
   test('alternar a regra opcional troca o estado sem recarregar a página', async ({ page }) => {
     await page.goto('/campanhas/1?tab=config')

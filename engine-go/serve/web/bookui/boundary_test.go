@@ -9,7 +9,7 @@ import (
 )
 
 // O `bookui` NÃO IMPORTA O HOSPEDEIRO, e este guarda é o mais importante da
-// série depois do `book` (ALE-278).
+// série depois do `book`.
 //
 // A razão é aritmética, e é a mesma que o `book` documenta: quase toda cena que
 // desenha um verbete vai importá-lo — o mestre já importa, o verbete importa, e
@@ -17,17 +17,10 @@ import (
 // elas alcançam junto, de graça, com o guarda de fronteira de cada uma
 // continuando VERDE, porque cada guarda só olha os imports dele.
 //
-// # Por que este pacote existe, e por que ele não é o `web/ui`
-//
-// A fatia 4 deixou isto escrito e adiado: o livro e os elos ficaram no `api`
-// porque o `trecho` que eles desenham nasce de uma consulta ao catálogo, e
-// levá-los para o kit faria o pacote de APRESENTAÇÃO importar catálogo — o
-// contrário do que a divisão existe para conseguir.
-//
-// A decisão adiada venceu na fatia do mestre: ele lê CINCO símbolos daqui, e não
-// podia sair enquanto eles morassem no hospedeiro. A saída não era mover para o
-// kit nem deixar ficar — era o pacote do meio, que sabe do livro e não sabe de
-// HTTP.
+// POR QUE ELE NÃO É O `web/ui`: o `trecho` que estes componentes desenham nasce
+// de uma consulta ao CATÁLOGO, e levá-los para o kit faria o pacote de
+// APRESENTAÇÃO importar catálogo — o contrário do que a divisão existe para
+// conseguir. Este é o pacote do meio: sabe do livro e não sabe de HTTP.
 var permitidos = map[string]bool{
 	"t20engine/domain/book":      true, // o catálogo TIPADO, que é o que ele desenha
 	"t20engine/serve/web/ui":     true, // o kit, para o botão e o ícone

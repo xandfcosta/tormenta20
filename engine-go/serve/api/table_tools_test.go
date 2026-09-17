@@ -8,14 +8,12 @@ import (
 	"testing"
 )
 
-// TestTheEraserClearsTheWholeSquare — o conserto do defeito que o dono achou.
+// A borracha limpa a CASA INTEIRA.
 //
-// Ela era um MODO que invertia o pincel selecionado: com `Cobertura` na mão,
-// clicar num quadrado de `Difícil` mandava `terreno/cobertura/…?apagar=1`,
-// apagava a cobertura que não estava ali, e a tela não dizia nada. Medido na
-// bancada, clique a clique, antes de virar este teste.
-//
-// Agora a rota não tem espécie no caminho — não há como errar qual.
+// Como MODO que inverte o pincel selecionado ela erra em silêncio: com
+// `Cobertura` na mão, clicar num quadrado de `Difícil` manda
+// `terreno/cobertura/…?apagar=1`, apaga a cobertura que não estava ali, e a tela
+// não diz nada. A rota não tem espécie no caminho justamente por isso.
 func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -44,12 +42,9 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 	}
 }
 
-// TestTheEraserDoesNotDependOnTheSelectedBrush.
-//
-// É a metade do defeito que um teste de "limpa a casa" sozinho não pegaria: a
-// rota antiga funcionava perfeitamente quando o pincel na mão era o certo. O que
-// quebrava era o outro caso, e ele passava despercebido porque o servidor
-// respondia 200.
+// A metade do defeito que um teste de "limpa a casa" sozinho não pega: com o
+// pincel CERTO na mão a rota antiga funcionava perfeitamente, e o outro caso
+// passava despercebido porque o servidor respondia 200.
 //
 // Aqui isso vira uma afirmação sobre a FORMA da rota: se a espécie voltar para o
 // caminho, este teste cai.
@@ -70,8 +65,6 @@ func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 	}
 }
 
-// TestThePlayerRailLacksWhatThePlayerCannotDo.
-//
 // A trava de verdade é do servidor (`gmBoardCommand`); isto é a
 // cortesia de não oferecer o que seria recusado. Mas ela também é o que impede um
 // gesto MUDO: a camada de pintura não existe na cena do jogador, então uma

@@ -12,7 +12,7 @@ import (
 // `TestConditionEffects` já cobre alguns deltas na ficha montada. O que se fixa
 // aqui é a TABELA em si (`conditionModifierTable`) contra o texto do livro: os
 // valores, quais atributos cada uma atinge, e as duas regras estruturais que a
-// lista enuncia no cabeçalho (ALE-105).
+// lista enuncia no cabeçalho.
 //
 //	"Condições com os mesmos efeitos não se acumulam; aplique apenas os mais
 //	 severos. Por exemplo, um personagem desprevenido e vulnerável sofre −5 na
@@ -205,7 +205,7 @@ func TestCegoAndAgarradoComposeDesprevenido(t *testing.T) {
 // O golden do `tanque-exausto-atordoado-nv10` foi quem mostrou: Reflexos levava
 // −10, porque o debilitado do exausto entra pelas perícias de Destreza e o
 // desprevenido do atordoado entra pelo Reflexos. Duas penalidades de condição
-// sobre o MESMO número da ficha (ALE-116).
+// sobre o MESMO número da ficha.
 func TestConditionPenaltiesOnOneSkillDoNotStackAcrossTargets(t *testing.T) {
 	// Reflexos é uma perícia de Destreza — o alvo por onde o debilitado entra.
 	reflexos := CharacterExpertise{Name: "Reflexos", Attribute: "dexterity"}
@@ -246,7 +246,7 @@ func TestConditionPenaltiesOnOneSkillDoNotStackAcrossTargets(t *testing.T) {
 // condição nova que cite outra e esqueça seus números cai aqui.
 //
 // Cinco delas não tinham modificador NENHUM: um personagem atordoado, paralisado
-// ou inconsciente ficava com a Defesa cheia (ALE-115).
+// ou inconsciente ficava com a Defesa cheia.
 func TestConditionsThatImplyAnotherCarryItsNumbers(t *testing.T) {
 	pares := []struct {
 		condicao, implicada, citacao string
@@ -284,7 +284,7 @@ func TestIndefesoReplacesTheDesprevenidoDefense(t *testing.T) {
 		t.Errorf("Defesa do indefeso = %d, want -10", got)
 	}
 	// "falha automaticamente em testes de Reflexos" não é um número, então não
-	// vira modificador — fica como lembrete na ficha (ALE-115).
+	// vira modificador — fica como lembrete na ficha.
 }
 
 // Sanidade cruzada: a tabela de modificadores vive no Go, e o catálogo que o
@@ -316,7 +316,7 @@ func TestModelledConditionsExistInTheServedCatalog(t *testing.T) {
 // Duas coisas incomuns numa linha só: a Defesa é DIRECIONAL, e o parêntese abre
 // uma exceção explícita à regra de não-acúmulo do cabeçalho da lista. As duas
 // caem no mesmo mecanismo — escopo no alvo — porque chaves diferentes não
-// competem no `resolveStack` (ALE-115).
+// competem no `resolveStack`.
 func TestCaidoDefenseIsDirectionalAndCumulative(t *testing.T) {
 	defenseFor := func(conds ...string) DefenseBreakdown {
 		mods := []Modifier{}
@@ -381,7 +381,7 @@ func TestCaidoDefenseIsDirectionalAndCumulative(t *testing.T) {
 // branda que a do livro, e deixá-la de fora fazia um personagem inconsciente
 // rolar Reflexos normalmente. Vai como FLAG, que é o mecanismo do motor para
 // efeito booleano — a ficha mostra "falha automática" na linha em vez de um
-// total (ALE-115).
+// total.
 func TestIndefesoAutoFailsReflexos(t *testing.T) {
 	vested := "vested"
 	flagsFor := func(ids ...string) map[string]bool {
@@ -397,7 +397,7 @@ func TestIndefesoAutoFailsReflexos(t *testing.T) {
 	}
 
 	// As condições que a p394 define COMO indefeso herdam a falha junto — foi por
-	// não compor que elas ficaram sem efeito nenhum (ALE-115).
+	// não compor que elas ficaram sem efeito nenhum.
 	for _, id := range []string{"paralisado", "inconsciente", "petrificado"} {
 		if !flagsFor(id)[autoFailReflexosFlag] {
 			t.Errorf("%s fica indefeso pelo livro, então falha em Reflexos", id)

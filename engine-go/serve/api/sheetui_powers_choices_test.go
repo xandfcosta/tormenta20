@@ -58,9 +58,8 @@ func TestTheOriginGivesTwoBenefits(t *testing.T) {
 // O PODER ÚNICO DA ORIGEM é escolhível — ele não está na lista de benefícios.
 //
 // O catálogo guarda o `poderUnico` num campo à parte, e a ficha o trata como um
-// dos dois que a pessoa leva (p85). Medido na bancada: sem juntá-lo, o poder da
-// origem não aparecia em lugar nenhum e o servidor recusava quem tentasse
-// escolhê-lo.
+// dos dois que a pessoa leva (p85): sem juntá-lo, ele não aparece em lugar
+// nenhum e o servidor recusa quem tentar escolhê-lo.
 func TestTheOnlyOriginPowerIsStillAChoice(t *testing.T) {
 	f, id := barbaro(t, 3)
 
@@ -231,10 +230,6 @@ func TestARepeatedDistributionIsRefused(t *testing.T) {
 	}
 }
 
-// Aqui morava o TestTheJsonApiRefusesAChoiceOutsideTheRule, que provava que a
-// rota `PATCH /personagens/{id}/abilities` recusava três poderes em duas vagas.
-// Ela saiu na ALE-277 com as outras sem consumidor.
-//
-// A REGRA não saiu: ela é `sheet.WithChoicesValid`, e quem a prende agora é o
-// comando da cena da ficha, que a chama pelo mesmo caminho. Uma regra, uma
-// camada — e a camada que sobrou é a que a mesa usa.
+// Não há caso de API JSON aqui de propósito: a regra é `sheet.WithChoicesValid`,
+// e quem a prende é o comando da cena da ficha, que a chama pelo mesmo caminho.
+// Uma regra, uma camada — e a camada que sobrou é a que a mesa usa.

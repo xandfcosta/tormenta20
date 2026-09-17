@@ -1,26 +1,23 @@
 import { expect, type Page } from '@playwright/test'
 
 /**
- * O MEDIDOR DE TIPOGRAFIA da casa: a Cinzel não desce abaixo de 14px (ALE-173).
+ * O MEDIDOR DE TIPOGRAFIA da casa: a Cinzel não desce abaixo de 14px.
  *
  * Ela é serifada de display — contraste de traço alto e olhos pequenos —, e em
- * 11px maiúscula com espaçamento largo vira desenho antes de virar texto. O dono
- * apontou isso olhando a folha de especificação, e a casa já tinha tomado a
- * mesma decisão um degrau abaixo: o rótulo de campo, em 10px, nunca usou Cinzel.
+ * 11px maiúscula com espaçamento largo vira desenho antes de virar texto. A casa
+ * já tinha a mesma decisão um degrau abaixo: o rótulo de campo, em 10px, nunca
+ * usou Cinzel.
  *
- * # Ele mora aqui pelo mesmo motivo que o `contraste.ts` (ALE-252)
+ * # Ele mora AQUI, e não dentro de um `test()`
  *
- * A versão anterior era função INLINE dentro de um `test()` do
- * `grimorio.spec.ts`, e visitava um endereço só: `/grimorio`. Instrumento que
- * mora dentro de um chamador tem exatamente um chamador, e isso não aparece em
- * revisão de diff nenhuma — foi assim que quatro violações minhas viveram em
- * três cenas com o guarda no ar o tempo todo.
+ * Instrumento que mora dentro de um chamador tem exatamente um chamador, e isso
+ * não aparece em revisão de diff nenhuma: a versão inline deste medidor visitava
+ * um endereço só, e quatro violações viveram em três cenas com o guarda no ar.
  *
- * O guarda da folha funcionava por AMOSTRAGEM: toda tipografia da SPA passava
- * pelos componentes de verdade, então vigiar uma tela vigiava 43. Cena em templ
- * escreve a classe à mão, e a amostragem virou enumeração — uma entrada por
- * cena, para sempre. Este módulo é a metade barata do conserto; a outra metade,
- * que RESTAURA a amostragem, é as cenas passarem pelos componentes da casa.
+ * E a cobertura hoje é ENUMERAÇÃO, não amostragem — cena em templ escreve a
+ * classe à mão, então é uma entrada por cena, para sempre. Este módulo é a
+ * metade barata do conserto; a que RESTAURA a amostragem é as cenas passarem
+ * pelos componentes da casa.
  *
  * Por que browser: a face resolvida só existe num navegador. Em jsdom o
  * `font-family` devolve a string do CSS — a lista inteira de fallbacks —, e não
@@ -30,7 +27,7 @@ import { expect, type Page } from '@playwright/test'
 /** Uma medição: o que reprovou, e QUANTOS textos em Cinzel foram olhados. */
 export type MedicaoDeTipografia = { falhas: string[]; medidos: number }
 
-/** O piso de leitura da Cinzel, em pixels (ALE-173). */
+/** O piso de leitura da Cinzel, em pixels. */
 export const PISO_DA_CINZEL = 14
 
 /**
@@ -39,8 +36,7 @@ export const PISO_DA_CINZEL = 14
  * O `medidos` existe para o CONTROLE de quem chama, e aqui ele é mais do que
  * zelo: o filtro é por FONTE, então uma página onde a Cinzel não carregou não
  * tem nenhum candidato — e "nenhuma Cinzel pequena" e "nenhuma Cinzel" produzem
- * a mesma lista vazia. A versão inline deste medidor não devolvia denominador
- * nenhum, e passaria verde com a fonte fora do ar.
+ * a mesma lista vazia.
  *
  * Ele olha o TEXTO PRÓPRIO de cada nó, e não o `textContent`: o tamanho é
  * herdado, então um `<section>` em Cinzel 24px que contém um rótulo de 11px
@@ -60,18 +56,16 @@ export async function medeATipografia(page: Page): Promise<MedicaoDeTipografia> 
           .join('')
           .trim()
         if (!texto) return null
-        // O MONOGRAMA DO AVATAR não é texto, é marca — decisão do dono
-        // (2026-09-08). O piso existe porque a Cinzel pequena "vira desenho
-        // antes de virar texto", e num monogram virar desenho é o objetivo:
-        // são duas letras dentro de um círculo colorido (ver `ui.Monogram`),
-        // com o nome escrito por extenso ao lado em texto de verdade.
+        // O MONOGRAMA DO AVATAR não é texto, é marca (decisão do dono): o piso
+        // existe porque a Cinzel pequena "vira desenho antes de virar texto", e
+        // num monogram virar desenho é o objetivo — o nome por extenso está ao
+        // lado, em texto de verdade.
         //
-        // A exceção é a CLASSE e não uma heurística, e essa escolha é o que a
-        // separa de afrouxar o guarda: `.monogram` é a receita da casa, então
-        // quem escreve um monogram novo herda a isenção junto com o desenho, e
-        // quem escrever Cinzel pequena em qualquer outro lugar continua sendo
-        // pego. Um `aria-hidden` no lugar dela isentaria toda Cinzel decorativa,
-        // que é largo demais.
+        // A exceção é a CLASSE e não uma heurística, e é isso que a separa de
+        // afrouxar o guarda: quem escreve um monogram novo herda a isenção
+        // junto com o desenho, e Cinzel pequena em qualquer outro lugar continua
+        // sendo pega. Um `aria-hidden` isentaria toda Cinzel decorativa, que é
+        // largo demais.
         if (el.closest('.monogram')) return null
         const px = Number.parseFloat(cs.fontSize)
         olhados.push(texto)

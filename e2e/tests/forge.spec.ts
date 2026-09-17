@@ -5,7 +5,7 @@ import { expectCinzelAcimaDoPiso } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
- * A FORJA em Datastar (ALE-272, fatia 9) — a folha em branco e os atributos.
+ * A FORJA — a folha em branco e os atributos.
  *
  * Dois casos, e os dois se justificam com mecanismo que só um navegador tem.
  *
@@ -13,18 +13,16 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
  * `@post` do Datastar manda o `<form>` inteiro (`contentType: 'form'`) e o
  * servidor devolve a folha com o equipamento da classe escolhida. O teste de
  * handler prova que o servidor responde certo ao formulário; ele NÃO prova que
- * o Datastar coleta os controles e aplica o remendo, que é a parte nova e a
- * única que pode quebrar sem ninguém ver.
+ * o Datastar coleta os controles e aplica o remendo.
  *
- * O segundo é o de sempre nesta casa: CONTRASTE e LEIAUTE reais. A ficha
- * atravessou duas fatias sem medição porque o medidor não era importável
- * (ALE-272); uma cena nova que não entra numa lista de visitas nasce sem
- * medição, em silêncio, que é a marca desta família.
+ * O segundo é o de sempre nesta casa: CONTRASTE e LEIAUTE reais — uma cena nova
+ * que não entra numa lista de visitas nasce sem medição, em silêncio, que é a
+ * marca desta família.
  *
  * O que NÃO está aqui, de propósito: recusa de escolha que o kit não oferece,
  * nascimento com o kit de p140, e o limite da compra de pontos. Isso é regra de
- * SERVIDOR e está preso em `api/forge_test.go`, que é a camada mais
- * barata que a segura.
+ * SERVIDOR e está preso em `api/forge_test.go`, que é a camada mais barata que
+ * a segura.
  */
 test.use({ storageState: '.auth/user.json' })
 

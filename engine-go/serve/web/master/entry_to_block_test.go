@@ -9,17 +9,11 @@ import (
 	"testing"
 )
 
-// O ORÁCULO DA CÓPIA DO VERBETE (ALE-269, superfície 6b).
+// O ORÁCULO DA CÓPIA DO VERBETE, e hoje ele é LINHA DE BASE: acusa qualquer
+// campo que mude sem ter sido pedido.
 //
-// Ele nasceu como PARIDADE: enquanto as duas telas existiam, o mestre podia
-// copiar o Ogro pela SPA numa noite e pelo app na outra, e o bloco ia para a
-// MESMA coluna do MESMO banco. Duas cópias diferentes do mesmo verbete é a
-// divergência mais cara possível aqui, porque ela não aparece — os dois blocos
-// são JSON válido. O esperado era MEDIDO rodando o `creature-from-monster.ts`.
-//
-// Com a SPA apagada (ALE-272, fatia 10c) sobrou uma tela só, e o oráculo virou
-// LINHA DE BASE: ele acusa qualquer campo que mude sem ter sido pedido, e não
-// prova mais que dois lados concordam. O script que o gerava saiu junto.
+// Uma divergência aqui não aparece na tela — os dois blocos são JSON válido —, e
+// o bloco copiado vai para a mesma coluna do mesmo banco.
 
 type oraculoDaCopia struct {
 	Casos []struct {
@@ -64,8 +58,6 @@ func TestTheEntryCopyMatchesTheJs(t *testing.T) {
 	}
 }
 
-// TestTheCopyDoesNotShareASliceWithTheCatalog.
-//
 // O catálogo é EMBUTIDO e servido à mesa inteira; o bloco nasce para ser
 // editado. Se os dois dividissem o mesmo array, o mestre mexer no ataque do seu
 // "Ogro Capitão" mexeria no verbete que o bestiário desenha para todo mundo — e

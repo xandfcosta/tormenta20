@@ -15,9 +15,6 @@ import "testing"
 //   - Arcanista (p37): "Seu atributo-chave para lançar magias é DEFINIDO PELO
 //     SEU CAMINHO" — Bruxo e Mago → Inteligência, Feiticeiro → Carisma.
 //   - Bardo (p44) → Carisma; Clérigo (p57) e Druida (p61) → Sabedoria.
-//
-// A cobertura vinha só dos oráculos de paridade, que provam que os dois motores
-// CONCORDAM e nunca que algum acerta o livro (ALE-105).
 
 func effectsNone() ItemEffects { return ItemEffects{Flags: map[string]bool{}} }
 
@@ -48,10 +45,8 @@ func TestSpellSaveDcFormula(t *testing.T) {
 //	"Samira é uma qareen FEITICEIRA de 8º nível com Carisma 5. A CD para resistir
 //	 a suas magias é 19 (10 +4 +5 = 19)."
 //
-// Feiticeiro é um CAMINHO do Arcanista, e o motor cravava Inteligência para todo
-// Arcanista — então a Samira do livro saía com a CD do atributo errado. O
-// catálogo já modelava o caminho do lado do PM (o `maxPm` do Feiticeiro escala
-// por Carisma); era só a metade da CD que ficou para trás (ALE-113).
+// Feiticeiro é um CAMINHO do Arcanista: cravar Inteligência para todo Arcanista
+// faz a Samira do livro sair com a CD do atributo errado.
 func TestSamiraTheBookWorkedExample(t *testing.T) {
 	samira := Character{
 		Level:        8,

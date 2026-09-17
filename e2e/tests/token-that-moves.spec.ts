@@ -2,7 +2,7 @@ import { expect, type Page, test } from '@playwright/test'
 import { openTheBoard, disposableTable, putATokenOnTheMap } from './support/table'
 
 /**
- * A PEÇA QUE MOVEU DESLIZA, em vez de teleportar (ALE-174, P3).
+ * A PEÇA QUE MOVEU DESLIZA, em vez de teleportar.
  *
  * E2E porque a pergunta é sobre a LINHA DO TEMPO de uma animação disparada por
  * um remendo do servidor — três coisas que não existem fora do navegador. Em
@@ -10,31 +10,30 @@ import { openTheBoard, disposableTable, putATokenOnTheMap } from './support/tabl
  *
  * # O que se mede é a POSIÇÃO PINTADA, e não a chamada
  *
- * A primeira versão destes guardas embrulhava o `Element.prototype.animate` e
- * afirmava que ele foi chamado com os quadros certos. Determinístico, e ainda
- * assim a pergunta errada: uma animação PEDIDA e uma animação VISTA são coisas
- * diferentes — uma regra de CSS com `transform` de maior peso engoliria a
- * segunda sem tocar na primeira, e o guarda seguiria verde sobre um teleporte.
+ * Embrulhar o `Element.prototype.animate` e afirmar que ele foi chamado com os
+ * quadros certos é determinístico e é a pergunta ERRADA: uma animação PEDIDA e
+ * uma animação VISTA são coisas diferentes — uma regra de CSS com `transform` de
+ * maior peso engole a segunda sem tocar na primeira, e o guarda segue verde
+ * sobre um teleporte.
  *
  * Então a sonda amostra `getBoundingClientRect().x` a cada quadro e conta
  * POSIÇÕES DISTINTAS. Um deslize passa por várias; um teleporte tem duas (antes
  * e depois) e um palco parado tem uma.
  *
  * **Capturar tela não serviria**: o `screenshot()` do Playwright desliga
- * animação por padrão e FINALIZA as finitas antes de fotografar. Medido nesta
- * issue — três quadros tirados a 30, 60 e 90ms saíram byte a byte idênticos, e
- * a leitura ingênua disso seria "a animação não existe".
+ * animação por padrão e FINALIZA as finitas antes de fotografar — três quadros
+ * tirados a 30, 60 e 90ms saem byte a byte idênticos, e a leitura ingênua disso
+ * seria "a animação não existe".
  */
 test.use({ storageState: '.auth/user.json' })
 
 /**
  * Amostra onde a peça é PINTADA, quadro a quadro, durante `ms` milissegundos.
  *
- * ELA É ARMADA DEPOIS DO ARRASTO E ANTES DO CONFIRMAR, e a ordem é o conserto de
- * um guarda que passava verde sobre o defeito. Armada antes do gesto inteiro,
- * ela media o ARRASTO: o dedo atravessa quatro casas e pinta a peça em cada uma,
- * então "mais de duas posições" era verdade sem módulo nenhum carregado —
- * 630 → 674 → 718 → 762 → 806, que é o dedo e não a animação.
+ * ELA É ARMADA DEPOIS DO ARRASTO E ANTES DO CONFIRMAR, e a ordem é o que separa
+ * medir a animação de medir a MÃO. Armada antes do gesto inteiro, ela conta o
+ * arrasto: o dedo atravessa quatro casas e pinta a peça em cada uma, então "mais
+ * de duas posições" fica verdade sem módulo nenhum carregado.
  *
  * Depois do arrasto não há corrida: a animação só começa quando o remendo do
  * servidor chega, e isso é depois do clique.
@@ -112,9 +111,7 @@ test('confirmar um movimento desliza a peça em vez de teleportá-la', async ({ 
  * aproximar — um movimento que ninguém fez, e que a mesa leria como alguém
  * tendo andado.
  *
- * A issue previa o perigo e nomeou a causa errada: ela dizia que era o PAN, que
- * na verdade é `transform` do contêiner e não toca na peça. Este guarda mede a
- * causa de verdade.
+ * E não é o PAN: ele é `transform` do contêiner e não toca na peça.
  */
 test('aproximar o mapa não faz as peças deslizarem', async ({ page }) => {
   const { apagar } = await aBoardWithOneToken(page)
