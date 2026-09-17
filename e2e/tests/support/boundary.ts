@@ -80,7 +80,7 @@ export async function medeOLimiteDosBotoes(page: Page): Promise<MedicaoDeLimite>
     // não têm limite POR DESENHO, e o WCAG não pede fronteira para controle que
     // é só texto.
     const daCasa = (b: Element) =>
-      !b.closest('spa-botao') && /\b(bg-primary|bg-secondary|bg-destructive)\b/.test(b.className)
+      /\b(bg-primary|bg-secondary|bg-destructive)\b/.test(b.className)
 
     const olhados: string[] = []
     const falhas: string[] = []
