@@ -109,6 +109,18 @@ type augmentRow struct {
 	// que ela ainda não chega lá.
 	Locked         bool
 	RequiredCircle int
+	// Exclusive não aceita companhia na mesma conjuração (p171). Truque diz, além
+	// disso, que a conjuração inteira custa zero. Ver GLOSSARY.
+	Exclusive bool
+	Truque    bool
+	// Toggle, More e Less são os gestos MONTADOS, e não expressões escritas no
+	// `.templ`, porque cada um precisa ver a VIZINHANÇA: ligar o exclusivo apaga
+	// os outros e ligar qualquer outro apaga o exclusivo. É a mesma regra do
+	// `thatOpensCastGesture` — quem troca limpa —, e é ela que impede a tela de
+	// oferecer uma combinação que o servidor vai recusar.
+	Toggle string
+	More   string
+	Less   string
 }
 
 // spellbookPanelOf monta a aba.
@@ -207,21 +219,65 @@ func aceitaAClasse(lista []string, nome string) bool {
 	return false
 }
 
-// augmentRowsOf traduz os aprimoramentos, trancando os fora de alcance.
+// augmentRowsOf traduz os aprimoramentos, trancando os fora de alcance e
+// montando os gestos que se apagam entre si.
 func augmentRowsOf(spellID string, magia catalog.Spell, castable int) []augmentRow {
+	var exclusivos []int
+	for i, a := range magia.Augments {
+		if a.Exclusive {
+			exclusivos = append(exclusivos, i)
+		}
+	}
+
 	linhas := make([]augmentRow, 0, len(magia.Augments))
 	for i, a := range magia.Augments {
 		linha := augmentRow{
 			Index: i, PM: a.PmCost, Stacks: a.Kind != "muda",
 			Description: augmentDescription(spellID, i),
+			Exclusive:   a.Exclusive, Truque: a.Truque,
 		}
 		if a.RequiresCircle != nil {
 			linha.RequiredCircle = *a.RequiresCircle
 			linha.Locked = *a.RequiresCircle > castable
 		}
+		// Quem o gesto APAGA: o exclusivo apaga todos os outros, e os outros
+		// apagam os exclusivos. Sem isto a tela deixa montar truque + companhia,
+		// mostra um custo e o servidor recusa na hora do clique — a recusa é a
+		// fronteira, mas oferecer o que não vale é a tela mentindo.
+		apaga := exclusivos
+		if a.Exclusive {
+			apaga = outrosIndices(len(magia.Augments), i)
+		}
+		linha.Toggle = clearSignals(apaga, i) + augmentSignal(i) + " = " + augmentSignal(i) + " ? 0 : 1"
+		linha.More = clearSignals(apaga, i) + augmentSignal(i) + "++"
+		// Diminuir não apaga nada: tirar uma pilha não monta combinação nova.
+		linha.Less = augmentSignal(i) + " = Math.max(0, " + augmentSignal(i) + " - 1)"
 		linhas = append(linhas, linha)
 	}
 	return linhas
+}
+
+// outrosIndices são todos os índices menos o próprio.
+func outrosIndices(quantos, proprio int) []int {
+	var fora []int
+	for i := 0; i < quantos; i++ {
+		if i != proprio {
+			fora = append(fora, i)
+		}
+	}
+	return fora
+}
+
+// clearSignals monta "$augmentA = 0; " para cada índice, pulando o próprio.
+func clearSignals(indices []int, proprio int) string {
+	expr := ""
+	for _, i := range indices {
+		if i == proprio {
+			continue
+		}
+		expr += augmentSignal(i) + " = 0; "
+	}
+	return expr
 }
 
 // augmentDescription lê o texto do aprimoramento do catálogo cru.
@@ -364,7 +420,39 @@ func costPreview(magia learnedSpellRow) string {
 		}
 		expr += " + " + strconv.Itoa(a.PM) + " * " + augmentSignal(a.Index)
 	}
+	// O TRUQUE zera a conjuração INTEIRA, e não a parcela dele: "reduz seu custo
+	// em PM para zero" (p171). Somado como um `+0 PM`, o custo base ficava de pé
+	// e a tela anunciava 1 PM sobre uma conjuração que o servidor não cobra
+	// (ALE-339). A prévia continua sem decidir nada — ela só deixou de discordar.
+	for _, a := range magia.Augments {
+		if a.Truque {
+			return "(" + augmentSignal(a.Index) + " ? 0 : (" + expr + ")) + ' PM'"
+		}
+	}
 	return "(" + expr + ") + ' PM'"
+}
+
+// augmentPriceWritten é a linha de baixo do aprimoramento: o que ele custa e o
+// que ele impede.
+//
+// O TRUQUE não escreve "+0 PM", que é a mesma coisa que um aprimoramento de
+// custo zero — e a Luz tem um desses (p197), então as duas linhas sairiam
+// idênticas dizendo coisas diferentes. Ele escreve que ZERA a conjuração, que é
+// o que a p171 diz.
+//
+// E a linha diz que ele não combina porque o gesto APAGA os outros: sem a frase,
+// ligar o truque faz as escolhas anteriores sumirem sem explicação.
+func augmentPriceWritten(a augmentRow) string {
+	if a.Locked {
+		return "+" + strconv.Itoa(a.PM) + " PM · exige o " + strconv.Itoa(a.RequiredCircle) + "º círculo"
+	}
+	if a.Truque {
+		return "a conjuração custa 0 PM · não combina com os outros"
+	}
+	if a.Exclusive {
+		return "+" + strconv.Itoa(a.PM) + " PM · não combina com os outros"
+	}
+	return "+" + strconv.Itoa(a.PM) + " PM"
 }
 
 // circleName é "Truque" ou "3º", como a mesa fala.
