@@ -68,3 +68,44 @@ func TestTheNewAddressesAnswer(t *testing.T) {
 		}
 	}
 }
+
+// TUDO O QUE O PROCESSO ATENDE sai de um roteador só.
+//
+// Este caso era IMPOSSÍVEL de escrever antes: as quatro rotas abaixo moravam num
+// roteador da biblioteca padrão montado no `cmd/api`, e nenhum teste deste
+// pacote alcançava aquele mux — a raiz de composição do binário não tinha teste
+// nenhum, que é o que permite uma rota sumir na montagem sem ninguém ver.
+//
+// Ele afirma ROTEAMENTO e não conteúdo: o que importa é o roteador conhecer o
+// caminho. Por isso o alvo protegido é medido por "não é 404" — 401 é a resposta
+// certa de uma rota que existe e exige sessão, e foi ela que provou o `Mount`
+// do `/api` funcionando com o prefixo removido.
+func TestTheProcessServesEverythingFromOneRouter(t *testing.T) {
+	roteador := newTestServer(t).WebRouter()
+
+	for _, caso := range []struct {
+		alvo   string
+		quero  int
+		porque string
+	}{
+		{"/health", http.StatusOK, "a sonda do compose e o `-health` do binário perguntam na RAIZ"},
+		{"/api/health", http.StatusOK, "a mesma saúde sob o prefixo da API"},
+		{"/favicon.svg", http.StatusOK, "o layout pede o ícone por caminho absoluto"},
+		{"/fonts/cinzel-latin.woff2", http.StatusOK, "a folha pede a Cinzel por caminho absoluto"},
+		{"/static/app.css", http.StatusOK, "a folha e o bundle do Datastar são anônimos"},
+	} {
+		rec := httptest.NewRecorder()
+		roteador.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, caso.alvo, nil))
+		if rec.Code != caso.quero {
+			t.Errorf("%s respondeu %d, quero %d — %s", caso.alvo, rec.Code, caso.quero, caso.porque)
+		}
+	}
+
+	// A API sob `/api`, com o prefixo TIRADO pelo `Mount`: se ele não tirasse, o
+	// handler receberia `/api/campanhas` e devolveria 404 em vez de 401.
+	rec := httptest.NewRecorder()
+	roteador.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/campanhas", nil))
+	if rec.Code == http.StatusNotFound {
+		t.Error("/api/campanhas respondeu 404: o `Mount` não está tirando o prefixo, e a API inteira está fora do ar")
+	}
+}

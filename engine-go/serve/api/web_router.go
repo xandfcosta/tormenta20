@@ -20,14 +20,36 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// O ROTEADOR WEB do app: cada cena registra as rotas dela, e aqui se decide
-// quem fica atrás de qual porteiro.
-
+// O ROTEADOR DO PROCESSO: tudo o que o binário atende, num lugar só.
+//
+// Era em DOIS — este e um roteador da biblioteca padrão no `cmd/api`, que
+// montava as fontes, o favicon, a saúde e o `/api` ao lado das cenas. A divisão
+// não tinha razão escrita em lugar nenhum, e cobrava duas:
+//
+// Quem quisesse saber o que o processo serve lia dois arquivos, e o mais
+// externo ficava no `cmd`, longe de tudo. E o roteador da biblioteca padrão NÃO
+// SE PERCORRE: o `chi.Walk` é o que o `route_params_test.go` usa para perguntar
+// ao roteador — em vez de a um regex sobre a fonte — quais rotas existem, e as
+// quatro rotas de lá eram invisíveis para ele.
+//
+// A ordem abaixo é de fora para dentro: primeiro o que qualquer um alcança,
+// depois o que exige sessão.
 func (s *Server) WebRouter() http.Handler {
 	r := chi.NewRouter()
 	// Os estáticos são ANÔNIMOS: são o bundle do Datastar e a folha de estilo, e
 	// exigir sessão para eles só quebraria o cache.
 	r.Handle("/static/*", http.StripPrefix("/static/", assets.Handler()))
+	// As FONTES, que a folha pede por caminho absoluto (`/fonts/…`), e o ÍCONE
+	// que o layout pede. Anônimos pelo mesmo motivo dos estáticos.
+	r.Handle("/fonts/*", assets.FontsHandler())
+	r.Handle("/favicon.svg", assets.FaviconHandler())
+	// A SAÚDE responde na RAIZ além de `/api/health`: quem pergunta é o
+	// `healthcheck` do compose e o `-health` do próprio binário, e infraestrutura
+	// não sabe de prefixo.
+	r.Handle("/health", s.HealthProbe())
+	// A API JSON, sob `/api`. O `Mount` do chi tira o prefixo sozinho — era um
+	// `http.StripPrefix` escrito à mão no mux.
+	r.Mount("/api", s.Router())
 	// A PORTA é anônima por necessidade: é ela que cria a sessão. Ela fica FORA
 	// do grupo com `requirePage` — não por ordem de casamento, que o chi resolve
 	// por rota, mas porque dentro dele ela seria inalcançável para exatamente
