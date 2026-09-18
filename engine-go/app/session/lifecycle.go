@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"t20engine/app/boards"
 
 	"t20engine/app"
-	"t20engine/domain/board"
 	"t20engine/domain/live"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -21,12 +21,12 @@ type Lifecycle struct {
 	db       *sql.DB
 	queries  *sqlcgen.Queries
 	sessions *Store
-	boards   *board.BoardStore
+	boards   *boards.Store
 	access   Access
 }
 
 func NewLifecycle(
-	db *sql.DB, q *sqlcgen.Queries, sessions *Store, boards *board.BoardStore,
+	db *sql.DB, q *sqlcgen.Queries, sessions *Store, boards *boards.Store,
 ) Lifecycle {
 	return Lifecycle{db: db, queries: q, sessions: sessions, boards: boards, access: NewAccess(q)}
 }

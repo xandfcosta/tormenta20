@@ -22,9 +22,14 @@ import "t20engine/infra/wire"
 // devolver os mesmos campos — cerimônia sobre uma função escrita para um pedido
 // que este desenho não faz.
 
+// O REMENDO DE PEÇA é público, e a razão é a mesma das mutações da fila
+// (ALE-344): o store que o consome mora em `app/board`, e um tipo que atravessa
+// a fronteira precisa de nome. Quem o MONTA continua sendo o construtor abaixo —
+// os campos são ponteiro, e "ausente é não mexa" é a regra que ele carrega.
+
 // ParseTokenPatch lê só os campos PRESENTES: ausente é "não mexa", não "zere".
-func ParseTokenPatch(raw any) tokenPatch {
-	patch := tokenPatch{}
+func ParseTokenPatch(raw any) TokenPatch {
+	patch := TokenPatch{}
 	m, ok := raw.(map[string]any)
 	if !ok {
 		return patch
@@ -51,8 +56,8 @@ func ParseTokenPatch(raw any) tokenPatch {
 }
 
 // ParseMarkerPatch lê só os campos PRESENTES.
-func ParseMarkerPatch(raw any) markerPatch {
-	patch := markerPatch{}
+func ParseMarkerPatch(raw any) MarkerPatch {
+	patch := MarkerPatch{}
 	m, ok := raw.(map[string]any)
 	if !ok {
 		return patch

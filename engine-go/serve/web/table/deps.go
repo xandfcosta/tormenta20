@@ -3,6 +3,7 @@ package table
 import (
 	"context"
 	"net/http"
+	"t20engine/app/boards"
 
 	"github.com/a-h/templ"
 
@@ -36,7 +37,7 @@ type Deps interface {
 	// Catalogs é o motor primado, para computar a ficha de quem senta à mesa.
 	Catalogs() *engine.Catalogs
 	// Boards são os tabuleiros vivos por sessão; Sessions é a fila e a cena.
-	Boards() *board.BoardStore
+	Boards() *boards.Store
 	Sessions() *session.Store
 	// Presence é quem está online na sala; SSE são os leitores por sessão e
 	// papel; Bus é o que aconteceu na mesa.

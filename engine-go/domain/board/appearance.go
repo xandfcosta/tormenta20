@@ -81,3 +81,17 @@ func hueOf(nome string) int {
 	}
 	return int(hash % 360)
 }
+
+// Place é uma cena guardada da crônica.
+//
+// O que a mesa chama de "lugar" é o tabuleiro CONGELADO: a taverna com as nove
+// peças onde ficaram, para reabrir na semana seguinte sem remontar nada.
+type Place struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	// Tokens é só a CONTAGEM: a lista serve para escolher onde jogar, e mandar
+	// a cena inteira de cada lugar seria mandar o acervo do mestre a cada
+	// abertura de menu. A cena chega ao reabrir.
+	Tokens    int    `json:"tokens"`
+	UpdatedAt string `json:"updatedAt"`
+}

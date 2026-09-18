@@ -1,4 +1,4 @@
-package board
+package boards
 
 import "t20engine/domain/live"
 
@@ -12,6 +12,7 @@ import (
 	"sync"
 	"t20engine/infra/db/dbvalue"
 
+	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
@@ -25,25 +26,25 @@ var errNoBoard = errors.New("esta sessão não tem tabuleiro aberto")
 // openBoardsCeiling — quantos tabuleiros uma sessão pode ter abertos ao mesmo
 // tempo.
 //
-// Existe pelo mesmo motivo do `boardMaxTokens`: sem teto o estado cresce sem
+// Existe pelo mesmo motivo do `MaxTokens`: sem teto o estado cresce sem
 // limite e TODA hidratação e TODA gravação o carregam. Oito frentes é uma cena
 // que nenhuma mesa joga.
 const openBoardsCeiling = 8
 
-// BoardStore guarda os tabuleiros vivos de cada sessão em memória, com lastro na
+// Store guarda os tabuleiros vivos de cada sessão em memória, com lastro na
 // tabela open_boards.
 //
 // Mutex PRÓPRIO, separado do `session.Store`: lá o mutex é global a todas as
 // sessões, e um tabuleiro movimentado numa mesa serializaria a edição de PV de
 // outra mesa. Aqui a mesma trava vale para todos os tabuleiros — quando o custo
 // aparecer, ela vira uma por sessão sem mudar quem chama.
-type BoardStore struct {
+type Store struct {
 	Mu sync.Mutex
 	// boards é uma LISTA por sessão, e a ordem dela é a de abertura: ela é a
 	// ordem das abas na tela, e a primeira é a aba PADRÃO de quem ainda não
 	// escolheu. Um mapa por id perderia a ordem e faria a barra de abas mudar de
 	// forma a cada carga.
-	boards map[int64][]*BoardState
+	boards map[int64][]*board.BoardState
 	// loaded marca a sessão já consultada no banco, para "sem tabuleiro" não
 	// virar uma ida ao disco por mensagem.
 	loaded map[int64]bool
@@ -66,10 +67,10 @@ type BoardStore struct {
 	q     *sqlcgen.Queries
 }
 
-func NewBoardStore(q *sqlcgen.Queries, newID func() string, bus *events.Bus) *BoardStore {
-	return &BoardStore{
+func NewStore(q *sqlcgen.Queries, newID func() string, bus *events.Bus) *Store {
+	return &Store{
 		bus:    bus,
-		boards: map[int64][]*BoardState{},
+		boards: map[int64][]*board.BoardState{},
 		loaded: map[int64]bool{},
 		Dirty:  map[int64]bool{},
 		newID:  newID,
@@ -80,16 +81,16 @@ func NewBoardStore(q *sqlcgen.Queries, newID func() string, bus *events.Bus) *Bo
 // cloneBoard copia o tabuleiro para o broadcast. As peças são valores; a cópia
 // da fatia é o que impede uma mensagem concorrente de mexer no que já está
 // sendo serializado.
-func cloneBoard(b *BoardState) *BoardState {
+func cloneBoard(b *board.BoardState) *board.BoardState {
 	if b == nil {
 		return nil
 	}
 	out := *b
-	out.Tokens = make([]BoardToken, len(b.Tokens))
+	out.Tokens = make([]board.BoardToken, len(b.Tokens))
 	copy(out.Tokens, b.Tokens)
 	// Os marcadores são valores, mas a FATIA é compartilhada: sem a cópia, uma
 	// mensagem concorrente mexeria no que já está sendo serializado.
-	out.Markers = make([]BoardMarker, len(b.Markers))
+	out.Markers = make([]board.BoardMarker, len(b.Markers))
 	copy(out.Markers, b.Markers)
 	// O provisório é PONTEIRO, e uma cópia rasa deixaria o instantâneo do
 	// broadcast apontando para o mesmo movimento que a mensagem seguinte
@@ -110,7 +111,7 @@ func cloneBoard(b *BoardState) *BoardState {
 // primeiro tabuleiro aberto. Um id que não existe devolve NIL em vez de cair no
 // padrão — a aba que o mestre fechou tem de sumir da tela de quem estava nela,
 // e não virar outra cena em silêncio.
-func (bs *BoardStore) Get(ctx context.Context, sessionID int64, tabuleiroID string) *BoardState {
+func (bs *Store) Get(ctx context.Context, sessionID int64, tabuleiroID string) *board.BoardState {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
@@ -121,13 +122,13 @@ func (bs *BoardStore) Get(ctx context.Context, sessionID int64, tabuleiroID stri
 // barra de abas desenha.
 //
 // Cópias, como o `Get`: quem recebe a lista a redige por papel e a serializa,
-// e devolver os ponteiros vivos deixaria o `BoardForRole` do chamador
+// e devolver os ponteiros vivos deixaria o `board.BoardForRole` do chamador
 // escrevendo no estado da mesa.
-func (bs *BoardStore) OpenBoards(ctx context.Context, sessionID int64) []*BoardState {
+func (bs *Store) OpenBoards(ctx context.Context, sessionID int64) []*board.BoardState {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
-	abertos := make([]*BoardState, 0, len(bs.boards[sessionID]))
+	abertos := make([]*board.BoardState, 0, len(bs.boards[sessionID]))
 	for _, b := range bs.boards[sessionID] {
 		abertos = append(abertos, cloneBoard(b))
 	}
@@ -140,7 +141,7 @@ func (bs *BoardStore) OpenBoards(ctx context.Context, sessionID int64) []*BoardS
 // enquanto a mesa olha a cripta, e por "a última" a mesa inteira seria puxada
 // para uma cortina sem ninguém pedir. Quem move a mesa de propósito é o FORÇAR,
 // que é gesto.
-func (bs *BoardStore) DefaultBoardID(ctx context.Context, sessionID int64) string {
+func (bs *Store) DefaultBoardID(ctx context.Context, sessionID int64) string {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
@@ -155,7 +156,7 @@ func (bs *BoardStore) DefaultBoardID(ctx context.Context, sessionID int64) strin
 // `max + 1` e não `len + 1`: fechar a aba do meio deixaria dois tabuleiros com
 // o mesmo número, e dois números iguais é o empate que esta coluna existe para
 // não ter. Buraco na sequência não custa nada — ela só serve para ordenar.
-func (bs *BoardStore) nextSeqLocked(sessionID int64) int64 {
+func (bs *Store) nextSeqLocked(sessionID int64) int64 {
 	var maior int64
 	for _, b := range bs.boards[sessionID] {
 		if b.Seq > maior {
@@ -166,7 +167,7 @@ func (bs *BoardStore) nextSeqLocked(sessionID int64) int64 {
 }
 
 // findLocked resolve o id na lista da sessão, com a trava já na mão.
-func (bs *BoardStore) findLocked(sessionID int64, tabuleiroID string) *BoardState {
+func (bs *Store) findLocked(sessionID int64, tabuleiroID string) *board.BoardState {
 	abertos := bs.boards[sessionID]
 	if len(abertos) == 0 {
 		return nil
@@ -192,7 +193,7 @@ func (bs *BoardStore) findLocked(sessionID int64, tabuleiroID string) *BoardStat
 // legítima e definitiva, então ela MARCA e evita uma ida ao disco por mensagem.
 // Qualquer outro erro deixa a sessão sem marca, e a mensagem seguinte tenta de
 // novo.
-func (bs *BoardStore) hydrateLocked(ctx context.Context, sessionID int64) {
+func (bs *Store) hydrateLocked(ctx context.Context, sessionID int64) {
 	if bs.loaded[sessionID] {
 		return
 	}
@@ -204,16 +205,16 @@ func (bs *BoardStore) hydrateLocked(ctx context.Context, sessionID int64) {
 		return
 	}
 	bs.loaded[sessionID] = true
-	abertos := make([]*BoardState, 0, len(rows))
+	abertos := make([]*board.BoardState, 0, len(rows))
 	for _, row := range rows {
-		var parsed BoardState
+		var parsed board.BoardState
 		if err := json.Unmarshal([]byte(row.State), &parsed); err != nil {
 			log.Printf("session %d: board %s blob malformed (%v); tratando como sem tabuleiro",
 				sessionID, row.Boardid, err)
 			continue
 		}
 		if parsed.Tokens == nil {
-			parsed.Tokens = []BoardToken{}
+			parsed.Tokens = []board.BoardToken{}
 		}
 		// O ID e a SEQUÊNCIA vêm da COLUNA e não do JSON, pela mesma razão do nome
 		// do lugar no `Reopen`: duas verdades sobre quem é este tabuleiro é como
@@ -236,7 +237,7 @@ func (bs *BoardStore) hydrateLocked(ctx context.Context, sessionID int64) {
 // A versão nasce em 1 e não continua a de ninguém: são dois tabuleiros
 // diferentes, com dois contadores, e continuar um no outro faria o número
 // mentir sobre quantas vezes ESTA cena mudou.
-func (bs *BoardStore) Open(ctx context.Context, sessionID int64, place, terrain string) (*BoardState, error) {
+func (bs *Store) Open(ctx context.Context, sessionID int64, place, terrain string) (*board.BoardState, error) {
 	b, err := bs.openLocked(ctx, sessionID, place, terrain)
 	if err != nil {
 		return nil, err
@@ -245,7 +246,7 @@ func (bs *BoardStore) Open(ctx context.Context, sessionID int64, place, terrain 
 	return b, nil
 }
 
-func (bs *BoardStore) openLocked(ctx context.Context, sessionID int64, place, terrain string) (*BoardState, error) {
+func (bs *Store) openLocked(ctx context.Context, sessionID int64, place, terrain string) (*board.BoardState, error) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
@@ -254,7 +255,7 @@ func (bs *BoardStore) openLocked(ctx context.Context, sessionID int64, place, te
 			"esta sessão já tem %d tabuleiros abertos (teto %d): feche um antes de abrir outro",
 			len(bs.boards[sessionID]), openBoardsCeiling)
 	}
-	b := newBoard(bs.newID(), place, terrain)
+	b := board.NewBoard(bs.newID(), place, terrain)
 	b.Seq = bs.nextSeqLocked(sessionID)
 	bs.boards[sessionID] = append(bs.boards[sessionID], b)
 	return cloneBoard(b), nil
@@ -266,7 +267,7 @@ func (bs *BoardStore) openLocked(ctx context.Context, sessionID int64, place, te
 // Devolve as transições de saúde como o `Persist`: se o DELETE falha, a memória
 // diz "fechado" e o banco mantém a linha — no próximo boot o tabuleiro FANTASMA
 // volta, com as peças de uma cena que a mesa já encerrou.
-func (bs *BoardStore) Close(ctx context.Context, sessionID int64, tabuleiroID string) (Dirty, changed bool) {
+func (bs *Store) Close(ctx context.Context, sessionID int64, tabuleiroID string) (Dirty, changed bool) {
 	bs.Mu.Lock()
 	alvo := bs.findLocked(sessionID, tabuleiroID)
 	if alvo == nil {
@@ -274,7 +275,7 @@ func (bs *BoardStore) Close(ctx context.Context, sessionID int64, tabuleiroID st
 		return bs.Dirty[sessionID], false
 	}
 	fechado := alvo.ID
-	restantes := make([]*BoardState, 0, len(bs.boards[sessionID]))
+	restantes := make([]*board.BoardState, 0, len(bs.boards[sessionID]))
 	for _, b := range bs.boards[sessionID] {
 		if b.ID != fechado {
 			restantes = append(restantes, b)
@@ -337,7 +338,7 @@ func (bs *BoardStore) Close(ctx context.Context, sessionID int64, tabuleiroID st
 // Não toca no BANCO: a linha de `open_boards` some por CASCATA quando a sessão
 // é apagada (migração 00010). Apagá-la aqui seria a segunda verdade sobre quem
 // limpa, e a que roda depois falharia por não achar nada.
-func (bs *BoardStore) SessionDeleted(sessionID int64) {
+func (bs *Store) SessionDeleted(sessionID int64) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	delete(bs.boards, sessionID)
@@ -348,9 +349,9 @@ func (bs *BoardStore) SessionDeleted(sessionID int64) {
 // apply roda uma mutação pura sobre UM tabuleiro, sob a trava, e devolve o
 // instantâneo para o broadcast. Recusa quando aquele tabuleiro não existe: mexer
 // no que não existe é erro de quem chamou, não um tabuleiro criado por acidente.
-func (bs *BoardStore) apply(
-	ctx context.Context, sessionID int64, tabuleiroID string, fn func(*BoardState) error,
-) (*BoardState, error) {
+func (bs *Store) apply(
+	ctx context.Context, sessionID int64, tabuleiroID string, fn func(*board.BoardState) error,
+) (*board.BoardState, error) {
 	b, err := bs.applyLocked(ctx, sessionID, tabuleiroID, fn)
 	if err != nil {
 		return nil, err
@@ -359,9 +360,9 @@ func (bs *BoardStore) apply(
 	return b, nil
 }
 
-func (bs *BoardStore) applyLocked(
-	ctx context.Context, sessionID int64, tabuleiroID string, fn func(*BoardState) error,
-) (*BoardState, error) {
+func (bs *Store) applyLocked(
+	ctx context.Context, sessionID int64, tabuleiroID string, fn func(*board.BoardState) error,
+) (*board.BoardState, error) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
@@ -375,44 +376,44 @@ func (bs *BoardStore) applyLocked(
 	return cloneBoard(b), nil
 }
 
-// AddToken põe a peça no tabuleiro, NA CASA que ela traz. A posição é sempre
+// board.AddToken põe a peça no tabuleiro, NA CASA que ela traz. A posição é sempre
 // declarada: o gesto de criar peça POSICIONA — o modo liga, o clique numa casa
 // diz onde, e a coordenada viaja no caminho.
-func (bs *BoardStore) AddToken(ctx context.Context, sessionID int64, tabuleiroID string, t BoardToken) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
-		return AddToken(b, t, bs.newID)
+func (bs *Store) AddToken(ctx context.Context, sessionID int64, tabuleiroID string, t board.BoardToken) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
+		return board.AddToken(b, t, bs.newID)
 	})
 }
 
-func (bs *BoardStore) RemoveToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { RemoveToken(b, tokenID); return nil })
+func (bs *Store) RemoveToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error { board.RemoveToken(b, tokenID); return nil })
 }
 
-// DuplicateToken põe outra igual ao lado, numerada pelo SERVIDOR: dois clientes
+// board.DuplicateToken põe outra igual ao lado, numerada pelo SERVIDOR: dois clientes
 // duplicando ao mesmo tempo não podem inventar o mesmo "Zumbi 3".
 //
-// O `laco` é o que a cópia vai ser — ver o `DuplicateToken` do estado, onde a
+// O `laco` é o que a cópia vai ser — ver o `board.DuplicateToken` do estado, onde a
 // decisão está escrita. Ele chega PRONTO porque a linha nova mora no
 // `session.Store`, e este store não o conhece.
-func (bs *BoardStore) DuplicateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string, laco *live.InitiativeEntry) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
-		return DuplicateToken(b, tokenID, laco, bs.newID)
+func (bs *Store) DuplicateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string, laco *live.InitiativeEntry) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
+		return board.DuplicateToken(b, tokenID, laco, bs.newID)
 	})
 }
 
-// PasteToken põe a cópia NESTE tabuleiro, e a original pode ser de outro.
-func (bs *BoardStore) PasteToken(ctx context.Context, sessionID int64, tabuleiroID string, modelo BoardToken, laco *live.InitiativeEntry, x, y int) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
-		return PasteToken(b, modelo, laco, x, y, bs.newID)
+// board.PasteToken põe a cópia NESTE tabuleiro, e a original pode ser de outro.
+func (bs *Store) PasteToken(ctx context.Context, sessionID int64, tabuleiroID string, modelo board.BoardToken, laco *live.InitiativeEntry, x, y int) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
+		return board.PasteToken(b, modelo, laco, x, y, bs.newID)
 	})
 }
 
-func (bs *BoardStore) UpdateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string, patch tokenPatch) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { return UpdateToken(b, tokenID, patch) })
+func (bs *Store) UpdateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string, patch board.TokenPatch) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error { return board.UpdateToken(b, tokenID, patch) })
 }
 
-// ClearSquare é a BORRACHA: tira todo terreno de um quadrado.
-func (bs *BoardStore) ClearSquare(ctx context.Context, sessionID int64, tabuleiroID string, square engine.Square) (*BoardState, error) {
+// board.ClearSquare é a BORRACHA: tira todo terreno de um quadrado.
+func (bs *Store) ClearSquare(ctx context.Context, sessionID int64, tabuleiroID string, square engine.Square) (*board.BoardState, error) {
 	return bs.ClearStroke(ctx, sessionID, tabuleiroID, []engine.Square{square})
 }
 
@@ -422,65 +423,65 @@ func (bs *BoardStore) ClearSquare(ctx context.Context, sessionID int64, tabuleir
 // `apply` sobe a versão do tabuleiro e publica para a mesa. Uma gravação por casa
 // faria a mesa receber dez quadros para um gesto só, e cada um deles com metade
 // do traço desenhada.
-func (bs *BoardStore) ClearStroke(ctx context.Context, sessionID int64, tabuleiroID string, traco []engine.Square) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
+func (bs *Store) ClearStroke(ctx context.Context, sessionID int64, tabuleiroID string, traco []engine.Square) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
 		for _, casa := range traco {
-			ClearSquare(b, casa)
+			board.ClearSquare(b, casa)
 		}
 		return nil
 	})
 }
 
-// ReturnToken desfaz o último pouso.
-func (bs *BoardStore) ReturnToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { return ReturnToken(b, tokenID) })
+// board.ReturnToken desfaz o último pouso.
+func (bs *Store) ReturnToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error { return board.ReturnToken(b, tokenID) })
 }
 
 // Marcadores: o lugar apontado no mapa que não é peça.
-func (bs *BoardStore) AddMarker(ctx context.Context, sessionID int64, tabuleiroID string, m BoardMarker) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { return AddMarker(b, m, bs.newID) })
+func (bs *Store) AddMarker(ctx context.Context, sessionID int64, tabuleiroID string, m board.BoardMarker) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error { return board.AddMarker(b, m, bs.newID) })
 }
 
-func (bs *BoardStore) UpdateMarker(ctx context.Context, sessionID int64, tabuleiroID, markerID string, patch markerPatch) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { return UpdateMarker(b, markerID, patch) })
+func (bs *Store) UpdateMarker(ctx context.Context, sessionID int64, tabuleiroID, markerID string, patch board.MarkerPatch) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error { return board.UpdateMarker(b, markerID, patch) })
 }
 
-func (bs *BoardStore) RemoveMarker(ctx context.Context, sessionID int64, tabuleiroID, markerID string) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { RemoveMarker(b, markerID); return nil })
+func (bs *Store) RemoveMarker(ctx context.Context, sessionID int64, tabuleiroID, markerID string) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error { board.RemoveMarker(b, markerID); return nil })
 }
 
-func (bs *BoardStore) PaintTerrain(
-	ctx context.Context, sessionID int64, tabuleiroID string, square engine.Square, especie TerrainKind, ligado bool,
-) (*BoardState, error) {
+func (bs *Store) PaintTerrain(
+	ctx context.Context, sessionID int64, tabuleiroID string, square engine.Square, especie board.TerrainKind, ligado bool,
+) (*board.BoardState, error) {
 	return bs.PaintStroke(ctx, sessionID, tabuleiroID, []engine.Square{square}, especie, ligado)
 }
 
 // PaintStroke pinta o segmento inteiro numa gravação só — ver `ClearStroke`.
-func (bs *BoardStore) PaintStroke(
-	ctx context.Context, sessionID int64, tabuleiroID string, traco []engine.Square, especie TerrainKind, ligado bool,
-) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
+func (bs *Store) PaintStroke(
+	ctx context.Context, sessionID int64, tabuleiroID string, traco []engine.Square, especie board.TerrainKind, ligado bool,
+) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
 		for _, casa := range traco {
-			PaintTerrain(b, casa, especie, ligado)
+			board.PaintTerrain(b, casa, especie, ligado)
 		}
 		return nil
 	})
 }
 
-func (bs *BoardStore) Populate(
-	ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, chosen EntrySelection,
-) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
-		populateBoard(b, st, bs.newID, chosen)
+func (bs *Store) Populate(
+	ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, chosen board.EntrySelection,
+) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
+		board.PopulateBoard(b, st, bs.newID, chosen)
 		return nil
 	})
 }
 
 // SetSpeeds grava o orçamento de várias peças de uma vez. Uma mutação só, e um
-// broadcast só: um `UpdateToken` por peça faria a mesa receber seis tabuleiros
+// broadcast só: um `board.UpdateToken` por peça faria a mesa receber seis tabuleiros
 // seguidos ao trazer o grupo.
-func (bs *BoardStore) SetSpeeds(ctx context.Context, sessionID int64, tabuleiroID string, speeds map[string]int) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
+func (bs *Store) SetSpeeds(ctx context.Context, sessionID int64, tabuleiroID string, speeds map[string]int) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
 		for i := range b.Tokens {
 			if squares, ok := speeds[b.Tokens[i].ID]; ok && squares > 0 {
 				b.Tokens[i].SpeedSquares = squares
@@ -508,13 +509,13 @@ func (bs *BoardStore) SetSpeeds(ctx context.Context, sessionID int64, tabuleiroI
 // merece vê-lo. Um evento perdido é um evento que não existiu.
 //
 // Sob a trava porque o `Dirty` é escrito pelo `Persist`, que roda em goroutine.
-func (bs *BoardStore) SaveFailed(sessionID int64) bool {
+func (bs *Store) SaveFailed(sessionID int64) bool {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	return bs.Dirty[sessionID]
 }
 
-func (bs *BoardStore) Persist(ctx context.Context, sessionID int64, tabuleiroID string) (Dirty, changed bool) {
+func (bs *Store) Persist(ctx context.Context, sessionID int64, tabuleiroID string) (Dirty, changed bool) {
 	bs.Mu.Lock()
 	b := cloneBoard(bs.findLocked(sessionID, tabuleiroID))
 	bs.Mu.Unlock()
@@ -548,43 +549,43 @@ func (bs *BoardStore) Persist(ctx context.Context, sessionID int64, tabuleiroID 
 	return Dirty, changed
 }
 
-// ProposeMove, CommitMove e CancelMove são as três portas do movimento.
+// board.ProposeMove, board.CommitMove e board.CancelMove são as três portas do movimento.
 // A posse e o orçamento chegam RESOLVIDOS do gateway: quem consulta o banco é
 // ele, e a trava daqui não pode esperar por I/O.
 
-func (bs *BoardStore) ProposeMove(ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, tokenID string, path []engine.Square, by Mover, speedSquares int) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
+func (bs *Store) ProposeMove(ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, tokenID string, path []engine.Square, by board.Mover, speedSquares int) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
 		// O orçamento fresco do motor entra na peça ANTES da medição: sem isso,
 		// a armadura vestida no meio da sessão só valeria no movimento seguinte.
-		if token := FindToken(b, tokenID); token != nil && speedSquares > 0 {
+		if token := board.FindToken(b, tokenID); token != nil && speedSquares > 0 {
 			token.SpeedSquares = speedSquares
 		}
-		return ProposeMove(b, st, tokenID, path, by)
+		return board.ProposeMove(b, st, tokenID, path, by)
 	})
 }
 
-// ProposeMoveWithStops é a porta de quem monta o movimento CLICANDO, e ela
+// board.ProposeMoveWithStops é a porta de quem monta o movimento CLICANDO, e ela
 // existe para a lista de paradas ser guardada junto.
 //
 // Mesma trava, mesmo orçamento fresco, mesma medição: o que muda é a memória de
 // ONDE a pessoa parou, que o caminho sozinho não deixa reconstruir. Sem ela,
 // "desfazer a última perna" seria um palpite sobre o movimento que a mesa está
 // vendo.
-func (bs *BoardStore) ProposeMoveWithStops(ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover, speedSquares int) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
-		if token := FindToken(b, tokenID); token != nil && speedSquares > 0 {
+func (bs *Store) ProposeMoveWithStops(ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, tokenID string, paradas []engine.Square, by board.Mover, speedSquares int) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
+		if token := board.FindToken(b, tokenID); token != nil && speedSquares > 0 {
 			token.SpeedSquares = speedSquares
 		}
-		return ProposeMoveWithStops(b, st, tokenID, paradas, by)
+		return board.ProposeMoveWithStops(b, st, tokenID, paradas, by)
 	})
 }
 
-func (bs *BoardStore) CommitMove(ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, version int64, by Mover) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { return CommitMove(b, st, version, by) })
+func (bs *Store) CommitMove(ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, version int64, by board.Mover) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error { return board.CommitMove(b, st, version, by) })
 }
 
-func (bs *BoardStore) CancelMove(ctx context.Context, sessionID int64, tabuleiroID string, by Mover) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { return CancelMove(b, by) })
+func (bs *Store) CancelMove(ctx context.Context, sessionID int64, tabuleiroID string, by board.Mover) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error { return board.CancelMove(b, by) })
 }
 
 // SetCurtain fecha ou abre a CORTINA. Devolve `changed` falso quando o estado
@@ -592,11 +593,11 @@ func (bs *BoardStore) CancelMove(ctx context.Context, sessionID int64, tabuleiro
 // do mestre, ou duas abas abertas — mas também não é mutação, e publicar quadro
 // por não-mudança acorda a mesa inteira à toa.
 //
-// A cortina é POR TABULEIRO porque `Curtained` é campo do `BoardState`: o
+// A cortina é POR TABULEIRO porque `Curtained` é campo do `board.BoardState`: o
 // mestre monta a taverna com a cortina fechada enquanto a mesa olha a cripta.
-func (bs *BoardStore) SetCurtain(ctx context.Context, sessionID int64, tabuleiroID string, fechada bool) (*BoardState, bool, error) {
+func (bs *Store) SetCurtain(ctx context.Context, sessionID int64, tabuleiroID string, fechada bool) (*board.BoardState, bool, error) {
 	var mudou bool
-	b, err := bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
+	b, err := bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
 		mudou = b.Curtained != fechada
 		if !mudou {
 			return nil
@@ -617,15 +618,15 @@ func (bs *BoardStore) SetCurtain(ctx context.Context, sessionID int64, tabuleiro
 	return b, mudou, err
 }
 
-// MoveGroup desloca as peças marcadas pelo mesmo delta.
+// board.MoveGroup desloca as peças marcadas pelo mesmo delta.
 //
 // Uma transação para o grupo inteiro, pelo mesmo motivo do `PaintStroke`: o
 // gesto é UM, e uma gravação por peça faria a mesa ver a horda chegar pela
 // metade.
-func (bs *BoardStore) MoveGroup(
+func (bs *Store) MoveGroup(
 	ctx context.Context, sessionID int64, tabuleiroID string, ids []string, dx, dy int,
-) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
-		return MoveGroup(b, ids, dx, dy)
+) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *board.BoardState) error {
+		return board.MoveGroup(b, ids, dx, dy)
 	})
 }

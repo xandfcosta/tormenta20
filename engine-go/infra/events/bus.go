@@ -125,7 +125,7 @@ func (b *Bus) Subscribe(interests ...Interest) (Subscription, func()) {
 // O barramento é FOLHA na ordem de travas: pega só o `b.mu`, não chama de volta
 // nenhum store, e não executa código de quem escuta — o `select` com `default`
 // nunca cede o processador para o ouvinte. O abraço mortal que o
-// `board/board_store.go` documenta é entre DOIS STORES com travas próprias
+// `app/boards/store.go` documenta é entre DOIS STORES com travas próprias
 // chamando um ao outro, e não é este caso.
 //
 // Mesmo assim os stores publicam DEPOIS de soltar a trava, e a razão é outra:

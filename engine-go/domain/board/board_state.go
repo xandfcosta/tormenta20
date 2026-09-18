@@ -10,10 +10,10 @@ import (
 	"t20engine/domain/engine"
 )
 
-// boardMaxTokens — teto de peças num tabuleiro. Espelha o `live.InitiativeMaxEntries`
+// MaxTokens — teto de peças num tabuleiro. Espelha o `live.InitiativeMaxEntries`
 // pelo mesmo motivo: sem teto, o estado cresce sem limite e TODO broadcast o
 // carrega. Vinte tokens é uma mesa cheia; 200 é um acidente.
-const boardMaxTokens = 200
+const MaxTokens = 200
 
 // boardCoordLimit — o tabuleiro é INFINITO e este número não é uma borda: é um
 // guarda contra lixo. 5000 quadrados são 7,5km (T20 p236: 1 quadrado = 1,5m), e
@@ -166,20 +166,20 @@ type BoardState struct {
 	Pending *PendingMove `json:"pending,omitempty"`
 }
 
-// newBoard abre um tabuleiro vazio num plano sem bordas.
-func newBoard(id, place, terrain string) *BoardState {
+// NewBoard abre um tabuleiro vazio num plano sem bordas.
+func NewBoard(id, place, terrain string) *BoardState {
 	return &BoardState{ID: id, Version: 1, Place: place, Terrain: terrain, Tokens: []BoardToken{}}
 }
 
 // AddToken põe uma peça no tabuleiro, recusando o que sairia da grade.
 func AddToken(b *BoardState, t BoardToken, newID func() string) error {
-	if len(b.Tokens) >= boardMaxTokens {
-		return fmt.Errorf("o tabuleiro já tem %d peças (teto %d)", len(b.Tokens), boardMaxTokens)
+	if len(b.Tokens) >= MaxTokens {
+		return fmt.Errorf("o tabuleiro já tem %d peças (teto %d)", len(b.Tokens), MaxTokens)
 	}
 	if t.Footprint <= 0 {
 		t.Footprint = 1
 	}
-	if err := assertSaneCoords(t); err != nil {
+	if err := AssertSaneCoords(t); err != nil {
 		return err
 	}
 	t.ID = newID()
@@ -328,9 +328,9 @@ func RemoveToken(b *BoardState, tokenID string) {
 	}
 }
 
-// tokenPatch é a alteração parcial de uma peça: só os campos não-nulos entram,
+// TokenPatch é a alteração parcial de uma peça: só os campos não-nulos entram,
 // para "não mexer" ficar distinto de "zerar".
-type tokenPatch struct {
+type TokenPatch struct {
 	Label     *string `json:"label"`
 	Hidden    *bool   `json:"hidden"`
 	Footprint *int    `json:"footprint"`
@@ -340,7 +340,7 @@ type tokenPatch struct {
 
 // UpdateToken aplica o patch. Não há borda para respeitar — só o guarda contra
 // coordenada absurda, que é sobre lixo de cliente e não sobre o mapa.
-func UpdateToken(b *BoardState, tokenID string, patch tokenPatch) error {
+func UpdateToken(b *BoardState, tokenID string, patch TokenPatch) error {
 	for i := range b.Tokens {
 		t := &b.Tokens[i]
 		if t.ID != tokenID {
@@ -348,7 +348,7 @@ func UpdateToken(b *BoardState, tokenID string, patch tokenPatch) error {
 		}
 		next := *t
 		applyTokenPatch(&next, patch)
-		if err := assertSaneCoords(next); err != nil {
+		if err := AssertSaneCoords(next); err != nil {
 			return err
 		}
 		*t = next
@@ -358,7 +358,7 @@ func UpdateToken(b *BoardState, tokenID string, patch tokenPatch) error {
 	return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 }
 
-func applyTokenPatch(t *BoardToken, patch tokenPatch) {
+func applyTokenPatch(t *BoardToken, patch TokenPatch) {
 	if patch.Label != nil {
 		t.Label = *patch.Label
 	}
@@ -410,7 +410,7 @@ func trimMarkerText(text string) string {
 
 // UpdateMarker altera texto, cor ou o ocultamento — a posição não muda porque
 // marcador que anda é peça, e peça já existe.
-func UpdateMarker(b *BoardState, markerID string, patch markerPatch) error {
+func UpdateMarker(b *BoardState, markerID string, patch MarkerPatch) error {
 	for i := range b.Markers {
 		if b.Markers[i].ID != markerID {
 			continue
@@ -430,8 +430,8 @@ func UpdateMarker(b *BoardState, markerID string, patch markerPatch) error {
 	return fmt.Errorf("marcador %q não está no tabuleiro", markerID)
 }
 
-// markerPatch é a alteração parcial: ausente é "não mexa", não "zere".
-type markerPatch struct {
+// MarkerPatch é a alteração parcial: ausente é "não mexa", não "zere".
+type MarkerPatch struct {
 	Text   *string `json:"text"`
 	Color  *string `json:"color"`
 	Hidden *bool   `json:"hidden"`
@@ -449,10 +449,10 @@ func RemoveMarker(b *BoardState, markerID string) {
 	}
 }
 
-// assertSaneCoords recusa coordenada que só pode ter vindo de cliente quebrado.
+// AssertSaneCoords recusa coordenada que só pode ter vindo de cliente quebrado.
 // Não é borda do mapa — o mapa não tem borda; é o guarda que impede um número
 // absurdo de estourar a serialização e a tela de todo mundo na mesa.
-func assertSaneCoords(t BoardToken) error {
+func AssertSaneCoords(t BoardToken) error {
 	if abs(t.X) > boardCoordLimit || abs(t.Y) > boardCoordLimit {
 		return fmt.Errorf("peça em (%d,%d) está além do limite de sanidade de %d quadrados", t.X, t.Y, boardCoordLimit)
 	}
@@ -475,7 +475,7 @@ type EntrySelection map[string]bool
 
 func (s EntrySelection) wants(entryID string) bool { return s == nil || s[entryID] }
 
-// populateBoard traz para o tabuleiro cada linha ESCOLHIDA da iniciativa que
+// PopulateBoard traz para o tabuleiro cada linha ESCOLHIDA da iniciativa que
 // ainda não tem peça, com os PERSONAGENS de um lado e o resto do outro.
 // Idempotente de propósito, como o `populateParty` do rastreador: clicar duas
 // vezes não duplica ninguém.
@@ -488,7 +488,7 @@ func (s EntrySelection) wants(entryID string) bool { return s == nil || s[entryI
 // Quem não foi escolhido não nasce — nem escondido: o assassino que o mestre
 // montou para aparecer no terceiro turno não deve estar no mapa, e peça que não
 // existe não vaza por bug de redação.
-func populateBoard(b *BoardState, st *live.SessionRuntimeState, newID func() string, chosen EntrySelection) int {
+func PopulateBoard(b *BoardState, st *live.SessionRuntimeState, newID func() string, chosen EntrySelection) int {
 	placed := 0
 	for _, entry := range st.Initiative {
 		if !chosen.wants(entry.ID) || hasTokenForEntry(b, entry.ID) {
@@ -831,7 +831,7 @@ func ProposeMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, pa
 	if cost.Malformed {
 		return fmt.Errorf("%s", cost.Reason)
 	}
-	if err := assertSaneCoords(BoardToken{X: path[len(path)-1].X, Y: path[len(path)-1].Y}); err != nil {
+	if err := AssertSaneCoords(BoardToken{X: path[len(path)-1].X, Y: path[len(path)-1].Y}); err != nil {
 		return err
 	}
 	b.Pending = &PendingMove{

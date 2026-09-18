@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"t20engine/app/boards"
 	"t20engine/app/session"
 
 	"t20engine/domain/board"
@@ -44,7 +45,7 @@ func (s *Server) tableHost() tableHost {
 // Embrulhá-los método a método daria oitenta entradas na porta e nenhuma
 // fronteira a mais — é a mesma concessão do `Queries`, e ela tem o mesmo sinal
 // de estar no lugar.
-func (h tableHost) Boards() *board.BoardStore        { return h.rules.boards }
+func (h tableHost) Boards() *boards.Store            { return h.rules.boards }
 func (h tableHost) Sessions() *session.Store         { return h.rules.sessions }
 func (h tableHost) Presence() *live.PresenceRegistry { return h.rules.presence }
 func (h tableHost) SSE() *live.SSEHub                { return h.rules.sse }

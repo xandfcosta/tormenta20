@@ -1,4 +1,4 @@
-package board
+package boards
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"t20engine/domain/board"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -26,7 +27,7 @@ import (
 // humano, e a próxima leitura vem do disco de qualquer jeito.
 //
 // Então cada gesto LÊ a cena guardada, aplica a MESMA função pura que a mesa
-// aplica (`AddToken`, `PaintTerrain`, `RemoveMarker`…) e grava de volta. Sem
+// aplica (`board.AddToken`, `board.PaintTerrain`, `board.RemoveMarker`…) e grava de volta. Sem
 // cache, sem despejo, sem uma segunda verdade sobre onde as peças estão.
 
 // EditPlace roda uma mutação sobre a cena guardada de um lugar.
@@ -35,9 +36,9 @@ import (
 // todo gesto: a mutação é pura e não sabe do teto de peças nem da coordenada
 // sã. Uma recusa deixa o acervo INTACTO, porque quem escreve é a gravação e ela
 // não chega a acontecer.
-func (bs *BoardStore) EditPlace(
-	ctx context.Context, campaignID, placeID int64, fn func(*BoardState) error,
-) (*BoardState, error) {
+func (bs *Store) EditPlace(
+	ctx context.Context, campaignID, placeID int64, fn func(*board.BoardState) error,
+) (*board.BoardState, error) {
 	cena, err := bs.PlaceScene(ctx, campaignID, placeID)
 	if err != nil {
 		return nil, err
@@ -73,7 +74,7 @@ const MaxPlaceNameLength = 60
 //
 // Um cunho próprio do rascunho seria uma segunda política de identidade sobre as
 // mesmas peças, e elas se encontram: a cena montada aqui vai para a mesa.
-func (bs *BoardStore) NewID() string { return bs.newID() }
+func (bs *Store) NewID() string { return bs.newID() }
 
 // refusesIfOnATable recusa o rascunho do lugar que está ABERTO numa mesa.
 //
@@ -98,7 +99,7 @@ func (bs *BoardStore) NewID() string { return bs.newID() }
 //   - só o BANCO não vê o tabuleiro que acabou de ser aberto: a gravação é
 //     ASSÍNCRONA (ver `persistBoardAndWarn`), e entre o `Open` e o `Persist` a
 //     tabela ainda não sabe dele.
-func (bs *BoardStore) refusesIfOnATable(ctx context.Context, campaignID int64, nome string) error {
+func (bs *Store) refusesIfOnATable(ctx context.Context, campaignID int64, nome string) error {
 	if sessao := bs.sessionShowingLocked(nome); sessao != 0 {
 		return placeOnATable(nome)
 	}
@@ -111,7 +112,7 @@ func (bs *BoardStore) refusesIfOnATable(ctx context.Context, campaignID int64, n
 		return fmt.Errorf("não consegui conferir se %q está aberto numa mesa: %v", nome, err)
 	}
 	for _, aberto := range abertos {
-		var cena BoardState
+		var cena board.BoardState
 		if err := json.Unmarshal([]byte(aberto.State), &cena); err != nil {
 			// Um blob quebrado não pode virar "pode montar": ele é justamente o
 			// tabuleiro sobre o qual não se sabe nada.
@@ -137,7 +138,7 @@ func (bs *BoardStore) refusesIfOnATable(ctx context.Context, campaignID int64, n
 // Mapa por NOME e não por id, porque é assim que o `Archive` identifica o lugar,
 // e é a chave que faz uma cena aberta do zero com o nome de um lugar guardado
 // contar como aquele lugar.
-func (bs *BoardStore) PlacesOnATable(ctx context.Context, campaignID int64) map[string]int64 {
+func (bs *Store) PlacesOnATable(ctx context.Context, campaignID int64) map[string]int64 {
 	naMesa := map[string]int64{}
 	abertos, err := bs.q.ListOpenBoardsOfCampaign(ctx, campaignID)
 	if err != nil {
@@ -148,7 +149,7 @@ func (bs *BoardStore) PlacesOnATable(ctx context.Context, campaignID int64) map[
 		log.Printf("campaign %d: falha ao listar os tabuleiros abertos (%v)", campaignID, err)
 	}
 	for _, aberto := range abertos {
-		var cena BoardState
+		var cena board.BoardState
 		if err := json.Unmarshal([]byte(aberto.State), &cena); err != nil {
 			continue
 		}
@@ -187,7 +188,7 @@ func placeOnATable(nome string) error {
 // Varre todas as sessões em memória e não uma: o rascunho não sabe em qual mesa
 // o lugar poderia estar, e é justamente essa a pergunta. O custo é um laço sobre
 // as sessões hidratadas, sem I/O nenhum, debaixo da trava que já protege o mapa.
-func (bs *BoardStore) sessionShowingLocked(nome string) int64 {
+func (bs *Store) sessionShowingLocked(nome string) int64 {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	for sessionID, abertos := range bs.boards {
@@ -212,19 +213,19 @@ func (bs *BoardStore) sessionShowingLocked(nome string) int64 {
 // O `terrain` só vale para o lugar que NASCE: pedi-lo de novo sobre uma cena
 // montada repintaria o chão dela por baixo do pano, e quem quer trocar o chão
 // tem o gesto do próprio rascunho para isso.
-func (bs *BoardStore) NewPlace(ctx context.Context, campaignID int64, name, terrain string) (Place, error) {
+func (bs *Store) NewPlace(ctx context.Context, campaignID int64, name, terrain string) (board.Place, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
-		return Place{}, errors.New("dê um nome ao lugar: é ele que identifica a cena no acervo, e é por ele que encerrar o tabuleiro reconhece qual lugar sobrescrever")
+		return board.Place{}, errors.New("dê um nome ao lugar: é ele que identifica a cena no acervo, e é por ele que encerrar o tabuleiro reconhece qual lugar sobrescrever")
 	}
 	if len([]rune(name)) > MaxPlaceNameLength {
-		return Place{}, fmt.Errorf("o nome do lugar tem %d letras (máximo %d)", len([]rune(name)), MaxPlaceNameLength)
+		return board.Place{}, fmt.Errorf("o nome do lugar tem %d letras (máximo %d)", len([]rune(name)), MaxPlaceNameLength)
 	}
 	if existente, err := bs.q.FindCampaignPlaceByName(ctx, sqlcgen.FindCampaignPlaceByNameParams{
 		Campaignid: campaignID,
 		Name:       name,
 	}); err == nil {
-		return Place{
+		return board.Place{
 			ID: existente.ID, Name: existente.Name,
 			Tokens: countTokens(existente.State), UpdatedAt: existente.Updatedat,
 		}, nil
@@ -232,13 +233,13 @@ func (bs *BoardStore) NewPlace(ctx context.Context, campaignID int64, name, terr
 	// A cena nasce com a versão em 1 e as peças em fatia VAZIA, como a do
 	// `Open`: `null` no JSON derruba quem indexa `tokens.length`, e é o mesmo
 	// cuidado que o `storedScene` toma na volta.
-	blob, err := json.Marshal(&BoardState{
+	blob, err := json.Marshal(&board.BoardState{
 		// O chão passa pelo catálogo ANTES de ser gravado: quem cria era a porta
 		// sem guarda, e um id que a folha não pinta vira mapa sem textura.
-		Version: 1, Place: name, Terrain: KnownGround(terrain), Tokens: []BoardToken{},
+		Version: 1, Place: name, Terrain: board.KnownGround(terrain), Tokens: []board.BoardToken{},
 	})
 	if err != nil {
-		return Place{}, err
+		return board.Place{}, err
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	row, err := bs.q.SaveCampaignPlace(ctx, sqlcgen.SaveCampaignPlaceParams{
@@ -246,7 +247,7 @@ func (bs *BoardStore) NewPlace(ctx context.Context, campaignID int64, name, terr
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		return Place{}, err
+		return board.Place{}, err
 	}
-	return Place{ID: row.ID, Name: row.Name, Tokens: 0, UpdatedAt: row.Updatedat}, nil
+	return board.Place{ID: row.ID, Name: row.Name, Tokens: 0, UpdatedAt: row.Updatedat}, nil
 }

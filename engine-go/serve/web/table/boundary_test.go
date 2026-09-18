@@ -40,6 +40,10 @@ import (
 var permitidos = map[string]bool{
 	// O vocabulário do grupo: quem pede e as recusas tipadas.
 	"t20engine/app": true,
+	// O `app/boards` é o store dos tabuleiros abertos — a orquestração que a
+	// ALE-344 tirou de `domain/board`. A cena o recebe pela porta, como recebia
+	// antes: o que mudou é de onde ele vem, não o que ele é.
+	"t20engine/app/boards": true,
 	// O `app/initiative` é quem entra na fila, pela mesma razão.
 	"t20engine/app/initiative": true,
 	// O `app/rest` é o descanso e a expiração de escopo, pela mesma razão.

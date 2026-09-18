@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"t20engine/app/boards"
 	"t20engine/app/session"
 	"t20engine/infra/db/dbvalue"
 
@@ -35,7 +36,7 @@ type campaignsHost struct {
 	// cena, e vive aqui só para a faxina de memória de apagar a campanha — que é
 	// do hospedeiro, e que a cena pede como PERGUNTA (`CampaignDeleted`) e não
 	// como store.
-	boards   *board.BoardStore
+	boards   *boards.Store
 	sessions *session.Store
 }
 

@@ -50,7 +50,7 @@ func mesaEmCombate(t *testing.T) (*BoardState, *live.SessionRuntimeState) {
 	_ = live.AddEntry(st, npc("Ogro", 12), id)                     // e2
 	st.TurnIndex = 0
 
-	b := newBoard("t1", "Taverna do Javali", "stone")
+	b := NewBoard("t1", "Taverna do Javali", "stone")
 	tokens := boardCounter()
 	heroi := int64(7)
 	_ = AddToken(b, BoardToken{Label: "Sílfide", X: 0, Y: 0, EntryID: strPtr("e1"), CharacterID: &heroi, SpeedSquares: 6}, tokens)
@@ -255,7 +255,7 @@ func TestACommitOnAChangedBoardIsRefused(t *testing.T) {
 	vista := b.Version
 
 	// O mestre mexe em outra peça: a cena que o jogador tinha na mão não existe mais.
-	_ = UpdateToken(b, "t2", tokenPatch{X: intPtr(5), Y: intPtr(5)})
+	_ = UpdateToken(b, "t2", TokenPatch{X: intPtr(5), Y: intPtr(5)})
 
 	if err := CommitMove(b, st, vista, mestre); err == nil {
 		t.Fatal("o commit passou por cima de um tabuleiro que já tinha mudado")
@@ -289,7 +289,7 @@ func TestTheGmConfirmsForThePlayerAndNotTheOtherWayAround(t *testing.T) {
 // senão um caminho desenhado saindo do nada entregaria a emboscada.
 func TestAPendingMoveOfAHiddenTokenDoesNotLeakToThePlayer(t *testing.T) {
 	b, st := mesaEmCombate(t)
-	_ = UpdateToken(b, "t2", tokenPatch{Hidden: boolPtr(true)})
+	_ = UpdateToken(b, "t2", TokenPatch{Hidden: boolPtr(true)})
 	_ = ProposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), mestre)
 
 	visto := BoardForRole("player", b)
@@ -343,9 +343,9 @@ func TestPopulateStartsTheSidesApart(t *testing.T) {
 	_ = live.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
 	_ = live.AddEntry(st, npc("Ogro", 12), id)
 	_ = live.AddEntry(st, npc("Goblin", 9), id)
-	b := newBoard("t1", "Cripta", "stone")
+	b := NewBoard("t1", "Cripta", "stone")
 
-	populateBoard(b, st, boardCounter(), nil)
+	PopulateBoard(b, st, boardCounter(), nil)
 
 	pcs, npcs := []BoardToken{}, []BoardToken{}
 	for _, token := range b.Tokens {
@@ -394,12 +394,12 @@ func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
 	st := live.EmptyRuntimeState()
 	id := ContadorDeIds()
 	_ = live.AddEntry(st, npc("Ogro", 12), id)
-	b := newBoard("t1", "Cripta", "stone")
+	b := NewBoard("t1", "Cripta", "stone")
 	tokens := boardCounter()
 	_ = AddToken(b, BoardToken{Label: "Ogro", X: 40, Y: 40, EntryID: strPtr("e1")}, tokens)
 
-	populateBoard(b, st, tokens, nil)
-	populateBoard(b, st, tokens, nil)
+	PopulateBoard(b, st, tokens, nil)
+	PopulateBoard(b, st, tokens, nil)
 
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o tabuleiro ficou com %d peças, esperava 1", len(b.Tokens))

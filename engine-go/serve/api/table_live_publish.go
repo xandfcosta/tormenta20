@@ -11,7 +11,7 @@ import (
 // `table_scene_deps.go`, e a publicação é a mesma para os dois papéis.
 
 // defaultTab é o id vazio, e ele significa "o tabuleiro de quem não escolheu
-// nenhum" — o primeiro aberto da sessão (ver `BoardStore.achaLocked`). É o que
+// nenhum" — o primeiro aberto da sessão (ver `boards.Store`). É o que
 // a mesa vê quando quem fecha uma aba não disse qual olhar.
 //
 // Constante em vez de um `""` solto porque é o que faz essa decisão ser lida

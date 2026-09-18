@@ -22,7 +22,7 @@ func boardCounter() func() string {
 
 func openBoard(t *testing.T) *BoardState {
 	t.Helper()
-	return newBoard("t1", "Taverna do Javali", "stone")
+	return NewBoard("t1", "Taverna do Javali", "stone")
 }
 
 // O plano NÃO tem bordas: quadrado negativo é lugar legítimo, e é para lá que a
@@ -114,10 +114,10 @@ func TestPopulateBoardIsIdempotent(t *testing.T) {
 	_ = live.AddEntry(st, npc("Ogro", 12), entryID)
 	_ = live.AddEntry(st, npc("Bandido", 8), entryID)
 
-	if placed := populateBoard(b, st, id, nil); placed != 2 {
+	if placed := PopulateBoard(b, st, id, nil); placed != 2 {
 		t.Errorf("primeira chamada colocou %d peças, esperado 2", placed)
 	}
-	if placed := populateBoard(b, st, id, nil); placed != 0 {
+	if placed := PopulateBoard(b, st, id, nil); placed != 0 {
 		t.Errorf("segunda chamada colocou %d peças — quem já está no tabuleiro duplicou", placed)
 	}
 	if len(b.Tokens) != 2 {
@@ -137,7 +137,7 @@ cópia que numere errado nasce pintada como outra criatura.
 */
 
 func tabuleiroCom(labels ...string) *BoardState {
-	b := newBoard("t1", "Cripta", "stone")
+	b := NewBoard("t1", "Cripta", "stone")
 	for i, label := range labels {
 		b.Tokens = append(b.Tokens, BoardToken{
 			ID: fmt.Sprintf("t%d", i), Label: label, X: i, Y: 0, Footprint: 1, Kind: "npc",
@@ -360,7 +360,7 @@ alvo. O marcador aponta e mais nada.
 // Ele nasce ESCONDIDO e some inteiro da cópia do jogador — a mesma redação da
 // peça, e não uma segunda política.
 func TestTheHiddenMarkerVanishesForThePlayer(t *testing.T) {
-	b := newBoard("t1", "Cripta", "crypt")
+	b := NewBoard("t1", "Cripta", "crypt")
 	if err := AddMarker(b, BoardMarker{X: 2, Y: 3, Text: "1A", Color: "carmim", Hidden: true}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
@@ -381,7 +381,7 @@ func TestTheHiddenMarkerVanishesForThePlayer(t *testing.T) {
 // O rótulo tem DUAS letras, cortadas em runas: "Ê2A" não pode virar meio
 // caractere na tela.
 func TestTheMarkerFitsInTwoLetters(t *testing.T) {
-	b := newBoard("t1", "Cripta", "crypt")
+	b := NewBoard("t1", "Cripta", "crypt")
 	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "Ê2A", Color: "azul"}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
@@ -394,7 +394,7 @@ func TestTheMarkerFitsInTwoLetters(t *testing.T) {
 // A cor vem de um conjunto FECHADO: ela vira classe na tela, e aceitar qualquer
 // string deixaria o cliente escrever CSS no estado da mesa.
 func TestTheMarkerColorComesFromAClosedSet(t *testing.T) {
-	b := newBoard("t1", "Cripta", "crypt")
+	b := NewBoard("t1", "Cripta", "crypt")
 	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "X", Color: "url(javascript:alert(1))"}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
@@ -404,7 +404,7 @@ func TestTheMarkerColorComesFromAClosedSet(t *testing.T) {
 	}
 	// E o mesmo vale ao ALTERAR: o patch não é uma porta de trás.
 	fora := "vermelho-do-cliente"
-	if err := UpdateMarker(b, b.Markers[0].ID, markerPatch{Color: &fora}); err != nil {
+	if err := UpdateMarker(b, b.Markers[0].ID, MarkerPatch{Color: &fora}); err != nil {
 		t.Fatalf("alterar: %v", err)
 	}
 	if got := b.Markers[0].Color; got != "ouro" {
@@ -414,13 +414,13 @@ func TestTheMarkerColorComesFromAClosedSet(t *testing.T) {
 
 // Revelar é o gesto seguinte a marcar, e é o que a mesa vê mudar.
 func TestRevealingTheMarkerHandsItToTheTable(t *testing.T) {
-	b := newBoard("t1", "Cripta", "crypt")
+	b := NewBoard("t1", "Cripta", "crypt")
 	if err := AddMarker(b, BoardMarker{X: 1, Y: 1, Text: "A", Color: "ouro", Hidden: true}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
 	visivel := false
 
-	if err := UpdateMarker(b, b.Markers[0].ID, markerPatch{Hidden: &visivel}); err != nil {
+	if err := UpdateMarker(b, b.Markers[0].ID, MarkerPatch{Hidden: &visivel}); err != nil {
 		t.Fatalf("revelar: %v", err)
 	}
 
@@ -431,7 +431,7 @@ func TestRevealingTheMarkerHandsItToTheTable(t *testing.T) {
 
 // ── OS TETOS QUE O ESTADO CARREGA EM TODO BROADCAST (ALE-315) ────────────────
 //
-// O `boardMaxTokens` e o `boardMaxMarkers` não tinham teste NENHUM, e são os
+// O `MaxTokens` e o `boardMaxMarkers` não tinham teste NENHUM, e são os
 // dois de maior consequência dos quatro do tabuleiro. A diferença para o traço e
 // o retângulo está na docstring deles: aqueles recusam UM GESTO grande demais;
 // estes dois seguram o ESTADO, que é gravado e que **todo broadcast carrega**.
@@ -443,7 +443,7 @@ func TestRevealingTheMarkerHandsItToTheTable(t *testing.T) {
 // O 200 sai da docstring — *"vinte tokens é uma mesa cheia; 200 é um acidente"* —
 // e a frase carrega o valor ofensor, que é o que a casa cobra de toda recusa.
 func TestTheBoardAcceptsTwoHundredTokensAndRefusesTheNextOne(t *testing.T) {
-	b := newBoard("b", "Cripta", "stone")
+	b := NewBoard("b", "Cripta", "stone")
 	proximoID := boardCounter()
 
 	// AS 200 PRIMEIRAS ENTRAM. Sem esta metade, um teto trocado por 1 passaria
@@ -474,7 +474,7 @@ func TestTheBoardAcceptsTwoHundredTokensAndRefusesTheNextOne(t *testing.T) {
 // TestTheBoardAcceptsOneHundredMarkersAndRefusesTheNextOne: o irmão, e o teto é
 // outro de propósito — marcador é anotação, peça é gente.
 func TestTheBoardAcceptsOneHundredMarkersAndRefusesTheNextOne(t *testing.T) {
-	b := newBoard("b", "Cripta", "stone")
+	b := NewBoard("b", "Cripta", "stone")
 	proximoID := boardCounter()
 
 	for i := 0; i < 100; i++ {

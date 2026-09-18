@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"t20engine/app/boards"
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
-	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/infra/config"
@@ -30,7 +30,7 @@ type Server struct {
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs       // nulo se o despejo do catálogo não carregou
 	sessions *session.Store         // a fila e a cena de cada sessão, em memória
-	boards   *board.BoardStore      // os tabuleiros táticos vivos por sessão
+	boards   *boards.Store          // os tabuleiros táticos vivos por sessão
 	presence *live.PresenceRegistry // quem está online em cada sala
 	sse      *live.SSEHub           // os leitores SSE por sessão e papel
 	// bus é o barramento: o que acontece numa mesa vira notícia tipada, e quem
@@ -142,7 +142,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),
 		sessions: session.NewStore(q, live.NewUUID, sheetVitals{q: q}, bus),
-		boards:   board.NewBoardStore(q, live.NewUUID, bus),
+		boards:   boards.NewStore(q, live.NewUUID, bus),
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),
 		sse:      live.NewSSEHub(),
