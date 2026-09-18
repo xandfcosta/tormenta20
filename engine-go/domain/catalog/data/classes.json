@@ -9,7 +9,6 @@
       "attribute": "intelligence",
       "schoolRestriction": null,
       "unlockLevel": {
-        "0": 1,
         "1": 1,
         "2": 5,
         "3": 9,
@@ -57,7 +56,6 @@
       "attribute": "charisma",
       "schoolRestriction": 3,
       "unlockLevel": {
-        "0": 1,
         "1": 1,
         "2": 6,
         "3": 10,
@@ -109,7 +107,6 @@
       "attribute": "wisdom",
       "schoolRestriction": null,
       "unlockLevel": {
-        "0": 1,
         "1": 1,
         "2": 5,
         "3": 9,
@@ -133,7 +130,6 @@
       "attribute": "wisdom",
       "schoolRestriction": 3,
       "unlockLevel": {
-        "0": 1,
         "1": 1,
         "2": 6,
         "3": 10,
@@ -197,7 +193,6 @@
       "attribute": "wisdom",
       "schoolRestriction": null,
       "unlockLevel": {
-        "0": null,
         "1": 2,
         "2": null,
         "3": null,
