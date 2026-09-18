@@ -29,7 +29,7 @@ type Server struct {
 	db       *sql.DB
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs       // nulo se o despejo do catálogo não carregou
-	sessions *live.SessionStore     // a fila e a cena de cada sessão, em memória
+	sessions *session.Store         // a fila e a cena de cada sessão, em memória
 	boards   *board.BoardStore      // os tabuleiros táticos vivos por sessão
 	presence *live.PresenceRegistry // quem está online em cada sala
 	sse      *live.SSEHub           // os leitores SSE por sessão e papel
@@ -141,7 +141,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),
-		sessions: live.NewSessionStore(q, live.NewUUID, sheetVitals{q: q}, bus),
+		sessions: session.NewStore(q, live.NewUUID, sheetVitals{q: q}, bus),
 		boards:   board.NewBoardStore(q, live.NewUUID, bus),
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),

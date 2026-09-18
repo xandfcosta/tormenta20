@@ -37,7 +37,7 @@ type Deps interface {
 	Catalogs() *engine.Catalogs
 	// Boards são os tabuleiros vivos por sessão; Sessions é a fila e a cena.
 	Boards() *board.BoardStore
-	Sessions() *live.SessionStore
+	Sessions() *session.Store
 	// Presence é quem está online na sala; SSE são os leitores por sessão e
 	// papel; Bus é o que aconteceu na mesa.
 	Presence() *live.PresenceRegistry

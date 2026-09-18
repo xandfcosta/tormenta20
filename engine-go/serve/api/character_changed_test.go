@@ -2,6 +2,7 @@ package api
 
 import (
 	"strings"
+	"t20engine/app/session"
 	"t20engine/domain/live"
 	"t20engine/infra/events"
 	"testing"
@@ -27,7 +28,7 @@ func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
 		// que nulo tolerado, que é como o gancho acima nasceu desligado.
 		bus: &events.Bus{},
 		sse: live.NewSSEHub(),
-		sessions: &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+		sessions: &session.Store{States: map[int64]*live.SessionRuntimeState{
 			7: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
 		}},
 	}
@@ -53,7 +54,7 @@ func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
 	s := &Server{
 		bus: &events.Bus{},
 		sse: live.NewSSEHub(),
-		sessions: &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+		sessions: &session.Store{States: map[int64]*live.SessionRuntimeState{
 			7: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(99)}}},
 		}},
 	}
@@ -75,7 +76,7 @@ func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
 // estar olhando.
 func TestOnlyTheLiveSessionsHoldingTheCharacter(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
-	st := &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+	st := &session.Store{States: map[int64]*live.SessionRuntimeState{
 		1: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
 		2: {Initiative: []live.InitiativeEntry{{ID: "b", CharacterID: umPersonagem(99)}}},
 		// NPC na fila: `CharacterID` nulo não pode ser confundido com o 14.
@@ -99,7 +100,7 @@ func TestOnlyTheLiveSessionsHoldingTheCharacter(t *testing.T) {
 // mesma busca duas vezes por escrita.
 func TestARepeatedSessionIsAnnouncedOnce(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
-	st := &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+	st := &session.Store{States: map[int64]*live.SessionRuntimeState{
 		1: {Initiative: []live.InitiativeEntry{
 			{ID: "a", CharacterID: umPersonagem(14)},
 			{ID: "b", CharacterID: umPersonagem(14)},
@@ -125,7 +126,7 @@ func TestARepeatedSessionIsAnnouncedOnce(t *testing.T) {
 // uma leitura de banco a cada escrita de ficha. Não foi feito, e a troca está
 // escrita aqui para quem for decidir de novo.
 func TestOffTableNobodyIsAnnouncedTo(t *testing.T) {
-	st := &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+	st := &session.Store{States: map[int64]*live.SessionRuntimeState{
 		1: {Initiative: []live.InitiativeEntry{{ID: "a"}}},
 	}}
 

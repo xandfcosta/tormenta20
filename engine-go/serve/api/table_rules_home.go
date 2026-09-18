@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"sync"
+	"t20engine/app/session"
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -34,7 +35,7 @@ type tableRules struct {
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs
 	boards   *board.BoardStore
-	sessions *live.SessionStore
+	sessions *session.Store
 	presence *live.PresenceRegistry
 	sse      *live.SSEHub
 	bus      *events.Bus

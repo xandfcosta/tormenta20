@@ -3,16 +3,16 @@ package api
 import (
 	"context"
 	"log"
+	"t20engine/app/session"
 
 	"t20engine/domain/board"
-	"t20engine/domain/live"
 	"t20engine/infra/db/sqlcgen"
 )
 
 // O FIM DA VIDA de uma sessão, e de tudo que ela deixou em memória.
 //
 // A mesa roda de MEMÓRIA: o tabuleiro num mapa por sessão no `BoardStore`, a
-// fila noutro no `SessionStore`. Apagar a linha do banco não esvazia nenhum dos
+// fila noutro no `session.Store`. Apagar a linha do banco não esvazia nenhum dos
 // dois, e o que sobra não é inerte — o `Persist` seguinte bate na chave
 // estrangeira, acende o `Dirty`, e a marca não sai mais: só um `Persist` bem
 // sucedido a apaga, e nenhum vai suceder.
@@ -38,7 +38,7 @@ import (
 // só: avisar antes deixaria uma janela em que a sessão ainda responde e o
 // estado em memória já não existe — uma requisição nesse instante recriaria o
 // que se acabou de apagar.
-func sessionDeleted(boards *board.BoardStore, sessions *live.SessionStore, sessionID int64) {
+func sessionDeleted(boards *board.BoardStore, sessions *session.Store, sessionID int64) {
 	boards.SessionDeleted(sessionID)
 	sessions.SessionDeleted(sessionID)
 }
@@ -61,7 +61,7 @@ func (s *Server) SessionDeleted(sessionID int64) {
 // saberia por quê.
 func campaignDeleted(
 	ctx context.Context, q *sqlcgen.Queries,
-	boards *board.BoardStore, sessions *live.SessionStore, campaignID int64,
+	boards *board.BoardStore, sessions *session.Store, campaignID int64,
 ) {
 	sessoes, err := q.ListSessions(ctx, campaignID)
 	if err != nil {

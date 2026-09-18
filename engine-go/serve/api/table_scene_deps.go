@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"t20engine/app/session"
 
 	"t20engine/domain/board"
 	"t20engine/domain/live"
@@ -44,7 +45,7 @@ func (s *Server) tableHost() tableHost {
 // fronteira a mais — é a mesma concessão do `Queries`, e ela tem o mesmo sinal
 // de estar no lugar.
 func (h tableHost) Boards() *board.BoardStore        { return h.rules.boards }
-func (h tableHost) Sessions() *live.SessionStore     { return h.rules.sessions }
+func (h tableHost) Sessions() *session.Store         { return h.rules.sessions }
 func (h tableHost) Presence() *live.PresenceRegistry { return h.rules.presence }
 func (h tableHost) SSE() *live.SSEHub                { return h.rules.sse }
 

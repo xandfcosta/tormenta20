@@ -224,7 +224,7 @@ func nextInstanceLabel(b *BoardState, label string) string {
 //   - `laco` = a linha DA ORIGINAL → as duas peças sangram JUNTO, com uma barra
 //     só. Serve para o mesmo inimigo desenhado em dois pontos;
 //   - `laco` = uma linha NOVA → a cópia sangra SOZINHA, com PV próprio. Quem
-//     cria a linha é o chamador, porque ela mora no `SessionStore` e não aqui.
+//     cria a linha é o chamador, porque ela mora no `app/session` e não aqui.
 //
 // A FICHA vem do laço e nunca da original: a linha nova de um NPC não tem
 // ficha, e herdar o `characterId` da original ali daria uma peça dizendo ser de

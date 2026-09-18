@@ -8,6 +8,7 @@ package live
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"regexp"
 	"strconv"
 	"strings"
@@ -69,3 +70,7 @@ func NextInstanceLabelAmong(usados []string, label string) string {
 // número está no MEIO do nome, e separar por qualquer dígito faria a cópia
 // nascer como outra espécie.
 func Species(rotulo string) (string, int) { return speciesOf(rotulo) }
+
+// NewUUID gera um id v4 aleatório para entrada de iniciativa. Injetado no store
+// para o teste trocar por um gerador determinístico.
+func NewUUID() string { return uuid.NewString() }

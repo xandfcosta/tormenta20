@@ -33,7 +33,7 @@ const openBoardsCeiling = 8
 // BoardStore guarda os tabuleiros vivos de cada sessão em memória, com lastro na
 // tabela open_boards.
 //
-// Mutex PRÓPRIO, separado do `sessionStore`: lá o mutex é global a todas as
+// Mutex PRÓPRIO, separado do `session.Store`: lá o mutex é global a todas as
 // sessões, e um tabuleiro movimentado numa mesa serializaria a edição de PV de
 // outra mesa. Aqui a mesma trava vale para todos os tabuleiros — quando o custo
 // aparecer, ela vira uma por sessão sem mudar quem chama.
@@ -393,7 +393,7 @@ func (bs *BoardStore) RemoveToken(ctx context.Context, sessionID int64, tabuleir
 //
 // O `laco` é o que a cópia vai ser — ver o `DuplicateToken` do estado, onde a
 // decisão está escrita. Ele chega PRONTO porque a linha nova mora no
-// `SessionStore`, e este store não o conhece.
+// `session.Store`, e este store não o conhece.
 func (bs *BoardStore) DuplicateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string, laco *live.InitiativeEntry) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
 		return DuplicateToken(b, tokenID, laco, bs.newID)

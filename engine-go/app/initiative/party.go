@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"t20engine/app"
+	"t20engine/app/session"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/infra/db/dbvalue"
@@ -125,10 +126,10 @@ func (r Roster) PartyCombatants(ctx context.Context, campaignID int64) ([]Combat
 // Queue é a fila de uma sessão, com o store por trás.
 type Queue struct {
 	roster   Roster
-	sessions *live.SessionStore
+	sessions *session.Store
 }
 
-func NewQueue(q *sqlcgen.Queries, catalogs *engine.Catalogs, sessions *live.SessionStore) Queue {
+func NewQueue(q *sqlcgen.Queries, catalogs *engine.Catalogs, sessions *session.Store) Queue {
 	return Queue{roster: NewRoster(q, catalogs), sessions: sessions}
 }
 

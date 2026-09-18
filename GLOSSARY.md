@@ -166,7 +166,7 @@ uma decisão do dono antes do renome.
 4. a casca visual da UI (`SceneShell`, `scene-grimorio`, `SceneContainerProvider`, `scene-nav`).
 
 Consequência medida: `endScene` existe **três vezes** no pacote `api` —
-`session_state.go` e `session_store.go` desligam a cena, e
+`session_state.go` e `app/session/store.go` desligam a cena, e
 `table_character_effects.go` limpa a duração "cena" de UMA ficha. Os três nomes
 continuam, e o renome ainda espera decisão do dono.
 

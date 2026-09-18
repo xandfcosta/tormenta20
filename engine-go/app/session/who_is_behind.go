@@ -1,4 +1,6 @@
-package live
+package session
+
+import "t20engine/domain/live"
 
 // Quem está ATRÁS de um combatente: a ficha, ou ninguém.
 //
@@ -11,16 +13,16 @@ package live
 // atrás, a linha do personagem manda (ALE-122); sem ficha, o rastreador é a
 // única verdade que existe.
 
-// characterIDOf reports which character backs an entry, or nil for an NPC —
+// CharacterIDOf reports which character backs an entry, or nil for an NPC —
 // which is what decides whether the sheet or the tracker is the record.
-func (st *SessionStore) CharacterIDOf(sessionID int64, entryID string) *int64 {
+func (st *Store) CharacterIDOf(sessionID int64, entryID string) *int64 {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	state := st.States[sessionID]
 	if state == nil {
 		return nil
 	}
-	idx := FindEntryIndex(state, entryID)
+	idx := live.FindEntryIndex(state, entryID)
 	if idx < 0 {
 		return nil
 	}

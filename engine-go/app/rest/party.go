@@ -22,12 +22,12 @@ import (
 // falha, não sobre escondê-la.
 type Party struct {
 	queries  *sqlcgen.Queries
-	sessions *live.SessionStore
+	sessions *session.Store
 	scopes   Scopes
 	access   session.Access
 }
 
-func NewParty(q *sqlcgen.Queries, sessions *live.SessionStore) Party {
+func NewParty(q *sqlcgen.Queries, sessions *session.Store) Party {
 	return Party{queries: q, sessions: sessions, scopes: NewScopes(q), access: session.NewAccess(q)}
 }
 

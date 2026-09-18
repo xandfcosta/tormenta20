@@ -20,13 +20,13 @@ import (
 type Lifecycle struct {
 	db       *sql.DB
 	queries  *sqlcgen.Queries
-	sessions *live.SessionStore
+	sessions *Store
 	boards   *board.BoardStore
 	access   Access
 }
 
 func NewLifecycle(
-	db *sql.DB, q *sqlcgen.Queries, sessions *live.SessionStore, boards *board.BoardStore,
+	db *sql.DB, q *sqlcgen.Queries, sessions *Store, boards *board.BoardStore,
 ) Lifecycle {
 	return Lifecycle{db: db, queries: q, sessions: sessions, boards: boards, access: NewAccess(q)}
 }

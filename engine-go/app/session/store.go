@@ -1,4 +1,4 @@
-package live
+package session
 
 import (
 	"context"
@@ -7,28 +7,23 @@ import (
 	"sync"
 	"t20engine/infra/db/dbvalue"
 
-	"github.com/google/uuid"
-
+	"t20engine/domain/live"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 )
 
-// NewUUID gera um id v4 aleatório para entrada de iniciativa. Injetado no store
-// para o teste trocar por um gerador determinístico.
-func NewUUID() string { return uuid.NewString() }
-
-// SessionStore guarda o estado vivo de cada sessão em memória: protege as
+// Store guarda o estado vivo de cada sessão em memória: protege as
 // mutações puras (session_state.go) com um mutex e grava em
 // `Session.runtimeState`. Reiniciar o servidor zera os rastreadores até o
 // primeiro `Load()` reidratar do banco, e cada mutação devolve um instantâneo
 // para quem chama serializar e transmitir fora da trava.
-type SessionStore struct {
+type Store struct {
 	Mu sync.Mutex
 	// ficha é a PORTA para o contexto da ficha: o regime escreve PV e PM de
 	// personagem, mas as REGRAS dessa escrita são de lá. Nulo é caminho normal em
 	// teste de regime puro — quem tem personagem na fila injeta o implementador.
-	ficha  SheetVitals
-	States map[int64]*SessionRuntimeState
+	ficha  live.SheetVitals
+	States map[int64]*live.SessionRuntimeState
 	Dirty  map[int64]bool
 	// seqs numera as mutações de cada sessão, para o hub reconhecer quadro
 	// atrasado. Mora aqui e não no estado: hidratar do banco troca o estado, e um
@@ -55,16 +50,16 @@ type SessionStore struct {
 
 // persistLock devolve o mutex de gravação daquela sessão, criando-o no primeiro
 // uso.
-func (st *SessionStore) persistLock(sessionID int64) *sync.Mutex {
+func (st *Store) persistLock(sessionID int64) *sync.Mutex {
 	m, _ := st.persistMus.LoadOrStore(sessionID, &sync.Mutex{})
 	return m.(*sync.Mutex)
 }
 
-// NewSessionStore recebe a PORTA da ficha por parâmetro — injetada e não
+// NewStore recebe a PORTA da ficha por parâmetro — injetada e não
 // importada, que é o que impede o regime de conhecer as regras da ficha.
-func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha SheetVitals, bus *events.Bus) *SessionStore {
-	return &SessionStore{
-		States: map[int64]*SessionRuntimeState{},
+func NewStore(q *sqlcgen.Queries, newID func() string, ficha live.SheetVitals, bus *events.Bus) *Store {
+	return &Store{
+		States: map[int64]*live.SessionRuntimeState{},
 		Dirty:  map[int64]bool{},
 		seqs:   map[int64]uint64{},
 		newID:  newID,
@@ -82,30 +77,15 @@ func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha SheetVitals,
 // e zeraria um contador que vivesse nele, e aí o hub descartaria todo quadro
 // seguinte por achá-los atrasados. O contador só reinicia com o processo, que é
 // quando o hub também esquece o que já mandou.
-func (st *SessionStore) nextSeqLocked(sessionID int64) uint64 {
+func (st *Store) nextSeqLocked(sessionID int64) uint64 {
 	st.seqs[sessionID]++
 	return st.seqs[sessionID]
 }
 
-// cloneState copia o estado para o broadcast: as entradas vão por VALOR e a
-// fatia é recriada. Os vitais `*int64` são compartilhados mas nunca mutados no
-// lugar (patch e delta sempre atribuem ponteiro novo), então o instantâneo é
-// seguro de serializar fora da trava.
-//
-// Por VALOR e não campo a campo: listar campos é uma lista que envelhece, e o
-// campo novo que ficasse de fora continuaria compilando e passaria a zerar o
-// valor em silêncio — na cópia que vai para o fio e para o banco.
-func cloneState(s *SessionRuntimeState) *SessionRuntimeState {
-	out := *s
-	out.Initiative = make([]InitiativeEntry, len(s.Initiative))
-	copy(out.Initiative, s.Initiative)
-	return &out
-}
-
-func (st *SessionStore) getOrCreateLocked(sessionID int64) *SessionRuntimeState {
+func (st *Store) getOrCreateLocked(sessionID int64) *live.SessionRuntimeState {
 	s := st.States[sessionID]
 	if s == nil {
-		s = EmptyRuntimeState()
+		s = live.EmptyRuntimeState()
 		st.States[sessionID] = s
 	}
 	return s
@@ -117,7 +97,7 @@ func (st *SessionStore) getOrCreateLocked(sessionID int64) *SessionRuntimeState 
 // Só as vivas, e isso é o ponto: o aviso serve para atualizar tela aberta. Mesa
 // que ninguém está olhando não precisa ser avisada — quem entrar depois busca o
 // estado do zero.
-func (st *SessionStore) LiveSessionsWithCharacter(characterID int64) []int64 {
+func (st *Store) LiveSessionsWithCharacter(characterID int64) []int64 {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	var out []int64
@@ -134,10 +114,10 @@ func (st *SessionStore) LiveSessionsWithCharacter(characterID int64) []int64 {
 
 // GetState devolve um instantâneo do estado atual (rastreador vazio quando a
 // sessão nunca foi carregada).
-func (st *SessionStore) GetState(sessionID int64) *SessionRuntimeState {
+func (st *Store) GetState(sessionID int64) *live.SessionRuntimeState {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
-	return cloneState(st.getOrCreateLocked(sessionID))
+	return live.CloneState(st.getOrCreateLocked(sessionID))
 }
 
 // apply roda uma mutação pura sob a trava, publica o evento e devolve o
@@ -150,7 +130,7 @@ func (st *SessionStore) GetState(sessionID int64) *SessionRuntimeState {
 // dentro (ver `events.Bus.Publish`), mas quem acorda agora sabe o que houve e
 // pode ler o estado na hora — publicar sob a trava faria esse leitor esperar
 // pelo escritor no exato instante em que foi acordado para ler.
-func (st *SessionStore) apply(sessionID int64, ev events.Event, fn func(*SessionRuntimeState) error) (*SessionRuntimeState, error) {
+func (st *Store) apply(sessionID int64, ev events.Event, fn func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error) {
 	clone, err := st.applyLocked(sessionID, fn)
 	if err != nil {
 		return nil, err
@@ -164,78 +144,80 @@ func (st *SessionStore) apply(sessionID int64, ev events.Event, fn func(*Session
 // A `seq` nasce AQUI DENTRO e não na publicação: ela numera as mutações para o
 // hub reconhecer quadro atrasado, e decidir a sequência e entregar têm de ser
 // atômicos.
-func (st *SessionStore) applyLocked(sessionID int64, fn func(*SessionRuntimeState) error) (*SessionRuntimeState, error) {
+func (st *Store) applyLocked(sessionID int64, fn func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	s := st.getOrCreateLocked(sessionID)
 	if err := fn(s); err != nil {
 		return nil, err
 	}
-	clone := cloneState(s)
+	clone := live.CloneState(s)
 	clone.Seq = st.nextSeqLocked(sessionID)
 	return clone, nil
 }
 
-func (st *SessionStore) AddInitiativeEntry(sessionID int64, e InitiativeEntry) (*SessionRuntimeState, error) {
+func (st *Store) AddInitiativeEntry(sessionID int64, e live.InitiativeEntry) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.CombatantJoined{SessionID: sessionID, EntryID: e.ID},
-		func(s *SessionRuntimeState) error { return AddEntry(s, e, st.newID) })
+		func(s *live.SessionRuntimeState) error { return live.AddEntry(s, e, st.newID) })
 }
 
-func (st *SessionStore) UpsertInitiativeEntry(sessionID int64, e InitiativeEntry) (*SessionRuntimeState, error) {
+func (st *Store) UpsertInitiativeEntry(sessionID int64, e live.InitiativeEntry) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.CombatantJoined{SessionID: sessionID, EntryID: e.ID},
-		func(s *SessionRuntimeState) error { return upsertCharacterEntry(s, e, st.newID) })
+		func(s *live.SessionRuntimeState) error { return live.UpsertCharacterEntry(s, e, st.newID) })
 }
 
-func (st *SessionStore) UpdateInitiativeEntry(sessionID int64, entryID string, patch EntryPatch) (*SessionRuntimeState, error) {
+func (st *Store) UpdateInitiativeEntry(sessionID int64, entryID string, patch live.EntryPatch) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.CombatantChanged{SessionID: sessionID, EntryID: entryID},
-		func(s *SessionRuntimeState) error { return UpdateEntry(s, entryID, patch) })
+		func(s *live.SessionRuntimeState) error { return live.UpdateEntry(s, entryID, patch) })
 }
 
-func (st *SessionStore) RemoveInitiativeEntry(sessionID int64, entryID string) (*SessionRuntimeState, error) {
+func (st *Store) RemoveInitiativeEntry(sessionID int64, entryID string) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.CombatantLeft{SessionID: sessionID, EntryID: entryID},
-		func(s *SessionRuntimeState) error { return RemoveEntry(s, entryID) })
+		func(s *live.SessionRuntimeState) error { return live.RemoveEntry(s, entryID) })
 }
 
-func (st *SessionStore) NextTurn(sessionID int64) (*SessionRuntimeState, error) {
+func (st *Store) NextTurn(sessionID int64) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
-		func(s *SessionRuntimeState) error { advanceTurn(s); return nil })
+		func(s *live.SessionRuntimeState) error { live.AdvanceTurn(s); return nil })
 }
 
-func (st *SessionStore) PreviousTurn(sessionID int64) (*SessionRuntimeState, error) {
+func (st *Store) PreviousTurn(sessionID int64) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
-		func(s *SessionRuntimeState) error { rewindTurn(s); return nil })
+		func(s *live.SessionRuntimeState) error { live.RewindTurn(s); return nil })
 }
 
-func (st *SessionStore) Reset(sessionID int64) (*SessionRuntimeState, error) {
+func (st *Store) Reset(sessionID int64) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.InitiativeReset{SessionID: sessionID},
-		func(s *SessionRuntimeState) error { resetInitiative(s); return nil })
+		func(s *live.SessionRuntimeState) error { live.ResetInitiative(s); return nil })
 }
 
-func (st *SessionStore) StartScene(sessionID int64) (*SessionRuntimeState, error) {
+func (st *Store) StartScene(sessionID int64) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.SceneStarted{SessionID: sessionID},
-		func(s *SessionRuntimeState) error { StartScene(s); return nil })
+		func(s *live.SessionRuntimeState) error { live.StartScene(s); return nil })
 }
 
-func (st *SessionStore) EndScene(sessionID int64) (*SessionRuntimeState, error) {
+func (st *Store) EndScene(sessionID int64) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.SceneEnded{SessionID: sessionID},
-		func(s *SessionRuntimeState) error { EndScene(s); return nil })
+		func(s *live.SessionRuntimeState) error { live.EndScene(s); return nil })
 }
 
 // PatchVitals fixa os vitais de uma entrada. Mesma regra do delta sobre quem é a
 // fonte; valor absoluto NÃO drena pool temporário, porque é uma afirmação sobre
 // o total e não uma pancada.
-func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*SessionRuntimeState, error) {
+func (st *Store) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*live.SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
 		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
-			func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
+			func(s *live.SessionRuntimeState) error {
+				return live.PatchEntryVitals(s, entryID, hpCurrent, mpCurrent)
+			})
 	}
 	hp, mp, err := st.ficha.ApplyAbsolute(context.Background(), *charID, hpCurrent, mpCurrent)
 	if err != nil {
 		return nil, err
 	}
 	return st.apply(sessionID, vitalsEvent(sessionID, entryID, charID),
-		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
+		func(s *live.SessionRuntimeState) error { return live.PatchEntryVitals(s, entryID, hp, mp) })
 }
 
 // DeltaCharacterVitals move os vitais de um PERSONAGEM, esteja ele na fila ou
@@ -251,7 +233,7 @@ func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, 
 // existe, não há o que espelhar e a ficha é a única a mudar — devolver o estado
 // como está é a resposta certa, e não um erro, porque "não está na fila" é o
 // caso comum aqui e não uma falha.
-func (st *SessionStore) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
+func (st *Store) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpDelta *int64) (*live.SessionRuntimeState, error) {
 	hp, mp, err := st.ficha.ApplyDelta(context.Background(), characterID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
@@ -261,7 +243,7 @@ func (st *SessionStore) DeltaCharacterVitals(sessionID, characterID int64, hpDel
 		return st.GetState(sessionID), nil
 	}
 	return st.apply(sessionID, vitalsEvent(sessionID, entryID, &characterID),
-		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
+		func(s *live.SessionRuntimeState) error { return live.PatchEntryVitals(s, entryID, hp, mp) })
 }
 
 // entryIDForCharacter é o inverso do `CharacterIDOf`, e devolve "" para quem não
@@ -270,7 +252,7 @@ func (st *SessionStore) DeltaCharacterVitals(sessionID, characterID int64, hpDel
 // Vazio e não erro: no elenco, estar FORA da iniciativa é o estado normal — o
 // mestre cura a Arwen entre duas brigas —, e tratar isso como falha faria o
 // gesto recusar exatamente o caso que ele veio atender.
-func (st *SessionStore) entryIDForCharacter(sessionID, characterID int64) string {
+func (st *Store) entryIDForCharacter(sessionID, characterID int64) string {
 	for _, e := range st.GetState(sessionID).Initiative {
 		if e.CharacterID != nil && *e.CharacterID == characterID {
 			return e.ID
@@ -283,27 +265,27 @@ func (st *SessionStore) entryIDForCharacter(sessionID, characterID int64) string
 // manda é a FICHA: o delta é aplicado na linha do personagem (dano drenando PV
 // temporários, como o endpoint de dano) e a entrada espelha o resultado. NPC não
 // tem ficha — ali o rastreador é o registro.
-func (st *SessionStore) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
+func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*live.SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
 		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
-			func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
+			func(s *live.SessionRuntimeState) error { return live.DeltaEntryVitals(s, entryID, hpDelta, mpDelta) })
 	}
 	hp, mp, err := st.ficha.ApplyDelta(context.Background(), *charID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}
 	return st.apply(sessionID, vitalsEvent(sessionID, entryID, charID),
-		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
+		func(s *live.SessionRuntimeState) error { return live.PatchEntryVitals(s, entryID, hp, mp) })
 }
 
 // Load hidrata a sessão de `Session.runtimeState` no primeiro acesso e depois
 // serve a cópia em memória.
-func (st *SessionStore) Load(ctx context.Context, sessionID int64) (*SessionRuntimeState, error) {
+func (st *Store) Load(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	if s := st.States[sessionID]; s != nil {
-		return cloneState(s), nil
+		return live.CloneState(s), nil
 	}
 	sess, err := st.q.GetSession(ctx, sessionID)
 	if err != nil {
@@ -311,28 +293,28 @@ func (st *SessionStore) Load(ctx context.Context, sessionID int64) (*SessionRunt
 	}
 	s := parseRuntimeBlob(sess.Runtimestate)
 	st.States[sessionID] = s
-	return cloneState(s), nil
+	return live.CloneState(s), nil
 }
 
 // parseRuntimeBlob lê um blob gravado e cai para um rastreador vazio quando ele
 // vem malformado. Os blobs são sempre completos (o nosso Marshal e o default da
 // coluna carregam rodada e turno), então não há campo parcial a preencher.
-func parseRuntimeBlob(blob string) *SessionRuntimeState {
+func parseRuntimeBlob(blob string) *live.SessionRuntimeState {
 	if blob == "" {
-		return EmptyRuntimeState()
+		return live.EmptyRuntimeState()
 	}
-	var parsed SessionRuntimeState
+	var parsed live.SessionRuntimeState
 	if err := json.Unmarshal([]byte(blob), &parsed); err != nil {
-		return EmptyRuntimeState()
+		return live.EmptyRuntimeState()
 	}
 	if parsed.Initiative == nil {
-		parsed.Initiative = []InitiativeEntry{}
+		parsed.Initiative = []live.InitiativeEntry{}
 	}
 	// Sessão gravada antes de `sceneActive` existir volta sem ele, e o zero de um
 	// bool é `false`: uma mesa que parou na rodada 3 reabriria "fora de cena" e a
 	// fila sumiria para os jogadores até o mestre clicar em iniciar. Um turno em
 	// curso é PROVA de que a cena estava ligada — não existe turno sem cena
-	// (`advanceTurn`), então isto não é remendo de migração: é a invariante
+	// (`live.AdvanceTurn`), então isto não é remendo de migração: é a invariante
 	// afirmada onde o estado entra no processo.
 	if parsed.TurnIndex >= 0 {
 		parsed.SceneActive = true
@@ -348,7 +330,7 @@ func parseRuntimeBlob(blob string) *SessionRuntimeState {
 // `BoardStore.SaveFailed`.
 //
 // Sob a trava porque o `Dirty` é escrito pelo `Persist`, que roda em goroutine.
-func (st *SessionStore) SaveFailed(sessionID int64) bool {
+func (st *Store) SaveFailed(sessionID int64) bool {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	return st.Dirty[sessionID]
@@ -362,7 +344,7 @@ func (st *SessionStore) SaveFailed(sessionID int64) bool {
 // Serializado para que gravações sobrepostas da mesma sessão cheguem em ordem: a
 // última a rodar retrata o estado mais novo, e o banco converge para ele em vez
 // de para uma captura velha.
-func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, changed bool) {
+func (st *Store) Persist(ctx context.Context, sessionID int64) (Dirty, changed bool) {
 	pm := st.persistLock(sessionID)
 	pm.Lock()
 	defer pm.Unlock()
@@ -373,7 +355,7 @@ func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, ch
 		st.Mu.Unlock()
 		return false, false
 	}
-	blob, _ := json.Marshal(cloneState(s))
+	blob, _ := json.Marshal(live.CloneState(s))
 	st.Mu.Unlock()
 
 	err := st.q.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
@@ -398,7 +380,7 @@ func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, ch
 // `Dirty`: isso engoliria a recuperação suja→saudável — uma sessão deixada suja
 // ainda precisa avisar `persistence-warning{Dirty:false}` no próximo `Persist`
 // bem-sucedido, e o mapa se poda sozinho nesse sucesso.
-func (st *SessionStore) Forget(sessionID int64) {
+func (st *Store) Forget(sessionID int64) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	delete(st.States, sessionID)
@@ -411,7 +393,7 @@ func (st *SessionStore) Forget(sessionID int64) {
 // recuperação suja→saudável"* — depende de haver um próximo `Persist` que avise
 // que voltou a gravar. Com a sessão apagada não há: a marca ficaria acesa até o
 // processo reiniciar, sobre uma mesa que ninguém quer gravar.
-func (st *SessionStore) SessionDeleted(sessionID int64) {
+func (st *Store) SessionDeleted(sessionID int64) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	delete(st.States, sessionID)
@@ -422,7 +404,7 @@ func (st *SessionStore) SessionDeleted(sessionID int64) {
 // personagem atrás (só os tetos; o atual não é tocado), para um nível subido no
 // meio da sessão não ficar preso ao máximo velho. Melhor esforço: uma piscada do
 // banco vira log e devolve o instantâneo atual em vez de derrubar a leitura.
-func (st *SessionStore) RefreshCharacterMaxes(ctx context.Context, sessionID int64) *SessionRuntimeState {
+func (st *Store) RefreshCharacterMaxes(ctx context.Context, sessionID int64) *live.SessionRuntimeState {
 	st.Mu.Lock()
 	ids := uniqueCharacterIDs(st.getOrCreateLocked(sessionID))
 	st.Mu.Unlock()
@@ -447,8 +429,8 @@ func (st *SessionStore) RefreshCharacterMaxes(ctx context.Context, sessionID int
 			continue
 		}
 		if fresh, ok := maxes[*e.CharacterID]; ok {
-			e.HpMax = PtrInt64(fresh.Hpmax)
-			e.MpMax = PtrInt64(fresh.Mpmax)
+			e.HpMax = live.PtrInt64(fresh.Hpmax)
+			e.MpMax = live.PtrInt64(fresh.Mpmax)
 			// O máximo pode ter ENCOLHIDO (nível abaixado, CON caída): sem aparar,
 			// a barra mostra 9/5 e a ficha se contradiz na tela — o mesmo par que
 			// a criação e o PATCH de vitais recusam.
@@ -456,7 +438,7 @@ func (st *SessionStore) RefreshCharacterMaxes(ctx context.Context, sessionID int
 			clampCurrentTo(&e.MpCurrent, fresh.Mpmax)
 		}
 	}
-	return cloneState(s)
+	return live.CloneState(s)
 }
 
 // clampCurrentTo apara o valor atual no novo máximo, deixando o ponteiro nulo
@@ -465,10 +447,10 @@ func clampCurrentTo(current **int64, max int64) {
 	if *current == nil || **current <= max {
 		return
 	}
-	*current = PtrInt64(max)
+	*current = live.PtrInt64(max)
 }
 
-func uniqueCharacterIDs(s *SessionRuntimeState) []int64 {
+func uniqueCharacterIDs(s *live.SessionRuntimeState) []int64 {
 	seen := map[int64]bool{}
 	ids := []int64{}
 	for _, e := range s.Initiative {

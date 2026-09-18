@@ -6,10 +6,10 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"t20engine/app/session"
 	"t20engine/infra/db/dbvalue"
 
 	"t20engine/domain/board"
-	"t20engine/domain/live"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/campaigns"
 )
@@ -36,7 +36,7 @@ type campaignsHost struct {
 	// do hospedeiro, e que a cena pede como PERGUNTA (`CampaignDeleted`) e não
 	// como store.
 	boards   *board.BoardStore
-	sessions *live.SessionStore
+	sessions *session.Store
 }
 
 func (s *Server) campaignsHost() campaignsHost {
