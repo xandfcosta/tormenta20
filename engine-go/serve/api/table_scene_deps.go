@@ -81,53 +81,10 @@ func (h tableHost) PlaceDraftCampaign(
 	return h.rules.campaign.loadOwnedCampaign(ctx, AuthUser{ID: userID}, campaignID)
 }
 
-// SessionDeleted avisa os dois stores de que a sessão deixou de existir.
-//
-// O corpo dela mora no `session_lifetime.go`, ao lado do irmão de campanha: os
-// dois caminhos de apagar têm de fazer a mesma faxina, e escrevê-la duas vezes é
-// como uma delas passa a esquecer um store.
-func (h tableHost) SessionDeleted(sessionID int64) {
-	sessionDeleted(h.rules.boards, h.rules.sessions, sessionID)
-}
-
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
-
-// StartSessionForTable e EndSessionForTable abrem e encerram a partida e
-// devolvem o estado AO VIVO, que é o que a cena redesenha.
-//
-// A leitura da linha mora aqui e não na cena: lá ela só seria passada de volta
-// ao hospedeiro, e duas perguntas em sequência viram uma.
-func (h tableHost) StartSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	sess, err := h.rules.queries.GetSession(ctx, sessionID)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := h.rules.StartSession(ctx, sess); err != nil {
-		return nil, err
-	}
-	return h.rules.sessions.GetState(sessionID), nil
-}
-
-func (h tableHost) EndSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	sess, err := h.rules.queries.GetSession(ctx, sessionID)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := h.rules.EndSession(ctx, sess); err != nil {
-		return nil, err
-	}
-	return h.rules.sessions.GetState(sessionID), nil
-}
 
 func (h tableHost) EndSceneForTable(userID, campaignID, sessionID int64) (*live.SessionRuntimeState, error) {
 	return h.rules.endSceneForTable(AuthUser{ID: userID}, campaignID, sessionID)
-}
-
-func (h tableHost) RestartCombatForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	if err := h.rules.RestartCombat(ctx, sessionID); err != nil {
-		return nil, err
-	}
-	return h.rules.sessions.GetState(sessionID), nil
 }
 
 func (h tableHost) RestParty(
@@ -217,18 +174,12 @@ func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
 	h.rules.publishWhatIsLeft(ctx, sessionID)
 }
 
-// ── as DUAS escritas montadas em SQL ─────────────────────────────────────────
+// ── a escrita montada em SQL ─────────────────────────────────────────────────
 //
-// A tabela `sessions` não tem query própria no sqlc para estas duas colunas —
-// quem escreve é um SET montado. Elas moram no hospedeiro e não na cena porque
-// cena que compõe SQL é cena com o banco dentro: quem sabe o nome da coluna, que
-// vazio é NULL e que a linha tem um `updatedAt` a carimbar é o hospedeiro.
-
-func (h tableHost) SaveSessionTitle(ctx context.Context, sessionID int64, titulo string) error {
-	var set setBuilder
-	set.Add("title = ?", nullableArg(trimOrNull(&titulo)))
-	return set.execTouched(ctx, h.rules.db, "UPDATE sessions", sessionID)
-}
+// A coluna `notes` não tem query própria no sqlc — quem escreve é um SET
+// montado. Ela mora no hospedeiro e não na cena porque cena que compõe SQL é
+// cena com o banco dentro. O TÍTULO era o irmão dela e saiu na ALE-344: ele
+// mora no `app/session`, que é onde uma escrita sem consulta gerada pode morar.
 
 // SaveNotes grava as notas do mestre, e ela NÃO apara o texto.
 //

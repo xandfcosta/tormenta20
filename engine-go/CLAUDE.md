@@ -14,7 +14,7 @@ onde o SSE pode ser bufferizado por engano.
 
 ## O mapa das pastas
 
-Quatro grupos, e a pergunta que cada um responde:
+Cinco grupos, e a pergunta que cada um responde:
 
 ```
 engine-go/
@@ -25,6 +25,8 @@ engine-go/
 │   ├── book/     o catálogo tipado, lido por treze famílias
 │   ├── sheet/  board/  live/   o domínio COM estado
 │   └── campaign/ account/ creature/ search/ markdown/
+├── app/          O QUE UM GESTO FAZ, do pedido à gravação
+│   └── session/  autoriza, pergunta a decisão ao `domain`, grava, publica
 ├── serve/        O QUE RESPONDE HTTP
 │   ├── api/      a RAIZ DE COMPOSIÇÃO: monta o roteador e cumpre as portas
 │   └── web/      as quinze cenas, cada uma com a porta dela
@@ -41,10 +43,29 @@ engine-go/
 └── scripts/      a folha e as ilhas de JS
 ```
 
-**A seta só aponta para BAIXO**: `domain` não conhece `serve`, `infra` não
-conhece ninguém. Quem garante são os `boundary_test.go` de cada pacote, e as
-listas de permitidos deles são argumentadas linha a linha — acrescentar uma
-entrada é decisão, não conveniência.
+**A seta só aponta para BAIXO**: `serve` → `app` → `domain` + `infra`, e o
+`infra` não conhece ninguém. Quem garante são os `boundary_test.go` de cada
+pacote — e, entre os GRUPOS, o `TestNoLayerImportsUpwards`, que varre a árvore em
+vez de uma lista, para o pacote que nascer amanhã já nascer medido. As listas de
+permitidos são argumentadas linha a linha: acrescentar uma entrada é decisão, não
+conveniência.
+
+### O `app/` é novo, e o que ele NÃO é (ALE-344)
+
+Ele não é "a pasta para onde mudo o que estava no `api`". O que entra aqui é o
+gesto INTEIRO — quem pode, o que decide, o que grava —, e o sinal de que uma
+coisa pertence a ele é ter as três. Um repasse de uma linha não vira caso de uso
+por mudar de pasta.
+
+**A orquestração já existia, com outro nome.** O `BoardStore.apply` carrega o
+estado, chama a regra PURA do `board_state.go` e devolve o quadro: isso é um caso
+de uso, e ele está arquivado dentro de `domain/`. O `app/` é o endereço do que
+não tinha nenhum — o ciclo da sessão foi o primeiro —, e os stores só mudam de
+lugar quando alguém medir que vale mover 1.126 linhas.
+
+**As recusas daqui são TIPADAS** (`ErrNotFound`, `ErrForbidden`, `ErrRefused`) e
+nunca um número de HTTP. Um caso de uso que devolvesse 403 não poderia ser
+chamado de outro transporte — que é a única coisa que esta camada compra.
 
 **Onde procurar:**
 

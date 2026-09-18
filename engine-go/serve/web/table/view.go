@@ -6,6 +6,7 @@ import (
 	"strings"
 	"t20engine/domain/live"
 	"t20engine/domain/markdown"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/sheetui"
 	"t20engine/serve/web/ui"
 )
@@ -590,14 +591,55 @@ func toggleConditionRow(v View, id string) string {
 
 // ── O CICLO da sessão na tela ───────────────────────────────────────────────
 
-// sessionCommand escreve a chamada de um verbo do ciclo.
-func sessionCommand(v View, acao string) string {
-	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/%s')", v.CampaignID, v.SessionID, acao)
+// sessionAddress é o endereço do RECURSO, e os três verbos do ciclo agem sobre
+// ele com método diferente. Uma função e não três `Sprintf`: o endereço é o
+// mesmo, e é o método que diz o que se quer.
+func sessionAddress(v View) string {
+	return routes.Session(v.CampaignID, v.SessionID)
 }
 
-// caminhoDeExcluir é o `action` do form, e não uma expressão: excluir NAVEGA.
-func caminhoDeExcluir(v View) string {
-	return fmt.Sprintf("/campanhas/%d/sessoes/%d/excluir", v.CampaignID, v.SessionID)
+// sessionPatch escreve o remendo do ciclo — o que muda, e só isso.
+//
+// # O `payload` não é enfeite: sem ele o gesto renomeia de carona
+//
+// O `@patch` sem payload manda os SINAIS DA PÁGINA, e `session_title` é um
+// deles — está ligado ao campo de texto das configurações. Um pedido de status
+// levaria o título junto e gravaria o que estivesse digitado (ou apagado) no
+// campo, sem ninguém ter clicado em Salvar.
+//
+// O `payload` SUBSTITUI os sinais, então o que vai é exatamente o que está
+// escrito aqui. É a mesma razão que faz o handler ler ponteiros: só o campo
+// presente muda.
+//
+// # A chave é LITERAL nas duas, e não um parâmetro
+//
+// Uma função só, com a chave vindo por argumento, produziria `{payload: {%s: …}}`
+// no código — e aí a chave não existe em lugar nenhum que se possa ler. O
+// `TestEveryPayloadKeyMatchesTheSignalItReads` confere cada chave contra a tag
+// `json` que a lê, e ele não tem como conferir uma que só existe em tempo de
+// execução. Duas funções custam uma linha e mantêm as duas chaves no `grep`.
+//
+//	sessionStatusPatch(v, "active") // @patch('…', {payload: {status: 'active'}})
+func sessionStatusPatch(v View, status string) string {
+	return fmt.Sprintf("@patch('%s', {payload: {status: '%s'}})", sessionAddress(v), status)
+}
+
+// sessionTitlePatch manda o título que está no campo, e só ele.
+func sessionTitlePatch(v View) string {
+	return fmt.Sprintf("@patch('%s', {payload: {session_title: $session_title}})", sessionAddress(v))
+}
+
+// restartCombatCommand é `POST` num sub-recurso e não um remendo na sessão:
+// reiniciar o combate NÃO muda o status — a partida continua no ar, e o que
+// esvazia é a fila.
+func restartCombatCommand(v View) string {
+	return fmt.Sprintf("@post('%s/combate/reiniciar')", sessionAddress(v))
+}
+
+// deleteSessionCommand apaga a sessão. A NAVEGAÇÃO vem pelo fio (`sse.Redirect`)
+// porque `DELETE` não cabe num `form` de HTML — ver o handler.
+func deleteSessionCommand(v View) string {
+	return fmt.Sprintf("@delete('%s')", sessionAddress(v))
 }
 
 // campaignChronicle é para onde se sai da sessão.

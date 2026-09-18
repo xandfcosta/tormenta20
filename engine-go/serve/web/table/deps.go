@@ -6,6 +6,8 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/session"
+
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -65,14 +67,9 @@ type Deps interface {
 	// navegador esperando página.
 	SessionForCaller(ctx context.Context, userID, campaignID, sessionID int64) (sqlcgen.Session, string, int, error)
 
-	// O sufixo `ForTable` existe porque o `*Server` JÁ tem `StartSession`,
-	// `EndSession` e `RestartCombat`, com outra forma: aqueles recebem a LINHA e
-	// devolvem a linha gravada, estes recebem o id e devolvem o estado AO VIVO.
-	// Dois nomes porque são duas perguntas — forçar um só juntaria coisas
-	// diferentes, e o compilador recusaria.
-	StartSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
-	EndSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
-	RestartCombatForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
+	// O sufixo `ForTable` existe porque o `*Server` JÁ tem um `EndScene` com
+	// outra forma. Dois nomes porque são duas perguntas — forçar um só juntaria
+	// coisas diferentes, e o compilador recusaria.
 	EndSceneForTable(userID, campaignID, sessionID int64) (*live.SessionRuntimeState, error)
 	RestParty(userID, campaignID, sessionID int64, escopo, condicao string) (int, int, error)
 	// SelfInitiativeEntry monta a linha de quem entra na fila com o próprio d20.
@@ -95,13 +92,6 @@ type Deps interface {
 	// SpeedsForBoard é o deslocamento de cada peça, que a prévia do movimento lê.
 	SpeedsForBoard(board *board.BoardState) map[string]int
 
-	// SessionDeleted não é o `Sessions().Forget`, que esvazia só o cache da
-	// fila: o tabuleiro ficaria no mapa em memória e a gravação seguinte bateria
-	// na chave estrangeira, acendendo um `Dirty` que nunca mais sai.
-	//
-	// É do HOSPEDEIRO porque são DOIS stores e nenhum conhece o outro.
-	SessionDeleted(sessionID int64)
-
 	// PUBLICAR é do hospedeiro: ele conhece o hub e o barramento, e a cena só
 	// sabe QUANDO alguma coisa mudou.
 	PublishSessionState(sessionID int64, estado *live.SessionRuntimeState)
@@ -109,9 +99,9 @@ type Deps interface {
 	PublishWhatIsLeft(ctx context.Context, sessionID int64)
 	CharacterChanged(characterID int64)
 
-	// As DUAS escritas que a cena montava em SQL.
+	// SaveNotes é a escrita que a cena montava em SQL. O título saiu daqui na
+	// ALE-344 e mora no `app/session`; as notas seguem, e pelo mesmo caminho.
 	SaveNotes(ctx context.Context, sessionID int64, texto string) error
-	SaveSessionTitle(ctx context.Context, sessionID int64, titulo string) error
 
 	// PlayerSheet é a ficha EMBUTIDA, pedida PRONTA: montá-la aqui obrigaria a
 	// Mesa a cumprir a `sheetui.Deps` inteira para desenhar um painel. Nulo é
@@ -145,11 +135,19 @@ type Combatant struct {
 // O `New` é chamado UMA vez, no registro das rotas: duas chamadas dariam dois
 // estados, e metade da mesa não veria a lente da outra metade.
 type Scene struct {
-	deps       Deps
+	deps Deps
+	// lifecycle é o CASO DE USO do ciclo da sessão, e ele chega por parâmetro e
+	// não pela `Deps` (ALE-344).
+	//
+	// A diferença é a razão inteira da camada: o `app/session` fica ABAIXO desta
+	// cena e do `serve/api`, então a cena o importa DIRETO. Não há ciclo para
+	// desviar, e por isso não há interface — cinco entradas que existiam só para
+	// contornar a falta de um lugar saíram com ele.
+	lifecycle  session.Lifecycle
 	lenses     *lenses
 	chosenTabs *chosenTabs
 }
 
-func New(d Deps) Scene {
-	return Scene{deps: d, lenses: newLenses(), chosenTabs: newTabs()}
+func New(d Deps, ciclo session.Lifecycle) Scene {
+	return Scene{deps: d, lifecycle: ciclo, lenses: newLenses(), chosenTabs: newTabs()}
 }

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"t20engine/app/session"
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -157,7 +158,16 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 // antes.
 func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
-	s.tableScene = table.New(s.tableHost())
+	s.tableScene = table.New(s.tableHost(), s.sessionLifecycle())
+}
+
+// sessionLifecycle é o caso de uso do ciclo, montado com o que o servidor tem.
+//
+// O `*Server` o CONSTRÓI e não o cumpre: a camada de aplicação não é adaptador
+// de nada — ela existe abaixo daqui, e quem a usa (esta casa e a cena) a importa
+// direto.
+func (s *Server) sessionLifecycle() session.Lifecycle {
+	return session.NewLifecycle(s.db, s.queries, s.sessions, s.boards)
 }
 
 // sceneCore é montado por chamada e não guardado num campo: são três ponteiros

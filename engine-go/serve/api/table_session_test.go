@@ -3,8 +3,11 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
+
+	"t20engine/app/session"
 )
 
 func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
@@ -20,8 +23,9 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 		t.Error("a sessão planejada oferece encerrar — o servidor recusaria")
 	}
 
-	// ATIVA: o contrário.
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/iniciar", ""); rec.Code != http.StatusOK {
+	// ATIVA: o contrário. O pedido é um REMENDO no recurso — o status que se
+	// quer —, e não uma rota com o verbo no caminho.
+	if rec := f.pede(t, f.mestre, http.MethodPatch, f.tableUrl(), `{"status":"active"}`); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar deu %d", rec.Code)
 	}
 	ativa := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -34,8 +38,13 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 
 	// ENCERRADA: o verbo muda de PALAVRA, porque o gesto mudou de sentido —
 	// "Reabrir" e não "Iniciar", que é o que o servidor faz de verdade.
-	sess, _ := f.s.queries.GetSession(ctx, f.sessionID)
-	if _, err := f.s.tableRules().EndSession(ctx, sess); err != nil {
+	//
+	// Encerrada pelo CASO DE USO e não pela rota: o que este teste mede é o
+	// DESENHO em cada status, e chegar ao status pela tela faria a montagem do
+	// caso depender do gesto que vem logo abaixo.
+	if _, err := f.s.sessionLifecycle().SetStatus(
+		ctx, session.Caller{ID: f.mestre}, f.campaignID, f.sessionID, "ended",
+	); err != nil {
 		t.Fatalf("encerrar: %v", err)
 	}
 	encerrada := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -59,11 +68,25 @@ func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 		t.Error("o jogador não tem como sair da mesa")
 	}
 
-	// E a trava é do SERVIDOR, não do desenho.
-	for _, gesto := range []string{"iniciar", "encerrar", "reiniciar", "titulo", "excluir"} {
-		rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/"+gesto, `{"session_title":"x"}`)
+	// E a trava é do SERVIDOR, não do desenho — agora ela mora no CASO DE USO, e
+	// os quatro gestos passam pela mesma linha dele. São os quatro, e não uma
+	// amostra: a trava é por gesto, e um gesto novo que esquecesse a chamada
+	// passaria despercebido se este laço fosse menor que a família.
+	for _, gesto := range []struct {
+		nome    string
+		metodo  string
+		caminho string
+		corpo   string
+	}{
+		{"iniciar", http.MethodPatch, f.tableUrl(), `{"status":"active"}`},
+		{"encerrar", http.MethodPatch, f.tableUrl(), `{"status":"ended"}`},
+		{"renomear", http.MethodPatch, f.tableUrl(), `{"session_title":"x"}`},
+		{"reiniciar o combate", http.MethodPost, f.tableUrl() + "/combate/reiniciar", ""},
+		{"excluir", http.MethodDelete, f.tableUrl(), ""},
+	} {
+		rec := f.pede(t, f.jogador, gesto.metodo, gesto.caminho, gesto.corpo)
 		if rec.Code != http.StatusForbidden {
-			t.Errorf("o jogador passou em %q: %d", gesto, rec.Code)
+			t.Errorf("o jogador passou em %q: %d", gesto.nome, rec.Code)
 		}
 	}
 }
@@ -74,22 +97,34 @@ func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
 
-	f.posta(t, f.mestre, f.tableUrl()+"/titulo", `{"session_title":"A cripta do rio"}`)
+	f.pede(t, f.mestre, http.MethodPatch, f.tableUrl(), `{"session_title":"A cripta do rio"}`)
 	sess, _ := f.s.queries.GetSession(ctx, f.sessionID)
 	if !sess.Title.Valid || sess.Title.String != "A cripta do rio" {
 		t.Fatalf("o título não foi salvo: %+v", sess.Title)
 	}
 
-	f.posta(t, f.mestre, f.tableUrl()+"/titulo", `{"session_title":"   "}`)
+	f.pede(t, f.mestre, http.MethodPatch, f.tableUrl(), `{"session_title":"   "}`)
 	sess, _ = f.s.queries.GetSession(ctx, f.sessionID)
 	if sess.Title.Valid && strings.TrimSpace(sess.Title.String) != "" {
 		t.Errorf("o título em branco não virou nulo: %+v", sess.Title)
 	}
 }
 
-// O guarda da regra já cobre o `Forget`; este cobre o CAMINHO — que o comando da
-// Mesa recarrega a fila depois, senão o `GetState` recria um estado vazio sem
-// passar pelo banco e a próxima carga fria discordaria desta.
+// Um remendo que não pede NADA é recusado, e não aceito em silêncio.
+//
+// Sem esta linha, um botão que deixasse de mandar o campo responderia 200 e não
+// faria nada — o sintoma seria "cliquei e a tela não mudou", que é o mais caro
+// de investigar porque não deixa erro em lugar nenhum.
+func TestAPatchThatAsksForNothingIsRefused(t *testing.T) {
+	f := newSceneFixture(t)
+	if rec := f.pede(t, f.mestre, http.MethodPatch, f.tableUrl(), `{"outra_coisa":1}`); rec.Code != http.StatusBadRequest {
+		t.Errorf("o remendo vazio deu %d, e ele tem de ser recusado", rec.Code)
+	}
+}
+
+// O caminho: o comando recarrega a fila depois de limpá-la, senão o `GetState`
+// recria um estado vazio sem passar pelo banco e a próxima carga fria
+// discordaria desta.
 func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -97,7 +132,7 @@ func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 		t.Fatalf("a cena montou %d combatentes — não há o que reiniciar", n)
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/reiniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/combate/reiniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("reiniciar deu %d", rec.Code)
 	}
 
@@ -108,17 +143,21 @@ func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 
 // O destino importa: voltar para a mesa apagada seria mandar o mestre para uma
 // porta que não existe mais.
+//
+// A navegação vem pelo FIO e não num cabeçalho `Location`: com `DELETE` não há
+// formulário para navegar sozinho, e quem leva o mestre é o `sse.Redirect`.
 func TestDeletingErasesAndSendsTheGmToTheCampaign(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
 
-	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/excluir", "")
+	rec := f.pede(t, f.mestre, http.MethodDelete, f.tableUrl(), "")
 
-	if rec.Code != http.StatusSeeOther {
-		t.Fatalf("excluir deu %d, esperado 303", rec.Code)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("excluir deu %d", rec.Code)
 	}
-	if destino := rec.Header().Get("Location"); !strings.HasPrefix(destino, "/campanhas/") {
-		t.Errorf("o destino depois de excluir é %q", destino)
+	destino := "/campanhas/" + strconv.FormatInt(f.campaignID, 10)
+	if !strings.Contains(rec.Body.String(), destino) {
+		t.Errorf("a resposta não manda o mestre para %q:\n%s", destino, rec.Body.String())
 	}
 	if _, err := f.s.queries.GetSession(ctx, f.sessionID); err == nil {
 		t.Error("a sessão continua no banco depois de excluída")

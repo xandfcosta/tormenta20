@@ -151,8 +151,8 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 	// errado para mostrar o defeito, e um guarda que a proibisse tiraria do
 	// repositório justamente a explicação que impede o defeito.
 	//
-	// O mesmo vale para o `ForTable`: ele é o SUFIXO de três métodos da porta da
-	// Mesa (`StartSessionForTable` e irmãos), citado como sufixo e não como
+	// O mesmo vale para o `ForTable`: ele é o SUFIXO de métodos da porta da
+	// sessão (`EndSceneForTable` e irmãos), citado como sufixo e não como
 	// símbolo.
 	"detalheAberto": true,
 	"ForTable":      true,

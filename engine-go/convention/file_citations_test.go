@@ -136,8 +136,9 @@ var oCaminhoCitado = regexp.MustCompile(
 // ALE-278 moveu famílias inteiras para pacotes novos. Os arquivos mudaram de
 // nome; os comentários que apontavam para eles, não. O `sessao_ciclo` era citado
 // em QUATRO lugares como o endereço da regra do ciclo da sessão — "a regra mora
-// no ..." — e ele virou `session_lifecycle` na ALE-283 e
-// `table_session_lifecycle.go` na ALE-330, que lhe deu o prefixo do dono. O
+// no ..." —, virou `session_lifecycle` na ALE-283, ganhou o prefixo do dono na
+// ALE-330 e deixou de existir na ALE-344, quando a regra desceu para o
+// `domain/live` e a orquestração para o `app/session`. O
 // `vista`, o `terreno`, o `chao`, o `aviso`, a `busca`, a `cortina`, os
 // `enderecos_antigos`: a mesma história catorze vezes.
 //

@@ -38,6 +38,11 @@ import (
 // `database/sql` fica fora da lista, e não é por precaução: é a tentação
 // MEDIDA.
 var permitidos = map[string]bool{
+	// O `app/session` NÃO é concessão, é a razão do guarda existir ficar menor
+	// (ALE-344): ele está ABAIXO desta cena e do `serve/api`, então não há ciclo
+	// para desviar — e por isso não há interface. Cinco entradas da porta saíram
+	// com ele. A direção continua legal: quem importa é quem desenha depois.
+	"t20engine/app/session":       true,
 	"t20engine/domain/live":       true, // a fila, a cena e a presença, pela porta
 	"t20engine/domain/book":       true, // o catálogo tipado do bestiário e das condições
 	"t20engine/domain/catalog":    true, // ver a nota abaixo — é o IsCondition, não o Resource
