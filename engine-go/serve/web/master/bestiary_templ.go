@@ -157,7 +157,7 @@ func railNav(atual string) templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<nav aria-label=\"Ferramentas do mestre\" data-nav-region=\"rail\" data-nav-layout=\"column\" class=\"flex shrink-0 gap-1 overflow-x-auto pb-1 lg:w-44 lg:flex-col lg:overflow-x-visible lg:pb-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<nav aria-label=\"Ferramentas do mestre\" data-nav-region=\"rail\" data-nav-layout=\"column\" class=\"flex shrink-0 gap-1 overflow-x-auto pb-1 lg:min-h-0 lg:w-44 lg:flex-col lg:overflow-y-auto lg:pb-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

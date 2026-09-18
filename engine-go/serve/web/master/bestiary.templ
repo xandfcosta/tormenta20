@@ -110,7 +110,7 @@ templ railNav(atual string) {
 		aria-label="Ferramentas do mestre"
 		data-nav-region="rail"
 		data-nav-layout="column"
-		class="flex shrink-0 gap-1 overflow-x-auto pb-1 lg:w-44 lg:flex-col lg:overflow-x-visible lg:pb-0"
+		class="flex shrink-0 gap-1 overflow-x-auto pb-1 lg:min-h-0 lg:w-44 lg:flex-col lg:overflow-y-auto lg:pb-0"
 	>
 		for _, secao := range masterRail {
 			// O cabeçalho é `<p>` e não `<h3>`: a `<nav>` já tem `aria-label`, e

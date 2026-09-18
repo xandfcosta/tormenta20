@@ -1,39 +1,51 @@
 import { expect, test } from '@playwright/test'
-import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
+import {
+  expectNoHorizontalOverflow,
+  expectOnlyTheScrollerScrolls,
+  VIEWPORTS,
+} from './support/viewports'
 
 test.describe('Os catálogos', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  const CATALOGOS = '/mestre/condicoes'
+  // Cada catálogo é uma CENA e a aba vem do CAMINHO: o `?aba=` da consulta não
+  // tem leitor nenhum, e um endereço que o carregasse mediria o acervo do
+  // caminho fingindo medir o outro (ALE-332).
+  const CONDITIONS = '/mestre/condicoes'
+  const POWERS = '/mestre/poderes'
+  const SCROLLER = '[role="region"][aria-label="Resultados dos catálogos"]'
 
   /**
    * O único guarda desta cena que precisa mesmo de browser.
    *
    * A cena manda as centenas de entradas de uma vez — sem virtualização, por
    * decisão do dono. O que sustenta essa decisão é a lista rolar DENTRO da
-   * caixa, e "a cena não rola" fica VERDE por cima do defeito: a lista cresce
-   * até a altura do conteúdo e vaza para fora do cartão sem a página rolar.
+   * caixa: deixada crescer até a altura do conteúdo, ela vaza milhares de
+   * pixels para fora do cartão (ALE-149).
    *
-   * Por isso a asserção é a INVERSA: o DOCUMENTO não pode ser mais alto que a
-   * janela. Um `min-h-0` faltando em qualquer elo da corrente dá uma página de
-   * dezenas de milhares de pixels — e a aba visitada é a de Poderes, que é a
-   * maior.
+   * Este caso mediu a coisa errada duas vezes, e as duas estão consertadas
+   * aqui (ALE-332). Pedia `/mestre/condicoes?aba=poderes` — consulta que
+   * handler nenhum lê, porque a aba vem do CAMINHO —, então media o catálogo
+   * mais magro do livro dizendo no comentário que media o mais gordo. E
+   * afirmava que o DOCUMENTO não crescia, o que a casca `h-dvh
+   * overflow-hidden` já garante: com o rolador sabotado a lista foi a 25.187px
+   * e a página continuou com 900. O instrumento está no `viewports.ts`, com a
+   * medição.
    */
-  test('com o acervo inteiro na tela, a PÁGINA não cresce em nenhum formato', async ({
+  test('com o acervo inteiro na tela, a lista rola DENTRO da caixa em todo formato', async ({
     page,
   }) => {
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await page.goto(`${CATALOGOS}?aba=poderes`)
-      const altura = await page.evaluate(() => ({
-        doc: document.documentElement.scrollHeight,
-        janela: window.innerHeight,
-      }))
-      expect(
-        altura.doc,
-        `a página cresceu para ${altura.doc}px em ${viewport.width}×${viewport.height} — é a ALE-149`,
-      ).toBeLessThanOrEqual(altura.janela + 2)
-    }
+    await page.goto(POWERS)
+    // O DENOMINADOR desta cena: Poderes é o maior acervo do livro, e é dele que
+    // o defeito precisa — com uma fração das entradas a corrente aguenta e o
+    // caso fica verde sem ter medido nada.
+    const desenhadas = await page.locator('.collection-in-columns > *').count()
+    expect(
+      desenhadas,
+      `a cena desenhou ${desenhadas} verbetes, e Poderes tem centenas — este caso não está medindo o acervo que ele diz medir`,
+    ).toBeGreaterThan(500)
+
+    await expectOnlyTheScrollerScrolls(page, SCROLLER, VIEWPORTS)
     await expectNoHorizontalOverflow(page, VIEWPORTS)
   })
 
@@ -53,7 +65,7 @@ test.describe('Os catálogos', () => {
       [390, 844, 1],
     ] as const) {
       await page.setViewportSize({ width: largura, height: altura })
-      await page.goto(`${CATALOGOS}?aba=condicoes`)
+      await page.goto(CONDITIONS)
       const colunas = await page.evaluate(() => {
         const grade = document.querySelector('.collection-in-columns')
         if (!grade) return 0
@@ -70,7 +82,7 @@ test.describe('Os catálogos', () => {
    */
   test('buscar varre todos os catálogos, não só o que está aberto', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto(`${CATALOGOS}?aba=condicoes`)
+    await page.goto(CONDITIONS)
     await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
 
     await page.getByRole('searchbox', { name: 'Buscar nos catálogos' }).fill('fogo')
