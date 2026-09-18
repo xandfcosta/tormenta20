@@ -62,7 +62,7 @@ func (s Scene) handleTableInitiative(w http.ResponseWriter, r *http.Request) {
 // abrir o SSE, e a ordem é obrigatória (ver o comentário lá em cima).
 func (s Scene) registerInitiativeTable(r *http.Request, campaignID, sessionID, d20 int64) error {
 	userID := s.deps.CurrentUserID(r)
-	if _, _, _, err := s.deps.SessionForCaller(r.Context(), userID, campaignID, sessionID); err != nil {
+	if _, _, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID); err != nil {
 		return err
 	}
 	_, _, eu := s.tableRoster(r.Context(), userID, campaignID)

@@ -2,6 +2,7 @@ package table
 
 import (
 	"context"
+	"t20engine/app"
 	"t20engine/domain/markdown"
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/sheetui"
@@ -278,7 +279,8 @@ func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
 // `master.LoadBestiaryFrom` — a cena diz como montar a si mesma, e o hospedeiro
 // prova que o que está no banco chega até lá.
 func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID int64) (View, int, error) {
-	sess, role, status, err := s.deps.SessionForCaller(ctx, userID, campaignID, sessionID)
+	sess, role, err := s.access.Session(ctx, app.Caller{ID: userID}, campaignID, sessionID)
+	status := statusOf(err)
 	if err != nil {
 		return View{}, status, err
 	}

@@ -5,7 +5,9 @@ import "t20engine/domain/live"
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"strings"
+	"t20engine/app"
 	"t20engine/infra/db/dbvalue"
 	"testing"
 
@@ -129,7 +131,7 @@ func TestAssertVitalsEditable(t *testing.T) {
 }
 
 // O comentário do `access` declara a ameaça — "um sessionId forjado num socket velho
-// não sequestra outra mesa" — e ela dependia de `sessionForCaller` conferir que a
+// não sequestra outra mesa" — e ela depende de o `Access.Session` conferir que a
 // sessão pertence à campanha pedida. Um mestre é mestre da PRÓPRIA mesa, e o socket
 // re-resolve o papel a cada mensagem: o par (campanha minha, sessão de outro) tem de
 // morrer aqui, senão o papel resolvido é "gm" e ele comanda a mesa alheia.
@@ -149,8 +151,12 @@ func TestSessionForCallerRejectsForeignSession(t *testing.T) {
 		t.Fatalf("seed foreign session: %v", err)
 	}
 
-	_, Role, status, err := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: mine}, myCampaign, foreign.ID)
-	if err == nil || status == 200 {
-		t.Fatalf("status=%d Role=%q err=%v — a sessão de outra mesa foi aceita", status, Role, err)
+	_, papel, err := s.sessionLifecycle().Access().Session(ctx, app.Caller{ID: mine}, myCampaign, foreign.ID)
+	if err == nil {
+		t.Fatalf("papel=%q — a sessão de outra mesa foi aceita", papel)
+	}
+	if !errors.Is(err, app.ErrNotFound) {
+		t.Errorf("a recusa foi %v, e a sessão de outra campanha é NÃO ENCONTRADA — dizer "+
+			"\"não é sua\" contaria que ela existe", err)
 	}
 }

@@ -84,7 +84,7 @@ func (s Scene) patchesTheSession(w http.ResponseWriter, r *http.Request) {
 	if recusa == nil && remendo.Status != nil {
 		estado, recusa = s.lifecycle.SetStatus(r.Context(), quem, campaignID, sessionID, *remendo.Status)
 	}
-	s.answersTheLifecycle(w, r, quem, campaignID, sessionID, estado, recusa)
+	s.answersTheGesture(w, r, quem, campaignID, sessionID, estado, recusa)
 }
 
 // restartsTheCombat esvazia a fila e os turnos SEM tirar a partida do ar.
@@ -99,7 +99,7 @@ func (s Scene) restartsTheCombat(w http.ResponseWriter, r *http.Request) {
 	}
 	quem := s.callerOf(r)
 	estado, recusa := s.lifecycle.RestartCombat(r.Context(), quem, campaignID, sessionID)
-	s.answersTheLifecycle(w, r, quem, campaignID, sessionID, estado, recusa)
+	s.answersTheGesture(w, r, quem, campaignID, sessionID, estado, recusa)
 }
 
 // deletesTheSession apaga a sessão e MANDA O MESTRE PARA A CRÔNICA.
@@ -129,6 +129,26 @@ func (s Scene) deletesTheSession(w http.ResponseWriter, r *http.Request) {
 	_ = sse.Redirect("/campanhas/" + strconv.FormatInt(campaignID, 10))
 }
 
+// sceneCommand é o caminho dos gestos cuja autorização mora no CASO DE USO.
+//
+// Ele NÃO confere o papel, e essa é a diferença inteira para o `gmCommand`:
+// quem decide se pode é quem executa, junto. Conferir aqui também custaria uma
+// consulta por gesto e, pior, daria duas opiniões sobre quem mestra — que é
+// como uma delas passa a divergir.
+func (s Scene) sceneCommand(
+	agir func(Scene, *http.Request, app.Caller, int64, int64) (*live.SessionRuntimeState, error),
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		campaignID, sessionID, ok := tableParams(w, r)
+		if !ok {
+			return
+		}
+		quem := s.callerOf(r)
+		estado, recusa := agir(s, r, quem, campaignID, sessionID)
+		s.answersTheGesture(w, r, quem, campaignID, sessionID, estado, recusa)
+	}
+}
+
 // callerOf é quem está pedindo, na forma que o caso de uso recebe.
 //
 // `IsAdmin` é FALSO aqui, e isso é a verdade de hoje e não um esquecimento: a
@@ -139,17 +159,22 @@ func (s Scene) callerOf(r *http.Request) app.Caller {
 	return app.Caller{ID: s.deps.CurrentUserID(r)}
 }
 
-// answersTheLifecycle responde o que os três gestos de remendo respondem: a
-// cena redesenhada, com a recusa escrita no rodapé do mestre.
-func (s Scene) answersTheLifecycle(
+// answersTheGesture responde o que um gesto cuja autorização mora no CASO DE USO
+// responde: a cena redesenhada, com a recusa escrita no rodapé do mestre.
+func (s Scene) answersTheGesture(
 	w http.ResponseWriter, r *http.Request,
 	quem app.Caller, campaignID, sessionID int64,
 	estado *live.SessionRuntimeState, recusa error,
 ) {
-	// NÃO ENCONTRADO e NÃO É SEU saem como status, e não como frase no rodapé:
-	// quem não alcança a sessão não tem rodapé para ler. A recusa da REGRA é a
-	// que vira frase — ela é sobre o gesto, e quem a recebeu está olhando a tela.
-	if recusa != nil && !errors.Is(recusa, app.ErrRefused) {
+	// SÓ quem não alcança a sessão leva status: NÃO ENCONTRADO e NÃO É SEU
+	// significam que não há rodapé do outro lado para ler frase nenhuma.
+	//
+	// TODO O RESTO vira frase, inclusive a falha de banco — e isso é o desenho,
+	// não descuido: **o Datastar não desenha corpo de resposta 4xx/5xx**, então
+	// recusar por `http.Error` é um beco onde a explicação morre e o mestre fica
+	// clicando numa tela que não muda. Se ele está olhando a cena, a recusa tem
+	// de chegar NA cena.
+	if recusa != nil && (errors.Is(recusa, app.ErrNotFound) || errors.Is(recusa, app.ErrForbidden)) {
 		http.Error(w, recusa.Error(), statusOf(recusa))
 		return
 	}

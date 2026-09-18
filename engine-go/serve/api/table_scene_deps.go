@@ -58,13 +58,6 @@ func (h tableHost) CharacterChanged(characterID int64) {
 }
 func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 
-// SessionForCaller é a trava de acesso à mesa.
-func (h tableHost) SessionForCaller(
-	ctx context.Context, userID, campaignID, sessionID int64,
-) (sqlcgen.Session, string, int, error) {
-	return h.rules.campaign.sessionForCaller(ctx, AuthUser{ID: userID}, campaignID, sessionID)
-}
-
 // PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR.
 //
 // O `loadOwnedCampaign` é a MESMA porta que renomear, apagar, convidar e abrir

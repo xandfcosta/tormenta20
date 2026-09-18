@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"database/sql"
 	"net/http"
 	"strings"
@@ -34,18 +33,6 @@ func sessionDTO(s sqlcgen.Session) SessionDTO {
 		Notes: dbvalue.NullToPtr(s.Notes), Status: s.Status, StartedAt: dbvalue.NullToPtr(s.Startedat), EndedAt: dbvalue.NullToPtr(s.Endedat),
 		CreatedAt: s.Createdat, UpdatedAt: s.Updatedat, RuntimeState: s.Runtimestate,
 	}
-}
-
-// sessionForCaller is the member-aware session resolver the WS gateway runs on every
-// session-scoped message: resolve the caller's Role (gm/player) then Load the session and
-// assert it belongs to the campaign. — the Role is
-// stashed on socket.data for per-action GM gating. Transport-agnostic (WS maps status/err).
-func (rules campaignRules) sessionForCaller(ctx context.Context, user AuthUser, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
-	sess, papel, err := rules.access().Session(ctx, callerOf(user), campaignID, sessionID)
-	if err != nil {
-		return sqlcgen.Session{}, "", statusForAccess(err), err
-	}
-	return sess, papel, http.StatusOK, nil
 }
 
 func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {

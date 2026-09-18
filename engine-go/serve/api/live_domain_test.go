@@ -236,20 +236,27 @@ func TestSessionForCaller(t *testing.T) {
 		t.Fatalf("seed session: %v", err)
 	}
 
-	t.Run("gm gets session + Role", func(t *testing.T) {
-		got, Role, status, err := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, sess.ID)
-		if err != nil || status != 200 || Role != "gm" || got.ID != sess.ID {
-			t.Errorf("status=%d Role=%q id=%d err=%v", status, Role, got.ID, err)
+	trava := s.sessionLifecycle().Access()
+
+	t.Run("o mestre recebe a sessão e o papel", func(t *testing.T) {
+		got, papel, err := trava.Session(ctx, app.Caller{ID: gm}, campaignID, sess.ID)
+		if err != nil || papel != app.RoleGM || got.ID != sess.ID {
+			t.Errorf("papel=%q id=%d err=%v", papel, got.ID, err)
 		}
 	})
-	t.Run("stranger forbidden before session Load", func(t *testing.T) {
-		if _, _, status, _ := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: stranger}, campaignID, sess.ID); status != 403 {
-			t.Errorf("status=%d, want 403", status)
+	// A ORDEM importa: o estranho é barrado ANTES de a sessão ser lida. Sem
+	// isso, a diferença entre 403 e 404 contaria a quem não pertence à campanha
+	// quais sessões existem nela.
+	t.Run("estranho é barrado antes de a sessão ser lida", func(t *testing.T) {
+		_, _, err := trava.Session(ctx, app.Caller{ID: stranger}, campaignID, sess.ID)
+		if !errors.Is(err, app.ErrForbidden) {
+			t.Errorf("a recusa foi %v, e queria ErrForbidden", err)
 		}
 	})
-	t.Run("missing session 404", func(t *testing.T) {
-		if _, _, status, _ := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, 999999); status != 404 {
-			t.Errorf("status=%d, want 404", status)
+	t.Run("sessão que não existe", func(t *testing.T) {
+		_, _, err := trava.Session(ctx, app.Caller{ID: gm}, campaignID, 999999)
+		if !errors.Is(err, app.ErrNotFound) {
+			t.Errorf("a recusa foi %v, e queria ErrNotFound", err)
 		}
 	})
 }

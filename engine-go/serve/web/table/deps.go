@@ -48,10 +48,10 @@ type Deps interface {
 	// porta.
 	CurrentUserID(r *http.Request) int64
 
-	// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR, e não o
-	// `SessionForCaller`: o rascunho acontece quando NÃO há sessão, e usá-lo
-	// aqui exigiria inventar uma para autorizar preparação. É `gm` e não
-	// "membro" — um jogador que abrisse esta tela veria a emboscada de sábado.
+	// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR, e não a trava da
+	// SESSÃO: o rascunho acontece quando NÃO há sessão, e usar aquela aqui
+	// exigiria inventar uma para autorizar preparação. É `gm` e não "membro" —
+	// um jogador que abrisse esta tela veria a emboscada de sábado.
 	//
 	// Devolve a CAMPANHA e não um booleano porque a cena escreve o nome dela no
 	// "voltar".
@@ -60,14 +60,6 @@ type Deps interface {
 	// desta porta: perguntar "qual é a sessão ativa" não vê o tabuleiro aberto
 	// numa sessão encerrada, que reabre com ele.
 	PlaceDraftCampaign(ctx context.Context, userID, campaignID int64) (campanha sqlcgen.Campaign, status int, err error)
-
-	// SessionForCaller é a trava de acesso à mesa: existe, e quem pede pertence?
-	//
-	// Ela devolve a LINHA da sessão, o papel e o STATUS: a cena desenha os dois
-	// primeiros — o número e o título no cabeçalho, o rodapé só para quem é
-	// mestre — e responde o terceiro, porque quem está do outro lado é um
-	// navegador esperando página.
-	SessionForCaller(ctx context.Context, userID, campaignID, sessionID int64) (sqlcgen.Session, string, int, error)
 
 	// CloneCreatureBlock é o "chefe que ganha nome": o bloco é um MOLDE que duas
 	// linhas dividem, e clonar só importa quando o mestre vai EDITAR uma delas —
@@ -124,7 +116,12 @@ type Scene struct {
 	// porque o `app/` está abaixo desta cena.
 	party rest.Party
 	// queue é o CASO DE USO de quem entra na fila.
-	queue      initiative.Queue
+	queue initiative.Queue
+	// access é a TRAVA da sessão, e ela é o MESMO objeto que os casos de uso
+	// usam por dentro (ALE-344). A cena a chama para decidir o que DESENHAR —
+	// o rodapé do mestre, a recusa antes do gesto —, e quem decide se o gesto
+	// pode é o caso de uso. Duas perguntas, uma implementação.
+	access     session.Access
 	lenses     *lenses
 	chosenTabs *chosenTabs
 }
@@ -132,6 +129,7 @@ type Scene struct {
 func New(d Deps, ciclo session.Lifecycle, grupo rest.Party, fila initiative.Queue) Scene {
 	return Scene{
 		deps: d, lifecycle: ciclo, party: grupo, queue: fila,
+		access: ciclo.Access(),
 		lenses: newLenses(), chosenTabs: newTabs(),
 	}
 }

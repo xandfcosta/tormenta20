@@ -37,14 +37,14 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().StartScene(c.SessionID)
 		}))
-	r.Post(sessionPattern+"/cena/encerrar", s.gmCommand(endScene))
+	r.Post(sessionPattern+"/cena/encerrar", s.sceneCommand(endsTheScene))
 	r.Post(sessionPattern+"/iniciativa/por-no-mapa", s.gmCommand(bringParty))
 	r.Post(sessionPattern+"/iniciativa/adicionar", s.gmCommand(addCombatant))
 	// DOIS caminhos e não um `/descanso` com o escopo no corpo, que é a forma da
 	// API JSON: nesta superfície o VERBO é o caminho, e misturar as duas
 	// gramáticas faria a próxima pessoa ter de descobrir qual vale onde.
-	r.Post(sessionPattern+"/descanso/cena", s.gmCommand(restParty("scene")))
-	r.Post(sessionPattern+"/descanso/dia", s.gmCommand(restParty("day")))
+	r.Post(sessionPattern+"/descanso/cena", s.sceneCommand(expiresTheSceneOfTheParty))
+	r.Post(sessionPattern+"/descanso/dia", s.sceneCommand(restsForTheDay))
 	// O QUE O MESTRE MEXE EM CADA LINHA — mais restrito que a API JSON de
 	// propósito. Lá o `assertVitalsEditableFor` deixa o jogador mexer nos vitais
 	// do PRÓPRIO personagem, porque lá existe a tela do jogador que faz isso.
@@ -297,40 +297,51 @@ func tiraDaFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // O aviso é obrigatório e não é o `session-state`: o que muda no descanso é a
 // FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem está com a
 // ficha aberta continua vendo o PV de antes até recarregar.
-func restParty(escopo string) func(Scene, commandCtx) (*live.SessionRuntimeState, error) {
-	return func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-		qualidade := "normal"
-		if escopo == "day" {
-			lida, err := restQuality(c.R)
-			if err != nil {
-				return nil, err
-			}
-			qualidade = lida
-		}
-		quem := app.Caller{ID: c.User}
-		var feitos, total int
-		var err error
-		if escopo == "day" {
-			feitos, total, err = st.party.RestForTheDay(c.R.Context(), quem, c.CampaignID, c.SessionID, qualidade)
-		} else {
-			feitos, total, err = st.party.ExpireScene(c.R.Context(), quem, c.CampaignID, c.SessionID)
-		}
-		if err != nil {
-			return nil, errors.New("não deu para carregar o grupo desta campanha")
-		}
-		st.deps.SSE().Emit(c.SessionID, "", "session-rest", map[string]any{
-			"sessionId": c.SessionID, "scope": escopo, "condition": qualidade,
-		})
-		estado := st.deps.Sessions().GetState(c.SessionID)
-		// O PARCIAL é contado e DITO: descartar a contagem faria o mestre ler
-		// "descansou" com duas de cinco fichas de fora. Volta como recusa porque
-		// é o caminho que acende a frase — e "3 de 5" é o que ele precisa ver
-		// para saber que tem de olhar as outras duas.
-		if feitos < total {
-			return estado, fmt.Errorf("%d de %d fichas descansaram; as outras %d falharam", feitos, total, total-feitos)
-		}
-		return estado, nil
+func expiresTheSceneOfTheParty(
+	st Scene, r *http.Request, quem app.Caller, campaignID, sessionID int64,
+) (*live.SessionRuntimeState, error) {
+	feitos, total, err := st.party.ExpireScene(r.Context(), quem, campaignID, sessionID)
+	if err != nil {
+		return nil, err
 	}
+	return st.announcesTheRest(sessionID, "scene", "normal", feitos, total)
+}
+
+func restsForTheDay(
+	st Scene, r *http.Request, quem app.Caller, campaignID, sessionID int64,
+) (*live.SessionRuntimeState, error) {
+	qualidade, err := restQuality(r)
+	if err != nil {
+		return nil, err
+	}
+	feitos, total, err := st.party.RestForTheDay(r.Context(), quem, campaignID, sessionID, qualidade)
+	if err != nil {
+		return nil, err
+	}
+	return st.announcesTheRest(sessionID, "day", qualidade, feitos, total)
+}
+
+// announcesTheRest avisa as fichas e devolve o estado com a contagem.
+//
+// O AVISO é obrigatório e não é o `session-state`: o que muda no descanso é a
+// FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem está com a
+// ficha aberta continua vendo o PV de antes até recarregar.
+func (s Scene) announcesTheRest(
+	sessionID int64, escopo, qualidade string, feitos, total int,
+) (*live.SessionRuntimeState, error) {
+	s.deps.SSE().Emit(sessionID, "", "session-rest", map[string]any{
+		"sessionId": sessionID, "scope": escopo, "condition": qualidade,
+	})
+	estado := s.deps.Sessions().GetState(sessionID)
+	// O PARCIAL é contado e DITO: descartar a contagem faria o mestre ler
+	// "descansou" com duas de cinco fichas de fora. Volta como recusa porque é o
+	// caminho que acende a frase — e "3 de 5" é o que ele precisa ver para saber
+	// que tem de olhar as outras duas.
+	if feitos < total {
+		return estado, fmt.Errorf("%d de %d fichas descansaram; as outras %d falharam",
+			feitos, total, total-feitos)
+	}
+	return estado, nil
 }
 
 // restQualities são as quatro do livro (T20 p106), e a lista existe aqui para
@@ -431,13 +442,15 @@ type commandCtx struct {
 // A segunda é o aviso: as fichas não estão no estado do rastreador, então sem o
 // `session-rest` o efeito morto e o "usado 1/cena" ficam na tela até alguém
 // recarregar.
-func endScene(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	estado, err := st.party.EndScene(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, c.SessionID)
+func endsTheScene(
+	st Scene, r *http.Request, quem app.Caller, campaignID, sessionID int64,
+) (*live.SessionRuntimeState, error) {
+	estado, err := st.party.EndScene(r.Context(), quem, campaignID, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	st.deps.SSE().Emit(c.SessionID, "", "session-rest", map[string]any{
-		"sessionId": c.SessionID, "scope": "scene",
+	st.deps.SSE().Emit(sessionID, "", "session-rest", map[string]any{
+		"sessionId": sessionID, "scope": "scene",
 	})
 	return estado, nil
 }
@@ -457,7 +470,8 @@ func (s Scene) gmCommand(
 			return
 		}
 		userID := s.deps.CurrentUserID(r)
-		_, papel, status, err := s.deps.SessionForCaller(r.Context(), userID, campaignID, sessionID)
+		_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+		status := statusOf(err)
 		if err != nil {
 			http.Error(w, err.Error(), status)
 			return

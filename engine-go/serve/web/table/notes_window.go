@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"t20engine/app"
 	"t20engine/domain/markdown"
 	"t20engine/serve/web/ui"
 )
@@ -38,7 +39,8 @@ func (s Scene) notesWindowPage(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	sess, papel, status, err := s.deps.SessionForCaller(r.Context(), s.deps.CurrentUserID(r), campaignID, sessionID)
+	sess, papel, err := s.access.Session(r.Context(), app.Caller{ID: s.deps.CurrentUserID(r)}, campaignID, sessionID)
+	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return

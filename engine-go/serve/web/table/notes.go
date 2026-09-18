@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/app"
 	"t20engine/domain/markdown"
 	"t20engine/serve/web/ui"
 
@@ -105,7 +106,8 @@ func (s Scene) notesCommand(
 		return
 	}
 	userID := s.deps.CurrentUserID(r)
-	_, papel, status, err := s.deps.SessionForCaller(r.Context(), userID, campaignID, sessionID)
+	_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return

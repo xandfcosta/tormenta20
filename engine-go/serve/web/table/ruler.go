@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/app"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -220,7 +221,8 @@ func (s Scene) whoMeasuresTheTable(w http.ResponseWriter, r *http.Request) (pape
 		return "", 0, "", false
 	}
 	userID := s.deps.CurrentUserID(r)
-	_, papel, status, err := s.deps.SessionForCaller(r.Context(), userID, campaignID, sessionID)
+	_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return "", 0, "", false

@@ -227,7 +227,8 @@ func (s Scene) tableGmOrRefusal(w http.ResponseWriter, r *http.Request) (int64, 
 	if !ok {
 		return 0, 0, false
 	}
-	_, papel, status, err := s.deps.SessionForCaller(r.Context(), s.deps.CurrentUserID(r), campaignID, sessionID)
+	_, papel, err := s.access.Session(r.Context(), app.Caller{ID: s.deps.CurrentUserID(r)}, campaignID, sessionID)
+	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return 0, 0, false
