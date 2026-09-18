@@ -421,18 +421,26 @@ export async function expectColunasMonotonicas(
  * numa caixa de 308, três palavras cortadas no meio, e o documento em 390 de
  * 390.
  *
+ * Ignora quem transborda DE PROPÓSITO, marcado com `data-transborda` — hoje um
+ * nó só, o ponto do "Ao vivo", cujo `animate-ping` escala 1,33× e sai 1,6px de
+ * cada lado. A marca existe em vez de uma folga maior porque folga esconde corte
+ * de verdade: o cartão da ALE-337 passava 44px, mas o `<p>` de `/campanhas/1`
+ * passava 4.
+ *
  * O DENOMINADOR vem junto porque uma lista de reprovados vazia e um seletor que
  * não casa com nada se parecem no terminal.
  *
  * @example await expectNothingIsClippedSideways(page, '#catalogs')
  */
 export async function expectNothingIsClippedSideways(page: Page, raiz: string): Promise<void> {
+  await waitForTheSceneToSettle(page)
   const medida = await page.evaluate((seletorRaiz) => {
     const root = document.querySelector(seletorRaiz as string)
     if (!root) return null
     const nos = [...root.querySelectorAll<HTMLElement>('*')]
     const cortados = nos
       .filter((node) => {
+        if (node.closest('[data-transborda]')) return false
         if (getComputedStyle(node).overflowX !== 'visible') return false
         return node.scrollWidth > node.clientWidth + 1
       })
@@ -451,4 +459,41 @@ export async function expectNothingIsClippedSideways(page: Page, raiz: string): 
     cortados,
     `conteúdo cortado de lado dentro de ${raiz} @ ${page.viewportSize()?.width}px — ele não rola, então quem lê nunca o alcança`,
   ).toEqual([])
+}
+
+/**
+ * Espera a cena PARAR de se mexer antes de medir caixa.
+ *
+ * Toda medida de geometria deste arquivo lê `getBoundingClientRect` ou
+ * `scrollWidth`, e os dois respondem sobre o QUADRO ATUAL. Enquanto a entrada do
+ * palco roda — `palcoEntraAdiante` e `placaSobe` —, os números são de um estado
+ * intermediário que ninguém desenhou de propósito, e escolher outro instante não
+ * conserta: é trocar o erro de lugar (ALE-318).
+ *
+ * MEDIDO, e por isso esta função existe: uma varredura de corte lateral acusou
+ * quatro nós transbordando 13px em `/campanhas` e `/personagens` a 390px. Seiscentos
+ * milissegundos depois eram ZERO, com zero animações rodando. Eu tinha escrito issue
+ * com os dois como defeito (ALE-342) — eram o medidor lendo no meio da entrada.
+ *
+ * Ela ignora quem NUNCA para: `animate-pulse` e `animate-ping` têm iterações
+ * infinitas, e esperar por eles seria esperar para sempre. Um transbordo causado
+ * por esses continua sendo visto — a marca de isenção é outra conversa.
+ */
+export async function waitForTheSceneToSettle(page: Page, teto = 2_000): Promise<void> {
+  await page
+    .waitForFunction(
+      () =>
+        document.getAnimations().filter((a) => {
+          if (a.playState !== 'running') return false
+          return a.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY
+        }).length === 0,
+      null,
+      { timeout: teto },
+    )
+    .catch(() => {
+      // Estourar o teto NÃO é motivo para falhar: a medida segue, e se ela
+      // reprovar a mensagem dela é que interessa. Falhar aqui trocaria "o cartão
+      // está cortado" por "uma animação demorou", que é a limpeza falando mais
+      // alto que o defeito (ALE-245).
+    })
 }

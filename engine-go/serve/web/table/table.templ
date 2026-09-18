@@ -127,7 +127,12 @@ templ tableHeader(v View) {
 				templ.KV("border-grimorio-iron bg-grimorio-panel", v.Turn.Kind != "mine") }
 		>
 			<p class="flex items-center gap-2">
-				<span class="relative flex size-2.5">
+				// `data-transborda`: o `animate-ping` ESCALA o filho para 1,33× e ele
+				// sai 1,6px de cada lado do ponto. É desenho, não defeito, e é o
+				// único transbordo deliberado do app — a varredura de corte lateral
+				// o ignoraria por uma folga maior, e uma folga maior esconderia
+				// corte de verdade (ALE-342).
+				<span data-transborda class="relative flex size-2.5">
 					<span class="absolute inline-flex size-full animate-ping rounded-full bg-hp-full opacity-75"></span>
 					<span class="relative inline-flex size-2.5 rounded-full bg-hp-full"></span>
 				</span>

@@ -69,7 +69,13 @@ templ oneHeader(v oneView) {
 			<p class="text-xs text-muted-foreground">{ tableMeta(v) }</p>
 		</div>
 		if v.SessaoVivaID > 0 {
-			<div class="flex shrink-0 flex-col items-end gap-1">
+			// `w-full sm:w-auto` é o que faz o `flex-wrap` do cabeçalho FUNCIONAR.
+			// Sem ele o bloco da sessão viva fica `shrink-0` com 185px numa linha de
+			// 288, e quem encolhe é o vizinho do nome — que tem `min-w-0` e vai a
+			// 31px, deixando o `truncate` do `<h1>` desenhar a campanha como "S ..".
+			// Envolver nunca acontecia porque um item que pode chegar a zero nunca
+			// força a quebra (ALE-342).
+			<div class="flex w-full shrink-0 flex-col items-end gap-1 sm:w-auto">
 				@ui.SectionLabel("gold", "") {
 					{ fmt.Sprintf("Sessão %d em andamento", v.NumeroDaSessaoViva) }
 				}
@@ -165,7 +171,11 @@ func ariaCurrent(ativa bool) string {
 // diz "0 heróis" porque uma das duas ainda não voltou.
 templ overviewTab(v oneView) {
 	<div class="space-y-6">
-		<div class="grid grid-cols-3 gap-3">
+		// DUAS colunas no telefone, e o terceiro selo ocupa a linha inteira: a 390px
+		// a trilha de três dá 86px, e "ENCERRADAS" — dez letras em versal com
+		// `tracking` largo — mede 94. O rótulo é uma palavra só, então não há quebra
+		// que o salve (ALE-342).
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>*]:min-w-0 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
 			@oneSeal("Users2", v.TotalHerois, "Heróis")
 			@oneSeal("Scroll", v.TotalSessoes, "Sessões")
 			@oneSeal("ShieldCheck", v.SessoesEncerradas, "Encerradas")

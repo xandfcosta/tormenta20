@@ -1,4 +1,5 @@
 import { type Page, expect } from '@playwright/test'
+import { expectNothingIsClippedSideways } from './geometry'
 
 // As asserções de RELAÇÃO (alinhamento, proporção, containment, alcance) moram
 // em `geometry.ts`. Aqui ficam a lista de formatos e as duas asserções de
@@ -20,16 +21,22 @@ export const DESK_VIEWPORTS = VIEWPORTS.filter((v) => v.width >= 1280)
 
 /**
  * Redimensiona por todos os formatos na página ATUAL e falha no primeiro em que
- * o documento rola para o lado.
+ * o documento rola para o lado — ou em que algo dentro dele é CORTADO.
  *
  * Um `goto` e seis redimensionamentos, e não seis navegações: as consultas de
  * mídia da casa chaveiam só por LARGURA, então o leiaute se refaz ao vivo e não
  * há o que rebuscar entre os tamanhos. Uma carga de página por formato por cena
  * custava 198s — 48% da suíte e2e inteira — por uma expressão repetida.
  *
- * Honesto sobre o que prova: só que o BODY não rola na horizontal. Ele não prova
- * que o conteúdo não é recortado dentro de um contêiner, nem que a cena "preenche
- * a tela" — isso seria outra asserção.
+ * A asserção do DOCUMENTO sozinha era quase inerte nesta casa, e isso é medido:
+ * a casca é `overflow-x-hidden`, então ela recorta em silêncio em vez de deixar o
+ * documento rolar. O cartão do catálogo passava 44px da caixa a 390px e este
+ * guarda marcava 390 de 390 (ALE-337). Por isso ele chama o
+ * `expectNothingIsClippedSideways` a cada formato: o documento responde "a
+ * página rola de lado?" e a varredura responde "alguma coisa foi cortada?".
+ *
+ * Continua NÃO provando que a cena "preenche a tela" — isso seria outra
+ * asserção.
  *
  * @example await expectNoHorizontalOverflow(page, VIEWPORTS)
  */
@@ -43,6 +50,8 @@ export async function expectNoHorizontalOverflow(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     )
     expect(overflow, `rolagem horizontal @ ${vp.name} (${vp.width}×${vp.height})`).toBeLessThanOrEqual(1)
+    // E a metade que o documento não conta. Ver o docstring.
+    await expectNothingIsClippedSideways(page, 'body')
   }
 }
 
