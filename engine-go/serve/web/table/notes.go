@@ -54,16 +54,10 @@ func readsNotesClient(r *http.Request) (string, error) {
 	return sinais.Notas, nil
 }
 
-// saveNote escreve a coluna `notes` pelo MESMO `setBuilder` do handler JSON: uma
-// segunda forma de gravar a mesma coluna divergiria no dia em que o `execTouched`
-// mudar, que é quem carimba o `updatedAt`.
-//
-// NÃO PASSA POR `trimOrNull`, e essa é a diferença que importa aqui: aparar o
-// texto a cada 1,2s comeria a linha em branco que o mestre acabou de abrir para
-// escrever o próximo parágrafo. O handler JSON apara porque salva UMA vez, ao
-// fechar; este salva no meio da digitação.
-func (s Scene) saveNote(r *http.Request, sessionID int64, texto string) error {
-	if err := s.deps.SaveNotes(r.Context(), sessionID, texto); err != nil {
+// saveNote pede a gravação ao caso de uso e traduz a falha na frase que o mestre
+// lê. A razão de o texto NÃO ser aparado está lá, junto da escrita.
+func (s Scene) saveNote(r *http.Request, campaignID, sessionID int64, texto string) error {
+	if err := s.lifecycle.SaveNotes(r.Context(), s.callerOf(r), campaignID, sessionID, texto); err != nil {
 		return fmt.Errorf("não deu para salvar as notas: %v", err)
 	}
 	return nil
@@ -126,7 +120,7 @@ func (s Scene) notesCommand(
 		novo, erroDaRegra = transforma(texto)
 	}
 	if erroDeLeitura == nil && erroDaRegra == nil {
-		erroDaRegra = s.saveNote(r, sessionID, novo)
+		erroDaRegra = s.saveNote(r, campaignID, sessionID, novo)
 	}
 	s.respondNotes(w, r, campaignID, sessionID, novo, primeiroErro(erroDeLeitura, erroDaRegra))
 }

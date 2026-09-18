@@ -48,39 +48,23 @@ type Deps interface {
 	// porta.
 	CurrentUserID(r *http.Request) int64
 
-	// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR, e não a trava da
-	// SESSÃO: o rascunho acontece quando NÃO há sessão, e usar aquela aqui
-	// exigiria inventar uma para autorizar preparação. É `gm` e não "membro" —
-	// um jogador que abrisse esta tela veria a emboscada de sábado.
+	// PUBLICAR é do hospedeiro, e continua sendo depois da camada de aplicação
+	// (ALE-344). Não é sobra: o `PublishSessionState` conta no contador de
+	// goroutines que o `Shutdown` do servidor espera, e esse contador é do
+	// PROCESSO — um caso de uso que o carregasse estaria segurando o
+	// desligamento.
 	//
-	// Devolve a CAMPANHA e não um booleano porque a cena escreve o nome dela no
-	// "voltar".
-	//
-	// A trava do lugar que já está numa MESA é do domínio (`EditPlace`), e não
-	// desta porta: perguntar "qual é a sessão ativa" não vê o tabuleiro aberto
-	// numa sessão encerrada, que reabre com ele.
-	PlaceDraftCampaign(ctx context.Context, userID, campaignID int64) (campanha sqlcgen.Campaign, status int, err error)
-
-	// CloneCreatureBlock é o "chefe que ganha nome": o bloco é um MOLDE que duas
-	// linhas dividem, e clonar só importa quando o mestre vai EDITAR uma delas —
-	// sem a cópia, dar 30 PV ao chefe daria aos outros três zumbis também.
-	//
-	// É o BLOCO e não a ficha: clonar personagem exigiria matricular a cópia na
-	// campanha, e todo membro aparece no painel do Grupo.
-	CloneCreatureBlock(ctx context.Context, creatureID, campaignID int64, nome string) (int64, error)
-	// SpeedsForBoard é o deslocamento de cada peça, que a prévia do movimento lê.
-	SpeedsForBoard(board *board.BoardState) map[string]int
-
-	// PUBLICAR é do hospedeiro: ele conhece o hub e o barramento, e a cena só
-	// sabe QUANDO alguma coisa mudou.
+	// Os três saem quando os STORES saírem, e não antes: eles são a gravação dos
+	// stores, não um gesto. Ver a nota do `app/` no guia.
 	PublishSessionState(sessionID int64, estado *live.SessionRuntimeState)
 	PublishBoardState(sessionID int64, board *board.BoardState)
 	PublishWhatIsLeft(ctx context.Context, sessionID int64)
+	// CharacterChanged é a regra da FICHA, que a Mesa pede emprestada: avisa a
+	// tela de quem tem aquela ficha aberta. Ela fica aqui porque o gesto que a
+	// dispara — mexer nos vitais de uma linha — ainda é uma chamada de STORE, e
+	// um caso de uso que só notificasse não seria um caso de uso. Ela vai junto
+	// com o store da fila.
 	CharacterChanged(characterID int64)
-
-	// SaveNotes é a escrita que a cena montava em SQL. O título saiu daqui na
-	// ALE-344 e mora no `app/session`; as notas seguem, e pelo mesmo caminho.
-	SaveNotes(ctx context.Context, sessionID int64, texto string) error
 
 	// PlayerSheet é a ficha EMBUTIDA, pedida PRONTA: montá-la aqui obrigaria a
 	// Mesa a cumprir a `sheetui.Deps` inteira para desenhar um painel. Nulo é

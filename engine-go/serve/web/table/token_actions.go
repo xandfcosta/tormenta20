@@ -168,7 +168,7 @@ func (s Scene) bondForMode(c commandCtx, modo string, modelo *board.BoardToken) 
 			return nil, fmt.Errorf("%s não tem bloco de criatura: não há o que copiar", linha.Label)
 		}
 		nomeDaCopia := s.nextNameForTheLine(c.SessionID, linha.Label)
-		blocoNovo, err := s.deps.CloneCreatureBlock(c.R.Context(), *linha.CreatureID, c.CampaignID, nomeDaCopia)
+		blocoNovo, err := s.queue.Roster().CloneCreatureBlock(c.R.Context(), c.CampaignID, *linha.CreatureID, nomeDaCopia)
 		if err != nil {
 			return nil, err
 		}

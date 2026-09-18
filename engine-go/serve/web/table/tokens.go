@@ -1,11 +1,14 @@
 package table
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 
 	"github.com/starfederation/datastar-go/datastar"
 
@@ -93,7 +96,7 @@ func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return board, err
 	}
-	if speeds := st.deps.SpeedsForBoard(board); len(speeds) > 0 {
+	if speeds := st.speedsForBoard(c.R.Context(), board); len(speeds) > 0 {
 		// O erro do deslocamento NÃO derruba o comando: as peças já nasceram e a
 		// mesa precisa vê-las. Devolver erro aqui deixaria o mestre achando que
 		// nada aconteceu sobre um mapa que mudou.
@@ -285,3 +288,45 @@ var footprintsDaCasa = map[int]bool{1: true, 2: true, 3: true, 6: true}
 // personagem pelo `Populate`, e deixar o mestre desenhar uma "ficha" solta
 // criaria uma peça que PARECE de jogador e não tem ninguém atrás dela.
 var aparenciasDaPeca = map[string]bool{"object": true, "npc": true}
+
+// speedsForBoard mede o deslocamento das peças de personagem que ainda não têm
+// um. SÓ AS QUE FALTAM: recomputar a ficha de todo mundo a cada "trazer o grupo"
+// seria pagar caro por um número que não muda sozinho.
+//
+// Ela é da CENA e não de um caso de uso (ALE-344): não autoriza nada, não grava
+// nada e não decide nada — é a conta que o desenho da prévia de movimento pede,
+// montada com o `Queries` e o `Catalogs` que a cena já recebe, como a Defesa do
+// Grupo. A REGRA é do motor (`engine.SquaresForDisplacement`).
+func (s Scene) speedsForBoard(ctx context.Context, tabuleiro *board.BoardState) map[string]int {
+	quadrados := map[string]int{}
+	if tabuleiro == nil {
+		return quadrados
+	}
+	for _, peca := range tabuleiro.Tokens {
+		if peca.CharacterID == nil || peca.SpeedSquares > 0 {
+			continue
+		}
+		if n := s.speedSquaresOf(ctx, *peca.CharacterID); n > 0 {
+			quadrados[peca.ID] = n
+		}
+	}
+	return quadrados
+}
+
+// speedSquaresOf converte o deslocamento da ficha computada em quadrados.
+//
+// Falha em silêncio de propósito: a peça sem deslocamento medido desenha sem a
+// prévia, e derrubar o gesto inteiro por causa de um número deixaria o mestre
+// sem as peças que já nasceram.
+func (s Scene) speedSquaresOf(ctx context.Context, characterID int64) int {
+	row, err := s.deps.Queries().GetCharacter(ctx, characterID)
+	if err != nil {
+		return 0
+	}
+	ficha, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
+	if err != nil {
+		log.Printf("tabuleiro: ficha do personagem %d não computada (%v)", characterID, err)
+		return 0
+	}
+	return engine.SquaresForDisplacement(float64(ficha.Displacement.Total))
+}

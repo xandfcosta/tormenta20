@@ -105,6 +105,35 @@ func (l Lifecycle) Rename(
 	return nil
 }
 
+// SaveNotes grava as notas do mestre, e ela NÃO apara o texto.
+//
+// A diferença para o título é a que importa: aparar a cada 1,2s comeria a linha
+// em branco que o mestre acabou de abrir para escrever o próximo parágrafo.
+// Quem salva UMA vez, ao fechar, apara; este salva no meio da digitação. Vazio
+// continua virando NULL.
+//
+// O `UPDATE` é escrito à mão pela mesma razão do título — a coluna não tem
+// consulta no sqlc, e esta camada é onde uma escrita sem consulta gerada pode
+// morar.
+func (l Lifecycle) SaveNotes(
+	ctx context.Context, quem app.Caller, campaignID, sessionID int64, texto string,
+) error {
+	if _, err := l.access.GM(ctx, quem, campaignID, sessionID); err != nil {
+		return err
+	}
+	var valor any
+	if texto != "" {
+		valor = texto
+	}
+	if _, err := l.db.ExecContext(ctx,
+		"UPDATE sessions SET notes = ?, updatedAt = ? WHERE id = ?",
+		valor, dbvalue.NowISO(), sessionID,
+	); err != nil {
+		return fmt.Errorf("gravar as notas da sessão %d: %w", sessionID, err)
+	}
+	return nil
+}
+
 // RestartCombat esvazia a fila e os turnos SEM tirar a partida do ar.
 //
 // ESQUECER O CACHE é metade do gesto, e a metade que não aparece: a fila mora em

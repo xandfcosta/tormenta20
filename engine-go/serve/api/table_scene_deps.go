@@ -2,13 +2,10 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"t20engine/domain/board"
 	"t20engine/domain/live"
-	"t20engine/infra/db/dbvalue"
-	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 	"t20engine/serve/web/sheetui"
 )
@@ -58,54 +55,7 @@ func (h tableHost) CharacterChanged(characterID int64) {
 }
 func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 
-// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR.
-//
-// O `loadOwnedCampaign` é a MESMA porta que renomear, apagar, convidar e abrir
-// sessão já atravessam: só o dono passa, com o desvio do admin. Montar o acervo
-// da campanha é da mesma família — não é um gesto de mesa, é um gesto de dono.
-//
-// Ela não pergunta mais nada: a outra trava do rascunho — o lugar que está
-// aberto numa mesa — é do domínio, e o `EditPlace` a resolve contra todas as
-// sessões da campanha.
-func (h tableHost) PlaceDraftCampaign(
-	ctx context.Context, userID, campaignID int64,
-) (sqlcgen.Campaign, int, error) {
-	return h.rules.campaign.loadOwnedCampaign(ctx, AuthUser{ID: userID}, campaignID)
-}
-
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
-
-// CloneCreatureBlock copia o bloco e devolve o id da cópia.
-//
-// Uma leitura e uma escrita, sem transação: o bloco é uma linha só, e não há
-// segundo passo que possa falhar deixando a cópia órfã — que é o que obriga o
-// `cloneCharacterTx` a ter dono de transação.
-//
-// A CAMPANHA vem de fora e não do bloco lido, e isso é deliberado: é o servidor
-// que sabe em qual mesa o gesto aconteceu, e copiar o `campaignId` da origem
-// deixaria um bloco de outra campanha entrar nesta pelo id na URL.
-func (h tableHost) CloneCreatureBlock(ctx context.Context, creatureID, campaignID int64, nome string) (int64, error) {
-	origem, err := h.rules.queries.GetCampaignCreature(ctx, creatureID)
-	if err != nil {
-		return 0, fmt.Errorf("o bloco %d não foi encontrado: %w", creatureID, err)
-	}
-	if origem.Campaignid != campaignID {
-		return 0, fmt.Errorf("o bloco %d é de outra campanha", creatureID)
-	}
-	agora := dbvalue.NowISO()
-	copia, err := h.rules.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
-		Campaignid: campaignID, Name: nome, Block: origem.Block,
-		Createdat: agora, Updatedat: agora,
-	})
-	if err != nil {
-		return 0, fmt.Errorf("copiar o bloco %d: %w", creatureID, err)
-	}
-	return copia.ID, nil
-}
-
-func (h tableHost) SpeedsForBoard(board *board.BoardState) map[string]int {
-	return h.rules.speedsForBoard(board)
-}
 
 // ── PUBLICAR, que é do hospedeiro ────────────────────────────────────────────
 
@@ -134,22 +84,6 @@ func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
 // montado. Ela mora no hospedeiro e não na cena porque cena que compõe SQL é
 // cena com o banco dentro. O TÍTULO era o irmão dela e saiu na ALE-344: ele
 // mora no `app/session`, que é onde uma escrita sem consulta gerada pode morar.
-
-// SaveNotes grava as notas do mestre, e ela NÃO apara o texto.
-//
-// A diferença com o título é a que importa: aparar a cada 1,2s comeria a linha
-// em branco que o mestre acabou de abrir para escrever o próximo parágrafo. O
-// handler JSON apara porque salva UMA vez, ao fechar; este salva no meio da
-// digitação. Vazio continua virando NULL.
-func (h tableHost) SaveNotes(ctx context.Context, sessionID int64, texto string) error {
-	var set setBuilder
-	if texto == "" {
-		set.Add("notes = ?", nil)
-	} else {
-		set.Add("notes = ?", texto)
-	}
-	return set.execTouched(ctx, h.rules.db, "UPDATE sessions", sessionID)
-}
 
 // ── a casca e a ficha embutida ───────────────────────────────────────────────
 //

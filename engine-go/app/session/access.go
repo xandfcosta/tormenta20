@@ -53,6 +53,28 @@ func (a Access) RoleInCampaign(ctx context.Context, quem app.Caller, campaignID 
 	return a.RoleIn(ctx, quem, c)
 }
 
+// OwnedCampaign é a trava SÓ DO DONO: passa o mestre, e o resto recebe recusa.
+//
+// Mais estreita que o `RoleIn`, e a diferença é o gesto: renomear, apagar,
+// convidar, abrir sessão e montar o acervo são do DONO da campanha; ver a mesa é
+// de qualquer membro. O admin passa pela mesma porta, e a exceção custa uma
+// condição só.
+func (a Access) OwnedCampaign(
+	ctx context.Context, quem app.Caller, campaignID int64,
+) (sqlcgen.Campaign, error) {
+	c, err := a.queries.GetCampaign(ctx, campaignID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return c, fmt.Errorf("a campanha %d não existe: %w", campaignID, app.ErrNotFound)
+	}
+	if err != nil {
+		return c, fmt.Errorf("carregar a campanha %d: %w", campaignID, err)
+	}
+	if c.Ownerid != quem.ID && !quem.IsAdmin {
+		return c, fmt.Errorf("a campanha %d é de outra pessoa: %w", campaignID, app.ErrForbidden)
+	}
+	return c, nil
+}
+
 // Session resolve o papel E a linha da sessão, conferindo que ela é DESTA
 // campanha.
 //

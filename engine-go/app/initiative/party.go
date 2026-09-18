@@ -9,6 +9,7 @@ import (
 	"t20engine/app"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -59,6 +60,43 @@ func (r Roster) Combatant(
 		HpCurrent: ficha.Hpcurrent, HpMax: ficha.Hpmax,
 		MpCurrent: ficha.Mpcurrent, MpMax: ficha.Mpmax,
 	}, nil
+}
+
+// CloneCreatureBlock copia o bloco de uma criatura da campanha e devolve o id da
+// cópia — o "chefe que ganha nome".
+//
+// O bloco é um MOLDE que duas linhas dividem, e clonar só importa quando o
+// mestre vai EDITAR uma delas: sem a cópia, dar 30 PV ao chefe daria aos outros
+// três zumbis também.
+//
+// É o BLOCO e não a ficha: clonar personagem exigiria matricular a cópia na
+// campanha, e todo membro aparece no painel do Grupo.
+//
+// Uma leitura e uma escrita, sem transação: o bloco é uma linha só, e não há
+// segundo passo que possa falhar deixando a cópia órfã.
+//
+// A CAMPANHA vem por parâmetro e não do bloco lido, e isso é deliberado: é o
+// servidor que sabe em qual mesa o gesto aconteceu, e copiar o `campaignId` da
+// origem deixaria um bloco de outra campanha entrar nesta pelo id na URL.
+func (r Roster) CloneCreatureBlock(
+	ctx context.Context, campaignID, creatureID int64, nome string,
+) (int64, error) {
+	origem, err := r.queries.GetCampaignCreature(ctx, creatureID)
+	if err != nil {
+		return 0, fmt.Errorf("o bloco %d não foi encontrado: %w", creatureID, app.ErrNotFound)
+	}
+	if origem.Campaignid != campaignID {
+		return 0, fmt.Errorf("o bloco %d é de outra campanha: %w", creatureID, app.ErrForbidden)
+	}
+	agora := dbvalue.NowISO()
+	copia, err := r.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
+		Campaignid: campaignID, Name: nome, Block: origem.Block,
+		Createdat: agora, Updatedat: agora,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("copiar o bloco %d: %w", creatureID, err)
+	}
+	return copia.ID, nil
 }
 
 // PartyCombatants é todo personagem da campanha com os vitais vivos — o "pôr o

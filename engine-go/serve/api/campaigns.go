@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"net/http"
 	"t20engine/domain/campaign"
 	"t20engine/infra/db/dbvalue"
@@ -266,16 +265,11 @@ func statusForAccess(err error) int {
 // transporte: passa o mestre (dono), e o resto recebe Forbidden. Esta função é o
 // gargalo de meia dúzia de sítios (renomear/apagar, convite, membros, sessões),
 // e é por isso que a exceção do admin custa uma condição só.
+// O corpo mora no `app/session` (ALE-344); aqui sobra o número do HTTP.
 func (rules campaignRules) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64) (sqlcgen.Campaign, int, error) {
-	c, err := rules.queries.GetCampaign(ctx, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return c, http.StatusNotFound, fmt.Errorf("Campaign %d not found", id)
-	}
+	c, err := rules.access().OwnedCampaign(ctx, callerOf(user), id)
 	if err != nil {
-		return c, http.StatusInternalServerError, errors.New("Could not load campaign")
-	}
-	if c.Ownerid != user.ID && !user.IsAdmin {
-		return c, http.StatusForbidden, fmt.Errorf("Campaign %d belongs to another user", id)
+		return c, statusForAccess(err), err
 	}
 	return c, http.StatusOK, nil
 }
