@@ -3,8 +3,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"t20engine/infra/db/dbvalue"
@@ -38,37 +36,16 @@ func sessionDTO(s sqlcgen.Session) SessionDTO {
 	}
 }
 
-// loadSessionInCampaign loads a session and asserts it belongs to the campaign —
-// transport-agnostic, no access check of its own. Ela era compartilhada pelo
-// `ownedSession` (só o dono) e pelo `sessionForCaller` do gateway, para a regra
-// "a sessão é desta campanha" morar num lugar só. O `ownedSession` foi apagado
-// com as rotas JSON na ALE-277; o `sessionForCaller` ficou, e é por ele que as
-// cenas passam.
-func (rules campaignRules) loadSessionInCampaign(ctx context.Context, campaignID, sessionID int64) (sqlcgen.Session, int, error) {
-	sess, err := rules.queries.GetSession(ctx, sessionID)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && sess.Campaignid != campaignID) {
-		return sqlcgen.Session{}, http.StatusNotFound, fmt.Errorf("Session %d not found", sessionID)
-	}
-	if err != nil {
-		return sqlcgen.Session{}, http.StatusInternalServerError, errors.New("Could not Load session")
-	}
-	return sess, http.StatusOK, nil
-}
-
 // sessionForCaller is the member-aware session resolver the WS gateway runs on every
 // session-scoped message: resolve the caller's Role (gm/player) then Load the session and
 // assert it belongs to the campaign. — the Role is
 // stashed on socket.data for per-action GM gating. Transport-agnostic (WS maps status/err).
 func (rules campaignRules) sessionForCaller(ctx context.Context, user AuthUser, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
-	Role, status, err := rules.resolveRole(ctx, user, campaignID)
+	sess, papel, err := rules.access().Session(ctx, callerOf(user), campaignID, sessionID)
 	if err != nil {
-		return sqlcgen.Session{}, "", status, err
+		return sqlcgen.Session{}, "", statusForAccess(err), err
 	}
-	sess, status, err := rules.loadSessionInCampaign(ctx, campaignID, sessionID)
-	if err != nil {
-		return sqlcgen.Session{}, "", status, err
-	}
-	return sess, Role, http.StatusOK, nil
+	return sess, papel, http.StatusOK, nil
 }
 
 func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
