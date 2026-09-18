@@ -15,29 +15,34 @@ const routeParamsFile = "testdata/route_params.txt"
 
 var routeParam = regexp.MustCompile(`\{([^}]*)\}`)
 
-// walkTheRouters visita TODA rota registrada, nos dois roteadores do processo.
+// walkTheRouter visita TODA rota registrada no processo.
+//
+// UM roteador e não dois: a API JSON é montada em `/api` dentro do `WebRouter`,
+// e percorrer os dois contaria cada rota dela duas vezes, com e sem o prefixo.
 //
 // `chi.Walk` e não um regex sobre o código-fonte, e essa é a decisão inteira
 // desta fatia: o padrão que ele devolve já está RESOLVIDO — o `base :=` juntado,
 // o `r.Route` pai concatenado com o filho, o registro quebrado em duas linhas
 // lido como uma. Nenhuma dessas três formas era visível para o guarda anterior,
 // e as três são forma que este repositório usa.
-func walkTheRouters(t *testing.T, s *Server) map[string][]string {
+//
+// É também o que se ganha em ter um roteador só: o que o processo atende passou
+// a caber inteiro nesta varredura. Enquanto as fontes, o favicon e a saúde
+// moravam num roteador da biblioteca padrão, no `cmd`, nenhum guarda conseguia
+// perguntar por elas.
+func walkTheRouter(t *testing.T, s *Server) map[string][]string {
 	t.Helper()
+	mux, ok := s.WebRouter().(*chi.Mux)
+	if !ok {
+		t.Fatalf("o roteador deixou de ser um *chi.Mux (%T) — sem ele não há a quem perguntar", s.WebRouter())
+	}
 	porRota := map[string][]string{}
-	for nome, handler := range map[string]http.Handler{"cenas": s.WebRouter(), "api": s.Router()} {
-		mux, ok := handler.(*chi.Mux)
-		if !ok {
-			t.Fatalf("o roteador %q deixou de ser um *chi.Mux (%T) — sem ele não há a quem perguntar",
-				nome, handler)
-		}
-		err := chi.Walk(mux, func(metodo, rota string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
-			porRota[metodo+" "+rota] = nil
-			return nil
-		})
-		if err != nil {
-			t.Fatalf("percorrer o roteador %q: %v", nome, err)
-		}
+	err := chi.Walk(mux, func(metodo, rota string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
+		porRota[metodo+" "+rota] = nil
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("percorrer o roteador: %v", err)
 	}
 	return porRota
 }
@@ -72,7 +77,7 @@ func TestNoRouteCarriesACoordinateInThePath(t *testing.T) {
 		}
 	}
 
-	rotas := walkTheRouters(t, newTestServer(t))
+	rotas := walkTheRouter(t, newTestServer(t))
 	vistos := map[string]bool{}
 	desconhecidos := map[string]string{}
 	for rota := range rotas {
@@ -128,7 +133,7 @@ func TestNoAllowedRouteParamIsStale(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ler %s: %v", routeParamsFile, err)
 	}
-	rotas := walkTheRouters(t, newTestServer(t))
+	rotas := walkTheRouter(t, newTestServer(t))
 	vivos := map[string]bool{}
 	for rota := range rotas {
 		for _, m := range routeParam.FindAllStringSubmatch(rota, -1) {

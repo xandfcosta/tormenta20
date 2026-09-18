@@ -24,7 +24,6 @@ import (
 	"t20engine/infra/db"
 	"t20engine/infra/httpio"
 	"t20engine/serve/api"
-	"t20engine/serve/web/assets"
 )
 
 // SONDA DE SAÚDE: a imagem é `distroless` e não tem shell, `curl` nem `wget`,
@@ -71,7 +70,10 @@ func main() {
 	defer func() { _ = database.Close() }()
 
 	srv := api.NewServer(cfg, database, primeCatalogs(cfg.CatalogPath))
-	mux := httpio.Gzip(buildMux(srv))
+	// UM roteador: as cenas, os estáticos, as fontes, a saúde e a API em `/api`
+	// saem todos do `WebRouter`. O `cmd` não monta rota nenhuma — ele abre o
+	// banco, prima os catálogos e escuta.
+	mux := httpio.Gzip(srv.WebRouter())
 
 	// Um sinal encerra a mesa com ordem, em vez de no meio de uma gravação: sem
 	// isto, um Ctrl-C durante um `VACUUM INTO` ou um persist do rastreador morre
@@ -179,28 +181,6 @@ func primeCatalogs(path string) *engine.Catalogs {
 	return catalogs
 }
 
-// buildMux monta o binário único: as cenas, os estáticos e a API em `/api/`,
-// tudo na mesma porta e em todo ambiente.
-func buildMux(srv *api.Server) *http.ServeMux {
-	mux := http.NewServeMux()
-	// AS CENAS atendem na RAIZ, e o `"/"` casa tudo que não tiver padrão mais
-	// específico. Os de baixo ganham dele por serem mais específicos — é o
-	// `http.ServeMux` que decide.
-	mux.Handle("/", srv.WebRouter())
-	// As FONTES, que a folha pede por caminho absoluto (`/fonts/…`).
-	mux.Handle("/fonts/", assets.FontsHandler())
-	mux.Handle("/favicon.svg", assets.FaviconHandler())
-	// A SAÚDE responde na RAIZ além de `/api/health`: quem pergunta é a
-	// infraestrutura, e ela não sabe de prefixo.
-	mux.Handle("/health", srv.HealthProbe())
-	// A API JSON fica sob `/api/`. Dois endereços para a mesma API seriam duas
-	// coisas para lembrar.
-	mux.Handle("/api/", http.StripPrefix("/api", srv.Router()))
-	return mux
-}
-
-// announce diz onde apontar o navegador, com os endereços da REDE junto: sem
-// eles o dono da mesa teria de ir ler `ip addr` para repassar à mesa.
 func announce(cfg config.Config) {
 	log.Printf("t20 %s server listening on :%s (%s, db=%s)", cfg.AppEnv, cfg.Port, cfg.Scheme(), cfg.DatabasePath)
 	if cfg.TLSEnabled() && !cfg.CookieSecure {
