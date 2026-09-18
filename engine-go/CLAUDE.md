@@ -26,7 +26,10 @@ engine-go/
 │   ├── sheet/  board/  live/   o domínio COM estado
 │   └── campaign/ account/ creature/ search/ markdown/
 ├── app/          O QUE UM GESTO FAZ, do pedido à gravação
-│   └── session/  autoriza, pergunta a decisão ao `domain`, grava, publica
+│   ├── session/  o ciclo da sessão, a trava de acesso e o STORE da fila
+│   ├── boards/   o store dos tabuleiros abertos, com as abas e os lugares
+│   ├── initiative/ quem entra na fila, e com que números
+│   └── rest/     o que expira e o que recupera quando a cena ou o dia acaba
 ├── serve/        O QUE RESPONDE HTTP
 │   ├── api/      a RAIZ DE COMPOSIÇÃO: monta o roteador e cumpre as portas
 │   └── web/      as quinze cenas, cada uma com a porta dela
@@ -57,11 +60,17 @@ gesto INTEIRO — quem pode, o que decide, o que grava —, e o sinal de que uma
 coisa pertence a ele é ter as três. Um repasse de uma linha não vira caso de uso
 por mudar de pasta.
 
-**A orquestração já existia, com outro nome.** O `BoardStore.apply` carrega o
-estado, chama a regra PURA do `board_state.go` e devolve o quadro: isso é um caso
-de uso, e ele está arquivado dentro de `domain/`. O `app/` é o endereço do que
-não tinha nenhum — o ciclo da sessão foi o primeiro —, e os stores só mudam de
-lugar quando alguém medir que vale mover 1.126 linhas.
+**A orquestração já existia, com outro nome.** O `apply` do store dos
+tabuleiros carrega o estado, chama a regra PURA do `board_state.go` e devolve o
+quadro: isso é um caso de uso, e ele passou anos arquivado dentro de `domain/`.
+Os dois stores mudaram de lugar na ALE-344, e o número que fecha a divisão é o
+do `domain/board`: **1.802 linhas, ZERO toques de persistência.**
+
+**O que sobra em `domain/` é a regra, e ela é PÚBLICA.** As mutações que os
+stores chamam — `AddToken`, `AdvanceTurn`, `PatchEntryVitals` e as irmãs — eram
+privadas enquanto o chamador morava no mesmo pacote. Hoje são a API dos dois
+pacotes puros, e é assim que se reconhece um: recebe estado, devolve estado, não
+trava nada e não grava nada.
 
 **As recusas daqui são TIPADAS** (`ErrNotFound`, `ErrForbidden`, `ErrRefused`) e
 nunca um número de HTTP. Um caso de uso que devolvesse 403 não poderia ser
@@ -411,7 +420,7 @@ desligado.
 
 O `events.Bus` (ALE-279) entrega, dentro do processo, o que aconteceu numa mesa.
 Ele substituiu quatro mecanismos com a mesma forma e nenhum nome em comum — o
-`SessionStore.Assinar`, o `BoardStore.Assinar`, o `CharacterWatch.Assinar` e um
+`Assinar` de cada um dos dois stores, o `CharacterWatch.Assinar` e um
 `Emit` —, os três primeiros `chan struct{}`: diziam QUE algo mudou e nunca O
 QUÊ, e o `select` do stream da Mesa tinha um `case` para cada um só para juntar
 de volta o que estava separado por acidente de onde o estado mora.
