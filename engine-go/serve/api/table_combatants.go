@@ -101,25 +101,6 @@ func (tr tableRules) resolveCombatant(ctx context.Context, callerID, campaignID,
 	}, http.StatusOK, nil
 }
 
-// listPlayerCombatants devolve todo personagem de jogador da campanha com os
-// vitais vivos — é o "pôr o grupo na fila" de um clique do mestre.
-func (tr tableRules) listPlayerCombatants(ctx context.Context, campaignID int64) ([]combatant, error) {
-	rows, err := tr.queries.ListMembers(ctx, campaignID)
-	if err != nil {
-		return nil, err
-	}
-	out := []combatant{}
-	// SEM filtro de papel: o mestre não tem personagem próprio, e os NPCs dele não
-	// são membros da campanha. Ver a nota mais longa no `tableRoster`.
-	for _, m := range rows {
-		out = append(out, combatant{
-			characterID: m.Characterid, name: m.Charname,
-			hpCurrent: m.Charhpcurrent, hpMax: m.Charhpmax, mpCurrent: m.Charmpcurrent, mpMax: m.Charmpmax,
-		})
-	}
-	return out, nil
-}
-
 // listMemberCharacterIds devolve o id do personagem de cada membro — o conjunto
 // que um descanso de sessão inteira percorre.
 func (tr tableRules) listMemberCharacterIds(ctx context.Context, campaignID int64) ([]int64, error) {

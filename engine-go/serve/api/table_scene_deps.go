@@ -176,25 +176,6 @@ func (h tableHost) MaterializeEntry(
 	return h.rules.materializeEntry(ctx, userID, campaignID, pedido)
 }
 
-// PlayerCombatants traduz o `combatant` do hospedeiro na forma que a CENA
-// declarou — os campos daqui são minúsculos, e tipo não exportado não atravessa
-// fronteira nenhuma.
-func (h tableHost) PlayerCombatants(ctx context.Context, campaignID int64) ([]table.Combatant, error) {
-	linhas, err := h.rules.listPlayerCombatants(ctx, campaignID)
-	if err != nil {
-		return nil, err
-	}
-	fora := make([]table.Combatant, 0, len(linhas))
-	for _, c := range linhas {
-		fora = append(fora, table.Combatant{
-			CharacterID: c.characterID, Name: c.name,
-			HpCurrent: c.hpCurrent, HpMax: c.hpMax,
-			MpCurrent: c.mpCurrent, MpMax: c.mpMax,
-		})
-	}
-	return fora, nil
-}
-
 func (h tableHost) PopulateParty(sessionID int64, quem []table.Combatant) (*live.SessionRuntimeState, error) {
 	linhas := make([]combatant, 0, len(quem))
 	for _, c := range quem {

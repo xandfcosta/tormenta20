@@ -1,6 +1,7 @@
 package table
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -58,7 +59,7 @@ func castMemberOf(st Scene, c commandCtx) (*Combatant, error) {
 	if err != nil {
 		return nil, fmt.Errorf("personagem inválido: %q", chi.URLParam(c.R, "characterId"))
 	}
-	combatentes, err := st.deps.PlayerCombatants(c.R.Context(), c.CampaignID)
+	combatentes, err := st.playerCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
 	}
@@ -100,6 +101,29 @@ func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeSta
 		}
 		return estado, err
 	}
+}
+
+// playerCombatants é todo personagem da campanha com os vitais vivos — o "pôr o
+// grupo na fila" de um clique do mestre.
+//
+// SEM filtro de papel, e isso é a regra e não um esquecimento: o mestre não tem
+// personagem próprio na maioria das mesas, os NPCs dele não são membros da
+// campanha, e a coluna `role` nunca teve outro valor além de `player` em
+// produção. Filtrar aqui esconderia da fila o bardo que o mestre também joga.
+func (s Scene) playerCombatants(ctx context.Context, campaignID int64) ([]Combatant, error) {
+	linhas, err := s.deps.Queries().ListMembers(ctx, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	grupo := make([]Combatant, 0, len(linhas))
+	for _, m := range linhas {
+		grupo = append(grupo, Combatant{
+			CharacterID: m.Characterid, Name: m.Charname,
+			HpCurrent: m.Charhpcurrent, HpMax: m.Charhpmax,
+			MpCurrent: m.Charmpcurrent, MpMax: m.Charmpmax,
+		})
+	}
+	return grupo, nil
 }
 
 // combatantFor acha o combatente do personagem pedido. Nil é a resposta para

@@ -357,11 +357,11 @@ func restQuality(r *http.Request) (string, error) {
 // botão continua clicável em vez de apagar depois do primeiro uso: o mestre que
 // aceitou um jogador atrasado clica de novo e leva só o que faltava.
 //
-// O filtro de PAPEL é do `PlayerCombatants` e não daqui: o mestre costuma ter um
-// PC próprio no roster, e uma segunda opinião sobre quem é o grupo faria duas
-// superfícies responderem diferente à mesma pergunta.
+// QUEM é o grupo é do `playerCombatants` e não daqui: são TODOS os membros da
+// campanha, inclusive o PC que o mestre também joga. Uma segunda opinião sobre
+// quem é o grupo faria duas superfícies responderem diferente à mesma pergunta.
 func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	combatentes, err := st.deps.PlayerCombatants(c.R.Context(), c.CampaignID)
+	combatentes, err := st.playerCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
 	}

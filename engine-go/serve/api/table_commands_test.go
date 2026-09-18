@@ -210,6 +210,45 @@ func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 	}
 }
 
+// QUEM é o grupo, que é o predicado do gesto — e ele precisa de TRÊS membros
+// para ser medido: com um só, "todos os membros" e "só o do jogador" dão a mesma
+// fila, e o caso em que o filtro erraria não chega a existir.
+//
+// Não há filtro por papel, e o personagem do MESTRE entra: a coluna `role` nunca
+// teve outro valor além de `player` em produção, e esperar dois aqui seria um
+// verde sobre um estado que só a bancada sabe montar.
+func TestAddPartyBringsEveryMemberIncludingTheGmsOwnCharacter(t *testing.T) {
+	f := newSceneFixture(t)
+	outroJogador := seedUser(t, f.s, "jogador2@t.com")
+	doOutro := seedCharacter(t, f.s, outroJogador, "Arwen", 12, 12, 0, 0)
+	doMestre := seedCharacter(t, f.s, f.mestre, "Bardo do mestre", 9, 9, 3, 3)
+	seedMember(t, f.s, f.campaignID, doOutro)
+	seedMember(t, f.s, f.campaignID, doMestre)
+
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
+		t.Fatalf("adicionar grupo deu %d", rec.Code)
+	}
+
+	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	naFila := map[int64]bool{}
+	for _, e := range fila {
+		if e.CharacterID != nil {
+			naFila[*e.CharacterID] = true
+		}
+	}
+	for _, quem := range []struct {
+		id   int64
+		nome string
+	}{{f.charID, "o personagem do jogador"}, {doOutro, "o do segundo jogador"}, {doMestre, "o do próprio mestre"}} {
+		if !naFila[quem.id] {
+			t.Errorf("%s (%d) não entrou na fila; ela ficou com %d linhas", quem.nome, quem.id, len(fila))
+		}
+	}
+	if len(fila) != 3 {
+		t.Errorf("a fila ficou com %d linhas, queria os 3 membros da campanha", len(fila))
+	}
+}
+
 // E o botão só existe para o MESTRE, porque a view do jogador não tem o que
 // desenhar. Esconder por classe deixaria o HTML na página para quem abrisse o
 // inspetor — e a trava de verdade é o 403 acima, medido em separado.

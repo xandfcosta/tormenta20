@@ -377,17 +377,9 @@ func TestListMemberHelpers(t *testing.T) {
 	seedMember(t, s, campaignID, pcB)
 	seedMember(t, s, campaignID, npc)
 
-	// TRÊS e não dois, e o NPC entra: não há filtro por papel. A coluna `role`
-	// nunca teve outro valor além de `'player'` em produção, e esperar 2 seria um
-	// verde sobre um estado que só a bancada sabia montar.
-	players, err := s.tableRules().listPlayerCombatants(ctx, campaignID)
-	if err != nil || len(players) != 3 {
-		t.Fatalf("players=%d err=%v, want 3", len(players), err)
-	}
-	if players[0].name != "A" || players[0].hpMax != 10 || players[1].name != "B" {
-		t.Errorf("unexpected players: %+v", players)
-	}
-
+	// TRÊS e não dois, e o do mestre entra: não há filtro por papel. A coluna
+	// `role` nunca teve outro valor além de `'player'` em produção, e esperar 2
+	// seria um verde sobre um estado que só a bancada sabia montar.
 	ids, err := s.tableRules().listMemberCharacterIds(ctx, campaignID)
 	if err != nil || len(ids) != 3 {
 		t.Fatalf("ids=%v err=%v, want 3 (players + gm entry)", ids, err)

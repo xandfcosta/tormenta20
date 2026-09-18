@@ -87,9 +87,7 @@ type Deps interface {
 	// MaterializeEntry transforma o pedido de linha nova (ficha, NPC, verbete)
 	// na linha de fila que o store aceita.
 	MaterializeEntry(ctx context.Context, userID, campaignID int64, pedido map[string]any) (live.InitiativeEntry, error)
-	// PlayerCombatants são os personagens dos jogadores da campanha, e
-	// PopulateParty põe os que faltam no mapa.
-	PlayerCombatants(ctx context.Context, campaignID int64) ([]Combatant, error)
+	// PopulateParty põe na fila os combatentes que ainda não estão lá.
 	PopulateParty(sessionID int64, quem []Combatant) (*live.SessionRuntimeState, error)
 	// InitiativeBonus é o bônus de Iniciativa que a fila mostra, computado pelo
 	// motor — a conta é regra do livro, e ela tem um dono só.
