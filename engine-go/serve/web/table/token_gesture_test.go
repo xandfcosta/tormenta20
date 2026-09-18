@@ -52,8 +52,8 @@ func TestNoTokenGestureAnswersForAnotherToken(t *testing.T) {
 	// nunca acusou nada.
 	tabuleiros := map[string]BoardView{
 		"rascunho":                 {Pecas: pecas, Mestre: true, Rascunho: true, Base: "/campanhas/1/lugares/2/tabuleiro"},
-		"mesa, alvo no meio":       {Pecas: pecas, Mestre: true, ArrastaAPeca: "beta-2222", Base: "/mesa/1/2/tabuleiro"},
-		"mesa, ninguém pode mover": {Pecas: pecas, Mestre: true, Base: "/mesa/1/2/tabuleiro"},
+		"mesa, alvo no meio":       {Pecas: pecas, Mestre: true, ArrastaAPeca: "beta-2222", Base: "/campanhas/1/sessoes/2/tabuleiro"},
+		"mesa, ninguém pode mover": {Pecas: pecas, Mestre: true, Base: "/campanhas/1/sessoes/2/tabuleiro"},
 	}
 
 	medidos := 0

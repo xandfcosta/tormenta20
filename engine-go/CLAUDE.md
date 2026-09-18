@@ -346,7 +346,7 @@ candidato.
 mutação é uma requisição; o que desce é um `text/event-stream` que fica aberto.
 Foi assim que um socket bidirecional virou uma rota por comando mais um `GET`
 longo, e o argumento continua valendo para o próximo canal. A Mesa em
-Datastar tem fluxo PRÓPRIO (`/mesa/{campanha}/{sessao}/fluxo`, em
+Datastar tem fluxo PRÓPRIO (`/campanhas/{campanha}/sessoes/{sessao}/fluxo`, em
 `web/table/stream.go`), ele assina o `events.Bus` e não o `SSEHub`, e os comandos
 dela são rotas da CENA. Nenhuma linha do que este arquivo descrevia como "a rota
 de eventos" existe.
@@ -1342,7 +1342,8 @@ Três coisas que essa medição deixou, e nenhuma delas é sobre contorno:
 
 ## As notas numa janela própria, e o pacto que as torna únicas (ALE-218)
 
-As notas da sessão têm endereço: `GET /mesa/{campanha}/{sessao}/notas` desenha o
+As notas da sessão têm endereço:
+`GET /campanhas/{campanha}/sessoes/{sessao}/notas` desenha o
 MESMO painel da coluna, sem o mapa em volta. É o último dos quatro lugares que a
 ALE-218 decidiu — lado a lado, empilhado, flutuando e a janela —, e o único que
 sai do leiaute da página.
@@ -1381,7 +1382,7 @@ ALE-308) em vez de ganhar um próprio: o defeito é o mesmo que o do `@post` com
 caminho morto, e o extrator já sabia parar na primeira vírgula de topo, então o
 nome da janela e as `features` ficam de fora sozinhos. O método é GET porque é
 navegação — e isso não é detalhe: perguntar ao chi por um POST em
-`/mesa/1/4/notas` responderia "existe" pela rota de SALVAR, e o guarda ficaria
+`/campanhas/1/sessoes/4/notas` responderia "existe" pela rota de SALVAR, e o guarda ficaria
 verde sobre um endereço de página que não existisse.
 
 ## Onde a coordenada de um gesto do tabuleiro viaja

@@ -19,11 +19,11 @@ import (
 // `characterId` — desligado da ficha, sem PV de verdade e fora do descanso.
 
 func (s Scene) CastRoutes(r chi.Router) {
-	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/na-fila",
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/elenco/{characterId}/na-fila",
 		s.gmCommand(putPlayerTracker))
-	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/vitais/{pool}/ferir/{step}",
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/elenco/{characterId}/vitais/{pool}/ferir/{step}",
 		s.gmCommand(moveCastVitals(-1)))
-	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/vitais/{pool}/curar/{step}",
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/elenco/{characterId}/vitais/{pool}/curar/{step}",
 		s.gmCommand(moveCastVitals(+1)))
 }
 
@@ -151,7 +151,7 @@ func closeSheetCast(m Member) string {
 // acende no `$command_error`, que é do RODAPÉ — um diálogo aberto por cima dela
 // esconderia a única frase que explica o que houve.
 func poeNaFila(v View, m Member) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/%d/na-fila')",
+	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/elenco/%d/na-fila')",
 		v.CampaignID, v.SessionID, m.CharacterID)
 }
 
@@ -159,7 +159,7 @@ func poeNaFila(v View, m Member) string {
 // `evt.shiftKey` escolhendo entre elas — a mesma forma do `rowVital` da fila, e
 // pela mesma razão: o número nunca viaja como dado.
 func castVital(v View, m Member, pool, verb string) string {
-	base := fmt.Sprintf("/mesa/%d/%d/elenco/%d/vitais/%s/%s/",
+	base := fmt.Sprintf("/campanhas/%d/sessoes/%d/elenco/%d/vitais/%s/%s/",
 		v.CampaignID, v.SessionID, m.CharacterID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }

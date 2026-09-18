@@ -17,8 +17,9 @@ import (
 
 // A MESA DO MESTRE: as ferramentas do mestre, em `/mestre/`.
 //
-// O endereço não é `/mesa/` porque essa palavra já é a sessão ao vivo
-// (`/mesa/{campanha}/{sessao}`), e pendurar as ferramentas ali daria à mesma
+// O endereço não é o da sessão (`/campanhas/{campanha}/sessoes/{sessao}`)
+// porque as ferramentas do mestre valem fora de qualquer partida, e
+// pendurá-las ali daria à mesma
 // palavra dois sentidos no mesmo espaço de endereço — o que o GLOSSARY.md
 // proíbe. O TÍTULO na tela continua "Mesa do Mestre": renomear tela que o
 // mestre já conhece é outro assunto.
@@ -191,7 +192,7 @@ func railNav(atual string) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(secao.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 125, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 126, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -209,7 +210,7 @@ func railNav(atual string) templ.Component {
 				var templ_7745c5c3_Var6 templ.SafeURL
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/mestre/" + f.Slug))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 129, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 130, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -222,7 +223,7 @@ func railNav(atual string) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.KeyboardSwapMark)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 130, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 131, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 				if templ_7745c5c3_Err != nil {
@@ -235,7 +236,7 @@ func railNav(atual string) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(f.Dica)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 131, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 132, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 				if templ_7745c5c3_Err != nil {
@@ -289,7 +290,7 @@ func railNav(atual string) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(f.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 147, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 148, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -338,7 +339,7 @@ func bestiaryScene(v BestiaryView) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(BestiarySignals(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 161, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 162, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -351,7 +352,7 @@ func bestiaryScene(v BestiaryView) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d de %d", len(v.Entries), v.Total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 165, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 166, Col: 94}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -448,7 +449,7 @@ func CreatureDialog(m book.Entry, livro bookui.BookAddress) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 269, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 270, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
@@ -549,7 +550,7 @@ func BestiaryFilters(v BestiaryView) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@get('%s')", v.BestiaryBase()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 303, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 304, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -562,7 +563,7 @@ func BestiaryFilters(v BestiaryView) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Term)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 304, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 305, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -630,7 +631,7 @@ func BestiaryFilters(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(v.typeOn(t)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 329, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 330, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 				if templ_7745c5c3_Err != nil {
@@ -643,7 +644,7 @@ func BestiaryFilters(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('%s/tipo/%s')", v.BestiaryBase(), t))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 330, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 331, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 				if templ_7745c5c3_Err != nil {
@@ -671,7 +672,7 @@ func BestiaryFilters(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(book.TypeName(t))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 336, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 337, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -749,7 +750,7 @@ func crBox(base, id, rotulo, sinal, valor string) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue("bestiario-" + id)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 352, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 353, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 			if templ_7745c5c3_Err != nil {
@@ -762,7 +763,7 @@ func crBox(base, id, rotulo, sinal, valor string) templ.Component {
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 352, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 353, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
@@ -785,7 +786,7 @@ func crBox(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue("bestiario-" + id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 355, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 356, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 		if templ_7745c5c3_Err != nil {
@@ -806,7 +807,7 @@ func crBox(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 361, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 362, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 		if templ_7745c5c3_Err != nil {
@@ -819,7 +820,7 @@ func crBox(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 362, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 363, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 		if templ_7745c5c3_Err != nil {
@@ -832,7 +833,7 @@ func crBox(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@get('%s')", base))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 363, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 364, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 		if templ_7745c5c3_Err != nil {
@@ -845,7 +846,7 @@ func crBox(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 364, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 365, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 		if templ_7745c5c3_Err != nil {
@@ -907,7 +908,7 @@ func EntryList(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var36 templ.SafeURL
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.BestiaryBase() + "?criatura=" + m.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 419, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 420, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 				if templ_7745c5c3_Err != nil {
@@ -920,7 +921,7 @@ func EntryList(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var37 string
 				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("evt.preventDefault(); $creature = %q; @get('%s')", m.ID, openTheEntry(v.BestiaryBase())))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 420, Col: 123}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 421, Col: 123}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 				if templ_7745c5c3_Err != nil {
@@ -933,7 +934,7 @@ func EntryList(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("el.matches(':focus-visible') && ($creature = %q, @get('%s'))", m.ID, v.BestiaryBase()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 421, Col: 145}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 422, Col: 145}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 				if templ_7745c5c3_Err != nil {
@@ -961,7 +962,7 @@ func EntryList(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 430, Col: 15}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 431, Col: 15}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 				if templ_7745c5c3_Err != nil {
@@ -974,7 +975,7 @@ func EntryList(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var40 string
 				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs("ND " + book.CRWritten(m.ND))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 431, Col: 89}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 432, Col: 89}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 				if templ_7745c5c3_Err != nil {
@@ -987,7 +988,7 @@ func EntryList(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var41 string
 				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(book.TypeName(m.Tipo) + " · " + book.SizeName(m.Size))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 433, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 434, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 				if templ_7745c5c3_Err != nil {
@@ -1000,7 +1001,7 @@ func EntryList(v BestiaryView) templ.Component {
 				var templ_7745c5c3_Var42 string
 				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("PV %d · DEF %d · p%d", m.HP, m.Defesa, m.BookPage))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 437, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 438, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 				if templ_7745c5c3_Err != nil {
@@ -1055,7 +1056,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 465, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 466, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -1068,7 +1069,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("ND %s · %s · %s · ", book.CRWritten(m.ND), book.TypeName(m.Tipo), book.SizeName(m.Size)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 467, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 468, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
@@ -1081,7 +1082,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(" · XP %d", book.XPForCR(m.ND)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 469, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 470, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 		if templ_7745c5c3_Err != nil {
@@ -1238,7 +1239,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 					var templ_7745c5c3_Var50 string
 					templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(a.Name + " ")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 521, Col: 24}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 522, Col: 24}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 					if templ_7745c5c3_Err != nil {
@@ -1251,7 +1252,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 					var templ_7745c5c3_Var51 string
 					templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(book.WithSign(a.AttackBonus) + " · " + a.Damage)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 522, Col: 106}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 523, Col: 106}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 					if templ_7745c5c3_Err != nil {
@@ -1269,7 +1270,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 						var templ_7745c5c3_Var52 string
 						templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(a.Special)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 525, Col: 63}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 526, Col: 63}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 						if templ_7745c5c3_Err != nil {
@@ -1362,7 +1363,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 						var templ_7745c5c3_Var55 string
 						templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(" · ")
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 550, Col: 17}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 551, Col: 17}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 						if templ_7745c5c3_Err != nil {
@@ -1388,7 +1389,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 						var templ_7745c5c3_Var57 string
 						templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 556, Col: 17}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 557, Col: 17}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 						if templ_7745c5c3_Err != nil {
@@ -1407,7 +1408,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 					var templ_7745c5c3_Var58 string
 					templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(" ")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 558, Col: 13}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 559, Col: 13}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 					if templ_7745c5c3_Err != nil {
@@ -1420,7 +1421,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 					var templ_7745c5c3_Var59 string
 					templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(book.WithSign(p.Bonus))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 559, Col: 56}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 560, Col: 56}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 					if templ_7745c5c3_Err != nil {
@@ -1438,7 +1439,7 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 						var templ_7745c5c3_Var60 string
 						templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(" (" + p.Nota + ")")
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 561, Col: 66}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 562, Col: 66}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 						if templ_7745c5c3_Err != nil {
@@ -1568,7 +1569,7 @@ func blockSection(titulo string) templ.Component {
 		var templ_7745c5c3_Var64 string
 		templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 598, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 599, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 		if templ_7745c5c3_Err != nil {
@@ -1603,7 +1604,7 @@ func blockSection(titulo string) templ.Component {
 		var templ_7745c5c3_Var67 string
 		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 599, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 600, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 		if templ_7745c5c3_Err != nil {
@@ -1665,7 +1666,7 @@ func stat(rotulo, valor string) templ.Component {
 			var templ_7745c5c3_Var70 string
 			templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 607, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 608, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 			if templ_7745c5c3_Err != nil {
@@ -1684,7 +1685,7 @@ func stat(rotulo, valor string) templ.Component {
 		var templ_7745c5c3_Var71 string
 		templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 609, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 610, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 		if templ_7745c5c3_Err != nil {

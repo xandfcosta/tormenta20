@@ -15,10 +15,10 @@ import (
 // `BoardView.Base`.
 //
 // Este guarda existe porque o modo de falha é SILENCIOSO e assimétrico. Uma
-// chamada que continuasse escrevendo `/mesa/%d/%d/tabuleiro` compilaria, passaria
+// chamada que continuasse escrevendo `/campanhas/%d/sessoes/%d/tabuleiro` compilaria, passaria
 // em toda revisão de diff e funcionaria perfeitamente na Mesa — o defeito só
 // apareceria no rascunho, onde `v.SessionID` é ZERO: o gesto postaria em
-// `/mesa/12/0/tabuleiro/…`, um endereço que existe, responde 404 ou 403, e
+// `/campanhas/12/sessoes/0/tabuleiro/…`, um endereço que existe, responde 404 ou 403, e
 // devolve uma tela que não mudou. Pintar não pinta, e nada explica por quê.
 //
 // A regra é mecanizável com o que já roda, então ela é guarda e não parágrafo —
@@ -57,9 +57,9 @@ func TestNoBoardRouteIsHandwritten(t *testing.T) {
 			// O que se procura é um CAMINHO, e não a palavra: o import do
 			// pacote `t20engine/domain/board` casa com ela e não é rota nenhuma.
 			// Por isso a linha só conta quando o caminho vem montado — com o
-			// `/mesa/` na frente ou com um `%d` para o id.
+			// `/campanhas/` na frente ou com um `%d` para o id.
 			ehCaminho := strings.Contains(linha, "/tabuleiro") &&
-				(strings.Contains(linha, "/mesa/") || strings.Contains(linha, "%d"))
+				(strings.Contains(linha, "/campanhas/") || strings.Contains(linha, "%d"))
 			if !ehCaminho || arquivo == ondeOPrefixoMora {
 				continue
 			}

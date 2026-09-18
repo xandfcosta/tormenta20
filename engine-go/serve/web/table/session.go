@@ -24,7 +24,7 @@ import (
 // cena de campanhas.
 
 func (s Scene) RoutesSession(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/sessao"
+	base := "/campanhas/{campaignId}/sessoes/{sessionId}"
 	r.Post(base+"/iniciar", s.gmCommand(iniciaAPartida))
 	r.Post(base+"/encerrar", s.gmCommand(encerraAPartida))
 	r.Post(base+"/titulo", s.gmCommand(renameStart))

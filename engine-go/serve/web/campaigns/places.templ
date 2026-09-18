@@ -83,7 +83,7 @@ templ placeRow(v oneView, l PlaceRow) {
 			// e o lugar apagado volta. As travas de verdade são do servidor; isto
 			// é não oferecer o gesto que ele recusa.
 			<a
-				href={ templ.SafeURL(routes.Table(v.ID, l.NaMesaID)) }
+				href={ templ.SafeURL(routes.Session(v.ID, l.NaMesaID)) }
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }
 			>Ver na mesa</a>
 		} else {

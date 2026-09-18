@@ -30,7 +30,7 @@ import (
 type BestiaryView struct {
 	// Base é o prefixo das rotas que ESTA cena chama, e existe porque o mesmo
 	// desenho serve dois lugares: a cena do mestre em `/mestre/bestiario` e o
-	// painel da Mesa em `/mesa/{c}/{s}/bestiario`. O que muda entre as duas é o
+	// painel da sessão em `/campanhas/{c}/sessoes/{s}/bestiario`. O que muda é o
 	// ENDEREÇO, não a lista nem o bloco.
 	//
 	// Sem valor não há rota: o `BestiaryBase` recusa a string vazia em vez de

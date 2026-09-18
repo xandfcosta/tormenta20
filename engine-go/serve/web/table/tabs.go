@@ -225,12 +225,12 @@ func (s Scene) TabRoutes(r chi.Router) {
 	// A troca é de TODO MUNDO, e é a metade da issue que o jogador ganha: ele
 	// não fica preso ao que o mestre está olhando — quem está na cripta abre a
 	// aba da cripta porque quer.
-	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/aba/{tabuleiroId}",
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/tabuleiro/aba/{tabuleiroId}",
 		s.tableCommand(swapBoard))
 	// MOSTRAR À MESA é só do mestre, e a trava é do servidor: um jogador que
 	// puxasse a mesa para a aba dele tiraria dos outros cinco o que esta issue
 	// acabou de lhes dar.
-	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/aba/{tabuleiroId}/mostrar",
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/tabuleiro/aba/{tabuleiroId}/mostrar",
 		s.gmBoardCommand(showTableIsTab))
 }
 

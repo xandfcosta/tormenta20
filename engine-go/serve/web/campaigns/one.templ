@@ -80,7 +80,7 @@ templ oneHeader(v oneView) {
 					{ fmt.Sprintf("Sessão %d em andamento", v.NumeroDaSessaoViva) }
 				}
 				<a
-					href={ templ.SafeURL(routes.Table(v.ID, v.SessaoVivaID)) }
+					href={ templ.SafeURL(routes.Session(v.ID, v.SessaoVivaID)) }
 					class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "") }
 				>
 					Continuar a sessão
@@ -280,7 +280,7 @@ templ heroRow(h heroAtTable) {
 templ sessionLine(campanhaID int64, sess sessionRow) {
 	<li>
 		<a
-			href={ templ.SafeURL(routes.Table(campanhaID, sess.ID)) }
+			href={ templ.SafeURL(routes.Session(campanhaID, sess.ID)) }
 			data-nav-item
 			class="flex min-h-11 items-center gap-3 px-1 text-sm outline-none transition-colors hover:text-grimorio-gold"
 		>

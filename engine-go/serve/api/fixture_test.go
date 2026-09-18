@@ -97,7 +97,8 @@ func (f sceneFixture) pede(t *testing.T, userID int64, method, path, body string
 }
 
 func (f sceneFixture) tableUrl() string {
-	return "/mesa/" + strconv.FormatInt(f.campaignID, 10) + "/" + strconv.FormatInt(f.sessionID, 10)
+	return "/campanhas/" + strconv.FormatInt(f.campaignID, 10) +
+		"/sessoes/" + strconv.FormatInt(f.sessionID, 10)
 }
 
 // posta manda a escrita por um servidor HTTP DE VERDADE, e não pelo par

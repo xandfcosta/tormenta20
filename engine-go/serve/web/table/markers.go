@@ -17,7 +17,7 @@ import (
 // dois gestos e não um.
 
 func (s Scene) MarkerRoutes(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/marcadores"
+	base := "/campanhas/{campaignId}/sessoes/{sessionId}/tabuleiro/marcadores"
 	// O `novo` estático antes das coordenadas separa a criação dos gestos sobre
 	// um marcador que já existe — sem ele, `{x}` e `{id}` disputariam a mesma
 	// posição do caminho.

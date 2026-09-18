@@ -81,15 +81,18 @@ func MasterBestiarySearch(term string) string {
 	return MasterBestiary + "?busca=" + url.QueryEscape(term)
 }
 
-// Table é PARA ONDE se entra numa sessão: a Mesa em Datastar.
+// Session é PARA ONDE se entra numa sessão: a cena ao vivo dela.
 //
 // O Hub, o cartão da campanha e duas linhas da campanha aberta a citam, e nenhum
-// deles é da Mesa. UMA função e não quatro `Sprintf`: é o que faz os quatro
+// deles é da cena. UMA função e não quatro `Sprintf`: é o que faz os quatro
 // caminhos concordarem, e o único lugar a ler para saber quem manda para onde.
 //
-//	routes.Table(1, 4) // "/mesa/1/4"
-func Table(campanhaID, sessaoID int64) string {
-	return fmt.Sprintf("/mesa/%d/%d", campanhaID, sessaoID)
+// O endereço é ANINHADO na campanha porque a sessão é dela: não existe sessão
+// fora de uma campanha, e o pai já atende em `/campanhas/{id}`.
+//
+//	routes.Session(1, 4) // "/campanhas/1/sessoes/4"
+func Session(campanhaID, sessaoID int64) string {
+	return fmt.Sprintf("/campanhas/%d/sessoes/%d", campanhaID, sessaoID)
 }
 
 // PlaceDraft é PARA ONDE se entra num RASCUNHO DE LUGAR: a cena que o mestre

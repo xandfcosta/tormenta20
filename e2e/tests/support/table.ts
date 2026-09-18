@@ -31,7 +31,7 @@ export async function disposableTable(page: Page): Promise<{ mesa: string; apaga
   const sid = (await sessao.json()).id as number
 
   return {
-    mesa: `/mesa/${campanha}/${sid}`,
+    mesa: `/campanhas/${campanha}/sessoes/${sid}`,
     // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO: sem o `catch`, um caso
     // que falhou no meio deixa a página num estado em que o `delete` estoura, e
     // o relatório mostra o erro da FAXINA no lugar do erro do teste. A campanha

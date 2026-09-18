@@ -21,7 +21,7 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 	}
 
 	// ATIVA: o contrário.
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/sessao/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar deu %d", rec.Code)
 	}
 	ativa := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -61,7 +61,7 @@ func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 
 	// E a trava é do SERVIDOR, não do desenho.
 	for _, gesto := range []string{"iniciar", "encerrar", "reiniciar", "titulo", "excluir"} {
-		rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/sessao/"+gesto, `{"session_title":"x"}`)
+		rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/"+gesto, `{"session_title":"x"}`)
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador passou em %q: %d", gesto, rec.Code)
 		}
@@ -74,13 +74,13 @@ func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
 
-	f.posta(t, f.mestre, f.tableUrl()+"/sessao/titulo", `{"session_title":"A cripta do rio"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/titulo", `{"session_title":"A cripta do rio"}`)
 	sess, _ := f.s.queries.GetSession(ctx, f.sessionID)
 	if !sess.Title.Valid || sess.Title.String != "A cripta do rio" {
 		t.Fatalf("o título não foi salvo: %+v", sess.Title)
 	}
 
-	f.posta(t, f.mestre, f.tableUrl()+"/sessao/titulo", `{"session_title":"   "}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/titulo", `{"session_title":"   "}`)
 	sess, _ = f.s.queries.GetSession(ctx, f.sessionID)
 	if sess.Title.Valid && strings.TrimSpace(sess.Title.String) != "" {
 		t.Errorf("o título em branco não virou nulo: %+v", sess.Title)
@@ -97,7 +97,7 @@ func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 		t.Fatalf("a cena montou %d combatentes — não há o que reiniciar", n)
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/sessao/reiniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/reiniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("reiniciar deu %d", rec.Code)
 	}
 
@@ -112,7 +112,7 @@ func TestDeletingErasesAndSendsTheGmToTheCampaign(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
 
-	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/sessao/excluir", "")
+	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/excluir", "")
 
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("excluir deu %d, esperado 303", rec.Code)

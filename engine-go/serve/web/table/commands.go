@@ -23,32 +23,32 @@ import (
 // Esconder o botão é UX; a trava é aqui.
 
 func (s Scene) TableCommandRoutes(r chi.Router) {
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/proxima-vez", s.gmCommand(
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/iniciativa/proxima-vez", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().NextTurn(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/vez-anterior", s.gmCommand(
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/iniciativa/vez-anterior", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().PreviousTurn(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/cena/iniciar", s.gmCommand(
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/cena/iniciar", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().StartScene(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/cena/encerrar", s.gmCommand(endScene))
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/por-no-mapa", s.gmCommand(bringParty))
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/adicionar", s.gmCommand(addCombatant))
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/cena/encerrar", s.gmCommand(endScene))
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/iniciativa/por-no-mapa", s.gmCommand(bringParty))
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/iniciativa/adicionar", s.gmCommand(addCombatant))
 	// DOIS caminhos e não um `/descanso` com o escopo no corpo, que é a forma da
 	// API JSON: nesta superfície o VERBO é o caminho, e misturar as duas
 	// gramáticas faria a próxima pessoa ter de descobrir qual vale onde.
-	r.Post("/mesa/{campaignId}/{sessionId}/descanso/cena", s.gmCommand(restParty("scene")))
-	r.Post("/mesa/{campaignId}/{sessionId}/descanso/dia", s.gmCommand(restParty("day")))
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/descanso/cena", s.gmCommand(restParty("scene")))
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/descanso/dia", s.gmCommand(restParty("day")))
 	// O QUE O MESTRE MEXE EM CADA LINHA — mais restrito que a API JSON de
 	// propósito. Lá o `assertVitalsEditableFor` deixa o jogador mexer nos vitais
 	// do PRÓPRIO personagem, porque lá existe a tela do jogador que faz isso.
 	// Aqui a superfície do jogador é leitura mais registrar iniciativa, e uma
 	// segunda regra de escrita seria uma porta que nenhuma tela usa.
-	r.Route("/mesa/{campaignId}/{sessionId}/iniciativa/{entryId}", func(r chi.Router) {
+	r.Route("/campanhas/{campaignId}/sessoes/{sessionId}/iniciativa/{entryId}", func(r chi.Router) {
 		r.Post("/vitais/{pool}/ferir/{step}", s.gmCommand(moveVitals(-1)))
 		r.Post("/vitais/{pool}/curar/{step}", s.gmCommand(moveVitals(+1)))
 		r.Post("/vitais/{pool}/oculto", s.gmCommand(toggleEye))

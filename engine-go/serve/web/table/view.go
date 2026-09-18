@@ -467,7 +467,7 @@ func ofViewGm(
 // regras extraídas, e o que impede as duas telas de divergirem é compartilhar a
 // REGRA, não a rota.
 func tableCommand(v View, metodo, acao string) string {
-	caminho := fmt.Sprintf("/mesa/%d/%d/%s", v.CampaignID, v.SessionID, acao)
+	caminho := fmt.Sprintf("/campanhas/%d/sessoes/%d/%s", v.CampaignID, v.SessionID, acao)
 	if metodo == "POST" {
 		return fmt.Sprintf("@post('%s')", caminho)
 	}
@@ -481,7 +481,7 @@ func tableCommand(v View, metodo, acao string) string {
 // postar é uma corrida esperando por um mestre de dedo rápido. Caminho é do
 // botão que foi clicado, e não há segundo escritor.
 func rowCommand(v View, l tableRow, acao string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/iniciativa/%s/%s')", v.CampaignID, v.SessionID, l.ID, acao)
+	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/iniciativa/%s/%s')", v.CampaignID, v.SessionID, l.ID, acao)
 }
 
 // rowVital escreve o ferir/curar com os DOIS passos já resolvidos em duas
@@ -513,7 +513,7 @@ func harmVerb(pool string) string {
 }
 
 func rowVital(v View, l tableRow, pool, verb string) string {
-	base := fmt.Sprintf("/mesa/%d/%d/iniciativa/%s/vitais/%s/%s/", v.CampaignID, v.SessionID, l.ID, pool, verb)
+	base := fmt.Sprintf("/campanhas/%d/sessoes/%d/iniciativa/%s/vitais/%s/%s/", v.CampaignID, v.SessionID, l.ID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }
 
@@ -536,7 +536,7 @@ func openEdit(v View, l tableRow) string {
 // saveEdit monta o caminho com o id que o número semeou.
 func saveEdit(v View) string {
 	return fmt.Sprintf(
-		"document.getElementById('edit-combatant').close(); @post('/mesa/%d/%d/iniciativa/' + $edit_row + '/editar')",
+		"document.getElementById('edit-combatant').close(); @post('/campanhas/%d/sessoes/%d/iniciativa/' + $edit_row + '/editar')",
 		v.CampaignID, v.SessionID,
 	)
 }
@@ -583,7 +583,7 @@ func onCondition(id string) string {
 // por combatente, e o sinal é reescrito a cada abertura.
 func toggleConditionRow(v View, id string) string {
 	return fmt.Sprintf(
-		"@post('/mesa/%d/%d/iniciativa/' + $condition_row + '/condicao/%s')",
+		"@post('/campanhas/%d/sessoes/%d/iniciativa/' + $condition_row + '/condicao/%s')",
 		v.CampaignID, v.SessionID, id,
 	)
 }
@@ -592,12 +592,12 @@ func toggleConditionRow(v View, id string) string {
 
 // sessionCommand escreve a chamada de um verbo do ciclo.
 func sessionCommand(v View, acao string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/sessao/%s')", v.CampaignID, v.SessionID, acao)
+	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/%s')", v.CampaignID, v.SessionID, acao)
 }
 
 // caminhoDeExcluir é o `action` do form, e não uma expressão: excluir NAVEGA.
 func caminhoDeExcluir(v View) string {
-	return fmt.Sprintf("/mesa/%d/%d/sessao/excluir", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("/campanhas/%d/sessoes/%d/excluir", v.CampaignID, v.SessionID)
 }
 
 // campaignChronicle é para onde se sai da sessão.

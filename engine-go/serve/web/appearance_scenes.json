@@ -38,8 +38,8 @@
   },
   "table": {
     "visits": [
-      { "address": "/mesa/1/4", "session": "gm" },
-      { "address": "/mesa/1/4", "session": "player" }
+      { "address": "/campanhas/1/sessoes/4", "session": "gm" },
+      { "address": "/campanhas/1/sessoes/4", "session": "player" }
     ]
   },
   "admin": { "visits": [{ "address": "/admin", "session": "gm" }] }

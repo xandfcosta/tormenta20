@@ -45,5 +45,5 @@ func (h hubHost) ExpiredSessionCookie() *http.Cookie { return sessionCookie(h.cf
 // TableRoute é o endereço de uma sessão ao vivo. Quem sabe onde cada cena está
 // montada é quem monta.
 func (h hubHost) TableRoute(campaignID, sessionID int64) string {
-	return routes.Table(campaignID, sessionID)
+	return routes.Session(campaignID, sessionID)
 }

@@ -27,9 +27,9 @@ import (
 // hospedeiro, no grupo em que ela é montada. Uma cena que se autoprotegesse
 // daria a impressão de que a fronteira é dela.
 func Routes(r chi.Router, s Scene) {
-	r.Get("/mesa/{campaignId}/{sessionId}", s.handleTablePage)
-	r.Get("/mesa/{campaignId}/{sessionId}/fluxo", s.handleTableStream)
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleTableInitiative)
+	r.Get("/campanhas/{campaignId}/sessoes/{sessionId}", s.handleTablePage)
+	r.Get("/campanhas/{campaignId}/sessoes/{sessionId}/fluxo", s.handleTableStream)
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/iniciativa", s.handleTableInitiative)
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
 	s.MoveRoutes(r)
@@ -53,7 +53,7 @@ func Routes(r chi.Router, s Scene) {
 	s.DraftRoutes(r)
 }
 
-// O ENDEREÇO da Mesa mora em `web/routes` (`routes.Table`), e não aqui: a cena
+// O ENDEREÇO da cena mora em `web/routes` (`routes.Session`), e não aqui: a cena
 // das campanhas o cita, e ela não alcança uma função deste pacote.
 
 // tableParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
@@ -89,7 +89,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: tableSignalsExpr(),
-		Init:   fmt.Sprintf("@get('/mesa/%d/%d/fluxo')", campaignID, sessionID),
+		Init:   fmt.Sprintf("@get('/campanhas/%d/sessoes/%d/fluxo')", campaignID, sessionID),
 		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um

@@ -29,7 +29,7 @@ func TestTheOldPilotPrefixIsGone(t *testing.T) {
 
 	cenas := []string{
 		"/", "/campanhas", "/personagens", "/grimorio", "/admin",
-		"/mestre/bestiario", "/entrar", "/criar-conta", "/mesa/1/4",
+		"/mestre/bestiario", "/entrar", "/criar-conta", "/campanhas/1/sessoes/4",
 	}
 	for _, scene := range cenas {
 		antigo := "/piloto" + scene

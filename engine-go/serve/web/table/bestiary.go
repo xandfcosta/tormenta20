@@ -34,13 +34,13 @@ import (
 
 // tableBestiaryRoute é a base das rotas do painel, montada por mesa.
 func tableBestiaryRoute(campaignID, sessionID int64) string {
-	return fmt.Sprintf("/mesa/%d/%d/bestiario", campaignID, sessionID)
+	return fmt.Sprintf("/campanhas/%d/sessoes/%d/bestiario", campaignID, sessionID)
 }
 
 func (s Scene) TableBestiaryRoutes(r chi.Router) {
-	r.Get("/mesa/{campaignId}/{sessionId}/bestiario", s.handleBestiaryTable)
-	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/tipo/{tipo}", s.handleKindBestiaryTable)
-	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/enviar", s.gmCommand(sendsForTable))
+	r.Get("/campanhas/{campaignId}/sessoes/{sessionId}/bestiario", s.handleBestiaryTable)
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/bestiario/tipo/{tipo}", s.handleKindBestiaryTable)
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/bestiario/enviar", s.gmCommand(sendsForTable))
 }
 
 // forTableBestiary monta a view do painel para esta mesa.

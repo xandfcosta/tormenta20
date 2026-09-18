@@ -10,7 +10,8 @@ import (
 
 // As rotas da MESA DO MESTRE.
 //
-// O prefixo é `/mestre/` e não `/mesa/`: `mesa` já nomeia a sessão ao vivo, e
+// O prefixo é `/mestre/` e não o da sessão: as ferramentas do mestre valem fora
+// de qualquer partida, e
 // uma palavra com dois sentidos no mesmo espaço de endereço é o que o glossário
 // existe para impedir.
 

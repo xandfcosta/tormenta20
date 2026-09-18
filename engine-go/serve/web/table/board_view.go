@@ -1100,7 +1100,7 @@ func tabCommand(v BoardView, tabuleiroID string) string {
 
 // tableBoardBase é o tabuleiro DA MESA: a cena que a sessão está jogando.
 func tableBoardBase(campaignID, sessionID int64) string {
-	return fmt.Sprintf("/mesa/%d/%d/tabuleiro", campaignID, sessionID)
+	return fmt.Sprintf("/campanhas/%d/sessoes/%d/tabuleiro", campaignID, sessionID)
 }
 
 // placeDraftBase é o tabuleiro do RASCUNHO: a cena que o mestre monta no acervo

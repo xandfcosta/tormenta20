@@ -92,7 +92,7 @@ func (l *lenses) Erase(sessionID int64) {
 }
 
 func (s Scene) LensRoutes(r chi.Router) {
-	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/lente",
+	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/tabuleiro/lente",
 		s.gmBoardCommand(toggleLens))
 }
 

@@ -29,7 +29,7 @@ import (
 // vem primeiro), e ela é indistinguível da dobra de uma parada.
 
 func (s Scene) MoveRoutes(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
+	base := "/campanhas/{campaignId}/sessoes/{sessionId}/tabuleiro/{tokenId}"
 	r.Post(base+"/parada", s.tableCommand(paraNoQuadrado))
 	r.Post(base+"/desfazer-parada", s.tableCommand(undoLastStop))
 	r.Post(base+"/confirmar", s.tableCommand(confirmMove))

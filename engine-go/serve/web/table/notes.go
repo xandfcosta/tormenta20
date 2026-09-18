@@ -20,7 +20,7 @@ import (
 // na mão — o botão escondido é cortesia para quem não pode, nunca a segurança.
 
 func (s Scene) RoutesNote(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/notas"
+	base := "/campanhas/{campaignId}/sessoes/{sessionId}/notas"
 	// O MESMO endereço serve a CENA e o comando. Não é economia de rota: a
 	// janela própria existe para o mestre pôr as notas no segundo monitor, e um
 	// endereço que ele possa favoritar é metade do que isso significa.
@@ -147,7 +147,7 @@ func primeiroErro(erros ...error) error {
 //
 // OS IDS VIAJAM PARA A PRÉVIA: uma `View` sintética com `CampaignID` e
 // `SessionID` ZERO faz cada quadrinho do fragmento remendado apontar para
-// `/mesa/0/0/notas/tarefa/N/marcar`. O sintoma é da pior família desta base: o
+// `/campanhas/0/sessoes/0/notas/tarefa/N/marcar`. O sintoma é da pior família desta base: o
 // PRIMEIRO clique funciona — ele acontece sobre o HTML da carga fria, que tem os
 // ids certos — e do segundo em diante a tela fica muda, com o botão no lugar, o
 // `aria-checked` desenhado e nenhum erro em canto nenhum. O guarda que o prende
@@ -290,7 +290,7 @@ func storeTheWidth() string {
 // grafias do mesmo caminho é como nasce a quarta que diverge — e o `@post` tem
 // guarda de endereço, mas o `window.open` não tem.
 func notesAddress(v View) string {
-	return fmt.Sprintf("/mesa/%d/%d/notas", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("/campanhas/%d/sessoes/%d/notas", v.CampaignID, v.SessionID)
 }
 
 func saveNotes(v View) string {

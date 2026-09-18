@@ -71,7 +71,7 @@ const HOUSE_SURFACES = [
       //
       // Endereço direto e não navegado: o gesto que a abre é um `window.open`,
       // e uma janela nova não é a `page` deste guarda.
-      await page.goto('/mesa/1/4/notas')
+      await page.goto('/campanhas/1/sessoes/4/notas')
       await expect(page.getByRole('heading', { name: /Notas/ })).toBeVisible()
     },
   },
