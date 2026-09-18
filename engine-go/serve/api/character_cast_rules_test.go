@@ -287,3 +287,68 @@ func TestPmCostReductionIsAppliedAndFloored(t *testing.T) {
 		}
 	})
 }
+
+// O TRUQUE, p171: "Este aprimoramento transforma a magia em uma versão mais
+// simples e reduz seu custo em PM para zero. Truques não podem ser usados em
+// conjunto com outros aprimoramentos."
+//
+// São duas regras numa frase, e o servidor não aplicava nenhuma das duas
+// (ALE-339). Havia um guarda com o nome certo — `spell.Circle == 0`, "truques
+// não recebem aprimoramentos" — apontado para a OUTRA representação de truque, a
+// magia de círculo 0, que nenhuma das 198 magias do catálogo tem. O truque de
+// verdade é o APRIMORAMENTO, e são catorze.
+//
+// A Explosão de Chamas serve porque tem os três casos numa magia só: o truque no
+// índice 0 e dois aprimoramentos comuns de 1 PM.
+func TestATruqueCostsNothingAndRefusesCompany(t *testing.T) {
+	s := newCastServer(t)
+	owner := seedUser(t, s, "truque@t20.local")
+	char := seedCaster(t, s, owner, "Arcanista", 5, 20, "explosao-de-chamas")
+
+	// "reduz seu custo em PM para zero" é a magia INTEIRA, e não o aprimoramento:
+	// modelado como um `+0 PM` o custo base de 1 PM ficaria de pé, e a versão mais
+	// simples da magia sairia pelo preço da normal.
+	t.Run("o truque zera o custo da conjuração", func(t *testing.T) {
+		antes := mpOf(t, s, char)
+		if err := castSpell(t, s, owner, char, "explosao-de-chamas", `{"augments":[{"augmentIndex":0,"stacks":1}]}`); err != nil {
+			t.Fatalf("o truque devolveu %v", err)
+		}
+		if gasto := antes - mpOf(t, s, char); gasto != 0 {
+			t.Errorf("o truque gastou %d PM, want 0 (p171)", gasto)
+		}
+	})
+
+	t.Run("o truque acompanhado é recusado", func(t *testing.T) {
+		antes := mpOf(t, s, char)
+		corpo := `{"augments":[{"augmentIndex":0,"stacks":1},{"augmentIndex":1,"stacks":1}]}`
+		if err := castSpell(t, s, owner, char, "explosao-de-chamas", corpo); err == nil {
+			t.Fatal("truque + aprimoramento devolveu — e não foi recusado")
+		}
+		if depois := mpOf(t, s, char); depois != antes {
+			t.Errorf("PM foi de %d para %d numa recusa", antes, depois)
+		}
+	})
+
+	// A ordem da lista não pode decidir nada: o truque em SEGUNDO lugar é a mesma
+	// combinação, e um laço que só olhasse o primeiro pedido passaria verde.
+	t.Run("a ordem do pedido não escapa da regra", func(t *testing.T) {
+		corpo := `{"augments":[{"augmentIndex":1,"stacks":1},{"augmentIndex":0,"stacks":1}]}`
+		if err := castSpell(t, s, owner, char, "explosao-de-chamas", corpo); err == nil {
+			t.Fatal("aprimoramento + truque devolveu — e não foi recusado")
+		}
+	})
+
+	// O CONTROLE: sem ele, "foi recusado" também seria verdade num servidor que
+	// recusa qualquer combinação. Os dois aprimoramentos comuns somam 1 + 1 sobre
+	// o 1 de base.
+	t.Run("dois aprimoramentos comuns continuam passando juntos", func(t *testing.T) {
+		antes := mpOf(t, s, char)
+		corpo := `{"augments":[{"augmentIndex":1,"stacks":1},{"augmentIndex":2,"stacks":1}]}`
+		if err := castSpell(t, s, owner, char, "explosao-de-chamas", corpo); err != nil {
+			t.Fatalf("dois aprimoramentos comuns devolveram %v", err)
+		}
+		if gasto := antes - mpOf(t, s, char); gasto != 3 {
+			t.Errorf("gastou %d PM, want 3 (1 de base + 1 + 1)", gasto)
+		}
+	})
+}

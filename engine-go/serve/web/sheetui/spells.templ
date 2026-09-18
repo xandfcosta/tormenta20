@@ -181,11 +181,7 @@ templ augmentPicker(a augmentRow) {
 		<span class="min-w-0 flex-1">
 			<span class="block text-xs text-foreground">{ a.Description }</span>
 			<span class="block font-mono text-3xs text-muted-foreground">
-				if a.Locked {
-					{ "+" + strconv.Itoa(a.PM) + " PM · exige o " + strconv.Itoa(a.RequiredCircle) + "º círculo" }
-				} else {
-					{ "+" + strconv.Itoa(a.PM) + " PM" }
-				}
+				{ augmentPriceWritten(a) }
 			</span>
 		</span>
 		if !a.Locked {
@@ -203,14 +199,14 @@ templ augmentStepper(a augmentRow) {
 			<button
 				type="button"
 				aria-label={ "Menos de " + a.Description }
-				data-on:click={ augmentSignal(a.Index) + " = Math.max(0, " + augmentSignal(a.Index) + " - 1)" }
+				data-on:click={ a.Less }
 				class="inline-flex size-7 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none hover:text-foreground"
 			>−</button>
 			<span class="w-5 text-center font-mono text-sm text-foreground" data-text={ augmentSignal(a.Index) }></span>
 			<button
 				type="button"
 				aria-label={ "Mais de " + a.Description }
-				data-on:click={ augmentSignal(a.Index) + "++" }
+				data-on:click={ a.More }
 				class="inline-flex size-7 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none hover:text-foreground"
 			>+</button>
 		} else {
@@ -219,7 +215,7 @@ templ augmentStepper(a augmentRow) {
 				role="switch"
 				aria-label={ a.Description }
 				data-attr:aria-checked={ augmentSignal(a.Index) + " > 0 ? 'true' : 'false'" }
-				data-on:click={ augmentSignal(a.Index) + " = " + augmentSignal(a.Index) + " > 0 ? 0 : 1" }
+				data-on:click={ a.Toggle }
 				class={ ui.BadgeClasses("inline-flex items-center border-grimorio-iron text-3xs uppercase tracking-wider text-muted-foreground") }
 			>Trocar</button>
 		}

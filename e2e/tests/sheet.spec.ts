@@ -189,6 +189,62 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
 })
 
 /**
+ * O TRUQUE na tela, e o navegador é a única testemunha: a prévia do custo é uma
+ * EXPRESSÃO do Datastar avaliada no cliente, e a exclusão mútua entre os
+ * aprimoramentos é uma atribuição de sinal no clique. Nenhum teste de Go vê o
+ * número que sai no lugar — eles veem a expressão que foi MONTADA.
+ *
+ * É a fatura da ALE-339 do lado da tela. O servidor passou a cobrar zero por uma
+ * conjuração com truque, que é o que a p171 manda ("reduz seu custo em PM para
+ * zero"), e a prévia continuava somando `base + 0` e anunciando 1 PM: os dois
+ * discordando dentro do mesmo gesto, que é o defeito da ALE-319 de novo.
+ *
+ * Nenhum herói da semente conhece uma das catorze magias com truque, então o
+ * caso aprende uma — e isso é parte do que ele prova, porque o diálogo de
+ * aprender é o único caminho até lá.
+ */
+test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async ({ page }) => {
+  const id = await oIdDoConjurador(page)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(`/personagens/${id}?tab=spells`)
+
+  await page.getByRole('button', { name: 'Aprender magia' }).click()
+  const aprender = page.getByRole('dialog', { name: 'Aprender magia' })
+  await aprender.getByRole('searchbox').fill('Explosão de Chamas')
+  await aprender.getByText('Explosão de Chamas', { exact: true }).click()
+  await expect(
+    page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }),
+    'a magia com truque não entrou no grimório: não há o que medir abaixo',
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Fechar aprender magia' }).click()
+
+  await page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }).click()
+  const conjurar = page.getByRole('dialog', { name: 'Explosão de Chamas' })
+  const custo = conjurar.getByText(/^\d+ PM$/)
+  const maisDano = conjurar.getByRole('button', { name: 'Mais de Aumenta o dano em +1d6.' })
+  const truque = conjurar.getByRole('switch').first()
+
+  // O CONTROLE em duas medidas: o mostrador tem de MUDAR antes do que eu vim
+  // medir, senão um repouso igual ao sucesso não testemunha nada (ALE-218).
+  await expect(custo, 'a Explosão de Chamas é de 1º círculo: 1 PM de base').toHaveText('1 PM')
+  await maisDano.click()
+  await expect(custo, 'o aprimoramento de +1 PM não entrou na prévia').toHaveText('2 PM')
+
+  await truque.click()
+  await expect(custo, 'o truque não zerou a prévia: a tela cobra o que o servidor não cobra (p171)').toHaveText('0 PM')
+  await expect(
+    truque,
+    'o truque não ficou ligado',
+  ).toHaveAttribute('aria-checked', 'true')
+  // E o aprimoramento que estava ligado tem de ter SUMIDO da escolha: a tela não
+  // pode oferecer uma combinação que o servidor recusa.
+  await expect(
+    conjurar.getByText('0', { exact: true }),
+    'o contador do aprimoramento comum não voltou a zero ao ligar o truque',
+  ).toBeVisible()
+})
+
+/**
  * A MOCHILA ABERTA, com a ficha de um item e o catálogo do Capítulo 3.
  *
  * O caminhar pelas sete abas cobre a tira e a grade, mas nenhum dos DIÁLOGOS —

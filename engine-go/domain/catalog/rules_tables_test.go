@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -297,5 +298,90 @@ func assertContiguousRolls(t *testing.T, nome string, rows []rollRow) {
 		if !seen[roll] {
 			t.Errorf("%s: rolagem %d não está coberta (faixa vai até %d)", nome, roll, max)
 		}
+	}
+}
+
+// spellForTruqueSweep é o subconjunto que a varredura de truque precisa: o nome,
+// para a falha dizer QUAL magia, e os aprimoramentos crus.
+type spellForTruqueSweep struct {
+	Name string `json:"name"`
+	// BaseEffect entra na varredura porque foi ONDE o truque do Hipnotismo estava:
+	// colado no fim da prosa do efeito base, em vez de ser um aprimoramento como
+	// nas outras treze. Assim ele não aparecia na lista, não custava zero e a
+	// contagem dava treze — a falta mais silenciosa das três (ALE-339).
+	BaseEffect string `json:"baseEffect"`
+	Augments   []struct {
+		PmCost      int    `json:"pmCost"`
+		Description string `json:"description"`
+		Exclusive   bool   `json:"exclusive"`
+		Truque      bool   `json:"truque"`
+	} `json:"augments"`
+}
+
+// TestEveryTruqueIsFreeAndAlone amarra as duas metades da frase da p171 ao DADO:
+// o truque custa zero e não aceita companhia.
+//
+// A varredura existe porque o truque tem TRÊS marcas que precisam concordar — o
+// prefixo `Truque:` da descrição, o `truque` e o `exclusive` — e elas moram em
+// lugares diferentes do mesmo registro. Duas concordando e uma não é um truque
+// que a tela anuncia e o servidor cobra, ou o contrário.
+//
+// O NÚMERO está preso porque é a única defesa contra a falta em silêncio: a
+// primeira contagem achou ONZE, e os três que faltavam foram a fatura da
+// ALE-339 — a Cura de Ferimentos (p189) e a Queda Suave (p202) cobravam 1 PM por
+// um truque, e o Hipnotismo (p194) não tinha o dele. Nenhum schema reprova um
+// aprimoramento que simplesmente não está lá.
+func TestEveryTruqueIsFreeAndAlone(t *testing.T) {
+	magias := decodeResource[map[string]spellForTruqueSweep](t, "spells")
+	if len(magias) == 0 {
+		t.Fatal("nenhuma magia no catálogo: não há o que varrer, e verde aqui não valeria nada")
+	}
+
+	truques, medidos := 0, 0
+	for id, m := range magias {
+		naMagia := 0
+		for i, a := range m.Augments {
+			medidos++
+			escrito := strings.HasPrefix(a.Description, "Truque")
+			if escrito != a.Truque {
+				t.Errorf(
+					"%s (%s) aprimoramento %d: a descrição %s de truque e o campo `truque` diz %v",
+					m.Name, id, i, map[bool]string{true: "fala", false: "não fala"}[escrito], a.Truque,
+				)
+				continue
+			}
+			if !a.Truque {
+				continue
+			}
+			truques++
+			naMagia++
+			if a.PmCost != 0 {
+				t.Errorf("%s (%s) aprimoramento %d: o truque cobra %d PM, e ele zera o custo (p171)",
+					m.Name, id, i, a.PmCost)
+			}
+			if !a.Exclusive {
+				t.Errorf("%s (%s) aprimoramento %d: o truque não está marcado como exclusivo, e a p171 diz que ele não aceita companhia",
+					m.Name, id, i)
+			}
+		}
+		if naMagia > 1 {
+			t.Errorf("%s (%s) tem %d truques, e o livro imprime no máximo um por magia", m.Name, id, naMagia)
+		}
+		if strings.Contains(m.BaseEffect, "Truque") {
+			t.Errorf(
+				"%s (%s) fala do truque no efeito base: o truque é APRIMORAMENTO, e escrito na prosa ele não entra na lista nem zera o custo",
+				m.Name, id,
+			)
+		}
+	}
+
+	// O DENOMINADOR em duas contas: quantos aprimoramentos a varredura leu, e
+	// quantos truques ela achou. Sem a primeira, um seletor que não casasse com
+	// nada seria verde; sem a segunda, um truque apagado do catálogo também.
+	if medidos < 400 {
+		t.Fatalf("a varredura leu %d aprimoramentos, e são quase 500 — o recurso é o primeiro suspeito", medidos)
+	}
+	if truques != 14 {
+		t.Errorf("o catálogo tem %d truques, e o livro tem 14 (contados no capítulo de Magia, p180–235)", truques)
 	}
 }
