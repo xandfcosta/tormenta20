@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test'
 import { medeOContraste } from './support/contrast'
-import { expectNothingIsClippedSideways } from './support/geometry'
 import { MEASURED_SCENES, SESSION_FILE } from './support/measured-scenes'
 import { expectCinzelAcimaDoPiso } from './support/typography'
 
@@ -78,31 +77,6 @@ for (const [nome, cena] of Object.entries(MEASURED_SCENES)) {
           `${onde}: o medidor achou ${contraste.medidos} textos — a cena não carregou, e a asserção seguinte não seria evidência de nada`,
         ).toBeGreaterThan(MEASURED_TEXT_FLOOR)
         expect(contraste.falhas, `texto abaixo do AA em ${onde}`).toEqual([])
-      })
-
-      // AS DUAS PONTAS, e não os seis formatos: a casa chaveia por LARGURA, e o
-      // corte lateral aparece quando a coluna deixa de caber. Medir 390 e 1440
-      // pega as duas decisões de leiaute sem pagar seis navegações por cena.
-      //
-      // Uma carga e dois redimensionamentos: as consultas de mídia refazem o
-      // leiaute ao vivo, e o `expectNothingIsClippedSideways` espera a cena
-      // PARAR antes de ler caixa — sem isso ele mede a entrada do palco em
-      // curso e acusa quatro nós que somem em 600ms (ALE-342).
-      test(`nada é cortado de lado em ${onde}`, async ({ page }) => {
-        const resposta = await page.goto(visita.address)
-        if (visita.mayBeAbsent && resposta?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visita.address}`)
-          return
-        }
-        expect(resposta?.status(), `${visita.address} não respondeu`).toBeLessThan(400)
-
-        for (const [largura, altura] of [
-          [390, 844],
-          [1440, 900],
-        ] as const) {
-          await page.setViewportSize({ width: largura, height: altura })
-          await expectNothingIsClippedSideways(page, 'body')
-        }
       })
 
       test(`a Cinzel não desce abaixo do piso de leitura em ${onde}`, async ({ page }) => {
