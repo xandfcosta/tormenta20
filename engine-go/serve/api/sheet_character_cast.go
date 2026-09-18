@@ -51,6 +51,18 @@ func (sr sheetRules) castSpellForCharacter(
 		return err
 	}
 	basePm := sheet.SpellBasePmCost[spell.Circle]
+	// O TRUQUE zera a conjuração INTEIRA e não só a parte dele: "reduz seu custo
+	// em PM para zero" (p171). Tratado como um aprimoramento de +0 PM, o custo
+	// base ficava de pé e a versão mais simples da magia saía pelo preço da
+	// normal (ALE-339).
+	//
+	// O `augmentPm` também vai a zero, e não por precaução: o truque é
+	// `Exclusive`, então o `validateAugments` já recusou qualquer companhia e não
+	// há segunda parcela — zerar aqui diz isso em voz alta em vez de depender de
+	// uma invariante que mora noutra função.
+	if truqueEscolhido(spell, augments) {
+		basePm, augmentPm = 0, 0
+	}
 	totalPm := sr.catalogs.SpellPmCostFor(ec, basePm, augmentPm, map[string]bool{})
 	minPm := sr.catalogs.SpellPmCostFor(ec, basePm, 0, map[string]bool{})
 	limit := sr.catalogs.SpellPmLimitFor(ec, spell.Classes)
@@ -66,6 +78,21 @@ func (sr sheetRules) castSpellForCharacter(
 	return sr.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{
 		MpCurrent: dto.MpCurrent - int64(totalPm), UpdatedAt: dbvalue.NowISO(), ID: dto.ID,
 	})
+}
+
+// truqueEscolhido diz se um dos aprimoramentos pedidos é um truque.
+//
+// Índice fora de faixa é ignorado de propósito: quem recusa o pedido malformado é
+// o `validateAugments`, que roda antes, e repetir a checagem aqui daria duas
+// respostas para a mesma pergunta.
+func truqueEscolhido(spell catalog.Spell, picks []sheet.AugmentPick) bool {
+	for _, p := range picks {
+		if p.AugmentIndex >= 0 && p.AugmentIndex < len(spell.Augments) &&
+			spell.Augments[p.AugmentIndex].Truque {
+			return true
+		}
+	}
+	return false
 }
 
 func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
@@ -108,6 +135,18 @@ func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, castableCi
 		a := spell.Augments[p.AugmentIndex]
 		if a.Kind == "muda" && p.Stacks > 1 {
 			return 0, fmt.Sprintf("'muda' augment cannot stack (index %d)", p.AugmentIndex)
+		}
+		// O EXCLUSIVO recusa companhia: "truques não podem ser usados em conjunto
+		// com outros aprimoramentos" (p171), e o livro repete a frase à mão na
+		// esfera da Invisibilidade (p195) e na Luz permanente (p197).
+		//
+		// A pergunta é feita DENTRO do laço, sobre cada pedido, e não sobre o
+		// primeiro: a ordem da lista é do cliente, e um ramo que olhasse só
+		// `picks[0]` deixaria passar a mesma combinação escrita ao contrário.
+		if a.Exclusive && len(picks) > 1 {
+			return 0, fmt.Sprintf(
+				"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele",
+				p.AugmentIndex)
 		}
 		if a.RequiresCircle != nil && *a.RequiresCircle > castableCircle {
 			return 0, fmt.Sprintf(
