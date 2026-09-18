@@ -12,6 +12,7 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/app"
+	"t20engine/app/initiative"
 	"t20engine/domain/live"
 )
 
@@ -64,8 +65,9 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 // A VALIDAÇÃO é do `live` e não daqui: limite escrito como atributo de campo é
 // UI e não trava, e quem posta na mão passa por cima dele.
 //
-// Quem MONTA a linha é o `materializeEntry`, que é o caminho que a API já usa.
-// Escrever a montagem aqui seria a segunda cópia da mesma regra.
+// Quem MONTA a linha é o `Roster.Entry`, que é o caminho único dos três pedidos
+// — este, o NPC do elenco e o verbete do bestiário. Escrever a montagem aqui
+// seria a segunda cópia da mesma regra.
 func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	novo, err := signalsCombatant(c.R)
 	if err != nil {
@@ -74,18 +76,17 @@ func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err := live.ValidateCombatantDraft(novo); err != nil {
 		return nil, err
 	}
-	entrada := map[string]any{
-		"label":      strings.TrimSpace(novo.Label),
-		"initiative": novo.Initiative,
-		"type":       novo.Kind,
+	rolada := int64(novo.Initiative)
+	pedido := initiative.EntryRequest{
+		Label: strings.TrimSpace(novo.Label), Initiative: &rolada, Kind: novo.Kind,
 	}
 	// PV ZERO fica de fora em vez de virar 0/0: "sem vida registrada" é a
 	// ausência do campo, e uma barra 0/0 diria que o capanga já está morto.
 	if novo.HP > 0 {
-		entrada["hpCurrent"] = novo.HP
-		entrada["hpMax"] = novo.HP
+		pv := int64(novo.HP)
+		pedido.HpCurrent, pedido.HpMax = &pv, &pv
 	}
-	linha, err := st.deps.MaterializeEntry(c.R.Context(), c.User, c.CampaignID, entrada)
+	linha, err := st.queue.Roster().Entry(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, pedido)
 	if err != nil {
 		return nil, err
 	}
@@ -365,18 +366,18 @@ func restQuality(r *http.Request) (string, error) {
 // botão continua clicável em vez de apagar depois do primeiro uso: o mestre que
 // aceitou um jogador atrasado clica de novo e leva só o que faltava.
 //
-// QUEM é o grupo é do `playerCombatants` e não daqui: são TODOS os membros da
+// QUEM é o grupo é do `PartyCombatants` e não daqui: são TODOS os membros da
 // campanha, inclusive o PC que o mestre também joga. Uma segunda opinião sobre
 // quem é o grupo faria duas superfícies responderem diferente à mesma pergunta.
 func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	combatentes, err := st.playerCombatants(c.R.Context(), c.CampaignID)
+	combatentes, err := st.queue.Roster().PartyCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
 	}
 	// O erro vem JUNTO com o estado parcial de propósito: pôr quatro dos cinco e
 	// tropeçar no quinto deixa a mesa com quatro combatentes novos, e é esse o
 	// estado que as outras telas precisam receber.
-	estado, err := st.deps.PopulateParty(c.SessionID, combatentes)
+	estado, err := st.queue.PopulateParty(c.SessionID, combatentes)
 	if estado == nil {
 		estado = st.deps.Sessions().GetState(c.SessionID)
 	}

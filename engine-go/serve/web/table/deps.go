@@ -6,6 +6,7 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
 
@@ -68,8 +69,6 @@ type Deps interface {
 	// navegador esperando página.
 	SessionForCaller(ctx context.Context, userID, campaignID, sessionID int64) (sqlcgen.Session, string, int, error)
 
-	// SelfInitiativeEntry monta a linha de quem entra na fila com o próprio d20.
-	SelfInitiativeEntry(userID, campaignID, characterID, d20 int64) (live.InitiativeEntry, error)
 	// CloneCreatureBlock é o "chefe que ganha nome": o bloco é um MOLDE que duas
 	// linhas dividem, e clonar só importa quando o mestre vai EDITAR uma delas —
 	// sem a cópia, dar 30 PV ao chefe daria aos outros três zumbis também.
@@ -77,14 +76,6 @@ type Deps interface {
 	// É o BLOCO e não a ficha: clonar personagem exigiria matricular a cópia na
 	// campanha, e todo membro aparece no painel do Grupo.
 	CloneCreatureBlock(ctx context.Context, creatureID, campaignID int64, nome string) (int64, error)
-	// MaterializeEntry transforma o pedido de linha nova (ficha, NPC, verbete)
-	// na linha de fila que o store aceita.
-	MaterializeEntry(ctx context.Context, userID, campaignID int64, pedido map[string]any) (live.InitiativeEntry, error)
-	// PopulateParty põe na fila os combatentes que ainda não estão lá.
-	PopulateParty(sessionID int64, quem []Combatant) (*live.SessionRuntimeState, error)
-	// InitiativeBonus é o bônus de Iniciativa que a fila mostra, computado pelo
-	// motor — a conta é regra do livro, e ela tem um dono só.
-	InitiativeBonus(ctx context.Context, characterID int64) (int64, error)
 	// SpeedsForBoard é o deslocamento de cada peça, que a prévia do movimento lê.
 	SpeedsForBoard(board *board.BoardState) map[string]int
 
@@ -113,17 +104,6 @@ type Deps interface {
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
 }
 
-// Combatant é quem entra na fila, na forma que a CENA declara: o `combatant` do
-// hospedeiro não é exportado, e tipo não exportado não atravessa fronteira.
-type Combatant struct {
-	CharacterID int64
-	Name        string
-	HpCurrent   int64
-	HpMax       int64
-	MpCurrent   int64
-	MpMax       int64
-}
-
 // Scene é a cena montada, com as dependências dela e o estado que é DELA: as
 // lentes e as abas escolhidas. Elas vivem no servidor e não num sinal do
 // navegador porque o stream não pergunta nada a ninguém.
@@ -142,11 +122,16 @@ type Scene struct {
 	lifecycle session.Lifecycle
 	// party é o CASO DE USO do descanso do grupo, e chega igual: por parâmetro,
 	// porque o `app/` está abaixo desta cena.
-	party      rest.Party
+	party rest.Party
+	// queue é o CASO DE USO de quem entra na fila.
+	queue      initiative.Queue
 	lenses     *lenses
 	chosenTabs *chosenTabs
 }
 
-func New(d Deps, ciclo session.Lifecycle, grupo rest.Party) Scene {
-	return Scene{deps: d, lifecycle: ciclo, party: grupo, lenses: newLenses(), chosenTabs: newTabs()}
+func New(d Deps, ciclo session.Lifecycle, grupo rest.Party, fila initiative.Queue) Scene {
+	return Scene{
+		deps: d, lifecycle: ciclo, party: grupo, queue: fila,
+		lenses: newLenses(), chosenTabs: newTabs(),
+	}
 }

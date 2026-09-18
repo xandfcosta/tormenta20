@@ -11,7 +11,6 @@ import (
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 	"t20engine/serve/web/sheetui"
-	"t20engine/serve/web/table"
 )
 
 // A MESA, com adaptador próprio, e a maior porta do projeto.
@@ -83,12 +82,6 @@ func (h tableHost) PlaceDraftCampaign(
 
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
 
-func (h tableHost) SelfInitiativeEntry(
-	userID, campaignID, characterID, d20 int64,
-) (live.InitiativeEntry, error) {
-	return h.rules.selfInitiativeEntry(userID, campaignID, characterID, d20)
-}
-
 // CloneCreatureBlock copia o bloco e devolve o id da cópia.
 //
 // Uma leitura e uma escrita, sem transação: o bloco é uma linha só, e não há
@@ -115,28 +108,6 @@ func (h tableHost) CloneCreatureBlock(ctx context.Context, creatureID, campaignI
 		return 0, fmt.Errorf("copiar o bloco %d: %w", creatureID, err)
 	}
 	return copia.ID, nil
-}
-
-func (h tableHost) MaterializeEntry(
-	ctx context.Context, userID, campaignID int64, pedido map[string]any,
-) (live.InitiativeEntry, error) {
-	return h.rules.materializeEntry(ctx, userID, campaignID, pedido)
-}
-
-func (h tableHost) PopulateParty(sessionID int64, quem []table.Combatant) (*live.SessionRuntimeState, error) {
-	linhas := make([]combatant, 0, len(quem))
-	for _, c := range quem {
-		linhas = append(linhas, combatant{
-			characterID: c.CharacterID, name: c.Name,
-			hpCurrent: c.HpCurrent, hpMax: c.HpMax,
-			mpCurrent: c.MpCurrent, mpMax: c.MpMax,
-		})
-	}
-	return h.rules.populateParty(sessionID, linhas)
-}
-
-func (h tableHost) InitiativeBonus(ctx context.Context, characterID int64) (int64, error) {
-	return h.rules.initiativeBonus(ctx, characterID)
 }
 
 func (h tableHost) SpeedsForBoard(board *board.BoardState) map[string]int {

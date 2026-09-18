@@ -26,7 +26,7 @@ func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 // characterList é o elenco de quem chama, agregado.
 //
 // Transport-agnostic, e esta é a SEXTA vez que a migração encontra a mesma
-// forma — depois do `selfInitiativeEntry`, do `deleteAccount`, do trio da porta,
+// forma — depois da iniciativa própria, do `deleteAccount`, do trio da porta,
 // do `mintAccountInvite` e do `campaignList`. Seis é padrão, não anedota: uma
 // base com exatamente um transporte não tem por que separar regra de handler, e
 // o segundo transporte é o que cobra a conta (ALE-239).

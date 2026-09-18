@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
 	"t20engine/domain/board"
@@ -159,7 +160,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 // antes.
 func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
-	s.tableScene = table.New(s.tableHost(), s.sessionLifecycle(), s.restParty())
+	s.tableScene = table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue())
 }
 
 // sessionLifecycle é o caso de uso do ciclo, montado com o que o servidor tem.
@@ -167,6 +168,10 @@ func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 // O `*Server` o CONSTRÓI e não o cumpre: a camada de aplicação não é adaptador
 // de nada — ela existe abaixo daqui, e quem a usa (esta casa e a cena) a importa
 // direto.
+func (s *Server) initiativeQueue() initiative.Queue {
+	return initiative.NewQueue(s.queries, s.catalogs, s.sessions)
+}
+
 func (s *Server) restParty() rest.Party {
 	return rest.NewParty(s.queries, s.sessions)
 }

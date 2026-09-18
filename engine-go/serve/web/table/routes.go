@@ -408,7 +408,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 		// entram na história ou não — decisão por CENA, tomada na hora de pôr a
 		// linha na fila —, e NPC nem é membro da campanha: ele entra na
 		// iniciativa por `label` e `initiative`, sem `characterId` (ver
-		// `materializeEntry`). `campaign_members` só tem personagem de jogador, e
+		// `Roster.Entry`). `campaign_members` só tem personagem de jogador, e
 		// o grupo é o grupo.
 		grupo = append(grupo, Member{
 			CharacterID: m.Characterid,
@@ -424,7 +424,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 	if eu != nil {
 		// O bônus é do MOTOR, nunca do template: é a mesma `ComputeSheetV2` que
 		// a ficha inteira usa.
-		if bonus, err := s.deps.InitiativeBonus(ctx, eu.CharacterID); err == nil {
+		if bonus, err := s.queue.Roster().Bonus(ctx, eu.CharacterID); err == nil {
 			eu.Bonus = bonus
 		}
 	}

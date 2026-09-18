@@ -656,7 +656,7 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 
 // ── acrescentar combatente ───────────────────────────────────────────────────
 
-// O que se prende é a COMPOSIÇÃO: que a cena chama o `materializeEntry` e a
+// O que se prende é a COMPOSIÇÃO: que a cena chama o `Roster.Entry` e a
 // validação do `live`, em vez de montar a linha por conta própria. As duas
 // metades do PV são o ponto — digitado ele vira pool cheio, e ZERO fica de fora
 // em vez de virar 0/0, que é a diferença entre "capanga sem vida rastreada" e

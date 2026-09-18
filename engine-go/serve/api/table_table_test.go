@@ -93,7 +93,7 @@ func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
-	bonus, err := f.s.tableHost().InitiativeBonus(context.Background(), f.charID)
+	bonus, err := f.s.initiativeQueue().Roster().Bonus(context.Background(), f.charID)
 	if err != nil {
 		t.Fatalf("bônus: %v", err)
 	}

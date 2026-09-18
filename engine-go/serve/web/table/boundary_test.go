@@ -40,6 +40,8 @@ import (
 var permitidos = map[string]bool{
 	// O vocabulário do grupo: quem pede e as recusas tipadas.
 	"t20engine/app": true,
+	// O `app/initiative` é quem entra na fila, pela mesma razão.
+	"t20engine/app/initiative": true,
 	// O `app/rest` é o descanso e a expiração de escopo, pela mesma razão.
 	"t20engine/app/rest": true,
 	// O `app/session` NÃO é concessão, é a razão do guarda existir ficar menor

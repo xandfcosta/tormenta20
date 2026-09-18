@@ -92,9 +92,10 @@ CENA é construída".
 **No `serve/api`, o nome do arquivo diz o ADAPTADOR que o possui**, e o assunto
 vem depois do prefixo: `table_*` é do `tableRules`, `sheet_*` do `sheetRules`,
 `campaign_*` e `account_*` dos outros dois. **Um arquivo, um dono** — o
-`character.go` tinha TRÊS donos, e o arquivo dos membros tinha dois — hoje
-`table_combatants.go` e `campaign_members.go` —, e nenhum dos dois nomes dizia
-qual (ALE-330).
+`character.go` tinha TRÊS donos, e o arquivo dos membros tinha dois — ele foi
+repartido um por dono, e nenhum dos dois nomes dizia qual (ALE-330). A metade da
+mesa desceu para o `app/initiative` na ALE-344; a de campanha é o
+`campaign_members.go`.
 
 Quem cobra é o `TestEveryAdapterFileCarriesItsPrefix`: ele lê o RECEPTOR dos
 métodos e falha com o nome do arquivo e o do dono. Duas coisas que ele NÃO

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"net/http"
+	"t20engine/app"
+	"t20engine/app/initiative"
 	"t20engine/domain/book"
 	"t20engine/serve/web/master"
 	"t20engine/serve/web/ui"
@@ -169,10 +171,12 @@ func sendsForTable(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 
 	var estado *live.SessionRuntimeState
 	for i := 0; i < envio.Copias; i++ {
-		linha, err := st.deps.MaterializeEntry(c.R.Context(), c.User, c.CampaignID, map[string]any{
-			"label": m.Name, "initiative": envio.Iniciativa, "type": "npc",
-			"monsterId": m.ID, "hpCurrent": envio.PV, "hpMax": envio.PV,
-		})
+		iniciativa, pv := int64(envio.Iniciativa), int64(envio.PV)
+		linha, err := st.queue.Roster().Entry(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID,
+			initiative.EntryRequest{
+				Label: m.Name, Initiative: &iniciativa, Kind: "npc",
+				MonsterID: m.ID, HpCurrent: &pv, HpMax: &pv,
+			})
 		if err != nil {
 			return estado, err
 		}

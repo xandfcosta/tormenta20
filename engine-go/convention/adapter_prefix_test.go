@@ -34,8 +34,9 @@ import (
 //
 // Um arquivo com métodos de DOIS adaptadores reprova sem exceção possível, e
 // esse é o defeito que a issue veio consertar: `character.go` tinha três donos,
-// e o arquivo dos membros tinha dois — ele virou `table_combatants.go` e
-// `campaign_members.go` —, e o nome não dizia nenhum.
+// e o arquivo dos membros tinha dois — ele foi repartido, um por dono, e o nome
+// de cada metade passou a dizer qual. A metade da mesa desceu para o `app/` na
+// ALE-344 e deixou de existir aqui; a de campanha é o `campaign_members.go`.
 var adapterPrefixes = map[string]string{
 	"tableRules":    "table",
 	"sheetRules":    "sheet",

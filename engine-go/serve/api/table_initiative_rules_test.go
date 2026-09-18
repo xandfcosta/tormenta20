@@ -1,97 +1,16 @@
 package api
 
-import "t20engine/domain/live"
-
 import (
 	"context"
-	"strings"
+	"errors"
 	"t20engine/app"
 	"testing"
 
 	"t20engine/domain/engine"
+	"t20engine/domain/live"
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O patch que chega do socket é montado por uma LISTA de campos escrita à mão,
-// e uma lista assim envelhece: um campo novo que o cliente manda e o servidor
-// não lê é descartado em SILÊNCIO, com tudo compilando. Por isso o teste
-// percorre os campos em vez de conferir um.
-func TestParseEntryPatchLosesNoField(t *testing.T) {
-	patch := parseEntryPatch(map[string]any{
-		"label":       "Chefe bandido",
-		"initiative":  float64(17),
-		"characterId": float64(3),
-		"hpCurrent":   float64(20),
-		"hpMax":       float64(30),
-		"mpCurrent":   float64(5),
-		"mpMax":       float64(10),
-		"hpHidden":    true,
-		"creatureId":  float64(7),
-	})
-
-	faltando := []string{}
-	if patch.Label == nil {
-		faltando = append(faltando, "label")
-	}
-	if patch.Initiative == nil {
-		faltando = append(faltando, "initiative")
-	}
-	if patch.CharacterID == nil {
-		faltando = append(faltando, "characterId")
-	}
-	if patch.HpCurrent == nil || patch.HpMax == nil {
-		faltando = append(faltando, "hp")
-	}
-	if patch.MpCurrent == nil || patch.MpMax == nil {
-		faltando = append(faltando, "mp")
-	}
-	if patch.HpHidden == nil {
-		faltando = append(faltando, "hpHidden")
-	}
-	if patch.CreatureID == nil {
-		faltando = append(faltando, "creatureId")
-	}
-	if len(faltando) > 0 {
-		t.Fatalf("o parser descartou: %v", faltando)
-	}
-	if *patch.CreatureID != 7 {
-		t.Errorf("creatureId chegou como %d, queria 7", *patch.CreatureID)
-	}
-}
-
-// Condição em NPC. A lista vem do CATÁLOGO e não de uma cópia escrita aqui:
-// cópia desvia do livro, e a que faltava um id dava 400 para todo mundo.
-func TestParseConditionsFiltersByTheCatalog(t *testing.T) {
-	// O `enfeiticado` está no caso de propósito: ele era `enfeitiçado`, com
-	// cedilha, e a grafia irregular fazia toda cópia da lista errar NELE. Quem
-	// segura a forma hoje é o `catalog.TestNoCatalogIDIsAccented`.
-	list := parseConditions([]any{"caido", "inventada", "enfeiticado", "atordoado"})
-
-	if len(list) != 3 {
-		t.Fatalf("passaram %v, queria as três do livro", list)
-	}
-	for _, id := range list {
-		if id == "inventada" {
-			t.Fatalf("id fora do catálogo passou: %v", list)
-		}
-	}
-}
-
-// Id desconhecido derruba um item, não a aplicação inteira: no meio do combate
-// o mestre perderia as outras condições junto.
-func TestParseConditionsNeitherDuplicatesNorBreaks(t *testing.T) {
-	list := parseConditions([]any{"caido", "caido", 42, nil, ""})
-
-	if len(list) != 1 || list[0] != "caido" {
-		t.Fatalf("esperava só caido uma vez, veio %v", list)
-	}
-	if parseConditions(nil) == nil {
-		t.Fatal("lista ausente tem de virar vazia, não nil — o cliente itera sem checar")
-	}
-}
-
-// A condição é estado de COMBATE e mora na linha, como os PV atuais: o bloco de
-// criatura descreve o vilão, e ele não volta na semana seguinte ainda caído.
 func TestAConditionEntersAndLeavesTheEntry(t *testing.T) {
 	st := live.EmptyRuntimeState()
 	id := idCounter()
@@ -125,7 +44,7 @@ func TestAConditionEntersAndLeavesTheEntry(t *testing.T) {
 func TestThePlayerInitiativeIsSummedByTheServer(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
-	entry, err := f.srv.tableRules().selfInitiativeEntry(f.player, f.campaignID, f.charID, 13)
+	entry, err := f.srv.initiativeQueue().Roster().SelfEntry(context.Background(), app.Caller{ID: f.player}, f.campaignID, f.charID, 13)
 	if err != nil {
 		t.Fatalf("registrar: %v", err)
 	}
@@ -145,30 +64,33 @@ func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
 	for _, d20 := range []int64{0, -3, 21, 100} {
-		if _, err := f.srv.tableRules().selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err == nil {
+		if _, err := f.srv.initiativeQueue().Roster().SelfEntry(context.Background(), app.Caller{ID: f.player}, f.campaignID, f.charID, d20); err == nil {
 			t.Errorf("d20 %d passou", d20)
 		}
 	}
 	// E a fronteira dos dois lados vale: 1 e 20 são dados de verdade.
 	for _, d20 := range []int64{1, 20} {
-		if _, err := f.srv.tableRules().selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err != nil {
+		if _, err := f.srv.initiativeQueue().Roster().SelfEntry(context.Background(), app.Caller{ID: f.player}, f.campaignID, f.charID, d20); err != nil {
 			t.Errorf("d20 %d recusado: %v", d20, err)
 		}
 	}
 }
 
-// O "self" do `initiative-self` é o que separa este caminho dos outros, que são
-// todos do mestre: sem porta de papel, quem o guarda é o `resolveCombatant`, e
-// ele recusa quem não é dono do personagem.
+// O "self" deste caminho é o que o separa dos outros, que são todos do mestre:
+// sem porta de papel, quem o guarda é o `Roster.Combatant`, e ele recusa quem
+// não é dono do personagem.
+//
+// A asserção é sobre a RECUSA TIPADA e não sobre a frase: texto de erro é para
+// quem lê, e prendê-lo faz o teste quebrar quando alguém melhora a mensagem.
 func TestRecordingSomeoneElsesInitiativeIsRefused(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
-	_, err := f.srv.tableRules().selfInitiativeEntry(f.intruder, f.campaignID, f.charID, 10)
+	_, err := f.srv.initiativeQueue().Roster().SelfEntry(context.Background(), app.Caller{ID: f.intruder}, f.campaignID, f.charID, 10)
 
 	if err == nil {
 		t.Fatal("um jogador registrou a iniciativa do personagem de outro")
 	}
-	if !strings.Contains(err.Error(), "neither the GM") {
+	if !errors.Is(err, app.ErrForbidden) {
 		t.Errorf("recusou pelo motivo errado: %v", err)
 	}
 }

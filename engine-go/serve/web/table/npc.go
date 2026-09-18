@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"t20engine/app"
+	"t20engine/app/initiative"
 	"t20engine/domain/book"
 	"t20engine/serve/web/master"
 
@@ -146,10 +148,12 @@ func putNpcTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// `creatureId` liga a LINHA ao bloco guardado, e é o que faz o olho da fila
 	// abrir a ficha certa. É o mesmo campo que o `monsterId` do bestiário usa
 	// para apontar o verbete — um diz "veio do livro", o outro "é do elenco".
-	entrada, err := st.deps.MaterializeEntry(c.R.Context(), c.User, c.CampaignID, map[string]any{
-		"label": linha.Name, "initiative": bloco.Iniciativa, "type": "npc",
-		"hpCurrent": bloco.HP, "hpMax": bloco.HP, "creatureId": linha.ID,
-	})
+	iniciativa, pv, blocoID := int64(bloco.Iniciativa), int64(bloco.HP), linha.ID
+	entrada, err := st.queue.Roster().Entry(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID,
+		initiative.EntryRequest{
+			Label: linha.Name, Initiative: &iniciativa, Kind: "npc",
+			HpCurrent: &pv, HpMax: &pv, CreatureID: &blocoID,
+		})
 	if err != nil {
 		return st.deps.Sessions().GetState(c.SessionID), err
 	}

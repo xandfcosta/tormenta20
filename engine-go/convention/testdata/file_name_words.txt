@@ -92,7 +92,6 @@ collection
 color
 colors
 combat
-combatants
 commands
 compose
 conditions
@@ -277,6 +276,7 @@ name
 names
 nav
 new
+night
 notes
 notice
 notices
@@ -341,6 +341,7 @@ render
 reset
 resets
 respond
+rest
 role
 route
 router

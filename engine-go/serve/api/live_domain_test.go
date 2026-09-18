@@ -3,6 +3,9 @@ package api
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"t20engine/app"
+	"t20engine/app/initiative"
 	"t20engine/infra/config"
 	"t20engine/infra/db/dbvalue"
 	"testing"
@@ -179,34 +182,42 @@ func TestResolveCombatant(t *testing.T) {
 	seedMember(t, s, campaignID, pc)
 	loose := seedCharacter(t, s, player, "Solto", 5, 5, 0, 0) // not a member
 
-	t.Run("owner resolves with vitals", func(t *testing.T) {
-		got, status, err := s.tableRules().resolveCombatant(ctx, player, campaignID, pc)
-		if err != nil || status != 200 {
-			t.Fatalf("status=%d err=%v", status, err)
+	roster := s.initiativeQueue().Roster()
+
+	t.Run("o dono resolve, com os vitais", func(t *testing.T) {
+		got, err := roster.Combatant(ctx, app.Caller{ID: player}, campaignID, pc)
+		if err != nil {
+			t.Fatalf("o dono foi barrado: %v", err)
 		}
-		want := combatant{characterID: pc, name: "Herói", hpCurrent: 7, hpMax: 12, mpCurrent: 3, mpMax: 8}
+		want := initiative.Combatant{CharacterID: pc, Name: "Herói", HpCurrent: 7, HpMax: 12, MpCurrent: 3, MpMax: 8}
 		if got != want {
-			t.Errorf("got %+v, want %+v", got, want)
+			t.Errorf("veio %+v, queria %+v", got, want)
 		}
 	})
-	t.Run("gm resolves another player's pc", func(t *testing.T) {
-		if _, status, err := s.tableRules().resolveCombatant(ctx, gm, campaignID, pc); status != 200 || err != nil {
-			t.Errorf("gm should resolve: status=%d err=%v", status, err)
+	t.Run("o mestre resolve o personagem de outro jogador", func(t *testing.T) {
+		if _, err := roster.Combatant(ctx, app.Caller{ID: gm}, campaignID, pc); err != nil {
+			t.Errorf("o mestre foi barrado: %v", err)
 		}
 	})
-	t.Run("stranger forbidden", func(t *testing.T) {
-		if _, status, _ := s.tableRules().resolveCombatant(ctx, stranger, campaignID, pc); status != 403 {
-			t.Errorf("status=%d, want 403", status)
+	// As TRÊS recusas são distintas de propósito, e o transporte as traduz em
+	// números diferentes: quem não pertence à mesa não pode descobrir, pela
+	// diferença entre elas, quais personagens existem nela.
+	t.Run("estranho é recusado por não ser dele", func(t *testing.T) {
+		_, err := roster.Combatant(ctx, app.Caller{ID: stranger}, campaignID, pc)
+		if !errors.Is(err, app.ErrForbidden) {
+			t.Errorf("a recusa foi %v, e queria ErrForbidden", err)
 		}
 	})
-	t.Run("non-member character is bad request", func(t *testing.T) {
-		if _, status, _ := s.tableRules().resolveCombatant(ctx, player, campaignID, loose); status != 400 {
-			t.Errorf("status=%d, want 400", status)
+	t.Run("personagem que não é membro é recusado pela REGRA", func(t *testing.T) {
+		_, err := roster.Combatant(ctx, app.Caller{ID: player}, campaignID, loose)
+		if !errors.Is(err, app.ErrRefused) {
+			t.Errorf("a recusa foi %v, e queria ErrRefused", err)
 		}
 	})
-	t.Run("missing character 404", func(t *testing.T) {
-		if _, status, _ := s.tableRules().resolveCombatant(ctx, gm, campaignID, 999999); status != 404 {
-			t.Errorf("status=%d, want 404", status)
+	t.Run("personagem que não existe", func(t *testing.T) {
+		_, err := roster.Combatant(ctx, app.Caller{ID: gm}, campaignID, 999999)
+		if !errors.Is(err, app.ErrNotFound) {
+			t.Errorf("a recusa foi %v, e queria ErrNotFound", err)
 		}
 	})
 }

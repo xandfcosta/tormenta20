@@ -1,13 +1,13 @@
 package table
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
+	"t20engine/app/initiative"
 	"t20engine/domain/live"
 )
 
@@ -39,7 +39,7 @@ func putPlayerTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	if err != nil {
 		return nil, err
 	}
-	estado, err := st.deps.PopulateParty(c.SessionID, []Combatant{*escolhido})
+	estado, err := st.queue.PopulateParty(c.SessionID, []initiative.Combatant{*escolhido})
 	if estado == nil {
 		estado = st.deps.Sessions().GetState(c.SessionID)
 	}
@@ -54,12 +54,12 @@ func putPlayerTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 //
 // Ela é função própria porque agora tem dois chamadores, e porque uma trava
 // copiada é uma trava que diverge no dia em que alguém apertar só uma delas.
-func castMemberOf(st Scene, c commandCtx) (*Combatant, error) {
+func castMemberOf(st Scene, c commandCtx) (*initiative.Combatant, error) {
 	characterID, err := strconv.ParseInt(chi.URLParam(c.R, "characterId"), 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("personagem inválido: %q", chi.URLParam(c.R, "characterId"))
 	}
-	combatentes, err := st.playerCombatants(c.R.Context(), c.CampaignID)
+	combatentes, err := st.queue.Roster().PartyCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
 	}
@@ -103,32 +103,9 @@ func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeSta
 	}
 }
 
-// playerCombatants é todo personagem da campanha com os vitais vivos — o "pôr o
-// grupo na fila" de um clique do mestre.
-//
-// SEM filtro de papel, e isso é a regra e não um esquecimento: o mestre não tem
-// personagem próprio na maioria das mesas, os NPCs dele não são membros da
-// campanha, e a coluna `role` nunca teve outro valor além de `player` em
-// produção. Filtrar aqui esconderia da fila o bardo que o mestre também joga.
-func (s Scene) playerCombatants(ctx context.Context, campaignID int64) ([]Combatant, error) {
-	linhas, err := s.deps.Queries().ListMembers(ctx, campaignID)
-	if err != nil {
-		return nil, err
-	}
-	grupo := make([]Combatant, 0, len(linhas))
-	for _, m := range linhas {
-		grupo = append(grupo, Combatant{
-			CharacterID: m.Characterid, Name: m.Charname,
-			HpCurrent: m.Charhpcurrent, HpMax: m.Charhpmax,
-			MpCurrent: m.Charmpcurrent, MpMax: m.Charmpmax,
-		})
-	}
-	return grupo, nil
-}
-
 // combatantFor acha o combatente do personagem pedido. Nil é a resposta para
 // "não é jogador desta campanha", e quem chama decide o que fazer com isso.
-func combatantFor(combatentes []Combatant, characterID int64) *Combatant {
+func combatantFor(combatentes []initiative.Combatant, characterID int64) *initiative.Combatant {
 	for i := range combatentes {
 		if combatentes[i].CharacterID == characterID {
 			return &combatentes[i]
