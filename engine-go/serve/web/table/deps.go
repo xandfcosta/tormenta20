@@ -91,16 +91,9 @@ type Deps interface {
 	// PopulateParty põe os que faltam no mapa.
 	PlayerCombatants(ctx context.Context, campaignID int64) ([]Combatant, error)
 	PopulateParty(sessionID int64, quem []Combatant) (*live.SessionRuntimeState, error)
-	// InitiativeBonus e ComputedSheet são a ficha computada que a fila e o
-	// elenco mostram.
+	// InitiativeBonus é o bônus de Iniciativa que a fila mostra, computado pelo
+	// motor — a conta é regra do livro, e ela tem um dono só.
 	InitiativeBonus(ctx context.Context, characterID int64) (int64, error)
-	ComputedSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error)
-	// SaveFailed diz se a última gravação desta sessão falhou — tabuleiro ou
-	// fila, porque para quem mestra os dois são "a mesa".
-	//
-	// A cena PERGUNTA a cada quadro em vez de esperar um aviso: o problema vale
-	// enquanto durar, e quem abre a aba dez minutos depois merece vê-lo.
-	SaveFailed(sessionID int64) bool
 	// SpeedsForBoard é o deslocamento de cada peça, que a prévia do movimento lê.
 	SpeedsForBoard(board *board.BoardState) map[string]int
 

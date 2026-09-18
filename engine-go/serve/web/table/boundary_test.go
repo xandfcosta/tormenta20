@@ -44,6 +44,7 @@ var permitidos = map[string]bool{
 	"t20engine/domain/creature":   true, // o bloco de criatura que o NPC edita
 	"t20engine/infra/db/sqlcgen":  true, // as linhas do banco, pelo `Queries` da porta
 	"t20engine/domain/engine":     true, // a medição de área e a ficha computada
+	"t20engine/domain/sheet":      true, // o `LoadAndCompute` que dá a Defesa do Grupo
 	"t20engine/infra/events":      true, // o barramento, para o stream saber o que houve
 	"t20engine/domain/markdown":   true, // as notas do mestre, que saíram daqui na fatia 1
 	"t20engine/infra/db/dbvalue":  true,

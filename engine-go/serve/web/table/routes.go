@@ -3,6 +3,7 @@ package table
 import (
 	"context"
 	"t20engine/domain/markdown"
+	"t20engine/domain/sheet"
 	"t20engine/serve/web/sheetui"
 
 	"fmt"
@@ -354,10 +355,20 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	conectados := live.ConnectedCharacters(membros, presentes)
 	marcaAPresenca(view.Grupo, conectados)
 	if role == "gm" {
-		r := ofViewGm(st, membros, presentes, true, s.deps.SaveFailed(sessionID))
+		r := ofViewGm(st, membros, presentes, true, s.saveFailed(sessionID))
 		view.Mestre = &r
 	}
 	return view, http.StatusOK, nil
+}
+
+// saveFailed junta os DOIS stores numa pergunta só.
+//
+// Para quem está mestrando não existe "o tabuleiro não salvou" e "a fila não
+// salvou": existe "a mesa não está sendo salva". Separar daria à tela uma
+// decisão que ela não tem o que fazer com — os dois têm a mesma causa (o disco)
+// e o mesmo remédio (parar e chamar alguém).
+func (s Scene) saveFailed(sessionID int64) bool {
+	return s.deps.Boards().SaveFailed(sessionID) || s.deps.Sessions().SaveFailed(sessionID)
 }
 
 // tableRoster traduz o roster da campanha nas três coisas que a tela quer: os
@@ -465,7 +476,7 @@ func (s Scene) memberDefense(ctx context.Context, characterID int64) string {
 	if err != nil {
 		return "—"
 	}
-	ficha, err := s.deps.ComputedSheet(ctx, row)
+	ficha, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
 	if err != nil {
 		return "—"
 	}

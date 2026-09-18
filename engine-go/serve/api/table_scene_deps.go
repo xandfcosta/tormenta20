@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"t20engine/domain/board"
-	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -212,22 +211,8 @@ func (h tableHost) InitiativeBonus(ctx context.Context, characterID int64) (int6
 	return h.rules.initiativeBonus(ctx, characterID)
 }
 
-func (h tableHost) ComputedSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
-	return h.rules.sheet.ComputeSheet(ctx, row)
-}
-
 func (h tableHost) SpeedsForBoard(board *board.BoardState) map[string]int {
 	return h.rules.speedsForBoard(board)
-}
-
-// SaveFailed junta os DOIS stores numa pergunta só.
-//
-// Para quem está mestrando não existe "o tabuleiro não salvou" e "a fila não
-// salvou": existe "a mesa não está sendo salva". Separar daria à tela uma
-// decisão que ela não tem o que fazer com — os dois têm a mesma causa (o disco)
-// e o mesmo remédio (parar e chamar alguém).
-func (h tableHost) SaveFailed(sessionID int64) bool {
-	return h.rules.boards.SaveFailed(sessionID) || h.rules.sessions.SaveFailed(sessionID)
 }
 
 // ── PUBLICAR, que é do hospedeiro ────────────────────────────────────────────
