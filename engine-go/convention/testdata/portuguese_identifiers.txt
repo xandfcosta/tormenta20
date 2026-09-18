@@ -5,7 +5,6 @@
 #
 # Renomeou um? Tire a linha. Este arquivo é a dívida, não a permissão.
 abre
-abreOLivro
 aceitaAClasse
 aceitaAFamilia
 aceitaMelhoria
@@ -26,7 +25,6 @@ asChavesDe
 asDuasTelas
 asPaletasDaCasa
 asPortasParaASessao
-avisaSeNaoLinearizado
 BANCO
 bancoDeTeste
 BANCO_DO_E2E
@@ -92,10 +90,8 @@ deformidadeHeldPower
 deformidadeModifiers
 deformidadeSkillIDs
 deformidadeStored
-digitoDoLivro
 edicaoDosSinais
 editarCombatente
-ehLinearizado
 emDuasCasas
 entradaComPagina
 entradasComNome
@@ -143,8 +139,6 @@ ligaOsDisparos
 LIMITE_MINIMO
 listaDe
 listaDeIDs
-livroDeMentira
-livroServido
 lugarDaURL
 lugarDoAcervo
 marcaAPresenca
@@ -190,7 +184,6 @@ pedeNaCena
 pedeNaCenaComLivro
 pedeNaCronica
 pedeNoMestre
-pedeOLivro
 pedidaOuTodas
 pegaAVista
 periciaTotal
@@ -233,7 +226,6 @@ seedSessao
 semComentario
 semLivro
 semOsComentarios
-servidorComLivro
 sessao
 sessaoDoBanco
 sinalQueAbre

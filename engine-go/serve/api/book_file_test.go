@@ -25,30 +25,30 @@ import (
 // DADO, anterior a isto, e a mesma que a linha da lista já mostra ("p289"); o
 // botão só a torna visível.
 
-// livroDeMentira grava um arquivo com conteúdo conhecido e devolve o caminho.
+// fakeBookFile grava um arquivo com conteúdo conhecido e devolve o caminho.
 // O conteúdo importa em UM lugar só (a marca de linearizado); para a rota, o que
 // importa é que ele exista e tenha bytes contáveis.
-func servidorComLivro(t *testing.T, s *Server, conteudo string) *Server {
+func serverWithBook(t *testing.T, s *Server, content string) *Server {
 	t.Helper()
-	s.livro = abreOLivro(config.Config{BookPDF: livroDeMentira(t, conteudo), BookPageOffset: 6})
-	if s.livro.caminho == "" {
+	s.book = openServedBook(config.Config{BookPDF: fakeBookFile(t, content), BookPageOffset: 6})
+	if s.book.path == "" {
 		t.Fatal("o livro de mentira não foi aceito — o resto do guarda mediria a ausência")
 	}
 	return s
 }
 
-func livroDeMentira(t *testing.T, conteudo string) string {
+func fakeBookFile(t *testing.T, content string) string {
 	t.Helper()
-	caminho := filepath.Join(t.TempDir(), "livro.pdf")
-	if err := os.WriteFile(caminho, []byte(conteudo), 0o600); err != nil {
+	path := filepath.Join(t.TempDir(), "livro.pdf")
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatalf("gravar o livro de mentira: %v", err)
 	}
-	return caminho
+	return path
 }
 
 func TestAMissingBookDoesNotBringTheServerDown(t *testing.T) {
-	l := abreOLivro(config.Config{BookPDF: filepath.Join(t.TempDir(), "nao-existe.pdf")})
-	if l.caminho != "" || l.endereco.Base != "" {
+	l := openServedBook(config.Config{BookPDF: filepath.Join(t.TempDir(), "nao-existe.pdf")})
+	if l.path != "" || l.address.Base != "" {
 		t.Errorf("um caminho inexistente virou livro servido: %+v", l)
 	}
 }
@@ -58,10 +58,10 @@ func TestAMissingBookDoesNotBringTheServerDown(t *testing.T) {
 // A marca vive no PRIMEIRO objeto do arquivo por definição da especificação —
 // procurá-la no arquivo inteiro seria ler 89 MB no boot para responder um aviso.
 func TestLinearizationIsRecognizedAtTheStartOfTheFile(t *testing.T) {
-	if !ehLinearizado([]byte("%PDF-1.6\n1 0 obj\n<< /Linearized 1 /L 78622788 >>")) {
+	if !isLinearized([]byte("%PDF-1.6\n1 0 obj\n<< /Linearized 1 /L 78622788 >>")) {
 		t.Error("um PDF linearizado foi lido como não linearizado — o aviso sairia sempre")
 	}
-	if ehLinearizado([]byte("%PDF-1.6\n1 0 obj\n<< /Type /Catalog >>")) {
+	if isLinearized([]byte("%PDF-1.6\n1 0 obj\n<< /Type /Catalog >>")) {
 		t.Error("um PDF cru passou por linearizado — o aviso nunca sairia")
 	}
 }
@@ -73,10 +73,10 @@ func TestLinearizationIsRecognizedAtTheStartOfTheFile(t *testing.T) {
 // pedido INTEIRO logo abaixo: ele prova que a rota serve e que o 206 do outro
 // caso é recorte e não erro.
 func TestTheBookRouteServesRanges(t *testing.T) {
-	s := servidorComLivro(t, newTestServer(t), "0123456789abcdef")
+	s := serverWithBook(t, newTestServer(t), "0123456789abcdef")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	inteiro := pedeOLivro(t, s, eu, "")
+	inteiro := askForTheBook(t, s, eu, "")
 	if inteiro.Code != http.StatusOK || inteiro.Body.String() != "0123456789abcdef" {
 		t.Fatalf("o livro inteiro deu %d com %q", inteiro.Code, inteiro.Body.String())
 	}
@@ -84,12 +84,12 @@ func TestTheBookRouteServesRanges(t *testing.T) {
 		t.Error("a rota não anuncia faixas — o visualizador baixa o arquivo todo")
 	}
 
-	faixa := pedeOLivro(t, s, eu, "bytes=0-3")
-	if faixa.Code != http.StatusPartialContent {
-		t.Fatalf("um pedido de faixa deu %d, e não 206", faixa.Code)
+	httpRange := askForTheBook(t, s, eu, "bytes=0-3")
+	if httpRange.Code != http.StatusPartialContent {
+		t.Fatalf("um pedido de faixa deu %d, e não 206", httpRange.Code)
 	}
-	if faixa.Body.String() != "0123" {
-		t.Errorf("a faixa trouxe %q — o servidor mandou o arquivo inteiro", faixa.Body.String())
+	if httpRange.Body.String() != "0123" {
+		t.Errorf("a faixa trouxe %q — o servidor mandou o arquivo inteiro", httpRange.Body.String())
 	}
 }
 
@@ -99,10 +99,10 @@ func TestTheBookRouteServesRanges(t *testing.T) {
 // entrou e reentregá-la a quem não entrou. A folha e as fontes são `public` de
 // propósito — elas saem sem sessão.
 func TestTheBookLeavesWithAPrivateCache(t *testing.T) {
-	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeOLivro(t, s, eu, "")
+	rec := askForTheBook(t, s, eu, "")
 	cache := rec.Header().Get("Cache-Control")
 	if !strings.Contains(cache, "private") || !strings.Contains(cache, "immutable") {
 		t.Errorf("o livro versionado saiu com Cache-Control %q", cache)
@@ -111,9 +111,9 @@ func TestTheBookLeavesWithAPrivateCache(t *testing.T) {
 
 // A rota está atrás da mesma porta do resto.
 func TestTheBookDoesNotLeaveWithoutASession(t *testing.T) {
-	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 
-	req := httptest.NewRequest(http.MethodGet, "/livro?v="+s.livro.digito, nil)
+	req := httptest.NewRequest(http.MethodGet, "/livro?v="+s.book.digest, nil)
 	rec := httptest.NewRecorder()
 	s.WebRouter().ServeHTTP(rec, req)
 	if rec.Code == http.StatusOK {
@@ -126,12 +126,12 @@ func TestWithoutConfigurationTheBookRouteGives404(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	if rec := pedeOLivro(t, s, eu, ""); rec.Code != http.StatusNotFound {
+	if rec := askForTheBook(t, s, eu, ""); rec.Code != http.StatusNotFound {
 		t.Errorf("sem LIVRO_PDF a rota deu %d, e não 404", rec.Code)
 	}
 }
 
-func pedeOLivro(t *testing.T, s *Server, userID int64, faixa string) *httptest.ResponseRecorder {
+func askForTheBook(t *testing.T, s *Server, userID int64, httpRange string) *httptest.ResponseRecorder {
 	t.Helper()
 	u, err := s.queries.GetUserByID(t.Context(), userID)
 	if err != nil {
@@ -141,10 +141,10 @@ func pedeOLivro(t *testing.T, s *Server, userID int64, faixa string) *httptest.R
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}
-	req := httptest.NewRequest(http.MethodGet, "/livro?v="+s.livro.digito, nil)
+	req := httptest.NewRequest(http.MethodGet, "/livro?v="+s.book.digest, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
-	if faixa != "" {
-		req.Header.Set("Range", faixa)
+	if httpRange != "" {
+		req.Header.Set("Range", httpRange)
 	}
 	rec := httptest.NewRecorder()
 	s.WebRouter().ServeHTTP(rec, req)
@@ -162,7 +162,7 @@ func pedeOLivro(t *testing.T, s *Server, userID int64, faixa string) *httptest.R
 // `#page=` nenhum, então este guarda mede presença contra ausência e não contra
 // uma string que estaria lá de qualquer jeito.
 func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
-	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario?criatura=lobo", "").Body.String()
@@ -177,13 +177,13 @@ func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
 		t.Error("a ficha do Lobo não abre o leitor na página dele")
 	}
 
-	semLivro := newTestServer(t)
-	outro := seedUser(t, semLivro, "mestre@t20.local")
-	sem := pedeNoMestre(t, semLivro, outro, "GET", "/mestre/bestiario?criatura=lobo", "").Body.String()
-	if strings.Contains(sem, "/livro/ler") {
+	withoutBook := newTestServer(t)
+	outro := seedUser(t, withoutBook, "mestre@t20.local")
+	without := pedeNoMestre(t, withoutBook, outro, "GET", "/mestre/bestiario?criatura=lobo", "").Body.String()
+	if strings.Contains(without, "/livro/ler") {
 		t.Error("sem LIVRO_PDF a cena desenhou um link para um livro que não é servido")
 	}
-	if !strings.Contains(sem, "p289") {
+	if !strings.Contains(without, "p289") {
 		t.Error("sem livro a página impressa devia continuar escrita na ficha")
 	}
 }
@@ -197,7 +197,7 @@ func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
 // silêncio: sem `data-abertura` ele abre seis páginas antes, sem `data-worker` o
 // pdf.js cai no modo sem worker e trava a aba.
 func TestTheBookReaderLoadsWhatTheSceneNeeds(t *testing.T) {
-	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	corpo := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290&t=Lobo", "").Body.String()
@@ -233,7 +233,7 @@ func TestWithoutABookThereIsNoReader(t *testing.T) {
 
 // O endereço é compartilhável e se digita à mão.
 func TestTheReaderPageRefusesGarbage(t *testing.T) {
-	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	for _, alvo := range []string{"/livro/ler?p=abacaxi", "/livro/ler?p=-3", "/livro/ler"} {

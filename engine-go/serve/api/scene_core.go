@@ -26,7 +26,7 @@ import (
 type sceneCore struct {
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs
-	livro    bookui.BookAddress
+	book     bookui.BookAddress
 }
 
 // Queries é a concessão mais larga da casa, e o que a mantém honesta é o que
@@ -38,10 +38,10 @@ func (c sceneCore) Queries() *sqlcgen.Queries { return c.queries }
 func (c sceneCore) Catalogs() *engine.Catalogs { return c.catalogs }
 
 // BookAddress é onde o PDF do livro atende, quando `LIVRO_PDF` aponta para um.
-func (c sceneCore) BookAddress() bookui.BookAddress { return c.livro }
+func (c sceneCore) BookAddress() bookui.BookAddress { return c.book }
 
 // Asset monta o endereço versionado de um estático.
-func (c sceneCore) Asset(arquivo string) string { return assets.URL(arquivo) }
+func (c sceneCore) Asset(file string) string { return assets.URL(file) }
 
 // CurrentUserID lê quem está pedindo do contexto que o `requirePage` escreveu.
 //

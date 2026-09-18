@@ -34,11 +34,11 @@ import (
 // componentes de lá, e ficar aqui obrigaria o pacote de apresentação do livro a
 // importar a cena que serve o PDF.
 
-// livroServido é o que o servidor guarda: onde o arquivo está e como falar dele.
-type livroServido struct {
-	caminho  string
-	digito   string
-	endereco bookui.BookAddress
+// servedBook é o que o servidor guarda: onde o arquivo está e como falar dele.
+type servedBook struct {
+	path    string
+	digest  string
+	address bookui.BookAddress
 }
 
 // O endereço do leitor mora em `web/routes` porque o `bookui` o cita para montar
@@ -50,46 +50,46 @@ type livroServido struct {
 // um arquivo do disco do dono da mesa. Uma cena que recebesse a `Config` para
 // saber onde o PDF está teria o hospedeiro dentro dela.
 
-// abreOLivro lê a configuração UMA vez, no boot.
+// openServedBook lê a configuração UMA vez, no boot.
 //
 // Ausência de arquivo é degradação normal e não queda: a mesa inteira funciona
 // sem o livro, e derrubar o servidor por causa de um botão seria trocar um
 // problema pequeno por um grande. O aviso vai para o log com o caminho que
 // falhou, porque configurar e não ver o botão é o sintoma sem explicação.
-func abreOLivro(cfg config.Config) livroServido {
+func openServedBook(cfg config.Config) servedBook {
 	if cfg.BookPDF == "" {
-		return livroServido{}
+		return servedBook{}
 	}
 	info, err := os.Stat(cfg.BookPDF)
 	if err != nil || info.IsDir() {
 		log.Printf("livro: %s não serve como PDF (%v) — o botão de abrir no livro não vai aparecer", cfg.BookPDF, err)
-		return livroServido{}
+		return servedBook{}
 	}
-	avisaSeNaoLinearizado(cfg.BookPDF)
-	digito := digitoDoLivro(info)
-	return livroServido{
-		caminho: cfg.BookPDF,
-		digito:  digito,
-		endereco: bookui.BookAddress{
-			Base:     routes.Book + "?v=" + digito,
+	warnIfNotLinearized(cfg.BookPDF)
+	digest := bookFileDigest(info)
+	return servedBook{
+		path:   cfg.BookPDF,
+		digest: digest,
+		address: bookui.BookAddress{
+			Base:     routes.Book + "?v=" + digest,
 			Abertura: cfg.BookPageOffset,
 		},
 	}
 }
 
-// digitoDoLivro versiona o endereço a partir do TAMANHO e da data do arquivo,
+// bookFileDigest versiona o endereço a partir do TAMANHO e da data do arquivo,
 // e não do conteúdo.
 //
 // A diferença é medida: somar os 89 MB custa uma leitura do arquivo inteiro em
 // todo boot, para invalidar um cache que só muda quando alguém TROCA o arquivo
 // — e trocar um arquivo muda o tamanho ou a data. É o mesmo par que qualquer
 // servidor de arquivos usa para cunhar `ETag`.
-func digitoDoLivro(info os.FileInfo) string {
-	soma := sha256.Sum256(fmt.Appendf(nil, "%d-%d", info.Size(), info.ModTime().UnixNano()))
-	return hex.EncodeToString(soma[:])[:12]
+func bookFileDigest(info os.FileInfo) string {
+	sum := sha256.Sum256(fmt.Appendf(nil, "%d-%d", info.Size(), info.ModTime().UnixNano()))
+	return hex.EncodeToString(sum[:])[:12]
 }
 
-// avisaSeNaoLinearizado diz, no boot, que o arquivo configurado não passou pelo
+// warnIfNotLinearized diz, no boot, que o arquivo configurado não passou pelo
 // `qpdf --linearize`.
 //
 // MEDIDO, e o número desmente a suposição óbvia: a linearização NÃO faz o
@@ -105,25 +105,25 @@ func digitoDoLivro(info os.FileInfo) string {
 // Aviso e não conserto: linearizar aqui obrigaria o servidor a depender do
 // `qpdf` instalado e a gravar um segundo arquivo de 78 MB no boot. O que o
 // servidor pode fazer barato é NOMEAR o comando.
-func avisaSeNaoLinearizado(caminho string) {
-	f, err := os.Open(caminho)
+func warnIfNotLinearized(path string) {
+	f, err := os.Open(path)
 	if err != nil {
 		return
 	}
 	defer func() { _ = f.Close() }()
 	// O dicionário de linearização é o PRIMEIRO objeto do arquivo, por
 	// definição: se ele não está no começo, ele não existe.
-	cabeca := make([]byte, 2048)
-	n, _ := io.ReadFull(f, cabeca)
-	if ehLinearizado(cabeca[:n]) {
+	head := make([]byte, 2048)
+	n, _ := io.ReadFull(f, head)
+	if isLinearized(head[:n]) {
 		return
 	}
-	log.Printf("livro: %s não está linearizado — medido, o navegador transfere o arquivo inteiro para abrir uma página, e o qpdf ainda o encolhe 12%%. Conserto: qpdf --linearize %s %s", caminho, caminho, caminho+".linear")
+	log.Printf("livro: %s não está linearizado — medido, o navegador transfere o arquivo inteiro para abrir uma página, e o qpdf ainda o encolhe 12%%. Conserto: qpdf --linearize %s %s", path, path, path+".linear")
 }
 
-// ehLinearizado procura a marca do PDF linearizado no começo do arquivo.
-func ehLinearizado(cabeca []byte) bool {
-	return strings.Contains(string(cabeca), "/Linearized")
+// isLinearized procura a marca do PDF linearizado no começo do arquivo.
+func isLinearized(head []byte) bool {
+	return strings.Contains(string(head), "/Linearized")
 }
 
 // BookFileHandler serve o PDF configurado, com faixas: o `http.ServeFile`
@@ -138,11 +138,11 @@ func (s *Server) BookFileHandler() http.Handler {
 	// `strings.Contains(ifNoneMatch, "")` responder verdadeiro, e a rota
 	// devolvia 304 para todo mundo em vez de 404. Visto no
 	// `TestWithoutConfigurationTheBookRouteGives404`, que nasceu vermelho por isso.
-	if s.livro.caminho == "" {
+	if s.book.path == "" {
 		return http.NotFoundHandler()
 	}
-	return httpio.WithVersionedCache(s.livro.digito, "private", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, s.livro.caminho)
+	return httpio.WithVersionedCache(s.book.digest, "private", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, s.book.path)
 	}))
 }
 
@@ -150,6 +150,6 @@ func (s *Server) BookFileHandler() http.Handler {
 //
 // Invólucro fino de um campo, e é assim que o `api` cumpre toda porta de cena:
 // quem escolhe o que atravessa a fronteira é o CONSUMIDOR, e o hospedeiro se
-// dobra ao que ele pediu. A cena não recebe a `Config` nem o `livroServido` —
+// dobra ao que ele pediu. A cena não recebe a `Config` nem o `servedBook` —
 // ela recebe o endereço pronto, que é a única coisa que os componentes do livro
 // precisam saber.

@@ -172,7 +172,7 @@ func TestAnEntryAddressShowsOnlyThatEntry(t *testing.T) {
 
 // A caixa do verbete traz o cartão INTEIRO — é o remendo que o elo pede.
 func TestTheEntryBoxCarriesTheWholeCard(t *testing.T) {
-	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	corpo := pedeNoMestre(t, s, eu, "GET", "/verbete?aba=efeitos&entrada=medo", "").Body.String()
@@ -272,7 +272,7 @@ func TestALooseNumberDoesNotBecomeAPage(t *testing.T) {
 
 // Os aprimoramentos abrem na caixa, em vez de serem uma contagem ilegível.
 func TestAugmentsOpenInTheBox(t *testing.T) {
-	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	scene := pedeNoMestre(t, s, eu, "GET", "/mestre/magias?entrada=bola-de-fogo", "").Body.String()
