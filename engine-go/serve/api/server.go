@@ -32,8 +32,8 @@ type Server struct {
 	sse      *live.SSEHub           // os leitores SSE por sessão e papel
 	// bus é o barramento: o que acontece numa mesa vira notícia tipada, e quem
 	// desenha cena escuta.
-	bus   *events.Bus
-	livro livroServido // o PDF do livro, quando `LIVRO_PDF` aponta para um
+	bus  *events.Bus
+	book servedBook // o PDF do book, quando `LIVRO_PDF` aponta para um
 	// tableScene é a cena da Mesa, montada UMA vez — ver o construtor.
 	tableScene table.Scene
 	// charMu serializa as escritas por personagem (id → *sync.Mutex), para
@@ -137,7 +137,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
-		livro:    abreOLivro(cfg),
+		book:     openServedBook(cfg),
 		sessions: live.NewSessionStore(q, live.NewUUID, sheetVitals{q: q}, bus),
 		boards:   board.NewBoardStore(q, live.NewUUID, bus),
 		bus:      bus,
@@ -164,7 +164,7 @@ func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 // copiados, e um campo daria ao `*Server` mais uma coisa para manter
 // consistente com ele mesmo.
 func (s *Server) sceneCore() sceneCore {
-	return sceneCore{queries: s.queries, catalogs: s.catalogs, livro: s.livro.endereco}
+	return sceneCore{queries: s.queries, catalogs: s.catalogs, book: s.book.address}
 }
 
 // Router é o que sobrou da API JSON, e nenhuma cena a chama — as cenas leem o
