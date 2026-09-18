@@ -19,11 +19,11 @@ import (
 // `characterId` — desligado da ficha, sem PV de verdade e fora do descanso.
 
 func (s Scene) CastRoutes(r chi.Router) {
-	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/elenco/{characterId}/na-fila",
+	r.Post(sessionPattern+"/elenco/{characterId}/na-fila",
 		s.gmCommand(putPlayerTracker))
-	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/elenco/{characterId}/vitais/{pool}/ferir/{step}",
+	r.Post(sessionPattern+"/elenco/{characterId}/vitais/{pool}/ferir/{step}",
 		s.gmCommand(moveCastVitals(-1)))
-	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/elenco/{characterId}/vitais/{pool}/curar/{step}",
+	r.Post(sessionPattern+"/elenco/{characterId}/vitais/{pool}/curar/{step}",
 		s.gmCommand(moveCastVitals(+1)))
 }
 

@@ -43,7 +43,7 @@ import (
 // inteira. O único que grava é o `saveDraft`.
 
 func (s Scene) RoutesEditorNpc(r chi.Router) {
-	base := "/campanhas/{campaignId}/sessoes/{sessionId}/elenco/npc"
+	base := sessionPattern + "/elenco/npc"
 	r.Post(base+"/{npcId}/editar", s.openDraft)
 	r.Post(base+"/novo", s.openDraft)
 	r.Post(base+"/rascunho/{lista}/nova", s.moveList(addList))

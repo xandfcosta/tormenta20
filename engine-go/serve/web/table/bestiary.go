@@ -38,9 +38,9 @@ func tableBestiaryRoute(campaignID, sessionID int64) string {
 }
 
 func (s Scene) TableBestiaryRoutes(r chi.Router) {
-	r.Get("/campanhas/{campaignId}/sessoes/{sessionId}/bestiario", s.handleBestiaryTable)
-	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/bestiario/tipo/{tipo}", s.handleKindBestiaryTable)
-	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/bestiario/enviar", s.gmCommand(sendsForTable))
+	r.Get(sessionPattern+"/bestiario", s.handleBestiaryTable)
+	r.Post(sessionPattern+"/bestiario/tipo/{tipo}", s.handleKindBestiaryTable)
+	r.Post(sessionPattern+"/bestiario/enviar", s.gmCommand(sendsForTable))
 }
 
 // forTableBestiary monta a view do painel para esta mesa.

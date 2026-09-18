@@ -36,7 +36,7 @@ import (
 // Criar do zero é a exceção, e é o mesmo formulário com a semente em branco.
 
 func (s Scene) RoutesNpc(r chi.Router) {
-	base := "/campanhas/{campaignId}/sessoes/{sessionId}/elenco/npc"
+	base := sessionPattern + "/elenco/npc"
 	r.Post(base+"/do-verbete", s.gmCommand(saveEntryCast))
 	r.Post(base+"/{npcId}/na-fila", s.gmCommand(putNpcTracker))
 	r.Post(base+"/{npcId}/apagar", s.gmCommand(eraseNpc))

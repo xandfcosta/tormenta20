@@ -20,7 +20,7 @@ import (
 // na mão — o botão escondido é cortesia para quem não pode, nunca a segurança.
 
 func (s Scene) RoutesNote(r chi.Router) {
-	base := "/campanhas/{campaignId}/sessoes/{sessionId}/notas"
+	base := sessionPattern + "/notas"
 	// O MESMO endereço serve a CENA e o comando. Não é economia de rota: a
 	// janela própria existe para o mestre pôr as notas no segundo monitor, e um
 	// endereço que ele possa favoritar é metade do que isso significa.

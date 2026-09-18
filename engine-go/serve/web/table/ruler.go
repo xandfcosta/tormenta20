@@ -30,7 +30,7 @@ import (
 // duas é recalculada na tela.
 
 func (s Scene) RulerRoutes(r chi.Router) {
-	base := "/campanhas/{campaignId}/sessoes/{sessionId}/tabuleiro"
+	base := sessionPattern + "/tabuleiro"
 	r.Post(base+"/regua", s.handleRulerTable)
 	r.Post(base+"/gabarito", s.handleTemplateTable)
 }

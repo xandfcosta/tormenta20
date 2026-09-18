@@ -32,64 +32,51 @@ import (
 // são dois problemas. O estrago é maior que o das tags: uma rota capitalizada
 // vira 404, e o 404 chega à tela como funcionalidade que sumiu — inclusive em
 // rotas que ninguém exercita no dia a dia, como redefinir senha.
+//
+// # Ele pergunta ao ROTEADOR, e a troca não foi de estilo (ALE-345)
+//
+// Aqui morava um regex sobre a fonte: `r.Post("(/…)"`. Ele só enxergava o
+// registro cujo caminho é um literal COLADO no parêntese — e a forma dominante
+// da cena da sessão é `base := …` seguido de `r.Post(base+"/iniciar", …)`, que
+// nunca casou. O guarda media 98 rotas de 242, e as que faltavam eram
+// exatamente as de um pacote só.
+//
+// O `chi.Walk` devolve o padrão RESOLVIDO: o `base` juntado, o `r.Route` pai
+// concatenado com o filho, a constante expandida. É o mesmo caminho do
+// `TestNoRouteCarriesACoordinateInThePath`, e é o que faz o piso abaixo poder
+// ser o número de rotas do processo em vez de um chute.
 func TestAWireRouteStartsLowercase(t *testing.T) {
-	rota := regexp.MustCompile(`r\.(?:Get|Post|Put|Patch|Delete|Route)\("(/[^"]*)"`)
+	rotas := walkTheRouter(t, newTestServer(t))
 
-	// ELE TAMBÉM CAMINHA A ÁRVORE, e pela razão que o irmão de baixo já tinha
-	// pago: varrer só o `api` deixou de alcançar as rotas quando elas passaram a
-	// morar nos `web/*/routes.go`.
-	var arquivos []string
-	{
-		raiz, err := os.Getwd()
-		if err != nil {
-			t.Fatalf("achar a raiz: %v", err)
+	for rota := range rotas {
+		// O método vem colado no padrão (`"POST /campanhas/…"`), e ele é
+		// MAIÚSCULO por definição — o que se mede é o caminho.
+		caminho := rota
+		if espaco := strings.IndexByte(rota, ' '); espaco >= 0 {
+			caminho = rota[espaco+1:]
 		}
-		if err := filepath.WalkDir(filepath.Dir(filepath.Dir(raiz)), func(caminho string, d fs.DirEntry, err error) error {
-			if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") {
-				return err
+		for _, pedaco := range strings.Split(strings.Trim(caminho, "/"), "/") {
+			// `{id}` é parâmetro e segue o nome do campo, não a rota; `*` é o
+			// curinga do chi.
+			if pedaco == "" || pedaco == "*" || strings.HasPrefix(pedaco, "{") {
+				continue
 			}
-			arquivos = append(arquivos, caminho)
-			return nil
-		}); err != nil {
-			t.Fatalf("caminhar a árvore: %v", err)
-		}
-	}
-
-	visitadas := 0
-	for _, nome := range arquivos {
-		bruto, err := os.ReadFile(nome)
-		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
-		}
-		for linha, texto := range strings.Split(string(bruto), "\n") {
-			if corte := strings.Index(texto, "//"); corte >= 0 {
-				texto = texto[:corte]
-			}
-			for _, m := range rota.FindAllStringSubmatch(texto, -1) {
-				caminho := m[1]
-				visitadas++
-				for _, pedaco := range strings.Split(strings.Trim(caminho, "/"), "/") {
-					// `{id}` é parâmetro e segue o nome do campo, não a rota.
-					if pedaco == "" || strings.HasPrefix(pedaco, "{") {
-						continue
-					}
-					// Qualquer maiúscula, e não só a primeira: em
-					// `password-Reset` o segmento COMEÇA minúsculo e a
-					// capitalização caiu depois do hífen. Um guarda que olhasse
-					// só a inicial passaria verde sobre ele.
-					if strings.ContainsAny(pedaco, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-						t.Errorf("%s:%d: a rota %q tem segmento em MAIÚSCULA (%q).\n"+
-							"O cliente chama a grafia minúscula; capitalizar vira 404, e o\n"+
-							"404 chega à tela como funcionalidade que sumiu.",
-							nome, linha+1, caminho, pedaco)
-					}
-				}
+			// Qualquer maiúscula, e não só a primeira: em `password-Reset` o
+			// segmento COMEÇA minúsculo e a capitalização caiu depois do hífen.
+			// Um guarda que olhasse só a inicial passaria verde sobre ele.
+			if strings.ContainsAny(pedaco, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+				t.Errorf("a rota %q tem segmento em MAIÚSCULA (%q).\n"+
+					"O cliente chama a grafia minúscula; capitalizar vira 404, e o\n"+
+					"404 chega à tela como funcionalidade que sumiu.",
+					caminho, pedaco)
 			}
 		}
 	}
 
-	if visitadas < 100 {
-		t.Fatalf("guarda cego: só %d rotas reconhecidas — o padrão parou de casar", visitadas)
+	// O DENOMINADOR é EXATO porque vem do roteador, e o piso denuncia um
+	// roteador que deixou de montar — que é como este guarda ficaria inerte.
+	if len(rotas) < 150 {
+		t.Fatalf("guarda cego: só %d rotas no roteador", len(rotas))
 	}
 }
 

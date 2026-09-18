@@ -24,13 +24,12 @@ import (
 // cena de campanhas.
 
 func (s Scene) RoutesSession(r chi.Router) {
-	base := "/campanhas/{campaignId}/sessoes/{sessionId}"
-	r.Post(base+"/iniciar", s.gmCommand(iniciaAPartida))
-	r.Post(base+"/encerrar", s.gmCommand(encerraAPartida))
-	r.Post(base+"/titulo", s.gmCommand(renameStart))
-	r.Post(base+"/reiniciar", s.gmCommand(reiniciaAFila))
+	r.Post(sessionPattern+"/iniciar", s.gmCommand(iniciaAPartida))
+	r.Post(sessionPattern+"/encerrar", s.gmCommand(encerraAPartida))
+	r.Post(sessionPattern+"/titulo", s.gmCommand(renameStart))
+	r.Post(sessionPattern+"/reiniciar", s.gmCommand(reiniciaAFila))
 	// O `form` de excluir, fora do fluxo de comandos: ele navega.
-	r.Post(base+"/excluir", s.excluiAPartida)
+	r.Post(sessionPattern+"/excluir", s.excluiAPartida)
 }
 
 // commandSession relê a linha, que é onde o ciclo mora.

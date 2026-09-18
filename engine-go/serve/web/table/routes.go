@@ -26,10 +26,18 @@ import (
 // O `requirePage` NÃO está aqui: quem decide que esta cena exige sessão é o
 // hospedeiro, no grupo em que ela é montada. Uma cena que se autoprotegesse
 // daria a impressão de que a fronteira é dela.
+// sessionPattern é o padrão que o chi casa para esta cena — o endereço da
+// sessão, com os dois parâmetros nomeados.
+//
+// Escrito UMA vez e não em cada `Routes*`: a ALE-345 trocou este prefixo em 35
+// registros, e a única razão de terem sido 35 é ele estar copiado. O endereço
+// RESOLVIDO (com os ids) é outra coisa e mora no `routes.Session`.
+const sessionPattern = "/campanhas/{campaignId}/sessoes/{sessionId}"
+
 func Routes(r chi.Router, s Scene) {
-	r.Get("/campanhas/{campaignId}/sessoes/{sessionId}", s.handleTablePage)
-	r.Get("/campanhas/{campaignId}/sessoes/{sessionId}/fluxo", s.handleTableStream)
-	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/iniciativa", s.handleTableInitiative)
+	r.Get(sessionPattern, s.handleTablePage)
+	r.Get(sessionPattern+"/fluxo", s.handleTableStream)
+	r.Post(sessionPattern+"/iniciativa", s.handleTableInitiative)
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
 	s.MoveRoutes(r)

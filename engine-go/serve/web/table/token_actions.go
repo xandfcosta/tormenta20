@@ -21,7 +21,7 @@ import (
 // lembrar.
 
 func (s Scene) TokenActionRoutes(r chi.Router) {
-	base := "/campanhas/{campaignId}/sessoes/{sessionId}/tabuleiro/pecas/{tokenId}"
+	base := sessionPattern + "/tabuleiro/pecas/{tokenId}"
 	r.Post(base+"/visibilidade", s.gmBoardCommand(toggleVisibility))
 	// TRÊS rotas de duplicar e não uma com parâmetro, porque são três VERBOS na
 	// tela e o endereço é o que o menu escreve. O que muda entre elas é só o
@@ -35,7 +35,7 @@ func (s Scene) TokenActionRoutes(r chi.Router) {
 	// clicou, não o caminho. O que vem no caminho é o QUADRADO, que é a única
 	// coisa que o cliente sabe e o servidor não — ele não conhece o zoom nem
 	// onde cada pessoa está olhando.
-	r.Post("/campanhas/{campaignId}/sessoes/{sessionId}/tabuleiro/colar", s.gmBoardCommand(pastesToken))
+	r.Post(sessionPattern+"/tabuleiro/colar", s.gmBoardCommand(pastesToken))
 	r.Post(base+"/voltar", s.gmBoardCommand(wasWhereForTokenBack))
 	r.Post(base+"/editar", s.gmBoardCommand(editsToken))
 	r.Post(base+"/remover", s.gmBoardCommand(removesToken))
