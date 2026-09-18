@@ -16,11 +16,10 @@ import (
 //
 // # Por que ele carrega quase tudo, e por que isso está certo
 //
-// Esta porta toca **todos** os campos do `*Server` menos um: `boards`,
-// `sessions`, `presence`, `sse`, `bus`, `queries`, `catalogs`, `db` e `cfg`. Um
-// adaptador que carrega quase tudo parece a divisão ter falhado, e é o
-// contrário: a Mesa É a mesa ao vivo, e a mesa ao vivo é o que esses stores
-// guardam.
+// Esta porta toca quase todos os campos do `*Server`: `boards`, `sessions`,
+// `presence`, `sse`, `bus`, `queries`, `catalogs` e `db`. Um adaptador que
+// carrega quase tudo parece a divisão ter falhado, e é o contrário: a Mesa É a
+// mesa ao vivo, e a mesa ao vivo é o que esses stores guardam.
 //
 // A diferença entre isto e receber o `*Server` não é o tamanho da lista, é o
 // que ela **não** tem — o `livro`, o `charMu`, o `emSegundoPlano`, a cena da
@@ -32,7 +31,6 @@ import (
 // ficha embutida é regra de ficha.
 type tableRules struct {
 	db       *sql.DB
-	cfg      configForTable
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs
 	boards   *board.BoardStore
@@ -54,18 +52,9 @@ type tableRules struct {
 	emSegundoPlano *sync.WaitGroup
 }
 
-// configForTable é o pedaço da configuração que a mesa lê: quem administra.
-//
-// Um tipo de uma pergunta em vez da `config.Config` inteira — a Mesa não
-// tem o que fazer com o segredo do JWT nem com a pasta de backup, e o
-// `IsAdminRequester` é a única coisa que ela pergunta à configuração.
-type configForTable struct {
-	isAdmin func(email string) bool
-}
-
 func (s *Server) tableRules() tableRules {
 	return tableRules{
-		db: s.db, cfg: configForTable{isAdmin: s.cfg.IsAdmin},
+		db:      s.db,
 		queries: s.queries, catalogs: s.catalogs,
 		boards: s.boards, sessions: s.sessions, presence: s.presence,
 		sse: s.sse, bus: s.bus,

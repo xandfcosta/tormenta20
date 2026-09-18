@@ -43,8 +43,6 @@ type Deps interface {
 	// o tipo do usuário é do hospedeiro, e uma porta que o devolvesse não é
 	// porta.
 	CurrentUserID(r *http.Request) int64
-	// IsAdmin diz se quem pede administra, para a cena que o rodapé oferece.
-	IsAdminRequester(ctx context.Context, userID int64) bool
 
 	// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR, e não o
 	// `SessionForCaller`: o rascunho acontece quando NÃO há sessão, e usá-lo

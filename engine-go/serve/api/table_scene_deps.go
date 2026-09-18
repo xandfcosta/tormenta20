@@ -60,20 +60,6 @@ func (h tableHost) CharacterChanged(characterID int64) {
 }
 func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 
-// IsAdminRequester diz se quem pede administra.
-//
-// O nome NÃO é `IsAdmin`: aquele já existe com `(email string)`, e é outra
-// pergunta — "este e-mail é de admin?" contra "quem está pedindo AGORA é?". Um
-// contrato que já existe ganha quando é a MESMA pergunta; quando só a cara é a
-// mesma, forçar um nome só junta duas coisas diferentes.
-func (h tableHost) IsAdminRequester(ctx context.Context, userID int64) bool {
-	u, err := h.rules.queries.GetUserByID(ctx, userID)
-	if err != nil {
-		return false
-	}
-	return h.rules.cfg.isAdmin(u.Email)
-}
-
 // SessionForCaller é a trava de acesso à mesa.
 func (h tableHost) SessionForCaller(
 	ctx context.Context, userID, campaignID, sessionID int64,
@@ -296,9 +282,9 @@ func (h tableHost) SaveNotes(ctx context.Context, sessionID int64, texto string)
 
 // ── a casca e a ficha embutida ───────────────────────────────────────────────
 //
-// O `BookAddress` NÃO está aqui: ele já existe no `book_file.go`, com a forma
-// exata que a porta pede, e declarar um segundo daria ao `*Server` dois nomes
-// para a mesma coisa.
+// O `BookAddress` NÃO está aqui: ele vem embutido do `sceneCore`
+// (`scene_core.go`), junto com as outras cinco assinaturas que MAIS DE UMA cena
+// pede. Declarar um segundo daria ao `*Server` dois nomes para a mesma coisa.
 
 // PlayerSheet é a ficha EMBUTIDA de quem senta à mesa.
 //
