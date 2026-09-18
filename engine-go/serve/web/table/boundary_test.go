@@ -38,6 +38,10 @@ import (
 // `database/sql` fica fora da lista, e não é por precaução: é a tentação
 // MEDIDA.
 var permitidos = map[string]bool{
+	// O vocabulário do grupo: quem pede e as recusas tipadas.
+	"t20engine/app": true,
+	// O `app/rest` é o descanso e a expiração de escopo, pela mesma razão.
+	"t20engine/app/rest": true,
 	// O `app/session` NÃO é concessão, é a razão do guarda existir ficar menor
 	// (ALE-344): ele está ABAIXO desta cena e do `serve/api`, então não há ciclo
 	// para desviar — e por isso não há interface. Cinco entradas da porta saíram

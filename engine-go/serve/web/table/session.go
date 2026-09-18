@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/app/session"
+	"t20engine/app"
 	"t20engine/domain/live"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -135,21 +135,21 @@ func (s Scene) deletesTheSession(w http.ResponseWriter, r *http.Request) {
 // cena recebe o id de quem pede e nada mais, e nenhum gesto do ciclo tem o
 // desvio de administrador. Quando tiver, o que atravessa é o valor — não um
 // segundo jeito de perguntar.
-func (s Scene) callerOf(r *http.Request) session.Caller {
-	return session.Caller{ID: s.deps.CurrentUserID(r)}
+func (s Scene) callerOf(r *http.Request) app.Caller {
+	return app.Caller{ID: s.deps.CurrentUserID(r)}
 }
 
 // answersTheLifecycle responde o que os três gestos de remendo respondem: a
 // cena redesenhada, com a recusa escrita no rodapé do mestre.
 func (s Scene) answersTheLifecycle(
 	w http.ResponseWriter, r *http.Request,
-	quem session.Caller, campaignID, sessionID int64,
+	quem app.Caller, campaignID, sessionID int64,
 	estado *live.SessionRuntimeState, recusa error,
 ) {
 	// NÃO ENCONTRADO e NÃO É SEU saem como status, e não como frase no rodapé:
 	// quem não alcança a sessão não tem rodapé para ler. A recusa da REGRA é a
 	// que vira frase — ela é sobre o gesto, e quem a recebeu está olhando a tela.
-	if recusa != nil && !errors.Is(recusa, session.ErrRefused) {
+	if recusa != nil && !errors.Is(recusa, app.ErrRefused) {
 		http.Error(w, recusa.Error(), statusOf(recusa))
 		return
 	}
@@ -166,11 +166,11 @@ func (s Scene) answersTheLifecycle(
 // é isso que o deixa ser chamado de outro lugar. Ver o `boundary` do grupo.
 func statusOf(err error) int {
 	switch {
-	case errors.Is(err, session.ErrNotFound):
+	case errors.Is(err, app.ErrNotFound):
 		return http.StatusNotFound
-	case errors.Is(err, session.ErrForbidden):
+	case errors.Is(err, app.ErrForbidden):
 		return http.StatusForbidden
-	case errors.Is(err, session.ErrRefused):
+	case errors.Is(err, app.ErrRefused):
 		return http.StatusUnprocessableEntity
 	}
 	return http.StatusInternalServerError

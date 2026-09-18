@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"t20engine/app"
 	"t20engine/domain/board"
 	"t20engine/domain/live"
 	"t20engine/infra/db/dbvalue"
@@ -41,7 +42,7 @@ func (l Lifecycle) Access() Access { return l.access }
 // duas portas para a mesma decisão são duas chances de uma delas esquecer esse
 // caso.
 func (l Lifecycle) SetStatus(
-	ctx context.Context, quem Caller, campaignID, sessionID int64, pedido string,
+	ctx context.Context, quem app.Caller, campaignID, sessionID int64, pedido string,
 ) (*live.SessionRuntimeState, error) {
 	sess, err := l.access.GM(ctx, quem, campaignID, sessionID)
 	if err != nil {
@@ -49,7 +50,7 @@ func (l Lifecycle) SetStatus(
 	}
 	mudanca, err := live.ChangeToStatus(sess.Status, pedido)
 	if err != nil {
-		return nil, fmt.Errorf("%v: %w", err, ErrRefused)
+		return nil, fmt.Errorf("%v: %w", err, app.ErrRefused)
 	}
 	agora := dbvalue.NowISO()
 	switch mudanca {
@@ -86,7 +87,7 @@ func (l Lifecycle) SetStatus(
 // consulta no `query.sql` e regerar; até lá, o SQL está aqui, inteiro e visível,
 // em vez de montado por um construtor genérico.
 func (l Lifecycle) Rename(
-	ctx context.Context, quem Caller, campaignID, sessionID int64, titulo string,
+	ctx context.Context, quem app.Caller, campaignID, sessionID int64, titulo string,
 ) error {
 	if _, err := l.access.GM(ctx, quem, campaignID, sessionID); err != nil {
 		return err
@@ -116,7 +117,7 @@ func (l Lifecycle) Rename(
 // recria um estado vazio sem passar pelo banco, e a próxima carga fria
 // discordaria desta.
 func (l Lifecycle) RestartCombat(
-	ctx context.Context, quem Caller, campaignID, sessionID int64,
+	ctx context.Context, quem app.Caller, campaignID, sessionID int64,
 ) (*live.SessionRuntimeState, error) {
 	if _, err := l.access.GM(ctx, quem, campaignID, sessionID); err != nil {
 		return nil, err
@@ -147,7 +148,7 @@ func (l Lifecycle) RestartCombat(
 //
 // O banco limpa o resto sozinho: `open_boards` sai por CASCATA com a sessão
 // (migração 00010), e a fila mora na própria linha dela.
-func (l Lifecycle) Delete(ctx context.Context, quem Caller, campaignID, sessionID int64) error {
+func (l Lifecycle) Delete(ctx context.Context, quem app.Caller, campaignID, sessionID int64) error {
 	if _, err := l.access.GM(ctx, quem, campaignID, sessionID); err != nil {
 		return err
 	}

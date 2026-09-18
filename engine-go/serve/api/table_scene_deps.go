@@ -83,16 +83,6 @@ func (h tableHost) PlaceDraftCampaign(
 
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
 
-func (h tableHost) EndSceneForTable(userID, campaignID, sessionID int64) (*live.SessionRuntimeState, error) {
-	return h.rules.endSceneForTable(AuthUser{ID: userID}, campaignID, sessionID)
-}
-
-func (h tableHost) RestParty(
-	userID, campaignID, sessionID int64, escopo, condicao string,
-) (int, int, error) {
-	return h.rules.restParty(AuthUser{ID: userID}, campaignID, sessionID, escopo, condicao)
-}
-
 func (h tableHost) SelfInitiativeEntry(
 	userID, campaignID, characterID, d20 int64,
 ) (live.InitiativeEntry, error) {

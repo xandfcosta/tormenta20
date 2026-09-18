@@ -86,7 +86,7 @@ func TestTheCommandAnnouncesToTheWholeTable(t *testing.T) {
 	}
 }
 
-// O "Encerrar cena" passa pelo `endSceneForTable`, que expira a duração "cena"
+// O "Encerrar cena" passa pelo caso de uso, que expira a duração "cena"
 // de toda ficha do grupo ANTES de desligar a cena. Chamar `sessions.EndScene`
 // direto só mexe no rastreador: a fila zera na tela e a bênção de duração
 // "cena" segue viva na ficha. O que se prende é a chamada ao mesmo helper, e
@@ -263,10 +263,10 @@ func TestThePlayerDoesNotGetAddPartyInTheHtml(t *testing.T) {
 	}
 }
 
-// ── a recuperação (T20 p105) ─────────────────────────────────────────────────
+// ── a recuperação (T20 p106) ─────────────────────────────────────────────────
 
-// O guarda que carrega a REGRA, e ele mira o desfecho mais silencioso: o
-// `restMultiplier` cai em "normal" quando não reconhece a palavra, então uma
+// O guarda que carrega a REGRA, e ele mira o desfecho mais silencioso: a conta
+// do livro cai em "normal" quando não reconhece a palavra, então uma
 // qualidade que não chegasse ao servidor não daria erro nenhum.
 //
 // Por isso a asserção é sobre o NÚMERO, com a qualidade "ruim": nível 8
@@ -286,6 +286,42 @@ func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 	}
 	if ficha.Hpcurrent != 24 {
 		t.Errorf("PV = %d; 24 é o descanso RUIM de um nível 8 (20+4), 28 seria o normal que ninguém pediu", ficha.Hpcurrent)
+	}
+}
+
+// QUEM o descanso visita, que é o predicado da varredura — e ele precisa de
+// TRÊS membros para ser medido: com um só, "todos os membros" e "só o do
+// jogador" curam a mesma ficha, e o caso em que o filtro erraria não existe.
+//
+// O personagem do MESTRE entra: não há filtro de papel, a coluna `role` foi
+// substituída pelo `ownerId` na ALE-287, e um mestre que também joga tem ficha
+// no grupo.
+func TestTheDayRestHealsEveryMemberIncludingTheGmsOwn(t *testing.T) {
+	f := newSceneFixture(t)
+	ctx := context.Background()
+	outro := seedUser(t, f.s, "jogador2@t.com")
+	// Nível 5, feridos: o descanso "normal" devolve 5, e o teto não interfere.
+	doOutro := seedCharacterAtLevel(t, f.s, outro, "Arwen", 5, 1, 40, 1, 40)
+	doMestre := seedCharacterAtLevel(t, f.s, f.mestre, "Bardo do mestre", 5, 1, 40, 1, 40)
+	seedMember(t, f.s, f.campaignID, doOutro)
+	seedMember(t, f.s, f.campaignID, doMestre)
+
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"normal"}`); rec.Code != http.StatusOK {
+		t.Fatalf("descanso de dia deu %d: %s", rec.Code, rec.Body.String())
+	}
+
+	for _, quem := range []struct {
+		nome string
+		id   int64
+	}{{"o do segundo jogador", doOutro}, {"o do próprio mestre", doMestre}} {
+		ficha, err := f.s.queries.GetCharacter(ctx, quem.id)
+		if err != nil {
+			t.Fatalf("reler %s: %v", quem.nome, err)
+		}
+		if ficha.Hpcurrent != 6 {
+			t.Errorf("%s ficou com %d PV; o descanso normal de um nível 5 devolve 5 (1+5)",
+				quem.nome, ficha.Hpcurrent)
+		}
 	}
 }
 
@@ -315,7 +351,7 @@ func TestAnInventedQualityIsRefused(t *testing.T) {
 
 // A recuperação de CENA é o mesmo gesto do encerrar cena sem desligar a cena:
 // expira a duração "cena" das fichas do grupo e avisa que elas mudaram. O que
-// se prende é a chamada ao `expirePartyScene`, e não uma sequência própria.
+// se prende é a chamada ao mesmo caso de uso, e não uma sequência própria.
 func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 	f := newSceneFixture(t)
 	seedEffect(t, f.s, f.charID, "bencao", "scene")

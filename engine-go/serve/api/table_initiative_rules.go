@@ -36,21 +36,6 @@ func (tr tableRules) selfInitiativeEntry(callerID, campaignID, charID, d20 int64
 	})
 }
 
-// endSceneForTable é o gesto "Encerrar cena" INTEIRO, sem socket: a duração
-// "cena" acaba para o grupo E a fila volta ao começo.
-//
-// A ordem importa e a recusa também. A expiração vem ANTES porque o estado
-// desligado é o que a mesa vê: desligar a cena e só então falhar deixaria o
-// mestre com a fila zerada e as bênçãos vivas — o defeito da ALE-220 outra vez,
-// agora com o botão parecendo ter funcionado. Falha aqui é falha do gesto
-// inteiro, e o mestre clica de novo.
-func (tr tableRules) endSceneForTable(user AuthUser, campaignID, sessionID int64) (*live.SessionRuntimeState, error) {
-	if _, _, err := tr.expirePartyScene(user, campaignID, sessionID); err != nil {
-		return nil, errors.New("Could not Load campaign members")
-	}
-	return tr.sessions.EndScene(sessionID)
-}
-
 // populateParty põe na fila, com iniciativa 0 e vitais vivos, cada combatente de
 // jogador que ainda não está lá. Devolve o estado mais recente e o PRIMEIRO erro
 // de `Add` junto com o estado parcial, para quem chama poder transmitir o que

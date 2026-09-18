@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/app/session"
+	"t20engine/app"
 )
 
 func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
@@ -43,7 +43,7 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 	// DESENHO em cada status, e chegar ao status pela tela faria a montagem do
 	// caso depender do gesto que vem logo abaixo.
 	if _, err := f.s.sessionLifecycle().SetStatus(
-		ctx, session.Caller{ID: f.mestre}, f.campaignID, f.sessionID, "ended",
+		ctx, app.Caller{ID: f.mestre}, f.campaignID, f.sessionID, "ended",
 	); err != nil {
 		t.Fatalf("encerrar: %v", err)
 	}

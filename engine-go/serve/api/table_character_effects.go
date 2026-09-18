@@ -2,56 +2,29 @@ package api
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"math"
 	"net/http"
-	"t20engine/infra/db/dbvalue"
+	"t20engine/app/rest"
 	"t20engine/infra/httpio"
 
 	"t20engine/infra/db/sqlcgen"
 )
 
-// restMultiplier é o fator de recuperação do descanso noturno do T20 por
-// qualidade de acomodação: PV/PM ganhos = floor(nível × fator). Acomodação
-// desconhecida cai para 'normal', o que mantém a regra inteira aqui dentro.
-var restMultiplier = map[string]float64{"ruim": 0.5, "normal": 1, "confortavel": 2, "luxuosa": 3}
-
-// restedVitals is the PV/PM current pair a rest leaves the character on.
-type restedVitals struct {
-	hpCurrent int64
-	mpCurrent int64
-}
-
-// EndScene expira os efeitos de escopo de CENA do personagem (a autorização —
-// dono ou mestre — roda antes). Sem transporte: quem chama o faz por ficha.
+// EndScene e endDay expiram os escopos da ficha. Os dois DELEGAM: o corpo mora
+// no `app/rest` (ALE-344), e o que sobra é o número do HTTP.
+//
+// Eles ficam com esta forma — `(int, error)` — porque é a que o
+// `clearEffectScopes` recebe por parâmetro, e ele serve os dois.
 func (tr tableRules) EndScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
-	if _, status, err := tr.authorizedCharacter(ctx, user, characterID); err != nil {
-		return status, err
-	}
-	if err := tr.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{Characterid: characterID, Scope: "scene"}); err != nil {
-		return http.StatusInternalServerError, errors.New("Could not clear effects")
-	}
-	// Os usos "1/cena" e as posturas vão junto. Aqui e não no `EndScene` da
-	// SESSÃO: este é o caminho que já limpa a ficha, e é por onde os dois
-	// transportes passam — o da sessão chega até aqui uma ficha por vez, pelo
-	// `expirePartyScene`.
-	if err := tr.clearScenePlayState(ctx, characterID); err != nil {
-		return http.StatusInternalServerError, errors.New("Could not clear the play state")
+	if err := rest.NewScopes(tr.queries).EndScene(ctx, callerOf(user), characterID); err != nil {
+		return statusForAccess(err), err
 	}
 	return http.StatusOK, nil
 }
 
-// endDay expira os efeitos de escopo de cena E de dia.
 func (tr tableRules) endDay(ctx context.Context, user AuthUser, characterID int64) (int, error) {
-	if _, status, err := tr.authorizedCharacter(ctx, user, characterID); err != nil {
-		return status, err
-	}
-	if err := tr.queries.DeleteSceneAndDayEffects(ctx, characterID); err != nil {
-		return http.StatusInternalServerError, errors.New("Could not clear effects")
-	}
-	if err := tr.clearDayPlayState(ctx, characterID); err != nil {
-		return http.StatusInternalServerError, errors.New("Could not clear the play state")
+	if err := rest.NewScopes(tr.queries).EndDay(ctx, callerOf(user), characterID); err != nil {
+		return statusForAccess(err), err
 	}
 	return http.StatusOK, nil
 }
@@ -125,31 +98,6 @@ func (s *Server) handleEndScene(w http.ResponseWriter, r *http.Request) {
 // do livro) — daí os dois escopos no delta.
 func (s *Server) handleEndDay(w http.ResponseWriter, r *http.Request) {
 	s.clearEffectScopes(w, r, s.tableRules().endDay, []string{"scene", "day"})
-}
-
-// restVitals aplica a recuperação do descanso noturno do T20: PV e PM ganham
-// cada um floor(nível × fator), aparado no máximo, e grava. Devolve os novos
-// valores atuais para quem chama espelhá-los no rastreador vivo.
-func (tr tableRules) restVitals(ctx context.Context, user AuthUser, characterID int64, condition string) (restedVitals, int, error) {
-	row, status, err := tr.authorizedCharacter(ctx, user, characterID)
-	if err != nil {
-		return restedVitals{}, status, err
-	}
-	mult, ok := restMultiplier[condition]
-	if !ok {
-		mult = restMultiplier["normal"]
-	}
-	gain := int64(math.Floor(float64(row.Level) * mult))
-	next := restedVitals{
-		hpCurrent: min(row.Hpmax, row.Hpcurrent+gain),
-		mpCurrent: min(row.Mpmax, row.Mpcurrent+gain),
-	}
-	if err := tr.queries.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
-		HpCurrent: next.hpCurrent, MpCurrent: next.mpCurrent, UpdatedAt: dbvalue.NowISO(), ID: characterID,
-	}); err != nil {
-		return restedVitals{}, http.StatusInternalServerError, errors.New("Could not update vitals")
-	}
-	return next, http.StatusOK, nil
 }
 
 type characterCampaignDTO struct {

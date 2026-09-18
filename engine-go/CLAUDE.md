@@ -1204,9 +1204,11 @@ não tocava `*Server` nem `http`; o `creature_block.go` importava `fmt` e
 história.
 
 O que NÃO saiu junto e vale saber por quê: os quatro handlers do estado de jogo.
-O `table_character_play_state.go` misturava a FORMA (dois structs sem dependência) com
+O arquivo que os hospedava misturava a FORMA (dois structs sem dependência) com
 o encanamento que a grava — os structs viajam dentro do `CharacterDTO`, então
-foram; os handlers ficaram.
+foram; os handlers ficaram. O que restava dele — zerar os usos "1/cena" e baixar
+as posturas — desceu para o `app/rest` na ALE-344, e o arquivo deixou de
+existir.
 
 **E o `sheet` ganhou a CONSTRUÇÃO junto, na terceira camada.** `Load` monta o
 agregado a partir das linhas do banco, `Compute` o passa pelo motor, e

@@ -5,6 +5,7 @@ import "t20engine/domain/live"
 import (
 	"context"
 	"strings"
+	"t20engine/app"
 	"testing"
 
 	"t20engine/domain/engine"
@@ -222,14 +223,14 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 // fim de uma cena "são determinadas pelo andamento da história" (p11) — que é
 // exatamente o que o mestre declara ao clicar em Encerrar cena.
 //
-// O teste vai pelo `endSceneForTable` e não pelo socket porque é ele que faz o
+// O teste vai pelo caso de uso (`rest.Party.EndScene`) e não pelo socket porque é ele que faz o
 // gesto inteiro; o `onSceneEnd` acima só carrega transporte e autorização. E
 // afirma os DOIS lados: o de cena sai, o de dia FICA. Limpar demais aqui
 // apagaria a bênção que o grupo comprou para o dia todo, e ninguém veria.
 func TestEndingTheSceneExpiresThePartySceneEffects(t *testing.T) {
 	f := newEndSceneFixture(t)
 
-	state, err := f.srv.tableRules().endSceneForTable(f.gm, f.campaignID, f.sessionID)
+	state, err := f.srv.restParty().EndScene(context.Background(), app.Caller{ID: f.gm.ID}, f.campaignID, f.sessionID)
 	if err != nil {
 		t.Fatalf("encerrar a cena: %v", err)
 	}
@@ -251,7 +252,7 @@ func TestEndingTheSceneReachesWhoIsNotInTheTracker(t *testing.T) {
 	seedMember(t, f.srv, f.campaignID, ausente)
 	seedEffect(t, f.srv, ausente, "bencao", "scene")
 
-	if _, err := f.srv.tableRules().endSceneForTable(f.gm, f.campaignID, f.sessionID); err != nil {
+	if _, err := f.srv.restParty().EndScene(context.Background(), app.Caller{ID: f.gm.ID}, f.campaignID, f.sessionID); err != nil {
 		t.Fatalf("encerrar a cena: %v", err)
 	}
 
@@ -305,7 +306,7 @@ func TestEndingTheSceneDoesNotTurnItOffIfItDidNotReachTheSheets(t *testing.T) {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
 
-	if _, err := f.srv.tableRules().endSceneForTable(f.gm, f.campaignID, f.sessionID); err == nil {
+	if _, err := f.srv.restParty().EndScene(context.Background(), app.Caller{ID: f.gm.ID}, f.campaignID, f.sessionID); err == nil {
 		t.Fatal("encerrou sem ter conseguido alcançar as fichas do grupo")
 	}
 

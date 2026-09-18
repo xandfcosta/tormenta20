@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"t20engine/app/rest"
 
 	"t20engine/infra/db/sqlcgen"
 )
@@ -18,30 +19,16 @@ import (
 // outro é a mesa, e é por isso que eles são do `tableRules`: o dono passa, o
 // mestre da campanha passa, o administrador passa, e mais ninguém.
 
-// authorizedCharacter loads a character and enforces the read/mutation guard
-// (owner or campaign GM). Returns the row, or an HTTP status + error to emit.
+// authorizedCharacter carrega a ficha e cobra a trava de leitura/escrita.
+//
+// O CORPO mora no `app/rest` (ALE-344), e o que sobra aqui é o número do HTTP.
+// A regra é a mesma que o descanso do grupo usa, e uma segunda cópia dela
+// divergiria em silêncio — o sintoma seria a mesa deixando entrar quem a ficha
+// barra.
 func (tr tableRules) authorizedCharacter(ctx context.Context, user AuthUser, id int64) (sqlcgen.Character, int, error) {
-	row, err := tr.queries.GetCharacter(ctx, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return row, http.StatusNotFound, fmt.Errorf("Character %d not found", id)
-	}
+	row, err := rest.NewAccess(tr.queries).Character(ctx, callerOf(user), id)
 	if err != nil {
-		return row, http.StatusInternalServerError, errors.New("Could not load character")
-	}
-	// The admin passes the same door as the owner and the campaign's GM: a table
-	// they administer includes the sheets in it (ALE-120).
-	if row.Ownerid == user.ID || user.IsAdmin {
-		return row, http.StatusOK, nil
-	}
-	isGm, err := tr.queries.IsCampaignGmForCharacter(ctx, sqlcgen.IsCampaignGmForCharacterParams{
-		Characterid: id,
-		Ownerid:     user.ID,
-	})
-	if err != nil {
-		return row, http.StatusInternalServerError, errors.New("Could not check access")
-	}
-	if !isGm {
-		return row, http.StatusForbidden, fmt.Errorf("Character %d belongs to another user", id)
+		return row, statusForAccess(err), err
 	}
 	return row, http.StatusOK, nil
 }

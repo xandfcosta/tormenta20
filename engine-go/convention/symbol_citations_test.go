@@ -151,9 +151,10 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 	// errado para mostrar o defeito, e um guarda que a proibisse tiraria do
 	// repositório justamente a explicação que impede o defeito.
 	//
-	// O mesmo vale para o `ForTable`: ele é o SUFIXO de métodos da porta da
-	// sessão (`EndSceneForTable` e irmãos), citado como sufixo e não como
-	// símbolo.
+	// O mesmo vale para o `ForTable`: ele foi o SUFIXO dos métodos da porta da
+	// sessão que atravessavam para a cena, citado como sufixo e não como
+	// símbolo. Os últimos saíram na ALE-344, e a entrada fica porque a lição é
+	// sobre a FORMA da citação, não sobre os métodos.
 	"detalheAberto": true,
 	"ForTable":      true,
 

@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/app"
 	"t20engine/domain/live"
 )
 
@@ -287,7 +288,7 @@ func tiraDaFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	return st.deps.Sessions().RemoveInitiativeEntry(c.SessionID, chi.URLParam(c.R, "entryId"))
 }
 
-// restParty é a RECUPERAÇÃO (T20 p105): devolve PV e PM ao grupo inteiro.
+// restParty é a RECUPERAÇÃO (T20 p106): devolve PV e PM ao grupo inteiro.
 //
 // Os dois escopos dividem o corpo porque só diferem na qualidade, que só o de
 // dia usa. Duas funções seriam duas chances de uma esquecer o aviso às fichas.
@@ -305,7 +306,14 @@ func restParty(escopo string) func(Scene, commandCtx) (*live.SessionRuntimeState
 			}
 			qualidade = lida
 		}
-		feitos, total, err := st.deps.RestParty(c.User, c.CampaignID, c.SessionID, escopo, qualidade)
+		quem := app.Caller{ID: c.User}
+		var feitos, total int
+		var err error
+		if escopo == "day" {
+			feitos, total, err = st.party.RestForTheDay(c.R.Context(), quem, c.CampaignID, c.SessionID, qualidade)
+		} else {
+			feitos, total, err = st.party.ExpireScene(c.R.Context(), quem, c.CampaignID, c.SessionID)
+		}
 		if err != nil {
 			return nil, errors.New("não deu para carregar o grupo desta campanha")
 		}
@@ -324,8 +332,8 @@ func restParty(escopo string) func(Scene, commandCtx) (*live.SessionRuntimeState
 	}
 }
 
-// restQualities são as quatro do livro (T20 p105), e a lista existe aqui para
-// RECUSAR o que não é uma delas: o `restMultiplier` do motor cai em "normal"
+// restQualities são as quatro do livro (T20 p106), e a lista existe aqui para
+// RECUSAR o que não é uma delas: a conta do livro cai em "normal"
 // quando não reconhece a palavra, então um sinal adulterado faria o grupo
 // descansar em "normal" com o mestre tendo pedido "luxuosa", e ninguém veria a
 // diferença.
@@ -346,7 +354,7 @@ func restQuality(r *http.Request) (string, error) {
 		return "", fmt.Errorf("não entendi a qualidade do descanso: %v", err)
 	}
 	if !restQualities[sinais.Qualidade] {
-		return "", fmt.Errorf("qualidade %q não existe; o livro tem ruim, normal, confortavel e luxuosa (p105)", sinais.Qualidade)
+		return "", fmt.Errorf("qualidade %q não existe; o livro tem ruim, normal, confortavel e luxuosa (p106)", sinais.Qualidade)
 	}
 	return sinais.Qualidade, nil
 }
@@ -416,14 +424,14 @@ type commandCtx struct {
 // rastreador, e a fila zeraria na tela com a bênção de duração "cena" viva na
 // FICHA. O livro não deixa margem: "a habilidade dura uma cena inteira,
 // encerrando-se quando esse momento da história acaba" (p227). O
-// `EndSceneForTable` é o caminho único que expira as fichas do grupo ANTES de
-// desligar a cena.
+// `Party.EndScene` do `app/rest` é o caminho único que expira as fichas do
+// grupo ANTES de desligar a cena, e a ordem é dele — não desta função.
 //
 // A segunda é o aviso: as fichas não estão no estado do rastreador, então sem o
 // `session-rest` o efeito morto e o "usado 1/cena" ficam na tela até alguém
 // recarregar.
 func endScene(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	estado, err := st.deps.EndSceneForTable(c.User, c.CampaignID, c.SessionID)
+	estado, err := st.party.EndScene(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, c.SessionID)
 	if err != nil {
 		return nil, err
 	}

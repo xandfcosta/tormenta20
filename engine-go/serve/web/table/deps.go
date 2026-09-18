@@ -6,6 +6,7 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/rest"
 	"t20engine/app/session"
 
 	"t20engine/domain/board"
@@ -67,11 +68,6 @@ type Deps interface {
 	// navegador esperando página.
 	SessionForCaller(ctx context.Context, userID, campaignID, sessionID int64) (sqlcgen.Session, string, int, error)
 
-	// O sufixo `ForTable` existe porque o `*Server` JÁ tem um `EndScene` com
-	// outra forma. Dois nomes porque são duas perguntas — forçar um só juntaria
-	// coisas diferentes, e o compilador recusaria.
-	EndSceneForTable(userID, campaignID, sessionID int64) (*live.SessionRuntimeState, error)
-	RestParty(userID, campaignID, sessionID int64, escopo, condicao string) (int, int, error)
 	// SelfInitiativeEntry monta a linha de quem entra na fila com o próprio d20.
 	SelfInitiativeEntry(userID, campaignID, characterID, d20 int64) (live.InitiativeEntry, error)
 	// CloneCreatureBlock é o "chefe que ganha nome": o bloco é um MOLDE que duas
@@ -143,11 +139,14 @@ type Scene struct {
 	// cena e do `serve/api`, então a cena o importa DIRETO. Não há ciclo para
 	// desviar, e por isso não há interface — cinco entradas que existiam só para
 	// contornar a falta de um lugar saíram com ele.
-	lifecycle  session.Lifecycle
+	lifecycle session.Lifecycle
+	// party é o CASO DE USO do descanso do grupo, e chega igual: por parâmetro,
+	// porque o `app/` está abaixo desta cena.
+	party      rest.Party
 	lenses     *lenses
 	chosenTabs *chosenTabs
 }
 
-func New(d Deps, ciclo session.Lifecycle) Scene {
-	return Scene{deps: d, lifecycle: ciclo, lenses: newLenses(), chosenTabs: newTabs()}
+func New(d Deps, ciclo session.Lifecycle, grupo rest.Party) Scene {
+	return Scene{deps: d, lifecycle: ciclo, party: grupo, lenses: newLenses(), chosenTabs: newTabs()}
 }

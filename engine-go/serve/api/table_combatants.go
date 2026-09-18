@@ -100,17 +100,3 @@ func (tr tableRules) resolveCombatant(ctx context.Context, callerID, campaignID,
 		hpCurrent: ch.Hpcurrent, hpMax: ch.Hpmax, mpCurrent: ch.Mpcurrent, mpMax: ch.Mpmax,
 	}, http.StatusOK, nil
 }
-
-// listMemberCharacterIds devolve o id do personagem de cada membro — o conjunto
-// que um descanso de sessão inteira percorre.
-func (tr tableRules) listMemberCharacterIds(ctx context.Context, campaignID int64) ([]int64, error) {
-	rows, err := tr.queries.ListMembers(ctx, campaignID)
-	if err != nil {
-		return nil, err
-	}
-	ids := make([]int64, 0, len(rows))
-	for _, m := range rows {
-		ids = append(ids, m.Characterid)
-	}
-	return ids, nil
-}

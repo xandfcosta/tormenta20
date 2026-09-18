@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"t20engine/app"
 	"testing"
 	"time"
 
@@ -414,9 +415,10 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	sid := seedSession(t, s, campaignID)
 	heroi := seedCharacter(t, s, gm, "Tanque", 10, 20, 2, 5)
 	seedMember(t, s, campaignID, heroi)
-	user := AuthUser{ID: gm, Email: "gm@t.com"}
+	quem := app.Caller{ID: gm}
+	ctx := context.Background()
 
-	done, total, err := s.tableRules().restParty(user, campaignID, sid, "scene", "normal")
+	done, total, err := s.restParty().ExpireScene(ctx, quem, campaignID, sid)
 	if err != nil || total != 1 || done != 1 {
 		t.Fatalf("descanso saudável deu done=%d total=%d err=%v", done, total, err)
 	}
@@ -425,7 +427,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	if _, err := s.db.Exec("DROP TABLE active_effects"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	done, total, err = s.tableRules().restParty(user, campaignID, sid, "scene", "normal")
+	done, total, err = s.restParty().ExpireScene(ctx, quem, campaignID, sid)
 
 	if err != nil {
 		t.Fatalf("uma ficha que falha não pode derrubar o descanso inteiro: %v", err)

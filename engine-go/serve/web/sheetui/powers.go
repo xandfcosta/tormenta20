@@ -328,7 +328,7 @@ func filtradasPorNome(linhas []powerRow, termo string) []powerRow {
 
 // ── o que a TELA escreve ─────────────────────────────────────────────────────
 
-// writtenActions é a economia de ações do livro (p105), em caixa alta porque
+// writtenActions é a economia de ações do livro (p233), em caixa alta porque
 // ela é crachá.
 var writtenActions = map[string]string{
 	"padrao": "PADRÃO", "movimento": "MOVIMENTO", "livre": "LIVRE", "reacao": "REAÇÃO",

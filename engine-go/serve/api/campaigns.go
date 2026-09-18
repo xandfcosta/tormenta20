@@ -12,6 +12,7 @@ import (
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/httpio"
 
+	"t20engine/app"
 	"t20engine/app/session"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -243,8 +244,8 @@ func (rules campaignRules) access() session.Access { return session.NewAccess(ru
 
 // callerOf traduz o usuário do hospedeiro na forma que o caso de uso recebe: um
 // id e se administra, e nada mais.
-func callerOf(user AuthUser) session.Caller {
-	return session.Caller{ID: user.ID, IsAdmin: user.IsAdmin}
+func callerOf(user AuthUser) app.Caller {
+	return app.Caller{ID: user.ID, IsAdmin: user.IsAdmin}
 }
 
 // statusForAccess é a tradução da recusa TIPADA no número do HTTP.
@@ -253,9 +254,9 @@ func callerOf(user AuthUser) session.Caller {
 // ser chamado de outro transporte, que é a única coisa que aquela camada compra.
 func statusForAccess(err error) int {
 	switch {
-	case errors.Is(err, session.ErrNotFound):
+	case errors.Is(err, app.ErrNotFound):
 		return http.StatusNotFound
-	case errors.Is(err, session.ErrForbidden):
+	case errors.Is(err, app.ErrForbidden):
 		return http.StatusForbidden
 	}
 	return http.StatusInternalServerError
