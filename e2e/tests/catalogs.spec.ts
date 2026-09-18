@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { expectNothingIsClippedSideways } from './support/geometry'
 import {
   expectNoHorizontalOverflow,
   expectOnlyTheScrollerScrolls,
@@ -47,6 +48,14 @@ test.describe('Os catálogos', () => {
 
     await expectOnlyTheScrollerScrolls(page, SCROLLER, VIEWPORTS)
     await expectNoHorizontalOverflow(page, VIEWPORTS)
+
+    // E o eixo horizontal PELA CENA, porque o do documento é inerte aqui: a
+    // casca é `overflow-hidden`, então o cartão que passava 44px da caixa a
+    // 390px era recortado sem o documento crescer um pixel (ALE-337).
+    for (const viewport of VIEWPORTS) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await expectNothingIsClippedSideways(page, '#catalogs')
+    }
   })
 
   /**

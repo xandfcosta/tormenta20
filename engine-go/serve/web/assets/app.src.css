@@ -316,7 +316,7 @@ html {
   .collection-in-columns {
     display: grid;
     gap: 0.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(max(22rem, (100% - 1rem) / 3), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, max(22rem, (100% - 1rem) / 3)), 1fr));
   }
   .collection-in-columns > * {
     min-width: 0;

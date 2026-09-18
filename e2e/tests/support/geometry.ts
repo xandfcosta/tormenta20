@@ -402,3 +402,53 @@ export async function expectColunasMonotonicas(
 
   expect(quedas, 'crescer o contêiner custou uma coluna').toEqual([])
 }
+
+/**
+ * Nada dentro da cena é CORTADO de lado (ALE-337).
+ *
+ * É a outra metade da pergunta do `expectNadaRolaDeLado`, e as duas juntas
+ * fecham o eixo horizontal:
+ *
+ *   - lá, o contêiner declara `overflow-x: auto` e ROLA — o conteúdo está
+ *     alcançável, e o defeito é ter de rolar de lado para alcançá-lo;
+ *   - aqui, o contêiner declara `overflow-x: visible` e o conteúdo TRANSBORDA —
+ *     ele não rola em lugar nenhum, e a casca (`h-dvh overflow-hidden`) o
+ *     recorta em silêncio. O que passa da borda não existe para quem lê.
+ *
+ * O terceiro guarda do eixo, o `expectNoHorizontalOverflow`, não alcança nenhuma
+ * das duas: ele lê `documentElement.scrollWidth`, e a casca garante que o
+ * documento nunca cresce. Medido a 390px nos catálogos — o cartão media 352px
+ * numa caixa de 308, três palavras cortadas no meio, e o documento em 390 de
+ * 390.
+ *
+ * O DENOMINADOR vem junto porque uma lista de reprovados vazia e um seletor que
+ * não casa com nada se parecem no terminal.
+ *
+ * @example await expectNothingIsClippedSideways(page, '#catalogs')
+ */
+export async function expectNothingIsClippedSideways(page: Page, raiz: string): Promise<void> {
+  const medida = await page.evaluate((seletorRaiz) => {
+    const root = document.querySelector(seletorRaiz as string)
+    if (!root) return null
+    const nos = [...root.querySelectorAll<HTMLElement>('*')]
+    const cortados = nos
+      .filter((node) => {
+        if (getComputedStyle(node).overflowX !== 'visible') return false
+        return node.scrollWidth > node.clientWidth + 1
+      })
+      .map((node) => {
+        const nome = node.getAttribute('aria-label') ?? node.className.slice(0, 40) ?? node.tagName
+        return `${nome}: conteúdo de ${node.scrollWidth}px numa caixa de ${node.clientWidth}px`
+      })
+      .slice(0, 5)
+    return { cortados, medidos: nos.length }
+  }, raiz)
+
+  expect(medida, `a raiz ${raiz} não existe na tela`).not.toBeNull()
+  const { cortados, medidos } = medida as { cortados: string[]; medidos: number }
+  expect(medidos, `a varredura não achou nó nenhum dentro de ${raiz}`).toBeGreaterThan(5)
+  expect(
+    cortados,
+    `conteúdo cortado de lado dentro de ${raiz} @ ${page.viewportSize()?.width}px — ele não rola, então quem lê nunca o alcança`,
+  ).toEqual([])
+}
