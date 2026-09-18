@@ -204,6 +204,36 @@ func TestTheSearchInTheUrlHoldsOnAColdLoad(t *testing.T) {
 	}
 }
 
+// A ABA vem do CAMINHO, e `?aba=` não a move.
+//
+// Isto não é preferência de endereço: é a armadilha que deixou um caso de e2e
+// pedindo `/mestre/condicoes?aba=poderes` e medindo o catálogo mais magro do
+// livro (ALE-332). A consulta não tem leitor desde que cada catálogo virou uma
+// cena, e o silêncio é o defeito — quem escreve o endereço recebe 200 e a
+// página errada.
+//
+// Preso AQUI e não num navegador: é regra de handler, e a camada mais barata que
+// a segura é esta.
+func TestTheTabComesFromThePathAndTheQueryDoesNotMoveIt(t *testing.T) {
+	// O `</h2>` é parte da agulha porque "Poderes" também é o texto de uma parada
+	// do trilho, que a casca desenha em toda cena do mestre: procurar a palavra
+	// solta acharia o link e diria que a aba mudou.
+	corpo := pedeNaCena(t, "/mestre/condicoes?aba=poderes").Body.String()
+	if !strings.Contains(corpo, ">Condições</h2>") {
+		t.Error("`?aba=poderes` levou a cena das condições para outra aba: a consulta voltou a ter leitor")
+	}
+	if strings.Contains(corpo, ">Poderes</h2>") {
+		t.Error("`?aba=poderes` desenhou Poderes num endereço de Condições")
+	}
+
+	// O CONTROLE, senão "não virou Poderes" também seria verdade numa cena que
+	// não sabe desenhar Poderes em endereço nenhum.
+	pedido := pedeNaCena(t, "/mestre/poderes").Body.String()
+	if !strings.Contains(pedido, ">Poderes</h2>") {
+		t.Error("/mestre/poderes não abriu na aba de Poderes — o caminho é o único canal da aba")
+	}
+}
+
 // AMOSTRAGEM e não enumeração: o teste percorre `collectionTabs`, então a aba que
 // entrar amanhã já nasce medida.
 //
