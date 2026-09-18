@@ -57,23 +57,24 @@ func filtersFromURL(q url.Values, aba string) map[string][]string {
 	return fora
 }
 
-// collectionCriteriaFromRequest lê a busca, a aba e a ENTRADA da URL na carga fria e
+// collectionCriteriaFromRequest lê a busca e a ENTRADA da URL na carga fria e
 // dos SINAIS quando o Datastar chama — mesma decisão das outras cenas, e é ela
-// que faz `?busca=fogo`, `?aba=magias` e `?entrada=medo` serem endereços que se
-// recarregam.
+// que faz `?busca=fogo` e `?entrada=medo` serem endereços que se recarregam.
 //
 // `entrada` NÃO vem de sinal, e é deliberado: ela é um endereço para UM verbete,
 // escrito por um elo ou colado por alguém. Vindo de sinal, ela sobreviveria à
 // próxima tecla digitada na busca e a cena ficaria presa num verbete só.
 func collectionCriteriaFromRequest(r *http.Request) collectionCriteria {
 	q := r.URL.Query()
-	// A ABA vem do CAMINHO desde que cada catálogo virou uma cena
-	// (`/mestre/condicoes`). A consulta continua sendo lida para o
-	// endereço velho e para quem digitar `?aba=` à mão.
+	// A ABA vem DO CAMINHO E SÓ DELE, porque o `Routes` registra uma rota por
+	// slug conhecido: `path.Base` aqui é sempre uma aba da fileira.
+	//
+	// Havia um `?aba=` de reserva para o `/mestre/catalogos`, que saiu na
+	// ALE-331, e ele não era só código morto: um caso de e2e pediu
+	// `/mestre/condicoes?aba=poderes` por confiar nele e passou a medir o
+	// catálogo mais magro do livro dizendo medir o mais gordo (ALE-332). Reserva
+	// que nunca é alcançada não avisa que não funciona.
 	aba := path.Base(r.URL.Path)
-	if knownTab(aba) != aba {
-		aba = q.Get("aba")
-	}
 	c := collectionCriteria{
 		Term: q.Get("busca"), Aba: aba, Entrada: q.Get("entrada"),
 		Filtros: filtersFromURL(q, aba),
