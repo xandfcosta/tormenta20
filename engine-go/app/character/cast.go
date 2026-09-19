@@ -10,6 +10,67 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
+// AS TRÊS ESCRITAS DO GRIMÓRIO — aprender, esquecer e alternar o preparo.
+//
+// Elas desceram da cena na ALE-350, e a do meio é a que explica por quê: o
+// `TogglePrepared` LÊ o grimório, DECIDE o estado novo e grava. As três coisas
+// que o guia usa para reconhecer um caso de uso, num gesto de um clique.
+
+// LearnSpell põe uma magia do catálogo no grimório.
+//
+// O livro é conferido AQUI e não por quem chama: uma magia que não existe seria
+// uma linha órfã no grimório, que a ficha desenha como um espaço em branco.
+func (p Plays) LearnSpell(ctx context.Context, characterID int64, catalogSpellID string) error {
+	if _, conhecida := catalog.LookupSpell(catalogSpellID); !conhecida {
+		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
+	}
+	if _, err := p.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
+		Characterid: characterID, Catalogspellid: catalogSpellID,
+		Prepared: 0, Learnedat: dbvalue.NowISO(),
+	}); err != nil {
+		return fmt.Errorf("aprender %q na ficha %d: %w", catalogSpellID, characterID, err)
+	}
+	return nil
+}
+
+// ForgetSpell tira a magia do grimório.
+func (p Plays) ForgetSpell(ctx context.Context, characterID int64, catalogSpellID string) error {
+	if _, err := p.queries.DeleteSpell(ctx, sqlcgen.DeleteSpellParams{
+		Characterid: characterID, Catalogspellid: catalogSpellID,
+	}); err != nil {
+		return fmt.Errorf("esquecer %q na ficha %d: %w", catalogSpellID, characterID, err)
+	}
+	return nil
+}
+
+// TogglePrepared prepara ou desprepara uma magia.
+//
+// Ela recebe a MAGIA e não o estado desejado: mandar "preparada" perde para o
+// clique repetido e para a segunda aba aberta no mesmo personagem — quem sabe o
+// que está lá é o servidor, e é ele que inverte.
+func (p Plays) TogglePrepared(ctx context.Context, characterID int64, catalogSpellID string) error {
+	todas, err := p.queries.ListSpellsByCharacter(ctx, characterID)
+	if err != nil {
+		return fmt.Errorf("ler o grimório da ficha %d: %w", characterID, err)
+	}
+	for _, m := range todas {
+		if m.Catalogspellid != catalogSpellID {
+			continue
+		}
+		depois := int64(0)
+		if m.Prepared == 0 {
+			depois = 1
+		}
+		if _, err := p.queries.SetSpellPreparedByCatalog(ctx, sqlcgen.SetSpellPreparedByCatalogParams{
+			Prepared: depois, CharacterId: characterID, CatalogSpellId: catalogSpellID,
+		}); err != nil {
+			return fmt.Errorf("gravar o preparo de %q: %w", catalogSpellID, err)
+		}
+		return nil
+	}
+	return fmt.Errorf("a magia %q não está no grimório", catalogSpellID)
+}
+
 // Cast é a conjuração INTEIRA: as recusas do livro, o custo em PM e a baixa.
 //
 // Ela nasceu extraída na ALE-272 (fatia 6), quando a ficha em Datastar passou a
