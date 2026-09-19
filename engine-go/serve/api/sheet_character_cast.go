@@ -1,8 +1,8 @@
 package api
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"t20engine/infra/db/dbvalue"
 
 	"t20engine/domain/catalog"
@@ -28,7 +28,7 @@ type castResult struct {
 // Devolve o PM que sobrou e uma frase de recusa quando a regra barra — a frase é
 // para um humano ler numa tela, e não um `FieldErrorMap` para um cliente.
 func (sr sheetRules) castSpellForCharacter(
-	r *http.Request, dto sheet.CharacterDTO, catalogSpellID string, augments []sheet.AugmentPick,
+	ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string, augments []sheet.AugmentPick,
 ) error {
 	spell, known := catalog.LookupSpell(catalogSpellID)
 	if !known {
@@ -75,7 +75,7 @@ func (sr sheetRules) castSpellForCharacter(
 	if totalPm == 0 {
 		return nil
 	}
-	return sr.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{
+	return sr.queries.SetMpCurrent(ctx, sqlcgen.SetMpCurrentParams{
 		MpCurrent: dto.MpCurrent - int64(totalPm), UpdatedAt: dbvalue.NowISO(), ID: dto.ID,
 	})
 }

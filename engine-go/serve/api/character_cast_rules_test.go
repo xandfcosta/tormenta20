@@ -3,8 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"t20engine/domain/sheet"
@@ -110,8 +108,9 @@ func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body
 	if err != nil {
 		t.Fatalf("montar a ficha %d: %v", characterID, err)
 	}
-	req := httptest.NewRequest(http.MethodPost, "/", nil)
-	return s.sheetRules().castSpellForCharacter(req, dto, spellID, corpo.Augments)
+	// Sem `httptest.NewRequest`: a regra recebe CONTEXTO, e montar um pedido só
+	// para entregá-lo era o sintoma que a ALE-347 veio tirar.
+	return s.sheetRules().castSpellForCharacter(context.Background(), dto, spellID, corpo.Augments)
 }
 
 func mpOf(t *testing.T, s *Server, characterID int64) int64 {

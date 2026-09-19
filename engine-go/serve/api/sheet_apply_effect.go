@@ -112,11 +112,11 @@ func resolvePowerGrant(w http.ResponseWriter, powerID string) (*catalog.Activati
 
 // powerTempHpAmount computes a temp-HP power's magnitude: character level + the attribute's
 // computed total (mirrors tempHpModifier), reusing the already-loaded row.
-func (sr sheetRules) powerTempHpAmount(r *http.Request, row sqlcgen.Character, attribute string) (int, bool) {
+func (sr sheetRules) powerTempHpAmount(ctx context.Context, row sqlcgen.Character, attribute string) (int, bool) {
 	if sr.catalogs == nil {
 		return 0, false
 	}
-	sheet, err := sr.ComputeSheet(r.Context(), row)
+	sheet, err := sr.ComputeSheet(ctx, row)
 	if err != nil {
 		return 0, false
 	}

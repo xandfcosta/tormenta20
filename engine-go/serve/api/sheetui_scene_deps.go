@@ -51,7 +51,7 @@ func (h sheetHost) SaveNewCraft(ctx context.Context, id int64, nome string) erro
 func (h sheetHost) CastSpell(
 	r *http.Request, dto sheet.CharacterDTO, magia string, aprimoramentos []sheet.AugmentPick,
 ) error {
-	return h.rules.castSpellForCharacter(r, dto, magia, aprimoramentos)
+	return h.rules.castSpellForCharacter(r.Context(), dto, magia, aprimoramentos)
 }
 
 // ConsumeItem gasta uma dose do consumível.
@@ -77,7 +77,7 @@ func (h sheetHost) ApplyClassLevel(r *http.Request, id int64, classe string, niv
 	if err != nil {
 		return err
 	}
-	_, _, _, _, err = h.rules.applyClassLevel(r, row, classe, nivel)
+	_, _, _, _, err = h.rules.applyClassLevel(r.Context(), row, classe, nivel)
 	return err
 }
 
@@ -92,7 +92,7 @@ func (h sheetHost) ApplySpellBuffEffect(
 func (h sheetHost) PowerTempHpAmount(
 	r *http.Request, row sqlcgen.Character, atributo string,
 ) (int, bool) {
-	return h.rules.powerTempHpAmount(r, row, atributo)
+	return h.rules.powerTempHpAmount(r.Context(), row, atributo)
 }
 
 // ── As ESCRITAS ──────────────────────────────────────────────────────────────

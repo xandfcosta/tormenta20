@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -47,7 +48,7 @@ func clampCurrent(c, hi int64) int64 { return min(max(int64(0), c), hi) }
 
 // syncLevelVitals recomputes the pools for the (already mutated) aggregate and
 // persists the level-shifted currents — the server-side syncVitalsForProjection.
-func (sr sheetRules) syncLevelVitals(r *http.Request, id int64, dto sheet.CharacterDTO) (storedVitals, error) {
+func (sr sheetRules) syncLevelVitals(ctx context.Context, id int64, dto sheet.CharacterDTO) (storedVitals, error) {
 	stored := storedVitals{HpMax: dto.HpMax, HpCurrent: dto.HpCurrent, MpMax: dto.MpMax, MpCurrent: dto.MpCurrent}
 	if sr.catalogs == nil || len(dto.Classes) == 0 {
 		return stored, nil // no engine pools (0/0) → keep what is stored
@@ -59,7 +60,7 @@ func (sr sheetRules) syncLevelVitals(r *http.Request, id int64, dto sheet.Charac
 	pools := sr.catalogs.VitalsForCharacter(ec)
 	next, changed := levelVitalsNext(stored, pools.PvMax, pools.PmMax)
 	if changed {
-		if err := sr.queries.SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
+		if err := sr.queries.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{
 			HpMax: next.HpMax, HpCurrent: next.HpCurrent, MpMax: next.MpMax, MpCurrent: next.MpCurrent,
 			UpdatedAt: dbvalue.NowISO(), ID: id,
 		}); err != nil {
@@ -105,9 +106,9 @@ func writeLevelFailure(w http.ResponseWriter, err error) {
 //     Gravar o nível sem sincronizar deixa a ficha com o número novo e a vida
 //     velha, que é o defeito que ninguém liga ao botão que o causou.
 func (sr sheetRules) applyClassLevel(
-	r *http.Request, row sqlcgen.Character, classe string, nivel int64,
+	ctx context.Context, row sqlcgen.Character, classe string, nivel int64,
 ) (sheet.CharacterDTO, []sheet.ClassDTO, int64, storedVitals, error) {
-	dto, err := sr.LoadCharacter(r.Context(), row)
+	dto, err := sr.LoadCharacter(ctx, row)
 	if err != nil {
 		return dto, nil, 0, storedVitals{}, err
 	}
@@ -132,18 +133,18 @@ func (sr sheetRules) applyClassLevel(
 			Frase: fmt.Sprintf("Total level %d exceeds 20", total),
 		}
 	}
-	if _, err := sr.queries.SetCharacterClassLevel(r.Context(), sqlcgen.SetCharacterClassLevelParams{
+	if _, err := sr.queries.SetCharacterClassLevel(ctx, sqlcgen.SetCharacterClassLevelParams{
 		Level: nivel, CharacterId: row.ID, ClassName: classe,
 	}); err != nil {
 		return dto, nil, 0, storedVitals{}, err
 	}
-	if err := sr.queries.SetCharacterLevel(r.Context(), sqlcgen.SetCharacterLevelParams{
+	if err := sr.queries.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
 		Level: total, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 	}); err != nil {
 		return dto, nil, 0, storedVitals{}, err
 	}
 	dto.Level = total
-	vitals, err := sr.syncLevelVitals(r, row.ID, dto)
+	vitals, err := sr.syncLevelVitals(ctx, row.ID, dto)
 	return dto, dto.Classes, total, vitals, err
 }
 
