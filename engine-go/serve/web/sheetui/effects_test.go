@@ -30,13 +30,24 @@ func TestAConditionAnnouncesItselfToTheLiveTable(t *testing.T) {
 	// gancho que ninguém preenche.
 	fonte := lerFonte(t, "effects_commands.go")
 	corpo := functionSlice(t, fonte, "func toggleBookCondition")
-	if !strings.Contains(corpo, "s.deps.CharacterChanged(row.ID)") {
-		t.Error("o comando de condição não chama `characterChanged`: o mestre aplica " +
+	// CONTROLE: o recorte achou a função de verdade, e não uma string vazia.
+	//
+	// A âncora é a CHAMADA ao caso de uso, e não mais o `UpdateConditions` — a
+	// escrita desceu para o `character.Plays` na ALE-351, e um controle preso ao
+	// nome da consulta passou a medir o vazio.
+	gravacao := strings.Index(corpo, "s.plays.ToggleBookCondition")
+	if gravacao < 0 {
+		t.Fatal("o recorte não pegou o corpo de `toggleBookCondition` — o guarda mediria o vazio")
+	}
+	aviso := strings.Index(corpo, "s.deps.CharacterChanged(row.ID)")
+	if aviso < 0 {
+		t.Fatal("o comando de condição não chama `CharacterChanged`: o mestre aplica " +
 			"Caído e a tela do jogador segue com a Defesa velha, sem nada acusar")
 	}
-	// CONTROLE: o recorte achou a função de verdade, e não uma string vazia.
-	if !strings.Contains(corpo, "UpdateConditions") {
-		t.Fatal("o recorte não pegou o corpo de `toggleBookCondition` — o guarda mediria o vazio")
+	// E a ORDEM, que é a outra metade da regra: avisar sobre algo que ainda pode
+	// falhar faria a mesa buscar o estado velho e acreditar nele.
+	if aviso < gravacao {
+		t.Error("o aviso à mesa sai ANTES da gravação: a mesa buscaria o estado velho")
 	}
 }
 

@@ -8,9 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -27,29 +25,12 @@ import (
 // O aviso sai DEPOIS da escrita, nunca antes: avisar sobre algo que ainda pode
 // falhar faria a mesa buscar o estado velho e acreditar nele.
 func toggleBookCondition(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	cond := chi.URLParam(r, "cond")
-	if !catalog.IsCondition(cond) {
-		return fmt.Errorf("%q não é uma condição do livro", cond)
-	}
-	atuais := sheet.UnmarshalStrings(row.Activeconditions)
-	depois := []string{}
-	tinha := false
-	for _, c := range atuais {
-		if c == cond {
-			tinha = true
-			continue
-		}
-		depois = append(depois, c)
-	}
-	if !tinha {
-		depois = append(depois, cond)
-	}
-	blob := sheet.MarshalStrings(&depois)
-	if err := s.deps.Queries().UpdateConditions(r.Context(), sqlcgen.UpdateConditionsParams{
-		ActiveConditions: blob, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-	}); err != nil {
+	if err := s.plays.ToggleBookCondition(r.Context(), row, chi.URLParam(r, "cond")); err != nil {
 		return err
 	}
+	// O AVISO sai DEPOIS da escrita, nunca antes: avisar sobre algo que ainda
+	// pode falhar faria a mesa buscar o estado velho e acreditar nele. Ele fica
+	// na cena porque depende do barramento do PROCESSO, que é do hospedeiro.
 	s.deps.CharacterChanged(row.ID)
 	return nil
 }
@@ -70,14 +51,7 @@ func endAppliedEffect(s Scene, r *http.Request, row sqlcgen.Character, _ Signals
 	if err != nil {
 		return fmt.Errorf("o efeito %q não é um número", chi.URLParam(r, "efeito"))
 	}
-	// A POSSE É CONFERIDA ANTES, e a query não a confere por nós: o
-	// `DeleteEffectByID` apaga por id e mais nada, então sem esta leitura um
-	// pedido montado à mão encerraria o efeito de OUTRO personagem.
-	meta, err := s.deps.Queries().GetActiveEffectMeta(r.Context(), id)
-	if err != nil || meta.Characterid != row.ID {
-		return fmt.Errorf("o efeito %d não é desta ficha", id)
-	}
-	return s.deps.Queries().DeleteEffectByID(r.Context(), id)
+	return s.plays.EndAppliedEffect(r.Context(), row.ID, id)
 }
 
 // endStance encerra uma postura.
@@ -108,23 +82,7 @@ func toggleSituational(s Scene, r *http.Request, row sqlcgen.Character, sinais S
 	if sinais.Situacao != nil {
 		chave = *sinais.Situacao
 	}
-	if chave == "" {
-		return fmt.Errorf("o gesto não disse qual efeito situacional alternar")
-	}
-	atuais, err := s.deps.Queries().ListCharacterConditionals(r.Context(), row.ID)
-	if err != nil {
-		return err
-	}
-	for _, c := range atuais {
-		if c == chave {
-			return s.deps.Queries().RemoveCharacterConditional(r.Context(), sqlcgen.RemoveCharacterConditionalParams{
-				Characterid: row.ID, Conditionalid: chave,
-			})
-		}
-	}
-	return s.deps.Queries().AddCharacterConditional(r.Context(), sqlcgen.AddCharacterConditionalParams{
-		Characterid: row.ID, Conditionalid: chave,
-	})
+	return s.plays.ToggleSituational(r.Context(), row.ID, chave)
 }
 
 // removeConditionalsWithFlag desliga todo condicional que a postura acendia.
