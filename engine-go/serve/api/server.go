@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"t20engine/app/boards"
+	"t20engine/app/campaign"
 	"t20engine/app/character"
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
@@ -187,6 +188,11 @@ func (s *Server) characterPlays() character.Plays {
 // sessionAccess é a TRAVA de quem alcança campanha e sessão, montada com o que
 // o servidor tem. Ela já era construída duas vezes — dentro do `Lifecycle` e
 // dentro do `campaignRules` —, e é barata: uma cópia de ponteiro.
+// campaignDirectory é o acervo de campanhas: quais existem para quem pede.
+func (s *Server) campaignDirectory() campaign.Directory {
+	return campaign.NewDirectory(s.queries)
+}
+
 func (s *Server) sessionAccess() session.Access {
 	return session.NewAccess(s.queries)
 }

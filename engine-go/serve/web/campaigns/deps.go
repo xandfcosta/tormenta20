@@ -6,6 +6,7 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/campaign"
 	"t20engine/app/session"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -16,11 +17,14 @@ import (
 // um endereço cada — a lista, a campanha aberta, a folha em branco e a carta de
 // entrar — e três delas ESCREVEM.
 //
-// Duas coisas NÃO atravessam esta porta, e as duas por um motivo só: tipo com
-// tag `json:` é a forma de um protocolo, e uma tela que o lesse passaria a
-// depender do formato de um fio que ela não fala. Por isso a cena declara o
-// `ListRow` e o `PlaceRow` dela, e por isso ela pede PERGUNTAS (`SaveText`) em
-// vez de montar SQL.
+// Tipo com tag `json:` NÃO atravessa esta porta: a tag é a forma de um
+// protocolo, e uma tela que a lesse passaria a depender do formato de um fio que
+// ela não fala. Por isso a cena declara o `PlaceRow` dela, e por isso ela pede
+// PERGUNTAS (`SaveText`) em vez de montar SQL.
+//
+// A lista das campanhas era o outro caso, e deixou de ser: ela virou caso de uso
+// (`campaign.Directory`), e o tipo que a cena declarava para ela deixou de
+// existir — quem chega por parâmetro já vem sem tag nenhuma (ALE-348).
 type Deps interface {
 	// Queries é o banco. O `Queries` continua na porta porque três telas leem e
 	// escrevem as próprias tabelas; o sinal de que ele está no lugar é nenhum
@@ -31,10 +35,6 @@ type Deps interface {
 	// olha a configuração e recebe um e-mail — dois nomes porque são duas
 	// perguntas, e o compilador recusaria um só.
 	RequesterIsAdmin(r *http.Request) bool
-	// List são as campanhas que esta pessoa vê, com o papel dela em cada uma.
-	List(ctx context.Context, userID int64, admin bool) ([]ListRow, error)
-	// OwnerNames traduz o dono de cada campanha em nome, para a lista do admin.
-	OwnerNames(ctx context.Context, campanhas []sqlcgen.Campaign, quemPede int64) map[int64]string
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
 	// IgnoredRules é o que o mestre DESLIGOU das regras opcionais.
 	IgnoredRules(ctx context.Context, campanhaID int64) []string
@@ -102,27 +102,6 @@ type GroundOption struct {
 }
 
 // ListRow é uma campanha na LISTA, na forma que esta cena precisa.
-type ListRow struct {
-	ID          int64
-	Name        string
-	Description string
-	// Role é o papel de quem pede: `gm` ou `player`.
-	Role string
-	// OwnerName vem preenchido SÓ numa campanha que quem pede não possui — hoje,
-	// um admin vendo as de todo mundo. A tela marca a exceção, não toda linha.
-	OwnerName string
-	// Character é o herói de quem pede NESTA campanha, quando há um.
-	Character *RowCharacter
-}
-
-// RowCharacter é o herói de quem pede numa campanha da lista.
-type RowCharacter struct {
-	ID      int64
-	Name    string
-	Level   int64
-	Classes []sheet.ClassDTO
-}
-
 // JoinRefusal é o MOTIVO de a pessoa não conseguir sentar à mesa.
 //
 // São SEIS valores para as sete travas do hospedeiro, e a diferença é
@@ -165,6 +144,13 @@ type Scene struct {
 	// HTTP, que a cena descartava com `_`. O nome `membros` ficou anos esperando
 	// alguém usá-lo (ALE-348).
 	access session.Access
+	// acervo responde QUAIS campanhas esta pessoa vê, e com que papel. Ele
+	// entrou no lugar de duas entradas da porta (`List` e `OwnerNames`) que o
+	// adaptador cumpria traduzindo um DTO com tag `json:` — a forma de um fio
+	// que esta tela não fala.
+	acervo campaign.Directory
 }
 
-func New(d Deps, trava session.Access) Scene { return Scene{deps: d, access: trava} }
+func New(d Deps, trava session.Access, acervo campaign.Directory) Scene {
+	return Scene{deps: d, access: trava, acervo: acervo}
+}

@@ -3,16 +3,21 @@ package api
 import (
 	"context"
 	"crypto/rand"
-	"database/sql"
 	"encoding/base64"
 	"errors"
 	"net/http"
-	"t20engine/domain/campaign"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/httpio"
 
 	"t20engine/app"
+	"t20engine/app/campaign"
 	"t20engine/app/session"
+	// O APELIDO é o preço medido de `app/campaign` morar ao lado de
+	// `domain/campaign`, e ele é cobrado em DOIS arquivos — este e o
+	// `serve/web/campaigns/routes.go`. O plural, que é o padrão da casa para
+	// desviar da colisão com o domínio, custaria SETE: `app/campaigns` colide
+	// com a CENA (ver o `doc.go` do pacote).
+	regra "t20engine/domain/campaign"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -65,95 +70,52 @@ func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 }
 
 func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
-	out, err := s.campaignRules().campaignList(r.Context(), currentUser(r))
+	vistas, err := s.campaignDirectory().Visible(r.Context(), callerOf(currentUser(r)))
 	if err != nil {
 		httpio.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
 		return
 	}
-	httpio.WriteJSON(w, http.StatusOK, out)
+	httpio.WriteJSON(w, http.StatusOK, campaignListJSON(vistas))
 }
 
-// campaignList monta a lista COMO A TELA a mostra: o papel de quem olha, o nome
-// do dono quando a mesa é de outra pessoa, e o personagem que o chamador tem
-// nela.
+// campaignListJSON veste o resultado do caso de uso na forma do FIO.
 //
-// Independente de TRANSPORTE de propósito, para o handler HTTP e a cena em templ
-// lerem a mesma regra.
-func (rules campaignRules) campaignList(ctx context.Context, user AuthUser) ([]campaignListDTO, error) {
-	rows, err := rules.visibleCampaigns(ctx, user)
-	if err != nil {
-		return nil, err
-	}
-	owners := rules.ownerNames(ctx, rows, user.ID)
-	out := make([]campaignListDTO, 0, len(rows))
-	for _, c := range rows {
-		item := campaignListDTO{CampaignDTO: campaignScalars(c), Role: "player"}
-		switch {
-		case c.Ownerid == user.ID:
-			item.Role = "gm"
-		case user.IsAdmin:
-			// Mesa de outra pessoa, na lista porque quem chamou administra o
-			// servidor. A condição é `IsAdmin` e não "o mapa de donos tem um nome":
-			// um jogador também não é dono aqui, e apoiar-se num mapa vazio faria
-			// uma edição futura no `ownerNames` entregar "gm" a ele em silêncio.
-			name := owners[c.Ownerid]
-			item.Role, item.OwnerName = "gm", &name
+// A tradução mora aqui e não no caso de uso porque a tag `json:` é a forma de um
+// protocolo: o `Seen` que o `app/campaign` devolve não tem tag nenhuma, e é isso
+// que deixa a cena em templ ler a MESMA regra sem depender do formato de um
+// endpoint que ela não serve.
+func campaignListJSON(vistas []campaign.Seen) []campaignListDTO {
+	fora := make([]campaignListDTO, 0, len(vistas))
+	for _, v := range vistas {
+		linha := campaignListDTO{
+			CampaignDTO: CampaignDTO{
+				ID: v.ID, OwnerID: v.OwnerID, Name: v.Name, Description: v.Description,
+				CreatedAt: v.CreatedAt, UpdatedAt: v.UpdatedAt,
+			},
+			Role: v.Role,
 		}
-		char, err := rules.queries.CallerCharacterInCampaign(ctx, sqlcgen.CallerCharacterInCampaignParams{Campaignid: c.ID, Ownerid: user.ID})
-		if err == nil {
-			classes, _ := rules.queries.ListClassesByCharacter(ctx, char.ID)
-			cc := &campaignCharacterDTO{ID: char.ID, Name: char.Name, Level: char.Level, Classes: []sheet.ClassDTO{}}
-			for _, cl := range classes {
-				cc.Classes = append(cc.Classes, sheet.ClassDTO{ClassName: cl.Classname, Level: cl.Level})
+		if v.OwnerName != "" {
+			nome := v.OwnerName
+			linha.OwnerName = &nome
+		}
+		if v.Character != nil {
+			linha.Character = &campaignCharacterDTO{
+				ID: v.Character.ID, Name: v.Character.Name,
+				Level: v.Character.Level, Classes: v.Character.Classes,
 			}
-			item.Character = cc
 		}
-		out = append(out, item)
+		fora = append(fora, linha)
 	}
-	return out, nil
+	return fora
 }
 
-// visibleCampaigns é o que o chamador pode ver listado: as dele mais as em que
-// joga — e, para o admin, todas as mesas do servidor. Sem isto o admin só
-// alcançaria a mesa de outra pessoa digitando a URL dela.
-func (rules campaignRules) visibleCampaigns(ctx context.Context, user AuthUser) ([]sqlcgen.Campaign, error) {
-	if user.IsAdmin {
-		return rules.queries.ListAllCampaigns(ctx)
-	}
-	return rules.queries.ListCampaignsForUser(ctx, user.ID)
-}
-
-// ownerNames rotula as mesas que o chamador não possui, numa consulta SÓ — a
-// lista é curta, mas um N+1 aqui cresceria com o servidor.
-func (rules campaignRules) ownerNames(ctx context.Context, rows []sqlcgen.Campaign, callerID int64) map[int64]string {
-	var ids []int64
-	for _, c := range rows {
-		if c.Ownerid != callerID {
-			ids = append(ids, c.Ownerid)
-		}
-	}
-	names := make(map[int64]string, len(ids))
-	if len(ids) == 0 {
-		return names
-	}
-	users, err := rules.queries.ListUsersByIDs(ctx, ids)
-	if err != nil {
-		return names
-	}
-	for _, u := range users {
-		names[u.ID] = displayName(u.Name, u.Email)
-	}
-	return names
-}
-
-// displayName prefere o nome escolhido e cai no e-mail, que é como o jogador é
-// chamado em todo o resto do app.
-func displayName(name sql.NullString, email string) string {
-	if name.Valid && name.String != "" {
-		return name.String
-	}
-	return email
-}
+// A LISTA DE CAMPANHAS mora no `app/campaign` (`Directory.Visible`), inteira.
+//
+// Eram QUATRO funções aqui, e todas deixaram de existir: a que montava a lista,
+// a do `where` que decide quem vê o quê, a que rotulava o dono e o rótulo de
+// nome que só ela usava. As quatro decidiam QUEM VÊ O QUÊ — e um `where` que
+// ramifica pelo admin é a regra, não encanamento. O que sobrou
+// deste lado é a tradução para o FIO, logo acima (ALE-348).
 
 func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	var body struct {
@@ -165,7 +127,7 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	// As DUAS recusas de uma vez, e em pt-BR: a mesma regra respondendo duas
 	// frases diferentes conforme o transporte é o que faz uma delas envelhecer.
-	name, descricaoTexto, erros := campaign.ValidateText(body.Name, body.Description)
+	name, descricaoTexto, erros := regra.ValidateText(body.Name, body.Description)
 	if len(erros) > 0 {
 		httpio.WriteValidationError(w, erros)
 		return

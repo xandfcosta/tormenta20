@@ -124,6 +124,7 @@ devotee
 dialog
 dialogs
 direction
+directory
 divine
 doc
 docker

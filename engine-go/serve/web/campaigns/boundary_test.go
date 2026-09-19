@@ -34,6 +34,7 @@ var permitidos = map[string]bool{
 	// parâmetro do construtor, como na Mesa e na ficha — e cada entrada que vira
 	// caso de uso SAI da `Deps` em vez de ganhar um adaptador novo.
 	"t20engine/app":                  true,
+	"t20engine/app/campaign":         true,
 	"t20engine/app/session":          true,
 	"t20engine/domain/campaign":      true, // as REGRAS: nome, descrição, regras opcionais
 	"t20engine/infra/db/sqlcgen":     true, // as linhas do banco, pelo `Queries` da porta

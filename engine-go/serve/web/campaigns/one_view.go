@@ -193,7 +193,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	// e não pelo usuário inteiro, pela mesma razão de sempre: o tipo do usuário
 	// é do hospedeiro.
 	if admin && c.Ownerid != euID {
-		v.DonoOutro = s.deps.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
+		v.DonoOutro = s.acervo.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
 	}
 	v.Abas = oneTabs(v.EhMestre, aba)
 	// O LINK só é LIDO para quem mestra, e essa é a fronteira desta tela: a aba

@@ -44,44 +44,6 @@ func (s *Server) campaignsHost() campaignsHost {
 	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules(), boards: s.boards, sessions: s.sessions}
 }
 
-// List traduz o `campaignList` para a forma que a CENA declarou.
-//
-// A cena NÃO consome o `campaignListDTO` direto: ele é a resposta de
-// `GET /campaigns`, com tag `json:` em cada campo, e uma tela que o lesse
-// passaria a depender do formato de um endpoint que ela não serve.
-//
-// O mapeamento é aqui e a CONSULTA continua uma só: duplicá-la do lado da cena
-// seria trocar um acoplamento por uma cópia.
-func (h campaignsHost) List(ctx context.Context, userID int64, admin bool) ([]campaigns.ListRow, error) {
-	linhas, err := h.rules.campaignList(ctx, AuthUser{ID: userID, IsAdmin: admin})
-	if err != nil {
-		return nil, err
-	}
-	fora := make([]campaigns.ListRow, 0, len(linhas))
-	for _, c := range linhas {
-		linha := campaigns.ListRow{ID: c.ID, Name: c.Name, Role: c.Role}
-		if c.Description != nil {
-			linha.Description = *c.Description
-		}
-		if c.OwnerName != nil {
-			linha.OwnerName = *c.OwnerName
-		}
-		if c.Character != nil {
-			linha.Character = &campaigns.RowCharacter{
-				ID: c.Character.ID, Name: c.Character.Name,
-				Level: c.Character.Level, Classes: c.Character.Classes,
-			}
-		}
-		fora = append(fora, linha)
-	}
-	return fora, nil
-}
-
-// OwnerNames traduz o dono de cada campanha em nome, para a lista do admin.
-func (h campaignsHost) OwnerNames(ctx context.Context, cs []sqlcgen.Campaign, quemPede int64) map[int64]string {
-	return h.rules.ownerNames(ctx, cs, quemPede)
-}
-
 // IgnoredRules são as regras que o mestre DESLIGOU nesta campanha.
 func (h campaignsHost) IgnoredRules(ctx context.Context, campanhaID int64) []string {
 	return h.rules.ignoredRulesOf(ctx, campanhaID)
