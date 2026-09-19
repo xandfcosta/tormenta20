@@ -457,12 +457,35 @@ func retratoDaFila(l tableRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\"></span></span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\"></span></span>               <span aria-hidden=\"true\" class=\"h-0.5 w-full overflow-hidden rounded-full\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if l.PV.TempPct > 0 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<span class=\"block h-full rounded-full bg-hp-temp\" style=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var18 string
+				templ_7745c5c3_Var18, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width:%d%%", l.PV.TempPct))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/stage.templ`, Line: 176, Col: 53}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\"></span>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -496,38 +519,38 @@ func queriesRail(v View) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var18 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var18 == nil {
-			templ_7745c5c3_Var18 = templ.NopComponent
+		templ_7745c5c3_Var19 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var19 == nil {
+			templ_7745c5c3_Var19 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<nav aria-label=\"Consultas do mestre\" class=\"order-first flex shrink-0 gap-1 overflow-x-auto border border-grimorio-iron bg-grimorio-panel p-1 lg:order-last lg:w-14 lg:flex-col lg:overflow-x-visible\"><button type=\"button\" aria-label=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir a iniciativa · " + fmt.Sprint(len(v.Fila)) + " na fila")
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/stage.templ`, Line: 178, Col: 79}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "\" data-on:click=\"document.getElementById('tracker-drawer').showModal()\" class=\"inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent lg:hidden\">Iniciativa · ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<nav aria-label=\"Consultas do mestre\" class=\"order-first flex shrink-0 gap-1 overflow-x-auto border border-grimorio-iron bg-grimorio-panel p-1 lg:order-last lg:w-14 lg:flex-col lg:overflow-x-visible\"><button type=\"button\" aria-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(len(v.Fila)))
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir a iniciativa · " + fmt.Sprint(len(v.Fila)) + " na fila")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/stage.templ`, Line: 181, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/stage.templ`, Line: 201, Col: 79}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\" data-on:click=\"document.getElementById('tracker-drawer').showModal()\" class=\"inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent lg:hidden\">Iniciativa · ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var21 string
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(len(v.Fila)))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/stage.templ`, Line: 204, Col: 42}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -539,7 +562,7 @@ func queriesRail(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<button type=\"button\" aria-label=\"Abrir o bestiário\" title=\"Bestiário — trazer uma criatura do livro\" data-on:click=\"document.getElementById('table-bestiary').showModal()\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent lg:size-12\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<button type=\"button\" aria-label=\"Abrir o bestiário\" title=\"Bestiário — trazer uma criatura do livro\" data-on:click=\"document.getElementById('table-bestiary').showModal()\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent lg:size-12\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -547,7 +570,7 @@ func queriesRail(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</button></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</button></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -584,12 +607,12 @@ func gavetaDaFila(v View) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var21 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var21 == nil {
-			templ_7745c5c3_Var21 = templ.NopComponent
+		templ_7745c5c3_Var22 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var22 == nil {
+			templ_7745c5c3_Var22 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<dialog id=\"tracker-drawer\" data-preserve-attr=\"open\" aria-labelledby=\"tracker-drawer-title\" class=\"scene-grimorio mr-auto h-dvh max-h-none w-[min(30rem,calc(100vw-2rem))] max-w-none border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60\"><div class=\"flex h-full flex-col\"><div class=\"flex shrink-0 items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2\"><h2 id=\"tracker-drawer-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Iniciativa</h2><button type=\"button\" aria-label=\"Fechar a iniciativa\" data-on:click=\"document.getElementById('tracker-drawer').close()\" class=\"flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<dialog id=\"tracker-drawer\" data-preserve-attr=\"open\" aria-labelledby=\"tracker-drawer-title\" class=\"scene-grimorio mr-auto h-dvh max-h-none w-[min(30rem,calc(100vw-2rem))] max-w-none border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60\"><div class=\"flex h-full flex-col\"><div class=\"flex shrink-0 items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2\"><h2 id=\"tracker-drawer-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Iniciativa</h2><button type=\"button\" aria-label=\"Fechar a iniciativa\" data-on:click=\"document.getElementById('tracker-drawer').close()\" class=\"flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -597,7 +620,7 @@ func gavetaDaFila(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</button></div><div class=\"min-h-0 flex-1 space-y-3 overflow-y-auto p-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</button></div><div class=\"min-h-0 flex-1 space-y-3 overflow-y-auto p-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -609,7 +632,7 @@ func gavetaDaFila(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</div></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</div></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -294,7 +294,17 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// segunda decisão sobre quem vê o quê.
 	st := live.StateForRole(role, s.deps.Sessions().RefreshCharacterMaxes(ctx, sessionID))
 	grupo, meus, eu := s.tableRoster(ctx, userID, campaignID)
-	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu)
+	// A RESERVA de PV temporário é DERIVADA a cada desenho, e nunca espelhada na
+	// linha da fila. O estado ao vivo mora em memória e tem vários sítios de
+	// escrita — entrar na fila, resincronizar máximos, aplicar dano —, e um
+	// terceiro número espelhado ali envelheceria no primeiro que esquecesse de
+	// atualizá-lo, em silêncio. Aqui não há o que esquecer: o stream redesenha
+	// por este mesmo `LoadView`, então o que a mesa vê é o que o banco tem.
+	reservas := s.tempHpOf(ctx, st, grupo)
+	for i := range grupo {
+		withTempHp(&grupo[i].PV, reservas[grupo[i].CharacterID])
+	}
+	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu, reservas)
 	// O CICLO da sessão chega à tela porque, sem ele, os verbos teriam de ser
 	// oferecidos todos — e "encerrar" numa sessão que nunca começou é o gesto
 	// que o servidor recusa. Oferecer o que será recusado é desenhar um erro.
@@ -431,6 +441,54 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 		}
 	}
 	return grupo, meus, eu
+}
+
+// tempHpOf lê a reserva de PV temporário de todo personagem que a tela desenha
+// — os da fila e os do Grupo —, numa consulta só.
+//
+// UMA consulta e não uma por combatente: a fila redesenha a cada tique do
+// stream, e N+1 por quadro é o custo que a `sqlc.slice` existe para não pagar.
+//
+// Falha não derruba a tela: sem o mapa as barras saem sem filete, que é o que
+// elas eram antes desta fatia. Mesma escolha do roster logo acima — a
+// iniciativa é o assunto da tela, a reserva é um detalhe dela.
+func (s Scene) tempHpOf(
+	ctx context.Context, st *live.SessionRuntimeState, grupo []Member,
+) map[int64]int64 {
+	vistos := map[int64]bool{}
+	ids := []int64{}
+	junta := func(id int64) {
+		if !vistos[id] {
+			vistos[id] = true
+			ids = append(ids, id)
+		}
+	}
+	for i := range st.Initiative {
+		if id := st.Initiative[i].CharacterID; id != nil {
+			junta(*id)
+		}
+	}
+	for i := range grupo {
+		junta(grupo[i].CharacterID)
+	}
+	if len(ids) == 0 {
+		return map[int64]int64{}
+	}
+	linhas, err := s.deps.Queries().ListActiveEffectsByCharacters(ctx, ids)
+	if err != nil {
+		return map[int64]int64{}
+	}
+	blobs := map[int64][]string{}
+	for _, l := range linhas {
+		blobs[l.Characterid] = append(blobs[l.Characterid], l.Modifiers)
+	}
+	fora := make(map[int64]int64, len(blobs))
+	for id, b := range blobs {
+		if total := sheet.TempHpTotal(b); total > 0 {
+			fora[id] = int64(total)
+		}
+	}
+	return fora
 }
 
 // tableClasses monta "Guerreiro 3 / Ladino 2".

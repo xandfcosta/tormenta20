@@ -1231,14 +1231,14 @@ func vitalBar(v View, rotulo string, vital sheetVital, apagado bool) templ.Compo
 			return templ_7745c5c3_Err
 		}
 		if vital.Temp != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<span title=\"PV temporários — o dano gasta estes primeiro (p106)\" class=\"shrink-0 font-mono text-sm tabular-nums text-grimorio-gold\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<span title=\"PV temporários — o dano gasta estes primeiro (p106)\" class=\"shrink-0 font-mono text-sm tabular-nums text-hp-temp\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(vital.Temp)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 380, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 385, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -1311,7 +1311,7 @@ func vitalStep(v View, rotulo string, passo int) templ.Component {
 		var templ_7745c5c3_Var59 string
 		templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepLabel(rotulo, passo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 403, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 408, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var59)
 		if templ_7745c5c3_Err != nil {
@@ -1324,7 +1324,7 @@ func vitalStep(v View, rotulo string, passo int) templ.Component {
 		var templ_7745c5c3_Var60 string
 		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepLabel(rotulo, passo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 404, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 409, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var60)
 		if templ_7745c5c3_Err != nil {
@@ -1337,7 +1337,7 @@ func vitalStep(v View, rotulo string, passo int) templ.Component {
 		var templ_7745c5c3_Var61 string
 		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.ResolveAttributeValue(vitalCommand(v, rotulo, passo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 405, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 410, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var61)
 		if templ_7745c5c3_Err != nil {
@@ -1350,7 +1350,7 @@ func vitalStep(v View, rotulo string, passo int) templ.Component {
 		var templ_7745c5c3_Var62 string
 		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(stepSignal(passo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 408, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 413, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 		if templ_7745c5c3_Err != nil {
@@ -1403,7 +1403,7 @@ func ruleRefusal(v View) templ.Component {
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(v.Recusa)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 427, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/sheet.templ`, Line: 432, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
