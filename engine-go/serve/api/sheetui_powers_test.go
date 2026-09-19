@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 	"testing"
@@ -12,18 +13,22 @@ import (
 
 func barbaro(t *testing.T, nivel int64) (sceneFixture, int64) {
 	t.Helper()
-	return barbarianWithMp(t, nivel, 20)
+	return barbarianWithMpSpent(t, nivel, 0)
 }
 
-// barbarianWithMp semeia o mesmo bárbaro com o PM escolhido, para os casos em
-// que o bolso vazio É o assunto. (O `barbaro` ao lado é dívida de idioma
-// baselinada; nome NOVO sai em inglês.)
-func barbarianWithMp(t *testing.T, nivel, pmAtual int64) (sceneFixture, int64) {
+// barbarianWithMpSpent semeia o mesmo bárbaro com um tanto de PM JÁ GASTO, para
+// os casos em que o bolso vazio É o assunto. (O `barbaro` ao lado é dívida de
+// idioma baselinada; nome NOVO sai em inglês.)
+//
+// Ele diz quanto foi GASTO e não quanto sobrou porque o poço é do catálogo: o
+// máximo de um bárbaro de nível 5 é o que o livro dá, e uma bancada que o
+// escolhesse estaria medindo um personagem que não pode existir (ALE-355).
+func barbarianWithMpSpent(t *testing.T, nivel, pmGasto int64) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Furioso", Origin: "Batedor", Level: nivel,
-		HpMax: 60, HpCurrent: 60, MpMax: 20, MpCurrent: pmAtual,
+		HpMax: 0, HpCurrent: 0, MpMax: 0, MpCurrent: 0,
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -34,6 +39,10 @@ func barbarianWithMp(t *testing.T, nivel, pmAtual int64) (sceneFixture, int64) {
 		t.Fatalf("semear o bárbaro: %v", err)
 	}
 	seedClasse(t, f.s, id, "Bárbaro", nivel)
+	arrangePools(t, f.s, id, func(pocos sheet.Pools) (sheet.Pools, error) {
+		pocos.HpCurrent, pocos.MpCurrent = pocos.HpMax, pocos.MpMax-pmGasto
+		return pocos, nil
+	})
 	return f, id
 }
 
@@ -156,12 +165,16 @@ func TestTheStanceStepsComeFromTheLevelInTheClass(t *testing.T) {
 func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
 	f, id := barbaro(t, 10)
 
+	antes := pm(t, f, id)
 	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":2}`); recusa != "" {
 		t.Fatalf("entrar foi recusado: %q", recusa)
 	}
-	// Base 2 + dois degraus de 1 PM = 4 PM sobre os 20 semeados.
-	if pm := pm(t, f, id); pm != 16 {
-		t.Errorf("o PM ficou %d, quer 16 (20 − 2 de base − 2 degraus de 1)", pm)
+	// O que se prende é o CUSTO e não o saldo: base 2 + dois degraus de 1 PM.
+	// Em delta, porque o saldo de partida é o poço que o livro dá ao bárbaro de
+	// nível 10, e não um número que a bancada escolha.
+	if depois := pm(t, f, id); antes-depois != 4 {
+		t.Errorf("a entrada cobrou %d PM (%d → %d), quer 4: 2 de base + 2 degraus de 1",
+			antes-depois, antes, depois)
 	}
 	posturas, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
 	if err != nil {
@@ -180,12 +193,13 @@ func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
 func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
 	f, id := barbaro(t, 5)
 
+	antes := pm(t, f, id)
 	recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":3}`)
 	if !strings.Contains(recusa, "1 degraus") {
 		t.Errorf("a recusa não diz o teto: %q", recusa)
 	}
-	if pm := pm(t, f, id); pm != 20 {
-		t.Errorf("a recusa cobrou assim mesmo: sobrou %d", pm)
+	if depois := pm(t, f, id); depois != antes {
+		t.Errorf("a recusa cobrou assim mesmo: %d → %d", antes, depois)
 	}
 }
 
@@ -207,7 +221,7 @@ func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
 // As duas metades do mesmo buraco estão aqui, porque são dois caminhos
 // diferentes até a mesma comparação: o `UseDecision` e o `StanceDecision`.
 func TestWithoutMpNeitherThePowerNorTheStanceGoesThrough(t *testing.T) {
-	f, id := barbarianWithMp(t, 5, 0)
+	f, id := barbarianWithMpSpent(t, 5, 15)
 	choiceCom(t, f, id, `["class.barbaro.brado-assustador"]`, `[]`)
 
 	usar := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", "")
@@ -268,11 +282,13 @@ func TestUsingChargesTheMpAndCountsTheUse(t *testing.T) {
 	f, id := barbaro(t, 5)
 	choiceCom(t, f, id, `["class.barbaro.brado-assustador"]`, `[]`)
 
+	antes := pm(t, f, id)
 	if recusa := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", ""); recusa != "" {
 		t.Fatalf("usar foi recusado: %q", recusa)
 	}
-	if pm := pm(t, f, id); pm != 19 {
-		t.Errorf("o PM ficou %d, quer 19 (20 − 1)", pm)
+	depois := pm(t, f, id)
+	if antes-depois != 1 {
+		t.Errorf("o uso cobrou %d PM (%d → %d), quer 1", antes-depois, antes, depois)
 	}
 	usos, err := f.s.sceneCore().Queries().ListCharacterPowerUses(context.Background(), id)
 	if err != nil {
@@ -287,8 +303,8 @@ func TestUsingChargesTheMpAndCountsTheUse(t *testing.T) {
 	if !strings.Contains(recusa, "limite por cena") {
 		t.Errorf("o segundo uso não foi barrado pelo limite: %q", recusa)
 	}
-	if pm := pm(t, f, id); pm != 19 {
-		t.Errorf("a recusa cobrou de novo: %d", pm)
+	if outra := pm(t, f, id); outra != depois {
+		t.Errorf("a recusa cobrou de novo: %d → %d", depois, outra)
 	}
 }
 
@@ -308,11 +324,12 @@ func TestAVariableCostCannotBeSpentFromTheSheet(t *testing.T) {
 	if !strings.Contains(tela, "PM variável") {
 		t.Error("o custo variável não é anunciado na tela")
 	}
+	antes := pm(t, f, id)
 	if recusa := powerCommand(t, f, id, "usa/class.barbaro.vigor-primal", ""); !strings.Contains(recusa, "variável") {
 		t.Errorf("a ficha aceitou usar um poder de custo variável: %q", recusa)
 	}
-	if pm := pm(t, f, id); pm != 20 {
-		t.Errorf("a recusa cobrou assim mesmo: %d", pm)
+	if depois := pm(t, f, id); depois != antes {
+		t.Errorf("a recusa cobrou assim mesmo: %d → %d", antes, depois)
 	}
 }
 

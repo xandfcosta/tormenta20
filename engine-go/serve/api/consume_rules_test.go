@@ -64,7 +64,7 @@ func TestConsumeDecrementsExactlyOneAndHeals(t *testing.T) {
 	owner := seedUser(t, s, "dono@t20.local")
 	// 12/20 de PV com bálsamo (2d4, média 5) cabe SEM encostar no teto: é o
 	// caso que separa "curou" de "curou até o máximo", que o teste ao lado pega.
-	char := seedCharacter(t, s, owner, "Guerreiro", 12, 20, 0, 0)
+	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 1, 8, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 3)
 
 	dose, errDose := consumeItem(t, s, char, item, nil, nil)
@@ -89,7 +89,7 @@ func TestConsumeDecrementsExactlyOneAndHeals(t *testing.T) {
 func TestConsumeLastUnitRemovesTheItem(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	char := seedCharacter(t, s, owner, "Guerreiro", 12, 20, 0, 0)
+	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 1, 8, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 1)
 
 	dose, errDose := consumeItem(t, s, char, item, nil, nil)
@@ -108,7 +108,7 @@ func TestConsumeLastUnitRemovesTheItem(t *testing.T) {
 func TestConsumeClampsGainAtMaximum(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	char := seedCharacter(t, s, owner, "Guerreiro", 18, 20, 0, 0)
+	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 1, 2, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 1)
 
 	dose, errDose := consumeItem(t, s, char, item, nil, nil)
@@ -124,7 +124,7 @@ func TestConsumeClampsGainAtMaximum(t *testing.T) {
 func TestConsumeUsesRolledValueWhenTheTableRolls(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	char := seedCharacter(t, s, owner, "Guerreiro", 10, 30, 0, 0)
+	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 3, 20, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 1)
 
 	// A média é o padrão de quem não quer rolar; quem rola manda o resultado.
@@ -142,7 +142,7 @@ func TestConsumeUsesRolledValueWhenTheTableRolls(t *testing.T) {
 func TestConsumeCreatesTheSceneEffect(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	char := seedCharacter(t, s, owner, "Bardo", 10, 10, 0, 0)
+	char := seedCharacterAtLevel(t, s, owner, "Bardo", "Bardo", 1, 2, 0)
 	item := seedConsumable(t, s, char, "cosmetico", "Cosmético", 1)
 
 	dose, errDose := consumeItem(t, s, char, item, nil, nil)
@@ -166,7 +166,7 @@ func TestConsumeCreatesTheSceneEffect(t *testing.T) {
 func TestConsumeRefusesWhatIsNotConsumable(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	char := seedCharacter(t, s, owner, "Guerreiro", 12, 20, 0, 0)
+	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 1, 8, 0)
 	item := seedConsumable(t, s, char, "espada-longa", "Espada longa", 1)
 
 	dose, errDose := consumeItem(t, s, char, item, nil, nil)
@@ -182,7 +182,7 @@ func TestConsumeRefusesWhatIsNotConsumable(t *testing.T) {
 func TestConsumeRefusesTheSecondPortionOfTheDay(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	char := seedCharacter(t, s, owner, "Guerreiro", 10, 40, 0, 0)
+	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 5, 30, 0)
 	item := seedConsumable(t, s, char, "macarrao-de-yuvalin", "Macarrão de Yuvalin", 2)
 
 	if _, first := consumeItem(t, s, char, item, nil, nil); first != nil {
@@ -202,7 +202,7 @@ func TestConsumeRefusesTheSecondPortionOfTheDay(t *testing.T) {
 func TestConsumeAllowsThePortionAgainAfterTheDayEnds(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	char := seedCharacter(t, s, owner, "Guerreiro", 10, 40, 0, 0)
+	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 5, 30, 0)
 	item := seedConsumable(t, s, char, "macarrao-de-yuvalin", "Macarrão de Yuvalin", 2)
 
 	consumeItem(t, s, char, item, nil, nil)

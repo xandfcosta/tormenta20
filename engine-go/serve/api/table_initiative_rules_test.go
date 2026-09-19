@@ -129,7 +129,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 	}
 	// Intruso na MESMA mesa: recusar alguém de fora seria recusar pela membresia,
 	// e a regra que este teste mira é a POSSE do personagem.
-	intruderChar := seedCharacter(t, s, intruder, "Colega", 20, 30, 5, 10)
+	intruderChar := seedCharacterAtLevel(t, s, intruder, "Colega", "Guerreiro", 3, 10, 4)
 	seedMember(t, s, campaignID, intruderChar)
 
 	return selfInitiativeFixture{
@@ -170,7 +170,7 @@ func TestEndingTheSceneExpiresThePartySceneEffects(t *testing.T) {
 // nunca chegou a pôr no rastreador.
 func TestEndingTheSceneReachesWhoIsNotInTheTracker(t *testing.T) {
 	f := newEndSceneFixture(t)
-	ausente := seedCharacter(t, f.srv, f.player, "Ladino de fora", 10, 10, 2, 2)
+	ausente := seedCharacter(t, f.srv, f.player, "Ladino de fora")
 	seedMember(t, f.srv, f.campaignID, ausente)
 	seedEffect(t, f.srv, ausente, "bencao", "scene")
 
@@ -199,7 +199,7 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 	player := seedUser(t, s, "jogador@t.com")
 	campaignID := seedCampaign(t, s, gmID)
 	sessionID := seedSession(t, s, campaignID)
-	charID := seedCharacter(t, s, player, "Clérigo", 10, 10, 5, 5)
+	charID := seedCharacterAtLevel(t, s, player, "Clérigo", "Clérigo", 2, 10, 5)
 	seedMember(t, s, campaignID, charID)
 	seedEffect(t, s, charID, "bencao", "scene")
 	seedEffect(t, s, charID, "heroismo", "day")

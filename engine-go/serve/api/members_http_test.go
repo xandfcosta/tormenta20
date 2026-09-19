@@ -34,8 +34,8 @@ func newMemberFixture(t *testing.T) memberFixture {
 
 	campaignID := seedCampaign(t, s, owner)
 	otherCamp := seedCampaign(t, s, otherOwner)
-	pcID := seedCharacter(t, s, player, "Herói", 20, 30, 5, 10)
-	otherPc := seedCharacter(t, s, otherOwner, "Vizinho", 20, 30, 5, 10)
+	pcID := seedCharacterAtLevel(t, s, player, "Herói", "Guerreiro", 3, 10, 4)
+	otherPc := seedCharacterAtLevel(t, s, otherOwner, "Vizinho", "Guerreiro", 3, 10, 4)
 
 	member, err := s.queries.CreateMember(ctx, sqlcgen.CreateMemberParams{
 		Campaignid: campaignID, Characterid: pcID, Addedat: dbvalue.NowISO(),
@@ -63,7 +63,7 @@ func newMemberFixture(t *testing.T) memberFixture {
 
 func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 	f := newMemberFixture(t)
-	outroHeroi := seedCharacter(t, f.s, f.owner, "Segundo Herói", 10, 10, 0, 0)
+	outroHeroi := seedCharacter(t, f.s, f.owner, "Segundo Herói")
 	antes := membersOf(t, f.s, f.campaignID)
 
 	// A checagem de unicidade não consegue responder. Antes disto, o erro virava
@@ -90,7 +90,7 @@ func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 // remover.
 func TestAFailedJoinLeavesNoOrphanSnapshot(t *testing.T) {
 	f := newMemberFixture(t)
-	heroi := seedCharacter(t, f.s, f.owner, "Terceiro Herói", 10, 10, 0, 0)
+	heroi := seedCharacter(t, f.s, f.owner, "Terceiro Herói")
 	copiasAntes := copiesOf(t, f.s, heroi)
 
 	// A criação do membro falha DEPOIS de o clone já ter acontecido.
@@ -111,7 +111,7 @@ func TestAFailedJoinLeavesNoOrphanSnapshot(t *testing.T) {
 // quem tem direito de entrar.
 func TestJoiningStillWorks(t *testing.T) {
 	f := newMemberFixture(t)
-	heroi := seedCharacter(t, f.s, f.owner, "Quarto Herói", 10, 10, 0, 0)
+	heroi := seedCharacter(t, f.s, f.owner, "Quarto Herói")
 	outraMesa := seedCampaign(t, f.s, f.owner)
 
 	if err := f.addMember(t, f.owner, outraMesa, heroi); err != nil {
@@ -177,7 +177,7 @@ func copiesOf(t *testing.T, s *Server, sourceID int64) int {
 func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	f := newMemberFixture(t)
 	table := seedCampaign(t, f.s, f.owner)
-	heroi := seedCharacter(t, f.s, f.owner, "Herói Disputado", 10, 10, 0, 0)
+	heroi := seedCharacter(t, f.s, f.owner, "Herói Disputado")
 
 	const pedidos = 8
 	var wg sync.WaitGroup

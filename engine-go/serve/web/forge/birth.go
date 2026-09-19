@@ -8,7 +8,6 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/wire"
 )
@@ -214,49 +213,39 @@ func birthBody(folha forgeAnswers, raca book.Race, classe book.Class) (sheet.Cre
 	}, nil
 }
 
-// heroAggregate carrega a ficha inteira de quem vai ter os poços mexidos.
+// heroRow busca a linha de quem vai ter os poços mexidos.
 //
-// Os dois chamadores precisam do agregado e não da linha, porque é dele que o
-// motor tira o PV da classe.
-func (s Scene) heroAggregate(r *http.Request, id int64) (sheet.CharacterDTO, error) {
-	row, err := s.deps.Queries().GetCharacter(r.Context(), id)
-	if err != nil {
-		return sheet.CharacterDTO{}, err
-	}
-	return sheet.Load(r.Context(), s.deps.Queries(), row)
+// É a LINHA e não o agregado: o funil dos poços carrega a ficha inteira por
+// conta própria, porque o máximo derivado depende dela.
+func (s Scene) heroRow(r *http.Request, id int64) (sqlcgen.Character, error) {
+	return s.deps.Queries().GetCharacter(r.Context(), id)
 }
 
 // fillPools deixa o herói recém-nascido com PV e PM CHEIOS.
 //
-// São dois passos e não um porque o `healVitals` calcula os máximos a partir do
-// agregado já gravado — antes de existir linha no banco não há de onde tirar o
-// PV da classe. Nascer com o poço no zero seria nascer inconsciente.
+// Ela vem DEPOIS do INSERT e não junto: o máximo sai do agregado já gravado —
+// antes de existir linha no banco não há de onde tirar o PV da classe. Nascer
+// com o poço no zero seria nascer inconsciente.
 //
-// Ela tem UM chamador, o nascimento, e é o encher à força que a prende ali:
-// chamá-la de uma cena que mexe em herói JÁ em jogo é uma bomba de cura. Quem
-// mexe numa ficha viva usa o `shiftPools`.
+// Tem UM chamador, o nascimento, e é o encher à força que a prende ali: chamá-la
+// de uma cena que mexe em herói JÁ em jogo é uma bomba de cura. Quem mexe numa
+// ficha viva usa o `refreshPools`.
 func (s Scene) fillPools(r *http.Request, id int64) error {
-	dto, err := s.heroAggregate(r, id)
+	row, err := s.heroRow(r, id)
 	if err != nil {
 		return err
 	}
-	if err := s.births.HealVitals(r.Context(), id, &dto); err != nil {
-		return err
-	}
-	return s.deps.Queries().SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
-		HpMax: dto.HpMax, HpCurrent: dto.HpMax, MpMax: dto.MpMax, MpCurrent: dto.MpMax,
-		UpdatedAt: dbvalue.NowISO(), ID: id,
-	})
+	return s.births.FillPools(r.Context(), row)
 }
 
-// shiftPools recompute os máximos e faz os ATUAIS acompanharem o delta.
+// refreshPools regrava os poços sem tocar no que já foi gasto.
 //
 // É o que um passo de atributo faz: a Constituição mexe no PV máximo (p34), e
 // quem já apanhou não se cura por mexer na ficha.
-func (s Scene) shiftPools(r *http.Request, id int64) error {
-	dto, err := s.heroAggregate(r, id)
+func (s Scene) refreshPools(r *http.Request, id int64) error {
+	row, err := s.heroRow(r, id)
 	if err != nil {
 		return err
 	}
-	return s.births.ShiftVitalsToNewMax(r.Context(), id, &dto)
+	return s.births.RefreshPools(r.Context(), row)
 }

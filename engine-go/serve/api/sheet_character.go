@@ -14,7 +14,7 @@ import (
 // dependências dela por construtor.
 
 func (sr sheetRules) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sheet.CharacterDTO, error) {
-	return sheet.Load(ctx, sr.queries, c)
+	return sheet.Load(ctx, sr.queries, sr.catalogs, c)
 }
 
 func (sr sheetRules) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheet, error) {

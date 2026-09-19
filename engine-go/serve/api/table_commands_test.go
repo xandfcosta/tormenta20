@@ -220,8 +220,8 @@ func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 func TestAddPartyBringsEveryMemberIncludingTheGmsOwnCharacter(t *testing.T) {
 	f := newSceneFixture(t)
 	outroJogador := seedUser(t, f.s, "jogador2@t.com")
-	doOutro := seedCharacter(t, f.s, outroJogador, "Arwen", 12, 12, 0, 0)
-	doMestre := seedCharacter(t, f.s, f.mestre, "Bardo do mestre", 9, 9, 3, 3)
+	doOutro := seedCharacter(t, f.s, outroJogador, "Arwen")
+	doMestre := seedCharacterAtLevel(t, f.s, f.mestre, "Bardo do mestre", "Bardo", 1, 0, 0)
 	seedMember(t, f.s, f.campaignID, doOutro)
 	seedMember(t, f.s, f.campaignID, doMestre)
 

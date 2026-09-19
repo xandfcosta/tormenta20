@@ -11,6 +11,7 @@ import (
 	"t20engine/app"
 	"t20engine/app/initiative"
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 	"t20engine/infra/config"
 	"t20engine/infra/db/dbvalue"
 	"testing"
@@ -130,22 +131,16 @@ func seedCampaign(t *testing.T, s *Server, ownerID int64) int64 {
 	return c.ID
 }
 
-// seedCharacter insere o personagem válido mínimo (colunas JSON no padrão) com o
-// dono e os vitais dados, e devolve o id dele.
-func seedCharacter(t *testing.T, s *Server, ownerID int64, name string, hpCur, hpMax, mpCur, mpMax int64) int64 {
+// seedCharacter é o personagem válido mínimo para quem não se importa com o
+// poço: um guerreiro de nível 1, inteiro.
+//
+// Ele recebia os quatro vitais e os escrevia — em trinta chamadas, sem CLASSE
+// nenhuma, que é um estado impossível nas regras. O poço
+// agora é o do livro, e quem precisa de outro chama o `seedCharacterAtLevel`
+// direto dizendo classe, nível e o quanto foi gasto (ALE-355).
+func seedCharacter(t *testing.T, s *Server, ownerID int64, name string) int64 {
 	t.Helper()
-	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: ownerID, Name: name, Origin: "Soldado", Level: 1,
-		HpMax: hpMax, HpCurrent: hpCur, MpMax: mpMax, MpCurrent: mpCur,
-		Size: "Médio", Displacement: 9,
-		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
-	})
-	if err != nil {
-		t.Fatalf("seed character %q: %v", name, err)
-	}
-	return id
+	return seedCharacterAtLevel(t, s, ownerID, name, "Guerreiro", 1, 0, 0)
 }
 
 // seedCharacterAtLevel: o nível importa para o descanso (a recuperação é o
@@ -154,7 +149,7 @@ func seedCharacter(t *testing.T, s *Server, ownerID int64, name string, hpCur, h
 //
 // # Ele não escolhe mais o máximo, e essa é a mudança
 //
-// A assinatura recebia `hpCur, hpMax, mpCur, mpMax` e escrevia os quatro. Isso
+// A assinatura recebia os quatro vitais e os escrevia. Isso
 // arranjava um estado que a regra não produz — um Arcanista de nível 8 tem 42
 // PV pelo livro, e a bancada escrevia 30 —, e enquanto o máximo era coluna
 // ninguém notava. Com ele derivado do catálogo (ALE-355), esses números viram
@@ -190,15 +185,33 @@ func seedCharacterAtLevel(
 		t.Fatalf("seed character %q: %v", name, err)
 	}
 	seedClasse(t, s, id, classe, level)
-	// O DANO vai para a tabela própria (00014), e só quem apanhou ganha linha.
 	if hpDano > 0 || mpGasto > 0 {
-		if err := s.queries.SaveCharacterDamage(context.Background(), sqlcgen.SaveCharacterDamageParams{
-			Characterid: id, Hpdamage: hpDano, Mpspent: mpGasto,
-		}); err != nil {
-			t.Fatalf("seed dano de %q: %v", name, err)
-		}
+		arrangePools(t, s, id, func(p sheet.Pools) (sheet.Pools, error) {
+			p.HpCurrent, p.MpCurrent = p.HpMax-hpDano, p.MpMax-mpGasto
+			return p, nil
+		})
 	}
 	return id
+}
+
+// arrangePools arranja o estado vital de uma ficha PELO FUNIL, que é o único
+// caminho que a produção tem.
+//
+// A bancada não escreve `hpCurrent` por fora nem inventa uma linha de dano: o
+// que ela arranja tem de ser um estado que a produção CONSEGUE produzir, senão o
+// caso mede um banco impossível. O `TestEveryVitalWriteGoesThroughTheFunnel`
+// cobra isso desta bancada com a mesma régua que cobra do resto.
+func arrangePools(t *testing.T, s *Server, id int64, regra sheet.PoolRule) sheet.Pools {
+	t.Helper()
+	row, err := s.queries.GetCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler a ficha %d para arranjar os poços: %v", id, err)
+	}
+	pocos, err := sheet.ApplyToPools(context.Background(), s.queries, s.catalogs, row, regra)
+	if err != nil {
+		t.Fatalf("arranjar os poços da ficha %d: %v", id, err)
+	}
+	return pocos
 }
 
 // bookPools é quanto o LIVRO dá de PV/PM para esta classe neste nível.
@@ -255,7 +268,7 @@ func TestTheRoleInACampaignIsOwnerGmMemberPlayerAndNobodyElse(t *testing.T) {
 	player := seedUser(t, s, "p@t.com")
 	stranger := seedUser(t, s, "x@t.com")
 	campaignID := seedCampaign(t, s, gm)
-	pc := seedCharacter(t, s, player, "PC", 10, 10, 5, 5)
+	pc := seedCharacter(t, s, player, "PC")
 	seedMember(t, s, campaignID, pc)
 
 	casos := []struct {
@@ -297,9 +310,9 @@ func TestResolveCombatant(t *testing.T) {
 	player := seedUser(t, s, "p@t.com")
 	stranger := seedUser(t, s, "x@t.com")
 	campaignID := seedCampaign(t, s, gm)
-	pc := seedCharacter(t, s, player, "Herói", 7, 12, 3, 8)
+	pc := seedCharacterAtLevel(t, s, player, "Herói", "Bardo", 2, 8, 5)
 	seedMember(t, s, campaignID, pc)
-	loose := seedCharacter(t, s, player, "Solto", 5, 5, 0, 0) // not a member
+	loose := seedCharacter(t, s, player, "Solto") // not a member
 
 	roster := s.initiativeQueue().Roster()
 
@@ -308,7 +321,8 @@ func TestResolveCombatant(t *testing.T) {
 		if err != nil {
 			t.Fatalf("o dono foi barrado: %v", err)
 		}
-		want := initiative.Combatant{CharacterID: pc, Name: "Herói", HpCurrent: 7, HpMax: 12, MpCurrent: 3, MpMax: 8}
+		// Bardo de nível 2: 15 PV e 8 PM pelo livro, menos os 8 e 5 semeados.
+		want := initiative.Combatant{CharacterID: pc, Name: "Herói", HpCurrent: 7, HpMax: 15, MpCurrent: 3, MpMax: 8}
 		if got != want {
 			t.Errorf("veio %+v, queria %+v", got, want)
 		}
@@ -409,7 +423,7 @@ func TestEndSceneEndDay(t *testing.T) {
 	gm := AuthUser{ID: gmID}
 	stranger := AuthUser{ID: seedUser(t, s, "x@t.com")}
 	_ = seedCampaign(t, s, gmID)
-	char := seedCharacter(t, s, gmID, "PC", 10, 10, 5, 5)
+	char := seedCharacter(t, s, gmID, "PC")
 
 	t.Run("EndScene removes only scene effects", func(t *testing.T) {
 		seedEffect(t, s, char, "buff-a", "scene")

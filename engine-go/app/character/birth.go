@@ -100,18 +100,6 @@ func (b Births) Create(
 	return id, nil
 }
 
-// HealVitals recomputa os poços e PRENDE o atual na faixa — a ficha que nasce
-// nasce cheia, e o que se evita é um atual maior que o máximo.
-func (b Births) HealVitals(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
-	return syncVitals(ctx, b.queries, b.catalogs, id, dto, sheet.ClampedToNewMax)
-}
-
-// ShiftVitalsToNewMax recomputa os poços e faz os ATUAIS acompanharem o delta,
-// que é o que um passo de atributo faz com os poços de um herói que já apanhou.
-func (b Births) ShiftVitalsToNewMax(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
-	return syncVitals(ctx, b.queries, b.catalogs, id, dto, sheet.ShiftedByNewMax)
-}
-
 // compactOr reescreve o JSON sem espaço, ou devolve o padrão quando não veio —
 // e também quando veio ILEGÍVEL: gravar o texto cru de um JSON quebrado faria a
 // leitura seguinte falhar longe daqui, na tela de quem abrisse a ficha.

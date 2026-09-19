@@ -29,8 +29,8 @@ import (
 	"fmt"
 
 	"t20engine/app"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -71,12 +71,13 @@ func (a Access) Character(ctx context.Context, quem app.Caller, id int64) (sqlcg
 
 // Scopes são os gestos por FICHA: o que acaba quando a cena ou o dia acaba.
 type Scopes struct {
-	queries *sqlcgen.Queries
-	access  Access
+	queries  *sqlcgen.Queries
+	catalogs *engine.Catalogs
+	access   Access
 }
 
-func NewScopes(q *sqlcgen.Queries) Scopes {
-	return Scopes{queries: q, access: NewAccess(q)}
+func NewScopes(q *sqlcgen.Queries, catalogs *engine.Catalogs) Scopes {
+	return Scopes{queries: q, catalogs: catalogs, access: NewAccess(q)}
 }
 
 // Access é a trava deste pacote, exposta para quem precisa só dela.
@@ -145,13 +146,18 @@ func (s Scopes) NightRest(
 	if err != nil {
 		return sheet.RestedVitals{}, err
 	}
-	depois := sheet.AfterNightRest(row.Level, condicao,
-		sheet.RestedVitals{HpCurrent: row.Hpcurrent, MpCurrent: row.Mpcurrent},
-		row.Hpmax, row.Mpmax)
-	if err := s.queries.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
-		HpCurrent: depois.HpCurrent, MpCurrent: depois.MpCurrent,
-		UpdatedAt: dbvalue.NowISO(), ID: characterID,
-	}); err != nil {
+	// A conta do livro recebe o poço DERIVADO e não a coluna: o descanso devolve
+	// uma fração do máximo, e com o máximo velho um personagem que subiu de nível
+	// recuperaria pelo teto de ontem.
+	var depois sheet.RestedVitals
+	if _, err := sheet.ApplyToPools(ctx, s.queries, s.catalogs, row,
+		func(pocos sheet.Pools) (sheet.Pools, error) {
+			depois = sheet.AfterNightRest(row.Level, condicao,
+				sheet.RestedVitals{HpCurrent: pocos.HpCurrent, MpCurrent: pocos.MpCurrent},
+				pocos.HpMax, pocos.MpMax)
+			pocos.HpCurrent, pocos.MpCurrent = depois.HpCurrent, depois.MpCurrent
+			return pocos, nil
+		}); err != nil {
 		return sheet.RestedVitals{}, fmt.Errorf("gravar os vitais do personagem %d: %w", characterID, err)
 	}
 	return depois, nil

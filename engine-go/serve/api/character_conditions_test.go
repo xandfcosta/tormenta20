@@ -19,7 +19,7 @@ import (
 func TestEveryCatalogConditionIsAccepted(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	character := seedCharacter(t, s, owner, "Herói", 20, 20, 10, 10)
+	character := seedCharacter(t, s, owner, "Herói")
 	path := "/personagens/" + id64(character) + "/conditions"
 
 	ids := catalog.ConditionIDs()
@@ -45,7 +45,7 @@ func TestEveryCatalogConditionIsAccepted(t *testing.T) {
 func TestAnUnknownConditionIsRejected(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	character := seedCharacter(t, s, owner, "Herói", 20, 20, 10, 10)
+	character := seedCharacter(t, s, owner, "Herói")
 
 	rec := authed(t, s, owner, http.MethodPatch, "/personagens/"+id64(character)+"/conditions",
 		`{"activeConditions":["caido","enfeiticado","voando"]}`)

@@ -67,7 +67,7 @@ func TestTheBenchSeedsThePoolsTheBookGives(t *testing.T) {
 
 			// E a CLASSE existe, porque personagem sem classe é impossível nas
 			// regras — e sem ela o poço do livro é zero.
-			dto, err := sheet.Load(context.Background(), s.queries, row)
+			dto, err := sheet.Load(context.Background(), s.queries, s.catalogs, row)
 			if err != nil {
 				t.Fatalf("carregar o agregado: %v", err)
 			}

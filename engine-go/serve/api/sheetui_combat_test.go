@@ -46,7 +46,7 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Combatente", Origin: "Soldado", Level: 3,
-		HpMax: 30, HpCurrent: 30, MpMax: 0, MpCurrent: 0,
+		HpMax: 0, HpCurrent: 0, MpMax: 0, MpCurrent: 0,
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -57,6 +57,10 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 		t.Fatalf("semear o combatente: %v", err)
 	}
 	seedClasse(t, f.s, id, "Guerreiro", 3)
+	arrangePools(t, f.s, id, func(pocos sheet.Pools) (sheet.Pools, error) {
+		pocos.HpCurrent, pocos.MpCurrent = pocos.HpMax, pocos.MpMax
+		return pocos, nil
+	})
 	seedPericia(t, f.s, id, "Luta", "strength", true)
 	seedPericia(t, f.s, id, "Pontaria", "dexterity", false)
 	seedPericia(t, f.s, id, "Fortitude", "constitution", false)

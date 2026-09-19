@@ -61,7 +61,7 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 	ctx := context.Background()
 	id, err := s.queries.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: "Conjurador", Origin: "Estudioso", Level: int64(classLevel),
-		HpMax: 50, HpCurrent: 50, MpMax: int64(mpCurrent), MpCurrent: int64(mpCurrent),
+		HpMax: 0, HpCurrent: 0, MpMax: 0, MpCurrent: 0,
 		Intelligence: 4, Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: classPowers, ClassChoices: "{}", PowerChoices: "{}",
@@ -80,6 +80,13 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 	}); err != nil {
 		t.Fatalf("semear magia: %v", err)
 	}
+	// O PM PEDIDO é o que fica no bolso, e o máximo é o que o livro dá — um
+	// pedido acima do poço da classe é aparado, e por isso todo caso abaixo
+	// afirma o CUSTO em delta e não o saldo (ALE-355).
+	arrangePools(t, s, id, func(pocos sheet.Pools) (sheet.Pools, error) {
+		pocos.HpCurrent, pocos.MpCurrent = pocos.HpMax, int64(mpCurrent)
+		return pocos, nil
+	})
 	return id
 }
 
@@ -141,11 +148,13 @@ func TestBolaDeFogoWorkedExample(t *testing.T) {
 	char := seedCaster(t, s, owner, "Arcanista", 11, 40, "bola-de-fogo")
 
 	t.Run("quatro acúmulos gastam exatamente os 11 PM do teto", func(t *testing.T) {
+		antes := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":4}]}`); err != nil {
 			t.Fatalf("conjurar devolveu %v", err)
 		}
-		if got := mpOf(t, s, char); got != 29 {
-			t.Errorf("PM restante = %d, want 29 (40 − 11)", got)
+		if depois := mpOf(t, s, char); antes-depois != 11 {
+			t.Errorf("gastou %d PM (%d → %d), want 11 (3 de base + 4 acúmulos de 2)",
+				antes-depois, antes, depois)
 		}
 	})
 
@@ -210,11 +219,12 @@ func TestMinimumCostIsAlwaysAllowed(t *testing.T) {
 	char := seedCaster(t, s, owner, "Bárbaro", 2, 20, "bola-de-fogo")
 
 	t.Run("o custo base passa mesmo acima do teto", func(t *testing.T) {
+		antes := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`); err != nil {
 			t.Fatalf("custo mínimo devolveu %v", err)
 		}
-		if got := mpOf(t, s, char); got != 17 {
-			t.Errorf("PM restante = %d, want 17 (20 − 3)", got)
+		if depois := mpOf(t, s, char); antes-depois != 3 {
+			t.Errorf("gastou %d PM (%d → %d), want 3 de base", antes-depois, antes, depois)
 		}
 	})
 

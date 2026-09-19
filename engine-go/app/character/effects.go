@@ -19,36 +19,24 @@ import (
 // TouchVital move PV ou PM em um passo, preso entre zero e o máximo.
 //
 // O TETO é o máximo do personagem: curar além dele não é PV temporário, que é
-// outra regra e tem dono no motor.
+// outra regra e tem dono no motor. Quem prende é o funil, para os dois vitais e
+// para todos os gestos — aqui só se diz QUAL vital anda e quanto.
 func (p Plays) TouchVital(
 	ctx context.Context, row sqlcgen.Character, qual string, passo int,
 ) error {
-	hp, mp := row.Hpcurrent, row.Mpcurrent
-	switch qual {
-	case "pv":
-		hp = pinnedToRange(hp+int64(passo), row.Hpmax)
-	case "pm":
-		mp = pinnedToRange(mp+int64(passo), row.Mpmax)
-	default:
+	if qual != "pv" && qual != "pm" {
 		return fmt.Errorf("vital %q não existe: são 'pv' e 'pm'", qual)
 	}
-	if err := p.queries.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
-		HpCurrent: hp, MpCurrent: mp, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-	}); err != nil {
-		return fmt.Errorf("gravar os vitais da ficha %d: %w", row.ID, err)
-	}
-	return nil
-}
-
-// pinnedToRange mantém o vital entre zero e o máximo.
-func pinnedToRange(valor, max int64) int64 {
-	if valor < 0 {
-		return 0
-	}
-	if valor > max {
-		return max
-	}
-	return valor
+	_, err := sheet.ApplyToPools(ctx, p.queries, p.catalogs, row,
+		func(pocos sheet.Pools) (sheet.Pools, error) {
+			if qual == "pv" {
+				pocos.HpCurrent += int64(passo)
+			} else {
+				pocos.MpCurrent += int64(passo)
+			}
+			return pocos, nil
+		})
+	return err
 }
 
 // ToggleBookCondition liga ou desliga UMA condição do livro (p394-395).

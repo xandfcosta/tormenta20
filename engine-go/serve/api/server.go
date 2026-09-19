@@ -138,12 +138,16 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 	// UM barramento para os dois stores e para o servidor: um por store faria
 	// quem escuta juntar as peças de novo.
 	bus := &events.Bus{}
-	srv := &Server{
+	// O `srv` é declarado antes do literal porque a porta dos vitais precisa
+	// PERGUNTAR o motor a ele, e não recebê-lo por cópia: o `primeCatalogs` troca
+	// o campo depois daqui.
+	var srv *Server
+	srv = &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),
-		sessions: session.NewStore(q, live.NewUUID, sheetVitals{q: q}, bus),
+		sessions: session.NewStore(q, live.NewUUID, sheetVitals{q: q, catalogs: func() *engine.Catalogs { return srv.catalogs }}, bus),
 		boards:   boards.NewStore(q, live.NewUUID, bus),
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),
@@ -209,7 +213,7 @@ func (s *Server) sessionAccess() session.Access {
 }
 
 func (s *Server) restParty() rest.Party {
-	return rest.NewParty(s.queries, s.sessions)
+	return rest.NewParty(s.queries, s.sessions, s.catalogs)
 }
 
 func (s *Server) sessionLifecycle() session.Lifecycle {

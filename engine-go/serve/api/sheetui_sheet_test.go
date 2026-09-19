@@ -251,6 +251,10 @@ func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 		t.Fatal("a ficha SEM poça já mostra a reserva — o caso mediria o repouso")
 	}
 
+	// A fração do PV é LIDA antes, e não escrita à mão: o poço do bárbaro vem do
+	// catálogo (ALE-355), e o que este caso afirma é que ela não MUDA.
+	fracao := pvFraction(t, f, id)
+
 	if rec := effect(t, f, id, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
 	}
@@ -265,8 +269,18 @@ func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 		t.Error("o crachá não diz QUANTO é a reserva")
 	}
 	// E o PV de verdade não se mexeu: a reserva é parcela à parte, não um
-	// somando. O bárbaro nasce com 60 de PV máximo.
-	if !strings.Contains(tela, "60/60") {
-		t.Error("a fração do PV mudou — a reserva virou somando em vez de parcela")
+	// somando.
+	if !strings.Contains(tela, fracao) {
+		t.Errorf("a fração do PV saiu de %q — a reserva virou somando em vez de parcela", fracao)
 	}
+}
+
+// pvFraction é o "atual/máximo" do PV como o crachá o escreve.
+func pvFraction(t *testing.T, f sceneFixture, id int64) string {
+	t.Helper()
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler a ficha %d: %v", id, err)
+	}
+	return fmt.Sprintf("%d/%d", row.Hpcurrent, row.Hpmax)
 }

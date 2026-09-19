@@ -47,7 +47,7 @@ type Dose struct {
 func (p Plays) Consume(
 	ctx context.Context, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
 ) (Dose, error) {
-	dto, err := sheet.Load(ctx, p.queries, row)
+	dto, err := sheet.Load(ctx, p.queries, p.catalogs, row)
 	if err != nil {
 		return Dose{}, err
 	}
@@ -116,20 +116,22 @@ func (p Plays) Consume(
 		removed, newQty = true, 0
 	}
 
-	hpCurrent, mpCurrent := row.Hpcurrent, row.Mpcurrent
-	if hasHp || hasMp {
-		if hasHp {
-			hpCurrent = min(row.Hpmax, row.Hpcurrent+int64(hpGain))
-		}
-		if hasMp {
-			mpCurrent = min(row.Mpmax, row.Mpcurrent+int64(mpGain))
-		}
-		if err := q.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
-			HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: row.ID,
-		}); err != nil {
-			return Dose{}, fmt.Errorf("gravar os poços da ficha %d: %w", row.ID, err)
-		}
+	// O poço tem de sair do funil mesmo quando a dose não cura nada: ele é o que
+	// a cena redesenha, e devolver a coluna crua aqui traria o número velho.
+	pocos, err := sheet.ApplyToPools(ctx, q, p.catalogs, row,
+		func(pocos sheet.Pools) (sheet.Pools, error) {
+			if hasHp {
+				pocos.HpCurrent += int64(hpGain)
+			}
+			if hasMp {
+				pocos.MpCurrent += int64(mpGain)
+			}
+			return pocos, nil
+		})
+	if err != nil {
+		return Dose{}, fmt.Errorf("gravar os poços da ficha %d: %w", row.ID, err)
 	}
+	hpCurrent, mpCurrent := pocos.HpCurrent, pocos.MpCurrent
 	if err := tx.Commit(); err != nil {
 		return Dose{}, fmt.Errorf("fechar a transação da dose de %q: %w", cat.Name, err)
 	}

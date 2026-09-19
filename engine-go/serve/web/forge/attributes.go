@@ -112,17 +112,11 @@ func (s Scene) stepAttribute(r *http.Request) (recusa string, status int, err er
 	if err := s.saveAttributes(r.Context(), row.ID, espalhamento); err != nil {
 		return "", http.StatusInternalServerError, err
 	}
-	// A Constituição mexe no PV máximo (p34), e os ATUAIS acompanham o delta —
-	// a mesma regra da mudança de nível.
-	//
-	// Encher os poços aqui seria uma bomba de cura de dois cliques: o `−` num
-	// atributo é sempre aceito dentro da faixa (gasta MENOS pontos), o `+`
-	// devolve o ponto, e uma Lenda de nível 20 com 3 de 180 PV sairia com 180.
-	// Não adianta encher só "enquanto o herói é forjado": `heroOfTheForge`
-	// confere id, existência e posse, e a tabela `characters` não guarda esse
-	// estado. O delta fecha o ciclo `−`/`+` EXATO, e o dano continua sendo do
-	// MESTRE.
-	return "", http.StatusOK, s.shiftPools(r, row.ID)
+	// A Constituição mexe no PV máximo (p34), e o atual ACOMPANHA — não porque
+	// alguém some o delta, mas porque o que o banco guarda é o DANO: o teto se
+	// move e a dívida fica. É o que impede o ciclo `−`/`+` de virar uma bomba de
+	// cura de dois cliques, e é de graça (ALE-355).
+	return "", http.StatusOK, s.refreshPools(r, row.ID)
 }
 
 // purchaseRefusal traduz o aviso do motor para a frase que a cena mostra.

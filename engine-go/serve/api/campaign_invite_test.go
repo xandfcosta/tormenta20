@@ -21,7 +21,7 @@ func TestACampaignBornOnScreenLetsAPlayerIn(t *testing.T) {
 	s := newTestServer(t)
 	mestre := seedUser(t, s, "mestre@t20.local")
 	jogador := seedUser(t, s, "jogador@t20.local")
-	heroi := seedCharacter(t, s, jogador, "Visitante", 10, 10, 0, 0)
+	heroi := seedCharacter(t, s, jogador, "Visitante")
 
 	id, err := s.campaignLifecycle().Open(context.Background(), mestre, "Mesa Nova", "")
 	if err != nil {
@@ -46,7 +46,7 @@ func TestALinkOnlyOpensItsOwnTable(t *testing.T) {
 	s := newTestServer(t)
 	mestre := seedUser(t, s, "mestre@t20.local")
 	jogador := seedUser(t, s, "jogador@t20.local")
-	heroi := seedCharacter(t, s, jogador, "Visitante", 10, 10, 0, 0)
+	heroi := seedCharacter(t, s, jogador, "Visitante")
 
 	minha, err := s.campaignLifecycle().Open(context.Background(), mestre, "A minha", "")
 	if err != nil {

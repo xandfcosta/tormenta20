@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/characters"
 	"t20engine/serve/web/ui"
@@ -87,25 +88,31 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	}
 }
 
-// Sem motor a Defesa vira TRAVESSÃO, e nunca zero: zero é um valor plausível de
-// Defesa, então mostrá-lo seria mentir com um número redondo. E travessão em vez
-// de omitir porque uma coluna que some faz o palco dançar ao trocar de herói.
-func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
-	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", "Guerreiro", 5, -4, 5)
-	s.primeCatalogs(nil)
+// Defesa que o motor não soube dar vira TRAVESSÃO, e nunca zero: zero é um valor
+// plausível de Defesa, então mostrá-lo seria mentir com um número redondo. E
+// travessão em vez de omitir porque uma coluna que some faz o palco dançar ao
+// trocar de herói.
+//
+// # Por que ele chama o `HeroCardOf` e não a cena
+//
+// Porque o caminho pela cena passou a ser IMPOSSÍVEL. Ele montava um servidor,
+// fazia `primeCatalogs(nil)` e pedia a cena — e desde a ALE-355 o `cmd/api` se
+// recusa a subir sem catálogo e o agregado se recusa a montar sem ele, porque o
+// poço de PV é derivado. Um caso que arranja um estado que o app não alcança
+// mede outra coisa.
+//
+// O que SOBRA de alcançável é a outra metade da mesma guarda: o `sheet.Compute`
+// devolver erro para um agregado que o motor não digere. O travessão é a
+// resposta das duas, e é aqui que ele mora.
+func TestADefenseTheEngineCannotGiveBecomesAnEmDash(t *testing.T) {
+	cartao := characters.HeroCardOf(nil, sheet.CharacterDTO{ID: 1, Name: "Thessa", Level: 5})
 
-	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
-	if err != nil {
-		t.Fatalf("carregar sem motor deveria funcionar: %v", err)
+	if cartao.Defense != "—" || cartao.DefenseVs != "—" {
+		t.Errorf("Defesa = %q / %q, queria travessão nos dois",
+			cartao.Defense, cartao.DefenseVs)
 	}
-	if len(v.Heroes) != 1 {
-		t.Fatalf("a cena caiu sem o motor")
-	}
-	if v.Heroes[0].Defense != "—" {
-		t.Errorf("Defesa = %q sem motor, queria travessão", v.Heroes[0].Defense)
-	}
-	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
+	html, err := ui.RenderFragment(t.Context(),
+		characters.SceneBody(characters.View{Heroes: []characters.HeroCard{cartao}, Total: 1, HasAny: true}))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}

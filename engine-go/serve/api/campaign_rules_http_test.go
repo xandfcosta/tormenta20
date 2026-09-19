@@ -35,7 +35,7 @@ func newRulesFixture(t *testing.T) rulesFixture {
 	otherOwner := seedUser(t, s, "outro-mestre@t.com")
 	campaign := seedCampaign(t, s, owner)
 	otherCamp := seedCampaign(t, s, otherOwner)
-	pc := seedCharacter(t, s, player, "Herói", 20, 30, 5, 10)
+	pc := seedCharacterAtLevel(t, s, player, "Herói", "Guerreiro", 3, 10, 4)
 	return rulesFixture{
 		s: s, owner: owner, player: player, campaign: campaign,
 		otherOwner: otherOwner, otherCamp: otherCamp, pc: pc,

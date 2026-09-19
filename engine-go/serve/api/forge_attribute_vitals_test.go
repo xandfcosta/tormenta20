@@ -4,10 +4,8 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"t20engine/domain/sheet"
 	"testing"
-
-	"t20engine/infra/db/dbvalue"
-	"t20engine/infra/db/sqlcgen"
 )
 
 // fereOHeroi grava o dano DIRETO no banco: é o arranjo do caso, não o código
@@ -15,16 +13,10 @@ import (
 // poria dois handlers na frente da pergunta.
 func fereOHeroi(t *testing.T, f sceneFixture, id, pvAtual, pmAtual int64) {
 	t.Helper()
-	row, err := f.s.queries.GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("herói %d: %v", id, err)
-	}
-	if err := f.s.queries.SetCharacterVitals(context.Background(), sqlcgen.SetCharacterVitalsParams{
-		HpMax: row.Hpmax, HpCurrent: pvAtual, MpMax: row.Mpmax, MpCurrent: pmAtual,
-		UpdatedAt: dbvalue.NowISO(), ID: id,
-	}); err != nil {
-		t.Fatalf("ferir o herói: %v", err)
-	}
+	arrangePools(t, f.s, id, func(p sheet.Pools) (sheet.Pools, error) {
+		p.HpCurrent, p.MpCurrent = pvAtual, pmAtual
+		return p, nil
+	})
 }
 
 func osVitaisDe(t *testing.T, f sceneFixture, id int64) (pv, pvMax, pm, pmMax int64) {
@@ -87,10 +79,10 @@ func TestTheAttributeStepDoesNotHealTheHero(t *testing.T) {
 
 // A outra metade: o atual ACOMPANHA o delta do máximo, nos dois sentidos.
 //
-// É a mesma regra que a mudança de NÍVEL usa (`sheet.ShiftedByNewMax`, pelo
-// `syncVitals`), e ela tem de ser a mesma: com "prende na faixa" só para baixo,
-// o ciclo `−` e `+` devolve dois pontos de PV por volta — o mesmo defeito, mais
-// devagar. As duas já foram funções diferentes com o mesmo corpo (ALE-347).
+// É a mesma regra que a mudança de NÍVEL usa — o `sheet.RefreshPools` —, e tem
+// de ser: com "prende na faixa" só para baixo, o ciclo `−` e `+` devolve dois
+// pontos de PV por volta. Hoje ela é uma consequência e não uma conta: o que o
+// banco guarda é o DANO, então o teto anda e a dívida fica (ALE-355).
 func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 	f := newSceneFixture(t)
 	id, atributos := umHeroiForjado(t, f)

@@ -2,48 +2,53 @@ package api
 
 import (
 	"context"
-	"database/sql"
-	"t20engine/domain/live"
+
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
 // O PV do rastreador É o PV da ficha, e ele atravessa uma PORTA.
 //
 // Este arquivo implementa `live.SheetVitals`. Os métodos moram deste lado porque
-// usam `applyDamagePlan` e `live.ClampVital`, que são regras da FICHA — e um
-// pacote do regime ao vivo não pode conhecê-las. O regime declara o que precisa;
+// a regra do dano — drenar os PV temporários antes dos reais — é da FICHA, e um
+// pacote do regime ao vivo não pode conhecê-la. O regime declara o que precisa;
 // quem entrega fica aqui.
 //
 // A LINHA DO PERSONAGEM é a fonte, e não um blob no estado da sessão. Com duas
 // fontes a mesma tela mostra 52/95 na iniciativa e 57/95 no card do grupo, e o
 // caminho do socket ignora PV TEMPORÁRIOS: bater 5 num personagem com Armadura
 // Arcana cobraria dos PV reais, enquanto o mesmo 5 pela ficha drena o pool
-// primeiro — duas regras para a mesma pancada. Aqui o dano percorre a MESMA
-// regra do `POST /personagens/{id}/damage` e a entrada da iniciativa espelha o
-// que foi gravado. NPC continua vivendo só no rastreador: não há ficha atrás
-// dele.
+// primeiro — duas regras para a mesma pancada. NPC continua vivendo só no
+// rastreador: não há ficha atrás dele.
 
-// sheetVitals é quem cumpre a porta. Guarda só o que precisa — as queries —
-// em vez de um `*Server` inteiro: uma porta que recebesse o servidor não seria
-// porta, seria o acoplamento de antes com outro nome.
-type sheetVitals struct{ q *sqlcgen.Queries }
-
-// applyDamagePlan runs the book's damage order — temporary pools first, biggest
-// first — persisting the drained pools and the new PV. Returns the plan so the
-// HTTP handler can report what was absorbed.
+// sheetVitals é quem cumpre a porta. Guarda só o que precisa — as queries e um
+// jeito de pedir o motor do momento — em vez de um `*Server` inteiro: uma porta
+// que recebesse o servidor não seria porta, seria o acoplamento de antes com
+// outro nome.
 //
-// Shared by POST /personagens/{id}/damage and the live tracker: uma pancada
-// digitada na sessão e a mesma pancada digitada na ficha não podem discordar.
-func applyDamagePlan(
-	ctx context.Context, q *sqlcgen.Queries, row sqlcgen.Character, amount int,
+// O motor vem por FUNÇÃO e não por valor porque o `primeCatalogs` o troca depois
+// do `NewServer`: um ponteiro copiado na montagem seria o motor de antes, que é
+// a mesma armadilha que aquele método documenta para a cena da Mesa.
+type sheetVitals struct {
+	q        *sqlcgen.Queries
+	catalogs func() *engine.Catalogs
+}
+
+// drainTempHpAndHit roda a ordem do livro — os poços temporários primeiro, o
+// maior antes — e devolve o PV que sobra nos reais, já gravadas as drenagens.
+//
+// O PV com que ela decide é o DERIVADO, que chega pelo funil: com a coluna crua,
+// um personagem cujo máximo mudou por catálogo apanharia a partir do PV de
+// ontem.
+func drainTempHpAndHit(
+	ctx context.Context, q *sqlcgen.Queries, characterID int64, hpCurrent int64, amount int,
 ) (sheet.DamagePlan, error) {
-	effects, err := q.ListActiveEffectsByCharacter(ctx, row.ID)
+	effects, err := q.ListActiveEffectsByCharacter(ctx, characterID)
 	if err != nil {
 		return sheet.DamagePlan{}, err
 	}
-	plan := sheet.PlanDamage(sheet.ParseTempHpPools(effects), int(row.Hpcurrent), amount)
+	plan := sheet.PlanDamage(sheet.ParseTempHpPools(effects), int(hpCurrent), amount)
 	for _, u := range plan.Updates {
 		if err := q.UpdateEffectModifiers(ctx, sqlcgen.UpdateEffectModifiersParams{
 			Modifiers: u.Modifiers, ID: u.EffectID,
@@ -56,91 +61,64 @@ func applyDamagePlan(
 			return sheet.DamagePlan{}, err
 		}
 	}
-	if plan.HpCurrent != int(row.Hpcurrent) {
-		if err := q.SetHpCurrent(ctx, sqlcgen.SetHpCurrentParams{
-			HpCurrent: int64(plan.HpCurrent), UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-		}); err != nil {
-			return sheet.DamagePlan{}, err
-		}
-	}
 	return plan, nil
 }
 
-// ApplyDelta moves a character's PV/PM by a delta and persists it,
-// returning the values the tracker entry must mirror. Damage (negative PV) goes
-// through applyDamagePlan; healing and PM are clamped to the character's maxes.
+// ApplyDelta move o PV/PM de um personagem por um delta e grava, devolvendo os
+// valores que a entrada do rastreador tem de espelhar.
+//
+// Dano (PV negativo) passa pela drenagem dos temporários; cura e PM são presos
+// na faixa pelo funil.
 func (v sheetVitals) ApplyDelta(
 	ctx context.Context, charID int64, hpDelta, mpDelta *int64,
 ) (*int64, *int64, error) {
-	row, err := v.q.GetCharacter(ctx, charID)
-	if err != nil {
-		return nil, nil, err
-	}
-	hp, healed := row.Hpcurrent, false
-	if hpDelta != nil && *hpDelta < 0 {
-		plan, err := applyDamagePlan(ctx, v.q, row, int(-*hpDelta))
-		if err != nil {
-			return nil, nil, err
+	return v.applyRule(ctx, charID, func(p sheet.Pools) (sheet.Pools, error) {
+		if hpDelta != nil && *hpDelta < 0 {
+			plan, err := drainTempHpAndHit(ctx, v.q, charID, p.HpCurrent, int(-*hpDelta))
+			if err != nil {
+				return p, err
+			}
+			p.HpCurrent = int64(plan.HpCurrent)
+		} else if hpDelta != nil {
+			p.HpCurrent += *hpDelta
 		}
-		hp = int64(plan.HpCurrent) // já persistido pelo plano
-	} else if hpDelta != nil {
-		hp, healed = live.ClampVital(row.Hpcurrent+*hpDelta, &row.Hpmax), true
-	}
-	mp := row.Mpcurrent
-	if mpDelta != nil {
-		mp = live.ClampVital(row.Mpcurrent+*mpDelta, &row.Mpmax)
-	}
-	return v.persistVitals(ctx, charID, hp, healed, mp, mpDelta != nil)
+		if mpDelta != nil {
+			p.MpCurrent += *mpDelta
+		}
+		return p, nil
+	})
 }
 
-// ApplyAbsolute sets absolute PV/PM on the character (the tracker's
-// "vitals-patch"). An absolute value is a statement about the total, not a hit,
-// so it does NOT drain temporary pools — that rule belongs to damage.
+// ApplyAbsolute crava PV/PM absolutos no personagem (o "vitals-patch" do
+// rastreador). Um valor absoluto é uma afirmação sobre o total, e não uma
+// pancada, então ele NÃO drena os poços temporários — essa regra é do dano.
 func (v sheetVitals) ApplyAbsolute(
 	ctx context.Context, charID int64, hpCurrent, mpCurrent *int64,
 ) (*int64, *int64, error) {
+	return v.applyRule(ctx, charID, func(p sheet.Pools) (sheet.Pools, error) {
+		if hpCurrent != nil {
+			p.HpCurrent = *hpCurrent
+		}
+		if mpCurrent != nil {
+			p.MpCurrent = *mpCurrent
+		}
+		return p, nil
+	})
+}
+
+// applyRule é o que os dois gestos têm em comum: achar a linha, passar pelo
+// funil e devolver os DOIS vitais — inclusive o que o gesto não tocou, senão o
+// rastreador voltaria a mostrar um número que a ficha não tem.
+func (v sheetVitals) applyRule(
+	ctx context.Context, charID int64, regra sheet.PoolRule,
+) (*int64, *int64, error) {
 	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, err
 	}
-	hp := row.Hpcurrent
-	if hpCurrent != nil {
-		hp = live.ClampVital(*hpCurrent, &row.Hpmax)
+	pocos, err := sheet.ApplyToPools(ctx, v.q, v.catalogs(), row, regra)
+	if err != nil {
+		return nil, nil, err
 	}
-	mp := row.Mpcurrent
-	if mpCurrent != nil {
-		mp = live.ClampVital(*mpCurrent, &row.Mpmax)
-	}
-	return v.persistVitals(ctx, charID, hp, hpCurrent != nil, mp, mpCurrent != nil)
-}
-
-// persistVitals writes only what changed and hands back BOTH values for the
-// entry to mirror — inclusive o que não foi escrito, senão o rastreador voltaria
-// a mostrar um número que a ficha não tem. `writeHp` é falso quando o plano de
-// dano já gravou o PV.
-func (v sheetVitals) persistVitals(
-	ctx context.Context, charID, hp int64, writeHp bool, mp int64, writeMp bool,
-) (*int64, *int64, error) {
-	if writeHp || writeMp {
-		params := sqlcgen.UpdateVitalsParams{UpdatedAt: dbvalue.NowISO(), ID: charID}
-		if writeHp {
-			params.HpCurrent = nullInt(&hp)
-		}
-		if writeMp {
-			params.MpCurrent = nullInt(&mp)
-		}
-		if _, err := v.q.UpdateVitals(ctx, params); err != nil {
-			return nil, nil, err
-		}
-	}
-	return &hp, &mp, nil
-}
-
-// Ponteiro nulo vira NULL, e não zero — a diferença entre "não mexeu neste
-// vital" e "zerou este vital".
-func nullInt(p *int64) sql.NullInt64 {
-	if p == nil {
-		return sql.NullInt64{}
-	}
-	return sql.NullInt64{Int64: *p, Valid: true}
+	return &pocos.HpCurrent, &pocos.MpCurrent, nil
 }

@@ -420,7 +420,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	gm := seedUser(t, s, "gm@t.com")
 	campaignID := seedCampaign(t, s, gm)
 	sid := seedSession(t, s, campaignID)
-	heroi := seedCharacter(t, s, gm, "Tanque", 10, 20, 2, 5)
+	heroi := seedCharacter(t, s, gm, "Tanque")
 	seedMember(t, s, campaignID, heroi)
 	quem := app.Caller{ID: gm}
 	ctx := context.Background()
