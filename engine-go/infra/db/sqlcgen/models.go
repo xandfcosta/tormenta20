@@ -78,10 +78,6 @@ type Character struct {
 	Godpower             string         `json:"godpower"`
 	Tibar                float64        `json:"tibar"`
 	Level                int64          `json:"level"`
-	Hpmax                int64          `json:"hpmax"`
-	Hpcurrent            int64          `json:"hpcurrent"`
-	Mpmax                int64          `json:"mpmax"`
-	Mpcurrent            int64          `json:"mpcurrent"`
 	Strength             int64          `json:"strength"`
 	Dexterity            int64          `json:"dexterity"`
 	Constitution         int64          `json:"constitution"`
@@ -115,6 +111,12 @@ type CharacterClass struct {
 type CharacterConditional struct {
 	Characterid   int64  `json:"characterid"`
 	Conditionalid string `json:"conditionalid"`
+}
+
+type CharacterDamage struct {
+	Characterid int64 `json:"characterid"`
+	Hpdamage    int64 `json:"hpdamage"`
+	Mpspent     int64 `json:"mpspent"`
 }
 
 type CharacterExpertise struct {

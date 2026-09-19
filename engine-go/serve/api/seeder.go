@@ -62,12 +62,11 @@ func (sd Seeder) CreateAccount(ctx context.Context, email, nome, senha string) e
 	return err
 }
 
-// CreateCharacter escreve a ficha INTEIRA e cura os vitais pelo motor.
+// CreateCharacter escreve a ficha INTEIRA, e o poço vem de graça.
 //
-// A ordem importa: o nível total e as proficiências saem das CLASSES antes da
-// escrita, e a cura vem depois — o `HealVitals` recomputa PV e PM máximos a
-// partir da ficha já gravada, que é como o número da seed passa a ser o número
-// que o motor daria.
+// A ordem importa só para o nível total e as proficiências, que saem das CLASSES
+// antes da escrita. Os vitais não entram: o poço é derivado do catálogo a cada
+// leitura, e um personagem sem dano nasce cheio por construção (ALE-355).
 //
 // É por isso que o gerador manda 9999 nos quatro vitais: um valor que a cura só
 // pode aparar para baixo. Barra danificada é escrita DEPOIS, pelo `SetHp`.
@@ -85,15 +84,7 @@ func (sd Seeder) CreateCharacter(
 	if err != nil {
 		return 0, err
 	}
-	linha, err := sd.queries.GetCharacter(ctx, id)
-	if err != nil {
-		return 0, err
-	}
-	dto, err := sd.sheet.LoadCharacter(ctx, linha)
-	if err != nil {
-		return 0, err
-	}
-	return id, sd.births.HealVitals(ctx, id, &dto)
+	return id, nil
 }
 
 // Character devolve a ficha carregada, para o gerador ler o PV máximo que o
@@ -125,11 +116,7 @@ func (sd Seeder) SetHp(ctx context.Context, id, atual int64) error {
 	if err != nil {
 		return err
 	}
-	return sd.queries.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{
-		HpMax: linha.Hpmax, HpCurrent: atual,
-		MpMax: linha.Mpmax, MpCurrent: linha.Mpcurrent,
-		UpdatedAt: dbvalue.NowISO(), ID: id,
-	})
+	return sd.plays.SetHpTo(ctx, linha, atual)
 }
 
 // ConsumeItem gasta uma dose, para o elenco ter efeito de cena ligado.

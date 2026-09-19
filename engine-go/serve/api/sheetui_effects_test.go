@@ -92,7 +92,7 @@ func TestAnInventedConditionIsRefused(t *testing.T) {
 // a do dono.
 func TestAnEffectFromAnotherSheetCannotBeEnded(t *testing.T) {
 	f, meu := fighterFixture(t)
-	outro := seedCharacterAtLevel(t, f.s, f.jogador, "Vizinho", 1, 10, 10, 0, 0)
+	outro := seedCharacterAtLevel(t, f.s, f.jogador, "Vizinho", "Guerreiro", 1, 0, 0)
 	alheio, err := f.s.sceneCore().Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
 		Characterid: outro, Catalogid: "armadura-arcana", Scope: "scene",
 		Modifiers: "[]", Createdat: dbvalue.NowISO(),

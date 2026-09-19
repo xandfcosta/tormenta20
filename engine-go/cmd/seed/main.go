@@ -231,11 +231,10 @@ func enrichCreate(ch seedCharacter) (json.RawMessage, error) {
 	if err := json.Unmarshal(ch.Create, &obj); err != nil {
 		return nil, fmt.Errorf("create body: %w", err)
 	}
-	// O `healVitals` recalcula os máximos de verdade pelo motor, então passe um
-	// valor que ele só possa aparar para baixo. Barra danificada vem depois.
-	for _, field := range []string{"hpMax", "hpCurrent", "mpMax", "mpCurrent"} {
-		obj[field] = json.RawMessage("9999")
-	}
+	// Aqui moravam quatro vitais escritos com 9999, para uma cura que os aparava
+	// para baixo. Os dois sumiram: o poço é derivado do catálogo a cada leitura e
+	// o corpo de criação nem tem mais esses campos. Barra danificada vem depois,
+	// pelo `HpFraction` (ALE-355).
 	if !ch.Simple {
 		if _, ok := obj["trainedExpertises"]; !ok {
 			trained, _ := json.Marshal(standardTrained)

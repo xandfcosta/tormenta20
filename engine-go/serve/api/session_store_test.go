@@ -113,7 +113,8 @@ func TestStoreRefreshCharacterMaxes(t *testing.T) {
 	ctx := context.Background()
 	gm := seedUser(t, s, "gm@t.com")
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
-	charID := seedCharacter(t, s, gm, "A", 7, 10, 3, 5) // real maxes 10/5
+	charID := seedCharacterAtLevel(t, s, gm, "A", "Guerreiro", 1, 3, 0)
+	pocoReal := bookPools(t, s, "Guerreiro", 1)
 	store := s.sessions
 	if _, err := store.Load(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
@@ -128,8 +129,9 @@ func TestStoreRefreshCharacterMaxes(t *testing.T) {
 	}
 	got := store.RefreshCharacterMaxes(ctx, sid)
 	entry := got.Initiative[0]
-	if entry.HpMax == nil || *entry.HpMax != 10 || entry.MpMax == nil || *entry.MpMax != 5 {
-		t.Errorf("maxes not refreshed: hpMax=%v mpMax=%v, want 10/5", entry.HpMax, entry.MpMax)
+	if entry.HpMax == nil || *entry.HpMax != pocoReal.PvMax || entry.MpMax == nil || *entry.MpMax != pocoReal.PmMax {
+		t.Errorf("os máximos não foram refrescados: hpMax=%v mpMax=%v, queria os da ficha (%d/%d)",
+			entry.HpMax, entry.MpMax, pocoReal.PvMax, pocoReal.PmMax)
 	}
 	if entry.HpCurrent == nil || *entry.HpCurrent != 4 {
 		t.Errorf("hpCurrent should be untouched at 4, got %v", entry.HpCurrent)
@@ -146,15 +148,18 @@ func TestStoreRefreshClampsCurrentToNewMax(t *testing.T) {
 	ctx := context.Background()
 	gm := seedUser(t, s, "gm@t.com")
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
-	charID := seedCharacter(t, s, gm, "Encolheu", 5, 5, 2, 2) // máximos reais 5/2
+	// O poço REAL é o do guerreiro de nível 1, e a entrada carrega um máximo
+	// maior com um atual acima dele — o estado que o refresh existe para aparar.
+	charID := seedCharacter(t, s, gm, "Encolheu")
+	pocoReal := bookPools(t, s, "Guerreiro", 1)
 	store := s.sessions
 	if _, err := store.Load(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	// A entrada carrega máximos ANTIGOS (maiores) e um atual acima do novo teto.
 	e := sheetCombatant("Encolheu", 12, charID)
-	velhoHpMax, atualHp := int64(30), int64(9)
-	velhoMpMax, atualMp := int64(10), int64(7)
+	velhoHpMax, atualHp := pocoReal.PvMax*2, pocoReal.PvMax+4
+	velhoMpMax, atualMp := pocoReal.PmMax*2, pocoReal.PmMax+4
 	e.HpMax, e.HpCurrent = &velhoHpMax, &atualHp
 	e.MpMax, e.MpCurrent = &velhoMpMax, &atualMp
 	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
@@ -163,11 +168,11 @@ func TestStoreRefreshClampsCurrentToNewMax(t *testing.T) {
 
 	entry := store.RefreshCharacterMaxes(ctx, sid).Initiative[0]
 
-	if entry.HpCurrent == nil || *entry.HpCurrent != 5 {
-		t.Errorf("PV atual=%v, queria 5 (aparado no novo máximo)", entry.HpCurrent)
+	if entry.HpCurrent == nil || *entry.HpCurrent != pocoReal.PvMax {
+		t.Errorf("PV atual=%v, queria %d (aparado no máximo real)", entry.HpCurrent, pocoReal.PvMax)
 	}
-	if entry.MpCurrent == nil || *entry.MpCurrent != 2 {
-		t.Errorf("PM atual=%v, queria 2 (aparado no novo máximo)", entry.MpCurrent)
+	if entry.MpCurrent == nil || *entry.MpCurrent != pocoReal.PmMax {
+		t.Errorf("PM atual=%v, queria %d (aparado no máximo real)", entry.MpCurrent, pocoReal.PmMax)
 	}
 }
 
@@ -214,7 +219,7 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	gm := seedUser(t, s, "gm@t.com")
-	charID := seedCharacter(t, s, gm, "A", 20, 30, 5, 10) // hp 20/30, mp 5/10
+	charID := seedCharacterAtLevel(t, s, gm, "A", "Guerreiro", 3, 10, 4) // hp 20/30, mp 5/10
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
 	if _, err := store.Load(ctx, sid); err != nil {
@@ -234,12 +239,8 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	}
 
 	// Sem espera: a gravação é o caminho, não um espelho assíncrono.
-	row, err := s.queries.GetCharacter(ctx, charID)
-	if err != nil {
-		t.Fatalf("carregar personagem: %v", err)
-	}
-	if row.Hpcurrent != 12 || row.Mpcurrent != 3 {
-		t.Errorf("ficha = %d/%d PV-PM, esperado 12/3", row.Hpcurrent, row.Mpcurrent)
+	if poco := poolsOf(t, s, charID); poco.HpCurrent != 12 || poco.MpCurrent != 3 {
+		t.Errorf("ficha = %d/%d PV-PM, esperado 12/3", poco.HpCurrent, poco.MpCurrent)
 	}
 	// E a entrada espelha o que foi gravado — os dois números da tela são um só.
 	got := snap.Initiative[0]
@@ -255,7 +256,7 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	gm := seedUser(t, s, "gm@t.com")
-	charID := seedCharacter(t, s, gm, "A", 20, 30, 5, 10)
+	charID := seedCharacterAtLevel(t, s, gm, "A", "Guerreiro", 3, 10, 4)
 	seedTempHpPool(t, s, charID, 5)
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
@@ -275,9 +276,8 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	}
 
 	// 5 absorvidos pelo pool, 3 nos PV reais.
-	row, _ := s.queries.GetCharacter(ctx, charID)
-	if row.Hpcurrent != 17 {
-		t.Errorf("PV = %d, esperado 17 (o pool de 5 absorveu antes)", row.Hpcurrent)
+	if poco := poolsOf(t, s, charID); poco.HpCurrent != 17 {
+		t.Errorf("PV = %d, esperado 17 (o pool de 5 absorveu antes)", poco.HpCurrent)
 	}
 	rows, _ := s.queries.ListActiveEffectsByCharacter(ctx, charID)
 	if len(sheet.ParseTempHpPools(rows)) != 0 {

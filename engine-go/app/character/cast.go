@@ -128,9 +128,12 @@ func (p Plays) Cast(
 	if totalPm == 0 {
 		return nil
 	}
-	return p.queries.SetMpCurrent(ctx, sqlcgen.SetMpCurrentParams{
-		MpCurrent: dto.MpCurrent - int64(totalPm), UpdatedAt: dbvalue.NowISO(), ID: dto.ID,
-	})
+	_, err = sheet.ApplyToLoadedPools(ctx, p.queries, &dto,
+		func(pocos sheet.Pools) (sheet.Pools, error) {
+			pocos.MpCurrent -= int64(totalPm)
+			return pocos, nil
+		})
+	return err
 }
 
 // truqueEscolhido diz se um dos aprimoramentos pedidos é um truque.

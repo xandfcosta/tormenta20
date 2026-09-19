@@ -77,8 +77,8 @@ func TestTheGmComesFirstInTheCast(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 	quemJoga := seedUser(t, s, "jogador@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	jogador := seedCharacterAtLevel(t, s, quemJoga, "Yrla", 4, 10, 14, 2, 6)
-	mestre := seedCharacterAtLevel(t, s, dono, "Thalen", 5, 16, 12, 3, 8)
+	jogador := seedCharacterAtLevel(t, s, quemJoga, "Yrla", "Arcanista", 4, 4, 4)
+	mestre := seedCharacterAtLevel(t, s, dono, "Thalen", "Guerreiro", 5, -4, 5)
 	seedMember(t, s, campanha, jogador)
 	seedMember(t, s, campanha, mestre)
 
@@ -104,7 +104,7 @@ func TestAPlayerAskingForConfigFallsBackToTheOverview(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
+	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
 	seedMember(t, s, campanha, heroi)
 
 	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), visitante, s.ehAdmin(t, visitante), campanha, "config")
@@ -126,7 +126,7 @@ func TestTheCampaignActionsBelongToTheGm(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
+	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
 	seedMember(t, s, campanha, heroi)
 	base := "/campanhas/" + strconv.FormatInt(campanha, 10)
 
@@ -238,7 +238,7 @@ func TestTheAdminEditsSomeoneElsesCampaignAndAPlayerStillCannot(t *testing.T) {
 	admin := seedUser(t, s, emailDoAdmin)
 	jogador := seedUser(t, s, "jogador@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	heroi := seedCharacterAtLevel(t, s, jogador, "Yrla", 4, 10, 14, 2, 6)
+	heroi := seedCharacterAtLevel(t, s, jogador, "Yrla", "Arcanista", 4, 4, 4)
 	seedMember(t, s, campanha, heroi)
 	editar := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/editar"
 

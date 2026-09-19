@@ -1,6 +1,4 @@
 #
-#
-#
 # AS PALAVRAS QUE UM NOME DE ARQUIVO PODE USAR (ALE-301).
 # Esta lista é um PERMITIDOS e não um proibidos, e a inversão é a lição da
 # NOME PRÓPRIO entra aqui pela regra do glossário (é o nome da coisa, não
@@ -48,6 +46,7 @@ backup
 badge
 bag
 base
+batch
 behind
 bench
 bestiary
@@ -91,6 +90,7 @@ collect
 collection
 color
 colors
+columns
 combat
 commands
 compose
@@ -293,6 +293,7 @@ options
 order
 origin
 origins
+out
 outside
 overflow
 overlay
@@ -318,6 +319,7 @@ pnpm
 pointbuy
 pointers
 polyline
+pools
 populate
 port
 portuguese
@@ -368,6 +370,7 @@ search
 seating
 section
 seed
+seeded
 seeder
 selection
 server
@@ -464,6 +467,7 @@ woff2
 words
 worker
 workspace
+write
 yaml
 yml
 zoom

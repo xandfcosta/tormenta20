@@ -145,7 +145,7 @@ func TestTheSurvivingCharacterWriteRejectsAStranger(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	estranho := seedUser(t, s, "estranho@t20.local")
-	ficha := seedCharacter(t, s, dono, "Herói Alheio", 10, 10, 0, 0)
+	ficha := seedCharacter(t, s, dono, "Herói Alheio")
 
 	rec := authed(t, s, estranho, http.MethodPatch, "/personagens/"+id64(ficha)+"/conditions",
 		`{"activeConditions":["caido"]}`)

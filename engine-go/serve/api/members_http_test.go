@@ -34,8 +34,8 @@ func newMemberFixture(t *testing.T) memberFixture {
 
 	campaignID := seedCampaign(t, s, owner)
 	otherCamp := seedCampaign(t, s, otherOwner)
-	pcID := seedCharacter(t, s, player, "Herói", 20, 30, 5, 10)
-	otherPc := seedCharacter(t, s, otherOwner, "Vizinho", 20, 30, 5, 10)
+	pcID := seedCharacterAtLevel(t, s, player, "Herói", "Guerreiro", 3, 10, 4)
+	otherPc := seedCharacterAtLevel(t, s, otherOwner, "Vizinho", "Guerreiro", 3, 10, 4)
 
 	member, err := s.queries.CreateMember(ctx, sqlcgen.CreateMemberParams{
 		Campaignid: campaignID, Characterid: pcID, Addedat: dbvalue.NowISO(),
@@ -63,7 +63,7 @@ func newMemberFixture(t *testing.T) memberFixture {
 
 func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 	f := newMemberFixture(t)
-	outroHeroi := seedCharacter(t, f.s, f.owner, "Segundo Herói", 10, 10, 0, 0)
+	outroHeroi := seedCharacter(t, f.s, f.owner, "Segundo Herói")
 	antes := membersOf(t, f.s, f.campaignID)
 
 	// A checagem de unicidade não consegue responder. Antes disto, o erro virava
@@ -90,7 +90,7 @@ func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 // remover.
 func TestAFailedJoinLeavesNoOrphanSnapshot(t *testing.T) {
 	f := newMemberFixture(t)
-	heroi := seedCharacter(t, f.s, f.owner, "Terceiro Herói", 10, 10, 0, 0)
+	heroi := seedCharacter(t, f.s, f.owner, "Terceiro Herói")
 	copiasAntes := copiesOf(t, f.s, heroi)
 
 	// A criação do membro falha DEPOIS de o clone já ter acontecido.
@@ -111,7 +111,7 @@ func TestAFailedJoinLeavesNoOrphanSnapshot(t *testing.T) {
 // quem tem direito de entrar.
 func TestJoiningStillWorks(t *testing.T) {
 	f := newMemberFixture(t)
-	heroi := seedCharacter(t, f.s, f.owner, "Quarto Herói", 10, 10, 0, 0)
+	heroi := seedCharacter(t, f.s, f.owner, "Quarto Herói")
 	outraMesa := seedCampaign(t, f.s, f.owner)
 
 	if err := f.addMember(t, f.owner, outraMesa, heroi); err != nil {
@@ -177,7 +177,7 @@ func copiesOf(t *testing.T, s *Server, sourceID int64) int {
 func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	f := newMemberFixture(t)
 	table := seedCampaign(t, f.s, f.owner)
-	heroi := seedCharacter(t, f.s, f.owner, "Herói Disputado", 10, 10, 0, 0)
+	heroi := seedCharacter(t, f.s, f.owner, "Herói Disputado")
 
 	const pedidos = 8
 	var wg sync.WaitGroup
@@ -225,3 +225,60 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 // NÃO há caso aqui sobre o teto de 1 MB do corpo: a garantia não é da rota e sim
 // do `httpio.DecodeJSON`, chamado por todo comando de cena. É lá que ela deve ser
 // presa se alguém quiser um guarda dela.
+
+// A CÓPIA DE MESA ENTRA FERIDA se o herói estava ferido.
+//
+// A entrada numa campanha clona a ficha, e o clone copiava PV e PM atuais nas
+// colunas de `characters`. Elas saíram na 00015: o poço é derivado e o que se
+// guarda é a DÍVIDA, numa tabela à parte. Um clone que não a copiasse não
+// falharia nada — a cópia simplesmente entraria CHEIA, e entrar numa mesa
+// viraria uma cura de sessão inteira (ALE-355).
+//
+// O CONTROLE vem primeiro e é obrigatório: um herói cheio entra cheio de
+// qualquer jeito, então o caso mediria o repouso. Aqui ele é ferido ANTES, e a
+// asserção compara com o dano semeado — não com "está menos que o máximo", que
+// um clone pela metade também satisfaria.
+func TestTheTableCopyEntersAsWoundedAsTheHero(t *testing.T) {
+	f := newMemberFixture(t)
+	heroi := seedCharacterAtLevel(t, f.s, f.owner, "Ferido", "Guerreiro", 5, 12, 4)
+	outraMesa := seedCampaign(t, f.s, f.owner)
+
+	original := poolsOf(t, f.s, heroi)
+	if original.HpCurrent == original.HpMax || original.MpCurrent == original.MpMax {
+		t.Fatalf("o herói entrou CHEIO em %d/%d PV e %d/%d PM — o caso mediria o repouso",
+			original.HpCurrent, original.HpMax, original.MpCurrent, original.MpMax)
+	}
+
+	if err := f.addMember(t, f.owner, outraMesa, heroi); err != nil {
+		t.Fatalf("entrada legítima foi recusada: %v", err)
+	}
+
+	copia := poolsOf(t, f.s, onlyCopyOf(t, f.s, heroi))
+	if copia != original {
+		t.Errorf("a cópia entrou em %+v e o original está em %+v — a dívida não veio junto",
+			copia, original)
+	}
+}
+
+// onlyCopyOf devolve o id da única cópia de mesa do molde, e FALHA se houver
+// outro número: com duas, "a cópia" não identifica nada.
+func onlyCopyOf(t *testing.T, s *Server, sourceID int64) int64 {
+	t.Helper()
+	var id int64
+	linhas, err := s.db.Query(`SELECT id FROM characters WHERE sourceCharacterId = ?`, sourceID)
+	if err != nil {
+		t.Fatalf("achar a cópia: %v", err)
+	}
+	defer linhas.Close()
+	achadas := 0
+	for linhas.Next() {
+		if err := linhas.Scan(&id); err != nil {
+			t.Fatalf("ler a cópia: %v", err)
+		}
+		achadas++
+	}
+	if achadas != 1 {
+		t.Fatalf("o molde %d tem %d cópias, e o caso precisa de exatamente uma", sourceID, achadas)
+	}
+	return id
+}

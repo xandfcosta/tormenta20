@@ -7,7 +7,6 @@ import (
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -50,7 +49,7 @@ func (p Plays) EnterStance(
 	custo := book.StanceCost(*spec, degraus)
 
 	if err := p.inTx(ctx, "entrar na postura "+flag, func(q *sqlcgen.Queries) error {
-		if err := chargeMp(ctx, q, row, custo); err != nil {
+		if err := chargeMp(ctx, q, p.catalogs, row, custo); err != nil {
 			return err
 		}
 		if err := q.UpsertCharacterStance(ctx, sqlcgen.UpsertCharacterStanceParams{
@@ -139,10 +138,10 @@ func (p Plays) UsePower(
 	if escopo == "" {
 		// Sem limite COBRADO não há contador, e sobra uma escrita só: a
 		// transação seria um bloqueio que ninguém pediu.
-		return chargeMp(ctx, p.queries, row, book.ActivationPm(*spec))
+		return chargeMp(ctx, p.queries, p.catalogs, row, book.ActivationPm(*spec))
 	}
 	return p.inTx(ctx, "usar o poder "+spec.ID, func(q *sqlcgen.Queries) error {
-		if err := chargeMp(ctx, q, row, book.ActivationPm(*spec)); err != nil {
+		if err := chargeMp(ctx, q, p.catalogs, row, book.ActivationPm(*spec)); err != nil {
 			return err
 		}
 		if err := q.BumpCharacterPowerUse(ctx, sqlcgen.BumpCharacterPowerUseParams{
@@ -156,22 +155,23 @@ func (p Plays) UsePower(
 
 // chargeMp tira o PM da ficha, sem deixar o saldo abaixo de zero.
 //
-// O piso existe porque a decisão que autorizou o gasto foi tomada com o saldo
-// LIDO antes: cobrar até o fundo é melhor que gravar um PM negativo, que a tela
-// desenharia como barra para trás. Ele FICA mesmo dentro da transação — o
-// `_txlock=immediate` serializa a escrita, mas a leitura que autorizou o gasto
-// aconteceu fora dela.
-func chargeMp(ctx context.Context, q *sqlcgen.Queries, row sqlcgen.Character, quanto int) error {
+// O piso é do funil e vale para todo gesto, mas a razão dele é desta cobrança: a
+// decisão que autorizou o gasto foi tomada com o saldo LIDO antes, e cobrar até
+// o fundo é melhor que gravar um PM negativo, que a tela desenharia como barra
+// para trás. A cobrança FICA dentro da transação — o `_txlock=immediate`
+// serializa a escrita, mas a leitura que autorizou o gasto aconteceu fora dela.
+func chargeMp(
+	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs,
+	row sqlcgen.Character, quanto int,
+) error {
 	if quanto <= 0 {
 		return nil
 	}
-	depois := row.Mpcurrent - int64(quanto)
-	if depois < 0 {
-		depois = 0
-	}
-	if err := q.SetMpCurrent(ctx, sqlcgen.SetMpCurrentParams{
-		MpCurrent: depois, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-	}); err != nil {
+	if _, err := sheet.ApplyToPools(ctx, q, cat, row,
+		func(pocos sheet.Pools) (sheet.Pools, error) {
+			pocos.MpCurrent -= int64(quanto)
+			return pocos, nil
+		}); err != nil {
 		return fmt.Errorf("cobrar %d PM da ficha %d: %w", quanto, row.ID, err)
 	}
 	return nil
@@ -205,9 +205,10 @@ func stanceOfFlag(flag string) *book.Activation {
 
 // conditionalsOfFlag são os ids dos condicionais que aquela flag acende.
 //
-// Motor ausente devolve vazio, e não erro: é o mesmo recuo que o `syncVitals`
-// faz — sem catálogo primado não há o que ligar, e recusar o gesto inteiro
-// deixaria a postura fora do alcance de quem roda sem o arquivo.
+// Motor ausente devolve vazio, e não erro: sem catálogo primado não há o que
+// ligar, e recusar o gesto inteiro deixaria a postura fora do alcance de quem
+// roda sem o arquivo. É o ÚLTIMO recuo desse tipo — o dos poços virou recusa
+// quando o arranque passou a exigir o catálogo (ALE-355).
 func (p Plays) conditionalsOfFlag(dto sheet.CharacterDTO, flag string) []string {
 	if p.catalogs == nil {
 		return nil

@@ -7,6 +7,7 @@ import (
 
 	"t20engine/app"
 	"t20engine/app/session"
+	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -27,8 +28,11 @@ type Party struct {
 	access   session.Access
 }
 
-func NewParty(q *sqlcgen.Queries, sessions *session.Store) Party {
-	return Party{queries: q, sessions: sessions, scopes: NewScopes(q), access: session.NewAccess(q)}
+func NewParty(q *sqlcgen.Queries, sessions *session.Store, catalogs *engine.Catalogs) Party {
+	return Party{
+		queries: q, sessions: sessions,
+		scopes: NewScopes(q, catalogs), access: session.NewAccess(q),
+	}
 }
 
 // EndScene é o gesto "Encerrar cena" INTEIRO: a duração "cena" acaba para o

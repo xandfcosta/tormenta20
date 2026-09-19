@@ -56,7 +56,7 @@ func TestThePlacesTabDoesNotExistForThePlayer(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 	jogador := seedUser(t, s, "jogador@t20.local")
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	heroi := seedCharacterAtLevel(t, s, jogador, "Guerreiro", 1, 10, 10, 5, 10)
+	heroi := seedCharacterAtLevel(t, s, jogador, "Guerreiro", "Guerreiro", 1, 0, 5)
 	seedMember(t, s, campanha, heroi)
 	if _, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt"); err != nil {
 		t.Fatalf("criar o lugar: %v", err)

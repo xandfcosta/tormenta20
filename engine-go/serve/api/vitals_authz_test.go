@@ -44,8 +44,8 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 	other := seedUser(t, s, "outro@t.com")
 	campaignID := seedCampaign(t, s, gmUser)
 
-	pcID := seedCharacter(t, s, player, "Herói", 20, 30, 5, 10)
-	otherID := seedCharacter(t, s, other, "Colega", 20, 30, 5, 10)
+	pcID := seedCharacterAtLevel(t, s, player, "Herói", "Guerreiro", 3, 10, 4)
+	otherID := seedCharacterAtLevel(t, s, other, "Colega", "Guerreiro", 3, 10, 4)
 	seedMember(t, s, campaignID, pcID)
 	seedMember(t, s, campaignID, otherID)
 

@@ -26,14 +26,14 @@ import (
 //     Gravar o nível sem sincronizar deixa a ficha com o número novo e a vida
 //     velha, que é o defeito que ninguém liga ao botão que o causou.
 //
-// O acompanhamento dos poços é o `sheet.ShiftedByNewMax` pelo `syncVitals`, o
-// MESMO que o passo de atributo usa: um herói que apanhou e sobe de nível ganha
-// o delta, não a cura. Enquanto esta função morava no `serve/api`, ela tinha
-// uma cópia própria daquela regra (ALE-347).
+// O acompanhamento dos poços não é passo nenhum: com o máximo derivado e o DANO
+// gravado, gravar o nível JÁ move o teto, e um herói que apanhou sobe de nível
+// ganhando os PV novos sem ganhar a cura — o que ele deve continua sendo o que
+// ele deve (ALE-355).
 func (p Plays) LevelClass(
 	ctx context.Context, row sqlcgen.Character, classe string, nivel int64,
 ) error {
-	dto, err := sheet.Load(ctx, p.queries, row)
+	dto, err := sheet.Load(ctx, p.queries, p.catalogs, row)
 	if err != nil {
 		return err
 	}
@@ -62,6 +62,5 @@ func (p Plays) LevelClass(
 	}); err != nil {
 		return fmt.Errorf("gravar o nível %d da ficha %d: %w", total, row.ID, err)
 	}
-	dto.Level = total
-	return syncVitals(ctx, p.queries, p.catalogs, row.ID, &dto, sheet.ShiftedByNewMax)
+	return nil
 }

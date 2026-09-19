@@ -58,7 +58,7 @@ func (c sceneCore) CharacterList(ctx context.Context, ownerID int64) ([]sheet.Ch
 	}
 	out := make([]sheet.CharacterDTO, 0, len(rows))
 	for _, row := range rows {
-		dto, err := sheet.Load(ctx, c.queries, row)
+		dto, err := sheet.Load(ctx, c.queries, c.catalogs, row)
 		if err != nil {
 			return nil, err
 		}

@@ -368,9 +368,15 @@ func TestClosingReportsAFailedDelete(t *testing.T) {
 // vitais continuam de pé —, mas sem o anúncio a degradação vira uma linha de
 // log enquanto os handlers do catálogo devolvem 503 no meio de uma jogada.
 func TestHealthReportsADegradedBoot(t *testing.T) {
-	// O servidor de teste sobe SEM catálogo — que é exatamente o estado
-	// degradado que o boot de produção assume quando o arquivo falta.
+	// O catálogo é DESLIGADO de propósito, e a bancada já não faz isso sozinha.
+	//
+	// Em produção este estado deixou de existir: o `primeCatalogs` derruba o
+	// processo desde que o PV máximo passou a ser derivado (ALE-355), e o
+	// `newTestServer` passou a primar como produção pela mesma razão. O que
+	// sobra aqui é o RELATÓRIO saber descrever um estado do meio — e arranjá-lo
+	// virou um ato explícito, que é como deve ser.
 	s := newTestServer(t)
+	s.primeCatalogs(nil)
 
 	degradado := healthBody(t, s)
 
@@ -414,7 +420,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	gm := seedUser(t, s, "gm@t.com")
 	campaignID := seedCampaign(t, s, gm)
 	sid := seedSession(t, s, campaignID)
-	heroi := seedCharacter(t, s, gm, "Tanque", 10, 20, 2, 5)
+	heroi := seedCharacter(t, s, gm, "Tanque")
 	seedMember(t, s, campaignID, heroi)
 	quem := app.Caller{ID: gm}
 	ctx := context.Background()

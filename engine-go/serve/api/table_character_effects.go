@@ -16,14 +16,14 @@ import (
 // Eles ficam com esta forma — `(int, error)` — porque é a que o
 // `clearEffectScopes` recebe por parâmetro, e ele serve os dois.
 func (tr tableRules) EndScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
-	if err := rest.NewScopes(tr.queries).EndScene(ctx, callerOf(user), characterID); err != nil {
+	if err := rest.NewScopes(tr.queries, tr.catalogs).EndScene(ctx, callerOf(user), characterID); err != nil {
 		return statusForAccess(err), err
 	}
 	return http.StatusOK, nil
 }
 
 func (tr tableRules) endDay(ctx context.Context, user AuthUser, characterID int64) (int, error) {
-	if err := rest.NewScopes(tr.queries).EndDay(ctx, callerOf(user), characterID); err != nil {
+	if err := rest.NewScopes(tr.queries, tr.catalogs).EndDay(ctx, callerOf(user), characterID); err != nil {
 		return statusForAccess(err), err
 	}
 	return http.StatusOK, nil

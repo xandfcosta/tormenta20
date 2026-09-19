@@ -21,14 +21,12 @@ func cloneCharacterTx(ctx context.Context, tx *sql.Tx, sourceID, campaignID int6
 	res, err := tx.ExecContext(ctx, `
 INSERT INTO characters (
   ownerId, name, origin, god, godPower, tibar, level,
-  hpMax, hpCurrent, mpMax, mpCurrent,
   strength, dexterity, constitution, intelligence, wisdom, charisma,
   size, displacement, proficiencies, raceAbilityChoices, raceAttributeChoices,
   secondaryRaceChoices, originChoices, classPowers, classChoices, powerChoices,
   activeConditions, sourceCharacterId, campaignId, createdAt, updatedAt)
 SELECT
   ownerId, name, origin, god, godPower, tibar, level,
-  hpMax, hpCurrent, mpMax, mpCurrent,
   strength, dexterity, constitution, intelligence, wisdom, charisma,
   size, displacement, proficiencies, raceAbilityChoices, raceAttributeChoices,
   secondaryRaceChoices, originChoices, classPowers, classChoices, powerChoices,
@@ -63,6 +61,12 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 			SELECT ?, source, catalogId, scope, modifiers, ? FROM active_effects WHERE characterId = ?`, []any{destID, now, sourceID}},
 		{"spells", `INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
 			SELECT ?, catalogSpellId, prepared, ? FROM character_spells WHERE characterId = ?`, []any{destID, now, sourceID}},
+		// O DANO vem junto, e é o que faz um herói ferido entrar na mesa ferido.
+		// Ele era copiado nas colunas `hpCurrent`/`mpCurrent` do INSERT acima,
+		// que saíram na 00015: o poço é derivado e o que se guarda é a dívida.
+		// Sem esta linha, entrar numa campanha viraria uma cura (ALE-355).
+		{"damage", `INSERT INTO character_damage (characterId, hpDamage, mpSpent)
+			SELECT ?, hpDamage, mpSpent FROM character_damage WHERE characterId = ?`, []any{destID, sourceID}},
 	}
 	for _, passo := range passos {
 		if _, err := tx.ExecContext(ctx, passo.sql, passo.args...); err != nil {

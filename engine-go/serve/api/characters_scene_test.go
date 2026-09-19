@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/characters"
 	"t20engine/serve/web/ui"
@@ -64,7 +65,7 @@ func seedRaca(t *testing.T, s *Server, characterID int64, raca string) {
 // 18 na lista e 17 na ficha e conclui que o app é aproximado.
 func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	id := seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
+	id := seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", "Guerreiro", 5, -4, 5)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
@@ -87,25 +88,31 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	}
 }
 
-// Sem motor a Defesa vira TRAVESSÃO, e nunca zero: zero é um valor plausível de
-// Defesa, então mostrá-lo seria mentir com um número redondo. E travessão em vez
-// de omitir porque uma coluna que some faz o palco dançar ao trocar de herói.
-func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
-	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
-	s.primeCatalogs(nil)
+// Defesa que o motor não soube dar vira TRAVESSÃO, e nunca zero: zero é um valor
+// plausível de Defesa, então mostrá-lo seria mentir com um número redondo. E
+// travessão em vez de omitir porque uma coluna que some faz o palco dançar ao
+// trocar de herói.
+//
+// # Por que ele chama o `HeroCardOf` e não a cena
+//
+// Porque o caminho pela cena passou a ser IMPOSSÍVEL. Ele montava um servidor,
+// fazia `primeCatalogs(nil)` e pedia a cena — e desde a ALE-355 o `cmd/api` se
+// recusa a subir sem catálogo e o agregado se recusa a montar sem ele, porque o
+// poço de PV é derivado. Um caso que arranja um estado que o app não alcança
+// mede outra coisa.
+//
+// O que SOBRA de alcançável é a outra metade da mesma guarda: o `sheet.Compute`
+// devolver erro para um agregado que o motor não digere. O travessão é a
+// resposta das duas, e é aqui que ele mora.
+func TestADefenseTheEngineCannotGiveBecomesAnEmDash(t *testing.T) {
+	cartao := characters.HeroCardOf(nil, sheet.CharacterDTO{ID: 1, Name: "Thessa", Level: 5})
 
-	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
-	if err != nil {
-		t.Fatalf("carregar sem motor deveria funcionar: %v", err)
+	if cartao.Defense != "—" || cartao.DefenseVs != "—" {
+		t.Errorf("Defesa = %q / %q, queria travessão nos dois",
+			cartao.Defense, cartao.DefenseVs)
 	}
-	if len(v.Heroes) != 1 {
-		t.Fatalf("a cena caiu sem o motor")
-	}
-	if v.Heroes[0].Defense != "—" {
-		t.Errorf("Defesa = %q sem motor, queria travessão", v.Heroes[0].Defense)
-	}
-	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
+	html, err := ui.RenderFragment(t.Context(),
+		characters.SceneBody(characters.View{Heroes: []characters.HeroCard{cartao}, Total: 1, HasAny: true}))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -144,7 +151,7 @@ func TestWithAnEmptyCastTheCreateSlotIsWhatIsLeft(t *testing.T) {
 // fim da fita pareceria igual e as setas o pulariam.
 func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
+	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", "Guerreiro", 5, -4, 5)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
@@ -172,8 +179,7 @@ func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
 // pelo nome e ficaria verde com a classe fora de `searchFields`.
 func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	id := seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
-	seedClasse(t, s, id, "Bárbaro", 5)
+	id := seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Bárbaro", 5, 0, 0)
 	seedRaca(t, s, id, "Anão")
 
 	// "Soldado" é a origem que o `seedCharacterAtLevel` grava.
@@ -205,8 +211,8 @@ func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 // busca esconde justamente o que a pessoa precisa saber para limpar o filtro.
 func TestTheCountSaysFilteredOutOfTotal(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
-	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
+	seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Guerreiro", 5, -4, 5)
+	seedCharacterAtLevel(t, s, eu.ID, "Yrla", "Arcanista", 4, 4, 4)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "thalen")
 	if err != nil {
@@ -222,8 +228,8 @@ func TestTheCountSaysFilteredOutOfTotal(t *testing.T) {
 // O que os vizinhos carregam de regra: o nome legível e o caminho de volta.
 func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
-	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
+	seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Guerreiro", 5, -4, 5)
+	seedCharacterAtLevel(t, s, eu.ID, "Yrla", "Arcanista", 4, 4, 4)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
@@ -258,8 +264,8 @@ func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 // elenco, e sem ele quem anda até o fim do trilho fica sem pista de retorno.
 func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
-	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
+	seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Guerreiro", 5, -4, 5)
+	seedCharacterAtLevel(t, s, eu.ID, "Yrla", "Arcanista", 4, 4, 4)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
@@ -284,7 +290,7 @@ func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
 // no `characters.spec.ts`. Aqui fica só o que é verdade de dado.
 func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
+	seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Guerreiro", 5, -4, 5)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
@@ -311,9 +317,13 @@ func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
 // que ignorasse o herói e lesse o primeiro do elenco passaria nos três.
 func TestTheCastPaintsEachHeroByHowBadlyHurtHeIs(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Inteiro", 5, 20, 20, 3, 8)
-	seedCharacterAtLevel(t, s, eu.ID, "Machucado", 5, 8, 20, 3, 8)
-	seedCharacterAtLevel(t, s, eu.ID, "Morrendo", 5, 2, 20, 3, 8)
+	// O dano sai da FRAÇÃO do poço e não de um número escolhido: o que este caso
+	// afirma são as três faixas de tinta, e um dano absoluto mudaria de faixa no
+	// dia em que a tabela de classe mudasse — sem ninguém mexer no teste.
+	poco := bookPools(t, s, "Guerreiro", 5).PvMax
+	seedCharacterAtLevel(t, s, eu.ID, "Inteiro", "Guerreiro", 5, 0, 5)
+	seedCharacterAtLevel(t, s, eu.ID, "Machucado", "Guerreiro", 5, poco*60/100, 5)
+	seedCharacterAtLevel(t, s, eu.ID, "Morrendo", "Guerreiro", 5, poco*90/100, 5)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {

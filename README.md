@@ -245,6 +245,6 @@ Variáveis (defaults em `engine-go/infra/config/config.go`):
 | `CORS_ORIGIN` | vazio nos dois ambientes | as origens liberadas a chamar de fora; vazio = nenhum middleware de CORS |
 | `TLS_CERT_FILE` / `TLS_KEY_FILE` | vazios | o par de certificados; os DOIS preenchidos = este processo fala HTTPS, os dois vazios = HTTP. Meio par **derruba o boot** |
 | `BACKUP_DIR` | `../backups` | onde o `pnpm db:backup` e a tela de admin escrevem |
-| `CATALOG_PATH` | `parity/_catalogs.json` | catálogos dos validadores de mutação |
+| `CATALOG_PATH` | `parity/_catalogs.json` | catálogos de regra. **O servidor não sobe sem eles**: o PV máximo é derivado do catálogo, e subir sem ele serviria ficha errada em silêncio (ALE-355) |
 | `LIVRO_PDF` | vazio | o Tormenta 20 em PDF que o servidor entrega em `/livro`; vazio = não serve nada e o botão "abrir no livro" não aparece. **Linearize antes** (`qpdf --linearize`): medido, o navegador transfere o arquivo inteiro para abrir uma página nos dois casos, e o qpdf encolhe os 89,5 MB para 78,6 — o boot avisa quando não está |
 | `LIVRO_ABERTURA` | `6` | quantas páginas o arquivo tem antes da página impressa 1 — `#page=N` conta páginas do ARQUIVO e o catálogo grava a IMPRESSA |

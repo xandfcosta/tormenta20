@@ -43,8 +43,8 @@ func stageScenes(t *testing.T) []stageScene {
 
 	elenco := newSceneFixture(t)
 	// O `newSceneFixture` já semeia um herói para o jogador; faltam dois.
-	seedCharacterAtLevel(t, elenco.s, elenco.jogador, "Anã Clériga", 4, 20, 20, 6, 6)
-	seedCharacterAtLevel(t, elenco.s, elenco.jogador, "Elfo Ladino", 2, 14, 14, 0, 0)
+	seedCharacterAtLevel(t, elenco.s, elenco.jogador, "Anã Clériga", "Clérigo", 4, 0, 0)
+	seedCharacterAtLevel(t, elenco.s, elenco.jogador, "Elfo Ladino", "Guerreiro", 2, 0, 0)
 
 	// E já semeia uma campanha para o mestre; faltam duas. A cena de campanhas é
 	// pedida pelo MESTRE, e não pelo jogador: é ele que tem mesa.

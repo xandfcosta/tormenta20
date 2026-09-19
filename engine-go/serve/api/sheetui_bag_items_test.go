@@ -164,18 +164,14 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 // USAR gasta a dose e aplica o que a MESA rolou, preso no máximo.
 func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Ferido", 3, 10, 30, 0, 0)
+	id := seedCharacterAtLevel(t, f.s, f.jogador, "Ferido", "Guerreiro", 3, 20, 0)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
 	if recusa := use(t, f, id, item, `{"item_roll_hp":7}`); recusa != "" {
 		t.Fatalf("usar foi recusado: %q", recusa)
 	}
-	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler o personagem: %v", err)
-	}
-	if row.Hpcurrent != 17 {
-		t.Errorf("o PV ficou %d, quer 17 (10 + os 7 que a mesa rolou)", row.Hpcurrent)
+	if poco := poolsOf(t, f.s, id); poco.HpCurrent != 17 {
+		t.Errorf("o PV ficou %d, quer 17 (10 + os 7 que a mesa rolou)", poco.HpCurrent)
 	}
 	// A DOSE FOI GASTA: era uma só, então a linha sai da ficha.
 	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
@@ -190,18 +186,14 @@ func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 // A CURA NÃO PASSA DO MÁXIMO, e é o motor que prende.
 func TestUsingDoesNotGoPastMaximumHp(t *testing.T) {
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Quase cheio", 3, 28, 30, 0, 0)
+	id := seedCharacterAtLevel(t, f.s, f.jogador, "Quase cheio", "Guerreiro", 3, 2, 0)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
 	if recusa := use(t, f, id, item, `{"item_roll_hp":8}`); recusa != "" {
 		t.Fatalf("usar foi recusado: %q", recusa)
 	}
-	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler o personagem: %v", err)
-	}
-	if row.Hpcurrent != 30 {
-		t.Errorf("o PV ficou %d, quer 30 — a cura passou do máximo", row.Hpcurrent)
+	if poco := poolsOf(t, f.s, id); poco.HpCurrent != 30 {
+		t.Errorf("o PV ficou %d, quer 30 — a cura passou do máximo", poco.HpCurrent)
 	}
 }
 

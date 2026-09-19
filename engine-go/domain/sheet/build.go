@@ -2,7 +2,10 @@ package sheet
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 
 	"t20engine/domain/engine"
 	"t20engine/infra/db/dbvalue"
@@ -23,7 +26,9 @@ import (
 // loadCharacter anexa as seis relações à linha do personagem, em ordem estável:
 // raças, classes, itens e efeitos por id, perícias por nome, magias por
 // `learnedAt`.
-func Load(ctx context.Context, q *sqlcgen.Queries, c sqlcgen.Character) (CharacterDTO, error) {
+func Load(
+	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, c sqlcgen.Character,
+) (CharacterDTO, error) {
 	dto := CharacterScalarsFrom(c)
 
 	races, err := q.ListRacesByCharacter(ctx, c.ID)
@@ -107,14 +112,86 @@ func Load(ctx context.Context, q *sqlcgen.Queries, c sqlcgen.Character) (Charact
 	if err := LoadPlayState(ctx, q, c.ID, &dto); err != nil {
 		return dto, err
 	}
+
+	// OS POÇOS SÃO DERIVADOS, e é o último passo de propósito: eles dependem do
+	// agregado inteiro — classes, raça, poderes, e os atributos já somados pelos
+	// itens que as linhas acima carregaram.
+	if err := withDerivedPools(ctx, q, cat, &dto); err != nil {
+		return dto, err
+	}
 	return dto, nil
+}
+
+// withDerivedPools troca os poços GRAVADOS pelos derivados, e o atual pelo que
+// sobra do dano.
+//
+// # Por que o máximo não pode vir da coluna
+//
+// Ele vinha, e era recomputado só em gesto de ESCRITA — nascer, passo de
+// atributo, degrau de nível. Um catálogo que mudasse o poço de uma classe não
+// alcançava ninguém até o próximo desses gestos, e a própria semente tinha um
+// bardo com 31 PM gravados contra 33 derivados: o Carisma total dele subiu de 3
+// para 5, e o poder "Magias (1º círculo)" soma o Carisma no total (p44).
+//
+// Decisão do dono: se o catálogo mudou, as regras do mundo mudaram, logo os
+// personagens acompanham (ALE-355).
+//
+// # E o ATUAL sai de uma subtração, e não de outra coluna
+//
+// `pvAtual = máximo derivado − dano`. Guardar o atual seria guardar um valor que
+// depende de um número derivado; o que é ESTADO é quanto o personagem apanhou.
+//
+// O que isso compra vem de graça: subir de nível entrega os PV novos já
+// preenchidos, e um máximo que ENCOLHE leva o atual junto — as duas regras que o
+// `ShiftedByNewMax` e o `ClampedToNewMax` implementavam à mão, e que precisavam
+// do máximo ANTIGO para diferenciar.
+//
+// # O catálogo é obrigatório, e isso é a decisão do arranque
+//
+// Sem ele não há poço para derivar, e as saídas seriam servir zero PV ou cair na
+// coluna velha — a segunda verdade que esta mudança existe para apagar. O
+// `cmd/api` já se recusa a subir sem catálogo; aqui a recusa é a mesma, dita
+// para quem montar um agregado sem ele.
+func withDerivedPools(
+	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, dto *CharacterDTO,
+) error {
+	if cat == nil {
+		return fmt.Errorf("sem catálogo primado não há poço a derivar para a ficha %d", dto.ID)
+	}
+	ec, err := EngineCharacterFrom(*dto)
+	if err != nil {
+		return fmt.Errorf("montar o personagem do motor (%d): %w", dto.ID, err)
+	}
+	pocos := cat.VitalsForCharacter(ec)
+
+	// AUSÊNCIA de linha quer dizer INTACTO: só quem apanhou tem registro (00014).
+	var dano sqlcgen.GetCharacterDamageRow
+	if linha, err := q.GetCharacterDamage(ctx, dto.ID); err == nil {
+		dano = linha
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("ler o dano da ficha %d: %w", dto.ID, err)
+	}
+
+	dto.HpMax, dto.MpMax = int64(pocos.PvMax), int64(pocos.PmMax)
+	dto.HpCurrent = poolAfterDamage(dto.HpMax, dano.Hpdamage)
+	dto.MpCurrent = poolAfterDamage(dto.MpMax, dano.Mpspent)
+	return nil
+}
+
+// poolAfterDamage é o que sobra de um poço depois do que foi gasto, preso entre
+// zero e o teto.
+//
+// O piso existe para o dano que sobreviveu a um máximo que ENCOLHEU: um
+// personagem com 60 de dano num poço que virou 50 tem zero, e não dez negativos.
+func poolAfterDamage(maximo, gasto int64) int64 {
+	return min(max(0, maximo-gasto), maximo)
 }
 
 // computeSheet monta a entrada do motor a partir de uma linha de personagem já
 // carregada e devolve a ficha computada pelo servidor — ficha base, sem
 // condicional ligada. Os catálogos têm de estar primados.
 func LoadAndCompute(ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, row sqlcgen.Character) (engine.ComputedSheet, error) {
-	dto, err := Load(ctx, q, row)
+	dto, err := Load(ctx, q, cat, row)
 	if err != nil {
 		return engine.ComputedSheet{}, err
 	}

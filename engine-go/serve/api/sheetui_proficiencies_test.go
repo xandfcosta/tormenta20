@@ -19,8 +19,7 @@ import (
 func guerreiro(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Guerreiro", 3, 20, 20, 10, 10)
-	seedClasse(t, f.s, id, "Guerreiro", 3)
+	id := seedCharacterAtLevel(t, f.s, f.jogador, "Guerreiro", "Guerreiro", 3, 0, 0)
 	return f, id
 }
 

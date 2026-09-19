@@ -65,7 +65,7 @@ func TestTheOwnerEntersTheirOwnTableWithoutAnInvite(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	heroi := seedCharacterAtLevel(t, s, dono, "Thalen", 5, 16, 12, 3, 8)
+	heroi := seedCharacterAtLevel(t, s, dono, "Thalen", "Guerreiro", 5, -4, 5)
 
 	rec := postaCarta(t, s, dono, url.Values{
 		"campaignId":  {strconv.FormatInt(campanha, 10)},
@@ -88,7 +88,7 @@ func TestWithoutAnInviteSomeoneElsesTableIsRefusedWithTheNextStep(t *testing.T) 
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa fechada", "o-token-certo")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
+	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
 
 	rec := postaCarta(t, s, visitante, url.Values{
 		"campaignId":  {strconv.FormatInt(campanha, 10)},
@@ -110,7 +110,7 @@ func TestWithTheRightInviteTheVisitorEnters(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
 	_ = seedCampanha(t, s, dono, "Mesa aberta", "o-token-certo")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
+	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
 
 	rec := postaCarta(t, s, visitante, url.Values{
 		"token":       {"o-token-certo"},
@@ -131,7 +131,7 @@ func TestWithAnInviteTheTypedNumberIsIgnored(t *testing.T) {
 	visitante := seedUser(t, s, "visitante@t20.local")
 	convidada := seedCampanha(t, s, dono, "A que convidou", "o-token-certo")
 	outra := seedCampanha(t, s, dono, "A que NÃO convidou", "outro-token")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
+	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
 
 	rec := postaCarta(t, s, visitante, url.Values{
 		"token":       {"o-token-certo"},

@@ -10,6 +10,7 @@ import (
 	"t20engine/app/session"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
+	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -56,11 +57,28 @@ func (r Roster) Combatant(
 			"%d não mestra a campanha %d nem é dono do personagem %d: %w",
 			quem.ID, campaignID, characterID, app.ErrForbidden)
 	}
+	poco, err := r.onePool(ctx, characterID)
+	if err != nil {
+		return Combatant{}, err
+	}
 	return Combatant{
 		CharacterID: characterID, Name: ficha.Name,
-		HpCurrent: ficha.Hpcurrent, HpMax: ficha.Hpmax,
-		MpCurrent: ficha.Mpcurrent, MpMax: ficha.Mpmax,
+		HpCurrent: poco.HpCurrent, HpMax: poco.HpMax,
+		MpCurrent: poco.MpCurrent, MpMax: poco.MpMax,
 	}, nil
+}
+
+// onePool é o poço derivado de um personagem só.
+//
+// As quatro colunas de `characters` ainda existem e ainda batem, porque o funil
+// as espelha — mas elas saem, e ler a regra pelo espelho é o hábito que faria a
+// saída delas quebrar a fila em silêncio (ALE-355).
+func (r Roster) onePool(ctx context.Context, characterID int64) (sheet.Pools, error) {
+	pocos, err := sheet.PoolsForCharacters(ctx, r.queries, r.catalogs, []int64{characterID})
+	if err != nil {
+		return sheet.Pools{}, fmt.Errorf("derivar o poço do personagem %d: %w", characterID, err)
+	}
+	return pocos[characterID], nil
 }
 
 // CloneCreatureBlock copia o bloco de uma criatura da campanha e devolve o id da
@@ -112,12 +130,24 @@ func (r Roster) PartyCombatants(ctx context.Context, campaignID int64) ([]Combat
 	if err != nil {
 		return nil, fmt.Errorf("listar os membros da campanha %d: %w", campaignID, err)
 	}
+	ids := make([]int64, len(linhas))
+	for i, m := range linhas {
+		ids[i] = m.Characterid
+	}
+	// Os poços do grupo INTEIRO de uma vez: o `ListMembers` traz as quatro
+	// colunas espelhadas, e usá-las seria ler pelo espelho a regra que já tem
+	// dono.
+	pocos, err := sheet.PoolsForCharacters(ctx, r.queries, r.catalogs, ids)
+	if err != nil {
+		return nil, fmt.Errorf("derivar os poços da campanha %d: %w", campaignID, err)
+	}
 	grupo := make([]Combatant, 0, len(linhas))
 	for _, m := range linhas {
+		poco := pocos[m.Characterid]
 		grupo = append(grupo, Combatant{
 			CharacterID: m.Characterid, Name: m.Charname,
-			HpCurrent: m.Charhpcurrent, HpMax: m.Charhpmax,
-			MpCurrent: m.Charmpcurrent, MpMax: m.Charmpmax,
+			HpCurrent: poco.HpCurrent, HpMax: poco.HpMax,
+			MpCurrent: poco.MpCurrent, MpMax: poco.MpMax,
 		})
 	}
 	return grupo, nil

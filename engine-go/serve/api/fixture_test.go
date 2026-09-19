@@ -5,14 +5,11 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"t20engine/domain/live"
 	"testing"
 
-	"t20engine/domain/engine"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -37,28 +34,11 @@ type sceneFixture struct {
 func newSceneFixture(t *testing.T) sceneFixture {
 	t.Helper()
 	s := newTestServer(t)
-	// O CATÁLOGO É O DE VERDADE, e não um `{"items":[]}`.
-	//
-	// Catálogo vazio faz regra sumir do TESTE sem sumir da produção: um escudo
-	// passa a ser VESTIDO porque o eixo de equipar não acha o item, e a
-	// distribuição de atributo do humano aceita três vezes o mesmo porque a raça
-	// não está primada. Fixture que desliga validação em silêncio é pior que
-	// fixture lento.
-	bruto, err := os.ReadFile(filepath.Join("..", "..", "parity", "_catalogs.json"))
-	if err != nil {
-		t.Fatalf("ler catálogos: %v (gere com `go run ./cmd/genoracle`)", err)
-	}
-	catalogs, err := engine.PrimeEngineCatalogs(bruto)
-	if err != nil {
-		t.Fatalf("preparar catálogo: %v", err)
-	}
-	s.primeCatalogs(catalogs)
-
 	mestre := seedUser(t, s, "mestre@t.com")
 	jogador := seedUser(t, s, "jogador@t.com")
 	campaignID := seedCampaign(t, s, mestre)
 	sessionID := seedSession(t, s, campaignID)
-	charID := seedCharacterAtLevel(t, s, jogador, "Arcanista", 8, 20, 30, 5, 10)
+	charID := seedCharacterAtLevel(t, s, jogador, "Arcanista", "Arcanista", 8, 10, 5)
 	seedMember(t, s, campaignID, charID)
 	if _, err := s.queries.CreateExpertise(context.Background(), sqlcgen.CreateExpertiseParams{
 		Characterid: charID, Name: "Iniciativa", Attribute: "dexterity", Trained: 0, Custom: 0,

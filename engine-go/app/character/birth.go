@@ -45,7 +45,6 @@ func (b Births) Create(
 	id, err := q.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: nome, Origin: corpo.Origin, God: dbvalue.NullString(corpo.God),
 		GodPower: orElse(corpo.GodPower, ""), Tibar: orElseFloat(corpo.Tibar, 0), Level: nivelTotal,
-		HpMax: corpo.HpMax, HpCurrent: corpo.HpCurrent, MpMax: corpo.MpMax, MpCurrent: corpo.MpCurrent,
 		Strength: corpo.Strength, Dexterity: corpo.Dexterity, Constitution: corpo.Constitution,
 		Intelligence: corpo.Intelligence, Wisdom: corpo.Wisdom, Charisma: corpo.Charisma,
 		Size: corpo.Size, Displacement: corpo.Displacement,
@@ -98,18 +97,6 @@ func (b Births) Create(
 		return 0, fmt.Errorf("fechar a transação do nascimento: %w", err)
 	}
 	return id, nil
-}
-
-// HealVitals recomputa os poços e PRENDE o atual na faixa — a ficha que nasce
-// nasce cheia, e o que se evita é um atual maior que o máximo.
-func (b Births) HealVitals(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
-	return syncVitals(ctx, b.queries, b.catalogs, id, dto, sheet.ClampedToNewMax)
-}
-
-// ShiftVitalsToNewMax recomputa os poços e faz os ATUAIS acompanharem o delta,
-// que é o que um passo de atributo faz com os poços de um herói que já apanhou.
-func (b Births) ShiftVitalsToNewMax(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
-	return syncVitals(ctx, b.queries, b.catalogs, id, dto, sheet.ShiftedByNewMax)
 }
 
 // compactOr reescreve o JSON sem espaço, ou devolve o padrão quando não veio —

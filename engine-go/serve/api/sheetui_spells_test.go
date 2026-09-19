@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 	"testing"
@@ -15,7 +16,6 @@ func arcanista(t *testing.T) (sceneFixture, int64) {
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Conjuradora", Origin: "Charlatão", Level: 9,
-		HpMax: 40, HpCurrent: 40, MpMax: 40, MpCurrent: 40,
 		Strength: 0, Dexterity: 2, Constitution: 2, Intelligence: 4, Wisdom: 1, Charisma: 1,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -26,6 +26,13 @@ func arcanista(t *testing.T) (sceneFixture, int64) {
 		t.Fatalf("semear a conjuradora: %v", err)
 	}
 	seedClasse(t, f.s, id, "Arcanista", 9)
+	// O poço vem do catálogo e a ficha nasce CHEIA: sem esta passada pelo funil
+	// as quatro colunas ficariam com o que o INSERT inventou, e a tela leria um
+	// número que o agregado não confirma (ALE-355).
+	arrangePools(t, f.s, id, func(pocos sheet.Pools) (sheet.Pools, error) {
+		pocos.HpCurrent, pocos.MpCurrent = pocos.HpMax, pocos.MpMax
+		return pocos, nil
+	})
 	return f, id
 }
 
@@ -116,22 +123,17 @@ func TestCastingChargesTheMp(t *testing.T) {
 
 func pm(t *testing.T, f sceneFixture, id int64) int64 {
 	t.Helper()
-	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler o personagem: %v", err)
-	}
-	return row.Mpcurrent
+	return poolsOf(t, f.s, id).MpCurrent
 }
 
 // SEM PM, A CONJURAÇÃO É RECUSADA e nada é cobrado.
 func TestWithoutMpTheCastIsRefused(t *testing.T) {
 	f, id := arcanista(t)
 	spell(t, f, id, "aprende/bola-de-fogo")
-	if err := f.s.sceneCore().Queries().SetMpCurrent(context.Background(), sqlcgen.SetMpCurrentParams{
-		MpCurrent: 1, UpdatedAt: dbvalue.NowISO(), ID: id,
-	}); err != nil {
-		t.Fatalf("zerar o PM: %v", err)
-	}
+	arrangePools(t, f.s, id, func(p sheet.Pools) (sheet.Pools, error) {
+		p.MpCurrent = 1
+		return p, nil
+	})
 
 	if recusa := spellRefusal(t, f, id, "conjura/bola-de-fogo"); !strings.Contains(recusa, "faltam PM") {
 		t.Errorf("a recusa por PM não chegou à tela: %q", recusa)
@@ -187,7 +189,6 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Totemista", Origin: "Batedor", Level: 3,
-		HpMax: 30, HpCurrent: 30, MpMax: 0, MpCurrent: 0,
 		Strength: 4, Dexterity: 1, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -222,8 +223,7 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 func TestAnAugmentOutOfReachShowsLocked(t *testing.T) {
 	// Nível 5 abre o 2º círculo; a Invisibilidade tem aprimoramento de 3º.
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Aprendiz", 5, 20, 20, 20, 20)
-	seedClasse(t, f.s, id, "Arcanista", 5)
+	id := seedCharacterAtLevel(t, f.s, f.jogador, "Aprendiz", "Arcanista", 5, 0, 0)
 	spell(t, f, id, "aprende/invisibilidade")
 
 	tela := spellScreen(t, f, id)

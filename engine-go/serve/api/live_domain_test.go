@@ -4,8 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sync"
 	"t20engine/app"
 	"t20engine/app/initiative"
+	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 	"t20engine/infra/config"
 	"t20engine/infra/db/dbvalue"
 	"testing"
@@ -59,7 +65,48 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 		srv.WaitForBackground()
 		_ = database.Close()
 	})
+	// O CATÁLOGO É O DE VERDADE, e não um `{"items":[]}` — nem nada.
+	//
+	// Catálogo vazio faz regra sumir do TESTE sem sumir da produção: um escudo
+	// passa a ser VESTIDO porque o eixo de equipar não acha o item, e a
+	// distribuição de atributo do humano aceita três vezes o mesmo porque a raça
+	// não está primada. Fixture que desliga validação em silêncio é pior que
+	// fixture lento.
+	//
+	// Ele subiu do `newSceneFixture` para cá na ALE-355, e a razão é que a
+	// bancada passou a poder MENTIR sobre produção: o PV máximo virou derivado do
+	// catálogo e o `cmd/api` se recusa a subir sem ele, então um servidor de
+	// teste sem catálogo arranja um estado que não existe mais — e o sintoma não
+	// é um erro, é uma ficha com os poços em zero.
+	srv.primeCatalogs(primedCatalogs(t))
 	return srv
+}
+
+// primedCatalogs lê e prima o catálogo de verdade, UMA vez por processo.
+//
+// Em cache porque são 134 servidores de teste neste pacote, e reler e analisar o
+// despejo em cada um custava mais que tudo o que eles fazem juntos. O valor é
+// só de leitura depois de primado.
+var (
+	catalogosUmaVez sync.Once
+	catalogosPrimos *engine.Catalogs
+	catalogosErro   error
+)
+
+func primedCatalogs(t *testing.T) *engine.Catalogs {
+	t.Helper()
+	catalogosUmaVez.Do(func() {
+		bruto, err := os.ReadFile(filepath.Join("..", "..", "parity", "_catalogs.json"))
+		if err != nil {
+			catalogosErro = fmt.Errorf("ler catálogos: %w (gere com `go run ./cmd/genoracle`)", err)
+			return
+		}
+		catalogosPrimos, catalogosErro = engine.PrimeEngineCatalogs(bruto)
+	})
+	if catalogosErro != nil {
+		t.Fatalf("preparar catálogo: %v", catalogosErro)
+	}
+	return catalogosPrimos
 }
 
 func seedUser(t *testing.T, s *Server, email string) int64 {
@@ -84,33 +131,46 @@ func seedCampaign(t *testing.T, s *Server, ownerID int64) int64 {
 	return c.ID
 }
 
-// seedCharacter insere o personagem válido mínimo (colunas JSON no padrão) com o
-// dono e os vitais dados, e devolve o id dele.
-func seedCharacter(t *testing.T, s *Server, ownerID int64, name string, hpCur, hpMax, mpCur, mpMax int64) int64 {
+// seedCharacter é o personagem válido mínimo para quem não se importa com o
+// poço: um guerreiro de nível 1, inteiro.
+//
+// Ele recebia os quatro vitais e os escrevia — em trinta chamadas, sem CLASSE
+// nenhuma, que é um estado impossível nas regras. O poço
+// agora é o do livro, e quem precisa de outro chama o `seedCharacterAtLevel`
+// direto dizendo classe, nível e o quanto foi gasto (ALE-355).
+func seedCharacter(t *testing.T, s *Server, ownerID int64, name string) int64 {
 	t.Helper()
-	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: ownerID, Name: name, Origin: "Soldado", Level: 1,
-		HpMax: hpMax, HpCurrent: hpCur, MpMax: mpMax, MpCurrent: mpCur,
-		Size: "Médio", Displacement: 9,
-		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
-	})
-	if err != nil {
-		t.Fatalf("seed character %q: %v", name, err)
-	}
-	return id
+	return seedCharacterAtLevel(t, s, ownerID, name, "Guerreiro", 1, 0, 0)
 }
 
 // seedCharacterAtLevel: o nível importa para o descanso (a recuperação é o
 // nível × fator), e o `seedCharacter` fixa nível 1.
+// seedCharacterAtLevel semeia um personagem com os poços que o LIVRO dá.
+//
+// # Ele não escolhe mais o máximo, e essa é a mudança
+//
+// A assinatura recebia os quatro vitais e os escrevia. Isso
+// arranjava um estado que a regra não produz — um Arcanista de nível 8 tem 42
+// PV pelo livro, e a bancada escrevia 30 —, e enquanto o máximo era coluna
+// ninguém notava. Com ele derivado do catálogo (ALE-355), esses números viram
+// ficção e todo caso que os afirmava passaria a medir outra coisa.
+//
+// Agora o ajudante PERGUNTA o poço ao motor, do mesmo jeito que a produção vai
+// perguntar, e o chamador diz só quanto o personagem APANHOU. O efeito é que a
+// bancada passa a dizer a verdade ANTES de a produção mudar: quando a derivação
+// entrar, estes números já serão os dela.
+//
+// # E todo personagem tem CLASSE
+//
+// Personagem sem classe é impossível nas regras (decisão do dono), e trinta das
+// quarenta chamadas o criavam. Sem classe o poço do livro é ZERO, então o
+// estado impossível só era invisível porque ninguém derivava.
 func seedCharacterAtLevel(
-	t *testing.T, s *Server, ownerID int64, name string, level, hpCur, hpMax, mpCur, mpMax int64,
+	t *testing.T, s *Server, ownerID int64, name, classe string, level, hpDano, mpGasto int64,
 ) int64 {
 	t.Helper()
 	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: name, Origin: "Soldado", Level: level,
-		HpMax: hpMax, HpCurrent: hpCur, MpMax: mpMax, MpCurrent: mpCur,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
@@ -119,7 +179,73 @@ func seedCharacterAtLevel(
 	if err != nil {
 		t.Fatalf("seed character %q: %v", name, err)
 	}
+	seedClasse(t, s, id, classe, level)
+	if hpDano > 0 || mpGasto > 0 {
+		arrangePools(t, s, id, func(p sheet.Pools) (sheet.Pools, error) {
+			p.HpCurrent, p.MpCurrent = p.HpMax-hpDano, p.MpMax-mpGasto
+			return p, nil
+		})
+	}
 	return id
+}
+
+// poolsOf é o poço DERIVADO de uma ficha — o par que a tela mostra.
+//
+// A bancada lia `row.Hpcurrent` e as irmãs, e elas saíram do schema na 00015: o
+// máximo vem do catálogo e o atual é `máximo − dano`. Perguntar aqui é
+// perguntar o mesmo que a cena pergunta (ALE-355).
+func poolsOf(t *testing.T, s *Server, id int64) sheet.Pools {
+	t.Helper()
+	pocos, err := sheet.PoolsForCharacters(context.Background(), s.queries, s.catalogs, []int64{id})
+	if err != nil {
+		t.Fatalf("derivar o poço da ficha %d: %v", id, err)
+	}
+	poco, tem := pocos[id]
+	if !tem {
+		t.Fatalf("a ficha %d não existe", id)
+	}
+	return poco
+}
+
+// arrangePools arranja o estado vital de uma ficha PELO FUNIL, que é o único
+// caminho que a produção tem.
+//
+// A bancada não escreve `hpCurrent` por fora nem inventa uma linha de dano: o
+// que ela arranja tem de ser um estado que a produção CONSEGUE produzir, senão o
+// caso mede um banco impossível. O `TestEveryVitalWriteGoesThroughTheFunnel`
+// cobra isso desta bancada com a mesma régua que cobra do resto.
+func arrangePools(t *testing.T, s *Server, id int64, regra sheet.PoolRule) sheet.Pools {
+	t.Helper()
+	row, err := s.queries.GetCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler a ficha %d para arranjar os poços: %v", id, err)
+	}
+	pocos, err := sheet.ApplyToPools(context.Background(), s.queries, s.catalogs, row, regra)
+	if err != nil {
+		t.Fatalf("arranjar os poços da ficha %d: %v", id, err)
+	}
+	return pocos
+}
+
+// bookPools é quanto o LIVRO dá de PV/PM para esta classe neste nível.
+//
+// Ela existe para a bancada parar de escolher o máximo: o número sai do mesmo
+// motor que a ficha usa, então um caso que afirme "metade do PV" continua
+// afirmando metade quando a tabela de classe mudar.
+type seededPools struct{ PvMax, PmMax int64 }
+
+func bookPools(t *testing.T, s *Server, classe string, nivel int64) seededPools {
+	t.Helper()
+	pocos := s.catalogs.ComputeVitals(engine.VitalContext{
+		Level:      int(nivel),
+		Classes:    []engine.ClassEntry{{ClassName: classe, Level: int(nivel)}},
+		AttrTotals: map[string]int{},
+	})
+	if pocos.PvMax <= 0 {
+		t.Fatalf("a classe %q no nível %d deu %d de PV — ela existe na tabela do livro?",
+			classe, nivel, pocos.PvMax)
+	}
+	return seededPools{PvMax: int64(pocos.PvMax), PmMax: int64(pocos.PmMax)}
 }
 
 // seedMember senta um personagem à mesa.
@@ -155,7 +281,7 @@ func TestTheRoleInACampaignIsOwnerGmMemberPlayerAndNobodyElse(t *testing.T) {
 	player := seedUser(t, s, "p@t.com")
 	stranger := seedUser(t, s, "x@t.com")
 	campaignID := seedCampaign(t, s, gm)
-	pc := seedCharacter(t, s, player, "PC", 10, 10, 5, 5)
+	pc := seedCharacter(t, s, player, "PC")
 	seedMember(t, s, campaignID, pc)
 
 	casos := []struct {
@@ -197,9 +323,9 @@ func TestResolveCombatant(t *testing.T) {
 	player := seedUser(t, s, "p@t.com")
 	stranger := seedUser(t, s, "x@t.com")
 	campaignID := seedCampaign(t, s, gm)
-	pc := seedCharacter(t, s, player, "Herói", 7, 12, 3, 8)
+	pc := seedCharacterAtLevel(t, s, player, "Herói", "Bardo", 2, 8, 5)
 	seedMember(t, s, campaignID, pc)
-	loose := seedCharacter(t, s, player, "Solto", 5, 5, 0, 0) // not a member
+	loose := seedCharacter(t, s, player, "Solto") // not a member
 
 	roster := s.initiativeQueue().Roster()
 
@@ -208,7 +334,8 @@ func TestResolveCombatant(t *testing.T) {
 		if err != nil {
 			t.Fatalf("o dono foi barrado: %v", err)
 		}
-		want := initiative.Combatant{CharacterID: pc, Name: "Herói", HpCurrent: 7, HpMax: 12, MpCurrent: 3, MpMax: 8}
+		// Bardo de nível 2: 15 PV e 8 PM pelo livro, menos os 8 e 5 semeados.
+		want := initiative.Combatant{CharacterID: pc, Name: "Herói", HpCurrent: 7, HpMax: 15, MpCurrent: 3, MpMax: 8}
 		if got != want {
 			t.Errorf("veio %+v, queria %+v", got, want)
 		}
@@ -309,7 +436,7 @@ func TestEndSceneEndDay(t *testing.T) {
 	gm := AuthUser{ID: gmID}
 	stranger := AuthUser{ID: seedUser(t, s, "x@t.com")}
 	_ = seedCampaign(t, s, gmID)
-	char := seedCharacter(t, s, gmID, "PC", 10, 10, 5, 5)
+	char := seedCharacter(t, s, gmID, "PC")
 
 	t.Run("EndScene removes only scene effects", func(t *testing.T) {
 		seedEffect(t, s, char, "buff-a", "scene")
