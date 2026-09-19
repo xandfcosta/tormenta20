@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/app/character"
 	"t20engine/domain/account"
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
@@ -29,14 +30,17 @@ import (
 // isso que mantém a promessa acima de pé.
 type Seeder struct {
 	accounts accountRules
-	forge    forgeHost
-	sheet    sheetRules
-	queries  *sqlcgen.Queries
+	// births é o MESMO caso de uso que a forja usa — e é por isso que este
+	// gerador não monta uma requisição falsa para chamar a criação: ele é o
+	// segundo chamador que a porta da forja nomeava antes de haver camada.
+	births  character.Births
+	sheet   sheetRules
+	queries *sqlcgen.Queries
 }
 
 func (s *Server) Seeder() Seeder {
 	return Seeder{
-		accounts: s.accountRules(), forge: s.forgeHost(),
+		accounts: s.accountRules(), births: s.characterBirths(),
 		sheet: s.sheetRules(), queries: s.queries,
 	}
 }
@@ -72,7 +76,7 @@ func (sd Seeder) CreateCharacter(
 		nivelTotal += c.Level
 		classes[i] = c.ClassName
 	}
-	id, err := sd.forge.InsertCharacter(ctx, donoID, corpo.Name, corpo, nivelTotal,
+	id, err := sd.births.Create(ctx, donoID, corpo.Name, corpo, nivelTotal,
 		book.GrantedProficiencies(classes), sheet.ToStringSet(corpo.TrainedExpertises))
 	if err != nil {
 		return 0, err
@@ -85,7 +89,7 @@ func (sd Seeder) CreateCharacter(
 	if err != nil {
 		return 0, err
 	}
-	return id, sd.forge.HealVitals(ctx, id, &dto)
+	return id, sd.births.HealVitals(ctx, id, &dto)
 }
 
 // Character devolve a ficha carregada, para o gerador ler o PV máximo que o

@@ -130,3 +130,13 @@ func (sr sheetRules) powerTempHpAmount(ctx context.Context, row sqlcgen.Characte
 func effectDTOFromUpsert(e sqlcgen.UpsertActiveEffectRow) sheet.EffectDTO {
 	return sheet.EffectDTO{ID: e.ID, CatalogID: e.Catalogid, Scope: e.Scope, Modifiers: e.Modifiers, CreatedAt: e.Createdat}
 }
+
+// derefStr mora com o ÚNICO chamador que tem: o compilador do Go não acusa
+// função de pacote sem uso, então uma cópia solta num arquivo vizinho sobrevive
+// em silêncio à morte de quem a chamava.
+func derefStr(p *string, def string) string {
+	if p == nil {
+		return def
+	}
+	return *p
+}

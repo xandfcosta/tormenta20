@@ -177,7 +177,7 @@ func (s Scene) birthHero(r *http.Request, ownerID int64, folha forgeAnswers) (in
 	if err != nil {
 		return 0, err
 	}
-	id, err := s.deps.InsertCharacter(r.Context(), ownerID, corpo.Name, corpo, 1,
+	id, err := s.births.Create(r.Context(), ownerID, corpo.Name, corpo, 1,
 		book.GrantedProficiencies([]string{classe.Name}), sheet.ToStringSet(corpo.TrainedExpertises))
 	if err != nil {
 		return 0, err
@@ -240,7 +240,7 @@ func (s Scene) fillPools(r *http.Request, id int64) error {
 	if err != nil {
 		return err
 	}
-	if err := s.deps.HealVitals(r.Context(), id, &dto); err != nil {
+	if err := s.births.HealVitals(r.Context(), id, &dto); err != nil {
 		return err
 	}
 	return s.deps.Queries().SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
@@ -258,5 +258,5 @@ func (s Scene) shiftPools(r *http.Request, id int64) error {
 	if err != nil {
 		return err
 	}
-	return s.deps.ShiftVitalsToNewMax(r.Context(), id, &dto)
+	return s.births.ShiftVitalsToNewMax(r.Context(), id, &dto)
 }

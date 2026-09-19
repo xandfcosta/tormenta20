@@ -5,7 +5,7 @@ import "encoding/json"
 // A CARGA DE CRIAÇÃO (ALE-278): o herói que vai nascer, como quem o pede o
 // descreve.
 //
-// Ela morava no `api/character_create.go`, junto do handler que a recebe, e saiu
+// Ela morava no `app/character/birth.go`, junto do handler que a recebe, e saiu
 // porque a FORJA precisa montá-la — e a forja não pode importar o `api`, que a
 // importa de volta para montar rota. Os três tipos não têm dependência nenhuma:
 // nem banco, nem motor, nem HTTP.

@@ -99,7 +99,8 @@ var arquivosAusentesDePROPOSITO = map[string]bool{
 	// atravessaram a reestruturação inteira sem um único chamador — o
 	// compilador do Go não acusa função de PACOTE sem uso, e por isso nada
 	// reclamou. Cada um é citado pelo arquivo que herdou o seu único símbolo
-	// vivo: o `boolToInt` foi para o `character_create.go` e o `nullInt` para o
+	// vivo: o `boolToInt` acabou no `app/character`, quando o nascimento desceu
+	// para a camada de aplicação (ALE-347), e o `nullInt` no
 	// `session_character_vitals.go`.
 	"character_spells.go":    true,
 	"character_mutations.go": true,

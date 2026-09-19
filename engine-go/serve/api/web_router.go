@@ -63,7 +63,7 @@ func (s *Server) WebRouter() http.Handler {
 		// PERSONAGENS e a FORJA são irmãs no mesmo endereço: o elenco é de onde
 		// se abre a folha em branco.
 		characters.Routes(r, characters.New(s.sceneCore()))
-		forge.Routes(r, forge.New(s.forgeHost()))
+		forge.Routes(r, forge.New(s.sceneCore(), s.characterBirths()))
 		// A FICHA é filha do endereço do elenco: `/personagens/{id}`.
 		sheetui.Routes(r, sheetui.New(s.sheetHost()))
 		grimoire.Routes(r, grimoire.New(s.sceneCore()))
