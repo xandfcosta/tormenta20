@@ -103,49 +103,13 @@ func (b Births) Create(
 // HealVitals recomputa os poços e PRENDE o atual na faixa — a ficha que nasce
 // nasce cheia, e o que se evita é um atual maior que o máximo.
 func (b Births) HealVitals(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
-	return b.recompute(ctx, id, dto, sheet.ClampedToNewMax)
+	return syncVitals(ctx, b.queries, b.catalogs, id, dto, sheet.ClampedToNewMax)
 }
 
 // ShiftVitalsToNewMax recomputa os poços e faz os ATUAIS acompanharem o delta,
 // que é o que um passo de atributo faz com os poços de um herói que já apanhou.
 func (b Births) ShiftVitalsToNewMax(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
-	return b.recompute(ctx, id, dto, sheet.ShiftedByNewMax)
-}
-
-// recompute pergunta os máximos ao motor e grava o que a regra decidir para os
-// atuais, remendando o agregado junto.
-//
-// Motor ausente ou ficha SEM CLASSE devolve sem escrever: os poços do livro
-// dependem da classe, e gravar 0/0 apagaria os números que a pessoa digitou.
-func (b Births) recompute(
-	ctx context.Context, id int64, dto *sheet.CharacterDTO,
-	regra func(sheet.Vitals, int, int) (sheet.Vitals, bool),
-) error {
-	if b.catalogs == nil || len(dto.Classes) == 0 {
-		return nil
-	}
-	ec, err := sheet.EngineCharacterFrom(*dto)
-	if err != nil {
-		return fmt.Errorf("montar o personagem do motor (%d): %w", id, err)
-	}
-	pocos := b.catalogs.VitalsForCharacter(ec)
-	atuais := sheet.Vitals{
-		HpMax: dto.HpMax, HpCurrent: dto.HpCurrent, MpMax: dto.MpMax, MpCurrent: dto.MpCurrent,
-	}
-	novos, mudou := regra(atuais, pocos.PvMax, pocos.PmMax)
-	if !mudou {
-		return nil
-	}
-	if err := b.queries.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{
-		HpMax: novos.HpMax, HpCurrent: novos.HpCurrent,
-		MpMax: novos.MpMax, MpCurrent: novos.MpCurrent,
-		UpdatedAt: dbvalue.NowISO(), ID: id,
-	}); err != nil {
-		return fmt.Errorf("gravar os vitais da ficha %d: %w", id, err)
-	}
-	dto.HpMax, dto.HpCurrent = novos.HpMax, novos.HpCurrent
-	dto.MpMax, dto.MpCurrent = novos.MpMax, novos.MpCurrent
-	return nil
+	return syncVitals(ctx, b.queries, b.catalogs, id, dto, sheet.ShiftedByNewMax)
 }
 
 // compactOr reescreve o JSON sem espaço, ou devolve o padrão quando não veio —

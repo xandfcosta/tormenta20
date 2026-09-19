@@ -69,6 +69,7 @@ func TestEveryAdapterFileCarriesItsPrefix(t *testing.T) {
 	}
 
 	medidos := 0
+	vistos := map[string]int{}
 	for _, e := range entradas {
 		nome := e.Name()
 		if e.IsDir() || !strings.HasSuffix(nome, ".go") || strings.HasSuffix(nome, "_test.go") {
@@ -92,6 +93,9 @@ func TestEveryAdapterFileCarriesItsPrefix(t *testing.T) {
 			continue
 		}
 		medidos++
+		for d := range donos {
+			vistos[d]++
+		}
 
 		if len(donos) > 1 {
 			nomes := make([]string, 0, len(donos))
@@ -126,9 +130,26 @@ func TestEveryAdapterFileCarriesItsPrefix(t *testing.T) {
 	// CONTROLE: uma lista de reprovados vazia e um regex que parou de casar se
 	// parecem no terminal. O receptor é a única coisa que este guarda lê, e se o
 	// padrão dele quebrar não sobra nada para reprovar.
-	if medidos < 20 {
-		t.Fatalf("só %d arquivos com dono medidos — o padrão do receptor parou de "+
-			"casar e o verde não significa nada", medidos)
+	//
+	// O controle pergunta se CADA adaptador da tabela acima foi encontrado, e
+	// não se o total passa de um piso. Aqui morava `medidos < 20`, e ele reprovou
+	// na ALE-347 sem que nada estivesse errado: conjurar, beber e subir de nível
+	// desceram para o `app/`, três arquivos de `sheetRules` deixaram de existir,
+	// e o número caiu para 19. **Piso escrito à mão sobre família que muda
+	// envelhece** — e o erro dele é do pior tipo, porque acusa quem fez a coisa
+	// certa.
+	//
+	// Esta forma não apodrece e mede o mesmo: se o padrão do receptor quebrar, os
+	// QUATRO somem de uma vez. E se um adaptador de fato acabar — o `sheetRules`
+	// está a caminho disso —, apagar a linha dele da tabela é um ato deliberado,
+	// que é o que se quer exigir.
+	for _, dono := range []string{"tableRules", "sheetRules", "campaignRules", "accountRules"} {
+		if vistos[dono] == 0 {
+			t.Errorf("nenhum arquivo de produção declara método de %s.\n"+
+				"Ou o adaptador deixou de existir — e então a linha dele sai do "+
+				"`adapterPrefixes`, de propósito e à vista —, ou o padrão do receptor "+
+				"parou de casar e o verde não significa nada.", dono)
+		}
 	}
-	t.Logf("%d arquivos de produção com adaptador dono", medidos)
+	t.Logf("%d arquivos de produção com adaptador dono: %v", medidos, vistos)
 }

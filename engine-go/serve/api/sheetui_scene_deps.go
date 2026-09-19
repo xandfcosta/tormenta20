@@ -47,20 +47,6 @@ func (h sheetHost) SaveNewCraft(ctx context.Context, id int64, nome string) erro
 	return h.rules.saveNewCraft(ctx, id, nome)
 }
 
-// ApplyClassLevel sobe ou desce uma classe.
-//
-// Nenhum dos valores do hospedeiro atravessa: um deles é o `storedVitals`, que é
-// tipo DELE, e uma porta que o devolvesse não seria porta. A cena redesenha a
-// ficha inteira depois de gravar.
-func (h sheetHost) ApplyClassLevel(r *http.Request, id int64, classe string, nivel int64) error {
-	row, err := h.rules.queries.GetCharacter(r.Context(), id)
-	if err != nil {
-		return err
-	}
-	_, _, _, _, err = h.rules.applyClassLevel(r.Context(), row, classe, nivel)
-	return err
-}
-
 // ApplySpellBuffEffect liga o efeito de uma magia de melhoria.
 func (h sheetHost) ApplySpellBuffEffect(
 	ctx context.Context, id int64, magia string, escopo *string,

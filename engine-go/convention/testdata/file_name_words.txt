@@ -132,6 +132,7 @@ dockerfile
 dockerignore
 domain
 door
+dose
 double
 draft
 drawing

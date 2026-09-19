@@ -39,7 +39,6 @@ type Deps interface {
 	// As ESCRITAS, uma por gesto: a cena decide QUANDO, o hospedeiro sabe COMO.
 	SaveProficiencies(ctx context.Context, id int64, categorias []string) (string, []string, error)
 	SaveNewCraft(ctx context.Context, id int64, nome string) error
-	ApplyClassLevel(r *http.Request, id int64, classe string, nivel int64) error
 	ApplySpellBuffEffect(ctx context.Context, id int64, magia string, escopo *string) (sheet.EffectDTO, int, error)
 	// PowerTempHpAmount lê o personagem do banco para saber o atributo-chave: a
 	// CONTA é do `sheet`, a leitura é do hospedeiro.

@@ -252,9 +252,8 @@ func rangePinned(valor, max int64) int64 {
 // pools de PV e PM derivam das CLASSES e não se mexem, então o número sobe e o
 // personagem não fica mais forte.
 //
-// A regra é a MESMA do handler JSON, extraída para os dois usarem (ver
-// `applyClassLevel`): a classe tem de ser do personagem, o total é limitado a
-// 20, e os pools sincronizam.
+// A regra mora no caso de uso (`character.Plays.LevelClass`): a classe tem de
+// ser do personagem, o total para em 20, e os poços sincronizam.
 func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	passo, err := uRLStep(r)
 	if err != nil {
@@ -276,7 +275,7 @@ func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 		if alvo < 1 {
 			return fmt.Errorf("%s está no nível 1: descer apagaria a classe", classe)
 		}
-		return s.deps.ApplyClassLevel(r, row.ID, classe, alvo)
+		return s.plays.LevelClass(r.Context(), row, classe, alvo)
 	}
 	return fmt.Errorf("%s não é uma classe deste personagem", classe)
 }

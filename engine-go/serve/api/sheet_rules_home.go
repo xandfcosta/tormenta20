@@ -9,17 +9,15 @@ import (
 	"t20engine/infra/events"
 )
 
-// AS REGRAS DE ESCRITA DA FICHA, com casa própria (ALE-278, fatia 6).
+// O QUE AINDA SOBRA DAS REGRAS DE ESCRITA DA FICHA (ALE-278, fatia 6).
 //
-// Dez métodos que mudam a ficha de alguém: subir de nível, conjurar, consumir
-// um item, aplicar o efeito de uma magia, gravar proficiência e perícia nova, e
-// a reserva de PV temporários que um poder concede.
+// Elas estão MUDANDO DE CASA fatia a fatia: conjurar, beber uma dose e subir de
+// nível já viraram `app/character.Plays`, e este tipo é o que ainda não foi —
+// aplicar o efeito de uma magia, gravar proficiência e perícia nova, a reserva
+// de PV temporários, e o aviso à Mesa.
 //
-// Elas leem o MOTOR além do banco, e é isso que as separa das regras de
-// campanha: subir de nível recalcula PV e PM (`syncLevelVitals`), conjurar
-// pergunta o custo ao círculo, e nenhuma dessas contas é uma consulta. O
-// `*sql.DB` está aqui pela mesma razão de sempre — consumir uma dose e gastar o
-// item são a mesma transação.
+// O `*sql.DB` continua aqui pelas escritas de item do adaptador da cena
+// (`setBuilder` sobre `character_items`), que são a próxima fatia.
 type sheetRules struct {
 	db       *sql.DB
 	queries  *sqlcgen.Queries

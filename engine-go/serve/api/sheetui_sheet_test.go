@@ -72,9 +72,13 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	if depois.Level != soma {
 		t.Errorf("o nível do personagem (%d) não é a soma das classes (%d)", depois.Level, soma)
 	}
-	// E OS POOLS ACOMPANHAM. O número é do LIVRO e escrito à mão: o Arcanista tem
-	// PV inicial 8 e +2 por nível (T20 p36, a tabela da classe; a regra da soma
-	// está em p34), então no nível 4 com Constituição 0 são 8 + 3×2 = **14**.
+	// E OS POÇOS ACOMPANHAM. O número é do LIVRO e escrito à mão: *"Um arcanista
+	// começa com 8 pontos de vida (+ Constituição) e ganha 2 PV (+ Constituição)
+	// por nível"* (**p37**); a regra da soma dos níveis de classe está na
+	// **p35**. Então no nível 4 com Constituição 0 são 8 + 3×2 = **14**.
+	//
+	// As duas páginas estavam erradas aqui — p36 e p34 — e foram conferidas no
+	// livro, uma de cada vez (ALE-347). A p34 é uma ilustração de página inteira.
 	//
 	// Afirmar "o PV máximo CRESCEU" seria errado: o personagem semeado tem 20
 	// gravados, que não é um número do motor, e sincronizar o BAIXA para 14. O que
