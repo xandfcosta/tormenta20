@@ -1,7 +1,6 @@
 package api
 
 import (
-	"database/sql"
 	"t20engine/app/session"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -11,15 +10,15 @@ import (
 
 // O QUE AINDA SOBRA DAS REGRAS DE ESCRITA DA FICHA (ALE-278, fatia 6).
 //
-// Elas estão MUDANDO DE CASA fatia a fatia: conjurar, beber uma dose e subir de
-// nível já viraram `app/character.Plays`, e este tipo é o que ainda não foi —
-// aplicar o efeito de uma magia, gravar proficiência e perícia nova, a reserva
-// de PV temporários, e o aviso à Mesa.
+// Três coisas: gravar proficiência, gravar perícia nova, e avisar a Mesa. Todo
+// o resto virou `app/character.Plays` na ALE-347.
 //
-// O `*sql.DB` continua aqui pelas escritas de item do adaptador da cena
-// (`setBuilder` sobre `character_items`), que são a próxima fatia.
+// **O `*sql.DB` saiu**, e essa é a medida da fatia: nenhuma escrita da ficha
+// compõe SQL deste lado da fronteira. As três que sobram falam pelo `queries`,
+// que é consulta gerada, e as quatro que compunham `SET` à mão sobre
+// `character_items` e `characters` foram para o caso de uso, onde o SQL está
+// escrito inteiro e visível.
 type sheetRules struct {
-	db       *sql.DB
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs
 	// O AVISO é dependência e não efeito colateral: quem grava a ficha tem de
@@ -34,7 +33,7 @@ type sheetRules struct {
 
 func (s *Server) sheetRules() sheetRules {
 	return sheetRules{
-		db: s.db, queries: s.queries, catalogs: s.catalogs,
+		queries: s.queries, catalogs: s.catalogs,
 		bus: s.bus, sessions: s.sessions, sse: s.sse,
 	}
 }

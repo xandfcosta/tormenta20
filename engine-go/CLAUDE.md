@@ -950,6 +950,22 @@ quem escolhe o que atravessa a fronteira é o CONSUMIDOR, não o objeto que tem
 tudo. O `api` monta com `cena.Routes(r, cena.New(s.cenaHost()))`, e é nessa linha
 que o compilador cobra quando a porta deixa de ser cumprida.
 
+**O CASO DE USO não entra pela porta: ele entra por PARÂMETRO** (ALE-344,
+ALE-347). Uma porta existe para desviar de um ciclo — a cena precisa do `api`,
+que importa a cena —, e o `app/` está ABAIXO das duas: não há ciclo, então não
+há interface a declarar. Três cenas já montam assim, e a assinatura diz o que
+elas fazem:
+
+```go
+table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue())
+forge.New(s.sceneCore(), s.characterBirths())
+sheetui.New(s.sheetHost(), s.characterPlays())
+```
+
+O efeito é a porta ENCOLHER em vez de crescer: a da ficha saiu de dezoito
+métodos para oito quando os gestos dela viraram `character.Plays`. Uma entrada
+que vira caso de uso SAI da `Deps` — ela não ganha um adaptador novo.
+
 Cada `web/*` tem um `boundary_test.go` que recusa import do hospedeiro. Ele não
 existe para pegar o ciclo — esse o compilador já pega —, existe para pegar o
 atalho: um import DIRETO de `catalog` contornando a camada tipada, que não é

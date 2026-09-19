@@ -65,7 +65,7 @@ func editItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) e
 	}
 	// A gravação é uma PERGUNTA e não um SQL montado aqui: quem sabe o nome das
 	// colunas é o hospedeiro. Mesma decisão do `SaveText` da cena de campanhas.
-	return s.deps.SaveCustomItem(r.Context(), item.ID, nome, quantidade, espacos)
+	return s.plays.SaveCustomItem(r.Context(), item.ID, nome, quantidade, espacos)
 }
 
 // removeItemFromSheet tira o item da ficha.
@@ -114,7 +114,7 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, sinais Signa
 	if err := fitsItemImprovement(catalogo, materiais, "material"); err != nil {
 		return err
 	}
-	return s.deps.SaveItemOverlays(r.Context(), item.ID, sinais.ItemMelhorias, sinais.ItemMaterial)
+	return s.plays.SaveItemOverlays(r.Context(), item.ID, sinais.ItemMelhorias, sinais.ItemMaterial)
 }
 
 // askedQuantity lê a quantidade, com as bordas do formulário.
@@ -166,7 +166,7 @@ func stowItem(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 	if err != nil {
 		return err
 	}
-	return saveEquipped(r, s, item.ID, sql.NullString{})
+	return saveEquipped(r, s, item.ID, "")
 }
 
 // equipItemFromSheet põe o item na mão ou no corpo.
@@ -202,16 +202,16 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 	if recusa := sheet.EquipLimitErrorOver(equipados, item.ID, slot); recusa != "" {
 		return fmt.Errorf("%s", recusa)
 	}
-	return saveEquipped(r, s, item.ID, sql.NullString{String: slot, Valid: true})
+	return saveEquipped(r, s, item.ID, slot)
 }
 
-// saveEquipped escreve a coluna `equipped`.
+// saveEquipped põe o item num lugar do corpo, e o VAZIO o guarda de volta.
 //
-// Ela é uma PERGUNTA na porta, e o detalhe é do hospedeiro: `character_items`
-// não tem `updatedAt`, então a gravação não toca carimbo nenhum. A cena não
-// precisa saber disso — ela sabe que o item foi para a mão.
-func saveEquipped(r *http.Request, s Scene, itemID int64, valor sql.NullString) error {
-	return s.deps.SaveEquipped(r.Context(), itemID, valor)
+// A cena diz o LUGAR e nada mais: que o vazio vira NULL, e que
+// `character_items` não tem carimbo para tocar, é do caso de uso. Ela sabe que
+// o item foi para a mão.
+func saveEquipped(r *http.Request, s Scene, itemID int64, lugar string) error {
+	return s.plays.SaveEquipped(r.Context(), itemID, lugar)
 }
 
 // slotEquipEh aceita só os três lugares do livro.

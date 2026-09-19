@@ -233,3 +233,37 @@ func TestARepeatedDistributionIsRefused(t *testing.T) {
 // Não há caso de API JSON aqui de propósito: a regra é `sheet.WithChoicesValid`,
 // e quem a prende é o comando da cena da ficha, que a chama pelo mesmo caminho.
 // Uma regra, uma camada — e a camada que sobrou é a que a mesa usa.
+
+// GRAVAR UMA ESCOLHA NÃO APAGA AS OUTRAS.
+//
+// As cinco escolhas moram em cinco COLUNAS da mesma linha, e cada gesto mexe só
+// nas que mudaram. O caso precisa de DOIS gestos e de duas colunas: com um só,
+// gravar o que veio e gravar as cinco dão o mesmo resultado, e a metade em que
+// o defeito é visível fica de fora.
+//
+// A distribuição de atributo é o segundo gesto de propósito — ela é a única
+// escolha que se grava SOZINHA, sem passar pelo funil que confere a ficha
+// inteira, e por isso é a que teria mais chance de levar as vizinhas junto.
+func TestWritingOneChoiceDoesNotEraseTheOthers(t *testing.T) {
+	f, id := barbaro(t, 5)
+	seedRaca(t, f.s, id, "Humano")
+
+	if recusa := powerCommand(t, f, id, "escolhe/ataque-poderoso", ""); recusa != "" {
+		t.Fatalf("escolher o poder geral foi recusado: %q", recusa)
+	}
+	corpo := `{"race_attributes":["strength","dexterity","constitution"]}`
+	if recusa := powerCommand(t, f, id, "atributos", corpo); recusa != "" {
+		t.Fatalf("a distribuição foi recusada: %q", recusa)
+	}
+
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler o personagem: %v", err)
+	}
+	if !strings.Contains(row.Classpowers, "ataque-poderoso") {
+		t.Errorf("o poder escolhido sumiu quando a distribuição foi gravada: %s", row.Classpowers)
+	}
+	if !strings.Contains(row.Raceattributechoices, "strength") {
+		t.Errorf("a distribuição não foi gravada: %s", row.Raceattributechoices)
+	}
+}

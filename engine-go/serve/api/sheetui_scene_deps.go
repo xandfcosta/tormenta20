@@ -2,11 +2,9 @@ package api
 
 import (
 	"context"
-	"database/sql"
 
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/serve/web/sheetui"
 )
 
 // A CENA DA FICHA, com adaptador próprio: o núcleo mais um `sheetRules`, que é
@@ -44,72 +42,4 @@ func (h sheetHost) SaveProficiencies(
 // SaveNewCraft acrescenta a perícia que o livro não tem.
 func (h sheetHost) SaveNewCraft(ctx context.Context, id int64, nome string) error {
 	return h.rules.saveNewCraft(ctx, id, nome)
-}
-
-// ── As ESCRITAS ──────────────────────────────────────────────────────────────
-//
-// Cena que compõe SQL é cena com o banco dentro. Quem sabe o nome da coluna, o
-// que é NULL e se a tabela tem carimbo é o HOSPEDEIRO.
-
-// SaveCustomItem grava nome, quantidade e espaços de um item da mochila.
-//
-// `espacos` é `float64` porque a coluna `slots` é REAL: a carga do livro conta
-// de meio em meio (uma adaga ocupa 1, um bálsamo 0,5, p141).
-func (h sheetHost) SaveCustomItem(
-	ctx context.Context, itemID int64, nome string, quantidade int64, espacos float64,
-) error {
-	var set setBuilder
-	set.Add("name = ?", nome)
-	set.Add("quantity = ?", quantidade)
-	set.Add("slots = ?", espacos)
-	return set.exec(ctx, h.rules.db, "UPDATE character_items", itemID)
-}
-
-// SaveEquipped grava o slot em que o item está vestido, ou NULL.
-func (h sheetHost) SaveEquipped(ctx context.Context, itemID int64, valor sql.NullString) error {
-	var set setBuilder
-	set.Add("equipped = ?", valor)
-	return set.exec(ctx, h.rules.db, "UPDATE character_items", itemID)
-}
-
-// SaveItemOverlays grava a melhoria e o material escolhidos.
-//
-// A cena manda a LISTA e o nome do material; a serialização em JSON e a tradução
-// de material vazio para NULL são daqui. É `exec` e não `execTouched` porque
-// nenhuma das tabelas de item tem `updatedAt`.
-func (h sheetHost) SaveItemOverlays(
-	ctx context.Context, itemID int64, melhorias []string, material string,
-) error {
-	var set setBuilder
-	set.Add("improvements = ?", sheet.MarshalStrings(&melhorias))
-	set.Add("material = ?", sql.NullString{String: material, Valid: material != ""})
-	return set.exec(ctx, h.rules.db, "UPDATE character_items", itemID)
-}
-
-// SaveChoices grava as colunas de escolha que a cena diz terem mudado.
-//
-// A cena declara o `ChoiceWrite` e este método o traduz em colunas — mesma
-// direção do `ListRow` das campanhas. Nulo é "não toque nesta", e um pedido sem
-// nenhuma coluna não vira `UPDATE`: gravar só o carimbo diria que a ficha mudou
-// quando ela não mudou, e o carimbo é o que a Mesa lê para repedir a ficha.
-func (h sheetHost) SaveChoices(ctx context.Context, id int64, escolhas sheetui.ChoiceWrite) error {
-	var set setBuilder
-	for _, campo := range []struct {
-		coluna string
-		valor  *string
-	}{
-		{"classPowers", escolhas.ClassPowers},
-		{"originChoices", escolhas.OriginChoices},
-		{"classChoices", escolhas.ClassChoices},
-		{"raceAbilityChoices", escolhas.RaceAbilityChoices},
-		{"raceAttributeChoices", escolhas.RaceAttributeChoices},
-	} {
-		if campo.valor != nil {
-			set.Add(campo.coluna+" = ?", *campo.valor)
-		}
-	}
-	if set.empty() {
-		return nil
-	}
-	return set.execTouched(ctx, h.rules.db, "UPDATE characters", id)
 }
