@@ -13,7 +13,7 @@ package sheet
 // silêncio.
 //
 // O OFÍCIO é a exceção viva: o livro o trata como família, e a ficha ganha
-// linhas novas dele pelo `saveNewCraft`. Por isso ele entra aqui uma vez, como
+// linhas novas dele pelo `AddCraft`. Por isso ele entra aqui uma vez, como
 // as outras, e o resto é escolha de quem joga.
 
 // Expertise é uma perícia do livro: o nome e o atributo que a chaveia.
@@ -34,6 +34,22 @@ var builtinExpertises = []Expertise{
 	{"Ofício", "intelligence"}, {"Percepção", "wisdom"}, {"Pilotagem", "dexterity"},
 	{"Pontaria", "dexterity"}, {"Reflexos", "dexterity"}, {"Religião", "wisdom"},
 	{"Sobrevivência", "wisdom"}, {"Vontade", "wisdom"},
+}
+
+// IsBuiltinExpertise diz se este nome é de uma perícia do livro.
+//
+// A pergunta mora ao lado da TABELA, e não em quem a faz: quem precisa dela é a
+// regra do ofício inventado (`character.Plays.AddCraft`), e ela já morou em
+// `serve/api` como uma segunda cópia dos 29 nomes — com esta tabela a dois
+// arquivos de distância e o comentário acima avisando que duas cópias divergem
+// num acento (ALE-350).
+func IsBuiltinExpertise(nome string) bool {
+	for _, e := range builtinExpertises {
+		if e.Name == nome {
+			return true
+		}
+	}
+	return false
 }
 
 // BuiltinExpertises devolve a lista, e devolve uma CÓPIA: a fatia é global, e

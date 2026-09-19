@@ -31,15 +31,3 @@ func (h sheetHost) LoadCharacter(ctx context.Context, c sqlcgen.Character) (shee
 
 // CharacterChanged avisa a MESA que esta ficha mexeu.
 func (h sheetHost) CharacterChanged(characterID int64) { h.rules.characterChanged(characterID) }
-
-// SaveProficiencies grava as categorias, devolvendo o blob e a lista limpa.
-func (h sheetHost) SaveProficiencies(
-	ctx context.Context, id int64, categorias []string,
-) (string, []string, error) {
-	return h.rules.saveProficiencies(ctx, id, categorias)
-}
-
-// SaveNewCraft acrescenta a perícia que o livro não tem.
-func (h sheetHost) SaveNewCraft(ctx context.Context, id int64, nome string) error {
-	return h.rules.saveNewCraft(ctx, id, nome)
-}

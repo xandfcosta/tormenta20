@@ -1,7 +1,6 @@
 package sheetui
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -9,13 +8,17 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/engine"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
 // OS COMANDOS DAS ABAS PERÍCIAS E PROFICIÊNCIAS.
+//
+// Nenhum deles decide nem grava: os cinco gestos são do `character.Plays`
+// (ALE-350). O que mora aqui é o que é da TELA — de onde sai cada valor: o nome
+// vem do caminho, o atributo vem do `<option>` que foi escolhido, e o par do
+// ofício novo vem dos dois campos do diálogo.
 
-// expertiseName lê o nome do caminho, desescapando como a API JSON faz.
+// expertiseName lê o nome do caminho, desescapando como a API JSON fazia.
 func expertiseName(r *http.Request) string {
 	nome := chi.URLParam(r, "nome")
 	if decodificado, err := url.PathUnescape(nome); err == nil {
@@ -24,29 +27,8 @@ func expertiseName(r *http.Request) string {
 	return nome
 }
 
-// toggleTraining liga ou desliga o treino de UMA perícia.
-//
-// O comando manda a PERÍCIA e não o estado desejado: mandar "treinada" perde
-// para o clique repetido e para a segunda aba aberta no mesmo personagem.
 func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	nome := expertiseName(r)
-	// O estado ATUAL vem da lista e não do `GetExpertiseMeta`, que devolve só o
-	// id e o `custom` — inverter exige saber o que está lá.
-	todas, err := s.deps.Queries().ListExpertisesByCharacter(r.Context(), row.ID)
-	if err != nil {
-		return err
-	}
-	for _, e := range todas {
-		if e.Name != nome {
-			continue
-		}
-		depois := e.Trained == 0
-		_, err := s.deps.Queries().UpdateExpertise(r.Context(), sqlcgen.UpdateExpertiseParams{
-			Trained: dbvalue.NullBool(&depois), CharacterId: row.ID, Name: nome,
-		})
-		return err
-	}
-	return fmt.Errorf("a perícia %q não é desta ficha", nome)
+	return s.plays.ToggleTraining(r.Context(), row.ID, expertiseName(r))
 }
 
 // swapAttribute repõe a perícia em outro atributo.
@@ -55,50 +37,19 @@ func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) 
 // mandá-lo por sinal faria as opções de todas as linhas disputarem a mesma
 // chave.
 func swapAttribute(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	atributo := chi.URLParam(r, "atributo")
-	if !engine.IsAttributeKey(atributo) {
-		return fmt.Errorf("%q não é um atributo: são %v", atributo, engine.AttributeKeys)
-	}
-	nome := expertiseName(r)
-	_, err := s.deps.Queries().UpdateExpertise(r.Context(), sqlcgen.UpdateExpertiseParams{
-		Attribute: dbvalue.NullString(&atributo), CharacterId: row.ID, Name: nome,
-	})
-	if err != nil {
-		return fmt.Errorf("a perícia %q não é desta ficha", nome)
-	}
-	return nil
+	return s.plays.SwapAttribute(r.Context(), row.ID, expertiseName(r), chi.URLParam(r, "atributo"))
 }
 
-// removeCraft apaga uma perícia INVENTADA pelo jogador.
-//
-// As do livro não se apagam, e a recusa é do SERVIDOR e não da tela: travar só
-// na UI deixaria a regra sem fronteira, e quem montasse o `@post` à mão apagaria
-// a Fortitude.
 func removeCraft(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	nome := expertiseName(r)
-	meta, err := s.deps.Queries().GetExpertiseMeta(r.Context(), sqlcgen.GetExpertiseMetaParams{
-		Characterid: row.ID, Name: nome,
-	})
-	if err != nil {
-		return fmt.Errorf("a perícia %q não é desta ficha", nome)
-	}
-	// A COLUNA decide, e não a lista das 29: `custom` é o que o banco guarda
-	// sobre esta linha, enquanto a lista é uma opinião do código sobre o nome. As
-	// duas concordam hoje; no dia em que uma perícia nova entrar no livro, a
-	// coluna continua certa e a lista fica velha.
-	if meta.Custom == 0 {
-		return fmt.Errorf("%q é uma perícia do livro e não se remove da ficha", nome)
-	}
-	return s.deps.Queries().DeleteExpertiseByID(r.Context(), meta.ID)
+	return s.plays.RemoveCraft(r.Context(), row.ID, expertiseName(r))
 }
 
-// criaOOficio acrescenta uma perícia que o livro não tem — o saber de um
-// ferreiro, a arte de um marinheiro.
+// criaOOficio lê os dois campos do diálogo e manda o par.
 //
-// Ela nasce TREINADA, porque inventar um ofício e não tê-lo treinado não é um
-// estado que signifique alguma coisa. A validação é a do `SaveNewCraft` e não
-// uma segunda: duas divergiriam no dia em que uma regra nova chegasse, e a
-// esquecida aceitaria o que a outra recusa.
+// O atributo cai em Inteligência quando o sinal não veio ou não é atributo: é o
+// padrão do formulário, e escolhê-lo aqui e não no caso de uso é deliberado —
+// o `AddCraft` RECUSA o que não reconhece, porque um chamador que não é diálogo
+// não tem por que herdar o padrão de um.
 func criaOOficio(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
 	nome, atributo := "", "intelligence"
 	if sinais.NovaPericia != nil {
@@ -107,19 +58,15 @@ func criaOOficio(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals
 	if sinais.NovoAtributo != nil && engine.IsAttributeKey(*sinais.NovoAtributo) {
 		atributo = *sinais.NovoAtributo
 	}
-	if err := s.deps.SaveNewCraft(r.Context(), row.ID, nome); err != nil {
-		return err
-	}
-	_, err := s.deps.Queries().CreateExpertise(r.Context(), sqlcgen.CreateExpertiseParams{
-		Characterid: row.ID, Name: nome, Attribute: atributo, Trained: 1, Custom: 1,
-	})
-	return err
+	return s.plays.AddCraft(r.Context(), row.ID, nome, atributo)
 }
 
 // toggleProficiency liga ou desliga UMA categoria.
 //
 // Manda a CATEGORIA e não o estado desejado, pela mesma razão do
-// `toggleTraining`.
+// `toggleTraining`. O que a tela faz é DERIVAR a lista nova da ficha desenhada
+// — a decisão de qual categoria entra e qual sai é do `proficiencySwap`, ao
+// lado do resto da apresentação desta aba.
 func toggleProficiency(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
@@ -129,7 +76,7 @@ func toggleProficiency(s Scene, r *http.Request, row sqlcgen.Character, _ Signal
 	if err != nil {
 		return err
 	}
-	return s.saveTheProficienciesSheet(r, row.ID, depois)
+	return s.plays.SaveProficiencies(r.Context(), row.ID, depois)
 }
 
 // restoresDefaultClass joga fora os ajustes manuais.
@@ -138,19 +85,5 @@ func restoresDefaultClass(s Scene, r *http.Request, row sqlcgen.Character, _ Sig
 	if err != nil {
 		return err
 	}
-	return s.saveTheProficienciesSheet(r, row.ID, classDefault(dto))
-}
-
-// saveTheProficienciesSheet usa a MESMA gravação da API JSON.
-//
-// A lista de desconhecidas vira frase porque quem está do outro lado é um
-// navegador mostrando página, e não um cliente lendo `FieldErrorMap`. Ela só
-// dispara se o servidor montar uma categoria que ele próprio não conhece — é o
-// guarda contra a tela e a validação divergirem, não contra o jogador.
-func (s Scene) saveTheProficienciesSheet(r *http.Request, id int64, categorias []string) error {
-	_, desconhecidas, err := s.deps.SaveProficiencies(r.Context(), id, categorias)
-	if len(desconhecidas) > 0 {
-		return fmt.Errorf("proficiência fora do catálogo: %s", strings.Join(desconhecidas, "; "))
-	}
-	return err
+	return s.plays.SaveProficiencies(r.Context(), row.ID, classDefault(dto))
 }

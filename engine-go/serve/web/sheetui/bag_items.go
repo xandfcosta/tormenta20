@@ -100,8 +100,8 @@ func itemSheetOf(item sheet.ItemDTO, proficiencias map[string]bool) itemSheet {
 	catalogo := catalogItem(item)
 	ficha := itemSheet{
 		ID: item.ID, Name: item.Name, Quantity: item.Quantity,
-		Slots:         virgulaCom(item.Slots),
-		Total:         virgulaCom(float64(item.Quantity) * item.Slots),
+		Slots:         sheet.WithComma(item.Slots),
+		Total:         sheet.WithComma(float64(item.Quantity) * item.Slots),
 		NoProficiency: !proficienteEh(item, proficiencias),
 		Equip:         reachablePlaces(item, catalogo),
 		Overlays:      appliedImprovements(item),
@@ -232,7 +232,7 @@ func rollThatAsksANumber(ganho *book.GainRoll) string {
 func thatSaysBook(catalogo book.Item) *bookInfo {
 	info := &bookInfo{
 		Categoria: writtenCategory(catalogo.Category),
-		Preco:     virgulaCom(catalogo.Price),
+		Preco:     sheet.WithComma(catalogo.Price),
 		Pagina:    catalogo.BookPage,
 	}
 	if arma := catalogo.Weapon; arma != nil {
@@ -341,7 +341,7 @@ func thatFitOverlays(categoria, familia string, aplicadas []string) []overlayCho
 		}
 		escolhas = append(escolhas, overlayChoice{
 			ID: entrada.ID, Nome: entrada.Name, Efeito: overlaySummary(entrada),
-			Preco: virgulaCom(entrada.Price), Ativa: contemTraco(aplicadas, entrada.ID),
+			Preco: sheet.WithComma(entrada.Price), Ativa: contemTraco(aplicadas, entrada.ID),
 		})
 	}
 	sort.SliceStable(escolhas, func(a, b int) bool { return escolhas[a].Nome < escolhas[b].Nome })
@@ -371,7 +371,7 @@ func catalogItemRowsOf(busca, categoria string) []catalogItemRow {
 		}
 		linhas = append(linhas, catalogItemRow{
 			ID: entrada.ID, Nome: entrada.Name, Categoria: writtenCategory(entrada.Category),
-			Espacos: virgulaCom(entrada.Slots), Preco: virgulaCom(entrada.Price), Pagina: entrada.BookPage,
+			Espacos: sheet.WithComma(entrada.Slots), Preco: sheet.WithComma(entrada.Price), Pagina: entrada.BookPage,
 		})
 	}
 	return linhas
