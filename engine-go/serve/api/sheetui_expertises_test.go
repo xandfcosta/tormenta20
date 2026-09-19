@@ -226,8 +226,19 @@ func TestACraftIsBornTrainedAndOnlyItCanBeRemoved(t *testing.T) {
 //
 // Um ofício não pode ROUBAR o nome de uma das 29: a ficha passaria a ter duas
 // linhas com o mesmo nome, e a decomposição de uma cairia sobre a outra.
+//
+// As três recusas saem do MESMO gesto que grava (`AddCraft`), e é isso que a
+// ALE-350 mudou: antes a regra devolvia `nil` e quem inseria era a cena, uma
+// camada acima. O "já tem" hoje vem da `UNIQUE (characterId, name)` traduzida,
+// e não de uma leitura anterior à escrita.
 func TestACraftDoesNotStealTheNameOfABookExpertise(t *testing.T) {
 	f, id := expertiseFixture(t)
+	oficios := f.s.characterPlays()
+	quantas := func() int {
+		return countRows(t, f.s, fmt.Sprintf(
+			"SELECT COUNT(*) FROM character_expertises WHERE characterId = %d", id))
+	}
+	antes := quantas()
 	casos := []struct {
 		nome string
 		erro string
@@ -237,7 +248,7 @@ func TestACraftDoesNotStealTheNameOfABookExpertise(t *testing.T) {
 		{"Ferreiro", "já tem"},
 	}
 	for _, caso := range casos {
-		err := f.s.sheetHost().SaveNewCraft(context.Background(), id, caso.nome)
+		err := oficios.AddCraft(context.Background(), id, caso.nome, "intelligence")
 		if err == nil {
 			t.Errorf("o nome %q foi aceito", caso.nome)
 			continue
@@ -246,7 +257,61 @@ func TestACraftDoesNotStealTheNameOfABookExpertise(t *testing.T) {
 			t.Errorf("o nome %q deu %q, e a mensagem devia falar de %q", caso.nome, err, caso.erro)
 		}
 	}
-	if err := f.s.sheetHost().SaveNewCraft(context.Background(), id, "Marinheiro"); err != nil {
+	if err := oficios.AddCraft(context.Background(), id, "Marinheiro", "intelligence"); err != nil {
 		t.Errorf("um nome legítimo foi recusado: %v", err)
+	}
+	// E o legítimo GRAVOU: sem esta metade, um `AddCraft` que recusasse tudo e
+	// devolvesse `nil` no fim passaria verde em todos os casos acima.
+	if got := countRows(t, f.s, fmt.Sprintf(
+		"SELECT COUNT(*) FROM character_expertises WHERE characterId = %d AND name = 'Marinheiro'", id)); got != 1 {
+		t.Errorf("o ofício aceito não foi gravado: %d linhas de Marinheiro", got)
+	}
+	// E as recusadas NÃO gravaram: a ficha cresceu de UMA, que é o Marinheiro.
+	// Medido contra o que a bancada semeou, e não contra um número escrito à mão
+	// — a `expertiseFixture` monta um guerreiro inteiro, e chutar o total dele
+	// foi o primeiro erro deste caso.
+	if depois := quantas(); depois != antes+1 {
+		t.Errorf("a ficha foi de %d para %d perícias, esperado exatamente uma a mais", antes, depois)
+	}
+}
+
+// A RECUSA DO NOME REPETIDO CHEGA AO JOGADOR, e não o erro do driver.
+//
+// Este caso NASCEU VERDE, e a honestidade sobre isso é parte dele: a ALE-350
+// suspeitou de uma janela entre a conferência e o `INSERT` — que moravam em
+// camadas diferentes — e foi medir. Quatro pedidos na mesma largada, três
+// corridas: o banco ficou com uma linha em todas, e as doze respostas trouxeram
+// a recusa DESENHADA. O DSN abre com `_txlock=immediate` e `busy_timeout`, então
+// a escrita serializa e o perdedor já enxerga a linha do vencedor.
+//
+// O que ele prende, então, não é a regra — essa é do
+// `TestACraftDoesNotStealTheNameOfABookExpertise`, uma camada abaixo. É a
+// LIGAÇÃO: a rota chega na regra, e o texto do driver não alcança a tela.
+func TestTheSecondCraftWithTheSameNameSaysWhyInsteadOfLeakingTheDriver(t *testing.T) {
+	f, id := expertiseFixture(t)
+	const corpo = `{"new_expertise":"Marinheiro","new_attribute":"intelligence"}`
+	caminho := fmt.Sprintf("/personagens/%d/pericias/nova?tab=expertises", id)
+
+	primeira := f.posta(t, f.jogador, caminho, corpo)
+	segunda := f.posta(t, f.jogador, caminho, corpo)
+
+	// O CONTROLE: sem ele, "a segunda recusou" não diz se a primeira gravou.
+	if strings.Contains(primeira, "UNIQUE") || strings.Contains(primeira, "constraint") {
+		t.Fatalf("a PRIMEIRA já falhou — o caso não chegou a medir a segunda:\n%s", primeira)
+	}
+	quantas := countRows(t, f.s, fmt.Sprintf(
+		"SELECT COUNT(*) FROM character_expertises WHERE characterId = %d AND name = 'Marinheiro'", id))
+	if quantas != 1 {
+		t.Fatalf("o banco tem %d linhas de Marinheiro, esperado exatamente 1", quantas)
+	}
+	if !strings.Contains(segunda, "já tem") {
+		t.Errorf("a segunda tentativa não explicou por quê:\n%s", segunda)
+	}
+	// E o texto do DRIVER não chega à tela: ele nomeia tabela e coluna, que é
+	// dizer a estranho como o banco é feito.
+	for _, vazamento := range []string{"UNIQUE", "constraint", "character_expertises"} {
+		if strings.Contains(segunda, vazamento) {
+			t.Errorf("o erro do driver vazou para a tela (%q):\n%s", vazamento, segunda)
+		}
 	}
 }

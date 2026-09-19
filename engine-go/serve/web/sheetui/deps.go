@@ -44,8 +44,6 @@ type Deps interface {
 	// esquecida numa delas seria uma ficha que não atualiza só naquele gesto.
 	CharacterChanged(characterID int64)
 	// As ESCRITAS, uma por gesto: a cena decide QUANDO, o hospedeiro sabe COMO.
-	SaveProficiencies(ctx context.Context, id int64, categorias []string) (string, []string, error)
-	SaveNewCraft(ctx context.Context, id int64, nome string) error
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
 }
