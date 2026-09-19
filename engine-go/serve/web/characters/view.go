@@ -14,7 +14,7 @@ import (
 // A cena de PERSONAGENS como dado. A forma é a de campanhas: o cursor é sinal,
 // todos os palcos são desenhados, e a busca vai ao servidor.
 //
-// A DEFESA sai da `ComputeSheetV2`, a mesma da ficha, e todas saem juntas; os
+// A DEFESA sai da `ComputeSheet`, a mesma da ficha, e todas saem juntas; os
 // TEXTOS das habilidades de raça vêm do catálogo embutido; e a vaga de CRIAR é
 // posição de cursor e não link — ver `scene.templ`.
 
@@ -146,7 +146,7 @@ func HeroCardOf(catalogos *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 		Origin:   c.Origin,
 		Classes:  ClassesOf(c),
 	}
-	// A DEFESA vem da mesma `ComputeSheetV2` que a ficha usa, e do agregado JÁ
+	// A DEFESA vem da mesma `ComputeSheet` que a ficha usa, e do agregado JÁ
 	// carregado — ver `sheet.Compute`. Sem motor (catálogo não primado) o cartão
 	// simplesmente não mostra Defesa; a cena inteira não pode cair por causa de
 	// um número.

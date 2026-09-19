@@ -385,7 +385,7 @@
     ],
     "conditional": []
   },
-  "sheetV2": {
+  "sheet": {
     "defense": {
       "base": 10,
       "itemBonus": 2,
@@ -1026,7 +1026,7 @@
     "autoFailExpertises": []
   },
   "activeConditionals": [],
-  "sheetV2WithConditionals": {
+  "sheetWithConditionals": {
     "defense": {
       "base": 10,
       "itemBonus": 2,

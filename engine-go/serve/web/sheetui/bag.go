@@ -363,7 +363,7 @@ func categoryBagDa(item sheet.ItemDTO, chip string) bool {
 // O parâmetro se chamava `sheet` e SOMBREAVA o pacote de mesmo nome — o corpo
 // não podia mais alcançar nada de `domain/sheet` sem que o compilador
 // procurasse um método na struct.
-func loadMeterOf(computed engine.ComputedSheetV2) loadMeter {
+func loadMeterOf(computed engine.ComputedSheet) loadMeter {
 	carga := computed.Carga
 	return loadMeter{
 		Used:                sheet.WithComma(carga.Used),

@@ -69,7 +69,7 @@ const fileNameWords = "testdata/file_name_words.txt"
 const parityIsTheException = "engine-go/parity/"
 
 // A quebra é por `.`, `_`, `-` e por camelCase, e o segmento puramente numérico
-// sai fora: o `00011` de uma migração e o `2` de `sheetv2` não são palavra de
+// sai fora: o `00011` de uma migração e o `2` de um nome versionado não são palavra de
 // língua nenhuma.
 var (
 	fileNameSeparators = regexp.MustCompile(`[._\-]+`)

@@ -113,10 +113,10 @@ func Load(ctx context.Context, q *sqlcgen.Queries, c sqlcgen.Character) (Charact
 // computeSheet monta a entrada do motor a partir de uma linha de personagem já
 // carregada e devolve a ficha computada pelo servidor — ficha base, sem
 // condicional ligada. Os catálogos têm de estar primados.
-func LoadAndCompute(ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
+func LoadAndCompute(ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, row sqlcgen.Character) (engine.ComputedSheet, error) {
 	dto, err := Load(ctx, q, row)
 	if err != nil {
-		return engine.ComputedSheetV2{}, err
+		return engine.ComputedSheet{}, err
 	}
 	return Compute(cat, dto)
 }
@@ -138,12 +138,12 @@ func EngineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
 // TODOS de uma vez: ela já tem os agregados na mão, e passar por `computeSheet`
 // faria cada personagem ser lido do banco DUAS vezes — uma na lista e outra
 // dentro dele.
-func Compute(cat *engine.Catalogs, dto CharacterDTO) (engine.ComputedSheetV2, error) {
+func Compute(cat *engine.Catalogs, dto CharacterDTO) (engine.ComputedSheet, error) {
 	ec, err := EngineCharacterFrom(dto)
 	if err != nil {
-		return engine.ComputedSheetV2{}, err
+		return engine.ComputedSheet{}, err
 	}
-	return cat.ComputeSheetV2(ec, map[string]bool{}), nil
+	return cat.ComputeSheet(ec, map[string]bool{}), nil
 }
 
 // loadPlayState anexa os três ao DTO da ficha.

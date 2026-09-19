@@ -439,7 +439,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 		})
 	}
 	if eu != nil {
-		// O bônus é do MOTOR, nunca do template: é a mesma `ComputeSheetV2` que
+		// O bônus é do MOTOR, nunca do template: é a mesma `ComputeSheet` que
 		// a ficha inteira usa.
 		if bonus, err := s.queue.Roster().Bonus(ctx, eu.CharacterID); err == nil {
 			eu.Bonus = bonus
@@ -536,7 +536,7 @@ func (s Scene) membrosEPresenca(ctx context.Context, campaignID, sessionID int64
 	return membros, presentes
 }
 
-// memberDefense pergunta ao MOTOR, que é a mesma `ComputeSheetV2` da ficha.
+// memberDefense pergunta ao MOTOR, que é a mesma `ComputeSheet` da ficha.
 //
 // Travessão quando o motor não está de pé: a cena inteira não pode cair por
 // causa de um número, e um zero seria pior — Defesa 0 é um valor plausível, e o

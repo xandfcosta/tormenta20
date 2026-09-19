@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-// A camada de decomposição (`ComputeSheetV2`) sobre dado REAL: para cada
+// A camada de decomposição (`ComputeSheet`) sobre dado REAL: para cada
 // personagem da semente, prima os catálogos, computa a ficha inteira e afirma
-// que toda decomposição bate com o oráculo (`sheetV2`) semanticamente.
+// que toda decomposição bate com o oráculo (`sheet`) semanticamente.
 //
 // Cada personagem é conferido DUAS vezes: sem nenhum condicional ligado, e com
 // todos ligados. A segunda passada é a única cobertura de oráculo do
@@ -20,7 +20,7 @@ import (
 // Regenere o oráculo quando a regra mudar:
 //
 //	cd engine-go && go run ./cmd/genoracle
-func TestSheetV2Parity(t *testing.T) {
+func TestSheetParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	catalogs := primeFromDump(t, dir)
 	comConditionais := 0
@@ -30,15 +30,15 @@ func TestSheetV2Parity(t *testing.T) {
 		t.Run(slug, func(t *testing.T) {
 			var oracle struct {
 				Char               Character `json:"char"`
-				SheetV2            any       `json:"sheetV2"`
+				Sheet              any       `json:"sheet"`
 				ActiveConditionals []string  `json:"activeConditionals"`
-				WithConditionals   any       `json:"sheetV2WithConditionals"`
+				WithConditionals   any       `json:"sheetWithConditionals"`
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			got := roundTrip(t, catalogs.ComputeSheetV2(oracle.Char, map[string]bool{}))
-			if !reflect.DeepEqual(got, oracle.SheetV2) {
-				diffReport(t, "sheetV2", got, oracle.SheetV2)
+			got := roundTrip(t, catalogs.ComputeSheet(oracle.Char, map[string]bool{}))
+			if !reflect.DeepEqual(got, oracle.Sheet) {
+				diffReport(t, "sheet", got, oracle.Sheet)
 			}
 
 			// A segunda passada só EXISTE para exercitar `ApplyActiveConditionals`:
@@ -50,9 +50,9 @@ func TestSheetV2Parity(t *testing.T) {
 			}
 			comConditionais++
 			on := toSet(oracle.ActiveConditionals)
-			gotOn := roundTrip(t, catalogs.ComputeSheetV2(oracle.Char, on))
+			gotOn := roundTrip(t, catalogs.ComputeSheet(oracle.Char, on))
 			if !reflect.DeepEqual(gotOn, oracle.WithConditionals) {
-				diffReport(t, "sheetV2WithConditionals", gotOn, oracle.WithConditionals)
+				diffReport(t, "sheetWithConditionals", gotOn, oracle.WithConditionals)
 			}
 		})
 	}

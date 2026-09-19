@@ -43,7 +43,7 @@ func TestTheDefenseRowsAddUpToTheTotal(t *testing.T) {
 	}
 	for _, caso := range casos {
 		t.Run(caso.nome, func(t *testing.T) {
-			sheet := engine.ComputedSheetV2{
+			sheet := engine.ComputedSheet{
 				Defense: engine.DefenseBreakdown{
 					Base: 10, Total: 15, VsMelee: 15, VsRanged: 15, DexApplied: caso.aplicada,
 					Contributions: []engine.BreakdownContribution{{Source: "Armadura", Amount: 5}},
@@ -75,7 +75,7 @@ func TestTheDefenseRowsAddUpToTheTotal(t *testing.T) {
 // responder: quem veste armadura pesada quer ver POR QUE a Defesa não subiu com
 // a Destreza dele, e uma linha ausente não diz nada.
 func TestBlockedDexterityComesOutAsADimmedRow(t *testing.T) {
-	sheet := engine.ComputedSheetV2{
+	sheet := engine.ComputedSheet{
 		Defense:    engine.DefenseBreakdown{Base: 10, Total: 10, VsMelee: 10, VsRanged: 10, DexApplied: false},
 		Attributes: map[string]engine.AttributeBreakdown{"dexterity": {Total: 3}},
 	}
@@ -117,7 +117,7 @@ func TestTheWeaponBlockFollowsWhoWieldsAndWhoCasts(t *testing.T) {
 	}
 	for _, caso := range casos {
 		t.Run(caso.nome, func(t *testing.T) {
-			painel := panelForCombat(engine.ComputedSheetV2{}, caso.cards, caso.caster)
+			painel := panelForCombat(engine.ComputedSheet{}, caso.cards, caso.caster)
 			if painel.ShowWeapons != caso.querBloco {
 				t.Errorf("ShowWeapons = %v, quer %v", painel.ShowWeapons, caso.querBloco)
 			}
@@ -130,10 +130,10 @@ func TestTheWeaponBlockFollowsWhoWieldsAndWhoCasts(t *testing.T) {
 
 // A TRIPLA MÁGICA SÓ SAI PARA QUEM CONJURA POR CLASSE.
 func TestTheSpellTripletOnlyShowsForWhoCasts(t *testing.T) {
-	if tiles := panelForCombat(engine.ComputedSheetV2{}, nil, false).MagicTiles; len(tiles) != 0 {
+	if tiles := panelForCombat(engine.ComputedSheet{}, nil, false).MagicTiles; len(tiles) != 0 {
 		t.Errorf("quem não conjura recebeu %d caixas mágicas", len(tiles))
 	}
-	tiles := panelForCombat(engine.ComputedSheetV2{}, nil, true).MagicTiles
+	tiles := panelForCombat(engine.ComputedSheet{}, nil, true).MagicTiles
 	if len(tiles) != 3 {
 		t.Fatalf("o conjurador recebeu %d caixas mágicas, quer 3", len(tiles))
 	}

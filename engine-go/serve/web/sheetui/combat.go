@@ -143,19 +143,19 @@ var theSaves = []struct {
 //
 // O segundo retorno diz se houve conta: sem catálogo primado não há ficha, e o
 // painel que chamar desenha o que sabe desenhar sem ela.
-func (s Scene) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheetV2, []engine.WeaponCard, bool) {
+func (s Scene) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheet, []engine.WeaponCard, bool) {
 	if s.deps.Catalogs() == nil {
-		return engine.ComputedSheetV2{}, nil, false
+		return engine.ComputedSheet{}, nil, false
 	}
 	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
-		return engine.ComputedSheetV2{}, nil, false
+		return engine.ComputedSheet{}, nil, false
 	}
 	// O OPT-IN DO JOGADOR entra na conta, e não a ficha base da `sheet.Compute`:
 	// com Fúria ligada, a base mostraria o ataque de quem não está em Fúria e a
 	// ficha discordaria da Mesa.
 	active := sheet.ToStringSet(dto.Conditionals)
-	return s.deps.Catalogs().ComputeSheetV2(ec, active), s.deps.Catalogs().ComputeWeaponCards(ec, active), true
+	return s.deps.Catalogs().ComputeSheet(ec, active), s.deps.Catalogs().ComputeWeaponCards(ec, active), true
 }
 
 // panelOfCombat computa a aba Combate de um personagem.
@@ -177,7 +177,7 @@ func (s Scene) panelOfCombat(dto sheet.CharacterDTO) panelCombat {
 // Ela recebe a ficha JÁ computada em vez de computar: o `Load` chama o
 // motor uma vez e reparte, e computar de novo aqui daria duas contas que podem
 // divergir no dia em que uma delas passar condicional diferente.
-func panelForCombat(sheet engine.ComputedSheetV2, cards []engine.WeaponCard, caster bool) panelCombat {
+func panelForCombat(sheet engine.ComputedSheet, cards []engine.WeaponCard, caster bool) panelCombat {
 	return panelCombat{
 		Tiles:       defenseAndAttackTiles(sheet),
 		Saves:       saveTiles(sheet),
@@ -189,7 +189,7 @@ func panelForCombat(sheet engine.ComputedSheetV2, cards []engine.WeaponCard, cas
 }
 
 // defenseAndAttackTiles são os três números do meio do turno.
-func defenseAndAttackTiles(sheet engine.ComputedSheetV2) []statTile {
+func defenseAndAttackTiles(sheet engine.ComputedSheet) []statTile {
 	luta := expertiseOrZero(sheet, "Luta", "strength")
 	pontaria := expertiseOrZero(sheet, "Pontaria", "dexterity")
 	return []statTile{
@@ -200,7 +200,7 @@ func defenseAndAttackTiles(sheet engine.ComputedSheetV2) []statTile {
 }
 
 // defenseTile é a Defesa, com a redução de dano pendurada quando existe.
-func defenseTile(sheet engine.ComputedSheetV2) statTile {
+func defenseTile(sheet engine.ComputedSheet) statTile {
 	tile := statTile{
 		Key: "defense", Label: "Defesa", Title: "Defesa", Icon: "Shield",
 		// A Defesa vira DUAS quando algo é direcional — hoje só o Caído (p394).
@@ -240,7 +240,7 @@ func iconForAttack(key string) string {
 //
 // O rótulo da caixa é cortado em quatro letras ("Fort", "Refl", "Vont") — é o
 // que cabe em três colunas num telefone —, e o nome inteiro vai no diálogo.
-func saveTiles(sheet engine.ComputedSheetV2) []statTile {
+func saveTiles(sheet engine.ComputedSheet) []statTile {
 	tiles := make([]statTile, 0, len(theSaves))
 	for _, save := range theSaves {
 		ex := expertiseOrZero(sheet, save.Name, save.Attribute)
@@ -261,7 +261,7 @@ func shortSaveLabel(name string) string {
 }
 
 // attributeTiles são os seis, na ordem do livro.
-func attributeTiles(sheet engine.ComputedSheetV2) []attributeTile {
+func attributeTiles(sheet engine.ComputedSheet) []attributeTile {
 	tiles := make([]attributeTile, 0, len(engine.AttributeKeys))
 	for _, key := range engine.AttributeKeys {
 		tiles = append(tiles, attributeTile{
@@ -273,7 +273,7 @@ func attributeTiles(sheet engine.ComputedSheetV2) []attributeTile {
 }
 
 // magicTiles é a tripla do conjurador, ou nada.
-func magicTiles(sheet engine.ComputedSheetV2, caster bool) []statTile {
+func magicTiles(sheet engine.ComputedSheet, caster bool) []statTile {
 	if !caster {
 		return nil
 	}
@@ -289,7 +289,7 @@ func magicTiles(sheet engine.ComputedSheetV2, caster bool) []statTile {
 
 // spellDcTotal é a CD que a mesa anuncia: a base do motor mais o que os itens
 // somam.
-func spellDcTotal(sheet engine.ComputedSheetV2) int {
+func spellDcTotal(sheet engine.ComputedSheet) int {
 	base := 0
 	if sheet.BestBaseSpellCd != nil {
 		base = *sheet.BestBaseSpellCd
@@ -339,7 +339,7 @@ func critLabel(card engine.WeaponCard) string {
 // A pergunta é do motor e não de uma lista repetida aqui: `BestBaseSpellCd` é
 // nulo exatamente para quem não tem classe conjuradora, e ele já resolve o
 // Caminho do Arcanista, que uma lista de nomes não resolveria.
-func isCaster(sheet engine.ComputedSheetV2) bool {
+func isCaster(sheet engine.ComputedSheet) bool {
 	return sheet.BestBaseSpellCd != nil
 }
 
@@ -348,7 +348,7 @@ func isCaster(sheet engine.ComputedSheetV2) bool {
 // Zero e não erro: uma ficha sem a linha de Luta desenha "+0" e seis linhas de
 // decomposição vazias. Derrubar a aba inteira porque uma perícia não foi gravada
 // trocaria um número errado por nenhuma tela.
-func expertiseOrZero(sheet engine.ComputedSheetV2, name, attribute string) engine.ExpertiseBreakdown {
+func expertiseOrZero(sheet engine.ComputedSheet, name, attribute string) engine.ExpertiseBreakdown {
 	for _, ex := range sheet.Expertises {
 		if ex.Name == name {
 			return ex

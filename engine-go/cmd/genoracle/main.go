@@ -41,9 +41,9 @@ type oraclePayload struct {
 	Char                        any      `json:"char"`
 	ActiveItems                 any      `json:"activeItems"`
 	ItemEffects                 any      `json:"itemEffects"`
-	SheetV2                     any      `json:"sheetV2"`
+	Sheet                       any      `json:"sheet"`
 	ActiveConditionals          []string `json:"activeConditionals"`
-	SheetV2WithConditionals     any      `json:"sheetV2WithConditionals"`
+	SheetWithConditionals       any      `json:"sheetWithConditionals"`
 	WeaponCardsWithConditionals any      `json:"weaponCardsWithConditionals"`
 	Vitals                      any      `json:"vitals"`
 	EquippedFlags               any      `json:"equippedFlags"`
@@ -104,9 +104,9 @@ func buildPayload(c *engine.Catalogs, f fixture) (oraclePayload, error) {
 		Char:                        f.Raw,
 		ActiveItems:                 c.ActiveItemsFor(f.Char),
 		ItemEffects:                 effects,
-		SheetV2:                     c.ComputeSheetV2(f.Char, none),
+		Sheet:                       c.ComputeSheet(f.Char, none),
 		ActiveConditionals:          ids,
-		SheetV2WithConditionals:     c.ComputeSheetV2(f.Char, on),
+		SheetWithConditionals:       c.ComputeSheet(f.Char, on),
 		WeaponCardsWithConditionals: c.ComputeWeaponCards(f.Char, on),
 		Vitals:                      c.ComputeVitals(c.VitalContextFor(f.Char)),
 		EquippedFlags:               c.ComputeEquippedFlags(f.Char.Items),

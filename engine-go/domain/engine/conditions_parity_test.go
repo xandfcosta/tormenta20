@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-// TestConditionEffects checks that p394 status conditions move the v2 sheet
-// numbers (ALE-28). Cross-language parity is proven separately by the sheetV2
+// TestConditionEffects checks that p394 status conditions move the computed sheet
+// numbers (ALE-28). Cross-language parity is proven separately by the sheet
 // oracle (recruta-nv1-simples carries conditions); this asserts the actual
 // deltas + the "aplique o mais severo" non-stacking rule Go-side.
 func TestConditionEffects(t *testing.T) {
@@ -21,12 +21,12 @@ func TestConditionEffects(t *testing.T) {
 	readJSON(t, filepath.Join(dir, "aprendiz-nv1-simples.json"), &oracle)
 	clean := oracle.Char
 
-	with := func(ids string) ComputedSheetV2 {
+	with := func(ids string) ComputedSheet {
 		c := clean
 		c.ActiveConditions = ids
-		return catalogs.ComputeSheetV2(c, none)
+		return catalogs.ComputeSheet(c, none)
 	}
-	expertise := func(s ComputedSheetV2, name string) int {
+	expertise := func(s ComputedSheet, name string) int {
 		for _, e := range s.Expertises {
 			if e.Name == name {
 				return e.Total
@@ -36,7 +36,7 @@ func TestConditionEffects(t *testing.T) {
 		return 0
 	}
 
-	base := catalogs.ComputeSheetV2(clean, none)
+	base := catalogs.ComputeSheet(clean, none)
 
 	if got := with(`["vulneravel"]`).Defense.Total; got != base.Defense.Total-2 {
 		t.Errorf("Vulnerável: Defesa = %d, quer %d", got, base.Defense.Total-2)
