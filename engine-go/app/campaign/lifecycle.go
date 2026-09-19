@@ -2,9 +2,7 @@ package campaign
 
 import (
 	"context"
-	"crypto/rand"
 	"database/sql"
-	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -12,6 +10,7 @@ import (
 	"t20engine/app/session"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/infra/secret"
 )
 
 // Lifecycle é o CICLO DE VIDA de uma campanha: abrir, renomear, cunhar o link
@@ -111,7 +110,7 @@ func (l Lifecycle) RotateInvite(
 // mintInvite é a cunhagem sem trava, para o nascimento — que não tem dono a
 // conferir porque acabou de escolher um.
 func (l Lifecycle) mintInvite(ctx context.Context, campanhaID int64) (string, error) {
-	token, err := newInviteToken()
+	token, err := secret.Token()
 	if err != nil {
 		return "", err
 	}
@@ -193,21 +192,4 @@ func nullOrText(texto string) any {
 		return ns.String
 	}
 	return nil
-}
-
-// newInviteToken é o segredo que deixa alguém sentar à mesa.
-//
-// `crypto/rand` e não `math/rand`: quem adivinha o token entra na mesa, e um
-// gerador previsível faria o convite ser uma formalidade.
-//
-// A FALHA SOBE, e é a diferença para a versão que morava no `serve/api`: lá o
-// erro era descartado (`_, _ = rand.Read(b)`), e uma leitura falha teria
-// gravado um token de vinte e quatro zeros — o mesmo para toda mesa aberta
-// naquele instante. Não acontece no Linux; custa uma linha garantir.
-func newInviteToken() (string, error) {
-	b := make([]byte, 24)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("sortear o convite: %w", err)
-	}
-	return base64.RawURLEncoding.EncodeToString(b), nil
 }

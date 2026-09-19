@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"errors"
 	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/secret"
 	"time"
 
 	"t20engine/infra/db/sqlcgen"
@@ -39,9 +40,13 @@ type accountInviteDTO struct {
 // Independente de TRANSPORTE, para o handler HTTP e a cena em templ lerem a
 // mesma regra.
 func mintAccountInvite(ctx context.Context, q *sqlcgen.Queries, criadoPor int64) (sqlcgen.AccountInvite, error) {
+	token, err := secret.Token()
+	if err != nil {
+		return sqlcgen.AccountInvite{}, err
+	}
 	now := time.Now()
 	return q.CreateAccountInvite(ctx, sqlcgen.CreateAccountInviteParams{
-		Token:     generateInviteToken(),
+		Token:     token,
 		Createdby: criadoPor,
 		Createdat: dbvalue.IsoAt(now),
 		Expiresat: dbvalue.IsoAt(now.Add(accountInviteTTL)),

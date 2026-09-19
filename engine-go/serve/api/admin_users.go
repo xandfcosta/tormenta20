@@ -9,6 +9,7 @@ import (
 	"errors"
 	"net/http"
 	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/secret"
 	"time"
 
 	"t20engine/infra/db/sqlcgen"
@@ -90,9 +91,13 @@ func (h adminHost) mintPasswordReset(ctx context.Context, usuarioID, criadoPor i
 	if _, err := h.queries.GetUserByID(ctx, usuarioID); err != nil {
 		return sqlcgen.PasswordReset{}, errUserNotFound
 	}
+	token, err := secret.Token()
+	if err != nil {
+		return sqlcgen.PasswordReset{}, err
+	}
 	now := time.Now()
 	return h.queries.CreatePasswordReset(ctx, sqlcgen.CreatePasswordResetParams{
-		Token:     generateInviteToken(),
+		Token:     token,
 		Userid:    usuarioID,
 		Createdby: criadoPor,
 		Createdat: dbvalue.IsoAt(now),

@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/secret"
 	"testing"
 	"time"
 
@@ -248,7 +249,7 @@ func (f doorFixture) seedResetLink(t *testing.T, validade time.Duration) string 
 	}
 	agora := time.Now()
 	reset, err := f.s.queries.CreatePasswordReset(context.Background(), sqlcgen.CreatePasswordResetParams{
-		Token: generateInviteToken(), Userid: user.ID, Createdby: user.ID,
+		Token: seedToken(t), Userid: user.ID, Createdby: user.ID,
 		Createdat: dbvalue.IsoAt(agora), Expiresat: dbvalue.IsoAt(agora.Add(validade)),
 	})
 	if err != nil {
@@ -315,4 +316,16 @@ func TestTheDoorPutsNothingInADatastarSignal(t *testing.T) {
 			}
 		}
 	}
+}
+
+// seedToken sorteia um token para a bancada pelo MESMO caminho que a produção
+// usa. Um literal aqui seria um dado que o código sob teste não sabe produzir —
+// e é assim que um fixture esconde o defeito de quem o produz.
+func seedToken(t *testing.T) string {
+	t.Helper()
+	token, err := secret.Token()
+	if err != nil {
+		t.Fatalf("sortear o token da bancada: %v", err)
+	}
+	return token
 }
