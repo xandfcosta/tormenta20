@@ -2,12 +2,8 @@ package api
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"t20engine/infra/db/dbvalue"
-	"t20engine/infra/httpio"
-	"t20engine/infra/wire"
 
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -18,17 +14,6 @@ type storedVitals struct {
 	HpCurrent int64 `json:"hpCurrent"`
 	MpMax     int64 `json:"mpMax"`
 	MpCurrent int64 `json:"mpCurrent"`
-}
-
-type levelResult struct {
-	Level  int64        `json:"level"`
-	Vitals storedVitals `json:"vitals"`
-}
-
-type classLevelResult struct {
-	Level   int64            `json:"level"`
-	Classes []sheet.ClassDTO `json:"classes"`
-	Vitals  storedVitals     `json:"vitals"`
 }
 
 // levelVitalsNext ports vitals-sync.helpers levelVitalsPatch: new maxes from the
@@ -79,17 +64,6 @@ type classLevelError struct {
 }
 
 func (e classLevelError) Error() string { return e.Frase }
-
-// writeLevelFailure traduz a recusa para o formato da API JSON.
-func writeLevelFailure(w http.ResponseWriter, err error) {
-	var recusa classLevelError
-	if errors.As(err, &recusa) {
-		httpio.WriteFieldError(w, http.StatusBadRequest, recusa.Frase,
-			wire.FieldErrorMap{recusa.Campo: {recusa.Frase}})
-		return
-	}
-	httpio.WriteError(w, http.StatusInternalServerError, "Could not update class level")
-}
 
 // applyClassLevel é A REGRA do degrau de nível, e ela é UMA para as duas telas.
 //
@@ -146,17 +120,4 @@ func (sr sheetRules) applyClassLevel(
 	dto.Level = total
 	vitals, err := sr.syncLevelVitals(ctx, row.ID, dto)
 	return dto, dto.Classes, total, vitals, err
-}
-
-// levelRangeError applies the UpdateLevelDto range (@IsInt @Min(1) @Max(20)).
-func levelRangeError(level *int64) string {
-	switch {
-	case level == nil:
-		return "level must be an integer number"
-	case *level < 1:
-		return "level must not be less than 1"
-	case *level > 20:
-		return "level must not be greater than 20"
-	}
-	return ""
 }

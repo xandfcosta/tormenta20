@@ -13,11 +13,6 @@ import (
 // O `AugmentPick` mora no `sheet` desde a ALE-278: a cena o lê dos sinais e
 // este arquivo o consome ao cobrar o PM.
 
-type castResult struct {
-	MpCurrent        int64   `json:"mpCurrent"`
-	RemovedEffectIDs []int64 `json:"removedEffectIds"`
-}
-
 // castSpellForCharacter é a conjuração INTEIRA, sem HTTP.
 //
 // Ela nasceu extraída na ALE-272 (fatia 6), quando a ficha em Datastar passou a

@@ -7,15 +7,12 @@ import (
 	"fmt"
 	"net/http"
 	"t20engine/infra/db/dbvalue"
-	"t20engine/infra/httpio"
 	"t20engine/infra/wire"
 
 	"t20engine/domain/catalog"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
-
-const manualTempHpCatalogID = "manual-temp-hp"
 
 // applyPoolTx é a transação da poça de PV temporários, SEM transporte.
 //
@@ -93,21 +90,6 @@ func (sr sheetRules) applySpellBuffEffect(ctx context.Context, charID int64, spe
 		return sheet.EffectDTO{}, http.StatusInternalServerError, errors.New("Could not apply buff")
 	}
 	return effectDTOFromUpsert(eff), http.StatusOK, nil
-}
-
-// resolvePowerGrant looks up a power's activation grant, writing the appropriate 400 and
-// returning ok=false when the power is unknown or has no applicable grant.
-func resolvePowerGrant(w http.ResponseWriter, powerID string) (*catalog.ActivationGrant, bool) {
-	spec, known := catalog.LookupActivation(powerID)
-	if !known {
-		httpio.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Power %q not found in the activation registry", powerID), wire.FieldErrorMap{"powerId": {"Poder desconhecido"}})
-		return nil, false
-	}
-	if spec.Grant == nil {
-		httpio.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Power %q has no applicable grant", powerID), wire.FieldErrorMap{"powerId": {"Poder sem efeito aplicável"}})
-		return nil, false
-	}
-	return spec.Grant, true
 }
 
 // powerTempHpAmount computes a temp-HP power's magnitude: character level + the attribute's

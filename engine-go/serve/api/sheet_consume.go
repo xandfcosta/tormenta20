@@ -5,13 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"t20engine/infra/db/dbvalue"
-	"t20engine/infra/httpio"
-	"t20engine/infra/wire"
 
 	"t20engine/domain/catalog"
 	"t20engine/domain/sheet"
@@ -140,10 +137,6 @@ func (sr sheetRules) consumeItemForCharacter(
 type doseUsed struct {
 	consumeResult
 	Nome string
-}
-
-func writeOncePerDay(w http.ResponseWriter, name string) {
-	httpio.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("%q already active for the day", name), wire.FieldErrorMap{"catalogId": {"Apenas uma porção por dia"}})
 }
 
 func findItemDTO(items []sheet.ItemDTO, itemID int64) *sheet.ItemDTO {
