@@ -151,10 +151,17 @@ func TestATempHpPoolDoesNotWipeTheOneAlreadyThere(t *testing.T) {
 		}
 	}
 
+	// E AS DUAS CHEGAM AO HTML DA CENA, cada uma com o próprio valor.
+	//
+	// "Chega ao HTML" e não "aparece na tela", e a diferença é medida: o cartão
+	// de efeito ativo desenha só o NOME; o valor mora no diálogo de detalhe, que
+	// nasce fechado dentro de um `fixed inset-0`. Uma mensagem dizendo "a aba não
+	// mostra" afirmaria sobre PRESENÇA VISUAL o que este instrumento não olha
+	// (ALE-347, conferido no navegador).
 	tela := effectScreen(t, f, id)
 	for _, quanto := range []string{"+30", "+9"} {
 		if !strings.Contains(tela, quanto) {
-			t.Errorf("a aba não mostra %q de PV temporários", quanto)
+			t.Errorf("o HTML da aba não traz %q de PV temporários", quanto)
 		}
 	}
 }

@@ -29,6 +29,7 @@ engine-go/
 │   ├── session/  o ciclo da sessão, a trava de acesso e o STORE da fila
 │   ├── boards/   o store dos tabuleiros abertos, com as abas e os lugares
 │   ├── initiative/ quem entra na fila, e com que números
+│   ├── character/ o herói: nascer (`Births`) e jogar (`Plays`)
 │   └── rest/     o que expira e o que recupera quando a cena ou o dia acaba
 ├── serve/        O QUE RESPONDE HTTP
 │   ├── api/      a RAIZ DE COMPOSIÇÃO: monta o roteador e cumpre as portas
@@ -75,6 +76,17 @@ trava nada e não grava nada.
 **As recusas daqui são TIPADAS** (`ErrNotFound`, `ErrForbidden`, `ErrRefused`) e
 nunca um número de HTTP. Um caso de uso que devolvesse 403 não poderia ser
 chamado de outro transporte — que é a única coisa que esta camada compra.
+
+> **O `character.Plays` é a exceção declarada, e a razão é a TELA** (ALE-347).
+> Quem embrulha uma recusa com `%w: app.ErrRefused` coloca "recusado pela regra"
+> no fim da frase que o `Error()` devolve — e a cena da ficha mostra esse texto
+> CRU ao jogador, porque o Datastar não desenha corpo de resposta 4xx e toda
+> recusa dela tem de voltar como frase na cena. Os gestos da ficha têm UM
+> transporte, e nenhum chamador lê o tipo: o embrulho custaria o sufixo na tela
+> e não compraria nada. Quando o segundo transporte chegar, é o embrulho que
+> desce — uma linha por recusa. O que NÃO pode voltar é o número de HTTP dentro
+> da regra, e esse saiu: o `applySpellBuffEffect` devolvia `(efeito, int, error)`
+> e montava um erro de campo com status 400 lá dentro.
 
 **Onde procurar:**
 
