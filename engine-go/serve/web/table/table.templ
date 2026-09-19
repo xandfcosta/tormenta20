@@ -567,7 +567,7 @@ templ tableRegister(v View) {
 			type="button"
 			data-indicator:registering
 			data-attr:disabled="$registering || !($d20 >= 1 && $d20 <= 20)"
-			data-on:click={ fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/iniciativa')", v.CampaignID, v.SessionID) }
+			data-on:click={ fmt.Sprintf("@post('%s/iniciativa')", v.SessionBase()) }
 			class="bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 disabled:opacity-50"
 		>
 			Registrar
@@ -901,7 +901,7 @@ templ formDeCombatente(v View) {
 		<button
 			type="button"
 			data-attr:disabled="!$new_name.trim()"
-			data-on:click={ fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/iniciativa/adicionar')", v.CampaignID, v.SessionID) }
+			data-on:click={ fmt.Sprintf("@post('%s/iniciativa/adicionar')", v.SessionBase()) }
 			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 disabled:opacity-50"
 		>Acrescentar</button>
 	</div>

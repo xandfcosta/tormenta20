@@ -183,7 +183,7 @@ templ blockMana() {
 templ attacksTab(v View) {
 	<div role="tabpanel" data-show={ onTabExpr(abaDosAtaques) } class="space-y-2">
 		@listHeader(v, listaDeAtaques, "Ataques", "Ataque")
-		@draftAttacks(v.CampaignID, v.SessionID, nil)
+		@draftAttacks(v, nil)
 		<p class="text-2xs text-muted-foreground">
 			O livro escreve a linha como "Corpo a Corpo: Clava +7 (1d6+3)" (p289). A nota entre parênteses vai em <span class="text-foreground">Efeito</span>.
 		</p>
@@ -194,11 +194,11 @@ templ ownedTab(v View) {
 	<div role="tabpanel" data-show={ onTabExpr(abaDasPosses) } class="space-y-4">
 		<div class="space-y-2">
 			@listHeader(v, listaDePericias, "Perícias", "Perícia")
-			@draftExpertises(v.CampaignID, v.SessionID, nil)
+			@draftExpertises(v, nil)
 		</div>
 		<div class="space-y-2">
 			@listHeader(v, listaDeHabilidades, "Habilidades especiais", "Habilidade")
-			@draftAbilities(v.CampaignID, v.SessionID, nil)
+			@draftAbilities(v, nil)
 		</div>
 		@blockSection("Posses") {
 			@blockText("equipment", "Equipamento", "Clava, couro batido")
@@ -212,7 +212,7 @@ templ listHeader(v View, lista, titulo, oQue string) {
 		<h4 class={ ui.SectionLabelClasses("gold", "") }>{ titulo }</h4>
 		<button
 			type="button"
-			data-on:click={ listCommand(v.CampaignID, v.SessionID, lista, -1) }
+			data-on:click={ listCommand(v, lista, -1) }
 			class="inline-flex min-h-9 items-center gap-1 rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent"
 		>
 			@ui.Icon("Plus", "size-3.5")
@@ -227,7 +227,7 @@ templ listHeader(v View, lista, titulo, oQue string) {
 // entram na lista de regiões da Mesa: o stream não sabe do rascunho de ninguém, e
 // um quadro dele apagaria as linhas em silêncio.
 
-templ draftAttacks(campanha, sessao int64, ataques []creature.Attack) {
+templ draftAttacks(v View, ataques []creature.Attack) {
 	<div id="npc-attacks" class="space-y-2">
 		if len(ataques) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhum ataque.</p>
@@ -242,13 +242,13 @@ templ draftAttacks(campanha, sessao int64, ataques []creature.Attack) {
 					<input type="checkbox" data-bind={ rowField(listaDeAtaques, i, "ranged") } class="size-4 accent-grimorio-gold"/>
 					À distância
 				</label>
-				@removeRowButton(campanha, sessao, listaDeAtaques, i, attackName(ataque, i))
+				@removeRowButton(v, listaDeAtaques, i, attackName(ataque, i))
 			</div>
 		}
 	</div>
 }
 
-templ draftExpertises(campanha, sessao int64, pericias []creature.Skill) {
+templ draftExpertises(v View, pericias []creature.Skill) {
 	<div id="npc-expertises" class="space-y-2">
 		if len(pericias) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhuma perícia.</p>
@@ -262,7 +262,7 @@ templ draftExpertises(campanha, sessao int64, pericias []creature.Skill) {
 				// parêntese, o de `Ofício (armeiro)`, vem ANTES do número e faz
 				// parte do NOME: por isso são dois campos e não um.
 				@rowBox(rowField(listaDePericias, i, "nota"), "Nota", "+14 em pântanos", "w-40")
-				@removeRowButton(campanha, sessao, listaDePericias, i, expertiseName(pericia, i))
+				@removeRowButton(v, listaDePericias, i, expertiseName(pericia, i))
 			</div>
 		}
 	</div>
@@ -272,7 +272,7 @@ templ draftExpertises(campanha, sessao int64, pericias []creature.Skill) {
 // `<input>` — o livro escreve habilidade especial em prosa ("Faro apurado.
 // Recebe +2 em testes de Percepção baseados em olfato", p289), e uma caixa de uma
 // linha faria o mestre resumir o que ele vai precisar ler em voz alta.
-templ draftAbilities(campanha, sessao int64, habilidades []string) {
+templ draftAbilities(v View, habilidades []string) {
 	<div id="npc-abilities" class="space-y-2">
 		if len(habilidades) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhuma habilidade especial.</p>
@@ -286,7 +286,7 @@ templ draftAbilities(campanha, sessao int64, habilidades []string) {
 					placeholder={ abilityPlaceholder }
 					class="min-w-0 flex-1 rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
 				></textarea>
-				@removeRowButton(campanha, sessao, listaDeHabilidades, i, fmt.Sprintf("a habilidade %d", i+1))
+				@removeRowButton(v, listaDeHabilidades, i, fmt.Sprintf("a habilidade %d", i+1))
 			</div>
 		}
 	</div>
@@ -380,12 +380,12 @@ templ numberRow(caminho, rotulo string, minimo, maximo int) {
 // Com cinco ataques na tela, cinco botões chamados "Remover" são cinco botões
 // idênticos para quem navega por leitor de tela — e o que se apaga por engano é
 // justamente o que se acabou de escrever.
-templ removeRowButton(campanha, sessao int64, lista string, indice int, oQue string) {
+templ removeRowButton(v View, lista string, indice int, oQue string) {
 	<button
 		type="button"
 		aria-label={ "Tirar " + oQue }
 		title={ "Tirar " + oQue }
-		data-on:click={ listCommand(campanha, sessao, lista, indice) }
+		data-on:click={ listCommand(v, lista, indice) }
 		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 	>
 		@ui.Icon("Trash2", "size-4")

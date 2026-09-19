@@ -643,7 +643,7 @@ func attacksTab(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = draftAttacks(v.CampaignID, v.SessionID, nil).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = draftAttacks(v, nil).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -697,7 +697,7 @@ func ownedTab(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = draftExpertises(v.CampaignID, v.SessionID, nil).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = draftExpertises(v, nil).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -709,7 +709,7 @@ func ownedTab(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = draftAbilities(v.CampaignID, v.SessionID, nil).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = draftAbilities(v, nil).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -816,9 +816,9 @@ func listHeader(v View, lista, titulo, oQue string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var33 string
-		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(listCommand(v.CampaignID, v.SessionID, lista, -1))
+		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(listCommand(v, lista, -1))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 215, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 215, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 		if templ_7745c5c3_Err != nil {
@@ -854,7 +854,7 @@ func listHeader(v View, lista, titulo, oQue string) templ.Component {
 // Cada uma é um nó com id próprio, e o id é como o remendo a encontra. Elas NÃO
 // entram na lista de regiões da Mesa: o stream não sabe do rascunho de ninguém, e
 // um quadro dele apagaria as linhas em silêncio.
-func draftAttacks(campanha, sessao int64, ataques []creature.Attack) templ.Component {
+func draftAttacks(v View, ataques []creature.Attack) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -923,7 +923,7 @@ func draftAttacks(campanha, sessao int64, ataques []creature.Attack) templ.Compo
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = removeRowButton(campanha, sessao, listaDeAtaques, i, attackName(ataque, i)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = removeRowButton(v, listaDeAtaques, i, attackName(ataque, i)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -940,7 +940,7 @@ func draftAttacks(campanha, sessao int64, ataques []creature.Attack) templ.Compo
 	})
 }
 
-func draftExpertises(campanha, sessao int64, pericias []creature.Skill) templ.Component {
+func draftExpertises(v View, pericias []creature.Skill) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -988,7 +988,7 @@ func draftExpertises(campanha, sessao int64, pericias []creature.Skill) templ.Co
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = removeRowButton(campanha, sessao, listaDePericias, i, expertiseName(pericia, i)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = removeRowButton(v, listaDePericias, i, expertiseName(pericia, i)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1009,7 +1009,7 @@ func draftExpertises(campanha, sessao int64, pericias []creature.Skill) templ.Co
 // `<input>` — o livro escreve habilidade especial em prosa ("Faro apurado.
 // Recebe +2 em testes de Percepção baseados em olfato", p289), e uma caixa de uma
 // linha faria o mestre resumir o que ele vai precisar ler em voz alta.
-func draftAbilities(campanha, sessao int64, habilidades []string) templ.Component {
+func draftAbilities(v View, habilidades []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1084,7 +1084,7 @@ func draftAbilities(campanha, sessao int64, habilidades []string) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = removeRowButton(campanha, sessao, listaDeHabilidades, i, fmt.Sprintf("a habilidade %d", i+1)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = removeRowButton(v, listaDeHabilidades, i, fmt.Sprintf("a habilidade %d", i+1)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1803,7 +1803,7 @@ func numberRow(caminho, rotulo string, minimo, maximo int) templ.Component {
 // Com cinco ataques na tela, cinco botões chamados "Remover" são cinco botões
 // idênticos para quem navega por leitor de tela — e o que se apaga por engano é
 // justamente o que se acabou de escrever.
-func removeRowButton(campanha, sessao int64, lista string, indice int, oQue string) templ.Component {
+func removeRowButton(v View, lista string, indice int, oQue string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1855,9 +1855,9 @@ func removeRowButton(campanha, sessao int64, lista string, indice int, oQue stri
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var92 string
-		templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.ResolveAttributeValue(listCommand(campanha, sessao, lista, indice))
+		templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.ResolveAttributeValue(listCommand(v, lista, indice))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 388, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 388, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var92)
 		if templ_7745c5c3_Err != nil {

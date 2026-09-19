@@ -1096,11 +1096,13 @@ func tabCommand(v BoardView, tabuleiroID string) string {
 // vão, e nenhum desenho precisa saber que existe mais de um destino.
 //
 // As duas funções abaixo são os únicos lugares do pacote onde o caminho do
-// tabuleiro é escrito, e é isso que o `TestNoBoardRouteIsHandwritten` varre.
+// tabuleiro é escrito, e é isso que o `TestNoBoardRouteIsHandwritten` varre. Elas
+// são IRMÃS agora: as duas somam o sufixo a um endereço do `routes`, e nenhuma
+// das duas escreve `/campanhas/` (ALE-346).
 
 // tableBoardBase é o tabuleiro DA MESA: a cena que a sessão está jogando.
 func tableBoardBase(campaignID, sessionID int64) string {
-	return fmt.Sprintf("/campanhas/%d/sessoes/%d/tabuleiro", campaignID, sessionID)
+	return routes.Session(campaignID, sessionID) + "/tabuleiro"
 }
 
 // placeDraftBase é o tabuleiro do RASCUNHO: a cena que o mestre monta no acervo

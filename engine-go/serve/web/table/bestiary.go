@@ -8,6 +8,7 @@ import (
 	"t20engine/app/initiative"
 	"t20engine/domain/book"
 	"t20engine/serve/web/master"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -36,7 +37,7 @@ import (
 
 // tableBestiaryRoute é a base das rotas do painel, montada por mesa.
 func tableBestiaryRoute(campaignID, sessionID int64) string {
-	return fmt.Sprintf("/campanhas/%d/sessoes/%d/bestiario", campaignID, sessionID)
+	return routes.Session(campaignID, sessionID) + "/bestiario"
 }
 
 func (s Scene) TableBestiaryRoutes(r chi.Router) {

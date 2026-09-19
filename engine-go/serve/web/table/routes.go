@@ -32,7 +32,12 @@ import (
 //
 // Escrito UMA vez e não em cada `Routes*`: a ALE-345 trocou este prefixo em 35
 // registros, e a única razão de terem sido 35 é ele estar copiado. O endereço
-// RESOLVIDO (com os ids) é outra coisa e mora no `routes.Session`.
+// RESOLVIDO (com os ids) é outra coisa e mora no `routes.Session` — a cena o
+// alcança pelo `View.SessionBase`.
+//
+// Esta frase já estava aqui e dezenove sítios a ignoravam. Hoje ela tem guarda
+// (`TestNoHandwrittenSessionAddress`), que é a diferença entre uma convenção
+// escrita e uma convenção que vale (ALE-346).
 const sessionPattern = "/campanhas/{campaignId}/sessoes/{sessionId}"
 
 func Routes(r chi.Router, s Scene) {
@@ -98,7 +103,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: tableSignalsExpr(),
-		Init:   fmt.Sprintf("@get('/campanhas/%d/sessoes/%d/fluxo')", campaignID, sessionID),
+		Init:   fmt.Sprintf("@get('%s/fluxo')", view.SessionBase()),
 		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um

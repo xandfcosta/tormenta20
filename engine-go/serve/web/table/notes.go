@@ -286,7 +286,7 @@ func storeTheWidth() string {
 // grafias do mesmo caminho é como nasce a quarta que diverge — e o `@post` tem
 // guarda de endereço, mas o `window.open` não tem.
 func notesAddress(v View) string {
-	return fmt.Sprintf("/campanhas/%d/sessoes/%d/notas", v.CampaignID, v.SessionID)
+	return v.SessionBase() + "/notas"
 }
 
 func saveNotes(v View) string {

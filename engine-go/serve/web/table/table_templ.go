@@ -1397,9 +1397,9 @@ func tableRegister(v View) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var58 string
-		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/iniciativa')", v.CampaignID, v.SessionID))
+		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('%s/iniciativa')", v.SessionBase()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 570, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 570, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 		if templ_7745c5c3_Err != nil {
@@ -2672,9 +2672,9 @@ func formDeCombatente(v View) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var124 string
-		templ_7745c5c3_Var124, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/iniciativa/adicionar')", v.CampaignID, v.SessionID))
+		templ_7745c5c3_Var124, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('%s/iniciativa/adicionar')", v.SessionBase()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 904, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 904, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var124)
 		if templ_7745c5c3_Err != nil {

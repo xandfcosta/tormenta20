@@ -128,15 +128,14 @@ func closeSheetCast(m Member) string {
 // acende no `$command_error`, que é do RODAPÉ — um diálogo aberto por cima dela
 // esconderia a única frase que explica o que houve.
 func poeNaFila(v View, m Member) string {
-	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/elenco/%d/na-fila')",
-		v.CampaignID, v.SessionID, m.CharacterID)
+	return fmt.Sprintf("@post('%s/elenco/%d/na-fila')", v.SessionBase(), m.CharacterID)
 }
 
 // castVital escreve o gesto com os DOIS passos já resolvidos em duas URLs, e o
 // `evt.shiftKey` escolhendo entre elas — a mesma forma do `rowVital` da fila, e
 // pela mesma razão: o número nunca viaja como dado.
 func castVital(v View, m Member, pool, verb string) string {
-	base := fmt.Sprintf("/campanhas/%d/sessoes/%d/elenco/%d/vitais/%s/%s/",
-		v.CampaignID, v.SessionID, m.CharacterID, pool, verb)
+	base := fmt.Sprintf("%s/elenco/%d/vitais/%s/%s/",
+		v.SessionBase(), m.CharacterID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }
