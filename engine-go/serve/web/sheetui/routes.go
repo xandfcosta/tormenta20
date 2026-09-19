@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/ui"
 )
@@ -219,30 +218,7 @@ func touchesVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) er
 	if err != nil {
 		return err
 	}
-	qual := chi.URLParam(r, "qual")
-	hp, mp := row.Hpcurrent, row.Mpcurrent
-	switch qual {
-	case "pv":
-		hp = rangePinned(hp+int64(passo), row.Hpmax)
-	case "pm":
-		mp = rangePinned(mp+int64(passo), row.Mpmax)
-	default:
-		return fmt.Errorf("vital %q não existe: são 'pv' e 'pm'", qual)
-	}
-	return s.deps.Queries().SetVitalsCurrent(r.Context(), sqlcgen.SetVitalsCurrentParams{
-		HpCurrent: hp, MpCurrent: mp, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-	})
-}
-
-// rangePinned mantém o vital entre zero e o máximo.
-func rangePinned(valor, max int64) int64 {
-	if valor < 0 {
-		return 0
-	}
-	if valor > max {
-		return max
-	}
-	return valor
+	return s.plays.TouchVital(r.Context(), row, chi.URLParam(r, "qual"), passo)
 }
 
 // mudaONivel sobe ou desce UMA CLASSE, e o nível do personagem acompanha.

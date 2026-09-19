@@ -1,0 +1,283 @@
+package character
+
+import (
+	"context"
+	"fmt"
+
+	"t20engine/domain/book"
+	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/db/sqlcgen"
+)
+
+// AS POSTURAS, e por que elas são os únicos gestos da ficha com TRANSAÇÃO.
+//
+// Entrar em Fúria não é uma escrita: o PM sai, o pagamento é registrado, e os
+// condicionais da flag sobem. O registro do pagamento existe para SAIR não
+// devolver PM — é para isso que a tabela `character_stances` serve —, e sem o
+// contorno as três podiam ficar pela metade: PM cobrado e postura sem os
+// condicionais dela, ou postura em pé sem registro de quanto foi pago.
+//
+// # O que fica FORA da transação, e é decisão e não esquecimento
+//
+// As CONCESSÕES (a reserva de PV temporários da Alma de Bronze, p41) são
+// aplicadas depois do commit, de propósito: uma concessão que falha NÃO derruba
+// a postura que a pessoa acabou de pagar. O erro sobe como recusa, a postura
+// fica em pé com o que já aplicou, e é esse o estado que a tela mostra. A regra
+// já estava escrita nas concessões da cena antes de haver transação — trazê-la
+// para dentro seria mudá-la de contrabando (ALE-351).
+
+// EnterStance entra numa postura com os degraus escolhidos.
+//
+// A `dto` atravessa porque a decisão precisa da ficha COMPUTADA — o teto de
+// degraus sai do nível NA CLASSE, e os condicionais da flag saem do motor. Quem
+// já a montou para desenhar a tela não a computa de novo.
+func (p Plays) EnterStance(
+	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, flag string, degraus int,
+) error {
+	spec := stanceOfFlag(flag)
+	if spec == nil {
+		return fmt.Errorf("%q não é uma postura do livro", flag)
+	}
+	maximo := 0
+	if spec.Scaling != nil {
+		maximo = book.LevelSteps(*spec.Scaling, ClassPowerLevel(dto, spec.ID))
+	}
+	if pode, porque := book.StanceDecision(*spec, degraus, maximo, int(dto.MpCurrent)); !pode {
+		return fmt.Errorf("%s: %s", spec.Name, porque)
+	}
+	custo := book.StanceCost(*spec, degraus)
+
+	if err := p.inTx(ctx, "entrar na postura "+flag, func(q *sqlcgen.Queries) error {
+		if err := chargeMp(ctx, q, row, custo); err != nil {
+			return err
+		}
+		if err := q.UpsertCharacterStance(ctx, sqlcgen.UpsertCharacterStanceParams{
+			Characterid: row.ID, Flag: flag, Steps: int64(degraus), Pmpaid: int64(custo),
+		}); err != nil {
+			return fmt.Errorf("registrar o pagamento da postura: %w", err)
+		}
+		// TODOS os condicionais da flag sobem juntos — a Fúria mexe em ataque,
+		// dano, Defesa e testes de Vontade, e metade ligada é uma ficha que soma
+		// metade de uma regra do livro.
+		for _, id := range p.conditionalsOfFlag(dto, flag) {
+			if err := q.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
+				Characterid: row.ID, Conditionalid: id,
+			}); err != nil {
+				return fmt.Errorf("ligar o condicional %q: %w", id, err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+	return p.applyStanceGrants(ctx, row, flag)
+}
+
+// EndStance encerra a postura e leva junto o que ela tinha ligado.
+//
+// A reserva de PV temporários dura "enquanto a Fúria durar" (p41), e deixá-la
+// para trás daria PV que a postura encerrada continua pagando. Aqui as três
+// escritas ficam DENTRO do contorno — ao contrário de entrar, onde a concessão
+// que falha não pode derrubar o que foi pago, sair não tem o que preservar: a
+// postura encerrada pela metade é a ficha somando o que não existe mais.
+func (p Plays) EndStance(
+	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, flag string,
+) error {
+	condicionais := p.conditionalsOfFlag(dto, flag)
+	concedidos, err := p.grantedEffectIDs(ctx, row, flag)
+	if err != nil {
+		return err
+	}
+	return p.inTx(ctx, "encerrar a postura "+flag, func(q *sqlcgen.Queries) error {
+		if err := q.RemoveCharacterStance(ctx, sqlcgen.RemoveCharacterStanceParams{
+			Characterid: row.ID, Flag: flag,
+		}); err != nil {
+			return fmt.Errorf("apagar a postura: %w", err)
+		}
+		for _, id := range concedidos {
+			if err := q.DeleteEffectByID(ctx, id); err != nil {
+				return fmt.Errorf("apagar o efeito concedido %d: %w", id, err)
+			}
+		}
+		for _, id := range condicionais {
+			if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
+				Characterid: row.ID, Conditionalid: id,
+			}); err != nil {
+				return fmt.Errorf("desligar o condicional %q: %w", id, err)
+			}
+		}
+		return nil
+	})
+}
+
+// UsePower gasta um uso de um poder instantâneo: cobra o PM e soma o contador.
+//
+// As duas escritas são de coisas diferentes — o PM é da ficha, o contador é do
+// estado de jogo — e a ordem importa: o PM primeiro, porque é ele que pode
+// faltar. Somar o uso antes deixaria um uso gasto por um poder que não saiu.
+func (p Plays) UsePower(
+	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, powerID string,
+) error {
+	spec := book.ActivationOf(powerID, "")
+	if spec == nil {
+		return fmt.Errorf("o poder %q não tem ativação no catálogo", powerID)
+	}
+	if spec.Kind != "instant" {
+		return fmt.Errorf("%q não é um poder de usar", spec.Name)
+	}
+	usos := PowerUses(dto)[spec.ID]
+	pode, porque := book.UseDecision(*spec, book.UseContext{
+		PmAtual: int(dto.MpCurrent), UsadoNaCena: usos.Cena, UsadoNoDia: usos.Dia,
+		Flags: p.activeFlags(dto),
+	})
+	if !pode {
+		return fmt.Errorf("%s: %s", spec.Name, porque)
+	}
+	escopo := book.ChargedScope(*spec)
+	if escopo == "" {
+		// Sem limite COBRADO não há contador, e sobra uma escrita só: a
+		// transação seria um bloqueio que ninguém pediu.
+		return chargeMp(ctx, p.queries, row, book.ActivationPm(*spec))
+	}
+	return p.inTx(ctx, "usar o poder "+spec.ID, func(q *sqlcgen.Queries) error {
+		if err := chargeMp(ctx, q, row, book.ActivationPm(*spec)); err != nil {
+			return err
+		}
+		if err := q.BumpCharacterPowerUse(ctx, sqlcgen.BumpCharacterPowerUseParams{
+			Characterid: row.ID, Powerid: spec.ID, Scope: escopo,
+		}); err != nil {
+			return fmt.Errorf("somar o uso de %q: %w", spec.ID, err)
+		}
+		return nil
+	})
+}
+
+// chargeMp tira o PM da ficha, sem deixar o saldo abaixo de zero.
+//
+// O piso existe porque a decisão que autorizou o gasto foi tomada com o saldo
+// LIDO antes: cobrar até o fundo é melhor que gravar um PM negativo, que a tela
+// desenharia como barra para trás. Ele FICA mesmo dentro da transação — o
+// `_txlock=immediate` serializa a escrita, mas a leitura que autorizou o gasto
+// aconteceu fora dela.
+func chargeMp(ctx context.Context, q *sqlcgen.Queries, row sqlcgen.Character, quanto int) error {
+	if quanto <= 0 {
+		return nil
+	}
+	depois := row.Mpcurrent - int64(quanto)
+	if depois < 0 {
+		depois = 0
+	}
+	if err := q.SetMpCurrent(ctx, sqlcgen.SetMpCurrentParams{
+		MpCurrent: depois, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
+	}); err != nil {
+		return fmt.Errorf("cobrar %d PM da ficha %d: %w", quanto, row.ID, err)
+	}
+	return nil
+}
+
+// inTx roda o corpo numa transação, e o `qual` entra na mensagem de falha: um
+// "abrir a transação" sem o gesto não diz qual dos três estourou.
+func (p Plays) inTx(ctx context.Context, qual string, corpo func(*sqlcgen.Queries) error) error {
+	tx, err := p.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("abrir a transação de %s: %w", qual, err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	if err := corpo(p.queries.WithTx(tx)); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("fechar a transação de %s: %w", qual, err)
+	}
+	return nil
+}
+
+// stanceOfFlag acha a ativação da postura pela flag que ela acende.
+func stanceOfFlag(flag string) *book.Activation {
+	postura, tem := book.StancesFromCatalog()[flag]
+	if !tem {
+		return nil
+	}
+	return book.ActivationOf("", postura.Name)
+}
+
+// conditionalsOfFlag são os ids dos condicionais que aquela flag acende.
+//
+// Motor ausente devolve vazio, e não erro: é o mesmo recuo que o `syncVitals`
+// faz — sem catálogo primado não há o que ligar, e recusar o gesto inteiro
+// deixaria a postura fora do alcance de quem roda sem o arquivo.
+func (p Plays) conditionalsOfFlag(dto sheet.CharacterDTO, flag string) []string {
+	if p.catalogs == nil {
+		return nil
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return nil
+	}
+	fora := []string{}
+	for _, c := range engine.ComputeItemEffects(p.catalogs.ActiveItemsFor(ec)).Conditional {
+		if c.Flag == flag {
+			fora = append(fora, engine.ConditionalID(c))
+		}
+	}
+	return fora
+}
+
+// activeFlags são as flags acesas agora, para a decisão de usar um poder que
+// depende de postura.
+func (p Plays) activeFlags(dto sheet.CharacterDTO) map[string]bool {
+	fora := map[string]bool{}
+	for _, s := range dto.Stances {
+		fora[s.Flag] = true
+	}
+	return fora
+}
+
+// grantedEffectIDs são os efeitos em curso que vieram das concessões da flag.
+//
+// A busca é pelo id do PODER na coluna `catalogId` do efeito — é assim que o
+// efeito guarda de onde veio, e é o que permite encerrar sem lembrar de nada
+// entre uma requisição e outra.
+func (p Plays) grantedEffectIDs(
+	ctx context.Context, row sqlcgen.Character, flag string,
+) ([]int64, error) {
+	daFlag := map[string]bool{}
+	for _, spec := range book.FlagGrants(flag) {
+		daFlag[spec.ID] = true
+	}
+	if len(daFlag) == 0 {
+		return nil, nil
+	}
+	efeitos, err := p.queries.ListActiveEffectsByCharacter(ctx, row.ID)
+	if err != nil {
+		return nil, fmt.Errorf("ler os efeitos da ficha %d: %w", row.ID, err)
+	}
+	fora := []int64{}
+	for _, e := range efeitos {
+		if daFlag[e.Catalogid] {
+			fora = append(fora, e.ID)
+		}
+	}
+	return fora, nil
+}
+
+// applyStanceGrants liga o que a flag concede, DEPOIS do commit — ver o
+// cabeçalho do arquivo.
+func (p Plays) applyStanceGrants(ctx context.Context, row sqlcgen.Character, flag string) error {
+	for _, spec := range book.FlagGrants(flag) {
+		if spec.Grant.Kind != "temp-hp" {
+			continue
+		}
+		quanto, ok := p.TempHpAmount(ctx, row, spec.Grant.Attribute)
+		if !ok {
+			continue
+		}
+		if _, err := p.ApplyTempHpPool(
+			ctx, row.ID, "power", spec.ID, spec.Grant.Scope, quanto, "PV temporários"); err != nil {
+			return err
+		}
+	}
+	return nil
+}

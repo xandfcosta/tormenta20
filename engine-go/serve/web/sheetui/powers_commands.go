@@ -9,10 +9,8 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/app/character"
-	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -31,130 +29,24 @@ func usePower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 	if err != nil {
 		return err
 	}
-	spec := book.ActivationOf(chi.URLParam(r, "poder"), "")
-	if spec == nil {
-		return fmt.Errorf("o poder %q não tem ativação no catálogo", chi.URLParam(r, "poder"))
-	}
-	if spec.Kind != "instant" {
-		return fmt.Errorf("%q não é um poder de usar", spec.Name)
-	}
-	usos := powerUses(dto)[spec.ID]
-	pode, porque := useDecision(*spec, useContext{
-		PmAtual: int(dto.MpCurrent), UsadoNaCena: usos.Cena, UsadoNoDia: usos.Dia,
-		Flags: s.activeFlags(dto),
-	})
-	if !pode {
-		return fmt.Errorf("%s: %s", spec.Name, porque)
-	}
-	if err := s.chargePm(r, row, activationPm(*spec)); err != nil {
-		return err
-	}
-	escopo := chargedScope(*spec)
-	if escopo == "" {
-		return nil
-	}
-	return s.deps.Queries().BumpCharacterPowerUse(r.Context(), sqlcgen.BumpCharacterPowerUseParams{
-		Characterid: row.ID, Powerid: spec.ID, Scope: escopo,
-	})
+	return s.plays.UsePower(r.Context(), row, dto, chi.URLParam(r, "poder"))
 }
 
-// enterStance entra numa postura, com os degraus escolhidos.
+// enterStance entra numa postura, com os DEGRAUS que o diálogo escolheu.
 //
-// São QUATRO escritas para um gesto: o PM sai, o pagamento é registrado, os
-// condicionais da flag sobem, e o que a postura concede vira efeito. O
-// pagamento é registrado para sair não devolver PM — é o que a tabela
-// `character_stances` existe para lembrar.
+// Os degraus vêm por sinal porque são o estado de um seletor na tela; o resto do
+// gesto — a decisão, o PM, o registro do pagamento e os condicionais — é do
+// caso de uso, numa transação (ver o `app/character/stance.go`).
 func enterStance(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
-	flag := chi.URLParam(r, "flag")
-	spec := flagStance(flag)
-	if spec == nil {
-		return fmt.Errorf("%q não é uma postura do livro", flag)
-	}
 	degraus := 0
 	if sinais.PoderDegraus != nil {
 		degraus = int(*sinais.PoderDegraus)
 	}
-	maximo := 0
-	if spec.Scaling != nil {
-		maximo = levelSteps(*spec.Scaling, classPowerLevel(dto, spec.ID))
-	}
-	pode, porque := stanceDecision(*spec, degraus, maximo, int(dto.MpCurrent))
-	if !pode {
-		return fmt.Errorf("%s: %s", spec.Name, porque)
-	}
-	custo := stanceCost(*spec, degraus)
-	if err := s.chargePm(r, row, custo); err != nil {
-		return err
-	}
-	if err := s.deps.Queries().UpsertCharacterStance(r.Context(), sqlcgen.UpsertCharacterStanceParams{
-		Characterid: row.ID, Flag: flag, Steps: int64(degraus), Pmpaid: int64(custo),
-	}); err != nil {
-		return err
-	}
-	if err := s.turnsOnTheConditionalsFlag(r, row, dto, flag); err != nil {
-		return err
-	}
-	return s.applyTheGrantsStance(r, row, flag)
-}
-
-// flagStance acha a ativação da postura pela flag que ela acende.
-func flagStance(flag string) *book.Activation {
-	postura, tem := stancesFromCatalog()[flag]
-	if !tem {
-		return nil
-	}
-	return book.ActivationOf("", postura.Name)
-}
-
-// chargePm tira o PM da ficha, sem deixar o saldo abaixo de zero.
-//
-// O piso existe porque a decisão que autorizou o gasto foi tomada com o saldo
-// LIDO antes, e duas requisições na mesma ficha podem se cruzar: cobrar até o
-// fundo é melhor que gravar um PM negativo, que a tela desenharia como barra
-// para trás.
-func (s Scene) chargePm(r *http.Request, row sqlcgen.Character, quanto int) error {
-	if quanto <= 0 {
-		return nil
-	}
-	depois := row.Mpcurrent - int64(quanto)
-	if depois < 0 {
-		depois = 0
-	}
-	return s.deps.Queries().SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{
-		MpCurrent: depois, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-	})
-}
-
-// turnsOnTheConditionalsFlag sobe TODOS os condicionais daquela flag.
-//
-// São vários por postura — a Fúria mexe em ataque, dano, Defesa e testes de
-// Vontade —, e eles sobem juntos: metade ligada é uma ficha que soma metade de
-// uma regra do livro.
-func (s Scene) turnsOnTheConditionalsFlag(
-	r *http.Request, row sqlcgen.Character, dto sheet.CharacterDTO, flag string,
-) error {
-	if s.deps.Catalogs() == nil {
-		return nil
-	}
-	ec, err := sheet.EngineCharacterFrom(dto)
-	if err != nil {
-		return err
-	}
-	for _, c := range engine.ComputeItemEffects(s.deps.Catalogs().ActiveItemsFor(ec)).Conditional {
-		if c.Flag != flag {
-			continue
-		}
-		if err := s.deps.Queries().AddCharacterConditional(r.Context(), sqlcgen.AddCharacterConditionalParams{
-			Characterid: row.ID, Conditionalid: engine.ConditionalID(c),
-		}); err != nil {
-			return err
-		}
-	}
-	return nil
+	return s.plays.EnterStance(r.Context(), row, dto, chi.URLParam(r, "flag"), degraus)
 }
 
 // ── AS ESCOLHAS, e a validação que virou fronteira ───────────────────────────

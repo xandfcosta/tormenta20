@@ -452,7 +452,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **sinal** (do Datastar) | `signal` | `web/sheetui/signals.go` (ALE-301). A palavra já era a da FRONTEIRA — o `$arrastando` do CLAUDE.md — e o que faltava era a grafia do arquivo que os lê |
 | **dinheiro** | `money` | `web/sheetui/money.go` (ALE-301). **Não é `tibar`**, que é a MOEDA de Arton e é nome próprio: `money.go` é o painel dos três gestos (receber, gastar, corrigir), `tibar` é a unidade que eles movem |
 | **mochila** | `bag` | `web/sheetui/bag.go` e a aba `{Valor: "bag", Rotulo: "Mochila"}` — a grafia já estava no pacote e a ALE-301 só a estendeu ao arquivo de comandos, que virou `bag_commands.go` |
-| **concessão** (de postura) | `grant` | `web/sheetui/powers_grants.go` (ALE-301), e `granted-powers.json` já usava |
+| **concessão** (de postura) | `grant` | `book.FlagGrants` e o `granted-powers.json`. A palavra foi batizada por um arquivo da cena que deixou de existir quando as posturas viraram caso de uso (ALE-351) — a concessão hoje mora no livro e no `app/character` |
 | **pendência** | `pending` | `web/sheetui/powers_pending.go` (ALE-301). O arquivo tinha "escolhas" no nome e falava de PENDÊNCIA, não de escolha — o renome corrigiu o nome junto com a língua, porque `powers_choices.go` já existia ao lado com o outro conceito |
 | **tinta** (da casa) | `ink` | `api/ink_test.go` (ALE-301) — a cor escrita num `.templ` que precisa existir na folha compilada |
 | **virada** (de fatia) | `switchover` | `api/switchover_test.go` — o guarda de que toda PORTA para uma sessão leva à Mesa em Datastar |
