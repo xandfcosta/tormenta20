@@ -26,10 +26,10 @@ import (
 //     Gravar o nível sem sincronizar deixa a ficha com o número novo e a vida
 //     velha, que é o defeito que ninguém liga ao botão que o causou.
 //
-// O acompanhamento dos poços é o `sheet.RefreshPools`, o MESMO que o passo de
-// atributo usa: com o máximo derivado e o DANO gravado, um herói que apanhou e
-// sobe de nível ganha os PV novos sem ganhar a cura — a conta do delta some
-// porque o que ele deve continua sendo o que ele deve (ALE-355).
+// O acompanhamento dos poços não é passo nenhum: com o máximo derivado e o DANO
+// gravado, gravar o nível JÁ move o teto, e um herói que apanhou sobe de nível
+// ganhando os PV novos sem ganhar a cura — o que ele deve continua sendo o que
+// ele deve (ALE-355).
 func (p Plays) LevelClass(
 	ctx context.Context, row sqlcgen.Character, classe string, nivel int64,
 ) error {
@@ -62,7 +62,5 @@ func (p Plays) LevelClass(
 	}); err != nil {
 		return fmt.Errorf("gravar o nível %d da ficha %d: %w", total, row.ID, err)
 	}
-	row.Level = total
-	_, err = sheet.RefreshPools(ctx, p.queries, p.catalogs, row)
-	return err
+	return nil
 }

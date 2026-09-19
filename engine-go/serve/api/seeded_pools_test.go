@@ -52,17 +52,18 @@ func TestTheBenchSeedsThePoolsTheBookGives(t *testing.T) {
 			}
 			poco := bookPools(t, s, caso.classe, caso.nivel)
 
-			if row.Hpmax != poco.PvMax || row.Mpmax != poco.PmMax {
+			semeado := poolsOf(t, s, id)
+			if semeado.HpMax != poco.PvMax || semeado.MpMax != poco.PmMax {
 				t.Errorf("semeado com %d/%d de máximo, e o livro dá %d/%d",
-					row.Hpmax, row.Mpmax, poco.PvMax, poco.PmMax)
+					semeado.HpMax, semeado.MpMax, poco.PvMax, poco.PmMax)
 			}
-			if querido := poco.PvMax - caso.hpDano; row.Hpcurrent != querido {
+			if querido := poco.PvMax - caso.hpDano; semeado.HpCurrent != querido {
 				t.Errorf("PV atual = %d, e %d de dano sobre %d dá %d",
-					row.Hpcurrent, caso.hpDano, poco.PvMax, querido)
+					semeado.HpCurrent, caso.hpDano, poco.PvMax, querido)
 			}
-			if querido := poco.PmMax - caso.mpGasto; row.Mpcurrent != querido {
+			if querido := poco.PmMax - caso.mpGasto; semeado.MpCurrent != querido {
 				t.Errorf("PM atual = %d, e %d gasto sobre %d dá %d",
-					row.Mpcurrent, caso.mpGasto, poco.PmMax, querido)
+					semeado.MpCurrent, caso.mpGasto, poco.PmMax, querido)
 			}
 
 			// E a CLASSE existe, porque personagem sem classe é impossível nas

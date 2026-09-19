@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"t20engine/domain/engine"
+	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -121,4 +122,25 @@ func (v sheetVitals) applyRule(
 		return nil, nil, err
 	}
 	return &pocos.HpCurrent, &pocos.MpCurrent, nil
+}
+
+// PoolsOf cumpre a metade de LEITURA da porta: o poço derivado de cada
+// personagem da fila.
+//
+// Ela traduz o `sheet.Pools` no `live.VitalPool` porque o regime não pode
+// conhecer o tipo da ficha — é o mesmo motivo de a porta existir.
+func (v sheetVitals) PoolsOf(
+	ctx context.Context, charIDs []int64,
+) (map[int64]live.VitalPool, error) {
+	pocos, err := sheet.PoolsForCharacters(ctx, v.q, v.catalogs(), charIDs)
+	if err != nil {
+		return nil, err
+	}
+	daFila := make(map[int64]live.VitalPool, len(pocos))
+	for id, p := range pocos {
+		daFila[id] = live.VitalPool{
+			HpMax: p.HpMax, HpCurrent: p.HpCurrent, MpMax: p.MpMax, MpCurrent: p.MpCurrent,
+		}
+	}
+	return daFila, nil
 }

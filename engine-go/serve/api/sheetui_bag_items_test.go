@@ -170,12 +170,8 @@ func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 	if recusa := use(t, f, id, item, `{"item_roll_hp":7}`); recusa != "" {
 		t.Fatalf("usar foi recusado: %q", recusa)
 	}
-	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler o personagem: %v", err)
-	}
-	if row.Hpcurrent != 17 {
-		t.Errorf("o PV ficou %d, quer 17 (10 + os 7 que a mesa rolou)", row.Hpcurrent)
+	if poco := poolsOf(t, f.s, id); poco.HpCurrent != 17 {
+		t.Errorf("o PV ficou %d, quer 17 (10 + os 7 que a mesa rolou)", poco.HpCurrent)
 	}
 	// A DOSE FOI GASTA: era uma só, então a linha sai da ficha.
 	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
@@ -196,12 +192,8 @@ func TestUsingDoesNotGoPastMaximumHp(t *testing.T) {
 	if recusa := use(t, f, id, item, `{"item_roll_hp":8}`); recusa != "" {
 		t.Fatalf("usar foi recusado: %q", recusa)
 	}
-	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler o personagem: %v", err)
-	}
-	if row.Hpcurrent != 30 {
-		t.Errorf("o PV ficou %d, quer 30 — a cura passou do máximo", row.Hpcurrent)
+	if poco := poolsOf(t, f.s, id); poco.HpCurrent != 30 {
+		t.Errorf("o PV ficou %d, quer 30 — a cura passou do máximo", poco.HpCurrent)
 	}
 }
 

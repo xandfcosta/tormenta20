@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -126,17 +125,13 @@ func (f sceneFixture) castMember(t *testing.T, characterID int64) table.Member {
 // continuaria com o PV de antes.
 func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
-	ctx := context.Background()
 
 	// O CONTROLE: o herói NÃO está na fila. Sem ele o caso mediria o caminho da
 	// fila com outra URL, que é o que ele existe para não fazer.
 	if fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; len(fila) != 0 {
 		t.Fatalf("a bancada já pôs %d na fila — o caso mediria o outro caminho", len(fila))
 	}
-	antes, err := f.s.queries.GetCharacter(ctx, f.charID)
-	if err != nil {
-		t.Fatalf("ler a ficha: %v", err)
-	}
+	antes := poolsOf(t, f.s, f.charID)
 
 	// O STATUS NÃO BASTA, e descobri isso sabotando: numa cena servida a recusa
 	// é CONTEÚDO e volta 200, com a frase no `command_error` do rodapé. Um
@@ -155,15 +150,12 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 		}
 	}
 
-	depois, err := f.s.queries.GetCharacter(ctx, f.charID)
-	if err != nil {
-		t.Fatalf("reler a ficha: %v", err)
+	depois := poolsOf(t, f.s, f.charID)
+	if depois.HpCurrent != antes.HpCurrent-5 {
+		t.Errorf("a ficha ficou com %d PV; %d-5 = %d", depois.HpCurrent, antes.HpCurrent, antes.HpCurrent-5)
 	}
-	if depois.Hpcurrent != antes.Hpcurrent-5 {
-		t.Errorf("a ficha ficou com %d PV; %d-5 = %d", depois.Hpcurrent, antes.Hpcurrent, antes.Hpcurrent-5)
-	}
-	if depois.Mpcurrent != antes.Mpcurrent-1 {
-		t.Errorf("a ficha ficou com %d PM; %d-1 = %d", depois.Mpcurrent, antes.Mpcurrent, antes.Mpcurrent-1)
+	if depois.MpCurrent != antes.MpCurrent-1 {
+		t.Errorf("a ficha ficou com %d PM; %d-1 = %d", depois.MpCurrent, antes.MpCurrent, antes.MpCurrent-1)
 	}
 }
 
@@ -175,12 +167,8 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 // pior que pô-lo na fila, porque escreve na ficha de um estranho.
 func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
 	f := newSceneFixture(t)
-	ctx := context.Background()
 	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", "Guerreiro", 3, 0, 2)
-	antes, err := f.s.queries.GetCharacter(ctx, forasteiro)
-	if err != nil {
-		t.Fatalf("ler a ficha do forasteiro: %v", err)
-	}
+	antes := poolsOf(t, f.s, forasteiro)
 
 	corpo := f.posta(t, f.mestre,
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(forasteiro, 10)+"/vitais/hp/ferir/5", "")
@@ -190,12 +178,8 @@ func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
 	}
 	// O CONTROLE do erro: uma recusa que já tivesse ESCRITO seria pior que
 	// nenhuma, e a frase sozinha não diria.
-	depois, err := f.s.queries.GetCharacter(ctx, forasteiro)
-	if err != nil {
-		t.Fatalf("reler a ficha do forasteiro: %v", err)
-	}
-	if depois.Hpcurrent != antes.Hpcurrent {
-		t.Errorf("a recusa feriu mesmo assim: %d virou %d", antes.Hpcurrent, depois.Hpcurrent)
+	if depois := poolsOf(t, f.s, forasteiro); depois.HpCurrent != antes.HpCurrent {
+		t.Errorf("a recusa feriu mesmo assim: %d virou %d", antes.HpCurrent, depois.HpCurrent)
 	}
 }
 
@@ -210,17 +194,14 @@ func TestTheCastVitalsMirrorIntoTheTrackerWhenThereIsALine(t *testing.T) {
 		t.Fatalf("ferir pelo elenco deu %d", rec.Code)
 	}
 
-	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("reler a ficha: %v", err)
-	}
+	ficha := poolsOf(t, f.s, f.charID)
 	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		if e.ID != entryID {
 			continue
 		}
-		if e.HpCurrent == nil || *e.HpCurrent != ficha.Hpcurrent {
+		if e.HpCurrent == nil || *e.HpCurrent != ficha.HpCurrent {
 			t.Errorf("a fila ficou com %v e a ficha com %d — as duas telas divergiram",
-				e.HpCurrent, ficha.Hpcurrent)
+				e.HpCurrent, ficha.HpCurrent)
 		}
 	}
 }

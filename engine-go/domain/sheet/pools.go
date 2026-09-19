@@ -86,30 +86,14 @@ func ApplyToLoadedPools(
 	return depois, savePools(ctx, q, dto.ID, depois)
 }
 
-// RefreshPools regrava os poços SEM mexer no que foi gasto.
+// Aqui moravam o `RefreshPools` e o `FillPools`, e os dois viraram NADA.
 //
-// É o que um passo de atributo e um degrau de nível fazem. O `ShiftedByNewMax`
-// vivia aqui: ele somava ao atual o mesmo delta do máximo, e precisava do máximo
-// ANTIGO para calcular o delta. Guardando o DANO a conta some — quem apanhou 16
-// continua devendo 16, e o atual acompanha o teto sozinho, nos dois sentidos.
-func RefreshPools(
-	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, c sqlcgen.Character,
-) (Pools, error) {
-	return ApplyToPools(ctx, q, cat, c, func(p Pools) (Pools, error) { return p, nil })
-}
-
-// FillPools apaga o que foi gasto: o personagem volta aos poços cheios.
-//
-// Tem um chamador, o NASCIMENTO, e é o encher à força que a prende ali — chamá-la
-// de um gesto de ficha viva é uma bomba de cura.
-func FillPools(
-	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, c sqlcgen.Character,
-) (Pools, error) {
-	return ApplyToPools(ctx, q, cat, c, func(p Pools) (Pools, error) {
-		p.HpCurrent, p.MpCurrent = p.HpMax, p.MpMax
-		return p, nil
-	})
-}
+// O primeiro regravava os poços sem mexer no gasto — o gesto do passo de
+// atributo e do degrau de nível. O segundo enchia os poços de quem nasce. Com o
+// máximo derivado e o dano guardado, os dois não têm o que fazer: o teto se move
+// sozinho quando o nível ou a Constituição mudam, e um personagem sem linha em
+// `character_damage` já está cheio. Eles existiam para manter as quatro colunas
+// de espelho, e elas saíram na 00015 (ALE-355).
 
 // WithinPool prende um vital entre zero e o teto.
 //
@@ -126,23 +110,31 @@ func WithinPool(valor, teto int64) int64 { return min(max(int64(0), valor), teto
 // que volta ao cheio perde o registro em vez de ganhar um par de zeros — é o que
 // mantém a tabela do tamanho de quem está machucado.
 //
-// # Por que ela relê a ficha antes de gravar
+// # Por que ela relê o dano antes de gravar
 //
-// Para não escrever quando nada mudou. O `updatedAt` de `characters` É a versão
-// da ficha (`sheetui/view.go` e `table/stream.go` o servem como tal), então um
-// `UPDATE` que não muda número nenhum manda a tela inteira se repedir. A
-// comparação tem de ser contra o que está GRAVADO e não contra o que o funil
-// derivou: derivado contra derivado dá sempre igual, e foi exatamente assim que
-// a sincronização de vitais parou de regravar o máximo e congelou a coluna de um
-// elfo em 19 quando o poço dele já era 20 (ALE-355).
+// Para não carimbar quando nada mudou. O `updatedAt` de `characters` É a versão
+// da ficha — o `sheetui/view.go` e o `table/stream.go` o servem como tal —,
+// então um carimbo sem mudança nenhuma manda a tela inteira se repedir.
+//
+// A comparação é contra o DANO GRAVADO, e não contra o poço que o funil acabou
+// de derivar: derivado contra derivado dá sempre igual, e foi exatamente assim
+// que a sincronização de vitais parou de regravar o máximo e congelou a coluna
+// de um elfo em 19 quando o poço dele já era 20.
+//
+// # E o carimbo é explícito porque perdeu a carona
+//
+// Ele vinha de graça no `UPDATE` das quatro colunas de vitais. Elas saíram na
+// 00015, e sem o `TouchCharacter` uma pancada do mestre deixaria de acender a
+// versão: o jogador ficaria com o PV de antes na tela, sem erro em lugar nenhum
+// (ALE-355).
 func savePools(ctx context.Context, q *sqlcgen.Queries, id int64, p Pools) error {
 	hpDano := WithinPool(p.HpMax-p.HpCurrent, p.HpMax)
 	mpGasto := WithinPool(p.MpMax-p.MpCurrent, p.MpMax)
-	gravado, err := storedPools(ctx, q, id)
+	gravado, err := storedDamage(ctx, q, id)
 	if err != nil {
 		return err
 	}
-	if gravado == (storedState{Pools: p, HpDamage: hpDano, MpSpent: mpGasto}) {
+	if gravado.Hpdamage == hpDano && gravado.Mpspent == mpGasto {
 		return nil
 	}
 	if hpDano == 0 && mpGasto == 0 {
@@ -154,41 +146,25 @@ func savePools(ctx context.Context, q *sqlcgen.Queries, id int64, p Pools) error
 	}); err != nil {
 		return fmt.Errorf("gravar o dano da ficha %d: %w", id, err)
 	}
-	// A PONTE, e ela é temporária: as quatro colunas de `characters` deixaram de
-	// ser a verdade e ainda são lidas por quem não montou o agregado — os cartões
-	// do grupo e a entrada da iniciativa, que pegam a linha por JOIN. Enquanto
-	// elas existirem, o funil as mantém iguais ao derivado; elas saem por
-	// migração quando o último leitor sair (ALE-355).
-	if err := q.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{
-		HpMax: p.HpMax, HpCurrent: p.HpCurrent,
-		MpMax: p.MpMax, MpCurrent: p.MpCurrent,
+	if err := q.TouchCharacter(ctx, sqlcgen.TouchCharacterParams{
 		UpdatedAt: dbvalue.NowISO(), ID: id,
 	}); err != nil {
-		return fmt.Errorf("espelhar os poços da ficha %d: %w", id, err)
+		return fmt.Errorf("carimbar a versão da ficha %d: %w", id, err)
 	}
 	return nil
 }
 
-// storedState é o que o banco tem hoje: as quatro colunas-ponte e o dano.
-type storedState struct {
-	Pools
-	HpDamage int64
-	MpSpent  int64
-}
-
-func storedPools(ctx context.Context, q *sqlcgen.Queries, id int64) (storedState, error) {
-	c, err := q.GetCharacter(ctx, id)
-	if err != nil {
-		return storedState{}, fmt.Errorf("reler a ficha %d antes de gravar os poços: %w", id, err)
-	}
-	estado := storedState{Pools: Pools{
-		HpMax: c.Hpmax, HpCurrent: c.Hpcurrent, MpMax: c.Mpmax, MpCurrent: c.Mpcurrent,
-	}}
+// storedDamage lê o dano gravado. Linha ausente é um par de zeros, que é o que
+// "intacto" quer dizer.
+func storedDamage(
+	ctx context.Context, q *sqlcgen.Queries, id int64,
+) (sqlcgen.GetCharacterDamageRow, error) {
 	dano, err := q.GetCharacterDamage(ctx, id)
-	if err == nil {
-		estado.HpDamage, estado.MpSpent = dano.Hpdamage, dano.Mpspent
-	} else if !errors.Is(err, sql.ErrNoRows) {
-		return storedState{}, fmt.Errorf("reler o dano da ficha %d: %w", id, err)
+	if errors.Is(err, sql.ErrNoRows) {
+		return sqlcgen.GetCharacterDamageRow{}, nil
 	}
-	return estado, nil
+	if err != nil {
+		return dano, fmt.Errorf("reler o dano da ficha %d: %w", id, err)
+	}
+	return dano, nil
 }

@@ -8,6 +8,7 @@ import (
 	"t20engine/serve/web/sheetui"
 
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -412,6 +413,20 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 	}
 	grupo := make([]Member, 0, len(rows))
 	meus := make(map[int64]bool, len(rows))
+	// OS POÇOS DO GRUPO NUMA VEZ SÓ. O `ListMembers` trazia os quatro vitais por
+	// JOIN — e eles não existem mais —, e este cartão foi o último leitor das
+	// colunas a sair (ALE-355). Falha
+	// de derivação deixa o cartão sem barra em vez de derrubar a Mesa — é o mesmo
+	// recuo da Defesa e das classes logo abaixo, que já são melhor esforço.
+	ids := make([]int64, len(rows))
+	for i, m := range rows {
+		ids[i] = m.Characterid
+	}
+	pocos, err := sheet.PoolsForCharacters(ctx, s.deps.Queries(), s.deps.Catalogs(), ids)
+	if err != nil {
+		log.Printf("mesa: derivar os poços do grupo falhou (%v)", err)
+		pocos = map[int64]sheet.Pools{}
+	}
 	var eu *tableMe
 	for _, m := range rows {
 		if dono, err := s.deps.Queries().GetCharacterOwner(ctx, m.Characterid); err == nil && dono == userID {
@@ -434,8 +449,8 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 			Defesa:      s.memberDefense(ctx, m.Characterid),
 			Nivel:       m.Charlevel,
 			Classes:     s.tableClasses(ctx, m.Characterid),
-			PV:          tableBarOf(m.Charhpcurrent, m.Charhpmax, false),
-			PM:          tableBarOf(m.Charmpcurrent, m.Charmpmax, true),
+			PV:          tableBarOf(pocos[m.Characterid].HpCurrent, pocos[m.Characterid].HpMax, false),
+			PM:          tableBarOf(pocos[m.Characterid].MpCurrent, pocos[m.Characterid].MpMax, true),
 		})
 	}
 	if eu != nil {

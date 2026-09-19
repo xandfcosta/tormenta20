@@ -22,24 +22,25 @@ import (
 // e desenha o atual derivado de um dano que ninguém atualizou. O dano some sem
 // erro em lugar nenhum, que é a assinatura desta família.
 //
-// Sete sítios computavam o atual novo por conta própria, e três deles liam
-// `row.Hpmax` — a coluna que deixou de ser verdade. O funil dá a todos o mesmo
-// material e guarda para si a única escrita.
+// Sete sítios computavam o atual novo por conta própria, e três deles liam o
+// máximo da linha — a coluna que deixou de ser verdade e depois deixou de
+// existir. O funil dá a todos o mesmo material e guarda para si a única escrita.
 //
 // # O que ele procura
 //
-// As cinco queries que escrevem os quatro campos vitais de `characters`, mais as
-// duas do dano. Elas são PERMITIDOS por nome e não proibidos por forma: uma
-// query nova que mexa nos mesmos campos cai aqui sozinha, porque a lista abaixo
-// é de quem PODE e o teste falha no que não conhece (ALE-301).
+// As duas queries do DANO, que é tudo o que se grava de vital desde a 00015 —
+// as quatro colunas de `characters` não existem mais. Elas são PERMITIDOS por
+// nome e não proibidos por forma: uma query nova que mexa no mesmo estado cai
+// aqui sozinha, porque a lista abaixo é de quem PODE e o teste falha no que não
+// conhece (ALE-301).
 func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
 	const oFunil = "domain/sheet/pools.go"
 
-	// As queries que tocam PV/PM gravados. Mexeu no `query.sql`? Esta lista
+	// As queries que tocam o estado vital. Eram sete: cinco escreviam as quatro
+	// colunas de `characters`, e elas saíram na 00015 junto com as queries. O que
+	// resta é o DANO, que é o que se guarda. Mexeu no `query.sql`? Esta lista
 	// acompanha, e o `TestEveryVitalQueryIsKnownToTheFunnelGuard` cobra.
 	escritasVitais := map[string]bool{
-		"UpdateVitals": true, "SetVitalsCurrent": true, "SetHpCurrent": true,
-		"SetMpCurrent": true, "SetCharacterVitals": true,
 		"SaveCharacterDamage": true, "ClearCharacterDamage": true,
 	}
 
@@ -95,7 +96,7 @@ func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
 	if medidos < 200 {
 		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", medidos)
 	}
-	if chamadasNoFunil < 3 {
+	if chamadasNoFunil < 2 {
 		t.Fatalf("o funil chama só %d das escritas vitais — se ele parou de gravar, "+
 			"este guarda estaria verde sobre um repositório que não persiste PV", chamadasNoFunil)
 	}
@@ -109,12 +110,7 @@ func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
 // guarda conhece.
 func TestEveryVitalQueryIsKnownToTheFunnelGuard(t *testing.T) {
 	conhecidas := map[string]bool{
-		"UpdateVitals": true, "SetVitalsCurrent": true, "SetHpCurrent": true,
-		"SetMpCurrent": true, "SetCharacterVitals": true,
 		"SaveCharacterDamage": true, "ClearCharacterDamage": true,
-		// Escrevem os campos vitais, e não são gesto: o INSERT do nascimento
-		// (não há poço a derivar antes de a linha existir) e a migração de dados.
-		"CreateCharacter": true,
 	}
 	bruto, err := os.ReadFile(filepath.Join("..", "infra", "db", "query.sql"))
 	if err != nil {
@@ -125,8 +121,9 @@ func TestEveryVitalQueryIsKnownToTheFunnelGuard(t *testing.T) {
 	for _, bloco := range strings.Split(string(bruto), "-- name: ")[1:] {
 		nome, _, _ := strings.Cut(bloco, " ")
 		corpo := strings.ToLower(bloco)
-		escreve := strings.Contains(corpo, "update ") || strings.Contains(corpo, "insert ")
-		if !escreve || !touchesVitalField(corpo) {
+		escreve := strings.Contains(corpo, "update ") ||
+			strings.Contains(corpo, "insert ") || strings.Contains(corpo, "delete ")
+		if !escreve || !touchesVitalState(corpo) {
 			continue
 		}
 		medidas++
@@ -137,14 +134,26 @@ func TestEveryVitalQueryIsKnownToTheFunnelGuard(t *testing.T) {
 				"Ponha o nome na lista de lá (ou aqui, se ela não for um gesto).", nome)
 		}
 	}
-	if medidas < 5 {
-		t.Fatalf("o guarda achou só %d queries vitais no query.sql — "+
-			"o formato do arquivo mudou e ele parou de ler", medidas)
+	// Duas, e o piso é o número exato: depois da 00015 não existe mais campo
+	// vital em `characters`, então tudo o que o `query.sql` pode escrever é a
+	// tabela do dano. Um piso maior só voltaria com uma coluna nova.
+	if medidas != 2 {
+		t.Fatalf("o guarda achou %d queries vitais no query.sql, e são 2 (o dano) — "+
+			"ou nasceu uma escrita nova, ou o formato do arquivo mudou e ele parou de ler", medidas)
 	}
 }
 
-// touchesVitalField procura os quatro campos de `characters` e os dois do dano.
-func touchesVitalField(lowercaseBody string) bool {
+// touchesVitalState procura o estado vital, e a TABELA entra junto com os
+// campos: o `ClearCharacterDamage` apaga a linha inteira e não nomeia campo
+// nenhum — procurar só por nome de coluna o deixaria de fora, que é a forma de
+// um guarda subcontar em silêncio.
+//
+// Os quatro campos de `characters` continuam na lista mesmo tendo saído na
+// 00015: é o que faz uma coluna vital RESSUSCITADA cair aqui.
+func touchesVitalState(lowercaseBody string) bool {
+	if strings.Contains(lowercaseBody, "character_damage") {
+		return true
+	}
 	for _, campo := range []string{"hpcurrent", "hpmax", "mpcurrent", "mpmax", "hpdamage", "mpspent"} {
 		if strings.Contains(lowercaseBody, campo) {
 			return true

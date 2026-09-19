@@ -28,4 +28,28 @@ type SheetVitals interface {
 
 	// ApplyAbsolute grava PV/PM totais. Não drena pool temporário.
 	ApplyAbsolute(ctx context.Context, charID int64, hpCurrent, mpCurrent *int64) (*int64, *int64, error)
+
+	// PoolsOf devolve o poço de cada personagem pedido, para a fila refrescar os
+	// máximos de quem subiu de nível no meio da sessão.
+	//
+	// Ela entrou na porta quando o máximo deixou de ser coluna e passou a ser
+	// DERIVADO do catálogo (ALE-355): a fila lia `hpMax` direto do banco, que era
+	// leitura de coluna e não de regra, e não é mais. Quem não existe mais não
+	// aparece no mapa — a lista de ids vem de uma fila onde uma ficha pode ter
+	// sido apagada.
+	//
+	// Em LOTE e não uma por uma porque ela roda a cada desenho da Mesa.
+	PoolsOf(ctx context.Context, charIDs []int64) (map[int64]VitalPool, error)
+}
+
+// VitalPool é o par máximo/atual de um personagem, como o regime precisa dele.
+//
+// O regime tem o seu porque não pode conhecer o `sheet.Pools`: quem cumpre a
+// porta traduz. São os mesmos quatro números, e a tradução é uma linha — o preço
+// de o regime não importar a ficha (ver o `boundary_test.go`).
+type VitalPool struct {
+	HpMax     int64
+	HpCurrent int64
+	MpMax     int64
+	MpCurrent int64
 }

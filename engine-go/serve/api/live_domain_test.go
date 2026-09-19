@@ -169,14 +169,9 @@ func seedCharacterAtLevel(
 	t *testing.T, s *Server, ownerID int64, name, classe string, level, hpDano, mpGasto int64,
 ) int64 {
 	t.Helper()
-	pocos := bookPools(t, s, classe, level)
 	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: name, Origin: "Soldado", Level: level,
-		HpMax:     pocos.PvMax,
-		HpCurrent: max(0, pocos.PvMax-hpDano),
-		MpMax:     pocos.PmMax,
-		MpCurrent: max(0, pocos.PmMax-mpGasto),
-		Size:      "Médio", Displacement: 9,
+		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
 		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
@@ -192,6 +187,24 @@ func seedCharacterAtLevel(
 		})
 	}
 	return id
+}
+
+// poolsOf é o poço DERIVADO de uma ficha — o par que a tela mostra.
+//
+// A bancada lia `row.Hpcurrent` e as irmãs, e elas saíram do schema na 00015: o
+// máximo vem do catálogo e o atual é `máximo − dano`. Perguntar aqui é
+// perguntar o mesmo que a cena pergunta (ALE-355).
+func poolsOf(t *testing.T, s *Server, id int64) sheet.Pools {
+	t.Helper()
+	pocos, err := sheet.PoolsForCharacters(context.Background(), s.queries, s.catalogs, []int64{id})
+	if err != nil {
+		t.Fatalf("derivar o poço da ficha %d: %v", id, err)
+	}
+	poco, tem := pocos[id]
+	if !tem {
+		t.Fatalf("a ficha %d não existe", id)
+	}
+	return poco
 }
 
 // arrangePools arranja o estado vital de uma ficha PELO FUNIL, que é o único

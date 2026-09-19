@@ -112,11 +112,14 @@ func (s Scene) stepAttribute(r *http.Request) (recusa string, status int, err er
 	if err := s.saveAttributes(r.Context(), row.ID, espalhamento); err != nil {
 		return "", http.StatusInternalServerError, err
 	}
-	// A Constituição mexe no PV máximo (p34), e o atual ACOMPANHA — não porque
-	// alguém some o delta, mas porque o que o banco guarda é o DANO: o teto se
-	// move e a dívida fica. É o que impede o ciclo `−`/`+` de virar uma bomba de
-	// cura de dois cliques, e é de graça (ALE-355).
-	return "", http.StatusOK, s.refreshPools(r, row.ID)
+	// A Constituição mexe no PV máximo (p34), e NÃO HÁ NADA A FAZER sobre isso.
+	//
+	// Aqui morava um passo que regravava as quatro colunas de espelho, e ele
+	// deixou de existir junto com elas na 00015: o máximo é derivado e o atual
+	// é `máximo − dano`, então o teto se move sozinho e a dívida fica. É o que
+	// impede o ciclo `−`/`+` de virar uma bomba de cura de dois cliques, e hoje
+	// sai de graça em vez de sair de uma conta de delta (ALE-355).
+	return "", http.StatusOK, nil
 }
 
 // purchaseRefusal traduz o aviso do motor para a frase que a cena mostra.

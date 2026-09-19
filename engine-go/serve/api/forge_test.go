@@ -231,8 +231,8 @@ func TestTheHeroIsBornDressedAndWithAPurse(t *testing.T) {
 	// PV cheio. O guerreiro de 1º nível tem 20 (p34) e o elfo leva Constituição
 	// −1 (p22), então o poço é 19 — o modificador da RAÇA já entra no
 	// nascimento, mesmo com os atributos base ainda em zero.
-	if row.Hpmax != 19 || row.Hpcurrent != row.Hpmax {
-		t.Errorf("PV %d/%d, esperado 19/19", row.Hpcurrent, row.Hpmax)
+	if poco := poolsOf(t, f.s, id); poco.HpMax != 19 || poco.HpCurrent != poco.HpMax {
+		t.Errorf("PV %d/%d, esperado 19/19", poco.HpCurrent, poco.HpMax)
 	}
 
 	itens, err := f.s.queries.ListItemsByCharacter(context.Background(), id)
@@ -328,10 +328,9 @@ func TestTheForgePointBuyRefusesWhatTheBookForbids(t *testing.T) {
 	if code := postaAForja(t, f, f.jogador, atributos+"/constitution/1", nil).Code; code != http.StatusOK {
 		t.Fatalf("subir Constituição: status %d", code)
 	}
-	row, _ = f.s.queries.GetCharacter(context.Background(), id)
 	// Con base +1 com a Constituição −1 do elfo dá Con 0: o poço volta a 20.
-	if row.Hpmax != 20 || row.Hpcurrent != 20 {
-		t.Errorf("PV %d/%d, esperado 20/20 com Con base +1 num elfo", row.Hpcurrent, row.Hpmax)
+	if poco := poolsOf(t, f.s, id); poco.HpMax != 20 || poco.HpCurrent != 20 {
+		t.Errorf("PV %d/%d, esperado 20/20 com Con base +1 num elfo", poco.HpCurrent, poco.HpMax)
 	}
 }
 

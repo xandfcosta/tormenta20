@@ -9,15 +9,19 @@ import (
 //
 // # O que este guarda existe para acusar
 //
-// `hpMax` e `mpMax` são COLUNAS, recomputadas só em gesto de escrita — nascer,
-// passo de atributo, degrau de nível. Um catálogo que mude o poço de uma classe,
-// ou uma raça que passe a somar um atributo, **não alcança ninguém** até o
-// próximo desses gestos. O número gravado vira o retrato de um mundo que mudou.
+// O `hpMax` e o `mpMax` do bloco `char` de cada oráculo são número ESCRITO À
+// MÃO: o `char` sai verbatim do `_fixtures.json`, que é a entrada carregada da
+// era do TypeScript, e o `genoracle` recalcula tudo MENOS ele. Um catálogo que
+// mude o poço de uma classe, ou uma raça que passe a somar um atributo, não
+// alcança esse número.
 //
-// A decisão de produto é que ele acompanhe: se a regra do mundo mudou, o
-// personagem muda junto (ALE-355). Enquanto o máximo for coluna, este guarda é o
-// que mede a distância entre as duas coisas — e quando ele passar a ser
-// derivado, o guarda deixa de ter o que comparar e sai junto com a coluna.
+// # O terreno dele MUDOU DE CASA, e ele ficou
+//
+// Ele nasceu medindo as colunas `hpMax`/`mpMax` de `characters` — que saíram na
+// migração 00015, porque a decisão do dono é que o personagem acompanhe a regra
+// do mundo (ALE-355). A invariante não morreu com elas: mudou de dono. Hoje o
+// número gravado à mão é o da FIXTURE, e comparar os dois continua sendo o
+// controle de duas naturezas que pegou o bardo.
 //
 // # Por que nenhuma suíte via isso
 //

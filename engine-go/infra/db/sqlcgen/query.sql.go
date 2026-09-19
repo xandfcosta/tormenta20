@@ -277,18 +277,18 @@ func (q *Queries) CreateCampaignCreature(ctx context.Context, arg CreateCampaign
 
 const createCharacter = `-- name: CreateCharacter :one
 INSERT INTO characters (
-  ownerId, name, origin, god, godPower, tibar, level, hpMax, hpCurrent, mpMax, mpCurrent,
+  ownerId, name, origin, god, godPower, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement,
   proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices, classPowers,
   classChoices, powerChoices, createdAt, updatedAt
 ) VALUES (
   ?1, ?2, ?3, ?4, ?5,
-  ?6, ?7, ?8, ?9, ?10,
+  ?6, ?7,
+  ?8, ?9, ?10,
   ?11, ?12, ?13, ?14,
-  ?15, ?16, ?17, ?18,
-  ?19, ?20, ?21,
-  ?22, ?23, ?24,
-  ?25, ?26, ?27, ?28
+  ?15, ?16, ?17,
+  ?18, ?19, ?20,
+  ?21, ?22, ?23, ?24
 )
 RETURNING id
 `
@@ -301,10 +301,6 @@ type CreateCharacterParams struct {
 	GodPower             string         `json:"godPower"`
 	Tibar                float64        `json:"tibar"`
 	Level                int64          `json:"level"`
-	HpMax                int64          `json:"hpMax"`
-	HpCurrent            int64          `json:"hpCurrent"`
-	MpMax                int64          `json:"mpMax"`
-	MpCurrent            int64          `json:"mpCurrent"`
 	Strength             int64          `json:"strength"`
 	Dexterity            int64          `json:"dexterity"`
 	Constitution         int64          `json:"constitution"`
@@ -333,10 +329,6 @@ func (q *Queries) CreateCharacter(ctx context.Context, arg CreateCharacterParams
 		arg.GodPower,
 		arg.Tibar,
 		arg.Level,
-		arg.HpMax,
-		arg.HpCurrent,
-		arg.MpMax,
-		arg.MpCurrent,
 		arg.Strength,
 		arg.Dexterity,
 		arg.Constitution,
@@ -415,6 +407,7 @@ func (q *Queries) CreateExpertise(ctx context.Context, arg CreateExpertiseParams
 }
 
 const createItem = `-- name: CreateItem :one
+
 INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id, catalogId, name, quantity, slots, equipped, improvements, material
@@ -443,6 +436,7 @@ type CreateItemRow struct {
 	Material     sql.NullString `json:"material"`
 }
 
+// character mutations (B.3)
 func (q *Queries) CreateItem(ctx context.Context, arg CreateItemParams) (CreateItemRow, error) {
 	row := q.db.QueryRowContext(ctx, createItem,
 		arg.Characterid,
@@ -1018,7 +1012,7 @@ func (q *Queries) GetCampaignPlace(ctx context.Context, id int64) (CampaignPlace
 }
 
 const getCharacter = `-- name: GetCharacter :one
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id = ? LIMIT 1
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error) {
@@ -1033,10 +1027,6 @@ func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error)
 		&i.Godpower,
 		&i.Tibar,
 		&i.Level,
-		&i.Hpmax,
-		&i.Hpcurrent,
-		&i.Mpmax,
-		&i.Mpcurrent,
 		&i.Strength,
 		&i.Dexterity,
 		&i.Constitution,
@@ -1763,49 +1753,6 @@ func (q *Queries) ListCharacterDamage(ctx context.Context, ids []int64) ([]Chara
 	return items, nil
 }
 
-const listCharacterMaxes = `-- name: ListCharacterMaxes :many
-SELECT id, hpMax, mpMax FROM characters WHERE id IN (/*SLICE:ids*/?)
-`
-
-type ListCharacterMaxesRow struct {
-	ID    int64 `json:"id"`
-	Hpmax int64 `json:"hpmax"`
-	Mpmax int64 `json:"mpmax"`
-}
-
-func (q *Queries) ListCharacterMaxes(ctx context.Context, ids []int64) ([]ListCharacterMaxesRow, error) {
-	query := listCharacterMaxes
-	var queryParams []interface{}
-	if len(ids) > 0 {
-		for _, v := range ids {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
-	}
-	rows, err := q.db.QueryContext(ctx, query, queryParams...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListCharacterMaxesRow{}
-	for rows.Next() {
-		var i ListCharacterMaxesRow
-		if err := rows.Scan(&i.ID, &i.Hpmax, &i.Mpmax); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listCharacterPowerUses = `-- name: ListCharacterPowerUses :many
 SELECT powerId, scope, used FROM character_power_uses
 WHERE characterId = ? ORDER BY powerId, scope
@@ -1874,9 +1821,76 @@ func (q *Queries) ListCharacterStances(ctx context.Context, characterid int64) (
 	return items, nil
 }
 
+const listCharactersByIDs = `-- name: ListCharactersByIDs :many
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id IN (/*SLICE:ids*/?)
+`
+
+func (q *Queries) ListCharactersByIDs(ctx context.Context, ids []int64) ([]Character, error) {
+	query := listCharactersByIDs
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Character{}
+	for rows.Next() {
+		var i Character
+		if err := rows.Scan(
+			&i.ID,
+			&i.Ownerid,
+			&i.Name,
+			&i.Origin,
+			&i.God,
+			&i.Godpower,
+			&i.Tibar,
+			&i.Level,
+			&i.Strength,
+			&i.Dexterity,
+			&i.Constitution,
+			&i.Intelligence,
+			&i.Wisdom,
+			&i.Charisma,
+			&i.Size,
+			&i.Displacement,
+			&i.Proficiencies,
+			&i.Raceabilitychoices,
+			&i.Raceattributechoices,
+			&i.Secondaryracechoices,
+			&i.Originchoices,
+			&i.Classpowers,
+			&i.Classchoices,
+			&i.Powerchoices,
+			&i.Activeconditions,
+			&i.Createdat,
+			&i.Updatedat,
+			&i.SourceCharacterId,
+			&i.CampaignId,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCharactersByOwner = `-- name: ListCharactersByOwner :many
 
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters
 WHERE ownerId = ? AND sourceCharacterId IS NULL
 ORDER BY updatedAt DESC
 `
@@ -1902,10 +1916,6 @@ func (q *Queries) ListCharactersByOwner(ctx context.Context, ownerid int64) ([]C
 			&i.Godpower,
 			&i.Tibar,
 			&i.Level,
-			&i.Hpmax,
-			&i.Hpcurrent,
-			&i.Mpmax,
-			&i.Mpcurrent,
 			&i.Strength,
 			&i.Dexterity,
 			&i.Constitution,
@@ -1960,6 +1970,50 @@ func (q *Queries) ListClassesByCharacter(ctx context.Context, characterid int64)
 	for rows.Next() {
 		var i ListClassesByCharacterRow
 		if err := rows.Scan(&i.Classname, &i.Level); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listClassesByCharacters = `-- name: ListClassesByCharacters :many
+SELECT characterId, className, level FROM character_classes
+WHERE characterId IN (/*SLICE:ids*/?) ORDER BY id ASC
+`
+
+type ListClassesByCharactersRow struct {
+	Characterid int64  `json:"characterid"`
+	Classname   string `json:"classname"`
+	Level       int64  `json:"level"`
+}
+
+func (q *Queries) ListClassesByCharacters(ctx context.Context, ids []int64) ([]ListClassesByCharactersRow, error) {
+	query := listClassesByCharacters
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListClassesByCharactersRow{}
+	for rows.Next() {
+		var i ListClassesByCharactersRow
+		if err := rows.Scan(&i.Characterid, &i.Classname, &i.Level); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -2189,29 +2243,83 @@ func (q *Queries) ListItemsByCharacter(ctx context.Context, characterid int64) (
 	return items, nil
 }
 
+const listItemsByCharacters = `-- name: ListItemsByCharacters :many
+SELECT characterId, id, catalogId, name, quantity, slots, equipped, improvements, material
+FROM character_items WHERE characterId IN (/*SLICE:ids*/?) ORDER BY id ASC
+`
+
+type ListItemsByCharactersRow struct {
+	Characterid  int64          `json:"characterid"`
+	ID           int64          `json:"id"`
+	Catalogid    sql.NullString `json:"catalogid"`
+	Name         string         `json:"name"`
+	Quantity     int64          `json:"quantity"`
+	Slots        float64        `json:"slots"`
+	Equipped     sql.NullString `json:"equipped"`
+	Improvements string         `json:"improvements"`
+	Material     sql.NullString `json:"material"`
+}
+
+func (q *Queries) ListItemsByCharacters(ctx context.Context, ids []int64) ([]ListItemsByCharactersRow, error) {
+	query := listItemsByCharacters
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListItemsByCharactersRow{}
+	for rows.Next() {
+		var i ListItemsByCharactersRow
+		if err := rows.Scan(
+			&i.Characterid,
+			&i.ID,
+			&i.Catalogid,
+			&i.Name,
+			&i.Quantity,
+			&i.Slots,
+			&i.Equipped,
+			&i.Improvements,
+			&i.Material,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMembers = `-- name: ListMembers :many
 
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        ch.ownerId AS charOwnerId,
-       ch.name AS charName, ch.level AS charLevel,
-       ch.hpCurrent AS charHpCurrent, ch.hpMax AS charHpMax,
-       ch.mpCurrent AS charMpCurrent, ch.mpMax AS charMpMax
+       ch.name AS charName, ch.level AS charLevel
 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
 WHERE m.campaignId = ? ORDER BY m.addedAt ASC
 `
 
 type ListMembersRow struct {
-	ID            int64  `json:"id"`
-	Campaignid    int64  `json:"campaignid"`
-	Characterid   int64  `json:"characterid"`
-	Addedat       string `json:"addedat"`
-	Charownerid   int64  `json:"charownerid"`
-	Charname      string `json:"charname"`
-	Charlevel     int64  `json:"charlevel"`
-	Charhpcurrent int64  `json:"charhpcurrent"`
-	Charhpmax     int64  `json:"charhpmax"`
-	Charmpcurrent int64  `json:"charmpcurrent"`
-	Charmpmax     int64  `json:"charmpmax"`
+	ID          int64  `json:"id"`
+	Campaignid  int64  `json:"campaignid"`
+	Characterid int64  `json:"characterid"`
+	Addedat     string `json:"addedat"`
+	Charownerid int64  `json:"charownerid"`
+	Charname    string `json:"charname"`
+	Charlevel   int64  `json:"charlevel"`
 }
 
 // campaign members (B.4)
@@ -2235,10 +2343,6 @@ func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMemb
 			&i.Charownerid,
 			&i.Charname,
 			&i.Charlevel,
-			&i.Charhpcurrent,
-			&i.Charhpmax,
-			&i.Charmpcurrent,
-			&i.Charmpmax,
 		); err != nil {
 			return nil, err
 		}
@@ -2389,6 +2493,53 @@ func (q *Queries) ListRacesByCharacter(ctx context.Context, characterid int64) (
 			return nil, err
 		}
 		items = append(items, race)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listRacesByCharacters = `-- name: ListRacesByCharacters :many
+SELECT characterId, race FROM character_races
+WHERE characterId IN (/*SLICE:ids*/?) ORDER BY id ASC
+`
+
+type ListRacesByCharactersRow struct {
+	Characterid int64  `json:"characterid"`
+	Race        string `json:"race"`
+}
+
+// The batch reads below feed the derived pools of a whole party at once, with
+// ListActiveEffectsByCharacters above: races, classes, items and effects are
+// what the vital context reads, because anything that moves Constitution moves
+// PV. See partialSheetsForPools.
+func (q *Queries) ListRacesByCharacters(ctx context.Context, ids []int64) ([]ListRacesByCharactersRow, error) {
+	query := listRacesByCharacters
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListRacesByCharactersRow{}
+	for rows.Next() {
+		var i ListRacesByCharactersRow
+		if err := rows.Scan(&i.Characterid, &i.Race); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -2864,50 +3015,6 @@ func (q *Queries) SetCharacterTibar(ctx context.Context, arg SetCharacterTibarPa
 	return err
 }
 
-const setCharacterVitals = `-- name: SetCharacterVitals :exec
-UPDATE characters
-SET hpMax = ?1, hpCurrent = ?2,
-    mpMax = ?3, mpCurrent = ?4, updatedAt = ?5
-WHERE id = ?6
-`
-
-type SetCharacterVitalsParams struct {
-	HpMax     int64  `json:"hpMax"`
-	HpCurrent int64  `json:"hpCurrent"`
-	MpMax     int64  `json:"mpMax"`
-	MpCurrent int64  `json:"mpCurrent"`
-	UpdatedAt string `json:"updatedAt"`
-	ID        int64  `json:"id"`
-}
-
-func (q *Queries) SetCharacterVitals(ctx context.Context, arg SetCharacterVitalsParams) error {
-	_, err := q.db.ExecContext(ctx, setCharacterVitals,
-		arg.HpMax,
-		arg.HpCurrent,
-		arg.MpMax,
-		arg.MpCurrent,
-		arg.UpdatedAt,
-		arg.ID,
-	)
-	return err
-}
-
-const setHpCurrent = `-- name: SetHpCurrent :exec
-UPDATE characters SET hpCurrent = ?1, updatedAt = ?2
-WHERE id = ?3
-`
-
-type SetHpCurrentParams struct {
-	HpCurrent int64  `json:"hpCurrent"`
-	UpdatedAt string `json:"updatedAt"`
-	ID        int64  `json:"id"`
-}
-
-func (q *Queries) SetHpCurrent(ctx context.Context, arg SetHpCurrentParams) error {
-	_, err := q.db.ExecContext(ctx, setHpCurrent, arg.HpCurrent, arg.UpdatedAt, arg.ID)
-	return err
-}
-
 const setInviteToken = `-- name: SetInviteToken :one
 UPDATE campaigns SET inviteToken = ?1, updatedAt = ?2
 WHERE id = ?3
@@ -2943,22 +3050,6 @@ type SetItemQuantityParams struct {
 
 func (q *Queries) SetItemQuantity(ctx context.Context, arg SetItemQuantityParams) error {
 	_, err := q.db.ExecContext(ctx, setItemQuantity, arg.Quantity, arg.ID)
-	return err
-}
-
-const setMpCurrent = `-- name: SetMpCurrent :exec
-UPDATE characters SET mpCurrent = ?1, updatedAt = ?2
-WHERE id = ?3
-`
-
-type SetMpCurrentParams struct {
-	MpCurrent int64  `json:"mpCurrent"`
-	UpdatedAt string `json:"updatedAt"`
-	ID        int64  `json:"id"`
-}
-
-func (q *Queries) SetMpCurrent(ctx context.Context, arg SetMpCurrentParams) error {
-	_, err := q.db.ExecContext(ctx, setMpCurrent, arg.MpCurrent, arg.UpdatedAt, arg.ID)
 	return err
 }
 
@@ -3001,28 +3092,6 @@ func (q *Queries) SetSpellPreparedByCatalog(ctx context.Context, arg SetSpellPre
 		&i.Learnedat,
 	)
 	return i, err
-}
-
-const setVitalsCurrent = `-- name: SetVitalsCurrent :exec
-UPDATE characters SET hpCurrent = ?1, mpCurrent = ?2, updatedAt = ?3
-WHERE id = ?4
-`
-
-type SetVitalsCurrentParams struct {
-	HpCurrent int64  `json:"hpCurrent"`
-	MpCurrent int64  `json:"mpCurrent"`
-	UpdatedAt string `json:"updatedAt"`
-	ID        int64  `json:"id"`
-}
-
-func (q *Queries) SetVitalsCurrent(ctx context.Context, arg SetVitalsCurrentParams) error {
-	_, err := q.db.ExecContext(ctx, setVitalsCurrent,
-		arg.HpCurrent,
-		arg.MpCurrent,
-		arg.UpdatedAt,
-		arg.ID,
-	)
-	return err
 }
 
 const spendAccountInvite = `-- name: SpendAccountInvite :execrows
@@ -3113,6 +3182,25 @@ func (q *Queries) TableCounts(ctx context.Context) (TableCountsRow, error) {
 	var i TableCountsRow
 	err := row.Scan(&i.Users, &i.Campaigns, &i.Characters)
 	return i, err
+}
+
+const touchCharacter = `-- name: TouchCharacter :exec
+UPDATE characters SET updatedAt = ?1 WHERE id = ?2
+`
+
+type TouchCharacterParams struct {
+	UpdatedAt string `json:"updatedAt"`
+	ID        int64  `json:"id"`
+}
+
+// Stamps updatedAt and nothing else, because updatedAt IS the sheet version:
+// the embedded sheet and the table stream both serve it as such, and a damage
+// write that does not bump it leaves the player's sheet showing yesterday's PV.
+// It used to ride along on the vital columns' UPDATE; those columns left in
+// 00015 and the stamp had to stay (ALE-355).
+func (q *Queries) TouchCharacter(ctx context.Context, arg TouchCharacterParams) error {
+	_, err := q.db.ExecContext(ctx, touchCharacter, arg.UpdatedAt, arg.ID)
+	return err
 }
 
 const transferCampaigns = `-- name: TransferCampaigns :execrows
@@ -3276,41 +3364,6 @@ type UpdateUserPasswordParams struct {
 func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
 	_, err := q.db.ExecContext(ctx, updateUserPassword, arg.Passwordhash, arg.Updatedat, arg.ID)
 	return err
-}
-
-const updateVitals = `-- name: UpdateVitals :one
-
-UPDATE characters
-SET hpCurrent = COALESCE(?1, hpCurrent),
-    mpCurrent = COALESCE(?2, mpCurrent),
-    updatedAt = ?3
-WHERE id = ?4
-RETURNING hpCurrent, mpCurrent
-`
-
-type UpdateVitalsParams struct {
-	HpCurrent sql.NullInt64 `json:"hpCurrent"`
-	MpCurrent sql.NullInt64 `json:"mpCurrent"`
-	UpdatedAt string        `json:"updatedAt"`
-	ID        int64         `json:"id"`
-}
-
-type UpdateVitalsRow struct {
-	Hpcurrent int64 `json:"hpcurrent"`
-	Mpcurrent int64 `json:"mpcurrent"`
-}
-
-// character mutations (B.3)
-func (q *Queries) UpdateVitals(ctx context.Context, arg UpdateVitalsParams) (UpdateVitalsRow, error) {
-	row := q.db.QueryRowContext(ctx, updateVitals,
-		arg.HpCurrent,
-		arg.MpCurrent,
-		arg.UpdatedAt,
-		arg.ID,
-	)
-	var i UpdateVitalsRow
-	err := row.Scan(&i.Hpcurrent, &i.Mpcurrent)
-	return i, err
 }
 
 const upsertActiveEffect = `-- name: UpsertActiveEffect :one

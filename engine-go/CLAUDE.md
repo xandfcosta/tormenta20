@@ -227,6 +227,13 @@ tabela NOVA com outro nome, copiar, e derrubar a velha — foi assim que o
 `session_boards` (1:1 com a sessão) virou `open_boards` (uma linha por tabuleiro
 aberto).
 
+E o `DROP COLUMN` funciona — **em minúsculas, e só assim**. Medido na `00015`:
+`ALTER TABLE characters DROP COLUMN hpMax`, com a grafia que a `00001` usou para
+DECLARAR a coluna, falha com `column "hpMax" of relation "characters" does not
+exist`; `DROP COLUMN hpmax` passa, e o gerador então reclama corretamente de
+toda query que ainda citava a coluna. Esta metade reclama em voz alta, ao
+contrário do `ADD COLUMN`.
+
 **E o guarda de schema precisou aprender o `DROP`**: a lista de esperadas lia só
 os `CREATE`, então toda tabela que qualquer migração já tivesse criado era
 exigida para sempre — o servidor recusaria subir sobre um banco CORRETO,

@@ -109,18 +109,19 @@ type SpellDTO struct {
 // penduradas pelo carregador.
 func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 	return CharacterDTO{
-		ID:                   c.ID,
-		OwnerID:              c.Ownerid,
-		Name:                 c.Name,
-		Origin:               c.Origin,
-		God:                  dbvalue.NullToPtr(c.God),
-		GodPower:             c.Godpower,
-		Tibar:                c.Tibar,
-		Level:                c.Level,
-		HpMax:                c.Hpmax,
-		HpCurrent:            c.Hpcurrent,
-		MpMax:                c.Mpmax,
-		MpCurrent:            c.Mpcurrent,
+		ID:       c.ID,
+		OwnerID:  c.Ownerid,
+		Name:     c.Name,
+		Origin:   c.Origin,
+		God:      dbvalue.NullToPtr(c.God),
+		GodPower: c.Godpower,
+		Tibar:    c.Tibar,
+		Level:    c.Level,
+		// Os quatro vitais NÃO saem daqui: eles são derivados, e o
+		// `withDerivedPools` os preenche no fim do `Load`. A linha nem os tem
+		// mais (migração 00015). Um agregado montado só pelos escalares sai com
+		// poço ZERO, e é o certo — quem quer poço passa pelo carregamento
+		// inteiro ou pelo `PoolsForCharacters`.
 		Strength:             c.Strength,
 		Dexterity:            c.Dexterity,
 		Constitution:         c.Constitution,

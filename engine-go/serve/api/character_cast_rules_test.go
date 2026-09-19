@@ -61,7 +61,6 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 	ctx := context.Background()
 	id, err := s.queries.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: "Conjurador", Origin: "Estudioso", Level: int64(classLevel),
-		HpMax: 0, HpCurrent: 0, MpMax: 0, MpCurrent: 0,
 		Intelligence: 4, Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: classPowers, ClassChoices: "{}", PowerChoices: "{}",
@@ -122,11 +121,7 @@ func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body
 
 func mpOf(t *testing.T, s *Server, characterID int64) int64 {
 	t.Helper()
-	row, err := s.queries.GetCharacter(context.Background(), characterID)
-	if err != nil {
-		t.Fatalf("reler personagem: %v", err)
-	}
-	return row.Mpcurrent
+	return poolsOf(t, s, characterID).MpCurrent
 }
 
 // A Tabela 4-1 (p170) é prendida no `sheet`, junto da tabela — aqui ficam só os

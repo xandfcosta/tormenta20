@@ -78,10 +78,6 @@ type Character struct {
 	Godpower             string         `json:"godpower"`
 	Tibar                float64        `json:"tibar"`
 	Level                int64          `json:"level"`
-	Hpmax                int64          `json:"hpmax"`
-	Hpcurrent            int64          `json:"hpcurrent"`
-	Mpmax                int64          `json:"mpmax"`
-	Mpcurrent            int64          `json:"mpcurrent"`
 	Strength             int64          `json:"strength"`
 	Dexterity            int64          `json:"dexterity"`
 	Constitution         int64          `json:"constitution"`

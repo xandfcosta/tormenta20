@@ -46,7 +46,6 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Combatente", Origin: "Soldado", Level: 3,
-		HpMax: 0, HpCurrent: 0, MpMax: 0, MpCurrent: 0,
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",

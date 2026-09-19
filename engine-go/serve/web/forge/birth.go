@@ -8,7 +8,6 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
-	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/wire"
 )
 
@@ -181,7 +180,11 @@ func (s Scene) birthHero(r *http.Request, ownerID int64, folha forgeAnswers) (in
 	if err != nil {
 		return 0, err
 	}
-	return id, s.fillPools(r, id)
+	// NADA de encher poço aqui: um personagem sem linha em `character_damage` JÁ
+	// está cheio, porque o atual é `máximo derivado − dano` e a ausência de linha
+	// é o zero. Aqui morava o passo que enchia os poços à força, e ele existia
+	// para escrever as quatro colunas de espelho — que saíram na 00015 (ALE-355).
+	return id, nil
 }
 
 // birthBody monta o herói de 1º nível que a folha descreve.
@@ -211,41 +214,4 @@ func birthBody(folha forgeAnswers, raca book.Race, classe book.Class) (sheet.Cre
 		Displacement:      int64(raca.Deslocamento),
 		TrainedExpertises: classe.Pericias,
 	}, nil
-}
-
-// heroRow busca a linha de quem vai ter os poços mexidos.
-//
-// É a LINHA e não o agregado: o funil dos poços carrega a ficha inteira por
-// conta própria, porque o máximo derivado depende dela.
-func (s Scene) heroRow(r *http.Request, id int64) (sqlcgen.Character, error) {
-	return s.deps.Queries().GetCharacter(r.Context(), id)
-}
-
-// fillPools deixa o herói recém-nascido com PV e PM CHEIOS.
-//
-// Ela vem DEPOIS do INSERT e não junto: o máximo sai do agregado já gravado —
-// antes de existir linha no banco não há de onde tirar o PV da classe. Nascer
-// com o poço no zero seria nascer inconsciente.
-//
-// Tem UM chamador, o nascimento, e é o encher à força que a prende ali: chamá-la
-// de uma cena que mexe em herói JÁ em jogo é uma bomba de cura. Quem mexe numa
-// ficha viva usa o `refreshPools`.
-func (s Scene) fillPools(r *http.Request, id int64) error {
-	row, err := s.heroRow(r, id)
-	if err != nil {
-		return err
-	}
-	return s.births.FillPools(r.Context(), row)
-}
-
-// refreshPools regrava os poços sem tocar no que já foi gasto.
-//
-// É o que um passo de atributo faz: a Constituição mexe no PV máximo (p34), e
-// quem já apanhou não se cura por mexer na ficha.
-func (s Scene) refreshPools(r *http.Request, id int64) error {
-	row, err := s.heroRow(r, id)
-	if err != nil {
-		return err
-	}
-	return s.births.RefreshPools(r.Context(), row)
 }

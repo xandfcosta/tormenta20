@@ -400,10 +400,14 @@ func (st *Store) SessionDeleted(sessionID int64) {
 	delete(st.Dirty, sessionID)
 }
 
-// RefreshCharacterMaxes relê do banco o PV/PM MÁXIMO de toda entrada com
-// personagem atrás (só os tetos; o atual não é tocado), para um nível subido no
-// meio da sessão não ficar preso ao máximo velho. Melhor esforço: uma piscada do
-// banco vira log e devolve o instantâneo atual em vez de derrubar a leitura.
+// RefreshCharacterMaxes repergunta o PV/PM MÁXIMO de toda entrada com personagem
+// atrás (só os tetos; o atual não é tocado), para um nível subido no meio da
+// sessão não ficar preso ao máximo velho. Melhor esforço: uma piscada do banco
+// vira log e devolve o instantâneo atual em vez de derrubar a leitura.
+//
+// Ela lia `SELECT id, hpMax, mpMax` direto e hoje pergunta à PORTA DA FICHA: o
+// máximo virou derivado, então saber qual ele é deixou de ser leitura de coluna
+// e passou a ser regra da ficha (ALE-355). O lote é da porta, e não daqui.
 func (st *Store) RefreshCharacterMaxes(ctx context.Context, sessionID int64) *live.SessionRuntimeState {
 	st.Mu.Lock()
 	ids := uniqueCharacterIDs(st.getOrCreateLocked(sessionID))
@@ -411,14 +415,10 @@ func (st *Store) RefreshCharacterMaxes(ctx context.Context, sessionID int64) *li
 	if len(ids) == 0 {
 		return st.GetState(sessionID)
 	}
-	rows, err := st.q.ListCharacterMaxes(ctx, ids)
+	pocos, err := st.ficha.PoolsOf(ctx, ids)
 	if err != nil {
 		log.Printf("session %d: hpMax refresh failed (%v)", sessionID, err)
 		return st.GetState(sessionID)
-	}
-	maxes := make(map[int64]sqlcgen.ListCharacterMaxesRow, len(rows))
-	for _, r := range rows {
-		maxes[r.ID] = r
 	}
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
@@ -428,14 +428,14 @@ func (st *Store) RefreshCharacterMaxes(ctx context.Context, sessionID int64) *li
 		if e.CharacterID == nil {
 			continue
 		}
-		if fresh, ok := maxes[*e.CharacterID]; ok {
-			e.HpMax = live.PtrInt64(fresh.Hpmax)
-			e.MpMax = live.PtrInt64(fresh.Mpmax)
+		if fresh, ok := pocos[*e.CharacterID]; ok {
+			e.HpMax = live.PtrInt64(fresh.HpMax)
+			e.MpMax = live.PtrInt64(fresh.MpMax)
 			// O máximo pode ter ENCOLHIDO (nível abaixado, CON caída): sem aparar,
 			// a barra mostra 9/5 e a ficha se contradiz na tela — o mesmo par que
 			// a criação e o PATCH de vitais recusam.
-			clampCurrentTo(&e.HpCurrent, fresh.Hpmax)
-			clampCurrentTo(&e.MpCurrent, fresh.Mpmax)
+			clampCurrentTo(&e.HpCurrent, fresh.HpMax)
+			clampCurrentTo(&e.MpCurrent, fresh.MpMax)
 		}
 	}
 	return live.CloneState(s)

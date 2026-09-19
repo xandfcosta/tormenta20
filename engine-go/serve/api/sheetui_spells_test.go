@@ -16,7 +16,6 @@ func arcanista(t *testing.T) (sceneFixture, int64) {
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Conjuradora", Origin: "Charlatão", Level: 9,
-		HpMax: 0, HpCurrent: 0, MpMax: 0, MpCurrent: 0,
 		Strength: 0, Dexterity: 2, Constitution: 2, Intelligence: 4, Wisdom: 1, Charisma: 1,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -124,11 +123,7 @@ func TestCastingChargesTheMp(t *testing.T) {
 
 func pm(t *testing.T, f sceneFixture, id int64) int64 {
 	t.Helper()
-	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler o personagem: %v", err)
-	}
-	return row.Mpcurrent
+	return poolsOf(t, f.s, id).MpCurrent
 }
 
 // SEM PM, A CONJURAÇÃO É RECUSADA e nada é cobrado.
@@ -194,7 +189,6 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Totemista", Origin: "Batedor", Level: 3,
-		HpMax: 0, HpCurrent: 0, MpMax: 0, MpCurrent: 0,
 		Strength: 4, Dexterity: 1, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",

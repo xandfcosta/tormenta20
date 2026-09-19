@@ -62,11 +62,11 @@ func (sd Seeder) CreateAccount(ctx context.Context, email, nome, senha string) e
 	return err
 }
 
-// CreateCharacter escreve a ficha INTEIRA e enche os poços pelo motor.
+// CreateCharacter escreve a ficha INTEIRA, e o poço vem de graça.
 //
-// A ordem importa: o nível total e as proficiências saem das CLASSES antes da
-// escrita, e o `FillPools` vem depois — o poço é derivado da ficha JÁ GRAVADA,
-// que é como o número da seed passa a ser o número que o motor daria.
+// A ordem importa só para o nível total e as proficiências, que saem das CLASSES
+// antes da escrita. Os vitais não entram: o poço é derivado do catálogo a cada
+// leitura, e um personagem sem dano nasce cheio por construção (ALE-355).
 //
 // É por isso que o gerador manda 9999 nos quatro vitais: um valor que a cura só
 // pode aparar para baixo. Barra danificada é escrita DEPOIS, pelo `SetHp`.
@@ -84,11 +84,7 @@ func (sd Seeder) CreateCharacter(
 	if err != nil {
 		return 0, err
 	}
-	linha, err := sd.queries.GetCharacter(ctx, id)
-	if err != nil {
-		return 0, err
-	}
-	return id, sd.births.FillPools(ctx, linha)
+	return id, nil
 }
 
 // Character devolve a ficha carregada, para o gerador ler o PV máximo que o

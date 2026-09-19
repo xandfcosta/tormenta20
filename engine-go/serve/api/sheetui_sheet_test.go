@@ -42,10 +42,7 @@ func sheetOf(t *testing.T, nome string, nivel int64) (sceneFixture, int64) {
 func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	f, id := sheetOf(t, "Arcanista Nv3", 3)
 	ctx := context.Background()
-	antes, err := f.s.sceneCore().Queries().GetCharacter(ctx, id)
-	if err != nil {
-		t.Fatalf("ler o personagem: %v", err)
-	}
+	antes := poolsOf(t, f.s, id)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/nivel/Arcanista/1", id), "")
@@ -79,14 +76,16 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	// As duas páginas estavam erradas aqui — p36 e p34 — e foram conferidas no
 	// livro, uma de cada vez (ALE-347). A p34 é uma ilustração de página inteira.
 	//
-	// Afirmar "o PV máximo CRESCEU" seria errado: o personagem semeado tem 20
-	// gravados, que não é um número do motor, e sincronizar o BAIXA para 14. O que
-	// a sincronização garante não é crescer — é a ficha dizer o que o livro diz.
-	if depois.Hpmax != 14 {
-		t.Errorf("o PV máximo do Arcanista 4 ficou em %d, e o livro dá 14 (8 inicial + 3×2, p36)", depois.Hpmax)
+	// O poço acompanha de GRAÇA desde a ALE-355: ele é derivado das classes a
+	// cada leitura, e o degrau só precisa gravar o nível. As duas metades
+	// continuam prendidas — o número do livro e o fato de ele ter MEXIDO —
+	// porque um degrau que não gravasse a classe deixaria os dois parados.
+	poco := poolsOf(t, f.s, id)
+	if poco.HpMax != 14 {
+		t.Errorf("o PV máximo do Arcanista 4 ficou em %d, e o livro dá 14 (8 inicial + 3×2, p36)", poco.HpMax)
 	}
-	if antes.Hpmax == depois.Hpmax {
-		t.Error("o PV máximo não se mexeu: o degrau gravou o nível sem sincronizar os pools")
+	if antes.HpMax == poco.HpMax {
+		t.Error("o PV máximo não se mexeu: o degrau não gravou o nível da classe")
 	}
 }
 
@@ -116,7 +115,6 @@ func TestTheLevelStepDoesNotEraseALevelOneClass(t *testing.T) {
 // mestre clicar quatro vezes de um em um para chegar no mesmo lugar.
 func TestTheVitalClampsAtZeroAndAtTheMaximum(t *testing.T) {
 	f, id := sheetOf(t, "Alvo", 3)
-	ctx := context.Background()
 	url := fmt.Sprintf("/personagens/%d/vitais/pv/", id)
 
 	// Cinco golpes de −5 sobre 20 de PV: para em zero e não vira negativo.
@@ -125,9 +123,8 @@ func TestTheVitalClampsAtZeroAndAtTheMaximum(t *testing.T) {
 			t.Fatalf("ferir deu %d", rec.Code)
 		}
 	}
-	ferido, _ := f.s.sceneCore().Queries().GetCharacter(ctx, id)
-	if ferido.Hpcurrent != 0 {
-		t.Errorf("o PV foi para %d: o passo tinha de prender em zero", ferido.Hpcurrent)
+	if ferido := poolsOf(t, f.s, id); ferido.HpCurrent != 0 {
+		t.Errorf("o PV foi para %d: o passo tinha de prender em zero", ferido.HpCurrent)
 	}
 
 	// E curar além do máximo para NO máximo: passar dele seria PV temporário,
@@ -135,9 +132,8 @@ func TestTheVitalClampsAtZeroAndAtTheMaximum(t *testing.T) {
 	for i := 0; i < 6; i++ {
 		f.pede(t, f.jogador, http.MethodPost, url+"5", "")
 	}
-	curado, _ := f.s.sceneCore().Queries().GetCharacter(ctx, id)
-	if curado.Hpcurrent != curado.Hpmax {
-		t.Errorf("o PV parou em %d com máximo %d", curado.Hpcurrent, curado.Hpmax)
+	if curado := poolsOf(t, f.s, id); curado.HpCurrent != curado.HpMax {
+		t.Errorf("o PV parou em %d com máximo %d", curado.HpCurrent, curado.HpMax)
 	}
 }
 
@@ -278,9 +274,6 @@ func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 // pvFraction é o "atual/máximo" do PV como o crachá o escreve.
 func pvFraction(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler a ficha %d: %v", id, err)
-	}
-	return fmt.Sprintf("%d/%d", row.Hpcurrent, row.Hpmax)
+	poco := poolsOf(t, f.s, id)
+	return fmt.Sprintf("%d/%d", poco.HpCurrent, poco.HpMax)
 }

@@ -4,7 +4,7 @@
 -- "ULL" of an `IS NULL`, which still compiled).
 --
 -- Queries compiled by sqlc into db/sqlcgen. One camelCase column set means the
--- generated json tags already match the frontend contract (hpMax, catalogSpellId).
+-- generated json tags already match the wire contract (catalogSpellId).
 -- Grouped by domain; grows per Fase B slice.
 
 -- users / auth (B.2)
@@ -71,14 +71,6 @@ FROM character_spells WHERE characterId = ? ORDER BY learnedAt ASC;
 
 -- character mutations (B.3)
 
--- name: UpdateVitals :one
-UPDATE characters
-SET hpCurrent = COALESCE(sqlc.narg('hpCurrent'), hpCurrent),
-    mpCurrent = COALESCE(sqlc.narg('mpCurrent'), mpCurrent),
-    updatedAt = sqlc.arg('updatedAt')
-WHERE id = sqlc.arg('id')
-RETURNING hpCurrent, mpCurrent;
-
 -- name: CreateItem :one
 INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -99,10 +91,6 @@ INSERT INTO active_effects (characterId, catalogId, scope, modifiers, createdAt)
 VALUES (?, ?, ?, ?, ?)
 RETURNING id, catalogId, scope, modifiers, createdAt;
 
--- name: SetVitalsCurrent :exec
-UPDATE characters SET hpCurrent = sqlc.arg('hpCurrent'), mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
-WHERE id = sqlc.arg('id');
-
 -- name: GetCharacterDamage :one
 -- Ausencia de linha quer dizer INTACTO: so quem apanhou tem registro (00014).
 SELECT hpDamage, mpSpent FROM character_damage WHERE characterId = ?;
@@ -117,8 +105,24 @@ ON CONFLICT (characterId) DO UPDATE SET hpDamage = excluded.hpDamage, mpSpent = 
 -- name: ClearCharacterDamage :exec
 DELETE FROM character_damage WHERE characterId = ?;
 
--- name: ListCharacterMaxes :many
-SELECT id, hpMax, mpMax FROM characters WHERE id IN (sqlc.slice('ids'));
+-- name: ListCharactersByIDs :many
+SELECT * FROM characters WHERE id IN (sqlc.slice('ids'));
+
+-- name: ListRacesByCharacters :many
+-- The batch reads below feed the derived pools of a whole party at once, with
+-- ListActiveEffectsByCharacters above: races, classes, items and effects are
+-- what the vital context reads, because anything that moves Constitution moves
+-- PV. See partialSheetsForPools.
+SELECT characterId, race FROM character_races
+WHERE characterId IN (sqlc.slice('ids')) ORDER BY id ASC;
+
+-- name: ListClassesByCharacters :many
+SELECT characterId, className, level FROM character_classes
+WHERE characterId IN (sqlc.slice('ids')) ORDER BY id ASC;
+
+-- name: ListItemsByCharacters :many
+SELECT characterId, id, catalogId, name, quantity, slots, equipped, improvements, material
+FROM character_items WHERE characterId IN (sqlc.slice('ids')) ORDER BY id ASC;
 
 -- name: UpsertActiveEffect :one
 INSERT INTO active_effects (characterId, source, catalogId, scope, modifiers, createdAt)
@@ -182,13 +186,13 @@ UPDATE active_effects SET modifiers = sqlc.arg('modifiers') WHERE id = sqlc.arg(
 -- name: DeleteEffectByID :exec
 DELETE FROM active_effects WHERE id = ?;
 
--- name: SetHpCurrent :exec
-UPDATE characters SET hpCurrent = sqlc.arg('hpCurrent'), updatedAt = sqlc.arg('updatedAt')
-WHERE id = sqlc.arg('id');
-
--- name: SetMpCurrent :exec
-UPDATE characters SET mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
-WHERE id = sqlc.arg('id');
+-- name: TouchCharacter :exec
+-- Stamps updatedAt and nothing else, because updatedAt IS the sheet version:
+-- the embedded sheet and the table stream both serve it as such, and a damage
+-- write that does not bump it leaves the player's sheet showing yesterday's PV.
+-- It used to ride along on the vital columns' UPDATE; those columns left in
+-- 00015 and the stamp had to stay (ALE-355).
+UPDATE characters SET updatedAt = sqlc.arg('updatedAt') WHERE id = sqlc.arg('id');
 
 -- name: SetCharacterLevel :exec
 UPDATE characters SET level = sqlc.arg('level'), updatedAt = sqlc.arg('updatedAt')
@@ -197,12 +201,6 @@ WHERE id = sqlc.arg('id');
 -- name: SetCharacterClassLevel :execrows
 UPDATE character_classes SET level = sqlc.arg('level')
 WHERE characterId = sqlc.arg('characterId') AND className = sqlc.arg('className');
-
--- name: SetCharacterVitals :exec
-UPDATE characters
-SET hpMax = sqlc.arg('hpMax'), hpCurrent = sqlc.arg('hpCurrent'),
-    mpMax = sqlc.arg('mpMax'), mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
-WHERE id = sqlc.arg('id');
 
 -- name: SetCharacterAttributes :exec
 -- The six base attributes, written together: point-buy (book p17) is one
@@ -224,14 +222,14 @@ WHERE id = sqlc.arg('id');
 
 -- name: CreateCharacter :one
 INSERT INTO characters (
-  ownerId, name, origin, god, godPower, tibar, level, hpMax, hpCurrent, mpMax, mpCurrent,
+  ownerId, name, origin, god, godPower, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement,
   proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices, classPowers,
   classChoices, powerChoices, createdAt, updatedAt
 ) VALUES (
   sqlc.arg('ownerId'), sqlc.arg('name'), sqlc.arg('origin'), sqlc.arg('god'), sqlc.arg('godPower'),
-  sqlc.arg('tibar'), sqlc.arg('level'), sqlc.arg('hpMax'), sqlc.arg('hpCurrent'), sqlc.arg('mpMax'),
-  sqlc.arg('mpCurrent'), sqlc.arg('strength'), sqlc.arg('dexterity'), sqlc.arg('constitution'),
+  sqlc.arg('tibar'), sqlc.arg('level'),
+  sqlc.arg('strength'), sqlc.arg('dexterity'), sqlc.arg('constitution'),
   sqlc.arg('intelligence'), sqlc.arg('wisdom'), sqlc.arg('charisma'), sqlc.arg('size'),
   sqlc.arg('displacement'), sqlc.arg('proficiencies'), sqlc.arg('raceAttributeChoices'),
   sqlc.arg('secondaryRaceChoices'), sqlc.arg('originChoices'), sqlc.arg('classPowers'),
@@ -304,9 +302,7 @@ SELECT id, email, name, createdAt FROM users WHERE id IN (sqlc.slice('ids')) ORD
 -- usa para autorizar -- ver a razao no `one_view.go`.
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        ch.ownerId AS charOwnerId,
-       ch.name AS charName, ch.level AS charLevel,
-       ch.hpCurrent AS charHpCurrent, ch.hpMax AS charHpMax,
-       ch.mpCurrent AS charMpCurrent, ch.mpMax AS charMpMax
+       ch.name AS charName, ch.level AS charLevel
 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
 WHERE m.campaignId = ? ORDER BY m.addedAt ASC;
 

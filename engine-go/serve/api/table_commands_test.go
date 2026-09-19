@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"strings"
 	"t20engine/domain/live"
@@ -277,26 +276,20 @@ func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 
 	// O PV de partida é LIDO e não escrito à mão: o poço vem do livro, e um
 	// número fixo aqui afirmaria a tabela de classe em vez do descanso.
-	antes, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("ler a ficha antes: %v", err)
-	}
+	antes := poolsOf(t, f.s, f.charID)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"ruim"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("descanso de dia deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("reler a ficha: %v", err)
-	}
+	ficha := poolsOf(t, f.s, f.charID)
 	// Os números do descanso estão escritos à mão de propósito: o RUIM devolve
 	// metade do nível (8/2 = 4), e o normal devolveria o nível inteiro. Derivá-los
 	// da regra faria a asserção andar junto com o defeito.
-	if querido := antes.Hpcurrent + 4; ficha.Hpcurrent != querido {
+	if querido := antes.HpCurrent + 4; ficha.HpCurrent != querido {
 		t.Errorf("PV = %d; %d é o descanso RUIM de um nível 8 (%d+4), %d seria o normal que ninguém pediu",
-			ficha.Hpcurrent, querido, antes.Hpcurrent, antes.Hpcurrent+8)
+			ficha.HpCurrent, querido, antes.HpCurrent, antes.HpCurrent+8)
 	}
 }
 
@@ -309,7 +302,6 @@ func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 // no grupo.
 func TestTheDayRestHealsEveryMemberIncludingTheGmsOwn(t *testing.T) {
 	f := newSceneFixture(t)
-	ctx := context.Background()
 	outro := seedUser(t, f.s, "jogador2@t.com")
 	// Nível 5, feridos: o descanso "normal" devolve 5, e o teto não interfere.
 	// Os dois partem de 1 PV, e o dano sai do POÇO de cada classe — eles têm
@@ -330,14 +322,11 @@ func TestTheDayRestHealsEveryMemberIncludingTheGmsOwn(t *testing.T) {
 		nome string
 		id   int64
 	}{{"o do segundo jogador", doOutro}, {"o do próprio mestre", doMestre}} {
-		ficha, err := f.s.queries.GetCharacter(ctx, quem.id)
-		if err != nil {
-			t.Fatalf("reler %s: %v", quem.nome, err)
-		}
+		ficha := poolsOf(t, f.s, quem.id)
 		// Eles partem de 1 PV, e o descanso normal devolve o NÍVEL inteiro.
-		if ficha.Hpcurrent != 1+5 {
+		if ficha.HpCurrent != 1+5 {
 			t.Errorf("%s ficou com %d PV; o descanso normal de um nível 5 devolve 5 (1+5)",
-				quem.nome, ficha.Hpcurrent)
+				quem.nome, ficha.HpCurrent)
 		}
 	}
 }
@@ -351,10 +340,7 @@ func TestAnInventedQualityIsRefused(t *testing.T) {
 	// O PV de partida é lido ANTES do gesto. Ler depois faria a asserção comparar
 	// o número consigo mesmo e passar sempre — foi o que aconteceu na primeira
 	// escrita deste caso.
-	antes, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("ler a ficha antes: %v", err)
-	}
+	antes := poolsOf(t, f.s, f.charID)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"palaciana"}`)
 	corpo := rec.Body.String()
@@ -365,12 +351,9 @@ func TestAnInventedQualityIsRefused(t *testing.T) {
 		t.Errorf("a recusa não disse a forma esperada; corpo = %q", corpo)
 	}
 
-	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("reler a ficha: %v", err)
-	}
-	if ficha.Hpcurrent != antes.Hpcurrent {
-		t.Errorf("PV = %d — o grupo descansou mesmo com a qualidade recusada", ficha.Hpcurrent)
+	ficha := poolsOf(t, f.s, f.charID)
+	if ficha.HpCurrent != antes.HpCurrent {
+		t.Errorf("PV = %d — o grupo descansou mesmo com a qualidade recusada", ficha.HpCurrent)
 	}
 }
 
@@ -429,24 +412,18 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 
 	// O PV de partida é LIDO: o poço vem do livro, e um 20 escrito à mão faria
 	// este caso afirmar a tabela de classe em vez do caminho do dano.
-	antes, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("ler a ficha antes: %v", err)
-	}
-	querido := antes.Hpcurrent - 5
+	antes := poolsOf(t, f.s, f.charID)
+	querido := antes.HpCurrent - 5
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/vitais/hp/ferir/5", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("ferir deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("reler a ficha: %v", err)
-	}
-	if ficha.Hpcurrent != querido {
+	ficha := poolsOf(t, f.s, f.charID)
+	if ficha.HpCurrent != querido {
 		t.Errorf("a FICHA ficou com %d PV; %d-5 = %d — o dano não chegou nela",
-			ficha.Hpcurrent, antes.Hpcurrent, querido)
+			ficha.HpCurrent, antes.HpCurrent, querido)
 	}
 	// E a linha espelha, senão a fila mostraria o número velho ao lado da ficha
 	// certa.
@@ -520,14 +497,11 @@ func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 
-	antes, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("ler a ficha: %v", err)
-	}
+	antes := poolsOf(t, f.s, f.charID)
 	// O CONTROLE: sem mana para gastar o caso mediria um clampeamento em zero e
 	// passaria verde sobre nada.
-	if antes.Mpcurrent < 5 {
-		t.Fatalf("a ficha semeada tem %d PM: o caso precisa de mana para gastar", antes.Mpcurrent)
+	if antes.MpCurrent < 5 {
+		t.Fatalf("a ficha semeada tem %d PM: o caso precisa de mana para gastar", antes.MpCurrent)
 	}
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/vitais/mp/ferir/5", "")
@@ -535,15 +509,12 @@ func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
 		t.Fatalf("gastar mana deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	depois, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("reler a ficha: %v", err)
+	depois := poolsOf(t, f.s, f.charID)
+	if depois.MpCurrent != antes.MpCurrent-5 {
+		t.Errorf("a ficha ficou com %d PM; %d-5 = %d", depois.MpCurrent, antes.MpCurrent, antes.MpCurrent-5)
 	}
-	if depois.Mpcurrent != antes.Mpcurrent-5 {
-		t.Errorf("a ficha ficou com %d PM; %d-5 = %d", depois.Mpcurrent, antes.Mpcurrent, antes.Mpcurrent-5)
-	}
-	if depois.Hpcurrent != antes.Hpcurrent {
-		t.Errorf("gastar mana mexeu no PV: %d virou %d", antes.Hpcurrent, depois.Hpcurrent)
+	if depois.HpCurrent != antes.HpCurrent {
+		t.Errorf("gastar mana mexeu no PV: %d virou %d", antes.HpCurrent, depois.HpCurrent)
 	}
 }
 
@@ -825,12 +796,9 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 	}
 	// E o PV passou pela FICHA, como o ferir/curar: a linha espelha, ela não é
 	// a autoridade.
-	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
-	if err != nil {
-		t.Fatalf("reler a ficha: %v", err)
-	}
-	if ficha.Hpcurrent != 7 {
-		t.Errorf("a FICHA ficou com %d PV — a edição não chegou nela", ficha.Hpcurrent)
+	ficha := poolsOf(t, f.s, f.charID)
+	if ficha.HpCurrent != 7 {
+		t.Errorf("a FICHA ficou com %d PV — a edição não chegou nela", ficha.HpCurrent)
 	}
 }
 

@@ -239,12 +239,8 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	}
 
 	// Sem espera: a gravação é o caminho, não um espelho assíncrono.
-	row, err := s.queries.GetCharacter(ctx, charID)
-	if err != nil {
-		t.Fatalf("carregar personagem: %v", err)
-	}
-	if row.Hpcurrent != 12 || row.Mpcurrent != 3 {
-		t.Errorf("ficha = %d/%d PV-PM, esperado 12/3", row.Hpcurrent, row.Mpcurrent)
+	if poco := poolsOf(t, s, charID); poco.HpCurrent != 12 || poco.MpCurrent != 3 {
+		t.Errorf("ficha = %d/%d PV-PM, esperado 12/3", poco.HpCurrent, poco.MpCurrent)
 	}
 	// E a entrada espelha o que foi gravado — os dois números da tela são um só.
 	got := snap.Initiative[0]
@@ -280,9 +276,8 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	}
 
 	// 5 absorvidos pelo pool, 3 nos PV reais.
-	row, _ := s.queries.GetCharacter(ctx, charID)
-	if row.Hpcurrent != 17 {
-		t.Errorf("PV = %d, esperado 17 (o pool de 5 absorveu antes)", row.Hpcurrent)
+	if poco := poolsOf(t, s, charID); poco.HpCurrent != 17 {
+		t.Errorf("PV = %d, esperado 17 (o pool de 5 absorveu antes)", poco.HpCurrent)
 	}
 	rows, _ := s.queries.ListActiveEffectsByCharacter(ctx, charID)
 	if len(sheet.ParseTempHpPools(rows)) != 0 {

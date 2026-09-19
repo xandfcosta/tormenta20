@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 	"t20engine/domain/sheet"
@@ -21,11 +20,8 @@ func fereOHeroi(t *testing.T, f sceneFixture, id, pvAtual, pmAtual int64) {
 
 func osVitaisDe(t *testing.T, f sceneFixture, id int64) (pv, pvMax, pm, pmMax int64) {
 	t.Helper()
-	row, err := f.s.queries.GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("herói %d: %v", id, err)
-	}
-	return row.Hpcurrent, row.Hpmax, row.Mpcurrent, row.Mpmax
+	poco := poolsOf(t, f.s, id)
+	return poco.HpCurrent, poco.HpMax, poco.MpCurrent, poco.MpMax
 }
 
 // umHeroiForjado devolve o id de um herói recém-nascido e o endereço dos
@@ -37,11 +33,11 @@ func umHeroiForjado(t *testing.T, f sceneFixture) (int64, string) {
 	return id, "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
 }
 
-// A cena de atributos chamava `fillPools` no fim de TODO passo bem-sucedido, e
-// `fillPools` grava `HpCurrent = HpMax`. O guarda da cena confere id, existência
-// e posse — e nada mais: não há checagem nenhuma de que o herói ainda está sendo
-// forjado, e não há como haver, porque a tabela `characters` não guarda esse
-// estado.
+// A cena de atributos enchia os poços no fim de TODO passo bem-sucedido — a
+// função que fazia isso deixou de existir (ALE-355), e o que ela gravava era
+// `HpCurrent = HpMax`. O guarda da cena confere id, existência e posse — e nada
+// mais: não há checagem nenhuma de que o herói ainda está sendo forjado, e não
+// há como haver, porque a tabela `characters` não guarda esse estado.
 //
 // O caminho do abuso são DOIS CLIQUES que não mudam nada na ficha: o `−` num
 // atributo é sempre aceito dentro da faixa (gasta MENOS pontos), o `+` devolve

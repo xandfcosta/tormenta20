@@ -45,7 +45,6 @@ func (b Births) Create(
 	id, err := q.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: nome, Origin: corpo.Origin, God: dbvalue.NullString(corpo.God),
 		GodPower: orElse(corpo.GodPower, ""), Tibar: orElseFloat(corpo.Tibar, 0), Level: nivelTotal,
-		HpMax: corpo.HpMax, HpCurrent: corpo.HpCurrent, MpMax: corpo.MpMax, MpCurrent: corpo.MpCurrent,
 		Strength: corpo.Strength, Dexterity: corpo.Dexterity, Constitution: corpo.Constitution,
 		Intelligence: corpo.Intelligence, Wisdom: corpo.Wisdom, Charisma: corpo.Charisma,
 		Size: corpo.Size, Displacement: corpo.Displacement,

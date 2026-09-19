@@ -231,14 +231,10 @@ func enrichCreate(ch seedCharacter) (json.RawMessage, error) {
 	if err := json.Unmarshal(ch.Create, &obj); err != nil {
 		return nil, fmt.Errorf("create body: %w", err)
 	}
-	// Os quatro vitais do corpo são IGNORADOS: o `Seeder.CreateCharacter` chama
-	// o funil logo depois do INSERT, e ele deriva o máximo do catálogo e grava o
-	// poço cheio por cima. Mandar zero diz isso; o 9999 que morava aqui era um
-	// valor escolhido para ser "aparado para baixo" por uma cura que não existe
-	// mais. Barra danificada vem depois (ALE-355).
-	for _, field := range []string{"hpMax", "hpCurrent", "mpMax", "mpCurrent"} {
-		obj[field] = json.RawMessage("0")
-	}
+	// Aqui moravam quatro vitais escritos com 9999, para uma cura que os aparava
+	// para baixo. Os dois sumiram: o poço é derivado do catálogo a cada leitura e
+	// o corpo de criação nem tem mais esses campos. Barra danificada vem depois,
+	// pelo `HpFraction` (ALE-355).
 	if !ch.Simple {
 		if _, ok := obj["trainedExpertises"]; !ok {
 			trained, _ := json.Marshal(standardTrained)
