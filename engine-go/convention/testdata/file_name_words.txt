@@ -15,6 +15,7 @@
 # permitidos falha no que não conhece, que é a forma do `TestNo…` da ALE-294.
 # proibidos SUBCONTA em silêncio e o resultado tem cara de resposta; lista de
 # tradução pendente): `piloto`, `grimorio`, `tormenta`, `tibar`, mais os nomes de
+accent
 accents
 access
 account
@@ -177,6 +178,7 @@ flags
 flake
 flash
 focus
+fold
 footer
 forge
 format

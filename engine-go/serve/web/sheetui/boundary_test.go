@@ -31,12 +31,19 @@ var permitidos = map[string]bool{
 	// ciclo para desviar — e por isso não há interface. As entradas da porta que
 	// viraram gesto dele saíram da `Deps` em vez de ganhar um adaptador. A
 	// direção continua legal: quem importa é quem desenha depois.
-	"t20engine/app/character":        true,
-	"t20engine/domain/book":          true, // o catálogo TIPADO: poder, origem, deus, condição, ativação
-	"t20engine/domain/catalog":       true, // ver a nota abaixo — é o LookupSpell, não o Resource
-	"t20engine/infra/db/sqlcgen":     true, // as linhas do banco, pelo `Queries` da porta
-	"t20engine/domain/engine":        true, // os tipos computados que os painéis desenham
-	"t20engine/infra/db/dbvalue":     true,
+	"t20engine/app/character":    true,
+	"t20engine/domain/book":      true, // o catálogo TIPADO: poder, origem, deus, condição, ativação
+	"t20engine/domain/catalog":   true, // ver a nota abaixo — é o LookupSpell, não o Resource
+	"t20engine/infra/db/sqlcgen": true, // as linhas do banco, pelo `Queries` da porta
+	"t20engine/domain/engine":    true, // os tipos computados que os painéis desenham
+	"t20engine/infra/db/dbvalue": true,
+	// O `domain/search` é a DOBRA DE ACENTO das buscas desta cena, e ele entrou
+	// tirando uma cópia daqui: havia uma tabela de nove pares no
+	// `expertises.go`, com doze chamadores, enquanto o buscador do livro já
+	// dobrava por NFD. Medido antes de trocar — nos catálogos de hoje as duas
+	// concordam em tudo; a que sai errava no nome que um JOGADOR inventa
+	// (ALE-352).
+	"t20engine/domain/search":        true,
 	"t20engine/domain/sheet":         true, // a ficha: a forma do dado E as regras dela
 	"t20engine/serve/web/characters": true, // a linha de classes do herói, uma só
 	"t20engine/serve/web/ui":         true, // o kit, a casca e a identidade visual

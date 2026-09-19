@@ -8,6 +8,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
 
@@ -81,18 +82,18 @@ type attributeOption struct {
 var theSaveNames = map[string]bool{"Fortitude": true, "Reflexos": true, "Vontade": true}
 
 // expertisePanelFor monta a aba inteira.
-func expertisePanelFor(dto sheet.CharacterDTO, sheet engine.ComputedSheetV2, search string) expertisePanel {
+func expertisePanelFor(dto sheet.CharacterDTO, computed engine.ComputedSheetV2, term string) expertisePanel {
 	panel := expertisePanel{
 		TrainingBonus: book.WithSign(trainingBonusFor(dto.Level)),
 		HalfLevel:     strconv.FormatInt(dto.Level/2, 10),
-		Search:        search,
-		Attributes:    attributeOptions(sheet),
+		Search:        term,
+		Attributes:    attributeOptions(computed),
 	}
 	for i, entry := range sortedExpertises(dto) {
-		if !matchesSearch(entry.Name, search) {
+		if !matchesSearch(entry.Name, term) {
 			continue
 		}
-		panel.Rows = append(panel.Rows, expertiseRowFor(i, entry, sheet))
+		panel.Rows = append(panel.Rows, expertiseRowFor(i, entry, computed))
 	}
 	return panel
 }
@@ -144,29 +145,21 @@ func rankOf(e sheet.ExpertiseDTO, doLivro map[string]int) int {
 }
 
 // matchesSearch compara SEM acento, porque "pericia" tem de achar "Perícia".
-func matchesSearch(name, search string) bool {
-	if strings.TrimSpace(search) == "" {
+//
+// A dobra é a do `domain/search`, que é a MESMA que o buscador do livro usa. Ela
+// já morou aqui como uma tabela de nove pares, com o argumento de que "o
+// alfabeto que a mesa digita é conhecido" — e o argumento era verdadeiro e
+// insuficiente: o que a mesa digita inclui o nome que um jogador INVENTA para um
+// ofício ou um item, e ali cabe qualquer acento (ALE-352).
+//
+// O parâmetro se chama `term` e não `search` porque `search` é o PACOTE — duas
+// funções deste arquivo o sombreavam, e o compilador só reclama quando alguém
+// tenta usar o pacote lá dentro.
+func matchesSearch(name, term string) bool {
+	if strings.TrimSpace(term) == "" {
 		return true
 	}
-	return strings.Contains(foldAccents(name), foldAccents(search))
-}
-
-// foldAccents baixa a caixa e tira os acentos do português.
-//
-// É uma tabela e não `unicode/norm` porque o alfabeto que a mesa digita é
-// conhecido e cabe em nove pares — trazer uma dependência de normalização
-// Unicode para isto seria pagar caro por generalidade que ninguém usa.
-var accentFolder = strings.NewReplacer(
-	"á", "a", "à", "a", "â", "a", "ã", "a",
-	"é", "e", "ê", "e",
-	"í", "i",
-	"ó", "o", "ô", "o", "õ", "o",
-	"ú", "u", "ü", "u",
-	"ç", "c",
-)
-
-func foldAccents(s string) string {
-	return accentFolder.Replace(strings.ToLower(s))
+	return strings.Contains(search.Fold(name), search.Fold(term))
 }
 
 // attributeOptions são as seis, com o modificador final de cada uma.

@@ -9,6 +9,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
 
@@ -90,7 +91,7 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, busca string) powersPanel {
 	panel := powersPanel{Search: busca, IsCaster: len(casterClassesOf(dto)) > 0}
 	linhas := s.powerRowsOf(dto)
 	panel.Total = len(linhas)
-	if termo := foldAccents(strings.TrimSpace(busca)); termo != "" {
+	if termo := search.Fold(strings.TrimSpace(busca)); termo != "" {
 		panel.Results = filtradasPorNome(linhas, termo)
 		return panel
 	}
@@ -321,7 +322,7 @@ func airTriggers(passivas []powerRow) []powerRow {
 func filtradasPorNome(linhas []powerRow, termo string) []powerRow {
 	fora := []powerRow{}
 	for _, linha := range linhas {
-		if strings.Contains(foldAccents(linha.Name), termo) {
+		if strings.Contains(search.Fold(linha.Name), termo) {
 			fora = append(fora, linha)
 		}
 	}

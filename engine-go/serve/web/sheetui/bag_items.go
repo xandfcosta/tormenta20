@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
+	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
 
@@ -356,7 +357,7 @@ func thatFitOverlays(categoria, familia string, aplicadas []string) []overlayCho
 // melhorias, que já filtra pela família. Ofertá-las aqui deixaria a pessoa pôr
 // um "Aço-rubi" solto na mochila.
 func catalogItemRowsOf(busca, categoria string) []catalogItemRow {
-	termo := foldAccents(strings.TrimSpace(busca))
+	termo := search.Fold(strings.TrimSpace(busca))
 	linhas := []catalogItemRow{}
 	for _, entrada := range book.Catalogs().Itens {
 		if entrada.Category == "improvement" || entrada.Category == "material" {
@@ -365,8 +366,8 @@ func catalogItemRowsOf(busca, categoria string) []catalogItemRow {
 		if categoria != "" && entrada.Category != categoria {
 			continue
 		}
-		if termo != "" && !strings.Contains(foldAccents(entrada.Name), termo) &&
-			!strings.Contains(foldAccents(writtenCategory(entrada.Category)), termo) {
+		if termo != "" && !strings.Contains(search.Fold(entrada.Name), termo) &&
+			!strings.Contains(search.Fold(writtenCategory(entrada.Category)), termo) {
 			continue
 		}
 		linhas = append(linhas, catalogItemRow{
