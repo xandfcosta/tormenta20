@@ -85,9 +85,11 @@ func (s Scene) applyOneGrant(
 	if spec.Grant.Kind != "temp-hp" {
 		return nil
 	}
-	quanto, ok := s.deps.PowerTempHpAmount(r, row, spec.Grant.Attribute)
+	quanto, ok := s.plays.TempHpAmount(r.Context(), row, spec.Grant.Attribute)
 	if !ok {
 		return nil
 	}
-	return s.deps.ApplyPowerTempHp(r.Context(), row.ID, spec.ID, spec.Grant.Scope, quanto)
+	_, err := s.plays.ApplyTempHpPool(
+		r.Context(), row.ID, "power", spec.ID, spec.Grant.Scope, quanto, "PV temporários")
+	return err
 }

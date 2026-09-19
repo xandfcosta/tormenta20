@@ -32,7 +32,6 @@ and
 app
 appearance
 applied
-apply
 area
 ascii
 asset

@@ -39,10 +39,6 @@ type Deps interface {
 	// As ESCRITAS, uma por gesto: a cena decide QUANDO, o hospedeiro sabe COMO.
 	SaveProficiencies(ctx context.Context, id int64, categorias []string) (string, []string, error)
 	SaveNewCraft(ctx context.Context, id int64, nome string) error
-	ApplySpellBuffEffect(ctx context.Context, id int64, magia string, escopo *string) (sheet.EffectDTO, int, error)
-	// PowerTempHpAmount lê o personagem do banco para saber o atributo-chave: a
-	// CONTA é do `sheet`, a leitura é do hospedeiro.
-	PowerTempHpAmount(r *http.Request, row sqlcgen.Character, atributo string) (int, bool)
 	// Quem sabe o nome das colunas — e que esta tabela NÃO tem `updatedAt`,
 	// então a gravação não toca carimbo — é o hospedeiro.
 	SaveCustomItem(ctx context.Context, itemID int64, nome string, quantidade int64, espacos float64) error
@@ -54,10 +50,6 @@ type Deps interface {
 	// se toca. O NOME da coluna não atravessa — string de coluna saindo da cena
 	// é SQL viajando com outra roupa.
 	SaveChoices(ctx context.Context, id int64, escolhas ChoiceWrite) error
-	// ApplyPowerTempHp aplica a reserva de PV temporários que um poder concede.
-	// A cena decide QUANDO ela vale — a postura que a liga —, e quanto ela vale
-	// vem do `PowerTempHpAmount` logo acima.
-	ApplyPowerTempHp(ctx context.Context, id int64, powerID, escopo string, quanto int) error
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
 }

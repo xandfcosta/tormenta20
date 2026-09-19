@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"net/http"
 
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -45,20 +44,6 @@ func (h sheetHost) SaveProficiencies(
 // SaveNewCraft acrescenta a perícia que o livro não tem.
 func (h sheetHost) SaveNewCraft(ctx context.Context, id int64, nome string) error {
 	return h.rules.saveNewCraft(ctx, id, nome)
-}
-
-// ApplySpellBuffEffect liga o efeito de uma magia de melhoria.
-func (h sheetHost) ApplySpellBuffEffect(
-	ctx context.Context, id int64, magia string, escopo *string,
-) (sheet.EffectDTO, int, error) {
-	return h.rules.applySpellBuffEffect(ctx, id, magia, escopo)
-}
-
-// PowerTempHpAmount é quanto de PV temporário um poder concede.
-func (h sheetHost) PowerTempHpAmount(
-	r *http.Request, row sqlcgen.Character, atributo string,
-) (int, bool) {
-	return h.rules.powerTempHpAmount(r.Context(), row, atributo)
 }
 
 // ── As ESCRITAS ──────────────────────────────────────────────────────────────
@@ -127,12 +112,4 @@ func (h sheetHost) SaveChoices(ctx context.Context, id int64, escolhas sheetui.C
 		return nil
 	}
 	return set.execTouched(ctx, h.rules.db, "UPDATE characters", id)
-}
-
-// ApplyPowerTempHp aplica a reserva de PV temporários de um poder.
-func (h sheetHost) ApplyPowerTempHp(
-	ctx context.Context, id int64, powerID, escopo string, quanto int,
-) error {
-	_, err := h.rules.applyTempHpPool(ctx, id, "power", powerID, escopo, quanto, "PV temporários")
-	return err
 }

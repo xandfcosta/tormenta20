@@ -16,7 +16,7 @@ import (
 //
 // A tentação tem nome: **o `s.db`**. Cena que compõe SQL é cena com o banco
 // dentro, e o remédio é um método que nomeia a pergunta (`SaveItemOverlays`,
-// `SaveChoices`, `ApplyPowerTempHp`).
+// `SaveChoices`).
 //
 // O `Queries` continua permitido — as sete abas leem e escrevem a mesma linha de
 // personagem, e é a concessão da forja, da administração e das campanhas. O
