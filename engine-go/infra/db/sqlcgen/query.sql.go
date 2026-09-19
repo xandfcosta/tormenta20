@@ -80,6 +80,15 @@ func (q *Queries) ClearCharacterConditionals(ctx context.Context, characterid in
 	return err
 }
 
+const clearCharacterDamage = `-- name: ClearCharacterDamage :exec
+DELETE FROM character_damage WHERE characterId = ?
+`
+
+func (q *Queries) ClearCharacterDamage(ctx context.Context, characterid int64) error {
+	_, err := q.db.ExecContext(ctx, clearCharacterDamage, characterid)
+	return err
+}
+
 const clearCharacterPowerUses = `-- name: ClearCharacterPowerUses :exec
 DELETE FROM character_power_uses WHERE characterId = ?
 `
@@ -1053,6 +1062,23 @@ func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error)
 	return i, err
 }
 
+const getCharacterDamage = `-- name: GetCharacterDamage :one
+SELECT hpDamage, mpSpent FROM character_damage WHERE characterId = ?
+`
+
+type GetCharacterDamageRow struct {
+	Hpdamage int64 `json:"hpdamage"`
+	Mpspent  int64 `json:"mpspent"`
+}
+
+// Ausencia de linha quer dizer INTACTO: so quem apanhou tem registro (00014).
+func (q *Queries) GetCharacterDamage(ctx context.Context, characterid int64) (GetCharacterDamageRow, error) {
+	row := q.db.QueryRowContext(ctx, getCharacterDamage, characterid)
+	var i GetCharacterDamageRow
+	err := row.Scan(&i.Hpdamage, &i.Mpspent)
+	return i, err
+}
+
 const getCharacterOwner = `-- name: GetCharacterOwner :one
 SELECT ownerId FROM characters WHERE id = ? LIMIT 1
 `
@@ -1690,6 +1716,43 @@ func (q *Queries) ListCharacterConditionals(ctx context.Context, characterid int
 			return nil, err
 		}
 		items = append(items, conditionalid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCharacterDamage = `-- name: ListCharacterDamage :many
+SELECT characterId, hpDamage, mpSpent FROM character_damage WHERE characterId IN (/*SLICE:ids*/?)
+`
+
+func (q *Queries) ListCharacterDamage(ctx context.Context, ids []int64) ([]CharacterDamage, error) {
+	query := listCharacterDamage
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterDamage{}
+	for rows.Next() {
+		var i CharacterDamage
+		if err := rows.Scan(&i.Characterid, &i.Hpdamage, &i.Mpspent); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -2669,6 +2732,22 @@ func (q *Queries) SaveCampaignPlace(ctx context.Context, arg SaveCampaignPlacePa
 		&i.Updatedat,
 	)
 	return i, err
+}
+
+const saveCharacterDamage = `-- name: SaveCharacterDamage :exec
+INSERT INTO character_damage (characterId, hpDamage, mpSpent) VALUES (?, ?, ?)
+ON CONFLICT (characterId) DO UPDATE SET hpDamage = excluded.hpDamage, mpSpent = excluded.mpSpent
+`
+
+type SaveCharacterDamageParams struct {
+	Characterid int64 `json:"characterid"`
+	Hpdamage    int64 `json:"hpdamage"`
+	Mpspent     int64 `json:"mpspent"`
+}
+
+func (q *Queries) SaveCharacterDamage(ctx context.Context, arg SaveCharacterDamageParams) error {
+	_, err := q.db.ExecContext(ctx, saveCharacterDamage, arg.Characterid, arg.Hpdamage, arg.Mpspent)
+	return err
 }
 
 const saveOpenBoard = `-- name: SaveOpenBoard :exec

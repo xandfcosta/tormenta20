@@ -103,6 +103,20 @@ RETURNING id, catalogId, scope, modifiers, createdAt;
 UPDATE characters SET hpCurrent = sqlc.arg('hpCurrent'), mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 
+-- name: GetCharacterDamage :one
+-- Ausencia de linha quer dizer INTACTO: so quem apanhou tem registro (00014).
+SELECT hpDamage, mpSpent FROM character_damage WHERE characterId = ?;
+
+-- name: ListCharacterDamage :many
+SELECT characterId, hpDamage, mpSpent FROM character_damage WHERE characterId IN (sqlc.slice('ids'));
+
+-- name: SaveCharacterDamage :exec
+INSERT INTO character_damage (characterId, hpDamage, mpSpent) VALUES (?, ?, ?)
+ON CONFLICT (characterId) DO UPDATE SET hpDamage = excluded.hpDamage, mpSpent = excluded.mpSpent;
+
+-- name: ClearCharacterDamage :exec
+DELETE FROM character_damage WHERE characterId = ?;
+
 -- name: ListCharacterMaxes :many
 SELECT id, hpMax, mpMax FROM characters WHERE id IN (sqlc.slice('ids'));
 

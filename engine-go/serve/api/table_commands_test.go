@@ -275,6 +275,13 @@ func TestThePlayerDoesNotGetAddPartyInTheHtml(t *testing.T) {
 func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 	f := newSceneFixture(t)
 
+	// O PV de partida é LIDO e não escrito à mão: o poço vem do livro, e um
+	// número fixo aqui afirmaria a tabela de classe em vez do descanso.
+	antes, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("ler a ficha antes: %v", err)
+	}
+
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"ruim"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("descanso de dia deu %d: %s", rec.Code, rec.Body.String())
@@ -284,8 +291,12 @@ func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reler a ficha: %v", err)
 	}
-	if ficha.Hpcurrent != 24 {
-		t.Errorf("PV = %d; 24 é o descanso RUIM de um nível 8 (20+4), 28 seria o normal que ninguém pediu", ficha.Hpcurrent)
+	// Os números do descanso estão escritos à mão de propósito: o RUIM devolve
+	// metade do nível (8/2 = 4), e o normal devolveria o nível inteiro. Derivá-los
+	// da regra faria a asserção andar junto com o defeito.
+	if querido := antes.Hpcurrent + 4; ficha.Hpcurrent != querido {
+		t.Errorf("PV = %d; %d é o descanso RUIM de um nível 8 (%d+4), %d seria o normal que ninguém pediu",
+			ficha.Hpcurrent, querido, antes.Hpcurrent, antes.Hpcurrent+8)
 	}
 }
 
@@ -301,8 +312,13 @@ func TestTheDayRestHealsEveryMemberIncludingTheGmsOwn(t *testing.T) {
 	ctx := context.Background()
 	outro := seedUser(t, f.s, "jogador2@t.com")
 	// Nível 5, feridos: o descanso "normal" devolve 5, e o teto não interfere.
-	doOutro := seedCharacterAtLevel(t, f.s, outro, "Arwen", 5, 1, 40, 1, 40)
-	doMestre := seedCharacterAtLevel(t, f.s, f.mestre, "Bardo do mestre", 5, 1, 40, 1, 40)
+	// Os dois partem de 1 PV, e o dano sai do POÇO de cada classe — eles têm
+	// poços diferentes, e um dano igual para os dois os deixaria em pontos
+	// diferentes da barra.
+	doOutro := seedCharacterAtLevel(t, f.s, outro, "Arwen", "Guerreiro", 5,
+		bookPools(t, f.s, "Guerreiro", 5).PvMax-1, 0)
+	doMestre := seedCharacterAtLevel(t, f.s, f.mestre, "Bardo do mestre", "Bardo", 5,
+		bookPools(t, f.s, "Bardo", 5).PvMax-1, 0)
 	seedMember(t, f.s, f.campaignID, doOutro)
 	seedMember(t, f.s, f.campaignID, doMestre)
 
@@ -318,7 +334,8 @@ func TestTheDayRestHealsEveryMemberIncludingTheGmsOwn(t *testing.T) {
 		if err != nil {
 			t.Fatalf("reler %s: %v", quem.nome, err)
 		}
-		if ficha.Hpcurrent != 6 {
+		// Eles partem de 1 PV, e o descanso normal devolve o NÍVEL inteiro.
+		if ficha.Hpcurrent != 1+5 {
 			t.Errorf("%s ficou com %d PV; o descanso normal de um nível 5 devolve 5 (1+5)",
 				quem.nome, ficha.Hpcurrent)
 		}
@@ -330,6 +347,14 @@ func TestTheDayRestHealsEveryMemberIncludingTheGmsOwn(t *testing.T) {
 // descansar em "normal" enquanto a tela dizia "luxuosa".
 func TestAnInventedQualityIsRefused(t *testing.T) {
 	f := newSceneFixture(t)
+
+	// O PV de partida é lido ANTES do gesto. Ler depois faria a asserção comparar
+	// o número consigo mesmo e passar sempre — foi o que aconteceu na primeira
+	// escrita deste caso.
+	antes, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("ler a ficha antes: %v", err)
+	}
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"palaciana"}`)
 	corpo := rec.Body.String()
@@ -344,7 +369,7 @@ func TestAnInventedQualityIsRefused(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reler a ficha: %v", err)
 	}
-	if ficha.Hpcurrent != 20 {
+	if ficha.Hpcurrent != antes.Hpcurrent {
 		t.Errorf("PV = %d — o grupo descansou mesmo com a qualidade recusada", ficha.Hpcurrent)
 	}
 }
@@ -402,6 +427,14 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 
+	// O PV de partida é LIDO: o poço vem do livro, e um 20 escrito à mão faria
+	// este caso afirmar a tabela de classe em vez do caminho do dano.
+	antes, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("ler a ficha antes: %v", err)
+	}
+	querido := antes.Hpcurrent - 5
+
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/vitais/hp/ferir/5", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("ferir deu %d: %s", rec.Code, rec.Body.String())
@@ -411,13 +444,14 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reler a ficha: %v", err)
 	}
-	if ficha.Hpcurrent != 15 {
-		t.Errorf("a FICHA ficou com %d PV; 20-5 = 15 — o dano não chegou nela", ficha.Hpcurrent)
+	if ficha.Hpcurrent != querido {
+		t.Errorf("a FICHA ficou com %d PV; %d-5 = %d — o dano não chegou nela",
+			ficha.Hpcurrent, antes.Hpcurrent, querido)
 	}
 	// E a linha espelha, senão a fila mostraria o número velho ao lado da ficha
 	// certa.
 	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
-		if e.ID == entryID && (e.HpCurrent == nil || *e.HpCurrent != 15) {
+		if e.ID == entryID && (e.HpCurrent == nil || *e.HpCurrent != querido) {
 			t.Errorf("a linha não espelhou a ficha: %v", e.HpCurrent)
 		}
 	}

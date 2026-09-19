@@ -4,8 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sync"
 	"t20engine/app"
 	"t20engine/app/initiative"
+	"t20engine/domain/engine"
 	"t20engine/infra/config"
 	"t20engine/infra/db/dbvalue"
 	"testing"
@@ -59,7 +64,48 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 		srv.WaitForBackground()
 		_ = database.Close()
 	})
+	// O CATÁLOGO É O DE VERDADE, e não um `{"items":[]}` — nem nada.
+	//
+	// Catálogo vazio faz regra sumir do TESTE sem sumir da produção: um escudo
+	// passa a ser VESTIDO porque o eixo de equipar não acha o item, e a
+	// distribuição de atributo do humano aceita três vezes o mesmo porque a raça
+	// não está primada. Fixture que desliga validação em silêncio é pior que
+	// fixture lento.
+	//
+	// Ele subiu do `newSceneFixture` para cá na ALE-355, e a razão é que a
+	// bancada passou a poder MENTIR sobre produção: o PV máximo virou derivado do
+	// catálogo e o `cmd/api` se recusa a subir sem ele, então um servidor de
+	// teste sem catálogo arranja um estado que não existe mais — e o sintoma não
+	// é um erro, é uma ficha com os poços em zero.
+	srv.primeCatalogs(primedCatalogs(t))
 	return srv
+}
+
+// primedCatalogs lê e prima o catálogo de verdade, UMA vez por processo.
+//
+// Em cache porque são 134 servidores de teste neste pacote, e reler e analisar o
+// despejo em cada um custava mais que tudo o que eles fazem juntos. O valor é
+// só de leitura depois de primado.
+var (
+	catalogosUmaVez sync.Once
+	catalogosPrimos *engine.Catalogs
+	catalogosErro   error
+)
+
+func primedCatalogs(t *testing.T) *engine.Catalogs {
+	t.Helper()
+	catalogosUmaVez.Do(func() {
+		bruto, err := os.ReadFile(filepath.Join("..", "..", "parity", "_catalogs.json"))
+		if err != nil {
+			catalogosErro = fmt.Errorf("ler catálogos: %w (gere com `go run ./cmd/genoracle`)", err)
+			return
+		}
+		catalogosPrimos, catalogosErro = engine.PrimeEngineCatalogs(bruto)
+	})
+	if catalogosErro != nil {
+		t.Fatalf("preparar catálogo: %v", catalogosErro)
+	}
+	return catalogosPrimos
 }
 
 func seedUser(t *testing.T, s *Server, email string) int64 {
@@ -104,14 +150,38 @@ func seedCharacter(t *testing.T, s *Server, ownerID int64, name string, hpCur, h
 
 // seedCharacterAtLevel: o nível importa para o descanso (a recuperação é o
 // nível × fator), e o `seedCharacter` fixa nível 1.
+// seedCharacterAtLevel semeia um personagem com os poços que o LIVRO dá.
+//
+// # Ele não escolhe mais o máximo, e essa é a mudança
+//
+// A assinatura recebia `hpCur, hpMax, mpCur, mpMax` e escrevia os quatro. Isso
+// arranjava um estado que a regra não produz — um Arcanista de nível 8 tem 42
+// PV pelo livro, e a bancada escrevia 30 —, e enquanto o máximo era coluna
+// ninguém notava. Com ele derivado do catálogo (ALE-355), esses números viram
+// ficção e todo caso que os afirmava passaria a medir outra coisa.
+//
+// Agora o ajudante PERGUNTA o poço ao motor, do mesmo jeito que a produção vai
+// perguntar, e o chamador diz só quanto o personagem APANHOU. O efeito é que a
+// bancada passa a dizer a verdade ANTES de a produção mudar: quando a derivação
+// entrar, estes números já serão os dela.
+//
+// # E todo personagem tem CLASSE
+//
+// Personagem sem classe é impossível nas regras (decisão do dono), e trinta das
+// quarenta chamadas o criavam. Sem classe o poço do livro é ZERO, então o
+// estado impossível só era invisível porque ninguém derivava.
 func seedCharacterAtLevel(
-	t *testing.T, s *Server, ownerID int64, name string, level, hpCur, hpMax, mpCur, mpMax int64,
+	t *testing.T, s *Server, ownerID int64, name, classe string, level, hpDano, mpGasto int64,
 ) int64 {
 	t.Helper()
+	pocos := bookPools(t, s, classe, level)
 	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: name, Origin: "Soldado", Level: level,
-		HpMax: hpMax, HpCurrent: hpCur, MpMax: mpMax, MpCurrent: mpCur,
-		Size: "Médio", Displacement: 9,
+		HpMax:     pocos.PvMax,
+		HpCurrent: max(0, pocos.PvMax-hpDano),
+		MpMax:     pocos.PmMax,
+		MpCurrent: max(0, pocos.PmMax-mpGasto),
+		Size:      "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
 		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
@@ -119,7 +189,37 @@ func seedCharacterAtLevel(
 	if err != nil {
 		t.Fatalf("seed character %q: %v", name, err)
 	}
+	seedClasse(t, s, id, classe, level)
+	// O DANO vai para a tabela própria (00014), e só quem apanhou ganha linha.
+	if hpDano > 0 || mpGasto > 0 {
+		if err := s.queries.SaveCharacterDamage(context.Background(), sqlcgen.SaveCharacterDamageParams{
+			Characterid: id, Hpdamage: hpDano, Mpspent: mpGasto,
+		}); err != nil {
+			t.Fatalf("seed dano de %q: %v", name, err)
+		}
+	}
 	return id
+}
+
+// bookPools é quanto o LIVRO dá de PV/PM para esta classe neste nível.
+//
+// Ela existe para a bancada parar de escolher o máximo: o número sai do mesmo
+// motor que a ficha usa, então um caso que afirme "metade do PV" continua
+// afirmando metade quando a tabela de classe mudar.
+type seededPools struct{ PvMax, PmMax int64 }
+
+func bookPools(t *testing.T, s *Server, classe string, nivel int64) seededPools {
+	t.Helper()
+	pocos := s.catalogs.ComputeVitals(engine.VitalContext{
+		Level:      int(nivel),
+		Classes:    []engine.ClassEntry{{ClassName: classe, Level: int(nivel)}},
+		AttrTotals: map[string]int{},
+	})
+	if pocos.PvMax <= 0 {
+		t.Fatalf("a classe %q no nível %d deu %d de PV — ela existe na tabela do livro?",
+			classe, nivel, pocos.PvMax)
+	}
+	return seededPools{PvMax: int64(pocos.PvMax), PmMax: int64(pocos.PmMax)}
 }
 
 // seedMember senta um personagem à mesa.

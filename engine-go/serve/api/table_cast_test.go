@@ -12,7 +12,7 @@ import (
 func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 	f := newSceneFixture(t)
 	// Um personagem que existe, mas de OUTRO dono e fora do roster desta mesa.
-	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", 3, 10, 10, 2, 4)
+	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", "Guerreiro", 3, 0, 2)
 
 	corpo := f.posta(t, f.mestre,
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(forasteiro, 10)+"/na-fila", "{}")
@@ -176,7 +176,7 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
-	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", 3, 10, 10, 2, 4)
+	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", "Guerreiro", 3, 0, 2)
 	antes, err := f.s.queries.GetCharacter(ctx, forasteiro)
 	if err != nil {
 		t.Fatalf("ler a ficha do forasteiro: %v", err)

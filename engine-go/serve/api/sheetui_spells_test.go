@@ -222,8 +222,7 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 func TestAnAugmentOutOfReachShowsLocked(t *testing.T) {
 	// Nível 5 abre o 2º círculo; a Invisibilidade tem aprimoramento de 3º.
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Aprendiz", 5, 20, 20, 20, 20)
-	seedClasse(t, f.s, id, "Arcanista", 5)
+	id := seedCharacterAtLevel(t, f.s, f.jogador, "Aprendiz", "Arcanista", 5, 0, 0)
 	spell(t, f, id, "aprende/invisibilidade")
 
 	tela := spellScreen(t, f, id)

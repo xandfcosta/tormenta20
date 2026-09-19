@@ -120,7 +120,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 	player := seedUser(t, s, "jogador@t.com")
 	intruder := seedUser(t, s, "intruso@t.com")
 	campaignID := seedCampaign(t, s, gm)
-	charID := seedCharacterAtLevel(t, s, player, "Arcanista", 8, 20, 30, 5, 10)
+	charID := seedCharacterAtLevel(t, s, player, "Arcanista", "Arcanista", 8, 10, 5)
 	seedMember(t, s, campaignID, charID)
 	if _, err := s.queries.CreateExpertise(ctx, sqlcgen.CreateExpertiseParams{
 		Characterid: charID, Name: "Iniciativa", Attribute: "dexterity", Trained: 0, Custom: 0,

@@ -167,7 +167,7 @@ func TestEquippingRespectsTheTwoHandCeiling(t *testing.T) {
 // não é erro que alguém veja.
 func TestAnItemFromAnotherSheetCannotBeMoved(t *testing.T) {
 	f, minha := fighterFixture(t)
-	outra := seedCharacterAtLevel(t, f.s, f.jogador, "Vizinho", 1, 10, 10, 0, 0)
+	outra := seedCharacterAtLevel(t, f.s, f.jogador, "Vizinho", "Guerreiro", 1, 0, 0)
 	alheio := itemSemeia(t, f, outra, "espada-longa", "Espada longa", "wielded")
 
 	if recusa := bagCommand(t, f, minha, fmt.Sprintf("itens/%d/guarda", alheio)); recusa == "" {

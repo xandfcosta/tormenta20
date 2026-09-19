@@ -164,7 +164,7 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 // USAR gasta a dose e aplica o que a MESA rolou, preso no máximo.
 func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Ferido", 3, 10, 30, 0, 0)
+	id := seedCharacterAtLevel(t, f.s, f.jogador, "Ferido", "Guerreiro", 3, 20, 0)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
 	if recusa := use(t, f, id, item, `{"item_roll_hp":7}`); recusa != "" {
@@ -190,7 +190,7 @@ func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 // A CURA NÃO PASSA DO MÁXIMO, e é o motor que prende.
 func TestUsingDoesNotGoPastMaximumHp(t *testing.T) {
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Quase cheio", 3, 28, 30, 0, 0)
+	id := seedCharacterAtLevel(t, f.s, f.jogador, "Quase cheio", "Guerreiro", 3, 2, 0)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
 	if recusa := use(t, f, id, item, `{"item_roll_hp":8}`); recusa != "" {

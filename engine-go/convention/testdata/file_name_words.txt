@@ -318,6 +318,7 @@ pnpm
 pointbuy
 pointers
 polyline
+pools
 populate
 port
 portuguese
@@ -368,6 +369,7 @@ search
 seating
 section
 seed
+seeded
 seeder
 selection
 server

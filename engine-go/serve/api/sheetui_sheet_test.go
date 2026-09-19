@@ -28,8 +28,7 @@ func TestTheSheetTabAddressSurvives(t *testing.T) {
 func sheetOf(t *testing.T, nome string, nivel int64) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, nome, nivel, 20, 20, 10, 10)
-	seedClasse(t, f.s, id, "Arcanista", nivel)
+	id := seedCharacterAtLevel(t, f.s, f.jogador, nome, "Arcanista", nivel, 0, 0)
 	return f, id
 }
 
@@ -203,13 +202,18 @@ func TestTheRefusalComesBackInTheSceneAndNotInAnErrorStatus(t *testing.T) {
 // andar junto com o defeito.
 func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 	f, id := sheetOf(t, "Ferido", 3)
-	url := fmt.Sprintf("/personagens/%d/vitais/pv/-5", id)
 
-	// 20/20 — CHEIO, e este é o controle: sem ele, pintar crítico sempre
-	// passaria em tudo que vem depois.
+	// O PASSO é um QUARTO do poço, e não um número escolhido: o poço vem do
+	// livro, e um passo fixo de 5 atravessaria as fronteiras em outro lugar no
+	// dia em que a tabela de classe mudasse — sem ninguém mexer no teste.
+	poco := bookPools(t, f.s, "Arcanista", 3).PvMax
+	url := fmt.Sprintf("/personagens/%d/vitais/pv/-%d", id, poco/4)
+
+	// CHEIO, e este é o controle: sem ele, pintar crítico sempre passaria em
+	// tudo que vem depois.
 	tela := f.pede(t, f.jogador, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "").Body.String()
 	if tom := hpTintOf(t, tela); tom != "full" {
-		t.Errorf("com 20/20 a faixa saiu %q, e vida cheia é `full`", tom)
+		t.Errorf("com o poço cheio a faixa saiu %q, e vida cheia é `full`", tom)
 	}
 
 	// A descida, degrau por degrau, nas fronteiras da escada.
@@ -218,13 +222,13 @@ func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 		pct    int
 		tom    string
 	}{
-		{"15/20", 75, "full"},
-		{"10/20", 50, "hurt"},
-		{"5/20", 25, "critical"},
+		{"três quartos", 75, "full"},
+		{"metade", 50, "hurt"},
+		{"um quarto", 25, "critical"},
 	} {
 		corpo := f.pede(t, f.jogador, http.MethodPost, url, "").Body.String()
 		if tom := hpTintOf(t, corpo); tom != caso.tom {
-			t.Errorf("com %s (%d%%) a faixa saiu %q, e o esperado é %q",
+			t.Errorf("com %s do poço (%d%%) a faixa saiu %q, e o esperado é %q",
 				caso.fracao, caso.pct, tom, caso.tom)
 		}
 	}

@@ -368,12 +368,15 @@ func TestClosingReportsAFailedDelete(t *testing.T) {
 // vitais continuam de pé —, mas sem o anúncio a degradação vira uma linha de
 // log enquanto os handlers do catálogo devolvem 503 no meio de uma jogada.
 func TestHealthReportsADegradedBoot(t *testing.T) {
-	// O servidor de teste sobe SEM catálogo. Em PRODUÇÃO isso deixou de ser
-	// possível — o `primeCatalogs` derruba o processo desde que o PV máximo
-	// passou a ser derivado (ALE-355) —, e é por isso que este caso vale: ele é
-	// o único lugar que ainda monta o estado do meio, e o que ele prende é o
-	// RELATÓRIO saber descrevê-lo.
+	// O catálogo é DESLIGADO de propósito, e a bancada já não faz isso sozinha.
+	//
+	// Em produção este estado deixou de existir: o `primeCatalogs` derruba o
+	// processo desde que o PV máximo passou a ser derivado (ALE-355), e o
+	// `newTestServer` passou a primar como produção pela mesma razão. O que
+	// sobra aqui é o RELATÓRIO saber descrever um estado do meio — e arranjá-lo
+	// virou um ato explícito, que é como deve ser.
 	s := newTestServer(t)
+	s.primeCatalogs(nil)
 
 	degradado := healthBody(t, s)
 
