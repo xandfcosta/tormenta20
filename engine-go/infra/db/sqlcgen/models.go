@@ -117,6 +117,12 @@ type CharacterConditional struct {
 	Conditionalid string `json:"conditionalid"`
 }
 
+type CharacterDamage struct {
+	Characterid int64 `json:"characterid"`
+	Hpdamage    int64 `json:"hpdamage"`
+	Mpspent     int64 `json:"mpspent"`
+}
+
 type CharacterExpertise struct {
 	ID          int64  `json:"id"`
 	Characterid int64  `json:"characterid"`

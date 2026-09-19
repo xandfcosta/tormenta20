@@ -107,7 +107,6 @@ creatures
 crossrefs
 css
 cues
-current
 curtain
 damage
 data
@@ -227,7 +226,6 @@ init
 initiative
 ink
 instance
-instead
 invite
 invites
 is
@@ -288,7 +286,6 @@ notes
 notice
 notices
 npc
-of
 one
 open
 optional
