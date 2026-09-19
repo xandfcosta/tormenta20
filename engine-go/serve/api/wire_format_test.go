@@ -130,10 +130,15 @@ func agrafiaDasTags(t *testing.T) {
 	}
 	// CONTROLE: sem ele, um regex que parou de casar diria verde sobre nada.
 	//
-	// O piso é CALIBRADO dos dois lados e não chutado: são 91 tags hoje, e um
-	// regex que parasse de casar daria ZERO. Sessenta fica acima da metade do que
-	// existe e muito longe do zero, com folga para o que ainda vai sair.
-	if sitios < 60 {
+	// O piso é calibrado contra o ZERO, e não como censo: o que ele pega é um
+	// regex que parou de casar, e esse caso dá zero.
+	//
+	// Ele DESCEU de 60 para 25, e a direção é o ponto. A conta encolhe de
+	// propósito a cada fatia da migração — o DTO de fio morre junto com o
+	// manipulador que o servia, e só a ALE-349 levou quatro. Um piso calibrado
+	// como "metade do que existe hoje" reprovaria a próxima fatia por ela ter
+	// dado certo, e a correção seria baixar o número de novo. São 55 tags agora.
+	if sitios < 25 {
 		t.Fatalf("só %d tags JSON em %d arquivos — o padrão parou de casar e o verde "+
 			"não significa nada", sitios, visitados)
 	}
