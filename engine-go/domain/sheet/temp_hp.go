@@ -10,7 +10,16 @@ import (
 // O DANO CONTRA PV TEMPORÁRIO: qual poça esvazia primeiro, e o que sobra da
 // poça vazia.
 //
-// O dano que chega drena a MAIOR poça de PV temporário antes de tocar o PV.
+// AS POÇAS SOMAM. *"Certos efeitos fornecem PV ou PM temporários. Eles são
+// somados a seus pontos atuais, mesmo que ultrapassem o máximo"* (p106). Duas
+// fontes convivem, e o que empilha os valores é o motor — os modificadores
+// `tempHp` saem com `bonusType: untyped`, que é o tipo que acumula.
+//
+// O dano que chega drena a MAIOR poça antes de tocar o PV. **A ORDEM não é do
+// livro** — ele só diz que os pontos temporários "são sempre os primeiros a
+// serem gastos" (p106), e cala sobre qual poça primeiro. A maior é escolha
+// nossa, e o que ela protege é a poça pequena de cena, que expira sozinha.
+//
 // As poças vivem como modificadores `tempHp` nas linhas de efeito ativo, e a
 // distinção que importa é entre poça PURA e MISTA: a pura (só modificadores de
 // tempHp) é APAGADA quando esvazia; a mista fica, com o tempHp zerado, porque
@@ -26,58 +35,6 @@ type TempHpPool struct {
 	Amount    int
 	Pure      bool
 	Mods      []map[string]any // guardado CRU, para uma reescrita não perder campo
-}
-
-type DisplacedPool struct {
-	EffectID int64 `json:"effectId"`
-	Removed  bool  `json:"removed"`
-}
-
-// PoolPlan é o VALE-O-MAIOR do livro (p256) virado plano.
-//
-// Os campos são exportados porque quem APLICA é o hospedeiro: a decisão de qual
-// poça vence é regra e mora aqui; apagar linha e reescrever modificador é
-// escrita, e é dele.
-type PoolPlan struct {
-	Superseded   bool
-	KeptEffectID int64
-	KeptAmount   int
-	Displaced    []DisplacedPool
-	ZeroWrites   []EffectModifierWrite
-	DeleteIDs    []int64
-}
-
-// PlanPoolSupremacy decide se uma poça nova pode existir ao lado das outras.
-//
-// Uma poça existente MAIOR OU IGUAL vence, e a nova nem chega a existir; senão a
-// nova vence e toda poça menor é deslocada. É o "vale o maior" do livro (p256):
-// PV temporário não soma, ele substitui.
-func PlanPoolSupremacy(pools []TempHpPool, ownCatalogID, ownScope string, newAmount int) PoolPlan {
-	others := []TempHpPool{}
-	for _, p := range pools {
-		if !(p.CatalogID == ownCatalogID && p.Scope == ownScope) {
-			others = append(others, p)
-		}
-	}
-	var top *TempHpPool
-	for i := range others {
-		if top == nil || others[i].Amount > top.Amount {
-			top = &others[i]
-		}
-	}
-	if top != nil && top.Amount >= newAmount {
-		return PoolPlan{Superseded: true, KeptEffectID: top.EffectID, KeptAmount: top.Amount}
-	}
-	plan := PoolPlan{Displaced: []DisplacedPool{}}
-	for _, p := range others {
-		plan.Displaced = append(plan.Displaced, DisplacedPool{EffectID: p.EffectID, Removed: p.Pure})
-		if p.Pure {
-			plan.DeleteIDs = append(plan.DeleteIDs, p.EffectID)
-		} else {
-			plan.ZeroWrites = append(plan.ZeroWrites, EffectModifierWrite{p.EffectID, withTempHpAmount(p.Mods, 0)})
-		}
-	}
-	return plan
 }
 
 // DamageDrain é uma poça drenada pelo dano, e quanto saiu dela.

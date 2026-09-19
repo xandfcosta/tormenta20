@@ -55,9 +55,9 @@ type Deps interface {
 	// se toca. O NOME da coluna não atravessa — string de coluna saindo da cena
 	// é SQL viajando com outra roupa.
 	SaveChoices(ctx context.Context, id int64, escolhas ChoiceWrite) error
-	// ApplyPowerTempHp aplica a reserva de PV temporários sob o vale-o-maior da
-	// p256. A TRANSAÇÃO é do hospedeiro; a conta é do `sheet`
-	// (`PlanPoolSupremacy`), e o que atravessa é QUANDO ela vale.
+	// ApplyPowerTempHp aplica a reserva de PV temporários que um poder concede.
+	// A cena decide QUANDO ela vale — a postura que a liga —, e quanto ela vale
+	// vem do `PowerTempHpAmount` logo acima.
 	ApplyPowerTempHp(ctx context.Context, id int64, powerID, escopo string, quanto int) error
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)

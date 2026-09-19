@@ -164,12 +164,9 @@ func (h sheetHost) SaveChoices(ctx context.Context, id int64, escolhas sheetui.C
 }
 
 // ApplyPowerTempHp aplica a reserva de PV temporários de um poder.
-//
-// A transação mora no `applyPoolTx` e não aqui, porque a conta é do `sheet`:
-// "considere apenas o maior valor" (p256).
 func (h sheetHost) ApplyPowerTempHp(
 	ctx context.Context, id int64, powerID, escopo string, quanto int,
 ) error {
-	_, _, err := h.rules.applyPoolTx(ctx, id, "power", powerID, escopo, quanto, "PV temporários")
+	_, err := h.rules.applyTempHpPool(ctx, id, "power", powerID, escopo, quanto, "PV temporários")
 	return err
 }

@@ -14,59 +14,32 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// applyPoolTx é a transação da poça de PV temporários, SEM transporte.
+// applyTempHpPool liga uma reserva de PV temporários, SEM transporte.
 //
-// Ela nasceu na ALE-278 porque a mesma sequência — `BeginTx`, listar os efeitos,
-// planejar pelo `sheet`, apagar/zerar os deslocados, gravar o novo, `Commit` —
-// estava escrita DUAS vezes: aqui e dentro da cena da ficha, que a montava para
-// a concessão de um poder. Duas transações sobre a mesma regra divergem na
-// primeira vez que uma das duas ganhar um passo.
+// Ela era uma TRANSAÇÃO de quatro passos — listar os efeitos, planejar o
+// vale-o-maior, apagar/zerar as poças deslocadas, gravar a nova — e virou um
+// `UPSERT` só quando a regra caiu (ALE-347). A p106 manda SOMAR os pontos
+// temporários, e o `domain/sheet` explica por que a ordem de drenagem é nossa e
+// o empilhamento é do motor.
 //
-// A conta continua sendo do `sheet` (`PlanPoolSupremacy`): "se você receber PV
-// temporários de mais de uma fonte, considere apenas o maior valor" (p256).
-// Poça SUPERADA não é erro — é a regra dizendo que esta não vale —, e por isso
-// ela volta com o plano e sem efeito.
-func (sr sheetRules) applyPoolTx(
+// O `Upsert` continua fazendo o trabalho que sobrou: reentrar na mesma Fúria
+// REESCREVE a poça da Alma de Bronze em vez de abrir uma segunda, porque a
+// chave é (personagem, catálogo, escopo). Fonte repetida não empilha; fontes
+// diferentes, sim.
+func (sr sheetRules) applyTempHpPool(
 	ctx context.Context, id int64, source, catalogID, scope string, amount int, note string,
-) (sheet.PoolPlan, sheet.EffectDTO, error) {
+) (sheet.EffectDTO, error) {
 	mods := []map[string]any{{"target": map[string]any{"k": "tempHp"}, "amount": amount, "bonusType": "untyped", "note": note}}
 	modJSON, _ := json.Marshal(mods)
 
-	tx, err := sr.db.BeginTx(ctx, nil)
-	if err != nil {
-		return sheet.PoolPlan{}, sheet.EffectDTO{}, err
-	}
-	defer func() { _ = tx.Rollback() }()
-	q := sr.queries.WithTx(tx)
-
-	rows, err := q.ListActiveEffectsByCharacter(ctx, id)
-	if err != nil {
-		return sheet.PoolPlan{}, sheet.EffectDTO{}, fmt.Errorf("ler os efeitos do personagem %d: %w", id, err)
-	}
-	plan := sheet.PlanPoolSupremacy(sheet.ParseTempHpPools(rows), catalogID, scope, amount)
-	if plan.Superseded {
-		return plan, sheet.EffectDTO{}, tx.Commit()
-	}
-	for _, z := range plan.ZeroWrites {
-		if err := q.UpdateEffectModifiers(ctx, sqlcgen.UpdateEffectModifiersParams{Modifiers: z.Modifiers, ID: z.EffectID}); err != nil {
-			return plan, sheet.EffectDTO{}, fmt.Errorf("zerar a poça deslocada %d: %w", z.EffectID, err)
-		}
-	}
-	for _, delID := range plan.DeleteIDs {
-		if err := q.DeleteEffectByID(ctx, delID); err != nil {
-			return plan, sheet.EffectDTO{}, fmt.Errorf("apagar a poça deslocada %d: %w", delID, err)
-		}
-	}
-	eff, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
-		Characterid: id, Source: source, Catalogid: catalogID, Scope: scope, Modifiers: string(modJSON), Createdat: dbvalue.NowISO(),
+	eff, err := sr.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+		Characterid: id, Source: source, Catalogid: catalogID, Scope: scope,
+		Modifiers: string(modJSON), Createdat: dbvalue.NowISO(),
 	})
 	if err != nil {
-		return plan, sheet.EffectDTO{}, err
+		return sheet.EffectDTO{}, fmt.Errorf("gravar a poça de %d PV temporários de %q: %w", amount, catalogID, err)
 	}
-	if err := tx.Commit(); err != nil {
-		return plan, sheet.EffectDTO{}, err
-	}
-	return plan, effectDTOFromUpsert(eff), nil
+	return effectDTOFromUpsert(eff), nil
 }
 
 // applySpellBuffEffect is the spell-buff domain rule, transport-agnostic: the spell must

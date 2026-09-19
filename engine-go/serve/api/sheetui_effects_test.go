@@ -121,3 +121,40 @@ func TestTheEffectsPanelDrawsTheFourBlocks(t *testing.T) {
 		}
 	}
 }
+
+// AS DUAS POÇAS DE PV TEMPORÁRIO CONVIVEM, e a segunda não apaga a primeira.
+//
+// O livro: *"Pontos Temporários. Certos efeitos fornecem PV ou PM temporários.
+// Eles são SOMADOS a seus pontos atuais, mesmo que ultrapassem o máximo"*
+// (p106). Ele não tem vale-o-maior em lugar nenhum — marca à mão os poderes
+// cujos pontos são "cumulativos" (p45, p54, p76) e nunca diz que duas fontes se
+// excluem.
+//
+// O caso precisa de DUAS fontes e de uma MAIOR primeiro: com uma só, o gesto
+// certo e o errado dão o mesmo resultado. O Campo de Força (30 de cena) entra
+// antes da Alma de Bronze (nível + Força), que é a poça menor — e era ela que
+// sumia, sem erro nenhum, porque o plano a declarava superada.
+func TestATempHpPoolDoesNotWipeTheOneAlreadyThere(t *testing.T) {
+	f, id := barbaro(t, 5)
+
+	if rec := effect(t, f, id, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
+		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
+	}
+	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); recusa != "" {
+		t.Fatalf("entrar na Fúria foi recusado: %q", recusa)
+	}
+
+	ativos := effects(t, f, id)
+	for _, fonte := range []string{"campo-de-forca", "class.barbaro.alma-de-bronze"} {
+		if !ativos[fonte] {
+			t.Errorf("a poça de %q não está na ficha: %v", fonte, ativos)
+		}
+	}
+
+	tela := effectScreen(t, f, id)
+	for _, quanto := range []string{"+30", "+9"} {
+		if !strings.Contains(tela, quanto) {
+			t.Errorf("a aba não mostra %q de PV temporários", quanto)
+		}
+	}
+}

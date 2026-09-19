@@ -13,7 +13,7 @@ import (
 //
 // Dez métodos que mudam a ficha de alguém: subir de nível, conjurar, consumir
 // um item, aplicar o efeito de uma magia, gravar proficiência e perícia nova, e
-// a reserva de PV temporários sob o vale-o-maior da p256.
+// a reserva de PV temporários que um poder concede.
 //
 // Elas leem o MOTOR além do banco, e é isso que as separa das regras de
 // campanha: subir de nível recalcula PV e PM (`syncLevelVitals`), conjurar
