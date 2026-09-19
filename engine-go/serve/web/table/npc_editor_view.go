@@ -85,11 +85,24 @@ func blankDraft() string {
 // que o handler tem e que não vale o acoplamento. Três fragmentos por clique é
 // HTML de meia dúzia de linhas.
 func draftLists(c commandCtx, rascunho npcDraft) []templ.Component {
+	v := c.sessionView()
 	return []templ.Component{
-		draftAttacks(c.CampaignID, c.SessionID, rascunho.Bloco.Attacks),
-		draftExpertises(c.CampaignID, c.SessionID, rascunho.Bloco.Skills),
-		draftAbilities(c.CampaignID, c.SessionID, rascunho.Bloco.SpecialAbilities),
+		draftAttacks(v, rascunho.Bloco.Attacks),
+		draftExpertises(v, rascunho.Bloco.Skills),
+		draftAbilities(v, rascunho.Bloco.SpecialAbilities),
 	}
+}
+
+// sessionView é a `View` mínima que um fragmento precisa para saber PARA ONDE
+// postar: os dois ids, de onde o `SessionBase` deriva o endereço.
+//
+// Ela é parcial de propósito e isso não repete o defeito da prévia das notas: o
+// que envenenou aquela foi nascer com os ids em ZERO, e estes vêm do pedido que
+// o chi acabou de casar. O fragmento não desenha fila, grupo nem tabuleiro, e
+// carregar a view inteira até aqui obrigaria o manipulador a recomputá-la para
+// redesenhar três listas.
+func (c commandCtx) sessionView() View {
+	return View{CampaignID: c.CampaignID, SessionID: c.SessionID}
 }
 
 // draftField é o caminho de um pedaço do rascunho, para o `data-bind`.
@@ -137,9 +150,9 @@ func blockName(lista string) string {
 // caminho.
 func openEditor(v View, npcID int64) string {
 	if npcID == 0 {
-		return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/elenco/npc/novo')", v.CampaignID, v.SessionID)
+		return fmt.Sprintf("@post('%s/elenco/npc/novo')", v.SessionBase())
 	}
-	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/elenco/npc/%d/editar')", v.CampaignID, v.SessionID, npcID)
+	return fmt.Sprintf("@post('%s/elenco/npc/%d/editar')", v.SessionBase(), npcID)
 }
 
 // closeEditor é o Cancelar, e ele não fala com o servidor: o rascunho mora no
@@ -147,8 +160,11 @@ func openEditor(v View, npcID int64) string {
 const closeEditor = "$draft_open = false; $draft_error = ''"
 
 // listCommand escreve o gesto que acrescenta ou tira uma linha.
-func listCommand(campanha, sessao int64, lista string, indice int) string {
-	base := fmt.Sprintf("/campanhas/%d/sessoes/%d/elenco/npc/rascunho/%s", campanha, sessao, lista)
+//
+// Ela recebe a VIEW e não os dois ids: o endereço da sessão tem um dono, e
+// passar os ids soltos seria reconstruí-lo aqui.
+func listCommand(v View, lista string, indice int) string {
+	base := fmt.Sprintf("%s/elenco/npc/rascunho/%s", v.SessionBase(), lista)
 	if indice < 0 {
 		return fmt.Sprintf("@post('%s/nova')", base)
 	}
@@ -157,7 +173,7 @@ func listCommand(campanha, sessao int64, lista string, indice int) string {
 
 // salvaOBloco é o único gesto desta tela que grava.
 func salvaOBloco(v View) string {
-	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/elenco/npc/rascunho/salvar')", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("@post('%s/elenco/npc/rascunho/salvar')", v.SessionBase())
 }
 
 // onTabExpr é a condição que mostra uma aba. Escrita aqui e não no `.templ` porque o

@@ -72,6 +72,17 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	if !strings.Contains(resposta, "draft.bloco.attacks.0.name") {
 		t.Errorf("a linha nova não tem onde escrever o nome:\n%s", resposta)
 	}
+	// E o botão de TIRAR a linha aponta para ESTA mesa.
+	//
+	// O fragmento é desenhado a partir de uma `View` mínima, montada com os dois
+	// ids do pedido (`commandCtx.sessionView`). É um sítio com um modo de falha
+	// silencioso: uma view montada sem eles produziria
+	// `/campanhas/0/sessoes/0/…`, um endereço que EXISTE, responde 403, e devolve
+	// uma tela que não mudou — a mesma família que a prévia das notas já teve.
+	tirar := f.tableUrl() + "/elenco/npc/rascunho/ataque/0/remover"
+	if !strings.Contains(resposta, tirar) {
+		t.Errorf("o botão de tirar a linha não aponta para %s:\n%s", tirar, resposta)
+	}
 }
 
 // Índice fora por um é a classe de erro clássica desta operação, e o sintoma na

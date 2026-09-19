@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -13,6 +12,7 @@ import (
 	"t20engine/app"
 	"t20engine/domain/live"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/serve/web/routes"
 )
 
 // O CICLO DA SESSÃO na cena — iniciar, encerrar, renomear, reiniciar o combate
@@ -126,7 +126,7 @@ func (s Scene) deletesTheSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sse := datastar.NewSSE(w, r)
-	_ = sse.Redirect("/campanhas/" + strconv.FormatInt(campaignID, 10))
+	_ = sse.Redirect(routes.CampaignTab(campaignID, ""))
 }
 
 // sceneCommand é o caminho dos gestos cuja autorização mora no CASO DE USO.

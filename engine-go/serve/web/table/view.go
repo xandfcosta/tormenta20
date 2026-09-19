@@ -520,13 +520,28 @@ func ofViewGm(
 	}
 }
 
+// SessionBase é O ENDEREÇO desta sessão, e os gestos da cena penduram o verbo
+// nele: `v.SessionBase() + "/notas"`.
+//
+// Ela é MÉTODO e não campo, e a diferença tem um defeito atrás. O `BoardView.Base`
+// é campo porque ali o prefixo é uma ESCOLHA — o mesmo tabuleiro posta na mesa
+// ou no rascunho do acervo, e quem monta a view decide qual. Aqui não há
+// escolha: o endereço é função dos dois ids e de mais nada. Um campo abriria a
+// única falha que este desenho não tem — a view sintética que alguém constrói
+// sem preenchê-lo, e que passa a postar em lugar nenhum. É a mesma família do
+// `/campanhas/0/sessoes/0/notas` que a prévia das notas já produziu.
+//
+// O literal mora no `routes.Session`, e em mais lugar nenhum: quem cobra é o
+// `TestNoHandwrittenSessionAddress`.
+func (v View) SessionBase() string { return routes.Session(v.CampaignID, v.SessionID) }
+
 // tableCommand escreve a chamada Datastar de um comando do mestre.
 //
 // O caminho é o da CENA e não o da API JSON: as rotas próprias chamam as MESMAS
 // regras extraídas, e o que impede as duas telas de divergirem é compartilhar a
 // REGRA, não a rota.
 func tableCommand(v View, metodo, acao string) string {
-	caminho := fmt.Sprintf("/campanhas/%d/sessoes/%d/%s", v.CampaignID, v.SessionID, acao)
+	caminho := v.SessionBase() + "/" + acao
 	if metodo == "POST" {
 		return fmt.Sprintf("@post('%s')", caminho)
 	}
@@ -540,7 +555,7 @@ func tableCommand(v View, metodo, acao string) string {
 // postar é uma corrida esperando por um mestre de dedo rápido. Caminho é do
 // botão que foi clicado, e não há segundo escritor.
 func rowCommand(v View, l tableRow, acao string) string {
-	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/iniciativa/%s/%s')", v.CampaignID, v.SessionID, l.ID, acao)
+	return fmt.Sprintf("@post('%s/iniciativa/%s/%s')", v.SessionBase(), l.ID, acao)
 }
 
 // rowVital escreve o ferir/curar com os DOIS passos já resolvidos em duas
@@ -572,7 +587,7 @@ func harmVerb(pool string) string {
 }
 
 func rowVital(v View, l tableRow, pool, verb string) string {
-	base := fmt.Sprintf("/campanhas/%d/sessoes/%d/iniciativa/%s/vitais/%s/%s/", v.CampaignID, v.SessionID, l.ID, pool, verb)
+	base := fmt.Sprintf("%s/iniciativa/%s/vitais/%s/%s/", v.SessionBase(), l.ID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }
 
@@ -595,8 +610,8 @@ func openEdit(v View, l tableRow) string {
 // saveEdit monta o caminho com o id que o número semeou.
 func saveEdit(v View) string {
 	return fmt.Sprintf(
-		"document.getElementById('edit-combatant').close(); @post('/campanhas/%d/sessoes/%d/iniciativa/' + $edit_row + '/editar')",
-		v.CampaignID, v.SessionID,
+		"document.getElementById('edit-combatant').close(); @post('%s/iniciativa/' + $edit_row + '/editar')",
+		v.SessionBase(),
 	)
 }
 
@@ -642,8 +657,8 @@ func onCondition(id string) string {
 // por combatente, e o sinal é reescrito a cada abertura.
 func toggleConditionRow(v View, id string) string {
 	return fmt.Sprintf(
-		"@post('/campanhas/%d/sessoes/%d/iniciativa/' + $condition_row + '/condicao/%s')",
-		v.CampaignID, v.SessionID, id,
+		"@post('%s/iniciativa/' + $condition_row + '/condicao/%s')",
+		v.SessionBase(), id,
 	)
 }
 
@@ -706,7 +721,10 @@ func deleteSessionCommand(v View) string {
 // mestre continua o que estava fazendo. Sair para a raiz obrigaria a refazer
 // dois cliques para voltar à mesa que ele acabou de deixar.
 func campaignChronicle(v View) string {
-	return fmt.Sprintf("/campanhas/%d", v.CampaignID)
+	// Pelo `routes` e não à mão: a crônica é cena de OUTRO pacote, e o critério
+	// de entrada daquele arquivo é exatamente este — endereço que uma cena cita
+	// de outra.
+	return routes.CampaignTab(v.CampaignID, "")
 }
 
 // portugueseCycle é o que o crachá do cabeçalho diz.

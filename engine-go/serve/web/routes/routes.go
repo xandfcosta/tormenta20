@@ -10,6 +10,13 @@
 // Esses ficam com o dono, porque trazê-los para cá não compra nada e transforma
 // este arquivo no lugar onde tudo cabe.
 //
+// **A exceção é o endereço que a PRÓPRIA cena não consegue escrever uma vez
+// só**, e ela tem um número: o da sessão estava copiado em dezenove sítios
+// dentro da Mesa, todos montando o mesmo `Sprintf` (ALE-346). Um endereço com
+// ids dentro não tem onde morar numa cena feita de funções soltas — cada uma
+// recebe os ids e remonta o caminho —, e é aí que trazê-lo para cá compra o que
+// o critério de cima diz que não compra.
+//
 // # Por que não a `Deps` de cada cena
 //
 // Porque isto é constante, não comportamento. Uma porta existe para a cena
@@ -83,9 +90,13 @@ func MasterBestiarySearch(term string) string {
 
 // Session é PARA ONDE se entra numa sessão: a cena ao vivo dela.
 //
-// O Hub, o cartão da campanha e duas linhas da campanha aberta a citam, e nenhum
-// deles é da cena. UMA função e não quatro `Sprintf`: é o que faz os quatro
-// caminhos concordarem, e o único lugar a ler para saber quem manda para onde.
+// Ela é a ÚNICA grafia deste endereço no repositório, e quem cobra é o
+// `TestNoHandwrittenSessionAddress`: fora daqui, nenhum literal de string
+// escreve `/sessoes` — só o padrão do chi, que traz os parâmetros nomeados.
+//
+// Citam-na de fora o Hub, o cartão da campanha e duas linhas da campanha aberta;
+// de DENTRO, a própria Mesa, pelo `View.SessionBase`, que a chama uma vez e
+// pendura o verbo. Eram vinte e três grafias do mesmo caminho antes da ALE-346.
 //
 // O endereço é ANINHADO na campanha porque a sessão é dela: não existe sessão
 // fora de uma campanha, e o pai já atende em `/campanhas/{id}`.
