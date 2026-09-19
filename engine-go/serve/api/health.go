@@ -10,15 +10,22 @@ import (
 // handleHealth diz se o servidor está VIVO e se está INTEIRO — duas coisas
 // diferentes, e o app já subiu no estado do meio sem ninguém saber (ALE-155).
 //
-// O boot é best-effort de propósito: sem os catálogos, autenticação, leitura e
-// vitais continuam funcionando, e derrubar a mesa por causa disso seria pior.
-// Mas até agora essa degradação só existia numa linha de log, enquanto o
-// `/health` respondia "ok" — e os handlers que precisam do catálogo devolvem
-// 503 lá na frente, no meio de uma jogada.
+// O CATÁLOGO deixou de ser degradação possível em produção (ALE-355): o PV
+// máximo passou a ser derivado dele, e o `primeCatalogs` do `cmd/api` agora
+// DERRUBA o processo em vez de subir servindo ficha errada em silêncio. O boot
+// era best-effort com a promessa de que "vitais continuam funcionando sem eles",
+// e essa promessa morreu junto com a coluna.
+//
+// A linha do catálogo fica porque o `/health` também roda em BANCADA, onde
+// montar um servidor sem catálogo é arranjo legítimo — e porque um relatório
+// que só sabe dizer "ok" não serve para descobrir o estado do meio.
+//
+// O que continua degradação de verdade são as ATIVAÇÕES, que carregam preguiçosa
+// e podem faltar sem impedir o arranque.
 //
 // Continua 200 mesmo degradado, e isso é decisão: nada aqui se conserta
-// reiniciando o processo (falta um ARQUIVO), então responder 503 só criaria um
-// laço de reinício em quem monitora. Quem quer saber, lê o corpo.
+// reiniciando o processo, então responder 503 só criaria um laço de reinício em
+// quem monitora. Quem quer saber, lê o corpo.
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	degraded := []string{}
 	if s.catalogs == nil {

@@ -164,18 +164,32 @@ func escutar(server *http.Server, cfg config.Config) error {
 	return server.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
 }
 
-// primeCatalogs carrega os catálogos de regra, em melhor esforço: entrar, ler e
-// mexer em vitais funciona sem eles; criar e equipar, não.
+// primeCatalogs carrega os catálogos de regra, e DERRUBA o processo sem eles.
+//
+// # Ele já foi melhor esforço, e a promessa que o sustentava morreu
+//
+// O comentário aqui dizia: "entrar, ler e mexer em vitais funciona sem eles;
+// criar e equipar, não". Era verdade enquanto o PV máximo fosse uma COLUNA —
+// sem catálogo a ficha abria com os números gravados, e só as validações de
+// mutação desligavam.
+//
+// O PV máximo passou a ser DERIVADO (ALE-355). Sem catálogo primado não há poço
+// para derivar, e as três saídas eram: servir zero PV para a mesa inteira,
+// cair na coluna velha (que é a segunda verdade que a mudança existe para
+// apagar), ou não subir. Decisão do dono: não subir.
+//
+// É a mesma classe de falha do `cfg.Validate()` acima, e pela mesma razão: um
+// processo que sobe servindo ficha errada em silêncio é pior que um processo
+// que não sobe.
 func primeCatalogs(path string) *engine.Catalogs {
 	raw, err := os.ReadFile(path)
 	if err != nil {
-		log.Printf("catalogs: %v — mutation validators disabled", err)
-		return nil
+		log.Fatalf("catalogs: %v — o PV máximo é derivado do catálogo, e sem ele "+
+			"toda ficha sairia errada em silêncio (CATALOG_PATH=%s)", err, path)
 	}
 	catalogs, err := engine.PrimeEngineCatalogs(raw)
 	if err != nil {
-		log.Printf("catalogs: prime failed: %v", err)
-		return nil
+		log.Fatalf("catalogs: prime failed: %v (CATALOG_PATH=%s)", err, path)
 	}
 	log.Printf("catalogs primed from %s", path)
 	return catalogs
