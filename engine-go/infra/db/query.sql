@@ -585,7 +585,7 @@ SELECT EXISTS (
 
 -- Estado de mesa da ficha (ALE-222). Saiu do localStorage: o servidor e dono.
 -- CUIDADO: conditionals (o opt-in do JOGADOR) nao e conditions (as do LIVRO,
--- que vivem na coluna characters.activeConditions). Ver C6 no GLOSSARIO.md.
+-- que vivem na coluna characters.activeConditions). Ver C6 no GLOSSARY.md.
 
 -- name: ListCharacterConditionals :many
 SELECT conditionalId FROM character_conditionals
