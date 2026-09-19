@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
+	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
 
@@ -248,7 +249,7 @@ func markedPicker(opcoes []sheet.ChoiceOption, escolhido string) *pickerChoice {
 // "Você sempre pode substituir um poder de classe por um poder geral" (p33), e
 // por isso as duas listas viram uma só — a vaga é a mesma.
 func thatChoosePowers(classe string, escolhidos []string, busca string) []powerChoice {
-	termo := foldAccents(strings.TrimSpace(busca))
+	termo := search.Fold(strings.TrimSpace(busca))
 	fora := []powerChoice{}
 	for _, p := range book.ClassPowers() {
 		if p.ClassName != classe || p.GrantedAtLevel != nil || !casaComABusca(p.Name, termo) {
@@ -278,7 +279,7 @@ func thatChoosePowers(classe string, escolhidos []string, busca string) []powerC
 }
 
 func casaComABusca(nome, termo string) bool {
-	return termo == "" || strings.Contains(foldAccents(nome), termo)
+	return termo == "" || strings.Contains(search.Fold(nome), termo)
 }
 
 // ── o que a TELA escreve ─────────────────────────────────────────────────────

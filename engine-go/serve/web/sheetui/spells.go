@@ -8,6 +8,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
+	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
 
@@ -332,7 +333,7 @@ func passesFilter(m book.Spell, busca, circulo, escola string) bool {
 	if strings.TrimSpace(busca) == "" {
 		return true
 	}
-	return strings.Contains(foldAccents(m.Name), foldAccents(busca))
+	return strings.Contains(search.Fold(m.Name), search.Fold(busca))
 }
 
 // grantedSpellRowsOf são as magias que um PODER ensinou.

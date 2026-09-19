@@ -7,6 +7,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
 
@@ -295,10 +296,10 @@ func itemGlyph(item sheet.ItemDTO) string {
 // A busca ignora acento pela mesma razão das Perícias: quem digita "balsamo"
 // tem de achar "Bálsamo restaurador".
 func bagFiltered(itens []sheet.ItemDTO, busca, categoria string) []sheet.ItemDTO {
-	termo := foldAccents(strings.TrimSpace(busca))
+	termo := search.Fold(strings.TrimSpace(busca))
 	fora := []sheet.ItemDTO{}
 	for _, item := range itens {
-		if termo != "" && !strings.Contains(foldAccents(item.Name), termo) {
+		if termo != "" && !strings.Contains(search.Fold(item.Name), termo) {
 			continue
 		}
 		if !categoryBagDa(item, categoria) {
