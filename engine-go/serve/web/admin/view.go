@@ -122,8 +122,8 @@ func belongings(admin bool, campanhas, fichas int64) string {
 // deletionCost é o preço que o diálogo diz ANTES de confirmar.
 //
 // As campanhas passam para quem apaga e as fichas vão junto — é o que o
-// `DeleteAccount` do hospedeiro faz, e a frase existe para o dono ler antes e
-// não descobrir depois.
+// `accounts.Roster` faz, e a frase existe para o dono ler antes e não descobrir
+// depois.
 func deletionCost(campanhas, fichas int64) string {
 	f := ui.Plural(fichas, "ficha", "fichas")
 	if campanhas == 0 {

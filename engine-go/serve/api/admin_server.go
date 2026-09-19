@@ -18,15 +18,6 @@ import (
 	"time"
 )
 
-type serverStatusDTO struct {
-	Environment  string `json:"environment"`
-	DatabasePath string `json:"databasePath"`
-	DatabaseSize int64  `json:"databaseSize"`
-	Users        int64  `json:"users"`
-	Campaigns    int64  `json:"campaigns"`
-	Characters   int64  `json:"characters"`
-}
-
 type backupDTO struct {
 	Name      string `json:"name"`
 	Size      int64  `json:"size"`

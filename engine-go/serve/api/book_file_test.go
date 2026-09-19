@@ -137,7 +137,7 @@ func askForTheBook(t *testing.T, s *Server, userID int64, httpRange string) *htt
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	token, err := s.accountRules().signToken(u)
+	token, err := s.accountGate().SignSession(u)
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}

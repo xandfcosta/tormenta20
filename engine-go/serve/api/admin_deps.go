@@ -3,12 +3,8 @@ package api
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"net/http"
 	"t20engine/infra/config"
 	"time"
-
-	"t20engine/infra/db/sqlcgen"
 )
 
 // O QUE O HOSPEDEIRO DEVE À CENA DE ADMINISTRAÇÃO.
@@ -17,23 +13,21 @@ import (
 // dela, e ele é fino: cada método embrulha o que a casa já fazia, com o nome
 // exportado que a interface pede e devolvendo a MENOR resposta que a tela usa.
 //
-// Quatro deles descartam o que a assinatura antiga devolvia — o caminho do
-// backup, a contagem de campanhas transferidas, o status HTTP, a linha do banco
-// das duas cunhagens. Cada um desses valores é um tipo a menos que a cena
-// conhece, e o `backupDTO` em particular teria feito a tela depender da forma do
-// JSON da API de backup.
+// O `BackupNow` descarta o caminho que a assinatura antiga devolvia, e é o
+// último exemplo vivo da regra: cada valor a menos que atravessa é um tipo a
+// menos que a cena conhece — o `backupDTO` teria feito a tela depender da forma
+// do JSON da API de backup.
 //
 // # O adaptador não é o `*Server`
 //
 // Ele carrega o núcleo mais DUAS coisas: a configuração (é dela que saem o
-// ambiente, o caminho do banco e a política de backup) e o `*sql.DB` (apagar
-// conta é uma transação — as campanhas mudam de dono e a linha some juntas, ou
-// uma mesa fica órfã de um usuário que não existe).
+// ambiente, o caminho do banco e a política de backup) e o `*sql.DB`. O banco
+// continua aqui, mas por outra razão: era a TRANSAÇÃO de apagar conta que o
+// justificava, e ela virou `accounts.Roster` na ALE-349 — o que resta é o
+// `VACUUM INTO` do backup, que precisa da conexão e não de transação nenhuma.
 //
-// As quatro regras que só esta cena usa — `deleteAccount`,
-// `deleteUserKeepingCampaigns`, `backupDatabase` e `mintPasswordReset` — moram
-// com ele, e não no servidor: elas não são do transporte que as alcançou
-// primeiro.
+// E o `backupDatabase` é a única regra que sobrou deste lado, de propósito:
+// copiar arquivo é serviço do hospedeiro, não caso de uso de conta.
 type adminHost struct {
 	sceneCore
 	cfg config.Config
@@ -64,32 +58,3 @@ func (h adminHost) BackupNow(ctx context.Context, at time.Time) error {
 	_, err := h.backupDatabase(ctx, at)
 	return err
 }
-
-func (h adminHost) DeleteAccount(r *http.Request, id, callerID int64) error {
-	_, _, err := h.deleteAccount(r, id, callerID)
-	return err
-}
-
-// MintAccountInvite é pedido por DUAS cenas — esta e o hub —, e as duas chamam
-// a mesma função de pacote. Ele não subiu para o núcleo porque duas cenas em
-// onze não é "toda cena": o núcleo é o que quase todo mundo pede, e uma linha
-// repetida em dois adaptadores custa menos que uma assinatura no núcleo que
-// nove cenas carregam sem usar.
-func (h adminHost) MintAccountInvite(ctx context.Context, by int64) (sqlcgen.AccountInvite, error) {
-	return mintAccountInvite(ctx, h.queries, by)
-}
-
-// MintPasswordReset é o par do `MintAccountInvite`. As duas devolvem a LINHA, e
-// não o token, porque aquela já estava escrita assim — ver a razão na
-// `admin.Deps`.
-func (h adminHost) MintPasswordReset(ctx context.Context, userID, by int64) (sqlcgen.PasswordReset, error) {
-	return h.mintPasswordReset(ctx, userID, by)
-}
-
-// IsUnknownUser é o sentinela desta casa visto de fora.
-//
-// A cena precisa separar "essa conta não existe mais" de "deu erro", porque as
-// duas frases são diferentes na tela — e o valor que os distingue é daqui. Um
-// predicado bastou: a porta precisou de um `RefusalMotive` porque tinha TRÊS
-// casos, e aqui há um.
-func (h adminHost) IsUnknownUser(err error) bool { return errors.Is(err, errUserNotFound) }

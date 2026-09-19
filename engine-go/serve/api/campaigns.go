@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"net/http"
 	"t20engine/infra/db/dbvalue"
@@ -221,10 +219,4 @@ func (rules campaignRules) ownedCampaign(w http.ResponseWriter, r *http.Request,
 		return c, false
 	}
 	return c, true
-}
-
-func generateInviteToken() string {
-	b := make([]byte, 24)
-	_, _ = rand.Read(b)
-	return base64.RawURLEncoding.EncodeToString(b)
 }

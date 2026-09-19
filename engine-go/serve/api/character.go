@@ -25,12 +25,12 @@ func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 
 // characterList é o elenco de quem chama, agregado.
 //
-// Transport-agnostic, e esta é a SEXTA vez que a migração encontra a mesma
-// forma — depois da iniciativa própria, do `deleteAccount`, do trio da porta,
-// do `mintAccountInvite` e da lista de campanhas — que desde a ALE-348 nem mora
-// mais aqui: ela virou `app/campaign`. Seis é padrão, não anedota: uma
-// base com exatamente um transporte não tem por que separar regra de handler, e
-// o segundo transporte é o que cobra a conta (ALE-239).
+// Transport-agnostic, e esta é a SEXTA vez que a migração encontra a mesma forma
+// — depois da iniciativa própria, de apagar conta, do trio da porta, do convite
+// de conta e da lista de campanhas. Das cinco, quatro já nem moram mais aqui:
+// viraram `app/campaign` (ALE-348) e `app/accounts` (ALE-349). Seis é padrão,
+// não anedota: uma base com exatamente um transporte não tem por que separar
+// regra de handler, e o segundo transporte é o que cobra a conta (ALE-239).
 func (s *Server) characterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error) {
 	rows, err := s.queries.ListCharactersByOwner(ctx, ownerID)
 	if err != nil {

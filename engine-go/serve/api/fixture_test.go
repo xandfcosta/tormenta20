@@ -75,7 +75,7 @@ func (f sceneFixture) token(t *testing.T, userID int64) string {
 	if err != nil {
 		t.Fatalf("usuário %d não existe: %v", userID, err)
 	}
-	tok, err := f.s.accountRules().signToken(user)
+	tok, err := f.s.accountGate().SignSession(user)
 	if err != nil {
 		t.Fatalf("assinar token: %v", err)
 	}

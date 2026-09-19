@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"t20engine/app/accounts"
 	"testing"
 	"time"
 )
@@ -25,7 +26,7 @@ func TestTheResetLinkLastsTwentyFourHours(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 
 	antes := time.Now()
-	reset, err := s.adminHost().mintPasswordReset(context.Background(), dono, dono)
+	reset, err := s.accountResets().Mint(context.Background(), dono, dono)
 	if err != nil {
 		t.Fatalf("cunhar: %v", err)
 	}
@@ -46,8 +47,8 @@ func TestMintingForAMissingAccountSaysItIsMissing(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 
-	_, err := s.adminHost().mintPasswordReset(context.Background(), 999999, dono)
-	if !errors.Is(err, errUserNotFound) {
+	_, err := s.accountResets().Mint(context.Background(), 999999, dono)
+	if !errors.Is(err, accounts.ErrUnknownAccount) {
 		t.Errorf("erro = %v, queria errUsuarioInexistente", err)
 	}
 }
@@ -120,7 +121,7 @@ func askScene(t *testing.T, s *Server, userID int64, metodo, caminho string) *ht
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	token, err := s.accountRules().signToken(u)
+	token, err := s.accountGate().SignSession(u)
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}

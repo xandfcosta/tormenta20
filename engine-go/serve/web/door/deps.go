@@ -1,12 +1,11 @@
 package door
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/a-h/templ"
 
-	"t20engine/domain/account"
+	"t20engine/app/accounts"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/ui"
 )
@@ -15,56 +14,44 @@ import (
 // confundir alguém: `door` é a CENA de entrar, `port` é a interface que uma cena
 // declara. Ver GLOSSARY.md.
 //
-// Duas coisas NÃO atravessam esta fronteira:
+// Ela era de NOVE métodos, e sete deles eram conta e senha: autenticar,
+// cadastrar, classificar a recusa do cadastro, conferir o link de redefinição,
+// redefinir. Esses sete viraram DOIS casos de uso — `accounts.Gate` e
+// `accounts.Resets` —, e eles chegam por PARÂMETRO do `New`, não pela porta: o
+// `app/` está abaixo da cena, então lê-lo direto não fecha ciclo nenhum
+// (ALE-349).
 //
-// O USUÁRIO INTEIRO. `AuthUser` é tipo do `api`, e pedi-lo faria a cena importar
-// o hospedeiro, que a importa de volta para montar rota: ciclo. A cena só
-// precisa saber SE há sessão, então a porta pede `HasSession`. A regra vale para
-// toda porta — uma que devolve tipo do hospedeiro não é porta, é o hospedeiro
-// com outro nome.
+// O que sobrou é o que de fato pertence ao hospedeiro: a casca da página e o
+// BISCOITO. Pôr cookie é transporte — quem sabe o que é `Secure` e `SameSite` é
+// quem responde HTTP —, e por isso a assinatura da sessão mora no caso de uso e
+// a escrita dela mora aqui.
 //
-// O `bcrypt`. Hashear senha não é trabalho da cena, e pedir o custo
-// criptográfico do `api` por uma porta seria fazê-lo mesmo assim: quem faz o
-// caminho inteiro, do outro lado, é o `ResetPassword`.
+// O USUÁRIO INTEIRO continua sem atravessar: `AuthUser` é tipo do `api`, e
+// pedi-lo faria a cena importar o hospedeiro, que a importa de volta para montar
+// rota. A cena só precisa saber SE há sessão.
 type Deps interface {
-	// Queries é o banco. A porta lê UMA coisa: o e-mail que o link de
-	// redefinição aponta.
-	Queries() *sqlcgen.Queries
 	// WritePage é a montagem da casca (ver `web/ui`).
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
 	HasSession(r *http.Request) bool
-	// Authenticate confere e-mail e senha. O erro NÃO se distingue na tela —
-	// conta inexistente e senha errada dão a mesma frase.
-	Authenticate(ctx context.Context, email, password string) (sqlcgen.User, error)
-	// CreateAccount fica no hospedeiro porque o registro é caminho compartilhado
-	// com a API JSON: a porta é uma entrada dele, não a dona.
-	CreateAccount(ctx context.Context, body account.RegisterBody) (sqlcgen.User, error)
-	// IssueSession escreve o cookie. `false` é não ter conseguido assinar, e aí
-	// a cena mostra a recusa em vez de mandar para dentro.
+	// IssueSession escreve o cookie da sessão já assinada pelo caso de uso.
+	// `false` é não ter conseguido assinar, e aí a cena mostra a recusa em vez de
+	// mandar para dentro.
 	IssueSession(w http.ResponseWriter, user sqlcgen.User) bool
-	// ResetLinkOwner é o e-mail que o link aponta, e se ele ainda vale. Mostrar
-	// o e-mail é a única coisa que esta rota anônima revela, e ela existe para
-	// quem clicou saber que está mudando a conta certa.
-	ResetLinkOwner(ctx context.Context, token string) (email string, ok bool)
-	ResetPassword(ctx context.Context, token, password string) bool
-	// SignUpRefusal devolve uma CHAVE e não a frase pronta: o hospedeiro
-	// classifica o erro (os sentinelas são dele), a cena escolhe o texto.
-	SignUpRefusal(err error) (motive RefusalMotive, status int)
 }
-
-// RefusalMotive é o vocabulário de recusa do registro, e ele é DA CENA.
-type RefusalMotive string
-
-const (
-	RefusalEmailTaken RefusalMotive = "email-em-uso"
-	RefusalBadInvite  RefusalMotive = "convite-invalido"
-	RefusalInternal   RefusalMotive = "interno"
-)
 
 // Scene é a porta montada com as dependências dela.
 //
 // Uma struct e não a interface direta porque o Go não aceita interface como
 // RECEPTOR, e os handlers precisam ser métodos para as rotas ficarem legíveis.
-type Scene struct{ deps Deps }
+type Scene struct {
+	deps   Deps
+	gate   accounts.Gate
+	resets accounts.Resets
+}
 
-func New(d Deps) Scene { return Scene{deps: d} }
+// New recebe os casos de uso por PARÂMETRO e o hospedeiro pela porta. A
+// diferença não é estilo: o que chega por parâmetro é regra que outro transporte
+// também chama, o que chega pela porta é o que só este hospedeiro sabe fazer.
+func New(d Deps, portao accounts.Gate, redefinicoes accounts.Resets) Scene {
+	return Scene{deps: d, gate: portao, resets: redefinicoes}
+}

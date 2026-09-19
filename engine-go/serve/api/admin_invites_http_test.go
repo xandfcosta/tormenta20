@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"t20engine/app/accounts"
 	"t20engine/domain/account"
-	"t20engine/infra/db"
 	"t20engine/infra/db/dbvalue"
 	"testing"
 	"time"
@@ -26,7 +26,7 @@ const adminEmail = "dono@t20.local"
 // registra chama a REGRA do cadastro, sem passar por transporte nenhum.
 func registra(t *testing.T, s *Server, email, token string) error {
 	t.Helper()
-	_, err := s.accountRules().createAccount(context.Background(),
+	_, err := s.accountGate().Register(context.Background(),
 		account.RegisterBody{Email: email, Password: "senha-da-mesa", InviteToken: token})
 	return err
 }
@@ -34,7 +34,7 @@ func registra(t *testing.T, s *Server, email, token string) error {
 // inviteFrom cunha um convite pela REGRA e devolve o token.
 func inviteFrom(t *testing.T, s *Server, adminID int64) string {
 	t.Helper()
-	convite, err := mintAccountInvite(context.Background(), s.queries, adminID)
+	convite, err := s.accountGate().MintInvite(context.Background(), adminID)
 	if err != nil {
 		t.Fatalf("cunhar convite: %v", err)
 	}
@@ -57,13 +57,13 @@ func TestAnInviteTokenIsTooLongToGuess(t *testing.T) {
 	}
 }
 
-// The door itself: without a link nobody on the network creates an account.
+// A porta em si: sem link, ninguém na rede cria conta.
 func TestRegisterRequiresAnInvite(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 
 	err := registra(t, s, "invasor@t20.local", "")
 
-	if !errors.Is(err, errInviteRejected) {
+	if !errors.Is(err, accounts.ErrBadInvite) {
 		t.Fatalf("esperada recusa por convite, veio %v", err)
 	}
 	if _, err := s.queries.GetUserByEmail(context.Background(), "invasor@t20.local"); err == nil {
@@ -81,19 +81,19 @@ func TestRegisterWithAnInviteWorksExactlyOnce(t *testing.T) {
 	if first != nil {
 		t.Fatalf("o convite válido tinha de valer, veio %v", first)
 	}
-	if !errors.Is(second, errInviteRejected) {
+	if !errors.Is(second, accounts.ErrBadInvite) {
 		t.Fatalf("esperada recusa reusando o convite, veio %v", second)
 	}
-	// Rolled back with the invite: a spent link leaves no half-created account.
+	// Volta atrás junto com o convite: link gasto não deixa meia conta para trás.
 	if _, err := s.queries.GetUserByEmail(context.Background(), "caio@t20.local"); err == nil {
 		t.Error("o segundo registro não podia ter deixado conta para trás")
 	}
 }
 
-// The sequential reuse above is caught by the READ check alone, so it does not
-// prove the `usedAt IS NULL` on the UPDATE. What that clause protects is the
-// race: everyone who opens the link at the same instant passes the read, and
-// only one UPDATE finds the invite unspent — the losers roll back with it.
+// O reuso em sequência acima é pego só pela conferência de LEITURA, então ele
+// não prova o `usedAt IS NULL` do UPDATE. O que essa cláusula protege é a
+// CORRIDA: todo mundo que abre o link no mesmo instante passa pela leitura, e um
+// só UPDATE acha o convite por gastar — os perdedores voltam atrás com ele.
 func TestConcurrentRegistrationsSpendTheInviteOnce(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 	token := inviteFrom(t, s, seedUser(t, s, adminEmail))
@@ -105,7 +105,7 @@ func TestConcurrentRegistrationsSpendTheInviteOnce(t *testing.T) {
 		go func() {
 			email := "corrida" + strconv.Itoa(i) + "@t20.local"
 			<-start
-			_, err := s.accountRules().createAccount(context.Background(),
+			_, err := s.accountGate().Register(context.Background(),
 				account.RegisterBody{Email: email, Password: "senha-da-mesa", InviteToken: token})
 			erros <- err
 		}()
@@ -127,7 +127,7 @@ func TestConcurrentRegistrationsSpendTheInviteOnce(t *testing.T) {
 	}
 }
 
-// A duplicate e-mail must not burn the link — the player still has to Get in.
+// E-mail repetido não pode queimar o link — o jogador ainda tem de entrar.
 func TestAFailedRegistrationKeepsTheInviteSpendable(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 	token := inviteFrom(t, s, seedUser(t, s, adminEmail))
@@ -136,7 +136,7 @@ func TestAFailedRegistrationKeepsTheInviteSpendable(t *testing.T) {
 	clash := registra(t, s, "bruna@t20.local", token)
 	retry := registra(t, s, "bruna2@t20.local", token)
 
-	if !db.IsUniqueViolation(clash) {
+	if !errors.Is(clash, accounts.ErrEmailTaken) {
 		t.Fatalf("esperada colisão de e-mail repetido, veio %v", clash)
 	}
 	if retry != nil {
@@ -145,7 +145,7 @@ func TestAFailedRegistrationKeepsTheInviteSpendable(t *testing.T) {
 }
 
 // NÃO há rota que pergunte se um convite ainda vale, e a ausência é deliberada:
-// a porta prefixa o campo com o `?convite=` e deixa o `CreateAccount` recusar
+// a porta prefixa o campo com o `?convite=` e deixa o `Register` recusar
 // (`web/door/routes.go`). O prazo continua preso aqui embaixo, do lado que
 // decide.
 func TestExpiredInviteIsRejected(t *testing.T) {
@@ -159,13 +159,13 @@ func TestExpiredInviteIsRejected(t *testing.T) {
 		t.Fatalf("semear convite: %v", err)
 	}
 
-	if err := registra(t, s, "tarde@t20.local", invite.Token); !errors.Is(err, errInviteRejected) {
+	if err := registra(t, s, "tarde@t20.local", invite.Token); !errors.Is(err, accounts.ErrBadInvite) {
 		t.Errorf("esperada recusa do convite vencido, veio %v", err)
 	}
 }
 
-// The bootstrap: on a fresh machine the owner has no invite to hold, and
-// "first to register wins" would hand the crown to whoever opens the page.
+// A partida do zero: numa máquina nova o dono não tem convite nenhum na mão, e
+// "quem se cadastra primeiro ganha" entregaria a coroa a quem abrisse a página.
 func TestTheAdminEmailRegistersWithoutAnInvite(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 
@@ -174,13 +174,14 @@ func TestTheAdminEmailRegistersWithoutAnInvite(t *testing.T) {
 	}
 }
 
-// The case-insensitive admin check would be a hole if e-mails were not
-// normalized: `DONO@` could register WITHOUT an invite as a second account and
-// be admin too. Normalization makes it the same row, so it collides instead.
+// A conferência de admin ignora a caixa, e isso seria um buraco se os e-mails
+// não fossem normalizados: `DONO@` se cadastraria SEM convite, como uma segunda
+// conta, e seria admin também. A normalização faz dela a mesma linha, então ela
+// colide em vez de passar.
 //
-// A normalização mora no `createAccount`, e não no manipulador: garantia que
-// mora no TRANSPORTE é garantia que o próximo chamador esquece, e é aqui que a
-// decisão de "quem é admin" já era tomada.
+// A normalização mora no `Register`, e não no manipulador: garantia que mora no
+// TRANSPORTE é garantia que o próximo chamador esquece, e é aqui que a decisão
+// de "quem é admin" já era tomada.
 func TestACaseVariantCannotBecomeASecondAdmin(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 	if err := registra(t, s, adminEmail, ""); err != nil {
@@ -189,7 +190,7 @@ func TestACaseVariantCannotBecomeASecondAdmin(t *testing.T) {
 
 	clash := registra(t, s, "DONO@T20.local", "")
 
-	if !db.IsUniqueViolation(clash) {
+	if !errors.Is(clash, accounts.ErrEmailTaken) {
 		t.Fatalf("esperada colisão para a variante de caixa, veio %v", clash)
 	}
 	if got := countUsers(t, s); got != 1 {

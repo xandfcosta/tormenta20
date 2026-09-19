@@ -54,11 +54,11 @@ func (s *Server) WebRouter() http.Handler {
 	// do grupo com `requirePage` — não por ordem de casamento, que o chi resolve
 	// por rota, mas porque dentro dele ela seria inalcançável para exatamente
 	// quem precisa dela.
-	door.Routes(r, door.New(s.doorHost()))
+	door.Routes(r, door.New(s.doorHost(), s.accountGate(), s.accountResets()))
 	// O HUB: o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
-		hub.Routes(r, hub.New(s.hubHost()))
+		hub.Routes(r, hub.New(s.hubHost(), s.accountGate()))
 		campaigns.Routes(r, campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards))
 		// PERSONAGENS e a FORJA são irmãs no mesmo endereço: o elenco é de onde
 		// se abre a folha em branco.
@@ -92,7 +92,7 @@ func (s *Server) WebRouter() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
 		r.Use(s.requireAdmin)
-		admin.Routes(r, admin.New(s.adminHost()))
+		admin.Routes(r, admin.New(s.adminHost(), s.accountGate(), s.accountResets(), s.accountRoster()))
 	})
 	return r
 }

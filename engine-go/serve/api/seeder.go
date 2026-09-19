@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/app/accounts"
 	"t20engine/app/character"
 	"t20engine/domain/account"
 	"t20engine/domain/book"
@@ -29,7 +30,7 @@ import (
 // sobre a regra que já existe — nenhuma linha de regra mora neste arquivo, e é
 // isso que mantém a promessa acima de pé.
 type Seeder struct {
-	accounts accountRules
+	gate accounts.Gate
 	// births é o MESMO caso de uso que a forja usa — e é por isso que este
 	// gerador não monta uma requisição falsa para chamar a criação: ele é o
 	// segundo chamador que a porta da forja nomeava antes de haver camada.
@@ -43,7 +44,7 @@ type Seeder struct {
 
 func (s *Server) Seeder() Seeder {
 	return Seeder{
-		accounts: s.accountRules(), births: s.characterBirths(), plays: s.characterPlays(),
+		gate: s.accountGate(), births: s.characterBirths(), plays: s.characterPlays(),
 		sheet: s.sheetRules(), queries: s.queries,
 	}
 }
@@ -55,7 +56,7 @@ func (s *Server) Seeder() Seeder {
 // próprio admin dele. Nada do papel chega ao `seed.sql` — ele é derivado do
 // ambiente a cada requisição e não tem coluna.
 func (sd Seeder) CreateAccount(ctx context.Context, email, nome, senha string) error {
-	_, err := sd.accounts.createAccount(ctx, account.RegisterBody{
+	_, err := sd.gate.Register(ctx, account.RegisterBody{
 		Email: email, Password: senha, Name: &nome,
 	})
 	return err

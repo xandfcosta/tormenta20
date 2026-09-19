@@ -3,8 +3,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,9 +12,11 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// A tela de administração, pelo router real. O que está aqui são as
-// consequências: apagar uma conta MOVE as mesas dela, o backup é um snapshot
-// que abre, e nada disso responde a quem não é admin.
+// AS CONSEQUÊNCIAS das duas ações pesadas da administração: apagar uma conta
+// MOVE as mesas dela, e o backup é um snapshot que abre de verdade.
+//
+// Nenhuma das duas passa por rota aqui, e é deliberado — o que elas prendem é
+// decisão de produto, não transporte. A AUTORIZAÇÃO tem casa própria, na cena.
 
 // A recusa a quem não é admin NÃO se prende aqui: ela é do
 // `TestANonAdminDoesNotReachTheInviteRoute`, na cena.
@@ -32,7 +32,7 @@ func TestDeletingAnAccountMovesItsCampaignsToTheAdmin(t *testing.T) {
 
 	// A REGRA direto, e não a rota: o que este caso prende é para onde vão as
 	// MESAS de quem some, que é decisão de produto e não de transporte.
-	movidas, _, err := s.adminHost().deleteAccount(httptest.NewRequest(http.MethodDelete, "/", nil), player, admin)
+	movidas, err := s.accountRoster().Delete(context.Background(), admin, player)
 	if err != nil {
 		t.Fatalf("apagar a conta falhou: %v", err)
 	}
