@@ -111,6 +111,16 @@ type sheetVital struct {
 	Fracao string
 	// Porcento é a largura da barra, entre 0 e 100.
 	Porcento int
+	// Temp é o PV TEMPORÁRIO, e ele é uma parcela À PARTE e não um somando.
+	//
+	// A barra continua sendo o PV de verdade: somar o temporário ao atual faria
+	// um herói a 50/137 com 70 de reserva desenhar 88% de vida com 36% de
+	// carne. O livro autoriza os dois desenhos — *"são somados a seus pontos
+	// atuais, mesmo que ultrapassem o máximo"* (p106) —, e o que decide é a
+	// pergunta que a barra responde, que é "quanto apanhei".
+	//
+	// Vazio quer dizer que não há reserva, e aí a fileira fica IGUAL à de antes.
+	Temp string
 }
 
 // Tab é uma das sete seções da ficha.
@@ -192,7 +202,7 @@ func (s Scene) Load(
 		Resumo:    cartao.Summary,
 		Nivel:     dto.Level,
 		Defesa:    cartao.DefenseVs,
-		PV:        vital(dto.HpCurrent, dto.HpMax),
+		PV:        withTempHp(vital(dto.HpCurrent, dto.HpMax), dto.ActiveEffects),
 		PM:        vital(dto.MpCurrent, dto.MpMax),
 		SemMana:   dto.MpMax == 0,
 		Classes:   cartao.Classes,
@@ -239,6 +249,26 @@ func vital(atual, max int64) sheetVital {
 		pct = 100
 	}
 	v.Porcento = pct
+	return v
+}
+
+// withTempHp acrescenta ao PV a reserva que os efeitos ativos carregam.
+//
+// A conta é do `sheet` (`TempHpTotal`), e a leitura NÃO custa consulta: o
+// agregado já traz os efeitos, porque a aba Efeitos os desenha.
+//
+// PM não ganha o mesmo: o livro tem pontos de mana temporários (p106) e este
+// app ainda não os modela — o motor só conhece o alvo `tempMp` como
+// modificador, e nada os gasta. Desenhar um número que nada consome seria pior
+// que não desenhá-lo.
+func withTempHp(v sheetVital, efeitos []sheet.EffectDTO) sheetVital {
+	blobs := make([]string, 0, len(efeitos))
+	for _, e := range efeitos {
+		blobs = append(blobs, e.Modifiers)
+	}
+	if total := sheet.TempHpTotal(blobs); total > 0 {
+		v.Temp = "+" + strconv.Itoa(total)
+	}
 	return v
 }
 

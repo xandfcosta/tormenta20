@@ -229,3 +229,40 @@ func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 		}
 	}
 }
+
+// O CRACHÁ MOSTRA A RESERVA DE PV TEMPORÁRIO, e ela é uma parcela à parte.
+//
+// O dado estava certo e a tela calava: o `PlanDamage` gasta a reserva antes do
+// PV desde sempre, e o crachá dizia 137/137 com 30 de colchão. Defeito de
+// APRESENTAÇÃO, que é a família da ALE-319.
+//
+// O CONTROLE vem primeiro e é obrigatório: um mostrador cujo REPOUSO é igual ao
+// sucesso não testemunha nada. A ficha sem poça não pode ter a marca — senão
+// este caso ficaria verde sobre uma tela que mostra a reserva o tempo todo.
+func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
+	f, id := barbaro(t, 5)
+	const marca = "PV temporários — o dano gasta estes primeiro (p106)"
+
+	if tela := powerScreen(t, f, id); strings.Contains(tela, marca) {
+		t.Fatal("a ficha SEM poça já mostra a reserva — o caso mediria o repouso")
+	}
+
+	if rec := effect(t, f, id, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
+		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
+	}
+
+	tela := powerScreen(t, f, id)
+	if !strings.Contains(tela, marca) {
+		t.Error("a reserva não chegou ao crachá")
+	}
+	// O número é do LIVRO e escrito à mão: o Campo de Força dá 30 PV
+	// temporários de cena.
+	if !strings.Contains(tela, ">+30</span>") {
+		t.Error("o crachá não diz QUANTO é a reserva")
+	}
+	// E o PV de verdade não se mexeu: a reserva é parcela à parte, não um
+	// somando. O bárbaro nasce com 60 de PV máximo.
+	if !strings.Contains(tela, "60/60") {
+		t.Error("a fração do PV mudou — a reserva virou somando em vez de parcela")
+	}
+}

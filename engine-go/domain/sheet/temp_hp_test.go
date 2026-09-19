@@ -75,3 +75,25 @@ func TestParseTempHpPools(t *testing.T) {
 		t.Errorf("mixed pool should not be Pure")
 	}
 }
+
+// AS POÇAS SOMAM, e o que não é poça não entra na conta.
+//
+// A soma é a p106 — *"são somados a seus pontos atuais, mesmo que ultrapassem o
+// máximo"*. Os números são escritos à mão: 30 + 9 = 39, e nenhuma das outras
+// quatro linhas mexe nisso.
+func TestTempHpTotalAddsThePoolsAndIgnoresWhatIsNotOne(t *testing.T) {
+	total := TempHpTotal([]string{
+		`[{"target":{"k":"tempHp"},"amount":30,"bonusType":"untyped"}]`,               // Campo de Força
+		`[{"target":{"k":"defense"},"amount":2}]`,                                     // não é poça
+		`[{"target":{"k":"tempHp"},"amount":0}]`,                                      // poça vazia não conta
+		`[{"target":{"k":"tempHp"},"amount":-5}]`,                                     // nem negativa
+		`{isto não é json`,                                                            // nem ilegível
+		`[{"target":{"k":"tempHp"},"amount":9},{"target":{"k":"attack"},"amount":1}]`, // mista conta
+	})
+	if total != 39 {
+		t.Errorf("as poças somaram %d, e 30 + 9 são 39", total)
+	}
+	if vazio := TempHpTotal(nil); vazio != 0 {
+		t.Errorf("sem efeito nenhum o total é %d, e tem de ser 0", vazio)
+	}
+}

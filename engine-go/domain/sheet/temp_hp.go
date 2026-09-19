@@ -70,29 +70,70 @@ type EffectModifierWrite struct {
 func ParseTempHpPools(rows []sqlcgen.ListActiveEffectsByCharacterRow) []TempHpPool {
 	pools := []TempHpPool{}
 	for _, row := range rows {
-		var Mods []map[string]any
-		if json.Unmarshal([]byte(row.Modifiers), &Mods) != nil {
-			continue
-		}
-		Amount, found, Pure := 0, false, true
-		for _, m := range Mods {
-			if IsTempHpModifier(m) {
-				if !found {
-					Amount = ToInt(m["amount"])
-					found = true
-				}
-			} else {
-				Pure = false
-			}
-		}
-		if !found || Amount <= 0 {
+		amount, pure, mods, ok := readTempHpPool(row.Modifiers)
+		if !ok {
 			continue
 		}
 		pools = append(pools, TempHpPool{
-			EffectID: row.ID, CatalogID: row.Catalogid, Scope: row.Scope, Amount: Amount, Pure: Pure, Mods: Mods,
+			EffectID: row.ID, CatalogID: row.Catalogid, Scope: row.Scope,
+			Amount: amount, Pure: pure, Mods: mods,
 		})
 	}
 	return pools
+}
+
+// readTempHpPool lê UMA linha de efeito: quanto de PV temporário ela carrega,
+// se ela é PURA, e os modificadores crus.
+//
+// `ok` falso quer dizer "esta linha não é uma poça": JSON ilegível, nenhum
+// modificador de tempHp, ou um valor que não é positivo. Os três são o mesmo
+// caso para quem chama — não há poça —, e distingui-los daria três ramos para
+// uma decisão só.
+//
+// O PRIMEIRO modificador de tempHp é o que vale. Uma linha com dois seria o
+// catálogo dizendo duas coisas sobre a mesma poça, e somá-los inventaria um
+// número que nenhuma fonte prometeu.
+func readTempHpPool(modifiers string) (int, bool, []map[string]any, bool) {
+	var mods []map[string]any
+	if json.Unmarshal([]byte(modifiers), &mods) != nil {
+		return 0, false, nil, false
+	}
+	amount, achou, pura := 0, false, true
+	for _, m := range mods {
+		if IsTempHpModifier(m) {
+			if !achou {
+				amount, achou = ToInt(m["amount"]), true
+			}
+			continue
+		}
+		pura = false
+	}
+	if !achou || amount <= 0 {
+		return 0, false, nil, false
+	}
+	return amount, pura, mods, true
+}
+
+// TempHpTotal é quanto de PV temporário um personagem tem, somando as linhas de
+// efeito dele.
+//
+// SOMAR é a regra do livro: *"Certos efeitos fornecem PV ou PM temporários.
+// Eles são somados a seus pontos atuais, mesmo que ultrapassem o máximo"*
+// (**p106**). Duas fontes convivem — foi a ALE-347 que tirou daqui um
+// "vale-o-maior" que o livro não tem.
+//
+// Ela recebe os BLOBS e não as linhas porque os dois chamadores têm formas
+// diferentes na mão: a ficha lê o agregado já montado (`[]EffectDTO`) e a Mesa
+// lê uma consulta de várias fichas de uma vez. O que os dois têm em comum é o
+// texto do modificador.
+func TempHpTotal(modifiers []string) int {
+	total := 0
+	for _, blob := range modifiers {
+		if amount, _, _, ok := readTempHpPool(blob); ok {
+			total += amount
+		}
+	}
+	return total
 }
 
 // PlanDamage drena as poças (a maior primeiro) e derrama o resto no PV.

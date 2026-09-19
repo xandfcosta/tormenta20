@@ -362,6 +362,23 @@ templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
 		// faria a ficha anunciar "PV 39 de 40" e "39/40" em seguida — duas vozes
 		// para o mesmo dado.
 		<span data-vital={ rotulo } class="shrink-0 font-mono text-sm tabular-nums text-foreground">{ vital.Fracao }</span>
+		// A RESERVA é uma parcela à parte, e ela SÓ NASCE quando existe: sem
+		// poça a fileira fica igual à de sempre, sem um "+0" que não quer dizer
+		// nada.
+		//
+		// O tom é o dourado da casa e não a cor da vida: a escada de
+		// `HpFillTone` responde "quanto apanhei", e a reserva não é carne — ela
+		// é o que o dano come ANTES da carne (p106). Pintá-la de verde faria
+		// duas coisas diferentes terem a mesma voz.
+		//
+		// `title` e não só o número: "+70" sozinho não diz de quê, e quem chega
+		// na ficha de outra pessoa no meio da noite merece a frase inteira.
+		if vital.Temp != "" {
+			<span
+				title="PV temporários — o dano gasta estes primeiro (p106)"
+				class="shrink-0 font-mono text-sm tabular-nums text-grimorio-gold"
+			>{ vital.Temp }</span>
+		}
 		if !apagado {
 			// OS PASSOS SÃO UM GRUPO e a fileira ENROLA: em linha única o `+5` do
 			// PV termina em x=399 numa janela de 390, sem rolagem que chegue lá.
