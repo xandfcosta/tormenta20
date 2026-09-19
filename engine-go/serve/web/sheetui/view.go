@@ -11,7 +11,7 @@ import (
 
 // A FICHA como dado: a casca, as abas e o crachá.
 //
-// Ela chega COMPUTADA DO SERVIDOR, pela mesma `ComputeSheetV2` que a Mesa e a
+// Ela chega COMPUTADA DO SERVIDOR, pela mesma `ComputeSheet` que a Mesa e a
 // cena de personagens usam — sem requisito de offline, não há por que a conta
 // acontecer no navegador.
 

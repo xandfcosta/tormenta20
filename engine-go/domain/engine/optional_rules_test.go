@@ -15,20 +15,20 @@ import (
 // sem enxergar quantos espaços estão ocupados.
 
 // O que a mesa desliga é a consequência, e ela desaparece da ficha INTEIRA e não
-// só do rótulo da mochila. Roda por `ComputeSheetV2` pela mesma razão do teste
+// só do rótulo da mochila. Roda por `ComputeSheet` pela mesma razão do teste
 // irmão da sobrecarga: o defeito que ele mira não é a conta, é ela chegar (ou
 // deixar de chegar) ao deslocamento e às perícias.
 func TestLoadTurnedOffPenalizesNeitherDisplacementNorExpertises(t *testing.T) {
 	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity")))
 	pericias := []CharacterExpertise{{Name: "Furtividade", Attribute: "dexterity"}}
 	// Força 0 ⇒ limite 10; onze espaços ultrapassam com folga.
-	sobrecarregado := func(ignorada bool) ComputedSheetV2 {
+	sobrecarregado := func(ignorada bool) ComputedSheet {
 		ch := Character{
 			Level: 1, Displacement: 9, Expertises: pericias,
 			Items:        []CharacterItem{{Name: "Barril", Quantity: 1, Slots: 11}},
 			IgnoredRules: IgnoredRules{Carga: ignorada},
 		}
-		return catalogs.ComputeSheetV2(ch, map[string]bool{})
+		return catalogs.ComputeSheet(ch, map[string]bool{})
 	}
 
 	comRegra, semRegra := sobrecarregado(false), sobrecarregado(true)

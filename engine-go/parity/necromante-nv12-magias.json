@@ -466,7 +466,7 @@
     "flags": [],
     "conditional": []
   },
-  "sheetV2": {
+  "sheet": {
     "defense": {
       "base": 12,
       "itemBonus": 0,
@@ -938,7 +938,7 @@
     "autoFailExpertises": []
   },
   "activeConditionals": [],
-  "sheetV2WithConditionals": {
+  "sheetWithConditionals": {
     "defense": {
       "base": 12,
       "itemBonus": 0,

@@ -62,9 +62,9 @@ func multiclassMpPool(classes []ClassEntry) int {
 }
 
 // Everything below this point used to be the MVP engine's own vital-grant
-// collector, deleted with it (the catalog-driven `vitals_v2.go` is what the app
+// collector, deleted with it (the catalog-driven `vitals_catalog.go` is what the app
 // runs). What survives above is `classVitalsTable`, `pvPoolWithCon`,
-// `multiclassPvPool` and `multiclassMpPool`, which vitals_v2 still calls.
+// `multiclassPvPool` and `multiclassMpPool`, which `vitals_catalog.go` still calls.
 
 // ClassStartingVitals são o PV inicial e o PM por nível de uma classe (p34).
 //

@@ -526,7 +526,7 @@
       }
     ]
   },
-  "sheetV2": {
+  "sheet": {
     "defense": {
       "base": 14,
       "itemBonus": 0,
@@ -1005,7 +1005,7 @@
     "Inspiração +1::expertiseAll::Sob Inspiração::1::morale",
     "Inspiração +2::expertiseAll::Sob Inspiração::2::morale"
   ],
-  "sheetV2WithConditionals": {
+  "sheetWithConditionals": {
     "defense": {
       "base": 14,
       "itemBonus": 0,

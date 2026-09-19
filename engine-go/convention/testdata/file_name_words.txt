@@ -378,7 +378,6 @@ sh
 shape
 sheet
 sheetui
-sheetv2
 signal
 signals
 snapshot
@@ -446,7 +445,6 @@ typography
 ui
 undo
 unified
-v2
 versioned
 view
 viewport

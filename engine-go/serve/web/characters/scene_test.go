@@ -9,7 +9,7 @@ import (
 // Os guardas da cena de PERSONAGENS (ALE-239).
 //
 // O que se protege é o que o SERVIDOR passou a fazer e a SPA pedia por
-// requisição: a Defesa saindo da mesma `ComputeSheetV2` da ficha, e os textos
+// requisição: a Defesa saindo da mesma `ComputeSheet` da ficha, e os textos
 // de raça saindo do catálogo embutido. Mais a gramática do cursor, que é o que
 // a ALE-98 estabeleceu e que um porte distraído quebra sem perceber.
 

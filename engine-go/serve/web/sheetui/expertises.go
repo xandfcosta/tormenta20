@@ -82,7 +82,7 @@ type attributeOption struct {
 var theSaveNames = map[string]bool{"Fortitude": true, "Reflexos": true, "Vontade": true}
 
 // expertisePanelFor monta a aba inteira.
-func expertisePanelFor(dto sheet.CharacterDTO, computed engine.ComputedSheetV2, term string) expertisePanel {
+func expertisePanelFor(dto sheet.CharacterDTO, computed engine.ComputedSheet, term string) expertisePanel {
 	panel := expertisePanel{
 		TrainingBonus: book.WithSign(trainingBonusFor(dto.Level)),
 		HalfLevel:     strconv.FormatInt(dto.Level/2, 10),
@@ -163,7 +163,7 @@ func matchesSearch(name, term string) bool {
 }
 
 // attributeOptions são as seis, com o modificador final de cada uma.
-func attributeOptions(sheet engine.ComputedSheetV2) []attributeOption {
+func attributeOptions(sheet engine.ComputedSheet) []attributeOption {
 	opcoes := make([]attributeOption, 0, len(engine.AttributeKeys))
 	for _, key := range engine.AttributeKeys {
 		opcoes = append(opcoes, attributeOption{
@@ -175,7 +175,7 @@ func attributeOptions(sheet engine.ComputedSheetV2) []attributeOption {
 }
 
 // expertiseRowFor monta uma linha.
-func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedSheetV2) expertiseRow {
+func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedSheet) expertiseRow {
 	quebra := expertiseOrZero(sheet, entry.Name, entry.Attribute)
 	soTreinada := trainedOnlyByBook(entry.Name)
 	linha := expertiseRow{
@@ -211,7 +211,7 @@ func trainedOnlyByBook(name string) bool {
 //
 // Quem responde é o MOTOR, e não a tela relendo uma condição: a regra de quais
 // condições implicam indefeso mora lá (p394).
-func autoFails(sheet engine.ComputedSheetV2, name string) bool {
+func autoFails(sheet engine.ComputedSheet, name string) bool {
 	for _, falha := range sheet.AutoFailExpertises {
 		if falha == name {
 			return true

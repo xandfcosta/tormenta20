@@ -1,6 +1,11 @@
 package engine
 
-// Catalog-driven vitals (PV/PM máximos).
+// OS POÇOS ORIENTADOS A CATÁLOGO (PV/PM máximos).
+//
+// O arquivo carregava um "v2" no nome que nunca distinguiu versão nenhuma: o
+// que ele separa do `vitals.go` ao lado é a FONTE — aquele é a
+// tabela fixa de classe, este junta as concessões dos catálogos primados e
+// recebe os totais FINAIS de atributo. O nome novo diz isso (ALE-354).
 //
 // Distinct from vitals.go, which is catalog-FREE (a hardcoded class table): this
 // one reuses that pool math but collects the maxPv/maxPm grants from the PRIMED

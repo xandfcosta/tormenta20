@@ -17,7 +17,7 @@ import (
 // A DESTREZA BLOQUEADA por armadura pesada aparece como linha ZERADA e apagada,
 // em vez de sumir. Sumir seria a resposta errada para a pergunta que o diálogo
 // existe para responder: "por que minha Defesa está baixa?".
-func defenseRows(sheet engine.ComputedSheetV2) []breakdownRow {
+func defenseRows(sheet engine.ComputedSheet) []breakdownRow {
 	rows := []breakdownRow{
 		{Label: "Base", Value: book.WithSign(sheet.Defense.Base - dexInDefense(sheet))},
 		dexterityRow(sheet),
@@ -34,14 +34,14 @@ func defenseRows(sheet engine.ComputedSheetV2) []breakdownRow {
 // na seguinte. Somar as linhas tem de dar o total, e é isso que
 // `TestTheDefenseRowsAddUpToTheTotal` prende — a subtração é exata porque o
 // `effectiveAttribute` da defesa e o `Total` do atributo são a mesma expressão.
-func dexInDefense(sheet engine.ComputedSheetV2) int {
+func dexInDefense(sheet engine.ComputedSheet) int {
 	if !sheet.Defense.DexApplied {
 		return 0
 	}
 	return sheet.Attributes["dexterity"].Total
 }
 
-func dexterityRow(sheet engine.ComputedSheetV2) breakdownRow {
+func dexterityRow(sheet engine.ComputedSheet) breakdownRow {
 	if !sheet.Defense.DexApplied {
 		return breakdownRow{Label: "Destreza (bloqueada por armadura pesada)", Value: "+0", Muted: true}
 	}
@@ -51,7 +51,7 @@ func dexterityRow(sheet engine.ComputedSheetV2) breakdownRow {
 // directionalDefenseRows são as duas Defesas DIRECIONAIS, e elas só aparecem
 // quando divergem da geral — hoje só o Caído as separa (p394: −5 contra corpo a
 // corpo, +5 contra à distância). Quem está em pé vê a linha de sempre.
-func directionalDefenseRows(sheet engine.ComputedSheetV2) []breakdownRow {
+func directionalDefenseRows(sheet engine.ComputedSheet) []breakdownRow {
 	d := sheet.Defense
 	if d.VsMelee == d.Total && d.VsRanged == d.Total {
 		return nil
@@ -95,7 +95,7 @@ func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 }
 
 // pmLimitRows é o teto de PM por magia.
-func pmLimitRows(sheet engine.ComputedSheetV2) []breakdownRow {
+func pmLimitRows(sheet engine.ComputedSheet) []breakdownRow {
 	rows := []breakdownRow{{Label: "Nível de conjurador", Value: book.WithSign(sheet.PmLimit.Base)}}
 	return append(rows, rowsFromContributions(sheet.PmLimit.Contributions)...)
 }
@@ -104,7 +104,7 @@ func pmLimitRows(sheet engine.ComputedSheetV2) []breakdownRow {
 //
 // A base vem do MOTOR — nível mais atributo-chave já resolvido —, e não de uma
 // releitura do atributo cru: lido cru, o conjurador Osteon saía 1 abaixo.
-func spellDcRows(sheet engine.ComputedSheetV2) []breakdownRow {
+func spellDcRows(sheet engine.ComputedSheet) []breakdownRow {
 	base := 0
 	if sheet.BestBaseSpellCd != nil {
 		base = *sheet.BestBaseSpellCd
@@ -117,7 +117,7 @@ func spellDcRows(sheet engine.ComputedSheetV2) []breakdownRow {
 }
 
 // pmCostRows é o que desconta (ou encarece) o custo de uma magia.
-func pmCostRows(sheet engine.ComputedSheetV2) []breakdownRow {
+func pmCostRows(sheet engine.ComputedSheet) []breakdownRow {
 	if sheet.PmCostMod.Total == 0 {
 		return []breakdownRow{{Label: "Sem mod de itens", Value: "+0", Muted: true}}
 	}

@@ -1,7 +1,7 @@
 package engine
 
 // A camada de DECOMPOSIÇÃO: ela transforma os `ItemEffects` resolvidos num
-// `ComputedSheetV2` em que nenhum número viaja sozinho — cada um leva as
+// `ComputedSheet` em que nenhum número viaja sozinho — cada um leva as
 // contribuições que o formaram.
 //
 // Isso é decisão de produto e não de engenharia: a ficha tem de responder "por
@@ -10,7 +10,7 @@ package engine
 // Deslocamento, defesa, atributo e perícia moram aqui; magia, RD e PV
 // temporários estão no `breakdowns_magic.go`.
 //
-// Oráculo de paridade: `engine-go/parity/<slug>.json`, chave `sheetV2`.
+// Oráculo de paridade: `engine-go/parity/<slug>.json`, chave `sheet`.
 
 // BreakdownContribution é uma linha {source, amount, note?} — a contribuição na
 // forma que a tela desenha. Ela NÃO carrega `bonusType`, ao contrário da
@@ -75,9 +75,9 @@ type ExpertiseBreakdown struct {
 	ArmorPenaltyApplied int                     `json:"armorPenaltyApplied"`
 }
 
-// ComputedSheetV2 junta todas as decomposições — a ficha rica que as cenas
+// ComputedSheet junta todas as decomposições — a ficha rica que as cenas
 // desenham, em que cada número chega com as contribuições que o formaram.
-type ComputedSheetV2 struct {
+type ComputedSheet struct {
 	Defense      DefenseBreakdown `json:"defense"`
 	Displacement ValueBreakdown   `json:"displacement"`
 	FlySpeed     int              `json:"flySpeed"`
@@ -107,9 +107,9 @@ type ComputedSheetV2 struct {
 	AutoFailExpertises []string `json:"autoFailExpertises"`
 }
 
-// ComputeSheetV2 monta a ficha decomposta de um `Character` cru sob os
+// ComputeSheet monta a ficha decomposta de um `Character` cru sob os
 // condicionais ligados — o caminho coleta → resolução → decomposição.
-func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bool) ComputedSheetV2 {
+func (c *Catalogs) ComputeSheet(ch Character, activeConditionals map[string]bool) ComputedSheet {
 	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), activeConditionals)
 	carga := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
 
@@ -122,7 +122,7 @@ func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bo
 		expertises = append(expertises, expertiseBreakdown(ch, ex, effects, carga))
 	}
 
-	return ComputedSheetV2{
+	return ComputedSheet{
 		Defense:            defenseBreakdown(ch, effects),
 		Displacement:       displacementBreakdown(ch, effects, carga),
 		FlySpeed:           flySpeedTotal(effects),

@@ -207,7 +207,7 @@ func tempHpFromPowers(ch Character, e ItemEffects, furiaActive bool) TempHpBreak
 // SpellPmLimit is the p224 ceiling for ONE spell: the character's level in the
 // CLASS that grants it, or the character level when the source is not a class
 // (a race, an origin, a general power). `itemBonus` must be the RESOLVED
-// `pmLimit` total (`ComputedSheetV2.PmLimit.ItemBonus`) — never a raw sum over
+// `pmLimit` total (`ComputedSheet.PmLimit.ItemBonus`) — never a raw sum over
 // equipped modifiers, which double-counts two `item`-typed bonuses and honours a
 // `wielded` condition on a merely vested item.
 //
@@ -239,7 +239,7 @@ func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
 // applies the p224 rule — the one call a transport (HTTP handler, WASM export)
 // should make, so no caller re-derives the bonus its own way.
 func (c *Catalogs) SpellPmLimitFor(ch Character, spellClasses []string) int {
-	sheet := c.ComputeSheetV2(ch, map[string]bool{})
+	sheet := c.ComputeSheet(ch, map[string]bool{})
 	return SpellPmLimit(ch, sheet.PmLimit.ItemBonus, spellClasses)
 }
 

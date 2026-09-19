@@ -17,6 +17,6 @@ func (sr sheetRules) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sh
 	return sheet.Load(ctx, sr.queries, c)
 }
 
-func (sr sheetRules) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
+func (sr sheetRules) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheet, error) {
 	return sheet.LoadAndCompute(ctx, sr.queries, sr.catalogs, row)
 }

@@ -22,7 +22,7 @@ const initiativeExpertise = "Iniciativa"
 // resolve na hora arrastando a ordem.
 //
 //	engine.InitiativeTotal(ficha) // 8, para o Arcanista Nv9 do oráculo
-func InitiativeTotal(ficha ComputedSheetV2) int {
+func InitiativeTotal(ficha ComputedSheet) int {
 	for _, pericia := range ficha.Expertises {
 		if pericia.Name == initiativeExpertise {
 			return pericia.Total

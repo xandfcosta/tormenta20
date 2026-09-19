@@ -88,7 +88,7 @@ func TestMoneyLoadCountsWholeThousands(t *testing.T) {
 
 // A consequência da sobrecarga, ponta a ponta pela ficha inteira: o motor não
 // pode só ANUNCIAR "–5 e –3m" e deixar o resto da ficha com os números de quem
-// anda leve. Roda por `ComputeSheetV2` de propósito — o defeito que este teste
+// anda leve. Roda por `ComputeSheet` de propósito — o defeito que este teste
 // mira não é a conta da carga, é ela não chegar ao deslocamento e às perícias.
 //
 // p141: "sofre penalidade de armadura –5 e seu deslocamento é reduzido em –3m".
@@ -101,12 +101,12 @@ func TestOverloadPenalizesDisplacementAndArmorExpertises(t *testing.T) {
 		{Name: "Diplomacia", Attribute: "charisma"},
 	}
 	// Força 0 ⇒ limite 10. Uma linha de 11 espaços ultrapassa; a de 10 não.
-	comCarga := func(espacos float64) ComputedSheetV2 {
+	comCarga := func(espacos float64) ComputedSheet {
 		ch := Character{
 			Level: 1, Displacement: 9, Expertises: pericias,
 			Items: []CharacterItem{{Name: "Barril", Quantity: 1, Slots: espacos}},
 		}
-		return catalogs.ComputeSheetV2(ch, map[string]bool{})
+		return catalogs.ComputeSheet(ch, map[string]bool{})
 	}
 
 	leve, pesado := comCarga(10), comCarga(11)
@@ -124,7 +124,7 @@ func TestOverloadPenalizesDisplacementAndArmorExpertises(t *testing.T) {
 	}
 }
 
-func periciaTotal(t *testing.T, sheet ComputedSheetV2, name string) int {
+func periciaTotal(t *testing.T, sheet ComputedSheet, name string) int {
 	t.Helper()
 	for _, ex := range sheet.Expertises {
 		if ex.Name == name {

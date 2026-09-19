@@ -196,7 +196,7 @@ func (s Scene) loadAttributes(r *http.Request, recusa string) (attributesView, i
 // pergunta é feita ao motor com o espalhamento hipotético. Travar na tela é
 // conveniência; quem recusa de verdade é o servidor, no `stepAttribute`.
 func attributeRowOf(
-	chave string, espalhamento map[string]int, sheet engine.ComputedSheetV2, gasto int,
+	chave string, espalhamento map[string]int, sheet engine.ComputedSheet, gasto int,
 ) attributeRow {
 	return attributeRow{
 		Key: chave, Label: attributeLabels[chave],

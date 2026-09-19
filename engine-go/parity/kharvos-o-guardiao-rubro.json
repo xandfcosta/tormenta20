@@ -1128,7 +1128,7 @@
       }
     ]
   },
-  "sheetV2": {
+  "sheet": {
     "defense": {
       "base": 11,
       "itemBonus": 11,
@@ -1677,7 +1677,7 @@
     "Medalhão de prata::defense::Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)::2::enhancement",
     "Medalhão de prata::pmLimit::Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)::1::enhancement"
   ],
-  "sheetV2WithConditionals": {
+  "sheetWithConditionals": {
     "defense": {
       "base": 11,
       "itemBonus": 12,

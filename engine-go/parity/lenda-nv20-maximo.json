@@ -955,7 +955,7 @@
       }
     ]
   },
-  "sheetV2": {
+  "sheet": {
     "defense": {
       "base": 10,
       "itemBonus": 12,
@@ -1465,7 +1465,7 @@
     "Duelo +5::attack:all::contra o alvo do Duelo — 2 PM, até o fim da cena::5::training",
     "Duelo +5::damage:all::contra o alvo do Duelo — 2 PM, até o fim da cena::5::training"
   ],
-  "sheetV2WithConditionals": {
+  "sheetWithConditionals": {
     "defense": {
       "base": 10,
       "itemBonus": 22,

@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// Shared helpers for the parity suites (collect, itemeffects, sheetV2, vitals,
+// Shared helpers for the parity suites (collect, itemeffects, sheet, vitals,
 // equipped flags, weapon cards). They used to live in `parity_test.go` — the MVP
 // engine's own test — which is why deleting that engine required moving them
 // out first rather than dropping the file wholesale.
