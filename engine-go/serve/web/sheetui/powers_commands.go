@@ -39,17 +39,17 @@ func usePower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 		return fmt.Errorf("%q não é um poder de usar", spec.Name)
 	}
 	usos := powerUses(dto)[spec.ID]
-	pode, porque := useDecision(*spec, useContext{
+	pode, porque := book.UseDecision(*spec, book.UseContext{
 		PmAtual: int(dto.MpCurrent), UsadoNaCena: usos.Cena, UsadoNoDia: usos.Dia,
 		Flags: s.activeFlags(dto),
 	})
 	if !pode {
 		return fmt.Errorf("%s: %s", spec.Name, porque)
 	}
-	if err := s.chargePm(r, row, activationPm(*spec)); err != nil {
+	if err := s.chargePm(r, row, book.ActivationPm(*spec)); err != nil {
 		return err
 	}
-	escopo := chargedScope(*spec)
+	escopo := book.ChargedScope(*spec)
 	if escopo == "" {
 		return nil
 	}
@@ -80,13 +80,13 @@ func enterStance(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals
 	}
 	maximo := 0
 	if spec.Scaling != nil {
-		maximo = levelSteps(*spec.Scaling, classPowerLevel(dto, spec.ID))
+		maximo = book.LevelSteps(*spec.Scaling, classPowerLevel(dto, spec.ID))
 	}
-	pode, porque := stanceDecision(*spec, degraus, maximo, int(dto.MpCurrent))
+	pode, porque := book.StanceDecision(*spec, degraus, maximo, int(dto.MpCurrent))
 	if !pode {
 		return fmt.Errorf("%s: %s", spec.Name, porque)
 	}
-	custo := stanceCost(*spec, degraus)
+	custo := book.StanceCost(*spec, degraus)
 	if err := s.chargePm(r, row, custo); err != nil {
 		return err
 	}

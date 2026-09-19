@@ -1,13 +1,18 @@
-package sheetui
+package book
 
 import (
 	"encoding/json"
 	"strconv"
-	"t20engine/domain/book"
 )
 
 // AS REGRAS DE ATIVAR UM PODER: se ele pode ser usado agora, qual limite o
 // prende, e quanto custa entrar numa postura de degraus.
+//
+// Elas moravam na CENA da ficha, e o `activations.go` ao lado dizia por escrito
+// que esta era "a metade que a cena decide". Deixou de ser: quem decide usar um
+// poder é o caso de uso (`character.Plays`), e a cena continua lendo as mesmas
+// funções para desenhar o botão desligado (ALE-351). Duas cópias — uma para
+// decidir, outra para desenhar — dariam um botão aceso sobre um gesto recusado.
 //
 // # O que é COBRADO e o que é só crachá
 //
@@ -15,14 +20,14 @@ import (
 // "1/rodada" saem como crachá e nada mais, e isso é decisão registrada, não
 // esquecimento: a mesa conta rodadas, a ficha não.
 //
-// O REGISTRO em si mora no `book` (`activations.go`): ler catálogo é do livro.
-// O que segue é o que a TELA decide a partir dele.
+// O REGISTRO em si mora no `activations.go`, ao lado: ler o catálogo é uma
+// coisa, decidir a partir dele é outra, e por isso são dois arquivos.
 
 // ── o LIMITE de usos ─────────────────────────────────────────────────────────
 
-// chargedScope é "scene", "day" ou "" — e "" quer dizer que o limite existe
+// ChargedScope é "scene", "day" ou "" — e "" quer dizer que o limite existe
 // no livro e a ficha NÃO o cobra.
-func chargedScope(spec book.Activation) string {
+func ChargedScope(spec Activation) string {
 	switch string(spec.Uses) {
 	case `"cena"`:
 		return "scene"
@@ -32,38 +37,17 @@ func chargedScope(spec book.Activation) string {
 	return ""
 }
 
-// limitBadge é o que a tela escreve do limite: "1/cena", "3/dia", ou "".
-func limitBadge(spec book.Activation) string {
-	cru := string(spec.Uses)
-	switch cru {
-	case "", "null":
-		return ""
-	case `"cena"`:
-		return "1/cena"
-	case `"dia"`:
-		return "1/dia"
-	case `"rodada"`:
-		return "1/rodada"
-	}
-	var numero int
-	if json.Unmarshal(spec.Uses, &numero) == nil {
-		return strconv.Itoa(numero) + "/dia"
-	}
-	return ""
+// CostIsVariable diz que o custo é NEGOCIADO com a mesa, e não um número.
+func CostIsVariable(spec Activation) bool {
+	return ActivationPm(spec) < 0
 }
 
-// costVariableEh diz se o PM do poder não é um número — "PM variável" na tela,
-// e o servidor recusa cobrar por ele: quem sabe o total é a mesa.
-func costVariableEh(spec book.Activation) bool {
-	return activationPm(spec) < 0
-}
-
-// activationPm é o custo em PM, ou -1 quando ele é variável.
+// ActivationPm é o custo em PM, ou -1 quando ele é variável.
 //
 // Menos um e não zero: zero é um custo LEGÍTIMO (a maioria das passivas), e
 // confundir os dois é o que faria um poder de graça ser tratado como negociado
 // com a mesa.
-func activationPm(spec book.Activation) int {
+func ActivationPm(spec Activation) int {
 	var numero int
 	if json.Unmarshal(spec.PmCost, &numero) == nil {
 		return numero
@@ -73,19 +57,19 @@ func activationPm(spec book.Activation) int {
 
 // ── a DECISÃO de usar ────────────────────────────────────────────────────────
 
-// useDecision responde se o poder pode ser usado AGORA, e por que não.
+// UseDecision responde se o poder pode ser usado AGORA, e por que não.
 //
 // A ORDEM das recusas importa: a razão mostrada é a PRIMEIRA que barra, então
 // "requer Fúria" aparece antes de "PM insuficiente" num poder que precisa das
 // duas coisas — e é a que a pessoa pode resolver primeiro.
-func useDecision(spec book.Activation, contexto useContext) (bool, string) {
-	if costVariableEh(spec) {
+func UseDecision(spec Activation, contexto UseContext) (bool, string) {
+	if CostIsVariable(spec) {
 		return false, "custo variável"
 	}
 	if spec.RequiresFlag != "" && !contexto.Flags[spec.RequiresFlag] {
 		return false, "requer " + spec.RequiresFlag
 	}
-	switch chargedScope(spec) {
+	switch ChargedScope(spec) {
 	case "scene":
 		if contexto.UsadoNaCena >= 1 {
 			return false, "limite por cena atingido"
@@ -95,14 +79,14 @@ func useDecision(spec book.Activation, contexto useContext) (bool, string) {
 			return false, "limite por dia atingido"
 		}
 	}
-	if activationPm(spec) > contexto.PmAtual {
+	if ActivationPm(spec) > contexto.PmAtual {
 		return false, "PM insuficiente"
 	}
 	return true, ""
 }
 
-// useContext é o que a decisão precisa saber da ficha AGORA.
-type useContext struct {
+// UseContext é o que a decisão precisa saber da ficha AGORA.
+type UseContext struct {
 	PmAtual     int
 	UsadoNaCena int
 	UsadoNoDia  int
@@ -111,31 +95,31 @@ type useContext struct {
 
 // ── a POSTURA de degraus ─────────────────────────────────────────────────────
 
-// levelSteps são os degraus EXTRAS que o nível na classe concede.
+// LevelSteps são os degraus EXTRAS que o nível na classe concede.
 //
 // O nível é o da CLASSE e não o do personagem (p40): um bárbaro 5/ladino 5 tem
 // a Fúria de um bárbaro de nível 5, e não a de um personagem de nível 10.
-func levelSteps(escala book.ActivationScale, nivelNaClasse int) int {
+func LevelSteps(escala ActivationScale, nivelNaClasse int) int {
 	if escala.StepEveryLevels <= 0 || nivelNaClasse < escala.FirstStepLevel {
 		return 0
 	}
 	return 1 + (nivelNaClasse-escala.FirstStepLevel)/escala.StepEveryLevels
 }
 
-// stanceCost é o que entrar custa com os degraus escolhidos.
-func stanceCost(spec book.Activation, degraus int) int {
+// StanceCost é o que entrar custa com os degraus escolhidos.
+func StanceCost(spec Activation, degraus int) int {
 	if spec.Scaling == nil {
-		return activationPm(spec)
+		return ActivationPm(spec)
 	}
 	return spec.Scaling.BasePm + degraus*spec.Scaling.StepPm
 }
 
-// stanceDecision responde se dá para entrar na postura com esses degraus.
-func stanceDecision(spec book.Activation, degraus, maximo, pmAtual int) (bool, string) {
+// StanceDecision responde se dá para entrar na postura com esses degraus.
+func StanceDecision(spec Activation, degraus, maximo, pmAtual int) (bool, string) {
 	if degraus < 0 || degraus > maximo {
 		return false, "o nível permite até " + strconv.Itoa(maximo) + " degraus"
 	}
-	if custo := stanceCost(spec, degraus); custo > pmAtual {
+	if custo := StanceCost(spec, degraus); custo > pmAtual {
 		return false, "PM insuficiente"
 	}
 	return true, ""

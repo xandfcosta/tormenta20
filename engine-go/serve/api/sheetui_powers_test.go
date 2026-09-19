@@ -12,10 +12,18 @@ import (
 
 func barbaro(t *testing.T, nivel int64) (sceneFixture, int64) {
 	t.Helper()
+	return barbarianWithMp(t, nivel, 20)
+}
+
+// barbarianWithMp semeia o mesmo bárbaro com o PM escolhido, para os casos em
+// que o bolso vazio É o assunto. (O `barbaro` ao lado é dívida de idioma
+// baselinada; nome NOVO sai em inglês.)
+func barbarianWithMp(t *testing.T, nivel, pmAtual int64) (sceneFixture, int64) {
+	t.Helper()
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Furioso", Origin: "Batedor", Level: nivel,
-		HpMax: 60, HpCurrent: 60, MpMax: 20, MpCurrent: 20,
+		HpMax: 60, HpCurrent: 60, MpMax: 20, MpCurrent: pmAtual,
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -178,6 +186,56 @@ func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
 	}
 	if pm := pm(t, f, id); pm != 20 {
 		t.Errorf("a recusa cobrou assim mesmo: sobrou %d", pm)
+	}
+}
+
+// SEM PM NO BOLSO, nem o poder sai nem a postura abre.
+//
+// # Este caso nasceu de uma SABOTAGEM, e vale dizer como
+//
+// A ALE-351 moveu as regras de ativação da cena para o `domain/book` e, para
+// provar que os guardas existentes mediam o código que mudou de casa, sabotou
+// cada ramo. O do teto de degraus reprovou; **o do PM não reprovou nada** —
+// trocar `ActivationPm(spec) > contexto.PmAtual` por `false` deixava a suíte
+// inteira verde.
+//
+// O buraco era de COBERTURA e não de comportamento: o servidor já recusava, e
+// ninguém afirmava isso. Sem o caso, o dia em que a comparação inverter passa
+// batido — e o `chargePm` tem PISO EM ZERO, então o sintoma não seria um erro:
+// seria o jogador usando o que não pode pagar e o PM indo a zero calado.
+//
+// As duas metades do mesmo buraco estão aqui, porque são dois caminhos
+// diferentes até a mesma comparação: o `UseDecision` e o `StanceDecision`.
+func TestWithoutMpNeitherThePowerNorTheStanceGoesThrough(t *testing.T) {
+	f, id := barbarianWithMp(t, 5, 0)
+	choiceCom(t, f, id, `["class.barbaro.brado-assustador"]`, `[]`)
+
+	usar := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", "")
+	if !strings.Contains(usar, "PM insuficiente") {
+		t.Errorf("o poder saiu com o bolso vazio: %q", usar)
+	}
+	entrar := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`)
+	if !strings.Contains(entrar, "PM insuficiente") {
+		t.Errorf("a postura abriu com o bolso vazio: %q", entrar)
+	}
+	// NADA foi gravado por nenhum dos dois: sem esta metade, "a recusa apareceu"
+	// não diz se ela apareceu ANTES ou DEPOIS da escrita.
+	if pm := pm(t, f, id); pm != 0 {
+		t.Errorf("o PM saiu do zero: %d", pm)
+	}
+	usos, err := f.s.sceneCore().Queries().ListCharacterPowerUses(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler os usos: %v", err)
+	}
+	if len(usos) != 0 {
+		t.Errorf("a recusa somou um uso assim mesmo: %+v", usos)
+	}
+	posturas, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler as posturas: %v", err)
+	}
+	if len(posturas) != 0 {
+		t.Errorf("a recusa abriu a postura assim mesmo: %+v", posturas)
 	}
 }
 

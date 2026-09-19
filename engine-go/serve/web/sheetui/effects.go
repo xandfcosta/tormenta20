@@ -143,7 +143,7 @@ func stancesFromCatalog() map[string]stanceOfBook {
 			if flag == "" {
 				continue
 			}
-			stancesByFlag[flag] = stanceOfBook{Flag: flag, Name: a.Name, PM: activationPm(a), Page: a.BookPage}
+			stancesByFlag[flag] = stanceOfBook{Flag: flag, Name: a.Name, PM: book.ActivationPm(a), Page: a.BookPage}
 		}
 	})
 	return stancesByFlag

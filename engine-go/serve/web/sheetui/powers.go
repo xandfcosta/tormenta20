@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"encoding/json"
 	"sort"
 	"strconv"
 	"strings"
@@ -56,7 +57,7 @@ type powerRow struct {
 	// Cost é "LIVRE · 1 PM" — a ação que o uso consome e o que ele custa.
 	Cost string
 	// Limit é o crachá do limite: "1/cena", "3/dia". Cobrado só nos dois
-	// primeiros; ver `chargedScope`.
+	// primeiros; ver `book.ChargedScope`.
 	Limit string
 	// Spent é "usado 1/1 cena", e só existe para o limite que a ficha cobra.
 	Spent string
@@ -100,7 +101,7 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, busca string) powersPanel {
 // powerRowsOf traduz o acervo em linhas de tela, resolvendo a ativação de cada
 // poder e o estado de jogo dele.
 func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
-	contexto := useContext{PmAtual: int(dto.MpCurrent), Flags: s.activeFlags(dto)}
+	contexto := book.UseContext{PmAtual: int(dto.MpCurrent), Flags: s.activeFlags(dto)}
 	usos := powerUses(dto)
 	posturas := paidStances(dto)
 	linhas := []powerRow{}
@@ -111,7 +112,7 @@ func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
 }
 
 func powerRowFor(
-	dto sheet.CharacterDTO, poder ownedPower, contexto useContext,
+	dto sheet.CharacterDTO, poder ownedPower, contexto book.UseContext,
 	usos map[string]powerUse, posturas map[string]bool,
 ) powerRow {
 	linha := powerRow{
@@ -139,10 +140,10 @@ func powerRowFor(
 	linha.Limit = limitBadge(*spec)
 	linha.Cost = writtenCost(*spec)
 	contexto.UsadoNaCena, contexto.UsadoNoDia = usos[spec.ID].Cena, usos[spec.ID].Dia
-	if escopo := chargedScope(*spec); escopo != "" {
+	if escopo := book.ChargedScope(*spec); escopo != "" {
 		linha.Spent = writtenSpent(escopo, usos[spec.ID])
 	}
-	linha.Can, linha.Why = useDecision(*spec, contexto)
+	linha.Can, linha.Why = book.UseDecision(*spec, contexto)
 	if spec.Kind == "stance" {
 		linha.Stance = stanceStateFor(dto, *spec, posturas, contexto)
 	}
@@ -151,18 +152,18 @@ func powerRowFor(
 
 // stanceStateFor resolve a flag, os degraus do nível e se ela está em curso.
 func stanceStateFor(
-	dto sheet.CharacterDTO, spec book.Activation, posturas map[string]bool, contexto useContext,
+	dto sheet.CharacterDTO, spec book.Activation, posturas map[string]bool, contexto book.UseContext,
 ) *stanceState {
 	flag := stanceFlag(spec)
 	if flag == "" {
 		return nil
 	}
-	estado := &stanceState{Flag: flag, Active: posturas[flag], BasePm: activationPm(spec)}
+	estado := &stanceState{Flag: flag, Active: posturas[flag], BasePm: book.ActivationPm(spec)}
 	if spec.Scaling != nil {
 		estado.BasePm = spec.Scaling.BasePm
 		estado.StepPm = spec.Scaling.StepPm
 		estado.StepLabel = spec.Scaling.StepLabel
-		estado.MaxSteps = levelSteps(*spec.Scaling, classPowerLevel(dto, spec.ID))
+		estado.MaxSteps = book.LevelSteps(*spec.Scaling, classPowerLevel(dto, spec.ID))
 	}
 	return estado
 }
@@ -187,6 +188,31 @@ func stanceFlag(spec book.Activation) string {
 // catálogo. Sem casar, o nível é o do personagem — o que é generoso, e é a
 // escolha certa entre errar para menos e errar para mais numa tela que só
 // OFERECE degraus: quem paga é o servidor, que cobra pelo que foi escolhido.
+// limitBadge é o que a TELA escreve do limite: "1/cena", "3/dia", ou "".
+//
+// Ele ficou na cena quando as regras de ativação subiram para o `domain/book`
+// (ALE-351), e a linha entre os dois é a mesma do guia: o `book.ChargedScope`
+// decide o que a ficha COBRA, este escreve o que a pessoa LÊ. Um "3/dia" sai
+// como crachá e não é cobrado — a mesma entrada, duas respostas.
+func limitBadge(spec book.Activation) string {
+	cru := string(spec.Uses)
+	switch cru {
+	case "", "null":
+		return ""
+	case `"cena"`:
+		return "1/cena"
+	case `"dia"`:
+		return "1/dia"
+	case `"rodada"`:
+		return "1/rodada"
+	}
+	var numero int
+	if json.Unmarshal(spec.Uses, &numero) == nil {
+		return strconv.Itoa(numero) + "/dia"
+	}
+	return ""
+}
+
 func classPowerLevel(dto sheet.CharacterDTO, activationID string) int {
 	for _, classe := range dto.Classes {
 		if strings.Contains(activationID, "."+foldAccents(strings.ToLower(classe.ClassName))+".") {
@@ -342,16 +368,16 @@ var writtenActions = map[string]string{
 // sobe com os degraus antes de a pessoa abrir o contador.
 func writtenCost(spec book.Activation) string {
 	if spec.Kind == "stance" {
-		return "POSTURA · " + strconv.Itoa(stanceCost(spec, 0)) + stepsMore(spec) + " PM"
+		return "POSTURA · " + strconv.Itoa(book.StanceCost(spec, 0)) + stepsMore(spec) + " PM"
 	}
 	acao, tem := writtenActions[spec.Action]
 	if !tem {
 		acao = strings.ToUpper(spec.Action)
 	}
-	if costVariableEh(spec) {
+	if book.CostIsVariable(spec) {
 		return acao + " · PM variável"
 	}
-	return acao + " · " + strconv.Itoa(activationPm(spec)) + " PM"
+	return acao + " · " + strconv.Itoa(book.ActivationPm(spec)) + " PM"
 }
 
 func stepsMore(spec book.Activation) string {

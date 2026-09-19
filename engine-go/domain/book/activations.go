@@ -14,9 +14,13 @@ import (
 // **o destino de uma função é a DEPENDÊNCIA dela**: quem lê o catálogo é do
 // livro.
 //
-// O que NÃO mora aqui é a metade que a cena decide: se o botão está ativo, que
-// crachá o limite desenha, e a frase da recusa. Aquilo lê esta tabela e a ficha,
-// e a voz é da tela.
+// A DECISÃO a partir dela — se o poder pode ser usado agora, quanto custa um
+// degrau de postura, e a frase da recusa — mudou de lado na ALE-351: ela morava
+// na cena, e hoje é o `activation_rules.go`, ao lado. A razão é a mesma frase
+// acima: quem DECIDE é o caso de uso, e ele não alcança o `serve/web`.
+//
+// O que continua sendo da tela é o CRACHÁ ("1/cena", "3/dia") — a mesma entrada
+// responde duas coisas, e só uma delas é cobrada.
 
 // Activation é a entrada do registro de ativações: id, nome, tipo, PM e página,
 // mais a AÇÃO que o uso consome, o limite, a flag que o gatilho exige e a escala
