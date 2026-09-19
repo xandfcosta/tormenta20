@@ -154,6 +154,29 @@ templ retratoDaFila(l tableRow) {
 					style={ fmt.Sprintf("width:%d%%", l.PV.Pct) }
 				></span>
 			</span>
+			// A RESERVA é um filete PRÓPRIO, embaixo, e não um pedaço da barra
+			// de cima. Emendá-la à direita da vida faria o herói cheio com
+			// colchão desenhar dois terços — a barra passaria a responder
+			// "quanto do total", e a pergunta dela é "quanto apanhei".
+			//
+			// A FAIXA SAI SEMPRE, e vazia quando não há reserva: desenhá-la só
+			// quando existe fazia o cartão com colchão medir 59px e os vizinhos
+			// 55, e o trilho escalonava. Dois pixels de folga em toda linha
+			// custam menos que uma fileira irregular — e ela não tem fundo, então
+			// o cartão sem reserva não ganha uma segunda barra vazia para
+			// confundir com a de vida.
+			//
+			// Aqui não há número: o cartão tem 70px e duas letras já são o nome.
+			// Quem não vê a tela lê a reserva no `aria-label` do botão, que o
+			// `barLabel` monta.
+			<span aria-hidden="true" class="h-0.5 w-full overflow-hidden rounded-full">
+				if l.PV.TempPct > 0 {
+					<span
+						class="block h-full rounded-full bg-hp-temp"
+						style={ fmt.Sprintf("width:%d%%", l.PV.TempPct) }
+					></span>
+				}
+			</span>
 		}
 	</button>
 }

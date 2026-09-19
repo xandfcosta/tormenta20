@@ -16,7 +16,7 @@ import (
 //
 // A tentação tem nome: **o `s.db`**. Cena que compõe SQL é cena com o banco
 // dentro, e o remédio é um método que nomeia a pergunta (`SaveItemOverlays`,
-// `SaveChoices`, `ApplyPowerTempHp`).
+// `SaveChoices`).
 //
 // O `Queries` continua permitido — as sete abas leem e escrevem a mesma linha de
 // personagem, e é a concessão da forja, da administração e das campanhas. O
@@ -27,6 +27,11 @@ import (
 // cartão do herói. A direção continua legal — quem importa é quem desenha
 // depois.
 var permitidos = map[string]bool{
+	// O `app/character` NÃO é concessão: ele está ABAIXO desta cena, então não há
+	// ciclo para desviar — e por isso não há interface. As entradas da porta que
+	// viraram gesto dele saíram da `Deps` em vez de ganhar um adaptador. A
+	// direção continua legal: quem importa é quem desenha depois.
+	"t20engine/app/character":        true,
 	"t20engine/domain/book":          true, // o catálogo TIPADO: poder, origem, deus, condição, ativação
 	"t20engine/domain/catalog":       true, // ver a nota abaixo — é o LookupSpell, não o Resource
 	"t20engine/infra/db/sqlcgen":     true, // as linhas do banco, pelo `Queries` da porta
@@ -45,8 +50,9 @@ var permitidos = map[string]bool{
 //
 // O que fica são `catalog.LookupSpell`, `catalog.IsCondition` e os tipos
 // `catalog.Spell` e `catalog.Augment` em três assinaturas — o mesmo acessor que
-// o HOSPEDEIRO usa (o `validateAugments` recebe um `catalog.Spell`). Unificá-lo
-// com o `book.Spell` é trabalho próprio, que mexe nos dois lados.
+// o CASO DE USO usa (o `validateAugments` recebe um `catalog.Spell`, e é por
+// isso que ele não desce para o `domain/sheet`). Unificá-lo com o `book.Spell`
+// é trabalho próprio, que mexe nos dois lados.
 func TestTheSheetSceneDoesNotImportItsHost(t *testing.T) {
 	arquivos, err := os.ReadDir(".")
 	if err != nil {

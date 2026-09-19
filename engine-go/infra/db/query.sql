@@ -59,6 +59,12 @@ FROM character_items WHERE characterId = ? ORDER BY id ASC;
 SELECT id, catalogId, scope, modifiers, createdAt
 FROM active_effects WHERE characterId = ? ORDER BY id ASC;
 
+-- name: ListActiveEffectsByCharacters :many
+-- A fila da Mesa redesenha a cada tique do stream, e uma leitura por
+-- combatente seria N consultas por quadro. Mesma forma do ListCharacterMaxes.
+SELECT id, characterId, catalogId, scope, modifiers, createdAt
+FROM active_effects WHERE characterId IN (sqlc.slice('ids')) ORDER BY id ASC;
+
 -- name: ListSpellsByCharacter :many
 SELECT id, catalogSpellId, prepared, learnedAt
 FROM character_spells WHERE characterId = ? ORDER BY learnedAt ASC;
@@ -585,7 +591,7 @@ SELECT EXISTS (
 
 -- Estado de mesa da ficha (ALE-222). Saiu do localStorage: o servidor e dono.
 -- CUIDADO: conditionals (o opt-in do JOGADOR) nao e conditions (as do LIVRO,
--- que vivem na coluna characters.activeConditions). Ver C6 no GLOSSARIO.md.
+-- que vivem na coluna characters.activeConditions). Ver C6 no GLOSSARY.md.
 
 -- name: ListCharacterConditionals :many
 SELECT conditionalId FROM character_conditionals

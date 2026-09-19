@@ -92,6 +92,19 @@ type tableBar struct {
 	// Para o JOGADOR, uma barra escondida chega sem números e com isto ligado —
 	// é assim que a tela distingue "não tem PV rastreado" de "o mestre escondeu".
 	Hidden bool
+	// Temp é a reserva de PV TEMPORÁRIO, e ela é parcela À PARTE do `Current`.
+	//
+	// O dano gasta a reserva ANTES do PV (p106), então o mestre que decide uma
+	// pancada precisa dela para saber se o golpe chega na carne. Ela não entra
+	// no `Pct` pela mesma razão que não entra na fração do crachá da ficha: a
+	// barra responde "quanto apanhei", e somar faria um herói ferido desenhar
+	// cheio.
+	//
+	// ZERO quer dizer "não há reserva", e aí a barra fica igual à de sempre.
+	Temp int64
+	// TempPct é a largura do filete da reserva, presa em 0..100 — o trilho da
+	// fila não tem número para mostrar, só espaço para uma linha.
+	TempPct int
 	// Tom é a CLASSE do preenchimento — a cor diz "quão mal", não só a largura.
 	//
 	// Classe e não `var(--token)` inline por duas razões que se somam: o
@@ -192,7 +205,23 @@ func portraitLabel(l tableRow) string {
 	if l.PV.Hidden {
 		return fmt.Sprintf("%s — PV oculto", l.Rotulo)
 	}
-	return fmt.Sprintf("%s — PV %d de %d", l.Rotulo, l.PV.Current, l.PV.Max)
+	return fmt.Sprintf("%s — %s", l.Rotulo, barLabel("PV", *l.PV))
+}
+
+// barLabel é o nome ACESSÍVEL de uma barra: "PV 22 de 40", mais a reserva
+// quando ela existe.
+//
+// O filete da reserva é COR e largura, e nenhuma das duas existe para quem usa
+// leitor de tela — o mesmo motivo que põe a presença no `castLabel` logo
+// abaixo. Aqui ela é o canal ÚNICO no trilho da fila, que não tem número
+// nenhum: sem esta frase, a reserva simplesmente não existiria para quem não vê
+// a tela.
+func barLabel(rotulo string, b tableBar) string {
+	frase := fmt.Sprintf("%s %d de %d", rotulo, b.Current, b.Max)
+	if b.Temp > 0 {
+		frase += fmt.Sprintf(", mais %d temporários", b.Temp)
+	}
+	return frase
 }
 
 // castLabel é o nome de um personagem do elenco recolhido, com a presença
@@ -326,7 +355,9 @@ func tableBarOf(current, max int64, arcane bool) tableBar {
 }
 
 // tableTrackerOf desenha a fila que o jogador recebeu — já redigida.
-func tableTrackerOf(st *live.SessionRuntimeState, meus map[int64]bool) []tableRow {
+func tableTrackerOf(
+	st *live.SessionRuntimeState, meus map[int64]bool, reservas map[int64]int64,
+) []tableRow {
 	fila := make([]tableRow, 0, len(st.Initiative))
 	for i := range st.Initiative {
 		e := &st.Initiative[i]
@@ -346,6 +377,20 @@ func tableTrackerOf(st *live.SessionRuntimeState, meus map[int64]bool) []tableRo
 		// escondeu" ficam iguais.
 		linha.PV = poolBar(e.HpCurrent, e.HpMax, e.HpHidden, false)
 		linha.PM = poolBar(e.MpCurrent, e.MpMax, e.MpHidden, true)
+		// A RESERVA pega carona no gargalo da REDAÇÃO, e o que a segura é o
+		// MÁXIMO e não a marca do olho.
+		//
+		// Para a mesa, o pool escondido volta do `StateForRole` sem números —
+		// o `poolBar` devolve uma barra só com a marca, `Max` zero —, e o
+		// `withTempHp` para aí. Para o MESTRE os números vêm, porque esconder é
+		// decisão sobre o que os OUTROS veem: uma trava pela marca cegaria
+		// justamente quem a acionou. Medido: com `!Hidden`, o mestre perdia a
+		// própria reserva de vista.
+		//
+		// Só linha com personagem atrás tem reserva — NPC não tem ficha.
+		if e.CharacterID != nil {
+			withTempHp(linha.PV, reservas[*e.CharacterID])
+		}
 		fila = append(fila, linha)
 	}
 	return fila
@@ -370,6 +415,18 @@ func poolBar(current, max *int64, hidden *bool, arcane bool) *tableBar {
 	return nil
 }
 
+// withTempHp põe a reserva numa barra, e a devolve.
+//
+// A reserva SÓ CABE onde há máximo: uma linha sem PV rastreado não ganha filete
+// nem número, porque não há de que o filete ser uma fração.
+func withTempHp(b *tableBar, temp int64) {
+	if b == nil || temp <= 0 || b.Max <= 0 {
+		return
+	}
+	b.Temp = temp
+	b.TempPct = ui.VitalPercent(temp, b.Max)
+}
+
 // tableViewOf monta a tela a partir das partes já buscadas. Tudo o que decide
 // mora aqui; o handler ao lado só sabe buscar.
 func tableViewOf(
@@ -378,6 +435,7 @@ func tableViewOf(
 	grupo []Member,
 	meus map[int64]bool,
 	eu *tableMe,
+	reservas map[int64]int64,
 ) View {
 	if eu != nil {
 		eu.NaFila = false
@@ -409,7 +467,7 @@ func tableViewOf(
 		Turn:        tableTurnOf(st, meus),
 		Proximos:    turnStripOf(st, meus),
 		Grupo:       grupo,
-		Fila:        tableTrackerOf(st, meus),
+		Fila:        tableTrackerOf(st, meus, reservas),
 		Eu:          eu,
 	}
 }

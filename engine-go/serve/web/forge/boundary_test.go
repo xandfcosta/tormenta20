@@ -32,6 +32,10 @@ import (
 // exatamente o conjunto que a extração tornou possível: sem `sheet`, `book` e
 // `web/ui` fora do `api`, esta cena não teria conseguido sair.
 var permitidos = map[string]bool{
+	// O `app/character` é o NASCIMENTO, e ele está ABAIXO desta cena: não há
+	// ciclo para desviar, então não há interface. Três entradas da porta saíram
+	// com ele (ALE-347), e a porta ficou com as quatro do núcleo.
+	"t20engine/app/character":    true,
 	"t20engine/domain/sheet":     true, // a forma e a construção da ficha
 	"t20engine/domain/book":      true, // o catálogo tipado: raça, classe, item
 	"t20engine/domain/engine":    true, // as regras do livro

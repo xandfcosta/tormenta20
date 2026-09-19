@@ -32,7 +32,6 @@ and
 app
 appearance
 applied
-apply
 area
 ascii
 asset
@@ -132,6 +131,7 @@ dockerfile
 dockerignore
 domain
 door
+dose
 double
 draft
 drawing
@@ -306,6 +306,7 @@ place
 places
 play
 player
+plays
 playwright
 pm
 pnpm

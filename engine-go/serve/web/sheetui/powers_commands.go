@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"t20engine/app/character"
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
@@ -261,7 +262,7 @@ func (s Scene) saveTheChoices(
 	if err := sheet.WithChoicesValid(dto); err != nil {
 		return err
 	}
-	var escreve ChoiceWrite
+	var escreve character.ChoiceWrite
 	mexeu := false
 	if dto.ClassPowers != antes.ClassPowers {
 		escreve.ClassPowers, mexeu = &dto.ClassPowers, true
@@ -278,7 +279,7 @@ func (s Scene) saveTheChoices(
 	if !mexeu {
 		return nil
 	}
-	return s.deps.SaveChoices(r.Context(), row.ID, escreve)
+	return s.plays.SaveChoices(r.Context(), row.ID, escreve)
 }
 
 // saveRaceAttributeChoice escreve o blob de `raceAttributeChoices`.
@@ -286,7 +287,7 @@ func (s Scene) saveTheChoices(
 // Ela é a única escolha que se grava SOZINHA — as outras quatro passam pelo
 // `saveTheChoices`, que confere a ficha inteira antes.
 func (s Scene) saveRaceAttributeChoice(r *http.Request, id int64, valor string) error {
-	return s.deps.SaveChoices(r.Context(), id, ChoiceWrite{RaceAttributeChoices: &valor})
+	return s.plays.SaveChoices(r.Context(), id, character.ChoiceWrite{RaceAttributeChoices: &valor})
 }
 
 // idToggledCom liga ou desliga um id numa lista guardada como blob.

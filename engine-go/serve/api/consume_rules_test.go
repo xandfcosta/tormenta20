@@ -3,17 +3,16 @@ package api
 import (
 	"context"
 	"database/sql"
-	"net/http"
-	"net/http/httptest"
-	"t20engine/infra/db/dbvalue"
 	"testing"
 
+	"t20engine/app/character"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
 // O que a POÇÃO faz.
 //
-// A decisão que mora no `sheet_consume.go`: catalisador é DECREMENTO INSTANTÂNEO
+// A decisão que mora no `app/character/dose.go`: catalisador é DECREMENTO INSTANTÂNEO
 // até o motor de magias chegar. O que se prova aqui é o que a mesa observa — a
 // poção some do inventário, o PV sobe e para no máximo, e o inventário é de quem
 // o abriu. A conta do dado (2d4 → média 5) pertence ao `rollAverage`.
@@ -34,16 +33,18 @@ func seedConsumable(t *testing.T, s *Server, charID int64, catalogID, name strin
 //
 // O que estes casos prendem nunca foi o transporte: é a baixa de UMA dose, a
 // cura presa no máximo, o efeito de cena e a porção diária. **Teste de regra
-// vive junto da regra**, e o caminho é o mesmo que a Mochila da ficha usa pelo
-// `ConsumeItem` da porta.
-func consumeItem(t *testing.T, s *Server, charID, itemID int64, pv, pm *int64) (doseUsed, error) {
+// vive junto da regra**, e o caminho é o MESMO que a Mochila da ficha usa — o
+// `character.Plays.Consume`, chamado direto pelos dois.
+//
+// Sem `httptest.NewRequest`: o caso de uso recebe CONTEXTO, e montar um pedido
+// falso só para entregá-lo era o sintoma que a ALE-347 veio tirar.
+func consumeItem(t *testing.T, s *Server, charID, itemID int64, pv, pm *int64) (character.Dose, error) {
 	t.Helper()
 	row, err := s.queries.GetCharacter(context.Background(), charID)
 	if err != nil {
 		t.Fatalf("ler personagem %d: %v", charID, err)
 	}
-	req := httptest.NewRequest(http.MethodPost, "/", nil)
-	return s.sheetRules().consumeItemForCharacter(req.Context(), row, itemID, pv, pm)
+	return s.characterPlays().Consume(context.Background(), row, itemID, pv, pm)
 }
 
 func itemQuantity(t *testing.T, s *Server, itemID int64) (int64, bool) {
@@ -71,15 +72,14 @@ func TestConsumeDecrementsExactlyOneAndHeals(t *testing.T) {
 	if errDose != nil {
 		t.Fatalf("a dose foi recusada: %v", errDose)
 	}
-	got := dose.consumeResult
-	if got.Item.Quantity != 2 || got.Item.Removed {
-		t.Fatalf("resposta diz quantidade %d removido=%v, esperado 2 e falso", got.Item.Quantity, got.Item.Removed)
+	if dose.Quantity != 2 || dose.Removed {
+		t.Fatalf("o resultado diz quantidade %d removido=%v, esperado 2 e falso", dose.Quantity, dose.Removed)
 	}
-	if got.HpCurrent != 17 {
-		t.Fatalf("PV = %d, esperado 17 (12 + os 5 de média de 2d4)", got.HpCurrent)
+	if dose.HpCurrent != 17 {
+		t.Fatalf("PV = %d, esperado 17 (12 + os 5 de média de 2d4)", dose.HpCurrent)
 	}
-	// O que a resposta diz e o que o banco guarda têm de ser a mesma coisa: a
-	// ficha recarrega do banco, e uma resposta otimista que mentisse só
+	// O que o resultado diz e o que o banco guarda têm de ser a mesma coisa: a
+	// ficha recarrega do banco, e um resultado otimista que mentisse só
 	// apareceria no F5 da próxima sessão.
 	if qty, alive := itemQuantity(t, s, item); !alive || qty != 2 {
 		t.Fatalf("no banco: quantidade %d viva=%v, esperado 2 e vivo", qty, alive)
@@ -97,8 +97,8 @@ func TestConsumeLastUnitRemovesTheItem(t *testing.T) {
 	if errDose != nil {
 		t.Fatalf("a dose foi recusada: %v", errDose)
 	}
-	if got := dose.consumeResult; !got.Item.Removed {
-		t.Fatalf("a última dose devia sair da mochila, veio %+v", got.Item)
+	if !dose.Removed {
+		t.Fatalf("a última dose devia sair da mochila, veio %+v", dose)
 	}
 	if _, alive := itemQuantity(t, s, item); alive {
 		t.Fatal("a última dose continua no banco — a mochila mostraria uma poção que não existe")
@@ -116,8 +116,8 @@ func TestConsumeClampsGainAtMaximum(t *testing.T) {
 		t.Fatalf("a dose foi recusada: %v", errDose)
 	}
 
-	if got := dose.consumeResult; got.HpCurrent != 20 {
-		t.Fatalf("PV = %d, esperado 20: 18 + 5 não pode passar do máximo", got.HpCurrent)
+	if dose.HpCurrent != 20 {
+		t.Fatalf("PV = %d, esperado 20: 18 + 5 não pode passar do máximo", dose.HpCurrent)
 	}
 }
 
@@ -134,8 +134,8 @@ func TestConsumeUsesRolledValueWhenTheTableRolls(t *testing.T) {
 		t.Fatalf("a dose foi recusada: %v", errDose)
 	}
 
-	if got := dose.consumeResult; got.HpCurrent != 18 {
-		t.Fatalf("PV = %d, esperado 18 (10 + o 8 rolado na mesa)", got.HpCurrent)
+	if dose.HpCurrent != 18 {
+		t.Fatalf("PV = %d, esperado 18 (10 + o 8 rolado na mesa)", dose.HpCurrent)
 	}
 }
 
@@ -150,12 +150,11 @@ func TestConsumeCreatesTheSceneEffect(t *testing.T) {
 		t.Fatalf("a dose foi recusada: %v", errDose)
 	}
 
-	got := dose.consumeResult
-	if got.Effect == nil {
+	if dose.Effect == nil {
 		t.Fatal("o cosmético dura a cena inteira e não devolveu efeito nenhum")
 	}
-	if got.Effect.Scope != "scene" || got.Effect.CatalogID != "cosmetico" {
-		t.Fatalf("efeito = %+v, esperado escopo de cena para o cosmético", got.Effect)
+	if dose.Effect.Scope != "scene" || dose.Effect.CatalogID != "cosmetico" {
+		t.Fatalf("efeito = %+v, esperado escopo de cena para o cosmético", dose.Effect)
 	}
 }
 

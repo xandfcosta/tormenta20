@@ -71,5 +71,5 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, sinais 
 	if err != nil {
 		return err
 	}
-	return s.deps.CastSpell(r, dto, chi.URLParam(r, "magia"), sinais.augments())
+	return s.plays.Cast(r.Context(), dto, chi.URLParam(r, "magia"), sinais.augments())
 }

@@ -29,6 +29,7 @@ engine-go/
 │   ├── session/  o ciclo da sessão, a trava de acesso e o STORE da fila
 │   ├── boards/   o store dos tabuleiros abertos, com as abas e os lugares
 │   ├── initiative/ quem entra na fila, e com que números
+│   ├── character/ o herói: nascer (`Births`) e jogar (`Plays`)
 │   └── rest/     o que expira e o que recupera quando a cena ou o dia acaba
 ├── serve/        O QUE RESPONDE HTTP
 │   ├── api/      a RAIZ DE COMPOSIÇÃO: monta o roteador e cumpre as portas
@@ -75,6 +76,17 @@ trava nada e não grava nada.
 **As recusas daqui são TIPADAS** (`ErrNotFound`, `ErrForbidden`, `ErrRefused`) e
 nunca um número de HTTP. Um caso de uso que devolvesse 403 não poderia ser
 chamado de outro transporte — que é a única coisa que esta camada compra.
+
+> **O `character.Plays` é a exceção declarada, e a razão é a TELA** (ALE-347).
+> Quem embrulha uma recusa com `%w: app.ErrRefused` coloca "recusado pela regra"
+> no fim da frase que o `Error()` devolve — e a cena da ficha mostra esse texto
+> CRU ao jogador, porque o Datastar não desenha corpo de resposta 4xx e toda
+> recusa dela tem de voltar como frase na cena. Os gestos da ficha têm UM
+> transporte, e nenhum chamador lê o tipo: o embrulho custaria o sufixo na tela
+> e não compraria nada. Quando o segundo transporte chegar, é o embrulho que
+> desce — uma linha por recusa. O que NÃO pode voltar é o número de HTTP dentro
+> da regra, e esse saiu: o `applySpellBuffEffect` devolvia `(efeito, int, error)`
+> e montava um erro de campo com status 400 lá dentro.
 
 **Onde procurar:**
 
@@ -937,6 +949,22 @@ que vale para a próxima cena está aqui.
 quem escolhe o que atravessa a fronteira é o CONSUMIDOR, não o objeto que tem
 tudo. O `api` monta com `cena.Routes(r, cena.New(s.cenaHost()))`, e é nessa linha
 que o compilador cobra quando a porta deixa de ser cumprida.
+
+**O CASO DE USO não entra pela porta: ele entra por PARÂMETRO** (ALE-344,
+ALE-347). Uma porta existe para desviar de um ciclo — a cena precisa do `api`,
+que importa a cena —, e o `app/` está ABAIXO das duas: não há ciclo, então não
+há interface a declarar. Três cenas já montam assim, e a assinatura diz o que
+elas fazem:
+
+```go
+table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue())
+forge.New(s.sceneCore(), s.characterBirths())
+sheetui.New(s.sheetHost(), s.characterPlays())
+```
+
+O efeito é a porta ENCOLHER em vez de crescer: a da ficha saiu de dezoito
+métodos para oito quando os gestos dela viraram `character.Plays`. Uma entrada
+que vira caso de uso SAI da `Deps` — ela não ganha um adaptador novo.
 
 Cada `web/*` tem um `boundary_test.go` que recusa import do hospedeiro. Ele não
 existe para pegar o ciclo — esse o compilador já pega —, existe para pegar o

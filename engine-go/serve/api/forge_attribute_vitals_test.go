@@ -87,9 +87,10 @@ func TestTheAttributeStepDoesNotHealTheHero(t *testing.T) {
 
 // A outra metade: o atual ACOMPANHA o delta do máximo, nos dois sentidos.
 //
-// É a mesma regra que a mudança de NÍVEL já usa (`levelVitalsNext`), e ela tem
-// de ser a mesma: com "prende na faixa" só para baixo, o ciclo `−` e `+` devolve
-// dois pontos de PV por volta — o mesmo defeito, mais devagar.
+// É a mesma regra que a mudança de NÍVEL usa (`sheet.ShiftedByNewMax`, pelo
+// `syncVitals`), e ela tem de ser a mesma: com "prende na faixa" só para baixo,
+// o ciclo `−` e `+` devolve dois pontos de PV por volta — o mesmo defeito, mais
+// devagar. As duas já foram funções diferentes com o mesmo corpo (ALE-347).
 func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 	f := newSceneFixture(t)
 	id, atributos := umHeroiForjado(t, f)

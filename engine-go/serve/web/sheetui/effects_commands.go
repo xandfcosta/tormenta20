@@ -56,15 +56,12 @@ func toggleBookCondition(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 
 // applySpellBuff aplica uma magia de bônus como efeito de cena ou dia.
 //
-// A gravação é a MESMA da API JSON (`applySpellBuffEffect`): duas escritas
-// divergiriam no dia em que uma regra nova chegasse, e o escopo padrão de cada
-// magia vive no catálogo, não aqui.
+// A gravação é a do caso de uso (`character.Plays.ApplySpellBuff`): duas
+// escritas divergiriam no dia em que uma regra nova chegasse, e o escopo padrão
+// de cada magia vive no catálogo, não aqui.
 func applySpellBuff(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	magia := chi.URLParam(r, "magia")
-	if _, _, err := s.deps.ApplySpellBuffEffect(r.Context(), row.ID, magia, nil); err != nil {
-		return err
-	}
-	return nil
+	_, err := s.plays.ApplySpellBuff(r.Context(), row.ID, chi.URLParam(r, "magia"), nil)
+	return err
 }
 
 // endAppliedEffect encerra um efeito em curso.

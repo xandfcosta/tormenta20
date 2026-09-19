@@ -3,8 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"t20engine/domain/sheet"
@@ -89,8 +87,8 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 //
 // O que estes casos prendem nunca foi o transporte: é o teto de PM da p171, o
 // empilhamento de aprimoramento da p224 e a ressalva do custo mínimo. **Teste de
-// regra vive junto da regra**, e o caminho até ela é o mesmo que a cena da ficha
-// usa — `castSpellForCharacter`, pelo `CastSpell` da porta.
+// regra vive junto da regra**, e o caminho até ela é o MESMO que a cena da ficha
+// usa — o `character.Plays.Cast`, chamado direto pelos dois.
 //
 // Devolve ERRO em vez de status: a recusa aqui é uma frase para uma pessoa, e é
 // o handler que a traduz em 400.
@@ -110,8 +108,9 @@ func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body
 	if err != nil {
 		t.Fatalf("montar a ficha %d: %v", characterID, err)
 	}
-	req := httptest.NewRequest(http.MethodPost, "/", nil)
-	return s.sheetRules().castSpellForCharacter(req, dto, spellID, corpo.Augments)
+	// Sem `httptest.NewRequest`: a regra recebe CONTEXTO, e montar um pedido só
+	// para entregá-lo era o sintoma que a ALE-347 veio tirar.
+	return s.characterPlays().Cast(context.Background(), dto, spellID, corpo.Augments)
 }
 
 func mpOf(t *testing.T, s *Server, characterID int64) int64 {

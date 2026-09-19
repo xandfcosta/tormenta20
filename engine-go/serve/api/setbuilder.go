@@ -22,7 +22,7 @@ import (
 //
 //	var set setBuilder
 //	set.Add("name = ?", name)
-//	if err := set.exec(ctx, s.db, "UPDATE campaigns", id); err != nil { … }
+//	if err := set.execTouched(ctx, s.db, "UPDATE campaigns", id); err != nil { … }
 type setBuilder struct {
 	columns []string
 	args    []any
@@ -34,10 +34,6 @@ func (b *setBuilder) Add(clause string, value any) {
 	b.columns = append(b.columns, clause)
 	b.args = append(b.args, value)
 }
-
-// empty diz que o PATCH não trouxe campo atualizável nenhum — o chamador
-// responde 400 em vez de rodar um UPDATE que só mexe no `updatedAt`.
-func (b *setBuilder) empty() bool { return len(b.columns) == 0 }
 
 // exec roda `<prefix> SET <clauses> WHERE id = ?` como foi registrado, sem tocar
 // em carimbo nenhum — `character_items` não tem coluna `updatedAt`.

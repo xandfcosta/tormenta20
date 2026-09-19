@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"t20engine/app/boards"
+	"t20engine/app/character"
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
@@ -170,6 +171,17 @@ func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 // direto.
 func (s *Server) initiativeQueue() initiative.Queue {
 	return initiative.NewQueue(s.queries, s.catalogs, s.sessions)
+}
+
+// characterBirths é o caso de uso do nascimento, montado com o que o servidor
+// tem — inclusive o `*sql.DB`, porque aqui a TRANSAÇÃO é do caso de uso.
+func (s *Server) characterBirths() character.Births {
+	return character.NewBirths(s.db, s.queries, s.catalogs)
+}
+
+// characterPlays são os gestos da ficha em jogo, montados com o mesmo trio.
+func (s *Server) characterPlays() character.Plays {
+	return character.NewPlays(s.db, s.queries, s.catalogs)
 }
 
 func (s *Server) restParty() rest.Party {

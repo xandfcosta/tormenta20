@@ -767,17 +767,65 @@ templ barraCompacta(rotulo string, b tableBar) {
 			aria-valuenow={ fmt.Sprint(b.Current) }
 			aria-valuemin="0"
 			aria-valuemax={ fmt.Sprint(b.Max) }
-			aria-label={ fmt.Sprintf("%s %d de %d", rotulo, b.Current, b.Max) }
+			aria-label={ barLabel(rotulo, b) }
 			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
 		>
 			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
 		</div>
 		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ fmt.Sprint(b.Current) }/{ fmt.Sprint(b.Max) }</span>
+		@reservaDeTemporarios(b)
 	</div>
+}
+
+// reservaDeTemporarios é o `+70` que segue a fração, no azul do PV temporário.
+//
+// PARCELA À PARTE e não somando, pela mesma razão do crachá da ficha: a barra
+// responde "quanto apanhei", e somar faria um herói ferido desenhar cheio. O
+// dano gasta esta parcela ANTES do PV (p106), que é o que o mestre precisa
+// saber para decidir a pancada.
+//
+// Ela SÓ NASCE quando existe — um "+0" não quer dizer nada — e o `aria-hidden`
+// é deliberado: o número já viaja no `aria-label` da barra ao lado, e duas
+// vozes para o mesmo dado é o que o cabeçalho do `vitalBar` da ficha recusa.
+//
+// # O `sm:` não é gosto, é a fileira medida
+//
+// A fileira da gaveta do mestre está CHEIA a 390px: label, barra, fração e três
+// botões cabem porque o flex espreme os passos de 36px para 32. Com o `+70`
+// dentro, eles caíram para **16px** — metade de um alvo de toque. Tentei o
+// conserto de cima (passos com `shrink-0`, fileira com `flex-wrap`), e ele
+// custou mais: o olho desceu para uma segunda linha em TODOS os cartões, com ou
+// sem reserva.
+//
+// Abaixo de `sm` sobra UM canal, e é o `aria-label` desta mesma barra. Medido, e
+// registrado aqui porque a saída óbvia não existe: pintar a reserva DENTRO do
+// trilho não custaria largura nenhuma — e não desenha, porque **o trilho tem
+// largura ZERO nos dois chamadores desta barra**. Ele é `flex-1 min-w-0` numa
+// fileira que já está cheia, então o `progressbar` existe para o leitor de tela
+// e nunca teve caixa para pintar. É defeito anterior a esta fatia e não desta
+// issue; consertá-lo muda a fileira de todo mundo.
+//
+// Quem joga no telefone continua vendo a reserva na PRÓPRIA ficha, onde o
+// crachá a mostra em qualquer largura.
+templ reservaDeTemporarios(b tableBar) {
+	if b.Temp > 0 {
+		<span
+			aria-hidden="true"
+			title="PV temporários — o dano gasta estes primeiro (p106)"
+			class="hidden shrink-0 font-mono text-[13px] tabular-nums text-hp-temp sm:inline"
+		>+{ fmt.Sprint(b.Temp) }</span>
+	}
 }
 
 // barra é um `progressbar` de verdade, e não uma tira pintada: "um pouco de
 // verde" não é resposta para quem não vê a tela — e o papel é o que o e2e lê.
+//
+// E HOJE ELA É SÓ ISSO. Medido na ALE-347, nos dois chamadores e nas duas
+// larguras: o trilho sai com largura ZERO, porque é `flex-1 min-w-0` numa
+// fileira que a fração e os três botões já enchem. O que a pessoa lê aqui é a
+// FRAÇÃO; o `progressbar` serve a quem usa leitor de tela. Quem for consertar
+// isto mexe na fileira de todo mundo — por isso ficou registrado e não
+// remendado de passagem.
 templ barra(rotulo string, b tableBar) {
 	<div class="flex items-center gap-1.5">
 		<span class={ ui.SectionLabelClasses("muted", "w-7 shrink-0") }>{ rotulo }</span>
@@ -786,12 +834,13 @@ templ barra(rotulo string, b tableBar) {
 			aria-valuenow={ fmt.Sprint(b.Current) }
 			aria-valuemin="0"
 			aria-valuemax={ fmt.Sprint(b.Max) }
-			aria-label={ fmt.Sprintf("%s %d de %d", rotulo, b.Current, b.Max) }
+			aria-label={ barLabel(rotulo, b) }
 			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
 		>
 			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
 		</div>
 		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ fmt.Sprint(b.Current) }/{ fmt.Sprint(b.Max) }</span>
+		@reservaDeTemporarios(b)
 	</div>
 }
 

@@ -222,6 +222,13 @@
      raiz servia a superfície CLARA da autenticação, onde clarear piorava — e
      essa superfície não existe mais. */
   --mp-arcane: oklch(0.66 0.16 250);
+  /* PV TEMPORÁRIO. Azul (decisão do dono), e um azul PRÓPRIO: o único que a
+     casa tinha era o do mana, e pintar a barra de VIDA com ele diria "isto é
+     PM" — a mesma armadilha que a nota do `--hp-hurt` registra, com outra cor.
+     Mais claro e mais ciano que o mana para os dois conviverem no mesmo crachá.
+     Medido contra o painel: 7,68:1, acima do mínimo de 4,5 para texto pequeno,
+     porque este token também sai como TINTA (o `+70` ao lado da fração). */
+  --hp-temp: oklch(0.74 0.11 220);
 }
 /* ── Grimório theme (ALE-35) ────────────────────────────────────────────
  * Canonical palette for the game-like scenes. A scene reads intrinsically
@@ -416,6 +423,7 @@
   --color-hp-hurt: var(--hp-hurt);
   --color-hp-critical: var(--hp-critical);
   --color-mp-arcane: var(--mp-arcane);
+  --color-hp-temp: var(--hp-temp);
 
   /* Grimório accents beyond the shadcn semantics — so scene primitives can
    * use text-grimorio-gold / border-grimorio-iron / bg-grimorio-parchment. */

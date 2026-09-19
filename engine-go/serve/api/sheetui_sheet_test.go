@@ -72,9 +72,13 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	if depois.Level != soma {
 		t.Errorf("o nível do personagem (%d) não é a soma das classes (%d)", depois.Level, soma)
 	}
-	// E OS POOLS ACOMPANHAM. O número é do LIVRO e escrito à mão: o Arcanista tem
-	// PV inicial 8 e +2 por nível (T20 p36, a tabela da classe; a regra da soma
-	// está em p34), então no nível 4 com Constituição 0 são 8 + 3×2 = **14**.
+	// E OS POÇOS ACOMPANHAM. O número é do LIVRO e escrito à mão: *"Um arcanista
+	// começa com 8 pontos de vida (+ Constituição) e ganha 2 PV (+ Constituição)
+	// por nível"* (**p37**); a regra da soma dos níveis de classe está na
+	// **p35**. Então no nível 4 com Constituição 0 são 8 + 3×2 = **14**.
+	//
+	// As duas páginas estavam erradas aqui — p36 e p34 — e foram conferidas no
+	// livro, uma de cada vez (ALE-347). A p34 é uma ilustração de página inteira.
 	//
 	// Afirmar "o PV máximo CRESCEU" seria errado: o personagem semeado tem 20
 	// gravados, que não é um número do motor, e sincronizar o BAIXA para 14. O que
@@ -223,5 +227,42 @@ func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 			t.Errorf("com %s (%d%%) a faixa saiu %q, e o esperado é %q",
 				caso.fracao, caso.pct, tom, caso.tom)
 		}
+	}
+}
+
+// O CRACHÁ MOSTRA A RESERVA DE PV TEMPORÁRIO, e ela é uma parcela à parte.
+//
+// O dado estava certo e a tela calava: o `PlanDamage` gasta a reserva antes do
+// PV desde sempre, e o crachá dizia 137/137 com 30 de colchão. Defeito de
+// APRESENTAÇÃO, que é a família da ALE-319.
+//
+// O CONTROLE vem primeiro e é obrigatório: um mostrador cujo REPOUSO é igual ao
+// sucesso não testemunha nada. A ficha sem poça não pode ter a marca — senão
+// este caso ficaria verde sobre uma tela que mostra a reserva o tempo todo.
+func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
+	f, id := barbaro(t, 5)
+	const marca = "PV temporários — o dano gasta estes primeiro (p106)"
+
+	if tela := powerScreen(t, f, id); strings.Contains(tela, marca) {
+		t.Fatal("a ficha SEM poça já mostra a reserva — o caso mediria o repouso")
+	}
+
+	if rec := effect(t, f, id, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
+		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
+	}
+
+	tela := powerScreen(t, f, id)
+	if !strings.Contains(tela, marca) {
+		t.Error("a reserva não chegou ao crachá")
+	}
+	// O número é do LIVRO e escrito à mão: o Campo de Força dá 30 PV
+	// temporários de cena.
+	if !strings.Contains(tela, ">+30</span>") {
+		t.Error("o crachá não diz QUANTO é a reserva")
+	}
+	// E o PV de verdade não se mexeu: a reserva é parcela à parte, não um
+	// somando. O bárbaro nasce com 60 de PV máximo.
+	if !strings.Contains(tela, "60/60") {
+		t.Error("a fração do PV mudou — a reserva virou somando em vez de parcela")
 	}
 }

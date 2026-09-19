@@ -1,4 +1,4 @@
-package api
+package character
 
 import (
 	"testing"
