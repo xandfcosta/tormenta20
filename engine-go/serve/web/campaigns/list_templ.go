@@ -1069,9 +1069,9 @@ func campaignActions(c campaignCard) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var51 templ.SafeURL
-			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.Table(c.ID, c.SessaoID)))
+			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.Session(c.ID, c.SessaoID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 297, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 297, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {

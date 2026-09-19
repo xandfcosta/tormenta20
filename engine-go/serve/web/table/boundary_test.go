@@ -38,12 +38,28 @@ import (
 // `database/sql` fica fora da lista, e não é por precaução: é a tentação
 // MEDIDA.
 var permitidos = map[string]bool{
+	// O vocabulário do grupo: quem pede e as recusas tipadas.
+	"t20engine/app": true,
+	// O `app/boards` é o store dos tabuleiros abertos — a orquestração que a
+	// ALE-344 tirou de `domain/board`. A cena o recebe pela porta, como recebia
+	// antes: o que mudou é de onde ele vem, não o que ele é.
+	"t20engine/app/boards": true,
+	// O `app/initiative` é quem entra na fila, pela mesma razão.
+	"t20engine/app/initiative": true,
+	// O `app/rest` é o descanso e a expiração de escopo, pela mesma razão.
+	"t20engine/app/rest": true,
+	// O `app/session` NÃO é concessão, é a razão do guarda existir ficar menor
+	// (ALE-344): ele está ABAIXO desta cena e do `serve/api`, então não há ciclo
+	// para desviar — e por isso não há interface. Cinco entradas da porta saíram
+	// com ele. A direção continua legal: quem importa é quem desenha depois.
+	"t20engine/app/session":       true,
 	"t20engine/domain/live":       true, // a fila, a cena e a presença, pela porta
 	"t20engine/domain/book":       true, // o catálogo tipado do bestiário e das condições
 	"t20engine/domain/catalog":    true, // ver a nota abaixo — é o IsCondition, não o Resource
 	"t20engine/domain/creature":   true, // o bloco de criatura que o NPC edita
 	"t20engine/infra/db/sqlcgen":  true, // as linhas do banco, pelo `Queries` da porta
 	"t20engine/domain/engine":     true, // a medição de área e a ficha computada
+	"t20engine/domain/sheet":      true, // o `LoadAndCompute` que dá a Defesa do Grupo
 	"t20engine/infra/events":      true, // o barramento, para o stream saber o que houve
 	"t20engine/domain/markdown":   true, // as notas do mestre, que saíram daqui na fatia 1
 	"t20engine/infra/db/dbvalue":  true,

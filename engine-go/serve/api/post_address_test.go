@@ -70,7 +70,7 @@ func firstArgument(s string) (string, bool) {
 // produzir.
 //
 // A regra é o VÃO entre dois literais: vão com `+` é CONCATENAÇÃO e continua o
-// mesmo endereço (`'/mesa/1/1/iniciativa/' + $edit_row + '/editar'` é um só);
+// mesmo endereço (`'/campanhas/1/sessoes/1/iniciativa/' + $edit_row + '/editar'` é um só);
 // vão sem `+` é DESVIO e começa outro (o `evt.shiftKey ? '…/5' : '…/1'` do
 // ferir são dois endereços de verdade, e os dois têm de existir).
 func pathsInExpression(expr string) []string {
@@ -127,7 +127,7 @@ func pathsInExpression(expr string) []string {
 // unescapeHTML devolve o texto que o navegador vai LER.
 //
 // O `templ` escapa o valor do atributo, então a aspa simples de
-// `@post('/mesa/…')` chega ao HTML como `&#39;` — e um extrator que procurasse
+// `@post('/campanhas/…')` chega ao HTML como `&#39;` — e um extrator que procurasse
 // a aspa no texto servido acharia zero endereços, com cara de "não há nenhum".
 var unescapeHTML = strings.NewReplacer(
 	"&#39;", "'", "&#34;", `"`, "&quot;", `"`, "&apos;", "'",
@@ -219,38 +219,38 @@ func TestTheAddressExtractorReadsEveryShapeTheScenesWrite(t *testing.T) {
 	}{
 		{
 			"o literal puro",
-			`'/mesa/1/1/iniciativa/proxima-vez'`,
-			[]string{"/mesa/1/1/iniciativa/proxima-vez"},
+			`'/campanhas/1/sessoes/1/iniciativa/proxima-vez'`,
+			[]string{"/campanhas/1/sessoes/1/iniciativa/proxima-vez"},
 		},
 		{
 			"a concatenação com sinal é UM endereço",
-			`'/mesa/1/1/iniciativa/' + $edit_row + '/editar'`,
-			[]string{"/mesa/1/1/iniciativa/spliced/editar"},
+			`'/campanhas/1/sessoes/1/iniciativa/' + $edit_row + '/editar'`,
+			[]string{"/campanhas/1/sessoes/1/iniciativa/spliced/editar"},
 		},
 		{
 			"o ternário do ferir são DOIS, e os dois têm de existir",
-			`evt.shiftKey ? '/mesa/1/1/elenco/1/vitais/hp/ferir/5' : '/mesa/1/1/elenco/1/vitais/hp/ferir/1'`,
-			[]string{"/mesa/1/1/elenco/1/vitais/hp/ferir/5", "/mesa/1/1/elenco/1/vitais/hp/ferir/1"},
+			`evt.shiftKey ? '/campanhas/1/sessoes/1/elenco/1/vitais/hp/ferir/5' : '/campanhas/1/sessoes/1/elenco/1/vitais/hp/ferir/1'`,
+			[]string{"/campanhas/1/sessoes/1/elenco/1/vitais/hp/ferir/5", "/campanhas/1/sessoes/1/elenco/1/vitais/hp/ferir/1"},
 		},
 		{
 			"a busca sai do caminho",
-			`'/mesa/1/1/bestiario?abrir=1'`,
-			[]string{"/mesa/1/1/bestiario"},
+			`'/campanhas/1/sessoes/1/bestiario?abrir=1'`,
+			[]string{"/campanhas/1/sessoes/1/bestiario"},
 		},
 	}
 	// O `window.open` é a QUINTA forma, e ela não passa pelo `pathsInExpression`
 	// sozinha: o que pode quebrar nela é a AGULHA (ela não tem `@`) e o MÉTODO
-	// (navegação é GET, e perguntar ao chi por um POST em `/mesa/1/4/notas`
+	// (navegação é GET, e perguntar ao chi por um POST em `/campanhas/1/sessoes/4/notas`
 	// responderia "existe" pela rota de salvar — o guarda ficaria verde sobre um
 	// endereço de página que não existe). Por isso o caso mede o extrator
 	// inteiro, e afirma o método.
-	const html = `<button data-on:click="const janela = window.open('/mesa/1/4/notas', 't20-notas', 'popup,width=620'); if (janela) { janela.focus() }">`
+	const html = `<button data-on:click="const janela = window.open('/campanhas/1/sessoes/4/notas', 't20-notas', 'popup,width=620'); if (janela) { janela.focus() }">`
 	achados, ilegiveis := addressesInHTML("caso", html)
 	if len(ilegiveis) > 0 {
 		t.Errorf("o extrator não leu o `window.open`: %q", ilegiveis)
 	}
-	if len(achados) != 1 || achados[0].Metodo != "GET" || achados[0].Caminho != "/mesa/1/4/notas" {
-		t.Errorf("o `window.open` saiu como %+v, esperava um GET em /mesa/1/4/notas", achados)
+	if len(achados) != 1 || achados[0].Metodo != "GET" || achados[0].Caminho != "/campanhas/1/sessoes/4/notas" {
+		t.Errorf("o `window.open` saiu como %+v, esperava um GET em /campanhas/1/sessoes/4/notas", achados)
 	}
 
 	for _, caso := range casos {
@@ -274,12 +274,12 @@ func TestTheAddressExtractorReadsEveryShapeTheScenesWrite(t *testing.T) {
 // lesse a chamada inteira acharia `'M 4.5 2.5 L 9 2.5'` e perguntaria ao
 // roteador por ela.
 func TestTheExtractorStopsAtThePayload(t *testing.T) {
-	chamada := `'/mesa/1/1/tabuleiro/gabarito', {payload: {shape: $template, path: 'M 4.5 2.5 L 9 2.5'}}`
+	chamada := `'/campanhas/1/sessoes/1/tabuleiro/gabarito', {payload: {shape: $template, path: 'M 4.5 2.5 L 9 2.5'}}`
 	argumento, fechou := firstArgument(chamada + ")")
 	if !fechou {
 		t.Fatalf("o primeiro argumento não fechou em %q", chamada)
 	}
-	if lido := pathsInExpression(argumento); len(lido) != 1 || lido[0] != "/mesa/1/1/tabuleiro/gabarito" {
+	if lido := pathsInExpression(argumento); len(lido) != 1 || lido[0] != "/campanhas/1/sessoes/1/tabuleiro/gabarito" {
 		t.Errorf("leu %q, e o payload não é endereço", lido)
 	}
 }

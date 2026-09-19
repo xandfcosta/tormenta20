@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/app"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -92,7 +93,8 @@ func (s Scene) draftGm(w http.ResponseWriter, r *http.Request) (draftCtx, bool) 
 		return draftCtx{}, false
 	}
 	userID := s.deps.CurrentUserID(r)
-	campanha, status, err := s.deps.PlaceDraftCampaign(r.Context(), userID, campaignID)
+	campanha, err := s.access.OwnedCampaign(r.Context(), app.Caller{ID: userID}, campaignID)
+	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return draftCtx{}, false

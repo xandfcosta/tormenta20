@@ -84,7 +84,7 @@ func MoveGroup(b *BoardState, ids []string, dx, dy int) error {
 		proposta := b.Tokens[i]
 		proposta.X += dx
 		proposta.Y += dy
-		if err := assertSaneCoords(proposta); err != nil {
+		if err := AssertSaneCoords(proposta); err != nil {
 			return err
 		}
 	}

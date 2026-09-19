@@ -11,6 +11,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/app"
+	"t20engine/app/initiative"
 	"t20engine/domain/live"
 )
 
@@ -23,32 +25,32 @@ import (
 // Esconder o botão é UX; a trava é aqui.
 
 func (s Scene) TableCommandRoutes(r chi.Router) {
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/proxima-vez", s.gmCommand(
+	r.Post(sessionPattern+"/iniciativa/proxima-vez", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().NextTurn(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/vez-anterior", s.gmCommand(
+	r.Post(sessionPattern+"/iniciativa/vez-anterior", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().PreviousTurn(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/cena/iniciar", s.gmCommand(
+	r.Post(sessionPattern+"/cena/iniciar", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().StartScene(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/cena/encerrar", s.gmCommand(endScene))
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/por-no-mapa", s.gmCommand(bringParty))
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/adicionar", s.gmCommand(addCombatant))
+	r.Post(sessionPattern+"/cena/encerrar", s.sceneCommand(endsTheScene))
+	r.Post(sessionPattern+"/iniciativa/por-no-mapa", s.gmCommand(bringParty))
+	r.Post(sessionPattern+"/iniciativa/adicionar", s.gmCommand(addCombatant))
 	// DOIS caminhos e não um `/descanso` com o escopo no corpo, que é a forma da
 	// API JSON: nesta superfície o VERBO é o caminho, e misturar as duas
 	// gramáticas faria a próxima pessoa ter de descobrir qual vale onde.
-	r.Post("/mesa/{campaignId}/{sessionId}/descanso/cena", s.gmCommand(restParty("scene")))
-	r.Post("/mesa/{campaignId}/{sessionId}/descanso/dia", s.gmCommand(restParty("day")))
+	r.Post(sessionPattern+"/descanso/cena", s.sceneCommand(expiresTheSceneOfTheParty))
+	r.Post(sessionPattern+"/descanso/dia", s.sceneCommand(restsForTheDay))
 	// O QUE O MESTRE MEXE EM CADA LINHA — mais restrito que a API JSON de
 	// propósito. Lá o `assertVitalsEditableFor` deixa o jogador mexer nos vitais
 	// do PRÓPRIO personagem, porque lá existe a tela do jogador que faz isso.
 	// Aqui a superfície do jogador é leitura mais registrar iniciativa, e uma
 	// segunda regra de escrita seria uma porta que nenhuma tela usa.
-	r.Route("/mesa/{campaignId}/{sessionId}/iniciativa/{entryId}", func(r chi.Router) {
+	r.Route(sessionPattern+"/iniciativa/{entryId}", func(r chi.Router) {
 		r.Post("/vitais/{pool}/ferir/{step}", s.gmCommand(moveVitals(-1)))
 		r.Post("/vitais/{pool}/curar/{step}", s.gmCommand(moveVitals(+1)))
 		r.Post("/vitais/{pool}/oculto", s.gmCommand(toggleEye))
@@ -63,8 +65,9 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 // A VALIDAÇÃO é do `live` e não daqui: limite escrito como atributo de campo é
 // UI e não trava, e quem posta na mão passa por cima dele.
 //
-// Quem MONTA a linha é o `materializeEntry`, que é o caminho que a API já usa.
-// Escrever a montagem aqui seria a segunda cópia da mesma regra.
+// Quem MONTA a linha é o `Roster.Entry`, que é o caminho único dos três pedidos
+// — este, o NPC do elenco e o verbete do bestiário. Escrever a montagem aqui
+// seria a segunda cópia da mesma regra.
 func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	novo, err := signalsCombatant(c.R)
 	if err != nil {
@@ -73,18 +76,17 @@ func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err := live.ValidateCombatantDraft(novo); err != nil {
 		return nil, err
 	}
-	entrada := map[string]any{
-		"label":      strings.TrimSpace(novo.Label),
-		"initiative": novo.Initiative,
-		"type":       novo.Kind,
+	rolada := int64(novo.Initiative)
+	pedido := initiative.EntryRequest{
+		Label: strings.TrimSpace(novo.Label), Initiative: &rolada, Kind: novo.Kind,
 	}
 	// PV ZERO fica de fora em vez de virar 0/0: "sem vida registrada" é a
 	// ausência do campo, e uma barra 0/0 diria que o capanga já está morto.
 	if novo.HP > 0 {
-		entrada["hpCurrent"] = novo.HP
-		entrada["hpMax"] = novo.HP
+		pv := int64(novo.HP)
+		pedido.HpCurrent, pedido.HpMax = &pv, &pv
 	}
-	linha, err := st.deps.MaterializeEntry(c.R.Context(), c.User, c.CampaignID, entrada)
+	linha, err := st.queue.Roster().Entry(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, pedido)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +289,7 @@ func tiraDaFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	return st.deps.Sessions().RemoveInitiativeEntry(c.SessionID, chi.URLParam(c.R, "entryId"))
 }
 
-// restParty é a RECUPERAÇÃO (T20 p105): devolve PV e PM ao grupo inteiro.
+// restParty é a RECUPERAÇÃO (T20 p106): devolve PV e PM ao grupo inteiro.
 //
 // Os dois escopos dividem o corpo porque só diferem na qualidade, que só o de
 // dia usa. Duas funções seriam duas chances de uma esquecer o aviso às fichas.
@@ -295,37 +297,55 @@ func tiraDaFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // O aviso é obrigatório e não é o `session-state`: o que muda no descanso é a
 // FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem está com a
 // ficha aberta continua vendo o PV de antes até recarregar.
-func restParty(escopo string) func(Scene, commandCtx) (*live.SessionRuntimeState, error) {
-	return func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-		qualidade := "normal"
-		if escopo == "day" {
-			lida, err := restQuality(c.R)
-			if err != nil {
-				return nil, err
-			}
-			qualidade = lida
-		}
-		feitos, total, err := st.deps.RestParty(c.User, c.CampaignID, c.SessionID, escopo, qualidade)
-		if err != nil {
-			return nil, errors.New("não deu para carregar o grupo desta campanha")
-		}
-		st.deps.SSE().Emit(c.SessionID, "", "session-rest", map[string]any{
-			"sessionId": c.SessionID, "scope": escopo, "condition": qualidade,
-		})
-		estado := st.deps.Sessions().GetState(c.SessionID)
-		// O PARCIAL é contado e DITO: descartar a contagem faria o mestre ler
-		// "descansou" com duas de cinco fichas de fora. Volta como recusa porque
-		// é o caminho que acende a frase — e "3 de 5" é o que ele precisa ver
-		// para saber que tem de olhar as outras duas.
-		if feitos < total {
-			return estado, fmt.Errorf("%d de %d fichas descansaram; as outras %d falharam", feitos, total, total-feitos)
-		}
-		return estado, nil
+func expiresTheSceneOfTheParty(
+	st Scene, r *http.Request, quem app.Caller, campaignID, sessionID int64,
+) (*live.SessionRuntimeState, error) {
+	feitos, total, err := st.party.ExpireScene(r.Context(), quem, campaignID, sessionID)
+	if err != nil {
+		return nil, err
 	}
+	return st.announcesTheRest(sessionID, "scene", "normal", feitos, total)
 }
 
-// restQualities são as quatro do livro (T20 p105), e a lista existe aqui para
-// RECUSAR o que não é uma delas: o `restMultiplier` do motor cai em "normal"
+func restsForTheDay(
+	st Scene, r *http.Request, quem app.Caller, campaignID, sessionID int64,
+) (*live.SessionRuntimeState, error) {
+	qualidade, err := restQuality(r)
+	if err != nil {
+		return nil, err
+	}
+	feitos, total, err := st.party.RestForTheDay(r.Context(), quem, campaignID, sessionID, qualidade)
+	if err != nil {
+		return nil, err
+	}
+	return st.announcesTheRest(sessionID, "day", qualidade, feitos, total)
+}
+
+// announcesTheRest avisa as fichas e devolve o estado com a contagem.
+//
+// O AVISO é obrigatório e não é o `session-state`: o que muda no descanso é a
+// FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem está com a
+// ficha aberta continua vendo o PV de antes até recarregar.
+func (s Scene) announcesTheRest(
+	sessionID int64, escopo, qualidade string, feitos, total int,
+) (*live.SessionRuntimeState, error) {
+	s.deps.SSE().Emit(sessionID, "", "session-rest", map[string]any{
+		"sessionId": sessionID, "scope": escopo, "condition": qualidade,
+	})
+	estado := s.deps.Sessions().GetState(sessionID)
+	// O PARCIAL é contado e DITO: descartar a contagem faria o mestre ler
+	// "descansou" com duas de cinco fichas de fora. Volta como recusa porque é o
+	// caminho que acende a frase — e "3 de 5" é o que ele precisa ver para saber
+	// que tem de olhar as outras duas.
+	if feitos < total {
+		return estado, fmt.Errorf("%d de %d fichas descansaram; as outras %d falharam",
+			feitos, total, total-feitos)
+	}
+	return estado, nil
+}
+
+// restQualities são as quatro do livro (T20 p106), e a lista existe aqui para
+// RECUSAR o que não é uma delas: a conta do livro cai em "normal"
 // quando não reconhece a palavra, então um sinal adulterado faria o grupo
 // descansar em "normal" com o mestre tendo pedido "luxuosa", e ninguém veria a
 // diferença.
@@ -346,7 +366,7 @@ func restQuality(r *http.Request) (string, error) {
 		return "", fmt.Errorf("não entendi a qualidade do descanso: %v", err)
 	}
 	if !restQualities[sinais.Qualidade] {
-		return "", fmt.Errorf("qualidade %q não existe; o livro tem ruim, normal, confortavel e luxuosa (p105)", sinais.Qualidade)
+		return "", fmt.Errorf("qualidade %q não existe; o livro tem ruim, normal, confortavel e luxuosa (p106)", sinais.Qualidade)
 	}
 	return sinais.Qualidade, nil
 }
@@ -357,18 +377,18 @@ func restQuality(r *http.Request) (string, error) {
 // botão continua clicável em vez de apagar depois do primeiro uso: o mestre que
 // aceitou um jogador atrasado clica de novo e leva só o que faltava.
 //
-// O filtro de PAPEL é do `PlayerCombatants` e não daqui: o mestre costuma ter um
-// PC próprio no roster, e uma segunda opinião sobre quem é o grupo faria duas
-// superfícies responderem diferente à mesma pergunta.
+// QUEM é o grupo é do `PartyCombatants` e não daqui: são TODOS os membros da
+// campanha, inclusive o PC que o mestre também joga. Uma segunda opinião sobre
+// quem é o grupo faria duas superfícies responderem diferente à mesma pergunta.
 func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	combatentes, err := st.deps.PlayerCombatants(c.R.Context(), c.CampaignID)
+	combatentes, err := st.queue.Roster().PartyCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
 	}
 	// O erro vem JUNTO com o estado parcial de propósito: pôr quatro dos cinco e
 	// tropeçar no quinto deixa a mesa com quatro combatentes novos, e é esse o
 	// estado que as outras telas precisam receber.
-	estado, err := st.deps.PopulateParty(c.SessionID, combatentes)
+	estado, err := st.queue.PopulateParty(c.SessionID, combatentes)
 	if estado == nil {
 		estado = st.deps.Sessions().GetState(c.SessionID)
 	}
@@ -416,19 +436,21 @@ type commandCtx struct {
 // rastreador, e a fila zeraria na tela com a bênção de duração "cena" viva na
 // FICHA. O livro não deixa margem: "a habilidade dura uma cena inteira,
 // encerrando-se quando esse momento da história acaba" (p227). O
-// `EndSceneForTable` é o caminho único que expira as fichas do grupo ANTES de
-// desligar a cena.
+// `Party.EndScene` do `app/rest` é o caminho único que expira as fichas do
+// grupo ANTES de desligar a cena, e a ordem é dele — não desta função.
 //
 // A segunda é o aviso: as fichas não estão no estado do rastreador, então sem o
 // `session-rest` o efeito morto e o "usado 1/cena" ficam na tela até alguém
 // recarregar.
-func endScene(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	estado, err := st.deps.EndSceneForTable(c.User, c.CampaignID, c.SessionID)
+func endsTheScene(
+	st Scene, r *http.Request, quem app.Caller, campaignID, sessionID int64,
+) (*live.SessionRuntimeState, error) {
+	estado, err := st.party.EndScene(r.Context(), quem, campaignID, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	st.deps.SSE().Emit(c.SessionID, "", "session-rest", map[string]any{
-		"sessionId": c.SessionID, "scope": "scene",
+	st.deps.SSE().Emit(sessionID, "", "session-rest", map[string]any{
+		"sessionId": sessionID, "scope": "scene",
 	})
 	return estado, nil
 }
@@ -448,7 +470,8 @@ func (s Scene) gmCommand(
 			return
 		}
 		userID := s.deps.CurrentUserID(r)
-		_, papel, status, err := s.deps.SessionForCaller(r.Context(), userID, campaignID, sessionID)
+		_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+		status := statusOf(err)
 		if err != nil {
 			http.Error(w, err.Error(), status)
 			return

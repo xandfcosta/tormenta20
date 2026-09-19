@@ -137,9 +137,9 @@ func blockName(lista string) string {
 // caminho.
 func openEditor(v View, npcID int64) string {
 	if npcID == 0 {
-		return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/novo')", v.CampaignID, v.SessionID)
+		return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/elenco/npc/novo')", v.CampaignID, v.SessionID)
 	}
-	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/%d/editar')", v.CampaignID, v.SessionID, npcID)
+	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/elenco/npc/%d/editar')", v.CampaignID, v.SessionID, npcID)
 }
 
 // closeEditor é o Cancelar, e ele não fala com o servidor: o rascunho mora no
@@ -148,7 +148,7 @@ const closeEditor = "$draft_open = false; $draft_error = ''"
 
 // listCommand escreve o gesto que acrescenta ou tira uma linha.
 func listCommand(campanha, sessao int64, lista string, indice int) string {
-	base := fmt.Sprintf("/mesa/%d/%d/elenco/npc/rascunho/%s", campanha, sessao, lista)
+	base := fmt.Sprintf("/campanhas/%d/sessoes/%d/elenco/npc/rascunho/%s", campanha, sessao, lista)
 	if indice < 0 {
 		return fmt.Sprintf("@post('%s/nova')", base)
 	}
@@ -157,7 +157,7 @@ func listCommand(campanha, sessao int64, lista string, indice int) string {
 
 // salvaOBloco é o único gesto desta tela que grava.
 func salvaOBloco(v View) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/rascunho/salvar')", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/elenco/npc/rascunho/salvar')", v.CampaignID, v.SessionID)
 }
 
 // onTabExpr é a condição que mostra uma aba. Escrita aqui e não no `.templ` porque o

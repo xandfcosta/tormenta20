@@ -121,7 +121,7 @@ func (f sceneFixture) dbNote(t *testing.T) string {
 // A prévia REMENDADA carrega os ids da mesa.
 //
 // Montá-la a partir de uma `View` SINTÉTICA, criada só com o texto, faz cada
-// quadrinho do fragmento apontar para `/mesa/0/0/notas/tarefa/N/marcar`: struct
+// quadrinho do fragmento apontar para `/campanhas/0/sessoes/0/notas/tarefa/N/marcar`: struct
 // nova nasce com `CampaignID` e `SessionID` em ZERO.
 //
 // O sintoma é mudo, e é por isso que ele merece guarda: o PRIMEIRO clique
@@ -145,7 +145,7 @@ func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 	if !strings.Contains(corpo, esperado) {
 		t.Errorf("o quadrinho remendado não aponta para %s", esperado)
 	}
-	if strings.Contains(corpo, "/mesa/0/0/") {
+	if strings.Contains(corpo, "/campanhas/0/sessoes/0/") {
 		t.Error("o quadrinho remendado aponta para a mesa 0/0: a view da prévia nasceu sem os ids")
 	}
 }

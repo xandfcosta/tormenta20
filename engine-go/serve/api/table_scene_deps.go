@@ -2,17 +2,14 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"t20engine/app/boards"
+	"t20engine/app/session"
 
 	"t20engine/domain/board"
-	"t20engine/domain/engine"
 	"t20engine/domain/live"
-	"t20engine/infra/db/dbvalue"
-	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 	"t20engine/serve/web/sheetui"
-	"t20engine/serve/web/table"
 )
 
 // A MESA, com adaptador próprio, e a maior porta do projeto.
@@ -48,8 +45,8 @@ func (s *Server) tableHost() tableHost {
 // Embrulhá-los método a método daria oitenta entradas na porta e nenhuma
 // fronteira a mais — é a mesma concessão do `Queries`, e ela tem o mesmo sinal
 // de estar no lugar.
-func (h tableHost) Boards() *board.BoardStore        { return h.rules.boards }
-func (h tableHost) Sessions() *live.SessionStore     { return h.rules.sessions }
+func (h tableHost) Boards() *boards.Store            { return h.rules.boards }
+func (h tableHost) Sessions() *session.Store         { return h.rules.sessions }
 func (h tableHost) Presence() *live.PresenceRegistry { return h.rules.presence }
 func (h tableHost) SSE() *live.SSEHub                { return h.rules.sse }
 
@@ -60,189 +57,7 @@ func (h tableHost) CharacterChanged(characterID int64) {
 }
 func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 
-// IsAdminRequester diz se quem pede administra.
-//
-// O nome NÃO é `IsAdmin`: aquele já existe com `(email string)`, e é outra
-// pergunta — "este e-mail é de admin?" contra "quem está pedindo AGORA é?". Um
-// contrato que já existe ganha quando é a MESMA pergunta; quando só a cara é a
-// mesma, forçar um nome só junta duas coisas diferentes.
-func (h tableHost) IsAdminRequester(ctx context.Context, userID int64) bool {
-	u, err := h.rules.queries.GetUserByID(ctx, userID)
-	if err != nil {
-		return false
-	}
-	return h.rules.cfg.isAdmin(u.Email)
-}
-
-// SessionForCaller é a trava de acesso à mesa.
-func (h tableHost) SessionForCaller(
-	ctx context.Context, userID, campaignID, sessionID int64,
-) (sqlcgen.Session, string, int, error) {
-	return h.rules.campaign.sessionForCaller(ctx, AuthUser{ID: userID}, campaignID, sessionID)
-}
-
-// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR.
-//
-// O `loadOwnedCampaign` é a MESMA porta que renomear, apagar, convidar e abrir
-// sessão já atravessam: só o dono passa, com o desvio do admin. Montar o acervo
-// da campanha é da mesma família — não é um gesto de mesa, é um gesto de dono.
-//
-// Ela não pergunta mais nada: a outra trava do rascunho — o lugar que está
-// aberto numa mesa — é do domínio, e o `EditPlace` a resolve contra todas as
-// sessões da campanha.
-func (h tableHost) PlaceDraftCampaign(
-	ctx context.Context, userID, campaignID int64,
-) (sqlcgen.Campaign, int, error) {
-	return h.rules.campaign.loadOwnedCampaign(ctx, AuthUser{ID: userID}, campaignID)
-}
-
-// SessionDeleted avisa os dois stores de que a sessão deixou de existir.
-//
-// O corpo dela mora no `session_lifetime.go`, ao lado do irmão de campanha: os
-// dois caminhos de apagar têm de fazer a mesma faxina, e escrevê-la duas vezes é
-// como uma delas passa a esquecer um store.
-func (h tableHost) SessionDeleted(sessionID int64) {
-	sessionDeleted(h.rules.boards, h.rules.sessions, sessionID)
-}
-
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
-
-// StartSessionForTable e EndSessionForTable abrem e encerram a partida e
-// devolvem o estado AO VIVO, que é o que a cena redesenha.
-//
-// A leitura da linha mora aqui e não na cena: lá ela só seria passada de volta
-// ao hospedeiro, e duas perguntas em sequência viram uma.
-func (h tableHost) StartSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	sess, err := h.rules.queries.GetSession(ctx, sessionID)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := h.rules.StartSession(ctx, sess); err != nil {
-		return nil, err
-	}
-	return h.rules.sessions.GetState(sessionID), nil
-}
-
-func (h tableHost) EndSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	sess, err := h.rules.queries.GetSession(ctx, sessionID)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := h.rules.EndSession(ctx, sess); err != nil {
-		return nil, err
-	}
-	return h.rules.sessions.GetState(sessionID), nil
-}
-
-func (h tableHost) EndSceneForTable(userID, campaignID, sessionID int64) (*live.SessionRuntimeState, error) {
-	return h.rules.endSceneForTable(AuthUser{ID: userID}, campaignID, sessionID)
-}
-
-func (h tableHost) RestartCombatForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	if err := h.rules.RestartCombat(ctx, sessionID); err != nil {
-		return nil, err
-	}
-	return h.rules.sessions.GetState(sessionID), nil
-}
-
-func (h tableHost) RestParty(
-	userID, campaignID, sessionID int64, escopo, condicao string,
-) (int, int, error) {
-	return h.rules.restParty(AuthUser{ID: userID}, campaignID, sessionID, escopo, condicao)
-}
-
-func (h tableHost) SelfInitiativeEntry(
-	userID, campaignID, characterID, d20 int64,
-) (live.InitiativeEntry, error) {
-	return h.rules.selfInitiativeEntry(userID, campaignID, characterID, d20)
-}
-
-// CloneCreatureBlock copia o bloco e devolve o id da cópia.
-//
-// Uma leitura e uma escrita, sem transação: o bloco é uma linha só, e não há
-// segundo passo que possa falhar deixando a cópia órfã — que é o que obriga o
-// `cloneCharacterTx` a ter dono de transação.
-//
-// A CAMPANHA vem de fora e não do bloco lido, e isso é deliberado: é o servidor
-// que sabe em qual mesa o gesto aconteceu, e copiar o `campaignId` da origem
-// deixaria um bloco de outra campanha entrar nesta pelo id na URL.
-func (h tableHost) CloneCreatureBlock(ctx context.Context, creatureID, campaignID int64, nome string) (int64, error) {
-	origem, err := h.rules.queries.GetCampaignCreature(ctx, creatureID)
-	if err != nil {
-		return 0, fmt.Errorf("o bloco %d não foi encontrado: %w", creatureID, err)
-	}
-	if origem.Campaignid != campaignID {
-		return 0, fmt.Errorf("o bloco %d é de outra campanha", creatureID)
-	}
-	agora := dbvalue.NowISO()
-	copia, err := h.rules.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
-		Campaignid: campaignID, Name: nome, Block: origem.Block,
-		Createdat: agora, Updatedat: agora,
-	})
-	if err != nil {
-		return 0, fmt.Errorf("copiar o bloco %d: %w", creatureID, err)
-	}
-	return copia.ID, nil
-}
-
-func (h tableHost) MaterializeEntry(
-	ctx context.Context, userID, campaignID int64, pedido map[string]any,
-) (live.InitiativeEntry, error) {
-	return h.rules.materializeEntry(ctx, userID, campaignID, pedido)
-}
-
-// PlayerCombatants traduz o `combatant` do hospedeiro na forma que a CENA
-// declarou — os campos daqui são minúsculos, e tipo não exportado não atravessa
-// fronteira nenhuma.
-func (h tableHost) PlayerCombatants(ctx context.Context, campaignID int64) ([]table.Combatant, error) {
-	linhas, err := h.rules.listPlayerCombatants(ctx, campaignID)
-	if err != nil {
-		return nil, err
-	}
-	fora := make([]table.Combatant, 0, len(linhas))
-	for _, c := range linhas {
-		fora = append(fora, table.Combatant{
-			CharacterID: c.characterID, Name: c.name,
-			HpCurrent: c.hpCurrent, HpMax: c.hpMax,
-			MpCurrent: c.mpCurrent, MpMax: c.mpMax,
-		})
-	}
-	return fora, nil
-}
-
-func (h tableHost) PopulateParty(sessionID int64, quem []table.Combatant) (*live.SessionRuntimeState, error) {
-	linhas := make([]combatant, 0, len(quem))
-	for _, c := range quem {
-		linhas = append(linhas, combatant{
-			characterID: c.CharacterID, name: c.Name,
-			hpCurrent: c.HpCurrent, hpMax: c.HpMax,
-			mpCurrent: c.MpCurrent, mpMax: c.MpMax,
-		})
-	}
-	return h.rules.populateParty(sessionID, linhas)
-}
-
-func (h tableHost) InitiativeBonus(ctx context.Context, characterID int64) (int64, error) {
-	return h.rules.initiativeBonus(ctx, characterID)
-}
-
-func (h tableHost) ComputedSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
-	return h.rules.sheet.ComputeSheet(ctx, row)
-}
-
-func (h tableHost) SpeedsForBoard(board *board.BoardState) map[string]int {
-	return h.rules.speedsForBoard(board)
-}
-
-// SaveFailed junta os DOIS stores numa pergunta só.
-//
-// Para quem está mestrando não existe "o tabuleiro não salvou" e "a fila não
-// salvou": existe "a mesa não está sendo salva". Separar daria à tela uma
-// decisão que ela não tem o que fazer com — os dois têm a mesma causa (o disco)
-// e o mesmo remédio (parar e chamar alguém).
-func (h tableHost) SaveFailed(sessionID int64) bool {
-	return h.rules.boards.SaveFailed(sessionID) || h.rules.sessions.SaveFailed(sessionID)
-}
 
 // ── PUBLICAR, que é do hospedeiro ────────────────────────────────────────────
 
@@ -265,40 +80,18 @@ func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
 	h.rules.publishWhatIsLeft(ctx, sessionID)
 }
 
-// ── as DUAS escritas montadas em SQL ─────────────────────────────────────────
+// ── a escrita montada em SQL ─────────────────────────────────────────────────
 //
-// A tabela `sessions` não tem query própria no sqlc para estas duas colunas —
-// quem escreve é um SET montado. Elas moram no hospedeiro e não na cena porque
-// cena que compõe SQL é cena com o banco dentro: quem sabe o nome da coluna, que
-// vazio é NULL e que a linha tem um `updatedAt` a carimbar é o hospedeiro.
-
-func (h tableHost) SaveSessionTitle(ctx context.Context, sessionID int64, titulo string) error {
-	var set setBuilder
-	set.Add("title = ?", nullableArg(trimOrNull(&titulo)))
-	return set.execTouched(ctx, h.rules.db, "UPDATE sessions", sessionID)
-}
-
-// SaveNotes grava as notas do mestre, e ela NÃO apara o texto.
-//
-// A diferença com o título é a que importa: aparar a cada 1,2s comeria a linha
-// em branco que o mestre acabou de abrir para escrever o próximo parágrafo. O
-// handler JSON apara porque salva UMA vez, ao fechar; este salva no meio da
-// digitação. Vazio continua virando NULL.
-func (h tableHost) SaveNotes(ctx context.Context, sessionID int64, texto string) error {
-	var set setBuilder
-	if texto == "" {
-		set.Add("notes = ?", nil)
-	} else {
-		set.Add("notes = ?", texto)
-	}
-	return set.execTouched(ctx, h.rules.db, "UPDATE sessions", sessionID)
-}
+// A coluna `notes` não tem query própria no sqlc — quem escreve é um SET
+// montado. Ela mora no hospedeiro e não na cena porque cena que compõe SQL é
+// cena com o banco dentro. O TÍTULO era o irmão dela e saiu na ALE-344: ele
+// mora no `app/session`, que é onde uma escrita sem consulta gerada pode morar.
 
 // ── a casca e a ficha embutida ───────────────────────────────────────────────
 //
-// O `BookAddress` NÃO está aqui: ele já existe no `book_file.go`, com a forma
-// exata que a porta pede, e declarar um segundo daria ao `*Server` dois nomes
-// para a mesma coisa.
+// O `BookAddress` NÃO está aqui: ele vem embutido do `sceneCore`
+// (`scene_core.go`), junto com as outras cinco assinaturas que MAIS DE UMA cena
+// pede. Declarar um segundo daria ao `*Server` dois nomes para a mesma coisa.
 
 // PlayerSheet é a ficha EMBUTIDA de quem senta à mesa.
 //

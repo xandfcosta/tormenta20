@@ -67,8 +67,8 @@ func TestTheHubOnlyOffersResumeWithALiveSession(t *testing.T) {
 	if !strings.Contains(comViva, "Continuar sessão") {
 		t.Fatal("não ofereceu continuar com sessão ativa")
 	}
-	if !strings.Contains(comViva, routes.Table(campanha, sessao)) {
-		t.Errorf("o link não aponta para a sessão viva (%s)", routes.Table(campanha, sessao))
+	if !strings.Contains(comViva, routes.Session(campanha, sessao)) {
+		t.Errorf("o link não aponta para a sessão viva (%s)", routes.Session(campanha, sessao))
 	}
 }
 
@@ -150,17 +150,17 @@ func TestSignOutClearsTheCookieAndGivesBackTheDoor(t *testing.T) {
 // a API e a errada para quem digitou uma URL — o jogador via
 // `{"statusCode":401}` numa tela branca. E o destino tem de trazer o prefixo:
 // o roteador é montado com `StripPrefix`, então quem lesse `URL.Path` mandaria
-// o jogador de volta para `/mesa/1/4` e ele cairia num 404 depois de entrar.
+// o jogador de volta para `/campanhas/1/sessoes/4` e ele cairia num 404 depois de entrar.
 func TestAnAnonymousPageGoesToTheDoorRememberingTheWholePath(t *testing.T) {
 	s, _ := hubFixture(t)
-	req := httptest.NewRequest(http.MethodGet, "/mesa/1/4", nil)
+	req := httptest.NewRequest(http.MethodGet, "/campanhas/1/sessoes/4", nil)
 	rec := httptest.NewRecorder()
 	s.WebRouter().ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303 — página não responde JSON 401 para o navegador", rec.Code)
 	}
-	if got := rec.Header().Get("Location"); got != "/entrar?redirect=%2Fmesa%2F1%2F4" {
+	if got := rec.Header().Get("Location"); got != "/entrar?redirect=%2Fcampanhas%2F1%2Fsessoes%2F4" {
 		t.Errorf("Location = %q — o caminho inteiro, com a query, precisa voltar depois do login", got)
 	}
 }

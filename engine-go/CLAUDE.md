@@ -14,7 +14,7 @@ onde o SSE pode ser bufferizado por engano.
 
 ## O mapa das pastas
 
-Quatro grupos, e a pergunta que cada um responde:
+Cinco grupos, e a pergunta que cada um responde:
 
 ```
 engine-go/
@@ -25,6 +25,11 @@ engine-go/
 │   ├── book/     o catálogo tipado, lido por treze famílias
 │   ├── sheet/  board/  live/   o domínio COM estado
 │   └── campaign/ account/ creature/ search/ markdown/
+├── app/          O QUE UM GESTO FAZ, do pedido à gravação
+│   ├── session/  o ciclo da sessão, a trava de acesso e o STORE da fila
+│   ├── boards/   o store dos tabuleiros abertos, com as abas e os lugares
+│   ├── initiative/ quem entra na fila, e com que números
+│   └── rest/     o que expira e o que recupera quando a cena ou o dia acaba
 ├── serve/        O QUE RESPONDE HTTP
 │   ├── api/      a RAIZ DE COMPOSIÇÃO: monta o roteador e cumpre as portas
 │   └── web/      as quinze cenas, cada uma com a porta dela
@@ -41,10 +46,35 @@ engine-go/
 └── scripts/      a folha e as ilhas de JS
 ```
 
-**A seta só aponta para BAIXO**: `domain` não conhece `serve`, `infra` não
-conhece ninguém. Quem garante são os `boundary_test.go` de cada pacote, e as
-listas de permitidos deles são argumentadas linha a linha — acrescentar uma
-entrada é decisão, não conveniência.
+**A seta só aponta para BAIXO**: `serve` → `app` → `domain` + `infra`, e o
+`infra` não conhece ninguém. Quem garante são os `boundary_test.go` de cada
+pacote — e, entre os GRUPOS, o `TestNoLayerImportsUpwards`, que varre a árvore em
+vez de uma lista, para o pacote que nascer amanhã já nascer medido. As listas de
+permitidos são argumentadas linha a linha: acrescentar uma entrada é decisão, não
+conveniência.
+
+### O `app/` é novo, e o que ele NÃO é (ALE-344)
+
+Ele não é "a pasta para onde mudo o que estava no `api`". O que entra aqui é o
+gesto INTEIRO — quem pode, o que decide, o que grava —, e o sinal de que uma
+coisa pertence a ele é ter as três. Um repasse de uma linha não vira caso de uso
+por mudar de pasta.
+
+**A orquestração já existia, com outro nome.** O `apply` do store dos
+tabuleiros carrega o estado, chama a regra PURA do `board_state.go` e devolve o
+quadro: isso é um caso de uso, e ele passou anos arquivado dentro de `domain/`.
+Os dois stores mudaram de lugar na ALE-344, e o número que fecha a divisão é o
+do `domain/board`: **1.802 linhas, ZERO toques de persistência.**
+
+**O que sobra em `domain/` é a regra, e ela é PÚBLICA.** As mutações que os
+stores chamam — `AddToken`, `AdvanceTurn`, `PatchEntryVitals` e as irmãs — eram
+privadas enquanto o chamador morava no mesmo pacote. Hoje são a API dos dois
+pacotes puros, e é assim que se reconhece um: recebe estado, devolve estado, não
+trava nada e não grava nada.
+
+**As recusas daqui são TIPADAS** (`ErrNotFound`, `ErrForbidden`, `ErrRefused`) e
+nunca um número de HTTP. Um caso de uso que devolvesse 403 não poderia ser
+chamado de outro transporte — que é a única coisa que esta camada compra.
 
 **Onde procurar:**
 
@@ -71,9 +101,10 @@ CENA é construída".
 **No `serve/api`, o nome do arquivo diz o ADAPTADOR que o possui**, e o assunto
 vem depois do prefixo: `table_*` é do `tableRules`, `sheet_*` do `sheetRules`,
 `campaign_*` e `account_*` dos outros dois. **Um arquivo, um dono** — o
-`character.go` tinha TRÊS donos, e o arquivo dos membros tinha dois — hoje
-`table_combatants.go` e `campaign_members.go` —, e nenhum dos dois nomes dizia
-qual (ALE-330).
+`character.go` tinha TRÊS donos, e o arquivo dos membros tinha dois — ele foi
+repartido um por dono, e nenhum dos dois nomes dizia qual (ALE-330). A metade da
+mesa desceu para o `app/initiative` na ALE-344; a de campanha é o
+`campaign_members.go`.
 
 Quem cobra é o `TestEveryAdapterFileCarriesItsPrefix`: ele lê o RECEPTOR dos
 métodos e falha com o nome do arquivo e o do dono. Duas coisas que ele NÃO
@@ -346,7 +377,7 @@ candidato.
 mutação é uma requisição; o que desce é um `text/event-stream` que fica aberto.
 Foi assim que um socket bidirecional virou uma rota por comando mais um `GET`
 longo, e o argumento continua valendo para o próximo canal. A Mesa em
-Datastar tem fluxo PRÓPRIO (`/mesa/{campanha}/{sessao}/fluxo`, em
+Datastar tem fluxo PRÓPRIO (`/campanhas/{campanha}/sessoes/{sessao}/fluxo`, em
 `web/table/stream.go`), ele assina o `events.Bus` e não o `SSEHub`, e os comandos
 dela são rotas da CENA. Nenhuma linha do que este arquivo descrevia como "a rota
 de eventos" existe.
@@ -389,7 +420,7 @@ desligado.
 
 O `events.Bus` (ALE-279) entrega, dentro do processo, o que aconteceu numa mesa.
 Ele substituiu quatro mecanismos com a mesma forma e nenhum nome em comum — o
-`SessionStore.Assinar`, o `BoardStore.Assinar`, o `CharacterWatch.Assinar` e um
+`Assinar` de cada um dos dois stores, o `CharacterWatch.Assinar` e um
 `Emit` —, os três primeiros `chan struct{}`: diziam QUE algo mudou e nunca O
 QUÊ, e o `select` do stream da Mesa tinha um `case` para cada um só para juntar
 de volta o que estava separado por acidente de onde o estado mora.
@@ -1183,9 +1214,11 @@ não tocava `*Server` nem `http`; o `creature_block.go` importava `fmt` e
 história.
 
 O que NÃO saiu junto e vale saber por quê: os quatro handlers do estado de jogo.
-O `table_character_play_state.go` misturava a FORMA (dois structs sem dependência) com
+O arquivo que os hospedava misturava a FORMA (dois structs sem dependência) com
 o encanamento que a grava — os structs viajam dentro do `CharacterDTO`, então
-foram; os handlers ficaram.
+foram; os handlers ficaram. O que restava dele — zerar os usos "1/cena" e baixar
+as posturas — desceu para o `app/rest` na ALE-344, e o arquivo deixou de
+existir.
 
 **E o `sheet` ganhou a CONSTRUÇÃO junto, na terceira camada.** `Load` monta o
 agregado a partir das linhas do banco, `Compute` o passa pelo motor, e
@@ -1342,7 +1375,8 @@ Três coisas que essa medição deixou, e nenhuma delas é sobre contorno:
 
 ## As notas numa janela própria, e o pacto que as torna únicas (ALE-218)
 
-As notas da sessão têm endereço: `GET /mesa/{campanha}/{sessao}/notas` desenha o
+As notas da sessão têm endereço:
+`GET /campanhas/{campanha}/sessoes/{sessao}/notas` desenha o
 MESMO painel da coluna, sem o mapa em volta. É o último dos quatro lugares que a
 ALE-218 decidiu — lado a lado, empilhado, flutuando e a janela —, e o único que
 sai do leiaute da página.
@@ -1381,7 +1415,7 @@ ALE-308) em vez de ganhar um próprio: o defeito é o mesmo que o do `@post` com
 caminho morto, e o extrator já sabia parar na primeira vírgula de topo, então o
 nome da janela e as `features` ficam de fora sozinhos. O método é GET porque é
 navegação — e isso não é detalhe: perguntar ao chi por um POST em
-`/mesa/1/4/notas` responderia "existe" pela rota de SALVAR, e o guarda ficaria
+`/campanhas/1/sessoes/4/notas` responderia "existe" pela rota de SALVAR, e o guarda ficaria
 verde sobre um endereço de página que não existisse.
 
 ## Onde a coordenada de um gesto do tabuleiro viaja

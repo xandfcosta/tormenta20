@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"t20engine/app/session"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/infra/db/sqlcgen"
@@ -29,7 +30,7 @@ type sheetRules struct {
 	// — e porque um GANCHO opcional já nasceu desligado uma vez neste
 	// repositório (ver `characterChanged`).
 	bus      *events.Bus
-	sessions *live.SessionStore
+	sessions *session.Store
 	sse      *live.SSEHub
 }
 

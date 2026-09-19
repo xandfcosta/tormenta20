@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 	"net/http"
+	"t20engine/app"
 
 	"github.com/go-chi/chi/v5"
 
@@ -29,7 +30,7 @@ import (
 // vem primeiro), e ela é indistinguível da dobra de uma parada.
 
 func (s Scene) MoveRoutes(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
+	base := sessionPattern + "/tabuleiro/{tokenId}"
 	r.Post(base+"/parada", s.tableCommand(paraNoQuadrado))
 	r.Post(base+"/desfazer-parada", s.tableCommand(undoLastStop))
 	r.Post(base+"/confirmar", s.tableCommand(confirmMove))
@@ -123,7 +124,7 @@ func cancelMove(st Scene, c commandCtx) (*board.BoardState, error) {
 // campanha — o mesmo caminho que o `tableRoster` usa para saber quais são os
 // MEUS.
 func (s Scene) moveWho(c commandCtx) board.Mover {
-	_, papel, _, err := s.deps.SessionForCaller(c.R.Context(), c.User, c.CampaignID, c.SessionID)
+	_, papel, err := s.access.Session(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, c.SessionID)
 	if err != nil {
 		papel = "player"
 	}
@@ -199,7 +200,8 @@ func (s Scene) boardCommand(
 			return
 		}
 		userID := s.deps.CurrentUserID(r)
-		_, papel, status, err := s.deps.SessionForCaller(r.Context(), userID, campaignID, sessionID)
+		_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+		status := statusOf(err)
 		if err != nil {
 			http.Error(w, err.Error(), status)
 			return

@@ -18,8 +18,9 @@ import (
 //
 // Por isso ele varre em vez de conferir um caso: uma revisão nomeia um arquivo,
 // e a correção é TODO arquivo com a mesma forma. A `aAbaPadrao` é da tela ANTIGA,
-// que não tem abas: ela morava em `board_commands.go`, apagado na ALE-277, e em
-// `table_board_rules.go`, que ficou. O que sobrou dela é a constante em
+// que não tem abas: ela morava em dois arquivos do `serve/api`, e os dois foram
+// apagados — um na ALE-277, o outro na ALE-344, quando o deslocamento das peças
+// desceu para a cena. O que sobrou dela é a constante em
 // `table_live_publish.go`, e lá ela mudou de significado — a Mesa em Datastar TEM
 // abas, então "a padrão" virou o quadro que quem fechou uma aba não escolheu.
 // **Ele veio para cá na ALE-278**, e a razão é a que o guarda do foco já tinha

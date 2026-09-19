@@ -67,7 +67,8 @@ func TestTheDraftDrawsTheBoardAndSaysNobodyIsWatching(t *testing.T) {
 // OS GESTOS POSTAM NO ACERVO, e não numa sessão que não existe.
 //
 // É o guarda do `BoardView.Base`, medido no HTML que sai. Sem ele, uma chamada
-// que continuasse escrevendo o caminho da mesa postaria em `/mesa/N/0/tabuleiro`
+// que continuasse escrevendo o caminho da sessão postaria em
+// `/campanhas/N/sessoes/0/tabuleiro`
 // — um endereço que RESPONDE, com 403 ou 404, e devolve uma tela que não mudou.
 // O sintoma seria "o pincel não pinta", sem uma linha em lugar nenhum.
 func TestTheDraftGesturesPostToTheArchiveAndNotToATable(t *testing.T) {
@@ -81,14 +82,15 @@ func TestTheDraftGesturesPostToTheArchiveAndNotToATable(t *testing.T) {
 		t.Fatalf("nenhum gesto posta em %q", esperado)
 	}
 	// O CONTROLE, e ele é o que separa "não achei" de "não procurei": a mesma
-	// página NÃO pode carregar o caminho da mesa. `/mesa/` sozinho apareceria
-	// num link de navegação legítimo, então o que se procura é o caminho do
-	// TABULEIRO de uma sessão.
+	// página NÃO pode carregar o caminho de uma sessão. `/campanhas/` sozinho
+	// aparece em todo link de navegação legítimo, então o que se procura é o
+	// caminho do TABULEIRO de uma sessão — com a sessão ZERO, que é o valor que
+	// um `Base` esquecido produz.
 	if strings.Contains(corpo, "/tabuleiro/terreno") && !strings.Contains(corpo, esperado+"/terreno") {
 		t.Error("o pincel do rascunho posta num tabuleiro que não é o dele")
 	}
-	if strings.Contains(corpo, fmt.Sprintf("/mesa/%d/0/tabuleiro", f.campaignID)) {
-		t.Error("um gesto escapou para a mesa com sessão ZERO — é o defeito que o `Base` existe para impedir")
+	if strings.Contains(corpo, fmt.Sprintf("/campanhas/%d/sessoes/0/tabuleiro", f.campaignID)) {
+		t.Error("um gesto escapou para uma sessão ZERO — é o defeito que o `Base` existe para impedir")
 	}
 }
 

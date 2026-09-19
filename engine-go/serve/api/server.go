@@ -6,7 +6,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"t20engine/domain/board"
+	"t20engine/app/boards"
+	"t20engine/app/initiative"
+	"t20engine/app/rest"
+	"t20engine/app/session"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/infra/config"
@@ -26,8 +29,8 @@ type Server struct {
 	db       *sql.DB
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs       // nulo se o despejo do catálogo não carregou
-	sessions *live.SessionStore     // a fila e a cena de cada sessão, em memória
-	boards   *board.BoardStore      // os tabuleiros táticos vivos por sessão
+	sessions *session.Store         // a fila e a cena de cada sessão, em memória
+	boards   *boards.Store          // os tabuleiros táticos vivos por sessão
 	presence *live.PresenceRegistry // quem está online em cada sala
 	sse      *live.SSEHub           // os leitores SSE por sessão e papel
 	// bus é o barramento: o que acontece numa mesa vira notícia tipada, e quem
@@ -138,8 +141,8 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),
-		sessions: live.NewSessionStore(q, live.NewUUID, sheetVitals{q: q}, bus),
-		boards:   board.NewBoardStore(q, live.NewUUID, bus),
+		sessions: session.NewStore(q, live.NewUUID, sheetVitals{q: q}, bus),
+		boards:   boards.NewStore(q, live.NewUUID, bus),
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),
 		sse:      live.NewSSEHub(),
@@ -157,7 +160,24 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 // antes.
 func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
-	s.tableScene = table.New(s.tableHost())
+	s.tableScene = table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue())
+}
+
+// sessionLifecycle é o caso de uso do ciclo, montado com o que o servidor tem.
+//
+// O `*Server` o CONSTRÓI e não o cumpre: a camada de aplicação não é adaptador
+// de nada — ela existe abaixo daqui, e quem a usa (esta casa e a cena) a importa
+// direto.
+func (s *Server) initiativeQueue() initiative.Queue {
+	return initiative.NewQueue(s.queries, s.catalogs, s.sessions)
+}
+
+func (s *Server) restParty() rest.Party {
+	return rest.NewParty(s.queries, s.sessions)
+}
+
+func (s *Server) sessionLifecycle() session.Lifecycle {
+	return session.NewLifecycle(s.db, s.queries, s.sessions, s.boards)
 }
 
 // sceneCore é montado por chamada e não guardado num campo: são três ponteiros

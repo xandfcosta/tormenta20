@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"t20engine/app/initiative"
 	"t20engine/domain/live"
 )
 
@@ -18,11 +19,11 @@ import (
 // `characterId` — desligado da ficha, sem PV de verdade e fora do descanso.
 
 func (s Scene) CastRoutes(r chi.Router) {
-	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/na-fila",
+	r.Post(sessionPattern+"/elenco/{characterId}/na-fila",
 		s.gmCommand(putPlayerTracker))
-	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/vitais/{pool}/ferir/{step}",
+	r.Post(sessionPattern+"/elenco/{characterId}/vitais/{pool}/ferir/{step}",
 		s.gmCommand(moveCastVitals(-1)))
-	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/vitais/{pool}/curar/{step}",
+	r.Post(sessionPattern+"/elenco/{characterId}/vitais/{pool}/curar/{step}",
 		s.gmCommand(moveCastVitals(+1)))
 }
 
@@ -38,7 +39,7 @@ func putPlayerTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	if err != nil {
 		return nil, err
 	}
-	estado, err := st.deps.PopulateParty(c.SessionID, []Combatant{*escolhido})
+	estado, err := st.queue.PopulateParty(c.SessionID, []initiative.Combatant{*escolhido})
 	if estado == nil {
 		estado = st.deps.Sessions().GetState(c.SessionID)
 	}
@@ -53,12 +54,12 @@ func putPlayerTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 //
 // Ela é função própria porque agora tem dois chamadores, e porque uma trava
 // copiada é uma trava que diverge no dia em que alguém apertar só uma delas.
-func castMemberOf(st Scene, c commandCtx) (*Combatant, error) {
+func castMemberOf(st Scene, c commandCtx) (*initiative.Combatant, error) {
 	characterID, err := strconv.ParseInt(chi.URLParam(c.R, "characterId"), 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("personagem inválido: %q", chi.URLParam(c.R, "characterId"))
 	}
-	combatentes, err := st.deps.PlayerCombatants(c.R.Context(), c.CampaignID)
+	combatentes, err := st.queue.Roster().PartyCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
 	}
@@ -104,7 +105,7 @@ func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeSta
 
 // combatantFor acha o combatente do personagem pedido. Nil é a resposta para
 // "não é jogador desta campanha", e quem chama decide o que fazer com isso.
-func combatantFor(combatentes []Combatant, characterID int64) *Combatant {
+func combatantFor(combatentes []initiative.Combatant, characterID int64) *initiative.Combatant {
 	for i := range combatentes {
 		if combatentes[i].CharacterID == characterID {
 			return &combatentes[i]
@@ -127,7 +128,7 @@ func closeSheetCast(m Member) string {
 // acende no `$command_error`, que é do RODAPÉ — um diálogo aberto por cima dela
 // esconderia a única frase que explica o que houve.
 func poeNaFila(v View, m Member) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/%d/na-fila')",
+	return fmt.Sprintf("@post('/campanhas/%d/sessoes/%d/elenco/%d/na-fila')",
 		v.CampaignID, v.SessionID, m.CharacterID)
 }
 
@@ -135,7 +136,7 @@ func poeNaFila(v View, m Member) string {
 // `evt.shiftKey` escolhendo entre elas — a mesma forma do `rowVital` da fila, e
 // pela mesma razão: o número nunca viaja como dado.
 func castVital(v View, m Member, pool, verb string) string {
-	base := fmt.Sprintf("/mesa/%d/%d/elenco/%d/vitais/%s/%s/",
+	base := fmt.Sprintf("/campanhas/%d/sessoes/%d/elenco/%d/vitais/%s/%s/",
 		v.CampaignID, v.SessionID, m.CharacterID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }

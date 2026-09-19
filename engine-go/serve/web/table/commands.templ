@@ -70,7 +70,7 @@ templ gmControls(v View, r viewGm) {
 				if v.SceneActive {
 					@endSceneButton(v)
 				}
-				@rest(v)
+				@expireScene(v)
 			</div>
 			@tableDrawer(v)
 		</div>
@@ -99,7 +99,7 @@ templ tableDrawer(v View) {
 			if v.SceneActive {
 				@endSceneButton(v)
 			}
-			@rest(v)
+			@expireScene(v)
 		</div>
 	</details>
 }
@@ -118,10 +118,10 @@ templ tableDrawer(v View) {
 // ninguém.
 //
 // A de CENA acontece no clique porque não precisa de mais nada. A de DIA precisa
-// da qualidade, que é o que a p105 usa para calcular quanto volta, e só por isso
+// da qualidade, que é o que a p106 usa para calcular quanto volta, e só por isso
 // abre o diálogo — cobrar dois passos pelo que tem um seria cobrar por um dado
 // que o motor não usa.
-templ rest(v View) {
+templ expireScene(v View) {
 	<button
 		type="button"
 		data-indicator:resting
@@ -142,7 +142,7 @@ templ rest(v View) {
 	</button>
 }
 
-// restDay pergunta a QUALIDADE antes de descansar (T20 p105).
+// restDay pergunta a QUALIDADE antes de descansar (T20 p106).
 //
 // `data-preserve-attr="open"` não é enfeite e sem ele o diálogo é inútil: a cena
 // inteira é remendada a cada mudança, o `open` do `showModal()` só existe no DOM
@@ -166,7 +166,7 @@ templ restDay(v View) {
 		class="scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
 		<h2 id="day-rest-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Descanso de dia</h2>
-		<p class="mt-1 text-sm text-muted-foreground">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p105).</p>
+		<p class="mt-1 text-sm text-muted-foreground">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p106).</p>
 		<label for="rest-quality" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Qualidade do descanso</label>
 		// O NOME DO SINAL É `snake_case` porque ele aparece como CHAVE de
 		// atributo, e chave de atributo é minusculada pelo analisador de HTML:

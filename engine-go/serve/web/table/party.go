@@ -31,7 +31,7 @@ import (
 // `board.MoveOGrupo`.
 
 func (s Scene) PartyRoutes(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
+	base := sessionPattern + "/tabuleiro"
 	r.Post(base+"/marcar-area", s.handleMarcarArea)
 	r.Post(base+"/grupo/mover", s.gmContinuousCommand(movePartyTable))
 }

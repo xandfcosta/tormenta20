@@ -73,13 +73,13 @@ func NextMarkerLetter(marcadores []BoardMarker) string {
 //
 // REVELAR é o verbo que importa: o marcador nasce escondido porque marcar a
 // armadilha na frente da mesa entrega a armadilha.
-func MarkerReveal(escondido bool) markerPatch {
-	return markerPatch{Hidden: &escondido}
+func MarkerReveal(escondido bool) MarkerPatch {
+	return MarkerPatch{Hidden: &escondido}
 }
 
 // NewMarkerColor monta o patch da cor. Cor fora da lista é IGNORADA pelo
 // `UpdateMarker`, então o marcador fica com a que tinha — que é melhor do que
 // cair no padrão, porque aqui já existe uma escolha anterior a preservar.
-func NewMarkerColor(cor string) markerPatch {
-	return markerPatch{Color: &cor}
+func NewMarkerColor(cor string) MarkerPatch {
+	return MarkerPatch{Color: &cor}
 }

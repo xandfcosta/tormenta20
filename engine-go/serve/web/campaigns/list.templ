@@ -294,7 +294,7 @@ templ campaignActions(c campaignCard) {
 		</a>
 		if c.AoVivo {
 			<a
-				href={ templ.SafeURL(routes.Table(c.ID, c.SessaoID)) }
+				href={ templ.SafeURL(routes.Session(c.ID, c.SessaoID)) }
 				class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "") }
 			>
 				Continuar a sessão

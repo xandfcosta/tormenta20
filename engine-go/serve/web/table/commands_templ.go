@@ -123,7 +123,7 @@ func gmControls(v View, r viewGm) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = rest(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = expireScene(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -199,7 +199,7 @@ func tableDrawer(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = rest(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = expireScene(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -225,10 +225,10 @@ func tableDrawer(v View) templ.Component {
 // ninguém.
 //
 // A de CENA acontece no clique porque não precisa de mais nada. A de DIA precisa
-// da qualidade, que é o que a p105 usa para calcular quanto volta, e só por isso
+// da qualidade, que é o que a p106 usa para calcular quanto volta, e só por isso
 // abre o diálogo — cobrar dois passos pelo que tem um seria cobrar por um dado
 // que o motor não usa.
-func rest(v View) templ.Component {
+func expireScene(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -286,7 +286,7 @@ func rest(v View) templ.Component {
 	})
 }
 
-// restDay pergunta a QUALIDADE antes de descansar (T20 p105).
+// restDay pergunta a QUALIDADE antes de descansar (T20 p106).
 //
 // `data-preserve-attr="open"` não é enfeite e sem ele o diálogo é inútil: a cena
 // inteira é remendada a cada mudança, o `open` do `showModal()` só existe no DOM
@@ -323,7 +323,7 @@ func restDay(v View) templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<dialog id=\"day-rest\" data-preserve-attr=\"open\" aria-labelledby=\"day-rest-title\" class=\"scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"day-rest-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Descanso de dia</h2><p class=\"mt-1 text-sm text-muted-foreground\">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p105).</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<dialog id=\"day-rest\" data-preserve-attr=\"open\" aria-labelledby=\"day-rest-title\" class=\"scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"day-rest-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Descanso de dia</h2><p class=\"mt-1 text-sm text-muted-foreground\">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p106).</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

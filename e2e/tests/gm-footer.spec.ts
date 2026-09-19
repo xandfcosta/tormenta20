@@ -15,7 +15,7 @@ import { expect, type Page, test } from '@playwright/test'
 
 test.use({ storageState: '.auth/user.json' })
 
-const MESA = '/mesa/1/4'
+const MESA = '/campanhas/1/sessoes/4'
 
 const rodape = 'section[aria-label="Controles do mestre"]'
 
@@ -214,7 +214,7 @@ test.describe('O rodapé do mestre', () => {
     // ABERTO, medindo exatamente o caminho que ele existe para excluir. Quem
     // denuncia isso é o controle abaixo.
     let tentouAbrir = 0
-    await page.route(/\/mesa\/\d+\/\d+\/fluxo(\?|$)/, async (rota) => {
+    await page.route(/\/campanhas\/\d+\/sessoes\/\d+\/fluxo(\?|$)/, async (rota) => {
       tentouAbrir++
       await rota.abort()
     })

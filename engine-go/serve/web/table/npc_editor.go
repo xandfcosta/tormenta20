@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/app"
 	"t20engine/serve/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -43,7 +44,7 @@ import (
 // inteira. O único que grava é o `saveDraft`.
 
 func (s Scene) RoutesEditorNpc(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/elenco/npc"
+	base := sessionPattern + "/elenco/npc"
 	r.Post(base+"/{npcId}/editar", s.openDraft)
 	r.Post(base+"/novo", s.openDraft)
 	r.Post(base+"/rascunho/{lista}/nova", s.moveList(addList))
@@ -355,7 +356,8 @@ func (s Scene) tableGm(w http.ResponseWriter, r *http.Request) (commandCtx, bool
 		return commandCtx{}, false
 	}
 	userID := s.deps.CurrentUserID(r)
-	_, papel, status, err := s.deps.SessionForCaller(r.Context(), userID, campaignID, sessionID)
+	_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return commandCtx{}, false

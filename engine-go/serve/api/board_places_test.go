@@ -4,6 +4,7 @@ import "t20engine/domain/board"
 
 import (
 	"context"
+	"t20engine/app/boards"
 
 	"strings"
 	"t20engine/infra/events"
@@ -407,7 +408,7 @@ func TestThePlaceOpenOnALiveTableRefusesTheDraft(t *testing.T) {
 // O caso de cima passa pela MEMÓRIA — a taverna está no mapa deste store. Este
 // prova a outra fonte, e ela não é redundância: depois de um reinício o mapa
 // nasce vazio, e uma trava que só olhasse a memória deixaria montar tudo. A
-// segunda `BoardStore` sobre as MESMAS consultas é literalmente o processo que
+// segunda `boards.Store` sobre as MESMAS consultas é literalmente o processo que
 // subiu de novo e não sabe de nada.
 func TestThePlaceOpenBeforeARestartStillRefusesTheDraft(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
@@ -422,7 +423,7 @@ func TestThePlaceOpenBeforeARestartStillRefusesTheDraft(t *testing.T) {
 		t.Fatal("a gravação do tabuleiro falhou")
 	}
 
-	depoisDoReinicio := board.NewBoardStore(s.queries, s.boards.NewID, &events.Bus{})
+	depoisDoReinicio := boards.NewStore(s.queries, s.boards.NewID, &events.Bus{})
 	_, err := depoisDoReinicio.EditPlace(ctx, campanha, lugar.ID, func(b *board.BoardState) error {
 		b.Tokens = nil
 		return nil

@@ -14,7 +14,7 @@ import (
 
 func (s Scene) CurtainRoutes(r chi.Router) {
 	// O ESTADO no caminho, e não um alternar: ver o comentário do `runsCurtain`.
-	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/cortina/{estado}",
+	r.Post(sessionPattern+"/tabuleiro/cortina/{estado}",
 		s.gmBoardCommand(runsCurtain))
 }
 

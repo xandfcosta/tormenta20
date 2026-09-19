@@ -30,13 +30,13 @@ func TestPopulateBringsOnlyTheChosen(t *testing.T) {
 	_ = live.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
 	_ = live.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
 	_ = live.AddEntry(st, npc("Assassino", 20), id)
-	b := newBoard("t1", "Cripta", "stone")
+	b := NewBoard("t1", "Cripta", "stone")
 
 	escolhidos := EntrySelection{
 		entryIDByLabel(t, st, "Sílfide"):  true,
 		entryIDByLabel(t, st, "Paladino"): true,
 	}
-	if placed := populateBoard(b, st, boardCounter(), escolhidos); placed != 2 {
+	if placed := PopulateBoard(b, st, boardCounter(), escolhidos); placed != 2 {
 		t.Fatalf("colocou %d peças, esperado 2", placed)
 	}
 	for _, token := range b.Tokens {
@@ -90,9 +90,9 @@ func TestPopulateIsBornBelowTheTopChrome(t *testing.T) {
 	id := ContadorDeIds()
 	_ = live.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
 	_ = live.AddEntry(st, npc("Ogro", 12), id)
-	b := newBoard("t1", "Cripta", "stone")
+	b := NewBoard("t1", "Cripta", "stone")
 
-	if placed := populateBoard(b, st, boardCounter(), nil); placed != 2 {
+	if placed := PopulateBoard(b, st, boardCounter(), nil); placed != 2 {
 		t.Fatalf("colocou %d peças, esperado 2: o que vem abaixo não mediria nada", placed)
 	}
 	for _, token := range b.Tokens {

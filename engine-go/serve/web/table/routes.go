@@ -2,7 +2,9 @@ package table
 
 import (
 	"context"
+	"t20engine/app"
 	"t20engine/domain/markdown"
+	"t20engine/domain/sheet"
 	"t20engine/serve/web/sheetui"
 
 	"fmt"
@@ -25,10 +27,18 @@ import (
 // O `requirePage` NÃO está aqui: quem decide que esta cena exige sessão é o
 // hospedeiro, no grupo em que ela é montada. Uma cena que se autoprotegesse
 // daria a impressão de que a fronteira é dela.
+// sessionPattern é o padrão que o chi casa para esta cena — o endereço da
+// sessão, com os dois parâmetros nomeados.
+//
+// Escrito UMA vez e não em cada `Routes*`: a ALE-345 trocou este prefixo em 35
+// registros, e a única razão de terem sido 35 é ele estar copiado. O endereço
+// RESOLVIDO (com os ids) é outra coisa e mora no `routes.Session`.
+const sessionPattern = "/campanhas/{campaignId}/sessoes/{sessionId}"
+
 func Routes(r chi.Router, s Scene) {
-	r.Get("/mesa/{campaignId}/{sessionId}", s.handleTablePage)
-	r.Get("/mesa/{campaignId}/{sessionId}/fluxo", s.handleTableStream)
-	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleTableInitiative)
+	r.Get(sessionPattern, s.handleTablePage)
+	r.Get(sessionPattern+"/fluxo", s.handleTableStream)
+	r.Post(sessionPattern+"/iniciativa", s.handleTableInitiative)
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
 	s.MoveRoutes(r)
@@ -52,7 +62,7 @@ func Routes(r chi.Router, s Scene) {
 	s.DraftRoutes(r)
 }
 
-// O ENDEREÇO da Mesa mora em `web/routes` (`routes.Table`), e não aqui: a cena
+// O ENDEREÇO da cena mora em `web/routes` (`routes.Session`), e não aqui: a cena
 // das campanhas o cita, e ela não alcança uma função deste pacote.
 
 // tableParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
@@ -88,7 +98,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: tableSignalsExpr(),
-		Init:   fmt.Sprintf("@get('/mesa/%d/%d/fluxo')", campaignID, sessionID),
+		Init:   fmt.Sprintf("@get('/campanhas/%d/sessoes/%d/fluxo')", campaignID, sessionID),
 		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um
@@ -269,7 +279,8 @@ func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
 // `master.LoadBestiaryFrom` — a cena diz como montar a si mesma, e o hospedeiro
 // prova que o que está no banco chega até lá.
 func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID int64) (View, int, error) {
-	sess, role, status, err := s.deps.SessionForCaller(ctx, userID, campaignID, sessionID)
+	sess, role, err := s.access.Session(ctx, app.Caller{ID: userID}, campaignID, sessionID)
+	status := statusOf(err)
 	if err != nil {
 		return View{}, status, err
 	}
@@ -354,10 +365,20 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	conectados := live.ConnectedCharacters(membros, presentes)
 	marcaAPresenca(view.Grupo, conectados)
 	if role == "gm" {
-		r := ofViewGm(st, membros, presentes, true, s.deps.SaveFailed(sessionID))
+		r := ofViewGm(st, membros, presentes, true, s.saveFailed(sessionID))
 		view.Mestre = &r
 	}
 	return view, http.StatusOK, nil
+}
+
+// saveFailed junta os DOIS stores numa pergunta só.
+//
+// Para quem está mestrando não existe "o tabuleiro não salvou" e "a fila não
+// salvou": existe "a mesa não está sendo salva". Separar daria à tela uma
+// decisão que ela não tem o que fazer com — os dois têm a mesma causa (o disco)
+// e o mesmo remédio (parar e chamar alguém).
+func (s Scene) saveFailed(sessionID int64) bool {
+	return s.deps.Boards().SaveFailed(sessionID) || s.deps.Sessions().SaveFailed(sessionID)
 }
 
 // tableRoster traduz o roster da campanha nas três coisas que a tela quer: os
@@ -389,7 +410,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 		// entram na história ou não — decisão por CENA, tomada na hora de pôr a
 		// linha na fila —, e NPC nem é membro da campanha: ele entra na
 		// iniciativa por `label` e `initiative`, sem `characterId` (ver
-		// `materializeEntry`). `campaign_members` só tem personagem de jogador, e
+		// `Roster.Entry`). `campaign_members` só tem personagem de jogador, e
 		// o grupo é o grupo.
 		grupo = append(grupo, Member{
 			CharacterID: m.Characterid,
@@ -405,7 +426,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 	if eu != nil {
 		// O bônus é do MOTOR, nunca do template: é a mesma `ComputeSheetV2` que
 		// a ficha inteira usa.
-		if bonus, err := s.deps.InitiativeBonus(ctx, eu.CharacterID); err == nil {
+		if bonus, err := s.queue.Roster().Bonus(ctx, eu.CharacterID); err == nil {
 			eu.Bonus = bonus
 		}
 	}
@@ -465,7 +486,7 @@ func (s Scene) memberDefense(ctx context.Context, characterID int64) string {
 	if err != nil {
 		return "—"
 	}
-	ficha, err := s.deps.ComputedSheet(ctx, row)
+	ficha, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
 	if err != nil {
 		return "—"
 	}

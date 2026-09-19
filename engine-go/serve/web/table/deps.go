@@ -3,8 +3,13 @@ package table
 import (
 	"context"
 	"net/http"
+	"t20engine/app/boards"
 
 	"github.com/a-h/templ"
+
+	"t20engine/app/initiative"
+	"t20engine/app/rest"
+	"t20engine/app/session"
 
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
@@ -32,8 +37,8 @@ type Deps interface {
 	// Catalogs é o motor primado, para computar a ficha de quem senta à mesa.
 	Catalogs() *engine.Catalogs
 	// Boards são os tabuleiros vivos por sessão; Sessions é a fila e a cena.
-	Boards() *board.BoardStore
-	Sessions() *live.SessionStore
+	Boards() *boards.Store
+	Sessions() *session.Store
 	// Presence é quem está online na sala; SSE são os leitores por sessão e
 	// papel; Bus é o que aconteceu na mesa.
 	Presence() *live.PresenceRegistry
@@ -43,86 +48,24 @@ type Deps interface {
 	// o tipo do usuário é do hospedeiro, e uma porta que o devolvesse não é
 	// porta.
 	CurrentUserID(r *http.Request) int64
-	// IsAdmin diz se quem pede administra, para a cena que o rodapé oferece.
-	IsAdminRequester(ctx context.Context, userID int64) bool
 
-	// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR, e não o
-	// `SessionForCaller`: o rascunho acontece quando NÃO há sessão, e usá-lo
-	// aqui exigiria inventar uma para autorizar preparação. É `gm` e não
-	// "membro" — um jogador que abrisse esta tela veria a emboscada de sábado.
+	// PUBLICAR é do hospedeiro, e continua sendo depois da camada de aplicação
+	// (ALE-344). Não é sobra: o `PublishSessionState` conta no contador de
+	// goroutines que o `Shutdown` do servidor espera, e esse contador é do
+	// PROCESSO — um caso de uso que o carregasse estaria segurando o
+	// desligamento.
 	//
-	// Devolve a CAMPANHA e não um booleano porque a cena escreve o nome dela no
-	// "voltar".
-	//
-	// A trava do lugar que já está numa MESA é do domínio (`EditPlace`), e não
-	// desta porta: perguntar "qual é a sessão ativa" não vê o tabuleiro aberto
-	// numa sessão encerrada, que reabre com ele.
-	PlaceDraftCampaign(ctx context.Context, userID, campaignID int64) (campanha sqlcgen.Campaign, status int, err error)
-
-	// SessionForCaller é a trava de acesso à mesa: existe, e quem pede pertence?
-	//
-	// Ela devolve a LINHA da sessão, o papel e o STATUS: a cena desenha os dois
-	// primeiros — o número e o título no cabeçalho, o rodapé só para quem é
-	// mestre — e responde o terceiro, porque quem está do outro lado é um
-	// navegador esperando página.
-	SessionForCaller(ctx context.Context, userID, campaignID, sessionID int64) (sqlcgen.Session, string, int, error)
-
-	// O sufixo `ForTable` existe porque o `*Server` JÁ tem `StartSession`,
-	// `EndSession` e `RestartCombat`, com outra forma: aqueles recebem a LINHA e
-	// devolvem a linha gravada, estes recebem o id e devolvem o estado AO VIVO.
-	// Dois nomes porque são duas perguntas — forçar um só juntaria coisas
-	// diferentes, e o compilador recusaria.
-	StartSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
-	EndSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
-	RestartCombatForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
-	EndSceneForTable(userID, campaignID, sessionID int64) (*live.SessionRuntimeState, error)
-	RestParty(userID, campaignID, sessionID int64, escopo, condicao string) (int, int, error)
-	// SelfInitiativeEntry monta a linha de quem entra na fila com o próprio d20.
-	SelfInitiativeEntry(userID, campaignID, characterID, d20 int64) (live.InitiativeEntry, error)
-	// CloneCreatureBlock é o "chefe que ganha nome": o bloco é um MOLDE que duas
-	// linhas dividem, e clonar só importa quando o mestre vai EDITAR uma delas —
-	// sem a cópia, dar 30 PV ao chefe daria aos outros três zumbis também.
-	//
-	// É o BLOCO e não a ficha: clonar personagem exigiria matricular a cópia na
-	// campanha, e todo membro aparece no painel do Grupo.
-	CloneCreatureBlock(ctx context.Context, creatureID, campaignID int64, nome string) (int64, error)
-	// MaterializeEntry transforma o pedido de linha nova (ficha, NPC, verbete)
-	// na linha de fila que o store aceita.
-	MaterializeEntry(ctx context.Context, userID, campaignID int64, pedido map[string]any) (live.InitiativeEntry, error)
-	// PlayerCombatants são os personagens dos jogadores da campanha, e
-	// PopulateParty põe os que faltam no mapa.
-	PlayerCombatants(ctx context.Context, campaignID int64) ([]Combatant, error)
-	PopulateParty(sessionID int64, quem []Combatant) (*live.SessionRuntimeState, error)
-	// InitiativeBonus e ComputedSheet são a ficha computada que a fila e o
-	// elenco mostram.
-	InitiativeBonus(ctx context.Context, characterID int64) (int64, error)
-	ComputedSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error)
-	// SaveFailed diz se a última gravação desta sessão falhou — tabuleiro ou
-	// fila, porque para quem mestra os dois são "a mesa".
-	//
-	// A cena PERGUNTA a cada quadro em vez de esperar um aviso: o problema vale
-	// enquanto durar, e quem abre a aba dez minutos depois merece vê-lo.
-	SaveFailed(sessionID int64) bool
-	// SpeedsForBoard é o deslocamento de cada peça, que a prévia do movimento lê.
-	SpeedsForBoard(board *board.BoardState) map[string]int
-
-	// SessionDeleted não é o `Sessions().Forget`, que esvazia só o cache da
-	// fila: o tabuleiro ficaria no mapa em memória e a gravação seguinte bateria
-	// na chave estrangeira, acendendo um `Dirty` que nunca mais sai.
-	//
-	// É do HOSPEDEIRO porque são DOIS stores e nenhum conhece o outro.
-	SessionDeleted(sessionID int64)
-
-	// PUBLICAR é do hospedeiro: ele conhece o hub e o barramento, e a cena só
-	// sabe QUANDO alguma coisa mudou.
+	// Os três saem quando os STORES saírem, e não antes: eles são a gravação dos
+	// stores, não um gesto. Ver a nota do `app/` no guia.
 	PublishSessionState(sessionID int64, estado *live.SessionRuntimeState)
 	PublishBoardState(sessionID int64, board *board.BoardState)
 	PublishWhatIsLeft(ctx context.Context, sessionID int64)
+	// CharacterChanged é a regra da FICHA, que a Mesa pede emprestada: avisa a
+	// tela de quem tem aquela ficha aberta. Ela fica aqui porque o gesto que a
+	// dispara — mexer nos vitais de uma linha — ainda é uma chamada de STORE, e
+	// um caso de uso que só notificasse não seria um caso de uso. Ela vai junto
+	// com o store da fila.
 	CharacterChanged(characterID int64)
-
-	// As DUAS escritas que a cena montava em SQL.
-	SaveNotes(ctx context.Context, sessionID int64, texto string) error
-	SaveSessionTitle(ctx context.Context, sessionID int64, titulo string) error
 
 	// PlayerSheet é a ficha EMBUTIDA, pedida PRONTA: montá-la aqui obrigaria a
 	// Mesa a cumprir a `sheetui.Deps` inteira para desenhar um painel. Nulo é
@@ -138,17 +81,6 @@ type Deps interface {
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
 }
 
-// Combatant é quem entra na fila, na forma que a CENA declara: o `combatant` do
-// hospedeiro não é exportado, e tipo não exportado não atravessa fronteira.
-type Combatant struct {
-	CharacterID int64
-	Name        string
-	HpCurrent   int64
-	HpMax       int64
-	MpCurrent   int64
-	MpMax       int64
-}
-
 // Scene é a cena montada, com as dependências dela e o estado que é DELA: as
 // lentes e as abas escolhidas. Elas vivem no servidor e não num sinal do
 // navegador porque o stream não pergunta nada a ninguém.
@@ -156,11 +88,33 @@ type Combatant struct {
 // O `New` é chamado UMA vez, no registro das rotas: duas chamadas dariam dois
 // estados, e metade da mesa não veria a lente da outra metade.
 type Scene struct {
-	deps       Deps
+	deps Deps
+	// lifecycle é o CASO DE USO do ciclo da sessão, e ele chega por parâmetro e
+	// não pela `Deps` (ALE-344).
+	//
+	// A diferença é a razão inteira da camada: o `app/session` fica ABAIXO desta
+	// cena e do `serve/api`, então a cena o importa DIRETO. Não há ciclo para
+	// desviar, e por isso não há interface — cinco entradas que existiam só para
+	// contornar a falta de um lugar saíram com ele.
+	lifecycle session.Lifecycle
+	// party é o CASO DE USO do descanso do grupo, e chega igual: por parâmetro,
+	// porque o `app/` está abaixo desta cena.
+	party rest.Party
+	// queue é o CASO DE USO de quem entra na fila.
+	queue initiative.Queue
+	// access é a TRAVA da sessão, e ela é o MESMO objeto que os casos de uso
+	// usam por dentro (ALE-344). A cena a chama para decidir o que DESENHAR —
+	// o rodapé do mestre, a recusa antes do gesto —, e quem decide se o gesto
+	// pode é o caso de uso. Duas perguntas, uma implementação.
+	access     session.Access
 	lenses     *lenses
 	chosenTabs *chosenTabs
 }
 
-func New(d Deps) Scene {
-	return Scene{deps: d, lenses: newLenses(), chosenTabs: newTabs()}
+func New(d Deps, ciclo session.Lifecycle, grupo rest.Party, fila initiative.Queue) Scene {
+	return Scene{
+		deps: d, lifecycle: ciclo, party: grupo, queue: fila,
+		access: ciclo.Access(),
+		lenses: newLenses(), chosenTabs: newTabs(),
+	}
 }

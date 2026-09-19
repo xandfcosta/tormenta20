@@ -3,6 +3,9 @@ package api
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"t20engine/app"
+	"t20engine/app/initiative"
 	"t20engine/infra/config"
 	"t20engine/infra/db/dbvalue"
 	"testing"
@@ -179,34 +182,42 @@ func TestResolveCombatant(t *testing.T) {
 	seedMember(t, s, campaignID, pc)
 	loose := seedCharacter(t, s, player, "Solto", 5, 5, 0, 0) // not a member
 
-	t.Run("owner resolves with vitals", func(t *testing.T) {
-		got, status, err := s.tableRules().resolveCombatant(ctx, player, campaignID, pc)
-		if err != nil || status != 200 {
-			t.Fatalf("status=%d err=%v", status, err)
+	roster := s.initiativeQueue().Roster()
+
+	t.Run("o dono resolve, com os vitais", func(t *testing.T) {
+		got, err := roster.Combatant(ctx, app.Caller{ID: player}, campaignID, pc)
+		if err != nil {
+			t.Fatalf("o dono foi barrado: %v", err)
 		}
-		want := combatant{characterID: pc, name: "Herói", hpCurrent: 7, hpMax: 12, mpCurrent: 3, mpMax: 8}
+		want := initiative.Combatant{CharacterID: pc, Name: "Herói", HpCurrent: 7, HpMax: 12, MpCurrent: 3, MpMax: 8}
 		if got != want {
-			t.Errorf("got %+v, want %+v", got, want)
+			t.Errorf("veio %+v, queria %+v", got, want)
 		}
 	})
-	t.Run("gm resolves another player's pc", func(t *testing.T) {
-		if _, status, err := s.tableRules().resolveCombatant(ctx, gm, campaignID, pc); status != 200 || err != nil {
-			t.Errorf("gm should resolve: status=%d err=%v", status, err)
+	t.Run("o mestre resolve o personagem de outro jogador", func(t *testing.T) {
+		if _, err := roster.Combatant(ctx, app.Caller{ID: gm}, campaignID, pc); err != nil {
+			t.Errorf("o mestre foi barrado: %v", err)
 		}
 	})
-	t.Run("stranger forbidden", func(t *testing.T) {
-		if _, status, _ := s.tableRules().resolveCombatant(ctx, stranger, campaignID, pc); status != 403 {
-			t.Errorf("status=%d, want 403", status)
+	// As TRÊS recusas são distintas de propósito, e o transporte as traduz em
+	// números diferentes: quem não pertence à mesa não pode descobrir, pela
+	// diferença entre elas, quais personagens existem nela.
+	t.Run("estranho é recusado por não ser dele", func(t *testing.T) {
+		_, err := roster.Combatant(ctx, app.Caller{ID: stranger}, campaignID, pc)
+		if !errors.Is(err, app.ErrForbidden) {
+			t.Errorf("a recusa foi %v, e queria ErrForbidden", err)
 		}
 	})
-	t.Run("non-member character is bad request", func(t *testing.T) {
-		if _, status, _ := s.tableRules().resolveCombatant(ctx, player, campaignID, loose); status != 400 {
-			t.Errorf("status=%d, want 400", status)
+	t.Run("personagem que não é membro é recusado pela REGRA", func(t *testing.T) {
+		_, err := roster.Combatant(ctx, app.Caller{ID: player}, campaignID, loose)
+		if !errors.Is(err, app.ErrRefused) {
+			t.Errorf("a recusa foi %v, e queria ErrRefused", err)
 		}
 	})
-	t.Run("missing character 404", func(t *testing.T) {
-		if _, status, _ := s.tableRules().resolveCombatant(ctx, gm, campaignID, 999999); status != 404 {
-			t.Errorf("status=%d, want 404", status)
+	t.Run("personagem que não existe", func(t *testing.T) {
+		_, err := roster.Combatant(ctx, app.Caller{ID: gm}, campaignID, 999999)
+		if !errors.Is(err, app.ErrNotFound) {
+			t.Errorf("a recusa foi %v, e queria ErrNotFound", err)
 		}
 	})
 }
@@ -225,20 +236,27 @@ func TestSessionForCaller(t *testing.T) {
 		t.Fatalf("seed session: %v", err)
 	}
 
-	t.Run("gm gets session + Role", func(t *testing.T) {
-		got, Role, status, err := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, sess.ID)
-		if err != nil || status != 200 || Role != "gm" || got.ID != sess.ID {
-			t.Errorf("status=%d Role=%q id=%d err=%v", status, Role, got.ID, err)
+	trava := s.sessionLifecycle().Access()
+
+	t.Run("o mestre recebe a sessão e o papel", func(t *testing.T) {
+		got, papel, err := trava.Session(ctx, app.Caller{ID: gm}, campaignID, sess.ID)
+		if err != nil || papel != app.RoleGM || got.ID != sess.ID {
+			t.Errorf("papel=%q id=%d err=%v", papel, got.ID, err)
 		}
 	})
-	t.Run("stranger forbidden before session Load", func(t *testing.T) {
-		if _, _, status, _ := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: stranger}, campaignID, sess.ID); status != 403 {
-			t.Errorf("status=%d, want 403", status)
+	// A ORDEM importa: o estranho é barrado ANTES de a sessão ser lida. Sem
+	// isso, a diferença entre 403 e 404 contaria a quem não pertence à campanha
+	// quais sessões existem nela.
+	t.Run("estranho é barrado antes de a sessão ser lida", func(t *testing.T) {
+		_, _, err := trava.Session(ctx, app.Caller{ID: stranger}, campaignID, sess.ID)
+		if !errors.Is(err, app.ErrForbidden) {
+			t.Errorf("a recusa foi %v, e queria ErrForbidden", err)
 		}
 	})
-	t.Run("missing session 404", func(t *testing.T) {
-		if _, _, status, _ := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, 999999); status != 404 {
-			t.Errorf("status=%d, want 404", status)
+	t.Run("sessão que não existe", func(t *testing.T) {
+		_, _, err := trava.Session(ctx, app.Caller{ID: gm}, campaignID, 999999)
+		if !errors.Is(err, app.ErrNotFound) {
+			t.Errorf("a recusa foi %v, e queria ErrNotFound", err)
 		}
 	})
 }
@@ -302,94 +320,4 @@ func TestEndSceneEndDay(t *testing.T) {
 			t.Errorf("effect should survive a rejected rest, scopes=%v", got)
 		}
 	})
-}
-
-func TestRestVitals(t *testing.T) {
-	s := newTestServer(t)
-	ctx := context.Background()
-	gmID := seedUser(t, s, "gm@t.com")
-	gm := AuthUser{ID: gmID}
-	_ = seedCampaign(t, s, gmID)
-
-	// Level-1 characters: gain = floor(1 × mult) → ruim 0, normal 1, confortavel 2, luxuosa 3.
-	t.Run("luxuosa gains 3, clamped to max", func(t *testing.T) {
-		char := seedCharacter(t, s, gmID, "Ferido", 5, 20, 2, 8)
-		got, status, err := s.tableRules().restVitals(ctx, gm, char, "luxuosa")
-		if err != nil || status != 200 || got.hpCurrent != 8 || got.mpCurrent != 5 {
-			t.Fatalf("got %+v status=%d err=%v, want hp=8 mp=5", got, status, err)
-		}
-	})
-	t.Run("gain clamps at max", func(t *testing.T) {
-		char := seedCharacter(t, s, gmID, "QuaseCheio", 19, 20, 8, 8)
-		got, _, _ := s.tableRules().restVitals(ctx, gm, char, "luxuosa")
-		if got.hpCurrent != 20 || got.mpCurrent != 8 {
-			t.Errorf("got %+v, want hp=20 mp=8 (clamped)", got)
-		}
-	})
-	t.Run("ruim gains nothing at level 1", func(t *testing.T) {
-		char := seedCharacter(t, s, gmID, "Pobre", 5, 20, 2, 8)
-		got, _, _ := s.tableRules().restVitals(ctx, gm, char, "ruim")
-		if got.hpCurrent != 5 || got.mpCurrent != 2 {
-			t.Errorf("got %+v, want unchanged 5/2", got)
-		}
-	})
-	// O EXEMPLO TRABALHADO do livro, p106: "Helior, elfo caçador de 7º nível,
-	// recupera 7 PV e 7 PM com uma noite de sono numa estalagem. Mas, como vive
-	// com o pé na estrada, dormindo ao relento, se acostumou a recuperar apenas
-	// 3 PV e 3 PM." Metade de 7 é 3,5, e o livro diz TRÊS — é o `math.Floor` da
-	// implementação, que os casos de nível 1 nunca exercitavam (floor(0,5) = 0
-	// não distingue arredondar para baixo de truncar de zerar).
-	t.Run("Helior, 7º nível: estalagem devolve 7, relento devolve 3 (p106)", func(t *testing.T) {
-		char := seedCharacterAtLevel(t, s, gmID, "Helior", 7, 1, 40, 1, 40)
-
-		normal, _, _ := s.tableRules().restVitals(ctx, gm, char, "normal")
-		if normal.hpCurrent != 8 || normal.mpCurrent != 8 {
-			t.Errorf("estalagem: %+v, queria 1+7 em PV e PM", normal)
-		}
-
-		ferido := seedCharacterAtLevel(t, s, gmID, "Helior ao relento", 7, 1, 40, 1, 40)
-		ruim, _, _ := s.tableRules().restVitals(ctx, gm, ferido, "ruim")
-		if ruim.hpCurrent != 4 || ruim.mpCurrent != 4 {
-			t.Errorf("relento: %+v, queria 1+3 em PV e PM (metade de 7 = 3, não 4)", ruim)
-		}
-	})
-
-	t.Run("unknown condition falls back to normal (gain 1)", func(t *testing.T) {
-		char := seedCharacter(t, s, gmID, "Default", 5, 20, 2, 8)
-		got, _, _ := s.tableRules().restVitals(ctx, gm, char, "bogus")
-		if got.hpCurrent != 6 || got.mpCurrent != 3 {
-			t.Errorf("got %+v, want 6/3", got)
-		}
-	})
-}
-
-func TestListMemberHelpers(t *testing.T) {
-	s := newTestServer(t)
-	ctx := context.Background()
-	gm := seedUser(t, s, "gm@t.com")
-	p1 := seedUser(t, s, "p1@t.com")
-	p2 := seedUser(t, s, "p2@t.com")
-	campaignID := seedCampaign(t, s, gm)
-	pcA := seedCharacter(t, s, p1, "A", 10, 10, 4, 4)
-	pcB := seedCharacter(t, s, p2, "B", 6, 8, 2, 2)
-	npc := seedCharacter(t, s, gm, "NPC", 20, 20, 0, 0)
-	seedMember(t, s, campaignID, pcA)
-	seedMember(t, s, campaignID, pcB)
-	seedMember(t, s, campaignID, npc)
-
-	// TRÊS e não dois, e o NPC entra: não há filtro por papel. A coluna `role`
-	// nunca teve outro valor além de `'player'` em produção, e esperar 2 seria um
-	// verde sobre um estado que só a bancada sabia montar.
-	players, err := s.tableRules().listPlayerCombatants(ctx, campaignID)
-	if err != nil || len(players) != 3 {
-		t.Fatalf("players=%d err=%v, want 3", len(players), err)
-	}
-	if players[0].name != "A" || players[0].hpMax != 10 || players[1].name != "B" {
-		t.Errorf("unexpected players: %+v", players)
-	}
-
-	ids, err := s.tableRules().listMemberCharacterIds(ctx, campaignID)
-	if err != nil || len(ids) != 3 {
-		t.Fatalf("ids=%v err=%v, want 3 (players + gm entry)", ids, err)
-	}
 }

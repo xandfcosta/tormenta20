@@ -30,7 +30,7 @@ import (
 // gastei?" —, que uma perna medida sozinha não responde.
 
 func (s Scene) MovePreviewRoutes(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
+	base := sessionPattern + "/tabuleiro/{tokenId}"
 	r.Post(base+"/previa", s.handlePreviewMove)
 }
 

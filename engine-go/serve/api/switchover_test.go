@@ -11,18 +11,25 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// Entrar numa sessão é entrar na Mesa em Datastar.
+// Entrar numa sessão leva à CENA DA SESSÃO.
 //
 // É o guarda de uma linha só de produção — quatro `href` — e ainda assim o mais
 // fácil de perder: um caminho que existe e que gesto nenhum percorre é
 // indistinguível de um que não existe.
 //
-// O que se prende é a NEGATIVA junto com a positiva: achar `/mesa/` numa
-// página não prova que o link velho saiu — as duas rotas cabem no mesmo HTML, e
-// foi assim que a tela conviveu com as duas durante toda a migração.
+// # A metade negativa saiu com o terreno dela (ALE-345)
+//
+// Aqui havia uma segunda asserção: que nenhuma porta escrevesse
+// `/campanhas/{c}/sessoes/{s}`, que era o endereço da SPA. Ele é o endereço da
+// CENA desde a ALE-345 — o `/mesa/` foi embora porque inventava uma entidade
+// que o modelo não tem, e o caminho da SPA estava vago desde que ela foi
+// apagada (ALE-314). Manter a negativa seria proibir o destino certo.
+//
+// A negativa que SOBRA é a do outro teste, e ela ainda discrimina:
+// `/campaigns/` em inglês nunca foi rota deste servidor.
 
 // asPortasParaASessao são as três cenas de onde se entra numa sessão. Uma
-// esquecida é uma porta que continua levando para a tela antiga, e ninguém nota
+// esquecida é uma porta que continua levando para lugar nenhum, e ninguém nota
 // até tentar jogar por ela.
 func asPortasParaASessao(campanha int64) []struct{ Nome, Caminho string } {
 	id := strconv.FormatInt(campanha, 10)
@@ -33,7 +40,7 @@ func asPortasParaASessao(campanha int64) []struct{ Nome, Caminho string } {
 	}
 }
 
-func TestEveryDoorLeadsToTheDatastarTable(t *testing.T) {
+func TestEveryDoorLeadsToTheSessionScene(t *testing.T) {
 	s, dono := hubFixture(t)
 	campanha := seedCampaign(t, s, dono)
 	sessao := seedSession(t, s, campanha)
@@ -43,24 +50,16 @@ func TestEveryDoorLeadsToTheDatastarTable(t *testing.T) {
 		t.Fatalf("iniciar sessão: %v", err)
 	}
 
-	// Escrito à mão nos dois lados, e não derivado da produção: derivar o destino
-	// novo faria o teste concordar com o defeito, e derivar o velho o faria
-	// procurar uma string que ninguém escreve mais.
-	daMesa := "/mesa/" + strconv.FormatInt(campanha, 10) + "/" + strconv.FormatInt(sessao, 10)
-	daSPA := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/sessoes/" + strconv.FormatInt(sessao, 10)
+	// Escrito à mão e não derivado da produção: derivar o destino faria o teste
+	// concordar com o defeito.
+	daSessao := "/campanhas/" + strconv.FormatInt(campanha, 10) +
+		"/sessoes/" + strconv.FormatInt(sessao, 10)
 
 	for _, porta := range asPortasParaASessao(campanha) {
 		html := pedeHub(t, s, dono, http.MethodGet, porta.Caminho).Body.String()
 
-		// O CONTROLE primeiro: a cena chegou e tem a sessão nela. Sem ele, "não
-		// achei o link velho" seria verdade também numa página em branco, num
-		// 403, ou numa cena que deixou de listar a sessão.
-		if !strings.Contains(html, daMesa) {
-			t.Errorf("%s não leva à Mesa em Datastar (%s)", porta.Nome, daMesa)
-			continue
-		}
-		if strings.Contains(html, daSPA) {
-			t.Errorf("%s ainda leva à tela antiga (%s)", porta.Nome, daSPA)
+		if !strings.Contains(html, daSessao) {
+			t.Errorf("%s não leva à cena da sessão (%s)", porta.Nome, daSessao)
 		}
 	}
 }
@@ -79,9 +78,10 @@ func TestTheCampaignRowLeadsThereToo(t *testing.T) {
 	html := pedeHub(t, s, dono, http.MethodGet,
 		"/campanhas/"+strconv.FormatInt(campanha, 10)).Body.String()
 
-	daMesa := "/mesa/" + strconv.FormatInt(campanha, 10) + "/" + strconv.FormatInt(sessao, 10)
-	if !strings.Contains(html, daMesa) {
-		t.Errorf("a linha da crônica não leva à Mesa em Datastar (%s)", daMesa)
+	daSessao := "/campanhas/" + strconv.FormatInt(campanha, 10) +
+		"/sessoes/" + strconv.FormatInt(sessao, 10)
+	if !strings.Contains(html, daSessao) {
+		t.Errorf("a linha da crônica não leva à cena da sessão (%s)", daSessao)
 	}
 	if strings.Contains(html, "/campaigns/") {
 		t.Error("a crônica ainda tem um caminho para a tela antiga")

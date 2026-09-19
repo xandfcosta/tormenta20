@@ -40,7 +40,6 @@ botaoDoAcervo
 Caixa
 CAIXA
 caminho
-caminhoDeExcluir
 campanha
 campanhaAberta
 CAMPO
@@ -227,7 +226,6 @@ semComentario
 semLivro
 semOsComentarios
 sessao
-sessaoDoBanco
 sinalQueAbre
 sinalQueFecha
 stanceRepeatedSem

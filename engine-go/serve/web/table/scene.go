@@ -28,7 +28,7 @@ import (
 // Por isso o rótulo é "Encerrar" e não "Fechar" — fechar sugere perder.
 
 func (s Scene) SceneRoutes(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
+	base := sessionPattern + "/tabuleiro"
 	r.Post(base+"/abrir", s.gmBoardCommand(openBoard))
 	r.Post(base+"/encerrar", s.gmBoardCommand(endBoard))
 	r.Post(base+"/lugares/{placeId}/reabrir", s.gmBoardCommand(reopenPlace))

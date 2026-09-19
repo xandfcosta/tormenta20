@@ -5,8 +5,9 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O CICLO DA SESSÃO na tela. A regra mora no `table_session_lifecycle.go` e o
-// caminho no `session.go`; aqui é o desenho.
+// O CICLO DA SESSÃO na tela. A DECISÃO mora no `domain/live`
+// (`ChangeToStatus`), a orquestração no `app/session` e o caminho no
+// `session.go`; aqui é o desenho.
 
 // O botão que abre as configurações, e o SAIR ao lado dele.
 //
@@ -96,7 +97,7 @@ templ sessionConfig(v View) {
 				</div>
 				<button
 					type="button"
-					data-on:click={ sessionCommand(v, "titulo") }
+					data-on:click={ sessionTitlePatch(v) }
 					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 				>Salvar</button>
 			</div>
@@ -104,7 +105,7 @@ templ sessionConfig(v View) {
 				@adjustRow("Iniciar sessão", "A mesa passa a ver a partida ao vivo.") {
 					<button
 						type="button"
-						data-on:click={ sessionCommand(v, "iniciar") }
+						data-on:click={ sessionStatusPatch(v, "active") }
 						class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
 					>
 						if v.Status == "ended" {
@@ -119,7 +120,7 @@ templ sessionConfig(v View) {
 				@adjustRow("Encerrar sessão", "A partida sai do ar para a mesa. A campanha e as fichas ficam como estão.") {
 					<button
 						type="button"
-						data-on:click={ "document.getElementById('session-config').close(); " + sessionCommand(v, "encerrar") }
+						data-on:click={ "document.getElementById('session-config').close(); " + sessionStatusPatch(v, "ended") }
 						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 					>Encerrar</button>
 				}
@@ -130,7 +131,7 @@ templ sessionConfig(v View) {
 			@adjustRow("Reiniciar o combate", "Esvazia a fila e os turnos. A partida CONTINUA no ar.") {
 				<button
 					type="button"
-					data-on:click={ sessionCommand(v, "reiniciar") }
+					data-on:click={ restartCombatCommand(v) }
 					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 				>Reiniciar</button>
 			}
@@ -157,8 +158,15 @@ templ sessionConfig(v View) {
 
 // A CONFIRMAÇÃO de excluir, onde o vermelho pertence.
 //
-// Ela é um `form` de verdade porque o destino é outra página: o servidor apaga e
-// redireciona para a crônica. Datastar não entra aqui.
+// # Ela deixou de ser um `form` na ALE-344, e o preço está escrito
+//
+// Era um `form method="post"` com `http.Redirect`, e a razão era boa: o destino
+// é outra página, e formulário navega sozinho. Com o recurso em `DELETE` isso
+// não cabe mais — o elemento `form` do HTML só faz `GET` e `POST` —, então quem
+// navega é o `sse.Redirect` do Datastar.
+//
+// **O que se perdeu é real**: o formulário funcionava com o JavaScript
+// desligado, e este botão não funciona.
 templ confirmDeleteSession(v View) {
 	<dialog
 		id="delete-session"
@@ -170,17 +178,18 @@ templ confirmDeleteSession(v View) {
 		<p class="mt-2 text-sm text-muted-foreground">
 			A fila, o tabuleiro e o histórico desta noite vão junto. As fichas e a campanha ficam como estão. Não dá para desfazer.
 		</p>
-		<form method="post" action={ templ.SafeURL(caminhoDeExcluir(v)) } class="mt-4 flex justify-end gap-2">
+		<div class="mt-4 flex justify-end gap-2">
 			<button
 				type="button"
 				data-on:click="document.getElementById('delete-session').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 			>Cancelar</button>
 			<button
-				type="submit"
+				type="button"
+				data-on:click={ "document.getElementById('delete-session').close(); " + deleteSessionCommand(v) }
 				class="inline-flex min-h-11 items-center rounded-sm bg-destructive px-3 text-sm font-semibold text-destructive-foreground outline-none transition-opacity hover:opacity-90"
 			>Excluir a sessão</button>
-		</form>
+		</div>
 	</dialog>
 }
 

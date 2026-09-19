@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 	"net/http"
+	"t20engine/app"
 
 	"github.com/starfederation/datastar-go/datastar"
 )
@@ -15,8 +16,8 @@ import (
 // GET, corpo JSON nos outros métodos.
 //
 // Só o d20 é lido. Os outros sinais viajam junto porque o Datastar manda todos,
-// e ignorá-los aqui é o mesmo cuidado do `selfInitiativeEntry`, que monta um
-// payload NOVO em vez de escrever no do cliente: um `initiative` que a página
+// e ignorá-los aqui é o mesmo cuidado do `Roster.SelfEntry`, que monta o pedido
+// NOVO em vez de escrever no do cliente: um `initiative` que a página
 // mandasse junto não pode vencer a conta do servidor.
 type tableSignals struct {
 	D20 int64 `json:"d20"`
@@ -61,7 +62,7 @@ func (s Scene) handleTableInitiative(w http.ResponseWriter, r *http.Request) {
 // abrir o SSE, e a ordem é obrigatória (ver o comentário lá em cima).
 func (s Scene) registerInitiativeTable(r *http.Request, campaignID, sessionID, d20 int64) error {
 	userID := s.deps.CurrentUserID(r)
-	if _, _, _, err := s.deps.SessionForCaller(r.Context(), userID, campaignID, sessionID); err != nil {
+	if _, _, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID); err != nil {
 		return err
 	}
 	_, _, eu := s.tableRoster(r.Context(), userID, campaignID)
@@ -70,7 +71,7 @@ func (s Scene) registerInitiativeTable(r *http.Request, campaignID, sessionID, d
 	}
 	// A REGRA: confere o d20 de 1 a 20, pergunta o bônus ao motor e soma. O app
 	// não tem uma segunda — se tivesse, mediria a cópia.
-	entry, err := s.deps.SelfInitiativeEntry(userID, campaignID, eu.CharacterID, d20)
+	entry, err := s.queue.Roster().SelfEntry(r.Context(), app.Caller{ID: userID}, campaignID, eu.CharacterID, d20)
 	if err != nil {
 		return err
 	}

@@ -6,12 +6,13 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"net/http"
 	"t20engine/domain/campaign"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/httpio"
 
+	"t20engine/app"
+	"t20engine/app/session"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -212,44 +213,63 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 // Dois mestres podem então conduzir a iniciativa ao mesmo tempo, que é o custo
 // aceito por deixar o dono do servidor consertar a mesa de um jogador no meio da
 // sessão.
+// # O CORPO mora no `app/session`, e as duas linhas abaixo são tradução
+//
+// A regra é a mesma que o ciclo da sessão usa para autorizar, e ela nasceu
+// duplicada quando o `app/` nasceu (ALE-344). Duas cópias de uma regra de
+// AUTORIZAÇÃO é a pior duplicação que existe: elas divergem em silêncio, e o
+// sintoma é uma superfície deixando entrar quem a outra barra.
+//
+// O que sobra aqui é o que é do TRANSPORTE — o número que o navegador recebe.
 func (rules campaignRules) resolveRole(ctx context.Context, user AuthUser, campaignID int64) (string, int, error) {
-	c, err := rules.queries.GetCampaign(ctx, campaignID)
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
-	}
+	papel, err := rules.access().RoleInCampaign(ctx, callerOf(user), campaignID)
 	if err != nil {
-		return "", http.StatusInternalServerError, errors.New("Could not load campaign")
+		return "", statusForAccess(err), err
 	}
-	return rules.roleIn(ctx, user, c)
+	return papel, http.StatusOK, nil
 }
 
 // roleIn é a mesma regra sobre uma campanha que o chamador JÁ carregou, para o
 // handler que precisa da linha e do papel não a ler duas vezes.
 func (rules campaignRules) roleIn(ctx context.Context, user AuthUser, c sqlcgen.Campaign) (string, int, error) {
-	if c.Ownerid == user.ID || user.IsAdmin {
-		return "gm", http.StatusOK, nil
+	papel, err := rules.access().RoleIn(ctx, callerOf(user), c)
+	if err != nil {
+		return "", statusForAccess(err), err
 	}
-	isMember, _ := rules.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{Campaignid: c.ID, Ownerid: user.ID})
-	if !isMember {
-		return "", http.StatusForbidden, fmt.Errorf("Campaign %d is not accessible", c.ID)
+	return papel, http.StatusOK, nil
+}
+
+func (rules campaignRules) access() session.Access { return session.NewAccess(rules.queries) }
+
+// callerOf traduz o usuário do hospedeiro na forma que o caso de uso recebe: um
+// id e se administra, e nada mais.
+func callerOf(user AuthUser) app.Caller {
+	return app.Caller{ID: user.ID, IsAdmin: user.IsAdmin}
+}
+
+// statusForAccess é a tradução da recusa TIPADA no número do HTTP.
+//
+// Ela mora aqui e não no `app/`: um caso de uso que devolvesse 403 não poderia
+// ser chamado de outro transporte, que é a única coisa que aquela camada compra.
+func statusForAccess(err error) int {
+	switch {
+	case errors.Is(err, app.ErrNotFound):
+		return http.StatusNotFound
+	case errors.Is(err, app.ErrForbidden):
+		return http.StatusForbidden
 	}
-	return "player", http.StatusOK, nil
+	return http.StatusInternalServerError
 }
 
 // loadOwnedCampaign é a regra de campanha SÓ DO DONO, independente de
 // transporte: passa o mestre (dono), e o resto recebe Forbidden. Esta função é o
 // gargalo de meia dúzia de sítios (renomear/apagar, convite, membros, sessões),
 // e é por isso que a exceção do admin custa uma condição só.
+// O corpo mora no `app/session` (ALE-344); aqui sobra o número do HTTP.
 func (rules campaignRules) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64) (sqlcgen.Campaign, int, error) {
-	c, err := rules.queries.GetCampaign(ctx, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return c, http.StatusNotFound, fmt.Errorf("Campaign %d not found", id)
-	}
+	c, err := rules.access().OwnedCampaign(ctx, callerOf(user), id)
 	if err != nil {
-		return c, http.StatusInternalServerError, errors.New("Could not load campaign")
-	}
-	if c.Ownerid != user.ID && !user.IsAdmin {
-		return c, http.StatusForbidden, fmt.Errorf("Campaign %d belongs to another user", id)
+		return c, statusForAccess(err), err
 	}
 	return c, http.StatusOK, nil
 }

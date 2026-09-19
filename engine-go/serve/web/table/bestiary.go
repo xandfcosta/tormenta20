@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"net/http"
+	"t20engine/app"
+	"t20engine/app/initiative"
 	"t20engine/domain/book"
 	"t20engine/serve/web/master"
 	"t20engine/serve/web/ui"
@@ -34,13 +36,13 @@ import (
 
 // tableBestiaryRoute é a base das rotas do painel, montada por mesa.
 func tableBestiaryRoute(campaignID, sessionID int64) string {
-	return fmt.Sprintf("/mesa/%d/%d/bestiario", campaignID, sessionID)
+	return fmt.Sprintf("/campanhas/%d/sessoes/%d/bestiario", campaignID, sessionID)
 }
 
 func (s Scene) TableBestiaryRoutes(r chi.Router) {
-	r.Get("/mesa/{campaignId}/{sessionId}/bestiario", s.handleBestiaryTable)
-	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/tipo/{tipo}", s.handleKindBestiaryTable)
-	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/enviar", s.gmCommand(sendsForTable))
+	r.Get(sessionPattern+"/bestiario", s.handleBestiaryTable)
+	r.Post(sessionPattern+"/bestiario/tipo/{tipo}", s.handleKindBestiaryTable)
+	r.Post(sessionPattern+"/bestiario/enviar", s.gmCommand(sendsForTable))
 }
 
 // forTableBestiary monta a view do painel para esta mesa.
@@ -169,10 +171,12 @@ func sendsForTable(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 
 	var estado *live.SessionRuntimeState
 	for i := 0; i < envio.Copias; i++ {
-		linha, err := st.deps.MaterializeEntry(c.R.Context(), c.User, c.CampaignID, map[string]any{
-			"label": m.Name, "initiative": envio.Iniciativa, "type": "npc",
-			"monsterId": m.ID, "hpCurrent": envio.PV, "hpMax": envio.PV,
-		})
+		iniciativa, pv := int64(envio.Iniciativa), int64(envio.PV)
+		linha, err := st.queue.Roster().Entry(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID,
+			initiative.EntryRequest{
+				Label: m.Name, Initiative: &iniciativa, Kind: "npc",
+				MonsterID: m.ID, HpCurrent: &pv, HpMax: &pv,
+			})
 		if err != nil {
 			return estado, err
 		}
@@ -223,7 +227,8 @@ func (s Scene) tableGmOrRefusal(w http.ResponseWriter, r *http.Request) (int64, 
 	if !ok {
 		return 0, 0, false
 	}
-	_, papel, status, err := s.deps.SessionForCaller(r.Context(), s.deps.CurrentUserID(r), campaignID, sessionID)
+	_, papel, err := s.access.Session(r.Context(), app.Caller{ID: s.deps.CurrentUserID(r)}, campaignID, sessionID)
+	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return 0, 0, false

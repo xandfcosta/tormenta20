@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/app"
 	"t20engine/domain/markdown"
 	"t20engine/serve/web/ui"
 
@@ -20,7 +21,7 @@ import (
 // na mão — o botão escondido é cortesia para quem não pode, nunca a segurança.
 
 func (s Scene) RoutesNote(r chi.Router) {
-	base := "/mesa/{campaignId}/{sessionId}/notas"
+	base := sessionPattern + "/notas"
 	// O MESMO endereço serve a CENA e o comando. Não é economia de rota: a
 	// janela própria existe para o mestre pôr as notas no segundo monitor, e um
 	// endereço que ele possa favoritar é metade do que isso significa.
@@ -53,16 +54,10 @@ func readsNotesClient(r *http.Request) (string, error) {
 	return sinais.Notas, nil
 }
 
-// saveNote escreve a coluna `notes` pelo MESMO `setBuilder` do handler JSON: uma
-// segunda forma de gravar a mesma coluna divergiria no dia em que o `execTouched`
-// mudar, que é quem carimba o `updatedAt`.
-//
-// NÃO PASSA POR `trimOrNull`, e essa é a diferença que importa aqui: aparar o
-// texto a cada 1,2s comeria a linha em branco que o mestre acabou de abrir para
-// escrever o próximo parágrafo. O handler JSON apara porque salva UMA vez, ao
-// fechar; este salva no meio da digitação.
-func (s Scene) saveNote(r *http.Request, sessionID int64, texto string) error {
-	if err := s.deps.SaveNotes(r.Context(), sessionID, texto); err != nil {
+// saveNote pede a gravação ao caso de uso e traduz a falha na frase que o mestre
+// lê. A razão de o texto NÃO ser aparado está lá, junto da escrita.
+func (s Scene) saveNote(r *http.Request, campaignID, sessionID int64, texto string) error {
+	if err := s.lifecycle.SaveNotes(r.Context(), s.callerOf(r), campaignID, sessionID, texto); err != nil {
 		return fmt.Errorf("não deu para salvar as notas: %v", err)
 	}
 	return nil
@@ -105,7 +100,8 @@ func (s Scene) notesCommand(
 		return
 	}
 	userID := s.deps.CurrentUserID(r)
-	_, papel, status, err := s.deps.SessionForCaller(r.Context(), userID, campaignID, sessionID)
+	_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
@@ -124,7 +120,7 @@ func (s Scene) notesCommand(
 		novo, erroDaRegra = transforma(texto)
 	}
 	if erroDeLeitura == nil && erroDaRegra == nil {
-		erroDaRegra = s.saveNote(r, sessionID, novo)
+		erroDaRegra = s.saveNote(r, campaignID, sessionID, novo)
 	}
 	s.respondNotes(w, r, campaignID, sessionID, novo, primeiroErro(erroDeLeitura, erroDaRegra))
 }
@@ -147,7 +143,7 @@ func primeiroErro(erros ...error) error {
 //
 // OS IDS VIAJAM PARA A PRÉVIA: uma `View` sintética com `CampaignID` e
 // `SessionID` ZERO faz cada quadrinho do fragmento remendado apontar para
-// `/mesa/0/0/notas/tarefa/N/marcar`. O sintoma é da pior família desta base: o
+// `/campanhas/0/sessoes/0/notas/tarefa/N/marcar`. O sintoma é da pior família desta base: o
 // PRIMEIRO clique funciona — ele acontece sobre o HTML da carga fria, que tem os
 // ids certos — e do segundo em diante a tela fica muda, com o botão no lugar, o
 // `aria-checked` desenhado e nenhum erro em canto nenhum. O guarda que o prende
@@ -290,7 +286,7 @@ func storeTheWidth() string {
 // grafias do mesmo caminho é como nasce a quarta que diverge — e o `@post` tem
 // guarda de endereço, mas o `window.open` não tem.
 func notesAddress(v View) string {
-	return fmt.Sprintf("/mesa/%d/%d/notas", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("/campanhas/%d/sessoes/%d/notas", v.CampaignID, v.SessionID)
 }
 
 func saveNotes(v View) string {

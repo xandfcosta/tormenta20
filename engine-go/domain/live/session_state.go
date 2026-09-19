@@ -61,7 +61,7 @@ type InitiativeEntry struct {
 type SessionRuntimeState struct {
 	// Seq é a ORDEM da mutação que produziu este instantâneo. Não exportado de
 	// propósito: é metadado de transporte e não pode entrar no fio. O
-	// `encoding/json` ignora campo não exportado, e o `cloneState` o carrega de
+	// `encoding/json` ignora campo não exportado, e o `CloneState` o carrega de
 	// graça porque copia a struct inteira.
 	Seq        uint64
 	Initiative []InitiativeEntry `json:"initiative"`
@@ -77,7 +77,7 @@ type SessionRuntimeState struct {
 	// É campo NOVO e não `TurnIndex >= 0` mal nomeado, que é a resposta mais
 	// barata: ela não sobrevive ao PRIMEIRO instante do fluxo — iniciar a cena
 	// abre a gaveta para o mestre montar a ordem, então "cena iniciada, fila
-	// vazia" é obrigatório, e `advanceTurn` não tem para onde ir com a lista
+	// vazia" é obrigatório, e `AdvanceTurn` não tem para onde ir com a lista
 	// vazia. A recíproca também acontece: oito linhas na fila com `TurnIndex`
 	// −1 é o mestre montando a briga antes de começar.
 	SceneActive bool `json:"sceneActive"`
@@ -204,10 +204,10 @@ func numberedLabel(st *SessionRuntimeState, label string) string {
 	return NextInstanceLabelAmong(usados, label)
 }
 
-// upsertCharacterEntry acrescenta a linha do personagem ou — se ele já está na
+// UpsertCharacterEntry acrescenta a linha do personagem ou — se ele já está na
 // fila — atualiza só a iniciativa dele, que é a rerrolagem, mantendo os PV/PM do
 // meio do combate.
-func upsertCharacterEntry(st *SessionRuntimeState, input InitiativeEntry, newID func() string) error {
+func UpsertCharacterEntry(st *SessionRuntimeState, input InitiativeEntry, newID func() string) error {
 	idx := -1
 	if input.CharacterID != nil {
 		for i := range st.Initiative {
@@ -299,13 +299,39 @@ func RemoveEntry(st *SessionRuntimeState, entryID string) error {
 	return nil
 }
 
-// advanceTurn passa a vez, dando a volta no índice 0 e somando uma rodada. Do
+// AdvanceTurn passa a vez, dando a volta no índice 0 e somando uma rodada. Do
 // pré-combate (turnIndex -1) ele põe o primeiro na vez sem somar rodada.
 //
 // Sem CENA não avança. A guarda não é defensiva: ela é o que dá ao estado uma
 // direção única — turno só existe dentro de cena —, e é dela que o
 // `parseRuntimeBlob` tira o direito de deduzir a cena de um turno em curso.
-func advanceTurn(st *SessionRuntimeState) {
+// CloneState copia o estado para o broadcast: as entradas vão por VALOR e a
+// fatia é recriada. Os vitais `*int64` são compartilhados mas nunca mutados no
+// lugar (patch e delta sempre atribuem ponteiro novo), então o instantâneo é
+// seguro de serializar fora da trava.
+//
+// Por VALOR e não campo a campo: listar campos é uma lista que envelhece, e o
+// campo novo que ficasse de fora continuaria compilando e passaria a zerar o
+// valor em silêncio — na cópia que vai para o fio e para o banco.
+func CloneState(s *SessionRuntimeState) *SessionRuntimeState {
+	out := *s
+	out.Initiative = make([]InitiativeEntry, len(s.Initiative))
+	copy(out.Initiative, s.Initiative)
+	return &out
+}
+
+// AS MUTAÇÕES DA FILA SÃO PÚBLICAS, e isso é a fronteira e não conveniência
+// (ALE-344).
+//
+// Elas eram privadas porque o único chamador morava no mesmo pacote: o STORE.
+// Com ele em `app/session`, onde a orquestração pertence, o que sobra aqui é a
+// regra — e a regra de um pacote de domínio existe para ser chamada de fora.
+// O `domain/board` sempre foi assim: o `AddToken` e os irmãos dele já eram
+// públicos, e a assimetria entre os dois era acidente de história.
+//
+// O que elas NÃO fazem continua sendo o que as define: nenhuma trava, nenhuma
+// gravação, nenhum aviso. Recebem o estado, mudam o estado.
+func AdvanceTurn(st *SessionRuntimeState) {
 	if !st.SceneActive || len(st.Initiative) == 0 {
 		return
 	}
@@ -325,10 +351,10 @@ func advanceTurn(st *SessionRuntimeState) {
 	}
 }
 
-// rewindTurn desfaz um "Próximo turno". Cruzar a virada de volta devolve a
+// RewindTurn desfaz um "Próximo turno". Cruzar a virada de volta devolve a
 // rodada; desfazer o primeiro turno devolve ao pré-combate (turnIndex -1) sem
 // zerar a rodada, porque a rodada 1 JÁ começou e voltar não desfaz isso.
-func rewindTurn(st *SessionRuntimeState) {
+func RewindTurn(st *SessionRuntimeState) {
 	if len(st.Initiative) == 0 || st.TurnIndex < 0 {
 		return
 	}
@@ -358,7 +384,7 @@ func StartScene(st *SessionRuntimeState) {
 // EndScene desliga a cena e devolve o combate ao começo — mas GUARDA a fila.
 //
 // Encerrar não é reiniciar, e essa é a única diferença entre os dois: quem
-// esvazia é o resetInitiative. O mestre que encerra a briga do castelo não pode
+// esvazia é o ResetInitiative. O mestre que encerra a briga do castelo não pode
 // pagar oito goblins digitados de novo para recomeçá-la.
 func EndScene(st *SessionRuntimeState) {
 	st.SceneActive = false
@@ -379,12 +405,12 @@ func EndScene(st *SessionRuntimeState) {
 // papel e o ack do `get-session-state`.
 func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
 	if !st.SceneActive {
-		// Rastreador limpo e não `cloneState` com a lista zerada: a rodada e o
+		// Rastreador limpo e não `CloneState` com a lista zerada: a rodada e o
 		// contador de turnos também são da cena, e "rodada 7, ninguém na fila"
 		// é uma contradição que o jogador leria como defeito.
 		return EmptyRuntimeState()
 	}
-	out := cloneState(st)
+	out := CloneState(st)
 	for i := range out.Initiative {
 		e := &out.Initiative[i]
 		// O PV do GRUPO é o único pool que a mesa vê sem o mestre mandar.
@@ -430,11 +456,11 @@ func StateForRole(role string, st *SessionRuntimeState) *SessionRuntimeState {
 	return RedactForPlayers(st)
 }
 
-// resetInitiative esvazia a fila e desliga a CENA junto: reiniciar é voltar ao
+// ResetInitiative esvazia a fila e desliga a CENA junto: reiniciar é voltar ao
 // ponto de partida, e o ponto de partida é fora de cena com a fila vazia. Deixar
 // a cena ligada aqui produziria o estado "em cena, ninguém na fila" sem ninguém
 // ter pedido por ele.
-func resetInitiative(st *SessionRuntimeState) {
+func ResetInitiative(st *SessionRuntimeState) {
 	st.Initiative = []InitiativeEntry{}
 	st.Round = 0
 	st.TurnIndex = -1
@@ -442,9 +468,9 @@ func resetInitiative(st *SessionRuntimeState) {
 	st.SceneActive = false
 }
 
-// patchEntryVitals grava PV/PM absolutos numa linha, presos ao máximo quando ele
+// PatchEntryVitals grava PV/PM absolutos numa linha, presos ao máximo quando ele
 // existe. A escrita no banco é da camada de store.
-func patchEntryVitals(st *SessionRuntimeState, entryID string, hpCurrent, mpCurrent *int64) error {
+func PatchEntryVitals(st *SessionRuntimeState, entryID string, hpCurrent, mpCurrent *int64) error {
 	idx := FindEntryIndex(st, entryID)
 	if idx < 0 {
 		return fmt.Errorf("Entry %s not found", entryID)
@@ -459,9 +485,9 @@ func patchEntryVitals(st *SessionRuntimeState, entryID string, hpCurrent, mpCurr
 	return nil
 }
 
-// deltaEntryVitals aplica um delta de PV/PM ("sofreu 10 de dano" ⇒ hpDelta -10).
+// DeltaEntryVitals aplica um delta de PV/PM ("sofreu 10 de dano" ⇒ hpDelta -10).
 // Atual ausente conta como 0.
-func deltaEntryVitals(st *SessionRuntimeState, entryID string, hpDelta, mpDelta *int64) error {
+func DeltaEntryVitals(st *SessionRuntimeState, entryID string, hpDelta, mpDelta *int64) error {
 	idx := FindEntryIndex(st, entryID)
 	if idx < 0 {
 		return fmt.Errorf("Entry %s not found", entryID)

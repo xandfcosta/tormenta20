@@ -57,7 +57,7 @@ type Deps interface {
 	// alcançaria o `api`.
 	Join(ctx context.Context, campanhaID, heroiID, quemPede int64, convite string) JoinRefusal
 
-	// O ACERVO DE LUGARES são três perguntas e não o `BoardStore` inteiro: o
+	// O ACERVO DE LUGARES são três perguntas e não o `boards.Store` inteiro: o
 	// store é o vocabulário do domínio AO VIVO, e esta cena não é ao vivo.
 	Places(ctx context.Context, campanhaID int64) []PlaceRow
 	// NewPlace cria o lugar vazio quando ele ainda não existe. Nome repetido
