@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"t20engine/app/boards"
+	"t20engine/app/campaign"
 	"t20engine/app/character"
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
@@ -182,6 +183,29 @@ func (s *Server) characterBirths() character.Births {
 // characterPlays são os gestos da ficha em jogo, montados com o mesmo trio.
 func (s *Server) characterPlays() character.Plays {
 	return character.NewPlays(s.db, s.queries, s.catalogs)
+}
+
+// sessionAccess é a TRAVA de quem alcança campanha e sessão, montada com o que
+// o servidor tem. Ela já era construída duas vezes — dentro do `Lifecycle` e
+// dentro do `campaignRules` —, e é barata: uma cópia de ponteiro.
+// campaignDirectory é o acervo de campanhas: quais existem para quem pede.
+func (s *Server) campaignDirectory() campaign.Directory {
+	return campaign.NewDirectory(s.queries)
+}
+
+// campaignLifecycle é o ciclo de uma campanha: abrir, renomear, cunhar convite,
+// escolher as regras opcionais. Ele recebe a TRAVA e autoriza sozinho.
+func (s *Server) campaignLifecycle() campaign.Lifecycle {
+	return campaign.NewLifecycle(s.db, s.queries, s.sessionAccess())
+}
+
+// campaignSeating senta alguém à mesa: as travas, a cópia do herói e o membro.
+func (s *Server) campaignSeating() campaign.Seating {
+	return campaign.NewSeating(s.db, s.queries)
+}
+
+func (s *Server) sessionAccess() session.Access {
+	return session.NewAccess(s.queries)
 }
 
 func (s *Server) restParty() rest.Party {

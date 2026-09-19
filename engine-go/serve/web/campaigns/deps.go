@@ -6,6 +6,9 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/boards"
+	"t20engine/app/campaign"
+	"t20engine/app/session"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/ui"
@@ -15,11 +18,14 @@ import (
 // um endereço cada — a lista, a campanha aberta, a folha em branco e a carta de
 // entrar — e três delas ESCREVEM.
 //
-// Duas coisas NÃO atravessam esta porta, e as duas por um motivo só: tipo com
-// tag `json:` é a forma de um protocolo, e uma tela que o lesse passaria a
-// depender do formato de um fio que ela não fala. Por isso a cena declara o
-// `ListRow` e o `PlaceRow` dela, e por isso ela pede PERGUNTAS (`SaveText`) em
-// vez de montar SQL.
+// Tipo com tag `json:` NÃO atravessa esta porta: a tag é a forma de um
+// protocolo, e uma tela que a lesse passaria a depender do formato de um fio que
+// ela não fala. Por isso a cena declara o `PlaceRow` dela, e por isso ela pede
+// PERGUNTAS em vez de montar SQL.
+//
+// A lista das campanhas era o outro caso, e deixou de ser: ela virou caso de uso
+// (`campaign.Directory`), e o tipo que a cena declarava para ela deixou de
+// existir — quem chega por parâmetro já vem sem tag nenhuma (ALE-348).
 type Deps interface {
 	// Queries é o banco. O `Queries` continua na porta porque três telas leem e
 	// escrevem as próprias tabelas; o sinal de que ele está no lugar é nenhum
@@ -30,44 +36,7 @@ type Deps interface {
 	// olha a configuração e recebe um e-mail — dois nomes porque são duas
 	// perguntas, e o compilador recusaria um só.
 	RequesterIsAdmin(r *http.Request) bool
-	// List são as campanhas que esta pessoa vê, com o papel dela em cada uma.
-	List(ctx context.Context, userID int64, admin bool) ([]ListRow, error)
-	RoleIn(ctx context.Context, userID int64, c sqlcgen.Campaign) (papel string, membros int, err error)
-	// OwnerNames traduz o dono de cada campanha em nome, para a lista do admin.
-	OwnerNames(ctx context.Context, campanhas []sqlcgen.Campaign, quemPede int64) map[int64]string
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
-	// IgnoredRules é o que o mestre DESLIGOU das regras opcionais.
-	IgnoredRules(ctx context.Context, campanhaID int64) []string
-	SaveIgnoredRules(ctx context.Context, campanhaID int64, regras []string) error
-	// OpenTable abre a mesa já com link de convite. Cunhar é do hospedeiro
-	// porque é `crypto/rand` e é a política de quem entra — e uma mesa que nasce
-	// sem link recusa todo mundo menos o dono.
-	OpenTable(ctx context.Context, donoID int64, nome, descricao string) (id int64, err error)
-	// InviteLink é o link da mesa, ou "" quando ela não tem um — estado NORMAL
-	// em toda campanha aberta antes de o link existir.
-	InviteLink(ctx context.Context, campanhaID int64) string
-	// RotateInvite cunha um novo e derruba o anterior: um gesto só, porque
-	// "nunca teve link" e "quero cortar quem tem" pedem a mesma coisa.
-	RotateInvite(ctx context.Context, campanhaID int64) (string, error)
-	// SaveText grava nome e descrição. Descrição vazia vira NULL no hospedeiro,
-	// para a regra não carregar `database/sql`.
-	SaveText(ctx context.Context, campanhaID int64, nome, descricao string) error
-	// Join devolve o MOTIVO da recusa, não o erro: quem classifica é o
-	// hospedeiro, quem escolhe a frase é a cena. Ler os sentinelas de erro daqui
-	// alcançaria o `api`.
-	Join(ctx context.Context, campanhaID, heroiID, quemPede int64, convite string) JoinRefusal
-
-	// O ACERVO DE LUGARES são três perguntas e não o `boards.Store` inteiro: o
-	// store é o vocabulário do domínio AO VIVO, e esta cena não é ao vivo.
-	Places(ctx context.Context, campanhaID int64) []PlaceRow
-	// NewPlace cria o lugar vazio quando ele ainda não existe. Nome repetido
-	// leva ÀQUELE lugar: o nome é a identidade dele dentro da campanha.
-	NewPlace(ctx context.Context, campanhaID int64, nome, chao string) (int64, error)
-	RemovePlace(ctx context.Context, campanhaID, lugarID int64) error
-	// Grounds são as aparências que um lugar pode ter. Vêm pela porta porque são
-	// do tabuleiro: uma cópia aqui ofereceria um chão que o servidor não conhece
-	// no dia em que a sexta nascer.
-	Grounds() []GroundOption
 
 	// CampaignDeleted é chamada ANTES do `DeleteCampaign`: apagar leva as
 	// sessões por cascata, e depois não há como perguntar quais eram. Sem ela o
@@ -101,58 +70,55 @@ type GroundOption struct {
 	Rotulo string
 }
 
-// ListRow é uma campanha na LISTA, na forma que esta cena precisa.
-type ListRow struct {
-	ID          int64
-	Name        string
-	Description string
-	// Role é o papel de quem pede: `gm` ou `player`.
-	Role string
-	// OwnerName vem preenchido SÓ numa campanha que quem pede não possui — hoje,
-	// um admin vendo as de todo mundo. A tela marca a exceção, não toda linha.
-	OwnerName string
-	// Character é o herói de quem pede NESTA campanha, quando há um.
-	Character *RowCharacter
-}
-
-// RowCharacter é o herói de quem pede numa campanha da lista.
-type RowCharacter struct {
-	ID      int64
-	Name    string
-	Level   int64
-	Classes []sheet.ClassDTO
-}
-
-// JoinRefusal é o MOTIVO de a pessoa não conseguir sentar à mesa.
-//
-// São SEIS valores para as sete travas do hospedeiro, e a diferença é
-// deliberada: "personagem não existe" e "personagem é de outra pessoa" viram a
-// mesma frase, e distinguir diria a um estranho se um id existe.
-type JoinRefusal int
-
-const (
-	// JoinOK é a pessoa sentada.
-	JoinOK JoinRefusal = iota
-	// JoinNoSuchCampaign: o número digitado não é de campanha nenhuma.
-	JoinNoSuchCampaign
-	// JoinNeedsInvite: a mesa é fechada e o convite não serve.
-	JoinNeedsInvite
-	// JoinNotYourHero cobre as DUAS travas de personagem do hospedeiro.
-	JoinNotYourHero
-	// JoinAlreadyHasHero: esta pessoa já tem um herói nesta mesa.
-	JoinAlreadyHasHero
-	// JoinHeroAlreadyThere: este herói já está nesta mesa.
-	JoinHeroAlreadyThere
-	// JoinFailed é qualquer outra coisa, e vira o aviso interno.
-	JoinFailed
-)
-
 // As montagens (`LoadList`, `LoadOne`, `LoadJoin`, `JoinBody`) são EXPORTADAS
 // porque quem prova o caminho banco → tela é a bancada do `api`: este pacote não
 // tem banco, e importar o `db/testdb` com um `*api.Server` seria o ciclo que a
 // divisão existe para evitar.
 
 // Scene é a cena montada com as dependências dela.
-type Scene struct{ deps Deps }
+type Scene struct {
+	deps Deps
+	// access é a TRAVA de quem alcança o quê, e chega por parâmetro e não pela
+	// porta: o `app/session` está ABAIXO desta cena, então ela o importa direto
+	// e não há ciclo para desviar com uma interface. Mesmo desenho que a Mesa e
+	// a ficha já têm.
+	//
+	// Ela entrou no lugar de um `RoleIn` da porta que MENTIA na assinatura: ele
+	// declarava `(papel string, membros int, err error)` e o `int` era um status
+	// HTTP, que a cena descartava com `_`. O nome `membros` ficou anos esperando
+	// alguém usá-lo (ALE-348).
+	access session.Access
+	// acervo responde QUAIS campanhas esta pessoa vê, e com que papel. Ele
+	// entrou no lugar de duas entradas da porta (`List` e `OwnerNames`) que o
+	// adaptador cumpria traduzindo um DTO com tag `json:` — a forma de um fio
+	// que esta tela não fala.
+	acervo campaign.Directory
+	// vida é o CICLO da campanha: abrir, renomear, cunhar convite, escolher as
+	// regras opcionais. Ele AUTORIZA sozinho, e é isso que tirou da cena uma
+	// segunda trava — que discordava da primeira e barrava o administrador
+	// (ALE-348).
+	vida campaign.Lifecycle
+	// assentos senta alguém à mesa: as sete travas, a cópia do herói e o membro,
+	// numa transação. As recusas dele são SENTINELAS que esta cena lê para
+	// escolher a frase — ela podia lê-las porque o `app/` está abaixo dela, e
+	// era isso que faltava quando elas moravam no hospedeiro (ALE-348).
+	assentos campaign.Seating
+	// lugares é o acervo de cenas guardadas da campanha, e ele chega INTEIRO.
+	//
+	// Eram quatro entradas da porta, e a razão escrita para elas era que "o
+	// store é o vocabulário do domínio AO VIVO, e esta cena não é ao vivo". O
+	// argumento caiu com a ALE-344: o `boards.Store` deixou de ser domínio e
+	// virou CASO DE USO, e a Mesa já o recebe assim. Quatro perguntas que só
+	// repassavam viraram uma dependência que diz o que é (ALE-348).
+	lugares *boards.Store
+}
 
-func New(d Deps) Scene { return Scene{deps: d} }
+func New(
+	d Deps, trava session.Access, acervo campaign.Directory,
+	vida campaign.Lifecycle, assentos campaign.Seating, lugares *boards.Store,
+) Scene {
+	return Scene{
+		deps: d, access: trava, acervo: acervo,
+		vida: vida, assentos: assentos, lugares: lugares,
+	}
+}

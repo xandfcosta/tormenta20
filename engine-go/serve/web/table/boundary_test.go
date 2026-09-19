@@ -33,10 +33,9 @@ import (
 //
 // # A tentação tem nome: o `s.db`
 //
-// `title` e `notes` não têm query própria no sqlc, e compor `setBuilder` +
-// `"UPDATE sessions"` aqui dentro é pôr o banco dentro da cena. O
-// `database/sql` fica fora da lista, e não é por precaução: é a tentação
-// MEDIDA.
+// `title` e `notes` não têm query própria no sqlc, e montar o `UPDATE` deles
+// aqui dentro é pôr o banco dentro da cena. O `database/sql` fica fora da
+// lista, e não é por precaução: é a tentação MEDIDA.
 var permitidos = map[string]bool{
 	// O vocabulário do grupo: quem pede e as recusas tipadas.
 	"t20engine/app": true,

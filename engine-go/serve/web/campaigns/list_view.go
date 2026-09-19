@@ -4,6 +4,8 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"t20engine/app"
+	"t20engine/app/campaign"
 	"t20engine/domain/search"
 	"t20engine/serve/web/ui"
 )
@@ -59,7 +61,7 @@ type myCharacter struct {
 
 // LoadList monta a cena.
 func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, busca, papel string) (listView, error) {
-	lista, err := s.deps.List(ctx, euID, admin)
+	lista, err := s.acervo.Visible(ctx, app.Caller{ID: euID, IsAdmin: admin})
 	if err != nil {
 		return listView{}, err
 	}
@@ -74,7 +76,7 @@ func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, busca, pape
 			continue
 		}
 		// Os campos indexados: nome e sinopse.
-		if !search.Matches([]string{c.Name, c.Description}, busca) {
+		if !search.Matches([]string{c.Name, textOrEmpty(c.Description)}, busca) {
 			continue
 		}
 		v.Campanhas = append(v.Campanhas, cardOf(c, vivas))
@@ -94,11 +96,11 @@ func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, busca, pape
 	return v, nil
 }
 
-func cardOf(c ListRow, vivas map[int64]int64) campaignCard {
+func cardOf(c campaign.Seen, vivas map[int64]int64) campaignCard {
 	cartao := campaignCard{
 		ID:        c.ID,
 		Nome:      c.Name,
-		Sinopse:   c.Description,
+		Sinopse:   textOrEmpty(c.Description),
 		Papel:     roleLabel(c.Role, c.OwnerName),
 		Iniciais:  ui.Monogram(c.Name),
 		Gradiente: ui.NameGradient(c.Name),
@@ -153,7 +155,7 @@ func asInt64(v any) (int64, bool) {
 
 // classesInLine: "Arcanista 5 / Guerreiro 2". Sem classe nenhuma cai no nível,
 // que é o que sobra para dizer.
-func classesInLine(c *RowCharacter) string {
+func classesInLine(c *campaign.SeenCharacter) string {
 	partes := make([]string, 0, len(c.Classes))
 	for _, cl := range c.Classes {
 		partes = append(partes, cl.ClassName+" "+strconv.FormatInt(cl.Level, 10))
@@ -184,6 +186,18 @@ func passesRole(papelDaCampanha, filtro string) bool {
 }
 
 func valueOrEmpty(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
+}
+
+// textOrEmpty achata o ponteiro da descrição.
+//
+// O caso de uso a carrega como PONTEIRO porque o banco — e a rota JSON — fazem
+// diferença entre "sem descrição" e "descrição vazia". A TELA não faz: as duas
+// desenham um cartão sem sinopse.
+func textOrEmpty(p *string) string {
 	if p == nil {
 		return ""
 	}

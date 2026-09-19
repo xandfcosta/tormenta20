@@ -80,9 +80,9 @@ func TestTheOnlyOriginPowerIsStillAChoice(t *testing.T) {
 // que a pessoa não tem como resolver, para sempre.
 func TestAnOriginWithoutBenefitsDoesNotDemandTwo(t *testing.T) {
 	f, id := barbaro(t, 1)
-	var set setBuilder
-	set.Add("origin = ?", "Amnésico")
-	if err := set.exec(context.Background(), f.s.db, "UPDATE characters", id); err != nil {
+	if _, err := f.s.db.ExecContext(context.Background(),
+		"UPDATE characters SET origin = ? WHERE id = ?", "Amnésico", id,
+	); err != nil {
 		t.Fatalf("trocar a origem: %v", err)
 	}
 

@@ -10,15 +10,18 @@ import (
 
 // A CENA NÃO IMPORTA O HOSPEDEIRO.
 //
-// É a cena de porta mais larga — ONZE métodos —, e o guarda existe para que a
-// largura pare aqui. A tentação tem nome: **o `s.db`**, porque o caminho curto
-// para qualquer coluna nova é pedir o banco cru de volta.
+// Ela FOI a porta mais larga do app — vinte métodos —, e hoje tem seis: a
+// ALE-348 tirou daqui tudo que era caso de uso. O guarda continua, e o que ele
+// impede é a largura VOLTAR.
 //
-// A resposta certa é a PERGUNTA: `SaveText` existe porque o hospedeiro é que
-// sabe o nome da coluna, que vazio é NULL e que a linha tem um `updatedAt` a
-// tocar. O `Queries` continua permitido porque três das quatro telas leem e
-// escrevem as próprias tabelas — é a concessão da forja e da administração —,
-// e o sinal de que ela está no lugar é nenhum handler tocar banco fora dele.
+// A tentação tem nome: **o `s.db`**, porque o caminho curto para qualquer coluna
+// nova é pedir o banco cru de volta. A resposta certa é a PERGUNTA, e melhor
+// ainda é o CASO DE USO: gravar o texto da campanha não atravessa mais esta
+// porta — ele é `campaign.Lifecycle`, e o SQL mora lá, inteiro e visível.
+//
+// O `Queries` continua permitido porque três das quatro telas leem e escrevem as
+// próprias tabelas — é a concessão da forja e da administração —, e o sinal de
+// que ela está no lugar é nenhum handler tocar banco fora dele.
 //
 // **O `web/characters` na lista é cena lendo cena, e é deliberado.** A lista de
 // campanhas desenha o herói de quem pede em cada mesa, e a linha de classes dele
@@ -26,6 +29,22 @@ import (
 // lugares. A direção continua legal — quem importa é quem desenha depois — e é
 // a mesma concessão que a Mesa faz com o bestiário do `web/master`.
 var permitidos = map[string]bool{
+	// O `app/` NÃO é concessão, é a porta encolhendo (ALE-348): ele está ABAIXO
+	// desta cena, então não há ciclo para desviar e não há interface a declarar.
+	// O vocabulário (`app.Caller`) e a TRAVA (`session.Access`) chegam por
+	// parâmetro do construtor, como na Mesa e na ficha — e cada entrada que vira
+	// caso de uso SAI da `Deps` em vez de ganhar um adaptador novo.
+	"t20engine/app": true,
+	// O `app/boards` é o acervo de LUGARES, e ele entrou INTEIRO no lugar de
+	// quatro entradas da porta que só o repassavam — mesmo desenho que a Mesa
+	// tem desde a ALE-344.
+	"t20engine/app/boards":   true,
+	"t20engine/app/campaign": true,
+	// O `domain/board` é o CATÁLOGO das aparências de um lugar, lido e nunca
+	// copiado: uma lista escrita na cena ofereceria um chão que o servidor não
+	// conhece no dia em que a sexta nascer.
+	"t20engine/domain/board":         true,
+	"t20engine/app/session":          true,
 	"t20engine/domain/campaign":      true, // as REGRAS: nome, descrição, regras opcionais
 	"t20engine/infra/db/sqlcgen":     true, // as linhas do banco, pelo `Queries` da porta
 	"t20engine/infra/wire":           true,
@@ -43,9 +62,9 @@ var permitidos = map[string]bool{
 // reprova o PRÓPRIO guarda — que importa `os` para ler o diretório. **Lista de
 // perigo imaginado envelhece; lista de defeito acontecido, não.**
 //
-// O `database/sql` desta cena é legítimo: ela GRAVA, e o `trimOrNull` traduz
-// vazio para NULL. O que ela não pode é montar a instrução, e isso não é um
-// import — é uma decisão que só a leitura do `SaveText` mostra.
+// O `database/sql` desta cena é legítimo: o `trimOrNull` dela traduz vazio para
+// NULL antes de o valor atravessar. O que ela não pode é montar a instrução, e
+// isso não é um import — é uma decisão que só a leitura do corpo mostra.
 
 func TestTheCampaignsSceneDoesNotImportItsHost(t *testing.T) {
 	arquivos, err := os.ReadDir(".")
@@ -75,7 +94,8 @@ func TestTheCampaignsSceneDoesNotImportItsHost(t *testing.T) {
 				"Acrescentar o import à lista transforma a porta em enfeite — e se %q for\n"+
 				"o `api`, é ciclo, porque ele importa esta cena para montar rota.\n"+
 				"Se a vontade for o banco cru para uma coluna nova, a resposta é outra: a\n"+
-				"porta cresce com a PERGUNTA (ver `SaveText`), não com a tabela.",
+				"porta cresce com a PERGUNTA, e encolhe quando a pergunta vira CASO DE\n"+
+				"USO (ver o `campaign.Lifecycle`). Ela nunca cresce com a tabela.",
 				nome, caminho, caminho)
 		}
 	}

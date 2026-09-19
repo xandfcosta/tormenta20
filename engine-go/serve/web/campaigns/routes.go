@@ -7,7 +7,10 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"t20engine/domain/campaign"
+
+	"t20engine/app"
+	"t20engine/app/campaign"
+	rules "t20engine/domain/campaign"
 	"t20engine/infra/wire"
 
 	"t20engine/serve/web/routes"
@@ -117,7 +120,7 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 		Erros:     wire.FieldErrorMap{},
 	}
 	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campaign/rules.go`.
-	nome, descricaoTexto, erros := campaign.ValidateText(v.Nome, &v.Descricao)
+	nome, descricaoTexto, erros := rules.ValidateText(v.Nome, &v.Descricao)
 	for campo, frases := range erros {
 		v.Erros[campo] = frases
 	}
@@ -126,7 +129,7 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := s.deps.OpenTable(r.Context(), s.deps.CurrentUserID(r), nome, descricaoTexto)
+	id, err := s.vida.Open(r.Context(), s.deps.CurrentUserID(r), nome, descricaoTexto)
 	if err != nil {
 		v.Aviso = ui.NoticeInternal
 		s.writeNewPage(w, r, http.StatusInternalServerError, v)
@@ -202,8 +205,8 @@ func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 	}
 	v.EscolhidoID = heroiID
 
-	if recusa := s.deps.Join(r.Context(), campanhaID, heroiID, s.deps.CurrentUserID(r), token); recusa != JoinOK {
-		v.Erros, v.Aviso = joinRefusalPhrase(recusa)
+	if err := s.assentos.Seat(r.Context(), s.deps.CurrentUserID(r), campanhaID, heroiID, token); err != nil {
+		v.Erros, v.Aviso = joinRefusalPhrase(err)
 		s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
@@ -212,26 +215,31 @@ func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(campanhaID, 10), http.StatusSeeOther)
 }
 
-// joinRefusalPhrase traduz cada MOTIVO de recusa na frase que a pessoa lê.
+// joinRefusalPhrase traduz cada recusa de sentar à mesa na frase que a pessoa lê.
 //
 // Uma frase por recusa, e não um "não foi possível entrar" para tudo: cada uma
 // destas tem uma AÇÃO diferente do outro lado — pedir link novo, conferir o
 // número, escolher outro herói, ou nada, porque já está lá dentro.
 //
-// Ela recebe o `JoinRefusal` desta cena e não o ERRO do hospedeiro: sentinela
-// de erro não atravessa a fronteira. Quem classifica é o hospedeiro, quem
-// escolhe a frase é a cena.
-func joinRefusalPhrase(recusa JoinRefusal) (wire.FieldErrorMap, string) {
-	switch recusa {
-	case JoinNoSuchCampaign:
+// Ela lê os SENTINELAS do caso de uso, e isso é novo: antes eles moravam no
+// hospedeiro, a cena não podia alcançá-los, e o adaptador os traduzia num enum
+// declarado aqui só para atravessar. Com as recusas no `app/`, que está ABAIXO
+// desta cena, o enum do meio deixou de existir (ALE-348).
+//
+// Quem CLASSIFICA continua sendo quem conhece o banco; quem escolhe a FRASE
+// continua sendo a tela. O que mudou é que a classificação não precisa mais de
+// um tipo para viajar.
+func joinRefusalPhrase(err error) (wire.FieldErrorMap, string) {
+	switch {
+	case errors.Is(err, campaign.ErrNoSuchCampaign):
 		return wire.FieldErrorMap{"campaignId": {"Não existe campanha com esse número."}}, ""
-	case JoinNeedsInvite:
+	case errors.Is(err, campaign.ErrNeedsInvite):
 		return wire.FieldErrorMap{}, "Esta mesa é fechada. Peça um link de convite ao mestre."
-	case JoinNotYourHero:
+	case errors.Is(err, campaign.ErrNotYourHero):
 		return wire.FieldErrorMap{"characterId": {"Escolha um herói seu."}}, ""
-	case JoinAlreadyHasHero:
+	case errors.Is(err, campaign.ErrAlreadyHasHero):
 		return wire.FieldErrorMap{"characterId": {"Você já tem um herói nesta mesa."}}, ""
-	case JoinHeroAlreadyThere:
+	case errors.Is(err, campaign.ErrHeroAlreadyThere):
 		return wire.FieldErrorMap{"characterId": {"Esse herói já está nesta mesa."}}, ""
 	default:
 		return wire.FieldErrorMap{}, ui.NoticeInternal
@@ -268,7 +276,7 @@ func (s Scene) handleOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		// O `roleIn` recusa quem não é da mesa, e a recusa dele é 403. Aqui ela
+		// O `Access.RoleIn` recusa quem não é da mesa, e a recusa dele é 403. Aqui ela
 		// vira página e não JSON, mas continua sendo a MESMA regra.
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
@@ -287,16 +295,16 @@ func (s Scene) handleOne(w http.ResponseWriter, r *http.Request) {
 // antigo em qualquer outro lugar que o mostrasse. Recarregar é o que garante
 // que a tela inteira fale do mesmo token.
 //
-// A trava é o `ownerOrRefuse`, a mesma de editar e excluir: gerar link é dar
-// acesso à mesa, então quem não é dono não gera. A tela nem oferece o botão a um
-// jogador — mas isso é UX, e a fronteira é esta linha.
+// A trava é a do CASO DE USO, a mesma de editar: gerar link é dar acesso à
+// mesa, então quem não é dono não gera. A tela nem oferece o botão a um jogador
+// — mas isso é UX, e a fronteira é o `Access.OwnedCampaign`.
 func (s Scene) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
-	id, _, ok := s.ownerOrRefuse(w, r)
+	id, quem, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
-	if _, err := s.deps.RotateInvite(r.Context(), id); err != nil {
-		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
+	if _, err := s.vida.RotateInvite(r.Context(), quem, id); err != nil {
+		refuse(w, err)
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
@@ -307,7 +315,7 @@ func (s Scene) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 // A recusa REDESENHA a aba de configuração com o que foi digitado, como a folha
 // em branco — e pela mesma razão: a descrição é o campo caro de reescrever.
 func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
-	id, eu, ok := s.ownerOrRefuse(w, r)
+	id, quem, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
@@ -320,9 +328,9 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 	// A MESMA regra da folha em branco e da rota JSON: três telas, uma função. E
 	// uma FRASE também — as mensagens moram no `campaign`, porque quem lê é o
 	// mestre e não o programa.
-	nome, descricaoTexto, erros := campaign.ValidateText(nomeBruto, &descricaoBruta)
+	nome, descricaoTexto, erros := rules.ValidateText(nomeBruto, &descricaoBruta)
 	if len(erros) > 0 {
-		v, erroAoLer := s.LoadOne(r.Context(), eu, s.deps.RequesterIsAdmin(r), id, "config")
+		v, erroAoLer := s.LoadOne(r.Context(), quem.ID, quem.IsAdmin, id, "config")
 		if erroAoLer != nil {
 			http.Error(w, erroAoLer.Error(), http.StatusInternalServerError)
 			return
@@ -341,8 +349,8 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 	// cena com o banco dentro. O hospedeiro sabe que a coluna se chama
 	// `description`, que vazio é NULL e que a linha tem um `updatedAt` a tocar;
 	// a cena sabe que o mestre renomeou a mesa.
-	if err := s.deps.SaveText(r.Context(), id, nome, descricaoTexto); err != nil {
-		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
+	if err := s.vida.Rename(r.Context(), quem, id, nome, descricaoTexto); err != nil {
+		refuse(w, err)
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
@@ -350,8 +358,14 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 
 // handleDelete apaga a crônica e devolve ao livro.
 func (s Scene) handleDelete(w http.ResponseWriter, r *http.Request) {
-	id, _, ok := s.ownerOrRefuse(w, r)
+	id, quem, ok := s.requesterOf(w, r)
 	if !ok {
+		return
+	}
+	// APAGAR é do dono, e a trava vem do mesmo lugar dos outros gestos — esta
+	// rota não tem caso de uso próprio ainda, então ela pergunta direto.
+	if _, err := s.access.OwnedCampaign(r.Context(), quem, id); err != nil {
+		refuse(w, err)
 		return
 	}
 	// ANTES de apagar — ver a razão da ordem na porta.
@@ -371,14 +385,27 @@ func (s Scene) handleDelete(w http.ResponseWriter, r *http.Request) {
 // perderia a posição de quem está lendo. Excluir e salvar LEVAM embora a
 // página, então lá o formulário de verdade é o certo.
 func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
-	id, eu, ok := s.ownerOrRefuse(w, r)
+	id, quem, ok := s.requesterOf(w, r)
 	if !ok {
+		return
+	}
+	// A TRAVA VEM ANTES DO ESCRITOR DE SSE, e a ordem é o caso inteiro: o
+	// `NewSSE` escreve o cabeçalho na hora em que existe, e depois disso o
+	// status não muda mais — um `http.Error` depois dele sai como 200 com o
+	// texto no corpo do fluxo. Medido: com a recusa depois, o jogador recebia
+	// 200 e o guarda que exige 403 reprovava.
+	//
+	// Perguntar aqui NÃO é uma segunda opinião: é o mesmo `Access` que o caso de
+	// uso pergunta, e ele continua perguntando lá — o que muda é só o INSTANTE,
+	// porque esta rota perde o direito de responder quando o fluxo abre.
+	if _, err := s.access.OwnedCampaign(r.Context(), quem, id); err != nil {
+		refuse(w, err)
 		return
 	}
 	regra := chi.URLParam(r, "regra")
 	sse := datastar.NewSSE(w, r)
 
-	atuais := s.deps.IgnoredRules(r.Context(), id)
+	atuais := s.vida.IgnoredRules(r.Context(), id)
 	var desejadas []string
 	if slices.Contains(atuais, regra) {
 		// Estava DESLIGADA: religar é tirá-la do conjunto de exceções.
@@ -392,17 +419,17 @@ func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
 	}
 	// A validação é a MESMA da rota JSON: regra que o motor não conhece é
 	// recusada mesmo vindo de um caminho de tela.
-	normalizadas, msg := campaign.NormalizeIgnoredRules(desejadas)
+	normalizadas, msg := rules.NormalizeIgnoredRules(desejadas)
 	if msg != "" {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": msg})
 		return
 	}
-	if err := s.deps.SaveIgnoredRules(r.Context(), id, normalizadas); err != nil {
+	if err := s.vida.SaveIgnoredRules(r.Context(), quem, id, normalizadas); err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
 	}
 
-	v, err := s.LoadOne(r.Context(), eu, s.deps.RequesterIsAdmin(r), id, "config")
+	v, err := s.LoadOne(r.Context(), quem.ID, quem.IsAdmin, id, "config")
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
@@ -416,27 +443,40 @@ func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
 	_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ""})
 }
 
-// ownerOrRefuse resolve o id e exige que quem pede seja o DONO.
+// requesterOf resolve o id da campanha e diz QUEM está pedindo.
 //
-// As três ações desta aba são de mestre, e a trava é aqui e não na tela: a tela
-// não mostra a aba para jogador, mas isso é UX — quem postar na mão leva 403.
-func (s Scene) ownerOrRefuse(w http.ResponseWriter, r *http.Request) (int64, int64, bool) {
+// As três ações desta aba são de mestre, e quem trava é o CASO DE USO: esta
+// função não autoriza nada.
+//
+// Ela TINHA a trava, e a trava era uma segunda opinião: comparava o id do dono
+// com o de quem pede, sem a condição do administrador que o
+// `Access.OwnedCampaign` tem. O efeito era a cena MOSTRAR a aba de configuração
+// ao admin — porque o papel dele é `gm` em qualquer mesa — e devolver 403 quando
+// ele salvava. Duas cópias de uma regra de autorização divergem em silêncio
+// (ALE-348).
+func (s Scene) requesterOf(w http.ResponseWriter, r *http.Request) (int64, app.Caller, bool) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, "id inválido", http.StatusBadRequest)
-		return 0, 0, false
+		return 0, app.Caller{}, false
 	}
-	eu := s.deps.CurrentUserID(r)
-	c, err := s.deps.Queries().GetCampaign(r.Context(), id)
-	if err != nil {
+	return id, app.Caller{ID: s.deps.CurrentUserID(r), IsAdmin: s.deps.RequesterIsAdmin(r)}, true
+}
+
+// refuse traduz a recusa TIPADA do caso de uso no número que o navegador
+// entende, e na frase que o mestre lê.
+//
+// A tradução mora aqui porque ela é do TRANSPORTE: o `app/` não conhece HTTP, e
+// é isso que o deixa ser chamado de outro lugar.
+func refuse(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, app.ErrNotFound):
 		http.Error(w, "Campanha não encontrada", http.StatusNotFound)
-		return 0, 0, false
-	}
-	if c.Ownerid != eu {
+	case errors.Is(err, app.ErrForbidden):
 		http.Error(w, "Só quem mestra pode mudar a crônica.", http.StatusForbidden)
-		return 0, 0, false
+	default:
+		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 	}
-	return id, eu, true
 }
 
 // ── o ACERVO DE LUGARES ──────────────────────────────────────────────────────
@@ -452,11 +492,16 @@ func (s Scene) ownerOrRefuse(w http.ResponseWriter, r *http.Request) (int64, int
 // é a identidade do lugar dentro da campanha. A tela avisa disso antes, no
 // diálogo — a surpresa seria descobrir depois de montar meia cripta.
 func (s Scene) handleNewPlace(w http.ResponseWriter, r *http.Request) {
-	id, _, ok := s.ownerOrRefuse(w, r)
+	id, quem, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
-	lugarID, err := s.deps.NewPlace(r.Context(), id, r.PostFormValue("name"), r.PostFormValue("ground"))
+	if _, err := s.access.OwnedCampaign(r.Context(), quem, id); err != nil {
+		refuse(w, err)
+		return
+	}
+	lugar, err := s.lugares.NewPlace(r.Context(), id, r.PostFormValue("name"), r.PostFormValue("ground"))
+	lugarID := lugar.ID
 	if err != nil {
 		// A RECUSA volta para a aba com a frase no campo, e não numa página de
 		// erro: o que ela diz ("dê um nome ao lugar") é sobre o que a pessoa
@@ -473,8 +518,12 @@ func (s Scene) handleNewPlace(w http.ResponseWriter, r *http.Request) {
 // limpando, e limpar é um gesto que se repete — devolver a lista é devolver a
 // pessoa ao trabalho dela.
 func (s Scene) handleRemovePlace(w http.ResponseWriter, r *http.Request) {
-	id, _, ok := s.ownerOrRefuse(w, r)
+	id, quem, ok := s.requesterOf(w, r)
 	if !ok {
+		return
+	}
+	if _, err := s.access.OwnedCampaign(r.Context(), quem, id); err != nil {
+		refuse(w, err)
 		return
 	}
 	lugarID, err := strconv.ParseInt(chi.URLParam(r, "placeId"), 10, 64)
@@ -482,7 +531,7 @@ func (s Scene) handleRemovePlace(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "id de lugar inválido", http.StatusBadRequest)
 		return
 	}
-	if err := s.deps.RemovePlace(r.Context(), id, lugarID); err != nil {
+	if err := s.lugares.RemovePlace(r.Context(), id, lugarID); err != nil {
 		s.redrawPlacesWithError(w, r, id, err)
 		return
 	}

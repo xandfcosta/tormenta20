@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"slices"
 	"strconv"
+	"t20engine/app"
+	"t20engine/domain/board"
 	"t20engine/infra/wire"
 	"t20engine/serve/web/ui"
 	"time"
@@ -172,9 +174,10 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	if err != nil {
 		return oneView{}, err
 	}
-	// A MESMA regra de acesso da rota JSON e do gateway do socket: dono é "gm",
-	// quem tem personagem na mesa é "player", e o resto não entra.
-	papel, _, err := s.deps.RoleIn(ctx, euID, c)
+	// A MESMA regra de acesso que o ciclo da sessão usa: dono é "gm", quem tem
+	// personagem na mesa é "player", e o resto não entra. Chamada DIRETO, e não
+	// por uma entrada da porta que só a repassava.
+	papel, err := s.access.RoleIn(ctx, app.Caller{ID: euID, IsAdmin: admin}, c)
 	if err != nil {
 		return oneView{}, err
 	}
@@ -183,7 +186,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		ID: c.ID, Nome: c.Name, Descricao: c.Description.String,
 		EhMestre:        papel == "gm",
 		CriadaEm:        shortDate(c.Createdat),
-		RegrasIgnoradas: s.deps.IgnoredRules(ctx, c.ID),
+		RegrasIgnoradas: s.vida.IgnoredRules(ctx, c.ID),
 		Erros:           wire.FieldErrorMap{},
 	}
 	// O nome do DONO só aparece numa campanha que não é de quem está olhando, o
@@ -191,7 +194,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	// e não pelo usuário inteiro, pela mesma razão de sempre: o tipo do usuário
 	// é do hospedeiro.
 	if admin && c.Ownerid != euID {
-		v.DonoOutro = s.deps.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
+		v.DonoOutro = s.acervo.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
 	}
 	v.Abas = oneTabs(v.EhMestre, aba)
 	// O LINK só é LIDO para quem mestra, e essa é a fronteira desta tela: a aba
@@ -199,7 +202,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	// carregar é a regra. Um jogador que forjasse `?tab=config` receberia a
 	// visão geral (ver `oneTabs`), e mesmo assim o link não teria sido lido.
 	if v.EhMestre {
-		if token := s.deps.InviteLink(ctx, c.ID); token != "" {
+		if token := s.vida.InviteOf(ctx, c.ID); token != "" {
 			v.LinkDoConvite = "/campanhas/entrar?token=" + url.QueryEscape(token)
 		}
 	}
@@ -207,8 +210,8 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	// desenhar é UX, não carregar é a decisão. Uma crônica de dois anos tem
 	// dezenas de lugares, e nenhuma outra aba mostra um.
 	if v.EhMestre && v.AbaAtiva() == "lugares" {
-		v.Lugares = s.deps.Places(ctx, c.ID)
-		v.Chaos = s.deps.Grounds()
+		v.Lugares = s.placesOf(ctx, c.ID)
+		v.Chaos = groundOptions()
 	}
 
 	membros, err := s.deps.Queries().ListMembers(ctx, id)
@@ -305,4 +308,39 @@ func readableState(status string) string {
 	default:
 		return "Planejada"
 	}
+}
+
+// placesOf lista o acervo de cenas guardadas, já dizendo qual lugar está numa
+// MESA agora.
+//
+// O casamento é pelo NOME e não pelo id, como o acervo da Mesa já faz: o nome é
+// a identidade do lugar dentro da campanha — é assim que o `Archive` decide se
+// sobrescreve —, e uma cena aberta do zero com o nome de um lugar guardado É
+// aquele lugar, porque é a conta que o arquivamento fará quando ela fechar.
+func (s Scene) placesOf(ctx context.Context, campanhaID int64) []PlaceRow {
+	naMesa := s.lugares.PlacesOnATable(ctx, campanhaID)
+	guardados := s.lugares.Places(ctx, campanhaID)
+	fora := make([]PlaceRow, 0, len(guardados))
+	for _, l := range guardados {
+		fora = append(fora, PlaceRow{
+			ID: l.ID, Nome: l.Name, Pecas: l.Tokens,
+			Quando: l.UpdatedAt, NaMesaID: naMesa[l.Name],
+		})
+	}
+	return fora
+}
+
+// groundOptions são as aparências que um lugar pode ter, na forma do
+// formulário.
+//
+// LIDAS do catálogo e nunca copiadas: uma lista escrita aqui ofereceria um chão
+// que o servidor não conhece no dia em que a sexta nascer. Era esse o argumento
+// para elas atravessarem a porta, e ele continua de pé — o que mudou é que a
+// cena lê o catálogo direto, que é `domain/` e está abaixo dela.
+func groundOptions() []GroundOption {
+	fora := make([]GroundOption, 0, len(board.PlaceGrounds))
+	for _, c := range board.PlaceGrounds {
+		fora = append(fora, GroundOption{ID: c.ID, Rotulo: c.Rotulo})
+	}
+	return fora
 }

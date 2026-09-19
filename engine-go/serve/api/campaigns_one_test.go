@@ -47,7 +47,7 @@ func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 		seedSessao(t, s, campanha, int64(i))
 	}
 
-	v, err := campaigns.New(s.campaignsHost()).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
+	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -82,7 +82,7 @@ func TestTheGmComesFirstInTheCast(t *testing.T) {
 	seedMember(t, s, campanha, jogador)
 	seedMember(t, s, campanha, mestre)
 
-	v, err := campaigns.New(s.campaignsHost()).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
+	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -107,7 +107,7 @@ func TestAPlayerAskingForConfigFallsBackToTheOverview(t *testing.T) {
 	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
 	seedMember(t, s, campanha, heroi)
 
-	v, err := campaigns.New(s.campaignsHost()).LoadOne(context.Background(), visitante, s.ehAdmin(t, visitante), campanha, "config")
+	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), visitante, s.ehAdmin(t, visitante), campanha, "config")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -181,7 +181,7 @@ func TestTheSwitchTogglesWhatIsInForceAndNotTheOpposite(t *testing.T) {
 	rota := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/regras/carga"
 
 	// Nasce EM VIGOR: nenhuma linha no banco significa "a regra vale".
-	v, _ := campaigns.New(s.campaignsHost()).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
+	v, _ := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
 	if !v.RegraEmVigor("carga") {
 		t.Fatal("a regra nasceu desligada — o padrão do livro é ela valer")
 	}
@@ -189,7 +189,7 @@ func TestTheSwitchTogglesWhatIsInForceAndNotTheOpposite(t *testing.T) {
 	if rec := pedeNaCronica(t, s, dono, http.MethodPost, rota, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar respondeu %d", rec.Code)
 	}
-	v, _ = campaigns.New(s.campaignsHost()).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
+	v, _ = campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
 	if v.RegraEmVigor("carga") {
 		t.Error("a regra continua em vigor depois de alternada")
 	}
@@ -197,7 +197,7 @@ func TestTheSwitchTogglesWhatIsInForceAndNotTheOpposite(t *testing.T) {
 	if rec := pedeNaCronica(t, s, dono, http.MethodPost, rota, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar de volta respondeu %d", rec.Code)
 	}
-	v, _ = campaigns.New(s.campaignsHost()).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
+	v, _ = campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
 	if !v.RegraEmVigor("carga") {
 		t.Error("a regra não voltou a valer")
 	}
@@ -214,4 +214,42 @@ func seedSessao(t *testing.T, s *Server, campanhaID, numero int64) int64 {
 		t.Fatalf("seed sessão %d: %v", numero, err)
 	}
 	return sess.ID
+}
+
+// O ADMIN MESTRA EM QUALQUER MESA, e isso vale para EDITAR e não só para VER.
+//
+// A casa decide isso em três lugares: a lista entrega `gm` ao admin, o
+// `Access.RoleIn` também, e o `Access.OwnedCampaign` deixa o admin passar pela
+// mesma porta do dono — é com as ferramentas de mestre que ele vem consertar a
+// mesa de um jogador no meio da sessão.
+//
+// A CENA discordava dos três. Ela tinha trava própria — o id do dono contra o
+// de quem pede, sem a condição do admin —, então ela MOSTRAVA a aba de
+// configuração ao administrador (porque o papel dele é `gm`) e devolvia 403
+// quando ele salvava. Duas cópias de uma regra de autorização divergem em
+// silêncio, e o sintoma é uma superfície deixando entrar quem a outra barra.
+//
+// O CONTROLE é o jogador, e ele vem junto: sem essa metade, o caso ficaria verde
+// sobre uma trava que deixou de recusar qualquer um.
+func TestTheAdminEditsSomeoneElsesCampaignAndAPlayerStillCannot(t *testing.T) {
+	const emailDoAdmin = "chefe@t20.local"
+	s := newTestServer(t, emailDoAdmin)
+	dono := seedUser(t, s, "dono@t20.local")
+	admin := seedUser(t, s, emailDoAdmin)
+	jogador := seedUser(t, s, "jogador@t20.local")
+	campanha := seedCampanha(t, s, dono, "Mesa", "")
+	heroi := seedCharacterAtLevel(t, s, jogador, "Yrla", 4, 10, 14, 2, 6)
+	seedMember(t, s, campanha, heroi)
+	editar := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/editar"
+
+	if rec := pedeNaCronica(t, s, admin, http.MethodPost, editar, "name=Consertada"); rec.Code == http.StatusForbidden {
+		t.Error("o admin levou 403 ao salvar a mesa que a própria cena o deixa abrir como mestre")
+	}
+	if c, _ := s.queries.GetCampaign(context.Background(), campanha); c.Name != "Consertada" {
+		t.Errorf("o nome ficou em %q — a edição do admin não chegou ao banco", c.Name)
+	}
+
+	if rec := pedeNaCronica(t, s, jogador, http.MethodPost, editar, "name=Roubada"); rec.Code != http.StatusForbidden {
+		t.Errorf("o jogador salvou a mesa de outra pessoa: %d", rec.Code)
+	}
 }

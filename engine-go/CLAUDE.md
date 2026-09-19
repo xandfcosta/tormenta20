@@ -30,6 +30,7 @@ engine-go/
 │   ├── boards/   o store dos tabuleiros abertos, com as abas e os lugares
 │   ├── initiative/ quem entra na fila, e com que números
 │   ├── character/ o herói: nascer (`Births`) e jogar (`Plays`)
+│   ├── campaign/ a mesa: quem a vê, quem a abre, quem senta nela
 │   └── rest/     o que expira e o que recupera quando a cena ou o dia acaba
 ├── serve/        O QUE RESPONDE HTTP
 │   ├── api/      a RAIZ DE COMPOSIÇÃO: monta o roteador e cumpre as portas
@@ -114,9 +115,9 @@ CENA é construída".
 vem depois do prefixo: `table_*` é do `tableRules`, `sheet_*` do `sheetRules`,
 `campaign_*` e `account_*` dos outros dois. **Um arquivo, um dono** — o
 `character.go` tinha TRÊS donos, e o arquivo dos membros tinha dois — ele foi
-repartido um por dono, e nenhum dos dois nomes dizia qual (ALE-330). A metade da
-mesa desceu para o `app/initiative` na ALE-344; a de campanha é o
-`campaign_members.go`.
+repartido um por dono, e nenhum dos dois nomes dizia qual (ALE-330). As duas
+metades acabaram descendo: a da mesa para o `app/initiative` na ALE-344, a de
+campanha para o `app/campaign` na ALE-348.
 
 Quem cobra é o `TestEveryAdapterFileCarriesItsPrefix`: ele lê o RECEPTOR dos
 métodos e falha com o nome do arquivo e o do dono. Duas coisas que ele NÃO
@@ -951,20 +952,28 @@ tudo. O `api` monta com `cena.Routes(r, cena.New(s.cenaHost()))`, e é nessa lin
 que o compilador cobra quando a porta deixa de ser cumprida.
 
 **O CASO DE USO não entra pela porta: ele entra por PARÂMETRO** (ALE-344,
-ALE-347). Uma porta existe para desviar de um ciclo — a cena precisa do `api`,
-que importa a cena —, e o `app/` está ABAIXO das duas: não há ciclo, então não
-há interface a declarar. Três cenas já montam assim, e a assinatura diz o que
-elas fazem:
+ALE-347, ALE-348). Uma porta existe para desviar de um ciclo — a cena precisa do
+`api`, que importa a cena —, e o `app/` está ABAIXO das duas: não há ciclo,
+então não há interface a declarar. Quatro cenas já montam assim, e a assinatura
+diz o que elas fazem:
 
 ```go
 table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue())
 forge.New(s.sceneCore(), s.characterBirths())
 sheetui.New(s.sheetHost(), s.characterPlays())
+campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), …)
 ```
 
 O efeito é a porta ENCOLHER em vez de crescer: a da ficha saiu de dezoito
-métodos para oito quando os gestos dela viraram `character.Plays`. Uma entrada
-que vira caso de uso SAI da `Deps` — ela não ganha um adaptador novo.
+métodos para oito, e a de campanhas de VINTE para seis. Uma entrada que vira
+caso de uso SAI da `Deps` — ela não ganha um adaptador novo.
+
+**E o que o `app/` habilita não é só encolher: é a cena poder LER os
+sentinelas.** A porta das campanhas dizia, por escrito, que ler um erro do
+hospedeiro "alcançaria o `api`" — e por isso o adaptador traduzia sete
+sentinelas num enum que a cena declarava só para a classificação atravessar. Com
+as recusas no `app/`, a cena as lê direto e o tipo do meio some. **Recusa que
+vira sentinela do `app/` deixa de precisar de um tipo para viajar** (ALE-348).
 
 Cada `web/*` tem um `boundary_test.go` que recusa import do hospedeiro. Ele não
 existe para pegar o ciclo — esse o compilador já pega —, existe para pegar o
