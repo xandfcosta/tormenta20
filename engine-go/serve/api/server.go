@@ -193,6 +193,12 @@ func (s *Server) campaignDirectory() campaign.Directory {
 	return campaign.NewDirectory(s.queries)
 }
 
+// campaignLifecycle é o ciclo de uma campanha: abrir, renomear, cunhar convite,
+// escolher as regras opcionais. Ele recebe a TRAVA e autoriza sozinho.
+func (s *Server) campaignLifecycle() campaign.Lifecycle {
+	return campaign.NewLifecycle(s.db, s.queries, s.sessionAccess())
+}
+
 func (s *Server) sessionAccess() session.Access {
 	return session.NewAccess(s.queries)
 }

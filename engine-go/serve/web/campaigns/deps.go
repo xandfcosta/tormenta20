@@ -20,7 +20,7 @@ import (
 // Tipo com tag `json:` NÃO atravessa esta porta: a tag é a forma de um
 // protocolo, e uma tela que a lesse passaria a depender do formato de um fio que
 // ela não fala. Por isso a cena declara o `PlaceRow` dela, e por isso ela pede
-// PERGUNTAS (`SaveText`) em vez de montar SQL.
+// PERGUNTAS em vez de montar SQL.
 //
 // A lista das campanhas era o outro caso, e deixou de ser: ela virou caso de uso
 // (`campaign.Directory`), e o tipo que a cena declarava para ela deixou de
@@ -36,22 +36,6 @@ type Deps interface {
 	// perguntas, e o compilador recusaria um só.
 	RequesterIsAdmin(r *http.Request) bool
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
-	// IgnoredRules é o que o mestre DESLIGOU das regras opcionais.
-	IgnoredRules(ctx context.Context, campanhaID int64) []string
-	SaveIgnoredRules(ctx context.Context, campanhaID int64, regras []string) error
-	// OpenTable abre a mesa já com link de convite. Cunhar é do hospedeiro
-	// porque é `crypto/rand` e é a política de quem entra — e uma mesa que nasce
-	// sem link recusa todo mundo menos o dono.
-	OpenTable(ctx context.Context, donoID int64, nome, descricao string) (id int64, err error)
-	// InviteLink é o link da mesa, ou "" quando ela não tem um — estado NORMAL
-	// em toda campanha aberta antes de o link existir.
-	InviteLink(ctx context.Context, campanhaID int64) string
-	// RotateInvite cunha um novo e derruba o anterior: um gesto só, porque
-	// "nunca teve link" e "quero cortar quem tem" pedem a mesma coisa.
-	RotateInvite(ctx context.Context, campanhaID int64) (string, error)
-	// SaveText grava nome e descrição. Descrição vazia vira NULL no hospedeiro,
-	// para a regra não carregar `database/sql`.
-	SaveText(ctx context.Context, campanhaID int64, nome, descricao string) error
 	// Join devolve o MOTIVO da recusa, não o erro: quem classifica é o
 	// hospedeiro, quem escolhe a frase é a cena. Ler os sentinelas de erro daqui
 	// alcançaria o `api`.
@@ -149,8 +133,13 @@ type Scene struct {
 	// adaptador cumpria traduzindo um DTO com tag `json:` — a forma de um fio
 	// que esta tela não fala.
 	acervo campaign.Directory
+	// vida é o CICLO da campanha: abrir, renomear, cunhar convite, escolher as
+	// regras opcionais. Ele AUTORIZA sozinho, e é isso que tirou da cena uma
+	// segunda trava — que discordava da primeira e barrava o administrador
+	// (ALE-348).
+	vida campaign.Lifecycle
 }
 
-func New(d Deps, trava session.Access, acervo campaign.Directory) Scene {
-	return Scene{deps: d, access: trava, acervo: acervo}
+func New(d Deps, trava session.Access, acervo campaign.Directory, vida campaign.Lifecycle) Scene {
+	return Scene{deps: d, access: trava, acervo: acervo, vida: vida}
 }

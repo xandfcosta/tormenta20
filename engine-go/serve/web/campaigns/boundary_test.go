@@ -16,9 +16,9 @@ import (
 // vinte na porta.) A tentação tem nome: **o `s.db`**, porque o caminho curto
 // para qualquer coluna nova é pedir o banco cru de volta.
 //
-// A resposta certa é a PERGUNTA: `SaveText` existe porque o hospedeiro é que
-// sabe o nome da coluna, que vazio é NULL e que a linha tem um `updatedAt` a
-// tocar. O `Queries` continua permitido porque três das quatro telas leem e
+// A resposta certa é a PERGUNTA, e melhor ainda é o CASO DE USO: gravar o texto
+// da campanha não atravessa mais esta porta — ele é `campaign.Lifecycle`, e o
+// SQL mora lá, inteiro e visível (ALE-348). O `Queries` continua permitido porque três das quatro telas leem e
 // escrevem as próprias tabelas — é a concessão da forja e da administração —,
 // e o sinal de que ela está no lugar é nenhum handler tocar banco fora dele.
 //
@@ -53,9 +53,9 @@ var permitidos = map[string]bool{
 // reprova o PRÓPRIO guarda — que importa `os` para ler o diretório. **Lista de
 // perigo imaginado envelhece; lista de defeito acontecido, não.**
 //
-// O `database/sql` desta cena é legítimo: ela GRAVA, e o `trimOrNull` traduz
-// vazio para NULL. O que ela não pode é montar a instrução, e isso não é um
-// import — é uma decisão que só a leitura do `SaveText` mostra.
+// O `database/sql` desta cena é legítimo: o `trimOrNull` dela traduz vazio para
+// NULL antes de o valor atravessar. O que ela não pode é montar a instrução, e
+// isso não é um import — é uma decisão que só a leitura do corpo mostra.
 
 func TestTheCampaignsSceneDoesNotImportItsHost(t *testing.T) {
 	arquivos, err := os.ReadDir(".")
@@ -85,7 +85,8 @@ func TestTheCampaignsSceneDoesNotImportItsHost(t *testing.T) {
 				"Acrescentar o import à lista transforma a porta em enfeite — e se %q for\n"+
 				"o `api`, é ciclo, porque ele importa esta cena para montar rota.\n"+
 				"Se a vontade for o banco cru para uma coluna nova, a resposta é outra: a\n"+
-				"porta cresce com a PERGUNTA (ver `SaveText`), não com a tabela.",
+				"porta cresce com a PERGUNTA, e encolhe quando a pergunta vira CASO DE\n"+
+				"USO (ver o `campaign.Lifecycle`). Ela nunca cresce com a tabela.",
 				nome, caminho, caminho)
 		}
 	}

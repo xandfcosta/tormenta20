@@ -185,7 +185,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		ID: c.ID, Nome: c.Name, Descricao: c.Description.String,
 		EhMestre:        papel == "gm",
 		CriadaEm:        shortDate(c.Createdat),
-		RegrasIgnoradas: s.deps.IgnoredRules(ctx, c.ID),
+		RegrasIgnoradas: s.vida.IgnoredRules(ctx, c.ID),
 		Erros:           wire.FieldErrorMap{},
 	}
 	// O nome do DONO só aparece numa campanha que não é de quem está olhando, o
@@ -201,7 +201,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	// carregar é a regra. Um jogador que forjasse `?tab=config` receberia a
 	// visão geral (ver `oneTabs`), e mesmo assim o link não teria sido lido.
 	if v.EhMestre {
-		if token := s.deps.InviteLink(ctx, c.ID); token != "" {
+		if token := s.vida.InviteOf(ctx, c.ID); token != "" {
 			v.LinkDoConvite = "/campanhas/entrar?token=" + url.QueryEscape(token)
 		}
 	}

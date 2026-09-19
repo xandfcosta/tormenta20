@@ -63,8 +63,9 @@ func editItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) e
 	if err != nil {
 		return err
 	}
-	// A gravação é uma PERGUNTA e não um SQL montado aqui: quem sabe o nome das
-	// colunas é o hospedeiro. Mesma decisão do `SaveText` da cena de campanhas.
+	// A gravação é do CASO DE USO e não um SQL montado aqui: quem sabe o nome
+	// das colunas é ele. Mesma decisão que o `campaign.Lifecycle` tomou com o
+	// texto da campanha.
 	return s.plays.SaveCustomItem(r.Context(), item.ID, nome, quantidade, espacos)
 }
 

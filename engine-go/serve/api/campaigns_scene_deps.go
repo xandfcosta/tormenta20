@@ -2,16 +2,12 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"net/http"
-	"strings"
 	"t20engine/app/boards"
 	"t20engine/app/session"
-	"t20engine/infra/db/dbvalue"
 
 	"t20engine/domain/board"
-	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/campaigns"
 )
 
@@ -42,28 +38,6 @@ type campaignsHost struct {
 
 func (s *Server) campaignsHost() campaignsHost {
 	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules(), boards: s.boards, sessions: s.sessions}
-}
-
-// IgnoredRules são as regras que o mestre DESLIGOU nesta campanha.
-func (h campaignsHost) IgnoredRules(ctx context.Context, campanhaID int64) []string {
-	return h.rules.ignoredRulesOf(ctx, campanhaID)
-}
-
-// SaveIgnoredRules troca o conjunto INTEIRO, e é idempotente de propósito.
-func (h campaignsHost) SaveIgnoredRules(ctx context.Context, campanhaID int64, regras []string) error {
-	return h.rules.saveIgnoredRules(ctx, campanhaID, regras)
-}
-
-// SaveText grava o nome e a descrição da campanha.
-//
-// O SQL mora aqui e não na cena: cena que compõe SQL é cena com o banco dentro.
-// O que atravessa a fronteira é a PERGUNTA — o hospedeiro é que sabe o nome da
-// coluna, que vazio é NULL e que a linha tem um `updatedAt` a tocar.
-func (h campaignsHost) SaveText(ctx context.Context, campanhaID int64, nome, descricao string) error {
-	var set setBuilder
-	set.Add("name = ?", nome)
-	set.Add("description = ?", nullableArg(trimOrNull(&descricao)))
-	return set.execTouched(ctx, h.rules.db, "UPDATE campaigns", campanhaID)
 }
 
 // Join senta alguém à mesa e devolve o MOTIVO da recusa, não o erro.
@@ -104,47 +78,6 @@ func (h campaignsHost) Join(ctx context.Context, campanhaID, heroiID, quemPede i
 // que a administração pede e que olha a CONFIGURAÇÃO. São perguntas diferentes
 // com a mesma cara, e reusar o nome faria uma responder pela outra.
 func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUser(r).IsAdmin }
-
-// OpenTable abre a mesa COM link de convite.
-//
-// Chamar o `CreateCampaign` direto faz a mesa nascer sem link — e sem link ela
-// não aceita ninguém. Cunhar é do hospedeiro: é `crypto/rand` e é a política de
-// quem entra, nenhuma das duas coisas é da tela.
-func (h campaignsHost) OpenTable(
-	ctx context.Context, donoID int64, nome, descricao string,
-) (int64, error) {
-	agora := dbvalue.NowISO()
-	c, err := h.rules.createCampaign(ctx, sqlcgen.CreateCampaignParams{
-		Ownerid: donoID, Name: nome, Description: descricaoOuNulo(descricao),
-		Createdat: agora, Updatedat: agora,
-	})
-	if err != nil {
-		return 0, err
-	}
-	return c.ID, nil
-}
-
-// InviteLink devolve "" quando a mesa não tem link, e isso é estado normal:
-// campanha antiga nasceu sem.
-func (h campaignsHost) InviteLink(ctx context.Context, campanhaID int64) string {
-	return h.rules.inviteOf(ctx, campanhaID)
-}
-
-func (h campaignsHost) RotateInvite(ctx context.Context, campanhaID int64) (string, error) {
-	return h.rules.rotateInvite(ctx, campanhaID)
-}
-
-// descricaoOuNulo traduz o vazio da tela para o NULO do banco.
-//
-// Os dois querem dizer "sem descrição", e a diferença importa numa direção só:
-// gravar string vazia faria a coluna distinguir "não escreveu" de "apagou o que
-// tinha", e a tela não oferece essa diferença a ninguém.
-func descricaoOuNulo(texto string) sql.NullString {
-	if t := strings.TrimSpace(texto); t != "" {
-		return sql.NullString{String: t, Valid: true}
-	}
-	return sql.NullString{}
-}
 
 // CampaignDeleted é a faxina de memória das sessões da campanha.
 func (h campaignsHost) CampaignDeleted(ctx context.Context, campanhaID int64) {

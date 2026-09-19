@@ -227,7 +227,7 @@ func TestTheArchiveIsNotReadOutsideItsTab(t *testing.T) {
 	if _, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt"); err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
-	cena := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory())
+	cena := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle())
 
 	visao, err := cena.LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
 	if err != nil {

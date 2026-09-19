@@ -81,10 +81,10 @@ func TestTheCollectionJoinsTheFiveOrigins(t *testing.T) {
 
 func choiceCom(t *testing.T, f sceneFixture, id int64, poderes, origem string) {
 	t.Helper()
-	var set setBuilder
-	set.Add("classPowers = ?", poderes)
-	set.Add("originChoices = ?", origem)
-	if err := set.exec(context.Background(), f.s.db, "UPDATE characters", id); err != nil {
+	if _, err := f.s.db.ExecContext(context.Background(),
+		"UPDATE characters SET classPowers = ?, originChoices = ? WHERE id = ?",
+		poderes, origem, id,
+	); err != nil {
 		t.Fatalf("semear as escolhas: %v", err)
 	}
 }

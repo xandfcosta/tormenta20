@@ -64,7 +64,8 @@ func TestGeneratingANewLinkDropsTheOldOne(t *testing.T) {
 }
 
 // QUEM NÃO MESTRA NÃO GERA. A tela nem desenha o botão, mas isso é UX: a
-// fronteira é o servidor, e é o mesmo `ownerOrRefuse` de editar e excluir.
+// fronteira é o servidor, e é a mesma trava de editar e excluir — o
+// `Access.OwnedCampaign`, dentro do caso de uso (ALE-348).
 func TestOnlyTheOwnerRotatesTheLink(t *testing.T) {
 	s := newTestServer(t)
 	mestre := seedUser(t, s, "mestre@t20.local")
