@@ -17,7 +17,7 @@ import (
 	// `serve/web/campaigns/routes.go`. O plural, que é o padrão da casa para
 	// desviar da colisão com o domínio, custaria SETE: `app/campaigns` colide
 	// com a CENA (ver o `doc.go` do pacote).
-	regra "t20engine/domain/campaign"
+	rules "t20engine/domain/campaign"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -127,17 +127,20 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	// As DUAS recusas de uma vez, e em pt-BR: a mesma regra respondendo duas
 	// frases diferentes conforme o transporte é o que faz uma delas envelhecer.
-	name, descricaoTexto, erros := regra.ValidateText(body.Name, body.Description)
+	name, descricaoTexto, erros := rules.ValidateText(body.Name, body.Description)
 	if len(erros) > 0 {
 		httpio.WriteValidationError(w, erros)
 		return
 	}
-	descricao := trimOrNull(&descricaoTexto)
-	now := dbvalue.NowISO()
-	c, err := s.campaignRules().createCampaign(r.Context(), sqlcgen.CreateCampaignParams{
-		Ownerid: currentUser(r).ID, Name: name, Description: descricao,
-		Createdat: now, Updatedat: now,
-	})
+	id, err := s.campaignLifecycle().Open(r.Context(), currentUser(r).ID, name, descricaoTexto)
+	if err != nil {
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
+		return
+	}
+	// RELÊ a linha em vez de montar a resposta com o que foi enviado: o caso de
+	// uso cunha o convite DEPOIS do `INSERT`, e a resposta tem de falar da mesa
+	// que existe e não da que foi pedida.
+	c, err := s.queries.GetCampaign(r.Context(), id)
 	if err != nil {
 		httpio.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
 		return

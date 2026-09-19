@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/app"
 	"t20engine/infra/db/dbvalue"
 	"testing"
 
@@ -50,13 +51,18 @@ func (f rulesFixture) Join(t *testing.T, campaignID int64) {
 	}
 }
 
-// putRules chama a REGRA direto, e não uma rota: o que estes casos prendem nunca
-// foi o transporte — é a mais ESTRITA vencendo entre duas mesas, e a ficha
-// avulsa aplicando tudo. A cena das campanhas grava pelo mesmo
-// `saveIgnoredRules`, pela porta, e a AUTORIZAÇÃO é dela. Uma regra, uma camada.
+// putRules chama o CASO DE USO direto, e não uma rota: o que estes casos
+// prendem nunca foi o transporte — é a mais ESTRITA vencendo entre duas mesas,
+// e a ficha avulsa aplicando tudo. A cena das campanhas grava pelo mesmo
+// `SaveIgnoredRules`. Uma regra, uma camada.
+//
+// O dono entra como ADMIN porque a fixture semeia a campanha sem dizer de quem
+// ela é para este caso: o que se mede aqui é a regra opcional, e a trava tem
+// guarda próprio na cena.
 func (f rulesFixture) putRules(t *testing.T, campaignID int64, regras ...string) error {
 	t.Helper()
-	return f.s.campaignRules().saveIgnoredRules(context.Background(), campaignID, regras)
+	return f.s.campaignLifecycle().SaveIgnoredRules(
+		context.Background(), app.Caller{IsAdmin: true}, campaignID, regras)
 }
 
 // cargaIgnorada pergunta ao CARREGAMENTO da ficha, e não à tabela: é o que o

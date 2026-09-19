@@ -199,6 +199,11 @@ func (s *Server) campaignLifecycle() campaign.Lifecycle {
 	return campaign.NewLifecycle(s.db, s.queries, s.sessionAccess())
 }
 
+// campaignSeating senta alguém à mesa: as travas, a cópia do herói e o membro.
+func (s *Server) campaignSeating() campaign.Seating {
+	return campaign.NewSeating(s.db, s.queries)
+}
+
 func (s *Server) sessionAccess() session.Access {
 	return session.NewAccess(s.queries)
 }

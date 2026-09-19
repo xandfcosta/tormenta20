@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"t20engine/app/boards"
 	"t20engine/app/session"
@@ -18,8 +17,10 @@ import (
 // cena e o do hospedeiro. Ler todos de uma vez é o que mostra se a fronteira
 // está no lugar — e o sinal de que está é nenhum deles desenhar nada.
 //
-// Quem os cumpre é o núcleo mais um `campaignRules`, e não o `*Server`: o que
-// esta cena precisa da casa é exatamente "as regras de quem é dono do quê".
+// Quem os cumpre é o NÚCLEO mais o acervo de lugares, e não o `*Server`. O
+// `campaignRules` ainda está aqui por um método só — a faxina de memória de
+// apagar a campanha —, e o que ele já respondeu ("de quem é esta mesa" e "quem
+// pode entrar nela") virou `session.Access` e `campaign.Seating` na ALE-348.
 type campaignsHost struct {
 	sceneCore
 	rules campaignRules
@@ -38,38 +39,6 @@ type campaignsHost struct {
 
 func (s *Server) campaignsHost() campaignsHost {
 	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules(), boards: s.boards, sessions: s.sessions}
-}
-
-// Join senta alguém à mesa e devolve o MOTIVO da recusa, não o erro.
-//
-// Aqui é o único lugar do repositório que conhece as duas listas: os sete
-// sentinelas do `joinTable` e os seis motivos que a cena declara. A cena colapsa
-// "personagem não existe" e "personagem é de outra pessoa" num motivo só, porque
-// as duas viram a mesma frase — e distinguir diria a um estranho se um id
-// existe.
-//
-// Quem CLASSIFICA é o hospedeiro, quem escolhe a FRASE é a cena.
-func (h campaignsHost) Join(ctx context.Context, campanhaID, heroiID, quemPede int64, convite string) campaigns.JoinRefusal {
-	_, err := h.rules.joinTable(ctx, joinRequest{
-		CampanhaID: campanhaID, PersonagemID: heroiID,
-		Convite: convite, Papel: "player", QuemPede: quemPede,
-	})
-	switch {
-	case err == nil:
-		return campaigns.JoinOK
-	case errors.Is(err, errCampanhaInexistente):
-		return campaigns.JoinNoSuchCampaign
-	case errors.Is(err, errConviteExigido):
-		return campaigns.JoinNeedsInvite
-	case errors.Is(err, errPersonagemInexistente), errors.Is(err, errPersonagemDeOutro):
-		return campaigns.JoinNotYourHero
-	case errors.Is(err, errJaTemPersonagem):
-		return campaigns.JoinAlreadyHasHero
-	case errors.Is(err, errAlreadyInCampaign):
-		return campaigns.JoinHeroAlreadyThere
-	default:
-		return campaigns.JoinFailed
-	}
 }
 
 // RequesterIsAdmin diz se QUEM PEDE administra o servidor.

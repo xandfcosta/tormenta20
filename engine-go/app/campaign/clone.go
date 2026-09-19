@@ -1,4 +1,4 @@
-package api
+package campaign
 
 import (
 	"context"
@@ -12,9 +12,9 @@ import (
 //
 // Existe por causa da ALE-156: a entrada na mesa clonava numa transação e
 // inseria o membro em outra, então um `CreateMember` que falhasse deixava a
-// cópia órfã — e a cópia órfã é pior que nada, porque o `campaignHasCopyOf`
-// passa a responder "já está na mesa" e o herói fica impedido de entrar PARA
-// SEMPRE, sem membro nenhum para remover.
+// cópia órfã — e a cópia órfã é pior que nada, porque a deduplicação passa a
+// responder "já está na mesa" e o herói fica impedido de entrar PARA SEMPRE,
+// sem membro nenhum para remover.
 func cloneCharacterTx(ctx context.Context, tx *sql.Tx, sourceID, campaignID int64) (int64, error) {
 	now := dbvalue.NowISO()
 
@@ -35,17 +35,19 @@ SELECT
   activeConditions, ?, ?, ?, ?
 FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 	if err != nil {
-		return 0, fmt.Errorf("clone character row (source %d): %w", sourceID, err)
+		return 0, fmt.Errorf("clonar a ficha do molde %d: %w", sourceID, err)
 	}
 	destID, err := res.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
 
-	// Child tables — INSERT…SELECT copies each row under the new characterId.
-	// Rows with their own createdAt (items, effects, spells) take a fresh `now`.
-	steps := []struct {
-		what string
+	// AS TABELAS FILHAS, uma por `INSERT…SELECT` sob o id novo. As que têm
+	// carimbo próprio — itens, efeitos, magias — levam um `now` fresco: a cópia
+	// nasce agora, e herdar o carimbo do molde faria a mesa dizer que o item
+	// entrou na mochila antes de o herói existir nela.
+	passos := []struct {
+		oQue string
 		sql  string
 		args []any
 	}{
@@ -62,21 +64,11 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		{"spells", `INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
 			SELECT ?, catalogSpellId, prepared, ? FROM character_spells WHERE characterId = ?`, []any{destID, now, sourceID}},
 	}
-	for _, step := range steps {
-		if _, err := tx.ExecContext(ctx, step.sql, step.args...); err != nil {
-			return 0, fmt.Errorf("clone %s (source %d): %w", step.what, sourceID, err)
+	for _, passo := range passos {
+		if _, err := tx.ExecContext(ctx, passo.sql, passo.args...); err != nil {
+			return 0, fmt.Errorf("clonar %s do molde %d: %w", passo.oQue, sourceID, err)
 		}
 	}
 
 	return destID, nil
-}
-
-// campaignHasCopyOf reports whether `sourceID` was already snapshotted into
-// `campaignID` — the snapshot-model dedupe (a template joins a mesa once).
-func (rules campaignRules) campaignHasCopyOf(ctx context.Context, sourceID, campaignID int64) (bool, error) {
-	var exists bool
-	err := rules.db.QueryRowContext(ctx,
-		`SELECT EXISTS(SELECT 1 FROM characters WHERE sourceCharacterId = ? AND campaignId = ?)`,
-		sourceID, campaignID).Scan(&exists)
-	return exists, err
 }

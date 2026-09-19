@@ -36,10 +36,6 @@ type Deps interface {
 	// perguntas, e o compilador recusaria um só.
 	RequesterIsAdmin(r *http.Request) bool
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
-	// Join devolve o MOTIVO da recusa, não o erro: quem classifica é o
-	// hospedeiro, quem escolhe a frase é a cena. Ler os sentinelas de erro daqui
-	// alcançaria o `api`.
-	Join(ctx context.Context, campanhaID, heroiID, quemPede int64, convite string) JoinRefusal
 
 	// O ACERVO DE LUGARES são três perguntas e não o `boards.Store` inteiro: o
 	// store é o vocabulário do domínio AO VIVO, e esta cena não é ao vivo.
@@ -85,31 +81,6 @@ type GroundOption struct {
 	Rotulo string
 }
 
-// ListRow é uma campanha na LISTA, na forma que esta cena precisa.
-// JoinRefusal é o MOTIVO de a pessoa não conseguir sentar à mesa.
-//
-// São SEIS valores para as sete travas do hospedeiro, e a diferença é
-// deliberada: "personagem não existe" e "personagem é de outra pessoa" viram a
-// mesma frase, e distinguir diria a um estranho se um id existe.
-type JoinRefusal int
-
-const (
-	// JoinOK é a pessoa sentada.
-	JoinOK JoinRefusal = iota
-	// JoinNoSuchCampaign: o número digitado não é de campanha nenhuma.
-	JoinNoSuchCampaign
-	// JoinNeedsInvite: a mesa é fechada e o convite não serve.
-	JoinNeedsInvite
-	// JoinNotYourHero cobre as DUAS travas de personagem do hospedeiro.
-	JoinNotYourHero
-	// JoinAlreadyHasHero: esta pessoa já tem um herói nesta mesa.
-	JoinAlreadyHasHero
-	// JoinHeroAlreadyThere: este herói já está nesta mesa.
-	JoinHeroAlreadyThere
-	// JoinFailed é qualquer outra coisa, e vira o aviso interno.
-	JoinFailed
-)
-
 // As montagens (`LoadList`, `LoadOne`, `LoadJoin`, `JoinBody`) são EXPORTADAS
 // porque quem prova o caminho banco → tela é a bancada do `api`: este pacote não
 // tem banco, e importar o `db/testdb` com um `*api.Server` seria o ciclo que a
@@ -138,8 +109,16 @@ type Scene struct {
 	// segunda trava — que discordava da primeira e barrava o administrador
 	// (ALE-348).
 	vida campaign.Lifecycle
+	// assentos senta alguém à mesa: as sete travas, a cópia do herói e o membro,
+	// numa transação. As recusas dele são SENTINELAS que esta cena lê para
+	// escolher a frase — ela podia lê-las porque o `app/` está abaixo dela, e
+	// era isso que faltava quando elas moravam no hospedeiro (ALE-348).
+	assentos campaign.Seating
 }
 
-func New(d Deps, trava session.Access, acervo campaign.Directory, vida campaign.Lifecycle) Scene {
-	return Scene{deps: d, access: trava, acervo: acervo, vida: vida}
+func New(
+	d Deps, trava session.Access, acervo campaign.Directory,
+	vida campaign.Lifecycle, assentos campaign.Seating,
+) Scene {
+	return Scene{deps: d, access: trava, acervo: acervo, vida: vida, assentos: assentos}
 }

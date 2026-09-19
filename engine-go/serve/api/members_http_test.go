@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"t20engine/app/campaign"
 	"t20engine/infra/db/dbvalue"
 	"testing"
 
@@ -84,9 +85,9 @@ func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 }
 
 // A entrada na mesa é UMA transação: se o membro não é criado, a cópia não
-// fica. Cópia órfã é pior que nada — o `campaignHasCopyOf` passa a dizer "já
-// está na mesa" e o herói fica impedido de entrar para sempre, sem membro
-// nenhum para remover.
+// fica. Cópia órfã é pior que nada — a deduplicação passa a dizer "já está na
+// mesa" e o herói fica impedido de entrar para sempre, sem membro nenhum para
+// remover.
 func TestAFailedJoinLeavesNoOrphanSnapshot(t *testing.T) {
 	f := newMemberFixture(t)
 	heroi := seedCharacter(t, f.s, f.owner, "Terceiro Herói", 10, 10, 0, 0)
@@ -122,18 +123,14 @@ func TestJoiningStillWorks(t *testing.T) {
 	}
 }
 
-// addMember chama a REGRA direto, e não a rota: o que estes casos prendem é a
-// TRAVA DE UNICIDADE do `joinTable`, que nunca foi do transporte — a cena das
-// campanhas grava pela mesma porta.
+// addMember chama o CASO DE USO direto, e não a rota: o que estes casos prendem
+// é a TRAVA DE UNICIDADE do `Seat`, que nunca foi do transporte — a cena das
+// campanhas senta pela mesma porta.
 //
 // Devolve ERRO em vez de status porque é a cena que traduz sentinela em FRASE.
 func (f memberFixture) addMember(t *testing.T, caller, campaignID, characterID int64) error {
 	t.Helper()
-	_, err := f.s.campaignRules().joinTable(context.Background(), joinRequest{
-		CampanhaID: campaignID, PersonagemID: characterID,
-		Papel: "player", QuemPede: caller,
-	})
-	return err
+	return f.s.campaignSeating().Seat(context.Background(), caller, campaignID, characterID, "")
 }
 
 func membersOf(t *testing.T, s *Server, campaignID int64) int {
@@ -213,12 +210,12 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	// Quem perde a corrida merece uma RECUSA, e não um erro de banco.
 	//
 	// São DOIS sentinelas, e não um, porque a corrida se perde em dois lugares:
-	// quem chega atrasado na checagem de fora leva `errJaTemPersonagem`, e quem
+	// quem chega atrasado na checagem de fora leva `ErrAlreadyHasHero`, e quem
 	// passa por ela e perde a releitura DENTRO da transação leva
-	// `errAlreadyInCampaign` — a trava dupla funcionando, e não um descuido.
+	// `ErrHeroAlreadyThere` — a trava dupla funcionando, e não um descuido.
 	// Prender só o primeiro fazia este teste reprovar em três de dez corridas.
 	for _, err := range erros {
-		if err != nil && !errors.Is(err, errJaTemPersonagem) && !errors.Is(err, errAlreadyInCampaign) {
+		if err != nil && !errors.Is(err, campaign.ErrAlreadyHasHero) && !errors.Is(err, campaign.ErrHeroAlreadyThere) {
 			t.Errorf("um perdedor recebeu um erro que não é recusa nenhuma: %v", err)
 			break
 		}

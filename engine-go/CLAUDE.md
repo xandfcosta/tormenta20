@@ -114,9 +114,9 @@ CENA é construída".
 vem depois do prefixo: `table_*` é do `tableRules`, `sheet_*` do `sheetRules`,
 `campaign_*` e `account_*` dos outros dois. **Um arquivo, um dono** — o
 `character.go` tinha TRÊS donos, e o arquivo dos membros tinha dois — ele foi
-repartido um por dono, e nenhum dos dois nomes dizia qual (ALE-330). A metade da
-mesa desceu para o `app/initiative` na ALE-344; a de campanha é o
-`campaign_members.go`.
+repartido um por dono, e nenhum dos dois nomes dizia qual (ALE-330). As duas
+metades acabaram descendo: a da mesa para o `app/initiative` na ALE-344, a de
+campanha para o `app/campaign` na ALE-348.
 
 Quem cobra é o `TestEveryAdapterFileCarriesItsPrefix`: ele lê o RECEPTOR dos
 métodos e falha com o nome do arquivo e o do dono. Duas coisas que ele NÃO

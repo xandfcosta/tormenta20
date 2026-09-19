@@ -9,7 +9,8 @@ import (
 	"strings"
 
 	"t20engine/app"
-	"t20engine/domain/campaign"
+	"t20engine/app/campaign"
+	rules "t20engine/domain/campaign"
 	"t20engine/infra/wire"
 
 	"t20engine/serve/web/routes"
@@ -119,7 +120,7 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 		Erros:     wire.FieldErrorMap{},
 	}
 	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campaign/rules.go`.
-	nome, descricaoTexto, erros := campaign.ValidateText(v.Nome, &v.Descricao)
+	nome, descricaoTexto, erros := rules.ValidateText(v.Nome, &v.Descricao)
 	for campo, frases := range erros {
 		v.Erros[campo] = frases
 	}
@@ -204,8 +205,8 @@ func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 	}
 	v.EscolhidoID = heroiID
 
-	if recusa := s.deps.Join(r.Context(), campanhaID, heroiID, s.deps.CurrentUserID(r), token); recusa != JoinOK {
-		v.Erros, v.Aviso = joinRefusalPhrase(recusa)
+	if err := s.assentos.Seat(r.Context(), s.deps.CurrentUserID(r), campanhaID, heroiID, token); err != nil {
+		v.Erros, v.Aviso = joinRefusalPhrase(err)
 		s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
@@ -214,26 +215,31 @@ func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(campanhaID, 10), http.StatusSeeOther)
 }
 
-// joinRefusalPhrase traduz cada MOTIVO de recusa na frase que a pessoa lê.
+// joinRefusalPhrase traduz cada recusa de sentar à mesa na frase que a pessoa lê.
 //
 // Uma frase por recusa, e não um "não foi possível entrar" para tudo: cada uma
 // destas tem uma AÇÃO diferente do outro lado — pedir link novo, conferir o
 // número, escolher outro herói, ou nada, porque já está lá dentro.
 //
-// Ela recebe o `JoinRefusal` desta cena e não o ERRO do hospedeiro: sentinela
-// de erro não atravessa a fronteira. Quem classifica é o hospedeiro, quem
-// escolhe a frase é a cena.
-func joinRefusalPhrase(recusa JoinRefusal) (wire.FieldErrorMap, string) {
-	switch recusa {
-	case JoinNoSuchCampaign:
+// Ela lê os SENTINELAS do caso de uso, e isso é novo: antes eles moravam no
+// hospedeiro, a cena não podia alcançá-los, e o adaptador os traduzia num enum
+// declarado aqui só para atravessar. Com as recusas no `app/`, que está ABAIXO
+// desta cena, o enum do meio deixou de existir (ALE-348).
+//
+// Quem CLASSIFICA continua sendo quem conhece o banco; quem escolhe a FRASE
+// continua sendo a tela. O que mudou é que a classificação não precisa mais de
+// um tipo para viajar.
+func joinRefusalPhrase(err error) (wire.FieldErrorMap, string) {
+	switch {
+	case errors.Is(err, campaign.ErrNoSuchCampaign):
 		return wire.FieldErrorMap{"campaignId": {"Não existe campanha com esse número."}}, ""
-	case JoinNeedsInvite:
+	case errors.Is(err, campaign.ErrNeedsInvite):
 		return wire.FieldErrorMap{}, "Esta mesa é fechada. Peça um link de convite ao mestre."
-	case JoinNotYourHero:
+	case errors.Is(err, campaign.ErrNotYourHero):
 		return wire.FieldErrorMap{"characterId": {"Escolha um herói seu."}}, ""
-	case JoinAlreadyHasHero:
+	case errors.Is(err, campaign.ErrAlreadyHasHero):
 		return wire.FieldErrorMap{"characterId": {"Você já tem um herói nesta mesa."}}, ""
-	case JoinHeroAlreadyThere:
+	case errors.Is(err, campaign.ErrHeroAlreadyThere):
 		return wire.FieldErrorMap{"characterId": {"Esse herói já está nesta mesa."}}, ""
 	default:
 		return wire.FieldErrorMap{}, ui.NoticeInternal
@@ -322,7 +328,7 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 	// A MESMA regra da folha em branco e da rota JSON: três telas, uma função. E
 	// uma FRASE também — as mensagens moram no `campaign`, porque quem lê é o
 	// mestre e não o programa.
-	nome, descricaoTexto, erros := campaign.ValidateText(nomeBruto, &descricaoBruta)
+	nome, descricaoTexto, erros := rules.ValidateText(nomeBruto, &descricaoBruta)
 	if len(erros) > 0 {
 		v, erroAoLer := s.LoadOne(r.Context(), quem.ID, quem.IsAdmin, id, "config")
 		if erroAoLer != nil {
@@ -413,7 +419,7 @@ func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
 	}
 	// A validação é a MESMA da rota JSON: regra que o motor não conhece é
 	// recusada mesmo vindo de um caminho de tela.
-	normalizadas, msg := campaign.NormalizeIgnoredRules(desejadas)
+	normalizadas, msg := rules.NormalizeIgnoredRules(desejadas)
 	if msg != "" {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": msg})
 		return
