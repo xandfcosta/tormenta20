@@ -14,19 +14,22 @@ import (
 // `deps.go` o que precisa, e o `api` cumpre.
 //
 // Importar o `api` daqui o COMPILADOR já recusa — é ciclo, porque o `api`
-// importa esta cena de volta para montar rota. O valor deste guarda é o RESTO,
-// e três coisas ficaram de fora, nenhuma por regra de estilo:
+// importa esta cena de volta para montar rota. O valor deste guarda é o RESTO, e
+// o que ele guarda hoje é o BCRYPT: hashear senha não é trabalho de quem desenha
+// o formulário, e o caminho inteiro da redefinição acontece do outro lado da
+// chamada (`accounts.Resets.Apply`).
 //
-//   - o BCRYPT porque o custo criptográfico é decisão de segurança do servidor,
-//     e a cena estaria carregando a constante dele para fazer trabalho que não é
-//     dela (`ResetPassword` faz o caminho inteiro do outro lado);
-//   - o `db` e os SENTINELAS porque classificar o erro é do hospedeiro; a cena
-//     recebe um MOTIVO e escolhe a frase, que é a parte que é dela.
-//
-// A lista abaixo é o que sobrou, e ela é curta porque a porta é uma tela de
-// formulário: ela não lê catálogo, não computa ficha e não conhece o livro.
+// A lista é curta porque a porta é uma tela de formulário: ela não lê catálogo,
+// não computa ficha e não conhece o livro.
 
 var permitidos = map[string]bool{
+	// O `app/accounts` NÃO é concessão, é a porta encolhendo de nove métodos
+	// para dois (ALE-349): ele está ABAIXO desta cena, então não há ciclo para
+	// desviar e não há interface a declarar. Os casos de uso chegam por
+	// PARÂMETRO do `New`, como nas campanhas e na Mesa — e com as recusas
+	// exportadas de lá, o vocabulário que esta cena declarava só para atravessar
+	// a fronteira deixou de existir.
+	"t20engine/app/accounts":     true,
 	"t20engine/domain/account":   true, // o que uma conta aceita: e-mail, senha, a forma do pedido
 	"t20engine/serve/web/ui":     true, // o kit de apresentação e a casca
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco, que atravessam a porta

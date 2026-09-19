@@ -30,7 +30,7 @@ func postaCarta(t *testing.T, s *Server, userID int64, form url.Values) *httptes
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	token, err := s.accountRules().signToken(u)
+	token, err := s.accountGate().SignSession(u)
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}

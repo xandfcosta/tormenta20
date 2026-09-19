@@ -46,7 +46,7 @@ func (a accountRules) sessionUser(r *http.Request) (AuthUser, error) {
 	if token == "" {
 		return AuthUser{}, errNoSession
 	}
-	sub, err := a.verifyToken(token)
+	sub, err := a.gate.UserOfSession(token)
 	if err != nil {
 		return AuthUser{}, errNoSession
 	}

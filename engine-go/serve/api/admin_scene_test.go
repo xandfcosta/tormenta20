@@ -120,7 +120,7 @@ func askScene(t *testing.T, s *Server, userID int64, metodo, caminho string) *ht
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	token, err := s.accountRules().signToken(u)
+	token, err := s.accountGate().SignSession(u)
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}

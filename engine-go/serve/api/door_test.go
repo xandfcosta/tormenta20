@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"t20engine/app/accounts"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/secret"
 	"testing"
@@ -69,7 +70,7 @@ func (f doorFixture) sessao(t *testing.T) string {
 	if err != nil {
 		t.Fatalf("conta sumiu: %v", err)
 	}
-	tok, err := f.s.accountRules().signToken(user)
+	tok, err := f.s.accountGate().SignSession(user)
 	if err != nil {
 		t.Fatalf("assinar: %v", err)
 	}
@@ -192,8 +193,11 @@ func TestTheDoorRefusesAnInvalidInviteInPortuguese(t *testing.T) {
 	if !strings.Contains(corpo, "Convite inválido ou expirado. Peça um link novo a quem administra a mesa.") {
 		t.Error("a recusa do convite não chegou à tela")
 	}
-	if strings.Contains(corpo, inviteRejected) {
-		t.Errorf("a frase EM INGLÊS da API vazou para a tela: %q", inviteRejected)
+	// A frase do SENTINELA não é frase de tela: ela é o texto do erro que o
+	// caso de uso devolve, e quem a desenha está repassando o `err.Error()` em
+	// vez de escolher o aviso.
+	if cru := accounts.ErrBadInvite.Error(); strings.Contains(corpo, cru) {
+		t.Errorf("o texto cru do erro vazou para a tela: %q", cru)
 	}
 }
 
@@ -292,11 +296,11 @@ func TestTheDoorChangesThePasswordAndSendsBackToSignIn(t *testing.T) {
 	if hasSessionCookie(f, rec) {
 		t.Error("o link de redefinição abriu sessão")
 	}
-	if _, err := f.s.accountRules().authenticate(context.Background(), f.email, nova); err != nil {
+	if _, err := f.s.accountGate().Authenticate(context.Background(), f.email, nova); err != nil {
 		t.Errorf("a senha nova não vale: %v", err)
 	}
 	// Uso único: o mesmo link de novo não vale mais.
-	if _, ok := f.s.accountRules().usableReset(context.Background(), token); ok {
+	if _, err := f.s.accountResets().OwnerOfLink(context.Background(), token); err == nil {
 		t.Error("o link continua utilizável depois de gasto")
 	}
 }

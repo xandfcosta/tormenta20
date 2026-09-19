@@ -14,7 +14,7 @@ import (
 // resetLinkFor cunha o link pela REGRA, e não pela rota do admin: o que estes
 // casos prendem nunca foi o transporte — é o link valer UMA vez e a corrida de
 // dois pedidos gastá-lo uma vez só. A porta troca a senha pelo mesmo
-// `ResetPassword`, e a administração cunha pelo mesmo `mintPasswordReset`.
+// `accounts.Resets`, e a administração cunha pelo mesmo `mintPasswordReset`.
 func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 	t.Helper()
 	reset, err := s.adminHost().mintPasswordReset(context.Background(), UserID, adminID)
@@ -27,7 +27,7 @@ func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 // trocaASenha é o gesto que a PORTA faz: um token e uma senha nova.
 func trocaASenha(t *testing.T, s *Server, token, senha string) bool {
 	t.Helper()
-	return s.doorHost().ResetPassword(context.Background(), token, senha)
+	return s.accountResets().Apply(context.Background(), token, senha) == nil
 }
 
 func passwordOf(t *testing.T, s *Server, UserID int64) string {
@@ -116,21 +116,19 @@ func TestResolvingAResetLinkNamesTheAccount(t *testing.T) {
 	player := seedUser(t, s, "jogador@t20.local")
 	token := resetLinkFor(t, s, admin, player)
 
-	// A PERGUNTA da porta, e não a rota JSON: `ResetLinkOwner` é o que a cena
-	// chama para escrever "você está trocando a senha de fulano" antes do
-	// formulário.
-	email, achou := s.doorHost().ResetLinkOwner(context.Background(), token)
-	if !achou || email != "jogador@t20.local" {
-		t.Errorf("dono do link = %q (achou=%v), esperado a conta do link", email, achou)
+	// A PERGUNTA da porta, e não a rota JSON: `OwnerOfLink` é o que a cena chama
+	// para escrever "você está trocando a senha de fulano" antes do formulário.
+	email, err := s.accountResets().OwnerOfLink(context.Background(), token)
+	if err != nil || email != "jogador@t20.local" {
+		t.Errorf("dono do link = %q (erro=%v), esperado a conta do link", email, err)
 	}
-	if _, achou := s.doorHost().ResetLinkOwner(context.Background(), "nao-existe"); achou {
+	if _, err := s.accountResets().OwnerOfLink(context.Background(), "nao-existe"); err == nil {
 		t.Error("um link inventado devolveu dono")
 	}
 }
 
-// A RECUSA DE SENHA FRACA não se prende aqui, e a razão importa: o
-// `ResetPassword` NÃO valida força de senha, e nunca validou — quem valida é quem
-// CHAMA. A regra é do `account` (`ValidatePassword`), e quem a chama antes de
+// A RECUSA DE SENHA FRACA não se prende aqui, e a razão importa: o `Apply` NÃO
+// valida força de senha, e nunca validou — quem valida é quem CHAMA. A regra é do `account` (`ValidatePassword`), e quem a chama antes de
 // trocar é a porta (`TestTheDoorSaysValidationRefusalsInPortuguese` e
 // `TestTheDoorRefusesPasswordsThatDoNotMatchOnTheServer`). Um segundo chamador
 // que esquecesse disso trocaria a senha por "123".

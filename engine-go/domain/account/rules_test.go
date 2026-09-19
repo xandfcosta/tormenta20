@@ -4,10 +4,10 @@ import "testing"
 
 // A REGRA DE SENHA é de PRODUTO, e o teste dela mora onde ela mora (ALE-278).
 //
-// Ele veio do `api/account_auth_test.go`, onde prendia a cópia ERRADA: havia duas
-// famílias de validação, e aquele caso chamava a exportada, cujas mensagens
-// saíam em inglês e que nenhuma tela usava. Mudar o mínimo na cópia viva o
-// deixava VERDE.
+// Ele veio dos testes de autenticação do `serve/api` — arquivo que não existe
+// mais —, onde prendia a cópia ERRADA: havia duas famílias de validação, e
+// aquele caso chamava a exportada, cujas mensagens saíam em inglês e que nenhuma
+// tela usava. Mudar o mínimo na cópia viva o deixava VERDE.
 //
 // Os números e as frases estão escritos à mão de propósito. Derivá-los das
 // constantes do pacote faria o teste andar junto com o defeito — trocar `8` por

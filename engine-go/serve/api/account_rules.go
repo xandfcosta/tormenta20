@@ -1,35 +1,43 @@
 package api
 
 import (
-	"database/sql"
+	"t20engine/app/accounts"
 	"t20engine/infra/config"
 	"t20engine/infra/db/sqlcgen"
 )
 
-// AS REGRAS DE CONTA E DE SESSÃO, com casa própria (ALE-278, fatia 6).
+// O QUE SOBROU DAS REGRAS DE CONTA DESTE LADO: quem a REQUISIÇÃO carrega.
 //
-// Elas eram doze métodos do `*Server`, e estavam nele por proximidade e não por
-// pertencimento: quem as chamava era o `handleLogin`, o `handleRegister` e o
-// `requireAuth`, todos do servidor, então elas nasceram lá. Os dois primeiros
-// foram apagados na ALE-277 por não terem consumidor, e o que sobrou tornou a
-// pergunta inevitável — quem chama `authenticate` hoje é a PORTA, uma cena.
+// Autenticar, cadastrar, assinar a sessão e redefinir a senha moravam aqui e
+// hoje moram no `app/accounts` — eram regra pregada ao primeiro transporte que a
+// alcançou, e a marca disso era um `issueSession` que recebia um
+// `http.ResponseWriter` para escrever um 500 no meio da assinatura (ALE-349).
 //
-// Elas não viraram métodos do adaptador da porta porque não são só da porta: o
-// `sessionUser` e o `verifyToken` são de quem barra requisição, e barrar é do
-// hospedeiro. Um tipo próprio é o que deixa as duas coisas verdadeiras ao mesmo
-// tempo — a porta embute um `accountRules`, o `*Server` guarda um, e nenhum dos
-// dois é dono do outro.
-//
-// O que ele carrega é o mínimo que essas regras leem: o segredo e a política do
-// biscoito (`cfg`), as consultas, e o `*sql.DB` porque criar conta gasta o
-// convite na MESMA transação — meia conta criada com convite gasto é a pior das
-// duas metades.
+// O que fica é tradução de transporte: achar o token no biscoito ou no
+// cabeçalho, perguntar ao caso de uso de quem ele é, e vestir a linha do banco
+// no `AuthUser` que as telas leem. O `*sql.DB` saiu junto — nenhuma transação
+// começa mais deste lado.
 type accountRules struct {
 	cfg     config.Config
-	db      *sql.DB
 	queries *sqlcgen.Queries
+	gate    accounts.Gate
 }
 
 func (s *Server) accountRules() accountRules {
-	return accountRules{cfg: s.cfg, db: s.db, queries: s.queries}
+	return accountRules{cfg: s.cfg, queries: s.queries, gate: s.accountGate()}
+}
+
+// accountGate é a porta de entrar e cadastrar-se, e ela recebe o `*sql.DB`
+// porque criar conta gasta o convite na MESMA transação.
+func (s *Server) accountGate() accounts.Gate {
+	return accounts.NewGate(s.db, s.queries, s.cfg)
+}
+
+// accountResets é a redefinição de senha por link.
+//
+// Ela se monta SOBRE o portão e não ao lado dele: o custo do bcrypt é um só, e
+// dois lugares escolhendo esse número divergiriam sem ninguém notar — as senhas
+// continuariam funcionando.
+func (s *Server) accountResets() accounts.Resets {
+	return accounts.NewResets(s.accountGate())
 }

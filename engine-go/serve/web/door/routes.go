@@ -1,8 +1,11 @@
 package door
 
 import (
+	"errors"
 	"net/http"
 	"strings"
+
+	"t20engine/app/accounts"
 	"t20engine/domain/account"
 	"t20engine/infra/wire"
 
@@ -66,7 +69,7 @@ func (s Scene) handleSignInSubmit(w http.ResponseWriter, r *http.Request) {
 		s.writeDoor(w, r, http.StatusBadRequest, signInPage(v))
 		return
 	}
-	user, err := s.deps.Authenticate(r.Context(), v.Email, senha)
+	user, err := s.gate.Authenticate(r.Context(), v.Email, senha)
 	if err != nil {
 		v.Notice = noticeBadCredentials
 		s.writeDoor(w, r, http.StatusUnauthorized, signInPage(v))
@@ -125,7 +128,7 @@ func (s Scene) handleSignUpSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.deps.CreateAccount(r.Context(), corpo)
+	user, err := s.gate.Register(r.Context(), corpo)
 	if err != nil {
 		aviso, status := s.signUpRefusal(err)
 		v.Notice = aviso
@@ -138,22 +141,24 @@ func (s Scene) handleSignUpSubmit(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// signUpRefusal escolhe a FRASE que o jogador lê; quem classifica o erro é o
-// hospedeiro.
+// signUpRefusal escolhe a FRASE que o jogador lê e o STATUS da resposta.
 //
-// A repartição é essa de propósito: o hospedeiro sabe distinguir os erros dele e
-// devolve um MOTIVO, a cena sabe o que o jogador lê. Ler os sentinelas do `api`
-// aqui faria a voz da porta morar lá. As frases da API continuam em inglês —
-// quem lê JSON não é quem lê tela.
+// As duas escolhas são da CENA, e agora sem intermediário: as recusas são
+// valores EXPORTADOS do caso de uso (`accounts.ErrEmailTaken`,
+// `accounts.ErrBadInvite`), e `errors.Is` as lê daqui.
+//
+// Havia um vocabulário só para atravessar a fronteira — um tipo de MOTIVO
+// declarado nesta cena, que o hospedeiro devolvia porque os sentinelas eram
+// dele e a cena não podia alcançá-los. Com a regra no `app/`, o tipo do meio não
+// tem mais o que traduzir e não existe mais (ALE-349).
 func (s Scene) signUpRefusal(err error) (string, int) {
-	motivo, status := s.deps.SignUpRefusal(err)
-	switch motivo {
-	case RefusalEmailTaken:
-		return noticeEmailTaken, status
-	case RefusalBadInvite:
-		return noticeBadInvite, status
+	switch {
+	case errors.Is(err, accounts.ErrEmailTaken):
+		return noticeEmailTaken, http.StatusConflict
+	case errors.Is(err, accounts.ErrBadInvite):
+		return noticeBadInvite, http.StatusForbidden
 	default:
-		return ui.NoticeInternal, status
+		return ui.NoticeInternal, http.StatusInternalServerError
 	}
 }
 
@@ -203,8 +208,8 @@ func (s Scene) handleResetSubmit(w http.ResponseWriter, r *http.Request) {
 // vezes.
 func (s Scene) linkView(r *http.Request, token string) resetView {
 	v := resetView{Token: token, Errors: wire.FieldErrorMap{}}
-	email, ok := s.deps.ResetLinkOwner(r.Context(), token)
-	if !ok {
+	email, err := s.resets.OwnerOfLink(r.Context(), token)
+	if err != nil {
 		return v
 	}
 	v.LinkIsValid = true
@@ -212,11 +217,11 @@ func (s Scene) linkView(r *http.Request, token string) resetView {
 	return v
 }
 
-// saveNewPassword pede o caminho INTEIRO ao hospedeiro, de propósito: gerar o
-// hash aqui obrigaria a porta a carregar a constante de custo do bcrypt, que é
+// saveNewPassword pede o caminho INTEIRO ao caso de uso, de propósito: gerar o
+// hash aqui obrigaria esta cena a carregar a constante de custo do bcrypt, que é
 // decisão de segurança do servidor e não de quem desenha o formulário.
 func (s Scene) saveNewPassword(r *http.Request, token, senha string) bool {
-	return s.deps.ResetPassword(r.Context(), token, senha)
+	return s.resets.Apply(r.Context(), token, senha) == nil
 }
 
 // ── auxiliares da porta ──────────────────────────────────────────────────────
