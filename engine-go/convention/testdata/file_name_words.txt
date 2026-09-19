@@ -262,6 +262,7 @@ markdown
 marker
 markers
 master
+max
 mcp
 md
 measure
@@ -400,6 +401,7 @@ starting
 state
 static
 store
+stored
 stream
 stroke
 sum
