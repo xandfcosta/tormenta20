@@ -500,7 +500,8 @@ func (s Scene) handleNewPlace(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
-	lugarID, err := s.deps.NewPlace(r.Context(), id, r.PostFormValue("name"), r.PostFormValue("ground"))
+	lugar, err := s.lugares.NewPlace(r.Context(), id, r.PostFormValue("name"), r.PostFormValue("ground"))
+	lugarID := lugar.ID
 	if err != nil {
 		// A RECUSA volta para a aba com a frase no campo, e não numa página de
 		// erro: o que ela diz ("dê um nome ao lugar") é sobre o que a pessoa
@@ -530,7 +531,7 @@ func (s Scene) handleRemovePlace(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "id de lugar inválido", http.StatusBadRequest)
 		return
 	}
-	if err := s.deps.RemovePlace(r.Context(), id, lugarID); err != nil {
+	if err := s.lugares.RemovePlace(r.Context(), id, lugarID); err != nil {
 		s.redrawPlacesWithError(w, r, id, err)
 		return
 	}

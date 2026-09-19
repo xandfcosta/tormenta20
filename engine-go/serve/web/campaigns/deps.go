@@ -6,6 +6,7 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/boards"
 	"t20engine/app/campaign"
 	"t20engine/app/session"
 	"t20engine/domain/sheet"
@@ -36,18 +37,6 @@ type Deps interface {
 	// perguntas, e o compilador recusaria um só.
 	RequesterIsAdmin(r *http.Request) bool
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
-
-	// O ACERVO DE LUGARES são três perguntas e não o `boards.Store` inteiro: o
-	// store é o vocabulário do domínio AO VIVO, e esta cena não é ao vivo.
-	Places(ctx context.Context, campanhaID int64) []PlaceRow
-	// NewPlace cria o lugar vazio quando ele ainda não existe. Nome repetido
-	// leva ÀQUELE lugar: o nome é a identidade dele dentro da campanha.
-	NewPlace(ctx context.Context, campanhaID int64, nome, chao string) (int64, error)
-	RemovePlace(ctx context.Context, campanhaID, lugarID int64) error
-	// Grounds são as aparências que um lugar pode ter. Vêm pela porta porque são
-	// do tabuleiro: uma cópia aqui ofereceria um chão que o servidor não conhece
-	// no dia em que a sexta nascer.
-	Grounds() []GroundOption
 
 	// CampaignDeleted é chamada ANTES do `DeleteCampaign`: apagar leva as
 	// sessões por cascata, e depois não há como perguntar quais eram. Sem ela o
@@ -114,11 +103,22 @@ type Scene struct {
 	// escolher a frase — ela podia lê-las porque o `app/` está abaixo dela, e
 	// era isso que faltava quando elas moravam no hospedeiro (ALE-348).
 	assentos campaign.Seating
+	// lugares é o acervo de cenas guardadas da campanha, e ele chega INTEIRO.
+	//
+	// Eram quatro entradas da porta, e a razão escrita para elas era que "o
+	// store é o vocabulário do domínio AO VIVO, e esta cena não é ao vivo". O
+	// argumento caiu com a ALE-344: o `boards.Store` deixou de ser domínio e
+	// virou CASO DE USO, e a Mesa já o recebe assim. Quatro perguntas que só
+	// repassavam viraram uma dependência que diz o que é (ALE-348).
+	lugares *boards.Store
 }
 
 func New(
 	d Deps, trava session.Access, acervo campaign.Directory,
-	vida campaign.Lifecycle, assentos campaign.Seating,
+	vida campaign.Lifecycle, assentos campaign.Seating, lugares *boards.Store,
 ) Scene {
-	return Scene{deps: d, access: trava, acervo: acervo, vida: vida, assentos: assentos}
+	return Scene{
+		deps: d, access: trava, acervo: acervo,
+		vida: vida, assentos: assentos, lugares: lugares,
+	}
 }

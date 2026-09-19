@@ -5,9 +5,6 @@ import (
 	"net/http"
 	"t20engine/app/boards"
 	"t20engine/app/session"
-
-	"t20engine/domain/board"
-	"t20engine/serve/web/campaigns"
 )
 
 // A CENA DE CAMPANHAS e o adaptador que cumpre a porta dela (`campaigns.Deps`).
@@ -24,15 +21,12 @@ import (
 type campaignsHost struct {
 	sceneCore
 	rules campaignRules
-	// boards é o acervo de LUGARES da campanha, e é a única coisa do domínio ao
-	// vivo que esta cena alcança — pelas três perguntas da porta, e não pelo
-	// store inteiro. A crônica lista, cria e apaga um lugar; quem MONTA a cena é
-	// a cena do tabuleiro.
+	// boards e sessions vivem aqui para UMA coisa só: a faxina de memória de
+	// apagar a campanha, que é do hospedeiro e que a cena pede como PERGUNTA
+	// (`CampaignDeleted`) e não como store.
 	//
-	// O `sessions` NÃO abre a mesma concessão: ele não atravessa a porta da
-	// cena, e vive aqui só para a faxina de memória de apagar a campanha — que é
-	// do hospedeiro, e que a cena pede como PERGUNTA (`CampaignDeleted`) e não
-	// como store.
+	// O acervo de LUGARES não passa mais por aqui — a cena recebe o
+	// `boards.Store` direto, como a Mesa (ALE-348).
 	boards   *boards.Store
 	sessions *session.Store
 }
@@ -51,43 +45,4 @@ func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUs
 // CampaignDeleted é a faxina de memória das sessões da campanha.
 func (h campaignsHost) CampaignDeleted(ctx context.Context, campanhaID int64) {
 	campaignDeleted(ctx, h.rules.queries, h.boards, h.sessions, campanhaID)
-}
-
-// ── o ACERVO DE LUGARES da crônica ───────────────────────────────────────────
-
-// Places lista o acervo, já dizendo qual lugar está numa MESA agora.
-//
-// O casamento é pelo NOME e não pelo id, como o acervo da Mesa já faz: o nome é
-// a identidade do lugar dentro da campanha — é assim que o `Archive` decide se
-// sobrescreve —, e uma cena aberta do zero com o nome de um lugar guardado É
-// aquele lugar, porque é a conta que o arquivamento fará quando ela fechar.
-func (h campaignsHost) Places(ctx context.Context, campanhaID int64) []campaigns.PlaceRow {
-	naMesa := h.boards.PlacesOnATable(ctx, campanhaID)
-	lugares := h.boards.Places(ctx, campanhaID)
-	fora := make([]campaigns.PlaceRow, 0, len(lugares))
-	for _, l := range lugares {
-		fora = append(fora, campaigns.PlaceRow{
-			ID: l.ID, Nome: l.Name, Pecas: l.Tokens,
-			Quando: l.UpdatedAt, NaMesaID: naMesa[l.Name],
-		})
-	}
-	return fora
-}
-
-func (h campaignsHost) NewPlace(ctx context.Context, campanhaID int64, nome, chao string) (int64, error) {
-	lugar, err := h.boards.NewPlace(ctx, campanhaID, nome, chao)
-	return lugar.ID, err
-}
-
-func (h campaignsHost) RemovePlace(ctx context.Context, campanhaID, lugarID int64) error {
-	return h.boards.RemovePlace(ctx, campanhaID, lugarID)
-}
-
-// Grounds traduz as aparências do tabuleiro para a forma que a tela desenha.
-func (h campaignsHost) Grounds() []campaigns.GroundOption {
-	fora := make([]campaigns.GroundOption, 0, len(board.PlaceGrounds))
-	for _, c := range board.PlaceGrounds {
-		fora = append(fora, campaigns.GroundOption{ID: c.ID, Rotulo: c.Rotulo})
-	}
-	return fora
 }

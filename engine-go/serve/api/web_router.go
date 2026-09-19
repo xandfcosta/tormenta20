@@ -59,7 +59,7 @@ func (s *Server) WebRouter() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
 		hub.Routes(r, hub.New(s.hubHost()))
-		campaigns.Routes(r, campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating()))
+		campaigns.Routes(r, campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards))
 		// PERSONAGENS e a FORJA são irmãs no mesmo endereço: o elenco é de onde
 		// se abre a folha em branco.
 		characters.Routes(r, characters.New(s.sceneCore()))
