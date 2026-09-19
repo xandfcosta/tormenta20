@@ -430,6 +430,7 @@ tormenta
 touch
 tracker
 traits
+transaction
 tree
 ts
 tsconfig

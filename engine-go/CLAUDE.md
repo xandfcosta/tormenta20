@@ -78,6 +78,13 @@ trava nada e não grava nada.
 nunca um número de HTTP. Um caso de uso que devolvesse 403 não poderia ser
 chamado de outro transporte — que é a única coisa que esta camada compra.
 
+**E a TRANSAÇÃO é daqui, sempre.** Ela é o contorno de um gesto — ou as
+campanhas mudam de dono e a conta some juntas, ou nada acontece —, e quem
+desenha esse contorno está decidindo o que o gesto É. O `serve/` chegou a ZERO
+`BeginTx` na ALE-349, e quem mantém é o
+`TestNoPresentationLayerOpensATransaction`: linha de base vazia, falha no
+primeiro que voltar.
+
 > **O `character.Plays` é a exceção declarada, e a razão é a TELA** (ALE-347).
 > Quem embrulha uma recusa com `%w: app.ErrRefused` coloca "recusado pela regra"
 > no fim da frase que o `Error()` devolve — e a cena da ficha mostra esse texto
@@ -954,19 +961,22 @@ que o compilador cobra quando a porta deixa de ser cumprida.
 **O CASO DE USO não entra pela porta: ele entra por PARÂMETRO** (ALE-344,
 ALE-347, ALE-348). Uma porta existe para desviar de um ciclo — a cena precisa do
 `api`, que importa a cena —, e o `app/` está ABAIXO das duas: não há ciclo,
-então não há interface a declarar. Quatro cenas já montam assim, e a assinatura
-diz o que elas fazem:
+então não há interface a declarar. A assinatura do `New` diz o que a cena faz:
 
 ```go
 table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue())
-forge.New(s.sceneCore(), s.characterBirths())
 sheetui.New(s.sheetHost(), s.characterPlays())
 campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), …)
+door.New(s.doorHost(), s.accountGate(), s.accountResets())
 ```
 
+Quantas cenas já montam assim se pergunta ao código — `grep -n "\.New(" serve/api/web_router.go` —, e não a esta linha: o número subiu a cada fatia e
+envelheceria aqui como envelheceu a contagem de métodos do `*Server`.
+
 O efeito é a porta ENCOLHER em vez de crescer: a da ficha saiu de dezoito
-métodos para oito, e a de campanhas de VINTE para seis. Uma entrada que vira
-caso de uso SAI da `Deps` — ela não ganha um adaptador novo.
+métodos para oito, a de campanhas de VINTE para seis, e a da porta de NOVE para
+três. Uma entrada que vira caso de uso SAI da `Deps` — ela não ganha um
+adaptador novo.
 
 **E o que o `app/` habilita não é só encolher: é a cena poder LER os
 sentinelas.** A porta das campanhas dizia, por escrito, que ler um erro do
@@ -987,9 +997,11 @@ ciclo, não é erro, e é a divisão vazando por baixo.
   tipo do hospedeiro não é porta, é o hospedeiro com outro nome.
 - **Ela pede a PERGUNTA, não o objeto.** Foi a lição que valeu para as dez cenas
   seguintes — `PodeEditar(...) bool` em vez de entregar o que permitiria decidir.
-- **Quem CLASSIFICA o erro é o hospedeiro; quem escolhe a FRASE é a cena.** O
-  texto que aparece na tela é da cena, sempre; a natureza do erro é de quem
-  conhece o banco.
+- **Quem escolhe a FRASE é a cena, sempre.** Quem CLASSIFICA depende de onde o
+  sentinela mora: enquanto ele for valor do `api`, a cena não o alcança e o
+  hospedeiro classifica; quando a regra desce para o `app/`, a cena lê o
+  sentinela com `errors.Is` e o classificador some junto com o tipo que ele
+  devolvia (ALE-348, ALE-349). O que NÃO muda é o texto da tela ser da cena.
 - **Ela é fina quando a cena não precisa do servidor**, não quando alguém foi
   disciplinado. Porta larga é sintoma de cena fazendo trabalho de outra — a
   pergunta é essa, não "dá para cortar um método?".
