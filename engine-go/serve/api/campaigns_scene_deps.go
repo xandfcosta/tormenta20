@@ -77,11 +77,6 @@ func (h campaignsHost) List(ctx context.Context, userID int64, admin bool) ([]ca
 	return fora, nil
 }
 
-// RoleIn é o papel de quem pede numa campanha, e quantos membros ela tem.
-func (h campaignsHost) RoleIn(ctx context.Context, userID int64, c sqlcgen.Campaign) (string, int, error) {
-	return h.rules.roleIn(ctx, AuthUser{ID: userID}, c)
-}
-
 // OwnerNames traduz o dono de cada campanha em nome, para a lista do admin.
 func (h campaignsHost) OwnerNames(ctx context.Context, cs []sqlcgen.Campaign, quemPede int64) map[int64]string {
 	return h.rules.ownerNames(ctx, cs, quemPede)

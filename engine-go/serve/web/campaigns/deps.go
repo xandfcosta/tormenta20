@@ -6,6 +6,7 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/session"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/ui"
@@ -32,7 +33,6 @@ type Deps interface {
 	RequesterIsAdmin(r *http.Request) bool
 	// List são as campanhas que esta pessoa vê, com o papel dela em cada uma.
 	List(ctx context.Context, userID int64, admin bool) ([]ListRow, error)
-	RoleIn(ctx context.Context, userID int64, c sqlcgen.Campaign) (papel string, membros int, err error)
 	// OwnerNames traduz o dono de cada campanha em nome, para a lista do admin.
 	OwnerNames(ctx context.Context, campanhas []sqlcgen.Campaign, quemPede int64) map[int64]string
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
@@ -153,6 +153,18 @@ const (
 // divisão existe para evitar.
 
 // Scene é a cena montada com as dependências dela.
-type Scene struct{ deps Deps }
+type Scene struct {
+	deps Deps
+	// access é a TRAVA de quem alcança o quê, e chega por parâmetro e não pela
+	// porta: o `app/session` está ABAIXO desta cena, então ela o importa direto
+	// e não há ciclo para desviar com uma interface. Mesmo desenho que a Mesa e
+	// a ficha já têm.
+	//
+	// Ela entrou no lugar de um `RoleIn` da porta que MENTIA na assinatura: ele
+	// declarava `(papel string, membros int, err error)` e o `int` era um status
+	// HTTP, que a cena descartava com `_`. O nome `membros` ficou anos esperando
+	// alguém usá-lo (ALE-348).
+	access session.Access
+}
 
-func New(d Deps) Scene { return Scene{deps: d} }
+func New(d Deps, trava session.Access) Scene { return Scene{deps: d, access: trava} }

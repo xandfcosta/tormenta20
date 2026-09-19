@@ -10,8 +10,10 @@ import (
 
 // A CENA NÃO IMPORTA O HOSPEDEIRO.
 //
-// É a cena de porta mais larga — ONZE métodos —, e o guarda existe para que a
-// largura pare aqui. A tentação tem nome: **o `s.db`**, porque o caminho curto
+// É a cena de porta mais larga, e o guarda existe para que a largura pare aqui.
+// (Sem número: ela está encolhendo fatia a fatia na ALE-348, e um número escrito
+// à mão sobre uma família que muda envelhece sozinho — este já dizia ONZE com
+// vinte na porta.) A tentação tem nome: **o `s.db`**, porque o caminho curto
 // para qualquer coluna nova é pedir o banco cru de volta.
 //
 // A resposta certa é a PERGUNTA: `SaveText` existe porque o hospedeiro é que
@@ -26,6 +28,13 @@ import (
 // lugares. A direção continua legal — quem importa é quem desenha depois — e é
 // a mesma concessão que a Mesa faz com o bestiário do `web/master`.
 var permitidos = map[string]bool{
+	// O `app/` NÃO é concessão, é a porta encolhendo (ALE-348): ele está ABAIXO
+	// desta cena, então não há ciclo para desviar e não há interface a declarar.
+	// O vocabulário (`app.Caller`) e a TRAVA (`session.Access`) chegam por
+	// parâmetro do construtor, como na Mesa e na ficha — e cada entrada que vira
+	// caso de uso SAI da `Deps` em vez de ganhar um adaptador novo.
+	"t20engine/app":                  true,
+	"t20engine/app/session":          true,
 	"t20engine/domain/campaign":      true, // as REGRAS: nome, descrição, regras opcionais
 	"t20engine/infra/db/sqlcgen":     true, // as linhas do banco, pelo `Queries` da porta
 	"t20engine/infra/wire":           true,

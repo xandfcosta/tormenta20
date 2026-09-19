@@ -184,6 +184,13 @@ func (s *Server) characterPlays() character.Plays {
 	return character.NewPlays(s.db, s.queries, s.catalogs)
 }
 
+// sessionAccess é a TRAVA de quem alcança campanha e sessão, montada com o que
+// o servidor tem. Ela já era construída duas vezes — dentro do `Lifecycle` e
+// dentro do `campaignRules` —, e é barata: uma cópia de ponteiro.
+func (s *Server) sessionAccess() session.Access {
+	return session.NewAccess(s.queries)
+}
+
 func (s *Server) restParty() rest.Party {
 	return rest.NewParty(s.queries, s.sessions)
 }

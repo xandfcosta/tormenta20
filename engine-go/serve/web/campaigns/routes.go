@@ -268,7 +268,7 @@ func (s Scene) handleOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		// O `roleIn` recusa quem não é da mesa, e a recusa dele é 403. Aqui ela
+		// O `Access.RoleIn` recusa quem não é da mesa, e a recusa dele é 403. Aqui ela
 		// vira página e não JSON, mas continua sendo a MESMA regra.
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return

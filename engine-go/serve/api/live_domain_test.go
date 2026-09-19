@@ -137,7 +137,18 @@ func seedMember(t *testing.T, s *Server, campaignID, characterID int64) {
 	}
 }
 
-func TestResolveRole(t *testing.T) {
+// O PAPEL NUMA CAMPANHA: o dono mestra, o membro joga, e o resto não entra.
+//
+// A asserção desceu para a REGRA (`session.Access`) e deixou de passar por uma
+// tradução do `serve/api` que deixou de existir (ALE-348): ela era duas linhas
+// sobre este mesmo caso de uso, e no fim existia só para este teste. Teste verde
+// sobre código que ninguém usa cobra manutenção e não protege nada.
+//
+// E o que se afirma agora é a RECUSA TIPADA e não o número do HTTP. O número é
+// do transporte e tem dono próprio (`statusForAccess`); afirmá-lo aqui faria
+// este caso reprovar no dia em que uma tela escolhesse outro código para a
+// mesma recusa.
+func TestTheRoleInACampaignIsOwnerGmMemberPlayerAndNobodyElse(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	gm := seedUser(t, s, "gm@t.com")
@@ -147,27 +158,35 @@ func TestResolveRole(t *testing.T) {
 	pc := seedCharacter(t, s, player, "PC", 10, 10, 5, 5)
 	seedMember(t, s, campaignID, pc)
 
-	cases := []struct {
-		name       string
-		caller     AuthUser
-		wantRole   string
-		wantStatus int
+	casos := []struct {
+		nome     string
+		quem     app.Caller
+		papel    string
+		recusado error
 	}{
-		{"owner is gm", AuthUser{ID: gm}, "gm", 200},
-		{"member is player", AuthUser{ID: player}, "player", 200},
-		{"stranger forbidden", AuthUser{ID: stranger}, "", 403},
+		{"o dono mestra", app.Caller{ID: gm}, app.RoleGM, nil},
+		{"o membro joga", app.Caller{ID: player}, app.RolePlayer, nil},
+		{"o estranho não entra", app.Caller{ID: stranger}, "", app.ErrForbidden},
 		// O administrador entra em qualquer mesa como mestre: é o que o deixa
 		// participar de uma sessão ao vivo.
-		{"admin is gm anywhere", AuthUser{ID: stranger, IsAdmin: true}, "gm", 200},
+		{"o admin mestra em qualquer mesa", app.Caller{ID: stranger, IsAdmin: true}, app.RoleGM, nil},
 	}
-	for _, c := range cases {
-		Role, status, err := s.campaignRules().resolveRole(ctx, c.caller, campaignID)
-		if Role != c.wantRole || status != c.wantStatus {
-			t.Errorf("%s: Role=%q status=%d err=%v, want Role=%q status=%d", c.name, Role, status, err, c.wantRole, c.wantStatus)
+	for _, c := range casos {
+		papel, err := s.sessionAccess().RoleInCampaign(ctx, c.quem, campaignID)
+		if papel != c.papel {
+			t.Errorf("%s: papel=%q, esperado %q (err=%v)", c.nome, papel, c.papel, err)
+		}
+		if c.recusado == nil && err != nil {
+			t.Errorf("%s: recusado com %v", c.nome, err)
+		}
+		if c.recusado != nil && !errors.Is(err, c.recusado) {
+			t.Errorf("%s: err=%v, esperado %v", c.nome, err, c.recusado)
 		}
 	}
-	if _, status, _ := s.campaignRules().resolveRole(ctx, AuthUser{ID: gm}, 999999); status != 404 {
-		t.Errorf("missing campaign: status=%d, want 404", status)
+	// A campanha que NÃO EXISTE é uma recusa diferente, e a diferença importa:
+	// "não é sua" e "não existe" viram números diferentes no transporte.
+	if _, err := s.sessionAccess().RoleInCampaign(ctx, app.Caller{ID: gm}, 999999); !errors.Is(err, app.ErrNotFound) {
+		t.Errorf("campanha inexistente devolveu %v, esperado ErrNotFound", err)
 	}
 }
 

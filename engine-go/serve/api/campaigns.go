@@ -202,42 +202,17 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	httpio.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
 }
 
-// resolveRole é a regra de ACESSO a uma campanha, independente de transporte: o
-// dono é "gm"; quem tem personagem membro é "player"; o resto é barrado. Devolve
-// o papel e um status à moda do HTTP, que o chamador traduz para o transporte
-// dele.
+// A REGRA DE ACESSO A UMA CAMPANHA mora no `app/session` inteira (`Access`), e
+// não sobrou tradução nenhuma dela aqui.
 //
-// O admin entra em QUALQUER mesa como "gm": o papel já existe, carrega as
-// ferramentas que ele veio usar, e nada no motor supõe um mestre só — esta
-// função devolve um PAPEL, e quem barra barra por papel e não por identidade.
-// Dois mestres podem então conduzir a iniciativa ao mesmo tempo, que é o custo
-// aceito por deixar o dono do servidor consertar a mesa de um jogador no meio da
-// sessão.
-// # O CORPO mora no `app/session`, e as duas linhas abaixo são tradução
+// Havia duas traduções, e as duas eram duas linhas: chamar o caso de uso e
+// trocar a recusa TIPADA por um número de HTTP. As duas deixaram de existir. A cena das
+// campanhas chamava a segunda pela porta, com uma assinatura que declarava
+// `(papel string, membros int, err error)` e entregava o STATUS no lugar do
+// número de membros (ALE-348). Hoje ela chama o `Access` direto.
 //
-// A regra é a mesma que o ciclo da sessão usa para autorizar, e ela nasceu
-// duplicada quando o `app/` nasceu (ALE-344). Duas cópias de uma regra de
-// AUTORIZAÇÃO é a pior duplicação que existe: elas divergem em silêncio, e o
-// sintoma é uma superfície deixando entrar quem a outra barra.
-//
-// O que sobra aqui é o que é do TRANSPORTE — o número que o navegador recebe.
-func (rules campaignRules) resolveRole(ctx context.Context, user AuthUser, campaignID int64) (string, int, error) {
-	papel, err := rules.access().RoleInCampaign(ctx, callerOf(user), campaignID)
-	if err != nil {
-		return "", statusForAccess(err), err
-	}
-	return papel, http.StatusOK, nil
-}
-
-// roleIn é a mesma regra sobre uma campanha que o chamador JÁ carregou, para o
-// handler que precisa da linha e do papel não a ler duas vezes.
-func (rules campaignRules) roleIn(ctx context.Context, user AuthUser, c sqlcgen.Campaign) (string, int, error) {
-	papel, err := rules.access().RoleIn(ctx, callerOf(user), c)
-	if err != nil {
-		return "", statusForAccess(err), err
-	}
-	return papel, http.StatusOK, nil
-}
+// Quem ainda precisa do número usa o `statusForAccess`, que é o que ele sempre
+// foi: tradução de transporte, no lugar onde o transporte mora.
 
 func (rules campaignRules) access() session.Access { return session.NewAccess(rules.queries) }
 

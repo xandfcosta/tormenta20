@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"slices"
 	"strconv"
+	"t20engine/app"
 	"t20engine/infra/wire"
 	"t20engine/serve/web/ui"
 	"time"
@@ -172,9 +173,10 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	if err != nil {
 		return oneView{}, err
 	}
-	// A MESMA regra de acesso da rota JSON e do gateway do socket: dono é "gm",
-	// quem tem personagem na mesa é "player", e o resto não entra.
-	papel, _, err := s.deps.RoleIn(ctx, euID, c)
+	// A MESMA regra de acesso que o ciclo da sessão usa: dono é "gm", quem tem
+	// personagem na mesa é "player", e o resto não entra. Chamada DIRETO, e não
+	// por uma entrada da porta que só a repassava.
+	papel, err := s.access.RoleIn(ctx, app.Caller{ID: euID, IsAdmin: admin}, c)
 	if err != nil {
 		return oneView{}, err
 	}
