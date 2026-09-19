@@ -1,28 +1,25 @@
-package api
+package character
 
 import (
 	"context"
 	"fmt"
-	"t20engine/infra/db/dbvalue"
 
 	"t20engine/domain/catalog"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O `AugmentPick` mora no `sheet` desde a ALE-278: a cena o lê dos sinais e
-// este arquivo o consome ao cobrar o PM.
-
-// castSpellForCharacter é a conjuração INTEIRA, sem HTTP.
+// Cast é a conjuração INTEIRA: as recusas do livro, o custo em PM e a baixa.
 //
 // Ela nasceu extraída na ALE-272 (fatia 6), quando a ficha em Datastar passou a
 // conjurar: escrever as recusas de novo lá daria DUAS regras para a mesma
 // pergunta, e elas divergiriam no dia em que uma mudasse. É a mesma razão da
 // ALE-110, que registrou o custo sendo exibido num lugar e ignorado no outro.
 //
-// Devolve o PM que sobrou e uma frase de recusa quando a regra barra — a frase é
-// para um humano ler numa tela, e não um `FieldErrorMap` para um cliente.
-func (sr sheetRules) castSpellForCharacter(
+// A recusa volta como uma FRASE para um humano ler numa tela — ver por que ela
+// não é tipada no `doc.go` do pacote.
+func (p Plays) Cast(
 	ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string, augments []sheet.AugmentPick,
 ) error {
 	spell, known := catalog.LookupSpell(catalogSpellID)
@@ -58,9 +55,9 @@ func (sr sheetRules) castSpellForCharacter(
 	if truqueEscolhido(spell, augments) {
 		basePm, augmentPm = 0, 0
 	}
-	totalPm := sr.catalogs.SpellPmCostFor(ec, basePm, augmentPm, map[string]bool{})
-	minPm := sr.catalogs.SpellPmCostFor(ec, basePm, 0, map[string]bool{})
-	limit := sr.catalogs.SpellPmLimitFor(ec, spell.Classes)
+	totalPm := p.catalogs.SpellPmCostFor(ec, basePm, augmentPm, map[string]bool{})
+	minPm := p.catalogs.SpellPmCostFor(ec, basePm, 0, map[string]bool{})
+	limit := p.catalogs.SpellPmLimitFor(ec, spell.Classes)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}
@@ -70,7 +67,7 @@ func (sr sheetRules) castSpellForCharacter(
 	if totalPm == 0 {
 		return nil
 	}
-	return sr.queries.SetMpCurrent(ctx, sqlcgen.SetMpCurrentParams{
+	return p.queries.SetMpCurrent(ctx, sqlcgen.SetMpCurrentParams{
 		MpCurrent: dto.MpCurrent - int64(totalPm), UpdatedAt: dbvalue.NowISO(), ID: dto.ID,
 	})
 }
@@ -102,6 +99,12 @@ func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 // validateAugments confere os aprimoramentos escolhidos e devolve o PM deles,
 // ou a frase da recusa.
 //
+// É regra PURA do livro e mesmo assim não desce para o `domain/sheet`: ela
+// recebe um `catalog.Spell`, e o guarda daquele pacote recusa o `catalog` por
+// escrito — *"catalog (que é o arquivo cru)"*. O caminho para descer é unificar
+// `catalog.Spell` com o `book.Spell` tipado, que é trabalho próprio e mexe nos
+// dois lados. Até lá ela fica com o único chamador que tem.
+//
 // O `castableCircle` fechou uma FRONTEIRA que estava aberta (ALE-272, fatia 6):
 // 126 dos 486 aprimoramentos do catálogo exigem um círculo mínimo, e até aqui
 // esse limite existia só na tela. A tabela que o decide vivia só no TypeScript,
@@ -112,24 +115,26 @@ func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, castableCi
 		return 0, ""
 	}
 	if spell.Circle == 0 {
-		return 0, "Truques cannot receive aprimoramentos"
+		return 0, "truque não recebe aprimoramento"
 	}
 	seen := map[int]bool{}
 	total := 0
 	for _, p := range picks {
 		if p.AugmentIndex < 0 || p.AugmentIndex >= len(spell.Augments) {
-			return 0, fmt.Sprintf("Invalid augmentIndex %d", p.AugmentIndex)
+			return 0, fmt.Sprintf("o aprimoramento %d não existe nesta magia", p.AugmentIndex)
 		}
 		if seen[p.AugmentIndex] {
-			return 0, fmt.Sprintf("Duplicate augmentIndex %d — combine stacks in one pick", p.AugmentIndex)
+			return 0, fmt.Sprintf("o aprimoramento %d veio duas vezes: junte as repetições num pedido só", p.AugmentIndex)
 		}
 		seen[p.AugmentIndex] = true
 		if p.Stacks < 1 {
-			return 0, fmt.Sprintf("stacks must be an integer ≥ 1 (got %d)", p.Stacks)
+			return 0, fmt.Sprintf("o aprimoramento %d pede um número de repetições de 1 para cima (veio %d)", p.AugmentIndex, p.Stacks)
 		}
 		a := spell.Augments[p.AugmentIndex]
+		// O "MUDA" não se repete: "Mudanças na mesma característica da magia
+		// nunca se acumulam" (p171).
 		if a.Kind == "muda" && p.Stacks > 1 {
-			return 0, fmt.Sprintf("'muda' augment cannot stack (index %d)", p.AugmentIndex)
+			return 0, fmt.Sprintf("o aprimoramento %d muda a magia, e mudança não se acumula", p.AugmentIndex)
 		}
 		// O EXCLUSIVO recusa companhia: "truques não podem ser usados em conjunto
 		// com outros aprimoramentos" (p171), e o livro repete a frase à mão na

@@ -7,6 +7,8 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/character"
+
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -37,7 +39,6 @@ type Deps interface {
 	// As ESCRITAS, uma por gesto: a cena decide QUANDO, o hospedeiro sabe COMO.
 	SaveProficiencies(ctx context.Context, id int64, categorias []string) (string, []string, error)
 	SaveNewCraft(ctx context.Context, id int64, nome string) error
-	CastSpell(r *http.Request, dto sheet.CharacterDTO, magia string, aprimoramentos []sheet.AugmentPick) error
 	ConsumeItem(r *http.Request, row sqlcgen.Character, itemID int64, pvRolado, pmRolado *int64) error
 	ApplyClassLevel(r *http.Request, id int64, classe string, nivel int64) error
 	ApplySpellBuffEffect(ctx context.Context, id int64, magia string, escopo *string) (sheet.EffectDTO, int, error)
@@ -74,6 +75,13 @@ type ChoiceWrite struct {
 }
 
 // Scene é a cena montada com as dependências dela.
-type Scene struct{ deps Deps }
+type Scene struct {
+	deps Deps
+	// plays são os GESTOS da ficha, e chegam por parâmetro e não pela porta: o
+	// `app/character` está ABAIXO desta cena, então ela o importa direto e não
+	// há ciclo para desviar com uma interface. É o mesmo desenho que a forja
+	// tem com o `character.Births`.
+	plays character.Plays
+}
 
-func New(d Deps) Scene { return Scene{deps: d} }
+func New(d Deps, gestos character.Plays) Scene { return Scene{deps: d, plays: gestos} }

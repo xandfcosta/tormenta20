@@ -3,7 +3,9 @@ package api
 import (
 	"database/sql"
 	"sync"
+
 	"t20engine/app/boards"
+	"t20engine/app/character"
 	"t20engine/app/session"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -45,6 +47,10 @@ type tableRules struct {
 	// painel da ficha embutida. Ela pede a cena PRONTA em vez de montá-la — ver
 	// o `PlayerSheet`.
 	sheetScene sheetHost
+	// sheetPlays acompanha o adaptador acima: montar a cena da ficha pede os
+	// gestos dela, e o painel embutido só LÊ. Passá-lo zerado seria guardar um
+	// ponteiro nulo esperando o primeiro gesto que alguém chamasse daqui.
+	sheetPlays character.Plays
 	// emSegundoPlano é PONTEIRO e vem do servidor: a gravação do estado da sessão
 	// roda em goroutine, e quem espera por ela no `Shutdown` é o servidor. Uma
 	// cópia do `sync.WaitGroup` seria um contador que ninguém espera — e o
@@ -59,7 +65,8 @@ func (s *Server) tableRules() tableRules {
 		queries: s.queries, catalogs: s.catalogs,
 		boards: s.boards, sessions: s.sessions, presence: s.presence,
 		sse: s.sse, bus: s.bus,
-		campaign: s.campaignRules(), sheet: s.sheetRules(), sheetScene: s.sheetHost(),
+		campaign: s.campaignRules(), sheet: s.sheetRules(),
+		sheetScene: s.sheetHost(), sheetPlays: s.characterPlays(),
 		emSegundoPlano: &s.emSegundoPlano,
 	}
 }

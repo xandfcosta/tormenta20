@@ -1,22 +1,3 @@
-// Package character é o NASCIMENTO de um herói e os poços dele.
-//
-// # Ele tem DOIS chamadores, e isso não é novidade — estava escrito na porta
-//
-// A `forge.Deps` já dizia, antes desta camada existir, sobre a entrada que
-// criava o personagem: *"fica no hospedeiro porque criar personagem é caminho
-// compartilhado: a forja é uma entrada dele, não a dona. Ela recebe CONTEXTO e
-// não o `*http.Request`: pedir a requisição inteira obrigaria quem chama a ter
-// uma, e o gerador da seed não tem."*
-//
-// A forja é uma entrada; a seed é a outra. O que faltava era o endereço.
-//
-// # E aqui a TRANSAÇÃO é do caso de uso
-//
-// Nascer é uma escrita só em cinco tabelas — a ficha, as raças, as classes, as
-// vinte e nove perícias do livro e os itens. Metade delas gravada é uma ficha
-// que abre quebrada, e o dono da transação é quem sabe onde o gesto começa e
-// acaba. É o que a Mesa não pôde provar: lá o estado vive em memória e a
-// gravação é assíncrona.
 package character
 
 import (

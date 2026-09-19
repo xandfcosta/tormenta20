@@ -65,7 +65,7 @@ func (s *Server) WebRouter() http.Handler {
 		characters.Routes(r, characters.New(s.sceneCore()))
 		forge.Routes(r, forge.New(s.sceneCore(), s.characterBirths()))
 		// A FICHA é filha do endereço do elenco: `/personagens/{id}`.
-		sheetui.Routes(r, sheetui.New(s.sheetHost()))
+		sheetui.Routes(r, sheetui.New(s.sheetHost(), s.characterPlays()))
 		grimoire.Routes(r, grimoire.New(s.sceneCore()))
 		// A MESA DO MESTRE: o trilho, os catálogos, o bestiário, os encontros e o
 		// improviso.

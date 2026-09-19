@@ -179,6 +179,11 @@ func (s *Server) characterBirths() character.Births {
 	return character.NewBirths(s.db, s.queries, s.catalogs)
 }
 
+// characterPlays são os gestos da ficha em jogo, montados com o mesmo trio.
+func (s *Server) characterPlays() character.Plays {
+	return character.NewPlays(s.db, s.queries, s.catalogs)
+}
+
 func (s *Server) restParty() rest.Party {
 	return rest.NewParty(s.queries, s.sessions)
 }

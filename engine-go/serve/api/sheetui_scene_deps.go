@@ -47,13 +47,6 @@ func (h sheetHost) SaveNewCraft(ctx context.Context, id int64, nome string) erro
 	return h.rules.saveNewCraft(ctx, id, nome)
 }
 
-// CastSpell gasta o PM e resolve os aprimoramentos.
-func (h sheetHost) CastSpell(
-	r *http.Request, dto sheet.CharacterDTO, magia string, aprimoramentos []sheet.AugmentPick,
-) error {
-	return h.rules.castSpellForCharacter(r.Context(), dto, magia, aprimoramentos)
-}
-
 // ConsumeItem gasta uma dose do consumível.
 //
 // O RESULTADO não atravessa: a cena descarta a dose inteira, e a única recusa

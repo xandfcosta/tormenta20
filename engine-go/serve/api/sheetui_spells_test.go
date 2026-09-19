@@ -218,7 +218,7 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 //
 // Some-lo faria a lista parecer menor do que o livro diz que é; e a fronteira
 // não é o cadeado — o servidor recusa o mesmo pedido, com guarda próprio em
-// `sheetui_augments_test.go`.
+// `app/character/augments_test.go`.
 func TestAnAugmentOutOfReachShowsLocked(t *testing.T) {
 	// Nível 5 abre o 2º círculo; a Invisibilidade tem aprimoramento de 3º.
 	f := newSceneFixture(t)

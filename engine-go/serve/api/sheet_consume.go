@@ -39,7 +39,7 @@ var errDailyPortion = errors.New("apenas uma porção por dia")
 //
 // Fora do HTTP porque as duas portas — a rota JSON e a Mochila em Datastar — a
 // chamam: reescrita numa delas, daria DUAS respostas para "posso beber esta
-// poção?". É a mesma razão do `castSpellForCharacter`.
+// poção?". É a mesma razão do `Cast`.
 func (sr sheetRules) consumeItemForCharacter(
 	ctx context.Context, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
 ) (doseUsed, error) {

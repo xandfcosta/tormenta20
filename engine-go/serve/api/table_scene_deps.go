@@ -96,12 +96,14 @@ func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
 // PlayerSheet é a ficha EMBUTIDA de quem senta à mesa.
 //
 // A Mesa pede o painel PRONTO em vez de montar a cena da ficha: montá-la lá
-// obrigaria a Mesa a cumprir a `sheetui.Deps` inteira — dezoito métodos que ela
-// não usa — só para desenhar um painel. Nulo é caminho normal, e a falha é
+// obrigaria a Mesa a cumprir a `sheetui.Deps` INTEIRA — e ela não usa nenhum
+// dos métodos — só para desenhar um painel. (Sem número aqui de propósito: a
+// porta está encolhendo fatia a fatia, e um número escrito à mão sobre uma
+// família que muda envelhece sozinho.) Nulo é caminho normal, e a falha é
 // silenciosa de propósito: estar numa mesa é mais importante que ver a própria
 // ficha dentro dela.
 func (h tableHost) PlayerSheet(r *http.Request, characterID int64) *sheetui.View {
-	ficha, _, err := sheetui.New(h.rules.sheetScene).Load(
+	ficha, _, err := sheetui.New(h.rules.sheetScene, h.rules.sheetPlays).Load(
 		r.Context(), currentUser(r).ID, characterID, sheetui.AskedTab(""), "", sheetui.Signals{})
 	if err != nil {
 		return nil
