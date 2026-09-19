@@ -201,7 +201,7 @@ func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
 //
 // O buraco era de COBERTURA e não de comportamento: o servidor já recusava, e
 // ninguém afirmava isso. Sem o caso, o dia em que a comparação inverter passa
-// batido — e o `chargePm` tem PISO EM ZERO, então o sintoma não seria um erro:
+// batido — e o `chargeMp` tem PISO EM ZERO, então o sintoma não seria um erro:
 // seria o jogador usando o que não pode pagar e o PM indo a zero calado.
 //
 // As duas metades do mesmo buraco estão aqui, porque são dois caminhos

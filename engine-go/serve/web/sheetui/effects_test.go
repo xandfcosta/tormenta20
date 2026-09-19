@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 )
 
@@ -56,7 +57,7 @@ func TestAConditionAnnouncesItselfToTheLiveTable(t *testing.T) {
 // Derivar a flag do último pedaço do id acerta as duas de hoje e erra calado na
 // terceira — por isso ela sai do `condition.flag` dos modificadores do poder.
 func TestStancesComeFromTheCatalogWithThePowerFlag(t *testing.T) {
-	posturas := stancesFromCatalog()
+	posturas := book.StancesFromCatalog()
 	if len(posturas) < 2 {
 		t.Fatalf("o catálogo ofereceu %d posturas, e são pelo menos 2 (Fúria e Inspiração): "+
 			"a leitura do `kind: stance` parou de casar", len(posturas))
@@ -74,7 +75,7 @@ func TestStancesComeFromTheCatalogWithThePowerFlag(t *testing.T) {
 	}
 }
 
-func chavesDe(m map[string]stanceOfBook) []string {
+func chavesDe(m map[string]book.Stance) []string {
 	fora := make([]string, 0, len(m))
 	for k := range m {
 		fora = append(fora, k)
@@ -151,4 +152,35 @@ func functionSlice(t *testing.T, fonte, cabecalho string) string {
 		return resto
 	}
 	return resto[:fim]
+}
+
+// O EFEITO CONCEDIDO POR UM PODER DIZ O NOME DO PODER, e não o id do catálogo.
+//
+// Visto na tela ao conferir a ALE-351: entrar em Fúria aplica a reserva de PV
+// temporários da Alma de Bronze (p41), e a linha em "Efeitos ativos" saía
+// escrita `class.barbaro.alma-de-bronze`.
+//
+// O `effectDisplayName` só procurava em MAGIAS. Um efeito de poder caía no
+// `return catalogID`, e o recuo é silencioso por construção: ele devolve algo
+// que parece um nome para quem lê o código, e não para quem lê a tela.
+func TestAGrantedEffectShowsThePowerNameInsteadOfTheCatalogId(t *testing.T) {
+	const almaDeBronze = "class.barbaro.alma-de-bronze"
+
+	// CONTROLE: o poder existe no catálogo. Sem isto, "o nome não é o id" também
+	// passaria com o catálogo vazio, onde nada tem nome.
+	if spec := book.ActivationOf(almaDeBronze, ""); spec == nil {
+		t.Fatalf("o poder %q sumiu do catálogo — o caso mediria o vazio", almaDeBronze)
+	}
+	nome := effectDisplayName(almaDeBronze)
+	if nome == almaDeBronze {
+		t.Errorf("a linha do efeito mostra o id cru %q", nome)
+	}
+	if nome != "Alma de Bronze" {
+		t.Errorf("o efeito saiu como %q, e o livro o chama de Alma de Bronze (p41)", nome)
+	}
+	// E a MAGIA continua sendo achada: o caminho novo não pode ter substituído o
+	// que já funcionava.
+	if m := effectDisplayName("abencoar-alimentos"); m == "abencoar-alimentos" {
+		t.Errorf("a magia deixou de ser achada: %q", m)
+	}
 }

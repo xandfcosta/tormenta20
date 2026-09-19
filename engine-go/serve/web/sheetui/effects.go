@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
@@ -109,68 +108,7 @@ type alwaysOnRow struct {
 
 // ── as posturas, lidas do catálogo ───────────────────────────────────────────
 
-// stanceOfBook é a postura de cada flag: `furia` → Fúria, 2 PM, p40.
-type stanceOfBook struct {
-	Flag string
-	Name string
-	PM   int
-	Page int
-}
-
-var (
-	stancesOnce   sync.Once
-	stancesByFlag map[string]stanceOfBook
-)
-
-// stancesFromCatalog liga as ativações de `kind: "stance"` à flag que elas
-// acendem.
-//
-// A FLAG NÃO É ADIVINHADA do id: ela sai do poder de MESMO id, lendo o
-// `condition.flag` dos modificadores dele. Derivar do último pedaço do id
-// acertaria as duas de hoje e erraria calado na terceira.
-func stancesFromCatalog() map[string]stanceOfBook {
-	stancesOnce.Do(func() {
-		stancesByFlag = map[string]stanceOfBook{}
-		flags := book.ClassPowerFlags()
-		for _, a := range book.Activations() {
-			if a.Kind != "stance" {
-				continue
-			}
-			flag := flags[a.ID]
-			if flag == "" {
-				flag = flags[a.ID+stanceStep(flags, a.ID)]
-			}
-			if flag == "" {
-				continue
-			}
-			stancesByFlag[flag] = stanceOfBook{Flag: flag, Name: a.Name, PM: book.ActivationPm(a), Page: a.BookPage}
-		}
-	})
-	return stancesByFlag
-}
-
-// stanceStep acha o sufixo do DEGRAU quando a postura não declara a flag no
-// poder de id exato.
-//
-// O catálogo trata as duas posturas de formas DIFERENTES:
-// `class.barbaro.furia` carrega os modificadores no poder de id exato, enquanto
-// `class.bardo.inspiracao` os põe nos degraus numerados (`inspiracao-1`, `-2`,
-// …) e deixa o id base sem modificador nenhum. Ligar só pelo id exato acha UMA
-// das duas, e passa calado: a outra simplesmente não aparece na lista.
-//
-// O sufixo aceito é `-<dígitos>` e MAIS NADA. Um prefixo solto casaria
-// `class.barbaro.furia-da-savana`, que é outro poder — e no dia em que ele
-// ligasse uma flag, a postura errada herdaria a dele.
-func stanceStep(flags map[string]string, base string) string {
-	for i := 1; i <= 9; i++ {
-		sufixo := "-" + strconv.Itoa(i)
-		if flags[base+sufixo] != "" {
-			return sufixo
-		}
-	}
-	return ""
-}
-
+// book.Stance é a postura de cada flag: `furia` → Fúria, 2 PM, p40.
 // ── a montagem ───────────────────────────────────────────────────────────────
 
 // effectsPanelOf computa a aba Efeitos de um personagem.
@@ -255,7 +193,7 @@ func conditionOptionsFor(dto sheet.CharacterDTO) []pickerOption {
 
 // stanceRowsOf são as posturas em curso.
 func stanceRowsOf(dto sheet.CharacterDTO) []stanceRow {
-	doLivro := stancesFromCatalog()
+	doLivro := book.StancesFromCatalog()
 	linhas := []stanceRow{}
 	for _, s := range dto.Stances {
 		nome := s.Flag
@@ -296,6 +234,16 @@ func effectDisplayName(catalogID string) string {
 			return m.Name
 		}
 	}
+	// E os PODERES, que é de onde vêm as concessões de postura: a reserva de PV
+	// temporários da Alma de Bronze saía na tela escrita
+	// `class.barbaro.alma-de-bronze` (ALE-351).
+	if spec := book.ActivationOf(catalogID, ""); spec != nil {
+		return spec.Name
+	}
+	// O recuo para o ID é silencioso por construção — ele devolve algo que
+	// parece um nome para quem lê o código, e não para quem lê a tela. Ele fica
+	// porque a alternativa é a linha sem texto nenhum, mas toda procedência
+	// nova de efeito precisa entrar numa das buscas acima.
 	return catalogID
 }
 
@@ -417,7 +365,7 @@ func circleLabel(circle int) string {
 // linhas, a pessoa deixaria metade do efeito ligado. As POSTURAS ficam de fora:
 // o interruptor delas mora nos Poderes, porque entrar custa PM.
 func situationalRowsOf(offered []engine.ConditionalEffect, ativos map[string]bool) ([]situationalRow, []alwaysOnRow) {
-	posturas := stancesFromCatalog()
+	posturas := book.StancesFromCatalog()
 	porFlag := map[string][]engine.ConditionalEffect{}
 	ordem := []string{}
 	soltos := []engine.ConditionalEffect{}

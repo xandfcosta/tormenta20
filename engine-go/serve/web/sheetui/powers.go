@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"t20engine/app/character"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
@@ -102,7 +103,7 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, busca string) powersPanel {
 // poder e o estado de jogo dele.
 func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
 	contexto := book.UseContext{PmAtual: int(dto.MpCurrent), Flags: s.activeFlags(dto)}
-	usos := powerUses(dto)
+	usos := character.PowerUses(dto)
 	posturas := paidStances(dto)
 	linhas := []powerRow{}
 	for _, poder := range ownedPowersOf(dto) {
@@ -113,7 +114,7 @@ func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
 
 func powerRowFor(
 	dto sheet.CharacterDTO, poder ownedPower, contexto book.UseContext,
-	usos map[string]powerUse, posturas map[string]bool,
+	usos map[string]character.PowerUse, posturas map[string]bool,
 ) powerRow {
 	linha := powerRow{
 		ID: poder.ID, Name: poder.Name, Source: shortSource(poder.Source),
@@ -163,7 +164,7 @@ func stanceStateFor(
 		estado.BasePm = spec.Scaling.BasePm
 		estado.StepPm = spec.Scaling.StepPm
 		estado.StepLabel = spec.Scaling.StepLabel
-		estado.MaxSteps = book.LevelSteps(*spec.Scaling, classPowerLevel(dto, spec.ID))
+		estado.MaxSteps = book.LevelSteps(*spec.Scaling, character.ClassPowerLevel(dto, spec.ID))
 	}
 	return estado
 }
@@ -173,7 +174,7 @@ func stanceStateFor(
 // Ela sai do CATÁLOGO — a postura não declara a própria flag, e derivá-la do id
 // acertaria as duas de hoje e erraria calado na terceira.
 func stanceFlag(spec book.Activation) string {
-	for flag, postura := range stancesFromCatalog() {
+	for flag, postura := range book.StancesFromCatalog() {
 		if postura.Name == spec.Name {
 			return flag
 		}
@@ -213,15 +214,6 @@ func limitBadge(spec book.Activation) string {
 	return ""
 }
 
-func classPowerLevel(dto sheet.CharacterDTO, activationID string) int {
-	for _, classe := range dto.Classes {
-		if strings.Contains(activationID, "."+foldAccents(strings.ToLower(classe.ClassName))+".") {
-			return int(classe.Level)
-		}
-	}
-	return int(dto.Level)
-}
-
 // activeFlags são as FLAGS levantadas agora, e elas não estão no banco.
 //
 // O que o banco guarda é a lista de condicionais LIGADOS, e o id de um
@@ -256,22 +248,6 @@ func paidStances(dto sheet.CharacterDTO) map[string]bool {
 	fora := map[string]bool{}
 	for _, p := range dto.Stances {
 		fora[p.Flag] = true
-	}
-	return fora
-}
-
-type powerUse struct{ Cena, Dia int }
-
-func powerUses(dto sheet.CharacterDTO) map[string]powerUse {
-	fora := map[string]powerUse{}
-	for _, u := range dto.PowerUses {
-		conta := fora[u.PowerID]
-		if u.Scope == "scene" {
-			conta.Cena = int(u.Used)
-		} else {
-			conta.Dia = int(u.Used)
-		}
-		fora[u.PowerID] = conta
 	}
 	return fora
 }
@@ -388,7 +364,7 @@ func stepsMore(spec book.Activation) string {
 }
 
 // writtenSpent é "usado 1/1 cena" — o que já se gastou do limite cobrado.
-func writtenSpent(escopo string, uso powerUse) string {
+func writtenSpent(escopo string, uso character.PowerUse) string {
 	gasto, palavra := uso.Dia, "dia"
 	if escopo == "scene" {
 		gasto, palavra = uso.Cena, "cena"
