@@ -17,6 +17,7 @@ import (
 	"t20engine/infra/db"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/infra/secret"
 	"t20engine/infra/wire"
 )
 
@@ -41,6 +42,11 @@ var (
 	// lado: um convite novo.
 	ErrBadInvite = fmt.Errorf("este convite não serve: %w", app.ErrForbidden)
 )
+
+// accountInviteTTL é curto de propósito: o link passa de mão em mão na mesa e
+// não por e-mail, então uma semana é generosa — e um link esquecido num
+// histórico de conversa para de funcionar.
+const accountInviteTTL = 7 * 24 * time.Hour
 
 // bcryptCost é o custo do hash de senha.
 //
@@ -111,6 +117,26 @@ func (g Gate) Register(ctx context.Context, corpo account.RegisterBody) (sqlcgen
 		Createdat:    agora,
 		Updatedat:    agora,
 	}, convite)
+}
+
+// MintInvite cunha o link de uso único que abre UMA conta.
+//
+// Ele é pedido por DUAS telas — a administração e o hub —, e é por isso que o
+// prazo mora aqui: com a conta de validade dentro de um manipulador HTTP, a
+// segunda tela só teria duas saídas, chamar a própria rota por dentro ou copiar
+// a conta.
+func (g Gate) MintInvite(ctx context.Context, criadoPor int64) (sqlcgen.AccountInvite, error) {
+	token, err := secret.Token()
+	if err != nil {
+		return sqlcgen.AccountInvite{}, err
+	}
+	agora := time.Now()
+	return g.queries.CreateAccountInvite(ctx, sqlcgen.CreateAccountInviteParams{
+		Token:     token,
+		Createdby: criadoPor,
+		Createdat: dbvalue.IsoAt(agora),
+		Expiresat: dbvalue.IsoAt(agora.Add(accountInviteTTL)),
+	})
 }
 
 // registrationInvite resolve o convite que este cadastro tem de gastar.

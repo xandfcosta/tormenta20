@@ -56,7 +56,7 @@ func (s Scene) handleHubInvite(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Só quem administra pode convidar."})
 		return
 	}
-	invite, err := s.deps.MintAccountInvite(r.Context(), s.deps.CurrentViewer(r).ID)
+	invite, err := s.gate.MintInvite(r.Context(), s.deps.CurrentViewer(r).ID)
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": internalNotice})
 		return

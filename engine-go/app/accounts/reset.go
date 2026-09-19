@@ -10,6 +10,7 @@ import (
 	"t20engine/app"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/infra/secret"
 )
 
 // ErrBadResetLink cobre as TRÊS formas de um link de redefinição não servir:
@@ -19,6 +20,19 @@ import (
 // As três dizem a mesma coisa a quem clicou, e distinguir contaria a um
 // estranho se um token existe.
 var ErrBadResetLink = fmt.Errorf("este link não serve mais: %w", app.ErrForbidden)
+
+// ErrUnknownAccount é a conta que não existe mais.
+//
+// Ela é separada do erro comum para quem CHAMA decidir o que dizer: a tela da
+// administração desenha um aviso, e uma rota JSON responderia 404. O caso de uso
+// não sabe qual é o transporte, e é esse o ponto.
+var ErrUnknownAccount = fmt.Errorf("esta conta não existe: %w", app.ErrNotFound)
+
+// passwordResetTTL é curto contra os sete dias do convite, e a diferença é de
+// RISCO: o convite abre uma conta que ainda não existe, este abre uma que já
+// existe e tem fichas dentro. Um link esquecido numa conversa vale mais para um
+// estranho.
+const passwordResetTTL = 24 * time.Hour
 
 // Resets é a redefinição de senha por LINK.
 //
@@ -32,6 +46,29 @@ type Resets struct {
 }
 
 func NewResets(portao Gate) Resets { return Resets{gate: portao} }
+
+// Mint cunha o link de uso único que o administrador entrega em mãos.
+//
+// Ele confere que a conta existe ANTES de escrever a linha: um link apontando
+// para um id apagado só falharia no clique de quem o recebeu, e aí já teria sido
+// entregue.
+func (r Resets) Mint(ctx context.Context, contaID, criadoPor int64) (sqlcgen.PasswordReset, error) {
+	if _, err := r.gate.queries.GetUserByID(ctx, contaID); err != nil {
+		return sqlcgen.PasswordReset{}, ErrUnknownAccount
+	}
+	token, err := secret.Token()
+	if err != nil {
+		return sqlcgen.PasswordReset{}, err
+	}
+	agora := time.Now()
+	return r.gate.queries.CreatePasswordReset(ctx, sqlcgen.CreatePasswordResetParams{
+		Token:     token,
+		Userid:    contaID,
+		Createdby: criadoPor,
+		Createdat: dbvalue.IsoAt(agora),
+		Expiresat: dbvalue.IsoAt(agora.Add(passwordResetTTL)),
+	})
+}
 
 // OwnerOfLink é de quem é a conta que este link redefine.
 //

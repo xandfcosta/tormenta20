@@ -7,13 +7,14 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/accounts"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/ui"
 )
 
-// A PORTA DA ADMINISTRAÇÃO, a mais larga de todas — a cena é um painel de
-// controle sobre serviços do servidor, e fazer backup, cunhar convite, apagar
-// conta e medir o banco são coisas do hospedeiro.
+// A PORTA DA ADMINISTRAÇÃO. Ela foi a mais larga de todas, e o que sobrou é o
+// que de fato é do HOSPEDEIRO: o banco, a casca, quem pede, e os serviços do
+// servidor — ambiente, caminho e tamanho do arquivo, e o backup.
 //
 // Cada método pede a MENOR pergunta que resolve, e isso não é economia de
 // bytes: cada tipo que atravessa é um tipo que a cena passa a conhecer. O
@@ -40,23 +41,27 @@ type Deps interface {
 	// LastBackup: `ok` falso é "nenhum backup ainda", que é estado normal.
 	LastBackup() (name string, size int64, ok bool)
 
+	// BackupNow fica na PORTA, e é deliberado: copiar o arquivo do banco é
+	// serviço do hospedeiro — sistema de arquivos e política de retenção —, e
+	// não caso de uso de conta nenhuma. A ALE-349 mudou de lado o que era regra
+	// de CONTA, e só isso.
 	BackupNow(ctx context.Context, at time.Time) error
-	// DeleteAccount apaga a conta e transfere as campanhas dela. A regra mora no
-	// hospedeiro porque é a mesma do handler JSON, e duas versões de "não se
-	// apaga a própria conta" divergiriam.
-	DeleteAccount(r *http.Request, id, callerID int64) error
-	// As duas cunhagens devolvem a LINHA e não o token, que é a única vez em que
-	// a regra da menor pergunta cede: o `hub.Deps` já pede `MintAccountInvite`
-	// com esta forma, e encolher aqui obrigaria o hospedeiro a ter dois métodos
-	// de mesmo nome — o compilador recusa.
-	MintAccountInvite(ctx context.Context, by int64) (sqlcgen.AccountInvite, error)
-	MintPasswordReset(ctx context.Context, userID, by int64) (sqlcgen.PasswordReset, error)
-	// IsUnknownUser separa "essa conta não existe mais" de "deu erro": o
-	// sentinela é valor do hospedeiro e a cena não o alcança.
-	IsUnknownUser(err error) bool
 }
 
 // Scene é a administração montada com as dependências dela.
-type Scene struct{ deps Deps }
+//
+// As quatro entradas que saíram da porta — apagar conta, cunhar convite, cunhar
+// link de senha, e o predicado que distinguia "conta inexistente" — chegam por
+// PARÂMETRO, do `app/accounts` (ALE-349). O predicado não veio junto porque
+// deixou de fazer sentido: `accounts.ErrUnknownAccount` é valor exportado, e a
+// cena o lê com `errors.Is`.
+type Scene struct {
+	deps   Deps
+	gate   accounts.Gate
+	resets accounts.Resets
+	roster accounts.Roster
+}
 
-func New(d Deps) Scene { return Scene{deps: d} }
+func New(d Deps, portao accounts.Gate, redefinicoes accounts.Resets, elenco accounts.Roster) Scene {
+	return Scene{deps: d, gate: portao, resets: redefinicoes, roster: elenco}
+}

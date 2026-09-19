@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -9,6 +10,8 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
+
+	"t20engine/app/accounts"
 	"t20engine/serve/web/ui"
 )
 
@@ -51,13 +54,26 @@ func (s Scene) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sse := datastar.NewSSE(w, r)
-	// A REGRA mora no `deleteAccount`: o app não ganha uma segunda versão de
+	// A REGRA mora no `accounts.Roster`: o app não ganha uma segunda versão de
 	// "não se apaga a própria conta".
-	if err := s.deps.DeleteAccount(r, id, s.deps.CurrentUserID(r)); err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"error": err.Error()})
+	if _, err := s.roster.Delete(r.Context(), s.deps.CurrentUserID(r), id); err != nil {
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": deleteRefusal(err)})
 		return
 	}
 	s.patchPanels(sse, r, playersPanel, serverPanel)
+}
+
+// deleteRefusal escolhe a frase que o dono lê.
+//
+// A recusa de apagar a PRÓPRIA conta é a única que vale ser dita com todas as
+// letras — ela acontece por um gesto, não por um defeito. O resto é interno, e
+// despejar o `err.Error()` na tela mostraria ao dono o texto de uma transação
+// que falhou.
+func deleteRefusal(err error) string {
+	if errors.Is(err, accounts.ErrCannotDeleteSelf) {
+		return "Você não pode apagar a própria conta."
+	}
+	return ui.NoticeInternal
 }
 
 // handleBackup grava o backup e devolve só o painel do servidor.
@@ -104,7 +120,7 @@ func (s Scene) patchPanels(sse *datastar.ServerSentEventGenerator, r *http.Reque
 // com ele. Nada mais muda na tela: gerar um link não altera jogador, convite
 // nem servidor, então não há painel a remendar.
 //
-// A REGRA vem do `mintPasswordReset`: o app não ganha uma segunda versão do
+// A REGRA vem do `accounts.Resets`: o app não ganha uma segunda versão do
 // prazo de 24h, que é como duas telas divergem sem ninguém notar.
 func (s Scene) handleMintReset(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
@@ -113,8 +129,8 @@ func (s Scene) handleMintReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sse := datastar.NewSSE(w, r)
-	reset, err := s.deps.MintPasswordReset(r.Context(), id, s.deps.CurrentUserID(r))
-	if s.deps.IsUnknownUser(err) {
+	reset, err := s.resets.Mint(r.Context(), id, s.deps.CurrentUserID(r))
+	if errors.Is(err, accounts.ErrUnknownAccount) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Essa conta não existe mais."})
 		return
 	}
@@ -140,7 +156,7 @@ func (s Scene) handleMintReset(w http.ResponseWriter, r *http.Request) {
 // essa lista, e por isso lá basta o link — mesma regra, transportes diferentes.
 func (s Scene) handleMintInvite(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
-	invite, err := s.deps.MintAccountInvite(r.Context(), s.deps.CurrentUserID(r))
+	invite, err := s.gate.MintInvite(r.Context(), s.deps.CurrentUserID(r))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return

@@ -14,10 +14,10 @@ import (
 // resetLinkFor cunha o link pela REGRA, e não pela rota do admin: o que estes
 // casos prendem nunca foi o transporte — é o link valer UMA vez e a corrida de
 // dois pedidos gastá-lo uma vez só. A porta troca a senha pelo mesmo
-// `accounts.Resets`, e a administração cunha pelo mesmo `mintPasswordReset`.
+// `accounts.Resets`, e a administração cunha pelo mesmo `Mint`.
 func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 	t.Helper()
-	reset, err := s.adminHost().mintPasswordReset(context.Background(), UserID, adminID)
+	reset, err := s.accountResets().Mint(context.Background(), UserID, adminID)
 	if err != nil {
 		t.Fatalf("gerar link: %v", err)
 	}

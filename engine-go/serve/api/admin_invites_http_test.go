@@ -34,7 +34,7 @@ func registra(t *testing.T, s *Server, email, token string) error {
 // inviteFrom cunha um convite pela REGRA e devolve o token.
 func inviteFrom(t *testing.T, s *Server, adminID int64) string {
 	t.Helper()
-	convite, err := mintAccountInvite(context.Background(), s.queries, adminID)
+	convite, err := s.accountGate().MintInvite(context.Background(), adminID)
 	if err != nil {
 		t.Fatalf("cunhar convite: %v", err)
 	}

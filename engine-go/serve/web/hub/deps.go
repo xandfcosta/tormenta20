@@ -1,11 +1,11 @@
 package hub
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/accounts"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/ui"
 )
@@ -31,9 +31,6 @@ type Deps interface {
 	Queries() *sqlcgen.Queries
 	// CurrentViewer é quem está pedindo, já traduzido para a língua desta cena.
 	CurrentViewer(r *http.Request) Viewer
-	// MintAccountInvite: criar conta para outra pessoa é ato da CASA, não desta
-	// tela.
-	MintAccountInvite(ctx context.Context, byUserID int64) (sqlcgen.AccountInvite, error)
 	// ExpiredSessionCookie apaga a sessão no logout. O formato depende da
 	// configuração (domínio, `Secure`, `SameSite`), que é do hospedeiro.
 	ExpiredSessionCookie() *http.Cookie
@@ -46,6 +43,15 @@ type Deps interface {
 }
 
 // Scene é o hub montado com as dependências dele.
-type Scene struct{ deps Deps }
+// Scene é o hub montado com as dependências dele.
+//
+// O `gate` chega por PARÂMETRO e não pela porta: cunhar o convite de conta é
+// caso de uso, e o `app/` está abaixo desta cena (ALE-349). Criar conta para
+// outra pessoa continua sendo ato da CASA e não desta tela — o que mudou é onde
+// a casa guarda a regra.
+type Scene struct {
+	deps Deps
+	gate accounts.Gate
+}
 
-func New(d Deps) Scene { return Scene{deps: d} }
+func New(d Deps, portao accounts.Gate) Scene { return Scene{deps: d, gate: portao} }

@@ -20,6 +20,12 @@ import (
 // O que ela alcança hoje é o kit, as linhas do banco e nada mais. `time` e
 // `context` são biblioteca padrão e não passam por aqui.
 var permitidos = map[string]bool{
+	// O `app/accounts` NÃO é concessão, é a porta encolhendo (ALE-349): ele está
+	// ABAIXO desta cena, então não há ciclo para desviar e não há interface a
+	// declarar. Apagar conta, cunhar convite e cunhar link de senha chegam por
+	// PARÂMETRO do `New` — e o predicado que distinguia "conta inexistente"
+	// deixou de existir, porque `accounts.ErrUnknownAccount` é valor exportado.
+	"t20engine/app/accounts":     true,
 	"t20engine/serve/web/ui":     true, // o kit de apresentação e a casca
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco
 	"t20engine/infra/db/dbvalue": true,

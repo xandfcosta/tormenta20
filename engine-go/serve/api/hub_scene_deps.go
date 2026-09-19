@@ -1,11 +1,9 @@
 package api
 
 import (
-	"context"
 	"net/http"
 
 	"t20engine/infra/config"
-	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/hub"
 	"t20engine/serve/web/routes"
 )
@@ -33,13 +31,9 @@ func (h hubHost) CurrentViewer(r *http.Request) hub.Viewer {
 	return hub.Viewer{ID: eu.ID, Email: eu.Email, Name: eu.Name, IsAdmin: eu.IsAdmin}
 }
 
-// MintAccountInvite e ExpiredSessionCookie são o que o hub pede da CASA: cunhar
-// convite e apagar a sessão dependem de configuração e de política, e nenhuma
-// das duas é da tela.
-func (h hubHost) MintAccountInvite(ctx context.Context, byUserID int64) (sqlcgen.AccountInvite, error) {
-	return mintAccountInvite(ctx, h.queries, byUserID)
-}
-
+// ExpiredSessionCookie é o que o hub pede da CASA: o formato do biscoito
+// depende da configuração e da política, e nenhuma das duas é da tela. Cunhar
+// convite era o outro, e virou caso de uso (ALE-349).
 func (h hubHost) ExpiredSessionCookie() *http.Cookie { return sessionCookie(h.cfg, "", -1) }
 
 // TableRoute é o endereço de uma sessão ao vivo. Quem sabe onde cada cena está

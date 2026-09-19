@@ -26,9 +26,12 @@ import (
 // `book` nem o `sheet` entram. A lista curta é o desenho, e não descuido — se
 // um dia ela crescer, a pergunta é se a cena está fazendo trabalho de outra.
 var permitidos = map[string]bool{
+	// O `app/accounts` chega por PARÂMETRO do `New`, e não pela porta: cunhar o
+	// convite de conta é caso de uso, e o `app/` está abaixo desta cena
+	// (ALE-349).
+	"t20engine/app/accounts":     true,
 	"t20engine/serve/web/ui":     true, // o kit de apresentação e a casca
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco
-
 }
 
 func TestTheSceneDoesNotImportItsHost(t *testing.T) {

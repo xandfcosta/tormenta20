@@ -41,3 +41,13 @@ func (s *Server) accountGate() accounts.Gate {
 func (s *Server) accountResets() accounts.Resets {
 	return accounts.NewResets(s.accountGate())
 }
+
+// accountRoster é o elenco de contas visto por quem administra: hoje, apagar uma
+// delas.
+//
+// Ele também se monta sobre o portão, e pela razão oposta à do `accountResets`:
+// não há segredo compartilhado, há a MESMA conexão — apagar conta é transação, e
+// quem carrega o `*sql.DB` desta família é o portão.
+func (s *Server) accountRoster() accounts.Roster {
+	return accounts.NewRoster(s.accountGate())
+}
