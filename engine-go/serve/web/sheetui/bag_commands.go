@@ -1,7 +1,6 @@
 package sheetui
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -31,12 +29,7 @@ func addCatalogItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Sign
 	if err != nil {
 		return err
 	}
-	_, err = s.deps.Queries().CreateItem(r.Context(), sqlcgen.CreateItemParams{
-		Characterid: row.ID, Catalogid: sql.NullString{String: catalogo.ID, Valid: true},
-		Name: catalogo.Name, Quantity: quantidade, Slots: catalogo.Slots,
-		Improvements: "[]", Createdat: dbvalue.NowISO(),
-	})
-	return err
+	return s.plays.AddCatalogItem(r.Context(), row.ID, catalogo.ID, quantidade)
 }
 
 // addCustomItem cria o item que o livro não tem — a lembrança de um NPC, a
@@ -46,11 +39,7 @@ func addCustomItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signa
 	if err != nil {
 		return err
 	}
-	_, err = s.deps.Queries().CreateItem(r.Context(), sqlcgen.CreateItemParams{
-		Characterid: row.ID, Name: nome, Quantity: quantidade, Slots: espacos,
-		Improvements: "[]", Createdat: dbvalue.NowISO(),
-	})
-	return err
+	return s.plays.AddCustomItem(r.Context(), row.ID, nome, quantidade, espacos)
 }
 
 // editItem muda nome, quantidade e espaços de um item já na ficha.
@@ -75,7 +64,7 @@ func removeItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 	if err != nil {
 		return err
 	}
-	return s.deps.Queries().DeleteItem(r.Context(), item.ID)
+	return s.plays.RemoveItem(r.Context(), item.ID)
 }
 
 // useItem gasta uma dose do consumível.
@@ -247,11 +236,5 @@ func changeMoney(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals
 	if sinais.TibarValor == nil {
 		return fmt.Errorf("informe um valor a partir de 0")
 	}
-	saldo, erro := afterGestureBalance(row.Tibar, sinais.TibarModo, *sinais.TibarValor)
-	if erro != "" {
-		return fmt.Errorf("%s", erro)
-	}
-	return s.deps.Queries().SetCharacterTibar(r.Context(), sqlcgen.SetCharacterTibarParams{
-		Tibar: saldo, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-	})
+	return s.plays.ChangeMoney(r.Context(), row, sinais.TibarModo, *sinais.TibarValor)
 }

@@ -2,9 +2,13 @@ package character
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
+	"t20engine/domain/book"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/db/sqlcgen"
 )
 
 // AS ESCRITAS DA MOCHILA.
@@ -20,6 +24,58 @@ import (
 //
 // **Nenhuma delas toca carimbo**: `character_items` não tem coluna `updatedAt`.
 // A ficha tem, e é por isso que o `choices.go` ao lado carimba e este não.
+
+// AddCatalogItem põe na mochila um item do Capítulo 3.
+//
+// O NOME e os ESPAÇOS saem do catálogo e não de quem chama, e isso é a regra e
+// não zelo: são dado transcrito do livro, e deixar o navegador mandá-los abriria
+// a porta para uma "Espada longa" de 0 espaços. Quem chama diz QUAL item e
+// QUANTOS, que é tudo o que ele sabe.
+func (p Plays) AddCatalogItem(
+	ctx context.Context, characterID int64, catalogID string, quantidade int64,
+) error {
+	catalogo := book.ItemByID(catalogID)
+	if catalogo == nil {
+		return fmt.Errorf("o item %q não existe no livro", catalogID)
+	}
+	if _, err := p.queries.CreateItem(ctx, sqlcgen.CreateItemParams{
+		Characterid:  characterID,
+		Catalogid:    sql.NullString{String: catalogo.ID, Valid: true},
+		Name:         catalogo.Name,
+		Quantity:     quantidade,
+		Slots:        catalogo.Slots,
+		Improvements: "[]",
+		Createdat:    dbvalue.NowISO(),
+	}); err != nil {
+		return fmt.Errorf("pôr %q na mochila de %d: %w", catalogo.Name, characterID, err)
+	}
+	return nil
+}
+
+// AddCustomItem cria o item que o livro não tem — a lembrança de um NPC, a
+// chave de um cofre.
+func (p Plays) AddCustomItem(
+	ctx context.Context, characterID int64, nome string, quantidade int64, espacos float64,
+) error {
+	if _, err := p.queries.CreateItem(ctx, sqlcgen.CreateItemParams{
+		Characterid: characterID, Name: nome, Quantity: quantidade, Slots: espacos,
+		Improvements: "[]", Createdat: dbvalue.NowISO(),
+	}); err != nil {
+		return fmt.Errorf("criar %q na mochila de %d: %w", nome, characterID, err)
+	}
+	return nil
+}
+
+// RemoveItem tira o item da ficha.
+//
+// A POSSE não é conferida aqui, e é a mesma decisão do resto do `Plays`: quem
+// chama já leu a linha e sabe de quem ela é. Ver o `doc.go`.
+func (p Plays) RemoveItem(ctx context.Context, itemID int64) error {
+	if err := p.queries.DeleteItem(ctx, itemID); err != nil {
+		return fmt.Errorf("tirar o item %d da ficha: %w", itemID, err)
+	}
+	return nil
+}
 
 // SaveCustomItem grava nome, quantidade e espaços de um item da mochila.
 //

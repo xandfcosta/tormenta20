@@ -91,7 +91,6 @@ deformidadeSkillIDs
 deformidadeStored
 edicaoDosSinais
 editarCombatente
-emDuasCasas
 entradaComPagina
 entradasComNome
 entreOsPontos
@@ -264,5 +263,4 @@ ultimoQuadro
 variantSwappedCom
 varrerCondicoesDeTeste
 varrerCronicasDeTeste
-virgulaCom
 zoomPeloTeclado

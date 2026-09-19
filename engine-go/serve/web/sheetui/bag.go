@@ -358,21 +358,25 @@ func categoryBagDa(item sheet.ItemDTO, chip string) bool {
 }
 
 // loadMeterOf traduz a carga do motor.
-func loadMeterOf(sheet engine.ComputedSheetV2) loadMeter {
-	carga := sheet.Carga
+//
+// O parâmetro se chamava `sheet` e SOMBREAVA o pacote de mesmo nome — o corpo
+// não podia mais alcançar nada de `domain/sheet` sem que o compilador
+// procurasse um método na struct.
+func loadMeterOf(computed engine.ComputedSheetV2) loadMeter {
+	carga := computed.Carga
 	return loadMeter{
-		Used:                virgulaCom(carga.Used),
+		Used:                sheet.WithComma(carga.Used),
 		Limit:               carga.Limit,
 		Max:                 carga.Max,
 		Percent:             barWidth(carga.Used, carga.Limit),
-		Coins:               virgulaCom(carga.Coins),
+		Coins:               sheet.WithComma(carga.Coins),
 		CoinSlots:           carga.Coins,
 		Overloaded:          carga.Overloaded,
 		OverMax:             carga.OverMax,
 		Enforced:            carga.Enforced,
 		ArmorPenalty:        book.WithSign(carga.ArmorPenalty),
 		DisplacementPenalty: book.WithSign(carga.DisplacementPenalty),
-		LimitLabel:          limitLabel(carga.Limit, sheet.Attributes["strength"].Total),
+		LimitLabel:          limitLabel(carga.Limit, computed.Attributes["strength"].Total),
 	}
 }
 
@@ -397,9 +401,9 @@ func limitLabel(limite, forca int) string {
 
 // moneyLineOf escreve o dinheiro e o espaço que ele ocupa.
 func moneyLineOf(dto sheet.CharacterDTO) moneyLine {
-	linha := moneyLine{Tibar: virgulaCom(dto.Tibar)}
+	linha := moneyLine{Tibar: sheet.WithComma(dto.Tibar)}
 	if espacos := coinSlots(dto.Tibar); espacos > 0 {
-		linha.Slots = virgulaCom(espacos) + slotPlural(espacos)
+		linha.Slots = sheet.WithComma(espacos) + slotPlural(espacos)
 	}
 	return linha
 }
@@ -415,15 +419,6 @@ func slotPlural(espacos float64) string {
 		return " espaço"
 	}
 	return " espaços"
-}
-
-// virgulaCom escreve o número como a mesa escreve: sem casa decimal quando ele
-// é inteiro, e com VÍRGULA quando não é.
-func virgulaCom(valor float64) string {
-	if valor == float64(int64(valor)) {
-		return strconv.FormatInt(int64(valor), 10)
-	}
-	return strings.Replace(strconv.FormatFloat(valor, 'f', -1, 64), ".", ",", 1)
 }
 
 // sortedImprovements devolve as sobreposições do item ordenadas por nome,
