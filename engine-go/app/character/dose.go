@@ -1,4 +1,4 @@
-package api
+package character
 
 import (
 	"context"
@@ -8,64 +8,68 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"t20engine/infra/db/dbvalue"
 
 	"t20engine/domain/catalog"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
-type consumeItemResult struct {
-	ID       int64 `json:"id"`
-	Quantity int64 `json:"quantity"`
-	Removed  bool  `json:"removed"`
+// ErrDailyPortion é a recusa da porção diária. Ela é RECONHECÍVEL em vez de
+// virar texto porque a dose tem dois caminhos para ela — o efeito já na ficha e
+// a colisão do UNIQUE no meio da transação — e quem chama precisa saber que os
+// dois são a mesma recusa.
+var ErrDailyPortion = errors.New("apenas uma porção por dia")
+
+// Dose é o que uma dose consumida MUDOU: o item, o efeito que ela deixou e os
+// poços depois dela.
+type Dose struct {
+	Nome      string
+	ItemID    int64
+	Quantity  int64
+	Removed   bool
+	Effect    *sheet.EffectDTO
+	HpCurrent int64
+	MpCurrent int64
 }
 
-type consumeResult struct {
-	Item      consumeItemResult `json:"item"`
-	Effect    *sheet.EffectDTO  `json:"effect"`
-	HpCurrent int64             `json:"hpCurrent"`
-	MpCurrent int64             `json:"mpCurrent"`
-}
-
-// errDailyPortion é a recusa da porção diária, que a API JSON responde com um
-// erro de CAMPO próprio — por isso ela é reconhecível em vez de virar texto.
-var errDailyPortion = errors.New("apenas uma porção por dia")
-
-// consumeItemForCharacter é a dose INTEIRA, sem HTTP: a rolagem imediata presa
-// no máximo, a linha de efeito de cena ou dia, e a baixa do item — tudo numa
-// transação.
+// Consume é a dose INTEIRA: a rolagem imediata presa no máximo, a linha de
+// efeito de cena ou dia, e a baixa do item — tudo numa transação.
 //
-// Fora do HTTP porque as duas portas — a rota JSON e a Mochila em Datastar — a
-// chamam: reescrita numa delas, daria DUAS respostas para "posso beber esta
-// poção?". É a mesma razão do `Cast`.
-func (sr sheetRules) consumeItemForCharacter(
+// Ela tem dois chamadores, e é por isso que mora aqui: a Mochila da ficha e o
+// gerador da seed. Reescrita numa delas, daria DUAS respostas para "posso beber
+// esta poção?". É a mesma razão do `Cast`.
+//
+// A TRANSAÇÃO é o caso inteiro desta fatia: três escritas — o efeito, o item e
+// os poços — que ou acontecem juntas ou não acontecem. Meia dose gravada é uma
+// poção que sumiu do inventário sem curar ninguém.
+func (p Plays) Consume(
 	ctx context.Context, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
-) (doseUsed, error) {
-	dto, err := sr.LoadCharacter(ctx, row)
+) (Dose, error) {
+	dto, err := sheet.Load(ctx, p.queries, row)
 	if err != nil {
-		return doseUsed{}, err
+		return Dose{}, err
 	}
 	item := findItemDTO(dto.Items, itemID)
 	if item == nil {
-		return doseUsed{}, fmt.Errorf("o item %d não está nesta ficha", itemID)
+		return Dose{}, fmt.Errorf("o item %d não está nesta ficha", itemID)
 	}
 	if item.CatalogID == nil {
-		return doseUsed{}, fmt.Errorf("%q é um item custom e não tem o que usar", item.Name)
+		return Dose{}, fmt.Errorf("%q é um item custom e não tem o que usar", item.Name)
 	}
 	cat, known := catalog.LookupItem(*item.CatalogID)
 	if !known || cat.Consumable == nil {
-		return doseUsed{}, fmt.Errorf("%q não é um consumível", item.Name)
+		return Dose{}, fmt.Errorf("%q não é um consumível", item.Name)
 	}
 	if item.Quantity < 1 {
-		return doseUsed{}, fmt.Errorf("não sobrou nenhum uso de %q", item.Name)
+		return Dose{}, fmt.Errorf("não sobrou nenhum uso de %q", item.Name)
 	}
 	spec := cat.Consumable
 	if spec.OncePerDay {
 		for _, e := range dto.ActiveEffects {
 			if e.CatalogID == cat.ID {
-				return doseUsed{Nome: cat.Name}, errDailyPortion
+				return Dose{Nome: cat.Name}, ErrDailyPortion
 			}
 		}
 	}
@@ -73,37 +77,41 @@ func (sr sheetRules) consumeItemForCharacter(
 	hpGain, hasHp := rollGain(hpRolled, spec.Instant, true)
 	mpGain, hasMp := rollGain(mpRolled, spec.Instant, false)
 
-	tx, err := sr.db.BeginTx(ctx, nil)
+	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
-		return doseUsed{}, err
+		return Dose{}, fmt.Errorf("abrir a transação da dose de %q: %w", cat.Name, err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	q := sr.queries.WithTx(tx)
+	q := p.queries.WithTx(tx)
 	now := dbvalue.NowISO()
 
 	var effect *sheet.EffectDTO
 	if wantsEffectRow(spec) {
 		eff, err := q.CreateActiveEffect(ctx, sqlcgen.CreateActiveEffectParams{
-			Characterid: row.ID, Catalogid: cat.ID, Scope: spec.Scope, Modifiers: effectModifiers(spec.Modifiers), Createdat: now,
+			Characterid: row.ID, Catalogid: cat.ID, Scope: spec.Scope,
+			Modifiers: effectModifiers(spec.Modifiers), Createdat: now,
 		})
 		if db.IsUniqueViolation(err) {
-			return doseUsed{Nome: cat.Name}, errDailyPortion
+			return Dose{Nome: cat.Name}, ErrDailyPortion
 		}
 		if err != nil {
-			return doseUsed{}, err
+			return Dose{}, fmt.Errorf("gravar o efeito de %q: %w", cat.Name, err)
 		}
-		effect = &sheet.EffectDTO{ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope, Modifiers: eff.Modifiers, CreatedAt: eff.Createdat}
+		effect = &sheet.EffectDTO{
+			ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope,
+			Modifiers: eff.Modifiers, CreatedAt: eff.Createdat,
+		}
 	}
 
 	removed := false
 	newQty := item.Quantity - 1
 	if item.Quantity > 1 {
 		if err := q.SetItemQuantity(ctx, sqlcgen.SetItemQuantityParams{Quantity: newQty, ID: itemID}); err != nil {
-			return doseUsed{}, err
+			return Dose{}, fmt.Errorf("dar baixa numa dose de %q: %w", cat.Name, err)
 		}
 	} else {
 		if err := q.DeleteItem(ctx, itemID); err != nil {
-			return doseUsed{}, err
+			return Dose{}, fmt.Errorf("tirar %q da mochila: %w", cat.Name, err)
 		}
 		removed, newQty = true, 0
 	}
@@ -116,27 +124,19 @@ func (sr sheetRules) consumeItemForCharacter(
 		if hasMp {
 			mpCurrent = min(row.Mpmax, row.Mpcurrent+int64(mpGain))
 		}
-		if err := q.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: row.ID}); err != nil {
-			return doseUsed{}, err
+		if err := q.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
+			HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: row.ID,
+		}); err != nil {
+			return Dose{}, fmt.Errorf("gravar os poços da ficha %d: %w", row.ID, err)
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		return doseUsed{}, err
+		return Dose{}, fmt.Errorf("fechar a transação da dose de %q: %w", cat.Name, err)
 	}
-	return doseUsed{
-		Nome: cat.Name,
-		consumeResult: consumeResult{
-			Item: consumeItemResult{ID: itemID, Quantity: newQty, Removed: removed}, Effect: effect,
-			HpCurrent: hpCurrent, MpCurrent: mpCurrent,
-		},
+	return Dose{
+		Nome: cat.Name, ItemID: itemID, Quantity: newQty, Removed: removed,
+		Effect: effect, HpCurrent: hpCurrent, MpCurrent: mpCurrent,
 	}, nil
-}
-
-// doseUsed é o resultado da dose mais o NOME do item, que a recusa da porção
-// diária precisa e o corpo da resposta JSON não carrega.
-type doseUsed struct {
-	consumeResult
-	Nome string
 }
 
 func findItemDTO(items []sheet.ItemDTO, itemID int64) *sheet.ItemDTO {
@@ -167,7 +167,7 @@ func rollGain(rolled *int64, instant *catalog.Instant, isHp bool) (int, bool) {
 
 // wantsEffectRow decide se a dose deixa LINHA de efeito. A linha é duas coisas
 // ao mesmo tempo: o que a ficha mostra em "Efeitos ativos" e o MARCADOR de que
-// a porção do dia já foi consumida — é ela que o `oncePerDay` lá em cima
+// a porção do dia já foi consumida — é ela que o `OncePerDay` lá em cima
 // procura, e é ela que o UNIQUE (characterId, catalogId, scope) protege.
 //
 // Exigir modificadores para criá-la mata a regra da porção diária inteira: os

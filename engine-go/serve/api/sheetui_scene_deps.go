@@ -47,19 +47,6 @@ func (h sheetHost) SaveNewCraft(ctx context.Context, id int64, nome string) erro
 	return h.rules.saveNewCraft(ctx, id, nome)
 }
 
-// ConsumeItem gasta uma dose do consumível.
-//
-// O RESULTADO não atravessa: a cena descarta a dose inteira, e a única recusa
-// que ela precisa — a porção diária — já chega como erro. O `doseUsed` carrega o
-// corpo da resposta JSON, e uma tela que o lesse dependeria do formato de um
-// endpoint que ela não serve.
-func (h sheetHost) ConsumeItem(
-	r *http.Request, row sqlcgen.Character, itemID int64, pvRolado, pmRolado *int64,
-) error {
-	_, err := h.rules.consumeItemForCharacter(r.Context(), row, itemID, pvRolado, pmRolado)
-	return err
-}
-
 // ApplyClassLevel sobe ou desce uma classe.
 //
 // Nenhum dos valores do hospedeiro atravessa: um deles é o `storedVitals`, que é

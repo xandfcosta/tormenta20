@@ -33,14 +33,17 @@ type Seeder struct {
 	// births é o MESMO caso de uso que a forja usa — e é por isso que este
 	// gerador não monta uma requisição falsa para chamar a criação: ele é o
 	// segundo chamador que a porta da forja nomeava antes de haver camada.
-	births  character.Births
+	births character.Births
+	// plays é o mesmo caso de uso que a Mochila da ficha usa para beber uma
+	// dose — o segundo chamador de novo, e pela mesma razão do `births`.
+	plays   character.Plays
 	sheet   sheetRules
 	queries *sqlcgen.Queries
 }
 
 func (s *Server) Seeder() Seeder {
 	return Seeder{
-		accounts: s.accountRules(), births: s.characterBirths(),
+		accounts: s.accountRules(), births: s.characterBirths(), plays: s.characterPlays(),
 		sheet: s.sheetRules(), queries: s.queries,
 	}
 }
@@ -128,14 +131,12 @@ func (sd Seeder) SetHp(ctx context.Context, id, atual int64) error {
 	})
 }
 
-// soOErro descarta o `doseUsed`, que é a forma de FIO da resposta JSON.
-func soOErro(_ doseUsed, err error) error { return err }
-
 // ConsumeItem gasta uma dose, para o elenco ter efeito de cena ligado.
 func (sd Seeder) ConsumeItem(ctx context.Context, id, itemID int64) error {
 	linha, err := sd.queries.GetCharacter(ctx, id)
 	if err != nil {
 		return err
 	}
-	return soOErro(sd.sheet.consumeItemForCharacter(ctx, linha, itemID, nil, nil))
+	_, err = sd.plays.Consume(ctx, linha, itemID, nil, nil)
+	return err
 }

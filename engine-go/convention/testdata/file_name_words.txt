@@ -306,6 +306,7 @@ place
 places
 play
 player
+plays
 playwright
 pm
 pnpm

@@ -80,14 +80,18 @@ func removeItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 // useItem gasta uma dose do consumível.
 //
 // A regra inteira — a rolagem presa no máximo, a linha de efeito de cena ou dia,
-// a porção diária, a baixa do item — mora no `ConsumeItem`. Os números rolados
+// a porção diária, a baixa do item — mora no `Plays.Consume`. Os números rolados
 // vêm por sinal porque quem rola é a MESA: a ficha não rola dado por ninguém.
 func useItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {
 		return err
 	}
-	return s.deps.ConsumeItem(r, row, item.ID, sinais.ItemRolagemPv, sinais.ItemRolagemPm)
+	// O RESULTADO não atravessa: a cena redesenha a ficha inteira depois do
+	// gesto, e a única recusa que ela precisa — a porção diária — já chega como
+	// erro.
+	_, err = s.plays.Consume(r.Context(), row, item.ID, sinais.ItemRolagemPv, sinais.ItemRolagemPm)
+	return err
 }
 
 // applyOverlays grava as melhorias e o material escolhidos.
