@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -24,7 +25,12 @@ func (p Plays) ApplySpellBuff(
 	if !known || spell.Buff == nil {
 		return sheet.EffectDTO{}, fmt.Errorf("a magia %q não deixa efeito para aplicar", spellID)
 	}
-	scope := spell.Buff.DefaultScope
+	// QUEM DIZ QUANTO O EFEITO DURA É A MAGIA, e o chamador só sobrescreve
+	// quando quer (o aprimoramento que "muda a duração para um dia", p227).
+	scope, err := engine.EffectScope(spell.Duration, spell.Buff.DefaultScope)
+	if err != nil {
+		return sheet.EffectDTO{}, fmt.Errorf("a magia %q: %w", spellID, err)
+	}
 	if escopo != nil {
 		scope = *escopo
 	}

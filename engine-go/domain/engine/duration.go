@@ -93,6 +93,16 @@ func ParseDuration(escrito string) (Duration, error) {
 	switch escrito {
 	case "instantanea":
 		return Duration{Kind: DurationInstant}, nil
+	case "instant":
+		return Duration{Kind: DurationInstant}, nil
+	case "sustained":
+		return Duration{Kind: DurationSustained}, nil
+	case "fixed":
+		return Duration{Kind: DurationFixed}, nil
+	case "permanent":
+		return Duration{Kind: DurationPermanent}, nil
+	case "discharge":
+		return Duration{Kind: DurationDischarge}, nil
 	case "cena", "scene":
 		return Duration{Kind: DurationScene}, nil
 	case "sustentada":
@@ -108,6 +118,97 @@ func ParseDuration(escrito string) (Duration, error) {
 	}
 	return Duration{}, fmt.Errorf(
 		"duração %q não é uma das seis do livro (p227): instantanea, cena, sustentada, definida, permanente, descarregar", escrito)
+}
+
+// EffectScope diz com que duração o efeito de uma magia é GRAVADO na ficha.
+//
+// A DURAÇÃO DA MAGIA MANDA. O catálogo escrevia a mesma coisa duas vezes — a
+// duração na magia e um `defaultScope` no efeito dela, em duas línguas — e oito
+// divergiam: Velocidade dizia "sustentada" e deixava na ficha um efeito de
+// cena, que nunca cobra PM e nunca cai (ALE-365).
+//
+// `declarada` só é consultada quando a magia NÃO PODE mandar, e os dois casos
+// são do livro:
+//
+//   - INSTANTÂNEA — a consequência não é a magia. "Curar Ferimentos age
+//     instantaneamente, mas os ferimentos continuam curados" (p227), e quanto o
+//     ferimento fica curado a duração da magia não diz.
+//   - DEFINIDA SEM QUANTIA — "definida" é a ESPÉCIE e não a medida ("pode ser
+//     medida em rodadas, horas, dias", p227). Sem a medida não há quando
+//     expirar, e gravar "definida" seria gravar um efeito eterno.
+//
+// Uma declaração REDUNDANTE não é erro aqui e sim dado sujo: quem a recusa é o
+// `TestEveryBuffLastsAsLongAsItsSpell`, na varredura. Fazer a conjuração falhar
+// por isso trocaria um efeito com duração errada por um efeito nenhum.
+//
+// @example EffectScope("sustentada", "scene") // "sustentada", nil
+func EffectScope(daMagia, declarada string) (string, error) {
+	dura, err := ParseDuration(daMagia)
+	if err != nil {
+		return "", fmt.Errorf("a magia dura %q: %w", daMagia, err)
+	}
+	if !dura.tellsTheEffectWhenToEnd() {
+		if declarada == "" {
+			return "", fmt.Errorf(
+				"a magia dura %q, que não diz quando o EFEITO acaba: o efeito tem de declarar a duração dele (p227)", daMagia)
+		}
+		doEfeito, err := ParseDuration(declarada)
+		if err != nil {
+			return "", fmt.Errorf("o efeito declara durar %q: %w", declarada, err)
+		}
+		return doEfeito.Stored(), nil
+	}
+	return dura.Stored(), nil
+}
+
+// tellsTheEffectWhenToEnd diz se a duração da magia serve de duração do efeito.
+func (d Duration) tellsTheEffectWhenToEnd() bool {
+	if d.Kind == DurationInstant {
+		return false
+	}
+	return !(d.Kind == DurationFixed && d.Amount == 0)
+}
+
+// Stored é a ÚNICA grafia com que uma duração vai para a coluna `scope`.
+//
+// Em inglês porque a coluna é FRONTEIRA (CLAUDE.md, "Idioma"), e uma só porque
+// o SQL que expira efeito casa a palavra: `scope IN ('scene','day')`. O
+// catálogo escreve em português e a tela lê em português — quem converte é
+// esta função e o `DurationLabel`, um em cada ponta.
+//
+// @example ParseDuration("sustentada").Stored() // "sustained"
+func (d Duration) Stored() string {
+	if d.Kind == DurationFixed && d.Unit == UnitDay && d.Amount == 1 {
+		return "day"
+	}
+	return string(d.Kind)
+}
+
+// DurationLabel é a palavra que a MESA lê ao lado do efeito na ficha.
+//
+// Palavra que o livro não tem cai em "cena" de propósito: este é o caminho do
+// DESENHO, e um efeito sem rótulo some da lista de quem o carrega. Quem recusa
+// a palavra é a validação do catálogo, no despejo.
+//
+// @example DurationLabel("sustentada") // "sustentada"
+func DurationLabel(escrito string) string {
+	dura, err := ParseDuration(escrito)
+	if err != nil {
+		return "cena"
+	}
+	switch dura.Kind {
+	case DurationSustained:
+		return "sustentada"
+	case DurationPermanent:
+		return "permanente"
+	case DurationDischarge:
+		return "até descarregar"
+	case DurationFixed:
+		if dura.Unit == UnitDay {
+			return "dia"
+		}
+	}
+	return "cena"
 }
 
 // ── LIMITE DE USO ───────────────────────────────────────────────────────────
