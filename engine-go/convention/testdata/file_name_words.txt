@@ -121,6 +121,7 @@ debt
 default
 defense
 defs
+delete
 deps
 design
 details
@@ -475,6 +476,7 @@ words
 worker
 workspace
 write
+writes
 yaml
 yml
 zoom

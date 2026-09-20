@@ -151,15 +151,12 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if _, ok := s.campaignRules().ownedCampaign(w, r, id); !ok {
-		return
-	}
-	// ANTES de apagar: a campanha leva as sessões por cascata, e depois disso não
-	// há mais como perguntar quais eram — o estado em memória delas ficaria
-	// batendo na chave estrangeira até o processo reiniciar.
-	s.CampaignDeleted(r.Context(), id)
-	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
-		httpio.WriteError(w, http.StatusInternalServerError, "Could not delete campaign")
+	// A TRAVA e a ORDEM são do caso de uso, e as duas juntas: esta rota repetia a
+	// sequência que a cena de campanhas também tinha, com o mesmo comentário
+	// explicando-a nos dois lugares. Duas cópias de uma ordem são duas
+	// oportunidades de inverter uma delas (ALE-359).
+	if err := s.campaignLifecycle().Delete(r.Context(), callerOf(currentUser(r)), id); err != nil {
+		httpio.WriteError(w, statusForAccess(err), "Could not delete campaign")
 		return
 	}
 	httpio.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})

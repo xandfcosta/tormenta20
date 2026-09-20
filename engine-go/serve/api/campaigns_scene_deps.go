@@ -1,10 +1,7 @@
 package api
 
 import (
-	"context"
 	"net/http"
-	"t20engine/app/boards"
-	"t20engine/app/session"
 )
 
 // A CENA DE CAMPANHAS e o adaptador que cumpre a porta dela (`campaigns.Deps`).
@@ -21,18 +18,10 @@ import (
 type campaignsHost struct {
 	sceneCore
 	rules campaignRules
-	// boards e sessions vivem aqui para UMA coisa só: a faxina de memória de
-	// apagar a campanha, que é do hospedeiro e que a cena pede como PERGUNTA
-	// (`CampaignDeleted`) e não como store.
-	//
-	// O acervo de LUGARES não passa mais por aqui — a cena recebe o
-	// `boards.Store` direto, como a Mesa (ALE-348).
-	boards   *boards.Store
-	sessions *session.Store
 }
 
 func (s *Server) campaignsHost() campaignsHost {
-	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules(), boards: s.boards, sessions: s.sessions}
+	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules()}
 }
 
 // RequesterIsAdmin diz se QUEM PEDE administra o servidor.
@@ -41,8 +30,3 @@ func (s *Server) campaignsHost() campaignsHost {
 // que a administração pede e que olha a CONFIGURAÇÃO. São perguntas diferentes
 // com a mesma cara, e reusar o nome faria uma responder pela outra.
 func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUser(r).IsAdmin }
-
-// CampaignDeleted é a faxina de memória das sessões da campanha.
-func (h campaignsHost) CampaignDeleted(ctx context.Context, campanhaID int64) {
-	campaignDeleted(ctx, h.rules.queries, h.boards, h.sessions, campanhaID)
-}

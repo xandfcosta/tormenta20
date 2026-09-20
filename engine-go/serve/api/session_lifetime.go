@@ -1,12 +1,8 @@
 package api
 
 import (
-	"context"
-	"log"
 	"t20engine/app/boards"
 	"t20engine/app/session"
-
-	"t20engine/infra/db/sqlcgen"
 )
 
 // O FIM DA VIDA de uma sessão, e de tudo que ela deixou em memória.
@@ -48,33 +44,7 @@ func (s *Server) SessionDeleted(sessionID int64) {
 	sessionDeleted(s.boards, s.sessions, sessionID)
 }
 
-// CampaignDeleted faz o mesmo para TODAS as sessões da campanha.
-//
-// Ela é chamada ANTES de apagar a campanha, e aqui a ordem é a inversa da de
-// cima — por um motivo prosaico: apagar a campanha leva as sessões por cascata,
-// e depois disso não há mais como perguntar quais eram.
-//
-// Falhar em LISTAR não impede o apagar: o mestre mandou apagar a campanha, e
-// recusar isso porque a faxina de memória não pôde ser planejada seria prender a
-// mesa numa campanha que ele já descartou. O custo do que sobra é um alarme
-// travado até o reinício, e ele fica REGISTRADO — sem esta linha, ninguém
-// saberia por quê.
-func campaignDeleted(
-	ctx context.Context, q *sqlcgen.Queries,
-	boards *boards.Store, sessions *session.Store, campaignID int64,
-) {
-	sessoes, err := q.ListSessions(ctx, campaignID)
-	if err != nil {
-		log.Printf("campaign %d: não deu para listar as sessões antes de apagar (%v); "+
-			"o estado em memória delas fica até o reinício", campaignID, err)
-		return
-	}
-	for _, sess := range sessoes {
-		sessionDeleted(boards, sessions, sess.ID)
-	}
-}
-
-// CampaignDeleted é a porta do hospedeiro para a sequência acima.
-func (s *Server) CampaignDeleted(ctx context.Context, campaignID int64) {
-	campaignDeleted(ctx, s.queries, s.boards, s.sessions, campaignID)
-}
+// Aqui morava a faxina de memória das sessões de uma campanha apagada, e ela
+// não existe mais neste pacote: a ORDEM — esquecer antes de apagar — é parte do
+// gesto, e gesto é do caso de uso. Hoje é o `campaign.Lifecycle.Delete`, e a
+// sequência tem um teste que a acusa invertida (ALE-359).
