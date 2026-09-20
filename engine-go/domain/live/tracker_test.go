@@ -219,3 +219,38 @@ func TestTheNameLimitCountsLettersNotBytes(t *testing.T) {
 		t.Errorf("60 letras acentuadas foram recusadas: %v", err)
 	}
 }
+
+// O EXTRATO DA MANUTENÇÃO é a segunda linha da faixa: quem entrou na vez pagou
+// o quê, e o que caiu por falta de mana (p227).
+func TestTheStripTellsWhatSustainingCostThisTurn(t *testing.T) {
+	casos := []struct {
+		nome    string
+		extrato *TurnUpkeep
+		quero   string
+	}{
+		{nome: "sem sustentada a linha não existe"},
+		// O SALDO vem junto do gasto: "−1 PM" diz o preço e não diz se dá para
+		// pagar de novo, que é a decisão de quem sustenta.
+		{nome: "uma paga diz o nome, o custo e o que sobrou",
+			extrato: &TurnUpkeep{Paid: []string{"Velocidade"}, Cost: 1, MpBefore: 12, MpAfter: 11},
+			quero:   "Velocidade · −1 PM (12 → 11)"},
+		{nome: "duas pagas somam o custo numa linha só",
+			extrato: &TurnUpkeep{Paid: []string{"Velocidade", "Oração"}, Cost: 2, MpBefore: 58, MpAfter: 56},
+			quero:   "Velocidade e Oração · −2 PM (58 → 56)"},
+		// A QUE CAIU é a notícia, e ela vem por último porque é o que muda a
+		// ficha de quem está jogando.
+		{nome: "a que caiu é nomeada",
+			extrato: &TurnUpkeep{Dropped: []string{"Velocidade"}, Cost: 0},
+			quero:   "Velocidade acabou: sem PM para sustentar"},
+		{nome: "paga e caída convivem",
+			extrato: &TurnUpkeep{Paid: []string{"Oração"}, Dropped: []string{"Velocidade"}, Cost: 1, MpBefore: 1},
+			quero:   "Oração · −1 PM (1 → 0) · Velocidade acabou: sem PM para sustentar"},
+	}
+	for _, c := range casos {
+		t.Run(c.nome, func(t *testing.T) {
+			if teve := UpkeepLine(c.extrato); teve != c.quero {
+				t.Errorf("a faixa diz %q, quero %q", teve, c.quero)
+			}
+		})
+	}
+}

@@ -34,6 +34,9 @@ func (p Plays) ApplySpellBuff(
 	if escopo != nil {
 		scope = *escopo
 	}
+	if err := p.assertOnlyOneSustainedSpell(ctx, characterID, spellID, scope); err != nil {
+		return sheet.EffectDTO{}, err
+	}
 	eff, err := p.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
 		Characterid: characterID, Source: "spell", Catalogid: spellID, Scope: scope,
 		Modifiers: string(spell.Buff.Modifiers), Createdat: dbvalue.NowISO(),
@@ -101,4 +104,49 @@ func effectFrom(e sqlcgen.UpsertActiveEffectRow) sheet.EffectDTO {
 		ID: e.ID, CatalogID: e.Catalogid, Scope: e.Scope,
 		Modifiers: e.Modifiers, CreatedAt: e.Createdat,
 	}
+}
+
+// assertOnlyOneSustainedSpell recusa a SEGUNDA magia sustentada (T20 p227).
+//
+// "Você pode manter diversas habilidades sustentadas, pagando o custo de cada
+// uma, mas apenas uma magia sustentada por vez." O limite é sobre MAGIA, e
+// aqui ele conta TODA sustentada — porque hoje só magia é sustentada: as 32 do
+// livro estão todas no `spells.json`, e nenhum outro catálogo declara a
+// duração. Filtrar pela fonte seria um ramo que nenhum dado alcança, e a
+// consulta nem traz a coluna.
+//
+// Quem força a revisita no dia em que isso mudar é o
+// `TestOnlySpellsAreSustainedInTheBook`: uma habilidade sustentada fora das
+// magias REPROVA, dizendo que este filtro passou a ter objeto.
+//
+// A recusa NOMEIA a que está de pé. "Só uma magia sustentada por vez" sozinho
+// manda procurar na aba Efeitos qual desligar.
+//
+// Reaplicar A MESMA magia não é uma segunda: é a gravação que já era um upsert.
+func (p Plays) assertOnlyOneSustainedSpell(ctx context.Context, characterID int64, spellID, scope string) error {
+	if dura, err := engine.ParseDuration(scope); err != nil || dura.Kind != engine.DurationSustained {
+		return nil
+	}
+	ligados, err := p.queries.ListActiveEffectsByCharacter(ctx, characterID)
+	if err != nil {
+		return fmt.Errorf("ler os efeitos da ficha %d: %w", characterID, err)
+	}
+	for _, e := range ligados {
+		if e.Catalogid == spellID {
+			continue
+		}
+		if dura, err := engine.ParseDuration(e.Scope); err == nil && dura.Kind == engine.DurationSustained {
+			return fmt.Errorf("%s já está sustentada, e o livro permite uma magia sustentada por vez (p227)",
+				spellName(e.Catalogid))
+		}
+	}
+	return nil
+}
+
+// spellName é o nome do livro; sem verbete, o id serve.
+func spellName(spellID string) string {
+	if magia, known := catalog.LookupSpell(spellID); known && magia.Name != "" {
+		return magia.Name
+	}
+	return spellID
 }

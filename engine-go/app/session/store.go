@@ -22,9 +22,13 @@ type Store struct {
 	// ficha é a PORTA para o contexto da ficha: o regime escreve PV e PM de
 	// personagem, mas as REGRAS dessa escrita são de lá. Nulo é caminho normal em
 	// teste de regime puro — quem tem personagem na fila injeta o implementador.
-	ficha  live.SheetVitals
-	States map[int64]*live.SessionRuntimeState
-	Dirty  map[int64]bool
+	ficha live.SheetVitals
+	// sustentadas é a porta do que a MANUTENÇÃO do turno precisa da ficha
+	// (p227). Separada da `ficha` porque muda por outra razão; o mesmo
+	// adaptador cumpre as duas.
+	sustentadas live.SheetSustained
+	States      map[int64]*live.SessionRuntimeState
+	Dirty       map[int64]bool
 	// seqs numera as mutações de cada sessão, para o hub reconhecer quadro
 	// atrasado. Mora aqui e não no estado: hidratar do banco troca o estado, e um
 	// contador que vivesse nele voltaria a zero.
@@ -57,15 +61,16 @@ func (st *Store) persistLock(sessionID int64) *sync.Mutex {
 
 // NewStore recebe a PORTA da ficha por parâmetro — injetada e não
 // importada, que é o que impede o regime de conhecer as regras da ficha.
-func NewStore(q *sqlcgen.Queries, newID func() string, ficha live.SheetVitals, bus *events.Bus) *Store {
+func NewStore(q *sqlcgen.Queries, newID func() string, ficha live.SheetVitals, sustentadas live.SheetSustained, bus *events.Bus) *Store {
 	return &Store{
-		States: map[int64]*live.SessionRuntimeState{},
-		Dirty:  map[int64]bool{},
-		seqs:   map[int64]uint64{},
-		newID:  newID,
-		ficha:  ficha,
-		q:      q,
-		bus:    bus,
+		States:      map[int64]*live.SessionRuntimeState{},
+		Dirty:       map[int64]bool{},
+		seqs:        map[int64]uint64{},
+		newID:       newID,
+		ficha:       ficha,
+		sustentadas: sustentadas,
+		q:           q,
+		bus:         bus,
 	}
 }
 
@@ -177,8 +182,23 @@ func (st *Store) RemoveInitiativeEntry(sessionID int64, entryID string) (*live.S
 }
 
 func (st *Store) NextTurn(sessionID int64) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { live.AdvanceTurn(s); return nil })
+	var cobranca upkeepCharge
+	virado, err := st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error {
+			live.AdvanceTurn(s)
+			cobranca = st.payUpkeep(s)
+			return nil
+		})
+	if err != nil || cobranca.pm == 0 {
+		return virado, err
+	}
+	// O TURNO VIRA MESMO QUE O MANA NÃO SAIA: a manutenção é uma consequência
+	// da virada, e uma gravação que falha não pode desfazer a vez de ninguém.
+	gasto := int64(-cobranca.pm)
+	if pago, err := st.DeltaVitals(sessionID, cobranca.entryID, nil, &gasto); err == nil {
+		return pago, nil
+	}
+	return virado, nil
 }
 
 func (st *Store) PreviousTurn(sessionID int64) (*live.SessionRuntimeState, error) {

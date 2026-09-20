@@ -165,3 +165,51 @@ func TestATempHpPoolDoesNotWipeTheOneAlreadyThere(t *testing.T) {
 		}
 	}
 }
+
+// UMA MAGIA SUSTENTADA POR VEZ (T20 p227).
+//
+// "Você pode manter diversas habilidades sustentadas, pagando o custo de cada
+// uma, mas apenas uma magia sustentada por vez." O limite é sobre MAGIA, e a
+// recusa nomeia a que está de pé — senão a resposta é "não" sem dizer o que
+// desligar.
+func TestOnlyOneSustainedSpellAtATime(t *testing.T) {
+	f := newSceneFixture(t)
+	id := f.charID
+
+	if rec := effect(t, f, id, "aplica/velocidade"); rec.Code != http.StatusOK {
+		t.Fatalf("conjurar a primeira sustentada deu %d", rec.Code)
+	}
+	// O CONTROLE: a primeira entrou mesmo, senão a segunda "recusada" seria uma
+	// recusa sobre nada.
+	if sustentadas(t, f, id) != 1 {
+		t.Fatalf("o controle falhou: a primeira sustentada não entrou na ficha")
+	}
+
+	rec := effect(t, f, id, "aplica/oracao")
+
+	// A FRASE INTEIRA, e não só o nome: "Velocidade" aparece na lista de magias
+	// da própria tela, e casar só o nome passaria verde sem recusa nenhuma.
+	if !strings.Contains(rec.Body, "Velocidade já está sustentada") {
+		t.Errorf("a recusa tem de nomear a magia sustentada que está de pé, e veio %q",
+			rec.Body[:min(240, len(rec.Body))])
+	}
+	if n := sustentadas(t, f, id); n != 1 {
+		t.Errorf("a ficha ficou com %d magias sustentadas, e o livro permite UMA", n)
+	}
+}
+
+// sustentadas conta as magias sustentadas de uma ficha.
+func sustentadas(t *testing.T, f sceneFixture, id int64) int {
+	t.Helper()
+	linhas, err := f.s.sceneCore().Queries().ListActiveEffectsByCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatalf("listar efeitos: %v", err)
+	}
+	n := 0
+	for _, l := range linhas {
+		if l.Scope == "sustained" {
+			n++
+		}
+	}
+	return n
+}

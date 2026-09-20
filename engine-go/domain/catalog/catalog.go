@@ -18,6 +18,10 @@ var files embed.FS
 
 // Spell is the subset of a SPELL_CATALOG entry the API's cast/apply paths read.
 type Spell struct {
+	// Name é o nome do livro, e ele é TEXTO DE TELA: o extrato da manutenção
+	// diz qual sustentada caiu, e "velocidade" não é o que a mesa chama de
+	// Velocidade.
+	Name   string `json:"name"`
 	Circle int    `json:"circle"`
 	School string `json:"school"`
 	// Class lists the spell appears on — the per-spell PM limit is the level in

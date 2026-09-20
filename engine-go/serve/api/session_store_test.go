@@ -358,3 +358,108 @@ func TestStoreConcurrentMutations(t *testing.T) {
 		t.Errorf("entries=%d, want 20", got)
 	}
 }
+
+// seedSustained liga um efeito que cobra mana por turno, como Velocidade deixa.
+func seedSustained(t *testing.T, s *Server, charID int64, spellID string) {
+	t.Helper()
+	if _, err := s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
+		Characterid: charID, Catalogid: spellID, Scope: "sustained",
+		Modifiers: "[]", Createdat: dbvalue.NowISO(),
+	}); err != nil {
+		t.Fatalf("semear sustentada: %v", err)
+	}
+}
+
+// ENTRAR NA VEZ PAGA 1 PM POR SUSTENTADA (T20 p227), e a que não for paga CAI.
+//
+// O caso é de INTEGRAÇÃO porque o que ele prende é a COSTURA: a decisão mora no
+// `engine.PaySustained`, os efeitos moram na ficha, o mana mora nos dois (ficha
+// e fila, espelhados), e quem junta os três é o avanço do turno.
+func TestEnteringYourTurnPaysForEachSustainedAbility(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gm := seedUser(t, s, "gm@t.com")
+	charID := seedCharacterAtLevel(t, s, gm, "A", "Arcanista", 3, 10, 4)
+	seedSustained(t, s, charID, "velocidade")
+	sid := seedSession(t, s, seedCampaign(t, s, gm))
+	store := s.sessions
+	if _, err := store.Load(ctx, sid); err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
+		t.Fatalf("começar a cena: %v", err)
+	}
+	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 12, charID)); err != nil {
+		t.Fatalf("Add: %v", err)
+	}
+	antes := poolsOf(t, s, charID).MpCurrent
+
+	depois, err := store.NextTurn(sid)
+	if err != nil {
+		t.Fatalf("entrar na vez: %v", err)
+	}
+
+	if agora := poolsOf(t, s, charID).MpCurrent; agora != antes-1 {
+		t.Errorf("a sustentada cobra 1 PM da FICHA: era %d e ficou %d", antes, agora)
+	}
+	extrato := depois.Scene.Upkeep
+	if extrato == nil {
+		t.Fatal("a faixa não tem o que dizer: a manutenção não deixou extrato")
+	}
+	if extrato.Cost != 1 || len(extrato.Paid) != 1 || extrato.Paid[0] != "Velocidade" {
+		t.Errorf("o extrato diz %+v, quero 1 PM pago por Velocidade", extrato)
+	}
+	// E a FILA espelha o mana da ficha: os dois números da tela são um só.
+	if mp := live.DerefOr(depois.Initiative[0].MpCurrent, -1); mp != antes-1 {
+		t.Errorf("a fila mostra %d PM e a ficha tem %d", mp, antes-1)
+	}
+}
+
+// SEM MANA A SUSTENTADA CAI, e ela some da ficha: "se não o fizer, a habilidade
+// termina" (p227). Um efeito de pé devendo PM seria a pior das duas saídas.
+func TestWithoutManaTheSustainedAbilityEnds(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gm := seedUser(t, s, "gm@t.com")
+	charID := seedCharacterAtLevel(t, s, gm, "A", "Arcanista", 3, 10, 4)
+	seedSustained(t, s, charID, "velocidade")
+	sid := seedSession(t, s, seedCampaign(t, s, gm))
+	store := s.sessions
+	if _, err := store.Load(ctx, sid); err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
+		t.Fatalf("começar a cena: %v", err)
+	}
+	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 12, charID)); err != nil {
+		t.Fatalf("Add: %v", err)
+	}
+	entryID := store.GetState(sid).Initiative[0].ID
+	// Zera o mana pelo caminho de verdade, e o CONTROLE vem junto: sem isto o
+	// teste mediria uma ficha cheia e passaria verde sobre nada.
+	if _, err := store.DeltaVitals(sid, entryID, nil, live.PtrInt64(-99)); err != nil {
+		t.Fatalf("zerar o mana: %v", err)
+	}
+	if mp := poolsOf(t, s, charID).MpCurrent; mp != 0 {
+		t.Fatalf("o controle falhou: a ficha ficou com %d PM em vez de 0", mp)
+	}
+
+	depois, err := store.NextTurn(sid)
+	if err != nil {
+		t.Fatalf("entrar na vez: %v", err)
+	}
+
+	extrato := depois.Scene.Upkeep
+	if extrato == nil || len(extrato.Dropped) != 1 || extrato.Dropped[0] != "Velocidade" {
+		t.Fatalf("o extrato diz %+v, quero Velocidade caída", extrato)
+	}
+	efeitos, err := s.queries.ListActiveEffectsByCharacter(ctx, charID)
+	if err != nil {
+		t.Fatalf("listar efeitos: %v", err)
+	}
+	for _, e := range efeitos {
+		if e.Catalogid == "velocidade" {
+			t.Error("a sustentada não paga continua na ficha")
+		}
+	}
+}
