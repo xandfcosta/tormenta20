@@ -51,7 +51,7 @@ func (c *Catalogs) ActiveItemsFor(ch Character) []ActiveItem {
 		}
 		scope := DurationLabel(eff.Scope)
 		items = append(items, ActiveItem{
-			Source:    fmt.Sprintf("%s (%s)", c.effectSourceName(eff.CatalogID), scope),
+			Source:    fmt.Sprintf("%s (%s)", c.appliedEffectName(eff.CatalogID, mods), scope),
 			Equipped:  &vestedWear,
 			Modifiers: mods,
 		})
@@ -427,6 +427,30 @@ func attackExpertiseFor(purpose string) string {
 // an ActiveEffect's display name. Spell/activation catalogs aren't primed in the
 // engine (no seed effect needs them), so this covers the manual pool + item
 // sources and falls back to the raw id — e cai no id cru como último recurso.
+// appliedEffectName nomeia a PROCEDÊNCIA de um efeito aplicado.
+//
+// O `effectSourceName` sozinho não dá conta do efeito de MAGIA: o
+// `engine.Catalogs` carrega itens, raças, origens e poderes, e não carrega
+// magias — então a decomposição da aba Combate saía escrita
+// "armadura-arcana (cena)", com o id na cara de quem lê a ficha (ALE-365).
+//
+// O nome do livro já está DENTRO do efeito, na nota do modificador que o
+// catálogo transcreveu ("Armadura Arcana"), e é ela que entra aqui. Ensinar o
+// motor a carregar as 198 magias resolveria também, e custaria uma entrada nova
+// no despejo que alimenta o oráculo — preço alto para um rótulo que o dado já
+// carrega.
+func (c *Catalogs) appliedEffectName(catalogID string, mods []Modifier) string {
+	if nome := c.effectSourceName(catalogID); nome != catalogID {
+		return nome
+	}
+	for _, m := range mods {
+		if m.Note != "" {
+			return m.Note
+		}
+	}
+	return catalogID
+}
+
 func (c *Catalogs) effectSourceName(catalogID string) string {
 	if catalogID == "manual-temp-hp" {
 		return "PV temporários (manual)"

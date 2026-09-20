@@ -248,12 +248,25 @@ func effectDisplayName(catalogID string) string {
 }
 
 // scopeLabel diz até quando o efeito vale.
+//
+// A coluna `scope` grava em INGLÊS porque é fronteira, e a tela lê em
+// português; as duas grafias entram aqui porque o dado gravado antes da
+// ALE-365 e o dado de hoje convivem. Palavra sem tradução VOLTA CRUA de
+// propósito — um efeito sem rótulo some da linha —, e é por isso que cada
+// duração nova precisa passar por aqui: a sustentada nasceu sem, e a aba
+// mostrou "sustained" para quem lê a ficha.
 func scopeLabel(scope string) string {
 	switch scope {
 	case "day", "dia":
 		return "até o fim do dia"
 	case "scene", "cena":
 		return "até o fim da cena"
+	case "sustained", "sustentada":
+		return "enquanto for sustentada"
+	case "permanent", "permanente":
+		return "para sempre"
+	case "discharge", "descarregar":
+		return "até descarregar"
 	}
 	return scope
 }

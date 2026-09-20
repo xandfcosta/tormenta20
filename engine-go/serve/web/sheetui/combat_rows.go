@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"strings"
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 )
@@ -128,7 +129,9 @@ func pmCostRows(sheet engine.ComputedSheet) []breakdownRow {
 func rowsFromContributions(contributions []engine.BreakdownContribution) []breakdownRow {
 	rows := make([]breakdownRow, 0, len(contributions))
 	for _, c := range contributions {
-		rows = append(rows, breakdownRow{Label: c.Source, Value: book.WithSign(c.Amount), Note: c.Note})
+		rows = append(rows, breakdownRow{
+			Label: c.Source, Value: book.WithSign(c.Amount), Note: noteUnlessEchoed(c.Source, c.Note),
+		})
 	}
 	return rows
 }
@@ -141,4 +144,18 @@ func rowsFromSourceAmounts(sources []engine.SourceAmount) []breakdownRow {
 		rows = append(rows, breakdownRow{Label: s.Source, Value: book.WithSign(s.Amount)})
 	}
 	return rows
+}
+
+// noteUnlessEchoed cala a nota que só repete a procedência.
+//
+// A linha da decomposição traz a procedência em cima e a nota embaixo, e as
+// duas vinham do mesmo nome do livro em toda magia aplicada: a procedência é
+// "Armadura Arcana (cena)" e a nota, "Armadura Arcana". Enquanto a procedência
+// saía com o ID, as duas diziam coisas diferentes e a nota era a única a dar o
+// nome — consertado o id, ela virou eco, e eco custa uma linha a 390px.
+func noteUnlessEchoed(procedencia, nota string) string {
+	if nota != "" && strings.HasPrefix(procedencia, nota) {
+		return ""
+	}
+	return nota
 }

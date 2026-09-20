@@ -213,3 +213,80 @@ func sustentadas(t *testing.T, f sceneFixture, id int64) int {
 	}
 	return n
 }
+
+// A PROCEDÊNCIA DE UM BÔNUS SAI COM O NOME DO LIVRO, e não com o id.
+//
+// A decomposição da ficha diz de onde cada número vem, e para efeito de magia
+// ela vinha escrita "armadura-arcana (cena)": o `engine.Catalogs` não carrega
+// magias, então o resolvedor de nomes do motor nunca teve o que resolver e caía
+// no id. Quem lê a ficha não conhece o id.
+func TestAnAppliedSpellIsNamedByItsBookName(t *testing.T) {
+	f := newSceneFixture(t)
+	id := f.charID
+	if rec := effect(t, f, id, "aplica/armadura-arcana"); rec.Code != http.StatusOK {
+		t.Fatalf("aplicar a magia deu %d", rec.Code)
+	}
+	// A DECOMPOSIÇÃO mora na aba COMBATE: é lá que o bônus de Defesa diz de
+	// onde veio, e foi lá que o id apareceu.
+	tela := f.pede(t, f.jogador, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
+
+	// O CONTROLE primeiro: a procedência TEM de estar na tela, senão as duas
+	// asserções abaixo medem a ausência do bloco inteiro e passam verde.
+	if !strings.Contains(tela, "(cena)") {
+		t.Fatal("a procedência do efeito não chegou à tela: o teste mediria o nada")
+	}
+	if strings.Contains(tela, "armadura-arcana (") {
+		t.Error("a procedência saiu com o id da magia; quem lê a ficha não conhece o id")
+	}
+	if !strings.Contains(tela, "Armadura Arcana (") {
+		t.Error("a procedência tem de trazer o nome do livro")
+	}
+}
+
+// A DURAÇÃO DO EFEITO É LIDA EM PORTUGUÊS na ficha.
+//
+// A coluna `scope` grava em inglês porque é fronteira, e a tela traduz. A
+// palavra da sustentada nasceu na ALE-365 e não tinha tradução: a aba mostrava
+// "sustained", que é identificador vazando para quem lê.
+func TestTheSheetReadsTheEffectDurationInPortuguese(t *testing.T) {
+	f := newSceneFixture(t)
+	id := f.charID
+	if rec := effect(t, f, id, "aplica/velocidade"); rec.Code != http.StatusOK {
+		t.Fatalf("conjurar a sustentada deu %d", rec.Code)
+	}
+	tela := effectScreen(t, f, id)
+
+	if !strings.Contains(tela, "Velocidade") {
+		t.Fatal("o controle falhou: o efeito não chegou à aba")
+	}
+	if strings.Contains(tela, ">sustained<") || strings.Contains(tela, " sustained") {
+		t.Error("a duração saiu em inglês: `sustained` é a grafia da COLUNA, não da tela")
+	}
+	if !strings.Contains(tela, "enquanto for sustentada") {
+		t.Error("a aba tem de dizer até quando o efeito vale, em português")
+	}
+}
+
+// A DECOMPOSIÇÃO NÃO DIZ O MESMO NOME DUAS VEZES.
+//
+// A linha traz a procedência ("Armadura Arcana (cena)") e, embaixo, a nota do
+// modificador. Enquanto a procedência saía com o id, as duas linhas diziam
+// coisas diferentes e a nota era a única a dar o nome; com o id consertado ela
+// virou eco, custando uma linha a 390px para não informar nada.
+func TestTheBreakdownDoesNotEchoTheSourceName(t *testing.T) {
+	f := newSceneFixture(t)
+	id := f.charID
+	if rec := effect(t, f, id, "aplica/armadura-arcana"); rec.Code != http.StatusOK {
+		t.Fatalf("aplicar a magia deu %d", rec.Code)
+	}
+	tela := f.pede(t, f.jogador, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
+
+	if !strings.Contains(tela, "Armadura Arcana (cena)") {
+		t.Fatal("o controle falhou: a procedência não chegou à decomposição")
+	}
+	if n := strings.Count(tela, "Armadura Arcana"); n != 1 {
+		t.Errorf("o nome aparece %d vezes na decomposição, e uma basta", n)
+	}
+}
