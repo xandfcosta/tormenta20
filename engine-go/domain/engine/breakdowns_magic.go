@@ -235,12 +235,31 @@ func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
 	return max(1, best) + itemBonus
 }
 
-// SpellPmLimitFor resolves the item bonus off the character's own sheet and
-// applies the p224 rule — the one call a transport (HTTP handler, WASM export)
-// should make, so no caller re-derives the bonus its own way.
-func (c *Catalogs) SpellPmLimitFor(ch Character, spellClasses []string) int {
-	sheet := c.ComputeSheet(ch, map[string]bool{})
-	return SpellPmLimit(ch, sheet.PmLimit.ItemBonus, spellClasses)
+// SpellPmLimitFor resolves the item bonus off the character's own effects and
+// applies the p224 rule — the one call a caller should make, so nobody
+// re-derives the bonus its own way.
+//
+// # Os condicionais vêm por PARÂMETRO, e antes não vinham
+//
+// Ela recomputava a ficha INTEIRA daqui de dentro, com `map[string]bool{}` no
+// lugar dos condicionais — uma re-entrada no pipeline com entrada diferente da
+// de quem chamou. O efeito medido: o `kharvos-o-guardiao-rubro` carrega um
+// Medalhão de prata vestido cujo `pmLimit +1` está atrás de um condicional que
+// ele tem LIGADO, e a ficha dele oferecia limite 8 enquanto o servidor recusava
+// acima de 7 (ALE-357).
+//
+// O aviso já estava escrito no bloco do `SpellPmLimit` logo acima — *"two
+// implementations of this cap disagree, and then the sheet offers what the
+// server refuses"* —, sobre OUTRA divergência. Esta era a terceira.
+//
+// Hoje ela tem a mesma forma do `SpellPmCostFor` abaixo: resolve os efeitos com
+// os condicionais recebidos e pergunta ao MESMO `pmLimitBreakdown` que a ficha
+// usa, em vez de reconstruir a conta.
+func (c *Catalogs) SpellPmLimitFor(
+	ch Character, conditionals map[string]bool, spellClasses []string,
+) int {
+	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), conditionals)
+	return SpellPmLimit(ch, pmLimitBreakdown(ch, effects).ItemBonus, spellClasses)
 }
 
 // resolvePmCostMod aplica a regra da p226 às contribuições de custo de PM:

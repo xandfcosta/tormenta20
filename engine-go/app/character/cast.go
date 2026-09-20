@@ -116,9 +116,13 @@ func (p Plays) Cast(
 	if truqueEscolhido(spell, augments) {
 		basePm, augmentPm = 0, 0
 	}
-	totalPm := p.catalogs.SpellPmCostFor(ec, basePm, augmentPm, map[string]bool{})
-	minPm := p.catalogs.SpellPmCostFor(ec, basePm, 0, map[string]bool{})
-	limit := p.catalogs.SpellPmLimitFor(ec, spell.Classes)
+	// OS CONDICIONAIS LIGADOS entram nas três contas. Aqui iam três conjuntos
+	// VAZIOS, e o custo, o mínimo e o teto saíam de um personagem que não é o
+	// que está conjurando (ALE-357).
+	ativos := sheet.ToStringSet(dto.Conditionals)
+	totalPm := p.catalogs.SpellPmCostFor(ec, basePm, augmentPm, ativos)
+	minPm := p.catalogs.SpellPmCostFor(ec, basePm, 0, ativos)
+	limit := p.catalogs.SpellPmLimitFor(ec, ativos, spell.Classes)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}

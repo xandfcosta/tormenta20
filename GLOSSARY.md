@@ -263,6 +263,14 @@ Os dois ficam a uma letra de distância no autocomplete, e trocá-los significa
 aplicar Fúria como se fosse Caído. Ao escrever query nova, confira o plural
 inteiro.
 
+**O conjunto de situacionais LIGADOS viaja com o agregado**, em
+`dto.Conditionals`, e quem computa a ficha o recebe por parâmetro. Inventar um
+conjunto vazio no lugar dele não quebra nada — computa um personagem plausível
+que não é o que está na tela —, e foi assim que o crachá do topo da ficha passou
+a dizer Defesa 12 enquanto a aba Combate dizia 17 (ALE-357). Quem varre é o
+`TestNoCallerInventsAnEmptyConditionalSet`; a ficha BASE, sem situacional nenhum,
+é resultado legítimo só dentro do `domain/engine`, que é o dono da conta.
+
 E os dois guardam-se em FORMAS diferentes — coluna JSON de um lado, tabela do
 outro — sem que isso signifique nada sobre os conceitos: é o sqlc, que não
 enxerga `ALTER TABLE ADD COLUMN` de arquivo de migração novo (ALE-124), então

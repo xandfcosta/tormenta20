@@ -25,6 +25,7 @@ activations
 adapter
 address
 admin
+agreement
 agrees
 air
 and
@@ -94,6 +95,7 @@ columns
 combat
 commands
 compose
+conditional
 conditions
 config
 consequences
@@ -376,6 +378,7 @@ selection
 server
 session
 sessions
+set
 setup
 sfx
 sh
