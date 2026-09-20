@@ -662,6 +662,21 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 		t.Errorf("a recusa diz de quem é o turno, e veio sem %q", naVez.Label)
 	}
 
+	// E A TELA NÃO OFERECE O QUE O SERVIDOR RECUSA: com o turno gasto, a
+	// proposta continua desenhável — propor é rascunho — mas o painel dela diz
+	// que não há ação e não põe um "Confirmar" na frente de quem vai ouvir não.
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/"+pecaID+"/parada",
+		`{"from":{"X":6,"Y":2}}`); rec.Code != http.StatusOK {
+		t.Fatalf("propor com o turno gasto deu %d", rec.Code)
+	}
+	tela := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+	if !strings.Contains(tela, "não sobrou ação neste turno") {
+		t.Error("o painel do movimento não diz que o turno acabou")
+	}
+	if strings.Contains(tela, ">Confirmar</button>") {
+		t.Error("o painel oferece Confirmar num movimento que o servidor vai recusar")
+	}
+
 	// PASSAR A VEZ devolve o turno inteiro a quem entra nele.
 	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("passar a vez: %v", err)

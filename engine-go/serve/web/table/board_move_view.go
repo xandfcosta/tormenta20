@@ -31,6 +31,10 @@ type moveView struct {
 	// alcance para desenhar, porque não há teto que ele desenharia.
 	Orcamento int
 	Restante  int
+	// SemAcao é "o turno de quem está na vez não paga este caminho". Ele é
+	// SEPARADO do `Orcamento`, que fala de metros: a peça pode ter deslocamento
+	// de sobra e o turno já ter acabado.
+	SemAcao bool
 	// Meu diz se quem olha decide sobre este movimento. O mestre decide por
 	// qualquer um — é ele quem toca a mesa.
 	Meu bool
@@ -74,7 +78,7 @@ type moveView struct {
 //
 // O ALCANCE só é desenhado para quem PODE decidir: oferecer casas clicáveis a
 // quem não vai poder confirmar é convidar para um beco.
-func moveBoard(b *board.BoardState, m board.Mover) *moveView {
+func moveBoard(b *board.BoardState, st *live.SessionRuntimeState, m board.Mover) *moveView {
 	if b == nil || b.Pending == nil {
 		return nil
 	}
@@ -86,6 +90,11 @@ func moveBoard(b *board.BoardState, m board.Mover) *moveView {
 	v := &moveView{
 		TokenID: p.TokenID, Rotulo: peca.Label, Custo: p.Cost, Orcamento: p.Budget,
 		Meu: m.Role == "gm" || p.ByUserID == m.UserID,
+		// O CAMINHO CABER NO DESLOCAMENTO E O TURNO NÃO PAGAR são perguntas
+		// diferentes, e a segunda é a que faz a tela mentir quando falta: um
+		// passo de 1,5m cabe em qualquer orçamento e não acontece se a padrão e
+		// a de movimento já foram (p233).
+		SemAcao: turnCannotPay(b, st, p.Cost, p.Budget),
 	}
 	for _, q := range p.Path {
 		v.Trilha = append(v.Trilha, boardSquare{X: q.X, Y: q.Y})
@@ -246,6 +255,28 @@ func moveBalance(m *moveView) string {
 // @example spentActions(&moveView{Custo: 8, Orcamento: 6}) // "ação de movimento + ação principal"
 func spentActions(m *moveView) string {
 	return rangesThree[costRange(m)].Texto
+}
+
+// turnCannotPay diz se o turno de quem está na vez NÃO tem como pagar este
+// caminho. Fora de uma cena que conta rodadas, ou movendo peça de quem não está
+// na vez, não há o que pagar — e a resposta é não.
+//
+// Quem decide é o MOTOR, e não uma segunda conta aqui: as ações de movimento
+// que o caminho pede são gastas uma a uma contra o que sobrou, então a troca da
+// padrão (p233) vale aqui exatamente como vale na cobrança.
+func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, custo, orcamento int) bool {
+	if orcamento <= 0 || !movedTokenIsOnTurn(st, b) || st.Scene == nil || !st.Scene.CountsRounds() {
+		return false
+	}
+	sobrou := engine.TurnBudget{Standard: st.Scene.StandardLeft, Movement: st.Scene.MovementLeft}
+	for pago := 0; pago < custo; pago += orcamento {
+		proximo, err := sobrou.Spend(engine.ActionMovement)
+		if err != nil {
+			return true
+		}
+		sobrou = proximo
+	}
+	return false
 }
 
 // moveRange é uma linha da LEGENDA das cores, no rodapé do movimento.

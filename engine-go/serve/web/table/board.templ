@@ -738,6 +738,13 @@ templ moveProposed(v BoardView) {
 				}
 			</ul>
 		}
+		// SEM O NOME, ao contrário da frase embaixo do mapa: o cabeçalho deste
+		// painel já diz de quem é o movimento, e repetir empurra a linha para
+		// duas a 390px. A legenda acima continua sendo o PREÇO do caminho; esta
+		// linha é o saldo do turno, e as duas não se contradizem.
+		if v.Movimento.SemAcao {
+			<p class="text-xs font-semibold text-destructive-ink">não sobrou ação neste turno para mover</p>
+		}
 		<span class="ml-auto flex items-center gap-2">
 			// DESFAZER UMA vem antes de CANCELAR, e a ordem é a do arrependimento:
 			// primeiro se corrige a última perna, e só depois se joga a rota inteira
@@ -762,8 +769,9 @@ templ moveProposed(v BoardView) {
 			// CONFIRMAR é do MESTRE, e só dele: quem muda o estado do tabuleiro é quem
 			// toca a cena. O botão não existe do lado do jogador nem escondido — mas a
 			// fronteira de verdade é o `CommitMove`, e isto aqui é só não oferecer o
-			// que seria recusado.
-			if v.Mestre {
+			// que seria recusado. Vale igual para o turno sem ação: o servidor já
+			// recusa, e o botão ali convidaria para um beco (p233).
+			if v.Mestre && !v.Movimento.SemAcao {
 				<button
 					type="button"
 					data-on:click={ moveCommand(v, "confirmar") }
