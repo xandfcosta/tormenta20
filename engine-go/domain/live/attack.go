@@ -68,35 +68,43 @@ func ProposeAttack(st *SessionRuntimeState, ataque PendingAttack) error {
 	return nil
 }
 
-// CommitAttack aplica o dano na linha do alvo e some com o provisório.
+// AttackToCommit responde "esta pessoa pode confirmar este ataque agora?" e
+// devolve o provisório — sem aplicar nada.
 //
 // SÓ O MESTRE, e é a mesma frase do `CommitMove`: o que o jogador rolou é um
-// rascunho para a mesa ver, e quem diz que aconteceu é quem toca a cena. Um
-// ataque que ERRA também se confirma — errar é uma coisa que acontece, e o
-// provisório tem de sair da tela do mesmo jeito.
-func CommitAttack(st *SessionRuntimeState, quem Attacker) error {
+// rascunho para a mesa ver, e quem diz que aconteceu é quem toca a cena.
+//
+// # Por que ela NÃO tira o PV, sendo essa a consequência inteira do gesto
+//
+// Porque o regime não sabe de onde o PV do alvo sai. Quando há uma FICHA atrás
+// da linha, quem manda é a ficha — o dano drena PV temporário, e a fila
+// ESPELHA o resultado; quando é um NPC, o rastreador é o próprio registro. Os
+// dois caminhos moram no store, que tem a porta da ficha, e é o
+// `DeltaVitals` que já os separa.
+//
+// Aplicar aqui daria o caso do NPC certo e o do PC errado EM SILÊNCIO: a linha
+// da fila mostraria o dano e a ficha do jogador continuaria cheia, que é
+// exatamente a divergência que a fila espelhada existe para não ter.
+func AttackToCommit(st *SessionRuntimeState, quem Attacker) (PendingAttack, error) {
 	ataque := st.PendingAttack
 	if ataque == nil {
-		return fmt.Errorf("não há ataque proposto para confirmar")
+		return PendingAttack{}, fmt.Errorf("não há ataque proposto para confirmar")
 	}
 	if quem.Role != "gm" {
-		return fmt.Errorf("só o mestre põe o dano na ficha: o seu ataque é um rascunho para a mesa ver")
+		return PendingAttack{}, fmt.Errorf("só o mestre põe o dano na ficha: o seu ataque é um rascunho para a mesa ver")
 	}
-	// O ALVO É CONFERIDO DE NOVO na confirmação: entre rolar e confirmar ele
-	// pode ter saído da fila, e o que vale é a mesa no instante em que o PV
-	// muda.
+	// O ALVO É CONFERIDO DE NOVO: entre rolar e confirmar ele pode ter saído da
+	// fila, e o que vale é a mesa no instante em que o PV muda.
 	if FindEntryIndex(st, ataque.TargetEntryID) < 0 {
-		return fmt.Errorf("o alvo saiu da fila entre a rolagem e a confirmação")
+		return PendingAttack{}, fmt.Errorf("o alvo saiu da fila entre a rolagem e a confirmação")
 	}
-	if ataque.Damage > 0 {
-		perda := int64(-ataque.Damage)
-		if err := DeltaEntryVitals(st, ataque.TargetEntryID, &perda, nil, 0); err != nil {
-			return err
-		}
-	}
-	st.PendingAttack = nil
-	return nil
+	return *ataque, nil
 }
+
+// ClearPendingAttack tira o provisório da mesa. Um ataque que ERRA também sai
+// por aqui: errar é uma coisa que acontece, e o provisório tem de sumir da tela
+// do mesmo jeito.
+func ClearPendingAttack(st *SessionRuntimeState) { st.PendingAttack = nil }
 
 // CancelAttack descarta o provisório sem mexer em ninguém. O mestre cancela por
 // qualquer um — é ele quem toca a mesa quando o jogador caiu da rede —, e o

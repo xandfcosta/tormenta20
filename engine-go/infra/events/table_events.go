@@ -41,6 +41,23 @@ type CombatantLeft struct {
 
 func (e CombatantLeft) Target() Target { return Target{SessionID: e.SessionID} }
 
+// AttackRolled — alguém rolou um ataque, e a mesa tem um provisório para ver.
+type AttackRolled struct {
+	SessionID int64
+}
+
+func (e AttackRolled) Target() Target { return Target{SessionID: e.SessionID} }
+
+// AttackSettled — o mestre decidiu sobre o provisório, confirmando ou
+// cancelando. Um evento para as duas saídas porque a notícia é a mesma: não há
+// mais ataque pendurado na tela. Quem confirmou e tirou PV publica o
+// `VitalsChanged` junto, que é o ato de outro nome.
+type AttackSettled struct {
+	SessionID int64
+}
+
+func (e AttackSettled) Target() Target { return Target{SessionID: e.SessionID} }
+
 // VitalsChanged — PV ou PM de um combatente mudou.
 //
 // É o único evento da fila que carrega `CharacterID`, e é o que faz a ficha

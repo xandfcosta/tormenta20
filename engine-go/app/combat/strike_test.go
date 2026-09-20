@@ -1,0 +1,171 @@
+package combat
+
+import (
+	"context"
+	"errors"
+	"strings"
+	"testing"
+
+	"t20engine/app"
+	"t20engine/domain/engine"
+	"t20engine/domain/live"
+)
+
+// AS DECISÕES do gesto de atacar. A conta do d20 contra a Defesa é do
+// `engine.ResolveAttack` e tem os casos do livro lá; o que se prende aqui é o
+// que ESTA camada decide: quem pode, qual d20 vale, e — a que mais importa —
+// contra QUEM a Defesa é medida.
+
+// queueDouble é a mesa dos casos: um herói e um ogro.
+type queueDouble struct {
+	estado   *live.SessionRuntimeState
+	guardado *live.PendingAttack
+}
+
+func (f *queueDouble) GetState(int64) *live.SessionRuntimeState { return f.estado }
+
+func (f *queueDouble) ProposeAttack(_ int64, a live.PendingAttack) (*live.SessionRuntimeState, error) {
+	f.guardado = &a
+	return f.estado, live.ProposeAttack(f.estado, a)
+}
+
+// sheetDouble é a porta traduzida à mão: cada linha da queueDouble vira um combatente com
+// os números que o caso quer.
+type sheetDouble map[string]Combatant
+
+func (f sheetDouble) Of(_ context.Context, e live.InitiativeEntry) (Combatant, error) {
+	c, ok := f[e.ID]
+	if !ok {
+		return Combatant{}, errors.New("combatente fora do caso")
+	}
+	return c, nil
+}
+
+func aTable(t *testing.T) *queueDouble {
+	t.Helper()
+	st := live.EmptyRuntimeState()
+	st.Initiative = []live.InitiativeEntry{
+		{ID: "heroi", Label: "Arwen", Type: "character"},
+		{ID: "ogro", Label: "Ogro", Type: "npc"},
+	}
+	return &queueDouble{estado: st}
+}
+
+func aLongsword() engine.WeaponCard {
+	return engine.WeaponCard{Name: "Espada longa", Damage: "1d8", DamageBonus: 3, Attack: 5, CritRange: 19, CritMult: 2}
+}
+
+func fixedDie(valor int) func(int) (int, error) {
+	return func(int) (int, error) { return valor, nil }
+}
+
+// A DEFESA MEDIDA É A DO ALVO, e este é o caso que separa "funciona" de
+// "funciona por acaso": quem ataca tem Defesa 30 e o alvo tem 10. Um código que
+// lesse a Defesa do atacante erraria o ataque — e um que lesse qualquer uma das
+// duas passaria se as duas fossem iguais.
+func TestTheDefenseThatMattersIsTheTargetOne(t *testing.T) {
+	mesa := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Defense: 30},
+		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 10},
+	}, mesa, fixedDie(4))
+
+	d20 := 10
+	fora, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20,
+	})
+	if err != nil {
+		t.Fatalf("propor: %v", err)
+	}
+	if !fora.Hit {
+		t.Errorf("15 contra a Defesa 10 do ALVO acerta; contra a 30 de quem ataca, erraria")
+	}
+	if fora.TargetEntryID != "ogro" || fora.AttackerEntryID != "heroi" {
+		t.Errorf("o provisório saiu com atacante %q e alvo %q", fora.AttackerEntryID, fora.TargetEntryID)
+	}
+	if mesa.guardado == nil || mesa.guardado.ByUserID != 7 {
+		t.Errorf("o provisório tem de ser GUARDADO na mesa, com quem rolou junto")
+	}
+}
+
+// O D20 RECEBIDO É CONFERIDO. É a mesma linha do `SelfEntry` da iniciativa: um
+// número fora da faixa não é um dado, é um pedido montado à mão.
+func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
+	mesa := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Weapons: []engine.WeaponCard{aLongsword()}},
+		"ogro":  {EntryID: "ogro", Defense: 10},
+	}, mesa, fixedDie(4))
+
+	for _, valor := range []int{0, 21, -3, 40} {
+		v := valor
+		_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+			SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &v,
+		})
+		if !errors.Is(err, app.ErrRefused) {
+			t.Errorf("d20 %d tinha de ser recusado, e veio %v", valor, err)
+		}
+	}
+	if mesa.guardado != nil {
+		t.Error("um pedido recusado não guarda provisório nenhum")
+	}
+}
+
+// SEM D20 O SERVIDOR ROLA, e é o caminho do gesto de menu, que não tem onde
+// digitar.
+func TestWithoutAD20TheServerRollsIt(t *testing.T) {
+	mesa := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Weapons: []engine.WeaponCard{aLongsword()}},
+		"ogro":  {EntryID: "ogro", Defense: 10},
+	}, mesa, fixedDie(19))
+
+	fora, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro",
+	})
+	if err != nil {
+		t.Fatalf("propor: %v", err)
+	}
+	if fora.Roll != 19 {
+		t.Errorf("o d20 = %d, e o dado desta mesa está cravado em 19", fora.Roll)
+	}
+	if !fora.Critical {
+		t.Errorf("19 com margem 19 é crítico, e o provisório tem de dizer isso à mesa")
+	}
+}
+
+// NINGUÉM ATACA A SI MESMO, e recusar na porta é mais barato que descobrir
+// depois que o alvo e o atacante são a mesma linha da queueDouble.
+func TestNobodyAttacksThemselves(t *testing.T) {
+	mesa := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Weapons: []engine.WeaponCard{aLongsword()}},
+	}, mesa, fixedDie(10))
+
+	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "heroi",
+	})
+	if !errors.Is(err, app.ErrRefused) {
+		t.Errorf("atacar a si mesmo tem de ser recusado, e veio %v", err)
+	}
+}
+
+// QUEM NÃO EMPUNHA ARMA não ataca, e a frase diz o nome de quem — "não tem arma
+// empunhada" sem sujeito manda procurar em nove sheetDouble.
+func TestWithoutAWieldedWeaponThereIsNoAttack(t *testing.T) {
+	mesa := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen"},
+		"ogro":  {EntryID: "ogro", Defense: 10},
+	}, mesa, fixedDie(10))
+
+	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro",
+	})
+	if !errors.Is(err, app.ErrRefused) {
+		t.Fatalf("sem arma empunhada o ataque é recusado, e veio %v", err)
+	}
+	if !strings.Contains(err.Error(), "Arwen") {
+		t.Errorf("a recusa tem de dizer de quem se fala, e veio %q", err)
+	}
+}

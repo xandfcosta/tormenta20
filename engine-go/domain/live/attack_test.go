@@ -49,31 +49,34 @@ func TestOnlyTheGameMasterConfirmsAnAttack(t *testing.T) {
 	if err := ProposeAttack(st, umGolpe()); err != nil {
 		t.Fatalf("propor: %v", err)
 	}
-	if err := CommitAttack(st, Attacker{UserID: 7, Role: "player"}); err == nil {
+	if _, err := AttackToCommit(st, Attacker{UserID: 7, Role: "player"}); err == nil {
 		t.Error("o jogador que propôs NÃO confirma o próprio ataque")
 	}
-	if got := DerefOr(st.Initiative[1].HpCurrent, 0); got != 30 {
-		t.Errorf("o PV do ogro = %d: uma confirmação recusada não pode ter aplicado dano", got)
+	if st.PendingAttack == nil {
+		t.Error("uma confirmação recusada deixa o provisório de pé")
 	}
 }
 
-// CONFIRMAR TIRA O DANO DA LINHA DO ALVO, e some o provisório.
-func TestConfirmingAnAttackTakesTheDamageFromTheTarget(t *testing.T) {
+// O MESTRE CONFIRMA E RECEBE A CONTA, e nada de PV se move aqui: quem aplica é
+// o store, que sabe distinguir a linha com ficha da linha sem.
+func TestTheGameMasterGetsTheAttackToApply(t *testing.T) {
 	st := aQueue(t)
 	if err := ProposeAttack(st, umGolpe()); err != nil {
 		t.Fatalf("propor: %v", err)
 	}
-	if err := CommitAttack(st, Attacker{UserID: 1, Role: "gm"}); err != nil {
+	ataque, err := AttackToCommit(st, Attacker{UserID: 1, Role: "gm"})
+	if err != nil {
 		t.Fatalf("confirmar: %v", err)
 	}
-	if got := DerefOr(st.Initiative[1].HpCurrent, 0); got != 19 {
-		t.Errorf("o PV do ogro = %d, e 30 menos 11 de dano é 19", got)
+	if ataque.Damage != 11 || ataque.TargetEntryID != "ogro" {
+		t.Errorf("veio %d de dano no alvo %q, e o golpe era 11 no ogro", ataque.Damage, ataque.TargetEntryID)
 	}
-	if got := DerefOr(st.Initiative[0].HpCurrent, 0); got != 40 {
-		t.Errorf("o PV de quem ATACA = %d: o dano é do alvo, e o herói tinha 40", got)
+	if got := DerefOr(st.Initiative[1].HpCurrent, 0); got != 30 {
+		t.Errorf("o PV do ogro = %d: o regime NÃO aplica dano, quem aplica é o store", got)
 	}
+	ClearPendingAttack(st)
 	if st.PendingAttack != nil {
-		t.Error("confirmado, o provisório some — senão ele seria confirmado duas vezes")
+		t.Error("limpo, o provisório some — senão ele seria confirmado duas vezes")
 	}
 }
 
@@ -86,12 +89,14 @@ func TestConfirmingAMissChangesNoVitals(t *testing.T) {
 	if err := ProposeAttack(st, errou); err != nil {
 		t.Fatalf("propor: %v", err)
 	}
-	if err := CommitAttack(st, Attacker{UserID: 1, Role: "gm"}); err != nil {
+	ataque, err := AttackToCommit(st, Attacker{UserID: 1, Role: "gm"})
+	if err != nil {
 		t.Fatalf("confirmar: %v", err)
 	}
-	if got := DerefOr(st.Initiative[1].HpCurrent, 0); got != 30 {
-		t.Errorf("o PV do ogro = %d, e um ataque que erra não tira nada", got)
+	if ataque.Damage != 0 {
+		t.Errorf("o dano = %d, e um ataque que erra não tira nada", ataque.Damage)
 	}
+	ClearPendingAttack(st)
 	if st.PendingAttack != nil {
 		t.Error("o provisório some mesmo quando o ataque errou")
 	}
@@ -121,7 +126,7 @@ func TestConfirmingAgainstAGoneTargetRefuses(t *testing.T) {
 		t.Fatalf("propor: %v", err)
 	}
 	st.Initiative = st.Initiative[:1]
-	if err := CommitAttack(st, Attacker{UserID: 1, Role: "gm"}); err == nil {
+	if _, err := AttackToCommit(st, Attacker{UserID: 1, Role: "gm"}); err == nil {
 		t.Error("confirmar contra um alvo que não está mais na fila tem de RECUSAR")
 	}
 }

@@ -84,6 +84,7 @@ color
 colors
 columns
 combat
+combatants
 commands
 compose
 conditional
@@ -434,6 +435,7 @@ static
 store
 stored
 stream
+strike
 stroke
 sum
 surfaces
