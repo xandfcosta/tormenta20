@@ -79,11 +79,17 @@ async function tiraDaFila(page: Page, nome: string) {
   await closeTheTracker(page)
 }
 
-/** A cena precisa estar EM CURSO: sem ela o servidor não manda fila à mesa. */
+/**
+ * A cena precisa estar EM CURSO: sem ela o servidor não manda fila à mesa.
+ *
+ * São DOIS cliques desde a ALE-365: "Iniciar cena" abre os três tipos do livro
+ * (p252) e a fila só existe na cena de AÇÃO, que é a que este caso quer.
+ */
 async function garanteACena(page: Page) {
-  const iniciar = page.getByRole('button', { name: 'Iniciar cena' }).filter({ visible: true })
+  const iniciar = page.locator('summary[aria-label="Iniciar uma cena"]').filter({ visible: true })
   if (await iniciar.count()) {
     await iniciar.first().click()
+    await page.getByRole('button', { name: 'Iniciar uma cena de Ação' }).filter({ visible: true }).first().click()
   }
   await expect(
     page.getByRole('button', { name: 'Encerrar cena' }).filter({ visible: true }).first(),

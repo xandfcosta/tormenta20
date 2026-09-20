@@ -32,8 +32,12 @@ type View struct {
 	// devolve fila limpa, então o falso aqui É a trava e não uma segunda
 	// decisão tomada na tela.
 	SceneActive bool
-	Round       int
-	Turn        tableTurn
+	// Cena é a cena EM CURSO, com o tipo e o número — nil fora de cena. O
+	// `SceneActive` continua ao lado porque a tela pergunta as duas coisas, e
+	// "há cena" é a pergunta de dezoito sítios.
+	Cena  *sceneView
+	Round int
+	Turn  tableTurn
 	// Proximos é a faixa de quem vem depois: a vez e as duas seguintes, dando a
 	// volta. Vazia fora de combate.
 	Proximos []turnAhead
@@ -462,13 +466,13 @@ func tableViewOf(
 		CampaignID:  campaignID,
 		SessionID:   sessionID,
 		SessionNum:  sessionNum,
-		SceneActive: st.SceneActive,
-		Round:       st.Round,
-		Turn:        tableTurnOf(st, meus),
-		Proximos:    turnStripOf(st, meus),
-		Grupo:       grupo,
-		Fila:        tableTrackerOf(st, meus, reservas),
-		Eu:          eu,
+		SceneActive: st.InScene(), Cena: sceneOf(st),
+		Round:    st.Round,
+		Turn:     tableTurnOf(st, meus),
+		Proximos: turnStripOf(st, meus),
+		Grupo:    grupo,
+		Fila:     tableTrackerOf(st, meus, reservas),
+		Eu:       eu,
 	}
 }
 
@@ -512,11 +516,11 @@ func ofViewGm(
 ) viewGm {
 	return viewGm{
 		GravacaoFalhando: gravacaoFalhando,
-		Contador:         live.TurnCounter(st.SceneActive, st.Round, st.TurnIndex, len(st.Initiative)),
+		Contador:         live.TurnCounter(st.Scene, st.Round, st.TurnIndex, len(st.Initiative)),
 		Avanco:           live.NextTurnButton(st.Initiative, st.TurnIndex),
 		VeVitais:         live.GmSeesVitals(st.Initiative, ehMestre),
 		Conectados:       live.ConnectedCharacters(membros, presentes),
-		PodeAvancar:      st.SceneActive && len(st.Initiative) > 0,
+		PodeAvancar:      st.CountsRounds() && len(st.Initiative) > 0,
 	}
 }
 

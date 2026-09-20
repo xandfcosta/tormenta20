@@ -35,7 +35,7 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 		t.Fatalf("initial Load: %v", err)
 	}
 	// A cena precisa estar iniciada para o turno andar.
-	if _, err := store.StartScene(sid); err != nil {
+	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
 		t.Fatalf("live.StartScene: %v", err)
 	}
 	if _, err := store.AddInitiativeEntry(sid, npc("Goblin", 15)); err != nil {
@@ -82,7 +82,7 @@ func TestStoreHydrateFromBlob(t *testing.T) {
 	// `false`, e sem esta dedução a mesa que parou na rodada 2 reabriria fora de
 	// cena e a fila sumiria dos jogadores até o mestre clicar em iniciar. O turno
 	// em curso é prova de que a cena estava ligada.
-	if !loaded.SceneActive {
+	if !loaded.InScene() {
 		t.Error("sessão reaberta no meio do turno voltou fora de cena — a mesa perde a fila")
 	}
 }
@@ -104,7 +104,7 @@ func TestABlobWithoutATurnInventsNoScene(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if loaded.SceneActive {
+	if loaded.InScene() {
 		t.Error("blob sem turno acordou em cena — a fila iria para a mesa sem o mestre mandar")
 	}
 }

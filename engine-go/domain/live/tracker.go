@@ -75,9 +75,16 @@ func NextTurnButton(fila []InitiativeEntry, turno int) NextTurnTarget {
 //
 // "Rodada 0" aparece de propósito no terceiro caso: a rodada só vira 1 no
 // primeiro avanço.
-func TurnCounter(cenaAtiva bool, rodada, turno int, naFila int) string {
-	if !cenaAtiva {
+func TurnCounter(cena *Scene, rodada, turno int, naFila int) string {
+	if cena == nil {
 		return "Fora de cena"
+	}
+	// FORA DA CENA DE AÇÃO não há rodada nem vez (p252), então o contador conta
+	// outra coisa: QUAL cena é esta. Antes ele recebia um booleano e dizia
+	// "Fora de cena" para tudo que não fosse combate — o que era verdade
+	// enquanto combate era a única cena que existia.
+	if !cena.CountsRounds() {
+		return fmt.Sprintf("%s · cena %d", cena.Kind.Name(), cena.Number)
 	}
 	if naFila == 0 {
 		return "Em cena · ninguém na fila"

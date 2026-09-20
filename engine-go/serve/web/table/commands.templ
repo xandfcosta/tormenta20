@@ -1,6 +1,11 @@
 package table
 
-import "t20engine/serve/web/ui"
+import (
+	"fmt"
+
+	"t20engine/domain/live"
+	"t20engine/serve/web/ui"
+)
 
 
 
@@ -59,9 +64,14 @@ templ gmControls(v View, r viewGm) {
 			// palco: abaixo de 1024 o ciclo sai do trilho, e sem esta exceção o
 			// mestre no celular ficaria sem caminho nenhum para COMEÇAR. O que
 			// anda é o par de baixo.
-			if !v.SceneActive {
-				@startScene(v)
-			}
+			//
+			// E ele fica mesmo COM uma cena em curso, o que é novo: "uma cena
+			// pode ser interrompida para dar lugar a outra… se os personagens
+			// estão discutindo na corte e de repente são atacados, a cena da
+			// discussão acaba e uma nova cena começa — um combate" (p252). Antes
+			// o botão sumia ao começar, e o exemplo do livro era justamente o
+			// que a tela não deixava fazer.
+			@startScene(v)
 			// Palco ALTO: encerrar e recuperar dividem a fileira com o avanço.
 			// Palco BAIXO: os mesmos nós reaparecem na gaveta, e não outros —
 			// são as MESMAS funções chamadas duas vezes, porque dois desenhos do
@@ -244,10 +254,56 @@ templ endSceneButton(v View) {
 	>Encerrar cena</button>
 }
 
+// INICIAR CENA abre uma SEGUNDA CAMADA em vez de agir, pela mesma razão do
+// duplicar peça: são TRÊS tipos (p252), e a diferença entre eles — se o tempo
+// corre em rodadas — não cabe num rótulo só. Um botão que abrisse a cena de
+// ação direto seria o app de antes com três nomes.
+//
+// `<details>` e não um popover de mão: abrir, fechar, o teclado, o foco e o
+// Escape já vêm com o elemento. É a mesma escolha que a gaveta do rodapé
+// registra logo acima.
 templ startScene(v View) {
+	<details class="relative">
+		<summary
+			aria-label="Iniciar uma cena"
+			class="inline-flex min-h-11 cursor-pointer list-none items-center rounded-sm border border-grimorio-gold px-3 text-sm text-grimorio-gold outline-none transition-colors hover:bg-accent"
+		>Iniciar cena</summary>
+		// ANCORADO À DIREITA, como a gaveta do rodapé: a 390px o botão nasce a
+		// 200px da borda, e uma camada de 16rem presa à ESQUERDA dele termina em
+		// 438 — quarenta e oito pixels fora da tela, alcançáveis por ninguém. O
+		// guarda do painel de verbos pegou isso na primeira corrida.
+		<div class="absolute bottom-full right-0 z-20 mb-2 flex w-64 flex-col gap-1 rounded-sm border border-grimorio-iron bg-grimorio-panel p-2 shadow-lg">
+			// O AVISO é UM, e é da camada e não de cada verbo: repetido nos três
+			// ele ocupava um terço do painel dizendo a mesma frase. Ele existe
+			// porque encerrar devolve a rodada e a vez ao começo, e um clique de
+			// inércia no meio de um combate custaria a contagem.
+			if v.Cena != nil {
+				<p class="px-2 pb-1 text-2xs text-destructive-ink">
+					{ "Interrompe a cena " + fmt.Sprint(v.Cena.Numero) + " (" + v.Cena.Nome + ")" }
+				</p>
+			}
+			@startSceneVerb(v, live.SceneAction, "combate, perseguição · o tempo corre em rodadas")
+			@startSceneVerb(v, live.SceneExploration, "atravessar o pântano, vasculhar a cripta")
+			@startSceneVerb(v, live.SceneRoleplay, "a discussão noite adentro na corte")
+		</div>
+	</details>
+}
+
+// startSceneVerb é um dos três. A FRASE do livro vem junto do nome porque
+// "exploração" e "interpretação" não dizem, sozinhas, o que muda — e o que muda
+// é se a mesa vai contar rodadas.
+templ startSceneVerb(v View, tipo live.SceneKind, frase string) {
+	// O NOME ACESSÍVEL é o que o botão FAZ, e não o que ele mostra. Sem ele o
+	// nome vira o conteúdo inteiro — "Ação combate, perseguição · o tempo corre
+	// em rodadas" —, e aí "Exploração" e "Interpretação" também CONTÊM "ação":
+	// procurar o verbo pelo nome acha os três.
 	<button
 		type="button"
-		data-on:click={ tableCommand(v, "POST", "cena/iniciar") }
-		class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-gold px-3 text-sm text-grimorio-gold outline-none transition-colors hover:bg-accent"
-	>Iniciar cena</button>
+		aria-label={ "Iniciar uma cena de " + tipo.Name() }
+		data-on:click={ tableCommand(v, "POST", "cena/iniciar/"+string(tipo)) }
+		class="flex min-h-11 flex-col items-start rounded-sm px-2 py-1 text-left text-sm outline-none transition-colors hover:bg-accent"
+	>
+		<span class="font-semibold">{ tipo.Name() }</span>
+		<span class="text-2xs text-muted-foreground">{ frase }</span>
+	</button>
 }

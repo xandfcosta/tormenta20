@@ -18,7 +18,7 @@ func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 	comandos := []struct{ rota, sinais string }{
 		{"iniciativa/proxima-vez", ""},
 		{"iniciativa/vez-anterior", ""},
-		{"cena/iniciar", ""},
+		{"cena/iniciar/acao", ""},
 		{"cena/encerrar", ""},
 		{"iniciativa/por-no-mapa", ""},
 		{"descanso/cena", ""},
@@ -43,7 +43,7 @@ func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 func TestTheCommandPatchesTheSceneRightAway(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", "")
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
@@ -64,7 +64,7 @@ func TestTheCommandAnnouncesToTheWholeTable(t *testing.T) {
 	conn := f.s.sse.Add(f.sessionID, "espia", "gm")
 	defer f.s.sse.Remove(f.sessionID, "espia")
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
@@ -95,7 +95,7 @@ func TestEndingTheSceneFromTheTableExpiresThePartyBlessings(t *testing.T) {
 	seedEffect(t, f.s, f.charID, "bencao", "scene")
 	seedEffect(t, f.s, f.charID, "heroismo", "day")
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/encerrar", ""); rec.Code != http.StatusOK {
@@ -117,7 +117,7 @@ func TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged(t *testing.T) {
 	conn := f.s.sse.Add(f.sessionID, "espia", "gm")
 	defer f.s.sse.Remove(f.sessionID, "espia")
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/encerrar", ""); rec.Code != http.StatusOK {
@@ -156,7 +156,7 @@ func TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged(t *testing.T) {
 // de propósito, deixando a cena LIGADA — sem frase, não há como saber por quê.
 func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 	// A sabotagem: sem o roster não há como alcançar as fichas, e o gesto
@@ -364,7 +364,7 @@ func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 	f := newSceneFixture(t)
 	seedEffect(t, f.s, f.charID, "bencao", "scene")
 	seedEffect(t, f.s, f.charID, "heroismo", "day")
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
@@ -378,7 +378,7 @@ func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 	// A diferença para o "Encerrar cena": a cena continua LIGADA. Recuperar ao
 	// fim de uma luta não acaba a cena, e confundir os dois tiraria a fila da
 	// mesa no meio do combate.
-	if !f.s.tableHost().Sessions().GetState(f.sessionID).SceneActive {
+	if !f.s.tableHost().Sessions().GetState(f.sessionID).InScene() {
 		t.Error("a recuperação de cena desligou a cena")
 	}
 }
@@ -531,7 +531,7 @@ func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 		`{"new_name":"Ogro","new_initiative":12,"new_hp":130,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("pôr o ogro na fila deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
@@ -572,7 +572,7 @@ func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 func TestTheRowVerbsBelongToTheGm(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
@@ -909,7 +909,7 @@ func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
 func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
 	f := newSceneFixture(t)
 	f.tracker(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 

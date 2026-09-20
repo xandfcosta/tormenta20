@@ -135,7 +135,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	f := newSceneFixture(t)
 	f.onBoard(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
@@ -197,7 +197,7 @@ func TestOutOfCombatNobodySeesReach(t *testing.T) {
 func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
@@ -252,7 +252,7 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
@@ -283,7 +283,7 @@ func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 // orçamento -1 e nunca vê vermelho.
 func (f sceneFixture) turnPlayer(t *testing.T) {
 	t.Helper()
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {

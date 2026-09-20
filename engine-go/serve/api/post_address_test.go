@@ -362,7 +362,7 @@ func scenesThatWriteAddresses(t *testing.T, f sceneFixture) []struct {
 // veio pegar.
 //
 // Os comandos do rodapé nascem `disabled` quando `PodeAvancar` é falso — e ele é
-// `st.SceneActive && len(st.Initiative) > 0`. Na bancada recém-montada a cena
+// `st.InScene() && len(st.Initiative) > 0`. Na bancada recém-montada a cena
 // está fria e a fila vazia, então o botão sai SEM o `data-on:click`: o endereço
 // morto simplesmente não está no HTML.
 func openTheLiveTable(t *testing.T, f sceneFixture) {
@@ -371,7 +371,7 @@ func openTheLiveTable(t *testing.T, f sceneFixture) {
 		`{"new_name":"Ogro","new_initiative":12,"new_hp":130,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("pôr o Ogro na fila deu %d — sem fila o rodapé de comandos nasce todo disabled", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar a cena deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir", ""); rec.Code != http.StatusOK {

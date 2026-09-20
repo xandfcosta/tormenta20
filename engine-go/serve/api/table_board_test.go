@@ -82,7 +82,7 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 		board.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 

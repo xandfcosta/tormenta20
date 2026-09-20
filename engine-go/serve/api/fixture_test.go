@@ -118,7 +118,7 @@ func (f sceneFixture) scene(t *testing.T) {
 	t.Helper()
 	oculto := true
 	pv, pvMax := int64(12), int64(130)
-	if _, err := f.s.sessions.StartScene(f.sessionID); err != nil {
+	if _, err := f.s.sessions.StartScene(f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{

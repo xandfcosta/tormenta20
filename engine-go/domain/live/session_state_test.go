@@ -32,7 +32,7 @@ func itoa(n int) string {
 // é fora de cena, que é o estado de uma sessão recém-aberta.
 func cenaEmCurso() *SessionRuntimeState {
 	st := EmptyRuntimeState()
-	StartScene(st)
+	StartScene(st, SceneAction)
 	return st
 }
 
@@ -673,7 +673,7 @@ func TestEndingKeepsTheTrackerAndRestartingEmptiesIt(t *testing.T) {
 	if len(encerrada.Initiative) != 2 {
 		t.Errorf("encerrar apagou a fila: %+v", encerrada.Initiative)
 	}
-	if encerrada.SceneActive || encerrada.Round != 0 || encerrada.TurnIndex != -1 || encerrada.TurnsTaken != 0 {
+	if encerrada.InScene() || encerrada.Round != 0 || encerrada.TurnIndex != -1 || encerrada.TurnsTaken != 0 {
 		t.Errorf("encerrar não voltou o combate ao começo: %+v", encerrada)
 	}
 
@@ -683,7 +683,7 @@ func TestEndingKeepsTheTrackerAndRestartingEmptiesIt(t *testing.T) {
 		t.Errorf("reiniciar deixou combatente na fila: %+v", reiniciada.Initiative)
 	}
 	// Reiniciar volta ao PONTO DE PARTIDA, e o ponto de partida é fora de cena.
-	if reiniciada.SceneActive {
+	if reiniciada.InScene() {
 		t.Error("reiniciar deixou a cena ligada, criando 'em cena com fila vazia' sem ninguém pedir")
 	}
 }
@@ -701,7 +701,7 @@ func TestWithoutASceneTheTurnDoesNotAdvance(t *testing.T) {
 		t.Fatalf("avançou fora de cena: %+v", st)
 	}
 	// E anda assim que a cena começa, pelo mesmo clique.
-	StartScene(st)
+	StartScene(st, SceneAction)
 	AdvanceTurn(st)
 	if st.TurnIndex != 0 || st.Round != 1 {
 		t.Fatalf("em cena o avanço parou de funcionar: %+v", st)

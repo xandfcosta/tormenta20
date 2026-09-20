@@ -204,7 +204,7 @@ func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 	f := newSceneFixture(t)
 	sub, parar := f.s.tableHost().Bus().Subscribe(events.OfSession(f.sessionID))
 
-	if _, err := f.s.tableHost().Sessions().StartScene(f.sessionID); err != nil {
+	if _, err := f.s.tableHost().Sessions().StartScene(f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	select {
