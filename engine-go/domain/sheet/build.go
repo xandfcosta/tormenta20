@@ -215,12 +215,26 @@ func EngineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
 // TODOS de uma vez: ela já tem os agregados na mão, e passar por `computeSheet`
 // faria cada personagem ser lido do banco DUAS vezes — uma na lista e outra
 // dentro dele.
+// # OS CONDICIONAIS DO JOGADOR ENTRAM, e é o agregado que os traz
+//
+// Aqui passava-se `map[string]bool{}` — um conjunto vazio inventado por quem
+// computa. O `dto.Conditionals` é o opt-in que o jogador LIGOU e que já vem
+// carregado pelo `Load`; ignorá-lo fazia a mesma ficha ter dois números.
+//
+// Medido: o crachá do topo da ficha dizia Defesa 12 e a aba Combate, 17 — a aba
+// passa os condicionais de verdade (`sheetui.sheetForPanels`) e o crachá vinha
+// por aqui. Nos oráculos, a Lenda de nível 20 erra por DEZ pontos de Defesa
+// (ALE-357).
+//
+// São sete chamadores pelo `LoadAndCompute`, e entre eles a Defesa do cartão do
+// Grupo na Mesa — que é a tela que o cabeçalho do `sheetForPanels` citava como
+// aquela de quem a ficha não podia discordar.
 func Compute(cat *engine.Catalogs, dto CharacterDTO) (engine.ComputedSheet, error) {
 	ec, err := EngineCharacterFrom(dto)
 	if err != nil {
 		return engine.ComputedSheet{}, err
 	}
-	return cat.ComputeSheet(ec, map[string]bool{}), nil
+	return cat.ComputeSheet(ec, ToStringSet(dto.Conditionals)), nil
 }
 
 // loadPlayState anexa os três ao DTO da ficha.
