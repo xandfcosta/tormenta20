@@ -1,5 +1,5 @@
 // Package campaign são os CASOS DE USO de uma campanha: quem a vê, quem a
-// abre, quem senta à mesa dela.
+// abre, quem senta à mesa dela e o ELENCO de NPCs que o mestre prepara.
 //
 // # Por que `campaign` e não `campaigns`
 //
@@ -25,4 +25,11 @@
 // A trava é a mesma do ciclo da sessão (`session.Access`), e não uma segunda:
 // duas cópias de uma regra de autorização divergem em silêncio, e o sintoma é
 // uma superfície deixando entrar quem a outra barra.
+//
+// O `Cast` chegou provando isso: a tabela `campaign_creatures` tinha DOIS donos
+// — a cena da Mesa e o `app/initiative` —, e a trava de campanha estava escrita
+// nos dois, com um comentário na cena avisando contra exatamente isso. Quem
+// varre hoje é o `TestEveryCastGestureGoesThroughTheCampaignLock`, e ele se
+// varre por REFLEXÃO: todo método que recebe um `app.Caller` é exercitado com
+// um intruso, então um gesto novo não nasce sem trava (ALE-353).
 package campaign

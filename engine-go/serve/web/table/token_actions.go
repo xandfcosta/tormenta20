@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -168,9 +169,10 @@ func (s Scene) bondForMode(c commandCtx, modo string, modelo *board.BoardToken) 
 			return nil, fmt.Errorf("%s não tem bloco de criatura: não há o que copiar", linha.Label)
 		}
 		nomeDaCopia := s.nextNameForTheLine(c.SessionID, linha.Label)
-		blocoNovo, err := s.queue.Roster().CloneCreatureBlock(c.R.Context(), c.CampaignID, *linha.CreatureID, nomeDaCopia)
+		blocoNovo, err := s.cast.CloneBlock(
+			c.R.Context(), s.callerOf(c.R), c.CampaignID, *linha.CreatureID, nomeDaCopia)
 		if err != nil {
-			return nil, err
+			return nil, castRefusal(err, strconv.Quote(linha.Label))
 		}
 		linhaModelo.CreatureID = &blocoNovo
 	}

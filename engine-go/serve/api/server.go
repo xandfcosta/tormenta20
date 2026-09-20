@@ -166,7 +166,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 // antes.
 func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
-	s.tableScene = table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue())
+	s.tableScene = table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue(), s.campaignCast())
 }
 
 // sessionLifecycle é o caso de uso do ciclo, montado com o que o servidor tem.
@@ -192,6 +192,12 @@ func (s *Server) characterPlays() character.Plays {
 // sessionAccess é a TRAVA de quem alcança campanha e sessão, montada com o que
 // o servidor tem. Ela já era construída duas vezes — dentro do `Lifecycle` e
 // dentro do `campaignRules` —, e é barata: uma cópia de ponteiro.
+// campaignCast é o ELENCO de NPCs de uma campanha, montado com a mesma TRAVA
+// que os outros gestos da campanha usam.
+func (s *Server) campaignCast() campaign.Cast {
+	return campaign.NewCast(s.queries, s.sessionAccess())
+}
+
 // campaignDirectory é o acervo de campanhas: quais existem para quem pede.
 func (s *Server) campaignDirectory() campaign.Directory {
 	return campaign.NewDirectory(s.queries)

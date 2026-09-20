@@ -3,6 +3,7 @@ package table
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -17,7 +18,6 @@ import (
 
 	"t20engine/domain/creature"
 	"t20engine/domain/live"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -73,21 +73,13 @@ func saveEntryCast(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if nome == "" {
 		nome = v.Name
 	}
-	bloco := master.CopyOfEntry(*v)
-	if err := creature.Validate(nome, &bloco); err != nil {
-		return nil, err
-	}
-	creature.Normalize(&bloco)
-	blob, err := json.Marshal(bloco)
-	if err != nil {
-		return nil, fmt.Errorf("não deu para guardar o bloco de %q", nome)
-	}
-	agora := dbvalue.NowISO()
-	if _, err := st.deps.Queries().CreateCampaignCreature(c.R.Context(), sqlcgen.CreateCampaignCreatureParams{
-		Campaignid: c.CampaignID, Name: nome, Block: string(blob),
-		Createdat: agora, Updatedat: agora,
-	}); err != nil {
-		return nil, fmt.Errorf("não deu para guardar %q no elenco: %v", nome, err)
+	// A CENA monta o bloco a partir do verbete; validar, normalizar e gravar são
+	// do caso de uso, porque o editor faz as mesmas três com um bloco de outra
+	// origem (ALE-353).
+	if _, err := st.cast.Save(
+		c.R.Context(), st.callerOf(c.R), c.CampaignID, nome, master.CopyOfEntry(*v),
+	); err != nil {
+		return nil, castRefusal(err, nome)
 	}
 	// O ELENCO NÃO É ESTADO DE SESSÃO: guardar um NPC não muda a fila nem o
 	// mapa. Devolver o estado mesmo assim é o que faz a cena ser redesenhada
@@ -113,20 +105,36 @@ func (s Scene) campaignNpc(c commandCtx) (sqlcgen.CampaignCreature, creature.Blo
 //
 // O editor precisa dele porque lá o id vem do RASCUNHO — o formulário sabe quem
 // está editando —, e a conferência de campanha tem de ser a MESMA. Duas cópias
-// dariam duas travas, e a que envelhecesse seria a de menos uso.
+// dariam duas travas, e a que envelhecesse seria a de menos uso — hoje ela mora
+// no `campaign.Cast`, e isto aqui é só a tradução da recusa para FRASE, que é o
+// que o Datastar precisa (ALE-353).
 func (s Scene) idCampaignNpc(c commandCtx, id int64) (sqlcgen.CampaignCreature, creature.Block, error) {
-	var bloco creature.Block
-	linha, err := s.deps.Queries().GetCampaignCreature(c.R.Context(), id)
+	linha, bloco, err := s.cast.Block(c.R.Context(), s.callerOf(c.R), c.CampaignID, id)
 	if err != nil {
-		return sqlcgen.CampaignCreature{}, bloco, fmt.Errorf("o npc %d não existe", id)
-	}
-	if linha.Campaignid != c.CampaignID {
-		return sqlcgen.CampaignCreature{}, bloco, fmt.Errorf("o npc %d não é desta campanha", id)
-	}
-	if err := json.Unmarshal([]byte(linha.Block), &bloco); err != nil {
-		return linha, bloco, fmt.Errorf("o bloco de %q está ilegível", linha.Name)
+		return sqlcgen.CampaignCreature{}, creature.Block{}, castRefusal(err, fmt.Sprintf("o npc %d", id))
 	}
 	return linha, bloco, nil
+}
+
+// castRefusal traduz a recusa TIPADA do caso de uso na FRASE que a cena mostra.
+//
+// A Mesa devolve recusa como CONTEÚDO em 200 — o Datastar descarta o corpo de
+// um 4xx —, e essa é a exceção declarada no `engine-go/CLAUDE.md`. O que muda é
+// de onde a frase vem: a decisão é do caso de uso e a redação é daqui.
+func castRefusal(err error, oQue string) error {
+	switch {
+	case err == nil:
+		// SUCESSO tem de atravessar: os chamadores a usam como último `return`,
+		// e um `nil` virando erro faria o gesto que DEU CERTO desenhar recusa.
+		return nil
+	case errors.Is(err, app.ErrNotFound):
+		return fmt.Errorf("%s não existe", oQue)
+	case errors.Is(err, app.ErrForbidden):
+		return fmt.Errorf("%s não é desta campanha", oQue)
+	case errors.Is(err, app.ErrRefused):
+		return err
+	}
+	return fmt.Errorf("não deu para mexer em %s: %v", oQue, err)
 }
 
 // putNpcTracker traz um NPC guardado para o combate.
@@ -171,8 +179,8 @@ func eraseNpc(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := st.deps.Queries().DeleteCampaignCreature(c.R.Context(), linha.ID); err != nil {
-		return nil, fmt.Errorf("não deu para apagar %q: %v", linha.Name, err)
+	if _, err := st.cast.Erase(c.R.Context(), st.callerOf(c.R), c.CampaignID, linha.ID); err != nil {
+		return nil, castRefusal(err, strconv.Quote(linha.Name))
 	}
 	return st.deps.Sessions().GetState(c.SessionID), nil
 }
@@ -200,7 +208,7 @@ type castNpc struct {
 // perder o elenco inteiro por causa de um JSON estragado seria trocar um
 // problema pequeno por um grande — e o mestre precisa poder APAGAR o estragado.
 func (s Scene) CampaignCast(ctx context.Context, campaignID int64) []castNpc {
-	linhas, err := s.deps.Queries().ListCampaignCreatures(ctx, campaignID)
+	linhas, err := s.cast.List(ctx, campaignID)
 	if err != nil {
 		return nil
 	}

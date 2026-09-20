@@ -1,7 +1,6 @@
 package table
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -13,8 +12,6 @@ import (
 
 	"t20engine/domain/creature"
 	"t20engine/domain/live"
-	"t20engine/infra/db/dbvalue"
-	"t20engine/infra/db/sqlcgen"
 )
 
 // O EDITOR DE BLOCO: mexer nos números da cópia, e escrever do zero. O NPC ou
@@ -243,43 +240,20 @@ func (s Scene) triesSaveDraft(c commandCtx) error {
 	if err != nil {
 		return err
 	}
-	bloco := draftBlock(rascunho)
-	if err := creature.Validate(rascunho.Nome, &bloco); err != nil {
-		return err
-	}
-	creature.Normalize(&bloco)
-	blob, err := json.Marshal(bloco)
-	if err != nil {
-		return fmt.Errorf("não deu para guardar o bloco de %q", rascunho.Nome)
-	}
-	return s.gravaOBloco(c, rascunho, string(blob))
+	return s.gravaOBloco(c, rascunho, draftBlock(rascunho))
 }
 
-func (s Scene) gravaOBloco(c commandCtx, rascunho npcDraft, blob string) error {
-	agora := dbvalue.NowISO()
+// gravaOBloco escolhe entre nascer e reescrever, e nada mais: a validação, a
+// normalização e a trava de campanha são do `campaign.Cast`, que é onde o outro
+// caminho de criação também passa (ALE-353).
+func (s Scene) gravaOBloco(c commandCtx, rascunho npcDraft, bloco creature.Block) error {
 	if rascunho.ID == 0 {
-		_, err := s.deps.Queries().CreateCampaignCreature(c.R.Context(), sqlcgen.CreateCampaignCreatureParams{
-			Campaignid: c.CampaignID, Name: rascunho.Nome, Block: blob,
-			Createdat: agora, Updatedat: agora,
-		})
-		if err != nil {
-			return fmt.Errorf("não deu para guardar %q no elenco: %v", rascunho.Nome, err)
-		}
-		return nil
+		_, err := s.cast.Save(c.R.Context(), s.callerOf(c.R), c.CampaignID, rascunho.Nome, bloco)
+		return castRefusal(err, strconv.Quote(rascunho.Nome))
 	}
-	// A CONFERÊNCIA de campanha é a mesma do `campaignNpc`, e ela é a trava:
-	// o id vem do rascunho, que vem do navegador, e sem ela o mestre de uma mesa
-	// reescreveria o elenco de outra — que é o material mais privado que um
-	// mestre tem.
-	if _, _, err := s.idCampaignNpc(c, rascunho.ID); err != nil {
-		return err
-	}
-	if _, err := s.deps.Queries().UpdateCampaignCreature(c.R.Context(), sqlcgen.UpdateCampaignCreatureParams{
-		ID: rascunho.ID, Name: rascunho.Nome, Block: blob, Updatedat: agora,
-	}); err != nil {
-		return fmt.Errorf("não deu para atualizar %q: %v", rascunho.Nome, err)
-	}
-	return nil
+	return castRefusal(
+		s.cast.Update(c.R.Context(), s.callerOf(c.R), c.CampaignID, rascunho.ID, rascunho.Nome, bloco),
+		strconv.Quote(rascunho.Nome))
 }
 
 // paraOFormulario traduz o modelo para o formulário, e é a metade que faltava do
