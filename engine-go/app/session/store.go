@@ -400,15 +400,35 @@ func (st *Store) SessionDeleted(sessionID int64) {
 	delete(st.Dirty, sessionID)
 }
 
-// RefreshCharacterMaxes repergunta o PV/PM MÁXIMO de toda entrada com personagem
-// atrás (só os tetos; o atual não é tocado), para um nível subido no meio da
-// sessão não ficar preso ao máximo velho. Melhor esforço: uma piscada do banco
-// vira log e devolve o instantâneo atual em vez de derrubar a leitura.
+// RefreshCharacterVitals repergunta o POÇO INTEIRO — máximo e atual — de toda
+// entrada que tem personagem atrás. Melhor esforço: uma piscada do banco vira
+// log e devolve o instantâneo atual em vez de derrubar a leitura.
 //
-// Ela lia `SELECT id, hpMax, mpMax` direto e hoje pergunta à PORTA DA FICHA: o
-// máximo virou derivado, então saber qual ele é deixou de ser leitura de coluna
-// e passou a ser regra da ficha (ALE-355). O lote é da porta, e não daqui.
-func (st *Store) RefreshCharacterMaxes(ctx context.Context, sessionID int64) *live.SessionRuntimeState {
+// # O atual TAMBÉM, e é isso que a ALE-358 consertou
+//
+// Ela chamava-se `RefreshCharacterMaxes` e refrescava só os tetos, com o atual
+// declarado intocável. O efeito: sete gestos mudam o poço de um personagem e só
+// DOIS contavam à fila — o dano pela própria fila e o mestre descansando o
+// grupo. Os outros cinco são os da FICHA, e um jogador que bebesse uma poção,
+// apanhasse pelo próprio crachá, conjurasse ou entrasse em Fúria deixava o
+// mestre escolhendo alvo por um PV que não existia mais.
+//
+// # Por que sobrescrever é seguro
+//
+// Porque a entrada com personagem atrás NUNCA foi a autoridade sobre o atual: o
+// `DeltaVitals` e o `PatchVitals` dizem, com todas as letras, que *"quem manda é
+// a FICHA"* — eles escrevem nela e a linha espelha. A linha é o espelho, e
+// espelho se redesenha.
+//
+// Quem NÃO tem personagem atrás — o NPC digitado — é pulado, e ali o rastreador
+// continua sendo o registro. É a mesma fronteira que os dois gestos acima usam.
+//
+// # E o aparo some junto
+//
+// Havia um `clampCurrentTo` aqui para o caso de o máximo ENCOLHER com o atual
+// acima dele. Ele deixou de ter caso: o atual vem do poço derivado, que é
+// `máximo − dano` e já nasce na faixa (ALE-355).
+func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *live.SessionRuntimeState {
 	st.Mu.Lock()
 	ids := uniqueCharacterIDs(st.getOrCreateLocked(sessionID))
 	st.Mu.Unlock()
@@ -429,25 +449,11 @@ func (st *Store) RefreshCharacterMaxes(ctx context.Context, sessionID int64) *li
 			continue
 		}
 		if fresh, ok := pocos[*e.CharacterID]; ok {
-			e.HpMax = live.PtrInt64(fresh.HpMax)
-			e.MpMax = live.PtrInt64(fresh.MpMax)
-			// O máximo pode ter ENCOLHIDO (nível abaixado, CON caída): sem aparar,
-			// a barra mostra 9/5 e a ficha se contradiz na tela — o mesmo par que
-			// a criação e o PATCH de vitais recusam.
-			clampCurrentTo(&e.HpCurrent, fresh.HpMax)
-			clampCurrentTo(&e.MpCurrent, fresh.MpMax)
+			e.HpMax, e.HpCurrent = live.PtrInt64(fresh.HpMax), live.PtrInt64(fresh.HpCurrent)
+			e.MpMax, e.MpCurrent = live.PtrInt64(fresh.MpMax), live.PtrInt64(fresh.MpCurrent)
 		}
 	}
 	return live.CloneState(s)
-}
-
-// clampCurrentTo apara o valor atual no novo máximo, deixando o ponteiro nulo
-// como está (entrada sem aquele recurso não ganha um zero do nada).
-func clampCurrentTo(current **int64, max int64) {
-	if *current == nil || **current <= max {
-		return
-	}
-	*current = live.PtrInt64(max)
 }
 
 func uniqueCharacterIDs(s *live.SessionRuntimeState) []int64 {

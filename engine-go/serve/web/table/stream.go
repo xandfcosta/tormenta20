@@ -246,7 +246,7 @@ func sheetVersion(s Scene, ctx context.Context, view View) string {
 // causa dele seria tráfego que não desenha nada.
 //
 // Comparar o HTML RENDERIZADO e não o estado também é escolha: o
-// `refreshCharacterMaxes` devolve struct nova a cada leitura, então igualdade
+// `RefreshCharacterVitals` devolve struct nova a cada leitura, então igualdade
 // de estado mandaria tudo sempre; e comparar campo a campo seria a lista que
 // envelhece.
 func writeTable(ctx context.Context, sse *datastar.ServerSentEventGenerator, view View, anterior digitais) digitais {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"sync"
+	"t20engine/app/session"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
@@ -108,72 +109,113 @@ func TestABlobWithoutATurnInventsNoScene(t *testing.T) {
 	}
 }
 
-func TestStoreRefreshCharacterMaxes(t *testing.T) {
+// O REFRESH TIRA OS DOIS POÇOS DA FICHA — máximo e atual.
+//
+// # O que ele deixou de fazer
+//
+// Refrescar só os tetos. O atual era declarado intocável, e o resultado é que a
+// fila só andava quando o gesto passava POR ELA: sete sítios mudam o poço de um
+// personagem e cinco são da FICHA — os botões ±PV, a dose, a conjuração, a
+// postura e o descanso pedido pelo jogador. Nenhum deles chegava à linha, e o
+// mestre escolhia alvo por um número de antes (ALE-358).
+//
+// # A entrada nunca foi a autoridade
+//
+// Com personagem atrás, o `DeltaVitals` e o `PatchVitals` escrevem na FICHA e a
+// linha espelha — está escrito no corpo dos dois. Sobrescrever a linha não
+// apaga decisão nenhuma: ela é o espelho.
+//
+// # Os dois sentidos, e o NPC
+//
+// O caso percorre stale ALTO e stale BAIXO, porque um refresh que só aparasse
+// para baixo passaria no primeiro e deixaria o segundo parado — que é
+// exatamente o defeito de onde ele veio. E afirma que o NPC NÃO é tocado: ali
+// não há ficha atrás, e o rastreador é o registro.
+func TestStoreRefreshTakesBothPoolsFromTheSheet(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	gm := seedUser(t, s, "gm@t.com")
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	charID := seedCharacterAtLevel(t, s, gm, "A", "Guerreiro", 1, 3, 0)
-	pocoReal := bookPools(t, s, "Guerreiro", 1)
+	naFicha := poolsOf(t, s, charID)
 	store := s.sessions
 	if _, err := store.Load(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	// A entrada carrega máximos VELHOS e um atual vivo que o refresh não pode
-	// tocar.
-	e := sheetCombatant("A", 12, charID)
-	stale, cur := int64(1), int64(4)
-	e.HpMax, e.HpCurrent = &stale, &cur
-	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
-		t.Fatalf("Add: %v", err)
+
+	casos := []struct {
+		nome         string
+		hpMax, hpCur int64
+	}{
+		{"stale ALTO (a linha acha que ele tem mais do que tem)",
+			naFicha.HpMax * 2, naFicha.HpCurrent + 9},
+		{"stale BAIXO (a linha acha que ele apanhou mais do que apanhou)",
+			1, 1},
 	}
-	got := store.RefreshCharacterMaxes(ctx, sid)
-	entry := got.Initiative[0]
-	if entry.HpMax == nil || *entry.HpMax != pocoReal.PvMax || entry.MpMax == nil || *entry.MpMax != pocoReal.PmMax {
-		t.Errorf("os máximos não foram refrescados: hpMax=%v mpMax=%v, queria os da ficha (%d/%d)",
-			entry.HpMax, entry.MpMax, pocoReal.PvMax, pocoReal.PmMax)
-	}
-	if entry.HpCurrent == nil || *entry.HpCurrent != 4 {
-		t.Errorf("hpCurrent should be untouched at 4, got %v", entry.HpCurrent)
+	for _, caso := range casos {
+		t.Run(caso.nome, func(t *testing.T) {
+			emptyTheQueue(t, store, sid)
+			e := sheetCombatant("A", 12, charID)
+			hpMax, hpCur := caso.hpMax, caso.hpCur
+			e.HpMax, e.HpCurrent = &hpMax, &hpCur
+			if _, err := store.AddInitiativeEntry(sid, e); err != nil {
+				t.Fatalf("Add: %v", err)
+			}
+			// O NPC entra JUNTO: a fronteira só é medida quando os dois estão na
+			// mesma fila passando pelo mesmo refresh.
+			capanga := live.InitiativeEntry{Label: "Goblin", Initiative: 9, Type: "npc"}
+			pvDoCapanga, maxDoCapanga := int64(4), int64(11)
+			capanga.HpCurrent, capanga.HpMax = &pvDoCapanga, &maxDoCapanga
+			if _, err := store.AddInitiativeEntry(sid, capanga); err != nil {
+				t.Fatalf("Add npc: %v", err)
+			}
+
+			depois := store.RefreshCharacterVitals(ctx, sid)
+
+			linha := rowLabelled(t, depois, "A")
+			if live.DerefOr(linha.HpMax, -1) != naFicha.HpMax ||
+				live.DerefOr(linha.HpCurrent, -1) != naFicha.HpCurrent {
+				t.Errorf("a linha ficou em %d/%d e a ficha está em %d/%d",
+					live.DerefOr(linha.HpCurrent, -1), live.DerefOr(linha.HpMax, -1),
+					naFicha.HpCurrent, naFicha.HpMax)
+			}
+			if live.DerefOr(linha.MpCurrent, -1) != naFicha.MpCurrent {
+				t.Errorf("o PM da linha ficou em %d e a ficha está em %d",
+					live.DerefOr(linha.MpCurrent, -1), naFicha.MpCurrent)
+			}
+
+			doCapanga := rowLabelled(t, depois, "Goblin")
+			if live.DerefOr(doCapanga.HpCurrent, -1) != 4 || live.DerefOr(doCapanga.HpMax, -1) != 11 {
+				t.Errorf("o NPC saiu em %d/%d e devia estar intocado em 4/11 — "+
+					"não há ficha atrás dele, e ali o rastreador É o registro",
+					live.DerefOr(doCapanga.HpCurrent, -1), live.DerefOr(doCapanga.HpMax, -1))
+			}
+		})
 	}
 }
 
-// O caso que faltava: o máximo ENCOLHE (o mestre baixou o nível, a CON caiu) e o
-// atual fica acima dele. Sem aparar, a barra do rastreador mostra 9/5 — mais de
-// 100% — enquanto o servidor recusa esse mesmo par em qualquer outro caminho
-// (criação e PATCH de vitais). O número que sobra não é "vida a mais": é uma
-// ficha que se contradiz na tela.
-func TestStoreRefreshClampsCurrentToNewMax(t *testing.T) {
-	s := newTestServer(t)
-	ctx := context.Background()
-	gm := seedUser(t, s, "gm@t.com")
-	sid := seedSession(t, s, seedCampaign(t, s, gm))
-	// O poço REAL é o do guerreiro de nível 1, e a entrada carrega um máximo
-	// maior com um atual acima dele — o estado que o refresh existe para aparar.
-	charID := seedCharacter(t, s, gm, "Encolheu")
-	pocoReal := bookPools(t, s, "Guerreiro", 1)
-	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
-		t.Fatalf("Load: %v", err)
+// emptyTheQueue esvazia a iniciativa entre os casos, para o segundo não medir a
+// linha que o primeiro deixou.
+func emptyTheQueue(t *testing.T, store *session.Store, sid int64) {
+	t.Helper()
+	for _, e := range store.GetState(sid).Initiative {
+		if _, err := store.RemoveInitiativeEntry(sid, e.ID); err != nil {
+			t.Fatalf("limpar a fila: %v", err)
+		}
 	}
-	// A entrada carrega máximos ANTIGOS (maiores) e um atual acima do novo teto.
-	e := sheetCombatant("Encolheu", 12, charID)
-	velhoHpMax, atualHp := pocoReal.PvMax*2, pocoReal.PvMax+4
-	velhoMpMax, atualMp := pocoReal.PmMax*2, pocoReal.PmMax+4
-	e.HpMax, e.HpCurrent = &velhoHpMax, &atualHp
-	e.MpMax, e.MpCurrent = &velhoMpMax, &atualMp
-	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
-		t.Fatalf("Add: %v", err)
-	}
+}
 
-	entry := store.RefreshCharacterMaxes(ctx, sid).Initiative[0]
-
-	if entry.HpCurrent == nil || *entry.HpCurrent != pocoReal.PvMax {
-		t.Errorf("PV atual=%v, queria %d (aparado no máximo real)", entry.HpCurrent, pocoReal.PvMax)
+// rowLabelled acha a entrada pelo rótulo e FALHA se ela sumiu: entrada ausente e
+// entrada intocada se parecem quando a asserção lê um zero.
+func rowLabelled(t *testing.T, st *live.SessionRuntimeState, rotulo string) live.InitiativeEntry {
+	t.Helper()
+	for _, e := range st.Initiative {
+		if e.Label == rotulo {
+			return e
+		}
 	}
-	if entry.MpCurrent == nil || *entry.MpCurrent != pocoReal.PmMax {
-		t.Errorf("PM atual=%v, queria %d (aparado no máximo real)", entry.MpCurrent, pocoReal.PmMax)
-	}
+	t.Fatalf("a linha %q não está na fila", rotulo)
+	return live.InitiativeEntry{}
 }
 
 func TestStoreDirtyOnPersistFailure(t *testing.T) {

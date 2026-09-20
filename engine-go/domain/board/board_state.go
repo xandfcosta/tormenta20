@@ -45,7 +45,7 @@ type BoardToken struct {
 	// SpeedSquares é o orçamento de movimento da peça em QUADRADOS (T20 p106:
 	// 9m = 6 quadrados). Mora na peça porque a tela precisa dele ANTES de
 	// propor — para contar o gasto e acender o que dá para alcançar —, e é
-	// re-sincronizado do motor a cada proposta, como o `RefreshCharacterMaxes`
+	// re-sincronizado do motor a cada proposta, como o `RefreshCharacterVitals`
 	// faz com o `hpMax`. Zero = nunca medido; vale o padrão do livro.
 	SpeedSquares int `json:"speedSquares,omitempty"`
 	// DeOndeVeio é onde a peça estava ANTES do último movimento confirmado, e é
