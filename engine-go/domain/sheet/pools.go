@@ -95,13 +95,25 @@ func ApplyToLoadedPools(
 // `character_damage` já está cheio. Eles existiam para manter as quatro colunas
 // de espelho, e elas saíram na 00015 (ALE-355).
 
-// WithinPool prende um vital entre zero e o teto.
+// WithinPool prende um vital entre zero e o teto, e é a ÚNICA grafia da regra.
 //
-// Eram cinco grafias: duas funções com nome próprio, que saíram com o
-// `app/character/vitals.go`, e três `min(max(…))` escritos à mão nos gestos. O
-// `live.ClampVital` NÃO entrou nesta conta e continua onde
-// está: ele prende a entrada do RASTREADOR, cujo máximo é opcional porque um NPC
-// pode não ter nenhum. Poço de ficha sempre tem teto.
+// Eram cinco: duas funções com nome próprio, que saíram com o
+// `app/character/vitals.go`, e três `min(max(…))` escritos à mão nos gestos. A
+// sexta nasceu na MESMA fatia que escreveu esta frase, num ajudante que não
+// existe mais a um arquivo daqui — e é por isso que a contagem deixou de ser
+// afirmada por extenso. Quem varre é o `TestNoSecondSpellingOfTheVitalClamp`,
+// que não envelhece.
+//
+// TRÊS regras parecidas ficam de fora, e a semelhança é só de FORMA:
+//
+//   - o `live.ClampVital` prende a entrada do RASTREADOR, cujo máximo é opcional
+//     porque um NPC pode não ter nenhum. Poço de ficha sempre tem teto;
+//   - o `BalanceAfterMoneyGesture` do `tibar.go` **não prende: RECUSA**, com a
+//     frase que diz quanto a pessoa tem. Um clamp ali gastaria o dinheiro até o
+//     fundo em silêncio, em vez de explicar por que não dá;
+//   - o `domain/engine` prende teto de BÔNUS DO LIVRO — a Insolência do
+//     Bucaneiro é "+Carisma na Defesa, até o nível de Bucaneiro" (p47) —, e ele
+//     não pode chamar isto aqui: a direção de import é `sheet → engine`.
 func WithinPool(valor, teto int64) int64 { return min(max(int64(0), valor), teto) }
 
 // savePools grava o que de fato é ESTADO: o quanto se apanhou.
