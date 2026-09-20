@@ -25,6 +25,9 @@ type SustainedUpkeep struct {
 	Dropped []string
 	// Cost é o que sai do poço: um por sustentada paga.
 	Cost int
+	// Unconscious diz POR QUE tudo caiu, e a mesa lê a diferença: sem mana é
+	// uma escolha que acabou; a 0 PV é um personagem no chão.
+	Unconscious bool
 }
 
 // PaySustained decide a manutenção do início do turno (T20 p227).
@@ -35,10 +38,22 @@ type SustainedUpkeep struct {
 // para a mais nova, que é estável e explicável. Quem quiser outra escolha
 // encerra a que preferir, o que também é ação livre.
 //
-// @example PaySustained([]string{"velocidade", "oracao"}, 1)
+// INCONSCIENTE NÃO SUSTENTA, e o mana cheio não muda isso: manter a habilidade
+// é uma AÇÃO LIVRE no início do turno, e a 0 PV "você cai inconsciente" (p236).
+// É por aqui que a cláusula da p227 — a morte encerra as sustentadas, e só elas
+// — chega a um app cujo poço de PV tem piso em zero: lá dentro, quem morreu e
+// quem está sangrando ocupam o mesmo número, e os dois deixam de pagar.
+//
+// @example PaySustained([]string{"velocidade", "oracao"}, 1, true)
 //
 //	// Paid: ["velocidade"], Dropped: ["oracao"], Cost: 1
-func PaySustained(sustentados []string, pmAtual int) SustainedUpkeep {
+func PaySustained(sustentados []string, pmAtual int, podeAgir bool) SustainedUpkeep {
+	if !podeAgir {
+		if len(sustentados) == 0 {
+			return SustainedUpkeep{}
+		}
+		return SustainedUpkeep{Dropped: sustentados, Unconscious: true}
+	}
 	sobra := max(pmAtual, 0)
 	var feito SustainedUpkeep
 	for _, id := range sustentados {

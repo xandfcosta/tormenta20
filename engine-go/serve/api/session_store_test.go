@@ -463,3 +463,58 @@ func TestWithoutManaTheSustainedAbilityEnds(t *testing.T) {
 		}
 	}
 }
+
+// CAIR A 0 PV ENCERRA AS SUSTENTADAS, com o mana cheio.
+//
+// É por aqui que a cláusula da p227 — "a morte de um personagem não afeta suas
+// habilidades (EXCETO sustentadas)" — chega ao app: manter é uma AÇÃO LIVRE no
+// início do turno (p227) e a 0 PV "você cai inconsciente" (p236), então quem
+// está no chão não paga. O poço do app tem piso em zero, e lá dentro morrer e
+// sangrar ocupam o mesmo número.
+func TestFallingToZeroHitPointsEndsTheSustainedAbilities(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gm := seedUser(t, s, "gm@t.com")
+	charID := seedCharacterAtLevel(t, s, gm, "A", "Arcanista", 3, 10, 4)
+	seedSustained(t, s, charID, "velocidade")
+	sid := seedSession(t, s, seedCampaign(t, s, gm))
+	store := s.sessions
+	if _, err := store.Load(ctx, sid); err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
+		t.Fatalf("começar a cena: %v", err)
+	}
+	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 12, charID)); err != nil {
+		t.Fatalf("Add: %v", err)
+	}
+	entryID := store.GetState(sid).Initiative[0].ID
+	if _, err := store.DeltaVitals(sid, entryID, live.PtrInt64(-999), nil); err != nil {
+		t.Fatalf("derrubar: %v", err)
+	}
+	// O CONTROLE, e ele é a metade que importa: o mana tem de estar CHEIO,
+	// senão o teste passaria verde pela outra razão (falta de PM).
+	poco := poolsOf(t, s, charID)
+	if poco.HpCurrent != 0 || poco.MpCurrent == 0 {
+		t.Fatalf("o controle falhou: PV %d (quero 0) e PM %d (quero >0)", poco.HpCurrent, poco.MpCurrent)
+	}
+
+	depois, err := store.NextTurn(sid)
+	if err != nil {
+		t.Fatalf("entrar na vez: %v", err)
+	}
+
+	extrato := depois.Scene.Upkeep
+	if extrato == nil || len(extrato.Dropped) != 1 || extrato.Dropped[0] != "Velocidade" {
+		t.Fatalf("o extrato diz %+v, quero Velocidade caída", extrato)
+	}
+	if !extrato.Unconscious {
+		t.Error("a razão é estar no chão, e não falta de mana — a faixa diz frases diferentes")
+	}
+	if extrato.Cost != 0 {
+		t.Errorf("quem está inconsciente não gasta PM, e gastou %d", extrato.Cost)
+	}
+	if mp := poolsOf(t, s, charID).MpCurrent; mp != poco.MpCurrent {
+		t.Errorf("o mana foi de %d para %d, e não devia ter saído do lugar", poco.MpCurrent, mp)
+	}
+}

@@ -50,14 +50,17 @@ func (st *Store) payUpkeep(s *live.SessionRuntimeState) upkeepCharge {
 	if err != nil {
 		return upkeepCharge{}
 	}
-	mana := int(pocos[*entrada.CharacterID].MpCurrent)
-	feito := engine.PaySustained(ids, mana)
+	poco := pocos[*entrada.CharacterID]
+	mana := int(poco.MpCurrent)
+	// PODE AGIR é ter PV: a 0 "você cai inconsciente" (p236), e o poço do app
+	// tem piso em zero, então é aqui que morrer e sangrar se encontram.
+	feito := engine.PaySustained(ids, mana, poco.HpCurrent > 0)
 	for _, id := range feito.Dropped {
 		_ = st.sustentadas.EndSustained(context.Background(), *entrada.CharacterID, id)
 	}
 	s.Scene.Upkeep = &live.TurnUpkeep{
 		Paid: labelsOf(feito.Paid, nome), Dropped: labelsOf(feito.Dropped, nome), Cost: feito.Cost,
-		MpBefore: mana, MpAfter: mana - feito.Cost,
+		MpBefore: mana, MpAfter: mana - feito.Cost, Unconscious: feito.Unconscious,
 	}
 	// O MANA SAI DEPOIS, e a cobrança VOLTA em vez de ficar guardada: quem
 	// grava na ficha e espelha na fila é o `DeltaVitals`, que toma o mesmo

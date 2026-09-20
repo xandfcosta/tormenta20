@@ -111,6 +111,9 @@ type TurnUpkeep struct {
 	Paid    []string `json:"paid,omitempty"`
 	Dropped []string `json:"dropped,omitempty"`
 	Cost    int      `json:"cost"`
+	// Unconscious diz que tudo caiu porque quem entrou na vez está a 0 PV, e
+	// não por falta de mana: manter é ação livre, e quem está no chão não age.
+	Unconscious bool `json:"unconscious,omitempty"`
 	// MpBefore e MpAfter são o poço ANTES e DEPOIS da manutenção. O gasto
 	// sozinho diz o preço e não diz se dá para pagar no turno seguinte, que é a
 	// decisão de quem sustenta.

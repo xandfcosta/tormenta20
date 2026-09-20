@@ -242,6 +242,10 @@ func TestTheStripTellsWhatSustainingCostThisTurn(t *testing.T) {
 		{nome: "a que caiu é nomeada",
 			extrato: &TurnUpkeep{Dropped: []string{"Velocidade"}, Cost: 0},
 			quero:   "Velocidade acabou: sem PM para sustentar"},
+		// A RAZÃO muda a frase: no chão não é falta de mana.
+		{nome: "quem caiu a 0 PV não sustenta, e a faixa diz isso",
+			extrato: &TurnUpkeep{Dropped: []string{"Velocidade", "Oração"}, Unconscious: true},
+			quero:   "Velocidade e Oração acabaram: inconsciente não sustenta"},
 		{nome: "paga e caída convivem",
 			extrato: &TurnUpkeep{Paid: []string{"Oração"}, Dropped: []string{"Velocidade"}, Cost: 1, MpBefore: 1},
 			quero:   "Oração · −1 PM (1 → 0) · Velocidade acabou: sem PM para sustentar"},

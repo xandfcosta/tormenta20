@@ -17,6 +17,7 @@ func TestSustainedAbilitiesCostAPointOfManaEachTurn(t *testing.T) {
 		nome        string
 		sustentados []string
 		pm          int
+		caido       bool
 		quantos     int
 		mantidos    []string
 		caidos      []string
@@ -40,10 +41,17 @@ func TestSustainedAbilitiesCostAPointOfManaEachTurn(t *testing.T) {
 			mantidos: []string{"velocidade", "oracao"}, caidos: []string{"forma-eterea"}},
 		{nome: "mana negativa é tratada como nenhuma",
 			sustentados: []string{"velocidade"}, pm: -3, caidos: []string{"velocidade"}},
+		// INCONSCIENTE NÃO SUSTENTA, e o mana cheio não muda nada: a 0 PV "você
+		// cai inconsciente" (p236), e manter a habilidade exige uma AÇÃO LIVRE
+		// no início do turno — que quem não age não faz. É por aqui que a
+		// cláusula da morte da p227 chega ao app, cujo PV tem piso em zero.
+		{nome: "quem caiu a 0 PV não paga, mesmo com mana de sobra",
+			sustentados: []string{"velocidade", "oracao"}, pm: 99, caido: true,
+			caidos: []string{"velocidade", "oracao"}},
 	}
 	for _, c := range casos {
 		t.Run(c.nome, func(t *testing.T) {
-			teve := PaySustained(c.sustentados, c.pm)
+			teve := PaySustained(c.sustentados, c.pm, !c.caido)
 			if teve.Cost != c.quantos {
 				t.Errorf("custou %d PM, quero %d", teve.Cost, c.quantos)
 			}
@@ -113,4 +121,20 @@ func countSustained(no any) int {
 		return n
 	}
 	return 0
+}
+
+// A RAZÃO DA QUEDA é diferente, e a mesa lê a diferença: sem mana é uma escolha
+// que acabou, inconsciente é um personagem no chão.
+func TestTheUpkeepSaysWhyTheAbilityEnded(t *testing.T) {
+	semMana := PaySustained([]string{"velocidade"}, 0, true)
+	if semMana.Unconscious {
+		t.Error("cair por falta de mana não é cair por estar inconsciente")
+	}
+	noChao := PaySustained([]string{"velocidade"}, 99, false)
+	if !noChao.Unconscious {
+		t.Error("quem está a 0 PV cai por não poder agir, e não por falta de mana")
+	}
+	if noChao.Cost != 0 {
+		t.Errorf("inconsciente não gasta PM, e gastou %d", noChao.Cost)
+	}
 }

@@ -232,8 +232,18 @@ func UpkeepLine(extrato *TurnUpkeep) string {
 		partes = append(partes, fmt.Sprintf("%s · −%d PM (%d → %d)",
 			joinWithAnd(extrato.Paid), extrato.Cost, extrato.MpBefore, extrato.MpAfter))
 	}
-	for _, caiu := range extrato.Dropped {
-		partes = append(partes, caiu+" acabou: sem PM para sustentar")
+	// A RAZÃO da queda entra na frase: sem mana é uma escolha que acabou;
+	// inconsciente é um personagem no chão, e quem lê a mesa precisa saber qual
+	// dos dois aconteceu para decidir se vale curar ou reconjurar.
+	if len(extrato.Dropped) > 0 {
+		if extrato.Unconscious {
+			partes = append(partes, joinWithAnd(extrato.Dropped)+" "+
+				endedVerb(extrato.Dropped)+": inconsciente não sustenta")
+		} else {
+			for _, caiu := range extrato.Dropped {
+				partes = append(partes, caiu+" acabou: sem PM para sustentar")
+			}
+		}
 	}
 	return strings.Join(partes, " · ")
 }
@@ -244,4 +254,13 @@ func joinWithAnd(nomes []string) string {
 		return strings.Join(nomes, "")
 	}
 	return strings.Join(nomes[:len(nomes)-1], ", ") + " e " + nomes[len(nomes)-1]
+}
+
+// endedVerb concorda o verbo com quantas habilidades caíram. Plural fixo sobre
+// contagem variável lê "Velocidade acabaram", e isso já foi visto na tela.
+func endedVerb(caidos []string) string {
+	if len(caidos) == 1 {
+		return "acabou"
+	}
+	return "acabaram"
 }
