@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { medeOContraste } from './support/contrast'
+import { expectNothingIsClippedSideways } from './support/geometry'
 import { MEASURED_SCENES, SESSION_FILE } from './support/measured-scenes'
 import { expectCinzelAcimaDoPiso } from './support/typography'
 
@@ -86,6 +87,31 @@ for (const [nome, cena] of Object.entries(MEASURED_SCENES)) {
           return
         }
         await expectCinzelAcimaDoPiso(page, `em ${onde}`)
+      })
+
+      // O CORTE LATERAL entra no MESMO laço, e essa é a decisão da ALE-342.
+      //
+      // O medidor existia desde a ALE-337 e estava ligado numa cena só — o
+      // catálogo. Uma cena que voltasse a cortar em qualquer outro lugar não
+      // acusava nada, que é a primeira das quatro formas de "não visitar" que o
+      // CLAUDE.md lista: a cena não está na lista.
+      //
+      // Aqui ele não ganha lista PRÓPRIA: pega carona no `MEASURED_SCENES`, que
+      // o `convention.TestEveryPageSceneIsMeasuredForAppearance` já obriga a
+      // estar completo. Cena nova entra nos três medidores de uma vez, e não há
+      // uma segunda enumeração para envelhecer sozinha.
+      //
+      // A 390px porque é a largura em que sobra menos espaço, e conteúdo que não
+      // cabe ali é conteúdo que ninguém alcança — ele não rola.
+      test(`nada é cortado de lado a 390px em ${onde}`, async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 })
+        const resposta = await page.goto(visita.address)
+        if (visita.mayBeAbsent && resposta?.status() === 404) {
+          test.skip(true, `esta bancada não serve ${visita.address}`)
+          return
+        }
+        expect(resposta?.status(), `${visita.address} não respondeu`).toBeLessThan(400)
+        await expectNothingIsClippedSideways(page, 'body')
       })
     })
   }
