@@ -1,0 +1,17 @@
+app/boards/store.go
+domain/board/board_state.go
+domain/book/catalogs.go
+domain/engine/itemeffects.go
+domain/live/session_state.go
+serve/web/campaigns/one.templ
+serve/web/campaigns/routes.go
+serve/web/master/bestiary.templ
+serve/web/master/collection.templ
+serve/web/sheetui/spells.go
+serve/web/table/board.templ
+serve/web/table/commands.go
+serve/web/table/routes.go
+serve/web/table/table.templ
+serve/web/table/token_actions.go
+serve/web/table/view.go
+serve/web/ui/kit.templ

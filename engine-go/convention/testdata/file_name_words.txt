@@ -175,6 +175,7 @@ favicon
 field
 fields
 file
+files
 filters
 finder
 finesse
@@ -195,6 +196,7 @@ general
 generate
 geometry
 gesture
+gestures
 ghost
 gitignore
 glossary
@@ -250,6 +252,7 @@ language
 latin
 layer
 layout
+length
 lens
 level
 lifecycle
@@ -261,6 +264,7 @@ lists
 live
 load
 lock
+long
 magic
 main
 markdown
