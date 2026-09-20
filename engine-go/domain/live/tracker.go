@@ -92,7 +92,10 @@ func TurnCounter(cena *Scene, rodada, turno int, naFila int) string {
 	if turno < 0 {
 		return fmt.Sprintf("Rodada %d · %d na fila", rodada, naFila)
 	}
-	return fmt.Sprintf("Rodada %d · Turno %d/%d", rodada, turno+1, naFila)
+	// O QUE SOBROU DO TURNO entra aqui e não numa segunda tira: a economia de
+	// ação (p233) é sobre o turno, e o turno já é o que esta frase conta. Quem
+	// vai clicar precisa saber ANTES — a recusa sozinha chega depois do gesto.
+	return fmt.Sprintf("Rodada %d · Turno %d/%d · %s", rodada, turno+1, naFila, cena.actionsLeft())
 }
 
 // ── presença ────────────────────────────────────────────────────────────────

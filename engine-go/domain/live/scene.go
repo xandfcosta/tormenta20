@@ -1,7 +1,5 @@
 package live
 
-import "encoding/json"
-
 // A CENA, como o livro a define (T20 p252).
 //
 // "O tempo narrativo de uma aventura de Tormenta20 é medido em CENAS. Uma cena
@@ -49,6 +47,15 @@ func (k SceneKind) Name() string {
 // Scene é a cena EM CURSO. Nil no estado quer dizer fora de cena.
 type Scene struct {
 	Kind SceneKind `json:"kind"`
+	// StandardLeft e MovementLeft são a economia de ação do turno EM CURSO
+	// (p233): uma padrão e uma de movimento, com uma troca de mão única entre
+	// elas. Elas são DADO aqui e a regra mora no `engine.TurnBudget` — o regime
+	// não alcança o motor (ver `boundary_test.go`), e duplicar a troca daria
+	// duas versões da mesma assimetria para divergir.
+	//
+	// Só a cena de AÇÃO tem turno, então só ela as usa.
+	StandardLeft bool `json:"standardLeft"`
+	MovementLeft bool `json:"movementLeft"`
 	// Number é a ordem dentro da sessão, começando em 1. Ele existe porque a
 	// sessão tem uma SEQUÊNCIA de cenas — sem número, "a terceira cena da noite"
 	// não tem como ser dita.
@@ -75,7 +82,7 @@ func StartScene(st *SessionRuntimeState, tipo SceneKind) {
 		EndScene(st)
 	}
 	st.ScenesSoFar++
-	st.Scene = &Scene{Kind: tipo, Number: st.ScenesSoFar}
+	st.Scene = &Scene{Kind: tipo, Number: st.ScenesSoFar, StandardLeft: true, MovementLeft: true}
 }
 
 // EndScene encerra a cena em curso e devolve o combate ao começo — mas GUARDA a
@@ -91,39 +98,31 @@ func EndScene(st *SessionRuntimeState) {
 	st.TurnsTaken = 0
 }
 
-// O BLOB GRAVADO de antes da ALE-365 tem `sceneActive: true|false` e não tem
-// cena. Ler o campo novo num blob velho devolveria "fora de cena" — e apagaria
-// da tela o combate de quem estivesse jogando no dia em que isto subisse.
+// RefreshTurn devolve o turno inteiro a quem acabou de entrar nele.
 //
-// O `UnmarshalJSON` é o lugar: ele é o ÚNICO caminho por onde um blob entra, e
-// consertar no chamador deixaria de fora o próximo chamador.
-func (st *SessionRuntimeState) UnmarshalJSON(bruto []byte) error {
-	// O apelido corta a recursão: sem ele, o `Unmarshal` chamaria este mesmo
-	// método para sempre.
-	type comoEstaNoDisco SessionRuntimeState
-	var lido struct {
-		comoEstaNoDisco
-		SceneActive *bool `json:"sceneActive"`
+// Ela é chamada pelo `AdvanceTurn` e pelo irmão que volta: um turno que começa
+// com a ação já gasta seria o turno de outra pessoa.
+func RefreshTurn(st *SessionRuntimeState) {
+	if st.Scene == nil {
+		return
 	}
-	if err := json.Unmarshal(bruto, &lido); err != nil {
-		return err
+	st.Scene.StandardLeft, st.Scene.MovementLeft = true, true
+}
+
+// actionsLeft escreve o que ainda cabe no turno.
+//
+// A frase diz a CONSEQUÊNCIA e não o mecanismo: com a padrão de pé e a de
+// movimento gasta, ainda dá para andar — "você pode trocar sua ação padrão por
+// uma ação de movimento" (p233) —, e um "padrão" seco leria como "só atacar"
+// para quem está decidindo se a criatura escapa do fogo.
+func (s *Scene) actionsLeft() string {
+	switch {
+	case s.StandardLeft && s.MovementLeft:
+		return "padrão e movimento"
+	case s.StandardLeft:
+		return "padrão (dá para mover)"
+	case s.MovementLeft:
+		return "movimento"
 	}
-	*st = SessionRuntimeState(lido.comoEstaNoDisco)
-	// UM TURNO EM CURSO É PROVA de que havia cena, e esta linha é mais velha que
-	// a cena tipada: sessão gravada antes de `sceneActive` existir volta sem ele,
-	// e o zero de um bool é `false` — a mesa que parou na rodada 3 reabriria
-	// "fora de cena" e a fila sumiria para os jogadores até o mestre clicar em
-	// iniciar. Não existe turno sem cena (ver `AdvanceTurn`), então não é
-	// remendo de migração: é a invariante afirmada onde o estado ENTRA.
-	//
-	// Nos dois casos a cena que se abre é a de AÇÃO, porque era a única que o
-	// app sabia abrir quando aqueles blobs foram gravados.
-	naCena := (lido.SceneActive != nil && *lido.SceneActive) || st.TurnIndex >= 0
-	if st.Scene == nil && naCena {
-		if st.ScenesSoFar == 0 {
-			st.ScenesSoFar = 1
-		}
-		st.Scene = &Scene{Kind: SceneAction, Number: st.ScenesSoFar}
-	}
-	return nil
+	return "sem ação"
 }

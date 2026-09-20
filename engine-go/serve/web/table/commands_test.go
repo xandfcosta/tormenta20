@@ -67,7 +67,7 @@ func TestTheCounterAndTheAdvanceTellTheSameStory(t *testing.T) {
 	}
 
 	emCombate := ofViewGm(estadoDe(true, 1, 0, fila...), nil, nil, true, false)
-	if emCombate.Contador != "Rodada 1 · Turno 1/2" {
+	if emCombate.Contador != "Rodada 1 · Turno 1/2 · padrão e movimento" {
 		t.Errorf("em combate o contador diz %q", emCombate.Contador)
 	}
 	if emCombate.Avanco.Label != "Próximo: Ogro" {
@@ -144,5 +144,5 @@ func anActionScene(ligada bool) *live.Scene {
 	if !ligada {
 		return nil
 	}
-	return &live.Scene{Kind: live.SceneAction, Number: 1}
+	return &live.Scene{Kind: live.SceneAction, Number: 1, StandardLeft: true, MovementLeft: true}
 }

@@ -351,6 +351,7 @@ func AdvanceTurn(st *SessionRuntimeState) {
 		st.TurnIndex = 0
 		st.Round++
 	}
+	RefreshTurn(st)
 }
 
 // RewindTurn desfaz um "Próximo turno". Cruzar a virada de volta devolve a

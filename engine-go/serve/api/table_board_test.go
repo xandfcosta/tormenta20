@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"t20engine/domain/board"
 	"t20engine/infra/events"
@@ -575,5 +576,97 @@ func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
 	// UMA classe de objeto e só uma: a porta a tem, o lobo não.
 	if n := strings.Count(html, "board-token-object"); n != 1 {
 		t.Errorf("a classe de cenário aparece %d vezes; a porta a tem e o lobo não", n)
+	}
+}
+
+// ANDAR GASTA A AÇÃO DE MOVIMENTO DO TURNO (T20 p233), e a segunda sai da
+// padrão — "você pode trocar sua ação padrão por uma ação de movimento".
+//
+// O caso é de INTEGRAÇÃO e não de unidade porque o que ele prende é a COSTURA:
+// a regra mora no `engine.TurnBudget`, o que sobrou mora no `live.Scene`, e
+// quem os junta é o comando da cena. Três lugares que um teste de cada um
+// deixaria verde sem ninguém cobrando ninguém.
+// tokenSquare devolve onde a peça está, pelo tabuleiro de verdade.
+func tokenSquare(t *testing.T, f sceneFixture, tokenID string) [2]int {
+	t.Helper()
+	tabuleiro := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	peca := board.FindToken(tabuleiro, tokenID)
+	if peca == nil {
+		t.Fatalf("a peça %q sumiu do tabuleiro", tokenID)
+	}
+	return [2]int{peca.X, peca.Y}
+}
+
+func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	f.seedOpenBoard(t, "stone")
+
+	// A VEZ é a do Ogro, que tem a iniciativa mais alta. A peça dele precisa
+	// apontar para a LINHA — é o `entryId` que liga o gesto ao turno.
+	estado := f.s.sessions.GetState(f.sessionID)
+	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
+		t.Fatalf("começar o turno: %v", err)
+	}
+	estado = f.s.sessions.GetState(f.sessionID)
+	naVez := estado.Initiative[estado.TurnIndex]
+	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+		board.BoardToken{Label: naVez.Label, X: 2, Y: 2, EntryID: &naVez.ID})
+	if err != nil {
+		t.Fatalf("pôr a peça: %v", err)
+	}
+	pecaID := posto.Tokens[len(posto.Tokens)-1].ID
+
+	andar := func(destinoX int) *httptest.ResponseRecorder {
+		base := f.tableUrl() + "/tabuleiro/" + pecaID
+		if rec := f.pede(t, f.mestre, "POST", base+"/parada",
+			`{"from":{"X":`+strconv.Itoa(destinoX)+`,"Y":2}}`); rec.Code != http.StatusOK {
+			t.Fatalf("propor a parada deu %d", rec.Code)
+		}
+		return f.pede(t, f.mestre, "POST", base+"/confirmar", "")
+	}
+
+	if rec := andar(3); rec.Code != http.StatusOK {
+		t.Fatalf("o primeiro movimento deu %d", rec.Code)
+	}
+	depois := f.s.sessions.GetState(f.sessionID)
+	if depois.Scene.MovementLeft {
+		t.Error("andar gastou a ação de MOVIMENTO, e ela continua de pé")
+	}
+	if !depois.Scene.StandardLeft {
+		t.Error("andar não toca na ação padrão")
+	}
+
+	// A SEGUNDA sai da padrão, pela troca de mão única da p233.
+	if rec := andar(4); rec.Code != http.StatusOK {
+		t.Fatalf("o segundo movimento, que sai da padrão, deu %d", rec.Code)
+	}
+	depois = f.s.sessions.GetState(f.sessionID)
+	if depois.Scene.StandardLeft || depois.Scene.MovementLeft {
+		t.Errorf("o turno inteiro foi gasto em dois movimentos, e sobrou %+v", depois.Scene)
+	}
+
+	// A TERCEIRA NÃO ACONTECE — e o que se prende é a PEÇA, não a frase: uma
+	// recusa escrita sobre um movimento que pousou é a pior das duas saídas,
+	// porque a mesa lê o erro e vê a peça no lugar novo.
+	ondeEstava := tokenSquare(t, f, pecaID)
+	rec := andar(5)
+	if agora := tokenSquare(t, f, pecaID); agora != ondeEstava {
+		t.Errorf("sem ação no turno a peça não anda, e ela foi de %v para %v", ondeEstava, agora)
+	}
+	if !strings.Contains(rec.Body.String(), "não sobrou ação neste turno") {
+		t.Errorf("a terceira andada tinha de ser recusada por falta de ação, e veio %q",
+			rec.Body.String()[:min(220, len(rec.Body.String()))])
+	}
+	if !strings.Contains(rec.Body.String(), naVez.Label) {
+		t.Errorf("a recusa diz de quem é o turno, e veio sem %q", naVez.Label)
+	}
+
+	// PASSAR A VEZ devolve o turno inteiro a quem entra nele.
+	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
+		t.Fatalf("passar a vez: %v", err)
+	}
+	if novo := f.s.sessions.GetState(f.sessionID).Scene; !novo.StandardLeft || !novo.MovementLeft {
+		t.Errorf("quem entra no turno o recebe inteiro, e veio %+v", novo)
 	}
 }

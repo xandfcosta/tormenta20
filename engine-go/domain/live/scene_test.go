@@ -1,9 +1,6 @@
 package live
 
-import (
-	"encoding/json"
-	"testing"
-)
+import "testing"
 
 // A CENA COMO O LIVRO A DEFINE (p252): um pedaço distinto da história, com um
 // TIPO, e não um interruptor de combate.
@@ -84,33 +81,5 @@ func TestEndingASceneKeepsTheQueue(t *testing.T) {
 	if st.Round != 0 || st.TurnIndex != -1 || st.TurnsTaken != 0 {
 		t.Errorf("encerrada, a contagem volta ao começo, e veio %d/%d/%d",
 			st.Round, st.TurnIndex, st.TurnsTaken)
-	}
-}
-
-// O BLOB ANTIGO CONTINUA LEGÍVEL. O estado é JSON gravado numa coluna, e há
-// sessões gravadas com `sceneActive: true` — ler isso como "fora de cena"
-// apagaria o combate de quem estiver jogando no dia da migração.
-func TestTheOldBlobStillOpensInAScene(t *testing.T) {
-	var st SessionRuntimeState
-	antigo := `{"initiative":[],"round":2,"turnIndex":0,"turnsTaken":3,"sceneActive":true}`
-	if err := json.Unmarshal([]byte(antigo), &st); err != nil {
-		t.Fatalf("ler o blob antigo: %v", err)
-	}
-	if !st.InScene() {
-		t.Fatal("`sceneActive: true` é uma cena em curso")
-	}
-	if st.Scene.Kind != SceneAction {
-		t.Errorf("a cena antiga era o combate: ela abre como cena de AÇÃO, e veio %q", st.Scene.Kind)
-	}
-	if st.Round != 2 {
-		t.Errorf("a rodada gravada sobrevive, e veio %d", st.Round)
-	}
-
-	fora := `{"initiative":[],"round":0,"turnIndex":-1,"sceneActive":false}`
-	if err := json.Unmarshal([]byte(fora), &st); err != nil {
-		t.Fatalf("ler o blob antigo: %v", err)
-	}
-	if st.InScene() {
-		t.Error("`sceneActive: false` é fora de cena")
 	}
 }
