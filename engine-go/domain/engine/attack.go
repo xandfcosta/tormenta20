@@ -45,10 +45,14 @@ type AttackOutcome struct {
 	Critical bool `json:"critical"` //
 	// Dice são as rolagens de dano na ordem, já na quantidade que o crítico
 	// pediu. Vazio quando o ataque erra: quem erra não rola dano.
-	Dice      []int `json:"dice"`
-	RawDamage int   `json:"rawDamage"` // dados + bônus, antes da RD
-	Absorbed  int   `json:"absorbed"`  // o que a RD comeu
-	Damage    int   `json:"damage"`    // o que o alvo perde de PV
+	Dice []int `json:"dice"`
+	// Faces é o dado da arma (o 8 de "1d8"). Ele viaja porque a mesa lê a
+	// NOTAÇÃO — "2d8+3" diz de onde os números vieram, e "8+5+3" faz quem olha
+	// reconstruir a arma de cabeça.
+	Faces     int `json:"faces"`
+	RawDamage int `json:"rawDamage"` // dados + bônus, antes da RD
+	Absorbed  int `json:"absorbed"`  // o que a RD comeu
+	Damage    int `json:"damage"`    // o que o alvo perde de PV
 }
 
 // ResolveAttack rola um ataque contra um alvo e devolve a conta inteira.
@@ -103,6 +107,7 @@ func ResolveAttack(
 	if fora.Critical {
 		quantidade *= multiplicador
 	}
+	fora.Faces = faces
 	for i := 0; i < quantidade; i++ {
 		valor, err := rolar(faces)
 		if err != nil {

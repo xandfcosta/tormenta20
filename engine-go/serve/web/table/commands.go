@@ -407,8 +407,12 @@ func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // que expira as fichas do grupo — com uma assinatura estreita acaba chamando o
 // helper que não precisa dela e faz menos.
 type commandCtx struct {
-	R          *http.Request
-	User       int64
+	R    *http.Request
+	User int64
+	// Role é "gm" ou "player", resolvido contra o banco. Ele viaja porque há
+	// gesto que os DOIS emitem e a regra separa — o ataque é proposto por quem
+	// joga e confirmado por quem mestra.
+	Role       string
 	CampaignID int64
 	SessionID  int64
 	// BoardID é a ABA em que este comando age, e ela é a aba que QUEM CLICOU
@@ -471,6 +475,25 @@ func endsTheScene(
 func (s Scene) gmCommand(
 	mutate func(Scene, commandCtx) (*live.SessionRuntimeState, error),
 ) http.HandlerFunc {
+	return s.stateCommand(mutate, true)
+}
+
+// tableStateCommand é o irmão do `gmCommand` para o que o JOGADOR também faz —
+// a mesma divisão que o `tableCommand` faz no tabuleiro, e pela mesma razão.
+//
+// Ele NÃO exige papel porque a recusa é da REGRA, e a regra escreve a frase
+// certa: "só o mestre põe o dano na ficha" diz o que aconteceu, e um 403 diria
+// "proibido" a quem está fazendo exatamente o que o desenho prevê — propor.
+func (s Scene) tableStateCommand(
+	mutate func(Scene, commandCtx) (*live.SessionRuntimeState, error),
+) http.HandlerFunc {
+	return s.stateCommand(mutate, false)
+}
+
+func (s Scene) stateCommand(
+	mutate func(Scene, commandCtx) (*live.SessionRuntimeState, error),
+	gmOnly bool,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		campaignID, sessionID, ok := tableParams(w, r)
 		if !ok {
@@ -485,14 +508,14 @@ func (s Scene) gmCommand(
 		}
 		// A trava é aqui e não na tela: quem postar na mão leva 403, e o botão
 		// escondido é só cortesia para quem não pode.
-		if role != "gm" {
+		if gmOnly && role != "gm" {
 			http.Error(w, "só o mestre comanda a mesa", http.StatusForbidden)
 			return
 		}
 
 		signals := map[string]any{}
 		state, err := mutate(s, commandCtx{
-			R: r, User: userID, CampaignID: campaignID, SessionID: sessionID, Signals: signals,
+			R: r, User: userID, Role: role, CampaignID: campaignID, SessionID: sessionID, Signals: signals,
 		})
 		// O que POUSOU se transmite mesmo quando a chamada devolveu erro, e o
 		// `bringParty` é quem o exige: ele põe quatro dos cinco e tropeça no

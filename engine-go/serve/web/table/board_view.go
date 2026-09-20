@@ -143,6 +143,13 @@ type lugarDoAcervo struct {
 type boardToken struct {
 	ID    string
 	Label string
+	// EntryID é a linha da fila desta peça, e é por ele que o ATAQUE viaja: o
+	// alvo de um golpe é um combatente, não um quadrado. Vazio no objeto de
+	// cenário, que não tem turno nem PV.
+	EntryID string
+	// Targeted acende a peça enquanto há um ataque pendurado contra ela. Quem
+	// olha o mapa sabe de quem a faixa fala sem ler a faixa.
+	Targeted bool
 	// X e Y são o lugar no PLANO, com sinal: o CSS os multiplica pelo
 	// `--quadrado` depois de descontar a janela. `Onde` é o mesmo escrito para
 	// gente ler, e é o que o nome acessível diz.
@@ -218,6 +225,13 @@ type boardSquare struct {
 // é da FILA, e o tabuleiro só a mostra. Derivá-la aqui seria a segunda conta de
 // PV do app.
 func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, health map[string]int, onTurn string, who board.Mover, mine map[int64]bool, campaignID, sessionID int64) BoardView {
+	// O ALVO do ataque pendurado, para a peça dele acender. Vem do ESTADO e não
+	// de um parâmetro novo porque é lá que o provisório mora — e assim a peça e
+	// a faixa não podem discordar sobre de quem se fala.
+	targeted := ""
+	if st != nil && st.PendingAttack != nil {
+		targeted = st.PendingAttack.TargetEntryID
+	}
 	// A cena VAZIA ainda precisa saber quem olha e onde ela está: é dela que sai
 	// o "Abrir tabuleiro", e um botão sem rota não é botão. Devolver o zero aqui
 	// daria ao mestre a MESMA moldura tracejada sem gesto que o jogador vê, que
@@ -253,7 +267,7 @@ func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, health map[s
 	}
 	withBlock := blocosDaFila(st)
 	for i := range b.Tokens {
-		v.Tokens = append(v.Tokens, boardTokenOf(&b.Tokens[i], health, withBlock, onTurn))
+		v.Tokens = append(v.Tokens, boardTokenOf(&b.Tokens[i], health, withBlock, onTurn, targeted))
 	}
 	for i := range b.Markers {
 		m := &b.Markers[i]
@@ -330,7 +344,7 @@ func dropWasWhereLandsToken(tokens []boardToken, mov *moveView, gm bool) *boardT
 	return nil
 }
 
-func boardTokenOf(t *board.BoardToken, health map[string]int, withBlock map[string]bool, onTurn string) boardToken {
+func boardTokenOf(t *board.BoardToken, health map[string]int, withBlock map[string]bool, onTurn, targeted string) boardToken {
 	a := board.AppearanceOf(t.Label)
 	footprint := t.Footprint
 	if footprint < 1 {
@@ -346,7 +360,9 @@ func boardTokenOf(t *board.BoardToken, health map[string]int, withBlock map[stri
 		IsObject: t.Kind == "object",
 	}
 	if t.EntryID != nil {
+		p.EntryID = *t.EntryID
 		p.OnTurn = onTurn != "" && *t.EntryID == onTurn
+		p.Targeted = targeted != "" && *t.EntryID == targeted
 		if pct, ok := health[*t.EntryID]; ok {
 			p.PV = &pct
 		}

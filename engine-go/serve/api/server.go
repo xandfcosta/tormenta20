@@ -9,6 +9,7 @@ import (
 	"t20engine/app/boards"
 	"t20engine/app/campaign"
 	"t20engine/app/character"
+	"t20engine/app/combat"
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
@@ -170,7 +171,26 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 // antes.
 func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
-	s.tableScene = table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue(), s.campaignCast(), s.characterPlays())
+	s.tableScene = table.New(
+		s.tableHost(), s.sessionLifecycle(), s.restParty(),
+		s.initiativeQueue(), s.campaignCast(), s.characterPlays(), s.combatStrike())
+}
+
+// combatStrike é o caso de uso de ATACAR.
+//
+// O DADO é injetado aqui e não escolhido lá dentro, e é o que torna a regra
+// testável: o caso de uso recebe uma função que devolve 1..faces, e a bancada
+// passa um dado cravado. Em produção ela é o `engine.RollDie`, com
+// aleatoriedade criptográfica pela razão que ele registra — duas mesas
+// atendidas ao mesmo tempo não podem ter rolagens correlacionadas.
+func (s *Server) combatStrike() combat.Strike {
+	return combat.NewStrike(
+		combat.NewRoster(s.queries, s.catalogs), s.sessions,
+		func(faces int) (int, error) {
+			roll, err := engine.RollDie(faces)
+			return roll.Value, err
+		},
+	)
 }
 
 // sessionLifecycle é o caso de uso do ciclo, montado com o que o servidor tem.

@@ -64,6 +64,10 @@ type Request struct {
 	// Weapon é qual das armas empunhadas, por índice. Zero é a primeira, que é
 	// o caso de quase toda ficha.
 	Weapon int
+	// OwnsAttacker: quem pede é dono do personagem que ataca. Resolvido no
+	// gateway, CONTRA O BANCO — o cliente não é fonte de posse. É o mesmo campo
+	// e a mesma razão do `board.Mover.OwnsCharacter`.
+	OwnsAttacker bool
 	// D20 é a rolagem QUE JÁ ACONTECEU na mesa, quando aconteceu.
 	//
 	// Nulo é o servidor rolar. Os dois caminhos existem porque as duas mesas
@@ -89,6 +93,13 @@ func (s Strike) Propose(ctx context.Context, quem app.Caller, papel string, pedi
 	alvo, err := entryOf(estado, pedido.TargetEntryID)
 	if err != nil {
 		return live.PendingAttack{}, err
+	}
+	// QUEM ROLA É O DONO, ou o mestre. Sem isto qualquer um na mesa rolaria o
+	// ataque do personagem alheio que estiver na vez — e o provisório sairia com
+	// o nome dele, que é pior do que não deixar atacar.
+	if papel != "gm" && !pedido.OwnsAttacker {
+		return live.PendingAttack{}, fmt.Errorf(
+			"%s não é seu personagem: %w", atacante.Label, app.ErrRefused)
 	}
 	if atacante.ID == alvo.ID {
 		return live.PendingAttack{}, fmt.Errorf("ninguém ataca a si mesmo: %w", app.ErrRefused)
@@ -128,8 +139,9 @@ func (s Strike) Propose(ctx context.Context, quem app.Caller, papel string, pedi
 
 	provisorio := live.PendingAttack{
 		AttackerEntryID: atacante.ID, TargetEntryID: alvo.ID, Weapon: arma.Name,
-		Roll: fora.Roll, Total: fora.Total, Hit: fora.Hit, Critical: fora.Critical,
-		Dice: fora.Dice, RawDamage: fora.RawDamage, Absorbed: fora.Absorbed,
+		Roll: fora.Roll, Total: fora.Total, Defense: quemApanha.Defense,
+		Hit: fora.Hit, Critical: fora.Critical,
+		Dice: fora.Dice, Faces: fora.Faces, RawDamage: fora.RawDamage, Absorbed: fora.Absorbed,
 		Damage: fora.Damage, ByUserID: quem.ID,
 	}
 	if _, err := s.mesas.ProposeAttack(pedido.SessionID, provisorio); err != nil {

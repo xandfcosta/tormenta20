@@ -39,6 +39,12 @@ templ gmStage(v View, b master.BestiaryView) {
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
 		@tableHeader(v)
+		// O ATAQUE PROPOSTO atravessa o palco, logo abaixo do cabeçalho: é a
+		// coisa que o mestre tem de decidir agora, e a mesma região do palco do
+		// jogador. As duas ARRUMAÇÕES penduram as mesmas regiões — e foi
+		// justamente esquecer esta que deixou a faixa invisível para o mestre até
+		// alguém abrir a tela (ALE-364).
+		@attackProposed(v)
 		<div class="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5 lg:flex-row">
 			@leftRail(v)
 			// O MAPA E AS NOTAS dividem um contêiner POSICIONADO, e o trilho de

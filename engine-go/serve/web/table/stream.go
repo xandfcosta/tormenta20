@@ -295,6 +295,9 @@ type tableRegion struct {
 func TableRegions(v View) []tableRegion {
 	regions := []tableRegion{
 		{"table-header", tableHeader(v)},
+		// O ATAQUE PROPOSTO muda no ritmo do COMBATE, que não é o do cabeçalho nem
+		// o do mapa: ele nasce e morre várias vezes por turno.
+		{"table-attack", attackProposed(v)},
 		{"table-register", tableRegisterRegion(v)},
 		{"table-party", tableParty(v)},
 		{"table-board", tableBoard(v)},

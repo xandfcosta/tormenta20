@@ -35,12 +35,17 @@ type PendingAttack struct {
 	Weapon          string `json:"weapon"`
 	Roll            int    `json:"roll"`
 	Total           int    `json:"total"`
-	Hit             bool   `json:"hit"`
-	Critical        bool   `json:"critical"`
-	Dice            []int  `json:"dice,omitempty"`
-	RawDamage       int    `json:"rawDamage"`
-	Absorbed        int    `json:"absorbed"`
-	Damage          int    `json:"damage"`
+	// Defense é a Defesa que o ataque enfrentou. Ela viaja porque a mesa lê a
+	// COMPARAÇÃO — "24 vs 17" é o que explica o veredicto, e sem o 17 a faixa
+	// afirma um acerto sem dizer contra o quê.
+	Defense   int   `json:"defense"`
+	Hit       bool  `json:"hit"`
+	Critical  bool  `json:"critical"`
+	Dice      []int `json:"dice,omitempty"`
+	Faces     int   `json:"faces,omitempty"`
+	RawDamage int   `json:"rawDamage"`
+	Absorbed  int   `json:"absorbed"`
+	Damage    int   `json:"damage"`
 	// ByUserID é quem rolou. O mestre confirma por qualquer um; quem propôs
 	// cancela o que é dele.
 	ByUserID int64 `json:"byUserId"`

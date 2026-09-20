@@ -32,6 +32,10 @@ templ tableScene(v View) {
 	>
 		@tableHeader(v)
 		@surfaceSelector(v)
+		// O ATAQUE PROPOSTO vem ACIMA da superfície porque ele é a coisa que a mesa
+		// tem de decidir agora: embaixo do mapa, numa tela de 390px, ele nasceria
+		// fora da dobra no exato momento em que alguém precisa clicar nele.
+		@attackProposed(v)
 		// MINHA FICHA fica FORA de `TableRegions` de propósito: o stream nunca a
 		// toca, e quem a mantém em dia são os comandos dela, que remendam o
 		// `#sheet-scene` por conta.

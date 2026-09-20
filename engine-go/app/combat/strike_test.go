@@ -72,7 +72,7 @@ func TestTheDefenseThatMattersIsTheTargetOne(t *testing.T) {
 
 	d20 := 10
 	fora, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
-		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20,
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
 	})
 	if err != nil {
 		t.Fatalf("propor: %v", err)
@@ -88,6 +88,33 @@ func TestTheDefenseThatMattersIsTheTargetOne(t *testing.T) {
 	}
 }
 
+// QUEM NÃO É DONO NÃO ROLA pelo personagem alheio, e o mestre rola por
+// qualquer um. A posse chega RESOLVIDA do gateway, contra o banco.
+func TestOnlyTheOwnerOrTheGameMasterRollsTheAttack(t *testing.T) {
+	mesa := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}},
+		"ogro":  {EntryID: "ogro", Defense: 10},
+	}, mesa, fixedDie(15))
+	pedido := Request{SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro"}
+
+	_, err := strike.Propose(context.Background(), app.Caller{ID: 9}, "player", pedido)
+	if !errors.Is(err, app.ErrRefused) {
+		t.Errorf("quem não é dono não rola pelo personagem, e veio %v", err)
+	}
+	if !strings.Contains(err.Error(), "Arwen") {
+		t.Errorf("a recusa diz de quem se fala, e veio %q", err)
+	}
+	if _, err := strike.Propose(context.Background(), app.Caller{ID: 1}, "gm", pedido); err != nil {
+		t.Errorf("o mestre rola por qualquer um, e veio %v", err)
+	}
+	dono := pedido
+	dono.OwnsAttacker = true
+	if _, err := strike.Propose(context.Background(), app.Caller{ID: 9}, "player", dono); err != nil {
+		t.Errorf("o dono rola pelo próprio personagem, e veio %v", err)
+	}
+}
+
 // O D20 RECEBIDO É CONFERIDO. É a mesma linha do `SelfEntry` da iniciativa: um
 // número fora da faixa não é um dado, é um pedido montado à mão.
 func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
@@ -100,7 +127,7 @@ func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
 	for _, valor := range []int{0, 21, -3, 40} {
 		v := valor
 		_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
-			SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &v,
+			SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &v, OwnsAttacker: true,
 		})
 		if !errors.Is(err, app.ErrRefused) {
 			t.Errorf("d20 %d tinha de ser recusado, e veio %v", valor, err)
@@ -121,7 +148,7 @@ func TestWithoutAD20TheServerRollsIt(t *testing.T) {
 	}, mesa, fixedDie(19))
 
 	fora, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
-		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro",
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", OwnsAttacker: true,
 	})
 	if err != nil {
 		t.Fatalf("propor: %v", err)
@@ -143,7 +170,7 @@ func TestNobodyAttacksThemselves(t *testing.T) {
 	}, mesa, fixedDie(10))
 
 	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
-		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "heroi",
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "heroi", OwnsAttacker: true,
 	})
 	if !errors.Is(err, app.ErrRefused) {
 		t.Errorf("atacar a si mesmo tem de ser recusado, e veio %v", err)
@@ -160,7 +187,7 @@ func TestWithoutAWieldedWeaponThereIsNoAttack(t *testing.T) {
 	}, mesa, fixedDie(10))
 
 	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
-		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro",
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", OwnsAttacker: true,
 	})
 	if !errors.Is(err, app.ErrRefused) {
 		t.Fatalf("sem arma empunhada o ataque é recusado, e veio %v", err)

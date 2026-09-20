@@ -1,0 +1,72 @@
+package table
+
+import "t20engine/serve/web/ui"
+
+// A FAIXA DO ATAQUE PROPOSTO — irmã da `moveProposed`, e de propósito.
+//
+// O que decide o clique vem primeiro, e aqui isso é o VEREDICTO: acertar ou não
+// muda o que a mesa faz em seguida, e o dano só importa depois dessa resposta.
+// No movimento o mesmo lugar é o custo.
+//
+// A conta inteira fica na segunda linha porque a mesa desconfia de número sem
+// origem: "11 de dano" pede "de onde?", e "24 vs 17 · 2d8+3 (8+5) · RD 5 → 11"
+// não pede nada.
+templ attackProposed(v View) {
+	if v.Attack != nil {
+		<section
+			id="table-attack"
+			aria-label="Ataque proposto"
+			class="mesa-ataque"
+		>
+			<p class="flex min-w-0 flex-wrap items-center gap-2">
+				// RASCUNHO é a palavra do lado de quem não confirma, e ela explica a
+				// ausência do Confirmar — sem ela a tela do jogador parece a do
+				// mestre com um botão faltando. É a mesma do movimento.
+				if v.GM == nil {
+					<span class="board-draft-seal">Rascunho</span>
+				}
+				<span class={ "mesa-ataque-selo", v.Attack.Class }>{ v.Attack.Verdict }</span>
+				<span class="min-w-0 truncate">{ v.Attack.Attacker } → { v.Attack.Target }</span>
+			</p>
+			// `aria-live` na CONTA e não na faixa inteira: quem ouve precisa do
+			// resultado, e anunciar os botões junto faria o leitor de tela ler dois
+			// verbos a cada ataque da mesa.
+			<p aria-live="polite" class="flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-2xs text-muted-foreground">
+				if v.Attack.Weapon != "" {
+					<span class="text-foreground">{ v.Attack.Weapon }</span>
+					<span aria-hidden="true">·</span>
+				}
+				<span class="font-mono tabular-nums">{ v.Attack.Tally }</span>
+			</p>
+			<span class="ml-auto flex items-center gap-2">
+				// CANCELAR é de quem rolou e do mestre. Oferecer a quem seria
+				// recusado é desenhar um erro — a fronteira de verdade é o
+				// `CancelAttack`, e isto é só não oferecer.
+				if v.Attack.Mine || v.GM != nil {
+					<button
+						type="button"
+						data-on:click={ attackCommand(v, "cancelar") }
+						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
+					>Cancelar</button>
+				}
+				// CONFIRMAR é do MESTRE, e só dele: quem põe o dano na ficha é quem
+				// toca a cena. A mesma divisa do `CommitMove`.
+				if v.GM != nil {
+					<button
+						type="button"
+						data-on:click={ attackCommand(v, "confirmar") }
+						class="inline-flex min-h-11 items-center gap-1.5 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
+					>
+						@ui.Icon("Swords", "size-4")
+						Confirmar
+					</button>
+				}
+			</span>
+		</section>
+	} else {
+		// O NÓ VAZIO fica, e é obrigatório: o stream remenda POR ID, e um id que
+		// não está no documento é remendo escrito no vazio — a faixa nunca
+		// apareceria sem recarregar a página.
+		<section id="table-attack" hidden></section>
+	}
+}

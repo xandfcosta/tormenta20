@@ -59,6 +59,7 @@ func Routes(r chi.Router, s Scene) {
 	s.LensRoutes(r)
 	s.TokenActionRoutes(r)
 	s.ConditionRoutes(r)
+	s.AttackRoutes(r)
 	s.RoutesSession(r)
 	s.RoutesNote(r)
 	s.CastRoutes(r)
@@ -319,6 +320,10 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// O CICLO da sessão chega à tela porque, sem ele, os verbos teriam de ser
 	// oferecidos todos — e "encerrar" numa sessão que nunca começou é o gesto
 	// que o servidor recusa. Oferecer o que será recusado é desenhar um erro.
+	// O PROVISÓRIO do ataque é montado aqui e não no `tableViewOf` porque ele
+	// depende de QUEM OLHA — só quem rolou cancela o que é dele —, e o
+	// construtor puro não recebe o usuário.
+	view.Attack = attackProposalOf(st, userID)
 	view.Status = sess.Status
 	if sess.Title.Valid {
 		view.Title = sess.Title.String

@@ -812,6 +812,10 @@ templ planToken(v BoardView, p boardToken) {
 		}
 		class={ "board-token",
 			templ.KV("board-token-on-turn", p.OnTurn),
+			// ALVEJADA enquanto há ataque pendurado contra ela. É a segunda
+			// testemunha do provisório: a faixa diz o nome, a peça diz ONDE, e
+			// quem está olhando o mapa não precisa ler a faixa para saber.
+			templ.KV("board-token-targeted", p.Targeted),
 			templ.KV("board-token-object", p.IsObject),
 			templ.KV("board-token-hidden", p.Hidden) }
 	>
@@ -1353,6 +1357,22 @@ templ tokenMenu(v BoardView, p boardToken) {
 				class="board-token-verb"
 			>
 				@ui.Icon("CornerUpLeft", "size-4")
+			</button>
+		}
+		// ATACAR é o verbo do ALVO, e o menu é o do alvo: quem ataca é quem está
+		// na VEZ. Não há segundo clique onde caberia escolher o atacante, e o
+		// livro concorda — combate acontece em turnos, e age quem está na vez
+		// (p231). Ele só aparece sobre quem tem linha na fila e não está na vez:
+		// objeto de cenário não apanha, e ninguém se ataca.
+		if p.EntryID != "" && !p.OnTurn {
+			<button
+				type="button"
+				aria-label={ "Atacar " + p.Label }
+				title="Atacar com quem está na vez"
+				data-on:click={ attackOnTarget(v, p.EntryID) }
+				class="board-token-verb"
+			>
+				@ui.Icon("Swords", "size-4")
 			</button>
 		}
 		<span aria-hidden="true" class="board-token-crease"></span>

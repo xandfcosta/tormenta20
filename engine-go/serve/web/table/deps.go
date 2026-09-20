@@ -9,6 +9,7 @@ import (
 
 	"t20engine/app/campaign"
 	"t20engine/app/character"
+	"t20engine/app/combat"
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
@@ -111,6 +112,9 @@ type Scene struct {
 	// plays são os GESTOS da ficha, e chegam como os outros casos de uso: a
 	// condição de um personagem marcada pela Mesa grava na ficha (ALE-368).
 	plays character.Plays
+	// strike é o CASO DE USO de atacar, e chega pelo mesmo caminho dos outros:
+	// por parâmetro, porque o `app/` está abaixo desta cena.
+	strike combat.Strike
 	// access é a TRAVA da sessão, e ela é o MESMO objeto que os casos de uso
 	// usam por dentro (ALE-344). A cena a chama para decidir o que DESENHAR —
 	// o rodapé do mestre, a recusa antes do gesto —, e quem decide se o gesto
@@ -122,10 +126,10 @@ type Scene struct {
 
 func New(
 	d Deps, cycle session.Lifecycle, group rest.Party,
-	queue initiative.Queue, cast campaign.Cast, plays character.Plays,
+	queue initiative.Queue, cast campaign.Cast, plays character.Plays, strike combat.Strike,
 ) Scene {
 	return Scene{
-		deps: d, lifecycle: cycle, party: group, queue: queue, cast: cast, plays: plays,
+		deps: d, lifecycle: cycle, party: group, queue: queue, cast: cast, plays: plays, strike: strike,
 		access: cycle.Access(),
 		lenses: newLenses(), chosenTabs: newTabs(),
 	}
