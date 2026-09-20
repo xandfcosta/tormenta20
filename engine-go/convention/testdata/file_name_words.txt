@@ -82,6 +82,7 @@ chronicles
 ci
 cinzel
 citations
+clamp
 class
 classes
 claude

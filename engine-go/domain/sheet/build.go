@@ -173,23 +173,22 @@ func withDerivedPools(
 	}
 
 	dto.HpMax, dto.MpMax = int64(pocos.PvMax), int64(pocos.PmMax)
-	dto.HpCurrent = poolAfterDamage(dto.HpMax, dano.Hpdamage)
-	dto.MpCurrent = poolAfterDamage(dto.MpMax, dano.Mpspent)
+	// O `WithinPool` e não uma conta própria: `máximo − gasto` preso entre zero e
+	// o teto é a MESMA regra que o funil aplica ao gravar, e o piso existe pela
+	// mesma razão nos dois — dano que sobreviveu a um máximo que ENCOLHEU. Um
+	// personagem com 60 de dano num poço que virou 50 tem zero, não dez
+	// negativos.
+	dto.HpCurrent = WithinPool(dto.HpMax-dano.Hpdamage, dto.HpMax)
+	dto.MpCurrent = WithinPool(dto.MpMax-dano.Mpspent, dto.MpMax)
 	return nil
 }
 
-// poolAfterDamage é o que sobra de um poço depois do que foi gasto, preso entre
-// zero e o teto.
+// LoadAndCompute monta o agregado a partir da linha e o passa pelo motor.
 //
-// O piso existe para o dano que sobreviveu a um máximo que ENCOLHEU: um
-// personagem com 60 de dano num poço que virou 50 tem zero, e não dez negativos.
-func poolAfterDamage(maximo, gasto int64) int64 {
-	return min(max(0, maximo-gasto), maximo)
-}
-
-// computeSheet monta a entrada do motor a partir de uma linha de personagem já
-// carregada e devolve a ficha computada pelo servidor — ficha base, sem
-// condicional ligada. Os catálogos têm de estar primados.
+// A ficha sai COM os situacionais que o jogador ligou, porque o `Compute` os tira
+// do agregado. Este bloco dizia "ficha base, sem condicional ligada" e deixou de
+// ser verdade na ALE-357 — que é quando o crachá do topo da ficha parou de
+// discordar da aba Combate. Os catálogos têm de estar primados.
 func LoadAndCompute(ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, row sqlcgen.Character) (engine.ComputedSheet, error) {
 	dto, err := Load(ctx, q, cat, row)
 	if err != nil {
