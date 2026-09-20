@@ -353,6 +353,7 @@ reader
 readme
 recipe
 rect
+redaction
 reduction
 refs
 render

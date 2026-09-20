@@ -208,7 +208,7 @@ qual:
 
 | Predicado | Pergunta que responde | Onde |
 |---|---|---|
-| `entry.Type == "character"` | esta linha é ficha ou é NPC? | `board_state.go:468`, `tokens.go:61`, `view.go:281` |
+| `entry.Type == "character"` | esta linha é ficha ou é NPC? | `board_populate.go:31`, `tokens.go:61`, `view.go:281` |
 | `c.Ownerid == user.ID` | a PESSOA dona é jogador ou mestre? | `roleIn`, em `campaigns.go` |
 | "é meu?" | o personagem é de quem está olhando? | `mesaRoster`, em `routes.go` |
 

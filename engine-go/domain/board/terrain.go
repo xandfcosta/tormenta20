@@ -1,11 +1,13 @@
 package board
 
-// AS ESPÉCIES DE TERRENO — o que um quadrado FAZ com quem está nele ou atrás
-// dele (T20 p238, Tabela 5-3).
+import "t20engine/domain/engine"
+
+// O TERRENO — o que um quadrado FAZ com quem está nele ou atrás dele (T20 p238,
+// Tabela 5-3): as quatro espécies, e o pincel que as pinta no tabuleiro.
 //
 // Arquivo próprio, separado do maquinário que DESENHA o tabuleiro: o que está
-// aqui é domínio — um `type` e quatro constantes —, e misturá-lo ao desenho faz
-// qualquer leitor do domínio carregar a renderização junto.
+// aqui é domínio, e misturá-lo ao desenho faz qualquer leitor do domínio
+// carregar a renderização junto.
 
 // TerrainKind é uma das quatro coisas que um quadrado FAZ (T20 p238,
 // Tabela 5-3). Ver GLOSSARY.md: terreno é a família, não o chão do lugar.
@@ -88,4 +90,118 @@ func KnownTerrainKind(pedido string) TerrainKind {
 		}
 	}
 	return TerrenoDificil
+}
+
+// PaintTerrain marca ou apaga UMA casa como terreno difícil (T20 p238).
+//
+// Recebe o valor DESEJADO e não alterna, e a razão mudou junto com a tela: o
+// pincel pinta ARRASTANDO, e o arraste passa pela mesma casa mais de uma vez —
+// alternar faria a casa piscar entre brejo e chão limpo debaixo do dedo. Com o
+// valor explícito a mensagem é idempotente, que é o que um arraste precisa.
+// Quem apaga é a borracha, que manda `false`.
+func PaintTerrain(b *BoardState, square engine.Square, especie TerrainKind, ligado bool) {
+	lista := listForKind(b, especie)
+	if lista == nil {
+		return // espécie que não existe não pinta nada, e não derruba a mesa
+	}
+	for i, existente := range *lista {
+		if existente == square {
+			if ligado {
+				return // já é brejo: nada mudou, e a versão não sobe à toa
+			}
+			*lista = append((*lista)[:i], (*lista)[i+1:]...)
+			b.Version++
+			return
+		}
+	}
+	if !ligado {
+		return
+	}
+	*lista = append(*lista, square)
+	b.Version++
+}
+
+// listForKind é o ÚNICO lugar que sabe qual lista guarda qual espécie.
+//
+// Devolve ponteiro para o campo porque o pincel escreve nele. É o que segura a
+// repetição das quatro listas irmãs num ponto só: acrescentar uma quinta espécie
+// é uma linha aqui e uma no `TerrainKinds`, e o resto do código não muda.
+//
+// nil para espécie desconhecida, e o pincel trata: o id vem do cliente, e uma
+// espécie inventada não pode derrubar a mesa nem pintar a lista errada.
+func listForKind(b *BoardState, especie TerrainKind) *[]engine.Square {
+	switch especie {
+	case TerrenoDificil:
+		return &b.Difficult
+	case TerrenoCobertura:
+		return &b.Cover
+	case TerrenoCamuflagem:
+		return &b.Concealment
+	case TerrenoElevado:
+		return &b.Elevated
+	}
+	return nil
+}
+
+// ClearSquare tira TODO terreno de um quadrado, seja qual for a espécie
+// (decisão do dono).
+//
+// O pincel na mão NÃO entra na conta, e a alternativa — a borracha como MODO
+// que inverte o pincel selecionado — é o defeito que ela consertou: com
+// `Cobertura` na mão, clicar num quadrado de `Difícil` apagava a cobertura que
+// não estava ali, e a tela não dizia nada. O que se perde é "tirar só a
+// cobertura desta casa": repintar o que sobrou é um clique, e descobrir por que
+// um gesto não fez nada é uma noite.
+//
+// Devolve se ALGUMA COISA saiu: quem chama usa para não subir a versão (e não
+// acordar a mesa) por um clique em chão limpo.
+func ClearSquare(b *BoardState, square engine.Square) bool {
+	limpou := false
+	for _, pincel := range TerrainKinds {
+		lista := listForKind(b, pincel.ID)
+		if lista == nil {
+			continue
+		}
+		for i, existente := range *lista {
+			if existente == square {
+				*lista = append((*lista)[:i], (*lista)[i+1:]...)
+				limpou = true
+				break
+			}
+		}
+	}
+	if limpou {
+		b.Version++
+	}
+	return limpou
+}
+
+// moveTerrainOf traduz a lista esparsa para o que o motor cobra. A conversão
+// mora aqui e não no motor porque o motor não conhece tabuleiro: ele responde
+// sobre um caminho e um chão, e quem tem chão é o estado.
+func moveTerrainOf(b *BoardState) engine.MoveTerrain {
+	if len(b.Difficult) == 0 {
+		return engine.MoveTerrain{}
+	}
+	difficult := make(map[engine.Square]bool, len(b.Difficult))
+	for _, square := range b.Difficult {
+		difficult[square] = true
+	}
+	return engine.MoveTerrain{Difficult: difficult}
+}
+
+// SquaresOf são as casas pintadas de uma espécie, para quem só LÊ.
+//
+// Existe para o mapeamento espécie→lista continuar com um dono só: sem ela,
+// quem desenha refaz o `switch` do `listForKind` do lado de fora, e é a cópia
+// de fora que fica para trás quando a quinta espécie chegar. Devolve a fatia e
+// não o ponteiro justamente por ser leitura — o pincel é quem escreve.
+func SquaresOf(b *BoardState, especie TerrainKind) []engine.Square {
+	if b == nil {
+		return nil
+	}
+	if lista := listForKind(b, especie); lista != nil {
+		return *lista
+	}
+	return nil
 }
