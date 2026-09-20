@@ -426,7 +426,32 @@ export async function expectColunasMonotonicas(
  *
  * @example await expectNothingIsClippedSideways(page, '#catalogs')
  */
+/**
+ * Espera as animações em curso terminarem, e é obrigatório antes de medir
+ * LARGURA.
+ *
+ * O palco entra deslizando: o cartão que chega passa alguns quadros FORA da
+ * caixa, e nesses quadros o `scrollWidth` acusa 403px numa caixa de 390px. Sem
+ * esta espera, a varredura das cenas reprovava `/personagens` e `/campanhas` —
+ * e o que ela estava medindo era a animação, não o leiaute (ALE-342).
+ *
+ * `getAnimations()` e não um `waitForTimeout` escolhido a dedo: ele responde SE
+ * existe transição, enquanto um tempo fixo é um palpite que acerta na máquina de
+ * quem escreveu. O teto existe para uma animação INFINITA — o ponto do "AO VIVO"
+ * pulsa para sempre — não pendurar a suíte.
+ */
+async function esperaAsAnimacoesPararem(page: Page): Promise<void> {
+  await page
+    .waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'), null, {
+      timeout: 3000,
+    })
+    .catch(() => {
+      /* animação infinita: seguir e medir é melhor que não medir */
+    })
+}
+
 export async function expectNothingIsClippedSideways(page: Page, raiz: string): Promise<void> {
+  await esperaAsAnimacoesPararem(page)
   const medida = await page.evaluate((seletorRaiz) => {
     const root = document.querySelector(seletorRaiz as string)
     if (!root) return null
@@ -434,7 +459,12 @@ export async function expectNothingIsClippedSideways(page: Page, raiz: string): 
     const cortados = nos
       .filter((node) => {
         if (getComputedStyle(node).overflowX !== 'visible') return false
-        return node.scrollWidth > node.clientWidth + 1
+        if (node.scrollWidth <= node.clientWidth + 1) return false
+        // CAIXA QUE ESTÁ ANIMANDO não tem largura para medir: o ponto do "Ao
+        // vivo" pulsa com `animate-ping` para sempre, e no auge do pulso o
+        // filho tem 12px numa caixa de 10. A largura dele é um instante, não um
+        // leiaute — e a espera lá em cima não o alcança porque ele nunca para.
+        return node.getAnimations({ subtree: true }).every((a) => a.playState !== 'running')
       })
       .map((node) => {
         const nome = node.getAttribute('aria-label') ?? node.className.slice(0, 40) ?? node.tagName
