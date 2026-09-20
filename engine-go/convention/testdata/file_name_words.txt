@@ -140,6 +140,7 @@ door
 dose
 double
 draft
+draw
 drawing
 dto
 dump
@@ -435,6 +436,7 @@ tibar
 tints
 title
 to
+toggles
 token
 tokens
 toml

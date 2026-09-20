@@ -390,6 +390,21 @@ func augmentSignal(indice int) string {
 	return "$augment" + strconv.Itoa(indice)
 }
 
+// augmentChosenClasses é o `data-class` do botão "Trocar": a tinta do ligado e a
+// do desligado, ambas presas ao MESMO sinal que o `aria-checked` usa.
+//
+// As duas listadas, e não só a do ligado: o `data-class` do Datastar ACRESCENTA
+// e REMOVE conforme a expressão, então deixar a do desligado na classe estática
+// faria as duas conviverem no instante ligado — borda dourada com texto cinza.
+//
+// O dourado é o mesmo do "Preparada" da magia, e isso é deliberado: as duas
+// dizem "isto está ligado" na mesma tela.
+func augmentChosenClasses(indice int) string {
+	sinal := augmentSignal(indice)
+	return "{'border-grimorio-gold/60 text-grimorio-gold': " + sinal + " > 0," +
+		" 'border-grimorio-iron text-muted-foreground': " + sinal + " === 0}"
+}
+
 // thatOpensCastGesture ZERA as pilhas antes de abrir.
 //
 // Quem TROCA de item limpa, e não quem gera — a regra do "remendo em nó

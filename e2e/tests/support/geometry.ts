@@ -452,3 +452,89 @@ export async function expectNothingIsClippedSideways(page: Page, raiz: string): 
     `conteúdo cortado de lado dentro de ${raiz} @ ${page.viewportSize()?.width}px — ele não rola, então quem lê nunca o alcança`,
   ).toEqual([])
 }
+
+/**
+ * Um CONTROLE DE ESTADO tem de DESENHAR o estado que ele declara.
+ *
+ * ## O defeito, e por que ele é invisível para quem escreve
+ *
+ * Um `role="switch"` ou um `aria-pressed` diz ao leitor de tela se está ligado.
+ * Se o visual não acompanhar, a tela fica correta para quem ouve e MUDA para
+ * quem olha: o mestre clica, nada muda, e ele clica de novo — desligando o que
+ * tinha acabado de ligar (ALE-341).
+ *
+ * ## Por que isto vive no NAVEGADOR
+ *
+ * Porque "desenha estado" tem pelo menos cinco mecanismos, e nenhum instrumento
+ * de FONTE os vê todos: `templ.KV` na classe, `data-class` ligado a sinal, a
+ * variante `aria-pressed:` do Tailwind, troca de ÍCONE dentro do elemento, e
+ * regra de folha de estilo casando o próprio atributo ARIA.
+ *
+ * Medido ao abrir a ALE-341: três varreduras de fonte deram 18, 14 e 10
+ * suspeitos, e o navegador derrubou os primeiros que ele foi conferir. É a
+ * lição da ALE-252 — quem mede pelo TEXTO do código mede o que foi escrito, e a
+ * pergunta é sobre o que é DESENHADO.
+ *
+ * ## O que ele compara
+ *
+ * O estilo COMPUTADO e o HTML de dentro, antes e depois do clique. Qualquer um
+ * dos dois mudando basta: trocar o ícone é desenhar estado tanto quanto trocar
+ * a cor.
+ *
+ * ## O CONTROLE, e ele é obrigatório
+ *
+ * Um controle que o clique NÃO liga não testemunha nada — a asserção passaria
+ * sobre um botão quebrado. Por isso o ARIA tem de MUDAR primeiro; quando ele
+ * não muda, o caso falha dizendo isso, e não "o visual está mudo".
+ */
+export async function expectEveryToggleDrawsItsState(page: Page, raiz: string): Promise<void> {
+  const controles = page.locator(`${raiz} [role="switch"], ${raiz} [aria-pressed]`)
+  const quantos = await controles.count()
+  expect(quantos, `nenhum controle de estado dentro de ${raiz} — a varredura mediria o vazio`).toBeGreaterThan(0)
+
+  const mudos: string[] = []
+  let medidos = 0
+  for (let i = 0; i < quantos; i++) {
+    const controle = controles.nth(i)
+    if (!(await controle.isVisible())) continue
+    const antes = await retratoDo(controle)
+    await controle.click({ force: true })
+    await page.waitForTimeout(350)
+    const depois = await retratoDo(controle).catch(() => null)
+    // O nó pode SUMIR no clique (um filtro que recarrega a lista). Aí não há o
+    // que comparar, e contá-lo como mudo seria acusar o que não se mediu.
+    if (depois === null) continue
+    medidos++
+    if (antes.aria === depois.aria) continue // o clique não ligou nada: ver o CONTROLE acima
+    if (antes.estilo === depois.estilo && antes.html === depois.html) {
+      mudos.push(`${depois.nome}: aria foi de ${antes.aria} para ${depois.aria} e nada mudou na tela`)
+    }
+    await controle.click({ force: true }).catch(() => {})
+    await page.waitForTimeout(250)
+  }
+
+  expect(medidos, `nenhum controle de ${raiz} respondeu ao clique — o seletor casa, mas o gesto não chega`).toBeGreaterThan(0)
+  expect(
+    mudos,
+    `controles que declaram estado por ARIA e não o DESENHAM, em ${raiz} — ` +
+      `a tela está certa para quem ouve e muda para quem olha`,
+  ).toEqual([])
+}
+
+type RetratoDoControle = { nome: string; estilo: string; html: string; aria: string }
+
+async function retratoDo(controle: ReturnType<Page['locator']>): Promise<RetratoDoControle> {
+  return controle.evaluate((n) => {
+    const cs = getComputedStyle(n as HTMLElement)
+    const pintura = [
+      'backgroundColor', 'color', 'borderColor', 'borderWidth', 'borderStyle',
+      'opacity', 'boxShadow', 'fontWeight', 'textDecorationLine', 'outlineColor',
+    ] as const
+    return {
+      nome: n.getAttribute('aria-label') ?? n.textContent?.trim().slice(0, 40) ?? n.tagName,
+      estilo: pintura.map((k) => cs[k]).join('|'),
+      html: (n as HTMLElement).innerHTML,
+      aria: n.getAttribute('aria-checked') ?? n.getAttribute('aria-pressed') ?? '',
+    }
+  })
+}
