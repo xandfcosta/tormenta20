@@ -298,7 +298,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// `stateForRole` e não `redactForPlayers` direto: é o mesmo gargalo que o
 	// socket usa, e papel desconhecido cai em jogador. Esta cena não ganha uma
 	// segunda decisão sobre quem vê o quê.
-	st := live.StateForRole(role, s.deps.Sessions().RefreshCharacterMaxes(ctx, sessionID))
+	st := live.StateForRole(role, s.deps.Sessions().RefreshCharacterVitals(ctx, sessionID))
 	grupo, meus, eu := s.tableRoster(ctx, userID, campaignID)
 	// A RESERVA de PV temporário é DERIVADA a cada desenho, e nunca espelhada na
 	// linha da fila. O estado ao vivo mora em memória e tem vários sítios de

@@ -13,7 +13,7 @@ import (
 //
 // # Por que existe um caminho em lote
 //
-// O `RefreshCharacterMaxes` roda a cada desenho da Mesa, inclusive a cada tique
+// O `RefreshCharacterVitals` roda a cada desenho da Mesa, inclusive a cada tique
 // do fluxo. Enquanto o máximo era coluna, ele era UMA consulta — `SELECT id,
 // hpMax, mpMax FROM characters WHERE id IN (…)`. Com o máximo derivado, chamar
 // o `Load` por personagem daria nove consultas cada um: numa mesa de seis, 54
