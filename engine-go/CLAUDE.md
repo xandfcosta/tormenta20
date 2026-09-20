@@ -428,7 +428,7 @@ Três coisas sumiram junto, e todas eram exceção:
   COOKIE, e o `extractToken` lê o cookie antes do header. Então o fluxo entra
   debaixo do `requireAuth` sem gambiarra.
 - **A detecção de queda por biblioteca.** O `r.Context()` é cancelado quando o
-  cliente vai embora. A batida de 25s (`sseHeartbeat`) NÃO é para isso — é um
+  cliente vai embora. A batida de 25s (`live.Heartbeat`) NÃO é para isso — é um
   comentário SSE (`: ping`) para atravessar intermediário que fecha conexão
   ociosa.
 
@@ -618,83 +618,36 @@ primar vazio é escolher que ela nunca rode.
 ## A bancada dos testes: um molde migrado, copiado por teste
 
 `newTestServer` abre um SQLite de VERDADE por teste — é o que faz este pacote
-provar composição em vez de mock. O que custava caro era migrar: `db.Open` roda
-as migrações todas, e um teste por banco dava ~3.400 migrações com `fsync`.
+provar composição em vez de mock. O caro não é o banco, é MIGRAR: `db.Open` roda
+as migrações todas, e cada `fsync` custa uma rotação de disco num prato girante.
+Medido na ALE-260: migrar do zero são 7,1 ms em tmpfs e **2.102 ms** no HD, e a
+suíte do `api/` levava 15 minutos com 10 s de CPU — 99% de espera.
 
-O preço de um `fsync` é o do dispositivo onde o `TMPDIR` cai, e a diferença não
-é de grau (ALE-260, medido nesta máquina):
-
-|                     | tmpfs (`/tmp`) | disco girante (`/mnt/HD`) |
-| ------------------- | -------------- | ------------------------- |
-| migrar do zero      | 7,1 ms         | **2.102 ms**              |
-| copiar o molde      | ~0,1 ms        | 0,076 ms                  |
-| reabrir já migrado  | ~1 ms          | 1 ms                      |
-
-No prato girante cada migração custava ~49 ms — uma rotação por `fsync` — e a
-suíte do `api/` levava **15m01s** com apenas 10 s de CPU: 99% de espera. O
-sintoma mente, porque aparece como "os testes estão lentos", que é a conclusão
-que faz alguém cortar teste ou subir o timeout em vez de consertar a bancada.
-
-Duas mudanças, as duas só no teste:
-
-1. **O molde** (`db/testdb`, extraído do `api` na ALE-281): o `TestMain` migra
-   UM banco e cada teste o copia. `db.Open` continua sendo o mesmo de produção,
-   com o mesmo `assertSchema` — o goose encontra a última versão e não tem o que
-   fazer.
-2. **`PRAGMA synchronous=OFF`** no banco de teste. Durabilidade é o que um banco
-   que morre no fim do caso não tem o que proteger. Fica no helper e **nunca** no
-   `db.Open`: em produção essa linha é perda de dados do mestre.
-3. **A cópia FALHA ALTO** (ALE-268), e as três defesas dela existem porque a
-   cópia era a parte silenciosa do arranjo: o erro do `Close` era descartado num
-   `defer`, não havia `Sync`, e ninguém conferia se o arquivo chegou inteiro.
-   Hoje o `Close` volta o erro, o `Sync` força os bytes ao disco, e o TAMANHO é
-   comparado com o do molde.
-
-   **O sintoma que isso conserta apontava para o lugar errado**: uma cópia
-   parcial produz um SQLite truncado, que se comporta exatamente como um banco
-   sem as tabelas — o CI reprovou uma vez com `no such table: session_boards`
-   junto de um `disk I/O error`, e "no such table" é a frase de um banco NÃO
-   MIGRADO. Quem investigasse iria caçar migração. E repare que o item 2 acima é
-   o que remove a barreira que tornaria isso barulhento sozinho: a decisão certa
-   para velocidade é a que cala o erro.
-
-   **O preço foi medido e não estimado**: `./api/ ./db/...` foi de 10,34 s para
-   10,96 s, ~6%, e é o `Sync` por banco de teste. Frequência do defeito em
-   2026-09-08: uma ocorrência em 100 corridas de CI.
-
-Resultado: `api/` de **15m01s para 24 s** no disco girante, e a suíte Go inteira
-de 6,8 s para **4,7 s** em tmpfs. Os 178 casos que o pacote tinha na época
-continuaram rodando, zero pulados — a aceleração não veio de cortar teste, que é
-a primeira suspeita quando uma suíte encolhe de quinze minutos para vinte e
-quatro segundos.
-
-**Por que o molde e não exportar `TMPDIR` para um tmpfs.** A variável funciona —
-mas só para quem lembrar, e só na máquina de quem lembrou. Quando isto foi
-medido havia uma sessão vizinha rodando com o `TMPDIR` no prato girante sem saber
-que pagava quinze minutos por corrida. O molde tira o disco da conta em vez de
-pedir que alguém escolha o disco certo.
-
-**Ela virou PACOTE (`db/testdb`) na ALE-281, e o motivo é de forma.** Arquivo
-`_test.go` não exporta nada para fora do pacote, e o `api` está se dividindo em
-um pacote por cena (ALE-278) — a primeira cena a sair encontraria a bancada
-inalcançável e escreveria a própria, que é como um fixture nasce com catálogo
-vazio e desliga validação em silêncio. Cada pacote que usa declara uma linha:
+**O molde** (`db/testdb`): o `TestMain` migra UM banco e cada teste o copia. Cada
+pacote que usa declara uma linha:
 
 ```go
 func TestMain(m *testing.M) { os.Exit(testdb.Run(m)) }
 ```
 
-O que NÃO foi junto é a montagem do servidor: ela precisa do tipo `api.Server`, e
-um pacote de bancada que importasse o `api` seria importado de volta pelos testes
-dele — ciclo. O molde é a parte cara e a parte compartilhável; o fixture é de
-cada pacote.
+Três regras que vieram com ele:
 
-**O preço de dividir foi medido antes de dividir, com controle** (o mesmo `go
-test -run` que não casa com nada, num pacote SEM banco, para descontar a subida
-do processo): **248 ms por pacote**, ou ~3,7 s na corrida inteira com quinze. O
-número é maior que os 7,1 ms de "migrar do zero" da tabela acima porque ele
-inclui ligar um binário que carrega o SQLite e as migrações — a tabela mede o
-`fsync`, esta medição mede o pacote.
+- **`PRAGMA synchronous=OFF` fica no helper e NUNCA no `db.Open`.** Durabilidade
+  é o que um banco que morre no fim do caso não tem o que proteger; em produção
+  essa linha é perda de dados do mestre.
+- **A cópia FALHA ALTO** — o `Close` volta o erro, o `Sync` força os bytes, e o
+  TAMANHO é comparado com o do molde. Uma cópia parcial produz um SQLite
+  truncado, que se comporta como um banco NÃO MIGRADO: o sintoma é `no such
+  table`, e quem o vir vai caçar migração. Custa ~6% da suíte, e o item acima é
+  justamente o que removeu a barreira que tornaria isso barulhento sozinho.
+- **O molde é PACOTE e não um `_test.go`.** Arquivo de teste não exporta nada
+  para fora do pacote, e a primeira cena a virar pacote própria encontraria a
+  bancada inalcançável e escreveria a dela — que é como um fixture nasce com
+  catálogo vazio e desliga validação em silêncio.
+
+O que NÃO é compartilhável é a montagem do servidor: ela precisa do tipo
+`api.Server`, e um pacote de bancada que o importasse seria importado de volta
+pelos testes dele. O molde é a parte cara; o fixture é de cada pacote.
 
 ## Testes
 
@@ -722,96 +675,40 @@ As faixas, o vermelho antes de confiar e o que não merece teste estão no
 
 ## `convention`: os guardas que não são de pacote nenhum
 
-`convention/` (ALE-282) não tem código de produção. Ele existe porque duas frases
-do CLAUDE.md da raiz se contradizem quando a regra é sobre TODOS os pacotes:
-"regra mecanizável vira guarda" e "o guarda mora no pacote que a possui". Pôr uma
-regra do repositório no `api` seria escolher um dono arbitrário — e o `api` está
-sendo dividido em um pacote por cena (ALE-278), então o guarda mudaria de casa
-junto com a próxima fatia.
+`convention/` (ALE-282) não tem código de produção. Ele existe porque duas
+frases do CLAUDE.md da raiz se contradizem quando a regra é sobre TODOS os
+pacotes: "regra mecanizável vira guarda" e "o guarda mora no pacote que a
+possui". Pôr uma regra do repositório no `api` seria escolher um dono arbitrário.
 
-São **23** hoje (`grep -h '^func Test' convention/*_test.go | wc -l`), e aqui dizia OITO
-até a ALE-317 — o número envelheceu sozinho ao longo de sete issues, que é
-exatamente o que a seção "Como uma convenção passa a valer" do guia da raiz
-prevê para número escrito à mão sobre família que cresce. **O `grep` é a fonte.**
+**Quantos são se pergunta ao código**, nunca a esta linha:
 
-O que vale saber não é a contagem, é por que cada um veio parar aqui, e são três
-razões. Uns nasceram lá porque a regra é do REPOSITÓRIO e não de um pacote;
-outros MUDARAM de casa porque mediam o próprio diretório e encolheram quando uma
-cena virou pacote; e três são a família das citações.
+```
+grep -h '^func Test' convention/*_test.go | wc -l
+```
 
-- **`TestEveryTestNameIsEnglish`** varre todo `*_test.go` e recusa nome com
-  palavra em português. Ele é o que impede o 774º — a regra de idioma sempre
-  disse "nome de teste" com todas as letras, e ainda assim 773 dos 1.051 casos
-  estavam em português, porque *convenção escrita e não varrida é aplicada
-  exatamente aos arquivos que alguém apontou*.
-- **`TestNoCitationNamesAMissingTest`** recusa comentário ou `.md` que nomeie um
-  teste inexistente. A varredura mediu **136** dessas antes de começar: um `.md`
-  fica errado sem ninguém mexer nele, e nada no repositório acusava.
-- **`TestNoCitationNamesAMissingFile`** faz o mesmo para CAMINHO DE ARQUIVO, e
-  mediu **41** (ALE-285). A origem é sempre a mesma: um renome ou uma mudança de
-  pacote leva o arquivo e deixa para trás os comentários que apontavam para ele —
-  "a regra mora no ..." nomeando um arquivo que já se chama outra coisa.
+**O gatilho — um guarda nasce aqui quando alguma destas três vale:** a regra é
+do REPOSITÓRIO e não de um pacote; ele varreria `.` e mediria por acaso o
+diretório em que mora; ou ele é da família das CITAÇÕES (arquivo, teste e
+símbolo citados que não existem mais).
 
-  Ele só olha `.go` e `.templ`, e a restrição é o que o torna possível: com as
-  extensões todas ele acusa **325**, e a esmagadora maioria (181 `.ts`, 20 `.js`,
-  17 `.tsx`) é PROCEDÊNCIA — um comentário dizendo de onde a regra veio, apontando
-  para um arquivo que nunca vai voltar a existir. Está certo, e um guarda com 325
-  exceções é um guarda que alguém apaga. Nas extensões do stack VIVO a
-  ambiguidade some: um `.go` citado que não existe é endereço velho, não
-  história.
+Três práticas que o pacote firmou, e as três são regra e não história:
 
-  A primeira coisa que ele pegou foi a **própria docstring**, que nomeava os
-  arquivos mortos como exemplo. Declará-los teria resolvido e seria errado: a
-  lista é por nome-base, então perdoar um nome ali perdoaria também o próximo
-  comentário que voltasse a apontar para ele. A prosa passou a nomeá-los sem a
-  extensão.
+- **Guarda que varre `.` mede o diretório em que ele por acaso mora.** Mover o
+  arquivo encolhe a varredura sem mudar uma linha do guarda nem acender nada —
+  por isso o terreno é o DIRETÓRIO e nunca um padrão de nome.
+- **Guarda que proíbe a cópia porque existe o original tem de falhar quando o
+  original sumir**, senão ele passa a cobrar uma regra cuja razão morreu. O
+  `TestNoHandwrittenFocusRing` lê o `index.css` e afirma que a regra global
+  continua lá.
+- **A LÁPIDE é declarada, não apagada.** `// Aqui morava o TestX, que prendia…`
+  diz por que uma garantia SAIU, que é o que o `git log` esconde de quem lê o
+  arquivo; os guardas de citação pedem que ela entre em `tombstones`,
+  `arquivosAusentesDePROPOSITO` ou `simbolosAusentesDePROPOSITO`. Apagar um teste
+  é um ato, e o ato aparece numa linha.
 
-- **`TestNoCitationNamesAMissingSymbol`** (ALE-286) fecha a TERCEIRA forma da
-  família: o comentário que nomeia uma FUNÇÃO que sumiu. Ele mediu **466**, e o
-  que o torna possível é o ruído ser resolvido por REGRA — cinco naturezas
-  colhidas mecanicamente (chave de fio, chave de catálogo, literal de string, a
-  API CHAMADA em qualquer `.X(`, e os identificadores do `.ts`) mais dois
-  julgamentos (a CAIXA, que identifica procedência, e a procedência DECLARADA no
-  bloco). Uma sonda ingênua acusa 1.371; com as regras, 122.
-
-  A lista de lápides dele tem 66 nomes e quatro grupos, e o grupo que ensina é o
-  do NOME HIPOTÉTICO: `detalheAberto` nunca existiu — ele é o exemplo do que
-  aconteceria se alguém escrevesse um sinal em camelCase, e um guarda que o
-  proibisse tiraria do repositório justamente a explicação que impede o defeito.
-
-- **`TestEveryMarkerColorCanBePainted`** e **`TestNoSceneCommandUsesTheDefaultTab`**
-  moram aqui porque um lia um caminho relativo ao `api` e o outro varria um glob
-  de nome; quando a Mesa virou pacote, o arquivo sumiu debaixo de um e o glob
-  deixou de casar para o outro. **Os dois falharam ALTO porque os dois tinham
-  piso** — o irmão do foco, que não tinha, teria passado verde medindo metade.
-
-- **`TestNoFocusAsksTheServerWithoutAKeyboardGuard`** chegou na ALE-278, e não
-  por ser regra de repositório desde sempre: ele já existia dentro da cena do
-  bestiário, e foi a divisão em pacotes que o obrigou a mudar de casa. A
-  história inteira está em "Dois pedidos de UM gesto", mais abaixo; o que
-  interessa aqui é a forma, porque ela vale para o próximo: **um guarda que
-  varre `.` mede o diretório em que ele por acaso mora**, e mover o arquivo
-  encolhe a varredura sem mudar uma linha do guarda nem acender nada.
-
-- **`TestNoHandwrittenFocusRing`** (ALE-317) é regra do repositório desde o
-  primeiro dia, e a razão de ele existir não é estilo: a receita de foco é
-  GLOBAL e não layerada, então `focus-visible:outline-*` numa `class=` é
-  decoração — 242 sítios a escreviam, e apagar os 242 não muda um pixel. O que
-  vale copiar dele é o TERCEIRO controle: ele lê o `index.css` e afirma que a
-  regra global continua lá. Um guarda que proíbe a cópia porque existe o
-  original tem de falhar quando o original sumir, senão ele passa a cobrar uma
-  regra cuja razão morreu — e aí a proibição deixa o app sem realce nenhum.
-
-**A lista de marcadores tem uma fresta declarada**, e ela é deliberada: nome
-PRÓPRIO do livro passa. `TestBolaDeFogoWorkedExample` e
-`TestEspecializacaoEmArmadura` são o nome da magia e do poder, não prosa em
-português — a alternativa seria uma lista que cobra a tradução de um nome
-próprio, que é pior.
-
-**E a lápide continua valendo.** `// Aqui morava o TestX, que prendia…` é boa
-prática aqui: ela diz por que uma garantia SAIU, que é o que o `git log` esconde
-de quem lê o arquivo. O guarda só pede que ela seja DECLARADA em `tombstones` —
-apagar um teste é um ato, e o ato aparece numa linha.
+**A lista de nomes em inglês tem uma fresta declarada:** nome PRÓPRIO do livro
+passa. `TestBolaDeFogoWorkedExample` é o nome da magia, não prosa em português —
+a alternativa seria cobrar a tradução de um nome próprio.
 
 ## templ — as armadilhas que já custaram tempo
 
@@ -962,7 +859,7 @@ que vale para a próxima cena está aqui.
 **O formato é uma PORTA declarada pela cena.** A interface `Deps` mora em
 `web/<cena>/deps.go`, e o `*api.Server` a cumpre. A direção é o desenho inteiro:
 quem escolhe o que atravessa a fronteira é o CONSUMIDOR, não o objeto que tem
-tudo. O `api` monta com `cena.Routes(r, cena.New(s.cenaHost()))`, e é nessa linha
+tudo. O `api` monta com uma linha por cena — `table.Routes(r, table.New(s.tableHost(), …))` —, e é nessa linha
 que o compilador cobra quando a porta deixa de ser cumprida.
 
 **O CASO DE USO não entra pela porta: ele entra por PARÂMETRO** (ALE-344,
@@ -1114,197 +1011,41 @@ sobreviveu à saída da API: dois guardas que varriam rotas de `/characters`
 morreram com o terreno, e a invariante mudou de casa para o
 `TestNoSheetWriteAcceptsAStranger`. **Guarda de varredura vale o que vale o
 terreno que ele varre.**
-## `campaign`: a mesma regra recusando com DUAS frases
+## Os pacotes que saíram do `api` (ALE-278, ALE-344)
 
-O que é um nome válido e o que é uma descrição válida saíram do `api` na
-ALE-278, com a forma exata do `account` — e pelo mesmo defeito, que vale
-registrar porque agora ele tem DOIS casos e um padrão.
+`campaign`, `account`, `search`, `book`, `sheet` e `creature` deixaram de ser
+arquivos do `api` e viraram pacotes. O que a série ensinou, e que vale para a
+próxima extração, são três regras — o caso de cada uma está na issue.
 
-A cena escrevia "O nome é obrigatório e cabe em 120 caracteres." e a rota JSON
-respondia `err.Error()`, que era uma frase em inglês. Duas frases para uma regra
-é o que quebra quando alguém mexe no limite: uma das duas fica para trás, e é
-sempre a que ninguém está olhando.
+**1. Função pura copiada por causa de fronteira é lugar de defeito silencioso.**
+Aconteceu TRÊS vezes na mesma série. Quando o `book` saiu, ele não podia importar
+o normalizador de acento que morava no `api`; a cópia de nove linhas chamou a
+função que só faz `ToLower`, e `KeyOfName("Atuação")` passou a devolver "atuação"
+com acento — a classe deixou de ligar a perícia que treina, sem erro, sem panic,
+sem log. No `account` a cópia divergiu na FRASE em vez da conta: a mesma regra de
+senha recusava em português pela tela e em inglês pela rota JSON, e o teste que
+existia prendia a cópia morta.
 
-**O padrão, agora com dois casos:** quando uma regra de produto tem um consumidor
-de TELA e um de API, a frase divide antes da conta. No `account` a divergência
-era a mesma (inglês na rota JSON, português na porta); aqui é idêntica. O que os
-dois pacotes fazem é a mensagem morar COM a regra, em pt-BR, porque quem lê é
-uma pessoa.
+> **Quando copiar, copie o CORPO do original — nunca uma reescrita de memória.**
+> E prefira o pacote: ele apaga a cópia E a razão de haver duas.
 
-### A extração desfez um vazamento de TIPO
+**2. O guarda de fronteira que mais importa é o do pacote MAIS IMPORTADO**, e a
+razão é aritmética: treze famílias leem o `book`, então quase toda cena que
+nascer vai importá-lo. No dia em que ele alcançar o `api`, todas as cenas
+alcançam HTTP de graça — **com o guarda de cada uma continuando VERDE, porque
+cada guarda só olha os imports dele.** Vale igual para `sheet`, `creature` e
+`events`.
 
-O `campaignDescription` devolvia `sql.NullString`. Uma regra de produto
-carregando o tipo do banco é a fronteira no lugar errado, e o conserto é o que
-também torna os dois caminhos iguais: a regra devolve TEXTO, quem grava traduz
-vazio para NULL.
+**3. A regra de PRODUTO não desce para a infraestrutura.** "A senha tem ao menos
+8 caracteres" é regra, não encanamento, e por isso o `account` não virou
+plataforma. Do mesmo modo, uma regra com consumidor de TELA e de API tem a frase
+morando COM ela, em pt-BR e uma só: duas frases para uma regra é o que quebra
+quando alguém mexe no limite.
 
-### O guarda afirmava uma garantia que ele não tinha
+**O critério de mover continua sendo a DEPENDÊNCIA, medida e não suposta:** a
+pergunta é "isto carrega HTTP?", e a resposta se lê nos imports do arquivo, não
+no assunto dele.
 
-Escrevi na docstring dele que "`database/sql` é a tentação NOMEADA aqui".
-Sabotei com `var _ = sql.NullString{}`: o build passou **e o guarda passou** —
-ele só olhava `t20engine/*`, e `database/sql` é biblioteca padrão.
-
-É literalmente o **comentário não é correção** do CLAUDE.md acontecendo dentro
-de um guarda. Ele ganhou uma lista de recusa da biblioteca padrão com UMA
-entrada, e a razão de ser uma só está escrita: esta é a tentação MEDIDA — a
-versão anterior devolvia `sql.NullString` de verdade. **Lista de perigo
-imaginado envelhece; lista de defeito acontecido, não.**
-
-> A lição de instrumento é a mais transferível daqui: um guarda de fronteira que
-> filtra por PREFIXO do módulo é cego para tudo que não tem esse prefixo. Se a
-> prosa dele nomear uma tentação de fora do módulo, ela precisa de uma segunda
-> lista — ou a prosa está mentindo.
-
-## `account`: a regra de conta, e a cópia que divergiu na FRASE
-
-O que é um e-mail, o que é uma senha aceitável, e a forma dos dois pedidos que
-criam sessão. Ele saiu do `api` junto com a porta (ALE-278), e o motivo não foi
-arrumação: eram DUAS cópias da mesma regra, e elas já tinham divergido.
-
-O `api` tinha `validateRegister`/`validateLogin`/`validatePassword` com as
-mensagens em pt-BR, e `ValidateRegister`/`ValidateLogin`/`ValidatePassword` com
-as mesmas regras em inglês. **Não era código morto esperando limpeza**: a
-`ValidatePassword` inglesa era chamada pela rota JSON que redefine a senha, e a
-portuguesa pela tela da porta. A mesma regra recusava com dois textos, e um deles
-na língua que a regra de idioma proíbe para o que um humano lê.
-
-As outras duas grafias inglesas eram dívida de verdade — a `ValidateLogin` sem
-chamador nenhum, a `ValidateRegister` com exatamente um: um teste, que afirmava
-as frases inglesas. **Mudar o mínimo da senha na cópia viva deixava aquele teste
-VERDE**, porque ele prendia a outra.
-
-É a mesma forma do `search` e pelo mesmo motivo declarado lá — função pura
-hospedada em pacote grande vira cópia na mão de quem não pode importar o pacote.
-A diferença é onde a cópia errou: lá foi na conta, aqui na frase. As duas
-compilam, e nenhuma das duas aparece num diff.
-
-Ele NÃO vai para `plataforma` de propósito: aquele pacote é infraestrutura sem
-domínio, e "a senha precisa ter ao menos 8 caracteres" é regra de PRODUTO.
-
-## `search`: a busca vira pacote, e a cópia que quebrou o acento morre
-
-O casamento e a pontuação de busca são 271 linhas puras — `strings`, `unicode` e
-a normalização de acento — que moravam no `api` por história e não por
-dependência. Elas viraram `search` na ALE-278.
-
-**O que decidiu não foi a pureza, foi o histórico.** Quando o catálogo tipado
-saiu para o `book`, ele precisou do `Fold` (que desacentua) e não podia importar
-o `api`. Escrevi uma cópia de nove linhas e escrevi ERRADO — chamei a função que
-só faz `ToLower` —, e `book.KeyOfName("Atuação")` passou a devolver "atuação" com
-acento: a classe deixou de ligar a perícia que treina, sem erro, sem panic, sem
-log.
-
-Um pacote apaga a cópia E a razão de haver duas. O guarda de fronteira dele tem
-lista VAZIA, e o comentário diz por que isso importa mais aqui do que na média:
-no dia em que o `search` alcançar catálogo, banco ou HTTP, o próximo que precisar
-do `Fold` vai copiar de novo — e a próxima cópia vai estar errada de outro jeito.
-
-A regra tem guarda nas DUAS camadas, e é deliberado: `search.TestFoldDropsAccentsAndCase`
-prende a função, `book.TestTheAddressKeyDropsAccents` prende o efeito no endereço.
-Foi exatamente entre as duas que a cópia divergiu.
-
-> Provar o guarda custou TRÊS sabotagens, e as duas primeiras foram inertes — uma
-> não achou a linha, a outra virou erro de compilação ("declared and not used").
-> Verde depois de sabotar só significa alguma coisa quando a sabotagem CHEGOU.
-
-## `book`: o catálogo TIPADO, lido por treze famílias
-
-A raça, a classe, a perícia, o deus, a condição, a magia, o poder, o item, a
-origem, o efeito e a escola de magia moram em `book` desde a ALE-278 — mais os
-leitores que os montam do `catalog` e o maquinário de ELOS, que transforma um
-texto em citação clicável consultando o catálogo de condições.
-
-Ele é a segunda camada compartilhada a sair, e a que de fato travava a divisão:
-a forja tentou sair primeiro e não conseguiu porque precisa de `racaDoLivro` e
-`classeDoLivro` para desenhar as cartas.
-
-**O BESTIÁRIO chegou depois, e o atraso foi um defeito de FERRAMENTA.** O extrator
-que separava as declarações tratava o parêntese de um bloco `var ( … )` como se
-fosse RECEPTOR de método, e engolia a declaração seguinte — que era justamente o
-carregador das criaturas. Ninguém percebeu porque o resultado foi um pacote que
-compilava com uma coisa a menos, e só apareceu quando o buscador tentou sair e
-esbarrou no verbete.
-
-A lição é sobre a ferramenta e não sobre o bestiário: **um extrator que erra por
-omissão produz um resultado que compila.** O que o teria pego na hora é o que o
-guarda de tinta faz — contar quantos itens saíram e comparar com quantos foram
-pedidos.
-
-**O guarda de fronteira dele é o mais importante da série, e a razão é
-aritmética:** treze famílias leem o livro, então quase todo pacote de cena que
-nascer vai importá-lo. No dia em que ele importar o `api`, todas as cenas
-alcançam HTTP de graça — com o guarda de cada uma continuando verde, porque cada
-guarda só olha os imports dele.
-
-### O defeito que a extração produziu, e como ele apareceu
-
-O `book` é FOLHA, então ele não pode importar o `dobra` do `busca.go` — a função
-que desacentua para comparação. Escrevi uma cópia de nove linhas, e escrevi
-ERRADO: chamei o `dobraSimples`, que é só `ToLower`, achando que ele desacentuava.
-
-O sintoma não parece o defeito. `KeyOfName("Atuação")` passou a devolver
-`"atuação"` em vez de `"atuacao"`, e a consequência foi a classe deixar de LIGAR
-a perícia que treina: um elo apontando para um endereço que não existe. Sem erro,
-sem panic, sem nada no log.
-
-Quem acusou foi um teste de CENA dois pacotes acima
-(`TestTheClassLinksTheExpertisesItTrains`). A regra passou a ter guarda onde ela
-mora, no próprio `book` — e ele nasceu vermelho por sabotagem.
-
-**A lição para as próximas extrações: função copiada por causa de fronteira é
-lugar de defeito silencioso.** Ela compila, tem o nome certo, e faz outra coisa.
-Quando copiar, copie o CORPO do original — não uma reescrita de memória.
-
-## `sheet` e `creature`: a ficha e a criatura, fora do `api`
-
-O `CharacterDTO` e os seus seis irmãos moram em `sheet`; o bloco de criatura do
-livro mora em `creature` (ALE-278). Eles saíram do `api` porque a medição da
-divisão apontou para eles: **toda cena usa de 15 a 60 símbolos de outras
-famílias**, e os DTOs estão em quase todas as listas — enquanto eles fossem do
-`api`, nenhuma cena podia sair sem levar o `api` junto.
-
-**A pergunta que decidiu foi "eles carregam HTTP?", e a resposta foi medida antes
-de mover:** o `character_dto.go` importava `sqlcgen`, `engine` e `plataforma` e
-não tocava `*Server` nem `http`; o `creature_block.go` importava `fmt` e
-`strings` e mais nada. Os dois eram forma de dado hospedada por acidente de
-história.
-
-O que NÃO saiu junto e vale saber por quê: os quatro handlers do estado de jogo.
-O arquivo que os hospedava misturava a FORMA (dois structs sem dependência) com
-o encanamento que a grava — os structs viajam dentro do `CharacterDTO`, então
-foram; os handlers ficaram. O que restava dele — zerar os usos "1/cena" e baixar
-as posturas — desceu para o `app/rest` na ALE-344, e o arquivo deixou de
-existir.
-
-**E o `sheet` ganhou a CONSTRUÇÃO junto, na terceira camada.** `Load` monta o
-agregado a partir das linhas do banco, `Compute` o passa pelo motor, e
-`LoadAndCompute` é a soma — as três eram métodos do `api.Server` e viraram
-funções com as dependências por parâmetro, porque o que elas usavam dele eram as
-`queries` e os `catalogs` e nada mais. Oito cenas leem isso.
-
-A medição que decidiu foi refeita DEPOIS das duas primeiras camadas, e ela disse
-duas coisas. A primeira: das 36 coisas que as cenas usam da família `character`,
-o núcleo é esse punhado. A segunda, que mudou o plano: **os treze arquivos
-`character*.go` misturam handler HTTP com domínio** — nenhum é puro, então não há
-arquivo a mover, só função.
-
-> A primeira versão dessa medição disse que os treze eram limpos, e era mentira
-> do INSTRUMENTO: `\\*Server\\b` dentro de uma f-string vira barra invertida
-> literal e não casa com nada. "Nenhum toca HTTP" era a resposta que eu queria, e
-> ela quase passou. A segunda versão tem CONTROLE — ela afirma primeiro que a
-> sonda enxerga HTTP num arquivo que sabidamente o tem.
-
-Os métodos do `Server` ficaram como invólucros de uma linha. Eles somem quando
-cada cena receber as dependências dela por construtor; o que interessa agora é
-que a lógica passou a ser alcançável sem o `api`.
-
-Os dois pacotes têm guarda de fronteira, e a razão é a que o `events` já
-documenta: **cada cena que se mudar vai importá-los.** No dia em que o `creature`
-alcançar o catálogo, todas as cenas alcançam junto — de graça, e com o guarda de
-fronteira de cada uma continuando VERDE, porque cada guarda só olha os imports
-dele. A lista do `creature` é vazia; a do `sheet` tem QUATRO, e a quarta é a
-única desta série que mudou o que um pacote é — o `book`, na fatia da ficha. Ver
-a seção do `web/sheetui`, mais abaixo.
 
 ## `web/ui`: o kit de apresentação, e o que ele NÃO pode saber
 
@@ -1314,11 +1055,10 @@ arquivo liam do `api`, e sair de lá é o que permite as cenas se dividirem em u
 pacote cada.
 
 **A linha divisória não é tamanho, é DEPENDÊNCIA.** O que ficou no `api` foi o
-agrupamento do LIVRO e dos ELOS — `aPaginaDoLivro`, `pedacoDoTexto`,
-`eloParaOAcervo`, os dois diálogos — porque o `trecho` que eles desenham nasce de
-uma consulta ao catálogo de efeitos e de escolas de magia. Levá-los faria o
-pacote de apresentação importar catálogo, que é o contrário do que a divisão
-existe para conseguir.
+agrupamento do LIVRO e dos ELOS, com os dois diálogos, porque o trecho que eles
+desenham nasce de uma consulta ao catálogo de efeitos e de escolas de magia.
+Levá-los faria o pacote de apresentação importar catálogo, que é o contrário do
+que a divisão existe para conseguir.
 
 **A casca RECEBE o que não pode conhecer.** Duas dependências a prendiam ao
 `api`, e as duas viraram campo de `ui.Page`:
@@ -1527,98 +1267,43 @@ que o `TestEveryGestureThatReadsPointsRefusesABrokenBody` prende a frase.
 
 ### Quando o corpo JÁ É o formulário, o payload lista os sinais
 
-**`/pecas/nova` também foi** (ALE-306), e o caminho dela é o que ensina.
-
-Eu a deixei de fora na ALE-305 dizendo que era impossível: *"o `payload`
-SUBSTITUI os sinais, então a peça nasceria sem nome"*. A primeira metade é
-verdade e a conclusão não segue — **o payload pode carregar os sinais**, basta
+O `payload` SUBSTITUI os sinais no corpo — mas ele pode CARREGÁ-los, basta
 nomeá-los:
 
 ```js
-@post('…/pecas/nova', {payload: {from: {X: cx, Y: cy},
-  new_token_name: $new_token_name, new_token_size: $new_token_size,
-  new_token_look: $new_token_look}})
+@post('…/pecas/nova', {payload: {from: {x: cx, y: cy},
+  new_token_name: $new_token_name, new_token_size: $new_token_size}})
 ```
 
-O obstáculo real era outro, e mais raso: **o corpo não se lê duas vezes.** O
-`ReadSignals` do datastar-go copia `r.Body` inteiro num buffer, então um segundo
-leitor pega vazio. O conserto é um struct só, lido uma vez — e some o leitor
-separado.
+**O corpo não se lê duas vezes.** O `ReadSignals` do datastar-go copia `r.Body`
+inteiro num buffer, então um segundo leitor pega vazio: é um struct só, lido uma
+vez, e some o leitor separado.
 
-**O preço, que é o que decide:** a expressão passa a listar cada sinal pelo nome,
-uma grafia a mais num lugar que um `grep` de `$nome` não distingue de leitura
-qualquer. Quem paga é o `TestEveryPayloadKeyMatchesTheSignalItReads`: quando a
-chave é ela mesma um nome de sinal, ela tem de carregar aquele sinal — então
-`new_token_size: $new_token_look` reprova, e `kind: $tool` passa, porque `kind`
-não é sinal nenhum.
+**O preço é uma grafia a mais** — a expressão passa a listar cada sinal pelo
+nome, num lugar que um `grep` de `$nome` não distingue de leitura qualquer.
+Quem paga é o `TestEveryPayloadKeyMatchesTheSignalItReads`: quando a chave é ela
+mesma um nome de sinal, ela tem de carregar aquele sinal
+(`new_token_size: $new_token_look` reprova; `kind: $tool` passa, porque `kind`
+não é sinal nenhum), e toda chave tem de achar uma tag `json:"chave"` do outro
+lado. Chave renomeada de um lado só chega ao servidor e cai no chão: 200 com o
+valor-zero, sem erro em lugar nenhum.
 
-#### O guarda tinha três cegos, e o denominador contava duas vezes (ALE-310)
+**E a CAIXA da chave conta.** O `encoding/json` casa campo sem diferenciar caixa
+**só quando não há correspondência exata** — então `{X: cx}` contra
+`json:"x"` funciona por ACIDENTE, e para de funcionar no dia em que o struct
+ganhar um campo que case exatamente com `X`. É a mesma tolerância de biblioteca
+que segura duas grafias para um conceito no nome de sinal. A grafia do CLIENTE é
+que muda, porque o tabuleiro gravado em `campaign_places` e `open_boards` já
+carrega `"x": 3` minúsculo; o guarda exige a grafia exata, e **a tag GANHA do
+nome do campo**, porque um campo tagueado não se lê pelo nome dele.
 
-- **Janela de 400 CARACTERES.** Ela sangrava de um `payload:` para o seguinte, e
-  os "nove pares" que o guarda reportava eram OITO distintos, com `marked_tokens`
-  contado duas vezes. Hoje a janela é o objeto `{…}` casado por BALANÇO DE
-  CHAVES.
-- **O piso era sobre PARES.** `pares < 1` sobre nove: trocar `payload:` por
-  `payload :` — que o JavaScript aceita — em três sítios derrubava a conta para
-  UM e o guarda passava. Ele só afirmava "o regex ainda casa em algum lugar do
-  repositório". Hoje o piso é sobre SÍTIOS de payload, que são quinze, e a âncora
-  aceita o espaço.
-- **Payload que é VARIÁVEL.** `{payload: traco}` contribuía zero pares em
-  silêncio. Hoje o `const traco = {…}` da linha de cima é resolvido, e o spread
-  (`{...traco, kind: $tool}`) traz as chaves de origem junto.
+> **Aqui o navegador NÃO é testemunha**, e é o inverso do caso do `from`/`origin`
+> logo acima: devolvida uma chave para `{X: …}`, o Go passa, o app FUNCIONA e o
+> Playwright passaria junto — a tolerância do `encoding/json` é exatamente o que
+> faz a grafia errada continuar funcionando. **Defeito que só existe como risco
+> latente não tem testemunha em tempo de execução**, e quem o prende é guarda de
+> TEXTO.
 
-**E o TERCEIRO CANAL foi fechado.** O guarda prendia `chave == $sinal` — o lado
-do CLIENTE — e nada prendia `chave == o que o servidor lê`. Uma chave renomeada
-de um lado só chega ao servidor e cai no chão: o gesto responde 200 com o
-valor-zero, sem erro em lugar nenhum. Agora toda chave de payload tem de ter uma
-tag `json:"chave"` ou um campo exportado de mesmo nome.
-
-> **E o "vermelho contra a árvore de ontem" deste guarda nunca foi detecção.**
-> Rodado contra a árvore pré-307 — a que TINHA o defeito de coordenada no
-> caminho — ele passa, com 13 sítios e 6 pares casados. O FAIL que ele produz nas
-> árvores mais antigas é o PISO tropeçando, porque o piso é calibrado para a
-> contagem de hoje. Um piso calibrado falha em qualquer árvore anterior,
-> inclusive numa perfeitamente sadia: **"vermelho contra ontem" só é evidência
-> quando o motivo do vermelho é o defeito, e não o denominador.**
-
-#### A CAIXA da chave conta, e ela vinha errada (ALE-313)
-
-O cliente escrevia `{X: cx, Y: cy}` e o `engine.Square` declara `json:"x"` e
-`json:"y"`, em MINÚSCULAS. Isso funcionava **por acidente**: o `encoding/json`
-casa campo sem diferenciar caixa **só quando não há correspondência exata**.
-
-É o mesmo mecanismo da armadilha do camelCase em nome de sinal, que esta casa
-já pagou no construtor de encontros — duas grafias para um conceito, seguradas
-por uma tolerância da biblioteca. O modo de falhar também é o mesmo: no dia em
-que o struct ganhar um campo com correspondência EXATA para `X`, a exata vence e
-a coordenada pousa no campo errado, sem erro em lugar nenhum.
-
-**Qual lado muda foi decidido pelo DADO, e não por gosto.** O tabuleiro gravado
-em `campaign_places` e `open_boards` carrega `"x": 3, "y": 0` — minúsculo. Mudar
-as tags do servidor reescreveria todo lugar do acervo; mudar o cliente é
-expressão. Foram 34 chaves em 13 linhas de `web/table`, todas dentro de literal
-de string — os `boardSquare{X: …}` em volta são campo de struct Go e ficam.
-
-Quem cobra é o `TestEveryPayloadKeyMatchesTheSignalItReads`, que passou a exigir
-a grafia EXATA: **a tag GANHA do nome do campo**, porque um campo tagueado não se
-lê pelo nome dele. Somar os dois faria o guarda aceitar `X` num campo que só
-responde por `x`.
-
-> **AQUI O NAVEGADOR NÃO É TESTEMUNHA, e é o inverso do achado da ALE-311.**
-> Lá, trocar `from` por `origin` deixava a suíte de Go verde e o Playwright
-> acusava com três falhas. Aqui não: devolvida UMA linha para `{X: …}`, o
-> `go test ./api/` passa, o app FUNCIONA e o Playwright passaria também —
-> porque a tolerância de caixa do `encoding/json` é exatamente o que faz a
-> grafia errada continuar funcionando. **Um defeito que só existe como risco
-> latente não tem testemunha em tempo de execução; quem o prende é o guarda de
-> TEXTO**, e é por isso que ele existe.
-
-> **E o guarda contaminou a si mesmo com a prosa que o explica.** Ao apertar a
-> regra, `x: $rect_to_x` passou a reprovar como "chave que é sinal e carrega
-> outro" — porque a colheita de sinais lia o corpo CRU dos arquivos, e o
-> `data-show="$x"` que o cabeçalho do `overlay_flash_test.go` usa como EXEMPLO
-> entrava na lista como se fosse sinal da árvore. O mesmo arquivo já tirava
-> comentário na varredura de payload e não na de sinais.
 
 ### DESLOCAMENTO é coordenada, e o guarda não sabia disso
 
@@ -2003,7 +1688,7 @@ evento que dá para escutar. O stream só lê o carimbo quando o evento diz que 
 ficha mexeu; ver "O barramento de eventos" acima.
 
 - **O interesse é por PERSONAGEM, não por sessão.** A pergunta é sobre uma ficha,
-  e a mesma ficha pode estar em duas mesas — pendurar isso no `SessionStore`
+  e a mesma ficha pode estar em duas mesas — pendurar isso no `session.Store`
   obrigaria quem PUBLICA a saber em quais mesas o personagem está.
 - **Quem não tem ficha nesta mesa simplesmente não pede o interesse dela.** Aqui
   morava "os outros recebem um canal NULO, e canal nulo num `select` nunca
