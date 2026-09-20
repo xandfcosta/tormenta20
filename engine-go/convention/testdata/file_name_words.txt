@@ -23,6 +23,7 @@ ascii
 # AS PALAVRAS QUE UM NOME DE ARQUIVO PODE USAR (ALE-301).
 asset
 assets
+attack
 attribute
 attributes
 audio
