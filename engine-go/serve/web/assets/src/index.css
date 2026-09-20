@@ -627,14 +627,6 @@
     color: var(--muted-foreground);
   }
 
-  /* A PEÇA ALVEJADA enquanto o ataque está pendurado. O anel é PONTILHADO para
-   * não se confundir com o da vez, que é contínuo e dourado: são duas coisas
-   * diferentes e a mesa não pode ter de olhar duas vezes para separá-las. */
-  .board-token-targeted {
-    outline: 2px dashed var(--destructive);
-    outline-offset: 2px;
-  }
-
   /* Hide native number spinners — replaced by the NumberInput buttons. */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
