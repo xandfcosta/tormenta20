@@ -7,6 +7,7 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/campaign"
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
@@ -102,6 +103,10 @@ type Scene struct {
 	party rest.Party
 	// queue é o CASO DE USO de quem entra na fila.
 	queue initiative.Queue
+	// cast é o CASO DE USO do elenco de NPCs da campanha. Ele é da CAMPANHA e
+	// não desta cena: o NPC preparado na quinta sobrevive à sessão de sábado, e
+	// a Mesa é uma entrada do gesto (ALE-353).
+	cast campaign.Cast
 	// access é a TRAVA da sessão, e ela é o MESMO objeto que os casos de uso
 	// usam por dentro (ALE-344). A cena a chama para decidir o que DESENHAR —
 	// o rodapé do mestre, a recusa antes do gesto —, e quem decide se o gesto
@@ -111,9 +116,12 @@ type Scene struct {
 	chosenTabs *chosenTabs
 }
 
-func New(d Deps, ciclo session.Lifecycle, grupo rest.Party, fila initiative.Queue) Scene {
+func New(
+	d Deps, ciclo session.Lifecycle, grupo rest.Party,
+	fila initiative.Queue, elenco campaign.Cast,
+) Scene {
 	return Scene{
-		deps: d, lifecycle: ciclo, party: grupo, queue: fila,
+		deps: d, lifecycle: ciclo, party: grupo, queue: fila, cast: elenco,
 		access: ciclo.Access(),
 		lenses: newLenses(), chosenTabs: newTabs(),
 	}

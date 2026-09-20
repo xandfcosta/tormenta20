@@ -45,6 +45,14 @@ var permitidos = map[string]bool{
 	"t20engine/app/boards": true,
 	// O `app/initiative` é quem entra na fila, pela mesma razão.
 	"t20engine/app/initiative": true,
+	// O `app/campaign` é o ELENCO de NPCs, e entra pela mesma razão dos dois
+	// acima: é caso de uso, chega por parâmetro, e está ABAIXO desta cena.
+	//
+	// Ele veio junto com a tabela ganhando dono: `campaign_creatures` é acervo
+	// da CAMPANHA — o NPC preparado na quinta sobrevive à sessão de sábado —, e
+	// esta cena escrevia nela direto, com uma segunda cópia da trava. As quatro
+	// escritas saíram daqui (ALE-353).
+	"t20engine/app/campaign": true,
 	// O `app/rest` é o descanso e a expiração de escopo, pela mesma razão.
 	"t20engine/app/rest": true,
 	// O `app/session` NÃO é concessão, é a razão do guarda existir ficar menor
