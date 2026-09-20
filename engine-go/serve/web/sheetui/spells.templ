@@ -210,13 +210,25 @@ templ augmentStepper(a augmentRow) {
 				class="inline-flex size-7 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none hover:text-foreground"
 			>+</button>
 		} else {
+			// O ESTADO É DESENHADO, e não só declarado por ARIA.
+			//
+			// Este botão dizia estar ligado no `aria-checked` e não mudava nada na
+			// tela: o mestre clicava, via o mesmo cinza, e clicava de novo —
+			// DESLIGANDO o aprimoramento que acabara de ligar. Correto para quem
+			// ouve, mudo para quem olha (ALE-341).
+			//
+			// A cor vem por `data-class` e não por `templ.KV` porque o estado é um
+			// SINAL do Datastar e não um bool do servidor: o `templ.KV` decide na
+			// renderização, e aqui ele decidiria uma vez e congelaria. É o dourado
+			// do "Preparada" logo acima, que é o mesmo "isto está ligado".
 			<button
 				type="button"
 				role="switch"
 				aria-label={ a.Description }
 				data-attr:aria-checked={ augmentSignal(a.Index) + " > 0 ? 'true' : 'false'" }
+				data-class={ augmentChosenClasses(a.Index) }
 				data-on:click={ a.Toggle }
-				class={ ui.BadgeClasses("inline-flex items-center border-grimorio-iron text-3xs uppercase tracking-wider text-muted-foreground") }
+				class={ ui.BadgeClasses("inline-flex items-center text-3xs uppercase tracking-wider") }
 			>Trocar</button>
 		}
 	</div>
