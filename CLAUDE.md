@@ -78,7 +78,11 @@ humano — não porque a suíte seja fraca.
   identifica nada. Um passo a passo linear e longo se lê de cima para baixo;
   cinco chamadas com nome genérico, não.
 - **Arquivos abaixo de 500 linhas** — este teto fica, e por outro motivo: arquivo
-  é unidade de RESPONSABILIDADE e de conflito de merge, não de leitura.
+  é unidade de RESPONSABILIDADE e de conflito de merge, não de leitura. Ele tem
+  CATRACA (`TestNoNewFileGoesOverTheLineCeiling`): arquivo novo acima do teto
+  reprova com o nome dele, e a dívida antiga mora numa linha de base que **só
+  pode encolher** — dezessete quando ela nasceu, um deles com quatro vezes o
+  teto. Arquivo baselinado que encolheu sai da lista, e não sair também reprova.
 - Uma responsabilidade por módulo. Extrair continua sendo o certo quando o
   pedaço tem sentido sozinho: quando ele tem OUTRO chamador, outro motivo para
   mudar, ou quando dar nome a ele explica o que o corpo não explicava.
