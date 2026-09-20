@@ -1,5 +1,4 @@
 app/boards/store.go
-domain/board/board_state.go
 domain/book/catalogs.go
 domain/engine/itemeffects.go
 domain/live/session_state.go

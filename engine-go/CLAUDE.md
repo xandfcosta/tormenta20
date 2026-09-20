@@ -63,10 +63,10 @@ coisa pertence a ele é ter as três. Um repasse de uma linha não vira caso de 
 por mudar de pasta.
 
 **A orquestração já existia, com outro nome.** O `apply` do store dos
-tabuleiros carrega o estado, chama a regra PURA do `board_state.go` e devolve o
+tabuleiros carrega o estado, chama a regra PURA do `domain/board` e devolve o
 quadro: isso é um caso de uso, e ele passou anos arquivado dentro de `domain/`.
 Os dois stores mudaram de lugar na ALE-344, e o número que fecha a divisão é o
-do `domain/board`: **1.802 linhas, ZERO toques de persistência.**
+do `domain/board`: **mais de 1.800 linhas, ZERO toques de persistência.**
 
 **O que sobra em `domain/` é a regra, e ela é PÚBLICA.** As mutações que os
 stores chamam — `AddToken`, `AdvanceTurn`, `PatchEntryVitals` e as irmãs — eram
