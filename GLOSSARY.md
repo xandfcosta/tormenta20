@@ -17,8 +17,7 @@ impede o décimo segundo caso.
 mesa por trás de um botão. Este glossário governa a linguagem do Tormenta 20 e
 do app; o vocabulário de widget segue a regra de idioma do `CLAUDE.md` e mais
 nada. O que continua aqui é o que a mesa fala: **elo**, **verbete**, **livro** —
-e o `eloParaOAcervo` segue com o nome dele porque ficou no `api`, junto do
-catálogo que ele consulta.
+e **elo** segue sendo a palavra da mesa para o que aponta ao verbete.
 
 **Como se lê uma linha:** o termo canônico é o que se escreve na tela; o
 identificador é como ele se chama no código; os proibidos são sinônimos que
@@ -143,9 +142,9 @@ porque esconderia que são coisas diferentes.
 
 | Canônico | Identificador | Proibidos | O que é |
 |---|---|---|---|
-| **título de seção** | `SectionTitle`, `SectionTitleClasses` | ~~cabeçalho~~ (é o de bloco), ~~título de cena~~ (é o `SceneTitle`) | O título de uma SEÇÃO da cena: Cinzel 18px dourada. `Mochila`, `Combate`, `Perícias`. **18px e não 14**, e a ALE-173 mediu os dois: 14px é a medida do CORPO deste app, e um cabeçalho do tamanho do texto perde a hierarquia que ele existe para criar. O `contexto` muda só a entreletra — `painel` aperta (`tracking-wide`) porque disputa espaço com nove vizinhos, `cena` respira (`[0.16em]`) porque é o único assunto da tela. **Não é o `SceneTitle`**, que é a tela-título inteira com o brilho arcano e o kicker. |
+| **título de seção** | `SectionTitleClasses` | ~~cabeçalho~~ (é o de bloco), ~~título de cena~~ (é o `SceneTitle`) | O título de uma SEÇÃO da cena: Cinzel 18px dourada. `Mochila`, `Combate`, `Perícias`. **18px e não 14**, e a ALE-173 mediu os dois: 14px é a medida do CORPO deste app, e um cabeçalho do tamanho do texto perde a hierarquia que ele existe para criar. O `contexto` muda só a entreletra — `painel` aperta (`tracking-wide`) porque disputa espaço com nove vizinhos, `cena` respira (`[0.16em]`) porque é o único assunto da tela. **Não é o `SceneTitle`**, que é a tela-título inteira com o brilho arcano e o kicker. |
 | **rótulo de bloco** | `SectionLabel`, `SectionLabelClasses`, `SectionCaption` | ~~rótulo de seção~~ (colide com o de cima) | O cabeçalho de um BLOCO dentro da cena: 11px, sem Cinzel, entreletra `[0.16em]`. É o que estava no kit desde a ALE-251. **Cuidado com o `SectionLabel` templ**, que embrulha num `<p>` e expulsa um `<h4>` passado como filho — para um cabeçalho, use o `…Classes` direto no elemento. |
-| **rótulo de campo** | `FieldLabel`, `FieldLabelClasses` | ~~rótulo~~ sozinho, ~~legenda~~ | O rótulo colado num VALOR — o "FOR" ao lado do 16. 10px, entreletra `widest`, **nunca Cinzel**: em 10px ela vira desenho antes de virar texto, e este papel é o degrau que já estava certo quando o cabeçalho de bloco ainda era a exceção solta. Ele **não é cabeçalho de nada**, e a distinção tem consequência: o `<span>` do "FOR" e o `<h3>` de "Poderes" pediram o mesmo desenho por acidente de aparência. |
+| **rótulo de campo** | `FieldLabelClasses` | ~~rótulo~~ sozinho, ~~legenda~~ | O rótulo colado num VALOR — o "FOR" ao lado do 16. 10px, entreletra `widest`, **nunca Cinzel**: em 10px ela vira desenho antes de virar texto, e este papel é o degrau que já estava certo quando o cabeçalho de bloco ainda era a exceção solta. Ele **não é cabeçalho de nada**, e a distinção tem consequência: o `<span>` do "FOR" e o `<h3>` de "Poderes" pediram o mesmo desenho por acidente de aparência. |
 
 O ELEMENTO é escolha de quem chama e não do papel, porque a semântica é do
 SÍTIO: o mesmo desenho é `<legend>` num `<fieldset>`, `<label>` ao lado de um
@@ -166,7 +165,7 @@ uma decisão do dono antes do renome.
 1. o estado da sessão (`SceneActive`, `session-scene-start/end`);
 2. a **duração de efeito** do livro (`scope: "scene"`, `DeleteEffectsByScope`);
 3. o mapa guardado do tabuleiro (`board-place-scene`, `parseScene` → devolve um `BoardState`);
-4. a casca visual da UI (`SceneShell`, `scene-grimorio`, `SceneContainerProvider`, `scene-nav`).
+4. a casca visual da UI (`ui.Layout`, `scene-grimorio`, `scene-nav`).
 
 Consequência medida: `endScene` existe **três vezes** no pacote `api` —
 `session_state.go` e `app/session/store.go` desligam a cena, e
@@ -181,7 +180,7 @@ continuam, e o renome ainda espera decisão do dono.
 O BUG que a colisão escondia está fechado (ALE-220): `onSceneEnd` não limpava
 efeito nenhum, e quem limpava era só a Recuperação com `scope='scene'` — o
 mestre encerrava a cena e a bênção que dura "cena" continuava na ficha. Agora os
-dois gestos passam pelo MESMO `expirePartyScene`, e o livro é quem manda: "a
+dois gestos passam pelo MESMO `rest.Party.expireScene`, e o livro é quem manda: "a
 habilidade dura uma cena inteira, encerrando-se quando esse momento da história
 acaba" (p227), e o início e o fim de uma cena são dados "pelo andamento da
 história" (p11) — que é o que o mestre declara ao clicar em Encerrar cena.
@@ -210,7 +209,7 @@ qual:
 |---|---|---|
 | `entry.Type == "character"` | esta linha é ficha ou é NPC? | `board_populate.go:31`, `tokens.go:61`, `view.go:281` |
 | `c.Ownerid == user.ID` | a PESSOA dona é jogador ou mestre? | `roleIn`, em `campaigns.go` |
-| "é meu?" | o personagem é de quem está olhando? | `mesaRoster`, em `routes.go` |
+| "é meu?" | o personagem é de quem está olhando? | `tableRoster`, em `action.go` |
 
 O SEGUNDO mudou de forma sem mudar de pergunta: ele era `member.role ===
 'player'`, uma coluna da tabela de membros, e a ALE-287 a substituiu pelo
@@ -342,7 +341,7 @@ ver as linhas deles na tabela abaixo.
 
 | termo | no código | proibido | o que é |
 | -- | -- | -- | -- |
-| **ao vivo** | `live/`, `live*` | ~~mesa~~ (como pacote), ~~tempo real~~ | **O REGIME: a sessão enquanto está acontecendo.** O que existe só enquanto há gente conectada — o estado da fila em memória, a entrega por SSE, a presença, e a autorização de quem está na sessão. Nomeia o regime e não as pessoas, o que o distingue de `mesa`, e não a linha do banco, o que o distingue de `sessão`. O código já dizia `mountLiveRoutes`, `liveAccess` e `liveCtx` antes de a palavra existir aqui. |
+| **ao vivo** | `live/`, `live*` | ~~mesa~~ (como pacote), ~~tempo real~~ | **O REGIME: a sessão enquanto está acontecendo.** O que existe só enquanto há gente conectada — o estado da fila em memória, a entrega por SSE, a presença, e a autorização de quem está na sessão. Nomeia o regime e não as pessoas, o que o distingue de `mesa`, e não a linha do banco, o que o distingue de `sessão`. O código já dizia `liveCtx` antes de a palavra existir aqui. |
 | **configuração** | `config/` | ~~env~~, ~~settings~~ | O que o ambiente diz: `.env`, as variáveis, os administradores, o segredo de assinatura. Lido no boot e nunca depois. |
 | **estáticos** | `assets/` | ~~public~~, ~~dist~~, ~~bundle~~ | O FRONT que não é `.templ`: a folha, as ilhas de JS, as fontes e o favicon, mais o `go:embed` que os leva para dentro do binário. Mora em `serve/web` porque o `go:embed` só alcança o que está ABAIXO do pacote — quem embute é quem hospeda. |
 | **borda HTTP** | `httpio/` | ~~util~~, ~~common~~, ~~shared~~ | Escrever resposta, ler corpo, comprimir. **Conhece `net/http`, e por isso o domínio NÃO o alcança** — é essa a linha que o separa do `wire`. |
