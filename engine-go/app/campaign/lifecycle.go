@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 
 	"t20engine/app"
+	"t20engine/app/boards"
 	"t20engine/app/session"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -14,7 +16,7 @@ import (
 )
 
 // Lifecycle é o CICLO DE VIDA de uma campanha: abrir, renomear, cunhar o link
-// de convite e escolher quais regras opcionais valem.
+// de convite, escolher quais regras opcionais valem e APAGAR.
 //
 // Cada método faz a mesma sequência, e é ela que define a camada: AUTORIZA,
 // decide, grava. A trava é a MESMA do ciclo da sessão (`session.Access`), e não
@@ -27,10 +29,18 @@ type Lifecycle struct {
 	db      *sql.DB
 	queries *sqlcgen.Queries
 	access  session.Access
+	// Os dois STORES existem para UM gesto: apagar. Eles são o estado em memória
+	// das sessões, e esquecê-lo é metade do que apagar uma campanha significa —
+	// ver a ordem no `Delete`.
+	boards   *boards.Store
+	sessions *session.Store
 }
 
-func NewLifecycle(db *sql.DB, q *sqlcgen.Queries, trava session.Access) Lifecycle {
-	return Lifecycle{db: db, queries: q, access: trava}
+func NewLifecycle(
+	db *sql.DB, q *sqlcgen.Queries, trava session.Access,
+	tabuleiros *boards.Store, sessoes *session.Store,
+) Lifecycle {
+	return Lifecycle{db: db, queries: q, access: trava, boards: tabuleiros, sessions: sessoes}
 }
 
 // Open abre uma mesa, e ela nasce COM link de convite.
@@ -192,4 +202,49 @@ func nullOrText(texto string) any {
 		return ns.String
 	}
 	return nil
+}
+
+// Delete apaga a campanha, e ESQUECE o estado em memória das sessões antes.
+//
+// # A ordem É o gesto
+//
+// Apagar a campanha leva as sessões por CASCATA, e depois disso não há mais como
+// perguntar quais eram. Invertida, a lista volta vazia, ninguém é esquecido, e o
+// tabuleiro de cada sessão fica no mapa em memória batendo numa chave
+// estrangeira que não existe: a mesa se declara suja para sempre.
+//
+// Ela morava num handler, entre dois comentários que a explicavam — e uma
+// invariante de sequência que depende de quem chama lembrar dela é uma
+// invariante que se perde na segunda vez. Aqui ela não tem como ser esquecida
+// (ALE-359), e o `TestDeletingACampaignForgetsItsSessionsFirst` a prende.
+//
+// # Esquecer é MELHOR ESFORÇO, apagar não é
+//
+// Se a listagem das sessões falhar, o esquecimento não acontece e a linha é
+// apagada assim mesmo: o usuário pediu para apagar, e recusar por causa de um
+// mapa em memória seria trocar o gesto dele por um detalhe de processo. O preço
+// é estado obsoleto até o reinício, e ele está dito no log.
+func (l Lifecycle) Delete(ctx context.Context, quem app.Caller, campanhaID int64) error {
+	if _, err := l.access.OwnedCampaign(ctx, quem, campanhaID); err != nil {
+		return err
+	}
+	l.forgetSessionsInMemory(ctx, campanhaID)
+	if err := l.queries.DeleteCampaign(ctx, campanhaID); err != nil {
+		return fmt.Errorf("apagar a campanha %d: %w", campanhaID, err)
+	}
+	return nil
+}
+
+// forgetSessionsInMemory tira do mapa o estado vivo de toda sessão da campanha.
+func (l Lifecycle) forgetSessionsInMemory(ctx context.Context, campanhaID int64) {
+	sessoes, err := l.queries.ListSessions(ctx, campanhaID)
+	if err != nil {
+		log.Printf("campanha %d: não deu para listar as sessões antes de apagar (%v); "+
+			"o estado em memória delas fica até o reinício", campanhaID, err)
+		return
+	}
+	for _, sess := range sessoes {
+		l.boards.SessionDeleted(sess.ID)
+		l.sessions.SessionDeleted(sess.ID)
+	}
 }

@@ -206,7 +206,7 @@ func (s *Server) campaignDirectory() campaign.Directory {
 // campaignLifecycle é o ciclo de uma campanha: abrir, renomear, cunhar convite,
 // escolher as regras opcionais. Ele recebe a TRAVA e autoriza sozinho.
 func (s *Server) campaignLifecycle() campaign.Lifecycle {
-	return campaign.NewLifecycle(s.db, s.queries, s.sessionAccess())
+	return campaign.NewLifecycle(s.db, s.queries, s.sessionAccess(), s.boards, s.sessions)
 }
 
 // campaignSeating senta alguém à mesa: as travas, a cópia do herói e o membro.

@@ -362,16 +362,12 @@ func (s Scene) handleDelete(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	// APAGAR é do dono, e a trava vem do mesmo lugar dos outros gestos — esta
-	// rota não tem caso de uso próprio ainda, então ela pergunta direto.
-	if _, err := s.access.OwnedCampaign(r.Context(), quem, id); err != nil {
+	// A TRAVA e a ORDEM são do caso de uso: esquecer o estado em memória das
+	// sessões tem de acontecer ANTES de a linha sumir, e essa sequência morava
+	// aqui entre dois comentários. Uma invariante que depende de quem chama
+	// lembrar dela se perde na segunda vez (ALE-359).
+	if err := s.vida.Delete(r.Context(), quem, id); err != nil {
 		refuse(w, err)
-		return
-	}
-	// ANTES de apagar — ver a razão da ordem na porta.
-	s.deps.CampaignDeleted(r.Context(), id)
-	if err := s.deps.Queries().DeleteCampaign(r.Context(), id); err != nil {
-		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/campanhas", http.StatusSeeOther)

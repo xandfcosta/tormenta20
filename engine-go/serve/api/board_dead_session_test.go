@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/app"
 	"t20engine/app/boards"
 	"testing"
 )
@@ -24,8 +25,17 @@ a ignorar o alarme.
 // deadSessionBoard abre um tabuleiro numa sessão e apaga a sessão por baixo dele.
 func deadSessionBoard(t *testing.T) (*Server, int64, int64) {
 	t.Helper()
+	s, campanha, sessao, _ := deadSessionBoardOfOwner(t)
+	return s, campanha, sessao
+}
+
+// deadSessionBoardOfOwner é o mesmo, dizendo QUEM é o dono — o caso que apaga a
+// campanha precisa dele para chamar o caso de uso, que autoriza.
+func deadSessionBoardOfOwner(t *testing.T) (*Server, int64, int64, int64) {
+	t.Helper()
 	s := newTestServer(t)
-	campanha := seedCampaign(t, s, seedUser(t, s, "gm@t.com"))
+	dono := seedUser(t, s, "gm@t.com")
+	campanha := seedCampaign(t, s, dono)
 	sessao := seedSession(t, s, campanha)
 	ctx := context.Background()
 
@@ -37,7 +47,7 @@ func deadSessionBoard(t *testing.T) (*Server, int64, int64) {
 	if dirty, _ := s.boards.Persist(ctx, sessao, defaultTab); dirty {
 		t.Fatal("a gravação já falhava com a sessão VIVA — o caso mediria outro defeito")
 	}
-	return s, campanha, sessao
+	return s, campanha, sessao, dono
 }
 
 // A sessão apagada deixa de ter tabuleiro em memória, e a mesa não se declara
@@ -77,7 +87,7 @@ func TestADeletedSessionLeavesNoBoardBehind(t *testing.T) {
 // Caso próprio porque o caminho é outro: apagar a campanha derruba as sessões
 // por CASCATA no banco, e nenhuma delas passa pelo caminho de apagar sessão.
 func TestADeletedCampaignLeavesNoBoardBehind(t *testing.T) {
-	s, campanha, sessao := deadSessionBoard(t)
+	s, campanha, sessao, dono := deadSessionBoardOfOwner(t)
 	ctx := context.Background()
 	segunda := seedSession(t, s, campanha)
 	if _, err := s.boards.Open(ctx, segunda, "Cripta", "crypt"); err != nil {
@@ -87,8 +97,10 @@ func TestADeletedCampaignLeavesNoBoardBehind(t *testing.T) {
 		t.Fatal("a segunda sessão já não gravava")
 	}
 
-	s.CampaignDeleted(ctx, campanha)
-	if err := s.queries.DeleteCampaign(ctx, campanha); err != nil {
+	// PELO CASO DE USO, e não pelos dois passos à mão: a ordem — esquecer antes
+	// de apagar — é dele, e um caso que a repetisse aqui seria uma terceira
+	// cópia dela (ALE-359).
+	if err := s.campaignLifecycle().Delete(ctx, app.Caller{ID: dono}, campanha); err != nil {
 		t.Fatalf("apagar a campanha: %v", err)
 	}
 

@@ -1,7 +1,6 @@
 package forge
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -12,7 +11,7 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/domain/engine"
-	"t20engine/infra/db/dbvalue"
+
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/ui"
 )
@@ -109,7 +108,7 @@ func (s Scene) stepAttribute(r *http.Request) (recusa string, status int, err er
 	if avisos := engine.PointBuyWarnings(espalhamento); len(avisos) > 0 {
 		return purchaseRefusal(avisos[0]), http.StatusOK, nil
 	}
-	if err := s.saveAttributes(r.Context(), row.ID, espalhamento); err != nil {
+	if err := s.births.SpreadAttributes(r.Context(), row.ID, espalhamento); err != nil {
 		return "", http.StatusInternalServerError, err
 	}
 	// A Constituição mexe no PV máximo (p34), e NÃO HÁ NADA A FAZER sobre isso.
@@ -137,15 +136,6 @@ func heroSpread(row sqlcgen.Character) map[string]int {
 		"constitution": int(row.Constitution), "intelligence": int(row.Intelligence),
 		"wisdom": int(row.Wisdom), "charisma": int(row.Charisma),
 	}
-}
-
-func (s Scene) saveAttributes(ctx context.Context, id int64, espalhamento map[string]int) error {
-	return s.deps.Queries().SetCharacterAttributes(ctx, sqlcgen.SetCharacterAttributesParams{
-		Strength: int64(espalhamento["strength"]), Dexterity: int64(espalhamento["dexterity"]),
-		Constitution: int64(espalhamento["constitution"]), Intelligence: int64(espalhamento["intelligence"]),
-		Wisdom: int64(espalhamento["wisdom"]), Charisma: int64(espalhamento["charisma"]),
-		UpdatedAt: dbvalue.NowISO(), ID: id,
-	})
 }
 
 // heroOfTheForge acha o herói e confere a POSSE — o mesmo gargalo da ficha:

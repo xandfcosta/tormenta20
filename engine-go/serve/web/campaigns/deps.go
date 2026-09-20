@@ -27,9 +27,13 @@ import (
 // (`campaign.Directory`), e o tipo que a cena declarava para ela deixou de
 // existir — quem chega por parâmetro já vem sem tag nenhuma (ALE-348).
 type Deps interface {
-	// Queries é o banco. O `Queries` continua na porta porque três telas leem e
-	// escrevem as próprias tabelas; o sinal de que ele está no lugar é nenhum
-	// handler daqui tocar banco fora dele.
+	// Queries é o banco, e hoje esta cena só LÊ por ele — cinco consultas, zero
+	// escritas. A última saiu com o `Delete` virando caso de uso, e com ela saiu
+	// uma entrada que não existe mais — ela servia só para a cena orquestrar a
+	// ordem de apagar, e essa ordem é do caso de uso (ALE-359).
+	//
+	// Ler não decide nada, e por isso o `Queries` fica: quem desenha precisa do
+	// que o banco tem. Quem varre é o `convention.TestNoSceneWritesSql`.
 	Queries() *sqlcgen.Queries
 	CurrentUserID(r *http.Request) int64
 	// RequesterIsAdmin olha a REQUISIÇÃO. O hospedeiro já tem um `IsAdmin`, que
@@ -37,12 +41,6 @@ type Deps interface {
 	// perguntas, e o compilador recusaria um só.
 	RequesterIsAdmin(r *http.Request) bool
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
-
-	// CampaignDeleted é chamada ANTES do `DeleteCampaign`: apagar leva as
-	// sessões por cascata, e depois não há como perguntar quais eram. Sem ela o
-	// tabuleiro de cada sessão fica no mapa em memória batendo na chave
-	// estrangeira, e a mesa se declara suja para sempre.
-	CampaignDeleted(ctx context.Context, campanhaID int64)
 
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
