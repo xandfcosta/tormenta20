@@ -90,23 +90,64 @@ func TestTheCriticalMultipliesTheDiceAndNotTheBonus(t *testing.T) {
 }
 
 // "Você faz um acerto crítico quando ACERTA um ataque rolando um valor igual ou
-// maior que a margem" (p231). Bater a margem não basta — e a p220 não dá 20
-// automático a ninguém, então um 20 contra uma Defesa alta é um erro comum.
+// maior que a margem" (p231). Bater a margem não basta: um 19 na margem 19 que
+// não alcança a Defesa é erro, e erro não critica.
 func TestRollingTheThreatRangeIsNotACriticalWhenTheAttackMisses(t *testing.T) {
 	arma := aWeapon("1d8", 3, 19, 2, 0)
 
-	fora, err := ResolveAttack(arma, AttackTarget{Defense: 25}, 20, fixedDice(t))
+	fora, err := ResolveAttack(arma, AttackTarget{Defense: 25}, 19, fixedDice(t))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
 	if fora.Hit {
-		t.Errorf("20 + 0 é 20 contra Defesa 25: erra, porque a p220 não tem 20 automático")
+		t.Errorf("19 + 0 é 19 contra Defesa 25: erra")
 	}
 	if fora.Critical {
 		t.Errorf("um ataque que ERRA não é crítico (p231)")
 	}
 	if fora.Damage != 0 {
 		t.Errorf("ataque que erra causa dano 0, e veio %d", fora.Damage)
+	}
+}
+
+// AS DUAS PONTAS DO DADO, e elas não estão na página do teste básico:
+//
+//	"Ao fazer um teste, um 20 natural sempre é um sucesso, e um 1 natural
+//	sempre é uma falha, não importando o valor a ser alcançado." (p221)
+//
+// A p220 define o teste sem exceção nenhuma, e é fácil ler ali a ausência da
+// regra — foi o que aconteceu neste arquivo: ele afirmava, com citação, que T20
+// não tinha 20 automático. A regra mora na página seguinte, em "Regras
+// Adicionais de testes".
+func TestTheNaturalTwentyAlwaysHitsAndTheNaturalOneAlwaysMisses(t *testing.T) {
+	arma := aWeapon("1d8", 3, 19, 2, 0)
+
+	// 20 + 0 é 20 contra Defesa 25: pela conta erraria, e o dado manda.
+	vinte, err := ResolveAttack(arma, AttackTarget{Defense: 25}, 20, fixedDice(t, 8, 8))
+	if err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	if !vinte.Hit {
+		t.Errorf("um 20 natural SEMPRE acerta, não importando o valor a ser alcançado (p221)")
+	}
+	// E ele critica: 20 alcança qualquer margem, e a p231 só exige acertar.
+	if !vinte.Critical {
+		t.Errorf("um 20 natural acerta e está na margem: é crítico")
+	}
+	if vinte.Damage != 19 {
+		t.Errorf("dano = %d, e 2d8+3 com os dados em 8 e 8 é 19", vinte.Damage)
+	}
+
+	// 1 + 50 é 51 contra Defesa 10: pela conta acertaria, e o dado manda.
+	um, err := ResolveAttack(aWeapon("1d8", 3, 19, 2, 50), AttackTarget{Defense: 10}, 1, fixedDice(t))
+	if err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	if um.Hit {
+		t.Errorf("um 1 natural SEMPRE erra, não importando o bônus (p221)")
+	}
+	if um.Damage != 0 {
+		t.Errorf("quem erra não causa dano, e veio %d", um.Damage)
 	}
 }
 

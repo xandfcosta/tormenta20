@@ -68,12 +68,17 @@ func ResolveAttack(
 	// (p230). O IGUAL decide todo ataque que empata, e é a metade que um `>`
 	// perderia em silêncio.
 	//
-	// NÃO HÁ 20 AUTOMÁTICO NEM 1 AUTOMÁTICO, e a ausência é deliberada: a p220
-	// define o teste como "1d20 + modificador, passa se for igual ou maior que a
-	// CD", sem exceção para as pontas — e a p230 não acrescenta nenhuma. É
-	// armadilha de hábito de outro sistema, e escrevê-la daria acerto onde o
-	// livro dá erro.
-	fora.Hit = fora.Total >= alvo.Defense
+	// AS DUAS PONTAS DO DADO MANDAM, e elas não estão na página do teste:
+	//
+	//	"Ao fazer um teste, um 20 natural sempre é um sucesso, e um 1 natural
+	//	sempre é uma falha, não importando o valor a ser alcançado." (p221)
+	//
+	// Aqui morava o contrário, escrito com citação: "não há 20 automático nem 1
+	// automático, e a ausência é deliberada (p220)". A p220 define o teste sem
+	// exceção nenhuma, e ler ali a AUSÊNCIA da regra é o erro — ela mora na
+	// página seguinte, em "Regras Adicionais de testes". Um 20 natural errava
+	// contra Defesa alta, e nada acusava.
+	fora.Hit = d20 == 20 || (d20 != 1 && fora.Total >= alvo.Defense)
 	if !fora.Hit {
 		return fora, nil
 	}
