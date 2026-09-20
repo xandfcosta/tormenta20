@@ -511,7 +511,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	if err != nil {
 		t.Fatalf("semear o bloco: %v", err)
 	}
-	if _, err := f.s.sessions.StartScene(f.sessionID); err != nil {
+	if _, err := f.s.sessions.StartScene(f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	pv := int64(20)

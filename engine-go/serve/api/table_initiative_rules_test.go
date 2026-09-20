@@ -157,7 +157,7 @@ func TestEndingTheSceneExpiresThePartySceneEffects(t *testing.T) {
 		t.Fatalf("encerrar a cena: %v", err)
 	}
 
-	if state.SceneActive {
+	if state.InScene() {
 		t.Error("a cena continuou ligada")
 	}
 	if got := effectScopes(t, f.srv, f.charID); len(got) != 1 || got[0] != "day" {
@@ -205,7 +205,7 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 	seedEffect(t, s, charID, "heroismo", "day")
 
 	srv := s
-	if _, err := s.sessions.StartScene(sessionID); err != nil {
+	if _, err := s.sessions.StartScene(sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar a cena: %v", err)
 	}
 	// O Clérigo entra na FILA: sem ele lá, "quem não está na fila" seria todo
@@ -232,7 +232,7 @@ func TestEndingTheSceneDoesNotTurnItOffIfItDidNotReachTheSheets(t *testing.T) {
 		t.Fatal("encerrou sem ter conseguido alcançar as fichas do grupo")
 	}
 
-	if !f.srv.sessions.GetState(f.sessionID).SceneActive {
+	if !f.srv.sessions.GetState(f.sessionID).InScene() {
 		t.Error("a cena foi desligada mesmo assim")
 	}
 }

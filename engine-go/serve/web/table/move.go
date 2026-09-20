@@ -9,6 +9,7 @@ import (
 
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
+	"t20engine/domain/live"
 )
 
 // O MOVIMENTO da peça na Mesa.
@@ -109,8 +110,46 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	// confirma acabou de ver a cena que o servidor desenhou — não há uma versão
 	// vinda do cliente para conferir contra. A trava contra a mesa ter mudado
 	// continua sendo a REVALIDAÇÃO da vez, que o `CommitMove` faz de novo.
-	return st.deps.Boards().CommitMove(c.R.Context(), c.SessionID, c.TabuleiroID,
-		st.deps.Sessions().GetState(c.SessionID), 0, st.moveWho(c))
+	estado := st.deps.Sessions().GetState(c.SessionID)
+	// QUEM ANDA É QUEM ESTÁ NA VEZ, e só então a ação é cobrada: o mestre move
+	// peça fora de turno o tempo todo — arrumando a cena, empurrando um NPC —, e
+	// cobrar dele a ação de outro combatente tiraria do turno de quem não se
+	// mexeu (p233).
+	daVez := movedTokenIsOnTurn(estado, st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID))
+	// A CONFERÊNCIA vem ANTES do pouso, e a COBRANÇA depois.
+	//
+	// Cobrar depois basta para o número ficar certo e NÃO basta para a mesa:
+	// sem ação no turno, o `CommitMove` já teria posto a peça na casa nova e a
+	// recusa seria só uma frase vermelha embaixo de um movimento feito. Entre a
+	// conferência e a cobrança o `CommitMove` ainda pode recusar — e aí o turno
+	// não é cobrado, que é o lado seguro dos dois.
+	if daVez {
+		if err := st.deps.Sessions().ActionFits(c.SessionID, engine.ActionMovement); err != nil {
+			return nil, err
+		}
+	}
+	tabuleiro, err := st.deps.Boards().CommitMove(c.R.Context(), c.SessionID, c.TabuleiroID,
+		estado, 0, st.moveWho(c))
+	if err != nil || !daVez {
+		return tabuleiro, err
+	}
+	if _, err := st.deps.Sessions().SpendAction(c.SessionID, engine.ActionMovement); err != nil {
+		return tabuleiro, err
+	}
+	return tabuleiro, nil
+}
+
+// movedTokenIsOnTurn diz se a peça do movimento proposto é a de quem está na
+// vez. Sem tabuleiro, sem provisório ou sem combate, não é.
+func movedTokenIsOnTurn(estado *live.SessionRuntimeState, tabuleiro *board.BoardState) bool {
+	if estado == nil || tabuleiro == nil || tabuleiro.Pending == nil {
+		return false
+	}
+	if estado.TurnIndex < 0 || estado.TurnIndex >= len(estado.Initiative) {
+		return false
+	}
+	peca := board.FindToken(tabuleiro, tabuleiro.Pending.TokenID)
+	return peca != nil && peca.EntryID != nil && *peca.EntryID == estado.Initiative[estado.TurnIndex].ID
 }
 
 func cancelMove(st Scene, c commandCtx) (*board.BoardState, error) {

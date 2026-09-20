@@ -71,16 +71,14 @@ type SessionRuntimeState struct {
 	// de derivado: rodada × tamanho da lista mente assim que alguém entra ou
 	// morre no meio do combate, que é o normal numa mesa.
 	TurnsTaken int `json:"turnsTaken"`
-	// SceneActive é a CENA como estado explícito: o mestre liga e desliga, e a
-	// mesa só recebe a fila enquanto ela está ligada.
-	//
-	// É campo NOVO e não `TurnIndex >= 0` mal nomeado, que é a resposta mais
-	// barata: ela não sobrevive ao PRIMEIRO instante do fluxo — iniciar a cena
-	// abre a gaveta para o mestre montar a ordem, então "cena iniciada, fila
-	// vazia" é obrigatório, e `AdvanceTurn` não tem para onde ir com a lista
-	// vazia. A recíproca também acontece: oito linhas na fila com `TurnIndex`
-	// −1 é o mestre montando a briga antes de começar.
-	SceneActive bool `json:"sceneActive"`
+	// Scene é a cena EM CURSO — nil fora de cena. Ver `scene.go`: ela substituiu
+	// um booleano que dizia "o combate está ligado", e o livro chama de cena um
+	// pedaço distinto da história, do qual o combate é um tipo (p252).
+	Scene *Scene `json:"scene,omitempty"`
+	// ScenesSoFar é quantas cenas esta sessão já teve. Ele mora no estado e não
+	// é derivado da cena em curso porque a sessão continua tendo tido três
+	// cenas depois que a terceira acaba.
+	ScenesSoFar int `json:"scenesSoFar,omitempty"`
 }
 
 // EmptyRuntimeState é um rastreador novo. Cada chamada devolve uma fatia nova,
@@ -332,7 +330,11 @@ func CloneState(s *SessionRuntimeState) *SessionRuntimeState {
 // O que elas NÃO fazem continua sendo o que as define: nenhuma trava, nenhuma
 // gravação, nenhum aviso. Recebem o estado, mudam o estado.
 func AdvanceTurn(st *SessionRuntimeState) {
-	if !st.SceneActive || len(st.Initiative) == 0 {
+	// SÓ A CENA DE AÇÃO tem vez a passar (p252): numa conversa na corte não há
+	// rodada, e "passar o turno" não quer dizer nada. Antes a condição era "a
+	// cena está ligada", que era a mesma coisa só porque a única cena que o app
+	// sabia abrir era o combate.
+	if !st.CountsRounds() || len(st.Initiative) == 0 {
 		return
 	}
 	if st.TurnIndex < 0 {
@@ -349,6 +351,7 @@ func AdvanceTurn(st *SessionRuntimeState) {
 		st.TurnIndex = 0
 		st.Round++
 	}
+	RefreshTurn(st)
 }
 
 // RewindTurn desfaz um "Próximo turno". Cruzar a virada de volta devolve a
@@ -376,23 +379,6 @@ func RewindTurn(st *SessionRuntimeState) {
 }
 
 // StartScene liga a cena, e só isso: a ordem se monta DEPOIS. É por esse gesto
-// que a fila passa a existir para a mesa.
-func StartScene(st *SessionRuntimeState) {
-	st.SceneActive = true
-}
-
-// EndScene desliga a cena e devolve o combate ao começo — mas GUARDA a fila.
-//
-// Encerrar não é reiniciar, e essa é a única diferença entre os dois: quem
-// esvazia é o ResetInitiative. O mestre que encerra a briga do castelo não pode
-// pagar oito goblins digitados de novo para recomeçá-la.
-func EndScene(st *SessionRuntimeState) {
-	st.SceneActive = false
-	st.Round = 0
-	st.TurnIndex = -1
-	st.TurnsTaken = 0
-}
-
 // RedactForPlayers devolve uma CÓPIA do estado sem os PV das linhas que o mestre
 // escondeu. A flag continua na cópia de propósito: o jogador precisa saber que
 // existe vida ali e que ela está oculta — sem isso, "sem barra" e "escondido"
@@ -404,7 +390,7 @@ func EndScene(st *SessionRuntimeState) {
 // gargalo pelo qual os DOIS caminhos do estado passam — o broadcast por sala de
 // papel e o ack do `get-session-state`.
 func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
-	if !st.SceneActive {
+	if !st.InScene() {
 		// Rastreador limpo e não `CloneState` com a lista zerada: a rodada e o
 		// contador de turnos também são da cena, e "rodada 7, ninguém na fila"
 		// é uma contradição que o jogador leria como defeito.
@@ -465,7 +451,7 @@ func ResetInitiative(st *SessionRuntimeState) {
 	st.Round = 0
 	st.TurnIndex = -1
 	st.TurnsTaken = 0
-	st.SceneActive = false
+	st.Scene = nil
 }
 
 // PatchEntryVitals grava PV/PM absolutos numa linha, presos ao máximo quando ele

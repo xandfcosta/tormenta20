@@ -138,7 +138,7 @@ func TestTheTurnStripSaysWhoIsNextAndWhereTheRoundTurns(t *testing.T) {
 	for _, c := range casos {
 		t.Run(c.nome, func(t *testing.T) {
 			faixa := turnStripOf(&live.SessionRuntimeState{
-				Initiative: fila, TurnIndex: c.turnIndex, SceneActive: true,
+				Initiative: fila, TurnIndex: c.turnIndex, Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1,
 			}, meus)
 
 			if len(faixa) != len(c.rotulos) {
@@ -185,7 +185,7 @@ func TestTheTurnStripShowsNothingOutOfCombatAndNeverRepeats(t *testing.T) {
 
 	dois := []live.InitiativeEntry{{Label: "Ogro"}, {Label: "Arwen"}}
 	faixa := turnStripOf(&live.SessionRuntimeState{
-		Initiative: dois, TurnIndex: 1, SceneActive: true,
+		Initiative: dois, TurnIndex: 1, Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1,
 	}, meus)
 	if len(faixa) != 2 {
 		t.Fatalf("uma fila de dois virou uma faixa de %d: %+v", len(faixa), faixa)
@@ -212,7 +212,7 @@ func TestTheStripSaysYourNameWhenMoreThanOneIsYours(t *testing.T) {
 	meu, outroMeu := int64(7), int64(8)
 	meus := map[int64]bool{meu: true, outroMeu: true}
 
-	umSo := turnStripOf(&live.SessionRuntimeState{SceneActive: true, TurnIndex: 0, Initiative: []live.InitiativeEntry{
+	umSo := turnStripOf(&live.SessionRuntimeState{Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1, TurnIndex: 0, Initiative: []live.InitiativeEntry{
 		{Label: "Ogro"},
 		{Label: "Arwen", Type: "character", CharacterID: &meu},
 		{Label: "Zumbi 1"},
@@ -221,7 +221,7 @@ func TestTheStripSaysYourNameWhenMoreThanOneIsYours(t *testing.T) {
 		t.Errorf("com UM personagem meu a faixa escreveu %q, queria \"você\"", got)
 	}
 
-	dois := turnStripOf(&live.SessionRuntimeState{SceneActive: true, TurnIndex: 0, Initiative: []live.InitiativeEntry{
+	dois := turnStripOf(&live.SessionRuntimeState{Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1, TurnIndex: 0, Initiative: []live.InitiativeEntry{
 		{Label: "Recruta", Type: "character", CharacterID: &meu},
 		{Label: "Tanque"},
 		{Label: "Arcanista", Type: "character", CharacterID: &outroMeu},

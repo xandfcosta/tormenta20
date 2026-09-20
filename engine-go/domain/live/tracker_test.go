@@ -89,26 +89,42 @@ func TestTheButtonSaysWhereItGoes(t *testing.T) {
 	}
 }
 
-// O contador tem quatro estados, e a ORDEM entre eles é regra: a cena existe
-// antes da fila, e a fila existe antes do turno.
-func TestTheCounterHasFourStates(t *testing.T) {
+// O contador tem CINCO estados, e o de combate diz o que SOBROU do turno, e a ORDEM entre eles é regra: a cena existe
+// antes da fila, e a fila existe antes do turno. O quinto entrou com a cena
+// tipada — fora da de AÇÃO não há rodada para contar, e o contador diz qual
+// cena é (p252).
+func TestTheCounterHasFiveStates(t *testing.T) {
+	acao := &Scene{Kind: SceneAction, Number: 1, StandardLeft: true, MovementLeft: true}
 	casos := []struct {
-		nome      string
-		cenaAtiva bool
-		rodada    int
-		turno     int
-		naFila    int
-		quero     string
+		nome   string
+		cena   *Scene
+		rodada int
+		turno  int
+		naFila int
+		quero  string
 	}{
-		{"fora de cena vence tudo", false, 3, 2, 5, "Fora de cena"},
-		{"em cena sem fila", true, 0, -1, 0, "Em cena · ninguém na fila"},
+		{"fora de cena vence tudo", nil, 3, 2, 5, "Fora de cena"},
+		{"numa conversa não há rodada", &Scene{Kind: SceneRoleplay, Number: 2}, 0, -1, 0,
+			"Interpretação · cena 2"},
+		{"numa exploração também não", &Scene{Kind: SceneExploration, Number: 3}, 0, -1, 4,
+			"Exploração · cena 3"},
+		{"em cena sem fila", acao, 0, -1, 0, "Em cena · ninguém na fila"},
 		// "Rodada 0" é de propósito: a rodada só vira 1 no primeiro avanço.
-		{"fila montada, combate não começou", true, 0, -1, 4, "Rodada 0 · 4 na fila"},
-		{"em combate", true, 2, 1, 4, "Rodada 2 · Turno 2/4"},
-		{"o turno é 1-indexado na tela", true, 1, 0, 3, "Rodada 1 · Turno 1/3"},
+		{"fila montada, combate não começou", acao, 0, -1, 4, "Rodada 0 · 4 na fila"},
+		{"em combate", acao, 2, 1, 4, "Rodada 2 · Turno 2/4 · padrão e movimento"},
+		// O QUE SOBROU entra na frase porque quem vai clicar precisa saber ANTES
+		// (p233). A TROCA aparece: com a padrão de pé e o movimento gasto, ainda
+		// dá para mover.
+		{"gastou o movimento", &Scene{Kind: SceneAction, Number: 1, StandardLeft: true}, 2, 1, 4,
+			"Rodada 2 · Turno 2/4 · padrão (dá para mover)"},
+		{"gastou a padrão", &Scene{Kind: SceneAction, Number: 1, MovementLeft: true}, 2, 1, 4,
+			"Rodada 2 · Turno 2/4 · movimento"},
+		{"turno inteiro gasto", &Scene{Kind: SceneAction, Number: 1}, 2, 1, 4,
+			"Rodada 2 · Turno 2/4 · sem ação"},
+		{"o turno é 1-indexado na tela", acao, 1, 0, 3, "Rodada 1 · Turno 1/3 · padrão e movimento"},
 	}
 	for _, c := range casos {
-		got := TurnCounter(c.cenaAtiva, c.rodada, c.turno, c.naFila)
+		got := TurnCounter(c.cena, c.rodada, c.turno, c.naFila)
 		if got != c.quero {
 			t.Errorf("%s: %q, quero %q", c.nome, got, c.quero)
 		}

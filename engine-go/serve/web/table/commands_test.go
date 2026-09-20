@@ -15,7 +15,7 @@ import (
 
 func estadoDe(cenaAtiva bool, rodada, turno int, fila ...live.InitiativeEntry) *live.SessionRuntimeState {
 	return &live.SessionRuntimeState{
-		SceneActive: cenaAtiva, Round: rodada, TurnIndex: turno, Initiative: fila,
+		Scene: anActionScene(cenaAtiva), Round: rodada, TurnIndex: turno, Initiative: fila,
 	}
 }
 
@@ -67,7 +67,7 @@ func TestTheCounterAndTheAdvanceTellTheSameStory(t *testing.T) {
 	}
 
 	emCombate := ofViewGm(estadoDe(true, 1, 0, fila...), nil, nil, true, false)
-	if emCombate.Contador != "Rodada 1 · Turno 1/2" {
+	if emCombate.Contador != "Rodada 1 · Turno 1/2 · padrão e movimento" {
 		t.Errorf("em combate o contador diz %q", emCombate.Contador)
 	}
 	if emCombate.Avanco.Label != "Próximo: Ogro" {
@@ -136,4 +136,13 @@ func trechoDaSemeadura(corpo string) string {
 		fim = len(corpo)
 	}
 	return corpo[i:fim]
+}
+
+// anActionScene monta a cena que o caso quer, ou nenhuma. Os casos deste arquivo
+// são todos sobre o COMBATE, que é a cena de ação.
+func anActionScene(ligada bool) *live.Scene {
+	if !ligada {
+		return nil
+	}
+	return &live.Scene{Kind: live.SceneAction, Number: 1, StandardLeft: true, MovementLeft: true}
 }

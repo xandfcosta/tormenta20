@@ -146,6 +146,7 @@ drawing
 dto
 dump
 dungeon
+duration
 editor
 effect
 effects
@@ -244,6 +245,7 @@ json
 juice
 key
 keyboard
+kind
 kit
 label
 labels

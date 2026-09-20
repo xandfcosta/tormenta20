@@ -191,9 +191,9 @@ func (st *Store) Reset(sessionID int64) (*live.SessionRuntimeState, error) {
 		func(s *live.SessionRuntimeState) error { live.ResetInitiative(s); return nil })
 }
 
-func (st *Store) StartScene(sessionID int64) (*live.SessionRuntimeState, error) {
+func (st *Store) StartScene(sessionID int64, tipo live.SceneKind) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.SceneStarted{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { live.StartScene(s); return nil })
+		func(s *live.SessionRuntimeState) error { live.StartScene(s, tipo); return nil })
 }
 
 func (st *Store) EndScene(sessionID int64) (*live.SessionRuntimeState, error) {
@@ -310,15 +310,8 @@ func parseRuntimeBlob(blob string) *live.SessionRuntimeState {
 	if parsed.Initiative == nil {
 		parsed.Initiative = []live.InitiativeEntry{}
 	}
-	// Sessão gravada antes de `sceneActive` existir volta sem ele, e o zero de um
-	// bool é `false`: uma mesa que parou na rodada 3 reabriria "fora de cena" e a
-	// fila sumiria para os jogadores até o mestre clicar em iniciar. Um turno em
-	// curso é PROVA de que a cena estava ligada — não existe turno sem cena
-	// (`live.AdvanceTurn`), então isto não é remendo de migração: é a invariante
-	// afirmada onde o estado entra no processo.
-	if parsed.TurnIndex >= 0 {
-		parsed.SceneActive = true
-	}
+	// A INVARIANTE DO TURNO subiu para o `UnmarshalJSON` do estado (ALE-365): ela
+	// vale para todo blob que entra, e aqui ela só alcançava este chamador.
 	return &parsed
 }
 

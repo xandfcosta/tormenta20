@@ -156,7 +156,10 @@ test('entrar na vez pulsa a linha do combatente que entrou', async ({ page }) =>
     // `disabled`. O sintoma é um timeout dizendo "waiting for element to be
     // visible, enabled and stable" — e o que falha é o ENABLED, com o botão
     // parado e visível na tela o tempo todo.
-    await page.getByRole('button', { name: 'Iniciar cena' }).click()
+    // DOIS cliques: "Iniciar cena" abre os três tipos (p252), e a fila só
+    // existe na de AÇÃO.
+    await page.locator('summary[aria-label="Iniciar uma cena"]').click()
+    await page.getByRole('button', { name: 'Iniciar uma cena de Ação' }).click()
     await expect(page.getByRole('button', { name: /^Começar:/ })).toBeEnabled()
 
     const comecando = await trackerAnimations(page, () =>

@@ -1630,7 +1630,7 @@ e o guarda leria isso como rota faltando.
 
 **Duas coisas nele valem para quem escrever o próximo guarda de cena.** A
 primeira: ele precisa da mesa VIVA. O `‹` nasce `disabled` quando `PodeAvancar`
-é falso (`SceneActive && len(Initiative) > 0`), então na bancada recém-montada o
+é falso (`st.CountsRounds() && len(st.Initiative) > 0`), então na bancada recém-montada o
 endereço morto não está no HTML — a primeira versão passou VERDE sobre o defeito
 que ela veio pegar. A segunda: expressão que o extrator não souber resolver
 REPROVA, em vez de sair da conta em silêncio.

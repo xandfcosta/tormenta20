@@ -279,7 +279,7 @@ func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, saude map[st
 	if v.Mestre {
 		v.Candidatos = MapCandidates(b, st)
 	}
-	v.Movimento = moveBoard(b, quem)
+	v.Movimento = moveBoard(b, st, quem)
 	alcance := reachAndTarget(b, st, quem, meus)
 	v.AlvoDoMovimento, v.RotuloDoAlvo = alcance.Alvo, alcance.Rotulo
 	v.Alcance, v.AlcanceSegundo = alcance.Dentro, alcance.Segundo

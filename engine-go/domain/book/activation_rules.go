@@ -3,6 +3,8 @@ package book
 import (
 	"encoding/json"
 	"strconv"
+
+	"t20engine/domain/engine"
 )
 
 // AS REGRAS DE ATIVAR UM PODER: se ele pode ser usado agora, qual limite o
@@ -27,14 +29,27 @@ import (
 
 // ChargedScope é "scene", "day" ou "" — e "" quer dizer que o limite existe
 // no livro e a ficha NÃO o cobra.
+//
+// A DECISÃO de cobrar mora no `engine.UsageLimit`, junto com a janela: aqui só
+// se traduz para a string que a coluna de contadores usa. Enquanto as duas
+// coisas eram um `switch` só, "a ficha não conta rodadas" era uma ausência no
+// meio de um `case` — e ausência não se lê (ALE-365).
 func ChargedScope(spec Activation) string {
-	switch string(spec.Uses) {
-	case `"cena"`:
-		return "scene"
-	case `"dia"`:
-		return "day"
+	limite, err := engine.ParseUsageLimit(unquoted(spec.Uses))
+	if err != nil || !limite.ChargedBySheet() {
+		return ""
 	}
-	return ""
+	return string(limite.Window)
+}
+
+// unquoted tira as aspas do JSON cru do `uses`. Ele é cru porque o catálogo
+// escreve naturezas diferentes ali — ver o `activations.go`.
+func unquoted(bruto json.RawMessage) string {
+	var texto string
+	if json.Unmarshal(bruto, &texto) != nil {
+		return ""
+	}
+	return texto
 }
 
 // CostIsVariable diz que o custo é NEGOCIADO com a mesa, e não um número.

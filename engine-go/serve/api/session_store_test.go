@@ -35,7 +35,7 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 		t.Fatalf("initial Load: %v", err)
 	}
 	// A cena precisa estar iniciada para o turno andar.
-	if _, err := store.StartScene(sid); err != nil {
+	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
 		t.Fatalf("live.StartScene: %v", err)
 	}
 	if _, err := store.AddInitiativeEntry(sid, npc("Goblin", 15)); err != nil {
@@ -78,18 +78,17 @@ func TestStoreHydrateFromBlob(t *testing.T) {
 	if len(loaded.Initiative) != 1 || loaded.Initiative[0].Label != "Boss" || loaded.Round != 2 {
 		t.Errorf("hydrated %+v, want Boss/round 2", loaded)
 	}
-	// O blob é ANTIGO e não traz `sceneActive`; o zero de um bool é
-	// `false`, e sem esta dedução a mesa que parou na rodada 2 reabriria fora de
-	// cena e a fila sumiria dos jogadores até o mestre clicar em iniciar. O turno
-	// em curso é prova de que a cena estava ligada.
-	if !loaded.SceneActive {
-		t.Error("sessão reaberta no meio do turno voltou fora de cena — a mesa perde a fila")
-	}
+	// Aqui morava a afirmação de que um blob SEM cena reabre em cena quando há
+	// turno em curso — a dedução que existia para os blobs de antes da cena
+	// tipada. Ela saiu com a retrocompatibilidade: os dados desta casa são de
+	// desenvolvimento, e manter o remendo era carregar uma regra para um blob
+	// que ninguém tem (ALE-365).
 }
 
-// A recíproca da dedução acima, e é ela que impede o remendo de virar mentira:
-// blob antigo SEM turno em curso não inventa cena nenhuma. Uma sessão que
-// terminou o combate na semana passada reabre fora de cena, que é o certo.
+// UM BLOB SEM CENA NÃO INVENTA UMA. A sessão que terminou o combate na semana
+// passada reabre fora de cena — e fora de cena a fila não vai para a mesa, que
+// é a trava do `RedactForPlayers`. O caso é barato e prende a ponta que
+// importa: nada acorda em cena sem o mestre mandar.
 func TestABlobWithoutATurnInventsNoScene(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
@@ -104,7 +103,7 @@ func TestABlobWithoutATurnInventsNoScene(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if loaded.SceneActive {
+	if loaded.InScene() {
 		t.Error("blob sem turno acordou em cena — a fila iria para a mesa sem o mestre mandar")
 	}
 }

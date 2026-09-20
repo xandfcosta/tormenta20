@@ -33,9 +33,16 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().PreviousTurn(c.SessionID)
 		}))
-	r.Post(sessionPattern+"/cena/iniciar", s.gmCommand(
+	// O TIPO DA CENA vai no CAMINHO, como o estado da cortina: nesta superfície
+	// o verbo é o caminho, e os três tipos do livro (p252) são três verbos
+	// diferentes — abrir um combate e abrir uma conversa não são o mesmo gesto.
+	r.Post(sessionPattern+"/cena/iniciar/{tipo}", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-			return st.deps.Sessions().StartScene(c.SessionID)
+			tipo, err := sceneKindOf(chi.URLParam(c.R, "tipo"))
+			if err != nil {
+				return nil, err
+			}
+			return st.deps.Sessions().StartScene(c.SessionID, tipo)
 		}))
 	r.Post(sessionPattern+"/cena/encerrar", s.sceneCommand(endsTheScene))
 	r.Post(sessionPattern+"/iniciativa/por-no-mapa", s.gmCommand(bringParty))
