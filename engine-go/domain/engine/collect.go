@@ -49,8 +49,13 @@ func (c *Catalogs) ActiveItemsFor(ch Character) []ActiveItem {
 		if len(mods) == 0 {
 			continue
 		}
+		// A DURAÇÃO pelo tipo, e não por um `if` sobre a string: o rótulo que a
+		// mesa lê ("cena", "dia") é derivado dela. Palavra que o livro não tem
+		// cai em "cena" aqui de propósito — este é o caminho do DESENHO, e um
+		// efeito sem rótulo some da lista de quem o carrega; quem recusa a
+		// palavra é a validação do catálogo, no despejo.
 		scope := "cena"
-		if eff.Scope == "day" {
+		if d, err := ParseDuration(eff.Scope); err == nil && d.Kind == DurationFixed && d.Unit == UnitDay {
 			scope = "dia"
 		}
 		items = append(items, ActiveItem{
