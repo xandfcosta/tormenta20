@@ -190,6 +190,7 @@ func (st *Store) NextTurn(sessionID int64) (*live.SessionRuntimeState, error) {
 			st.expireTurnEffects(s)
 			live.AdvanceTurn(s)
 			charge = st.payUpkeep(s)
+			st.openBleedingCheck(s)
 			return nil
 		})
 	if err != nil || charge.pm == 0 {

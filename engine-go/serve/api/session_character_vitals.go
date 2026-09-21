@@ -2,11 +2,13 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -192,6 +194,40 @@ func (v sheetVitals) ConditionsOf(ctx context.Context, charID int64) ([]string, 
 		return nil, err
 	}
 	return sheet.UnmarshalStrings(row.Activeconditions), nil
+}
+
+// ConstitutionOf computa a ficha e devolve o total de Constituição.
+func (v sheetVitals) ConstitutionOf(ctx context.Context, charID int64) (int, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return 0, err
+	}
+	computed, err := sheet.LoadAndCompute(ctx, v.q, v.catalogs(), row)
+	if err != nil {
+		return 0, err
+	}
+	attr, found := computed.Attributes["constitution"]
+	if !found {
+		return 0, fmt.Errorf("a ficha %d não computou Constituição", charID)
+	}
+	return attr.Total, nil
+}
+
+// StabilizeBleeding tira a condição Sangrando da ficha.
+func (v sheetVitals) StabilizeBleeding(ctx context.Context, charID int64) error {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return err
+	}
+	kept := []string{}
+	for _, c := range sheet.UnmarshalStrings(row.Activeconditions) {
+		if c != engine.ConditionBleeding {
+			kept = append(kept, c)
+		}
+	}
+	return v.q.UpdateConditions(ctx, sqlcgen.UpdateConditionsParams{
+		ActiveConditions: sheet.MarshalStrings(&kept), UpdatedAt: dbvalue.NowISO(), ID: charID,
+	})
 }
 
 // spellLabel é o nome que a MESA lê. Sem verbete, o id serve: um extrato que

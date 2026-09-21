@@ -65,6 +65,9 @@ type Scene struct {
 	// notícia à parte, porque é estado do turno EM CURSO: quem recarrega a
 	// página no meio do turno tem de ler a mesma coisa.
 	Upkeep *TurnUpkeep `json:"upkeep,omitempty"`
+	// Bleeding é o teste de Constituição de quem sangra, pendente nesta vez
+	// (p236) — nil quando quem entrou não sangra.
+	Bleeding *BleedingCheck `json:"bleeding,omitempty"`
 }
 
 // CountsRounds diz se esta cena mede tempo em rodadas. Só a de ação (p252).
@@ -133,6 +136,9 @@ func RefreshTurn(st *SessionRuntimeState) {
 	// A MANUTENÇÃO DA VEZ ANTERIOR SAI JUNTO: ela é o extrato deste turno, e
 	// deixá-la faria a faixa dizer que a Velocidade de outra pessoa caiu agora.
 	st.Scene.Upkeep = nil
+	// E o teste de sangramento da vez anterior: respondido ou não, ele era da
+	// vez que acabou.
+	st.Scene.Bleeding = nil
 }
 
 // actionsLeft escreve o que ainda cabe no turno.
