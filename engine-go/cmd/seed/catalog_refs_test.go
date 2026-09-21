@@ -17,10 +17,10 @@ import (
 // Só `create.items[].catalogId` era conferido. Tudo o mais que aponta para o
 // catálogo — raça, origem, classe, deus, poder concedido, magia — entrava cru.
 func TestTheSeedRefusesEveryUnknownCatalogReference(t *testing.T) {
-	casos := []struct {
-		campo   string
-		errado  string
-		esperar string
+	cases := []struct {
+		field string
+		wrong string
+		wait  string
 	}{
 		{"races", "Anãoo", "races"},
 		{"origin", "Acóito", "origin"},
@@ -30,22 +30,22 @@ func TestTheSeedRefusesEveryUnknownCatalogReference(t *testing.T) {
 		{"spell", "bola-de-fog", "magia"},
 		{"item", "machado-de-batalha", "item"},
 	}
-	for _, caso := range casos {
-		t.Run(caso.campo, func(t *testing.T) {
-			sf := sujaOCampo(t, caso.campo, caso.errado)
+	for _, tc := range cases {
+		t.Run(tc.field, func(t *testing.T) {
+			sf := sujaOCampo(t, tc.field, tc.wrong)
 			err := validateCatalogRefs(sf)
 			if err == nil {
 				t.Fatalf("%s = %q passou em silêncio: o personagem nasceria sem isso e a ficha abriria normal",
-					caso.campo, caso.errado)
+					tc.field, tc.wrong)
 			}
 			// A MENSAGEM carrega o valor ofensor, que é a regra da casa — e aqui
 			// ela vale duplo, porque quem a lê está a meio caminho de escrever um
 			// teste sobre esse personagem.
-			if !strings.Contains(err.Error(), caso.errado) {
+			if !strings.Contains(err.Error(), tc.wrong) {
 				t.Errorf("a mensagem não diz qual valor está errado: %v", err)
 			}
-			if !strings.Contains(err.Error(), caso.esperar) {
-				t.Errorf("a mensagem não diz de que catálogo se trata (esperava %q): %v", caso.esperar, err)
+			if !strings.Contains(err.Error(), tc.wait) {
+				t.Errorf("a mensagem não diz de que catálogo se trata (esperava %q): %v", tc.wait, err)
 			}
 		})
 	}
@@ -85,7 +85,7 @@ func TestTheRealSeedHasNoUnknownCatalogReference(t *testing.T) {
 //
 // Do seed de verdade e não de um fixture à mão: um fixture teria a forma que eu
 // imagino, e o que precisa ser conferido é a forma que o arquivo TEM.
-func sujaOCampo(t *testing.T, campo, errado string) seedFile {
+func sujaOCampo(t *testing.T, field, wrong string) seedFile {
 	t.Helper()
 	var sf seedFile
 	if err := json.Unmarshal(seedData, &sf); err != nil {
@@ -94,115 +94,115 @@ func sujaOCampo(t *testing.T, campo, errado string) seedFile {
 	for iu := range sf.Users {
 		for ic := range sf.Users[iu].Characters {
 			ch := &sf.Users[iu].Characters[ic]
-			if campo == "spell" {
+			if field == "spell" {
 				if len(ch.Spells) == 0 {
 					continue
 				}
-				ch.Spells[0].ID = errado
+				ch.Spells[0].ID = wrong
 				return sf
 			}
-			var criar map[string]json.RawMessage
-			if err := json.Unmarshal(ch.Create, &criar); err != nil {
+			var create map[string]json.RawMessage
+			if err := json.Unmarshal(ch.Create, &create); err != nil {
 				t.Fatalf("create do personagem %d: %v", ic, err)
 			}
-			if !sujaOCriar(t, criar, campo, errado) {
+			if !sujaOCriar(t, create, field, wrong) {
 				continue
 			}
-			bruto, err := json.Marshal(criar)
+			raw, err := json.Marshal(create)
 			if err != nil {
 				t.Fatalf("remontar o create: %v", err)
 			}
-			ch.Create = bruto
+			ch.Create = raw
 			return sf
 		}
 	}
-	t.Fatalf("nenhum personagem do seed tem o campo %q: o caso mediria um seed que não existe", campo)
+	t.Fatalf("nenhum personagem do seed tem o campo %q: o caso mediria um seed que não existe", field)
 	return sf
 }
 
-func sujaOCriar(t *testing.T, criar map[string]json.RawMessage, campo, errado string) bool {
+func sujaOCriar(t *testing.T, create map[string]json.RawMessage, field, wrong string) bool {
 	t.Helper()
-	switch campo {
+	switch field {
 	case "races":
-		return trocaNaLista(t, criar, "races", errado)
+		return trocaNaLista(t, create, "races", wrong)
 	case "item":
-		return trocaNoItem(t, criar, errado)
+		return trocaNoItem(t, create, wrong)
 	case "className":
-		return trocaNaClasse(t, criar, errado)
+		return trocaNaClasse(t, create, wrong)
 	default: // origin, god, godPower — todos strings simples
-		if _, tem := criar[campo]; !tem {
+		if _, found := create[field]; !found {
 			return false
 		}
-		bruto, err := json.Marshal(errado)
+		raw, err := json.Marshal(wrong)
 		if err != nil {
-			t.Fatalf("marshal de %q: %v", errado, err)
+			t.Fatalf("marshal de %q: %v", wrong, err)
 		}
-		criar[campo] = bruto
+		create[field] = raw
 		return true
 	}
 }
 
-func trocaNaLista(t *testing.T, criar map[string]json.RawMessage, chave, errado string) bool {
+func trocaNaLista(t *testing.T, create map[string]json.RawMessage, key, wrong string) bool {
 	t.Helper()
-	bruto, tem := criar[chave]
-	if !tem {
+	raw, found := create[key]
+	if !found {
 		return false
 	}
-	var lista []string
-	if err := json.Unmarshal(bruto, &lista); err != nil || len(lista) == 0 {
+	var list []string
+	if err := json.Unmarshal(raw, &list); err != nil || len(list) == 0 {
 		return false
 	}
-	lista[0] = errado
-	novo, err := json.Marshal(lista)
+	list[0] = wrong
+	novo, err := json.Marshal(list)
 	if err != nil {
-		t.Fatalf("marshal de %s: %v", chave, err)
+		t.Fatalf("marshal de %s: %v", key, err)
 	}
-	criar[chave] = novo
+	create[key] = novo
 	return true
 }
 
-func trocaNaClasse(t *testing.T, criar map[string]json.RawMessage, errado string) bool {
+func trocaNaClasse(t *testing.T, create map[string]json.RawMessage, wrong string) bool {
 	t.Helper()
-	bruto, tem := criar["classes"]
-	if !tem {
+	raw, found := create["classes"]
+	if !found {
 		return false
 	}
 	var classes []map[string]json.RawMessage
-	if err := json.Unmarshal(bruto, &classes); err != nil || len(classes) == 0 {
+	if err := json.Unmarshal(raw, &classes); err != nil || len(classes) == 0 {
 		return false
 	}
-	nome, err := json.Marshal(errado)
+	name, err := json.Marshal(wrong)
 	if err != nil {
-		t.Fatalf("marshal de %q: %v", errado, err)
+		t.Fatalf("marshal de %q: %v", wrong, err)
 	}
-	classes[0]["className"] = nome
+	classes[0]["className"] = name
 	novo, err := json.Marshal(classes)
 	if err != nil {
 		t.Fatalf("marshal das classes: %v", err)
 	}
-	criar["classes"] = novo
+	create["classes"] = novo
 	return true
 }
 
-func trocaNoItem(t *testing.T, criar map[string]json.RawMessage, errado string) bool {
+func trocaNoItem(t *testing.T, create map[string]json.RawMessage, wrong string) bool {
 	t.Helper()
-	bruto, tem := criar["items"]
-	if !tem {
+	raw, found := create["items"]
+	if !found {
 		return false
 	}
-	var itens []map[string]json.RawMessage
-	if err := json.Unmarshal(bruto, &itens); err != nil || len(itens) == 0 {
+	var items []map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &items); err != nil || len(items) == 0 {
 		return false
 	}
-	id, err := json.Marshal(errado)
+	id, err := json.Marshal(wrong)
 	if err != nil {
-		t.Fatalf("marshal de %q: %v", errado, err)
+		t.Fatalf("marshal de %q: %v", wrong, err)
 	}
-	itens[0]["catalogId"] = id
-	novo, err := json.Marshal(itens)
+	items[0]["catalogId"] = id
+	novo, err := json.Marshal(items)
 	if err != nil {
 		t.Fatalf("marshal dos itens: %v", err)
 	}
-	criar["items"] = novo
+	create["items"] = novo
 	return true
 }

@@ -70,11 +70,11 @@ type seedSpell struct {
 // que monta (`srv.Seeder()`) que o compilador cobra quando ela deixa de ser
 // cumprida.
 type casaDaSeed interface {
-	CreateAccount(ctx context.Context, email, nome, senha string) error
-	CreateCharacter(ctx context.Context, donoID int64, corpo sheet.CreateBody) (int64, error)
+	CreateAccount(ctx context.Context, email, name, password string) error
+	CreateCharacter(ctx context.Context, ownerID int64, body sheet.CreateBody) (int64, error)
 	Character(ctx context.Context, id int64) (sheet.CharacterDTO, error)
-	LearnSpell(ctx context.Context, id int64, catalogo string, preparada bool) error
-	SetHp(ctx context.Context, id, atual int64) error
+	LearnSpell(ctx context.Context, id int64, catalog string, prepared bool) error
+	SetHp(ctx context.Context, id, current int64) error
 	ConsumeItem(ctx context.Context, id, itemID int64) error
 }
 
@@ -103,12 +103,12 @@ func main() {
 	if err := validateCatalogRefs(sf); err != nil {
 		log.Fatalf("%v", err)
 	}
-	casa, database, cleanup := freshServer(seedEmails(sf))
+	square, database, cleanup := freshServer(seedEmails(sf))
 	defer cleanup()
 	total, seeded := 0, 0
 	for _, u := range sf.Users {
 		total += len(u.Characters)
-		seeded += seedUserCharacters(casa, database, sf.Password, u)
+		seeded += seedUserCharacters(square, database, sf.Password, u)
 	}
 	if err := seedChronicles(database); err != nil {
 		log.Fatalf("chronicles: %v", err)
@@ -175,20 +175,20 @@ func freshServer(adminEmails []string) (casaDaSeed, *sql.DB, func()) {
 
 // ── semeando pelas REGRAS ──────────────────────────────────────────────────────
 
-func seedUserCharacters(casa casaDaSeed, database *sql.DB, password string, u seedUser) int {
+func seedUserCharacters(square casaDaSeed, database *sql.DB, password string, u seedUser) int {
 	ctx := context.Background()
-	if err := casa.CreateAccount(ctx, u.Email, u.Name, password); err != nil {
+	if err := square.CreateAccount(ctx, u.Email, u.Name, password); err != nil {
 		log.Printf("conta %s: %v", u.Email, err)
 		return 0
 	}
-	donoID, err := userID(database, u.Email)
+	ownerID, err := userID(database, u.Email)
 	if err != nil {
 		log.Printf("conta %s: %v", u.Email, err)
 		return 0
 	}
 	seeded := 0
 	for _, ch := range u.Characters {
-		if err := seedCharacterRow(ctx, casa, donoID, ch); err != nil {
+		if err := seedCharacterRow(ctx, square, ownerID, ch); err != nil {
 			log.Printf("%s: %v", u.Email, err)
 			continue
 		}
@@ -197,26 +197,26 @@ func seedUserCharacters(casa casaDaSeed, database *sql.DB, password string, u se
 	return seeded
 }
 
-func seedCharacterRow(ctx context.Context, casa casaDaSeed, donoID int64, ch seedCharacter) error {
-	bruto, err := enrichCreate(ch)
+func seedCharacterRow(ctx context.Context, square casaDaSeed, ownerID int64, ch seedCharacter) error {
+	raw, err := enrichCreate(ch)
 	if err != nil {
 		return err
 	}
-	var corpo sheet.CreateBody
-	if err := json.Unmarshal(bruto, &corpo); err != nil {
+	var body sheet.CreateBody
+	if err := json.Unmarshal(raw, &body); err != nil {
 		return fmt.Errorf("corpo de criação: %w", err)
 	}
-	id, err := casa.CreateCharacter(ctx, donoID, corpo)
+	id, err := square.CreateCharacter(ctx, ownerID, body)
 	if err != nil {
 		return err
 	}
 	for _, sp := range ch.Spells {
-		if err := casa.LearnSpell(ctx, id, sp.ID, sp.Prepared); err != nil {
+		if err := square.LearnSpell(ctx, id, sp.ID, sp.Prepared); err != nil {
 			log.Printf("personagem %d, magia %q: %v", id, sp.ID, err)
 		}
 	}
 	if ch.HpFraction != nil || ch.SceneEffect {
-		if err := enrichLiveState(ctx, casa, id, ch); err != nil {
+		if err := enrichLiveState(ctx, square, id, ch); err != nil {
 			log.Printf("personagem %d, estado de jogo: %v", id, err)
 		}
 	}
@@ -275,8 +275,8 @@ func resolveItemMetadata(obj map[string]json.RawMessage) error {
 	return nil
 }
 
-func enrichLiveState(ctx context.Context, casa casaDaSeed, id int64, ch seedCharacter) error {
-	ficha, err := casa.Character(ctx, id)
+func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCharacter) error {
+	sheet, err := square.Character(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -284,23 +284,23 @@ func enrichLiveState(ctx context.Context, casa casaDaSeed, id int64, ch seedChar
 		// O PV MÁXIMO é o que o motor calculou, e por isso ele é lido de volta:
 		// o corpo de criação manda 9999 nos quatro vitais justamente para a cura
 		// aparar para o número certo.
-		pv := int64(float64(ficha.HpMax)**ch.HpFraction + 0.5)
-		if err := casa.SetHp(ctx, id, pv); err != nil {
+		pv := int64(float64(sheet.HpMax)**ch.HpFraction + 0.5)
+		if err := square.SetHp(ctx, id, pv); err != nil {
 			return err
 		}
 	}
 	if ch.SceneEffect {
-		return applySceneEffect(ctx, casa, id, ficha.Items)
+		return applySceneEffect(ctx, square, id, sheet.Items)
 	}
 	return nil
 }
 
-func applySceneEffect(ctx context.Context, casa casaDaSeed, id int64, itens []sheet.ItemDTO) error {
-	for _, it := range itens {
+func applySceneEffect(ctx context.Context, square casaDaSeed, id int64, items []sheet.ItemDTO) error {
+	for _, it := range items {
 		if it.CatalogID == nil || *it.CatalogID != sceneConsumable {
 			continue
 		}
-		return casa.ConsumeItem(ctx, id, it.ID)
+		return square.ConsumeItem(ctx, id, it.ID)
 	}
 	return nil
 }

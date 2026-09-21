@@ -32,8 +32,8 @@ import (
 // Ela lê a MESMA `PORT` que o servidor escuta — uma porta escrita à mão daria
 // uma sonda que reprova servidor saudável no dia em que a porta mudasse.
 func healthProbe(cfg config.Config) int {
-	cliente := &http.Client{Timeout: 3 * time.Second}
-	resp, err := cliente.Get(fmt.Sprintf("http://127.0.0.1:%s/health", cfg.Port))
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get(fmt.Sprintf("http://127.0.0.1:%s/health", cfg.Port))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "health: %v\n", err)
 		return 1
@@ -125,15 +125,15 @@ func httpServerFor(cfg config.Config, mux http.Handler) *http.Server {
 //     É o timeout que parece obrigatório e é justamente o errado aqui.
 func serve(ctx context.Context, cfg config.Config, mux http.Handler) error {
 	server := httpServerFor(cfg, mux)
-	falhou := make(chan error, 1)
+	failed := make(chan error, 1)
 	go func() {
 		if err := escutar(server, cfg); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			falhou <- err
+			failed <- err
 		}
 	}()
 
 	select {
-	case err := <-falhou:
+	case err := <-failed:
 		return err
 	case <-ctx.Done():
 	}
@@ -142,9 +142,9 @@ func serve(ctx context.Context, cfg config.Config, mux http.Handler) error {
 	// A janela existe para a gravação em curso terminar; passado o prazo, o
 	// desligamento continua — travar o encerramento seria trocar um problema
 	// por outro.
-	prazo, cancelar := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancelar()
-	if err := server.Shutdown(prazo); err != nil {
+	deadline, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(deadline); err != nil {
 		log.Printf("encerramento forçado: %v", err)
 	}
 	return nil

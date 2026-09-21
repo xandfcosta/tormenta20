@@ -23,31 +23,31 @@ import (
 // `time.Now()` no caminho, o arquivo passa a diferir a cada corrida e este caso
 // reprova na primeira.
 func TestTheSeedGeneratorStillWritesTheCommittedFile(t *testing.T) {
-	raiz := moduleRoot(t)
-	saida := filepath.Join(t.TempDir(), "seed.sql")
+	root := moduleRoot(t)
+	output := filepath.Join(t.TempDir(), "seed.sql")
 
 	// Subprocesso e não chamada direta: o `main` escreve arquivo e usa o
 	// diretório de trabalho para achar o `.env` e o catálogo. Um `os.Chdir` no
 	// teste vazaria para os outros casos do pacote.
-	cmd := exec.Command("go", "run", "./cmd/seed", saida)
-	cmd.Dir = raiz
+	cmd := exec.Command("go", "run", "./cmd/seed", output)
+	cmd.Dir = root
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("o gerador não rodou: %v\n%s", err, out)
 	}
 
-	gerado, err := os.ReadFile(saida)
+	generated, err := os.ReadFile(output)
 	if err != nil {
 		t.Fatalf("ler o gerado: %v", err)
 	}
-	commitado, err := os.ReadFile(filepath.Join(raiz, "seed.sql"))
+	committed, err := os.ReadFile(filepath.Join(root, "seed.sql"))
 	if err != nil {
 		t.Fatalf("ler o commitado: %v", err)
 	}
-	if string(gerado) != string(commitado) {
+	if string(generated) != string(committed) {
 		t.Errorf("o `seed.sql` commitado não é o que o gerador escreve hoje.\n"+
 			"Se a mudança foi INTENCIONAL (elenco, regra, crônica), rode\n"+
 			"`go run ./cmd/seed` em engine-go/ e commite o resultado.\n"+
-			"gerado: %d bytes, commitado: %d bytes", len(gerado), len(commitado))
+			"gerado: %d bytes, commitado: %d bytes", len(generated), len(committed))
 	}
 }
 
