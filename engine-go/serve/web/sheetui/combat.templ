@@ -123,7 +123,7 @@ templ combatBox(tile statTile) {
 // `<div>`: um botão que não faz nada é uma promessa quebrada para quem navega
 // por teclado, que pararia em seis paradas mudas.
 templ attributeBox(attr attributeTile) {
-	<div class="rounded-none border-2 border-grimorio-iron bg-grimorio-panel p-2 text-center">
+	<div class="rounded-none border-2 border-grimorio-iron bg-grimorio-panel px-1 py-2 text-center">
 		<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ attr.Abbr }</p>
 		<p class="mt-0.5 text-2xl font-bold leading-none text-foreground">{ attr.Value }</p>
 	</div>
