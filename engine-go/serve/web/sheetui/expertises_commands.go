@@ -20,11 +20,11 @@ import (
 
 // expertiseName lê o nome do caminho, desescapando como a API JSON fazia.
 func expertiseName(r *http.Request) string {
-	nome := chi.URLParam(r, "nome")
-	if decodificado, err := url.PathUnescape(nome); err == nil {
-		return decodificado
+	name := chi.URLParam(r, "nome")
+	if decoded, err := url.PathUnescape(name); err == nil {
+		return decoded
 	}
-	return nome
+	return name
 }
 
 func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
@@ -50,15 +50,15 @@ func removeCraft(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) err
 // padrão do formulário, e escolhê-lo aqui e não no caso de uso é deliberado —
 // o `AddCraft` RECUSA o que não reconhece, porque um chamador que não é diálogo
 // não tem por que herdar o padrão de um.
-func criaOOficio(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
-	nome, atributo := "", "intelligence"
-	if sinais.NovaPericia != nil {
-		nome = strings.TrimSpace(*sinais.NovaPericia)
+func criaOOficio(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	name, attribute := "", "intelligence"
+	if signals.NewExpertise != nil {
+		name = strings.TrimSpace(*signals.NewExpertise)
 	}
-	if sinais.NovoAtributo != nil && engine.IsAttributeKey(*sinais.NovoAtributo) {
-		atributo = *sinais.NovoAtributo
+	if signals.NewAttribute != nil && engine.IsAttributeKey(*signals.NewAttribute) {
+		attribute = *signals.NewAttribute
 	}
-	return s.plays.AddCraft(r.Context(), row.ID, nome, atributo)
+	return s.plays.AddCraft(r.Context(), row.ID, name, attribute)
 }
 
 // toggleProficiency liga ou desliga UMA categoria.
@@ -72,11 +72,11 @@ func toggleProficiency(s Scene, r *http.Request, row sqlcgen.Character, _ Signal
 	if err != nil {
 		return err
 	}
-	depois, err := proficiencySwap(dto, chi.URLParam(r, "categoria"))
+	after, err := proficiencySwap(dto, chi.URLParam(r, "categoria"))
 	if err != nil {
 		return err
 	}
-	return s.plays.SaveProficiencies(r.Context(), row.ID, depois)
+	return s.plays.SaveProficiencies(r.Context(), row.ID, after)
 }
 
 // restoresDefaultClass joga fora os ajustes manuais.

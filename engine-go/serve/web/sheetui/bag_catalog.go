@@ -25,11 +25,11 @@ func catalogItem(item sheet.ItemDTO) *book.Item {
 
 // itemOverlays são os NOMES das melhorias e do material aplicados.
 func itemOverlays(item sheet.ItemDTO) []string {
-	nomes := []string{}
-	for _, entrada := range bookOverlays(item) {
-		nomes = append(nomes, entrada.Name)
+	names := []string{}
+	for _, entry := range bookOverlays(item) {
+		names = append(names, entry.Name)
 	}
-	return nomes
+	return names
 }
 
 // bookOverlays resolve melhorias + material contra o catálogo.
@@ -41,13 +41,13 @@ func bookOverlays(item sheet.ItemDTO) []book.Item {
 	if item.Material != nil && *item.Material != "" {
 		ids = append(ids, *item.Material)
 	}
-	fora := []book.Item{}
+	outside := []book.Item{}
 	for _, id := range ids {
-		if entrada := book.ItemByID(id); entrada != nil {
-			fora = append(fora, *entrada)
+		if entry := book.ItemByID(id); entry != nil {
+			outside = append(outside, *entry)
 		}
 	}
-	return fora
+	return outside
 }
 
 // savedImprovements lê o blob JSON da coluna `improvements`.
@@ -65,37 +65,37 @@ func savedImprovements(blob string) []string {
 // `armor.defense` E como modificador de Defesa do mesmo valor, e desenhar os
 // dois daria "Defesa +2 · Defesa +2" em toda armadura.
 func thatGrantsItem(item sheet.ItemDTO) []string {
-	catalogo := catalogItem(item)
-	if catalogo == nil {
+	catalog := catalogItem(item)
+	if catalog == nil {
 		return nil
 	}
-	crachas := []string{}
-	if base := baseItemDefense(*catalogo); base != "" {
-		crachas = append(crachas, base)
+	badges := []string{}
+	if base := baseItemDefense(*catalog); base != "" {
+		badges = append(badges, base)
 	}
-	if catalogo.Weapon != nil {
-		crachas = append(crachas, "Dano "+catalogo.Weapon.Damage)
+	if catalog.Weapon != nil {
+		badges = append(badges, "Dano "+catalog.Weapon.Damage)
 	}
-	for _, m := range catalogo.Modifiers {
-		crachas = append(crachas, modifierBadge(m))
+	for _, m := range catalog.Modifiers {
+		badges = append(badges, modifierBadge(m))
 	}
-	return repetidosSem(crachas)
+	return repetidosSem(badges)
 }
 
-func baseItemDefense(catalogo book.Item) string {
-	protecao := catalogo.Armor
-	if protecao == nil {
-		protecao = catalogo.Shield
+func baseItemDefense(catalog book.Item) string {
+	protection := catalog.Armor
+	if protection == nil {
+		protection = catalog.Shield
 	}
-	if protecao == nil || protecao.Defense == 0 {
+	if protection == nil || protection.Defense == 0 {
 		return ""
 	}
-	for _, m := range catalogo.Modifiers {
-		if m.Target.K == "defense" && m.Amount == protecao.Defense {
+	for _, m := range catalog.Modifiers {
+		if m.Target.K == "defense" && m.Amount == protection.Defense {
 			return ""
 		}
 	}
-	return "Defesa " + book.WithSign(protecao.Defense)
+	return "Defesa " + book.WithSign(protection.Defense)
 }
 
 // modifierBadge escreve o que um modificador de item concede.
@@ -103,24 +103,24 @@ func baseItemDefense(catalogo book.Item) string {
 // Alvo de FLAG é booleano: ele não leva número, e escrever "Fadiga ao dormir
 // +1" faria a tela prometer uma quantidade que não existe.
 func modifierBadge(m engine.Modifier) string {
-	rotulo := targetLabel(m.Target)
+	label := targetLabel(m.Target)
 	if m.Target.K == "flag" || m.Amount == 0 {
-		return rotulo
+		return label
 	}
-	return rotulo + " " + book.WithSign(m.Amount)
+	return label + " " + book.WithSign(m.Amount)
 }
 
-func repetidosSem(lista []string) []string {
-	vistos := map[string]bool{}
-	fora := []string{}
-	for _, texto := range lista {
-		if texto == "" || vistos[texto] {
+func repetidosSem(list []string) []string {
+	seen := map[string]bool{}
+	outside := []string{}
+	for _, text := range list {
+		if text == "" || seen[text] {
 			continue
 		}
-		vistos[texto] = true
-		fora = append(fora, texto)
+		seen[text] = true
+		outside = append(outside, text)
 	}
-	return fora
+	return outside
 }
 
 // itemCatalog é o id de catálogo de uma linha do banco, ou "".
@@ -134,12 +134,12 @@ func itemCatalog(item sqlcgen.GetItemRow) string {
 // howEngineItem traduz a entrada do livro para a forma que as validações do
 // motor esperam. Só os campos que elas leem — eixo, id e nome —, porque um
 // tradutor completo prometeria que os dois lados têm a mesma forma, e não têm.
-func howEngineItem(catalogo *book.Item) *engine.CatalogItem {
-	if catalogo == nil {
+func howEngineItem(catalog *book.Item) *engine.CatalogItem {
+	if catalog == nil {
 		return nil
 	}
 	return &engine.CatalogItem{
-		ID: catalogo.ID, Name: catalogo.Name, Category: catalogo.Category,
-		Equip: catalogo.Equip, Slots: catalogo.Slots,
+		ID: catalog.ID, Name: catalog.Name, Category: catalog.Category,
+		Equip: catalog.Equip, Slots: catalog.Slots,
 	}
 }

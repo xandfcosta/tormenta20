@@ -269,17 +269,17 @@ func TestEverySheetTabDrawsSomething(t *testing.T) {
 
 	var visited int
 	for _, aba := range sheetui.Tabs() {
-		title, knows := panelTitle[aba.Valor]
+		title, knows := panelTitle[aba.Value]
 		if !knows {
 			t.Errorf("a aba %q não tem título esperado neste guarda — acrescente a "+
-				"linha ao mapa `panelTitle`", aba.Valor)
+				"linha ao mapa `panelTitle`", aba.Value)
 			continue
 		}
 		visited++
 		screen := f.pede(t, f.player, http.MethodGet,
-			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
+			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Value), "").Body.String()
 		if !strings.Contains(screen, ">"+title+"</h2>") {
-			t.Errorf("a aba %q não desenhou painel nenhum", aba.Valor)
+			t.Errorf("a aba %q não desenhou painel nenhum", aba.Value)
 		}
 		// E ELA SE ANUNCIA: ler `aria-current` é ler HTML, e HTML o servidor
 		// escreve — a camada mais barata que segura isto é esta, e aqui ela varre
@@ -288,13 +288,13 @@ func TestEverySheetTabDrawsSomething(t *testing.T) {
 		// O par CONTA + LUGAR é o guarda inteiro: uma aba ativa a mais não
 		// estoura nada na tela, ela só põe duas seções acesas ao mesmo tempo.
 		if n := strings.Count(screen, `aria-current="page"`); n != 1 {
-			t.Errorf("a aba %q desenhou %d marcas de aba ativa, e a ficha tem UMA", aba.Valor, n)
+			t.Errorf("a aba %q desenhou %d marcas de aba ativa, e a ficha tem UMA", aba.Value, n)
 			continue
 		}
 		afterMark := screen[strings.Index(screen, `aria-current="page"`):]
 		labeled, _, _ := strings.Cut(afterMark, "</a>")
-		if !strings.Contains(labeled, aba.Rotulo) {
-			t.Errorf("com ?tab=%s a marca de aba ativa não caiu no link %q", aba.Valor, aba.Rotulo)
+		if !strings.Contains(labeled, aba.Label) {
+			t.Errorf("com ?tab=%s a marca de aba ativa não caiu no link %q", aba.Value, aba.Label)
 		}
 	}
 	// CONTROLE: sem ele, um `Tabs` que virasse vazio faria o laço não
@@ -328,12 +328,12 @@ func TestNoSheetCommandLosesTheTab(t *testing.T) {
 	var seen int
 	for _, aba := range sheetui.Tabs() {
 		screen := f.pede(t, f.player, http.MethodGet,
-			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
+			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Value), "").Body.String()
 		for _, found := range posted.FindAllStringSubmatch(screen, -1) {
 			seen++
-			if !strings.HasSuffix(found[1], "?tab="+aba.Valor) {
+			if !strings.HasSuffix(found[1], "?tab="+aba.Value) {
 				t.Errorf("na aba %q o comando %q não carrega a aba: o clique joga o jogador para %q",
-					aba.Valor, found[1], sheetui.Tabs()[0].Valor)
+					aba.Value, found[1], sheetui.Tabs()[0].Value)
 			}
 		}
 	}

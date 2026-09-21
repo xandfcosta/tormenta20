@@ -20,14 +20,14 @@ import (
 //
 // O corte vai da grade até o fim da SEÇÃO, que é onde o painel acaba e os
 // diálogos começam.
-func screenSaved(tela string) string {
-	inicio := strings.Index(tela, "grid-cols-3")
-	if inicio < 0 {
+func screenSaved(screen string) string {
+	start := strings.Index(screen, "grid-cols-3")
+	if start < 0 {
 		return ""
 	}
-	fim := strings.Index(tela[inicio:], "</section>")
-	if fim < 0 {
-		return tela[inicio:]
+	end := strings.Index(screen[start:], "</section>")
+	if end < 0 {
+		return screen[start:]
 	}
-	return tela[inicio : inicio+fim]
+	return screen[start : start+end]
 }

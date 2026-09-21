@@ -22,21 +22,21 @@ var categoriesWithoutOverlap = map[string]bool{
 	"improvement": true, "material": true, "animal": true, "vehicle": true,
 }
 
-func aceitaMelhoria(catalogo book.Item) bool {
-	return !categoriesWithoutOverlap[catalogo.Category]
+func aceitaMelhoria(catalog book.Item) bool {
+	return !categoriesWithoutOverlap[catalog.Category]
 }
 
 // itemFamily é a classificação grossa que o `appliesTo` do catálogo usa.
 //
 // Quatro famílias, e a última é o resto: arma, armadura, escudo e vestuário. Ela
 // é do CATÁLOGO e não do livro, então mora ao lado de quem a consome.
-func itemFamily(catalogo book.Item) string {
+func itemFamily(catalog book.Item) string {
 	switch {
-	case strings.HasPrefix(catalogo.Category, "weapon-"):
+	case strings.HasPrefix(catalog.Category, "weapon-"):
 		return "weapon"
-	case strings.HasPrefix(catalogo.Category, "armor-"):
+	case strings.HasPrefix(catalog.Category, "armor-"):
 		return "armor"
-	case catalogo.Category == "shield":
+	case catalog.Category == "shield":
 		return "shield"
 	}
 	return "apparel"
@@ -47,11 +47,11 @@ func itemFamily(catalogo book.Item) string {
 // Sobreposição SEM `appliesTo` serve a qualquer um: o catálogo usa o campo para
 // restringir, e a ausência dele é "não restringe" — não "não serve a ninguém",
 // que faria uma melhoria nova nascer inalcançável.
-func aceitaAFamilia(sobreposicao book.Item, familia string) bool {
-	if len(sobreposicao.AppliesTo) == 0 {
+func aceitaAFamilia(overlap book.Item, family string) bool {
+	if len(overlap.AppliesTo) == 0 {
 		return true
 	}
-	return contemTraco(sobreposicao.AppliesTo, familia)
+	return contemTraco(overlap.AppliesTo, family)
 }
 
 // fitsItemImprovement é a RECUSA do servidor, e ela é a fronteira.
@@ -59,28 +59,28 @@ func aceitaAFamilia(sobreposicao book.Item, familia string) bool {
 // Ela confere três coisas de cada id: que ele existe no catálogo, que ele é da
 // categoria certa (melhoria não entra no campo do material e vice-versa), e que
 // ele serve à família do item.
-func fitsItemImprovement(catalogo *book.Item, ids []string, categoria string) error {
-	if catalogo == nil {
+func fitsItemImprovement(catalog *book.Item, ids []string, category string) error {
+	if catalog == nil {
 		return fmt.Errorf("um item custom não recebe melhoria: ele não tem família no catálogo")
 	}
-	if len(ids) > 0 && !aceitaMelhoria(*catalogo) {
-		return fmt.Errorf("%q não recebe melhoria nem material", catalogo.Name)
+	if len(ids) > 0 && !aceitaMelhoria(*catalog) {
+		return fmt.Errorf("%q não recebe melhoria nem material", catalog.Name)
 	}
-	familia := itemFamily(*catalogo)
+	family := itemFamily(*catalog)
 	for _, id := range ids {
-		sobreposicao := book.ItemByID(id)
-		if sobreposicao == nil || sobreposicao.Category != categoria {
-			return fmt.Errorf("%q não é uma %s do livro", id, categoryName(categoria))
+		overlap := book.ItemByID(id)
+		if overlap == nil || overlap.Category != category {
+			return fmt.Errorf("%q não é uma %s do livro", id, categoryName(category))
 		}
-		if !aceitaAFamilia(*sobreposicao, familia) {
-			return fmt.Errorf("%q não cabe em %q", sobreposicao.Name, catalogo.Name)
+		if !aceitaAFamilia(*overlap, family) {
+			return fmt.Errorf("%q não cabe em %q", overlap.Name, catalog.Name)
 		}
 	}
 	return nil
 }
 
-func categoryName(categoria string) string {
-	if categoria == "material" {
+func categoryName(category string) string {
+	if category == "material" {
 		return "material"
 	}
 	return "melhoria"

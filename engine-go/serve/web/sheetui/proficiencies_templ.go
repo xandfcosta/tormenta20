@@ -108,7 +108,7 @@ func proficiencyPanel(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, grupo := range v.Proficiencias {
+		for _, grupo := range v.Proficiencies {
 			templ_7745c5c3_Err = proficiencyGroupPanel(v, grupo).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -170,9 +170,9 @@ func proficiencyGroupPanel(v View, grupo proficiencyGroup) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(grupo.Titulo)
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(grupo.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/proficiencies.templ`, Line: 47, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/proficiencies.templ`, Line: 47, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -182,7 +182,7 @@ func proficiencyGroupPanel(v View, grupo proficiencyGroup) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, linha := range grupo.Linhas {
+		for _, linha := range grupo.Rows {
 			templ_7745c5c3_Err = proficiencyRow(v, linha).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -223,7 +223,7 @@ func proficiencyRow(v View, linha sheetProficiency) templ.Component {
 			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var12 = []any{"rounded-sm text-xs", templ.KV("bg-bonus/10", linha.Tem)}
+		var templ_7745c5c3_Var12 = []any{"rounded-sm text-xs", templ.KV("bg-bonus/10", linha.Has)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var12...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -257,7 +257,7 @@ func proficiencyRow(v View, linha sheetProficiency) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			if linha.Tem {
+			if linha.Has {
 				templ_7745c5c3_Err = ui.Icon("Check", "size-3.5 text-bonus-ink").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -272,7 +272,7 @@ func proficiencyRow(v View, linha sheetProficiency) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var15 = []any{templ.KV("text-foreground", linha.Tem), templ.KV("text-muted-foreground line-through", !linha.Tem)}
+			var templ_7745c5c3_Var15 = []any{templ.KV("text-foreground", linha.Has), templ.KV("text-muted-foreground line-through", !linha.Has)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -295,9 +295,9 @@ func proficiencyRow(v View, linha sheetProficiency) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var17 string
-			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Rotulo)
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/proficiencies.templ`, Line: 71, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/proficiencies.templ`, Line: 71, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -307,7 +307,7 @@ func proficiencyRow(v View, linha sheetProficiency) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if linha.DeClasse {
+			if linha.FromClass {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<span title=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -328,7 +328,7 @@ func proficiencyRow(v View, linha sheetProficiency) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ui.Button(ui.VariantGhost, ui.SizeInline, "min-h-11 w-full gap-2 px-2 text-left", templ.Attributes{"type": "button", "aria-pressed": fmt.Sprintf("%t", linha.Tem), "aria-label": swapLabel(linha), "data-on:click": proficiencyCommand(v, linha.Chave)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Button(ui.VariantGhost, ui.SizeInline, "min-h-11 w-full gap-2 px-2 text-left", templ.Attributes{"type": "button", "aria-pressed": fmt.Sprintf("%t", linha.Has), "aria-label": swapLabel(linha), "data-on:click": proficiencyCommand(v, linha.Key)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

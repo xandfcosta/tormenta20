@@ -268,12 +268,12 @@ templ bagFiltersBody(v View) {
 			for _, badge := range v.Bag.Categories {
 				<button
 					type="button"
-					aria-pressed={ ui.AriaBool(badge.Ativo) }
-					data-on:click={ "$item_category = '" + badge.Valor + "'; " + sheetGet(v) }
+					aria-pressed={ ui.AriaBool(badge.Active) }
+					data-on:click={ "$item_category = '" + badge.Value + "'; " + sheetGet(v) }
 					class={ ui.BadgeClasses("inline-flex items-center text-3xs uppercase tracking-wider"),
-						templ.KV("border-grimorio-gold/60 bg-accent text-grimorio-gold", badge.Ativo),
-						templ.KV("border-grimorio-iron text-muted-foreground hover:text-foreground", !badge.Ativo) }
-				>{ badge.Rotulo }</button>
+						templ.KV("border-grimorio-gold/60 bg-accent text-grimorio-gold", badge.Active),
+						templ.KV("border-grimorio-iron text-muted-foreground hover:text-foreground", !badge.Active) }
+				>{ badge.Label }</button>
 			}
 		</div>
 	</div>
@@ -313,10 +313,10 @@ templ moneyDialog(v View) {
 			for _, modo := range moneyModes {
 				<button
 					type="button"
-					data-on:click={ "$tibar_mode = '" + modo.Valor + "'" }
-					data-attr:aria-pressed={ "$tibar_mode === '" + modo.Valor + "' ? 'true' : 'false'" }
+					data-on:click={ "$tibar_mode = '" + modo.Value + "'" }
+					data-attr:aria-pressed={ "$tibar_mode === '" + modo.Value + "' ? 'true' : 'false'" }
 					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold"
-				>{ modo.Rotulo }</button>
+				>{ modo.Label }</button>
 			}
 		</div>
 		<label class="block space-y-1">

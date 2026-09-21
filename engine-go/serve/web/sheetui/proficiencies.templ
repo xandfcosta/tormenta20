@@ -35,7 +35,7 @@ templ proficiencyPanel(v View) {
 			>Restaurar padrão de classe</button>
 		</div>
 		<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">
-			for _, grupo := range v.Proficiencias {
+			for _, grupo := range v.Proficiencies {
 				@proficiencyGroupPanel(v, grupo)
 			}
 		</div>
@@ -44,9 +44,9 @@ templ proficiencyPanel(v View) {
 
 templ proficiencyGroupPanel(v View, grupo proficiencyGroup) {
 	<section class="rounded-none border border-grimorio-iron p-3">
-		<h3 class={ ui.SectionTitleClasses("painel", "", "") }>{ grupo.Titulo }</h3>
+		<h3 class={ ui.SectionTitleClasses("painel", "", "") }>{ grupo.Title }</h3>
 		<ul class="mt-2 space-y-1">
-			for _, linha := range grupo.Linhas {
+			for _, linha := range grupo.Rows {
 				@proficiencyRow(v, linha)
 			}
 		</ul>
@@ -60,20 +60,20 @@ templ proficiencyGroupPanel(v View, grupo proficiencyGroup) {
 // mesma razão pela qual o guarda de contraste existe — e aqui o dado é binário
 // e vale a redundância.
 templ proficiencyRow(v View, linha sheetProficiency) {
-	<li class={ "rounded-sm text-xs", templ.KV("bg-bonus/10", linha.Tem) }>
-		@ui.Button(ui.VariantGhost, ui.SizeInline, "min-h-11 w-full gap-2 px-2 text-left", templ.Attributes{"type": "button", "aria-pressed": fmt.Sprintf("%t", linha.Tem), "aria-label": swapLabel(linha), "data-on:click": proficiencyCommand(v, linha.Chave)}) {
-			if linha.Tem {
+	<li class={ "rounded-sm text-xs", templ.KV("bg-bonus/10", linha.Has) }>
+		@ui.Button(ui.VariantGhost, ui.SizeInline, "min-h-11 w-full gap-2 px-2 text-left", templ.Attributes{"type": "button", "aria-pressed": fmt.Sprintf("%t", linha.Has), "aria-label": swapLabel(linha), "data-on:click": proficiencyCommand(v, linha.Key)}) {
+			if linha.Has {
 				@ui.Icon("Check", "size-3.5 text-bonus-ink")
 			} else {
 				@ui.Icon("X", "size-3.5 text-muted-foreground")
 			}
-			<span class={ templ.KV("text-foreground", linha.Tem), templ.KV("text-muted-foreground line-through", !linha.Tem) }>
-				{ linha.Rotulo }
+			<span class={ templ.KV("text-foreground", linha.Has), templ.KV("text-muted-foreground line-through", !linha.Has) }>
+				{ linha.Label }
 			</span>
 			// "classe" marca o que vem de fábrica, para o jogador distinguir um
 			// ajuste deliberado da conta — sem ela, uma proficiência tirada na
 			// mão parece defeito.
-			if linha.DeClasse {
+			if linha.FromClass {
 				<span
 					title={ sourceTag(linha) }
 					class="ml-1 rounded-md bg-muted px-1 text-3xs uppercase tracking-[0.14em] text-muted-foreground"

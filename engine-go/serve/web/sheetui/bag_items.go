@@ -43,14 +43,14 @@ type itemSheet struct {
 }
 
 type equipChoice struct {
-	Slot   string
-	Rotulo string
+	Slot  string
+	Label string
 }
 
 // consumeChoice é o "Usar" de um consumível.
 type consumeChoice struct {
-	// Escopo é imediato, 1 cena ou 1 dia, na palavra da mesa.
-	Escopo string
+	// Scope é imediato, 1 cena ou 1 dia, na palavra da mesa.
+	Scope string
 	// HpDice e MpDice são as rolagens que a MESA faz. A ficha não rola por
 	// ninguém: o dado é da pessoa, e o servidor aceita o número que ela mandar.
 	HpDice string
@@ -59,68 +59,68 @@ type consumeChoice struct {
 
 // bookInfo é o que o livro diz do item.
 type bookInfo struct {
-	Categoria string
-	Preco     string
-	Pagina    int
-	Linhas    []string
+	Category string
+	Price    string
+	Page     int
+	Rows     []string
 }
 
 type overlayRow struct {
-	Nome   string
-	Efeito string
+	Name   string
+	Effect string
 }
 
 // overlayChoice é uma melhoria ou material que CABE neste item.
 type overlayChoice struct {
 	ID     string
-	Nome   string
-	Efeito string
-	Preco  string
-	Ativa  bool
+	Name   string
+	Effect string
+	Price  string
+	Active bool
 }
 
 // catalogItemRow é uma linha do catálogo no diálogo de adicionar.
 type catalogItemRow struct {
-	ID        string
-	Nome      string
-	Categoria string
-	Espacos   string
-	Preco     string
-	Pagina    int
+	ID       string
+	Name     string
+	Category string
+	Slots    string
+	Price    string
+	Page     int
 }
 
-func itemSheetsOf(dto sheet.CharacterDTO, proficiencias map[string]bool) []itemSheet {
-	fichas := make([]itemSheet, 0, len(dto.Items))
+func itemSheetsOf(dto sheet.CharacterDTO, proficiencies map[string]bool) []itemSheet {
+	sheets := make([]itemSheet, 0, len(dto.Items))
 	for _, item := range dto.Items {
-		fichas = append(fichas, itemSheetOf(item, proficiencias))
+		sheets = append(sheets, itemSheetOf(item, proficiencies))
 	}
-	return fichas
+	return sheets
 }
 
-func itemSheetOf(item sheet.ItemDTO, proficiencias map[string]bool) itemSheet {
-	catalogo := catalogItem(item)
-	ficha := itemSheet{
+func itemSheetOf(item sheet.ItemDTO, proficiencies map[string]bool) itemSheet {
+	catalog := catalogItem(item)
+	character := itemSheet{
 		ID: item.ID, Name: item.Name, Quantity: item.Quantity,
 		Slots:         sheet.WithComma(item.Slots),
 		Total:         sheet.WithComma(float64(item.Quantity) * item.Slots),
-		NoProficiency: !proficienteEh(item, proficiencias),
-		Equip:         reachablePlaces(item, catalogo),
+		NoProficiency: !proficienteEh(item, proficiencies),
+		Equip:         reachablePlaces(item, catalog),
 		Overlays:      appliedImprovements(item),
 		Command:       strconv.FormatInt(item.ID, 10),
 	}
-	if catalogo == nil {
-		return ficha
+	if catalog == nil {
+		return character
 	}
-	ficha.Book = thatSaysBook(*catalogo)
-	ficha.Consumable = consumableUse(*catalogo)
-	ficha.Overlayable = aceitaMelhoria(*catalogo)
-	if ficha.Overlayable {
-		aplicadas := savedImprovements(item.Improvements)
-		familia := itemFamily(*catalogo)
-		ficha.Improvements = thatFitOverlays("improvement", familia, aplicadas)
-		ficha.Materials = thatFitOverlays("material", familia, appliedMaterial(item))
+	character.Book = thatSaysBook(*catalog)
+	character.Consumable = consumableUse(*catalog)
+	character.Overlayable = aceitaMelhoria(*catalog)
+	if character.Overlayable {
+		applied := savedImprovements(item.Improvements)
+		family := itemFamily(*catalog)
+		character.Improvements = thatFitOverlays("improvement", family, applied)
+		character.Materials = thatFitOverlays("material", family, appliedMaterial(item))
 	}
-	return ficha
+	return character
 }
 
 // appliedMaterial é o material como lista, para a comparação ser uma só.
@@ -137,15 +137,15 @@ func appliedMaterial(item sheet.ItemDTO) []string {
 // Item custom não tem eixo no catálogo, então ele aceita os três: não há o que
 // saber sobre uma coisa que a pessoa inventou, e recusar por precaução tiraria
 // dela a única forma de equipar o que ela criou.
-func reachablePlaces(item sheet.ItemDTO, catalogo *book.Item) []equipChoice {
-	atual := equippedSlotOf(item)
-	fora := []equipChoice{}
-	for _, escolha := range itemPlaces(catalogo) {
-		if escolha.Slot != atual {
-			fora = append(fora, escolha)
+func reachablePlaces(item sheet.ItemDTO, catalog *book.Item) []equipChoice {
+	current := equippedSlotOf(item)
+	outside := []equipChoice{}
+	for _, choice := range itemPlaces(catalog) {
+		if choice.Slot != current {
+			outside = append(outside, choice)
 		}
 	}
-	return fora
+	return outside
 }
 
 // itemPlaces lê o EIXO do livro — `vested`, `wielded` ou `either` — e
@@ -154,40 +154,40 @@ func reachablePlaces(item sheet.ItemDTO, catalogo *book.Item) []equipChoice {
 // As duas mãos só aparecem quando são OBRIGATÓRIAS (`hands: 2`) ou quando
 // mudam alguma coisa: uma arma versátil dá mais dano empunhada com as duas
 // (p150). Numa arma de uma mão só, ocupar as duas não ganha nada.
-func itemPlaces(catalogo *book.Item) []equipChoice {
-	guardar := equipChoice{Slot: "", Rotulo: "Guardar"}
-	if catalogo == nil {
-		return []equipChoice{guardar, {Slot: "vested", Rotulo: "Vestir"},
-			{Slot: "wielded", Rotulo: "Empunhar (1 mão)"}, {Slot: "wielded2", Rotulo: "Empunhar (2 mãos)"}}
+func itemPlaces(catalog *book.Item) []equipChoice {
+	save := equipChoice{Slot: "", Label: "Guardar"}
+	if catalog == nil {
+		return []equipChoice{save, {Slot: "vested", Label: "Vestir"},
+			{Slot: "wielded", Label: "Empunhar (1 mão)"}, {Slot: "wielded2", Label: "Empunhar (2 mãos)"}}
 	}
-	if catalogo.Category == "consumable" || catalogo.Category == "meal" {
-		return []equipChoice{guardar}
+	if catalog.Category == "consumable" || catalog.Category == "meal" {
+		return []equipChoice{save}
 	}
-	if catalogo.Equip == "vested" {
-		return []equipChoice{guardar, {Slot: "vested", Rotulo: "Vestir"}}
+	if catalog.Equip == "vested" {
+		return []equipChoice{save, {Slot: "vested", Label: "Vestir"}}
 	}
-	maos := itemHands(*catalogo)
-	if catalogo.Equip == "wielded" {
-		return append([]equipChoice{guardar}, maos...)
+	hands := itemHands(*catalog)
+	if catalog.Equip == "wielded" {
+		return append([]equipChoice{save}, hands...)
 	}
-	return append([]equipChoice{guardar, {Slot: "vested", Rotulo: "Vestir"}}, maos...)
+	return append([]equipChoice{save, {Slot: "vested", Label: "Vestir"}}, hands...)
 }
 
-func itemHands(catalogo book.Item) []equipChoice {
-	duas := equipChoice{Slot: "wielded2", Rotulo: "Empunhar (2 mãos)"}
-	if catalogo.Hands == 2 {
-		return []equipChoice{duas}
+func itemHands(catalog book.Item) []equipChoice {
+	two := equipChoice{Slot: "wielded2", Label: "Empunhar (2 mãos)"}
+	if catalog.Hands == 2 {
+		return []equipChoice{two}
 	}
-	uma := equipChoice{Slot: "wielded", Rotulo: "Empunhar (1 mão)"}
-	if catalogo.Weapon != nil && contemTraco(catalogo.Weapon.Traits, "versatil") {
-		return []equipChoice{uma, duas}
+	one := equipChoice{Slot: "wielded", Label: "Empunhar (1 mão)"}
+	if catalog.Weapon != nil && contemTraco(catalog.Weapon.Traits, "versatil") {
+		return []equipChoice{one, two}
 	}
-	return []equipChoice{uma}
+	return []equipChoice{one}
 }
 
-func contemTraco(tracos []string, alvo string) bool {
-	for _, t := range tracos {
-		if t == alvo {
+func contemTraco(traits []string, target string) bool {
+	for _, t := range traits {
+		if t == target {
 			return true
 		}
 	}
@@ -195,76 +195,76 @@ func contemTraco(tracos []string, alvo string) bool {
 }
 
 // consumableUse descreve a dose, ou nil quando o item não se usa.
-func consumableUse(catalogo book.Item) *consumeChoice {
-	if catalogo.Consumable == nil {
+func consumableUse(catalog book.Item) *consumeChoice {
+	if catalog.Consumable == nil {
 		return nil
 	}
-	uso := &consumeChoice{Escopo: writtenScope(catalogo.Consumable.Scope)}
-	if imediato := catalogo.Consumable.Instant; imediato != nil && catalogo.Consumable.Scope == "instant" {
-		uso.HpDice = rollThatAsksANumber(imediato.HP)
-		uso.MpDice = rollThatAsksANumber(imediato.MP)
+	use := &consumeChoice{Scope: writtenScope(catalog.Consumable.Scope)}
+	if immediate := catalog.Consumable.Instant; immediate != nil && catalog.Consumable.Scope == "instant" {
+		use.HpDice = rollThatAsksANumber(immediate.HP)
+		use.MpDice = rollThatAsksANumber(immediate.MP)
 	}
-	return uso
+	return use
 }
 
 var consumableScopes = map[string]string{
 	"instant": "imediato", "scene": "1 cena", "day": "1 dia",
 }
 
-func writtenScope(escopo string) string {
-	if nome, tem := consumableScopes[escopo]; tem {
-		return nome
+func writtenScope(scope string) string {
+	if name, found := consumableScopes[scope]; found {
+		return name
 	}
-	return escopo
+	return scope
 }
 
 // rollThatAsksANumber é o dado que a MESA rola, ou "" quando o ganho é fixo.
 //
 // Ganho fixo não pergunta nada: perguntar o resultado de um dado que não existe
 // é pedir que a pessoa invente um número.
-func rollThatAsksANumber(ganho *book.GainRoll) string {
-	if ganho == nil || ganho.Dice == "" || ganho.Dice == "0" {
+func rollThatAsksANumber(gain *book.GainRoll) string {
+	if gain == nil || gain.Dice == "" || gain.Dice == "0" {
 		return ""
 	}
-	return ganho.Dice
+	return gain.Dice
 }
 
 // thatSaysBook é o bloco de referência da ficha do item.
-func thatSaysBook(catalogo book.Item) *bookInfo {
+func thatSaysBook(catalog book.Item) *bookInfo {
 	info := &bookInfo{
-		Categoria: writtenCategory(catalogo.Category),
-		Preco:     sheet.WithComma(catalogo.Price),
-		Pagina:    catalogo.BookPage,
+		Category: writtenCategory(catalog.Category),
+		Price:    sheet.WithComma(catalog.Price),
+		Page:     catalog.BookPage,
 	}
-	if arma := catalogo.Weapon; arma != nil {
-		info.Linhas = append(info.Linhas, "dano "+arma.Damage+" · crítico "+
-			strconv.Itoa(arma.CritRange)+"/×"+strconv.Itoa(arma.CritMult))
-		if arma.Type != "" {
-			info.Linhas = append(info.Linhas, "tipo "+damageWrittenKind(arma.Type))
+	if weapon := catalog.Weapon; weapon != nil {
+		info.Rows = append(info.Rows, "dano "+weapon.Damage+" · crítico "+
+			strconv.Itoa(weapon.CritRange)+"/×"+strconv.Itoa(weapon.CritMult))
+		if weapon.Type != "" {
+			info.Rows = append(info.Rows, "tipo "+damageWrittenKind(weapon.Type))
 		}
 	}
-	if protecao := catalogo.Armor; protecao != nil {
-		info.Linhas = append(info.Linhas, protectionRow(*protecao, true))
+	if protection := catalog.Armor; protection != nil {
+		info.Rows = append(info.Rows, protectionRow(*protection, true))
 	}
-	if protecao := catalogo.Shield; protecao != nil {
-		info.Linhas = append(info.Linhas, protectionRow(*protecao, false))
+	if protection := catalog.Shield; protection != nil {
+		info.Rows = append(info.Rows, protectionRow(*protection, false))
 	}
-	for _, m := range catalogo.Modifiers {
-		info.Linhas = append(info.Linhas, modifierBadge(m))
+	for _, m := range catalog.Modifiers {
+		info.Rows = append(info.Rows, modifierBadge(m))
 	}
-	info.Linhas = repetidosSem(info.Linhas)
+	info.Rows = repetidosSem(info.Rows)
 	return info
 }
 
-func protectionRow(protecao book.Armor, ehArmadura bool) string {
-	linha := "Defesa " + book.WithSign(protecao.Defense) + " · penalidade " + strconv.Itoa(protecao.Penalty)
-	if !ehArmadura {
-		return linha
+func protectionRow(protection book.Armor, isArmor bool) string {
+	row := "Defesa " + book.WithSign(protection.Defense) + " · penalidade " + strconv.Itoa(protection.Penalty)
+	if !isArmor {
+		return row
 	}
-	if protecao.Heavy {
-		return linha + " · pesada"
+	if protection.Heavy {
+		return row + " · pesada"
 	}
-	return linha + " · leve"
+	return row + " · leve"
 }
 
 // damageWrittenKinds é o pt-BR do tipo de dano da arma.
@@ -276,11 +276,11 @@ var damageWrittenKinds = map[string]string{
 	"corte-perfuracao": "corte ou perfuração",
 }
 
-func damageWrittenKind(tipo string) string {
-	if nome, tem := damageWrittenKinds[tipo]; tem {
-		return nome
+func damageWrittenKind(kind string) string {
+	if name, found := damageWrittenKinds[kind]; found {
+		return name
 	}
-	return tipo
+	return kind
 }
 
 // writtenCategories é o pt-BR de cada categoria do catálogo.
@@ -297,34 +297,34 @@ var writtenCategories = map[string]string{
 }
 
 func writtenCategory(id string) string {
-	if nome, tem := writtenCategories[id]; tem {
-		return nome
+	if name, found := writtenCategories[id]; found {
+		return name
 	}
 	return id
 }
 
 // appliedImprovements são as sobreposições em vigor, com o que elas fazem.
 func appliedImprovements(item sheet.ItemDTO) []overlayRow {
-	linhas := []overlayRow{}
-	for _, entrada := range sortedImprovements(item) {
-		linhas = append(linhas, overlayRow{Nome: entrada.Name, Efeito: overlaySummary(entrada)})
+	rows := []overlayRow{}
+	for _, entry := range sortedImprovements(item) {
+		rows = append(rows, overlayRow{Name: entry.Name, Effect: overlaySummary(entry)})
 	}
-	return linhas
+	return rows
 }
 
 // overlaySummary junta as notas do catálogo numa linha, SEM repetir.
 //
 // A Equilibrada carrega quatro modificadores de manobra que dividem a mesma
 // nota "+2 em manobras"; juntá-las cruas escrevia a frase quatro vezes.
-func overlaySummary(entrada book.Item) string {
-	notas := []string{}
-	for _, m := range entrada.Modifiers {
+func overlaySummary(entry book.Item) string {
+	notes := []string{}
+	for _, m := range entry.Modifiers {
 		if m.Note != "" {
-			notas = append(notas, m.Note)
+			notes = append(notes, m.Note)
 		}
 	}
-	if resumo := strings.Join(repetidosSem(notas), ", "); resumo != "" {
-		return resumo
+	if summary := strings.Join(repetidosSem(notes), ", "); summary != "" {
+		return summary
 	}
 	return "sem efeito mecânico"
 }
@@ -334,19 +334,19 @@ func overlaySummary(entrada book.Item) string {
 // O filtro é o `appliesTo` do catálogo, e ele é a mesma regra que o servidor
 // cobra ao gravar (`fitsItemImprovement`): a lista mostra o que cabe, e quem
 // recusa o resto é o servidor.
-func thatFitOverlays(categoria, familia string, aplicadas []string) []overlayChoice {
-	escolhas := []overlayChoice{}
-	for _, entrada := range book.Catalogs().Items {
-		if entrada.Category != categoria || !aceitaAFamilia(entrada, familia) {
+func thatFitOverlays(category, family string, applied []string) []overlayChoice {
+	choices := []overlayChoice{}
+	for _, entry := range book.Catalogs().Items {
+		if entry.Category != category || !aceitaAFamilia(entry, family) {
 			continue
 		}
-		escolhas = append(escolhas, overlayChoice{
-			ID: entrada.ID, Nome: entrada.Name, Efeito: overlaySummary(entrada),
-			Preco: sheet.WithComma(entrada.Price), Ativa: contemTraco(aplicadas, entrada.ID),
+		choices = append(choices, overlayChoice{
+			ID: entry.ID, Name: entry.Name, Effect: overlaySummary(entry),
+			Price: sheet.WithComma(entry.Price), Active: contemTraco(applied, entry.ID),
 		})
 	}
-	sort.SliceStable(escolhas, func(a, b int) bool { return escolhas[a].Nome < escolhas[b].Nome })
-	return escolhas
+	sort.SliceStable(choices, func(a, b int) bool { return choices[a].Name < choices[b].Name })
+	return choices
 }
 
 // catalogItemRowsOf são as entradas do catálogo que o diálogo de adicionar
@@ -356,44 +356,44 @@ func thatFitOverlays(categoria, familia string, aplicadas []string) []overlayCho
 // são coisas que se aplicam a um item — e quem as aplica é o diálogo de
 // melhorias, que já filtra pela família. Ofertá-las aqui deixaria a pessoa pôr
 // um "Aço-rubi" solto na mochila.
-func catalogItemRowsOf(busca, categoria string) []catalogItemRow {
-	termo := search.Fold(strings.TrimSpace(busca))
-	linhas := []catalogItemRow{}
-	for _, entrada := range book.Catalogs().Items {
-		if entrada.Category == "improvement" || entrada.Category == "material" {
+func catalogItemRowsOf(query, category string) []catalogItemRow {
+	term := search.Fold(strings.TrimSpace(query))
+	rows := []catalogItemRow{}
+	for _, entry := range book.Catalogs().Items {
+		if entry.Category == "improvement" || entry.Category == "material" {
 			continue
 		}
-		if categoria != "" && entrada.Category != categoria {
+		if category != "" && entry.Category != category {
 			continue
 		}
-		if termo != "" && !strings.Contains(search.Fold(entrada.Name), termo) &&
-			!strings.Contains(search.Fold(writtenCategory(entrada.Category)), termo) {
+		if term != "" && !strings.Contains(search.Fold(entry.Name), term) &&
+			!strings.Contains(search.Fold(writtenCategory(entry.Category)), term) {
 			continue
 		}
-		linhas = append(linhas, catalogItemRow{
-			ID: entrada.ID, Nome: entrada.Name, Categoria: writtenCategory(entrada.Category),
-			Espacos: sheet.WithComma(entrada.Slots), Preco: sheet.WithComma(entrada.Price), Pagina: entrada.BookPage,
+		rows = append(rows, catalogItemRow{
+			ID: entry.ID, Name: entry.Name, Category: writtenCategory(entry.Category),
+			Slots: sheet.WithComma(entry.Slots), Price: sheet.WithComma(entry.Price), Page: entry.BookPage,
 		})
 	}
-	return linhas
+	return rows
 }
 
 // catalogCategories são as opções do seletor do diálogo de adicionar,
 // lidas do próprio catálogo — uma lista escrita à mão envelheceria calada.
-func catalogCategories(ativa string) []filterOption {
-	vistas := map[string]bool{}
-	opcoes := []filterOption{{Valor: "", Rotulo: "Todas as categorias", Ativo: ativa == ""}}
+func catalogCategories(active string) []filterOption {
+	seen := map[string]bool{}
+	options := []filterOption{{Value: "", Label: "Todas as categorias", Active: active == ""}}
 	ids := []string{}
-	for _, entrada := range book.Catalogs().Items {
-		if entrada.Category == "improvement" || entrada.Category == "material" || vistas[entrada.Category] {
+	for _, entry := range book.Catalogs().Items {
+		if entry.Category == "improvement" || entry.Category == "material" || seen[entry.Category] {
 			continue
 		}
-		vistas[entrada.Category] = true
-		ids = append(ids, entrada.Category)
+		seen[entry.Category] = true
+		ids = append(ids, entry.Category)
 	}
 	sort.Strings(ids)
 	for _, id := range ids {
-		opcoes = append(opcoes, filterOption{Valor: id, Rotulo: writtenCategory(id), Ativo: id == ativa})
+		options = append(options, filterOption{Value: id, Label: writtenCategory(id), Active: id == active})
 	}
-	return opcoes
+	return options
 }

@@ -25,11 +25,11 @@ templ choicesButton(v View) {
 		class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "shrink-0 gap-1") }
 	>
 		Escolher
-		if len(v.Choices.Pendencias) > 0 {
+		if len(v.Choices.Pending) > 0 {
 			<span aria-hidden="true" class="rounded-full bg-primary px-1.5 text-3xs font-bold text-primary-foreground">
-				{ strconv.Itoa(len(v.Choices.Pendencias)) }
+				{ strconv.Itoa(len(v.Choices.Pending)) }
 			</span>
-			<span class="sr-only">{ writtenPendings(len(v.Choices.Pendencias)) }</span>
+			<span class="sr-only">{ writtenPendings(len(v.Choices.Pending)) }</span>
 		}
 	</button>
 }
@@ -37,14 +37,14 @@ templ choicesButton(v View) {
 // choicesDialog é a administração da ficha.
 templ choicesDialog(v View) {
 	@overlay("escolher-poderes", "Escolher poderes", "Star", false) {
-		if len(v.Choices.Pendencias) > 0 {
+		if len(v.Choices.Pending) > 0 {
 			<div class="space-y-1 rounded-sm border border-grimorio-gold/40 bg-accent p-2">
 				<p class={ ui.FieldLabelClasses("gold", "") }>
-					{ writtenPendings(len(v.Choices.Pendencias)) }
+					{ writtenPendings(len(v.Choices.Pending)) }
 				</p>
-				for _, p := range v.Choices.Pendencias {
-					@ui.Button(ui.VariantLink, ui.SizeInline, "block w-full text-left text-xs", templ.Attributes{"type": "button", "data-on:click": "$power_source = '" + p.Fonte + "'"}) {
-						{ p.Rotulo }
+				for _, p := range v.Choices.Pending {
+					@ui.Button(ui.VariantLink, ui.SizeInline, "block w-full text-left text-xs", templ.Attributes{"type": "button", "data-on:click": "$power_source = '" + p.Source + "'"}) {
+						{ p.Label }
 					}
 				}
 			</div>
@@ -90,11 +90,11 @@ templ raceChoicesBlock(v View) {
 								<button
 									type="button"
 									role="switch"
-									aria-checked={ ui.AriaBool(o.Ativo) }
-									aria-label={ o.Rotulo }
-									data-on:click={ sheetPost(v, "/poderes/variante/"+o.Valor) }
-									class={ choiceChip(o.Ativo) }
-								>{ o.Rotulo }</button>
+									aria-checked={ ui.AriaBool(o.Active) }
+									aria-label={ o.Label }
+									data-on:click={ sheetPost(v, "/poderes/variante/"+o.Value) }
+									class={ choiceChip(o.Active) }
+								>{ o.Label }</button>
 							}
 						</div>
 					</div>
@@ -119,11 +119,11 @@ templ attributeChoiceBlock(v View, escolha attributeChoice) {
 					<button
 						type="button"
 						role="switch"
-						aria-checked={ ui.AriaBool(contemTraco(escolha.Chosen, o.Valor)) }
-						aria-label={ o.Rotulo }
-						data-on:click={ sheetPost(v, "/poderes/ascendencia/"+o.Valor) }
-						class={ choiceChip(contemTraco(escolha.Chosen, o.Valor)) }
-					>{ o.Rotulo }</button>
+						aria-checked={ ui.AriaBool(contemTraco(escolha.Chosen, o.Value)) }
+						aria-label={ o.Label }
+						data-on:click={ sheetPost(v, "/poderes/ascendencia/"+o.Value) }
+						class={ choiceChip(contemTraco(escolha.Chosen, o.Value)) }
+					>{ o.Label }</button>
 				}
 			</div>
 		} else {
@@ -132,12 +132,12 @@ templ attributeChoiceBlock(v View, escolha attributeChoice) {
 					<button
 						type="button"
 						role="switch"
-						aria-checked={ ui.AriaBool(contemTraco(escolha.Chosen, o.Valor)) }
-						aria-label={ o.Rotulo }
-						data-on:click={ thatTogglesAttributeGesture(o.Valor) }
-						data-attr:data-escolhido={ "$race_attributes.includes('" + o.Valor + "')" }
+						aria-checked={ ui.AriaBool(contemTraco(escolha.Chosen, o.Value)) }
+						aria-label={ o.Label }
+						data-on:click={ thatTogglesAttributeGesture(o.Value) }
+						data-attr:data-escolhido={ "$race_attributes.includes('" + o.Value + "')" }
 						class={ ui.BadgeClasses("inline-flex items-center border-grimorio-iron text-3xs uppercase tracking-wider text-muted-foreground data-[escolhido]:border-grimorio-gold/60 data-[escolhido]:bg-accent data-[escolhido]:text-grimorio-gold") }
-					>{ o.Rotulo }</button>
+					>{ o.Label }</button>
 				}
 			</div>
 			<button
@@ -166,11 +166,11 @@ templ originChoicesBlock(v View) {
 				<button
 					type="button"
 					role="switch"
-					aria-checked={ ui.AriaBool(o.Ativo) }
-					aria-label={ o.Rotulo }
-					data-on:click={ sheetPost(v, "/poderes/origem/"+o.Valor) }
-					class={ choiceChip(o.Ativo) + " block w-full text-left" }
-				>{ o.Rotulo }</button>
+					aria-checked={ ui.AriaBool(o.Active) }
+					aria-label={ o.Label }
+					data-on:click={ sheetPost(v, "/poderes/origem/"+o.Value) }
+					class={ choiceChip(o.Active) + " block w-full text-left" }
+				>{ o.Label }</button>
 			}
 		</section>
 	}
@@ -186,11 +186,11 @@ templ classChoicesBlock(v View) {
 				</h4>
 				<span class="font-mono text-2xs text-muted-foreground">{ classWrittenSlots(cartao) }</span>
 			</div>
-			if cartao.Caminho != nil {
-				@classPicker(v, cartao.ClassName, "caminho", "Caminho", *cartao.Caminho)
+			if cartao.Path != nil {
+				@classPicker(v, cartao.ClassName, "caminho", "Caminho", *cartao.Path)
 			}
-			if cartao.Devoto != nil {
-				@classPicker(v, cartao.ClassName, "devoto", "Devoto", *cartao.Devoto)
+			if cartao.Devotee != nil {
+				@classPicker(v, cartao.ClassName, "devoto", "Devoto", *cartao.Devotee)
 			}
 			<input
 				type="search"
@@ -215,7 +215,7 @@ templ classChoicesBlock(v View) {
 					>
 						<span class="font-semibold text-foreground">{ poder.Name }</span>
 						<span class="min-w-0 flex-1 truncate text-muted-foreground">{ poder.Detail }</span>
-						<span class="shrink-0 text-3xs text-muted-foreground">{ poder.Fonte }</span>
+						<span class="shrink-0 text-3xs text-muted-foreground">{ poder.Source }</span>
 					</button>
 				}
 			</div>
@@ -232,11 +232,11 @@ templ classPicker(v View, classe, escolha, rotulo string, seletor pickerChoice) 
 				<button
 					type="button"
 					role="switch"
-					aria-checked={ ui.AriaBool(o.Ativo) }
-					aria-label={ o.Rotulo }
-					data-on:click={ choiceClassCommand(v, classe, escolha, o.Valor) }
-					class={ choiceChip(o.Ativo) }
-				>{ o.Rotulo }</button>
+					aria-checked={ ui.AriaBool(o.Active) }
+					aria-label={ o.Label }
+					data-on:click={ choiceClassCommand(v, classe, escolha, o.Value) }
+					class={ choiceChip(o.Active) }
+				>{ o.Label }</button>
 			}
 		</div>
 	</div>

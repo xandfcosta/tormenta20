@@ -34,7 +34,7 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 							type="button"
 							data-on:click={ equipCommand(v, ficha, lugar) + "; $detail = ''" }
 							class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
-						>{ lugar.Rotulo }</button>
+						>{ lugar.Label }</button>
 					}
 				</div>
 			</div>
@@ -50,8 +50,8 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 				<p class={ ui.FieldLabelClasses("muted", "") }>Melhorias & material</p>
 				for _, melhoria := range ficha.Overlays {
 					<p class="text-xs">
-						<span class="font-semibold text-grimorio-gold">{ melhoria.Nome }</span>
-						<span class="ml-2 text-muted-foreground">{ melhoria.Efeito }</span>
+						<span class="font-semibold text-grimorio-gold">{ melhoria.Name }</span>
+						<span class="ml-2 text-muted-foreground">{ melhoria.Effect }</span>
 					</p>
 				}
 			</div>
@@ -97,7 +97,7 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 templ consumeBlock(v View, ficha itemSheet) {
 	<div class="space-y-1 rounded-sm border border-grimorio-iron p-2">
 		<p class={ ui.FieldLabelClasses("muted", "") }>
-			{ "Usar · " + ficha.Consumable.Escopo }
+			{ "Usar · " + ficha.Consumable.Scope }
 		</p>
 		if ficha.Consumable.HpDice != "" {
 			@rollField("item_roll_hp", "PV rolados ("+ficha.Consumable.HpDice+")")
@@ -129,8 +129,8 @@ templ rollField(sinal, rotulo string) {
 // bookBlock é o que o livro diz do item.
 templ bookBlock(ficha itemSheet) {
 	<div class="space-y-1 rounded-sm border border-grimorio-iron p-2 text-xs text-muted-foreground">
-		<p>{ ficha.Book.Categoria + " · T$ " + ficha.Book.Preco + " · p" + strconv.Itoa(ficha.Book.Pagina) }</p>
-		for _, linha := range ficha.Book.Linhas {
+		<p>{ ficha.Book.Category + " · T$ " + ficha.Book.Price + " · p" + strconv.Itoa(ficha.Book.Page) }</p>
+		for _, linha := range ficha.Book.Rows {
 			<p>{ linha }</p>
 		}
 	</div>
@@ -149,15 +149,15 @@ templ overlayDialog(v View, ficha itemSheet) {
 				<button
 					type="button"
 					role="switch"
-					aria-checked={ ui.AriaBool(escolha.Ativa) }
-					aria-label={ escolha.Nome }
+					aria-checked={ ui.AriaBool(escolha.Active) }
+					aria-label={ escolha.Name }
 					data-on:click={ thatTogglesImprovementGesture(escolha) }
 					data-attr:data-escolhida={ improvementSignal(escolha) }
 					class="flex w-full items-baseline gap-2 rounded-sm border border-grimorio-iron px-2 py-1 text-left text-xs outline-none transition-colors data-[escolhida]:border-grimorio-gold/60 data-[escolhida]:bg-accent"
 				>
-					<span class="font-semibold text-foreground">{ escolha.Nome }</span>
-					<span class="min-w-0 flex-1 truncate text-muted-foreground">{ escolha.Efeito }</span>
-					<span class="shrink-0 font-mono text-3xs text-muted-foreground">{ "T$ " + escolha.Preco }</span>
+					<span class="font-semibold text-foreground">{ escolha.Name }</span>
+					<span class="min-w-0 flex-1 truncate text-muted-foreground">{ escolha.Effect }</span>
+					<span class="shrink-0 font-mono text-3xs text-muted-foreground">{ "T$ " + escolha.Price }</span>
 				</button>
 			}
 		</div>
@@ -170,8 +170,8 @@ templ overlayDialog(v View, ficha itemSheet) {
 			>
 				<option value="">Nenhum</option>
 				for _, escolha := range ficha.Materials {
-					<option value={ escolha.ID } selected?={ escolha.Ativa }>
-						{ escolha.Nome + " · T$ " + escolha.Preco }
+					<option value={ escolha.ID } selected?={ escolha.Active }>
+						{ escolha.Name + " · T$ " + escolha.Price }
 					</option>
 				}
 			</select>
@@ -204,7 +204,7 @@ templ catalogAddDialog(v View) {
 				class="h-9 max-w-[45%] rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 			>
 				for _, opcao := range v.Bag.CatalogCategories {
-					<option value={ opcao.Valor } selected?={ opcao.Ativo }>{ opcao.Rotulo }</option>
+					<option value={ opcao.Value } selected?={ opcao.Active }>{ opcao.Label }</option>
 				}
 			</select>
 		</div>
@@ -218,21 +218,21 @@ templ catalogAddDialog(v View) {
 				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 			/>
 		</label>
-		if len(v.Bag.Catalogo) == 0 {
+		if len(v.Bag.Catalog) == 0 {
 			<p class="py-4 text-center text-xs text-muted-foreground">Nenhum item para essa busca.</p>
 		} else {
 			<div class="max-h-[45vh] space-y-1 overflow-y-auto">
-				for _, linha := range v.Bag.Catalogo {
+				for _, linha := range v.Bag.Catalog {
 					<button
 						type="button"
-						aria-label={ "Adicionar " + linha.Nome }
+						aria-label={ "Adicionar " + linha.Name }
 						data-on:click={ sheetPost(v, "/itens/adiciona/"+linha.ID) + "; $detail = ''" }
 						class="flex w-full items-baseline gap-2 rounded-sm border border-grimorio-iron px-2 py-1 text-left text-xs outline-none transition-colors hover:border-grimorio-gold/50"
 					>
-						<span class="min-w-0 flex-1 truncate text-foreground">{ linha.Nome }</span>
-						<span class="shrink-0 text-3xs text-muted-foreground">{ linha.Categoria }</span>
+						<span class="min-w-0 flex-1 truncate text-foreground">{ linha.Name }</span>
+						<span class="shrink-0 text-3xs text-muted-foreground">{ linha.Category }</span>
 						<span class="shrink-0 font-mono text-3xs text-muted-foreground">
-							{ "esp " + linha.Espacos + " · T$ " + linha.Preco }
+							{ "esp " + linha.Slots + " · T$ " + linha.Price }
 						</span>
 					</button>
 				}
@@ -363,7 +363,7 @@ func thatOpensEditGesture(ficha itemSheet) string {
 func improvementWrittenList(ficha itemSheet) string {
 	ids := []string{}
 	for _, escolha := range ficha.Improvements {
-		if escolha.Ativa {
+		if escolha.Active {
 			ids = append(ids, "'"+escolha.ID+"'")
 		}
 	}
@@ -372,7 +372,7 @@ func improvementWrittenList(ficha itemSheet) string {
 
 func chosenMaterial(ficha itemSheet) string {
 	for _, escolha := range ficha.Materials {
-		if escolha.Ativa {
+		if escolha.Active {
 			return escolha.ID
 		}
 	}

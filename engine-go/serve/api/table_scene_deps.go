@@ -108,6 +108,6 @@ func (h tableHost) PlayerSheet(r *http.Request, characterID int64) *sheetui.View
 	if err != nil {
 		return nil
 	}
-	sheet.Embutida = true
+	sheet.Embedded = true
 	return &sheet
 }

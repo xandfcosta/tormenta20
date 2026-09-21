@@ -35,7 +35,7 @@ func togglePrepared(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) 
 // aprimoramentos, o teto da p224 e as reduções saem do que o motor já montou, e
 // recomputá-la dentro do caso de uso faria o mesmo trabalho duas vezes no mesmo
 // pedido.
-func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
+func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	spellID := chi.URLParam(r, "magia")
 	spell, known := catalog.LookupSpell(spellID)
 	if !known {
@@ -53,7 +53,7 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, sinais 
 	if err != nil {
 		return err
 	}
-	if err := s.plays.Cast(r.Context(), dto, spellID, sinais.augments()); err != nil {
+	if err := s.plays.Cast(r.Context(), dto, spellID, signals.augments()); err != nil {
 		return err
 	}
 	return s.deps.SpendActionOnTurn(row.ID, cost)

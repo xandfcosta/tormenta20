@@ -35,8 +35,8 @@ import (
 type spellbookPanel struct {
 	Learned []learnedSpellRow
 	Granted []grantedSpellRow
-	// Catalogo são as magias que o personagem AINDA não sabe, já filtradas.
-	Catalogo []catalogSpellRow
+	// Catalog são as magias que o personagem AINDA não sabe, já filtradas.
+	Catalog []catalogSpellRow
 	// IsCaster diz se há classe conjuradora. Sem ela não há o que aprender — mas
 	// as concedidas continuam aparecendo.
 	IsCaster bool
@@ -48,15 +48,15 @@ type spellbookPanel struct {
 	CastableCircle int
 	PmCurrent      int64
 	Search         string
-	Circulo        string
-	Escola         string
-	Escolas        []filterOption
+	Circle         string
+	School         string
+	Schools        []filterOption
 }
 
 type filterOption struct {
-	Valor  string
-	Rotulo string
-	Ativo  bool
+	Value  string
+	Label  string
+	Active bool
 }
 
 type learnedSpellRow struct {
@@ -113,7 +113,7 @@ type augmentRow struct {
 	// Exclusive não aceita companhia na mesma conjuração (p171). Truque diz, além
 	// disso, que a conjuração inteira custa zero. Ver GLOSSARY.
 	Exclusive bool
-	Truque    bool
+	Cantrip   bool
 	// Toggle, More e Less são os gestos MONTADOS, e não expressões escritas no
 	// `.templ`, porque cada um precisa ver a VIZINHANÇA: ligar o exclusivo apaga
 	// os outros e ligar qualquer outro apaga o exclusivo. É a mesma regra do
@@ -125,95 +125,95 @@ type augmentRow struct {
 }
 
 // spellbookPanelOf monta a aba.
-func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, busca, circulo, escola string) spellbookPanel {
+func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, search, circle, school string) spellbookPanel {
 	panel := spellbookPanel{
 		IsCaster:       len(casterClassesOf(dto)) > 0,
 		RequiresPrep:   sheet.RequiresPreparation(dto.Classes, dto.ClassChoices),
 		CastableCircle: sheet.HighestCastableCircle(dto.Classes, 0),
 		PmCurrent:      dto.MpCurrent,
-		Search:         busca,
-		Circulo:        circulo,
-		Escola:         escola,
-		Escolas:        schoolOptions(escola),
+		Search:         search,
+		Circle:         circle,
+		School:         school,
+		Schools:        schoolOptions(school),
 		Granted:        grantedSpellRowsOf(dto),
 	}
 	panel.Learned = learnedSpellRowsOf(s, dto, panel.CastableCircle)
 	// Quem não conjura não aprende, e por isso não paga o catálogo: a lista
 	// inteira do Capítulo 4 viajaria em toda cena da ficha de um guerreiro.
 	if panel.IsCaster {
-		panel.Catalogo = catalogSpellRowsOf(dto, busca, circulo, escola)
+		panel.Catalog = catalogSpellRowsOf(dto, search, circle, school)
 	}
 	return panel
 }
 
 // casterClassesOf são as classes do personagem que conjuram.
 func casterClassesOf(dto sheet.CharacterDTO) []string {
-	nomes := []string{}
+	names := []string{}
 	for _, c := range dto.Classes {
 		if sheet.IsCasterClass(c.ClassName) {
-			nomes = append(nomes, c.ClassName)
+			names = append(names, c.ClassName)
 		}
 	}
-	return nomes
+	return names
 }
 
 // learnedSpellRowsOf é o grimório, por círculo e depois por nome.
 func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learnedSpellRow {
-	linhas := []learnedSpellRow{}
-	for _, aprendida := range dto.Spells {
-		magia, conhecida := catalog.LookupSpell(aprendida.CatalogSpellID)
-		if !conhecida {
+	rows := []learnedSpellRow{}
+	for _, learned := range dto.Spells {
+		spell, known := catalog.LookupSpell(learned.CatalogSpellID)
+		if !known {
 			continue
 		}
-		doLivro := spellOfBook(aprendida.CatalogSpellID)
-		linhas = append(linhas, learnedSpellRow{
-			ID: aprendida.CatalogSpellID, Name: doLivro.Name,
-			Circle: circleName(doLivro.Circle), School: schoolName(doLivro.School),
-			BasePm: sheet.SpellBasePmCost[doLivro.Circle], Prepared: aprendida.Prepared,
-			CD:        s.spellCdOf(dto, magia),
-			Augments:  augmentRowsOf(aprendida.CatalogSpellID, magia, castable),
-			Execution: doLivro.Execution, Range: doLivro.Range, Duration: doLivro.Duration,
-			Effect: doLivro.BaseEffect, Page: doLivro.BookPage,
-			Command: aprendida.CatalogSpellID,
+		fromBook := spellOfBook(learned.CatalogSpellID)
+		rows = append(rows, learnedSpellRow{
+			ID: learned.CatalogSpellID, Name: fromBook.Name,
+			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
+			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Prepared: learned.Prepared,
+			CD:        s.spellCdOf(dto, spell),
+			Augments:  augmentRowsOf(learned.CatalogSpellID, spell, castable),
+			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
+			Effect: fromBook.BaseEffect, Page: fromBook.BookPage,
+			Command: learned.CatalogSpellID,
 		})
 	}
-	sort.SliceStable(linhas, func(a, b int) bool {
-		if linhas[a].Circle != linhas[b].Circle {
-			return linhas[a].Circle < linhas[b].Circle
+	sort.SliceStable(rows, func(a, b int) bool {
+		if rows[a].Circle != rows[b].Circle {
+			return rows[a].Circle < rows[b].Circle
 		}
-		return linhas[a].Name < linhas[b].Name
+		return rows[a].Name < rows[b].Name
 	})
-	return linhas
+	return rows
 }
 
 // spellCdOf é a CD dos testes contra a magia, pelo atributo-chave da classe.
 //
 // Ela vem do MOTOR, pelo mapa por atributo que a caixa "CD Magia" do Combate já
 // usa: uma segunda conta aqui daria dois números para a mesma pergunta.
-func (s Scene) spellCdOf(dto sheet.CharacterDTO, magia catalog.Spell) string {
+func (s Scene) spellCdOf(dto sheet.CharacterDTO, spell catalog.Spell) string {
 	sheet, _, ok := s.sheetForPanels(dto)
 	if !ok {
 		return "—"
 	}
-	melhor := 0
-	for _, classe := range dto.Classes {
-		prog, conjura := book.SpellProgressions()[classe.ClassName]
-		if !conjura || !aceitaAClasse(magia.Classes, classe.ClassName) {
+	best := 0
+	for _, class := range dto.Classes {
+		prog, casts := book.SpellProgressions()[class.ClassName]
+		if !casts || !aceitaAClasse(spell.Classes, class.ClassName) {
 			continue
 		}
-		if cd := sheet.SpellCdByAttribute[prog.Attribute]; cd > melhor {
-			melhor = cd
+		if cd := sheet.SpellCdByAttribute[prog.Attribute]; cd > best {
+			best = cd
 		}
 	}
-	if melhor == 0 {
+	if best == 0 {
 		return "—"
 	}
-	return strconv.Itoa(melhor)
+	return strconv.Itoa(best)
 }
 
-func aceitaAClasse(lista []string, nome string) bool {
-	for _, c := range lista {
-		if c == nome {
+func aceitaAClasse(list []string, name string) bool {
+	for _, c := range list {
+		if c == name {
 			return true
 		}
 	}
@@ -222,58 +222,58 @@ func aceitaAClasse(lista []string, nome string) bool {
 
 // augmentRowsOf traduz os aprimoramentos, trancando os fora de alcance e
 // montando os gestos que se apagam entre si.
-func augmentRowsOf(spellID string, magia catalog.Spell, castable int) []augmentRow {
-	var exclusivos []int
-	for i, a := range magia.Augments {
+func augmentRowsOf(spellID string, spell catalog.Spell, castable int) []augmentRow {
+	var exclusive []int
+	for i, a := range spell.Augments {
 		if a.Exclusive {
-			exclusivos = append(exclusivos, i)
+			exclusive = append(exclusive, i)
 		}
 	}
 
-	linhas := make([]augmentRow, 0, len(magia.Augments))
-	for i, a := range magia.Augments {
-		linha := augmentRow{
+	rows := make([]augmentRow, 0, len(spell.Augments))
+	for i, a := range spell.Augments {
+		row := augmentRow{
 			Index: i, PM: a.PmCost, Stacks: a.Kind != "muda",
 			Description: augmentDescription(spellID, i),
-			Exclusive:   a.Exclusive, Truque: a.Cantrip,
+			Exclusive:   a.Exclusive, Cantrip: a.Cantrip,
 		}
 		if a.RequiresCircle != nil {
-			linha.RequiredCircle = *a.RequiresCircle
-			linha.Locked = *a.RequiresCircle > castable
+			row.RequiredCircle = *a.RequiresCircle
+			row.Locked = *a.RequiresCircle > castable
 		}
 		// Quem o gesto APAGA: o exclusivo apaga todos os outros, e os outros
 		// apagam os exclusivos. Sem isto a tela deixa montar truque + companhia,
 		// mostra um custo e o servidor recusa na hora do clique — a recusa é a
 		// fronteira, mas oferecer o que não vale é a tela mentindo.
-		apaga := exclusivos
+		deletes := exclusive
 		if a.Exclusive {
-			apaga = outrosIndices(len(magia.Augments), i)
+			deletes = outrosIndices(len(spell.Augments), i)
 		}
-		linha.Toggle = clearSignals(apaga, i) + augmentSignal(i) + " = " + augmentSignal(i) + " ? 0 : 1"
-		linha.More = clearSignals(apaga, i) + augmentSignal(i) + "++"
+		row.Toggle = clearSignals(deletes, i) + augmentSignal(i) + " = " + augmentSignal(i) + " ? 0 : 1"
+		row.More = clearSignals(deletes, i) + augmentSignal(i) + "++"
 		// Diminuir não apaga nada: tirar uma pilha não monta combinação nova.
-		linha.Less = augmentSignal(i) + " = Math.max(0, " + augmentSignal(i) + " - 1)"
-		linhas = append(linhas, linha)
+		row.Less = augmentSignal(i) + " = Math.max(0, " + augmentSignal(i) + " - 1)"
+		rows = append(rows, row)
 	}
-	return linhas
+	return rows
 }
 
 // outrosIndices são todos os índices menos o próprio.
-func outrosIndices(quantos, proprio int) []int {
-	var fora []int
-	for i := 0; i < quantos; i++ {
-		if i != proprio {
-			fora = append(fora, i)
+func outrosIndices(howMany, own int) []int {
+	var outside []int
+	for i := 0; i < howMany; i++ {
+		if i != own {
+			outside = append(outside, i)
 		}
 	}
-	return fora
+	return outside
 }
 
 // clearSignals monta "$augmentA = 0; " para cada índice, pulando o próprio.
-func clearSignals(indices []int, proprio int) string {
+func clearSignals(indices []int, own int) string {
 	expr := ""
 	for _, i := range indices {
-		if i == proprio {
+		if i == own {
 			continue
 		}
 		expr += augmentSignal(i) + " = 0; "
@@ -287,9 +287,9 @@ func clearSignals(indices []int, proprio int) string {
 // descrição — mas a tela precisa dela, senão o jogador escolhe entre "1 PM" e
 // "1 PM" sem saber o que cada um faz.
 func augmentDescription(spellID string, index int) string {
-	doLivro := spellOfBook(spellID)
-	if index < len(doLivro.Augments) {
-		return doLivro.Augments[index].Description
+	fromBook := spellOfBook(spellID)
+	if index < len(fromBook.Augments) {
+		return fromBook.Augments[index].Description
 	}
 	return ""
 }
@@ -305,35 +305,35 @@ func spellOfBook(id string) book.Spell {
 }
 
 // catalogSpellRowsOf são as magias que ainda dá para aprender, filtradas.
-func catalogSpellRowsOf(dto sheet.CharacterDTO, busca, circulo, escola string) []catalogSpellRow {
-	sabidas := map[string]bool{}
+func catalogSpellRowsOf(dto sheet.CharacterDTO, search, circle, school string) []catalogSpellRow {
+	known := map[string]bool{}
 	for _, s := range dto.Spells {
-		sabidas[s.CatalogSpellID] = true
+		known[s.CatalogSpellID] = true
 	}
-	linhas := []catalogSpellRow{}
+	rows := []catalogSpellRow{}
 	for _, m := range book.Catalogs().Spells {
-		if sabidas[m.ID] || !passesFilter(m, busca, circulo, escola) {
+		if known[m.ID] || !passesFilter(m, search, circle, school) {
 			continue
 		}
-		linhas = append(linhas, catalogSpellRow{
+		rows = append(rows, catalogSpellRow{
 			ID: m.ID, Name: m.Name, Circle: circleName(m.Circle), School: schoolName(m.School),
 			Effect: m.BaseEffect, Page: m.BookPage, Command: m.ID,
 		})
 	}
-	return linhas
+	return rows
 }
 
-func passesFilter(m book.Spell, busca, circulo, escola string) bool {
-	if circulo != "" && strconv.Itoa(m.Circle) != circulo {
+func passesFilter(m book.Spell, query, circle, school string) bool {
+	if circle != "" && strconv.Itoa(m.Circle) != circle {
 		return false
 	}
-	if escola != "" && m.School != escola {
+	if school != "" && m.School != school {
 		return false
 	}
-	if strings.TrimSpace(busca) == "" {
+	if strings.TrimSpace(query) == "" {
 		return true
 	}
-	return strings.Contains(search.Fold(m.Name), search.Fold(busca))
+	return strings.Contains(search.Fold(m.Name), search.Fold(query))
 }
 
 // grantedSpellRowsOf são as magias que um PODER ensinou.
@@ -342,32 +342,32 @@ func passesFilter(m book.Spell, busca, circulo, escola string) bool {
 // poder. Aparecem mesmo para quem não tem classe conjuradora — um bárbaro com
 // Totem Espiritual (p42) tem de ver a magia dele.
 func grantedSpellRowsOf(dto sheet.CharacterDTO) []grantedSpellRow {
-	escolhas := map[string][]string{}
-	if err := json.Unmarshal([]byte(dto.PowerChoices), &escolhas); err != nil {
+	choices := map[string][]string{}
+	if err := json.Unmarshal([]byte(dto.PowerChoices), &choices); err != nil {
 		return nil
 	}
-	porNome := map[string]book.Spell{}
+	byName := map[string]book.Spell{}
 	for _, m := range book.Catalogs().Spells {
-		porNome[m.Name] = m
+		byName[m.Name] = m
 	}
-	linhas := []grantedSpellRow{}
-	for _, poder := range book.PowersThatTeachSpells() {
-		picks, escolheu := escolhas[poder.ID]
-		if !escolheu {
+	rows := []grantedSpellRow{}
+	for _, power := range book.PowersThatTeachSpells() {
+		picks, chose := choices[power.ID]
+		if !chose {
 			continue
 		}
 		for _, pick := range picks {
-			magia, existe := porNome[poder.Options[pick]]
-			if !existe {
+			spell, exists := byName[power.Options[pick]]
+			if !exists {
 				continue
 			}
-			linhas = append(linhas, grantedSpellRow{
-				Name: magia.Name, Circle: circleName(magia.Circle),
-				Source: poder.Name, Effect: magia.BaseEffect, Page: magia.BookPage,
+			rows = append(rows, grantedSpellRow{
+				Name: spell.Name, Circle: circleName(spell.Circle),
+				Source: power.Name, Effect: spell.BaseEffect, Page: spell.BookPage,
 			})
 		}
 	}
-	return linhas
+	return rows
 }
 
 // ── o que a TELA precisa escrever ────────────────────────────────────────────
@@ -386,8 +386,8 @@ func aprendidasEscrito(n int) string {
 // diálogo abre por vez, e seis é o máximo do catálogo (Conjurar Monstro). Um
 // sinal por magia daria 198 × 6 declarações no `<body>` para guardar seis
 // números.
-func augmentSignal(indice int) string {
-	return "$augment" + strconv.Itoa(indice)
+func augmentSignal(index int) string {
+	return "$augment" + strconv.Itoa(index)
 }
 
 // augmentChosenClasses é o `data-class` do botão "Trocar": a tinta do ligado e a
@@ -399,10 +399,10 @@ func augmentSignal(indice int) string {
 //
 // O dourado é o mesmo do "Preparada" da magia, e isso é deliberado: as duas
 // dizem "isto está ligado" na mesma tela.
-func augmentChosenClasses(indice int) string {
-	sinal := augmentSignal(indice)
-	return "{'border-grimorio-gold/60 text-grimorio-gold': " + sinal + " > 0," +
-		" 'border-grimorio-iron text-muted-foreground': " + sinal + " === 0}"
+func augmentChosenClasses(index int) string {
+	signal := augmentSignal(index)
+	return "{'border-grimorio-gold/60 text-grimorio-gold': " + signal + " > 0," +
+		" 'border-grimorio-iron text-muted-foreground': " + signal + " === 0}"
 }
 
 // thatOpensCastGesture ZERA as pilhas antes de abrir.
@@ -411,12 +411,12 @@ func augmentChosenClasses(indice int) string {
 // compartilhado" do guia do Go. Sem isto, a pilha escolhida numa magia
 // reapareceria na próxima que fosse aberta, e o custo mostrado seria o de outra
 // conjuração.
-func thatOpensCastGesture(magia learnedSpellRow) string {
-	limpeza := ""
+func thatOpensCastGesture(spell learnedSpellRow) string {
+	cleanup := ""
 	for i := 0; i < 6; i++ {
-		limpeza += augmentSignal(i) + " = 0; "
+		cleanup += augmentSignal(i) + " = 0; "
 	}
-	return limpeza + "$detail = 'conjura-" + magia.Command + "'"
+	return cleanup + "$detail = 'conjura-" + spell.Command + "'"
 }
 
 // costPreview é a expressão que soma o custo na tela.
@@ -428,9 +428,9 @@ func thatOpensCastGesture(magia learnedSpellRow) string {
 // Aprimoramento TRANCADO fica de fora da soma: ele não tem contador, então o
 // sinal dele nunca sobe — mas somá-lo mostraria um custo que o servidor não
 // cobraria.
-func costPreview(magia learnedSpellRow) string {
-	expr := strconv.Itoa(magia.BasePm)
-	for _, a := range magia.Augments {
+func costPreview(spell learnedSpellRow) string {
+	expr := strconv.Itoa(spell.BasePm)
+	for _, a := range spell.Augments {
 		if a.Locked {
 			continue
 		}
@@ -440,8 +440,8 @@ func costPreview(magia learnedSpellRow) string {
 	// em PM para zero" (p171). Somado como um `+0 PM`, o custo base ficava de pé
 	// e a tela anunciava 1 PM sobre uma conjuração que o servidor não cobra
 	// (ALE-339). A prévia continua sem decidir nada — ela só deixou de discordar.
-	for _, a := range magia.Augments {
-		if a.Truque {
+	for _, a := range spell.Augments {
+		if a.Cantrip {
 			return "(" + augmentSignal(a.Index) + " ? 0 : (" + expr + ")) + ' PM'"
 		}
 	}
@@ -462,7 +462,7 @@ func augmentPriceWritten(a augmentRow) string {
 	if a.Locked {
 		return "+" + strconv.Itoa(a.PM) + " PM · exige o " + strconv.Itoa(a.RequiredCircle) + "º círculo"
 	}
-	if a.Truque {
+	if a.Cantrip {
 		return "a conjuração custa 0 PM · não combina com os outros"
 	}
 	if a.Exclusive {
@@ -486,21 +486,21 @@ var schoolNames = map[string]string{
 }
 
 func schoolName(id string) string {
-	if nome, tem := schoolNames[id]; tem {
-		return nome
+	if name, found := schoolNames[id]; found {
+		return name
 	}
 	return id
 }
 
-func schoolOptions(ativa string) []filterOption {
+func schoolOptions(active string) []filterOption {
 	ids := make([]string, 0, len(schoolNames))
 	for id := range schoolNames {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
-	opcoes := []filterOption{{Valor: "", Rotulo: "Todas as escolas", Ativo: ativa == ""}}
+	options := []filterOption{{Value: "", Label: "Todas as escolas", Active: active == ""}}
 	for _, id := range ids {
-		opcoes = append(opcoes, filterOption{Valor: id, Rotulo: schoolNames[id], Ativo: ativa == id})
+		options = append(options, filterOption{Value: id, Label: schoolNames[id], Active: active == id})
 	}
-	return opcoes
+	return options
 }

@@ -1139,13 +1139,13 @@ func learnSpellDialog(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if len(v.Spells.Catalogo) == 0 {
+		if len(v.Spells.Catalog) == 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<p class=\"py-3 text-center text-xs text-muted-foreground\">Nenhuma magia com esses filtros.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			for _, magia := range v.Spells.Catalogo {
+			for _, magia := range v.Spells.Catalog {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "<button type=\"button\" data-on:click=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1285,31 +1285,31 @@ func spellFilters(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = circleOption("", "Todos os círculos", v.Spells.Circulo).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = circleOption("", "Todos os círculos", v.Spells.Circle).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = circleOption("0", "Truque", v.Spells.Circulo).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = circleOption("0", "Truque", v.Spells.Circle).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = circleOption("1", "1º círculo", v.Spells.Circulo).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = circleOption("1", "1º círculo", v.Spells.Circle).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = circleOption("2", "2º círculo", v.Spells.Circulo).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = circleOption("2", "2º círculo", v.Spells.Circle).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = circleOption("3", "3º círculo", v.Spells.Circulo).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = circleOption("3", "3º círculo", v.Spells.Circle).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = circleOption("4", "4º círculo", v.Spells.Circulo).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = circleOption("4", "4º círculo", v.Spells.Circle).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = circleOption("5", "5º círculo", v.Spells.Circulo).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = circleOption("5", "5º círculo", v.Spells.Circle).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1330,14 +1330,14 @@ func spellFilters(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, opcao := range v.Spells.Escolas {
-			if opcao.Ativo {
+		for _, opcao := range v.Spells.Schools {
+			if opcao.Active {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "<option value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var75 string
-				templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Valor)
+				templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Value)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 334, Col: 32}
 				}
@@ -1350,9 +1350,9 @@ func spellFilters(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var76 string
-				templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Rotulo)
+				templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 334, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 334, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 				if templ_7745c5c3_Err != nil {
@@ -1368,7 +1368,7 @@ func spellFilters(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var77 string
-				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Valor)
+				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Value)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 336, Col: 32}
 				}
@@ -1381,9 +1381,9 @@ func spellFilters(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var78 string
-				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Rotulo)
+				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 336, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 336, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {

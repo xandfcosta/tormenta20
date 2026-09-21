@@ -35,12 +35,12 @@ type ownedPower struct {
 
 // ownedPowersOf junta as cinco procedências, na ordem em que a tela as mostra.
 func ownedPowersOf(dto sheet.CharacterDTO) []ownedPower {
-	fora := []ownedPower{}
-	fora = append(fora, raceAbilities(dto)...)
-	fora = append(fora, originBenefits(dto)...)
-	fora = append(fora, automaticAbilities(dto)...)
-	fora = append(fora, chosenPowers(dto)...)
-	return fora
+	outside := []ownedPower{}
+	outside = append(outside, raceAbilities(dto)...)
+	outside = append(outside, originBenefits(dto)...)
+	outside = append(outside, automaticAbilities(dto)...)
+	outside = append(outside, chosenPowers(dto)...)
+	return outside
 }
 
 // raceAbilities são as habilidades de cada raça da ficha.
@@ -49,20 +49,20 @@ func ownedPowersOf(dto sheet.CharacterDTO) []ownedPower {
 // indexado por id E por nome, porque o personagem guarda a raça por um dos dois.
 // Um segundo leitor aqui seria uma terceira cópia da mesma decisão.
 func raceAbilities(dto sheet.CharacterDTO) []ownedPower {
-	fora := []ownedPower{}
+	outside := []ownedPower{}
 	for _, r := range dto.Races {
-		raca, tem := book.RaceTraitsByKey()[r.Race]
-		if !tem {
+		race, found := book.RaceTraitsByKey()[r.Race]
+		if !found {
 			continue
 		}
-		for _, hab := range raca.Abilities {
-			fora = append(fora, ownedPower{
-				ID: hab.ID, Name: hab.Name, Detail: hab.Description,
-				Source: "Raça · " + raca.Name,
+		for _, ability := range race.Abilities {
+			outside = append(outside, ownedPower{
+				ID: ability.ID, Name: ability.Name, Detail: ability.Description,
+				Source: "Raça · " + race.Name,
 			})
 		}
 	}
-	return fora
+	return outside
 }
 
 // originBenefits são só os ESCOLHIDOS.
@@ -71,28 +71,28 @@ func raceAbilities(dto sheet.CharacterDTO) []ownedPower {
 // poder, de uma lista maior), então listar todos mostraria como possuído o que
 // ninguém escolheu.
 func originBenefits(dto sheet.CharacterDTO) []ownedPower {
-	origem, tem := book.Origins()[dto.Origin]
-	if !tem {
+	origin, found := book.Origins()[dto.Origin]
+	if !found {
 		return nil
 	}
-	escolhidos := map[string]bool{}
+	chosen := map[string]bool{}
 	var ids []string
 	if json.Unmarshal([]byte(dto.OriginChoices), &ids) == nil {
 		for _, id := range ids {
-			escolhidos[id] = true
+			chosen[id] = true
 		}
 	}
-	fora := []ownedPower{}
-	for _, b := range sheet.OriginBenefitsOf(origem) {
-		if !escolhidos[b.ID] {
+	outside := []ownedPower{}
+	for _, b := range sheet.OriginBenefitsOf(origin) {
+		if !chosen[b.ID] {
 			continue
 		}
-		fora = append(fora, ownedPower{
+		outside = append(outside, ownedPower{
 			ID: b.ID, Name: b.Name, Detail: b.Description,
-			Source: "Origem · " + origem.Name, Page: origem.BookPage,
+			Source: "Origem · " + origin.Name, Page: origin.BookPage,
 		})
 	}
-	return fora
+	return outside
 }
 
 // automaticAbilities são as que o NÍVEL concede, sem escolha.
@@ -103,21 +103,21 @@ func originBenefits(dto sheet.CharacterDTO) []ownedPower {
 // deus do clérigo). Uma segunda leitura aqui daria uma tela que mostra um poder
 // que a ficha não soma — ou o contrário.
 func automaticAbilities(dto sheet.CharacterDTO) []ownedPower {
-	escolhas := sheet.ClassChoiceSelections(dto)
-	fora := []ownedPower{}
-	for _, classe := range dto.Classes {
-		for _, poder := range book.ClassPowers() {
-			if poder.ClassName != classe.ClassName || !automaticOwnership(poder, classe, escolhas) {
+	choices := sheet.ClassChoiceSelections(dto)
+	outside := []ownedPower{}
+	for _, class := range dto.Classes {
+		for _, power := range book.ClassPowers() {
+			if power.ClassName != class.ClassName || !automaticOwnership(power, class, choices) {
 				continue
 			}
-			fora = append(fora, ownedPower{
-				ID: poder.ID, Name: poder.Name, Detail: poder.Description,
-				Source: "Classe · " + classe.ClassName, Page: poder.BookPage,
+			outside = append(outside, ownedPower{
+				ID: power.ID, Name: power.Name, Detail: power.Description,
+				Source: "Classe · " + class.ClassName, Page: power.BookPage,
 			})
 		}
 	}
-	book.SortByName(fora, func(p ownedPower) string { return p.Name })
-	return fora
+	book.SortByName(outside, func(p ownedPower) string { return p.Name })
+	return outside
 }
 
 // automaticOwnership pergunta ao MOTOR se a classe concede este poder.
@@ -125,18 +125,18 @@ func automaticAbilities(dto sheet.CharacterDTO) []ownedPower {
 // A lista de ESCOLHIDOS entra vazia de propósito: quem escolheu já aparece em
 // `chosenPowers`, e passá-la aqui listaria o mesmo poder duas vezes.
 func automaticOwnership(
-	poder book.ClassPower, classe sheet.ClassDTO, escolhas map[string]engine.ClassChoiceSelections,
+	power book.ClassPower, class sheet.ClassDTO, choices map[string]engine.ClassChoiceSelections,
 ) bool {
 	doMotor := &engine.ClassPower{
-		ID: poder.ID, ClassName: poder.ClassName, Name: poder.Name,
-		GrantedAtLevel: poder.GrantedAtLevel,
+		ID: power.ID, ClassName: power.ClassName, Name: power.Name,
+		GrantedAtLevel: power.GrantedAtLevel,
 	}
-	if poder.GrantedByChoice != nil {
+	if power.GrantedByChoice != nil {
 		doMotor.GrantedByChoice = &engine.GrantedByChoice{
-			Field: poder.GrantedByChoice.Field, Value: poder.GrantedByChoice.Value,
+			Field: power.GrantedByChoice.Field, Value: power.GrantedByChoice.Value,
 		}
 	}
-	return engine.OwnsClassPower(doMotor, int(classe.Level), nil, escolhas[classe.ClassName])
+	return engine.OwnsClassPower(doMotor, int(class.Level), nil, choices[class.ClassName])
 }
 
 // chosenPowers são os ids da coluna `classPowers` — poder de classe, poder
@@ -149,29 +149,29 @@ func chosenPowers(dto sheet.CharacterDTO) []ownedPower {
 	if json.Unmarshal([]byte(dto.ClassPowers), &ids) != nil {
 		return nil
 	}
-	fora := []ownedPower{}
+	outside := []ownedPower{}
 	for _, id := range ids {
-		if poder, tem := book.ClassPowers()[id]; tem {
-			fora = append(fora, ownedPower{
-				ID: poder.ID, Name: poder.Name, Detail: poder.Description,
-				Source: "Classe · " + poder.ClassName, Page: poder.BookPage,
+		if power, found := book.ClassPowers()[id]; found {
+			outside = append(outside, ownedPower{
+				ID: power.ID, Name: power.Name, Detail: power.Description,
+				Source: "Classe · " + power.ClassName, Page: power.BookPage,
 			})
 			continue
 		}
-		if poder, tem := book.GeneralPowers()[id]; tem {
-			fora = append(fora, ownedPower{
-				ID: poder.ID, Name: poder.Name, Detail: poder.Description,
-				Source: powerGeneralSource(poder), Page: poder.BookPage,
+		if power, found := book.GeneralPowers()[id]; found {
+			outside = append(outside, ownedPower{
+				ID: power.ID, Name: power.Name, Detail: power.Description,
+				Source: powerGeneralSource(power), Page: power.BookPage,
 			})
 		}
 	}
-	return fora
+	return outside
 }
 
 // powerGeneralSource separa o poder da TORMENTA do poder geral comum: eles
 // moram no mesmo catálogo e a mesa os trata como coisas diferentes.
-func powerGeneralSource(poder book.GeneralPower) string {
-	if poder.Kind == "tormenta" {
+func powerGeneralSource(power book.GeneralPower) string {
+	if power.Kind == "tormenta" {
 		return "Poder da Tormenta"
 	}
 	return "Poder geral"
@@ -185,11 +185,11 @@ func powerGeneralSource(poder book.GeneralPower) string {
 // Ele vem do `races.json` — a vitrine do mestre —, que é o único catálogo que
 // carrega o `atributoMod`. O `race-defs.json` traz as habilidades com id e
 // texto; os dois são lidos por esta aba, cada um pelo que só ele tem.
-func attributeRaceMod(nome string) *book.RaceAttribute {
-	racas, _, _ := book.CharacterCatalogs()
-	for i, r := range racas {
-		if r.Name == nome || r.ID == nome {
-			return &racas[i].AttributeMod
+func attributeRaceMod(name string) *book.RaceAttribute {
+	races, _, _ := book.CharacterCatalogs()
+	for i, r := range races {
+		if r.Name == name || r.ID == name {
+			return &races[i].AttributeMod
 		}
 	}
 	return nil
@@ -197,50 +197,50 @@ func attributeRaceMod(nome string) *book.RaceAttribute {
 
 // raceAncestries são as metades de uma raça que se escolhe na criação — o
 // suraggel é "aggelus" ou "sulfure".
-func raceAncestries(nome string) []filterOption {
-	racas, _, _ := book.CharacterCatalogs()
-	for _, r := range racas {
-		if r.Name != nome && r.ID != nome {
+func raceAncestries(name string) []filterOption {
+	races, _, _ := book.CharacterCatalogs()
+	for _, r := range races {
+		if r.Name != name && r.ID != name {
 			continue
 		}
-		fora := []filterOption{}
+		outside := []filterOption{}
 		for _, a := range r.Ancestries {
-			fora = append(fora, filterOption{Valor: a, Rotulo: strings.ToUpper(a[:1]) + a[1:]})
+			outside = append(outside, filterOption{Value: a, Label: strings.ToUpper(a[:1]) + a[1:]})
 		}
-		return fora
+		return outside
 	}
 	return nil
 }
 
 // withVariantsRace é a entrada do `race-defs.json`, que é a que tem as
 // variantes de habilidade.
-func withVariantsRace(nome string) *book.RaceForScreen {
-	if raca, tem := book.RaceTraitsByKey()[nome]; tem {
-		return &raca
+func withVariantsRace(name string) *book.RaceForScreen {
+	if race, found := book.RaceTraitsByKey()[name]; found {
+		return &race
 	}
 	return nil
 }
 
 // attributeSavedChoices são os atributos que a pessoa já distribuiu.
 func attributeSavedChoices(blob string) []string {
-	var escolha struct {
+	var choice struct {
 		FloatingPicks []string `json:"floatingPicks"`
 	}
-	if json.Unmarshal([]byte(blob), &escolha) != nil {
+	if json.Unmarshal([]byte(blob), &choice) != nil {
 		return nil
 	}
-	return escolha.FloatingPicks
+	return choice.FloatingPicks
 }
 
 // savedAncestry é a metade escolhida, ou "".
 func savedAncestry(blob string) string {
-	var escolha struct {
-		Ascendencia string `json:"ascendencia"`
+	var choice struct {
+		Ancestry string `json:"ascendencia"`
 	}
-	if json.Unmarshal([]byte(blob), &escolha) != nil {
+	if json.Unmarshal([]byte(blob), &choice) != nil {
 		return ""
 	}
-	return escolha.Ascendencia
+	return choice.Ancestry
 }
 
 // sheet.OriginBenefitsOf são os benefícios MAIS o poder único.

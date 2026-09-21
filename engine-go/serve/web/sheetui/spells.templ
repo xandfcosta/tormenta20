@@ -269,10 +269,10 @@ templ learnSpellDialog(v View) {
 			// uma vez: sem o `min-h-0` aqui, a caixa cresce até a altura do
 			// conteúdo e a página inteira estica.
 			<div class="mt-2 min-h-0 flex-1 space-y-1 overflow-y-auto">
-				if len(v.Spells.Catalogo) == 0 {
+				if len(v.Spells.Catalog) == 0 {
 					<p class="py-3 text-center text-xs text-muted-foreground">Nenhuma magia com esses filtros.</p>
 				} else {
-					for _, magia := range v.Spells.Catalogo {
+					for _, magia := range v.Spells.Catalog {
 						<button
 							type="button"
 							data-on:click={ sheetPost(v, "/magias/aprende/"+magia.Command) }
@@ -314,13 +314,13 @@ templ spellFilters(v View) {
 			aria-label="Filtrar por círculo"
 			class="h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm text-foreground outline-none"
 		>
-			@circleOption("", "Todos os círculos", v.Spells.Circulo)
-			@circleOption("0", "Truque", v.Spells.Circulo)
-			@circleOption("1", "1º círculo", v.Spells.Circulo)
-			@circleOption("2", "2º círculo", v.Spells.Circulo)
-			@circleOption("3", "3º círculo", v.Spells.Circulo)
-			@circleOption("4", "4º círculo", v.Spells.Circulo)
-			@circleOption("5", "5º círculo", v.Spells.Circulo)
+			@circleOption("", "Todos os círculos", v.Spells.Circle)
+			@circleOption("0", "Truque", v.Spells.Circle)
+			@circleOption("1", "1º círculo", v.Spells.Circle)
+			@circleOption("2", "2º círculo", v.Spells.Circle)
+			@circleOption("3", "3º círculo", v.Spells.Circle)
+			@circleOption("4", "4º círculo", v.Spells.Circle)
+			@circleOption("5", "5º círculo", v.Spells.Circle)
 		</select>
 		<select
 			name="magiaescola"
@@ -329,11 +329,11 @@ templ spellFilters(v View) {
 			aria-label="Filtrar por escola"
 			class="h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm text-foreground outline-none"
 		>
-			for _, opcao := range v.Spells.Escolas {
-				if opcao.Ativo {
-					<option value={ opcao.Valor } selected>{ opcao.Rotulo }</option>
+			for _, opcao := range v.Spells.Schools {
+				if opcao.Active {
+					<option value={ opcao.Value } selected>{ opcao.Label }</option>
 				} else {
-					<option value={ opcao.Valor }>{ opcao.Rotulo }</option>
+					<option value={ opcao.Value }>{ opcao.Label }</option>
 				}
 			}
 		</select>

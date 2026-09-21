@@ -18,36 +18,36 @@ import (
 // View é a ficha de um personagem pronta para desenhar.
 type View struct {
 	ID   int64
-	Nome string
-	// Versao é o `updatedAt` do personagem, e existe só para a ficha EMBUTIDA: o
+	Name string
+	// Version é o `updatedAt` do personagem, e existe só para a ficha EMBUTIDA: o
 	// ouvinte que repede a ficha compara o carimbo do stream com o que já está
 	// na tela, e não pede nada quando são o mesmo. Sem isso, um gesto do próprio
 	// jogador produz DOIS pedidos — o dele e o do aviso que a escrita dele
 	// acabou de provocar.
-	Versao string
-	// Embutida diz que esta ficha está sendo desenhada DENTRO da sessão.
+	Version string
+	// Embedded diz que esta ficha está sendo desenhada DENTRO da sessão.
 	//
 	// Ela muda duas coisas na tela, e as duas são sobre NAVEGAÇÃO: a barra com
 	// o "‹ Voltar" some (a sessão tem cabeçalho próprio, e voltar dali tiraria
 	// o jogador da mesa), e as abas deixam de ser links para virar comandos que
 	// remendam a ficha no lugar. Um `<a href>` ali levaria embora da sessão
 	// quem só queria trocar de seção.
-	Embutida bool
-	// Iniciais e Gradiente são o retrato derivado do nome, como no palco e no
+	Embedded bool
+	// Initials e Gradiente são o retrato derivado do nome, como no palco e no
 	// cartão da campanha: o app não guarda imagem de personagem.
-	Iniciais  string
-	Gradiente string
-	// Papel é "GUERREIRO 10" — a mesma placa do palco de personagens.
-	Papel  string
-	Resumo string
-	Nivel  int64
-	// Defesa vem do MOTOR e é travessão quando não há catálogo primado: a tela
+	Initials string
+	Gradient string
+	// Role é "GUERREIRO 10" — a mesma placa do palco de personagens.
+	Role    string
+	Summary string
+	Level   int64
+	// Defense vem do MOTOR e é travessão quando não há catálogo primado: a tela
 	// inteira não pode cair por causa de um número, e um zero seria pior — 0 é
 	// um valor plausível, e o jogador agiria sobre ele.
-	Defesa  string
+	Defense string
 	PV      sheetVital
 	PM      sheetVital
-	SemMana bool
+	NoMana  bool
 	// Classes é "Guerreiro 3 / Ladino 2" — a mesma linha do palco, e string e
 	// não lista porque é assim que a mesa lê e é assim que o cartão já a monta.
 	Classes string
@@ -55,16 +55,16 @@ type View struct {
 	// DEGRAU DE NÍVEL: o nível de um personagem é a SOMA dos níveis de classe, e
 	// subir um nível é escolher QUAL classe o recebe.
 	AsClasses []sheetClass
-	// Abas são as sete da ficha, com a ativa marcada. Ver `Tabs`.
-	Abas []Tab
-	// AbaAtiva é o valor resolvido — nunca o que veio na URL cru, que pode ser
+	// Tabs são as sete da ficha, com a ativa marcada. Ver `Tabs`.
+	Tabs []Tab
+	// ActiveTab é o valor resolvido — nunca o que veio na URL cru, que pode ser
 	// um endereço antigo ou lixo digitado.
-	AbaAtiva string
-	// Proficiencias são os dois blocos do painel homônimo. Elas são computadas
+	ActiveTab string
+	// Proficiencies são os dois blocos do painel homônimo. Elas são computadas
 	// SEMPRE, e não só quando a aba está aberta: são sete linhas derivadas de
 	// dado que a ficha já carregou, e um `if` aqui trocaria microssegundos por um
 	// ramo a mais para um guarda cobrir.
-	Proficiencias []proficiencyGroup
+	Proficiencies []proficiencyGroup
 	// Combat é a aba homônima, computada SEMPRE pela mesma razão: o motor já roda
 	// uma vez por carga da ficha para a Defesa do crachá, e repartir esse
 	// resultado custa menos que um `if` a mais.
@@ -87,30 +87,30 @@ type View struct {
 	Powers powersPanel
 	// Choices é o diálogo de escolher poderes — a administração da ficha.
 	Choices choicesPanel
-	// Recusa é a frase de uma regra que barrou o gesto — o teto de duas mãos, o
+	// Refusal é a frase de uma regra que barrou o gesto — o teto de duas mãos, o
 	// PM que falta, a magia que não está preparada. Vazia no caminho normal.
 	// Ela vem com a cena INTEIRA redesenhada, que é o que mostra que nada mudou.
-	Recusa string
+	Refusal string
 }
 
 // sheetClass é uma classe do personagem, com o que o degrau precisa saber.
 type sheetClass struct {
-	Nome  string
-	Nivel int64
-	// PodeSubir e PodeDescer são a elegibilidade do livro, e elas são POR CLASSE
+	Name  string
+	Level int64
+	// CanRaise e PodeDescer são a elegibilidade do livro, e elas são POR CLASSE
 	// e não do personagem: descer uma classe de nível 1 a apagaria, e subir com
 	// o total em 20 (p32) passaria do teto.
-	PodeSubir  bool
-	PodeDescer bool
+	CanRaise bool
+	CanLower bool
 }
 
 type sheetVital struct {
-	Atual int64
-	Max   int64
-	// Fracao é "12/20", que é como a mesa fala.
-	Fracao string
-	// Porcento é a largura da barra, entre 0 e 100.
-	Porcento int
+	Current int64
+	Max     int64
+	// Fraction é "12/20", que é como a mesa fala.
+	Fraction string
+	// Percent é a largura da barra, entre 0 e 100.
+	Percent int
 	// Temp é o PV TEMPORÁRIO, e ele é uma parcela À PARTE e não um somando.
 	//
 	// A barra continua sendo o PV de verdade: somar o temporário ao atual faria
@@ -125,11 +125,11 @@ type sheetVital struct {
 
 // Tab é uma das sete seções da ficha.
 type Tab struct {
-	// Valor é o que vai na URL — ver `Tabs`.
-	Valor  string
-	Rotulo string
-	Icone  string
-	Ativa  bool
+	// Value é o que vai na URL — ver `Tabs`.
+	Value  string
+	Label  string
+	Icon   string
+	Active bool
 }
 
 // Tabs são as sete seções, na ordem em que aparecem.
@@ -143,26 +143,26 @@ type Tab struct {
 // A primeira é o padrão de quem chega sem `?tab=`.
 func Tabs() []Tab {
 	return []Tab{
-		{Valor: "expertises", Rotulo: "Perícias", Icone: "Scroll"},
-		{Valor: "combat", Rotulo: "Combate", Icone: "Swords"},
-		{Valor: "bag", Rotulo: "Mochila", Icone: "Backpack"},
-		{Valor: "proficiencies", Rotulo: "Proficiências", Icone: "ShieldCheck"},
-		{Valor: "conditionals", Rotulo: "Efeitos", Icone: "Zap"},
-		{Valor: "abilities", Rotulo: "Poderes", Icone: "Star"},
-		{Valor: "spells", Rotulo: "Magias", Icone: "BookMarked"},
+		{Value: "expertises", Label: "Perícias", Icon: "Scroll"},
+		{Value: "combat", Label: "Combate", Icon: "Swords"},
+		{Value: "bag", Label: "Mochila", Icon: "Backpack"},
+		{Value: "proficiencies", Label: "Proficiências", Icon: "ShieldCheck"},
+		{Value: "conditionals", Label: "Efeitos", Icon: "Zap"},
+		{Value: "abilities", Label: "Poderes", Icon: "Star"},
+		{Value: "spells", Label: "Magias", Icon: "BookMarked"},
 	}
 }
 
 // AskedTab resolve o que veio na URL contra as sete que existem. Valor
 // desconhecido cai na PRIMEIRA, em vez de dar 404: `?tab=` é endereço, e alguém
 // o digita errado.
-func AskedTab(bruto string) string {
+func AskedTab(raw string) string {
 	for _, aba := range Tabs() {
-		if aba.Valor == bruto {
-			return bruto
+		if aba.Value == raw {
+			return raw
 		}
 	}
-	return Tabs()[0].Valor
+	return Tabs()[0].Value
 }
 
 // Load monta a ficha de um personagem para desenhar.
@@ -178,7 +178,7 @@ func AskedTab(bruto string) string {
 // O status é o do HTTP porque quem chama responde por HTTP; a cena não escreve
 // resposta nenhuma.
 func (s Scene) Load(
-	ctx context.Context, userID int64, id int64, aba, busca string, sinais Signals,
+	ctx context.Context, userID int64, id int64, aba, search string, signals Signals,
 ) (View, int, error) {
 	row, err := s.deps.Queries().GetCharacter(ctx, id)
 	if err != nil {
@@ -191,42 +191,42 @@ func (s Scene) Load(
 	if err != nil {
 		return View{}, 500, err
 	}
-	cartao := characters.HeroCardOf(s.deps.Catalogs(), dto)
+	card := characters.HeroCardOf(s.deps.Catalogs(), dto)
 	v := View{
 		ID:        dto.ID,
-		Nome:      dto.Name,
-		Versao:    row.Updatedat,
-		Iniciais:  cartao.Monogram,
-		Gradiente: cartao.Gradient,
-		Papel:     cartao.Role,
-		Resumo:    cartao.Summary,
-		Nivel:     dto.Level,
-		Defesa:    cartao.DefenseVs,
+		Name:      dto.Name,
+		Version:   row.Updatedat,
+		Initials:  card.Monogram,
+		Gradient:  card.Gradient,
+		Role:      card.Role,
+		Summary:   card.Summary,
+		Level:     dto.Level,
+		Defense:   card.DefenseVs,
 		PV:        withTempHp(vital(dto.HpCurrent, dto.HpMax), dto.ActiveEffects),
 		PM:        vital(dto.MpCurrent, dto.MpMax),
-		SemMana:   dto.MpMax == 0,
-		Classes:   cartao.Classes,
+		NoMana:    dto.MpMax == 0,
+		Classes:   card.Classes,
 		AsClasses: stepClasses(dto),
-		AbaAtiva:  aba,
+		ActiveTab: aba,
 
-		Proficiencias: proficiencyGroupsOf(dto),
+		Proficiencies: proficiencyGroupsOf(dto),
 	}
 	v.Effects = s.effectsPanelOf(dto)
-	v.Spells = s.spellbookPanelOf(dto, sinais.MagiaBusca, sinais.MagiaCirculo, sinais.MagiaEscola)
-	v.Powers = s.powersPanelOf(dto, sinais.PoderBusca)
-	v.Choices = s.choicesPanelOf(dto, sinais.PoderBusca)
+	v.Spells = s.spellbookPanelOf(dto, signals.SpellSearch, signals.SpellCircle, signals.SpellSchool)
+	v.Powers = s.powersPanelOf(dto, signals.PowerSearch)
+	v.Choices = s.choicesPanelOf(dto, signals.PowerSearch)
 	v.Bag = s.bagPanelOf(dto, bagFilters{
-		Busca: sinais.ItemBusca, Categoria: sinais.ItemCategoria,
-		BuscaNoCatalogo: sinais.CatalogoBusca, CategoriaNoCatalogo: sinais.CatalogoCategoria,
+		Search: signals.ItemSearch, Category: signals.ItemCategory,
+		CatalogSearch: signals.CatalogSearch, CatalogCategory: signals.CatalogCategory,
 	})
 	// UMA conta do motor para os DOIS painéis que a leem.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = panelForCombat(sheet, cards, isCaster(sheet))
-		v.Expertises = expertisePanelFor(dto, sheet, busca)
+		v.Expertises = expertisePanelFor(dto, sheet, search)
 	}
 	for _, item := range Tabs() {
-		item.Ativa = item.Valor == aba
-		v.Abas = append(v.Abas, item)
+		item.Active = item.Value == aba
+		v.Tabs = append(v.Tabs, item)
 	}
 	return v, 200, nil
 }
@@ -236,19 +236,19 @@ func (s Scene) Load(
 // A FRAÇÃO é o que a mesa fala em voz alta ("doze de vinte"), e a porcentagem é
 // só a largura da barra. Máximo ZERO não vira divisão por zero nem barra cheia:
 // quem não tem mana tem a barra vazia e apagada.
-func vital(atual, max int64) sheetVital {
-	v := sheetVital{Atual: atual, Max: max, Fracao: strconv.FormatInt(atual, 10) + "/" + strconv.FormatInt(max, 10)}
+func vital(current, max int64) sheetVital {
+	v := sheetVital{Current: current, Max: max, Fraction: strconv.FormatInt(current, 10) + "/" + strconv.FormatInt(max, 10)}
 	if max <= 0 {
 		return v
 	}
-	pct := int(atual * 100 / max)
+	pct := int(current * 100 / max)
 	if pct < 0 {
 		pct = 0
 	}
 	if pct > 100 {
 		pct = 100
 	}
-	v.Porcento = pct
+	v.Percent = pct
 	return v
 }
 
@@ -261,9 +261,9 @@ func vital(atual, max int64) sheetVital {
 // app ainda não os modela — o motor só conhece o alvo `tempMp` como
 // modificador, e nada os gasta. Desenhar um número que nada consome seria pior
 // que não desenhá-lo.
-func withTempHp(v sheetVital, efeitos []sheet.EffectDTO) sheetVital {
-	blobs := make([]string, 0, len(efeitos))
-	for _, e := range efeitos {
+func withTempHp(v sheetVital, effects []sheet.EffectDTO) sheetVital {
+	blobs := make([]string, 0, len(effects))
+	for _, e := range effects {
 		blobs = append(blobs, e.Modifiers)
 	}
 	if total := sheet.TempHpTotal(blobs); total > 0 {
@@ -288,8 +288,8 @@ func sheetRoute(id int64, aba string) string {
 // Duas palavras para a mesma coisa é o que o GLOSSARY chama de colisão, e aqui
 // ela é deliberada e contida: a TELA diz "PV" porque é o que a mesa fala, e a
 // ROTA diz "pv" porque endereço é minúsculo. Esta função é a única costura.
-func routeVital(rotulo string) string {
-	if rotulo == "PM" {
+func routeVital(label string) string {
+	if label == "PM" {
 		return "pm"
 	}
 	return "pv"
@@ -300,11 +300,11 @@ func routeVital(rotulo string) string {
 // O MENOS É O SINAL TIPOGRÁFICO (U+2212) e não o hífen: no mesmo tamanho de
 // fonte o hífen fica mais curto e mais alto que o traço do "+", e a fileira dos
 // quatro botões desalinha.
-func stepSignal(passo int) string {
-	if passo < 0 {
-		return "−" + strconv.Itoa(-passo)
+func stepSignal(step int) string {
+	if step < 0 {
+		return "−" + strconv.Itoa(-step)
 	}
-	return "+" + strconv.Itoa(passo)
+	return "+" + strconv.Itoa(step)
 }
 
 // stepLabel é o nome acessível: "Curar 5 de PV", "Ferir 1 de PV".
@@ -312,13 +312,13 @@ func stepSignal(passo int) string {
 // O VERBO muda com o sinal em vez de "mais 5 PV", porque é o verbo que a mesa
 // usa — e um leitor de tela lendo "menos cinco pê vê" obriga quem ouve a
 // traduzir de volta para "levou cinco".
-func stepLabel(rotulo string, passo int) string {
-	verbo := "Curar"
-	if passo < 0 {
-		verbo = "Ferir"
-		passo = -passo
+func stepLabel(label string, step int) string {
+	verb := "Curar"
+	if step < 0 {
+		verb = "Ferir"
+		step = -step
 	}
-	return fmt.Sprintf("%s %d de %s", verbo, passo, rotulo)
+	return fmt.Sprintf("%s %d de %s", verb, step, label)
 }
 
 // stepClasses monta as classes com a elegibilidade de cada uma.
@@ -338,36 +338,36 @@ func stepClasses(dto sheet.CharacterDTO) []sheetClass {
 	classes := make([]sheetClass, 0, len(dto.Classes))
 	for _, cl := range dto.Classes {
 		classes = append(classes, sheetClass{
-			Nome:       cl.ClassName,
-			Nivel:      cl.Level,
-			PodeSubir:  total < 20,
-			PodeDescer: cl.Level > 1,
+			Name:     cl.ClassName,
+			Level:    cl.Level,
+			CanRaise: total < 20,
+			CanLower: cl.Level > 1,
 		})
 	}
 	return classes
 }
 
 // thatCan filtra as classes elegíveis para um sentido do degrau.
-func thatCan(classes []sheetClass, passo int) []sheetClass {
-	elegiveis := make([]sheetClass, 0, len(classes))
+func thatCan(classes []sheetClass, step int) []sheetClass {
+	eligible := make([]sheetClass, 0, len(classes))
 	for _, cl := range classes {
-		if (passo > 0 && cl.PodeSubir) || (passo < 0 && cl.PodeDescer) {
-			elegiveis = append(elegiveis, cl)
+		if (step > 0 && cl.CanRaise) || (step < 0 && cl.CanLower) {
+			eligible = append(eligible, cl)
 		}
 	}
-	return elegiveis
+	return eligible
 }
 
 // directStep é o comando de quem só tem UMA classe elegível — o caso comum.
 //
 // Vazio quando há mais de uma: aí o gesto abre a escolha, porque adivinhar qual
 // classe recebe o nível é o defeito que o `stepClasses` descreve.
-func directStep(v View, passo int) string {
-	elegiveis := thatCan(v.AsClasses, passo)
-	if len(elegiveis) != 1 {
+func directStep(v View, step int) string {
+	eligible := thatCan(v.AsClasses, step)
+	if len(eligible) != 1 {
 		return ""
 	}
-	return stepCommand(v, elegiveis[0].Nome, passo)
+	return stepCommand(v, eligible[0].Name, step)
 }
 
 // sheetPost escreve o `@post` de um gesto da ficha, CARREGANDO A ABA ABERTA.
@@ -377,8 +377,8 @@ func directStep(v View, passo int) string {
 // `AskedTab` não acha nada na query e cai na primeira aba — mexer no PV com a
 // Mochila aberta joga o jogador em Perícias, e a ficha parece ter se fechado
 // sozinha. Quem varre é o `TestNoSheetCommandLosesTheTab`.
-func sheetPost(v View, caminho string) string {
-	return fmt.Sprintf("@post('%s')", commandRoute(v, caminho))
+func sheetPost(v View, path string) string {
+	return fmt.Sprintf("@post('%s')", commandRoute(v, path))
 }
 
 // commandRoute monta o endereço de um comando da ficha com o estado que a URL
@@ -387,12 +387,12 @@ func sheetPost(v View, caminho string) string {
 // A marca viaja pelo mesmo motivo que a aba: o handler descobre o que desenhar
 // lendo a requisição, e um comando sem ela devolveria a ficha de página inteira
 // — com a barra do "‹ Voltar" e as abas navegando — dentro da sessão.
-func commandRoute(v View, caminho string) string {
-	rota := fmt.Sprintf("/personagens/%d%s?tab=%s", v.ID, caminho, v.AbaAtiva)
-	if v.Embutida {
-		rota += "&embutida=1"
+func commandRoute(v View, path string) string {
+	route := fmt.Sprintf("/personagens/%d%s?tab=%s", v.ID, path, v.ActiveTab)
+	if v.Embedded {
+		route += "&embutida=1"
 	}
-	return rota
+	return route
 }
 
 // sheetGet escreve o `@get` que REDESENHA a cena sem mutar nada — hoje só a
@@ -446,21 +446,21 @@ func SheetRefetch(v View) string {
 // texto fixo: são seis atributos por linha e uma linha por perícia, e um comando
 // por combinação daria centenas deles numa página que já tem um diálogo por
 // linha.
-func attributeCommand(v View, comando string) string {
+func attributeCommand(v View, command string) string {
 	return fmt.Sprintf(
 		"@post('/personagens/%d/pericias/atributo/%s/' + evt.target.value + '?tab=%s')",
-		v.ID, comando, v.AbaAtiva)
+		v.ID, command, v.ActiveTab)
 }
 
 // totalLabel é o nome acessível do número de uma perícia.
 //
 // A falha automática não diz um número, porque não há um: ela diz o que
 // aconteceu. Um botão chamado "—" não informa nada a quem usa leitor de tela.
-func totalLabel(linha expertiseRow) string {
-	if linha.AutoFail {
-		return "Falha automática em " + linha.Name + " — detalhar"
+func totalLabel(row expertiseRow) string {
+	if row.AutoFail {
+		return "Falha automática em " + row.Name + " — detalhar"
 	}
-	return "Detalhar " + linha.Name + " " + linha.Total
+	return "Detalhar " + row.Name + " " + row.Total
 }
 
 // stepCommand escreve o `@post` de subir ou descer uma classe.
@@ -468,18 +468,18 @@ func totalLabel(linha expertiseRow) string {
 // A CLASSE VAI NO CAMINHO, codificada: nome de classe é do catálogo e não tem
 // espaço hoje, mas escrever a rota assumindo isso é o tipo de suposição que
 // quebra no dia em que uma classe nova chegar.
-func stepCommand(v View, classe string, passo int) string {
-	return sheetPost(v, fmt.Sprintf("/nivel/%s/%d", url.PathEscape(classe), passo))
+func stepCommand(v View, class string, step int) string {
+	return sheetPost(v, fmt.Sprintf("/nivel/%s/%d", url.PathEscape(class), step))
 }
 
 // vitalCommand escreve o `@post` de um passo de PV ou PM.
-func vitalCommand(v View, rotulo string, passo int) string {
-	return sheetPost(v, fmt.Sprintf("/vitais/%s/%d", routeVital(rotulo), passo))
+func vitalCommand(v View, label string, step int) string {
+	return sheetPost(v, fmt.Sprintf("/vitais/%s/%d", routeVital(label), step))
 }
 
 // proficiencyCommand escreve o `@post` de ligar ou desligar uma categoria.
-func proficiencyCommand(v View, chave string) string {
-	return sheetPost(v, "/proficiencias/alterna/"+chave)
+func proficiencyCommand(v View, key string) string {
+	return sheetPost(v, "/proficiencias/alterna/"+key)
 }
 
 // defaultClassCommand escreve o `@post` do "Restaurar padrão de classe".
@@ -492,8 +492,8 @@ func defaultClassCommand(v View) string {
 // DOIS diálogos e não um, porque as listas são diferentes: subir oferece as que
 // cabem no teto, descer oferece as que têm nível de sobra. Um diálogo só teria
 // de ser reescrito no gesto que o abre, que é a armadilha do nó COMPARTILHADO.
-func stepDialog(passo int) string {
-	if passo > 0 {
+func stepDialog(step int) string {
+	if step > 0 {
 		return "subir-de-nivel"
 	}
 	return "descer-de-nivel"
