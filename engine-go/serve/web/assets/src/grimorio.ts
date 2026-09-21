@@ -18,8 +18,8 @@
 import { piscarVital, pulsarVez } from '@/lib/turn-juice'
 
 /** Onde a legenda vai buscar o que medir: a amostra da mesma figura. */
-function amostraDe(legenda: Element): HTMLElement | null {
-  return legenda.closest('figure, [data-par]')?.querySelector<HTMLElement>('[data-amostra]') ?? null
+function amostraDe(caption: Element): HTMLElement | null {
+  return caption.closest('figure, [data-par]')?.querySelector<HTMLElement>('[data-amostra]') ?? null
 }
 
 /**
@@ -31,22 +31,22 @@ function amostraDe(legenda: Element): HTMLElement | null {
  * valor é 8,86. Pintar um pixel e ler de volta é o único jeito de sair do
  * espaço de cor e chegar em sRGB.
  */
-function contrasteNoPainel(cor: string): number | null {
-  const tela = document.createElement('canvas')
-  tela.width = 1
-  tela.height = 1
-  const ctx = tela.getContext('2d')
-  const cena = document.querySelector('.scene-grimorio')
-  if (!ctx || !cena) return null
+function contrasteNoPainel(color: string): number | null {
+  const page = document.createElement('canvas')
+  page.width = 1
+  page.height = 1
+  const ctx = page.getContext('2d')
+  const scene = document.querySelector('.scene-grimorio')
+  if (!ctx || !scene) return null
 
-  const paraRgb = (css: string): [number, number, number] => {
+  const toRgb = (css: string): [number, number, number] => {
     ctx.clearRect(0, 0, 1, 1)
     ctx.fillStyle = css
     ctx.fillRect(0, 0, 1, 1)
     const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
     return [r ?? 0, g ?? 0, b ?? 0]
   }
-  const luminancia = ([r, g, b]: [number, number, number]) => {
+  const luminance = ([r, g, b]: [number, number, number]) => {
     const [lr, lg, lb] = [r, g, b].map((v) => {
       const c = v / 255
       return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
@@ -54,20 +54,20 @@ function contrasteNoPainel(cor: string): number | null {
     return 0.2126 * (lr ?? 0) + 0.7152 * (lg ?? 0) + 0.0722 * (lb ?? 0)
   }
 
-  const painel = getComputedStyle(cena).getPropertyValue('--grimorio-panel').trim()
-  const [claro, escuro] = [luminancia(paraRgb(cor)), luminancia(paraRgb(painel))].sort(
+  const panel = getComputedStyle(scene).getPropertyValue('--grimorio-panel').trim()
+  const [light, dark] = [luminance(toRgb(color)), luminance(toRgb(panel))].sort(
     (a, b) => b - a,
   )
-  return Number((((claro ?? 0) + 0.05) / ((escuro ?? 0) + 0.05)).toFixed(2))
+  return Number((((light ?? 0) + 0.05) / ((dark ?? 0) + 0.05)).toFixed(2))
 }
 
 /** Preenche cada legenda com a propriedade computada da amostra ao lado. */
 function medeAsPropriedades(): void {
-  for (const legenda of document.querySelectorAll<HTMLElement>('[data-medir]')) {
-    const amostra = amostraDe(legenda)
-    const propriedade = legenda.dataset.medir
-    if (!amostra || !propriedade) continue
-    legenda.textContent = getComputedStyle(amostra).getPropertyValue(propriedade).trim() || '—'
+  for (const caption of document.querySelectorAll<HTMLElement>('[data-medir]')) {
+    const sample = amostraDe(caption)
+    const property = caption.dataset.medir
+    if (!sample || !property) continue
+    caption.textContent = getComputedStyle(sample).getPropertyValue(property).trim() || '—'
   }
 }
 
@@ -80,18 +80,18 @@ function medeAsPropriedades(): void {
  * parecem o mesmo papel e não são (ALE-173, P3).
  */
 function medeOsContrastes(): void {
-  for (const legenda of document.querySelectorAll<HTMLElement>('[data-contraste]')) {
-    const amostra = amostraDe(legenda)
-    if (!amostra) continue
-    const razao = contrasteNoPainel(getComputedStyle(amostra).backgroundColor)
-    if (razao === null) continue
-    const serveDeTexto = razao >= 4.5
-    legenda.textContent = serveDeTexto ? `${razao}:1 no painel` : `${razao}:1 — só bloco, não texto`
+  for (const caption of document.querySelectorAll<HTMLElement>('[data-contraste]')) {
+    const sample = amostraDe(caption)
+    if (!sample) continue
+    const ratio = contrasteNoPainel(getComputedStyle(sample).backgroundColor)
+    if (ratio === null) continue
+    const servesAsText = ratio >= 4.5
+    caption.textContent = servesAsText ? `${ratio}:1 no painel` : `${ratio}:1 — só bloco, não texto`
     // A cor do aviso é do TEMA e não inventada aqui: o dourado é o que a casa
     // usa para "olhe para isto".
-    legenda.classList.toggle('text-grimorio-gold', !serveDeTexto)
-    legenda.classList.toggle('font-bold', !serveDeTexto)
-    legenda.classList.toggle('text-muted-foreground', serveDeTexto)
+    caption.classList.toggle('text-grimorio-gold', !servesAsText)
+    caption.classList.toggle('font-bold', !servesAsText)
+    caption.classList.toggle('text-muted-foreground', servesAsText)
   }
 }
 
@@ -117,13 +117,13 @@ function medeOsContrastes(): void {
  */
 async function medeAsCelulas(): Promise<void> {
   await new Promise((pronto) => requestAnimationFrame(() => pronto(null)))
-  for (const legenda of document.querySelectorAll<HTMLElement>('[data-medir-cela]')) {
-    const cela = legenda.previousElementSibling
-    const peca = cela?.querySelector<HTMLElement>('button, input, [role="progressbar"]')
-    if (!peca) continue
-    const caixa = peca.getBoundingClientRect()
-    const raio = getComputedStyle(peca).borderRadius
-    legenda.textContent = `h ${Math.round(caixa.height)} · w ${Math.round(caixa.width)} · r ${raio}`
+  for (const caption of document.querySelectorAll<HTMLElement>('[data-medir-cela]')) {
+    const cell = caption.previousElementSibling
+    const token = cell?.querySelector<HTMLElement>('button, input, [role="progressbar"]')
+    if (!token) continue
+    const box = token.getBoundingClientRect()
+    const radius = getComputedStyle(token).borderRadius
+    caption.textContent = `h ${Math.round(box.height)} · w ${Math.round(box.width)} · r ${radius}`
   }
 }
 
@@ -139,25 +139,25 @@ async function medeAsCelulas(): Promise<void> {
  * no sistema e clicando de novo.
  */
 function ligaOsDisparos(): void {
-  const linha = document.querySelector<HTMLElement>('[data-linha-iniciativa]')
-  const parado = window.matchMedia('(prefers-reduced-motion: reduce)')
+  const row = document.querySelector<HTMLElement>('[data-linha-iniciativa]')
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)')
 
-  const mostraOGate = () => {
-    const rotulo = document.querySelector<HTMLElement>('[data-movimento-reduzido]')
-    if (rotulo) rotulo.textContent = parado.matches ? 'LIGADO' : 'desligado'
+  const showsGate = () => {
+    const label = document.querySelector<HTMLElement>('[data-movimento-reduzido]')
+    if (label) label.textContent = still.matches ? 'LIGADO' : 'desligado'
   }
-  mostraOGate()
-  parado.addEventListener('change', mostraOGate)
+  showsGate()
+  still.addEventListener('change', showsGate)
 
-  for (const botao of document.querySelectorAll<HTMLElement>('[data-disparar]')) {
-    botao.addEventListener('click', () => {
+  for (const button of document.querySelectorAll<HTMLElement>('[data-disparar]')) {
+    button.addEventListener('click', () => {
       // A guarda é aqui e não dentro de cada animação, igual à sessão: um
       // ponto só decide, e é ele que a folha demonstra.
-      if (parado.matches || !linha) return
-      const qual = botao.dataset.disparar
-      if (qual === 'ferir') piscarVital(linha, { curou: false })
-      if (qual === 'curar') piscarVital(linha, { curou: true })
-      if (qual === 'vez') pulsarVez(linha)
+      if (still.matches || !row) return
+      const which = button.dataset.disparar
+      if (which === 'ferir') piscarVital(row, { curou: false })
+      if (which === 'curar') piscarVital(row, { curou: true })
+      if (which === 'vez') pulsarVez(row)
     })
   }
 }

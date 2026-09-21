@@ -64,30 +64,30 @@ test.describe('O rodapé do mestre', () => {
   test('a qualidade que o mestre escolhe é a que vai no fio', async ({ page }) => {
     await page.goto(MESA)
 
-    let corpo: string | null = null
-    await page.route('**/descanso/dia', async (rota) => {
-      corpo = rota.request().postData()
-      await rota.abort()
+    let body: string | null = null
+    await page.route('**/descanso/dia', async (route) => {
+      body = route.request().postData()
+      await route.abort()
     })
 
     await page.getByRole('button', { name: 'Recuperar · dia' }).first().click()
-    const qualidade = page.getByLabel('Qualidade do descanso')
-    await expect(qualidade).toBeVisible()
+    const quality = page.getByLabel('Qualidade do descanso')
+    await expect(quality).toBeVisible()
     // O CONTROLE de que o sinal declarado chega ao elemento: sem ele o select
     // nasceria na primeira opção ("ruim") e a tela mentiria antes de qualquer
     // escolha.
-    await expect(qualidade).toHaveValue('normal')
+    await expect(quality).toHaveValue('normal')
 
-    await qualidade.selectOption('luxuosa')
+    await quality.selectOption('luxuosa')
     await page.getByRole('button', { name: 'Descansar' }).click()
 
-    await expect.poll(() => corpo, { message: 'o clique não postou nada' }).not.toBeNull()
-    const sinais = JSON.parse(corpo ?? '{}') as Record<string, unknown>
-    expect(sinais.rest_quality, `o fio levou ${corpo}`).toBe('luxuosa')
+    await expect.poll(() => body, { message: 'o clique não postou nada' }).not.toBeNull()
+    const signals = JSON.parse(body ?? '{}') as Record<string, unknown>
+    expect(signals.rest_quality, `o fio levou ${body}`).toBe('luxuosa')
     // E leva UM nome só. Dois — o declarado e o que o `data-bind` inventou — é
     // exatamente a forma do defeito, e ela passa despercebida porque o valor
     // certo ESTÁ lá, só que na chave que o servidor não lê.
-    expect(Object.keys(sinais).filter((k) => k.toLowerCase().includes('quality'))).toHaveLength(1)
+    expect(Object.keys(signals).filter((k) => k.toLowerCase().includes('quality'))).toHaveLength(1)
   })
 
   /**
@@ -104,44 +104,44 @@ test.describe('O rodapé do mestre', () => {
    */
   test('a recuperação sai da fileira quando o palco é baixo', async ({ page }) => {
     await page.goto(MESA)
-    const naFileira = page.locator(`${rodape} .stage-tall-only`).getByRole('button', {
+    const inRow = page.locator(`${rodape} .stage-tall-only`).getByRole('button', {
       name: 'Expirar efeitos · cena',
     })
-    const gaveta = page.locator(`${rodape} details.stage-drawer`)
+    const drawer = page.locator(`${rodape} details.stage-drawer`)
 
     // Localizador de CSS e não `getByRole('button')`: `<summary>` não expõe o
     // papel de botão, então aquele localizador não acha nada — e `toBeHidden`
     // sobre o que não existe passa VERDE, porque "não achei" e "está escondido"
     // são a mesma linha para ele. Este casa o elemento nas DUAS alturas, e aí a
     // visibilidade responde pela consulta de contêiner.
-    const abrir = page.locator('summary[aria-label="Mais comandos da mesa"]')
+    const openIt = page.locator('summary[aria-label="Mais comandos da mesa"]')
 
     await page.setViewportSize({ width: 390, height: 844 })
-    await expect(naFileira, 'em pé a recuperação fica à vista').toBeVisible()
-    await expect(abrir, 'em pé a gaveta não tem por que existir').toBeHidden()
+    await expect(inRow, 'em pé a recuperação fica à vista').toBeVisible()
+    await expect(openIt, 'em pé a gaveta não tem por que existir').toBeHidden()
 
     await page.setViewportSize({ width: 844, height: 390 })
-    await expect(naFileira, 'deitado ela sai da fileira').toBeHidden()
-    await expect(abrir, 'deitado a gaveta é o único caminho até ela').toBeVisible()
+    await expect(inRow, 'deitado ela sai da fileira').toBeHidden()
+    await expect(openIt, 'deitado a gaveta é o único caminho até ela').toBeVisible()
 
     // A fileira ÚNICA é a troca inteira: se o rodapé enrolasse, esconder os
     // botões não teria comprado nada. 61px foi o medido com uma fileira; o teto
     // dá folga para o alvo de toque de 44px mais a borda, e denuncia a segunda.
-    const altura = await page.locator(rodape).evaluate((el) => el.getBoundingClientRect().height)
-    expect(altura, 'o rodapé enrolou em mais de uma fileira').toBeLessThan(80)
+    const height = await page.locator(rodape).evaluate((el) => el.getBoundingClientRect().height)
+    expect(height, 'o rodapé enrolou em mais de uma fileira').toBeLessThan(80)
 
     // E a gaveta aberta cabe na janela: ela sobe (`bottom-full`) porque nasce no
     // rodapé, e subir é o que pode estourar por cima num palco de 390.
-    await abrir.click()
-    const painel = gaveta.locator('div').first()
-    await expect(painel.getByRole('button', { name: 'Expirar efeitos · cena' })).toBeVisible()
-    const caixa = await painel.evaluate((el) => {
+    await openIt.click()
+    const panel = drawer.locator('div').first()
+    await expect(panel.getByRole('button', { name: 'Expirar efeitos · cena' })).toBeVisible()
+    const crate = await panel.evaluate((el) => {
       const r = el.getBoundingClientRect()
       return { top: r.top, bottom: r.bottom, left: r.left, right: r.right }
     })
-    expect(caixa.top, 'a gaveta estourou por cima da janela').toBeGreaterThanOrEqual(0)
-    expect(caixa.left, 'a gaveta estourou pela esquerda').toBeGreaterThanOrEqual(0)
-    expect(caixa.right, 'a gaveta estourou pela direita').toBeLessThanOrEqual(844)
+    expect(crate.top, 'a gaveta estourou por cima da janela').toBeGreaterThanOrEqual(0)
+    expect(crate.left, 'a gaveta estourou pela esquerda').toBeGreaterThanOrEqual(0)
+    expect(crate.right, 'a gaveta estourou pela direita').toBeLessThanOrEqual(844)
   })
 
   /**
@@ -165,27 +165,27 @@ test.describe('O rodapé do mestre', () => {
     // idempotente, então chamá-lo aqui não depende do que outro spec deixou.
     await openTheTracker(page)
     await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
-    const linha = page.locator('#table ol li').first()
-    await expect(linha).toBeVisible()
-    await expect(linha.getByRole('button', { name: /^Ferir / })).toBeVisible()
+    const row = page.locator('#table ol li').first()
+    await expect(row).toBeVisible()
+    await expect(row.getByRole('button', { name: /^Ferir / })).toBeVisible()
     // E a linha medida TEM o crachá, senão a medida é de outra linha que não a
     // que corre risco: o selo de 5 letras é o que empurra os verbos, e uma
     // fileira sem ele passaria verde sobre o caso que importa.
-    await expect(linha.getByText('Ficha', { exact: true })).toBeVisible()
+    await expect(row.getByText('Ficha', { exact: true })).toBeVisible()
 
-    const medida = await linha.evaluate((el) => {
-      const caixa = el.getBoundingClientRect()
-      const verbos = el.querySelector('div.shrink-0') as HTMLElement
-      const v = verbos.getBoundingClientRect()
+    const measure = await row.evaluate((el) => {
+      const box = el.getBoundingClientRect()
+      const verbs = el.querySelector('div.shrink-0') as HTMLElement
+      const v = verbs.getBoundingClientRect()
       return {
         recorte: el.scrollWidth - el.clientWidth,
-        verbosForaPelaDireita: v.right - caixa.right,
-        verbosForaPelaEsquerda: caixa.left - v.left,
+        verbosForaPelaDireita: v.right - box.right,
+        verbosForaPelaEsquerda: box.left - v.left,
       }
     })
-    expect(medida.recorte, 'a linha recortou o próprio conteúdo').toBeLessThanOrEqual(1)
-    expect(medida.verbosForaPelaDireita, 'os verbos saíram pela direita da linha').toBeLessThanOrEqual(1)
-    expect(medida.verbosForaPelaEsquerda, 'os verbos saíram pela esquerda da linha').toBeLessThanOrEqual(1)
+    expect(measure.recorte, 'a linha recortou o próprio conteúdo').toBeLessThanOrEqual(1)
+    expect(measure.verbosForaPelaDireita, 'os verbos saíram pela direita da linha').toBeLessThanOrEqual(1)
+    expect(measure.verbosForaPelaEsquerda, 'os verbos saíram pela esquerda da linha').toBeLessThanOrEqual(1)
   })
 
   /**
@@ -213,37 +213,37 @@ test.describe('O rodapé do mestre', () => {
     // terminado em `/fluxo` não casa — o teste passaria verde com o stream
     // ABERTO, medindo exatamente o caminho que ele existe para excluir. Quem
     // denuncia isso é o controle abaixo.
-    let tentouAbrir = 0
-    await page.route(/\/campanhas\/\d+\/sessoes\/\d+\/fluxo(\?|$)/, async (rota) => {
-      tentouAbrir++
-      await rota.abort()
+    let triedOpening = 0
+    await page.route(/\/campanhas\/\d+\/sessoes\/\d+\/fluxo(\?|$)/, async (route) => {
+      triedOpening++
+      await route.abort()
     })
 
     await page.goto(MESA)
     await openTheTracker(page)
     await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
 
-    const olho = page
+    const eye = page
       .locator('#table ol li')
       .first()
       .getByRole('button', { name: /^(Ocultar|Revelar) os PV de / })
-    await expect(olho).toBeVisible()
+    await expect(eye).toBeVisible()
     // O CONTROLE de que o canal está mesmo fechado: a página TENTOU abri-lo e
     // foi barrada. Sem isto, um `data-init` que deixasse de existir faria este
     // teste medir uma página sem stream por acidente, e não por corte.
-    expect(tentouAbrir, 'a página nem tentou abrir o stream — o corte não prova nada').toBeGreaterThan(0)
+    expect(triedOpening, 'a página nem tentou abrir o stream — o corte não prova nada').toBeGreaterThan(0)
 
-    const antes = await olho.getAttribute('aria-pressed')
-    await olho.click()
+    const before = await eye.getAttribute('aria-pressed')
+    await eye.click()
 
     // O DOM mudou com o stream fechado: só a resposta do POST podia ter feito
     // isso. E mudou UMA vez — `aria-pressed` é o oposto, e não o valor de volta.
-    const depois = antes === 'true' ? 'false' : 'true'
-    await expect(olho).toHaveAttribute('aria-pressed', depois)
+    const after = before === 'true' ? 'false' : 'true'
+    await expect(eye).toHaveAttribute('aria-pressed', after)
 
     // Devolve a linha ao que era: a sessão é compartilhada.
-    await olho.click()
-    await expect(olho).toHaveAttribute('aria-pressed', antes ?? 'false')
+    await eye.click()
+    await expect(eye).toHaveAttribute('aria-pressed', before ?? 'false')
   })
 
   /**
@@ -264,7 +264,7 @@ test.describe('O rodapé do mestre', () => {
   test('nenhum diálogo fechado rouba o clique da cena', async ({ page }) => {
     await page.goto(MESA)
 
-    const fechados = await page.evaluate(() =>
+    const shut = await page.evaluate(() =>
       [...document.querySelectorAll('dialog:not([open])')].map((d) => ({
         id: d.id,
         display: getComputedStyle(d).display,
@@ -272,8 +272,8 @@ test.describe('O rodapé do mestre', () => {
     )
     // O CONTROLE: a cena do mestre TEM diálogos. Uma lista vazia passaria verde
     // dizendo nada, e é o que aconteceria se os ids mudassem.
-    expect(fechados.length, 'a cena não tem diálogo nenhum para medir').toBeGreaterThan(0)
-    for (const d of fechados) {
+    expect(shut.length, 'a cena não tem diálogo nenhum para medir').toBeGreaterThan(0)
+    for (const d of shut) {
       expect(d.display, `o diálogo #${d.id} está fechado e ocupando a tela`).toBe('none')
     }
   })
@@ -293,15 +293,15 @@ test.describe('O rodapé do mestre', () => {
     await page.goto(MESA)
     await page.getByRole('button', { name: 'Recuperar · dia' }).first().click()
 
-    const caixa = page.locator('dialog#day-rest')
-    await expect(caixa).toBeVisible()
-    const centro = await caixa.evaluate((el) => {
+    const box = page.locator('dialog#day-rest')
+    await expect(box).toBeVisible()
+    const center = await box.evaluate((el) => {
       const r = el.getBoundingClientRect()
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
     })
     // Tolerância de 2px para o arredondamento de sub-pixel, e não mais: o
     // defeito que isto pega punha o centro a centenas de pixels do lugar.
-    expect(Math.abs(centro.x - 512), 'fora do centro horizontal').toBeLessThanOrEqual(2)
-    expect(Math.abs(centro.y - 384), 'fora do centro vertical').toBeLessThanOrEqual(2)
+    expect(Math.abs(center.x - 512), 'fora do centro horizontal').toBeLessThanOrEqual(2)
+    expect(Math.abs(center.y - 384), 'fora do centro vertical').toBeLessThanOrEqual(2)
   })
 })

@@ -26,8 +26,8 @@ import { STORAGE_KEY, persistUi, readStoredSfx, readStoredVolume } from '@/lib/u
 type Preferencias = { som: boolean; volume: number }
 
 function lidas(): Preferencias {
-  const bruto = globalThis.localStorage?.getItem(STORAGE_KEY) ?? null
-  return { som: readStoredSfx(bruto), volume: readStoredVolume(bruto) }
+  const raw = globalThis.localStorage?.getItem(STORAGE_KEY) ?? null
+  return { som: readStoredSfx(raw), volume: readStoredVolume(raw) }
 }
 
 const prefs = lidas()
@@ -40,10 +40,10 @@ const tocador = createSfxPlayer()
  * `select` no MESMO gesto, e a pessoa ouve duas vezes — regra que veio do
  * `sfx.ts` da SPA e não é reinventada aqui.
  */
-function cue(nome: SfxName): void {
+function cue(label: SfxName): void {
   if (!prefs.som) return
-  if (nome === 'hover' && window.matchMedia?.('(pointer: coarse)').matches) return
-  tocador.play(nome, prefs.volume / 100)
+  if (label === 'hover' && window.matchMedia?.('(pointer: coarse)').matches) return
+  tocador.play(label, prefs.volume / 100)
 }
 
 /**
@@ -58,10 +58,10 @@ function cue(nome: SfxName): void {
  * O que NÃO se escreve aqui é o que importa: foco, dispensa por clique fora,
  * `Esc` e camada vêm do navegador. Era isso que o Popover do Kobalte trazia.
  */
-function ancora(painel: HTMLElement): void {
-  const gatilho = document.querySelector<HTMLElement>(`[popovertarget="${painel.id}"]`)
-  if (!gatilho) return
-  const g = gatilho.getBoundingClientRect()
+function ancora(panel: HTMLElement): void {
+  const trigger = document.querySelector<HTMLElement>(`[popovertarget="${panel.id}"]`)
+  if (!trigger) return
+  const g = trigger.getBoundingClientRect()
 
   // Ancorado pelo BOTTOM quando abre para cima, e não por `top - altura`: no
   // `beforetoggle` o painel ainda está oculto, então `offsetHeight` é ZERO —
@@ -80,17 +80,17 @@ function ancora(painel: HTMLElement): void {
   // mandava para BAIXO — 191 + 312 = 503 numa janela de 390, com três dos seis
   // modos fora da tela. O rodapé do Hub não muda de lado: lá os dois critérios
   // concordam.
-  const margem = 8
-  const espacoAcima = g.top - margem * 2
-  const espacoAbaixo = window.innerHeight - g.bottom - margem * 2
-  const paraCima = espacoAcima > espacoAbaixo
+  const margin = 8
+  const spaceAbove = g.top - margin * 2
+  const spaceBelow = window.innerHeight - g.bottom - margin * 2
+  const upward = spaceAbove > spaceBelow
   // `auto` e NÃO string vazia. O estilo de agente de usuário do popover é
   // `inset: 0`, então limpar a propriedade devolve o `top: 0` DELE — e com
   // `top` e `bottom` ambos definidos e altura automática a caixa fica
   // sobre-restringida: o `top` vence e o `bottom` é ignorado em silêncio.
   // Medido: o painel encostava no alto da tela com `bottom: 112px` aplicado.
-  painel.style.top = paraCima ? 'auto' : `${Math.round(g.bottom + margem)}px`
-  painel.style.bottom = paraCima ? `${Math.round(window.innerHeight - g.top + margem)}px` : 'auto'
+  panel.style.top = upward ? 'auto' : `${Math.round(g.bottom + margin)}px`
+  panel.style.bottom = upward ? `${Math.round(window.innerHeight - g.top + margin)}px` : 'auto'
   // O TETO é o espaço do lado escolhido, e com ele o painel nunca passa da
   // janela — o que não couber ROLA, o que é diferente de não existir. O piso de
   // 96px existe para o caso degenerado (gatilho colado numa borda): melhor um
@@ -98,7 +98,7 @@ function ancora(painel: HTMLElement): void {
   //
   // Quem quiser um painel sem rolagem declara `max-height` menor na própria
   // folha; este é o TETO, não a altura.
-  painel.style.maxHeight = `${Math.max(96, Math.round(paraCima ? espacoAcima : espacoAbaixo))}px`
+  panel.style.maxHeight = `${Math.max(96, Math.round(upward ? spaceAbove : spaceBelow))}px`
   // Preso à janela: num telefone o gatilho pode estar perto da borda direita e
   // o painel é mais largo que ele.
   //
@@ -111,8 +111,8 @@ function ancora(painel: HTMLElement): void {
   // Por isso o `ancora` roda DUAS vezes (ver o ouvinte no fim do arquivo): a
   // primeira com o chute, para não haver lampejo no canto, e a segunda no
   // `toggle`, quando o painel já tem tamanho e a conta deixa de ser palpite.
-  const largura = painel.offsetWidth || 224
-  painel.style.left = `${Math.round(Math.max(margem, Math.min(g.left, window.innerWidth - largura - margem)))}px`
+  const width = panel.offsetWidth || 224
+  panel.style.left = `${Math.round(Math.max(margin, Math.min(g.left, window.innerWidth - width - margin)))}px`
 }
 
 /** A superfície que as expressões do Datastar chamam. */
@@ -166,8 +166,8 @@ attachSceneNav({
   // `data-voltar` na casca diz para onde o Esc leva. Sem ele, Esc não faz nada
   // — é o caso do Hub, que é a cena raiz e não tem para onde voltar.
   onEscape: () => {
-    const destino = cascaDaCena()?.dataset.voltar
-    if (destino) window.location.href = destino
+    const destination = cascaDaCena()?.dataset.voltar
+    if (destination) window.location.href = destination
   },
   sfx: cue,
 })
@@ -194,12 +194,12 @@ document.addEventListener('click', (e) => {
 // escondido e mede zero, então a largura e o espaço saem de um chute; na
 // segunda ele já está na top layer e a conta é a real. Só a segunda não bastaria
 // — o painel apareceria no canto por um quadro antes de saltar para o lugar.
-for (const quando of ['beforetoggle', 'toggle']) {
+for (const moment of ['beforetoggle', 'toggle']) {
   document.addEventListener(
-    quando,
+    moment,
     (e) => {
-      const alvo = e.target as HTMLElement
-      if (alvo?.matches?.('[popover]') && (e as ToggleEvent).newState === 'open') ancora(alvo)
+      const target = e.target as HTMLElement
+      if (target?.matches?.('[popover]') && (e as ToggleEvent).newState === 'open') ancora(target)
     },
     true,
   )

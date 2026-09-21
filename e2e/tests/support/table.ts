@@ -11,34 +11,34 @@ import { expect, type Page } from '@playwright/test'
 
 /** Uma mesa só desta corrida. Devolve o endereço e como se livrar dela. */
 export async function disposableTable(page: Page): Promise<{ mesa: string; apagar: () => Promise<void> }> {
-  const nome = `E2E Descartável tabuleiro ${Date.now()}-${Math.floor(Math.random() * 1e6)}`
+  const label = `E2E Descartável tabuleiro ${Date.now()}-${Math.floor(Math.random() * 1e6)}`
 
   // A FIXTURE vai pela API e não pela tela, de propósito: montar campanha e
   // sessão clicando gastaria meia dúzia de navegações em cada caso para chegar
   // ao que se quer medir, e nenhuma delas é o assunto deste arquivo. O que é
   // medido — o tabuleiro — vai pela tela inteiro. Os casos abaixo só precisam
   // de um endereço de mesa, então trocar este caminho não mexe em nenhum.
-  const criada = await page.request.post('/api/campanhas', {
-    data: { name: nome, description: 'Criada e apagada pelo E2E do tabuleiro.' },
+  const created = await page.request.post('/api/campanhas', {
+    data: { name: label, description: 'Criada e apagada pelo E2E do tabuleiro.' },
   })
-  expect(criada.ok(), `criar a campanha descartável: ${criada.status()}`).toBeTruthy()
-  const campanha = (await criada.json()).id as number
+  expect(created.ok(), `criar a campanha descartável: ${created.status()}`).toBeTruthy()
+  const campaign = (await created.json()).id as number
 
-  const sessao = await page.request.post(`/api/campanhas/${campanha}/sessoes`, {
+  const session = await page.request.post(`/api/campanhas/${campaign}/sessoes`, {
     data: { sessionNumber: 1, title: 'Sessão do E2E' },
   })
-  expect(sessao.ok(), `criar a sessão descartável: ${sessao.status()}`).toBeTruthy()
-  const sid = (await sessao.json()).id as number
+  expect(session.ok(), `criar a sessão descartável: ${session.status()}`).toBeTruthy()
+  const sid = (await session.json()).id as number
 
   return {
-    mesa: `/campanhas/${campanha}/sessoes/${sid}`,
+    mesa: `/campanhas/${campaign}/sessoes/${sid}`,
     // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO: sem o `catch`, um caso
     // que falhou no meio deixa a página num estado em que o `delete` estoura, e
     // o relatório mostra o erro da FAXINA no lugar do erro do teste. A campanha
     // órfã custa uma linha na lista; o defeito escondido custa uma sessão.
     apagar: async () => {
       try {
-        await page.request.delete(`/api/campanhas/${campanha}`)
+        await page.request.delete(`/api/campanhas/${campaign}`)
       } catch {
         // A mesa descartável fica para trás. É o preço certo a pagar.
       }
@@ -97,7 +97,7 @@ export async function openTheTracker(page: Page): Promise<void> {
  */
 export async function putACombatantInTheTracker(
   page: Page,
-  nome: string,
+  displayName: string,
   pv?: number,
 ): Promise<void> {
   await openTheTracker(page)
@@ -105,13 +105,13 @@ export async function putACombatantInTheTracker(
   // e o formulário fica aberto depois de acrescentar. Clicar sem olhar o estado
   // FECHA o formulário no segundo combatente, e o sintoma é um timeout no campo
   // Nome — que existe, e está escondido.
-  const abrir = page.getByRole('button', { name: '+ Combatente' })
-  if ((await abrir.getAttribute('aria-expanded')) !== 'true') {
-    await abrir.click()
+  const openIt = page.getByRole('button', { name: '+ Combatente' })
+  if ((await openIt.getAttribute('aria-expanded')) !== 'true') {
+    await openIt.click()
   }
   // `exact` porque `getByLabel` casa por SUBSTRING, e a mesma cena tem "Nome do
   // NPC": sem ele, `'Nome'` resolve para dois campos.
-  await page.getByLabel('Nome', { exact: true }).fill(nome)
+  await page.getByLabel('Nome', { exact: true }).fill(displayName)
   if (pv !== undefined) {
     // Pelo ID e não pelo rótulo: `PV` resolve para DOIS campos nesta cena — este
     // e o ajuste do bestiário —, e o `exact` não desempata porque os dois se
@@ -140,15 +140,15 @@ export async function putATokenOnTheMap(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Pôr no mapa', exact: true }).first().click()
   // Escopado ao DIÁLOGO: o nome do combatente aparece também na fila atrás dele,
   // e um seletor de página inteira acha os dois.
-  const dialogo = page.locator('#populate')
-  await dialogo.getByRole('button', { name: /Ogro do E2E/ }).click()
-  await dialogo.getByRole('button', { name: 'Pôr no mapa', exact: true }).click()
+  const dialog = page.locator('#populate')
+  await dialog.getByRole('button', { name: /Ogro do E2E/ }).click()
+  await dialog.getByRole('button', { name: 'Pôr no mapa', exact: true }).click()
   await expect(page.locator('.board-token'), 'a peça não entrou no mapa').toHaveCount(1)
 }
 
 /** Abre o tabuleiro pela TELA, que é o gesto de verdade. */
-export async function openTheBoard(page: Page, mesa: string): Promise<void> {
-  await page.goto(mesa, { waitUntil: 'domcontentloaded' })
+export async function openTheBoard(page: Page, table: string): Promise<void> {
+  await page.goto(table, { waitUntil: 'domcontentloaded' })
   await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
   // `exact` porque `getByLabel` casa por SUBSTRING, e o diálogo do acervo se
   // chama "Lugares da campanha": com acervo na mesa, `'Lugar'` resolve para

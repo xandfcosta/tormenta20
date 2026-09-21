@@ -25,8 +25,8 @@ import { type Page, expect } from '@playwright/test'
 /** Uma caixa medida, com o texto que identifica quem ela é no relatório. */
 type Caixa = { x: number; y: number; width: number; height: number; texto: string }
 
-async function medir(page: Page, seletor: string): Promise<Caixa[]> {
-  return page.$$eval(seletor, (nodes) =>
+async function medir(page: Page, selector: string): Promise<Caixa[]> {
+  return page.$$eval(selector, (nodes) =>
     nodes
       .map((node) => {
         const r = node.getBoundingClientRect()
@@ -55,15 +55,15 @@ async function medir(page: Page, seletor: string): Promise<Caixa[]> {
  *
  * @example await expectFormaColuna(page, 'button[aria-label^="Curar "]')
  */
-export async function expectFormaColuna(page: Page, seletor: string, folga = 1): Promise<void> {
-  const caixas = await medir(page, seletor)
-  expect(caixas.length, `nenhuma caixa em ${seletor} — o seletor não casou nada`).toBeGreaterThan(0)
-  const colunas = [...new Set(caixas.map((c) => c.x))].sort((a, b) => a - b)
-  const espalhamento = colunas.length === 0 ? 0 : colunas[colunas.length - 1] - colunas[0]
+export async function expectFormaColuna(page: Page, selector: string, slack = 1): Promise<void> {
+  const boxes = await medir(page, selector)
+  expect(boxes.length, `nenhuma caixa em ${selector} — o seletor não casou nada`).toBeGreaterThan(0)
+  const columns = [...new Set(boxes.map((c) => c.x))].sort((a, b) => a - b)
+  const spread = columns.length === 0 ? 0 : columns[columns.length - 1] - columns[0]
   expect(
-    espalhamento,
-    `${seletor} em ${colunas.length} colunas (x: ${colunas.join(', ')}) — deveria ser uma`,
-  ).toBeLessThanOrEqual(folga)
+    spread,
+    `${selector} em ${columns.length} colunas (x: ${columns.join(', ')}) — deveria ser uma`,
+  ).toBeLessThanOrEqual(slack)
 }
 
 /**
@@ -77,19 +77,19 @@ export async function expectFormaColuna(page: Page, seletor: string, folga = 1):
  */
 export async function expectProporcao(
   page: Page,
-  seletor: string,
+  selector: string,
   min: number,
   max: number,
 ): Promise<void> {
-  const caixas = await medir(page, seletor)
-  expect(caixas.length, `nenhuma caixa em ${seletor}`).toBeGreaterThan(0)
-  for (const caixa of caixas) {
-    const razao = caixa.width / caixa.height
+  const boxes = await medir(page, selector)
+  expect(boxes.length, `nenhuma caixa em ${selector}`).toBeGreaterThan(0)
+  for (const rect of boxes) {
+    const aspect = rect.width / rect.height
     expect(
-      razao,
-      `${caixa.texto || seletor}: ${caixa.width}×${caixa.height} dá ${razao.toFixed(2)}, fora de ${min}–${max}`,
+      aspect,
+      `${rect.texto || selector}: ${rect.width}×${rect.height} dá ${aspect.toFixed(2)}, fora de ${min}–${max}`,
     ).toBeGreaterThanOrEqual(min)
-    expect(razao).toBeLessThanOrEqual(max)
+    expect(aspect).toBeLessThanOrEqual(max)
   }
 }
 
@@ -103,33 +103,33 @@ export async function expectProporcao(
  */
 export async function expectEnchePai(
   page: Page,
-  pai: string,
-  filho: string,
-  folga = 4,
+  father: string,
+  child: string,
+  slack = 4,
 ): Promise<void> {
-  const sobra = await page.evaluate(
-    ([seletorPai, seletorFilho]) => {
-      const caixaPai = document.querySelector(seletorPai as string)
-      if (!caixaPai) return { erro: `pai ${seletorPai} não existe` }
-      const filhos = [...caixaPai.querySelectorAll(seletorFilho as string)].filter(
+  const spare = await page.evaluate(
+    ([parentSelector, childSelector]) => {
+      const parentBox = document.querySelector(parentSelector as string)
+      if (!parentBox) return { erro: `pai ${parentSelector} não existe` }
+      const children = [...parentBox.querySelectorAll(childSelector as string)].filter(
         (node) => node.getBoundingClientRect().width > 0,
       )
-      if (filhos.length === 0) return { erro: `nenhum ${seletorFilho} dentro de ${seletorPai}` }
-      const r = caixaPai.getBoundingClientRect()
-      const direita = Math.max(...filhos.map((f) => f.getBoundingClientRect().right))
+      if (children.length === 0) return { erro: `nenhum ${childSelector} dentro de ${parentSelector}` }
+      const r = parentBox.getBoundingClientRect()
+      const right = Math.max(...children.map((f) => f.getBoundingClientRect().right))
       // O padding do pai não é espaço morto: descontar é o que evita exigir que
       // o filho encoste na borda de um contêiner que tem respiro de propósito.
-      const estilo = getComputedStyle(caixaPai)
-      const limite = r.right - Number.parseFloat(estilo.paddingRight || '0')
-      return { sobra: Math.round(limite - direita), largura: Math.round(r.width) }
+      const style = getComputedStyle(parentBox)
+      const limit = r.right - Number.parseFloat(style.paddingRight || '0')
+      return { sobra: Math.round(limit - right), largura: Math.round(r.width) }
     },
-    [pai, filho],
+    [father, child],
   )
-  expect(sobra.erro, sobra.erro ?? '').toBeUndefined()
+  expect(spare.erro, spare.erro ?? '').toBeUndefined()
   expect(
-    sobra.sobra,
-    `${filho} para ${sobra.sobra}px antes do fim de ${pai} (largura ${sobra.largura}px)`,
-  ).toBeLessThanOrEqual(folga)
+    spare.sobra,
+    `${child} para ${spare.sobra}px antes do fim de ${father} (largura ${spare.largura}px)`,
+  ).toBeLessThanOrEqual(slack)
 }
 
 /**
@@ -145,28 +145,28 @@ export async function expectEnchePai(
  *
  * @example await expectNadaEscapa(page, 'section[aria-label="Mochila"]')
  */
-export async function expectNadaEscapa(page: Page, pai: string, filhos = '*'): Promise<void> {
-  const escapando = await page.evaluate(
-    ([seletorPai, seletorFilhos]) => {
-      const raiz = document.querySelector(seletorPai as string)
-      if (!raiz) return null
-      return [...raiz.querySelectorAll(seletorFilhos as string)]
+export async function expectNadaEscapa(page: Page, father: string, children = '*'): Promise<void> {
+  const escaping = await page.evaluate(
+    ([parentSelector, childSelectors]) => {
+      const root = document.querySelector(parentSelector as string)
+      if (!root) return null
+      return [...root.querySelectorAll(childSelectors as string)]
         .filter((node) => {
-          const pai = node.parentElement
-          if (!pai) return false
-          const estilo = getComputedStyle(node)
-          if (estilo.position === 'absolute' || estilo.position === 'fixed') return false
-          if (getComputedStyle(pai).overflowX !== 'visible') return false
+          const parentSel = node.parentElement
+          if (!parentSel) return false
+          const computedStyle = getComputedStyle(node)
+          if (computedStyle.position === 'absolute' || computedStyle.position === 'fixed') return false
+          if (getComputedStyle(parentSel).overflowX !== 'visible') return false
           const r = node.getBoundingClientRect()
-          return r.width > 0 && r.right > pai.getBoundingClientRect().right + 1
+          return r.width > 0 && r.right > parentSel.getBoundingClientRect().right + 1
         })
         .map((node) => (node.textContent ?? '').trim().slice(0, 30))
         .slice(0, 5)
     },
-    [pai, filhos],
+    [father, children],
   )
-  expect(escapando, `o pai ${pai} não existe na tela`).not.toBeNull()
-  expect(escapando, `pintado para fora do pai, dentro de ${pai}`).toEqual([])
+  expect(escaping, `o pai ${father} não existe na tela`).not.toBeNull()
+  expect(escaping, `pintado para fora do pai, dentro de ${father}`).toEqual([])
 }
 
 /**
@@ -188,38 +188,38 @@ export async function expectNadaEscapa(page: Page, pai: string, filhos = '*'): P
  *
  * @example await expectDentroDaJanela(page, 'main')
  */
-export async function expectDentroDaJanela(page: Page, raiz = 'body'): Promise<void> {
-  const fora = await page.evaluate((seletorRaiz) => {
-    const root = document.querySelector(seletorRaiz as string)
+export async function expectDentroDaJanela(page: Page, root = 'body'): Promise<void> {
+  const outside = await page.evaluate((rootSelector) => {
+    const root = document.querySelector(rootSelector as string)
     if (!root) return null
-    const rolavel = (node: Element, eixo: 'x' | 'y'): boolean => {
-      for (let atual: Element | null = node; atual; atual = atual.parentElement) {
-        const estilo = getComputedStyle(atual)
-        const overflow = eixo === 'x' ? estilo.overflowX : estilo.overflowY
+    const scrollable = (node: Element, axis: 'x' | 'y'): boolean => {
+      for (let current: Element | null = node; current; current = current.parentElement) {
+        const style = getComputedStyle(current)
+        const overflow = axis === 'x' ? style.overflowX : style.overflowY
         if (overflow === 'auto' || overflow === 'scroll') return true
       }
       return false
     }
-    const janela = { largura: window.innerWidth, altura: window.innerHeight }
+    const viewport = { largura: window.innerWidth, altura: window.innerHeight }
     return [...root.querySelectorAll('a, button, input, select, textarea, [role="button"]')]
       .filter((node) => {
         const r = node.getBoundingClientRect()
         if (r.width <= 1 || r.height <= 1) return false // sr-only e afins
-        const foraX = r.right > janela.largura + 1 || r.left < -1
-        const foraY = r.bottom > janela.altura + 1 || r.top < -1
-        return (foraX && !rolavel(node, 'x')) || (foraY && !rolavel(node, 'y'))
+        const outsideX = r.right > viewport.largura + 1 || r.left < -1
+        const outsideY = r.bottom > viewport.altura + 1 || r.top < -1
+        return (outsideX && !scrollable(node, 'x')) || (outsideY && !scrollable(node, 'y'))
       })
       .map((node) => {
         const r = node.getBoundingClientRect()
-        const nome = node.getAttribute('aria-label') ?? (node.textContent ?? '').trim().slice(0, 24)
-        return `${nome || node.tagName} em x ${Math.round(r.left)}–${Math.round(r.right)}, y ${Math.round(r.top)}–${Math.round(r.bottom)}`
+        const label = node.getAttribute('aria-label') ?? (node.textContent ?? '').trim().slice(0, 24)
+        return `${label || node.tagName} em x ${Math.round(r.left)}–${Math.round(r.right)}, y ${Math.round(r.top)}–${Math.round(r.bottom)}`
       })
       .slice(0, 5)
-  }, raiz)
+  }, root)
 
-  expect(fora, `a raiz ${raiz} não existe na tela`).not.toBeNull()
+  expect(outside, `a raiz ${root} não existe na tela`).not.toBeNull()
   expect(
-    fora,
+    outside,
     `alcançável por ninguém: fora da janela de ${page.viewportSize()?.width}×${page.viewportSize()?.height} e sem rolagem que chegue lá`,
   ).toEqual([])
 }
@@ -240,26 +240,26 @@ export async function expectDentroDaJanela(page: Page, raiz = 'body'): Promise<v
  *
  * @example await expectNadaRolaDeLado(page, '.scene-grimorio')
  */
-export async function expectNadaRolaDeLado(page: Page, raiz = 'body'): Promise<void> {
-  const rolando = await page.evaluate((seletorRaiz) => {
-    const root = document.querySelector(seletorRaiz as string)
+export async function expectNadaRolaDeLado(page: Page, root = 'body'): Promise<void> {
+  const scrolling = await page.evaluate((rootSelector) => {
+    const root = document.querySelector(rootSelector as string)
     if (!root) return null
     return [...root.querySelectorAll<HTMLElement>('*')]
       .filter((node) => {
         if (node.closest('[data-rola-lado]')) return false
-        const estilo = getComputedStyle(node)
-        const podeRolar = estilo.overflowX === 'auto' || estilo.overflowX === 'scroll'
-        return podeRolar && node.scrollWidth > node.clientWidth + 1
+        const style = getComputedStyle(node)
+        const canScroll = style.overflowX === 'auto' || style.overflowX === 'scroll'
+        return canScroll && node.scrollWidth > node.clientWidth + 1
       })
       .map((node) => {
-        const nome = node.getAttribute('aria-label') ?? node.className.slice(0, 40) ?? node.tagName
-        return `${nome}: conteúdo de ${node.scrollWidth}px numa caixa de ${node.clientWidth}px`
+        const label = node.getAttribute('aria-label') ?? node.className.slice(0, 40) ?? node.tagName
+        return `${label}: conteúdo de ${node.scrollWidth}px numa caixa de ${node.clientWidth}px`
       })
       .slice(0, 5)
-  }, raiz)
+  }, root)
 
-  expect(rolando, `a raiz ${raiz} não existe na tela`).not.toBeNull()
-  expect(rolando, 'painel rolando de lado dentro da cena, que não deveria rolar').toEqual([])
+  expect(scrolling, `a raiz ${root} não existe na tela`).not.toBeNull()
+  expect(scrolling, 'painel rolando de lado dentro da cena, que não deveria rolar').toEqual([])
 }
 
 /**
@@ -288,18 +288,18 @@ export async function expectNadaRolaDeLado(page: Page, raiz = 'body'): Promise<v
  */
 export async function expectSemFaixaMorta(
   page: Page,
-  palco: string,
+  stage: string,
   maxPx = 8,
 ): Promise<void> {
-  const medida = await page.evaluate(
-    ({ seletor }) => {
-      const raiz = document.querySelector(seletor as string)
-      if (!raiz) return null
-      const caixa = raiz.getBoundingClientRect()
+  const measurement = await page.evaluate(
+    ({ seletor: selector }) => {
+      const root = document.querySelector(selector as string)
+      if (!root) return null
+      const crate = root.getBoundingClientRect()
 
-      const temTextoProprio = (node: Element) =>
+      const hasOwnText = (node: Element) =>
         [...node.childNodes].some((f) => f.nodeType === 3 && (f.textContent ?? '').trim() !== '')
-      const eGrafico = (node: Element) =>
+      const isGraphic = (node: Element) =>
         ['IMG', 'SVG', 'CANVAS', 'VIDEO', 'INPUT', 'SELECT', 'TEXTAREA', 'HR'].includes(
           node.tagName.toUpperCase(),
         )
@@ -309,46 +309,46 @@ export async function expectSemFaixaMorta(
       // reportando a caixa dele lá embaixo, e sem este passo ele "cobre" a
       // faixa morta e a medição jura que o espaço está ocupado. Foi assim que
       // a primeira versão desta primitiva passou verde pela sabotagem.
-      const janelaDoPai = (node: Element): DOMRect => {
-        for (let atual = node.parentElement; atual; atual = atual.parentElement) {
-          const estilo = getComputedStyle(atual)
-          if (estilo.overflowY === 'auto' || estilo.overflowY === 'scroll') {
-            return atual.getBoundingClientRect()
+      const parentWindow = (node: Element): DOMRect => {
+        for (let current = node.parentElement; current; current = current.parentElement) {
+          const style = getComputedStyle(current)
+          if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+            return current.getBoundingClientRect()
           }
-          if (atual === raiz) break
+          if (current === root) break
         }
-        return caixa
+        return crate
       }
 
-      const tinta = [...raiz.querySelectorAll('*')]
-        .filter((node) => temTextoProprio(node) || eGrafico(node))
-        .map((node) => ({ r: node.getBoundingClientRect(), pai: janelaDoPai(node) }))
+      const paint = [...root.querySelectorAll('*')]
+        .filter((node) => hasOwnText(node) || isGraphic(node))
+        .map((node) => ({ r: node.getBoundingClientRect(), pai: parentWindow(node) }))
         .filter(({ r }) => r.width > 1 && r.height > 1)
-        .map(({ r, pai }) => ({
-          topo: Math.max(r.top, pai.top, caixa.top),
-          base: Math.min(r.bottom, pai.bottom, caixa.bottom),
+        .map(({ r, pai: father }) => ({
+          topo: Math.max(r.top, father.top, crate.top),
+          base: Math.min(r.bottom, father.bottom, crate.bottom),
         }))
         .filter((f) => f.base > f.topo)
         .sort((a, b) => a.topo - b.topo)
 
-      if (tinta.length === 0) return { faixa: Math.round(caixa.height), onde: 'o palco inteiro' }
+      if (paint.length === 0) return { faixa: Math.round(crate.height), onde: 'o palco inteiro' }
 
       // Mede a sobra DEPOIS do último elemento, e só ela. Vão INTERNO não
       // entra de propósito: ele é o `gap` do arranjo, e acusá-lo seria brigar
       // com o sistema de espaçamento em vez de proteger a cena.
-      const fim = tinta.reduce((maior, f) => Math.max(maior, f.base), caixa.top)
+      const end = paint.reduce((max, f) => Math.max(max, f.base), crate.top)
       return {
-        faixa: Math.round(Math.max(0, caixa.bottom - fim)),
-        onde: `de y ${Math.round(fim)} até o fim do palco em ${Math.round(caixa.bottom)}`,
+        faixa: Math.round(Math.max(0, crate.bottom - end)),
+        onde: `de y ${Math.round(end)} até o fim do palco em ${Math.round(crate.bottom)}`,
       }
     },
-    { seletor: palco },
+    { seletor: stage },
   )
 
-  expect(medida, `o palco ${palco} não existe na tela`).not.toBeNull()
+  expect(measurement, `o palco ${stage} não existe na tela`).not.toBeNull()
   expect(
-    medida?.faixa ?? 999,
-    `banda vazia de ${medida?.faixa}px ${medida?.onde} numa janela de ${page.viewportSize()?.height}px — o palco não preencheu o espaço que recebeu`,
+    measurement?.faixa ?? 999,
+    `banda vazia de ${measurement?.faixa}px ${measurement?.onde} numa janela de ${page.viewportSize()?.height}px — o palco não preencheu o espaço que recebeu`,
   ).toBeLessThanOrEqual(maxPx)
 }
 
@@ -372,35 +372,35 @@ export async function expectSemFaixaMorta(
  */
 export async function expectColunasMonotonicas(
   page: Page,
-  seletor: string,
-  larguras: number[],
-  altura = 900,
+  selector: string,
+  widths: number[],
+  height = 900,
 ): Promise<void> {
-  const medidas: { janela: number; conteiner: number; colunas: number }[] = []
-  for (const largura of larguras) {
-    await page.setViewportSize({ width: largura, height: altura })
-    const medida = await page.evaluate((sel) => {
+  const measured: { janela: number; conteiner: number; colunas: number }[] = []
+  for (const width of widths) {
+    await page.setViewportSize({ width: width, height: height })
+    const measure = await page.evaluate((sel) => {
       const node = document.querySelector(sel as string)
       if (!node) return null
       return {
         conteiner: Math.round(node.getBoundingClientRect().width),
         colunas: getComputedStyle(node).gridTemplateColumns.split(' ').filter(Boolean).length,
       }
-    }, seletor)
-    expect(medida, `${seletor} não existe em ${largura}×${altura}`).not.toBeNull()
-    if (medida) medidas.push({ janela: largura, ...medida })
+    }, selector)
+    expect(measure, `${selector} não existe em ${width}×${height}`).not.toBeNull()
+    if (measure) measured.push({ janela: width, ...measure })
   }
 
-  const porConteiner = [...medidas].sort((a, b) => a.conteiner - b.conteiner)
-  const quedas = porConteiner
-    .map((atual, i) => ({ atual, antes: porConteiner[i - 1] }))
-    .filter(({ atual, antes }) => antes !== undefined && atual.colunas < antes.colunas)
+  const byContainer = [...measured].sort((a, b) => a.conteiner - b.conteiner)
+  const drops = byContainer
+    .map((current, i) => ({ atual: current, antes: byContainer[i - 1] }))
+    .filter(({ atual: current, antes: before }) => before !== undefined && current.colunas < before.colunas)
     .map(
-      ({ atual, antes }) =>
-        `contêiner de ${antes?.conteiner}px dá ${antes?.colunas} coluna(s) (janela ${antes?.janela}) e o de ${atual.conteiner}px dá ${atual.colunas} (janela ${atual.janela})`,
+      ({ atual: current, antes: before }) =>
+        `contêiner de ${before?.conteiner}px dá ${before?.colunas} coluna(s) (janela ${before?.janela}) e o de ${current.conteiner}px dá ${current.colunas} (janela ${current.janela})`,
     )
 
-  expect(quedas, 'crescer o contêiner custou uma coluna').toEqual([])
+  expect(drops, 'crescer o contêiner custou uma coluna').toEqual([])
 }
 
 /**
@@ -450,13 +450,13 @@ async function esperaAsAnimacoesPararem(page: Page): Promise<void> {
     })
 }
 
-export async function expectNothingIsClippedSideways(page: Page, raiz: string): Promise<void> {
+export async function expectNothingIsClippedSideways(page: Page, root: string): Promise<void> {
   await esperaAsAnimacoesPararem(page)
-  const medida = await page.evaluate((seletorRaiz) => {
-    const root = document.querySelector(seletorRaiz as string)
+  const measure = await page.evaluate((rootSelector) => {
+    const root = document.querySelector(rootSelector as string)
     if (!root) return null
-    const nos = [...root.querySelectorAll<HTMLElement>('*')]
-    const cortados = nos
+    const nodes = [...root.querySelectorAll<HTMLElement>('*')]
+    const clipped = nodes
       .filter((node) => {
         if (getComputedStyle(node).overflowX !== 'visible') return false
         if (node.scrollWidth <= node.clientWidth + 1) return false
@@ -467,19 +467,19 @@ export async function expectNothingIsClippedSideways(page: Page, raiz: string): 
         return node.getAnimations({ subtree: true }).every((a) => a.playState !== 'running')
       })
       .map((node) => {
-        const nome = node.getAttribute('aria-label') ?? node.className.slice(0, 40) ?? node.tagName
-        return `${nome}: conteúdo de ${node.scrollWidth}px numa caixa de ${node.clientWidth}px`
+        const label = node.getAttribute('aria-label') ?? node.className.slice(0, 40) ?? node.tagName
+        return `${label}: conteúdo de ${node.scrollWidth}px numa caixa de ${node.clientWidth}px`
       })
       .slice(0, 5)
-    return { cortados, medidos: nos.length }
-  }, raiz)
+    return { cortados: clipped, medidos: nodes.length }
+  }, root)
 
-  expect(medida, `a raiz ${raiz} não existe na tela`).not.toBeNull()
-  const { cortados, medidos } = medida as { cortados: string[]; medidos: number }
-  expect(medidos, `a varredura não achou nó nenhum dentro de ${raiz}`).toBeGreaterThan(5)
+  expect(measure, `a raiz ${root} não existe na tela`).not.toBeNull()
+  const { cortados: cut, medidos: measured } = measure as { cortados: string[]; medidos: number }
+  expect(measured, `a varredura não achou nó nenhum dentro de ${root}`).toBeGreaterThan(5)
   expect(
-    cortados,
-    `conteúdo cortado de lado dentro de ${raiz} @ ${page.viewportSize()?.width}px — ele não rola, então quem lê nunca o alcança`,
+    cut,
+    `conteúdo cortado de lado dentro de ${root} @ ${page.viewportSize()?.width}px — ele não rola, então quem lê nunca o alcança`,
   ).toEqual([])
 }
 
@@ -517,52 +517,52 @@ export async function expectNothingIsClippedSideways(page: Page, raiz: string): 
  * sobre um botão quebrado. Por isso o ARIA tem de MUDAR primeiro; quando ele
  * não muda, o caso falha dizendo isso, e não "o visual está mudo".
  */
-export async function expectEveryToggleDrawsItsState(page: Page, raiz: string): Promise<void> {
-  const controles = page.locator(`${raiz} [role="switch"], ${raiz} [aria-pressed]`)
-  const quantos = await controles.count()
-  expect(quantos, `nenhum controle de estado dentro de ${raiz} — a varredura mediria o vazio`).toBeGreaterThan(0)
+export async function expectEveryToggleDrawsItsState(page: Page, root: string): Promise<void> {
+  const controls = page.locator(`${root} [role="switch"], ${root} [aria-pressed]`)
+  const howMany = await controls.count()
+  expect(howMany, `nenhum controle de estado dentro de ${root} — a varredura mediria o vazio`).toBeGreaterThan(0)
 
-  const mudos: string[] = []
-  let medidos = 0
-  for (let i = 0; i < quantos; i++) {
-    const controle = controles.nth(i)
-    if (!(await controle.isVisible())) continue
-    const antes = await retratoDo(controle)
-    await controle.click({ force: true })
+  const silent: string[] = []
+  let measured = 0
+  for (let i = 0; i < howMany; i++) {
+    const control = controls.nth(i)
+    if (!(await control.isVisible())) continue
+    const before = await retratoDo(control)
+    await control.click({ force: true })
     await page.waitForTimeout(350)
-    const depois = await retratoDo(controle).catch(() => null)
+    const after = await retratoDo(control).catch(() => null)
     // O nó pode SUMIR no clique (um filtro que recarrega a lista). Aí não há o
     // que comparar, e contá-lo como mudo seria acusar o que não se mediu.
-    if (depois === null) continue
-    medidos++
-    if (antes.aria === depois.aria) continue // o clique não ligou nada: ver o CONTROLE acima
-    if (antes.estilo === depois.estilo && antes.html === depois.html) {
-      mudos.push(`${depois.nome}: aria foi de ${antes.aria} para ${depois.aria} e nada mudou na tela`)
+    if (after === null) continue
+    measured++
+    if (before.aria === after.aria) continue // o clique não ligou nada: ver o CONTROLE acima
+    if (before.estilo === after.estilo && before.html === after.html) {
+      silent.push(`${after.nome}: aria foi de ${before.aria} para ${after.aria} e nada mudou na tela`)
     }
-    await controle.click({ force: true }).catch(() => {})
+    await control.click({ force: true }).catch(() => {})
     await page.waitForTimeout(250)
   }
 
-  expect(medidos, `nenhum controle de ${raiz} respondeu ao clique — o seletor casa, mas o gesto não chega`).toBeGreaterThan(0)
+  expect(measured, `nenhum controle de ${root} respondeu ao clique — o seletor casa, mas o gesto não chega`).toBeGreaterThan(0)
   expect(
-    mudos,
-    `controles que declaram estado por ARIA e não o DESENHAM, em ${raiz} — ` +
+    silent,
+    `controles que declaram estado por ARIA e não o DESENHAM, em ${root} — ` +
       `a tela está certa para quem ouve e muda para quem olha`,
   ).toEqual([])
 }
 
 type RetratoDoControle = { nome: string; estilo: string; html: string; aria: string }
 
-async function retratoDo(controle: ReturnType<Page['locator']>): Promise<RetratoDoControle> {
-  return controle.evaluate((n) => {
+async function retratoDo(control: ReturnType<Page['locator']>): Promise<RetratoDoControle> {
+  return control.evaluate((n) => {
     const cs = getComputedStyle(n as HTMLElement)
-    const pintura = [
+    const painting = [
       'backgroundColor', 'color', 'borderColor', 'borderWidth', 'borderStyle',
       'opacity', 'boxShadow', 'fontWeight', 'textDecorationLine', 'outlineColor',
     ] as const
     return {
       nome: n.getAttribute('aria-label') ?? n.textContent?.trim().slice(0, 40) ?? n.tagName,
-      estilo: pintura.map((k) => cs[k]).join('|'),
+      estilo: painting.map((k) => cs[k]).join('|'),
       html: (n as HTMLElement).innerHTML,
       aria: n.getAttribute('aria-checked') ?? n.getAttribute('aria-pressed') ?? '',
     }

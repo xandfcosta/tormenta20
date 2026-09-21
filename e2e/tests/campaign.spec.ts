@@ -117,22 +117,22 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
     // o formulário (173px numa janela alta contra 34 numa baixa, com o mesmo
     // respiro nas duas), e no horizontal entra 1px de arredondamento de barra
     // de rolagem — ruído da ordem do sinal, que era de 24px para 16.
-    const respiro = () =>
+    const breathingRoom = () =>
       page
         .locator('[data-tome-root]')
         .evaluate((el) => `${getComputedStyle(el).paddingLeft}/${getComputedStyle(el).rowGap}`)
 
     await page.setViewportSize({ width: 390, height: 844 })
-    const semTeclado = await respiro()
+    const noKeyboard = await breathingRoom()
 
     // O teclado virtual do celular não muda a largura, só a altura.
     await page.setViewportSize({ width: 390, height: 494 })
-    const comTeclado = await respiro()
+    const withKeyboard = await breathingRoom()
 
     expect(
-      comTeclado,
+      withKeyboard,
       'o respiro da folha encolheu quando o teclado abriu — ela está chaveando por ALTURA',
-    ).toBe(semTeclado)
+    ).toBe(noKeyboard)
 
     await page.setViewportSize({ width: 844, height: 390 })
     await expect(
@@ -158,26 +158,26 @@ test.describe('A cena de campanhas', () => {
    */
   test('as setas trocam de campanha sem pedir nada ao servidor', async ({ page }) => {
     await page.goto('/campanhas')
-    const opcoes = page.getByRole('option')
-    await expect(opcoes.first()).toBeVisible()
+    const options = page.getByRole('option')
+    await expect(options.first()).toBeVisible()
 
-    const primeira = (await opcoes.first().textContent())?.trim() ?? ''
-    const segunda = (await opcoes.nth(1).textContent())?.trim() ?? ''
-    expect(primeira, 'a seed precisa de duas campanhas para este guarda').not.toBe(segunda)
+    const first = (await options.first().textContent())?.trim() ?? ''
+    const second = (await options.nth(1).textContent())?.trim() ?? ''
+    expect(first, 'a seed precisa de duas campanhas para este guarda').not.toBe(second)
 
-    let pedidos = 0
+    let requests = 0
     page.on('request', () => {
-      pedidos++
+      requests++
     })
 
-    await opcoes.first().focus()
+    await options.first().focus()
     // Seta DIREITA e não abaixo: a listagem virou uma tira deitada no rodapé,
     // igual à de personagens, e o driver lê `data-nav-layout="row"`.
     await page.keyboard.press('ArrowRight')
 
-    await expect(opcoes.nth(1)).toHaveAttribute('aria-selected', 'true')
-    await expect(opcoes.first()).toHaveAttribute('aria-selected', 'false')
-    expect(pedidos, 'andar no trilho foi à rede — o cursor deixou de ser sinal').toBe(0)
+    await expect(options.nth(1)).toHaveAttribute('aria-selected', 'true')
+    await expect(options.first()).toHaveAttribute('aria-selected', 'false')
+    expect(requests, 'andar no trilho foi à rede — o cursor deixou de ser sinal').toBe(0)
   })
 
   /**
@@ -193,11 +193,11 @@ test.describe('A cena de campanhas', () => {
     // A VAGA conta como opção no trilho e nunca é filtrada, então ela sai do
     // número: contar o trilho inteiro faria o guarda medir "3 achados" onde a
     // busca achou 2.
-    const campanhas = page.getByRole('option').filter({ hasNotText: 'Folha em branco' })
-    expect(await campanhas.count(), 'a seed precisa de mais de duas campanhas').toBeGreaterThan(2)
+    const campaigns = page.getByRole('option').filter({ hasNotText: 'Folha em branco' })
+    expect(await campaigns.count(), 'a seed precisa de mais de duas campanhas').toBeGreaterThan(2)
 
     await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('tauron')
-    await expect(campanhas).toHaveCount(3)
+    await expect(campaigns).toHaveCount(3)
     await expect(page.getByRole('option', { name: /A Queda de Tauron/ })).toBeVisible()
 
     await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('zzzzzz')
@@ -232,19 +232,19 @@ test.describe('A folha em branco', () => {
    */
   test('a recusa devolve o texto, e o limite avisa enquanto se escreve', async ({ page }) => {
     await page.goto('/campanhas/nova')
-    const descricao = page.getByLabel('Descrição')
+    const description = page.getByLabel('Descrição')
 
     // O `maxlength` nativo é o aviso durante a digitação.
-    await descricao.fill('x'.repeat(2500))
-    expect((await descricao.inputValue()).length, 'o navegador deixou passar do teto').toBe(2000)
+    await description.fill('x'.repeat(2500))
+    expect((await description.inputValue()).length, 'o navegador deixou passar do teto').toBe(2000)
 
     // Nome de puros espaços: o `required` não pega, o servidor pega.
     await page.getByLabel('Nome').fill('   ')
-    await descricao.fill('A caravana parte de Valkaria ao amanhecer.')
+    await description.fill('A caravana parte de Valkaria ao amanhecer.')
     await page.getByRole('button', { name: 'Abrir campanha' }).click()
 
     await expect(page.getByText(/O nome é obrigatório/)).toBeVisible()
-    await expect(descricao, 'a descrição sumiu na recusa').toHaveValue(
+    await expect(description, 'a descrição sumiu na recusa').toHaveValue(
       'A caravana parte de Valkaria ao amanhecer.',
     )
   })
@@ -301,28 +301,28 @@ test.describe('A crônica', () => {
    */
   test('alternar a regra opcional troca o estado sem recarregar a página', async ({ page }) => {
     await page.goto('/campanhas/1?tab=config')
-    const chave = page.getByRole('switch', { name: 'Limites de carga' })
-    const antes = await chave.getAttribute('aria-checked')
+    const key = page.getByRole('switch', { name: 'Limites de carga' })
+    const before = await key.getAttribute('aria-checked')
 
     // A navegação NÃO pode acontecer: se acontecesse, este marcador sumiria.
     await page.evaluate(() => {
       ;(window as unknown as { __mesmaPagina: boolean }).__mesmaPagina = true
     })
 
-    await chave.click()
-    await expect(chave, 'o interruptor não trocou de estado').not.toHaveAttribute(
+    await key.click()
+    await expect(key, 'o interruptor não trocou de estado').not.toHaveAttribute(
       'aria-checked',
-      antes ?? '',
+      before ?? '',
     )
     expect(
       await page.evaluate(() => (window as unknown as { __mesmaPagina?: boolean }).__mesmaPagina),
       'a página recarregou — o remendo virou navegação',
     ).toBe(true)
 
-    await chave.click()
-    await expect(chave, 'o teste não devolveu a regra ao estado original').toHaveAttribute(
+    await key.click()
+    await expect(key, 'o teste não devolveu a regra ao estado original').toHaveAttribute(
       'aria-checked',
-      antes ?? '',
+      before ?? '',
     )
   })
 

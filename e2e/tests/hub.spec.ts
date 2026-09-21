@@ -51,8 +51,8 @@ test.describe('O Hub', () => {
    */
   test('o menu do jogador é popover nativo: Esc fecha e devolve o foco', async ({ page }) => {
     await page.goto('/')
-    const gatilho = page.getByRole('button', { name: /^Menu de / })
-    await gatilho.click()
+    const trigger = page.getByRole('button', { name: /^Menu de / })
+    await trigger.click()
 
     const menu = page.locator('#player-menu')
     await expect(menu).toBeVisible()
@@ -60,7 +60,7 @@ test.describe('O Hub', () => {
 
     await page.keyboard.press('Escape')
     await expect(menu).toBeHidden()
-    await expect(gatilho).toBeFocused()
+    await expect(trigger).toBeFocused()
   })
 })
 
@@ -86,11 +86,11 @@ test.describe('O Hub e as cenas dividem a preferência de som', () => {
     await page.goto('/')
 
     await page.getByRole('button', { name: /^Menu de / }).click()
-    const alternador = page.locator('#player-menu button').first()
-    await expect(alternador).toHaveText(/Som desligado/)
+    const toggler = page.locator('#player-menu button').first()
+    await expect(toggler).toHaveText(/Som desligado/)
 
-    await alternador.click()
-    await expect(alternador).toHaveText(/Som ligado/)
+    await toggler.click()
+    await expect(toggler).toHaveText(/Som ligado/)
     // O slider só existe com o som ligado: controle sobre o mudo é controle morto.
     await expect(page.locator('#volume')).toBeVisible()
 

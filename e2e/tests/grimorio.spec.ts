@@ -36,25 +36,25 @@ test.describe('Grimório — a folha de especificação', () => {
     await page.goto('/grimorio')
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
 
-    const nomes = ['rounded-none', 'rounded-sm', 'rounded-md', 'rounded-lg', 'rounded-xl']
-    const degraus = await page.evaluate(
-      (esperados) =>
+    const names = ['rounded-none', 'rounded-sm', 'rounded-md', 'rounded-lg', 'rounded-xl']
+    const steps = await page.evaluate(
+      (expected) =>
         [...document.querySelectorAll('#raio figure')]
           .map((f) => ({
             nome: f.querySelector('p')?.textContent?.trim() ?? '',
             px: Number.parseFloat(getComputedStyle(f.firstElementChild as Element).borderRadius),
           }))
-          .filter((d) => esperados.includes(d.nome)),
-      nomes,
+          .filter((d) => expected.includes(d.nome)),
+      names,
     )
 
-    expect(degraus.length, 'a folha não desenhou os cinco degraus').toBe(5)
-    expect(degraus[0]?.px, 'o primeiro degrau tem de ser o canto quadrado').toBe(0)
-    for (let i = 1; i < degraus.length; i++) {
+    expect(steps.length, 'a folha não desenhou os cinco degraus').toBe(5)
+    expect(steps[0]?.px, 'o primeiro degrau tem de ser o canto quadrado').toBe(0)
+    for (let i = 1; i < steps.length; i++) {
       expect(
-        degraus[i]?.px ?? -1,
-        `${degraus[i]?.nome} não é maior que ${degraus[i - 1]?.nome} — a escala degenerou, e é o defeito que a ALE-173 consertou`,
-      ).toBeGreaterThan(degraus[i - 1]?.px ?? 0)
+        steps[i]?.px ?? -1,
+        `${steps[i]?.nome} não é maior que ${steps[i - 1]?.nome} — a escala degenerou, e é o defeito que a ALE-173 consertou`,
+      ).toBeGreaterThan(steps[i - 1]?.px ?? 0)
     }
   })
 
@@ -71,24 +71,24 @@ test.describe('Grimório — a folha de especificação', () => {
     await page.goto('/grimorio')
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
 
-    const ordem = ['text-xs', 'text-2xs', 'text-3xs', 'text-4xs']
-    const degraus = await page.evaluate((nomes) => {
-      const cena = document.querySelector('.scene-grimorio') ?? document.body
-      return nomes.map((nome) => {
-        const alvo = document.createElement('span')
-        alvo.className = nome
-        cena.appendChild(alvo)
-        const px = Number.parseFloat(getComputedStyle(alvo).fontSize)
-        alvo.remove()
-        return { nome, px }
+    const order = ['text-xs', 'text-2xs', 'text-3xs', 'text-4xs']
+    const steps = await page.evaluate((names) => {
+      const sceneState = document.querySelector('.scene-grimorio') ?? document.body
+      return names.map((displayName) => {
+        const target = document.createElement('span')
+        target.className = displayName
+        sceneState.appendChild(target)
+        const px = Number.parseFloat(getComputedStyle(target).fontSize)
+        target.remove()
+        return { nome: displayName, px }
       })
-    }, ordem)
+    }, order)
 
-    for (let i = 1; i < degraus.length; i++) {
+    for (let i = 1; i < steps.length; i++) {
       expect(
-        degraus[i]?.px ?? -1,
-        `${degraus[i]?.nome} não é menor que ${degraus[i - 1]?.nome} — dois degraus valendo o mesmo`,
-      ).toBeLessThan(degraus[i - 1]?.px ?? 0)
+        steps[i]?.px ?? -1,
+        `${steps[i]?.nome} não é menor que ${steps[i - 1]?.nome} — dois degraus valendo o mesmo`,
+      ).toBeLessThan(steps[i - 1]?.px ?? 0)
     }
   })
 
@@ -104,16 +104,16 @@ test.describe('Grimório — a folha de especificação', () => {
     await page.goto('/grimorio')
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
 
-    const transparentes = await page.evaluate(() =>
+    const transparent = await page.evaluate(() =>
       [...document.querySelectorAll('#cor figure')]
         .filter((f) => {
-          const fundo = getComputedStyle(f.firstElementChild as Element).backgroundColor
-          return fundo === 'rgba(0, 0, 0, 0)' || fundo === 'transparent'
+          const background = getComputedStyle(f.firstElementChild as Element).backgroundColor
+          return background === 'rgba(0, 0, 0, 0)' || background === 'transparent'
         })
         .map((f) => f.querySelector('p')?.textContent?.trim() ?? '?'),
     )
 
-    expect(transparentes, 'amostra sem cor: o utilitário não existe no CSS').toEqual([])
+    expect(transparent, 'amostra sem cor: o utilitário não existe no CSS').toEqual([])
   })
 
   /**
@@ -136,13 +136,13 @@ test.describe('Grimório — a folha de especificação', () => {
     await page.goto('/grimorio')
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
 
-    const fracas = await page.evaluate(() => {
-      const cena = document.querySelector('.scene-grimorio')
-      const tela = document.createElement('canvas')
-      tela.width = 1
-      tela.height = 1
-      const ctx = tela.getContext('2d')
-      if (!ctx || !cena) return ['a cena não montou']
+    const weak = await page.evaluate(() => {
+      const scene = document.querySelector('.scene-grimorio')
+      const canvasEl = document.createElement('canvas')
+      canvasEl.width = 1
+      canvasEl.height = 1
+      const ctx = canvasEl.getContext('2d')
+      if (!ctx || !scene) return ['a cena não montou']
 
       const rgb = (css: string): [number, number, number] => {
         ctx.clearRect(0, 0, 1, 1)
@@ -151,28 +151,28 @@ test.describe('Grimório — a folha de especificação', () => {
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
         return [r ?? 0, g ?? 0, b ?? 0]
       }
-      const luz = (c: [number, number, number]) => {
+      const light = (c: [number, number, number]) => {
         const [r, g, b] = c.map((v) => {
           const x = v / 255
           return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
         })
         return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
       }
-      const estilo = getComputedStyle(cena)
-      const painel = luz(rgb(estilo.getPropertyValue('--grimorio-panel').trim()))
+      const style = getComputedStyle(scene)
+      const pane = light(rgb(style.getPropertyValue('--grimorio-panel').trim()))
 
       return ['--bonus-ink', '--arcane-ink', '--penalty-ink', '--warning-ink']
         .map((token) => {
-          const valor = estilo.getPropertyValue(token).trim()
-          const [a, b] = [luz(rgb(valor)), painel].sort((x, y) => y - x)
-          const razao = ((a ?? 0) + 0.05) / ((b ?? 0) + 0.05)
-          return { token, razao: Number(razao.toFixed(2)) }
+          const value = style.getPropertyValue(token).trim()
+          const [a, b] = [light(rgb(value)), pane].sort((x, y) => y - x)
+          const ratio = ((a ?? 0) + 0.05) / ((b ?? 0) + 0.05)
+          return { token, razao: Number(ratio.toFixed(2)) }
         })
         .filter((t) => t.razao < 4.5)
         .map((t) => `${t.token} dá ${t.razao}:1`)
     })
 
-    expect(fracas, 'tinta que não alcança texto — ela é cor de BLOCO').toEqual([])
+    expect(weak, 'tinta que não alcança texto — ela é cor de BLOCO').toEqual([])
   })
 
   /**
@@ -196,11 +196,11 @@ test.describe('Grimório — a folha de especificação', () => {
     await page.goto('/grimorio')
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
 
-    const fracos = await page.evaluate(() => {
-      const tela = document.createElement('canvas')
-      tela.width = 1
-      tela.height = 1
-      const ctx = tela.getContext('2d')
+    const weak = await page.evaluate(() => {
+      const canvasEl = document.createElement('canvas')
+      canvasEl.width = 1
+      canvasEl.height = 1
+      const ctx = canvasEl.getContext('2d')
       if (!ctx) return ['sem canvas']
 
       const rgb = (css: string): [number, number, number, number] => {
@@ -210,7 +210,7 @@ test.describe('Grimório — a folha de especificação', () => {
         const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
         return [r ?? 0, g ?? 0, b ?? 0, a ?? 0]
       }
-      const luz = (c: [number, number, number, number]) => {
+      const light = (c: [number, number, number, number]) => {
         const [r, g, b] = [c[0], c[1], c[2]].map((v) => {
           const x = v / 255
           return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
@@ -219,22 +219,22 @@ test.describe('Grimório — a folha de especificação', () => {
       }
 
       return [...document.querySelectorAll<HTMLElement>('[data-slot="button"]')]
-        .map((botao) => {
-          const estilo = getComputedStyle(botao)
-          const fundo = rgb(estilo.backgroundColor)
+        .map((button) => {
+          const style = getComputedStyle(button)
+          const background = rgb(style.backgroundColor)
           // Só os PREENCHIDOS: `ghost`, `outline` e `link` são transparentes, e
           // quem decide a legibilidade deles é o painel — que o guarda das
           // tintas já cobre.
-          if (fundo[3] < 250) return null
-          const [a, b] = [luz(rgb(estilo.color)), luz(fundo)].sort((x, y) => y - x)
-          const razao = ((a ?? 0) + 0.05) / ((b ?? 0) + 0.05)
-          return { variante: botao.dataset.variant ?? '?', razao: Number(razao.toFixed(2)) }
+          if (background[3] < 250) return null
+          const [a, b] = [light(rgb(style.color)), light(background)].sort((x, y) => y - x)
+          const ratio = ((a ?? 0) + 0.05) / ((b ?? 0) + 0.05)
+          return { variante: button.dataset.variant ?? '?', razao: Number(ratio.toFixed(2)) }
         })
         .filter((b) => b !== null && b.razao < 4.5)
         .map((b) => `${b?.variante} dá ${b?.razao}:1`)
     })
 
-    expect(fracos, 'botão preenchido cujo texto não alcança o mínimo de leitura').toEqual([])
+    expect(weak, 'botão preenchido cujo texto não alcança o mínimo de leitura').toEqual([])
   })
 
   /**
@@ -298,31 +298,31 @@ test.describe('Grimório — a folha de especificação', () => {
    */
   test('cada peça do kit sai com a medida do navegador, e a ladeira cresce', async ({ page }) => {
     await page.goto('/grimorio')
-    const tamanhos = page.locator('#pecas [data-par]').filter({ hasText: /^(xs|sm|default|lg)/ })
-    await expect(tamanhos.first()).toBeVisible()
+    const sizes = page.locator('#pecas [data-par]').filter({ hasText: /^(xs|sm|default|lg)/ })
+    await expect(sizes.first()).toBeVisible()
 
-    const alturas = await page.evaluate(() => {
-      const linhas = [...document.querySelectorAll('#pecas [data-par]')]
-      const daLinha = (nome: string) => {
-        const linha = linhas.find((l) => l.firstElementChild?.textContent?.trim() === nome)
-        return [...(linha?.querySelectorAll('[data-medir-cela]') ?? [])].map(
+    const heights = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll('#pecas [data-par]')]
+      const fromRow = (label: string) => {
+        const row = rows.find((l) => l.firstElementChild?.textContent?.trim() === label)
+        return [...(row?.querySelectorAll('[data-medir-cela]') ?? [])].map(
           (e) => Number(/h (\d+)/.exec(e.textContent ?? '')?.[1] ?? 0),
         )
       }
-      return { xs: daLinha('xs'), sm: daLinha('sm'), lg: daLinha('lg') }
+      return { xs: fromRow('xs'), sm: fromRow('sm'), lg: fromRow('lg') }
     })
 
     // O DENOMINADOR: uma linha que perdeu a cela — ou um nome que deixou de
     // existir — devolve lista vazia, e lista vazia passaria calada em toda
     // asserção de ladeira abaixo.
-    for (const [nome, celas] of Object.entries(alturas)) {
-      expect(celas.length, `a linha ${nome} não tem exatamente uma cela medida`).toBe(1)
-      expect(celas[0], `a cela de ${nome} não mediu`).toBeGreaterThan(0)
+    for (const [label, cells] of Object.entries(heights)) {
+      expect(cells.length, `a linha ${label} não tem exatamente uma cela medida`).toBe(1)
+      expect(cells[0], `a cela de ${label} não mediu`).toBeGreaterThan(0)
     }
     // A ladeira é o que pega a coluna CONSTANTE: nenhuma asserção de "mediu"
     // separa 36/36/36 de três tamanhos de verdade.
-    expect(alturas.xs[0], 'xs não é menor que sm').toBeLessThan(alturas.sm[0] as number)
-    expect(alturas.sm[0], 'sm não é menor que lg').toBeLessThan(alturas.lg[0] as number)
+    expect(heights.xs[0], 'xs não é menor que sm').toBeLessThan(heights.sm[0] as number)
+    expect(heights.sm[0], 'sm não é menor que lg').toBeLessThan(heights.lg[0] as number)
   })
 
   // Não há caso de SHADOW ROOT aqui de propósito: ele prendia o `noShadowDOM()`

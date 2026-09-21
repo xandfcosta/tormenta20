@@ -53,19 +53,19 @@ const LARGURA_MAXIMA = 1100
  *  o bitmap. É o mesmo limite que o `<img srcset>` da SPA usa. */
 const DENSIDADE_MAXIMA = 2
 
-function leOCartaz(raiz: HTMLElement): Cartaz {
+function leOCartaz(root: HTMLElement): Cartaz {
   return {
-    livro: raiz.dataset.livro ?? '',
-    worker: raiz.dataset.worker ?? '',
-    pagina: Number(raiz.dataset.pagina ?? '1'),
-    abertura: Number(raiz.dataset.abertura ?? '0'),
-    termo: raiz.dataset.termo ?? '',
+    livro: root.dataset.livro ?? '',
+    worker: root.dataset.worker ?? '',
+    pagina: Number(root.dataset.pagina ?? '1'),
+    abertura: Number(root.dataset.abertura ?? '0'),
+    termo: root.dataset.termo ?? '',
   }
 }
 
 /** dobra: minúsculas e sem acento, como a busca do servidor. */
-function dobra(texto: string): string {
-  return texto
+function dobra(text: string): string {
+  return text
     .normalize('NFD')
     .replace(/\p{Mn}/gu, '')
     .toLowerCase()
@@ -80,28 +80,28 @@ function dobra(texto: string): string {
  * o verbete na página, não para sublinhar a palavra com precisão tipográfica.
  */
 function marcasNoTexto(
-  itens: ReadonlyArray<{ str: string; transform: number[]; width: number; height: number }>,
-  termo: string,
+  items: ReadonlyArray<{ str: string; transform: number[]; width: number; height: number }>,
+  term: string,
   viewport: { transform: number[]; scale: number },
 ): Array<{ esquerda: number; topo: number; largura: number; altura: number }> {
-  const alvo = dobra(termo)
-  if (!alvo) return []
-  const marcas = []
-  for (const item of itens) {
-    const onde = dobra(item.str).indexOf(alvo)
-    if (onde < 0) continue
+  const target = dobra(term)
+  if (!target) return []
+  const marks = []
+  for (const item of items) {
+    const where = dobra(item.str).indexOf(target)
+    if (where < 0) continue
     const m = pdfjs.Util.transform(viewport.transform, item.transform)
-    const altura = Math.hypot(m[2], m[3])
-    const larguraDoItem = item.width * viewport.scale
-    const porLetra = item.str.length > 0 ? larguraDoItem / item.str.length : 0
-    marcas.push({
-      esquerda: m[4] + onde * porLetra,
-      topo: m[5] - altura,
-      largura: Math.max(porLetra * alvo.length, 4),
-      altura,
+    const height = Math.hypot(m[2], m[3])
+    const itemWidth = item.width * viewport.scale
+    const byLetter = item.str.length > 0 ? itemWidth / item.str.length : 0
+    marks.push({
+      esquerda: m[4] + where * byLetter,
+      topo: m[5] - height,
+      largura: Math.max(byLetter * target.length, 4),
+      altura: height,
     })
   }
-  return marcas
+  return marks
 }
 
 class Leitor {
@@ -110,16 +110,16 @@ class Leitor {
   private renderizando: Promise<void> = Promise.resolve()
 
   constructor(
-    private readonly raiz: HTMLElement,
-    private readonly cartaz: Cartaz,
-    private readonly tela: HTMLCanvasElement,
-    private readonly camada: HTMLElement,
-    private readonly rotulo: HTMLElement,
+    private readonly root: HTMLElement,
+    private readonly poster: Cartaz,
+    private readonly page: HTMLCanvasElement,
+    private readonly layer: HTMLElement,
+    private readonly label: HTMLElement,
   ) {}
 
   /** A página do ARQUIVO, que é o que o pdf.js conta. */
   private get noArquivo(): number {
-    return this.cartaz.pagina + this.cartaz.abertura
+    return this.poster.pagina + this.poster.abertura
   }
 
   /**
@@ -131,30 +131,30 @@ class Leitor {
    * janela de verdade.
    */
   async abre(): Promise<void> {
-    pdfjs.GlobalWorkerOptions.workerSrc = this.cartaz.worker
+    pdfjs.GlobalWorkerOptions.workerSrc = this.poster.worker
     // `rangeChunkSize` grande porque a rede é a LAN da mesa e o disco é o do
     // mestre: pedaço pequeno vira muitas idas e volta a pesar mais que baixar.
     this.doc = await pdfjs.getDocument({
-      url: this.cartaz.livro,
+      url: this.poster.livro,
       rangeChunkSize: 262144,
     }).promise
     await this.desenha()
-    this.raiz.dataset.pronto = ''
-    for (const botao of document.querySelectorAll<HTMLButtonElement>('[data-acao]')) {
-      botao.disabled = false
+    this.root.dataset.pronto = ''
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-acao]')) {
+      button.disabled = false
     }
   }
 
-  vai(passo: number): void {
+  vai(step: number): void {
     if (!this.doc) return
-    const alvo = this.noArquivo + passo
-    if (alvo < 1 || alvo > this.doc.numPages) return
-    this.cartaz.pagina += passo
+    const target = this.noArquivo + step
+    if (target < 1 || target > this.doc.numPages) return
+    this.poster.pagina += step
     void this.desenha()
   }
 
-  aproxima(fator: number): void {
-    this.zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, this.zoom * fator))
+  aproxima(factor: number): void {
+    this.zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, this.zoom * factor))
     void this.desenha()
   }
 
@@ -170,70 +170,70 @@ class Leitor {
 
   private async pinta(): Promise<void> {
     if (!this.doc) return
-    const pagina: PDFPageProxy = await this.doc.getPage(this.noArquivo)
-    const larguraDisponivel = Math.min(this.raiz.clientWidth - 32, LARGURA_MAXIMA)
-    const natural = pagina.getViewport({ scale: 1 })
-    const escala = (larguraDisponivel / natural.width) * this.zoom
-    const viewport = pagina.getViewport({ scale: escala })
+    const page: PDFPageProxy = await this.doc.getPage(this.noArquivo)
+    const availableWidth = Math.min(this.root.clientWidth - 32, LARGURA_MAXIMA)
+    const natural = page.getViewport({ scale: 1 })
+    const scale = (availableWidth / natural.width) * this.zoom
+    const viewport = page.getViewport({ scale: scale })
 
     // O `devicePixelRatio` é o que separa "legível" de "borrado" numa tela de
     // retina: o canvas nasce com o dobro de pixels e é encolhido por CSS.
     const dpr = Math.min(window.devicePixelRatio || 1, DENSIDADE_MAXIMA)
-    this.tela.width = Math.floor(viewport.width * dpr)
-    this.tela.height = Math.floor(viewport.height * dpr)
-    this.tela.style.width = `${Math.floor(viewport.width)}px`
-    this.tela.style.height = `${Math.floor(viewport.height)}px`
-    const contexto = this.tela.getContext('2d')
-    if (!contexto) return
-    contexto.setTransform(dpr, 0, 0, dpr, 0, 0)
-    await pagina.render({ canvas: this.tela, canvasContext: contexto, viewport }).promise
+    this.page.width = Math.floor(viewport.width * dpr)
+    this.page.height = Math.floor(viewport.height * dpr)
+    this.page.style.width = `${Math.floor(viewport.width)}px`
+    this.page.style.height = `${Math.floor(viewport.height)}px`
+    const context = this.page.getContext('2d')
+    if (!context) return
+    context.setTransform(dpr, 0, 0, dpr, 0, 0)
+    await page.render({ canvas: this.page, canvasContext: context, viewport }).promise
 
-    const texto = await pagina.getTextContent()
-    this.camada.style.width = `${Math.floor(viewport.width)}px`
-    this.camada.style.height = `${Math.floor(viewport.height)}px`
-    this.camada.replaceChildren(
-      ...marcasNoTexto(texto.items as never[], this.cartaz.termo, viewport).map((marca) => {
-        const caixa = document.createElement('span')
-        caixa.className = 'reader-mark'
-        caixa.style.left = `${marca.esquerda}px`
-        caixa.style.top = `${marca.topo}px`
-        caixa.style.width = `${marca.largura}px`
-        caixa.style.height = `${marca.altura}px`
-        return caixa
+    const text = await page.getTextContent()
+    this.layer.style.width = `${Math.floor(viewport.width)}px`
+    this.layer.style.height = `${Math.floor(viewport.height)}px`
+    this.layer.replaceChildren(
+      ...marcasNoTexto(text.items as never[], this.poster.termo, viewport).map((marker) => {
+        const box = document.createElement('span')
+        box.className = 'reader-mark'
+        box.style.left = `${marker.esquerda}px`
+        box.style.top = `${marker.topo}px`
+        box.style.width = `${marker.largura}px`
+        box.style.height = `${marker.altura}px`
+        return box
       }),
     )
-    this.rotulo.textContent = `p${this.cartaz.pagina} de ${this.doc.numPages - this.cartaz.abertura}`
+    this.label.textContent = `p${this.poster.pagina} de ${this.doc.numPages - this.poster.abertura}`
   }
 }
 
 export function montaOLeitor(): void {
-  const raiz = document.getElementById('reader')
-  if (!raiz) return
-  const tela = raiz.querySelector<HTMLCanvasElement>('canvas')
-  const camada = raiz.querySelector<HTMLElement>('[data-marcas]')
-  const rotulo = document.querySelector<HTMLElement>('[data-pagina-atual]')
-  if (!tela || !camada || !rotulo) return
+  const root = document.getElementById('reader')
+  if (!root) return
+  const page = root.querySelector<HTMLCanvasElement>('canvas')
+  const layer = root.querySelector<HTMLElement>('[data-marcas]')
+  const label = document.querySelector<HTMLElement>('[data-pagina-atual]')
+  if (!page || !layer || !label) return
 
-  const leitor = new Leitor(raiz, leOCartaz(raiz), tela, camada, rotulo)
-  const aoClicar = (acao: string, fazer: () => void) =>
-    document.querySelector(`[data-acao="${acao}"]`)?.addEventListener('click', fazer)
-  aoClicar('anterior', () => leitor.vai(-1))
-  aoClicar('proxima', () => leitor.vai(1))
-  aoClicar('mais', () => leitor.aproxima(1.25))
-  aoClicar('menos', () => leitor.aproxima(0.8))
+  const reader = new Leitor(root, leOCartaz(root), page, layer, label)
+  const onClick = (action: string, make: () => void) =>
+    document.querySelector(`[data-acao="${action}"]`)?.addEventListener('click', make)
+  onClick('anterior', () => reader.vai(-1))
+  onClick('proxima', () => reader.vai(1))
+  onClick('mais', () => reader.aproxima(1.25))
+  onClick('menos', () => reader.aproxima(0.8))
   // As setas leem o livro; o guarda de digitação não é preciso porque esta cena
   // não tem campo nenhum — mas o `dialog[open]` do buscador tem, e ele fica por
   // cima. Sem isto, ⌃K e as setas disputariam a mesma tecla.
-  window.addEventListener('keydown', (evento) => {
+  window.addEventListener('keydown', (evt) => {
     if (document.querySelector('dialog[open]')) return
-    if (evento.key === 'ArrowRight') leitor.vai(1)
-    if (evento.key === 'ArrowLeft') leitor.vai(-1)
+    if (evt.key === 'ArrowRight') reader.vai(1)
+    if (evt.key === 'ArrowLeft') reader.vai(-1)
     // O Esc ATRAVESSA o iframe. Dentro do diálogo da cena, o foco fica no
     // documento de dentro, e o Esc do `<dialog>` é do documento de FORA — sem
     // esta linha, quem lê pelo teclado não tem como fechar o livro. Mesma
     // origem, então falar com o pai é permitido; o `try` cobre o dia em que
     // alguém embutir esta cena de outro lugar.
-    if (evento.key === 'Escape' && window.parent !== window) {
+    if (evt.key === 'Escape' && window.parent !== window) {
       try {
         window.parent.document.querySelector<HTMLDialogElement>('#book-in-dialog')?.close()
       } catch {
@@ -242,11 +242,11 @@ export function montaOLeitor(): void {
     }
   })
 
-  void leitor.abre().catch((erro: unknown) => {
+  void reader.abre().catch((failure: unknown) => {
     // Falhar CALADO aqui seria a tela preta sem explicação: o livro pode não
     // estar configurado, o arquivo pode ter sumido do disco do mestre.
-    rotulo.textContent = 'não consegui abrir o livro'
-    console.error('[leitor]', erro)
+    label.textContent = 'não consegui abrir o livro'
+    console.error('[leitor]', failure)
   })
 }
 

@@ -54,16 +54,16 @@ test('o medidor acusa um alvo que reprova de verdade', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Perícias' }).first()).toBeVisible()
 
   await page.evaluate(() => {
-    const caixa = document.createElement('div')
-    caixa.style.cssText = 'position:fixed;top:400px;left:8px;z-index:9999'
-    caixa.innerHTML =
+    const crate = document.createElement('div')
+    crate.style.cssText = 'position:fixed;top:400px;left:8px;z-index:9999'
+    crate.innerHTML =
       '<button style="width:20px;height:20px">a</button><button style="width:20px;height:20px">b</button>'
-    document.body.append(caixa)
+    document.body.append(crate)
   })
 
-  const { alvos } = await touchTargets(page)
-  const plantados = alvos.filter((a) => a.nome === 'a' || a.nome === 'b')
-  expect(plantados.map((a) => a.reprova), 'o medidor não achou dois alvos 20×20 colados').toEqual([
+  const { alvos: targets } = await touchTargets(page)
+  const planted = targets.filter((a) => a.nome === 'a' || a.nome === 'b')
+  expect(planted.map((a) => a.reprova), 'o medidor não achou dois alvos 20×20 colados').toEqual([
     true,
     true,
   ])
@@ -72,33 +72,33 @@ test('o medidor acusa um alvo que reprova de verdade', async ({ page }) => {
 // UM caso por herói, e não um por aba: são catorze navegações contra duas, e
 // e2e é a faixa mais cara do repositório. A aba ofensora entra na MENSAGEM, que
 // é o que a divisão em catorze casos comprava.
-for (const heroi of HEROES) {
-  test(`a ficha de ${heroi.quem} cumpre o piso de toque a 390px, nas sete abas`, async ({ page }) => {
+for (const hero of HEROES) {
+  test(`a ficha de ${hero.quem} cumpre o piso de toque a 390px, nas sete abas`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
-    const reprovas: string[] = []
+    const rejects: string[] = []
 
     for (const aba of ABAS) {
-      await page.goto(`/personagens/${heroi.id}?tab=${aba}`)
+      await page.goto(`/personagens/${hero.id}?tab=${aba}`)
       // A ESPERA É PELA ABA PEDIDA, e não por `networkidle`: um parâmetro com o
       // nome errado desenha a primeira aba em SILÊNCIO, e sete medições da mesma
       // página passam com cara de sete abas. O `networkidle` também não serve na
       // Mesa, onde o SSE nunca fecha.
       await expect(page.locator('[aria-current="page"]')).toBeVisible()
 
-      const { medidos, alvos } = await touchTargets(page)
+      const { medidos: measured, alvos: targets } = await touchTargets(page)
 
       // O DENOMINADOR: sem alvo medido, a asserção final é verde sobre uma
       // página que não carregou — uma cena fora de cena devolve `medidos=4` e
       // passa.
-      expect(medidos, `a aba ${aba} mediu ${medidos} alvos: ela não desenhou`).toBeGreaterThan(15)
+      expect(measured, `a aba ${aba} mediu ${measured} alvos: ela não desenhou`).toBeGreaterThan(15)
 
-      for (const a of alvos.filter((x) => x.reprova)) {
-        reprovas.push(`${aba}: "${a.nome}" ${a.larg}x${a.alt} — ${a.familia}`)
+      for (const a of targets.filter((x) => x.reprova)) {
+        rejects.push(`${aba}: "${a.nome}" ${a.larg}x${a.alt} — ${a.familia}`)
       }
     }
 
     expect(
-      reprovas,
+      rejects,
       'alvos abaixo de 24px sem a folga que a exceção de espaçamento pede, e sem equivalente que passe',
     ).toEqual([])
   })

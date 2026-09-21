@@ -5,10 +5,10 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 test.describe('O bestiário', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  const BESTIARIO = '/mestre/bestiario'
+  const BESTIARY = '/mestre/bestiario'
 
   test('o bestiário cabe nos seis formatos', async ({ page }) => {
-    await page.goto(BESTIARIO)
+    await page.goto(BESTIARY)
     await expect(page.getByRole('heading', { name: 'Bestiário' })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
@@ -32,25 +32,25 @@ test.describe('O bestiário', () => {
    * `data-show` do Datastar decidindo juntos.
    */
   test('a ficha vive no painel quando cabe, e no diálogo quando não cabe', async ({ page }) => {
-    await page.goto(BESTIARIO)
-    const painel = page.getByRole('region', { name: 'Criatura escolhida' })
-    const dialogo = page.getByRole('dialog')
+    await page.goto(BESTIARY)
+    const panel = page.getByRole('region', { name: 'Criatura escolhida' })
+    const dialog = page.getByRole('dialog')
 
     await page.setViewportSize({ width: 1440, height: 900 })
-    await expect(painel, 'o painel sumiu numa largura que comporta duas colunas').toBeVisible()
-    await expect(dialogo, 'o diálogo apareceu por cima do painel').toBeHidden()
+    await expect(panel, 'o painel sumiu numa largura que comporta duas colunas').toBeVisible()
+    await expect(dialog, 'o diálogo apareceu por cima do painel').toBeHidden()
 
     // No telefone o painel não cabe: a ficha só é alcançável pelo diálogo, e é
     // ele que impede a lista de virar uma lista sem detalhe nenhum.
     await page.setViewportSize({ width: 390, height: 844 })
-    await expect(painel, 'o painel ficou visível onde não cabe').toBeHidden()
-    await expect(dialogo, 'o diálogo abriu sozinho').toBeHidden()
+    await expect(panel, 'o painel ficou visível onde não cabe').toBeHidden()
+    await expect(dialog, 'o diálogo abriu sozinho').toBeHidden()
 
     await page.getByRole('listitem').first().getByRole('link').click()
-    await expect(dialogo, 'tocar na linha não abriu a ficha no telefone').toBeVisible()
+    await expect(dialog, 'tocar na linha não abriu a ficha no telefone').toBeVisible()
 
     await page.keyboard.press('Escape')
-    await expect(dialogo, 'o Esc não fechou a ficha').toBeHidden()
+    await expect(dialog, 'o Esc não fechou a ficha').toBeHidden()
   })
 
   /**
@@ -71,7 +71,7 @@ test.describe('O bestiário', () => {
    * o foco do mouse do foco da seta.
    */
   test('a ficha abre no clique mesmo se a resposta do foco chegar depois', async ({ page }) => {
-    await page.goto(BESTIARIO)
+    await page.goto(BESTIARY)
     await page.setViewportSize({ width: 390, height: 844 })
     await expect(page.getByRole('listitem').first()).toBeVisible()
 

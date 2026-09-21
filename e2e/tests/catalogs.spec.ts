@@ -40,10 +40,10 @@ test.describe('Os catálogos', () => {
     // O DENOMINADOR desta cena: Poderes é o maior acervo do livro, e é dele que
     // o defeito precisa — com uma fração das entradas a corrente aguenta e o
     // caso fica verde sem ter medido nada.
-    const desenhadas = await page.locator('.collection-in-columns > *').count()
+    const drawn = await page.locator('.collection-in-columns > *').count()
     expect(
-      desenhadas,
-      `a cena desenhou ${desenhadas} verbetes, e Poderes tem centenas — este caso não está medindo o acervo que ele diz medir`,
+      drawn,
+      `a cena desenhou ${drawn} verbetes, e Poderes tem centenas — este caso não está medindo o acervo que ele diz medir`,
     ).toBeGreaterThan(500)
 
     await expectOnlyTheScrollerScrolls(page, SCROLLER, VIEWPORTS)
@@ -67,20 +67,20 @@ test.describe('Os catálogos', () => {
    * classe é a mesma em toda largura, então asserção de classe não veria nada.
    */
   test('a grade nunca passa de três colunas, e nunca some', async ({ page }) => {
-    for (const [largura, altura, esperado] of [
+    for (const [width, height, want] of [
       [1920, 1080, 3],
       [1440, 900, 3],
       [1024, 768, 2],
       [390, 844, 1],
     ] as const) {
-      await page.setViewportSize({ width: largura, height: altura })
+      await page.setViewportSize({ width: width, height: height })
       await page.goto(CONDITIONS)
-      const colunas = await page.evaluate(() => {
+      const columns = await page.evaluate(() => {
         const grade = document.querySelector('.collection-in-columns')
         if (!grade) return 0
         return getComputedStyle(grade).gridTemplateColumns.split(' ').length
       })
-      expect(colunas, `${largura}px devia dar ${esperado} coluna(s)`).toBe(esperado)
+      expect(columns, `${width}px devia dar ${want} coluna(s)`).toBe(want)
     }
   })
 

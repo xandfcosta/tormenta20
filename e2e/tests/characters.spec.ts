@@ -20,17 +20,17 @@ test.describe('A cena de personagens', () => {
     await page.goto('/personagens')
     await page.getByRole('option').first().focus()
 
-    const dossie = page.locator('aside[aria-label^="Dossiê"]').first()
-    await expect(dossie).toBeHidden()
+    const dossier = page.locator('aside[aria-label^="Dossiê"]').first()
+    await expect(dossier).toBeHidden()
 
     await page.keyboard.press('d')
-    await expect(dossie).toBeVisible()
+    await expect(dossier).toBeVisible()
     // Ele traz o que o servidor já tinha: as habilidades da raça vêm do
     // catálogo EMBUTIDO, e o navegador não baixou catálogo nenhum para isso.
-    await expect(dossie.getByText(/HABILIDADES DE/i)).toBeVisible()
+    await expect(dossier.getByText(/HABILIDADES DE/i)).toBeVisible()
 
     await page.keyboard.press('d')
-    await expect(dossie).toBeHidden()
+    await expect(dossier).toBeHidden()
   })
 
   /**
@@ -43,20 +43,20 @@ test.describe('A cena de personagens', () => {
    */
   test('as setas trocam de herói sem pedir nada ao servidor', async ({ page }) => {
     await page.goto('/personagens')
-    const opcoes = page.getByRole('option')
-    await expect(opcoes.first()).toBeVisible()
+    const options = page.getByRole('option')
+    await expect(options.first()).toBeVisible()
 
-    let pedidos = 0
+    let requests = 0
     page.on('request', () => {
-      pedidos++
+      requests++
     })
 
-    await opcoes.first().focus()
+    await options.first().focus()
     await page.keyboard.press('ArrowRight')
 
-    await expect(opcoes.nth(1)).toHaveAttribute('aria-selected', 'true')
-    await expect(opcoes.first()).toHaveAttribute('aria-selected', 'false')
-    expect(pedidos, 'andar no elenco foi à rede — o cursor deixou de ser sinal').toBe(0)
+    await expect(options.nth(1)).toHaveAttribute('aria-selected', 'true')
+    await expect(options.first()).toHaveAttribute('aria-selected', 'false')
+    expect(requests, 'andar no elenco foi à rede — o cursor deixou de ser sinal').toBe(0)
   })
 
   /**
@@ -65,14 +65,14 @@ test.describe('A cena de personagens', () => {
    */
   test('⏎ no trilho abre a ficha do herói em cena', async ({ page }) => {
     await page.goto('/personagens')
-    const primeiro = page.getByRole('option').first()
-    await primeiro.focus()
-    const nome = (await primeiro.getAttribute('aria-label'))?.split(' · ')[0]
+    const first = page.getByRole('option').first()
+    await first.focus()
+    const displayName = (await first.getAttribute('aria-label'))?.split(' · ')[0]
 
     await page.keyboard.press('Enter')
 
     await expect(page).toHaveURL(/\/personagens\/\d+$/)
-    await expect(page.getByRole('heading', { name: nome, level: 1 }).first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: displayName, level: 1 }).first()).toBeVisible()
   })
 
   /**
@@ -89,13 +89,13 @@ test.describe('A cena de personagens', () => {
     // vez de o esconder num `aria-label`, e ele é o mesmo texto do título do
     // palco. O retrato tracejado segue dizendo "novo" — lá a palavra distingue a
     // vaga das capas ao redor, e aqui ela só truncaria em 208px.
-    const vaga = page.getByRole('option', { name: 'Forjar um herói' })
-    await expect(vaga).toBeVisible()
+    const slot = page.getByRole('option', { name: 'Forjar um herói' })
+    await expect(slot).toBeVisible()
 
     await page.getByRole('option').first().focus()
     // Anda até o fim do trilho: a vaga é a última posição, sempre.
     for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
-    await expect(vaga).toHaveAttribute('aria-selected', 'true')
+    await expect(slot).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByRole('heading', { name: 'Forjar um herói' })).toBeVisible()
 
     await page.keyboard.press('Enter')
@@ -117,11 +117,11 @@ test.describe('A cena de personagens', () => {
     // Um passo para dentro, para haver vizinho dos DOIS lados do palco.
     await page.keyboard.press('ArrowRight')
 
-    for (const lado of [/^Anterior:/, /^Próximo:/]) {
-      const peek = page.getByRole('button', { name: lado })
-      const legenda = peek.locator('span').last()
-      await expect(legenda).not.toHaveText('')
-      await expect(legenda).toHaveCSS('opacity', '1')
+    for (const side of [/^Anterior:/, /^Próximo:/]) {
+      const peek = page.getByRole('button', { name: side })
+      const caption = peek.locator('span').last()
+      await expect(caption).not.toHaveText('')
+      await expect(caption).toHaveCSS('opacity', '1')
     }
   })
 
@@ -135,7 +135,7 @@ test.describe('A cena de personagens', () => {
    */
   test('o retrato fica no mesmo lugar nas pontas do elenco', async ({ page }) => {
     await page.goto('/personagens')
-    const retratoVisivel = () =>
+    const visiblePortrait = () =>
       page.locator('a[aria-label^="Abrir ficha de"]:visible').first().boundingBox()
 
     // A ENTRADA DO PALCO desloca o retrato por 220ms de propósito, e isso não
@@ -146,7 +146,7 @@ test.describe('A cena de personagens', () => {
     // A espera é pelas animações DESTA cena, pelo nome: `document.getAnimations()`
     // devolve também os `animate-pulse` da tela, que são INFINITOS — esperar
     // "nenhuma rodando" nunca terminaria.
-    const palcoAssentado = () =>
+    const settledStage = () =>
       page.waitForFunction(() =>
         document
           .getAnimations()
@@ -155,18 +155,18 @@ test.describe('A cena de personagens', () => {
       )
 
     await page.getByRole('option').first().focus()
-    await palcoAssentado()
-    const naPonta = await retratoVisivel()
+    await settledStage()
+    const atTip = await visiblePortrait()
 
     await page.keyboard.press('ArrowRight')
     await expect(page.getByRole('button', { name: /^Anterior:/ })).toBeVisible()
-    await palcoAssentado()
-    const noMeio = await retratoVisivel()
+    await settledStage()
+    const inMiddle = await visiblePortrait()
 
-    expect(naPonta, 'retrato não medido na ponta').not.toBeNull()
-    expect(noMeio, 'retrato não medido no meio').not.toBeNull()
-    expect(Math.round(noMeio!.x), 'o retrato escorregou ao sair da ponta').toBe(
-      Math.round(naPonta!.x),
+    expect(atTip, 'retrato não medido na ponta').not.toBeNull()
+    expect(inMiddle, 'retrato não medido no meio').not.toBeNull()
+    expect(Math.round(inMiddle!.x), 'o retrato escorregou ao sair da ponta').toBe(
+      Math.round(atTip!.x),
     )
 
     // E a VAGA de criar ocupa a mesma posição de um herói. Ela não tem nome
@@ -174,15 +174,15 @@ test.describe('A cena de personagens', () => {
     // deles a coluna centralizada puxa o retrato 74px para cima, que é o maior
     // salto do trilho inteiro.
     for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
-    await palcoAssentado()
-    const vaga = await page
+    await settledStage()
+    const slot = await page
       .locator('a[aria-label="Forjar um novo herói"]:visible')
       .first()
       .boundingBox()
-    expect(vaga, 'vaga de criar não medida').not.toBeNull()
-    expect(Math.round(vaga!.y), 'o palco pulou na vaga de criar').toBe(Math.round(naPonta!.y))
-    expect(Math.round(vaga!.x), 'a vaga de criar não está onde os heróis estão').toBe(
-      Math.round(naPonta!.x),
+    expect(slot, 'vaga de criar não medida').not.toBeNull()
+    expect(Math.round(slot!.y), 'o palco pulou na vaga de criar').toBe(Math.round(atTip!.y))
+    expect(Math.round(slot!.x), 'a vaga de criar não está onde os heróis estão').toBe(
+      Math.round(atTip!.x),
     )
   })
 

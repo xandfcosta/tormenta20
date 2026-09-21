@@ -5,10 +5,10 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 test.describe('O improviso', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  const IMPROVISO = '/mestre/improviso'
+  const IMPROV = '/mestre/improviso'
 
   test('o improviso cabe nos seis formatos', async ({ page }) => {
-    await page.goto(IMPROVISO)
+    await page.goto(IMPROV)
     await expectNoHorizontalOverflow(page, VIEWPORTS)
     for (const viewport of VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
@@ -26,8 +26,8 @@ test.describe('O improviso', () => {
    */
   test('rolar não empilha histórico, e o Voltar sai da tela', async ({ page }) => {
     await page.goto('/')
-    await page.goto(IMPROVISO)
-    const antes = await page.evaluate(() => history.length)
+    await page.goto(IMPROV)
+    const earlier = await page.evaluate(() => history.length)
 
     for (let i = 0; i < 3; i++) {
       await page.getByRole('button', { name: 'Rolar d20' }).first().click()
@@ -35,7 +35,7 @@ test.describe('O improviso', () => {
     }
 
     expect(await page.evaluate(() => history.length), 'as rolagens empilharam histórico').toBe(
-      antes,
+      earlier,
     )
     await page.goBack()
     await expect(page, 'o Voltar desfez uma rolagem em vez de sair').toHaveURL(/\/$/)
@@ -47,17 +47,17 @@ test.describe('O improviso', () => {
    * comparar. Cinco é o fundo, e a sexta rolagem empurra a primeira para fora.
    */
   test('a tabela guarda as rolagens anteriores, e para em cinco', async ({ page }) => {
-    await page.goto(IMPROVISO)
+    await page.goto(IMPROV)
     // Pelo NOME da região, e não por contar filhos de `div`: acoplar ao formato
     // do DOM é o que o guia manda não escrever, e a primeira versão deste teste
     // fazia isso — e apontava para o cartão errado.
-    const cartao = page.getByRole('region', { name: 'Ermos — Ruína' })
+    const card = page.getByRole('region', { name: 'Ermos — Ruína' })
 
     for (let i = 0; i < 7; i++) {
-      await cartao.getByRole('button', { name: 'Rolar d6' }).click()
-      await expect(cartao.locator('[aria-live="polite"]')).toBeVisible()
+      await card.getByRole('button', { name: 'Rolar d6' }).click()
+      await expect(card.locator('[aria-live="polite"]')).toBeVisible()
     }
     // Uma manchete + quatro anteriores = os cinco que o fundo permite.
-    await expect(cartao.locator('li'), 'o histórico passou do fundo de cinco').toHaveCount(4)
+    await expect(card.locator('li'), 'o histórico passou do fundo de cinco').toHaveCount(4)
   })
 })

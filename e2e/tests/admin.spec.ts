@@ -26,24 +26,24 @@ test.describe('Administração', () => {
    */
   test('o link de redefinição não vaza para a caixa do jogador seguinte', async ({ page }) => {
     await page.goto('/admin')
-    const gatilhos = page.getByRole('button', { name: /^Redefinir a senha de/ })
-    await expect(gatilhos.first()).toBeVisible()
+    const triggers = page.getByRole('button', { name: /^Redefinir a senha de/ })
+    await expect(triggers.first()).toBeVisible()
 
-    await gatilhos.first().click()
+    await triggers.first().click()
     await page.getByRole('button', { name: 'Gerar link' }).click()
-    const campo = page.locator('#reset-url')
-    await expect(campo).toBeVisible()
-    const primeiro = await campo.inputValue()
-    expect(primeiro, 'o link nasceu sem token').toContain('token=')
+    const field = page.locator('#reset-url')
+    await expect(field).toBeVisible()
+    const first = await field.inputValue()
+    expect(first, 'o link nasceu sem token').toContain('token=')
     // A origem é a do NAVEGADOR, e não a do servidor: com o `r.Host` o link
     // nasceria apontando para a porta errada atrás de qualquer intermediário.
-    expect(primeiro).toContain(new URL(page.url()).origin)
+    expect(first).toContain(new URL(page.url()).origin)
 
     await page.getByRole('button', { name: 'Fechar' }).click()
-    await gatilhos.nth(1).click()
+    await triggers.nth(1).click()
 
     await expect(page.locator('dialog#reset')).toBeVisible()
-    await expect(campo, 'o link do primeiro jogador sobreviveu na caixa do segundo').toHaveCount(0)
+    await expect(field, 'o link do primeiro jogador sobreviveu na caixa do segundo').toHaveCount(0)
   })
 
   /**
@@ -58,14 +58,14 @@ test.describe('Administração', () => {
    */
   test('o diálogo de apagar conta é modal, nomeado, e devolve o foco', async ({ page }) => {
     await page.goto('/admin')
-    const gatilho = page.getByRole('button', { name: /^Apagar a conta de/ }).first()
-    await gatilho.focus()
-    await gatilho.press('Enter')
+    const trigger = page.getByRole('button', { name: /^Apagar a conta de/ }).first()
+    await trigger.focus()
+    await trigger.press('Enter')
 
-    const dialogo = page.locator('#confirm')
-    await expect(dialogo).toBeVisible()
+    const dialog = page.locator('#confirm')
+    await expect(dialog).toBeVisible()
 
-    const estado = await page.evaluate(() => {
+    const state = await page.evaluate(() => {
       const d = document.getElementById('confirm') as HTMLDialogElement
       return {
         modal: d.matches(':modal'),
@@ -73,12 +73,12 @@ test.describe('Administração', () => {
         nome: document.getElementById(d.getAttribute('aria-labelledby') ?? '')?.textContent?.trim() ?? '',
       }
     })
-    expect(estado.modal, 'o fundo precisa ficar inerte').toBe(true)
-    expect(estado.focoDentro, 'o foco precisa entrar no diálogo').toBe(true)
-    expect(estado.nome, 'o diálogo precisa de nome acessível').toContain('Apagar a conta de')
+    expect(state.modal, 'o fundo precisa ficar inerte').toBe(true)
+    expect(state.focoDentro, 'o foco precisa entrar no diálogo').toBe(true)
+    expect(state.nome, 'o diálogo precisa de nome acessível').toContain('Apagar a conta de')
 
     await page.keyboard.press('Escape')
-    await expect(dialogo).toBeHidden()
-    await expect(gatilho).toBeFocused()
+    await expect(dialog).toBeHidden()
+    await expect(trigger).toBeFocused()
   })
 })

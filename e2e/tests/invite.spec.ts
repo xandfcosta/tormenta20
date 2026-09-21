@@ -39,8 +39,8 @@ test.describe('A carta de convite', () => {
     await expect(page, 'o envio passou sem herói escolhido').toHaveURL(
       /\/campanhas\/entrar$/,
     )
-    const aviso = await radios.first().evaluate((el: HTMLInputElement) => el.validationMessage)
-    expect(aviso, 'o navegador barrou em silêncio').not.toBe('')
+    const notice = await radios.first().evaluate((el: HTMLInputElement) => el.validationMessage)
+    expect(notice, 'o navegador barrou em silêncio').not.toBe('')
   })
 
   // Convite morto: a carta diz, e NÃO oferece o botão. Um botão que não pode

@@ -46,64 +46,64 @@ export type MeasuredTarget = {
 
 export async function touchTargets(page: Page): Promise<{ medidos: number; alvos: MeasuredTarget[] }> {
   return page.evaluate(() => {
-    const SELETOR =
+    const SELECTOR =
       'a[href],button:not([disabled]),input:not([type=hidden]),select,textarea,summary,[tabindex]:not([tabindex="-1"])'
-    const visivel = (e: Element) => {
+    const visible = (e: Element) => {
       const r = e.getBoundingClientRect()
       if (r.width <= 0 || r.height <= 0) return false
       const s = getComputedStyle(e)
       return s.visibility !== 'hidden' && s.display !== 'none'
     }
-    const alvos = [...document.querySelectorAll(SELETOR)].filter(visivel)
-    const caixas = alvos.map((e) => e.getBoundingClientRect())
+    const targets = [...document.querySelectorAll(SELECTOR)].filter(visible)
+    const rects = targets.map((e) => e.getBoundingClientRect())
     const pequeno = (r: DOMRect) => r.width < 24 || r.height < 24
 
     // O círculo de 24px da exceção: raio 12 em volta do CENTRO da caixa.
-    const centro = (r: DOMRect) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
-    const cruzaCaixa = (c: { x: number; y: number }, r: DOMRect) => {
+    const center = (r: DOMRect) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
+    const crossesBox = (c: { x: number; y: number }, r: DOMRect) => {
       const px = Math.max(r.left, Math.min(c.x, r.right))
       const py = Math.max(r.top, Math.min(c.y, r.bottom))
       return Math.hypot(c.x - px, c.y - py) < 12
     }
-    const cruzaCirculo = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+    const crossesCircle = (a: { x: number; y: number }, b: { x: number; y: number }) =>
       Math.hypot(a.x - b.x, a.y - b.y) < 24
 
     // O COMANDO que o alvo dispara, para achar o equivalente. `data-on:click` é
     // o gesto do Datastar; `href` cobre os links.
-    const comandoDe = (e: Element) =>
+    const commandOf = (e: Element) =>
       e.getAttribute('data-on:click') ?? e.getAttribute('href') ?? ''
-    const comandos = alvos.map(comandoDe)
-    const temEquivalenteQuePassa = (i: number) => {
-      const meu = comandos[i]
-      if (!meu) return false
-      return alvos.some((_, j) => j !== i && comandos[j] === meu && !pequeno(caixas[j]))
+    const commands = targets.map(commandOf)
+    const hasPassingEquivalent = (i: number) => {
+      const mine = commands[i]
+      if (!mine) return false
+      return targets.some((_, j) => j !== i && commands[j] === mine && !pequeno(rects[j]))
     }
 
-    const nomeDe = (e: Element) =>
+    const nameOf = (e: Element) =>
       (e.getAttribute('aria-label') ?? e.getAttribute('title') ?? e.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 40)
 
-    const medidos: MeasuredTarget[] = []
-    for (let i = 0; i < alvos.length; i++) {
-      const r = caixas[i]
+    const measured: MeasuredTarget[] = []
+    for (let i = 0; i < targets.length; i++) {
+      const r = rects[i]
       if (!pequeno(r)) continue
-      const c = centro(r)
-      let colide = false
-      for (let j = 0; j < alvos.length && !colide; j++) {
+      const c = center(r)
+      let collides = false
+      for (let j = 0; j < targets.length && !collides; j++) {
         if (j === i) continue
         // O círculo não pode cruzar OUTRO ALVO...
-        if (cruzaCaixa(c, caixas[j])) colide = true
+        if (crossesBox(c, rects[j])) collides = true
         // ...nem o círculo de outro alvo PEQUENO.
-        else if (pequeno(caixas[j]) && cruzaCirculo(c, centro(caixas[j]))) colide = true
+        else if (pequeno(rects[j]) && crossesCircle(c, center(rects[j]))) collides = true
       }
-      const equivalente = temEquivalenteQuePassa(i)
-      medidos.push({
-        nome: nomeDe(alvos[i]),
+      const equivalent = hasPassingEquivalent(i)
+      measured.push({
+        nome: nameOf(targets[i]),
         larg: Math.round(r.width),
         alt: Math.round(r.height),
-        familia: (alvos[i].getAttribute('class') ?? '').split(/\s+/).slice(0, 3).join(' ') || alvos[i].tagName.toLowerCase(),
-        reprova: colide && !equivalente,
+        familia: (targets[i].getAttribute('class') ?? '').split(/\s+/).slice(0, 3).join(' ') || targets[i].tagName.toLowerCase(),
+        reprova: collides && !equivalent,
       })
     }
-    return { medidos: alvos.length, alvos: medidos }
+    return { medidos: targets.length, alvos: measured }
   })
 }

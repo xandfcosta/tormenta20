@@ -41,8 +41,8 @@
  * animar, e uma segunda cópia da checagem divergiria no dia em que o alvo
  * pudesse ser outra coisa que não um `Element`.
  */
-export function podeAnimar(alvo: Element | null | undefined): alvo is Element {
-  return !!alvo && typeof (alvo as HTMLElement).animate === 'function'
+export function podeAnimar(target: Element | null | undefined): target is Element {
+  return !!target && typeof (target as HTMLElement).animate === 'function'
 }
 
 /**
@@ -59,24 +59,24 @@ export function podeAnimar(alvo: Element | null | undefined): alvo is Element {
  *
  * @example piscarVital(linha, { curou: false })
  */
-export function piscarVital(alvo: Element | null | undefined, opcoes: { curou: boolean }): void {
-  if (!podeAnimar(alvo)) return
-  const veu = document.createElement('div')
-  veu.setAttribute('aria-hidden', 'true')
-  veu.style.cssText = [
+export function piscarVital(target: Element | null | undefined, options: { curou: boolean }): void {
+  if (!podeAnimar(target)) return
+  const veil = document.createElement('div')
+  veil.setAttribute('aria-hidden', 'true')
+  veil.style.cssText = [
     'position:absolute',
     'inset:0',
     'border-radius:inherit',
     'pointer-events:none',
-    `background:var(${opcoes.curou ? '--hp-full' : '--hp-critical'})`,
+    `background:var(${options.curou ? '--hp-full' : '--hp-critical'})`,
   ].join(';')
-  alvo.appendChild(veu)
+  target.appendChild(veil)
 
-  const animacao = veu.animate([{ opacity: 0.45 }, { opacity: 0 }], {
+  const animation = veil.animate([{ opacity: 0.45 }, { opacity: 0 }], {
     duration: 380,
     easing: 'ease-out',
   })
-  animacao.finished.then(() => veu.remove()).catch(() => veu.remove())
+  animation.finished.then(() => veil.remove()).catch(() => veil.remove())
 }
 
 /**
@@ -89,9 +89,9 @@ export function piscarVital(alvo: Element | null | undefined, opcoes: { curou: b
  *
  * @example pulsarVez(linhaDaVez)
  */
-export function pulsarVez(alvo: Element | null | undefined): void {
-  if (!podeAnimar(alvo)) return
-  alvo.animate(
+export function pulsarVez(target: Element | null | undefined): void {
+  if (!podeAnimar(target)) return
+  target.animate(
     [
       { transform: 'scale(1)', boxShadow: '0 0 0 0 transparent' },
       {
@@ -119,9 +119,9 @@ export function pulsarVez(alvo: Element | null | undefined): void {
  *
  * @example surgir(cracha)
  */
-export function emerge(alvo: Element | null | undefined): void {
-  if (!podeAnimar(alvo)) return
-  alvo.animate(
+export function emerge(target: Element | null | undefined): void {
+  if (!podeAnimar(target)) return
+  target.animate(
     [
       { opacity: 0, transform: 'scale(0.92)' },
       { opacity: 1, transform: 'scale(1)' },

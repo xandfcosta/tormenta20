@@ -21,11 +21,11 @@ test('a seta anda na lista e a ficha segue junto', async ({ page }) => {
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
-  const fichaLateral = page.locator('.mesa-painel')
-  const primeira = page.locator('a[href*="criatura="]').first()
-  await primeira.focus()
-  await expect(fichaLateral).toContainText(/\S/)
-  const antes = (await fichaLateral.innerText()).slice(0, 40)
+  const sideSheet = page.locator('.mesa-painel')
+  const first = page.locator('a[href*="criatura="]').first()
+  await first.focus()
+  await expect(sideSheet).toContainText(/\S/)
+  const before = (await sideSheet.innerText()).slice(0, 40)
 
   // O CONTROLE: a região está declarada. Sem ela o driver não tem o que dirigir,
   // e "a seta não andou" seria verdade sobre uma tela sem teclado nenhum — que é
@@ -34,8 +34,8 @@ test('a seta anda na lista e a ficha segue junto', async ({ page }) => {
 
   await page.keyboard.press('ArrowDown')
   await expect
-    .poll(async () => (await fichaLateral.innerText()).slice(0, 40), { timeout: 4000 })
-    .not.toBe(antes)
+    .poll(async () => (await sideSheet.innerText()).slice(0, 40), { timeout: 4000 })
+    .not.toBe(before)
 })
 
 test('cada passo da seta desenha a ficha sem espera perceptível', async ({ page }) => {
@@ -43,7 +43,7 @@ test('cada passo da seta desenha a ficha sem espera perceptível', async ({ page
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
-  const ficha = page.locator('.mesa-painel')
+  const sheet = page.locator('.mesa-painel')
   await page.locator('a[href*="criatura="]').first().focus()
 
   // PASSO DELIBERADO custa uma ida ao servidor por linha, e isso é o CERTO: quem
@@ -55,24 +55,24 @@ test('cada passo da seta desenha a ficha sem espera perceptível', async ({ page
   // a seta "responde igual em jogo", e jogo é quadro a quadro. O teto de 400ms é
   // generoso de propósito — abaixo disso ninguém chama de espera, e acima o
   // desenho deixa de acompanhar o dedo.
-  const latencias: number[] = []
+  const latencies: number[] = []
   for (let i = 0; i < 8; i++) {
-    const antes = (await ficha.innerText()).slice(0, 40)
+    const before = (await sheet.innerText()).slice(0, 40)
     const t0 = Date.now()
     await page.keyboard.press('ArrowDown')
     await expect
-      .poll(async () => (await ficha.innerText()).slice(0, 40), { timeout: 4000, intervals: [16] })
-      .not.toBe(antes)
-    latencias.push(Date.now() - t0)
+      .poll(async () => (await sheet.innerText()).slice(0, 40), { timeout: 4000, intervals: [16] })
+      .not.toBe(before)
+    latencies.push(Date.now() - t0)
   }
 
-  latencias.sort((a, b) => a - b)
-  const mediana = latencias[Math.floor(latencias.length / 2)]
-  const pior = latencias[latencias.length - 1]
-  console.log(`latência por passo — mediana ${mediana}ms, pior ${pior}ms, todas: ${latencias.join(', ')}`)
+  latencies.sort((a, b) => a - b)
+  const median = latencies[Math.floor(latencies.length / 2)]
+  const worst = latencies[latencies.length - 1]
+  console.log(`latência por passo — mediana ${median}ms, pior ${worst}ms, todas: ${latencies.join(', ')}`)
 
-  expect(mediana, `mediana de ${mediana}ms por passo de seta`).toBeLessThan(400)
-  expect(pior, `pior passo levou ${pior}ms`).toBeLessThan(900)
+  expect(median, `mediana de ${median}ms por passo de seta`).toBeLessThan(400)
+  expect(worst, `pior passo levou ${worst}ms`).toBeLessThan(900)
 })
 
 test('depois de uma travessia rápida a ficha é a da linha onde o foco PAROU', async ({ page }) => {
@@ -89,17 +89,17 @@ test('depois de uma travessia rápida a ficha é a da linha onde o foco PAROU', 
     Array.from({ length: 12 }, () => page.keyboard.press('ArrowDown')),
   )
 
-  const foco = page.locator(':focus')
-  const href = await foco.getAttribute('href')
-  const criatura = new URL(href!, 'http://x').searchParams.get('criatura')
+  const focused = page.locator(':focus')
+  const href = await focused.getAttribute('href')
+  const creature = new URL(href!, 'http://x').searchParams.get('criatura')
 
   // O CONTROLE: o foco de fato ANDOU. Sem ele, "a ficha bate com o foco" seria
   // verdade trivialmente sobre uma travessia que não saiu do lugar.
-  expect(criatura, 'o foco não andou na travessia').toBeTruthy()
-  const rotulo = (await foco.innerText()).split('\n')[0].trim()
+  expect(creature, 'o foco não andou na travessia').toBeTruthy()
+  const caption = (await focused.innerText()).split('\n')[0].trim()
 
   await expect
-    .poll(async () => (await page.locator('.mesa-painel').innerText()).includes(rotulo), {
+    .poll(async () => (await page.locator('.mesa-painel').innerText()).includes(caption), {
       timeout: 4000,
       intervals: [16],
     })
@@ -138,30 +138,30 @@ test('com o foco na ficha, as setas rolam o painel', async ({ page }) => {
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
-  const painel = page.locator('.mesa-painel')
+  const panel = page.locator('.mesa-painel')
 
   // O CONTROLE, e ele é duplo: o painel precisa ROLAR (senão a asserção final é
   // vazia) e precisa ser FOCÁVEL (senão o teclado nunca chega lá).
-  const escondido = await painel.evaluate((e) => e.scrollHeight - e.clientHeight)
-  expect(escondido, 'a ficha não transborda nesta janela — o guarda mediria nada').toBeGreaterThan(20)
+  const hidden = await panel.evaluate((e) => e.scrollHeight - e.clientHeight)
+  expect(hidden, 'a ficha não transborda nesta janela — o guarda mediria nada').toBeGreaterThan(20)
 
   // O foco vai no MIOLO e não na `<section>`: a seção é a REGIÃO (é assim que a
   // seta chega até aqui) e o driver só considera item o focável de dentro dela.
   // A rolagem continua sendo da seção, porque rolagem nativa rola o ancestral
   // rolável do elemento focado.
-  const miolo = painel.locator('[tabindex="0"]').first()
-  await miolo.focus()
-  await expect(miolo).toBeFocused()
+  const core = panel.locator('[tabindex="0"]').first()
+  await core.focus()
+  await expect(core).toBeFocused()
 
-  const antes = await painel.evaluate((e) => e.scrollTop)
+  const before = await panel.evaluate((e) => e.scrollTop)
   for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowDown')
   await page.waitForTimeout(200)
-  const depois = await painel.evaluate((e) => e.scrollTop)
+  const after = await panel.evaluate((e) => e.scrollTop)
 
   expect(
-    depois,
-    `a ficha não rolou com o foco nela (${antes} → ${depois}): o driver de navegação comeu a seta`,
-  ).toBeGreaterThan(antes)
+    after,
+    `a ficha não rolou com o foco nela (${before} → ${after}): o driver de navegação comeu a seta`,
+  ).toBeGreaterThan(before)
 })
 
 /**
@@ -189,17 +189,17 @@ test('a seta sobe da lista para os filtros e volta', async ({ page }) => {
   await page.locator('a[href*="criatura="]').first().focus()
   await page.keyboard.press('ArrowUp')
 
-  const dentroDosFiltros = await page.evaluate(
+  const insideFilters = await page.evaluate(
     () => !!document.activeElement?.closest('[data-nav-region="filtros"]'),
   )
-  expect(dentroDosFiltros, 'a seta para cima não saiu da lista: ficou presa na região').toBe(true)
+  expect(insideFilters, 'a seta para cima não saiu da lista: ficou presa na região').toBe(true)
 
   // E VOLTA, senão os filtros viram a armadilha que a lista era.
   await page.keyboard.press('ArrowDown')
-  const deVoltaNaLista = await page.evaluate(
+  const backInList = await page.evaluate(
     () => !!document.activeElement?.closest('[data-nav-region="lista"]'),
   )
-  expect(deVoltaNaLista, 'a seta para baixo não voltou para a lista').toBe(true)
+  expect(backInList, 'a seta para baixo não voltou para a lista').toBe(true)
 })
 
 /**
@@ -242,14 +242,14 @@ test('a seta chega na ficha sem nenhum TAB', async ({ page }) => {
   // Sete é teto generoso de propósito: o que se afirma é que a lista é
   // ALCANÇÁVEL, não em quantas teclas. Sem teto seria laço infinito; com teto
   // apertado, um guarda que quebra por uma linha a mais nos filtros.
-  let naLista = false
-  for (let i = 0; i < 7 && !naLista; i++) {
+  let inList = false
+  for (let i = 0; i < 7 && !inList; i++) {
     await page.keyboard.press('ArrowDown')
-    naLista = await page.evaluate(
+    inList = await page.evaluate(
       () => !!document.activeElement?.closest('[data-nav-region="lista"]'),
     )
   }
-  expect(naLista, 'da ficha não se volta à lista só com setas').toBe(true)
+  expect(inList, 'da ficha não se volta à lista só com setas').toBe(true)
 })
 
 /**
@@ -264,13 +264,13 @@ test('a legenda de teclado aparece no laptop e some no telefone', async ({ page 
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
-  const legenda = page.getByText('trocar de painel')
-  await expect(legenda).toBeVisible()
+  const caption = page.getByText('trocar de painel')
+  await expect(caption).toBeVisible()
   // Só o que funciona: o Esc está morto nesta cena e não pode ser anunciado.
   await expect(page.locator('body')).not.toContainText('Esc voltar')
 
   await page.setViewportSize({ width: 640, height: 900 })
-  await expect(legenda).toBeHidden()
+  await expect(caption).toBeHidden()
 })
 
 /**
@@ -292,18 +292,18 @@ test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
   await page.locator('a[href*="criatura="]').first().focus()
   await page.keyboard.press('ArrowRight')
 
-  const medida = await page.evaluate(() => {
-    const desenha = (e: Element) => {
+  const measure = await page.evaluate(() => {
+    const draws = (e: Element) => {
       const cs = getComputedStyle(e)
       return cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0
     }
-    const painel = document.querySelector('.mesa-painel') as HTMLElement
+    const panel = document.querySelector('.mesa-painel') as HTMLElement
     return {
       focoNaFicha: !!document.activeElement?.closest('[data-nav-region="ficha"]'),
-      comAnel: [...document.querySelectorAll('*')].filter(desenha).map((e) =>
+      comAnel: [...document.querySelectorAll('*')].filter(draws).map((e) =>
         String((e as HTMLElement).className).slice(0, 30),
       ),
-      molduraAcesa: getComputedStyle(painel).boxShadow !== 'none',
+      molduraAcesa: getComputedStyle(panel).boxShadow !== 'none',
       mioloComBrilho:
         getComputedStyle(document.activeElement as HTMLElement).boxShadow !== 'none',
     }
@@ -311,11 +311,11 @@ test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
 
   // O CONTROLE: o foco está na ficha. Sem ele, "nenhum anel" seria verdade sobre
   // uma tela em que nada está focado.
-  expect(medida.focoNaFicha, 'o guarda não chegou na ficha').toBe(true)
+  expect(measure.focoNaFicha, 'o guarda não chegou na ficha').toBe(true)
 
-  expect(medida.comAnel, `anéis de contorno desenhados: ${medida.comAnel.join(' / ')}`).toEqual([])
-  expect(medida.molduraAcesa, 'a moldura da ficha não acendeu').toBe(true)
-  expect(medida.mioloComBrilho, 'o miolo acendeu por dentro do que rola').toBe(false)
+  expect(measure.comAnel, `anéis de contorno desenhados: ${measure.comAnel.join(' / ')}`).toEqual([])
+  expect(measure.molduraAcesa, 'a moldura da ficha não acendeu').toBe(true)
+  expect(measure.mioloComBrilho, 'o miolo acendeu por dentro do que rola').toBe(false)
 })
 
 /**
@@ -337,31 +337,31 @@ test('trocar de ferramenta pelo teclado mantém o foco no trilho', async ({ page
   // O DESTINO SAI DO TRILHO, e não escrito à mão: a garantia é "o foco sobrevive
   // à troca", e qual é a parada vizinha não importa. Escrito à mão, reordenar o
   // trilho deixa o guarda vermelho sem nada ter piorado.
-  const paradas = page.locator('[data-nav-region="rail"] a')
-  const segunda = await paradas.nth(1).getAttribute('href')
-  expect(segunda, 'o trilho não tem uma segunda parada para onde ir').toBeTruthy()
+  const stops = page.locator('[data-nav-region="rail"] a')
+  const second = await stops.nth(1).getAttribute('href')
+  expect(second, 'o trilho não tem uma segunda parada para onde ir').toBeTruthy()
 
-  await paradas.first().focus()
+  await stops.first().focus()
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('Enter')
   // `waitForURL` e NÃO `waitForLoadState`: medido, o segundo volta antes de a
   // navegação começar e a asserção lê a URL antiga — o controle acusa "o Enter
   // não trocou de ferramenta" sobre uma troca que aconteceu.
-  await page.waitForURL(`**${segunda}`)
+  await page.waitForURL(`**${second}`)
 
   // O CONTROLE: a navegação aconteceu. Sem ele, "o foco ficou no trilho" seria
   // verdade sobre uma tecla que não fez nada.
-  expect(page.url(), 'o Enter não trocou de ferramenta').toContain(segunda as string)
+  expect(page.url(), 'o Enter não trocou de ferramenta').toContain(second as string)
 
-  const foco = await page.evaluate(() => {
+  const focused = await page.evaluate(() => {
     const e = document.activeElement as HTMLElement
     return {
       noTrilho: !!e?.closest('[data-nav-region="rail"]'),
       naFerramentaAtual: e?.getAttribute('aria-current') === 'page',
     }
   })
-  expect(foco.noTrilho, 'o foco caiu no body depois da troca').toBe(true)
-  expect(foco.naFerramentaAtual, 'o foco voltou para o primeiro item, não para a ferramenta aberta').toBe(true)
+  expect(focused.noTrilho, 'o foco caiu no body depois da troca').toBe(true)
+  expect(focused.naFerramentaAtual, 'o foco voltou para o primeiro item, não para a ferramenta aberta').toBe(true)
 })
 
 test('trocar de ferramenta pelo MOUSE não rouba o foco', async ({ page }) => {
@@ -372,8 +372,8 @@ test('trocar de ferramenta pelo MOUSE não rouba o foco', async ({ page }) => {
   await page.locator('[data-nav-region="rail"] a', { hasText: 'IMPROVISO' }).click()
   await page.waitForURL('**/mestre/improviso')
 
-  const roubou = await page.evaluate(
+  const stole = await page.evaluate(
     () => !!document.activeElement?.closest('[data-nav-region="rail"]'),
   )
-  expect(roubou, 'a carga por clique acendeu o cursor no trilho sozinha').toBe(false)
+  expect(stole, 'a carga por clique acendeu o cursor no trilho sozinha').toBe(false)
 })
