@@ -10,18 +10,18 @@ import (
 
 func TestSheetCommandNotifiesListeners(t *testing.T) {
 	f := newSceneFixture(t)
-	aviso, parar := f.s.bus.Subscribe(events.OfCharacter(f.charID))
-	defer parar()
+	notice, stop := f.s.bus.Subscribe(events.OfCharacter(f.charID))
+	defer stop()
 
 	// Um comando qualquer que GRAVA: tirar 1 de PV.
-	rec := f.pede(t, f.jogador, http.MethodPost,
+	rec := f.pede(t, f.player, http.MethodPost,
 		"/personagens/"+strconv.FormatInt(f.charID, 10)+"/vitais/pv/-1", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o comando respondeu %d", rec.Code)
 	}
 
 	select {
-	case ev := <-aviso.C:
+	case ev := <-notice.C:
 		if _, ok := ev.(events.CharacterChanged); !ok {
 			t.Fatalf("chegou %T, e quem escuta a ficha espera um CharacterChanged", ev)
 		}
@@ -40,20 +40,20 @@ func TestSheetCommandNotifiesListeners(t *testing.T) {
 // recusa. Ela estava certa: não havia recusa nenhuma.
 func TestRefusedCommandNotifiesNobody(t *testing.T) {
 	f := newSceneFixture(t)
-	aviso, parar := f.s.bus.Subscribe(events.OfCharacter(f.charID))
-	defer parar()
+	notice, stop := f.s.bus.Subscribe(events.OfCharacter(f.charID))
+	defer stop()
 
-	rec := f.pede(t, f.jogador, http.MethodPost,
+	rec := f.pede(t, f.player, http.MethodPost,
 		"/personagens/"+strconv.FormatInt(f.charID, 10)+"/proficiencias/alterna/gargalhada", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("a recusa devia voltar 200 com a cena: veio %d", rec.Code)
 	}
-	if frase := sceneRefusal(rec.Body.String()); frase == "" {
+	if sentence := sceneRefusal(rec.Body.String()); sentence == "" {
 		t.Fatal("a cena não trouxe a recusa — sem ela este caso mede outra coisa")
 	}
 
 	select {
-	case ev := <-aviso.C:
+	case ev := <-notice.C:
 		t.Fatalf("um gesto recusado publicou %T", ev)
 	case <-time.After(100 * time.Millisecond):
 	}

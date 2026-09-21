@@ -76,11 +76,11 @@ func TestTheBookRouteServesRanges(t *testing.T) {
 	s := serverWithBook(t, newTestServer(t), "0123456789abcdef")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	inteiro := askForTheBook(t, s, eu, "")
-	if inteiro.Code != http.StatusOK || inteiro.Body.String() != "0123456789abcdef" {
-		t.Fatalf("o livro inteiro deu %d com %q", inteiro.Code, inteiro.Body.String())
+	whole := askForTheBook(t, s, eu, "")
+	if whole.Code != http.StatusOK || whole.Body.String() != "0123456789abcdef" {
+		t.Fatalf("o livro inteiro deu %d com %q", whole.Code, whole.Body.String())
 	}
-	if inteiro.Header().Get("Accept-Ranges") != "bytes" {
+	if whole.Header().Get("Accept-Ranges") != "bytes" {
 		t.Error("a rota não anuncia faixas — o visualizador baixa o arquivo todo")
 	}
 
@@ -165,7 +165,7 @@ func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
 	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario?criatura=lobo", "").Body.String()
+	body := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario?criatura=lobo", "").Body.String()
 	// O endereço leva ao LEITOR, na página impressa e com o nome a destacar.
 	//
 	// 290 e não 289: o bloco do Lobo abre na impressa 290, e o catálogo dizia
@@ -173,13 +173,13 @@ func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
 	// conferência por substring aprovava a página que CITA em vez da que ABRE.
 	// Corrigido pela assinatura "<nome> nd <valor>", que é como o livro imprime
 	// o começo de todo bloco de criatura.
-	if !strings.Contains(corpo, "/livro/ler?p=290&amp;t=Lobo") {
+	if !strings.Contains(body, "/livro/ler?p=290&amp;t=Lobo") {
 		t.Error("a ficha do Lobo não abre o leitor na página dele")
 	}
 
 	withoutBook := newTestServer(t)
-	outro := seedUser(t, withoutBook, "mestre@t20.local")
-	without := pedeNoMestre(t, withoutBook, outro, "GET", "/mestre/bestiario?criatura=lobo", "").Body.String()
+	other := seedUser(t, withoutBook, "mestre@t20.local")
+	without := pedeNoMestre(t, withoutBook, other, "GET", "/mestre/bestiario?criatura=lobo", "").Body.String()
 	if strings.Contains(without, "/livro/ler") {
 		t.Error("sem LIVRO_PDF a cena desenhou um link para um livro que não é servido")
 	}
@@ -200,23 +200,23 @@ func TestTheBookReaderLoadsWhatTheSceneNeeds(t *testing.T) {
 	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290&t=Lobo", "").Body.String()
-	for _, dado := range []string{
+	body := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290&t=Lobo", "").Body.String()
+	for _, data := range []string{
 		`data-pagina="290"`,
 		`data-termo="Lobo"`,
 		`data-abertura="6"`,
 		`data-worker="/static/pdf.worker.js`,
 		`data-livro="/livro?v=`,
 	} {
-		if !strings.Contains(corpo, dado) {
-			t.Errorf("a cena do leitor não escreveu %s", dado)
+		if !strings.Contains(body, data) {
+			t.Errorf("a cena do leitor não escreveu %s", data)
 		}
 	}
 	// O módulo do leitor só entra NESTA cena: são 540 KB de pdf.js.
-	if !strings.Contains(corpo, "reader.js") {
+	if !strings.Contains(body, "reader.js") {
 		t.Error("a cena não carrega o módulo do leitor")
 	}
-	if bestiario := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario", "").Body.String(); strings.Contains(bestiario, "reader.js") {
+	if bestiary := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario", "").Body.String(); strings.Contains(bestiary, "reader.js") {
 		t.Error("o bestiário carregou o pdf.js — 540 KB no caminho de quem só quer a ficha")
 	}
 }
@@ -236,10 +236,10 @@ func TestTheReaderPageRefusesGarbage(t *testing.T) {
 	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	for _, alvo := range []string{"/livro/ler?p=abacaxi", "/livro/ler?p=-3", "/livro/ler"} {
-		corpo := pedeNoMestre(t, s, eu, "GET", alvo, "").Body.String()
-		if !strings.Contains(corpo, `data-pagina="1"`) {
-			t.Errorf("%s não caiu na primeira página — a cena aceitou lixo", alvo)
+	for _, target := range []string{"/livro/ler?p=abacaxi", "/livro/ler?p=-3", "/livro/ler"} {
+		body := pedeNoMestre(t, s, eu, "GET", target, "").Body.String()
+		if !strings.Contains(body, `data-pagina="1"`) {
+			t.Errorf("%s não caiu na primeira página — a cena aceitou lixo", target)
 		}
 	}
 }

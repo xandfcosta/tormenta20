@@ -44,28 +44,28 @@ func TestTheQueueMirrorsAWoundTakenOnTheSheet(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 
-	cheio := poolsOf(t, f.s, f.charID)
-	if pv := queueHp(t, f, entryID); pv != cheio.HpCurrent {
+	full := poolsOf(t, f.s, f.charID)
+	if pv := queueHp(t, f, entryID); pv != full.HpCurrent {
 		t.Fatalf("a linha entrou na fila com %d e a ficha tem %d — o caso mediria "+
-			"uma fila que já discordava antes do gesto", pv, cheio.HpCurrent)
+			"uma fila que já discordava antes do gesto", pv, full.HpCurrent)
 	}
 
 	// O GESTO DA FICHA: o botão −5 da própria tela do jogador.
-	alvo := fmt.Sprintf("/personagens/%d/vitais/pv/-5", f.charID)
-	if rec := f.pede(t, f.jogador, http.MethodPost, alvo, ""); rec.Code != http.StatusOK {
+	target := fmt.Sprintf("/personagens/%d/vitais/pv/-5", f.charID)
+	if rec := f.pede(t, f.player, http.MethodPost, target, ""); rec.Code != http.StatusOK {
 		t.Fatalf("ferir pela ficha deu %d", rec.Code)
 	}
 
-	naFicha := poolsOf(t, f.s, f.charID)
-	if naFicha.HpCurrent != cheio.HpCurrent-5 {
+	onSheet := poolsOf(t, f.s, f.charID)
+	if onSheet.HpCurrent != full.HpCurrent-5 {
 		t.Fatalf("a FICHA ficou com %d e devia ter %d: o gesto não chegou nela, "+
-			"e o resto do caso mediria outra coisa", naFicha.HpCurrent, cheio.HpCurrent-5)
+			"e o resto do caso mediria outra coisa", onSheet.HpCurrent, full.HpCurrent-5)
 	}
 
-	if pv := queueHp(t, f, entryID); pv != naFicha.HpCurrent {
+	if pv := queueHp(t, f, entryID); pv != onSheet.HpCurrent {
 		t.Errorf("a fila ficou com %d PV e a ficha com %d.\n"+
 			"O mestre escolhe alvo e ordem olhando a fila, e ela mostra o número de antes "+
-			"do gesto do jogador — sem erro nenhum em lugar nenhum.", pv, naFicha.HpCurrent)
+			"do gesto do jogador — sem erro nenhum em lugar nenhum.", pv, onSheet.HpCurrent)
 	}
 }
 
@@ -74,18 +74,18 @@ func TestTheQueueMirrorsAWoundTakenOnTheSheet(t *testing.T) {
 // não funcionou".
 func queueHp(t *testing.T, f sceneFixture, entryID string) int64 {
 	t.Helper()
-	v, _, err := f.s.tableScene.LoadView(context.Background(), f.mestre, f.campaignID, f.sessionID)
+	v, _, err := f.s.tableScene.LoadView(context.Background(), f.gm, f.campaignID, f.sessionID)
 	if err != nil {
 		t.Fatalf("carregar a cena da Mesa: %v", err)
 	}
-	for _, linha := range v.Fila {
-		if linha.ID != entryID {
+	for _, row := range v.Fila {
+		if row.ID != entryID {
 			continue
 		}
-		if linha.PV == nil {
+		if row.PV == nil {
 			t.Fatalf("a linha %s está na fila sem barra de PV nenhuma", entryID)
 		}
-		return linha.PV.Current
+		return row.PV.Current
 	}
 	t.Fatalf("a linha %s sumiu da fila", entryID)
 	return 0

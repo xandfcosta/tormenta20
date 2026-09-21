@@ -15,7 +15,7 @@ func arcanista(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: f.jogador, Name: "Conjuradora", Origin: "Charlatão", Level: 9,
+		OwnerId: f.player, Name: "Conjuradora", Origin: "Charlatão", Level: 9,
 		Strength: 0, Dexterity: 2, Constitution: 2, Intelligence: 4, Wisdom: 1, Charisma: 1,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -29,43 +29,43 @@ func arcanista(t *testing.T) (sceneFixture, int64) {
 	// O poço vem do catálogo e a ficha nasce CHEIA: sem esta passada pelo funil
 	// as quatro colunas ficariam com o que o INSERT inventou, e a tela leria um
 	// número que o agregado não confirma (ALE-355).
-	arrangePools(t, f.s, id, func(pocos sheet.Pools) (sheet.Pools, error) {
-		pocos.HpCurrent, pocos.MpCurrent = pocos.HpMax, pocos.MpMax
-		return pocos, nil
+	arrangePools(t, f.s, id, func(pools sheet.Pools) (sheet.Pools, error) {
+		pools.HpCurrent, pools.MpCurrent = pools.HpMax, pools.MpMax
+		return pools, nil
 	})
 	return f, id
 }
 
 func spellScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.pede(t, f.jogador, http.MethodGet,
+	return f.pede(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=spells", id), "").Body.String()
 }
 
-func spell(t *testing.T, f sceneFixture, id int64, caminho string) int {
+func spell(t *testing.T, f sceneFixture, id int64, path string) int {
 	t.Helper()
-	alvo := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, caminho)
-	return f.pede(t, f.jogador, http.MethodPost, alvo, "").Code
+	target := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, path)
+	return f.pede(t, f.player, http.MethodPost, target, "").Code
 }
 
 // spellRefusal é a frase da regra que barrou o comando, ou "".
-func spellRefusal(t *testing.T, f sceneFixture, id int64, caminho string) string {
+func spellRefusal(t *testing.T, f sceneFixture, id int64, path string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, caminho)
-	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String())
+	target := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, path)
+	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, "").Body.String())
 }
 
 func spellbook(t *testing.T, f sceneFixture, id int64) map[string]bool {
 	t.Helper()
-	linhas, err := f.s.sceneCore().Queries().ListSpellsByCharacter(context.Background(), id)
+	rows, err := f.s.sceneCore().Queries().ListSpellsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o grimório: %v", err)
 	}
-	fora := map[string]bool{}
-	for _, l := range linhas {
-		fora[l.Catalogspellid] = l.Prepared != 0
+	outside := map[string]bool{}
+	for _, l := range rows {
+		outside[l.Catalogspellid] = l.Prepared != 0
 	}
-	return fora
+	return outside
 }
 
 // APRENDER, PREPARAR E ESQUECER, nessa ordem.
@@ -75,21 +75,21 @@ func TestASpellEntersTheSpellbookIsPreparedAndLeaves(t *testing.T) {
 	if got := spell(t, f, id, "aprende/bola-de-fogo"); got != http.StatusOK {
 		t.Fatalf("aprender respondeu %d", got)
 	}
-	if grimorio := spellbook(t, f, id); !existe(grimorio, "bola-de-fogo") {
+	if grimoire := spellbook(t, f, id); !existe(grimoire, "bola-de-fogo") {
 		t.Fatal("a magia não entrou no grimório")
 	}
 
 	spell(t, f, id, "prepara/bola-de-fogo")
-	if grimorio := spellbook(t, f, id); !grimorio["bola-de-fogo"] {
+	if grimoire := spellbook(t, f, id); !grimoire["bola-de-fogo"] {
 		t.Error("o toque não preparou a magia")
 	}
 	spell(t, f, id, "prepara/bola-de-fogo")
-	if grimorio := spellbook(t, f, id); grimorio["bola-de-fogo"] {
+	if grimoire := spellbook(t, f, id); grimoire["bola-de-fogo"] {
 		t.Error("o segundo toque não despreparou: o comando manda o ESTADO em vez da magia")
 	}
 
 	spell(t, f, id, "esquece/bola-de-fogo")
-	if grimorio := spellbook(t, f, id); existe(grimorio, "bola-de-fogo") {
+	if grimoire := spellbook(t, f, id); existe(grimoire, "bola-de-fogo") {
 		t.Error("a magia sobreviveu ao esquecer")
 	}
 }
@@ -110,14 +110,14 @@ func TestCastingChargesTheMp(t *testing.T) {
 	f, id := arcanista(t)
 	spell(t, f, id, "aprende/bola-de-fogo")
 
-	antes := pm(t, f, id)
+	before := pm(t, f, id)
 	if got := spell(t, f, id, "conjura/bola-de-fogo"); got != http.StatusOK {
 		t.Fatalf("conjurar respondeu %d", got)
 	}
-	depois := pm(t, f, id)
+	after := pm(t, f, id)
 	// Bola de Fogo é de 2º círculo, e o 2º custa 3 PM (Tabela 4-1, livro p170).
-	if antes-depois != 3 {
-		t.Errorf("a conjuração cobrou %d PM, quer 3 (base do 2º círculo)", antes-depois)
+	if before-after != 3 {
+		t.Errorf("a conjuração cobrou %d PM, quer 3 (base do 2º círculo)", before-after)
 	}
 }
 
@@ -135,8 +135,8 @@ func TestWithoutMpTheCastIsRefused(t *testing.T) {
 		return p, nil
 	})
 
-	if recusa := spellRefusal(t, f, id, "conjura/bola-de-fogo"); !strings.Contains(recusa, "faltam PM") {
-		t.Errorf("a recusa por PM não chegou à tela: %q", recusa)
+	if refusal := spellRefusal(t, f, id, "conjura/bola-de-fogo"); !strings.Contains(refusal, "faltam PM") {
+		t.Errorf("a recusa por PM não chegou à tela: %q", refusal)
 	}
 	if pm := pm(t, f, id); pm != 1 {
 		t.Errorf("a recusa mexeu no PM assim mesmo: sobrou %d", pm)
@@ -147,19 +147,19 @@ func TestWithoutMpTheCastIsRefused(t *testing.T) {
 func TestTheSpellsPanelDrawsTheSpellbookAndTheCatalog(t *testing.T) {
 	f, id := arcanista(t)
 	spell(t, f, id, "aprende/bola-de-fogo")
-	tela := spellScreen(t, f, id)
+	screen := spellScreen(t, f, id)
 
-	for _, esperado := range []string{"Grimório", "1 aprendida", "Conjurar Bola de Fogo", "Aprender magia"} {
-		if !strings.Contains(tela, esperado) {
-			t.Errorf("a tela não tem %q", esperado)
+	for _, want := range []string{"Grimório", "1 aprendida", "Conjurar Bola de Fogo", "Aprender magia"} {
+		if !strings.Contains(screen, want) {
+			t.Errorf("a tela não tem %q", want)
 		}
 	}
 	// O CATÁLOGO sai inteiro, menos o que já se sabe.
-	if strings.Count(tela, "/magias/aprende/") < 150 {
+	if strings.Count(screen, "/magias/aprende/") < 150 {
 		t.Errorf("o catálogo desenhou %d opções de aprender, e são ~197",
-			strings.Count(tela, "/magias/aprende/"))
+			strings.Count(screen, "/magias/aprende/"))
 	}
-	if strings.Contains(tela, "/magias/aprende/bola-de-fogo") {
+	if strings.Contains(screen, "/magias/aprende/bola-de-fogo") {
 		t.Error("uma magia JÁ aprendida continua ofertada no catálogo")
 	}
 }
@@ -167,15 +167,15 @@ func TestTheSpellsPanelDrawsTheSpellbookAndTheCatalog(t *testing.T) {
 // QUEM NÃO CONJURA não recebe o botão nem o catálogo do Capítulo 4.
 func TestWhoDoesNotCastDoesNotGetTheCatalog(t *testing.T) {
 	f, id := fighterFixture(t)
-	tela := spellScreen(t, f, id)
+	screen := spellScreen(t, f, id)
 
-	if strings.Contains(tela, `aria-label="Aprender magia"`) {
+	if strings.Contains(screen, `aria-label="Aprender magia"`) {
 		t.Error("um guerreiro recebeu o botão de aprender magia")
 	}
-	if strings.Contains(tela, "/magias/aprende/") {
+	if strings.Contains(screen, "/magias/aprende/") {
 		t.Error("o catálogo inteiro viajou para quem não pode aprender nada")
 	}
-	if !strings.Contains(tela, "não conjura por classe") {
+	if !strings.Contains(screen, "não conjura por classe") {
 		t.Error("a aba não diz por que está vazia")
 	}
 }
@@ -188,7 +188,7 @@ func TestWhoDoesNotCastDoesNotGetTheCatalog(t *testing.T) {
 func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: f.jogador, Name: "Totemista", Origin: "Batedor", Level: 3,
+		OwnerId: f.player, Name: "Totemista", Origin: "Batedor", Level: 3,
 		Strength: 4, Dexterity: 1, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -201,16 +201,16 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 	}
 	seedClasse(t, f.s, id, "Bárbaro", 3)
 
-	tela := spellScreen(t, f, id)
-	if !strings.Contains(tela, "Visão Mística") {
+	screen := spellScreen(t, f, id)
+	if !strings.Contains(screen, "Visão Mística") {
 		t.Error("a magia do corvo não chegou à tela")
 	}
-	if !strings.Contains(tela, "Totem Espiritual") {
+	if !strings.Contains(screen, "Totem Espiritual") {
 		t.Error("a tela não diz de onde a magia veio")
 	}
 	// CONTROLE: ela não virou uma linha do grimório, que teria os comandos de
 	// preparar e esquecer — nenhum dos dois se aplica a uma concedida.
-	if strings.Contains(tela, "/magias/esquece/") {
+	if strings.Contains(screen, "/magias/esquece/") {
 		t.Error("a concedida virou linha do grimório: dá para esquecê-la")
 	}
 }
@@ -223,17 +223,17 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 func TestAnAugmentOutOfReachShowsLocked(t *testing.T) {
 	// Nível 5 abre o 2º círculo; a Invisibilidade tem aprimoramento de 3º.
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Aprendiz", "Arcanista", 5, 0, 0)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Aprendiz", "Arcanista", 5, 0, 0)
 	spell(t, f, id, "aprende/invisibilidade")
 
-	tela := spellScreen(t, f, id)
-	if !strings.Contains(tela, "exige o 3º círculo") {
+	screen := spellScreen(t, f, id)
+	if !strings.Contains(screen, "exige o 3º círculo") {
 		t.Error("o aprimoramento fora de alcance não diz que está trancado")
 	}
 	// A Invisibilidade tem TRÊS aprimoramentos e dois exigem círculo (3º e 4º).
 	// Contar é o CONTROLE: uma tela que trancasse tudo também conteria a frase
 	// acima, e uma que não trancasse nada nunca chegaria aqui.
-	if trancados := strings.Count(tela, "exige o"); trancados != 2 {
-		t.Errorf("a tela trancou %d aprimoramentos, quer 2 (3º e 4º círculo)", trancados)
+	if locked := strings.Count(screen, "exige o"); locked != 2 {
+		t.Errorf("a tela trancou %d aprimoramentos, quer 2 (3º e 4º círculo)", locked)
 	}
 }

@@ -13,14 +13,14 @@ import (
 
 func effectScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.pede(t, f.jogador, http.MethodGet,
+	return f.pede(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=conditionals", id), "").Body.String()
 }
 
-func effect(t *testing.T, f sceneFixture, id int64, caminho string) *responseRecorderLike {
+func effect(t *testing.T, f sceneFixture, id int64, path string) *responseRecorderLike {
 	t.Helper()
-	alvo := fmt.Sprintf("/personagens/%d/efeitos/%s?tab=conditionals", id, caminho)
-	rec := f.pede(t, f.jogador, http.MethodPost, alvo, "")
+	target := fmt.Sprintf("/personagens/%d/efeitos/%s?tab=conditionals", id, path)
+	rec := f.pede(t, f.player, http.MethodPost, target, "")
 	return &responseRecorderLike{Code: rec.Code, Body: rec.Body.String()}
 }
 
@@ -54,10 +54,10 @@ func TestAConditionEntersLeavesAndMovesTheNumbers(t *testing.T) {
 	if got := conditions(t, f, id); len(got) != 1 || got[0] != "caido" {
 		t.Fatalf("as condições gravadas são %v, quer [caido]", got)
 	}
-	comCaido := combatScreen(t, f, id)
-	for _, esperado := range []string{"Contra corpo a corpo", "Contra ataques à distância"} {
-		if !strings.Contains(comCaido, esperado) {
-			t.Errorf("com o Caído aplicado a Defesa não mostra %q: a condição virou crachá", esperado)
+	withProne := combatScreen(t, f, id)
+	for _, want := range []string{"Contra corpo a corpo", "Contra ataques à distância"} {
+		if !strings.Contains(withProne, want) {
+			t.Errorf("com o Caído aplicado a Defesa não mostra %q: a condição virou crachá", want)
 		}
 	}
 
@@ -76,7 +76,7 @@ func TestAConditionEntersLeavesAndMovesTheNumbers(t *testing.T) {
 // condição fantasma injetaria na ficha um efeito que o livro não tem.
 func TestAnInventedConditionIsRefused(t *testing.T) {
 	f, id := fighterFixture(t)
-	if recusa := sceneRefusal(effect(t, f, id, "condicao/entediado").Body); recusa == "" {
+	if refusal := sceneRefusal(effect(t, f, id, "condicao/entediado").Body); refusal == "" {
 		t.Error("uma condição que não existe foi aceita sem uma palavra na tela")
 	}
 	if got := conditions(t, f, id); len(got) != 0 {
@@ -91,21 +91,21 @@ func TestAnInventedConditionIsRefused(t *testing.T) {
 // personagem — e o 403 do `sheetCommand` não pega, porque a ficha do caminho é
 // a do dono.
 func TestAnEffectFromAnotherSheetCannotBeEnded(t *testing.T) {
-	f, meu := fighterFixture(t)
-	outro := seedCharacterAtLevel(t, f.s, f.jogador, "Vizinho", "Guerreiro", 1, 0, 0)
-	alheio, err := f.s.sceneCore().Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
-		Characterid: outro, Catalogid: "armadura-arcana", Scope: "scene",
+	f, mine := fighterFixture(t)
+	other := seedCharacterAtLevel(t, f.s, f.player, "Vizinho", "Guerreiro", 1, 0, 0)
+	foreign, err := f.s.sceneCore().Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
+		Characterid: other, Catalogid: "armadura-arcana", Scope: "scene",
 		Modifiers: "[]", Createdat: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o efeito alheio: %v", err)
 	}
 
-	rec := effect(t, f, meu, fmt.Sprintf("encerra/%d", alheio.ID))
-	if recusa := sceneRefusal(rec.Body); recusa == "" {
+	rec := effect(t, f, mine, fmt.Sprintf("encerra/%d", foreign.ID))
+	if refusal := sceneRefusal(rec.Body); refusal == "" {
 		t.Error("encerrei o efeito de outro personagem pela minha ficha")
 	}
-	if _, err := f.s.sceneCore().Queries().GetActiveEffectMeta(context.Background(), alheio.ID); err != nil {
+	if _, err := f.s.sceneCore().Queries().GetActiveEffectMeta(context.Background(), foreign.ID); err != nil {
 		t.Error("o efeito alheio foi apagado assim mesmo")
 	}
 }
@@ -113,11 +113,11 @@ func TestAnEffectFromAnotherSheetCannotBeEnded(t *testing.T) {
 // O PAINEL CHEGA NA TELA.
 func TestTheEffectsPanelDrawsTheFourBlocks(t *testing.T) {
 	f, id := fighterFixture(t)
-	tela := effectScreen(t, f, id)
+	screen := effectScreen(t, f, id)
 
-	for _, esperado := range []string{"Condições (p394)", "Efeitos ativos", "Aplicar condição", "Aplicar magia"} {
-		if !strings.Contains(tela, esperado) {
-			t.Errorf("a tela não tem %q", esperado)
+	for _, want := range []string{"Condições (p394)", "Efeitos ativos", "Aplicar condição", "Aplicar magia"} {
+		if !strings.Contains(screen, want) {
+			t.Errorf("a tela não tem %q", want)
 		}
 	}
 }
@@ -140,14 +140,14 @@ func TestATempHpPoolDoesNotWipeTheOneAlreadyThere(t *testing.T) {
 	if rec := effect(t, f, id, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
 	}
-	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); recusa != "" {
-		t.Fatalf("entrar na Fúria foi recusado: %q", recusa)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); refusal != "" {
+		t.Fatalf("entrar na Fúria foi recusado: %q", refusal)
 	}
 
-	ativos := effects(t, f, id)
-	for _, fonte := range []string{"campo-de-forca", "class.barbaro.alma-de-bronze"} {
-		if !ativos[fonte] {
-			t.Errorf("a poça de %q não está na ficha: %v", fonte, ativos)
+	active := effects(t, f, id)
+	for _, source := range []string{"campo-de-forca", "class.barbaro.alma-de-bronze"} {
+		if !active[source] {
+			t.Errorf("a poça de %q não está na ficha: %v", source, active)
 		}
 	}
 
@@ -158,10 +158,10 @@ func TestATempHpPoolDoesNotWipeTheOneAlreadyThere(t *testing.T) {
 	// nasce fechado dentro de um `fixed inset-0`. Uma mensagem dizendo "a aba não
 	// mostra" afirmaria sobre PRESENÇA VISUAL o que este instrumento não olha
 	// (ALE-347, conferido no navegador).
-	tela := effectScreen(t, f, id)
-	for _, quanto := range []string{"+30", "+9"} {
-		if !strings.Contains(tela, quanto) {
-			t.Errorf("o HTML da aba não traz %q de PV temporários", quanto)
+	screen := effectScreen(t, f, id)
+	for _, howMuch := range []string{"+30", "+9"} {
+		if !strings.Contains(screen, howMuch) {
+			t.Errorf("o HTML da aba não traz %q de PV temporários", howMuch)
 		}
 	}
 }
@@ -228,18 +228,18 @@ func TestAnAppliedSpellIsNamedByItsBookName(t *testing.T) {
 	}
 	// A DECOMPOSIÇÃO mora na aba COMBATE: é lá que o bônus de Defesa diz de
 	// onde veio, e foi lá que o id apareceu.
-	tela := f.pede(t, f.jogador, http.MethodGet,
+	screen := f.pede(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
 
 	// O CONTROLE primeiro: a procedência TEM de estar na tela, senão as duas
 	// asserções abaixo medem a ausência do bloco inteiro e passam verde.
-	if !strings.Contains(tela, "(cena)") {
+	if !strings.Contains(screen, "(cena)") {
 		t.Fatal("a procedência do efeito não chegou à tela: o teste mediria o nada")
 	}
-	if strings.Contains(tela, "armadura-arcana (") {
+	if strings.Contains(screen, "armadura-arcana (") {
 		t.Error("a procedência saiu com o id da magia; quem lê a ficha não conhece o id")
 	}
-	if !strings.Contains(tela, "Armadura Arcana (") {
+	if !strings.Contains(screen, "Armadura Arcana (") {
 		t.Error("a procedência tem de trazer o nome do livro")
 	}
 }
@@ -255,15 +255,15 @@ func TestTheSheetReadsTheEffectDurationInPortuguese(t *testing.T) {
 	if rec := effect(t, f, id, "aplica/velocidade"); rec.Code != http.StatusOK {
 		t.Fatalf("conjurar a sustentada deu %d", rec.Code)
 	}
-	tela := effectScreen(t, f, id)
+	screen := effectScreen(t, f, id)
 
-	if !strings.Contains(tela, "Velocidade") {
+	if !strings.Contains(screen, "Velocidade") {
 		t.Fatal("o controle falhou: o efeito não chegou à aba")
 	}
-	if strings.Contains(tela, ">sustained<") || strings.Contains(tela, " sustained") {
+	if strings.Contains(screen, ">sustained<") || strings.Contains(screen, " sustained") {
 		t.Error("a duração saiu em inglês: `sustained` é a grafia da COLUNA, não da tela")
 	}
-	if !strings.Contains(tela, "enquanto for sustentada") {
+	if !strings.Contains(screen, "enquanto for sustentada") {
 		t.Error("a aba tem de dizer até quando o efeito vale, em português")
 	}
 }
@@ -280,13 +280,13 @@ func TestTheBreakdownDoesNotEchoTheSourceName(t *testing.T) {
 	if rec := effect(t, f, id, "aplica/armadura-arcana"); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar a magia deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.jogador, http.MethodGet,
+	screen := f.pede(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
 
-	if !strings.Contains(tela, "Armadura Arcana (cena)") {
+	if !strings.Contains(screen, "Armadura Arcana (cena)") {
 		t.Fatal("o controle falhou: a procedência não chegou à decomposição")
 	}
-	if n := strings.Count(tela, "Armadura Arcana"); n != 1 {
+	if n := strings.Count(screen, "Armadura Arcana"); n != 1 {
 		t.Errorf("o nome aparece %d vezes na decomposição, e uma basta", n)
 	}
 }

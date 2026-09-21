@@ -12,31 +12,31 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 	f.turnPlayer(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	rec := f.pede(t, f.jogador, http.MethodPost, base+"/previa", `{"from":{"X":9,"Y":2}}`)
+	rec := f.pede(t, f.player, http.MethodPost, base+"/previa", `{"from":{"X":9,"Y":2}}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("a prévia deu %d", rec.Code)
 	}
-	sinais := trechoDeSinais(rec.Body.String())
+	signals := trechoDeSinais(rec.Body.String())
 
 	// Cinco casas para o leste custam 5, que cabem no deslocamento de 6: fio de
 	// uma faixa só, e a frase nomeando a ação.
-	if !strings.Contains(sinais, `"preview_arrow_fits":"M 4.5 2.5 L 9 2.5"`) {
-		t.Errorf("a prévia não desenhou a seta da perna viva; sinais = %s", sinais)
+	if !strings.Contains(signals, `"preview_arrow_fits":"M 4.5 2.5 L 9 2.5"`) {
+		t.Errorf("a prévia não desenhou a seta da perna viva; sinais = %s", signals)
 	}
-	if !strings.Contains(sinais, "5 de 6 quadrados") || !strings.Contains(sinais, "ação de movimento") {
-		t.Errorf("a prévia não diz o custo nem a ação; sinais = %s", sinais)
+	if !strings.Contains(signals, "5 de 6 quadrados") || !strings.Contains(signals, "ação de movimento") {
+		t.Errorf("a prévia não diz o custo nem a ação; sinais = %s", signals)
 	}
 	// A DISTÂNCIA EM METROS sobre a linha, que é o pedido ao pé da letra.
-	if !strings.Contains(sinais, `"t":"7,5m"`) {
-		t.Errorf("a prévia não põe a distância em metros na seta; sinais = %s", sinais)
+	if !strings.Contains(signals, `"t":"7,5m"`) {
+		t.Errorf("a prévia não põe a distância em metros na seta; sinais = %s", signals)
 	}
 
 	// E A CENA NÃO MUDOU: nem a peça andou, nem nasceu proposta.
-	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(tela, "board-token-ghost") {
+	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(screen, "board-token-ghost") {
 		t.Error("a prévia deixou uma proposta na cena: arrastar viraria uma proposta por casa")
 	}
-	if !strings.Contains(tela, "Arcanista em 4, 2") {
+	if !strings.Contains(screen, "Arcanista em 4, 2") {
 		t.Error("a peça saiu do lugar por causa de uma prévia")
 	}
 }
@@ -52,18 +52,18 @@ func TestThePreviewExtendsThePathAlreadyDrawn(t *testing.T) {
 	f.turnPlayer(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.jogador, http.MethodPost, base+"/parada", `{"from":{"X":3,"Y":0}}`); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.player, http.MethodPost, base+"/parada", `{"from":{"X":3,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a primeira parada deu %d", rec.Code)
 	}
-	sinais := trechoDeSinais(f.pede(t, f.jogador, http.MethodPost, base+"/previa", `{"from":{"X":6,"Y":0}}`).Body.String())
+	signals := trechoDeSinais(f.pede(t, f.player, http.MethodPost, base+"/previa", `{"from":{"X":6,"Y":0}}`).Body.String())
 
 	// Três mais três: o total é 6, e não 3. Recomeçar daria "3 de 6".
-	if !strings.Contains(sinais, "6 de 6 quadrados") {
-		t.Errorf("a prévia recomeçou o caminho em vez de estendê-lo; sinais = %s", sinais)
+	if !strings.Contains(signals, "6 de 6 quadrados") {
+		t.Errorf("a prévia recomeçou o caminho em vez de estendê-lo; sinais = %s", signals)
 	}
 	// DOIS rótulos, um por perna: a parada posta continua tendo o número dela.
-	if strings.Count(sinais, `"t":"4,5m"`) != 2 {
-		t.Errorf("as duas pernas não ganharam rótulo próprio; sinais = %s", sinais)
+	if strings.Count(signals, `"t":"4,5m"`) != 2 {
+		t.Errorf("as duas pernas não ganharam rótulo próprio; sinais = %s", signals)
 	}
 }
 
@@ -77,16 +77,16 @@ func TestThePreviewPaintsTheThreeBands(t *testing.T) {
 	tokenID := f.onBoardAt(t, 0, 0)
 	f.turnPlayer(t)
 
-	sinais := trechoDeSinais(f.pede(t, f.jogador, http.MethodPost,
+	signals := trechoDeSinais(f.pede(t, f.player, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa", `{"from":{"X":15,"Y":0}}`).Body.String())
 
-	for _, fio := range []string{"preview_arrow_fits", "preview_arrow_second", "preview_arrow_beyond"} {
-		if strings.Contains(sinais, `"`+fio+`":""`) {
-			t.Errorf("a faixa %q saiu vazia num caminho que passa das duas ações; sinais = %s", fio, sinais)
+	for _, wire := range []string{"preview_arrow_fits", "preview_arrow_second", "preview_arrow_beyond"} {
+		if strings.Contains(signals, `"`+wire+`":""`) {
+			t.Errorf("a faixa %q saiu vazia num caminho que passa das duas ações; sinais = %s", wire, signals)
 		}
 	}
-	if !strings.Contains(sinais, "não cabe no turno") {
-		t.Errorf("a prévia não diz que o caminho não cabe; sinais = %s", sinais)
+	if !strings.Contains(signals, "não cabe no turno") {
+		t.Errorf("a prévia não diz que o caminho não cabe; sinais = %s", signals)
 	}
 }
 
@@ -98,18 +98,18 @@ func TestOutOfCombatThePreviewMeasuresWithoutBands(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 0, 0)
 
-	sinais := trechoDeSinais(f.pede(t, f.mestre, http.MethodPost,
+	signals := trechoDeSinais(f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa", `{"from":{"X":15,"Y":0}}`).Body.String())
 
-	if !strings.Contains(sinais, `"preview_arrow_second":""`) || !strings.Contains(sinais, `"preview_arrow_beyond":""`) {
-		t.Errorf("fora de combate a prévia pintou faixa de ação; sinais = %s", sinais)
+	if !strings.Contains(signals, `"preview_arrow_second":""`) || !strings.Contains(signals, `"preview_arrow_beyond":""`) {
+		t.Errorf("fora de combate a prévia pintou faixa de ação; sinais = %s", signals)
 	}
 	// E MEDE do mesmo jeito: o canal está aberto, então o vazio acima é o
 	// resultado e não a ausência de resposta.
-	if strings.Contains(sinais, `"preview_arrow_fits":""`) {
-		t.Errorf("a prévia não desenhou seta nenhuma fora de combate; sinais = %s", sinais)
+	if strings.Contains(signals, `"preview_arrow_fits":""`) {
+		t.Errorf("a prévia não desenhou seta nenhuma fora de combate; sinais = %s", signals)
 	}
-	if !strings.Contains(sinais, "15 quadrados") {
-		t.Errorf("a prévia não mediu fora de combate; sinais = %s", sinais)
+	if !strings.Contains(signals, "15 quadrados") {
+		t.Errorf("a prévia não mediu fora de combate; sinais = %s", signals)
 	}
 }

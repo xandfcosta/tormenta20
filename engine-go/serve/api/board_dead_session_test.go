@@ -25,8 +25,8 @@ a ignorar o alarme.
 // deadSessionBoard abre um tabuleiro numa sessão e apaga a sessão por baixo dele.
 func deadSessionBoard(t *testing.T) (*Server, int64, int64) {
 	t.Helper()
-	s, campanha, sessao, _ := deadSessionBoardOfOwner(t)
-	return s, campanha, sessao
+	s, campaign, session, _ := deadSessionBoardOfOwner(t)
+	return s, campaign, session
 }
 
 // deadSessionBoardOfOwner é o mesmo, dizendo QUEM é o dono — o caso que apaga a
@@ -34,50 +34,50 @@ func deadSessionBoard(t *testing.T) (*Server, int64, int64) {
 func deadSessionBoardOfOwner(t *testing.T) (*Server, int64, int64, int64) {
 	t.Helper()
 	s := newTestServer(t)
-	dono := seedUser(t, s, "gm@t.com")
-	campanha := seedCampaign(t, s, dono)
-	sessao := seedSession(t, s, campanha)
+	owner := seedUser(t, s, "gm@t.com")
+	campaign := seedCampaign(t, s, owner)
+	session := seedSession(t, s, campaign)
 	ctx := context.Background()
 
-	if _, err := s.boards.Open(ctx, sessao, "Taverna do Javali", "tavern"); err != nil {
+	if _, err := s.boards.Open(ctx, session, "Taverna do Javali", "tavern"); err != nil {
 		t.Fatalf("abrir o tabuleiro: %v", err)
 	}
 	// A GRAVAÇÃO tem de dar certo ANTES, senão o caso mede uma sessão que nunca
 	// gravou e a conclusão seria sobre outra coisa.
-	if dirty, _ := s.boards.Persist(ctx, sessao, defaultTab); dirty {
+	if dirty, _ := s.boards.Persist(ctx, session, defaultTab); dirty {
 		t.Fatal("a gravação já falhava com a sessão VIVA — o caso mediria outro defeito")
 	}
-	return s, campanha, sessao, dono
+	return s, campaign, session, owner
 }
 
 // A sessão apagada deixa de ter tabuleiro em memória, e a mesa não se declara
 // suja por causa dela.
 func TestADeletedSessionLeavesNoBoardBehind(t *testing.T) {
-	s, campanha, sessao := deadSessionBoard(t)
+	s, campaign, session := deadSessionBoard(t)
 	ctx := context.Background()
 
-	if err := s.queries.DeleteSession(ctx, sessao); err != nil {
+	if err := s.queries.DeleteSession(ctx, session); err != nil {
 		t.Fatalf("apagar a sessão: %v", err)
 	}
-	s.SessionDeleted(sessao)
+	s.SessionDeleted(session)
 
 	// O MAPA: o tabuleiro morreu com a sessão. Sem isto, todo `Persist` seguinte
 	// bate na FK, para sempre.
-	if abertos := s.boards.OpenBoards(ctx, sessao); len(abertos) != 0 {
-		t.Errorf("a sessão apagada continuou com %d tabuleiros em memória", len(abertos))
+	if open := s.boards.OpenBoards(ctx, session); len(open) != 0 {
+		t.Errorf("a sessão apagada continuou com %d tabuleiros em memória", len(open))
 	}
 	// E A MARCA saiu: um `Dirty` que ninguém pode limpar é um alarme travado.
-	if s.boards.SaveFailed(sessao) {
+	if s.boards.SaveFailed(session) {
 		t.Error("a mesa continuou se declarando suja por uma sessão que não existe")
 	}
 	// CONTROLE do controle: a campanha segue de pé, e outra sessão dela grava
 	// normalmente. Sem isto, um esquecimento que limpasse o store INTEIRO
 	// passaria neste caso.
-	outra := seedSession(t, s, campanha)
-	if _, err := s.boards.Open(ctx, outra, "Cripta", "crypt"); err != nil {
+	other := seedSession(t, s, campaign)
+	if _, err := s.boards.Open(ctx, other, "Cripta", "crypt"); err != nil {
 		t.Fatalf("abrir tabuleiro na sessão vizinha: %v", err)
 	}
-	if dirty, _ := s.boards.Persist(ctx, outra, defaultTab); dirty {
+	if dirty, _ := s.boards.Persist(ctx, other, defaultTab); dirty {
 		t.Error("a sessão vizinha deixou de gravar")
 	}
 }
@@ -87,29 +87,29 @@ func TestADeletedSessionLeavesNoBoardBehind(t *testing.T) {
 // Caso próprio porque o caminho é outro: apagar a campanha derruba as sessões
 // por CASCATA no banco, e nenhuma delas passa pelo caminho de apagar sessão.
 func TestADeletedCampaignLeavesNoBoardBehind(t *testing.T) {
-	s, campanha, sessao, dono := deadSessionBoardOfOwner(t)
+	s, campaign, session, owner := deadSessionBoardOfOwner(t)
 	ctx := context.Background()
-	segunda := seedSession(t, s, campanha)
-	if _, err := s.boards.Open(ctx, segunda, "Cripta", "crypt"); err != nil {
+	second := seedSession(t, s, campaign)
+	if _, err := s.boards.Open(ctx, second, "Cripta", "crypt"); err != nil {
 		t.Fatalf("abrir o segundo tabuleiro: %v", err)
 	}
-	if dirty, _ := s.boards.Persist(ctx, segunda, defaultTab); dirty {
+	if dirty, _ := s.boards.Persist(ctx, second, defaultTab); dirty {
 		t.Fatal("a segunda sessão já não gravava")
 	}
 
 	// PELO CASO DE USO, e não pelos dois passos à mão: a ordem — esquecer antes
 	// de apagar — é dele, e um caso que a repetisse aqui seria uma terceira
 	// cópia dela (ALE-359).
-	if err := s.campaignLifecycle().Delete(ctx, app.Caller{ID: dono}, campanha); err != nil {
+	if err := s.campaignLifecycle().Delete(ctx, app.Caller{ID: owner}, campaign); err != nil {
 		t.Fatalf("apagar a campanha: %v", err)
 	}
 
-	for _, morta := range []int64{sessao, segunda} {
-		if abertos := s.boards.OpenBoards(ctx, morta); len(abertos) != 0 {
-			t.Errorf("a sessão %d da campanha apagada ficou com %d tabuleiros", morta, len(abertos))
+	for _, dead := range []int64{session, second} {
+		if open := s.boards.OpenBoards(ctx, dead); len(open) != 0 {
+			t.Errorf("a sessão %d da campanha apagada ficou com %d tabuleiros", dead, len(open))
 		}
-		if s.boards.SaveFailed(morta) {
-			t.Errorf("a sessão %d da campanha apagada ficou marcada como suja", morta)
+		if s.boards.SaveFailed(dead) {
+			t.Errorf("a sessão %d da campanha apagada ficou marcada como suja", dead)
 		}
 	}
 }
@@ -121,20 +121,20 @@ func TestADeletedCampaignLeavesNoBoardBehind(t *testing.T) {
 // embora. A linha fica no banco, o `Dirty` acende, e não há quem tente de novo:
 // `board delete failed (context canceled)` foi medido numa corrida de e2e.
 func TestClosingABoardSurvivesTheClientLeaving(t *testing.T) {
-	s, _, sessao := deadSessionBoard(t)
-	cancelado, cancela := context.WithCancel(context.Background())
-	cancela() // o cliente foi embora ANTES de a gravação acontecer
+	s, _, session := deadSessionBoard(t)
+	canceled, cancels := context.WithCancel(context.Background())
+	cancels() // o cliente foi embora ANTES de a gravação acontecer
 
-	dirty, _ := s.boards.Close(cancelado, sessao, defaultTab)
+	dirty, _ := s.boards.Close(canceled, session, defaultTab)
 
 	if dirty {
 		t.Error("fechar o tabuleiro com o cliente já embora declarou a mesa suja")
 	}
 	// E A LINHA SAIU do banco: sem isto, a próxima hidratação traz de volta um
 	// tabuleiro que o mestre encerrou.
-	depois := boards.NewStore(s.queries, s.boards.NewID, s.bus)
-	if abertos := depois.OpenBoards(context.Background(), sessao); len(abertos) != 0 {
-		t.Errorf("a linha do tabuleiro fechado ficou no banco: %d aberto(s) depois do reinício", len(abertos))
+	after := boards.NewStore(s.queries, s.boards.NewID, s.bus)
+	if open := after.OpenBoards(context.Background(), session); len(open) != 0 {
+		t.Errorf("a linha do tabuleiro fechado ficou no banco: %d aberto(s) depois do reinício", len(open))
 	}
 }
 
@@ -146,25 +146,25 @@ func TestClosingABoardSurvivesTheClientLeaving(t *testing.T) {
 // o `Dirty` acende. É a garantia de que os casos acima não passam por não terem
 // chegado ao lugar onde o defeito morava.
 func TestTheForeignKeyStillBitesWhenTheBoardOutlivesTheSession(t *testing.T) {
-	s, _, sessao := deadSessionBoard(t)
+	s, _, session := deadSessionBoard(t)
 	ctx := context.Background()
 
 	// Apaga a sessão SEM avisar os stores — que é exatamente o que a produção
 	// fazia antes desta issue.
-	if err := s.queries.DeleteSession(ctx, sessao); err != nil {
+	if err := s.queries.DeleteSession(ctx, session); err != nil {
 		t.Fatalf("apagar a sessão: %v", err)
 	}
 
-	dirty, _ := s.boards.Persist(ctx, sessao, defaultTab)
+	dirty, _ := s.boards.Persist(ctx, session, defaultTab)
 
 	if !dirty {
 		t.Fatal("a gravação de um tabuleiro órfão passou — o canal não existe, e os outros casos não provam nada")
 	}
-	if !s.boards.SaveFailed(sessao) {
+	if !s.boards.SaveFailed(session) {
 		t.Error("a marca de suja não acendeu")
 	}
 	// E ELA NÃO SAI SOZINHA: é o que torna o alarme travado, e não um susto.
-	if dirtyDeNovo, _ := s.boards.Persist(ctx, sessao, defaultTab); !dirtyDeNovo {
+	if dirtyDeNovo, _ := s.boards.Persist(ctx, session, defaultTab); !dirtyDeNovo {
 		t.Error("a segunda gravação passou: o defeito não é o alarme travado que a issue descreve")
 	}
 }

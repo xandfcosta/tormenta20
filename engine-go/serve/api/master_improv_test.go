@@ -52,19 +52,19 @@ func TestClearingResetsOnlyThatTable(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	sinais := `{"ruina":[{"r":4,"t":"Vazia"}],"perseguicao":[{"r":9,"t":"Obstáculo"}],` +
+	signals := `{"ruina":[{"r":4,"t":"Vazia"}],"perseguicao":[{"r":9,"t":"Obstáculo"}],` +
 		`"recompensa":[{"r":2,"t":"Favor"}],"ideias":[{"r":7,"t":"Cripta"}]}`
-	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/improviso/ruina/limpar", sinais)
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/improviso/ruina/limpar", signals)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
-	corpo := rec.Body.String()
-	if strings.Contains(corpo, "Vazia") {
+	body := rec.Body.String()
+	if strings.Contains(body, "Vazia") {
 		t.Error("a ruína não foi limpa")
 	}
-	for _, sobrevivente := range []string{"Obstáculo", "Favor", "Cripta"} {
-		if !strings.Contains(corpo, sobrevivente) {
-			t.Errorf("limpar a ruína levou junto %q — as tabelas são independentes", sobrevivente)
+	for _, survivor := range []string{"Obstáculo", "Favor", "Cripta"} {
+		if !strings.Contains(body, survivor) {
+			t.Errorf("limpar a ruína levou junto %q — as tabelas são independentes", survivor)
 		}
 	}
 }

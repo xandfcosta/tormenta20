@@ -143,11 +143,11 @@ func TestProtectedRoutesRejectAnonymous(t *testing.T) {
 // remendo: é o conjunto inteiro.
 func TestTheSurvivingCharacterWriteRejectsAStranger(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	estranho := seedUser(t, s, "estranho@t20.local")
-	ficha := seedCharacter(t, s, dono, "Herói Alheio")
+	owner := seedUser(t, s, "dono@t20.local")
+	stranger := seedUser(t, s, "estranho@t20.local")
+	sheet := seedCharacter(t, s, owner, "Herói Alheio")
 
-	rec := authed(t, s, estranho, http.MethodPatch, "/personagens/"+id64(ficha)+"/conditions",
+	rec := authed(t, s, stranger, http.MethodPatch, "/personagens/"+id64(sheet)+"/conditions",
 		`{"activeConditions":["caido"]}`)
 
 	if rec.Code != http.StatusForbidden {

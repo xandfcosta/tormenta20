@@ -17,19 +17,19 @@ import (
 func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: a faixa está na página. Sem isto, as buscas abaixo falhariam
 	// por motivo errado e "não achei o limite" leria como "o limite sumiu"
 	// quando a verdade seria "a cena não desenhou o zoom".
-	if !strings.Contains(tela, "Enquadrar o mapa") {
+	if !strings.Contains(screen, "Enquadrar o mapa") {
 		t.Fatal("a cena não desenhou os controles de enquadramento")
 	}
 
 	// O PADRÃO é derivado e não digitado: escrever 44 no `data-signals` seria a
 	// terceira cópia da mesma escolha, e a que fica para trás é sempre a da
 	// página — a cena nasceria com um zoom e o botão contando outro.
-	if !strings.Contains(tela, fmt.Sprintf("square: %d", table.DefaultSquare)) {
+	if !strings.Contains(screen, fmt.Sprintf("square: %d", table.DefaultSquare)) {
 		t.Errorf("a página não semeia o zoom padrão (%d)", table.DefaultSquare)
 	}
 	// E os limites que desabilitam os botões são os do código, não outros dois.
@@ -42,20 +42,20 @@ func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	// DINÂMICO, e só valor constante sai literal (está no guia do pacote). No
 	// navegador não muda nada — o parser desfaz o escape —, mas um teste que lê
 	// HTML cru compara com a forma do fio.
-	for _, expressao := range []string{table.ZoomAtLimit(-table.ZoomStep), table.ZoomAtLimit(table.ZoomStep)} {
-		if !strings.Contains(tela, html.EscapeString(expressao)) {
-			t.Errorf("a expressão de limite %q não está na cena", expressao)
+	for _, expression := range []string{table.ZoomAtLimit(-table.ZoomStep), table.ZoomAtLimit(table.ZoomStep)} {
+		if !strings.Contains(screen, html.EscapeString(expression)) {
+			t.Errorf("a expressão de limite %q não está na cena", expression)
 		}
 	}
 	// O enquadramento é de TODO MUNDO: o jogador enquadra a própria janela, e
 	// depender do mestre para aproximar no telefone não é enquadramento, é
 	// pedido. Vale para o centralizar pela mesma razão — achar o grupo num plano
 	// sem bordas é problema de quem está olhando, não de quem montou a cena.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(doJogador, "Enquadrar o mapa") {
+	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(forPlayer, "Enquadrar o mapa") {
 		t.Error("o jogador não recebeu os controles de enquadramento")
 	}
-	if !strings.Contains(doJogador, table.CenterTarget(table.BoardView{})) {
+	if !strings.Contains(forPlayer, table.CenterTarget(table.BoardView{})) {
 		t.Error("o jogador não recebeu o centralizar")
 	}
 }

@@ -19,7 +19,7 @@ type hubView struct {
 	Inicial string
 	EhAdmin bool
 	// Viva é a sessão que "Continuar sessão" retoma, ou nil. Uma consulta, não
-	// N+1 — ver `sessaoViva`.
+	// N+1 — ver `liveSession`.
 	Viva *hubLiveSession
 }
 

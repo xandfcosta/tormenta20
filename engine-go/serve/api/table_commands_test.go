@@ -15,7 +15,7 @@ func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 	// O corpo é o dos SINAIS que o Datastar manda junto. Só o descanso de dia lê
 	// algum; os outros levam corpo vazio, que é o que o `@post` manda quando a
 	// página não tem sinal nenhum a declarar.
-	comandos := []struct{ rota, sinais string }{
+	commands := []struct{ route, signals string }{
 		{"iniciativa/proxima-vez", ""},
 		{"iniciativa/vez-anterior", ""},
 		{"cena/iniciar/acao", ""},
@@ -24,14 +24,14 @@ func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 		{"descanso/cena", ""},
 		{"descanso/dia", `{"rest_quality":"normal"}`},
 	}
-	for _, cmd := range comandos {
-		t.Run(cmd.rota, func(t *testing.T) {
-			rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/"+cmd.rota, cmd.sinais)
+	for _, cmd := range commands {
+		t.Run(cmd.route, func(t *testing.T) {
+			rec := f.pede(t, f.player, "POST", f.tableUrl()+"/"+cmd.route, cmd.signals)
 			if rec.Code != http.StatusForbidden {
-				t.Errorf("o jogador comandou %q e levou %d, quero 403", cmd.rota, rec.Code)
+				t.Errorf("o jogador comandou %q e levou %d, quero 403", cmd.route, rec.Code)
 			}
-			if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/"+cmd.rota, cmd.sinais); rec.Code != http.StatusOK {
-				t.Errorf("o mestre foi recusado em %q com %d", cmd.rota, rec.Code)
+			if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/"+cmd.route, cmd.signals); rec.Code != http.StatusOK {
+				t.Errorf("o mestre foi recusado em %q com %d", cmd.route, rec.Code)
 			}
 		})
 	}
@@ -43,7 +43,7 @@ func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 func TestTheCommandPatchesTheSceneRightAway(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", "")
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
@@ -64,23 +64,23 @@ func TestTheCommandAnnouncesToTheWholeTable(t *testing.T) {
 	conn := f.s.sse.Add(f.sessionID, "espia", "gm")
 	defer f.s.sse.Remove(f.sessionID, "espia")
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
-	var viu bool
+	var saw bool
 	for {
 		select {
 		case frame := <-conn.Frames:
 			if strings.Contains(string(frame), "session-state") {
-				viu = true
+				saw = true
 			}
 			continue
 		default:
 		}
 		break
 	}
-	if !viu {
+	if !saw {
 		t.Error("o comando do app não avisou o hub — a SPA ficaria com o estado velho")
 	}
 }
@@ -95,10 +95,10 @@ func TestEndingTheSceneFromTheTableExpiresThePartyBlessings(t *testing.T) {
 	seedEffect(t, f.s, f.charID, "bencao", "scene")
 	seedEffect(t, f.s, f.charID, "heroismo", "day")
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar cena deu %d", rec.Code)
 	}
 
@@ -117,35 +117,35 @@ func TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged(t *testing.T) {
 	conn := f.s.sse.Add(f.sessionID, "espia", "gm")
 	defer f.s.sse.Remove(f.sessionID, "espia")
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar cena deu %d", rec.Code)
 	}
 
 	// O CONTROLE contra ler ausência como evidência: o `session-state` sai
 	// sempre, então achá-lo prova que o canal está aberto. Sem ele, "não achei
 	// o session-rest" e "o canal não existe" seriam a mesma linha no terminal.
-	var viuEstado, viuFichas bool
+	var sawState, sawSheets bool
 	for {
 		select {
 		case frame := <-conn.Frames:
 			if strings.Contains(string(frame), "session-state") {
-				viuEstado = true
+				sawState = true
 			}
 			if strings.Contains(string(frame), "session-rest") {
-				viuFichas = true
+				sawSheets = true
 			}
 			continue
 		default:
 		}
 		break
 	}
-	if !viuEstado {
+	if !sawState {
 		t.Fatal("nem o session-state chegou — o canal não estava aberto, e a ausência abaixo não seria evidência de nada")
 	}
-	if !viuFichas {
+	if !sawSheets {
 		t.Error("a mesa não foi avisada de que as fichas mudaram")
 	}
 }
@@ -156,7 +156,7 @@ func TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged(t *testing.T) {
 // de propósito, deixando a cena LIGADA — sem frase, não há como saber por quê.
 func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 	// A sabotagem: sem o roster não há como alcançar as fichas, e o gesto
@@ -165,12 +165,12 @@ func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/encerrar", "")
-	corpo := rec.Body.String()
-	if !strings.Contains(corpo, "command_error") {
-		t.Fatalf("a recusa não chegou à cena do mestre; corpo = %q", corpo)
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/encerrar", "")
+	body := rec.Body.String()
+	if !strings.Contains(body, "command_error") {
+		t.Fatalf("a recusa não chegou à cena do mestre; corpo = %q", body)
 	}
-	if strings.Contains(corpo, `"command_error":""`) {
+	if strings.Contains(body, `"command_error":""`) {
 		t.Error("a cena recebeu a frase VAZIA — o mestre veria a cena ligada e nenhuma explicação")
 	}
 }
@@ -181,8 +181,8 @@ func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 // errado.
 func TestTheCommandErrorDoesNotInvadeTheRecordError(t *testing.T) {
 	f := newSceneFixture(t)
-	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(corpo, "command_error") {
+	body := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(body, "command_error") {
 		t.Error("a página do mestre não declarou o sinal do comando")
 	}
 }
@@ -193,19 +193,19 @@ func TestTheCommandErrorDoesNotInvadeTheRecordError(t *testing.T) {
 func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 	f := newSceneFixture(t)
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
 	}
-	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
-	if len(fila) != 1 || fila[0].CharacterID == nil || *fila[0].CharacterID != f.charID {
-		t.Fatalf("a fila ficou %+v, queria só o personagem %d", fila, f.charID)
+	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	if len(queue) != 1 || queue[0].CharacterID == nil || *queue[0].CharacterID != f.charID {
+		t.Fatalf("a fila ficou %+v, queria só o personagem %d", queue, f.charID)
 	}
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o segundo clique deu %d", rec.Code)
 	}
-	if depois := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; len(depois) != 1 {
-		t.Errorf("o segundo clique deixou %d combatentes na fila, queria 1", len(depois))
+	if after := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; len(after) != 1 {
+		t.Errorf("o segundo clique deixou %d combatentes na fila, queria 1", len(after))
 	}
 }
 
@@ -218,33 +218,33 @@ func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 // verde sobre um estado que só a bancada sabe montar.
 func TestAddPartyBringsEveryMemberIncludingTheGmsOwnCharacter(t *testing.T) {
 	f := newSceneFixture(t)
-	outroJogador := seedUser(t, f.s, "jogador2@t.com")
-	doOutro := seedCharacter(t, f.s, outroJogador, "Arwen")
-	doMestre := seedCharacterAtLevel(t, f.s, f.mestre, "Bardo do mestre", "Bardo", 1, 0, 0)
-	seedMember(t, f.s, f.campaignID, doOutro)
-	seedMember(t, f.s, f.campaignID, doMestre)
+	otherPlayer := seedUser(t, f.s, "jogador2@t.com")
+	others := seedCharacter(t, f.s, otherPlayer, "Arwen")
+	forGM := seedCharacterAtLevel(t, f.s, f.gm, "Bardo do mestre", "Bardo", 1, 0, 0)
+	seedMember(t, f.s, f.campaignID, others)
+	seedMember(t, f.s, f.campaignID, forGM)
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
 	}
 
-	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
-	naFila := map[int64]bool{}
-	for _, e := range fila {
+	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	inQueue := map[int64]bool{}
+	for _, e := range queue {
 		if e.CharacterID != nil {
-			naFila[*e.CharacterID] = true
+			inQueue[*e.CharacterID] = true
 		}
 	}
-	for _, quem := range []struct {
+	for _, who := range []struct {
 		id   int64
-		nome string
-	}{{f.charID, "o personagem do jogador"}, {doOutro, "o do segundo jogador"}, {doMestre, "o do próprio mestre"}} {
-		if !naFila[quem.id] {
-			t.Errorf("%s (%d) não entrou na fila; ela ficou com %d linhas", quem.nome, quem.id, len(fila))
+		name string
+	}{{f.charID, "o personagem do jogador"}, {others, "o do segundo jogador"}, {forGM, "o do próprio mestre"}} {
+		if !inQueue[who.id] {
+			t.Errorf("%s (%d) não entrou na fila; ela ficou com %d linhas", who.name, who.id, len(queue))
 		}
 	}
-	if len(fila) != 3 {
-		t.Errorf("a fila ficou com %d linhas, queria os 3 membros da campanha", len(fila))
+	if len(queue) != 3 {
+		t.Errorf("a fila ficou com %d linhas, queria os 3 membros da campanha", len(queue))
 	}
 }
 
@@ -254,10 +254,10 @@ func TestAddPartyBringsEveryMemberIncludingTheGmsOwnCharacter(t *testing.T) {
 func TestThePlayerDoesNotGetAddPartyInTheHtml(t *testing.T) {
 	f := newSceneFixture(t)
 
-	if corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(corpo, "Adicionar grupo") {
+	if body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(body, "Adicionar grupo") {
 		t.Error("o HTML do jogador veio com o Adicionar grupo")
 	}
-	if corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(corpo, "Adicionar grupo") {
+	if body := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(body, "Adicionar grupo") {
 		t.Error("o mestre não recebeu o Adicionar grupo")
 	}
 }
@@ -276,20 +276,20 @@ func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 
 	// O PV de partida é LIDO e não escrito à mão: o poço vem do livro, e um
 	// número fixo aqui afirmaria a tabela de classe em vez do descanso.
-	antes := poolsOf(t, f.s, f.charID)
+	before := poolsOf(t, f.s, f.charID)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"ruim"}`)
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"ruim"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("descanso de dia deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	ficha := poolsOf(t, f.s, f.charID)
+	sheet := poolsOf(t, f.s, f.charID)
 	// Os números do descanso estão escritos à mão de propósito: o RUIM devolve
 	// metade do nível (8/2 = 4), e o normal devolveria o nível inteiro. Derivá-los
 	// da regra faria a asserção andar junto com o defeito.
-	if querido := antes.HpCurrent + 4; ficha.HpCurrent != querido {
+	if wanted := before.HpCurrent + 4; sheet.HpCurrent != wanted {
 		t.Errorf("PV = %d; %d é o descanso RUIM de um nível 8 (%d+4), %d seria o normal que ninguém pediu",
-			ficha.HpCurrent, querido, antes.HpCurrent, antes.HpCurrent+8)
+			sheet.HpCurrent, wanted, before.HpCurrent, before.HpCurrent+8)
 	}
 }
 
@@ -302,31 +302,31 @@ func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 // no grupo.
 func TestTheDayRestHealsEveryMemberIncludingTheGmsOwn(t *testing.T) {
 	f := newSceneFixture(t)
-	outro := seedUser(t, f.s, "jogador2@t.com")
+	other := seedUser(t, f.s, "jogador2@t.com")
 	// Nível 5, feridos: o descanso "normal" devolve 5, e o teto não interfere.
 	// Os dois partem de 1 PV, e o dano sai do POÇO de cada classe — eles têm
 	// poços diferentes, e um dano igual para os dois os deixaria em pontos
 	// diferentes da barra.
-	doOutro := seedCharacterAtLevel(t, f.s, outro, "Arwen", "Guerreiro", 5,
+	others := seedCharacterAtLevel(t, f.s, other, "Arwen", "Guerreiro", 5,
 		bookPools(t, f.s, "Guerreiro", 5).PvMax-1, 0)
-	doMestre := seedCharacterAtLevel(t, f.s, f.mestre, "Bardo do mestre", "Bardo", 5,
+	forGM := seedCharacterAtLevel(t, f.s, f.gm, "Bardo do mestre", "Bardo", 5,
 		bookPools(t, f.s, "Bardo", 5).PvMax-1, 0)
-	seedMember(t, f.s, f.campaignID, doOutro)
-	seedMember(t, f.s, f.campaignID, doMestre)
+	seedMember(t, f.s, f.campaignID, others)
+	seedMember(t, f.s, f.campaignID, forGM)
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"normal"}`); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"normal"}`); rec.Code != http.StatusOK {
 		t.Fatalf("descanso de dia deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	for _, quem := range []struct {
-		nome string
+	for _, who := range []struct {
+		name string
 		id   int64
-	}{{"o do segundo jogador", doOutro}, {"o do próprio mestre", doMestre}} {
-		ficha := poolsOf(t, f.s, quem.id)
+	}{{"o do segundo jogador", others}, {"o do próprio mestre", forGM}} {
+		sheet := poolsOf(t, f.s, who.id)
 		// Eles partem de 1 PV, e o descanso normal devolve o NÍVEL inteiro.
-		if ficha.HpCurrent != 1+5 {
+		if sheet.HpCurrent != 1+5 {
 			t.Errorf("%s ficou com %d PV; o descanso normal de um nível 5 devolve 5 (1+5)",
-				quem.nome, ficha.HpCurrent)
+				who.name, sheet.HpCurrent)
 		}
 	}
 }
@@ -340,20 +340,20 @@ func TestAnInventedQualityIsRefused(t *testing.T) {
 	// O PV de partida é lido ANTES do gesto. Ler depois faria a asserção comparar
 	// o número consigo mesmo e passar sempre — foi o que aconteceu na primeira
 	// escrita deste caso.
-	antes := poolsOf(t, f.s, f.charID)
+	before := poolsOf(t, f.s, f.charID)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"palaciana"}`)
-	corpo := rec.Body.String()
-	if !strings.Contains(corpo, "palaciana") {
-		t.Errorf("a recusa não citou o valor ofensivo; corpo = %q", corpo)
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"palaciana"}`)
+	body := rec.Body.String()
+	if !strings.Contains(body, "palaciana") {
+		t.Errorf("a recusa não citou o valor ofensivo; corpo = %q", body)
 	}
-	if !strings.Contains(corpo, "luxuosa") {
-		t.Errorf("a recusa não disse a forma esperada; corpo = %q", corpo)
+	if !strings.Contains(body, "luxuosa") {
+		t.Errorf("a recusa não disse a forma esperada; corpo = %q", body)
 	}
 
-	ficha := poolsOf(t, f.s, f.charID)
-	if ficha.HpCurrent != antes.HpCurrent {
-		t.Errorf("PV = %d — o grupo descansou mesmo com a qualidade recusada", ficha.HpCurrent)
+	sheet := poolsOf(t, f.s, f.charID)
+	if sheet.HpCurrent != before.HpCurrent {
+		t.Errorf("PV = %d — o grupo descansou mesmo com a qualidade recusada", sheet.HpCurrent)
 	}
 }
 
@@ -364,11 +364,11 @@ func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 	f := newSceneFixture(t)
 	seedEffect(t, f.s, f.charID, "bencao", "scene")
 	seedEffect(t, f.s, f.charID, "heroismo", "day")
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/cena", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/descanso/cena", ""); rec.Code != http.StatusOK {
 		t.Fatalf("recuperar a cena deu %d", rec.Code)
 	}
 
@@ -388,7 +388,7 @@ func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 // tracker põe o grupo na fila e devolve o id do combatente do personagem.
 func (f sceneFixture) tracker(t *testing.T) string {
 	t.Helper()
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
 	}
 	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
@@ -412,23 +412,23 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 
 	// O PV de partida é LIDO: o poço vem do livro, e um 20 escrito à mão faria
 	// este caso afirmar a tabela de classe em vez do caminho do dano.
-	antes := poolsOf(t, f.s, f.charID)
-	querido := antes.HpCurrent - 5
+	before := poolsOf(t, f.s, f.charID)
+	wanted := before.HpCurrent - 5
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/vitais/hp/ferir/5", "")
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/vitais/hp/ferir/5", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("ferir deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	ficha := poolsOf(t, f.s, f.charID)
-	if ficha.HpCurrent != querido {
+	sheet := poolsOf(t, f.s, f.charID)
+	if sheet.HpCurrent != wanted {
 		t.Errorf("a FICHA ficou com %d PV; %d-5 = %d — o dano não chegou nela",
-			ficha.HpCurrent, antes.HpCurrent, querido)
+			sheet.HpCurrent, before.HpCurrent, wanted)
 	}
 	// E a linha espelha, senão a fila mostraria o número velho ao lado da ficha
 	// certa.
 	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
-		if e.ID == entryID && (e.HpCurrent == nil || *e.HpCurrent != querido) {
+		if e.ID == entryID && (e.HpCurrent == nil || *e.HpCurrent != wanted) {
 			t.Errorf("a linha não espelhou a ficha: %v", e.HpCurrent)
 		}
 	}
@@ -444,14 +444,14 @@ func TestTheVitalStepComesFromThePathAndThereAreOnlyTwo(t *testing.T) {
 
 	// O CONTROLE: os dois passos que existem passam. Sem ele, "o inventado
 	// falhou" também seria verdade se a rota inteira estivesse quebrada.
-	for _, passo := range []string{"1", "5"} {
-		if rec := f.pede(t, f.mestre, "POST", base+"curar/"+passo, ""); rec.Code != http.StatusOK {
-			t.Fatalf("curar em %s deu %d", passo, rec.Code)
+	for _, step := range []string{"1", "5"} {
+		if rec := f.pede(t, f.gm, "POST", base+"curar/"+step, ""); rec.Code != http.StatusOK {
+			t.Fatalf("curar em %s deu %d", step, rec.Code)
 		}
 	}
-	rec := f.pede(t, f.mestre, "POST", base+"ferir/99", "")
-	if corpo := rec.Body.String(); !strings.Contains(corpo, "99") || !strings.Contains(corpo, "Shift") {
-		t.Errorf("a recusa do passo 99 não citou o valor e os passos que existem; corpo = %q", corpo)
+	rec := f.pede(t, f.gm, "POST", base+"ferir/99", "")
+	if body := rec.Body.String(); !strings.Contains(body, "99") || !strings.Contains(body, "Shift") {
+		t.Errorf("a recusa do passo 99 não citou o valor e os passos que existem; corpo = %q", body)
 	}
 }
 
@@ -462,9 +462,9 @@ func TestTheVitalStepComesFromThePathAndThereAreOnlyTwo(t *testing.T) {
 func TestTheEyeInvertsTheStateTheServerKeeps(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
-	olho := f.tableUrl() + "/iniciativa/" + entryID + "/vitais/hp/oculto"
+	eye := f.tableUrl() + "/iniciativa/" + entryID + "/vitais/hp/oculto"
 
-	oculto := func() bool {
+	hidden := func() bool {
 		for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 			if e.ID == entryID {
 				return e.HpHidden != nil && *e.HpHidden
@@ -473,19 +473,19 @@ func TestTheEyeInvertsTheStateTheServerKeeps(t *testing.T) {
 		t.Fatal("a linha sumiu")
 		return false
 	}
-	if oculto() {
+	if hidden() {
 		t.Fatal("a linha nasceu escondida — o teste mediria o contrário do que quer")
 	}
-	if rec := f.pede(t, f.mestre, "POST", olho, ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", eye, ""); rec.Code != http.StatusOK {
 		t.Fatalf("esconder deu %d", rec.Code)
 	}
-	if !oculto() {
+	if !hidden() {
 		t.Fatal("o primeiro clique não escondeu")
 	}
-	if rec := f.pede(t, f.mestre, "POST", olho, ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", eye, ""); rec.Code != http.StatusOK {
 		t.Fatalf("revelar deu %d", rec.Code)
 	}
-	if oculto() {
+	if hidden() {
 		t.Error("o segundo clique não revelou — o olho não é interruptor, é um valor que a página manda")
 	}
 }
@@ -497,24 +497,24 @@ func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 
-	antes := poolsOf(t, f.s, f.charID)
+	before := poolsOf(t, f.s, f.charID)
 	// O CONTROLE: sem mana para gastar o caso mediria um clampeamento em zero e
 	// passaria verde sobre nada.
-	if antes.MpCurrent < 5 {
-		t.Fatalf("a ficha semeada tem %d PM: o caso precisa de mana para gastar", antes.MpCurrent)
+	if before.MpCurrent < 5 {
+		t.Fatalf("a ficha semeada tem %d PM: o caso precisa de mana para gastar", before.MpCurrent)
 	}
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/vitais/mp/ferir/5", "")
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/vitais/mp/ferir/5", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("gastar mana deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	depois := poolsOf(t, f.s, f.charID)
-	if depois.MpCurrent != antes.MpCurrent-5 {
-		t.Errorf("a ficha ficou com %d PM; %d-5 = %d", depois.MpCurrent, antes.MpCurrent, antes.MpCurrent-5)
+	after := poolsOf(t, f.s, f.charID)
+	if after.MpCurrent != before.MpCurrent-5 {
+		t.Errorf("a ficha ficou com %d PM; %d-5 = %d", after.MpCurrent, before.MpCurrent, before.MpCurrent-5)
 	}
-	if depois.HpCurrent != antes.HpCurrent {
-		t.Errorf("gastar mana mexeu no PV: %d virou %d", antes.HpCurrent, depois.HpCurrent)
+	if after.HpCurrent != before.HpCurrent {
+		t.Errorf("gastar mana mexeu no PV: %d virou %d", before.HpCurrent, after.HpCurrent)
 	}
 }
 
@@ -527,19 +527,19 @@ func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
 // exatamente no caso que ele veio medir.
 func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Ogro","new_initiative":12,"new_hp":130,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("pôr o ogro na fila deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
-	entryID := fila[0].ID
+	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	entryID := queue[0].ID
 
-	aMesaVeOPv := func() bool {
-		paraMesa := live.StateForRole("player", f.s.tableHost().Sessions().GetState(f.sessionID))
-		for _, e := range paraMesa.Initiative {
+	tableSeesHP := func() bool {
+		forTable := live.StateForRole("player", f.s.tableHost().Sessions().GetState(f.sessionID))
+		for _, e := range forTable.Initiative {
 			if e.ID == entryID {
 				return e.HpMax != nil
 			}
@@ -548,20 +548,20 @@ func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 		return false
 	}
 
-	if aMesaVeOPv() {
+	if tableSeesHP() {
 		t.Fatal("o PV do ogro nasceu à vista — o caso mediria o contrário do que quer")
 	}
-	olho := f.tableUrl() + "/iniciativa/" + entryID + "/vitais/hp/oculto"
-	if rec := f.pede(t, f.mestre, "POST", olho, ""); rec.Code != http.StatusOK {
+	eye := f.tableUrl() + "/iniciativa/" + entryID + "/vitais/hp/oculto"
+	if rec := f.pede(t, f.gm, "POST", eye, ""); rec.Code != http.StatusOK {
 		t.Fatalf("o primeiro clique deu %d", rec.Code)
 	}
-	if !aMesaVeOPv() {
+	if !tableSeesHP() {
 		t.Error("o primeiro clique não revelou: o olho alternou o ponteiro em vez do que a mesa vê")
 	}
-	if rec := f.pede(t, f.mestre, "POST", olho, ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", eye, ""); rec.Code != http.StatusOK {
 		t.Fatalf("o segundo clique deu %d", rec.Code)
 	}
-	if aMesaVeOPv() {
+	if tableSeesHP() {
 		t.Error("o segundo clique não voltou a esconder")
 	}
 }
@@ -572,32 +572,32 @@ func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 func TestTheRowVerbsBelongToTheGm(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
 	// Os DOIS pools entram na varredura: enumerar só o `hp` deixaria um verbo
 	// novo do `mp` nascer aberto ao jogador e sem medição.
-	for _, acao := range []string{
+	for _, action := range []string{
 		"vitais/hp/ferir/1", "vitais/hp/curar/1", "vitais/hp/oculto",
 		"vitais/mp/ferir/1", "vitais/mp/curar/1", "vitais/mp/oculto",
 		"remover",
 	} {
-		rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/"+acao, "")
+		rec := f.pede(t, f.player, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/"+action, "")
 		if rec.Code != http.StatusForbidden {
-			t.Errorf("o jogador fez %q e levou %d, quero 403", acao, rec.Code)
+			t.Errorf("o jogador fez %q e levou %d, quero 403", action, rec.Code)
 		}
 	}
 
-	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE de que ele está mesmo vendo a fila: sem a linha na tela, a
 	// ausência dos verbos não seria evidência de nada.
-	if !strings.Contains(corpo, "Arcanista") {
+	if !strings.Contains(body, "Arcanista") {
 		t.Fatalf("o jogador não viu a própria linha; a ausência abaixo não provaria nada")
 	}
-	for _, verbo := range []string{"Remover Arcanista", "Ferir Arcanista", "Ocultar os PV"} {
-		if strings.Contains(corpo, verbo) {
-			t.Errorf("o HTML do jogador veio com %q", verbo)
+	for _, verb := range []string{"Remover Arcanista", "Ferir Arcanista", "Ocultar os PV"} {
+		if strings.Contains(body, verb) {
+			t.Errorf("o HTML do jogador veio com %q", verb)
 		}
 	}
 }
@@ -609,7 +609,7 @@ func TestRemoveTakesTheCombatantOutOfTheTracker(t *testing.T) {
 		t.Fatalf("a fila começou com %d, queria 1", n)
 	}
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/remover", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/remover", ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
 	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
@@ -631,30 +631,30 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 
 	// Fora da mesa primeiro, que é o estado de nascença: sem esta metade, "vi
 	// 'na mesa'" não distinguiria a ligação certa de uma frase fixa.
-	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(corpo, "fora da mesa") {
+	body := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(body, "fora da mesa") {
 		t.Fatalf("o mestre não viu a presença do grupo com ninguém conectado")
 	}
-	if strings.Contains(corpo, ">na mesa<") {
+	if strings.Contains(body, ">na mesa<") {
 		t.Error("alguém apareceu na mesa sem ter entrado")
 	}
 
 	f.s.tableHost().Presence().Join(f.sessionID, "conn-do-jogador", live.PresenceUser{
-		UserID: f.jogador, Name: "Jogador", Role: "player",
+		UserID: f.player, Name: "Jogador", Role: "player",
 	})
 
-	corpo = f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(corpo, "na mesa") || strings.Contains(corpo, "fora da mesa") {
+	body = f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(body, "na mesa") || strings.Contains(body, "fora da mesa") {
 		t.Error("o dono do personagem entrou e o cartão dele não acendeu")
 	}
 
 	// E O JOGADOR RECEBE A MESMA COISA. A frase é o que se prende, e não a cor:
 	// cor não existe para quem usa leitor de tela.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(doJogador, "Arcanista") {
+	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(forPlayer, "Arcanista") {
 		t.Fatal("o jogador não viu o cartão do Grupo; o que vem abaixo não provaria nada")
 	}
-	if !strings.Contains(doJogador, "na mesa") {
+	if !strings.Contains(forPlayer, "na mesa") {
 		t.Error("o cartão do jogador não diz quem está na mesa: o `Presenca` chega nil e o ponto é ramo morto")
 	}
 }
@@ -669,28 +669,28 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"  Goblin salteador  ","new_initiative":17,"new_hp":12,"new_type":"npc"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d: %s", rec.Code, rec.Body.String())
 	}
-	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
-	if len(fila) != 1 {
-		t.Fatalf("a fila ficou com %d combatentes", len(fila))
+	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	if len(queue) != 1 {
+		t.Fatalf("a fila ficou com %d combatentes", len(queue))
 	}
 	// O nome vai APARADO: o mestre digitando com espaço sobrando não deve
 	// produzir uma linha que ordena diferente do que ele leu.
-	if fila[0].Label != "Goblin salteador" {
-		t.Errorf("o rótulo ficou %q", fila[0].Label)
+	if queue[0].Label != "Goblin salteador" {
+		t.Errorf("o rótulo ficou %q", queue[0].Label)
 	}
-	if fila[0].Initiative != 17 || fila[0].Type != "npc" {
-		t.Errorf("a linha ficou %+v", fila[0])
+	if queue[0].Initiative != 17 || queue[0].Type != "npc" {
+		t.Errorf("a linha ficou %+v", queue[0])
 	}
-	if fila[0].HpMax == nil || *fila[0].HpMax != 12 || fila[0].HpCurrent == nil || *fila[0].HpCurrent != 12 {
-		t.Errorf("o PV digitado não virou pool cheio: %v/%v", fila[0].HpCurrent, fila[0].HpMax)
+	if queue[0].HpMax == nil || *queue[0].HpMax != 12 || queue[0].HpCurrent == nil || *queue[0].HpCurrent != 12 {
+		t.Errorf("o PV digitado não virou pool cheio: %v/%v", queue[0].HpCurrent, queue[0].HpMax)
 	}
 
-	rec = f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	rec = f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Figurante","new_initiative":3,"new_hp":0,"new_type":"npc"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar sem PV deu %d", rec.Code)
@@ -710,10 +710,10 @@ func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Ogro","new_initiative":400,"new_hp":0,"new_type":"npc"}`)
-	if corpo := rec.Body.String(); !strings.Contains(corpo, "400") {
-		t.Errorf("a recusa não citou a iniciativa ofensiva; corpo = %q", corpo)
+	if body := rec.Body.String(); !strings.Contains(body, "400") {
+		t.Errorf("a recusa não citou a iniciativa ofensiva; corpo = %q", body)
 	}
 	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
 		t.Errorf("o combatente recusado entrou na fila mesmo assim (%d na fila)", n)
@@ -723,12 +723,12 @@ func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {
 // E acrescentar é do MESTRE, com as duas metades medidas juntas.
 func TestAddingACombatantBelongsToTheGm(t *testing.T) {
 	f := newSceneFixture(t)
-	corpo := `{"new_name":"Intruso","new_initiative":10,"new_hp":0,"new_type":"npc"}`
+	body := `{"new_name":"Intruso","new_initiative":10,"new_hp":0,"new_type":"npc"}`
 
-	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/iniciativa/adicionar", corpo); rec.Code != http.StatusForbidden {
+	if rec := f.pede(t, f.player, "POST", f.tableUrl()+"/iniciativa/adicionar", body); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador acrescentou e levou %d, quero 403", rec.Code)
 	}
-	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(html, "Iniciativa") {
 		t.Fatal("o jogador não viu a seção da fila; a ausência abaixo não provaria nada")
 	}
@@ -743,26 +743,26 @@ func TestAddingACombatantBelongsToTheGm(t *testing.T) {
 func TestTheFormOnlyClearsWhenTheServerAccepts(t *testing.T) {
 	f := newSceneFixture(t)
 
-	aceito := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	accepted := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Goblin","new_initiative":17,"new_hp":12,"new_type":"character"}`).Body.String()
-	if !strings.Contains(aceito, `"new_name":""`) {
-		t.Errorf("o formulário não se limpou depois do aceite; corpo = %s", trechoDeSinais(aceito))
+	if !strings.Contains(accepted, `"new_name":""`) {
+		t.Errorf("o formulário não se limpou depois do aceite; corpo = %s", trechoDeSinais(accepted))
 	}
-	if !strings.Contains(aceito, `"new_type":"npc"`) {
-		t.Errorf("o tipo não voltou para npc; corpo = %s", trechoDeSinais(aceito))
+	if !strings.Contains(accepted, `"new_type":"npc"`) {
+		t.Errorf("o tipo não voltou para npc; corpo = %s", trechoDeSinais(accepted))
 	}
 
-	recusado := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	refused := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Ogro","new_initiative":400,"new_hp":0,"new_type":"npc"}`).Body.String()
 	// O CONTROLE: a recusa TEM de ter acontecido, senão "não limpou" seria só
 	// "não houve resposta nenhuma".
-	if !strings.Contains(recusado, "400") {
-		t.Fatalf("a recusa não chegou; corpo = %s", trechoDeSinais(recusado))
+	if !strings.Contains(refused, "400") {
+		t.Fatalf("a recusa não chegou; corpo = %s", trechoDeSinais(refused))
 	}
 	// Quem garante isto é a ORDEM — a mutação só escreve nos sinais depois de a
 	// própria escrita ter dado certo —, e não um descarte na resposta. O teste
 	// prende a ordem: quem mover a limpeza para antes da mutação cai aqui.
-	if strings.Contains(recusado, `"new_name"`) {
+	if strings.Contains(refused, `"new_name"`) {
 		t.Error("o formulário foi limpo numa RECUSA — a pessoa perdeu o que digitou e precisa corrigir")
 	}
 }
@@ -774,31 +774,31 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	// O CONTROLE do que a issue descreve: o grupo entra com iniciativa ZERO.
-	if fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; fila[0].Initiative != 0 {
-		t.Fatalf("o grupo entrou com iniciativa %d; o teste mede o conserto do zero", fila[0].Initiative)
+	if queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; queue[0].Initiative != 0 {
+		t.Fatalf("o grupo entrou com iniciativa %d; o teste mede o conserto do zero", queue[0].Initiative)
 	}
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
 		`{"edit_initiative":21,"edit_hp":7}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("editar deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
 	}
 
-	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
-	if len(fila) != 1 || fila[0].ID != entryID {
-		t.Fatalf("a linha não sobreviveu à edição: %+v", fila)
+	order := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	if len(order) != 1 || order[0].ID != entryID {
+		t.Fatalf("a linha não sobreviveu à edição: %+v", order)
 	}
-	if fila[0].Initiative != 21 {
-		t.Errorf("a iniciativa ficou %d", fila[0].Initiative)
+	if order[0].Initiative != 21 {
+		t.Errorf("a iniciativa ficou %d", order[0].Initiative)
 	}
-	if fila[0].HpCurrent == nil || *fila[0].HpCurrent != 7 {
-		t.Errorf("o PV da linha ficou %v", fila[0].HpCurrent)
+	if order[0].HpCurrent == nil || *order[0].HpCurrent != 7 {
+		t.Errorf("o PV da linha ficou %v", order[0].HpCurrent)
 	}
 	// E o PV passou pela FICHA, como o ferir/curar: a linha espelha, ela não é
 	// a autoridade.
-	ficha := poolsOf(t, f.s, f.charID)
-	if ficha.HpCurrent != 7 {
-		t.Errorf("a FICHA ficou com %d PV — a edição não chegou nela", ficha.HpCurrent)
+	sheet := poolsOf(t, f.s, f.charID)
+	if sheet.HpCurrent != 7 {
+		t.Errorf("a FICHA ficou com %d PV — a edição não chegou nela", sheet.HpCurrent)
 	}
 }
 
@@ -807,13 +807,13 @@ func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
 		`{"edit_initiative":41,"edit_hp":10}`)
-	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "41") {
-		t.Errorf("a recusa não citou a iniciativa ofensiva; sinais = %s", corpo)
+	if body := trechoDeSinais(rec.Body.String()); !strings.Contains(body, "41") {
+		t.Errorf("a recusa não citou a iniciativa ofensiva; sinais = %s", body)
 	}
-	if fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; fila[0].Initiative != 0 {
-		t.Errorf("a iniciativa recusada foi gravada mesmo assim (%d)", fila[0].Initiative)
+	if queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; queue[0].Initiative != 0 {
+		t.Errorf("a iniciativa recusada foi gravada mesmo assim (%d)", queue[0].Initiative)
 	}
 }
 
@@ -822,24 +822,24 @@ func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 // que acabou de perder a barra, e a escrita inventaria um pool onde não havia.
 func TestEditingInventsNoPoolOnALifelessEntry(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Figurante","new_initiative":5,"new_hp":0,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d", rec.Code)
 	}
 	entryID := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative[0].ID
 
 	// A página manda PV, como mandaria se estivesse defasada.
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
 		`{"edit_initiative":9,"edit_hp":50}`); rec.Code != http.StatusOK {
 		t.Fatalf("editar deu %d", rec.Code)
 	}
 
-	linha := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative[0]
-	if linha.Initiative != 9 {
-		t.Errorf("a iniciativa não foi corrigida: %d", linha.Initiative)
+	row := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative[0]
+	if row.Initiative != 9 {
+		t.Errorf("a iniciativa não foi corrigida: %d", row.Initiative)
 	}
-	if linha.HpMax != nil || linha.HpCurrent != nil {
-		t.Errorf("o capanga sem vida rastreada ganhou um pool inventado: %v/%v", linha.HpCurrent, linha.HpMax)
+	if row.HpMax != nil || row.HpCurrent != nil {
+		t.Errorf("o capanga sem vida rastreada ganhou um pool inventado: %v/%v", row.HpCurrent, row.HpMax)
 	}
 }
 
@@ -847,7 +847,7 @@ func TestEditingInventsNoPoolOnALifelessEntry(t *testing.T) {
 func TestEditingBelongsToTheGm(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
-	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
+	rec := f.pede(t, f.player, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
 		`{"edit_initiative":21,"edit_hp":7}`)
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador editou e levou %d, quero 403", rec.Code)
@@ -861,23 +861,23 @@ func TestEditingBelongsToTheGm(t *testing.T) {
 // escape de JS, e confundir os dois é como se escreve uma injeção sem querer.
 func TestACombatantWithAQuoteInTheNameDoesNotBreakTheExpression(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"O'Brien, o \"Justo\"","new_initiative":5,"new_hp":0,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d", rec.Code)
 	}
 
-	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O literal tem de sair como JSON: aspas ESCAPADAS dentro dele, e não uma
 	// aspa crua fechando a string no meio do nome.
-	if !strings.Contains(corpo, `$edit_name = &#34;O&#39;Brien, o \&#34;Justo\&#34;&#34;`) {
-		t.Errorf("o nome com aspas não virou literal seguro; a semeadura saiu como: %s", trechoDaSemeadura(corpo))
+	if !strings.Contains(body, `$edit_name = &#34;O&#39;Brien, o \&#34;Justo\&#34;&#34;`) {
+		t.Errorf("o nome com aspas não virou literal seguro; a semeadura saiu como: %s", trechoDaSemeadura(body))
 	}
 }
 
 // Um teste sobre uma PALAVRA, porque nenhuma outra camada afirma o texto do
 // crachá — o e2e cobre o LEIAUTE do selo, não a palavra.
 //
-// A palavra carrega regra: o GLOSSARY bane `PC`, e o canônico é `ficha` porque
+// A palavra carrega regra: o GLOSSARY bane `PC`, e o canônico é `sheet` porque
 // a pergunta que o `type == "character"` responde é "esta linha é ficha ou é
 // NPC?". As duas metades ficam juntas de propósito: afirmar só a nova deixaria
 // passar uma tela que diz as duas coisas.
@@ -885,16 +885,16 @@ func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
 	f := newSceneFixture(t)
 	f.tracker(t)
 
-	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE: a linha do personagem está na tela. Sem ele, "não achei PC"
 	// seria verdade também numa fila vazia.
-	if !strings.Contains(corpo, "Arcanista") {
+	if !strings.Contains(body, "Arcanista") {
 		t.Fatal("a fila não tem a linha do personagem; as asserções abaixo não provariam nada")
 	}
-	if !strings.Contains(corpo, ">Ficha<") {
+	if !strings.Contains(body, ">Ficha<") {
 		t.Error("o crachá da linha de personagem não diz Ficha")
 	}
-	if strings.Contains(corpo, ">PC<") {
+	if strings.Contains(body, ">PC<") {
 		t.Error("o crachá voltou a dizer PC, que o GLOSSARY proíbe")
 	}
 }
@@ -909,34 +909,34 @@ func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
 func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
 	f := newSceneFixture(t)
 	f.tracker(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
-	doMestre := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+	forGM := f.pede(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 	// O verbo mora ao lado da barra que ele mexe, e o nome acessível é o que
 	// prova isso: dois olhos na mesma linha, cada um dizendo de qual pool é.
-	for _, rotulo := range []string{"Ocultar os PV de ", "Ocultar os PM de "} {
-		if !strings.Contains(doMestre, rotulo) {
-			t.Errorf("o mestre não recebeu o olho %q — o verbo não diz de qual pool fala", rotulo)
+	for _, label := range []string{"Ocultar os PV de ", "Ocultar os PM de "} {
+		if !strings.Contains(forGM, label) {
+			t.Errorf("o mestre não recebeu o olho %q — o verbo não diz de qual pool fala", label)
 		}
 	}
-	if !strings.Contains(doMestre, "/vitais/mp/ferir/") {
+	if !strings.Contains(forGM, "/vitais/mp/ferir/") {
 		t.Error("o mestre não recebeu o gesto de gastar mana na fila")
 	}
 
-	doJogador := f.pede(t, f.jogador, "GET", f.tableUrl(), "").Body.String()
+	forPlayer := f.pede(t, f.player, "GET", f.tableUrl(), "").Body.String()
 	// O PV do GRUPO é o que a mesa vê por padrão, e o personagem desta bancada é
 	// justamente do jogador que está pedindo.
-	if !strings.Contains(doJogador, "PV ") {
+	if !strings.Contains(forPlayer, "PV ") {
 		t.Error("a mesa perdeu o PV do próprio grupo")
 	}
-	if !strings.Contains(doJogador, "PM ocultos pelo mestre") {
+	if !strings.Contains(forPlayer, "PM ocultos pelo mestre") {
 		t.Error("a mesa não foi avisada de que existe PM escondido: 'sem barra' e 'escondido' viraram a mesma coisa")
 	}
 	// E o jogador não recebe verbo nenhum: a trava é o 403, mas o HTML também
 	// não os tem, e as duas coisas se medem juntas.
-	if strings.Contains(doJogador, "/vitais/mp/ferir/") || strings.Contains(doJogador, "Ocultar os PM de ") {
+	if strings.Contains(forPlayer, "/vitais/mp/ferir/") || strings.Contains(forPlayer, "Ocultar os PM de ") {
 		t.Error("os verbos do mana vazaram para o HTML do jogador")
 	}
 }

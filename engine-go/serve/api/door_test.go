@@ -24,16 +24,16 @@ import (
 // aparência não entra — o e2e mede contraste, e classe de CSS ninguém prometeu.
 
 type doorFixture struct {
-	s     *Server
-	email string
-	senha string
+	s        *Server
+	email    string
+	password string
 }
 
 func newDoor(t *testing.T, admins ...string) doorFixture {
 	t.Helper()
 	s := newTestServer(t, admins...)
-	f := doorFixture{s: s, email: "jogadora@t20.local", senha: "senha-de-verdade"}
-	hash, err := bcrypt.GenerateFromPassword([]byte(f.senha), bcrypt.MinCost)
+	f := doorFixture{s: s, email: "jogadora@t20.local", password: "senha-de-verdade"}
+	hash, err := bcrypt.GenerateFromPassword([]byte(f.password), bcrypt.MinCost)
 	if err != nil {
 		t.Fatalf("hash: %v", err)
 	}
@@ -46,13 +46,13 @@ func newDoor(t *testing.T, admins ...string) doorFixture {
 }
 
 // bate manda um pedido pelo WebRouter. `form` nil = GET.
-func (f doorFixture) bate(t *testing.T, caminho string, form url.Values, cookie string) *httptest.ResponseRecorder {
+func (f doorFixture) bate(t *testing.T, path string, form url.Values, cookie string) *httptest.ResponseRecorder {
 	t.Helper()
-	metodo, corpo := http.MethodGet, ""
+	method, body := http.MethodGet, ""
 	if form != nil {
-		metodo, corpo = http.MethodPost, form.Encode()
+		method, body = http.MethodPost, form.Encode()
 	}
-	req := httptest.NewRequest(metodo, caminho, strings.NewReader(corpo))
+	req := httptest.NewRequest(method, path, strings.NewReader(body))
 	if form != nil {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
@@ -120,17 +120,17 @@ func TestTheDoorRefusesAWrongPasswordWithoutOpeningASession(t *testing.T) {
 // dois entrega a quem sonda a lista de quem tem conta na mesa.
 func TestTheDoorDoesNotTellAMissingAccountFromAWrongPassword(t *testing.T) {
 	f := newDoor(t)
-	inexistente := f.bate(t, "/entrar", url.Values{
+	nonexistent := f.bate(t, "/entrar", url.Values{
 		"email": {"ninguem@t20.local"}, "senha": {"seja o que for"},
 	}, "")
-	errada := f.bate(t, "/entrar", url.Values{
+	wrong := f.bate(t, "/entrar", url.Values{
 		"email": {f.email}, "senha": {"não é essa"},
 	}, "")
 
-	if inexistente.Code != errada.Code {
-		t.Errorf("status diferentes (%d vs %d) — dá para enumerar contas", inexistente.Code, errada.Code)
+	if nonexistent.Code != wrong.Code {
+		t.Errorf("status diferentes (%d vs %d) — dá para enumerar contas", nonexistent.Code, wrong.Code)
 	}
-	if !strings.Contains(inexistente.Body.String(), "E-mail ou senha incorretos.") {
+	if !strings.Contains(nonexistent.Body.String(), "E-mail ou senha incorretos.") {
 		t.Error("a conta inexistente recebeu outra frase")
 	}
 }
@@ -138,7 +138,7 @@ func TestTheDoorDoesNotTellAMissingAccountFromAWrongPassword(t *testing.T) {
 func TestTheDoorSignsInAndSendsToTheDestination(t *testing.T) {
 	f := newDoor(t)
 	rec := f.bate(t, "/entrar", url.Values{
-		"email": {f.email}, "senha": {f.senha}, "destino": {"/campanhas/7"},
+		"email": {f.email}, "senha": {f.password}, "destino": {"/campanhas/7"},
 	}, "")
 
 	if rec.Code != http.StatusSeeOther {
@@ -189,15 +189,15 @@ func TestTheDoorRefusesAnInvalidInviteInPortuguese(t *testing.T) {
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("status = %d, queria 403", rec.Code)
 	}
-	corpo := rec.Body.String()
-	if !strings.Contains(corpo, "Convite inválido ou expirado. Peça um link novo a quem administra a mesa.") {
+	body := rec.Body.String()
+	if !strings.Contains(body, "Convite inválido ou expirado. Peça um link novo a quem administra a mesa.") {
 		t.Error("a recusa do convite não chegou à tela")
 	}
 	// A frase do SENTINELA não é frase de tela: ela é o texto do erro que o
 	// caso de uso devolve, e quem a desenha está repassando o `err.Error()` em
 	// vez de escolher o aviso.
-	if cru := accounts.ErrBadInvite.Error(); strings.Contains(corpo, cru) {
-		t.Errorf("o texto cru do erro vazou para a tela: %q", cru)
+	if raw := accounts.ErrBadInvite.Error(); strings.Contains(body, raw) {
+		t.Errorf("o texto cru do erro vazou para a tela: %q", raw)
 	}
 }
 
@@ -230,31 +230,31 @@ func TestTheDoorSaysValidationRefusalsInPortuguese(t *testing.T) {
 		"email": {"isto-não-é-e-mail"}, "senha": {"x"},
 	}, "")
 
-	corpo := rec.Body.String()
+	body := rec.Body.String()
 	// A frase escrita À MÃO, e não a constante do `account`: importar o valor de
 	// quem está sendo testado faz o teste andar junto com o defeito — trocar o
 	// texto lá passaria aqui, e é justamente o texto que o jogador lê.
 	const esperada = "E-mail inválido"
-	if !strings.Contains(corpo, esperada) {
+	if !strings.Contains(body, esperada) {
 		t.Errorf("não achei %q na tela", esperada)
 	}
-	if strings.Contains(corpo, "must be an email") {
+	if strings.Contains(body, "must be an email") {
 		t.Error("a frase em inglês do class-validator vazou para a tela")
 	}
 }
 
 // ── redefinir senha ──────────────────────────────────────────────────────────
 
-func (f doorFixture) seedResetLink(t *testing.T, validade time.Duration) string {
+func (f doorFixture) seedResetLink(t *testing.T, validity time.Duration) string {
 	t.Helper()
 	user, err := f.s.queries.GetUserByEmail(context.Background(), f.email)
 	if err != nil {
 		t.Fatalf("conta: %v", err)
 	}
-	agora := time.Now()
+	now := time.Now()
 	reset, err := f.s.queries.CreatePasswordReset(context.Background(), sqlcgen.CreatePasswordResetParams{
 		Token: seedToken(t), Userid: user.ID, Createdby: user.ID,
-		Createdat: dbvalue.IsoAt(agora), Expiresat: dbvalue.IsoAt(agora.Add(validade)),
+		Createdat: dbvalue.IsoAt(now), Expiresat: dbvalue.IsoAt(now.Add(validity)),
 	})
 	if err != nil {
 		t.Fatalf("semear link: %v", err)
@@ -269,12 +269,12 @@ func TestTheDoorShowsNoFormWithAnExpiredLink(t *testing.T) {
 	token := f.seedResetLink(t, -time.Hour)
 
 	rec := f.bate(t, "/redefinir-senha?token="+token, nil, "")
-	corpo := rec.Body.String()
+	body := rec.Body.String()
 
-	if !strings.Contains(corpo, "Este link não vale mais — ele serve uma vez só e expira em 24 horas. Peça outro a quem administra a mesa.") {
+	if !strings.Contains(body, "Este link não vale mais — ele serve uma vez só e expira em 24 horas. Peça outro a quem administra a mesa.") {
 		t.Error("o link vencido não disse que não vale mais")
 	}
-	if strings.Contains(corpo, `name="senha"`) {
+	if strings.Contains(body, `name="senha"`) {
 		t.Error("desenhou o formulário para um link que não vale")
 	}
 }
@@ -312,11 +312,11 @@ func TestTheDoorChangesThePasswordAndSendsBackToSignIn(t *testing.T) {
 // uma senha em `data-bind` viajaria de novo a cada pedido da página.
 func TestTheDoorPutsNothingInADatastarSignal(t *testing.T) {
 	f := newDoor(t)
-	for _, caminho := range []string{"/entrar", "/criar-conta?convite=x", "/redefinir-senha"} {
-		corpo := f.bate(t, caminho, nil, "").Body.String()
-		for _, proibido := range []string{"data-bind", "data-signals", "data-init"} {
-			if strings.Contains(corpo, proibido) {
-				t.Errorf("%s trouxe %q — a porta não pode ter estado de cliente", caminho, proibido)
+	for _, path := range []string{"/entrar", "/criar-conta?convite=x", "/redefinir-senha"} {
+		body := f.bate(t, path, nil, "").Body.String()
+		for _, forbidden := range []string{"data-bind", "data-signals", "data-init"} {
+			if strings.Contains(body, forbidden) {
+				t.Errorf("%s trouxe %q — a porta não pode ter estado de cliente", path, forbidden)
 			}
 		}
 	}

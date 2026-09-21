@@ -42,18 +42,18 @@ func postaCarta(t *testing.T, s *Server, userID int64, form url.Values) *httptes
 	return rec
 }
 
-func seedCampanha(t *testing.T, s *Server, dono int64, nome, convite string) int64 {
+func seedCampanha(t *testing.T, s *Server, owner int64, name, invite string) int64 {
 	t.Helper()
-	agora := dbvalue.NowISO()
+	now := dbvalue.NowISO()
 	c, err := s.queries.CreateCampaign(context.Background(), sqlcgen.CreateCampaignParams{
-		Ownerid: dono, Name: nome, Createdat: agora, Updatedat: agora,
+		Ownerid: owner, Name: name, Createdat: now, Updatedat: now,
 	})
 	if err != nil {
 		t.Fatalf("seed campanha: %v", err)
 	}
-	if convite != "" {
+	if invite != "" {
 		if _, err := s.db.ExecContext(context.Background(),
-			"UPDATE campaigns SET inviteToken = ? WHERE id = ?", convite, c.ID); err != nil {
+			"UPDATE campaigns SET inviteToken = ? WHERE id = ?", invite, c.ID); err != nil {
 			t.Fatalf("seed convite: %v", err)
 		}
 	}
@@ -63,21 +63,21 @@ func seedCampanha(t *testing.T, s *Server, dono int64, nome, convite string) int
 // O DONO entra na própria mesa sem convite, e sai daqui para a crônica com 303.
 func TestTheOwnerEntersTheirOwnTableWithoutAnInvite(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	heroi := seedCharacterAtLevel(t, s, dono, "Thalen", "Guerreiro", 5, -4, 5)
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "A Queda de Tauron", "")
+	hero := seedCharacterAtLevel(t, s, owner, "Thalen", "Guerreiro", 5, -4, 5)
 
-	rec := postaCarta(t, s, dono, url.Values{
-		"campaignId":  {strconv.FormatInt(campanha, 10)},
-		"characterId": {strconv.FormatInt(heroi, 10)},
+	rec := postaCarta(t, s, owner, url.Values{
+		"campaignId":  {strconv.FormatInt(campaign, 10)},
+		"characterId": {strconv.FormatInt(hero, 10)},
 	})
 
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303\n%s", rec.Code, rec.Body.String())
 	}
 	// O destino é a CRÔNICA: quem acabou de sentar à mesa cai na página dela.
-	if destino := rec.Header().Get("Location"); destino != "/campanhas/"+strconv.FormatInt(campanha, 10) {
-		t.Errorf("destino = %q", destino)
+	if destination := rec.Header().Get("Location"); destination != "/campanhas/"+strconv.FormatInt(campaign, 10) {
+		t.Errorf("destino = %q", destination)
 	}
 }
 
@@ -85,14 +85,14 @@ func TestTheOwnerEntersTheirOwnTableWithoutAnInvite(t *testing.T) {
 // pedir o link — em vez de \"não foi possível entrar\".
 func TestWithoutAnInviteSomeoneElsesTableIsRefusedWithTheNextStep(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	visitante := seedUser(t, s, "visitante@t20.local")
-	campanha := seedCampanha(t, s, dono, "Mesa fechada", "o-token-certo")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
+	owner := seedUser(t, s, "dono@t20.local")
+	visitor := seedUser(t, s, "visitante@t20.local")
+	campaign := seedCampanha(t, s, owner, "Mesa fechada", "o-token-certo")
+	hero := seedCharacterAtLevel(t, s, visitor, "Yrla", "Arcanista", 4, 4, 4)
 
-	rec := postaCarta(t, s, visitante, url.Values{
-		"campaignId":  {strconv.FormatInt(campanha, 10)},
-		"characterId": {strconv.FormatInt(heroi, 10)},
+	rec := postaCarta(t, s, visitor, url.Values{
+		"campaignId":  {strconv.FormatInt(campaign, 10)},
+		"characterId": {strconv.FormatInt(hero, 10)},
 	})
 
 	if rec.Code != http.StatusUnprocessableEntity {
@@ -107,14 +107,14 @@ func TestWithoutAnInviteSomeoneElsesTableIsRefusedWithTheNextStep(t *testing.T) 
 // aquele passaria numa tela que recusasse todo mundo.
 func TestWithTheRightInviteTheVisitorEnters(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	visitante := seedUser(t, s, "visitante@t20.local")
-	_ = seedCampanha(t, s, dono, "Mesa aberta", "o-token-certo")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
+	owner := seedUser(t, s, "dono@t20.local")
+	visitor := seedUser(t, s, "visitante@t20.local")
+	_ = seedCampanha(t, s, owner, "Mesa aberta", "o-token-certo")
+	hero := seedCharacterAtLevel(t, s, visitor, "Yrla", "Arcanista", 4, 4, 4)
 
-	rec := postaCarta(t, s, visitante, url.Values{
+	rec := postaCarta(t, s, visitor, url.Values{
 		"token":       {"o-token-certo"},
-		"characterId": {strconv.FormatInt(heroi, 10)},
+		"characterId": {strconv.FormatInt(hero, 10)},
 	})
 
 	if rec.Code != http.StatusSeeOther {
@@ -127,23 +127,23 @@ func TestWithTheRightInviteTheVisitorEnters(t *testing.T) {
 // convite de uma mesa serviria de senha para entrar em OUTRA.
 func TestWithAnInviteTheTypedNumberIsIgnored(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	visitante := seedUser(t, s, "visitante@t20.local")
-	convidada := seedCampanha(t, s, dono, "A que convidou", "o-token-certo")
-	outra := seedCampanha(t, s, dono, "A que NÃO convidou", "outro-token")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
+	owner := seedUser(t, s, "dono@t20.local")
+	visitor := seedUser(t, s, "visitante@t20.local")
+	invited := seedCampanha(t, s, owner, "A que convidou", "o-token-certo")
+	other := seedCampanha(t, s, owner, "A que NÃO convidou", "outro-token")
+	hero := seedCharacterAtLevel(t, s, visitor, "Yrla", "Arcanista", 4, 4, 4)
 
-	rec := postaCarta(t, s, visitante, url.Values{
+	rec := postaCarta(t, s, visitor, url.Values{
 		"token":       {"o-token-certo"},
-		"campaignId":  {strconv.FormatInt(outra, 10)},
-		"characterId": {strconv.FormatInt(heroi, 10)},
+		"campaignId":  {strconv.FormatInt(other, 10)},
+		"characterId": {strconv.FormatInt(hero, 10)},
 	})
 
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303\n%s", rec.Code, rec.Body.String())
 	}
-	if destino := rec.Header().Get("Location"); destino != "/campanhas/"+strconv.FormatInt(convidada, 10) {
-		t.Errorf("entrou em %q — o número digitado venceu o convite", destino)
+	if destination := rec.Header().Get("Location"); destination != "/campanhas/"+strconv.FormatInt(invited, 10) {
+		t.Errorf("entrou em %q — o número digitado venceu o convite", destination)
 	}
 }
 
@@ -151,11 +151,11 @@ func TestWithAnInviteTheTypedNumberIsIgnored(t *testing.T) {
 // resposta, e não há estado de \"carregando\" para existir.
 func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	visitante := seedUser(t, s, "visitante@t20.local")
-	seedCampanha(t, s, dono, "A Queda de Tauron", "o-token-certo")
+	owner := seedUser(t, s, "dono@t20.local")
+	visitor := seedUser(t, s, "visitante@t20.local")
+	seedCampanha(t, s, owner, "A Queda de Tauron", "o-token-certo")
 
-	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadJoin(context.Background(), visitante, "o-token-certo")
+	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadJoin(context.Background(), visitor, "o-token-certo")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -168,9 +168,9 @@ func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 // alta, para a pessoa pedir outro link em vez de olhar um botão que não envia.
 func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	s := newTestServer(t)
-	visitante := seedUser(t, s, "visitante@t20.local")
+	visitor := seedUser(t, s, "visitante@t20.local")
 
-	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadJoin(context.Background(), visitante, "nao-existe")
+	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadJoin(context.Background(), visitor, "nao-existe")
 	if err != nil {
 		t.Fatalf("convite morto derrubou a carta: %v", err)
 	}

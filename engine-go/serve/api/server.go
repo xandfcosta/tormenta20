@@ -44,7 +44,7 @@ type Server struct {
 	// charMu serializa as escritas por personagem (id → *sync.Mutex), para
 	// cliques rápidos de dano e vitais não se perderem no ler-computar-gravar.
 	charMu sync.Map
-	// emSegundoPlano conta o trabalho que continua DEPOIS da resposta: a
+	// inBackground conta o trabalho que continua DEPOIS da resposta: a
 	// persistência do estado da sessão, disparada em goroutine para o mestre não
 	// esperar o disco no meio do turno.
 	//
@@ -53,7 +53,7 @@ type Server struct {
 	// da mesa. No TESTE é pior de ler: o `t.TempDir()` falha ao limpar com
 	// "directory not empty", porque o SQLite recria `-wal`/`-shm` depois do
 	// `RemoveAll` — e a mensagem que sobra fala da LIMPEZA, não do defeito.
-	emSegundoPlano sync.WaitGroup
+	inBackground sync.WaitGroup
 }
 
 // WaitForBackground bloqueia até o trabalho disparado por resposta terminar.
@@ -63,7 +63,7 @@ type Server struct {
 // pode não chegar ao disco, e o log da falha aparece depois de o processo já
 // estar indo embora.
 func (s *Server) WaitForBackground() {
-	s.emSegundoPlano.Wait()
+	s.inBackground.Wait()
 }
 
 // characterChanged avisa as mesas AO VIVO que uma ficha mudou.

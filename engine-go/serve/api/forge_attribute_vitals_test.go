@@ -10,25 +10,25 @@ import (
 // fereOHeroi grava o dano DIRETO no banco: é o arranjo do caso, não o código
 // sob teste. O caminho de ferir de verdade é o da Mesa, e trazê-lo para cá
 // poria dois handlers na frente da pergunta.
-func fereOHeroi(t *testing.T, f sceneFixture, id, pvAtual, pmAtual int64) {
+func fereOHeroi(t *testing.T, f sceneFixture, id, currentHP, currentPM int64) {
 	t.Helper()
 	arrangePools(t, f.s, id, func(p sheet.Pools) (sheet.Pools, error) {
-		p.HpCurrent, p.MpCurrent = pvAtual, pmAtual
+		p.HpCurrent, p.MpCurrent = currentHP, currentPM
 		return p, nil
 	})
 }
 
 func osVitaisDe(t *testing.T, f sceneFixture, id int64) (pv, pvMax, pm, pmMax int64) {
 	t.Helper()
-	poco := poolsOf(t, f.s, id)
-	return poco.HpCurrent, poco.HpMax, poco.MpCurrent, poco.MpMax
+	pool := poolsOf(t, f.s, id)
+	return pool.HpCurrent, pool.HpMax, pool.MpCurrent, pool.MpMax
 }
 
 // umHeroiForjado devolve o id de um herói recém-nascido e o endereço dos
 // atributos dele.
 func umHeroiForjado(t *testing.T, f sceneFixture) (int64, string) {
 	t.Helper()
-	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
+	rec := postaAForja(t, f, f.player, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
 	return id, "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
 }
@@ -48,13 +48,13 @@ func umHeroiForjado(t *testing.T, f sceneFixture) (int64, string) {
 // sistema inteiro de vitais existe para o dano ser dele.
 func TestTheAttributeStepDoesNotHealTheHero(t *testing.T) {
 	f := newSceneFixture(t)
-	id, atributos := umHeroiForjado(t, f)
+	id, attributes := umHeroiForjado(t, f)
 	fereOHeroi(t, f, id, 3, 0)
 
 	// O GESTO DO ABUSO, inteiro: desce a Constituição e devolve o ponto.
-	for _, passo := range []string{"/constitution/-1", "/constitution/1"} {
-		if code := postaAForja(t, f, f.jogador, atributos+passo, nil).Code; code != http.StatusOK {
-			t.Fatalf("o passo %q respondeu %d", passo, code)
+	for _, step := range []string{"/constitution/-1", "/constitution/1"} {
+		if code := postaAForja(t, f, f.player, attributes+step, nil).Code; code != http.StatusOK {
+			t.Fatalf("o passo %q respondeu %d", step, code)
 		}
 	}
 
@@ -81,12 +81,12 @@ func TestTheAttributeStepDoesNotHealTheHero(t *testing.T) {
 // banco guarda é o DANO, então o teto anda e a dívida fica (ALE-355).
 func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 	f := newSceneFixture(t)
-	id, atributos := umHeroiForjado(t, f)
+	id, attributes := umHeroiForjado(t, f)
 
 	// O elfo tem Constituição −1: com a base em +1 o total é 0, e o guerreiro de
 	// nível 1 fica com 20 de PV máximo. Os números são escritos à mão de
 	// propósito — derivá-los do motor os faria andar junto com o defeito.
-	if code := postaAForja(t, f, f.jogador, atributos+"/constitution/1", nil).Code; code != http.StatusOK {
+	if code := postaAForja(t, f, f.player, attributes+"/constitution/1", nil).Code; code != http.StatusOK {
 		t.Fatalf("subir a Constituição respondeu %d", code)
 	}
 	if pv, pvMax, _, _ := osVitaisDe(t, f, id); pv != 20 || pvMax != 20 {
@@ -96,7 +96,7 @@ func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 	fereOHeroi(t, f, id, 3, 0)
 
 	// Base +2 num elfo dá Con +1: +1 de PV máximo por nível, e o nível é 1.
-	if code := postaAForja(t, f, f.jogador, atributos+"/constitution/1", nil).Code; code != http.StatusOK {
+	if code := postaAForja(t, f, f.player, attributes+"/constitution/1", nil).Code; code != http.StatusOK {
 		t.Fatalf("subir a Constituição de novo respondeu %d", code)
 	}
 	if pv, pvMax, _, _ := osVitaisDe(t, f, id); pv != 4 || pvMax != 21 {
@@ -104,7 +104,7 @@ func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 	}
 
 	// E DE VOLTA: o mesmo delta para baixo desfaz exatamente o passo.
-	if code := postaAForja(t, f, f.jogador, atributos+"/constitution/-1", nil).Code; code != http.StatusOK {
+	if code := postaAForja(t, f, f.player, attributes+"/constitution/-1", nil).Code; code != http.StatusOK {
 		t.Fatalf("descer a Constituição respondeu %d", code)
 	}
 	if pv, pvMax, _, _ := osVitaisDe(t, f, id); pv != 3 || pvMax != 20 {
@@ -121,7 +121,7 @@ func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 // acontecer é a CURA de quem apanhou.
 func TestTheNewbornStillLeavesTheForgeWithFullPools(t *testing.T) {
 	f := newSceneFixture(t)
-	id, atributos := umHeroiForjado(t, f)
+	id, attributes := umHeroiForjado(t, f)
 
 	if pv, pvMax, pm, pmMax := osVitaisDe(t, f, id); pv != pvMax || pm != pmMax {
 		t.Fatalf("o herói nasceu em %d/%d PV e %d/%d PM, e devia nascer CHEIO", pv, pvMax, pm, pmMax)
@@ -129,7 +129,7 @@ func TestTheNewbornStillLeavesTheForgeWithFullPools(t *testing.T) {
 	// Cheio continua cheio quando o máximo SOBE: dois pontos em Constituição
 	// levam o elfo de Con 0 a Con +1, e o poço acompanha.
 	for i := 0; i < 2; i++ {
-		if code := postaAForja(t, f, f.jogador, atributos+"/constitution/1", nil).Code; code != http.StatusOK {
+		if code := postaAForja(t, f, f.player, attributes+"/constitution/1", nil).Code; code != http.StatusOK {
 			t.Fatalf("subir a Constituição respondeu %d", code)
 		}
 	}

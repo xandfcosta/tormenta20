@@ -30,14 +30,14 @@ func TestTheFinderRouteReadsTheSignal(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := askTheFinder(t, s, eu, `{"finder":"abalado"}`)
-	if !strings.Contains(corpo, "datastar-patch-elements") {
+	body := askTheFinder(t, s, eu, `{"finder":"abalado"}`)
+	if !strings.Contains(body, "datastar-patch-elements") {
 		t.Fatal("a rota não devolveu remendo nenhum — o resto do guarda mediria a resposta errada")
 	}
-	if !strings.Contains(corpo, "Abalado") {
+	if !strings.Contains(body, "Abalado") {
 		t.Error("o remendo não traz a condição buscada")
 	}
-	if !strings.Contains(corpo, `id="finder-found"`) {
+	if !strings.Contains(body, `id="finder-found"`) {
 		t.Error("o remendo não traz o id que ele substitui — o Datastar não teria onde aplicá-lo")
 	}
 }
@@ -52,19 +52,19 @@ func TestTheDoorDoesNotDrawTheFinder(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	porta := httptest.NewRecorder()
-	s.WebRouter().ServeHTTP(porta, httptest.NewRequest(http.MethodGet, "/entrar", nil))
-	if strings.Contains(porta.Body.String(), `id="finder"`) {
+	door := httptest.NewRecorder()
+	s.WebRouter().ServeHTTP(door, httptest.NewRequest(http.MethodGet, "/entrar", nil))
+	if strings.Contains(door.Body.String(), `id="finder"`) {
 		t.Error("a porta desenhou a caixa do buscador, e com ela um sinal que viaja com a senha")
 	}
 
-	dentro := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario", "")
-	if !strings.Contains(dentro.Body.String(), `id="finder"`) {
+	inside := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario", "")
+	if !strings.Contains(inside.Body.String(), `id="finder"`) {
 		t.Error("a caixa sumiu da cena com sessão — o guarda acima passaria por ausência de tudo")
 	}
 }
 
-func askTheFinder(t *testing.T, s *Server, userID int64, sinais string) string {
+func askTheFinder(t *testing.T, s *Server, userID int64, signals string) string {
 	t.Helper()
 	u, err := s.queries.GetUserByID(t.Context(), userID)
 	if err != nil {
@@ -74,7 +74,7 @@ func askTheFinder(t *testing.T, s *Server, userID int64, sinais string) string {
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}
-	req := httptest.NewRequest(http.MethodGet, finderAddress+"?datastar="+url.QueryEscape(sinais), nil)
+	req := httptest.NewRequest(http.MethodGet, finderAddress+"?datastar="+url.QueryEscape(signals), nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("datastar-request", "true")
 	rec := httptest.NewRecorder()

@@ -21,8 +21,8 @@ import (
 const blocoMinimo = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":10,` +
 	`"deslocamento":"9m (6q)","attacks":[],"skills":[],"specialAbilities":[]`
 
-func bodyDraft(dentro string) string {
-	return `{"draft":{` + dentro + `}}`
+func bodyDraft(inside string) string {
+	return `{"draft":{` + inside + `}}`
 }
 
 // compiledStylesheet é a folha que o NAVEGADOR recebe, e é sempre ela que os
@@ -34,27 +34,27 @@ func bodyDraft(dentro string) string {
 // navegador nunca recebeu.
 func compiledStylesheet(t *testing.T) string {
 	t.Helper()
-	folha, err := os.ReadFile(filepath.Join("../web/assets", "static", "app.css"))
+	sheet, err := os.ReadFile(filepath.Join("../web/assets", "static", "app.css"))
 	if err != nil {
 		t.Fatalf("ler a folha compilada: %v", err)
 	}
-	return string(folha)
+	return string(sheet)
 }
 
 // classesThatReceiveBox lê a folha COMPILADA e devolve as classes de toda
 // regra que resolve o `--col` em pixels.
 func classesThatReceiveBox(t *testing.T) map[string]bool {
 	t.Helper()
-	folha := compiledStylesheet(t)
+	sheet := compiledStylesheet(t)
 	classes := map[string]bool{}
-	for _, regra := range strings.Split(folha, "}") {
-		abre := strings.Index(regra, "{")
-		if abre < 0 || !strings.Contains(regra[abre:], "left:calc(var(--col)") {
+	for _, rule := range strings.Split(sheet, "}") {
+		opens := strings.Index(rule, "{")
+		if opens < 0 || !strings.Contains(rule[opens:], "left:calc(var(--col)") {
 			continue
 		}
-		for _, seletor := range strings.Split(regra[:abre], ",") {
-			if nome := strings.TrimPrefix(strings.TrimSpace(seletor), "."); nome != "" {
-				classes[nome] = true
+		for _, selector := range strings.Split(rule[:opens], ",") {
+			if name := strings.TrimPrefix(strings.TrimSpace(selector), "."); name != "" {
+				classes[name] = true
 			}
 		}
 	}
@@ -67,39 +67,39 @@ func classesThatReceiveBox(t *testing.T) map[string]bool {
 // mudo: uma busca que não acha nada faria toda asserção seguinte passar sobre
 // uma string vazia — o `strings.Contains(vazio, x)` é falso, e "não contém" é
 // exatamente o que a maioria dos guardas daqui afirma.
-func collectionRow(t *testing.T, tela, marca string) string {
+func collectionRow(t *testing.T, screen, mark string) string {
 	t.Helper()
-	pos := strings.Index(tela, marca)
+	pos := strings.Index(screen, mark)
 	if pos < 0 {
-		t.Fatalf("não achei %q na tela: a asserção seguinte mediria uma string vazia", marca)
+		t.Fatalf("não achei %q na tela: a asserção seguinte mediria uma string vazia", mark)
 	}
-	inicio := strings.LastIndex(tela[:pos], "<li ")
-	fim := strings.Index(tela[pos:], "</li>")
-	if inicio < 0 || fim < 0 {
-		t.Fatalf("a marca %q não está dentro de um <li> do acervo", marca)
+	start := strings.LastIndex(screen[:pos], "<li ")
+	end := strings.Index(screen[pos:], "</li>")
+	if start < 0 || end < 0 {
+		t.Fatalf("a marca %q não está dentro de um <li> do acervo", mark)
 	}
-	return tela[inicio : pos+fim]
+	return screen[start : pos+end]
 }
 
-func contem(casas []engine.Square, alvo engine.Square) bool {
-	for _, c := range casas {
-		if c == alvo {
+func contem(squares []engine.Square, target engine.Square) bool {
+	for _, c := range squares {
+		if c == target {
 			return true
 		}
 	}
 	return false
 }
 
-// element acha o primeiro elemento cujo atributo `atributo` contém `trecho`,
+// element acha o primeiro elemento cujo atributo `attribute` contém `excerpt`,
 // e devolve os atributos dele.
 //
 // Um parser de HTML de verdade e não uma expressão regular, e a razão é o guarda
 // do fim deste arquivo: as expressões do Datastar carregam `<`, `>` e aspas
 // dentro dos valores, e um `<[^>]*>` corta um elemento no meio de um `data-on:`
 // sem avisar — a busca devolveria menos e a ausência viraria conclusão.
-func element(t *testing.T, tela, atributo, trecho string) map[string]string {
+func element(t *testing.T, screen, attribute, excerpt string) map[string]string {
 	t.Helper()
-	z := html.NewTokenizer(strings.NewReader(tela))
+	z := html.NewTokenizer(strings.NewReader(screen))
 	for {
 		switch z.Next() {
 		case html.ErrorToken:
@@ -107,13 +107,13 @@ func element(t *testing.T, tela, atributo, trecho string) map[string]string {
 		case html.StartTagToken, html.SelfClosingTagToken:
 			attrs := map[string]string{}
 			for {
-				chave, valor, mais := z.TagAttr()
-				attrs[string(chave)] = string(valor)
-				if !mais {
+				key, value, more := z.TagAttr()
+				attrs[string(key)] = string(value)
+				if !more {
 					break
 				}
 			}
-			if strings.Contains(attrs[atributo], trecho) {
+			if strings.Contains(attrs[attribute], excerpt) {
 				return attrs
 			}
 		}
@@ -121,11 +121,11 @@ func element(t *testing.T, tela, atributo, trecho string) map[string]string {
 }
 
 func firstRows(s string, n int) string {
-	linhas := strings.Split(s, "\n")
-	if len(linhas) > n {
-		linhas = linhas[:n]
+	rows := strings.Split(s, "\n")
+	if len(rows) > n {
+		rows = rows[:n]
 	}
-	return strings.Join(linhas, "\n")
+	return strings.Join(rows, "\n")
 }
 
 // primeirosAtributos encurta a tag para a mensagem caber na saída do teste.
@@ -149,27 +149,27 @@ func quadrados(pares ...[2]int) []engine.Square {
 // "Ogro Capitão")` passa verde com o sinal renomeado, porque o nome continua no
 // corpo — ligado a coisa nenhuma. O que a tela precisa é do valor sob
 // `rascunho`.
-func responseDraft(t *testing.T, resposta string) map[string]any {
+func responseDraft(t *testing.T, response string) map[string]any {
 	t.Helper()
 	const marca = "data: signals "
-	i := strings.Index(resposta, marca)
+	i := strings.Index(response, marca)
 	if i < 0 {
-		t.Fatalf("a resposta não trouxe sinais:\n%s", resposta)
+		t.Fatalf("a resposta não trouxe sinais:\n%s", response)
 	}
-	linha := resposta[i+len(marca):]
-	if fim := strings.IndexByte(linha, '\n'); fim >= 0 {
-		linha = linha[:fim]
+	row := response[i+len(marca):]
+	if end := strings.IndexByte(row, '\n'); end >= 0 {
+		row = row[:end]
 	}
-	var sinais struct {
-		Rascunho map[string]any `json:"draft"`
+	var signals struct {
+		Draft map[string]any `json:"draft"`
 	}
-	if err := json.Unmarshal([]byte(linha), &sinais); err != nil {
-		t.Fatalf("os sinais não são JSON: %v\n%s", err, linha)
+	if err := json.Unmarshal([]byte(row), &signals); err != nil {
+		t.Fatalf("os sinais não são JSON: %v\n%s", err, row)
 	}
-	if sinais.Rascunho == nil {
-		t.Fatalf("a resposta não trouxe `rascunho`:\n%s", linha)
+	if signals.Draft == nil {
+		t.Fatalf("a resposta não trouxe `rascunho`:\n%s", row)
 	}
-	return sinais.Rascunho
+	return signals.Draft
 }
 
 // signals escreve os sinais do jeito que o Datastar os manda num GET: um
@@ -198,9 +198,9 @@ var tableRegionNames = []string{
 // temAlgumaClasse: basta UMA classe posicionada, porque o elemento veste várias —
 // o fantasma é `board-token board-token-ghost`, e quem lhe dá caixa é a
 // primeira.
-func temAlgumaClasse(lista string, procuradas map[string]bool) bool {
-	for _, c := range strings.Fields(lista) {
-		if procuradas[c] {
+func temAlgumaClasse(list string, sought map[string]bool) bool {
+	for _, c := range strings.Fields(list) {
+		if sought[c] {
 			return true
 		}
 	}
@@ -209,24 +209,24 @@ func temAlgumaClasse(lista string, procuradas map[string]bool) bool {
 
 // trechoDaSemeadura tira só o pedaço da expressão que semeia o nome, porque a
 // página inteira enterra a asserção em vários KB de HTML.
-func trechoDaSemeadura(corpo string) string {
-	i := strings.Index(corpo, "$edit_name = ")
+func trechoDaSemeadura(body string) string {
+	i := strings.Index(body, "$edit_name = ")
 	if i < 0 {
 		return "(a semeadura do nome não está na página)"
 	}
-	fim := i + 120
-	if fim > len(corpo) {
-		fim = len(corpo)
+	end := i + 120
+	if end > len(body) {
+		end = len(body)
 	}
-	return corpo[i:fim]
+	return body[i:end]
 }
 
 // trechoDeSinais tira só a linha dos sinais da resposta SSE, porque o quadro
 // inteiro traz a cena e enterra a asserção em 8 KB de HTML.
-func trechoDeSinais(corpo string) string {
-	for _, linha := range strings.Split(corpo, "\n") {
-		if strings.HasPrefix(linha, "data: signals ") {
-			return linha
+func trechoDeSinais(body string) string {
+	for _, row := range strings.Split(body, "\n") {
+		if strings.HasPrefix(row, "data: signals ") {
+			return row
 		}
 	}
 	return "(nenhuma linha de sinais na resposta)"
@@ -239,27 +239,27 @@ func trechoDeSinais(corpo string) string {
 // Espécie vazia é a BORRACHA, que não nomeia espécie nenhuma — nem no caminho
 // nem no corpo. É a espécie que a faz apagar a coisa errada em silêncio, e o
 // corpo não devolve esse campo de graça.
-func stroke(especie string, x, y, x2, y2 int) string {
-	if especie == "" {
+func stroke(species string, x, y, x2, y2 int) string {
+	if species == "" {
 		return fmt.Sprintf(`{"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`, x, y, x2, y2)
 	}
 	return fmt.Sprintf(`{"kind":%q,"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`,
-		especie, x, y, x2, y2)
+		species, x, y, x2, y2)
 }
 
 // strokeErasing é o traço que apaga AQUELA espécie, e não a casa inteira.
 //
 // São coisas diferentes e por isso não são a mesma rota: esta nomeia a espécie e
 // a borracha (`/terreno/limpar`) não nomeia nenhuma.
-func strokeErasing(especie string, x, y, x2, y2 int) string {
+func strokeErasing(species string, x, y, x2, y2 int) string {
 	return fmt.Sprintf(`{"kind":%q,"erase":true,"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`,
-		especie, x, y, x2, y2)
+		species, x, y, x2, y2)
 }
 
 // templateBody monta o CORPO do gabarito: a forma, o tamanho, a origem e a mira.
 // Os dois pontos usam os mesmos `from`/`to` do traço — um formato só para o
 // tabuleiro inteiro.
-func templateBody(forma, tamanho string, x, y, mx, my int) string {
+func templateBody(form, size string, x, y, mx, my int) string {
 	return fmt.Sprintf(`{"shape":%q,"size":%q,"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`,
-		forma, tamanho, x, y, mx, my)
+		form, size, x, y, mx, my)
 }

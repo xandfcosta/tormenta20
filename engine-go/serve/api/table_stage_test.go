@@ -16,11 +16,11 @@ func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+	html := f.pede(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 
 	for _, id := range append(tableRegionNames, "table-tracker-rail") {
-		marca := `id="` + id + `"`
-		if n := strings.Count(html, marca); n != 1 {
+		mark := `id="` + id + `"`
+		if n := strings.Count(html, mark); n != 1 {
 			t.Errorf("a região %q aparece %d vezes no palco do mestre, e o remendo precisa de exatamente 1", id, n)
 		}
 	}
@@ -35,7 +35,7 @@ func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.jogador, "GET", f.tableUrl(), "").Body.String()
+	html := f.pede(t, f.player, "GET", f.tableUrl(), "").Body.String()
 
 	// O CONTROLE primeiro: sem ele, "não achei o trilho" seria verdade também
 	// numa página que voltou vazia, num 403, ou num id que alguém renomeou.
@@ -57,13 +57,13 @@ func TestTheStreamOnlySendsTheRegionTheDocumentHas(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	paraOMestre := idsDasRegioes(t, f, f.mestre)
-	paraOJogador := idsDasRegioes(t, f, f.jogador)
+	forGM := idsDasRegioes(t, f, f.gm)
+	forPlayer := idsDasRegioes(t, f, f.player)
 
-	if !paraOMestre["table-tracker-rail"] {
+	if !forGM["table-tracker-rail"] {
 		t.Error("o palco do mestre desenha o trilho e o stream não o remenda: ele nasce e nunca mais muda")
 	}
-	if paraOJogador["table-tracker-rail"] {
+	if forPlayer["table-tracker-rail"] {
 		t.Error("o stream manda ao jogador uma região que a coluna dele não tem — o remendo escreve no vazio")
 	}
 }

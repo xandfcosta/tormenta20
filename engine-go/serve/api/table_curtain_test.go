@@ -11,13 +11,13 @@ func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(tela, "Fechar a cortina") {
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(screen, "Fechar a cortina") {
 		t.Fatal("o mestre não tem gesto para fechar a cortina — a feature volta a ser invisível")
 	}
 
 	base := f.tableUrl() + "/tabuleiro/cortina"
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/fechar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"/fechar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("fechar deu %d", rec.Code)
 	}
 	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); !b.Curtained {
@@ -26,12 +26,12 @@ func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
 
 	// Fechada, a tela do mestre oferece o CAMINHO DE VOLTA — e em dois lugares,
 	// porque a tira de aviso é onde ele percebe e o cabeçalho é onde ele procura.
-	fechada := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if n := strings.Count(fechada, "Abrir a cortina"); n < 2 {
+	closed := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if n := strings.Count(closed, "Abrir a cortina"); n < 2 {
 		t.Errorf("com a cortina fechada há %d caminhos de volta, esperado 2 (a tira e o cabeçalho)", n)
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/abrir", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"/abrir", ""); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
 	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); b.Curtained {
@@ -47,19 +47,19 @@ func TestThePlayerDoesNotDrawTheCurtain(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/cortina"
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/fechar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"/fechar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("fechar deu %d", rec.Code)
 	}
 
-	if rec := f.pede(t, f.jogador, http.MethodPost, base+"/abrir", ""); rec.Code != http.StatusForbidden {
+	if rec := f.pede(t, f.player, http.MethodPost, base+"/abrir", ""); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador abriu a cortina: %d", rec.Code)
 	}
 	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); !b.Curtained {
 		t.Error("a cortina abriu apesar do 403")
 	}
 	// E o gesto nem aparece para ele: cortesia, não a trava.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(doJogador, "Fechar a cortina") {
+	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(forPlayer, "Fechar a cortina") {
 		t.Error("o jogador recebeu o botão da cortina")
 	}
 }

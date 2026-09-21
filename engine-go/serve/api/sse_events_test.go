@@ -24,19 +24,19 @@ import (
 
 // lerQuadro lê um quadro SSE (até a linha em branco) com prazo, para o teste
 // falhar em vez de pendurar quando o servidor não empurra.
-func lerQuadro(t *testing.T, leitor *bufio.Reader) string {
+func lerQuadro(t *testing.T, reader *bufio.Reader) string {
 	t.Helper()
 	pronto := make(chan string, 1)
 	go func() {
 		var sb strings.Builder
 		for {
-			linha, err := leitor.ReadString('\n')
+			row, err := reader.ReadString('\n')
 			if err != nil {
 				pronto <- sb.String()
 				return
 			}
-			sb.WriteString(linha)
-			if linha == "\n" {
+			sb.WriteString(row)
+			if row == "\n" {
 				pronto <- sb.String()
 				return
 			}
@@ -60,10 +60,10 @@ func TestTheFrameArrivesWithTheRequestStillOpen(t *testing.T) {
 	hub := live.NewSSEHub()
 	conn := hub.Add(7, "c1", "gm")
 
-	servidor := httptest.NewServer(fluxoDeTeste(conn, time.Hour))
-	defer servidor.Close()
+	server := httptest.NewServer(fluxoDeTeste(conn, time.Hour))
+	defer server.Close()
 
-	resp, err := servidor.Client().Get(servidor.URL)
+	resp, err := server.Client().Get(server.URL)
 	if err != nil {
 		t.Fatalf("conectar: %v", err)
 	}
@@ -76,12 +76,12 @@ func TestTheFrameArrivesWithTheRequestStillOpen(t *testing.T) {
 		t.Errorf("Cache-Control = %q — sem isto o quadro pode vir de cache", cc)
 	}
 
-	leitor := bufio.NewReader(resp.Body)
+	reader := bufio.NewReader(resp.Body)
 	hub.Emit(7, "", "session-state", map[string]any{"turnIndex": 3})
 
-	quadro := lerQuadro(t, leitor)
-	if !strings.Contains(quadro, "event: session-state") || !strings.Contains(quadro, `"turnIndex":3`) {
-		t.Fatalf("quadro = %q", quadro)
+	frame := lerQuadro(t, reader)
+	if !strings.Contains(frame, "event: session-state") || !strings.Contains(frame, `"turnIndex":3`) {
+		t.Fatalf("quadro = %q", frame)
 	}
 }
 
@@ -91,28 +91,28 @@ func TestTheFrameArrivesWithTheRequestStillOpen(t *testing.T) {
 func TestTheHeartbeatIsACommentAndNotAnEvent(t *testing.T) {
 	hub := live.NewSSEHub()
 	conn := hub.Add(7, "c1", "gm")
-	servidor := httptest.NewServer(fluxoDeTeste(conn, 30*time.Millisecond))
-	defer servidor.Close()
+	server := httptest.NewServer(fluxoDeTeste(conn, 30*time.Millisecond))
+	defer server.Close()
 
-	resp, err := servidor.Client().Get(servidor.URL)
+	resp, err := server.Client().Get(server.URL)
 	if err != nil {
 		t.Fatalf("conectar: %v", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	quadro := lerQuadro(t, bufio.NewReader(resp.Body))
-	if !strings.HasPrefix(quadro, ":") {
-		t.Fatalf("batida = %q, queria um comentário SSE", quadro)
+	frame := lerQuadro(t, bufio.NewReader(resp.Body))
+	if !strings.HasPrefix(frame, ":") {
+		t.Fatalf("batida = %q, queria um comentário SSE", frame)
 	}
-	if strings.Contains(quadro, "event:") {
-		t.Fatalf("batida = %q — comentário não pode virar evento", quadro)
+	if strings.Contains(frame, "event:") {
+		t.Fatalf("batida = %q — comentário não pode virar evento", frame)
 	}
 }
 
 // fluxoDeTeste põe o LAÇO DE VERDADE (`live.StreamFrames`) atrás de um servidor, com
 // os mesmos cabeçalhos do handler. Copiar o laço numa imitação faria o teste
 // medir a cópia — que é o modo de o guarda passar verde sobre o app quebrado.
-func fluxoDeTeste(conn *live.SSEConn, batida time.Duration) http.HandlerFunc {
+func fluxoDeTeste(conn *live.SSEConn, hit time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		flusher, ok := w.(http.Flusher)
 		if !ok {
@@ -123,6 +123,6 @@ func fluxoDeTeste(conn *live.SSEConn, batida time.Duration) http.HandlerFunc {
 		w.Header().Set("Cache-Control", "no-cache")
 		w.WriteHeader(http.StatusOK)
 		flusher.Flush()
-		live.StreamFrames(r.Context(), w, flusher, conn, batida)
+		live.StreamFrames(r.Context(), w, flusher, conn, hit)
 	}
 }

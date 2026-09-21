@@ -36,42 +36,42 @@ func TestTheFrameFollowsTheOrderOfTheMutation(t *testing.T) {
 	// visita. Sem o conserto isto fica vermelho em poucas dezenas.
 	const tentativas = 200
 
-	for tentativa := range tentativas {
+	for attempt := range tentativas {
 		s := newTestServer(t)
 		conn := s.sse.Add(sessionID, "c1", "gm")
 
 		var wg sync.WaitGroup
-		for _, nome := range []string{"Abalado", "Agarrado", "Cego", "Surdo", "Lento", "Fraco"} {
+		for _, name := range []string{"Abalado", "Agarrado", "Cego", "Surdo", "Lento", "Fraco"} {
 			wg.Add(1)
-			go func(rotulo string) {
+			go func(label string) {
 				defer wg.Done()
-				estado, err := s.sessions.AddInitiativeEntry(sessionID, live.InitiativeEntry{
-					Label: rotulo, Type: "npc", Initiative: 10,
+				state, err := s.sessions.AddInitiativeEntry(sessionID, live.InitiativeEntry{
+					Label: label, Type: "npc", Initiative: 10,
 				})
 				if err != nil {
 					return
 				}
-				s.tableRules().publishSessionState(sessionID, estado)
-			}(nome)
+				s.tableRules().publishSessionState(sessionID, state)
+			}(name)
 		}
 		wg.Wait()
 
-		ultimo := ultimoQuadro(conn)
-		if ultimo == "" {
-			t.Fatalf("tentativa %d: nenhum quadro desceu — o canal não existe, e ausência aqui não é resultado", tentativa)
+		last := ultimoQuadro(conn)
+		if last == "" {
+			t.Fatalf("tentativa %d: nenhum quadro desceu — o canal não existe, e ausência aqui não é resultado", attempt)
 		}
 		// O ÚLTIMO quadro é o que fica na tela. Ele tem de conter as duas
 		// entradas: as duas mutações já aconteceram quando o `wg.Wait` voltou.
-		faltando := ""
-		for _, nome := range []string{"Abalado", "Agarrado", "Cego", "Surdo", "Lento", "Fraco"} {
-			if !strings.Contains(ultimo, nome) {
-				faltando = nome
+		missing := ""
+		for _, name := range []string{"Abalado", "Agarrado", "Cego", "Surdo", "Lento", "Fraco"} {
+			if !strings.Contains(last, name) {
+				missing = name
 				break
 			}
 		}
-		if faltando != "" {
+		if missing != "" {
 			t.Fatalf("tentativa %d: o último quadro perdeu %q — a tela fica com ela sumida.\n%s",
-				tentativa, faltando, resumoDoQuadro(t, ultimo))
+				attempt, missing, resumoDoQuadro(t, last))
 		}
 		s.sse.Remove(sessionID, "c1")
 	}
@@ -80,15 +80,15 @@ func TestTheFrameFollowsTheOrderOfTheMutation(t *testing.T) {
 // ultimoQuadro drena a fila e devolve o último quadro, que é o que sobrevive na
 // tela — os anteriores são sobrescritos por ele.
 func ultimoQuadro(conn *live.SSEConn) string {
-	var ultimo string
+	var last string
 	for {
 		select {
 		case frame := <-conn.Frames:
 			if strings.Contains(string(frame), "event: session-state") {
-				ultimo = string(frame)
+				last = string(frame)
 			}
 		default:
-			return ultimo
+			return last
 		}
 	}
 }
@@ -97,18 +97,18 @@ func ultimoQuadro(conn *live.SSEConn) string {
 // que sobrou em vez de despejar o JSON inteiro.
 func resumoDoQuadro(t *testing.T, frame string) string {
 	t.Helper()
-	_, corpo, _ := strings.Cut(frame, "data: ")
-	var estado struct {
+	_, body, _ := strings.Cut(frame, "data: ")
+	var state struct {
 		Initiative []struct {
 			Label string `json:"label"`
 		} `json:"initiative"`
 	}
-	if err := json.Unmarshal([]byte(strings.TrimSpace(corpo)), &estado); err != nil {
+	if err := json.Unmarshal([]byte(strings.TrimSpace(body)), &state); err != nil {
 		return frame
 	}
-	rotulos := make([]string, 0, len(estado.Initiative))
-	for _, e := range estado.Initiative {
-		rotulos = append(rotulos, e.Label)
+	labels := make([]string, 0, len(state.Initiative))
+	for _, e := range state.Initiative {
+		labels = append(labels, e.Label)
 	}
-	return "sobrou: [" + strings.Join(rotulos, " ") + "]"
+	return "sobrou: [" + strings.Join(labels, " ") + "]"
 }

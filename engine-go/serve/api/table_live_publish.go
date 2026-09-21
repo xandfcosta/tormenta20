@@ -38,13 +38,13 @@ func (tr tableRules) saveBoard(sessionID int64, board *board.BoardState) {
 // saveSession GRAVA o estado da sessão. O irmão do `saveBoard`, e pela mesma
 // razão — ver lá.
 //
-// Ela conta no `emSegundoPlano` e o tabuleiro não: quem espera no `Shutdown` é
+// Ela conta no `inBackground` e o tabuleiro não: quem espera no `Shutdown` é
 // este contador. Diferença conhecida e não "arrumada" de passagem — mexer no
 // que o desligamento espera é decisão de quem mediu o desligamento.
 func (tr tableRules) saveSession(sessionID int64) {
-	tr.emSegundoPlano.Add(1)
+	tr.inBackground.Add(1)
 	go func() {
-		defer tr.emSegundoPlano.Done()
+		defer tr.inBackground.Done()
 		tr.persistSessionAndWarn(sessionID)
 	}()
 }
@@ -73,12 +73,12 @@ func (tr tableRules) publishBoardState(sessionID int64, state *board.BoardState)
 	// O tabuleiro já numera as próprias mutações, então a ordem sai de graça —
 	// `Version` sobe a cada mutação aceita. Fechar o tabuleiro manda `nil` e cai
 	// no caminho "sem ordem", que reinicia o destino de propósito.
-	var ordem uint64
+	var order uint64
 	if state != nil {
-		ordem = uint64(state.Version)
+		order = uint64(state.Version)
 	}
-	tr.sse.EmitOrdered(sessionID, "gm", "board-state", ordem, state)
-	tr.sse.EmitOrdered(sessionID, "player", "board-state", ordem, board.BoardForRole("player", state))
+	tr.sse.EmitOrdered(sessionID, "gm", "board-state", order, state)
+	tr.sse.EmitOrdered(sessionID, "player", "board-state", order, board.BoardForRole("player", state))
 }
 
 // publishWhatIsLeft é o quadro DEPOIS de fechar uma aba.
@@ -91,13 +91,13 @@ func (tr tableRules) publishBoardState(sessionID int64, state *board.BoardState)
 // Ela GRAVA e publica, os dois passos escritos. O `Close` do store já apagou a
 // linha da aba fechada; o que esta regravação alcança é a que SOBROU.
 func (tr tableRules) publishWhatIsLeft(ctx context.Context, sessionID int64) {
-	sobrou := tr.boards.Get(ctx, sessionID, defaultTab)
-	tr.saveBoard(sessionID, sobrou)
-	tr.publishBoardState(sessionID, sobrou)
+	left := tr.boards.Get(ctx, sessionID, defaultTab)
+	tr.saveBoard(sessionID, left)
+	tr.publishBoardState(sessionID, left)
 }
 
-func (tr tableRules) persistBoardAndWarn(sessionID int64, tabuleiroID string) {
-	if Dirty, changed := tr.boards.Persist(context.Background(), sessionID, tabuleiroID); changed {
+func (tr tableRules) persistBoardAndWarn(sessionID int64, boardID string) {
+	if Dirty, changed := tr.boards.Persist(context.Background(), sessionID, boardID); changed {
 		tr.warnPersistenceOnBoard(sessionID, Dirty)
 	}
 }

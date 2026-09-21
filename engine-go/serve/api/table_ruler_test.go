@@ -26,18 +26,18 @@ func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 	}
 
 	// Um quadrado de lado 1 exatamente em cima dela.
-	caminho := f.tableUrl() + "/tabuleiro/gabarito"
-	quadrado := templateBody("quadrado", "1", 4, 4, 4, 4)
-	doMestre := f.posta(t, f.mestre, caminho, quadrado)
-	if !strings.Contains(doMestre, "Ogro emboscado") {
-		t.Fatalf("o MESTRE não viu a própria peça: %s\n— sem o caso positivo o resto não mede nada", doMestre)
+	path := f.tableUrl() + "/tabuleiro/gabarito"
+	square := templateBody("quadrado", "1", 4, 4, 4, 4)
+	forGM := f.posta(t, f.gm, path, square)
+	if !strings.Contains(forGM, "Ogro emboscado") {
+		t.Fatalf("o MESTRE não viu a própria peça: %s\n— sem o caso positivo o resto não mede nada", forGM)
 	}
-	doJogador := f.posta(t, f.jogador, caminho, quadrado)
-	if strings.Contains(doJogador, "Ogro emboscado") {
-		t.Errorf("a emboscada vazou no gabarito do jogador: %s", doJogador)
+	forPlayer := f.posta(t, f.player, path, square)
+	if strings.Contains(forPlayer, "Ogro emboscado") {
+		t.Errorf("a emboscada vazou no gabarito do jogador: %s", forPlayer)
 	}
-	if !strings.Contains(doJogador, "Ninguém dentro") {
-		t.Errorf("o jogador recebeu %q, esperado a área vazia", doJogador)
+	if !strings.Contains(forPlayer, "Ninguém dentro") {
+		t.Errorf("o jogador recebeu %q, esperado a área vazia", forPlayer)
 	}
 }
 
@@ -56,13 +56,13 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 
 	// As paradas vêm nos SINAIS: com número variável de pernas, um caminho com
 	// as pontas dentro seria uma rota que muda de forma.
-	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/regua",
+	response := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/regua",
 		`{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
-	if !strings.Contains(resposta, "ruler_text") {
-		t.Fatalf("a medida não voltou: %s", resposta)
+	if !strings.Contains(response, "ruler_text") {
+		t.Fatalf("a medida não voltou: %s", response)
 	}
-	if strings.Contains(resposta, "table-board") || strings.Contains(resposta, "datastar-patch-elements") {
-		t.Errorf("medir remendou a cena inteira:\n%s", resposta)
+	if strings.Contains(response, "table-board") || strings.Contains(response, "datastar-patch-elements") {
+		t.Errorf("medir remendou a cena inteira:\n%s", response)
 	}
 }
 
@@ -74,14 +74,14 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/gabarito", templateBody("piramide", "2", 0, 0, 0, 0))
+	rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/gabarito", templateBody("piramide", "2", 0, 0, 0, 0))
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("forma inventada deu %d, esperado 400", rec.Code)
 	}
 	// A mensagem diz o valor recebido E a lista do que existe: quem lê o erro
 	// precisa saber o que digitar em vez do que digitou.
-	if corpo := rec.Body.String(); !strings.Contains(corpo, "piramide") || !strings.Contains(corpo, "esfera") {
-		t.Errorf("a recusa saiu %q, sem o valor recusado ou sem a lista", corpo)
+	if body := rec.Body.String(); !strings.Contains(body, "piramide") || !strings.Contains(body, "esfera") {
+		t.Errorf("a recusa saiu %q, sem o valor recusado ou sem a lista", body)
 	}
 }
 
@@ -99,18 +99,18 @@ func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	estranho := seedUser(t, f.s, "estranho@t.com")
+	stranger := seedUser(t, f.s, "estranho@t.com")
 
-	caminho := f.tableUrl() + "/tabuleiro/regua"
-	paradas := `{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`
+	path := f.tableUrl() + "/tabuleiro/regua"
+	stops := `{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`
 
-	rec := f.pede(t, estranho, http.MethodPost, caminho, paradas)
+	rec := f.pede(t, stranger, http.MethodPost, path, stops)
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("quem não está na mesa recebeu %d, quero 403: %s", rec.Code, rec.Body.String())
 	}
 	// O CONTROLE. Ele responde a pergunta que o `!= 200` não respondia: o canal
 	// existe, e o 403 acima é uma RECUSA e não um endereço que não casa.
-	if rec := f.pede(t, f.jogador, http.MethodPost, caminho, paradas); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.player, http.MethodPost, path, stops); rec.Code != http.StatusOK {
 		t.Fatalf("quem ESTÁ na mesa recebeu %d no mesmo endereço — o caso de cima passou a medir nada", rec.Code)
 	}
 }
@@ -125,18 +125,18 @@ func TestTheRailOffersTheRulerToThePlayer(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	for _, esperado := range []string{"Régua", "Gabarito", "Mover a peça"} {
-		if !strings.Contains(corpo, esperado) {
-			t.Errorf("a cena do jogador não ofereceu %q", esperado)
+	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	for _, want := range []string{"Régua", "Gabarito", "Mover a peça"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("a cena do jogador não ofereceu %q", want)
 		}
 	}
-	if strings.Contains(corpo, "Borracha") {
+	if strings.Contains(body, "Borracha") {
 		t.Error("o pincel do mestre apareceu na cena do jogador")
 	}
 
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(doMestre, "Borracha") {
+	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(forGM, "Borracha") {
 		t.Error("o mestre perdeu o pincel — sem o caso positivo o de cima não mede nada")
 	}
 }

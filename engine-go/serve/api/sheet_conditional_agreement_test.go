@@ -42,30 +42,30 @@ func TestTheSheetBadgeAndTheCombatTabAgreeOnDefense(t *testing.T) {
 	f, id := fighterFixture(t)
 	seedConditionalDefenseEffect(t, f.s, id, 5)
 
-	antesDeLigar := combatTabDefense(t, f, id)
+	beforeEnabling := combatTabDefense(t, f, id)
 	ligaOCondicional(t, f, id)
-	doPainel := combatTabDefense(t, f, id)
+	ofPanel := combatTabDefense(t, f, id)
 
-	if doPainel == antesDeLigar {
+	if ofPanel == beforeEnabling {
 		t.Fatalf("ligar o condicional não moveu a Defesa da aba Combate (%s): "+
-			"o caso mediria duas telas paradas", doPainel)
+			"o caso mediria duas telas paradas", ofPanel)
 	}
 
-	if doCrachá := badgeDefense(t, f, id); doCrachá != doPainel {
+	if ofBadge := badgeDefense(t, f, id); ofBadge != ofPanel {
 		t.Errorf("o crachá do topo diz Defesa %s e a aba Combate diz %s, na MESMA ficha.\n"+
 			"O crachá sai do `sheet.Compute`, que passa `map[string]bool{}` no lugar dos\n"+
 			"condicionais que o jogador ligou; o painel passa os de verdade.",
-			doCrachá, doPainel)
+			ofBadge, ofPanel)
 	}
 }
 
 // seedConditionalDefenseEffect é o irmão do `seedEfeitoCondicional` que mexe na
 // DEFESA — é ela que o crachá do topo mostra.
-func seedConditionalDefenseEffect(t *testing.T, s *Server, id int64, quanto int) {
+func seedConditionalDefenseEffect(t *testing.T, s *Server, id int64, howMuch int) {
 	t.Helper()
 	mods := fmt.Sprintf(
 		`[{"target":{"k":"defense"},"amount":%d,"bonusType":"untyped",`+
-			`"condition":{"c":"context","note":"enquanto estiver em Fúria"}}]`, quanto)
+			`"condition":{"c":"context","note":"enquanto estiver em Fúria"}}]`, howMuch)
 	if _, err := s.sceneCore().Queries().CreateActiveEffect(context.Background(),
 		sqlcgen.CreateActiveEffectParams{
 			Characterid: id, Catalogid: "furia", Scope: "scene",
@@ -90,21 +90,21 @@ func combatTabDefense(t *testing.T, f sceneFixture, id int64) string {
 
 func badgeDefense(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	corpo := f.pede(t, f.jogador, "GET",
+	body := f.pede(t, f.player, "GET",
 		fmt.Sprintf("/personagens/%d?tab=expertises", id), "").Body.String()
-	return firstMatchOf(t, badgeDefensePattern, corpo, "o crachá do topo")
+	return firstMatchOf(t, badgeDefensePattern, body, "o crachá do topo")
 }
 
-func firstMatchOf(t *testing.T, re *regexp.Regexp, html, onde string) string {
+func firstMatchOf(t *testing.T, re *regexp.Regexp, html, where string) string {
 	t.Helper()
-	achado := re.FindStringSubmatch(html)
-	if achado == nil {
+	found := re.FindStringSubmatch(html)
+	if found == nil {
 		t.Fatalf("%s não desenhou Defesa nenhuma — o seletor deixou de casar, "+
-			"e sem ele este caso compararia duas strings vazias", onde)
+			"e sem ele este caso compararia duas strings vazias", where)
 	}
-	valor := strings.TrimSpace(achado[1])
-	if valor == "" {
-		t.Fatalf("%s desenhou uma Defesa vazia", onde)
+	value := strings.TrimSpace(found[1])
+	if value == "" {
+		t.Fatalf("%s desenhou uma Defesa vazia", where)
 	}
-	return valor
+	return value
 }

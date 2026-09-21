@@ -32,12 +32,12 @@ func TestDeletingAnAccountMovesItsCampaignsToTheAdmin(t *testing.T) {
 
 	// A REGRA direto, e não a rota: o que este caso prende é para onde vão as
 	// MESAS de quem some, que é decisão de produto e não de transporte.
-	movidas, err := s.accountRoster().Delete(context.Background(), admin, player)
+	moved, err := s.accountRoster().Delete(context.Background(), admin, player)
 	if err != nil {
 		t.Fatalf("apagar a conta falhou: %v", err)
 	}
-	if movidas != 1 {
-		t.Errorf("mesas transferidas = %d, esperado 1", movidas)
+	if moved != 1 {
+		t.Errorf("mesas transferidas = %d, esperado 1", moved)
 	}
 	row, err := s.queries.GetCampaign(context.Background(), campaign)
 	if err != nil {

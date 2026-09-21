@@ -17,13 +17,13 @@ import (
 func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	casa := f.tableUrl() + "/tabuleiro/terreno"
+	square := f.tableUrl() + "/tabuleiro/terreno"
 
 	// Três espécies EMPILHADAS na mesma casa: é o caso que o modo antigo não
 	// sabia resolver, porque ele tinha de escolher uma.
-	for _, especie := range []string{"dificil", "cobertura", "elevado"} {
-		if rec := f.pede(t, f.mestre, http.MethodPost, casa, stroke(especie, 4, 4, 4, 4)); rec.Code != http.StatusOK {
-			t.Fatalf("pintar %s deu %d", especie, rec.Code)
+	for _, species := range []string{"dificil", "cobertura", "elevado"} {
+		if rec := f.pede(t, f.gm, http.MethodPost, square, stroke(species, 4, 4, 4, 4)); rec.Code != http.StatusOK {
+			t.Fatalf("pintar %s deu %d", species, rec.Code)
 		}
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
@@ -32,7 +32,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 			len(b.Difficult), len(b.Cover), len(b.Elevated))
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, casa+"/limpar", stroke("", 4, 4, 4, 4)); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, square+"/limpar", stroke("", 4, 4, 4, 4)); rec.Code != http.StatusOK {
 		t.Fatalf("limpar deu %d", rec.Code)
 	}
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
@@ -51,16 +51,16 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if !strings.Contains(tela, "tabuleiro/terreno/limpar/") {
+	if !strings.Contains(screen, "tabuleiro/terreno/limpar/") {
 		t.Error("a borracha não usa a rota sem espécie")
 	}
-	if strings.Contains(tela, "apagar=1") {
+	if strings.Contains(screen, "apagar=1") {
 		t.Error("a borracha voltou a ser um modo do pincel (`?apagar=1`)")
 	}
 	// E ela é FERRAMENTA: tem lugar no trilho, com tecla.
-	if !strings.Contains(tela, "Borracha (tecla ") {
+	if !strings.Contains(screen, "Borracha (tecla ") {
 		t.Error("a borracha não é uma ferramenta do trilho")
 	}
 }
@@ -72,13 +72,13 @@ func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 func TestThePlayerRailLacksWhatThePlayerCannotDo(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if !strings.Contains(tela, "Régua (tecla ") {
+	if !strings.Contains(screen, "Régua (tecla ") {
 		t.Fatal("o jogador não recebeu o trilho — a página não é o que este teste pensa que é")
 	}
 	for _, f := range table.MapTools() {
-		if f.SoMestre && strings.Contains(tela, f.Rotulo+" (tecla ") {
+		if f.SoMestre && strings.Contains(screen, f.Rotulo+" (tecla ") {
 			t.Errorf("o jogador recebeu %q, que é do mestre", f.Rotulo)
 		}
 	}

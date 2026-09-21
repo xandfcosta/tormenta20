@@ -16,23 +16,23 @@ import (
 // conhece cena nenhuma.
 func TestEveryStaticAddressOnThePageIsVersioned(t *testing.T) {
 	f := newSceneFixture(t)
-	tela := f.pede(t, f.mestre, http.MethodGet, "/", "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, "/", "").Body.String()
 
 	// O CONTROLE: a página REFERENCIA estáticos. Sem ele, "nenhum endereço cru"
 	// seria verdade também sobre uma página que não carregou.
-	if !strings.Contains(tela, "/static/") {
+	if !strings.Contains(screen, "/static/") {
 		t.Fatal("a página não referencia estático nenhum — o guarda mediria a tela errada")
 	}
-	if strings.Contains(tela, `"/static/app.css"`) {
+	if strings.Contains(screen, `"/static/app.css"`) {
 		t.Error("a folha entrou sem versão: ela volta a ser rebaixada a cada troca de página")
 	}
-	for _, pedaco := range strings.Split(tela, "/static/")[1:] {
-		fim := strings.IndexAny(pedaco, `"'`)
-		if fim < 0 {
+	for _, chunk := range strings.Split(screen, "/static/")[1:] {
+		end := strings.IndexAny(chunk, `"'`)
+		if end < 0 {
 			continue
 		}
-		if !strings.Contains(pedaco[:fim], "?v=") {
-			t.Errorf("endereço estático sem versão: /static/%s", pedaco[:fim])
+		if !strings.Contains(chunk[:end], "?v=") {
+			t.Errorf("endereço estático sem versão: /static/%s", chunk[:end])
 		}
 	}
 }

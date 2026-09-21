@@ -21,12 +21,12 @@ import (
 func hubFixture(t *testing.T, admins ...string) (*Server, int64) {
 	t.Helper()
 	s := newTestServer(t, admins...)
-	dono := seedUser(t, s, "mestre@t20.local")
-	return s, dono
+	owner := seedUser(t, s, "mestre@t20.local")
+	return s, owner
 }
 
 // pedeHub manda um pedido pelo WebRouter com a sessão de `userID`.
-func pedeHub(t *testing.T, s *Server, userID int64, metodo, caminho string) *httptest.ResponseRecorder {
+func pedeHub(t *testing.T, s *Server, userID int64, method, path string) *httptest.ResponseRecorder {
 	t.Helper()
 	user, err := s.queries.GetUserByID(context.Background(), userID)
 	if err != nil {
@@ -36,7 +36,7 @@ func pedeHub(t *testing.T, s *Server, userID int64, metodo, caminho string) *htt
 	if err != nil {
 		t.Fatalf("assinar: %v", err)
 	}
-	req := httptest.NewRequest(metodo, caminho, nil)
+	req := httptest.NewRequest(method, path, nil)
 	req.AddCookie(&http.Cookie{Name: s.cfg.CookieName, Value: tok})
 	rec := httptest.NewRecorder()
 	s.WebRouter().ServeHTTP(rec, req)
@@ -48,66 +48,66 @@ func pedeHub(t *testing.T, s *Server, userID int64, metodo, caminho string) *htt
 // A entrada só existe com partida rolando — é o "Continue" de um jogo, e um
 // item que leva a uma sessão encerrada é pior que item nenhum.
 func TestTheHubOnlyOffersResumeWithALiveSession(t *testing.T) {
-	s, dono := hubFixture(t)
-	campanha := seedCampaign(t, s, dono)
-	sessao := seedSession(t, s, campanha)
+	s, owner := hubFixture(t)
+	campaign := seedCampaign(t, s, owner)
+	session := seedSession(t, s, campaign)
 
-	semViva := pedeHub(t, s, dono, http.MethodGet, "/").Body.String()
-	if strings.Contains(semViva, "Continuar sessão") {
+	noLive := pedeHub(t, s, owner, http.MethodGet, "/").Body.String()
+	if strings.Contains(noLive, "Continuar sessão") {
 		t.Error("ofereceu continuar sem sessão ativa")
 	}
 
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		UpdatedAt: dbvalue.NowISO(), ID: sessao,
+		UpdatedAt: dbvalue.NowISO(), ID: session,
 	}); err != nil {
 		t.Fatalf("iniciar sessão: %v", err)
 	}
 
-	comViva := pedeHub(t, s, dono, http.MethodGet, "/").Body.String()
-	if !strings.Contains(comViva, "Continuar sessão") {
+	withLive := pedeHub(t, s, owner, http.MethodGet, "/").Body.String()
+	if !strings.Contains(withLive, "Continuar sessão") {
 		t.Fatal("não ofereceu continuar com sessão ativa")
 	}
-	if !strings.Contains(comViva, routes.Session(campanha, sessao)) {
-		t.Errorf("o link não aponta para a sessão viva (%s)", routes.Session(campanha, sessao))
+	if !strings.Contains(withLive, routes.Session(campaign, session)) {
+		t.Errorf("o link não aponta para a sessão viva (%s)", routes.Session(campaign, session))
 	}
 }
 
 func TestTheHubDrawsNoAdminEntriesForAPlayer(t *testing.T) {
 	s, _ := hubFixture(t, "mestre@t20.local")
-	jogador := seedUser(t, s, "jogadora@t20.local")
+	player := seedUser(t, s, "jogadora@t20.local")
 
-	corpo := pedeHub(t, s, jogador, http.MethodGet, "/").Body.String()
-	for _, entrada := range []string{"Convidar jogador", "Administração"} {
-		if strings.Contains(corpo, entrada) {
-			t.Errorf("o Hub ofereceu %q para quem não administra", entrada)
+	body := pedeHub(t, s, player, http.MethodGet, "/").Body.String()
+	for _, entry := range []string{"Convidar jogador", "Administração"} {
+		if strings.Contains(body, entry) {
+			t.Errorf("o Hub ofereceu %q para quem não administra", entry)
 		}
 	}
 }
 
 func TestTheHubRefusesAnInviteFromANonAdmin(t *testing.T) {
 	s, _ := hubFixture(t, "mestre@t20.local")
-	jogador := seedUser(t, s, "jogadora@t20.local")
+	player := seedUser(t, s, "jogadora@t20.local")
 
-	antes, err := s.queries.ListOpenAccountInvites(context.Background(), dbvalue.NowISO())
+	before, err := s.queries.ListOpenAccountInvites(context.Background(), dbvalue.NowISO())
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
-	pedeHub(t, s, jogador, http.MethodPost, "/convites")
-	depois, err := s.queries.ListOpenAccountInvites(context.Background(), dbvalue.NowISO())
+	pedeHub(t, s, player, http.MethodPost, "/convites")
+	after, err := s.queries.ListOpenAccountInvites(context.Background(), dbvalue.NowISO())
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
-	if len(depois) != len(antes) {
+	if len(after) != len(before) {
 		t.Error("um não-admin cunhou convite — a trava da tela não é a trava")
 	}
 }
 
 func TestTheHubDrawsAdminEntriesForAnAdmin(t *testing.T) {
-	s, dono := hubFixture(t, "mestre@t20.local")
-	corpo := pedeHub(t, s, dono, http.MethodGet, "/").Body.String()
-	for _, entrada := range []string{"Convidar jogador", "Administração"} {
-		if !strings.Contains(corpo, entrada) {
-			t.Errorf("o Hub escondeu %q de quem administra", entrada)
+	s, owner := hubFixture(t, "mestre@t20.local")
+	body := pedeHub(t, s, owner, http.MethodGet, "/").Body.String()
+	for _, entry := range []string{"Convidar jogador", "Administração"} {
+		if !strings.Contains(body, entry) {
+			t.Errorf("o Hub escondeu %q de quem administra", entry)
 		}
 	}
 }
@@ -119,27 +119,27 @@ func TestTheHubDrawsAdminEntriesForAnAdmin(t *testing.T) {
 // topo por GET. Um `<a href="/sair">` seria disparável por qualquer
 // imagem de terceiro, e o jogador seria deslogado no meio da mesa.
 func TestSignOutDoesNotAnswerGet(t *testing.T) {
-	s, dono := hubFixture(t)
-	rec := pedeHub(t, s, dono, http.MethodGet, "/sair")
+	s, owner := hubFixture(t)
+	rec := pedeHub(t, s, owner, http.MethodGet, "/sair")
 	if rec.Code != http.StatusMethodNotAllowed && rec.Code != http.StatusNotFound {
 		t.Errorf("GET /sair respondeu %d — ação com efeito não pode viver num GET", rec.Code)
 	}
 }
 
 func TestSignOutClearsTheCookieAndGivesBackTheDoor(t *testing.T) {
-	s, dono := hubFixture(t)
-	rec := pedeHub(t, s, dono, http.MethodPost, "/sair")
+	s, owner := hubFixture(t)
+	rec := pedeHub(t, s, owner, http.MethodPost, "/sair")
 
 	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/entrar" {
 		t.Fatalf("status %d para %q", rec.Code, rec.Header().Get("Location"))
 	}
-	var apagou bool
+	var deleted bool
 	for _, c := range rec.Result().Cookies() {
 		if c.Name == s.cfg.CookieName && c.Value == "" && c.MaxAge < 0 {
-			apagou = true
+			deleted = true
 		}
 	}
-	if !apagou {
+	if !deleted {
 		t.Error("saiu sem apagar o cookie de sessão")
 	}
 }

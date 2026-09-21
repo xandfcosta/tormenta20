@@ -24,15 +24,15 @@ const sinalQueFecha = `sheet_open: false`
 // handler: o conteúdo tem de sair ANTES do sinal que abre. Invertido, a ficha
 // aparece com a criatura velha — e nenhum teste de "abriu?" pegaria isso.
 
-func fluxoDaFicha(t *testing.T, f sceneFixture, alvo string) string {
+func fluxoDaFicha(t *testing.T, f sceneFixture, target string) string {
 	t.Helper()
-	req := httptest.NewRequest(http.MethodGet, alvo, nil)
-	req.Header.Set("Authorization", "Bearer "+f.token(t, f.mestre))
+	req := httptest.NewRequest(http.MethodGet, target, nil)
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.gm))
 	req.Header.Set("datastar-request", "true")
 	rec := httptest.NewRecorder()
 	f.s.WebRouter().ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
-		t.Fatalf("%s deu %d", alvo, rec.Code)
+		t.Fatalf("%s deu %d", target, rec.Code)
 	}
 	return rec.Body.String()
 }
@@ -45,19 +45,19 @@ func fluxoDaFicha(t *testing.T, f sceneFixture, alvo string) string {
 // e o estado de aberto chegam juntos e não existe janela entre eles.
 func TestTheEntryCardIsBornOpenInTheSamePatchAsItsContent(t *testing.T) {
 	f := newSceneFixture(t)
-	corpo := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&abrir=1")
+	body := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&abrir=1")
 
-	if !strings.Contains(corpo, "datastar-patch-elements") {
+	if !strings.Contains(body, "datastar-patch-elements") {
 		t.Fatal("o fluxo não trouxe conteúdo nenhum — o guarda mediria a resposta errada")
 	}
-	if !strings.Contains(corpo, sinalQueAbre) {
+	if !strings.Contains(body, sinalQueAbre) {
 		t.Errorf("a ficha não nasce aberta: o remendo declara %q", sinalQueFecha)
 	}
-	if strings.Contains(corpo, sinalQueFecha) {
+	if strings.Contains(body, sinalQueFecha) {
 		t.Error("o remendo redeclara a ficha FECHADA por cima: ela não abriria, ou abriria e fecharia")
 	}
 	// E o conteúdo é o da criatura PEDIDA, não o de qualquer uma.
-	if !strings.Contains(corpo, "Lobo") {
+	if !strings.Contains(body, "Lobo") {
 		t.Error("o fluxo não trouxe a criatura escolhida")
 	}
 }
@@ -72,13 +72,13 @@ func TestSearchAndFilterDoNotOpenTheEntryCard(t *testing.T) {
 
 	// O CONTROLE: com `abrir` o sinal SAI. Sem ele, "não abriu" seria verdade
 	// também sobre uma rota quebrada que não responde nada.
-	comAbrir := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&abrir=1")
-	if !strings.Contains(comAbrir, sinalQueAbre) {
+	withOpen := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&abrir=1")
+	if !strings.Contains(withOpen, sinalQueAbre) {
 		t.Fatal("nem com abrir=1 a ficha abre — o guarda abaixo não mediria nada")
 	}
 
-	semAbrir := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&busca=lo")
-	if strings.Contains(semAbrir, sinalQueAbre) {
+	noOpen := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&busca=lo")
+	if strings.Contains(noOpen, sinalQueAbre) {
 		t.Error("buscar abriu a ficha: a cada tecla o diálogo saltaria por cima da lista")
 	}
 }
@@ -89,15 +89,15 @@ func TestSearchAndFilterDoNotOpenTheEntryCard(t *testing.T) {
 // atribui a um commit.
 func TestClickingTheRowDoesNotOpenTheEntryCardOnItsOwn(t *testing.T) {
 	f := newSceneFixture(t)
-	tela := f.pede(t, f.mestre, http.MethodGet, "/mestre/bestiario", "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, "/mestre/bestiario", "").Body.String()
 
-	if !strings.Contains(tela, "criatura=") {
+	if !strings.Contains(screen, "criatura=") {
 		t.Fatal("a lista não desenhou — o guarda mediria a tela errada")
 	}
-	if strings.Contains(tela, "$sheet_open = true") {
+	if strings.Contains(screen, "$sheet_open = true") {
 		t.Error("o clique abre a ficha pelo cliente: ela aparece com a criatura anterior por um quadro")
 	}
-	if !strings.Contains(tela, "abrir=1") {
+	if !strings.Contains(screen, "abrir=1") {
 		t.Error("o clique não pede ao servidor para abrir a ficha")
 	}
 }

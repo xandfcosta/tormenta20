@@ -13,12 +13,12 @@ func TestOnlyTheGmMarksAGroup(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`)
+	rec := f.pede(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`)
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador marcou um grupo e recebeu %d, esperado 403", rec.Code)
 	}
 	// O CONTROLE: o mestre PODE. Sem ele, um 403 para todo mundo passaria igual.
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`); rec.Code != http.StatusOK {
 		t.Errorf("o mestre não conseguiu marcar: %d", rec.Code)
 	}
@@ -38,20 +38,20 @@ func TestOnlyTheGmMarksAGroup(t *testing.T) {
 func TestTheLassoMarksOnlyWhatIsInsideIt(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	dentro := f.seedToken(t, "Goblin de dentro", 3, 3)
-	foraNoX := f.seedToken(t, "Goblin à direita", 9, 3)
-	foraNoY := f.seedToken(t, "Goblin abaixo", 3, 9)
+	inside := f.seedToken(t, "Goblin de dentro", 3, 3)
+	outsideX := f.seedToken(t, "Goblin à direita", 9, 3)
+	outsideY := f.seedToken(t, "Goblin abaixo", 3, 9)
 
 	// O laço vai de (2,2) a (5,5): pega o (3,3) e deixa os dois vizinhos fora.
-	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area",
+	response := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/marcar-area",
 		`{"from":{"X":2,"Y":2},"to":{"X":5,"Y":5}}`)
 
-	if !strings.Contains(resposta, dentro) {
-		t.Errorf("o laço de (2,2) a (5,5) não pegou a peça em (3,3):\n%s", resposta)
+	if !strings.Contains(response, inside) {
+		t.Errorf("o laço de (2,2) a (5,5) não pegou a peça em (3,3):\n%s", response)
 	}
-	for nome, deFora := range map[string]string{"a de (9,3)": foraNoX, "a de (3,9)": foraNoY} {
-		if strings.Contains(resposta, deFora) {
-			t.Errorf("o laço de (2,2) a (5,5) marcou %s, que está fora dele:\n%s", nome, resposta)
+	for name, fromOutside := range map[string]string{"a de (9,3)": outsideX, "a de (3,9)": outsideY} {
+		if strings.Contains(response, fromOutside) {
+			t.Errorf("o laço de (2,2) a (5,5) marcou %s, que está fora dele:\n%s", name, response)
 		}
 	}
 }
@@ -62,19 +62,19 @@ func TestTheLassoMarksOnlyWhatIsInsideIt(t *testing.T) {
 // campo. Um caso que comparasse o `marked_tokens` com o id que ele mesmo passou
 // afirmaria sobre uma peça que não existe — e, como `strings.Contains` de um
 // nome inventado é sempre falso, ele acusaria "o laço não pegou" para SEMPRE.
-func (f sceneFixture) seedToken(t *testing.T, rotulo string, x, y int) string {
+func (f sceneFixture) seedToken(t *testing.T, label string, x, y int) string {
 	t.Helper()
-	estado, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		board.BoardToken{Label: rotulo, X: x, Y: y})
+	state, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+		board.BoardToken{Label: label, X: x, Y: y})
 	if err != nil {
-		t.Fatalf("pôr a peça %q: %v", rotulo, err)
+		t.Fatalf("pôr a peça %q: %v", label, err)
 	}
-	for _, peca := range estado.Tokens {
-		if peca.Label == rotulo {
-			return peca.ID
+	for _, token := range state.Tokens {
+		if token.Label == label {
+			return token.ID
 		}
 	}
-	t.Fatalf("a peça %q não entrou no tabuleiro", rotulo)
+	t.Fatalf("a peça %q não entrou no tabuleiro", label)
 	return ""
 }
 
@@ -87,12 +87,12 @@ func (f sceneFixture) seedToken(t *testing.T, rotulo string, x, y int) string {
 func TestTheLassoReadsTheCornersInAnyOrder(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	dentro := f.seedToken(t, "Goblin de dentro", 3, 3)
+	inside := f.seedToken(t, "Goblin de dentro", 3, 3)
 
-	invertido := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area",
+	inverted := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/marcar-area",
 		`{"from":{"X":5,"Y":5},"to":{"X":2,"Y":2}}`)
-	if !strings.Contains(invertido, dentro) {
-		t.Errorf("o laço arrastado de (5,5) para (2,2) não pegou a peça em (3,3):\n%s", invertido)
+	if !strings.Contains(inverted, inside) {
+		t.Errorf("o laço arrastado de (5,5) para (2,2) não pegou a peça em (3,3):\n%s", inverted)
 	}
 }
 
@@ -103,12 +103,12 @@ func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area", "{}")
-	if !strings.Contains(resposta, "marked_tokens") {
-		t.Fatalf("a marcação não voltou: %s", resposta)
+	response := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/marcar-area", "{}")
+	if !strings.Contains(response, "marked_tokens") {
+		t.Fatalf("a marcação não voltou: %s", response)
 	}
-	if strings.Contains(resposta, "datastar-patch-elements") {
-		t.Errorf("marcar remendou a cena:\n%s", resposta)
+	if strings.Contains(response, "datastar-patch-elements") {
+		t.Errorf("marcar remendou a cena:\n%s", response)
 	}
 }
 
@@ -118,9 +118,9 @@ func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover", `{"delta":{"X":1,"Y":1},"marked_tokens":""}`)
-	if !strings.Contains(corpo, "não há peça marcada") {
-		t.Errorf("mover um grupo vazio não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
+	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/grupo/mover", `{"delta":{"X":1,"Y":1},"marked_tokens":""}`)
+	if !strings.Contains(body, "não há peça marcada") {
+		t.Errorf("mover um grupo vazio não foi recusado com frase: %q", body[max(0, len(body)-200):])
 	}
 }
 
@@ -131,23 +131,23 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
-	ficha, _ := sceneIds(t, f)
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
+	sheet, _ := sceneIds(t, f)
+	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) == 0 {
 		t.Fatal("a peça não entrou no mapa — o guarda mediria o vazio")
 	}
-	antes := b.Tokens[0]
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover",
-		`{"delta":{"X":3,"Y":-2},"marked_tokens":"`+antes.ID+`"}`)
+	before := b.Tokens[0]
+	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/grupo/mover",
+		`{"delta":{"X":3,"Y":-2},"marked_tokens":"`+before.ID+`"}`)
 
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if b.Tokens[0].X != antes.X+3 || b.Tokens[0].Y != antes.Y-2 {
+	if b.Tokens[0].X != before.X+3 || b.Tokens[0].Y != before.Y-2 {
 		t.Errorf("a peça de %s foi para (%d,%d), esperado (%d,%d)",
-			ficha, b.Tokens[0].X, b.Tokens[0].Y, antes.X+3, antes.Y-2)
+			sheet, b.Tokens[0].X, b.Tokens[0].Y, before.X+3, before.Y-2)
 	}
-	if strings.Contains(corpo, `id="table-archive"`) {
+	if strings.Contains(body, `id="table-archive"`) {
 		t.Error("mover o grupo devolveu a Mesa inteira no meio de um arrasto")
 	}
 }
@@ -167,19 +167,19 @@ func TestTheRestingLayerServesBothGestures(t *testing.T) {
 	// COM PEÇA no mapa: a marca do grupo é vestida pela peça, e num tabuleiro
 	// vazio a classe não aparece — o guarda acusaria a ausência dela sobre uma
 	// cena que só não tem peça nenhuma.
-	ficha, _ := sceneIds(t, f)
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	sheet, _ := sceneIds(t, f)
+	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O valor é CONSTANTE no `.templ`, então ele sai LITERAL no HTML — só o
 	// dinâmico é escapado. Procurar a forma escapada acha zero e acusa
 	// "0 camadas" sobre uma cena correta.
-	if quantas := strings.Count(tela, `data-show="$tool === ''"`); quantas != 1 {
-		t.Errorf("há %d camadas de repouso; com mais de uma a de baixo nunca recebe o dedo", quantas)
+	if howMany := strings.Count(screen, `data-show="$tool === ''"`); howMany != 1 {
+		t.Errorf("há %d camadas de repouso; com mais de uma a de baixo nunca recebe o dedo", howMany)
 	}
-	for _, pedaco := range []string{"marcar-area", "swallow_click", "board-token-marked"} {
-		if !strings.Contains(tela, pedaco) {
-			t.Errorf("a cena não tem %q: a seleção em área não acontece", pedaco)
+	for _, chunk := range []string{"marcar-area", "swallow_click", "board-token-marked"} {
+		if !strings.Contains(screen, chunk) {
+			t.Errorf("a cena não tem %q: a seleção em área não acontece", chunk)
 		}
 	}
 }

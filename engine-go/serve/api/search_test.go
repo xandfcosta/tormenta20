@@ -11,9 +11,9 @@ import (
 // com til no meio de uma sessão.
 
 func TestSearchIgnoresAccents(t *testing.T) {
-	casos := []struct {
-		campo, busca string
-		quer         bool
+	cases := []struct {
+		field, search string
+		want          bool
 	}{
 		{"Anão", "anao", true},
 		{"anao", "Anão", true},
@@ -21,9 +21,9 @@ func TestSearchIgnoresAccents(t *testing.T) {
 		{"Sombras de Valkaria", "VALKARIA", true},
 		{"Anão", "elfo", false},
 	}
-	for _, c := range casos {
-		if got := search.Matches([]string{c.campo}, c.busca); got != c.quer {
-			t.Errorf("casaBusca(%q, %q) = %v, queria %v", c.campo, c.busca, got, c.quer)
+	for _, c := range cases {
+		if got := search.Matches([]string{c.field}, c.search); got != c.want {
+			t.Errorf("casaBusca(%q, %q) = %v, queria %v", c.field, c.search, got, c.want)
 		}
 	}
 }
@@ -65,9 +65,9 @@ func TestSearchAcceptsNeitherASwappedNorAnExtraLetter(t *testing.T) {
 // Os dois que RECUSAM ("nzcromante", "anaox") são os que provam que o port não
 // ficou frouxo.
 func TestASingleLetterSearchMatchesAtAnyPosition(t *testing.T) {
-	for _, campo := range []string{"Anão", "Sombras"} {
-		if !search.Matches([]string{campo}, "a") {
-			t.Errorf("%q não casou com \"a\" — o match-sorter casa", campo)
+	for _, field := range []string{"Anão", "Sombras"} {
+		if !search.Matches([]string{field}, "a") {
+			t.Errorf("%q não casou com \"a\" — o match-sorter casa", field)
 		}
 	}
 	if search.Matches([]string{"Sombras"}, "z") {
@@ -76,9 +76,9 @@ func TestASingleLetterSearchMatchesAtAnyPosition(t *testing.T) {
 }
 
 func TestAnEmptySearchFiltersNothing(t *testing.T) {
-	for _, busca := range []string{"", "   "} {
-		if !search.Matches([]string{"qualquer coisa"}, busca) {
-			t.Errorf("busca %q filtrou — não digitar não é filtrar", busca)
+	for _, query := range []string{"", "   "} {
+		if !search.Matches([]string{"qualquer coisa"}, query) {
+			t.Errorf("busca %q filtrou — não digitar não é filtrar", query)
 		}
 	}
 }
@@ -86,11 +86,11 @@ func TestAnEmptySearchFiltersNothing(t *testing.T) {
 // Vários campos: casa se QUALQUER um casar. Na cena das campanhas são o nome e
 // a sinopse.
 func TestSearchLooksAtEveryField(t *testing.T) {
-	campos := []string{"Sombras de Valkaria", "Uma campanha sobre a Tormenta"}
-	if !search.Matches(campos, "tormenta") {
+	fields := []string{"Sombras de Valkaria", "Uma campanha sobre a Tormenta"}
+	if !search.Matches(fields, "tormenta") {
 		t.Error("não achou pela sinopse")
 	}
-	if search.Matches(campos, "dragão") {
+	if search.Matches(fields, "dragão") {
 		t.Error("casou com o que não está em campo nenhum")
 	}
 }

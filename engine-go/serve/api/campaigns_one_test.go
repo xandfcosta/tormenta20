@@ -15,7 +15,7 @@ import (
 
 // Os guardas da CRÔNICA.
 
-func pedeNaCronica(t *testing.T, s *Server, userID int64, metodo, caminho, corpo string) *httptest.ResponseRecorder {
+func pedeNaCronica(t *testing.T, s *Server, userID int64, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	u, err := s.queries.GetUserByID(context.Background(), userID)
 	if err != nil {
@@ -25,8 +25,8 @@ func pedeNaCronica(t *testing.T, s *Server, userID int64, metodo, caminho, corpo
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}
-	req := httptest.NewRequest(metodo, caminho, strings.NewReader(corpo))
-	if corpo != "" {
+	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	if body != "" {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -41,13 +41,13 @@ func pedeNaCronica(t *testing.T, s *Server, userID int64, metodo, caminho, corpo
 // tela não tem como avisar que está mentindo.
 func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "A Queda de Tauron", "")
 	for i := 1; i <= 5; i++ {
-		seedSessao(t, s, campanha, int64(i))
+		seedSessao(t, s, campaign, int64(i))
 	}
 
-	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
+	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), owner, s.ehAdmin(t, owner), campaign, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -55,11 +55,11 @@ func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 		t.Fatalf("esperava 5 sessões, veio %d", len(v.Sessoes))
 	}
 	if v.Sessoes[0].Numero != 5 || v.Sessoes[4].Numero != 1 {
-		numeros := make([]int64, len(v.Sessoes))
+		numbers := make([]int64, len(v.Sessoes))
 		for i, sess := range v.Sessoes {
-			numeros[i] = sess.Numero
+			numbers[i] = sess.Numero
 		}
-		t.Errorf("ordem = %v, queria da mais nova para a mais velha", numeros)
+		t.Errorf("ordem = %v, queria da mais nova para a mais velha", numbers)
 	}
 }
 
@@ -74,15 +74,15 @@ func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 // nunca escreve deixa o caso verde sobre uma ordenação que nunca aconteceu.
 func TestTheGmComesFirstInTheCast(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	quemJoga := seedUser(t, s, "jogador@t20.local")
-	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	jogador := seedCharacterAtLevel(t, s, quemJoga, "Yrla", "Arcanista", 4, 4, 4)
-	mestre := seedCharacterAtLevel(t, s, dono, "Thalen", "Guerreiro", 5, -4, 5)
-	seedMember(t, s, campanha, jogador)
-	seedMember(t, s, campanha, mestre)
+	owner := seedUser(t, s, "dono@t20.local")
+	playerTurn := seedUser(t, s, "jogador@t20.local")
+	campaign := seedCampanha(t, s, owner, "Mesa", "")
+	player := seedCharacterAtLevel(t, s, playerTurn, "Yrla", "Arcanista", 4, 4, 4)
+	gm := seedCharacterAtLevel(t, s, owner, "Thalen", "Guerreiro", 5, -4, 5)
+	seedMember(t, s, campaign, player)
+	seedMember(t, s, campaign, gm)
 
-	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
+	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), owner, s.ehAdmin(t, owner), campaign, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -101,13 +101,13 @@ func TestTheGmComesFirstInTheCast(t *testing.T) {
 // trava de verdade é das rotas de escrita, que respondem 403.
 func TestAPlayerAskingForConfigFallsBackToTheOverview(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	visitante := seedUser(t, s, "visitante@t20.local")
-	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
-	seedMember(t, s, campanha, heroi)
+	owner := seedUser(t, s, "dono@t20.local")
+	visitor := seedUser(t, s, "visitante@t20.local")
+	campaign := seedCampanha(t, s, owner, "Mesa", "")
+	hero := seedCharacterAtLevel(t, s, visitor, "Yrla", "Arcanista", 4, 4, 4)
+	seedMember(t, s, campaign, hero)
 
-	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), visitante, s.ehAdmin(t, visitante), campanha, "config")
+	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), visitor, s.ehAdmin(t, visitor), campaign, "config")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -123,21 +123,21 @@ func TestAPlayerAskingForConfigFallsBackToTheOverview(t *testing.T) {
 // para o jogador, mas isso é UX — quem postar na mão leva 403.
 func TestTheCampaignActionsBelongToTheGm(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	visitante := seedUser(t, s, "visitante@t20.local")
-	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", "Arcanista", 4, 4, 4)
-	seedMember(t, s, campanha, heroi)
-	base := "/campanhas/" + strconv.FormatInt(campanha, 10)
+	owner := seedUser(t, s, "dono@t20.local")
+	visitor := seedUser(t, s, "visitante@t20.local")
+	campaign := seedCampanha(t, s, owner, "Mesa", "")
+	hero := seedCharacterAtLevel(t, s, visitor, "Yrla", "Arcanista", 4, 4, 4)
+	seedMember(t, s, campaign, hero)
+	base := "/campanhas/" + strconv.FormatInt(campaign, 10)
 
-	for _, caminho := range []string{base + "/editar", base + "/excluir", base + "/regras/carga"} {
-		rec := pedeNaCronica(t, s, visitante, http.MethodPost, caminho, "name=Roubada")
+	for _, path := range []string{base + "/editar", base + "/excluir", base + "/regras/carga"} {
+		rec := pedeNaCronica(t, s, visitor, http.MethodPost, path, "name=Roubada")
 		if rec.Code != http.StatusForbidden {
-			t.Errorf("%s respondeu %d para o jogador, queria 403", caminho, rec.Code)
+			t.Errorf("%s respondeu %d para o jogador, queria 403", path, rec.Code)
 		}
 	}
 	// E a campanha continua intacta depois das três tentativas.
-	c, err := s.queries.GetCampaign(context.Background(), campanha)
+	c, err := s.queries.GetCampaign(context.Background(), campaign)
 	if err != nil || c.Name != "Mesa" {
 		t.Errorf("a campanha mudou: %+v (%v)", c, err)
 	}
@@ -148,13 +148,13 @@ func TestTheCampaignActionsBelongToTheGm(t *testing.T) {
 // edição dela na cara.
 func TestTheSignUpRefusalGivesBackTheTypedText(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "Nome antigo", "")
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "Nome antigo", "")
 	const novaDescricao = "A caravana parte de Valkaria ao amanhecer."
 
 	form := url.Values{"name": {"   "}, "description": {novaDescricao}}
-	rec := pedeNaCronica(t, s, dono, http.MethodPost,
-		"/campanhas/"+strconv.FormatInt(campanha, 10)+"/editar", form.Encode())
+	rec := pedeNaCronica(t, s, owner, http.MethodPost,
+		"/campanhas/"+strconv.FormatInt(campaign, 10)+"/editar", form.Encode())
 
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("status = %d, queria 422", rec.Code)
@@ -166,7 +166,7 @@ func TestTheSignUpRefusalGivesBackTheTypedText(t *testing.T) {
 		t.Error("a recusa não diz o que houve")
 	}
 	// E nada foi gravado.
-	c, _ := s.queries.GetCampaign(context.Background(), campanha)
+	c, _ := s.queries.GetCampaign(context.Background(), campaign)
 	if c.Name != "Nome antigo" {
 		t.Errorf("o nome mudou para %q apesar da recusa", c.Name)
 	}
@@ -176,42 +176,42 @@ func TestTheSignUpRefusalGivesBackTheTypedText(t *testing.T) {
 // guardado é o das regras DESLIGADAS — o padrão do livro é a regra valer.
 func TestTheSwitchTogglesWhatIsInForceAndNotTheOpposite(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	rota := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/regras/carga"
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "Mesa", "")
+	route := "/campanhas/" + strconv.FormatInt(campaign, 10) + "/regras/carga"
 
 	// Nasce EM VIGOR: nenhuma linha no banco significa "a regra vale".
-	v, _ := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
+	v, _ := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), owner, s.ehAdmin(t, owner), campaign, "config")
 	if !v.RegraEmVigor("carga") {
 		t.Fatal("a regra nasceu desligada — o padrão do livro é ela valer")
 	}
 
-	if rec := pedeNaCronica(t, s, dono, http.MethodPost, rota, ""); rec.Code != http.StatusOK {
+	if rec := pedeNaCronica(t, s, owner, http.MethodPost, route, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar respondeu %d", rec.Code)
 	}
-	v, _ = campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
+	v, _ = campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), owner, s.ehAdmin(t, owner), campaign, "config")
 	if v.RegraEmVigor("carga") {
 		t.Error("a regra continua em vigor depois de alternada")
 	}
 
-	if rec := pedeNaCronica(t, s, dono, http.MethodPost, rota, ""); rec.Code != http.StatusOK {
+	if rec := pedeNaCronica(t, s, owner, http.MethodPost, route, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar de volta respondeu %d", rec.Code)
 	}
-	v, _ = campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
+	v, _ = campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadOne(context.Background(), owner, s.ehAdmin(t, owner), campaign, "config")
 	if !v.RegraEmVigor("carga") {
 		t.Error("a regra não voltou a valer")
 	}
 }
 
-func seedSessao(t *testing.T, s *Server, campanhaID, numero int64) int64 {
+func seedSessao(t *testing.T, s *Server, campaignID, number int64) int64 {
 	t.Helper()
-	agora := dbvalue.NowISO()
+	now := dbvalue.NowISO()
 	sess, err := s.queries.CreateSession(context.Background(), sqlcgen.CreateSessionParams{
-		Campaignid: campanhaID, Sessionnumber: numero,
-		Createdat: agora, Updatedat: agora,
+		Campaignid: campaignID, Sessionnumber: number,
+		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		t.Fatalf("seed sessão %d: %v", numero, err)
+		t.Fatalf("seed sessão %d: %v", number, err)
 	}
 	return sess.ID
 }
@@ -234,22 +234,22 @@ func seedSessao(t *testing.T, s *Server, campanhaID, numero int64) int64 {
 func TestTheAdminEditsSomeoneElsesCampaignAndAPlayerStillCannot(t *testing.T) {
 	const emailDoAdmin = "chefe@t20.local"
 	s := newTestServer(t, emailDoAdmin)
-	dono := seedUser(t, s, "dono@t20.local")
+	owner := seedUser(t, s, "dono@t20.local")
 	admin := seedUser(t, s, emailDoAdmin)
-	jogador := seedUser(t, s, "jogador@t20.local")
-	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	heroi := seedCharacterAtLevel(t, s, jogador, "Yrla", "Arcanista", 4, 4, 4)
-	seedMember(t, s, campanha, heroi)
-	editar := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/editar"
+	player := seedUser(t, s, "jogador@t20.local")
+	campaign := seedCampanha(t, s, owner, "Mesa", "")
+	hero := seedCharacterAtLevel(t, s, player, "Yrla", "Arcanista", 4, 4, 4)
+	seedMember(t, s, campaign, hero)
+	edit := "/campanhas/" + strconv.FormatInt(campaign, 10) + "/editar"
 
-	if rec := pedeNaCronica(t, s, admin, http.MethodPost, editar, "name=Consertada"); rec.Code == http.StatusForbidden {
+	if rec := pedeNaCronica(t, s, admin, http.MethodPost, edit, "name=Consertada"); rec.Code == http.StatusForbidden {
 		t.Error("o admin levou 403 ao salvar a mesa que a própria cena o deixa abrir como mestre")
 	}
-	if c, _ := s.queries.GetCampaign(context.Background(), campanha); c.Name != "Consertada" {
+	if c, _ := s.queries.GetCampaign(context.Background(), campaign); c.Name != "Consertada" {
 		t.Errorf("o nome ficou em %q — a edição do admin não chegou ao banco", c.Name)
 	}
 
-	if rec := pedeNaCronica(t, s, jogador, http.MethodPost, editar, "name=Roubada"); rec.Code != http.StatusForbidden {
+	if rec := pedeNaCronica(t, s, player, http.MethodPost, edit, "name=Roubada"); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador salvou a mesa de outra pessoa: %d", rec.Code)
 	}
 }

@@ -19,29 +19,29 @@ import (
 // passaria verde sobre uma ficha que continuou mentindo.
 func TestTheProneDefenseIsSplitOnTheSheetAndInTheCast(t *testing.T) {
 	f := newSceneFixture(t)
-	heroi := strconv.FormatInt(f.charID, 10)
+	hero := strconv.FormatInt(f.charID, 10)
 
 	// O CONTROLE vem primeiro: em pé, a Defesa é UM número, e é assim que se sabe
 	// que o caso mede a mudança e não um texto que já estava lá.
-	emPe := f.pede(t, f.jogador, "GET", "/personagens/"+heroi+"?tab=combat", "").Body.String()
+	emPe := f.pede(t, f.player, "GET", "/personagens/"+hero+"?tab=combat", "").Body.String()
 	if strings.Contains(emPe, " CaC · ") {
 		t.Fatal("a ficha já mostrava a Defesa partida em pé — o caso mediria o que não mudou")
 	}
 
-	if rec := f.pede(t, f.jogador, "POST",
-		"/personagens/"+heroi+"/efeitos/condicao/caido", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.player, "POST",
+		"/personagens/"+hero+"/efeitos/condicao/caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Caído deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	caido := f.pede(t, f.jogador, "GET", "/personagens/"+heroi+"?tab=combat", "").Body.String()
-	if !strings.Contains(caido, " CaC · ") || !strings.Contains(caido, " Dist") {
+	down := f.pede(t, f.player, "GET", "/personagens/"+hero+"?tab=combat", "").Body.String()
+	if !strings.Contains(down, " CaC · ") || !strings.Contains(down, " Dist") {
 		t.Errorf("a ficha do caído não partiu a Defesa: %s", "(a caixa de Defesa não trouxe o par)")
 	}
 
 	// E o DIÁLOGO DO ELENCO, que é onde o mestre confere a Defesa de um jogador
 	// para decidir se o ataque acerta — o lugar onde o custo do erro é maior.
-	naMesa := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
-	if !strings.Contains(naMesa, " CaC · ") {
+	onTable := f.pede(t, f.gm, "GET", f.tableUrl(), "").Body.String()
+	if !strings.Contains(onTable, " CaC · ") {
 		t.Errorf("o elenco da Mesa não partiu a Defesa do caído: %s", "(o elenco não trouxe o par)")
 	}
 }
@@ -57,20 +57,20 @@ func TestTheProneDefenseIsSplitOnTheSheetAndInTheCast(t *testing.T) {
 // leitura, achando que é esquecimento — e é escolha.
 func TestTheHeroListKeepsTheSingleDefenseNumber(t *testing.T) {
 	f := newSceneFixture(t)
-	heroi := strconv.FormatInt(f.charID, 10)
-	if rec := f.pede(t, f.jogador, "POST",
-		"/personagens/"+heroi+"/efeitos/condicao/caido", ""); rec.Code != http.StatusOK {
+	hero := strconv.FormatInt(f.charID, 10)
+	if rec := f.pede(t, f.player, "POST",
+		"/personagens/"+hero+"/efeitos/condicao/caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Caído deu %d", rec.Code)
 	}
 
-	lista := f.pede(t, f.jogador, "GET", "/personagens", "").Body.String()
+	list := f.pede(t, f.player, "GET", "/personagens", "").Body.String()
 
 	// O CONTROLE: o herói TEM de estar na lista, senão o caso mede a ausência
 	// dele e passa verde dizendo nada.
-	if !strings.Contains(lista, "Arcanista") {
+	if !strings.Contains(list, "Arcanista") {
 		t.Fatal("o herói não apareceu na lista — o caso mediria outra coisa")
 	}
-	if strings.Contains(lista, " CaC · ") {
+	if strings.Contains(list, " CaC · ") {
 		t.Error("a lista partiu a Defesa: ali o par é ruído, e a decisão foi mantê-la inteira")
 	}
 }

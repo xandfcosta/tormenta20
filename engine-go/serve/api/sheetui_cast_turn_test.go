@@ -20,11 +20,11 @@ import (
 func learnAndCast(t *testing.T, f sceneFixture, spellID string) *responseRecorderLike {
 	t.Helper()
 	learnURL := fmt.Sprintf("/personagens/%d/magias/aprende/%s?tab=spells", f.charID, spellID)
-	if rec := f.pede(t, f.jogador, http.MethodPost, learnURL, ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.player, http.MethodPost, learnURL, ""); rec.Code != http.StatusOK {
 		t.Fatalf("aprender %q respondeu %d: %s", spellID, rec.Code, rec.Body.String())
 	}
 	castURL := fmt.Sprintf("/personagens/%d/magias/conjura/%s?tab=spells", f.charID, spellID)
-	rec := f.pede(t, f.jogador, http.MethodPost, castURL, "")
+	rec := f.pede(t, f.player, http.MethodPost, castURL, "")
 	return &responseRecorderLike{Code: rec.Code, Body: rec.Body.String()}
 }
 
@@ -136,7 +136,7 @@ func TestARefusedCastDoesNotSpendTheTurnAction(t *testing.T) {
 
 	// `luz` sem estar no grimório: o instante permite e a castURLção recusa.
 	castURL := fmt.Sprintf("/personagens/%d/magias/conjura/luz?tab=spells", f.charID)
-	refusal := sceneRefusal(f.pede(t, f.jogador, http.MethodPost, castURL, "").Body.String())
+	refusal := sceneRefusal(f.pede(t, f.player, http.MethodPost, castURL, "").Body.String())
 	if refusal == "" {
 		t.Fatal("o controle falhou: conjurar uma magia fora do grimório passou")
 	}

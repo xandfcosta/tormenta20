@@ -47,11 +47,11 @@ func (h adminHost) DatabaseSize() int64  { return fileSize(h.cfg.DatabasePath) }
 // LastBackup é o backup mais recente. `ok` em falso é "nenhum ainda", que é
 // estado normal — a lista vazia não é erro.
 func (h adminHost) LastBackup() (string, int64, bool) {
-	lista := h.listBackups()
-	if len(lista) == 0 {
+	list := h.listBackups()
+	if len(list) == 0 {
 		return "", 0, false
 	}
-	return lista[0].Name, lista[0].Size, true
+	return list[0].Name, list[0].Size, true
 }
 
 func (h adminHost) BackupNow(ctx context.Context, at time.Time) error {

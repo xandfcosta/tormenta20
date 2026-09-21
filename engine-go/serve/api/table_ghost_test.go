@@ -14,12 +14,12 @@ func (f sceneFixture) onBoardAt(t *testing.T, x, y int) string {
 	t.Helper()
 	f.seedOpenBoard(t, "stone")
 	entryID := f.tracker(t)
-	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	placed, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Arcanista", X: x, Y: y, EntryID: &entryID, CharacterID: &f.charID})
 	if err != nil {
 		t.Fatalf("pôr a peça em %d,%d: %v", x, y, err)
 	}
-	return posto.Tokens[len(posto.Tokens)-1].ID
+	return placed.Tokens[len(placed.Tokens)-1].ID
 }
 
 // A peça é DESENHADA onde foi solta, em vez de voltar para o início do
@@ -32,41 +32,41 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	tokenID := f.onBoardAt(t, 4, 2)
 	f.turnPlayer(t)
 
-	antes := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if peca := element(t, antes, "aria-label", "Arcanista em 4, 2"); peca == nil {
+	before := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if token := element(t, before, "aria-label", "Arcanista em 4, 2"); token == nil {
 		t.Fatal("a peça não está em 4,2 ANTES da proposta: o canal não está aberto e o que vem abaixo não é evidência")
-	} else if !strings.Contains(peca["style"], "--col:4; --lin:2;") {
-		t.Fatalf("a peça parada está desenhada em %q", peca["style"])
+	} else if !strings.Contains(token["style"], "--col:4; --lin:2;") {
+		t.Fatalf("a peça parada está desenhada em %q", token["style"])
 	}
 
 	// O JOGADOR desenha, e é pelos olhos DELE que se lê: para quem pede, o
 	// destino é o fato — a peça sólida vai para lá. Para o mestre é o contrário,
 	// e o guarda disso é o `TestForTheGmTheTokenStaysAndTheGhostGoes`.
-	if rec := f.pede(t, f.jogador, http.MethodPost,
+	if rec := f.pede(t, f.player, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	depois := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	after := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	peca := element(t, depois, "aria-label", "Arcanista em 7, 3")
-	if peca == nil {
+	piece := element(t, after, "aria-label", "Arcanista em 7, 3")
+	if piece == nil {
 		t.Fatal("a peça não é desenhada onde foi solta: ela voltou para a origem, que é o defeito do dono")
 	}
-	if !strings.Contains(peca["style"], "--col:7; --lin:3;") {
-		t.Errorf("a peça solta em 7,3 está desenhada em %q", peca["style"])
+	if !strings.Contains(piece["style"], "--col:7; --lin:3;") {
+		t.Errorf("a peça solta em 7,3 está desenhada em %q", piece["style"])
 	}
 	// O ARRASTO conta do lugar DESENHADO, senão a próxima parada cai longe do
 	// dedo — é a regra do `nextStepOrigin`, que antes morava no losango.
-	if !strings.Contains(peca["data-on:pointerup__window"], "x: 7 + dx") {
-		t.Errorf("o arrasto da peça proposta conta da origem: %q", peca["data-on:pointerup__window"])
+	if !strings.Contains(piece["data-on:pointerup__window"], "x: 7 + dx") {
+		t.Errorf("o arrasto da peça proposta conta da origem: %q", piece["data-on:pointerup__window"])
 	}
 
 	// E a METADE QUE NÃO PODE TER MUDADO: a peça continua GRAVADA em 4,2. Sem
 	// esta asserção o guarda acima passaria verde sobre uma peça que ANDOU sem
 	// confirmação, que é pior que o defeito que ele conserta.
-	gravada := board.FindToken(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
-	if gravada.X != 4 || gravada.Y != 2 {
-		t.Errorf("a peça ANDOU na proposta, para %d,%d — o desenho virou gravação", gravada.X, gravada.Y)
+	saved := board.FindToken(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
+	if saved.X != 4 || saved.Y != 2 {
+		t.Errorf("a peça ANDOU na proposta, para %d,%d — o desenho virou gravação", saved.X, saved.Y)
 	}
 }
 
@@ -76,35 +76,35 @@ func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 
-	semMovimento := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(semMovimento, "board-token-ghost") {
+	noMovement := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(noMovement, "board-token-ghost") {
 		t.Fatal("há fantasma SEM movimento proposto: ele estaria marcando um começo que não existe")
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	fantasma := element(t, tela, "class", "board-token-ghost")
-	if fantasma == nil {
+	ghost := element(t, screen, "class", "board-token-ghost")
+	if ghost == nil {
 		t.Fatal("a origem do movimento não tem fantasma: o começo do caminho não está marcado em lugar nenhum")
 	}
-	if !strings.Contains(fantasma["style"], "--col:4; --lin:2;") {
-		t.Errorf("o fantasma está em %q, e a peça saiu de 4,2", fantasma["style"])
+	if !strings.Contains(ghost["style"], "--col:4; --lin:2;") {
+		t.Errorf("o fantasma está em %q, e a peça saiu de 4,2", ghost["style"])
 	}
 	// Ele veste a PEÇA, e é o `--matiz` que prova: sem ele o disco sairia cinza,
 	// e a cor da espécie é metade de quem ele diz que é.
-	if !strings.Contains(fantasma["style"], "--matiz:") {
-		t.Errorf("o fantasma saiu sem a cor da espécie: %q", fantasma["style"])
+	if !strings.Contains(ghost["style"], "--matiz:") {
+		t.Errorf("o fantasma saiu sem a cor da espécie: %q", ghost["style"])
 	}
 	// E o leitor de tela não perde de onde ela saiu: quem conta é o nome da PEÇA,
 	// porque o fantasma é `aria-hidden` para não anunciar o mesmo combatente duas
 	// vezes na mesma cena.
-	peca := element(t, tela, "aria-label", "Arcanista em 7, 3")
-	if peca == nil || !strings.Contains(peca["aria-label"], "saiu de 4, 2") {
-		t.Fatalf("o nome da peça não diz de onde ela saiu: %+v", peca)
+	token := element(t, screen, "aria-label", "Arcanista em 7, 3")
+	if token == nil || !strings.Contains(token["aria-label"], "saiu de 4, 2") {
+		t.Fatalf("o nome da peça não diz de onde ela saiu: %+v", token)
 	}
 }
 
@@ -123,21 +123,21 @@ func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if peca := element(t, tela, "aria-label", "Arcanista em 4, 2"); peca == nil {
+	if token := element(t, screen, "aria-label", "Arcanista em 4, 2"); token == nil {
 		t.Error("a peça do mestre saiu da casa dela numa proposta que ele ainda não confirmou")
 	}
-	fantasma := element(t, tela, "class", "board-token-ghost")
-	if fantasma == nil {
+	ghost := element(t, screen, "class", "board-token-ghost")
+	if ghost == nil {
 		t.Fatal("o mestre não vê fantasma nenhum: o destino proposto não está marcado")
 	}
-	if !strings.Contains(fantasma["style"], "--col:7; --lin:3;") {
-		t.Errorf("o fantasma do mestre está em %q, e o destino proposto é 7,3", fantasma["style"])
+	if !strings.Contains(ghost["style"], "--col:7; --lin:3;") {
+		t.Errorf("o fantasma do mestre está em %q, e o destino proposto é 7,3", ghost["style"])
 	}
 }
 
@@ -150,15 +150,15 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	// Três paradas: (0,0) de onde ela saiu, depois (3,0) e (3,4).
-	for _, casa := range []string{`{"from":{"X":3,"Y":0}}`, `{"from":{"X":3,"Y":4}}`} {
-		if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada", casa); rec.Code != http.StatusOK {
-			t.Fatalf("a parada %s deu %d", casa, rec.Code)
+	for _, square := range []string{`{"from":{"X":3,"Y":0}}`, `{"from":{"X":3,"Y":4}}`} {
+		if rec := f.pede(t, f.gm, http.MethodPost, base+"/parada", square); rec.Code != http.StatusOK {
+			t.Fatalf("a parada %s deu %d", square, rec.Code)
 		}
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	fio := element(t, tela, "class", "board-move-arrow")
-	if fio == nil {
+	wire := element(t, screen, "class", "board-move-arrow")
+	if wire == nil {
 		t.Fatal("o movimento não tem seta")
 	}
 	// Três paradas, três pontos: (0,0) → (3,0) → (3,4). A ÚLTIMA perna desce 4
@@ -166,11 +166,11 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 	//
 	// A trilha desta proposta tem NOVE casas; uma seta que dobrasse nelas teria
 	// nove pontos, e é essa a confusão que o caso separa.
-	if fio["d"] != "M 0.5 0.5 L 3.5 0.5 L 3.5 4" {
-		t.Errorf("a seta saiu %q, esperado \"M 0.5 0.5 L 3.5 0.5 L 3.5 4\"", fio["d"])
+	if wire["d"] != "M 0.5 0.5 L 3.5 0.5 L 3.5 4" {
+		t.Errorf("a seta saiu %q, esperado \"M 0.5 0.5 L 3.5 0.5 L 3.5 4\"", wire["d"])
 	}
-	if !strings.Contains(fio["marker-end"], "board-tip-move") {
-		t.Errorf("a seta não tem ponta: %q — sem ela o desenho é uma régua, que não tem sentido", fio["marker-end"])
+	if !strings.Contains(wire["marker-end"], "board-tip-move") {
+		t.Errorf("a seta não tem ponta: %q — sem ela o desenho é uma régua, que não tem sentido", wire["marker-end"])
 	}
 }
 
@@ -196,54 +196,54 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 	tokenID := f.onBoardAt(t, 4, 2)
 	// A cena precisa ter as três famílias no ar, senão o guarda mede o que
 	// sobrou: terreno pintado, movimento proposto (trilha e paradas) e alcance.
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 5, 2, 5, 2)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar terreno deu %d", rec.Code)
 	}
-	for _, parada := range []string{`{"from":{"X":7,"Y":3}}`, `{"from":{"X":7,"Y":6}}`} {
-		if rec := f.pede(t, f.mestre, http.MethodPost,
-			f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", parada); rec.Code != http.StatusOK {
-			t.Fatalf("a parada %s deu %d", parada, rec.Code)
+	for _, stop := range []string{`{"from":{"X":7,"Y":3}}`, `{"from":{"X":7,"Y":6}}`} {
+		if rec := f.pede(t, f.gm, http.MethodPost,
+			f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", stop); rec.Code != http.StatusOK {
+			t.Fatalf("a parada %s deu %d", stop, rec.Code)
 		}
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	comCaixa := classesThatReceiveBox(t)
-	if len(comCaixa) < 3 {
-		t.Fatalf("a folha só dá caixa a %d classes: o canal não está aberto e o silêncio abaixo não é evidência", len(comCaixa))
+	withBox := classesThatReceiveBox(t)
+	if len(withBox) < 3 {
+		t.Fatalf("a folha só dá caixa a %d classes: o canal não está aberto e o silêncio abaixo não é evidência", len(withBox))
 	}
 
-	posicionados := 0
-	z := html.NewTokenizer(strings.NewReader(tela))
+	positioned := 0
+	z := html.NewTokenizer(strings.NewReader(screen))
 	for {
-		tipo := z.Next()
-		if tipo == html.ErrorToken {
+		kind := z.Next()
+		if kind == html.ErrorToken {
 			break
 		}
-		if tipo != html.StartTagToken && tipo != html.SelfClosingTagToken {
+		if kind != html.StartTagToken && kind != html.SelfClosingTagToken {
 			continue
 		}
 		attrs := map[string]string{}
 		for {
-			chave, valor, mais := z.TagAttr()
-			attrs[string(chave)] = string(valor)
-			if !mais {
+			key, value, more := z.TagAttr()
+			attrs[string(key)] = string(value)
+			if !more {
 				break
 			}
 		}
 		if !strings.Contains(attrs["style"], "--col:") {
 			continue
 		}
-		posicionados++
-		if !temAlgumaClasse(attrs["class"], comCaixa) {
+		positioned++
+		if !temAlgumaClasse(attrs["class"], withBox) {
 			t.Errorf("o elemento de classe %q é posicionado por --col e NENHUMA classe dele recebe caixa na folha: ele sai 0x0 e a tinta não desenha", attrs["class"])
 		}
 	}
 	// O CONTROLE do outro lado: sem ele, "todos os posicionados têm caixa" não se
 	// distingue de "não há posicionado nenhum" — e a cena montada acima tem peça,
 	// fantasma, terreno, trilha, paradas e alcance.
-	if posicionados < 10 {
-		t.Fatalf("a cena só tem %d elementos posicionados por --col: a montagem não produziu o que este guarda vem medir", posicionados)
+	if positioned < 10 {
+		t.Fatalf("a cena só tem %d elementos posicionados por --col: a montagem não produziu o que este guarda vem medir", positioned)
 	}
 }
 
@@ -260,35 +260,35 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 func TestNoElementRepeatsAnAttribute(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	z := html.NewTokenizer(strings.NewReader(tela))
-	elementos := 0
+	z := html.NewTokenizer(strings.NewReader(screen))
+	elements := 0
 	for {
-		tipo := z.Next()
-		if tipo == html.ErrorToken {
+		kind := z.Next()
+		if kind == html.ErrorToken {
 			break
 		}
-		if tipo != html.StartTagToken && tipo != html.SelfClosingTagToken {
+		if kind != html.StartTagToken && kind != html.SelfClosingTagToken {
 			continue
 		}
-		nome, temAtributo := z.TagName()
-		if !temAtributo {
+		name, hasAttribute := z.TagName()
+		if !hasAttribute {
 			continue
 		}
-		elementos++
-		vistos := map[string]bool{}
+		elements++
+		seen := map[string]bool{}
 		for {
-			chave, _, mais := z.TagAttr()
-			if vistos[string(chave)] {
-				t.Errorf("o <%s> repete o atributo %q: o navegador guarda o primeiro e descarta o resto em silêncio — procure um `else if` numa lista de atributos", nome, chave)
+			key, _, more := z.TagAttr()
+			if seen[string(key)] {
+				t.Errorf("o <%s> repete o atributo %q: o navegador guarda o primeiro e descarta o resto em silêncio — procure um `else if` numa lista de atributos", name, key)
 			}
-			vistos[string(chave)] = true
-			if !mais {
+			seen[string(key)] = true
+			if !more {
 				break
 			}
 		}
@@ -296,13 +296,13 @@ func TestNoElementRepeatsAnAttribute(t *testing.T) {
 		// atributo sem valor. Vale afirmá-la à parte: um `else if` cujos dois
 		// ramos escrevem atributos DIFERENTES não repete nada, e passaria pelo
 		// laço acima deixando o ramo morto de pé.
-		if vistos["else"] {
-			t.Errorf("o <%s> tem um atributo chamado `else`: um `else if` numa lista de atributos virou texto", nome)
+		if seen["else"] {
+			t.Errorf("o <%s> tem um atributo chamado `else`: um `else if` numa lista de atributos virou texto", name)
 		}
 	}
 	// O CONTROLE: sem ele, "não achei atributo repetido" não se distingue de "não
 	// achei elemento nenhum" — a cena tem centenas.
-	if elementos < 100 {
-		t.Fatalf("a cena só tem %d elementos com atributo: o canal não está aberto, e o silêncio acima não é evidência", elementos)
+	if elements < 100 {
+		t.Fatalf("a cena só tem %d elementos com atributo: o canal não está aberto, e o silêncio acima não é evidência", elements)
 	}
 }

@@ -32,8 +32,8 @@ func TestOpeningTheTableStreamRegistersPresence(t *testing.T) {
 	// O CONTROLE, e ele é obrigatório: sem a leitura de antes, "vi o jogador no
 	// elenco" não distingue o fluxo tendo registrado de um registro que já
 	// estava lá.
-	if antes := f.s.tableHost().Presence().Roster(f.sessionID); len(antes) != 0 {
-		t.Fatalf("o elenco já tinha %d gente antes de alguém abrir a mesa", len(antes))
+	if before := f.s.tableHost().Presence().Roster(f.sessionID); len(before) != 0 {
+		t.Fatalf("o elenco já tinha %d gente antes de alguém abrir a mesa", len(before))
 	}
 
 	// O CANCELAMENTO É DEFERIDO, e isso não é higiene: sem ele qualquer
@@ -42,14 +42,14 @@ func TestOpeningTheTableStreamRegistersPresence(t *testing.T) {
 	// reprovar e passa a TRAVAR — foi o que aconteceu ao sabotar o `Join`: o
 	// veredito virou "test timed out after 1m0s", que não diz nada sobre
 	// presença. Limpeza não pode falar mais alto que o defeito.
-	ctx, fechar := context.WithCancel(context.Background())
-	defer fechar()
+	ctx, close := context.WithCancel(context.Background())
+	defer close()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+f.tableUrl()+"/fluxo", nil)
 	if err != nil {
 		t.Fatalf("montar pedido: %v", err)
 	}
 	req.Header.Set("Accept-Encoding", "gzip")
-	req.Header.Set("Authorization", "Bearer "+f.token(t, f.jogador))
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.player))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("abrir stream: %v", err)
@@ -60,17 +60,17 @@ func TestOpeningTheTableStreamRegistersPresence(t *testing.T) {
 	// nunca ganha — ele reprova em máquina lenta e some da vista na rápida.
 	esperaOPrimeiroQuadro(t, resp)
 
-	presentes := f.s.tableHost().Presence().Roster(f.sessionID)
-	if len(presentes) != 1 || presentes[0].UserID != f.jogador {
-		t.Fatalf("o elenco presente = %+v, queria só o jogador %d", presentes, f.jogador)
+	present := f.s.tableHost().Presence().Roster(f.sessionID)
+	if len(present) != 1 || present[0].UserID != f.player {
+		t.Fatalf("o elenco presente = %+v, queria só o jogador %d", present, f.player)
 	}
-	if presentes[0].Role != "player" {
-		t.Errorf("o jogador entrou como %q — o papel sai do `view.Mestre`", presentes[0].Role)
+	if present[0].Role != "player" {
+		t.Errorf("o jogador entrou como %q — o papel sai do `view.Mestre`", present[0].Role)
 	}
 
 	// FECHAR A ABA TIRA A PESSOA, e é a metade que uma rota nova erraria: quem
 	// avisa da saída é o `r.Context()` cancelado, não um gesto do cliente.
-	fechar()
+	close()
 	_ = resp.Body.Close()
 	ateSumir(t, f)
 }
@@ -81,10 +81,10 @@ func esperaOPrimeiroQuadro(t *testing.T, resp *http.Response) {
 	if err != nil {
 		t.Fatalf("o corpo não é gzip: %v", err)
 	}
-	leitor := bufio.NewScanner(zr)
-	leitor.Buffer(make([]byte, 0, 64*1024), 1<<20)
-	for leitor.Scan() {
-		if strings.HasPrefix(leitor.Text(), "event:") {
+	reader := bufio.NewScanner(zr)
+	reader.Buffer(make([]byte, 0, 64*1024), 1<<20)
+	for reader.Scan() {
+		if strings.HasPrefix(reader.Text(), "event:") {
 			return
 		}
 	}
@@ -98,8 +98,8 @@ func esperaOPrimeiroQuadro(t *testing.T, resp *http.Response) {
 // exatamente o teste que pisca na de outra pessoa.
 func ateSumir(t *testing.T, f sceneFixture) {
 	t.Helper()
-	limite := time.Now().Add(2 * time.Second)
-	for time.Now().Before(limite) {
+	limit := time.Now().Add(2 * time.Second)
+	for time.Now().Before(limit) {
 		if len(f.s.tableHost().Presence().Roster(f.sessionID)) == 0 {
 			return
 		}

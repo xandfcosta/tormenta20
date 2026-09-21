@@ -21,8 +21,8 @@ import (
 
 type sceneFixture struct {
 	s          *Server
-	mestre     int64
-	jogador    int64
+	gm         int64
+	player     int64
 	campaignID int64
 	sessionID  int64
 	charID     int64
@@ -34,18 +34,18 @@ type sceneFixture struct {
 func newSceneFixture(t *testing.T) sceneFixture {
 	t.Helper()
 	s := newTestServer(t)
-	mestre := seedUser(t, s, "mestre@t.com")
-	jogador := seedUser(t, s, "jogador@t.com")
-	campaignID := seedCampaign(t, s, mestre)
+	gm := seedUser(t, s, "mestre@t.com")
+	player := seedUser(t, s, "jogador@t.com")
+	campaignID := seedCampaign(t, s, gm)
 	sessionID := seedSession(t, s, campaignID)
-	charID := seedCharacterAtLevel(t, s, jogador, "Arcanista", "Arcanista", 8, 10, 5)
+	charID := seedCharacterAtLevel(t, s, player, "Arcanista", "Arcanista", 8, 10, 5)
 	seedMember(t, s, campaignID, charID)
 	if _, err := s.queries.CreateExpertise(context.Background(), sqlcgen.CreateExpertiseParams{
 		Characterid: charID, Name: "Iniciativa", Attribute: "dexterity", Trained: 0, Custom: 0,
 	}); err != nil {
 		t.Fatalf("semear perícia: %v", err)
 	}
-	return sceneFixture{s: s, mestre: mestre, jogador: jogador, campaignID: campaignID, sessionID: sessionID, charID: charID}
+	return sceneFixture{s: s, gm: gm, player: player, campaignID: campaignID, sessionID: sessionID, charID: charID}
 }
 
 // token assina um JWT do usuário — o mesmo caminho do `authed` da casa.
@@ -90,12 +90,12 @@ func (f sceneFixture) tableUrl() string {
 // passou verde na suíte inteira e quebrou toda escrita no servidor real; o
 // defeito apareceu com um curl, não com um teste. Este helper existe para que
 // não apareça assim de novo.
-func (f sceneFixture) posta(t *testing.T, userID int64, caminho, corpo string) string {
+func (f sceneFixture) posta(t *testing.T, userID int64, path, body string) string {
 	t.Helper()
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
 
-	req, err := http.NewRequest(http.MethodPost, srv.URL+caminho, strings.NewReader(corpo))
+	req, err := http.NewRequest(http.MethodPost, srv.URL+path, strings.NewReader(body))
 	if err != nil {
 		t.Fatalf("montar pedido: %v", err)
 	}
@@ -106,24 +106,24 @@ func (f sceneFixture) posta(t *testing.T, userID int64, caminho, corpo string) s
 		t.Fatalf("postar: %v", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
-	lido, err := io.ReadAll(resp.Body)
+	read, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("ler resposta: %v", err)
 	}
-	return string(lido)
+	return string(read)
 }
 
 // cena põe a sessão em cena com um ogro de PV OCULTOS e o PC do jogador.
 func (f sceneFixture) scene(t *testing.T) {
 	t.Helper()
-	oculto := true
+	hidden := true
 	pv, pvMax := int64(12), int64(130)
 	if _, err := f.s.sessions.StartScene(f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
 		Label: "Ogro cansado", Initiative: 19, Type: "npc",
-		HpHidden: &oculto, HpCurrent: &pv, HpMax: &pvMax,
+		HpHidden: &hidden, HpCurrent: &pv, HpMax: &pvMax,
 	}); err != nil {
 		t.Fatalf("semear ogro: %v", err)
 	}
@@ -137,12 +137,12 @@ func (f sceneFixture) scene(t *testing.T) {
 // seedClasse põe uma classe na ficha, e ela é a bancada de SEIS arquivos — por
 // isso mora aqui. Ajudante compartilhado hospedado no arquivo de UM caso só
 // aparece quando esse caso morre.
-func seedClasse(t *testing.T, s *Server, characterID int64, nome string, nivel int64) {
+func seedClasse(t *testing.T, s *Server, characterID int64, name string, level int64) {
 	t.Helper()
 	err := s.queries.CreateClass(context.Background(), sqlcgen.CreateClassParams{
-		Characterid: characterID, Classname: nome, Level: nivel,
+		Characterid: characterID, Classname: name, Level: level,
 	})
 	if err != nil {
-		t.Fatalf("seed classe %q: %v", nome, err)
+		t.Fatalf("seed classe %q: %v", name, err)
 	}
 }

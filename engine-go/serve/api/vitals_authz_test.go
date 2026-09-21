@@ -151,9 +151,9 @@ func TestSessionForCallerRejectsForeignSession(t *testing.T) {
 		t.Fatalf("seed foreign session: %v", err)
 	}
 
-	_, papel, err := s.sessionLifecycle().Access().Session(ctx, app.Caller{ID: mine}, myCampaign, foreign.ID)
+	_, role, err := s.sessionLifecycle().Access().Session(ctx, app.Caller{ID: mine}, myCampaign, foreign.ID)
 	if err == nil {
-		t.Fatalf("papel=%q — a sessão de outra mesa foi aceita", papel)
+		t.Fatalf("papel=%q — a sessão de outra mesa foi aceita", role)
 	}
 	if !errors.Is(err, app.ErrNotFound) {
 		t.Errorf("a recusa foi %v, e a sessão de outra campanha é NÃO ENCONTRADA — dizer "+

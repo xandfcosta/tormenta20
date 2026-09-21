@@ -34,11 +34,11 @@ func registra(t *testing.T, s *Server, email, token string) error {
 // inviteFrom cunha um convite pela REGRA e devolve o token.
 func inviteFrom(t *testing.T, s *Server, adminID int64) string {
 	t.Helper()
-	convite, err := s.accountGate().MintInvite(context.Background(), adminID)
+	invite, err := s.accountGate().MintInvite(context.Background(), adminID)
 	if err != nil {
 		t.Fatalf("cunhar convite: %v", err)
 	}
-	return convite.Token
+	return invite.Token
 }
 
 // A autorização de quem CUNHA não é medida aqui de propósito: ela mora no
@@ -99,7 +99,7 @@ func TestConcurrentRegistrationsSpendTheInviteOnce(t *testing.T) {
 	token := inviteFrom(t, s, seedUser(t, s, adminEmail))
 
 	const racers = 4
-	erros := make(chan error, racers)
+	errs := make(chan error, racers)
 	start := make(chan struct{})
 	for i := range racers {
 		go func() {
@@ -107,14 +107,14 @@ func TestConcurrentRegistrationsSpendTheInviteOnce(t *testing.T) {
 			<-start
 			_, err := s.accountGate().Register(context.Background(),
 				account.RegisterBody{Email: email, Password: "senha-da-mesa", InviteToken: token})
-			erros <- err
+			errs <- err
 		}()
 	}
 	close(start)
 
 	created := 0
 	for range racers {
-		if <-erros == nil {
+		if <-errs == nil {
 			created++
 		}
 	}

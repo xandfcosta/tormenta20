@@ -32,15 +32,15 @@ func TestTheGmIsWarnedWhenSavingFails(t *testing.T) {
 
 	// O CONTROLE primeiro: com o disco saudável a frase NÃO está lá. Sem esta
 	// metade, "vi o aviso" não distingue a ligação certa de um texto fixo.
-	saudavel := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(saudavel, avisoDeGravacao) {
+	healthy := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(healthy, avisoDeGravacao) {
 		t.Fatalf("a mesa saudável já avisava que a gravação falhou")
 	}
 
 	quebraAGravacao(t, f)
 
-	comFalha := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(comFalha, avisoDeGravacao) {
+	withFailure := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(withFailure, avisoDeGravacao) {
 		t.Errorf("a gravação falhou e o mestre não foi avisado")
 	}
 }
@@ -53,14 +53,14 @@ func TestThePlayerIsNotWarnedAboutSaving(t *testing.T) {
 	f.scene(t)
 	quebraAGravacao(t, f)
 
-	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O controle é afirmar que o jogador VIU a mesa: sem isto, um 403 passaria
 	// como "não recebeu o aviso".
-	if !strings.Contains(corpo, "Arcanista") {
+	if !strings.Contains(body, "Arcanista") {
 		t.Fatal("o jogador não viu a própria mesa; a ausência abaixo não prova nada")
 	}
-	if strings.Contains(corpo, avisoDeGravacao) {
+	if strings.Contains(body, avisoDeGravacao) {
 		t.Errorf("o jogador recebeu o aviso de gravação")
 	}
 }
@@ -83,9 +83,9 @@ func quebraAGravacao(t *testing.T, f sceneFixture) {
 	if _, err := f.s.db.ExecContext(ctx, "DROP TABLE open_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	sujo, mudou := f.s.boards.Persist(ctx, f.sessionID, "")
-	if !sujo || !mudou {
-		t.Fatalf("a gravação não falhou (sujo=%v, mudou=%v) — o defeito não foi reproduzido", sujo, mudou)
+	dirty, changed := f.s.boards.Persist(ctx, f.sessionID, "")
+	if !dirty || !changed {
+		t.Fatalf("a gravação não falhou (sujo=%v, mudou=%v) — o defeito não foi reproduzido", dirty, changed)
 	}
 }
 
@@ -99,9 +99,9 @@ func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
-	ficha, _ := sceneIds(t, f)
+	sheet, _ := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
+	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	// O CONTROLE: a peça entrou na memória. Sem isto, um disco vazio não
 	// distingue "não gravou" de "não havia o que gravar".
@@ -118,14 +118,14 @@ func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 // não `sleep` fixo: um tempo escolhido nesta máquina pisca na de outra pessoa.
 func esperaOTabuleiroNoDisco(t *testing.T, f sceneFixture) {
 	t.Helper()
-	limite := time.Now().Add(2 * time.Second)
-	for time.Now().Before(limite) {
-		var linhas int
+	limit := time.Now().Add(2 * time.Second)
+	for time.Now().Before(limit) {
+		var rows int
 		if err := f.s.db.QueryRowContext(context.Background(),
-			"SELECT COUNT(*) FROM open_boards WHERE sessionId = ?", f.sessionID).Scan(&linhas); err != nil {
+			"SELECT COUNT(*) FROM open_boards WHERE sessionId = ?", f.sessionID).Scan(&rows); err != nil {
 			t.Fatalf("consultar o disco: %v", err)
 		}
-		if linhas > 0 {
+		if rows > 0 {
 			return
 		}
 		time.Sleep(10 * time.Millisecond)

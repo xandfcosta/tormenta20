@@ -112,17 +112,17 @@ func (v sheetVitals) ApplyAbsolute(
 // funil e devolver os DOIS vitais — inclusive o que o gesto não tocou, senão o
 // rastreador voltaria a mostrar um número que a ficha não tem.
 func (v sheetVitals) applyRule(
-	ctx context.Context, charID int64, regra sheet.PoolRule,
+	ctx context.Context, charID int64, rule sheet.PoolRule,
 ) (*int64, *int64, error) {
 	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, err
 	}
-	pocos, err := sheet.ApplyToPools(ctx, v.q, v.catalogs(), row, regra)
+	pools, err := sheet.ApplyToPools(ctx, v.q, v.catalogs(), row, rule)
 	if err != nil {
 		return nil, nil, err
 	}
-	return &pocos.HpCurrent, &pocos.MpCurrent, nil
+	return &pools.HpCurrent, &pools.MpCurrent, nil
 }
 
 // PoolsOf cumpre a metade de LEITURA da porta: o poço derivado de cada
@@ -133,17 +133,17 @@ func (v sheetVitals) applyRule(
 func (v sheetVitals) PoolsOf(
 	ctx context.Context, charIDs []int64,
 ) (map[int64]live.VitalPool, error) {
-	pocos, err := sheet.PoolsForCharacters(ctx, v.q, v.catalogs(), charIDs)
+	pools, err := sheet.PoolsForCharacters(ctx, v.q, v.catalogs(), charIDs)
 	if err != nil {
 		return nil, err
 	}
-	daFila := make(map[int64]live.VitalPool, len(pocos))
-	for id, p := range pocos {
-		daFila[id] = live.VitalPool{
+	fromQueue := make(map[int64]live.VitalPool, len(pools))
+	for id, p := range pools {
+		fromQueue[id] = live.VitalPool{
 			HpMax: p.HpMax, HpCurrent: p.HpCurrent, MpMax: p.MpMax, MpCurrent: p.MpCurrent,
 		}
 	}
-	return daFila, nil
+	return fromQueue, nil
 }
 
 // SUSTENTADA: o que a manutenção do turno precisa da ficha (T20 p227).

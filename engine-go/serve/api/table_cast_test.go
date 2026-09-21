@@ -11,18 +11,18 @@ import (
 func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 	f := newSceneFixture(t)
 	// Um personagem que existe, mas de OUTRO dono e fora do roster desta mesa.
-	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", "Guerreiro", 3, 0, 2)
+	outsider := seedCharacterAtLevel(t, f.s, f.player, "Forasteiro", "Guerreiro", 3, 0, 2)
 
-	corpo := f.posta(t, f.mestre,
-		f.tableUrl()+"/elenco/"+strconv.FormatInt(forasteiro, 10)+"/na-fila", "{}")
+	body := f.posta(t, f.gm,
+		f.tableUrl()+"/elenco/"+strconv.FormatInt(outsider, 10)+"/na-fila", "{}")
 
-	if !strings.Contains(corpo, "não é jogador desta campanha") {
-		t.Errorf("a recusa não veio; a resposta foi:\n%s", firstRows(corpo, 6))
+	if !strings.Contains(body, "não é jogador desta campanha") {
+		t.Errorf("a recusa não veio; a resposta foi:\n%s", firstRows(body, 6))
 	}
 	// O CONTROLE do erro: uma recusa que já tivesse ESCRITO seria pior que
 	// nenhuma, e o status sozinho não diria.
 	for _, l := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
-		if l.CharacterID != nil && *l.CharacterID == forasteiro {
+		if l.CharacterID != nil && *l.CharacterID == outsider {
 			t.Fatal("o forasteiro entrou na fila apesar da recusa")
 		}
 	}
@@ -37,14 +37,14 @@ func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 	f := newSceneFixture(t)
 
-	f.posta(t, f.mestre,
+	f.posta(t, f.gm,
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
 
-	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
-	if len(fila) != 1 {
-		t.Fatalf("a fila tem %d linhas, queria 1", len(fila))
+	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	if len(queue) != 1 {
+		t.Fatalf("a fila tem %d linhas, queria 1", len(queue))
 	}
-	if fila[0].CharacterID == nil || *fila[0].CharacterID != f.charID {
+	if queue[0].CharacterID == nil || *queue[0].CharacterID != f.charID {
 		t.Error("a linha nasceu SEM `characterId`: ela fica fora do descanso e sem fio até a ficha")
 	}
 }
@@ -55,10 +55,10 @@ func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 // novo passa por ele em vez de escrever direto.
 func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 	f := newSceneFixture(t)
-	rota := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
+	route := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 
-	f.posta(t, f.mestre, rota, "{}")
-	f.posta(t, f.mestre, rota, "{}")
+	f.posta(t, f.gm, route, "{}")
+	f.posta(t, f.gm, route, "{}")
 
 	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
 		t.Errorf("dois cliques deram %d linhas", n)
@@ -69,7 +69,7 @@ func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.jogador, "POST",
+	rec := f.pede(t, f.player, "POST",
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
 
 	if rec.Code != 403 {
@@ -83,15 +83,15 @@ func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
 // pode não fazer nada — a mesma regra que trava os verbos do ciclo da sessão.
 func TestTheCastSaysWhoIsAlreadyInTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
-	rota := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
+	route := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 
-	antes := f.castMember(t, f.charID)
-	if antes.NaFila {
+	before := f.castMember(t, f.charID)
+	if before.NaFila {
 		t.Fatal("o personagem já nasceu marcado como na fila — o teste mediria nada")
 	}
-	f.posta(t, f.mestre, rota, "{}")
+	f.posta(t, f.gm, route, "{}")
 
-	if depois := f.castMember(t, f.charID); !depois.NaFila {
+	if after := f.castMember(t, f.charID); !after.NaFila {
 		t.Error("pôs na fila e o elenco não soube: o botão continuaria oferecendo o gesto")
 	}
 }
@@ -101,7 +101,7 @@ func TestTheCastSaysWhoIsAlreadyInTheTracker(t *testing.T) {
 // desenha, e é nela que a marca precisa chegar.
 func (f sceneFixture) castMember(t *testing.T, characterID int64) table.Member {
 	t.Helper()
-	view, _, err := f.s.tableScene.LoadView(t.Context(), f.mestre, f.campaignID, f.sessionID)
+	view, _, err := f.s.tableScene.LoadView(t.Context(), f.gm, f.campaignID, f.sessionID)
 	if err != nil {
 		t.Fatalf("montar a view: %v", err)
 	}
@@ -128,10 +128,10 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 
 	// O CONTROLE: o herói NÃO está na fila. Sem ele o caso mediria o caminho da
 	// fila com outra URL, que é o que ele existe para não fazer.
-	if fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; len(fila) != 0 {
-		t.Fatalf("a bancada já pôs %d na fila — o caso mediria o outro caminho", len(fila))
+	if queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; len(queue) != 0 {
+		t.Fatalf("a bancada já pôs %d na fila — o caso mediria o outro caminho", len(queue))
 	}
-	antes := poolsOf(t, f.s, f.charID)
+	before := poolsOf(t, f.s, f.charID)
 
 	// O STATUS NÃO BASTA, e descobri isso sabotando: numa cena servida a recusa
 	// é CONTEÚDO e volta 200, com a frase no `command_error` do rodapé. Um
@@ -139,23 +139,23 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 	// escreveu a ficha e reprovou depois — que é exatamente a forma que a
 	// sabotagem produziu.
 	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitais/"
-	for _, caminho := range []string{"hp/ferir/5", "mp/ferir/1"} {
-		rec := f.pede(t, f.mestre, "POST", base+caminho, "")
+	for _, path := range []string{"hp/ferir/5", "mp/ferir/1"} {
+		rec := f.pede(t, f.gm, "POST", base+path, "")
 		if rec.Code != http.StatusOK {
-			t.Fatalf("%s deu %d: %s", caminho, rec.Code, rec.Body.String())
+			t.Fatalf("%s deu %d: %s", path, rec.Code, rec.Body.String())
 		}
-		if corpo := rec.Body.String(); strings.Contains(corpo, "command_error") &&
-			!strings.Contains(corpo, `"command_error":""`) {
-			t.Fatalf("%s foi recusado apesar do 200: %s", caminho, firstRows(corpo, 6))
+		if body := rec.Body.String(); strings.Contains(body, "command_error") &&
+			!strings.Contains(body, `"command_error":""`) {
+			t.Fatalf("%s foi recusado apesar do 200: %s", path, firstRows(body, 6))
 		}
 	}
 
-	depois := poolsOf(t, f.s, f.charID)
-	if depois.HpCurrent != antes.HpCurrent-5 {
-		t.Errorf("a ficha ficou com %d PV; %d-5 = %d", depois.HpCurrent, antes.HpCurrent, antes.HpCurrent-5)
+	after := poolsOf(t, f.s, f.charID)
+	if after.HpCurrent != before.HpCurrent-5 {
+		t.Errorf("a ficha ficou com %d PV; %d-5 = %d", after.HpCurrent, before.HpCurrent, before.HpCurrent-5)
 	}
-	if depois.MpCurrent != antes.MpCurrent-1 {
-		t.Errorf("a ficha ficou com %d PM; %d-1 = %d", depois.MpCurrent, antes.MpCurrent, antes.MpCurrent-1)
+	if after.MpCurrent != before.MpCurrent-1 {
+		t.Errorf("a ficha ficou com %d PM; %d-1 = %d", after.MpCurrent, before.MpCurrent, before.MpCurrent-1)
 	}
 }
 
@@ -167,19 +167,19 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 // pior que pô-lo na fila, porque escreve na ficha de um estranho.
 func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
 	f := newSceneFixture(t)
-	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", "Guerreiro", 3, 0, 2)
-	antes := poolsOf(t, f.s, forasteiro)
+	outsider := seedCharacterAtLevel(t, f.s, f.player, "Forasteiro", "Guerreiro", 3, 0, 2)
+	before := poolsOf(t, f.s, outsider)
 
-	corpo := f.posta(t, f.mestre,
-		f.tableUrl()+"/elenco/"+strconv.FormatInt(forasteiro, 10)+"/vitais/hp/ferir/5", "")
+	body := f.posta(t, f.gm,
+		f.tableUrl()+"/elenco/"+strconv.FormatInt(outsider, 10)+"/vitais/hp/ferir/5", "")
 
-	if !strings.Contains(corpo, "não é jogador desta campanha") {
-		t.Errorf("a recusa não veio; a resposta foi:\n%s", firstRows(corpo, 6))
+	if !strings.Contains(body, "não é jogador desta campanha") {
+		t.Errorf("a recusa não veio; a resposta foi:\n%s", firstRows(body, 6))
 	}
 	// O CONTROLE do erro: uma recusa que já tivesse ESCRITO seria pior que
 	// nenhuma, e a frase sozinha não diria.
-	if depois := poolsOf(t, f.s, forasteiro); depois.HpCurrent != antes.HpCurrent {
-		t.Errorf("a recusa feriu mesmo assim: %d virou %d", antes.HpCurrent, depois.HpCurrent)
+	if after := poolsOf(t, f.s, outsider); after.HpCurrent != before.HpCurrent {
+		t.Errorf("a recusa feriu mesmo assim: %d virou %d", before.HpCurrent, after.HpCurrent)
 	}
 }
 
@@ -190,18 +190,18 @@ func TestTheCastVitalsMirrorIntoTheTrackerWhenThereIsALine(t *testing.T) {
 	entryID := f.tracker(t)
 
 	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitais/"
-	if rec := f.pede(t, f.mestre, "POST", base+"hp/ferir/5", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", base+"hp/ferir/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ferir pelo elenco deu %d", rec.Code)
 	}
 
-	ficha := poolsOf(t, f.s, f.charID)
+	sheet := poolsOf(t, f.s, f.charID)
 	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		if e.ID != entryID {
 			continue
 		}
-		if e.HpCurrent == nil || *e.HpCurrent != ficha.HpCurrent {
+		if e.HpCurrent == nil || *e.HpCurrent != sheet.HpCurrent {
 			t.Errorf("a fila ficou com %v e a ficha com %d — as duas telas divergiram",
-				e.HpCurrent, ficha.HpCurrent)
+				e.HpCurrent, sheet.HpCurrent)
 		}
 	}
 }

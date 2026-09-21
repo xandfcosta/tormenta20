@@ -16,17 +16,17 @@ func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if !strings.Contains(corpo, "Ogro cansado") {
+	if !strings.Contains(body, "Ogro cansado") {
 		t.Fatal("o ogro sumiu da fila do jogador — ele deve ver QUEM está lá")
 	}
-	if strings.Contains(corpo, "130") {
+	if strings.Contains(body, "130") {
 		t.Errorf("os PV ocultos do mestre vazaram para o HTML do jogador")
 	}
 	// A flag sobrevive à redação de propósito: "sem barra" e "escondido" são
 	// coisas diferentes, e a segunda é informação.
-	if !strings.Contains(corpo, "PV ocultos pelo mestre") {
+	if !strings.Contains(body, "PV ocultos pelo mestre") {
 		t.Errorf("a linha oculta não DISSE que está oculta — vira 'sem vida' na tela")
 	}
 }
@@ -45,18 +45,18 @@ func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 		t.Fatalf("semear chefe: %v", err)
 	}
 
-	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if strings.Contains(corpo, "Chefe secreto") {
+	if strings.Contains(body, "Chefe secreto") {
 		t.Error("a fila de fora de cena vazou para o jogador")
 	}
-	if !strings.Contains(corpo, "Fora de cena") {
+	if !strings.Contains(body, "Fora de cena") {
 		t.Error("a tela não explicou o vazio")
 	}
 	// O mestre, na MESMA página, continua vendo o que montou — sem esta metade
 	// o teste passaria com um `redactForPlayers` aplicado a todo mundo.
-	corpoDoMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(corpoDoMestre, "Chefe secreto") {
+	gmBody := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(gmBody, "Chefe secreto") {
 		t.Error("o mestre perdeu a própria fila — a redação está pegando o papel errado")
 	}
 }
@@ -70,17 +70,17 @@ func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	corpo := f.posta(t, f.jogador, f.tableUrl()+"/iniciativa", `{"d20":47}`)
+	body := f.posta(t, f.player, f.tableUrl()+"/iniciativa", `{"d20":47}`)
 
-	if !strings.HasPrefix(corpo, "event: datastar-patch-signals") {
-		t.Fatalf("a recusa não saiu como evento do Datastar, saiu como:\n%s", corpo)
+	if !strings.HasPrefix(body, "event: datastar-patch-signals") {
+		t.Fatalf("a recusa não saiu como evento do Datastar, saiu como:\n%s", body)
 	}
 	// A mensagem carrega o valor ofendido, que é a regra da casa para exceção.
-	if !strings.Contains(corpo, "47") {
-		t.Errorf("a recusa não disse qual valor foi recusado:\n%s", corpo)
+	if !strings.Contains(body, "47") {
+		t.Errorf("a recusa não disse qual valor foi recusado:\n%s", body)
 	}
-	if !strings.Contains(corpo, `\"error\"`) && !strings.Contains(corpo, `"error"`) {
-		t.Errorf("a recusa não veio no sinal `error`, então nada acende na tela:\n%s", corpo)
+	if !strings.Contains(body, `\"error\"`) && !strings.Contains(body, `"error"`) {
+		t.Errorf("a recusa não veio no sinal `error`, então nada acende na tela:\n%s", body)
 	}
 }
 
@@ -103,16 +103,16 @@ func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 
 	// O corpo é conferido, e não só o código: com a ordem trocada o servidor
 	// devolve 200 com um erro DENTRO do sinal, e "deu 200" não é resposta.
-	if resposta := f.posta(t, f.jogador, f.tableUrl()+"/iniciativa", `{"d20":14}`); !strings.Contains(resposta, `{"error":""}`) {
-		t.Fatalf("a escrita não foi aceita, respondeu:\n%s", resposta)
+	if response := f.posta(t, f.player, f.tableUrl()+"/iniciativa", `{"d20":14}`); !strings.Contains(response, `{"error":""}`) {
+		t.Fatalf("a escrita não foi aceita, respondeu:\n%s", response)
 	}
 
-	estado := f.s.tableHost().Sessions().GetState(f.sessionID)
-	for i := range estado.Initiative {
-		e := &estado.Initiative[i]
+	state := f.s.tableHost().Sessions().GetState(f.sessionID)
+	for i := range state.Initiative {
+		e := &state.Initiative[i]
 		if e.CharacterID != nil && *e.CharacterID == f.charID {
-			if querido := 14 + int(bonus); e.Initiative != querido {
-				t.Fatalf("iniciativa gravada = %d, queria %d (14 + bônus %d)", e.Initiative, querido, bonus)
+			if wanted := 14 + int(bonus); e.Initiative != wanted {
+				t.Fatalf("iniciativa gravada = %d, queria %d (14 + bônus %d)", e.Initiative, wanted, bonus)
 			}
 			return
 		}
@@ -140,11 +140,11 @@ func TestTheTableStreamCompresses(t *testing.T) {
 		t.Fatalf("montar pedido: %v", err)
 	}
 	req.Header.Set("Accept-Encoding", "gzip")
-	req.Header.Set("Authorization", "Bearer "+f.token(t, f.jogador))
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.player))
 	// O stream não termina sozinho; o contexto é o que devolve o controle depois
 	// do primeiro quadro.
-	ctx, cancelar := context.WithCancel(context.Background())
-	defer cancelar()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
 		t.Fatalf("abrir stream: %v", err)
@@ -166,29 +166,29 @@ func TestTheTableStreamCompresses(t *testing.T) {
 	// Ler um buffer de tamanho fixo continua não servindo: um buffer curto corta
 	// o fragmento no meio, e um longo bloquearia esperando quadros que só o
 	// batimento traria.
-	leitor := bufio.NewScanner(zr)
-	leitor.Buffer(make([]byte, 0, 64*1024), 1<<20)
-	var tudo strings.Builder
-	var achouPatch, achouFila bool
-	for leitor.Scan() && !achouFila {
-		linha := leitor.Text()
-		tudo.WriteString(linha)
-		tudo.WriteString("\n")
-		if strings.Contains(linha, "datastar-patch-elements") {
-			achouPatch = true
+	reader := bufio.NewScanner(zr)
+	reader.Buffer(make([]byte, 0, 64*1024), 1<<20)
+	var all strings.Builder
+	var foundPatch, foundQueue bool
+	for reader.Scan() && !foundQueue {
+		row := reader.Text()
+		all.WriteString(row)
+		all.WriteString("\n")
+		if strings.Contains(row, "datastar-patch-elements") {
+			foundPatch = true
 		}
-		if strings.Contains(linha, "Ogro cansado") {
-			achouFila = true
+		if strings.Contains(row, "Ogro cansado") {
+			foundQueue = true
 		}
 	}
 
 	// As duas metades: veio no evento do Datastar E carrega a fila de verdade.
 	// Só a primeira passaria verde com um stream que comprime silêncio.
-	if !achouPatch {
-		t.Errorf("nenhum quadro é um patch do Datastar:\n%.600s", tudo.String())
+	if !foundPatch {
+		t.Errorf("nenhum quadro é um patch do Datastar:\n%.600s", all.String())
 	}
-	if !achouFila {
-		t.Errorf("a fila não chegou em quadro nenhum:\n%.600s", tudo.String())
+	if !foundQueue {
+		t.Errorf("a fila não chegou em quadro nenhum:\n%.600s", all.String())
 	}
 }
 
@@ -202,7 +202,7 @@ func TestTheTableStreamCompresses(t *testing.T) {
 // serviria igualmente para o encerramento.
 func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 	f := newSceneFixture(t)
-	sub, parar := f.s.tableHost().Bus().Subscribe(events.OfSession(f.sessionID))
+	sub, stop := f.s.tableHost().Bus().Subscribe(events.OfSession(f.sessionID))
 
 	if _, err := f.s.tableHost().Sessions().StartScene(f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
@@ -219,7 +219,7 @@ func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 	// Baixar a assinatura tem de PARAR a entrega: sem isto cada aba fechada deixa
 	// um canal para sempre, e o `Publish` passa a percorrer uma lista que só
 	// cresce escrevendo em canais que ninguém lê.
-	parar()
+	stop()
 	if _, err := f.s.tableHost().Sessions().EndScene(f.sessionID); err != nil {
 		t.Fatalf("encerrar cena: %v", err)
 	}

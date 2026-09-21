@@ -38,40 +38,40 @@ func TestTheBatchPoolsMatchTheOneByOnePools(t *testing.T) {
 	applySeedFile(t, s)
 	ctx := context.Background()
 
-	fichas := allCharacters(t, s)
-	ids := make([]int64, len(fichas))
-	for i, c := range fichas {
+	sheets := allCharacters(t, s)
+	ids := make([]int64, len(sheets))
+	for i, c := range sheets {
 		ids[i] = c.ID
 	}
-	emLote, err := sheet.PoolsForCharacters(ctx, s.queries, s.catalogs, ids)
+	inBatch, err := sheet.PoolsForCharacters(ctx, s.queries, s.catalogs, ids)
 	if err != nil {
 		t.Fatalf("poços em lote: %v", err)
 	}
 
-	comparados := 0
-	for _, c := range fichas {
+	compared := 0
+	for _, c := range sheets {
 		dto, err := sheet.Load(ctx, s.queries, s.catalogs, c)
 		if err != nil {
 			t.Fatalf("carregar %q: %v", c.Name, err)
 		}
-		umPorUm := sheet.Pools{
+		oneByOne := sheet.Pools{
 			HpMax: dto.HpMax, HpCurrent: dto.HpCurrent,
 			MpMax: dto.MpMax, MpCurrent: dto.MpCurrent,
 		}
-		comparados++
-		if emLote[c.ID] != umPorUm {
+		compared++
+		if inBatch[c.ID] != oneByOne {
 			t.Errorf("%q (id %d): o lote deu %+v e a ficha inteira deu %+v.\n"+
 				"O agregado PARCIAL do `partialSheetsForPools` perdeu alguma coisa que o\n"+
 				"`engine.VitalContextFor` lê — confira o que ele carrega contra o que o\n"+
-				"contexto consome.", c.Name, c.ID, emLote[c.ID], umPorUm)
+				"contexto consome.", c.Name, c.ID, inBatch[c.ID], oneByOne)
 		}
 	}
 
 	// O DENOMINADOR: um elenco vazio e um lote que bate se parecem no terminal.
 	// A semente tem dezesseis personagens, e o piso é baixo de propósito — o que
 	// ele pega é a semente não chegar ao banco, não o elenco encolher de um.
-	if comparados < 10 {
-		t.Fatalf("o guarda comparou só %d fichas — a semente não chegou ao banco", comparados)
+	if compared < 10 {
+		t.Fatalf("o guarda comparou só %d fichas — a semente não chegou ao banco", compared)
 	}
 }
 
@@ -82,37 +82,37 @@ func TestTheBatchPoolsMatchTheOneByOnePools(t *testing.T) {
 // pergunta "a semente está atual?".
 func applySeedFile(t *testing.T, s *Server) {
 	t.Helper()
-	bruto, err := os.ReadFile(filepath.Join("..", "..", "seed.sql"))
+	raw, err := os.ReadFile(filepath.Join("..", "..", "seed.sql"))
 	if err != nil {
 		t.Fatalf("ler o seed.sql: %v", err)
 	}
-	if _, err := s.db.Exec(string(bruto)); err != nil {
+	if _, err := s.db.Exec(string(raw)); err != nil {
 		t.Fatalf("aplicar o seed.sql: %v", err)
 	}
 }
 
 func allCharacters(t *testing.T, s *Server) []sqlcgen.Character {
 	t.Helper()
-	linhas, err := s.db.Query(`SELECT id FROM characters ORDER BY id`)
+	rows, err := s.db.Query(`SELECT id FROM characters ORDER BY id`)
 	if err != nil {
 		t.Fatalf("listar o elenco: %v", err)
 	}
-	defer linhas.Close()
+	defer rows.Close()
 	ids := []int64{}
-	for linhas.Next() {
+	for rows.Next() {
 		var id int64
-		if err := linhas.Scan(&id); err != nil {
+		if err := rows.Scan(&id); err != nil {
 			t.Fatalf("ler um id: %v", err)
 		}
 		ids = append(ids, id)
 	}
-	fichas := make([]sqlcgen.Character, 0, len(ids))
+	sheets := make([]sqlcgen.Character, 0, len(ids))
 	for _, id := range ids {
 		c, err := s.queries.GetCharacter(context.Background(), id)
 		if err != nil {
 			t.Fatalf("ler a ficha %d: %v", id, err)
 		}
-		fichas = append(fichas, c)
+		sheets = append(sheets, c)
 	}
-	return fichas
+	return sheets
 }

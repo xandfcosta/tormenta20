@@ -54,9 +54,9 @@ func TestDifferentKindsDoNotMix(t *testing.T) {
 	st := addNpcs(t, "Ogro", "Goblin", "Ogro", "Goblin")
 
 	got := labelsOf(st)
-	esperado := map[string]bool{"Ogro": true, "Ogro 2": true, "Goblin": true, "Goblin 2": true}
+	want := map[string]bool{"Ogro": true, "Ogro 2": true, "Goblin": true, "Goblin 2": true}
 	for _, label := range got {
-		if !esperado[label] {
+		if !want[label] {
 			t.Fatalf("rótulos = %v — %q não é um dos esperados", got, label)
 		}
 	}
@@ -77,16 +77,16 @@ func TestTheGapIsReused(t *testing.T) {
 	}
 
 	got := labelsOf(st)
-	tem2 := false
+	found2 := false
 	for _, l := range got {
 		if l == "Ogro 2" {
-			tem2 = true
+			found2 = true
 		}
 		if l == "Ogro 4" {
 			t.Fatalf("rótulos = %v — pulou para o 4 em vez de reaproveitar o buraco", got)
 		}
 	}
-	if !tem2 {
+	if !found2 {
 		t.Fatalf("rótulos = %v — o Ogro 2 não voltou", got)
 	}
 }

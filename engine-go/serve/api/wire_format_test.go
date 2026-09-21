@@ -36,37 +36,37 @@ func TestTheWireSpellingIsLowercase(t *testing.T) {
 // identificador dentro de string. Na mesma linha, `/Places/{placeId}/scene`
 // vira maiúsculo em `Places` e fica intacto em `scene` e em `{placeId}`.
 func agrafiaDasRotas(t *testing.T) {
-	rota := regexp.MustCompile(`r\.(?:Get|Post|Put|Delete|Patch|Head|Options|Route|Handle|HandleFunc)\("(/[^"]*)"`)
-	var sitios int
+	route := regexp.MustCompile(`r\.(?:Get|Post|Put|Delete|Patch|Head|Options|Route|Handle|HandleFunc)\("(/[^"]*)"`)
+	var sites int
 	// CAMINHA A ÁRVORE em vez de enumerar pacotes: as rotas mudam de casa, e uma
 	// lista escrita à mão passa a varrer diretório vazio em silêncio. É o piso
 	// abaixo que denuncia — enumerar é remendo, a caminhada é a amostragem.
 	{
-		var arquivos []string
-		raizDoModulo, err := os.Getwd()
+		var files []string
+		moduleRoot, err := os.Getwd()
 		if err != nil {
 			t.Fatalf("achar a raiz: %v", err)
 		}
-		if err := filepath.WalkDir(filepath.Dir(raizDoModulo), func(caminho string, d fs.DirEntry, err error) error {
-			if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") {
+		if err := filepath.WalkDir(filepath.Dir(moduleRoot), func(path string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") {
 				return err
 			}
-			arquivos = append(arquivos, caminho)
+			files = append(files, path)
 			return nil
 		}); err != nil {
 			t.Fatalf("caminhar a árvore: %v", err)
 		}
-		for _, caminho := range arquivos {
-			conteudo, err := os.ReadFile(caminho)
+		for _, path := range files {
+			content, err := os.ReadFile(path)
 			if err != nil {
-				t.Fatalf("ler %s: %v", caminho, err)
+				t.Fatalf("ler %s: %v", path, err)
 			}
-			for i, linha := range strings.Split(string(conteudo), "\n") {
-				if j := strings.Index(linha, "//"); j >= 0 {
-					linha = linha[:j]
+			for i, row := range strings.Split(string(content), "\n") {
+				if j := strings.Index(row, "//"); j >= 0 {
+					row = row[:j]
 				}
-				for _, m := range rota.FindAllStringSubmatch(linha, -1) {
-					sitios++
+				for _, m := range route.FindAllStringSubmatch(row, -1) {
+					sites++
 					for _, seg := range strings.Split(strings.Trim(m[1], "/"), "/") {
 						if seg == "" || strings.HasPrefix(seg, "{") {
 							continue
@@ -74,55 +74,55 @@ func agrafiaDasRotas(t *testing.T) {
 						if seg[0] >= 'A' && seg[0] <= 'Z' {
 							t.Errorf("%s:%d — o caminho %q tem o segmento %q em maiúscula. "+
 								"O chi casa com sensibilidade a caixa: isto é um 404 para o "+
-								"cliente, que chama minúsculo.", caminho, i+1, m[1], seg)
+								"cliente, que chama minúsculo.", path, i+1, m[1], seg)
 						}
 					}
 				}
 			}
 		}
 	}
-	if sitios < 40 {
-		t.Fatalf("só %d rotas casadas — o padrão parou de casar e o verde não vale", sitios)
+	if sites < 40 {
+		t.Fatalf("só %d rotas casadas — o padrão parou de casar e o verde não vale", sites)
 	}
-	t.Logf("%d caminhos de rota conferidos", sitios)
+	t.Logf("%d caminhos de rota conferidos", sites)
 }
 
 func agrafiaDasTags(t *testing.T) {
 	// Caminha a árvore em vez de enumerar pacotes, pela mesma razão do guarda
 	// acima: enumerar é remendo, e o pacote que muda de casa sai da medição em
 	// silêncio.
-	raizes := []string{"."}
+	roots := []string{"."}
 	// A tag pode vir com opções (`json:"nome,omitempty"`); o que importa é a
 	// primeira letra do NOME. `json:"-"` é descarte e não é nome.
 	tag := regexp.MustCompile("`[^`]*json:\"([A-Za-z][^\",]*)")
 
-	var visitados, sitios int
-	for _, raiz := range raizes {
-		arquivos, err := filepath.Glob(filepath.Join(raiz, "*.go"))
+	var visited, sites int
+	for _, root := range roots {
+		files, err := filepath.Glob(filepath.Join(root, "*.go"))
 		if err != nil {
-			t.Fatalf("listar %s: %v", raiz, err)
+			t.Fatalf("listar %s: %v", root, err)
 		}
-		for _, caminho := range arquivos {
-			conteudo, err := os.ReadFile(caminho)
+		for _, path := range files {
+			content, err := os.ReadFile(path)
 			if err != nil {
-				t.Fatalf("ler %s: %v", caminho, err)
+				t.Fatalf("ler %s: %v", path, err)
 			}
-			visitados++
-			for i, linha := range strings.Split(string(conteudo), "\n") {
+			visited++
+			for i, row := range strings.Split(string(content), "\n") {
 				// Comentário fora antes de medir: o cabeçalho acima cita
 				// `json:"role"` para explicar o defeito, e um guarda que lê a
 				// fonte crua acusaria a própria explicação.
-				if j := strings.Index(linha, "//"); j >= 0 {
-					linha = linha[:j]
+				if j := strings.Index(row, "//"); j >= 0 {
+					row = row[:j]
 				}
-				for _, m := range tag.FindAllStringSubmatch(linha, -1) {
-					sitios++
-					nome := m[1]
-					if nome[0] >= 'A' && nome[0] <= 'Z' {
+				for _, m := range tag.FindAllStringSubmatch(row, -1) {
+					sites++
+					name := m[1]
+					if name[0] >= 'A' && name[0] <= 'Z' {
 						t.Errorf("%s:%d — a tag `json:%q` começa com maiúscula. O fio é "+
 							"minúsculo e o cliente lê assim; uma renomeação de identificador "+
 							"que varra a string da tag quebra o contrato sem quebrar o build.",
-							caminho, i+1, nome)
+							path, i+1, name)
 					}
 				}
 			}
@@ -138,9 +138,9 @@ func agrafiaDasTags(t *testing.T) {
 	// manipulador que o servia, e só a ALE-349 levou quatro. Um piso calibrado
 	// como "metade do que existe hoje" reprovaria a próxima fatia por ela ter
 	// dado certo, e a correção seria baixar o número de novo. São 55 tags agora.
-	if sitios < 25 {
+	if sites < 25 {
 		t.Fatalf("só %d tags JSON em %d arquivos — o padrão parou de casar e o verde "+
-			"não significa nada", sitios, visitados)
+			"não significa nada", sites, visited)
 	}
-	t.Logf("%d tags JSON conferidas em %d arquivos", sitios, visitados)
+	t.Logf("%d tags JSON conferidas em %d arquivos", sites, visited)
 }

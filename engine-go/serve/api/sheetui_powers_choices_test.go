@@ -9,9 +9,9 @@ import (
 func TestAtTheFirstLevelThereIsNoPowerSlot(t *testing.T) {
 	f, id := barbaro(t, 1)
 
-	recusa := powerCommand(t, f, id, "escolhe/class.barbaro.golpe-poderoso", "")
-	if !strings.Contains(recusa, "0 vagas") {
-		t.Errorf("o nível 1 aceitou um poder: %q", recusa)
+	refusal := powerCommand(t, f, id, "escolhe/class.barbaro.golpe-poderoso", "")
+	if !strings.Contains(refusal, "0 vagas") {
+		t.Errorf("o nível 1 aceitou um poder: %q", refusal)
 	}
 }
 
@@ -19,14 +19,14 @@ func TestAtTheFirstLevelThereIsNoPowerSlot(t *testing.T) {
 func TestAPowerFromAnotherClassDoesNotEnter(t *testing.T) {
 	f, id := barbaro(t, 5)
 
-	recusa := powerCommand(t, f, id, "escolhe/class.bardo.lendas-e-historias", "")
-	if !strings.Contains(recusa, "Bardo") {
-		t.Errorf("a recusa não diz de qual classe é o poder: %q", recusa)
+	refusal := powerCommand(t, f, id, "escolhe/class.bardo.lendas-e-historias", "")
+	if !strings.Contains(refusal, "Bardo") {
+		t.Errorf("a recusa não diz de qual classe é o poder: %q", refusal)
 	}
 	// O PODER GERAL, ao contrário, entra em qualquer classe: "você sempre pode
 	// substituir um poder de classe por um poder geral" (p33).
-	if recusa := powerCommand(t, f, id, "escolhe/ataque-poderoso", ""); recusa != "" {
-		t.Errorf("um poder geral foi recusado: %q", recusa)
+	if refused := powerCommand(t, f, id, "escolhe/ataque-poderoso", ""); refused != "" {
+		t.Errorf("um poder geral foi recusado: %q", refused)
 	}
 }
 
@@ -34,9 +34,9 @@ func TestAPowerFromAnotherClassDoesNotEnter(t *testing.T) {
 func TestAnAutomaticPowerTakesNoSlot(t *testing.T) {
 	f, id := barbaro(t, 5)
 
-	recusa := powerCommand(t, f, id, "escolhe/class.barbaro.furia", "")
-	if !strings.Contains(recusa, "automático") {
-		t.Errorf("a Fúria, que o nível concede, foi aceita como escolha: %q", recusa)
+	refusal := powerCommand(t, f, id, "escolhe/class.barbaro.furia", "")
+	if !strings.Contains(refusal, "automático") {
+		t.Errorf("a Fúria, que o nível concede, foi aceita como escolha: %q", refusal)
 	}
 }
 
@@ -45,13 +45,13 @@ func TestTheOriginGivesTwoBenefits(t *testing.T) {
 	f, id := barbaro(t, 3)
 
 	for _, b := range []string{"pericia-Furtividade", "pericia-Percepção"} {
-		if recusa := powerCommand(t, f, id, "origem/origin-batedor-"+b, ""); recusa != "" {
-			t.Fatalf("o benefício %q foi recusado: %q", b, recusa)
+		if refusal := powerCommand(t, f, id, "origem/origin-batedor-"+b, ""); refusal != "" {
+			t.Fatalf("o benefício %q foi recusado: %q", b, refusal)
 		}
 	}
-	recusa := powerCommand(t, f, id, "origem/origin-batedor-pericia-Sobrevivência", "")
-	if !strings.Contains(recusa, "2 benefícios") {
-		t.Errorf("o terceiro benefício foi aceito: %q", recusa)
+	refused := powerCommand(t, f, id, "origem/origin-batedor-pericia-Sobrevivência", "")
+	if !strings.Contains(refused, "2 benefícios") {
+		t.Errorf("o terceiro benefício foi aceito: %q", refused)
 	}
 }
 
@@ -63,10 +63,10 @@ func TestTheOriginGivesTwoBenefits(t *testing.T) {
 func TestTheOnlyOriginPowerIsStillAChoice(t *testing.T) {
 	f, id := barbaro(t, 3)
 
-	if recusa := powerCommand(t, f, id, "origem/origin-batedor-unique", ""); recusa != "" {
+	if refusal := powerCommand(t, f, id, "origem/origin-batedor-unique", ""); refusal != "" {
 		// O id do poder único do Batedor sai do catálogo; se ele mudar, o teste
 		// falha dizendo o que procurar.
-		t.Fatalf("o poder único da origem foi recusado: %q", recusa)
+		t.Fatalf("o poder único da origem foi recusado: %q", refusal)
 	}
 	if !strings.Contains(powerScreen(t, f, id), "Estilo de Disparo") {
 		t.Error("o poder único escolhido não aparece na lista")
@@ -86,11 +86,11 @@ func TestAnOriginWithoutBenefitsDoesNotDemandTwo(t *testing.T) {
 		t.Fatalf("trocar a origem: %v", err)
 	}
 
-	tela := powerScreen(t, f, id)
-	if strings.Contains(tela, "Origem: 2 benefícios") {
+	screen := powerScreen(t, f, id)
+	if strings.Contains(screen, "Origem: 2 benefícios") {
 		t.Error("o Amnésico cobra dois benefícios de uma lista que tem um")
 	}
-	if !strings.Contains(tela, "Origem: 1 benefício") {
+	if !strings.Contains(screen, "Origem: 1 benefício") {
 		t.Error("o Amnésico não cobra o poder único que ele oferece")
 	}
 }
@@ -99,9 +99,9 @@ func TestAnOriginWithoutBenefitsDoesNotDemandTwo(t *testing.T) {
 func TestABenefitFromAnotherOriginDoesNotEnter(t *testing.T) {
 	f, id := barbaro(t, 3)
 
-	recusa := powerCommand(t, f, id, "origem/origin-acolito-pericia-Cura", "")
-	if !strings.Contains(recusa, "Batedor") {
-		t.Errorf("a recusa não diz qual é a origem da ficha: %q", recusa)
+	refusal := powerCommand(t, f, id, "origem/origin-acolito-pericia-Cura", "")
+	if !strings.Contains(refusal, "Batedor") {
+		t.Errorf("a recusa não diz qual é a origem da ficha: %q", refusal)
 	}
 }
 
@@ -109,15 +109,15 @@ func TestABenefitFromAnotherOriginDoesNotEnter(t *testing.T) {
 func TestThePathAndTheDevotoOnlyAcceptWhatTheClassOffers(t *testing.T) {
 	f, id := arcanista(t)
 
-	if recusa := powerCommand(t, f, id, "classe/Arcanista/caminho/mago", ""); recusa != "" {
-		t.Fatalf("um caminho do arcanista foi recusado: %q", recusa)
+	if refusal := powerCommand(t, f, id, "classe/Arcanista/caminho/mago", ""); refusal != "" {
+		t.Fatalf("um caminho do arcanista foi recusado: %q", refusal)
 	}
-	if recusa := powerCommand(t, f, id, "classe/Arcanista/caminho/bastiao", ""); recusa == "" {
+	if refusal := powerCommand(t, f, id, "classe/Arcanista/caminho/bastiao", ""); refusal == "" {
 		t.Error("o caminho do cavaleiro foi aceito num arcanista")
 	}
 	// E O ARCANISTA NÃO ESCOLHE DEVOTO: são três classes que escolhem (p57,
 	// p61, p82), e ele não é nenhuma delas.
-	if recusa := powerCommand(t, f, id, "classe/Arcanista/devoto/khalmyr", ""); recusa == "" {
+	if refusal := powerCommand(t, f, id, "classe/Arcanista/devoto/khalmyr", ""); refusal == "" {
 		t.Error("um arcanista escolheu devoto")
 	}
 }
@@ -126,20 +126,20 @@ func TestThePathAndTheDevotoOnlyAcceptWhatTheClassOffers(t *testing.T) {
 func TestThePendenciesSayWhatIsMissing(t *testing.T) {
 	f, id := barbaro(t, 3)
 
-	tela := powerScreen(t, f, id)
-	for _, esperado := range []string{
+	screen := powerScreen(t, f, id)
+	for _, want := range []string{
 		"2 poderes por escolher", // duas vagas, nenhuma usada
 		"Origem: 2 benefícios por escolher",
 		"escolhas pendentes",
 	} {
-		if !strings.Contains(tela, esperado) {
-			t.Errorf("a tela não anuncia %q", esperado)
+		if !strings.Contains(screen, want) {
+			t.Errorf("a tela não anuncia %q", want)
 		}
 	}
 
 	// E ELAS SOMEM quando a escolha é feita.
 	powerCommand(t, f, id, "escolhe/class.barbaro.golpe-poderoso", "")
-	if tela := powerScreen(t, f, id); !strings.Contains(tela, "1 poder por escolher") {
+	if page := powerScreen(t, f, id); !strings.Contains(page, "1 poder por escolher") {
 		t.Error("a pendência não desceu para uma vaga depois da escolha")
 	}
 }
@@ -147,19 +147,19 @@ func TestThePendenciesSayWhatIsMissing(t *testing.T) {
 // O DIÁLOGO oferece o que cabe em cada aba.
 func TestTheDialogOffersWhatFitsInEachTab(t *testing.T) {
 	f, id := arcanista(t)
-	tela := powerScreen(t, f, id)
+	screen := powerScreen(t, f, id)
 
-	if !strings.Contains(tela, "Escolher poderes") {
+	if !strings.Contains(screen, "Escolher poderes") {
 		t.Fatal("a aba não tem o diálogo de escolher")
 	}
 	// O CAMINHO do arcanista, que ele escolhe desde o 1º nível.
-	for _, esperado := range []string{"Bruxo", "Feiticeiro", "Mago"} {
-		if !strings.Contains(tela, esperado) {
-			t.Errorf("o diálogo não oferece o caminho %q", esperado)
+	for _, want := range []string{"Bruxo", "Feiticeiro", "Mago"} {
+		if !strings.Contains(screen, want) {
+			t.Errorf("o diálogo não oferece o caminho %q", want)
 		}
 	}
 	// E NÃO oferece o que é de outra classe.
-	if strings.Contains(tela, "Égide Sagrada") {
+	if strings.Contains(screen, "Égide Sagrada") {
 		t.Error("o diálogo ofereceu um caminho de paladino a um arcanista")
 	}
 }
@@ -177,19 +177,19 @@ func TestPowerSlotsAreOnePerLevelFromTheSecondOn(t *testing.T) {
 	f, id := barbaro(t, 3)
 
 	// Duas vagas no 3º nível: a do 2º e a do 3º.
-	if recusa := powerCommand(t, f, id, "escolhe/class.barbaro.golpe-poderoso", ""); recusa != "" {
-		t.Fatalf("a primeira escolha foi recusada: %q", recusa)
+	if refusal := powerCommand(t, f, id, "escolhe/class.barbaro.golpe-poderoso", ""); refusal != "" {
+		t.Fatalf("a primeira escolha foi recusada: %q", refusal)
 	}
-	if recusa := powerCommand(t, f, id, "escolhe/class.barbaro.brado-assustador", ""); recusa != "" {
-		t.Fatalf("a segunda escolha foi recusada: %q", recusa)
+	if refusal := powerCommand(t, f, id, "escolhe/class.barbaro.brado-assustador", ""); refusal != "" {
+		t.Fatalf("a segunda escolha foi recusada: %q", refusal)
 	}
 	// A TERCEIRA não cabe.
-	recusa := powerCommand(t, f, id, "escolhe/class.barbaro.frenesi", "")
-	if !strings.Contains(recusa, "2 vagas") {
-		t.Errorf("a recusa não diz quantas vagas existem: %q", recusa)
+	refused := powerCommand(t, f, id, "escolhe/class.barbaro.frenesi", "")
+	if !strings.Contains(refused, "2 vagas") {
+		t.Errorf("a recusa não diz quantas vagas existem: %q", refused)
 	}
-	if guardados := chosen(t, f, id); strings.Contains(guardados, "frenesi") {
-		t.Errorf("a recusa gravou assim mesmo: %s", guardados)
+	if saved := chosen(t, f, id); strings.Contains(saved, "frenesi") {
+		t.Errorf("a recusa gravou assim mesmo: %s", saved)
 	}
 }
 
@@ -199,15 +199,15 @@ func TestTheRaceAttributePendencyAppearsAndCloses(t *testing.T) {
 	f, id := barbaro(t, 1)
 	seedRaca(t, f.s, id, "Humano")
 
-	if tela := powerScreen(t, f, id); !strings.Contains(tela, "distribuir o bônus de atributo") {
+	if screen := powerScreen(t, f, id); !strings.Contains(screen, "distribuir o bônus de atributo") {
 		t.Fatal("o humano sem distribuição não mostra a pendência")
 	}
 
-	corpo := `{"race_attributes":["strength","dexterity","constitution"]}`
-	if recusa := powerCommand(t, f, id, "atributos", corpo); recusa != "" {
-		t.Fatalf("a distribuição foi recusada: %q", recusa)
+	body := `{"race_attributes":["strength","dexterity","constitution"]}`
+	if refusal := powerCommand(t, f, id, "atributos", body); refusal != "" {
+		t.Fatalf("a distribuição foi recusada: %q", refusal)
 	}
-	if tela := powerScreen(t, f, id); strings.Contains(tela, "distribuir o bônus de atributo") {
+	if screen := powerScreen(t, f, id); strings.Contains(screen, "distribuir o bônus de atributo") {
 		t.Error("a pendência ficou depois de a distribuição fechar")
 	}
 }
@@ -217,9 +217,9 @@ func TestARepeatedDistributionIsRefused(t *testing.T) {
 	f, id := barbaro(t, 1)
 	seedRaca(t, f.s, id, "Humano")
 
-	corpo := `{"race_attributes":["strength","strength","strength"]}`
-	if recusa := powerCommand(t, f, id, "atributos", corpo); !strings.Contains(recusa, "distintos") {
-		t.Errorf("três vezes o mesmo atributo foi aceito: %q", recusa)
+	body := `{"race_attributes":["strength","strength","strength"]}`
+	if refusal := powerCommand(t, f, id, "atributos", body); !strings.Contains(refusal, "distintos") {
+		t.Errorf("três vezes o mesmo atributo foi aceito: %q", refusal)
 	}
 	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
@@ -248,12 +248,12 @@ func TestWritingOneChoiceDoesNotEraseTheOthers(t *testing.T) {
 	f, id := barbaro(t, 5)
 	seedRaca(t, f.s, id, "Humano")
 
-	if recusa := powerCommand(t, f, id, "escolhe/ataque-poderoso", ""); recusa != "" {
-		t.Fatalf("escolher o poder geral foi recusado: %q", recusa)
+	if refusal := powerCommand(t, f, id, "escolhe/ataque-poderoso", ""); refusal != "" {
+		t.Fatalf("escolher o poder geral foi recusado: %q", refusal)
 	}
-	corpo := `{"race_attributes":["strength","dexterity","constitution"]}`
-	if recusa := powerCommand(t, f, id, "atributos", corpo); recusa != "" {
-		t.Fatalf("a distribuição foi recusada: %q", recusa)
+	body := `{"race_attributes":["strength","dexterity","constitution"]}`
+	if refusal := powerCommand(t, f, id, "atributos", body); refusal != "" {
+		t.Fatalf("a distribuição foi recusada: %q", refusal)
 	}
 
 	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)

@@ -13,28 +13,28 @@ import (
 
 // dbNpc lê o bloco guardado pelo nome, para as asserções não dependerem do
 // id que o banco escolheu.
-func dbNpc(t *testing.T, f sceneFixture, nome string) creature.Block {
+func dbNpc(t *testing.T, f sceneFixture, name string) creature.Block {
 	t.Helper()
 	for _, npc := range f.s.tableScene.CampaignCast(context.Background(), f.campaignID) {
-		if npc.Nome != nome {
+		if npc.Nome != name {
 			continue
 		}
-		linhas, err := f.s.queries.ListCampaignCreatures(context.Background(), f.campaignID)
+		rows, err := f.s.queries.ListCampaignCreatures(context.Background(), f.campaignID)
 		if err != nil {
 			t.Fatalf("ler o elenco: %v", err)
 		}
-		for _, l := range linhas {
-			if l.Name != nome {
+		for _, l := range rows {
+			if l.Name != name {
 				continue
 			}
-			var bloco creature.Block
-			if err := json.Unmarshal([]byte(l.Block), &bloco); err != nil {
-				t.Fatalf("o bloco de %q está ilegível: %v", nome, err)
+			var block creature.Block
+			if err := json.Unmarshal([]byte(l.Block), &block); err != nil {
+				t.Fatalf("o bloco de %q está ilegível: %v", name, err)
 			}
-			return bloco
+			return block
 		}
 	}
-	t.Fatalf("%q não está no elenco", nome)
+	t.Fatalf("%q não está no elenco", name)
 	return creature.Block{}
 }
 
@@ -48,29 +48,29 @@ func dbNpc(t *testing.T, f sceneFixture, nome string) creature.Block {
 func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	f := newSceneFixture(t)
 
-	resposta := f.posta(t, f.mestre,
+	response := f.posta(t, f.gm,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/nova",
 		bodyDraft(`"id":0,"nome":"Ogro Capitão","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
-	if elenco := f.s.tableScene.CampaignCast(context.Background(), f.campaignID); len(elenco) != 0 {
-		t.Errorf("acrescentar um ataque GRAVOU no elenco: %+v", elenco)
+	if cast := f.s.tableScene.CampaignCast(context.Background(), f.campaignID); len(cast) != 0 {
+		t.Errorf("acrescentar um ataque GRAVOU no elenco: %+v", cast)
 	}
 	// O nome volta DENTRO de `rascunho`, e a asserção lê a CHAVE em vez de
 	// procurar o texto na resposta inteira: `Contains(resposta, "Ogro Capitão")`
 	// passa verde com o sinal renomeado, porque o texto continua no corpo — ligado
 	// a coisa nenhuma.
-	if nome := responseDraft(t, resposta)["nome"]; nome != "Ogro Capitão" {
-		t.Errorf("o rascunho voltou com nome %v, esperado o que estava sendo digitado:\n%s", nome, resposta)
+	if name := responseDraft(t, response)["nome"]; name != "Ogro Capitão" {
+		t.Errorf("o rascunho voltou com nome %v, esperado o que estava sendo digitado:\n%s", name, response)
 	}
 	// A LINHA nova volta como HTML, e não só como sinal: um `data-bind` para uma
 	// posição que a tela não desenhou é um campo que não existe.
-	if !strings.Contains(resposta, `id="npc-attacks"`) {
-		t.Errorf("a lista de ataques não foi redesenhada:\n%s", resposta)
+	if !strings.Contains(response, `id="npc-attacks"`) {
+		t.Errorf("a lista de ataques não foi redesenhada:\n%s", response)
 	}
 	// O CAMINHO do campo vai escrito à mão: derivá-lo do `rowField` da cena
 	// faria o esperado sair do código sob teste.
-	if !strings.Contains(resposta, "draft.bloco.attacks.0.name") {
-		t.Errorf("a linha nova não tem onde escrever o nome:\n%s", resposta)
+	if !strings.Contains(response, "draft.bloco.attacks.0.name") {
+		t.Errorf("a linha nova não tem onde escrever o nome:\n%s", response)
 	}
 	// E o botão de TIRAR a linha aponta para ESTA mesa.
 	//
@@ -79,9 +79,9 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	// silencioso: uma view montada sem eles produziria
 	// `/campanhas/0/sessoes/0/…`, um endereço que EXISTE, responde 403, e devolve
 	// uma tela que não mudou — a mesma família que a prévia das notas já teve.
-	tirar := f.tableUrl() + "/elenco/npc/rascunho/ataque/0/remover"
-	if !strings.Contains(resposta, tirar) {
-		t.Errorf("o botão de tirar a linha não aponta para %s:\n%s", tirar, resposta)
+	remove := f.tableUrl() + "/elenco/npc/rascunho/ataque/0/remover"
+	if !strings.Contains(response, remove) {
+		t.Errorf("o botão de tirar a linha não aponta para %s:\n%s", remove, response)
 	}
 }
 
@@ -90,17 +90,17 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 // segundo, que ele acabou de escrever.
 func TestRemovingARowRemovesThatRow(t *testing.T) {
 	f := newSceneFixture(t)
-	tres := `"attacks":[{"name":"Clava"},{"name":"Mordida"},{"name":"Cauda"}],"skills":[],"specialAbilities":[]`
-	resposta := f.posta(t, f.mestre,
+	three := `"attacks":[{"name":"Clava"},{"name":"Mordida"},{"name":"Cauda"}],"skills":[],"specialAbilities":[]`
+	response := f.posta(t, f.gm,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/1/remover",
-		bodyDraft(`"id":0,"nome":"Hidra","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+tres+`}`))
+		bodyDraft(`"id":0,"nome":"Hidra","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+three+`}`))
 
-	if strings.Contains(resposta, "Mordida") {
-		t.Errorf("a linha do meio sobreviveu ao remover:\n%s", resposta)
+	if strings.Contains(response, "Mordida") {
+		t.Errorf("a linha do meio sobreviveu ao remover:\n%s", response)
 	}
-	for _, sobrevivente := range []string{"Clava", "Cauda"} {
-		if !strings.Contains(resposta, sobrevivente) {
-			t.Errorf("%q sumiu junto com a linha removida:\n%s", sobrevivente, resposta)
+	for _, survivor := range []string{"Clava", "Cauda"} {
+		if !strings.Contains(response, survivor) {
+			t.Errorf("%q sumiu junto com a linha removida:\n%s", survivor, response)
 		}
 	}
 }
@@ -110,11 +110,11 @@ func TestRemovingARowRemovesThatRow(t *testing.T) {
 // número diz o que aconteceu.
 func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
 	f := newSceneFixture(t)
-	resposta := f.posta(t, f.mestre,
+	response := f.posta(t, f.gm,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/7/remover",
 		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
-	if !strings.Contains(resposta, "draft_error") {
-		t.Errorf("a linha inexistente não recusou:\n%s", resposta)
+	if !strings.Contains(response, "draft_error") {
+		t.Errorf("a linha inexistente não recusou:\n%s", response)
 	}
 }
 
@@ -129,14 +129,14 @@ func TestTheAbsenceOfManaSurvivesTheForm(t *testing.T) {
 	base := f.tableUrl() + "/elenco/npc/rascunho/salvar"
 
 	// Sem conjurar: o número no formulário é ignorado e o bloco fica SEM a linha.
-	f.posta(t, f.mestre, base,
+	f.posta(t, f.gm, base,
 		bodyDraft(`"id":0,"nome":"Bandido","conjura":false,"bloco":{`+blocoMinimo+`,"pm":7}`))
 	if pm := dbNpc(t, f, "Bandido").PM; pm != nil {
 		t.Errorf("o Bandido guardou %d PM sem conjurar — a ausência virou número", *pm)
 	}
 
 	// Conjurando: o número atravessa.
-	f.posta(t, f.mestre, base,
+	f.posta(t, f.gm, base,
 		bodyDraft(`"id":0,"nome":"Centauro Xamã","conjura":true,"bloco":{`+blocoMinimo+`,"pm":20}`))
 	pm := dbNpc(t, f, "Centauro Xamã").PM
 	if pm == nil || *pm != 20 {
@@ -152,16 +152,16 @@ func TestTheAbsenceOfManaSurvivesTheForm(t *testing.T) {
 // com valor vazio, e não faltando.
 func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 	f := newSceneFixture(t)
-	comOpcionaisVazios := `"attacks":[{"name":"Clava","attackBonus":7,"damage":"1d6+3"}],` +
+	withEmptyOptionals := `"attacks":[{"name":"Clava","attackBonus":7,"damage":"1d6+3"}],` +
 		`"skills":[{"name":"Furtividade","bonus":5}],"specialAbilities":[]`
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
-		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+comOpcionaisVazios+`}`))
+	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+withEmptyOptionals+`}`))
 
 	id := npcId(t, f, "Ogro")
-	aberto := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/"+id+"/editar", "{}")
-	for _, campo := range []string{`"special"`, `"nota"`, `"pm"`} {
-		if !strings.Contains(aberto, campo) {
-			t.Errorf("o campo %s não veio no rascunho — a caixa dele nasceria escrita \"undefined\":\n%s", campo, aberto)
+	open := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/"+id+"/editar", "{}")
+	for _, field := range []string{`"special"`, `"nota"`, `"pm"`} {
+		if !strings.Contains(open, field) {
+			t.Errorf("o campo %s não veio no rascunho — a caixa dele nasceria escrita \"undefined\":\n%s", field, open)
 		}
 	}
 }
@@ -174,14 +174,14 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 // escrita "Nome" manda o mestre procurar um campo que não existe.
 func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 	f := newSceneFixture(t)
-	resposta := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+	response := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
 		bodyDraft(`"id":0,"nome":"","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
-	if !strings.Contains(resposta, "draft_error") || !strings.Contains(resposta, "precisa de um nome") {
-		t.Errorf("a recusa não falou no editor:\n%s", resposta)
+	if !strings.Contains(response, "draft_error") || !strings.Contains(response, "precisa de um nome") {
+		t.Errorf("a recusa não falou no editor:\n%s", response)
 	}
-	if elenco := f.s.tableScene.CampaignCast(context.Background(), f.campaignID); len(elenco) != 0 {
-		t.Errorf("o NPC sem nome foi gravado assim mesmo: %+v", elenco)
+	if cast := f.s.tableScene.CampaignCast(context.Background(), f.campaignID); len(cast) != 0 {
+		t.Errorf("o NPC sem nome foi gravado assim mesmo: %+v", cast)
 	}
 }
 
@@ -192,44 +192,44 @@ func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	f := newSceneFixture(t)
 	// Um NPC guardado numa campanha VIZINHA do mesmo mestre.
-	vizinha := seedCampaign(t, f.s, f.mestre)
-	agora := "2026-01-01T00:00:00Z"
-	linha, err := f.s.queries.CreateCampaignCreature(context.Background(), sqlcgen.CreateCampaignCreatureParams{
-		Campaignid: vizinha, Name: "Vilão da vizinha",
+	neighbor := seedCampaign(t, f.s, f.gm)
+	now := "2026-01-01T00:00:00Z"
+	row, err := f.s.queries.CreateCampaignCreature(context.Background(), sqlcgen.CreateCampaignCreatureParams{
+		Campaignid: neighbor, Name: "Vilão da vizinha",
 		Block:     `{` + blocoMinimo + `}`,
-		Createdat: agora, Updatedat: agora,
+		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
 		t.Fatalf("semear o NPC vizinho: %v", err)
 	}
 
-	resposta := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
-		bodyDraft(`"id":`+strconv.FormatInt(linha.ID, 10)+`,"nome":"Sequestrado","conjura":false,"bloco":{`+blocoMinimo+`}`))
+	response := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+		bodyDraft(`"id":`+strconv.FormatInt(row.ID, 10)+`,"nome":"Sequestrado","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
-	if !strings.Contains(resposta, "não é desta campanha") {
-		t.Errorf("o editor aceitou reescrever o elenco da vizinha:\n%s", resposta)
+	if !strings.Contains(response, "não é desta campanha") {
+		t.Errorf("o editor aceitou reescrever o elenco da vizinha:\n%s", response)
 	}
-	depois, err := f.s.queries.GetCampaignCreature(context.Background(), linha.ID)
+	after, err := f.s.queries.GetCampaignCreature(context.Background(), row.ID)
 	if err != nil {
 		t.Fatalf("reler o NPC vizinho: %v", err)
 	}
-	if depois.Name != linha.Name {
-		t.Errorf("o NPC da vizinha virou %q", depois.Name)
+	if after.Name != row.Name {
+		t.Errorf("o NPC da vizinha virou %q", after.Name)
 	}
 }
 
 // A trava é do SERVIDOR, e não o botão escondido.
 func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 	f := newSceneFixture(t)
-	for _, caminho := range []string{
+	for _, path := range []string{
 		"/elenco/npc/novo",
 		"/elenco/npc/rascunho/ataque/nova",
 		"/elenco/npc/rascunho/salvar",
 	} {
-		rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+caminho,
+		rec := f.pede(t, f.player, http.MethodPost, f.tableUrl()+path,
 			bodyDraft(`"id":0,"nome":"Intruso","conjura":false,"bloco":{`+blocoMinimo+`}`))
 		if rec.Code != http.StatusForbidden {
-			t.Errorf("o jogador alcançou %s: %d", caminho, rec.Code)
+			t.Errorf("o jogador alcançou %s: %d", path, rec.Code)
 		}
 	}
 }
@@ -239,38 +239,38 @@ func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 // dois abrem devolvendo a MESMA forma de rascunho — o que muda é a semente.
 func TestCreatingFromScratchAndEditingAreTheSameForm(t *testing.T) {
 	f := newSceneFixture(t)
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
 		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
-	doZero := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/novo", "{}")
-	daCopia := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/"+npcId(t, f, "Ogro")+"/editar", "{}")
+	doZero := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/novo", "{}")
+	fromCopy := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/"+npcId(t, f, "Ogro")+"/editar", "{}")
 
-	for _, campo := range []string{`"nd"`, `"tipo"`, `"size"`, `"attacks"`, `"skills"`, `"specialAbilities"`, `"conjura"`} {
-		if !strings.Contains(doZero, campo) {
-			t.Errorf("criar do zero não tem %s:\n%s", campo, doZero)
+	for _, field := range []string{`"nd"`, `"tipo"`, `"size"`, `"attacks"`, `"skills"`, `"specialAbilities"`, `"conjura"`} {
+		if !strings.Contains(doZero, field) {
+			t.Errorf("criar do zero não tem %s:\n%s", field, doZero)
 		}
-		if !strings.Contains(daCopia, campo) {
-			t.Errorf("editar não tem %s:\n%s", campo, daCopia)
+		if !strings.Contains(fromCopy, field) {
+			t.Errorf("editar não tem %s:\n%s", field, fromCopy)
 		}
 	}
 	// A diferença é a SEMENTE, e ela precisa aparecer: o do zero não tem id.
 	if !strings.Contains(doZero, `"id":0`) {
 		t.Errorf("criar do zero nasceu com id:\n%s", doZero)
 	}
-	if strings.Contains(daCopia, `"id":0`) {
-		t.Errorf("editar abriu sem o id do NPC:\n%s", daCopia)
+	if strings.Contains(fromCopy, `"id":0`) {
+		t.Errorf("editar abriu sem o id do NPC:\n%s", fromCopy)
 	}
 }
 
 // npcId acha o id pelo nome, para o teste não depender do número que o banco
 // escolheu.
-func npcId(t *testing.T, f sceneFixture, nome string) string {
+func npcId(t *testing.T, f sceneFixture, name string) string {
 	t.Helper()
 	for _, npc := range f.s.tableScene.CampaignCast(context.Background(), f.campaignID) {
-		if npc.Nome == nome {
+		if npc.Nome == name {
 			return strconv.FormatInt(npc.ID, 10)
 		}
 	}
-	t.Fatalf("%q não está no elenco", nome)
+	t.Fatalf("%q não está no elenco", name)
 	return ""
 }

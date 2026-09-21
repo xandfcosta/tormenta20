@@ -188,10 +188,10 @@ func TestEndSceneRouteRefusedWithNoRunningSession(t *testing.T) {
 	}
 	seedSession(t, s, campaign) // planned, never started
 
-	for quem, id := range map[string]int64{"o mestre": gmID, "o dono da ficha": ownerID} {
+	for who, id := range map[string]int64{"o mestre": gmID, "o dono da ficha": ownerID} {
 		rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: id}), "/fim-de-cena", char)
 		if rec.Code != http.StatusForbidden {
-			t.Errorf("%s: status = %d, want 403 (body %q)", quem, rec.Code, rec.Body.String())
+			t.Errorf("%s: status = %d, want 403 (body %q)", who, rec.Code, rec.Body.String())
 		}
 	}
 	if got := effectScopes(t, s, char); len(got) != 1 {
@@ -213,11 +213,11 @@ func TestEndSceneRouteRefusesGmWhoseLiveSessionIsAnotherCampaign(t *testing.T) {
 	seedEffect(t, s, char, "buff-a", "scene")
 
 	// Campanha A: o personagem está nela, e ela NÃO tem sessão rodando.
-	quieta := seedCampaign(t, s, gmID)
-	seedMember(t, s, quieta, char)
+	quiet := seedCampaign(t, s, gmID)
+	seedMember(t, s, quiet, char)
 	// Campanha B: o mesmo mestre, sessão rodando, e o personagem NÃO está nela.
-	outroPc := seedCharacter(t, s, ownerID, "Outro")
-	seedLiveSession(t, s, gmID, outroPc)
+	otherPC := seedCharacter(t, s, ownerID, "Outro")
+	seedLiveSession(t, s, gmID, otherPC)
 
 	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: gmID}), "/fim-de-cena", char)
 

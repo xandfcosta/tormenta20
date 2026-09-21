@@ -13,14 +13,14 @@ import (
 	"testing"
 )
 
-func mapToken(t *testing.T, f sceneFixture, rotulo string, x, y int) string {
+func mapToken(t *testing.T, f sceneFixture, label string, x, y int) string {
 	t.Helper()
-	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		board.BoardToken{Label: rotulo, X: x, Y: y, Kind: "npc"})
+	placed, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+		board.BoardToken{Label: label, X: x, Y: y, Kind: "npc"})
 	if err != nil {
-		t.Fatalf("pôr a peça %q: %v", rotulo, err)
+		t.Fatalf("pôr a peça %q: %v", label, err)
 	}
-	return posto.Tokens[len(posto.Tokens)-1].ID
+	return placed.Tokens[len(placed.Tokens)-1].ID
 }
 
 func nowBoard(t *testing.T, f sceneFixture) *board.BoardState {
@@ -41,7 +41,7 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	id := mapToken(t, f, "Ogro", 4, 4)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
 		t.Fatalf("esconder deu %d", rec.Code)
 	}
 	if !board.FindToken(nowBoard(t, f), id).Hidden {
@@ -49,15 +49,15 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	}
 	// A MESA deixa de vê-la, que é o ponto inteiro: a trava é o `BoardForRole`, e
 	// este caso afirma que o gesto passa por ele em vez de só pintar diferente.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(doJogador, "Ogro") {
+	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(forPlayer, "Ogro") {
 		t.Error("a peça escondida continuou na tela do jogador")
 	}
 
 	// ALTERNA: o mestre que escondeu cedo demais precisa poder mostrar de volta, e
 	// um segundo botão para desfazer o primeiro seria a mesma decisão em dois
 	// lugares.
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
 		t.Fatalf("mostrar deu %d", rec.Code)
 	}
 	if board.FindToken(nowBoard(t, f), id).Hidden {
@@ -71,14 +71,14 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	entryID := f.tracker(t)
-	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	placed, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID})
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
-	id := posto.Tokens[len(posto.Tokens)-1].ID
+	id := placed.Tokens[len(placed.Tokens)-1].ID
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/remover", ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
@@ -105,41 +105,41 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
 	// Sem movimento nenhum: o servidor recusa E a tela não desenha o verbo.
-	rec := f.pede(t, f.mestre, http.MethodPost, base+"/voltar", "")
+	rec := f.pede(t, f.gm, http.MethodPost, base+"/voltar", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o comando deu %d — a recusa é uma frase, não um status", rec.Code)
 	}
 	if !strings.Contains(rec.Body.String(), "não há para onde voltar") {
 		t.Errorf("voltar sem movimento não recusou:\n%s", rec.Body.String())
 	}
-	if tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(tela, "Voltar Ogro para") {
+	if screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(screen, "Voltar Ogro para") {
 		t.Error("a tela ofereceu voltar numa peça que não se moveu")
 	}
 
 	// Agora com um movimento CONFIRMADO: o mestre move sem orçamento.
 	mover := f.tableUrl() + "/tabuleiro/" + id
-	if rec := f.pede(t, f.mestre, http.MethodPost, mover+"/parada", `{"from":{"X":5,"Y":1}}`); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, mover+"/parada", `{"from":{"X":5,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, http.MethodPost, mover+"/confirmar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, mover+"/confirmar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("confirmar deu %d", rec.Code)
 	}
-	if peca := board.FindToken(nowBoard(t, f), id); peca.X != 5 {
-		t.Fatalf("a peça não andou: está em (%d,%d)", peca.X, peca.Y)
+	if token := board.FindToken(nowBoard(t, f), id); token.X != 5 {
+		t.Fatalf("a peça não andou: está em (%d,%d)", token.X, token.Y)
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/voltar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"/voltar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("voltar deu %d", rec.Code)
 	}
-	peca := board.FindToken(nowBoard(t, f), id)
-	if peca.X != 1 || peca.Y != 1 {
-		t.Errorf("a peça voltou para (%d,%d), esperado (1,1)", peca.X, peca.Y)
+	piece := board.FindToken(nowBoard(t, f), id)
+	if piece.X != 1 || piece.Y != 1 {
+		t.Errorf("a peça voltou para (%d,%d), esperado (1,1)", piece.X, piece.Y)
 	}
 	// UMA vez e não uma pilha: voltar LIMPA o registro, então o botão some. Um
 	// "voltar" que continuasse disponível andaria para trás na cena com um botão
 	// que não diz até onde vai.
-	if peca.CameFrom != nil {
-		t.Errorf("o voltar continuou disponível, apontando para %v", peca.CameFrom)
+	if piece.CameFrom != nil {
+		t.Errorf("o voltar continuou disponível, apontando para %v", piece.CameFrom)
 	}
 }
 
@@ -151,18 +151,18 @@ func TestUndoSurvivesAReload(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Dragão", 2, 2)
 	mover := f.tableUrl() + "/tabuleiro/" + id
-	for _, passo := range []struct{ rota, corpo string }{
+	for _, step := range []struct{ route, body string }{
 		{"/parada", `{"from":{"X":8,"Y":8}}`},
 		{"/confirmar", ""},
 	} {
-		if rec := f.pede(t, f.mestre, http.MethodPost, mover+passo.rota, passo.corpo); rec.Code != http.StatusOK {
-			t.Fatalf("%s deu %d", passo.rota, rec.Code)
+		if rec := f.pede(t, f.gm, http.MethodPost, mover+step.route, step.body); rec.Code != http.StatusOK {
+			t.Fatalf("%s deu %d", step.route, rec.Code)
 		}
 	}
 
 	// Uma carga fria, como quem apertou F5: nada do navegador anterior viaja.
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(tela, "Voltar Dragão para "+table.Coordinate(2, 2)) {
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(screen, "Voltar Dragão para "+table.Coordinate(2, 2)) {
 		t.Error("a página recarregada perdeu o voltar — ele não sobreviveu ao F5")
 	}
 }
@@ -175,7 +175,7 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Zumbi", 3, 3)
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/peca", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar deu %d", rec.Code)
 	}
@@ -183,12 +183,12 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 	if len(b.Tokens) != 2 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 2", len(b.Tokens))
 	}
-	copia := b.Tokens[1]
-	if copia.Label == "Zumbi" {
+	dup := b.Tokens[1]
+	if dup.Label == "Zumbi" {
 		t.Error("a cópia ficou com o mesmo nome — dois 'Zumbi' no mesmo mapa")
 	}
-	if perto := engine.RangeSquares(engine.Square{X: 3, Y: 3}, engine.Square{X: copia.X, Y: copia.Y}); perto > 2 {
-		t.Errorf("a cópia nasceu a %d quadrados da original", perto)
+	if near := engine.RangeSquares(engine.Square{X: 3, Y: 3}, engine.Square{X: dup.X, Y: dup.Y}); near > 2 {
+		t.Errorf("a cópia nasceu a %d quadrados da original", near)
 	}
 }
 
@@ -203,24 +203,24 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 //
 // O `mapToken` põe peça SOLTA, que é o caso do cenário; sem esta o teste dos
 // modos mediria sempre a recusa.
-func tokenOnTheQueue(t *testing.T, f sceneFixture, rotulo string) (string, string) {
+func tokenOnTheQueue(t *testing.T, f sceneFixture, label string) (string, string) {
 	t.Helper()
-	estado := f.s.sessions.GetState(f.sessionID)
-	var linha string
-	for i := range estado.Initiative {
-		if estado.Initiative[i].Label == rotulo {
-			linha = estado.Initiative[i].ID
+	state := f.s.sessions.GetState(f.sessionID)
+	var row string
+	for i := range state.Initiative {
+		if state.Initiative[i].Label == label {
+			row = state.Initiative[i].ID
 		}
 	}
-	if linha == "" {
-		t.Fatalf("%q não está na fila: o resto do caso não mediria nada", rotulo)
+	if row == "" {
+		t.Fatalf("%q não está na fila: o resto do caso não mediria nada", label)
 	}
-	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		board.BoardToken{Label: rotulo, X: 3, Y: 3, Kind: "npc", EntryID: &linha})
+	placed, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+		board.BoardToken{Label: label, X: 3, Y: 3, Kind: "npc", EntryID: &row})
 	if err != nil {
-		t.Fatalf("pôr a peça de %q: %v", rotulo, err)
+		t.Fatalf("pôr a peça de %q: %v", label, err)
 	}
-	return posto.Tokens[len(posto.Tokens)-1].ID, linha
+	return placed.Tokens[len(placed.Tokens)-1].ID, row
 }
 
 // É o "mais um zumbi" de montar encontro, e o número que importa é o PV: o ogro
@@ -231,30 +231,30 @@ func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
-	id, linhaOriginal := tokenOnTheQueue(t, f, "Ogro cansado")
-	antes := len(f.s.sessions.GetState(f.sessionID).Initiative)
+	id, originalLine := tokenOnTheQueue(t, f, "Ogro cansado")
+	before := len(f.s.sessions.GetState(f.sessionID).Initiative)
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/sozinha", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar com PV próprio deu %d", rec.Code)
 	}
 
-	fila := f.s.sessions.GetState(f.sessionID)
-	if len(fila.Initiative) != antes+1 {
-		t.Fatalf("a fila ficou com %d linhas, esperado %d", len(fila.Initiative), antes+1)
+	queue := f.s.sessions.GetState(f.sessionID)
+	if len(queue.Initiative) != before+1 {
+		t.Fatalf("a fila ficou com %d linhas, esperado %d", len(queue.Initiative), before+1)
 	}
 	b := nowBoard(t, f)
-	copia := b.Tokens[len(b.Tokens)-1]
-	if copia.EntryID == nil {
+	dup := b.Tokens[len(b.Tokens)-1]
+	if dup.EntryID == nil {
 		t.Fatal("a cópia nasceu sem linha: ela não teria barra de PV nenhuma")
 	}
-	if *copia.EntryID == linhaOriginal {
+	if *dup.EntryID == originalLine {
 		t.Fatal("a cópia ficou na linha da ORIGINAL — isso é o 'sangra junto', não o PV próprio")
 	}
 	var nova *live.InitiativeEntry
-	for i := range fila.Initiative {
-		if fila.Initiative[i].ID == *copia.EntryID {
-			nova = &fila.Initiative[i]
+	for i := range queue.Initiative {
+		if queue.Initiative[i].ID == *dup.EntryID {
+			nova = &queue.Initiative[i]
 		}
 	}
 	if nova == nil {
@@ -273,21 +273,21 @@ func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
-	id, linha := tokenOnTheQueue(t, f, "Ogro cansado")
-	antes := len(f.s.sessions.GetState(f.sessionID).Initiative)
+	id, row := tokenOnTheQueue(t, f, "Ogro cansado")
+	before := len(f.s.sessions.GetState(f.sessionID).Initiative)
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/junto", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar sangrando junto deu %d", rec.Code)
 	}
 
-	if depois := len(f.s.sessions.GetState(f.sessionID).Initiative); depois != antes {
-		t.Errorf("a fila ganhou linha: %d → %d, e o ponto deste modo é NÃO ganhar", antes, depois)
+	if after := len(f.s.sessions.GetState(f.sessionID).Initiative); after != before {
+		t.Errorf("a fila ganhou linha: %d → %d, e o ponto deste modo é NÃO ganhar", before, after)
 	}
 	b := nowBoard(t, f)
-	copia := b.Tokens[len(b.Tokens)-1]
-	if copia.EntryID == nil || *copia.EntryID != linha {
-		t.Errorf("a cópia aponta para %v, esperado a linha da original — sem isso o dano não aparece nas duas", copia.EntryID)
+	dup := b.Tokens[len(b.Tokens)-1]
+	if dup.EntryID == nil || *dup.EntryID != row {
+		t.Errorf("a cópia aponta para %v, esperado a linha da original — sem isso o dano não aparece nas duas", dup.EntryID)
 	}
 }
 
@@ -300,15 +300,15 @@ func TestTheModesThatNeedALineRefuseALoosePiece(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Baú", 1, 1)
 
-	for _, modo := range []string{"junto", "sozinha"} {
-		recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/"+modo, "")
-		if !strings.Contains(recusa, "não é um combatente da fila") {
-			t.Errorf("o modo %q não recusou a peça solta:\n%s", modo, recusa)
+	for _, mode := range []string{"junto", "sozinha"} {
+		refusal := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/"+mode, "")
+		if !strings.Contains(refusal, "não é um combatente da fila") {
+			t.Errorf("o modo %q não recusou a peça solta:\n%s", mode, refusal)
 		}
 	}
 	// O CONTROLE: o peão mudo, na mesma peça, PASSA. Sem ele as duas recusas
 	// acima seriam verdade também numa rota que recusa tudo.
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/peca", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o peão mudo também foi recusado: %d", rec.Code)
 	}
@@ -326,20 +326,20 @@ func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id + "/editar"
 
-	recusa := f.posta(t, f.mestre, base, `{"token_name":"Ogro","token_size":4}`)
-	if !strings.Contains(recusa, "1, 2, 3 ou 6") {
-		t.Errorf("o lado 4 não foi recusado:\n%s", recusa)
+	refusal := f.posta(t, f.gm, base, `{"token_name":"Ogro","token_size":4}`)
+	if !strings.Contains(refusal, "1, 2, 3 ou 6") {
+		t.Errorf("o lado 4 não foi recusado:\n%s", refusal)
 	}
-	semNome := f.posta(t, f.mestre, base, `{"token_name":"  ","token_size":1}`)
-	if !strings.Contains(semNome, "precisa de um nome") {
-		t.Errorf("o nome vazio não foi recusado:\n%s", semNome)
+	noName := f.posta(t, f.gm, base, `{"token_name":"  ","token_size":1}`)
+	if !strings.Contains(noName, "precisa de um nome") {
+		t.Errorf("o nome vazio não foi recusado:\n%s", noName)
 	}
 	// E o caso positivo, sem o qual as duas recusas acima seriam verdade também
 	// numa rota que recusa tudo.
-	f.posta(t, f.mestre, base, `{"token_name":"Ogro Capitão","token_size":2}`)
-	peca := board.FindToken(nowBoard(t, f), id)
-	if peca.Label != "Ogro Capitão" || peca.Footprint != 2 {
-		t.Errorf("a edição válida não pegou: %q, lado %d", peca.Label, peca.Footprint)
+	f.posta(t, f.gm, base, `{"token_name":"Ogro Capitão","token_size":2}`)
+	token := board.FindToken(nowBoard(t, f), id)
+	if token.Label != "Ogro Capitão" || token.Footprint != 2 {
+		t.Errorf("a edição válida não pegou: %q, lado %d", token.Label, token.Footprint)
 	}
 }
 
@@ -351,17 +351,17 @@ func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
-	for _, verbo := range []string{"/visibilidade", "/duplicar/peca", "/duplicar/junto", "/duplicar/sozinha", "/voltar", "/remover"} {
-		if rec := f.pede(t, f.jogador, http.MethodPost, base+verbo, ""); rec.Code != http.StatusForbidden {
-			t.Errorf("o jogador alcançou %s: %d", verbo, rec.Code)
+	for _, verb := range []string{"/visibilidade", "/duplicar/peca", "/duplicar/junto", "/duplicar/sozinha", "/voltar", "/remover"} {
+		if rec := f.pede(t, f.player, http.MethodPost, base+verb, ""); rec.Code != http.StatusForbidden {
+			t.Errorf("o jogador alcançou %s: %d", verb, rec.Code)
 		}
 	}
 	// E o MENU não é desenhado para ele — cortesia, não trava.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(doJogador, "Ogro") {
+	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(forPlayer, "Ogro") {
 		t.Fatal("o jogador não viu nem a peça — a página não é o que este teste pensa que é")
 	}
-	if strings.Contains(doJogador, "O que fazer com Ogro") {
+	if strings.Contains(forPlayer, "O que fazer com Ogro") {
 		t.Error("o menu do mestre apareceu na tela do jogador")
 	}
 }
@@ -373,11 +373,11 @@ func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 // tinha caminho nenhum antes, e é a que estes casos prendem.
 
 // colaNaAba manda o comando de colar com a área apontando para outra aba.
-func colaNaAba(t *testing.T, f sceneFixture, deOndeVeio, peca, modo string, x, y int) string {
+func colaNaAba(t *testing.T, f sceneFixture, cameFrom, token, mode string, x, y int) string {
 	t.Helper()
 	area := fmt.Sprintf(`{"area_token":%q,"area_board":%q,"area_mode":%q,"from":{"X":%d,"Y":%d}}`,
-		peca, deOndeVeio, modo, x, y)
-	return f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/colar", area)
+		token, cameFrom, mode, x, y)
+	return f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/colar", area)
 }
 
 // Copiar o zumbi na Cripta e colá-lo na Taverna. O servidor procura a original
@@ -385,45 +385,45 @@ func colaNaAba(t *testing.T, f sceneFixture, deOndeVeio, peca, modo string, x, y
 // justamente quando o colar mais serve.
 func TestThePasteCrossesTheTabs(t *testing.T) {
 	f := newSceneFixture(t)
-	cripta := f.seedOpenBoard(t, "stone")
-	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, cripta.ID,
+	crypt := f.seedOpenBoard(t, "stone")
+	placed, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, crypt.ID,
 		board.BoardToken{Label: "Zumbi", X: 1, Y: 1, Kind: "npc"})
 	if err != nil {
 		t.Fatalf("pôr a peça na cripta: %v", err)
 	}
-	naCripta := posto.Tokens[len(posto.Tokens)-1].ID
+	inCrypt := placed.Tokens[len(placed.Tokens)-1].ID
 
 	// A SEGUNDA ABA, e o comando age nela porque é a que o mestre está olhando.
-	taverna, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, "Taverna", "madeira")
+	tavern, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, "Taverna", "madeira")
 	if err != nil {
 		t.Fatalf("abrir a segunda aba: %v", err)
 	}
-	if taverna.ID == cripta.ID {
+	if tavern.ID == crypt.ID {
 		t.Fatal("as duas abas têm o mesmo id: o caso não mediria travessia nenhuma")
 	}
 	// A ABA é escolhida pela PORTA de verdade, e não mexendo no campo do
 	// servidor: é o mesmo gesto de clicar na aba, e ele é quem decide em qual
 	// tabuleiro o comando age.
-	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/aba/"+taverna.ID, ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/aba/"+tavern.ID, ""); rec.Code != http.StatusOK {
 		t.Fatalf("escolher a aba da taverna deu %d", rec.Code)
 	}
 
-	if recusa := colaNaAba(t, f, cripta.ID, naCripta, "peca", 6, 4); strings.Contains(recusa, "não há peça na área") {
-		t.Fatalf("o colar recusou:\n%s", recusa)
+	if refusal := colaNaAba(t, f, crypt.ID, inCrypt, "peca", 6, 4); strings.Contains(refusal, "não há peça na área") {
+		t.Fatalf("o colar recusou:\n%s", refusal)
 	}
 
-	naTaverna := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, taverna.ID)
-	if len(naTaverna.Tokens) != 1 {
-		t.Fatalf("a taverna ficou com %d peças, esperado 1", len(naTaverna.Tokens))
+	inTavern := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, tavern.ID)
+	if len(inTavern.Tokens) != 1 {
+		t.Fatalf("a taverna ficou com %d peças, esperado 1", len(inTavern.Tokens))
 	}
-	colada := naTaverna.Tokens[0]
-	if colada.X != 6 || colada.Y != 4 {
-		t.Errorf("a cópia pousou em (%d,%d), esperado o quadrado pedido (6,4)", colada.X, colada.Y)
+	pasted := inTavern.Tokens[0]
+	if pasted.X != 6 || pasted.Y != 4 {
+		t.Errorf("a cópia pousou em (%d,%d), esperado o quadrado pedido (6,4)", pasted.X, pasted.Y)
 	}
 	// E a CRIPTA não perdeu a original: colar copia, não move.
-	if depois := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, cripta.ID); len(depois.Tokens) != 1 {
-		t.Errorf("a cripta ficou com %d peças — o colar levou a original junto", len(depois.Tokens))
+	if after := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, crypt.ID); len(after.Tokens) != 1 {
+		t.Errorf("a cripta ficou com %d peças — o colar levou a original junto", len(after.Tokens))
 	}
 }
 
@@ -434,9 +434,9 @@ func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/colar", `{"area_token":"","from":{"X":2,"Y":2}}`)
-	if !strings.Contains(recusa, "não há peça na área") {
-		t.Errorf("a área vazia não foi recusada:\n%s", recusa)
+	refusal := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/colar", `{"area_token":"","from":{"X":2,"Y":2}}`)
+	if !strings.Contains(refusal, "não há peça na área") {
+		t.Errorf("a área vazia não foi recusada:\n%s", refusal)
 	}
 }
 
@@ -446,9 +446,9 @@ func TestThePasteOfAPieceThatIsGoneSaysSo(t *testing.T) {
 	f := newSceneFixture(t)
 	b := f.seedOpenBoard(t, "stone")
 
-	recusa := colaNaAba(t, f, b.ID, "peca-que-nao-existe", "peca", 2, 2)
-	if !strings.Contains(recusa, "não está mais no tabuleiro de origem") {
-		t.Errorf("a peça sumida não foi recusada:\n%s", recusa)
+	refusal := colaNaAba(t, f, b.ID, "peca-que-nao-existe", "peca", 2, 2)
+	if !strings.Contains(refusal, "não está mais no tabuleiro de origem") {
+		t.Errorf("a peça sumida não foi recusada:\n%s", refusal)
 	}
 }
 
@@ -460,25 +460,25 @@ func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 	f.scene(t)
 	b := f.seedOpenBoard(t, "stone")
 	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
-	antes := len(f.s.sessions.GetState(f.sessionID).Initiative)
+	before := len(f.s.sessions.GetState(f.sessionID).Initiative)
 
-	if recusa := colaNaAba(t, f, b.ID, id, "sozinha", 8, 8); strings.Contains(recusa, "não há peça") {
-		t.Fatalf("o colar recusou:\n%s", recusa)
+	if refusal := colaNaAba(t, f, b.ID, id, "sozinha", 8, 8); strings.Contains(refusal, "não há peça") {
+		t.Fatalf("o colar recusou:\n%s", refusal)
 	}
 
-	fila := f.s.sessions.GetState(f.sessionID)
-	if len(fila.Initiative) != antes+1 {
-		t.Fatalf("a fila ficou com %d linhas, esperado %d", len(fila.Initiative), antes+1)
+	queue := f.s.sessions.GetState(f.sessionID)
+	if len(queue.Initiative) != before+1 {
+		t.Fatalf("a fila ficou com %d linhas, esperado %d", len(queue.Initiative), before+1)
 	}
-	mapa := nowBoard(t, f)
-	colada := mapa.Tokens[len(mapa.Tokens)-1]
-	if colada.EntryID == nil {
+	board := nowBoard(t, f)
+	pasted := board.Tokens[len(board.Tokens)-1]
+	if pasted.EntryID == nil {
 		t.Fatal("a cópia colada nasceu sem linha: ela não teria barra de PV")
 	}
 	var nova *live.InitiativeEntry
-	for i := range fila.Initiative {
-		if fila.Initiative[i].ID == *colada.EntryID {
-			nova = &fila.Initiative[i]
+	for i := range queue.Initiative {
+		if queue.Initiative[i].ID == *pasted.EntryID {
+			nova = &queue.Initiative[i]
 		}
 	}
 	if nova == nil {
@@ -502,11 +502,11 @@ func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 // membro aparece no painel do Grupo — um zumbi duplicado entraria lá.
 func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	f := newSceneFixture(t)
-	agora := "2026-01-01T00:00:00Z"
-	bloco, err := f.s.queries.CreateCampaignCreature(context.Background(), sqlcgen.CreateCampaignCreatureParams{
+	now := "2026-01-01T00:00:00Z"
+	block, err := f.s.queries.CreateCampaignCreature(context.Background(), sqlcgen.CreateCampaignCreatureParams{
 		Campaignid: f.campaignID, Name: "Zumbi",
 		Block:     `{` + blocoMinimo + `}`,
-		Createdat: agora, Updatedat: agora,
+		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
 		t.Fatalf("semear o bloco: %v", err)
@@ -517,23 +517,23 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	pv := int64(20)
 	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
 		Label: "Zumbi", Initiative: 10, Type: "npc",
-		HpCurrent: &pv, HpMax: &pv, CreatureID: &bloco.ID,
+		HpCurrent: &pv, HpMax: &pv, CreatureID: &block.ID,
 	}); err != nil {
 		t.Fatalf("semear a linha: %v", err)
 	}
 	f.seedOpenBoard(t, "stone")
-	id, linhaOriginal := tokenOnTheQueue(t, f, "Zumbi")
+	id, originalLine := tokenOnTheQueue(t, f, "Zumbi")
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/bloco", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar com bloco próprio deu %d", rec.Code)
 	}
 
-	fila := f.s.sessions.GetState(f.sessionID)
+	queue := f.s.sessions.GetState(f.sessionID)
 	var nova *live.InitiativeEntry
-	for i := range fila.Initiative {
-		if fila.Initiative[i].ID != linhaOriginal {
-			nova = &fila.Initiative[i]
+	for i := range queue.Initiative {
+		if queue.Initiative[i].ID != originalLine {
+			nova = &queue.Initiative[i]
 		}
 	}
 	if nova == nil {
@@ -542,24 +542,24 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	if nova.CreatureID == nil {
 		t.Fatal("a linha nova nasceu sem bloco: o chefe não teria ficha para editar")
 	}
-	if *nova.CreatureID == bloco.ID {
+	if *nova.CreatureID == block.ID {
 		t.Fatal("a linha nova aponta para o bloco da ORIGINAL — editar um mexeria no outro")
 	}
-	copia, err := f.s.queries.GetCampaignCreature(context.Background(), *nova.CreatureID)
+	dup, err := f.s.queries.GetCampaignCreature(context.Background(), *nova.CreatureID)
 	if err != nil {
 		t.Fatalf("o bloco copiado não está no acervo: %v", err)
 	}
-	if copia.Block != `{`+blocoMinimo+`}` {
-		t.Errorf("o bloco copiado veio diferente do original:\n%s", copia.Block)
+	if dup.Block != `{`+blocoMinimo+`}` {
+		t.Errorf("o bloco copiado veio diferente do original:\n%s", dup.Block)
 	}
 	// O NOME do bloco acompanha o da linha, e este é o ponto: com dois "Zumbi"
 	// no acervo, o olho da fila abriria um bloco chamado como o outro.
-	if copia.Name != nova.Label {
+	if dup.Name != nova.Label {
 		t.Errorf("o bloco se chama %q e a linha %q — dois nomes para a mesma criatura",
-			copia.Name, nova.Label)
+			dup.Name, nova.Label)
 	}
-	if copia.Campaignid != f.campaignID {
-		t.Errorf("o bloco copiado caiu na campanha %d", copia.Campaignid)
+	if dup.Campaignid != f.campaignID {
+		t.Errorf("o bloco copiado caiu na campanha %d", dup.Campaignid)
 	}
 }
 
@@ -571,13 +571,13 @@ func TestTheOwnBlockModeRefusesWhoHasNone(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
 
-	recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/bloco", "")
-	if !strings.Contains(recusa, "não tem bloco de criatura") {
-		t.Errorf("o modo do bloco aceitou uma linha sem bloco:\n%s", recusa)
+	refusal := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/bloco", "")
+	if !strings.Contains(refusal, "não tem bloco de criatura") {
+		t.Errorf("o modo do bloco aceitou uma linha sem bloco:\n%s", refusal)
 	}
 	// O CONTROLE: o "com PV próprio", na MESMA peça, passa. Sem ele a recusa
 	// acima seria verdade também numa rota que recusa tudo.
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/sozinha", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o modo com PV próprio também foi recusado: %d", rec.Code)
 	}

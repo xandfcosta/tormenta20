@@ -82,9 +82,9 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 	// O PM PEDIDO é o que fica no bolso, e o máximo é o que o livro dá — um
 	// pedido acima do poço da classe é aparado, e por isso todo caso abaixo
 	// afirma o CUSTO em delta e não o saldo (ALE-355).
-	arrangePools(t, s, id, func(pocos sheet.Pools) (sheet.Pools, error) {
-		pocos.HpCurrent, pocos.MpCurrent = pocos.HpMax, int64(mpCurrent)
-		return pocos, nil
+	arrangePools(t, s, id, func(pools sheet.Pools) (sheet.Pools, error) {
+		pools.HpCurrent, pools.MpCurrent = pools.HpMax, int64(mpCurrent)
+		return pools, nil
 	})
 	return id
 }
@@ -100,10 +100,10 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 // o handler que a traduz em 400.
 func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body string) error {
 	t.Helper()
-	var corpo struct {
+	var payload struct {
 		Augments []sheet.AugmentPick `json:"augments"`
 	}
-	if err := json.Unmarshal([]byte(body), &corpo); err != nil {
+	if err := json.Unmarshal([]byte(body), &payload); err != nil {
 		t.Fatalf("corpo do caso inválido: %v", err)
 	}
 	row, err := s.queries.GetCharacter(context.Background(), characterID)
@@ -116,7 +116,7 @@ func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body
 	}
 	// Sem `httptest.NewRequest`: a regra recebe CONTEXTO, e montar um pedido só
 	// para entregá-lo era o sintoma que a ALE-347 veio tirar.
-	return s.characterPlays().Cast(context.Background(), dto, spellID, corpo.Augments)
+	return s.characterPlays().Cast(context.Background(), dto, spellID, payload.Augments)
 }
 
 func mpOf(t *testing.T, s *Server, characterID int64) int64 {
@@ -143,23 +143,23 @@ func TestBolaDeFogoWorkedExample(t *testing.T) {
 	char := seedCaster(t, s, owner, "Arcanista", 11, 40, "bola-de-fogo")
 
 	t.Run("quatro acúmulos gastam exatamente os 11 PM do teto", func(t *testing.T) {
-		antes := mpOf(t, s, char)
+		before := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":4}]}`); err != nil {
 			t.Fatalf("conjurar devolveu %v", err)
 		}
-		if depois := mpOf(t, s, char); antes-depois != 11 {
+		if after := mpOf(t, s, char); before-after != 11 {
 			t.Errorf("gastou %d PM (%d → %d), want 11 (3 de base + 4 acúmulos de 2)",
-				antes-depois, antes, depois)
+				before-after, before, after)
 		}
 	})
 
 	t.Run("um acúmulo a mais estoura o teto e nada é gasto", func(t *testing.T) {
-		antes := mpOf(t, s, char)
+		before := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":5}]}`); err == nil {
 			t.Fatal("13 PM com teto 11 devolveu — e não foi recusado")
 		}
-		if depois := mpOf(t, s, char); depois != antes {
-			t.Errorf("PM foi de %d para %d — a recusa cobrou mesmo assim", antes, depois)
+		if after := mpOf(t, s, char); after != before {
+			t.Errorf("PM foi de %d para %d — a recusa cobrou mesmo assim", before, after)
 		}
 	})
 }
@@ -173,12 +173,12 @@ func TestAugmentStackingRules(t *testing.T) {
 	char := seedCaster(t, s, owner, "Arcanista", 11, 40, "bola-de-fogo")
 
 	t.Run("o aprimoramento que AUMENTA acumula", func(t *testing.T) {
-		antes := mpOf(t, s, char)
+		before := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":3}]}`); err != nil {
 			t.Fatalf("devolveu %v", err)
 		}
 		// 3 de base + 3 × 2 = 9.
-		if got := antes - mpOf(t, s, char); got != 9 {
+		if got := before - mpOf(t, s, char); got != 9 {
 			t.Errorf("gastou %d PM, want 9 (3 + 3×2)", got)
 		}
 	})
@@ -214,24 +214,24 @@ func TestMinimumCostIsAlwaysAllowed(t *testing.T) {
 	char := seedCaster(t, s, owner, "Bárbaro", 2, 20, "bola-de-fogo")
 
 	t.Run("o custo base passa mesmo acima do teto", func(t *testing.T) {
-		antes := mpOf(t, s, char)
+		before := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`); err != nil {
 			t.Fatalf("custo mínimo devolveu %v", err)
 		}
-		if depois := mpOf(t, s, char); antes-depois != 3 {
-			t.Errorf("gastou %d PM (%d → %d), want 3 de base", antes-depois, antes, depois)
+		if after := mpOf(t, s, char); before-after != 3 {
+			t.Errorf("gastou %d PM (%d → %d), want 3 de base", before-after, before, after)
 		}
 	})
 
 	// A ressalva cobre o MÍNIMO, e não mais que isso: um aprimoramento em cima
 	// continua barrado.
 	t.Run("um aprimoramento acima do mínimo continua barrado", func(t *testing.T) {
-		antes := mpOf(t, s, char)
+		before := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":1}]}`); err == nil {
 			t.Fatal("devolveu — e não foi recusado")
 		}
-		if depois := mpOf(t, s, char); depois != antes {
-			t.Errorf("PM foi de %d para %d numa recusa", antes, depois)
+		if after := mpOf(t, s, char); after != before {
+			t.Errorf("PM foi de %d para %d numa recusa", before, after)
 		}
 	})
 }
@@ -265,12 +265,12 @@ func TestPmCostReductionIsAppliedAndFloored(t *testing.T) {
 		`["class.druida.forca-da-natureza"]`)
 
 	t.Run("a redução sai do custo (3 PM de base − 2)", func(t *testing.T) {
-		antes := mpOf(t, s, char)
+		before := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`); err != nil {
 			t.Fatalf("devolveu %v", err)
 		}
-		if gasto := antes - mpOf(t, s, char); gasto != 1 {
-			t.Errorf("gastou %d PM, want 1 (3 de base − 2 da Força da Natureza)", gasto)
+		if spent := before - mpOf(t, s, char); spent != 1 {
+			t.Errorf("gastou %d PM, want 1 (3 de base − 2 da Força da Natureza)", spent)
 		}
 	})
 
@@ -282,12 +282,12 @@ func TestPmCostReductionIsAppliedAndFloored(t *testing.T) {
 		}); err != nil {
 			t.Fatalf("semear magia: %v", err)
 		}
-		antes := mpOf(t, s, char)
+		before := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "luz", `{"augments":[]}`); err != nil {
 			t.Fatalf("devolveu %v", err)
 		}
-		if gasto := antes - mpOf(t, s, char); gasto != 1 {
-			t.Errorf("gastou %d PM, want 1 — o piso da p226 não segurou", gasto)
+		if spent := before - mpOf(t, s, char); spent != 1 {
+			t.Errorf("gastou %d PM, want 1 — o piso da p226 não segurou", spent)
 		}
 	})
 }
@@ -313,31 +313,31 @@ func TestATruqueCostsNothingAndRefusesCompany(t *testing.T) {
 	// modelado como um `+0 PM` o custo base de 1 PM ficaria de pé, e a versão mais
 	// simples da magia sairia pelo preço da normal.
 	t.Run("o truque zera o custo da conjuração", func(t *testing.T) {
-		antes := mpOf(t, s, char)
+		before := mpOf(t, s, char)
 		if err := castSpell(t, s, owner, char, "explosao-de-chamas", `{"augments":[{"augmentIndex":0,"stacks":1}]}`); err != nil {
 			t.Fatalf("o truque devolveu %v", err)
 		}
-		if gasto := antes - mpOf(t, s, char); gasto != 0 {
-			t.Errorf("o truque gastou %d PM, want 0 (p171)", gasto)
+		if spent := before - mpOf(t, s, char); spent != 0 {
+			t.Errorf("o truque gastou %d PM, want 0 (p171)", spent)
 		}
 	})
 
 	t.Run("o truque acompanhado é recusado", func(t *testing.T) {
-		antes := mpOf(t, s, char)
-		corpo := `{"augments":[{"augmentIndex":0,"stacks":1},{"augmentIndex":1,"stacks":1}]}`
-		if err := castSpell(t, s, owner, char, "explosao-de-chamas", corpo); err == nil {
+		before := mpOf(t, s, char)
+		body := `{"augments":[{"augmentIndex":0,"stacks":1},{"augmentIndex":1,"stacks":1}]}`
+		if err := castSpell(t, s, owner, char, "explosao-de-chamas", body); err == nil {
 			t.Fatal("truque + aprimoramento devolveu — e não foi recusado")
 		}
-		if depois := mpOf(t, s, char); depois != antes {
-			t.Errorf("PM foi de %d para %d numa recusa", antes, depois)
+		if after := mpOf(t, s, char); after != before {
+			t.Errorf("PM foi de %d para %d numa recusa", before, after)
 		}
 	})
 
 	// A ordem da lista não pode decidir nada: o truque em SEGUNDO lugar é a mesma
 	// combinação, e um laço que só olhasse o primeiro pedido passaria verde.
 	t.Run("a ordem do pedido não escapa da regra", func(t *testing.T) {
-		corpo := `{"augments":[{"augmentIndex":1,"stacks":1},{"augmentIndex":0,"stacks":1}]}`
-		if err := castSpell(t, s, owner, char, "explosao-de-chamas", corpo); err == nil {
+		body := `{"augments":[{"augmentIndex":1,"stacks":1},{"augmentIndex":0,"stacks":1}]}`
+		if err := castSpell(t, s, owner, char, "explosao-de-chamas", body); err == nil {
 			t.Fatal("aprimoramento + truque devolveu — e não foi recusado")
 		}
 	})
@@ -346,13 +346,13 @@ func TestATruqueCostsNothingAndRefusesCompany(t *testing.T) {
 	// recusa qualquer combinação. Os dois aprimoramentos comuns somam 1 + 1 sobre
 	// o 1 de base.
 	t.Run("dois aprimoramentos comuns continuam passando juntos", func(t *testing.T) {
-		antes := mpOf(t, s, char)
-		corpo := `{"augments":[{"augmentIndex":1,"stacks":1},{"augmentIndex":2,"stacks":1}]}`
-		if err := castSpell(t, s, owner, char, "explosao-de-chamas", corpo); err != nil {
+		before := mpOf(t, s, char)
+		body := `{"augments":[{"augmentIndex":1,"stacks":1},{"augmentIndex":2,"stacks":1}]}`
+		if err := castSpell(t, s, owner, char, "explosao-de-chamas", body); err != nil {
 			t.Fatalf("dois aprimoramentos comuns devolveram %v", err)
 		}
-		if gasto := antes - mpOf(t, s, char); gasto != 3 {
-			t.Errorf("gastou %d PM, want 3 (1 de base + 1 + 1)", gasto)
+		if spent := before - mpOf(t, s, char); spent != 3 {
+			t.Errorf("gastou %d PM, want 3 (1 de base + 1 + 1)", spent)
 		}
 	})
 }

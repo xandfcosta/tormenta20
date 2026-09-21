@@ -19,9 +19,9 @@ const runtimeSegment = "spliced"
 
 // datastarAddress é um endereço que a cena mandou para o navegador.
 type datastarAddress struct {
-	Metodo  string
-	Caminho string
-	Origem  string
+	Method string
+	Path   string
+	Origin string
 }
 
 // firstArgument devolve o PRIMEIRO argumento de uma chamada, lendo `s` a partir
@@ -31,34 +31,34 @@ type datastarAddress struct {
 // endereço nenhum. Ler a chamada inteira acharia `'M 4.5 2.5 L 9 2.5'` e
 // perguntaria ao roteador por ela.
 func firstArgument(s string) (string, bool) {
-	profundidade := 0
-	var aspa byte
+	depth := 0
+	var quote byte
 	for i := 0; i < len(s); i++ {
 		c := s[i]
-		if aspa != 0 {
+		if quote != 0 {
 			if c == '\\' {
 				i++
 				continue
 			}
-			if c == aspa {
-				aspa = 0
+			if c == quote {
+				quote = 0
 			}
 			continue
 		}
 		switch c {
 		case '\'', '"', '`':
-			aspa = c
+			quote = c
 		case '(', '{', '[':
-			profundidade++
+			depth++
 		case ')':
-			if profundidade == 0 {
+			if depth == 0 {
 				return s[:i], true
 			}
-			profundidade--
+			depth--
 		case '}', ']':
-			profundidade--
+			depth--
 		case ',':
-			if profundidade == 0 {
+			if depth == 0 {
 				return s[:i], true
 			}
 		}
@@ -74,8 +74,8 @@ func firstArgument(s string) (string, bool) {
 // vão sem `+` é DESVIO e começa outro (o `evt.shiftKey ? '…/5' : '…/1'` do
 // ferir são dois endereços de verdade, e os dois têm de existir).
 func pathsInExpression(expr string) []string {
-	var caminhos []string
-	atual, fim, primeiro := "", 0, true
+	var paths []string
+	current, end, first := "", 0, true
 	for i := 0; i < len(expr); i++ {
 		c := expr[i]
 		if c != '\'' && c != '"' && c != '`' {
@@ -91,37 +91,37 @@ func pathsInExpression(expr string) []string {
 		if j >= len(expr) {
 			break
 		}
-		literal, vao := expr[i+1:j], expr[fim:i]
-		if primeiro || !strings.Contains(vao, "+") {
-			if atual != "" {
-				caminhos = append(caminhos, atual)
+		literal, span := expr[i+1:j], expr[end:i]
+		if first || !strings.Contains(span, "+") {
+			if current != "" {
+				paths = append(paths, current)
 			}
-			atual = literal
+			current = literal
 		} else {
-			if strings.TrimSpace(strings.ReplaceAll(vao, "+", "")) != "" {
-				atual += runtimeSegment
+			if strings.TrimSpace(strings.ReplaceAll(span, "+", "")) != "" {
+				current += runtimeSegment
 			}
-			atual += literal
+			current += literal
 		}
-		primeiro, fim, i = false, j+1, j
+		first, end, i = false, j+1, j
 	}
-	if atual != "" {
-		caminhos = append(caminhos, atual)
+	if current != "" {
+		paths = append(paths, current)
 	}
 
-	var enderecos []string
-	for _, caminho := range caminhos {
-		if !strings.HasPrefix(caminho, "/") {
+	var addresses []string
+	for _, path := range paths {
+		if !strings.HasPrefix(path, "/") {
 			continue
 		}
 		// A busca fica de fora: quem casa rota no chi é o CAMINHO, e um
 		// `?abrir=1` colado nele nunca casaria.
-		if corte := strings.IndexByte(caminho, '?'); corte >= 0 {
-			caminho = caminho[:corte]
+		if cut := strings.IndexByte(path, '?'); cut >= 0 {
+			path = path[:cut]
 		}
-		enderecos = append(enderecos, caminho)
+		addresses = append(addresses, path)
 	}
-	return enderecos
+	return addresses
 }
 
 // unescapeHTML devolve o texto que o navegador vai LER.
@@ -136,12 +136,12 @@ var unescapeHTML = strings.NewReplacer(
 
 // addressesInHTML acha toda chamada do Datastar que pede um endereço.
 //
-// `ilegiveis` é a outra metade do resultado e não é descarte: uma expressão que
+// `unreadable` é a outra metade do resultado e não é descarte: uma expressão que
 // o extrator não consegue resolver NÃO é uma expressão limpa, e um parser que
 // descarta em silêncio o que não sabe ler produz lista de falhas com cara de
 // descoberta.
-func addressesInHTML(origem, html string) (achados []datastarAddress, ilegiveis []string) {
-	texto := unescapeHTML.Replace(html)
+func addressesInHTML(origin, html string) (findings []datastarAddress, unreadable []string) {
+	text := unescapeHTML.Replace(html)
 	// `window.open(` É UM ENDEREÇO QUE A CENA ESCREVE, e ele entrou aqui em vez
 	// de ganhar guarda próprio porque o defeito é o mesmo: um caminho morto num
 	// `@post` não faz nada e não avisa; num `window.open` ele abre uma janela com
@@ -151,40 +151,40 @@ func addressesInHTML(origem, html string) (achados []datastarAddress, ilegiveis 
 	//
 	// O método é GET porque é navegação: o que se pergunta ao chi é se existe
 	// uma página naquele caminho.
-	for _, verbo := range []string{"post", "get", "put", "delete", "patch", "window.open"} {
-		agulha := "@" + verbo + "("
-		if verbo == "window.open" {
-			agulha = verbo + "("
+	for _, verb := range []string{"post", "get", "put", "delete", "patch", "window.open"} {
+		needle := "@" + verb + "("
+		if verb == "window.open" {
+			needle = verb + "("
 		}
 		for pos := 0; ; {
-			corte := strings.Index(texto[pos:], agulha)
-			if corte < 0 {
+			cut := strings.Index(text[pos:], needle)
+			if cut < 0 {
 				break
 			}
-			inicio := pos + corte + len(agulha)
-			pos = inicio
-			argumento, fechou := firstArgument(texto[inicio:])
-			if !fechou {
-				ilegiveis = append(ilegiveis, origem+": "+agulha+" não fecha")
+			start := pos + cut + len(needle)
+			pos = start
+			argument, closed := firstArgument(text[start:])
+			if !closed {
+				unreadable = append(unreadable, origin+": "+needle+" não fecha")
 				continue
 			}
-			caminhos := pathsInExpression(argumento)
-			if len(caminhos) == 0 {
-				ilegiveis = append(ilegiveis, origem+": "+agulha+clipForMessage(argumento)+")")
+			paths := pathsInExpression(argument)
+			if len(paths) == 0 {
+				unreadable = append(unreadable, origin+": "+needle+clipForMessage(argument)+")")
 				continue
 			}
-			metodo := strings.ToUpper(verbo)
-			if verbo == "window.open" {
-				metodo = "GET"
+			method := strings.ToUpper(verb)
+			if verb == "window.open" {
+				method = "GET"
 			}
-			for _, caminho := range caminhos {
-				achados = append(achados, datastarAddress{
-					Metodo: metodo, Caminho: caminho, Origem: origem,
+			for _, path := range paths {
+				findings = append(findings, datastarAddress{
+					Method: method, Path: path, Origin: origin,
 				})
 			}
 		}
 	}
-	return achados, ilegiveis
+	return findings, unreadable
 }
 
 func clipForMessage(s string) string {
@@ -199,8 +199,8 @@ func clipForMessage(s string) string {
 // A diferença é o que separa "esta rota não existe" de "este id não existe": um
 // pedido de verdade a `/personagens/spliced` devolveria 404 do HANDLER, e o
 // guarda leria isso como rota faltando. `Match` responde só sobre a TABELA.
-func routerKnows(mux *chi.Mux, metodo, caminho string) bool {
-	return mux.Match(chi.NewRouteContext(), metodo, caminho)
+func routerKnows(mux *chi.Mux, method, path string) bool {
+	return mux.Match(chi.NewRouteContext(), method, path)
 }
 
 // O EXTRATOR é a peça que pode ficar cega em silêncio, e por isso ele tem caso
@@ -213,9 +213,9 @@ func routerKnows(mux *chi.Mux, metodo, caminho string) bool {
 // delas parar de ser resolvida, o guarda grande não fica vermelho — ele fica
 // com um denominador menor, que é a cor do verde.
 func TestTheAddressExtractorReadsEveryShapeTheScenesWrite(t *testing.T) {
-	casos := []struct {
-		nome, expressao string
-		esperado        []string
+	cases := []struct {
+		name, expression string
+		want             []string
 	}{
 		{
 			"o literal puro",
@@ -245,23 +245,23 @@ func TestTheAddressExtractorReadsEveryShapeTheScenesWrite(t *testing.T) {
 	// endereço de página que não existe). Por isso o caso mede o extrator
 	// inteiro, e afirma o método.
 	const html = `<button data-on:click="const janela = window.open('/campanhas/1/sessoes/4/notas', 't20-notas', 'popup,width=620'); if (janela) { janela.focus() }">`
-	achados, ilegiveis := addressesInHTML("caso", html)
-	if len(ilegiveis) > 0 {
-		t.Errorf("o extrator não leu o `window.open`: %q", ilegiveis)
+	findings, unreadable := addressesInHTML("caso", html)
+	if len(unreadable) > 0 {
+		t.Errorf("o extrator não leu o `window.open`: %q", unreadable)
 	}
-	if len(achados) != 1 || achados[0].Metodo != "GET" || achados[0].Caminho != "/campanhas/1/sessoes/4/notas" {
-		t.Errorf("o `window.open` saiu como %+v, esperava um GET em /campanhas/1/sessoes/4/notas", achados)
+	if len(findings) != 1 || findings[0].Method != "GET" || findings[0].Path != "/campanhas/1/sessoes/4/notas" {
+		t.Errorf("o `window.open` saiu como %+v, esperava um GET em /campanhas/1/sessoes/4/notas", findings)
 	}
 
-	for _, caso := range casos {
-		lido := pathsInExpression(caso.expressao)
-		if len(lido) != len(caso.esperado) {
-			t.Errorf("%s: %d endereços, esperava %d — %q", caso.nome, len(lido), len(caso.esperado), lido)
+	for _, tc := range cases {
+		read := pathsInExpression(tc.expression)
+		if len(read) != len(tc.want) {
+			t.Errorf("%s: %d endereços, esperava %d — %q", tc.name, len(read), len(tc.want), read)
 			continue
 		}
-		for i, endereco := range lido {
-			if endereco != caso.esperado[i] {
-				t.Errorf("%s: leu %q, esperava %q", caso.nome, endereco, caso.esperado[i])
+		for i, address := range read {
+			if address != tc.want[i] {
+				t.Errorf("%s: leu %q, esperava %q", tc.name, address, tc.want[i])
 			}
 		}
 	}
@@ -274,13 +274,13 @@ func TestTheAddressExtractorReadsEveryShapeTheScenesWrite(t *testing.T) {
 // lesse a chamada inteira acharia `'M 4.5 2.5 L 9 2.5'` e perguntaria ao
 // roteador por ela.
 func TestTheExtractorStopsAtThePayload(t *testing.T) {
-	chamada := `'/campanhas/1/sessoes/1/tabuleiro/gabarito', {payload: {shape: $template, path: 'M 4.5 2.5 L 9 2.5'}}`
-	argumento, fechou := firstArgument(chamada + ")")
-	if !fechou {
-		t.Fatalf("o primeiro argumento não fechou em %q", chamada)
+	call := `'/campanhas/1/sessoes/1/tabuleiro/gabarito', {payload: {shape: $template, path: 'M 4.5 2.5 L 9 2.5'}}`
+	argument, closed := firstArgument(call + ")")
+	if !closed {
+		t.Fatalf("o primeiro argumento não fechou em %q", call)
 	}
-	if lido := pathsInExpression(argumento); len(lido) != 1 || lido[0] != "/campanhas/1/sessoes/1/tabuleiro/gabarito" {
-		t.Errorf("leu %q, e o payload não é endereço", lido)
+	if read := pathsInExpression(argument); len(read) != 1 || read[0] != "/campanhas/1/sessoes/1/tabuleiro/gabarito" {
+		t.Errorf("leu %q, e o payload não é endereço", read)
 	}
 }
 
@@ -296,66 +296,66 @@ func TestTheExtractorStopsAtThePayload(t *testing.T) {
 // puro, com `SemEstadoDeCliente: true` —, e `/admin` mora noutro servidor,
 // porque só ele leva `ADMIN_EMAILS`.
 func scenesThatWriteAddresses(t *testing.T, f sceneFixture) []struct {
-	Nome, Caminho string
-	Usuario       int64
+	Name, Path string
+	User       int64
 } {
 	t.Helper()
-	mesa := f.tableUrl()
-	campanha := "/campanhas/" + strconv.FormatInt(f.campaignID, 10)
-	ficha := "/personagens/" + strconv.FormatInt(f.charID, 10)
+	table := f.tableUrl()
+	campaign := "/campanhas/" + strconv.FormatInt(f.campaignID, 10)
+	sheet := "/personagens/" + strconv.FormatInt(f.charID, 10)
 
-	cenas := []struct {
-		Nome, Caminho string
-		Usuario       int64
+	scenes := []struct {
+		Name, Path string
+		User       int64
 	}{
-		{"hub", "/", f.mestre},
-		{"elenco", "/personagens", f.mestre},
-		{"forja", "/personagens/nova", f.mestre},
-		{"campanhas", "/campanhas", f.mestre},
-		{"campanha nova", "/campanhas/nova", f.mestre},
-		{"grimorio", "/grimorio", f.mestre},
-		{"buscador", "/buscador?q=fogo", f.mestre},
-		{"bestiario", "/mestre/bestiario", f.mestre},
-		{"catalogo", "/mestre/condicoes", f.mestre},
-		{"encontros", "/mestre/encontros", f.mestre},
-		{"improviso", "/mestre/improviso", f.mestre},
-		{"verbete", "/verbete?aba=condicoes&entrada=cego", f.mestre},
+		{"hub", "/", f.gm},
+		{"elenco", "/personagens", f.gm},
+		{"forja", "/personagens/nova", f.gm},
+		{"campanhas", "/campanhas", f.gm},
+		{"campanha nova", "/campanhas/nova", f.gm},
+		{"grimorio", "/grimorio", f.gm},
+		{"buscador", "/buscador?q=fogo", f.gm},
+		{"bestiario", "/mestre/bestiario", f.gm},
+		{"catalogo", "/mestre/condicoes", f.gm},
+		{"encontros", "/mestre/encontros", f.gm},
+		{"improviso", "/mestre/improviso", f.gm},
+		{"verbete", "/verbete?aba=condicoes&entrada=cego", f.gm},
 		// A MESA nas DUAS formas. Não é a mesma tela duas vezes: o mestre tem
 		// rodapé de comandos, trilho da fila e tabuleiro; o jogador não desenha
 		// controle de mestre NENHUM (`View.Mestre` é `nil`).
-		{"mesa do mestre", mesa, f.mestre},
-		{"mesa do jogador", mesa, f.jogador},
-		{"tabuleiro do jogador", mesa + "?superficie=tabuleiro", f.jogador},
+		{"mesa do mestre", table, f.gm},
+		{"mesa do jogador", table, f.player},
+		{"tabuleiro do jogador", table + "?superficie=tabuleiro", f.player},
 		// AS NOTAS NUMA JANELA: cena própria, endereço próprio, e o `@post` de
 		// salvar sai dela também. Cena nova entra nesta lista no MESMO commit que
 		// a cria, ou ela nasce sem medição.
-		{"notas em janela", mesa + "/notas", f.mestre},
+		{"notas em janela", table + "/notas", f.gm},
 	}
 	// AS SETE ABAS da ficha, e o `?embutida=1` que a Mesa encaixa.
 	for _, aba := range []string{
 		"expertises", "combat", "bag", "proficiencies", "conditionals", "abilities", "spells",
 	} {
-		cenas = append(cenas, struct {
-			Nome, Caminho string
-			Usuario       int64
-		}{"ficha " + aba, ficha + "?tab=" + aba, f.jogador})
+		scenes = append(scenes, struct {
+			Name, Path string
+			User       int64
+		}{"ficha " + aba, sheet + "?tab=" + aba, f.player})
 	}
-	cenas = append(cenas, struct {
-		Nome, Caminho string
-		Usuario       int64
-	}{"ficha embutida", ficha + "?tab=combat&embutida=1", f.jogador})
+	scenes = append(scenes, struct {
+		Name, Path string
+		User       int64
+	}{"ficha embutida", sheet + "?tab=combat&embutida=1", f.player})
 	// AS CINCO ABAS da crônica, das quais duas só o mestre vê.
 	for _, aba := range []string{"visao", "sessoes", "membros", "lugares", "config"} {
-		cenas = append(cenas, struct {
-			Nome, Caminho string
-			Usuario       int64
-		}{"cronica " + aba, campanha + "?tab=" + aba, f.mestre})
+		scenes = append(scenes, struct {
+			Name, Path string
+			User       int64
+		}{"cronica " + aba, campaign + "?tab=" + aba, f.gm})
 	}
-	cenas = append(cenas, struct {
-		Nome, Caminho string
-		Usuario       int64
-	}{"atributos", ficha + "/atributos", f.jogador})
-	return cenas
+	scenes = append(scenes, struct {
+		Name, Path string
+		User       int64
+	}{"atributos", sheet + "/atributos", f.player})
+	return scenes
 }
 
 // A MESA VIVA é pré-requisito, senão o guarda passa VERDE sobre o defeito que
@@ -367,14 +367,14 @@ func scenesThatWriteAddresses(t *testing.T, f sceneFixture) []struct {
 // morto simplesmente não está no HTML.
 func openTheLiveTable(t *testing.T, f sceneFixture) {
 	t.Helper()
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Ogro","new_initiative":12,"new_hp":130,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("pôr o Ogro na fila deu %d — sem fila o rodapé de comandos nasce todo disabled", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar a cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir", ""); rec.Code != http.StatusOK {
 		t.Logf("abrir o tabuleiro deu %d", rec.Code)
 	}
 }
@@ -411,27 +411,27 @@ func TestEveryAddressAPostWritesExistsInTheRouter(t *testing.T) {
 		t.Fatalf("o WebRouter deixou de ser um *chi.Mux (%T) — sem ele não há a quem perguntar", f.s.WebRouter())
 	}
 
-	var faltando, ilegiveis []string
-	medidos, cenasLidas := map[string]bool{}, 0
-	for _, cena := range scenesThatWriteAddresses(t, f) {
-		rec := f.pede(t, cena.Usuario, "GET", cena.Caminho, "")
+	var missing, unreadable []string
+	measured, scenesRead := map[string]bool{}, 0
+	for _, scene := range scenesThatWriteAddresses(t, f) {
+		rec := f.pede(t, scene.User, "GET", scene.Path, "")
 		if rec.Code != http.StatusOK {
 			t.Errorf("a cena %q (%s) respondeu %d: ela saiu da lista sem ninguém tirar, e uma cena que não abre não mede nada",
-				cena.Nome, cena.Caminho, rec.Code)
+				scene.Name, scene.Path, rec.Code)
 			continue
 		}
-		cenasLidas++
-		achados, naoLidos := addressesInHTML(cena.Nome, rec.Body.String())
-		ilegiveis = append(ilegiveis, naoLidos...)
-		for _, endereco := range achados {
-			chave := endereco.Metodo + " " + endereco.Caminho
-			if medidos[chave] {
+		scenesRead++
+		findings, unread := addressesInHTML(scene.Name, rec.Body.String())
+		unreadable = append(unreadable, unread...)
+		for _, address := range findings {
+			key := address.Method + " " + address.Path
+			if measured[key] {
 				continue
 			}
-			medidos[chave] = true
-			if !routerKnows(mux, endereco.Metodo, endereco.Caminho) {
-				faltando = append(faltando,
-					endereco.Metodo+" "+endereco.Caminho+"  ← escrito pela cena "+endereco.Origem)
+			measured[key] = true
+			if !routerKnows(mux, address.Method, address.Path) {
+				missing = append(missing,
+					address.Method+" "+address.Path+"  ← escrito pela cena "+address.Origin)
 			}
 		}
 	}
@@ -439,29 +439,29 @@ func TestEveryAddressAPostWritesExistsInTheRouter(t *testing.T) {
 	// O DENOMINADOR. Uma lista de faltantes vazia e um extrator que parou de
 	// casar são a mesma cor no terminal, e por isso o guarda afirma quantos
 	// endereços olhou antes de afirmar que nenhum falta.
-	if cenasLidas < 25 || len(medidos) < 150 {
+	if scenesRead < 25 || len(measured) < 150 {
 		t.Fatalf("a varredura leu %d cenas e %d endereços distintos — o extrator é o primeiro suspeito",
-			cenasLidas, len(medidos))
+			scenesRead, len(measured))
 	}
 
-	sort.Strings(ilegiveis)
-	if len(ilegiveis) > 0 {
+	sort.Strings(unreadable)
+	if len(unreadable) > 0 {
 		t.Errorf("%d chamadas do Datastar que o extrator NÃO soube resolver:\n  %s\n"+
 			"Ramo que ignora o que não entende produz lista de falhas com cara de descoberta "+
 			"(ALE-294). Ou a forma nova entra no extrator, ou ela não é forma.",
-			len(ilegiveis), strings.Join(ilegiveis, "\n  "))
+			len(unreadable), strings.Join(unreadable, "\n  "))
 	}
-	sort.Strings(faltando)
-	if len(faltando) > 0 {
+	sort.Strings(missing)
+	if len(missing) > 0 {
 		t.Errorf("%d de %d endereços não existem no roteador:\n  %s\n"+
 			"O Datastar descarta o remendo de toda resposta não-2xx, então um endereço morto "+
 			"não deixa erro na tela, no console nem em lugar nenhum: o gesto simplesmente não acontece.",
-			len(faltando), len(medidos), strings.Join(faltando, "\n  "))
+			len(missing), len(measured), strings.Join(missing, "\n  "))
 	}
 	// A ÚLTIMA LINHA NÃO PODE DESMENTIR O VEREDITO: um `t.Logf` de sucesso escrito
 	// depois do `t.Errorf` é o que se lê logo antes do FAIL, e ele diz o
 	// contrário.
 	if !t.Failed() {
-		t.Logf("endereços: %d distintos em %d cenas, todos no roteador", len(medidos), cenasLidas)
+		t.Logf("endereços: %d distintos em %d cenas, todos no roteador", len(measured), scenesRead)
 	}
 }
