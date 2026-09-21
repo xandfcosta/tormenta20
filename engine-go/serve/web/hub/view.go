@@ -12,38 +12,38 @@ import (
 // navegação por setas, cues de áudio, tela cheia e um diálogo com formulário.
 
 type hubView struct {
-	Nome string
-	// Inicial é a letra do retrato. Calculada aqui e não no template porque é
+	Name string
+	// Initial é a letra do retrato. Calculada aqui e não no template porque é
 	// regra de apresentação (maiúscula, e "?" quando não sobra letra), e regra
 	// em template é regra escondida onde ninguém a testa.
-	Inicial string
+	Initial string
 	EhAdmin bool
-	// Viva é a sessão que "Continuar sessão" retoma, ou nil. Uma consulta, não
+	// Alive é a sessão que "Continuar sessão" retoma, ou nil. Uma consulta, não
 	// N+1 — ver `liveSession`.
-	Viva *hubLiveSession
+	Alive *hubLiveSession
 }
 
 type hubLiveSession struct {
 	CampaignID int64
 	SessionID  int64
-	// Rota é PARA ONDE o "Continuar sessão" leva, resolvido por quem hospeda a
+	// Route é PARA ONDE o "Continuar sessão" leva, resolvido por quem hospeda a
 	// cena (`Deps.MesaRoute`). Ela é campo da view e não uma chamada no
 	// template pela mesma razão da `Inicial` acima.
-	Rota string
+	Route string
 }
 
 // loadHub monta a tela inteira.
 func (s Scene) loadHub(ctx context.Context, eu Viewer) (hubView, error) {
-	viva, err := s.liveSession(ctx, eu.ID)
+	alive, err := s.liveSession(ctx, eu.ID)
 	if err != nil {
 		return hubView{}, err
 	}
-	nome := displayName(eu)
+	name := displayName(eu)
 	return hubView{
-		Nome:    nome,
-		Inicial: initialOf(nome),
+		Name:    name,
+		Initial: initialOf(name),
 		EhAdmin: eu.IsAdmin,
-		Viva:    viva,
+		Alive:   alive,
 	}, nil
 }
 
@@ -56,7 +56,7 @@ func (s Scene) loadHub(ctx context.Context, eu Viewer) (hubView, error) {
 // "Nenhuma linha" é resposta NORMAL e não erro: quase sempre não há partida
 // rolando.
 func (s Scene) liveSession(ctx context.Context, userID int64) (*hubLiveSession, error) {
-	linha, err := s.deps.Queries().FirstLiveSessionForUser(ctx, userID)
+	row, err := s.deps.Queries().FirstLiveSessionForUser(ctx, userID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -64,9 +64,9 @@ func (s Scene) liveSession(ctx context.Context, userID int64) (*hubLiveSession, 
 		return nil, err
 	}
 	return &hubLiveSession{
-		CampaignID: linha.Campaignid,
-		SessionID:  linha.Sessionid,
-		Rota:       s.deps.TableRoute(linha.Campaignid, linha.Sessionid),
+		CampaignID: row.Campaignid,
+		SessionID:  row.Sessionid,
+		Route:      s.deps.TableRoute(row.Campaignid, row.Sessionid),
 	}, nil
 }
 
@@ -86,8 +86,8 @@ func displayName(eu Viewer) string {
 //
 // Por runa e não por byte: "Ãurea" começa com dois bytes, e cortar o primeiro
 // produziria meio caractere — que o navegador desenha como o losango de erro.
-func initialOf(nome string) string {
-	for _, r := range strings.TrimSpace(nome) {
+func initialOf(name string) string {
+	for _, r := range strings.TrimSpace(name) {
 		return string(unicode.ToUpper(r))
 	}
 	return "?"

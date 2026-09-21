@@ -36,9 +36,9 @@ import (
 // O `>>> 0` do JS é truncamento para 32 bits sem sinal. Em Go o `uint32` já
 // envolve sozinho, e o resultado é o mesmo porque multiplicação e soma
 // distribuem sobre o módulo.
-func NameHue(nome string) int {
+func NameHue(name string) int {
 	var hash uint32
-	for _, r := range nome {
+	for _, r := range name {
 		hash = hash*31 + uint32(r)
 	}
 	return int(hash % 360)
@@ -48,8 +48,8 @@ func NameHue(nome string) int {
 // EMBLEMA (o retrato de personagem é um fio mais claro, e essa diferença é
 // deliberada). Ele deriva de um nome QUALQUER — o cartão do herói o chama com o
 // nome do personagem.
-func NameGradient(nome string) string {
-	m := NameHue(nome)
+func NameGradient(name string) string {
+	m := NameHue(name)
 	return fmt.Sprintf(
 		"linear-gradient(155deg, oklch(0.5 0.14 %d) 0%%, oklch(0.30 0.09 %d) 70%%, oklch(0.22 0.06 %d) 100%%)",
 		m, m, m,
@@ -57,17 +57,17 @@ func NameGradient(nome string) string {
 }
 
 // Monogram é o monogram de até duas letras.
-func Monogram(nome string) string {
-	partes := strings.Fields(nome)
-	if len(partes) == 0 {
+func Monogram(name string) string {
+	parts := strings.Fields(name)
+	if len(parts) == 0 {
 		return "?"
 	}
-	if len(partes) > 2 {
-		partes = partes[:2]
+	if len(parts) > 2 {
+		parts = parts[:2]
 	}
 	var b strings.Builder
-	for _, parte := range partes {
-		for _, r := range parte {
+	for _, part := range parts {
+		for _, r := range part {
 			b.WriteString(strings.ToUpper(string(r)))
 			break
 		}

@@ -18,11 +18,11 @@ const NoticeInternal = "Não consegui completar agora. Tente de novo."
 // Ela leva as DUAS formas por parâmetro em vez de somar "s": o português tem
 // plural irregular, e uma função que adivinha erra em "sessão" e em "papel"
 // exatamente onde ninguém está olhando.
-func Plural(n int64, um, muitos string) string {
+func Plural(n int64, um, many string) string {
 	if n == 1 {
 		return fmt.Sprintf("%d %s", n, um)
 	}
-	return fmt.Sprintf("%d %s", n, muitos)
+	return fmt.Sprintf("%d %s", n, many)
 }
 
 // TokenCount concorda o número de PEÇAS com o substantivo, e escreve o zero por

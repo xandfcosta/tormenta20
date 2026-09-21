@@ -52,7 +52,7 @@ templ charactersBody(v View) {
 templ charactersBar(v View) {
 	<div
 		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
-		data-signals={ fmt.Sprintf("{search: %q, dossier: false, %s}", v.Busca, ui.StageSignals(v.CursorID)) }
+		data-signals={ fmt.Sprintf("{search: %q, dossier: false, %s}", v.Search, ui.StageSignals(v.CursorID)) }
 		data-on:keydown__window="(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossier = !$dossier)"
 	>
 		<a
@@ -70,7 +70,7 @@ templ charactersBar(v View) {
 					data-busca
 					data-bind:search
 					data-on:input__debounce.250ms="@get('/personagens')"
-					value={ v.Busca }
+					value={ v.Search }
 					placeholder="Buscar personagem"
 					aria-label="Buscar personagem"
 					class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none md:text-sm"

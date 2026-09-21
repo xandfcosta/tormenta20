@@ -41,8 +41,8 @@ func Routes(r chi.Router, s Scene) {
 func (s Scene) handleSignIn(w http.ResponseWriter, r *http.Request) {
 	// Quem já tem sessão não vê a porta, e quem decide isso é o HANDLER: uma
 	// guarda no cliente custaria uma ida à rede só para descobrir se há sessão.
-	if destino, autenticado := s.alreadySignedIn(r); autenticado {
-		http.Redirect(w, r, destino, http.StatusSeeOther)
+	if destination, authenticated := s.alreadySignedIn(r); authenticated {
+		http.Redirect(w, r, destination, http.StatusSeeOther)
 		return
 	}
 	s.writeDoor(w, r, http.StatusOK, signInPage(signInView{
@@ -59,17 +59,17 @@ func (s Scene) handleSignInSubmit(w http.ResponseWriter, r *http.Request) {
 		Email:       strings.TrimSpace(r.PostFormValue("email")),
 		Destination: requestedDestination(r.PostFormValue("destino")),
 	}
-	senha := r.PostFormValue("senha")
+	password := r.PostFormValue("senha")
 
 	// A MESMA validação da API (`validateLogin`), com as chaves traduzidas para
 	// os nomes dos campos deste formulário. Uma segunda regra aqui seria uma
 	// porta mais frouxa que a outra, e a mais frouxa é a que passa a valer.
-	if fields := account.ValidateLogin(account.LoginBody{Email: v.Email, Password: senha}); len(fields) > 0 {
+	if fields := account.ValidateLogin(account.LoginBody{Email: v.Email, Password: password}); len(fields) > 0 {
 		v.Errors = withFormFieldNames(fields)
 		s.writeDoor(w, r, http.StatusBadRequest, signInPage(v))
 		return
 	}
-	user, err := s.gate.Authenticate(r.Context(), v.Email, senha)
+	user, err := s.gate.Authenticate(r.Context(), v.Email, password)
 	if err != nil {
 		v.Notice = noticeBadCredentials
 		s.writeDoor(w, r, http.StatusUnauthorized, signInPage(v))
@@ -84,19 +84,19 @@ func (s Scene) handleSignInSubmit(w http.ResponseWriter, r *http.Request) {
 // ── criar conta ──────────────────────────────────────────────────────────────
 
 func (s Scene) handleSignUp(w http.ResponseWriter, r *http.Request) {
-	if _, autenticado := s.alreadySignedIn(r); autenticado {
+	if _, authenticated := s.alreadySignedIn(r); authenticated {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	convite := r.URL.Query().Get("convite")
-	if convite == "" {
+	invite := r.URL.Query().Get("convite")
+	if invite == "" {
 		// Sem convite a tela nem abre. O servidor já recusa com 403, mas uma tela
 		// de cadastro aberta parece um cadastro comum — o destino é a de entrar,
 		// onde a frase explica que a mesa é por convite.
 		http.Redirect(w, r, "/entrar", http.StatusSeeOther)
 		return
 	}
-	s.writeDoor(w, r, http.StatusOK, signUpPage(signUpView{Invite: convite}))
+	s.writeDoor(w, r, http.StatusOK, signUpPage(signUpView{Invite: invite}))
 }
 
 func (s Scene) handleSignUpSubmit(w http.ResponseWriter, r *http.Request) {
@@ -109,18 +109,18 @@ func (s Scene) handleSignUpSubmit(w http.ResponseWriter, r *http.Request) {
 		Name:   strings.TrimSpace(r.PostFormValue("nome")),
 		Invite: r.PostFormValue("convite"),
 	}
-	senha := r.PostFormValue("senha")
-	corpo := account.RegisterBody{
-		Email: v.Email, Password: senha, InviteToken: v.Invite,
+	password := r.PostFormValue("senha")
+	body := account.RegisterBody{
+		Email: v.Email, Password: password, InviteToken: v.Invite,
 		Name: nameOrNil(v.Name),
 	}
 
-	v.Errors = withFormFieldNames(account.ValidateRegister(corpo))
+	v.Errors = withFormFieldNames(account.ValidateRegister(body))
 	// A conferência de senha é do FORMULÁRIO e não da API — o `confirmar` não
 	// existe no corpo JSON. Ela roda no SERVIDOR e não só no `data-on:input`,
 	// senão a página deixaria de proteger contra o typo com JavaScript
 	// desligado, que é o que esta superfície ganhou ao não usar sinais.
-	if r.PostFormValue("confirmar") != senha {
+	if r.PostFormValue("confirmar") != password {
 		v.Errors["confirmar"] = []string{noticePasswordMismatch}
 	}
 	if len(v.Errors) > 0 {
@@ -128,10 +128,10 @@ func (s Scene) handleSignUpSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.gate.Register(r.Context(), corpo)
+	user, err := s.gate.Register(r.Context(), body)
 	if err != nil {
-		aviso, status := s.signUpRefusal(err)
-		v.Notice = aviso
+		notice, status := s.signUpRefusal(err)
+		v.Notice = notice
 		s.writeDoor(w, r, status, signUpPage(v))
 		return
 	}
@@ -174,15 +174,15 @@ func (s Scene) handleResetSubmit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "formulário inválido", http.StatusBadRequest)
 		return
 	}
-	senha := r.PostFormValue("senha")
+	password := r.PostFormValue("senha")
 	v := s.linkView(r, r.PostFormValue("token"))
 	if !v.LinkIsValid {
 		s.writeDoor(w, r, http.StatusForbidden, resetPage(v))
 		return
 	}
 
-	v.Errors = withFormFieldNames(account.ValidatePassword(senha))
-	if r.PostFormValue("confirmar") != senha {
+	v.Errors = withFormFieldNames(account.ValidatePassword(password))
+	if r.PostFormValue("confirmar") != password {
 		v.Errors["confirmar"] = []string{noticePasswordMismatch}
 	}
 	if len(v.Errors) > 0 {
@@ -190,7 +190,7 @@ func (s Scene) handleResetSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !s.saveNewPassword(r, v.Token, senha) {
+	if !s.saveNewPassword(r, v.Token, password) {
 		// Perder a corrida pelo link é a MESMA resposta de link inválido: quem
 		// chegou depois não pode saber que houve um primeiro.
 		v.LinkIsValid = false
@@ -220,8 +220,8 @@ func (s Scene) linkView(r *http.Request, token string) resetView {
 // saveNewPassword pede o caminho INTEIRO ao caso de uso, de propósito: gerar o
 // hash aqui obrigaria esta cena a carregar a constante de custo do bcrypt, que é
 // decisão de segurança do servidor e não de quem desenha o formulário.
-func (s Scene) saveNewPassword(r *http.Request, token, senha string) bool {
-	return s.resets.Apply(r.Context(), token, senha) == nil
+func (s Scene) saveNewPassword(r *http.Request, token, password string) bool {
+	return s.resets.Apply(r.Context(), token, password) == nil
 }
 
 // ── auxiliares da porta ──────────────────────────────────────────────────────
@@ -231,7 +231,7 @@ func (s Scene) saveNewPassword(r *http.Request, token, senha string) bool {
 // O status importa: um formulário recusado com 200 mente para tudo o que não é
 // um navegador — teste, log, monitoração —, e a tela é a mesma nos dois casos.
 func (s Scene) writeDoor(
-	w http.ResponseWriter, r *http.Request, status int, corpo templ.Component,
+	w http.ResponseWriter, r *http.Request, status int, body templ.Component,
 ) {
 	s.deps.WritePage(w, r, status, ui.Page{
 		// O `<title>` é o do JOGO e não o da tela: a porta é a tela-título, e o
@@ -245,7 +245,7 @@ func (s Scene) writeDoor(
 		// restauração de foco do trilho a toda página — a porta não tem trilho, e
 		// o guarda desta regra existe justamente porque a omissão é silenciosa.
 		SemEstadoDeCliente: true,
-	}, corpo)
+	}, body)
 }
 
 // alreadySignedIn responde se o pedido já traz uma sessão válida, e para onde mandar
@@ -262,35 +262,35 @@ func (s Scene) alreadySignedIn(r *http.Request) (string, bool) {
 // sai do nosso domínio, o jogador confia, e a página que recebe pode imitar
 // esta. Barra dupla é o caso que engana — `//outro.site` é protocol-relative e
 // o navegador o trata como absoluto.
-func requestedDestination(bruto string) string {
-	if bruto == "" || !strings.HasPrefix(bruto, "/") || strings.HasPrefix(bruto, "//") {
+func requestedDestination(raw string) string {
+	if raw == "" || !strings.HasPrefix(raw, "/") || strings.HasPrefix(raw, "//") {
 		return "/"
 	}
-	return bruto
+	return raw
 }
 
 // withFormFieldNames traduz as chaves do `wire.FieldErrorMap` da API (`password`)
-// para os nomes dos campos DESTE formulário (`senha`).
+// para os nomes dos campos DESTE formulário (`password`).
 //
 // A tradução é aqui e não no validador porque o `wire.FieldErrorMap` é contrato de
 // fio da API JSON — renomear a chave lá quebraria o cliente que a lê.
 func withFormFieldNames(fields wire.FieldErrorMap) wire.FieldErrorMap {
 	out := wire.FieldErrorMap{}
-	nomes := map[string]string{"password": "senha", "name": "nome", "email": "email"}
-	for chave, msgs := range fields {
-		if nome, ok := nomes[chave]; ok {
-			out[nome] = msgs
+	names := map[string]string{"password": "senha", "name": "nome", "email": "email"}
+	for key, msgs := range fields {
+		if name, ok := names[key]; ok {
+			out[name] = msgs
 			continue
 		}
-		out[chave] = msgs
+		out[key] = msgs
 	}
 	return out
 }
 
 // nameOrNil: nome vazio é "sem nome", não a string vazia.
-func nameOrNil(nome string) *string {
-	if nome == "" {
+func nameOrNil(name string) *string {
+	if name == "" {
 		return nil
 	}
-	return &nome
+	return &name
 }

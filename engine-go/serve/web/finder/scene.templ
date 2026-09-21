@@ -74,36 +74,36 @@ templ finderResults(v finderView) {
 			<p class="px-2 py-8 text-center text-xs text-muted-foreground">
 				Procura em criaturas, condições, magias, poderes e itens do livro.
 			</p>
-		} else if v.Achados == 0 {
+		} else if v.Findings == 0 {
 			<p class="px-2 py-8 text-center text-xs text-muted-foreground">
-				{ "Nada no livro casa com “" + v.Busca + "”." }
+				{ "Nada no livro casa com “" + v.Search + "”." }
 			</p>
 		} else {
 			// O AVISO da segunda passada: sem ele, uma lista em que o termo não
 			// aparece em nome nenhum parece a lista errada. Ver `searchTheBook`.
-			if v.PeloTexto {
+			if v.ByText {
 				<p class="px-2 pt-2 text-3xs text-muted-foreground">
-					{ "Nenhum nome casa — estes mencionam “" + v.Busca + "” no texto da regra." }
+					{ "Nenhum nome casa — estes mencionam “" + v.Search + "” no texto da regra." }
 				</p>
 			}
-			for _, g := range v.Grupos {
-				<p class={ ui.FieldLabelClasses("gold", "px-2 pt-2 pb-1") }>{ g.Rotulo }</p>
+			for _, g := range v.Groups {
+				<p class={ ui.FieldLabelClasses("gold", "px-2 pt-2 pb-1") }>{ g.Label }</p>
 				<ul>
-					for _, a := range g.Achados {
+					for _, a := range g.Findings {
 						<li>
 							// `<a>` de verdade: abrir é NAVEGAR, e um botão com
 							// JavaScript perderia o clique do meio, o "abrir em
 							// nova aba" e o Enter que o navegador já dá de graça.
 							// O `data-resultado` é o que as setas percorrem.
 							<a
-								href={ templ.SafeURL(a.Destino) }
+								href={ templ.SafeURL(a.Destination) }
 								data-resultado
 								class="flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:bg-accent"
 							>
-								<span class="shrink-0 font-semibold">{ a.Nome }</span>
-								<span class="truncate text-3xs text-muted-foreground">{ a.Detalhe }</span>
-								if a.Pagina > 0 {
-									<span class="ml-auto shrink-0 font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", a.Pagina) }</span>
+								<span class="shrink-0 font-semibold">{ a.Name }</span>
+								<span class="truncate text-3xs text-muted-foreground">{ a.Detail }</span>
+								if a.Page > 0 {
+									<span class="ml-auto shrink-0 font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", a.Page) }</span>
 								}
 							</a>
 						</li>
@@ -114,10 +114,10 @@ templ finderResults(v finderView) {
 					if g.Cortados() > 0 {
 						<li>
 							<a
-								href={ templ.SafeURL(g.Mais) }
+								href={ templ.SafeURL(g.More) }
 								data-resultado
 								class="flex min-h-11 items-center rounded-sm px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent"
-							>{ "+" + strconv.Itoa(g.Cortados()) + " em " + g.Rotulo }</a>
+							>{ "+" + strconv.Itoa(g.Cortados()) + " em " + g.Label }</a>
 						</li>
 					}
 				</ul>

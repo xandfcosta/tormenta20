@@ -58,31 +58,31 @@ type serverInfo struct {
 // depois que as quatro responderam, então não há estado "carregando" para
 // desenhar.
 func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
-	linhas, err := s.deps.Queries().ListUsersWithCounts(ctx)
+	rows, err := s.deps.Queries().ListUsersWithCounts(ctx)
 	if err != nil {
 		return adminView{}, err
 	}
-	jogadores := make([]playerRow, 0, len(linhas))
-	for _, u := range linhas {
-		nome := u.Email
+	players := make([]playerRow, 0, len(rows))
+	for _, u := range rows {
+		name := u.Email
 		if u.Name.Valid && u.Name.String != "" {
-			nome = u.Name.String
+			name = u.Name.String
 		}
-		jogadores = append(jogadores, playerRow{
-			ID: u.ID, Name: nome, Email: u.Email,
+		players = append(players, playerRow{
+			ID: u.ID, Name: name, Email: u.Email,
 			Belongings: belongings(s.deps.IsAdmin(u.Email), u.Campaigns, u.Characters),
 			Cost:       deletionCost(u.Campaigns, u.Characters),
 			IsMe:       u.ID == meID,
 		})
 	}
 
-	convites, err := s.deps.Queries().ListOpenAccountInvites(ctx, dbvalue.NowISO())
+	invites, err := s.deps.Queries().ListOpenAccountInvites(ctx, dbvalue.NowISO())
 	if err != nil {
 		return adminView{}, err
 	}
-	abertos := make([]inviteRow, 0, len(convites))
-	for _, c := range convites {
-		abertos = append(abertos, inviteRow{
+	open := make([]inviteRow, 0, len(invites))
+	for _, c := range invites {
+		open = append(open, inviteRow{
 			Token:   c.Token,
 			Label:   "Link de convite " + firstChars(c.Token, 6),
 			Expires: expiryLabel(c.Expiresat, time.Now()),
@@ -90,33 +90,33 @@ func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
 		})
 	}
 
-	contagem, err := s.deps.Queries().TableCounts(ctx)
+	count, err := s.deps.Queries().TableCounts(ctx)
 	if err != nil {
 		return adminView{}, err
 	}
-	servidor := serverInfo{
+	server := serverInfo{
 		Environment:  s.deps.Environment(),
 		Database:     s.deps.DatabasePath(),
 		DatabaseSize: inBytes(s.deps.DatabaseSize()),
 		Contents: fmt.Sprintf("%d contas · %d campanhas · %d fichas",
-			contagem.Users, contagem.Campaigns, contagem.Characters),
+			count.Users, count.Campaigns, count.Characters),
 		LastBackup: "Nenhum backup ainda.",
 	}
-	if nome, tamanho, ok := s.deps.LastBackup(); ok {
-		servidor.LastBackup = fmt.Sprintf("Último: %s · %s", nome, inBytes(tamanho))
+	if name, size, ok := s.deps.LastBackup(); ok {
+		server.LastBackup = fmt.Sprintf("Último: %s · %s", name, inBytes(size))
 	}
 
-	return adminView{Players: jogadores, Invites: abertos, Machine: servidor}, nil
+	return adminView{Players: players, Invites: open, Machine: server}, nil
 }
 
 // posses é a frase de quanto a conta tem — mesas e fichas, com o plural certo.
-func belongings(admin bool, campanhas, fichas int64) string {
-	frase := fmt.Sprintf("%s · %s",
-		ui.Plural(campanhas, "campanha", "campanhas"), ui.Plural(fichas, "ficha", "fichas"))
+func belongings(admin bool, campaigns, sheets int64) string {
+	sentence := fmt.Sprintf("%s · %s",
+		ui.Plural(campaigns, "campanha", "campanhas"), ui.Plural(sheets, "ficha", "fichas"))
 	if admin {
-		return "admin · " + frase
+		return "admin · " + sentence
 	}
-	return frase
+	return sentence
 }
 
 // deletionCost é o preço que o diálogo diz ANTES de confirmar.
@@ -124,13 +124,13 @@ func belongings(admin bool, campanhas, fichas int64) string {
 // As campanhas passam para quem apaga e as fichas vão junto — é o que o
 // `accounts.Roster` faz, e a frase existe para o dono ler antes e não descobrir
 // depois.
-func deletionCost(campanhas, fichas int64) string {
-	f := ui.Plural(fichas, "ficha", "fichas")
-	if campanhas == 0 {
+func deletionCost(campaigns, sheets int64) string {
+	f := ui.Plural(sheets, "ficha", "fichas")
+	if campaigns == 0 {
 		return fmt.Sprintf("As %s vão junto. Não há campanhas para transferir.", f)
 	}
 	return fmt.Sprintf("As %s vão junto, e %s para você.", f,
-		ui.Plural(campanhas, "campanha passa", "campanhas passam"))
+		ui.Plural(campaigns, "campanha passa", "campanhas passam"))
 }
 
 func firstChars(s string, n int) string {
@@ -160,18 +160,18 @@ func inBytes(n int64) string {
 // alguns segundos, tem de dizer "7 dias" e não "6". E abaixo de um dia a escala
 // vira HORAS, com piso em 1 — "0 horas" não diz se dá tempo de mandar a
 // mensagem.
-func expiryLabel(iso string, agora time.Time) string {
-	prazo, err := time.Parse(time.RFC3339, iso)
+func expiryLabel(iso string, now time.Time) string {
+	deadline, err := time.Parse(time.RFC3339, iso)
 	if err != nil {
 		return iso
 	}
-	restante := prazo.Sub(agora)
-	if dias := restante.Hours() / 24; dias >= 1 {
-		return ui.Plural(int64(math.Round(dias)), "dia", "dias")
+	remaining := deadline.Sub(now)
+	if days := remaining.Hours() / 24; days >= 1 {
+		return ui.Plural(int64(math.Round(days)), "dia", "dias")
 	}
-	horas := int64(math.Round(restante.Hours()))
-	if horas < 1 {
-		horas = 1
+	hours := int64(math.Round(remaining.Hours()))
+	if hours < 1 {
+		hours = 1
 	}
-	return ui.Plural(horas, "hora", "horas")
+	return ui.Plural(hours, "hora", "horas")
 }

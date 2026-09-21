@@ -74,7 +74,7 @@ func pedeNaCena(t *testing.T, target string) *httptest.ResponseRecorder {
 type comLivro struct{ semLivro }
 
 func (comLivro) BookAddress() bookui.BookAddress {
-	return bookui.BookAddress{Base: routes.Book, Abertura: 6}
+	return bookui.BookAddress{Base: routes.Book, Opening: 6}
 }
 
 func pedeNaCenaComLivro(t *testing.T, target string) *httptest.ResponseRecorder {

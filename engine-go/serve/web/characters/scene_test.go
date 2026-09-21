@@ -47,17 +47,17 @@ func TestTheDossierRespectsTheLimit(t *testing.T) {
 //
 // O `>` que fecha a tag de abertura é o primeiro do trecho porque o templ
 // escapa `>` dentro de valor de atributo — então o corte é seguro.
-func corpoDoBotao(t *testing.T, html, rotulo string) string {
+func corpoDoBotao(t *testing.T, html, label string) string {
 	t.Helper()
-	i := strings.Index(html, `aria-label="`+rotulo+`"`)
+	i := strings.Index(html, `aria-label="`+label+`"`)
 	if i < 0 {
-		t.Fatalf("nenhum botão com rótulo %q no HTML", rotulo)
+		t.Fatalf("nenhum botão com rótulo %q no HTML", label)
 	}
-	resto := html[i:]
-	abre := strings.Index(resto, ">")
-	fecha := strings.Index(resto, "</button>")
-	if abre < 0 || fecha < 0 || abre > fecha {
-		t.Fatalf("botão %q malformado no HTML", rotulo)
+	rest := html[i:]
+	opens := strings.Index(rest, ">")
+	closes := strings.Index(rest, "</button>")
+	if opens < 0 || closes < 0 || opens > closes {
+		t.Fatalf("botão %q malformado no HTML", label)
 	}
-	return resto[abre+1 : fecha]
+	return rest[opens+1 : closes]
 }

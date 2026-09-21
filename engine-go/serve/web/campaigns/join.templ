@@ -26,24 +26,24 @@ templ JoinBody(v joinView) {
 		// margens automáticas somem e ela preenche a página.
 		<form method="post" action="/campanhas/entrar" class="m-auto w-full max-w-3xl space-y-6">
 			@ui.SheetTitle("Carta de convite", "Entrar na mesa")
-			if v.TemConvite {
-				<input type="hidden" name="token" value={ v.Convite }/>
+			if v.HasInvite {
+				<input type="hidden" name="token" value={ v.Invite }/>
 				@inviteLetter(v)
 			} else {
 				@ui.TextField(ui.Field{
 					Nome: "campaignId", Label: "Número da campanha", Tipo: "number",
-					Valor: v.NumeroDigitado, Obrigatorio: true,
+					Valor: v.TypedNumber, Obrigatorio: true,
 					Dica:  "O mestre da mesa envia esse número.",
 					Erros: v.Erros["campaignId"],
 				})
 			}
-			if len(v.Herois) == 0 {
+			if len(v.Heroes) == 0 {
 				@noHeroesToSeat()
 			} else {
 				@heroChoice(v)
 			}
-			if v.Aviso != "" {
-				<p class="text-sm text-destructive-ink">{ v.Aviso }</p>
+			if v.Notice != "" {
+				<p class="text-sm text-destructive-ink">{ v.Notice }</p>
 			}
 			// O botão SOME quando não há o que enviar — convite morto ou elenco
 			// vazio —, em vez de ficar desabilitado: nos dois casos não existe
@@ -53,7 +53,7 @@ templ JoinBody(v joinView) {
 			// oferecem o passo certo.
 			<div class="flex justify-end gap-2">
 				<a href="/campanhas" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }>Cancelar</a>
-				if len(v.Herois) > 0 && (!v.TemConvite || v.ConviteVale) {
+				if len(v.Heroes) > 0 && (!v.HasInvite || v.InviteValid) {
 					@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
 						Entrar na mesa
 					}
@@ -76,9 +76,9 @@ templ inviteLetter(v joinView) {
 			@ui.SectionLabel("muted", "") {
 				Convite
 			}
-			if v.ConviteVale {
+			if v.InviteValid {
 				<p class="text-sm">
-					Você foi convidado para <span class="font-semibold text-grimorio-gold">{ v.NomeDaCampanha }</span>.
+					Você foi convidado para <span class="font-semibold text-grimorio-gold">{ v.CampaignName }</span>.
 				</p>
 			} else {
 				<p class="text-sm text-destructive-ink">
@@ -98,8 +98,8 @@ templ heroChoice(v joinView) {
 			Qual herói entra na mesa?
 		}
 		<div data-nav-region="content" data-nav-layout="grid" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-			for _, h := range v.Herois {
-				@heroPlate(h, h.ID == v.EscolhidoID)
+			for _, h := range v.Heroes {
+				@heroPlate(h, h.ID == v.ChosenID)
 			}
 		</div>
 		if len(v.Erros["characterId"]) > 0 {
@@ -138,11 +138,11 @@ templ heroPlate(h joinHero, marcado bool) {
 		<span
 			aria-hidden="true"
 			class="monogram size-11 rounded-sm text-xs"
-			style={ "background: " + h.Gradiente }
-		>{ h.Iniciais }</span>
+			style={ "background: " + h.Gradient }
+		>{ h.Initials }</span>
 		<span class="min-w-0 flex-1">
-			<span class="block truncate font-medium text-foreground">{ h.Nome }</span>
-			<span class="block truncate text-xs text-muted-foreground">{ h.Subtitulo }</span>
+			<span class="block truncate font-medium text-foreground">{ h.Name }</span>
+			<span class="block truncate text-xs text-muted-foreground">{ h.Subtitle }</span>
 		</span>
 	</label>
 }

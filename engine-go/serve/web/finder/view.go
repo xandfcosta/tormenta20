@@ -36,47 +36,47 @@ const hitsByGroup = 6
 
 // finderHit é uma linha do resultado.
 type finderHit struct {
-	Nome    string
-	Detalhe string
-	Destino string
-	// Pagina é a do livro, e ZERO significa "o catálogo não sabe" — a linha sai
+	Name        string
+	Detail      string
+	Destination string
+	// Page é a do livro, e ZERO significa "o catálogo não sabe" — a linha sai
 	// sem número em vez de sair com "p0".
-	Pagina int
-	// ponto não vai para a tela: ele é a ORDEM, e mostrá-lo convidaria a
+	Page int
+	// point não vai para a tela: ele é a ORDEM, e mostrá-lo convidaria a
 	// discutir a nota em vez do resultado.
-	ponto int
+	point int
 }
 
 // finderGroup é um catálogo com o que sobrou, já cortado.
 type finderGroup struct {
-	Rotulo  string
-	Achados []finderHit
+	Label    string
+	Findings []finderHit
 	// Total é antes do corte — é ele que escreve o "+12".
 	Total int
-	// Mais é para onde o "+12" leva: a cena da ferramenta com a MESMA busca.
+	// More é para onde o "+12" leva: a cena da ferramenta com a MESMA busca.
 	// Corte com saída, e não corte que informa e abandona.
-	Mais string
+	More string
 }
 
-func (g finderGroup) Cortados() int { return g.Total - len(g.Achados) }
+func (g finderGroup) Cortados() int { return g.Total - len(g.Findings) }
 
 type finderView struct {
-	Busca  string
-	Grupos []finderGroup
-	// Achados é o total ANTES dos cortes de grupo.
-	Achados int
-	// PeloTexto diz que estes achados vieram da segunda passada — nenhum NOME
+	Search string
+	Groups []finderGroup
+	// Findings é o total ANTES dos cortes de grupo.
+	Findings int
+	// ByText diz que estes achados vieram da segunda passada — nenhum NOME
 	// casou, e o que está na lista apenas MENCIONA o termo. A tela avisa: sem
 	// isso, uma lista que não contém o que se pediu parece a lista errada.
-	PeloTexto bool
+	ByText bool
 }
 
-func (v finderView) Buscando() bool { return strings.TrimSpace(v.Busca) != "" }
+func (v finderView) Buscando() bool { return strings.TrimSpace(v.Search) != "" }
 
 // searchTheBook monta o resultado do ⌃K.
-func searchTheBook(busca string) finderView {
-	v := buildHits(busca, pelosNomes)
-	if v.Achados > 0 || !v.Buscando() {
+func searchTheBook(search string) finderView {
+	v := buildHits(search, pelosNomes)
+	if v.Findings > 0 || !v.Buscando() {
 		return v
 	}
 	// SEGUNDA PASSADA: o corpo da regra só entra quando NOME nenhum casou. Com
@@ -85,8 +85,8 @@ func searchTheBook(busca string) finderView {
 	//
 	// Quem digita "abal" procura o verbete; quem digita "chance de falha" não
 	// sabe o nome, e é para essa pessoa que a passada existe.
-	v = buildHits(busca, tambemPeloTexto)
-	v.PeloTexto = v.Achados > 0
+	v = buildHits(search, tambemPeloTexto)
+	v.ByText = v.Findings > 0
 	return v
 }
 
@@ -97,33 +97,33 @@ const (
 	tambemPeloTexto = true
 )
 
-func buildHits(busca string, peloTexto bool) finderView {
-	v := finderView{Busca: busca}
+func buildHits(search string, byText bool) finderView {
+	v := finderView{Search: search}
 	if !v.Buscando() {
 		return v
 	}
 	a := book.Catalogs()
-	racas, classes, deuses := book.CharacterCatalogs()
+	races, classes, gods := book.CharacterCatalogs()
 	for _, g := range []finderGroup{
-		foundGroup("Condições", a.Conditions, busca, peloTexto, routes.MasterSearch("condicoes", busca), book.ConditionFields, conditionHit),
-		foundGroup("Criaturas", book.Creatures(), busca, peloTexto, routes.MasterBestiarySearch(busca), entryFields, entryHit),
-		foundGroup("Magias", a.Spells, busca, peloTexto, routes.MasterSearch("magias", busca), book.SpellFields, spellHit),
-		foundGroup("Poderes", a.Powers, busca, peloTexto, routes.MasterSearch("poderes", busca), book.PowerFields, powerHit),
-		foundGroup("Itens", a.Items, busca, peloTexto, routes.MasterSearch("itens", busca), book.ItemFields, itemHit),
-		foundGroup("Efeitos", book.EffectKinds(), busca, peloTexto, routes.MasterSearch("efeitos", busca), book.EffectFields, effectHit),
-		foundGroup("Escolas", book.SpellSchools(), busca, peloTexto, routes.MasterSearch("escolas", busca), book.SchoolFields, schoolHit),
-		foundGroup("Perícias", book.Expertises(), busca, peloTexto, routes.MasterSearch("pericias", busca), book.ExpertiseFields, expertiseHit),
-		foundGroup("Raças", racas, busca, peloTexto, routes.MasterSearch("racas", busca), book.RaceFields, raceHit),
-		foundGroup("Classes", classes, busca, peloTexto, routes.MasterSearch("classes", busca), book.ClassFields, classHit),
-		foundGroup("Deuses", deuses, busca, peloTexto, routes.MasterSearch("deuses", busca), book.GodFields, deityHit),
+		foundGroup("Condições", a.Conditions, search, byText, routes.MasterSearch("condicoes", search), book.ConditionFields, conditionHit),
+		foundGroup("Criaturas", book.Creatures(), search, byText, routes.MasterBestiarySearch(search), entryFields, entryHit),
+		foundGroup("Magias", a.Spells, search, byText, routes.MasterSearch("magias", search), book.SpellFields, spellHit),
+		foundGroup("Poderes", a.Powers, search, byText, routes.MasterSearch("poderes", search), book.PowerFields, powerHit),
+		foundGroup("Itens", a.Items, search, byText, routes.MasterSearch("itens", search), book.ItemFields, itemHit),
+		foundGroup("Efeitos", book.EffectKinds(), search, byText, routes.MasterSearch("efeitos", search), book.EffectFields, effectHit),
+		foundGroup("Escolas", book.SpellSchools(), search, byText, routes.MasterSearch("escolas", search), book.SchoolFields, schoolHit),
+		foundGroup("Perícias", book.Expertises(), search, byText, routes.MasterSearch("pericias", search), book.ExpertiseFields, expertiseHit),
+		foundGroup("Raças", races, search, byText, routes.MasterSearch("racas", search), book.RaceFields, raceHit),
+		foundGroup("Classes", classes, search, byText, routes.MasterSearch("classes", search), book.ClassFields, classHit),
+		foundGroup("Deuses", gods, search, byText, routes.MasterSearch("deuses", search), book.GodFields, deityHit),
 	} {
 		if g.Total == 0 {
 			continue
 		}
-		v.Achados += g.Total
-		v.Grupos = append(v.Grupos, g)
+		v.Findings += g.Total
+		v.Groups = append(v.Groups, g)
 	}
-	sortByRelevance(v.Grupos)
+	sortByRelevance(v.Groups)
 	return v
 }
 
@@ -136,8 +136,8 @@ func buildHits(busca string, peloTexto bool) finderView {
 //
 // Estável, então a ordem da fileira continua valendo no EMPATE: dois grupos com
 // achados igualmente bons saem na ordem de sempre.
-func sortByRelevance(grupos []finderGroup) {
-	slices.SortStableFunc(grupos, func(a, b finderGroup) int {
+func sortByRelevance(groups []finderGroup) {
+	slices.SortStableFunc(groups, func(a, b finderGroup) int {
 		return cmp.Compare(b.melhorPonto(), a.melhorPonto())
 	})
 }
@@ -145,41 +145,41 @@ func sortByRelevance(grupos []finderGroup) {
 // melhorPonto é a nota do primeiro achado — a lista já vem ordenada pelo
 // `bestFirst`, então o primeiro é o melhor.
 func (g finderGroup) melhorPonto() int {
-	if len(g.Achados) == 0 {
+	if len(g.Findings) == 0 {
 		return 0
 	}
-	return g.Achados[0].ponto
+	return g.Findings[0].point
 }
 
 // foundGroup pontua, ordena e corta um catálogo.
 //
-// `campos` é a MESMA função que a cena dos catálogos usa para filtrar, e reusá-la
+// `fields` é a MESMA função que a cena dos catálogos usa para filtrar, e reusá-la
 // é o que faz as duas superfícies concordarem sobre o que é buscável — uma
 // segunda lista de campos aqui divergiria no dia em que alguém acrescentasse um.
 func foundGroup[T any](
-	rotulo string, lista []T, busca string, peloTexto bool, mais string,
-	campos func(T) []string, comoAchado func(T) finderHit,
+	label string, list []T, query string, byText bool, more string,
+	fields func(T) []string, asFound func(T) finderHit,
 ) finderGroup {
-	g := finderGroup{Rotulo: rotulo, Mais: mais}
-	for _, e := range lista {
+	g := finderGroup{Label: label, More: more}
+	for _, e := range list {
 		// A linha é montada ANTES de saber se ela passa, e é deliberado: pegar o
 		// nome de `campos(e)[0]` seria depender de uma ordem que nada garante, e
 		// no dia em que um `entryFields` mudasse de ordem a pontuação passaria a
 		// medir a descrição — em silêncio, com a lista continuando a sair.
-		a := comoAchado(e)
-		a.ponto = search.Score(a.Nome, busca)
-		if a.ponto == 0 && peloTexto {
-			a.ponto = search.ScoreText(campos(e), busca)
+		a := asFound(e)
+		a.point = search.Score(a.Name, query)
+		if a.point == 0 && byText {
+			a.point = search.ScoreText(fields(e), query)
 		}
-		if a.ponto == 0 {
+		if a.point == 0 {
 			continue
 		}
-		g.Achados = append(g.Achados, a)
+		g.Findings = append(g.Findings, a)
 	}
-	g.Total = len(g.Achados)
-	slices.SortStableFunc(g.Achados, bestFirst)
-	if len(g.Achados) > hitsByGroup {
-		g.Achados = g.Achados[:hitsByGroup]
+	g.Total = len(g.Findings)
+	slices.SortStableFunc(g.Findings, bestFirst)
+	if len(g.Findings) > hitsByGroup {
+		g.Findings = g.Findings[:hitsByGroup]
 	}
 	return g
 }
@@ -191,13 +191,13 @@ func foundGroup[T any](
 // tem mais chance de estar procurando. O terceiro critério é o nome, para a
 // ordem não depender da ordem de leitura do catálogo.
 func bestFirst(a, b finderHit) int {
-	if d := cmp.Compare(b.ponto, a.ponto); d != 0 {
+	if d := cmp.Compare(b.point, a.point); d != 0 {
 		return d
 	}
-	if d := cmp.Compare(len(a.Nome), len(b.Nome)); d != 0 {
+	if d := cmp.Compare(len(a.Name), len(b.Name)); d != 0 {
 		return d
 	}
-	return cmp.Compare(a.Nome, b.Nome)
+	return cmp.Compare(a.Name, b.Name)
 }
 
 // ── de cada catálogo para uma linha ──────────────────────────────────────────
@@ -210,99 +210,99 @@ func entryFields(m book.Entry) []string {
 }
 
 func conditionHit(c book.Condition) finderHit {
-	detalhe := "Condição"
+	detail := "Condição"
 	if c.UpgradesTo != "" {
-		detalhe = "Condição · agrava para " + book.ConditionName(c.UpgradesTo)
+		detail = "Condição · agrava para " + book.ConditionName(c.UpgradesTo)
 	}
-	return finderHit{Nome: c.Name, Detalhe: detalhe, Destino: routes.MasterEntry("condicoes", c.ID), Pagina: c.BookPage}
+	return finderHit{Name: c.Name, Detail: detail, Destination: routes.MasterEntry("condicoes", c.ID), Page: c.BookPage}
 }
 
 func spellHit(m book.Spell) finderHit {
 	return finderHit{
-		Nome:    m.Name,
-		Detalhe: fmt.Sprintf("%dº círculo · %s", m.Circle, book.CastingName(m.Execution)),
-		Destino: routes.MasterEntry("magias", m.ID),
-		Pagina:  m.BookPage,
+		Name:        m.Name,
+		Detail:      fmt.Sprintf("%dº círculo · %s", m.Circle, book.CastingName(m.Execution)),
+		Destination: routes.MasterEntry("magias", m.ID),
+		Page:        m.BookPage,
 	}
 }
 
 func powerHit(p book.Power) finderHit {
-	return finderHit{Nome: p.Name, Detalhe: p.Source, Destino: routes.MasterEntry("poderes", p.ID), Pagina: p.BookPage}
+	return finderHit{Name: p.Name, Detail: p.Source, Destination: routes.MasterEntry("poderes", p.ID), Page: p.BookPage}
 }
 
 func itemHit(i book.Item) finderHit {
 	return finderHit{
-		Nome:    i.Name,
-		Detalhe: book.CategoryName(i.Category),
-		Destino: routes.MasterEntry("itens", i.ID),
-		Pagina:  i.BookPage,
+		Name:        i.Name,
+		Detail:      book.CategoryName(i.Category),
+		Destination: routes.MasterEntry("itens", i.ID),
+		Page:        i.BookPage,
 	}
 }
 
 func effectHit(e book.EffectKind) finderHit {
 	return finderHit{
-		Nome:    e.Name,
-		Detalhe: "Tipo de efeito",
-		Destino: routes.MasterEntry("efeitos", e.ID),
-		Pagina:  e.BookPage,
+		Name:        e.Name,
+		Detail:      "Tipo de efeito",
+		Destination: routes.MasterEntry("efeitos", e.ID),
+		Page:        e.BookPage,
 	}
 }
 
 func schoolHit(e book.SpellSchool) finderHit {
 	return finderHit{
-		Nome:    e.Name,
-		Detalhe: "Escola de magia",
-		Destino: routes.MasterEntry("escolas", e.ID),
-		Pagina:  e.BookPage,
+		Name:        e.Name,
+		Detail:      "Escola de magia",
+		Destination: routes.MasterEntry("escolas", e.ID),
+		Page:        e.BookPage,
 	}
 }
 
 func expertiseHit(p book.Expertise) finderHit {
-	detalhe := "Perícia · " + book.AttributeAbbrev(p.Attribute)
+	detail := "Perícia · " + book.AttributeAbbrev(p.Attribute)
 	if p.TrainedOnly {
-		detalhe += " · só treinada"
+		detail += " · só treinada"
 	}
 	return finderHit{
-		Nome:    p.Name,
-		Detalhe: detalhe,
-		Destino: routes.MasterEntry("pericias", p.ID),
-		Pagina:  p.BookPage,
+		Name:        p.Name,
+		Detail:      detail,
+		Destination: routes.MasterEntry("pericias", p.ID),
+		Page:        p.BookPage,
 	}
 }
 
 func raceHit(r book.Race) finderHit {
 	return finderHit{
-		Nome:    r.Name,
-		Detalhe: book.TierName(r.Tier) + " · " + r.AttributeMod.Escrito(),
-		Destino: routes.MasterEntry("racas", r.ID),
-		Pagina:  r.BookPage,
+		Name:        r.Name,
+		Detail:      book.TierName(r.Tier) + " · " + r.AttributeMod.Escrito(),
+		Destination: routes.MasterEntry("racas", r.ID),
+		Page:        r.BookPage,
 	}
 }
 
 func classHit(c book.Class) finderHit {
 	return finderHit{
-		Nome:    c.Name,
-		Detalhe: fmt.Sprintf("Classe · %d poderes", c.Powers),
-		Destino: routes.MasterEntry("classes", c.ID),
-		Pagina:  c.BookPage,
+		Name:        c.Name,
+		Detail:      fmt.Sprintf("Classe · %d poderes", c.Powers),
+		Destination: routes.MasterEntry("classes", c.ID),
+		Page:        c.BookPage,
 	}
 }
 
 func deityHit(d book.God) finderHit {
 	return finderHit{
-		Nome:    d.Name,
-		Detalhe: d.Portfolio,
-		Destino: routes.MasterEntry("deuses", d.ID),
-		Pagina:  d.BookPage,
+		Name:        d.Name,
+		Detail:      d.Portfolio,
+		Destination: routes.MasterEntry("deuses", d.ID),
+		Page:        d.BookPage,
 	}
 }
 
 func entryHit(m book.Entry) finderHit {
 	return finderHit{
-		Nome:    m.Name,
-		Detalhe: fmt.Sprintf("ND %s · %s", book.CRWritten(m.ND), book.TypeName(m.Kind)),
-		Destino: routes.MasterBestiary + "?criatura=" + url.QueryEscape(m.ID),
-		Pagina:  m.BookPage,
+		Name:        m.Name,
+		Detail:      fmt.Sprintf("ND %s · %s", book.CRWritten(m.ND), book.TypeName(m.Kind)),
+		Destination: routes.MasterBestiary + "?criatura=" + url.QueryEscape(m.ID),
+		Page:        m.BookPage,
 	}
 }
 

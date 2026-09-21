@@ -94,7 +94,7 @@ func listBody(v listView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if !v.TemAlguma {
+		if !v.HasAny {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "   ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -103,7 +103,7 @@ func listBody(v listView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		} else if v.FiltrouTudo {
+		} else if v.FilteredAll {
 			templ_7745c5c3_Err = searchWithoutResult(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -113,7 +113,7 @@ func listBody(v listView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for i, c := range v.Campanhas {
+			for i, c := range v.Campaigns {
 				templ_7745c5c3_Err = campaignStage(c, ui.NeighborAt(v.Neighbors, i-1), ui.NeighborAt(v.Neighbors, i+1)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -171,7 +171,7 @@ func listBar(v listView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{search: %q, role: %q, %s}", v.Busca, v.Papel, ui.StageSignals(v.CursorID)))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{search: %q, role: %q, %s}", v.Search, v.Role, ui.StageSignals(v.CursorID)))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 67, Col: 105}
 		}
@@ -183,7 +183,7 @@ func listBar(v listView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if v.TemAlguma {
+		if v.HasAny {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "   <div class=\"relative w-full sm:ml-auto sm:w-56 md:w-64\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -197,9 +197,9 @@ func listBar(v listView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Busca)
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Search)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 86, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 86, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -351,8 +351,8 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var12 = []any{"h-8 rounded-sm px-3 text-sm font-medium outline-none transition-colors",
-			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Papel == valor),
-			templ.KV("text-muted-foreground hover:text-foreground", v.Papel != valor)}
+			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Role == valor),
+			templ.KV("text-muted-foreground hover:text-foreground", v.Role != valor)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var12...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -362,9 +362,9 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolText(v.Papel == valor))
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolText(v.Role == valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 123, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 123, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -477,7 +477,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + ui.StageWash(c.Nome))
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + ui.StageWash(c.Name))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 152, Col: 48}
 		}
@@ -511,7 +511,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir " + c.Nome)
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir " + c.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 158, Col: 34}
 		}
@@ -524,9 +524,9 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var23 string
-		templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + c.Gradiente)
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + c.Gradient)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 160, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 160, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -537,7 +537,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var24 string
-		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(c.Iniciais)
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(c.Initials)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 163, Col: 17}
 		}
@@ -558,7 +558,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(c.Nome)
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(c.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 174, Col: 113}
 		}
@@ -582,7 +582,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = synopsisTaste(c.Sinopse).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = synopsisTaste(c.Synopsis).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -639,9 +639,9 @@ func campaignPlate(c campaignCard) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var28 string
-			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(c.Papel)
+			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(c.Role)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 188, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 188, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -651,7 +651,7 @@ func campaignPlate(c campaignCard) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if c.AoVivo {
+			if c.Live {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<span aria-hidden=\"true\">·</span> <span class=\"flex items-center gap-1.5 text-destructive-ink\"><span class=\"size-2 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none\"></span> Sessão ao vivo</span>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -698,8 +698,8 @@ func myHeroBand(c campaignCard) templ.Component {
 			templ_7745c5c3_Var29 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if c.Meu != nil {
-			templ_7745c5c3_Err = oneHeroCard(c.Meu.Iniciais, c.Meu.Nome, c.Meu.Classes, c.Meu.Gradiente, false).Render(ctx, templ_7745c5c3_Buffer)
+		if c.Mine != nil {
+			templ_7745c5c3_Err = oneHeroCard(c.Mine.Initials, c.Mine.Name, c.Mine.Classes, c.Mine.Gradient, false).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1058,7 +1058,7 @@ func campaignActions(c campaignCard) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if c.AoVivo {
+		if c.Live {
 			var templ_7745c5c3_Var50 = []any{ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var50...)
 			if templ_7745c5c3_Err != nil {
@@ -1069,9 +1069,9 @@ func campaignActions(c campaignCard) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var51 templ.SafeURL
-			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.Session(c.ID, c.SessaoID)))
+			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.Session(c.ID, c.SessionID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 297, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 297, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -1112,7 +1112,7 @@ func campaignActions(c campaignCard) templ.Component {
 }
 
 func ifLive(c campaignCard, aoVivo, parado ui.Variant) ui.Variant {
-	if c.AoVivo {
+	if c.Live {
 		return aoVivo
 	}
 	return parado
@@ -1316,13 +1316,13 @@ func campaignRail(v listView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for i, c := range v.Campanhas {
+		for i, c := range v.Campaigns {
 			templ_7745c5c3_Err = campaignMarker(c, i).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = blankSheetMarker(len(v.Campanhas)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = blankSheetMarker(len(v.Campaigns)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1367,7 +1367,7 @@ func campaignMarker(c campaignCard, indice int) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			if c.AoVivo {
+			if c.Live {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "<span aria-hidden=\"true\" class=\"size-2 shrink-0 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none\"></span> <span class=\"sr-only\">com sessão ao vivo</span>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1376,10 +1376,10 @@ func campaignMarker(c campaignCard, indice int) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = ui.Marker(ui.RailMarker{
-			ID: c.ID, Index: indice, Monogram: c.Iniciais, Gradient: c.Gradiente,
+			ID: c.ID, Index: indice, Monogram: c.Initials, Gradient: c.Gradient,
 			// Nome E papel: o papel não é enfeite na lista de um admin, que vê mesas
 			// de outras pessoas e precisa distinguir a própria.
-			Name: c.Nome, Sub: c.Papel,
+			Name: c.Name, Sub: c.Role,
 			Destino: "/campanhas/" + strconv.FormatInt(c.ID, 10),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var60), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

@@ -30,11 +30,11 @@ func (s Scene) handleCharacters(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := ui.RenderFragment(r.Context(), SceneBody(view))
+		fragment, err := ui.RenderFragment(r.Context(), SceneBody(view))
 		if err != nil {
 			return
 		}
-		_ = sse.PatchElements(fragmento)
+		_ = sse.PatchElements(fragment)
 		return
 	}
 
@@ -49,12 +49,12 @@ func (s Scene) handleCharacters(w http.ResponseWriter, r *http.Request) {
 // chama. Mesma razão do `filterFromRequest` das campanhas: ler os dois no mesmo
 // lugar é o que deixa `?busca=anao` ser um endereço que se recarrega.
 func termFromRequest(r *http.Request) string {
-	busca := r.URL.Query().Get("busca")
-	sinais := struct {
-		Busca string `json:"search"`
+	search := r.URL.Query().Get("busca")
+	signals := struct {
+		Search string `json:"search"`
 	}{}
-	if err := datastar.ReadSignals(r, &sinais); err == nil && sinais.Busca != "" {
-		busca = sinais.Busca
+	if err := datastar.ReadSignals(r, &signals); err == nil && signals.Search != "" {
+		search = signals.Search
 	}
-	return busca
+	return search
 }

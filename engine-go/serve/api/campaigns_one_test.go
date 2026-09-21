@@ -51,13 +51,13 @@ func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(v.Sessoes) != 5 {
-		t.Fatalf("esperava 5 sessões, veio %d", len(v.Sessoes))
+	if len(v.Sessions) != 5 {
+		t.Fatalf("esperava 5 sessões, veio %d", len(v.Sessions))
 	}
-	if v.Sessoes[0].Numero != 5 || v.Sessoes[4].Numero != 1 {
-		numbers := make([]int64, len(v.Sessoes))
-		for i, sess := range v.Sessoes {
-			numbers[i] = sess.Numero
+	if v.Sessions[0].Number != 5 || v.Sessions[4].Number != 1 {
+		numbers := make([]int64, len(v.Sessions))
+		for i, sess := range v.Sessions {
+			numbers[i] = sess.Number
 		}
 		t.Errorf("ordem = %v, queria da mais nova para a mais velha", numbers)
 	}
@@ -86,13 +86,13 @@ func TestTheGmComesFirstInTheCast(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(v.Herois) != 2 || !v.Herois[0].EhMestre || v.Herois[0].Nome != "Thalen" {
-		t.Errorf("elenco = %+v, queria o mestre primeiro", v.Herois)
+	if len(v.Heroes) != 2 || !v.Heroes[0].IsGM || v.Heroes[0].Name != "Thalen" {
+		t.Errorf("elenco = %+v, queria o mestre primeiro", v.Heroes)
 	}
 	// E o sinete conta JOGADORES, não membros: são duas contagens legítimas, e
 	// trocá-las faz a tela dizer "2 heróis" numa mesa de um jogador só.
-	if v.TotalHerois != 1 {
-		t.Errorf("TotalHerois = %d, queria 1 (o mestre não é herói do grupo)", v.TotalHerois)
+	if v.TotalHeroes != 1 {
+		t.Errorf("TotalHerois = %d, queria 1 (o mestre não é herói do grupo)", v.TotalHeroes)
 	}
 }
 
@@ -114,7 +114,7 @@ func TestAPlayerAskingForConfigFallsBackToTheOverview(t *testing.T) {
 	if v.AbaAtiva() != "visao" {
 		t.Errorf("aba = %q, queria cair para visao", v.AbaAtiva())
 	}
-	if v.EhMestre {
+	if v.IsGM {
 		t.Error("o jogador foi marcado como mestre")
 	}
 }

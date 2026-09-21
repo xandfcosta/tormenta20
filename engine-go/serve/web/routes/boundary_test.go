@@ -20,38 +20,38 @@ import (
 // `book` e o `events` já documentam, e aqui ela é pior, porque um pacote de
 // constantes não tem nenhuma razão legítima para crescer.
 func TestTheAddressesImportNothing(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") || strings.HasSuffix(nome, "_test.go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
 			// A biblioteca PADRÃO passa: o `net/url` escapa o que vai na query, e
 			// recusá-lo empurraria o escape para cada chamador — que é como um
 			// endereço sai sem escapar em UM lugar e ninguém vê.
-			if !strings.HasPrefix(caminho, "t20engine/") {
+			if !strings.HasPrefix(path, "t20engine/") {
 				continue
 			}
 			t.Errorf("%s importa %q.\n"+
 				"Este pacote não pode alcançar NADA do projeto. Toda cena o importa: um\n"+
 				"alcance aqui é um alcance concedido a todas elas de uma vez, e o guarda de\n"+
 				"fronteira de cada uma continua verde, porque só olha os imports dela.",
-				nome, caminho)
+				name, path)
 		}
 	}
-	if visitados == 0 {
+	if visited == 0 {
 		t.Fatal("nenhum arquivo .go visitado — o guarda ficou cego")
 	}
 }

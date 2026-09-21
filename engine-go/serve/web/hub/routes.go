@@ -62,13 +62,13 @@ func (s Scene) handleHubInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `ui.MintedInvite`.
-	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+invite.Token,
+	fragment, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+invite.Token,
 		"Cada convite serve para UMA conta. Gere outro para o próximo jogador."))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": internalNotice})
 		return
 	}
-	_ = sse.PatchElements(fragmento)
+	_ = sse.PatchElements(fragment)
 }
 
 // internalNotice é a frase que a pessoa lê quando algo do servidor falhou.

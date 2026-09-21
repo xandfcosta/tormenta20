@@ -19,7 +19,7 @@ type Deps interface {
 	// Catalogs é o motor primado, para computar a ficha do herói recém-nascido.
 	Catalogs() *engine.Catalogs
 	// WritePage é a montagem da casca (ver `web/ui`).
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 	CurrentUserID(r *http.Request) int64
 }
 
@@ -34,6 +34,6 @@ type Scene struct {
 	births character.Births
 }
 
-func New(d Deps, nascimento character.Births) Scene {
-	return Scene{deps: d, births: nascimento}
+func New(d Deps, birth character.Births) Scene {
+	return Scene{deps: d, births: birth}
 }

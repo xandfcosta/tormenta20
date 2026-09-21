@@ -14,18 +14,18 @@ import "testing"
 // possível por URL) e transfere o arquivo inteiro — 85 MiB contra 1 MiB do
 // leitor, contados na interface de loopback.
 func TestTheButtonOpensTheReaderAtThePrintedPageWithTheTerm(t *testing.T) {
-	livro := BookAddress{Base: "/livro?v=abc", Abertura: 6}
-	if got := livro.AtPage(289, "Lobo"); got != "/livro/ler?p=289&t=Lobo" {
+	book := BookAddress{Base: "/livro?v=abc", Opening: 6}
+	if got := book.AtPage(289, "Lobo"); got != "/livro/ler?p=289&t=Lobo" {
 		t.Errorf("o botão do Lobo aponta para %q", got)
 	}
 	// O termo vai ESCAPADO: "Bola de Fogo" tem espaço, e nome de verbete com
 	// "&" quebraria a consulta inteira.
-	if got := livro.AtPage(180, "Bola de Fogo"); got != "/livro/ler?p=180&t=Bola+de+Fogo" {
+	if got := book.AtPage(180, "Bola de Fogo"); got != "/livro/ler?p=180&t=Bola+de+Fogo" {
 		t.Errorf("o termo não foi escapado: %q", got)
 	}
 	// A ABERTURA não entra no endereço: quem soma é o leitor, que fala em página
 	// impressa com quem lê e em página de arquivo com o pdf.js.
-	if got := livro.AtPage(289, ""); got != "/livro/ler?p=289" {
+	if got := book.AtPage(289, ""); got != "/livro/ler?p=289" {
 		t.Errorf("sem termo o endereço devia ser só a página, e foi %q", got)
 	}
 }

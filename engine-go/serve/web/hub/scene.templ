@@ -40,11 +40,11 @@ templ hubMenu(v hubView) {
 		@menuItem("Users2", "Meus Heróis", "/personagens", false)
 		@menuItem("Scroll", "Campanhas", "/campanhas", false)
 		@menuItem("Wand2", "Ferramentas do Mestre", "/mestre/bestiario", false)
-		if v.Viva != nil {
+		if v.Alive != nil {
 			// Só aparece com partida rolando — o "Continue" de um jogo. Mestre e
 			// jogador retomam a MESMA tela.
 			@menuItem("PlayCircle", "Continuar sessão",
-				v.Viva.Rota, true)
+				v.Alive.Route, true)
 		}
 	</nav>
 }
@@ -79,7 +79,7 @@ templ hubFooter(v hubView) {
 		<button
 			type="button"
 			popovertarget="player-menu"
-			aria-label={ "Menu de " + v.Nome }
+			aria-label={ "Menu de " + v.Name }
 			data-cue-hover
 			class="group flex flex-1 items-center gap-3 rounded-none p-1 text-left outline-none"
 		>
@@ -87,9 +87,9 @@ templ hubFooter(v hubView) {
 				aria-hidden="true"
 				class="grid size-10 place-items-center rounded-full border-2 border-grimorio-iron-light font-heading font-bold text-grimorio-gold transition-colors group-hover:border-grimorio-gold"
 			>
-				{ v.Inicial }
+				{ v.Initial }
 			</span>
-			<span class="min-w-0 flex-1 truncate font-heading tracking-wide text-foreground">{ v.Nome }</span>
+			<span class="min-w-0 flex-1 truncate font-heading tracking-wide text-foreground">{ v.Name }</span>
 			@ui.Icon("Settings", "size-4 text-muted-foreground transition-colors group-hover:text-grimorio-gold")
 		</button>
 		@playerMenu(v)

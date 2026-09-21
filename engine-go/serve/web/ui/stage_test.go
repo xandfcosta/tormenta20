@@ -39,17 +39,17 @@ func TestNoNeighborIsInventedOutsideTheRail(t *testing.T) {
 func TestTheCursorGestureDoesNotRecomputeTheDirectionTwice(t *testing.T) {
 	// A guarda tem de estar na expressão, e ela é o que torna a segunda passagem
 	// um nada. Sem `if`, rodar duas vezes é o defeito.
-	gesto := CursorGesture(3, 16)
+	gesture := CursorGesture(3, 16)
 
-	if !strings.HasPrefix(gesto, "if ($last_index != 3)") {
-		t.Fatalf("o gesto não é idempotente: %q — o focusin e o click seguidos apagariam o sentido", gesto)
+	if !strings.HasPrefix(gesture, "if ($last_index != 3)") {
+		t.Fatalf("o gesto não é idempotente: %q — o focusin e o click seguidos apagariam o sentido", gesture)
 	}
 	// E a ordem importa: o sentido é calculado ANTES de o índice ser escrito,
 	// senão ele compara o índice novo consigo mesmo.
-	sentido := strings.Index(gesto, "$direction =")
-	escrita := strings.Index(gesto, "$last_index = ")
-	if sentido < 0 || escrita < 0 || sentido > escrita {
-		t.Errorf("o índice é escrito antes de o sentido ser calculado: %q", gesto)
+	direction := strings.Index(gesture, "$direction =")
+	write := strings.Index(gesture, "$last_index = ")
+	if direction < 0 || write < 0 || direction > write {
+		t.Errorf("o índice é escrito antes de o sentido ser calculado: %q", gesture)
 	}
 }
 
@@ -61,13 +61,13 @@ func TestTheCursorGestureDoesNotRecomputeTheDirectionTwice(t *testing.T) {
 // entraria pelo lado errado — `undefined >= undefined` é `false`, então o palco
 // escolheria "atrás" e ninguém leria isso como defeito.
 func TestTheStageSignalsCoverEveryOneTheGestureWrites(t *testing.T) {
-	declarados := StageSignals(41)
-	for _, sinal := range []string{"cursor", "direction", "last_index"} {
-		if !strings.Contains(declarados, sinal+":") {
-			t.Errorf("a cena não declara $%s, que o gesto escreve: %q", sinal, declarados)
+	declared := StageSignals(41)
+	for _, signal := range []string{"cursor", "direction", "last_index"} {
+		if !strings.Contains(declared, signal+":") {
+			t.Errorf("a cena não declara $%s, que o gesto escreve: %q", signal, declared)
 		}
 	}
-	if !strings.Contains(declarados, "cursor: 41") {
-		t.Errorf("o cursor não nasce onde a cena mandou: %q", declarados)
+	if !strings.Contains(declared, "cursor: 41") {
+		t.Errorf("o cursor não nasce onde a cena mandou: %q", declared)
 	}
 }

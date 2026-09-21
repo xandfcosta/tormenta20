@@ -42,7 +42,7 @@ templ placesTab(v oneView) {
 		<p class="text-sm text-muted-foreground">
 			As cenas guardadas desta campanha. Montar abre o mapa para você preparar a cena com calma — a mesa não vê nada até você reabrir o lugar numa sessão.
 		</p>
-		if len(v.Lugares) == 0 {
+		if len(v.Places) == 0 {
 			// O VAZIO diz o que fazer, e não só que está vazio: este é o estado
 			// do primeiro dia da campanha, e uma linha "nenhum lugar" deixaria a
 			// pessoa procurando de onde eles vêm.
@@ -54,7 +54,7 @@ templ placesTab(v oneView) {
 			</div>
 		} else {
 			<ul class="space-y-1">
-				for _, l := range v.Lugares {
+				for _, l := range v.Places {
 					@placeRow(v, l)
 				}
 			</ul>
@@ -67,23 +67,23 @@ templ placesTab(v oneView) {
 templ placeRow(v oneView, l PlaceRow) {
 	<li class="flex flex-wrap items-center gap-2 border border-grimorio-iron bg-grimorio-panel px-3 py-2">
 		<span class="min-w-0 flex-1">
-			<span class="block truncate text-sm text-foreground">{ l.Nome }</span>
+			<span class="block truncate text-sm text-foreground">{ l.Name }</span>
 			<span class="block text-xs text-muted-foreground">
-				if l.NaMesaID > 0 {
+				if l.AtTableID > 0 {
 					@ui.Icon("LayoutGrid", "mr-1 inline size-3")
-					{ "nesta mesa agora · " + ui.TokenCount(l.Pecas) }
+					{ "nesta mesa agora · " + ui.TokenCount(l.Tokens) }
 				} else {
-					{ fmt.Sprintf("%s · %s", ui.TokenCount(l.Pecas), shortDate(l.Quando)) }
+					{ fmt.Sprintf("%s · %s", ui.TokenCount(l.Tokens), shortDate(l.When)) }
 				}
 			</span>
 		</span>
-		if l.NaMesaID > 0 {
+		if l.AtTableID > 0 {
 			// O QUE ESTÁ NA MESA NÃO SE MONTA NEM SE APAGA: as duas coisas seriam
 			// desfeitas pelo `Archive` quando a aba encerrasse — o rascunho some,
 			// e o lugar apagado volta. As travas de verdade são do servidor; isto
 			// é não oferecer o gesto que ele recusa.
 			<a
-				href={ templ.SafeURL(routes.Session(v.ID, l.NaMesaID)) }
+				href={ templ.SafeURL(routes.Session(v.ID, l.AtTableID)) }
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }
 			>Ver na mesa</a>
 		} else {
@@ -97,8 +97,8 @@ templ placeRow(v oneView, l PlaceRow) {
 			<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/lugares/%d/excluir", v.ID, l.ID)) }>
 				<button
 					type="submit"
-					aria-label={ "Apagar " + l.Nome }
-					title={ "Apagar " + l.Nome + " do acervo" }
+					aria-label={ "Apagar " + l.Name }
+					title={ "Apagar " + l.Name + " do acervo" }
 					class="flex size-11 items-center justify-center rounded-sm border border-transparent text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 				>
 					@ui.Icon("Trash2", "size-4")
@@ -141,7 +141,7 @@ templ newPlaceDialog(v oneView) {
 					class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 				>
 					for _, c := range v.Chaos {
-						<option value={ c.ID }>{ c.Rotulo }</option>
+						<option value={ c.ID }>{ c.Label }</option>
 					}
 				</select>
 			</div>

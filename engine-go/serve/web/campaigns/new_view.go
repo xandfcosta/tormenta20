@@ -10,10 +10,10 @@ import (
 // nome de 121 caracteres e devolver a folha VAZIA faria perder a descrição
 // inteira junto — que é o campo caro de reescrever.
 type newView struct {
-	Nome      string
-	Descricao string
-	Erros     wire.FieldErrorMap
-	// Aviso é a recusa do formulário inteiro, quando nenhum campo é dono do
+	Name        string
+	Description string
+	Erros       wire.FieldErrorMap
+	// Notice é a recusa do formulário inteiro, quando nenhum campo é dono do
 	// problema. Mesma divisão da porta.
-	Aviso string
+	Notice string
 }

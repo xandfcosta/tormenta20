@@ -233,8 +233,8 @@ func TestTheArchiveIsNotReadOutsideItsTab(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar a visão geral: %v", err)
 	}
-	if len(vision.Lugares) != 0 {
-		t.Errorf("a visão geral leu %d lugares do acervo", len(vision.Lugares))
+	if len(vision.Places) != 0 {
+		t.Errorf("a visão geral leu %d lugares do acervo", len(vision.Places))
 	}
 
 	// O CONTROLE, e ele é o denominador: na aba dos lugares a leitura ACONTECE.
@@ -244,8 +244,8 @@ func TestTheArchiveIsNotReadOutsideItsTab(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar a aba dos lugares: %v", err)
 	}
-	if len(aba.Lugares) != 1 {
-		t.Fatalf("a aba dos lugares leu %d lugares — o guarda mediu uma porta muda", len(aba.Lugares))
+	if len(aba.Places) != 1 {
+		t.Fatalf("a aba dos lugares leu %d lugares — o guarda mediu uma porta muda", len(aba.Places))
 	}
 	if len(aba.Chaos) == 0 {
 		t.Error("a aba não recebeu as aparências para o formulário do lugar novo")

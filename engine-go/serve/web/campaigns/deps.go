@@ -43,29 +43,29 @@ type Deps interface {
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
 
 	// WritePage é a montagem da casca.
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 }
 
 // PlaceRow é um lugar do acervo, na forma que esta tela desenha.
 type PlaceRow struct {
 	ID   int64
-	Nome string
-	// Pecas é a CONTAGEM, e ela separa a cena montada da cena abandonada:
+	Name string
+	// Tokens é a CONTAGEM, e ela separa a cena montada da cena abandonada:
 	// "Cripta · 9 peças" é uma noite de trabalho, "cena vazia" é lixo.
-	Pecas int
-	// Quando é a última mudança, já legível.
-	Quando string
-	// NaMesaID é a sessão que mostra este lugar agora, ou zero. Ela decide os
+	Tokens int
+	// When é a última mudança, já legível.
+	When string
+	// AtTableID é a sessão que mostra este lugar agora, ou zero. Ela decide os
 	// gestos da linha: o lugar que está numa mesa não se monta nem se apaga. As
 	// travas de verdade são do servidor; isto é a cortesia de não oferecer o
 	// gesto que ele vai recusar.
-	NaMesaID int64
+	AtTableID int64
 }
 
 // GroundOption é uma aparência de lugar, para o formulário do lugar novo.
 type GroundOption struct {
-	ID     string
-	Rotulo string
+	ID    string
+	Label string
 }
 
 // As montagens (`LoadList`, `LoadOne`, `LoadJoin`, `JoinBody`) são EXPORTADAS
@@ -86,37 +86,37 @@ type Scene struct {
 	// HTTP, que a cena descartava com `_`. O nome `membros` ficou anos esperando
 	// alguém usá-lo (ALE-348).
 	access session.Access
-	// acervo responde QUAIS campanhas esta pessoa vê, e com que papel. Ele
+	// collection responde QUAIS campanhas esta pessoa vê, e com que papel. Ele
 	// entrou no lugar de duas entradas da porta (`List` e `OwnerNames`) que o
 	// adaptador cumpria traduzindo um DTO com tag `json:` — a forma de um fio
 	// que esta tela não fala.
-	acervo campaign.Directory
-	// vida é o CICLO da campanha: abrir, renomear, cunhar convite, escolher as
+	collection campaign.Directory
+	// life é o CICLO da campanha: abrir, renomear, cunhar convite, escolher as
 	// regras opcionais. Ele AUTORIZA sozinho, e é isso que tirou da cena uma
 	// segunda trava — que discordava da primeira e barrava o administrador
 	// (ALE-348).
-	vida campaign.Lifecycle
-	// assentos senta alguém à mesa: as sete travas, a cópia do herói e o membro,
+	life campaign.Lifecycle
+	// seats senta alguém à mesa: as sete travas, a cópia do herói e o membro,
 	// numa transação. As recusas dele são SENTINELAS que esta cena lê para
 	// escolher a frase — ela podia lê-las porque o `app/` está abaixo dela, e
 	// era isso que faltava quando elas moravam no hospedeiro (ALE-348).
-	assentos campaign.Seating
-	// lugares é o acervo de cenas guardadas da campanha, e ele chega INTEIRO.
+	seats campaign.Seating
+	// places é o acervo de cenas guardadas da campanha, e ele chega INTEIRO.
 	//
 	// Eram quatro entradas da porta, e a razão escrita para elas era que "o
 	// store é o vocabulário do domínio AO VIVO, e esta cena não é ao vivo". O
 	// argumento caiu com a ALE-344: o `boards.Store` deixou de ser domínio e
 	// virou CASO DE USO, e a Mesa já o recebe assim. Quatro perguntas que só
 	// repassavam viraram uma dependência que diz o que é (ALE-348).
-	lugares *boards.Store
+	places *boards.Store
 }
 
 func New(
-	d Deps, trava session.Access, acervo campaign.Directory,
-	vida campaign.Lifecycle, assentos campaign.Seating, lugares *boards.Store,
+	d Deps, lock session.Access, collection campaign.Directory,
+	life campaign.Lifecycle, seats campaign.Seating, places *boards.Store,
 ) Scene {
 	return Scene{
-		deps: d, access: trava, acervo: acervo,
-		vida: vida, assentos: assentos, lugares: lugares,
+		deps: d, access: lock, collection: collection,
+		life: life, seats: seats, places: places,
 	}
 }

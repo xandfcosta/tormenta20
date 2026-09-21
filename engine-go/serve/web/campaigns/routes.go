@@ -48,8 +48,8 @@ func Routes(r chi.Router, s Scene) {
 }
 
 func (s Scene) handleList(w http.ResponseWriter, r *http.Request) {
-	busca, papel := filterFromRequest(r)
-	view, err := s.LoadList(r.Context(), s.deps.CurrentUserID(r), s.deps.RequesterIsAdmin(r), busca, papel)
+	search, role := filterFromRequest(r)
+	view, err := s.LoadList(r.Context(), s.deps.CurrentUserID(r), s.deps.RequesterIsAdmin(r), search, role)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -59,11 +59,11 @@ func (s Scene) handleList(w http.ResponseWriter, r *http.Request) {
 	// barra também muda — o chip de papel aceso e o texto da busca.
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := ui.RenderFragment(r.Context(), SceneBody(view))
+		fragment, err := ui.RenderFragment(r.Context(), SceneBody(view))
 		if err != nil {
 			return
 		}
-		_ = sse.PatchElements(fragmento)
+		_ = sse.PatchElements(fragment)
 		return
 	}
 
@@ -81,19 +81,19 @@ func (s Scene) handleList(w http.ResponseWriter, r *http.Request) {
 // ele os manda no `?datastar=` como JSON. Ler os dois no mesmo lugar é o que
 // deixa a tela filtrada ser um endereço que se guarda: recarregar `?busca=anao`
 // devolve exatamente o que estava.
-func filterFromRequest(r *http.Request) (busca, papel string) {
+func filterFromRequest(r *http.Request) (search, role string) {
 	q := r.URL.Query()
-	busca, papel = q.Get("busca"), q.Get("papel")
-	sinais := struct {
-		Busca string `json:"search"`
-		Papel string `json:"role"`
+	search, role = q.Get("busca"), q.Get("papel")
+	signals := struct {
+		Search string `json:"search"`
+		Role   string `json:"role"`
 	}{}
-	if err := datastar.ReadSignals(r, &sinais); err == nil {
-		if sinais.Busca != "" || sinais.Papel != "" {
-			busca, papel = sinais.Busca, sinais.Papel
+	if err := datastar.ReadSignals(r, &signals); err == nil {
+		if signals.Search != "" || signals.Role != "" {
+			search, role = signals.Search, signals.Role
 		}
 	}
-	return busca, papel
+	return search, role
 }
 
 // ── a folha em branco: abrir campanha ────────────────────────────────────────
@@ -111,27 +111,27 @@ func (s Scene) handleNew(w http.ResponseWriter, r *http.Request) {
 // navegador não trata os dois igual no histórico.
 func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		s.writeNewPage(w, r, http.StatusBadRequest, newView{Aviso: ui.NoticeInternal})
+		s.writeNewPage(w, r, http.StatusBadRequest, newView{Notice: ui.NoticeInternal})
 		return
 	}
 	v := newView{
-		Nome:      r.PostFormValue("name"),
-		Descricao: r.PostFormValue("description"),
-		Erros:     wire.FieldErrorMap{},
+		Name:        r.PostFormValue("name"),
+		Description: r.PostFormValue("description"),
+		Erros:       wire.FieldErrorMap{},
 	}
 	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campaign/rules.go`.
-	nome, descricaoTexto, erros := rules.ValidateText(v.Nome, &v.Descricao)
-	for campo, frases := range erros {
-		v.Erros[campo] = frases
+	name, descriptionText, errs := rules.ValidateText(v.Name, &v.Description)
+	for field, sentences := range errs {
+		v.Erros[field] = sentences
 	}
 	if len(v.Erros) > 0 {
 		s.writeNewPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
 
-	id, err := s.vida.Open(r.Context(), s.deps.CurrentUserID(r), nome, descricaoTexto)
+	id, err := s.life.Open(r.Context(), s.deps.CurrentUserID(r), name, descriptionText)
 	if err != nil {
-		v.Aviso = ui.NoticeInternal
+		v.Notice = ui.NoticeInternal
 		s.writeNewPage(w, r, http.StatusInternalServerError, v)
 		return
 	}
@@ -171,7 +171,7 @@ func (s Scene) handleJoin(w http.ResponseWriter, r *http.Request) {
 // português no campo certo, que é trabalho de tela e não de regra.
 func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		s.writeJoinPage(w, r, http.StatusBadRequest, joinView{Aviso: ui.NoticeInternal})
+		s.writeJoinPage(w, r, http.StatusBadRequest, joinView{Notice: ui.NoticeInternal})
 		return
 	}
 	eu := s.deps.CurrentUserID(r)
@@ -181,38 +181,38 @@ func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	v.NumeroDigitado = r.PostFormValue("campaignId")
+	v.TypedNumber = r.PostFormValue("campaignId")
 
 	// O id da campanha vem do CONVITE quando há um, e do campo quando não há.
 	// Nunca dos dois: com convite na mão, um número digitado seria uma segunda
 	// fonte para a mesma coisa, e a tela nem mostra o campo.
-	campanhaID := v.CampanhaID
-	if !v.TemConvite {
-		n, erroNum := strconv.ParseInt(strings.TrimSpace(v.NumeroDigitado), 10, 64)
-		if erroNum != nil || n <= 0 {
+	campaignID := v.CampaignID
+	if !v.HasInvite {
+		n, numErr := strconv.ParseInt(strings.TrimSpace(v.TypedNumber), 10, 64)
+		if numErr != nil || n <= 0 {
 			v.Erros["campaignId"] = []string{"Informe o número da campanha."}
 			s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 			return
 		}
-		campanhaID = n
+		campaignID = n
 	}
 
-	heroiID, erroHeroi := strconv.ParseInt(r.PostFormValue("characterId"), 10, 64)
-	if erroHeroi != nil {
+	heroID, heroErr := strconv.ParseInt(r.PostFormValue("characterId"), 10, 64)
+	if heroErr != nil {
 		v.Erros["characterId"] = []string{"Escolha o herói que entra na mesa."}
 		s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
-	v.EscolhidoID = heroiID
+	v.ChosenID = heroID
 
-	if err := s.assentos.Seat(r.Context(), s.deps.CurrentUserID(r), campanhaID, heroiID, token); err != nil {
-		v.Erros, v.Aviso = joinRefusalPhrase(err)
+	if err := s.seats.Seat(r.Context(), s.deps.CurrentUserID(r), campaignID, heroID, token); err != nil {
+		v.Erros, v.Notice = joinRefusalPhrase(err)
 		s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
 	// 303, como a folha em branco: depois de um POST, recarregar a crônica não
 	// pode reenviar o formulário.
-	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(campanhaID, 10), http.StatusSeeOther)
+	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(campaignID, 10), http.StatusSeeOther)
 }
 
 // joinRefusalPhrase traduz cada recusa de sentar à mesa na frase que a pessoa lê.
@@ -299,11 +299,11 @@ func (s Scene) handleOne(w http.ResponseWriter, r *http.Request) {
 // mesa, então quem não é dono não gera. A tela nem oferece o botão a um jogador
 // — mas isso é UX, e a fronteira é o `Access.OwnedCampaign`.
 func (s Scene) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
-	id, quem, ok := s.requesterOf(w, r)
+	id, who, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
-	if _, err := s.vida.RotateInvite(r.Context(), quem, id); err != nil {
+	if _, err := s.life.RotateInvite(r.Context(), who, id); err != nil {
 		refuse(w, err)
 		return
 	}
@@ -315,7 +315,7 @@ func (s Scene) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 // A recusa REDESENHA a aba de configuração com o que foi digitado, como a folha
 // em branco — e pela mesma razão: a descrição é o campo caro de reescrever.
 func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
-	id, quem, ok := s.requesterOf(w, r)
+	id, who, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
@@ -323,23 +323,23 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "formulário inválido", http.StatusBadRequest)
 		return
 	}
-	nomeBruto, descricaoBruta := r.PostFormValue("name"), r.PostFormValue("description")
+	rawName, rawDescription := r.PostFormValue("name"), r.PostFormValue("description")
 
 	// A MESMA regra da folha em branco e da rota JSON: três telas, uma função. E
 	// uma FRASE também — as mensagens moram no `campaign`, porque quem lê é o
 	// mestre e não o programa.
-	nome, descricaoTexto, erros := rules.ValidateText(nomeBruto, &descricaoBruta)
-	if len(erros) > 0 {
-		v, erroAoLer := s.LoadOne(r.Context(), quem.ID, quem.IsAdmin, id, "config")
-		if erroAoLer != nil {
-			http.Error(w, erroAoLer.Error(), http.StatusInternalServerError)
+	name, descriptionText, errs := rules.ValidateText(rawName, &rawDescription)
+	if len(errs) > 0 {
+		v, readErr := s.LoadOne(r.Context(), who.ID, who.IsAdmin, id, "config")
+		if readErr != nil {
+			http.Error(w, readErr.Error(), http.StatusInternalServerError)
 			return
 		}
 		// O que a pessoa digitou vence o que está no banco: ela está olhando
 		// para o próprio texto, e devolver o antigo apagaria a edição dela.
-		v.Nome, v.Descricao = nomeBruto, descricaoBruta
-		for campo, frases := range erros {
-			v.Erros[campo] = frases
+		v.Name, v.Description = rawName, rawDescription
+		for field, sentences := range errs {
+			v.Erros[field] = sentences
 		}
 		s.writeOnePage(w, r, http.StatusUnprocessableEntity, v)
 		return
@@ -349,7 +349,7 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 	// cena com o banco dentro. O hospedeiro sabe que a coluna se chama
 	// `description`, que vazio é NULL e que a linha tem um `updatedAt` a tocar;
 	// a cena sabe que o mestre renomeou a mesa.
-	if err := s.vida.Rename(r.Context(), quem, id, nome, descricaoTexto); err != nil {
+	if err := s.life.Rename(r.Context(), who, id, name, descriptionText); err != nil {
 		refuse(w, err)
 		return
 	}
@@ -358,7 +358,7 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 
 // handleDelete apaga a crônica e devolve ao livro.
 func (s Scene) handleDelete(w http.ResponseWriter, r *http.Request) {
-	id, quem, ok := s.requesterOf(w, r)
+	id, who, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
@@ -366,7 +366,7 @@ func (s Scene) handleDelete(w http.ResponseWriter, r *http.Request) {
 	// sessões tem de acontecer ANTES de a linha sumir, e essa sequência morava
 	// aqui entre dois comentários. Uma invariante que depende de quem chama
 	// lembrar dela se perde na segunda vez (ALE-359).
-	if err := s.vida.Delete(r.Context(), quem, id); err != nil {
+	if err := s.life.Delete(r.Context(), who, id); err != nil {
 		refuse(w, err)
 		return
 	}
@@ -381,7 +381,7 @@ func (s Scene) handleDelete(w http.ResponseWriter, r *http.Request) {
 // perderia a posição de quem está lendo. Excluir e salvar LEVAM embora a
 // página, então lá o formulário de verdade é o certo.
 func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
-	id, quem, ok := s.requesterOf(w, r)
+	id, who, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
@@ -394,48 +394,48 @@ func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
 	// Perguntar aqui NÃO é uma segunda opinião: é o mesmo `Access` que o caso de
 	// uso pergunta, e ele continua perguntando lá — o que muda é só o INSTANTE,
 	// porque esta rota perde o direito de responder quando o fluxo abre.
-	if _, err := s.access.OwnedCampaign(r.Context(), quem, id); err != nil {
+	if _, err := s.access.OwnedCampaign(r.Context(), who, id); err != nil {
 		refuse(w, err)
 		return
 	}
-	regra := chi.URLParam(r, "regra")
+	rule := chi.URLParam(r, "regra")
 	sse := datastar.NewSSE(w, r)
 
-	atuais := s.vida.IgnoredRules(r.Context(), id)
-	var desejadas []string
-	if slices.Contains(atuais, regra) {
+	current := s.life.IgnoredRules(r.Context(), id)
+	var desired []string
+	if slices.Contains(current, rule) {
 		// Estava DESLIGADA: religar é tirá-la do conjunto de exceções.
-		for _, x := range atuais {
-			if x != regra {
-				desejadas = append(desejadas, x)
+		for _, x := range current {
+			if x != rule {
+				desired = append(desired, x)
 			}
 		}
 	} else {
-		desejadas = append(append([]string{}, atuais...), regra)
+		desired = append(append([]string{}, current...), rule)
 	}
 	// A validação é a MESMA da rota JSON: regra que o motor não conhece é
 	// recusada mesmo vindo de um caminho de tela.
-	normalizadas, msg := rules.NormalizeIgnoredRules(desejadas)
+	normalized, msg := rules.NormalizeIgnoredRules(desired)
 	if msg != "" {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": msg})
 		return
 	}
-	if err := s.vida.SaveIgnoredRules(r.Context(), quem, id, normalizadas); err != nil {
+	if err := s.life.SaveIgnoredRules(r.Context(), who, id, normalized); err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
 	}
 
-	v, err := s.LoadOne(r.Context(), quem.ID, quem.IsAdmin, id, "config")
+	v, err := s.LoadOne(r.Context(), who.ID, who.IsAdmin, id, "config")
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
 	}
-	fragmento, err := ui.RenderFragment(r.Context(), rulesPanel(v))
+	fragment, err := ui.RenderFragment(r.Context(), rulesPanel(v))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
 	}
-	_ = sse.PatchElements(fragmento)
+	_ = sse.PatchElements(fragment)
 	_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ""})
 }
 
@@ -488,16 +488,16 @@ func refuse(w http.ResponseWriter, err error) {
 // é a identidade do lugar dentro da campanha. A tela avisa disso antes, no
 // diálogo — a surpresa seria descobrir depois de montar meia cripta.
 func (s Scene) handleNewPlace(w http.ResponseWriter, r *http.Request) {
-	id, quem, ok := s.requesterOf(w, r)
+	id, who, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
-	if _, err := s.access.OwnedCampaign(r.Context(), quem, id); err != nil {
+	if _, err := s.access.OwnedCampaign(r.Context(), who, id); err != nil {
 		refuse(w, err)
 		return
 	}
-	lugar, err := s.lugares.NewPlace(r.Context(), id, r.PostFormValue("name"), r.PostFormValue("ground"))
-	lugarID := lugar.ID
+	place, err := s.places.NewPlace(r.Context(), id, r.PostFormValue("name"), r.PostFormValue("ground"))
+	placeID := place.ID
 	if err != nil {
 		// A RECUSA volta para a aba com a frase no campo, e não numa página de
 		// erro: o que ela diz ("dê um nome ao lugar") é sobre o que a pessoa
@@ -505,7 +505,7 @@ func (s Scene) handleNewPlace(w http.ResponseWriter, r *http.Request) {
 		s.redrawPlacesWithError(w, r, id, err)
 		return
 	}
-	http.Redirect(w, r, routes.PlaceDraft(id, lugarID), http.StatusSeeOther)
+	http.Redirect(w, r, routes.PlaceDraft(id, placeID), http.StatusSeeOther)
 }
 
 // handleRemovePlace tira o lugar do acervo e VOLTA para a lista.
@@ -514,20 +514,20 @@ func (s Scene) handleNewPlace(w http.ResponseWriter, r *http.Request) {
 // limpando, e limpar é um gesto que se repete — devolver a lista é devolver a
 // pessoa ao trabalho dela.
 func (s Scene) handleRemovePlace(w http.ResponseWriter, r *http.Request) {
-	id, quem, ok := s.requesterOf(w, r)
+	id, who, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
-	if _, err := s.access.OwnedCampaign(r.Context(), quem, id); err != nil {
+	if _, err := s.access.OwnedCampaign(r.Context(), who, id); err != nil {
 		refuse(w, err)
 		return
 	}
-	lugarID, err := strconv.ParseInt(chi.URLParam(r, "placeId"), 10, 64)
+	placeID, err := strconv.ParseInt(chi.URLParam(r, "placeId"), 10, 64)
 	if err != nil {
 		http.Error(w, "id de lugar inválido", http.StatusBadRequest)
 		return
 	}
-	if err := s.lugares.RemovePlace(r.Context(), id, lugarID); err != nil {
+	if err := s.places.RemovePlace(r.Context(), id, placeID); err != nil {
 		s.redrawPlacesWithError(w, r, id, err)
 		return
 	}
@@ -539,19 +539,19 @@ func (s Scene) handleRemovePlace(w http.ResponseWriter, r *http.Request) {
 // A view é montada DE NOVO em vez de remendada porque estes dois gestos são
 // formulários de verdade — eles levam a página embora quando dão certo, e a
 // recusa tem de devolver uma página inteira.
-func (s Scene) redrawPlacesWithError(w http.ResponseWriter, r *http.Request, id int64, recusa error) {
+func (s Scene) redrawPlacesWithError(w http.ResponseWriter, r *http.Request, id int64, refusal error) {
 	v, err := s.LoadOne(r.Context(), s.deps.CurrentUserID(r), s.deps.RequesterIsAdmin(r), id, "lugares")
 	if err != nil {
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
-	v.Erros["place"] = []string{recusa.Error()}
+	v.Erros["place"] = []string{refusal.Error()}
 	s.writeOnePage(w, r, http.StatusUnprocessableEntity, v)
 }
 
 func (s Scene) writeOnePage(w http.ResponseWriter, r *http.Request, status int, v oneView) {
 	s.deps.WritePage(w, r, status, ui.Page{
-		Titulo: v.Nome,
+		Titulo: v.Name,
 		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",
 		// O rótulo nomeia o destino em vez da seta genérica: daqui se volta

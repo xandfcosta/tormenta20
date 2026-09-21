@@ -48,48 +48,48 @@ type readerView struct {
 // A página vem da URL porque este endereço é COMPARTILHÁVEL: o mestre manda
 // "olha na p289" no chat da mesa, e o link tem de abrir lá. Página fora do livro
 // cai na primeira em vez de derrubar a cena — endereço se digita à mão.
-func readerFromRequest(r *http.Request, livro bookui.BookAddress) readerView {
-	pagina, err := strconv.Atoi(r.URL.Query().Get("p"))
-	if err != nil || pagina <= 0 {
-		pagina = 1
+func readerFromRequest(r *http.Request, book bookui.BookAddress) readerView {
+	page, err := strconv.Atoi(r.URL.Query().Get("p"))
+	if err != nil || page <= 0 {
+		page = 1
 	}
-	voltar := r.Referer()
-	if voltar == "" || !strings.HasPrefix(voltar, "/") {
+	goBack := r.Referer()
+	if goBack == "" || !strings.HasPrefix(goBack, "/") {
 		// Referer de outro site (ou nenhum) não vira link de voltar: seria um
 		// endereço de terceiro na nossa barra. O Hub é o destino de quem chegou
 		// por um link colado.
-		voltar = "/"
+		goBack = "/"
 	}
 	return readerView{
-		PDF:  livro.Base,
-		Page: pagina,
+		PDF:  book.Base,
+		Page: page,
 		// `Opening` é nome NOVO e `Abertura` é o nome CHAMADO: a costura PT/EN
 		// aparece nesta linha de propósito, e o GLOSSARY diz por quê.
-		Opening:  livro.Abertura,
+		Opening:  book.Opening,
 		Term:     r.URL.Query().Get("t"),
-		Back:     voltar,
+		Back:     goBack,
 		InDialog: r.URL.Query().Get("dialogo") != "",
 	}
 }
 
 func (s Scene) handleReader(w http.ResponseWriter, r *http.Request) {
-	livro := s.deps.BookAddress()
+	book := s.deps.BookAddress()
 	// "Há livro configurado?" é respondida pelo próprio ENDEREÇO estar vazio, e
 	// não por um método a mais na porta: sem `LIVRO_PDF` o hospedeiro não monta
 	// endereço nenhum. Uma pergunta que o valor já responde não precisa de
 	// assinatura.
-	if livro.Base == "" {
+	if book.Base == "" {
 		http.NotFound(w, r)
 		return
 	}
-	v := readerFromRequest(r, livro)
+	v := readerFromRequest(r, book)
 	v.Worker = s.deps.Asset("pdf.worker.js")
-	titulo := "Livro · Tormenta 20"
+	title := "Livro · Tormenta 20"
 	if v.Term != "" {
-		titulo = v.Term + " · Livro · Tormenta 20"
+		title = v.Term + " · Livro · Tormenta 20"
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: titulo,
+		Titulo: title,
 		Forma:  ui.ShellBare,
 		Voltar: v.Back,
 		// O módulo do leitor só entra AQUI: são 540 KB de pdf.js, e mandá-los em

@@ -66,15 +66,15 @@ func JoinBody(v joinView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if v.TemConvite {
+			if v.HasInvite {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<input type=\"hidden\" name=\"token\" value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Convite)
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Invite)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 30, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 30, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 				if templ_7745c5c3_Err != nil {
@@ -91,7 +91,7 @@ func JoinBody(v joinView) templ.Component {
 			} else {
 				templ_7745c5c3_Err = ui.TextField(ui.Field{
 					Nome: "campaignId", Label: "Número da campanha", Tipo: "number",
-					Valor: v.NumeroDigitado, Obrigatorio: true,
+					Valor: v.TypedNumber, Obrigatorio: true,
 					Dica:  "O mestre da mesa envia esse número.",
 					Erros: v.Erros["campaignId"],
 				}).Render(ctx, templ_7745c5c3_Buffer)
@@ -99,7 +99,7 @@ func JoinBody(v joinView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			if len(v.Herois) == 0 {
+			if len(v.Heroes) == 0 {
 				templ_7745c5c3_Err = noHeroesToSeat().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -110,15 +110,15 @@ func JoinBody(v joinView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			if v.Aviso != "" {
+			if v.Notice != "" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"text-sm text-destructive-ink\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 string
-				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.Aviso)
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.Notice)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 46, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 46, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -155,7 +155,7 @@ func JoinBody(v joinView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(v.Herois) > 0 && (!v.TemConvite || v.ConviteVale) {
+			if len(v.Heroes) > 0 && (!v.HasInvite || v.InviteValid) {
 				templ_7745c5c3_Var7 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -254,15 +254,15 @@ func inviteLetter(v joinView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if v.ConviteVale {
+		if v.InviteValid {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<p class=\"text-sm\">Você foi convidado para <span class=\"font-semibold text-grimorio-gold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(v.NomeDaCampanha)
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(v.CampaignName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 81, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 81, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -340,8 +340,8 @@ func heroChoice(v joinView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, h := range v.Herois {
-			templ_7745c5c3_Err = heroPlate(h, h.ID == v.EscolhidoID).Render(ctx, templ_7745c5c3_Buffer)
+		for _, h := range v.Heroes {
+			templ_7745c5c3_Err = heroPlate(h, h.ID == v.ChosenID).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -443,9 +443,9 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + h.Gradiente)
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + h.Gradient)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 141, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 141, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -456,7 +456,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(h.Iniciais)
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(h.Initials)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 142, Col: 15}
 		}
@@ -469,7 +469,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var18 string
-		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(h.Nome)
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(h.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 144, Col: 68}
 		}
@@ -482,9 +482,9 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(h.Subtitulo)
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(h.Subtitle)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 145, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 145, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {

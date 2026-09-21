@@ -23,9 +23,9 @@ type Deps interface {
 	BookAddress() bookui.BookAddress
 	// Asset é o resolvedor e não os dois endereços prontos (o pdf.js e o worker
 	// dele): o que varia é só o nome do arquivo.
-	Asset(arquivo string) string
+	Asset(file string) string
 	// WritePage é a montagem da casca.
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 }
 
 // Scene é a cena montada com as dependências dela.

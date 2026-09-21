@@ -71,8 +71,8 @@ func openServedBook(cfg config.Config) servedBook {
 		path:   cfg.BookPDF,
 		digest: digest,
 		address: bookui.BookAddress{
-			Base:     routes.Book + "?v=" + digest,
-			Abertura: cfg.BookPageOffset,
+			Base:    routes.Book + "?v=" + digest,
+			Opening: cfg.BookPageOffset,
 		},
 	}
 }

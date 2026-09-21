@@ -25,14 +25,14 @@ import (
 // ilha por acidente.
 
 type listView struct {
-	Busca string
-	// Papel é "todas" | "gm" | "player". Fica na URL junto com a busca para a
+	Search string
+	// Role é "todas" | "gm" | "player". Fica na URL junto com a busca para a
 	// tela filtrada ser um endereço que se guarda e se recarrega.
-	Papel       string
-	Campanhas   []campaignCard
+	Role        string
+	Campaigns   []campaignCard
 	CursorID    int64
-	TemAlguma   bool
-	FiltrouTudo bool
+	HasAny      bool
+	FilteredAll bool
 	// Neighbors espelha `Campanhas` na ordem do trilho — ver `ui.NeighborAt`.
 	// Montado uma vez aqui em vez de dois por palco desenhado, e no tipo
 	// compartilhado porque o vizinho é a MESMA peça da cena do elenco.
@@ -41,82 +41,82 @@ type listView struct {
 
 type campaignCard struct {
 	ID       int64
-	Nome     string
-	Sinopse  string
-	Papel    string
-	Iniciais string
-	// Gradiente é a capa derivada do nome — ver `ui.NameGradient`.
-	Gradiente string
-	AoVivo    bool
-	SessaoID  int64
-	Meu       *myCharacter
+	Name     string
+	Synopsis string
+	Role     string
+	Initials string
+	// Gradient é a capa derivada do nome — ver `ui.NameGradient`.
+	Gradient  string
+	Live      bool
+	SessionID int64
+	Mine      *myCharacter
 }
 
 type myCharacter struct {
-	Nome      string
-	Classes   string
-	Iniciais  string
-	Gradiente string
+	Name     string
+	Classes  string
+	Initials string
+	Gradient string
 }
 
 // LoadList monta a cena.
-func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, busca, papel string) (listView, error) {
-	lista, err := s.acervo.Visible(ctx, app.Caller{ID: euID, IsAdmin: admin})
+func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, query, role string) (listView, error) {
+	list, err := s.collection.Visible(ctx, app.Caller{ID: euID, IsAdmin: admin})
 	if err != nil {
 		return listView{}, err
 	}
-	vivas, err := s.liveSessions(ctx, euID)
+	alive, err := s.liveSessions(ctx, euID)
 	if err != nil {
 		return listView{}, err
 	}
 
-	v := listView{Busca: busca, Papel: knownRole(papel), TemAlguma: len(lista) > 0}
-	for _, c := range lista {
-		if !passesRole(c.Role, v.Papel) {
+	v := listView{Search: query, Role: knownRole(role), HasAny: len(list) > 0}
+	for _, c := range list {
+		if !passesRole(c.Role, v.Role) {
 			continue
 		}
 		// Os campos indexados: nome e sinopse.
-		if !search.Matches([]string{c.Name, textOrEmpty(c.Description)}, busca) {
+		if !search.Matches([]string{c.Name, textOrEmpty(c.Description)}, query) {
 			continue
 		}
-		v.Campanhas = append(v.Campanhas, cardOf(c, vivas))
+		v.Campaigns = append(v.Campaigns, cardOf(c, alive))
 	}
-	v.FiltrouTudo = v.TemAlguma && len(v.Campanhas) == 0
-	if len(v.Campanhas) > 0 {
+	v.FilteredAll = v.HasAny && len(v.Campaigns) == 0
+	if len(v.Campaigns) > 0 {
 		// O cursor nasce na primeira, e é sempre uma que EXISTE na lista
 		// filtrada: um cursor apontando para campanha filtrada fora deixaria o
 		// palco vazio com o trilho cheio.
-		v.CursorID = v.Campanhas[0].ID
+		v.CursorID = v.Campaigns[0].ID
 	}
-	for i, c := range v.Campanhas {
+	for i, c := range v.Campaigns {
 		v.Neighbors = append(v.Neighbors, ui.Neighbor{
-			ID: c.ID, Name: c.Nome, Monogram: c.Iniciais, Gradient: c.Gradiente, Index: i,
+			ID: c.ID, Name: c.Name, Monogram: c.Initials, Gradient: c.Gradient, Index: i,
 		})
 	}
 	return v, nil
 }
 
-func cardOf(c campaign.Seen, vivas map[int64]int64) campaignCard {
-	cartao := campaignCard{
-		ID:        c.ID,
-		Nome:      c.Name,
-		Sinopse:   textOrEmpty(c.Description),
-		Papel:     roleLabel(c.Role, c.OwnerName),
-		Iniciais:  ui.Monogram(c.Name),
-		Gradiente: ui.NameGradient(c.Name),
+func cardOf(c campaign.Seen, alive map[int64]int64) campaignCard {
+	card := campaignCard{
+		ID:       c.ID,
+		Name:     c.Name,
+		Synopsis: textOrEmpty(c.Description),
+		Role:     roleLabel(c.Role, c.OwnerName),
+		Initials: ui.Monogram(c.Name),
+		Gradient: ui.NameGradient(c.Name),
 	}
-	if sid, ok := vivas[c.ID]; ok {
-		cartao.AoVivo, cartao.SessaoID = true, sid
+	if sid, ok := alive[c.ID]; ok {
+		card.Live, card.SessionID = true, sid
 	}
 	if c.Character != nil {
-		cartao.Meu = &myCharacter{
-			Nome:      c.Character.Name,
-			Classes:   classesInLine(c.Character),
-			Iniciais:  ui.Monogram(c.Character.Name),
-			Gradiente: ui.NameGradient(c.Character.Name),
+		card.Mine = &myCharacter{
+			Name:     c.Character.Name,
+			Classes:  classesInLine(c.Character),
+			Initials: ui.Monogram(c.Character.Name),
+			Gradient: ui.NameGradient(c.Character.Name),
 		}
 	}
-	return cartao
+	return card
 }
 
 // liveSessions responde, numa consulta só, quais campanhas têm partida rolando.
@@ -125,20 +125,20 @@ func cardOf(c campaign.Seen, vivas map[int64]int64) campaignCard {
 // que aparece quando a resposta não existe no servidor, e ela já apareceu em
 // duas telas.
 func (s Scene) liveSessions(ctx context.Context, userID int64) (map[int64]int64, error) {
-	linhas, err := s.deps.Queries().LiveSessionsForUser(ctx, userID)
+	rows, err := s.deps.Queries().LiveSessionsForUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	vivas := make(map[int64]int64, len(linhas))
-	for _, l := range linhas {
+	alive := make(map[int64]int64, len(rows))
+	for _, l := range rows {
 		// O sqlc tipa o `MIN(s.id)` de um GROUP BY como `interface{}`, porque
 		// agregação pode devolver NULL. Aqui nunca devolve — o grupo só existe
 		// se houver linha —, mas o tipo é o que é.
 		if id, ok := asInt64(l.Sessionid); ok {
-			vivas[l.Campaignid] = id
+			alive[l.Campaignid] = id
 		}
 	}
-	return vivas, nil
+	return alive, nil
 }
 
 func asInt64(v any) (int64, bool) {
@@ -156,33 +156,33 @@ func asInt64(v any) (int64, bool) {
 // classesInLine: "Arcanista 5 / Guerreiro 2". Sem classe nenhuma cai no nível,
 // que é o que sobra para dizer.
 func classesInLine(c *campaign.SeenCharacter) string {
-	partes := make([]string, 0, len(c.Classes))
+	parts := make([]string, 0, len(c.Classes))
 	for _, cl := range c.Classes {
-		partes = append(partes, cl.ClassName+" "+strconv.FormatInt(cl.Level, 10))
+		parts = append(parts, cl.ClassName+" "+strconv.FormatInt(cl.Level, 10))
 	}
-	if len(partes) == 0 {
+	if len(parts) == 0 {
 		return "Nv " + strconv.FormatInt(c.Level, 10)
 	}
-	return strings.Join(partes, " / ")
+	return strings.Join(parts, " / ")
 }
 
 // knownRole fecha o filtro nos três valores que existem: qualquer outra coisa
 // na URL vira "todas" em vez de esconder a lista inteira.
-func knownRole(papel string) string {
-	if papel == "gm" || papel == "player" {
-		return papel
+func knownRole(role string) string {
+	if role == "gm" || role == "player" {
+		return role
 	}
 	return "todas"
 }
 
-func passesRole(papelDaCampanha, filtro string) bool {
-	if filtro == "todas" {
+func passesRole(campaignRole, filter string) bool {
+	if filter == "todas" {
 		return true
 	}
-	if papelDaCampanha == "" {
-		return filtro == "player"
+	if campaignRole == "" {
+		return filter == "player"
 	}
-	return papelDaCampanha == filtro
+	return campaignRole == filter
 }
 
 func valueOrEmpty(p *string) string {

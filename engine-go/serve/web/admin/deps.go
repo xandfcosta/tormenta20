@@ -25,7 +25,7 @@ type Deps interface {
 	// o total de linhas de cada tabela.
 	Queries() *sqlcgen.Queries
 	// WritePage é a montagem da casca (ver `web/ui`).
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 	// CurrentUserID serve para não oferecer o botão de apagar na própria linha.
 	// A trava de verdade é do servidor.
 	CurrentUserID(r *http.Request) int64
@@ -62,6 +62,6 @@ type Scene struct {
 	roster accounts.Roster
 }
 
-func New(d Deps, portao accounts.Gate, redefinicoes accounts.Resets, elenco accounts.Roster) Scene {
-	return Scene{deps: d, gate: portao, resets: redefinicoes, roster: elenco}
+func New(d Deps, gate accounts.Gate, resets accounts.Resets, cast accounts.Roster) Scene {
+	return Scene{deps: d, gate: gate, resets: resets, roster: cast}
 }

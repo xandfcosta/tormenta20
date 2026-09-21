@@ -48,27 +48,27 @@ type forgeAnswers struct {
 // Devolve TODAS as recusas de uma vez, e não a primeira: quem preencheu a folha
 // inteira merece ver tudo o que falta numa passada, e não descobrir o segundo
 // erro depois de consertar o primeiro.
-func forgeRefusals(folha forgeAnswers) wire.FieldErrorMap {
-	erros := wire.FieldErrorMap{}
-	if nome := strings.TrimSpace(folha.Name); nome == "" || len([]rune(nome)) > heroNameMax {
-		erros["name"] = []string{fmt.Sprintf(
+func forgeRefusals(sheet forgeAnswers) wire.FieldErrorMap {
+	errs := wire.FieldErrorMap{}
+	if name := strings.TrimSpace(sheet.Name); name == "" || len([]rune(name)) > heroNameMax {
+		errs["name"] = []string{fmt.Sprintf(
 			"O nome é obrigatório e cabe em %d caracteres.", heroNameMax)}
 	}
-	if raceByName(folha.Race) == nil {
-		erros["race"] = []string{choiceRefusal(folha.Race, "a linhagem", "raça")}
+	if raceByName(sheet.Race) == nil {
+		errs["race"] = []string{choiceRefusal(sheet.Race, "a linhagem", "raça")}
 	}
-	if _, tem := book.Origins()[folha.Origin]; !tem {
-		erros["origin"] = []string{choiceRefusal(folha.Origin, "a origem", "origem")}
+	if _, found := book.Origins()[sheet.Origin]; !found {
+		errs["origin"] = []string{choiceRefusal(sheet.Origin, "a origem", "origem")}
 	}
-	classe := classByName(folha.Class)
-	if classe == nil {
-		erros["class"] = []string{choiceRefusal(folha.Class, "o ofício", "classe")}
-		return erros
+	class := classByName(sheet.Class)
+	if class == nil {
+		errs["class"] = []string{choiceRefusal(sheet.Class, "o ofício", "classe")}
+		return errs
 	}
 	// O equipamento só se confere DEPOIS da classe: é ela que diz quais peças o
 	// kit oferece, e conferir contra um kit inventado acusaria o campo errado.
-	gearRefusals(folha, engine.StartingKitFor(classe.Name, classe.Proficiencies), erros)
-	return erros
+	gearRefusals(sheet, engine.StartingKitFor(class.Name, class.Proficiencies), errs)
+	return errs
 }
 
 // choiceRefusal separa "não escolheu" de "escolheu o que não existe".
@@ -77,11 +77,11 @@ func forgeRefusals(folha forgeAnswers) wire.FieldErrorMap {
 // que falta, e um valor desconhecido só chega por POST feito na mão ou por
 // catálogo que mudou debaixo de uma folha aberta. Mandar `"" não é uma raça do
 // livro` para quem simplesmente ainda não escolheu é responder outra pergunta.
-func choiceRefusal(valor, oQueFalta, oQueE string) string {
-	if strings.TrimSpace(valor) == "" {
-		return "Escolha " + oQueFalta + " do herói."
+func choiceRefusal(value, missing, whatItIs string) string {
+	if strings.TrimSpace(value) == "" {
+		return "Escolha " + missing + " do herói."
 	}
-	return fmt.Sprintf("%q não é uma %s do livro.", valor, oQueE)
+	return fmt.Sprintf("%q não é uma %s do livro.", value, whatItIs)
 }
 
 // gearRefusals confere as escolhas de p140 contra o kit da classe.
@@ -90,25 +90,25 @@ func choiceRefusal(valor, oQueFalta, oQueE string) string {
 // nasceria desarmado sem ter escolhido isso; mandar o que o kit NÃO oferece
 // também é, porque é o cliente concedendo a si mesmo uma brunea que a classe
 // não sabe vestir.
-func gearRefusals(folha forgeAnswers, kit engine.StartingKit, erros wire.FieldErrorMap) {
-	if erro := weaponFitsKit(folha.SimpleWeapon, "weapon-simple", true); erro != "" {
-		erros["weaponSimple"] = []string{erro}
+func gearRefusals(sheet forgeAnswers, kit engine.StartingKit, errs wire.FieldErrorMap) {
+	if failure := weaponFitsKit(sheet.SimpleWeapon, "weapon-simple", true); failure != "" {
+		errs["weaponSimple"] = []string{failure}
 	}
-	if erro := weaponFitsKit(folha.MartialWeapon, "weapon-martial", kit.MartialWeapon); erro != "" {
-		erros["weaponMartial"] = []string{erro}
+	if failure := weaponFitsKit(sheet.MartialWeapon, "weapon-martial", kit.MartialWeapon); failure != "" {
+		errs["weaponMartial"] = []string{failure}
 	}
-	if erro := armorFitsKit(folha.Armor, kit.Armors); erro != "" {
-		erros["armor"] = []string{erro}
+	if failure := armorFitsKit(sheet.Armor, kit.Armors); failure != "" {
+		errs["armor"] = []string{failure}
 	}
-	if folha.Shield && kit.Shield == "" {
-		erros["shield"] = []string{"Esta classe não é proficiente com escudos."}
+	if sheet.Shield && kit.Shield == "" {
+		errs["shield"] = []string{"Esta classe não é proficiente com escudos."}
 	}
 }
 
 // weaponFitsKit devolve a recusa da arma, ou "" quando ela serve. `oferecida`
 // diz se o kit dá essa arma: quando não dá, o campo tem de vir vazio.
-func weaponFitsKit(id, categoria string, oferecida bool) string {
-	if !oferecida {
+func weaponFitsKit(id, category string, offered bool) string {
+	if !offered {
 		if id == "" {
 			return ""
 		}
@@ -118,7 +118,7 @@ func weaponFitsKit(id, categoria string, oferecida bool) string {
 	if item == nil {
 		return "Escolha a arma com que o herói nasce."
 	}
-	if item.Category != categoria {
+	if item.Category != category {
 		return fmt.Sprintf("%s não é uma arma da categoria que o kit oferece.", item.Name)
 	}
 	return ""
@@ -126,15 +126,15 @@ func weaponFitsKit(id, categoria string, oferecida bool) string {
 
 // armorFitsKit confere a armadura contra as que o kit oferece. Lista vazia
 // é o arcanista, que "começa sem armadura" (p140) — e aí escolher uma é recusa.
-func armorFitsKit(id string, oferecidas []string) string {
-	if len(oferecidas) == 0 {
+func armorFitsKit(id string, offered []string) string {
+	if len(offered) == 0 {
 		if id == "" {
 			return ""
 		}
 		return "Arcanistas começam sem armadura (p140)."
 	}
-	for _, oferecida := range oferecidas {
-		if id == oferecida {
+	for _, available := range offered {
+		if id == available {
 			return ""
 		}
 	}
@@ -142,21 +142,21 @@ func armorFitsKit(id string, oferecidas []string) string {
 }
 
 // raceByName acha a raça pelo nome, ou nil.
-func raceByName(nome string) *book.Race {
-	racas, _, _ := book.CharacterCatalogs()
-	for i := range racas {
-		if racas[i].Name == nome {
-			return &racas[i]
+func raceByName(name string) *book.Race {
+	races, _, _ := book.CharacterCatalogs()
+	for i := range races {
+		if races[i].Name == name {
+			return &races[i]
 		}
 	}
 	return nil
 }
 
 // classByName acha a classe pelo nome, ou nil.
-func classByName(nome string) *book.Class {
+func classByName(name string) *book.Class {
 	_, classes, _ := book.CharacterCatalogs()
 	for i := range classes {
-		if classes[i].Name == nome {
+		if classes[i].Name == name {
 			return &classes[i]
 		}
 	}
@@ -166,17 +166,17 @@ func classByName(nome string) *book.Class {
 // birthHero cria o herói da folha e devolve o id dele.
 //
 // Assume a folha JÁ conferida por `forgeRefusals` — quem chama recusa antes.
-func (s Scene) birthHero(r *http.Request, ownerID int64, folha forgeAnswers) (int64, error) {
-	raca, classe := raceByName(folha.Race), classByName(folha.Class)
-	if raca == nil || classe == nil {
-		return 0, fmt.Errorf("nascimento com folha não conferida: raça %q, classe %q", folha.Race, folha.Class)
+func (s Scene) birthHero(r *http.Request, ownerID int64, stylesheet forgeAnswers) (int64, error) {
+	race, class := raceByName(stylesheet.Race), classByName(stylesheet.Class)
+	if race == nil || class == nil {
+		return 0, fmt.Errorf("nascimento com folha não conferida: raça %q, classe %q", stylesheet.Race, stylesheet.Class)
 	}
-	corpo, err := birthBody(folha, *raca, *classe)
+	body, err := birthBody(stylesheet, *race, *class)
 	if err != nil {
 		return 0, err
 	}
-	id, err := s.births.Create(r.Context(), ownerID, corpo.Name, corpo, 1,
-		book.GrantedProficiencies([]string{classe.Name}), sheet.ToStringSet(corpo.TrainedExpertises))
+	id, err := s.births.Create(r.Context(), ownerID, body.Name, body, 1,
+		book.GrantedProficiencies([]string{class.Name}), sheet.ToStringSet(body.TrainedExpertises))
 	if err != nil {
 		return 0, err
 	}
@@ -197,21 +197,21 @@ func (s Scene) birthHero(r *http.Request, ownerID int64, folha forgeAnswers) (in
 //
 // Os seis atributos nascem em ZERO, que é o ponto de partida da compra de
 // pontos (p17): distribuí-los é a segunda cena da forja.
-func birthBody(folha forgeAnswers, raca book.Race, classe book.Class) (sheet.CreateBody, error) {
-	tibar, err := birthPurse(folha.Origin)
+func birthBody(stylesheet forgeAnswers, race book.Race, class book.Class) (sheet.CreateBody, error) {
+	tibar, err := birthPurse(stylesheet.Origin)
 	if err != nil {
 		return sheet.CreateBody{}, err
 	}
-	kit := engine.StartingKitFor(classe.Name, classe.Proficiencies)
+	kit := engine.StartingKitFor(class.Name, class.Proficiencies)
 	return sheet.CreateBody{
-		Name:              strings.TrimSpace(folha.Name),
-		Races:             []string{raca.Name},
-		Origin:            folha.Origin,
-		Classes:           []sheet.ClassEntry{{ClassName: classe.Name, Level: 1}},
+		Name:              strings.TrimSpace(stylesheet.Name),
+		Races:             []string{race.Name},
+		Origin:            stylesheet.Origin,
+		Classes:           []sheet.ClassEntry{{ClassName: class.Name, Level: 1}},
 		Tibar:             &tibar,
-		Items:             birthItems(folha, kit),
-		Size:              raca.Size,
-		Displacement:      int64(raca.Speed),
-		TrainedExpertises: classe.Expertises,
+		Items:             birthItems(stylesheet, kit),
+		Size:              race.Size,
+		Displacement:      int64(race.Speed),
+		TrainedExpertises: class.Expertises,
 	}, nil
 }

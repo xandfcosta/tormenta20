@@ -102,8 +102,8 @@ func MasterBestiarySearch(term string) string {
 // fora de uma campanha, e o pai já atende em `/campanhas/{id}`.
 //
 //	routes.Session(1, 4) // "/campanhas/1/sessoes/4"
-func Session(campanhaID, sessaoID int64) string {
-	return fmt.Sprintf("/campanhas/%d/sessoes/%d", campanhaID, sessaoID)
+func Session(campaignID, sessionID int64) string {
+	return fmt.Sprintf("/campanhas/%d/sessoes/%d", campaignID, sessionID)
 }
 
 // PlaceDraft é PARA ONDE se entra num RASCUNHO DE LUGAR: a cena que o mestre
@@ -115,8 +115,8 @@ func Session(campanhaID, sessaoID int64) string {
 // cortina.
 //
 //	routes.PlaceDraft(12, 7) // "/campanhas/12/lugares/7"
-func PlaceDraft(campanhaID, lugarID int64) string {
-	return fmt.Sprintf("/campanhas/%d/lugares/%d", campanhaID, lugarID)
+func PlaceDraft(campaignID, placeID int64) string {
+	return fmt.Sprintf("/campanhas/%d/lugares/%d", campaignID, placeID)
 }
 
 // CampaignTab é a crônica aberta numa seção: `/campanhas/12?tab=lugares`.
@@ -128,9 +128,9 @@ func PlaceDraft(campanhaID, lugarID int64) string {
 // Aba vazia devolve a crônica sem query, que é a visão geral.
 //
 //	routes.CampaignTab(12, "lugares") // "/campanhas/12?tab=lugares"
-func CampaignTab(campanhaID int64, aba string) string {
+func CampaignTab(campaignID int64, aba string) string {
 	if aba == "" {
-		return fmt.Sprintf("/campanhas/%d", campanhaID)
+		return fmt.Sprintf("/campanhas/%d", campaignID)
 	}
-	return fmt.Sprintf("/campanhas/%d?tab=%s", campanhaID, url.QueryEscape(aba))
+	return fmt.Sprintf("/campanhas/%d?tab=%s", campaignID, url.QueryEscape(aba))
 }

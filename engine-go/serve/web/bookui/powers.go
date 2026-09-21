@@ -6,9 +6,9 @@ import (
 
 // PowerID devolve o id do poder concedido pelo deus, ou vazio se ele não tem
 // verbete no acervo.
-func PowerID(nome string) string {
+func PowerID(name string) string {
 	for _, p := range book.Catalogs().Powers {
-		if p.Name == nome {
+		if p.Name == name {
 			return p.ID
 		}
 	}

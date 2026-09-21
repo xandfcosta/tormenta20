@@ -35,11 +35,11 @@ type Neighbor struct {
 // Nil NÃO significa "não desenhe": significa ESPAÇADOR. Sem a caixa vazia nas
 // pontas da lista o palco escorrega para o lado ao chegar no primeiro ou no
 // último item.
-func NeighborAt(vizinhos []Neighbor, i int) *Neighbor {
-	if i < 0 || i >= len(vizinhos) {
+func NeighborAt(neighbors []Neighbor, i int) *Neighbor {
+	if i < 0 || i >= len(neighbors) {
 		return nil
 	}
-	return &vizinhos[i]
+	return &neighbors[i]
 }
 
 // StageWash é o facho de luz no matiz do próprio item — o que faz o palco
@@ -47,9 +47,9 @@ func NeighborAt(vizinhos []Neighbor, i int) *Neighbor {
 // usa é `aria-hidden`.
 //
 // @example StageWash("A Queda de Tauron") // "radial-gradient(ellipse 60% 50% …)"
-func StageWash(nome string) string {
+func StageWash(name string) string {
 	return "radial-gradient(ellipse 60% 50% at 50% 42%, oklch(0.55 0.15 " +
-		strconv.Itoa(NameHue(nome)) + " / 0.14), transparent 70%)"
+		strconv.Itoa(NameHue(name)) + " / 0.14), transparent 70%)"
 }
 
 // A ENTRADA DO PALCO: a CLASSE é o que substitui o mount.
@@ -117,6 +117,6 @@ func StageSignals(cursorID int64) string {
 // gesto vira "escolher e abrir" quando a pessoa só queria escolher.
 //
 // @example theEnterThatOpens("/personagens/41")
-func theEnterThatOpens(destino string) string {
-	return fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = %q)", destino)
+func theEnterThatOpens(destination string) string {
+	return fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = %q)", destination)
 }

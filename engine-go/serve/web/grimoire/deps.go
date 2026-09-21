@@ -17,9 +17,9 @@ import (
 type Deps interface {
 	// Asset monta o endereço versionado de um estático: a folha carrega a ilha de
 	// JS dela (`grimorio.js`).
-	Asset(arquivo string) string
+	Asset(file string) string
 	// WritePage é a montagem da casca.
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 }
 
 // Scene é o grimório montado com as dependências dele.

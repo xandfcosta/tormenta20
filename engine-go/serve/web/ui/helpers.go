@@ -12,14 +12,14 @@ import (
 // Join cola pedaços de lista de classes ignorando os vazios, que é o `cn` da
 // SPA sem o `tailwind-merge`: aqui não há sobreposição para resolver, porque
 // quem monta a lista é o componente e não o chamador.
-func Join(partes ...string) string {
-	presentes := make([]string, 0, len(partes))
-	for _, p := range partes {
+func Join(parts ...string) string {
+	present := make([]string, 0, len(parts))
+	for _, p := range parts {
 		if p != "" {
-			presentes = append(presentes, p)
+			present = append(present, p)
 		}
 	}
-	return strings.Join(presentes, " ")
+	return strings.Join(present, " ")
 }
 
 func Int(n int) string { return strconv.Itoa(n) }
@@ -27,11 +27,11 @@ func Int(n int) string { return strconv.Itoa(n) }
 // InputType existe porque `<input>` sem `type` é `text`, mas um atributo
 // vazio no HTML não é: `type=""` faz o navegador cair no padrão por recuperação
 // de erro, e depender de recuperação de erro é depender do navegador.
-func InputType(tipo string) string {
-	if tipo == "" {
+func InputType(kind string) string {
+	if kind == "" {
 		return "text"
 	}
-	return tipo
+	return kind
 }
 
 // AriaBool escreve o "true"/"false" que um atributo ARIA exige.

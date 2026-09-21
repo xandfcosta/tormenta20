@@ -159,7 +159,7 @@ func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if !v.ConviteVale || v.NomeDaCampanha != "A Queda de Tauron" {
+	if !v.InviteValid || v.CampaignName != "A Queda de Tauron" {
 		t.Errorf("carta = %+v, queria o nome da mesa resolvido", v)
 	}
 }
@@ -174,7 +174,7 @@ func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("convite morto derrubou a carta: %v", err)
 	}
-	if v.ConviteVale {
+	if v.InviteValid {
 		t.Fatal("convite inexistente foi dado como válido")
 	}
 	html, err := ui.RenderFragment(t.Context(), campaigns.JoinBody(v))

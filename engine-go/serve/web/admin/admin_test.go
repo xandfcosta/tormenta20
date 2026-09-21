@@ -14,13 +14,13 @@ import (
 // montada à mão. Os que precisam do servidor de verdade estão no `api`.
 
 func TestExpiresIn(t *testing.T) {
-	agora := time.Date(2026, 8, 23, 12, 0, 0, 0, time.UTC)
-	em := func(d time.Duration) string { return agora.Add(d).Format(time.RFC3339) }
+	now := time.Date(2026, 8, 23, 12, 0, 0, 0, time.UTC)
+	em := func(d time.Duration) string { return now.Add(d).Format(time.RFC3339) }
 
-	casos := []struct {
-		nome  string
-		prazo string
-		quer  string
+	cases := []struct {
+		name     string
+		deadline string
+		want     string
 	}{
 		// Arredonda: sete dias menos alguns segundos ainda são 7, não 6.
 		{"quase sete dias ainda são 7", em(7*24*time.Hour - 3*time.Second), "7 dias"},
@@ -30,10 +30,10 @@ func TestExpiresIn(t *testing.T) {
 		{"menos de um dia vira horas", em(5 * time.Hour), "5 horas"},
 		{"prestes a vencer não vira 0 horas", em(time.Minute), "1 hora"},
 	}
-	for _, c := range casos {
-		t.Run(c.nome, func(t *testing.T) {
-			if got := expiryLabel(c.prazo, agora); got != c.quer {
-				t.Errorf("expiryLabel = %q, queria %q", got, c.quer)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := expiryLabel(c.deadline, now); got != c.want {
+				t.Errorf("expiryLabel = %q, queria %q", got, c.want)
 			}
 		})
 	}
@@ -56,13 +56,13 @@ func TestHoldingsAndHowTheyRead(t *testing.T) {
 // O aviso tem de dizer o preço DESTA conta: um texto genérico não distingue
 // apagar uma conta vazia de apagar a do jogador que mestra duas campanhas.
 func TestTheDeleteCostNamesThePriceOfTheAccount(t *testing.T) {
-	comCampanhas := deletionCost(2, 3)
-	if !strings.Contains(comCampanhas, "3 fichas") || !strings.Contains(comCampanhas, "2 campanhas passam") {
-		t.Errorf("custo = %q — precisa dizer o que se perde E para onde vão as campanhas", comCampanhas)
+	withCampaigns := deletionCost(2, 3)
+	if !strings.Contains(withCampaigns, "3 fichas") || !strings.Contains(withCampaigns, "2 campanhas passam") {
+		t.Errorf("custo = %q — precisa dizer o que se perde E para onde vão as campanhas", withCampaigns)
 	}
-	semCampanhas := deletionCost(0, 1)
-	if !strings.Contains(semCampanhas, "Não há campanhas para transferir") {
-		t.Errorf("sem campanhas o aviso não pode prometer transferência: %q", semCampanhas)
+	noCampaigns := deletionCost(0, 1)
+	if !strings.Contains(noCampaigns, "Não há campanhas para transferir") {
+		t.Errorf("sem campanhas o aviso não pode prometer transferência: %q", noCampaigns)
 	}
 }
 
@@ -82,12 +82,12 @@ func TestThePanelDoesNotOfferDeletingYourOwnAccount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	texto := html
+	text := html
 
-	if strings.Contains(texto, "Apagar a conta de Dono") {
+	if strings.Contains(text, "Apagar a conta de Dono") {
 		t.Error("o painel ofereceu apagar a PRÓPRIA conta — o servidor recusaria e o dono levaria um erro")
 	}
-	if !strings.Contains(texto, "Apagar a conta de Outro") {
+	if !strings.Contains(text, "Apagar a conta de Outro") {
 		t.Error("o painel deixou de oferecer apagar as outras contas")
 	}
 }
@@ -98,22 +98,22 @@ func TestThePanelDoesNotOfferDeletingYourOwnAccount(t *testing.T) {
 // comportamento no navegador.
 func TestTheRowButtonOpensTheDialogInsteadOfDeleting(t *testing.T) {
 	view := adminView{Players: []playerRow{{ID: 2, Name: "Outro", IsMe: false}}}
-	linha, err := ui.RenderFragment(t.Context(), playersPanel(view))
+	row, err := ui.RenderFragment(t.Context(), playersPanel(view))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	if strings.Contains(linha, "@post") {
+	if strings.Contains(row, "@post") {
 		t.Error("o botão da linha posta direto — o primeiro clique virou irreversível")
 	}
-	if !strings.Contains(linha, "showModal()") {
+	if !strings.Contains(row, "showModal()") {
 		t.Error("o botão da linha não abre o diálogo")
 	}
 
-	dialogo, err := ui.RenderFragment(t.Context(), confirmDialog())
+	dialog, err := ui.RenderFragment(t.Context(), confirmDialog())
 	if err != nil {
 		t.Fatalf("render do diálogo: %v", err)
 	}
-	if !strings.Contains(dialogo, "@post") {
+	if !strings.Contains(dialog, "@post") {
 		t.Error("quem apaga é o botão do diálogo, e ele não posta")
 	}
 }
@@ -134,9 +134,9 @@ func TestResettingWorksForYourOwnAccountToo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	for _, quem := range []string{"Dono", "Outro"} {
-		if !strings.Contains(html, "Redefinir a senha de "+quem) {
-			t.Errorf("o painel não oferece redefinir a senha de %q", quem)
+	for _, who := range []string{"Dono", "Outro"} {
+		if !strings.Contains(html, "Redefinir a senha de "+who) {
+			t.Errorf("o painel não oferece redefinir a senha de %q", who)
 		}
 	}
 	// E o contraste com o Apagar continua valendo, senão este teste passaria
@@ -160,22 +160,22 @@ func TestResettingWorksForYourOwnAccountToo(t *testing.T) {
 // isso no navegador; aqui se afirma que a limpeza está no marcador.
 func TestTheResetButtonOpensTheDialogAndClearsThePreviousLink(t *testing.T) {
 	view := adminView{Players: []playerRow{{ID: 2, Name: "Outro", IsMe: false}}}
-	linha, err := ui.RenderFragment(t.Context(), playersPanel(view))
+	row, err := ui.RenderFragment(t.Context(), playersPanel(view))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	if strings.Contains(linha, "@post") {
+	if strings.Contains(row, "@post") {
 		t.Error("o botão da linha posta direto — cunhar virou efeito do primeiro clique")
 	}
-	if !strings.Contains(linha, "reset-link") {
+	if !strings.Contains(row, "reset-link") {
 		t.Error("abrir não limpa o link anterior — ele apareceria sob o nome errado")
 	}
 
-	dialogo, err := ui.RenderFragment(t.Context(), resetDialog())
+	dialog, err := ui.RenderFragment(t.Context(), resetDialog())
 	if err != nil {
 		t.Fatalf("render do diálogo: %v", err)
 	}
-	if !strings.Contains(dialogo, "@post") {
+	if !strings.Contains(dialog, "@post") {
 		t.Error("quem cunha é o botão do diálogo, e ele não posta")
 	}
 }

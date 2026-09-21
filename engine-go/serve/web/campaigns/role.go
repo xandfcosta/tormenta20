@@ -14,11 +14,11 @@ package campaigns
 // Uma mesa que é de OUTRA pessoa — que só um admin chega a ver listada — diz de
 // quem ela é em vez da postura. O servidor entrega o papel `gm` ali, e escrever
 // "Mestrando" faria parecer que a mesa é de quem está lendo (ALE-120).
-func roleLabel(papel, dono string) string {
-	if dono != "" {
-		return "Mesa de " + dono
+func roleLabel(role, owner string) string {
+	if owner != "" {
+		return "Mesa de " + owner
 	}
-	if papel == "gm" {
+	if role == "gm" {
 		return "Mestrando"
 	}
 	return "Jogando"

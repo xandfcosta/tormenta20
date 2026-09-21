@@ -26,82 +26,82 @@ import (
 // pedido — não há o que espelhar no cliente.
 
 type oneView struct {
-	ID        int64
-	Nome      string
-	Descricao string
-	// EhMestre decide o que a tela OFERECE. A trava é do servidor em cada rota
+	ID          int64
+	Name        string
+	Description string
+	// IsGM decide o que a tela OFERECE. A trava é do servidor em cada rota
 	// de escrita; isto é UX.
-	EhMestre bool
-	// DonoOutro é o nome do dono quando quem olha é admin e NÃO é o dono. Vazio
+	IsGM bool
+	// OtherOwner é o nome do dono quando quem olha é admin e NÃO é o dono. Vazio
 	// para o dono e para o jogador: marcar a mesa de um jogador trocaria o
 	// "Jogando" dele por "Mesa de Fulano".
-	DonoOutro string
+	OtherOwner string
 
-	Aba     string
-	Abas    []oneTab
-	Herois  []heroAtTable
-	Sessoes []sessionRow
+	Aba      string
+	Tabs     []oneTab
+	Heroes   []heroAtTable
+	Sessions []sessionRow
 
 	// Os três sinetes da visão geral, contados aqui e não na tela: a tela que
 	// conta é a tela que discorda de si mesma quando alguém muda o filtro de um
 	// lado só.
-	TotalHerois       int
-	TotalSessoes      int
-	SessoesEncerradas int
+	TotalHeroes   int
+	TotalSessions int
+	EndedSessions int
 	// SessaoViva é a única ação de sessão que a cabeça da página oferece.
-	SessaoVivaID       int64
-	NumeroDaSessaoViva int64
-	// CriadaEm é "desde quando esta mesa existe", e ela fica na linha de meta
+	LiveSessionID     int64
+	LiveSessionNumber int64
+	// CreatedAt é "desde quando esta mesa existe", e ela fica na linha de meta
 	// porque é o que separa uma crônica de anos de uma aberta ontem.
-	CriadaEm string
+	CreatedAt string
 
-	// Lugares é o ACERVO da campanha, e ele só é carregado na aba dele.
+	// Places é o ACERVO da campanha, e ele só é carregado na aba dele.
 	//
 	// Sob demanda e não sempre: uma crônica longa tem dezenas de lugares, e a
 	// visão geral não mostra nenhum — buscá-los a cada abertura da página seria
 	// ler o acervo para desenhar três sinetes.
-	Lugares []PlaceRow
+	Places []PlaceRow
 	// Chaos são as aparências oferecidas ao lugar NOVO.
 	Chaos []GroundOption
 
-	// RegrasIgnoradas é o conjunto DESLIGADO, e não o ligado: o padrão do livro
+	// IgnoredRules é o conjunto DESLIGADO, e não o ligado: o padrão do livro
 	// é a regra valer, então guardar as exceções é guardar o que alguém
 	// decidiu — e uma regra nova nasce em vigor sem migração de dados.
-	RegrasIgnoradas []string
-	// LinkDoConvite é o CAMINHO do convite desta mesa, ou "" quando ela não tem
+	IgnoredRules []string
+	// InviteLink é o CAMINHO do convite desta mesa, ou "" quando ela não tem
 	// um. Caminho e não URL: quem prefixa a origem é o navegador — ver a razão
 	// em `ui.MintedInvite`.
-	LinkDoConvite string
+	InviteLink string
 	// Erros e Aviso servem à aba de configuração, que é a única com formulário.
-	Erros wire.FieldErrorMap
-	Aviso string
+	Erros  wire.FieldErrorMap
+	Notice string
 }
 
 type oneTab struct {
 	ID     string
-	Rotulo string
-	Ativa  bool
+	Label  string
+	Active bool
 }
 
 type heroAtTable struct {
-	Nome string
-	// EhMestre é "este personagem é do dono da mesa?".
+	Name string
+	// IsGM é "este personagem é do dono da mesa?".
 	//
 	// Booleano e não a string do papel: a tela desenha uma COROA ou não desenha
 	// nada, e um campo de texto convidaria a inventar um terceiro estado que a
 	// autorização não tem. Ela conhece dois — dono e o resto.
-	EhMestre  bool
-	Iniciais  string
-	Gradiente string
+	IsGM     bool
+	Initials string
+	Gradient string
 }
 
 type sessionRow struct {
 	ID     int64
-	Numero int64
-	Titulo string
+	Number int64
+	Title  string
 	Data   string
-	Estado string
-	Viva   bool
+	State  string
+	Alive  bool
 }
 
 // oneTabs: a de configuração só existe para quem mestra.
@@ -109,57 +109,57 @@ type sessionRow struct {
 // `?tab=config` na URL de um jogador CAI para a visão geral em vez de mostrar
 // uma seção que o trilho dele não tem. A trava de verdade é do servidor em cada
 // rota; isto evita a tela meio desenhada.
-func oneTabs(ehMestre bool, pedida string) []oneTab {
-	todas := []oneTab{
-		{ID: "visao", Rotulo: "Visão geral"},
-		{ID: "sessoes", Rotulo: "Sessões"},
-		{ID: "membros", Rotulo: "Membros"},
+func oneTabs(isGM bool, requested string) []oneTab {
+	all := []oneTab{
+		{ID: "visao", Label: "Visão geral"},
+		{ID: "sessoes", Label: "Sessões"},
+		{ID: "membros", Label: "Membros"},
 	}
-	if ehMestre {
+	if isGM {
 		// LUGARES antes de CONFIG, e a ordem é a do uso: preparar a próxima cena
 		// é trabalho de toda semana, e configurar a mesa acontece uma vez. Config
 		// fecha o trilho porque é o que se procura quando já se sabe o que
 		// procurar.
-		todas = append(todas, oneTab{ID: "lugares", Rotulo: "Lugares"})
-		todas = append(todas, oneTab{ID: "config", Rotulo: "Config"})
+		all = append(all, oneTab{ID: "lugares", Label: "Lugares"})
+		all = append(all, oneTab{ID: "config", Label: "Config"})
 	}
-	escolhida := "visao"
-	for _, a := range todas {
-		if a.ID == pedida {
-			escolhida = pedida
+	chosen := "visao"
+	for _, a := range all {
+		if a.ID == requested {
+			chosen = requested
 		}
 	}
-	for i := range todas {
-		todas[i].Ativa = todas[i].ID == escolhida
+	for i := range all {
+		all[i].Active = all[i].ID == chosen
 	}
-	return todas
+	return all
 }
 
 // RegraEmVigor: o conjunto guardado é o das DESLIGADAS.
 func (v oneView) RegraEmVigor(id string) bool {
-	return !slices.Contains(v.RegrasIgnoradas, id)
+	return !slices.Contains(v.IgnoredRules, id)
 }
 
 // optionalRule é o verbete que a tela mostra. O texto vive no servidor porque
 // ele cita a PÁGINA do livro, e página citada é dado de regra, não de layout.
 type optionalRule struct {
-	ID        string
-	Titulo    string
-	Descricao string
+	ID          string
+	Title       string
+	Description string
 }
 
 var optionalRules = []optionalRule{
 	{
-		ID:     "carga",
-		Titulo: "Limites de carga",
-		Descricao: "Passar do limite sobrecarrega: −5 de penalidade de armadura e −3m de deslocamento (p141). " +
+		ID:    "carga",
+		Title: "Limites de carga",
+		Description: "Passar do limite sobrecarrega: −5 de penalidade de armadura e −3m de deslocamento (p141). " +
 			"Os espaços continuam somados na mochila mesmo com a regra desligada.",
 	},
 }
 
 func (v oneView) AbaAtiva() string {
-	for _, a := range v.Abas {
-		if a.Ativa {
+	for _, a := range v.Tabs {
+		if a.Active {
 			return a.ID
 		}
 	}
@@ -177,44 +177,44 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	// A MESMA regra de acesso que o ciclo da sessão usa: dono é "gm", quem tem
 	// personagem na mesa é "player", e o resto não entra. Chamada DIRETO, e não
 	// por uma entrada da porta que só a repassava.
-	papel, err := s.access.RoleIn(ctx, app.Caller{ID: euID, IsAdmin: admin}, c)
+	role, err := s.access.RoleIn(ctx, app.Caller{ID: euID, IsAdmin: admin}, c)
 	if err != nil {
 		return oneView{}, err
 	}
 
 	v := oneView{
-		ID: c.ID, Nome: c.Name, Descricao: c.Description.String,
-		EhMestre:        papel == "gm",
-		CriadaEm:        shortDate(c.Createdat),
-		RegrasIgnoradas: s.vida.IgnoredRules(ctx, c.ID),
-		Erros:           wire.FieldErrorMap{},
+		ID: c.ID, Name: c.Name, Description: c.Description.String,
+		IsGM:         role == "gm",
+		CreatedAt:    shortDate(c.Createdat),
+		IgnoredRules: s.life.IgnoredRules(ctx, c.ID),
+		Erros:        wire.FieldErrorMap{},
 	}
 	// O nome do DONO só aparece numa campanha que não é de quem está olhando, o
 	// que hoje quer dizer um admin. A pergunta "sou admin?" chega por parâmetro
 	// e não pelo usuário inteiro, pela mesma razão de sempre: o tipo do usuário
 	// é do hospedeiro.
 	if admin && c.Ownerid != euID {
-		v.DonoOutro = s.acervo.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
+		v.OtherOwner = s.collection.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
 	}
-	v.Abas = oneTabs(v.EhMestre, aba)
+	v.Tabs = oneTabs(v.IsGM, aba)
 	// O LINK só é LIDO para quem mestra, e essa é a fronteira desta tela: a aba
 	// de configuração não existe para o jogador, mas "não desenhar" é UX — não
 	// carregar é a regra. Um jogador que forjasse `?tab=config` receberia a
 	// visão geral (ver `oneTabs`), e mesmo assim o link não teria sido lido.
-	if v.EhMestre {
-		if token := s.vida.InviteOf(ctx, c.ID); token != "" {
-			v.LinkDoConvite = "/campanhas/entrar?token=" + url.QueryEscape(token)
+	if v.IsGM {
+		if token := s.life.InviteOf(ctx, c.ID); token != "" {
+			v.InviteLink = "/campanhas/entrar?token=" + url.QueryEscape(token)
 		}
 	}
 	// O ACERVO é lido só na ABA dele, e pela mesma regra do link acima: não
 	// desenhar é UX, não carregar é a decisão. Uma crônica de dois anos tem
 	// dezenas de lugares, e nenhuma outra aba mostra um.
-	if v.EhMestre && v.AbaAtiva() == "lugares" {
-		v.Lugares = s.placesOf(ctx, c.ID)
+	if v.IsGM && v.AbaAtiva() == "lugares" {
+		v.Places = s.placesOf(ctx, c.ID)
 		v.Chaos = groundOptions()
 	}
 
-	membros, err := s.deps.Queries().ListMembers(ctx, id)
+	members, err := s.deps.Queries().ListMembers(ctx, id)
 	if err != nil {
 		return oneView{}, err
 	}
@@ -227,52 +227,52 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	// todo par, deixando a lista na ordem em que veio. O dono é a MESMA verdade
 	// que o `RoleIn` usa para autorizar, e é o que faz a tela e a autorização não
 	// poderem divergir.
-	ehDoMestre := func(m sqlcgen.ListMembersRow) bool { return m.Charownerid == c.Ownerid }
-	slices.SortStableFunc(membros, func(a, b sqlcgen.ListMembersRow) int {
+	isGMs := func(m sqlcgen.ListMembersRow) bool { return m.Charownerid == c.Ownerid }
+	slices.SortStableFunc(members, func(a, b sqlcgen.ListMembersRow) int {
 		switch {
-		case ehDoMestre(a) == ehDoMestre(b):
+		case isGMs(a) == isGMs(b):
 			return 0
-		case ehDoMestre(a):
+		case isGMs(a):
 			return -1
 		default:
 			return 1
 		}
 	})
-	for _, m := range membros {
-		if !ehDoMestre(m) {
-			v.TotalHerois++
+	for _, m := range members {
+		if !isGMs(m) {
+			v.TotalHeroes++
 		}
-		nome := memberName(m.Charname, m.Characterid)
-		v.Herois = append(v.Herois, heroAtTable{
-			Nome: nome, EhMestre: ehDoMestre(m),
-			Iniciais: ui.Monogram(nome), Gradiente: ui.NameGradient(nome),
+		name := memberName(m.Charname, m.Characterid)
+		v.Heroes = append(v.Heroes, heroAtTable{
+			Name: name, IsGM: isGMs(m),
+			Initials: ui.Monogram(name), Gradient: ui.NameGradient(name),
 		})
 	}
 
-	sessoes, err := s.deps.Queries().ListSessions(ctx, id)
+	sessions, err := s.deps.Queries().ListSessions(ctx, id)
 	if err != nil {
 		return oneView{}, err
 	}
-	v.TotalSessoes = len(sessoes)
+	v.TotalSessions = len(sessions)
 	// DA MAIS NOVA PARA A MAIS VELHA, e por isso o laço é de trás para a frente:
 	// o `ListSessions` ordena por número CRESCENTE, então "as recentes" são as
 	// ÚLTIMAS. Tomar as primeiras mostraria as mais antigas — o que não aparece
 	// numa mesa com três sessões, e a tela não tem como avisar que está
 	// mentindo.
-	for i := len(sessoes) - 1; i >= 0; i-- {
-		sess := sessoes[i]
+	for i := len(sessions) - 1; i >= 0; i-- {
+		sess := sessions[i]
 		if sess.Status == "ended" {
-			v.SessoesEncerradas++
+			v.EndedSessions++
 		}
-		viva := sess.Status == "active"
-		if viva {
-			v.SessaoVivaID, v.NumeroDaSessaoViva = sess.ID, sess.Sessionnumber
+		alive := sess.Status == "active"
+		if alive {
+			v.LiveSessionID, v.LiveSessionNumber = sess.ID, sess.Sessionnumber
 		}
-		v.Sessoes = append(v.Sessoes, sessionRow{
-			ID: sess.ID, Numero: sess.Sessionnumber,
-			Titulo: sess.Title.String,
-			Data:   shortDate(sess.Createdat),
-			Estado: readableState(sess.Status), Viva: viva,
+		v.Sessions = append(v.Sessions, sessionRow{
+			ID: sess.ID, Number: sess.Sessionnumber,
+			Title: sess.Title.String,
+			Data:  shortDate(sess.Createdat),
+			State: readableState(sess.Status), Alive: alive,
 		})
 	}
 	return v, nil
@@ -281,9 +281,9 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 // memberName: personagem sem nome vira "Personagem N" e não linha em branco.
 // Um membro invisível na lista é pior que um nome feio — ele some da contagem
 // que o olho faz.
-func memberName(nome string, id int64) string {
-	if nome != "" {
-		return nome
+func memberName(name string, id int64) string {
+	if name != "" {
+		return name
 	}
 	return "Personagem " + strconv.FormatInt(id, 10)
 }
@@ -317,17 +317,17 @@ func readableState(status string) string {
 // a identidade do lugar dentro da campanha — é assim que o `Archive` decide se
 // sobrescreve —, e uma cena aberta do zero com o nome de um lugar guardado É
 // aquele lugar, porque é a conta que o arquivamento fará quando ela fechar.
-func (s Scene) placesOf(ctx context.Context, campanhaID int64) []PlaceRow {
-	naMesa := s.lugares.PlacesOnATable(ctx, campanhaID)
-	guardados := s.lugares.Places(ctx, campanhaID)
-	fora := make([]PlaceRow, 0, len(guardados))
-	for _, l := range guardados {
-		fora = append(fora, PlaceRow{
-			ID: l.ID, Nome: l.Name, Pecas: l.Tokens,
-			Quando: l.UpdatedAt, NaMesaID: naMesa[l.Name],
+func (s Scene) placesOf(ctx context.Context, campaignID int64) []PlaceRow {
+	onTable := s.places.PlacesOnATable(ctx, campaignID)
+	saved := s.places.Places(ctx, campaignID)
+	outside := make([]PlaceRow, 0, len(saved))
+	for _, l := range saved {
+		outside = append(outside, PlaceRow{
+			ID: l.ID, Name: l.Name, Tokens: l.Tokens,
+			When: l.UpdatedAt, AtTableID: onTable[l.Name],
 		})
 	}
-	return fora
+	return outside
 }
 
 // groundOptions são as aparências que um lugar pode ter, na forma do
@@ -338,9 +338,9 @@ func (s Scene) placesOf(ctx context.Context, campanhaID int64) []PlaceRow {
 // para elas atravessarem a porta, e ele continua de pé — o que mudou é que a
 // cena lê o catálogo direto, que é `domain/` e está abaixo dela.
 func groundOptions() []GroundOption {
-	fora := make([]GroundOption, 0, len(board.PlaceGrounds))
+	outside := make([]GroundOption, 0, len(board.PlaceGrounds))
 	for _, c := range board.PlaceGrounds {
-		fora = append(fora, GroundOption{ID: c.ID, Rotulo: c.Label})
+		outside = append(outside, GroundOption{ID: c.ID, Label: c.Label})
 	}
-	return fora
+	return outside
 }

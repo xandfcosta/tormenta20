@@ -47,11 +47,11 @@ func handleFinder(w http.ResponseWriter, r *http.Request) {
 	// é justamente o que faria o defeito nascer no dia da mudança para POST.
 	v := searchTheBook(finderTerm(r))
 	sse := datastar.NewSSE(w, r)
-	fragmento, err := ui.RenderFragment(r.Context(), finderResults(v))
+	fragment, err := ui.RenderFragment(r.Context(), finderResults(v))
 	if err != nil {
 		return
 	}
-	_ = sse.PatchElements(fragmento)
+	_ = sse.PatchElements(fragment)
 }
 
 // finderTerm lê o que foi digitado: do SINAL quando o Datastar chama, da
@@ -61,11 +61,11 @@ func handleFinder(w http.ResponseWriter, r *http.Request) {
 // apagar a busca é gesto legítimo, e tratá-lo como ausência ressuscitaria o
 // termo anterior.
 func finderTerm(r *http.Request) string {
-	sinais := struct {
-		Buscador *string `json:"finder"`
+	signals := struct {
+		Searcher *string `json:"finder"`
 	}{}
-	if err := datastar.ReadSignals(r, &sinais); err != nil || sinais.Buscador == nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil || signals.Searcher == nil {
 		return r.URL.Query().Get("busca")
 	}
-	return *sinais.Buscador
+	return *signals.Searcher
 }

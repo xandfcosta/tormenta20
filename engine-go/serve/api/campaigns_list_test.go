@@ -69,16 +69,16 @@ func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(byName.Campanhas) != 1 || byName.Campanhas[0].Nome != "A Queda de Tauron" {
-		t.Errorf("busca por nome devolveu %d resultados", len(byName.Campanhas))
+	if len(byName.Campaigns) != 1 || byName.Campaigns[0].Name != "A Queda de Tauron" {
+		t.Errorf("busca por nome devolveu %d resultados", len(byName.Campaigns))
 	}
 
 	bySynopsis, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "tormenta", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(bySynopsis.Campanhas) != 1 || bySynopsis.Campanhas[0].Nome != "Segredos de Wynlla" {
-		t.Errorf("busca por sinopse devolveu %d resultados", len(bySynopsis.Campanhas))
+	if len(bySynopsis.Campaigns) != 1 || bySynopsis.Campaigns[0].Name != "Segredos de Wynlla" {
+		t.Errorf("busca por sinopse devolveu %d resultados", len(bySynopsis.Campaigns))
 	}
 }
 
@@ -107,8 +107,8 @@ func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if nothing.TemAlguma || nothing.FiltrouTudo {
-		t.Errorf("lista vazia: TemAlguma=%v FiltrouTudo=%v", nothing.TemAlguma, nothing.FiltrouTudo)
+	if nothing.HasAny || nothing.FilteredAll {
+		t.Errorf("lista vazia: TemAlguma=%v FiltrouTudo=%v", nothing.HasAny, nothing.FilteredAll)
 	}
 
 	f := novaCena(t)
@@ -117,8 +117,8 @@ func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if !noResult.TemAlguma || !noResult.FiltrouTudo {
-		t.Errorf("busca sem resultado: TemAlguma=%v FiltrouTudo=%v", noResult.TemAlguma, noResult.FiltrouTudo)
+	if !noResult.HasAny || !noResult.FilteredAll {
+		t.Errorf("busca sem resultado: TemAlguma=%v FiltrouTudo=%v", noResult.HasAny, noResult.FilteredAll)
 	}
 }
 
@@ -146,13 +146,13 @@ func TestALiveSessionGoesToTheRightCampaign(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	for _, c := range v.Campanhas {
+	for _, c := range v.Campaigns {
 		wantLive := c.ID == scrolling
-		if c.AoVivo != wantLive {
-			t.Errorf("%q: AoVivo=%v, queria %v", c.Nome, c.AoVivo, wantLive)
+		if c.Live != wantLive {
+			t.Errorf("%q: AoVivo=%v, queria %v", c.Name, c.Live, wantLive)
 		}
-		if c.AoVivo && c.SessaoID != liveSession {
-			t.Errorf("%q aponta para a sessão %d, queria %d", c.Nome, c.SessaoID, liveSession)
+		if c.Live && c.SessionID != liveSession {
+			t.Errorf("%q aponta para a sessão %d, queria %d", c.Name, c.SessionID, liveSession)
 		}
 	}
 }
@@ -171,8 +171,8 @@ func TestAnInvalidRoleInTheUrlDoesNotHideTheList(t *testing.T) {
 		if err != nil {
 			t.Fatalf("carregar: %v", err)
 		}
-		if v.Papel != "todas" || len(v.Campanhas) != 1 {
-			t.Errorf("papel %q virou %q com %d campanhas", role, v.Papel, len(v.Campanhas))
+		if v.Role != "todas" || len(v.Campaigns) != 1 {
+			t.Errorf("papel %q virou %q com %d campanhas", role, v.Role, len(v.Campaigns))
 		}
 	}
 }
@@ -185,16 +185,16 @@ func TestTheRoleFilterSeparatesRunningFromPlaying(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(mastering.Campanhas) != 1 {
-		t.Errorf("mestrando devolveu %d — o dono mestra a própria mesa", len(mastering.Campanhas))
+	if len(mastering.Campaigns) != 1 {
+		t.Errorf("mestrando devolveu %d — o dono mestra a própria mesa", len(mastering.Campaigns))
 	}
 
 	playing, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "", "player")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(playing.Campanhas) != 0 {
-		t.Errorf("jogando devolveu %d — o dono não JOGA na própria mesa", len(playing.Campanhas))
+	if len(playing.Campaigns) != 0 {
+		t.Errorf("jogando devolveu %d — o dono não JOGA na própria mesa", len(playing.Campaigns))
 	}
 }
 
