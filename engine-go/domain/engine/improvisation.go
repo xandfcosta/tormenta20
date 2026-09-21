@@ -21,7 +21,7 @@ import (
 // mestre quer VER o número: "saiu 4" é parte da resposta, não detalhe de
 // implementação. Sem ele a tabela vira um oráculo que não se confere.
 type Roll struct {
-	Valor int
+	Value int
 	Faces int
 }
 
@@ -40,7 +40,7 @@ func RollDie(faces int) (Roll, error) {
 	if err != nil {
 		return Roll{}, fmt.Errorf("rolar d%d: %w", faces, err)
 	}
-	return Roll{Valor: int(n.Int64()) + 1, Faces: faces}, nil
+	return Roll{Value: int(n.Int64()) + 1, Faces: faces}, nil
 }
 
 // ── as faixas ────────────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ func RollDie(faces int) (Roll, error) {
 // RollRange é uma linha que cobre um intervalo de resultados — "1-2" na
 // tabela de ruínas.
 type RollRange interface {
-	Covers(rolagem int) bool
+	Covers(scroll int) bool
 }
 
 // RowForRoll acha a linha que cobre a rolagem.
@@ -57,14 +57,14 @@ type RollRange interface {
 // tabela com buraco devolveria a linha errada ou nenhuma, e o mestre leria o
 // resultado de outra faixa como se fosse o dele. Melhor a tela dizer que a
 // tabela está incompleta.
-func RowForRoll[T RollRange](linhas []T, rolagem int, tabela string) (T, error) {
-	var vazio T
-	for _, l := range linhas {
-		if l.Covers(rolagem) {
+func RowForRoll[T RollRange](rows []T, scroll int, table string) (T, error) {
+	var empty T
+	for _, l := range rows {
+		if l.Covers(scroll) {
 			return l, nil
 		}
 	}
-	return vazio, fmt.Errorf("%s: nenhuma linha cobre a rolagem %d", tabela, rolagem)
+	return empty, fmt.Errorf("%s: nenhuma linha cobre a rolagem %d", table, scroll)
 }
 
 // ── a masmorra ───────────────────────────────────────────────────────────────
@@ -79,12 +79,12 @@ func RowForRoll[T RollRange](linhas []T, rolagem int, tabela string) (T, error) 
 // PlannedThreats arredonda PARA CIMA: sete salas com uma ameaça a cada três
 // dão três, não duas. Duas deixariam a última salinha sem nada, e a regra do
 // livro é uma cota mínima de tensão, não uma divisão exata.
-func PlannedThreats(salas, salasPorAmeaca int) (int, error) {
-	if salas <= 0 {
-		return 0, fmt.Errorf("a masmorra precisa de pelo menos 1 sala, veio %d", salas)
+func PlannedThreats(rooms, roomsByThreat int) (int, error) {
+	if rooms <= 0 {
+		return 0, fmt.Errorf("a masmorra precisa de pelo menos 1 sala, veio %d", rooms)
 	}
-	if salasPorAmeaca <= 0 {
-		return 0, fmt.Errorf("salas por ameaça precisa ser > 0, veio %d", salasPorAmeaca)
+	if roomsByThreat <= 0 {
+		return 0, fmt.Errorf("salas por ameaça precisa ser > 0, veio %d", roomsByThreat)
 	}
-	return (salas + salasPorAmeaca - 1) / salasPorAmeaca, nil
+	return (rooms + roomsByThreat - 1) / roomsByThreat, nil
 }

@@ -20,7 +20,7 @@ func TestBarbaroRdProgression(t *testing.T) {
 	tests := []struct {
 		level int
 		want  int
-		nota  string
+		note  string
 	}{
 		{1, 0, "antes do 5º não há RD"},
 		{4, 0, "o nível 4 ainda é zero — a habilidade começa no 5º"},
@@ -34,7 +34,7 @@ func TestBarbaroRdProgression(t *testing.T) {
 	}
 	for _, tt := range tests {
 		if got := barbaroRdForLevel(tt.level); got != tt.want {
-			t.Errorf("nível %d: RD = %d, want %d %s", tt.level, got, tt.want, tt.nota)
+			t.Errorf("nível %d: RD = %d, want %d %s", tt.level, got, tt.want, tt.note)
 		}
 	}
 }
@@ -44,13 +44,13 @@ func TestBarbaroRdProgression(t *testing.T) {
 // tabela acima: se o passo mudar, isto quebra mesmo que os patamares batam.
 func TestBarbaroRdStepsEveryThreeLevels(t *testing.T) {
 	for level := 5; level <= 14; level += 3 {
-		antes, depois := barbaroRdForLevel(level), barbaroRdForLevel(level+3)
-		if depois-antes != 2 {
-			t.Errorf("do nível %d ao %d a RD foi de %d para %d, want +2", level, level+3, antes, depois)
+		before, after := barbaroRdForLevel(level), barbaroRdForLevel(level+3)
+		if after-before != 2 {
+			t.Errorf("do nível %d ao %d a RD foi de %d para %d, want +2", level, level+3, before, after)
 		}
 		// E não pode subir ANTES da hora: dois níveis depois ainda é o mesmo.
-		if meio := barbaroRdForLevel(level + 2); meio != antes {
-			t.Errorf("nível %d: RD = %d, want %d — subiu antes dos três níveis", level+2, meio, antes)
+		if middle := barbaroRdForLevel(level + 2); middle != before {
+			t.Errorf("nível %d: RD = %d, want %d — subiu antes dos três níveis", level+2, middle, before)
 		}
 	}
 }
@@ -78,43 +78,43 @@ func TestEspecializacaoEmArmadura(t *testing.T) {
 		_ = catalogs
 		return characterDamageReduction(ch, e).Total
 	}
-	poder := func(class string) string {
+	power := func(class string) string {
 		return `["class.` + class + `.especializacao-em-armadura"]`
 	}
 
 	for _, class := range []string{"guerreiro", "cavaleiro"} {
-		nome := strings.ToUpper(class[:1]) + class[1:]
+		name := strings.ToUpper(class[:1]) + class[1:]
 		if class == "cavaleiro" {
-			nome = "Cavaleiro"
+			name = "Cavaleiro"
 		} else {
-			nome = "Guerreiro"
+			name = "Guerreiro"
 		}
 
-		t.Run(nome+": sem o poder escolhido não há RD, em nenhum nível", func(t *testing.T) {
+		t.Run(name+": sem o poder escolhido não há RD, em nenhum nível", func(t *testing.T) {
 			for _, level := range []int{5, 11, 12, 20} {
-				if got := rd(nome, level, `[]`, true); got != 0 {
+				if got := rd(name, level, `[]`, true); got != 0 {
 					t.Errorf("nível %d sem o poder: RD = %d, want 0", level, got)
 				}
 			}
 		})
 
-		t.Run(nome+": com o poder, só a partir do 12º nível", func(t *testing.T) {
-			if got := rd(nome, 11, poder(class), true); got != 0 {
+		t.Run(name+": com o poder, só a partir do 12º nível", func(t *testing.T) {
+			if got := rd(name, 11, power(class), true); got != 0 {
 				t.Errorf("nível 11: RD = %d, want 0 — o pré-requisito é 12º", got)
 			}
-			if got := rd(nome, 12, poder(class), true); got != 5 {
+			if got := rd(name, 12, power(class), true); got != 5 {
 				t.Errorf("nível 12: RD = %d, want 5", got)
 			}
 		})
 
-		t.Run(nome+": RD 5 é FIXA, não escala com o nível", func(t *testing.T) {
-			if got := rd(nome, 20, poder(class), true); got != 5 {
+		t.Run(name+": RD 5 é FIXA, não escala com o nível", func(t *testing.T) {
+			if got := rd(name, 20, power(class), true); got != 5 {
 				t.Errorf("nível 20: RD = %d, want 5 — voltou a escalar?", got)
 			}
 		})
 
-		t.Run(nome+": sem armadura pesada não vale", func(t *testing.T) {
-			if got := rd(nome, 20, poder(class), false); got != 0 {
+		t.Run(name+": sem armadura pesada não vale", func(t *testing.T) {
+			if got := rd(name, 20, power(class), false); got != 0 {
 				t.Errorf("sem armadura pesada: RD = %d, want 0", got)
 			}
 		})
@@ -123,7 +123,7 @@ func TestEspecializacaoEmArmadura(t *testing.T) {
 	// O poder é class-qualified: a escolha de uma classe não pode satisfazer a
 	// outra num multiclasse. Antes o casamento era por sufixo.
 	t.Run("a escolha de uma classe não vale para a outra", func(t *testing.T) {
-		if got := rd("Cavaleiro", 12, poder("guerreiro"), true); got != 0 {
+		if got := rd("Cavaleiro", 12, power("guerreiro"), true); got != 0 {
 			t.Errorf("Cavaleiro com o poder do Guerreiro: RD = %d, want 0", got)
 		}
 	})
@@ -167,11 +167,11 @@ func TestPetrificadoGrantsDamageReduction(t *testing.T) {
 	// p226: efeitos de origens diferentes acumulam. Uma estátua de bárbaro tem
 	// a RD da classe E a da condição.
 	t.Run("soma com a RD de classe, que é de outra origem", func(t *testing.T) {
-		barbaro := CharacterClass{ClassName: "Bárbaro", Level: 11} // RD 6 (p42)
-		if got := rd(nil, barbaro).Total; got != 6 {
+		barbarian := CharacterClass{ClassName: "Bárbaro", Level: 11} // RD 6 (p42)
+		if got := rd(nil, barbarian).Total; got != 6 {
 			t.Fatalf("só o Bárbaro: RD = %d, want 6", got)
 		}
-		if got := rd([]string{"petrificado"}, barbaro).Total; got != 14 {
+		if got := rd([]string{"petrificado"}, barbarian).Total; got != 14 {
 			t.Errorf("Bárbaro petrificado: RD = %d, want 14 (6 + 8)", got)
 		}
 	})
@@ -194,9 +194,9 @@ func TestPetrificadoGrantsDamageReduction(t *testing.T) {
 // Uma habilidade catalogada SEM MODIFICADOR aparece na ficha e não mexe na
 // Defesa, que é o modo silencioso de errar isto.
 func TestInsolenciaAddsCarismaCappedByClassLevel(t *testing.T) {
-	bucaneiro := func(level, carisma int, flags map[string]bool, conds string) DefenseBreakdown {
+	buccaneer := func(level, charisma int, flags map[string]bool, conds string) DefenseBreakdown {
 		ch := Character{
-			Level: level, Charisma: carisma, ActiveConditions: conds,
+			Level: level, Charisma: charisma, ActiveConditions: conds,
 			Classes: []CharacterClass{{ClassName: "Bucaneiro", Level: level}},
 		}
 		e := ItemEffects{Flags: flags}
@@ -206,23 +206,23 @@ func TestInsolenciaAddsCarismaCappedByClassLevel(t *testing.T) {
 
 	// O exemplo do próprio livro, nos dois níveis que ele cita.
 	t.Run("o exemplo da p226: nível 2 com Car 3 soma +2, nível 3 soma +3", func(t *testing.T) {
-		if got := bucaneiro(2, 3, none, "[]").Total; got != 12 {
+		if got := buccaneer(2, 3, none, "[]").Total; got != 12 {
 			t.Errorf("nível 2, Car 3: Defesa = %d, want 12 (10 + 2, limitado pelo nível)", got)
 		}
-		if got := bucaneiro(3, 3, none, "[]").Total; got != 13 {
+		if got := buccaneer(3, 3, none, "[]").Total; got != 13 {
 			t.Errorf("nível 3, Car 3: Defesa = %d, want 13 (10 + 3)", got)
 		}
 	})
 
 	// Acima do Carisma o nível deixa de importar — o teto é o MENOR dos dois.
 	t.Run("nível alto não passa do Carisma", func(t *testing.T) {
-		if got := bucaneiro(10, 3, none, "[]").Total; got != 13 {
+		if got := buccaneer(10, 3, none, "[]").Total; got != 13 {
 			t.Errorf("nível 10, Car 3: Defesa = %d, want 13 — o teto é o menor dos dois", got)
 		}
 	})
 
 	t.Run("Carisma negativo não vira bônus nem penalidade", func(t *testing.T) {
-		if got := bucaneiro(5, -2, none, "[]").Total; got != 10 {
+		if got := buccaneer(5, -2, none, "[]").Total; got != 10 {
 			t.Errorf("Car −2: Defesa = %d, want 10", got)
 		}
 	})
@@ -230,13 +230,13 @@ func TestInsolenciaAddsCarismaCappedByClassLevel(t *testing.T) {
 	// "exige liberdade de movimentos": as duas travas do livro.
 	t.Run("armadura pesada desliga", func(t *testing.T) {
 		heavy := map[string]bool{"armadura-pesada": true}
-		if got := bucaneiro(5, 3, heavy, "[]").Total; got != 10 {
+		if got := buccaneer(5, 3, heavy, "[]").Total; got != 10 {
 			t.Errorf("de armadura pesada: Defesa = %d, want 10 (sem Insolência)", got)
 		}
 	})
 
 	t.Run("a condição imóvel desliga", func(t *testing.T) {
-		if got := bucaneiro(5, 3, none, `["imovel"]`).Total; got != 10 {
+		if got := buccaneer(5, 3, none, `["imovel"]`).Total; got != 10 {
 			t.Errorf("imóvel: Defesa = %d, want 10 (sem Insolência)", got)
 		}
 	})

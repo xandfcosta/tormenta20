@@ -219,10 +219,10 @@ func classChoiceCards(dto sheet.CharacterDTO, busca string) []classChoiceCard {
 			Powers: thatChoosePowers(classe.ClassName, escolhidos, busca),
 		}
 		if opcoes := sheet.LevelPaths(classe.ClassName, classe.Level); len(opcoes) > 0 {
-			cartao.Caminho = markedPicker(opcoes, escolhas[classe.ClassName].Caminho)
+			cartao.Caminho = markedPicker(opcoes, escolhas[classe.ClassName].Path)
 		}
 		if opcoes := sheet.ClassDevotees(classe.ClassName); len(opcoes) > 0 {
-			cartao.Devoto = markedPicker(opcoes, escolhas[classe.ClassName].Devoto)
+			cartao.Devoto = markedPicker(opcoes, escolhas[classe.ClassName].Devotee)
 		}
 		cartoes = append(cartoes, cartao)
 	}

@@ -364,7 +364,7 @@ func categoryBagDa(item sheet.ItemDTO, chip string) bool {
 // não podia mais alcançar nada de `domain/sheet` sem que o compilador
 // procurasse um método na struct.
 func loadMeterOf(computed engine.ComputedSheet) loadMeter {
-	carga := computed.Carga
+	carga := computed.Load
 	return loadMeter{
 		Used:                sheet.WithComma(carga.Used),
 		Limit:               carga.Limit,

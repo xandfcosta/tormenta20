@@ -31,11 +31,11 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 	damageAll := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"})
 	forTotal := effectiveAttribute(ch, "strength", effects)
 	dexTotal := effectiveAttribute(ch, "dexterity", effects)
-	hasAcuidade := parseChoiceSet(ch.ClassPowers).has["acuidade-com-arma"]
+	hasFinesse := parseChoiceSet(ch.ClassPowers).has["acuidade-com-arma"]
 	// A carta de arma resolve Luta/Pontaria, que a penalidade de armadura nunca
 	// alcança (p153) — a carga entra por completude, para esta chamada não
 	// depender de saber quais perícias ficam de fora.
-	carga := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
+	load := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
 
 	cards := []WeaponCard{}
 	for _, it := range ch.Items {
@@ -57,7 +57,7 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 			strDamage = 0
 		} else {
 			// Finesse (Adaga / Acuidade com Arma): use Destreza when it beats Força.
-			dexAttack, dexDamage := weaponDexUse(w, hasAcuidade, forTotal, dexTotal)
+			dexAttack, dexDamage := weaponDexUse(w, hasFinesse, forTotal, dexTotal)
 			if dexAttack {
 				attribute = "dexterity"
 			}
@@ -69,7 +69,7 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 		// the resolved attribute so a finessed melee attack sums Destreza (ALE-31).
 		state := weaponSkillState(ch, skill, attribute)
 		state.Attribute = attribute
-		ex := expertiseBreakdown(ch, state, effects, carga)
+		ex := expertiseBreakdown(ch, state, effects, load)
 		cards = append(cards, WeaponCard{
 			Name:        it.Name,
 			Skill:       skill,
@@ -96,13 +96,13 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 // FOR (the rule is optional, so the sheet takes the better). Attack finesse = the
 // weapon's inherent flag (Adaga) OR the Acuidade power on a light-melee/thrown/
 // ágil weapon; damage finesse is Acuidade-only. Ranged never applies (ALE-31).
-func weaponDexUse(w *WeaponStats, hasAcuidade bool, forTotal, dexTotal int) (attack, damage bool) {
+func weaponDexUse(w *WeaponStats, hasFinesse bool, forTotal, dexTotal int) (attack, damage bool) {
 	if w.Purpose == "ranged" || dexTotal <= forTotal {
 		return false, false
 	}
-	acuidade := hasAcuidade &&
+	finesse := hasFinesse &&
 		((w.Hand == "light" && w.Purpose == "melee") || w.Purpose == "thrown" || hasTrait(w.Traits, "agil"))
-	return w.Finesse || acuidade, acuidade
+	return w.Finesse || finesse, finesse
 }
 
 func hasTrait(traits []string, t string) bool {

@@ -73,7 +73,7 @@ func parseClassChoices(raw string) map[string]ClassChoiceSelections {
 }
 
 type deformidadeStored struct {
-	pericias      []string
+	expertises    []string
 	tormentaPower string
 }
 
@@ -81,37 +81,37 @@ type deformidadeStored struct {
 // absent secondary-race entry (TS `undefined`) from a real empty choice.
 type raceAttrChoice struct {
 	floatingPicks []string
-	ascendencia   string
-	deformidade   *deformidadeStored
+	ancestry      string
+	deformity     *deformidadeStored
 	present       bool
 }
 
 // rawRaceChoice is the on-disk JSON shape shared by primary + secondary choices.
 type rawRaceChoice struct {
 	FloatingPicks []string        `json:"floatingPicks"`
-	Ascendencia   string          `json:"ascendencia"`
-	Deformidade   *rawDeformidade `json:"deformidade"`
+	Ancestry      string          `json:"ascendencia"`
+	Deformity     *rawDeformidade `json:"deformidade"`
 }
 
 type rawDeformidade struct {
-	Pericias      []string `json:"pericias"`
+	Expertises    []string `json:"pericias"`
 	TormentaPower string   `json:"tormentaPower"`
 }
 
 func (r rawRaceChoice) toChoice() raceAttrChoice {
 	return raceAttrChoice{
 		floatingPicks: r.FloatingPicks,
-		ascendencia:   r.Ascendencia,
-		deformidade:   r.Deformidade.toStored(),
+		ancestry:      r.Ancestry,
+		deformity:     r.Deformity.toStored(),
 		present:       true,
 	}
 }
 
 func (d *rawDeformidade) toStored() *deformidadeStored {
-	if d == nil || d.Pericias == nil {
+	if d == nil || d.Expertises == nil {
 		return nil
 	}
-	return &deformidadeStored{pericias: d.Pericias, tormentaPower: d.TormentaPower}
+	return &deformidadeStored{expertises: d.Expertises, tormentaPower: d.TormentaPower}
 }
 
 // parseRaceAttributeChoices: the primary race's attribute

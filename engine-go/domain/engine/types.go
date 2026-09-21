@@ -23,9 +23,9 @@ var AttributeKeys = []string{
 // a pergunta sobre a lista moram juntas de propósito: é a lição do `Fold`
 // copiado para o `book`, onde a cópia compilava, tinha o nome certo e fazia
 // outra coisa.
-func IsAttributeKey(chave string) bool {
+func IsAttributeKey(key string) bool {
 	for _, k := range AttributeKeys {
-		if k == chave {
+		if k == key {
 			return true
 		}
 	}
@@ -41,7 +41,7 @@ type CharacterInput struct {
 	ClassName          string                 `json:"className"`
 	RaceID             string                 `json:"raceId"`
 	RaceFloatingPicks  []string               `json:"raceFloatingPicks"`
-	RaceAscendencia    string                 `json:"raceAscendencia"`
+	RaceAncestry       string                 `json:"raceAscendencia"`
 	AdditionalRaces    []AdditionalRace       `json:"additionalRaces"`
 	BaseAttributes     map[string]int         `json:"baseAttributes"`
 	CurrentPv          *int                   `json:"currentPv"`
@@ -57,19 +57,19 @@ type CharacterInput struct {
 	GodPower           string                 `json:"godPower"`
 	Origin             string                 `json:"origin"`
 	OriginChoices      []string               `json:"originChoices"`
-	Deformidade        *Deformidade           `json:"deformidade"`
+	Deformity          *Deformidade           `json:"deformidade"`
 	ActiveConditions   []string               `json:"activeConditions"`
 }
 
 type AdditionalRace struct {
 	RaceID        string   `json:"raceId"`
 	FloatingPicks []string `json:"floatingPicks"`
-	Ascendencia   string   `json:"ascendencia"`
+	Ancestry      string   `json:"ascendencia"`
 }
 
 type ClassChoice struct {
-	Devoto  string `json:"devoto"`
-	Caminho string `json:"caminho"`
+	Devotee string `json:"devoto"`
+	Path    string `json:"caminho"`
 }
 
 type ClassEntry struct {
@@ -78,7 +78,7 @@ type ClassEntry struct {
 }
 
 type Deformidade struct {
-	Pericias      []string `json:"pericias"`
+	Expertises    []string `json:"pericias"`
 	TormentaPower string   `json:"tormentaPower"`
 }
 

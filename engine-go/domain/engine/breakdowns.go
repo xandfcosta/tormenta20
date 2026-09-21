@@ -81,8 +81,8 @@ type ComputedSheet struct {
 	Defense      DefenseBreakdown `json:"defense"`
 	Displacement ValueBreakdown   `json:"displacement"`
 	FlySpeed     int              `json:"flySpeed"`
-	// Carga é a p141 inteira — os espaços ocupados, o limite e a sobrecarga.
-	Carga           LoadBreakdown                 `json:"carga"`
+	// Load é a p141 inteira — os espaços ocupados, o limite e a sobrecarga.
+	Load            LoadBreakdown                 `json:"carga"`
 	Attributes      map[string]AttributeBreakdown `json:"attributes"`
 	PmLimit         ValueBreakdown                `json:"pmLimit"`
 	BestBaseSpellCd *int                          `json:"bestBaseSpellCd"`
@@ -97,10 +97,10 @@ type ComputedSheet struct {
 	AttackAll       TotalContribs `json:"attackAll"`
 	DamageAll       TotalContribs `json:"damageAll"`
 	DamageReduction RdBreakdown   `json:"damageReduction"`
-	// TempHpFuria is tempHpFromPowers with furia active — the interesting branch
+	// TempHpFury is tempHpFromPowers with furia active — the interesting branch
 	// (Alma de Bronze). The base sheet (furia off) is always {0, []}.
-	TempHpFuria TempHpBreakdown      `json:"tempHpFuria"`
-	Expertises  []ExpertiseBreakdown `json:"expertises"`
+	TempHpFury TempHpBreakdown      `json:"tempHpFuria"`
+	Expertises []ExpertiseBreakdown `json:"expertises"`
 	// Perícias em que o personagem FALHA AUTOMATICAMENTE — hoje só Reflexos, do
 	// Indefeso (p394). É o motor quem responde isso, e não a UI reinterpretando
 	// uma flag: a regra de quais condições implicam indefeso mora aqui.
@@ -111,7 +111,7 @@ type ComputedSheet struct {
 // condicionais ligados — o caminho coleta → resolução → decomposição.
 func (c *Catalogs) ComputeSheet(ch Character, activeConditionals map[string]bool) ComputedSheet {
 	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), activeConditionals)
-	carga := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
+	load := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
 
 	attrs := make(map[string]AttributeBreakdown, len(AttributeKeys))
 	for _, a := range AttributeKeys {
@@ -119,14 +119,14 @@ func (c *Catalogs) ComputeSheet(ch Character, activeConditionals map[string]bool
 	}
 	expertises := []ExpertiseBreakdown{}
 	for _, ex := range ch.Expertises {
-		expertises = append(expertises, expertiseBreakdown(ch, ex, effects, carga))
+		expertises = append(expertises, expertiseBreakdown(ch, ex, effects, load))
 	}
 
 	return ComputedSheet{
 		Defense:            defenseBreakdown(ch, effects),
-		Displacement:       displacementBreakdown(ch, effects, carga),
+		Displacement:       displacementBreakdown(ch, effects, load),
 		FlySpeed:           flySpeedTotal(effects),
-		Carga:              carga,
+		Load:               load,
 		Attributes:         attrs,
 		PmLimit:            pmLimitBreakdown(ch, effects),
 		BestBaseSpellCd:    bestBaseSpellCd(ch, effects),
@@ -136,7 +136,7 @@ func (c *Catalogs) ComputeSheet(ch Character, activeConditionals map[string]bool
 		AttackAll:          totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"}),
 		DamageAll:          totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"}),
 		DamageReduction:    characterDamageReduction(ch, effects),
-		TempHpFuria:        tempHpFromPowers(ch, effects, true),
+		TempHpFury:         tempHpFromPowers(ch, effects, true),
 		Expertises:         expertises,
 		AutoFailExpertises: autoFailExpertises(effects),
 	}
@@ -155,19 +155,19 @@ func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
 	if dexApplied {
 		base += effectiveAttribute(ch, "dexterity", e)
 	}
-	insolencia := insolenciaDefense(ch, e)
+	insolence := insolenciaDefense(ch, e)
 	melee := StatFor(e, ModifierTarget{K: "defense", Scope: "melee"})
 	ranged := StatFor(e, ModifierTarget{K: "defense", Scope: "ranged"})
-	total := base + stat.Total + insolencia
+	total := base + stat.Total + insolence
 	contribs := stat.Contributions
-	if insolencia > 0 {
+	if insolence > 0 {
 		contribs = concatContribs(contribs, []Contribution{
-			{Source: "Insolência (p47)", BonusType: "untyped", Amount: insolencia},
+			{Source: "Insolência (p47)", BonusType: "untyped", Amount: insolence},
 		})
 	}
 	return DefenseBreakdown{
 		Base:          base,
-		ItemBonus:     stat.Total + insolencia,
+		ItemBonus:     stat.Total + insolence,
 		Total:         total,
 		DexApplied:    dexApplied,
 		VsMelee:       total + melee.Total,
@@ -216,13 +216,13 @@ func hasActiveCondition(ch Character, id string) bool {
 // sobrecarga: −3m enquanto a mochila passa do limite (p141). Ela entra como
 // contribuição NOMEADA porque um deslocamento que cai sem dizer por quê é lido
 // como defeito.
-func displacementBreakdown(ch Character, e ItemEffects, carga LoadBreakdown) ValueBreakdown {
+func displacementBreakdown(ch Character, e ItemEffects, load LoadBreakdown) ValueBreakdown {
 	stat := StatFor(e, ModifierTarget{K: "displacement"})
 	contribs := withNoteContribs(stat.Contributions)
 	bonus := stat.Total
-	if carga.DisplacementPenalty != 0 {
-		bonus += carga.DisplacementPenalty
-		contribs = append(contribs, overloadContrib(carga.DisplacementPenalty))
+	if load.DisplacementPenalty != 0 {
+		bonus += load.DisplacementPenalty
+		contribs = append(contribs, overloadContrib(load.DisplacementPenalty))
 	}
 	return ValueBreakdown{
 		Base:          ch.Displacement,
@@ -254,7 +254,7 @@ var armorPenaltyExpertises = map[string]bool{"Acrobacia": true, "Furtividade": t
 // expertiseBreakdown: ½ nível + atributo + treino + modificadores de item
 // (expertise/expertiseAll/expertiseByAttribute) + penalidade de armadura, que
 // tem duas fontes: a armadura vestida e a sobrecarga.
-func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, carga LoadBreakdown) ExpertiseBreakdown {
+func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, load LoadBreakdown) ExpertiseBreakdown {
 	halfLevel := ch.Level / 2
 	attrValue := effectiveAttribute(ch, state.Attribute, e)
 	training := 0
@@ -271,7 +271,7 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, c
 
 	armorPenaltyApplied := 0
 	if armorPenaltyExpertises[state.Name] {
-		for _, row := range armorPenaltyContribs(e, carga) {
+		for _, row := range armorPenaltyContribs(e, load) {
 			armorPenaltyApplied += row.Amount
 			itemContribs = append(itemContribs, row)
 		}
@@ -298,13 +298,13 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, c
 // descreve com essas mesmas palavras — "sofre penalidade de armadura –5". São
 // linhas separadas de propósito: somadas numa só, o jogador não descobre que
 // metade dela some ao largar peso.
-func armorPenaltyContribs(e ItemEffects, carga LoadBreakdown) []BreakdownContribution {
+func armorPenaltyContribs(e ItemEffects, load LoadBreakdown) []BreakdownContribution {
 	out := []BreakdownContribution{}
 	if item := StatFor(e, ModifierTarget{K: "armorPenalty"}).Total; item != 0 {
 		out = append(out, BreakdownContribution{Source: "Penalidade de armadura", Amount: item})
 	}
-	if carga.ArmorPenalty != 0 {
-		out = append(out, overloadContrib(carga.ArmorPenalty))
+	if load.ArmorPenalty != 0 {
+		out = append(out, overloadContrib(load.ArmorPenalty))
 	}
 	return out
 }

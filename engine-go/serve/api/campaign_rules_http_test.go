@@ -77,7 +77,7 @@ func (f rulesFixture) cargaIgnorada(t *testing.T) bool {
 	if err != nil {
 		t.Fatalf("carregar ficha: %v", err)
 	}
-	return dto.IgnoredRules.Carga
+	return dto.IgnoredRules.Load
 }
 
 func TestReplaceCampaignRules(t *testing.T) {

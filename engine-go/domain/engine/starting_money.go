@@ -78,17 +78,17 @@ func RollStartingMoney() (int, error) {
 // "Itens" de algumas origens concede dinheiro em vez de item — "T$ 2d6 (último
 // salário)", do Artesão —, e ele sai do mesmo catálogo, escrito do mesmo jeito.
 func RollDiceNotation(notation string) (int, error) {
-	quantidade, faces, err := parseDiceNotation(notation)
+	amount, faces, err := parseDiceNotation(notation)
 	if err != nil {
 		return 0, err
 	}
 	total := 0
-	for i := 0; i < quantidade; i++ {
-		rolagem, err := RollDie(faces)
+	for i := 0; i < amount; i++ {
+		scroll, err := RollDie(faces)
 		if err != nil {
 			return 0, fmt.Errorf("rolar %s: %w", notation, err)
 		}
-		total += rolagem.Valor
+		total += scroll.Value
 	}
 	return total, nil
 }
@@ -96,15 +96,15 @@ func RollDiceNotation(notation string) (int, error) {
 // diceNotation é "4d6": quantos dados e de quantas faces.
 var diceNotation = regexp.MustCompile(`^(\d+)d(\d+)$`)
 
-func parseDiceNotation(notation string) (quantidade, faces int, err error) {
-	partes := diceNotation.FindStringSubmatch(notation)
-	if partes == nil {
+func parseDiceNotation(notation string) (amount, faces int, err error) {
+	parts := diceNotation.FindStringSubmatch(notation)
+	if parts == nil {
 		return 0, 0, fmt.Errorf("notação de dado inválida: %q, esperado algo como %q", notation, StartingMoneyDice)
 	}
-	quantidade, _ = strconv.Atoi(partes[1])
-	faces, _ = strconv.Atoi(partes[2])
-	if quantidade < 1 || quantidade > maxDiceRolled {
-		return 0, 0, fmt.Errorf("notação de dado com %d dados, esperado de 1 a %d", quantidade, maxDiceRolled)
+	amount, _ = strconv.Atoi(parts[1])
+	faces, _ = strconv.Atoi(parts[2])
+	if amount < 1 || amount > maxDiceRolled {
+		return 0, 0, fmt.Errorf("notação de dado com %d dados, esperado de 1 a %d", amount, maxDiceRolled)
 	}
-	return quantidade, faces, nil
+	return amount, faces, nil
 }

@@ -27,7 +27,7 @@ func classes(pairs ...any) []ClassEntry {
 
 func TestPvPoolSingleClass(t *testing.T) {
 	tests := []struct {
-		nome  string
+		name  string
 		class string
 		level int
 		con   int
@@ -44,7 +44,7 @@ func TestPvPoolSingleClass(t *testing.T) {
 		{"Guerreiro L5 CON 2 = 20+2 + 4×(5+2)", "Guerreiro", 5, 2, 50},
 	}
 	for _, tt := range tests {
-		t.Run(tt.nome, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			got := multiclassPvPool(classes(tt.class, tt.level), tt.con)
 			if got != tt.want {
 				t.Errorf("PV = %d, want %d", got, tt.want)
@@ -95,14 +95,14 @@ func TestPvPoolMulticlassSeedsOnlyOnTheFirstClass(t *testing.T) {
 	// as mesmas duas classes, nos mesmos níveis, dão totais diferentes conforme
 	// a ordem. Um teste com uma ordem só passaria com a regra errada.
 	t.Run("a ordem importa: Guerreiro→Arcanista dá 50, Arcanista→Guerreiro dá 41", func(t *testing.T) {
-		guerreiroPrimeiro := multiclassPvPool(classes("Guerreiro", 5, "Arcanista", 5), 0)
-		arcanistaPrimeiro := multiclassPvPool(classes("Arcanista", 5, "Guerreiro", 5), 0)
+		warriorFirst := multiclassPvPool(classes("Guerreiro", 5, "Arcanista", 5), 0)
+		arcanistFirst := multiclassPvPool(classes("Arcanista", 5, "Guerreiro", 5), 0)
 
-		if guerreiroPrimeiro != 50 {
-			t.Errorf("Guerreiro 5 / Arcanista 5 = %d, want 50 (20 + 4×5 + 5×2)", guerreiroPrimeiro)
+		if warriorFirst != 50 {
+			t.Errorf("Guerreiro 5 / Arcanista 5 = %d, want 50 (20 + 4×5 + 5×2)", warriorFirst)
 		}
-		if arcanistaPrimeiro != 41 {
-			t.Errorf("Arcanista 5 / Guerreiro 5 = %d, want 41 (8 + 4×2 + 5×5)", arcanistaPrimeiro)
+		if arcanistFirst != 41 {
+			t.Errorf("Arcanista 5 / Guerreiro 5 = %d, want 41 (8 + 4×2 + 5×5)", arcanistFirst)
 		}
 	})
 

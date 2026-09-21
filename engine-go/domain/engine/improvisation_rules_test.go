@@ -9,7 +9,7 @@ import "testing"
 // entre 1 e 6", e um que devolvesse 0 ou 7 quebraria a tabela em silêncio.
 func TestTheDieCoversEveryFaceAndNoneBeyondThem(t *testing.T) {
 	for _, faces := range []int{6, 20} {
-		vistas := map[int]int{}
+		seen := map[int]int{}
 		// 40× as faces dá margem folgada: a chance de uma face não sair em 240
 		// rolagens de d6 é de ordem 10^-19.
 		for i := 0; i < faces*40; i++ {
@@ -17,16 +17,16 @@ func TestTheDieCoversEveryFaceAndNoneBeyondThem(t *testing.T) {
 			if err != nil {
 				t.Fatalf("d%d: %v", faces, err)
 			}
-			if d.Valor < 1 || d.Valor > faces {
-				t.Fatalf("d%d saiu %d — fora da faixa", faces, d.Valor)
+			if d.Value < 1 || d.Value > faces {
+				t.Fatalf("d%d saiu %d — fora da faixa", faces, d.Value)
 			}
 			if d.Faces != faces {
 				t.Errorf("d%d disse ter %d faces", faces, d.Faces)
 			}
-			vistas[d.Valor]++
+			seen[d.Value]++
 		}
 		for f := 1; f <= faces; f++ {
-			if vistas[f] == 0 {
+			if seen[f] == 0 {
 				t.Errorf("d%d: a face %d nunca saiu em %d rolagens", faces, f, faces*40)
 			}
 		}
@@ -49,14 +49,14 @@ func TestADieWithoutFacesIsRefused(t *testing.T) {
 // três dão TRÊS, não duas. Duas deixariam a última salinha sem nada, e a regra
 // do livro é cota mínima de tensão, não divisão exata.
 func TestOneThreatEveryThreeRooms(t *testing.T) {
-	casos := map[int]int{1: 1, 3: 1, 4: 2, 6: 2, 7: 3, 9: 3, 10: 4, 50: 17}
-	for salas, quero := range casos {
-		got, err := PlannedThreats(salas, 3)
+	cases := map[int]int{1: 1, 3: 1, 4: 2, 6: 2, 7: 3, 9: 3, 10: 4, 50: 17}
+	for rooms, want := range cases {
+		got, err := PlannedThreats(rooms, 3)
 		if err != nil {
-			t.Fatalf("%d salas: %v", salas, err)
+			t.Fatalf("%d salas: %v", rooms, err)
 		}
-		if got != quero {
-			t.Errorf("%d salas deram %d ameaças, quero %d", salas, got, quero)
+		if got != want {
+			t.Errorf("%d salas deram %d ameaças, quero %d", rooms, got, want)
 		}
 	}
 }
@@ -74,11 +74,11 @@ func TestADungeonWithoutRoomsIsRefused(t *testing.T) {
 // Tabela com buraco devolveria a linha errada ou nenhuma, e o mestre leria o
 // resultado de outra faixa como se fosse o dele.
 func TestAnUncoveredRollIsAnError(t *testing.T) {
-	linhas := []faixaDeTeste{{1, 2}, {5, 6}}
-	if _, err := RowForRoll(linhas, 1, "teste"); err != nil {
+	rows := []faixaDeTeste{{1, 2}, {5, 6}}
+	if _, err := RowForRoll(rows, 1, "teste"); err != nil {
 		t.Errorf("a face 1 está coberta e deu erro: %v", err)
 	}
-	_, err := RowForRoll(linhas, 3, "teste")
+	_, err := RowForRoll(rows, 3, "teste")
 	if err == nil {
 		t.Fatal("a face 3 não está coberta e passou")
 	}

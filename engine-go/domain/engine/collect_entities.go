@@ -36,7 +36,7 @@ func (c *Catalogs) raceActiveItems(ch Character) []ActiveItem {
 				mods = append(mods, m)
 			}
 		}
-		mods = append(mods, c.deformidadeModifiers(entry.Race, choice.deformidade)...)
+		mods = append(mods, c.deformidadeModifiers(entry.Race, choice.deformity)...)
 		if len(mods) == 0 {
 			continue
 		}
@@ -53,11 +53,11 @@ func (c *Catalogs) raceActiveItems(ch Character) []ActiveItem {
 // floating/ascendência choices) as `attribute` modifiers. Empty on incomplete
 // choices, sem lançar: dado ruim vira escolha vazia.
 func (c *Catalogs) raceAttributeMods(raceName string, choice raceAttrChoice) []Modifier {
-	raca := c.raceEntryByName(raceName)
-	if raca == nil {
+	race := c.raceEntryByName(raceName)
+	if race == nil {
 		return []Modifier{}
 	}
-	deltas, err := resolveAttributeDeltas(raca, choice.floatingPicks, choice.ascendencia)
+	deltas, err := resolveAttributeDeltas(race, choice.floatingPicks, choice.ancestry)
 	if err != nil {
 		return []Modifier{}
 	}
@@ -70,7 +70,7 @@ func (c *Catalogs) raceAttributeMods(raceName string, choice raceAttrChoice) []M
 			Target:    ModifierTarget{K: "attribute", Name: d.attr},
 			Amount:    d.amount,
 			BonusType: "untyped",
-			Note:      raca.Name,
+			Note:      race.Name,
 		})
 	}
 	return out
@@ -83,7 +83,7 @@ func (c *Catalogs) deformidadeModifiers(raceName string, draft *deformidadeStore
 		return []Modifier{}
 	}
 	out := []Modifier{}
-	for _, n := range draft.pericias {
+	for _, n := range draft.expertises {
 		if !expertiseNamesSet[n] {
 			continue
 		}
@@ -103,13 +103,13 @@ func (c *Catalogs) deformidadeHeldPower(ch Character) string {
 	if len(ch.Races) > 0 {
 		primaryRace := ch.Races[0].Race
 		primary := parseRaceAttributeChoices(ch.RaceAttributeChoices)
-		if c.raceWithDeformidade(primaryRace) != "" && heldTormenta(primary.deformidade) != "" {
-			return heldTormenta(primary.deformidade)
+		if c.raceWithDeformidade(primaryRace) != "" && heldTormenta(primary.deformity) != "" {
+			return heldTormenta(primary.deformity)
 		}
 	}
 	for race, choice := range parseSecondaryRaceChoices(ch.SecondaryRaceChoices) {
-		if c.raceWithDeformidade(race) != "" && heldTormenta(choice.deformidade) != "" {
-			return heldTormenta(choice.deformidade)
+		if c.raceWithDeformidade(race) != "" && heldTormenta(choice.deformity) != "" {
+			return heldTormenta(choice.deformity)
 		}
 	}
 	return ""

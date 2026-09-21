@@ -20,25 +20,25 @@ import (
 // deixar de chegar) ao deslocamento e às perícias.
 func TestLoadTurnedOffPenalizesNeitherDisplacementNorExpertises(t *testing.T) {
 	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity")))
-	pericias := []CharacterExpertise{{Name: "Furtividade", Attribute: "dexterity"}}
+	expertises := []CharacterExpertise{{Name: "Furtividade", Attribute: "dexterity"}}
 	// Força 0 ⇒ limite 10; onze espaços ultrapassam com folga.
-	sobrecarregado := func(ignorada bool) ComputedSheet {
+	overloaded := func(ignored bool) ComputedSheet {
 		ch := Character{
-			Level: 1, Displacement: 9, Expertises: pericias,
+			Level: 1, Displacement: 9, Expertises: expertises,
 			Items:        []CharacterItem{{Name: "Barril", Quantity: 1, Slots: 11}},
-			IgnoredRules: IgnoredRules{Carga: ignorada},
+			IgnoredRules: IgnoredRules{Load: ignored},
 		}
 		return catalogs.ComputeSheet(ch, map[string]bool{})
 	}
 
-	comRegra, semRegra := sobrecarregado(false), sobrecarregado(true)
-	if comRegra.Displacement.Total != 6 {
-		t.Fatalf("com a regra ligada o deslocamento é %d, want 6 — o controle já estava errado", comRegra.Displacement.Total)
+	withRule, noRule := overloaded(false), overloaded(true)
+	if withRule.Displacement.Total != 6 {
+		t.Fatalf("com a regra ligada o deslocamento é %d, want 6 — o controle já estava errado", withRule.Displacement.Total)
 	}
-	if semRegra.Displacement.Total != 9 {
-		t.Errorf("mesa sem a regra de carga: deslocamento %d, want 9 (a penalidade não existe)", semRegra.Displacement.Total)
+	if noRule.Displacement.Total != 9 {
+		t.Errorf("mesa sem a regra de carga: deslocamento %d, want 9 (a penalidade não existe)", noRule.Displacement.Total)
 	}
-	if got := periciaTotal(t, semRegra, "Furtividade") - periciaTotal(t, comRegra, "Furtividade"); got != 5 {
+	if got := periciaTotal(t, noRule, "Furtividade") - periciaTotal(t, withRule, "Furtividade"); got != 5 {
 		t.Errorf("mesa sem a regra: Furtividade %+d contra a mesa com a regra, want +5 (os −5 da p141 não são aplicados)", got)
 	}
 }
@@ -50,7 +50,7 @@ func TestLoadTurnedOffStillCountsTheSlots(t *testing.T) {
 	ch := Character{
 		Tibar:        2000,
 		Items:        []CharacterItem{{Name: "Barril", Quantity: 1, Slots: 11}},
-		IgnoredRules: IgnoredRules{Carga: true},
+		IgnoredRules: IgnoredRules{Load: true},
 	}
 	got := loadBreakdownOf(ch, 10)
 
@@ -95,7 +95,7 @@ func TestZeroMeansEveryRuleInForce(t *testing.T) {
 func TestAnUnknownRuleOnReadTurnsNothingOff(t *testing.T) {
 	got := IgnoredRulesFrom([]string{"carga", "custo-de-vida-do-futuro"})
 
-	if !got.Carga {
+	if !got.Load {
 		t.Error("a regra conhecida não foi lida por causa da desconhecida ao lado")
 	}
 	if IgnoredRulesFrom([]string{"custo-de-vida-do-futuro"}) != (IgnoredRules{}) {

@@ -11,11 +11,11 @@ import (
 // transcrição de tabela: é o comportamento nas bordas, que é o que quebra.
 
 func TestThePartyChallengeLevelFollowsTheBook(t *testing.T) {
-	casos := []struct {
-		nome  string
-		nd    float64
-		qtd   int
-		quero float64
+	cases := []struct {
+		name string
+		nd   float64
+		qtd  int
+		want float64
 	}{
 		// Abaixo de ND 1 a regra é MULTIPLICAR, e os dois exemplos do texto:
 		{"quatro de ND 1/4 dão ND 1", 0.25, 4, 1},
@@ -33,9 +33,9 @@ func TestThePartyChallengeLevelFollowsTheBook(t *testing.T) {
 		{"zero criaturas", 3, 0, 0},
 		{"quantidade negativa", 3, -2, 0},
 	}
-	for _, c := range casos {
-		if got := PartyChallengeLevel(c.nd, c.qtd); math.Abs(got-c.quero) > 1e-9 {
-			t.Errorf("%s: NDDeGrupo(%v, %d) = %v, quero %v", c.nome, c.nd, c.qtd, got, c.quero)
+	for _, c := range cases {
+		if got := PartyChallengeLevel(c.nd, c.qtd); math.Abs(got-c.want) > 1e-9 {
+			t.Errorf("%s: NDDeGrupo(%v, %d) = %v, quero %v", c.name, c.nd, c.qtd, got, c.want)
 		}
 	}
 }
@@ -51,8 +51,8 @@ func TestThePartyChallengeLevelFollowsTheBook(t *testing.T) {
 // acusar.
 func TestAFractionalDifferenceDoesNotFallIntoHard(t *testing.T) {
 	d := EncounterDifficulty(PartyChallengeLevel(0.25, 1) - 1)
-	if d.Rotulo != "Fácil" {
-		t.Errorf("uma criatura de ND 1/4 contra grupo de nível 1 deu %q, quero Fácil", d.Rotulo)
+	if d.Label != "Fácil" {
+		t.Errorf("uma criatura de ND 1/4 contra grupo de nível 1 deu %q, quero Fácil", d.Label)
 	}
 	if d.Tom != "calmo" {
 		t.Errorf("e pintou de %q — a ALE-25 é exatamente isto: o combate mais fácil "+
@@ -61,7 +61,7 @@ func TestAFractionalDifferenceDoesNotFallIntoHard(t *testing.T) {
 }
 
 func TestTheDifficultyBands(t *testing.T) {
-	casos := map[float64]string{
+	cases := map[float64]string{
 		-5:   "Trivial",
 		-3:   "Trivial",
 		-2:   "Fácil",
@@ -74,9 +74,9 @@ func TestTheDifficultyBands(t *testing.T) {
 		3:    "Mortal",
 		9:    "Mortal",
 	}
-	for diferenca, quero := range casos {
-		if got := EncounterDifficulty(diferenca).Rotulo; got != quero {
-			t.Errorf("diferença %v deu %q, quero %q", diferenca, got, quero)
+	for difference, want := range cases {
+		if got := EncounterDifficulty(difference).Label; got != want {
+			t.Errorf("diferença %v deu %q, quero %q", difference, got, want)
 		}
 	}
 }

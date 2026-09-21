@@ -58,18 +58,18 @@ func TestTargetKeyComposition(t *testing.T) {
 // na mesma chave da Defesa geral, as duas competiriam pelo maior e uma sumiria
 // — o oposto do que o livro manda. É o único braço do `switch` com regra atrás.
 func TestDirectionalDefenseDoesNotCompeteWithTheGeneralOne(t *testing.T) {
-	geral := targetKey(ModifierTarget{K: "defense"})
-	todos := targetKey(ModifierTarget{K: "defense", Scope: "all"})
-	corpoACorpo := targetKey(ModifierTarget{K: "defense", Scope: "melee"})
+	general := targetKey(ModifierTarget{K: "defense"})
+	all := targetKey(ModifierTarget{K: "defense", Scope: "all"})
+	melee := targetKey(ModifierTarget{K: "defense", Scope: "melee"})
 
-	if geral != "defense" || todos != "defense" {
-		t.Errorf("defesa geral=%q e escopo all=%q, queria as duas em \"defense\"", geral, todos)
+	if general != "defense" || all != "defense" {
+		t.Errorf("defesa geral=%q e escopo all=%q, queria as duas em \"defense\"", general, all)
 	}
-	if corpoACorpo == geral {
-		t.Fatalf("a Defesa contra corpo a corpo caiu na mesma chave da geral (%q): elas passariam a competir", corpoACorpo)
+	if melee == general {
+		t.Fatalf("a Defesa contra corpo a corpo caiu na mesma chave da geral (%q): elas passariam a competir", melee)
 	}
-	if corpoACorpo != "defense:melee" {
-		t.Errorf("chave direcional=%q, queria defense:melee", corpoACorpo)
+	if melee != "defense:melee" {
+		t.Errorf("chave direcional=%q, queria defense:melee", melee)
 	}
 }
 
@@ -384,7 +384,7 @@ func TestApplyActiveConditionalsIgnoresFlagTargets(t *testing.T) {
 // ─── resolveConditionalDisplay ────────────────────────────────────────
 
 func TestResolveConditionalDisplayTierDedupe(t *testing.T) {
-	furiaTargets := []ModifierTarget{
+	furyTargets := []ModifierTarget{
 		{K: "attack", Scope: "all"},
 		{K: "damage", Scope: "all"},
 		{K: "expertise", Name: "Fortitude"},
@@ -392,7 +392,7 @@ func TestResolveConditionalDisplayTierDedupe(t *testing.T) {
 	}
 	tier := func(amount int) []ConditionalDisplayInput {
 		out := []ConditionalDisplayInput{}
-		for _, tg := range furiaTargets {
+		for _, tg := range furyTargets {
 			out = append(out, ConditionalDisplayInput{Target: tg, BonusType: "morale", Amount: amount})
 		}
 		return out

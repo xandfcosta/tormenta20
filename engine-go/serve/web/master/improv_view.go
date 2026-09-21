@@ -96,11 +96,11 @@ func rollRuin() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(t.Ruina, d.Valor, "ruina")
+	linha, err := engine.RowForRoll(t.Ruina, d.Value, "ruina")
 	if err != nil {
 		return roll{}, err
 	}
-	return roll{Rolagem: d.Valor, Texto: linha.Label}, nil
+	return roll{Rolagem: d.Value, Texto: linha.Label}, nil
 }
 
 // rollChase: Tabela 6-5, d20, p274.
@@ -121,11 +121,11 @@ func rollChase() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(t.ChaseEvents, d.Valor, "chaseEvents")
+	linha, err := engine.RowForRoll(t.ChaseEvents, d.Value, "chaseEvents")
 	if err != nil {
 		return roll{}, err
 	}
-	s := roll{Rolagem: d.Valor, Texto: eventName(linha.Kind)}
+	s := roll{Rolagem: d.Value, Texto: eventName(linha.Kind)}
 	var partes []string
 	if linha.Test != nil && linha.CD != nil {
 		partes = append(partes, fmt.Sprintf("%s (CD %d)", *linha.Test, *linha.CD))
@@ -158,12 +158,12 @@ func rollReward() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(t.RewardCastigo, d.Valor, "rewardCastigo")
+	linha, err := engine.RowForRoll(t.RewardCastigo, d.Value, "rewardCastigo")
 	if err != nil {
 		return roll{}, err
 	}
 	return roll{
-		Rolagem: d.Valor,
+		Rolagem: d.Value,
 		Texto:   labelOrRaw(t.RewardLabels, linha.Reward),
 		Detalhe: "Castigo: " + labelOrRaw(t.CastigoLabels, linha.Castigo),
 	}, nil
@@ -176,11 +176,11 @@ func rollIdea() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(m.Ideas, d.Valor, "ideias de masmorra")
+	linha, err := engine.RowForRoll(m.Ideas, d.Value, "ideias de masmorra")
 	if err != nil {
 		return roll{}, err
 	}
-	return roll{Rolagem: d.Valor, Texto: linha.Label}, nil
+	return roll{Rolagem: d.Value, Texto: linha.Label}, nil
 }
 
 func labelOrRaw(mapa map[string]string, chave string) string {

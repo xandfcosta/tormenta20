@@ -238,9 +238,9 @@ func choiceClassCom(blob, classe, qual, valor string) string {
 	_ = json.Unmarshal([]byte(blob), &escolhas)
 	daClasse := escolhas[classe]
 	if qual == "caminho" {
-		daClasse.Caminho = valor
+		daClasse.Path = valor
 	} else {
-		daClasse.Devoto = valor
+		daClasse.Devotee = valor
 	}
 	escolhas[classe] = daClasse
 	depois, err := json.Marshal(escolhas)

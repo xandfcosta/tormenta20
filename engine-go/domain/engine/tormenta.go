@@ -34,8 +34,8 @@ func tormentaCarismaLoss(in *CharacterInput) int {
 		}
 	}
 	held := ""
-	if in.Deformidade != nil {
-		held = in.Deformidade.TormentaPower
+	if in.Deformity != nil {
+		held = in.Deformity.TormentaPower
 	}
 	count := len(picked)
 	if held != "" && !contains(picked, held) {
@@ -66,7 +66,7 @@ func deformidadeSkillIDs(d *Deformidade) []string {
 		return nil
 	}
 	var out []string
-	for _, name := range d.Pericias {
+	for _, name := range d.Expertises {
 		if id, ok := expertiseToSkill[stripAccentsLower(name)]; ok {
 			out = append(out, id)
 		}

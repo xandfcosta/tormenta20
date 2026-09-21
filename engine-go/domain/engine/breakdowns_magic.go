@@ -158,10 +158,10 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 	}
 	// As de CLASSE competem entre si (duas RD gerais não somam), com a
 	// Especialização por cima porque as duas descrições dizem que é cumulativa.
-	especializacao, general := 0, 0
+	specialization, general := 0, 0
 	for _, s := range sources {
 		if s.Source == "Especialização em Armadura" {
-			especializacao += s.Amount
+			specialization += s.Amount
 			continue
 		}
 		general = max(general, s.Amount)
@@ -179,14 +179,14 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 	if len(sources) == 0 {
 		return RdBreakdown{Total: 0, Sources: sources}
 	}
-	return RdBreakdown{Total: general + especializacao + granted.Total, Sources: sources}
+	return RdBreakdown{Total: general + specialization + granted.Total, Sources: sources}
 }
 
 // tempHpFromPowers: Alma de Bronze (Bárbaro p41) grants
 // nível + Força temp PV while furia is active.
-func tempHpFromPowers(ch Character, e ItemEffects, furiaActive bool) TempHpBreakdown {
+func tempHpFromPowers(ch Character, e ItemEffects, furyActive bool) TempHpBreakdown {
 	empty := TempHpBreakdown{Total: 0, Sources: []SourceAmount{}}
-	if !furiaActive {
+	if !furyActive {
 		return empty
 	}
 	chosen := parseChoiceSet(ch.ClassPowers)

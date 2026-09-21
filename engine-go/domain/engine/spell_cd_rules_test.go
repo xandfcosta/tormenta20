@@ -24,7 +24,7 @@ func effectsNone() ItemEffects { return ItemEffects{Flags: map[string]bool{}} }
 func TestSpellSaveDcFormula(t *testing.T) {
 	tests := []struct {
 		level, mod, want int
-		nota             string
+		note             string
 	}{
 		{1, 0, 10, "no 1º nível a metade é 0, não 1"},
 		{2, 0, 11, ""},
@@ -35,7 +35,7 @@ func TestSpellSaveDcFormula(t *testing.T) {
 	}
 	for _, tt := range tests {
 		if got := spellSaveDc(tt.level, tt.mod); got != tt.want {
-			t.Errorf("nível %d, atributo %+d: CD = %d, want %d %s", tt.level, tt.mod, got, tt.want, tt.nota)
+			t.Errorf("nível %d, atributo %+d: CD = %d, want %d %s", tt.level, tt.mod, got, tt.want, tt.note)
 		}
 	}
 }
@@ -68,43 +68,43 @@ func TestSamiraTheBookWorkedExample(t *testing.T) {
 // Mesmo personagem, mesmos atributos, muda só a escolha — se o motor ignorar o
 // caminho, os três dão o mesmo número.
 func TestArcanistaKeyAttributeFollowsThePath(t *testing.T) {
-	arcanista := func(caminho string) Character {
+	arcanist := func(path string) Character {
 		return Character{
 			Level:        10,
 			Intelligence: 2,
 			Charisma:     5,
 			Classes:      []CharacterClass{{ClassName: "Arcanista", Level: 10}},
-			ClassChoices: `{"Arcanista":{"caminho":"` + caminho + `"}}`,
+			ClassChoices: `{"Arcanista":{"caminho":"` + path + `"}}`,
 		}
 	}
 	// Nível 10 → 10 + 5 = 15 de base. Inteligência 2 → 17; Carisma 5 → 20.
 	tests := []struct {
-		caminho string
-		want    int
-		atrib   string
+		path string
+		want int
+		attr string
 	}{
 		{"bruxo", 17, "Inteligência"},
 		{"mago", 17, "Inteligência"},
 		{"feiticeiro", 20, "Carisma"},
 	}
 	for _, tt := range tests {
-		got := bestBaseSpellCd(arcanista(tt.caminho), effectsNone())
+		got := bestBaseSpellCd(arcanist(tt.path), effectsNone())
 		if got == nil || *got != tt.want {
-			t.Errorf("caminho %s: CD = %v, want %d (%s)", tt.caminho, deref(got), tt.want, tt.atrib)
+			t.Errorf("caminho %s: CD = %v, want %d (%s)", tt.path, deref(got), tt.want, tt.attr)
 		}
 	}
 
 	// Ficha meio preenchida: a escolha é obrigatória no 1º nível, mas o
 	// personagem pode existir antes dela. Inteligência é o padrão porque é o de
 	// dois dos três caminhos — e é o que a ficha já mostrava.
-	semCaminho := Character{
+	noPath := Character{
 		Level:        10,
 		Intelligence: 2,
 		Charisma:     5,
 		Classes:      []CharacterClass{{ClassName: "Arcanista", Level: 10}},
 		ClassChoices: `{}`,
 	}
-	if got := bestBaseSpellCd(semCaminho, effectsNone()); got == nil || *got != 17 {
+	if got := bestBaseSpellCd(noPath, effectsNone()); got == nil || *got != 17 {
 		t.Errorf("sem caminho escolhido: CD = %v, want 17 (cai em Inteligência)", deref(got))
 	}
 }
@@ -114,7 +114,7 @@ func TestArcanistaKeyAttributeFollowsThePath(t *testing.T) {
 // enquanto o teto de PM usa "seu nível NA CLASSE que fornece a habilidade"
 // (p224). Este teste prende a metade da CD; `TestSpellPmLimit` prende a outra.
 func TestSpellCdUsesCharacterLevelNotClassLevel(t *testing.T) {
-	guerreiroArcanista := Character{
+	warriorArcanist := Character{
 		Level:        10,
 		Intelligence: 3,
 		Classes: []CharacterClass{
@@ -124,13 +124,13 @@ func TestSpellCdUsesCharacterLevelNotClassLevel(t *testing.T) {
 		ClassChoices: `{"Arcanista":{"caminho":"mago"}}`,
 	}
 	// 10 + ½ de 10 + 3 = 18. Pelo nível de Arcanista daria 10 + 0 + 3 = 13.
-	got := bestBaseSpellCd(guerreiroArcanista, effectsNone())
+	got := bestBaseSpellCd(warriorArcanist, effectsNone())
 	if got == nil || *got != 18 {
 		t.Errorf("CD = %v, want 18 — usou o nível da CLASSE em vez do de personagem?", deref(got))
 	}
 
 	// E o teto de PM da mesma ficha faz o contrário: 1, o nível de Arcanista.
-	if limit := SpellPmLimit(guerreiroArcanista, 0, []string{"Arcanista"}); limit != 1 {
+	if limit := SpellPmLimit(warriorArcanist, 0, []string{"Arcanista"}); limit != 1 {
 		t.Errorf("limite de PM = %d, want 1 — as duas regras não são a mesma", limit)
 	}
 }
@@ -138,7 +138,7 @@ func TestSpellCdUsesCharacterLevelNotClassLevel(t *testing.T) {
 // Multiclasse de duas conjuradoras: cada classe lança com o SEU atributo-chave,
 // então a ficha mostra a melhor das duas.
 func TestBestSpellCdTakesTheBestCasterClass(t *testing.T) {
-	bardoClerigo := Character{
+	bardCleric := Character{
 		Level:    8,
 		Charisma: 5,
 		Wisdom:   1,
@@ -148,7 +148,7 @@ func TestBestSpellCdTakesTheBestCasterClass(t *testing.T) {
 		},
 	}
 	// Bardo/Carisma → 19; Clérigo/Sabedoria → 15.
-	if got := bestBaseSpellCd(bardoClerigo, effectsNone()); got == nil || *got != 19 {
+	if got := bestBaseSpellCd(bardCleric, effectsNone()); got == nil || *got != 19 {
 		t.Errorf("CD = %v, want 19 (a melhor das duas)", deref(got))
 	}
 }
@@ -156,13 +156,13 @@ func TestBestSpellCdTakesTheBestCasterClass(t *testing.T) {
 // A CD usa o atributo FINAL, com bônus de raça e item dentro — não o valor cru
 // da ficha. Um Osteon Necromante saía com 21 na tela quando o correto era 22.
 func TestSpellCdUsesTheFinalAttribute(t *testing.T) {
-	arcanista := Character{
+	arcanist := Character{
 		Level:        10,
 		Intelligence: 2,
 		Classes:      []CharacterClass{{ClassName: "Arcanista", Level: 10}},
 		ClassChoices: `{"Arcanista":{"caminho":"mago"}}`,
 	}
-	comItem := ItemEffects{
+	withItem := ItemEffects{
 		Flags: map[string]bool{},
 		ByTarget: map[string]AggregatedStat{
 			targetKey(ModifierTarget{K: "attribute", Name: "intelligence"}): {
@@ -171,18 +171,18 @@ func TestSpellCdUsesTheFinalAttribute(t *testing.T) {
 			},
 		},
 	}
-	if got := bestBaseSpellCd(arcanista, comItem); got == nil || *got != 19 {
+	if got := bestBaseSpellCd(arcanist, withItem); got == nil || *got != 19 {
 		t.Errorf("CD = %v, want 19 (15 + Inteligência 2 + item 2)", deref(got))
 	}
 }
 
 // Quem não lança magia não tem CD de magia — nil, e não 10.
 func TestNonCasterHasNoSpellCd(t *testing.T) {
-	barbaro := Character{
+	barbarian := Character{
 		Level:   10,
 		Classes: []CharacterClass{{ClassName: "Bárbaro", Level: 10}},
 	}
-	if got := bestBaseSpellCd(barbaro, effectsNone()); got != nil {
+	if got := bestBaseSpellCd(barbarian, effectsNone()); got != nil {
 		t.Errorf("CD = %d, want nil — o Bárbaro não lança magias", *got)
 	}
 }

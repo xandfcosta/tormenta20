@@ -2,7 +2,7 @@ package engine
 
 // classVitals mirrors CLASS_VITALS (class-vitals.ts).
 type classVitals struct {
-	pvInicial  int
+	startHP    int
 	pvPerLevel int
 	mpPerLevel int
 }
@@ -27,7 +27,7 @@ var classVitalsTable = map[string]classVitals{
 // pvPoolWithCon mirrors class-vitals.ts pvPoolWithCon (p34 min-1 floor).
 func pvPoolWithCon(v classVitals, level, con int) int {
 	perLevel := max(1, v.pvPerLevel+con)
-	return v.pvInicial + con + (level-1)*perLevel
+	return v.startHP + con + (level-1)*perLevel
 }
 
 // multiclassPvPool: only the first class seeds its PV inicial (p34-35).
@@ -72,10 +72,10 @@ func multiclassMpPool(classes []ClassEntry) int {
 // compra — "PV 20 · PM 3" — antes de existir personagem para calcular. Os dois
 // números são os da tabela, sem Constituição e sem nível, porque é isso que o
 // bloco da classe imprime.
-func ClassStartingVitals(className string) (pvInicial, pmPorNivel int, ok bool) {
+func ClassStartingVitals(className string) (startHP, pmPerLevel int, ok bool) {
 	v, ok := classVitalsTable[className]
 	if !ok {
 		return 0, 0, false
 	}
-	return v.pvInicial, v.mpPerLevel, true
+	return v.startHP, v.mpPerLevel, true
 }

@@ -38,11 +38,11 @@ func TestConditionModifierValues(t *testing.T) {
 	// −2 e −5, e trocar um pelo outro é o erro de cadastro mais provável.
 	t.Run("os pares brando/severo", func(t *testing.T) {
 		pares := []struct {
-			brando, severo string
-			target         ModifierTarget
-			querBrando     int
-			querSevero     int
-			nota           string
+			mild, severe string
+			target       ModifierTarget
+			wantMild     int
+			wantSevere   int
+			note         string
 		}{
 			{"abalado", "apavorado", ModifierTarget{K: "expertiseAll"}, -2, -5, "medo: perícias"},
 			{"fraco", "debilitado", ModifierTarget{K: "expertiseByAttribute", Attribute: "strength"}, -2, -5, "perícias de Força"},
@@ -50,11 +50,11 @@ func TestConditionModifierValues(t *testing.T) {
 			{"vulneravel", "desprevenido", defense, -2, -5, "Defesa"},
 		}
 		for _, p := range pares {
-			if got := condTotal(conditionModifiers(p.brando), p.target); got != p.querBrando {
-				t.Errorf("%s (%s) = %d, want %d", p.brando, p.nota, got, p.querBrando)
+			if got := condTotal(conditionModifiers(p.mild), p.target); got != p.wantMild {
+				t.Errorf("%s (%s) = %d, want %d", p.mild, p.note, got, p.wantMild)
 			}
-			if got := condTotal(conditionModifiers(p.severo), p.target); got != p.querSevero {
-				t.Errorf("%s (%s) = %d, want %d", p.severo, p.nota, got, p.querSevero)
+			if got := condTotal(conditionModifiers(p.severe), p.target); got != p.wantSevere {
+				t.Errorf("%s (%s) = %d, want %d", p.severe, p.note, got, p.wantSevere)
 			}
 		}
 	})
@@ -106,21 +106,21 @@ func TestConditionModifierValues(t *testing.T) {
 
 // "EXAUSTO. O personagem fica debilitado, lento e vulnerável." Uma condição
 // COMPOSTA: seus efeitos têm de ser os das que ela cita, não um número próprio.
-// Derivado das partes em vez de repetido, então mudar `debilitado` sem mudar
-// `exausto` quebra aqui.
+// Derivado das partes em vez de repetido, então mudar `debilitated` sem mudar
+// `exhausted` quebra aqui.
 func TestExaustoComposesDebilitadoAndVulneravel(t *testing.T) {
-	exausto := conditionModifiers("exausto")
-	debilitado := conditionModifiers("debilitado")
-	vulneravel := conditionModifiers("vulneravel")
+	exhausted := conditionModifiers("exausto")
+	debilitated := conditionModifiers("debilitado")
+	vulnerable := conditionModifiers("vulneravel")
 
 	for _, attr := range []string{"strength", "dexterity", "constitution"} {
 		target := ModifierTarget{K: "expertiseByAttribute", Attribute: attr}
-		if got, want := condTotal(exausto, target), condTotal(debilitado, target); got != want {
+		if got, want := condTotal(exhausted, target), condTotal(debilitated, target); got != want {
 			t.Errorf("exausto em %s = %d, want %d (o mesmo que debilitado)", attr, got, want)
 		}
 	}
 	defense := ModifierTarget{K: "defense"}
-	if got, want := condTotal(exausto, defense), condTotal(vulneravel, defense); got != want {
+	if got, want := condTotal(exhausted, defense), condTotal(vulnerable, defense); got != want {
 		t.Errorf("exausto na Defesa = %d, want %d (o mesmo que vulnerável)", got, want)
 	}
 
@@ -171,19 +171,19 @@ func TestConditionsApplyOnlyTheMostSevere(t *testing.T) {
 // área melhor do que deveria. Derivado do desprevenido em vez de repetido, então
 // mexer numa metade sem mexer na outra quebra aqui.
 func TestCegoAndAgarradoComposeDesprevenido(t *testing.T) {
-	desprevenido := conditionModifiers("desprevenido")
+	flatFooted := conditionModifiers("desprevenido")
 	defense := ModifierTarget{K: "defense"}
-	reflexos := ModifierTarget{K: "expertise", Name: "Reflexos"}
+	reflexes := ModifierTarget{K: "expertise", Name: "Reflexos"}
 
 	for _, id := range []string{"cego", "agarrado"} {
 		mods := conditionModifiers(id)
-		for _, alvo := range []struct {
-			nome   string
+		for _, target := range []struct {
+			name   string
 			target ModifierTarget
-		}{{"Defesa", defense}, {"Reflexos", reflexos}} {
-			got, want := condTotal(mods, alvo.target), condTotal(desprevenido, alvo.target)
+		}{{"Defesa", defense}, {"Reflexos", reflexes}} {
+			got, want := condTotal(mods, target.target), condTotal(flatFooted, target.target)
 			if got != want {
-				t.Errorf("%s em %s = %d, want %d (o mesmo que desprevenido)", id, alvo.nome, got, want)
+				t.Errorf("%s em %s = %d, want %d (o mesmo que desprevenido)", id, target.name, got, want)
 			}
 		}
 	}
@@ -208,8 +208,8 @@ func TestCegoAndAgarradoComposeDesprevenido(t *testing.T) {
 // sobre o MESMO número da ficha.
 func TestConditionPenaltiesOnOneSkillDoNotStackAcrossTargets(t *testing.T) {
 	// Reflexos é uma perícia de Destreza — o alvo por onde o debilitado entra.
-	reflexos := CharacterExpertise{Name: "Reflexos", Attribute: "dexterity"}
-	ch := Character{Level: 10, Dexterity: 0, Expertises: []CharacterExpertise{reflexos}}
+	reflexes := CharacterExpertise{Name: "Reflexos", Attribute: "dexterity"}
+	ch := Character{Level: 10, Dexterity: 0, Expertises: []CharacterExpertise{reflexes}}
 
 	sheetFor := func(conds ...string) int {
 		mods := []Modifier{}
@@ -219,7 +219,7 @@ func TestConditionPenaltiesOnOneSkillDoNotStackAcrossTargets(t *testing.T) {
 		vested := "vested"
 		e := ComputeItemEffects([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}})
 		// Mochila vazia: este caso é sobre condições, e a sobrecarga não entra.
-		return expertiseBreakdown(ch, reflexos, e, loadBreakdownOf(ch, 10)).ItemBonus
+		return expertiseBreakdown(ch, reflexes, e, loadBreakdownOf(ch, 10)).ItemBonus
 	}
 
 	if got := sheetFor("desprevenido"); got != -5 {
@@ -249,7 +249,7 @@ func TestConditionPenaltiesOnOneSkillDoNotStackAcrossTargets(t *testing.T) {
 // ou inconsciente ficava com a Defesa cheia.
 func TestConditionsThatImplyAnotherCarryItsNumbers(t *testing.T) {
 	pares := []struct {
-		condicao, implicada, citacao string
+		condition, implied, citation string
 	}{
 		{"atordoado", "desprevenido", "O personagem fica desprevenido e não pode fazer ações"},
 		{"surpreendido", "desprevenido", "O personagem fica desprevenido e não pode fazer ações"},
@@ -265,12 +265,12 @@ func TestConditionsThatImplyAnotherCarryItsNumbers(t *testing.T) {
 		{"enredado", "vulneravel", "O personagem fica lento, vulnerável e sofre −2 em ataque"},
 	}
 	for _, p := range pares {
-		derivada := conditionModifiers(p.condicao)
-		for _, m := range conditionModifiers(p.implicada) {
-			got := condTotal(derivada, m.Target)
+		derived := conditionModifiers(p.condition)
+		for _, m := range conditionModifiers(p.implied) {
+			got := condTotal(derived, m.Target)
 			if got != m.Amount {
 				t.Errorf("%s em %s = %d, want %d — %q implica %s inteiro",
-					p.condicao, targetKey(m.Target), got, m.Amount, p.citacao, p.implicada)
+					p.condition, targetKey(m.Target), got, m.Amount, p.citation, p.implied)
 			}
 		}
 	}
@@ -296,14 +296,14 @@ func TestModelledConditionsExistInTheServedCatalog(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ler o catálogo de condições: %v", err)
 	}
-	var catalogo map[string]struct {
+	var catalog map[string]struct {
 		Name string `json:"name"`
 	}
-	if err := json.Unmarshal(raw, &catalogo); err != nil {
+	if err := json.Unmarshal(raw, &catalog); err != nil {
 		t.Fatalf("catálogo de condições ilegível: %v", err)
 	}
 	for id := range conditionModifierTable {
-		if _, ok := catalogo[id]; !ok {
+		if _, ok := catalog[id]; !ok {
 			t.Errorf("condição %q tem modificadores mas não está no catálogo — nunca chega à tela", id)
 		}
 	}

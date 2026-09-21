@@ -21,9 +21,9 @@ package engine
 //
 // @example engine.Character{IgnoredRules: engine.IgnoredRules{Carga: true}} // mesa sem carga
 type IgnoredRules struct {
-	// Carga desliga os limites de carga da p141 — a mochila continua contando
+	// Load desliga os limites de carga da p141 — a mochila continua contando
 	// espaços, mas ninguém fica sobrecarregado e nenhuma penalidade sai daqui.
-	Carga bool `json:"carga"`
+	Load bool `json:"carga"`
 }
 
 // RuleLoad é o identificador de fio da regra de carga: o que a campanha grava
@@ -58,7 +58,7 @@ func IgnoredRulesFrom(rules []string) IgnoredRules {
 	var out IgnoredRules
 	for _, rule := range rules {
 		if rule == RuleLoad {
-			out.Carga = true
+			out.Load = true
 		}
 	}
 	return out

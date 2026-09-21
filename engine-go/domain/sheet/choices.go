@@ -222,12 +222,12 @@ func classChoiceSelectionsAreValid(dto CharacterDTO) error {
 	for _, classe := range dto.Classes {
 		blob := escolhas[classe.ClassName]
 		if err := chosenExistsOption(
-			"caminho", blob.Caminho, LevelPaths(classe.ClassName, classe.Level), classe.ClassName,
+			"caminho", blob.Path, LevelPaths(classe.ClassName, classe.Level), classe.ClassName,
 		); err != nil {
 			return err
 		}
 		if err := chosenExistsOption(
-			"devoto", blob.Devoto, ClassDevotees(classe.ClassName), classe.ClassName,
+			"devoto", blob.Devotee, ClassDevotees(classe.ClassName), classe.ClassName,
 		); err != nil {
 			return err
 		}

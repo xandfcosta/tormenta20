@@ -112,12 +112,12 @@ func classPendings(dto sheet.CharacterDTO) []pendencia {
 			})
 		}
 		blob := escolhas[classe.ClassName]
-		if len(sheet.ClassDevotees(classe.ClassName)) > 0 && blob.Devoto == "" {
+		if len(sheet.ClassDevotees(classe.ClassName)) > 0 && blob.Devotee == "" {
 			fora = append(fora, pendencia{
 				Fonte: "classe", Rotulo: classe.ClassName + ": escolher devoto",
 			})
 		}
-		if len(sheet.LevelPaths(classe.ClassName, classe.Level)) > 0 && blob.Caminho == "" {
+		if len(sheet.LevelPaths(classe.ClassName, classe.Level)) > 0 && blob.Path == "" {
 			fora = append(fora, pendencia{
 				Fonte: "classe", Rotulo: classe.ClassName + ": escolher caminho",
 			})

@@ -17,12 +17,12 @@ import (
 // O exemplo trabalhado do próprio livro é o caso deste teste: ele separa
 // "ultrapassar" de "chegar em", que é a leitura que a frase deixa em aberto.
 func TestSafeLoadTheBookExampleWithStrength2(t *testing.T) {
-	limite := 14 // 10 + 2×2, o número que o livro escreve para Força 2.
-	casos := []struct {
-		espacos     float64
-		sobrecarga  bool
-		acimaDoTeto bool
-		nota        string
+	limit := 14 // 10 + 2×2, o número que o livro escreve para Força 2.
+	cases := []struct {
+		spaces      float64
+		overload    bool
+		overCeiling bool
+		note        string
 	}{
 		{13, false, false, "abaixo do limite"},
 		{14, false, false, "EM 14 ainda não é sobrecarga — o livro diz 'até 14 sem penalidade'"},
@@ -30,17 +30,17 @@ func TestSafeLoadTheBookExampleWithStrength2(t *testing.T) {
 		{28, true, false, "o dobro ainda é carregável, sobrecarregado"},
 		{28.5, true, true, "acima do dobro o livro diz que ele NÃO pode carregar"},
 	}
-	for _, caso := range casos {
-		ch := Character{Items: []CharacterItem{{Quantity: 1, Slots: caso.espacos}}}
-		got := loadBreakdownOf(ch, limite)
-		if got.Overloaded != caso.sobrecarga {
-			t.Errorf("%v espaços: sobrecarregado=%v, want %v (%s)", caso.espacos, got.Overloaded, caso.sobrecarga, caso.nota)
+	for _, tc := range cases {
+		ch := Character{Items: []CharacterItem{{Quantity: 1, Slots: tc.spaces}}}
+		got := loadBreakdownOf(ch, limit)
+		if got.Overloaded != tc.overload {
+			t.Errorf("%v espaços: sobrecarregado=%v, want %v (%s)", tc.spaces, got.Overloaded, tc.overload, tc.note)
 		}
-		if got.OverMax != caso.acimaDoTeto {
-			t.Errorf("%v espaços: acima do teto=%v, want %v (%s)", caso.espacos, got.OverMax, caso.acimaDoTeto, caso.nota)
+		if got.OverMax != tc.overCeiling {
+			t.Errorf("%v espaços: acima do teto=%v, want %v (%s)", tc.spaces, got.OverMax, tc.overCeiling, tc.note)
 		}
 	}
-	if got := loadBreakdownOf(Character{}, limite).Max; got != 28 {
+	if got := loadBreakdownOf(Character{}, limit).Max; got != 28 {
 		t.Errorf("teto com Força 2 = %d, want 28 (o dobro, p141)", got)
 	}
 }
@@ -68,14 +68,14 @@ func TestLoadMultipliesQuantityByTheItemSlots(t *testing.T) {
 // Sem esta leitura o dinheiro ou não pesa nunca, ou pesa um espaço inteiro por
 // um punhado de tibares.
 func TestMoneyLoadCountsWholeThousands(t *testing.T) {
-	casos := map[float64]float64{
+	cases := map[float64]float64{
 		0:    0,
 		999:  0,
 		1000: 1,
 		1999: 1,
 		3000: 3,
 	}
-	for tibar, want := range casos {
+	for tibar, want := range cases {
 		got := loadBreakdownOf(Character{Tibar: tibar}, 14)
 		if got.Coins != want {
 			t.Errorf("T$ %v ocupam %v espaços, want %v", tibar, got.Coins, want)
@@ -96,30 +96,30 @@ func TestMoneyLoadCountsWholeThousands(t *testing.T) {
 // Ladinagem".
 func TestOverloadPenalizesDisplacementAndArmorExpertises(t *testing.T) {
 	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity")))
-	pericias := []CharacterExpertise{
+	expertises := []CharacterExpertise{
 		{Name: "Furtividade", Attribute: "dexterity"},
 		{Name: "Diplomacia", Attribute: "charisma"},
 	}
 	// Força 0 ⇒ limite 10. Uma linha de 11 espaços ultrapassa; a de 10 não.
-	comCarga := func(espacos float64) ComputedSheet {
+	withLoad := func(spaces float64) ComputedSheet {
 		ch := Character{
-			Level: 1, Displacement: 9, Expertises: pericias,
-			Items: []CharacterItem{{Name: "Barril", Quantity: 1, Slots: espacos}},
+			Level: 1, Displacement: 9, Expertises: expertises,
+			Items: []CharacterItem{{Name: "Barril", Quantity: 1, Slots: spaces}},
 		}
 		return catalogs.ComputeSheet(ch, map[string]bool{})
 	}
 
-	leve, pesado := comCarga(10), comCarga(11)
-	if leve.Displacement.Total != 9 {
-		t.Fatalf("dentro do limite o deslocamento é %d, want 9 — o caso de controle já estava errado", leve.Displacement.Total)
+	light, heavy := withLoad(10), withLoad(11)
+	if light.Displacement.Total != 9 {
+		t.Fatalf("dentro do limite o deslocamento é %d, want 9 — o caso de controle já estava errado", light.Displacement.Total)
 	}
-	if pesado.Displacement.Total != 6 {
-		t.Errorf("sobrecarregado: deslocamento %d, want 6 (9 − 3, p141)", pesado.Displacement.Total)
+	if heavy.Displacement.Total != 6 {
+		t.Errorf("sobrecarregado: deslocamento %d, want 6 (9 − 3, p141)", heavy.Displacement.Total)
 	}
-	if got := periciaTotal(t, pesado, "Furtividade") - periciaTotal(t, leve, "Furtividade"); got != -5 {
+	if got := periciaTotal(t, heavy, "Furtividade") - periciaTotal(t, light, "Furtividade"); got != -5 {
 		t.Errorf("sobrecarregado: Furtividade mudou %d, want −5 (p141 + p153)", got)
 	}
-	if got := periciaTotal(t, pesado, "Diplomacia") - periciaTotal(t, leve, "Diplomacia"); got != 0 {
+	if got := periciaTotal(t, heavy, "Diplomacia") - periciaTotal(t, light, "Diplomacia"); got != 0 {
 		t.Errorf("sobrecarregado: Diplomacia mudou %d, want 0 — a penalidade de armadura não a alcança (p153)", got)
 	}
 }

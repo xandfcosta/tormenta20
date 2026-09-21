@@ -79,15 +79,15 @@ var (
 //
 //	ParseOriginItem("Estojo de disfarces OU gazua").Kind // OriginItemOneOf
 func ParseOriginItem(entry string) OriginItemGrant {
-	if categorias, arma := originWeaponEntries[entry]; arma {
-		return OriginItemGrant{Kind: OriginItemWeapon, Label: entry, Categories: categorias}
+	if categories, weapon := originWeaponEntries[entry]; weapon {
+		return OriginItemGrant{Kind: OriginItemWeapon, Label: entry, Categories: categories}
 	}
-	if dado := originMoneyDice.FindStringSubmatch(entry); dado != nil {
-		return OriginItemGrant{Kind: OriginItemMoney, Label: entry, Dice: dado[1]}
+	if data := originMoneyDice.FindStringSubmatch(entry); data != nil {
+		return OriginItemGrant{Kind: OriginItemMoney, Label: entry, Dice: data[1]}
 	}
-	if teto := originPriceCap.FindStringSubmatch(entry); teto != nil {
-		preco, _ := strconv.Atoi(teto[1])
-		return OriginItemGrant{Kind: OriginItemAny, Label: entry, MaxPrice: preco}
+	if ceiling := originPriceCap.FindStringSubmatch(entry); ceiling != nil {
+		price, _ := strconv.Atoi(ceiling[1])
+		return OriginItemGrant{Kind: OriginItemAny, Label: entry, MaxPrice: price}
 	}
 	if strings.Contains(entry, " OU ") {
 		return OriginItemGrant{
@@ -95,9 +95,9 @@ func ParseOriginItem(entry string) OriginItemGrant {
 		}
 	}
 	if originChoiceEnd.MatchString(entry) {
-		lista := originChoiceEnd.ReplaceAllString(entry, "")
+		list := originChoiceEnd.ReplaceAllString(entry, "")
 		return OriginItemGrant{
-			Kind: OriginItemOneOf, Label: entry, Options: withInitialCapital(originChoiceSep.Split(lista, -1)),
+			Kind: OriginItemOneOf, Label: entry, Options: withInitialCapital(originChoiceSep.Split(list, -1)),
 		}
 	}
 	return OriginItemGrant{Kind: OriginItemFixed, Label: entry, Name: entry}
@@ -105,15 +105,15 @@ func ParseOriginItem(entry string) OriginItemGrant {
 
 // withInitialCapital arruma as alternativas de uma lista escrita em corrido —
 // "cão de caça, cavalo, pônei ou trobo" vira quatro nomes próprios de item.
-func withInitialCapital(partes []string) []string {
-	saida := make([]string, 0, len(partes))
-	for _, parte := range partes {
-		parte = strings.TrimSpace(parte)
-		if parte == "" {
+func withInitialCapital(parts []string) []string {
+	output := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
 			continue
 		}
-		runas := []rune(parte)
-		saida = append(saida, strings.ToUpper(string(runas[0]))+string(runas[1:]))
+		runes := []rune(part)
+		output = append(output, strings.ToUpper(string(runes[0]))+string(runes[1:]))
 	}
-	return saida
+	return output
 }

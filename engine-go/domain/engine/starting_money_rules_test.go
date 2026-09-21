@@ -10,8 +10,8 @@ import (
 // Os números são escritos na mão, colhidos do livro: as três pontas da tabela
 // mais uma linha do meio de cada coluna impressa.
 func TestTheStartingPurseFollowsTable31(t *testing.T) {
-	casos := []struct {
-		nivel int
+	cases := []struct {
+		level int
 		tibar int
 	}{
 		{2, 300},      // a primeira linha com valor
@@ -20,14 +20,14 @@ func TestTheStartingPurseFollowsTable31(t *testing.T) {
 		{11, 19_000},  // começo da coluna da direita
 		{20, 260_000}, // a última linha
 	}
-	for _, caso := range casos {
-		tibar, err := StartingMoneyForLevel(caso.nivel)
+	for _, tc := range cases {
+		tibar, err := StartingMoneyForLevel(tc.level)
 		if err != nil {
-			t.Errorf("nível %d: %v", caso.nivel, err)
+			t.Errorf("nível %d: %v", tc.level, err)
 			continue
 		}
-		if tibar != caso.tibar {
-			t.Errorf("nível %d: T$ %d, esperado T$ %d", caso.nivel, tibar, caso.tibar)
+		if tibar != tc.tibar {
+			t.Errorf("nível %d: T$ %d, esperado T$ %d", tc.level, tibar, tc.tibar)
 		}
 	}
 }
@@ -47,14 +47,14 @@ func TestTheFirstLevelHasNoTableValue(t *testing.T) {
 // TestALevelOutsideTheTableNamesTheOffendingValue: 0 e 21 não existem no livro, e a
 // mensagem carrega o número que chegou.
 func TestALevelOutsideTheTableNamesTheOffendingValue(t *testing.T) {
-	for _, nivel := range []int{0, 21, -3} {
-		_, err := StartingMoneyForLevel(nivel)
+	for _, level := range []int{0, 21, -3} {
+		_, err := StartingMoneyForLevel(level)
 		if err == nil {
-			t.Errorf("nível %d passou pela Tabela 3-1", nivel)
+			t.Errorf("nível %d passou pela Tabela 3-1", level)
 			continue
 		}
 		if !strings.Contains(err.Error(), "1 a 20") {
-			t.Errorf("nível %d: a mensagem não diz a faixa esperada: %q", nivel, err)
+			t.Errorf("nível %d: a mensagem não diz a faixa esperada: %q", level, err)
 		}
 	}
 }
@@ -63,7 +63,7 @@ func TestALevelOutsideTheTableNamesTheOffendingValue(t *testing.T) {
 // alcançável. Roda o bastante para que uma soma de três dados (mínimo 3) ou de
 // cinco (máximo 30) apareça.
 func TestThePurseRollFitsInFourD6(t *testing.T) {
-	vistos := map[int]bool{}
+	seen := map[int]bool{}
 	for i := 0; i < 400; i++ {
 		tibar, err := RollStartingMoney()
 		if err != nil {
@@ -72,11 +72,11 @@ func TestThePurseRollFitsInFourD6(t *testing.T) {
 		if tibar < 4 || tibar > 24 {
 			t.Fatalf("T$ %d fora de 4d6 (4 a 24)", tibar)
 		}
-		vistos[tibar] = true
+		seen[tibar] = true
 	}
 	// O controle: 400 rolagens de 4d6 sem variação nenhuma seria um dado preso,
 	// e um dado preso passaria na asserção de faixa acima sem reclamar.
-	if len(vistos) < 5 {
-		t.Fatalf("400 rolagens deram só %d resultados distintos — o dado está preso", len(vistos))
+	if len(seen) < 5 {
+		t.Fatalf("400 rolagens deram só %d resultados distintos — o dado está preso", len(seen))
 	}
 }

@@ -12,10 +12,10 @@ import (
 // TestOriginGrantsAreClassified — as frases são as do livro (p85–95),
 // copiadas de `origens.json` na mão.
 func TestOriginGrantsAreClassified(t *testing.T) {
-	casos := []struct {
-		frase    string
+	cases := []struct {
+		sentence string
 		kind     OriginItemKind
-		conferir func(*testing.T, OriginItemGrant)
+		check    func(*testing.T, OriginItemGrant)
 	}{
 		{"Símbolo sagrado", OriginItemFixed, func(t *testing.T, g OriginItemGrant) {
 			if g.Name != "Símbolo sagrado" {
@@ -59,23 +59,23 @@ func TestOriginGrantsAreClassified(t *testing.T) {
 		{
 			"Cão de caça, cavalo, pônei ou trobo (escolha)", OriginItemOneOf,
 			func(t *testing.T, g OriginItemGrant) {
-				esperado := []string{"Cão de caça", "Cavalo", "Pônei", "Trobo"}
-				if !reflect.DeepEqual(g.Options, esperado) {
-					t.Errorf("alternativas: %v, esperado %v", g.Options, esperado)
+				want := []string{"Cão de caça", "Cavalo", "Pônei", "Trobo"}
+				if !reflect.DeepEqual(g.Options, want) {
+					t.Errorf("alternativas: %v, esperado %v", g.Options, want)
 				}
 			},
 		},
 	}
-	for _, caso := range casos {
-		t.Run(caso.frase, func(t *testing.T) {
-			concessao := ParseOriginItem(caso.frase)
-			if concessao.Kind != caso.kind {
-				t.Fatalf("tipo %q, esperado %q", concessao.Kind, caso.kind)
+	for _, tc := range cases {
+		t.Run(tc.sentence, func(t *testing.T) {
+			grant := ParseOriginItem(tc.sentence)
+			if grant.Kind != tc.kind {
+				t.Fatalf("tipo %q, esperado %q", grant.Kind, tc.kind)
 			}
-			if concessao.Label != caso.frase {
-				t.Errorf("o rótulo perdeu a frase do livro: %q", concessao.Label)
+			if grant.Label != tc.sentence {
+				t.Errorf("o rótulo perdeu a frase do livro: %q", grant.Label)
 			}
-			caso.conferir(t, concessao)
+			tc.check(t, grant)
 		})
 	}
 }
@@ -89,37 +89,37 @@ func TestOriginGrantsAreClassified(t *testing.T) {
 // dele. Como o classificador é por FORMA, uma origem nova com uma forma nova
 // falha aqui em vez de nascer errada.
 func TestNoOriginGrantWithAChoiceIsBornFixed(t *testing.T) {
-	bruto, ok := catalog.Resource("origins-source")
+	raw, ok := catalog.Resource("origins-source")
 	if !ok {
 		t.Fatal("catálogo de origens ausente")
 	}
 	// O catálogo de origens é um OBJETO indexado por id, e não uma lista como o
 	// de itens e o de perícias.
-	var origens map[string]struct {
+	var origins map[string]struct {
 		Name          string   `json:"name"`
-		ItensIniciais []string `json:"itensIniciais"`
+		StartingItems []string `json:"itensIniciais"`
 	}
-	if err := json.Unmarshal(bruto, &origens); err != nil {
+	if err := json.Unmarshal(raw, &origins); err != nil {
 		t.Fatalf("origens: %v", err)
 	}
 
-	marcas := []string{" OU ", "até T$", "(escolha)"}
-	medidos, escolhas := 0, 0
-	for _, origem := range origens {
-		for _, frase := range origem.ItensIniciais {
-			medidos++
-			concessao := ParseOriginItem(frase)
-			if concessao.Kind != OriginItemFixed {
-				escolhas++
+	marks := []string{" OU ", "até T$", "(escolha)"}
+	measured, choices := 0, 0
+	for _, origin := range origins {
+		for _, sentence := range origin.StartingItems {
+			measured++
+			grant := ParseOriginItem(sentence)
+			if grant.Kind != OriginItemFixed {
+				choices++
 				continue
 			}
-			for _, marca := range marcas {
-				if strings.Contains(frase, marca) {
-					t.Errorf("%s: %q nasceu fixa e carrega %q", origem.Name, frase, marca)
+			for _, mark := range marks {
+				if strings.Contains(sentence, mark) {
+					t.Errorf("%s: %q nasceu fixa e carrega %q", origin.Name, sentence, mark)
 				}
 			}
-			if originMoneyDice.MatchString(frase) {
-				t.Errorf("%s: %q nasceu fixa e é dinheiro", origem.Name, frase)
+			if originMoneyDice.MatchString(sentence) {
+				t.Errorf("%s: %q nasceu fixa e é dinheiro", origin.Name, sentence)
 			}
 		}
 	}
@@ -127,7 +127,7 @@ func TestNoOriginGrantWithAChoiceIsBornFixed(t *testing.T) {
 	// com o `json` se parecem no terminal. Hoje são 71 frases, 14 delas
 	// escolha ou dinheiro; o piso é frouxo de propósito, porque o catálogo
 	// cresce e o que este guarda protege é a FORMA, não a contagem.
-	if medidos < 60 || escolhas < 10 {
-		t.Fatalf("mediu %d frases (%d de escolha) — o catálogo não chegou inteiro", medidos, escolhas)
+	if measured < 60 || choices < 10 {
+		t.Fatalf("mediu %d frases (%d de escolha) — o catálogo não chegou inteiro", measured, choices)
 	}
 }

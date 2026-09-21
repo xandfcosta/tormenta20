@@ -57,7 +57,7 @@ func TestTormentaCarismaLossCountsDeformidadeOnce(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			in := &CharacterInput{PowerIDs: tc.powers}
 			if tc.swapped != "" {
-				in.Deformidade = &Deformidade{TormentaPower: tc.swapped}
+				in.Deformity = &Deformidade{TormentaPower: tc.swapped}
 			}
 			if got := tormentaCarismaLoss(in); got != tc.want {
 				t.Errorf("perda=%d, queria %d", got, tc.want)
@@ -70,11 +70,11 @@ func TestTormentaCarismaLossCountsDeformidadeOnce(t *testing.T) {
 // acentuados da ficha e o índice de perícias é sem acento — "Percepção" tem de virar
 // `percepcao`, senão o bônus some em silêncio para metade das perícias do livro.
 func TestDeformidadeSkillIDs(t *testing.T) {
-	ids := deformidadeSkillIDs(&Deformidade{Pericias: []string{"Furtividade", "Percepção"}})
+	ids := deformidadeSkillIDs(&Deformidade{Expertises: []string{"Furtividade", "Percepção"}})
 	if len(ids) != 2 || ids[0] != "furtividade" || ids[1] != "percepcao" {
 		t.Fatalf("ids=%v, queria [furtividade percepcao]", ids)
 	}
-	if got := deformidadeSkillIDs(&Deformidade{Pericias: []string{"Perícia Inventada"}}); len(got) != 0 {
+	if got := deformidadeSkillIDs(&Deformidade{Expertises: []string{"Perícia Inventada"}}); len(got) != 0 {
 		t.Errorf("perícia inexistente virou %v, queria nada", got)
 	}
 	if got := deformidadeSkillIDs(nil); got != nil {
