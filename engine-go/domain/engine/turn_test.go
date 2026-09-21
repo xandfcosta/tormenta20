@@ -123,12 +123,14 @@ func TestTheRefusalSaysWhatIsLeft(t *testing.T) {
 //	do seu turno. Você pode reagir mesmo se não puder realizar ações, como por
 //	estar atordoado."
 
-// A REAÇÃO ATRAVESSA OS DOIS PORTÕES, e é o único custo que atravessa.
+// A REAÇÃO ATRAVESSA OS DOIS PORTÕES — a vez e o poder agir —, e é o único
+// custo que atravessa. O caso é o ATORDOADO do livro: não age, e reage. Quem
+// não reage é o inconsciente, e esse fica no `dying_test.go`.
 //
 // Ela é a razão de o instante existir separado do custo: o `Spend` já dizia que
 // reação não gasta nada, e "não gasta nada" não responde se PODE agora.
 func TestAReactionHappensOutOfTurnAndWithoutBeingAbleToAct(t *testing.T) {
-	outside := ActionMoment{OnTurn: false, CanAct: false}
+	outside := ActionMoment{OnTurn: false, CanAct: false, CanReact: true}
 	if err := UsableNow(ActionReaction, outside); err != nil {
 		t.Errorf("a reação ocorre fora do seu turno e mesmo sem poder agir (p233): %v", err)
 	}

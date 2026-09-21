@@ -118,10 +118,7 @@ func (st *Store) momentOf(characterID int64) (int64, engine.ActionMoment, bool) 
 		if !s.CountsRounds() {
 			continue
 		}
-		return sessionID, engine.ActionMoment{
-			OnTurn: isOnTurn(s, characterID),
-			CanAct: st.canAct(characterID),
-		}, true
+		return sessionID, st.characterMoment(characterID, isOnTurn(s, characterID)), true
 	}
 	return 0, engine.ActionMoment{}, false
 }
@@ -135,21 +132,29 @@ func isOnTurn(s *live.SessionRuntimeState, characterID int64) bool {
 	return onTurn != nil && *onTurn == characterID
 }
 
-// canAct é ter PV: a 0 "você cai inconsciente" (p236), e o poço do app tem piso
-// em zero.
+// characterMoment monta o instante do personagem pelo PV e pelas condições da
+// ficha — quem decide o que cada uma tira é o `engine.MomentFor`.
 //
-// Sem porta para a ficha, ou com a leitura falhando, a resposta é SIM. O erro
+// Sem porta para a ficha, ou com a leitura falhando, a resposta é DE PÉ. O erro
 // pende para o lado de deixar jogar: recusar o gesto de alguém porque o banco
 // tossiu troca um número errado por uma mesa parada, e é o mesmo caminho que o
 // `payUpkeep` escolheu pela mesma razão.
-func (st *Store) canAct(characterID int64) bool {
-	if st.sheet == nil {
-		return true
+func (st *Store) characterMoment(characterID int64, onTurn bool) engine.ActionMoment {
+	standing := engine.ActionMoment{OnTurn: onTurn, CanAct: true, CanReact: true}
+	if st.sheet == nil || st.turnEffects == nil {
+		return standing
 	}
 	pools, err := st.sheet.PoolsOf(context.Background(), []int64{characterID})
 	if err != nil {
-		return true
+		return standing
 	}
 	pool, found := pools[characterID]
-	return !found || pool.HpCurrent > 0
+	if !found {
+		return standing
+	}
+	conditions, err := st.turnEffects.ConditionsOf(context.Background(), characterID)
+	if err != nil {
+		conditions = nil
+	}
+	return engine.MomentFor(onTurn, pool.HpCurrent, conditions)
 }

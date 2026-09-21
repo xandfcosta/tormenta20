@@ -185,6 +185,15 @@ func (v sheetVitals) ExpireTurnEffects(ctx context.Context, charID int64) error 
 	})
 }
 
+// ConditionsOf lê as condições ligadas na ficha.
+func (v sheetVitals) ConditionsOf(ctx context.Context, charID int64) ([]string, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return nil, err
+	}
+	return sheet.UnmarshalStrings(row.Activeconditions), nil
+}
+
 // spellLabel é o nome que a MESA lê. Sem verbete, o id serve: um extrato que
 // diz "velocidade" ainda responde qual efeito caiu, e um extrato vazio não.
 //

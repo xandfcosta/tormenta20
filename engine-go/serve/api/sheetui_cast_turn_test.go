@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"t20engine/domain/live"
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/db/sqlcgen"
 )
 
 // CONJURAR CUSTA AÇÃO, E A REAÇÃO NÃO ESPERA A SUA VEZ (T20 p233).
@@ -150,5 +152,31 @@ func TestARefusedCastDoesNotSpendTheTurnAction(t *testing.T) {
 	// E a padrão continua inteira: a mesma magia, agora aprendida, sai.
 	if rec := learnAndCast(t, f, "luz"); sceneRefusal(rec.Body) != "" {
 		t.Errorf("a padrão tinha sido gasta pela recusa: %q", sceneRefusal(rec.Body))
+	}
+}
+
+// QUEM CAIU NÃO REAGE (decisão do dono, ALE-366): a isenção da p233 — "você
+// pode reagir mesmo se não puder realizar ações, como por estar atordoado" — é
+// do atordoado. O inconsciente está "sem ações (incluindo reações)" (p395).
+func TestAnUnconsciousCharacterCannotReact(t *testing.T) {
+	f := newSceneFixture(t)
+	startCombatWithSomeoneElseOnTurn(t, f)
+	// O CONTROLE: de pé, a mesma reação passa — sem ele, a recusa abaixo
+	// poderia vir de qualquer outra coisa.
+	if rec := learnAndCast(t, f, "queda-suave"); sceneRefusal(rec.Body) != "" {
+		t.Fatalf("o controle falhou: a reação de quem está de pé foi recusada: %q", sceneRefusal(rec.Body))
+	}
+	if err := f.s.queries.UpdateConditions(t.Context(), sqlcgen.UpdateConditionsParams{
+		ActiveConditions: `["inconsciente","sangrando"]`, UpdatedAt: dbvalue.NowISO(), ID: f.charID,
+	}); err != nil {
+		t.Fatalf("derrubar o personagem: %v", err)
+	}
+	cast := fmt.Sprintf("/personagens/%d/magias/conjura/queda-suave?tab=spells", f.charID)
+	refusal := sceneRefusal(f.pede(t, f.player, http.MethodPost, cast, "").Body.String())
+	if refusal == "" {
+		t.Fatal("o inconsciente conjurou uma reação: a p395 diz sem ações, incluindo reações")
+	}
+	if !strings.Contains(refusal, "reação") {
+		t.Errorf("a recusa diz %q, e quem lê precisa saber que é a inconsciência tirando a reação", refusal)
 	}
 }

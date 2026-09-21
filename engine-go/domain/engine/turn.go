@@ -150,6 +150,10 @@ type ActionMoment struct {
 	// CanAct é se ele pode realizar ações. A 0 PV "você cai inconsciente"
 	// (p236), e o livro isenta só a reação.
 	CanAct bool
+	// CanReact é se ele ainda REAGE. O atordoado reage (p233); o inconsciente
+	// não — "sem ações (incluindo reações)", p395. Quem monta os dois é o
+	// `MomentFor`.
+	CanReact bool
 }
 
 // UsableNow diz se o INSTANTE permite acionar uma habilidade deste custo.
@@ -162,6 +166,9 @@ type ActionMoment struct {
 func UsableNow(cost ActionCost, moment ActionMoment) error {
 	switch cost {
 	case ActionReaction:
+		if !moment.CanReact {
+			return fmt.Errorf("%w, e a inconsciência tira até a reação (p395)", ErrCannotAct)
+		}
 		return nil
 	case ActionPassive, ActionVaries:
 		return nil
