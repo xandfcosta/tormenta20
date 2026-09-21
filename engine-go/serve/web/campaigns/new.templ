@@ -36,7 +36,7 @@ templ newBody(v newView) {
 			<form method="post" action="/campanhas/nova" data-nav-region="content" data-nav-layout="column" class="space-y-4">
 				@ui.TextField(ui.Field{
 					Name: "name", Label: "Nome", Value: v.Name,
-					Obrigatorio: true, MaxSize: campaign.MaxNameLength,
+					Required: true, MaxSize: campaign.MaxNameLength,
 					Errors: v.Errors["name"],
 				})
 				@ui.TextArea(ui.Field{

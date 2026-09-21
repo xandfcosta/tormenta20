@@ -345,10 +345,10 @@ templ classChoice(v View, step int, title string) {
 // fixo, o herói a 17,5% de vida sai verde aqui e vermelho na Mesa, com a largura
 // certa nas duas — e quem lê a barra pela cor, que é como se lê uma barra, lê a
 // resposta errada.
-templ vitalBar(v View, label string, vital sheetVital, apagado bool) {
+templ vitalBar(v View, label string, vital sheetVital, dimmed bool) {
 	// O `relative` é CONTEXTO DE POSICIONAMENTO e não estilo: a piscada pinta um
 	// véu `absolute inset-0` sobre a fileira.
-	<div class={ "relative flex flex-wrap items-center gap-2", templ.KV("opacity-50", apagado) }>
+	<div class={ "relative flex flex-wrap items-center gap-2", templ.KV("opacity-50", dimmed) }>
 		<span class={ ui.SectionLabelClasses("muted", "w-6 shrink-0") }>{ label }</span>
 		<div aria-hidden="true" class="h-2 min-w-16 flex-1 overflow-hidden rounded-sm bg-grimorio-iron">
 			<div
@@ -384,7 +384,7 @@ templ vitalBar(v View, label string, vital sheetVital, apagado bool) {
 				class="shrink-0 font-mono text-sm tabular-nums text-hp-temp"
 			>{ vital.Temp }</span>
 		}
-		if !apagado {
+		if !dimmed {
 			// OS PASSOS SÃO UM GRUPO e a fileira ENROLA: em linha única o `+5` do
 			// PV termina em x=399 numa janela de 390, sem rolagem que chegue lá.
 			// Fora da janela um botão não é feio, é inalcançável — a cura de 5

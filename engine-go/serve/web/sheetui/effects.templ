@@ -262,14 +262,14 @@ templ situationalDetail(row situationalRow) {
 // conditionPickerDialog escolhe uma condição do livro para aplicar.
 templ conditionPickerDialog(v View) {
 	@pickerDialog("condition_dialog", "Aplicar condição", v.Effects.ConditionOptions) {
-		for _, opcao := range v.Effects.ConditionOptions {
+		for _, option := range v.Effects.ConditionOptions {
 			<button
 				type="button"
-				data-on:click={ sheetPost(v, "/efeitos/condicao/"+opcao.Command) + "; $condition_dialog = false" }
+				data-on:click={ sheetPost(v, "/efeitos/condicao/"+option.Command) + "; $condition_dialog = false" }
 				class="block w-full rounded-sm border border-grimorio-iron px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent"
 			>
-				<span class="block text-sm text-foreground">{ opcao.Label }</span>
-				<span class="block text-2xs text-muted-foreground">{ opcao.Detail }</span>
+				<span class="block text-sm text-foreground">{ option.Label }</span>
+				<span class="block text-2xs text-muted-foreground">{ option.Detail }</span>
 			</button>
 		}
 	}
@@ -281,14 +281,14 @@ templ conditionPickerDialog(v View) {
 // recebe (ou o mestre) escolhe a fonte e aplica aqui. O escopo vem do catálogo.
 templ buffPickerDialog(v View) {
 	@pickerDialog("buff_dialog", "Aplicar magia", v.Effects.BuffOptions) {
-		for _, opcao := range v.Effects.BuffOptions {
+		for _, option := range v.Effects.BuffOptions {
 			<button
 				type="button"
-				data-on:click={ sheetPost(v, "/efeitos/aplica/"+opcao.Command) + "; $buff_dialog = false" }
+				data-on:click={ sheetPost(v, "/efeitos/aplica/"+option.Command) + "; $buff_dialog = false" }
 				class="block w-full rounded-sm border border-grimorio-iron px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent"
 			>
-				<span class="block text-sm text-foreground">{ opcao.Label }</span>
-				<span class="block text-2xs text-muted-foreground">{ opcao.Detail }</span>
+				<span class="block text-sm text-foreground">{ option.Label }</span>
+				<span class="block text-2xs text-muted-foreground">{ option.Detail }</span>
 			</button>
 		}
 	}

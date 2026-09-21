@@ -150,8 +150,8 @@ templ castSpellDialog(v View, spell learnedSpellRow) {
 		if len(spell.Augments) > 0 {
 			<div class="space-y-1">
 				<p class={ ui.SectionLabelClasses("muted", "") }>Aprimoramentos</p>
-				for _, aprimoramento := range spell.Augments {
-					@augmentPicker(aprimoramento)
+				for _, augment := range spell.Augments {
+					@augmentPicker(augment)
 				}
 			</div>
 		}
@@ -329,11 +329,11 @@ templ spellFilters(v View) {
 			aria-label="Filtrar por escola"
 			class="h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm text-foreground outline-none"
 		>
-			for _, opcao := range v.Spells.Schools {
-				if opcao.Active {
-					<option value={ opcao.Value } selected>{ opcao.Label }</option>
+			for _, option := range v.Spells.Schools {
+				if option.Active {
+					<option value={ option.Value } selected>{ option.Label }</option>
 				} else {
-					<option value={ opcao.Value }>{ opcao.Label }</option>
+					<option value={ option.Value }>{ option.Label }</option>
 				}
 			}
 		</select>

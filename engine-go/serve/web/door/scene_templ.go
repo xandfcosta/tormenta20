@@ -26,7 +26,7 @@ import "t20engine/serve/web/ui"
 
 // doorFrame é a moldura de ferro no meio da tela-título, com o rodapé embaixo e
 // o aviso legal por último.
-func doorFrame(title, subtitle string, rodape templ.Component) templ.Component {
+func doorFrame(title, subtitle string, footer templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -135,12 +135,12 @@ func doorFrame(title, subtitle string, rodape templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if rodape != nil {
+		if footer != nil {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<p class=\"text-center text-sm text-muted-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = rodape.Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = footer.Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -264,14 +264,14 @@ func signInPage(v signInView) templ.Component {
 			}
 			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Name: "email", Label: "E-mail", Kind: "email", Autocomplete: "email",
-				Value: v.Email, Errors: v.Errors["email"], Obrigatorio: true,
+				Value: v.Email, Errors: v.Errors["email"], Required: true,
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Name: "senha", Label: "Senha", Kind: "password", Autocomplete: "current-password",
-				Errors: v.Errors["senha"], Obrigatorio: true,
+				Errors: v.Errors["senha"], Required: true,
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -400,7 +400,7 @@ func signUpPage(v signUpView) templ.Component {
 			}
 			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Name: "email", Label: "E-mail", Kind: "email", Autocomplete: "email",
-				Value: v.Email, Errors: v.Errors["email"], Obrigatorio: true,
+				Value: v.Email, Errors: v.Errors["email"], Required: true,
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -415,7 +415,7 @@ func signUpPage(v signUpView) templ.Component {
 			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Name: "senha", Label: "Senha", Kind: "password", Autocomplete: "new-password",
 				Hint: "Ao menos 8 caracteres.", Errors: v.Errors["senha"],
-				Obrigatorio: true, MinSize: 8, MaxSize: 128,
+				Required: true, MinSize: 8, MaxSize: 128,
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -548,7 +548,7 @@ func resetPage(v resetView) templ.Component {
 				templ_7745c5c3_Err = ui.TextField(ui.Field{
 					Name: "senha", Label: "Nova senha", Kind: "password", Autocomplete: "new-password",
 					Hint: "Ao menos 8 caracteres.", Errors: v.Errors["senha"],
-					Obrigatorio: true, MinSize: 8, MaxSize: 128,
+					Required: true, MinSize: 8, MaxSize: 128,
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

@@ -1009,7 +1009,7 @@ func draftExpertises(v View, expertises []creature.Skill) templ.Component {
 // `<input>` — o livro escreve habilidade especial em prosa ("Faro apurado.
 // Recebe +2 em testes de Percepção baseados em olfato", p289), e uma caixa de uma
 // linha faria o mestre resumir o que ele vai precisar ler em voz alta.
-func draftAbilities(v View, habilidades []string) templ.Component {
+func draftAbilities(v View, abilities []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1034,13 +1034,13 @@ func draftAbilities(v View, habilidades []string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if len(habilidades) == 0 {
+		if len(abilities) == 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<p class=\"border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground\">Nenhuma habilidade especial.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		for i := range habilidades {
+		for i := range abilities {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<div class=\"flex items-start gap-2\"><textarea rows=\"2\" aria-label=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1521,15 +1521,15 @@ func blockChoice(field, label string, options []blockOption) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, opcao := range options {
+		for _, option := range options {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "<option value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var70 string
-			templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Value)
+			templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue(option.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 345, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 345, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var70)
 			if templ_7745c5c3_Err != nil {
@@ -1540,9 +1540,9 @@ func blockChoice(field, label string, options []blockOption) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var71 string
-			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
+			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(option.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 345, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 345, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 			if templ_7745c5c3_Err != nil {

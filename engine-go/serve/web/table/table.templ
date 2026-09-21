@@ -94,16 +94,16 @@ templ surfaceSelector(v View) {
 	// Centrado, ele encabeça a coluna na Mesa e continua alcançável no
 	// Tabuleiro.
 	<div role="group" aria-label="O que ver na sessão" class="mx-auto flex w-full max-w-3xl shrink-0 gap-1 px-3 pt-2 sm:px-4">
-		for _, superficie := range surfaces(v) {
+		for _, layer := range surfaces(v) {
 			<button
 				type="button"
-				data-attr:aria-pressed={ fmt.Sprintf("%s ? 'true' : 'false'", surface(superficie.ID)) }
-				data-class={ surfaceStyling(superficie.ID) }
-				data-on:click={ pickSurface(superficie.ID) }
+				data-attr:aria-pressed={ fmt.Sprintf("%s ? 'true' : 'false'", surface(layer.ID)) }
+				data-class={ surfaceStyling(layer.ID) }
+				data-on:click={ pickSurface(layer.ID) }
 				class="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-none border px-2 text-xs uppercase tracking-wide outline-none transition-colors"
 			>
-				@ui.Icon(superficie.Icon, "size-4 shrink-0")
-				<span class="truncate">{ superficie.Label }</span>
+				@ui.Icon(layer.Icon, "size-4 shrink-0")
+				<span class="truncate">{ layer.Label }</span>
 			</button>
 		}
 	</div>

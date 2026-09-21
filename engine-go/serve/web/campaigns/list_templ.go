@@ -713,7 +713,7 @@ func myHeroBand(c campaignCard) templ.Component {
 	})
 }
 
-func oneHeroCard(initials, name, classes, gradient string, espacador bool) templ.Component {
+func oneHeroCard(initials, name, classes, gradient string, spacer bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -735,7 +735,7 @@ func oneHeroCard(initials, name, classes, gradient string, espacador bool) templ
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var31 = []any{"flex w-full max-w-xs items-center gap-2 rounded-sm border border-grimorio-iron p-2 text-left",
-			templ.KV("invisible", espacador)}
+			templ.KV("invisible", spacer)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var31...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -744,7 +744,7 @@ func oneHeroCard(initials, name, classes, gradient string, espacador bool) templ
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if espacador {
+		if spacer {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, " aria-hidden=\"true\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1127,7 +1127,7 @@ func ifLive(c campaignCard, live, stopped ui.Variant) ui.Variant {
 // Os botões **Entrar** e **Nova** do cabeçalho FICAM: a vaga representa só um
 // dos dois caminhos de entrada, e "entrar com o link que o mestre mandou" não
 // tem palco — não há campanha para pôr nele antes de aceitar o convite.
-func blankSheetStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
+func blankSheetStage(alone bool, anterior *ui.Neighbor) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1152,7 +1152,7 @@ func blankSheetStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if !sozinha {
+		if !alone {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, " data-show=\"$cursor == 0\" data-class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1233,7 +1233,7 @@ func blankSheetStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if sozinha {
+		if alone {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<p class=\"max-w-xl px-4 text-center text-sm text-muted-foreground\">Você ainda não tem campanha nenhuma. Comece a sua, ou entre numa com o link que o mestre enviou.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

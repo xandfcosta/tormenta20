@@ -1252,15 +1252,15 @@ func conditionPickerDialog(v View) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			for _, opcao := range v.Effects.ConditionOptions {
+			for _, option := range v.Effects.ConditionOptions {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "<button type=\"button\" data-on:click=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var64 string
-				templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/efeitos/condicao/"+opcao.Command) + "; $condition_dialog = false")
+				templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/efeitos/condicao/"+option.Command) + "; $condition_dialog = false")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 268, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 268, Col: 101}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 				if templ_7745c5c3_Err != nil {
@@ -1271,9 +1271,9 @@ func conditionPickerDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var65 string
-				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
+				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(option.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 271, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 271, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 				if templ_7745c5c3_Err != nil {
@@ -1284,9 +1284,9 @@ func conditionPickerDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var66 string
-				templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Detail)
+				templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(option.Detail)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 272, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 272, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 				if templ_7745c5c3_Err != nil {
@@ -1344,15 +1344,15 @@ func buffPickerDialog(v View) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			for _, opcao := range v.Effects.BuffOptions {
+			for _, option := range v.Effects.BuffOptions {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "<button type=\"button\" data-on:click=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var69 string
-				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/efeitos/aplica/"+opcao.Command) + "; $buff_dialog = false")
+				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/efeitos/aplica/"+option.Command) + "; $buff_dialog = false")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 287, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 287, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 				if templ_7745c5c3_Err != nil {
@@ -1363,9 +1363,9 @@ func buffPickerDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var70 string
-				templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
+				templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(option.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 290, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 290, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 				if templ_7745c5c3_Err != nil {
@@ -1376,9 +1376,9 @@ func buffPickerDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var71 string
-				templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Detail)
+				templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(option.Detail)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 291, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 291, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 				if templ_7745c5c3_Err != nil {

@@ -91,7 +91,7 @@ func JoinBody(v joinView) templ.Component {
 			} else {
 				templ_7745c5c3_Err = ui.TextField(ui.Field{
 					Name: "campaignId", Label: "Número da campanha", Kind: "number",
-					Value: v.TypedNumber, Obrigatorio: true,
+					Value: v.TypedNumber, Required: true,
 					Hint:   "O mestre da mesa envia esse número.",
 					Errors: v.Errors["campaignId"],
 				}).Render(ctx, templ_7745c5c3_Buffer)
@@ -394,7 +394,7 @@ func heroChoice(v joinView) templ.Component {
 //
 // O anel de foco mora no RÓTULO e não no rádio, pela razão que o `raceTile` da
 // forja registra por extenso — e com o mesmo afastamento de 1px da casa.
-func heroPlate(h joinHero, marcado bool) templ.Component {
+func heroPlate(h joinHero, checked bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -415,7 +415,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<label class=\"flex cursor-pointer items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring\"><input type=\"radio\" name=\"characterId\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<label class=\"flex min-w-0 cursor-pointer items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring\"><input type=\"radio\" name=\"characterId\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -432,7 +432,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if marcado {
+		if checked {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, " checked")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

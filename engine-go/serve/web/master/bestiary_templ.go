@@ -72,8 +72,8 @@ var railStops = flattenRail()
 
 func flattenRail() []railStop {
 	var outside []railStop
-	for _, secao := range masterRail {
-		outside = append(outside, secao.Stops...)
+	for _, section := range masterRail {
+		outside = append(outside, section.Stops...)
 	}
 	return outside
 }
@@ -162,7 +162,7 @@ func railNav(current string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, secao := range masterRail {
+		for _, section := range masterRail {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "        ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -190,9 +190,9 @@ func railNav(current string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(secao.Label)
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(section.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 126, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 126, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -202,7 +202,7 @@ func railNav(current string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, f := range secao.Stops {
+			for _, f := range section.Stops {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

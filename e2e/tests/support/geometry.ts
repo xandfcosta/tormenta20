@@ -404,29 +404,6 @@ export async function expectColunasMonotonicas(
 }
 
 /**
- * Nada dentro da cena é CORTADO de lado (ALE-337).
- *
- * É a outra metade da pergunta do `expectNadaRolaDeLado`, e as duas juntas
- * fecham o eixo horizontal:
- *
- *   - lá, o contêiner declara `overflow-x: auto` e ROLA — o conteúdo está
- *     alcançável, e o defeito é ter de rolar de lado para alcançá-lo;
- *   - aqui, o contêiner declara `overflow-x: visible` e o conteúdo TRANSBORDA —
- *     ele não rola em lugar nenhum, e a casca (`h-dvh overflow-hidden`) o
- *     recorta em silêncio. O que passa da borda não existe para quem lê.
- *
- * O terceiro guarda do eixo, o `expectNoHorizontalOverflow`, não alcança nenhuma
- * das duas: ele lê `documentElement.scrollWidth`, e a casca garante que o
- * documento nunca cresce. Medido a 390px nos catálogos — o cartão media 352px
- * numa caixa de 308, três palavras cortadas no meio, e o documento em 390 de
- * 390.
- *
- * O DENOMINADOR vem junto porque uma lista de reprovados vazia e um seletor que
- * não casa com nada se parecem no terminal.
- *
- * @example await expectNothingIsClippedSideways(page, '#catalogs')
- */
-/**
  * Espera as animações em curso terminarem, e é obrigatório antes de medir
  * LARGURA.
  *
@@ -450,7 +427,50 @@ async function esperaAsAnimacoesPararem(page: Page): Promise<void> {
     })
 }
 
+/**
+ * Nada dentro da cena é CORTADO de lado (ALE-337).
+ *
+ * É a outra metade da pergunta do `expectNadaRolaDeLado`, e as duas juntas
+ * fecham o eixo horizontal:
+ *
+ *   - lá, o contêiner declara `overflow-x: auto` e ROLA — o conteúdo está
+ *     alcançável, e o defeito é ter de rolar de lado para alcançá-lo;
+ *   - aqui, o contêiner declara `overflow-x: visible` e o conteúdo TRANSBORDA —
+ *     ele não rola em lugar nenhum, e a casca (`h-dvh overflow-hidden`) o
+ *     recorta em silêncio. O que passa da borda não existe para quem lê.
+ *
+ * O terceiro guarda do eixo, o `expectNoHorizontalOverflow`, não alcança nenhuma
+ * das duas: ele lê `documentElement.scrollWidth`, e a casca garante que o
+ * documento nunca cresce. Medido a 390px nos catálogos — o cartão media 352px
+ * numa caixa de 308, três palavras cortadas no meio, e o documento em 390 de
+ * 390.
+ *
+ * O DENOMINADOR vem junto porque uma lista de reprovados vazia e um seletor que
+ * não casa com nada se parecem no terminal.
+ *
+ * @example await expectNothingIsClippedSideways(page, '#catalogs')
+ */
 export async function expectNothingIsClippedSideways(page: Page, root: string): Promise<void> {
+  const { cortados: clipped, medidos: measured } = await measureSidewaysClipping(page, root)
+  expect(measured, `a varredura não achou nó nenhum dentro de ${root}`).toBeGreaterThan(5)
+  expect(
+    clipped,
+    `conteúdo cortado de lado dentro de ${root} @ ${page.viewportSize()?.width}px — ele não rola, então quem lê nunca o alcança`,
+  ).toEqual([])
+}
+
+/**
+ * measureSidewaysClipping é a MEDIÇÃO sozinha, sem asserção.
+ *
+ * Ela existe separada porque há dois leitores com perguntas opostas: o
+ * `expectNothingIsClippedSideways` afirma que a lista está vazia, e o caso da
+ * face mais larga afirma, para a dívida registrada, que ela NÃO está — é a
+ * segunda direção da catraca, a que faz a dívida encolher.
+ */
+export async function measureSidewaysClipping(
+  page: Page,
+  root: string,
+): Promise<{ cortados: string[]; medidos: number }> {
   await esperaAsAnimacoesPararem(page)
   const measure = await page.evaluate((rootSelector) => {
     const root = document.querySelector(rootSelector as string)
@@ -475,12 +495,7 @@ export async function expectNothingIsClippedSideways(page: Page, root: string): 
   }, root)
 
   expect(measure, `a raiz ${root} não existe na tela`).not.toBeNull()
-  const { cortados: cut, medidos: measured } = measure as { cortados: string[]; medidos: number }
-  expect(measured, `a varredura não achou nó nenhum dentro de ${root}`).toBeGreaterThan(5)
-  expect(
-    cut,
-    `conteúdo cortado de lado dentro de ${root} @ ${page.viewportSize()?.width}px — ele não rola, então quem lê nunca o alcança`,
-  ).toEqual([])
+  return measure as { cortados: string[]; medidos: number }
 }
 
 /**

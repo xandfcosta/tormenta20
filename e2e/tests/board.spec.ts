@@ -336,13 +336,13 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
 
     const squares = camadaDe(page, /Pintar terreno/)
     const box = (await squares.boundingBox())!
-    const de = { x: box.x + 120, y: box.y + 120 }
-    const ate = { x: de.x + 120, y: de.y + 90 }
+    const dragStart = { x: box.x + 120, y: box.y + 120 }
+    const dragEnd = { x: dragStart.x + 120, y: dragStart.y + 90 }
 
     // O CONTROLE: o MESMO arrasto sem Shift pinta uma linha, não uma área.
-    await page.mouse.move(de.x, de.y)
+    await page.mouse.move(dragStart.x, dragStart.y)
     await page.mouse.down()
-    await page.mouse.move(ate.x, ate.y, { steps: 10 })
+    await page.mouse.move(dragEnd.x, dragEnd.y, { steps: 10 })
     await page.mouse.up()
     const strokeOf = await page.locator('.board-terrain.board-difficult').count()
 

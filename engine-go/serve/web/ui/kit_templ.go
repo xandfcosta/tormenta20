@@ -188,9 +188,9 @@ type Field struct {
 	// Viram validação NATIVA do navegador, que não substitui o servidor: ele
 	// continua sendo a autoridade. O que se ganha é a mensagem localizada e
 	// acessível de graça, antes da ida à rede.
-	Obrigatorio bool
-	MinSize     int
-	MaxSize     int
+	Required bool
+	MinSize  int
+	MaxSize  int
 }
 
 func TextField(c Field) templ.Component {
@@ -315,7 +315,7 @@ func TextField(c Field) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if c.Obrigatorio {
+		if c.Required {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " required")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -941,14 +941,14 @@ func SectionLabelClasses(tom, extra string) string {
 // tela e o título pode respirar; um cabeçalho de painel disputa espaço com nove
 // outros, e apertar é o que o mantém legível ao lado dos vizinhos.
 func SectionTitleClasses(context, tom, extra string) string {
-	entreletra := "tracking-[0.16em]"
+	tracking := "tracking-[0.16em]"
 	if context == "painel" {
-		entreletra = "tracking-wide"
+		tracking = "tracking-wide"
 	}
 	if tom == "" {
 		tom = "gold"
 	}
-	return Join("font-heading text-lg uppercase "+entreletra+" "+SectionLabelTone(tom), extra)
+	return Join("font-heading text-lg uppercase "+tracking+" "+SectionLabelTone(tom), extra)
 }
 
 // FieldLabelClasses é o rótulo colado num VALOR — o "FOR" ao lado do 16.

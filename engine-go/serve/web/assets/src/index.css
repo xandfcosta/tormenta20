@@ -34,6 +34,63 @@
     U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+/* Liberation Sans (OFL 2.1.5, licença em /fonts/liberation-license.txt) — a
+ * face de CORPO, auto-hospedada pela mesma razão da Cinzel, mais uma que só
+ * esta descobriu: `ui-sans-serif, system-ui` não é uma escolha, é um pedido à
+ * máquina, e a máquina responde diferente. O app MEDE texto desenhado — corte
+ * lateral, piso de toque, contraste —, então com a face vindo de fora a bancada
+ * e a CI deixam de medir a mesma tela. A `main` passou três merges vermelha por
+ * isso: o número do atributo pedia 27px aqui e 37px no runner, numa caixa de 34
+ * (ALE-362).
+ *
+ * Métrica ARIAL, e é isto que a escolhe: é a face que esta casa já desenhava
+ * (`fc-match system-ui` → Liberation Sans), então fixá-la não muda o que o dono
+ * vê — muda o que TODO O RESTO vê, que é o ponto.
+ *
+ * Só 400 e 700: o 500/600 do Tailwind casa no 700 pela regra de peso do CSS, e
+ * o itálico (oito usos, todos de letra miúda) sai do OBLÍQUO sintético da
+ * própria face — que continua sendo a face do app, e não a da máquina. Um
+ * arquivo de 27KB para oito linhas de texto em itálico não se paga. */
+@font-face {
+  font-family: 'Liberation Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/liberation-sans-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Liberation Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/liberation-sans-bold.woff2') format('woff2');
+}
+
+/* JetBrains Mono (OFL 1.1 sem nome reservado, licença em
+ * /fonts/jetbrains-mono-license.txt) — a face dos NÚMEROS DE JOGO, que a cena
+ * pede 202 vezes como `font-mono tabular-nums`. Auto-hospedada pela razão da
+ * Liberation Sans e escolhida pelo mesmo critério: é a face que `fc-match
+ * monospace` já devolve nesta casa, então fixá-la não muda o que o dono vê.
+ *
+ * Aqui morava a ideia de deixar o `--font-mono` como dívida, por a única
+ * monoespaçada livre à mão ser a Liberation Mono — métrica Courier, que teria
+ * redesenhado os números da mesa. A JetBrains Mono desfez a escolha entre
+ * "conserta" e "não redesenha": ela é OFL e já estava aqui. */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-bold.woff2') format('woff2');
+}
+
 /* Default shadcn neutral theme. Custom "Controlled Decay" palette stripped —
  * the app is on plain shadcn now, focused on function. The only kept
  * non-default tokens are the HP/PM bar colors (functional state signal). */
@@ -369,11 +426,10 @@
 }
 
 @theme inline {
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
-  --font-serif: ui-serif, Georgia, serif;
-  --font-display: ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Liberation Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sans);
   --font-heading: 'Cinzel', ui-serif, Georgia, serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
   /* Três degraus ABAIXO do `text-xs`, que a cena usa 321 vezes e que nenhum
    * token nomeava (ALE-173, P2). Não são exagero de miniaturização: a mesa é
@@ -509,11 +565,12 @@
     @apply bg-background text-foreground antialiased;
   }
 
-  /* Kept as no-op-ish utilities so the usages compile; custom faces dropped —
-   * `font-display` is now the system sans. A irmã `.font-hud` foi APAGADA na
-   * ALE-173: ela era a utilidade dos números de jogo (mono + `tnum`), nasceu
-   * junto com esta e terminou com ZERO usos — quem quer números alinhados
-   * escreve `font-mono tabular-nums` direto, que é o que a cena inteira faz. */
+  /* `.font-display` é a face de CORPO fora de uma cena e a Cinzel dentro dela —
+   * o `.scene-grimorio` reaponta o token, e é por isso que ela existe em vez de
+   * cada chamador escolher. A irmã `.font-hud` foi APAGADA na ALE-173: ela era
+   * a utilidade dos números de jogo (mono + `tnum`), nasceu junto com esta e
+   * terminou com ZERO usos — quem quer números alinhados escreve `font-mono
+   * tabular-nums` direto, que é o que a cena inteira faz. */
   .font-display {
     font-family: var(--font-display);
   }

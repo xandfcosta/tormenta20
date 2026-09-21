@@ -62,6 +62,7 @@ anel
 animacao
 antes
 antigo
+apagado
 apagou
 aparencia
 apeca
@@ -70,11 +71,13 @@ aplicada
 aplicadas
 aprender
 aprendida
+aprimoramento
 aproximando
 arcano
 argumento
 arma
 armaduras
+armas
 arodada
 arquivo
 arquivos
@@ -318,6 +321,7 @@ energia
 engole
 entrada
 entradas
+entreletra
 envio
 equipado
 equipados
@@ -351,6 +355,7 @@ escritores
 escudo
 escuro
 espacado
+espacador
 espaco
 espacos
 espada
@@ -447,6 +452,7 @@ guardadas
 guardado
 guardados
 habilidade
+habilidades
 heroi
 hipotese
 historico
@@ -485,6 +491,7 @@ junto
 laco
 lado
 lados
+ladrilho
 lama
 larga
 largo
@@ -523,6 +530,7 @@ maos
 marcacao
 marcada
 marcadas
+marcado
 marcador
 marcadores
 marcas
@@ -539,6 +547,7 @@ medidos
 meia
 meio
 melhor
+melhoria
 melhorias
 membro
 membros
@@ -577,6 +586,7 @@ normalizadas
 novas
 novos
 objetos
+obrigatorio
 obtido
 oculta
 oculto
@@ -601,6 +611,7 @@ omestre
 onde
 opaco
 opainel
+opcao
 opcionais
 opcoes
 oprefixo
@@ -649,6 +660,7 @@ penalidade
 pendencias
 pendurados
 percepcao
+perigo
 perna
 pernas
 perseguicao
@@ -778,6 +790,7 @@ reto
 retrato
 revelado
 rodada
+rodape
 rola
 rolada
 rolado
@@ -806,6 +819,7 @@ salas
 saldo
 saudavel
 saude
+secao
 segredo
 seguinte
 segunda
@@ -827,6 +841,7 @@ sinopse
 sitios
 situacao
 sobra
+sobrancelha
 sobrando
 sobrecarga
 sobrecarregado
@@ -838,11 +853,13 @@ soltas
 solto
 soltos
 sorteado
+sozinha
 subir
 subtitulo
 sufixo
 sujo
 sumidos
+superficie
 sóde
 tabela
 tabelas
@@ -894,6 +911,7 @@ usadas
 usado
 usados
 usar
+uso
 usos
 usuario
 usuarios

@@ -156,11 +156,11 @@ templ attributePicker(v View, row expertiseRow) {
 		data-on:change={ attributeCommand(v, row.Command) }
 		class={ ui.BadgeClasses("min-w-0 max-w-full shrink cursor-pointer border-grimorio-iron bg-transparent font-mono text-2xs text-foreground") }
 	>
-		for _, opcao := range v.Expertises.Attributes {
-			if opcao.Key == row.Attribute {
-				<option value={ opcao.Key } selected>{ opcao.Label }</option>
+		for _, option := range v.Expertises.Attributes {
+			if option.Key == row.Attribute {
+				<option value={ option.Key } selected>{ option.Label }</option>
 			} else {
-				<option value={ opcao.Key }>{ opcao.Label }</option>
+				<option value={ option.Key }>{ option.Label }</option>
 			}
 		}
 	</select>
@@ -263,8 +263,8 @@ templ craftDialog(v View) {
 						data-bind:new_attribute
 						class="mt-1 h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-2 font-mono text-sm text-foreground outline-none"
 					>
-						for _, opcao := range v.Expertises.Attributes {
-							<option value={ opcao.Key }>{ opcao.Label }</option>
+						for _, option := range v.Expertises.Attributes {
+							<option value={ option.Key }>{ option.Label }</option>
 						}
 					</select>
 				</div>

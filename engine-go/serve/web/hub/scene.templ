@@ -183,9 +183,9 @@ templ playerMenu(v hubView) {
 
 // quickItemClass: uma linha do menu rápido. Em função e não repetida sete
 // vezes porque a lista de classes é longa e uma cópia divergente é invisível.
-func quickItemClass(perigo bool) string {
+func quickItemClass(danger bool) string {
 	base := "flex w-full items-center gap-2.5 rounded-none px-2.5 py-2 text-left font-heading text-sm tracking-wide transition-colors hover:bg-accent focus-visible:bg-accent outline-none"
-	if perigo {
+	if danger {
 		return ui.Join(base, "text-grimorio-crimson-bright")
 	}
 	return ui.Join(base, "text-foreground")
