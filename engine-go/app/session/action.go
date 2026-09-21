@@ -143,10 +143,10 @@ func isOnTurn(s *live.SessionRuntimeState, characterID int64) bool {
 // tossiu troca um número errado por uma mesa parada, e é o mesmo caminho que o
 // `payUpkeep` escolheu pela mesma razão.
 func (st *Store) canAct(characterID int64) bool {
-	if st.ficha == nil {
+	if st.sheet == nil {
 		return true
 	}
-	pools, err := st.ficha.PoolsOf(context.Background(), []int64{characterID})
+	pools, err := st.sheet.PoolsOf(context.Background(), []int64{characterID})
 	if err != nil {
 		return true
 	}

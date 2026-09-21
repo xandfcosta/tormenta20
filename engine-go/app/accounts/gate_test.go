@@ -14,9 +14,9 @@ import (
 
 // portao monta um portão SEM banco. Assinar e conferir não tocam em `queries`
 // nem em `db`, e é por isso que este caso não paga uma migração.
-func portao(segredo string) Gate {
+func portao(secret string) Gate {
 	return NewGate(nil, nil, config.Config{
-		JWTSecret: segredo, JWTExpiresIn: "7d", CookieName: "t20_session",
+		JWTSecret: secret, JWTExpiresIn: "7d", CookieName: "t20_session",
 	})
 }
 
@@ -38,16 +38,16 @@ func TestASessionSignedWithAnotherSecretIsRefused(t *testing.T) {
 // e número inválido. Um `JWT_EXPIRES_IN` malformado caindo em silêncio para sete
 // dias é o tipo de coisa que ninguém descobre olhando.
 func TestParseExpiry(t *testing.T) {
-	casos := map[string]time.Duration{
+	cases := map[string]time.Duration{
 		"7d":  7 * 24 * time.Hour,
 		"12h": 12 * time.Hour,
 		"30m": 30 * time.Minute,
 		"":    sessionTTL,
 		"abc": sessionTTL,
 	}
-	for entrada, esperado := range casos {
-		if veio := parseExpiry(entrada); veio != esperado {
-			t.Errorf("parseExpiry(%q) = %v, esperado %v", entrada, veio, esperado)
+	for entry, want := range cases {
+		if came := parseExpiry(entry); came != want {
+			t.Errorf("parseExpiry(%q) = %v, esperado %v", entry, came, want)
 		}
 	}
 }

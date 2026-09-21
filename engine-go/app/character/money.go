@@ -19,14 +19,14 @@ import (
 // é onde o teto da ficha já morava. Aqui fica o que é desta camada: pedir a
 // decisão e gravá-la.
 func (p Plays) ChangeMoney(
-	ctx context.Context, row sqlcgen.Character, modo string, valor float64,
+	ctx context.Context, row sqlcgen.Character, mode string, value float64,
 ) error {
-	saldo, recusa := sheet.BalanceAfterMoneyGesture(row.Tibar, modo, valor)
-	if recusa != "" {
-		return fmt.Errorf("%s", recusa)
+	balance, refusal := sheet.BalanceAfterMoneyGesture(row.Tibar, mode, value)
+	if refusal != "" {
+		return fmt.Errorf("%s", refusal)
 	}
 	if err := p.queries.SetCharacterTibar(ctx, sqlcgen.SetCharacterTibarParams{
-		Tibar: saldo, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
+		Tibar: balance, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 	}); err != nil {
 		return fmt.Errorf("gravar o dinheiro da ficha %d: %w", row.ID, err)
 	}

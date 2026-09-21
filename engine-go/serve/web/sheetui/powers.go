@@ -141,7 +141,7 @@ func powerRowFor(
 	}
 	linha.Limit = limitBadge(*spec)
 	linha.Cost = writtenCost(*spec)
-	contexto.UsedThisScene, contexto.UsedToday = usos[spec.ID].Cena, usos[spec.ID].Dia
+	contexto.UsedThisScene, contexto.UsedToday = usos[spec.ID].Scene, usos[spec.ID].Day
 	if escopo := book.ChargedScope(*spec); escopo != "" {
 		linha.Spent = writtenSpent(escopo, usos[spec.ID])
 	}
@@ -366,9 +366,9 @@ func stepsMore(spec book.Activation) string {
 
 // writtenSpent é "usado 1/1 cena" — o que já se gastou do limite cobrado.
 func writtenSpent(escopo string, uso character.PowerUse) string {
-	gasto, palavra := uso.Dia, "dia"
+	gasto, palavra := uso.Day, "dia"
 	if escopo == "scene" {
-		gasto, palavra = uso.Cena, "cena"
+		gasto, palavra = uso.Scene, "cena"
 	}
 	return "usado " + strconv.Itoa(gasto) + "/1 " + palavra
 }

@@ -24,13 +24,13 @@ func (bs *Store) Archive(ctx context.Context, campaignID int64, state *board.Boa
 		return err
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
-	existente, err := bs.q.FindCampaignPlaceByName(ctx, sqlcgen.FindCampaignPlaceByNameParams{
+	existing, err := bs.q.FindCampaignPlaceByName(ctx, sqlcgen.FindCampaignPlaceByNameParams{
 		Campaignid: campaignID,
 		Name:       state.Place,
 	})
 	if err == nil {
 		_, err = bs.q.UpdateCampaignPlace(ctx, sqlcgen.UpdateCampaignPlaceParams{
-			State: string(blob), Updatedat: now, ID: existente.ID,
+			State: string(blob), Updatedat: now, ID: existing.ID,
 		})
 		return err
 	}
@@ -51,16 +51,16 @@ func (bs *Store) Places(ctx context.Context, campaignID int64) []board.Place {
 		log.Printf("campaign %d: falha ao listar lugares (%v)", campaignID, err)
 		return []board.Place{}
 	}
-	lugares := make([]board.Place, 0, len(rows))
+	places := make([]board.Place, 0, len(rows))
 	for _, row := range rows {
-		lugares = append(lugares, board.Place{
+		places = append(places, board.Place{
 			ID:        row.ID,
 			Name:      row.Name,
 			Tokens:    countTokens(row.State),
 			UpdatedAt: row.Updatedat,
 		})
 	}
-	return lugares
+	return places
 }
 
 // OpenPlace põe um lugar guardado numa ABA NOVA, sem tocar no que já está na
@@ -87,14 +87,14 @@ func (bs *Store) openPlaceLocked(ctx context.Context, campaignID, sessionID, pla
 	if row.Campaignid != campaignID {
 		return nil, errPlaceFromAnotherCampaign
 	}
-	cena, err := storedScene(row.State, row.Name)
+	scene, err := storedScene(row.State, row.Name)
 	if err != nil {
 		return nil, err
 	}
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
-	return bs.inNewTabLocked(sessionID, cena)
+	return bs.inNewTabLocked(sessionID, scene)
 }
 
 // inNewTabLocked acrescenta a cena como mais uma aba, com a trava na mão.
@@ -103,38 +103,38 @@ func (bs *Store) openPlaceLocked(ctx context.Context, campaignID, sessionID, pla
 // cópia disso é como uma delas esquece o TETO de abas — a diferença entre uma
 // sessão com oito cenas e uma que cresce sem limite carregando tudo em toda
 // hidratação.
-func (bs *Store) inNewTabLocked(sessionID int64, cena *board.BoardState) (*board.BoardState, error) {
+func (bs *Store) inNewTabLocked(sessionID int64, scene *board.BoardState) (*board.BoardState, error) {
 	if len(bs.boards[sessionID]) >= openBoardsCeiling {
 		return nil, fmt.Errorf(
 			"esta sessão já tem %d tabuleiros abertos (teto %d): feche um antes de abrir outro lugar",
 			len(bs.boards[sessionID]), openBoardsCeiling)
 	}
-	cena.ID = bs.newID()
-	cena.Seq = bs.nextSeqLocked(sessionID)
-	bs.boards[sessionID] = append(bs.boards[sessionID], cena)
-	return cloneBoard(cena), nil
+	scene.ID = bs.newID()
+	scene.Seq = bs.nextSeqLocked(sessionID)
+	bs.boards[sessionID] = append(bs.boards[sessionID], scene)
+	return cloneBoard(scene), nil
 }
 
 // storedScene desempacota o que o acervo guardou, pronto para entrar na mesa.
 // As três decisões abaixo moram aqui e não em quem chama: copiadas, uma cena
 // reaberta por um caminho voltaria com o movimento proposto da semana passada e
 // a do outro não.
-func storedScene(blob, nome string) (*board.BoardState, error) {
-	var cena board.BoardState
-	if err := json.Unmarshal([]byte(blob), &cena); err != nil {
+func storedScene(blob, name string) (*board.BoardState, error) {
+	var scene board.BoardState
+	if err := json.Unmarshal([]byte(blob), &scene); err != nil {
 		return nil, err
 	}
 	// Fatia VAZIA e não nula: `null` no JSON derruba quem indexa `tokens.length`.
-	if cena.Tokens == nil {
-		cena.Tokens = []board.BoardToken{}
+	if scene.Tokens == nil {
+		scene.Tokens = []board.BoardToken{}
 	}
 	// O provisório não volta: ele é de uma cena que já acabou, e a mesa que
 	// reabre a taverna não deve nada a um movimento proposto na semana passada.
-	cena.Pending = nil
+	scene.Pending = nil
 	// O nome vem da COLUNA e não do JSON: renomear o lugar mexeria em dois
 	// lugares, e o de fora é o que a lista mostra.
-	cena.Place = nome
-	return &cena, nil
+	scene.Place = name
+	return &scene, nil
 }
 
 // PlaceScene devolve a cena INTEIRA de um lugar guardado — é o que o mestre
@@ -152,18 +152,18 @@ func (bs *Store) PlaceScene(ctx context.Context, campaignID, placeID int64) (*bo
 	if row.Campaignid != campaignID {
 		return nil, errPlaceFromAnotherCampaign
 	}
-	var cena board.BoardState
-	if err := json.Unmarshal([]byte(row.State), &cena); err != nil {
+	var scene board.BoardState
+	if err := json.Unmarshal([]byte(row.State), &scene); err != nil {
 		return nil, err
 	}
-	if cena.Tokens == nil {
-		cena.Tokens = []board.BoardToken{}
+	if scene.Tokens == nil {
+		scene.Tokens = []board.BoardToken{}
 	}
 	// O nome vem da COLUNA, como no reabrir: ele é o que a lista mostra, e ter
 	// duas verdades sobre como o lugar se chama é como elas divergem.
-	cena.Place = row.Name
-	cena.Pending = nil
-	return &cena, nil
+	scene.Place = row.Name
+	scene.Pending = nil
+	return &scene, nil
 }
 
 // SavePlaceScene grava a cena que o mestre montou, sem tocar na mesa.
@@ -177,7 +177,7 @@ func (bs *Store) PlaceScene(ctx context.Context, campaignID, placeID int64) (*bo
 // uma mutação pura que produza coordenada absurda ou estoure o teto de peças —
 // as puras não sabem de nenhum dos dois. Sem ela o lixo só apareceria quando a
 // cena chegasse à mesa.
-func (bs *Store) SavePlaceScene(ctx context.Context, campaignID, placeID int64, cena *board.BoardState) error {
+func (bs *Store) SavePlaceScene(ctx context.Context, campaignID, placeID int64, scene *board.BoardState) error {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return err
@@ -185,11 +185,11 @@ func (bs *Store) SavePlaceScene(ctx context.Context, campaignID, placeID int64, 
 	if row.Campaignid != campaignID {
 		return errPlaceFromAnotherCampaign
 	}
-	if err := sanitizeScene(cena, bs.newID); err != nil {
+	if err := sanitizeScene(scene, bs.newID); err != nil {
 		return err
 	}
-	cena.Place = row.Name
-	blob, err := json.Marshal(cena)
+	scene.Place = row.Name
+	blob, err := json.Marshal(scene)
 	if err != nil {
 		return err
 	}
@@ -207,12 +207,12 @@ func (bs *Store) SavePlaceScene(ctx context.Context, campaignID, placeID int64, 
 // A peça nova nasce sem id (o cliente não cunha id de servidor) e ganha um
 // aqui; o provisório não existe em acervo, porque ele é de uma cena que está
 // acontecendo.
-func sanitizeScene(cena *board.BoardState, newID func() string) error {
-	if len(cena.Tokens) > board.MaxTokens {
-		return fmt.Errorf("a cena tem %d peças (teto %d)", len(cena.Tokens), board.MaxTokens)
+func sanitizeScene(scene *board.BoardState, newID func() string) error {
+	if len(scene.Tokens) > board.MaxTokens {
+		return fmt.Errorf("a cena tem %d peças (teto %d)", len(scene.Tokens), board.MaxTokens)
 	}
-	for i := range cena.Tokens {
-		token := &cena.Tokens[i]
+	for i := range scene.Tokens {
+		token := &scene.Tokens[i]
 		if token.Footprint <= 0 {
 			token.Footprint = 1
 		}
@@ -223,7 +223,7 @@ func sanitizeScene(cena *board.BoardState, newID func() string) error {
 			token.ID = newID()
 		}
 	}
-	cena.Pending = nil
+	scene.Pending = nil
 	return nil
 }
 
@@ -231,13 +231,13 @@ func sanitizeScene(cena *board.BoardState, newID func() string) error {
 // lista de lugares só quer o número, e um `board.Place` inteiro por linha seria ler o
 // acervo do mestre para desenhar um menu.
 func countTokens(state string) int {
-	var apenasPecas struct {
+	var tokensOnly struct {
 		Tokens []json.RawMessage `json:"tokens"`
 	}
-	if err := json.Unmarshal([]byte(state), &apenasPecas); err != nil {
+	if err := json.Unmarshal([]byte(state), &tokensOnly); err != nil {
 		return 0
 	}
-	return len(apenasPecas.Tokens)
+	return len(tokensOnly.Tokens)
 }
 
 // RemovePlace apaga um lugar do acervo da crônica.

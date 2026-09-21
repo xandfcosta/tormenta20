@@ -33,27 +33,27 @@ import (
 // degraus sai do nível NA CLASSE, e os condicionais da flag saem do motor. Quem
 // já a montou para desenhar a tela não a computa de novo.
 func (p Plays) EnterStance(
-	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, flag string, degraus int,
+	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, flag string, steps int,
 ) error {
 	spec := stanceOfFlag(flag)
 	if spec == nil {
 		return fmt.Errorf("%q não é uma postura do livro", flag)
 	}
-	maximo := 0
+	max := 0
 	if spec.Scaling != nil {
-		maximo = book.LevelSteps(*spec.Scaling, ClassPowerLevel(dto, spec.ID))
+		max = book.LevelSteps(*spec.Scaling, ClassPowerLevel(dto, spec.ID))
 	}
-	if pode, porque := book.StanceDecision(*spec, degraus, maximo, int(dto.MpCurrent)); !pode {
-		return fmt.Errorf("%s: %s", spec.Name, porque)
+	if can, reason := book.StanceDecision(*spec, steps, max, int(dto.MpCurrent)); !can {
+		return fmt.Errorf("%s: %s", spec.Name, reason)
 	}
-	custo := book.StanceCost(*spec, degraus)
+	cost := book.StanceCost(*spec, steps)
 
 	if err := p.inTx(ctx, "entrar na postura "+flag, func(q *sqlcgen.Queries) error {
-		if err := chargeMp(ctx, q, p.catalogs, row, custo); err != nil {
+		if err := chargeMp(ctx, q, p.catalogs, row, cost); err != nil {
 			return err
 		}
 		if err := q.UpsertCharacterStance(ctx, sqlcgen.UpsertCharacterStanceParams{
-			Characterid: row.ID, Flag: flag, Steps: int64(degraus), Pmpaid: int64(custo),
+			Characterid: row.ID, Flag: flag, Steps: int64(steps), Pmpaid: int64(cost),
 		}); err != nil {
 			return fmt.Errorf("registrar o pagamento da postura: %w", err)
 		}
@@ -84,8 +84,8 @@ func (p Plays) EnterStance(
 func (p Plays) EndStance(
 	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, flag string,
 ) error {
-	condicionais := p.conditionalsOfFlag(dto, flag)
-	concedidos, err := p.grantedEffectIDs(ctx, row, flag)
+	conditionals := p.conditionalsOfFlag(dto, flag)
+	granted, err := p.grantedEffectIDs(ctx, row, flag)
 	if err != nil {
 		return err
 	}
@@ -95,12 +95,12 @@ func (p Plays) EndStance(
 		}); err != nil {
 			return fmt.Errorf("apagar a postura: %w", err)
 		}
-		for _, id := range concedidos {
+		for _, id := range granted {
 			if err := q.DeleteEffectByID(ctx, id); err != nil {
 				return fmt.Errorf("apagar o efeito concedido %d: %w", id, err)
 			}
 		}
-		for _, id := range condicionais {
+		for _, id := range conditionals {
 			if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
 				Characterid: row.ID, Conditionalid: id,
 			}); err != nil {
@@ -126,16 +126,16 @@ func (p Plays) UsePower(
 	if spec.Kind != "instant" {
 		return fmt.Errorf("%q não é um poder de usar", spec.Name)
 	}
-	usos := PowerUses(dto)[spec.ID]
-	pode, porque := book.UseDecision(*spec, book.UseContext{
-		CurrentPM: int(dto.MpCurrent), UsedThisScene: usos.Cena, UsedToday: usos.Dia,
+	uses := PowerUses(dto)[spec.ID]
+	can, reason := book.UseDecision(*spec, book.UseContext{
+		CurrentPM: int(dto.MpCurrent), UsedThisScene: uses.Scene, UsedToday: uses.Day,
 		Flags: p.activeFlags(dto),
 	})
-	if !pode {
-		return fmt.Errorf("%s: %s", spec.Name, porque)
+	if !can {
+		return fmt.Errorf("%s: %s", spec.Name, reason)
 	}
-	escopo := book.ChargedScope(*spec)
-	if escopo == "" {
+	scope := book.ChargedScope(*spec)
+	if scope == "" {
 		// Sem limite COBRADO não há contador, e sobra uma escrita só: a
 		// transação seria um bloqueio que ninguém pediu.
 		return chargeMp(ctx, p.queries, p.catalogs, row, book.ActivationPm(*spec))
@@ -145,7 +145,7 @@ func (p Plays) UsePower(
 			return err
 		}
 		if err := q.BumpCharacterPowerUse(ctx, sqlcgen.BumpCharacterPowerUseParams{
-			Characterid: row.ID, Powerid: spec.ID, Scope: escopo,
+			Characterid: row.ID, Powerid: spec.ID, Scope: scope,
 		}); err != nil {
 			return fmt.Errorf("somar o uso de %q: %w", spec.ID, err)
 		}
@@ -162,45 +162,45 @@ func (p Plays) UsePower(
 // serializa a escrita, mas a leitura que autorizou o gasto aconteceu fora dela.
 func chargeMp(
 	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs,
-	row sqlcgen.Character, quanto int,
+	row sqlcgen.Character, howMuch int,
 ) error {
-	if quanto <= 0 {
+	if howMuch <= 0 {
 		return nil
 	}
 	if _, err := sheet.ApplyToPools(ctx, q, cat, row,
-		func(pocos sheet.Pools) (sheet.Pools, error) {
-			pocos.MpCurrent -= int64(quanto)
-			return pocos, nil
+		func(pools sheet.Pools) (sheet.Pools, error) {
+			pools.MpCurrent -= int64(howMuch)
+			return pools, nil
 		}); err != nil {
-		return fmt.Errorf("cobrar %d PM da ficha %d: %w", quanto, row.ID, err)
+		return fmt.Errorf("cobrar %d PM da ficha %d: %w", howMuch, row.ID, err)
 	}
 	return nil
 }
 
-// inTx roda o corpo numa transação, e o `qual` entra na mensagem de falha: um
+// inTx roda o corpo numa transação, e o `which` entra na mensagem de falha: um
 // "abrir a transação" sem o gesto não diz qual dos três estourou.
-func (p Plays) inTx(ctx context.Context, qual string, corpo func(*sqlcgen.Queries) error) error {
+func (p Plays) inTx(ctx context.Context, which string, body func(*sqlcgen.Queries) error) error {
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("abrir a transação de %s: %w", qual, err)
+		return fmt.Errorf("abrir a transação de %s: %w", which, err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	if err := corpo(p.queries.WithTx(tx)); err != nil {
+	if err := body(p.queries.WithTx(tx)); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fechar a transação de %s: %w", qual, err)
+		return fmt.Errorf("fechar a transação de %s: %w", which, err)
 	}
 	return nil
 }
 
 // stanceOfFlag acha a ativação da postura pela flag que ela acende.
 func stanceOfFlag(flag string) *book.Activation {
-	postura, tem := book.StancesFromCatalog()[flag]
-	if !tem {
+	stance, found := book.StancesFromCatalog()[flag]
+	if !found {
 		return nil
 	}
-	return book.ActivationOf("", postura.Name)
+	return book.ActivationOf("", stance.Name)
 }
 
 // conditionalsOfFlag são os ids dos condicionais que aquela flag acende.
@@ -217,23 +217,23 @@ func (p Plays) conditionalsOfFlag(dto sheet.CharacterDTO, flag string) []string 
 	if err != nil {
 		return nil
 	}
-	fora := []string{}
+	outside := []string{}
 	for _, c := range engine.ComputeItemEffects(p.catalogs.ActiveItemsFor(ec)).Conditional {
 		if c.Flag == flag {
-			fora = append(fora, engine.ConditionalID(c))
+			outside = append(outside, engine.ConditionalID(c))
 		}
 	}
-	return fora
+	return outside
 }
 
 // activeFlags são as flags acesas agora, para a decisão de usar um poder que
 // depende de postura.
 func (p Plays) activeFlags(dto sheet.CharacterDTO) map[string]bool {
-	fora := map[string]bool{}
+	outside := map[string]bool{}
 	for _, s := range dto.Stances {
-		fora[s.Flag] = true
+		outside[s.Flag] = true
 	}
-	return fora
+	return outside
 }
 
 // grantedEffectIDs são os efeitos em curso que vieram das concessões da flag.
@@ -244,24 +244,24 @@ func (p Plays) activeFlags(dto sheet.CharacterDTO) map[string]bool {
 func (p Plays) grantedEffectIDs(
 	ctx context.Context, row sqlcgen.Character, flag string,
 ) ([]int64, error) {
-	daFlag := map[string]bool{}
+	fromFlag := map[string]bool{}
 	for _, spec := range book.FlagGrants(flag) {
-		daFlag[spec.ID] = true
+		fromFlag[spec.ID] = true
 	}
-	if len(daFlag) == 0 {
+	if len(fromFlag) == 0 {
 		return nil, nil
 	}
-	efeitos, err := p.queries.ListActiveEffectsByCharacter(ctx, row.ID)
+	effects, err := p.queries.ListActiveEffectsByCharacter(ctx, row.ID)
 	if err != nil {
 		return nil, fmt.Errorf("ler os efeitos da ficha %d: %w", row.ID, err)
 	}
-	fora := []int64{}
-	for _, e := range efeitos {
-		if daFlag[e.Catalogid] {
-			fora = append(fora, e.ID)
+	outside := []int64{}
+	for _, e := range effects {
+		if fromFlag[e.Catalogid] {
+			outside = append(outside, e.ID)
 		}
 	}
-	return fora, nil
+	return outside, nil
 }
 
 // applyStanceGrants liga o que a flag concede, DEPOIS do commit — ver o
@@ -271,12 +271,12 @@ func (p Plays) applyStanceGrants(ctx context.Context, row sqlcgen.Character, fla
 		if spec.Grant.Kind != "temp-hp" {
 			continue
 		}
-		quanto, ok := p.TempHpAmount(ctx, row, spec.Grant.Attribute)
+		howMuch, ok := p.TempHpAmount(ctx, row, spec.Grant.Attribute)
 		if !ok {
 			continue
 		}
 		if _, err := p.ApplyTempHpPool(
-			ctx, row.ID, "power", spec.ID, spec.Grant.Scope, quanto, "PV temporários"); err != nil {
+			ctx, row.ID, "power", spec.ID, spec.Grant.Scope, howMuch, "PV temporários"); err != nil {
 			return err
 		}
 	}

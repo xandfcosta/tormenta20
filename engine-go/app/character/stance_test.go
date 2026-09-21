@@ -32,32 +32,32 @@ import (
 // transação que não precisa existir é um bloqueio que ninguém pediu, e o
 // comentário dele diz isso.
 func TestEveryMultiWriteStanceGestureIsWrappedInATransaction(t *testing.T) {
-	exigem := map[string]bool{"EnterStance": true, "EndStance": true, "UsePower": true}
+	require := map[string]bool{"EnterStance": true, "EndStance": true, "UsePower": true}
 
-	conjunto := token.NewFileSet()
-	arquivo, err := parser.ParseFile(conjunto, "stance.go", nil, 0)
+	set := token.NewFileSet()
+	file, err := parser.ParseFile(set, "stance.go", nil, 0)
 	if err != nil {
 		t.Fatalf("ler o `stance.go`: %v", err)
 	}
-	vistos := map[string]bool{}
-	for _, decl := range arquivo.Decls {
+	seen := map[string]bool{}
+	for _, decl := range file.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
-		if !ok || !exigem[fn.Name.Name] {
+		if !ok || !require[fn.Name.Name] {
 			continue
 		}
-		vistos[fn.Name.Name] = true
-		achou := false
+		seen[fn.Name.Name] = true
+		found := false
 		ast.Inspect(fn, func(n ast.Node) bool {
-			chamada, ok := n.(*ast.CallExpr)
+			call, ok := n.(*ast.CallExpr)
 			if !ok {
 				return true
 			}
-			if alvo, ok := chamada.Fun.(*ast.SelectorExpr); ok && alvo.Sel.Name == "inTx" {
-				achou = true
+			if target, ok := call.Fun.(*ast.SelectorExpr); ok && target.Sel.Name == "inTx" {
+				found = true
 			}
 			return true
 		})
-		if !achou {
+		if !found {
 			t.Errorf("`%s` escreve mais de uma vez e NÃO passa por `inTx`.\n"+
 				"Sem o contorno, uma escrita do meio que falhe deixa o gesto pela metade —\n"+
 				"e o caminho feliz, que é o que os testes exercitam, não acusa nada.",
@@ -67,14 +67,14 @@ func TestEveryMultiWriteStanceGestureIsWrappedInATransaction(t *testing.T) {
 
 	// O DENOMINADOR: um nome que mudou faria o laço não visitar ninguém e o
 	// guarda passar dizendo que está tudo certo.
-	for nome := range exigem {
-		if !vistos[nome] {
+	for name := range require {
+		if !seen[name] {
 			t.Fatalf("o guarda não achou `%s` no `stance.go` — ele mediria o vazio.\n"+
-				"Se o gesto mudou de nome ou de arquivo, a lista acompanha.", nome)
+				"Se o gesto mudou de nome ou de arquivo, a lista acompanha.", name)
 		}
 	}
 	// E o arquivo é o que se pensa que é.
-	if fonte := arquivo.Name.Name; !strings.HasSuffix(fonte, "character") {
-		t.Fatalf("o guarda leu o pacote %q", fonte)
+	if source := file.Name.Name; !strings.HasSuffix(source, "character") {
+		t.Fatalf("o guarda leu o pacote %q", source)
 	}
 }

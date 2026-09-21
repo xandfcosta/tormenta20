@@ -22,19 +22,19 @@ import (
 // outra regra e tem dono no motor. Quem prende é o funil, para os dois vitais e
 // para todos os gestos — aqui só se diz QUAL vital anda e quanto.
 func (p Plays) TouchVital(
-	ctx context.Context, row sqlcgen.Character, qual string, passo int,
+	ctx context.Context, row sqlcgen.Character, which string, step int,
 ) error {
-	if qual != "pv" && qual != "pm" {
-		return fmt.Errorf("vital %q não existe: são 'pv' e 'pm'", qual)
+	if which != "pv" && which != "pm" {
+		return fmt.Errorf("vital %q não existe: são 'pv' e 'pm'", which)
 	}
 	_, err := sheet.ApplyToPools(ctx, p.queries, p.catalogs, row,
-		func(pocos sheet.Pools) (sheet.Pools, error) {
-			if qual == "pv" {
-				pocos.HpCurrent += int64(passo)
+		func(pools sheet.Pools) (sheet.Pools, error) {
+			if which == "pv" {
+				pools.HpCurrent += int64(step)
 			} else {
-				pocos.MpCurrent += int64(passo)
+				pools.MpCurrent += int64(step)
 			}
-			return pocos, nil
+			return pools, nil
 		})
 	return err
 }
@@ -51,25 +51,25 @@ func (p Plays) TouchVital(
 // avisa DEPOIS, nunca antes: avisar sobre algo que ainda pode falhar faria a
 // mesa buscar o estado velho e acreditar nele.
 func (p Plays) ToggleBookCondition(
-	ctx context.Context, row sqlcgen.Character, condicao string,
+	ctx context.Context, row sqlcgen.Character, condition string,
 ) error {
-	if !catalog.IsCondition(condicao) {
-		return fmt.Errorf("%q não é uma condição do livro", condicao)
+	if !catalog.IsCondition(condition) {
+		return fmt.Errorf("%q não é uma condição do livro", condition)
 	}
-	depois := []string{}
-	tinha := false
+	after := []string{}
+	had := false
 	for _, c := range sheet.UnmarshalStrings(row.Activeconditions) {
-		if c == condicao {
-			tinha = true
+		if c == condition {
+			had = true
 			continue
 		}
-		depois = append(depois, c)
+		after = append(after, c)
 	}
-	if !tinha {
-		depois = append(depois, condicao)
+	if !had {
+		after = append(after, condition)
 	}
 	if err := p.queries.UpdateConditions(ctx, sqlcgen.UpdateConditionsParams{
-		ActiveConditions: sheet.MarshalStrings(&depois),
+		ActiveConditions: sheet.MarshalStrings(&after),
 		UpdatedAt:        dbvalue.NowISO(),
 		ID:               row.ID,
 	}); err != nil {
@@ -85,41 +85,41 @@ func (p Plays) ToggleBookCondition(
 // montado à mão encerraria o efeito de OUTRO personagem. Ela desceu junto com a
 // escrita de propósito — separá-las daria ao `app/` um método que apaga efeito
 // de qualquer ficha.
-func (p Plays) EndAppliedEffect(ctx context.Context, characterID, efeitoID int64) error {
-	meta, err := p.queries.GetActiveEffectMeta(ctx, efeitoID)
+func (p Plays) EndAppliedEffect(ctx context.Context, characterID, effectID int64) error {
+	meta, err := p.queries.GetActiveEffectMeta(ctx, effectID)
 	if err != nil || meta.Characterid != characterID {
-		return fmt.Errorf("o efeito %d não é desta ficha", efeitoID)
+		return fmt.Errorf("o efeito %d não é desta ficha", effectID)
 	}
-	if err := p.queries.DeleteEffectByID(ctx, efeitoID); err != nil {
-		return fmt.Errorf("encerrar o efeito %d: %w", efeitoID, err)
+	if err := p.queries.DeleteEffectByID(ctx, effectID); err != nil {
+		return fmt.Errorf("encerrar o efeito %d: %w", effectID, err)
 	}
 	return nil
 }
 
 // ToggleSituational liga ou desliga um condicional de contexto.
-func (p Plays) ToggleSituational(ctx context.Context, characterID int64, chave string) error {
-	if chave == "" {
+func (p Plays) ToggleSituational(ctx context.Context, characterID int64, key string) error {
+	if key == "" {
 		return fmt.Errorf("o gesto não disse qual efeito situacional alternar")
 	}
-	atuais, err := p.queries.ListCharacterConditionals(ctx, characterID)
+	current, err := p.queries.ListCharacterConditionals(ctx, characterID)
 	if err != nil {
 		return fmt.Errorf("ler os condicionais da ficha %d: %w", characterID, err)
 	}
-	for _, c := range atuais {
-		if c != chave {
+	for _, c := range current {
+		if c != key {
 			continue
 		}
 		if err := p.queries.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
-			Characterid: characterID, Conditionalid: chave,
+			Characterid: characterID, Conditionalid: key,
 		}); err != nil {
-			return fmt.Errorf("desligar o condicional %q: %w", chave, err)
+			return fmt.Errorf("desligar o condicional %q: %w", key, err)
 		}
 		return nil
 	}
 	if err := p.queries.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
-		Characterid: characterID, Conditionalid: chave,
+		Characterid: characterID, Conditionalid: key,
 	}); err != nil {
-		return fmt.Errorf("ligar o condicional %q: %w", chave, err)
+		return fmt.Errorf("ligar o condicional %q: %w", key, err)
 	}
 	return nil
 }

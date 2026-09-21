@@ -25,24 +25,24 @@ func NewAccess(q *sqlcgen.Queries) Access { return Access{queries: q} }
 // O dono mestra; o admin também, e a exceção custa uma condição só porque esta
 // é a única pergunta de papel da casa. Quem não é membro não recebe "player":
 // recebe recusa, senão a cena de outra pessoa abriria vazia em vez de barrar.
-func (a Access) RoleIn(ctx context.Context, quem app.Caller, c sqlcgen.Campaign) (string, error) {
-	if c.Ownerid == quem.ID || quem.IsAdmin {
+func (a Access) RoleIn(ctx context.Context, who app.Caller, c sqlcgen.Campaign) (string, error) {
+	if c.Ownerid == who.ID || who.IsAdmin {
 		return app.RoleGM, nil
 	}
-	membro, err := a.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{
-		Campaignid: c.ID, Ownerid: quem.ID,
+	member, err := a.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{
+		Campaignid: c.ID, Ownerid: who.ID,
 	})
 	if err != nil {
-		return "", fmt.Errorf("conferir se %d é membro da campanha %d: %w", quem.ID, c.ID, err)
+		return "", fmt.Errorf("conferir se %d é membro da campanha %d: %w", who.ID, c.ID, err)
 	}
-	if !membro {
-		return "", fmt.Errorf("a campanha %d não é acessível para %d: %w", c.ID, quem.ID, app.ErrForbidden)
+	if !member {
+		return "", fmt.Errorf("a campanha %d não é acessível para %d: %w", c.ID, who.ID, app.ErrForbidden)
 	}
 	return app.RolePlayer, nil
 }
 
 // RoleInCampaign carrega a campanha e devolve o papel.
-func (a Access) RoleInCampaign(ctx context.Context, quem app.Caller, campaignID int64) (string, error) {
+func (a Access) RoleInCampaign(ctx context.Context, who app.Caller, campaignID int64) (string, error) {
 	c, err := a.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", fmt.Errorf("a campanha %d não existe: %w", campaignID, app.ErrNotFound)
@@ -50,7 +50,7 @@ func (a Access) RoleInCampaign(ctx context.Context, quem app.Caller, campaignID 
 	if err != nil {
 		return "", fmt.Errorf("carregar a campanha %d: %w", campaignID, err)
 	}
-	return a.RoleIn(ctx, quem, c)
+	return a.RoleIn(ctx, who, c)
 }
 
 // OwnedCampaign é a trava SÓ DO DONO: passa o mestre, e o resto recebe recusa.
@@ -60,7 +60,7 @@ func (a Access) RoleInCampaign(ctx context.Context, quem app.Caller, campaignID 
 // de qualquer membro. O admin passa pela mesma porta, e a exceção custa uma
 // condição só.
 func (a Access) OwnedCampaign(
-	ctx context.Context, quem app.Caller, campaignID int64,
+	ctx context.Context, who app.Caller, campaignID int64,
 ) (sqlcgen.Campaign, error) {
 	c, err := a.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -69,7 +69,7 @@ func (a Access) OwnedCampaign(
 	if err != nil {
 		return c, fmt.Errorf("carregar a campanha %d: %w", campaignID, err)
 	}
-	if c.Ownerid != quem.ID && !quem.IsAdmin {
+	if c.Ownerid != who.ID && !who.IsAdmin {
 		return c, fmt.Errorf("a campanha %d é de outra pessoa: %w", campaignID, app.ErrForbidden)
 	}
 	return c, nil
@@ -81,9 +81,9 @@ func (a Access) OwnedCampaign(
 // A ordem é papel primeiro: quem não alcança a campanha não pode descobrir,
 // pela diferença entre 403 e 404, se a sessão existe.
 func (a Access) Session(
-	ctx context.Context, quem app.Caller, campaignID, sessionID int64,
+	ctx context.Context, who app.Caller, campaignID, sessionID int64,
 ) (sqlcgen.Session, string, error) {
-	papel, err := a.RoleInCampaign(ctx, quem, campaignID)
+	role, err := a.RoleInCampaign(ctx, who, campaignID)
 	if err != nil {
 		return sqlcgen.Session{}, "", err
 	}
@@ -95,7 +95,7 @@ func (a Access) Session(
 	if err != nil {
 		return sqlcgen.Session{}, "", fmt.Errorf("carregar a sessão %d: %w", sessionID, err)
 	}
-	return sess, papel, nil
+	return sess, role, nil
 }
 
 // GM resolve a sessão e EXIGE o mestre.
@@ -103,13 +103,13 @@ func (a Access) Session(
 // Os quatro gestos do ciclo passam por aqui, e é a única trava deles: a tela
 // esconder o botão é cortesia, e quem postar na mão bate nesta linha.
 func (a Access) GM(
-	ctx context.Context, quem app.Caller, campaignID, sessionID int64,
+	ctx context.Context, who app.Caller, campaignID, sessionID int64,
 ) (sqlcgen.Session, error) {
-	sess, papel, err := a.Session(ctx, quem, campaignID, sessionID)
+	sess, role, err := a.Session(ctx, who, campaignID, sessionID)
 	if err != nil {
 		return sqlcgen.Session{}, err
 	}
-	if papel != app.RoleGM {
+	if role != app.RoleGM {
 		return sqlcgen.Session{}, fmt.Errorf(
 			"a sessão %d é mestrada por outra pessoa: %w", sessionID, app.ErrForbidden)
 	}

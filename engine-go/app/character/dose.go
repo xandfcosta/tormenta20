@@ -25,7 +25,7 @@ var ErrDailyPortion = errors.New("apenas uma porção por dia")
 // Dose é o que uma dose consumida MUDOU: o item, o efeito que ela deixou e os
 // poços depois dela.
 type Dose struct {
-	Nome      string
+	Name      string
 	ItemID    int64
 	Quantity  int64
 	Removed   bool
@@ -69,7 +69,7 @@ func (p Plays) Consume(
 	if spec.OncePerDay {
 		for _, e := range dto.ActiveEffects {
 			if e.CatalogID == cat.ID {
-				return Dose{Nome: cat.Name}, ErrDailyPortion
+				return Dose{Name: cat.Name}, ErrDailyPortion
 			}
 		}
 	}
@@ -92,7 +92,7 @@ func (p Plays) Consume(
 			Modifiers: effectModifiers(spec.Modifiers), Createdat: now,
 		})
 		if db.IsUniqueViolation(err) {
-			return Dose{Nome: cat.Name}, ErrDailyPortion
+			return Dose{Name: cat.Name}, ErrDailyPortion
 		}
 		if err != nil {
 			return Dose{}, fmt.Errorf("gravar o efeito de %q: %w", cat.Name, err)
@@ -118,25 +118,25 @@ func (p Plays) Consume(
 
 	// O poço tem de sair do funil mesmo quando a dose não cura nada: ele é o que
 	// a cena redesenha, e devolver a coluna crua aqui traria o número velho.
-	pocos, err := sheet.ApplyToPools(ctx, q, p.catalogs, row,
-		func(pocos sheet.Pools) (sheet.Pools, error) {
+	pools, err := sheet.ApplyToPools(ctx, q, p.catalogs, row,
+		func(poolMap sheet.Pools) (sheet.Pools, error) {
 			if hasHp {
-				pocos.HpCurrent += int64(hpGain)
+				poolMap.HpCurrent += int64(hpGain)
 			}
 			if hasMp {
-				pocos.MpCurrent += int64(mpGain)
+				poolMap.MpCurrent += int64(mpGain)
 			}
-			return pocos, nil
+			return poolMap, nil
 		})
 	if err != nil {
 		return Dose{}, fmt.Errorf("gravar os poços da ficha %d: %w", row.ID, err)
 	}
-	hpCurrent, mpCurrent := pocos.HpCurrent, pocos.MpCurrent
+	hpCurrent, mpCurrent := pools.HpCurrent, pools.MpCurrent
 	if err := tx.Commit(); err != nil {
 		return Dose{}, fmt.Errorf("fechar a transação da dose de %q: %w", cat.Name, err)
 	}
 	return Dose{
-		Nome: cat.Name, ItemID: itemID, Quantity: newQty, Removed: removed,
+		Name: cat.Name, ItemID: itemID, Quantity: newQty, Removed: removed,
 		Effect: effect, HpCurrent: hpCurrent, MpCurrent: mpCurrent,
 	}, nil
 }

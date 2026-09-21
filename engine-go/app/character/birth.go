@@ -31,8 +31,8 @@ func NewBirths(db *sql.DB, q *sqlcgen.Queries, catalogs *engine.Catalogs) Births
 // desfaz tudo. Sem essa linha, um erro ao gravar o quinto item deixaria um herói
 // sem perícias no banco — e ele abriria na tela, quebrado, sem nada acusando.
 func (b Births) Create(
-	ctx context.Context, ownerID int64, nome string, corpo sheet.CreateBody,
-	nivelTotal int64, proficiencias []string, treinadas map[string]bool,
+	ctx context.Context, ownerID int64, name string, body sheet.CreateBody,
+	totalLevel int64, proficiencies []string, trained map[string]bool,
 ) (int64, error) {
 	tx, err := b.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -40,32 +40,32 @@ func (b Births) Create(
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := b.queries.WithTx(tx)
-	agora := dbvalue.NowISO()
+	now := dbvalue.NowISO()
 
 	id, err := q.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
-		OwnerId: ownerID, Name: nome, Origin: corpo.Origin, God: dbvalue.NullString(corpo.God),
-		GodPower: orElse(corpo.GodPower, ""), Tibar: orElseFloat(corpo.Tibar, 0), Level: nivelTotal,
-		Strength: corpo.Strength, Dexterity: corpo.Dexterity, Constitution: corpo.Constitution,
-		Intelligence: corpo.Intelligence, Wisdom: corpo.Wisdom, Charisma: corpo.Charisma,
-		Size: corpo.Size, Displacement: corpo.Displacement,
-		Proficiencies:        sheet.MarshalStrings(&proficiencias),
-		RaceAttributeChoices: compactOr(corpo.RaceAttributeChoices, "{}"),
-		SecondaryRaceChoices: compactOr(corpo.SecondaryRaceChoices, "[]"),
-		OriginChoices:        sheet.MarshalStrings(corpo.OriginChoices),
-		ClassPowers:          sheet.MarshalStrings(corpo.ClassPowers),
-		ClassChoices:         compactOr(corpo.ClassChoices, "{}"),
-		PowerChoices:         compactOr(corpo.PowerChoices, "{}"),
-		CreatedAt:            agora, UpdatedAt: agora,
+		OwnerId: ownerID, Name: name, Origin: body.Origin, God: dbvalue.NullString(body.God),
+		GodPower: orElse(body.GodPower, ""), Tibar: orElseFloat(body.Tibar, 0), Level: totalLevel,
+		Strength: body.Strength, Dexterity: body.Dexterity, Constitution: body.Constitution,
+		Intelligence: body.Intelligence, Wisdom: body.Wisdom, Charisma: body.Charisma,
+		Size: body.Size, Displacement: body.Displacement,
+		Proficiencies:        sheet.MarshalStrings(&proficiencies),
+		RaceAttributeChoices: compactOr(body.RaceAttributeChoices, "{}"),
+		SecondaryRaceChoices: compactOr(body.SecondaryRaceChoices, "[]"),
+		OriginChoices:        sheet.MarshalStrings(body.OriginChoices),
+		ClassPowers:          sheet.MarshalStrings(body.ClassPowers),
+		ClassChoices:         compactOr(body.ClassChoices, "{}"),
+		PowerChoices:         compactOr(body.PowerChoices, "{}"),
+		CreatedAt:            now, UpdatedAt: now,
 	})
 	if err != nil {
-		return 0, fmt.Errorf("gravar a ficha de %q: %w", nome, err)
+		return 0, fmt.Errorf("gravar a ficha de %q: %w", name, err)
 	}
-	for _, raca := range corpo.Races {
-		if err := q.CreateRace(ctx, sqlcgen.CreateRaceParams{Characterid: id, Race: raca}); err != nil {
-			return 0, fmt.Errorf("gravar a raça %q: %w", raca, err)
+	for _, race := range body.Races {
+		if err := q.CreateRace(ctx, sqlcgen.CreateRaceParams{Characterid: id, Race: race}); err != nil {
+			return 0, fmt.Errorf("gravar a raça %q: %w", race, err)
 		}
 	}
-	for _, c := range corpo.Classes {
+	for _, c := range body.Classes {
 		if err := q.CreateClass(ctx, sqlcgen.CreateClassParams{
 			Characterid: id, Classname: c.ClassName, Level: c.Level,
 		}); err != nil {
@@ -75,20 +75,20 @@ func (b Births) Create(
 	// TODA ficha nasce com as vinte e nove perícias do livro, treinadas ou não:
 	// a lista é fechada, e uma perícia que só aparecesse quando treinada faria a
 	// tela ter de inventar as outras.
-	for _, pericia := range sheet.BuiltinExpertises() {
+	for _, expertise := range sheet.BuiltinExpertises() {
 		if _, err := q.CreateExpertise(ctx, sqlcgen.CreateExpertiseParams{
-			Characterid: id, Name: pericia.Name, Attribute: pericia.Attribute,
-			Trained: oneIfTrue(treinadas[pericia.Name]), Custom: 0,
+			Characterid: id, Name: expertise.Name, Attribute: expertise.Attribute,
+			Trained: oneIfTrue(trained[expertise.Name]), Custom: 0,
 		}); err != nil {
-			return 0, fmt.Errorf("gravar a perícia %q: %w", pericia.Name, err)
+			return 0, fmt.Errorf("gravar a perícia %q: %w", expertise.Name, err)
 		}
 	}
-	for _, item := range corpo.Items {
+	for _, item := range body.Items {
 		if _, err := q.CreateItem(ctx, sqlcgen.CreateItemParams{
 			Characterid: id, Catalogid: dbvalue.NullString(item.CatalogID),
 			Name: orElse(item.Name, ""), Quantity: live.DerefOr(item.Quantity, 1),
 			Slots: orElseFloat(item.Slots, 1), Equipped: dbvalue.NullString(item.Equipped),
-			Improvements: "[]", Material: sql.NullString{}, Createdat: agora,
+			Improvements: "[]", Material: sql.NullString{}, Createdat: now,
 		}); err != nil {
 			return 0, fmt.Errorf("gravar um item da ficha %d: %w", id, err)
 		}
@@ -102,31 +102,31 @@ func (b Births) Create(
 // compactOr reescreve o JSON sem espaço, ou devolve o padrão quando não veio —
 // e também quando veio ILEGÍVEL: gravar o texto cru de um JSON quebrado faria a
 // leitura seguinte falhar longe daqui, na tela de quem abrisse a ficha.
-func compactOr(bruto *json.RawMessage, padrao string) string {
-	if bruto == nil {
-		return padrao
+func compactOr(raw *json.RawMessage, standard string) string {
+	if raw == nil {
+		return standard
 	}
-	var qualquer any
-	if json.Unmarshal(*bruto, &qualquer) != nil {
-		return padrao
+	var anything any
+	if json.Unmarshal(*raw, &anything) != nil {
+		return standard
 	}
-	compacto, err := json.Marshal(qualquer)
+	compact, err := json.Marshal(anything)
 	if err != nil {
-		return padrao
+		return standard
 	}
-	return string(compacto)
+	return string(compact)
 }
 
-func orElse(p *string, padrao string) string {
+func orElse(p *string, standard string) string {
 	if p == nil {
-		return padrao
+		return standard
 	}
 	return *p
 }
 
-func orElseFloat(p *float64, padrao float64) float64 {
+func orElseFloat(p *float64, standard float64) float64 {
 	if p == nil {
-		return padrao
+		return standard
 	}
 	return *p
 }

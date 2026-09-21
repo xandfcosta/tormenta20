@@ -21,7 +21,7 @@ import (
 // O livro é conferido AQUI e não por quem chama: uma magia que não existe seria
 // uma linha órfã no grimório, que a ficha desenha como um espaço em branco.
 func (p Plays) LearnSpell(ctx context.Context, characterID int64, catalogSpellID string) error {
-	if _, conhecida := catalog.LookupSpell(catalogSpellID); !conhecida {
+	if _, known := catalog.LookupSpell(catalogSpellID); !known {
 		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
 	}
 	if _, err := p.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
@@ -49,20 +49,20 @@ func (p Plays) ForgetSpell(ctx context.Context, characterID int64, catalogSpellI
 // clique repetido e para a segunda aba aberta no mesmo personagem — quem sabe o
 // que está lá é o servidor, e é ele que inverte.
 func (p Plays) TogglePrepared(ctx context.Context, characterID int64, catalogSpellID string) error {
-	todas, err := p.queries.ListSpellsByCharacter(ctx, characterID)
+	all, err := p.queries.ListSpellsByCharacter(ctx, characterID)
 	if err != nil {
 		return fmt.Errorf("ler o grimório da ficha %d: %w", characterID, err)
 	}
-	for _, m := range todas {
+	for _, m := range all {
 		if m.Catalogspellid != catalogSpellID {
 			continue
 		}
-		depois := int64(0)
+		after := int64(0)
 		if m.Prepared == 0 {
-			depois = 1
+			after = 1
 		}
 		if _, err := p.queries.SetSpellPreparedByCatalog(ctx, sqlcgen.SetSpellPreparedByCatalogParams{
-			Prepared: depois, CharacterId: characterID, CatalogSpellId: catalogSpellID,
+			Prepared: after, CharacterId: characterID, CatalogSpellId: catalogSpellID,
 		}); err != nil {
 			return fmt.Errorf("gravar o preparo de %q: %w", catalogSpellID, err)
 		}
@@ -119,10 +119,10 @@ func (p Plays) Cast(
 	// OS CONDICIONAIS LIGADOS entram nas três contas. Aqui iam três conjuntos
 	// VAZIOS, e o custo, o mínimo e o teto saíam de um personagem que não é o
 	// que está conjurando (ALE-357).
-	ativos := sheet.ToStringSet(dto.Conditionals)
-	totalPm := p.catalogs.SpellPmCostFor(ec, basePm, augmentPm, ativos)
-	minPm := p.catalogs.SpellPmCostFor(ec, basePm, 0, ativos)
-	limit := p.catalogs.SpellPmLimitFor(ec, ativos, spell.Classes)
+	active := sheet.ToStringSet(dto.Conditionals)
+	totalPm := p.catalogs.SpellPmCostFor(ec, basePm, augmentPm, active)
+	minPm := p.catalogs.SpellPmCostFor(ec, basePm, 0, active)
+	limit := p.catalogs.SpellPmLimitFor(ec, active, spell.Classes)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}
@@ -133,9 +133,9 @@ func (p Plays) Cast(
 		return nil
 	}
 	_, err = sheet.ApplyToLoadedPools(ctx, p.queries, &dto,
-		func(pocos sheet.Pools) (sheet.Pools, error) {
-			pocos.MpCurrent -= int64(totalPm)
-			return pocos, nil
+		func(pools sheet.Pools) (sheet.Pools, error) {
+			pools.MpCurrent -= int64(totalPm)
+			return pools, nil
 		})
 	return err
 }

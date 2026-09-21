@@ -19,12 +19,12 @@ import (
 // para quem chama serializar e transmitir fora da trava.
 type Store struct {
 	Mu sync.Mutex
-	// ficha é a PORTA para o contexto da ficha: o regime escreve PV e PM de
+	// sheet é a PORTA para o contexto da ficha: o regime escreve PV e PM de
 	// personagem, mas as REGRAS dessa escrita são de lá. Nulo é caminho normal em
 	// teste de regime puro — quem tem personagem na fila injeta o implementador.
-	ficha live.SheetVitals
+	sheet live.SheetVitals
 	// turnEffects é a porta do que o GIRO DA VEZ faz com os efeitos da ficha
-	// (p227). Separada da `ficha` porque muda por outra razão; o mesmo
+	// (p227). Separada da `sheet` porque muda por outra razão; o mesmo
 	// adaptador cumpre as duas.
 	turnEffects live.SheetTurnEffects
 	States      map[int64]*live.SessionRuntimeState
@@ -61,13 +61,13 @@ func (st *Store) persistLock(sessionID int64) *sync.Mutex {
 
 // NewStore recebe a PORTA da ficha por parâmetro — injetada e não
 // importada, que é o que impede o regime de conhecer as regras da ficha.
-func NewStore(q *sqlcgen.Queries, newID func() string, ficha live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus) *Store {
+func NewStore(q *sqlcgen.Queries, newID func() string, sheet live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus) *Store {
 	return &Store{
 		States:      map[int64]*live.SessionRuntimeState{},
 		Dirty:       map[int64]bool{},
 		seqs:        map[int64]uint64{},
 		newID:       newID,
-		ficha:       ficha,
+		sheet:       sheet,
 		turnEffects: turnEffects,
 		q:           q,
 		bus:         bus,
@@ -235,7 +235,7 @@ func (st *Store) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurre
 				return live.PatchEntryVitals(s, entryID, hpCurrent, mpCurrent)
 			})
 	}
-	hp, mp, err := st.ficha.ApplyAbsolute(context.Background(), *charID, hpCurrent, mpCurrent)
+	hp, mp, err := st.sheet.ApplyAbsolute(context.Background(), *charID, hpCurrent, mpCurrent)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +257,7 @@ func (st *Store) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurre
 // como está é a resposta certa, e não um erro, porque "não está na fila" é o
 // caso comum aqui e não uma falha.
 func (st *Store) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpDelta *int64) (*live.SessionRuntimeState, error) {
-	hp, mp, err := st.ficha.ApplyDelta(context.Background(), characterID, hpDelta, mpDelta)
+	hp, mp, err := st.sheet.ApplyDelta(context.Background(), characterID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *
 		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
 			func(s *live.SessionRuntimeState) error { return live.DeltaEntryVitals(s, entryID, hpDelta, mpDelta) })
 	}
-	hp, mp, err := st.ficha.ApplyDelta(context.Background(), *charID, hpDelta, mpDelta)
+	hp, mp, err := st.sheet.ApplyDelta(context.Background(), *charID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}
@@ -451,7 +451,7 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *l
 	if len(ids) == 0 {
 		return st.GetState(sessionID)
 	}
-	pocos, err := st.ficha.PoolsOf(ctx, ids)
+	pools, err := st.sheet.PoolsOf(ctx, ids)
 	if err != nil {
 		log.Printf("session %d: hpMax refresh failed (%v)", sessionID, err)
 		return st.GetState(sessionID)
@@ -464,7 +464,7 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *l
 		if e.CharacterID == nil {
 			continue
 		}
-		if fresh, ok := pocos[*e.CharacterID]; ok {
+		if fresh, ok := pools[*e.CharacterID]; ok {
 			e.HpMax, e.HpCurrent = live.PtrInt64(fresh.HpMax), live.PtrInt64(fresh.HpCurrent)
 			e.MpMax, e.MpCurrent = live.PtrInt64(fresh.MpMax), live.PtrInt64(fresh.MpCurrent)
 		}

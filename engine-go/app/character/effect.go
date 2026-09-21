@@ -19,7 +19,7 @@ import (
 // existiram — a rota JSON, que morreu, e a aba Efeitos da ficha —, e é isso que
 // mantém uma resposta só para "esta magia deixa efeito?".
 func (p Plays) ApplySpellBuff(
-	ctx context.Context, characterID int64, spellID string, escopo *string,
+	ctx context.Context, characterID int64, spellID string, duration *string,
 ) (sheet.EffectDTO, error) {
 	spell, known := catalog.LookupSpell(spellID)
 	if !known || spell.Buff == nil {
@@ -31,8 +31,8 @@ func (p Plays) ApplySpellBuff(
 	if err != nil {
 		return sheet.EffectDTO{}, fmt.Errorf("a magia %q: %w", spellID, err)
 	}
-	if escopo != nil {
-		scope = *escopo
+	if duration != nil {
+		scope = *duration
 	}
 	if err := p.assertOnlyOneSustainedSpell(ctx, characterID, spellID, scope); err != nil {
 		return sheet.EffectDTO{}, err
@@ -60,19 +60,19 @@ func (p Plays) ApplySpellBuff(
 // (personagem, catálogo, escopo). Fonte repetida não empilha; fontes
 // diferentes, sim.
 func (p Plays) ApplyTempHpPool(
-	ctx context.Context, characterID int64, fonte, catalogID, escopo string, quanto int, nota string,
+	ctx context.Context, characterID int64, source, catalogID, scope string, howMuch int, note string,
 ) (sheet.EffectDTO, error) {
 	mods := []map[string]any{
-		{"target": map[string]any{"k": "tempHp"}, "amount": quanto, "bonusType": "untyped", "note": nota},
+		{"target": map[string]any{"k": "tempHp"}, "amount": howMuch, "bonusType": "untyped", "note": note},
 	}
 	modJSON, _ := json.Marshal(mods)
 
 	eff, err := p.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
-		Characterid: characterID, Source: fonte, Catalogid: catalogID, Scope: escopo,
+		Characterid: characterID, Source: source, Catalogid: catalogID, Scope: scope,
 		Modifiers: string(modJSON), Createdat: dbvalue.NowISO(),
 	})
 	if err != nil {
-		return sheet.EffectDTO{}, fmt.Errorf("gravar a poça de %d PV temporários de %q: %w", quanto, catalogID, err)
+		return sheet.EffectDTO{}, fmt.Errorf("gravar a poça de %d PV temporários de %q: %w", howMuch, catalogID, err)
 	}
 	return effectFrom(eff), nil
 }
@@ -84,16 +84,16 @@ func (p Plays) ApplyTempHpPool(
 // ficha que não computa, atributo que o poder cita e a ficha não tem. Quem
 // chama trata os três do mesmo jeito: não concede nada. Uma concessão de zero
 // gravaria uma linha de efeito que a aba mostraria valendo nada.
-func (p Plays) TempHpAmount(ctx context.Context, row sqlcgen.Character, atributo string) (int, bool) {
+func (p Plays) TempHpAmount(ctx context.Context, row sqlcgen.Character, attribute string) (int, bool) {
 	if p.catalogs == nil {
 		return 0, false
 	}
-	computada, err := sheet.LoadAndCompute(ctx, p.queries, p.catalogs, row)
+	computed, err := sheet.LoadAndCompute(ctx, p.queries, p.catalogs, row)
 	if err != nil {
 		return 0, false
 	}
-	attr, tem := computada.Attributes[atributo]
-	if !tem {
+	attr, found := computed.Attributes[attribute]
+	if !found {
 		return 0, false
 	}
 	return int(row.Level) + attr.Total, true

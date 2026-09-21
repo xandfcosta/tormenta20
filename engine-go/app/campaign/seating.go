@@ -60,55 +60,55 @@ func NewSeating(db *sql.DB, q *sqlcgen.Queries) Seating {
 // trava do dono do personagem confere. Um administrador não senta pela cara —
 // ele precisaria de um herói dele na mesa como qualquer um.
 func (s Seating) Seat(
-	ctx context.Context, quemPede, campanhaID, heroiID int64, convite string,
+	ctx context.Context, requester, campaignID, heroID int64, invite string,
 ) error {
-	c, err := s.queries.GetCampaign(ctx, campanhaID)
+	c, err := s.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ErrNoSuchCampaign
 	}
 	if err != nil {
-		return fmt.Errorf("carregar a campanha %d: %w", campanhaID, err)
+		return fmt.Errorf("carregar a campanha %d: %w", campaignID, err)
 	}
 	// O dono entra sem convite; qualquer outra pessoa precisa do token EXATO.
-	if c.Ownerid != quemPede {
-		if !c.Invitetoken.Valid || convite == "" || convite != c.Invitetoken.String {
+	if c.Ownerid != requester {
+		if !c.Invitetoken.Valid || invite == "" || invite != c.Invitetoken.String {
 			return ErrNeedsInvite
 		}
 	}
 
-	dono, err := s.queries.GetCharacterOwner(ctx, heroiID)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && dono != quemPede) {
+	owner, err := s.queries.GetCharacterOwner(ctx, heroID)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && owner != requester) {
 		return ErrNotYourHero
 	}
 	if err != nil {
-		return fmt.Errorf("ler o dono do personagem %d: %w", heroiID, err)
+		return fmt.Errorf("ler o dono do personagem %d: %w", heroID, err)
 	}
 
 	// AS DUAS TRAVAS ABAIXO JÁ FALHARAM ABERTAS uma vez: o erro era descartado
 	// com `_`, e erro de banco virava `false`, que significa "pode entrar".
 	// Checagem de autorização ou de unicidade NUNCA descarta erro: na dúvida,
 	// NEGA.
-	temHeroi, err := s.queries.HasPlayerPc(ctx, sqlcgen.HasPlayerPcParams{
-		Campaignid: campanhaID, Ownerid: quemPede,
+	hasHero, err := s.queries.HasPlayerPc(ctx, sqlcgen.HasPlayerPcParams{
+		Campaignid: campaignID, Ownerid: requester,
 	})
 	if err != nil {
-		return fmt.Errorf("conferir se %d já tem herói na campanha %d: %w", quemPede, campanhaID, err)
+		return fmt.Errorf("conferir se %d já tem herói na campanha %d: %w", requester, campaignID, err)
 	}
-	if temHeroi {
+	if hasHero {
 		return ErrAlreadyHasHero
 	}
 
 	// Modelo de INSTANTÂNEO: o personagem do elenco é um molde, e a mesa guarda
 	// uma CÓPIA dele. A deduplicação é por "este molde já foi copiado aqui" e
 	// não por participação do molde — o molde nunca é membro.
-	temCopia, err := s.hasCopyOf(ctx, s.db, heroiID, campanhaID)
+	hasCopy, err := s.hasCopyOf(ctx, s.db, heroID, campaignID)
 	if err != nil {
-		return fmt.Errorf("conferir a cópia de %d na campanha %d: %w", heroiID, campanhaID, err)
+		return fmt.Errorf("conferir a cópia de %d na campanha %d: %w", heroID, campaignID, err)
 	}
-	if temCopia {
+	if hasCopy {
 		return ErrHeroAlreadyThere
 	}
-	return s.seat(ctx, heroiID, campanhaID)
+	return s.seat(ctx, heroID, campaignID)
 }
 
 // seat clona o personagem para a mesa e cria o membro NA MESMA transação.
@@ -129,29 +129,29 @@ func (s Seating) Seat(
 //
 // É a mesma forma do commit de movimento no tabuleiro: entre decidir e
 // escrever, a mesa pode ter mudado.
-func (s Seating) seat(ctx context.Context, heroiID, campanhaID int64) error {
+func (s Seating) seat(ctx context.Context, heroID, campaignID int64) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("abrir a transação de sentar à mesa: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	temCopia, err := s.hasCopyOf(ctx, tx, heroiID, campanhaID)
+	hasCopy, err := s.hasCopyOf(ctx, tx, heroID, campaignID)
 	if err != nil {
-		return fmt.Errorf("reconferir a cópia de %d na campanha %d: %w", heroiID, campanhaID, err)
+		return fmt.Errorf("reconferir a cópia de %d na campanha %d: %w", heroID, campaignID, err)
 	}
-	if temCopia {
+	if hasCopy {
 		return ErrHeroAlreadyThere
 	}
 
-	copiaID, err := cloneCharacterTx(ctx, tx, heroiID, campanhaID)
+	copyID, err := cloneCharacterTx(ctx, tx, heroID, campaignID)
 	if err != nil {
 		return err
 	}
 	if _, err := s.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: campanhaID, Characterid: copiaID, Addedat: dbvalue.NowISO(),
+		Campaignid: campaignID, Characterid: copyID, Addedat: dbvalue.NowISO(),
 	}); err != nil {
-		return fmt.Errorf("gravar o membro da campanha %d: %w", campanhaID, err)
+		return fmt.Errorf("gravar o membro da campanha %d: %w", campaignID, err)
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("fechar a transação de sentar à mesa: %w", err)
@@ -169,10 +169,10 @@ type consultor interface {
 }
 
 // hasCopyOf diz se este molde já foi copiado para esta mesa.
-func (s Seating) hasCopyOf(ctx context.Context, q consultor, heroiID, campanhaID int64) (bool, error) {
-	var existe bool
+func (s Seating) hasCopyOf(ctx context.Context, q consultor, heroID, campaignID int64) (bool, error) {
+	var exists bool
 	err := q.QueryRowContext(ctx,
 		`SELECT EXISTS(SELECT 1 FROM characters WHERE sourceCharacterId = ? AND campaignId = ?)`,
-		heroiID, campanhaID).Scan(&existe)
-	return existe, err
+		heroID, campaignID).Scan(&exists)
+	return exists, err
 }

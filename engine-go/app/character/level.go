@@ -31,31 +31,31 @@ import (
 // ganhando os PV novos sem ganhar a cura — o que ele deve continua sendo o que
 // ele deve (ALE-355).
 func (p Plays) LevelClass(
-	ctx context.Context, row sqlcgen.Character, classe string, nivel int64,
+	ctx context.Context, row sqlcgen.Character, class string, level int64,
 ) error {
 	dto, err := sheet.Load(ctx, p.queries, p.catalogs, row)
 	if err != nil {
 		return err
 	}
-	achou := false
+	found := false
 	var total int64
 	for i := range dto.Classes {
-		if dto.Classes[i].ClassName == classe {
-			dto.Classes[i].Level = nivel
-			achou = true
+		if dto.Classes[i].ClassName == class {
+			dto.Classes[i].Level = level
+			found = true
 		}
 		total += dto.Classes[i].Level
 	}
-	if !achou {
-		return fmt.Errorf("%s não é uma classe deste personagem", classe)
+	if !found {
+		return fmt.Errorf("%s não é uma classe deste personagem", class)
 	}
 	if total > 20 {
 		return fmt.Errorf("as classes somariam o nível %d, e o 20º é o último (p35)", total)
 	}
 	if _, err := p.queries.SetCharacterClassLevel(ctx, sqlcgen.SetCharacterClassLevelParams{
-		Level: nivel, CharacterId: row.ID, ClassName: classe,
+		Level: level, CharacterId: row.ID, ClassName: class,
 	}); err != nil {
-		return fmt.Errorf("gravar o nível %d de %s: %w", nivel, classe, err)
+		return fmt.Errorf("gravar o nível %d de %s: %w", level, class, err)
 	}
 	if err := p.queries.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
 		Level: total, UpdatedAt: dbvalue.NowISO(), ID: row.ID,

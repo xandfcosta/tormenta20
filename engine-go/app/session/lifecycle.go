@@ -42,36 +42,36 @@ func (l Lifecycle) Access() Access { return l.access }
 // duas portas para a mesma decisão são duas chances de uma delas esquecer esse
 // caso.
 func (l Lifecycle) SetStatus(
-	ctx context.Context, quem app.Caller, campaignID, sessionID int64, pedido string,
+	ctx context.Context, who app.Caller, campaignID, sessionID int64, requested string,
 ) (*live.SessionRuntimeState, error) {
-	sess, err := l.access.GM(ctx, quem, campaignID, sessionID)
+	sess, err := l.access.GM(ctx, who, campaignID, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	mudanca, err := live.ChangeToStatus(sess.Status, pedido)
+	change, err := live.ChangeToStatus(sess.Status, requested)
 	if err != nil {
 		return nil, fmt.Errorf("%v: %w", err, app.ErrRefused)
 	}
-	agora := dbvalue.NowISO()
-	switch mudanca {
+	now := dbvalue.NowISO()
+	switch change {
 	case live.StatusUnchanged:
 		// Clicar duas vezes não escreve nada, e não é erro. O estado volta
 		// mesmo assim: quem clicou merece ver a tela que já era a certa.
 	case live.StatusStartsFresh:
 		_, err = l.queries.StartSessionFresh(ctx, sqlcgen.StartSessionFreshParams{
-			StartedAt: sql.NullString{String: agora, Valid: true}, UpdatedAt: agora, ID: sessionID,
+			StartedAt: sql.NullString{String: now, Valid: true}, UpdatedAt: now, ID: sessionID,
 		})
 	case live.StatusReopens:
 		_, err = l.queries.ReopenSession(ctx, sqlcgen.ReopenSessionParams{
-			UpdatedAt: agora, ID: sessionID,
+			UpdatedAt: now, ID: sessionID,
 		})
 	case live.StatusEnds:
 		_, err = l.queries.EndSession(ctx, sqlcgen.EndSessionParams{
-			EndedAt: sql.NullString{String: agora, Valid: true}, UpdatedAt: agora, ID: sessionID,
+			EndedAt: sql.NullString{String: now, Valid: true}, UpdatedAt: now, ID: sessionID,
 		})
 	}
 	if err != nil {
-		return nil, fmt.Errorf("gravar a sessão %d como %q: %w", sessionID, pedido, err)
+		return nil, fmt.Errorf("gravar a sessão %d como %q: %w", sessionID, requested, err)
 	}
 	return l.sessions.GetState(sessionID), nil
 }
@@ -87,18 +87,18 @@ func (l Lifecycle) SetStatus(
 // consulta no `query.sql` e regerar; até lá, o SQL está aqui, inteiro e visível,
 // em vez de montado por um construtor genérico.
 func (l Lifecycle) Rename(
-	ctx context.Context, quem app.Caller, campaignID, sessionID int64, titulo string,
+	ctx context.Context, who app.Caller, campaignID, sessionID int64, title string,
 ) error {
-	if _, err := l.access.GM(ctx, quem, campaignID, sessionID); err != nil {
+	if _, err := l.access.GM(ctx, who, campaignID, sessionID); err != nil {
 		return err
 	}
-	var valor any
-	if titulo != "" {
-		valor = titulo
+	var value any
+	if title != "" {
+		value = title
 	}
 	if _, err := l.db.ExecContext(ctx,
 		"UPDATE sessions SET title = ?, updatedAt = ? WHERE id = ?",
-		valor, dbvalue.NowISO(), sessionID,
+		value, dbvalue.NowISO(), sessionID,
 	); err != nil {
 		return fmt.Errorf("gravar o título da sessão %d: %w", sessionID, err)
 	}
@@ -116,18 +116,18 @@ func (l Lifecycle) Rename(
 // consulta no sqlc, e esta camada é onde uma escrita sem consulta gerada pode
 // morar.
 func (l Lifecycle) SaveNotes(
-	ctx context.Context, quem app.Caller, campaignID, sessionID int64, texto string,
+	ctx context.Context, who app.Caller, campaignID, sessionID int64, text string,
 ) error {
-	if _, err := l.access.GM(ctx, quem, campaignID, sessionID); err != nil {
+	if _, err := l.access.GM(ctx, who, campaignID, sessionID); err != nil {
 		return err
 	}
-	var valor any
-	if texto != "" {
-		valor = texto
+	var value any
+	if text != "" {
+		value = text
 	}
 	if _, err := l.db.ExecContext(ctx,
 		"UPDATE sessions SET notes = ?, updatedAt = ? WHERE id = ?",
-		valor, dbvalue.NowISO(), sessionID,
+		value, dbvalue.NowISO(), sessionID,
 	); err != nil {
 		return fmt.Errorf("gravar as notas da sessão %d: %w", sessionID, err)
 	}
@@ -146,9 +146,9 @@ func (l Lifecycle) SaveNotes(
 // recria um estado vazio sem passar pelo banco, e a próxima carga fria
 // discordaria desta.
 func (l Lifecycle) RestartCombat(
-	ctx context.Context, quem app.Caller, campaignID, sessionID int64,
+	ctx context.Context, who app.Caller, campaignID, sessionID int64,
 ) (*live.SessionRuntimeState, error) {
-	if _, err := l.access.GM(ctx, quem, campaignID, sessionID); err != nil {
+	if _, err := l.access.GM(ctx, who, campaignID, sessionID); err != nil {
 		return nil, err
 	}
 	if err := l.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
@@ -177,8 +177,8 @@ func (l Lifecycle) RestartCombat(
 //
 // O banco limpa o resto sozinho: `open_boards` sai por CASCATA com a sessão
 // (migração 00010), e a fila mora na própria linha dela.
-func (l Lifecycle) Delete(ctx context.Context, quem app.Caller, campaignID, sessionID int64) error {
-	if _, err := l.access.GM(ctx, quem, campaignID, sessionID); err != nil {
+func (l Lifecycle) Delete(ctx context.Context, who app.Caller, campaignID, sessionID int64) error {
+	if _, err := l.access.GM(ctx, who, campaignID, sessionID); err != nil {
 		return err
 	}
 	if err := l.queries.DeleteSession(ctx, sessionID); err != nil {
