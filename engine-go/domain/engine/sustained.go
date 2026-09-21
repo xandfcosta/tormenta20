@@ -1,5 +1,7 @@
 package engine
 
+import "errors"
+
 // A HABILIDADE SUSTENTADA COBRA TODO TURNO, e é a única duração que cobra.
 //
 // "A habilidade precisa de um fluxo constante de mana. O personagem deve gastar
@@ -38,21 +40,24 @@ type SustainedUpkeep struct {
 // para a mais nova, que é estável e explicável. Quem quiser outra escolha
 // encerra a que preferir, o que também é ação livre.
 //
-// INCONSCIENTE NÃO SUSTENTA, e o mana cheio não muda isso: manter a habilidade
-// é uma AÇÃO LIVRE no início do turno, e a 0 PV "você cai inconsciente" (p236).
-// É por aqui que a cláusula da p227 — a morte encerra as sustentadas, e só elas
-// — chega a um app cujo poço de PV tem piso em zero: lá dentro, quem morreu e
-// quem está sangrando ocupam o mesmo número, e os dois deixam de pagar.
+// INCONSCIENTE NÃO SUSTENTA, e o mana cheio não muda isso. Quem decide não é um
+// `if` daqui: manter a habilidade é uma AÇÃO LIVRE no início do turno, e é o
+// `UsableNow` que sabe o que uma livre exige do instante (p233). É por aí que a
+// cláusula da p227 — a morte encerra as sustentadas, e só elas — chega a um app
+// cujo poço de PV tem piso em zero: lá dentro, quem morreu e quem está
+// sangrando ocupam o mesmo número, e os dois deixam de pagar.
 //
-// @example PaySustained([]string{"velocidade", "oracao"}, 1, true)
+// @example PaySustained([]string{"velocidade", "oracao"}, 1, ActionMoment{OnTurn: true, CanAct: true})
 //
 //	// Paid: ["velocidade"], Dropped: ["oracao"], Cost: 1
-func PaySustained(sustentados []string, pmAtual int, podeAgir bool) SustainedUpkeep {
-	if !podeAgir {
+func PaySustained(sustentados []string, pmAtual int, quando ActionMoment) SustainedUpkeep {
+	if err := UsableNow(ActionFree, quando); err != nil {
 		if len(sustentados) == 0 {
 			return SustainedUpkeep{}
 		}
-		return SustainedUpkeep{Dropped: sustentados, Unconscious: true}
+		// A RAZÃO vem da recusa e não de um segundo `if`: a mesa lê frases
+		// diferentes para "está no chão" e para o resto.
+		return SustainedUpkeep{Dropped: sustentados, Unconscious: errors.Is(err, ErrCannotAct)}
 	}
 	sobra := max(pmAtual, 0)
 	var feito SustainedUpkeep

@@ -52,9 +52,11 @@ func (st *Store) payUpkeep(s *live.SessionRuntimeState) upkeepCharge {
 	}
 	poco := pocos[*entrada.CharacterID]
 	mana := int(poco.MpCurrent)
-	// PODE AGIR é ter PV: a 0 "você cai inconsciente" (p236), e o poço do app
-	// tem piso em zero, então é aqui que morrer e sangrar se encontram.
-	feito := engine.PaySustained(ids, mana, poco.HpCurrent > 0)
+	// O INSTANTE é a vez de quem entrou, e PODER AGIR é ter PV: a 0 "você cai
+	// inconsciente" (p236), e o poço do app tem piso em zero, então é aqui que
+	// morrer e sangrar se encontram. O que uma ação LIVRE exige do instante
+	// quem sabe é o motor.
+	feito := engine.PaySustained(ids, mana, engine.ActionMoment{OnTurn: true, CanAct: poco.HpCurrent > 0})
 	for _, id := range feito.Dropped {
 		_ = st.sustentadas.EndSustained(context.Background(), *entrada.CharacterID, id)
 	}

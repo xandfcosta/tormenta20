@@ -113,3 +113,73 @@ func TestTheRefusalSaysWhatIsLeft(t *testing.T) {
 		t.Error("um custo que o livro não tem precisa recusar")
 	}
 }
+
+// ── O INSTANTE, que é outra pergunta que o custo (T20 p233) ─────────────────
+//
+//	"Uma reação acontece em resposta a outra coisa. Como ações livres, reações
+//	tomam tão pouco tempo que você pode realizar qualquer quantidade delas. A
+//	diferença é que uma ação livre é uma escolha consciente, feita no seu
+//	turno. Já uma reação é uma resposta automática, que pode ocorrer mesmo fora
+//	do seu turno. Você pode reagir mesmo se não puder realizar ações, como por
+//	estar atordoado."
+
+// A REAÇÃO ATRAVESSA OS DOIS PORTÕES, e é o único custo que atravessa.
+//
+// Ela é a razão de o instante existir separado do custo: o `Spend` já dizia que
+// reação não gasta nada, e "não gasta nada" não responde se PODE agora.
+func TestAReactionHappensOutOfTurnAndWithoutBeingAbleToAct(t *testing.T) {
+	fora := ActionMoment{OnTurn: false, CanAct: false}
+	if err := UsableNow(ActionReaction, fora); err != nil {
+		t.Errorf("a reação ocorre fora do seu turno e mesmo sem poder agir (p233): %v", err)
+	}
+}
+
+// A LIVRE É ESCOLHA CONSCIENTE, e é por aí que ela difere da reação: mesma
+// conta no turno, instantes diferentes.
+func TestAFreeActionIsAConsciousChoiceMadeOnYourTurn(t *testing.T) {
+	if err := UsableNow(ActionFree, ActionMoment{OnTurn: true, CanAct: true}); err != nil {
+		t.Errorf("a livre cabe na sua vez: %v", err)
+	}
+	if err := UsableNow(ActionFree, ActionMoment{OnTurn: false, CanAct: true}); !errors.Is(err, ErrNotYourTurn) {
+		t.Errorf("a livre é feita NO SEU TURNO (p233), e a recusa veio %v", err)
+	}
+	// É a manutenção da sustentada: manter é ação livre, e a 0 PV "você cai
+	// inconsciente" (p236).
+	if err := UsableNow(ActionFree, ActionMoment{OnTurn: true, CanAct: false}); !errors.Is(err, ErrCannotAct) {
+		t.Errorf("quem não pode agir não faz ação livre, e a recusa veio %v", err)
+	}
+}
+
+// AS TRÊS QUE GASTAM TURNO só acontecem na sua vez, e a recusa por INSTANTE é
+// reconhecível separada da recusa por CUSTO: "espere a sua vez" e "não sobrou
+// ação" mandam a pessoa fazer coisas diferentes.
+func TestTheActionsThatSpendTheTurnOnlyHappenOnYourOwn(t *testing.T) {
+	for _, custo := range []ActionCost{ActionStandard, ActionMovement, ActionFull} {
+		if err := UsableNow(custo, ActionMoment{OnTurn: true, CanAct: true}); err != nil {
+			t.Errorf("%q cabe na sua vez: %v", custo, err)
+		}
+		if err := UsableNow(custo, ActionMoment{OnTurn: false, CanAct: true}); !errors.Is(err, ErrNotYourTurn) {
+			t.Errorf("%q fora da vez tinha de recusar por INSTANTE, e veio %v", custo, err)
+		}
+	}
+}
+
+// A PASSIVA E A VARIÁVEL não têm instante para conferir — a primeira não é
+// acionada (238 das 411 ativações) e a segunda é negociada com a mesa. É a
+// mesma isenção que o `Spend` lhes dá, e pela mesma razão.
+func TestThePassiveAndTheVariableHaveNoMomentToCheck(t *testing.T) {
+	nenhum := ActionMoment{OnTurn: false, CanAct: false}
+	for _, custo := range []ActionCost{ActionPassive, ActionVaries} {
+		if err := UsableNow(custo, nenhum); err != nil {
+			t.Errorf("%q não tem instante para conferir: %v", custo, err)
+		}
+	}
+}
+
+// PALAVRA DESCONHECIDA RECUSA no instante como recusa no custo — um `action`
+// com erro de digitação no catálogo não pode virar "pode sempre".
+func TestAnUnknownCostHasNoMomentEither(t *testing.T) {
+	if err := UsableNow(ActionCost("dancar"), ActionMoment{OnTurn: true, CanAct: true}); err == nil {
+		t.Error("um custo que o livro não tem precisa recusar também no instante")
+	}
+}
