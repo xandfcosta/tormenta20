@@ -23,10 +23,10 @@ type Store struct {
 	// personagem, mas as REGRAS dessa escrita são de lá. Nulo é caminho normal em
 	// teste de regime puro — quem tem personagem na fila injeta o implementador.
 	ficha live.SheetVitals
-	// sustentadas é a porta do que a MANUTENÇÃO do turno precisa da ficha
+	// turnEffects é a porta do que o GIRO DA VEZ faz com os efeitos da ficha
 	// (p227). Separada da `ficha` porque muda por outra razão; o mesmo
 	// adaptador cumpre as duas.
-	sustentadas live.SheetSustained
+	turnEffects live.SheetTurnEffects
 	States      map[int64]*live.SessionRuntimeState
 	Dirty       map[int64]bool
 	// seqs numera as mutações de cada sessão, para o hub reconhecer quadro
@@ -61,14 +61,14 @@ func (st *Store) persistLock(sessionID int64) *sync.Mutex {
 
 // NewStore recebe a PORTA da ficha por parâmetro — injetada e não
 // importada, que é o que impede o regime de conhecer as regras da ficha.
-func NewStore(q *sqlcgen.Queries, newID func() string, ficha live.SheetVitals, sustentadas live.SheetSustained, bus *events.Bus) *Store {
+func NewStore(q *sqlcgen.Queries, newID func() string, ficha live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus) *Store {
 	return &Store{
 		States:      map[int64]*live.SessionRuntimeState{},
 		Dirty:       map[int64]bool{},
 		seqs:        map[int64]uint64{},
 		newID:       newID,
 		ficha:       ficha,
-		sustentadas: sustentadas,
+		turnEffects: turnEffects,
 		q:           q,
 		bus:         bus,
 	}
@@ -185,6 +185,9 @@ func (st *Store) NextTurn(sessionID int64) (*live.SessionRuntimeState, error) {
 	var cobranca upkeepCharge
 	virado, err := st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error {
+			// O FIM DA VEZ vem ANTES do começo da próxima: o que durava a vez
+			// que acaba tem de sair antes de alguém entrar na sua.
+			st.expireTurnEffects(s)
 			live.AdvanceTurn(s)
 			cobranca = st.payUpkeep(s)
 			return nil

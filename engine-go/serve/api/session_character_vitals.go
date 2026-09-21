@@ -178,6 +178,13 @@ func (v sheetVitals) EndSustained(ctx context.Context, charID int64, catalogID s
 	})
 }
 
+// ExpireTurnEffects derruba o que durava a vez que acabou.
+func (v sheetVitals) ExpireTurnEffects(ctx context.Context, charID int64) error {
+	return v.q.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
+		Characterid: charID, Scope: engine.TurnScope(),
+	})
+}
+
 // spellLabel é o nome que a MESA lê. Sem verbete, o id serve: um extrato que
 // diz "velocidade" ainda responde qual efeito caiu, e um extrato vazio não.
 //

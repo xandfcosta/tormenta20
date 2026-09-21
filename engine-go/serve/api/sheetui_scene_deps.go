@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -31,3 +32,16 @@ func (h sheetHost) LoadCharacter(ctx context.Context, c sqlcgen.Character) (shee
 
 // CharacterChanged avisa a MESA que esta ficha mexeu.
 func (h sheetHost) CharacterChanged(characterID int64) { h.rules.characterChanged(characterID) }
+
+// ActionFitsOnTurn e SpendActionOnTurn levam o gesto da ficha ao turno da mesa
+// em que este personagem está.
+//
+// Achar a mesa é do hospedeiro porque só ele tem o `session.Store`: a ficha
+// pergunta por personagem, e a resposta atravessa a porta já decidida.
+func (h sheetHost) ActionFitsOnTurn(characterID int64, custo engine.ActionCost) error {
+	return h.rules.sessions.CharacterActionFits(characterID, custo)
+}
+
+func (h sheetHost) SpendActionOnTurn(characterID int64, custo engine.ActionCost) error {
+	return h.rules.sessions.SpendCharacterAction(characterID, custo)
+}

@@ -1,6 +1,9 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // OS DOIS EIXOS DO TEMPO, que o livro nomeia separadamente e o app colapsou
 // numa palavra (ALE-365).
@@ -54,6 +57,11 @@ const (
 	UnitRound TimeUnit = "round"
 	UnitHour  TimeUnit = "hour"
 	UnitDay   TimeUnit = "day"
+	// UnitTurn é a vez de um personagem — "cada jogador tem o seu turno, a sua
+	// vez de realizar ações" (p233). O livro não a lista entre as unidades da
+	// definida; ela é a "outra unidade de tempo" que a p227 deixa aberta, e o
+	// Escudo da Fé a escreve (p192).
+	UnitTurn TimeUnit = "turn"
 )
 
 // Duration é quanto tempo um efeito vale.
@@ -111,6 +119,8 @@ func ParseDuration(escrito string) (Duration, error) {
 		return Duration{Kind: DurationFixed}, nil
 	case "dia", "day":
 		return Duration{Kind: DurationFixed, Amount: 1, Unit: UnitDay}, nil
+	case "turn":
+		return Duration{Kind: DurationFixed, Amount: 1, Unit: UnitTurn}, nil
 	case "permanente":
 		return Duration{Kind: DurationPermanent}, nil
 	case "descarregar":
@@ -118,6 +128,61 @@ func ParseDuration(escrito string) (Duration, error) {
 	}
 	return Duration{}, fmt.Errorf(
 		"duração %q não é uma das seis do livro (p227): instantanea, cena, sustentada, definida, permanente, descarregar", escrito)
+}
+
+// storableNotes são as MEDIDAS que o catálogo escreve em prosa e que o app sabe
+// EXPIRAR, e a lista é de PERMITIDOS: nota que ela não conhece continua sendo
+// definida SEM quantia, que é o caso comum e legítimo.
+//
+// As 26 definidas escrevem dezesseis notas diferentes, e quase todas são
+// condicionais ("veja texto", "até chegar ao solo ou cena, o que ocorrer
+// primeiro"). Das que têm número, só duas unidades têm QUEM AS DERRUBE: o dia
+// cai no descanso e o turno cai no giro da vez. Medir "3 rodadas" sem ninguém
+// contar rodadas gravaria um efeito eterno com cara de medido — que é
+// exatamente o defeito que o `defaultScope` produziu uma vez.
+//
+// Ela não é um analisador de prosa de propósito. A forma "N unidade" convidaria
+// a aceitar "1 semana" e "1d4 rodadas", e as duas cairiam do lado errado: a
+// primeira por unidade que o motor não tem, a segunda por quantia que não é
+// número. Uma tabela de duas entradas tem denominador à vista.
+var storableNotes = map[string]Duration{
+	"1 turno": {Kind: DurationFixed, Amount: 1, Unit: UnitTurn},
+	"1 dia":   {Kind: DurationFixed, Amount: 1, Unit: UnitDay},
+}
+
+// TurnScope é a grafia com que uma duração de UMA VEZ vai para a coluna
+// `scope`, e ela tem nome porque DOIS lugares a expiram: o giro da vez, enquanto
+// o combate corre, e o fim da cena, para a reação que nunca chegou a girar.
+// Duas grafias à mão divergiriam, que é o defeito que esta fatia veio consertar.
+//
+// @example TurnScope() // "turn"
+func TurnScope() string {
+	return Duration{Kind: DurationFixed, Amount: 1, Unit: UnitTurn}.Stored()
+}
+
+// SpellDuration é a duração da magia COM a medida, quando há medida.
+//
+// A espécie vem do campo `duration` e a medida vem do `durationNote`, que é
+// prosa — "Definida. A duração pode ser medida em rodadas, horas, dias ou outra
+// unidade de tempo" (p227) nomeia a espécie e deixa a medida para o verbete.
+//
+// A NOTA SÓ FALA DA DEFINIDA SEM QUANTIA. Deixá-la mandar sobre uma cena ou uma
+// sustentada seria pôr a segunda transcrição por cima da primeira, que é o
+// defeito do `defaultScope` com outro nome.
+//
+// @example SpellDuration("definida", "1 turno") // {Fixed, 1, turn}
+func SpellDuration(escrito, nota string) (Duration, error) {
+	dura, err := ParseDuration(escrito)
+	if err != nil {
+		return Duration{}, err
+	}
+	if dura.Kind != DurationFixed || dura.Amount != 0 {
+		return dura, nil
+	}
+	if medida, tem := storableNotes[strings.ToLower(strings.TrimSpace(nota))]; tem {
+		return medida, nil
+	}
+	return dura, nil
 }
 
 // EffectScope diz com que duração o efeito de uma magia é GRAVADO na ficha.
@@ -141,9 +206,9 @@ func ParseDuration(escrito string) (Duration, error) {
 // `TestEveryBuffLastsAsLongAsItsSpell`, na varredura. Fazer a conjuração falhar
 // por isso trocaria um efeito com duração errada por um efeito nenhum.
 //
-// @example EffectScope("sustentada", "scene") // "sustentada", nil
-func EffectScope(daMagia, declarada string) (string, error) {
-	dura, err := ParseDuration(daMagia)
+// @example EffectScope("sustentada", "", "scene") // "sustained", nil
+func EffectScope(daMagia, nota, declarada string) (string, error) {
+	dura, err := SpellDuration(daMagia, nota)
 	if err != nil {
 		return "", fmt.Errorf("a magia dura %q: %w", daMagia, err)
 	}
@@ -178,8 +243,13 @@ func (d Duration) tellsTheEffectWhenToEnd() bool {
 //
 // @example ParseDuration("sustentada").Stored() // "sustained"
 func (d Duration) Stored() string {
-	if d.Kind == DurationFixed && d.Unit == UnitDay && d.Amount == 1 {
-		return "day"
+	if d.Kind == DurationFixed && d.Amount == 1 {
+		switch d.Unit {
+		case UnitDay:
+			return "day"
+		case UnitTurn:
+			return "turn"
+		}
 	}
 	return string(d.Kind)
 }
@@ -204,8 +274,11 @@ func DurationLabel(escrito string) string {
 	case DurationDischarge:
 		return "até descarregar"
 	case DurationFixed:
-		if dura.Unit == UnitDay {
+		switch dura.Unit {
+		case UnitDay:
 			return "dia"
+		case UnitTurn:
+			return "1 turno"
 		}
 	}
 	return "cena"

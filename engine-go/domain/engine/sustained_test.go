@@ -51,7 +51,7 @@ func TestSustainedAbilitiesCostAPointOfManaEachTurn(t *testing.T) {
 	}
 	for _, c := range casos {
 		t.Run(c.nome, func(t *testing.T) {
-			teve := PaySustained(c.sustentados, c.pm, !c.caido)
+			teve := PaySustained(c.sustentados, c.pm, ActionMoment{OnTurn: true, CanAct: !c.caido})
 			if teve.Cost != c.quantos {
 				t.Errorf("custou %d PM, quero %d", teve.Cost, c.quantos)
 			}
@@ -126,11 +126,11 @@ func countSustained(no any) int {
 // A RAZÃO DA QUEDA é diferente, e a mesa lê a diferença: sem mana é uma escolha
 // que acabou, inconsciente é um personagem no chão.
 func TestTheUpkeepSaysWhyTheAbilityEnded(t *testing.T) {
-	semMana := PaySustained([]string{"velocidade"}, 0, true)
+	semMana := PaySustained([]string{"velocidade"}, 0, ActionMoment{OnTurn: true, CanAct: true})
 	if semMana.Unconscious {
 		t.Error("cair por falta de mana não é cair por estar inconsciente")
 	}
-	noChao := PaySustained([]string{"velocidade"}, 99, false)
+	noChao := PaySustained([]string{"velocidade"}, 99, ActionMoment{OnTurn: true, CanAct: false})
 	if !noChao.Unconscious {
 		t.Error("quem está a 0 PV cai por não poder agir, e não por falta de mana")
 	}

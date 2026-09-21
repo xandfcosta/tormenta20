@@ -101,8 +101,82 @@ func (b TurnBudget) Spend(custo ActionCost) (TurnBudget, error) {
 		}
 		return TurnBudget{}, nil
 	}
-	return b, fmt.Errorf("custo de ação %q não é um dos do livro (p233): padrao, movimento, completa, livre, reacao", custo)
+	return b, unknownActionCost(custo)
 }
 
 // Spent diz se algo já foi gasto neste turno.
 func (b TurnBudget) Spent() bool { return !b.Standard || !b.Movement }
+
+// unknownActionCost é a recusa que o CUSTO e o INSTANTE devolvem para a mesma
+// palavra, e ela é uma só porque a pergunta é a mesma: o catálogo escreveu algo
+// que o livro não tem.
+func unknownActionCost(custo ActionCost) error {
+	return fmt.Errorf("custo de ação %q não é um dos do livro (p233): padrao, movimento, completa, livre, reacao", custo)
+}
+
+// ── O INSTANTE ──────────────────────────────────────────────────────────────
+//
+// O `TurnBudget` responde "o custo CABE?". Ele não responde "é a HORA?", e as
+// duas perguntas são diferentes — é a REAÇÃO que as separa (T20 p233):
+//
+//	"Uma reação acontece em resposta a outra coisa. Como ações livres, reações
+//	tomam tão pouco tempo que você pode realizar qualquer quantidade delas. A
+//	diferença é que uma ação livre é uma escolha consciente, feita no seu turno.
+//	Já uma reação é uma resposta automática, que pode ocorrer mesmo fora do seu
+//	turno. Você pode reagir mesmo se não puder realizar ações, como por estar
+//	atordoado."
+//
+// Livre e reação custam o MESMO do turno — nada — e acontecem em instantes
+// diferentes. Um só dos dois eixos não distingue as duas, e é a reação que
+// carrega a duração ancorada na vez EM CURSO, porque ela nunca acontece na vez
+// de quem reage.
+
+// ErrNotYourTurn e ErrCannotAct são as duas recusas do INSTANTE, e são
+// separadas de `ErrNoActionLeft` porque mandam a pessoa fazer coisas
+// diferentes: esperar a vez, ser curada, ou desistir do gesto neste turno.
+var (
+	ErrNotYourTurn = errors.New("não é a sua vez")
+	ErrCannotAct   = errors.New("não dá para agir agora")
+)
+
+// ActionMoment é o instante da mesa visto por quem vai acionar a habilidade.
+//
+// Os dois campos são NOMEADOS e não dois booleanos soltos porque a chamada
+// `UsableNow(ActionFree, true, false)` não se lê — e as duas condições são
+// independentes, então a ordem delas não tem como ser lembrada.
+type ActionMoment struct {
+	// OnTurn é se a vez em curso é de quem aciona.
+	OnTurn bool
+	// CanAct é se ele pode realizar ações. A 0 PV "você cai inconsciente"
+	// (p236), e o livro isenta só a reação.
+	CanAct bool
+}
+
+// UsableNow diz se o INSTANTE permite acionar uma habilidade deste custo.
+//
+// Ela não olha o `TurnBudget` e não o substitui: um gesto que passa aqui ainda
+// pode não caber. Quem cobra são os dois, em ordem — primeiro se é a hora,
+// depois se sobrou.
+//
+// @example UsableNow(ActionReaction, ActionMoment{}) // nil: reação vale sempre
+func UsableNow(custo ActionCost, quando ActionMoment) error {
+	switch custo {
+	case ActionReaction:
+		return nil
+	case ActionPassive, ActionVaries:
+		return nil
+	case ActionStandard, ActionMovement, ActionFull, ActionFree:
+	default:
+		return unknownActionCost(custo)
+	}
+	// AS DUAS FRASES NÃO CITAM O CUSTO, e isso é escolha: `padrao` é a grafia do
+	// CATÁLOGO, e quem lê a recusa é uma pessoa. Dizer o que FUNCIONARIA — a
+	// reação — informa mais que repetir o nome do que ela acabou de clicar.
+	if !quando.OnTurn {
+		return fmt.Errorf("%w, e só a reação acontece fora dela (p233)", ErrNotYourTurn)
+	}
+	if !quando.CanAct {
+		return fmt.Errorf("%w, e o livro isenta só a reação (p233)", ErrCannotAct)
+	}
+	return nil
+}

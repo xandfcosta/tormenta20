@@ -20,7 +20,7 @@ import (
 // turno de alguém é pior que uma manutenção não cobrada. O extrato fica nil, a
 // faixa não diz nada, e o mestre segue jogando.
 func (st *Store) payUpkeep(s *live.SessionRuntimeState) upkeepCharge {
-	if !s.Scene.CountsRounds() || st.sustentadas == nil {
+	if !s.Scene.CountsRounds() || st.turnEffects == nil {
 		return upkeepCharge{}
 	}
 	if s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
@@ -30,7 +30,7 @@ func (st *Store) payUpkeep(s *live.SessionRuntimeState) upkeepCharge {
 	if entrada.CharacterID == nil {
 		return upkeepCharge{}
 	}
-	efeitos, err := st.sustentadas.SustainedOf(context.Background(), *entrada.CharacterID)
+	efeitos, err := st.turnEffects.SustainedOf(context.Background(), *entrada.CharacterID)
 	if err != nil || len(efeitos) == 0 {
 		return upkeepCharge{}
 	}
@@ -52,11 +52,13 @@ func (st *Store) payUpkeep(s *live.SessionRuntimeState) upkeepCharge {
 	}
 	poco := pocos[*entrada.CharacterID]
 	mana := int(poco.MpCurrent)
-	// PODE AGIR é ter PV: a 0 "você cai inconsciente" (p236), e o poço do app
-	// tem piso em zero, então é aqui que morrer e sangrar se encontram.
-	feito := engine.PaySustained(ids, mana, poco.HpCurrent > 0)
+	// O INSTANTE é a vez de quem entrou, e PODER AGIR é ter PV: a 0 "você cai
+	// inconsciente" (p236), e o poço do app tem piso em zero, então é aqui que
+	// morrer e sangrar se encontram. O que uma ação LIVRE exige do instante
+	// quem sabe é o motor.
+	feito := engine.PaySustained(ids, mana, engine.ActionMoment{OnTurn: true, CanAct: poco.HpCurrent > 0})
 	for _, id := range feito.Dropped {
-		_ = st.sustentadas.EndSustained(context.Background(), *entrada.CharacterID, id)
+		_ = st.turnEffects.EndSustained(context.Background(), *entrada.CharacterID, id)
 	}
 	s.Scene.Upkeep = &live.TurnUpkeep{
 		Paid: labelsOf(feito.Paid, nome), Dropped: labelsOf(feito.Dropped, nome), Cost: feito.Cost,
@@ -86,4 +88,27 @@ func labelsOf(ids []string, nome map[string]string) []string {
 type upkeepCharge struct {
 	entryID string
 	pm      int
+}
+
+// expireTurnEffects derruba, de TODA a fila, os efeitos que duravam a vez que
+// está acabando.
+//
+// A VEZ É A EM CURSO, e não a de quem carrega o efeito. Uma duração de "1
+// turno" chega por REAÇÃO — o Escudo da Fé é o único caso do catálogo (p192) —,
+// e "uma reação pode ocorrer mesmo fora do seu turno" (p233): ancorá-la em quem
+// a recebeu daria a um alvo que ainda não jogou uma rodada inteira de escudo.
+// Por isso a varredura é da fila toda e não do combatente que entra.
+//
+// O erro é engolido pela mesma razão que o `payUpkeep` explica: uma mesa travada
+// no turno de alguém é pior que um efeito que sobrou.
+func (st *Store) expireTurnEffects(s *live.SessionRuntimeState) {
+	if !s.Scene.CountsRounds() || st.turnEffects == nil {
+		return
+	}
+	for _, entrada := range s.Initiative {
+		if entrada.CharacterID == nil {
+			continue
+		}
+		_ = st.turnEffects.ExpireTurnEffects(context.Background(), *entrada.CharacterID)
+	}
 }

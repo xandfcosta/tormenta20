@@ -27,7 +27,7 @@ func (p Plays) ApplySpellBuff(
 	}
 	// QUEM DIZ QUANTO O EFEITO DURA É A MAGIA, e o chamador só sobrescreve
 	// quando quer (o aprimoramento que "muda a duração para um dia", p227).
-	scope, err := engine.EffectScope(spell.Duration, spell.Buff.DefaultScope)
+	scope, err := engine.EffectScope(spell.Duration, spell.DurationNote, spell.Buff.DefaultScope)
 	if err != nil {
 		return sheet.EffectDTO{}, fmt.Errorf("a magia %q: %w", spellID, err)
 	}

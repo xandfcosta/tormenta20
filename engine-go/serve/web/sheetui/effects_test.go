@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"t20engine/domain/book"
+	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 )
 
@@ -183,4 +184,42 @@ func TestAGrantedEffectShowsThePowerNameInsteadOfTheCatalogId(t *testing.T) {
 	if m := effectDisplayName("abencoar-alimentos"); m == "abencoar-alimentos" {
 		t.Errorf("a magia deixou de ser achada: %q", m)
 	}
+}
+
+// TODA DURAÇÃO QUE UM EFEITO PODE CARREGAR TEM NOME NA ABA.
+//
+// O `scopeLabel` devolve a palavra CRUA quando não conhece a duração — de
+// propósito, porque um efeito sem rótulo some da linha. O preço é que cada
+// duração nova precisa passar por lá, e a sustentada não passou: a aba mostrou
+// "sustained" para quem lê a ficha.
+//
+// Era um parágrafo de comentário, e vira varredura: a lista é a das magias com
+// efeito, e a duração de cada uma é a que o motor GRAVARIA. Uma duração que
+// nasça amanhã reprova aqui com o nome da magia, em vez de esperar alguém
+// reler o comentário.
+func TestEveryDurationAnEffectCanCarryIsNamedOnTheSheet(t *testing.T) {
+	medidas := 0
+	for _, m := range book.Catalogs().Magias {
+		spell, conhecida := catalog.LookupSpell(m.ID)
+		if !conhecida || spell.Buff == nil {
+			continue
+		}
+		id := m.ID
+		escopo, err := engine.EffectScope(spell.Duration, spell.DurationNote, spell.Buff.DefaultScope)
+		if err != nil {
+			t.Errorf("a magia %q não sabe com que duração gravar o efeito dela: %v", id, err)
+			continue
+		}
+		medidas++
+		if rotulo := scopeLabel(escopo); rotulo == escopo {
+			t.Errorf("a magia %q grava a duração %q e a aba a mostra CRUA: dê um rótulo a ela em `scopeLabel`",
+				id, escopo)
+		}
+	}
+	// O DENOMINADOR: uma varredura que não abriu nenhuma magia e um catálogo
+	// impecável têm a mesma cor no terminal.
+	if medidas < 25 {
+		t.Fatalf("só %d magias com efeito varridas — a varredura está olhando o campo errado", medidas)
+	}
+	t.Logf("%d durações de efeito conferidas contra o rótulo da aba", medidas)
 }
