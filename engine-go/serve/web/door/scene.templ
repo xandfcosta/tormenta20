@@ -18,13 +18,13 @@ import "t20engine/serve/web/ui"
 
 // doorFrame é a moldura de ferro no meio da tela-título, com o rodapé embaixo e
 // o aviso legal por último.
-templ doorFrame(title, subtitulo string, rodape templ.Component) {
+templ doorFrame(title, subtitle string, rodape templ.Component) {
 	<div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 py-6">
 		@ui.PanelFrame("space-y-5") {
 			<div class="space-y-1.5">
 				<h2 class={ ui.SectionTitleClasses("cena", "", "") }>{ title }</h2>
-				if subtitulo != "" {
-					<p class="text-sm text-muted-foreground">{ subtitulo }</p>
+				if subtitle != "" {
+					<p class="text-sm text-muted-foreground">{ subtitle }</p>
 				}
 			</div>
 			{ children... }
@@ -92,12 +92,12 @@ templ signUpPage(v signUpView) {
 			})
 			@ui.TextField(ui.Field{
 				Name: "nome", Label: "Nome (opcional)", Autocomplete: "name",
-				Value: v.Name, Errors: v.Errors["nome"], TamanhoMaximo: 80,
+				Value: v.Name, Errors: v.Errors["nome"], MaxSize: 80,
 			})
 			@ui.TextField(ui.Field{
 				Name: "senha", Label: "Senha", Kind: "password", Autocomplete: "new-password",
 				Hint: "Ao menos 8 caracteres.", Errors: v.Errors["senha"],
-				Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
+				Obrigatorio: true, MinSize: 8, MaxSize: 128,
 			})
 			@passwordConfirmation(v.Errors["confirmar"])
 			@formNotice(v.Notice)
@@ -123,7 +123,7 @@ templ resetPage(v resetView) {
 				@ui.TextField(ui.Field{
 					Name: "senha", Label: "Nova senha", Kind: "password", Autocomplete: "new-password",
 					Hint: "Ao menos 8 caracteres.", Errors: v.Errors["senha"],
-					Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
+					Obrigatorio: true, MinSize: 8, MaxSize: 128,
 				})
 				@passwordConfirmation(v.Errors["confirmar"])
 				@formNotice(v.Notice)

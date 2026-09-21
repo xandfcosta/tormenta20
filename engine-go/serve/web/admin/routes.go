@@ -30,10 +30,10 @@ func (s Scene) handleAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:         "Administração",
-		Forma:         ui.ShellDense,
-		TituloVisivel: "Administração",
-		Voltar:        "/",
+		Title:        "Administração",
+		Shape:        ui.ShellDense,
+		VisibleTitle: "Administração",
+		Back:         "/",
 		// Sem `Init`: esta tela não abre stream nenhum. Os sinais existem só
 		// para o diálogo e para os avisos — estado de INTERAÇÃO, não da
 		// aplicação.

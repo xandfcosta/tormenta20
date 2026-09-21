@@ -237,14 +237,14 @@ func (s Scene) writeDoor(
 		// O `<title>` é o do JOGO e não o da tela: a porta é a tela-título, e o
 		// nome dela já está desenhado em Cinzel no meio da página.
 		Title:  "Tormenta 20",
-		Forma:  ui.ShellTitled,
+		Shape:  ui.ShellTitled,
 		Kicker: "— Grimório de Arton —",
 		// Sem `Sinais` e sem `Init`: esta superfície não tem estado de cliente
 		// nenhum, e é isso que mantém a senha fora dele. O campo abaixo DIZ isso
 		// para a casca, que de outro modo acrescentaria o `data-init` da
 		// restauração de foco do trilho a toda página — a porta não tem trilho, e
 		// o guarda desta regra existe justamente porque a omissão é silenciosa.
-		SemEstadoDeCliente: true,
+		NoClientState: true,
 	}, body)
 }
 

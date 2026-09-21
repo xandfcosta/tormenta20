@@ -71,7 +71,7 @@ func (s Scene) handleList(w http.ResponseWriter, r *http.Request) {
 		Title: "Campanhas · Tormenta 20",
 		// `ui.ShellBare`: esta cena desenha o próprio cabeçalho, porque ele carrega a
 		// busca e os filtros. A casca densa poria um segundo `<h1>` acima.
-		Forma: ui.ShellBare,
+		Shape: ui.ShellBare,
 	}, SceneBody(view))
 }
 
@@ -147,8 +147,8 @@ func (s Scene) writeNewPage(w http.ResponseWriter, r *http.Request, status int, 
 		// `ui.ShellDense`: o cabeçalho compacto traz o "‹ Voltar", e sem ele a
 		// folha nasce sem saída visível — o Esc existe, mas atalho não é a única
 		// porta.
-		Forma:  ui.ShellDense,
-		Voltar: "/campanhas",
+		Shape: ui.ShellDense,
+		Back:  "/campanhas",
 	}, newBody(v))
 }
 
@@ -251,9 +251,9 @@ func (s Scene) writeJoinPage(w http.ResponseWriter, r *http.Request, status int,
 		v.Errors = wire.FieldErrorMap{}
 	}
 	s.deps.WritePage(w, r, status, ui.Page{
-		Title:  "Entrar na mesa",
-		Forma:  ui.ShellDense,
-		Voltar: "/campanhas",
+		Title: "Entrar na mesa",
+		Shape: ui.ShellDense,
+		Back:  "/campanhas",
 	}, JoinBody(v))
 }
 
@@ -551,12 +551,12 @@ func (s Scene) redrawPlacesWithError(w http.ResponseWriter, r *http.Request, id 
 
 func (s Scene) writeOnePage(w http.ResponseWriter, r *http.Request, status int, v oneView) {
 	s.deps.WritePage(w, r, status, ui.Page{
-		Title:  v.Name,
-		Forma:  ui.ShellDense,
-		Voltar: "/campanhas",
+		Title: v.Name,
+		Shape: ui.ShellDense,
+		Back:  "/campanhas",
 		// O rótulo nomeia o destino em vez da seta genérica: daqui se volta
 		// para o livro, e "Campanhas" diz isso melhor que "Voltar".
-		VoltarRotulo: "Campanhas",
+		BackLabel: "Campanhas",
 		// Os sinais são só de INTERAÇÃO — o diálogo de excluir e o aviso do
 		// interruptor. Nada de estado da aplicação: a aba vem da URL e o resto
 		// vem desenhado.

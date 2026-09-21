@@ -56,7 +56,7 @@ templ hubMenu(v hubView) {
 // Os `data-cue-*` são o gancho dos sons: o `scene.js` escuta por DELEGAÇÃO num
 // ouvinte só, porque o HTML pode ser remendado a qualquer tique e ouvinte preso
 // a nó morre no remendo.
-templ menuItem(icone_, label, destination string, temProximo bool) {
+templ menuItem(icon_, label, destination string, hasNext bool) {
 	<a
 		href={ templ.SafeURL(destination) }
 		data-nav-item
@@ -65,9 +65,9 @@ templ menuItem(icone_, label, destination string, temProximo bool) {
 		class="grimorio-menu-item group flex min-h-11 w-full items-center gap-3 rounded-none px-4 py-3 text-left font-heading text-lg tracking-wide text-foreground outline-none"
 	>
 		<span aria-hidden="true" class="text-sm text-grimorio-crimson-bright">▸</span>
-		@ui.Icon(icone_, "size-5 text-grimorio-gold")
+		@ui.Icon(icon_, "size-5 text-grimorio-gold")
 		<span class="flex-1">{ label }</span>
-		if temProximo {
+		if hasNext {
 			<span aria-hidden="true" class="text-sm text-grimorio-gold">►</span>
 		}
 	</a>

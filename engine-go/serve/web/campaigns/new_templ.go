@@ -71,7 +71,7 @@ func newBody(v newView) templ.Component {
 			}
 			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Name: "name", Label: "Nome", Value: v.Name,
-				Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
+				Obrigatorio: true, MaxSize: campaign.MaxNameLength,
 				Errors: v.Errors["name"],
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -79,8 +79,8 @@ func newBody(v newView) templ.Component {
 			}
 			templ_7745c5c3_Err = ui.TextArea(ui.Field{
 				Name: "description", Label: "Descrição", Value: v.Description,
-				TamanhoMaximo: campaign.MaxDescriptionLength,
-				Errors:        v.Errors["description"],
+				MaxSize: campaign.MaxDescriptionLength,
+				Errors:  v.Errors["description"],
 			}, 6).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

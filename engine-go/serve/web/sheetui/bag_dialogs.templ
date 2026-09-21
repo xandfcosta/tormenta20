@@ -244,7 +244,7 @@ templ catalogAddDialog(v View) {
 // itemFormDialog é o formulário de um item CUSTOM — nome, quantidade e espaços.
 // Ele serve tanto ao "novo" quanto ao "editar", que é o mesmo formulário com
 // outro destino.
-templ itemFormDialog(v View, key, title, botao, command string) {
+templ itemFormDialog(v View, key, title, button, command string) {
 	@overlay(key, title, "Pencil", false) {
 		<label class="block space-y-1">
 			<span class={ ui.FieldLabelClasses("muted", "") }>nome</span>
@@ -281,7 +281,7 @@ templ itemFormDialog(v View, key, title, botao, command string) {
 			type="button"
 			data-on:click={ command + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
-		>{ botao }</button>
+		>{ button }</button>
 	}
 }
 

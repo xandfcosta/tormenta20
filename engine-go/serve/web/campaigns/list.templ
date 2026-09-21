@@ -138,7 +138,7 @@ templ roleChip(v listView, value, label string) {
 //
 // Todos os palcos são desenhados e o `data-show` escolhe um. É o que faz ←/→ não
 // custar requisição.
-templ campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) {
+templ campaignStage(c campaignCard, anterior, next *ui.Neighbor) {
 	<div
 		data-show={ fmt.Sprintf("$cursor == %d", c.ID) }
 		data-class={ ui.EnteringStage(c.ID) }
@@ -164,7 +164,7 @@ templ campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) {
 				</span>
 				<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
 			</a>
-			@ui.NeighborPortrait(proximo, "Próximo")
+			@ui.NeighborPortrait(next, "Próximo")
 		</div>
 		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
 		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
@@ -214,7 +214,7 @@ templ myHeroBand(c campaignCard) {
 	}
 }
 
-templ oneHeroCard(iniciais, name, classes, gradiente string, espacador bool) {
+templ oneHeroCard(initials, name, classes, gradient string, espacador bool) {
 	<div
 		if espacador {
 			aria-hidden="true"
@@ -225,8 +225,8 @@ templ oneHeroCard(iniciais, name, classes, gradiente string, espacador bool) {
 		<span
 			aria-hidden="true"
 			class="grid size-9 shrink-0 place-items-center rounded-full font-heading text-sm font-bold text-white"
-			style={ "background: " + gradiente }
-		>{ iniciais }</span>
+			style={ "background: " + gradient }
+		>{ initials }</span>
 		<div class="min-w-0">
 			<p class="truncate text-sm font-medium text-foreground">{ name }</p>
 			<p class="truncate text-xs text-muted-foreground">{ classes }</p>
@@ -304,11 +304,11 @@ templ campaignActions(c campaignCard) {
 	</div>
 }
 
-func ifLive(c campaignCard, aoVivo, parado ui.Variant) ui.Variant {
+func ifLive(c campaignCard, live, stopped ui.Variant) ui.Variant {
 	if c.Live {
-		return aoVivo
+		return live
 	}
-	return parado
+	return stopped
 }
 
 // blankSheetStage é a vaga do fim — e ela existe TAMBÉM com a lista vazia,

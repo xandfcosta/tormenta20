@@ -44,7 +44,7 @@ templ forgeBody(v forgeView) {
 			@fieldRefusals(v.OrphanRefusals)
 			@ui.TextField(ui.Field{
 				Name: "name", Label: "Nome", Value: v.Name,
-				TamanhoMaximo: heroNameMax, Errors: v.Errors["name"],
+				MaxSize: heroNameMax, Errors: v.Errors["name"],
 			})
 			@raceChoice(v)
 			@classChoice(v)

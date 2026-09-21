@@ -28,7 +28,7 @@ func (s Scene) handleHub(w http.ResponseWriter, r *http.Request) {
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:  "Tormenta 20",
-		Forma:  ui.ShellTitled,
+		Shape:  ui.ShellTitled,
 		Kicker: "— Grimório de Arton —",
 		// Sem `data-voltar`: o Hub é a cena raiz e o Esc não tem para onde ir.
 	}, hub(view))

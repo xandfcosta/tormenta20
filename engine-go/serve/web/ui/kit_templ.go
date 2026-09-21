@@ -72,7 +72,7 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 	// 1.4.11 para LIMITE de componente é 3:1. Sem ela não se vê onde o botão
 	// começa — e o guarda de contraste não acusa, porque ele mede a tinta do
 	// TEXTO, que continua legível.
-	porVariante := map[Variant]string{
+	byVariant := map[Variant]string{
 		VariantPrimary:     "bg-primary text-primary-foreground hover:bg-primary/90",
 		VariantSecondary:   "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
 		VariantDestructive: "bg-destructive text-white hover:bg-destructive/90",
@@ -83,7 +83,7 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 		// de uma linha de lista densa, e 4px encostam na linha de baixo.
 		VariantLink: "text-foreground underline-offset-2 hover:underline",
 	}
-	porTamanho := map[Size]string{
+	bySize := map[Size]string{
 		SizeDefault:   "h-9 gap-2 px-4 py-2 text-sm",
 		SizeLarge:     "h-10 gap-2 rounded-sm px-6 text-sm",
 		SizeSmall:     "h-8 gap-1.5 rounded-sm px-3 text-sm",
@@ -93,7 +93,7 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 		SizeIconTiny:  "size-6 text-xs",
 		SizeInline:    "",
 	}
-	return Join(base, porVariante[v], porTamanho[t], extra)
+	return Join(base, byVariant[v], bySize[t], extra)
 }
 
 // Button é o botão da casa. Os atributos chegam como mapa e são espalhados, e é
@@ -188,9 +188,9 @@ type Field struct {
 	// Viram validação NATIVA do navegador, que não substitui o servidor: ele
 	// continua sendo a autoridade. O que se ganha é a mensagem localizada e
 	// acessível de graça, antes da ida à rede.
-	Obrigatorio   bool
-	TamanhoMinimo int
-	TamanhoMaximo int
+	Obrigatorio bool
+	MinSize     int
+	MaxSize     int
 }
 
 func TextField(c Field) templ.Component {
@@ -321,15 +321,15 @@ func TextField(c Field) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if c.TamanhoMinimo > 0 {
+		if c.MinSize > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " minlength=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMinimo))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.MinSize))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 148, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 148, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -340,15 +340,15 @@ func TextField(c Field) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if c.TamanhoMaximo > 0 {
+		if c.MaxSize > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, " maxlength=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMaximo))
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.MaxSize))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 151, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 151, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -677,15 +677,15 @@ func TextArea(c Field, rows int) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if c.TamanhoMaximo > 0 {
+		if c.MaxSize > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, " maxlength=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var30 string
-			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMaximo))
+			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.MaxSize))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 218, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 218, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 			if templ_7745c5c3_Err != nil {
@@ -1277,7 +1277,7 @@ const RestoreRailFocus = `sessionStorage.getItem('rail_focus') && ` +
 // existe num sistema é um atalho quebrado no outro.
 //
 // A caixa pode NÃO EXISTIR — a porta não a desenha, porque ela é estado de
-// cliente e a porta não pode ter nenhum (ver `SemEstadoDeCliente`). Por isso o
+// cliente e a porta não pode ter nenhum (ver `NoClientState`). Por isso o
 // atalho começa procurando o elemento em vez de supor: sem ele, o ⌃K na tela de
 // entrar estouraria num `null` e ainda teria roubado a tecla do navegador.
 //

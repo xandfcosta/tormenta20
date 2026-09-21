@@ -44,11 +44,11 @@ type Page struct {
 	Overlays []templ.Component
 	// Title é sempre o do `<title>`. O que aparece na TELA depende da Forma.
 	Title string
-	Forma ShellShape
-	// TituloVisivel e Voltar são da casca DENSA; Kicker é da casca TÍTULO.
-	TituloVisivel string
-	Voltar        string
-	// SemEstadoDeCliente marca a superfície que não pode ter sinal NEM `data-init`
+	Shape ShellShape
+	// VisibleTitle e Voltar são da casca DENSA; Kicker é da casca TÍTULO.
+	VisibleTitle string
+	Back         string
+	// NoClientState marca a superfície que não pode ter sinal NEM `data-init`
 	// — hoje só a PORTA. Um sinal é estado do cliente e o Datastar o serializa em
 	// TODA requisição seguinte, então qualquer estado ali faria a senha viajar de
 	// novo a cada pedido da página. É o que o
@@ -57,19 +57,19 @@ type Page struct {
 	// Campo EXPLÍCITO e não inferido da forma da casca: `ui.ShellTitled` descreve o
 	// desenho, e amarrar uma regra de segurança a um nome de leiaute é a regra
 	// sumindo no dia em que alguém usar a mesma casca noutra tela.
-	SemEstadoDeCliente bool
-	Kicker             string
-	Signals            string
-	Init               string
+	NoClientState bool
+	Kicker        string
+	Signals       string
+	Init          string
 	// Scripts são os módulos EXTRA de UMA cena. O `scene.js` vale para toda
 	// página; estes são para o que é de uma só. Carregá-los em toda cena seria
 	// pôr o custo de uma tela de quem CONSTRÓI no caminho de quem só quer jogar.
 	Scripts []string
-	// VoltarRotulo troca o "Voltar" por um destino NOMEADO. A folha de
+	// BackLabel troca o "Voltar" por um destino NOMEADO. A folha de
 	// especificação diz "Hub" porque é para lá que ela volta, e nomear o
 	// destino é melhor que a seta genérica quando a cena não é filha óbvia de
 	// ninguém.
-	VoltarRotulo string
+	BackLabel string
 }
 
 // ShellShape são as três posturas da casca, e elas se excluem — um campo em vez
@@ -210,7 +210,7 @@ func Layout(p Page, body templ.Component) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if !p.SemEstadoDeCliente {
+		if !p.NoClientState {
 			if p.Init != "" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, " data-init=\"")
 				if templ_7745c5c3_Err != nil {
@@ -266,15 +266,15 @@ func Layout(p Page, body templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if p.Voltar != "" {
+		if p.Back != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, " data-voltar=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Voltar)
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Back)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 140, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 140, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -289,15 +289,15 @@ func Layout(p Page, body templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if p.Forma == ShellDense {
+		if p.Shape == ShellDense {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<header class=\"relative flex flex-wrap items-center gap-3 border-b border-grimorio-iron px-4 py-3\" style=\"padding-top: max(0.75rem, env(safe-area-inset-top))\"><a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 templ.SafeURL
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(p.Voltar))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(p.Back))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 155, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 155, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -307,11 +307,11 @@ func Layout(p Page, body templ.Component) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if p.VoltarRotulo != "" {
+			if p.BackLabel != "" {
 				var templ_7745c5c3_Var13 string
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("‹ " + p.VoltarRotulo)
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("‹ " + p.BackLabel)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 159, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 159, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -327,15 +327,15 @@ func Layout(p Page, body templ.Component) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if p.TituloVisivel != "" {
+			if p.VisibleTitle != "" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<h1 class=\"font-heading text-xl tracking-wide text-foreground\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(p.TituloVisivel)
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(p.VisibleTitle)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 170, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 170, Col: 86}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -352,8 +352,8 @@ func Layout(p Page, body templ.Component) templ.Component {
 			}
 		}
 		var templ_7745c5c3_Var15 = []any{"relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
-			templ.KV("px-4 py-4", p.Forma == ShellDense),
-			templ.KV("px-5 py-14", p.Forma == ShellTitled)}
+			templ.KV("px-4 py-4", p.Shape == ShellDense),
+			templ.KV("px-5 py-14", p.Shape == ShellTitled)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -375,7 +375,7 @@ func Layout(p Page, body templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if p.Forma == ShellTitled {
+		if p.Shape == ShellTitled {
 			templ_7745c5c3_Err = SceneTitle(p.Title, p.Kicker).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -389,7 +389,7 @@ func Layout(p Page, body templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if !p.SemEstadoDeCliente {
+		if !p.NoClientState {
 			for _, overlap := range p.Overlays {
 				templ_7745c5c3_Err = overlap.Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {

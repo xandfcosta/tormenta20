@@ -175,14 +175,14 @@ func knownRole(role string) string {
 	return "todas"
 }
 
-func passesRole(campaignRole, filter string) bool {
-	if filter == "todas" {
+func passesRole(campaignRole, filterText string) bool {
+	if filterText == "todas" {
 		return true
 	}
 	if campaignRole == "" {
-		return filter == "player"
+		return filterText == "player"
 	}
-	return campaignRole == filter
+	return campaignRole == filterText
 }
 
 func valueOrEmpty(p *string) string {

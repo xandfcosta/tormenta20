@@ -1212,7 +1212,7 @@ func catalogAddDialog(v View) templ.Component {
 // itemFormDialog é o formulário de um item CUSTOM — nome, quantidade e espaços.
 // Ele serve tanto ao "novo" quanto ao "editar", que é o mesmo formulário com
 // outro destino.
-func itemFormDialog(v View, key, title, botao, command string) templ.Component {
+func itemFormDialog(v View, key, title, button, command string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1351,9 +1351,9 @@ func itemFormDialog(v View, key, title, botao, command string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var84 string
-			templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(botao)
+			templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(button)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 284, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 284, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 			if templ_7745c5c3_Err != nil {

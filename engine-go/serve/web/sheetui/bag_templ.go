@@ -618,7 +618,7 @@ func poolBox(title string, used, ceiling int) templ.Component {
 }
 
 // equippedCardItem é o cartão de um item equipado.
-func equippedCardItem(v View, card *equippedCard, largo bool) templ.Component {
+func equippedCardItem(v View, card *equippedCard, wide bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -640,7 +640,7 @@ func equippedCardItem(v View, card *equippedCard, largo bool) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var30 = []any{"relative min-h-[3.75rem] rounded-none border border-grimorio-gold/40 bg-grimorio-panel-raised px-2 py-1.5",
-			templ.KV("col-span-2", largo)}
+			templ.KV("col-span-2", wide)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var30...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -835,7 +835,7 @@ func equippedCardItem(v View, card *equippedCard, largo bool) templ.Component {
 }
 
 // emptySlot é a posição livre — ela existe para o teto aparecer.
-func emptySlot(label string, largo bool) templ.Component {
+func emptySlot(label string, wide bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -857,7 +857,7 @@ func emptySlot(label string, largo bool) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var43 = []any{"flex min-h-[3.75rem] flex-col justify-center rounded-none border border-dashed border-grimorio-iron bg-grimorio-panel px-2 py-1.5",
-			templ.KV("col-span-2", largo)}
+			templ.KV("col-span-2", wide)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var43...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

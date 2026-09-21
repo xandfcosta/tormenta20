@@ -425,7 +425,7 @@ func roleChip(v listView, value, label string) templ.Component {
 //
 // Todos os palcos são desenhados e o `data-show` escolhe um. É o que faz ←/→ não
 // custar requisição.
-func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Component {
+func campaignStage(c campaignCard, anterior, next *ui.Neighbor) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -549,7 +549,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.NeighborPortrait(proximo, "Próximo").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.NeighborPortrait(next, "Próximo").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -713,7 +713,7 @@ func myHeroBand(c campaignCard) templ.Component {
 	})
 }
 
-func oneHeroCard(iniciais, name, classes, gradiente string, espacador bool) templ.Component {
+func oneHeroCard(initials, name, classes, gradient string, espacador bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -768,9 +768,9 @@ func oneHeroCard(iniciais, name, classes, gradiente string, espacador bool) temp
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var33 string
-		templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + gradiente)
+		templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + gradient)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 228, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 228, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -781,7 +781,7 @@ func oneHeroCard(iniciais, name, classes, gradiente string, espacador bool) temp
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var34 string
-		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(iniciais)
+		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(initials)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 229, Col: 13}
 		}
@@ -1111,11 +1111,11 @@ func campaignActions(c campaignCard) templ.Component {
 	})
 }
 
-func ifLive(c campaignCard, aoVivo, parado ui.Variant) ui.Variant {
+func ifLive(c campaignCard, live, stopped ui.Variant) ui.Variant {
 	if c.Live {
-		return aoVivo
+		return live
 	}
-	return parado
+	return stopped
 }
 
 // blankSheetStage é a vaga do fim — e ela existe TAMBÉM com a lista vazia,

@@ -309,7 +309,7 @@ func attributeStepper(id int64, row attributeRow) templ.Component {
 	})
 }
 
-func attributeStepCmd(id int64, row attributeRow, step int, simbolo, label string) templ.Component {
+func attributeStepCmd(id int64, row attributeRow, step int, symbol, label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -371,9 +371,9 @@ func attributeStepCmd(id int64, row attributeRow, step int, simbolo, label strin
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(simbolo)
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(symbol)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 89, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 89, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {

@@ -36,11 +36,11 @@ func (s Scene) handleCollection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:         tabLabel(v.Aba) + " · Mesa do Mestre · Tormenta 20",
-		Forma:         ui.ShellDense,
-		Voltar:        "/",
-		VoltarRotulo:  "Hub",
-		TituloVisivel: "Mesa do Mestre",
+		Title:        tabLabel(v.Aba) + " · Mesa do Mestre · Tormenta 20",
+		Shape:        ui.ShellDense,
+		Back:         "/",
+		BackLabel:    "Hub",
+		VisibleTitle: "Mesa do Mestre",
 	}, masterBody(v.Aba, collectionScene(v)))
 }
 

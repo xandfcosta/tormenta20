@@ -68,11 +68,11 @@ func (s Scene) respondEncounter(
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:         "Encontros · Mesa do Mestre · Tormenta 20",
-		Forma:         ui.ShellDense,
-		Voltar:        "/",
-		VoltarRotulo:  "Hub",
-		TituloVisivel: "Mesa do Mestre",
+		Title:        "Encontros · Mesa do Mestre · Tormenta 20",
+		Shape:        ui.ShellDense,
+		Back:         "/",
+		BackLabel:    "Hub",
+		VisibleTitle: "Mesa do Mestre",
 	}, masterBody("encontros", encountersScene(v)))
 }
 

@@ -662,7 +662,7 @@ func overviewTab(v oneView) templ.Component {
 	})
 }
 
-func oneSeal(nomeDoIcone string, value int, label string) templ.Component {
+func oneSeal(iconName string, value int, label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -687,7 +687,7 @@ func oneSeal(nomeDoIcone string, value int, label string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.Icon(nomeDoIcone, "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon(iconName, "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1378,7 +1378,7 @@ func campaignForm(v oneView) templ.Component {
 		}
 		templ_7745c5c3_Err = ui.TextField(ui.Field{
 			Name: "name", Label: "Nome", Value: v.Name,
-			Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
+			Obrigatorio: true, MaxSize: campaign.MaxNameLength,
 			Errors: v.Errors["name"],
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -1386,8 +1386,8 @@ func campaignForm(v oneView) templ.Component {
 		}
 		templ_7745c5c3_Err = ui.TextArea(ui.Field{
 			Name: "description", Label: "Descrição", Value: v.Description,
-			TamanhoMaximo: campaign.MaxDescriptionLength,
-			Errors:        v.Errors["description"],
+			MaxSize: campaign.MaxDescriptionLength,
+			Errors:  v.Errors["description"],
 		}, 6).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

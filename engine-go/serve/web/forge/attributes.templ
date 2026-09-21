@@ -79,14 +79,14 @@ templ attributeStepper(id int64, row attributeRow) {
 	</div>
 }
 
-templ attributeStepCmd(id int64, row attributeRow, step int, simbolo, label string) {
+templ attributeStepCmd(id int64, row attributeRow, step int, symbol, label string) {
 	<button
 		type="button"
 		aria-label={ label }
 		disabled?={ !buttonFits(row, step) }
 		data-on:click={ attributePost(id, row.Key, step) }
 		class="inline-flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-base text-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold disabled:cursor-not-allowed disabled:opacity-40"
-	>{ simbolo }</button>
+	>{ symbol }</button>
 }
 
 func buttonFits(row attributeRow, step int) bool {

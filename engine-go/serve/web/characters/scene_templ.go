@@ -197,7 +197,7 @@ func charactersBar(v View) templ.Component {
 }
 
 // ── o palco ──────────────────────────────────────────────────────────────────
-func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
+func heroStage(h HeroCard, anterior, next *ui.Neighbor) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -321,7 +321,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.NeighborPortrait(proximo, "Próximo").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.NeighborPortrait(next, "Próximo").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

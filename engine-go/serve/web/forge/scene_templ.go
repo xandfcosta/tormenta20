@@ -118,7 +118,7 @@ func forgeBody(v forgeView) templ.Component {
 		}
 		templ_7745c5c3_Err = ui.TextField(ui.Field{
 			Name: "name", Label: "Nome", Value: v.Name,
-			TamanhoMaximo: heroNameMax, Errors: v.Errors["name"],
+			MaxSize: heroNameMax, Errors: v.Errors["name"],
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

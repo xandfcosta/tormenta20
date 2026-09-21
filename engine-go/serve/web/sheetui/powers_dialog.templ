@@ -82,11 +82,11 @@ templ raceChoicesBlock(v View) {
 				if card.Attribute != nil {
 					@attributeChoiceBlock(v, *card.Attribute)
 				}
-				for _, variante := range card.Variants {
+				for _, variant := range card.Variants {
 					<div class="space-y-1">
-						<p class={ ui.FieldLabelClasses("muted", "") }>{ variante.Name }</p>
+						<p class={ ui.FieldLabelClasses("muted", "") }>{ variant.Name }</p>
 						<div class="flex flex-wrap gap-1">
-							for _, o := range variante.Options {
+							for _, o := range variant.Options {
 								<button
 									type="button"
 									role="switch"

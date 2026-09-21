@@ -227,12 +227,12 @@ templ listHeader(v View, list, title, what string) {
 // entram na lista de regiões da Mesa: o stream não sabe do rascunho de ninguém, e
 // um quadro dele apagaria as linhas em silêncio.
 
-templ draftAttacks(v View, ataques []creature.Attack) {
+templ draftAttacks(v View, attacks []creature.Attack) {
 	<div id="npc-attacks" class="space-y-2">
-		if len(ataques) == 0 {
+		if len(attacks) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhum ataque.</p>
 		}
-		for i, ataque := range ataques {
+		for i, attack := range attacks {
 			<div class="flex flex-wrap items-end gap-2 border border-grimorio-iron bg-card/40 p-2">
 				@rowBox(rowField(listaDeAtaques, i, "name"), "Nome", "Clava", "min-w-36 flex-1")
 				@numberRow(rowField(listaDeAtaques, i, "attackBonus"), "Ataque", -20, 60)
@@ -242,7 +242,7 @@ templ draftAttacks(v View, ataques []creature.Attack) {
 					<input type="checkbox" data-bind={ rowField(listaDeAtaques, i, "ranged") } class="size-4 accent-grimorio-gold"/>
 					À distância
 				</label>
-				@removeRowButton(v, listaDeAtaques, i, attackName(ataque, i))
+				@removeRowButton(v, listaDeAtaques, i, attackName(attack, i))
 			</div>
 		}
 	</div>
@@ -317,14 +317,14 @@ templ numberBlock(field, label string, min, max int) {
 	</div>
 }
 
-templ blockText(field, label, dica string) {
+templ blockText(field, label, hint string) {
 	<div class="col-span-2 space-y-1 sm:col-span-3">
 		<label for={ "npc-" + field } class={ ui.FieldLabelClasses("muted", "block") }>{ label }</label>
 		<input
 			id={ "npc-" + field }
 			type="text"
 			data-bind={ draftField(field) }
-			placeholder={ dica }
+			placeholder={ hint }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		/>
 	</div>
@@ -348,14 +348,14 @@ templ blockChoice(field, label string, options []blockOption) {
 	</div>
 }
 
-templ rowBox(path, label, dica, largura string) {
-	<div class={ "space-y-1", largura }>
+templ rowBox(path, label, hint, width string) {
+	<div class={ "space-y-1", width }>
 		<span class={ ui.SectionLabelClasses("muted", "block") }>{ label }</span>
 		<input
 			type="text"
 			aria-label={ label }
 			data-bind={ path }
-			placeholder={ dica }
+			placeholder={ hint }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		/>
 	</div>

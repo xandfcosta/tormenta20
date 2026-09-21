@@ -223,10 +223,10 @@ templ overviewTab(v oneView) {
 	</div>
 }
 
-templ oneSeal(nomeDoIcone string, value int, label string) {
+templ oneSeal(iconName string, value int, label string) {
 	<div class="flex flex-col items-center gap-1 border border-grimorio-iron bg-grimorio-panel px-3 py-4 text-center">
 		<span aria-hidden="true" class="text-grimorio-gold/70">
-			@ui.Icon(nomeDoIcone, "size-4")
+			@ui.Icon(iconName, "size-4")
 		</span>
 		<span class="font-mono text-xl font-semibold tabular-nums text-foreground">{ strconv.Itoa(value) }</span>
 		@ui.SectionLabel("muted", "") {
@@ -370,12 +370,12 @@ templ campaignForm(v oneView) {
 		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/editar", v.ID)) } class="space-y-4">
 			@ui.TextField(ui.Field{
 				Name: "name", Label: "Nome", Value: v.Name,
-				Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
+				Obrigatorio: true, MaxSize: campaign.MaxNameLength,
 				Errors: v.Errors["name"],
 			})
 			@ui.TextArea(ui.Field{
 				Name: "description", Label: "Descrição", Value: v.Description,
-				TamanhoMaximo: campaign.MaxDescriptionLength,
+				MaxSize: campaign.MaxDescriptionLength,
 				Errors:         v.Errors["description"],
 			}, 6)
 			if v.Notice != "" {

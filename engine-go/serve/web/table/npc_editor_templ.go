@@ -854,7 +854,7 @@ func listHeader(v View, list, title, what string) templ.Component {
 // Cada uma é um nó com id próprio, e o id é como o remendo a encontra. Elas NÃO
 // entram na lista de regiões da Mesa: o stream não sabe do rascunho de ninguém, e
 // um quadro dele apagaria as linhas em silêncio.
-func draftAttacks(v View, ataques []creature.Attack) templ.Component {
+func draftAttacks(v View, attacks []creature.Attack) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -879,13 +879,13 @@ func draftAttacks(v View, ataques []creature.Attack) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if len(ataques) == 0 {
+		if len(attacks) == 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<p class=\"border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground\">Nenhum ataque.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		for i, ataque := range ataques {
+		for i, attack := range attacks {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<div class=\"flex flex-wrap items-end gap-2 border border-grimorio-iron bg-card/40 p-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -923,7 +923,7 @@ func draftAttacks(v View, ataques []creature.Attack) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = removeRowButton(v, listaDeAtaques, i, attackName(ataque, i)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = removeRowButton(v, listaDeAtaques, i, attackName(attack, i)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1303,7 +1303,7 @@ func numberBlock(field, label string, min, max int) templ.Component {
 	})
 }
 
-func blockText(field, label, dica string) templ.Component {
+func blockText(field, label, hint string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1403,7 +1403,7 @@ func blockText(field, label, dica string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var62 string
-		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(dica)
+		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(hint)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 327, Col: 21}
 		}
@@ -1561,7 +1561,7 @@ func blockChoice(field, label string, options []blockOption) templ.Component {
 	})
 }
 
-func rowBox(path, label, dica, largura string) templ.Component {
+func rowBox(path, label, hint, width string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1582,7 +1582,7 @@ func rowBox(path, label, dica, largura string) templ.Component {
 			templ_7745c5c3_Var72 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var73 = []any{"space-y-1", largura}
+		var templ_7745c5c3_Var73 = []any{"space-y-1", width}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var73...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1666,7 +1666,7 @@ func rowBox(path, label, dica, largura string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var80 string
-		templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.ResolveAttributeValue(dica)
+		templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.ResolveAttributeValue(hint)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/npc_editor.templ`, Line: 358, Col: 21}
 		}

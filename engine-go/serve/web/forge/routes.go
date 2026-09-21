@@ -96,9 +96,9 @@ func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, v 
 		Title: "Forja · Tormenta 20",
 		// `ui.ShellDense`: o cabeçalho compacto com o "‹ Voltar", como a folha em
 		// branco da campanha. Sem ele a folha nasce sem saída visível.
-		Forma:        ui.ShellDense,
-		Voltar:       "/personagens",
-		VoltarRotulo: "Personagens",
+		Shape:     ui.ShellDense,
+		Back:      "/personagens",
+		BackLabel: "Personagens",
 	}, forgeSheet(v))
 }
 

@@ -89,9 +89,9 @@ func (s Scene) handleReader(w http.ResponseWriter, r *http.Request) {
 		title = v.Term + " · Livro · Tormenta 20"
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:  title,
-		Forma:  ui.ShellBare,
-		Voltar: v.Back,
+		Title: title,
+		Shape: ui.ShellBare,
+		Back:  v.Back,
 		// O módulo do leitor só entra AQUI: são 540 KB de pdf.js, e mandá-los em
 		// toda cena seria pôr um visualizador de PDF no caminho de quem abriu a
 		// ficha de um personagem.

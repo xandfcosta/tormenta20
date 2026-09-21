@@ -110,7 +110,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title: view.Name + " · Tormenta 20",
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, com a volta e o nome.
-		Forma: ui.ShellBare,
+		Shape: ui.ShellBare,
 		// Os sinais moram no <body> porque o <body> NUNCA é remendado: declarado
 		// dentro de um painel, o `@post` de qualquer gesto redeclararia o sinal a
 		// cada toque e fecharia o diálogo que o jogador acabou de abrir.

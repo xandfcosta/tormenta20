@@ -82,7 +82,7 @@ templ charactersBar(v View) {
 
 // ── o palco ──────────────────────────────────────────────────────────────────
 
-templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
+templ heroStage(h HeroCard, anterior, next *ui.Neighbor) {
 	<div
 		data-show={ fmt.Sprintf("$cursor == %d", h.ID) }
 		data-class={ ui.EnteringStage(h.ID) }
@@ -108,7 +108,7 @@ templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
 				</span>
 				<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
 			</a>
-			@ui.NeighborPortrait(proximo, "Próximo")
+			@ui.NeighborPortrait(next, "Próximo")
 		</div>
 		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
 		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome

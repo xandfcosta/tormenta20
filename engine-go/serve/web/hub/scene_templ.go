@@ -131,7 +131,7 @@ func hubMenu(v hubView) templ.Component {
 // Os `data-cue-*` são o gancho dos sons: o `scene.js` escuta por DELEGAÇÃO num
 // ouvinte só, porque o HTML pode ser remendado a qualquer tique e ouvinte preso
 // a nó morre no remendo.
-func menuItem(icone_, label, destination string, temProximo bool) templ.Component {
+func menuItem(icon_, label, destination string, hasNext bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -169,7 +169,7 @@ func menuItem(icone_, label, destination string, temProximo bool) templ.Componen
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.Icon(icone_, "size-5 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon(icon_, "size-5 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -190,7 +190,7 @@ func menuItem(icone_, label, destination string, temProximo bool) templ.Componen
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if temProximo {
+		if hasNext {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<span aria-hidden=\"true\" class=\"text-sm text-grimorio-gold\">►</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

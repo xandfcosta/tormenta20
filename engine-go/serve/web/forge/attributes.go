@@ -215,10 +215,10 @@ func (s Scene) writeAttributes(w http.ResponseWriter, r *http.Request, v attribu
 		return
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:        "Atributos · Forja · Tormenta 20",
-		Forma:        ui.ShellDense,
-		Voltar:       "/personagens",
-		VoltarRotulo: "Personagens",
+		Title:     "Atributos · Forja · Tormenta 20",
+		Shape:     ui.ShellDense,
+		Back:      "/personagens",
+		BackLabel: "Personagens",
 	}, attributesScene(v))
 }
 

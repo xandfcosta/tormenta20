@@ -238,7 +238,7 @@ templ weaponDetail(weapon weaponTile) {
 // caixas ATRÁS da sobreposição. Aqui o `data-attr` com BOOLEANO é o certo, ao
 // contrário do que vale para `aria-*`: é a PRESENÇA do atributo que o seletor
 // procura.
-templ overlay(key, title, icone string, magic bool) {
+templ overlay(key, title, icon string, magic bool) {
 	// NASCE ESCONDIDO pelo `style` estático, e ele é o conserto inteiro.
 	//
 	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
@@ -274,7 +274,7 @@ templ overlay(key, title, icone string, magic bool) {
 					templ.KV("text-grimorio-gold", !magic),
 					templ.KV("text-arcane-ink", magic) }
 			>
-				@detailIcon(icone)
+				@detailIcon(icon)
 				{ title }
 			</p>
 			<div class="mt-3 space-y-2 text-sm">

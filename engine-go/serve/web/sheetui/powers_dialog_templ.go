@@ -389,7 +389,7 @@ func raceChoicesBlock(v View) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				for _, variante := range card.Variants {
+				for _, variant := range card.Variants {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<div class=\"space-y-1\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -417,9 +417,9 @@ func raceChoicesBlock(v View) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var23 string
-					templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(variante.Name)
+					templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(variant.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/powers_dialog.templ`, Line: 87, Col: 68}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/powers_dialog.templ`, Line: 87, Col: 67}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 					if templ_7745c5c3_Err != nil {
@@ -429,7 +429,7 @@ func raceChoicesBlock(v View) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					for _, o := range variante.Options {
+					for _, o := range variant.Options {
 						var templ_7745c5c3_Var24 = []any{choiceChip(o.Active)}
 						templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
 						if templ_7745c5c3_Err != nil {
