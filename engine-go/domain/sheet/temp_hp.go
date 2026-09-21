@@ -157,7 +157,11 @@ func PlanDamage(pools []TempHpPool, HpCurrent, Amount int) DamagePlan {
 		}
 		plan.Updates = append(plan.Updates, EffectModifierWrite{pool.EffectID, withTempHpAmount(pool.Mods, newAmount)})
 	}
-	plan.HpCurrent = max(0, HpCurrent-left)
+	// SEM PISO aqui: o PV desce abaixo de zero até o limiar da morte (p236), e
+	// quem prende é o funil (`WithinHitPoints`). Um piso a mais neste passo foi
+	// a terceira grafia do "piso zero", e o guarda de grafia única não a via
+	// porque ela não tinha a forma `min(max(…))` (ALE-366).
+	plan.HpCurrent = HpCurrent - left
 	return plan
 }
 

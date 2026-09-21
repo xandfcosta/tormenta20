@@ -79,11 +79,57 @@ func ApplyToLoadedPools(
 	// recusar quem devolvesse um máximo diferente, e isso convidaria o gesto a
 	// tentar. O poço é do catálogo, ponto.
 	after.HpMax, after.MpMax = before.HpMax, before.MpMax
-	after.HpCurrent = WithinPool(after.HpCurrent, after.HpMax)
+	after.HpCurrent = WithinHitPoints(after.HpCurrent, after.HpMax)
 	after.MpCurrent = WithinPool(after.MpCurrent, after.MpMax)
 	dto.HpMax, dto.HpCurrent = after.HpMax, after.HpCurrent
 	dto.MpMax, dto.MpCurrent = after.MpMax, after.MpCurrent
-	return after, savePools(ctx, q, dto.ID, after)
+	if err := savePools(ctx, q, dto.ID, after); err != nil {
+		return after, err
+	}
+	return after, followTheHitPoints(ctx, q, dto, before.HpCurrent, after.HpCurrent)
+}
+
+// followTheHitPoints liga e desliga as condições que a mudança de PV pede
+// (p236): cair liga Inconsciente e Sangrando, curar estabiliza, chegar a 1
+// acorda. QUAIS é decisão do `engine.DyingConditionChange`; aqui só se grava.
+//
+// Ela mora NO FUNIL porque ele é o único caminho de escrita de vital (o
+// `TestEveryVitalWriteGoesThroughTheFunnel` o prende): pancada do mestre, dose,
+// descanso e conjuração passam todos aqui, e nenhum escapa das condições.
+func followTheHitPoints(ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO, before, after int64) error {
+	add, drop := engine.DyingConditionChange(before, after, dto.HpMax)
+	if len(add) == 0 && len(drop) == 0 {
+		return nil
+	}
+	current := UnmarshalStrings(dto.ActiveConditions)
+	next := make([]string, 0, len(current)+len(add))
+	dropped := map[string]bool{}
+	for _, c := range drop {
+		dropped[c] = true
+	}
+	present := map[string]bool{}
+	for _, c := range current {
+		if !dropped[c] {
+			next = append(next, c)
+			present[c] = true
+		}
+	}
+	for _, c := range add {
+		if !present[c] {
+			next = append(next, c)
+		}
+	}
+	marshaled := MarshalStrings(&next)
+	if marshaled == dto.ActiveConditions {
+		return nil
+	}
+	if err := q.UpdateConditions(ctx, sqlcgen.UpdateConditionsParams{
+		ActiveConditions: marshaled, UpdatedAt: dbvalue.NowISO(), ID: dto.ID,
+	}); err != nil {
+		return fmt.Errorf("gravar as condições que o PV da ficha %d pede: %w", dto.ID, err)
+	}
+	dto.ActiveConditions = marshaled
+	return nil
 }
 
 // Aqui moravam o `RefreshPools` e o `FillPools`, e os dois viraram NADA.
@@ -95,7 +141,9 @@ func ApplyToLoadedPools(
 // `character_damage` já está cheio. Eles existiam para manter as quatro colunas
 // de espelho, e elas saíram na 00015 (ALE-355).
 
-// WithinPool prende um vital entre zero e o teto, e é a ÚNICA grafia da regra.
+// WithinPool prende o PM entre zero e o teto, e o `WithinHitPoints` logo abaixo
+// prende o PV — o PV desce até o limiar da morte, o PM não (ALE-366). As duas
+// são as ÚNICAS grafias da regra.
 //
 // Eram cinco: duas funções com nome próprio, que saíram com o
 // `app/character/vitals.go`, e três `min(max(…))` escritos à mão nos gestos. A
@@ -115,6 +163,15 @@ func ApplyToLoadedPools(
 //     Bucaneiro é "+Carisma na Defesa, até o nível de Bucaneiro" (p47) —, e ele
 //     não pode chamar isto aqui: a direção de import é `sheet → engine`.
 func WithinPool(value, ceiling int64) int64 { return min(max(int64(0), value), ceiling) }
+
+// WithinHitPoints é o mesmo, com o piso do PV: ele desce abaixo de zero até o
+// limiar da morte (–10 ou menos a metade dos PV totais, p236), e o PM não
+// (decisão do dono, ALE-366). O limiar é do motor; o PV no limiar é morto.
+//
+// @example WithinHitPoints(-40, 30) // -15
+func WithinHitPoints(value, ceiling int64) int64 {
+	return min(max(engine.DeathThreshold(ceiling), value), ceiling)
+}
 
 // savePools grava o que de fato é ESTADO: o quanto se apanhou.
 //
@@ -140,7 +197,9 @@ func WithinPool(value, ceiling int64) int64 { return min(max(int64(0), value), c
 // versão: o jogador ficaria com o PV de antes na tela, sem erro em lugar nenhum
 // (ALE-355).
 func savePools(ctx context.Context, q *sqlcgen.Queries, id int64, p Pools) error {
-	hpDamage := WithinPool(p.HpMax-p.HpCurrent, p.HpMax)
+	// O dano pode passar do máximo — é o PV negativo —, e o funil já prendeu o
+	// atual ao limiar; preso de novo aqui, contra zero, ele voltaria a mentir.
+	hpDamage := p.HpMax - WithinHitPoints(p.HpCurrent, p.HpMax)
 	mpSpent := WithinPool(p.MpMax-p.MpCurrent, p.MpMax)
 	saved, err := storedDamage(ctx, q, id)
 	if err != nil {

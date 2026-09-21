@@ -26,8 +26,10 @@ func TestPlanDamage(t *testing.T) {
 	if p := PlanDamage(nil, 20, 8); p.HpCurrent != 12 || p.TempHpRemaining != 0 {
 		t.Fatalf("plain damage: hp=%d temp=%d, want 12/0", p.HpCurrent, p.TempHpRemaining)
 	}
-	if p := PlanDamage(nil, 5, 8); p.HpCurrent != 0 {
-		t.Fatalf("overkill floors at 0, got %d", p.HpCurrent)
+	// O PV desce abaixo de zero (p236): o planejador não prende, o funil prende
+	// no limiar da morte.
+	if p := PlanDamage(nil, 5, 8); p.HpCurrent != -3 {
+		t.Fatalf("5 - 8 deixa -3 PV, e deu %d", p.HpCurrent)
 	}
 
 	// Biggest pool drains first; overflow hits HP. Pools 5 + 3, dmg 7:

@@ -111,20 +111,26 @@ func TestTheLevelStepDoesNotEraseALevelOneClass(t *testing.T) {
 //
 // É a diferença entre o gesto e a API: o `PATCH /vitals` manda o valor absoluto
 // e recusa fora da faixa, o que está certo para um cliente que calculou. Aqui o
-// gesto é "levou seis" — com 4 de PV o resultado é zero, e uma recusa faria o
-// mestre clicar quatro vezes de um em um para chegar no mesmo lugar.
-func TestTheVitalClampsAtZeroAndAtTheMaximum(t *testing.T) {
+// gesto é "levou seis" — e uma recusa faria o mestre clicar de um em um para
+// chegar no mesmo lugar.
+//
+// A FAIXA DO PV desce abaixo de zero até o limiar da morte (p236, ALE-366): com
+// até 20 PV totais o limiar é –10, e é lá que o passo para.
+func TestTheVitalClampsAtTheDeathThresholdAndAtTheMaximum(t *testing.T) {
 	f, id := sheetOf(t, "Alvo", 3)
 	url := fmt.Sprintf("/personagens/%d/vitais/pv/", id)
+	if total := poolsOf(t, f.s, id).HpMax; total > 20 {
+		t.Fatalf("o controle falhou: a ficha tem %d PV totais, e o caso precisa de até 20 para o limiar ser -10", total)
+	}
 
-	// Cinco golpes de −5 sobre 20 de PV: para em zero e não vira negativo.
-	for i := 0; i < 5; i++ {
+	// Dez golpes de −5: bem abaixo do limiar, e o passo para nele.
+	for i := 0; i < 10; i++ {
 		if rec := f.pede(t, f.player, http.MethodPost, url+"-5", ""); rec.Code != http.StatusOK {
 			t.Fatalf("ferir deu %d", rec.Code)
 		}
 	}
-	if wounded := poolsOf(t, f.s, id); wounded.HpCurrent != 0 {
-		t.Errorf("o PV foi para %d: o passo tinha de prender em zero", wounded.HpCurrent)
+	if wounded := poolsOf(t, f.s, id); wounded.HpCurrent != -10 {
+		t.Errorf("o PV foi para %d: o passo tinha de parar no limiar da morte, -10", wounded.HpCurrent)
 	}
 
 	// E curar além do máximo para NO máximo: passar dele seria PV temporário,

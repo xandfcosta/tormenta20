@@ -173,12 +173,12 @@ func withDerivedPools(
 	}
 
 	dto.HpMax, dto.MpMax = int64(pools.PvMax), int64(pools.PmMax)
-	// O `WithinPool` e não uma conta própria: `máximo − gasto` preso entre zero e
-	// o teto é a MESMA regra que o funil aplica ao gravar, e o piso existe pela
-	// mesma razão nos dois — dano que sobreviveu a um máximo que ENCOLHEU. Um
-	// personagem com 60 de dano num poço que virou 50 tem zero, não dez
-	// negativos.
-	dto.HpCurrent = WithinPool(dto.HpMax-damage.Hpdamage, dto.HpMax)
+	// O `WithinHitPoints` e não uma conta própria: `máximo − dano` preso entre o
+	// limiar da morte e o teto é a MESMA regra que o funil aplica ao gravar. O
+	// piso importa nos dois pela mesma razão — dano que sobreviveu a um máximo
+	// que ENCOLHEU: com 60 de dano num poço que virou 50 o PV é –10, e passar
+	// disso é passar do limiar (p236).
+	dto.HpCurrent = WithinHitPoints(dto.HpMax-damage.Hpdamage, dto.HpMax)
 	dto.MpCurrent = WithinPool(dto.MpMax-damage.Mpspent, dto.MpMax)
 	return nil
 }

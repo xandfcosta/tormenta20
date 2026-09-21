@@ -72,7 +72,7 @@ func PoolsForCharacters(
 		}
 		derived := cat.VitalsForCharacter(ec)
 		p := Pools{HpMax: int64(derived.PvMax), MpMax: int64(derived.PmMax)}
-		p.HpCurrent = WithinPool(p.HpMax-damage[id].Hpdamage, p.HpMax)
+		p.HpCurrent = WithinHitPoints(p.HpMax-damage[id].Hpdamage, p.HpMax)
 		p.MpCurrent = WithinPool(p.MpMax-damage[id].Mpspent, p.MpMax)
 		pools[id] = p
 	}

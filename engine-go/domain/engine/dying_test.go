@@ -72,6 +72,8 @@ func TestTheDyingConditionsFollowTheHitPoints(t *testing.T) {
 		{"cura até 1 acorda", -5, 1, nil, []string{ConditionUnconscious, ConditionBleeding}},
 		// quem morreu não rola mais nada
 		{"chegar ao limiar para de sangrar", -8, -10, nil, []string{ConditionBleeding}},
+		// morrer de uma vez, de pé: o morto também está inconsciente
+		{"morrer de pé cai inconsciente", 1, -10, []string{ConditionUnconscious}, []string{ConditionBleeding}},
 		// de pé para de pé, nada muda
 		{"apanhar de pé não mexe em condição", 10, 4, nil, nil},
 		{"nada mudou", -3, -3, nil, nil},

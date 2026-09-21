@@ -76,7 +76,10 @@ func DyingConditionChange(before, after, hpMax int64) (add, drop []string) {
 		// "recupere PV até um valor positivo […] recobra a consciência"
 		return nil, []string{ConditionUnconscious, ConditionBleeding}
 	case after <= DeathThreshold(hpMax):
-		// quem morreu não rola mais nada
+		// quem morreu não rola mais nada — e, se morreu de pé, também caiu
+		if before > 0 {
+			return []string{ConditionUnconscious}, []string{ConditionBleeding}
+		}
 		return nil, []string{ConditionBleeding}
 	case before > 0:
 		// "Se ficar com 0 PV ou menos, você cai inconsciente e fica sangrando."
