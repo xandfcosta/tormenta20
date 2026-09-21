@@ -431,11 +431,11 @@ templ EntryList(v BestiaryView) {
 							{ m.Name }
 							<span class="font-mono text-3xs text-grimorio-gold">{ "ND " + book.CRWritten(m.ND) }</span>
 							<span class="text-3xs font-normal text-muted-foreground">
-								{ book.TypeName(m.Tipo) + " · " + book.SizeName(m.Size) }
+								{ book.TypeName(m.Kind) + " · " + book.SizeName(m.Size) }
 							</span>
 						</p>
 						<p class="font-mono text-3xs text-muted-foreground">
-							{ fmt.Sprintf("PV %d · DEF %d · p%d", m.HP, m.Defesa, m.BookPage) }
+							{ fmt.Sprintf("PV %d · DEF %d · p%d", m.HP, m.Defense, m.BookPage) }
 						</p>
 					</a>
 				</li>
@@ -465,7 +465,7 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 		<div class="space-y-0.5">
 			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
 			<p class="text-xs text-muted-foreground">
-				{ fmt.Sprintf("ND %s · %s · %s · ", book.CRWritten(m.ND), book.TypeName(m.Tipo), book.SizeName(m.Size)) }
+				{ fmt.Sprintf("ND %s · %s · %s · ", book.CRWritten(m.ND), book.TypeName(m.Kind), book.SizeName(m.Size)) }
 				@bookui.PageSeal(livro, m.BookPage, m.Name)
 				{ fmt.Sprintf(" · XP %d", book.XPForCR(m.ND)) }
 			</p>
@@ -485,30 +485,30 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 				// (p289), e o mestre rola as duas antes de qualquer outra coisa
 				// no combate.
 				<div class="grid grid-cols-2 gap-2">
-					@stat("Iniciativa", book.WithSign(m.Iniciativa))
-					@stat("Percepção", book.WithSign(m.Percepcao))
+					@stat("Iniciativa", book.WithSign(m.Initiative))
+					@stat("Percepção", book.WithSign(m.Perception))
 					@stat("PV", fmt.Sprintf("%d", m.HP))
-					@stat("Defesa", fmt.Sprintf("%d", m.Defesa))
-					@stat("Deslocamento", m.Deslocamento)
+					@stat("Defesa", fmt.Sprintf("%d", m.Defense))
+					@stat("Deslocamento", m.Speed)
 					if m.PM != nil {
 						@stat("PM", fmt.Sprintf("%d", *m.PM))
 					}
 				</div>
 				@blockSection("Atributos") {
 					<div class="entry-attributes grid gap-1">
-						@stat("For", book.WithSignPtr(m.Forca))
-						@stat("Des", book.WithSignPtr(m.Destreza))
-						@stat("Con", book.WithSignPtr(m.Constituicao))
-						@stat("Int", book.WithSignPtr(m.Inteligencia))
-						@stat("Sab", book.WithSignPtr(m.Sabedoria))
-						@stat("Car", book.WithSignPtr(m.Carisma))
+						@stat("For", book.WithSignPtr(m.Strength))
+						@stat("Des", book.WithSignPtr(m.Dexterity))
+						@stat("Con", book.WithSignPtr(m.Constitution))
+						@stat("Int", book.WithSignPtr(m.Intelligence))
+						@stat("Sab", book.WithSignPtr(m.Wisdom))
+						@stat("Car", book.WithSignPtr(m.Charisma))
 					</div>
 				}
 				@blockSection("Resistências") {
 					<div class="grid grid-cols-3 gap-1">
 						@stat("Fortitude", book.WithSign(m.Fortitude))
-						@stat("Reflexos", book.WithSign(m.Reflexos))
-						@stat("Vontade", book.WithSign(m.Vontade))
+						@stat("Reflexos", book.WithSign(m.Reflex))
+						@stat("Vontade", book.WithSign(m.Will))
 					</div>
 				}
 			</div>
@@ -569,19 +569,19 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 				// põe. As duas passam pela varredura pelo mesmo motivo das habilidades:
 				// o tesouro do dragão diz "veja o quadro na página 312", e sem ela o
 				// número fica texto morto no meio da frase.
-				if m.Equipamento != "" {
+				if m.Equipment != "" {
 					@blockSection("Equipamento") {
 						<p class="text-xs">
-							for _, pedaco := range book.WithLinks(m.Equipamento) {
+							for _, pedaco := range book.WithLinks(m.Equipment) {
 								@bookui.Chunk(pedaco, livro)
 							}
 						</p>
 					}
 				}
-				if m.Tesouro != "" {
+				if m.Treasure != "" {
 					@blockSection("Tesouro") {
 						<p class="text-xs">
-							for _, pedaco := range book.WithLinks(m.Tesouro) {
+							for _, pedaco := range book.WithLinks(m.Treasure) {
 								@bookui.Chunk(pedaco, livro)
 							}
 						</p>

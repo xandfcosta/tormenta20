@@ -161,7 +161,7 @@ func activeCountOf(linhas []situationalRow) int {
 // condição, e um blob velho não pode injetar uma condição fantasma na ficha.
 func conditionRowsOf(dto sheet.CharacterDTO) []conditionRow {
 	porID := map[string]book.Condition{}
-	for _, c := range book.Catalogs().Condicoes {
+	for _, c := range book.Catalogs().Conditions {
 		porID[c.ID] = c
 	}
 	linhas := []conditionRow{}
@@ -181,7 +181,7 @@ func conditionRowsOf(dto sheet.CharacterDTO) []conditionRow {
 func conditionOptionsFor(dto sheet.CharacterDTO) []pickerOption {
 	ligadas := sheet.ToStringSet(sheet.UnmarshalStrings(dto.ActiveConditions))
 	opcoes := []pickerOption{}
-	for _, c := range book.Catalogs().Condicoes {
+	for _, c := range book.Catalogs().Conditions {
 		if ligadas[c.ID] {
 			continue
 		}
@@ -244,7 +244,7 @@ func modifierRowsOf(bruto string) []breakdownRow {
 // buffOptions são as magias com efeito aplicável.
 func buffOptions() []pickerOption {
 	opcoes := []pickerOption{}
-	for _, m := range book.Catalogs().Magias {
+	for _, m := range book.Catalogs().Spells {
 		spell, conhecida := catalog.LookupSpell(m.ID)
 		if !conhecida || spell.Buff == nil {
 			continue

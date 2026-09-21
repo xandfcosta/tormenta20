@@ -20,8 +20,8 @@ func TestACatalogSceneDrawsTheWholeCatalog(t *testing.T) {
 	}
 	corpo := rec.Body.String()
 	a := book.Catalogs()
-	if !strings.Contains(corpo, fmt.Sprintf("%d entradas", len(a.Condicoes))) {
-		t.Errorf("a contagem não é a das %d condições", len(a.Condicoes))
+	if !strings.Contains(corpo, fmt.Sprintf("%d entradas", len(a.Conditions))) {
+		t.Errorf("a contagem não é a das %d condições", len(a.Conditions))
 	}
 	// Uma condição de verdade, e o texto dela: sem isso o teste passaria com a
 	// cena desenhando só o cabeçalho.
@@ -40,7 +40,7 @@ func TestTheWholeCollectionComesOutInThePowersTab(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/poderes", "")
-	poderes := book.Catalogs().Poderes
+	poderes := book.Catalogs().Powers
 	if !strings.Contains(rec.Body.String(), fmt.Sprintf("%d entradas", len(poderes))) {
 		t.Fatalf("a contagem não é a dos %d poderes", len(poderes))
 	}

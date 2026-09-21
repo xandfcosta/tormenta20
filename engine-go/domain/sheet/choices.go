@@ -96,10 +96,10 @@ func ClassDevotees(classe string) []ChoiceOption {
 		return append(godsThat(deuses, func(d book.God) bool { return d.Major }),
 			ChoiceOption{Value: "panteao", Label: "Panteão"})
 	case "Paladino":
-		return append(godsThat(deuses, func(d book.God) bool { return d.PaladinoEligible }),
+		return append(godsThat(deuses, func(d book.God) bool { return d.PaladinEligible }),
 			ChoiceOption{Value: "bem", Label: "Paladino do Bem"})
 	case "Druida":
-		return godsThat(deuses, func(d book.God) bool { return d.DruidaEligible })
+		return godsThat(deuses, func(d book.God) bool { return d.DruidEligible })
 	}
 	return nil
 }
@@ -209,8 +209,8 @@ func originFitBenefits(dto CharacterDTO) error {
 // ficha trata como um item da mesma lista.
 func OriginBenefitsOf(origem book.Origin) []book.OriginBenefit {
 	fora := append([]book.OriginBenefit{}, origem.Benefits...)
-	if origem.PoderUnico.ID != "" {
-		fora = append(fora, origem.PoderUnico)
+	if origem.UniquePower.ID != "" {
+		fora = append(fora, origem.UniquePower)
 	}
 	return fora
 }

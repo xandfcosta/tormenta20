@@ -21,20 +21,20 @@ import (
 func CopyOfEntry(v book.Entry) creature.Block {
 	return creature.Block{
 		ND:         v.ND,
-		Tipo:       v.Tipo,
+		Tipo:       v.Kind,
 		Size:       v.Size,
-		Iniciativa: v.Iniciativa,
-		Percepcao:  v.Percepcao,
+		Iniciativa: v.Initiative,
+		Percepcao:  v.Perception,
 		// O PM ATRAVESSA COMO PONTEIRO, e não desreferenciado: a maioria das
 		// criaturas não tem a linha, e um zero diria "tem mana e está sem" —
 		// que é outro estado. Os dois lados guardam a ausência de propósito.
 		PM:           v.PM,
-		Defesa:       v.Defesa,
+		Defesa:       v.Defense,
 		Fortitude:    v.Fortitude,
-		Reflexos:     v.Reflexos,
-		Vontade:      v.Vontade,
+		Reflexos:     v.Reflex,
+		Vontade:      v.Will,
 		HP:           v.HP,
-		Deslocamento: v.Deslocamento,
+		Deslocamento: v.Speed,
 		// ATRIBUTO AUSENTE VIRA ZERO, e esta é uma PERDA CONHECIDA. O livro
 		// escreve TRAVESSÃO onde a criatura não tem o atributo — o Zumbi não tem
 		// Inteligência (p297) —, e no bloco do mestre isso vira 0, que "+0"
@@ -44,16 +44,16 @@ func CopyOfEntry(v book.Entry) creature.Block {
 		// tem", e ensiná-lo exigiria mexer no struct, no formulário e na
 		// validação. A partir da cópia o bloco é DELE e ele edita; quem guarda a
 		// ausência de verdade é o CATÁLOGO, que é a fonte.
-		Forca:            orZero(v.Forca),
-		Destreza:         orZero(v.Destreza),
-		Constituicao:     orZero(v.Constituicao),
-		Inteligencia:     orZero(v.Inteligencia),
-		Sabedoria:        orZero(v.Sabedoria),
-		Carisma:          orZero(v.Carisma),
+		Forca:            orZero(v.Strength),
+		Destreza:         orZero(v.Dexterity),
+		Constituicao:     orZero(v.Constitution),
+		Inteligencia:     orZero(v.Intelligence),
+		Sabedoria:        orZero(v.Wisdom),
+		Carisma:          orZero(v.Charisma),
 		Attacks:          copyAttacks(v.Attacks),
 		Skills:           copyExpertises(v.Skills),
-		Equipment:        v.Equipamento,
-		Treasure:         v.Tesouro,
+		Equipment:        v.Equipment,
+		Treasure:         v.Treasure,
 		SpecialAbilities: copyPhrases(v.SpecialAbilities),
 		SourceMonsterID:  v.ID,
 	}

@@ -296,7 +296,7 @@ func augmentDescription(spellID string, index int) string {
 
 // spellOfBook acha a magia no acervo já ordenado.
 func spellOfBook(id string) book.Spell {
-	for _, m := range book.Catalogs().Magias {
+	for _, m := range book.Catalogs().Spells {
 		if m.ID == id {
 			return m
 		}
@@ -311,7 +311,7 @@ func catalogSpellRowsOf(dto sheet.CharacterDTO, busca, circulo, escola string) [
 		sabidas[s.CatalogSpellID] = true
 	}
 	linhas := []catalogSpellRow{}
-	for _, m := range book.Catalogs().Magias {
+	for _, m := range book.Catalogs().Spells {
 		if sabidas[m.ID] || !passesFilter(m, busca, circulo, escola) {
 			continue
 		}
@@ -347,7 +347,7 @@ func grantedSpellRowsOf(dto sheet.CharacterDTO) []grantedSpellRow {
 		return nil
 	}
 	porNome := map[string]book.Spell{}
-	for _, m := range book.Catalogs().Magias {
+	for _, m := range book.Catalogs().Spells {
 		porNome[m.Name] = m
 	}
 	linhas := []grantedSpellRow{}

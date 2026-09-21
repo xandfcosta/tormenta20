@@ -57,7 +57,7 @@ func TestTheBestiaryOpensWithTheWholeBook(t *testing.T) {
 		t.Errorf("a primeira criatura (%s) não está na página", primeira.Name)
 	}
 	// O bloco à direita, não só a linha da lista: o `Deslocamento` só aparece lá.
-	if !strings.Contains(corpo, primeira.Deslocamento) {
+	if !strings.Contains(corpo, primeira.Speed) {
 		t.Error("o painel da criatura escolhida não foi desenhado")
 	}
 	if !strings.Contains(corpo, "Ferramentas do mestre") {
@@ -75,7 +75,7 @@ func TestTheSearchIsAnAddress(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
-	esperado := book.FilterCreatures(book.Creatures(), book.CreatureFilter{Busca: "ogro", NDMax: book.CRMax})
+	esperado := book.FilterCreatures(book.Creatures(), book.CreatureFilter{Search: "ogro", NDMax: book.CRMax})
 	if len(esperado) == 0 {
 		t.Fatal("a busca por ogro não casa com nada: o dado mudou e este teste perdeu o sentido")
 	}
@@ -114,7 +114,7 @@ func TestTheTypeBadgeTogglesWithoutNavigating(t *testing.T) {
 		t.Fatalf("Content-Type %q — o gesto navegou em vez de remendar", ct)
 	}
 	corpo := rec.Body.String()
-	sos := book.FilterCreatures(book.Creatures(), book.CreatureFilter{Tipos: []string{"animal"}, NDMax: book.CRMax})
+	sos := book.FilterCreatures(book.Creatures(), book.CreatureFilter{Kinds: []string{"animal"}, NDMax: book.CRMax})
 	if !strings.Contains(corpo, fmt.Sprintf("%d de %d", len(sos), len(book.Creatures()))) {
 		t.Errorf("o remendo não filtrou por animal; queria %d de %d", len(sos), len(book.Creatures()))
 	}

@@ -79,7 +79,7 @@ func chosenOrFirst(lista []book.Entry, id string) *book.Entry {
 // esquecimento impossível em vez de detectável.
 func LoadBestiaryFrom(base string, livro bookui.BookAddress, busca string, tipos []string, ndMin, ndMax float64, escolhido string) BestiaryView {
 	todos := book.Creatures()
-	lista := book.FilterCreatures(todos, book.CreatureFilter{Busca: busca, Tipos: tipos, NDMin: ndMin, NDMax: ndMax})
+	lista := book.FilterCreatures(todos, book.CreatureFilter{Search: busca, Kinds: tipos, NDMin: ndMin, NDMax: ndMax})
 	return BestiaryView{
 		Base:    base,
 		Book:    livro,

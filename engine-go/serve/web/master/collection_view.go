@@ -173,10 +173,10 @@ func loadCollection(c collectionCriteria, livro bookui.BookAddress) collectionVi
 
 	racas, classes, deuses := book.CharacterCatalogs()
 	for _, g := range []collectionGroup{
-		{Rotulo: "Condições", Condicoes: filter(a.Condicoes, book.ConditionFields, busca)},
-		{Rotulo: "Magias", Magias: filter(a.Magias, book.SpellFields, busca)},
-		{Rotulo: "Poderes", Poderes: filter(a.Poderes, book.PowerFields, busca)},
-		{Rotulo: "Itens", Itens: filter(a.Itens, book.ItemFields, busca)},
+		{Rotulo: "Condições", Condicoes: filter(a.Conditions, book.ConditionFields, busca)},
+		{Rotulo: "Magias", Magias: filter(a.Spells, book.SpellFields, busca)},
+		{Rotulo: "Poderes", Poderes: filter(a.Powers, book.PowerFields, busca)},
+		{Rotulo: "Itens", Itens: filter(a.Items, book.ItemFields, busca)},
 		{Rotulo: "Efeitos", Efeitos: filter(book.EffectKinds(), book.EffectFields, busca)},
 		{Rotulo: "Escolas", Escolas: filter(book.SpellSchools(), book.SchoolFields, busca)},
 		{Rotulo: "Perícias", Pericias: filter(book.Expertises(), book.ExpertiseFields, busca)},
@@ -265,11 +265,11 @@ func groupForTab(a book.GMCatalogs, aba string, acesos map[string][]string) coll
 	racas, classes, deuses := book.CharacterCatalogs()
 	switch aba {
 	case "magias":
-		return collectionGroup{Rotulo: "Magias", Magias: applyFilters(a.Magias, acesos, spellMatches)}
+		return collectionGroup{Rotulo: "Magias", Magias: applyFilters(a.Spells, acesos, spellMatches)}
 	case "poderes":
-		return collectionGroup{Rotulo: "Poderes", Poderes: applyFilters(a.Poderes, acesos, powerMatches)}
+		return collectionGroup{Rotulo: "Poderes", Poderes: applyFilters(a.Powers, acesos, powerMatches)}
 	case "itens":
-		return collectionGroup{Rotulo: "Itens", Itens: applyFilters(a.Itens, acesos, itemMatches)}
+		return collectionGroup{Rotulo: "Itens", Itens: applyFilters(a.Items, acesos, itemMatches)}
 	case "efeitos":
 		return collectionGroup{Rotulo: "Efeitos", Efeitos: book.EffectKinds()}
 	case "escolas":
@@ -283,7 +283,7 @@ func groupForTab(a book.GMCatalogs, aba string, acesos map[string][]string) coll
 	case "deuses":
 		return collectionGroup{Rotulo: "Deuses", Deuses: applyFilters(deuses, acesos, godMatches)}
 	default:
-		return collectionGroup{Rotulo: "Condições", Condicoes: applyFilters(a.Condicoes, acesos, conditionMatches)}
+		return collectionGroup{Rotulo: "Condições", Condicoes: applyFilters(a.Conditions, acesos, conditionMatches)}
 	}
 }
 

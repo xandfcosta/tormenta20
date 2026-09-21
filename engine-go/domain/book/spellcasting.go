@@ -37,11 +37,11 @@ type SpellProgression struct {
 // SpellProgressions é a tabela por nome de classe, só com quem conjura.
 func SpellProgressions() map[string]SpellProgression {
 	_, classes, _ := CharacterCatalogs()
-	tabela := make(map[string]SpellProgression, len(classes))
+	table := make(map[string]SpellProgression, len(classes))
 	for _, c := range classes {
 		if c.Spellcasting != nil {
-			tabela[c.Name] = *c.Spellcasting
+			table[c.Name] = *c.Spellcasting
 		}
 	}
-	return tabela
+	return table
 }

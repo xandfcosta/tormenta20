@@ -14,14 +14,14 @@ import "testing"
 // Rodar cem vezes é o que torna a asserção honesta: uma passada só teria 1/6 de
 // chance de pegar a ordem errada por acaso.
 func TestModifiersComeOutInTheBookOrder(t *testing.T) {
-	elfo := RaceAttribute{
+	elf := RaceAttribute{
 		Kind: "fixed",
 		Mods: map[string]int{"intelligence": 2, "dexterity": 1, "constitution": -1},
 	}
 	const esperado = "+1 Des, -1 Con, +2 Int"
 	for i := 0; i < 100; i++ {
-		if escrito := elfo.Escrito(); escrito != esperado {
-			t.Fatalf("volta %d: %q — a ordem do livro é For, Des, Con, Int, Sab, Car", i, escrito)
+		if written := elf.Escrito(); written != esperado {
+			t.Fatalf("volta %d: %q — a ordem do livro é For, Des, Con, Int, Sab, Car", i, written)
 		}
 	}
 }
@@ -29,9 +29,9 @@ func TestModifiersComeOutInTheBookOrder(t *testing.T) {
 // As duas formas do livro.
 
 func TestAFreeChoiceDoesNotBecomeThreeInventedAttributes(t *testing.T) {
-	humano := RaceAttribute{Kind: "floating", Count: 3, Value: 1}
-	if escrito := humano.Escrito(); escrito != "+1 em três atributos" {
-		t.Errorf("o humano escolhe onde põe os três +1, e a tela disse %q", escrito)
+	human := RaceAttribute{Kind: "floating", Count: 3, Value: 1}
+	if written := human.Escrito(); written != "+1 em três atributos" {
+		t.Errorf("o humano escolhe onde põe os três +1, e a tela disse %q", written)
 	}
 }
 

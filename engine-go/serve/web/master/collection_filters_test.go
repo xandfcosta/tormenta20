@@ -54,7 +54,7 @@ func TestEachCatalogOffersItsOwnFilters(t *testing.T) {
 // "filtrou do jeito certo" — um E virando OU daria 39 + as evocações todas, que
 // também é uma lista plausível.
 func TestTheFilterAddsWithinAndMultipliesAcross(t *testing.T) {
-	todas := len(book.Catalogs().Magias)
+	todas := len(book.Catalogs().Spells)
 	if todas != 198 {
 		t.Fatalf("%d magias no catálogo — os números abaixo perderam o sentido", todas)
 	}
@@ -113,7 +113,7 @@ func TestTheSpellSchoolHasAnEntryAndBecomesALink(t *testing.T) {
 			t.Errorf("a escola %q veio sem definição ou sem página", e.Name)
 		}
 	}
-	for _, m := range book.Catalogs().Magias {
+	for _, m := range book.Catalogs().Spells {
 		if m.School != "" && !conhecidas[m.School] {
 			t.Errorf("a magia %q é da escola %q, que não tem verbete", m.Name, m.School)
 		}
@@ -133,10 +133,10 @@ func TestTheExpertiseCarriesWhatTheBookPrintsBesideTheName(t *testing.T) {
 
 	treinadas, comArmadura := 0, 0
 	for _, p := range pericias {
-		if p.SoTreinada {
+		if p.TrainedOnly {
 			treinadas++
 		}
-		if p.PenalidadeDeArmadura {
+		if p.ArmorPenalty {
 			comArmadura++
 		}
 		if p.BookPage == 0 {

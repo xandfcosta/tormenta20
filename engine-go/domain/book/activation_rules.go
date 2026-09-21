@@ -63,9 +63,9 @@ func CostIsVariable(spec Activation) bool {
 // confundir os dois é o que faria um poder de graça ser tratado como negociado
 // com a mesa.
 func ActivationPm(spec Activation) int {
-	var numero int
-	if json.Unmarshal(spec.PmCost, &numero) == nil {
-		return numero
+	var number int
+	if json.Unmarshal(spec.PmCost, &number) == nil {
+		return number
 	}
 	return -1
 }
@@ -77,24 +77,24 @@ func ActivationPm(spec Activation) int {
 // A ORDEM das recusas importa: a razão mostrada é a PRIMEIRA que barra, então
 // "requer Fúria" aparece antes de "PM insuficiente" num poder que precisa das
 // duas coisas — e é a que a pessoa pode resolver primeiro.
-func UseDecision(spec Activation, contexto UseContext) (bool, string) {
+func UseDecision(spec Activation, context UseContext) (bool, string) {
 	if CostIsVariable(spec) {
 		return false, "custo variável"
 	}
-	if spec.RequiresFlag != "" && !contexto.Flags[spec.RequiresFlag] {
+	if spec.RequiresFlag != "" && !context.Flags[spec.RequiresFlag] {
 		return false, "requer " + spec.RequiresFlag
 	}
 	switch ChargedScope(spec) {
 	case "scene":
-		if contexto.UsadoNaCena >= 1 {
+		if context.UsedThisScene >= 1 {
 			return false, "limite por cena atingido"
 		}
 	case "day":
-		if contexto.UsadoNoDia >= 1 {
+		if context.UsedToday >= 1 {
 			return false, "limite por dia atingido"
 		}
 	}
-	if ActivationPm(spec) > contexto.PmAtual {
+	if ActivationPm(spec) > context.CurrentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -102,10 +102,10 @@ func UseDecision(spec Activation, contexto UseContext) (bool, string) {
 
 // UseContext é o que a decisão precisa saber da ficha AGORA.
 type UseContext struct {
-	PmAtual     int
-	UsadoNaCena int
-	UsadoNoDia  int
-	Flags       map[string]bool
+	CurrentPM     int
+	UsedThisScene int
+	UsedToday     int
+	Flags         map[string]bool
 }
 
 // ── a POSTURA de degraus ─────────────────────────────────────────────────────
@@ -114,27 +114,27 @@ type UseContext struct {
 //
 // O nível é o da CLASSE e não o do personagem (p40): um bárbaro 5/ladino 5 tem
 // a Fúria de um bárbaro de nível 5, e não a de um personagem de nível 10.
-func LevelSteps(escala ActivationScale, nivelNaClasse int) int {
-	if escala.StepEveryLevels <= 0 || nivelNaClasse < escala.FirstStepLevel {
+func LevelSteps(scale ActivationScale, classLevel int) int {
+	if scale.StepEveryLevels <= 0 || classLevel < scale.FirstStepLevel {
 		return 0
 	}
-	return 1 + (nivelNaClasse-escala.FirstStepLevel)/escala.StepEveryLevels
+	return 1 + (classLevel-scale.FirstStepLevel)/scale.StepEveryLevels
 }
 
 // StanceCost é o que entrar custa com os degraus escolhidos.
-func StanceCost(spec Activation, degraus int) int {
+func StanceCost(spec Activation, steps int) int {
 	if spec.Scaling == nil {
 		return ActivationPm(spec)
 	}
-	return spec.Scaling.BasePm + degraus*spec.Scaling.StepPm
+	return spec.Scaling.BasePm + steps*spec.Scaling.StepPm
 }
 
 // StanceDecision responde se dá para entrar na postura com esses degraus.
-func StanceDecision(spec Activation, degraus, maximo, pmAtual int) (bool, string) {
-	if degraus < 0 || degraus > maximo {
-		return false, "o nível permite até " + strconv.Itoa(maximo) + " degraus"
+func StanceDecision(spec Activation, steps, max, currentPM int) (bool, string) {
+	if steps < 0 || steps > max {
+		return false, "o nível permite até " + strconv.Itoa(max) + " degraus"
 	}
-	if custo := StanceCost(spec, degraus); custo > pmAtual {
+	if cost := StanceCost(spec, steps); cost > currentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""

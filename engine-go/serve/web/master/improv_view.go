@@ -96,7 +96,7 @@ func rollRuin() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(t.Ruina, d.Value, "ruina")
+	linha, err := engine.RowForRoll(t.Ruin, d.Value, "ruina")
 	if err != nil {
 		return roll{}, err
 	}
@@ -158,14 +158,14 @@ func rollReward() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(t.RewardCastigo, d.Value, "rewardCastigo")
+	linha, err := engine.RowForRoll(t.RewardPunishment, d.Value, "rewardCastigo")
 	if err != nil {
 		return roll{}, err
 	}
 	return roll{
 		Rolagem: d.Value,
 		Texto:   labelOrRaw(t.RewardLabels, linha.Reward),
-		Detalhe: "Castigo: " + labelOrRaw(t.CastigoLabels, linha.Castigo),
+		Detalhe: "Castigo: " + labelOrRaw(t.PunishmentLabels, linha.Punishment),
 	}, nil
 }
 

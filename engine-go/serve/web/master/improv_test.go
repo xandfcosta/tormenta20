@@ -23,14 +23,14 @@ import (
 // falta no meio de uma sessão.
 func TestEveryDieFaceHitsARow(t *testing.T) {
 	tab, masmorra := book.ImprovTables()
-	if len(tab.Ruina) == 0 || len(tab.ChaseEvents) == 0 || len(masmorra.Ideas) == 0 {
+	if len(tab.Ruin) == 0 || len(tab.ChaseEvents) == 0 || len(masmorra.Ideas) == 0 {
 		t.Fatal("tabelas vazias: o catálogo não carregou, e verde aqui não valeria nada")
 	}
 	for face := 1; face <= 6; face++ {
-		if _, err := linhaOuErro(tab.Ruina, face); err != nil {
+		if _, err := linhaOuErro(tab.Ruin, face); err != nil {
 			t.Errorf("ruína: %v", err)
 		}
-		if _, err := linhaOuErro(tab.RewardCastigo, face); err != nil {
+		if _, err := linhaOuErro(tab.RewardPunishment, face); err != nil {
 			t.Errorf("consequências: %v", err)
 		}
 	}

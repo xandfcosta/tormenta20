@@ -32,16 +32,16 @@ import (
 // dela. Por isso a conferência abaixo é do CONJUNTO de chaves e não só dos
 // valores: um círculo que o livro não tem reprova com o nome dele.
 func TestTheCircleProgressionMatchesTheBook(t *testing.T) {
-	nivel := func(n int) *int { return &n }
+	level := func(n int) *int { return &n }
 	const naoAlcanca = "nunca"
 
-	livro := []struct {
-		classe   string
-		pagina   int
-		lista    string
-		atributo string
-		max      int
-		abre     map[int]*int
+	book := []struct {
+		class     string
+		page      int
+		list      string
+		attribute string
+		max       int
+		opens     map[int]*int
 	}{
 		// Tabela 1-5 e "Magias", p37: "Você pode lançar magias arcanas de 1º
 		// círculo. A cada quatro níveis, pode lançar magias de um círculo maior
@@ -52,93 +52,93 @@ func TestTheCircleProgressionMatchesTheBook(t *testing.T) {
 		// três (bruxo e mago), e o feiticeiro lança com Carisma. Quem resolve o
 		// caminho é o `spellcastingAttributeFor`, no `engine`.
 		{"Arcanista", 37, "arcana", "intelligence", 5, map[int]*int{
-			1: nivel(1), 2: nivel(5), 3: nivel(9), 4: nivel(13), 5: nivel(17),
+			1: level(1), 2: level(5), 3: level(9), 4: level(13), 5: level(17),
 		}},
 		// Tabela 1-7 e "Magias", p44: "2º círculo no 6º nível, 3º círculo no 10º
 		// nível e 4º círculo no 14º nível". A tabela para no 4º.
 		{"Bardo", 44, "arcana", "charisma", 4, map[int]*int{
-			1: nivel(1), 2: nivel(6), 3: nivel(10), 4: nivel(14), 5: nil,
+			1: level(1), 2: level(6), 3: level(10), 4: level(14), 5: nil,
 		}},
 		// Tabela 1-11 e "Magias", p57: mesma cadência do arcanista, lista divina.
 		{"Clérigo", 57, "divina", "wisdom", 5, map[int]*int{
-			1: nivel(1), 2: nivel(5), 3: nivel(9), 4: nivel(13), 5: nivel(17),
+			1: level(1), 2: level(5), 3: level(9), 4: level(13), 5: level(17),
 		}},
 		// Tabela 1-12 e "Magias", p61: mesma cadência do bardo, lista divina.
 		{"Druida", 61, "divina", "wisdom", 4, map[int]*int{
-			1: nivel(1), 2: nivel(6), 3: nivel(10), 4: nivel(14), 5: nil,
+			1: level(1), 2: level(6), 3: level(10), 4: level(14), 5: nil,
 		}},
 		// O poder Orar, p83: "Você aprende e pode lançar uma magia divina de 1º
 		// círculo a sua escolha. Seu atributo-chave para esta magia é Sabedoria".
 		// Poder de paladino começa no 2º nível (Tabela 1-18, p82).
 		{"Paladino", 83, "divina", "wisdom", 1, map[int]*int{
-			1: nivel(2), 2: nil, 3: nil, 4: nil, 5: nil,
+			1: level(2), 2: nil, 3: nil, 4: nil, 5: nil,
 		}},
 	}
 
-	tabela := SpellProgressions()
-	if len(tabela) != len(livro) {
-		t.Fatalf("o catálogo ofereceu %d classes conjuradoras, quer %d", len(tabela), len(livro))
+	table := SpellProgressions()
+	if len(table) != len(book) {
+		t.Fatalf("o catálogo ofereceu %d classes conjuradoras, quer %d", len(table), len(book))
 	}
 
-	circulosConferidos := 0
-	for _, quer := range livro {
-		tem, conjura := tabela[quer.classe]
-		if !conjura {
-			t.Errorf("%s não trouxe progressão nenhuma (livro p%d)", quer.classe, quer.pagina)
+	checkedCircles := 0
+	for _, want := range book {
+		found, casts := table[want.class]
+		if !casts {
+			t.Errorf("%s não trouxe progressão nenhuma (livro p%d)", want.class, want.page)
 			continue
 		}
-		if tem.List != quer.lista {
-			t.Errorf("%s lança da lista %q, quer %q (p%d)", quer.classe, tem.List, quer.lista, quer.pagina)
+		if found.List != want.list {
+			t.Errorf("%s lança da lista %q, quer %q (p%d)", want.class, found.List, want.list, want.page)
 		}
-		if tem.Attribute != quer.atributo {
-			t.Errorf("%s lança com %q, quer %q (p%d)", quer.classe, tem.Attribute, quer.atributo, quer.pagina)
+		if found.Attribute != want.attribute {
+			t.Errorf("%s lança com %q, quer %q (p%d)", want.class, found.Attribute, want.attribute, want.page)
 		}
-		if tem.MaxCircle != quer.max {
-			t.Errorf("%s vai até o %dº círculo, quer o %dº (p%d)", quer.classe, tem.MaxCircle, quer.max, quer.pagina)
+		if found.MaxCircle != want.max {
+			t.Errorf("%s vai até o %dº círculo, quer o %dº (p%d)", want.class, found.MaxCircle, want.max, want.page)
 		}
 
 		// O CONJUNTO de chaves antes dos valores: um círculo a mais é um círculo
 		// que o livro não tem, e um a menos some sem nunca reprovar num laço que
 		// só percorre o esperado.
-		var sobrando []string
-		for chave := range tem.UnlockLevel {
-			c, err := strconv.Atoi(chave)
-			if _, doLivro := quer.abre[c]; err != nil || !doLivro {
-				sobrando = append(sobrando, chave)
+		var leftover []string
+		for key := range found.UnlockLevel {
+			c, err := strconv.Atoi(key)
+			if _, fromBook := want.opens[c]; err != nil || !fromBook {
+				leftover = append(leftover, key)
 			}
 		}
-		sort.Strings(sobrando)
-		if len(sobrando) > 0 {
-			t.Errorf("%s conhece o(s) círculo(s) %v, que o livro não tem (Tabela 4-1, p170: 1º ao 5º)", quer.classe, sobrando)
+		sort.Strings(leftover)
+		if len(leftover) > 0 {
+			t.Errorf("%s conhece o(s) círculo(s) %v, que o livro não tem (Tabela 4-1, p170: 1º ao 5º)", want.class, leftover)
 		}
 
-		for circulo, querNivel := range quer.abre {
-			circulosConferidos++
-			temNivel, declarado := tem.UnlockLevel[strconv.Itoa(circulo)]
-			if !declarado {
-				t.Errorf("%s não diz nada sobre o %dº círculo (p%d)", quer.classe, circulo, quer.pagina)
+		for circle, wantLevel := range want.opens {
+			checkedCircles++
+			hasLevel, declared := found.UnlockLevel[strconv.Itoa(circle)]
+			if !declared {
+				t.Errorf("%s não diz nada sobre o %dº círculo (p%d)", want.class, circle, want.page)
 				continue
 			}
-			if querNivel == nil {
-				if temNivel != nil {
+			if wantLevel == nil {
+				if hasLevel != nil {
 					t.Errorf(
 						"%s abre o %dº círculo no %dº nível, e no livro ele %s abre (p%d)",
-						quer.classe, circulo, *temNivel, naoAlcanca, quer.pagina,
+						want.class, circle, *hasLevel, naoAlcanca, want.page,
 					)
 				}
 				continue
 			}
-			if temNivel == nil {
+			if hasLevel == nil {
 				t.Errorf(
 					"%s nunca abre o %dº círculo, e no livro ele abre no %dº nível (p%d)",
-					quer.classe, circulo, *querNivel, quer.pagina,
+					want.class, circle, *wantLevel, want.page,
 				)
 				continue
 			}
-			if *temNivel != *querNivel {
+			if *hasLevel != *wantLevel {
 				t.Errorf(
 					"%s abre o %dº círculo no %dº nível, quer no %dº (p%d)",
-					quer.classe, circulo, *temNivel, *querNivel, quer.pagina,
+					want.class, circle, *hasLevel, *wantLevel, want.page,
 				)
 			}
 		}
@@ -146,7 +146,7 @@ func TestTheCircleProgressionMatchesTheBook(t *testing.T) {
 
 	// O DENOMINADOR, porque uma tabela vazia e uma tabela certa se parecem num
 	// laço que percorre o que ESPERA: são cinco classes × cinco círculos.
-	if circulosConferidos != 25 {
-		t.Errorf("a conferência olhou %d círculos, e são 25 (5 classes × 5 círculos)", circulosConferidos)
+	if checkedCircles != 25 {
+		t.Errorf("a conferência olhou %d círculos, e são 25 (5 classes × 5 círculos)", checkedCircles)
 	}
 }

@@ -36,9 +36,9 @@ type SpellSchool struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	// Abrev é a forma curta que o livro imprime nas tabelas ("Abjur"). Ilusão
+	// Abbrev é a forma curta que o livro imprime nas tabelas ("Abjur"). Ilusão
 	// não tem — o livro não deu —, e vazio aqui é ausência e não dado.
-	Abrev    string `json:"abrev,omitempty"`
+	Abbrev   string `json:"abrev,omitempty"`
 	BookPage int    `json:"bookPage"`
 }
 
@@ -58,7 +58,7 @@ func SchoolName(id string) string {
 }
 
 func SchoolFields(e SpellSchool) []string {
-	return []string{e.Name, e.Abrev, e.Description}
+	return []string{e.Name, e.Abbrev, e.Description}
 }
 
 // ── o texto com elos dentro ──────────────────────────────────────────────────

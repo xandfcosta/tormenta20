@@ -22,7 +22,7 @@ import (
 
 // effectDisplayName troca o id do catálogo pelo nome que a mesa lê.
 func effectDisplayName(catalogID string) string {
-	for _, m := range book.Catalogs().Magias {
+	for _, m := range book.Catalogs().Spells {
 		if m.ID == catalogID {
 			return m.Name
 		}

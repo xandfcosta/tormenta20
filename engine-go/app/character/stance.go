@@ -128,7 +128,7 @@ func (p Plays) UsePower(
 	}
 	usos := PowerUses(dto)[spec.ID]
 	pode, porque := book.UseDecision(*spec, book.UseContext{
-		PmAtual: int(dto.MpCurrent), UsadoNaCena: usos.Cena, UsadoNoDia: usos.Dia,
+		CurrentPM: int(dto.MpCurrent), UsedThisScene: usos.Cena, UsedToday: usos.Dia,
 		Flags: p.activeFlags(dto),
 	})
 	if !pode {

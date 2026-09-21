@@ -34,19 +34,19 @@ var (
 func OriginItemsByName() map[string][]string {
 	originItemsOnce.Do(func() {
 		originItemsIndex = map[string][]string{}
-		bruto, ok := catalog.Resource("origins-source")
+		raw, ok := catalog.Resource("origins-source")
 		if !ok {
 			return
 		}
-		var porID map[string]struct {
+		var byID map[string]struct {
 			Name          string   `json:"name"`
-			ItensIniciais []string `json:"itensIniciais"`
+			StartingItems []string `json:"itensIniciais"`
 		}
-		if err := json.Unmarshal(bruto, &porID); err != nil {
+		if err := json.Unmarshal(raw, &byID); err != nil {
 			return
 		}
-		for _, origem := range porID {
-			originItemsIndex[origem.Name] = origem.ItensIniciais
+		for _, origin := range byID {
+			originItemsIndex[origin.Name] = origin.StartingItems
 		}
 	})
 	return originItemsIndex

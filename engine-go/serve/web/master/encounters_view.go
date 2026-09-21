@@ -120,7 +120,7 @@ func loadEncounters(nivel, grupo int, linhas []encounterRow, busca string) encou
 	// conta é o assunto desta ferramenta.
 	if strings.TrimSpace(busca) != "" {
 		v.Achados = book.FilterCreatures(book.Creatures(), book.CreatureFilter{
-			Busca: busca, NDMin: book.CRMin, NDMax: book.CRMax,
+			Search: busca, NDMin: book.CRMin, NDMax: book.CRMax,
 		})
 	}
 	return v

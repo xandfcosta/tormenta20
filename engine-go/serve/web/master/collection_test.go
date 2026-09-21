@@ -18,7 +18,7 @@ import (
 // Provado VERMELHO removendo a linha "catalyst" do `book.categoryLabel`.
 func TestEveryBookValueHasALabel(t *testing.T) {
 	a := book.Catalogs()
-	if len(a.Magias) == 0 || len(a.Itens) == 0 {
+	if len(a.Spells) == 0 || len(a.Items) == 0 {
 		t.Fatal("catálogo vazio: não há o que medir, e verde aqui não valeria nada")
 	}
 
@@ -34,12 +34,12 @@ func TestEveryBookValueHasALabel(t *testing.T) {
 	}
 
 	execucoes, alcances := map[string]int{}, map[string]int{}
-	for _, m := range a.Magias {
+	for _, m := range a.Spells {
 		execucoes[m.Execution]++
 		alcances[m.Range]++
 	}
 	categorias := map[string]int{}
-	for _, i := range a.Itens {
+	for _, i := range a.Items {
 		categorias[i.Category]++
 	}
 
@@ -116,10 +116,10 @@ func TestWithoutASearchOnlyTheOpenTabShows(t *testing.T) {
 		rotulo  string
 		quantas int
 	}{
-		{"condicoes", "Condições", len(a.Condicoes)},
-		{"magias", "Magias", len(a.Magias)},
-		{"poderes", "Poderes", len(a.Poderes)},
-		{"itens", "Itens", len(a.Itens)},
+		{"condicoes", "Condições", len(a.Conditions)},
+		{"magias", "Magias", len(a.Spells)},
+		{"poderes", "Poderes", len(a.Powers)},
+		{"itens", "Itens", len(a.Items)},
 	} {
 		t.Run(caso.aba, func(t *testing.T) {
 			v := loadCollection(collectionCriteria{Aba: caso.aba}, bookui.BookAddress{})
@@ -155,7 +155,7 @@ func TestAnInventedTabFallsBackToTheFirst(t *testing.T) {
 // veio. Sem a fonte, "Ataque Poderoso" não diz se é poder de classe ou geral.
 func TestPowersComeFromTheThreeCatalogs(t *testing.T) {
 	fontes := map[string]int{}
-	for _, p := range book.Catalogs().Poderes {
+	for _, p := range book.Catalogs().Powers {
 		switch {
 		case strings.HasPrefix(p.ID, "general."):
 			fontes["geral"]++
@@ -164,7 +164,7 @@ func TestPowersComeFromTheThreeCatalogs(t *testing.T) {
 		default:
 			fontes["classe"]++
 		}
-		if p.Fonte == "" {
+		if p.Source == "" {
 			t.Fatalf("o poder %q não diz de onde veio", p.Name)
 		}
 	}

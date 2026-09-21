@@ -30,7 +30,7 @@ import (
 // resolve id → palavra do livro. Uma segunda cópia da tabela do livro é uma
 // cópia que desvia.
 func conditionEffect(id string) string {
-	for _, c := range book.Catalogs().Condicoes {
+	for _, c := range book.Catalogs().Conditions {
 		if c.ID == id {
 			return c.Description
 		}

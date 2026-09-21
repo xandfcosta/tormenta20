@@ -140,7 +140,7 @@ func raceCardOf(raca book.Race, escolhida string) raceCard {
 	}
 	return raceCard{
 		Name: raca.Name, Attributes: raca.AttributeMod.Escrito(),
-		Size: raca.Tamanho, Displacement: raca.Deslocamento,
+		Size: raca.Size, Displacement: raca.Speed,
 		Abilities: strings.Join(nomes, ", "), Chosen: raca.Name == escolhida,
 	}
 }
@@ -158,11 +158,11 @@ func classCardOf(classe book.Class, escolhida string) classCard {
 //
 //	"Fortitude · mais 2 a escolher"
 func cardExpertisesLine(classe book.Class) string {
-	fixas := strings.Join(classe.Pericias, ", ")
-	if classe.Escolhe == 0 {
+	fixas := strings.Join(classe.Expertises, ", ")
+	if classe.Chooses == 0 {
 		return fixas
 	}
-	escolha := fmt.Sprintf("mais %d a escolher", classe.Escolhe)
+	escolha := fmt.Sprintf("mais %d a escolher", classe.Chooses)
 	if fixas == "" {
 		return escolha
 	}
@@ -200,7 +200,7 @@ func benefitsLine(origem book.Origin) string {
 
 // startingGearFor monta os seletores do kit desta classe.
 func startingGearFor(folha forgeAnswers, classe book.Class) *startingGear {
-	kit := engine.StartingKitFor(classe.Name, classe.Proficiencias)
+	kit := engine.StartingKitFor(classe.Name, classe.Proficiencies)
 	eq := &startingGear{
 		SimpleWeapons: itemOptionsInCategory("weapon-simple", folha.SimpleWeapon),
 		Armors:        itemOptionsByID(kit.Armors, folha.Armor),
@@ -219,7 +219,7 @@ func startingGearFor(folha forgeAnswers, classe book.Class) *startingGear {
 // em que o acervo já os guarda.
 func itemOptionsInCategory(categoria, escolhido string) []itemOption {
 	var opcoes []itemOption
-	for _, item := range book.Catalogs().Itens {
+	for _, item := range book.Catalogs().Items {
 		if item.Category == categoria {
 			opcoes = append(opcoes, itemOptionOf(item, escolhido))
 		}

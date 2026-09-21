@@ -83,7 +83,7 @@ func filtersForTab(aba string) []collectionFilter {
 
 func effectOptions() []filterOption {
 	usados := map[string]bool{}
-	for _, c := range book.Catalogs().Condicoes {
+	for _, c := range book.Catalogs().Conditions {
 		for _, t := range c.Tags {
 			usados[t] = true
 		}
@@ -99,7 +99,7 @@ func effectOptions() []filterOption {
 
 func circleOptions() []filterOption {
 	var fora []filterOption
-	for _, circulo := range distinctValues(book.Catalogs().Magias, func(m book.Spell) string {
+	for _, circulo := range distinctValues(book.Catalogs().Spells, func(m book.Spell) string {
 		return strconv.Itoa(m.Circle)
 	}) {
 		fora = append(fora, filterOption{circulo, circulo + "º"})
@@ -109,7 +109,7 @@ func circleOptions() []filterOption {
 
 func schoolOptions() []filterOption {
 	var fora []filterOption
-	for _, escola := range distinctValues(book.Catalogs().Magias, func(m book.Spell) string {
+	for _, escola := range distinctValues(book.Catalogs().Spells, func(m book.Spell) string {
 		return m.School
 	}) {
 		fora = append(fora, filterOption{escola, book.SchoolName(escola)})
@@ -120,7 +120,7 @@ func schoolOptions() []filterOption {
 func spellClassOptions() []filterOption {
 	vistos := map[string]bool{}
 	var fora []filterOption
-	for _, m := range book.Catalogs().Magias {
+	for _, m := range book.Catalogs().Spells {
 		for _, c := range m.Classes {
 			if !vistos[c] {
 				vistos[c] = true
@@ -200,8 +200,8 @@ func attributeOptions() []filterOption {
 	}
 	var fora []filterOption
 	for _, a := range book.AttributeOrder {
-		if usados[a.Chave] {
-			fora = append(fora, filterOption{a.Chave, a.Sigla})
+		if usados[a.Key] {
+			fora = append(fora, filterOption{a.Key, a.Abbreviation})
 		}
 	}
 	return fora
@@ -215,8 +215,8 @@ func expertiseMatches(p book.Expertise, chave, valor string) bool {
 		// As duas marcas do livro num filtro só: são as duas coisas que mudam
 		// COMO a perícia se usa, e separá-las em duas linhas de um crachá cada
 		// gastaria duas linhas para dizer o que uma diz.
-		return (valor == "so-treinada" && p.SoTreinada) ||
-			(valor == "armadura" && p.PenalidadeDeArmadura)
+		return (valor == "so-treinada" && p.TrainedOnly) ||
+			(valor == "armadura" && p.ArmorPenalty)
 	}
 	return true
 }
@@ -244,7 +244,7 @@ func spellMatches(m book.Spell, chave, valor string) bool {
 // e o crachá diz "Geral" e "Divino". Para classe a fonte é o nome puro.
 func powerMatches(p book.Power, chave, valor string) bool {
 	if chave == "fonte" {
-		return p.Fonte == valor || strings.HasPrefix(p.Fonte, valor+" ·")
+		return p.Source == valor || strings.HasPrefix(p.Source, valor+" ·")
 	}
 	return true
 }
@@ -258,7 +258,7 @@ func itemMatches(i book.Item, chave, valor string) bool {
 
 func godMatches(d book.God, chave, valor string) bool {
 	if chave == "energia" {
-		return d.Energia == valor
+		return d.Energy == valor
 	}
 	return true
 }

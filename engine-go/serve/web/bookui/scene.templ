@@ -67,15 +67,15 @@ templ bookAnchor(livro BookAddress, pagina int, termo string) {
 // texto, e três `if` copiados divergem no primeiro que alguém ajustar.
 templ Chunk(pedaco book.Chunk, livro BookAddress) {
 	if pedaco.Aba != "" {
-		@CrossRef(pedaco.Aba, pedaco.ID, pedaco.Texto) {
-			{ pedaco.Texto }
+		@CrossRef(pedaco.Aba, pedaco.ID, pedaco.Text) {
+			{ pedaco.Text }
 		}
-	} else if pedaco.Pagina > 0 && livro.AtPage(pedaco.Pagina, "") != "" {
-		@bookAnchor(livro, pedaco.Pagina, "") {
-			{ pedaco.Texto }
+	} else if pedaco.Page > 0 && livro.AtPage(pedaco.Page, "") != "" {
+		@bookAnchor(livro, pedaco.Page, "") {
+			{ pedaco.Text }
 		}
 	} else {
-		{ pedaco.Texto }
+		{ pedaco.Text }
 	}
 }
 

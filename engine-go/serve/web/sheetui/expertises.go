@@ -201,7 +201,7 @@ func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedS
 func trainedOnlyByBook(name string) bool {
 	for _, p := range book.Expertises() {
 		if p.Name == name {
-			return p.SoTreinada
+			return p.TrainedOnly
 		}
 	}
 	return true

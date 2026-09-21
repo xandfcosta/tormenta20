@@ -31,10 +31,10 @@ func TestTheEmDashSurvivesTheParse(t *testing.T) {
 	semInteligencia := 0
 	semForca := 0
 	for _, m := range book.Creatures() {
-		if m.Inteligencia == nil {
+		if m.Intelligence == nil {
 			semInteligencia++
 		}
-		if m.Forca == nil {
+		if m.Strength == nil {
 			semForca++
 		}
 	}
@@ -63,10 +63,10 @@ func TestTheFieldsTheEmbedWouldLoseAreThere(t *testing.T) {
 		if m.BookPage == 0 {
 			semPagina++
 		}
-		if m.Equipamento != "" {
+		if m.Equipment != "" {
 			comEquipamento++
 		}
-		if m.Tesouro != "" {
+		if m.Treasure != "" {
 			comTesouro++
 		}
 	}
@@ -141,13 +141,13 @@ func TestAnEmptyTypeMeansEveryType(t *testing.T) {
 	if len(semTipo) != len(todas) {
 		t.Fatalf("sem tipo escolhido vieram %d de %d criaturas", len(semTipo), len(todas))
 	}
-	umTipo := book.FilterCreatures(todas, book.CreatureFilter{Tipos: []string{"animal"}, NDMax: book.CRMax})
+	umTipo := book.FilterCreatures(todas, book.CreatureFilter{Kinds: []string{"animal"}, NDMax: book.CRMax})
 	if len(umTipo) == 0 || len(umTipo) == len(todas) {
 		t.Fatalf("filtrar por animal devolveu %d de %d — o filtro não filtrou", len(umTipo), len(todas))
 	}
 	for _, m := range umTipo {
-		if m.Tipo != "animal" {
-			t.Fatalf("%s é %q e passou pelo filtro de animal", m.Name, m.Tipo)
+		if m.Kind != "animal" {
+			t.Fatalf("%s é %q e passou pelo filtro de animal", m.Name, m.Kind)
 		}
 	}
 }
@@ -181,7 +181,7 @@ func TestAChallengeBelowOneComesOutAsAFraction(t *testing.T) {
 func TestEveryBookTypeIsOnTheRailAndHasALabel(t *testing.T) {
 	noLivro := map[string]int{}
 	for _, m := range book.Creatures() {
-		noLivro[m.Tipo]++
+		noLivro[m.Kind]++
 	}
 	if len(noLivro) == 0 {
 		t.Fatal("bestiário vazio: o catálogo não carregou")

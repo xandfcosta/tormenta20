@@ -48,7 +48,7 @@ func TestTheConditionEffectTypeBecameALink(t *testing.T) {
 // elo que aponta para a página em que já se está é ruído com cara de saída.
 func TestTheConditionCitedInTheDescriptionBecameALink(t *testing.T) {
 	pedacos := book.WithConditionLinks("Desprevenido e imóvel; -2 em ataques", "Agarrado")
-	if len(pedacos) < 2 || pedacos[0].Texto != "Desprevenido" || pedacos[0].Aba != "condicoes" {
+	if len(pedacos) < 2 || pedacos[0].Text != "Desprevenido" || pedacos[0].Aba != "condicoes" {
 		t.Fatalf("a citação não virou elo: %+v", pedacos)
 	}
 	if pedacos[1].Aba != "" {
@@ -124,7 +124,7 @@ func TestEveryConditionTagHasAnEffectType(t *testing.T) {
 	if len(conhecidos) < 15 {
 		t.Fatalf("só %d tipos de efeito — o catálogo não carregou", len(conhecidos))
 	}
-	for _, c := range book.Catalogs().Condicoes {
+	for _, c := range book.Catalogs().Conditions {
 		for _, tag := range c.Tags {
 			if !conhecidos[tag] {
 				t.Errorf("a condição %q carrega o tipo %q, que não tem verbete", c.Name, tag)
@@ -234,25 +234,25 @@ func TestAPageReferenceInTheTextBecomesALink(t *testing.T) {
 	pedacos := book.WithLinks("Reduz os PV do alvo. Efeitos deste tipo são subdivididos em tipos de dano (veja a página 230).")
 	var achou *book.Chunk
 	for i := range pedacos {
-		if pedacos[i].Pagina > 0 {
+		if pedacos[i].Page > 0 {
 			achou = &pedacos[i]
 		}
 	}
 	if achou == nil {
 		t.Fatalf("a referência não virou elo: %+v", pedacos)
 	}
-	if achou.Pagina != 230 {
-		t.Errorf("a referência aponta para a p%d", achou.Pagina)
+	if achou.Page != 230 {
+		t.Errorf("a referência aponta para a p%d", achou.Page)
 	}
 	// O TEXTO do elo é a frase do livro, e não um "p230 ↗" inventado: trocá-la
 	// reescreveria o livro na tela.
-	if achou.Texto != "página 230" {
-		t.Errorf("o elo mudou o texto para %q", achou.Texto)
+	if achou.Text != "página 230" {
+		t.Errorf("o elo mudou o texto para %q", achou.Text)
 	}
 	// E o resto da frase continua inteiro, texto puro.
 	inteiro := ""
 	for _, p := range pedacos {
-		inteiro += p.Texto
+		inteiro += p.Text
 	}
 	if !strings.Contains(inteiro, "Reduz os PV do alvo.") || !strings.Contains(inteiro, ").") {
 		t.Errorf("a varredura comeu pedaço da frase: %q", inteiro)
@@ -263,8 +263,8 @@ func TestAPageReferenceInTheTextBecomesALink(t *testing.T) {
 func TestALooseNumberDoesNotBecomeAPage(t *testing.T) {
 	for _, texto := range []string{"causa 3d6 de dano", "recebe +2 na Defesa e 230 de alcance", "20% de chance"} {
 		for _, p := range book.WithLinks(texto) {
-			if p.Pagina > 0 {
-				t.Errorf("%q: o número %d virou página", texto, p.Pagina)
+			if p.Page > 0 {
+				t.Errorf("%q: o número %d virou página", texto, p.Page)
 			}
 		}
 	}
@@ -306,7 +306,7 @@ func TestEveryGodLinksThePowersItGrants(t *testing.T) {
 	}
 	concedidos := 0
 	for _, d := range deuses {
-		for _, poder := range d.PoderesConcedidos {
+		for _, poder := range d.GrantedPowers {
 			concedidos++
 			if bookui.PowerID(poder) == "" {
 				t.Errorf("%s concede %q, que não tem verbete no acervo", d.Name, poder)
@@ -333,7 +333,7 @@ func TestEveryDevotoThatIsAnEntryBecomesALink(t *testing.T) {
 		"Aventureiros (todas as classes)": true,
 	}
 	for _, d := range deuses {
-		for _, devoto := range d.Devotos {
+		for _, devoto := range d.Devotees {
 			aba, _ := book.DevoteeLink(devoto)
 			if aba == "" && !semVerbete[devoto] {
 				t.Errorf("%s tem o devoto %q sem elo — plural que o casamento não pega?", d.Name, devoto)

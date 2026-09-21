@@ -103,7 +103,7 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, busca string) powersPanel {
 // powerRowsOf traduz o acervo em linhas de tela, resolvendo a ativação de cada
 // poder e o estado de jogo dele.
 func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
-	contexto := book.UseContext{PmAtual: int(dto.MpCurrent), Flags: s.activeFlags(dto)}
+	contexto := book.UseContext{CurrentPM: int(dto.MpCurrent), Flags: s.activeFlags(dto)}
 	usos := character.PowerUses(dto)
 	posturas := paidStances(dto)
 	linhas := []powerRow{}
@@ -141,7 +141,7 @@ func powerRowFor(
 	}
 	linha.Limit = limitBadge(*spec)
 	linha.Cost = writtenCost(*spec)
-	contexto.UsadoNaCena, contexto.UsadoNoDia = usos[spec.ID].Cena, usos[spec.ID].Dia
+	contexto.UsedThisScene, contexto.UsedToday = usos[spec.ID].Cena, usos[spec.ID].Dia
 	if escopo := book.ChargedScope(*spec); escopo != "" {
 		linha.Spent = writtenSpent(escopo, usos[spec.ID])
 	}

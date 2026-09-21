@@ -218,10 +218,10 @@ templ expertiseCard(p book.Expertise, livro bookui.BookAddress) {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ p.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 font-mono text-3xs text-muted-foreground">{ book.AttributeAbbrev(p.Attribute) }</span>
-			if p.SoTreinada {
+			if p.TrainedOnly {
 				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">Só treinada</span>
 			}
-			if p.PenalidadeDeArmadura {
+			if p.ArmorPenalty {
 				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">Penalidade de armadura</span>
 			}
 			@bookui.PageSeal(livro, p.BookPage, p.Name)
@@ -251,8 +251,8 @@ templ schoolCard(e book.SpellSchool, livro bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ e.Name }
-			if e.Abrev != "" {
-				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ e.Abrev }</span>
+			if e.Abbrev != "" {
+				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ e.Abbrev }</span>
 			}
 			@bookui.PageSeal(livro, e.BookPage, e.Name)
 		</p>
@@ -326,7 +326,7 @@ templ powerCard(p book.Power, livro bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ p.Name }
-			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ p.Fonte }</span>
+			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ p.Source }</span>
 			@bookui.PageSeal(livro, p.BookPage, p.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
@@ -365,11 +365,11 @@ templ raceCard(r book.Race, livro bookui.BookAddress) {
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
 			<span>{ book.TierName(r.Tier) }</span>
-			<span>{ r.Tamanho }</span>
-			<span>{ fmt.Sprintf("Deslocamento: %dm", r.Deslocamento) }</span>
-			if r.VisaoNoEscuro {
+			<span>{ r.Size }</span>
+			<span>{ fmt.Sprintf("Deslocamento: %dm", r.Speed) }</span>
+			if r.Darkvision {
 				<span>Visão no escuro</span>
-			} else if r.VisaoNaPenumbra {
+			} else if r.LowLightVision {
 				<span>Visão na penumbra</span>
 			}
 		</p>
@@ -393,14 +393,14 @@ templ classCard(c book.Class, livro bookui.BookAddress) {
 			@bookui.PageSeal(livro, c.BookPage, c.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-			<span>{ fmt.Sprintf("%d poderes de classe", c.Poderes) }</span>
+			<span>{ fmt.Sprintf("%d poderes de classe", c.Powers) }</span>
 			// As perícias treinadas viram ELOS: a classe cita a perícia, e
 			// citação sem destino é texto morto — o mesmo que valia para o
 			// poder concedido do deus.
-			if len(c.Pericias) > 0 {
+			if len(c.Expertises) > 0 {
 				<span>
 					Treinado em: 
-					for i, pericia := range c.Pericias {
+					for i, pericia := range c.Expertises {
 						if i > 0 {
 							{ ", " }
 						}
@@ -410,8 +410,8 @@ templ classCard(c book.Class, livro bookui.BookAddress) {
 					}
 				</span>
 			}
-			if c.Escolhe > 0 {
-				<span>{ fmt.Sprintf("+ %d à escolha", c.Escolhe) }</span>
+			if c.Chooses > 0 {
+				<span>{ fmt.Sprintf("+ %d à escolha", c.Chooses) }</span>
 			}
 		</p>
 	}
@@ -434,23 +434,23 @@ templ godCard(d book.God, livro bookui.BookAddress) {
 		// no livro (são deusas de paz e cura), e "Arma preferida:" seguido de
 		// nada parece dado perdido em vez de ausência com significado.
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-			if d.Energia != "" {
-				<span>{ "Energia: " + d.Energia }</span>
+			if d.Energy != "" {
+				<span>{ "Energia: " + d.Energy }</span>
 			}
-			if d.Simbolo != "" {
-				<span>{ "Símbolo: " + d.Simbolo }</span>
+			if d.Symbol != "" {
+				<span>{ "Símbolo: " + d.Symbol }</span>
 			}
-			if d.ArmaPreferida != "" {
-				<span>{ "Arma preferida: " + d.ArmaPreferida }</span>
+			if d.PreferredWeapon != "" {
+				<span>{ "Arma preferida: " + d.PreferredWeapon }</span>
 			}
 		</p>
 		// Concedidos e devotos são LISTAS DE NOMES de coisas que têm verbete —
 		// o poder está em Poderes, o devoto é raça ou classe. Cada nome vira o
 		// elo dele; o que não tem verbete (o "Quaisquer" de Aharadak) fica texto.
-		if len(d.PoderesConcedidos) > 0 {
+		if len(d.GrantedPowers) > 0 {
 			<p class="mt-1 text-xs text-muted-foreground">
 				Concede: 
-				for i, poder := range d.PoderesConcedidos {
+				for i, poder := range d.GrantedPowers {
 					if i > 0 {
 						{ ", " }
 					}
@@ -464,10 +464,10 @@ templ godCard(d book.God, livro bookui.BookAddress) {
 				}
 			</p>
 		}
-		if len(d.Devotos) > 0 {
+		if len(d.Devotees) > 0 {
 			<p class="mt-1 text-xs text-muted-foreground">
 				Devotos: 
-				for i, devoto := range d.Devotos {
+				for i, devoto := range d.Devotees {
 					if i > 0 {
 						{ ", " }
 					}

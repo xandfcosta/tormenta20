@@ -173,7 +173,7 @@ func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
 
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	condicoes := book.Catalogs().Condicoes
+	condicoes := book.Catalogs().Conditions
 	if len(condicoes) == 0 {
 		t.Fatal("o catálogo não tem condição nenhuma — o laço abaixo não mediria nada")
 	}
@@ -190,7 +190,7 @@ func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
 // esperado sair do código sob teste, e os dois andariam juntos com o defeito. O
 // catálogo é a fonte dos dois lados, e é dele que a asserção lê.
 func conditionEffectOf(id string) string {
-	for _, c := range book.Catalogs().Condicoes {
+	for _, c := range book.Catalogs().Conditions {
 		if c.ID == id {
 			return c.Description
 		}

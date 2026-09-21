@@ -172,7 +172,7 @@ func (s Scene) loadAttributes(r *http.Request, recusa string) (attributesView, i
 		Budget: engine.PointBuyBudget, Refusal: recusa,
 	}
 	for _, atributo := range book.AttributeOrder {
-		v.Rows = append(v.Rows, attributeRowOf(atributo.Chave, espalhamento, sheet, gasto))
+		v.Rows = append(v.Rows, attributeRowOf(atributo.Key, espalhamento, sheet, gasto))
 	}
 	return v, http.StatusOK, nil
 }

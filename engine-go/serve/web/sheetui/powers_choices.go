@@ -153,10 +153,10 @@ func (s Scene) attributeRaceBonus(dto sheet.CharacterDTO, nome string) *attribut
 func thatFitAttributes(proibido string) []filterOption {
 	fora := []filterOption{}
 	for _, a := range book.AttributeOrder {
-		if a.Chave == proibido {
+		if a.Key == proibido {
 			continue
 		}
-		fora = append(fora, filterOption{Valor: a.Chave, Rotulo: a.Sigla})
+		fora = append(fora, filterOption{Valor: a.Key, Rotulo: a.Abbreviation})
 	}
 	return fora
 }

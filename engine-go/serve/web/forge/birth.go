@@ -67,7 +67,7 @@ func forgeRefusals(folha forgeAnswers) wire.FieldErrorMap {
 	}
 	// O equipamento só se confere DEPOIS da classe: é ela que diz quais peças o
 	// kit oferece, e conferir contra um kit inventado acusaria o campo errado.
-	gearRefusals(folha, engine.StartingKitFor(classe.Name, classe.Proficiencias), erros)
+	gearRefusals(folha, engine.StartingKitFor(classe.Name, classe.Proficiencies), erros)
 	return erros
 }
 
@@ -202,7 +202,7 @@ func birthBody(folha forgeAnswers, raca book.Race, classe book.Class) (sheet.Cre
 	if err != nil {
 		return sheet.CreateBody{}, err
 	}
-	kit := engine.StartingKitFor(classe.Name, classe.Proficiencias)
+	kit := engine.StartingKitFor(classe.Name, classe.Proficiencies)
 	return sheet.CreateBody{
 		Name:              strings.TrimSpace(folha.Name),
 		Races:             []string{raca.Name},
@@ -210,8 +210,8 @@ func birthBody(folha forgeAnswers, raca book.Race, classe book.Class) (sheet.Cre
 		Classes:           []sheet.ClassEntry{{ClassName: classe.Name, Level: 1}},
 		Tibar:             &tibar,
 		Items:             birthItems(folha, kit),
-		Size:              raca.Tamanho,
-		Displacement:      int64(raca.Deslocamento),
-		TrainedExpertises: classe.Pericias,
+		Size:              raca.Size,
+		Displacement:      int64(raca.Speed),
+		TrainedExpertises: classe.Expertises,
 	}, nil
 }

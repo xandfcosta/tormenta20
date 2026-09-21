@@ -105,11 +105,11 @@ func buildHits(busca string, peloTexto bool) finderView {
 	a := book.Catalogs()
 	racas, classes, deuses := book.CharacterCatalogs()
 	for _, g := range []finderGroup{
-		foundGroup("Condições", a.Condicoes, busca, peloTexto, routes.MasterSearch("condicoes", busca), book.ConditionFields, conditionHit),
+		foundGroup("Condições", a.Conditions, busca, peloTexto, routes.MasterSearch("condicoes", busca), book.ConditionFields, conditionHit),
 		foundGroup("Criaturas", book.Creatures(), busca, peloTexto, routes.MasterBestiarySearch(busca), entryFields, entryHit),
-		foundGroup("Magias", a.Magias, busca, peloTexto, routes.MasterSearch("magias", busca), book.SpellFields, spellHit),
-		foundGroup("Poderes", a.Poderes, busca, peloTexto, routes.MasterSearch("poderes", busca), book.PowerFields, powerHit),
-		foundGroup("Itens", a.Itens, busca, peloTexto, routes.MasterSearch("itens", busca), book.ItemFields, itemHit),
+		foundGroup("Magias", a.Spells, busca, peloTexto, routes.MasterSearch("magias", busca), book.SpellFields, spellHit),
+		foundGroup("Poderes", a.Powers, busca, peloTexto, routes.MasterSearch("poderes", busca), book.PowerFields, powerHit),
+		foundGroup("Itens", a.Items, busca, peloTexto, routes.MasterSearch("itens", busca), book.ItemFields, itemHit),
 		foundGroup("Efeitos", book.EffectKinds(), busca, peloTexto, routes.MasterSearch("efeitos", busca), book.EffectFields, effectHit),
 		foundGroup("Escolas", book.SpellSchools(), busca, peloTexto, routes.MasterSearch("escolas", busca), book.SchoolFields, schoolHit),
 		foundGroup("Perícias", book.Expertises(), busca, peloTexto, routes.MasterSearch("pericias", busca), book.ExpertiseFields, expertiseHit),
@@ -206,7 +206,7 @@ func bestFirst(a, b finderHit) int {
 // que os outros catálogos: a cena dele filtra por outro caminho
 // (`book.FilterCreatures`), que não serve aqui.
 func entryFields(m book.Entry) []string {
-	return append([]string{m.Name, book.TypeName(m.Tipo)}, m.SpecialAbilities...)
+	return append([]string{m.Name, book.TypeName(m.Kind)}, m.SpecialAbilities...)
 }
 
 func conditionHit(c book.Condition) finderHit {
@@ -227,7 +227,7 @@ func spellHit(m book.Spell) finderHit {
 }
 
 func powerHit(p book.Power) finderHit {
-	return finderHit{Nome: p.Name, Detalhe: p.Fonte, Destino: routes.MasterEntry("poderes", p.ID), Pagina: p.BookPage}
+	return finderHit{Nome: p.Name, Detalhe: p.Source, Destino: routes.MasterEntry("poderes", p.ID), Pagina: p.BookPage}
 }
 
 func itemHit(i book.Item) finderHit {
@@ -259,7 +259,7 @@ func schoolHit(e book.SpellSchool) finderHit {
 
 func expertiseHit(p book.Expertise) finderHit {
 	detalhe := "Perícia · " + book.AttributeAbbrev(p.Attribute)
-	if p.SoTreinada {
+	if p.TrainedOnly {
 		detalhe += " · só treinada"
 	}
 	return finderHit{
@@ -282,7 +282,7 @@ func raceHit(r book.Race) finderHit {
 func classHit(c book.Class) finderHit {
 	return finderHit{
 		Nome:    c.Name,
-		Detalhe: fmt.Sprintf("Classe · %d poderes", c.Poderes),
+		Detalhe: fmt.Sprintf("Classe · %d poderes", c.Powers),
 		Destino: routes.MasterEntry("classes", c.ID),
 		Pagina:  c.BookPage,
 	}
@@ -300,7 +300,7 @@ func deityHit(d book.God) finderHit {
 func entryHit(m book.Entry) finderHit {
 	return finderHit{
 		Nome:    m.Name,
-		Detalhe: fmt.Sprintf("ND %s · %s", book.CRWritten(m.ND), book.TypeName(m.Tipo)),
+		Detalhe: fmt.Sprintf("ND %s · %s", book.CRWritten(m.ND), book.TypeName(m.Kind)),
 		Destino: routes.MasterBestiary + "?criatura=" + url.QueryEscape(m.ID),
 		Pagina:  m.BookPage,
 	}

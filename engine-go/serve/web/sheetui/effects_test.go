@@ -199,7 +199,7 @@ func TestAGrantedEffectShowsThePowerNameInsteadOfTheCatalogId(t *testing.T) {
 // reler o comentário.
 func TestEveryDurationAnEffectCanCarryIsNamedOnTheSheet(t *testing.T) {
 	measured := 0
-	for _, m := range book.Catalogs().Magias {
+	for _, m := range book.Catalogs().Spells {
 		spell, known := catalog.LookupSpell(m.ID)
 		if !known || spell.Buff == nil {
 			continue

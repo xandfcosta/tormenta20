@@ -336,7 +336,7 @@ func overlaySummary(entrada book.Item) string {
 // recusa o resto é o servidor.
 func thatFitOverlays(categoria, familia string, aplicadas []string) []overlayChoice {
 	escolhas := []overlayChoice{}
-	for _, entrada := range book.Catalogs().Itens {
+	for _, entrada := range book.Catalogs().Items {
 		if entrada.Category != categoria || !aceitaAFamilia(entrada, familia) {
 			continue
 		}
@@ -359,7 +359,7 @@ func thatFitOverlays(categoria, familia string, aplicadas []string) []overlayCho
 func catalogItemRowsOf(busca, categoria string) []catalogItemRow {
 	termo := search.Fold(strings.TrimSpace(busca))
 	linhas := []catalogItemRow{}
-	for _, entrada := range book.Catalogs().Itens {
+	for _, entrada := range book.Catalogs().Items {
 		if entrada.Category == "improvement" || entrada.Category == "material" {
 			continue
 		}
@@ -384,7 +384,7 @@ func catalogCategories(ativa string) []filterOption {
 	vistas := map[string]bool{}
 	opcoes := []filterOption{{Valor: "", Rotulo: "Todas as categorias", Ativo: ativa == ""}}
 	ids := []string{}
-	for _, entrada := range book.Catalogs().Itens {
+	for _, entrada := range book.Catalogs().Items {
 		if entrada.Category == "improvement" || entrada.Category == "material" || vistas[entrada.Category] {
 			continue
 		}

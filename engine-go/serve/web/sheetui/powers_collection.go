@@ -204,7 +204,7 @@ func raceAncestries(nome string) []filterOption {
 			continue
 		}
 		fora := []filterOption{}
-		for _, a := range r.Ascendencias {
+		for _, a := range r.Ancestries {
 			fora = append(fora, filterOption{Valor: a, Rotulo: strings.ToUpper(a[:1]) + a[1:]})
 		}
 		return fora

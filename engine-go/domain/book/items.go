@@ -10,9 +10,9 @@ import "strings"
 
 // ItemByID é a busca por id no acervo já ordenado.
 func ItemByID(id string) *Item {
-	for i, entrada := range Catalogs().Itens {
-		if entrada.ID == id {
-			return &Catalogs().Itens[i]
+	for i, entry := range Catalogs().Items {
+		if entry.ID == id {
+			return &Catalogs().Items[i]
 		}
 	}
 	return nil
@@ -23,11 +23,11 @@ func ItemByID(id string) *Item {
 // Existe porque nem toda procedência cita o item por id: a linha "Itens" de uma
 // origem cita "Símbolo sagrado" por escrito (p85), e é o nome que tem de achar
 // a entrada do livro para a linha nascer com o preço e os espaços certos.
-func ItemByName(nome string) *Item {
-	procurado := strings.ToLower(strings.TrimSpace(nome))
-	for i, entrada := range Catalogs().Itens {
-		if strings.ToLower(entrada.Name) == procurado {
-			return &Catalogs().Itens[i]
+func ItemByName(name string) *Item {
+	sought := strings.ToLower(strings.TrimSpace(name))
+	for i, entry := range Catalogs().Items {
+		if strings.ToLower(entry.Name) == sought {
+			return &Catalogs().Items[i]
 		}
 	}
 	return nil
