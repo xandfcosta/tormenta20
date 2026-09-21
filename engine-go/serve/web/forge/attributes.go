@@ -75,12 +75,12 @@ func (s Scene) handleAttributes(w http.ResponseWriter, r *http.Request) {
 // O passo vai no CAMINHO e não num sinal, como o do vital na ficha: o valor é
 // do botão que foi clicado, e doze botões não disputam um sinal só.
 func (s Scene) handleAttributeStep(w http.ResponseWriter, r *http.Request) {
-	recusa, status, err := s.stepAttribute(r)
+	refusal, status, err := s.stepAttribute(r)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	v, status, err := s.loadAttributes(r, recusa)
+	v, status, err := s.loadAttributes(r, refusal)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
@@ -89,26 +89,26 @@ func (s Scene) handleAttributeStep(w http.ResponseWriter, r *http.Request) {
 }
 
 // stepAttribute grava o espalhamento novo, ou devolve a frase da recusa.
-func (s Scene) stepAttribute(r *http.Request) (recusa string, status int, err error) {
+func (s Scene) stepAttribute(r *http.Request) (refusal string, status int, err error) {
 	row, status, err := s.heroOfTheForge(r)
 	if err != nil {
 		return "", status, err
 	}
-	passo, err := stepFromURL(r)
+	step, err := stepFromURL(r)
 	if err != nil {
 		return "", http.StatusBadRequest, err
 	}
-	chave := chi.URLParam(r, "atributo")
-	espalhamento := heroSpread(row)
-	if _, conhecido := espalhamento[chave]; !conhecido {
+	key := chi.URLParam(r, "atributo")
+	spread := heroSpread(row)
+	if _, known := spread[key]; !known {
 		return "", http.StatusBadRequest, fmt.Errorf(
-			"atributo %q não existe: são os seis do livro", chave)
+			"atributo %q não existe: são os seis do livro", key)
 	}
-	espalhamento[chave] += passo
-	if avisos := engine.PointBuyWarnings(espalhamento); len(avisos) > 0 {
-		return purchaseRefusal(avisos[0]), http.StatusOK, nil
+	spread[key] += step
+	if notices := engine.PointBuyWarnings(spread); len(notices) > 0 {
+		return purchaseRefusal(notices[0]), http.StatusOK, nil
 	}
-	if err := s.births.SpreadAttributes(r.Context(), row.ID, espalhamento); err != nil {
+	if err := s.births.SpreadAttributes(r.Context(), row.ID, spread); err != nil {
 		return "", http.StatusInternalServerError, err
 	}
 	// A Constituição mexe no PV máximo (p34), e NÃO HÁ NADA A FAZER sobre isso.
@@ -125,8 +125,8 @@ func (s Scene) stepAttribute(r *http.Request) (recusa string, status int, err er
 //
 // O motor escreve para quem depura ("compra de pontos: 14 pontos gastos excedem
 // o limite de 10"); a cena fala com quem está criando um herói.
-func purchaseRefusal(aviso string) string {
-	return "Não cabe na compra de pontos (p17): " + aviso
+func purchaseRefusal(notice string) string {
+	return "Não cabe na compra de pontos (p17): " + notice
 }
 
 // heroSpread lê os seis atributos base da linha do banco.
@@ -156,7 +156,7 @@ func (s Scene) heroOfTheForge(r *http.Request) (sqlcgen.Character, int, error) {
 }
 
 // loadAttributes monta a cena a partir do que está gravado.
-func (s Scene) loadAttributes(r *http.Request, recusa string) (attributesView, int, error) {
+func (s Scene) loadAttributes(r *http.Request, refusal string) (attributesView, int, error) {
 	row, status, err := s.heroOfTheForge(r)
 	if err != nil {
 		return attributesView{}, status, err
@@ -165,14 +165,14 @@ func (s Scene) loadAttributes(r *http.Request, recusa string) (attributesView, i
 	if err != nil {
 		return attributesView{}, http.StatusInternalServerError, err
 	}
-	espalhamento := heroSpread(row)
-	gasto, _ := engine.PointBuySpent(espalhamento)
+	spread := heroSpread(row)
+	spent, _ := engine.PointBuySpent(spread)
 	v := attributesView{
-		ID: row.ID, HeroName: row.Name, Spent: gasto,
-		Budget: engine.PointBuyBudget, Refusal: recusa,
+		ID: row.ID, HeroName: row.Name, Spent: spent,
+		Budget: engine.PointBuyBudget, Refusal: refusal,
 	}
-	for _, atributo := range book.AttributeOrder {
-		v.Rows = append(v.Rows, attributeRowOf(atributo.Chave, espalhamento, sheet, gasto))
+	for _, attribute := range book.AttributeOrder {
+		v.Rows = append(v.Rows, attributeRowOf(attribute.Key, spread, sheet, spent))
 	}
 	return v, http.StatusOK, nil
 }
@@ -183,42 +183,42 @@ func (s Scene) loadAttributes(r *http.Request, recusa string) (attributesView, i
 // pergunta é feita ao motor com o espalhamento hipotético. Travar na tela é
 // conveniência; quem recusa de verdade é o servidor, no `stepAttribute`.
 func attributeRowOf(
-	chave string, espalhamento map[string]int, sheet engine.ComputedSheet, gasto int,
+	key string, spread map[string]int, sheet engine.ComputedSheet, spent int,
 ) attributeRow {
 	return attributeRow{
-		Key: chave, Label: attributeLabels[chave],
-		Base:     espalhamento[chave],
-		Total:    sheet.Attributes[chave].Total,
-		CanRaise: stepFits(chave, espalhamento, +1),
-		CanLower: stepFits(chave, espalhamento, -1),
+		Key: key, Label: attributeLabels[key],
+		Base:     spread[key],
+		Total:    sheet.Attributes[key].Total,
+		CanRaise: stepFits(key, spread, +1),
+		CanLower: stepFits(key, spread, -1),
 	}
 }
 
 // stepFits pergunta ao motor se o espalhamento continuaria legal com o passo.
-func stepFits(chave string, espalhamento map[string]int, passo int) bool {
-	hipotese := make(map[string]int, len(espalhamento))
-	for k, v := range espalhamento {
-		hipotese[k] = v
+func stepFits(key string, spread map[string]int, step int) bool {
+	hypothesis := make(map[string]int, len(spread))
+	for k, v := range spread {
+		hypothesis[k] = v
 	}
-	hipotese[chave] += passo
-	return len(engine.PointBuyWarnings(hipotese)) == 0
+	hypothesis[key] += step
+	return len(engine.PointBuyWarnings(hypothesis)) == 0
 }
 
 func (s Scene) writeAttributes(w http.ResponseWriter, r *http.Request, v attributesView) {
 	if r.Header.Get("datastar-request") != "" {
-		fragmento, err := ui.RenderFragment(r.Context(), attributesBody(v))
+		fragment, err := ui.RenderFragment(r.Context(), attributesBody(v))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		_ = datastar.NewSSE(w, r).PatchElements(fragmento)
+		_ = datastar.NewSSE(w, r).PatchElements(fragment)
 		return
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo:       "Atributos · Forja · Tormenta 20",
-		Forma:        ui.ShellDense,
-		Voltar:       "/personagens",
-		VoltarRotulo: "Personagens",
+		Title:     "Atributos · Forja · Tormenta 20",
+		Shape:     ui.ShellDense,
+		Back:      "/personagens",
+		BackLabel: "Personagens",
 	}, attributesScene(v))
 }
 
@@ -228,10 +228,10 @@ func (s Scene) writeAttributes(w http.ResponseWriter, r *http.Request, v attribu
 // de rotas diferentes, e pedi-lo pela porta seria pôr sete linhas de parse numa
 // interface — mais acoplamento que duplicação.
 func stepFromURL(r *http.Request) (int, error) {
-	bruto := chi.URLParam(r, "passo")
-	passo, err := strconv.Atoi(bruto)
-	if err != nil || passo == 0 {
-		return 0, fmt.Errorf("passo %q não é um número diferente de zero", bruto)
+	raw := chi.URLParam(r, "passo")
+	step, err := strconv.Atoi(raw)
+	if err != nil || step == 0 {
+		return 0, fmt.Errorf("passo %q não é um número diferente de zero", raw)
 	}
-	return passo, nil
+	return step, nil
 }

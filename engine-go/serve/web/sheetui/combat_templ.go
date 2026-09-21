@@ -152,8 +152,8 @@ func combatPanel(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		for _, arma := range v.Combat.Weapons {
-			templ_7745c5c3_Err = weaponDetail(arma).Render(ctx, templ_7745c5c3_Buffer)
+		for _, weapon := range v.Combat.Weapons {
+			templ_7745c5c3_Err = weaponDetail(weapon).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -505,8 +505,8 @@ func weaponCards(armas []weaponTile) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, arma := range armas {
-				templ_7745c5c3_Err = weaponCard(arma).Render(ctx, templ_7745c5c3_Buffer)
+			for _, weapon := range armas {
+				templ_7745c5c3_Err = weaponCard(weapon).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -520,7 +520,7 @@ func weaponCards(armas []weaponTile) templ.Component {
 	})
 }
 
-func weaponCard(arma weaponTile) templ.Component {
+func weaponCard(weapon weaponTile) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -546,9 +546,9 @@ func weaponCard(arma weaponTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var27 string
-		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue("Detalhamento de " + arma.Name)
+		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue("Detalhamento de " + weapon.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 152, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 152, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -559,9 +559,9 @@ func weaponCard(arma weaponTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var28 string
-		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(arma.Skill + " " + arma.Attack + " · dano " + arma.Damage + " · crítico " + arma.Crit)
+		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(weapon.Skill + " " + weapon.Attack + " · dano " + weapon.Damage + " · crítico " + weapon.Crit)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 154, Col: 98}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 154, Col: 106}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -572,9 +572,9 @@ func weaponCard(arma weaponTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var29 string
-		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = '" + arma.Key + "'")
+		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = '" + weapon.Key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 155, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 155, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -607,9 +607,9 @@ func weaponCard(arma weaponTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var32 string
-		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(arma.Name)
+		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(weapon.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 158, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 158, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -620,9 +620,9 @@ func weaponCard(arma weaponTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var33 string
-		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(arma.Attack + " · " + arma.Damage)
+		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(weapon.Attack + " · " + weapon.Damage)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 160, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 160, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -633,9 +633,9 @@ func weaponCard(arma weaponTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var34 string
-		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(arma.Crit)
+		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(weapon.Crit)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 162, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 162, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -840,7 +840,7 @@ func boxDetail(tile statTile) templ.Component {
 //
 // Não há caixa de "Total": uma arma não tem um número só — tem o ataque e tem o
 // dano, e um total entre os dois não significaria nada.
-func weaponDetail(arma weaponTile) templ.Component {
+func weaponDetail(weapon weaponTile) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -900,9 +900,9 @@ func weaponDetail(arma weaponTile) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var51 string
-			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs("Ataque (" + arma.Skill + ") " + arma.Attack)
+			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs("Ataque (" + weapon.Skill + ") " + weapon.Attack)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 204, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 204, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -912,7 +912,7 @@ func weaponDetail(arma weaponTile) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = breakdownRows(arma.AttackRows).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = breakdownRows(weapon.AttackRows).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -943,9 +943,9 @@ func weaponDetail(arma weaponTile) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var54 string
-			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs("Dano " + arma.Damage + " · crítico " + arma.Crit)
+			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs("Dano " + weapon.Damage + " · crítico " + weapon.Crit)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 212, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 212, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 			if templ_7745c5c3_Err != nil {
@@ -955,13 +955,13 @@ func weaponDetail(arma weaponTile) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(arma.DamageRows) == 0 {
+			if len(weapon.DamageRows) == 0 {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<p class=\"text-xs text-muted-foreground\">Só o dado da arma.</p>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = breakdownRows(arma.DamageRows).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = breakdownRows(weapon.DamageRows).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -972,7 +972,7 @@ func weaponDetail(arma weaponTile) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = overlay(arma.Key, arma.Name, "Sword", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = overlay(weapon.Key, weapon.Name, "Sword", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -996,7 +996,7 @@ func weaponDetail(arma weaponTile) templ.Component {
 // caixas ATRÁS da sobreposição. Aqui o `data-attr` com BOOLEANO é o certo, ao
 // contrário do que vale para `aria-*`: é a PRESENÇA do atributo que o seletor
 // procura.
-func overlay(key, titulo, icone string, magic bool) templ.Component {
+func overlay(key, title, icon string, magic bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1035,9 +1035,9 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var57 string
-		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(titulo)
+		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 265, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 265, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var57)
 		if templ_7745c5c3_Err != nil {
@@ -1078,7 +1078,7 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar " + titulo, "data-on:click": "$detail = ''"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var59), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar " + title, "data-on:click": "$detail = ''"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var59), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1106,14 +1106,14 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = detailIcon(icone).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = detailIcon(icon).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var62 string
-		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
+		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 278, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/combat.templ`, Line: 278, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 		if templ_7745c5c3_Err != nil {
@@ -1137,7 +1137,7 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 
 // detailIcon existe só para o comentário do ícone não morar na lista de
 // atributos de um elemento, onde o templ não o aceita.
-func detailIcon(nome string) templ.Component {
+func detailIcon(name string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1158,7 +1158,7 @@ func detailIcon(nome string) templ.Component {
 			templ_7745c5c3_Var63 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = ui.Icon(nome, "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon(name, "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

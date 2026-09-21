@@ -31,7 +31,7 @@ import (
 // rota. A cena só precisa saber SE há sessão.
 type Deps interface {
 	// WritePage é a montagem da casca (ver `web/ui`).
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 	HasSession(r *http.Request) bool
 	// IssueSession escreve o cookie da sessão já assinada pelo caso de uso.
 	// `false` é não ter conseguido assinar, e aí a cena mostra a recusa em vez de
@@ -52,6 +52,6 @@ type Scene struct {
 // New recebe os casos de uso por PARÂMETRO e o hospedeiro pela porta. A
 // diferença não é estilo: o que chega por parâmetro é regra que outro transporte
 // também chama, o que chega pela porta é o que só este hospedeiro sabe fazer.
-func New(d Deps, portao accounts.Gate, redefinicoes accounts.Resets) Scene {
-	return Scene{deps: d, gate: portao, resets: redefinicoes}
+func New(d Deps, gate accounts.Gate, resets accounts.Resets) Scene {
+	return Scene{deps: d, gate: gate, resets: resets}
 }

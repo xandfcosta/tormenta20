@@ -26,26 +26,26 @@ var permitidos = map[string]bool{
 }
 
 func TestTheReaderDoesNotImportItsHost(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
-			if !strings.HasPrefix(caminho, "t20engine/") || permitidos[caminho] {
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
+			if !strings.HasPrefix(path, "t20engine/") || permitidos[path] {
 				continue
 			}
 			t.Errorf("%s importa %q.\n"+
@@ -54,12 +54,12 @@ func TestTheReaderDoesNotImportItsHost(t *testing.T) {
 				"o `api`, é ciclo, porque ele importa esta cena para montar rota.\n"+
 				"Se for `t20engine/infra/config`, a resposta é outra: quem lê configuração e\n"+
 				"serve o ARQUIVO é o hospedeiro; esta cena só desenha a página.",
-				nome, caminho, caminho)
+				name, path, path)
 		}
 	}
 
-	if visitados < 3 {
+	if visited < 3 {
 		t.Fatalf("o guarda visitou só %d arquivos `.go` — ele está medindo o "+
-			"diretório errado", visitados)
+			"diretório errado", visited)
 	}
 }

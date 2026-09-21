@@ -23,7 +23,7 @@ import (
 func TestSheetParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	catalogs := primeFromDump(t, dir)
-	comConditionais := 0
+	withConditionals := 0
 
 	for _, slug := range parityOracleSlugs(t, dir) {
 		slug := slug
@@ -48,7 +48,7 @@ func TestSheetParity(t *testing.T) {
 			if len(oracle.ActiveConditionals) == 0 {
 				return
 			}
-			comConditionais++
+			withConditionals++
 			on := toSet(oracle.ActiveConditionals)
 			gotOn := roundTrip(t, catalogs.ComputeSheet(oracle.Char, on))
 			if !reflect.DeepEqual(gotOn, oracle.WithConditionals) {
@@ -60,7 +60,7 @@ func TestSheetParity(t *testing.T) {
 	// A dobra dos condicionais é o que pega a Inspiração dupla do bardo: se um
 	// dia NENHUM oráculo tiver condicional, a cobertura dela vira zero em
 	// silêncio — e é isso que esta linha impede.
-	if comConditionais == 0 {
+	if withConditionals == 0 {
 		t.Error("nenhum oráculo exercitou ApplyActiveConditionals — a dobra ficou sem prova")
 	}
 }

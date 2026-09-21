@@ -42,33 +42,33 @@ import (
 // `creature.Skill` são reusados porque esses SIM têm o mesmo formato nos dois
 // lados — conferido campo a campo contra o JSON.
 type Entry struct {
-	ID           string  `json:"id"`
-	Name         string  `json:"name"`
-	ND           float64 `json:"nd"`
-	Tipo         string  `json:"tipo"`
-	Size         string  `json:"size"`
-	HP           int     `json:"hp"`
-	Defesa       int     `json:"defesa"`
-	Iniciativa   int     `json:"iniciativa"`
-	Percepcao    int     `json:"percepcao"`
-	Fortitude    int     `json:"fortitude"`
-	Reflexos     int     `json:"reflexos"`
-	Vontade      int     `json:"vontade"`
-	Deslocamento string  `json:"deslocamento"`
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	ND         float64 `json:"nd"`
+	Kind       string  `json:"tipo"`
+	Size       string  `json:"size"`
+	HP         int     `json:"hp"`
+	Defense    int     `json:"defesa"`
+	Initiative int     `json:"iniciativa"`
+	Perception int     `json:"percepcao"`
+	Fortitude  int     `json:"fortitude"`
+	Reflex     int     `json:"reflexos"`
+	Will       int     `json:"vontade"`
+	Speed      string  `json:"deslocamento"`
 	// Os seis que podem ser TRAVESSÃO. Ver o comentário do tipo.
-	Forca        *int `json:"forca"`
-	Destreza     *int `json:"destreza"`
-	Constituicao *int `json:"constituicao"`
-	Inteligencia *int `json:"inteligencia"`
-	Sabedoria    *int `json:"sabedoria"`
-	Carisma      *int `json:"carisma"`
+	Strength     *int `json:"forca"`
+	Dexterity    *int `json:"destreza"`
+	Constitution *int `json:"constituicao"`
+	Intelligence *int `json:"inteligencia"`
+	Wisdom       *int `json:"sabedoria"`
+	Charisma     *int `json:"carisma"`
 	// PM só existe em conjurador: um zero diria "tem mana e está sem".
 	PM               *int              `json:"pm,omitempty"`
 	Attacks          []creature.Attack `json:"attacks"`
 	Skills           []creature.Skill  `json:"skills"`
 	SpecialAbilities []string          `json:"specialAbilities"`
-	Equipamento      string            `json:"equipamento"`
-	Tesouro          string            `json:"tesouro"`
+	Equipment        string            `json:"equipamento"`
+	Treasure         string            `json:"tesouro"`
 	BookPage         int               `json:"bookPage"`
 }
 
@@ -92,24 +92,24 @@ var (
 
 func Creatures() []Entry {
 	bestiarioUmaVez.Do(func() {
-		bruto, ok := catalog.Resource("bestiary")
+		raw, ok := catalog.Resource("bestiary")
 		if !ok {
 			return
 		}
 		// Catálogo ausente é degradação NORMAL: a ferramenta abre vazia em vez
 		// de derrubar a Mesa inteira. É a mesma decisão do `RaceTraitsByKey`.
-		_ = json.Unmarshal(bruto, &bestiario)
+		_ = json.Unmarshal(raw, &bestiario)
 	})
 	return bestiario
 }
 
 // CreatureFilter são os quatro critérios da tela.
 type CreatureFilter struct {
-	Busca string
-	// Tipos VAZIO significa TODOS, e não nenhum. É a convenção da tela: sem
+	Search string
+	// Kinds VAZIO significa TODOS, e não nenhum. É a convenção da tela: sem
 	// crachá aceso, o filtro não filtra por tipo — tratar vazio como "nenhum"
 	// mostraria bestiário vazio a quem não escolheu nada.
-	Tipos []string
+	Kinds []string
 	NDMin float64
 	NDMax float64
 }
@@ -130,28 +130,28 @@ const (
 // que a linha errada passaria despercebida.
 //
 // O collator nasce por chamada porque não é seguro para concorrência.
-func FilterCreatures(todas []Entry, f CreatureFilter) []Entry {
-	fora := make([]Entry, 0, len(todas))
-	for _, m := range todas {
-		if !search.Matches([]string{m.Name}, f.Busca) {
+func FilterCreatures(all []Entry, f CreatureFilter) []Entry {
+	outside := make([]Entry, 0, len(all))
+	for _, m := range all {
+		if !search.Matches([]string{m.Name}, f.Search) {
 			continue
 		}
-		if len(f.Tipos) > 0 && !slices.Contains(f.Tipos, m.Tipo) {
+		if len(f.Kinds) > 0 && !slices.Contains(f.Kinds, m.Kind) {
 			continue
 		}
 		if m.ND < f.NDMin || m.ND > f.NDMax {
 			continue
 		}
-		fora = append(fora, m)
+		outside = append(outside, m)
 	}
 	col := collate.New(language.BrazilianPortuguese)
-	slices.SortStableFunc(fora, func(a, b Entry) int {
+	slices.SortStableFunc(outside, func(a, b Entry) int {
 		if c := cmp.Compare(a.ND, b.ND); c != 0 {
 			return c
 		}
 		return col.CompareString(a.Name, b.Name)
 	})
-	return fora
+	return outside
 }
 
 // CRRange aperta o que veio da URL para dentro dos limites do livro.
@@ -164,17 +164,17 @@ func FilterCreatures(todas []Entry, f CreatureFilter) []Entry {
 // diz "Nenhuma criatura casa com os filtros", que é resposta honesta. Consertar
 // para "faixa inteira" faria o filtro MENTIR — pedir 10..2 e receber tudo é pior
 // que receber nada.
-func CRRange(minBruto, maxBruto string) (float64, float64) {
-	return numberOrDefault(minBruto, CRMin), numberOrDefault(maxBruto, CRMax)
+func CRRange(rawMin, rawMax string) (float64, float64) {
+	return numberOrDefault(rawMin, CRMin), numberOrDefault(rawMax, CRMax)
 }
 
-func numberOrDefault(bruto string, padrao float64) float64 {
-	if bruto == "" {
-		return padrao
+func numberOrDefault(raw string, standard float64) float64 {
+	if raw == "" {
+		return standard
 	}
-	n, err := strconv.ParseFloat(strings.TrimSpace(bruto), 64)
+	n, err := strconv.ParseFloat(strings.TrimSpace(raw), 64)
 	if err != nil || n < CRMin || n > CRMax {
-		return padrao
+		return standard
 	}
 	return n
 }
@@ -219,11 +219,11 @@ var TypeLabels = map[string]string{
 // para o mais raro.
 var CreatureTypes = []string{"humanoide", "animal", "monstro", "morto-vivo", "construto", "espirito", "planar"}
 
-func TypeName(tipo string) string {
-	if r, ok := TypeLabels[tipo]; ok {
+func TypeName(kind string) string {
+	if r, ok := TypeLabels[kind]; ok {
 		return r
 	}
-	return tipo
+	return kind
 }
 
 var sizeLabels = map[string]string{
@@ -260,10 +260,10 @@ func EntryByID(id string) *Entry {
 	if id == "" {
 		return nil
 	}
-	todas := Creatures()
-	for i := range todas {
-		if todas[i].ID == id {
-			return &todas[i]
+	all := Creatures()
+	for i := range all {
+		if all[i].ID == id {
+			return &all[i]
 		}
 	}
 	return nil

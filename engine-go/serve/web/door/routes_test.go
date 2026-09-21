@@ -12,16 +12,16 @@ import "testing"
 // o caso que engana, porque `//outro.site` é relativo a PROTOCOLO e o navegador
 // o trata como absoluto.
 func TestTheRequestedDestinationOnlyAcceptsAnInternalPath(t *testing.T) {
-	casos := map[string]string{
+	cases := map[string]string{
 		"/campanhas/7":        "/campanhas/7",
 		"":                    "/",
 		"https://outro.site":  "/",
 		"//outro.site":        "/", // protocol-relative: o navegador trata como absoluto
 		"javascript:alert(1)": "/",
 	}
-	for entrada, quer := range casos {
-		if got := requestedDestination(entrada); got != quer {
-			t.Errorf("requestedDestination(%q) = %q, queria %q", entrada, got, quer)
+	for entry, want := range cases {
+		if got := requestedDestination(entry); got != want {
+			t.Errorf("requestedDestination(%q) = %q, queria %q", entry, got, want)
 		}
 	}
 }

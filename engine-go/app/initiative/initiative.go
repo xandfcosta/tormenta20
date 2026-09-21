@@ -83,11 +83,11 @@ func (r Roster) Bonus(ctx context.Context, characterID int64) (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("carregar o personagem %d: %w", characterID, err)
 	}
-	ficha, err := sheet.LoadAndCompute(ctx, r.queries, r.catalogs, row)
+	character, err := sheet.LoadAndCompute(ctx, r.queries, r.catalogs, row)
 	if err != nil {
 		return 0, fmt.Errorf("computar a ficha do personagem %d: %w", characterID, err)
 	}
-	return int64(engine.InitiativeTotal(ficha)), nil
+	return int64(engine.InitiativeTotal(character)), nil
 }
 
 // SelfEntry é a linha de quem registra a PRÓPRIA iniciativa: confere o d20,
@@ -96,7 +96,7 @@ func (r Roster) Bonus(ctx context.Context, characterID int64) (int64, error) {
 // O pedido é montado AQUI e não recebido do cliente: um `initiative` que ele
 // mandasse junto venceria a conta do servidor.
 func (r Roster) SelfEntry(
-	ctx context.Context, quem app.Caller, campaignID, characterID, d20 int64,
+	ctx context.Context, who app.Caller, campaignID, characterID, d20 int64,
 ) (live.InitiativeEntry, error) {
 	if d20 < 1 || d20 > 20 {
 		return live.InitiativeEntry{}, fmt.Errorf(
@@ -107,82 +107,82 @@ func (r Roster) SelfEntry(
 		return live.InitiativeEntry{}, err
 	}
 	total := d20 + bonus
-	return r.Entry(ctx, quem, campaignID, EntryRequest{CharacterID: &characterID, Initiative: &total})
+	return r.Entry(ctx, who, campaignID, EntryRequest{CharacterID: &characterID, Initiative: &total})
 }
 
 // Entry resolve um pedido numa linha concreta.
 func (r Roster) Entry(
-	ctx context.Context, quem app.Caller, campaignID int64, pedido EntryRequest,
+	ctx context.Context, who app.Caller, campaignID int64, requested EntryRequest,
 ) (live.InitiativeEntry, error) {
-	if pedido.CharacterID == nil {
-		return r.npcEntry(pedido)
+	if requested.CharacterID == nil {
+		return r.npcEntry(requested)
 	}
-	return r.characterEntry(ctx, quem, campaignID, pedido)
+	return r.characterEntry(ctx, who, campaignID, requested)
 }
 
 // npcEntry é a linha sem ficha atrás.
-func (r Roster) npcEntry(pedido EntryRequest) (live.InitiativeEntry, error) {
-	rotulo := strings.TrimSpace(pedido.Label)
-	if rotulo == "" {
+func (r Roster) npcEntry(requested EntryRequest) (live.InitiativeEntry, error) {
+	label := strings.TrimSpace(requested.Label)
+	if label == "" {
 		return live.InitiativeEntry{}, fmt.Errorf("um NPC precisa de rótulo: %w", app.ErrRefused)
 	}
-	if pedido.Initiative == nil {
+	if requested.Initiative == nil {
 		return live.InitiativeEntry{}, fmt.Errorf("a linha precisa de iniciativa: %w", app.ErrRefused)
 	}
-	tipo := "npc"
-	if pedido.Kind != "" {
-		tipo = pedido.Kind
+	kind := "npc"
+	if requested.Kind != "" {
+		kind = requested.Kind
 	}
-	linha := live.InitiativeEntry{Label: rotulo, Initiative: int(*pedido.Initiative), Type: tipo}
-	linha.HpCurrent, linha.HpMax = pedido.HpCurrent, pedido.HpMax
+	row := live.InitiativeEntry{Label: label, Initiative: int(*requested.Initiative), Type: kind}
+	row.HpCurrent, row.HpMax = requested.HpCurrent, requested.HpMax
 	// O id do verbete e o do bloco vêm do CLIENTE, e o servidor não os confere
 	// contra o catálogo de propósito: um id desconhecido vira "sem bloco" na
 	// tela, e não um erro que derruba a adição no meio do combate. Quem confere
 	// o dono do bloco é a rota que o serve, e ela só responde ao mestre.
-	if id := strings.TrimSpace(pedido.MonsterID); id != "" {
-		linha.MonsterID = &id
+	if id := strings.TrimSpace(requested.MonsterID); id != "" {
+		row.MonsterID = &id
 	}
-	if pedido.CreatureID != nil && *pedido.CreatureID > 0 {
-		linha.CreatureID = pedido.CreatureID
+	if requested.CreatureID != nil && *requested.CreatureID > 0 {
+		row.CreatureID = requested.CreatureID
 	}
-	linha.Conditions = KnownConditions(pedido.Conditions)
-	return linha, nil
+	row.Conditions = KnownConditions(requested.Conditions)
+	return row, nil
 }
 
 // characterEntry busca o nome e os vitais na ficha, com as sobreposições que o
 // pedido trouxer.
 func (r Roster) characterEntry(
-	ctx context.Context, quem app.Caller, campaignID int64, pedido EntryRequest,
+	ctx context.Context, who app.Caller, campaignID int64, requested EntryRequest,
 ) (live.InitiativeEntry, error) {
-	if pedido.Initiative == nil {
+	if requested.Initiative == nil {
 		return live.InitiativeEntry{}, fmt.Errorf("a linha precisa de iniciativa: %w", app.ErrRefused)
 	}
-	quemEntra, err := r.Combatant(ctx, quem, campaignID, *pedido.CharacterID)
+	entrant, err := r.Combatant(ctx, who, campaignID, *requested.CharacterID)
 	if err != nil {
 		return live.InitiativeEntry{}, err
 	}
-	rotulo := quemEntra.Name
-	if escolhido := strings.TrimSpace(pedido.Label); escolhido != "" {
-		rotulo = escolhido
+	label := entrant.Name
+	if chosen := strings.TrimSpace(requested.Label); chosen != "" {
+		label = chosen
 	}
-	id := *pedido.CharacterID
+	id := *requested.CharacterID
 	return live.InitiativeEntry{
-		Label: rotulo, Initiative: int(*pedido.Initiative), Type: "character", CharacterID: &id,
-		HpCurrent:  overriddenOr(pedido.HpCurrent, quemEntra.HpCurrent),
-		HpMax:      overriddenOr(pedido.HpMax, quemEntra.HpMax),
-		MpCurrent:  overriddenOr(pedido.MpCurrent, quemEntra.MpCurrent),
-		MpMax:      overriddenOr(pedido.MpMax, quemEntra.MpMax),
-		Conditions: KnownConditions(pedido.Conditions),
+		Label: label, Initiative: int(*requested.Initiative), Type: "character", CharacterID: &id,
+		HpCurrent:  overriddenOr(requested.HpCurrent, entrant.HpCurrent),
+		HpMax:      overriddenOr(requested.HpMax, entrant.HpMax),
+		MpCurrent:  overriddenOr(requested.MpCurrent, entrant.MpCurrent),
+		MpMax:      overriddenOr(requested.MpMax, entrant.MpMax),
+		Conditions: KnownConditions(requested.Conditions),
 	}, nil
 }
 
 // overriddenOr devolve a sobreposição quando ela veio, e o valor da ficha
 // quando não.
-func overriddenOr(sobreposto *int64, daFicha int64) *int64 {
-	if sobreposto != nil {
-		return live.PtrInt64(*sobreposto)
+func overriddenOr(overlapping *int64, fromSheet int64) *int64 {
+	if overlapping != nil {
+		return live.PtrInt64(*overlapping)
 	}
-	return live.PtrInt64(daFicha)
+	return live.PtrInt64(fromSheet)
 }
 
 // KnownConditions filtra pelo CATÁLOGO, que é onde as condições são autoradas.
@@ -191,15 +191,15 @@ func overriddenOr(sobreposto *int64, daFicha int64) *int64 {
 // desvia — uma condição faltando dá 400 na hora de aplicá-la. Id desconhecido é
 // descartado em silêncio de propósito: a alternativa seria derrubar a aplicação
 // inteira no meio do combate por causa de um item.
-func KnownConditions(pedidas []string) []string {
-	fora := []string{}
-	visto := map[string]bool{}
-	for _, id := range pedidas {
-		if id == "" || visto[id] || !catalog.IsCondition(id) {
+func KnownConditions(requested []string) []string {
+	outside := []string{}
+	seen := map[string]bool{}
+	for _, id := range requested {
+		if id == "" || seen[id] || !catalog.IsCondition(id) {
 			continue
 		}
-		visto[id] = true
-		fora = append(fora, id)
+		seen[id] = true
+		outside = append(outside, id)
 	}
-	return fora
+	return outside
 }

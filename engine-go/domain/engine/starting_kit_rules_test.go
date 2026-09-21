@@ -22,13 +22,13 @@ var (
 
 // p140. O kit é um só; o que a classe muda são a arma marcial, a brunea e o escudo.
 func TestTheStartingKitFollowsTheProficiencies(t *testing.T) {
-	casos := []struct {
-		nome          string
-		classe        string
-		proficiencias []string
+	cases := []struct {
+		name          string
+		class         string
+		proficiencies []string
 		martial       bool
-		armaduras     []string
-		escudo        string
+		armors        []string
+		shield        string
 	}{
 		{
 			"guerreiro leva tudo o que o kit condiciona",
@@ -73,17 +73,17 @@ func TestTheStartingKitFollowsTheProficiencies(t *testing.T) {
 			"",
 		},
 	}
-	for _, caso := range casos {
-		t.Run(caso.nome, func(t *testing.T) {
-			kit := StartingKitFor(caso.classe, caso.proficiencias)
-			if kit.MartialWeapon != caso.martial {
-				t.Errorf("arma marcial: %v, esperado %v", kit.MartialWeapon, caso.martial)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			kit := StartingKitFor(tc.class, tc.proficiencies)
+			if kit.MartialWeapon != tc.martial {
+				t.Errorf("arma marcial: %v, esperado %v", kit.MartialWeapon, tc.martial)
 			}
-			if !reflect.DeepEqual(kit.Armors, caso.armaduras) {
-				t.Errorf("armaduras: %v, esperado %v", kit.Armors, caso.armaduras)
+			if !reflect.DeepEqual(kit.Armors, tc.armors) {
+				t.Errorf("armaduras: %v, esperado %v", kit.Armors, tc.armors)
 			}
-			if kit.Shield != caso.escudo {
-				t.Errorf("escudo: %q, esperado %q", kit.Shield, caso.escudo)
+			if kit.Shield != tc.shield {
+				t.Errorf("escudo: %q, esperado %q", kit.Shield, tc.shield)
 			}
 			if !reflect.DeepEqual(kit.BaseItems, []string{"mochila", "saco-de-dormir", "traje-viajante"}) {
 				t.Errorf("itens de base: %v", kit.BaseItems)
@@ -112,31 +112,31 @@ func TestTheBruneaIsAChoiceAndNotASwap(t *testing.T) {
 // por ID, e um ID que não casa não estoura — ele concede NADA, em silêncio, e o
 // herói nasce sem mochila sem ninguém ver.
 func TestEveryStartingKitItemExistsInTheCatalog(t *testing.T) {
-	bruto, ok := catalog.Resource("items")
+	raw, ok := catalog.Resource("items")
 	if !ok {
 		t.Fatal("catálogo de itens ausente")
 	}
-	var itens []struct {
+	var items []struct {
 		ID string `json:"id"`
 	}
-	if err := json.Unmarshal(bruto, &itens); err != nil {
+	if err := json.Unmarshal(raw, &items); err != nil {
 		t.Fatalf("itens: %v", err)
 	}
-	noCatalogo := make(map[string]bool, len(itens))
-	for _, item := range itens {
-		noCatalogo[item.ID] = true
+	inCatalog := make(map[string]bool, len(items))
+	for _, item := range items {
+		inCatalog[item.ID] = true
 	}
 
 	// O denominador: uma lista de ausentes vazia e um catálogo que não carregou
 	// se parecem no terminal.
-	concedidos := append([]string{}, startingKitBaseItems...)
-	concedidos = append(concedidos, startingLightArmors...)
-	concedidos = append(concedidos, startingHeavyArmor, startingShield)
-	if len(concedidos) != 8 {
-		t.Fatalf("%d itens conferidos, esperado 8", len(concedidos))
+	granted := append([]string{}, startingKitBaseItems...)
+	granted = append(granted, startingLightArmors...)
+	granted = append(granted, startingHeavyArmor, startingShield)
+	if len(granted) != 8 {
+		t.Fatalf("%d itens conferidos, esperado 8", len(granted))
 	}
-	for _, id := range concedidos {
-		if !noCatalogo[id] {
+	for _, id := range granted {
+		if !inCatalog[id] {
 			t.Errorf("o kit concede %q, que não existe em items.json", id)
 		}
 	}

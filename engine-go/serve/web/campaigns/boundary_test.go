@@ -67,26 +67,26 @@ var permitidos = map[string]bool{
 // isso não é um import — é uma decisão que só a leitura do corpo mostra.
 
 func TestTheCampaignsSceneDoesNotImportItsHost(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
-			if !strings.HasPrefix(caminho, "t20engine/") || permitidos[caminho] {
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
+			if !strings.HasPrefix(path, "t20engine/") || permitidos[path] {
 				continue
 			}
 			t.Errorf("%s importa %q.\n"+
@@ -96,14 +96,14 @@ func TestTheCampaignsSceneDoesNotImportItsHost(t *testing.T) {
 				"Se a vontade for o banco cru para uma coluna nova, a resposta é outra: a\n"+
 				"porta cresce com a PERGUNTA, e encolhe quando a pergunta vira CASO DE\n"+
 				"USO (ver o `campaign.Lifecycle`). Ela nunca cresce com a tabela.",
-				nome, caminho, caminho)
+				name, path, path)
 		}
 	}
 
 	// O DENOMINADOR: um diretório não lido e uma lista de reprovados vazia se
 	// parecem no terminal. Esta cena tem oito arquivos `.go` de produção.
-	if visitados < 6 {
+	if visited < 6 {
 		t.Fatalf("o guarda visitou só %d arquivos `.go` — ele está medindo o "+
-			"diretório errado", visitados)
+			"diretório errado", visited)
 	}
 }

@@ -72,7 +72,7 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 	// 1.4.11 para LIMITE de componente é 3:1. Sem ela não se vê onde o botão
 	// começa — e o guarda de contraste não acusa, porque ele mede a tinta do
 	// TEXTO, que continua legível.
-	porVariante := map[Variant]string{
+	byVariant := map[Variant]string{
 		VariantPrimary:     "bg-primary text-primary-foreground hover:bg-primary/90",
 		VariantSecondary:   "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
 		VariantDestructive: "bg-destructive text-white hover:bg-destructive/90",
@@ -83,7 +83,7 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 		// de uma linha de lista densa, e 4px encostam na linha de baixo.
 		VariantLink: "text-foreground underline-offset-2 hover:underline",
 	}
-	porTamanho := map[Size]string{
+	bySize := map[Size]string{
 		SizeDefault:   "h-9 gap-2 px-4 py-2 text-sm",
 		SizeLarge:     "h-10 gap-2 rounded-sm px-6 text-sm",
 		SizeSmall:     "h-8 gap-1.5 rounded-sm px-3 text-sm",
@@ -93,7 +93,7 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 		SizeIconTiny:  "size-6 text-xs",
 		SizeInline:    "",
 	}
-	return Join(base, porVariante[v], porTamanho[t], extra)
+	return Join(base, byVariant[v], bySize[t], extra)
 }
 
 // Button é o botão da casa. Os atributos chegam como mapa e são espalhados, e é
@@ -172,25 +172,25 @@ func Button(v Variant, t Size, extra string, attrs templ.Attributes) templ.Compo
 // O `Nome` é o `id` E o `name`, porque é ele que liga o `<label for>` ao
 // controle; um rótulo sem controle é o defeito que essa amarração previne.
 type Field struct {
-	Nome  string
+	Name  string
 	Label string
-	Tipo  string
-	// Valor volta preenchido quando o servidor rejeita, para o jogador não
+	Kind  string
+	// Value volta preenchido quando o servidor rejeita, para o jogador não
 	// redigitar o que estava certo. Campo de SENHA nunca volta: o navegador não
 	// deve receber de volta o que ele mandou, e redigitar é o comportamento
 	// esperado depois de uma recusa.
-	Valor        string
+	Value        string
 	Autocomplete string
-	Dica         string
-	// Erros vem do `FieldErrorMap` do servidor: a porta não tem validação
+	Hint         string
+	// Errors vem do `FieldErrorMap` do servidor: a porta não tem validação
 	// própria.
-	Erros []string
+	Errors []string
 	// Viram validação NATIVA do navegador, que não substitui o servidor: ele
 	// continua sendo a autoridade. O que se ganha é a mensagem localizada e
 	// acessível de graça, antes da ida à rede.
-	Obrigatorio   bool
-	TamanhoMinimo int
-	TamanhoMaximo int
+	Obrigatorio bool
+	MinSize     int
+	MaxSize     int
 }
 
 func TextField(c Field) templ.Component {
@@ -219,7 +219,7 @@ func TextField(c Field) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 133, Col: 21}
 		}
@@ -245,7 +245,7 @@ func TextField(c Field) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 137, Col: 14}
 		}
@@ -258,7 +258,7 @@ func TextField(c Field) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 138, Col: 16}
 		}
@@ -271,7 +271,7 @@ func TextField(c Field) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(InputType(c.Tipo))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(InputType(c.Kind))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 139, Col: 27}
 		}
@@ -284,7 +284,7 @@ func TextField(c Field) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Valor)
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Value)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 140, Col: 18}
 		}
@@ -321,15 +321,15 @@ func TextField(c Field) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if c.TamanhoMinimo > 0 {
+		if c.MinSize > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " minlength=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMinimo))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.MinSize))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 148, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 148, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -340,15 +340,15 @@ func TextField(c Field) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if c.TamanhoMaximo > 0 {
+		if c.MaxSize > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, " maxlength=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMaximo))
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.MaxSize))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 151, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 151, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -359,13 +359,13 @@ func TextField(c Field) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if len(c.Erros) > 0 {
+		if len(c.Errors) > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " aria-invalid=\"true\" aria-describedby=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name + "-erro")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 155, Col: 39}
 			}
@@ -382,13 +382,13 @@ func TextField(c Field) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if len(c.Erros) == 0 && c.Dica != "" {
+		if len(c.Errors) == 0 && c.Hint != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<p class=\"text-xs text-muted-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var15 string
-			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.Dica)
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.Hint)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 160, Col: 52}
 			}
@@ -401,13 +401,13 @@ func TextField(c Field) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if len(c.Erros) > 0 {
+		if len(c.Errors) > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<div id=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name + "-erro")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 163, Col: 29}
 			}
@@ -419,7 +419,7 @@ func TextField(c Field) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, e := range c.Erros {
+			for _, e := range c.Errors {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<p class=\"text-sm text-destructive-ink\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -510,7 +510,7 @@ func PanelFrame(extra string) templ.Component {
 
 // SceneTitle é o título cinematográfico do Grimório: Cinzel em caixa alta,
 // entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
-func SceneTitle(titulo, kicker string) templ.Component {
+func SceneTitle(title, kicker string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -536,9 +536,9 @@ func SceneTitle(titulo, kicker string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 185, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 185, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -584,10 +584,10 @@ func SceneTitle(titulo, kicker string) templ.Component {
 // `maxlength` não sobrevive a um POST feito na mão.
 //
 // A altura NÃO é fixa: com `field-sizing-content` a caixa cresce com o texto, e
-// `linhas` é só o piso para quem não suporta a propriedade. Fixar a altura em
+// `rows` é só o piso para quem não suporta a propriedade. Fixar a altura em
 // "3 linhas" custa 13px num telefone deitado, que é a diferença entre o botão
 // de enviar estar na tela e não estar.
-func TextArea(c Field, linhas int) templ.Component {
+func TextArea(c Field, rows int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -613,7 +613,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 210, Col: 21}
 		}
@@ -639,7 +639,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var27 string
-		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
+		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 214, Col: 14}
 		}
@@ -652,7 +652,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var28 string
-		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
+		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 215, Col: 16}
 		}
@@ -665,9 +665,9 @@ func TextArea(c Field, linhas int) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var29 string
-		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(linhas))
+		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(rows))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 216, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 216, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -677,15 +677,15 @@ func TextArea(c Field, linhas int) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if c.TamanhoMaximo > 0 {
+		if c.MaxSize > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, " maxlength=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var30 string
-			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMaximo))
+			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.MaxSize))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 218, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 218, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 			if templ_7745c5c3_Err != nil {
@@ -696,13 +696,13 @@ func TextArea(c Field, linhas int) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if len(c.Erros) > 0 {
+		if len(c.Errors) > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, " aria-invalid=\"true\" aria-describedby=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var31 string
-			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
+			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name + "-erro")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 222, Col: 39}
 			}
@@ -720,7 +720,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var32 string
-		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(c.Valor)
+		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(c.Value)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 225, Col: 12}
 		}
@@ -732,13 +732,13 @@ func TextArea(c Field, linhas int) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if len(c.Erros) == 0 && c.Dica != "" {
+		if len(c.Errors) == 0 && c.Hint != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<p class=\"text-xs text-muted-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var33 string
-			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(c.Dica)
+			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(c.Hint)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 227, Col: 52}
 			}
@@ -751,13 +751,13 @@ func TextArea(c Field, linhas int) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if len(c.Erros) > 0 {
+		if len(c.Errors) > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<div id=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var34 string
-			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
+			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Name + "-erro")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 230, Col: 29}
 			}
@@ -769,7 +769,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, e := range c.Erros {
+			for _, e := range c.Errors {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<p class=\"text-sm text-destructive-ink\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -940,9 +940,9 @@ func SectionLabelClasses(tom, extra string) string {
 // passo de forja e ferramenta do mestre. Um passo de cena é o único assunto da
 // tela e o título pode respirar; um cabeçalho de painel disputa espaço com nove
 // outros, e apertar é o que o mantém legível ao lado dos vizinhos.
-func SectionTitleClasses(contexto, tom, extra string) string {
+func SectionTitleClasses(context, tom, extra string) string {
 	entreletra := "tracking-[0.16em]"
-	if contexto == "painel" {
+	if context == "painel" {
 		entreletra = "tracking-wide"
 	}
 	if tom == "" {
@@ -1056,7 +1056,7 @@ func SectionLabelTone(tom string) string {
 // Existir como COMPONENTE é o ponto: enquanto cada cena escrever `overflow-y-auto`
 // à mão, cobrir isto é ENUMERAÇÃO — uma entrada por tela, para sempre, e a que
 // alguém esquecer nasce sem alcance. Passando por aqui, volta a ser amostragem.
-func ScrollBox(rotulo string, extra string) templ.Component {
+func ScrollBox(label string, extra string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1087,9 +1087,9 @@ func ScrollBox(rotulo string, extra string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var45 string
-		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
+		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 376, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 376, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 		if templ_7745c5c3_Err != nil {
@@ -1277,7 +1277,7 @@ const RestoreRailFocus = `sessionStorage.getItem('rail_focus') && ` +
 // existe num sistema é um atalho quebrado no outro.
 //
 // A caixa pode NÃO EXISTIR — a porta não a desenha, porque ela é estado de
-// cliente e a porta não pode ter nenhum (ver `SemEstadoDeCliente`). Por isso o
+// cliente e a porta não pode ter nenhum (ver `NoClientState`). Por isso o
 // atalho começa procurando o elemento em vez de supor: sem ele, o ⌃K na tela de
 // entrar estouraria num `null` e ainda teria roubado a tecla do navegador.
 //
@@ -1356,7 +1356,7 @@ const WalkTheSearch = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preven
 //
 // E some abaixo de `xl`: a tecla não existe no toque, e anunciar atalho para
 // quem não tem teclado é ruído.
-func Key(rotulo string) templ.Component {
+func Key(label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1382,9 +1382,9 @@ func Key(rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var53 string
-		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 545, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 545, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1413,7 +1413,7 @@ func Key(rotulo string) templ.Component {
 //
 // O rótulo vem por parâmetro porque as duas cenas filtram coisas diferentes, e
 // "Filtros" sozinho num leitor de tela não diz filtros de quê.
-func FilterDrawer(rotulo string) templ.Component {
+func FilterDrawer(label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1443,9 +1443,9 @@ func FilterDrawer(rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var55 string
-		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 571, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 571, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {

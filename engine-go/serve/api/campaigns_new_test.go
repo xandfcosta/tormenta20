@@ -14,9 +14,9 @@ import (
 // O que se protege é o que uma recusa custa: o texto digitado. O resto da tela
 // é marcação, e marcação se confere olhando.
 
-func postaFolhaNova(t *testing.T, s *Server, userID int64, nome, descricao string) *httptest.ResponseRecorder {
+func postaFolhaNova(t *testing.T, s *Server, userID int64, name, description string) *httptest.ResponseRecorder {
 	t.Helper()
-	form := url.Values{"name": {nome}, "description": {descricao}}
+	form := url.Values{"name": {name}, "description": {description}}
 	u, err := s.queries.GetUserByID(t.Context(), userID)
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
@@ -38,20 +38,20 @@ func postaFolhaNova(t *testing.T, s *Server, userID int64, nome, descricao strin
 // o único que alguém digita por minutos.
 func TestTheRefusalGivesBackWhatWasTyped(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	const texto = "A caravana parte de Valkaria ao amanhecer."
+	owner := seedUser(t, s, "dono@t20.local")
+	const text = "A caravana parte de Valkaria ao amanhecer."
 
-	rec := postaFolhaNova(t, s, dono, "   ", texto)
+	rec := postaFolhaNova(t, s, owner, "   ", text)
 
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Errorf("status = %d, queria 422", rec.Code)
 	}
-	corpo := rec.Body.String()
-	if !strings.Contains(corpo, texto) {
+	body := rec.Body.String()
+	if !strings.Contains(body, text) {
 		t.Error("a descrição sumiu na recusa — o trabalho da pessoa foi embora junto com o erro")
 	}
-	if !strings.Contains(corpo, "O nome é obrigatório") {
-		t.Errorf("a recusa não diz o que houve:\n%s", corpo)
+	if !strings.Contains(body, "O nome é obrigatório") {
+		t.Errorf("a recusa não diz o que houve:\n%s", body)
 	}
 }
 
@@ -60,27 +60,27 @@ func TestTheRefusalGivesBackWhatWasTyped(t *testing.T) {
 // destino reenviaria o formulário e abriria uma segunda campanha igual.
 func TestOpeningACampaignLandsOnItWithACleanHistoryView(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
+	owner := seedUser(t, s, "dono@t20.local")
 
-	rec := postaFolhaNova(t, s, dono, "A Queda de Tauron", "")
+	rec := postaFolhaNova(t, s, owner, "A Queda de Tauron", "")
 
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303 — com 302 recarregar reenviaria o POST", rec.Code)
 	}
 	// A crônica virou cena do servidor na ALE-255, então abrir uma campanha
 	// leva à página DELA e não mais à da SPA.
-	destino := rec.Header().Get("Location")
-	if !strings.HasPrefix(destino, "/campanhas/") {
-		t.Errorf("destino = %q, queria a crônica recém-aberta", destino)
+	destination := rec.Header().Get("Location")
+	if !strings.HasPrefix(destination, "/campanhas/") {
+		t.Errorf("destino = %q, queria a crônica recém-aberta", destination)
 	}
 
 	// E ela existe de verdade, com o nome aparado.
-	lista, err := s.queries.ListCampaignsForUser(t.Context(), dono)
+	list, err := s.queries.ListCampaignsForUser(t.Context(), owner)
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
-	if len(lista) != 1 || lista[0].Name != "A Queda de Tauron" {
-		t.Errorf("campanhas do dono = %+v", lista)
+	if len(list) != 1 || list[0].Name != "A Queda de Tauron" {
+		t.Errorf("campanhas do dono = %+v", list)
 	}
 }
 
@@ -89,9 +89,9 @@ func TestOpeningACampaignLandsOnItWithACleanHistoryView(t *testing.T) {
 // virada teria apagado ao levar o formulário da SPA embora.
 func TestTheFormRefusesADescriptionAboveTheCeiling(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
+	owner := seedUser(t, s, "dono@t20.local")
 
-	rec := postaFolhaNova(t, s, dono, "Nome bom", strings.Repeat("a", campaign.MaxDescriptionLength+1))
+	rec := postaFolhaNova(t, s, owner, "Nome bom", strings.Repeat("a", campaign.MaxDescriptionLength+1))
 
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Errorf("status = %d, queria 422 — o teto de 2000 vivia só na tela da SPA", rec.Code)

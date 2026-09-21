@@ -13,8 +13,8 @@ import (
 // `LIVRO_PDF` não está configurado — por isso `AtPage` devolve string vazia
 // em vez de um link quebrado.
 type BookAddress struct {
-	Base     string
-	Abertura int
+	Base    string
+	Opening int
 }
 
 // AtPage devolve o endereço que abre o livro na página IMPRESSA pedida, com o
@@ -31,13 +31,13 @@ type BookAddress struct {
 // A ABERTURA não entra aqui: quem soma é o leitor, que fala em página impressa
 // com quem lê e em página de arquivo com o pdf.js. Ver
 // `config.Config.BookPageOffset` para a medição do 6.
-func (l BookAddress) AtPage(pagina int, termo string) string {
-	if l.Base == "" || pagina <= 0 {
+func (l BookAddress) AtPage(page int, term string) string {
+	if l.Base == "" || page <= 0 {
 		return ""
 	}
-	endereco := routes.Reader + "?p=" + strconv.Itoa(pagina)
-	if termo != "" {
-		endereco += "&t=" + url.QueryEscape(termo)
+	address := routes.Reader + "?p=" + strconv.Itoa(page)
+	if term != "" {
+		address += "&t=" + url.QueryEscape(term)
 	}
-	return endereco
+	return address
 }

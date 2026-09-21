@@ -43,11 +43,11 @@ func (s Scene) PartyRoutes(r chi.Router) {
 // do jogador, mas aparece na do mestre, e a redação por papel tem de continuar
 // com um dono só.
 func (s Scene) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
-	papel, sessionID, tabuleiroID, ok := s.whoMeasuresTheTable(w, r)
+	role, sessionID, boardID, ok := s.whoMeasuresTheTable(w, r)
 	if !ok {
 		return
 	}
-	if papel != "gm" {
+	if role != "gm" {
 		http.Error(w, "só o mestre marca um grupo", http.StatusForbidden)
 		return
 	}
@@ -56,7 +56,7 @@ func (s Scene) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "os cantos do laço precisam ser dois pares de números", http.StatusBadRequest)
 		return
 	}
-	b := s.deps.Boards().Get(r.Context(), sessionID, tabuleiroID)
+	b := s.deps.Boards().Get(r.Context(), sessionID, boardID)
 	ids := board.TokensInRectangle(b, de, ate)
 	writeSignals(w, r, map[string]any{
 		markedTokensSignal: strings.Join(ids, ","),
@@ -66,15 +66,15 @@ func (s Scene) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 // movePartyTable desloca as peças marcadas pelo delta do arrasto. A LISTA E O
 // DELTA vêm do mesmo CORPO — ver o `partyDragBody`.
 func movePartyTable(st Scene, c commandCtx) (*board.BoardState, error) {
-	corpo, err := partyDrag(c.R)
+	body, err := partyDrag(c.R)
 	if err != nil {
 		return nil, err
 	}
-	if len(corpo.ids) == 0 {
+	if len(body.ids) == 0 {
 		return nil, fmt.Errorf("não há peça marcada para mover")
 	}
 	return st.deps.Boards().MoveGroup(
-		c.R.Context(), c.SessionID, c.TabuleiroID, corpo.ids, corpo.Delta.X, corpo.Delta.Y)
+		c.R.Context(), c.SessionID, c.BoardID, body.ids, body.Delta.X, body.Delta.Y)
 }
 
 // partyDragBody é o arrasto do grupo: o DELTA e a lista, num corpo só.
@@ -87,27 +87,27 @@ func movePartyTable(st Scene, c commandCtx) (*board.BoardState, error) {
 // O `payload` do `@post` SUBSTITUI os sinais, então `marked_tokens` está
 // listado ao lado do delta na expressão que posta — a mesma forma do colar.
 type partyDragBody struct {
-	Delta    struct{ X, Y int } `json:"delta"`
-	Marcadas string             `json:"marked_tokens"`
+	Delta  struct{ X, Y int } `json:"delta"`
+	Marked string             `json:"marked_tokens"`
 
 	ids []string
 }
 
 // partyDrag lê o corpo do arrasto e reparte a lista de marcadas.
 func partyDrag(r *http.Request) (partyDragBody, error) {
-	var corpo partyDragBody
-	if err := datastar.ReadSignals(r, &corpo); err != nil {
-		return corpo, fmt.Errorf("as peças marcadas não vieram: %w", err)
+	var body partyDragBody
+	if err := datastar.ReadSignals(r, &body); err != nil {
+		return body, fmt.Errorf("as peças marcadas não vieram: %w", err)
 	}
-	for _, id := range strings.Split(corpo.Marcadas, ",") {
+	for _, id := range strings.Split(body.Marked, ",") {
 		if id != "" {
-			corpo.ids = append(corpo.ids, id)
+			body.ids = append(body.ids, id)
 		}
 	}
-	if len(corpo.ids) > markedMax {
-		return corpo, fmt.Errorf("o grupo tem %d peças e a mesa cabe %d", len(corpo.ids), markedMax)
+	if len(body.ids) > markedMax {
+		return body, fmt.Errorf("o grupo tem %d peças e a mesa cabe %d", len(body.ids), markedMax)
 	}
-	return corpo, nil
+	return body, nil
 }
 
 // markedTokensSignal guarda os ids marcados, separados por vírgula.
@@ -124,14 +124,14 @@ const markedMax = 50
 
 // markedTokens lê os ids do sinal.
 func markedTokens(r *http.Request) ([]string, error) {
-	var sinais struct {
-		Marcadas string `json:"marked_tokens"`
+	var signals struct {
+		Marked string `json:"marked_tokens"`
 	}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return nil, fmt.Errorf("as peças marcadas não vieram: %w", err)
 	}
 	var ids []string
-	for _, id := range strings.Split(sinais.Marcadas, ",") {
+	for _, id := range strings.Split(signals.Marked, ",") {
 		if id != "" {
 			ids = append(ids, id)
 		}

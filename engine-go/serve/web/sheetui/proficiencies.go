@@ -36,46 +36,46 @@ const everyoneSourceLabel = "Todas as classes"
 
 // sheetProficiency é uma linha do painel.
 type sheetProficiency struct {
-	Chave  string
-	Rotulo string
-	// Tem é o estado GUARDADO — o que o personagem de fato tem, depois de
+	Key   string
+	Label string
+	// Has é o estado GUARDADO — o que o personagem de fato tem, depois de
 	// qualquer ajuste manual.
-	Tem bool
-	// DeClasse é o que as classes concedem por si. Ela existe separada de `Tem`
+	Has bool
+	// FromClass é o que as classes concedem por si. Ela existe separada de `Tem`
 	// para o jogador distinguir um ajuste deliberado do que veio de fábrica: sem
 	// isso, uma proficiência tirada na mão parece defeito da conta.
-	DeClasse bool
-	// Fontes são as classes que concedem, para a etiqueta explicar de onde vem.
-	Fontes []string
+	FromClass bool
+	// Sources são as classes que concedem, para a etiqueta explicar de onde vem.
+	Sources []string
 }
 
 // proficiencyGroup é um dos dois blocos do painel.
 type proficiencyGroup struct {
-	Titulo string
-	Linhas []sheetProficiency
+	Title string
+	Rows  []sheetProficiency
 }
 
 // proficiencyGroupsOf monta as sete linhas nos dois grupos.
 func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
-	tem := savedProficiencies(dto.Proficiencies)
-	fontes := proficiencySources(dto)
+	found := savedProficiencies(dto.Proficiencies)
+	sources := proficiencySources(dto)
 
-	porGrupo := map[string]*proficiencyGroup{}
-	ordem := []string{book.WeaponGroup, book.ArmorGroup}
-	for _, titulo := range ordem {
-		porGrupo[titulo] = &proficiencyGroup{Titulo: titulo}
+	byGroup := map[string]*proficiencyGroup{}
+	order := []string{book.WeaponGroup, book.ArmorGroup}
+	for _, title := range order {
+		byGroup[title] = &proficiencyGroup{Title: title}
 	}
 	for _, cat := range book.ProficiencyCategories {
-		g := porGrupo[cat.Group]
-		g.Linhas = append(g.Linhas, sheetProficiency{
-			Chave:    cat.Key,
-			Rotulo:   cat.Label,
-			Tem:      tem[cat.Key],
-			DeClasse: len(fontes[cat.Key]) > 0,
-			Fontes:   fontes[cat.Key],
+		g := byGroup[cat.Group]
+		g.Rows = append(g.Rows, sheetProficiency{
+			Key:       cat.Key,
+			Label:     cat.Label,
+			Has:       found[cat.Key],
+			FromClass: len(sources[cat.Key]) > 0,
+			Sources:   sources[cat.Key],
 		})
 	}
-	return []proficiencyGroup{*porGrupo[book.WeaponGroup], *porGrupo[book.ArmorGroup]}
+	return []proficiencyGroup{*byGroup[book.WeaponGroup], *byGroup[book.ArmorGroup]}
 }
 
 // savedProficiencies lê o blob da coluna `proficiencies`.
@@ -105,49 +105,49 @@ func savedProficiencies(blob string) map[string]bool {
 //     explícita para poder ser revista de propósito, e não redescoberta como
 //     defeito.
 func proficiencySources(dto sheet.CharacterDTO) map[string][]string {
-	daClasse := book.ProficienciesByClass()
-	fontes := map[string][]string{everyoneStartsWith: {everyoneSourceLabel}}
+	ofClass := book.ProficienciesByClass()
+	sources := map[string][]string{everyoneStartsWith: {everyoneSourceLabel}}
 	for _, cl := range dto.Classes {
-		concede := daClasse[cl.ClassName]
-		for _, chave := range concede {
-			fontes[chave] = append(fontes[chave], cl.ClassName)
-			if chave == "armaduras-pesadas" {
-				fontes["armaduras-leves"] = append(fontes["armaduras-leves"], cl.ClassName)
+		concede := ofClass[cl.ClassName]
+		for _, key := range concede {
+			sources[key] = append(sources[key], cl.ClassName)
+			if key == "armaduras-pesadas" {
+				sources["armaduras-leves"] = append(sources["armaduras-leves"], cl.ClassName)
 			}
 		}
 	}
-	for chave := range fontes {
-		fontes[chave] = repetirSem(fontes[chave])
+	for key := range sources {
+		sources[key] = repetirSem(sources[key])
 	}
-	return fontes
+	return sources
 }
 
 // repetirSem tira o nome duplicado de quem tem a mesma classe duas vezes —
 // impossível hoje, e a etiqueta "Padrão: Guerreiro, Guerreiro" seria o sintoma.
-func repetirSem(nomes []string) []string {
-	visto := map[string]bool{}
-	unicos := nomes[:0]
-	for _, nome := range nomes {
-		if visto[nome] {
+func repetirSem(names []string) []string {
+	seen := map[string]bool{}
+	unique := names[:0]
+	for _, name := range names {
+		if seen[name] {
 			continue
 		}
-		visto[nome] = true
-		unicos = append(unicos, nome)
+		seen[name] = true
+		unique = append(unique, name)
 	}
-	return unicos
+	return unique
 }
 
 // classDefault é o alvo do "Restaurar padrão de classe": tudo o que as
 // classes concedem, e nada do que foi acrescentado na mão.
 func classDefault(dto sheet.CharacterDTO) []string {
-	fontes := proficiencySources(dto)
-	padrao := make([]string, 0, len(fontes))
+	sources := proficiencySources(dto)
+	standard := make([]string, 0, len(sources))
 	for _, cat := range book.ProficiencyCategories {
-		if len(fontes[cat.Key]) > 0 {
-			padrao = append(padrao, cat.Key)
+		if len(sources[cat.Key]) > 0 {
+			standard = append(standard, cat.Key)
 		}
 	}
-	return padrao
+	return standard
 }
 
 // proficiencySwap devolve o conjunto DEPOIS de ligar ou desligar uma.
@@ -155,20 +155,20 @@ func classDefault(dto sheet.CharacterDTO) []string {
 // A saída sai na ordem do catálogo e não na de chegada: o blob é lido por
 // pessoa numa revisão de banco, e uma ordem estável faz o diff de duas gravações
 // significar alguma coisa.
-func proficiencySwap(dto sheet.CharacterDTO, chave string) ([]string, error) {
-	if !book.IsProficiencyCategory(chave) {
+func proficiencySwap(dto sheet.CharacterDTO, key string) ([]string, error) {
+	if !book.IsProficiencyCategory(key) {
 		return nil, fmt.Errorf("proficiência %q não existe: são %s",
-			chave, strings.Join(book.ProficiencyKeys(), ", "))
+			key, strings.Join(book.ProficiencyKeys(), ", "))
 	}
-	tem := savedProficiencies(dto.Proficiencies)
-	tem[chave] = !tem[chave]
-	depois := make([]string, 0, len(tem))
+	found := savedProficiencies(dto.Proficiencies)
+	found[key] = !found[key]
+	after := make([]string, 0, len(found))
 	for _, cat := range book.ProficiencyCategories {
-		if tem[cat.Key] {
-			depois = append(depois, cat.Key)
+		if found[cat.Key] {
+			after = append(after, cat.Key)
 		}
 	}
-	return depois, nil
+	return after, nil
 }
 
 // A lista que a mensagem de erro cita é a do livro (`book.ProficiencyKeys`), na
@@ -176,8 +176,8 @@ func proficiencySwap(dto sheet.CharacterDTO, chave string) ([]string, error) {
 // trocaria a escala de dificuldade da p142 por uma ordem que não diz nada.
 
 // sourceTag é o `title` da etiqueta "classe": "Padrão: Guerreiro, Nobre".
-func sourceTag(linha sheetProficiency) string {
-	return "Padrão: " + strings.Join(linha.Fontes, ", ")
+func sourceTag(row sheetProficiency) string {
+	return "Padrão: " + strings.Join(row.Sources, ", ")
 }
 
 // swapLabel é o nome acessível do botão de cada linha.
@@ -185,9 +185,9 @@ func sourceTag(linha sheetProficiency) string {
 // O VERBO diz o que o clique FAZ, e não o estado atual: um leitor de tela lê o
 // botão para decidir se aperta, e "Armas marciais" sozinho não diz se apertar
 // dá ou tira.
-func swapLabel(linha sheetProficiency) string {
-	if linha.Tem {
-		return "Remover proficiência: " + linha.Rotulo
+func swapLabel(row sheetProficiency) string {
+	if row.Has {
+		return "Remover proficiência: " + row.Label
 	}
-	return "Adicionar proficiência: " + linha.Rotulo
+	return "Adicionar proficiência: " + row.Label
 }

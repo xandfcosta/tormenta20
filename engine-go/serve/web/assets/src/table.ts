@@ -54,28 +54,28 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
  * contra os 16,7ms de um quadro. O filtro de atributo é o que compra isso: sem
  * ele o observador acordaria em toda mudança de classe da Mesa.
  */
-function wireTheTokenSlide(parado: MediaQueryList): void {
-  new MutationObserver((registros) => {
-    if (parado.matches) return
-    for (const registro of registros) {
-      if (registro.attributeName !== 'style') continue
-      const alvo = registro.target as Element
-      if (!alvo.classList?.contains('board-token')) continue
+function wireTheTokenSlide(still: MediaQueryList): void {
+  new MutationObserver((records) => {
+    if (still.matches) return
+    for (const record of records) {
+      if (record.attributeName !== 'style') continue
+      const subject = record.target as Element
+      if (!subject.classList?.contains('board-token')) continue
       // O FANTASMA do arrasto é uma peça também, e ele nasce e morre a cada
       // gesto: animá-lo seria desenhar um deslize por cima da prévia que o
       // dedo está conduzindo.
-      if (alvo.classList.contains('board-token-ghost')) continue
+      if (subject.classList.contains('board-token-ghost')) continue
 
-      const de = squareFromStyle(registro.oldValue)
-      const para = squareFromStyle(alvo.getAttribute('style'))
-      if (!de || !para) continue
+      const de = squareFromStyle(record.oldValue)
+      const to = squareFromStyle(subject.getAttribute('style'))
+      if (!de || !to) continue
 
       // O lado da casa vem do COMPUTADO e não do atributo: `--quadrado` mora na
       // cena e a peça o herda, então lê-lo do `style` dela devolveria vazio.
-      const quadrado = Number.parseFloat(getComputedStyle(alvo).getPropertyValue('--quadrado'))
-      if (!Number.isFinite(quadrado) || quadrado <= 0) continue
+      const square = Number.parseFloat(getComputedStyle(subject).getPropertyValue('--quadrado'))
+      if (!Number.isFinite(square) || square <= 0) continue
 
-      slideTheToken(alvo, de, para, quadrado)
+      slideTheToken(subject, de, to, square)
     }
   }).observe(document.body, {
     subtree: true,
@@ -118,20 +118,20 @@ function wireTheTokenSlide(parado: MediaQueryList): void {
  * gatilho é a mudança do TEXTO, que é o número de verdade, e o `data-vital` diz
  * apenas QUAL poço é — não repete o valor.
  */
-function wireTheVitalBlink(parado: MediaQueryList): void {
-  new MutationObserver((registros) => {
-    if (parado.matches) return
-    for (const registro of registros) {
-      if (registro.attributeName !== 'aria-valuenow') continue
-      const barra = registro.target as Element
-      const antes = Number(registro.oldValue)
-      const agora = Number(barra.getAttribute('aria-valuenow'))
-      if (!Number.isFinite(antes) || !Number.isFinite(agora) || antes === agora) continue
+function wireTheVitalBlink(stopped: MediaQueryList): void {
+  new MutationObserver((records) => {
+    if (stopped.matches) return
+    for (const record of records) {
+      if (record.attributeName !== 'aria-valuenow') continue
+      const bar = record.target as Element
+      const before = Number(record.oldValue)
+      const now = Number(bar.getAttribute('aria-valuenow'))
+      if (!Number.isFinite(before) || !Number.isFinite(now) || before === now) continue
 
       // A linha é quem tem o nome. Sem ela — uma barra fora de linha nenhuma —
       // não há o que piscar, e piscar a barra seria responder outra pergunta.
-      const linha = barra.closest('li')
-      if (!linha) continue
+      const line = bar.closest('li')
+      if (!line) continue
 
       // ESPERAR O MORPH ASSENTAR, e isto não é cautela: medido, sem o quadro de
       // espera a piscada NUNCA PINTA.
@@ -146,7 +146,7 @@ function wireTheVitalBlink(parado: MediaQueryList): void {
       //
       // O pulso da vez não precisa disto: ele anima a própria linha, e o morph
       // reusa esse nó em vez de trocá-lo.
-      requestAnimationFrame(() => piscarVital(linha, { curou: agora > antes }))
+      requestAnimationFrame(() => piscarVital(line, { curou: now > before }))
     }
   }).observe(document.body, {
     subtree: true,
@@ -157,8 +157,8 @@ function wireTheVitalBlink(parado: MediaQueryList): void {
 }
 
 /** `"39/40"` → 39. Nulo quando a fração não é uma fração. */
-function currentOfTheFraction(texto: string | null): number | null {
-  const m = /^\s*(-?\d+)\s*\//.exec(texto ?? '')
+function currentOfTheFraction(text: string | null): number | null {
+  const m = /^\s*(-?\d+)\s*\//.exec(text ?? '')
   return m ? Number(m[1]) : null
 }
 
@@ -173,23 +173,23 @@ function currentOfTheFraction(texto: string | null): number | null {
  * os passos —, que é o equivalente da linha da fila: a caixa que diz DE QUEM é o
  * número que mudou. Piscar só a fração seria piscar dois dígitos.
  */
-function wireTheSheetBlink(parado: MediaQueryList): void {
-  new MutationObserver((registros) => {
-    if (parado.matches) return
-    for (const registro of registros) {
-      const texto = registro.target
-      const span = texto.parentElement
+function wireTheSheetBlink(still: MediaQueryList): void {
+  new MutationObserver((records) => {
+    if (still.matches) return
+    for (const record of records) {
+      const text = record.target
+      const span = text.parentElement
       if (!span?.hasAttribute('data-vital')) continue
 
-      const antes = currentOfTheFraction(registro.oldValue)
-      const agora = currentOfTheFraction(texto.textContent)
-      if (antes === null || agora === null || antes === agora) continue
+      const before = currentOfTheFraction(record.oldValue)
+      const now = currentOfTheFraction(text.textContent)
+      if (before === null || now === null || before === now) continue
 
-      const fileira = span.parentElement
-      if (!fileira) continue
+      const row = span.parentElement
+      if (!row) continue
       // O mesmo quadro de espera da fila, e pela mesma razão medida: o morph
       // remove o véu se ele for pendurado de dentro do observador.
-      requestAnimationFrame(() => piscarVital(fileira, { curou: agora > antes }))
+      requestAnimationFrame(() => piscarVital(row, { curou: now > before }))
     }
   }).observe(document.body, {
     subtree: true,
@@ -239,14 +239,14 @@ function wireTheSheetBlink(parado: MediaQueryList): void {
  * Escrever a linha com um comentário dizendo "deve funcionar" seria dívida com
  * cara de entrega.
  */
-function wireTheTurnPulse(parado: MediaQueryList): void {
-  new MutationObserver((registros) => {
-    if (parado.matches) return
-    for (const registro of registros) {
-      if (registro.attributeName !== 'aria-current') continue
-      const linha = registro.target as Element
-      if (linha.getAttribute('aria-current') !== 'true') continue
-      pulsarVez(linha)
+function wireTheTurnPulse(still: MediaQueryList): void {
+  new MutationObserver((records) => {
+    if (still.matches) return
+    for (const record of records) {
+      if (record.attributeName !== 'aria-current') continue
+      const row = record.target as Element
+      if (row.getAttribute('aria-current') !== 'true') continue
+      pulsarVez(row)
     }
   }).observe(document.body, {
     subtree: true,
@@ -272,18 +272,18 @@ function wireTheTurnPulse(parado: MediaQueryList): void {
  * segunda condição chega dentro de um `<ul>` que já existe — animar só o
  * contêiner faria a primeira aparecer e as seguintes não.
  */
-function wireTheConditionEmerging(parado: MediaQueryList): void {
-  new MutationObserver((registros) => {
-    if (parado.matches) return
-    for (const registro of registros) {
-      for (const no of registro.addedNodes) {
+function wireTheConditionEmerging(still: MediaQueryList): void {
+  new MutationObserver((records) => {
+    if (still.matches) return
+    for (const record of records) {
+      for (const no of record.addedNodes) {
         if (no.nodeType !== Node.ELEMENT_NODE) continue
-        const elemento = no as Element
+        const element = no as Element
         // O crachá em si, ou a lista inteira chegando de uma vez.
-        const crachas = elemento.matches('[data-condicao]')
-          ? [elemento]
-          : [...elemento.querySelectorAll('[data-condicao]')]
-        for (const cracha of crachas) emerge(cracha)
+        const badges = element.matches('[data-condicao]')
+          ? [element]
+          : [...element.querySelectorAll('[data-condicao]')]
+        for (const badge of badges) emerge(badge)
       }
     }
   }).observe(document.body, { subtree: true, childList: true })

@@ -37,16 +37,16 @@ func usePower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 // Os degraus vêm por sinal porque são o estado de um seletor na tela; o resto do
 // gesto — a decisão, o PM, o registro do pagamento e os condicionais — é do
 // caso de uso, numa transação (ver o `app/character/stance.go`).
-func enterStance(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
+func enterStance(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
-	degraus := 0
-	if sinais.PoderDegraus != nil {
-		degraus = int(*sinais.PoderDegraus)
+	steps := 0
+	if signals.PowerSteps != nil {
+		steps = int(*signals.PowerSteps)
 	}
-	return s.plays.EnterStance(r.Context(), row, dto, chi.URLParam(r, "flag"), degraus)
+	return s.plays.EnterStance(r.Context(), row, dto, chi.URLParam(r, "flag"), steps)
 }
 
 // ── AS ESCOLHAS, e a validação que virou fronteira ───────────────────────────
@@ -76,24 +76,24 @@ func pickOriginBenefit(s Scene, r *http.Request, row sqlcgen.Character, _ Signal
 // Ela é EXCLUSIVA dentro da habilidade: escolher "resistência a fogo" tira
 // "resistência a frio", porque o qareen tem uma resistência e não seis.
 func pickRaceVariant(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	escolhida := chi.URLParam(r, "variante")
+	chosen := chi.URLParam(r, "variante")
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
-		dto.RaceAbilityChoices = variantSwappedCom(*dto, escolhida)
+		dto.RaceAbilityChoices = variantSwappedCom(*dto, chosen)
 	})
 }
 
 // pickClassChoice grava o caminho ou o devoto de uma classe.
 func pickClassChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	escolha, valor := chi.URLParam(r, "escolha"), chi.URLParam(r, "valor")
-	if escolha != "caminho" && escolha != "devoto" {
-		return fmt.Errorf("%q não é uma escolha de classe", escolha)
+	choice, value := chi.URLParam(r, "escolha"), chi.URLParam(r, "valor")
+	if choice != "caminho" && choice != "devoto" {
+		return fmt.Errorf("%q não é uma escolha de classe", choice)
 	}
-	classe, err := url.PathUnescape(chi.URLParam(r, "classe"))
+	class, err := url.PathUnescape(chi.URLParam(r, "classe"))
 	if err != nil {
 		return fmt.Errorf("a classe %q não é um nome", chi.URLParam(r, "classe"))
 	}
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
-		dto.ClassChoices = choiceClassCom(dto.ClassChoices, classe, escolha, valor)
+		dto.ClassChoices = choiceClassCom(dto.ClassChoices, class, choice, value)
 	})
 }
 
@@ -106,9 +106,9 @@ func pickClassChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 // distribuição tem regra PRÓPRIA (distintas, contagem exata, atributo proibido),
 // e quem a conhece é o `RaceAttributeChoiceIsComplete`. Gravar e perguntar
 // depois seria aceitar uma ficha inválida por um instante.
-func pickRaceAttributes(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
-	escolhas := sinais.RacaAtributos
-	blob, err := json.Marshal(map[string]any{"floatingPicks": escolhas})
+func pickRaceAttributes(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	choices := signals.RaceAttributes
+	blob, err := json.Marshal(map[string]any{"floatingPicks": choices})
 	if err != nil {
 		return err
 	}
@@ -118,9 +118,9 @@ func pickRaceAttributes(s Scene, r *http.Request, row sqlcgen.Character, sinais 
 	}
 	dto.RaceAttributeChoices = string(blob)
 	if s.deps.Catalogs() != nil {
-		for _, raca := range dto.Races {
-			if !s.deps.Catalogs().RaceAttributeChoiceIsComplete(raca.Race, dto.RaceAttributeChoices) {
-				return fmt.Errorf("a distribuição não fecha para %s: ela pede atributos distintos", raca.Race)
+		for _, race := range dto.Races {
+			if !s.deps.Catalogs().RaceAttributeChoiceIsComplete(race.Race, dto.RaceAttributeChoices) {
+				return fmt.Errorf("a distribuição não fecha para %s: ela pede atributos distintos", race.Race)
 			}
 		}
 	}
@@ -143,109 +143,109 @@ func pickRaceAscendencia(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 // mais estrita do que "não acrescente além do limite" — uma ficha fora da conta
 // não aceita escrita de escolha nenhuma até ser arrumada.
 func (s Scene) saveTheChoices(
-	r *http.Request, row sqlcgen.Character, muda func(*sheet.CharacterDTO),
+	r *http.Request, row sqlcgen.Character, changes func(*sheet.CharacterDTO),
 ) error {
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
-	antes := dto
-	muda(&dto)
+	before := dto
+	changes(&dto)
 	if err := sheet.WithChoicesValid(dto); err != nil {
 		return err
 	}
-	var escreve character.ChoiceWrite
-	mexeu := false
-	if dto.ClassPowers != antes.ClassPowers {
-		escreve.ClassPowers, mexeu = &dto.ClassPowers, true
+	var writes character.ChoiceWrite
+	moved := false
+	if dto.ClassPowers != before.ClassPowers {
+		writes.ClassPowers, moved = &dto.ClassPowers, true
 	}
-	if dto.OriginChoices != antes.OriginChoices {
-		escreve.OriginChoices, mexeu = &dto.OriginChoices, true
+	if dto.OriginChoices != before.OriginChoices {
+		writes.OriginChoices, moved = &dto.OriginChoices, true
 	}
-	if dto.ClassChoices != antes.ClassChoices {
-		escreve.ClassChoices, mexeu = &dto.ClassChoices, true
+	if dto.ClassChoices != before.ClassChoices {
+		writes.ClassChoices, moved = &dto.ClassChoices, true
 	}
-	if dto.RaceAbilityChoices != antes.RaceAbilityChoices {
-		escreve.RaceAbilityChoices, mexeu = &dto.RaceAbilityChoices, true
+	if dto.RaceAbilityChoices != before.RaceAbilityChoices {
+		writes.RaceAbilityChoices, moved = &dto.RaceAbilityChoices, true
 	}
-	if !mexeu {
+	if !moved {
 		return nil
 	}
-	return s.plays.SaveChoices(r.Context(), row.ID, escreve)
+	return s.plays.SaveChoices(r.Context(), row.ID, writes)
 }
 
 // saveRaceAttributeChoice escreve o blob de `raceAttributeChoices`.
 //
 // Ela é a única escolha que se grava SOZINHA — as outras quatro passam pelo
 // `saveTheChoices`, que confere a ficha inteira antes.
-func (s Scene) saveRaceAttributeChoice(r *http.Request, id int64, valor string) error {
-	return s.plays.SaveChoices(r.Context(), id, character.ChoiceWrite{RaceAttributeChoices: &valor})
+func (s Scene) saveRaceAttributeChoice(r *http.Request, id int64, value string) error {
+	return s.plays.SaveChoices(r.Context(), id, character.ChoiceWrite{RaceAttributeChoices: &value})
 }
 
 // idToggledCom liga ou desliga um id numa lista guardada como blob.
 func idToggledCom(blob, id string) string {
-	atuais := sheet.UnmarshalStrings(blob)
-	depois := []string{}
-	tinha := false
-	for _, atual := range atuais {
-		if atual == id {
-			tinha = true
+	current := sheet.UnmarshalStrings(blob)
+	after := []string{}
+	had := false
+	for _, now := range current {
+		if now == id {
+			had = true
 			continue
 		}
-		depois = append(depois, atual)
+		after = append(after, now)
 	}
-	if !tinha {
-		depois = append(depois, id)
+	if !had {
+		after = append(after, id)
 	}
-	return sheet.MarshalStrings(&depois)
+	return sheet.MarshalStrings(&after)
 }
 
 // variantSwappedCom troca a variante escolhida dentro da MESMA habilidade.
-func variantSwappedCom(dto sheet.CharacterDTO, escolhida string) string {
-	irmas := variantSibling(dto, escolhida)
-	depois := []string{escolhida}
-	for _, atual := range sheet.UnmarshalStrings(dto.RaceAbilityChoices) {
-		if !irmas[atual] {
-			depois = append(depois, atual)
+func variantSwappedCom(dto sheet.CharacterDTO, chosen string) string {
+	siblings := variantSibling(dto, chosen)
+	after := []string{chosen}
+	for _, current := range sheet.UnmarshalStrings(dto.RaceAbilityChoices) {
+		if !siblings[current] {
+			after = append(after, current)
 		}
 	}
-	return sheet.MarshalStrings(&depois)
+	return sheet.MarshalStrings(&after)
 }
 
 // variantSibling são todas as opções da habilidade a que a escolhida
 // pertence — inclusive ela.
-func variantSibling(dto sheet.CharacterDTO, escolhida string) map[string]bool {
-	fora := map[string]bool{}
+func variantSibling(dto sheet.CharacterDTO, chosen string) map[string]bool {
+	outside := map[string]bool{}
 	for _, r := range dto.Races {
-		for _, hab := range raceVariants(dto, r.Race) {
-			daHabilidade := map[string]bool{}
-			achou := false
-			for _, o := range hab.Options {
-				daHabilidade[o.Valor] = true
-				achou = achou || o.Valor == escolhida
+		for _, ability := range raceVariants(dto, r.Race) {
+			fromAbility := map[string]bool{}
+			found := false
+			for _, o := range ability.Options {
+				fromAbility[o.Value] = true
+				found = found || o.Value == chosen
 			}
-			if achou {
-				return daHabilidade
+			if found {
+				return fromAbility
 			}
 		}
 	}
-	return fora
+	return outside
 }
 
 // choiceClassCom escreve caminho ou devoto no blob de escolhas.
-func choiceClassCom(blob, classe, qual, valor string) string {
-	escolhas := map[string]engine.ClassChoiceSelections{}
-	_ = json.Unmarshal([]byte(blob), &escolhas)
-	daClasse := escolhas[classe]
-	if qual == "caminho" {
-		daClasse.Caminho = valor
+func choiceClassCom(blob, class, which, value string) string {
+	choices := map[string]engine.ClassChoiceSelections{}
+	_ = json.Unmarshal([]byte(blob), &choices)
+	ofClass := choices[class]
+	if which == "caminho" {
+		ofClass.Path = value
 	} else {
-		daClasse.Devoto = valor
+		ofClass.Devotee = value
 	}
-	escolhas[classe] = daClasse
-	depois, err := json.Marshal(escolhas)
+	choices[class] = ofClass
+	after, err := json.Marshal(choices)
 	if err != nil {
 		return blob
 	}
-	return string(depois)
+	return string(after)
 }

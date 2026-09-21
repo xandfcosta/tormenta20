@@ -51,7 +51,7 @@ func commandSession(st Scene, c commandCtx) (sqlcgen.Session, error) {
 // nunca acontece — cada botão manda o seu —, e se acontecesse os dois valeriam.
 type statusPatch struct {
 	Status *string `json:"status"`
-	Titulo *string `json:"session_title"`
+	Title  *string `json:"session_title"`
 }
 
 // patchesTheSession é o `PATCH` da sessão: o status, o título, ou os dois.
@@ -60,31 +60,31 @@ func (s Scene) patchesTheSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	quem := s.callerOf(r)
+	who := s.callerOf(r)
 
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
-	var remendo statusPatch
-	if err := datastar.ReadSignals(r, &remendo); err != nil {
+	var patch statusPatch
+	if err := datastar.ReadSignals(r, &patch); err != nil {
 		http.Error(w, fmt.Sprintf("não entendi o remendo enviado: %v", err), http.StatusBadRequest)
 		return
 	}
-	if remendo.Status == nil && remendo.Titulo == nil {
+	if patch.Status == nil && patch.Title == nil {
 		http.Error(w, "o remendo não pede nada: mande `status` ou `session_title`", http.StatusBadRequest)
 		return
 	}
 
-	var estado *live.SessionRuntimeState
-	var recusa error
-	if remendo.Titulo != nil {
+	var state *live.SessionRuntimeState
+	var refusal error
+	if patch.Title != nil {
 		// APARADO aqui e não no caso de uso: espaço em branco é coisa de campo de
 		// texto, e o vazio que sobra é legítimo — a sessão tem NÚMERO, que é a
 		// identidade dela.
-		recusa = s.lifecycle.Rename(r.Context(), quem, campaignID, sessionID, strings.TrimSpace(*remendo.Titulo))
+		refusal = s.lifecycle.Rename(r.Context(), who, campaignID, sessionID, strings.TrimSpace(*patch.Title))
 	}
-	if recusa == nil && remendo.Status != nil {
-		estado, recusa = s.lifecycle.SetStatus(r.Context(), quem, campaignID, sessionID, *remendo.Status)
+	if refusal == nil && patch.Status != nil {
+		state, refusal = s.lifecycle.SetStatus(r.Context(), who, campaignID, sessionID, *patch.Status)
 	}
-	s.answersTheGesture(w, r, quem, campaignID, sessionID, estado, recusa)
+	s.answersTheGesture(w, r, who, campaignID, sessionID, state, refusal)
 }
 
 // restartsTheCombat esvazia a fila e os turnos SEM tirar a partida do ar.
@@ -97,9 +97,9 @@ func (s Scene) restartsTheCombat(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	quem := s.callerOf(r)
-	estado, recusa := s.lifecycle.RestartCombat(r.Context(), quem, campaignID, sessionID)
-	s.answersTheGesture(w, r, quem, campaignID, sessionID, estado, recusa)
+	who := s.callerOf(r)
+	state, refusal := s.lifecycle.RestartCombat(r.Context(), who, campaignID, sessionID)
+	s.answersTheGesture(w, r, who, campaignID, sessionID, state, refusal)
 }
 
 // deletesTheSession apaga a sessão e MANDA O MESTRE PARA A CRÔNICA.
@@ -120,8 +120,8 @@ func (s Scene) deletesTheSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	quem := s.callerOf(r)
-	if err := s.lifecycle.Delete(r.Context(), quem, campaignID, sessionID); err != nil {
+	who := s.callerOf(r)
+	if err := s.lifecycle.Delete(r.Context(), who, campaignID, sessionID); err != nil {
 		http.Error(w, err.Error(), statusOf(err))
 		return
 	}
@@ -136,16 +136,16 @@ func (s Scene) deletesTheSession(w http.ResponseWriter, r *http.Request) {
 // consulta por gesto e, pior, daria duas opiniões sobre quem mestra — que é
 // como uma delas passa a divergir.
 func (s Scene) sceneCommand(
-	agir func(Scene, *http.Request, app.Caller, int64, int64) (*live.SessionRuntimeState, error),
+	act func(Scene, *http.Request, app.Caller, int64, int64) (*live.SessionRuntimeState, error),
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		campaignID, sessionID, ok := tableParams(w, r)
 		if !ok {
 			return
 		}
-		quem := s.callerOf(r)
-		estado, recusa := agir(s, r, quem, campaignID, sessionID)
-		s.answersTheGesture(w, r, quem, campaignID, sessionID, estado, recusa)
+		who := s.callerOf(r)
+		state, refusal := act(s, r, who, campaignID, sessionID)
+		s.answersTheGesture(w, r, who, campaignID, sessionID, state, refusal)
 	}
 }
 
@@ -163,8 +163,8 @@ func (s Scene) callerOf(r *http.Request) app.Caller {
 // responde: a cena redesenhada, com a recusa escrita no rodapé do mestre.
 func (s Scene) answersTheGesture(
 	w http.ResponseWriter, r *http.Request,
-	quem app.Caller, campaignID, sessionID int64,
-	estado *live.SessionRuntimeState, recusa error,
+	who app.Caller, campaignID, sessionID int64,
+	state *live.SessionRuntimeState, refusal error,
 ) {
 	// SÓ quem não alcança a sessão leva status: NÃO ENCONTRADO e NÃO É SEU
 	// significam que não há rodapé do outro lado para ler frase nenhuma.
@@ -174,14 +174,14 @@ func (s Scene) answersTheGesture(
 	// recusar por `http.Error` é um beco onde a explicação morre e o mestre fica
 	// clicando numa tela que não muda. Se ele está olhando a cena, a recusa tem
 	// de chegar NA cena.
-	if recusa != nil && (errors.Is(recusa, app.ErrNotFound) || errors.Is(recusa, app.ErrForbidden)) {
-		http.Error(w, recusa.Error(), statusOf(recusa))
+	if refusal != nil && (errors.Is(refusal, app.ErrNotFound) || errors.Is(refusal, app.ErrForbidden)) {
+		http.Error(w, refusal.Error(), statusOf(refusal))
 		return
 	}
-	if estado != nil {
-		s.deps.PublishSessionState(sessionID, estado)
+	if state != nil {
+		s.deps.PublishSessionState(sessionID, state)
 	}
-	s.respondGm(w, r, quem.ID, campaignID, sessionID, recusa, map[string]any{})
+	s.respondGm(w, r, who.ID, campaignID, sessionID, refusal, map[string]any{})
 }
 
 // statusOf traduz a recusa TIPADA do caso de uso no número que o navegador

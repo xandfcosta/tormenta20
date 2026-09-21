@@ -68,12 +68,12 @@ func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 }
 
 func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
-	vistas, err := s.campaignDirectory().Visible(r.Context(), callerOf(currentUser(r)))
+	seen, err := s.campaignDirectory().Visible(r.Context(), callerOf(currentUser(r)))
 	if err != nil {
 		httpio.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
 		return
 	}
-	httpio.WriteJSON(w, http.StatusOK, campaignListJSON(vistas))
+	httpio.WriteJSON(w, http.StatusOK, campaignListJSON(seen))
 }
 
 // campaignListJSON veste o resultado do caso de uso na forma do FIO.
@@ -82,10 +82,10 @@ func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 // protocolo: o `Seen` que o `app/campaign` devolve não tem tag nenhuma, e é isso
 // que deixa a cena em templ ler a MESMA regra sem depender do formato de um
 // endpoint que ela não serve.
-func campaignListJSON(vistas []campaign.Seen) []campaignListDTO {
-	fora := make([]campaignListDTO, 0, len(vistas))
-	for _, v := range vistas {
-		linha := campaignListDTO{
+func campaignListJSON(seen []campaign.Seen) []campaignListDTO {
+	outside := make([]campaignListDTO, 0, len(seen))
+	for _, v := range seen {
+		row := campaignListDTO{
 			CampaignDTO: CampaignDTO{
 				ID: v.ID, OwnerID: v.OwnerID, Name: v.Name, Description: v.Description,
 				CreatedAt: v.CreatedAt, UpdatedAt: v.UpdatedAt,
@@ -93,18 +93,18 @@ func campaignListJSON(vistas []campaign.Seen) []campaignListDTO {
 			Role: v.Role,
 		}
 		if v.OwnerName != "" {
-			nome := v.OwnerName
-			linha.OwnerName = &nome
+			name := v.OwnerName
+			row.OwnerName = &name
 		}
 		if v.Character != nil {
-			linha.Character = &campaignCharacterDTO{
+			row.Character = &campaignCharacterDTO{
 				ID: v.Character.ID, Name: v.Character.Name,
 				Level: v.Character.Level, Classes: v.Character.Classes,
 			}
 		}
-		fora = append(fora, linha)
+		outside = append(outside, row)
 	}
-	return fora
+	return outside
 }
 
 // A LISTA DE CAMPANHAS mora no `app/campaign` (`Directory.Visible`), inteira.
@@ -125,12 +125,12 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	// As DUAS recusas de uma vez, e em pt-BR: a mesma regra respondendo duas
 	// frases diferentes conforme o transporte é o que faz uma delas envelhecer.
-	name, descricaoTexto, erros := rules.ValidateText(body.Name, body.Description)
-	if len(erros) > 0 {
-		httpio.WriteValidationError(w, erros)
+	name, descriptionText, errs := rules.ValidateText(body.Name, body.Description)
+	if len(errs) > 0 {
+		httpio.WriteValidationError(w, errs)
 		return
 	}
-	id, err := s.campaignLifecycle().Open(r.Context(), currentUser(r).ID, name, descricaoTexto)
+	id, err := s.campaignLifecycle().Open(r.Context(), currentUser(r).ID, name, descriptionText)
 	if err != nil {
 		httpio.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
 		return

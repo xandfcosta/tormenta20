@@ -36,15 +36,15 @@ func walkTheRouter(t *testing.T, s *Server) map[string][]string {
 	if !ok {
 		t.Fatalf("o roteador deixou de ser um *chi.Mux (%T) — sem ele não há a quem perguntar", s.WebRouter())
 	}
-	porRota := map[string][]string{}
-	err := chi.Walk(mux, func(metodo, rota string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
-		porRota[metodo+" "+rota] = nil
+	byRoute := map[string][]string{}
+	err := chi.Walk(mux, func(method, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
+		byRoute[method+" "+route] = nil
 		return nil
 	})
 	if err != nil {
 		t.Fatalf("percorrer o roteador: %v", err)
 	}
-	return porRota
+	return byRoute
 }
 
 // NENHUMA ROTA CARREGA COORDENADA NO CAMINHO.
@@ -66,99 +66,99 @@ func walkTheRouter(t *testing.T, s *Server) map[string][]string {
 // coordenada passaram verdes por ela, incluindo as que o cliente usa hoje.
 // Escrever a linha é o ato de declarar que aquele parâmetro não vem do ponteiro.
 func TestNoRouteCarriesACoordinateInThePath(t *testing.T) {
-	bruto, err := os.ReadFile(routeParamsFile)
+	raw, err := os.ReadFile(routeParamsFile)
 	if err != nil {
 		t.Fatalf("ler %s: %v", routeParamsFile, err)
 	}
-	permitidos := map[string]bool{}
-	for _, linha := range strings.Split(string(bruto), "\n") {
-		if linha = strings.TrimSpace(linha); linha != "" && !strings.HasPrefix(linha, "#") {
-			permitidos[linha] = true
+	allowed := map[string]bool{}
+	for _, row := range strings.Split(string(raw), "\n") {
+		if row = strings.TrimSpace(row); row != "" && !strings.HasPrefix(row, "#") {
+			allowed[row] = true
 		}
 	}
 
-	rotas := walkTheRouter(t, newTestServer(t))
-	vistos := map[string]bool{}
-	desconhecidos := map[string]string{}
-	for rota := range rotas {
-		for _, m := range routeParam.FindAllStringSubmatch(rota, -1) {
-			nome := m[1]
+	routes := walkTheRouter(t, newTestServer(t))
+	seen := map[string]bool{}
+	unknown := map[string]string{}
+	for route := range routes {
+		for _, m := range routeParam.FindAllStringSubmatch(route, -1) {
+			name := m[1]
 			// O `{*}` e o `{param:regex}` do chi não são nome de parâmetro.
-			if nome == "*" {
+			if name == "*" {
 				continue
 			}
-			if corte := strings.IndexByte(nome, ':'); corte >= 0 {
-				nome = nome[:corte]
+			if cut := strings.IndexByte(name, ':'); cut >= 0 {
+				name = name[:cut]
 			}
-			vistos[nome] = true
-			if !permitidos[nome] {
-				desconhecidos[nome] = rota
+			seen[name] = true
+			if !allowed[name] {
+				unknown[name] = route
 			}
 		}
 	}
 
 	// O DENOMINADOR, e ele é EXATO porque vem do roteador. O piso denuncia um
 	// roteador que deixou de montar — que é como este guarda ficaria inerte.
-	if len(rotas) < 150 || len(vistos) < 30 {
+	if len(routes) < 150 || len(seen) < 30 {
 		t.Fatalf("a varredura achou %d rotas e %d parâmetros — o roteador é o primeiro suspeito",
-			len(rotas), len(vistos))
+			len(routes), len(seen))
 	}
 
-	var lista []string
-	for nome, rota := range desconhecidos {
-		lista = append(lista, nome+" — em "+rota)
+	var list []string
+	for name, route := range unknown {
+		list = append(list, name+" — em "+route)
 	}
-	sort.Strings(lista)
-	if len(lista) > 0 {
+	sort.Strings(list)
+	if len(list) > 0 {
 		t.Errorf("parâmetro de caminho que o PERMITIDOS não conhece — %d de %d, em %d rotas:\n  %s\n"+
 			"A coordenada de um gesto viaja no CORPO, pelo `payload` do `@post` (ver "+
 			"`engine-go/CLAUDE.md`). Se este parâmetro NÃO vem do ponteiro, escreva a linha em "+
 			routeParamsFile+" — o guarda falha no que não conhece de propósito, porque a lista de "+
 			"PROIBIDOS que ele substituiu deixou nove grafias de coordenada passarem verdes.",
-			len(lista), len(vistos), len(rotas), strings.Join(lista, "\n  "))
+			len(list), len(seen), len(routes), strings.Join(list, "\n  "))
 		return
 	}
-	t.Logf("rotas: %d, parâmetros: %d, nenhum desconhecido", len(rotas), len(vistos))
+	t.Logf("rotas: %d, parâmetros: %d, nenhum desconhecido", len(routes), len(seen))
 }
 
 // A lista SÓ PODE ENCOLHER sozinha.
 //
 // Uma entrada que deixou de existir no roteador é uma permissão pendurada, e
 // pendurada é exatamente onde ela não incomoda ninguém: no dia em que alguém
-// registrar `/tabuleiro/{linha}/{col}` achando que `linha` é a da lista de
+// registrar `/tabuleiro/{linha}/{col}` achando que `row` é a da lista de
 // tarefas, a lista velha o aprova em silêncio. É a mesma regra da linha de base
 // de idioma: arquivo de permissões que não encolhe vira mentira sozinho.
 func TestNoAllowedRouteParamIsStale(t *testing.T) {
-	bruto, err := os.ReadFile(routeParamsFile)
+	raw, err := os.ReadFile(routeParamsFile)
 	if err != nil {
 		t.Fatalf("ler %s: %v", routeParamsFile, err)
 	}
-	rotas := walkTheRouter(t, newTestServer(t))
-	vivos := map[string]bool{}
-	for rota := range rotas {
-		for _, m := range routeParam.FindAllStringSubmatch(rota, -1) {
-			nome := m[1]
-			if corte := strings.IndexByte(nome, ':'); corte >= 0 {
-				nome = nome[:corte]
+	routes := walkTheRouter(t, newTestServer(t))
+	alive := map[string]bool{}
+	for route := range routes {
+		for _, m := range routeParam.FindAllStringSubmatch(route, -1) {
+			name := m[1]
+			if cut := strings.IndexByte(name, ':'); cut >= 0 {
+				name = name[:cut]
 			}
-			vivos[nome] = true
+			alive[name] = true
 		}
 	}
 
-	var pendurados []string
-	for _, linha := range strings.Split(string(bruto), "\n") {
-		linha = strings.TrimSpace(linha)
-		if linha == "" || strings.HasPrefix(linha, "#") {
+	var dangling []string
+	for _, row := range strings.Split(string(raw), "\n") {
+		row = strings.TrimSpace(row)
+		if row == "" || strings.HasPrefix(row, "#") {
 			continue
 		}
-		if !vivos[linha] {
-			pendurados = append(pendurados, linha)
+		if !alive[row] {
+			dangling = append(dangling, row)
 		}
 	}
-	sort.Strings(pendurados)
-	if len(pendurados) > 0 {
+	sort.Strings(dangling)
+	if len(dangling) > 0 {
 		t.Errorf("parâmetro permitido que NENHUMA rota usa — %d:\n  %s\n"+
 			"Tire a linha. Uma permissão pendurada aprova em silêncio o dia em que alguém "+
-			"reusar aquele nome para outra coisa.", len(pendurados), strings.Join(pendurados, "\n  "))
+			"reusar aquele nome para outra coisa.", len(dangling), strings.Join(dangling, "\n  "))
 	}
 }

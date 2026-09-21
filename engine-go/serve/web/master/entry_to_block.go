@@ -21,20 +21,20 @@ import (
 func CopyOfEntry(v book.Entry) creature.Block {
 	return creature.Block{
 		ND:         v.ND,
-		Tipo:       v.Tipo,
+		Kind:       v.Kind,
 		Size:       v.Size,
-		Iniciativa: v.Iniciativa,
-		Percepcao:  v.Percepcao,
+		Initiative: v.Initiative,
+		Perception: v.Perception,
 		// O PM ATRAVESSA COMO PONTEIRO, e não desreferenciado: a maioria das
 		// criaturas não tem a linha, e um zero diria "tem mana e está sem" —
 		// que é outro estado. Os dois lados guardam a ausência de propósito.
-		PM:           v.PM,
-		Defesa:       v.Defesa,
-		Fortitude:    v.Fortitude,
-		Reflexos:     v.Reflexos,
-		Vontade:      v.Vontade,
-		HP:           v.HP,
-		Deslocamento: v.Deslocamento,
+		PM:        v.PM,
+		Defense:   v.Defense,
+		Fortitude: v.Fortitude,
+		Reflex:    v.Reflex,
+		Will:      v.Will,
+		HP:        v.HP,
+		Speed:     v.Speed,
 		// ATRIBUTO AUSENTE VIRA ZERO, e esta é uma PERDA CONHECIDA. O livro
 		// escreve TRAVESSÃO onde a criatura não tem o atributo — o Zumbi não tem
 		// Inteligência (p297) —, e no bloco do mestre isso vira 0, que "+0"
@@ -44,16 +44,16 @@ func CopyOfEntry(v book.Entry) creature.Block {
 		// tem", e ensiná-lo exigiria mexer no struct, no formulário e na
 		// validação. A partir da cópia o bloco é DELE e ele edita; quem guarda a
 		// ausência de verdade é o CATÁLOGO, que é a fonte.
-		Forca:            orZero(v.Forca),
-		Destreza:         orZero(v.Destreza),
-		Constituicao:     orZero(v.Constituicao),
-		Inteligencia:     orZero(v.Inteligencia),
-		Sabedoria:        orZero(v.Sabedoria),
-		Carisma:          orZero(v.Carisma),
+		Strength:         orZero(v.Strength),
+		Dexterity:        orZero(v.Dexterity),
+		Constitution:     orZero(v.Constitution),
+		Intelligence:     orZero(v.Intelligence),
+		Wisdom:           orZero(v.Wisdom),
+		Charisma:         orZero(v.Charisma),
 		Attacks:          copyAttacks(v.Attacks),
 		Skills:           copyExpertises(v.Skills),
-		Equipment:        v.Equipamento,
-		Treasure:         v.Tesouro,
+		Equipment:        v.Equipment,
+		Treasure:         v.Treasure,
 		SpecialAbilities: copyPhrases(v.SpecialAbilities),
 		SourceMonsterID:  v.ID,
 	}
@@ -71,19 +71,19 @@ func orZero(n *int) int {
 // bloco nasce para ser editado. Sem a cópia, mexer num ataque do NPC mexeria no
 // verbete que o bestiário desenha para a mesa inteira.
 func copyAttacks(de []creature.Attack) []creature.Attack {
-	fora := make([]creature.Attack, len(de))
-	copy(fora, de)
-	return fora
+	outside := make([]creature.Attack, len(de))
+	copy(outside, de)
+	return outside
 }
 
 func copyExpertises(de []creature.Skill) []creature.Skill {
-	fora := make([]creature.Skill, len(de))
-	copy(fora, de)
-	return fora
+	outside := make([]creature.Skill, len(de))
+	copy(outside, de)
+	return outside
 }
 
 func copyPhrases(de []string) []string {
-	fora := make([]string, len(de))
-	copy(fora, de)
-	return fora
+	outside := make([]string, len(de))
+	copy(outside, de)
+	return outside
 }

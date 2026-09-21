@@ -25,24 +25,24 @@ import (
 // pega é o desvio ressuscitar numa só.
 func TestTheOldPilotPrefixIsGone(t *testing.T) {
 	s := newTestServer(t)
-	roteador := s.WebRouter()
+	router := s.WebRouter()
 
-	cenas := []string{
+	scenes := []string{
 		"/", "/campanhas", "/personagens", "/grimorio", "/admin",
 		"/mestre/bestiario", "/entrar", "/criar-conta", "/campanhas/1/sessoes/4",
 	}
-	for _, scene := range cenas {
-		antigo := "/piloto" + scene
+	for _, scene := range scenes {
+		old := "/piloto" + scene
 		rec := httptest.NewRecorder()
-		roteador.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, antigo, nil))
+		router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, old, nil))
 
 		if rec.Code != http.StatusNotFound {
 			t.Errorf("%s respondeu %d, e o corte foi SECO — o prefixo velho não é endereço deste app",
-				antigo, rec.Code)
+				old, rec.Code)
 		}
-		if destino := rec.Header().Get("Location"); destino != "" {
+		if destination := rec.Header().Get("Location"); destination != "" {
 			t.Errorf("%s desviou para %q: a decisão foi 404, e um desvio aqui é a exceção que a ALE-280 tirou do mux",
-				antigo, destino)
+				old, destination)
 		}
 	}
 }
@@ -55,11 +55,11 @@ func TestTheOldPilotPrefixIsGone(t *testing.T) {
 // perfeitamente a "o endereço velho dá 404".
 func TestTheNewAddressesAnswer(t *testing.T) {
 	s := newTestServer(t)
-	roteador := s.WebRouter()
+	router := s.WebRouter()
 
 	for _, scene := range []string{"/", "/entrar", "/criar-conta"} {
 		rec := httptest.NewRecorder()
-		roteador.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, scene, nil))
+		router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, scene, nil))
 
 		// Anônimo: a porta responde 200 e o resto manda para ela com 303. O que
 		// não pode acontecer é 404.
@@ -81,12 +81,12 @@ func TestTheNewAddressesAnswer(t *testing.T) {
 // certa de uma rota que existe e exige sessão, e foi ela que provou o `Mount`
 // do `/api` funcionando com o prefixo removido.
 func TestTheProcessServesEverythingFromOneRouter(t *testing.T) {
-	roteador := newTestServer(t).WebRouter()
+	router := newTestServer(t).WebRouter()
 
-	for _, caso := range []struct {
-		alvo   string
-		quero  int
-		porque string
+	for _, tc := range []struct {
+		target string
+		want   int
+		reason string
 	}{
 		{"/health", http.StatusOK, "a sonda do compose e o `-health` do binário perguntam na RAIZ"},
 		{"/api/health", http.StatusOK, "a mesma saúde sob o prefixo da API"},
@@ -95,16 +95,16 @@ func TestTheProcessServesEverythingFromOneRouter(t *testing.T) {
 		{"/static/app.css", http.StatusOK, "a folha e o bundle do Datastar são anônimos"},
 	} {
 		rec := httptest.NewRecorder()
-		roteador.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, caso.alvo, nil))
-		if rec.Code != caso.quero {
-			t.Errorf("%s respondeu %d, quero %d — %s", caso.alvo, rec.Code, caso.quero, caso.porque)
+		router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tc.target, nil))
+		if rec.Code != tc.want {
+			t.Errorf("%s respondeu %d, quero %d — %s", tc.target, rec.Code, tc.want, tc.reason)
 		}
 	}
 
 	// A API sob `/api`, com o prefixo TIRADO pelo `Mount`: se ele não tirasse, o
 	// handler receberia `/api/campanhas` e devolveria 404 em vez de 401.
 	rec := httptest.NewRecorder()
-	roteador.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/campanhas", nil))
+	router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/campanhas", nil))
 	if rec.Code == http.StatusNotFound {
 		t.Error("/api/campanhas respondeu 404: o `Mount` não está tirando o prefixo, e a API inteira está fora do ar")
 	}

@@ -68,8 +68,8 @@ templ combatPanel(v View) {
 	for _, tile := range v.Combat.MagicTiles {
 		@boxDetail(tile)
 	}
-	for _, arma := range v.Combat.Weapons {
-		@weaponDetail(arma)
+	for _, weapon := range v.Combat.Weapons {
+		@weaponDetail(weapon)
 	}
 }
 
@@ -139,27 +139,27 @@ templ weaponCards(armas []weaponTile) {
 		<p class="self-center text-center text-xs italic text-muted-foreground">Nenhuma arma empunhada.</p>
 	} else {
 		<div class={ "grid gap-2", templ.KV("grid-cols-2", len(armas) > 1) }>
-			for _, arma := range armas {
-				@weaponCard(arma)
+			for _, weapon := range armas {
+				@weaponCard(weapon)
 			}
 		</div>
 	}
 }
 
-templ weaponCard(arma weaponTile) {
+templ weaponCard(weapon weaponTile) {
 	<button
 		type="button"
-		aria-label={ "Detalhamento de " + arma.Name }
+		aria-label={ "Detalhamento de " + weapon.Name }
 		aria-haspopup="dialog"
-		title={ arma.Skill + " " + arma.Attack + " · dano " + arma.Damage + " · crítico " + arma.Crit }
-		data-on:click={ "$detail = '" + arma.Key + "'" }
+		title={ weapon.Skill + " " + weapon.Attack + " · dano " + weapon.Damage + " · crítico " + weapon.Crit }
+		data-on:click={ "$detail = '" + weapon.Key + "'" }
 		class="flex cursor-pointer flex-col items-center rounded-none border-2 border-destructive/50 bg-grimorio-panel p-2 text-center outline-none transition-colors hover:bg-destructive/10"
 	>
-		<span class={ ui.SectionLabelClasses("herda", "max-w-full truncate text-4xs text-penalty-ink") }>{ arma.Name }</span>
+		<span class={ ui.SectionLabelClasses("herda", "max-w-full truncate text-4xs text-penalty-ink") }>{ weapon.Name }</span>
 		<span class="mt-0.5 font-mono text-sm font-bold leading-tight text-foreground">
-			{ arma.Attack + " · " + arma.Damage }
+			{ weapon.Attack + " · " + weapon.Damage }
 		</span>
-		<span class="text-3xs text-muted-foreground">{ arma.Crit }</span>
+		<span class="text-3xs text-muted-foreground">{ weapon.Crit }</span>
 	</button>
 }
 
@@ -197,25 +197,25 @@ templ boxDetail(tile statTile) {
 //
 // Não há caixa de "Total": uma arma não tem um número só — tem o ataque e tem o
 // dano, e um total entre os dois não significaria nada.
-templ weaponDetail(arma weaponTile) {
-	@overlay(arma.Key, arma.Name, "Sword", false) {
+templ weaponDetail(weapon weaponTile) {
+	@overlay(weapon.Key, weapon.Name, "Sword", false) {
 		<div>
 			<p class={ ui.SectionLabelClasses("herda", "text-penalty-ink") }>
-				{ "Ataque (" + arma.Skill + ") " + arma.Attack }
+				{ "Ataque (" + weapon.Skill + ") " + weapon.Attack }
 			</p>
 			<div class="mt-1">
-				@breakdownRows(arma.AttackRows)
+				@breakdownRows(weapon.AttackRows)
 			</div>
 		</div>
 		<div>
 			<p class={ ui.SectionLabelClasses("herda", "text-penalty-ink") }>
-				{ "Dano " + arma.Damage + " · crítico " + arma.Crit }
+				{ "Dano " + weapon.Damage + " · crítico " + weapon.Crit }
 			</p>
 			<div class="mt-1">
-				if len(arma.DamageRows) == 0 {
+				if len(weapon.DamageRows) == 0 {
 					<p class="text-xs text-muted-foreground">Só o dado da arma.</p>
 				} else {
-					@breakdownRows(arma.DamageRows)
+					@breakdownRows(weapon.DamageRows)
 				}
 			</div>
 		</div>
@@ -238,7 +238,7 @@ templ weaponDetail(arma weaponTile) {
 // caixas ATRÁS da sobreposição. Aqui o `data-attr` com BOOLEANO é o certo, ao
 // contrário do que vale para `aria-*`: é a PRESENÇA do atributo que o seletor
 // procura.
-templ overlay(key, titulo, icone string, magic bool) {
+templ overlay(key, title, icon string, magic bool) {
 	// NASCE ESCONDIDO pelo `style` estático, e ele é o conserto inteiro.
 	//
 	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
@@ -262,11 +262,11 @@ templ overlay(key, titulo, icone string, magic bool) {
 		<div
 			role="dialog"
 			aria-modal="true"
-			aria-label={ titulo }
+			aria-label={ title }
 			data-attr:data-expanded={ "$detail === '" + key + "'" }
 			class="relative max-h-[85vh] w-full overflow-y-auto rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-sm"
 		>
-			@ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar " + titulo, "data-on:click": "$detail = ''"}) {
+			@ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar " + title, "data-on:click": "$detail = ''"}) {
 				×
 			}
 			<p
@@ -274,8 +274,8 @@ templ overlay(key, titulo, icone string, magic bool) {
 					templ.KV("text-grimorio-gold", !magic),
 					templ.KV("text-arcane-ink", magic) }
 			>
-				@detailIcon(icone)
-				{ titulo }
+				@detailIcon(icon)
+				{ title }
 			</p>
 			<div class="mt-3 space-y-2 text-sm">
 				{ children... }
@@ -286,8 +286,8 @@ templ overlay(key, titulo, icone string, magic bool) {
 
 // detailIcon existe só para o comentário do ícone não morar na lista de
 // atributos de um elemento, onde o templ não o aceita.
-templ detailIcon(nome string) {
-	@ui.Icon(nome, "size-3.5")
+templ detailIcon(name string) {
+	@ui.Icon(name, "size-3.5")
 }
 
 // breakdownRows é a lista de "de onde veio, e quanto".

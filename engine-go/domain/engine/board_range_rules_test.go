@@ -13,9 +13,9 @@ tela.
 
 // As três faixas, nos números que o livro dá em quadrados (p224).
 func TestRangeBandsAtTheBookLimits(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		squares int
-		quer    RangeBand
+		want    RangeBand
 	}{
 		{0, RangeShort},
 		{6, RangeShort},   // 9m: o limite do curto
@@ -25,9 +25,9 @@ func TestRangeBandsAtTheBookLimits(t *testing.T) {
 		{60, RangeLong}, // 90m: o limite do longo
 		{61, RangeBeyond},
 	}
-	for _, caso := range casos {
-		if got := BandFor(caso.squares); got != caso.quer {
-			t.Errorf("%d quadrados caiu em %q, esperado %q", caso.squares, got, caso.quer)
+	for _, tc := range cases {
+		if got := BandFor(tc.squares); got != tc.want {
+			t.Errorf("%d quadrados caiu em %q, esperado %q", tc.squares, got, tc.want)
 		}
 	}
 }
@@ -50,22 +50,22 @@ func TestTheDiagonalDoublesOnTheRuler(t *testing.T) {
 // Metro é a unidade da conversa na mesa, e a conversão sai do motor para a tela
 // não ter uma segunda (p236: 1 quadrado = 1,5m).
 func TestTheRulerSaysMetresAlongsideSquares(t *testing.T) {
-	reta := Measure(Square{X: 0, Y: 0}, Square{X: 6, Y: 0})
+	line := Measure(Square{X: 0, Y: 0}, Square{X: 6, Y: 0})
 
-	if reta.Squares != 6 || reta.Metres != 9 {
-		t.Errorf("seis quadrados em linha reta deram %d quadrados e %.1fm, esperado 6 e 9,0", reta.Squares, reta.Metres)
+	if line.Squares != 6 || line.Metres != 9 {
+		t.Errorf("seis quadrados em linha reta deram %d quadrados e %.1fm, esperado 6 e 9,0", line.Squares, line.Metres)
 	}
-	if reta.Band != RangeShort {
-		t.Errorf("9m caiu em %q, esperado curto (o limite do curto é 9m)", reta.Band)
+	if line.Band != RangeShort {
+		t.Errorf("9m caiu em %q, esperado curto (o limite do curto é 9m)", line.Band)
 	}
 }
 
 // Medir de A para B é medir de B para A: a régua não tem dono.
 func TestTheRulerHasNoDirection(t *testing.T) {
 	ida := Measure(Square{X: -3, Y: 2}, Square{X: 5, Y: -4})
-	volta := Measure(Square{X: 5, Y: -4}, Square{X: -3, Y: 2})
+	back := Measure(Square{X: 5, Y: -4}, Square{X: -3, Y: 2})
 
-	if ida != volta {
-		t.Errorf("ida %+v e volta %+v discordam", ida, volta)
+	if ida != back {
+		t.Errorf("ida %+v e volta %+v discordam", ida, back)
 	}
 }

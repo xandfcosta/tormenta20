@@ -55,9 +55,9 @@ func (s *Server) Seeder() Seeder {
 // conta de um banco vazio não tem quem a tivesse convidado, e o gerador é o
 // próprio admin dele. Nada do papel chega ao `seed.sql` — ele é derivado do
 // ambiente a cada requisição e não tem coluna.
-func (sd Seeder) CreateAccount(ctx context.Context, email, nome, senha string) error {
+func (sd Seeder) CreateAccount(ctx context.Context, email, name, password string) error {
 	_, err := sd.gate.Register(ctx, account.RegisterBody{
-		Email: email, Password: senha, Name: &nome,
+		Email: email, Password: password, Name: &name,
 	})
 	return err
 }
@@ -71,16 +71,16 @@ func (sd Seeder) CreateAccount(ctx context.Context, email, nome, senha string) e
 // É por isso que o gerador manda 9999 nos quatro vitais: um valor que a cura só
 // pode aparar para baixo. Barra danificada é escrita DEPOIS, pelo `SetHp`.
 func (sd Seeder) CreateCharacter(
-	ctx context.Context, donoID int64, corpo sheet.CreateBody,
+	ctx context.Context, ownerID int64, body sheet.CreateBody,
 ) (int64, error) {
-	var nivelTotal int64
-	classes := make([]string, len(corpo.Classes))
-	for i, c := range corpo.Classes {
-		nivelTotal += c.Level
+	var totalLevel int64
+	classes := make([]string, len(body.Classes))
+	for i, c := range body.Classes {
+		totalLevel += c.Level
 		classes[i] = c.ClassName
 	}
-	id, err := sd.births.Create(ctx, donoID, corpo.Name, corpo, nivelTotal,
-		book.GrantedProficiencies(classes), sheet.ToStringSet(corpo.TrainedExpertises))
+	id, err := sd.births.Create(ctx, ownerID, body.Name, body, totalLevel,
+		book.GrantedProficiencies(classes), sheet.ToStringSet(body.TrainedExpertises))
 	if err != nil {
 		return 0, err
 	}
@@ -90,41 +90,41 @@ func (sd Seeder) CreateCharacter(
 // Character devolve a ficha carregada, para o gerador ler o PV máximo que o
 // motor calculou e os itens que a criação materializou.
 func (sd Seeder) Character(ctx context.Context, id int64) (sheet.CharacterDTO, error) {
-	linha, err := sd.queries.GetCharacter(ctx, id)
+	row, err := sd.queries.GetCharacter(ctx, id)
 	if err != nil {
 		return sheet.CharacterDTO{}, err
 	}
-	return sd.sheet.LoadCharacter(ctx, linha)
+	return sd.sheet.LoadCharacter(ctx, row)
 }
 
 // LearnSpell põe a magia no grimório da ficha, preparada ou não.
-func (sd Seeder) LearnSpell(ctx context.Context, id int64, catalogo string, preparada bool) error {
-	preparadaEm := int64(0)
-	if preparada {
-		preparadaEm = 1
+func (sd Seeder) LearnSpell(ctx context.Context, id int64, catalog string, prepared bool) error {
+	preparedAt := int64(0)
+	if prepared {
+		preparedAt = 1
 	}
 	_, err := sd.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
-		Characterid: id, Catalogspellid: catalogo,
-		Prepared: preparadaEm, Learnedat: dbvalue.NowISO(),
+		Characterid: id, Catalogspellid: catalog,
+		Prepared: preparedAt, Learnedat: dbvalue.NowISO(),
 	})
 	return err
 }
 
 // SetHp deixa a barra danificada, para o elenco de teste ter ficha machucada.
-func (sd Seeder) SetHp(ctx context.Context, id, atual int64) error {
-	linha, err := sd.queries.GetCharacter(ctx, id)
+func (sd Seeder) SetHp(ctx context.Context, id, current int64) error {
+	row, err := sd.queries.GetCharacter(ctx, id)
 	if err != nil {
 		return err
 	}
-	return sd.plays.SetHpTo(ctx, linha, atual)
+	return sd.plays.SetHpTo(ctx, row, current)
 }
 
 // ConsumeItem gasta uma dose, para o elenco ter efeito de cena ligado.
 func (sd Seeder) ConsumeItem(ctx context.Context, id, itemID int64) error {
-	linha, err := sd.queries.GetCharacter(ctx, id)
+	row, err := sd.queries.GetCharacter(ctx, id)
 	if err != nil {
 		return err
 	}
-	_, err = sd.plays.Consume(ctx, linha, itemID, nil, nil)
+	_, err = sd.plays.Consume(ctx, row, itemID, nil, nil)
 	return err
 }

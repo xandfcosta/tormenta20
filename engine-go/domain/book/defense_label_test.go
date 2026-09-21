@@ -16,9 +16,9 @@ import (
 // `DefenseBreakdown` que o teste monta: um erro na conta sairia dos dois lados.
 // Defesa 22, caído: 22−5 = 17 de perto, 22+5 = 27 de longe.
 func TestTheDefenseLabelSplitsWhenTheTargetIsProne(t *testing.T) {
-	caido := engine.DefenseBreakdown{Total: 22, VsMelee: 17, VsRanged: 27}
+	down := engine.DefenseBreakdown{Total: 22, VsMelee: 17, VsRanged: 27}
 
-	if got := DefenseLabel(caido); got != "17 CaC · 27 Dist" {
+	if got := DefenseLabel(down); got != "17 CaC · 27 Dist" {
 		t.Errorf("a Defesa do caído saiu %q", got)
 	}
 }
@@ -26,9 +26,9 @@ func TestTheDefenseLabelSplitsWhenTheTargetIsProne(t *testing.T) {
 // E ela é UM número no caso comum, que é o que impede a mudança de virar ruído
 // nas 90% das fichas em que nada é direcional.
 func TestTheDefenseLabelIsOneNumberWhenNothingIsDirectional(t *testing.T) {
-	inteiro := engine.DefenseBreakdown{Total: 22, VsMelee: 22, VsRanged: 22}
+	whole := engine.DefenseBreakdown{Total: 22, VsMelee: 22, VsRanged: 22}
 
-	if got := DefenseLabel(inteiro); got != "22" {
+	if got := DefenseLabel(whole); got != "22" {
 		t.Errorf("a Defesa sem condição direcional saiu %q, e devia ser o número seco", got)
 	}
 	// O CONTROLE do caso comum: uma implementação que SEMPRE partisse passaria
@@ -40,9 +40,9 @@ func TestTheDefenseLabelIsOneNumberWhenNothingIsDirectional(t *testing.T) {
 // porque a estrutura é geral: o `condDefenseVs` aceita qualquer escopo, e a
 // próxima condição do livro que mexer só num lado entra pelo mesmo caminho.
 func TestTheDefenseLabelSplitsEvenWhenOnlyOneSideMoves(t *testing.T) {
-	sóDePerto := engine.DefenseBreakdown{Total: 20, VsMelee: 15, VsRanged: 20}
+	closeOnly := engine.DefenseBreakdown{Total: 20, VsMelee: 15, VsRanged: 20}
 
-	if got := DefenseLabel(sóDePerto); got != "15 CaC · 20 Dist" {
+	if got := DefenseLabel(closeOnly); got != "15 CaC · 20 Dist" {
 		t.Errorf("a Defesa com um lado mexido saiu %q", got)
 	}
 }

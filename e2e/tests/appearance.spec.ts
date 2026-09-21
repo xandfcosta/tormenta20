@@ -54,39 +54,39 @@ import { expectCinzelAcimaDoPiso } from './support/typography'
 // não "esta tela tem pouco texto".
 const MEASURED_TEXT_FLOOR = 8
 
-for (const [nome, cena] of Object.entries(MEASURED_SCENES)) {
-  for (const visita of cena.visits) {
+for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
+  for (const visit of scene.visits) {
     // O papel entra no NOME porque a Mesa aparece duas vezes: o mestre e o
     // jogador recebem metades diferentes do mesmo endereço, e um relatório com
     // dois casos de nome igual não diz qual reprovou.
-    const onde = `${nome} · ${visita.address} · ${visita.session}`
+    const where = `${label} · ${visit.address} · ${visit.session}`
 
-    test.describe(`aparência: ${onde}`, () => {
-      test.use({ storageState: SESSION_FILE[visita.session] })
+    test.describe(`aparência: ${where}`, () => {
+      test.use({ storageState: SESSION_FILE[visit.session] })
 
-      test(`sem texto abaixo do mínimo de contraste do AA em ${onde}`, async ({ page }) => {
-        const resposta = await page.goto(visita.address)
-        if (visita.mayBeAbsent && resposta?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visita.address}`)
+      test(`sem texto abaixo do mínimo de contraste do AA em ${where}`, async ({ page }) => {
+        const response = await page.goto(visit.address)
+        if (visit.mayBeAbsent && response?.status() === 404) {
+          test.skip(true, `esta bancada não serve ${visit.address}`)
           return
         }
-        expect(resposta?.status(), `${visita.address} não respondeu`).toBeLessThan(400)
+        expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
 
-        const contraste = await medeOContraste(page)
+        const contrast = await medeOContraste(page)
         expect(
-          contraste.medidos,
-          `${onde}: o medidor achou ${contraste.medidos} textos — a cena não carregou, e a asserção seguinte não seria evidência de nada`,
+          contrast.medidos,
+          `${where}: o medidor achou ${contrast.medidos} textos — a cena não carregou, e a asserção seguinte não seria evidência de nada`,
         ).toBeGreaterThan(MEASURED_TEXT_FLOOR)
-        expect(contraste.falhas, `texto abaixo do AA em ${onde}`).toEqual([])
+        expect(contrast.falhas, `texto abaixo do AA em ${where}`).toEqual([])
       })
 
-      test(`a Cinzel não desce abaixo do piso de leitura em ${onde}`, async ({ page }) => {
-        const resposta = await page.goto(visita.address)
-        if (visita.mayBeAbsent && resposta?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visita.address}`)
+      test(`a Cinzel não desce abaixo do piso de leitura em ${where}`, async ({ page }) => {
+        const response = await page.goto(visit.address)
+        if (visit.mayBeAbsent && response?.status() === 404) {
+          test.skip(true, `esta bancada não serve ${visit.address}`)
           return
         }
-        await expectCinzelAcimaDoPiso(page, `em ${onde}`)
+        await expectCinzelAcimaDoPiso(page, `em ${where}`)
       })
 
       // O CORTE LATERAL entra no MESMO laço, e essa é a decisão da ALE-342.
@@ -103,14 +103,14 @@ for (const [nome, cena] of Object.entries(MEASURED_SCENES)) {
       //
       // A 390px porque é a largura em que sobra menos espaço, e conteúdo que não
       // cabe ali é conteúdo que ninguém alcança — ele não rola.
-      test(`nada é cortado de lado a 390px em ${onde}`, async ({ page }) => {
+      test(`nada é cortado de lado a 390px em ${where}`, async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 })
-        const resposta = await page.goto(visita.address)
-        if (visita.mayBeAbsent && resposta?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visita.address}`)
+        const response = await page.goto(visit.address)
+        if (visit.mayBeAbsent && response?.status() === 404) {
+          test.skip(true, `esta bancada não serve ${visit.address}`)
           return
         }
-        expect(resposta?.status(), `${visita.address} não respondeu`).toBeLessThan(400)
+        expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
         await expectNothingIsClippedSideways(page, 'body')
       })
     })

@@ -52,8 +52,8 @@ func mesaEmCombate(t *testing.T) (*BoardState, *live.SessionRuntimeState) {
 
 	b := NewBoard("t1", "Taverna do Javali", "stone")
 	tokens := boardCounter()
-	heroi := int64(7)
-	_ = AddToken(b, BoardToken{Label: "Sílfide", X: 0, Y: 0, EntryID: strPtr("e1"), CharacterID: &heroi, SpeedSquares: 6}, tokens)
+	hero := int64(7)
+	_ = AddToken(b, BoardToken{Label: "Sílfide", X: 0, Y: 0, EntryID: strPtr("e1"), CharacterID: &hero, SpeedSquares: 6}, tokens)
 	_ = AddToken(b, BoardToken{Label: "Ogro", X: 9, Y: 9, EntryID: strPtr("e2")}, tokens)
 	return b, st
 }
@@ -200,9 +200,9 @@ func TestAPlayerDoesNotMoveOutsideTheirOwnTurn(t *testing.T) {
 // A peça do vizinho não é da pessoa, mesmo estando na vez dela.
 func TestAPlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	b, st := mesaEmCombate(t)
-	naoDono := Mover{UserID: 42, Role: "player", OwnsCharacter: false}
+	notOwner := Mover{UserID: 42, Role: "player", OwnsCharacter: false}
 
-	if err := ProposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), naoDono); err == nil {
+	if err := ProposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), notOwner); err == nil {
 		t.Fatal("o jogador moveu a peça do Ogro")
 	}
 }
@@ -216,9 +216,9 @@ func TestAPlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 func TestTheGmMovesWithoutALimitButSeesTheTokenDisplacement(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
-	longe := caminho([2]int{9, 9}, [2]int{10, 10}, [2]int{11, 11}, [2]int{12, 12},
+	far := caminho([2]int{9, 9}, [2]int{10, 10}, [2]int{11, 11}, [2]int{12, 12},
 		[2]int{13, 13}, [2]int{14, 14}, [2]int{15, 15}, [2]int{16, 16})
-	if err := ProposeMove(b, st, "t2", longe, mestre); err != nil {
+	if err := ProposeMove(b, st, "t2", far, mestre); err != nil {
 		t.Fatalf("o mestre foi barrado: %v", err)
 	}
 	if b.Pending.Budget != speedOf(b.Tokens[1]) {
@@ -237,8 +237,8 @@ func TestOutOfCombatEachOneMovesTheirOwn(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	st.TurnIndex = -1
 
-	longe := caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}, [2]int{4, 4})
-	if err := ProposeMove(b, st, "t1", longe, jogadorDono); err != nil {
+	far := caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}, [2]int{4, 4})
+	if err := ProposeMove(b, st, "t1", far, jogadorDono); err != nil {
 		t.Fatalf("fora de combate o jogador foi barrado: %v", err)
 	}
 	if b.Pending.Budget != -1 {
@@ -252,12 +252,12 @@ func TestOutOfCombatEachOneMovesTheirOwn(t *testing.T) {
 func TestACommitOnAChangedBoardIsRefused(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	_ = ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
-	vista := b.Version
+	view := b.Version
 
 	// O mestre mexe em outra peça: a cena que o jogador tinha na mão não existe mais.
 	_ = UpdateToken(b, "t2", TokenPatch{X: intPtr(5), Y: intPtr(5)})
 
-	if err := CommitMove(b, st, vista, mestre); err == nil {
+	if err := CommitMove(b, st, view, mestre); err == nil {
 		t.Fatal("o commit passou por cima de um tabuleiro que já tinha mudado")
 	}
 	if b.Pending == nil {
@@ -276,8 +276,8 @@ func TestTheGmConfirmsForThePlayerAndNotTheOtherWayAround(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	_ = ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
 
-	outroJogador := Mover{UserID: 99, Role: "player", OwnsCharacter: true}
-	if err := CommitMove(b, st, b.Version, outroJogador); err == nil {
+	otherPlayer := Mover{UserID: 99, Role: "player", OwnsCharacter: true}
+	if err := CommitMove(b, st, b.Version, otherPlayer); err == nil {
 		t.Fatal("um jogador confirmou o movimento proposto por outro")
 	}
 	if err := CommitMove(b, st, b.Version, mestre); err != nil {
@@ -292,13 +292,13 @@ func TestAPendingMoveOfAHiddenTokenDoesNotLeakToThePlayer(t *testing.T) {
 	_ = UpdateToken(b, "t2", TokenPatch{Hidden: boolPtr(true)})
 	_ = ProposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), mestre)
 
-	visto := BoardForRole("player", b)
+	seen := BoardForRole("player", b)
 
-	if visto.Pending != nil {
-		t.Errorf("o provisório da peça escondida saiu para o jogador: %+v", visto.Pending)
+	if seen.Pending != nil {
+		t.Errorf("o provisório da peça escondida saiu para o jogador: %+v", seen.Pending)
 	}
-	if len(visto.Tokens) != 1 {
-		t.Errorf("o jogador viu %d peças, esperava só a dele", len(visto.Tokens))
+	if len(seen.Tokens) != 1 {
+		t.Errorf("o jogador viu %d peças, esperava só a dele", len(seen.Tokens))
 	}
 	// E o mestre continua vendo tudo.
 	if BoardForRole("gm", b).Pending == nil {
@@ -361,9 +361,9 @@ func TestPopulateStartsTheSidesApart(t *testing.T) {
 
 	// Ninguém nasce dentro do bloco do outro lado.
 	for _, pc := range pcs {
-		for _, inimigo := range npcs {
-			if pc.X == inimigo.X && pc.Y == inimigo.Y {
-				t.Fatalf("%s e %s nasceram no mesmo quadrado", pc.Label, inimigo.Label)
+		for _, enemy := range npcs {
+			if pc.X == enemy.X && pc.Y == enemy.Y {
+				t.Fatalf("%s e %s nasceram no mesmo quadrado", pc.Label, enemy.Label)
 			}
 		}
 	}
@@ -371,19 +371,19 @@ func TestPopulateStartsTheSidesApart(t *testing.T) {
 	// A distância entre as bordas é de 6 quadrados — 9m, o alcance CURTO do
 	// livro (T20 p224): perto o bastante para a briga começar sem ninguém
 	// atravessar meia tela, longe o bastante para o primeiro turno ter escolha.
-	maisADireitaDoGrupo, maisAEsquerdaDoInimigo := pcs[0].X, npcs[0].X
+	rightmostAlly, leftmostEnemy := pcs[0].X, npcs[0].X
 	for _, pc := range pcs {
-		if pc.X > maisADireitaDoGrupo {
-			maisADireitaDoGrupo = pc.X
+		if pc.X > rightmostAlly {
+			rightmostAlly = pc.X
 		}
 	}
-	for _, inimigo := range npcs {
-		if inimigo.X < maisAEsquerdaDoInimigo {
-			maisAEsquerdaDoInimigo = inimigo.X
+	for _, enemy := range npcs {
+		if enemy.X < leftmostEnemy {
+			leftmostEnemy = enemy.X
 		}
 	}
-	if vao := maisAEsquerdaDoInimigo - maisADireitaDoGrupo; vao < 4 {
-		t.Errorf("os dois lados nasceram a %d quadrados um do outro — perto demais para ser começo de combate", vao)
+	if span := leftmostEnemy - rightmostAlly; span < 4 {
+		t.Errorf("os dois lados nasceram a %d quadrados um do outro — perto demais para ser começo de combate", span)
 	}
 }
 
@@ -418,8 +418,8 @@ forte — cada peça nasce EXATAMENTE onde o mestre clicou.
 func TestPaintedTerrainMakesThePathCostMore(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	// Quatro passos ortogonais custam 4 de 6 — cabe com folga.
-	reto := caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 0}, [2]int{3, 0}, [2]int{4, 0})
-	if err := ProposeMove(b, st, "t1", reto, jogadorDono); err != nil {
+	straight := caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 0}, [2]int{3, 0}, [2]int{4, 0})
+	if err := ProposeMove(b, st, "t1", straight, jogadorDono); err != nil {
 		t.Fatalf("caminho de quatro quadrados em chão limpo foi recusado: %v", err)
 	}
 	if b.Pending.Cost != 4 {
@@ -431,7 +431,7 @@ func TestPaintedTerrainMakesThePathCostMore(t *testing.T) {
 	PaintTerrain(b, engine.Square{X: 2, Y: 0}, TerrenoDificil, true)
 	PaintTerrain(b, engine.Square{X: 3, Y: 0}, TerrenoDificil, true)
 
-	if err := ProposeMove(b, st, "t1", reto, jogadorDono); err != nil {
+	if err := ProposeMove(b, st, "t1", straight, jogadorDono); err != nil {
 		t.Fatalf("seis quadrados de custo num deslocamento de seis foram recusados: %v", err)
 	}
 	if b.Pending.Cost != 6 {
@@ -444,27 +444,27 @@ func TestPaintedTerrainMakesThePathCostMore(t *testing.T) {
 // pela mesma casa várias vezes. Alternar faria a casa piscar debaixo do dedo.
 func TestPaintingAndErasingAreExplicitAndIdempotent(t *testing.T) {
 	b, _ := mesaEmCombate(t)
-	casa := engine.Square{X: 2, Y: 0}
+	square := engine.Square{X: 2, Y: 0}
 
-	PaintTerrain(b, casa, TerrenoDificil, true)
+	PaintTerrain(b, square, TerrenoDificil, true)
 	if len(b.Difficult) != 1 {
 		t.Fatalf("pintar não marcou a casa: %+v", b.Difficult)
 	}
-	versaoDepoisDePintar := b.Version
+	versionAfterPaint := b.Version
 
 	// O arraste passando de novo: nada muda, e a versão NÃO sobe à toa — cada
 	// subida é um broadcast para a mesa inteira.
-	PaintTerrain(b, casa, TerrenoDificil, true)
-	if len(b.Difficult) != 1 || b.Version != versaoDepoisDePintar {
+	PaintTerrain(b, square, TerrenoDificil, true)
+	if len(b.Difficult) != 1 || b.Version != versionAfterPaint {
 		t.Errorf("pintar de novo mexeu no estado: %d casas, versão %d", len(b.Difficult), b.Version)
 	}
 
-	PaintTerrain(b, casa, TerrenoDificil, false)
+	PaintTerrain(b, square, TerrenoDificil, false)
 
 	if len(b.Difficult) != 0 {
 		t.Errorf("a borracha não apagou: %+v", b.Difficult)
 	}
-	if b.Version <= versaoDepoisDePintar {
+	if b.Version <= versionAfterPaint {
 		t.Errorf("apagar não subiu a versão: %d", b.Version)
 	}
 }

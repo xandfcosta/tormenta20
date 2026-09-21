@@ -31,16 +31,16 @@ import (
 // verdade para isso valer.
 func TestTheBenchRefusesATruncatedCopy(t *testing.T) {
 	dir := t.TempDir()
-	origem := filepath.Join(dir, "molde.db")
-	if err := os.WriteFile(origem, make([]byte, 4096), 0o600); err != nil {
+	origin := filepath.Join(dir, "molde.db")
+	if err := os.WriteFile(origin, make([]byte, 4096), 0o600); err != nil {
 		t.Fatalf("montar o molde de mentira: %v", err)
 	}
-	destino := filepath.Join(dir, "truncado.db")
-	if err := os.WriteFile(destino, make([]byte, 1024), 0o600); err != nil {
+	destination := filepath.Join(dir, "truncado.db")
+	if err := os.WriteFile(destination, make([]byte, 1024), 0o600); err != nil {
 		t.Fatalf("montar a cópia truncada: %v", err)
 	}
 
-	err := conferAcopia(origem, destino)
+	err := conferAcopia(origin, destination)
 	if err == nil {
 		t.Fatal("a cópia truncada passou: o teste que a receber vai reprovar dizendo " +
 			"`no such table`, e quem investigar vai procurar defeito na migração")
@@ -48,19 +48,19 @@ func TestTheBenchRefusesATruncatedCopy(t *testing.T) {
 	// A MENSAGEM carrega os dois tamanhos, que é o que separa "a cópia falhou" de
 	// "a cópia falhou e olha o quanto": quem lê precisa saber se faltou um byte
 	// ou faltou o arquivo inteiro.
-	for _, pedaco := range []string{"1024", "4096"} {
-		if !strings.Contains(err.Error(), pedaco) {
-			t.Errorf("a mensagem não diz os tamanhos (falta %q): %v", pedaco, err)
+	for _, chunk := range []string{"1024", "4096"} {
+		if !strings.Contains(err.Error(), chunk) {
+			t.Errorf("a mensagem não diz os tamanhos (falta %q): %v", chunk, err)
 		}
 	}
 
 	// O CONTROLE POSITIVO: uma cópia inteira passa. Sem ele, uma verificação que
 	// recusa TUDO passaria neste arquivo — e é o jeito mais fácil de errar.
-	inteira := filepath.Join(dir, "inteira.db")
-	if err := os.WriteFile(inteira, make([]byte, 4096), 0o600); err != nil {
+	whole := filepath.Join(dir, "inteira.db")
+	if err := os.WriteFile(whole, make([]byte, 4096), 0o600); err != nil {
 		t.Fatalf("montar a cópia inteira: %v", err)
 	}
-	if err := conferAcopia(origem, inteira); err != nil {
+	if err := conferAcopia(origin, whole); err != nil {
 		t.Errorf("a cópia inteira foi recusada: %v", err)
 	}
 }
@@ -68,19 +68,19 @@ func TestTheBenchRefusesATruncatedCopy(t *testing.T) {
 // E O CAMINHO DE VERDADE continua entregando um banco que abre — sem isto, as
 // asserções acima provariam a verificação e nada sobre o `Fresh`.
 func TestTheBenchStillHandsOutAWorkingDatabase(t *testing.T) {
-	caminho := Fresh(t)
-	info, err := os.Stat(caminho)
+	path := Fresh(t)
+	info, err := os.Stat(path)
 	if err != nil {
 		t.Fatalf("o banco copiado não existe: %v", err)
 	}
 	if info.Size() == 0 {
 		t.Fatal("o banco copiado está vazio")
 	}
-	molde, err := os.Stat(molde)
+	mold, err := os.Stat(molde)
 	if err != nil {
 		t.Fatalf("o molde sumiu: %v", err)
 	}
-	if info.Size() != molde.Size() {
-		t.Errorf("a cópia tem %d bytes e o molde tem %d", info.Size(), molde.Size())
+	if info.Size() != mold.Size() {
+		t.Errorf("a cópia tem %d bytes e o molde tem %d", info.Size(), mold.Size())
 	}
 }

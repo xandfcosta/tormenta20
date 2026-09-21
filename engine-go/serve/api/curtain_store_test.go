@@ -26,10 +26,10 @@ func TestTheCurtainComesBackFromTheDatabase(t *testing.T) {
 	s.boards.Persist(ctx, sid, defaultTab)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	frio := boards.NewStore(s.queries, live.NewUUID, &events.Bus{})
+	cold := boards.NewStore(s.queries, live.NewUUID, &events.Bus{})
 
-	if voltou := frio.Get(ctx, sid, defaultTab); voltou == nil || !voltou.Curtained {
-		t.Fatalf("a cortina não voltou do banco e a mesa veria a cena: %+v", voltou)
+	if returned := cold.Get(ctx, sid, defaultTab); returned == nil || !returned.Curtained {
+		t.Fatalf("a cortina não voltou do banco e a mesa veria a cena: %+v", returned)
 	}
 }
 
@@ -39,7 +39,7 @@ func TestTheCurtainComesBackFromTheDatabase(t *testing.T) {
 // movimento proposto sobre um tabuleiro que mudou desde então.
 //
 // O que este teste NÃO prova, e eu escrevi errado antes de medir: que sem o bump
-// a mesa não veria a cortina. O `EmitOrdered` descarta com `Seq < ultimaSeq` —
+// a mesa não veria a cortina. O `EmitOrdered` descarta com `Seq < lastSeq` —
 // estritamente menor —, então versão repetida passa. Tirei o bump, subi o
 // servidor e o e2e de dois clientes seguiu verde. O guarda continua valendo pelo
 // primeiro motivo; a consequência dramática é que era invenção minha.
@@ -48,28 +48,28 @@ func TestClosingTheCurtainAdvancesTheBoardVersion(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	antes := abre(t, s, sid, "Taverna do Javali", "tavern").Version
+	before := abre(t, s, sid, "Taverna do Javali", "tavern").Version
 
-	fechada, mudou, err := s.boards.SetCurtain(ctx, sid, defaultTab, true)
+	closed, changed, err := s.boards.SetCurtain(ctx, sid, defaultTab, true)
 	if err != nil {
 		t.Fatalf("fechar a cortina: %v", err)
 	}
-	if !mudou {
+	if !changed {
 		t.Error("fechar cortina aberta não foi reconhecido como mudança")
 	}
-	if fechada.Version <= antes {
-		t.Errorf("a versão não avançou (%d → %d): o contador deixou de dizer que o tabuleiro mudou", antes, fechada.Version)
+	if closed.Version <= before {
+		t.Errorf("a versão não avançou (%d → %d): o contador deixou de dizer que o tabuleiro mudou", before, closed.Version)
 	}
 
 	// Fechar o que já está fechado não é erro nem mutação — dois cliques no
 	// telefone do mestre, ou duas abas — e publicar por não-mudança acordaria a
 	// mesa inteira à toa.
-	denovo, mudou, err := s.boards.SetCurtain(ctx, sid, defaultTab, true)
+	again, changed, err := s.boards.SetCurtain(ctx, sid, defaultTab, true)
 	if err != nil {
 		t.Fatalf("fechar de novo: %v", err)
 	}
-	if mudou || denovo.Version != fechada.Version {
+	if changed || again.Version != closed.Version {
 		t.Errorf("fechar cortina fechada mexeu no estado: mudou=%v versão %d → %d",
-			mudou, fechada.Version, denovo.Version)
+			changed, closed.Version, again.Version)
 	}
 }

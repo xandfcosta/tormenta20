@@ -30,14 +30,14 @@ func (s Scene) handleAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo:        "Administração",
-		Forma:         ui.ShellDense,
-		TituloVisivel: "Administração",
-		Voltar:        "/",
+		Title:        "Administração",
+		Shape:        ui.ShellDense,
+		VisibleTitle: "Administração",
+		Back:         "/",
 		// Sem `Init`: esta tela não abre stream nenhum. Os sinais existem só
 		// para o diálogo e para os avisos — estado de INTERAÇÃO, não da
 		// aplicação.
-		Sinais: "{target_id: 0, target_name: '', target_cost: '', copied: '', error: ''}",
+		Signals: "{target_id: 0, target_name: '', target_cost: '', copied: '', error: ''}",
 	}, adminScene(view))
 }
 
@@ -98,18 +98,18 @@ type adminPanel func(adminView) templ.Component
 // Cada fragmento carrega o próprio `id`, então o Datastar casa pelo id e o
 // `selector` fica desnecessário — é o mesmo mecanismo do `#table`, só que
 // apontado a pedaços em vez da tela toda.
-func (s Scene) patchPanels(sse *datastar.ServerSentEventGenerator, r *http.Request, paineis ...adminPanel) {
+func (s Scene) patchPanels(sse *datastar.ServerSentEventGenerator, r *http.Request, panels ...adminPanel) {
 	view, err := s.loadAdmin(r.Context(), s.deps.CurrentUserID(r))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Não consegui reler a tela."})
 		return
 	}
-	for _, painel := range paineis {
-		fragmento, err := ui.RenderFragment(r.Context(), painel(view))
+	for _, panel := range panels {
+		fragment, err := ui.RenderFragment(r.Context(), panel(view))
 		if err != nil {
 			continue
 		}
-		_ = sse.PatchElements(fragmento)
+		_ = sse.PatchElements(fragment)
 	}
 	// Limpa o aviso anterior: sem isto, um erro de uma ação passada fica na
 	// tela depois de a seguinte dar certo.
@@ -139,12 +139,12 @@ func (s Scene) handleMintReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `mintedReset`.
-	fragmento, err := ui.RenderFragment(r.Context(), mintedReset("/redefinir-senha?token="+url.QueryEscape(reset.Token)))
+	fragment, err := ui.RenderFragment(r.Context(), mintedReset("/redefinir-senha?token="+url.QueryEscape(reset.Token)))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
-	_ = sse.PatchElements(fragmento)
+	_ = sse.PatchElements(fragment)
 }
 
 // handleMintInvite cunha o convite e devolve DOIS remendos: o link e o
@@ -161,13 +161,13 @@ func (s Scene) handleMintInvite(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
-	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+url.QueryEscape(invite.Token),
+	fragment, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+url.QueryEscape(invite.Token),
 		"Cada convite serve para UMA conta. Gere outro para o próximo jogador."))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
-	_ = sse.PatchElements(fragmento)
+	_ = sse.PatchElements(fragment)
 	s.patchPanels(sse, r, invitesPanel)
 }
 

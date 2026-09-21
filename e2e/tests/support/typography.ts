@@ -43,19 +43,19 @@ export const PISO_DA_CINZEL = 14
  * seria acusado no lugar do rótulo, com o texto do filho na mensagem.
  */
 export async function medeATipografia(page: Page): Promise<MedicaoDeTipografia> {
-  return page.evaluate((piso) => {
-    const olhados: string[] = []
-    const falhas = [...document.querySelectorAll('*')]
+  return page.evaluate((floor) => {
+    const checkedTags: string[] = []
+    const failures = [...document.querySelectorAll('*')]
       .map((el) => {
         const cs = getComputedStyle(el)
         if (!cs.fontFamily.startsWith('Cinzel')) return null
         if (cs.visibility === 'hidden' || cs.display === 'none') return null
-        const texto = [...el.childNodes]
+        const text = [...el.childNodes]
           .filter((n) => n.nodeType === 3)
           .map((n) => n.textContent?.trim() ?? '')
           .join('')
           .trim()
-        if (!texto) return null
+        if (!text) return null
         // O MONOGRAMA DO AVATAR não é texto, é marca (decisão do dono): o piso
         // existe porque a Cinzel pequena "vira desenho antes de virar texto", e
         // num monogram virar desenho é o objetivo — o nome por extenso está ao
@@ -68,11 +68,11 @@ export async function medeATipografia(page: Page): Promise<MedicaoDeTipografia> 
         // largo demais.
         if (el.closest('.monogram')) return null
         const px = Number.parseFloat(cs.fontSize)
-        olhados.push(texto)
-        return px < piso ? `${Math.round(px)}px: "${texto.slice(0, 32)}"` : null
+        checkedTags.push(text)
+        return px < floor ? `${Math.round(px)}px: "${text.slice(0, 32)}"` : null
       })
       .filter((x): x is string => x !== null)
-    return { falhas, medidos: olhados.length }
+    return { falhas: failures, medidos: checkedTags.length }
   }, PISO_DA_CINZEL)
 }
 
@@ -89,11 +89,11 @@ export async function medeATipografia(page: Page): Promise<MedicaoDeTipografia> 
  * por cena, e a que alguém esquecer nasce sem medição. Quando a falha aparecer,
  * ela precisa dizer em qual cena — senão a busca começa do zero.
  */
-export async function expectCinzelAcimaDoPiso(page: Page, onde: string): Promise<void> {
-  const { falhas, medidos } = await medeATipografia(page)
+export async function expectCinzelAcimaDoPiso(page: Page, at: string): Promise<void> {
+  const { falhas: failures, medidos: measured } = await medeATipografia(page)
   expect(
-    medidos,
-    `${onde}: o medidor não achou NENHUM texto em Cinzel — ou a fonte não carregou, ou o filtro parou de casar, e a asserção seguinte não seria evidência de nada`,
+    measured,
+    `${at}: o medidor não achou NENHUM texto em Cinzel — ou a fonte não carregou, ou o filtro parou de casar, e a asserção seguinte não seria evidência de nada`,
   ).toBeGreaterThan(0)
-  expect(falhas, `Cinzel abaixo do piso de ${PISO_DA_CINZEL}px ${onde}`).toEqual([])
+  expect(failures, `Cinzel abaixo do piso de ${PISO_DA_CINZEL}px ${at}`).toEqual([])
 }

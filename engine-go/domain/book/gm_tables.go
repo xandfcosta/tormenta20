@@ -45,9 +45,9 @@ func (l ChaseRow) Covers(r int) bool { return r >= l.RollMin && r <= l.RollMax }
 // RewardRow é a única das três que casa por valor EXATO e não por faixa: a
 // tabela de recompensa/castigo tem uma linha por face do d6.
 type RewardRow struct {
-	Roll    int    `json:"roll"`
-	Reward  string `json:"reward"`
-	Castigo string `json:"castigo"`
+	Roll       int    `json:"roll"`
+	Reward     string `json:"reward"`
+	Punishment string `json:"castigo"`
 }
 
 func (l RewardRow) Covers(r int) bool { return l.Roll == r }
@@ -72,11 +72,11 @@ type DungeonSize struct {
 
 // GMTables é o recurso `gm-tables` inteiro: as três tabelas que se rola.
 type GMTables struct {
-	Ruina         []RuinRow         `json:"ruina"`
-	ChaseEvents   []ChaseRow        `json:"chaseEvents"`
-	RewardCastigo []RewardRow       `json:"rewardCastigo"`
-	RewardLabels  map[string]string `json:"rewardLabels"`
-	CastigoLabels map[string]string `json:"castigoLabels"`
+	Ruin             []RuinRow         `json:"ruina"`
+	ChaseEvents      []ChaseRow        `json:"chaseEvents"`
+	RewardPunishment []RewardRow       `json:"rewardCastigo"`
+	RewardLabels     map[string]string `json:"rewardLabels"`
+	PunishmentLabels map[string]string `json:"castigoLabels"`
 }
 
 // DungeonDesign é o recurso `dungeon-design`: o esqueleto de masmorra.
@@ -98,11 +98,11 @@ var (
 // para uma leitura só.
 func ImprovTables() (GMTables, DungeonDesign) {
 	improvOnce.Do(func() {
-		if bruto, ok := catalog.Resource("gm-tables"); ok {
-			_ = json.Unmarshal(bruto, &gmTables)
+		if raw, ok := catalog.Resource("gm-tables"); ok {
+			_ = json.Unmarshal(raw, &gmTables)
 		}
-		if bruto, ok := catalog.Resource("dungeon-design"); ok {
-			_ = json.Unmarshal(bruto, &dungeonTable)
+		if raw, ok := catalog.Resource("dungeon-design"); ok {
+			_ = json.Unmarshal(raw, &dungeonTable)
 		}
 	})
 	return gmTables, dungeonTable

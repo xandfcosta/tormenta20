@@ -18,17 +18,17 @@ func TestACatalogSceneDrawsTheWholeCatalog(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
-	corpo := rec.Body.String()
+	body := rec.Body.String()
 	a := book.Catalogs()
-	if !strings.Contains(corpo, fmt.Sprintf("%d entradas", len(a.Condicoes))) {
-		t.Errorf("a contagem não é a das %d condições", len(a.Condicoes))
+	if !strings.Contains(body, fmt.Sprintf("%d entradas", len(a.Conditions))) {
+		t.Errorf("a contagem não é a das %d condições", len(a.Conditions))
 	}
 	// Uma condição de verdade, e o texto dela: sem isso o teste passaria com a
 	// cena desenhando só o cabeçalho.
-	if !strings.Contains(corpo, "Abalado") {
+	if !strings.Contains(body, "Abalado") {
 		t.Error("a condição Abalado não está na página")
 	}
-	if strings.Contains(corpo, "Bola de Fogo") {
+	if strings.Contains(body, "Bola de Fogo") {
 		t.Error("a aba Condições desenhou magia — a aba não é um catálogo só")
 	}
 }
@@ -40,14 +40,14 @@ func TestTheWholeCollectionComesOutInThePowersTab(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/poderes", "")
-	poderes := book.Catalogs().Poderes
-	if !strings.Contains(rec.Body.String(), fmt.Sprintf("%d entradas", len(poderes))) {
-		t.Fatalf("a contagem não é a dos %d poderes", len(poderes))
+	powers := book.Catalogs().Powers
+	if !strings.Contains(rec.Body.String(), fmt.Sprintf("%d entradas", len(powers))) {
+		t.Fatalf("a contagem não é a dos %d poderes", len(powers))
 	}
 	// O ÚLTIMO da lista, e não o primeiro: um teto cortaria pelo fim.
-	ultimo := poderes[len(poderes)-1]
-	if !strings.Contains(rec.Body.String(), ultimo.Name) {
-		t.Errorf("o último poder (%q) não saiu — a lista foi cortada", ultimo.Name)
+	last := powers[len(powers)-1]
+	if !strings.Contains(rec.Body.String(), last.Name) {
+		t.Errorf("o último poder (%q) não saiu — a lista foi cortada", last.Name)
 	}
 }
 
@@ -64,8 +64,8 @@ func TestSearchingSweepsTheEightCatalogsFromAnyScene(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	// Da cena das CONDIÇÕES, buscando uma MAGIA.
-	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes?busca=bola+de+fogo", "").Body.String()
-	if !strings.Contains(corpo, "Bola de Fogo") {
+	body := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes?busca=bola+de+fogo", "").Body.String()
+	if !strings.Contains(body, "Bola de Fogo") {
 		t.Error("a busca da cena de condições não achou a magia — voltou a filtrar só a aba")
 	}
 	// O CONTROLE: sem termo, a cena mostra só o catálogo dela.

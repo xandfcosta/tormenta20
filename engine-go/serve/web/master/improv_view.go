@@ -23,11 +23,11 @@ import (
 // o mestre quer vê-lo: "saiu 4" é parte da resposta, e sem ele a tabela vira um
 // oráculo que ninguém confere.
 type roll struct {
-	Rolagem int    `json:"r"`
-	Texto   string `json:"t"`
-	// Detalhe é a segunda linha, quando a tabela tem uma — o teste e a CD do
+	Roll int    `json:"r"`
+	Text string `json:"t"`
+	// Detail é a segunda linha, quando a tabela tem uma — o teste e a CD do
 	// evento de perseguição, ou o castigo que acompanha a recompensa.
-	Detalhe string `json:"d,omitempty"`
+	Detail string `json:"d,omitempty"`
 }
 
 // O histórico guarda mais que "o último": o mestre que rola na mesma tabela
@@ -39,18 +39,18 @@ const historyDepth = 5
 // tabelas são independentes — rolar ruína não pode empurrar o evento de
 // perseguição para fora da tela.
 type improvView struct {
-	Ruina       []roll
-	Perseguicao []roll
-	Recompensa  []roll
-	Ideias      []roll
+	Ruin   []roll
+	Chase  []roll
+	Reward []roll
+	Ideas  []roll
 	// A masmorra não é sorteio: é uma conta sobre o número de salas.
-	Salas   int
-	Tamanho *book.DungeonSize
-	Ameacas int
-	// AcimaDoTeto diz que o número de salas passou do maior tamanho do livro.
+	Rooms   int
+	Size    *book.DungeonSize
+	Threats int
+	// OverCeiling diz que o número de salas passou do maior tamanho do livro.
 	// Não é erro: é o livro recomendando parar, e a tela diz isso em vez de
 	// esconder o campo.
-	AcimaDoTeto bool
+	OverCeiling bool
 }
 
 const (
@@ -61,30 +61,30 @@ const (
 
 // loadImprov monta a cena a partir dos históricos que vieram nos sinais.
 func loadImprov(v improvView) improvView {
-	_, masmorra := book.ImprovTables()
-	v.Salas = clamp(v.Salas, salasMinimo, salasMaximo, salasPadrao)
+	_, dungeon := book.ImprovTables()
+	v.Rooms = clamp(v.Rooms, salasMinimo, salasMaximo, salasPadrao)
 
-	for i := range masmorra.SizeTable {
-		t := masmorra.SizeTable[i]
-		if v.Salas >= t.MinRooms && v.Salas <= t.MaxRooms {
-			v.Tamanho = &t
+	for i := range dungeon.SizeTable {
+		t := dungeon.SizeTable[i]
+		if v.Rooms >= t.MinRooms && v.Rooms <= t.MaxRooms {
+			v.Size = &t
 			break
 		}
 	}
-	v.AcimaDoTeto = v.Tamanho == nil
-	if n, err := engine.PlannedThreats(v.Salas, masmorra.RoomsPerThreat); err == nil {
-		v.Ameacas = n
+	v.OverCeiling = v.Size == nil
+	if n, err := engine.PlannedThreats(v.Rooms, dungeon.RoomsPerThreat); err == nil {
+		v.Threats = n
 	}
 	return v
 }
 
 // empilha põe o sorteio novo na frente e corta o excesso.
-func push(historico []roll, novo roll) []roll {
-	fora := append([]roll{novo}, historico...)
-	if len(fora) > historyDepth {
-		fora = fora[:historyDepth]
+func push(history []roll, novo roll) []roll {
+	outside := append([]roll{novo}, history...)
+	if len(outside) > historyDepth {
+		outside = outside[:historyDepth]
 	}
-	return fora
+	return outside
 }
 
 // ── as quatro rolagens ───────────────────────────────────────────────────────
@@ -96,11 +96,11 @@ func rollRuin() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(t.Ruina, d.Valor, "ruina")
+	row, err := engine.RowForRoll(t.Ruin, d.Value, "ruina")
 	if err != nil {
 		return roll{}, err
 	}
-	return roll{Rolagem: d.Valor, Texto: linha.Label}, nil
+	return roll{Roll: d.Value, Text: row.Label}, nil
 }
 
 // rollChase: Tabela 6-5, d20, p274.
@@ -121,21 +121,21 @@ func rollChase() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(t.ChaseEvents, d.Valor, "chaseEvents")
+	row, err := engine.RowForRoll(t.ChaseEvents, d.Value, "chaseEvents")
 	if err != nil {
 		return roll{}, err
 	}
-	s := roll{Rolagem: d.Valor, Texto: eventName(linha.Kind)}
-	var partes []string
-	if linha.Test != nil && linha.CD != nil {
-		partes = append(partes, fmt.Sprintf("%s (CD %d)", *linha.Test, *linha.CD))
+	s := roll{Roll: d.Value, Text: eventName(row.Kind)}
+	var parts []string
+	if row.Test != nil && row.CD != nil {
+		parts = append(parts, fmt.Sprintf("%s (CD %d)", *row.Test, *row.CD))
 	}
 	// O travessão é como o livro escreve "não há exemplo", e repeti-lo na tela
 	// só ocuparia a linha com um traço.
-	if linha.Example != "" && linha.Example != "—" {
-		partes = append(partes, linha.Example)
+	if row.Example != "" && row.Example != "—" {
+		parts = append(parts, row.Example)
 	}
-	s.Detalhe = strings.Join(partes, " · ")
+	s.Detail = strings.Join(parts, " · ")
 	return s, nil
 }
 
@@ -158,14 +158,14 @@ func rollReward() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(t.RewardCastigo, d.Valor, "rewardCastigo")
+	row, err := engine.RowForRoll(t.RewardPunishment, d.Value, "rewardCastigo")
 	if err != nil {
 		return roll{}, err
 	}
 	return roll{
-		Rolagem: d.Valor,
-		Texto:   labelOrRaw(t.RewardLabels, linha.Reward),
-		Detalhe: "Castigo: " + labelOrRaw(t.CastigoLabels, linha.Castigo),
+		Roll:   d.Value,
+		Text:   labelOrRaw(t.RewardLabels, row.Reward),
+		Detail: "Castigo: " + labelOrRaw(t.PunishmentLabels, row.Punishment),
 	}, nil
 }
 
@@ -176,18 +176,18 @@ func rollIdea() (roll, error) {
 	if err != nil {
 		return roll{}, err
 	}
-	linha, err := engine.RowForRoll(m.Ideas, d.Valor, "ideias de masmorra")
+	row, err := engine.RowForRoll(m.Ideas, d.Value, "ideias de masmorra")
 	if err != nil {
 		return roll{}, err
 	}
-	return roll{Rolagem: d.Valor, Texto: linha.Label}, nil
+	return roll{Roll: d.Value, Text: row.Label}, nil
 }
 
-func labelOrRaw(mapa map[string]string, chave string) string {
-	if r, ok := mapa[chave]; ok {
+func labelOrRaw(board map[string]string, key string) string {
+	if r, ok := board[key]; ok {
 		return r
 	}
-	return chave
+	return key
 }
 
 // ── a escrita da masmorra ────────────────────────────────────────────────────
@@ -211,5 +211,5 @@ func improvSignals(v improvView) string {
 		return string(b)
 	}
 	return fmt.Sprintf(`{ruina: %s, perseguicao: %s, recompensa: %s, ideias: %s, rooms: %d}`,
-		j(v.Ruina), j(v.Perseguicao), j(v.Recompensa), j(v.Ideias), v.Salas)
+		j(v.Ruin), j(v.Chase), j(v.Reward), j(v.Ideas), v.Rooms)
 }

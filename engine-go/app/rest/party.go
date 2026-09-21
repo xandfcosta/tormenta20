@@ -49,30 +49,30 @@ func NewParty(q *sqlcgen.Queries, sessions *session.Store, catalogs *engine.Cata
 // em sequência: a ordem é a regra, e uma sequência escrita no chamador é uma
 // sequência que o segundo chamador escreve ao contrário.
 func (p Party) EndScene(
-	ctx context.Context, quem app.Caller, campaignID, sessionID int64,
+	ctx context.Context, who app.Caller, campaignID, sessionID int64,
 ) (*live.SessionRuntimeState, error) {
-	if _, err := p.access.GM(ctx, quem, campaignID, sessionID); err != nil {
+	if _, err := p.access.GM(ctx, who, campaignID, sessionID); err != nil {
 		return nil, err
 	}
-	if _, _, err := p.expireScene(ctx, quem, campaignID); err != nil {
+	if _, _, err := p.expireScene(ctx, who, campaignID); err != nil {
 		return nil, err
 	}
-	estado, err := p.sessions.EndScene(sessionID)
+	state, err := p.sessions.EndScene(sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("zerar a fila da sessão %d: %w", sessionID, err)
 	}
-	return estado, nil
+	return state, nil
 }
 
 // ExpireScene é a MESMA expiração, sem mexer na fila — o botão "Expirar efeitos
 // · cena" do rodapé.
 func (p Party) ExpireScene(
-	ctx context.Context, quem app.Caller, campaignID, sessionID int64,
-) (feitos, total int, err error) {
-	if _, err := p.access.GM(ctx, quem, campaignID, sessionID); err != nil {
+	ctx context.Context, who app.Caller, campaignID, sessionID int64,
+) (done, total int, err error) {
+	if _, err := p.access.GM(ctx, who, campaignID, sessionID); err != nil {
 		return 0, 0, err
 	}
-	return p.expireScene(ctx, quem, campaignID)
+	return p.expireScene(ctx, who, campaignID)
 }
 
 // RestForTheDay encerra o dia de cada ficha, cura e espelha os vitais no
@@ -81,68 +81,68 @@ func (p Party) ExpireScene(
 // Uma ficha só conta quando ela INTEIRA deu certo — meia ficha descansada não
 // conta, senão o ack diz "5 de 5" com dois PV que não foram gravados.
 func (p Party) RestForTheDay(
-	ctx context.Context, quem app.Caller, campaignID, sessionID int64, condicao string,
-) (feitos, total int, err error) {
-	if _, err := p.access.GM(ctx, quem, campaignID, sessionID); err != nil {
+	ctx context.Context, who app.Caller, campaignID, sessionID int64, condition string,
+) (done, total int, err error) {
+	if _, err := p.access.GM(ctx, who, campaignID, sessionID); err != nil {
 		return 0, 0, err
 	}
-	fichas, err := p.memberCharacterIDs(ctx, campaignID)
+	sheets, err := p.memberCharacterIDs(ctx, campaignID)
 	if err != nil {
 		return 0, 0, err
 	}
-	for _, id := range fichas {
-		if p.restOne(ctx, quem, sessionID, id, condicao) {
-			feitos++
+	for _, id := range sheets {
+		if p.restOne(ctx, who, sessionID, id, condition) {
+			done++
 		}
 	}
-	return feitos, len(fichas), nil
+	return done, len(sheets), nil
 }
 
 // expireScene percorre o grupo SEM conferir o papel — quem confere é o método
 // exportado que chamou.
 func (p Party) expireScene(
-	ctx context.Context, quem app.Caller, campaignID int64,
-) (feitos, total int, err error) {
-	fichas, err := p.memberCharacterIDs(ctx, campaignID)
+	ctx context.Context, who app.Caller, campaignID int64,
+) (done, total int, err error) {
+	sheets, err := p.memberCharacterIDs(ctx, campaignID)
 	if err != nil {
 		return 0, 0, err
 	}
-	for _, id := range fichas {
-		if err := p.scopes.EndScene(ctx, quem, id); err != nil {
+	for _, id := range sheets {
+		if err := p.scopes.EndScene(ctx, who, id); err != nil {
 			log.Printf("campanha %d: encerrar a cena do personagem %d falhou (%v)", campaignID, id, err)
 			continue
 		}
-		feitos++
+		done++
 	}
-	return feitos, len(fichas), nil
+	return done, len(sheets), nil
 }
 
 // restOne encerra o dia de UMA ficha, cura e espelha. Devolve se a ficha inteira
 // deu certo.
 func (p Party) restOne(
-	ctx context.Context, quem app.Caller, sessionID, characterID int64, condicao string,
+	ctx context.Context, who app.Caller, sessionID, characterID int64, condition string,
 ) bool {
-	if err := p.scopes.EndDay(ctx, quem, characterID); err != nil {
+	if err := p.scopes.EndDay(ctx, who, characterID); err != nil {
 		log.Printf("sessão %d: encerrar o dia do personagem %d falhou (%v)", sessionID, characterID, err)
 		return false
 	}
-	vitais, err := p.scopes.NightRest(ctx, quem, characterID, condicao)
+	vitals, err := p.scopes.NightRest(ctx, who, characterID, condition)
 	if err != nil {
 		log.Printf("sessão %d: o descanso do personagem %d falhou (%v)", sessionID, characterID, err)
 		return false
 	}
-	p.mirrorToTracker(sessionID, characterID, vitais)
+	p.mirrorToTracker(sessionID, characterID, vitals)
 	return true
 }
 
 // mirrorToTracker copia os PV/PM recém-gravados para a linha viva do
 // rastreador, quando o personagem está na iniciativa, para as barras mudarem
 // sem recarga.
-func (p Party) mirrorToTracker(sessionID, characterID int64, vitais sheet.RestedVitals) {
-	for _, linha := range p.sessions.GetState(sessionID).Initiative {
-		if linha.CharacterID != nil && *linha.CharacterID == characterID {
-			hp, mp := vitais.HpCurrent, vitais.MpCurrent
-			_, _ = p.sessions.PatchVitals(sessionID, linha.ID, &hp, &mp)
+func (p Party) mirrorToTracker(sessionID, characterID int64, vitals sheet.RestedVitals) {
+	for _, row := range p.sessions.GetState(sessionID).Initiative {
+		if row.CharacterID != nil && *row.CharacterID == characterID {
+			hp, mp := vitals.HpCurrent, vitals.MpCurrent
+			_, _ = p.sessions.PatchVitals(sessionID, row.ID, &hp, &mp)
 			return
 		}
 	}
@@ -155,12 +155,12 @@ func (p Party) mirrorToTracker(sessionID, characterID int64, vitais sheet.Rested
 // mesas, os NPCs dele não são membros da campanha, e a coluna `role` foi
 // substituída pelo `ownerId` na ALE-287.
 func (p Party) memberCharacterIDs(ctx context.Context, campaignID int64) ([]int64, error) {
-	linhas, err := p.queries.ListMembers(ctx, campaignID)
+	rows, err := p.queries.ListMembers(ctx, campaignID)
 	if err != nil {
 		return nil, fmt.Errorf("listar os membros da campanha %d: %w", campaignID, err)
 	}
-	ids := make([]int64, 0, len(linhas))
-	for _, m := range linhas {
+	ids := make([]int64, 0, len(rows))
+	for _, m := range rows {
 		ids = append(ids, m.Characterid)
 	}
 	return ids, nil

@@ -39,7 +39,7 @@ type Deps interface {
 	// quinto que diverge.
 	TableRoute(campaignID, sessionID int64) string
 	// WritePage é a montagem da casca.
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 }
 
 // Scene é o hub montado com as dependências dele.
@@ -54,4 +54,4 @@ type Scene struct {
 	gate accounts.Gate
 }
 
-func New(d Deps, portao accounts.Gate) Scene { return Scene{deps: d, gate: portao} }
+func New(d Deps, gate accounts.Gate) Scene { return Scene{deps: d, gate: gate} }

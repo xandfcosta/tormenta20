@@ -61,26 +61,26 @@ var permitidos = map[string]bool{
 // isso que ele não desce para o `domain/sheet`). Unificá-lo com o `book.Spell`
 // é trabalho próprio, que mexe nos dois lados.
 func TestTheSheetSceneDoesNotImportItsHost(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
-			if !strings.HasPrefix(caminho, "t20engine/") || permitidos[caminho] {
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
+			if !strings.HasPrefix(path, "t20engine/") || permitidos[path] {
 				continue
 			}
 			t.Errorf("%s importa %q.\n"+
@@ -89,7 +89,7 @@ func TestTheSheetSceneDoesNotImportItsHost(t *testing.T) {
 				"o `api`, é ciclo, porque ele importa esta cena para montar a Mesa.\n"+
 				"Se a vontade for o banco cru para uma coluna nova, a resposta é outra: a\n"+
 				"porta cresce com a PERGUNTA (ver `SaveChoices`), não com a tabela.",
-				nome, caminho, caminho)
+				name, path, path)
 		}
 	}
 
@@ -97,8 +97,8 @@ func TestTheSheetSceneDoesNotImportItsHost(t *testing.T) {
 	// parecem no terminal. Esta cena tem 36 arquivos `.go` de produção e mais os
 	// de teste; o piso é folgado de propósito, para ele acusar o guarda medindo o
 	// diretório errado e não uma fatia que junta dois arquivos.
-	if visitados < 30 {
+	if visited < 30 {
 		t.Fatalf("o guarda visitou só %d arquivos `.go` — ele está medindo o "+
-			"diretório errado", visitados)
+			"diretório errado", visited)
 	}
 }

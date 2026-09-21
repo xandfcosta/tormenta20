@@ -8,17 +8,17 @@ import (
 	"testing"
 )
 
-func (f sceneFixture) savePlace(t *testing.T, nome string) int64 {
+func (f sceneFixture) savePlace(t *testing.T, name string) int64 {
 	t.Helper()
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 	for _, l := range f.s.tableHost().Boards().Places(context.Background(), f.campaignID) {
-		if l.Name == nome {
+		if l.Name == name {
 			return l.ID
 		}
 	}
-	t.Fatalf("%q não foi para o acervo", nome)
+	t.Fatalf("%q não foi para o acervo", name)
 	return 0
 }
 
@@ -32,26 +32,26 @@ func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
 	f.seedOpenBoard(t, "tavern") // "Taverna do Javali"
 	f.savePlace(t, "Taverna do Javali")
 	// Ela volta para a mesa, agora numa aba.
-	taverna := f.openSecond(t, "Taverna do Javali")
+	tavern := f.openSecond(t, "Taverna do Javali")
 
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if !strings.Contains(tela, "nesta mesa agora") {
+	if !strings.Contains(screen, "nesta mesa agora") {
 		t.Fatal("o acervo não distingue a cena que está na mesa das 147 que não estão")
 	}
 	// A asserção é ESCOPADA na linha do acervo, e não na página: a barra de abas
 	// também escreve `tabuleiro/aba/<id>` (no gesto de mostrar à mesa), então uma
 	// busca solta acharia a rota certa no lugar errado e passaria verde sobre uma
 	// lista que não leva a lugar nenhum.
-	linha := collectionRow(t, tela, "nesta mesa agora")
+	row := collectionRow(t, screen, "nesta mesa agora")
 	// O gesto que sobra é IR até ela, pela mesma rota que a barra de abas usa.
-	if !strings.Contains(linha, "/tabuleiro/aba/"+taverna.ID) {
+	if !strings.Contains(row, "/tabuleiro/aba/"+tavern.ID) {
 		t.Error("a linha da cena aberta não leva à aba dela")
 	}
-	if !strings.Contains(linha, ">Ver</button>") {
+	if !strings.Contains(row, ">Ver</button>") {
 		t.Error("a linha da cena aberta não oferece o gesto de ir até ela")
 	}
-	if strings.Contains(linha, ">Reabrir</button>") {
+	if strings.Contains(row, ">Reabrir</button>") {
 		t.Error("o acervo ofereceu reabrir uma cena que já está aberta")
 	}
 }
@@ -69,7 +69,7 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 	id := f.savePlace(t, "Taverna do Javali")
 	f.openSecond(t, "Taverna do Javali")
 
-	rec := f.pede(t, f.mestre, http.MethodPost,
+	rec := f.pede(t, f.gm, http.MethodPost,
 		fmt.Sprintf("%s/tabuleiro/lugares/%d/remover", f.tableUrl(), id), "")
 
 	// A recusa é 200 com a frase no rodapé do mestre: é o caminho do
@@ -80,18 +80,18 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 	if !strings.Contains(rec.Body.String(), "encerre a cena antes") {
 		t.Error("a recusa não diz o que fazer para conseguir apagar")
 	}
-	achou := false
+	found := false
 	for _, l := range f.s.tableHost().Boards().Places(context.Background(), f.campaignID) {
 		if l.ID == id {
-			achou = true
+			found = true
 		}
 	}
-	if !achou {
+	if !found {
 		t.Error("o lugar aberto foi apagado do acervo: ele voltaria sozinho ao encerrar a aba")
 	}
 	// E a lixeira nem é oferecida — cortesia, não a trava.
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(tela, "Apagar Taverna do Javali") {
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(screen, "Apagar Taverna do Javali") {
 		t.Error("a lista ofereceu a lixeira para a cena que está na mesa")
 	}
 }
@@ -109,7 +109,7 @@ func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
 		f.openSecond(t, fmt.Sprintf("Cena %d", i))
 	}
 
-	rec := f.pede(t, f.mestre, http.MethodPost,
+	rec := f.pede(t, f.gm, http.MethodPost,
 		fmt.Sprintf("%s/tabuleiro/lugares/%d/reabrir", f.tableUrl(), id), "")
 
 	if rec.Code != http.StatusOK {

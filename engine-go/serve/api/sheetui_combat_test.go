@@ -12,27 +12,27 @@ import (
 	"testing"
 )
 
-func seedPericia(t *testing.T, s *Server, id int64, nome, atributo string, treinada bool) {
+func seedPericia(t *testing.T, s *Server, id int64, name, attribute string, trained bool) {
 	t.Helper()
-	treino := int64(0)
-	if treinada {
-		treino = 1
+	training := int64(0)
+	if trained {
+		training = 1
 	}
 	_, err := s.sceneCore().Queries().CreateExpertise(context.Background(), sqlcgen.CreateExpertiseParams{
-		Characterid: id, Name: nome, Attribute: atributo, Trained: treino, Custom: 0,
+		Characterid: id, Name: name, Attribute: attribute, Trained: training, Custom: 0,
 	})
 	if err != nil {
-		t.Fatalf("semear a perícia %q: %v", nome, err)
+		t.Fatalf("semear a perícia %q: %v", name, err)
 	}
 }
 
 // seedEfeitoCondicional põe um efeito de cena que soma no ataque só quando o
 // jogador o liga.
-func seedEfeitoCondicional(t *testing.T, s *Server, id int64, quanto int) {
+func seedEfeitoCondicional(t *testing.T, s *Server, id int64, howMuch int) {
 	t.Helper()
 	mods := fmt.Sprintf(
 		`[{"target":{"k":"attack","scope":"all"},"amount":%d,"bonusType":"untyped",`+
-			`"condition":{"c":"context","note":"enquanto estiver em Fúria"}}]`, quanto)
+			`"condition":{"c":"context","note":"enquanto estiver em Fúria"}}]`, howMuch)
 	_, err := s.sceneCore().Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
 		Characterid: id, Catalogid: "furia", Scope: "scene",
 		Modifiers: mods, Createdat: dbvalue.NowISO(),
@@ -45,7 +45,7 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: f.jogador, Name: "Combatente", Origin: "Soldado", Level: 3,
+		OwnerId: f.player, Name: "Combatente", Origin: "Soldado", Level: 3,
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -56,9 +56,9 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 		t.Fatalf("semear o combatente: %v", err)
 	}
 	seedClasse(t, f.s, id, "Guerreiro", 3)
-	arrangePools(t, f.s, id, func(pocos sheet.Pools) (sheet.Pools, error) {
-		pocos.HpCurrent, pocos.MpCurrent = pocos.HpMax, pocos.MpMax
-		return pocos, nil
+	arrangePools(t, f.s, id, func(pools sheet.Pools) (sheet.Pools, error) {
+		pools.HpCurrent, pools.MpCurrent = pools.HpMax, pools.MpMax
+		return pools, nil
 	})
 	seedPericia(t, f.s, id, "Luta", "strength", true)
 	seedPericia(t, f.s, id, "Pontaria", "dexterity", false)
@@ -70,7 +70,7 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 
 func combatScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.pede(t, f.jogador, http.MethodGet,
+	return f.pede(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
 }
 
@@ -88,22 +88,22 @@ func combatScreen(t *testing.T, f sceneFixture, id int64) string {
 //	Vontade   = ½ nível 1 + Sabedoria 1        = +2
 func TestTheCombatPanelSaysTheEngineNumbers(t *testing.T) {
 	f, id := fighterFixture(t)
-	tela := combatScreen(t, f, id)
+	screen := combatScreen(t, f, id)
 
 	// Rótulo E valor no mesmo `aria-label`, que é como a caixa se nomeia: procurar
 	// só o número acharia o "12" de qualquer outro lugar da página.
-	for _, esperado := range []string{
+	for _, want := range []string{
 		"Defesa 12", "Atq CaC +7", "Atq Dist +3", "Fort +4", "Refl +3", "Vont +2",
 	} {
-		if !strings.Contains(tela, `aria-label="`+esperado+`"`) {
-			t.Errorf("a tela não tem a caixa %q", esperado)
+		if !strings.Contains(screen, `aria-label="`+want+`"`) {
+			t.Errorf("a tela não tem a caixa %q", want)
 		}
 	}
 	// Os SEIS atributos, e o "+0" é tão informativo quanto os outros: uma caixa
 	// que some é uma pergunta sem resposta.
-	for _, esperado := range []string{"FOR", "+4", "DES", "+2", "CON", "+3", "INT", "SAB", "CAR"} {
-		if !strings.Contains(tela, ">"+esperado+"</p>") {
-			t.Errorf("a tela não tem o atributo %q", esperado)
+	for _, want := range []string{"FOR", "+4", "DES", "+2", "CON", "+3", "INT", "SAB", "CAR"} {
+		if !strings.Contains(screen, ">"+want+"</p>") {
+			t.Errorf("a tela não tem o atributo %q", want)
 		}
 	}
 }
@@ -121,22 +121,22 @@ func TestActiveConditionalsEnterTheAttack(t *testing.T) {
 	seedEfeitoCondicional(t, f.s, id, 3)
 
 	// DESLIGADO: o ataque é o mesmo de sempre — ½ nível 1 + Força 4 + treino 2.
-	if tela := combatScreen(t, f, id); !strings.Contains(tela, `aria-label="Atq CaC +7"`) {
+	if screen := combatScreen(t, f, id); !strings.Contains(screen, `aria-label="Atq CaC +7"`) {
 		t.Fatal("com o condicional desligado o ataque não é +7: o painel mudou de base e o resto do caso não mede nada")
 	}
 
 	ligaOCondicional(t, f, id)
 
 	// LIGADO: +3, e o número é escrito à mão — 7 + 3.
-	tela := combatScreen(t, f, id)
-	if !strings.Contains(tela, `aria-label="Atq CaC +10"`) {
+	page := combatScreen(t, f, id)
+	if !strings.Contains(page, `aria-label="Atq CaC +10"`) {
 		t.Error("com o condicional LIGADO o ataque continua sem os +3: o painel computa a ficha base " +
 			"e mostra o número de quem não está com o efeito ativo")
 	}
 	// A DECOMPOSIÇÃO tem de contar a mesma história que a caixa: um total que
 	// sobe sem linha que o explique é pior que o total errado, porque parece
 	// certo.
-	if !strings.Contains(tela, "(cond.)") {
+	if !strings.Contains(page, "(cond.)") {
 		t.Error("o diálogo do ataque não mostra a linha do condicional que somou os +3")
 	}
 }
@@ -167,13 +167,13 @@ func ligaOCondicional(t *testing.T, f sceneFixture, id int64) {
 	if err != nil {
 		t.Fatalf("converter para o motor: %v", err)
 	}
-	oferecidos := engine.ComputeItemEffects(f.s.sceneCore().Catalogs().ActiveItemsFor(ec)).Conditional
-	if len(oferecidos) != 1 {
+	offered := engine.ComputeItemEffects(f.s.sceneCore().Catalogs().ActiveItemsFor(ec)).Conditional
+	if len(offered) != 1 {
 		t.Fatalf("o motor ofereceu %d condicionais e o caso precisa de exatamente 1: "+
-			"o efeito semeado não virou um opt-in, e ligar nada mediria o vazio", len(oferecidos))
+			"o efeito semeado não virou um opt-in, e ligar nada mediria o vazio", len(offered))
 	}
 	err = f.s.sceneCore().Queries().AddCharacterConditional(context.Background(), sqlcgen.AddCharacterConditionalParams{
-		Characterid: id, Conditionalid: engine.ConditionalID(oferecidos[0]),
+		Characterid: id, Conditionalid: engine.ConditionalID(offered[0]),
 	})
 	if err != nil {
 		t.Fatalf("ligar o condicional: %v", err)

@@ -98,20 +98,20 @@ func readTempHpPool(modifiers string) (int, bool, []map[string]any, bool) {
 	if json.Unmarshal([]byte(modifiers), &mods) != nil {
 		return 0, false, nil, false
 	}
-	amount, achou, pura := 0, false, true
+	amount, found, pure := 0, false, true
 	for _, m := range mods {
 		if IsTempHpModifier(m) {
-			if !achou {
-				amount, achou = ToInt(m["amount"]), true
+			if !found {
+				amount, found = ToInt(m["amount"]), true
 			}
 			continue
 		}
-		pura = false
+		pure = false
 	}
-	if !achou || amount <= 0 {
+	if !found || amount <= 0 {
 		return 0, false, nil, false
 	}
-	return amount, pura, mods, true
+	return amount, pure, mods, true
 }
 
 // TempHpTotal é quanto de PV temporário um personagem tem, somando as linhas de

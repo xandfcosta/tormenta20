@@ -127,8 +127,8 @@ func attributesBody(v attributesView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, linha := range v.Rows {
-			templ_7745c5c3_Err = attributeStepper(v.ID, linha).Render(ctx, templ_7745c5c3_Buffer)
+		for _, row := range v.Rows {
+			templ_7745c5c3_Err = attributeStepper(v.ID, row).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -225,7 +225,7 @@ func pointCount(v attributesView) templ.Component {
 // O botão desligado é conveniência sobre a MESMA regra do servidor — ele é
 // desligado com a resposta que o motor daria ao clique, e não com uma segunda
 // conta escrita aqui.
-func attributeStepper(id int64, linha attributeRow) templ.Component {
+func attributeStepper(id int64, row attributeRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -251,9 +251,9 @@ func attributeStepper(id int64, linha attributeRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Label)
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(row.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 70, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 70, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -263,7 +263,7 @@ func attributeStepper(id int64, linha attributeRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = attributeStepCmd(id, linha, -1, "−", "Diminuir "+linha.Label).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = attributeStepCmd(id, row, -1, "−", "Diminuir "+row.Label).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -272,9 +272,9 @@ func attributeStepper(id int64, linha attributeRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(book.WithSign(linha.Base))
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(book.WithSign(row.Base))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 73, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 73, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -284,7 +284,7 @@ func attributeStepper(id int64, linha attributeRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = attributeStepCmd(id, linha, 1, "+", "Aumentar "+linha.Label).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = attributeStepCmd(id, row, 1, "+", "Aumentar "+row.Label).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -293,9 +293,9 @@ func attributeStepper(id int64, linha attributeRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("total " + book.WithSign(linha.Total))
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("total " + book.WithSign(row.Total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 77, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 77, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -309,7 +309,7 @@ func attributeStepper(id int64, linha attributeRow) templ.Component {
 	})
 }
 
-func attributeStepCmd(id int64, linha attributeRow, passo int, simbolo, rotulo string) templ.Component {
+func attributeStepCmd(id int64, row attributeRow, step int, symbol, label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -335,9 +335,9 @@ func attributeStepCmd(id int64, linha attributeRow, passo int, simbolo, rotulo s
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 85, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 85, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -347,7 +347,7 @@ func attributeStepCmd(id int64, linha attributeRow, passo int, simbolo, rotulo s
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if !buttonFits(linha, passo) {
+		if !buttonFits(row, step) {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " disabled")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -358,9 +358,9 @@ func attributeStepCmd(id int64, linha attributeRow, passo int, simbolo, rotulo s
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(attributePost(id, linha.Key, passo))
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(attributePost(id, row.Key, step))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 87, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 87, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
@@ -371,9 +371,9 @@ func attributeStepCmd(id int64, linha attributeRow, passo int, simbolo, rotulo s
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(simbolo)
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(symbol)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 89, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/attributes.templ`, Line: 89, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -387,18 +387,18 @@ func attributeStepCmd(id int64, linha attributeRow, passo int, simbolo, rotulo s
 	})
 }
 
-func buttonFits(linha attributeRow, passo int) bool {
-	if passo > 0 {
-		return linha.CanRaise
+func buttonFits(row attributeRow, step int) bool {
+	if step > 0 {
+		return row.CanRaise
 	}
-	return linha.CanLower
+	return row.CanLower
 }
 
 // attributePost monta o comando. Ele não carrega estado nenhum na URL — esta
 // cena não tem aba nem busca —, e é por isso que ela não precisa do cuidado do
 // `sheetPost`.
-func attributePost(id int64, chave string, passo int) string {
-	return fmt.Sprintf("@post('/personagens/%d/atributos/%s/%d')", id, chave, passo)
+func attributePost(id int64, key string, step int) string {
+	return fmt.Sprintf("@post('/personagens/%d/atributos/%s/%d')", id, key, step)
 }
 
 var _ = templruntime.GeneratedTemplate

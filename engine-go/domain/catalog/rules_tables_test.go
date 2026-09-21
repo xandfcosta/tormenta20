@@ -78,7 +78,7 @@ type classeDoCatalogo struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
 	BookPage      int      `json:"bookPage"`
-	Proficiencias []string `json:"proficiencies"`
+	Proficiencies []string `json:"proficiencies"`
 }
 
 // Proficiências por classe (a linha "Proficiências." de cada bloco, p36–83).
@@ -98,24 +98,24 @@ func TestClassProficienciesTable(t *testing.T) {
 	if len(classes) != 14 {
 		t.Errorf("a tabela tem %d classes, want 14 (as classes-base do livro)", len(classes))
 	}
-	conhecidas := map[string]bool{
+	known := map[string]bool{
 		"armas-simples": true, "armas-marciais": true, "armas-exoticas": true,
 		"armas-de-fogo": true, "armaduras-leves": true, "armaduras-pesadas": true,
 		"escudos": true,
 	}
 	for _, c := range classes {
-		visto := map[string]bool{}
-		for _, cat := range c.Proficiencias {
-			if !conhecidas[cat] {
+		seen := map[string]bool{}
+		for _, cat := range c.Proficiencies {
+			if !known[cat] {
 				t.Errorf("%s: proficiência %q não é uma das sete categorias", c.Name, cat)
 			}
 			if cat == "armas-simples" {
 				t.Errorf("%s: lista `armas-simples`, que é de TODO personagem (p142) e não da classe", c.Name)
 			}
-			if visto[cat] {
+			if seen[cat] {
 				t.Errorf("%s: proficiência %q repetida", c.Name, cat)
 			}
-			visto[cat] = true
+			seen[cat] = true
 		}
 	}
 }
@@ -213,25 +213,25 @@ func (r rollRow) span() (int, int) {
 // mostra nada. Por isso o teste exige cobertura contígua a partir de 1.
 func TestGmRollTablesCoverTheirRange(t *testing.T) {
 	tables := decodeResource[struct {
-		Ruina         []rollRow         `json:"ruina"`
-		ChaseEvents   []rollRow         `json:"chaseEvents"`
-		RewardCastigo []rollRow         `json:"rewardCastigo"`
-		RewardLabels  map[string]string `json:"rewardLabels"`
-		CastigoLabels map[string]string `json:"castigoLabels"`
+		Ruin             []rollRow         `json:"ruina"`
+		ChaseEvents      []rollRow         `json:"chaseEvents"`
+		RewardPunishment []rollRow         `json:"rewardCastigo"`
+		RewardLabels     map[string]string `json:"rewardLabels"`
+		PunishmentLabels map[string]string `json:"castigoLabels"`
 	}](t, "gm-tables")
 
 	for _, tt := range []struct {
-		nome string
+		name string
 		rows []rollRow
 	}{
-		{"ruina", tables.Ruina},
+		{"ruina", tables.Ruin},
 		{"chaseEvents", tables.ChaseEvents},
-		{"rewardCastigo", tables.RewardCastigo},
+		{"rewardCastigo", tables.RewardPunishment},
 	} {
-		assertContiguousRolls(t, tt.nome, tt.rows)
+		assertContiguousRolls(t, tt.name, tt.rows)
 	}
 
-	if len(tables.RewardLabels) == 0 || len(tables.CastigoLabels) == 0 {
+	if len(tables.RewardLabels) == 0 || len(tables.PunishmentLabels) == 0 {
 		t.Error("rótulos de recompensa/castigo vazios — a tela mostraria a chave crua")
 	}
 }
@@ -270,10 +270,10 @@ func TestDungeonDesignTable(t *testing.T) {
 
 // assertContiguousRolls exige que as rolagens cubram 1..N sem buraco e sem
 // repetição — um buraco faz a ferramenta devolver vazio para um d20 legítimo.
-func assertContiguousRolls(t *testing.T, nome string, rows []rollRow) {
+func assertContiguousRolls(t *testing.T, name string, rows []rollRow) {
 	t.Helper()
 	if len(rows) == 0 {
-		t.Errorf("%s: tabela vazia", nome)
+		t.Errorf("%s: tabela vazia", name)
 		return
 	}
 	seen := map[int]bool{}
@@ -281,12 +281,12 @@ func assertContiguousRolls(t *testing.T, nome string, rows []rollRow) {
 	for _, r := range rows {
 		lo, hi := r.span()
 		if lo == 0 || hi < lo {
-			t.Errorf("%s: faixa inválida %d..%d", nome, lo, hi)
+			t.Errorf("%s: faixa inválida %d..%d", name, lo, hi)
 			continue
 		}
 		for roll := lo; roll <= hi; roll++ {
 			if seen[roll] {
-				t.Errorf("%s: rolagem %d aparece em duas linhas", nome, roll)
+				t.Errorf("%s: rolagem %d aparece em duas linhas", name, roll)
 			}
 			seen[roll] = true
 		}
@@ -296,7 +296,7 @@ func assertContiguousRolls(t *testing.T, nome string, rows []rollRow) {
 	}
 	for roll := 1; roll <= max; roll++ {
 		if !seen[roll] {
-			t.Errorf("%s: rolagem %d não está coberta (faixa vai até %d)", nome, roll, max)
+			t.Errorf("%s: rolagem %d não está coberta (faixa vai até %d)", name, roll, max)
 		}
 	}
 }
@@ -314,7 +314,7 @@ type spellForTruqueSweep struct {
 		PmCost      int    `json:"pmCost"`
 		Description string `json:"description"`
 		Exclusive   bool   `json:"exclusive"`
-		Truque      bool   `json:"truque"`
+		Cantrip     bool   `json:"truque"`
 	} `json:"augments"`
 }
 
@@ -332,29 +332,29 @@ type spellForTruqueSweep struct {
 // um truque, e o Hipnotismo (p194) não tinha o dele. Nenhum schema reprova um
 // aprimoramento que simplesmente não está lá.
 func TestEveryTruqueIsFreeAndAlone(t *testing.T) {
-	magias := decodeResource[map[string]spellForTruqueSweep](t, "spells")
-	if len(magias) == 0 {
+	spells := decodeResource[map[string]spellForTruqueSweep](t, "spells")
+	if len(spells) == 0 {
 		t.Fatal("nenhuma magia no catálogo: não há o que varrer, e verde aqui não valeria nada")
 	}
 
-	truques, medidos := 0, 0
-	for id, m := range magias {
-		naMagia := 0
+	cantrips, measured := 0, 0
+	for id, m := range spells {
+		inSpell := 0
 		for i, a := range m.Augments {
-			medidos++
-			escrito := strings.HasPrefix(a.Description, "Truque")
-			if escrito != a.Truque {
+			measured++
+			written := strings.HasPrefix(a.Description, "Truque")
+			if written != a.Cantrip {
 				t.Errorf(
 					"%s (%s) aprimoramento %d: a descrição %s de truque e o campo `truque` diz %v",
-					m.Name, id, i, map[bool]string{true: "fala", false: "não fala"}[escrito], a.Truque,
+					m.Name, id, i, map[bool]string{true: "fala", false: "não fala"}[written], a.Cantrip,
 				)
 				continue
 			}
-			if !a.Truque {
+			if !a.Cantrip {
 				continue
 			}
-			truques++
-			naMagia++
+			cantrips++
+			inSpell++
 			if a.PmCost != 0 {
 				t.Errorf("%s (%s) aprimoramento %d: o truque cobra %d PM, e ele zera o custo (p171)",
 					m.Name, id, i, a.PmCost)
@@ -364,8 +364,8 @@ func TestEveryTruqueIsFreeAndAlone(t *testing.T) {
 					m.Name, id, i)
 			}
 		}
-		if naMagia > 1 {
-			t.Errorf("%s (%s) tem %d truques, e o livro imprime no máximo um por magia", m.Name, id, naMagia)
+		if inSpell > 1 {
+			t.Errorf("%s (%s) tem %d truques, e o livro imprime no máximo um por magia", m.Name, id, inSpell)
 		}
 		if strings.Contains(m.BaseEffect, "Truque") {
 			t.Errorf(
@@ -378,10 +378,10 @@ func TestEveryTruqueIsFreeAndAlone(t *testing.T) {
 	// O DENOMINADOR em duas contas: quantos aprimoramentos a varredura leu, e
 	// quantos truques ela achou. Sem a primeira, um seletor que não casasse com
 	// nada seria verde; sem a segunda, um truque apagado do catálogo também.
-	if medidos < 400 {
-		t.Fatalf("a varredura leu %d aprimoramentos, e são quase 500 — o recurso é o primeiro suspeito", medidos)
+	if measured < 400 {
+		t.Fatalf("a varredura leu %d aprimoramentos, e são quase 500 — o recurso é o primeiro suspeito", measured)
 	}
-	if truques != 14 {
-		t.Errorf("o catálogo tem %d truques, e o livro tem 14 (contados no capítulo de Magia, p180–235)", truques)
+	if cantrips != 14 {
+		t.Errorf("o catálogo tem %d truques, e o livro tem 14 (contados no capítulo de Magia, p180–235)", cantrips)
 	}
 }

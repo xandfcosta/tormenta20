@@ -13,38 +13,38 @@ import (
 // itemScreenSheet acha um item pelo nome, para o teste não guardar ids.
 // A FICHA DO ITEM oferece os lugares ALCANÇÁVEIS, e só eles.
 // itemScreenSheet recorta o diálogo de UM item pelo rótulo dele.
-func itemScreenSheet(tela, nome string) string {
-	inicio := strings.Index(tela, `aria-label="`+nome+`"`)
-	if inicio < 0 {
+func itemScreenSheet(screen, name string) string {
+	start := strings.Index(screen, `aria-label="`+name+`"`)
+	if start < 0 {
 		return ""
 	}
-	fim := strings.Index(tela[inicio:], "</div></div>")
-	if fim < 0 {
-		return tela[inicio:]
+	end := strings.Index(screen[start:], "</div></div>")
+	if end < 0 {
+		return screen[start:]
 	}
-	return tela[inicio : inicio+fim]
+	return screen[start : start+end]
 }
 
-func improvementScreenDialog(tela, nome string) string {
-	inicio := strings.Index(tela, `aria-label="Melhorias de `+nome+`"`)
-	if inicio < 0 {
+func improvementScreenDialog(screen, name string) string {
+	start := strings.Index(screen, `aria-label="Melhorias de `+name+`"`)
+	if start < 0 {
 		return ""
 	}
-	fim := strings.Index(tela[inicio:], "Aplicar")
-	if fim < 0 {
-		return tela[inicio:]
+	end := strings.Index(screen[start:], "Aplicar")
+	if end < 0 {
+		return screen[start:]
 	}
-	return tela[inicio : inicio+fim]
+	return screen[start : start+end]
 }
-func existe(m map[string]bool, chave string) bool {
-	_, tem := m[chave]
-	return tem
+func existe(m map[string]bool, key string) bool {
+	_, found := m[key]
+	return found
 }
 
-func sceneRefusal(corpo string) string {
-	achado := sceneAlert.FindStringSubmatch(corpo)
-	if achado == nil {
+func sceneRefusal(body string) string {
+	found := sceneAlert.FindStringSubmatch(body)
+	if found == nil {
 		return ""
 	}
-	return html.UnescapeString(achado[1])
+	return html.UnescapeString(found[1])
 }

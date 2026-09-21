@@ -117,15 +117,15 @@ func trainingBonusFor(level int64) int {
 
 // sortedExpertises devolve as perícias na ordem da tela.
 func sortedExpertises(dto sheet.CharacterDTO) []sheet.ExpertiseDTO {
-	doLivro := map[string]int{}
+	fromBook := map[string]int{}
 	for i, p := range book.Expertises() {
-		doLivro[p.Name] = i
+		fromBook[p.Name] = i
 	}
-	ordenadas := append([]sheet.ExpertiseDTO(nil), dto.Expertises...)
-	sort.SliceStable(ordenadas, func(a, b int) bool {
-		return rankOf(ordenadas[a], doLivro) < rankOf(ordenadas[b], doLivro)
+	sorted := append([]sheet.ExpertiseDTO(nil), dto.Expertises...)
+	sort.SliceStable(sorted, func(a, b int) bool {
+		return rankOf(sorted[a], fromBook) < rankOf(sorted[b], fromBook)
 	})
-	return ordenadas
+	return sorted
 }
 
 // rankOf é a posição de uma perícia na ordem da tela: resistências, livro,
@@ -134,11 +134,11 @@ func sortedExpertises(dto sheet.CharacterDTO) []sheet.ExpertiseDTO {
 // Os degraus são largos de propósito — somar o índice do catálogo a um bloco de
 // mil mantém a ordem alfabética DENTRO do bloco sem que um bloco invada o
 // seguinte.
-func rankOf(e sheet.ExpertiseDTO, doLivro map[string]int) int {
+func rankOf(e sheet.ExpertiseDTO, fromBook map[string]int) int {
 	if theSaveNames[e.Name] {
-		return doLivro[e.Name]
+		return fromBook[e.Name]
 	}
-	if i, ok := doLivro[e.Name]; ok {
+	if i, ok := fromBook[e.Name]; ok {
 		return 1000 + i
 	}
 	return 2000
@@ -164,34 +164,34 @@ func matchesSearch(name, term string) bool {
 
 // attributeOptions são as seis, com o modificador final de cada uma.
 func attributeOptions(sheet engine.ComputedSheet) []attributeOption {
-	opcoes := make([]attributeOption, 0, len(engine.AttributeKeys))
+	options := make([]attributeOption, 0, len(engine.AttributeKeys))
 	for _, key := range engine.AttributeKeys {
-		opcoes = append(opcoes, attributeOption{
+		options = append(options, attributeOption{
 			Key:   key,
 			Label: attributeAbbr[key] + " " + book.WithSign(sheet.Attributes[key].Total),
 		})
 	}
-	return opcoes
+	return options
 }
 
 // expertiseRowFor monta uma linha.
 func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedSheet) expertiseRow {
-	quebra := expertiseOrZero(sheet, entry.Name, entry.Attribute)
-	soTreinada := trainedOnlyByBook(entry.Name)
-	linha := expertiseRow{
+	breaks := expertiseOrZero(sheet, entry.Name, entry.Attribute)
+	trainedOnly := trainedOnlyByBook(entry.Name)
+	row := expertiseRow{
 		Key:         "exp-" + strconv.Itoa(index),
 		Name:        entry.Name,
 		Command:     url.PathEscape(entry.Name),
 		Attribute:   entry.Attribute,
-		Total:       book.WithSign(quebra.Total),
+		Total:       book.WithSign(breaks.Total),
 		Trained:     entry.Trained,
-		TrainedOnly: soTreinada,
-		Locked:      soTreinada && !entry.Trained,
+		TrainedOnly: trainedOnly,
+		Locked:      trainedOnly && !entry.Trained,
 		AutoFail:    autoFails(sheet, entry.Name),
 		Custom:      entry.Custom,
-		Rows:        expertiseBreakdownRows(quebra),
+		Rows:        expertiseBreakdownRows(breaks),
 	}
-	return linha
+	return row
 }
 
 // trainedOnlyByBook lê a Tabela 2-1 pelo CATÁLOGO, e não por uma lista aqui.
@@ -201,7 +201,7 @@ func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedS
 func trainedOnlyByBook(name string) bool {
 	for _, p := range book.Expertises() {
 		if p.Name == name {
-			return p.SoTreinada
+			return p.TrainedOnly
 		}
 	}
 	return true
@@ -212,8 +212,8 @@ func trainedOnlyByBook(name string) bool {
 // Quem responde é o MOTOR, e não a tela relendo uma condição: a regra de quais
 // condições implicam indefeso mora lá (p394).
 func autoFails(sheet engine.ComputedSheet, name string) bool {
-	for _, falha := range sheet.AutoFailExpertises {
-		if falha == name {
+	for _, fails := range sheet.AutoFailExpertises {
+		if fails == name {
 			return true
 		}
 	}
@@ -226,16 +226,16 @@ func autoFails(sheet engine.ComputedSheet, name string) bool {
 // as contribuições vêm indentadas por baixo dela. Quem abre uma perícia quer
 // primeiro as quatro parcelas do livro, e só depois de onde saiu a quarta.
 func expertiseBreakdownRows(ex engine.ExpertiseBreakdown) []breakdownRow {
-	linhas := []breakdownRow{
+	rows := []breakdownRow{
 		{Label: "½ nível", Value: book.WithSign(ex.HalfLevel)},
 		{Label: "Atributo (" + attributeAbbr[ex.Attribute] + ")", Value: book.WithSign(ex.AttrValue)},
 		{Label: "Treino", Value: book.WithSign(ex.Training)},
 		{Label: "Outros", Value: book.WithSign(ex.ItemBonus)},
 	}
 	for _, c := range ex.ItemContributions {
-		linhas = append(linhas, breakdownRow{
+		rows = append(rows, breakdownRow{
 			Label: c.Source, Value: book.WithSign(c.Amount), Note: c.Note, Indented: true,
 		})
 	}
-	return linhas
+	return rows
 }

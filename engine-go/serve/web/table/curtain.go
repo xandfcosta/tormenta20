@@ -26,8 +26,8 @@ func (s Scene) CurtainRoutes(r chi.Router) {
 // chegasse a ser desenhada com a cortina já aberta — e ela é justamente o que o
 // mestre clica com pressa, no meio da cena.
 func runsCurtain(st Scene, c commandCtx) (*board.BoardState, error) {
-	fechada := chi.URLParam(c.R, "estado") == "fechar"
-	board, mudou, err := st.deps.Boards().SetCurtain(c.R.Context(), c.SessionID, c.TabuleiroID, fechada)
+	closed := chi.URLParam(c.R, "estado") == "fechar"
+	board, changed, err := st.deps.Boards().SetCurtain(c.R.Context(), c.SessionID, c.BoardID, closed)
 	if err != nil {
 		return board, err
 	}
@@ -38,7 +38,7 @@ func runsCurtain(st Scene, c commandCtx) (*board.BoardState, error) {
 	//
 	// Publicar um quadro que não mudou custa um `BoardForRole` e um remendo em
 	// cada tela da mesa para dizer exatamente o que elas já sabiam.
-	if !mudou {
+	if !changed {
 		return nil, nil
 	}
 	return board, nil

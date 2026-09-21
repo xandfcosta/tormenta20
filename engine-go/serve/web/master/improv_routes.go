@@ -38,57 +38,57 @@ func (s Scene) handleImprovClear(w http.ResponseWriter, r *http.Request) {
 
 // respondImprov é o caminho único das seis rotas.
 //
-// `tabela` vazio significa "só redesenhe" — é a carga fria e o campo de salas.
+// `table` vazio significa "só redesenhe" — é a carga fria e o campo de salas.
 // Com tabela, rola e empilha ANTES de montar a cena, porque o histórico é o que
 // a cena desenha.
-func (s Scene) respondImprov(w http.ResponseWriter, r *http.Request, tabela string) {
+func (s Scene) respondImprov(w http.ResponseWriter, r *http.Request, table string) {
 	v := improvFromRequest(r)
 
-	if alvo, achou := strings.CutPrefix(tabela, "limpar:"); achou {
-		if _, conhecida := improvRolls[alvo]; !conhecida {
-			http.Error(w, "tabela de improviso desconhecida: "+alvo, http.StatusBadRequest)
+	if target, found := strings.CutPrefix(table, "limpar:"); found {
+		if _, known := improvRolls[target]; !known {
+			http.Error(w, "tabela de improviso desconhecida: "+target, http.StatusBadRequest)
 			return
 		}
-		v = clearTable(v, alvo)
-		tabela = ""
+		v = clearTable(v, target)
+		table = ""
 	}
-	if tabela != "" {
-		rolar, ok := improvRolls[tabela]
+	if table != "" {
+		roll, ok := improvRolls[table]
 		if !ok {
 			// Tabela inventada é 400 e não silêncio: a rota é montada a partir
 			// da própria lista, então um nome errado aqui só chega por URL
 			// digitada à mão — e devolver a cena intacta faria parecer que o
 			// botão não funciona.
-			http.Error(w, "tabela de improviso desconhecida: "+tabela, http.StatusBadRequest)
+			http.Error(w, "tabela de improviso desconhecida: "+table, http.StatusBadRequest)
 			return
 		}
-		sorteado, err := rolar()
+		drawn, err := roll()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		v = pushOnto(v, tabela, sorteado)
+		v = pushOnto(v, table, drawn)
 	}
 
-	pronta := loadImprov(v)
+	ready := loadImprov(v)
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := ui.RenderFragment(r.Context(), improvScene(pronta))
+		fragment, err := ui.RenderFragment(r.Context(), improvScene(ready))
 		if err != nil {
 			return
 		}
-		_ = sse.PatchElements(fragmento)
+		_ = sse.PatchElements(fragment)
 		return
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo:        "Improviso · Mesa do Mestre · Tormenta 20",
-		Forma:         ui.ShellDense,
-		Voltar:        "/",
-		VoltarRotulo:  "Hub",
-		TituloVisivel: "Mesa do Mestre",
-	}, masterBody("improviso", improvScene(pronta)))
+		Title:        "Improviso · Mesa do Mestre · Tormenta 20",
+		Shape:        ui.ShellDense,
+		Back:         "/",
+		BackLabel:    "Hub",
+		VisibleTitle: "Mesa do Mestre",
+	}, masterBody("improviso", improvScene(ready)))
 }
 
 // improvRolls liga o nome da rota à função que rola. A tela e a rota leem a
@@ -101,30 +101,30 @@ var improvRolls = map[string]func() (roll, error){
 }
 
 // clearTable apaga o histórico de uma tabela e deixa as outras três intactas.
-func clearTable(v improvView, tabela string) improvView {
-	switch tabela {
+func clearTable(v improvView, table string) improvView {
+	switch table {
 	case "ruina":
-		v.Ruina = nil
+		v.Ruin = nil
 	case "perseguicao":
-		v.Perseguicao = nil
+		v.Chase = nil
 	case "recompensa":
-		v.Recompensa = nil
+		v.Reward = nil
 	case "ideias":
-		v.Ideias = nil
+		v.Ideas = nil
 	}
 	return v
 }
 
-func pushOnto(v improvView, tabela string, s roll) improvView {
-	switch tabela {
+func pushOnto(v improvView, table string, s roll) improvView {
+	switch table {
 	case "ruina":
-		v.Ruina = push(v.Ruina, s)
+		v.Ruin = push(v.Ruin, s)
 	case "perseguicao":
-		v.Perseguicao = push(v.Perseguicao, s)
+		v.Chase = push(v.Chase, s)
 	case "recompensa":
-		v.Recompensa = push(v.Recompensa, s)
+		v.Reward = push(v.Reward, s)
 	case "ideias":
-		v.Ideias = push(v.Ideias, s)
+		v.Ideas = push(v.Ideas, s)
 	}
 	return v
 }
@@ -136,21 +136,21 @@ func pushOnto(v improvView, tabela string, s roll) improvView {
 // tirei" no chat da mesa, e pôr isso na URL só encheria o histórico do
 // navegador a cada clique no botão de rolar.
 func improvFromRequest(r *http.Request) improvView {
-	sinais := struct {
-		Ruina       []roll `json:"ruina"`
-		Perseguicao []roll `json:"perseguicao"`
-		Recompensa  []roll `json:"recompensa"`
-		Ideias      []roll `json:"ideias"`
-		Salas       *int   `json:"rooms"`
+	signals := struct {
+		Ruin   []roll `json:"ruina"`
+		Chase  []roll `json:"perseguicao"`
+		Reward []roll `json:"recompensa"`
+		Ideas  []roll `json:"ideias"`
+		Rooms  *int   `json:"rooms"`
 	}{}
-	v := improvView{Salas: salasPadrao}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	v := improvView{Rooms: salasPadrao}
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return v
 	}
-	v.Ruina, v.Perseguicao = sinais.Ruina, sinais.Perseguicao
-	v.Recompensa, v.Ideias = sinais.Recompensa, sinais.Ideias
-	if sinais.Salas != nil {
-		v.Salas = *sinais.Salas
+	v.Ruin, v.Chase = signals.Ruin, signals.Chase
+	v.Reward, v.Ideas = signals.Reward, signals.Ideas
+	if signals.Rooms != nil {
+		v.Rooms = *signals.Rooms
 	}
 	return v
 }

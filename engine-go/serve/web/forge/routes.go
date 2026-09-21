@@ -29,17 +29,17 @@ func (s Scene) handleForge(w http.ResponseWriter, r *http.Request) {
 // porque remendo de resposta que não é 2xx o Datastar DESCARTA, e a folha
 // ficaria parada sem uma palavra na tela.
 func (s Scene) handleForgeDraft(w http.ResponseWriter, r *http.Request) {
-	folha, err := answersFromForm(r)
+	sheet, err := answersFromForm(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fragmento, err := ui.RenderFragment(r.Context(), forgeBody(blankForgeSheet(folha, nil)))
+	fragment, err := ui.RenderFragment(r.Context(), forgeBody(blankForgeSheet(sheet, nil)))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	_ = datastar.NewSSE(w, r).PatchElements(fragmento)
+	_ = datastar.NewSSE(w, r).PatchElements(fragment)
 }
 
 // handleForgePost cria o herói e leva para a distribuição de atributos.
@@ -50,16 +50,16 @@ func (s Scene) handleForgeDraft(w http.ResponseWriter, r *http.Request) {
 // `submit` de um formulário de verdade: quem desenha a resposta é o navegador,
 // não um remendo.
 func (s Scene) handleForgePost(w http.ResponseWriter, r *http.Request) {
-	folha, err := answersFromForm(r)
+	sheet, err := answersFromForm(r)
 	if err != nil {
 		s.writeForge(w, r, http.StatusBadRequest, blankForgeSheet(forgeAnswers{}, nil))
 		return
 	}
-	if erros := forgeRefusals(folha); len(erros) > 0 {
-		s.writeForge(w, r, http.StatusUnprocessableEntity, blankForgeSheet(folha, erros))
+	if errs := forgeRefusals(sheet); len(errs) > 0 {
+		s.writeForge(w, r, http.StatusUnprocessableEntity, blankForgeSheet(sheet, errs))
 		return
 	}
-	id, err := s.birthHero(r, s.deps.CurrentUserID(r), folha)
+	id, err := s.birthHero(r, s.deps.CurrentUserID(r), sheet)
 	if err != nil {
 		http.Error(w, "não foi possível forjar o herói", http.StatusInternalServerError)
 		return
@@ -93,12 +93,12 @@ func answersFromForm(r *http.Request) (forgeAnswers, error) {
 
 func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, v forgeView) {
 	s.deps.WritePage(w, r, status, ui.Page{
-		Titulo: "Forja · Tormenta 20",
+		Title: "Forja · Tormenta 20",
 		// `ui.ShellDense`: o cabeçalho compacto com o "‹ Voltar", como a folha em
 		// branco da campanha. Sem ele a folha nasce sem saída visível.
-		Forma:        ui.ShellDense,
-		Voltar:       "/personagens",
-		VoltarRotulo: "Personagens",
+		Shape:     ui.ShellDense,
+		Back:      "/personagens",
+		BackLabel: "Personagens",
 	}, forgeSheet(v))
 }
 

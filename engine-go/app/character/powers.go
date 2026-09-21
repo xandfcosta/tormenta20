@@ -22,28 +22,28 @@ import (
 // (`class.barbaro.furia`), e a dobra de acento é a do `domain/search` — a mesma
 // que a busca do livro usa, para não haver duas tabelas de acento no projeto.
 func ClassPowerLevel(dto sheet.CharacterDTO, activationID string) int {
-	for _, classe := range dto.Classes {
-		if strings.Contains(activationID, "."+search.Fold(classe.ClassName)+".") {
-			return int(classe.Level)
+	for _, class := range dto.Classes {
+		if strings.Contains(activationID, "."+search.Fold(class.ClassName)+".") {
+			return int(class.Level)
 		}
 	}
 	return int(dto.Level)
 }
 
 // PowerUse é quanto um poder já foi usado nesta cena e neste dia.
-type PowerUse struct{ Cena, Dia int }
+type PowerUse struct{ Scene, Day int }
 
 // PowerUses agrupa os usos gravados por poder.
 func PowerUses(dto sheet.CharacterDTO) map[string]PowerUse {
-	fora := map[string]PowerUse{}
+	outside := map[string]PowerUse{}
 	for _, u := range dto.PowerUses {
-		conta := fora[u.PowerID]
+		account := outside[u.PowerID]
 		if u.Scope == "scene" {
-			conta.Cena = int(u.Used)
+			account.Scene = int(u.Used)
 		} else {
-			conta.Dia = int(u.Used)
+			account.Day = int(u.Used)
 		}
-		fora[u.PowerID] = conta
+		outside[u.PowerID] = account
 	}
-	return fora
+	return outside
 }

@@ -23,22 +23,22 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ler o CSS da casa: %v", err)
 	}
-	folha := string(css)
+	sheet := string(css)
 
 	// O CONTROLE: a folha tem a família que vamos procurar. Sem ele, um caminho
 	// errado ou um arquivo renomeado daria "nenhum chão encontrado" — que se
 	// parece com "todos faltando" e passaria verde se a asserção fosse ao
 	// contrário.
-	if !strings.Contains(folha, ".ground-") {
-		t.Fatalf("o CSS da casa não tem nenhuma classe .ground-* — o guarda está lendo o arquivo errado (%d bytes)", len(folha))
+	if !strings.Contains(sheet, ".ground-") {
+		t.Fatalf("o CSS da casa não tem nenhuma classe .ground-* — o guarda está lendo o arquivo errado (%d bytes)", len(sheet))
 	}
 
 	for _, chao := range board.PlaceGrounds {
-		if !strings.Contains(folha, ".ground-"+chao.ID) {
+		if !strings.Contains(sheet, ".ground-"+chao.ID) {
 			t.Errorf("o chão %q (%s) é oferecido na tela e o CSS não sabe pintá-lo: falta .ground-%s",
-				chao.ID, chao.Rotulo, chao.ID)
+				chao.ID, chao.Label, chao.ID)
 		}
-		if chao.Rotulo == "" {
+		if chao.Label == "" {
 			t.Errorf("o chão %q não tem rótulo para o mestre ler", chao.ID)
 		}
 	}
@@ -57,11 +57,11 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 // pega é a regressão exata e provável — alguém arrastar a regra de volta para
 // dentro do `@layer` numa arrumação, achando que camada é organização.
 func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
-	folha, err := os.ReadFile("../web/assets/app.src.css")
+	sheet, err := os.ReadFile("../web/assets/app.src.css")
 	if err != nil {
 		t.Fatalf("ler o CSS da casa: %v", err)
 	}
-	css := string(folha)
+	css := string(sheet)
 
 	pos := strings.Index(css, ".table-sheet-in-dialog")
 	if pos < 0 {
@@ -71,16 +71,16 @@ func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
 	// Profundidade de blocos ABERTOS na altura da regra. Um nível é o
 	// `@container`, que é legítimo e necessário; dois ou mais significa que há
 	// um `@layer` (ou outro bloco) por fora, e lá a regra perde.
-	profundidade := 0
+	depth := 0
 	for _, c := range css[:pos] {
 		if c == '{' {
-			profundidade++
+			depth++
 		} else if c == '}' {
-			profundidade--
+			depth--
 		}
 	}
-	if profundidade > 1 {
-		t.Errorf("a regra que esconde a ficha em diálogo está %d blocos aninhada, e só o `@container` é esperado: dentro de `@layer` ela perde para o `flex` do Tailwind e a tela larga mostra o painel E o modal", profundidade)
+	if depth > 1 {
+		t.Errorf("a regra que esconde a ficha em diálogo está %d blocos aninhada, e só o `@container` é esperado: dentro de `@layer` ela perde para o `flex` do Tailwind e a tela larga mostra o painel E o modal", depth)
 	}
 }
 
@@ -89,14 +89,14 @@ func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
 // Cinzel cai para uma serifada do sistema em toda tela, que é um defeito de
 // aparência que ninguém liga à causa.
 func TestTheStylesheetFontsExist(t *testing.T) {
-	fontes, err := os.ReadDir("../web/assets/static/fonts")
+	sources, err := os.ReadDir("../web/assets/static/fonts")
 	if err != nil {
 		t.Fatalf("ler as fontes embutidas: %v", err)
 	}
-	if len(fontes) != 2 {
-		t.Fatalf("%d fontes embutidas, e a folha declara duas (latin e latin-ext)", len(fontes))
+	if len(sources) != 2 {
+		t.Fatalf("%d fontes embutidas, e a folha declara duas (latin e latin-ext)", len(sources))
 	}
-	for _, f := range fontes {
+	for _, f := range sources {
 		info, err := f.Info()
 		if err != nil || info.Size() == 0 {
 			t.Errorf("%s está vazia: o navegador ignora a fonte e cai na do sistema", f.Name())

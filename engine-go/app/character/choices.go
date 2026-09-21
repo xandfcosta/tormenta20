@@ -41,8 +41,8 @@ type ChoiceWrite struct {
 // Não é economia: gravar só o carimbo diria que a ficha mudou quando ela não
 // mudou, e o `updatedAt` é o que a Mesa lê para repedir a ficha de quem está à
 // mesa.
-func (p Plays) SaveChoices(ctx context.Context, id int64, escolhas ChoiceWrite) error {
-	if escolhas == (ChoiceWrite{}) {
+func (p Plays) SaveChoices(ctx context.Context, id int64, choices ChoiceWrite) error {
+	if choices == (ChoiceWrite{}) {
 		return nil
 	}
 	if _, err := p.db.ExecContext(ctx, `UPDATE characters SET
@@ -53,8 +53,8 @@ func (p Plays) SaveChoices(ctx context.Context, id int64, escolhas ChoiceWrite) 
 		raceAttributeChoices = COALESCE(?, raceAttributeChoices),
 		updatedAt            = ?
 		WHERE id = ?`,
-		escolhas.ClassPowers, escolhas.OriginChoices, escolhas.ClassChoices,
-		escolhas.RaceAbilityChoices, escolhas.RaceAttributeChoices,
+		choices.ClassPowers, choices.OriginChoices, choices.ClassChoices,
+		choices.RaceAbilityChoices, choices.RaceAttributeChoices,
 		dbvalue.NowISO(), id,
 	); err != nil {
 		return fmt.Errorf("gravar as escolhas da ficha %d: %w", id, err)

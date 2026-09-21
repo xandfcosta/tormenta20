@@ -257,6 +257,8 @@ listener
 lists
 live
 load
+local
+locals
 lock
 long
 magic

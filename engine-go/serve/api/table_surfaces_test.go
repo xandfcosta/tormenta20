@@ -13,11 +13,11 @@ func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	for _, id := range tableRegionNames {
-		marca := `id="` + id + `"`
-		if n := strings.Count(html, marca); n != 1 {
+		mark := `id="` + id + `"`
+		if n := strings.Count(html, mark); n != 1 {
 			t.Errorf("a região %q aparece %d vezes na cena do jogador, e o remendo precisa de exatamente 1", id, n)
 		}
 	}
@@ -29,14 +29,14 @@ func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(html, "O que ver na sessão") {
 		t.Fatal("o jogador não recebeu o seletor de superfícies")
 	}
-	for _, rotulo := range []string{"Ficha", "Mesa", "Tabuleiro"} {
-		if !strings.Contains(html, ">"+rotulo+"<") {
-			t.Errorf("o seletor não oferece %q", rotulo)
+	for _, label := range []string{"Ficha", "Mesa", "Tabuleiro"} {
+		if !strings.Contains(html, ">"+label+"<") {
+			t.Errorf("o seletor não oferece %q", label)
 		}
 	}
 	// E a ficha chega DESENHADA, não prometida: aba com rótulo e sem conteúdo
@@ -53,11 +53,11 @@ func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	dentroDaFicha := html[strings.Index(html, `id="sheet-scene"`):]
-	if i := strings.Index(dentroDaFicha, "Seções da ficha"); i >= 0 {
-		nav := dentroDaFicha[i : i+3000]
+	insideSheet := html[strings.Index(html, `id="sheet-scene"`):]
+	if i := strings.Index(insideSheet, "Seções da ficha"); i >= 0 {
+		nav := insideSheet[i : i+3000]
 		if strings.Contains(nav, `href="/personagens/`) {
 			t.Error("a fileira de abas da ficha embutida ainda tem link para fora da sessão")
 		}
@@ -80,20 +80,20 @@ func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	naMesa := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	embutida := naMesa[strings.Index(naMesa, `id="sheet-scene"`):]
-	cabecalho, _, _ := strings.Cut(embutida, "Seções da ficha")
+	onTable := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	embedded := onTable[strings.Index(onTable, `id="sheet-scene"`):]
+	header, _, _ := strings.Cut(embedded, "Seções da ficha")
 
-	if !strings.Contains(cabecalho, ">Arcanista<") {
+	if !strings.Contains(header, ">Arcanista<") {
 		t.Error("a ficha dentro da sessão não diz de quem ela é")
 	}
-	if strings.Contains(cabecalho, "‹ Voltar") {
+	if strings.Contains(header, "‹ Voltar") {
 		t.Error("a ficha embutida tem a volta que tira o jogador da mesa")
 	}
 
-	solta := f.pede(t, f.jogador, http.MethodGet,
+	loose := f.pede(t, f.player, http.MethodGet,
 		"/personagens/"+strconv.FormatInt(f.charID, 10), "").Body.String()
-	if !strings.Contains(solta, "‹ Voltar") {
+	if !strings.Contains(loose, "‹ Voltar") {
 		t.Fatal("a ficha de página inteira perdeu a volta — sem ela o caso acima não mede nada")
 	}
 }
@@ -105,7 +105,7 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: a cena do mestre chegou inteira. Sem ele, "não achei o seletor"
 	// seria verdade também num 403 ou numa página vazia.
@@ -124,18 +124,18 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 // outro.
 func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 	f := newSceneFixture(t)
-	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(html, `surface: &#39;`+table.DefaultOpeningSurface+`&#39;`) {
 		t.Errorf("a página não semeia a superfície padrão (%q)", table.DefaultOpeningSurface)
 	}
 	// E a superfície padrão precisa EXISTIR na lista: um padrão que não é
 	// oferecido abriria a sessão com as duas abas apagadas e a tela vazia.
-	oferecida := false
+	offered := false
 	for _, s := range table.PlayerSurfaces {
-		oferecida = oferecida || s.ID == table.DefaultOpeningSurface
+		offered = offered || s.ID == table.DefaultOpeningSurface
 	}
-	if !oferecida {
+	if !offered {
 		t.Errorf("a superfície padrão %q não está entre as oferecidas", table.DefaultOpeningSurface)
 	}
 }
@@ -156,7 +156,7 @@ func TestTheSheetInTheSessionHasAWayToKnowItChanged(t *testing.T) {
 	// DESESCAPADO: `data-signals` e `data-on-*` são valores DINÂMICOS de
 	// atributo, e o templ escapa a aspa simples deles (`&#39;`). Procurar a
 	// forma crua aqui daria um guarda que reprova o código certo.
-	scene := html.UnescapeString(f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String())
+	scene := html.UnescapeString(f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String())
 
 	if !strings.Contains(scene, "sheet_version: ''") {
 		t.Error("o sinal `sheet_version` não foi declarado: o remendo do servidor não teria onde pousar")

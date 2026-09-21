@@ -23,28 +23,28 @@ import (
 // guarda. O `TestTheGmTrailIconsExist`, logo abaixo, é esse guarda
 // para a primeira indireta que apareceu.
 func TestEveryRequestedIconExistsInTheGeneratedFile(t *testing.T) {
-	gerado, err := os.ReadFile("icons.templ")
+	generated, err := os.ReadFile("icons.templ")
 	if err != nil {
 		t.Fatalf("ler o gerado: %v", err)
 	}
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
-	pedido := regexp.MustCompile(`@icone\("([A-Za-z0-9]+)"`)
-	for _, f := range arquivos {
-		nome := f.Name()
-		if !strings.HasSuffix(nome, ".templ") || nome == "icons.templ" {
+	requested := regexp.MustCompile(`@icone\("([A-Za-z0-9]+)"`)
+	for _, f := range files {
+		name := f.Name()
+		if !strings.HasSuffix(name, ".templ") || name == "icons.templ" {
 			continue
 		}
-		conteudo, err := os.ReadFile(nome)
+		content, err := os.ReadFile(name)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, m := range pedido.FindAllStringSubmatch(string(conteudo), -1) {
-			if !strings.Contains(string(gerado), `case "`+m[1]+`":`) {
+		for _, m := range requested.FindAllStringSubmatch(string(content), -1) {
+			if !strings.Contains(string(generated), `case "`+m[1]+`":`) {
 				t.Errorf("%s pede o ícone %q e o gerado não o tem — ele sai como SVG vazio, sem erro. "+
-					"Acrescente em scripts/gen-icons-templ.mjs e rode o gerador.", nome, m[1])
+					"Acrescente em scripts/gen-icons-templ.mjs e rode o gerador.", name, m[1])
 			}
 		}
 	}

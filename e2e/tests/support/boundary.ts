@@ -34,32 +34,32 @@ export const LIMITE_MINIMO = 3
  * `secondary` da casa.
  */
 export async function medeOLimiteDosBotoes(page: Page): Promise<MedicaoDeLimite> {
-  return page.evaluate((minimo) => {
-    const tela = document.createElement('canvas')
-    tela.width = 1
-    tela.height = 1
-    const pincel = tela.getContext('2d')
-    if (!pincel) return { falhas: ['sem canvas'], medidos: 0 }
+  return page.evaluate((minimum) => {
+    const canvasEl = document.createElement('canvas')
+    canvasEl.width = 1
+    canvasEl.height = 1
+    const brush = canvasEl.getContext('2d')
+    if (!brush) return { falhas: ['sem canvas'], medidos: 0 }
     const rgb = (css: string): number[] => {
-      pincel.clearRect(0, 0, 1, 1)
-      pincel.fillStyle = css
-      pincel.fillRect(0, 0, 1, 1)
-      return [...pincel.getImageData(0, 0, 1, 1).data]
+      brush.clearRect(0, 0, 1, 1)
+      brush.fillStyle = css
+      brush.fillRect(0, 0, 1, 1)
+      return [...brush.getImageData(0, 0, 1, 1).data]
     }
-    const luz = (c: number[]) => {
+    const light = (c: number[]) => {
       const [r, g, b] = c.slice(0, 3).map((v) => {
         const x = v / 255
         return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
       })
       return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
     }
-    const razao = (a: number[], b: number[]) => {
-      const [x, y] = [luz(a), luz(b)].sort((p, q) => q - p)
+    const reason = (a: number[], b: number[]) => {
+      const [x, y] = [light(a), light(b)].sort((p, q) => q - p)
       return ((x ?? 0) + 0.05) / ((y ?? 0) + 0.05)
     }
     // O fundo EFETIVO: sobe a árvore até achar quem é opaco, como o medidor de
     // contraste faz — medir contra um pai transparente daria razão inventada.
-    const fundoDe = (el: Element): number[] => {
+    const backgroundOf = (el: Element): number[] => {
       let n: Element | null = el.parentElement
       while (n && n !== document.documentElement) {
         const c = rgb(getComputedStyle(n).backgroundColor)
@@ -79,37 +79,37 @@ export async function medeOLimiteDosBotoes(page: Page): Promise<MedicaoDeLimite>
     // dos chamadores. Um `ghost` ou um `link` não entram, e não é isenção: eles
     // não têm limite POR DESENHO, e o WCAG não pede fronteira para controle que
     // é só texto.
-    const daCasa = (b: Element) =>
+    const fromSquare = (b: Element) =>
       /\b(bg-primary|bg-secondary|bg-destructive)\b/.test(b.className)
 
-    const olhados: string[] = []
-    const falhas: string[] = []
-    for (const b of [...document.querySelectorAll('button')].filter(daCasa) as HTMLButtonElement[]) {
+    const looked: string[] = []
+    const failures: string[] = []
+    for (const b of [...document.querySelectorAll('button')].filter(fromSquare) as HTMLButtonElement[]) {
       const cs = getComputedStyle(b)
       if (cs.visibility === 'hidden' || cs.display === 'none') continue
-      const caixa = b.getBoundingClientRect()
-      if (caixa.width < 24 || caixa.height < 16) continue
+      const box = b.getBoundingClientRect()
+      if (box.width < 24 || box.height < 16) continue
       // DESABILITADO fica de fora: o WCAG isenta componente inativo, e o app o
       // desenha com 50% de opacidade DE PROPÓSITO — cobrá-lo faria o guarda
       // pedir que "indisponível" parecesse disponível.
       if (b.disabled) continue
-      const fundo = fundoDe(b)
-      const preenchimento = rgb(cs.backgroundColor)
-      const opaco = (preenchimento[3] ?? 0) > 250
-      const temBorda = Number.parseFloat(cs.borderTopWidth) > 0
-      const doPreenchimento = opaco ? razao(preenchimento, fundo) : 1
-      const daBorda = temBorda ? razao(rgb(cs.borderTopColor), fundo) : 1
-      const melhor = Math.max(doPreenchimento, daBorda)
-      const rotulo = (b.getAttribute('aria-label') || b.textContent || '').trim().slice(0, 24)
-      olhados.push(rotulo)
-      if (melhor < minimo) {
-        falhas.push(
-          `"${rotulo}" tem limite de ${melhor.toFixed(2)}:1 ` +
-            `(preenchimento ${doPreenchimento.toFixed(2)}, borda ${daBorda.toFixed(2)})`,
+      const bg = backgroundOf(b)
+      const fill = rgb(cs.backgroundColor)
+      const opaque = (fill[3] ?? 0) > 250
+      const hasBorder = Number.parseFloat(cs.borderTopWidth) > 0
+      const fillOf = opaque ? reason(fill, bg) : 1
+      const fromEdge = hasBorder ? reason(rgb(cs.borderTopColor), bg) : 1
+      const best = Math.max(fillOf, fromEdge)
+      const caption = (b.getAttribute('aria-label') || b.textContent || '').trim().slice(0, 24)
+      looked.push(caption)
+      if (best < minimum) {
+        failures.push(
+          `"${caption}" tem limite de ${best.toFixed(2)}:1 ` +
+            `(preenchimento ${fillOf.toFixed(2)}, borda ${fromEdge.toFixed(2)})`,
         )
       }
     }
-    return { falhas, medidos: olhados.length }
+    return { falhas: failures, medidos: looked.length }
   }, LIMITE_MINIMO)
 }
 
@@ -118,11 +118,11 @@ export async function medeOLimiteDosBotoes(page: Page): Promise<MedicaoDeLimite>
  * de tipografia: quem afirma "nada reprovou" afirma junto quantos foram olhados,
  * senão "verde" e "não mediu" são a mesma cor.
  */
-export async function expectBotoesComLimiteVisivel(page: Page, onde: string): Promise<void> {
-  const { falhas, medidos } = await medeOLimiteDosBotoes(page)
+export async function expectBotoesComLimiteVisivel(page: Page, where: string): Promise<void> {
+  const { falhas: failures, medidos: measured } = await medeOLimiteDosBotoes(page)
   expect(
-    medidos,
-    `${onde}: o medidor não achou botão nenhum — o seletor parou de casar, e a asserção seguinte não seria evidência`,
+    measured,
+    `${where}: o medidor não achou botão nenhum — o seletor parou de casar, e a asserção seguinte não seria evidência`,
   ).toBeGreaterThan(0)
-  expect(falhas, `botão sem limite visível de ${LIMITE_MINIMO}:1 contra o fundo ${onde}`).toEqual([])
+  expect(failures, `botão sem limite visível de ${LIMITE_MINIMO}:1 contra o fundo ${where}`).toEqual([])
 }

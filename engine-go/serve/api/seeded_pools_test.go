@@ -29,13 +29,13 @@ import (
 // cheio e os casos de "ferido" mediriam um herói intacto.
 func TestTheBenchSeedsThePoolsTheBookGives(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t.com")
+	owner := seedUser(t, s, "dono@t.com")
 
-	casos := []struct {
-		classe  string
-		nivel   int64
-		hpDano  int64
-		mpGasto int64
+	cases := []struct {
+		class    string
+		level    int64
+		hpDamage int64
+		mpSpent  int64
 	}{
 		{"Guerreiro", 1, 0, 0},
 		{"Guerreiro", 5, 12, 0},
@@ -43,27 +43,27 @@ func TestTheBenchSeedsThePoolsTheBookGives(t *testing.T) {
 		{"Bardo", 5, 3, 2},
 		{"Clérigo", 4, 0, 1},
 	}
-	for _, caso := range casos {
-		t.Run(caso.classe, func(t *testing.T) {
-			id := seedCharacterAtLevel(t, s, dono, "Herói", caso.classe, caso.nivel, caso.hpDano, caso.mpGasto)
+	for _, tc := range cases {
+		t.Run(tc.class, func(t *testing.T) {
+			id := seedCharacterAtLevel(t, s, owner, "Herói", tc.class, tc.level, tc.hpDamage, tc.mpSpent)
 			row, err := s.queries.GetCharacter(context.Background(), id)
 			if err != nil {
 				t.Fatalf("reler o personagem: %v", err)
 			}
-			poco := bookPools(t, s, caso.classe, caso.nivel)
+			pool := bookPools(t, s, tc.class, tc.level)
 
-			semeado := poolsOf(t, s, id)
-			if semeado.HpMax != poco.PvMax || semeado.MpMax != poco.PmMax {
+			seeded := poolsOf(t, s, id)
+			if seeded.HpMax != pool.PvMax || seeded.MpMax != pool.PmMax {
 				t.Errorf("semeado com %d/%d de máximo, e o livro dá %d/%d",
-					semeado.HpMax, semeado.MpMax, poco.PvMax, poco.PmMax)
+					seeded.HpMax, seeded.MpMax, pool.PvMax, pool.PmMax)
 			}
-			if querido := poco.PvMax - caso.hpDano; semeado.HpCurrent != querido {
+			if wanted := pool.PvMax - tc.hpDamage; seeded.HpCurrent != wanted {
 				t.Errorf("PV atual = %d, e %d de dano sobre %d dá %d",
-					semeado.HpCurrent, caso.hpDano, poco.PvMax, querido)
+					seeded.HpCurrent, tc.hpDamage, pool.PvMax, wanted)
 			}
-			if querido := poco.PmMax - caso.mpGasto; semeado.MpCurrent != querido {
+			if wanted := pool.PmMax - tc.mpSpent; seeded.MpCurrent != wanted {
 				t.Errorf("PM atual = %d, e %d gasto sobre %d dá %d",
-					semeado.MpCurrent, caso.mpGasto, poco.PmMax, querido)
+					seeded.MpCurrent, tc.mpSpent, pool.PmMax, wanted)
 			}
 
 			// E a CLASSE existe, porque personagem sem classe é impossível nas
@@ -72,8 +72,8 @@ func TestTheBenchSeedsThePoolsTheBookGives(t *testing.T) {
 			if err != nil {
 				t.Fatalf("carregar o agregado: %v", err)
 			}
-			if len(dto.Classes) != 1 || dto.Classes[0].ClassName != caso.classe {
-				t.Errorf("as classes do semeado são %+v, e o caso pediu %q", dto.Classes, caso.classe)
+			if len(dto.Classes) != 1 || dto.Classes[0].ClassName != tc.class {
+				t.Errorf("as classes do semeado são %+v, e o caso pediu %q", dto.Classes, tc.class)
 			}
 		})
 	}

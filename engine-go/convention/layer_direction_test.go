@@ -32,55 +32,55 @@ import (
 // regra, e proibi-lo empurraria a orquestração de volta para o `serve/`, que é
 // de onde ela está saindo.
 func TestNoLayerImportsUpwards(t *testing.T) {
-	proibido := map[string][]string{
+	forbidden := map[string][]string{
 		"app":    {"t20engine/serve/"},
 		"domain": {"t20engine/serve/", "t20engine/app/"},
 	}
 
-	raiz, err := filepath.Abs("..")
+	root, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatalf("achar a raiz: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	medidos := map[string]int{}
-	for grupo, recusados := range proibido {
-		dir := filepath.Join(raiz, grupo)
-		err := filepath.WalkDir(dir, func(caminho string, d fs.DirEntry, err error) error {
-			if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") {
+	set := token.NewFileSet()
+	measured := map[string]int{}
+	for group, refused := range forbidden {
+		dir := filepath.Join(root, group)
+		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") {
 				return err
 			}
-			arquivo, err := parser.ParseFile(conjunto, caminho, nil, parser.ImportsOnly)
+			file, err := parser.ParseFile(set, path, nil, parser.ImportsOnly)
 			if err != nil {
 				return err
 			}
-			medidos[grupo]++
-			for _, imp := range arquivo.Imports {
-				alvo := strings.Trim(imp.Path.Value, `"`)
-				for _, r := range recusados {
-					if strings.HasPrefix(alvo, r) {
-						rel, _ := filepath.Rel(raiz, caminho)
+			measured[group]++
+			for _, imp := range file.Imports {
+				target := strings.Trim(imp.Path.Value, `"`)
+				for _, r := range refused {
+					if strings.HasPrefix(target, r) {
+						rel, _ := filepath.Rel(root, path)
 						t.Errorf("%s importa %q — a seta das camadas só aponta para baixo.\n"+
 							"Se %s/ precisa disso, o que falta é o valor atravessar para cá:\n"+
 							"receba-o por parâmetro, ou declare aqui o tipo que você precisa.",
-							rel, alvo, grupo)
+							rel, target, group)
 					}
 				}
 			}
 			return nil
 		})
 		if err != nil {
-			t.Fatalf("caminhar %s: %v", grupo, err)
+			t.Fatalf("caminhar %s: %v", group, err)
 		}
 	}
 
 	// O DENOMINADOR, por grupo: uma lista de reprovados vazia e um diretório não
 	// lido se parecem no terminal. O piso do `app/` é baixo de propósito — ele
 	// existe para acusar a pasta que sumiu, não para contar arquivos.
-	if medidos["app"] < 3 {
-		t.Fatalf("o guarda leu só %d arquivos em `app/` — ele está medindo o diretório errado", medidos["app"])
+	if measured["app"] < 3 {
+		t.Fatalf("o guarda leu só %d arquivos em `app/` — ele está medindo o diretório errado", measured["app"])
 	}
-	if medidos["domain"] < 50 {
-		t.Fatalf("o guarda leu só %d arquivos em `domain/` — ele está medindo o diretório errado", medidos["domain"])
+	if measured["domain"] < 50 {
+		t.Fatalf("o guarda leu só %d arquivos em `domain/` — ele está medindo o diretório errado", measured["domain"])
 	}
 }

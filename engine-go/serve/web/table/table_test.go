@@ -16,15 +16,15 @@ import (
 // A vez é MINHA quando a linha na vez é de um personagem meu — e é "de outro"
 // quando não é. A escada mora num lugar só: duas divergiriam em silêncio.
 func TestTableTurnOf(t *testing.T) {
-	meu, alheio := int64(7), int64(9)
-	fila := []live.InitiativeEntry{
+	mine, foreign := int64(7), int64(9)
+	queue := []live.InitiativeEntry{
 		{Label: "Ogro", Initiative: 19, Type: "npc"},
-		{Label: "Arcanista", Initiative: 12, Type: "character", CharacterID: &meu},
+		{Label: "Arcanista", Initiative: 12, Type: "character", CharacterID: &mine},
 	}
-	meus := map[int64]bool{meu: true}
+	owned := map[int64]bool{mine: true}
 
-	casos := []struct {
-		nome      string
+	cases := []struct {
+		name      string
 		turnIndex int
 		kind      string
 		label     string
@@ -34,21 +34,21 @@ func TestTableTurnOf(t *testing.T) {
 		{"a vez do meu personagem é minha", 1, "mine", ""},
 		{"índice além da fila não inventa uma vez", 5, "idle", ""},
 	}
-	for _, c := range casos {
-		t.Run(c.nome, func(t *testing.T) {
-			got := tableTurnOf(&live.SessionRuntimeState{Initiative: fila, TurnIndex: c.turnIndex}, meus)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := tableTurnOf(&live.SessionRuntimeState{Initiative: queue, TurnIndex: c.turnIndex}, owned)
 			if got.Kind != c.kind || got.Label != c.label {
 				t.Errorf("veio {%s %q}, queria {%s %q}", got.Kind, got.Label, c.kind, c.label)
 			}
 		})
 	}
 	// O personagem alheio não acende a faixa de ninguém.
-	outro := tableTurnOf(&live.SessionRuntimeState{
-		Initiative: []live.InitiativeEntry{{Label: "Colega", Type: "character", CharacterID: &alheio}},
+	other := tableTurnOf(&live.SessionRuntimeState{
+		Initiative: []live.InitiativeEntry{{Label: "Colega", Type: "character", CharacterID: &foreign}},
 		TurnIndex:  0,
-	}, meus)
-	if outro.Kind != "other" {
-		t.Errorf("a vez de um PC alheio virou %q", outro.Kind)
+	}, owned)
+	if other.Kind != "other" {
+		t.Errorf("a vez de um PC alheio virou %q", other.Kind)
 	}
 }
 
@@ -74,7 +74,7 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 	html, err := ui.RenderFragment(t.Context(), tableScene(View{
 		CampaignID: 7, SessionID: 42, SceneActive: true,
 		Turn: tableTurn{Kind: "idle"},
-		Eu:   &tableMe{CharacterID: 1, Nome: "Samira", Bonus: bonus},
+		Eu:   &tableMe{CharacterID: 1, Name: "Samira", Bonus: bonus},
 	}))
 	if err != nil {
 		t.Fatalf("render: %v", err)
@@ -82,8 +82,8 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 
 	// LITERAL e não escapado: o atributo é CONSTANTE, e o templ só escapa os
 	// dinâmicos. Procurar a forma ESCAPADA aqui reprova com o guarda certo.
-	const faixa = "$d20 >= 1 && $d20 <= 20"
-	if !strings.Contains(html, faixa) {
+	const strip = "$d20 >= 1 && $d20 <= 20"
+	if !strings.Contains(html, strip) {
 		t.Errorf("a prévia não é condicionada à faixa do dado — campo vazio vira um total inventado")
 	}
 	if !strings.Contains(html, "informe o dado") {
@@ -104,63 +104,63 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 // minha. As duas são fatos de apresentação — a regra não sabe quem está olhando
 // nem desenha setas.
 func TestTheTurnStripSaysWhoIsNextAndWhereTheRoundTurns(t *testing.T) {
-	meu := int64(7)
-	fila := []live.InitiativeEntry{
+	mine := int64(7)
+	queue := []live.InitiativeEntry{
 		{Label: "Ogro", Initiative: 20, Type: "npc"},
-		{Label: "Arwen", Initiative: 15, Type: "character", CharacterID: &meu},
+		{Label: "Arwen", Initiative: 15, Type: "character", CharacterID: &mine},
 		{Label: "Zumbi 1", Initiative: 10, Type: "npc"},
 		{Label: "Zumbi 2", Initiative: 5, Type: "npc"},
 	}
-	meus := map[int64]bool{meu: true}
+	owned := map[int64]bool{mine: true}
 
-	casos := []struct {
-		nome      string
+	cases := []struct {
+		name      string
 		turnIndex int
-		rotulos   []string
-		meu       int // a posição que é minha, ou -1
-		viraEm    int // a posição onde a rodada vira, ou -1
+		labels    []string
+		mine      int // a posição que é minha, ou -1
+		becomesAt int // a posição onde a rodada vira, ou -1
 	}{
 		{
-			nome:      "no começo da rodada ela olha para a frente",
-			turnIndex: 0, rotulos: []string{"Ogro", "Arwen", "Zumbi 1"}, meu: 1, viraEm: -1,
+			name:      "no começo da rodada ela olha para a frente",
+			turnIndex: 0, labels: []string{"Ogro", "Arwen", "Zumbi 1"}, mine: 1, becomesAt: -1,
 		},
 		{
 			// O CASO QUE IMPORTA: no último da rodada, "quem vem depois" está no
 			// TOPO da lista, e é justamente quando a pergunta mais pesa.
-			nome:      "no último da rodada ela DÁ A VOLTA",
-			turnIndex: 3, rotulos: []string{"Zumbi 2", "Ogro", "Arwen"}, meu: 2, viraEm: 1,
+			name:      "no último da rodada ela DÁ A VOLTA",
+			turnIndex: 3, labels: []string{"Zumbi 2", "Ogro", "Arwen"}, mine: 2, becomesAt: 1,
 		},
 		{
-			nome:      "a volta acontece na terceira posição quando falta um",
-			turnIndex: 2, rotulos: []string{"Zumbi 1", "Zumbi 2", "Ogro"}, meu: -1, viraEm: 2,
+			name:      "a volta acontece na terceira posição quando falta um",
+			turnIndex: 2, labels: []string{"Zumbi 1", "Zumbi 2", "Ogro"}, mine: -1, becomesAt: 2,
 		},
 	}
-	for _, c := range casos {
-		t.Run(c.nome, func(t *testing.T) {
-			faixa := turnStripOf(&live.SessionRuntimeState{
-				Initiative: fila, TurnIndex: c.turnIndex, Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1,
-			}, meus)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			strip := turnStripOf(&live.SessionRuntimeState{
+				Initiative: queue, TurnIndex: c.turnIndex, Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1,
+			}, owned)
 
-			if len(faixa) != len(c.rotulos) {
-				t.Fatalf("a faixa veio com %d nomes, queria %d: %+v", len(faixa), len(c.rotulos), faixa)
+			if len(strip) != len(c.labels) {
+				t.Fatalf("a faixa veio com %d nomes, queria %d: %+v", len(strip), len(c.labels), strip)
 			}
-			for i, esperado := range c.rotulos {
-				if faixa[i].Rotulo != esperado {
-					t.Errorf("posição %d é %q, queria %q", i, faixa[i].Rotulo, esperado)
+			for i, want := range c.labels {
+				if strip[i].Label != want {
+					t.Errorf("posição %d é %q, queria %q", i, strip[i].Label, want)
 				}
-				if faixa[i].Meu != (i == c.meu) {
-					t.Errorf("posição %d (%s): Meu=%v, queria %v", i, esperado, faixa[i].Meu, i == c.meu)
+				if strip[i].Mine != (i == c.mine) {
+					t.Errorf("posição %d (%s): Meu=%v, queria %v", i, want, strip[i].Mine, i == c.mine)
 				}
-				if faixa[i].ViraARodada != (i == c.viraEm) {
-					t.Errorf("posição %d (%s): ViraARodada=%v, queria %v", i, esperado, faixa[i].ViraARodada, i == c.viraEm)
+				if strip[i].WrapsRound != (i == c.becomesAt) {
+					t.Errorf("posição %d (%s): ViraARodada=%v, queria %v", i, want, strip[i].WrapsRound, i == c.becomesAt)
 				}
 			}
 			// A PRIMEIRA é sempre a que está na vez, e as outras nunca são.
-			if !faixa[0].Agora {
+			if !strip[0].Now {
 				t.Error("a primeira posição não está marcada como a da vez")
 			}
-			for i := 1; i < len(faixa); i++ {
-				if faixa[i].Agora {
+			for i := 1; i < len(strip); i++ {
+				if strip[i].Now {
 					t.Errorf("a posição %d também se diz na vez", i)
 				}
 			}
@@ -175,25 +175,25 @@ func TestTheTurnStripSaysWhoIsNextAndWhereTheRoundTurns(t *testing.T) {
 // volta traria o Ogro duas vezes se ela pedisse três da fila de dois — e é o
 // `UpcomingTurns` que corta, com o guarda dele.
 func TestTheTurnStripShowsNothingOutOfCombatAndNeverRepeats(t *testing.T) {
-	meus := map[int64]bool{}
+	mine := map[int64]bool{}
 
-	if faixa := turnStripOf(&live.SessionRuntimeState{
+	if strip := turnStripOf(&live.SessionRuntimeState{
 		Initiative: []live.InitiativeEntry{{Label: "Ogro"}}, TurnIndex: -1,
-	}, meus); len(faixa) != 0 {
-		t.Errorf("fora de combate a faixa desenhou %d nomes: %+v", len(faixa), faixa)
+	}, mine); len(strip) != 0 {
+		t.Errorf("fora de combate a faixa desenhou %d nomes: %+v", len(strip), strip)
 	}
 
-	dois := []live.InitiativeEntry{{Label: "Ogro"}, {Label: "Arwen"}}
-	faixa := turnStripOf(&live.SessionRuntimeState{
-		Initiative: dois, TurnIndex: 1, Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1,
-	}, meus)
-	if len(faixa) != 2 {
-		t.Fatalf("uma fila de dois virou uma faixa de %d: %+v", len(faixa), faixa)
+	two := []live.InitiativeEntry{{Label: "Ogro"}, {Label: "Arwen"}}
+	band := turnStripOf(&live.SessionRuntimeState{
+		Initiative: two, TurnIndex: 1, Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1,
+	}, mine)
+	if len(band) != 2 {
+		t.Fatalf("uma fila de dois virou uma faixa de %d: %+v", len(band), band)
 	}
-	if faixa[0].Rotulo != "Arwen" || faixa[1].Rotulo != "Ogro" {
-		t.Errorf("a faixa da fila de dois é %q,%q", faixa[0].Rotulo, faixa[1].Rotulo)
+	if band[0].Label != "Arwen" || band[1].Label != "Ogro" {
+		t.Errorf("a faixa da fila de dois é %q,%q", band[0].Label, band[1].Label)
 	}
-	if !faixa[1].ViraARodada {
+	if !band[1].WrapsRound {
 		t.Error("a volta na fila de dois não foi marcada")
 	}
 }
@@ -209,34 +209,34 @@ func TestTheTurnStripShowsNothingOutOfCombatAndNeverRepeats(t *testing.T) {
 // marca os dois casos, e por isso o caso PRECISA de dois personagens meus —
 // uma bancada que semeie um por pessoa não enfrenta o ramo.
 func TestTheStripSaysYourNameWhenMoreThanOneIsYours(t *testing.T) {
-	meu, outroMeu := int64(7), int64(8)
-	meus := map[int64]bool{meu: true, outroMeu: true}
+	mine, otherMine := int64(7), int64(8)
+	owned := map[int64]bool{mine: true, otherMine: true}
 
 	umSo := turnStripOf(&live.SessionRuntimeState{Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1, TurnIndex: 0, Initiative: []live.InitiativeEntry{
 		{Label: "Ogro"},
-		{Label: "Arwen", Type: "character", CharacterID: &meu},
+		{Label: "Arwen", Type: "character", CharacterID: &mine},
 		{Label: "Zumbi 1"},
-	}}, meus)
+	}}, owned)
 	if got := turnStripName(umSo[1]); got != "você" {
 		t.Errorf("com UM personagem meu a faixa escreveu %q, queria \"você\"", got)
 	}
 
-	dois := turnStripOf(&live.SessionRuntimeState{Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1, TurnIndex: 0, Initiative: []live.InitiativeEntry{
-		{Label: "Recruta", Type: "character", CharacterID: &meu},
+	two := turnStripOf(&live.SessionRuntimeState{Scene: &live.Scene{Kind: live.SceneAction, Number: 1}, ScenesSoFar: 1, TurnIndex: 0, Initiative: []live.InitiativeEntry{
+		{Label: "Recruta", Type: "character", CharacterID: &mine},
 		{Label: "Tanque"},
-		{Label: "Arcanista", Type: "character", CharacterID: &outroMeu},
-	}}, meus)
+		{Label: "Arcanista", Type: "character", CharacterID: &otherMine},
+	}}, owned)
 	for _, i := range []int{0, 2} {
-		if got := turnStripName(dois[i]); got == "você" {
+		if got := turnStripName(two[i]); got == "você" {
 			t.Errorf("posição %d escreveu \"você\" com DOIS personagens meus na faixa — qual deles?", i)
 		}
 	}
-	if turnStripName(dois[0]) != "Recruta" || turnStripName(dois[2]) != "Arcanista" {
-		t.Errorf("os nomes não voltaram: %q e %q", turnStripName(dois[0]), turnStripName(dois[2]))
+	if turnStripName(two[0]) != "Recruta" || turnStripName(two[2]) != "Arcanista" {
+		t.Errorf("os nomes não voltaram: %q e %q", turnStripName(two[0]), turnStripName(two[2]))
 	}
 	// A COR continua marcando os dois: o que se perdeu foi a palavra, não o
 	// destaque.
-	if !dois[0].Meu || !dois[2].Meu {
+	if !two[0].Mine || !two[2].Mine {
 		t.Error("as linhas deixaram de ser marcadas como minhas")
 	}
 }

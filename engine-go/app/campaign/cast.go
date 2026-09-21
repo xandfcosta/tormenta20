@@ -37,8 +37,8 @@ type Cast struct {
 	access  session.Access
 }
 
-func NewCast(q *sqlcgen.Queries, trava session.Access) Cast {
-	return Cast{queries: q, access: trava}
+func NewCast(q *sqlcgen.Queries, lock session.Access) Cast {
+	return Cast{queries: q, access: lock}
 }
 
 // Save grava um NPC NOVO no elenco e devolve o id dele.
@@ -48,40 +48,40 @@ func NewCast(q *sqlcgen.Queries, trava session.Access) Cast {
 // editor — faziam as duas na cena, cada um por sua conta. O que difere entre
 // eles é de onde o bloco VEM; o que é um bloco válido é uma regra só.
 func (c Cast) Save(
-	ctx context.Context, quem app.Caller, campanhaID int64, nome string, bloco creature.Block,
+	ctx context.Context, who app.Caller, campaignID int64, name string, block creature.Block,
 ) (int64, error) {
-	if _, err := c.access.OwnedCampaign(ctx, quem, campanhaID); err != nil {
+	if _, err := c.access.OwnedCampaign(ctx, who, campaignID); err != nil {
 		return 0, err
 	}
-	blob, err := validBlockJSON(nome, bloco)
+	blob, err := validBlockJSON(name, block)
 	if err != nil {
 		return 0, err
 	}
-	agora := dbvalue.NowISO()
-	linha, err := c.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
-		Campaignid: campanhaID, Name: nome, Block: blob, Createdat: agora, Updatedat: agora,
+	now := dbvalue.NowISO()
+	row, err := c.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
+		Campaignid: campaignID, Name: name, Block: blob, Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		return 0, fmt.Errorf("guardar %q no elenco da campanha %d: %w", nome, campanhaID, err)
+		return 0, fmt.Errorf("guardar %q no elenco da campanha %d: %w", name, campaignID, err)
 	}
-	return linha.ID, nil
+	return row.ID, nil
 }
 
 // Update reescreve um NPC que já está no elenco.
 func (c Cast) Update(
-	ctx context.Context, quem app.Caller, campanhaID, npcID int64, nome string, bloco creature.Block,
+	ctx context.Context, who app.Caller, campaignID, npcID int64, name string, block creature.Block,
 ) error {
-	if _, _, err := c.Block(ctx, quem, campanhaID, npcID); err != nil {
+	if _, _, err := c.Block(ctx, who, campaignID, npcID); err != nil {
 		return err
 	}
-	blob, err := validBlockJSON(nome, bloco)
+	blob, err := validBlockJSON(name, block)
 	if err != nil {
 		return err
 	}
 	if _, err := c.queries.UpdateCampaignCreature(ctx, sqlcgen.UpdateCampaignCreatureParams{
-		ID: npcID, Name: nome, Block: blob, Updatedat: dbvalue.NowISO(),
+		ID: npcID, Name: name, Block: blob, Updatedat: dbvalue.NowISO(),
 	}); err != nil {
-		return fmt.Errorf("atualizar o npc %d da campanha %d: %w", npcID, campanhaID, err)
+		return fmt.Errorf("atualizar o npc %d da campanha %d: %w", npcID, campaignID, err)
 	}
 	return nil
 }
@@ -91,15 +91,15 @@ func (c Cast) Update(
 // NÃO mexe na FILA, e a separação é do desenho: "ele não volta mais" e "ele saiu
 // desta cena" são duas perguntas, e juntá-las faria o mestre perder o combatente
 // em curso ao arrumar a preparação.
-func (c Cast) Erase(ctx context.Context, quem app.Caller, campanhaID, npcID int64) (string, error) {
-	linha, _, err := c.Block(ctx, quem, campanhaID, npcID)
+func (c Cast) Erase(ctx context.Context, who app.Caller, campaignID, npcID int64) (string, error) {
+	row, _, err := c.Block(ctx, who, campaignID, npcID)
 	if err != nil {
 		return "", err
 	}
 	if err := c.queries.DeleteCampaignCreature(ctx, npcID); err != nil {
-		return "", fmt.Errorf("apagar o npc %d da campanha %d: %w", npcID, campanhaID, err)
+		return "", fmt.Errorf("apagar o npc %d da campanha %d: %w", npcID, campaignID, err)
 	}
-	return linha.Name, nil
+	return row.Name, nil
 }
 
 // Block lê UM NPC do elenco, com a trava, e já devolve o bloco desserializado.
@@ -107,35 +107,35 @@ func (c Cast) Erase(ctx context.Context, quem app.Caller, campanhaID, npcID int6
 // É o gargalo de leitura dos outros três: quem escreve passa por aqui primeiro,
 // e é isso que faz a conferência de campanha existir UMA vez.
 func (c Cast) Block(
-	ctx context.Context, quem app.Caller, campanhaID, npcID int64,
+	ctx context.Context, who app.Caller, campaignID, npcID int64,
 ) (sqlcgen.CampaignCreature, creature.Block, error) {
-	var bloco creature.Block
-	if _, err := c.access.OwnedCampaign(ctx, quem, campanhaID); err != nil {
-		return sqlcgen.CampaignCreature{}, bloco, err
+	var block creature.Block
+	if _, err := c.access.OwnedCampaign(ctx, who, campaignID); err != nil {
+		return sqlcgen.CampaignCreature{}, block, err
 	}
-	linha, err := c.queries.GetCampaignCreature(ctx, npcID)
+	row, err := c.queries.GetCampaignCreature(ctx, npcID)
 	if err != nil {
-		return sqlcgen.CampaignCreature{}, bloco, fmt.Errorf(
+		return sqlcgen.CampaignCreature{}, block, fmt.Errorf(
 			"o npc %d não existe: %w", npcID, app.ErrNotFound)
 	}
-	if linha.Campaignid != campanhaID {
-		return sqlcgen.CampaignCreature{}, bloco, fmt.Errorf(
-			"o npc %d não é da campanha %d: %w", npcID, campanhaID, app.ErrForbidden)
+	if row.Campaignid != campaignID {
+		return sqlcgen.CampaignCreature{}, block, fmt.Errorf(
+			"o npc %d não é da campanha %d: %w", npcID, campaignID, app.ErrForbidden)
 	}
-	if err := json.Unmarshal([]byte(linha.Block), &bloco); err != nil {
-		return linha, bloco, fmt.Errorf("o bloco de %q está ilegível: %w", linha.Name, app.ErrRefused)
+	if err := json.Unmarshal([]byte(row.Block), &block); err != nil {
+		return row, block, fmt.Errorf("o bloco de %q está ilegível: %w", row.Name, app.ErrRefused)
 	}
-	return linha, bloco, nil
+	return row, block, nil
 }
 
 // List devolve o elenco inteiro, cru. Quem monta o resumo da tela é a cena — o
 // que ela desenha de cada NPC é decisão de apresentação.
-func (c Cast) List(ctx context.Context, campanhaID int64) ([]sqlcgen.CampaignCreature, error) {
-	linhas, err := c.queries.ListCampaignCreatures(ctx, campanhaID)
+func (c Cast) List(ctx context.Context, campaignID int64) ([]sqlcgen.CampaignCreature, error) {
+	rows, err := c.queries.ListCampaignCreatures(ctx, campaignID)
 	if err != nil {
-		return nil, fmt.Errorf("listar o elenco da campanha %d: %w", campanhaID, err)
+		return nil, fmt.Errorf("listar o elenco da campanha %d: %w", campaignID, err)
 	}
-	return linhas, nil
+	return rows, nil
 }
 
 // CloneBlock copia um NPC do elenco sob outro nome — o "chefe que ganha nome".
@@ -149,21 +149,21 @@ func (c Cast) List(ctx context.Context, campanhaID int64) ([]sqlcgen.CampaignCre
 // que as linhas dividem. E é o BLOCO e não a ficha: clonar personagem exigiria
 // matricular a cópia na campanha, e todo membro aparece no painel do Grupo.
 func (c Cast) CloneBlock(
-	ctx context.Context, quem app.Caller, campanhaID, npcID int64, nome string,
+	ctx context.Context, who app.Caller, campaignID, npcID int64, name string,
 ) (int64, error) {
-	origem, _, err := c.Block(ctx, quem, campanhaID, npcID)
+	origin, _, err := c.Block(ctx, who, campaignID, npcID)
 	if err != nil {
 		return 0, err
 	}
-	agora := dbvalue.NowISO()
-	copia, err := c.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
-		Campaignid: campanhaID, Name: nome, Block: origem.Block,
-		Createdat: agora, Updatedat: agora,
+	now := dbvalue.NowISO()
+	dup, err := c.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
+		Campaignid: campaignID, Name: name, Block: origin.Block,
+		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		return 0, fmt.Errorf("copiar o npc %d da campanha %d: %w", npcID, campanhaID, err)
+		return 0, fmt.Errorf("copiar o npc %d da campanha %d: %w", npcID, campaignID, err)
 	}
-	return copia.ID, nil
+	return dup.ID, nil
 }
 
 // validBlockJSON é o que TODO bloco atravessa antes de virar linha: a validação
@@ -171,14 +171,14 @@ func (c Cast) CloneBlock(
 //
 // Um erro de validação sai com `app.ErrRefused` porque é recusa de REGRA — o
 // mestre digitou algo que um bloco não pode ter —, e não falha de sistema.
-func validBlockJSON(nome string, bloco creature.Block) (string, error) {
-	if err := creature.Validate(nome, &bloco); err != nil {
+func validBlockJSON(name string, block creature.Block) (string, error) {
+	if err := creature.Validate(name, &block); err != nil {
 		return "", fmt.Errorf("%w: %w", app.ErrRefused, err)
 	}
-	creature.Normalize(&bloco)
-	blob, err := json.Marshal(bloco)
+	creature.Normalize(&block)
+	blob, err := json.Marshal(block)
 	if err != nil {
-		return "", fmt.Errorf("guardar o bloco de %q: %w", nome, errors.Join(err, app.ErrRefused))
+		return "", fmt.Errorf("guardar o bloco de %q: %w", name, errors.Join(err, app.ErrRefused))
 	}
 	return string(blob), nil
 }

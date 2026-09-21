@@ -27,11 +27,11 @@ func quadrados(pares ...[2]int) []engine.Square {
 }
 
 func brejoEm(pares ...[2]int) engine.MoveTerrain {
-	dificil := map[engine.Square]bool{}
+	hard := map[engine.Square]bool{}
 	for _, q := range quadrados(pares...) {
-		dificil[q] = true
+		hard[q] = true
 	}
-	return engine.MoveTerrain{Difficult: dificil}
+	return engine.MoveTerrain{Difficult: hard}
 }
 
 // A PRIMEIRA VIRADA: o ouro acaba onde a ação de movimento acaba.
@@ -41,16 +41,16 @@ func brejoEm(pares ...[2]int) engine.MoveTerrain {
 // peça também para. O resto é AZUL e não vermelho: 9 cabe em 12, ou seja, cabe
 // na segunda ação de movimento.
 func TestTheGoldEndsWhereTheMoveActionEnds(t *testing.T) {
-	ouro, azul, vermelho := moveWires(quadrados([2]int{0, 0}, [2]int{9, 0}), []int{9}, 6)
+	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{9, 0}), []int{9}, 6)
 
-	if ouro != "M 0.5 0.5 L 6.5 0.5" {
-		t.Errorf("o ouro saiu %q, esperado até o centro de (6,0)", ouro)
+	if gold != "M 0.5 0.5 L 6.5 0.5" {
+		t.Errorf("o ouro saiu %q, esperado até o centro de (6,0)", gold)
 	}
-	if azul != "M 6.5 0.5 L 9 0.5" {
-		t.Errorf("o azul saiu %q, esperado do centro de (6,0) até a borda do destino", azul)
+	if blue != "M 6.5 0.5 L 9 0.5" {
+		t.Errorf("o azul saiu %q, esperado do centro de (6,0) até a borda do destino", blue)
 	}
-	if vermelho != "" {
-		t.Errorf("nove quadrados cabem em duas ações de movimento e mesmo assim pintaram %q de vermelho", vermelho)
+	if red != "" {
+		t.Errorf("nove quadrados cabem em duas ações de movimento e mesmo assim pintaram %q de vermelho", red)
 	}
 }
 
@@ -59,16 +59,16 @@ func TestTheGoldEndsWhereTheMoveActionEnds(t *testing.T) {
 // Vinte casas rasas com deslocamento de 6: o ouro vai até 6, o azul de 6 a 12, e
 // o que passa de 12 não cabe no turno — não há terceira ação de movimento.
 func TestTheRedStartsAfterBothActions(t *testing.T) {
-	ouro, azul, vermelho := moveWires(quadrados([2]int{0, 0}, [2]int{20, 0}), []int{20}, 6)
+	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{20, 0}), []int{20}, 6)
 
-	if ouro != "M 0.5 0.5 L 6.5 0.5" {
-		t.Errorf("o ouro saiu %q, esperado até o centro de (6,0)", ouro)
+	if gold != "M 0.5 0.5 L 6.5 0.5" {
+		t.Errorf("o ouro saiu %q, esperado até o centro de (6,0)", gold)
 	}
-	if azul != "M 6.5 0.5 L 12.5 0.5" {
-		t.Errorf("o azul saiu %q, esperado do centro de (6,0) ao de (12,0)", azul)
+	if blue != "M 6.5 0.5 L 12.5 0.5" {
+		t.Errorf("o azul saiu %q, esperado do centro de (6,0) ao de (12,0)", blue)
 	}
-	if vermelho != "M 12.5 0.5 L 20 0.5" {
-		t.Errorf("o vermelho saiu %q, esperado do centro de (12,0) até a borda do destino", vermelho)
+	if red != "M 12.5 0.5 L 20 0.5" {
+		t.Errorf("o vermelho saiu %q, esperado do centro de (12,0) até a borda do destino", red)
 	}
 }
 
@@ -78,12 +78,12 @@ func TestTheRedStartsAfterBothActions(t *testing.T) {
 // Sem ele, "achei ouro" não se distingue de "o ouro é o caminho inteiro sempre",
 // e as duas tesouras poderiam estar cortando em qualquer lugar.
 func TestThePathThatFitsInTheMoveActionIsPureGold(t *testing.T) {
-	ouro, azul, vermelho := moveWires(quadrados([2]int{0, 0}, [2]int{3, 0}), []int{3}, 6)
+	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{3, 0}), []int{3}, 6)
 
-	if azul != "" || vermelho != "" {
-		t.Errorf("três quadrados sobre um deslocamento de seis pintaram %q de azul e %q de vermelho", azul, vermelho)
+	if blue != "" || red != "" {
+		t.Errorf("três quadrados sobre um deslocamento de seis pintaram %q de azul e %q de vermelho", blue, red)
 	}
-	if ouro == "" {
+	if gold == "" {
 		t.Error("o caminho que cabe não desenhou fio nenhum")
 	}
 }
@@ -94,16 +94,16 @@ func TestThePathThatFitsInTheMoveActionIsPureGold(t *testing.T) {
 // Oito cabe em doze, então o resto é azul: este é o caminho que antes era
 // RECUSADO pelo servidor, e hoje é um movimento legítimo que custa o turno todo.
 func TestTheBookDiagonalDecidesTheFirstTurn(t *testing.T) {
-	ouro, azul, vermelho := moveWires(quadrados([2]int{0, 0}, [2]int{4, 4}), []int{8}, 6)
+	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{4, 4}), []int{8}, 6)
 
-	if ouro != "M 0.5 0.5 L 3.5 3.5" {
-		t.Errorf("o ouro saiu %q, esperado até o centro de (3,3)", ouro)
+	if gold != "M 0.5 0.5 L 3.5 3.5" {
+		t.Errorf("o ouro saiu %q, esperado até o centro de (3,3)", gold)
 	}
-	if azul == "" {
+	if blue == "" {
 		t.Error("oito quadrados sobre um deslocamento de seis não pintaram nada de azul")
 	}
-	if vermelho != "" {
-		t.Errorf("oito cabe em duas ações de movimento e mesmo assim saiu %q de vermelho", vermelho)
+	if red != "" {
+		t.Errorf("oito cabe em duas ações de movimento e mesmo assim saiu %q de vermelho", red)
 	}
 }
 
@@ -112,13 +112,13 @@ func TestTheBookDiagonalDecidesTheFirstTurn(t *testing.T) {
 // Sem vez não há ação padrão para trocar por movimento, então azul e vermelho
 // não querem dizer nada: desenhá-los inventaria um teto que a cena não tem.
 func TestOutOfCombatTheArrowIsGoldAllTheWay(t *testing.T) {
-	ouro, azul, vermelho := moveWires(quadrados([2]int{0, 0}, [2]int{40, 0}), []int{40}, -1)
+	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{40, 0}), []int{40}, -1)
 
-	if azul != "" || vermelho != "" {
-		t.Errorf("sem orçamento a seta pintou %q de azul e %q de vermelho", azul, vermelho)
+	if blue != "" || red != "" {
+		t.Errorf("sem orçamento a seta pintou %q de azul e %q de vermelho", blue, red)
 	}
-	if ouro != "M 0.5 0.5 L 40 0.5" {
-		t.Errorf("a seta sem orçamento saiu %q, esperada inteira", ouro)
+	if gold != "M 0.5 0.5 L 40 0.5" {
+		t.Errorf("a seta sem orçamento saiu %q, esperada inteira", gold)
 	}
 }
 
@@ -131,16 +131,16 @@ func TestOutOfCombatTheArrowIsGoldAllTheWay(t *testing.T) {
 // de traduzir o índice e é aqui que ela se perderia, com a linha continuando a
 // sair, só que com as cores no lugar errado.
 func TestBothTurnsOnTheSameLeg(t *testing.T) {
-	ouro, azul, vermelho := moveWires(quadrados([2]int{0, 0}, [2]int{30, 0}), []int{30}, 6)
+	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{30, 0}), []int{30}, 6)
 
-	if ouro != "M 0.5 0.5 L 6.5 0.5" {
-		t.Errorf("o ouro saiu %q", ouro)
+	if gold != "M 0.5 0.5 L 6.5 0.5" {
+		t.Errorf("o ouro saiu %q", gold)
 	}
-	if azul != "M 6.5 0.5 L 12.5 0.5" {
-		t.Errorf("o azul saiu %q, esperado o miolo entre as duas viradas", azul)
+	if blue != "M 6.5 0.5 L 12.5 0.5" {
+		t.Errorf("o azul saiu %q, esperado o miolo entre as duas viradas", blue)
 	}
-	if vermelho != "M 12.5 0.5 L 30 0.5" {
-		t.Errorf("o vermelho saiu %q", vermelho)
+	if red != "M 12.5 0.5 L 30 0.5" {
+		t.Errorf("o vermelho saiu %q", red)
 	}
 }
 
@@ -152,17 +152,17 @@ func TestBothTurnsOnTheSameLeg(t *testing.T) {
 // É o caso que prova que `pontos[i1:i2]` traz as dobras do MIOLO — cortar só nas
 // pontas perderia a dobra e a seta azul viraria uma reta por cima do mapa.
 func TestOnThePolylineTheBlueCrossesTheBend(t *testing.T) {
-	ouro, azul, vermelho := moveWires(
+	gold, blue, red := moveWires(
 		quadrados([2]int{0, 0}, [2]int{8, 0}, [2]int{8, 8}), []int{8, 8}, 6)
 
-	if ouro != "M 0.5 0.5 L 6.5 0.5" {
-		t.Errorf("o ouro saiu %q, esperado até o centro de (6,0)", ouro)
+	if gold != "M 0.5 0.5 L 6.5 0.5" {
+		t.Errorf("o ouro saiu %q, esperado até o centro de (6,0)", gold)
 	}
-	if azul != "M 6.5 0.5 L 8.5 0.5 L 8.5 4.5" {
-		t.Errorf("o azul saiu %q, esperado dobrando em (8,0) e parando no centro de (8,4)", azul)
+	if blue != "M 6.5 0.5 L 8.5 0.5 L 8.5 4.5" {
+		t.Errorf("o azul saiu %q, esperado dobrando em (8,0) e parando no centro de (8,4)", blue)
 	}
-	if vermelho != "M 8.5 4.5 L 8.5 8" {
-		t.Errorf("o vermelho saiu %q, esperado do centro de (8,4) até a borda do destino", vermelho)
+	if red != "M 8.5 4.5 L 8.5 8" {
+		t.Errorf("o vermelho saiu %q, esperado do centro de (8,4) até a borda do destino", red)
 	}
 }
 
@@ -181,10 +181,10 @@ func TestOnThePolylineTheBlueCrossesTheBend(t *testing.T) {
 // para poria 50% de dourado sob um rótulo que pede 67%, e as duas metades se
 // desmentiriam na mesma linha. Quem mostra as casas percorridas é a TRILHA.
 func TestTheMarshShortensTheGoldByCost(t *testing.T) {
-	ouro, _, _ := moveWires(quadrados([2]int{0, 0}, [2]int{6, 0}), []int{9}, 6)
+	gold, _, _ := moveWires(quadrados([2]int{0, 0}, [2]int{6, 0}), []int{9}, 6)
 
-	if ouro != "M 0.5 0.5 L 4.5 0.5" {
-		t.Errorf("com a perna custando 9 e a ação de movimento pagando 6, o ouro saiu %q, esperado em dois terços da linha", ouro)
+	if gold != "M 0.5 0.5 L 4.5 0.5" {
+		t.Errorf("com a perna custando 9 e a ação de movimento pagando 6, o ouro saiu %q, esperado em dois terços da linha", gold)
 	}
 }
 
@@ -193,13 +193,13 @@ func TestTheMarshShortensTheGoldByCost(t *testing.T) {
 // Seis casas para o leste custam 6 e cabem num deslocamento de 6. Sem ele, "o
 // ouro parou em 4,5" não se distingue de "o ouro para sempre em dois terços".
 func TestWithoutTheMarshTheSameLegFitsWhole(t *testing.T) {
-	ouro, azul, _ := moveWires(quadrados([2]int{0, 0}, [2]int{6, 0}), []int{6}, 6)
+	gold, blue, _ := moveWires(quadrados([2]int{0, 0}, [2]int{6, 0}), []int{6}, 6)
 
-	if azul != "" {
-		t.Errorf("seis casas rasas sobre um deslocamento de seis pintaram %q de azul", azul)
+	if blue != "" {
+		t.Errorf("seis casas rasas sobre um deslocamento de seis pintaram %q de azul", blue)
 	}
-	if ouro != "M 0.5 0.5 L 6 0.5" {
-		t.Errorf("o ouro saiu %q, esperado até a borda do destino", ouro)
+	if gold != "M 0.5 0.5 L 6 0.5" {
+		t.Errorf("o ouro saiu %q, esperado até a borda do destino", gold)
 	}
 }
 
@@ -211,19 +211,19 @@ func TestWithoutTheMarshTheSameLegFitsWhole(t *testing.T) {
 // linha. A divergência é aceita porque o metro do rótulo precisa ser o mesmo
 // metro do deslocamento: é ele que explica onde cada cor começa.
 func TestTheLegLabelCountsTheCostAndNotTheGeometry(t *testing.T) {
-	dobras := quadrados([2]int{0, 0}, [2]int{4, 0})
-	brejo := brejoEm([2]int{1, 0}, [2]int{2, 0}, [2]int{3, 0}, [2]int{4, 0})
+	folds := quadrados([2]int{0, 0}, [2]int{4, 0})
+	swamp := brejoEm([2]int{1, 0}, [2]int{2, 0}, [2]int{3, 0}, [2]int{4, 0})
 
-	pernas := moveLegs(dobras, legsCosts(dobras, brejo))
+	legs := moveLegs(folds, legsCosts(folds, swamp))
 
-	if len(pernas) != 1 {
-		t.Fatalf("uma perna virou %d rótulos", len(pernas))
+	if len(legs) != 1 {
+		t.Fatalf("uma perna virou %d rótulos", len(legs))
 	}
-	if pernas[0].Rotulo != "12,0m" {
-		t.Errorf("o rótulo saiu %q; quatro casas de brejo custam 8 quadrados, que são 12,0m", pernas[0].Rotulo)
+	if legs[0].Label != "12,0m" {
+		t.Errorf("o rótulo saiu %q; quatro casas de brejo custam 8 quadrados, que são 12,0m", legs[0].Label)
 	}
-	if pernas[0].MeioX != 2.5 || pernas[0].MeioY != 0.5 {
-		t.Errorf("o rótulo pousou em (%v,%v), esperado no meio da perna", pernas[0].MeioX, pernas[0].MeioY)
+	if legs[0].MidX != 2.5 || legs[0].MidY != 0.5 {
+		t.Errorf("o rótulo pousou em (%v,%v), esperado no meio da perna", legs[0].MidX, legs[0].MidY)
 	}
 }
 
@@ -232,18 +232,18 @@ func TestTheLegLabelCountsTheCostAndNotTheGeometry(t *testing.T) {
 // Sem isto, uma polilinha ganharia um número só — e o pedido é a distância
 // "entre paradas", que é justamente o que uma soma esconde.
 func TestEachLegGetsItsOwnLabel(t *testing.T) {
-	dobras := quadrados([2]int{0, 0}, [2]int{2, 0}, [2]int{2, 4})
+	folds := quadrados([2]int{0, 0}, [2]int{2, 0}, [2]int{2, 4})
 
-	pernas := moveLegs(dobras, legsCosts(dobras, engine.MoveTerrain{}))
+	legs := moveLegs(folds, legsCosts(folds, engine.MoveTerrain{}))
 
-	if len(pernas) != 2 {
-		t.Fatalf("duas pernas viraram %d rótulos", len(pernas))
+	if len(legs) != 2 {
+		t.Fatalf("duas pernas viraram %d rótulos", len(legs))
 	}
-	if pernas[0].Rotulo != "3,0m" || pernas[1].Rotulo != "6,0m" {
-		t.Errorf("os rótulos saíram %q e %q, esperados 3,0m e 6,0m", pernas[0].Rotulo, pernas[1].Rotulo)
+	if legs[0].Label != "3,0m" || legs[1].Label != "6,0m" {
+		t.Errorf("os rótulos saíram %q e %q, esperados 3,0m e 6,0m", legs[0].Label, legs[1].Label)
 	}
-	if pernas[1].MeioX != 2.5 || pernas[1].MeioY != 2.5 {
-		t.Errorf("o segundo rótulo pousou em (%v,%v), esperado no meio da segunda perna", pernas[1].MeioX, pernas[1].MeioY)
+	if legs[1].MidX != 2.5 || legs[1].MidY != 2.5 {
+		t.Errorf("o segundo rótulo pousou em (%v,%v), esperado no meio da segunda perna", legs[1].MidX, legs[1].MidY)
 	}
 }
 
@@ -253,19 +253,19 @@ func TestEachLegGetsItsOwnLabel(t *testing.T) {
 // Ela é a mesma leitura das cores, em palavras — quem não distingue azul de
 // vermelho no mapa lê aqui.
 func TestTheFooterNamesTheActionsSpent(t *testing.T) {
-	casos := []struct {
-		custo, orcamento int
-		frase            string
+	cases := []struct {
+		cost, budget int
+		sentence     string
 	}{
-		{custo: 4, orcamento: 6, frase: "ação de movimento"},
-		{custo: 6, orcamento: 6, frase: "ação de movimento"},
-		{custo: 7, orcamento: 6, frase: "ação de movimento + ação principal"},
-		{custo: 12, orcamento: 6, frase: "ação de movimento + ação principal"},
-		{custo: 13, orcamento: 6, frase: "não cabe no turno"},
+		{cost: 4, budget: 6, sentence: "ação de movimento"},
+		{cost: 6, budget: 6, sentence: "ação de movimento"},
+		{cost: 7, budget: 6, sentence: "ação de movimento + ação principal"},
+		{cost: 12, budget: 6, sentence: "ação de movimento + ação principal"},
+		{cost: 13, budget: 6, sentence: "não cabe no turno"},
 	}
-	for _, c := range casos {
-		if got := spentActions(&moveView{Custo: c.custo, Orcamento: c.orcamento}); got != c.frase {
-			t.Errorf("custo %d sobre deslocamento %d disse %q, esperado %q", c.custo, c.orcamento, got, c.frase)
+	for _, c := range cases {
+		if got := spentActions(&moveView{Cost: c.cost, Budget: c.budget}); got != c.sentence {
+			t.Errorf("custo %d sobre deslocamento %d disse %q, esperado %q", c.cost, c.budget, got, c.sentence)
 		}
 	}
 }
@@ -278,30 +278,30 @@ func TestTheFooterNamesTheActionsSpent(t *testing.T) {
 // decisão. Por isso o guarda prende as duas metades: que as três SAEM, e que
 // exatamente uma está acesa.
 func TestTheLegendShowsTheThreeBandsAndLightsTheCurrentOne(t *testing.T) {
-	casos := []struct {
-		custo, orcamento, acesa int
+	cases := []struct {
+		cost, budget, lit int
 	}{
-		{custo: 4, orcamento: 6, acesa: 0},
-		{custo: 7, orcamento: 6, acesa: 1},
-		{custo: 13, orcamento: 6, acesa: 2},
+		{cost: 4, budget: 6, lit: 0},
+		{cost: 7, budget: 6, lit: 1},
+		{cost: 13, budget: 6, lit: 2},
 	}
-	for _, c := range casos {
-		legenda := moveLegend(&moveView{Custo: c.custo, Orcamento: c.orcamento})
-		if len(legenda) != 3 {
-			t.Fatalf("custo %d: a legenda saiu com %d faixas, e a escala tem três", c.custo, len(legenda))
+	for _, c := range cases {
+		caption := moveLegend(&moveView{Cost: c.cost, Budget: c.budget})
+		if len(caption) != 3 {
+			t.Fatalf("custo %d: a legenda saiu com %d faixas, e a escala tem três", c.cost, len(caption))
 		}
-		acesas := 0
-		for i, f := range legenda {
-			if !f.Ativa {
+		lit := 0
+		for i, f := range caption {
+			if !f.Active {
 				continue
 			}
-			acesas++
-			if i != c.acesa {
-				t.Errorf("custo %d sobre deslocamento %d acendeu a faixa %d, esperada a %d", c.custo, c.orcamento, i, c.acesa)
+			lit++
+			if i != c.lit {
+				t.Errorf("custo %d sobre deslocamento %d acendeu a faixa %d, esperada a %d", c.cost, c.budget, i, c.lit)
 			}
 		}
-		if acesas != 1 {
-			t.Errorf("custo %d acendeu %d faixas, e a leitura só faz sentido com uma", c.custo, acesas)
+		if lit != 1 {
+			t.Errorf("custo %d acendeu %d faixas, e a leitura só faz sentido com uma", c.cost, lit)
 		}
 	}
 }
@@ -311,11 +311,11 @@ func TestTheLegendShowsTheThreeBandsAndLightsTheCurrentOne(t *testing.T) {
 // Sem isto, as duas envelhecem separadas — e o pior sintoma possível é a tela
 // dizendo "gasta a ação principal" ao lado de uma bolinha que diz outra coisa.
 func TestTheLitLegendAndTheSentenceAreTheSameText(t *testing.T) {
-	m := &moveView{Custo: 8, Orcamento: 6}
+	m := &moveView{Cost: 8, Budget: 6}
 
 	for _, f := range moveLegend(m) {
-		if f.Ativa && f.Texto != spentActions(m) {
-			t.Errorf("a legenda acesa diz %q e a frase diz %q", f.Texto, spentActions(m))
+		if f.Active && f.Text != spentActions(m) {
+			t.Errorf("a legenda acesa diz %q e a frase diz %q", f.Text, spentActions(m))
 		}
 	}
 }

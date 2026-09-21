@@ -22,25 +22,25 @@ import (
 
 // ClassPowerFlags mapeia id do poder → flag que os modificadores dele ligam.
 func ClassPowerFlags() map[string]string {
-	bruto, ok := catalog.Resource("class-powers")
+	raw, ok := catalog.Resource("class-powers")
 	if !ok {
 		return map[string]string{}
 	}
-	var poderes []struct {
+	var powers []struct {
 		ID        string            `json:"id"`
 		Modifiers []engine.Modifier `json:"modifiers"`
 	}
-	_ = json.Unmarshal(bruto, &poderes)
-	achados := map[string]string{}
-	for _, p := range poderes {
+	_ = json.Unmarshal(raw, &powers)
+	findings := map[string]string{}
+	for _, p := range powers {
 		for _, m := range p.Modifiers {
 			if m.Condition != nil && m.Condition.C == "flagOn" && m.Condition.Flag != "" {
-				achados[p.ID] = m.Condition.Flag
+				findings[p.ID] = m.Condition.Flag
 				break
 			}
 		}
 	}
-	return achados
+	return findings
 }
 
 // PowerTeachingSpells é um poder que ENSINA magia, com o que ele oferece.
@@ -54,11 +54,11 @@ type PowerTeachingSpells struct {
 
 // PowersThatTeachSpells são os poderes cujo bloco de escolha concede magia.
 func PowersThatTeachSpells() []PowerTeachingSpells {
-	bruto, ok := catalog.Resource("class-powers")
+	raw, ok := catalog.Resource("class-powers")
 	if !ok {
 		return nil
 	}
-	var poderes []struct {
+	var powers []struct {
 		ID     string `json:"id"`
 		Name   string `json:"name"`
 		Choice *struct {
@@ -69,19 +69,19 @@ func PowersThatTeachSpells() []PowerTeachingSpells {
 			} `json:"options"`
 		} `json:"choice"`
 	}
-	if err := json.Unmarshal(bruto, &poderes); err != nil {
+	if err := json.Unmarshal(raw, &powers); err != nil {
 		return nil
 	}
-	fora := []PowerTeachingSpells{}
-	for _, p := range poderes {
+	outside := []PowerTeachingSpells{}
+	for _, p := range powers {
 		if p.Choice == nil || p.Choice.GrantsSpellAttribute == "" {
 			continue
 		}
-		opcoes := map[string]string{}
+		options := map[string]string{}
 		for _, o := range p.Choice.Options {
-			opcoes[o.ID] = o.Note
+			options[o.ID] = o.Note
 		}
-		fora = append(fora, PowerTeachingSpells{ID: p.ID, Name: p.Name, Options: opcoes})
+		outside = append(outside, PowerTeachingSpells{ID: p.ID, Name: p.Name, Options: options})
 	}
-	return fora
+	return outside
 }

@@ -35,15 +35,15 @@ func (s Scene) CastRoutes(r chi.Router) {
 // e a diferença apareceria como uma linha sem ficha, que é justamente o defeito
 // que este gesto existe para não repetir.
 func putPlayerTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	escolhido, err := castMemberOf(st, c)
+	chosen, err := castMemberOf(st, c)
 	if err != nil {
 		return nil, err
 	}
-	estado, err := st.queue.PopulateParty(c.SessionID, []initiative.Combatant{*escolhido})
-	if estado == nil {
-		estado = st.deps.Sessions().GetState(c.SessionID)
+	state, err := st.queue.PopulateParty(c.SessionID, []initiative.Combatant{*chosen})
+	if state == nil {
+		state = st.deps.Sessions().GetState(c.SessionID)
 	}
-	return estado, err
+	return state, err
 }
 
 // castMemberOf resolve o personagem do CAMINHO contra o roster da campanha.
@@ -59,15 +59,15 @@ func castMemberOf(st Scene, c commandCtx) (*initiative.Combatant, error) {
 	if err != nil {
 		return nil, fmt.Errorf("personagem inválido: %q", chi.URLParam(c.R, "characterId"))
 	}
-	combatentes, err := st.queue.Roster().PartyCombatants(c.R.Context(), c.CampaignID)
+	combatants, err := st.queue.Roster().PartyCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
 	}
-	escolhido := combatantFor(combatentes, characterID)
-	if escolhido == nil {
+	chosen := combatantFor(combatants, characterID)
+	if chosen == nil {
 		return nil, fmt.Errorf("o personagem %d não é jogador desta campanha", characterID)
 	}
-	return escolhido, nil
+	return chosen, nil
 }
 
 // moveCastVitals fere e cura pelo ELENCO, com o personagem na fila ou fora dela.
@@ -88,27 +88,27 @@ func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeSta
 		if !ok {
 			return nil, fmt.Errorf("pool %q não existe; o elenco mexe em 'hp' e em 'mp'", pool)
 		}
-		escolhido, err := castMemberOf(st, c)
+		chosen, err := castMemberOf(st, c)
 		if err != nil {
 			return nil, err
 		}
-		estado, err := st.deps.Sessions().DeltaCharacterVitals(c.SessionID, escolhido.CharacterID, hp, mp)
+		state, err := st.deps.Sessions().DeltaCharacterVitals(c.SessionID, chosen.CharacterID, hp, mp)
 		// A ficha de quem está na mesa MUDOU, e a tela dele precisa saber —
 		// aqui sempre há personagem atrás do gesto, ao contrário da fila,
 		// onde o capanga anônimo não tem quem avisar.
 		if err == nil {
-			st.deps.CharacterChanged(escolhido.CharacterID)
+			st.deps.CharacterChanged(chosen.CharacterID)
 		}
-		return estado, err
+		return state, err
 	}
 }
 
 // combatantFor acha o combatente do personagem pedido. Nil é a resposta para
 // "não é jogador desta campanha", e quem chama decide o que fazer com isso.
-func combatantFor(combatentes []initiative.Combatant, characterID int64) *initiative.Combatant {
-	for i := range combatentes {
-		if combatentes[i].CharacterID == characterID {
-			return &combatentes[i]
+func combatantFor(combatants []initiative.Combatant, characterID int64) *initiative.Combatant {
+	for i := range combatants {
+		if combatants[i].CharacterID == characterID {
+			return &combatants[i]
 		}
 	}
 	return nil

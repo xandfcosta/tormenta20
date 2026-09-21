@@ -32,14 +32,14 @@ func ParseScene(raw any) (*BoardState, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cena ilegível: %w", err)
 	}
-	var cena BoardState
-	if err := json.Unmarshal(blob, &cena); err != nil {
+	var scene BoardState
+	if err := json.Unmarshal(blob, &scene); err != nil {
 		return nil, fmt.Errorf("cena ilegível: %w", err)
 	}
-	if cena.Tokens == nil {
-		cena.Tokens = []BoardToken{}
+	if scene.Tokens == nil {
+		scene.Tokens = []BoardToken{}
 	}
-	return &cena, nil
+	return &scene, nil
 }
 
 // ChosenEntries lê do corpo as linhas que o mestre escolheu trazer.

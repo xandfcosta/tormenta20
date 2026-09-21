@@ -25,45 +25,45 @@ import (
 // estreito que a trava da ficha (que aceita o admin): pôr alguém na fila é um
 // gesto de mesa, e a mesa tem dono.
 func (r Roster) Combatant(
-	ctx context.Context, quem app.Caller, campaignID, characterID int64,
+	ctx context.Context, who app.Caller, campaignID, characterID int64,
 ) (Combatant, error) {
-	ficha, err := r.queries.GetCharacter(ctx, characterID)
+	sheet, err := r.queries.GetCharacter(ctx, characterID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Combatant{}, fmt.Errorf("o personagem %d não existe: %w", characterID, app.ErrNotFound)
 	}
 	if err != nil {
 		return Combatant{}, fmt.Errorf("carregar o personagem %d: %w", characterID, err)
 	}
-	campanha, err := r.queries.GetCampaign(ctx, campaignID)
+	campaign, err := r.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Combatant{}, fmt.Errorf("a campanha %d não existe: %w", campaignID, app.ErrNotFound)
 	}
 	if err != nil {
 		return Combatant{}, fmt.Errorf("carregar a campanha %d: %w", campaignID, err)
 	}
-	membro, err := r.queries.IsCharacterMember(ctx, sqlcgen.IsCharacterMemberParams{
+	member, err := r.queries.IsCharacterMember(ctx, sqlcgen.IsCharacterMemberParams{
 		Campaignid: campaignID, Characterid: characterID,
 	})
 	if err != nil {
 		return Combatant{}, fmt.Errorf("conferir a filiação do personagem %d: %w", characterID, err)
 	}
-	if !membro {
+	if !member {
 		return Combatant{}, fmt.Errorf(
 			"o personagem %d não é membro da campanha %d: %w", characterID, campaignID, app.ErrRefused)
 	}
-	if quem.ID != ficha.Ownerid && quem.ID != campanha.Ownerid {
+	if who.ID != sheet.Ownerid && who.ID != campaign.Ownerid {
 		return Combatant{}, fmt.Errorf(
 			"%d não mestra a campanha %d nem é dono do personagem %d: %w",
-			quem.ID, campaignID, characterID, app.ErrForbidden)
+			who.ID, campaignID, characterID, app.ErrForbidden)
 	}
-	poco, err := r.onePool(ctx, characterID)
+	pool, err := r.onePool(ctx, characterID)
 	if err != nil {
 		return Combatant{}, err
 	}
 	return Combatant{
-		CharacterID: characterID, Name: ficha.Name,
-		HpCurrent: poco.HpCurrent, HpMax: poco.HpMax,
-		MpCurrent: poco.MpCurrent, MpMax: poco.MpMax,
+		CharacterID: characterID, Name: sheet.Name,
+		HpCurrent: pool.HpCurrent, HpMax: pool.HpMax,
+		MpCurrent: pool.MpCurrent, MpMax: pool.MpMax,
 	}, nil
 }
 
@@ -73,11 +73,11 @@ func (r Roster) Combatant(
 // as espelha — mas elas saem, e ler a regra pelo espelho é o hábito que faria a
 // saída delas quebrar a fila em silêncio (ALE-355).
 func (r Roster) onePool(ctx context.Context, characterID int64) (sheet.Pools, error) {
-	pocos, err := sheet.PoolsForCharacters(ctx, r.queries, r.catalogs, []int64{characterID})
+	pools, err := sheet.PoolsForCharacters(ctx, r.queries, r.catalogs, []int64{characterID})
 	if err != nil {
 		return sheet.Pools{}, fmt.Errorf("derivar o poço do personagem %d: %w", characterID, err)
 	}
-	return pocos[characterID], nil
+	return pools[characterID], nil
 }
 
 // Aqui morava o clone do bloco de criatura, e ele não existe mais neste pacote:
@@ -94,31 +94,31 @@ func (r Roster) onePool(ctx context.Context, characterID int64) (sheet.Pools, er
 // campanha, e a coluna `role` foi substituída pelo `ownerId` na ALE-287.
 // Filtrar aqui esconderia da fila o bardo que o mestre também joga.
 func (r Roster) PartyCombatants(ctx context.Context, campaignID int64) ([]Combatant, error) {
-	linhas, err := r.queries.ListMembers(ctx, campaignID)
+	rows, err := r.queries.ListMembers(ctx, campaignID)
 	if err != nil {
 		return nil, fmt.Errorf("listar os membros da campanha %d: %w", campaignID, err)
 	}
-	ids := make([]int64, len(linhas))
-	for i, m := range linhas {
+	ids := make([]int64, len(rows))
+	for i, m := range rows {
 		ids[i] = m.Characterid
 	}
 	// Os poços do grupo INTEIRO de uma vez: o `ListMembers` traz as quatro
 	// colunas espelhadas, e usá-las seria ler pelo espelho a regra que já tem
 	// dono.
-	pocos, err := sheet.PoolsForCharacters(ctx, r.queries, r.catalogs, ids)
+	pools, err := sheet.PoolsForCharacters(ctx, r.queries, r.catalogs, ids)
 	if err != nil {
 		return nil, fmt.Errorf("derivar os poços da campanha %d: %w", campaignID, err)
 	}
-	grupo := make([]Combatant, 0, len(linhas))
-	for _, m := range linhas {
-		poco := pocos[m.Characterid]
-		grupo = append(grupo, Combatant{
+	group := make([]Combatant, 0, len(rows))
+	for _, m := range rows {
+		pool := pools[m.Characterid]
+		group = append(group, Combatant{
 			CharacterID: m.Characterid, Name: m.Charname,
-			HpCurrent: poco.HpCurrent, HpMax: poco.HpMax,
-			MpCurrent: poco.MpCurrent, MpMax: poco.MpMax,
+			HpCurrent: pool.HpCurrent, HpMax: pool.HpMax,
+			MpCurrent: pool.MpCurrent, MpMax: pool.MpMax,
 		})
 	}
-	return grupo, nil
+	return group, nil
 }
 
 // Queue é a fila de uma sessão, com o store por trás.
@@ -144,28 +144,28 @@ func (q Queue) Roster() Roster { return q.roster }
 // dos cinco e tropeçar no quinto deixa a mesa com quatro combatentes novos, e é
 // esse o estado que as outras telas precisam receber.
 func (q Queue) PopulateParty(
-	sessionID int64, quem []Combatant,
+	sessionID int64, who []Combatant,
 ) (*live.SessionRuntimeState, error) {
-	jaEstao := map[int64]bool{}
-	for _, linha := range q.sessions.GetState(sessionID).Initiative {
-		if linha.CharacterID != nil {
-			jaEstao[*linha.CharacterID] = true
+	alreadyThere := map[int64]bool{}
+	for _, row := range q.sessions.GetState(sessionID).Initiative {
+		if row.CharacterID != nil {
+			alreadyThere[*row.CharacterID] = true
 		}
 	}
-	var estado *live.SessionRuntimeState
-	for _, c := range quem {
-		if jaEstao[c.CharacterID] {
+	var state *live.SessionRuntimeState
+	for _, c := range who {
+		if alreadyThere[c.CharacterID] {
 			continue
 		}
-		id, pvAtual, pvMax, pmAtual, pmMax := c.CharacterID, c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax
+		id, currentHP, pvMax, currentPM, pmMax := c.CharacterID, c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax
 		novo, err := q.sessions.AddInitiativeEntry(sessionID, live.InitiativeEntry{
 			Label: c.Name, Initiative: 0, Type: "character", CharacterID: &id,
-			HpCurrent: &pvAtual, HpMax: &pvMax, MpCurrent: &pmAtual, MpMax: &pmMax,
+			HpCurrent: &currentHP, HpMax: &pvMax, MpCurrent: &currentPM, MpMax: &pmMax,
 		})
 		if err != nil {
-			return estado, fmt.Errorf("pôr %q na fila da sessão %d: %w", c.Name, sessionID, err)
+			return state, fmt.Errorf("pôr %q na fila da sessão %d: %w", c.Name, sessionID, err)
 		}
-		estado = novo
+		state = novo
 	}
-	return estado, nil
+	return state, nil
 }

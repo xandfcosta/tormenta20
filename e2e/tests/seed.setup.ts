@@ -42,11 +42,11 @@ semear('semear o banco do e2e', async () => {
   // login, com "credenciais inválidas" — que manda procurar defeito na
   // autenticação quando o problema é um banco vazio. Uma linha aqui troca
   // trinta falhas confusas por uma frase.
-  const usuarios = execFileSync('sqlite3', [BANCO, 'select count(*) from users'], {
+  const users = execFileSync('sqlite3', [BANCO, 'select count(*) from users'], {
     encoding: 'utf8',
   }).trim()
   expect(
-    Number(usuarios),
+    Number(users),
     'o banco do e2e ficou sem usuários depois da seed — o login de todos os specs falharia',
   ).toBeGreaterThan(0)
 })

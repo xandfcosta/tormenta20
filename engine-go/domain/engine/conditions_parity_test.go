@@ -49,11 +49,11 @@ func TestConditionEffects(t *testing.T) {
 		t.Errorf("Vulnerável+Desprevenido: Defesa = %d, quer %d", got, base.Defense.Total-5)
 	}
 	// Caído penaliza Luta (corpo-a-corpo), não Pontaria.
-	caido := with(`["caido"]`)
-	if got := expertise(caido, "Luta"); got != expertise(base, "Luta")-5 {
+	down := with(`["caido"]`)
+	if got := expertise(down, "Luta"); got != expertise(base, "Luta")-5 {
 		t.Errorf("Caído: Luta = %d, quer %d", got, expertise(base, "Luta")-5)
 	}
-	if got := expertise(caido, "Pontaria"); got != expertise(base, "Pontaria") {
+	if got := expertise(down, "Pontaria"); got != expertise(base, "Pontaria") {
 		t.Errorf("Caído não deveria afetar Pontaria: %d != %d", got, expertise(base, "Pontaria"))
 	}
 	// Condição só-lembrete não altera nada.

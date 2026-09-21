@@ -26,14 +26,14 @@ import (
 // busca é gesto legítimo, e tratá-lo como ausência ressuscitaria o termo
 // anterior — é a mesma decisão do `finderTerm`.
 type Signals struct {
-	Busca *string `json:"search"`
-	// NovaPericia e NovoAtributo são os dois campos do diálogo de ofício novo.
-	NovaPericia  *string `json:"new_expertise"`
-	NovoAtributo *string `json:"new_attribute"`
-	// Situacao é a CHAVE do condicional que o gesto quer alternar. Ela vem por
+	Search *string `json:"search"`
+	// NewExpertise e NovoAtributo são os dois campos do diálogo de ofício novo.
+	NewExpertise *string `json:"new_expertise"`
+	NewAttribute *string `json:"new_attribute"`
+	// Status é a CHAVE do condicional que o gesto quer alternar. Ela vem por
 	// sinal e não pelo caminho porque é um encadeado com `::` e texto livre do
 	// catálogo dentro — um `PathEscape` daquilo funciona e é ilegível no log.
-	Situacao *string `json:"conditional"`
+	Status *string `json:"conditional"`
 	// Aprimoramentos são as pilhas escolhidas no diálogo de conjurar, uma por
 	// índice. Seis porque é o máximo do catálogo (Conjurar Monstro).
 	Aug0 *int `json:"augment0"`
@@ -43,36 +43,36 @@ type Signals struct {
 	Aug4 *int `json:"augment4"`
 	Aug5 *int `json:"augment5"`
 	// Os filtros do catálogo de magias.
-	MagiaBusca   string `json:"spell_search"`
-	MagiaCirculo string `json:"spell_circle"`
-	MagiaEscola  string `json:"spell_school"`
+	SpellSearch string `json:"spell_search"`
+	SpellCircle string `json:"spell_circle"`
+	SpellSchool string `json:"spell_school"`
 	// Os filtros da Mochila: a busca da grade e o chip de categoria.
-	ItemBusca     string `json:"item_search"`
-	ItemCategoria string `json:"item_category"`
+	ItemSearch   string `json:"item_search"`
+	ItemCategory string `json:"item_category"`
 	// O diálogo do dinheiro: o modo (receber, gastar, corrigir) e o valor.
-	TibarModo  string   `json:"tibar_mode"`
-	TibarValor *float64 `json:"tibar_value"`
+	TibarMode  string   `json:"tibar_mode"`
+	TibarValue *float64 `json:"tibar_value"`
 	// Os filtros do diálogo de adicionar do catálogo.
-	CatalogoBusca     string `json:"catalog_search"`
-	CatalogoCategoria string `json:"catalog_category"`
+	CatalogSearch   string `json:"catalog_search"`
+	CatalogCategory string `json:"catalog_category"`
 	// Os campos de um item: quantidade, nome e espaços. `ItemQtd` serve ao
 	// catálogo e à edição; os outros dois só ao item custom.
-	ItemQtd     *int64   `json:"item_qty"`
-	ItemNome    *string  `json:"item_name"`
-	ItemEspacos *float64 `json:"item_slots"`
+	ItemQtd   *int64   `json:"item_qty"`
+	ItemName  *string  `json:"item_name"`
+	ItemSlots *float64 `json:"item_slots"`
 	// O que a MESA rolou ao usar um consumível. A ficha não rola por ninguém.
-	ItemRolagemPv *int64 `json:"item_roll_hp"`
-	ItemRolagemPm *int64 `json:"item_roll_mp"`
+	ItemHPRoll *int64 `json:"item_roll_hp"`
+	ItemMPRoll *int64 `json:"item_roll_mp"`
 	// As melhorias escolhidas no diálogo, e o material. Lista e não par de
 	// ids: são até quatro melhorias no mesmo item.
-	ItemMelhorias []string `json:"item_improvements"`
-	ItemMaterial  string   `json:"item_material"`
+	ItemImprovements []string `json:"item_improvements"`
+	ItemMaterial     string   `json:"item_material"`
 	// Os degraus escolhidos ao entrar numa postura que escala com o nível, e a
 	// busca da lista de poderes.
-	PoderDegraus *int64 `json:"stance_degrees"`
-	PoderBusca   string `json:"power_search"`
+	PowerSteps  *int64 `json:"stance_degrees"`
+	PowerSearch string `json:"power_search"`
 	// Os atributos que a raça distribui, escolhidos no diálogo.
-	RacaAtributos []string `json:"race_attributes"`
+	RaceAttributes []string `json:"race_attributes"`
 }
 
 // augments traduz os seis sinais no que a validação espera.
@@ -81,11 +81,11 @@ type Signals struct {
 // `stacks: 0` é recusado pelo servidor de propósito.
 func (s Signals) augments() []sheet.AugmentPick {
 	picks := []sheet.AugmentPick{}
-	for i, valor := range []*int{s.Aug0, s.Aug1, s.Aug2, s.Aug3, s.Aug4, s.Aug5} {
-		if valor == nil || *valor <= 0 {
+	for i, value := range []*int{s.Aug0, s.Aug1, s.Aug2, s.Aug3, s.Aug4, s.Aug5} {
+		if value == nil || *value <= 0 {
 			continue
 		}
-		picks = append(picks, sheet.AugmentPick{AugmentIndex: i, Stacks: *valor})
+		picks = append(picks, sheet.AugmentPick{AugmentIndex: i, Stacks: *value})
 	}
 	return picks
 }
@@ -95,37 +95,37 @@ func (s Signals) augments() []sheet.AugmentPick {
 // A queda para a query serve a quem abre o endereço à mão — e serve à bancada,
 // que precisa poder pedir uma aba filtrada sem montar um corpo de Datastar.
 func sheetSignals(r *http.Request) Signals {
-	sinais := Signals{}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
-		sinais = Signals{}
+	signals := Signals{}
+	if err := datastar.ReadSignals(r, &signals); err != nil {
+		signals = Signals{}
 	}
-	if sinais.Busca == nil {
-		daURL := r.URL.Query().Get("busca")
-		sinais.Busca = &daURL
+	if signals.Search == nil {
+		fromURL := r.URL.Query().Get("busca")
+		signals.Search = &fromURL
 	}
 	// Os FILTROS caem para a query pela mesma razão da busca, e com uma a mais:
 	// eles são o estado que faz sentido num endereço guardado — "a mochila,
 	// filtrada por armas" é um lugar. O sinal do cliente vence quando existe.
-	fillsURL(r, "poderbusca", &sinais.PoderBusca)
-	fillsURL(r, "itembusca", &sinais.ItemBusca)
-	fillsURL(r, "itemcategoria", &sinais.ItemCategoria)
-	fillsURL(r, "magiabusca", &sinais.MagiaBusca)
-	fillsURL(r, "magiacirculo", &sinais.MagiaCirculo)
-	fillsURL(r, "magiaescola", &sinais.MagiaEscola)
-	return sinais
+	fillsURL(r, "poderbusca", &signals.PowerSearch)
+	fillsURL(r, "itembusca", &signals.ItemSearch)
+	fillsURL(r, "itemcategoria", &signals.ItemCategory)
+	fillsURL(r, "magiabusca", &signals.SpellSearch)
+	fillsURL(r, "magiacirculo", &signals.SpellCircle)
+	fillsURL(r, "magiaescola", &signals.SpellSchool)
+	return signals
 }
 
 // fillsURL põe o valor da query no campo quando o sinal veio vazio.
-func fillsURL(r *http.Request, chave string, campo *string) {
-	if *campo == "" {
-		*campo = r.URL.Query().Get(chave)
+func fillsURL(r *http.Request, key string, field *string) {
+	if *field == "" {
+		*field = r.URL.Query().Get(key)
 	}
 }
 
 // term é o termo já resolvido, para quem só quer o texto.
 func (s Signals) term() string {
-	if s.Busca == nil {
+	if s.Search == nil {
 		return ""
 	}
-	return *s.Busca
+	return *s.Search
 }

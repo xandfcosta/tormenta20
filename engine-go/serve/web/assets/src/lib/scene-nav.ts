@@ -70,23 +70,23 @@ export function attachSceneNav(opts: SceneNavOptions): () => void {
   // Region → last-focused item, so re-entering a region restores its cursor.
   const memory: Memory = new WeakMap<HTMLElement, HTMLElement>()
   const onKey = (e: KeyboardEvent) => handleKey(e, opts, memory)
-  const lista = typeof window.matchMedia === 'function' ? window.matchMedia(DESKTOP) : null
+  const list = typeof window.matchMedia === 'function' ? window.matchMedia(DESKTOP) : null
 
-  let ouvindo = false
-  const sincroniza = () => {
-    const quer = (lista?.matches ?? false) && opts.active?.() !== false
-    if (quer === ouvindo) return
-    ouvindo = quer
-    if (quer) window.addEventListener('keydown', onKey, true)
+  let listening = false
+  const syncs = () => {
+    const want = (list?.matches ?? false) && opts.active?.() !== false
+    if (want === listening) return
+    listening = want
+    if (want) window.addEventListener('keydown', onKey, true)
     else window.removeEventListener('keydown', onKey, true)
   }
-  sincroniza()
-  lista?.addEventListener('change', sincroniza)
+  syncs()
+  list?.addEventListener('change', syncs)
 
   return () => {
-    lista?.removeEventListener('change', sincroniza)
-    if (ouvindo) window.removeEventListener('keydown', onKey, true)
-    ouvindo = false
+    list?.removeEventListener('change', syncs)
+    if (listening) window.removeEventListener('keydown', onKey, true)
+    listening = false
   }
 }
 

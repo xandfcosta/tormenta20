@@ -39,20 +39,20 @@ import (
 func (bs *Store) EditPlace(
 	ctx context.Context, campaignID, placeID int64, fn func(*board.BoardState) error,
 ) (*board.BoardState, error) {
-	cena, err := bs.PlaceScene(ctx, campaignID, placeID)
+	scene, err := bs.PlaceScene(ctx, campaignID, placeID)
 	if err != nil {
 		return nil, err
 	}
-	if err := bs.refusesIfOnATable(ctx, campaignID, cena.Place); err != nil {
+	if err := bs.refusesIfOnATable(ctx, campaignID, scene.Place); err != nil {
 		return nil, err
 	}
-	if err := fn(cena); err != nil {
+	if err := fn(scene); err != nil {
 		return nil, err
 	}
-	if err := bs.SavePlaceScene(ctx, campaignID, placeID, cena); err != nil {
+	if err := bs.SavePlaceScene(ctx, campaignID, placeID, scene); err != nil {
 		return nil, err
 	}
-	return cena, nil
+	return scene, nil
 }
 
 // MaxPlaceNameLength é o teto do nome de um lugar, em LETRAS e não em bytes:
@@ -99,28 +99,28 @@ func (bs *Store) NewID() string { return bs.newID() }
 //   - só o BANCO não vê o tabuleiro que acabou de ser aberto: a gravação é
 //     ASSÍNCRONA (ver `persistBoardAndWarn`), e entre o `Open` e o `Persist` a
 //     tabela ainda não sabe dele.
-func (bs *Store) refusesIfOnATable(ctx context.Context, campaignID int64, nome string) error {
-	if sessao := bs.sessionShowingLocked(nome); sessao != 0 {
-		return placeOnATable(nome)
+func (bs *Store) refusesIfOnATable(ctx context.Context, campaignID int64, name string) error {
+	if session := bs.sessionShowingLocked(name); session != 0 {
+		return placeOnATable(name)
 	}
-	abertos, err := bs.q.ListOpenBoardsOfCampaign(ctx, campaignID)
+	open, err := bs.q.ListOpenBoardsOfCampaign(ctx, campaignID)
 	if err != nil {
 		// RECUSA em vez de deixar passar: o que está em jogo é o trabalho do
 		// mestre, e o modo de falha do "deixa passar" é ele montar uma cripta
 		// inteira que o `Archive` apaga depois. Um erro na tela custa um clique;
 		// o silêncio custa a noite.
-		return fmt.Errorf("não consegui conferir se %q está aberto numa mesa: %v", nome, err)
+		return fmt.Errorf("não consegui conferir se %q está aberto numa mesa: %v", name, err)
 	}
-	for _, aberto := range abertos {
-		var cena board.BoardState
-		if err := json.Unmarshal([]byte(aberto.State), &cena); err != nil {
+	for _, isOpen := range open {
+		var scene board.BoardState
+		if err := json.Unmarshal([]byte(isOpen.State), &scene); err != nil {
 			// Um blob quebrado não pode virar "pode montar": ele é justamente o
 			// tabuleiro sobre o qual não se sabe nada.
 			return fmt.Errorf("o tabuleiro %s da sessão %d está ilegível; não dá para saber se é %q",
-				aberto.Boardid, aberto.Sessionid, nome)
+				isOpen.Boardid, isOpen.Sessionid, name)
 		}
-		if cena.Place == nome {
-			return placeOnATable(nome)
+		if scene.Place == name {
+			return placeOnATable(name)
 		}
 	}
 	return nil
@@ -139,8 +139,8 @@ func (bs *Store) refusesIfOnATable(ctx context.Context, campaignID int64, nome s
 // e é a chave que faz uma cena aberta do zero com o nome de um lugar guardado
 // contar como aquele lugar.
 func (bs *Store) PlacesOnATable(ctx context.Context, campaignID int64) map[string]int64 {
-	naMesa := map[string]int64{}
-	abertos, err := bs.q.ListOpenBoardsOfCampaign(ctx, campaignID)
+	onTable := map[string]int64{}
+	open, err := bs.q.ListOpenBoardsOfCampaign(ctx, campaignID)
 	if err != nil {
 		// A LISTA SEGUE sem a marca, ao contrário da trava, e a assimetria é
 		// deliberada: aqui o custo do erro é oferecer um botão que o servidor
@@ -148,27 +148,27 @@ func (bs *Store) PlacesOnATable(ctx context.Context, campaignID int64) map[strin
 		// erra para o lado seguro, a tela erra para o lado que fala.
 		log.Printf("campaign %d: falha ao listar os tabuleiros abertos (%v)", campaignID, err)
 	}
-	for _, aberto := range abertos {
-		var cena board.BoardState
-		if err := json.Unmarshal([]byte(aberto.State), &cena); err != nil {
+	for _, isOpen := range open {
+		var scene board.BoardState
+		if err := json.Unmarshal([]byte(isOpen.State), &scene); err != nil {
 			continue
 		}
-		if cena.Place != "" {
-			naMesa[cena.Place] = aberto.Sessionid
+		if scene.Place != "" {
+			onTable[scene.Place] = isOpen.Sessionid
 		}
 	}
 	// A MEMÓRIA por cima do disco, e não o contrário: o tabuleiro aberto agora
 	// ainda não foi gravado, e é justamente o que a pessoa acabou de fazer.
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	for sessionID, vivos := range bs.boards {
-		for _, b := range vivos {
+	for sessionID, alive := range bs.boards {
+		for _, b := range alive {
 			if b.Place != "" {
-				naMesa[b.Place] = sessionID
+				onTable[b.Place] = sessionID
 			}
 		}
 	}
-	return naMesa
+	return onTable
 }
 
 // placeOnATable é a frase da recusa, escrita UMA vez.
@@ -176,10 +176,10 @@ func (bs *Store) PlacesOnATable(ctx context.Context, campaignID int64) map[strin
 // As duas fontes acima chegam à mesma conclusão, e duas cópias da frase é como
 // uma delas passa a dizer outra coisa — quem lê a tela não sabe nem deve saber
 // se quem pegou foi a memória ou o disco.
-func placeOnATable(nome string) error {
+func placeOnATable(name string) error {
 	return fmt.Errorf(
 		"%q está aberto numa mesa agora: encerre a aba antes de montar o rascunho, senão o que você montar aqui some quando ela for encerrada",
-		nome)
+		name)
 }
 
 // sessionShowingLocked procura o lugar entre os tabuleiros VIVOS deste processo,
@@ -188,12 +188,12 @@ func placeOnATable(nome string) error {
 // Varre todas as sessões em memória e não uma: o rascunho não sabe em qual mesa
 // o lugar poderia estar, e é justamente essa a pergunta. O custo é um laço sobre
 // as sessões hidratadas, sem I/O nenhum, debaixo da trava que já protege o mapa.
-func (bs *Store) sessionShowingLocked(nome string) int64 {
+func (bs *Store) sessionShowingLocked(name string) int64 {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	for sessionID, abertos := range bs.boards {
-		for _, b := range abertos {
-			if b.Place == nome {
+	for sessionID, open := range bs.boards {
+		for _, b := range open {
+			if b.Place == name {
 				return sessionID
 			}
 		}
@@ -221,13 +221,13 @@ func (bs *Store) NewPlace(ctx context.Context, campaignID int64, name, terrain s
 	if len([]rune(name)) > MaxPlaceNameLength {
 		return board.Place{}, fmt.Errorf("o nome do lugar tem %d letras (máximo %d)", len([]rune(name)), MaxPlaceNameLength)
 	}
-	if existente, err := bs.q.FindCampaignPlaceByName(ctx, sqlcgen.FindCampaignPlaceByNameParams{
+	if existing, err := bs.q.FindCampaignPlaceByName(ctx, sqlcgen.FindCampaignPlaceByNameParams{
 		Campaignid: campaignID,
 		Name:       name,
 	}); err == nil {
 		return board.Place{
-			ID: existente.ID, Name: existente.Name,
-			Tokens: countTokens(existente.State), UpdatedAt: existente.Updatedat,
+			ID: existing.ID, Name: existing.Name,
+			Tokens: countTokens(existing.State), UpdatedAt: existing.Updatedat,
 		}, nil
 	}
 	// A cena nasce com a versão em 1 e as peças em fatia VAZIA, como a do

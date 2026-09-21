@@ -25,11 +25,11 @@ templ choicesButton(v View) {
 		class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "shrink-0 gap-1") }
 	>
 		Escolher
-		if len(v.Choices.Pendencias) > 0 {
+		if len(v.Choices.Pending) > 0 {
 			<span aria-hidden="true" class="rounded-full bg-primary px-1.5 text-3xs font-bold text-primary-foreground">
-				{ strconv.Itoa(len(v.Choices.Pendencias)) }
+				{ strconv.Itoa(len(v.Choices.Pending)) }
 			</span>
-			<span class="sr-only">{ writtenPendings(len(v.Choices.Pendencias)) }</span>
+			<span class="sr-only">{ writtenPendings(len(v.Choices.Pending)) }</span>
 		}
 	</button>
 }
@@ -37,26 +37,26 @@ templ choicesButton(v View) {
 // choicesDialog é a administração da ficha.
 templ choicesDialog(v View) {
 	@overlay("escolher-poderes", "Escolher poderes", "Star", false) {
-		if len(v.Choices.Pendencias) > 0 {
+		if len(v.Choices.Pending) > 0 {
 			<div class="space-y-1 rounded-sm border border-grimorio-gold/40 bg-accent p-2">
 				<p class={ ui.FieldLabelClasses("gold", "") }>
-					{ writtenPendings(len(v.Choices.Pendencias)) }
+					{ writtenPendings(len(v.Choices.Pending)) }
 				</p>
-				for _, p := range v.Choices.Pendencias {
-					@ui.Button(ui.VariantLink, ui.SizeInline, "block w-full text-left text-xs", templ.Attributes{"type": "button", "data-on:click": "$power_source = '" + p.Fonte + "'"}) {
-						{ p.Rotulo }
+				for _, p := range v.Choices.Pending {
+					@ui.Button(ui.VariantLink, ui.SizeInline, "block w-full text-left text-xs", templ.Attributes{"type": "button", "data-on:click": "$power_source = '" + p.Source + "'"}) {
+						{ p.Label }
 					}
 				}
 			</div>
 		}
 		<div class="flex gap-1">
-			for _, fonte := range sourceThree {
+			for _, source := range sourceThree {
 				<button
 					type="button"
-					data-on:click={ "$power_source = '" + fonte + "'" }
-					data-attr:aria-pressed={ "$power_source === '" + fonte + "' ? 'true' : 'false'" }
+					data-on:click={ "$power_source = '" + source + "'" }
+					data-attr:aria-pressed={ "$power_source === '" + source + "' ? 'true' : 'false'" }
 					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold"
-				>{ writtenSource(fonte) }</button>
+				>{ writtenSource(source) }</button>
 			}
 		</div>
 		<div data-show="$power_source === 'raca'" class="space-y-3">
@@ -76,25 +76,25 @@ templ raceChoicesBlock(v View) {
 	if len(v.Choices.Races) == 0 {
 		<p class="py-2 text-xs italic text-muted-foreground">A raça desta ficha não pede escolha.</p>
 	} else {
-		for _, cartao := range v.Choices.Races {
+		for _, card := range v.Choices.Races {
 			<section class="space-y-2 rounded-sm border border-grimorio-iron p-2">
-				<h4 class={ ui.SectionLabelClasses("gold", "") }>{ cartao.Race }</h4>
-				if cartao.Attribute != nil {
-					@attributeChoiceBlock(v, *cartao.Attribute)
+				<h4 class={ ui.SectionLabelClasses("gold", "") }>{ card.Race }</h4>
+				if card.Attribute != nil {
+					@attributeChoiceBlock(v, *card.Attribute)
 				}
-				for _, variante := range cartao.Variants {
+				for _, variant := range card.Variants {
 					<div class="space-y-1">
-						<p class={ ui.FieldLabelClasses("muted", "") }>{ variante.Name }</p>
+						<p class={ ui.FieldLabelClasses("muted", "") }>{ variant.Name }</p>
 						<div class="flex flex-wrap gap-1">
-							for _, o := range variante.Options {
+							for _, o := range variant.Options {
 								<button
 									type="button"
 									role="switch"
-									aria-checked={ ui.AriaBool(o.Ativo) }
-									aria-label={ o.Rotulo }
-									data-on:click={ sheetPost(v, "/poderes/variante/"+o.Valor) }
-									class={ choiceChip(o.Ativo) }
-								>{ o.Rotulo }</button>
+									aria-checked={ ui.AriaBool(o.Active) }
+									aria-label={ o.Label }
+									data-on:click={ sheetPost(v, "/poderes/variante/"+o.Value) }
+									class={ choiceChip(o.Active) }
+								>{ o.Label }</button>
 							}
 						</div>
 					</div>
@@ -110,34 +110,34 @@ templ raceChoicesBlock(v View) {
 // motor é sobre o CONJUNTO — três distintos, nenhum no proibido —, então mandar
 // um de cada vez faria o servidor recusar os dois primeiros cliques de uma
 // escolha que vai ficar válida no terceiro.
-templ attributeChoiceBlock(v View, escolha attributeChoice) {
+templ attributeChoiceBlock(v View, choice attributeChoice) {
 	<div class="space-y-1">
-		<p class={ ui.FieldLabelClasses("muted", "") }>{ attributeWrittenChoice(escolha) }</p>
-		if escolha.Kind == "ascendencia" {
+		<p class={ ui.FieldLabelClasses("muted", "") }>{ attributeWrittenChoice(choice) }</p>
+		if choice.Kind == "ascendencia" {
 			<div class="flex flex-wrap gap-1">
-				for _, o := range escolha.Options {
+				for _, o := range choice.Options {
 					<button
 						type="button"
 						role="switch"
-						aria-checked={ ui.AriaBool(contemTraco(escolha.Chosen, o.Valor)) }
-						aria-label={ o.Rotulo }
-						data-on:click={ sheetPost(v, "/poderes/ascendencia/"+o.Valor) }
-						class={ choiceChip(contemTraco(escolha.Chosen, o.Valor)) }
-					>{ o.Rotulo }</button>
+						aria-checked={ ui.AriaBool(contemTraco(choice.Chosen, o.Value)) }
+						aria-label={ o.Label }
+						data-on:click={ sheetPost(v, "/poderes/ascendencia/"+o.Value) }
+						class={ choiceChip(contemTraco(choice.Chosen, o.Value)) }
+					>{ o.Label }</button>
 				}
 			</div>
 		} else {
 			<div class="flex flex-wrap gap-1">
-				for _, o := range escolha.Options {
+				for _, o := range choice.Options {
 					<button
 						type="button"
 						role="switch"
-						aria-checked={ ui.AriaBool(contemTraco(escolha.Chosen, o.Valor)) }
-						aria-label={ o.Rotulo }
-						data-on:click={ thatTogglesAttributeGesture(o.Valor) }
-						data-attr:data-escolhido={ "$race_attributes.includes('" + o.Valor + "')" }
+						aria-checked={ ui.AriaBool(contemTraco(choice.Chosen, o.Value)) }
+						aria-label={ o.Label }
+						data-on:click={ thatTogglesAttributeGesture(o.Value) }
+						data-attr:data-escolhido={ "$race_attributes.includes('" + o.Value + "')" }
 						class={ ui.BadgeClasses("inline-flex items-center border-grimorio-iron text-3xs uppercase tracking-wider text-muted-foreground data-[escolhido]:border-grimorio-gold/60 data-[escolhido]:bg-accent data-[escolhido]:text-grimorio-gold") }
-					>{ o.Rotulo }</button>
+					>{ o.Label }</button>
 				}
 			</div>
 			<button
@@ -166,11 +166,11 @@ templ originChoicesBlock(v View) {
 				<button
 					type="button"
 					role="switch"
-					aria-checked={ ui.AriaBool(o.Ativo) }
-					aria-label={ o.Rotulo }
-					data-on:click={ sheetPost(v, "/poderes/origem/"+o.Valor) }
-					class={ choiceChip(o.Ativo) + " block w-full text-left" }
-				>{ o.Rotulo }</button>
+					aria-checked={ ui.AriaBool(o.Active) }
+					aria-label={ o.Label }
+					data-on:click={ sheetPost(v, "/poderes/origem/"+o.Value) }
+					class={ choiceChip(o.Active) + " block w-full text-left" }
+				>{ o.Label }</button>
 			}
 		</section>
 	}
@@ -178,19 +178,19 @@ templ originChoicesBlock(v View) {
 
 // classChoicesBlock são as vagas de poder, o caminho e o devoto de cada classe.
 templ classChoicesBlock(v View) {
-	for _, cartao := range v.Choices.Classes {
+	for _, card := range v.Choices.Classes {
 		<section class="space-y-2 rounded-sm border border-grimorio-iron p-2">
 			<div class="flex items-baseline justify-between">
 				<h4 class={ ui.SectionLabelClasses("gold", "") }>
-					{ cartao.ClassName + " " + strconv.FormatInt(cartao.Level, 10) }
+					{ card.ClassName + " " + strconv.FormatInt(card.Level, 10) }
 				</h4>
-				<span class="font-mono text-2xs text-muted-foreground">{ classWrittenSlots(cartao) }</span>
+				<span class="font-mono text-2xs text-muted-foreground">{ classWrittenSlots(card) }</span>
 			</div>
-			if cartao.Caminho != nil {
-				@classPicker(v, cartao.ClassName, "caminho", "Caminho", *cartao.Caminho)
+			if card.Path != nil {
+				@classPicker(v, card.ClassName, "caminho", "Caminho", *card.Path)
 			}
-			if cartao.Devoto != nil {
-				@classPicker(v, cartao.ClassName, "devoto", "Devoto", *cartao.Devoto)
+			if card.Devotee != nil {
+				@classPicker(v, card.ClassName, "devoto", "Devoto", *card.Devotee)
 			}
 			<input
 				type="search"
@@ -198,24 +198,24 @@ templ classChoicesBlock(v View) {
 				data-on:input__debounce.250ms={ sheetGet(v) }
 				value={ v.Powers.Search }
 				placeholder="Buscar poder…"
-				aria-label={ "Buscar poder de " + cartao.ClassName }
+				aria-label={ "Buscar poder de " + card.ClassName }
 				class="h-8 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground"
 			/>
 			<div class="max-h-[40vh] space-y-1 overflow-y-auto">
-				for _, poder := range cartao.Powers {
+				for _, power := range card.Powers {
 					<button
 						type="button"
 						role="switch"
-						aria-checked={ ui.AriaBool(poder.Chosen) }
-						aria-label={ poder.Name }
-						data-on:click={ sheetPost(v, "/poderes/escolhe/"+poder.ID) }
+						aria-checked={ ui.AriaBool(power.Chosen) }
+						aria-label={ power.Name }
+						data-on:click={ sheetPost(v, "/poderes/escolhe/"+power.ID) }
 						class={ "flex w-full items-baseline gap-2 rounded-sm border px-2 py-1 text-left text-xs outline-none transition-colors",
-							templ.KV("border-grimorio-gold/60 bg-accent", poder.Chosen),
-							templ.KV("border-grimorio-iron", !poder.Chosen) }
+							templ.KV("border-grimorio-gold/60 bg-accent", power.Chosen),
+							templ.KV("border-grimorio-iron", !power.Chosen) }
 					>
-						<span class="font-semibold text-foreground">{ poder.Name }</span>
-						<span class="min-w-0 flex-1 truncate text-muted-foreground">{ poder.Detail }</span>
-						<span class="shrink-0 text-3xs text-muted-foreground">{ poder.Fonte }</span>
+						<span class="font-semibold text-foreground">{ power.Name }</span>
+						<span class="min-w-0 flex-1 truncate text-muted-foreground">{ power.Detail }</span>
+						<span class="shrink-0 text-3xs text-muted-foreground">{ power.Source }</span>
 					</button>
 				}
 			</div>
@@ -224,19 +224,19 @@ templ classChoicesBlock(v View) {
 }
 
 // classPicker é uma escolha de valor único — caminho ou devoto.
-templ classPicker(v View, classe, escolha, rotulo string, seletor pickerChoice) {
+templ classPicker(v View, class, choice, label string, selector pickerChoice) {
 	<div class="space-y-1">
-		<p class={ ui.FieldLabelClasses("muted", "") }>{ rotulo }</p>
+		<p class={ ui.FieldLabelClasses("muted", "") }>{ label }</p>
 		<div class="flex flex-wrap gap-1">
-			for _, o := range seletor.Options {
+			for _, o := range selector.Options {
 				<button
 					type="button"
 					role="switch"
-					aria-checked={ ui.AriaBool(o.Ativo) }
-					aria-label={ o.Rotulo }
-					data-on:click={ choiceClassCommand(v, classe, escolha, o.Valor) }
-					class={ choiceChip(o.Ativo) }
-				>{ o.Rotulo }</button>
+					aria-checked={ ui.AriaBool(o.Active) }
+					aria-label={ o.Label }
+					data-on:click={ choiceClassCommand(v, class, choice, o.Value) }
+					class={ choiceChip(o.Active) }
+				>{ o.Label }</button>
 			}
 		</div>
 	</div>

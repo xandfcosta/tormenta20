@@ -22,11 +22,11 @@ func TestSpellBasePmCostTable(t *testing.T) {
 }
 
 func TestTheReachableCircleRisesWithTheLevelAndHasAFloorInTheSpellItself(t *testing.T) {
-	casos := []struct {
-		nome    string
+	cases := []struct {
+		name    string
 		classes []ClassDTO
-		magia   int
-		quer    int
+		spell   int
+		want    int
 	}{
 		{"arcanista de 1º alcança o 1º", []ClassDTO{{ClassName: "Arcanista", Level: 1}}, 1, 1},
 		{"arcanista de 4º ainda está no 1º", []ClassDTO{{ClassName: "Arcanista", Level: 4}}, 1, 1},
@@ -38,10 +38,10 @@ func TestTheReachableCircleRisesWithTheLevelAndHasAFloorInTheSpellItself(t *test
 			{ClassName: "Guerreiro", Level: 10}, {ClassName: "Arcanista", Level: 9},
 		}, 1, 3},
 	}
-	for _, caso := range casos {
-		t.Run(caso.nome, func(t *testing.T) {
-			if got := HighestCastableCircle(caso.classes, caso.magia); got != caso.quer {
-				t.Errorf("alcançou o %dº, quer o %dº", got, caso.quer)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := HighestCastableCircle(tc.classes, tc.spell); got != tc.want {
+				t.Errorf("alcançou o %dº, quer o %dº", got, tc.want)
 			}
 		})
 	}

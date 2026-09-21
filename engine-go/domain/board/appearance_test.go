@@ -9,16 +9,16 @@ import (
 // A regra: a cor é da ESPÉCIE e o número é da INSTÂNCIA.
 
 func TestEqualsComeOutEqualAndTheNumberStaysOutOfTheColor(t *testing.T) {
-	um, tres := AppearanceOf("Zumbi 1"), AppearanceOf("Zumbi 3")
+	um, three := AppearanceOf("Zumbi 1"), AppearanceOf("Zumbi 3")
 
-	if um.Matiz != tres.Matiz {
-		t.Errorf("dois zumbis saíram em matizes diferentes: %d e %d", um.Matiz, tres.Matiz)
+	if um.Hue != three.Hue {
+		t.Errorf("dois zumbis saíram em matizes diferentes: %d e %d", um.Hue, three.Hue)
 	}
-	if um.Monograma != tres.Monograma {
-		t.Errorf("monogramas diferentes: %q e %q", um.Monograma, tres.Monograma)
+	if um.Monogram != three.Monogram {
+		t.Errorf("monogramas diferentes: %q e %q", um.Monogram, three.Monogram)
 	}
-	if um.Instancia != "1" || tres.Instancia != "3" {
-		t.Errorf("selos: %q e %q", um.Instancia, tres.Instancia)
+	if um.Instance != "1" || three.Instance != "3" {
+		t.Errorf("selos: %q e %q", um.Instance, three.Instance)
 	}
 }
 
@@ -27,8 +27,8 @@ func TestEqualsComeOutEqualAndTheNumberStaysOutOfTheColor(t *testing.T) {
 // três peças na mesa — era justamente o que se perdia.
 func TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal(t *testing.T) {
 	p := AppearanceOf("Zumbi Putrefato 2")
-	if p.Monograma != "ZP" || p.Instancia != "2" {
-		t.Errorf("ficou %q + %q, queria ZP + 2", p.Monograma, p.Instancia)
+	if p.Monogram != "ZP" || p.Instance != "2" {
+		t.Errorf("ficou %q + %q, queria ZP + 2", p.Monogram, p.Instance)
 	}
 }
 
@@ -36,11 +36,11 @@ func TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal(t *testing.T) {
 // metade da massa que a peça precisa para ser achada entre vinte vizinhas.
 func TestWithoutANumberThereIsNoSealAndTheMonogramStillHasTwoLetters(t *testing.T) {
 	p := AppearanceOf("Ogro")
-	if p.Instancia != "" {
-		t.Errorf("apareceu selo %q num nome sem número", p.Instancia)
+	if p.Instance != "" {
+		t.Errorf("apareceu selo %q num nome sem número", p.Instance)
 	}
-	if p.Monograma != "OG" {
-		t.Errorf("monogram %q, queria OG", p.Monograma)
+	if p.Monogram != "OG" {
+		t.Errorf("monogram %q, queria OG", p.Monogram)
 	}
 }
 
@@ -48,16 +48,16 @@ func TestWithoutANumberThereIsNoSealAndTheMonogramStillHasTwoLetters(t *testing.
 // transformaria "Recruta Nv1 Simples" em outra espécie.
 func TestANumberInTheMiddleOfTheNameIsNotAnInstance(t *testing.T) {
 	p := AppearanceOf("Recruta Nv1 Simples")
-	if p.Instancia != "" {
-		t.Errorf("o Nv1 virou selo %q", p.Instancia)
+	if p.Instance != "" {
+		t.Errorf("o Nv1 virou selo %q", p.Instance)
 	}
-	if p.Monograma != "RN" {
-		t.Errorf("monogram %q", p.Monograma)
+	if p.Monogram != "RN" {
+		t.Errorf("monogram %q", p.Monogram)
 	}
 }
 
 func TestDifferentKindsStayDistinct(t *testing.T) {
-	if AppearanceOf("Zumbi 1").Matiz == AppearanceOf("Goblin 1").Matiz {
+	if AppearanceOf("Zumbi 1").Hue == AppearanceOf("Goblin 1").Hue {
 		t.Error("zumbi e goblin saíram no mesmo matiz — a cor deixou de dizer algo")
 	}
 }
@@ -73,7 +73,7 @@ func TestDifferentKindsStayDistinct(t *testing.T) {
 // percorre BYTES dão números diferentes em todo nome acentuado, e é a única
 // entrada da lista que pega esse erro.
 func TestTheHueIsTheSameAsTheHeroPortrait(t *testing.T) {
-	casos := map[string]int{
+	cases := map[string]int{
 		"Thorvald": 186,
 		"Ogro":     197,
 		"Zumbi":    9,
@@ -81,9 +81,9 @@ func TestTheHueIsTheSameAsTheHeroPortrait(t *testing.T) {
 		"Ácido":    218,
 		"Goblin":   183,
 	}
-	for nome, quero := range casos {
-		if got := hueOf(nome); got != quero {
-			t.Errorf("matiz de %q = %d, quero %d (rodado no hueFromName da SPA)", nome, got, quero)
+	for name, want := range cases {
+		if got := hueOf(name); got != want {
+			t.Errorf("matiz de %q = %d, quero %d (rodado no hueFromName da SPA)", name, got, want)
 		}
 	}
 }

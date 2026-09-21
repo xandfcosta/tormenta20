@@ -9,19 +9,19 @@ import (
 func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/bestiario/enviar",
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"goblin-salteador","entry_hp":4,"entry_initiative":13,"entry_copies":3}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("mandar para a mesa deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
 	}
 
-	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
-	if len(fila) != 3 {
-		t.Fatalf("a fila ficou com %d combatentes, queria 3", len(fila))
+	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	if len(queue) != 3 {
+		t.Fatalf("a fila ficou com %d combatentes, queria 3", len(queue))
 	}
-	rotulos := map[string]bool{}
-	for _, e := range fila {
-		rotulos[e.Label] = true
+	labels := map[string]bool{}
+	for _, e := range queue {
+		labels[e.Label] = true
 		if e.MonsterID == nil || *e.MonsterID != "goblin-salteador" {
 			t.Errorf("a linha %q não levou o monsterId: %v", e.Label, e.MonsterID)
 		}
@@ -34,8 +34,8 @@ func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 	}
 	// Os TRÊS têm rótulos distintos, e é o servidor que os numera: três linhas
 	// com o mesmo nome na fila deixam o mestre sem saber qual ele feriu.
-	if len(rotulos) != 3 {
-		t.Errorf("as três cópias ficaram com %d rótulos distintos: %v", len(rotulos), rotulos)
+	if len(labels) != 3 {
+		t.Errorf("as três cópias ficaram com %d rótulos distintos: %v", len(labels), labels)
 	}
 }
 
@@ -47,10 +47,10 @@ func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/bestiario/enviar",
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"goblin-salteador","entry_hp":4,"entry_initiative":13,"entry_copies":99}`)
-	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "99") {
-		t.Errorf("a recusa não citou o valor ofensivo; sinais = %s", corpo)
+	if body := trechoDeSinais(rec.Body.String()); !strings.Contains(body, "99") {
+		t.Errorf("a recusa não citou o valor ofensivo; sinais = %s", body)
 	}
 	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
 		t.Errorf("entraram %d combatentes apesar da recusa", n)
@@ -63,10 +63,10 @@ func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 func TestAnInventedCreatureIsRefused(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/bestiario/enviar",
+	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"grifo-de-neon","entry_hp":10,"entry_initiative":10,"entry_copies":1}`)
-	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "grifo-de-neon") {
-		t.Errorf("a recusa não citou a criatura; sinais = %s", corpo)
+	if body := trechoDeSinais(rec.Body.String()); !strings.Contains(body, "grifo-de-neon") {
+		t.Errorf("a recusa não citou a criatura; sinais = %s", body)
 	}
 	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
 		t.Errorf("entraram %d combatentes apesar da recusa", n)
@@ -82,32 +82,32 @@ func TestAnInventedCreatureIsRefused(t *testing.T) {
 // acabou de ajustar.
 func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 	f := newSceneFixture(t)
-	painel := f.tableUrl() + "/bestiario"
+	panel := f.tableUrl() + "/bestiario"
 
 	// Primeira abertura: o rascunho na tela não é de ninguém ainda.
-	abriu := f.pede(t, f.mestre, http.MethodGet, painel+signals(`{"creature":"zumbi","draft_of":""}`), "").Body.String()
-	if !strings.Contains(trechoDeSinais(abriu), `"entry_hp":20`) {
-		t.Errorf("abrir o Zumbi não semeou o PV do livro (20); sinais = %s", trechoDeSinais(abriu))
+	opened := f.pede(t, f.gm, http.MethodGet, panel+signals(`{"creature":"zumbi","draft_of":""}`), "").Body.String()
+	if !strings.Contains(trechoDeSinais(opened), `"entry_hp":20`) {
+		t.Errorf("abrir o Zumbi não semeou o PV do livro (20); sinais = %s", trechoDeSinais(opened))
 	}
-	if !strings.Contains(trechoDeSinais(abriu), `"draft_of":"zumbi"`) {
-		t.Errorf("o rascunho não ficou marcado como do Zumbi; sinais = %s", trechoDeSinais(abriu))
+	if !strings.Contains(trechoDeSinais(opened), `"draft_of":"zumbi"`) {
+		t.Errorf("o rascunho não ficou marcado como do Zumbi; sinais = %s", trechoDeSinais(opened))
 	}
 
 	// Segunda visita à MESMA criatura, agora com o rascunho já sendo dela: é o
 	// que acontece a cada tecla da busca, e não pode semear nada.
-	dinovo := f.pede(t, f.mestre, http.MethodGet,
-		painel+signals(`{"creature":"zumbi","search":"zu","draft_of":"zumbi"}`), "").Body.String()
+	again := f.pede(t, f.gm, http.MethodGet,
+		panel+signals(`{"creature":"zumbi","search":"zu","draft_of":"zumbi"}`), "").Body.String()
 	// O CONTROLE: o painel FOI redesenhado, senão "não semeou" seria só "não
 	// respondeu".
-	if !strings.Contains(dinovo, "table-bestiary") {
+	if !strings.Contains(again, "table-bestiary") {
 		t.Fatalf("o painel não voltou no remendo; a ausência abaixo não provaria nada")
 	}
 	// A asserção é sobre a LINHA DE SINAIS e não sobre o corpo inteiro: a
 	// palavra `pvdoverbete` também aparece no HTML, no `data-bind` do campo de
 	// ajuste. Procurá-la no corpo casava com o desenho e acusava o código por um
 	// defeito que era do teste.
-	if sinais := trechoDeSinais(dinovo); strings.Contains(sinais, "entry_hp") {
-		t.Errorf("filtrar semeou o rascunho de novo e apagaria o ajuste do mestre; sinais = %s", sinais)
+	if signals := trechoDeSinais(again); strings.Contains(signals, "entry_hp") {
+		t.Errorf("filtrar semeou o rascunho de novo e apagaria o ajuste do mestre; sinais = %s", signals)
 	}
 }
 
@@ -116,31 +116,31 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rotas := []struct{ metodo, caminho, corpo string }{
+	routes := []struct{ method, path, body string }{
 		{http.MethodGet, "/bestiario", ""},
 		{"POST", "/bestiario/tipo/animal", ""},
 		{"POST", "/bestiario/enviar", `{"creature":"zumbi","entry_hp":20,"entry_initiative":10,"entry_copies":1}`},
 	}
-	for _, rota := range rotas {
-		rec := f.pede(t, f.jogador, rota.metodo, f.tableUrl()+rota.caminho, rota.corpo)
+	for _, route := range routes {
+		rec := f.pede(t, f.player, route.method, f.tableUrl()+route.path, route.body)
 		if rec.Code != http.StatusForbidden {
-			t.Errorf("o jogador chamou %q e levou %d, quero 403", rota.caminho, rec.Code)
+			t.Errorf("o jogador chamou %q e levou %d, quero 403", route.path, rec.Code)
 		}
 	}
 
-	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(html, "Iniciativa") {
 		t.Fatal("o jogador não viu a cena; a ausência abaixo não provaria nada")
 	}
 	// O painel não é ESCONDIDO na tela do jogador: ele não existe nela. Mandá-lo
 	// e esconder por CSS entregaria as 80 criaturas com PV e defesa a quem
 	// abrisse o inspetor.
-	for _, marca := range []string{"table-bestiary", "Abrir o bestiário"} {
-		if strings.Contains(html, marca) {
-			t.Errorf("o HTML do jogador veio com %q", marca)
+	for _, mark := range []string{"table-bestiary", "Abrir o bestiário"} {
+		if strings.Contains(html, mark) {
+			t.Errorf("o HTML do jogador veio com %q", mark)
 		}
 	}
-	if doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(doMestre, "table-bestiary") {
+	if forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(forGM, "table-bestiary") {
 		t.Error("o mestre não recebeu o painel")
 	}
 }

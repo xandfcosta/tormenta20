@@ -9,20 +9,20 @@ import (
 	"testing"
 )
 
-func sceneIds(t *testing.T, f sceneFixture) (ficha, npc string) {
+func sceneIds(t *testing.T, f sceneFixture) (sheet, npc string) {
 	t.Helper()
 	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		switch e.Type {
 		case "character":
-			ficha = e.ID
+			sheet = e.ID
 		case "npc":
 			npc = e.ID
 		}
 	}
-	if ficha == "" || npc == "" {
-		t.Fatalf("a cena não tem os dois lados: ficha=%q npc=%q", ficha, npc)
+	if sheet == "" || npc == "" {
+		t.Fatalf("a cena não tem os dois lados: ficha=%q npc=%q", sheet, npc)
 	}
-	return ficha, npc
+	return sheet, npc
 }
 
 // A fila inteira num clique põe no mapa o vilão montado para aparecer no
@@ -33,19 +33,19 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
-	ficha, npc := sceneIds(t, f)
+	sheet, npc := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
+	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 1", len(b.Tokens))
 	}
-	if id := b.Tokens[0].EntryID; id == nil || *id != ficha {
+	if id := b.Tokens[0].EntryID; id == nil || *id != sheet {
 		t.Errorf("a peça no mapa não é a escolhida: %v", id)
 	}
-	for _, peca := range b.Tokens {
-		if peca.EntryID != nil && *peca.EntryID == npc {
+	for _, token := range b.Tokens {
+		if token.EntryID != nil && *token.EntryID == npc {
 			t.Error("o NPC que ninguém escolheu foi para o mapa — é a emboscada vazando")
 		}
 	}
@@ -60,15 +60,15 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":""}`)
+	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":""}`)
 
 	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
 		t.Fatalf("escolha vazia trouxe %d peças — nil virou TODAS", len(b.Tokens))
 	}
 	// E a recusa FALA: um comando que não faz nada e não diz nada é lido como
 	// tela travada. O texto vai para o `command_error`, o rodapé do mestre.
-	if !strings.Contains(corpo, "escolha ao menos um") {
-		t.Errorf("a recusa não chegou ao rodapé do mestre; resposta: %.200s", corpo)
+	if !strings.Contains(body, "escolha ao menos um") {
+		t.Errorf("a recusa não chegou ao rodapé do mestre; resposta: %.200s", body)
 	}
 }
 
@@ -80,9 +80,9 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
-	ficha, _ := sceneIds(t, f)
+	sheet, _ := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
+	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) != 1 {
@@ -106,13 +106,13 @@ func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(doMestre, `id="populate"`) {
+	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(forGM, `id="populate"`) {
 		t.Fatal("o diálogo não está na página do MESTRE — o controle falhou, e sem ele o resto não mede nada")
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(doJogador, `id="populate"`) {
+	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(forPlayer, `id="populate"`) {
 		t.Error("o diálogo do mestre foi para o HTML do jogador, com a fila inteira dentro")
 	}
 }
@@ -126,10 +126,10 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
-	ficha, _ := sceneIds(t, f)
+	sheet, _ := sceneIds(t, f)
 
-	rec := f.pede(t, f.jogador, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
+	rec := f.pede(t, f.player, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça no mapa: %d", rec.Code)
@@ -146,33 +146,33 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
-	ficha, npc := sceneIds(t, f)
+	sheet, npc := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
+	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	candidatos := table.MapCandidates(b, f.s.tableHost().Sessions().GetState(f.sessionID))
-	if len(candidatos) != 2 {
-		t.Fatalf("a fila tem 2 combatentes e o diálogo ofereceu %d", len(candidatos))
+	candidates := table.MapCandidates(b, f.s.tableHost().Sessions().GetState(f.sessionID))
+	if len(candidates) != 2 {
+		t.Fatalf("a fila tem 2 combatentes e o diálogo ofereceu %d", len(candidates))
 	}
-	for _, c := range candidatos {
+	for _, c := range candidates {
 		switch c.ID {
-		case ficha:
-			if !c.NoMapa {
+		case sheet:
+			if !c.OnBoard {
 				t.Error("quem acabou de virar peça continua sendo oferecido para trazer")
 			}
-			if !c.Ficha {
+			if !c.Sheet {
 				t.Error("o PC não foi marcado como ficha — ele nasceria do lado errado do mapa")
 			}
 		case npc:
-			if c.NoMapa {
+			if c.OnBoard {
 				t.Error("o NPC que não foi escolhido aparece como se já estivesse no mapa")
 			}
 		}
 	}
 	// O atalho do clique direito escolhe as FICHAS que faltam, e agora não falta
 	// nenhuma: sem isto ele reenviaria a mesma ficha a cada clique.
-	if ids := table.MapOutsideSheets(candidatos); len(ids) != 0 {
+	if ids := table.MapOutsideSheets(candidates); len(ids) != 0 {
 		t.Errorf("o atalho ainda ofereceria %v, que já está no mapa", ids)
 	}
 }
@@ -184,14 +184,14 @@ func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
-	ficha, _ := sceneIds(t, f)
+	sheet, _ := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
+	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	for _, especie := range board.TerrainKinds {
-		if casas := board.SquaresOf(b, especie.ID); len(casas) != 0 {
-			t.Errorf("pôr no mapa pintou %s em %v", especie.ID, casas)
+	for _, species := range board.TerrainKinds {
+		if squares := board.SquaresOf(b, species.ID); len(squares) != 0 {
+			t.Errorf("pôr no mapa pintou %s em %v", species.ID, squares)
 		}
 	}
 }

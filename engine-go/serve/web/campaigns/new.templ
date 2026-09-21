@@ -35,17 +35,17 @@ templ newBody(v newView) {
 			// gramática nenhuma — o que o guarda de cenas cobra.
 			<form method="post" action="/campanhas/nova" data-nav-region="content" data-nav-layout="column" class="space-y-4">
 				@ui.TextField(ui.Field{
-					Nome: "name", Label: "Nome", Valor: v.Nome,
-					Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
-					Erros: v.Erros["name"],
+					Name: "name", Label: "Nome", Value: v.Name,
+					Obrigatorio: true, MaxSize: campaign.MaxNameLength,
+					Errors: v.Errors["name"],
 				})
 				@ui.TextArea(ui.Field{
-					Nome: "description", Label: "Descrição", Valor: v.Descricao,
-					TamanhoMaximo: campaign.MaxDescriptionLength,
-					Erros:         v.Erros["description"],
+					Name: "description", Label: "Descrição", Value: v.Description,
+					MaxSize: campaign.MaxDescriptionLength,
+					Errors:         v.Errors["description"],
 				}, 6)
-				if v.Aviso != "" {
-					<p class="text-sm text-destructive-ink">{ v.Aviso }</p>
+				if v.Notice != "" {
+					<p class="text-sm text-destructive-ink">{ v.Notice }</p>
 				}
 				<div class="flex justify-end gap-2">
 					<a href="/campanhas" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }>Cancelar</a>

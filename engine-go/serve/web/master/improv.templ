@@ -38,9 +38,9 @@ templ improvScene(v improvView) {
 					Tabelas do Cap 6
 				}
 				<div class="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
-					@rollingTable("ruina", "Ermos — Ruína", "d6", "p269", v.Ruina)
-					@rollingTable("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5 · p274", v.Perseguicao)
-					@rollingTable("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p279", v.Recompensa)
+					@rollingTable("ruina", "Ermos — Ruína", "d6", "p269", v.Ruin)
+					@rollingTable("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5 · p274", v.Chase)
+					@rollingTable("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p279", v.Reward)
 				</div>
 			</div>
 			<div class="border-t border-grimorio-iron pt-4">
@@ -48,7 +48,7 @@ templ improvScene(v improvView) {
 					Masmorra
 				}
 				<div class="grid items-start gap-3 sm:grid-cols-2">
-					@rollingTable("ideias", "Ideias de masmorra", "d20", "Tabela 6-2 · p263", v.Ideias)
+					@rollingTable("ideias", "Ideias de masmorra", "d20", "Tabela 6-2 · p263", v.Ideas)
 					@dungeonPlanner(v)
 				</div>
 			</div>
@@ -68,11 +68,11 @@ templ improvScene(v improvView) {
 // regiões — a mesma razão do `blockSection` no bestiário. De quebra, é o que
 // deixa o teste apontar para UM cartão em vez de contar filhos de `div`, que é
 // o acoplamento a formato de DOM que o guia manda não escrever.
-templ rollingTable(id, titulo, dado, fonte string, historico []roll) {
-	<section aria-label={ titulo } class="flex flex-col gap-2 rounded-sm border border-grimorio-iron p-3">
+templ rollingTable(id, title, data, source string, history []roll) {
+	<section aria-label={ title } class="flex flex-col gap-2 rounded-sm border border-grimorio-iron p-3">
 		<div class="flex flex-wrap items-baseline gap-x-2">
-			<h3 class="font-heading text-sm tracking-wide text-foreground">{ titulo }</h3>
-			<span class="text-3xs text-muted-foreground">{ fonte }</span>
+			<h3 class="font-heading text-sm tracking-wide text-foreground">{ title }</h3>
+			<span class="text-3xs text-muted-foreground">{ source }</span>
 		</div>
 		<button
 			type="button"
@@ -81,16 +81,16 @@ templ rollingTable(id, titulo, dado, fonte string, historico []roll) {
 			class="inline-flex min-h-11 items-center justify-center gap-1.5 self-start rounded-sm border border-grimorio-iron px-3 text-xs text-foreground outline-none transition-colors hover:bg-accent"
 		>
 			@ui.Icon("Dices", "size-4")
-			{ "Rolar " + dado }
+			{ "Rolar " + data }
 		</button>
-		if len(historico) > 0 {
+		if len(history) > 0 {
 			// LIMPAR só aparece com histórico: um botão que não tem o que fazer
 			// ocupa a linha e ensina errado.
-			@ui.Button(ui.VariantGhost, ui.SizeInline, "self-start px-1 text-xs", templ.Attributes{"type": "button", "aria-label": "Limpar o histórico de " + titulo, "data-on:click": fmt.Sprintf("@post('/mestre/improviso/%s/limpar')", id)}) {
+			@ui.Button(ui.VariantGhost, ui.SizeInline, "self-start px-1 text-xs", templ.Attributes{"type": "button", "aria-label": "Limpar o histórico de " + title, "data-on:click": fmt.Sprintf("@post('/mestre/improviso/%s/limpar')", id)}) {
 				Limpar
 			}
 		}
-		if len(historico) == 0 {
+		if len(history) == 0 {
 			<p class="text-xs text-muted-foreground">Nada rolado ainda.</p>
 		} else {
 			// O `aria-live` fica no BLOCO do resultado e não no botão: quem usa
@@ -100,22 +100,22 @@ templ rollingTable(id, titulo, dado, fonte string, historico []roll) {
 			// acabou de pedir.
 			<div aria-live="polite" class="space-y-0.5">
 				<p class="flex items-baseline gap-2">
-					<span class="font-mono text-2xl leading-none tabular-nums text-grimorio-gold">{ ui.Int(historico[0].Rolagem) }</span>
-					<span class="text-sm text-foreground">{ historico[0].Texto }</span>
+					<span class="font-mono text-2xl leading-none tabular-nums text-grimorio-gold">{ ui.Int(history[0].Roll) }</span>
+					<span class="text-sm text-foreground">{ history[0].Text }</span>
 				</p>
-				if historico[0].Detalhe != "" {
-					<p class="pl-9 text-xs text-muted-foreground">{ historico[0].Detalhe }</p>
+				if history[0].Detail != "" {
+					<p class="pl-9 text-xs text-muted-foreground">{ history[0].Detail }</p>
 				}
 			</div>
-			if len(historico) > 1 {
+			if len(history) > 1 {
 				// As anteriores existem porque o mestre que rola duas vezes na
 				// mesma cena quer COMPARAR — guardar só a última joga fora a
 				// comparação no instante da segunda rolagem.
 				<ul class="space-y-0.5 border-t border-grimorio-iron pt-1.5">
-					for _, s := range historico[1:] {
+					for _, s := range history[1:] {
 						<li class="flex items-baseline gap-2 text-3xs text-muted-foreground">
-							<span class="w-5 shrink-0 text-right font-mono tabular-nums">{ ui.Int(s.Rolagem) }</span>
-							<span class="truncate">{ s.Texto }</span>
+							<span class="w-5 shrink-0 text-right font-mono tabular-nums">{ ui.Int(s.Roll) }</span>
+							<span class="truncate">{ s.Text }</span>
 						</li>
 					}
 				</ul>
@@ -142,35 +142,35 @@ templ dungeonPlanner(v improvView) {
 				type="number"
 				min={ ui.Int(salasMinimo) }
 				max={ ui.Int(salasMaximo) }
-				value={ ui.Int(v.Salas) }
+				value={ ui.Int(v.Rooms) }
 				data-bind:rooms
 				data-on:input__debounce.300ms="@get('/mestre/improviso')"
 				aria-label="Número de salas da masmorra"
 				class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none md:text-sm"
 			/>
 		</div>
-		if v.AcimaDoTeto {
+		if v.OverCeiling {
 			// Acima do teto não é ERRO: é o livro recomendando parar. A tela diz
 			// isso em vez de esconder o resultado ou fingir um tamanho.
 			<p class="text-xs text-muted-foreground">
 				Acima do maior tamanho de masmorra do livro. Ele recomenda parar aqui e quebrar em masmorras menores.
 			</p>
-		} else if v.Tamanho != nil {
+		} else if v.Size != nil {
 			<dl class="space-y-1 text-xs">
-				@skeletonRow("Tamanho", v.Tamanho.Label)
-				@skeletonRow("Ritmo", pacingName(v.Tamanho.Pacing))
-				@skeletonRow("Ameaças a distribuir", ui.Int(v.Ameacas))
-				if v.Tamanho.MaxSecondaryObjectives > 0 {
-					@skeletonRow("Objetivos secundários (até)", ui.Int(v.Tamanho.MaxSecondaryObjectives))
+				@skeletonRow("Tamanho", v.Size.Label)
+				@skeletonRow("Ritmo", pacingName(v.Size.Pacing))
+				@skeletonRow("Ameaças a distribuir", ui.Int(v.Threats))
+				if v.Size.MaxSecondaryObjectives > 0 {
+					@skeletonRow("Objetivos secundários (até)", ui.Int(v.Size.MaxSecondaryObjectives))
 				}
 			</dl>
 		}
 	</section>
 }
 
-templ skeletonRow(rotulo, valor string) {
+templ skeletonRow(label, value string) {
 	<div class="flex items-baseline justify-between gap-2">
-		<dt class="text-muted-foreground">{ rotulo }</dt>
-		<dd class="font-mono tabular-nums text-foreground">{ valor }</dd>
+		<dt class="text-muted-foreground">{ label }</dt>
+		<dd class="font-mono tabular-nums text-foreground">{ value }</dd>
 	</div>
 }

@@ -43,22 +43,22 @@ const CENAS = [
 // de cenas com endereço fixo, e fingir um id faria o guarda medir um 403.
 
 
-for (const cena of CENAS) {
-  test(`a cena de ${cena.nome} declara a gramática de teclado`, async ({ page }) => {
+for (const scene of CENAS) {
+  test(`a cena de ${scene.nome} declara a gramática de teclado`, async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 })
-    await page.goto(cena.url)
+    await page.goto(scene.url)
     await page.waitForLoadState('networkidle')
 
-    const medida = await page.evaluate(() => {
-      const comArea = (e: Element) => {
+    const measure = await page.evaluate(() => {
+      const withArea = (e: Element) => {
         const r = e.getBoundingClientRect()
         return r.width > 0 && r.height > 0
       }
-      const regioes = [...document.querySelectorAll('[data-nav-region]')]
+      const regions = [...document.querySelectorAll('[data-nav-region]')]
       return {
         desenhou: !!document.querySelector('[data-slot="scene-shell"]'),
         temVoltar: document.querySelector('[data-slot="scene-shell"]')?.hasAttribute('data-voltar'),
-        regioes: regioes.filter(comArea).map((e) => ({
+        regioes: regions.filter(withArea).map((e) => ({
           nome: e.getAttribute('data-nav-region'),
           itens: e.querySelectorAll(
             'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"]),[data-nav-item]',
@@ -70,17 +70,17 @@ for (const cena of CENAS) {
     // O CONTROLE: a cena desenhou. Sem ele "não declara região" seria verdade
     // sobre um 404 ou um redirecionamento, e a mensagem mandaria procurar no
     // arquivo errado.
-    expect(medida.desenhou, `a cena de ${cena.nome} não desenhou`).toBe(true)
+    expect(measure.desenhou, `a cena de ${scene.nome} não desenhou`).toBe(true)
 
     expect(
-      medida.regioes.length,
-      `a cena de ${cena.nome} não declara nenhuma região: o driver de teclado carrega e não tem o que dirigir`,
+      measure.regioes.length,
+      `a cena de ${scene.nome} não declara nenhuma região: o driver de teclado carrega e não tem o que dirigir`,
     ).toBeGreaterThan(0)
 
     // Região SEM item é pior que região nenhuma: o driver tenta entrar e o foco
     // some. Cada uma tem de ter ao menos um alvo.
-    for (const r of medida.regioes) {
-      expect(r.itens, `a região "${r.nome}" de ${cena.nome} não tem item focável`).toBeGreaterThan(0)
+    for (const r of measure.regioes) {
+      expect(r.itens, `a região "${r.nome}" de ${scene.nome} não tem item focável`).toBeGreaterThan(0)
     }
   })
 }

@@ -17,75 +17,75 @@ import (
 // digitado numa caixa reaparece na próxima.
 
 // itemSheetDialog é a ficha de UM item — o alvo de todo toque na Mochila.
-templ itemSheetDialog(v View, ficha itemSheet) {
-	@overlay("item-"+ficha.Command, ficha.Name, "Backpack", false) {
+templ itemSheetDialog(v View, sheet itemSheet) {
+	@overlay("item-"+sheet.Command, sheet.Name, "Backpack", false) {
 		<p class="text-xs text-muted-foreground">
-			{ writtenWeight(ficha) }
-			if ficha.NoProficiency {
+			{ writtenWeight(sheet) }
+			if sheet.NoProficiency {
 				<span class="ml-2 font-semibold text-penalty-ink">sem proficiência</span>
 			}
 		</p>
-		if len(ficha.Equip) > 0 {
+		if len(sheet.Equip) > 0 {
 			<div class="space-y-1">
 				<p class={ ui.FieldLabelClasses("muted", "") }>Equipar</p>
 				<div class="grid grid-cols-2 gap-2">
-					for _, lugar := range ficha.Equip {
+					for _, place := range sheet.Equip {
 						<button
 							type="button"
-							data-on:click={ equipCommand(v, ficha, lugar) + "; $detail = ''" }
+							data-on:click={ equipCommand(v, sheet, place) + "; $detail = ''" }
 							class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
-						>{ lugar.Rotulo }</button>
+						>{ place.Label }</button>
 					}
 				</div>
 			</div>
 		}
-		if ficha.Consumable != nil {
-			@consumeBlock(v, ficha)
+		if sheet.Consumable != nil {
+			@consumeBlock(v, sheet)
 		}
-		if ficha.Book != nil {
-			@bookBlock(ficha)
+		if sheet.Book != nil {
+			@bookBlock(sheet)
 		}
-		if len(ficha.Overlays) > 0 {
+		if len(sheet.Overlays) > 0 {
 			<div class="space-y-1 rounded-sm border border-grimorio-iron p-2">
 				<p class={ ui.FieldLabelClasses("muted", "") }>Melhorias & material</p>
-				for _, melhoria := range ficha.Overlays {
+				for _, melhoria := range sheet.Overlays {
 					<p class="text-xs">
-						<span class="font-semibold text-grimorio-gold">{ melhoria.Nome }</span>
-						<span class="ml-2 text-muted-foreground">{ melhoria.Efeito }</span>
+						<span class="font-semibold text-grimorio-gold">{ melhoria.Name }</span>
+						<span class="ml-2 text-muted-foreground">{ melhoria.Effect }</span>
 					</p>
 				}
 			</div>
 		}
 		<div class="flex flex-wrap gap-2 border-t border-grimorio-iron pt-2">
-			if ficha.Overlayable {
+			if sheet.Overlayable {
 				<button
 					type="button"
-					aria-label={ "Melhorias de " + ficha.Name }
+					aria-label={ "Melhorias de " + sheet.Name }
 					aria-haspopup="dialog"
-					data-on:click={ thatOpensTheImprovementsGesture(ficha) }
+					data-on:click={ thatOpensTheImprovementsGesture(sheet) }
 					class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 				>Melhorias</button>
 			}
 			<button
 				type="button"
-				aria-label={ "Editar " + ficha.Name }
+				aria-label={ "Editar " + sheet.Name }
 				aria-haspopup="dialog"
-				data-on:click={ thatOpensEditGesture(ficha) }
+				data-on:click={ thatOpensEditGesture(sheet) }
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>Editar</button>
 			<button
 				type="button"
-				aria-label={ "Remover " + ficha.Name }
-				data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/remover") + "; $detail = ''" }
+				aria-label={ "Remover " + sheet.Name }
+				data-on:click={ sheetPost(v, "/itens/"+sheet.Command+"/remover") + "; $detail = ''" }
 				class={ ui.ButtonClasses(ui.VariantDestructive, ui.SizeSmall, "ml-auto") }
 			>Remover</button>
 		</div>
 	}
-	if ficha.Overlayable {
-		@overlayDialog(v, ficha)
+	if sheet.Overlayable {
+		@overlayDialog(v, sheet)
 	}
-	@itemFormDialog(v, "editar-"+ficha.Command, "Editar "+ficha.Name, "Salvar",
-		sheetPost(v, "/itens/"+ficha.Command+"/edita"))
+	@itemFormDialog(v, "editar-"+sheet.Command, "Editar "+sheet.Name, "Salvar",
+		sheetPost(v, "/itens/"+sheet.Command+"/edita"))
 }
 
 // consumeBlock é o "Usar", com o campo da rolagem quando o ganho é por dado.
@@ -94,44 +94,44 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 // mandar. A ficha rolando por conta própria tiraria da mesa o gesto que ela
 // gosta de fazer — e obrigaria a inventar uma política para o crítico, para o
 // dado emprestado e para o "rolei de novo porque caiu no chão".
-templ consumeBlock(v View, ficha itemSheet) {
+templ consumeBlock(v View, sheet itemSheet) {
 	<div class="space-y-1 rounded-sm border border-grimorio-iron p-2">
 		<p class={ ui.FieldLabelClasses("muted", "") }>
-			{ "Usar · " + ficha.Consumable.Escopo }
+			{ "Usar · " + sheet.Consumable.Scope }
 		</p>
-		if ficha.Consumable.HpDice != "" {
-			@rollField("item_roll_hp", "PV rolados ("+ficha.Consumable.HpDice+")")
+		if sheet.Consumable.HpDice != "" {
+			@rollField("item_roll_hp", "PV rolados ("+sheet.Consumable.HpDice+")")
 		}
-		if ficha.Consumable.MpDice != "" {
-			@rollField("item_roll_mp", "PM rolados ("+ficha.Consumable.MpDice+")")
+		if sheet.Consumable.MpDice != "" {
+			@rollField("item_roll_mp", "PM rolados ("+sheet.Consumable.MpDice+")")
 		}
 		<button
 			type="button"
-			aria-label={ "Usar " + ficha.Name }
-			data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/usa") + "; $detail = ''" }
+			aria-label={ "Usar " + sheet.Name }
+			data-on:click={ sheetPost(v, "/itens/"+sheet.Command+"/usa") + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "w-full") }
 		>Usar</button>
 	</div>
 }
 
-templ rollField(sinal, rotulo string) {
+templ rollField(signal, label string) {
 	<label class="block space-y-1">
-		<span class="text-3xs text-muted-foreground">{ rotulo }</span>
+		<span class="text-3xs text-muted-foreground">{ label }</span>
 		<input
 			type="number"
 			min="0"
-			data-bind={ sinal }
+			data-bind={ signal }
 			class="h-8 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 		/>
 	</label>
 }
 
 // bookBlock é o que o livro diz do item.
-templ bookBlock(ficha itemSheet) {
+templ bookBlock(sheet itemSheet) {
 	<div class="space-y-1 rounded-sm border border-grimorio-iron p-2 text-xs text-muted-foreground">
-		<p>{ ficha.Book.Categoria + " · T$ " + ficha.Book.Preco + " · p" + strconv.Itoa(ficha.Book.Pagina) }</p>
-		for _, linha := range ficha.Book.Linhas {
-			<p>{ linha }</p>
+		<p>{ sheet.Book.Category + " · T$ " + sheet.Book.Price + " · p" + strconv.Itoa(sheet.Book.Page) }</p>
+		for _, row := range sheet.Book.Rows {
+			<p>{ row }</p>
 		}
 	</div>
 }
@@ -141,23 +141,23 @@ templ bookBlock(ficha itemSheet) {
 // As duas listas já vêm FILTRADAS pela família do item — não se põe corda de
 // arco num escudo —, e quem recusa o resto é o servidor: o filtro aqui é
 // conveniência, `fitsItemImprovement` é a fronteira.
-templ overlayDialog(v View, ficha itemSheet) {
-	@overlay("melhorias-"+ficha.Command, "Melhorias de "+ficha.Name, "Sparkles", false) {
+templ overlayDialog(v View, sheet itemSheet) {
+	@overlay("melhorias-"+sheet.Command, "Melhorias de "+sheet.Name, "Sparkles", false) {
 		<div class="space-y-1">
 			<p class={ ui.FieldLabelClasses("muted", "") }>Melhorias</p>
-			for _, escolha := range ficha.Improvements {
+			for _, choice := range sheet.Improvements {
 				<button
 					type="button"
 					role="switch"
-					aria-checked={ ui.AriaBool(escolha.Ativa) }
-					aria-label={ escolha.Nome }
-					data-on:click={ thatTogglesImprovementGesture(escolha) }
-					data-attr:data-escolhida={ improvementSignal(escolha) }
+					aria-checked={ ui.AriaBool(choice.Active) }
+					aria-label={ choice.Name }
+					data-on:click={ thatTogglesImprovementGesture(choice) }
+					data-attr:data-escolhida={ improvementSignal(choice) }
 					class="flex w-full items-baseline gap-2 rounded-sm border border-grimorio-iron px-2 py-1 text-left text-xs outline-none transition-colors data-[escolhida]:border-grimorio-gold/60 data-[escolhida]:bg-accent"
 				>
-					<span class="font-semibold text-foreground">{ escolha.Nome }</span>
-					<span class="min-w-0 flex-1 truncate text-muted-foreground">{ escolha.Efeito }</span>
-					<span class="shrink-0 font-mono text-3xs text-muted-foreground">{ "T$ " + escolha.Preco }</span>
+					<span class="font-semibold text-foreground">{ choice.Name }</span>
+					<span class="min-w-0 flex-1 truncate text-muted-foreground">{ choice.Effect }</span>
+					<span class="shrink-0 font-mono text-3xs text-muted-foreground">{ "T$ " + choice.Price }</span>
 				</button>
 			}
 		</div>
@@ -165,20 +165,20 @@ templ overlayDialog(v View, ficha itemSheet) {
 			<p class={ ui.FieldLabelClasses("muted", "") }>Material</p>
 			<select
 				data-bind:item_material
-				aria-label={ "Material de " + ficha.Name }
+				aria-label={ "Material de " + sheet.Name }
 				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 			>
 				<option value="">Nenhum</option>
-				for _, escolha := range ficha.Materials {
-					<option value={ escolha.ID } selected?={ escolha.Ativa }>
-						{ escolha.Nome + " · T$ " + escolha.Preco }
+				for _, choice := range sheet.Materials {
+					<option value={ choice.ID } selected?={ choice.Active }>
+						{ choice.Name + " · T$ " + choice.Price }
 					</option>
 				}
 			</select>
 		</div>
 		<button
 			type="button"
-			data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/melhorias") + "; $detail = ''" }
+			data-on:click={ sheetPost(v, "/itens/"+sheet.Command+"/melhorias") + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>Aplicar</button>
 	}
@@ -204,7 +204,7 @@ templ catalogAddDialog(v View) {
 				class="h-9 max-w-[45%] rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 			>
 				for _, opcao := range v.Bag.CatalogCategories {
-					<option value={ opcao.Valor } selected?={ opcao.Ativo }>{ opcao.Rotulo }</option>
+					<option value={ opcao.Value } selected?={ opcao.Active }>{ opcao.Label }</option>
 				}
 			</select>
 		</div>
@@ -218,21 +218,21 @@ templ catalogAddDialog(v View) {
 				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 			/>
 		</label>
-		if len(v.Bag.Catalogo) == 0 {
+		if len(v.Bag.Catalog) == 0 {
 			<p class="py-4 text-center text-xs text-muted-foreground">Nenhum item para essa busca.</p>
 		} else {
 			<div class="max-h-[45vh] space-y-1 overflow-y-auto">
-				for _, linha := range v.Bag.Catalogo {
+				for _, row := range v.Bag.Catalog {
 					<button
 						type="button"
-						aria-label={ "Adicionar " + linha.Nome }
-						data-on:click={ sheetPost(v, "/itens/adiciona/"+linha.ID) + "; $detail = ''" }
+						aria-label={ "Adicionar " + row.Name }
+						data-on:click={ sheetPost(v, "/itens/adiciona/"+row.ID) + "; $detail = ''" }
 						class="flex w-full items-baseline gap-2 rounded-sm border border-grimorio-iron px-2 py-1 text-left text-xs outline-none transition-colors hover:border-grimorio-gold/50"
 					>
-						<span class="min-w-0 flex-1 truncate text-foreground">{ linha.Nome }</span>
-						<span class="shrink-0 text-3xs text-muted-foreground">{ linha.Categoria }</span>
+						<span class="min-w-0 flex-1 truncate text-foreground">{ row.Name }</span>
+						<span class="shrink-0 text-3xs text-muted-foreground">{ row.Category }</span>
 						<span class="shrink-0 font-mono text-3xs text-muted-foreground">
-							{ "esp " + linha.Espacos + " · T$ " + linha.Preco }
+							{ "esp " + row.Slots + " · T$ " + row.Price }
 						</span>
 					</button>
 				}
@@ -244,8 +244,8 @@ templ catalogAddDialog(v View) {
 // itemFormDialog é o formulário de um item CUSTOM — nome, quantidade e espaços.
 // Ele serve tanto ao "novo" quanto ao "editar", que é o mesmo formulário com
 // outro destino.
-templ itemFormDialog(v View, chave, titulo, botao, comando string) {
-	@overlay(chave, titulo, "Pencil", false) {
+templ itemFormDialog(v View, key, title, button, command string) {
+	@overlay(key, title, "Pencil", false) {
 		<label class="block space-y-1">
 			<span class={ ui.FieldLabelClasses("muted", "") }>nome</span>
 			<input
@@ -279,9 +279,9 @@ templ itemFormDialog(v View, chave, titulo, botao, comando string) {
 		</div>
 		<button
 			type="button"
-			data-on:click={ comando + "; $detail = ''" }
+			data-on:click={ command + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
-		>{ botao }</button>
+		>{ button }</button>
 	}
 }
 
@@ -312,22 +312,22 @@ templ bagAddButtons(v View) {
 }
 
 // writtenWeight é "2 × 0,5 espaço = 1", que é o que a carga conta.
-func writtenWeight(ficha itemSheet) string {
-	return strconv.FormatInt(ficha.Quantity, 10) + " × " + ficha.Slots + " espaço = " + ficha.Total
+func writtenWeight(sheet itemSheet) string {
+	return strconv.FormatInt(sheet.Quantity, 10) + " × " + sheet.Slots + " espaço = " + sheet.Total
 }
 
 // equipCommand escreve o `@post` do lugar escolhido — guardar tem rota
 // própria, porque guardar não passa por teto nenhum.
-func equipCommand(v View, ficha itemSheet, lugar equipChoice) string {
-	if lugar.Slot == "" {
-		return sheetPost(v, "/itens/"+ficha.Command+"/guarda")
+func equipCommand(v View, sheet itemSheet, place equipChoice) string {
+	if place.Slot == "" {
+		return sheetPost(v, "/itens/"+sheet.Command+"/guarda")
 	}
-	return sheetPost(v, "/itens/"+ficha.Command+"/equipa/"+lugar.Slot)
+	return sheetPost(v, "/itens/"+sheet.Command+"/equipa/"+place.Slot)
 }
 
 // improvementSignal é a expressão que diz se a melhoria está escolhida AGORA.
-func improvementSignal(escolha overlayChoice) string {
-	return "$item_improvements.includes('" + escolha.ID + "')"
+func improvementSignal(choice overlayChoice) string {
+	return "$item_improvements.includes('" + choice.ID + "')"
 }
 
 // thatTogglesImprovementGesture liga ou desliga uma melhoria na lista do sinal.
@@ -335,9 +335,9 @@ func improvementSignal(escolha overlayChoice) string {
 // A lista é COPIADA antes de ser mexida (`[...$item_improvements]`): o sinal é um
 // proxy, e escrever dentro dele item a item é a armadilha que o guia do Go
 // registra — ler um índice que não existe o CRIA.
-func thatTogglesImprovementGesture(escolha overlayChoice) string {
-	return "const escolhidas = [...$item_improvements]; const onde = escolhidas.indexOf('" + escolha.ID + "'); " +
-		"if (onde >= 0) { escolhidas.splice(onde, 1) } else { escolhidas.push('" + escolha.ID + "') }; " +
+func thatTogglesImprovementGesture(choice overlayChoice) string {
+	return "const escolhidas = [...$item_improvements]; const onde = escolhidas.indexOf('" + choice.ID + "'); " +
+		"if (onde >= 0) { escolhidas.splice(onde, 1) } else { escolhidas.push('" + choice.ID + "') }; " +
 		"$item_improvements = escolhidas"
 }
 
@@ -346,34 +346,34 @@ func thatTogglesImprovementGesture(escolha overlayChoice) string {
 // Quem TROCA de item limpa: sem isto, as melhorias marcadas numa espada
 // apareceriam marcadas na armadura aberta em seguida — e o botão Aplicar
 // gravaria nela o que era de outra.
-func thatOpensTheImprovementsGesture(ficha itemSheet) string {
-	return "$item_improvements = " + improvementWrittenList(ficha) +
-		"; $item_material = '" + chosenMaterial(ficha) + "'" +
-		"; $detail = 'melhorias-" + ficha.Command + "'"
+func thatOpensTheImprovementsGesture(sheet itemSheet) string {
+	return "$item_improvements = " + improvementWrittenList(sheet) +
+		"; $item_material = '" + chosenMaterial(sheet) + "'" +
+		"; $detail = 'melhorias-" + sheet.Command + "'"
 }
 
 // thatOpensEditGesture põe os valores atuais no formulário.
-func thatOpensEditGesture(ficha itemSheet) string {
-	return "$item_name = " + strconv.Quote(ficha.Name) +
-		"; $item_qty = " + strconv.FormatInt(ficha.Quantity, 10) +
-		"; $item_slots = " + strings.Replace(ficha.Slots, ",", ".", 1) +
-		"; $detail = 'editar-" + ficha.Command + "'"
+func thatOpensEditGesture(sheet itemSheet) string {
+	return "$item_name = " + strconv.Quote(sheet.Name) +
+		"; $item_qty = " + strconv.FormatInt(sheet.Quantity, 10) +
+		"; $item_slots = " + strings.Replace(sheet.Slots, ",", ".", 1) +
+		"; $detail = 'editar-" + sheet.Command + "'"
 }
 
-func improvementWrittenList(ficha itemSheet) string {
+func improvementWrittenList(sheet itemSheet) string {
 	ids := []string{}
-	for _, escolha := range ficha.Improvements {
-		if escolha.Ativa {
-			ids = append(ids, "'"+escolha.ID+"'")
+	for _, choice := range sheet.Improvements {
+		if choice.Active {
+			ids = append(ids, "'"+choice.ID+"'")
 		}
 	}
 	return "[" + strings.Join(ids, ", ") + "]"
 }
 
-func chosenMaterial(ficha itemSheet) string {
-	for _, escolha := range ficha.Materials {
-		if escolha.Ativa {
-			return escolha.ID
+func chosenMaterial(sheet itemSheet) string {
+	for _, choice := range sheet.Materials {
+		if choice.Active {
+			return choice.ID
 		}
 	}
 	return ""

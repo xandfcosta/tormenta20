@@ -15,24 +15,24 @@ func TestTheItemCardOffersTheReachablePlaces(t *testing.T) {
 	itemSemeia(t, f, id, "montante", "Montante", "")
 	itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
-	tela := bagScreen(t, f, id)
+	screen := bagScreen(t, f, id)
 	// UMA MÃO: a adaga é de uma mão e não é versátil, então ocupar as duas não
 	// ganharia nada (p150) e a opção não existe.
-	if !strings.Contains(tela, "Empunhar (1 mão)") {
+	if !strings.Contains(screen, "Empunhar (1 mão)") {
 		t.Error("a adaga não oferece empunhar com uma mão")
 	}
 	// DUAS MÃOS, obrigatórias: o montante não cabe numa mão só.
-	if !strings.Contains(tela, "Empunhar (2 mãos)") {
+	if !strings.Contains(screen, "Empunhar (2 mãos)") {
 		t.Error("o montante não oferece as duas mãos")
 	}
 	// O CONSUMÍVEL não se equipa em lugar nenhum, e por isso ele mostra o USAR
 	// no lugar do bloco de equipar.
-	if !strings.Contains(tela, "Usar Bálsamo restaurador") {
+	if !strings.Contains(screen, "Usar Bálsamo restaurador") {
 		t.Error("o consumível não oferece o Usar")
 	}
 	// E O ESTADO ATUAL não é oferecido: um item guardado com um botão "Guardar"
 	// é um controle que não faz nada.
-	if strings.Contains(itemScreenSheet(tela, "Adaga"), ">Guardar<") {
+	if strings.Contains(itemScreenSheet(screen, "Adaga"), ">Guardar<") {
 		t.Error("um item já guardado oferece Guardar")
 	}
 }
@@ -41,15 +41,15 @@ func TestTheItemCardOffersTheReachablePlaces(t *testing.T) {
 func TestAnInventedItemDoesNotEnterThroughTheCatalog(t *testing.T) {
 	f, id := fighterFixture(t)
 
-	if recusa := bagCommand(t, f, id, "itens/adiciona/espada-de-luz"); recusa == "" {
+	if refusal := bagCommand(t, f, id, "itens/adiciona/espada-de-luz"); refusal == "" {
 		t.Error("um item que não existe no livro foi aceito")
 	}
-	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
+	items, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
-	if len(itens) != 0 {
-		t.Errorf("a recusa gravou assim mesmo: %d itens", len(itens))
+	if len(items) != 0 {
+		t.Errorf("a recusa gravou assim mesmo: %d itens", len(items))
 	}
 }
 
@@ -57,33 +57,33 @@ func TestAnInventedItemDoesNotEnterThroughTheCatalog(t *testing.T) {
 func TestTheImprovementsDialogOnlyOffersWhatFits(t *testing.T) {
 	f, id := fighterFixture(t)
 	itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
-	tela := bagScreen(t, f, id)
-	daEspada := improvementScreenDialog(tela, "Espada longa")
+	screen := bagScreen(t, f, id)
+	fromSword := improvementScreenDialog(screen, "Espada longa")
 
-	if daEspada == "" {
+	if fromSword == "" {
 		t.Fatal("a espada não tem diálogo de melhorias: nada abaixo mediria coisa alguma")
 	}
-	if !strings.Contains(daEspada, "Certeira") {
+	if !strings.Contains(fromSword, "Certeira") {
 		t.Error("a melhoria de arma não é oferecida à espada")
 	}
 	// A Reforçada é de armadura e escudo, e não de arma.
-	if strings.Contains(daEspada, "Reforçada") {
+	if strings.Contains(fromSword, "Reforçada") {
 		t.Error("uma melhoria de armadura foi oferecida a uma arma")
 	}
 }
 
-func sheetNameItem(t *testing.T, f sceneFixture, id int64, nome string) sqlcgen.ListItemsByCharacterRow {
+func sheetNameItem(t *testing.T, f sceneFixture, id int64, name string) sqlcgen.ListItemsByCharacterRow {
 	t.Helper()
-	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
+	items, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar os itens: %v", err)
 	}
-	for _, item := range itens {
-		if item.Name == nome {
+	for _, item := range items {
+		if item.Name == name {
 			return item
 		}
 	}
-	t.Fatalf("o item %q não está na ficha", nome)
+	t.Fatalf("o item %q não está na ficha", name)
 	return sqlcgen.ListItemsByCharacterRow{}
 }
 
@@ -94,8 +94,8 @@ func sheetNameItem(t *testing.T, f sceneFixture, id int64, nome string) sqlcgen.
 func TestAddingFromTheCatalogUsesTheBookNumbers(t *testing.T) {
 	f, id := fighterFixture(t)
 
-	if recusa := bagCommand(t, f, id, "itens/adiciona/espada-longa"); recusa != "" {
-		t.Fatalf("adicionar foi recusado: %q", recusa)
+	if refusal := bagCommand(t, f, id, "itens/adiciona/espada-longa"); refusal != "" {
+		t.Fatalf("adicionar foi recusado: %q", refusal)
 	}
 	item := sheetNameItem(t, f, id, "Espada longa")
 	if item.Slots != 1 {
@@ -113,14 +113,14 @@ func TestAddingFromTheCatalogUsesTheBookNumbers(t *testing.T) {
 func TestACustomItemRequiresANameAndHalfStepSlots(t *testing.T) {
 	f, id := fighterFixture(t)
 
-	if recusa := customItem(t, f, id, `{"item_name":"  ","item_qty":1,"item_slots":1}`); recusa == "" {
+	if refusal := customItem(t, f, id, `{"item_name":"  ","item_qty":1,"item_slots":1}`); refusal == "" {
 		t.Error("um item sem nome foi aceito")
 	}
-	if recusa := customItem(t, f, id, `{"item_name":"Pena","item_qty":1,"item_slots":0.3}`); recusa == "" {
+	if refusal := customItem(t, f, id, `{"item_name":"Pena","item_qty":1,"item_slots":0.3}`); refusal == "" {
 		t.Error("0,3 espaço foi aceito, e o livro conta de meio em meio")
 	}
-	if recusa := customItem(t, f, id, `{"item_name":"Pena","item_qty":1,"item_slots":0.5}`); recusa != "" {
-		t.Fatalf("meio espaço foi recusado: %q", recusa)
+	if refusal := customItem(t, f, id, `{"item_name":"Pena","item_qty":1,"item_slots":0.5}`); refusal != "" {
+		t.Fatalf("meio espaço foi recusado: %q", refusal)
 	}
 	item := sheetNameItem(t, f, id, "Pena")
 	if item.Slots != 0.5 || item.Catalogid.Valid {
@@ -128,10 +128,10 @@ func TestACustomItemRequiresANameAndHalfStepSlots(t *testing.T) {
 	}
 }
 
-func customItem(t *testing.T, f sceneFixture, id int64, corpo string) string {
+func customItem(t *testing.T, f sceneFixture, id int64, body string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/personagens/%d/itens/custom?tab=bag", id)
-	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
+	target := fmt.Sprintf("/personagens/%d/itens/custom?tab=bag", id)
+	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 // EDITAR muda os três campos, e REMOVER tira da ficha.
@@ -139,46 +139,46 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 	f, id := fighterFixture(t)
 	item := itemSemeia(t, f, id, "", "Lembrança", "")
 
-	alvo := fmt.Sprintf("/personagens/%d/itens/%d/edita?tab=bag", id, item)
-	corpo := `{"item_name":"Lembrança da Ana","item_qty":3,"item_slots":0.5}`
-	if recusa := sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String()); recusa != "" {
-		t.Fatalf("editar foi recusado: %q", recusa)
+	target := fmt.Sprintf("/personagens/%d/itens/%d/edita?tab=bag", id, item)
+	body := `{"item_name":"Lembrança da Ana","item_qty":3,"item_slots":0.5}`
+	if refusal := sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String()); refusal != "" {
+		t.Fatalf("editar foi recusado: %q", refusal)
 	}
-	editado := sheetNameItem(t, f, id, "Lembrança da Ana")
-	if editado.Quantity != 3 || editado.Slots != 0.5 {
-		t.Errorf("a edição gravou %d × %v", editado.Quantity, editado.Slots)
+	edited := sheetNameItem(t, f, id, "Lembrança da Ana")
+	if edited.Quantity != 3 || edited.Slots != 0.5 {
+		t.Errorf("a edição gravou %d × %v", edited.Quantity, edited.Slots)
 	}
 
-	if recusa := bagCommand(t, f, id, fmt.Sprintf("itens/%d/remover", item)); recusa != "" {
-		t.Fatalf("remover foi recusado: %q", recusa)
+	if refusal := bagCommand(t, f, id, fmt.Sprintf("itens/%d/remover", item)); refusal != "" {
+		t.Fatalf("remover foi recusado: %q", refusal)
 	}
-	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
+	items, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
-	if len(itens) != 0 {
-		t.Errorf("o item sobreviveu ao remover: %d na ficha", len(itens))
+	if len(items) != 0 {
+		t.Errorf("o item sobreviveu ao remover: %d na ficha", len(items))
 	}
 }
 
 // USAR gasta a dose e aplica o que a MESA rolou, preso no máximo.
 func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Ferido", "Guerreiro", 3, 20, 0)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Ferido", "Guerreiro", 3, 20, 0)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
-	if recusa := use(t, f, id, item, `{"item_roll_hp":7}`); recusa != "" {
-		t.Fatalf("usar foi recusado: %q", recusa)
+	if refusal := use(t, f, id, item, `{"item_roll_hp":7}`); refusal != "" {
+		t.Fatalf("usar foi recusado: %q", refusal)
 	}
-	if poco := poolsOf(t, f.s, id); poco.HpCurrent != 17 {
-		t.Errorf("o PV ficou %d, quer 17 (10 + os 7 que a mesa rolou)", poco.HpCurrent)
+	if pool := poolsOf(t, f.s, id); pool.HpCurrent != 17 {
+		t.Errorf("o PV ficou %d, quer 17 (10 + os 7 que a mesa rolou)", pool.HpCurrent)
 	}
 	// A DOSE FOI GASTA: era uma só, então a linha sai da ficha.
-	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
+	items, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
-	if len(itens) != 0 {
+	if len(items) != 0 {
 		t.Error("a dose foi usada e o item continua na mochila")
 	}
 }
@@ -186,14 +186,14 @@ func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 // A CURA NÃO PASSA DO MÁXIMO, e é o motor que prende.
 func TestUsingDoesNotGoPastMaximumHp(t *testing.T) {
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Quase cheio", "Guerreiro", 3, 2, 0)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Quase cheio", "Guerreiro", 3, 2, 0)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
-	if recusa := use(t, f, id, item, `{"item_roll_hp":8}`); recusa != "" {
-		t.Fatalf("usar foi recusado: %q", recusa)
+	if refusal := use(t, f, id, item, `{"item_roll_hp":8}`); refusal != "" {
+		t.Fatalf("usar foi recusado: %q", refusal)
 	}
-	if poco := poolsOf(t, f.s, id); poco.HpCurrent != 30 {
-		t.Errorf("o PV ficou %d, quer 30 — a cura passou do máximo", poco.HpCurrent)
+	if pool := poolsOf(t, f.s, id); pool.HpCurrent != 30 {
+		t.Errorf("o PV ficou %d, quer 30 — a cura passou do máximo", pool.HpCurrent)
 	}
 }
 
@@ -202,18 +202,18 @@ func TestWhatIsNotConsumableCannotBeUsed(t *testing.T) {
 	f, id := fighterFixture(t)
 	item := itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
 
-	if recusa := use(t, f, id, item, "{}"); !strings.Contains(recusa, "consumível") {
-		t.Errorf("a recusa não diz o motivo: %q", recusa)
+	if refusal := use(t, f, id, item, "{}"); !strings.Contains(refusal, "consumível") {
+		t.Errorf("a recusa não diz o motivo: %q", refusal)
 	}
 	if _, err := f.s.sceneCore().Queries().GetItem(context.Background(), item); err != nil {
 		t.Error("a espada foi consumida assim mesmo")
 	}
 }
 
-func use(t *testing.T, f sceneFixture, id, item int64, corpo string) string {
+func use(t *testing.T, f sceneFixture, id, item int64, body string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/personagens/%d/itens/%d/usa?tab=bag", id, item)
-	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
+	target := fmt.Sprintf("/personagens/%d/itens/%d/usa?tab=bag", id, item)
+	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 // A MELHORIA QUE NÃO CABE É RECUSADA PELO SERVIDOR.
@@ -222,23 +222,23 @@ func use(t *testing.T, f sceneFixture, id, item int64, corpo string) string {
 // pedido montado à mão põe corda de arco num escudo e o servidor grava.
 func TestAnImprovementThatDoesNotFitIsRefusedByTheServer(t *testing.T) {
 	f, id := fighterFixture(t)
-	escudo := itemSemeia(t, f, id, "escudo-leve", "Escudo leve", "")
+	shield := itemSemeia(t, f, id, "escudo-leve", "Escudo leve", "")
 
 	// A Certeira é de ARMA (`appliesTo: ["weapon"]`).
-	recusa := improvements(t, f, id, escudo, `{"item_improvements":["melhoria-certeira"]}`)
-	if !strings.Contains(recusa, "Certeira") || !strings.Contains(recusa, "Escudo leve") {
-		t.Errorf("a recusa não nomeia os dois lados: %q", recusa)
+	refusal := improvements(t, f, id, shield, `{"item_improvements":["melhoria-certeira"]}`)
+	if !strings.Contains(refusal, "Certeira") || !strings.Contains(refusal, "Escudo leve") {
+		t.Errorf("a recusa não nomeia os dois lados: %q", refusal)
 	}
-	if guardadas := itemImprovements(t, f, escudo); guardadas != "[]" {
-		t.Errorf("a recusa gravou assim mesmo: %q", guardadas)
+	if saved := itemImprovements(t, f, shield); saved != "[]" {
+		t.Errorf("a recusa gravou assim mesmo: %q", saved)
 	}
 
 	// E a que CABE passa: o guarda não pode estar recusando tudo.
-	if recusa := improvements(t, f, id, escudo, `{"item_improvements":["melhoria-reforcada"]}`); recusa != "" {
-		t.Fatalf("uma melhoria de escudo foi recusada: %q", recusa)
+	if refused := improvements(t, f, id, shield, `{"item_improvements":["melhoria-reforcada"]}`); refused != "" {
+		t.Fatalf("uma melhoria de escudo foi recusada: %q", refused)
 	}
-	if guardadas := itemImprovements(t, f, escudo); !strings.Contains(guardadas, "melhoria-reforcada") {
-		t.Errorf("a melhoria que cabe não foi gravada: %q", guardadas)
+	if saved := itemImprovements(t, f, shield); !strings.Contains(saved, "melhoria-reforcada") {
+		t.Errorf("a melhoria que cabe não foi gravada: %q", saved)
 	}
 }
 
@@ -253,10 +253,10 @@ func TestAnImprovementThatDoesNotFitIsRefusedByTheServer(t *testing.T) {
 // restrição serve a todos", entraria numa poção.
 func TestAConsumableTakesNoImprovement(t *testing.T) {
 	f, id := fighterFixture(t)
-	balsamo := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
+	balm := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
-	recusa := improvements(t, f, id, balsamo, `{"item_material":"material-aco-rubi"}`)
-	if recusa == "" {
+	refusal := improvements(t, f, id, balm, `{"item_material":"material-aco-rubi"}`)
+	if refusal == "" {
 		t.Error("um consumível recebeu material")
 	}
 	// E o DIÁLOGO nem oferece o botão — a tela e o servidor concordam.
@@ -268,20 +268,20 @@ func TestAConsumableTakesNoImprovement(t *testing.T) {
 // UMA MELHORIA INVENTADA não entra.
 func TestAnInventedImprovementDoesNotEnter(t *testing.T) {
 	f, id := fighterFixture(t)
-	espada := itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
+	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
 
-	if recusa := improvements(t, f, id, espada, `{"item_improvements":["melhoria-lendaria"]}`); recusa == "" {
+	if refusal := improvements(t, f, id, sword, `{"item_improvements":["melhoria-lendaria"]}`); refusal == "" {
 		t.Error("uma melhoria que não existe foi aceita")
 	}
-	if guardadas := itemImprovements(t, f, espada); guardadas != "[]" {
-		t.Errorf("a recusa gravou assim mesmo: %q", guardadas)
+	if saved := itemImprovements(t, f, sword); saved != "[]" {
+		t.Errorf("a recusa gravou assim mesmo: %q", saved)
 	}
 }
 
-func improvements(t *testing.T, f sceneFixture, id, item int64, corpo string) string {
+func improvements(t *testing.T, f sceneFixture, id, item int64, body string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/personagens/%d/itens/%d/melhorias?tab=bag", id, item)
-	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
+	target := fmt.Sprintf("/personagens/%d/itens/%d/melhorias?tab=bag", id, item)
+	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 func itemImprovements(t *testing.T, f sceneFixture, item int64) string {

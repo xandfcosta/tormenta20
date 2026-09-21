@@ -20,24 +20,24 @@ import (
 // uma tabela de teclas escrita à mão — falharia em silêncio dos dois jeitos: uma
 // tecla que liga uma ferramenta sem botão, e um botão que a tecla não alcança.
 func TestTheKeyboardAndTheRailAgreeOnWhatExists(t *testing.T) {
-	for _, papel := range []struct {
-		Nome   string
-		Mestre bool
+	for _, role := range []struct {
+		Name string
+		GM   bool
 	}{{"o mestre", true}, {"o jogador", false}} {
-		teclado := railKeyboard(papel.Mestre)
-		for _, f := range rail(papel.Mestre) {
-			if !strings.Contains(teclado, `evt.key === "`+f.Atalho+`"`) {
-				t.Errorf("%s tem o botão %q e não tem a tecla %s", papel.Nome, f.Rotulo, f.Atalho)
+		keyboard := railKeyboard(role.GM)
+		for _, f := range rail(role.GM) {
+			if !strings.Contains(keyboard, `evt.key === "`+f.Shortcut+`"`) {
+				t.Errorf("%s tem o botão %q e não tem a tecla %s", role.Name, f.Label, f.Shortcut)
 			}
 		}
 	}
 	// E o inverso: o jogador NÃO pode ter a tecla de uma ferramenta do mestre.
 	// Uma tecla que liga o pincel na tela de quem não pinta deixaria o clique
 	// mudo — a camada não existe lá, e o gesto simplesmente não faria nada.
-	doJogador := railKeyboard(false)
+	forPlayer := railKeyboard(false)
 	for _, f := range MapTools() {
-		if f.SoMestre && strings.Contains(doJogador, `$tool = "`+f.ID+`"`) {
-			t.Errorf("o jogador tem a tecla de %q, que é do mestre", f.Rotulo)
+		if f.GMOnly && strings.Contains(forPlayer, `$tool = "`+f.ID+`"`) {
+			t.Errorf("o jogador tem a tecla de %q, que é do mestre", f.Label)
 		}
 	}
 }
@@ -46,24 +46,24 @@ func TestTheKeyboardAndTheRailAgreeOnWhatExists(t *testing.T) {
 // papéis — o trilho do jogador tem três entradas e o do mestre tem nove. Quem
 // aprendeu `3 = gabarito` mestrando tem de continuar com `3 = gabarito` jogando.
 func TestTheShortcutIsFixedPerTool(t *testing.T) {
-	doMestre := map[string]string{}
+	forGM := map[string]string{}
 	for _, f := range rail(true) {
-		doMestre[f.ID] = f.Atalho
+		forGM[f.ID] = f.Shortcut
 	}
 	for _, f := range rail(false) {
-		if doMestre[f.ID] != f.Atalho {
+		if forGM[f.ID] != f.Shortcut {
 			t.Errorf("%q é a tecla %s para o jogador e %s para o mestre",
-				f.Rotulo, f.Atalho, doMestre[f.ID])
+				f.Label, f.Shortcut, forGM[f.ID])
 		}
 	}
 	// E nenhuma tecla serve a duas ferramentas: a segunda ganharia a disputa no
 	// `?:` encadeado e a primeira ficaria inalcançável, sem erro nenhum.
-	vistas := map[string]string{}
+	seen := map[string]string{}
 	for _, f := range MapTools() {
-		if antes, repetida := vistas[f.Atalho]; repetida {
-			t.Errorf("a tecla %s serve a %q e a %q", f.Atalho, antes, f.Rotulo)
+		if before, repeated := seen[f.Shortcut]; repeated {
+			t.Errorf("a tecla %s serve a %q e a %q", f.Shortcut, before, f.Label)
 		}
-		vistas[f.Atalho] = f.Rotulo
+		seen[f.Shortcut] = f.Label
 	}
 }
 
@@ -71,13 +71,13 @@ func TestTheShortcutIsFixedPerTool(t *testing.T) {
 // atrás do formulário. Já aconteceu com o `-` do zoom, e é por isso que a guarda
 // é uma constante compartilhada em vez de três cópias.
 func TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping(t *testing.T) {
-	teclado := railKeyboard(true)
-	for _, alvo := range []string{"INPUT", "TEXTAREA", "SELECT"} {
-		if !strings.Contains(teclado, alvo) {
-			t.Errorf("o atalho não se protege de %s", alvo)
+	keyboard := railKeyboard(true)
+	for _, target := range []string{"INPUT", "TEXTAREA", "SELECT"} {
+		if !strings.Contains(keyboard, target) {
+			t.Errorf("o atalho não se protege de %s", target)
 		}
 	}
-	if !strings.Contains(teclado, "isContentEditable") {
+	if !strings.Contains(keyboard, "isContentEditable") {
 		t.Error("o atalho não se protege de um campo `contenteditable`")
 	}
 	// E o ESC NÃO pode estar aqui. Ele tem dono — o `scene.js` mapeia Escape para
@@ -87,7 +87,7 @@ func TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping(t *testing.T) {
 	//
 	// O guarda é NEGATIVO de propósito: um ramo de Escape aqui não daria erro em
 	// lugar nenhum — ele só ficaria prometendo uma saída que a tela não cumpre.
-	if strings.Contains(teclado, "Escape") {
+	if strings.Contains(keyboard, "Escape") {
 		t.Error("o trilho promete o Esc, que o `scene.js` engole antes de chegar à janela")
 	}
 }

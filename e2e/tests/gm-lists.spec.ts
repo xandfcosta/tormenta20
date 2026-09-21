@@ -26,13 +26,13 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
   await expect(page.getByRole('link', { name: /ND / }).first()).toBeVisible()
 
   // Sem transbordo a asserção não prova nada: seria uma lista que coube.
-  const transbordou = await page.evaluate(
+  const overflowed = await page.evaluate(
     () =>
       [...document.querySelectorAll('*')].find(
         (n) => n.scrollHeight > n.clientHeight + 8 && n.clientHeight > 100,
       ) !== undefined,
   )
-  expect(transbordou, 'a lista não transbordou — o teste não mediu nada').toBe(true)
+  expect(overflowed, 'a lista não transbordou — o teste não mediu nada').toBe(true)
 
   // Tolerância de 12 e não 8, e a razão é do INSTRUMENTO: a primitiva mede o
   // último elemento com TEXTO, e cada linha tem `p-2`, então o texto da última
@@ -82,13 +82,13 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
   // pode existir. O risco é o oposto, e é o que se afirma: a grade declarando
   // MAIS colunas do que cabem para ler.
   await page.setViewportSize({ width: 1920, height: 1080 })
-  const colunas = await page.evaluate(() => {
+  const cols = await page.evaluate(() => {
     const grade = document.querySelector('.collection-in-columns')
     if (!grade) return null
     return getComputedStyle(grade).gridTemplateColumns.split(' ').filter(Boolean).length
   })
-  expect(colunas, 'nenhuma grade pintou em 1920').not.toBeNull()
-  expect(colunas, 'o teto de três colunas é medida de leitura (ALE-170)').toBeLessThanOrEqual(3)
+  expect(cols, 'nenhuma grade pintou em 1920').not.toBeNull()
+  expect(cols, 'o teto de três colunas é medida de leitura (ALE-170)').toBeLessThanOrEqual(3)
 })
 
 /**
@@ -106,27 +106,27 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
   // assim que a versão anterior deste teste estourou o timeout sem que nada
   // estivesse errado.
   await page.goto('/mestre/condicoes')
-  const trilho = 'nav[aria-label="Ferramentas do mestre"]'
+  const rail = 'nav[aria-label="Ferramentas do mestre"]'
   await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 
   // A CONTAGEM de paradas não mora aqui: ela é `TestTheRailHasOneStopPerCatalog`
   // no Go, por amostragem sobre `abasDoAcervo`. Escrita aqui como número, ela
   // ficava vermelha por parada nova sem proteger nada. Aqui fica só a geometria,
   // que é o que o navegador testemunha.
-  let referencia = 0
+  let reference = 0
 
-  for (const largura of [1920, 1024, 768, 390]) {
-    await page.setViewportSize({ width: largura, height: 900 })
+  for (const width of [1920, 1024, 768, 390]) {
+    await page.setViewportSize({ width: width, height: 900 })
     await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 
     // Nenhuma parada escapa do trilho.
-    await expectNadaEscapa(page, trilho)
+    await expectNadaEscapa(page, rail)
 
     // E TODAS continuam alcançáveis: uma parada que some da tela é uma
     // ferramenta que deixou de existir para quem está naquela largura.
-    const alcancaveis = await page.locator(`${trilho} a`).count()
-    if (largura === 1920) referencia = alcancaveis
-    expect(alcancaveis, `a ${largura}px o trilho perdeu paradas`).toBe(referencia)
+    const reachable = await page.locator(`${rail} a`).count()
+    if (width === 1920) reference = reachable
+    expect(reachable, `a ${width}px o trilho perdeu paradas`).toBe(reference)
   }
 })
 })
@@ -152,68 +152,68 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
  */
 test('deitado os filtros viram gaveta, e em toda outra forma eles ficam abertos', async ({ page }) => {
   await page.goto('/mestre/bestiario')
-  const paradas = await page
+  const stops = await page
     .getByRole('navigation', { name: 'Ferramentas do mestre' })
     .getByRole('link')
     .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href))
-  expect(paradas.length, 'o trilho veio vazio: este caso não mediria nada').toBeGreaterThan(10)
+  expect(stops.length, 'o trilho veio vazio: este caso não mediria nada').toBeGreaterThan(10)
 
   // A CAIXA da gaveta fechada é o resumo e mais nada: 44px de alvo de toque.
-  const TETO_FECHADA = 44 + 12
+  const CLOSED_CEILING = 44 + 12
 
-  let comGaveta = 0
-  let semGaveta = 0
-  for (const parada of paradas) {
+  let withDrawer = 0
+  let noDrawer = 0
+  for (const waypoint of stops) {
     // ── deitado: a gaveta existe e está recolhida ──────────────────────────
     await page.setViewportSize({ width: 844, height: 390 })
-    await page.goto(parada)
-    const gaveta = page.locator('.filters-in-drawer')
-    if ((await gaveta.count()) === 0) {
-      semGaveta++
+    await page.goto(waypoint)
+    const drawer = page.locator('.filters-in-drawer')
+    if ((await drawer.count()) === 0) {
+      noDrawer++
       continue
     }
-    comGaveta++
+    withDrawer++
 
-    const medida = await gaveta.first().evaluate((d: HTMLDetailsElement) => ({
+    const measurement = await drawer.first().evaluate((d: HTMLDetailsElement) => ({
       // A CAIXA, e nunca o filho: fechado, o miolo devolve retângulo mesmo.
       alta: Math.round(d.getBoundingClientRect().height),
       aberta: d.open,
       resumoAparece: d.querySelector('summary')!.checkVisibility(),
       filtroAparece: !!d.querySelector('button')?.checkVisibility(),
     }))
-    expect(medida.aberta, `a gaveta de ${parada} nasce aberta no deitado`).toBe(false)
-    expect(medida.resumoAparece, `sem o resumo, os filtros de ${parada} ficam inalcançáveis`).toBe(true)
-    expect(medida.filtroAparece, `os filtros de ${parada} não recolheram deitado`).toBe(false)
+    expect(measurement.aberta, `a gaveta de ${waypoint} nasce aberta no deitado`).toBe(false)
+    expect(measurement.resumoAparece, `sem o resumo, os filtros de ${waypoint} ficam inalcançáveis`).toBe(true)
+    expect(measurement.filtroAparece, `os filtros de ${waypoint} não recolheram deitado`).toBe(false)
     expect(
-      medida.alta,
-      `a gaveta de ${parada} recolhida ocupa ${medida.alta}px`,
-    ).toBeLessThanOrEqual(TETO_FECHADA)
+      measurement.alta,
+      `a gaveta de ${waypoint} recolhida ocupa ${measurement.alta}px`,
+    ).toBeLessThanOrEqual(CLOSED_CEILING)
 
     // ── em pé e no laptop: a gaveta não existe como gaveta ─────────────────
-    for (const forma of [
+    for (const form of [
       { nome: 'no formato em pé', width: 390, height: 844 },
       { nome: 'no laptop', width: 1280, height: 720 },
     ]) {
-      await page.setViewportSize({ width: forma.width, height: forma.height })
-      const larga = await gaveta.first().evaluate((d: HTMLDetailsElement) => ({
+      await page.setViewportSize({ width: form.width, height: form.height })
+      const wide = await drawer.first().evaluate((d: HTMLDetailsElement) => ({
         resumoAparece: d.querySelector('summary')!.checkVisibility(),
         filtroAparece: !!d.querySelector('button')?.checkVisibility(),
       }))
       expect(
-        larga.filtroAparece,
-        `em ${forma.nome} os filtros de ${parada} continuam escondidos: a regra de abertura caiu`,
+        wide.filtroAparece,
+        `em ${form.nome} os filtros de ${waypoint} continuam escondidos: a regra de abertura caiu`,
       ).toBe(true)
       expect(
-        larga.resumoAparece,
-        `em ${forma.nome} a gaveta de ${parada} ainda mostra o resumo, e ali ela não deveria existir`,
+        wide.resumoAparece,
+        `em ${form.nome} a gaveta de ${waypoint} ainda mostra o resumo, e ali ela não deveria existir`,
       ).toBe(false)
     }
   }
 
   // O DENOMINADOR: sem ele, um seletor que parou de casar dá o mesmo verde que
   // uma tela em ordem. Medido: sete paradas filtram, seis não.
-  expect(comGaveta, 'nenhuma parada tinha gaveta: o seletor `.filters-in-drawer` parou de casar').toBeGreaterThanOrEqual(7)
-  expect(comGaveta + semGaveta).toBe(paradas.length)
+  expect(withDrawer, 'nenhuma parada tinha gaveta: o seletor `.filters-in-drawer` parou de casar').toBeGreaterThanOrEqual(7)
+  expect(withDrawer + noDrawer).toBe(stops.length)
 })
 
 /**
@@ -227,16 +227,16 @@ test('deitado os filtros viram gaveta, e em toda outra forma eles ficam abertos'
 test('deitado, a lista do bestiário mostra uma criatura inteira', async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 })
   await page.goto('/mestre/bestiario')
-  const lista = page.locator('#bestiary ul')
-  await expect(lista, 'sem a lista não há medição').toBeVisible()
+  const list = page.locator('#bestiary ul')
+  await expect(list, 'sem a lista não há medição').toBeVisible()
 
-  const medida = await lista.evaluate((ul) => ({
+  const measure = await list.evaluate((ul) => ({
     caixa: Math.round(ul.getBoundingClientRect().height),
     linha: Math.round(ul.firstElementChild!.getBoundingClientRect().height),
   }))
-  expect(medida.linha, 'uma linha de zero passaria em qualquer teto').toBeGreaterThan(20)
+  expect(measure.linha, 'uma linha de zero passaria em qualquer teto').toBeGreaterThan(20)
   expect(
-    medida.caixa,
-    `a lista recebe ${medida.caixa}px e uma criatura mede ${medida.linha}px`,
-  ).toBeGreaterThanOrEqual(medida.linha)
+    measure.caixa,
+    `a lista recebe ${measure.caixa}px e uma criatura mede ${measure.linha}px`,
+  ).toBeGreaterThanOrEqual(measure.linha)
 })

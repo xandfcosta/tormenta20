@@ -17,24 +17,24 @@ import (
 // espécie que alguém acrescentar já nasce medida, e não há uma entrada por caso
 // para alguém esquecer de escrever.
 func TestEachKindHasItsOwnList(t *testing.T) {
-	casa := engine.Square{X: 3, Y: 4}
-	for _, pincel := range TerrainKinds {
+	square := engine.Square{X: 3, Y: 4}
+	for _, brush := range TerrainKinds {
 		b := &BoardState{}
-		PaintTerrain(b, casa, pincel.ID, true)
+		PaintTerrain(b, square, brush.ID, true)
 
-		lista := listForKind(b, pincel.ID)
-		if lista == nil || len(*lista) != 1 || (*lista)[0] != casa {
-			t.Errorf("%s: pintar não pôs a casa na lista dela (%v)", pincel.ID, lista)
+		list := listForKind(b, brush.ID)
+		if list == nil || len(*list) != 1 || (*list)[0] != square {
+			t.Errorf("%s: pintar não pôs a casa na lista dela (%v)", brush.ID, list)
 			continue
 		}
 		// E NENHUMA outra recebeu nada. Sem esta metade, quatro ponteiros para o
 		// mesmo campo passariam verde no laço inteiro.
-		for _, outra := range TerrainKinds {
-			if outra.ID == pincel.ID {
+		for _, other := range TerrainKinds {
+			if other.ID == brush.ID {
 				continue
 			}
-			if vizinha := listForKind(b, outra.ID); len(*vizinha) != 0 {
-				t.Errorf("pintar %s sujou a lista de %s: %v", pincel.ID, outra.ID, *vizinha)
+			if neighbor := listForKind(b, other.ID); len(*neighbor) != 0 {
+				t.Errorf("pintar %s sujou a lista de %s: %v", brush.ID, other.ID, *neighbor)
 			}
 		}
 	}
@@ -43,24 +43,24 @@ func TestEachKindHasItsOwnList(t *testing.T) {
 // O pincel é IDEMPOTENTE em cada espécie: o arraste passa duas vezes pela mesma
 // casa, e alternar faria ela piscar debaixo do dedo. Quem apaga é a borracha.
 func TestTheBrushIsIdempotentForEachKind(t *testing.T) {
-	casa := engine.Square{X: -2, Y: 7}
-	for _, pincel := range TerrainKinds {
+	square := engine.Square{X: -2, Y: 7}
+	for _, brush := range TerrainKinds {
 		b := &BoardState{}
-		PaintTerrain(b, casa, pincel.ID, true)
-		versao := b.Version
-		PaintTerrain(b, casa, pincel.ID, true)
+		PaintTerrain(b, square, brush.ID, true)
+		version := b.Version
+		PaintTerrain(b, square, brush.ID, true)
 
-		if lista := listForKind(b, pincel.ID); len(*lista) != 1 {
-			t.Errorf("%s: pintar duas vezes deixou %d casas", pincel.ID, len(*lista))
+		if list := listForKind(b, brush.ID); len(*list) != 1 {
+			t.Errorf("%s: pintar duas vezes deixou %d casas", brush.ID, len(*list))
 		}
-		if b.Version != versao {
+		if b.Version != version {
 			t.Errorf("%s: repintar a mesma casa subiu a versão de %d para %d — a mesa recebe um remendo sobre nada",
-				pincel.ID, versao, b.Version)
+				brush.ID, version, b.Version)
 		}
 
-		PaintTerrain(b, casa, pincel.ID, false)
-		if lista := listForKind(b, pincel.ID); len(*lista) != 0 {
-			t.Errorf("%s: a borracha não apagou (%v)", pincel.ID, *lista)
+		PaintTerrain(b, square, brush.ID, false)
+		if list := listForKind(b, brush.ID); len(*list) != 0 {
+			t.Errorf("%s: a borracha não apagou (%v)", brush.ID, *list)
 		}
 	}
 }
@@ -74,9 +74,9 @@ func TestAnInventedKindPaintsNothingAndDoesNotCrash(t *testing.T) {
 	if b.Version != 0 {
 		t.Errorf("uma espécie inventada subiu a versão para %d", b.Version)
 	}
-	for _, pincel := range TerrainKinds {
-		if lista := listForKind(b, pincel.ID); len(*lista) != 0 {
-			t.Errorf("a espécie inventada foi parar em %s: %v", pincel.ID, *lista)
+	for _, brush := range TerrainKinds {
+		if list := listForKind(b, brush.ID); len(*list) != 0 {
+			t.Errorf("a espécie inventada foi parar em %s: %v", brush.ID, *list)
 		}
 	}
 	// E o portão que a rota usa devolve o DIFÍCIL, que é o que o pincel sempre
@@ -94,25 +94,25 @@ func TestAnInventedKindPaintsNothingAndDoesNotCrash(t *testing.T) {
 // sintoma seria a taverna reabrindo parecendo certa, com o pântano virando chão
 // liso. Perder dado sem estourar é o defeito que este guarda existe para pegar.
 func TestTheStrokesSurviveTheArchive(t *testing.T) {
-	casa := engine.Square{X: 5, Y: -3}
+	square := engine.Square{X: 5, Y: -3}
 	original := &BoardState{Place: "Pântano"}
-	for _, pincel := range TerrainKinds {
-		PaintTerrain(original, casa, pincel.ID, true)
+	for _, brush := range TerrainKinds {
+		PaintTerrain(original, square, brush.ID, true)
 	}
 
 	blob, err := json.Marshal(original)
 	if err != nil {
 		t.Fatalf("guardar: %v", err)
 	}
-	var voltou BoardState
-	if err := json.Unmarshal(blob, &voltou); err != nil {
+	var returned BoardState
+	if err := json.Unmarshal(blob, &returned); err != nil {
 		t.Fatalf("reabrir: %v", err)
 	}
 
-	for _, pincel := range TerrainKinds {
-		lista := listForKind(&voltou, pincel.ID)
-		if lista == nil || len(*lista) != 1 || (*lista)[0] != casa {
-			t.Errorf("%s não sobreviveu ao acervo: %v", pincel.ID, lista)
+	for _, brush := range TerrainKinds {
+		list := listForKind(&returned, brush.ID)
+		if list == nil || len(*list) != 1 || (*list)[0] != square {
+			t.Errorf("%s não sobreviveu ao acervo: %v", brush.ID, list)
 		}
 	}
 }
@@ -122,23 +122,23 @@ func TestTheStrokesSurviveTheArchive(t *testing.T) {
 // caminho não pode encarecer o passo — seria inventar uma regra que o livro não
 // tem, e ela apareceria como a peça andando menos sem explicação.
 func TestOnlyDifficultTerrainCountsForMovement(t *testing.T) {
-	casa := engine.Square{X: 1, Y: 0}
+	square := engine.Square{X: 1, Y: 0}
 	b := &BoardState{}
-	for _, pincel := range TerrainKinds {
-		if pincel.ID != TerrenoDificil {
-			PaintTerrain(b, casa, pincel.ID, true)
+	for _, brush := range TerrainKinds {
+		if brush.ID != TerrenoDificil {
+			PaintTerrain(b, square, brush.ID, true)
 		}
 	}
-	semDificil := moveTerrainOf(b)
-	if len(semDificil.Difficult) != 0 {
-		t.Errorf("cobertura, camuflagem ou elevado entraram na conta do movimento: %v", semDificil.Difficult)
+	noHard := moveTerrainOf(b)
+	if len(noHard.Difficult) != 0 {
+		t.Errorf("cobertura, camuflagem ou elevado entraram na conta do movimento: %v", noHard.Difficult)
 	}
 
 	// O CONTROLE: com o difícil pintado a casa APARECE. Sem ele, "nada entrou na
 	// conta" seria verdade também sobre uma tradução quebrada que nunca devolve
 	// casa nenhuma.
-	PaintTerrain(b, casa, TerrenoDificil, true)
-	if comDificil := moveTerrainOf(b); !comDificil.Difficult[casa] {
+	PaintTerrain(b, square, TerrenoDificil, true)
+	if withHard := moveTerrainOf(b); !withHard.Difficult[square] {
 		t.Error("o terreno difícil não chegou ao motor — o guarda acima mediria um cano entupido")
 	}
 }

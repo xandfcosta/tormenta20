@@ -87,15 +87,15 @@ type stanceState struct {
 }
 
 // powersPanelOf monta a aba.
-func (s Scene) powersPanelOf(dto sheet.CharacterDTO, busca string) powersPanel {
-	panel := powersPanel{Search: busca, IsCaster: len(casterClassesOf(dto)) > 0}
-	linhas := s.powerRowsOf(dto)
-	panel.Total = len(linhas)
-	if termo := search.Fold(strings.TrimSpace(busca)); termo != "" {
-		panel.Results = filtradasPorNome(linhas, termo)
+func (s Scene) powersPanelOf(dto sheet.CharacterDTO, query string) powersPanel {
+	panel := powersPanel{Search: query, IsCaster: len(casterClassesOf(dto)) > 0}
+	rows := s.powerRowsOf(dto)
+	panel.Total = len(rows)
+	if term := search.Fold(strings.TrimSpace(query)); term != "" {
+		panel.Results = filtradasPorNome(rows, term)
 		return panel
 	}
-	panel.Actions, panel.Passives = separadasPorUso(linhas)
+	panel.Actions, panel.Passives = separadasPorUso(rows)
 	panel.LiveTriggers = airTriggers(panel.Passives)
 	return panel
 }
@@ -103,30 +103,30 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, busca string) powersPanel {
 // powerRowsOf traduz o acervo em linhas de tela, resolvendo a ativação de cada
 // poder e o estado de jogo dele.
 func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
-	contexto := book.UseContext{PmAtual: int(dto.MpCurrent), Flags: s.activeFlags(dto)}
-	usos := character.PowerUses(dto)
-	posturas := paidStances(dto)
-	linhas := []powerRow{}
-	for _, poder := range ownedPowersOf(dto) {
-		linhas = append(linhas, powerRowFor(dto, poder, contexto, usos, posturas))
+	context := book.UseContext{CurrentPM: int(dto.MpCurrent), Flags: s.activeFlags(dto)}
+	uses := character.PowerUses(dto)
+	stances := paidStances(dto)
+	rows := []powerRow{}
+	for _, power := range ownedPowersOf(dto) {
+		rows = append(rows, powerRowFor(dto, power, context, uses, stances))
 	}
-	return stanceRepeatedSem(linhas)
+	return stanceRepeatedSem(rows)
 }
 
 func powerRowFor(
-	dto sheet.CharacterDTO, poder ownedPower, contexto book.UseContext,
-	usos map[string]character.PowerUse, posturas map[string]bool,
+	dto sheet.CharacterDTO, power ownedPower, context book.UseContext,
+	uses map[string]character.PowerUse, stances map[string]bool,
 ) powerRow {
-	linha := powerRow{
-		ID: poder.ID, Name: poder.Name, Source: shortSource(poder.Source),
-		Detail: poder.Detail, Page: poder.Page, Glyph: "BookOpen", Command: poder.ID,
+	row := powerRow{
+		ID: power.ID, Name: power.Name, Source: shortSource(power.Source),
+		Detail: power.Detail, Page: power.Page, Glyph: "BookOpen", Command: power.ID,
 	}
-	spec := book.ActivationOf(poder.ID, poder.Name)
+	spec := book.ActivationOf(power.ID, power.Name)
 	if spec == nil {
-		return linha
+		return row
 	}
-	linha.ID, linha.Command = spec.ID, spec.ID
-	linha.Kind, linha.Glyph = spec.Kind, activationGlyph(spec.Kind)
+	row.ID, row.Command = spec.ID, spec.ID
+	row.Kind, row.Glyph = spec.Kind, activationGlyph(spec.Kind)
 	// O NOME DA AÇÃO é o da ATIVAÇÃO, e não o da linha do catálogo.
 	//
 	// "Inspiração +1" a "+5" são cinco linhas de classe e UMA postura na mesa: o
@@ -134,40 +134,40 @@ func powerRowFor(
 	// Manter o sufixo daria um botão "Ativar Inspiração +1" que ativa qualquer
 	// degrau — a tela prometeria uma escolha que o gesto não faz.
 	if spec.Kind == "stance" || spec.Kind == "instant" {
-		linha.Name = spec.Name
+		row.Name = spec.Name
 	}
 	if spec.BookPage > 0 {
-		linha.Page = spec.BookPage
+		row.Page = spec.BookPage
 	}
-	linha.Limit = limitBadge(*spec)
-	linha.Cost = writtenCost(*spec)
-	contexto.UsadoNaCena, contexto.UsadoNoDia = usos[spec.ID].Cena, usos[spec.ID].Dia
-	if escopo := book.ChargedScope(*spec); escopo != "" {
-		linha.Spent = writtenSpent(escopo, usos[spec.ID])
+	row.Limit = limitBadge(*spec)
+	row.Cost = writtenCost(*spec)
+	context.UsedThisScene, context.UsedToday = uses[spec.ID].Scene, uses[spec.ID].Day
+	if scope := book.ChargedScope(*spec); scope != "" {
+		row.Spent = writtenSpent(scope, uses[spec.ID])
 	}
-	linha.Can, linha.Why = book.UseDecision(*spec, contexto)
+	row.Can, row.Why = book.UseDecision(*spec, context)
 	if spec.Kind == "stance" {
-		linha.Stance = stanceStateFor(dto, *spec, posturas, contexto)
+		row.Stance = stanceStateFor(dto, *spec, stances, context)
 	}
-	return linha
+	return row
 }
 
 // stanceStateFor resolve a flag, os degraus do nível e se ela está em curso.
 func stanceStateFor(
-	dto sheet.CharacterDTO, spec book.Activation, posturas map[string]bool, contexto book.UseContext,
+	dto sheet.CharacterDTO, spec book.Activation, stances map[string]bool, context book.UseContext,
 ) *stanceState {
 	flag := stanceFlag(spec)
 	if flag == "" {
 		return nil
 	}
-	estado := &stanceState{Flag: flag, Active: posturas[flag], BasePm: book.ActivationPm(spec)}
+	state := &stanceState{Flag: flag, Active: stances[flag], BasePm: book.ActivationPm(spec)}
 	if spec.Scaling != nil {
-		estado.BasePm = spec.Scaling.BasePm
-		estado.StepPm = spec.Scaling.StepPm
-		estado.StepLabel = spec.Scaling.StepLabel
-		estado.MaxSteps = book.LevelSteps(*spec.Scaling, character.ClassPowerLevel(dto, spec.ID))
+		state.BasePm = spec.Scaling.BasePm
+		state.StepPm = spec.Scaling.StepPm
+		state.StepLabel = spec.Scaling.StepLabel
+		state.MaxSteps = book.LevelSteps(*spec.Scaling, character.ClassPowerLevel(dto, spec.ID))
 	}
-	return estado
+	return state
 }
 
 // stanceFlag acha a flag que a postura acende.
@@ -175,8 +175,8 @@ func stanceStateFor(
 // Ela sai do CATÁLOGO — a postura não declara a própria flag, e derivá-la do id
 // acertaria as duas de hoje e erraria calado na terceira.
 func stanceFlag(spec book.Activation) string {
-	for flag, postura := range book.StancesFromCatalog() {
-		if postura.Name == spec.Name {
+	for flag, stance := range book.StancesFromCatalog() {
+		if stance.Name == spec.Name {
 			return flag
 		}
 	}
@@ -197,8 +197,8 @@ func stanceFlag(spec book.Activation) string {
 // decide o que a ficha COBRA, este escreve o que a pessoa LÊ. Um "3/dia" sai
 // como crachá e não é cobrado — a mesma entrada, duas respostas.
 func limitBadge(spec book.Activation) string {
-	cru := string(spec.Uses)
-	switch cru {
+	raw := string(spec.Uses)
+	switch raw {
 	case "", "null":
 		return ""
 	case `"cena"`:
@@ -208,9 +208,9 @@ func limitBadge(spec book.Activation) string {
 	case `"rodada"`:
 		return "1/rodada"
 	}
-	var numero int
-	if json.Unmarshal(spec.Uses, &numero) == nil {
-		return strconv.Itoa(numero) + "/dia"
+	var number int
+	if json.Unmarshal(spec.Uses, &number) == nil {
+		return strconv.Itoa(number) + "/dia"
 	}
 	return ""
 }
@@ -227,81 +227,81 @@ func limitBadge(spec book.Activation) string {
 // Sem catálogo primado não há condicional oferecido, e o mapa sai vazio: a
 // consequência é a tela não OFERECER o poder de gatilho, que é o lado seguro.
 func (s Scene) activeFlags(dto sheet.CharacterDTO) map[string]bool {
-	fora := map[string]bool{}
+	outside := map[string]bool{}
 	if s.deps.Catalogs() == nil {
-		return fora
+		return outside
 	}
 	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
-		return fora
+		return outside
 	}
-	ligados := sheet.ToStringSet(dto.Conditionals)
+	on := sheet.ToStringSet(dto.Conditionals)
 	for _, c := range engine.ComputeItemEffects(s.deps.Catalogs().ActiveItemsFor(ec)).Conditional {
-		if c.Flag != "" && ligados[engine.ConditionalID(c)] {
-			fora[c.Flag] = true
+		if c.Flag != "" && on[engine.ConditionalID(c)] {
+			outside[c.Flag] = true
 		}
 	}
-	return fora
+	return outside
 }
 
 // paidStances são as posturas com pagamento registrado.
 func paidStances(dto sheet.CharacterDTO) map[string]bool {
-	fora := map[string]bool{}
+	outside := map[string]bool{}
 	for _, p := range dto.Stances {
-		fora[p.Flag] = true
+		outside[p.Flag] = true
 	}
-	return fora
+	return outside
 }
 
 // stanceRepeatedSem junta os DEGRAUS numa linha só.
 //
 // "Inspiração +1" até "+5" são cinco linhas do catálogo e UMA postura na mesa —
 // mostrar as cinco daria cinco botões de Ativar para a mesma coisa.
-func stanceRepeatedSem(linhas []powerRow) []powerRow {
-	vistas := map[string]bool{}
-	fora := []powerRow{}
-	for _, linha := range linhas {
-		if linha.Kind == "stance" || linha.Kind == "instant" {
-			if vistas[linha.ID] {
+func stanceRepeatedSem(rows []powerRow) []powerRow {
+	seen := map[string]bool{}
+	outside := []powerRow{}
+	for _, row := range rows {
+		if row.Kind == "stance" || row.Kind == "instant" {
+			if seen[row.ID] {
 				continue
 			}
-			vistas[linha.ID] = true
+			seen[row.ID] = true
 		}
-		fora = append(fora, linha)
+		outside = append(outside, row)
 	}
-	return fora
+	return outside
 }
 
 // separadasPorUso parte as linhas nas duas seções e ordena as ações.
-func separadasPorUso(linhas []powerRow) (acoes, passivas []powerRow) {
-	for _, linha := range linhas {
-		if linha.Kind == "instant" || linha.Kind == "stance" {
-			acoes = append(acoes, linha)
+func separadasPorUso(rows []powerRow) (actions, passives []powerRow) {
+	for _, row := range rows {
+		if row.Kind == "instant" || row.Kind == "stance" {
+			actions = append(actions, row)
 			continue
 		}
-		passivas = append(passivas, linha)
+		passives = append(passives, row)
 	}
-	sort.SliceStable(acoes, func(a, b int) bool {
-		if activeOne(acoes[a]) != activeOne(acoes[b]) {
-			return activeOne(acoes[a])
+	sort.SliceStable(actions, func(a, b int) bool {
+		if activeOne(actions[a]) != activeOne(actions[b]) {
+			return activeOne(actions[a])
 		}
-		return rowPm(acoes[a]) < rowPm(acoes[b])
+		return rowPm(actions[a]) < rowPm(actions[b])
 	})
-	return acoes, passivas
+	return actions, passives
 }
 
-func activeOne(linha powerRow) bool {
-	return linha.Stance != nil && linha.Stance.Active
+func activeOne(row powerRow) bool {
+	return row.Stance != nil && row.Stance.Active
 }
 
 // rowPm é o custo para ordenar. O custo variável vai para o FIM, e é por
 // isso que ele vira um número grande em vez de ganhar um caso próprio.
-func rowPm(linha powerRow) int {
-	if strings.Contains(linha.Cost, "variável") {
+func rowPm(row powerRow) int {
+	if strings.Contains(row.Cost, "variável") {
 		return 999
 	}
-	for _, pedaco := range strings.Fields(linha.Cost) {
-		if n, err := strconv.Atoi(pedaco); err == nil {
+	for _, chunk := range strings.Fields(row.Cost) {
+		if n, err := strconv.Atoi(chunk); err == nil {
 			return n
 		}
 	}
@@ -309,24 +309,24 @@ func rowPm(linha powerRow) int {
 }
 
 // airTriggers são as passivas de gatilho que estão fazendo efeito agora.
-func airTriggers(passivas []powerRow) []powerRow {
-	fora := []powerRow{}
-	for _, linha := range passivas {
-		if linha.Kind == "triggered-passive" && linha.Can {
-			fora = append(fora, linha)
+func airTriggers(passives []powerRow) []powerRow {
+	outside := []powerRow{}
+	for _, row := range passives {
+		if row.Kind == "triggered-passive" && row.Can {
+			outside = append(outside, row)
 		}
 	}
-	return fora
+	return outside
 }
 
-func filtradasPorNome(linhas []powerRow, termo string) []powerRow {
-	fora := []powerRow{}
-	for _, linha := range linhas {
-		if strings.Contains(search.Fold(linha.Name), termo) {
-			fora = append(fora, linha)
+func filtradasPorNome(rows []powerRow, term string) []powerRow {
+	outside := []powerRow{}
+	for _, row := range rows {
+		if strings.Contains(search.Fold(row.Name), term) {
+			outside = append(outside, row)
 		}
 	}
-	return fora
+	return outside
 }
 
 // ── o que a TELA escreve ─────────────────────────────────────────────────────
@@ -347,14 +347,14 @@ func writtenCost(spec book.Activation) string {
 	if spec.Kind == "stance" {
 		return "POSTURA · " + strconv.Itoa(book.StanceCost(spec, 0)) + stepsMore(spec) + " PM"
 	}
-	acao, tem := writtenActions[spec.Action]
-	if !tem {
-		acao = strings.ToUpper(spec.Action)
+	action, found := writtenActions[spec.Action]
+	if !found {
+		action = strings.ToUpper(spec.Action)
 	}
 	if book.CostIsVariable(spec) {
-		return acao + " · PM variável"
+		return action + " · PM variável"
 	}
-	return acao + " · " + strconv.Itoa(book.ActivationPm(spec)) + " PM"
+	return action + " · " + strconv.Itoa(book.ActivationPm(spec)) + " PM"
 }
 
 func stepsMore(spec book.Activation) string {
@@ -365,29 +365,29 @@ func stepsMore(spec book.Activation) string {
 }
 
 // writtenSpent é "usado 1/1 cena" — o que já se gastou do limite cobrado.
-func writtenSpent(escopo string, uso character.PowerUse) string {
-	gasto, palavra := uso.Dia, "dia"
-	if escopo == "scene" {
-		gasto, palavra = uso.Cena, "cena"
+func writtenSpent(scope string, use character.PowerUse) string {
+	spent, word := use.Day, "dia"
+	if scope == "scene" {
+		spent, word = use.Scene, "cena"
 	}
-	return "usado " + strconv.Itoa(gasto) + "/1 " + palavra
+	return "usado " + strconv.Itoa(spent) + "/1 " + word
 }
 
 // shortSource encurta a procedência para caber no crachá da linha.
 //
 // "Classe · Bárbaro" vira "Bárbaro" porque a palavra "Classe" é a que se repete
 // em quase toda linha — o que distingue é o nome da classe.
-func shortSource(fonte string) string {
-	if nome, achou := strings.CutPrefix(fonte, "Classe · "); achou {
-		return nome
+func shortSource(source string) string {
+	if name, found := strings.CutPrefix(source, "Classe · "); found {
+		return name
 	}
-	if strings.HasPrefix(fonte, "Raça") {
+	if strings.HasPrefix(source, "Raça") {
 		return "Raça"
 	}
-	if strings.HasPrefix(fonte, "Origem") {
+	if strings.HasPrefix(source, "Origem") {
 		return "Origem"
 	}
-	if fonte == "Poder da Tormenta" {
+	if source == "Poder da Tormenta" {
 		return "Tormenta"
 	}
 	return "Geral"
@@ -416,8 +416,8 @@ func writtenPowers(n int) string {
 
 // noActionsPhrase explica a seção vazia, e ela DEPENDE de quem lê: mandar às
 // Magias quem não conjura seria mandá-lo a uma aba vazia.
-func noActionsPhrase(conjura bool) string {
-	if conjura {
+func noActionsPhrase(casts bool) string {
+	if casts {
 		return "Nenhuma ação ativável — suas magias estão na aba Magias."
 	}
 	return "Nenhuma ação ativável. Suas habilidades são passivas."
@@ -438,8 +438,8 @@ func powerBadge(kind string) string {
 // PRÉVIA e não decisão: quem cobra é o servidor, com o teto de degraus do nível
 // e o PM disponível. Escrever a regra aqui daria uma segunda conta do mesmo
 // número.
-func costStancePreview(linha powerRow) string {
-	base := strconv.Itoa(linha.Stance.BasePm)
-	passo := strconv.Itoa(linha.Stance.StepPm)
-	return "(" + base + " + " + passo + " * $stance_degrees) + ' PM'"
+func costStancePreview(row powerRow) string {
+	base := strconv.Itoa(row.Stance.BasePm)
+	step := strconv.Itoa(row.Stance.StepPm)
+	return "(" + base + " + " + step + " * $stance_degrees) + ' PM'"
 }

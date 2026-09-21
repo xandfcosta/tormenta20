@@ -54,9 +54,9 @@ func TestExpectedTablesComesFromTheMigrations(t *testing.T) {
 	if len(tables) < 10 {
 		t.Fatalf("só %d tabelas lidas das migrações (%v) — o regex parou de casar", len(tables), tables)
 	}
-	for _, esperada := range []string{"users", "characters", "sessions", "open_boards", "campaign_creatures"} {
-		if !contains(tables, esperada) {
-			t.Errorf("a tabela %q não foi lida das migrações: %v", esperada, tables)
+	for _, expected := range []string{"users", "characters", "sessions", "open_boards", "campaign_creatures"} {
+		if !contains(tables, expected) {
+			t.Errorf("a tabela %q não foi lida das migrações: %v", expected, tables)
 		}
 	}
 	// O `DROP TABLE` da seção Down não pode entrar como "tem de existir", e o

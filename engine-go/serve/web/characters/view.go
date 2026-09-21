@@ -19,7 +19,7 @@ import (
 // posição de cursor e não link — ver `scene.templ`.
 
 type View struct {
-	Busca string
+	Search string
 	// Herois já vem na ordem do trilho. A vaga de criar é a posição seguinte, e
 	// não entra nesta lista: ela não é um herói e tratá-la como um faria toda
 	// contagem da tela ficar um a mais.
@@ -93,15 +93,15 @@ type HeroCard struct {
 //
 // A fronteira fica assim: a cena diz COMO montar a si mesma, o hospedeiro prova
 // que o que está no banco chega aqui.
-func (s Scene) Load(ctx context.Context, ownerID int64, busca string) (View, error) {
-	elenco, err := s.deps.CharacterList(ctx, ownerID)
+func (s Scene) Load(ctx context.Context, ownerID int64, query string) (View, error) {
+	cast, err := s.deps.CharacterList(ctx, ownerID)
 	if err != nil {
 		return View{}, err
 	}
 
-	v := View{Busca: busca, Total: len(elenco), HasAny: len(elenco) > 0}
-	for _, c := range elenco {
-		if !search.Matches(searchFields(c), busca) {
+	v := View{Search: query, Total: len(cast), HasAny: len(cast) > 0}
+	for _, c := range cast {
+		if !search.Matches(searchFields(c), query) {
 			continue
 		}
 		v.Heroes = append(v.Heroes, HeroCardOf(s.deps.Catalogs(), c))
@@ -129,8 +129,8 @@ func searchFields(c sheet.CharacterDTO) []string {
 // pergunta: de tudo que a `Deps` oferece, o cartão usa só o motor. Deixá-lo
 // método obrigaria quem o chama de fora — a ficha, que reaproveita quatro campos
 // dele — a montar uma `Scene` inteira para pedir um cartão.
-func HeroCardOf(catalogos *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
-	cartao := HeroCard{
+func HeroCardOf(catalogs *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
+	card := HeroCard{
 		ID:       c.ID,
 		Name:     c.Name,
 		Monogram: ui.Monogram(c.Name),
@@ -150,16 +150,16 @@ func HeroCardOf(catalogos *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 	// carregado — ver `sheet.Compute`. Sem motor (catálogo não primado) o cartão
 	// simplesmente não mostra Defesa; a cena inteira não pode cair por causa de
 	// um número.
-	cartao.Defense = "—"
-	cartao.DefenseVs = "—"
-	if catalogos != nil {
-		if ficha, err := sheet.Compute(catalogos, c); err == nil {
-			cartao.Defense = strconv.Itoa(ficha.Defense.Total)
-			cartao.DefenseVs = book.DefenseLabel(ficha.Defense)
+	card.Defense = "—"
+	card.DefenseVs = "—"
+	if catalogs != nil {
+		if character, err := sheet.Compute(catalogs, c); err == nil {
+			card.Defense = strconv.Itoa(character.Defense.Total)
+			card.DefenseVs = book.DefenseLabel(character.Defense)
 		}
 	}
-	cartao.Dossier = book.RaceAbilities(cartao.Race, 8)
-	return cartao
+	card.Dossier = book.RaceAbilities(card.Race, 8)
+	return card
 }
 
 // stageLine é o resumo curto sob os vitais: "Devoto de X · origem · tamanho".
@@ -168,31 +168,31 @@ func HeroCardOf(catalogos *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 //
 // `god` é opcional e some quando ausente, em vez de virar "Devoto de ".
 func stageLine(c sheet.CharacterDTO) string {
-	partes := []string{}
+	parts := []string{}
 	if c.God != nil && *c.God != "" {
-		partes = append(partes, "Devoto de "+*c.God)
+		parts = append(parts, "Devoto de "+*c.God)
 	}
-	partes = append(partes, c.Origin, c.Size)
+	parts = append(parts, c.Origin, c.Size)
 	// Fatia nova em vez do filtro no lugar (`partes[:0]`): aquele é correto e é
 	// idioma conhecido, mas escreve no mesmo array que lê, e a lista aqui tem
 	// cinco itens. Não vale um segundo de leitura a mais para quem passar.
-	presentes := make([]string, 0, len(partes))
-	for _, p := range partes {
+	present := make([]string, 0, len(parts))
+	for _, p := range parts {
 		if strings.TrimSpace(p) != "" {
-			presentes = append(presentes, p)
+			present = append(present, p)
 		}
 	}
-	return strings.Join(presentes, " · ")
+	return strings.Join(present, " · ")
 }
 
 // heroPlate é o subtítulo da placa: "GUERREIRO 10 · ANÃO". A raça entra
 // junto, e não é enfeite — num elenco de dez, classe sozinha repete.
 func heroPlate(c sheet.CharacterDTO) string {
-	placa := strings.ToUpper(classOrOrigin(c))
-	if raca := mainRace(c); raca != "" {
-		placa += " · " + strings.ToUpper(raca)
+	plate := strings.ToUpper(classOrOrigin(c))
+	if race := mainRace(c); race != "" {
+		plate += " · " + strings.ToUpper(race)
 	}
-	return placa
+	return plate
 }
 
 // classOrOrigin: a classe primária com o nível, ou a origem para quem ainda
@@ -212,19 +212,19 @@ func primaryClass(c sheet.CharacterDTO) string {
 }
 
 func ClassesOf(c sheet.CharacterDTO) string {
-	partes := make([]string, 0, len(c.Classes))
+	parts := make([]string, 0, len(c.Classes))
 	for _, cl := range c.Classes {
-		partes = append(partes, cl.ClassName+" "+strconv.FormatInt(cl.Level, 10))
+		parts = append(parts, cl.ClassName+" "+strconv.FormatInt(cl.Level, 10))
 	}
-	return strings.Join(partes, " / ")
+	return strings.Join(parts, " / ")
 }
 
 func racesInLine(c sheet.CharacterDTO) string {
-	partes := make([]string, 0, len(c.Races))
+	parts := make([]string, 0, len(c.Races))
 	for _, r := range c.Races {
-		partes = append(partes, r.Race)
+		parts = append(parts, r.Race)
 	}
-	return strings.Join(partes, ", ")
+	return strings.Join(parts, ", ")
 }
 
 func mainRace(c sheet.CharacterDTO) string {
@@ -234,6 +234,6 @@ func mainRace(c sheet.CharacterDTO) string {
 	return c.Races[0].Race
 }
 
-func vital(atual, max int64) string {
-	return strconv.FormatInt(atual, 10) + "/" + strconv.FormatInt(max, 10)
+func vital(current, max int64) string {
+	return strconv.FormatInt(current, 10) + "/" + strconv.FormatInt(max, 10)
 }

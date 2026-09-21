@@ -68,16 +68,16 @@ func (s Scene) SceneRoutes(r chi.Router) {
 // ARRASTANDO e o arraste passa duas vezes pela mesma casa. Alternar faria a casa
 // piscar entre brejo e chão limpo debaixo do dedo.
 func paintTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
-	pedido, traco, err := strokeFromBody(c.R)
+	requested, trait, err := strokeFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
+	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := board.KnownTerrainKind(pedido.Kind)
-	ligado := !pedido.Erase
-	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco, especie, ligado)
+	species := board.KnownTerrainKind(requested.Kind)
+	on := !requested.Erase
+	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.BoardID, trait, species, on)
 }
 
 // clearTerrain é a BORRACHA: o clique devolve a casa ao chão limpo, seja qual
@@ -87,14 +87,14 @@ func paintTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 // ESPÉCIE, e era justamente a espécie que fazia a borracha apagar a coisa
 // errada em silêncio. Sem espécie no pedido, não há como errar qual.
 func clearTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
-	_, traco, err := strokeFromBody(c.R)
+	_, trait, err := strokeFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
+	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
 	}
-	return st.deps.Boards().ClearStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco)
+	return st.deps.Boards().ClearStroke(c.R.Context(), c.SessionID, c.BoardID, trait)
 }
 
 // fillRect e clearRect são os irmãos de área dos dois de cima.
@@ -103,26 +103,26 @@ func clearTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 // traço, mas o que elas recebem é uma lista de casas. Quem escolhe a forma é a
 // rota.
 func fillRect(st Scene, c commandCtx) (*board.BoardState, error) {
-	pedido, casas, err := rectFromBody(c.R)
+	requested, squares, err := rectFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
+	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := board.KnownTerrainKind(pedido.Kind)
-	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas, especie, true)
+	species := board.KnownTerrainKind(requested.Kind)
+	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.BoardID, squares, species, true)
 }
 
 func clearRect(st Scene, c commandCtx) (*board.BoardState, error) {
-	_, casas, err := rectFromBody(c.R)
+	_, squares, err := rectFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
+	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
 	}
-	return st.deps.Boards().ClearStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas)
+	return st.deps.Boards().ClearStroke(c.R.Context(), c.SessionID, c.BoardID, squares)
 }
 
 // strokeBody é o TRAÇO como o cliente o manda: os dois cantos e, na pintura, a
@@ -159,13 +159,13 @@ type strokeBody struct {
 // o par NOMEIA — a linha entre os cantos ou tudo o que cabe dentro —, e isso é do
 // chamador: é o significado do pedido, não um detalhe de leitura.
 func pointsFromBody(r *http.Request) (strokeBody, engine.Square, engine.Square, error) {
-	var pedido strokeBody
-	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&pedido); err != nil {
-		return pedido, engine.Square{}, engine.Square{}, fmt.Errorf("não entendi o gesto enviado: %v", err)
+	var requested strokeBody
+	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&requested); err != nil {
+		return requested, engine.Square{}, engine.Square{}, fmt.Errorf("não entendi o gesto enviado: %v", err)
 	}
-	return pedido,
-		engine.Square{X: pedido.From.X, Y: pedido.From.Y},
-		engine.Square{X: pedido.To.X, Y: pedido.To.Y},
+	return requested,
+		engine.Square{X: requested.From.X, Y: requested.From.Y},
+		engine.Square{X: requested.To.X, Y: requested.To.Y},
 		nil
 }
 
@@ -177,26 +177,26 @@ func pointsFromBody(r *http.Request) (strokeBody, engine.Square, engine.Square, 
 // aprender, e o `to` sobra sem custo. O contrário — um campo por gesto — é como
 // nasce a terceira grafia do mesmo par de números.
 func squareFromBody(r *http.Request) (strokeBody, engine.Square, error) {
-	pedido, de, _, err := pointsFromBody(r)
-	return pedido, de, err
+	requested, de, _, err := pointsFromBody(r)
+	return requested, de, err
 }
 
 // squareOnly é o `squareFromBody` para quem não precisa do resto do pedido.
 func squareOnly(r *http.Request) (engine.Square, error) {
-	_, casa, err := squareFromBody(r)
-	return casa, err
+	_, square, err := squareFromBody(r)
+	return square, err
 }
 
 // strokeFromBody é o SEGMENTO entre os dois cantos.
 func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
-	pedido, de, ate, err := pointsFromBody(r)
+	requested, de, ate, err := pointsFromBody(r)
 	if err != nil {
-		return pedido, nil, err
+		return requested, nil, err
 	}
 	if !board.ValidStroke(de, ate) {
-		return pedido, nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
+		return requested, nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
 	}
-	return pedido, board.StrokeSquares(de, ate), nil
+	return requested, board.StrokeSquares(de, ate), nil
 }
 
 // rectFromBody é TUDO O QUE CABE entre os dois cantos.
@@ -207,11 +207,11 @@ func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
 // TRAÇO, mantém o dele: ele é um quadro de 16ms, e cem casas ali continuam sendo
 // impossíveis para um dedo.
 func rectFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
-	pedido, de, ate, err := pointsFromBody(r)
+	requested, de, ate, err := pointsFromBody(r)
 	if err != nil {
-		return pedido, nil, err
+		return requested, nil, err
 	}
-	return pedido, board.RectangleSquares(de, ate), nil
+	return requested, board.RectangleSquares(de, ate), nil
 }
 
 // reopenPlace traz uma cena guardada de volta para a mesa, NUMA ABA NOVA.
@@ -255,14 +255,14 @@ func removeOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 	//
 	// A recusa é do SERVIDOR e não da tela: a lista já não oferece a lixeira ao
 	// que está aberto, mas quem postar na mão passaria por cima.
-	if nome, aba := st.placeTab(c.R.Context(), c.CampaignID, c.SessionID, id); aba != "" {
+	if name, aba := st.placeTab(c.R.Context(), c.CampaignID, c.SessionID, id); aba != "" {
 		return nil, fmt.Errorf(
-			"%q está aberta numa aba: encerre a cena antes de apagá-la do acervo", nome)
+			"%q está aberta numa aba: encerre a cena antes de apagá-la do acervo", name)
 	}
 	if err := st.deps.Boards().RemovePlace(c.R.Context(), c.CampaignID, id); err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID), nil
+	return st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID), nil
 }
 
 // placeTab diz em qual aba um lugar guardado está aberto, e como ele se
@@ -278,17 +278,17 @@ func removeOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 // A consequência, dita para ninguém a redescobrir: uma cena ABERTA do zero com o
 // nome de um lugar guardado é tratada como aquele lugar. É a mesma conta que o
 // arquivamento fará quando ela fechar.
-func (s Scene) placeTab(ctx context.Context, campaignID, sessionID, placeID int64) (nome, tabuleiroID string) {
-	for _, lugar := range s.deps.Boards().Places(ctx, campaignID) {
-		if lugar.ID != placeID {
+func (s Scene) placeTab(ctx context.Context, campaignID, sessionID, placeID int64) (name, boardID string) {
+	for _, place := range s.deps.Boards().Places(ctx, campaignID) {
+		if place.ID != placeID {
 			continue
 		}
-		for _, aberto := range s.deps.Boards().OpenBoards(ctx, sessionID) {
-			if aberto.Place == lugar.Name {
-				return lugar.Name, aberto.ID
+		for _, open := range s.deps.Boards().OpenBoards(ctx, sessionID) {
+			if open.Place == place.Name {
+				return place.Name, open.ID
 			}
 		}
-		return lugar.Name, ""
+		return place.Name, ""
 	}
 	return "", ""
 }
@@ -296,10 +296,10 @@ func (s Scene) placeTab(ctx context.Context, campaignID, sessionID, placeID int6
 // lugarDaURL lê o id do CAMINHO, como o quadrado do movimento: o valor é do
 // botão que foi clicado, e não de um sinal da página que N linhas disputariam.
 func lugarDaURL(r *http.Request) (int64, error) {
-	bruto := chi.URLParam(r, "placeId")
-	id, err := strconv.ParseInt(bruto, 10, 64)
+	raw := chi.URLParam(r, "placeId")
+	id, err := strconv.ParseInt(raw, 10, 64)
 	if err != nil || id <= 0 {
-		return 0, fmt.Errorf("lugar %q não é um id", bruto)
+		return 0, fmt.Errorf("lugar %q não é um id", raw)
 	}
 	return id, nil
 }
@@ -316,19 +316,19 @@ func lugarDaURL(r *http.Request) (int64, error) {
 // quem clicou e de mais ninguém: a mesa não é puxada, porque a aba padrão
 // continua sendo a mais antiga.
 func openBoard(st Scene, c commandCtx) (*board.BoardState, error) {
-	lugar, chao, err := signalsScene(c.R)
+	place, chao, err := signalsScene(c.R)
 	if err != nil {
 		return nil, err
 	}
-	b, err := st.deps.Boards().Open(c.R.Context(), c.SessionID, lugar, chao)
+	b, err := st.deps.Boards().Open(c.R.Context(), c.SessionID, place, chao)
 	if err != nil {
 		return nil, err
 	}
 	st.chosenTabs.Escolhe(c.SessionID, c.User, b.ID)
 	// O formulário volta ao zero, como o do combatente: sem isto o lugar fica no
 	// campo e a cena seguinte nasce com o nome da anterior.
-	c.Sinais["new_place"] = ""
-	c.Sinais["new_ground"] = board.DefaultGround()
+	c.Signals["new_place"] = ""
+	c.Signals["new_ground"] = board.DefaultGround()
 	return b, nil
 }
 
@@ -338,12 +338,12 @@ func openBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 // mesa, e recusar isso porque o acervo falhou deixaria a mesa presa numa cena
 // que já acabou.
 func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
-	if atual := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID); atual != nil {
-		if err := st.deps.Boards().Archive(c.R.Context(), c.CampaignID, atual); err != nil {
+	if current := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID); current != nil {
+		if err := st.deps.Boards().Archive(c.R.Context(), c.CampaignID, current); err != nil {
 			log.Printf("session %d: falha ao arquivar o lugar (%v)", c.SessionID, err)
 		}
 	}
-	st.deps.Boards().Close(c.R.Context(), c.SessionID, c.TabuleiroID)
+	st.deps.Boards().Close(c.R.Context(), c.SessionID, c.BoardID)
 	// AS ESCOLHAS DE ABA morrem com a ÚLTIMA cena, e não com esta.
 	//
 	// Fechar uma aba com outras abertas não é o fim do tabuleiro: quem estava
@@ -379,27 +379,27 @@ func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 // desconhecido cai no padrão em vez de recusar, porque um valor que a tela não
 // oferece só chega por posse do fio, e a resposta a isso é desenhar pedra e não
 // discutir.
-func signalsScene(r *http.Request) (lugar, chao string, err error) {
+func signalsScene(r *http.Request) (place, chao string, err error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
-	var sinais struct {
-		Lugar string `json:"new_place"`
+	var signals struct {
+		Place string `json:"new_place"`
 		Chao  string `json:"new_ground"`
 	}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return "", "", fmt.Errorf("não entendi a cena enviada: %v", err)
 	}
-	lugar = strings.TrimSpace(sinais.Lugar)
-	if lugar == "" {
-		lugar = "Cena"
+	place = strings.TrimSpace(signals.Place)
+	if place == "" {
+		place = "Cena"
 	}
-	return lugar, chaoConhecido(sinais.Chao), nil
+	return place, chaoConhecido(signals.Chao), nil
 }
 
 // chaoConhecido devolve o chão pedido se ele existe, ou o padrão.
-func chaoConhecido(pedido string) string {
+func chaoConhecido(requested string) string {
 	for _, c := range board.PlaceGrounds {
-		if c.ID == pedido {
-			return pedido
+		if c.ID == requested {
+			return requested
 		}
 	}
 	return board.DefaultGround()

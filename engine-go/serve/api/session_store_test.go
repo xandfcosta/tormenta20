@@ -136,58 +136,58 @@ func TestStoreRefreshTakesBothPoolsFromTheSheet(t *testing.T) {
 	gm := seedUser(t, s, "gm@t.com")
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	charID := seedCharacterAtLevel(t, s, gm, "A", "Guerreiro", 1, 3, 0)
-	naFicha := poolsOf(t, s, charID)
+	onSheet := poolsOf(t, s, charID)
 	store := s.sessions
 	if _, err := store.Load(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 
-	casos := []struct {
-		nome         string
+	cases := []struct {
+		name         string
 		hpMax, hpCur int64
 	}{
 		{"stale ALTO (a linha acha que ele tem mais do que tem)",
-			naFicha.HpMax * 2, naFicha.HpCurrent + 9},
+			onSheet.HpMax * 2, onSheet.HpCurrent + 9},
 		{"stale BAIXO (a linha acha que ele apanhou mais do que apanhou)",
 			1, 1},
 	}
-	for _, caso := range casos {
-		t.Run(caso.nome, func(t *testing.T) {
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
 			emptyTheQueue(t, store, sid)
 			e := sheetCombatant("A", 12, charID)
-			hpMax, hpCur := caso.hpMax, caso.hpCur
+			hpMax, hpCur := tc.hpMax, tc.hpCur
 			e.HpMax, e.HpCurrent = &hpMax, &hpCur
 			if _, err := store.AddInitiativeEntry(sid, e); err != nil {
 				t.Fatalf("Add: %v", err)
 			}
 			// O NPC entra JUNTO: a fronteira só é medida quando os dois estão na
 			// mesma fila passando pelo mesmo refresh.
-			capanga := live.InitiativeEntry{Label: "Goblin", Initiative: 9, Type: "npc"}
-			pvDoCapanga, maxDoCapanga := int64(4), int64(11)
-			capanga.HpCurrent, capanga.HpMax = &pvDoCapanga, &maxDoCapanga
-			if _, err := store.AddInitiativeEntry(sid, capanga); err != nil {
+			minion := live.InitiativeEntry{Label: "Goblin", Initiative: 9, Type: "npc"}
+			minionHP, minionMax := int64(4), int64(11)
+			minion.HpCurrent, minion.HpMax = &minionHP, &minionMax
+			if _, err := store.AddInitiativeEntry(sid, minion); err != nil {
 				t.Fatalf("Add npc: %v", err)
 			}
 
-			depois := store.RefreshCharacterVitals(ctx, sid)
+			after := store.RefreshCharacterVitals(ctx, sid)
 
-			linha := rowLabelled(t, depois, "A")
-			if live.DerefOr(linha.HpMax, -1) != naFicha.HpMax ||
-				live.DerefOr(linha.HpCurrent, -1) != naFicha.HpCurrent {
+			row := rowLabelled(t, after, "A")
+			if live.DerefOr(row.HpMax, -1) != onSheet.HpMax ||
+				live.DerefOr(row.HpCurrent, -1) != onSheet.HpCurrent {
 				t.Errorf("a linha ficou em %d/%d e a ficha está em %d/%d",
-					live.DerefOr(linha.HpCurrent, -1), live.DerefOr(linha.HpMax, -1),
-					naFicha.HpCurrent, naFicha.HpMax)
+					live.DerefOr(row.HpCurrent, -1), live.DerefOr(row.HpMax, -1),
+					onSheet.HpCurrent, onSheet.HpMax)
 			}
-			if live.DerefOr(linha.MpCurrent, -1) != naFicha.MpCurrent {
+			if live.DerefOr(row.MpCurrent, -1) != onSheet.MpCurrent {
 				t.Errorf("o PM da linha ficou em %d e a ficha está em %d",
-					live.DerefOr(linha.MpCurrent, -1), naFicha.MpCurrent)
+					live.DerefOr(row.MpCurrent, -1), onSheet.MpCurrent)
 			}
 
-			doCapanga := rowLabelled(t, depois, "Goblin")
-			if live.DerefOr(doCapanga.HpCurrent, -1) != 4 || live.DerefOr(doCapanga.HpMax, -1) != 11 {
+			ofMinion := rowLabelled(t, after, "Goblin")
+			if live.DerefOr(ofMinion.HpCurrent, -1) != 4 || live.DerefOr(ofMinion.HpMax, -1) != 11 {
 				t.Errorf("o NPC saiu em %d/%d e devia estar intocado em 4/11 — "+
 					"não há ficha atrás dele, e ali o rastreador É o registro",
-					live.DerefOr(doCapanga.HpCurrent, -1), live.DerefOr(doCapanga.HpMax, -1))
+					live.DerefOr(ofMinion.HpCurrent, -1), live.DerefOr(ofMinion.HpMax, -1))
 			}
 		})
 	}
@@ -206,14 +206,14 @@ func emptyTheQueue(t *testing.T, store *session.Store, sid int64) {
 
 // rowLabelled acha a entrada pelo rótulo e FALHA se ela sumiu: entrada ausente e
 // entrada intocada se parecem quando a asserção lê um zero.
-func rowLabelled(t *testing.T, st *live.SessionRuntimeState, rotulo string) live.InitiativeEntry {
+func rowLabelled(t *testing.T, st *live.SessionRuntimeState, label string) live.InitiativeEntry {
 	t.Helper()
 	for _, e := range st.Initiative {
-		if e.Label == rotulo {
+		if e.Label == label {
 			return e
 		}
 	}
-	t.Fatalf("a linha %q não está na fila", rotulo)
+	t.Fatalf("a linha %q não está na fila", label)
 	return live.InitiativeEntry{}
 }
 
@@ -280,8 +280,8 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	}
 
 	// Sem espera: a gravação é o caminho, não um espelho assíncrono.
-	if poco := poolsOf(t, s, charID); poco.HpCurrent != 12 || poco.MpCurrent != 3 {
-		t.Errorf("ficha = %d/%d PV-PM, esperado 12/3", poco.HpCurrent, poco.MpCurrent)
+	if pool := poolsOf(t, s, charID); pool.HpCurrent != 12 || pool.MpCurrent != 3 {
+		t.Errorf("ficha = %d/%d PV-PM, esperado 12/3", pool.HpCurrent, pool.MpCurrent)
 	}
 	// E a entrada espelha o que foi gravado — os dois números da tela são um só.
 	got := snap.Initiative[0]
@@ -317,8 +317,8 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	}
 
 	// 5 absorvidos pelo pool, 3 nos PV reais.
-	if poco := poolsOf(t, s, charID); poco.HpCurrent != 17 {
-		t.Errorf("PV = %d, esperado 17 (o pool de 5 absorveu antes)", poco.HpCurrent)
+	if pool := poolsOf(t, s, charID); pool.HpCurrent != 17 {
+		t.Errorf("PV = %d, esperado 17 (o pool de 5 absorveu antes)", pool.HpCurrent)
 	}
 	rows, _ := s.queries.ListActiveEffectsByCharacter(ctx, charID)
 	if len(sheet.ParseTempHpPools(rows)) != 0 {
@@ -394,7 +394,7 @@ func TestEnteringYourTurnPaysForEachSustainedAbility(t *testing.T) {
 	}
 	before := poolsOf(t, s, charID).MpCurrent
 
-	depois, err := store.NextTurn(sid)
+	after, err := store.NextTurn(sid)
 	if err != nil {
 		t.Fatalf("entrar na vez: %v", err)
 	}
@@ -402,7 +402,7 @@ func TestEnteringYourTurnPaysForEachSustainedAbility(t *testing.T) {
 	if now := poolsOf(t, s, charID).MpCurrent; now != before-1 {
 		t.Errorf("a sustentada cobra 1 PM da FICHA: era %d e ficou %d", before, now)
 	}
-	statement := depois.Scene.Upkeep
+	statement := after.Scene.Upkeep
 	if statement == nil {
 		t.Fatal("a faixa não tem o que dizer: a manutenção não deixou extrato")
 	}
@@ -410,7 +410,7 @@ func TestEnteringYourTurnPaysForEachSustainedAbility(t *testing.T) {
 		t.Errorf("o extrato diz %+v, quero 1 PM pago por Velocidade", statement)
 	}
 	// E a FILA espelha o mana da ficha: os dois números da tela são um só.
-	if mp := live.DerefOr(depois.Initiative[0].MpCurrent, -1); mp != before-1 {
+	if mp := live.DerefOr(after.Initiative[0].MpCurrent, -1); mp != before-1 {
 		t.Errorf("a fila mostra %d PM e a ficha tem %d", mp, before-1)
 	}
 }
@@ -444,12 +444,12 @@ func TestWithoutManaTheSustainedAbilityEnds(t *testing.T) {
 		t.Fatalf("o controle falhou: a ficha ficou com %d PM em vez de 0", mp)
 	}
 
-	depois, err := store.NextTurn(sid)
+	after, err := store.NextTurn(sid)
 	if err != nil {
 		t.Fatalf("entrar na vez: %v", err)
 	}
 
-	statement := depois.Scene.Upkeep
+	statement := after.Scene.Upkeep
 	if statement == nil || len(statement.Dropped) != 1 || statement.Dropped[0] != "Velocidade" {
 		t.Fatalf("o extrato diz %+v, quero Velocidade caída", statement)
 	}
@@ -494,17 +494,17 @@ func TestFallingToZeroHitPointsEndsTheSustainedAbilities(t *testing.T) {
 	}
 	// O CONTROLE, e ele é a metade que importa: o mana tem de estar CHEIO,
 	// senão o teste passaria verde pela outra razão (falta de PM).
-	poco := poolsOf(t, s, charID)
-	if poco.HpCurrent != 0 || poco.MpCurrent == 0 {
-		t.Fatalf("o controle falhou: PV %d (quero 0) e PM %d (quero >0)", poco.HpCurrent, poco.MpCurrent)
+	pool := poolsOf(t, s, charID)
+	if pool.HpCurrent != 0 || pool.MpCurrent == 0 {
+		t.Fatalf("o controle falhou: PV %d (quero 0) e PM %d (quero >0)", pool.HpCurrent, pool.MpCurrent)
 	}
 
-	depois, err := store.NextTurn(sid)
+	after, err := store.NextTurn(sid)
 	if err != nil {
 		t.Fatalf("entrar na vez: %v", err)
 	}
 
-	statement := depois.Scene.Upkeep
+	statement := after.Scene.Upkeep
 	if statement == nil || len(statement.Dropped) != 1 || statement.Dropped[0] != "Velocidade" {
 		t.Fatalf("o extrato diz %+v, quero Velocidade caída", statement)
 	}
@@ -514,8 +514,8 @@ func TestFallingToZeroHitPointsEndsTheSustainedAbilities(t *testing.T) {
 	if statement.Cost != 0 {
 		t.Errorf("quem está inconsciente não gasta PM, e gastou %d", statement.Cost)
 	}
-	if mp := poolsOf(t, s, charID).MpCurrent; mp != poco.MpCurrent {
-		t.Errorf("o mana foi de %d para %d, e não devia ter saído do lugar", poco.MpCurrent, mp)
+	if mp := poolsOf(t, s, charID).MpCurrent; mp != pool.MpCurrent {
+		t.Errorf("o mana foi de %d para %d, e não devia ter saído do lugar", pool.MpCurrent, mp)
 	}
 }
 

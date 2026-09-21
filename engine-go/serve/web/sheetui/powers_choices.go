@@ -25,10 +25,10 @@ import (
 
 // choicesPanel é o diálogo inteiro.
 type choicesPanel struct {
-	Pendencias []pendencia
-	Races      []raceChoiceCard
-	Origin     *originChoiceCard
-	Classes    []classChoiceCard
+	Pending []pendencia
+	Races   []raceChoiceCard
+	Origin  *originChoiceCard
+	Classes []classChoiceCard
 }
 
 // raceChoiceCard é o que uma raça pede: o bônus de atributo e as variantes.
@@ -81,8 +81,8 @@ type classChoiceCard struct {
 	Used  int
 	// Powers são os poderes ELETIVOS da classe mais os gerais, já marcados.
 	Powers  []powerChoice
-	Caminho *pickerChoice
-	Devoto  *pickerChoice
+	Path    *pickerChoice
+	Devotee *pickerChoice
 }
 
 // powerChoice é um poder que dá para escolher.
@@ -90,8 +90,8 @@ type powerChoice struct {
 	ID     string
 	Name   string
 	Detail string
-	// Fonte é "Classe" ou "Geral", para a lista dizer de onde o poder vem.
-	Fonte  string
+	// Source é "Classe" ou "Geral", para a lista dizer de onde o poder vem.
+	Source string
 	Chosen bool
 }
 
@@ -102,131 +102,131 @@ type pickerChoice struct {
 }
 
 // choicesPanelOf monta o diálogo.
-func (s Scene) choicesPanelOf(dto sheet.CharacterDTO, busca string) choicesPanel {
-	panel := choicesPanel{Pendencias: s.sheetPendings(dto)}
+func (s Scene) choicesPanelOf(dto sheet.CharacterDTO, search string) choicesPanel {
+	panel := choicesPanel{Pending: s.sheetPendings(dto)}
 	panel.Races = s.raceChoices(dto)
 	panel.Origin = originChoice(dto)
-	panel.Classes = classChoiceCards(dto, busca)
+	panel.Classes = classChoiceCards(dto, search)
 	return panel
 }
 
 func (s Scene) raceChoices(dto sheet.CharacterDTO) []raceChoiceCard {
-	cartoes := []raceChoiceCard{}
+	cards := []raceChoiceCard{}
 	for _, r := range dto.Races {
-		cartao := raceChoiceCard{Race: r.Race, Variants: raceVariants(dto, r.Race)}
-		cartao.Attribute = s.attributeRaceBonus(dto, r.Race)
-		if cartao.Attribute == nil && len(cartao.Variants) == 0 {
+		card := raceChoiceCard{Race: r.Race, Variants: raceVariants(dto, r.Race)}
+		card.Attribute = s.attributeRaceBonus(dto, r.Race)
+		if card.Attribute == nil && len(card.Variants) == 0 {
 			continue
 		}
-		cartoes = append(cartoes, cartao)
+		cards = append(cards, card)
 	}
-	return cartoes
+	return cards
 }
 
 // attributeRaceBonus descreve a escolha de atributo, ou nil quando a raça
 // não pede nenhuma (as doze de bônus fixo).
-func (s Scene) attributeRaceBonus(dto sheet.CharacterDTO, nome string) *attributeChoice {
-	mod := attributeRaceMod(nome)
+func (s Scene) attributeRaceBonus(dto sheet.CharacterDTO, name string) *attributeChoice {
+	mod := attributeRaceMod(name)
 	if mod == nil || mod.Kind == "fixed" {
 		return nil
 	}
-	escolha := &attributeChoice{
+	choice := &attributeChoice{
 		Kind: mod.Kind, Count: mod.Count, Value: mod.Value, Exclude: mod.Exclude,
 		Chosen: attributeSavedChoices(dto.RaceAttributeChoices),
 	}
 	if s.deps.Catalogs() != nil {
-		escolha.Complete = s.deps.Catalogs().RaceAttributeChoiceIsComplete(nome, dto.RaceAttributeChoices)
+		choice.Complete = s.deps.Catalogs().RaceAttributeChoiceIsComplete(name, dto.RaceAttributeChoices)
 	}
 	if mod.Kind == "floating" {
-		escolha.Options = thatFitAttributes(mod.Exclude)
-		return escolha
+		choice.Options = thatFitAttributes(mod.Exclude)
+		return choice
 	}
-	escolha.Kind = "ascendencia"
-	escolha.Options = raceAncestries(nome)
+	choice.Kind = "ascendencia"
+	choice.Options = raceAncestries(name)
 	if a := savedAncestry(dto.RaceAttributeChoices); a != "" {
-		escolha.Chosen = []string{a}
+		choice.Chosen = []string{a}
 	}
-	return escolha
+	return choice
 }
 
 // thatFitAttributes são os seis do livro, menos o proibido da raça.
-func thatFitAttributes(proibido string) []filterOption {
-	fora := []filterOption{}
+func thatFitAttributes(forbidden string) []filterOption {
+	outside := []filterOption{}
 	for _, a := range book.AttributeOrder {
-		if a.Chave == proibido {
+		if a.Key == forbidden {
 			continue
 		}
-		fora = append(fora, filterOption{Valor: a.Chave, Rotulo: a.Sigla})
+		outside = append(outside, filterOption{Value: a.Key, Label: a.Abbreviation})
 	}
-	return fora
+	return outside
 }
 
 // raceVariants são as habilidades de raça que pedem uma escolha.
-func raceVariants(dto sheet.CharacterDTO, nome string) []variantChoice {
-	raca := withVariantsRace(nome)
-	if raca == nil {
+func raceVariants(dto sheet.CharacterDTO, name string) []variantChoice {
+	race := withVariantsRace(name)
+	if race == nil {
 		return nil
 	}
-	escolhidas := sheet.UnmarshalStrings(dto.RaceAbilityChoices)
-	fora := []variantChoice{}
-	for _, hab := range raca.Abilities {
-		if len(hab.Variants) == 0 {
+	chosen := sheet.UnmarshalStrings(dto.RaceAbilityChoices)
+	outside := []variantChoice{}
+	for _, ability := range race.Abilities {
+		if len(ability.Variants) == 0 {
 			continue
 		}
-		escolha := variantChoice{AbilityID: hab.ID, Name: hab.Name}
-		for _, v := range hab.Variants {
-			ativa := contemTraco(escolhidas, v.ID)
-			if ativa {
-				escolha.Chosen = v.ID
+		choice := variantChoice{AbilityID: ability.ID, Name: ability.Name}
+		for _, v := range ability.Variants {
+			active := contemTraco(chosen, v.ID)
+			if active {
+				choice.Chosen = v.ID
 			}
-			escolha.Options = append(escolha.Options,
-				filterOption{Valor: v.ID, Rotulo: v.Name, Ativo: ativa})
+			choice.Options = append(choice.Options,
+				filterOption{Value: v.ID, Label: v.Name, Active: active})
 		}
-		fora = append(fora, escolha)
+		outside = append(outside, choice)
 	}
-	return fora
+	return outside
 }
 
 // originChoice monta o cartão da origem.
 func originChoice(dto sheet.CharacterDTO) *originChoiceCard {
-	origem, tem := book.Origins()[dto.Origin]
-	if !tem {
+	origin, found := book.Origins()[dto.Origin]
+	if !found {
 		return nil
 	}
-	escolhidos := sheet.UnmarshalStrings(dto.OriginChoices)
-	cartao := &originChoiceCard{
-		Name: origem.Name, Chosen: escolhidos,
-		Left: sheet.BenefitsOriginLimit - len(escolhidos),
+	chosen := sheet.UnmarshalStrings(dto.OriginChoices)
+	card := &originChoiceCard{
+		Name: origin.Name, Chosen: chosen,
+		Left: sheet.BenefitsOriginLimit - len(chosen),
 	}
-	for _, b := range sheet.OriginBenefitsOf(origem) {
-		cartao.Options = append(cartao.Options, filterOption{
-			Valor: b.ID, Rotulo: b.Name, Ativo: contemTraco(escolhidos, b.ID),
+	for _, b := range sheet.OriginBenefitsOf(origin) {
+		card.Options = append(card.Options, filterOption{
+			Value: b.ID, Label: b.Name, Active: contemTraco(chosen, b.ID),
 		})
 	}
-	return cartao
+	return card
 }
 
 // classChoiceCards monta um cartão por classe da ficha.
-func classChoiceCards(dto sheet.CharacterDTO, busca string) []classChoiceCard {
-	escolhidos := sheet.UnmarshalStrings(dto.ClassPowers)
-	escolhas := sheet.ClassChoiceSelections(dto)
-	cartoes := []classChoiceCard{}
-	for _, classe := range dto.Classes {
-		cartao := classChoiceCard{
-			ClassName: classe.ClassName, Level: classe.Level,
-			Slots:  sheet.PowerSlots(classe.Level),
-			Used:   len(escolhidos),
-			Powers: thatChoosePowers(classe.ClassName, escolhidos, busca),
+func classChoiceCards(dto sheet.CharacterDTO, search string) []classChoiceCard {
+	chosen := sheet.UnmarshalStrings(dto.ClassPowers)
+	choices := sheet.ClassChoiceSelections(dto)
+	cards := []classChoiceCard{}
+	for _, class := range dto.Classes {
+		card := classChoiceCard{
+			ClassName: class.ClassName, Level: class.Level,
+			Slots:  sheet.PowerSlots(class.Level),
+			Used:   len(chosen),
+			Powers: thatChoosePowers(class.ClassName, chosen, search),
 		}
-		if opcoes := sheet.LevelPaths(classe.ClassName, classe.Level); len(opcoes) > 0 {
-			cartao.Caminho = markedPicker(opcoes, escolhas[classe.ClassName].Caminho)
+		if options := sheet.LevelPaths(class.ClassName, class.Level); len(options) > 0 {
+			card.Path = markedPicker(options, choices[class.ClassName].Path)
 		}
-		if opcoes := sheet.ClassDevotees(classe.ClassName); len(opcoes) > 0 {
-			cartao.Devoto = markedPicker(opcoes, escolhas[classe.ClassName].Devoto)
+		if options := sheet.ClassDevotees(class.ClassName); len(options) > 0 {
+			card.Devotee = markedPicker(options, choices[class.ClassName].Devotee)
 		}
-		cartoes = append(cartoes, cartao)
+		cards = append(cards, card)
 	}
-	return cartoes
+	return cards
 }
 
 // markedPicker vira as opções do LIVRO nas opções da TELA, marcando a escolhida.
@@ -234,72 +234,72 @@ func classChoiceCards(dto sheet.CharacterDTO, busca string) []classChoiceCard {
 // A conversão existe porque as duas listas respondem perguntas diferentes: o
 // `sheet.ChoiceOption` é o que o livro oferece (valor e nome), e o
 // `filterOption` é o que o `<select>` desenha — com o `Ativo` que só a tela tem.
-func markedPicker(opcoes []sheet.ChoiceOption, escolhido string) *pickerChoice {
-	marcadas := make([]filterOption, 0, len(opcoes))
-	for _, o := range opcoes {
-		marcadas = append(marcadas, filterOption{
-			Valor: o.Value, Rotulo: o.Label, Ativo: o.Value == escolhido,
+func markedPicker(options []sheet.ChoiceOption, chosen string) *pickerChoice {
+	marked := make([]filterOption, 0, len(options))
+	for _, o := range options {
+		marked = append(marked, filterOption{
+			Value: o.Value, Label: o.Label, Active: o.Value == chosen,
 		})
 	}
-	return &pickerChoice{Options: marcadas, Chosen: escolhido}
+	return &pickerChoice{Options: marked, Chosen: chosen}
 }
 
 // thatChoosePowers são os ELETIVOS da classe mais os gerais.
 //
 // "Você sempre pode substituir um poder de classe por um poder geral" (p33), e
 // por isso as duas listas viram uma só — a vaga é a mesma.
-func thatChoosePowers(classe string, escolhidos []string, busca string) []powerChoice {
-	termo := search.Fold(strings.TrimSpace(busca))
-	fora := []powerChoice{}
+func thatChoosePowers(class string, chosen []string, query string) []powerChoice {
+	term := search.Fold(strings.TrimSpace(query))
+	outside := []powerChoice{}
 	for _, p := range book.ClassPowers() {
-		if p.ClassName != classe || p.GrantedAtLevel != nil || !casaComABusca(p.Name, termo) {
+		if p.ClassName != class || p.GrantedAtLevel != nil || !casaComABusca(p.Name, term) {
 			continue
 		}
-		fora = append(fora, powerChoice{
-			ID: p.ID, Name: p.Name, Detail: p.Description, Fonte: "Classe",
-			Chosen: contemTraco(escolhidos, p.ID),
+		outside = append(outside, powerChoice{
+			ID: p.ID, Name: p.Name, Detail: p.Description, Source: "Classe",
+			Chosen: contemTraco(chosen, p.ID),
 		})
 	}
 	for _, p := range book.GeneralPowers() {
-		if !casaComABusca(p.Name, termo) {
+		if !casaComABusca(p.Name, term) {
 			continue
 		}
-		fora = append(fora, powerChoice{
-			ID: p.ID, Name: p.Name, Detail: p.Description, Fonte: powerGeneralSource(p),
-			Chosen: contemTraco(escolhidos, p.ID),
+		outside = append(outside, powerChoice{
+			ID: p.ID, Name: p.Name, Detail: p.Description, Source: powerGeneralSource(p),
+			Chosen: contemTraco(chosen, p.ID),
 		})
 	}
-	sort.SliceStable(fora, func(a, b int) bool {
-		if fora[a].Chosen != fora[b].Chosen {
-			return fora[a].Chosen
+	sort.SliceStable(outside, func(a, b int) bool {
+		if outside[a].Chosen != outside[b].Chosen {
+			return outside[a].Chosen
 		}
-		return fora[a].Name < fora[b].Name
+		return outside[a].Name < outside[b].Name
 	})
-	return fora
+	return outside
 }
 
-func casaComABusca(nome, termo string) bool {
-	return termo == "" || strings.Contains(search.Fold(nome), termo)
+func casaComABusca(name, term string) bool {
+	return term == "" || strings.Contains(search.Fold(name), term)
 }
 
 // ── o que a TELA escreve ─────────────────────────────────────────────────────
 
 // classWrittenSlots é "3 de 4 vagas".
-func classWrittenSlots(cartao classChoiceCard) string {
-	return strconv.Itoa(cartao.Used) + " de " + strconv.Itoa(cartao.Slots) + " vagas"
+func classWrittenSlots(card classChoiceCard) string {
+	return strconv.Itoa(card.Used) + " de " + strconv.Itoa(card.Slots) + " vagas"
 }
 
 // attributeWrittenChoice descreve o que a raça pede.
-func attributeWrittenChoice(escolha attributeChoice) string {
-	if escolha.Kind == "ascendencia" {
+func attributeWrittenChoice(choice attributeChoice) string {
+	if choice.Kind == "ascendencia" {
 		return "Escolha a ascendência"
 	}
-	texto := "Distribua +" + strconv.Itoa(escolha.Value) + " em " +
-		strconv.Itoa(escolha.Count) + " atributos diferentes"
-	if escolha.Exclude != "" {
-		return texto + " (exceto " + book.AttributeAbbrev(escolha.Exclude) + ")"
+	text := "Distribua +" + strconv.Itoa(choice.Value) + " em " +
+		strconv.Itoa(choice.Count) + " atributos diferentes"
+	if choice.Exclude != "" {
+		return text + " (exceto " + book.AttributeAbbrev(choice.Exclude) + ")"
 	}
-	return texto
+	return text
 }
 
 // sourceThree são as abas do diálogo, na ordem em que o livro monta um
@@ -311,32 +311,32 @@ var sourceThree = []string{"raca", "origem", "classe"}
 // Quem abriu veio pela pendência, e fazê-lo caçar a aba certa é gastar o clique
 // que ele acabou de dar. Sem pendência nenhuma, ele abre na Raça.
 func firstPendingSource(v View) string {
-	if len(v.Choices.Pendencias) > 0 {
-		return v.Choices.Pendencias[0].Fonte
+	if len(v.Choices.Pending) > 0 {
+		return v.Choices.Pending[0].Source
 	}
 	return "raca"
 }
 
 // choiceChip é a classe de um chip que liga e desliga.
-func choiceChip(ativo bool) string {
+func choiceChip(active bool) string {
 	base := "rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors"
-	if ativo {
+	if active {
 		return base + " border-grimorio-gold/60 bg-accent text-grimorio-gold"
 	}
 	return base + " border-grimorio-iron text-muted-foreground hover:text-foreground"
 }
 
 // choiceClassCommand escreve o `@post` do caminho ou do devoto.
-func choiceClassCommand(v View, classe, escolha, valor string) string {
-	return sheetPost(v, "/poderes/classe/"+url.PathEscape(classe)+"/"+escolha+"/"+valor)
+func choiceClassCommand(v View, class, choice, value string) string {
+	return sheetPost(v, "/poderes/classe/"+url.PathEscape(class)+"/"+choice+"/"+value)
 }
 
 // thatTogglesAttributeGesture liga ou desliga um atributo na distribuição.
 //
 // A lista é COPIADA antes de ser mexida: o sinal é um proxy, e escrever dentro
 // dele item a item é a armadilha que o guia do Go registra.
-func thatTogglesAttributeGesture(atributo string) string {
-	return "const escolhidos = [...$race_attributes]; const onde = escolhidos.indexOf('" + atributo + "'); " +
-		"if (onde >= 0) { escolhidos.splice(onde, 1) } else { escolhidos.push('" + atributo + "') }; " +
+func thatTogglesAttributeGesture(attribute string) string {
+	return "const escolhidos = [...$race_attributes]; const onde = escolhidos.indexOf('" + attribute + "'); " +
+		"if (onde >= 0) { escolhidos.splice(onde, 1) } else { escolhidos.push('" + attribute + "') }; " +
 		"$race_attributes = escolhidos"
 }

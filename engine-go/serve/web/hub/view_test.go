@@ -12,7 +12,7 @@ import "testing"
 // Por RUNA e não por byte: "Áurea" começa com dois bytes, e cortar o primeiro
 // desenha o losango de erro no lugar da letra.
 func TestTheInitialCutsByRuneAndNotByByte(t *testing.T) {
-	casos := map[string]string{
+	cases := map[string]string{
 		"Mestre":            "M",
 		"Áurea":             "Á",
 		"  ébano  ":         "É",
@@ -20,9 +20,9 @@ func TestTheInitialCutsByRuneAndNotByByte(t *testing.T) {
 		"   ":               "?",
 		"jogador@t20.local": "J",
 	}
-	for entrada, quer := range casos {
-		if got := initialOf(entrada); got != quer {
-			t.Errorf("inicialDe(%q) = %q, queria %q", entrada, got, quer)
+	for entry, want := range cases {
+		if got := initialOf(entry); got != want {
+			t.Errorf("inicialDe(%q) = %q, queria %q", entry, got, want)
 		}
 	}
 }

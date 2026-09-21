@@ -28,22 +28,22 @@ import (
 // mudar a struct e o teste junto deixa o contador em zero por construção do
 // próprio remendo, e não pelo parse.
 func TestTheEmDashSurvivesTheParse(t *testing.T) {
-	semInteligencia := 0
-	semForca := 0
+	noIntelligence := 0
+	noStrength := 0
 	for _, m := range book.Creatures() {
-		if m.Inteligencia == nil {
-			semInteligencia++
+		if m.Intelligence == nil {
+			noIntelligence++
 		}
-		if m.Forca == nil {
-			semForca++
+		if m.Strength == nil {
+			noStrength++
 		}
 	}
 	// Os números vêm do dado de hoje. Eles são um DETECTOR de regressão do
 	// parse, não uma transcrição do livro: se o embed voltar, os dois caem a
 	// zero de uma vez.
-	if semInteligencia == 0 || semForca == 0 {
+	if noIntelligence == 0 || noStrength == 0 {
 		t.Fatalf("nenhum travessão sobreviveu ao parse: %d sem Int, %d sem For — "+
-			"o campo virou `int` e `null` virou zero", semInteligencia, semForca)
+			"o campo virou `int` e `null` virou zero", noIntelligence, noStrength)
 	}
 	if got := book.WithSignPtr(nil); got != "—" {
 		t.Errorf("book.WithSignPtr(nil) = %q, quero o travessão %q", got, "—")
@@ -54,30 +54,30 @@ func TestTheEmDashSurvivesTheParse(t *testing.T) {
 // não existem no `CreatureBlock` (ou existem com OUTRO nome), e o
 // `encoding/json` os deixaria vazios em silêncio.
 func TestTheFieldsTheEmbedWouldLoseAreThere(t *testing.T) {
-	todas := book.Creatures()
-	if len(todas) == 0 {
+	all := book.Creatures()
+	if len(all) == 0 {
 		t.Fatal("bestiário vazio: o catálogo não carregou")
 	}
-	var semPagina, comEquipamento, comTesouro int
-	for _, m := range todas {
+	var noPage, withEquipment, withTreasure int
+	for _, m := range all {
 		if m.BookPage == 0 {
-			semPagina++
+			noPage++
 		}
-		if m.Equipamento != "" {
-			comEquipamento++
+		if m.Equipment != "" {
+			withEquipment++
 		}
-		if m.Tesouro != "" {
-			comTesouro++
+		if m.Treasure != "" {
+			withTreasure++
 		}
 	}
-	if semPagina > 0 {
-		t.Errorf("%d criaturas sem `bookPage` — a linha mostra \"p0\"", semPagina)
+	if noPage > 0 {
+		t.Errorf("%d criaturas sem `bookPage` — a linha mostra \"p0\"", noPage)
 	}
-	if comEquipamento == 0 {
+	if withEquipment == 0 {
 		t.Error("nenhuma criatura com `equipamento`: o campo do livro é `equipamento` " +
 			"e o do bloco do mestre é `equipment` — nomes diferentes não casam")
 	}
-	if comTesouro == 0 {
+	if withTreasure == 0 {
 		t.Error("nenhuma criatura com `tesouro`: mesmo motivo, o bloco do mestre diz `treasure`")
 	}
 }
@@ -85,15 +85,15 @@ func TestTheFieldsTheEmbedWouldLoseAreThere(t *testing.T) {
 // A ordem é REGRA, não apresentação — o
 // mestre procura nível de ameaça primeiro.
 func TestTheOrderIsByChallengeAndThenByName(t *testing.T) {
-	fora := book.FilterCreatures(book.Creatures(), book.CreatureFilter{NDMin: book.CRMin, NDMax: book.CRMax})
-	if len(fora) < 2 {
-		t.Fatalf("o bestiário devolveu %d criaturas", len(fora))
+	outside := book.FilterCreatures(book.Creatures(), book.CreatureFilter{NDMin: book.CRMin, NDMax: book.CRMax})
+	if len(outside) < 2 {
+		t.Fatalf("o bestiário devolveu %d criaturas", len(outside))
 	}
-	for i := 1; i < len(fora); i++ {
-		anterior, atual := fora[i-1], fora[i]
-		if atual.ND < anterior.ND {
+	for i := 1; i < len(outside); i++ {
+		anterior, current := outside[i-1], outside[i]
+		if current.ND < anterior.ND {
 			t.Fatalf("ND fora de ordem em %d: %s (ND %v) depois de %s (ND %v)",
-				i, atual.Name, atual.ND, anterior.Name, anterior.ND)
+				i, current.Name, current.ND, anterior.Name, anterior.ND)
 		}
 	}
 }
@@ -102,14 +102,14 @@ func TestTheOrderIsByChallengeAndThenByName(t *testing.T) {
 // edita à mão. Um 999 ou um texto esconderia TODAS as criaturas, e a tela leria
 // como "bestiário vazio" em vez de "filtro absurdo".
 func TestAnAbsurdRangeDoesNotEmptyTheBestiary(t *testing.T) {
-	casos := []struct{ nome, min, max string }{
+	cases := []struct{ name, min, max string }{
 		{"texto no lugar do número", "abc", "xyz"},
 		{"acima do teto do livro", "999", "9999"},
 		{"negativo", "-5", ""},
 		{"vazio", "", ""},
 	}
-	for _, c := range casos {
-		t.Run(c.nome, func(t *testing.T) {
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
 			min, max := book.CRRange(c.min, c.max)
 			if min != book.CRMin || max != book.CRMax {
 				t.Fatalf("faixaDeND(%q, %q) = %v..%v, quero a faixa inteira %v..%v",
@@ -126,9 +126,9 @@ func TestAnAbsurdRangeDoesNotEmptyTheBestiary(t *testing.T) {
 // receber as 80 é pior que receber nenhuma.
 func TestAnInvertedRangeReturnsEmpty(t *testing.T) {
 	min, max := book.CRRange("10", "2")
-	fora := book.FilterCreatures(book.Creatures(), book.CreatureFilter{NDMin: min, NDMax: max})
-	if len(fora) != 0 {
-		t.Fatalf("faixa invertida devolveu %d criaturas, quero nenhuma", len(fora))
+	outside := book.FilterCreatures(book.Creatures(), book.CreatureFilter{NDMin: min, NDMax: max})
+	if len(outside) != 0 {
+		t.Fatalf("faixa invertida devolveu %d criaturas, quero nenhuma", len(outside))
 	}
 }
 
@@ -136,18 +136,18 @@ func TestAnInvertedRangeReturnsEmpty(t *testing.T) {
 // por tipo, e tratar vazio como "nenhum" mostraria bestiário vazio a quem não
 // escolheu nada.
 func TestAnEmptyTypeMeansEveryType(t *testing.T) {
-	todas := book.Creatures()
-	semTipo := book.FilterCreatures(todas, book.CreatureFilter{NDMax: book.CRMax})
-	if len(semTipo) != len(todas) {
-		t.Fatalf("sem tipo escolhido vieram %d de %d criaturas", len(semTipo), len(todas))
+	all := book.Creatures()
+	noKind := book.FilterCreatures(all, book.CreatureFilter{NDMax: book.CRMax})
+	if len(noKind) != len(all) {
+		t.Fatalf("sem tipo escolhido vieram %d de %d criaturas", len(noKind), len(all))
 	}
-	umTipo := book.FilterCreatures(todas, book.CreatureFilter{Tipos: []string{"animal"}, NDMax: book.CRMax})
-	if len(umTipo) == 0 || len(umTipo) == len(todas) {
-		t.Fatalf("filtrar por animal devolveu %d de %d — o filtro não filtrou", len(umTipo), len(todas))
+	oneKind := book.FilterCreatures(all, book.CreatureFilter{Kinds: []string{"animal"}, NDMax: book.CRMax})
+	if len(oneKind) == 0 || len(oneKind) == len(all) {
+		t.Fatalf("filtrar por animal devolveu %d de %d — o filtro não filtrou", len(oneKind), len(all))
 	}
-	for _, m := range umTipo {
-		if m.Tipo != "animal" {
-			t.Fatalf("%s é %q e passou pelo filtro de animal", m.Name, m.Tipo)
+	for _, m := range oneKind {
+		if m.Kind != "animal" {
+			t.Fatalf("%s é %q e passou pelo filtro de animal", m.Name, m.Kind)
 		}
 	}
 }
@@ -155,10 +155,10 @@ func TestAnEmptyTypeMeansEveryType(t *testing.T) {
 // "ND 0.25" não existe em Tormenta 20 — a mesa
 // diz "ND 1/4", e um decimal na linha lê como artefato de arredondamento.
 func TestAChallengeBelowOneComesOutAsAFraction(t *testing.T) {
-	casos := map[float64]string{0.25: "1/4", 0.5: "1/2", 1: "1", 3: "3", 20: "20"}
-	for nd, quero := range casos {
-		if got := book.CRWritten(nd); got != quero {
-			t.Errorf("ndEscrito(%v) = %q, quero %q", nd, got, quero)
+	cases := map[float64]string{0.25: "1/4", 0.5: "1/2", 1: "1", 3: "3", 20: "20"}
+	for nd, want := range cases {
+		if got := book.CRWritten(nd); got != want {
+			t.Errorf("ndEscrito(%v) = %q, quero %q", nd, got, want)
 		}
 	}
 }
@@ -179,28 +179,28 @@ func TestAChallengeBelowOneComesOutAsAFraction(t *testing.T) {
 // usa precisa estar no trilho e ter rótulo**, senão existe criatura que ninguém
 // consegue filtrar e que mostra o dado cru na linha.
 func TestEveryBookTypeIsOnTheRailAndHasALabel(t *testing.T) {
-	noLivro := map[string]int{}
+	inBook := map[string]int{}
 	for _, m := range book.Creatures() {
-		noLivro[m.Tipo]++
+		inBook[m.Kind]++
 	}
-	if len(noLivro) == 0 {
+	if len(inBook) == 0 {
 		t.Fatal("bestiário vazio: o catálogo não carregou")
 	}
-	for tipo, quantas := range noLivro {
-		if !slices.Contains(book.CreatureTypes, tipo) {
+	for kind, howMany := range inBook {
+		if !slices.Contains(book.CreatureTypes, kind) {
 			t.Errorf("%d criaturas são do tipo %q e o trilho não o oferece — ninguém consegue filtrá-las",
-				quantas, tipo)
+				howMany, kind)
 		}
-		if rotulo, ok := book.TypeLabels[tipo]; !ok || rotulo == tipo {
+		if label, ok := book.TypeLabels[kind]; !ok || label == kind {
 			t.Errorf("o tipo %q (%d criaturas) sai na tela como o dado cru %q",
-				tipo, quantas, book.TypeName(tipo))
+				kind, howMany, book.TypeName(kind))
 		}
 	}
 	// E o outro lado: crachá do trilho sem rótulo é botão com nome de campo de
 	// banco. Aqui é o trilho inteiro, `planar` incluído.
-	for _, tipo := range book.CreatureTypes {
-		if _, ok := book.TypeLabels[tipo]; !ok {
-			t.Errorf("o trilho oferece %q e não há rótulo para ele", tipo)
+	for _, kind := range book.CreatureTypes {
+		if _, ok := book.TypeLabels[kind]; !ok {
+			t.Errorf("o trilho oferece %q e não há rótulo para ele", kind)
 		}
 	}
 }
@@ -236,18 +236,18 @@ func TestTheGmSceneTalksToTheGmRoute(t *testing.T) {
 // A GEOMETRIA (nenhuma parada escapa da janela, em qualquer largura) fica no
 // e2e: é caixa contra caixa, e em jsdom todo elemento mede zero.
 func TestTheRailHasOneStopPerCatalog(t *testing.T) {
-	corpo := pedeNaCena(t, "/mestre/condicoes").Body.String()
+	body := pedeNaCena(t, "/mestre/condicoes").Body.String()
 
 	for _, a := range collectionTabs {
-		if !strings.Contains(corpo, `href="/mestre/`+a.ID+`"`) {
+		if !strings.Contains(body, `href="/mestre/`+a.ID+`"`) {
 			t.Errorf("o catálogo %q não tem parada no trilho", a.ID)
 		}
 	}
 	// O bestiário é catálogo como os outros, e as duas ferramentas
 	// são a outra seção do trilho — se alguma sumir, o mestre perde a porta.
-	for _, parada := range []string{"bestiario", "encontros", "improviso"} {
-		if !strings.Contains(corpo, `href="/mestre/`+parada+`"`) {
-			t.Errorf("a parada %q sumiu do trilho", parada)
+	for _, stop := range []string{"bestiario", "encontros", "improviso"} {
+		if !strings.Contains(body, `href="/mestre/`+stop+`"`) {
+			t.Errorf("a parada %q sumiu do trilho", stop)
 		}
 	}
 }

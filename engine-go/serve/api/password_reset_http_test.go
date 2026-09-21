@@ -25,9 +25,9 @@ func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 }
 
 // trocaASenha é o gesto que a PORTA faz: um token e uma senha nova.
-func trocaASenha(t *testing.T, s *Server, token, senha string) bool {
+func trocaASenha(t *testing.T, s *Server, token, password string) bool {
 	t.Helper()
-	return s.accountResets().Apply(context.Background(), token, senha) == nil
+	return s.accountResets().Apply(context.Background(), token, password) == nil
 }
 
 func passwordOf(t *testing.T, s *Server, UserID int64) string {

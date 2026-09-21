@@ -12,7 +12,7 @@ import (
 func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 	f := newSceneFixture(t)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete",
+	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete",
 		`{"creature":"ogro","npc_name":"Ogro Capitão"}`)
 
 	npcs := f.dbCast(t)
@@ -22,18 +22,18 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 	if npcs[0].Name != "Ogro Capitão" {
 		t.Errorf("o nome guardado é %q", npcs[0].Name)
 	}
-	var bloco creature.Block
-	if err := json.Unmarshal([]byte(npcs[0].Block), &bloco); err != nil {
+	var block creature.Block
+	if err := json.Unmarshal([]byte(npcs[0].Block), &block); err != nil {
 		t.Fatalf("o bloco guardado está ilegível: %v", err)
 	}
-	if bloco.HP <= 0 || bloco.Defesa <= 0 {
-		t.Errorf("o bloco nasceu vazio: PV %d, Defesa %d", bloco.HP, bloco.Defesa)
+	if block.HP <= 0 || block.Defense <= 0 {
+		t.Errorf("o bloco nasceu vazio: PV %d, Defesa %d", block.HP, block.Defense)
 	}
 	// A ORIGEM fica gravada, e é ela que deixa a tela dizer "cópia de ogro"
 	// depois de o mestre renomear. Sem ela, "Ogro Capitão" perde o fio até o
 	// livro no instante em que ganha nome próprio.
-	if bloco.SourceMonsterID != "ogro" {
-		t.Errorf("a origem não foi guardada: %q", bloco.SourceMonsterID)
+	if block.SourceMonsterID != "ogro" {
+		t.Errorf("a origem não foi guardada: %q", block.SourceMonsterID)
 	}
 }
 
@@ -42,7 +42,7 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 	f := newSceneFixture(t)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","npc_name":"   "}`)
+	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","npc_name":"   "}`)
 
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 || npcs[0].Name == "" {
@@ -59,12 +59,12 @@ func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 // um elenco que se perde toda noite.
 func TestTheCastBelongsToTheCampaignAndNotToTheSession(t *testing.T) {
 	f := newSceneFixture(t)
-	outraSessao := seedSession(t, f.s, f.campaignID)
+	otherSession := seedSession(t, f.s, f.campaignID)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
+	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 
 	// A view da OUTRA sessão da mesma campanha tem de enxergar o mesmo NPC.
-	view, _, err := f.s.tableScene.LoadView(t.Context(), f.mestre, f.campaignID, outraSessao)
+	view, _, err := f.s.tableScene.LoadView(t.Context(), f.gm, f.campaignID, otherSession)
 	if err != nil {
 		t.Fatalf("montar a view da outra sessão: %v", err)
 	}
@@ -78,24 +78,24 @@ func TestTheCastBelongsToTheCampaignAndNotToTheSession(t *testing.T) {
 // pior que ver a fila dela.
 func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	f := newSceneFixture(t)
-	outraCampanha := seedCampaign(t, f.s, f.jogador)
-	agora := "2026-01-01T00:00:00.000Z"
-	alheio, err := f.s.queries.CreateCampaignCreature(t.Context(), sqlcgen.CreateCampaignCreatureParams{
-		Campaignid: outraCampanha, Name: "Segredo alheio", Block: `{"nd":1,"tipo":"humanoide","size":"medio","hp":10}`,
-		Createdat: agora, Updatedat: agora,
+	otherCampaign := seedCampaign(t, f.s, f.player)
+	now := "2026-01-01T00:00:00.000Z"
+	foreign, err := f.s.queries.CreateCampaignCreature(t.Context(), sqlcgen.CreateCampaignCreatureParams{
+		Campaignid: otherCampaign, Name: "Segredo alheio", Block: `{"nd":1,"tipo":"humanoide","size":"medio","hp":10}`,
+		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
 		t.Fatalf("semear o NPC alheio: %v", err)
 	}
 
-	corpo := f.posta(t, f.mestre,
-		f.tableUrl()+"/elenco/npc/"+strconv.FormatInt(alheio.ID, 10)+"/apagar", "{}")
+	body := f.posta(t, f.gm,
+		f.tableUrl()+"/elenco/npc/"+strconv.FormatInt(foreign.ID, 10)+"/apagar", "{}")
 
-	if !strings.Contains(corpo, "não é desta campanha") {
-		t.Errorf("a recusa não veio: %s", firstRows(corpo, 5))
+	if !strings.Contains(body, "não é desta campanha") {
+		t.Errorf("a recusa não veio: %s", firstRows(body, 5))
 	}
 	// O CONTROLE: recusar DEPOIS de apagar seria pior que não recusar.
-	if _, err := f.s.queries.GetCampaignCreature(t.Context(), alheio.ID); err != nil {
+	if _, err := f.s.queries.GetCampaignCreature(t.Context(), foreign.ID); err != nil {
 		t.Error("o NPC da outra campanha foi apagado apesar da recusa")
 	}
 }
@@ -107,18 +107,18 @@ func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 // perder o combatente EM CURSO ao arrumar a preparação, no meio da noite.
 func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
+	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 {
 		t.Fatalf("o NPC não foi guardado")
 	}
-	rota := f.tableUrl() + "/elenco/npc/" + strconv.FormatInt(npcs[0].ID, 10)
-	f.posta(t, f.mestre, rota+"/na-fila", "{}")
+	route := f.tableUrl() + "/elenco/npc/" + strconv.FormatInt(npcs[0].ID, 10)
+	f.posta(t, f.gm, route+"/na-fila", "{}")
 	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
 		t.Fatalf("o NPC não entrou na fila (%d linhas) — o resto do teste mediria nada", n)
 	}
 
-	f.posta(t, f.mestre, rota+"/apagar", "{}")
+	f.posta(t, f.gm, route+"/apagar", "{}")
 
 	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
 		t.Errorf("apagar do elenco tirou o combatente da cena: a fila tem %d linhas", n)
@@ -129,7 +129,7 @@ func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 func TestThePlayerDoesNotTouchTheCampaignCast(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
+	rec := f.pede(t, f.player, "POST", f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 
 	if rec.Code != 403 {
 		t.Errorf("o jogador guardou NPC no elenco do mestre: %d", rec.Code)
@@ -141,9 +141,9 @@ func TestThePlayerDoesNotTouchTheCampaignCast(t *testing.T) {
 
 func (f sceneFixture) dbCast(t *testing.T) []sqlcgen.CampaignCreature {
 	t.Helper()
-	linhas, err := f.s.queries.ListCampaignCreatures(t.Context(), f.campaignID)
+	rows, err := f.s.queries.ListCampaignCreatures(t.Context(), f.campaignID)
 	if err != nil {
 		t.Fatalf("ler o elenco: %v", err)
 	}
-	return linhas
+	return rows
 }

@@ -45,12 +45,12 @@ const recuoDaSeta = 0.5
 // MESMO metro do deslocamento — sem isso os números da seta não explicariam onde
 // o vermelho começa.
 type moveLeg struct {
-	Rotulo string
-	// MeioX e MeioY são o meio da perna em QUADRADOS, com sinal: o plano não tem
+	Label string
+	// MidX e MeioY são o meio da perna em QUADRADOS, com sinal: o plano não tem
 	// bordas. Quem os põe em pixel é a tela, porque o rótulo mora FORA do grupo
 	// que escala.
-	MeioX float64
-	MeioY float64
+	MidX float64
+	MidY float64
 }
 
 // moveLegs escreve o rótulo de cada perna, no meio dela.
@@ -58,19 +58,19 @@ type moveLeg struct {
 // O metro sai do `metersLeg`, que é o mesmo formatador dos rótulos da
 // régua: as duas ferramentas põem número sobre uma linha, e dois formatadores
 // para a mesma frase é como nasce "9,0m" numa e "9.0 m" na outra.
-func moveLegs(dobras []engine.Square, custos []int) []moveLeg {
-	centros := foldsCenters(dobras)
-	pernas := make([]moveLeg, 0, len(custos))
-	for i, custo := range custos {
-		meio := entreOsPontos(centros[i], centros[i+1], 0.5)
-		pernas = append(pernas, moveLeg{
-			Rotulo: metersLeg(engine.Measurement{
-				Squares: custo, Metres: float64(custo) * engine.SquareMetres,
+func moveLegs(folds []engine.Square, costs []int) []moveLeg {
+	centers := foldsCenters(folds)
+	legs := make([]moveLeg, 0, len(costs))
+	for i, cost := range costs {
+		middle := entreOsPontos(centers[i], centers[i+1], 0.5)
+		legs = append(legs, moveLeg{
+			Label: metersLeg(engine.Measurement{
+				Squares: cost, Metres: float64(cost) * engine.SquareMetres,
 			}),
-			MeioX: meio[0], MeioY: meio[1],
+			MidX: middle[0], MidY: middle[1],
 		})
 	}
-	return pernas
+	return legs
 }
 
 // legsCosts mede cada perna em quadrados, pela régua do MOVIMENTO.
@@ -82,13 +82,13 @@ func moveLegs(dobras []engine.Square, custos []int) []moveLeg {
 // A soma destes números é o custo total do movimento porque o
 // `engine.PathThroughStops` concatena exatamente estes trechos, descartando a
 // emenda — a mesma decomposição, medida pela mesma função.
-func legsCosts(dobras []engine.Square, terreno engine.MoveTerrain) []int {
-	custos := make([]int, 0, len(dobras))
-	for i := 1; i < len(dobras); i++ {
-		trecho := engine.PathBetween(dobras[i-1], dobras[i])
-		custos = append(custos, engine.PathCost(trecho, terreno, -1).Squares)
+func legsCosts(folds []engine.Square, terrain engine.MoveTerrain) []int {
+	costs := make([]int, 0, len(folds))
+	for i := 1; i < len(folds); i++ {
+		excerpt := engine.PathBetween(folds[i-1], folds[i])
+		costs = append(costs, engine.PathCost(excerpt, terrain, -1).Squares)
 	}
-	return custos
+	return costs
 }
 
 // moveWires parte a seta em DOURADO — o que o deslocamento paga — e VERMELHO, o
@@ -103,34 +103,34 @@ func legsCosts(dobras []engine.Square, terreno engine.MoveTerrain) []int {
 // já governa o desenho do `Alcance`, que também não aparece ali.
 //
 // @example moveWires([]engine.Square{{}, {X: 3}}, []int{3}, -1) // ouro "M 0.5 0.5 L 3 0.5", resto vazio
-func moveWires(dobras []engine.Square, custos []int, orcamento int) (cabe, segundo, alem string) {
-	centros := foldsCenters(dobras)
-	if len(centros) < 2 {
+func moveWires(folds []engine.Square, costs []int, budget int) (fits, segundo, beyond string) {
+	centers := foldsCenters(folds)
+	if len(centers) < 2 {
 		return "", "", ""
 	}
-	pontos := endIndent(centros)
-	if orcamento < 0 {
-		return pointsWire(pontos), "", ""
+	points := endIndent(centers)
+	if budget < 0 {
+		return pointsWire(points), "", ""
 	}
 	// AS DUAS TESOURAS são medidas contra o caminho INTEIRO, e não uma sobre o
 	// resto da outra: cortar em cadeia obrigaria a traduzir o índice da segunda
 	// para dentro do trecho que a primeira devolveu, e essa aritmética erra em
 	// silêncio — a linha continua saindo, só com a cor virando no lugar errado.
 	// Aqui os dois índices falam da mesma lista, e `pontos[i1:i2]` é o miolo azul.
-	i1, avanco1, passaDaPrimeira := cutSpeed(custos, orcamento)
-	if !passaDaPrimeira {
-		return pointsWire(pontos), "", ""
+	i1, advance1, passesFirst := cutSpeed(costs, budget)
+	if !passesFirst {
+		return pointsWire(points), "", ""
 	}
-	corte1 := entreOsPontos(centros[i1-1], centros[i1], avanco1)
-	i2, avanco2, passaDasDuas := cutSpeed(custos, 2*orcamento)
-	if !passaDasDuas {
-		return pointsWire(pointUntil(pontos[:i1], corte1)),
-			pointsWire(point(corte1, pontos[i1:])), ""
+	cut1 := entreOsPontos(centers[i1-1], centers[i1], advance1)
+	i2, advance2, passesBoth := cutSpeed(costs, 2*budget)
+	if !passesBoth {
+		return pointsWire(pointUntil(points[:i1], cut1)),
+			pointsWire(point(cut1, points[i1:])), ""
 	}
-	corte2 := entreOsPontos(centros[i2-1], centros[i2], avanco2)
-	return pointsWire(pointUntil(pontos[:i1], corte1)),
-		pointsWire(pointUntil(point(corte1, pontos[i1:i2]), corte2)),
-		pointsWire(point(corte2, pontos[i2:]))
+	cut2 := entreOsPontos(centers[i2-1], centers[i2], advance2)
+	return pointsWire(pointUntil(points[:i1], cut1)),
+		pointsWire(pointUntil(point(cut1, points[i1:i2]), cut2)),
+		pointsWire(point(cut2, points[i2:]))
 }
 
 // pointUntil fecha uma polilinha num ponto solto; point a abre num.
@@ -139,12 +139,12 @@ func moveWires(dobras []engine.Square, custos []int, orcamento int) (cabe, segun
 // de pontos, e um `append` sobre o array de trás compartilhado faria a faixa
 // seguinte sobrescrever a anterior — o clássico do slice em Go, e aqui ele
 // apareceria como uma cor comendo a outra.
-func pointUntil(inicio [][2]float64, fim [2]float64) [][2]float64 {
-	return append(append([][2]float64(nil), inicio...), fim)
+func pointUntil(start [][2]float64, end [2]float64) [][2]float64 {
+	return append(append([][2]float64(nil), start...), end)
 }
 
-func point(inicio [2]float64, resto [][2]float64) [][2]float64 {
-	return append([][2]float64{inicio}, resto...)
+func point(start [2]float64, rest [][2]float64) [][2]float64 {
+	return append([][2]float64{start}, rest...)
 }
 
 // cutSpeed diz em QUE perna o deslocamento acaba e ONDE dentro dela.
@@ -163,44 +163,44 @@ func point(inicio [2]float64, resto [][2]float64) [][2]float64 {
 // que a reta representa é o que o RÓTULO dela diz, o custo em metros, então quem
 // a divide tem de ser o custo; senão os dois se contradizem sobre a mesma linha.
 // Quem mostra as casas percorridas é a TRILHA, que é outro desenho.
-func cutSpeed(custos []int, orcamento int) (int, float64, bool) {
-	if orcamento < 0 {
+func cutSpeed(costs []int, budget int) (int, float64, bool) {
+	if budget < 0 {
 		return 0, 0, false
 	}
-	gasto := 0
-	for i, custo := range custos {
-		if gasto+custo <= orcamento {
-			gasto += custo
+	spent := 0
+	for i, cost := range costs {
+		if spent+cost <= budget {
+			spent += cost
 			continue
 		}
-		// `custo` é maior que zero aqui: só se chega nesta linha com
+		// `cost` é maior que zero aqui: só se chega nesta linha com
 		// `gasto+custo > orcamento` e `gasto <= orcamento`, que é o invariante do
 		// ramo de cima.
-		return i + 1, float64(orcamento-gasto) / float64(custo), true
+		return i + 1, float64(budget-spent) / float64(cost), true
 	}
 	return 0, 0, false
 }
 
 // foldsCenters põe cada dobra no CENTRO da casa dela.
-func foldsCenters(dobras []engine.Square) [][2]float64 {
-	centros := make([][2]float64, len(dobras))
-	for i, q := range dobras {
-		centros[i] = [2]float64{float64(q.X) + 0.5, float64(q.Y) + 0.5}
+func foldsCenters(folds []engine.Square) [][2]float64 {
+	centers := make([][2]float64, len(folds))
+	for i, q := range folds {
+		centers[i] = [2]float64{float64(q.X) + 0.5, float64(q.Y) + 0.5}
 	}
-	return centros
+	return centers
 }
 
 // endIndent encolhe a ÚLTIMA perna pelo `recuoDaSeta`, sem tocar no resto.
-func endIndent(centros [][2]float64) [][2]float64 {
-	pontos := append([][2]float64(nil), centros...)
-	ultimo := len(pontos) - 1
-	dx := pontos[ultimo][0] - pontos[ultimo-1][0]
-	dy := pontos[ultimo][1] - pontos[ultimo-1][1]
-	if perna := math.Hypot(dx, dy); perna > recuoDaSeta {
-		pontos[ultimo][0] -= dx / perna * recuoDaSeta
-		pontos[ultimo][1] -= dy / perna * recuoDaSeta
+func endIndent(centers [][2]float64) [][2]float64 {
+	points := append([][2]float64(nil), centers...)
+	last := len(points) - 1
+	dx := points[last][0] - points[last-1][0]
+	dy := points[last][1] - points[last-1][1]
+	if leg := math.Hypot(dx, dy); leg > recuoDaSeta {
+		points[last][0] -= dx / leg * recuoDaSeta
+		points[last][1] -= dy / leg * recuoDaSeta
 	}
-	return pontos
+	return points
 }
 
 // entreOsPontos é o ponto a uma fração `t` do caminho de `a` até `b`.
@@ -209,9 +209,9 @@ func entreOsPontos(a, b [2]float64, t float64) [2]float64 {
 }
 
 // pointsWire escreve o `d` de uma polilinha.
-func pointsWire(pontos [][2]float64) string {
+func pointsWire(points [][2]float64) string {
 	var b strings.Builder
-	for i, p := range pontos {
+	for i, p := range points {
 		if i == 0 {
 			b.WriteString("M ")
 		} else {

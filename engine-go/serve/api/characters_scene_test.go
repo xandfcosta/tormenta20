@@ -15,18 +15,18 @@ import (
 // corpoDoBotao é uma CÓPIA do helper do `web/characters`, e não um símbolo
 // exportado de lá: importar do que está sendo testado faz o teste andar junto
 // com o defeito. São nove linhas de parse.
-func corpoDoBotao(t *testing.T, html, rotulo string) string {
+func corpoDoBotao(t *testing.T, html, label string) string {
 	t.Helper()
-	i := strings.Index(html, `aria-label="`+rotulo+`"`)
+	i := strings.Index(html, `aria-label="`+label+`"`)
 	if i < 0 {
 		return ""
 	}
-	resto := html[i:]
-	j := strings.Index(resto, "</button>")
+	rest := html[i:]
+	j := strings.Index(rest, "</button>")
 	if j < 0 {
-		return resto
+		return rest
 	}
-	return resto[:j]
+	return rest[:j]
 }
 
 // Os guardas da cena de PERSONAGENS: a Defesa saindo da mesma conta da ficha, os
@@ -35,26 +35,26 @@ func corpoDoBotao(t *testing.T, html, rotulo string) string {
 func novaCenaDeHerois(t *testing.T) (*Server, AuthUser) {
 	t.Helper()
 	s := newTestServer(t)
-	catalogos, err := engine.PrimeEngineCatalogs([]byte(`{"items":[]}`))
+	catalogs, err := engine.PrimeEngineCatalogs([]byte(`{"items":[]}`))
 	if err != nil {
 		t.Fatalf("preparar catálogo: %v", err)
 	}
-	s.primeCatalogs(catalogos)
-	dono := seedUser(t, s, "jogadora@t20.local")
-	u, err := s.queries.GetUserByID(context.Background(), dono)
+	s.primeCatalogs(catalogs)
+	owner := seedUser(t, s, "jogadora@t20.local")
+	u, err := s.queries.GetUserByID(context.Background(), owner)
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
 	return s, s.accountRules().authUser(u)
 }
 
-func seedRaca(t *testing.T, s *Server, characterID int64, raca string) {
+func seedRaca(t *testing.T, s *Server, characterID int64, race string) {
 	t.Helper()
 	err := s.queries.CreateRace(context.Background(), sqlcgen.CreateRaceParams{
-		Characterid: characterID, Race: raca,
+		Characterid: characterID, Race: race,
 	})
 	if err != nil {
-		t.Fatalf("seed raça %q: %v", raca, err)
+		t.Fatalf("seed raça %q: %v", race, err)
 	}
 }
 
@@ -75,16 +75,16 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 		t.Fatalf("esperava 1 herói, veio %d", len(v.Heroes))
 	}
 
-	linha, err := s.queries.GetCharacter(context.Background(), id)
+	row, err := s.queries.GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("personagem: %v", err)
 	}
-	ficha, err := s.sheetRules().ComputeSheet(context.Background(), linha)
+	sheet, err := s.sheetRules().ComputeSheet(context.Background(), row)
 	if err != nil {
 		t.Fatalf("ficha: %v", err)
 	}
-	if v.Heroes[0].Defense != strconv.Itoa(ficha.Defense.Total) {
-		t.Errorf("Defesa do palco = %q, a da ficha = %d", v.Heroes[0].Defense, ficha.Defense.Total)
+	if v.Heroes[0].Defense != strconv.Itoa(sheet.Defense.Total) {
+		t.Errorf("Defesa do palco = %q, a da ficha = %d", v.Heroes[0].Defense, sheet.Defense.Total)
 	}
 }
 
@@ -105,14 +105,14 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 // devolver erro para um agregado que o motor não digere. O travessão é a
 // resposta das duas, e é aqui que ele mora.
 func TestADefenseTheEngineCannotGiveBecomesAnEmDash(t *testing.T) {
-	cartao := characters.HeroCardOf(nil, sheet.CharacterDTO{ID: 1, Name: "Thessa", Level: 5})
+	card := characters.HeroCardOf(nil, sheet.CharacterDTO{ID: 1, Name: "Thessa", Level: 5})
 
-	if cartao.Defense != "—" || cartao.DefenseVs != "—" {
+	if card.Defense != "—" || card.DefenseVs != "—" {
 		t.Errorf("Defesa = %q / %q, queria travessão nos dois",
-			cartao.Defense, cartao.DefenseVs)
+			card.Defense, card.DefenseVs)
 	}
 	html, err := ui.RenderFragment(t.Context(),
-		characters.SceneBody(characters.View{Heroes: []characters.HeroCard{cartao}, Total: 1, HasAny: true}))
+		characters.SceneBody(characters.View{Heroes: []characters.HeroCard{card}, Total: 1, HasAny: true}))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -183,26 +183,26 @@ func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 	seedRaca(t, s, id, "Anão")
 
 	// "Soldado" é a origem que o `seedCharacterAtLevel` grava.
-	for termo, campo := range map[string]string{
+	for term, field := range map[string]string{
 		"thalen":  "nome",
 		"barbaro": "classe",
 		"soldado": "origem",
 		"anao":    "raça",
 	} {
-		v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, termo)
+		v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, term)
 		if err != nil {
-			t.Fatalf("carregar %q: %v", termo, err)
+			t.Fatalf("carregar %q: %v", term, err)
 		}
 		if len(v.Heroes) != 1 {
-			t.Errorf("busca por %s (%q) devolveu %d heróis, queria 1", campo, termo, len(v.Heroes))
+			t.Errorf("busca por %s (%q) devolveu %d heróis, queria 1", field, term, len(v.Heroes))
 		}
 	}
 
-	nada, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "zzzzzz")
+	nothing, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "zzzzzz")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if !nada.FilteredAll {
+	if !nothing.FilteredAll {
 		t.Error("busca sem resultado não foi marcada como tal")
 	}
 }
@@ -238,7 +238,7 @@ func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 	if len(v.Heroes) != 2 {
 		t.Fatalf("esperava 2 heróis, veio %d", len(v.Heroes))
 	}
-	primeiro, segundo := v.Heroes[0].Name, v.Heroes[1].Name
+	first, segundo := v.Heroes[0].Name, v.Heroes[1].Name
 
 	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
 	if err != nil {
@@ -246,17 +246,17 @@ func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 	}
 	// O primeiro palco olha para a frente, o segundo para trás.
 	if !strings.Contains(html, `aria-label="Próximo: `+segundo+`"`) {
-		t.Errorf("o palco de %q não mostra %q como próximo", primeiro, segundo)
+		t.Errorf("o palco de %q não mostra %q como próximo", first, segundo)
 	}
-	if !strings.Contains(html, `aria-label="Anterior: `+primeiro+`"`) {
-		t.Errorf("o palco de %q não mostra %q como anterior", segundo, primeiro)
+	if !strings.Contains(html, `aria-label="Anterior: `+first+`"`) {
+		t.Errorf("o palco de %q não mostra %q como anterior", segundo, first)
 	}
 	// O NOME vai no CORPO do botão, e não só no rótulo: duas iniciais não dizem
 	// quem vem a seguir, e é para os olhos que ele existe. Procurá-lo no HTML
 	// INTEIRO sobrevive à sabotagem — o nome também está no `title`, no `h2` do
 	// palco e no rótulo do filme.
-	if corpo := corpoDoBotao(t, html, "Próximo: "+segundo); !strings.Contains(corpo, segundo) {
-		t.Errorf("o peek de %q não mostra o nome na tela, só em atributo: %q", segundo, corpo)
+	if body := corpoDoBotao(t, html, "Próximo: "+segundo); !strings.Contains(body, segundo) {
+		t.Errorf("o peek de %q não mostra o nome na tela, só em atributo: %q", segundo, body)
 	}
 }
 
@@ -275,11 +275,11 @@ func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	ultimo := v.Heroes[len(v.Heroes)-1].Name
+	last := v.Heroes[len(v.Heroes)-1].Name
 	// UMA vez, e é isso que prova que veio da vaga: "Anterior: X" só aparece no
 	// palco de quem vem DEPOIS de X, e depois do último herói não há palco de
 	// herói nenhum. A única coisa à direita dele no trilho é a vaga.
-	if got := strings.Count(html, `aria-label="Anterior: `+ultimo+`"`); got != 1 {
+	if got := strings.Count(html, `aria-label="Anterior: `+last+`"`); got != 1 {
 		t.Errorf("o último herói aparece como anterior %d vez(es), queria 1 (a vaga de criar)", got)
 	}
 }
@@ -320,10 +320,10 @@ func TestTheCastPaintsEachHeroByHowBadlyHurtHeIs(t *testing.T) {
 	// O dano sai da FRAÇÃO do poço e não de um número escolhido: o que este caso
 	// afirma são as três faixas de tinta, e um dano absoluto mudaria de faixa no
 	// dia em que a tabela de classe mudasse — sem ninguém mexer no teste.
-	poco := bookPools(t, s, "Guerreiro", 5).PvMax
+	pool := bookPools(t, s, "Guerreiro", 5).PvMax
 	seedCharacterAtLevel(t, s, eu.ID, "Inteiro", "Guerreiro", 5, 0, 5)
-	seedCharacterAtLevel(t, s, eu.ID, "Machucado", "Guerreiro", 5, poco*60/100, 5)
-	seedCharacterAtLevel(t, s, eu.ID, "Morrendo", "Guerreiro", 5, poco*90/100, 5)
+	seedCharacterAtLevel(t, s, eu.ID, "Machucado", "Guerreiro", 5, pool*60/100, 5)
+	seedCharacterAtLevel(t, s, eu.ID, "Morrendo", "Guerreiro", 5, pool*90/100, 5)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
@@ -335,14 +335,14 @@ func TestTheCastPaintsEachHeroByHowBadlyHurtHeIs(t *testing.T) {
 
 	// As tintas escritas à mão: derivá-las de `ui.HpInkTone` faria a asserção
 	// andar junto com o defeito.
-	querido := map[string]string{
+	wanted := map[string]string{
 		"Inteiro":   "text-hp-full",                 // 100%
 		"Machucado": "text-hp-hurt",                 // 40%
 		"Morrendo":  "text-grimorio-crimson-bright", // 10%
 	}
 	for _, h := range v.Heroes {
-		if tinta, ok := querido[h.Name]; ok && h.PVInk != tinta {
-			t.Errorf("%s (PV %s) escreve com %q, e o esperado é %q", h.Name, h.PV, h.PVInk, tinta)
+		if paint, ok := wanted[h.Name]; ok && h.PVInk != paint {
+			t.Errorf("%s (PV %s) escreve com %q, e o esperado é %q", h.Name, h.PV, h.PVInk, paint)
 		}
 	}
 }

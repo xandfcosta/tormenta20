@@ -16,26 +16,26 @@ import (
 // dela — o de escolher poderes mostra o catálogo inteiro de opções.
 // powerPanel corta a LISTA, deixando de fora os diálogos que vêm depois
 // dela — o de escolher poderes mostra o catálogo inteiro de opções.
-func powerPanel(tela string) string {
+func powerPanel(screen string) string {
 	// O CORTE é no ABRIR do primeiro diálogo, e não no primeiro `</section>`: as
 	// duas seções da lista são `<section>` ANINHADAS, e cortar no primeiro
 	// fechamento deixaria de fora justamente as passivas. Os diálogos começam
 	// depois do painel, e todos são sobreposições de tela cheia.
-	fim := strings.Index(tela, `class="fixed inset-0`)
-	if fim < 0 {
-		return tela
+	end := strings.Index(screen, `class="fixed inset-0`)
+	if end < 0 {
+		return screen
 	}
-	return tela[:fim]
+	return screen[:end]
 }
 
-func actionsSlice(tela string) string {
-	inicio := strings.Index(tela, ">Ações</h3>")
-	if inicio < 0 {
+func actionsSlice(screen string) string {
+	start := strings.Index(screen, ">Ações</h3>")
+	if start < 0 {
 		return ""
 	}
-	fim := strings.Index(tela[inicio:], "Passivas ·")
-	if fim < 0 {
-		return tela[inicio:]
+	end := strings.Index(screen[start:], "Passivas ·")
+	if end < 0 {
+		return screen[start:]
 	}
-	return tela[inicio : inicio+fim]
+	return screen[start : start+end]
 }

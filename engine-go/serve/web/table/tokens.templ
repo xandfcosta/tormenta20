@@ -15,7 +15,7 @@ import "t20engine/serve/web/ui"
 // O `title` conta o gesto direito porque um gesto que ninguém descobre é o mesmo
 // que não existir — e ele nunca é o único caminho: o diálogo faz o mesmo.
 templ botaoDePorNoMapa(v BoardView) {
-	if v.Mestre {
+	if v.GM {
 		<button
 			type="button"
 			aria-label="Pôr no mapa"
@@ -44,8 +44,8 @@ templ botaoDePorNoMapa(v BoardView) {
 // mestre esconde é o CONTEÚDO.
 templ tableMap(v View) {
 	<div id="table-populate">
-		if v.Tabuleiro.Mestre {
-			@poeNoMapaDialogo(v.Tabuleiro)
+		if v.Board.GM {
+			@poeNoMapaDialogo(v.Board)
 		}
 	</div>
 }
@@ -66,32 +66,32 @@ templ poeNoMapaDialogo(v BoardView) {
 			As fichas já vêm escolhidas. Quem você marcar aqui nasce no mapa: as fichas de um lado, o resto do outro.
 		</p>
 		<ul class="mt-3 flex flex-wrap gap-1.5">
-			for _, cand := range v.Candidatos {
+			for _, cand := range v.Candidates {
 				<li>
-					if cand.NoMapa {
+					if cand.OnBoard {
 						// Já no mapa: aparece, não se escolhe. Sumir faria o mestre
 						// procurar um nome que ele acabou de ver na fila; oferecer
 						// faria um clique que o servidor ignora (o `Populate` é
 						// idempotente), que é pior — parece que não funcionou.
 						<span class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-dashed border-grimorio-iron px-3 text-sm text-muted-foreground">
-							{ cand.Nome }
+							{ cand.Name }
 							<span class={ ui.SectionLabelClasses("herda", "") }>já no mapa</span>
 						</span>
 					} else {
 						<button
 							type="button"
 							data-id={ cand.ID }
-							data-ficha?={ cand.Ficha }
+							data-ficha?={ cand.Sheet }
 							data-attr:aria-pressed={ estaEscolhido(cand.ID) + " ? 'true' : 'false'" }
 							data-class={ "{'brush-on': " + estaEscolhido(cand.ID) + "}" }
 							data-on:click={ toggleMap(cand.ID) }
 							class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 						>
-							{ cand.Nome }
+							{ cand.Name }
 							// O selo diz o LADO do mapa em que a peça nasce, e é o
 							// mesmo predicado que o servidor usa. `Ficha`/`NPC` é o
 							// par da casa — o `PC` está proibido (GLOSSARY).
-							if cand.Ficha {
+							if cand.Sheet {
 								<span class={ ui.SectionLabelClasses("muted", "") }>Ficha</span>
 							} else {
 								<span class={ ui.SectionLabelClasses("muted", "") }>NPC</span>

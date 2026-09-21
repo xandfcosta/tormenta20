@@ -43,10 +43,10 @@ import { podeAnimar } from '@/lib/turn-juice'
  */
 
 /** A casa em que a peça está, lida de um `style` cru. Nulo quando não dá. */
-export function squareFromStyle(estilo: string | null): { col: number; lin: number } | null {
-  if (!estilo) return null
-  const col = /--col:\s*(-?\d+)/.exec(estilo)
-  const lin = /--lin:\s*(-?\d+)/.exec(estilo)
+export function squareFromStyle(style: string | null): { col: number; lin: number } | null {
+  if (!style) return null
+  const col = /--col:\s*(-?\d+)/.exec(style)
+  const lin = /--lin:\s*(-?\d+)/.exec(style)
   if (!col || !lin) return null
   return { col: Number(col[1]), lin: Number(lin[1]) }
 }
@@ -65,20 +65,20 @@ export function squareFromStyle(estilo: string | null): { col: number; lin: numb
  * @example slideTheToken(botao, { col: 3, lin: 2 }, { col: 7, lin: 2 }, 44)
  */
 export function slideTheToken(
-  alvo: Element | null | undefined,
+  subject: Element | null | undefined,
   de: { col: number; lin: number },
-  para: { col: number; lin: number },
-  quadrado: number,
+  to: { col: number; lin: number },
+  square: number,
 ): void {
-  if (!podeAnimar(alvo)) return
-  const dx = (de.col - para.col) * quadrado
-  const dy = (de.lin - para.lin) * quadrado
+  if (!podeAnimar(subject)) return
+  const dx = (de.col - to.col) * square
+  const dy = (de.lin - to.lin) * square
   // Peça que não andou não anima. Acontece a cada remendo que mexe em outra
   // coisa da peça — o PV, o selo, a vez —, e sem esta linha toda mudança de
   // estado viraria uma animação de zero pixel roubando um quadro.
   if (dx === 0 && dy === 0) return
 
-  alvo.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], {
+  subject.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], {
     // 200ms é o que a issue mediu como legível sem atrasar quem está jogando —
     // e é a mesma faixa da entrada do palco (220ms), para a casa ter uma
     // cadência só.

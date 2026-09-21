@@ -17,7 +17,7 @@ func TestTheThreeNewTabsDrawWhatTheirEntryHas(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	casos := []struct{ aba, esperado, porque string }{
+	cases := []struct{ aba, want, reason string }{
 		{"racas", "Graça de Glórienn", "a habilidade de raça vem do catálogo"},
 		{"racas", "+2 Int", "o modificador de atributo é o que muda numa ficha"},
 		{"classes", "poderes de classe", "a conta de poderes é derivada, não transcrita"},
@@ -25,10 +25,10 @@ func TestTheThreeNewTabsDrawWhatTheirEntryHas(t *testing.T) {
 		{"deuses", "Arma preferida", "o clérigo saca a arma preferida na cena"},
 		{"deuses", "Concede", "os poderes concedidos são o que o mestre consulta"},
 	}
-	for _, caso := range casos {
-		corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/"+caso.aba, "").Body.String()
-		if !strings.Contains(corpo, caso.esperado) {
-			t.Errorf("a aba %q não traz %q — %s", caso.aba, caso.esperado, caso.porque)
+	for _, tc := range cases {
+		body := pedeNoMestre(t, s, eu, "GET", "/mestre/"+tc.aba, "").Body.String()
+		if !strings.Contains(body, tc.want) {
+			t.Errorf("a aba %q não traz %q — %s", tc.aba, tc.want, tc.reason)
 		}
 	}
 }
@@ -41,12 +41,12 @@ func TestAnEmptyLabelDoesNotComeOutAlone(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/deuses", "").Body.String()
-	if strings.Contains(corpo, "Arma preferida: </span>") {
+	body := pedeNoMestre(t, s, eu, "GET", "/mestre/deuses", "").Body.String()
+	if strings.Contains(body, "Arma preferida: </span>") {
 		t.Error("um rótulo saiu sem valor — Lena e Marah não têm arma preferida")
 	}
 	// O CONTROLE: quem TEM arma preferida continua mostrando.
-	if !strings.Contains(corpo, "Arma preferida: Martelo de guerra") {
+	if !strings.Contains(body, "Arma preferida: Martelo de guerra") {
 		t.Error("o rótulo sumiu de quem tem valor — o guarda acima passaria por ausência de tudo")
 	}
 }

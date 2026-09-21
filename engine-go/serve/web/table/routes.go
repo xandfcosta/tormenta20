@@ -98,13 +98,13 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	view.MinhaFicha = s.tablePlayerSheet(r, view)
+	view.MySheet = s.tablePlayerSheet(r, view)
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
-		Sinais: tableSignalsExpr(),
-		Init:   fmt.Sprintf("@get('%s/fluxo')", view.SessionBase()),
+		Title:   fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
+		Signals: tableSignalsExpr(),
+		Init:    fmt.Sprintf("@get('%s/fluxo')", view.SessionBase()),
 		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um
@@ -253,7 +253,7 @@ func tableSignalsExpr() string {
 // esconde, é a página que não o tem. Mandá-lo para todo mundo e escondê-lo por
 // CSS entregaria as criaturas com PV e defesa a quem abrisse o inspetor.
 func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64) templ.Component {
-	if view.Mestre == nil {
+	if view.GM == nil {
 		return tableScene(view)
 	}
 	return gmStage(view, s.forTableBestiary(r, campaignID, sessionID))
@@ -270,7 +270,7 @@ func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64
 // e não derruba a sessão. Estar numa mesa é mais importante que ver a própria
 // ficha dentro dela, e o jogador continua tendo o elenco.
 func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
-	if view.Mestre != nil || view.Eu == nil {
+	if view.GM != nil || view.Eu == nil {
 		return nil
 	}
 	return s.deps.PlayerSheet(r, view.Eu.CharacterID)
@@ -299,24 +299,24 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// socket usa, e papel desconhecido cai em jogador. Esta cena não ganha uma
 	// segunda decisão sobre quem vê o quê.
 	st := live.StateForRole(role, s.deps.Sessions().RefreshCharacterVitals(ctx, sessionID))
-	grupo, meus, eu := s.tableRoster(ctx, userID, campaignID)
+	group, mine, eu := s.tableRoster(ctx, userID, campaignID)
 	// A RESERVA de PV temporário é DERIVADA a cada desenho, e nunca espelhada na
 	// linha da fila. O estado ao vivo mora em memória e tem vários sítios de
 	// escrita — entrar na fila, resincronizar máximos, aplicar dano —, e um
 	// terceiro número espelhado ali envelheceria no primeiro que esquecesse de
 	// atualizá-lo, em silêncio. Aqui não há o que esquecer: o stream redesenha
 	// por este mesmo `LoadView`, então o que a mesa vê é o que o banco tem.
-	reservas := s.tempHpOf(ctx, st, grupo)
-	for i := range grupo {
-		withTempHp(&grupo[i].PV, reservas[grupo[i].CharacterID])
+	pools := s.tempHpOf(ctx, st, group)
+	for i := range group {
+		withTempHp(&group[i].PV, pools[group[i].CharacterID])
 	}
-	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu, reservas)
+	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, group, mine, eu, pools)
 	// O CICLO da sessão chega à tela porque, sem ele, os verbos teriam de ser
 	// oferecidos todos — e "encerrar" numa sessão que nunca começou é o gesto
 	// que o servidor recusa. Oferecer o que será recusado é desenhar um erro.
 	view.Status = sess.Status
 	if sess.Title.Valid {
-		view.Titulo = sess.Title.String
+		view.Title = sess.Title.String
 	}
 	// O tabuleiro passa pelo MESMO gargalo por papel que a fila: o `BoardForRole`
 	// é para o mapa o que o `StateForRole` é para a lista, e é ele que tira as
@@ -324,42 +324,42 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// REDIGIDO, então o combatente cujo PV o mestre ocultou chega sem `HpMax` e a
 	// peça dele sai sem barra — a redação alcança o mapa sem uma segunda decisão.
 	// O `Mover` diz de quem é a vez e de quem é a peça, e a POSSE é resolvida
-	// contra o banco (o `meus` do roster) e nunca contra o cliente.
-	quemOlha := board.Mover{UserID: userID, Role: role}
+	// contra o banco (o `mine` do roster) e nunca contra o cliente.
+	viewer := board.Mover{UserID: userID, Role: role}
 	// A ABA que ESTA pessoa está olhando, e não "o tabuleiro da sessão": não há
 	// tabuleiro único. Ela é resolvida contra os abertos, então a aba que o
 	// mestre fechou não deixa ninguém numa tela morta.
-	aba, puxado, deOnde := s.pullTab(ctx, sessionID, userID)
+	aba, pulled, pulledFrom := s.pullTab(ctx, sessionID, userID)
 	scene := board.BoardForRole(role, s.deps.Boards().Get(ctx, sessionID, aba))
 	// A LENTE DO MESTRE: com ela ligada, o que se desenha é a cena
-	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `quemOlha` continua
+	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `viewer` continua
 	// dizendo "mestre", porque a lente é sobre o que ele vê e não sobre o que ele
 	// pode: ele confere a emboscada sem parar de montá-la.
-	escondidas := 0
-	naLente := role == "gm" && s.lenses.On(sessionID, userID)
-	if naLente {
-		scene, escondidas = seesTableHowScene(scene)
+	hidden := 0
+	inLens := role == "gm" && s.lenses.On(sessionID, userID)
+	if inLens {
+		scene, hidden = seesTableHowScene(scene)
 	}
-	view.Tabuleiro = boardViewOf(
-		scene, st, saudeDaFila(st), turnCombatant(st), quemOlha, meus, campaignID, sessionID,
+	view.Board = boardViewOf(
+		scene, st, saudeDaFila(st), turnCombatant(st), viewer, mine, campaignID, sessionID,
 	)
-	view.Tabuleiro.Lente = naLente
-	view.Tabuleiro.PecasEscondidas = escondidas
+	view.Board.Lens = inLens
+	view.Board.HiddenTokens = hidden
 	// A BARRA DE ABAS é a lista dos abertos, redigida pelo papel de
 	// quem olha — e ela vem depois da lente de propósito: a lente é sobre a CENA
 	// que o mestre está vendo, não sobre quais cenas existem. Um mestre na lente
 	// que perdesse as abas não teria como sair da que está olhando.
-	view.Tabuleiro.Abas = tableTabs(s.deps.Boards().OpenBoards(ctx, sessionID), role, aba, campaignID, sessionID)
+	view.Board.Tabs = tableTabs(s.deps.Boards().OpenBoards(ctx, sessionID), role, aba, campaignID, sessionID)
 	// A TIRA DO PUXÃO vem depois da barra porque ela é feita DELA: os nomes já
 	// passaram pelo papel de quem olha, e ler o estado cru aqui contaria o nome
 	// de uma cena sob cortina a quem não pode sabê-lo.
-	if puxado {
-		view.Tabuleiro.Puxado = removePull(view.Tabuleiro.Abas, deOnde)
+	if pulled {
+		view.Board.Pulled = removePull(view.Board.Tabs, pulledFrom)
 	}
 	// O ACERVO é do mestre, pela mesma razão do rastreador: a mesa não escolhe
 	// onde joga. A trava é a view não ter o que desenhar, e não a tela esconder.
 	if role == "gm" {
-		view.Tabuleiro.Acervo = campaignCollection(s.deps.Boards().Places(ctx, campaignID), s.deps.Boards().OpenBoards(ctx, sessionID))
+		view.Board.Collection = campaignCollection(s.deps.Boards().Places(ctx, campaignID), s.deps.Boards().OpenBoards(ctx, sessionID))
 	}
 	// AS NOTAS são do mestre e chegam JÁ EM ÁRVORE. Elas não entram no
 	// `tableViewOf` porque não vêm do estado ao vivo: moram na linha da sessão,
@@ -367,8 +367,8 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// bloco, é a view não ter o que desenhar — pelo mesmo `role` que o
 	// `stateForRole` já usou para redigir o estado.
 	if role == "gm" && sess.Notes.Valid {
-		view.Notas = sess.Notes.String
-		view.NotasBlocos = markdown.Parse(sess.Notes.String)
+		view.Notes = sess.Notes.String
+		view.NoteBlocks = markdown.Parse(sess.Notes.String)
 	}
 	if role == "gm" {
 		view.NPCs = s.CampaignCast(ctx, campaignID)
@@ -377,12 +377,12 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// quem caiu é o que faz a mesa ESPERAR em vez de continuar sem alguém. Por
 	// isso ela é calculada FORA do ramo do mestre — dentro dele, o `cardsParty`
 	// do jogador desenharia o ponto de presença que nunca chegaria.
-	membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
-	conectados := live.ConnectedCharacters(membros, presentes)
-	marcaAPresenca(view.Grupo, conectados)
+	members, present := s.membrosEPresenca(ctx, campaignID, sessionID)
+	connected := live.ConnectedCharacters(members, present)
+	marcaAPresenca(view.Group, connected)
 	if role == "gm" {
-		r := ofViewGm(st, membros, presentes, true, s.saveFailed(sessionID))
-		view.Mestre = &r
+		r := ofViewGm(st, members, present, true, s.saveFailed(sessionID))
+		view.GM = &r
 	}
 	return view, http.StatusOK, nil
 }
@@ -411,8 +411,8 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 		// tela, e o Grupo é o cartão ao lado.
 		return nil, map[int64]bool{}, nil
 	}
-	grupo := make([]Member, 0, len(rows))
-	meus := make(map[int64]bool, len(rows))
+	group := make([]Member, 0, len(rows))
+	mine := make(map[int64]bool, len(rows))
 	// OS POÇOS DO GRUPO NUMA VEZ SÓ. O `ListMembers` trazia os quatro vitais por
 	// JOIN — e eles não existem mais —, e este cartão foi o último leitor das
 	// colunas a sair (ALE-355). Falha
@@ -422,17 +422,17 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 	for i, m := range rows {
 		ids[i] = m.Characterid
 	}
-	pocos, err := sheet.PoolsForCharacters(ctx, s.deps.Queries(), s.deps.Catalogs(), ids)
+	pools, err := sheet.PoolsForCharacters(ctx, s.deps.Queries(), s.deps.Catalogs(), ids)
 	if err != nil {
 		log.Printf("mesa: derivar os poços do grupo falhou (%v)", err)
-		pocos = map[int64]sheet.Pools{}
+		pools = map[int64]sheet.Pools{}
 	}
 	var eu *tableMe
 	for _, m := range rows {
-		if dono, err := s.deps.Queries().GetCharacterOwner(ctx, m.Characterid); err == nil && dono == userID {
-			meus[m.Characterid] = true
+		if owner, err := s.deps.Queries().GetCharacterOwner(ctx, m.Characterid); err == nil && owner == userID {
+			mine[m.Characterid] = true
 			if eu == nil {
-				eu = &tableMe{CharacterID: m.Characterid, Nome: m.Charname}
+				eu = &tableMe{CharacterID: m.Characterid, Name: m.Charname}
 			}
 		}
 		// NÃO entra filtro de PAPEL aqui, e a razão é do dono da mesa: o mestre
@@ -442,15 +442,15 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 		// iniciativa por `label` e `initiative`, sem `characterId` (ver
 		// `Roster.Entry`). `campaign_members` só tem personagem de jogador, e
 		// o grupo é o grupo.
-		grupo = append(grupo, Member{
+		group = append(group, Member{
 			CharacterID: m.Characterid,
-			Nome:        m.Charname,
-			Iniciais:    ui.Monogram(m.Charname),
-			Defesa:      s.memberDefense(ctx, m.Characterid),
-			Nivel:       m.Charlevel,
+			Name:        m.Charname,
+			Initials:    ui.Monogram(m.Charname),
+			Defense:     s.memberDefense(ctx, m.Characterid),
+			Level:       m.Charlevel,
 			Classes:     s.tableClasses(ctx, m.Characterid),
-			PV:          tableBarOf(pocos[m.Characterid].HpCurrent, pocos[m.Characterid].HpMax, false),
-			PM:          tableBarOf(pocos[m.Characterid].MpCurrent, pocos[m.Characterid].MpMax, true),
+			PV:          tableBarOf(pools[m.Characterid].HpCurrent, pools[m.Characterid].HpMax, false),
+			PM:          tableBarOf(pools[m.Characterid].MpCurrent, pools[m.Characterid].MpMax, true),
 		})
 	}
 	if eu != nil {
@@ -460,7 +460,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 			eu.Bonus = bonus
 		}
 	}
-	return grupo, meus, eu
+	return group, mine, eu
 }
 
 // tempHpOf lê a reserva de PV temporário de todo personagem que a tela desenha
@@ -473,42 +473,42 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 // elas eram antes desta fatia. Mesma escolha do roster logo acima — a
 // iniciativa é o assunto da tela, a reserva é um detalhe dela.
 func (s Scene) tempHpOf(
-	ctx context.Context, st *live.SessionRuntimeState, grupo []Member,
+	ctx context.Context, st *live.SessionRuntimeState, group []Member,
 ) map[int64]int64 {
-	vistos := map[int64]bool{}
+	seen := map[int64]bool{}
 	ids := []int64{}
-	junta := func(id int64) {
-		if !vistos[id] {
-			vistos[id] = true
+	joins := func(id int64) {
+		if !seen[id] {
+			seen[id] = true
 			ids = append(ids, id)
 		}
 	}
 	for i := range st.Initiative {
 		if id := st.Initiative[i].CharacterID; id != nil {
-			junta(*id)
+			joins(*id)
 		}
 	}
-	for i := range grupo {
-		junta(grupo[i].CharacterID)
+	for i := range group {
+		joins(group[i].CharacterID)
 	}
 	if len(ids) == 0 {
 		return map[int64]int64{}
 	}
-	linhas, err := s.deps.Queries().ListActiveEffectsByCharacters(ctx, ids)
+	rows, err := s.deps.Queries().ListActiveEffectsByCharacters(ctx, ids)
 	if err != nil {
 		return map[int64]int64{}
 	}
 	blobs := map[int64][]string{}
-	for _, l := range linhas {
+	for _, l := range rows {
 		blobs[l.Characterid] = append(blobs[l.Characterid], l.Modifiers)
 	}
-	fora := make(map[int64]int64, len(blobs))
+	outside := make(map[int64]int64, len(blobs))
 	for id, b := range blobs {
 		if total := sheet.TempHpTotal(b); total > 0 {
-			fora[id] = int64(total)
+			outside[id] = int64(total)
 		}
 	}
-	return fora
+	return outside
 }
 
 // tableClasses monta "Guerreiro 3 / Ladino 2".
@@ -536,19 +536,19 @@ func (s Scene) membrosEPresenca(ctx context.Context, campaignID, sessionID int64
 	if err != nil {
 		return nil, nil
 	}
-	membros := make([]live.TableMember, 0, len(rows))
+	members := make([]live.TableMember, 0, len(rows))
 	for _, m := range rows {
-		dono, err := s.deps.Queries().GetCharacterOwner(ctx, m.Characterid)
+		owner, err := s.deps.Queries().GetCharacterOwner(ctx, m.Characterid)
 		if err != nil {
 			continue
 		}
-		membros = append(membros, live.TableMember{CharacterID: m.Characterid, OwnerID: dono})
+		members = append(members, live.TableMember{CharacterID: m.Characterid, OwnerID: owner})
 	}
-	var presentes []int64
+	var present []int64
 	for _, u := range s.deps.Presence().Roster(sessionID) {
-		presentes = append(presentes, u.UserID)
+		present = append(present, u.UserID)
 	}
-	return membros, presentes
+	return members, present
 }
 
 // memberDefense pergunta ao MOTOR, que é a mesma `ComputeSheet` da ficha.
@@ -564,12 +564,12 @@ func (s Scene) memberDefense(ctx context.Context, characterID int64) string {
 	if err != nil {
 		return "—"
 	}
-	ficha, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
+	character, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
 	if err != nil {
 		return "—"
 	}
 	// A MESMA frase da ficha, e da mesma função: o mestre confere aqui a Defesa
 	// de um jogador para decidir se o ataque acerta, e com o alvo caído o total
 	// é o único número que não responde essa pergunta.
-	return book.DefenseLabel(ficha.Defense)
+	return book.DefenseLabel(character.Defense)
 }

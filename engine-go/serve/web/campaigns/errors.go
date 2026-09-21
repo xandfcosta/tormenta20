@@ -24,8 +24,8 @@ var errNoSuchCampaign = errors.New("campanha não existe")
 //
 // Ela mora aqui e não no `campaign` porque o pacote de REGRA não pode carregar
 // `database/sql`: a regra devolve texto, quem grava traduz. Esta cena grava.
-func trimOrNull(texto string) sql.NullString {
-	if t := strings.TrimSpace(texto); t != "" {
+func trimOrNull(text string) sql.NullString {
+	if t := strings.TrimSpace(text); t != "" {
 		return sql.NullString{String: t, Valid: true}
 	}
 	return sql.NullString{}

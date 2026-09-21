@@ -30,16 +30,16 @@ import (
 
 // referenciaQuebrada é um apontamento que não acha o que aponta.
 type referenciaQuebrada struct {
-	onde     string
-	valor    string
-	catalogo string
-	vizinho  string
+	where    string
+	value    string
+	catalog  string
+	neighbor string
 }
 
 func (r referenciaQuebrada) String() string {
-	msg := fmt.Sprintf("%s: %q não existe no catálogo de %s", r.onde, r.valor, r.catalogo)
-	if r.vizinho != "" {
-		msg += fmt.Sprintf(" — você quis dizer %q?", r.vizinho)
+	msg := fmt.Sprintf("%s: %q não existe no catálogo de %s", r.where, r.value, r.catalog)
+	if r.neighbor != "" {
+		msg += fmt.Sprintf(" — você quis dizer %q?", r.neighbor)
 	}
 	return msg
 }
@@ -51,29 +51,29 @@ func validateCatalogRefs(sf seedFile) error {
 	if err != nil {
 		return err
 	}
-	var quebradas []referenciaQuebrada
+	var broken []referenciaQuebrada
 	for iu, u := range sf.Users {
 		for ic, ch := range u.Characters {
-			onde := fmt.Sprintf("usuário %d (%s), personagem %d", iu+1, u.Email, ic+1)
-			quebradas = append(quebradas, cat.confereUmPersonagem(onde, ch)...)
+			where := fmt.Sprintf("usuário %d (%s), personagem %d", iu+1, u.Email, ic+1)
+			broken = append(broken, cat.confereUmPersonagem(where, ch)...)
 		}
 	}
-	if len(quebradas) == 0 {
+	if len(broken) == 0 {
 		return nil
 	}
-	linhas := make([]string, 0, len(quebradas))
-	for _, q := range quebradas {
-		linhas = append(linhas, "  "+q.String())
+	rows := make([]string, 0, len(broken))
+	for _, q := range broken {
+		rows = append(rows, "  "+q.String())
 	}
 	return fmt.Errorf("o seed aponta para %d coisas que o catálogo não tem:\n%s",
-		len(quebradas), strings.Join(linhas, "\n"))
+		len(broken), strings.Join(rows, "\n"))
 }
 
 // catalogoDaSeed são as listas de nomes contra as quais o seed é conferido.
 // Magia e item não entram aqui: eles são procurados por id, e o `catalog` já
 // tem o `LookupSpell` e o `LookupItem`.
 type catalogoDaSeed struct {
-	listas map[string][]string
+	lists map[string][]string
 }
 
 // carregaOCatalogo monta as listas e AFIRMA O DENOMINADOR antes de devolvê-las.
@@ -84,7 +84,7 @@ type catalogoDaSeed struct {
 // quem escreveu o seed por um defeito do build. Lista vazia aqui é falha de
 // carga, e a mensagem diz isso em vez de listar dezesseis personagens.
 func carregaOCatalogo() (catalogoDaSeed, error) {
-	listas := map[string][]string{
+	lists := map[string][]string{
 		"raças":              catalog.OptionList("races"),
 		"classes":            catalog.OptionList("classes"),
 		"origens":            catalog.OptionList("origins"),
@@ -92,76 +92,76 @@ func carregaOCatalogo() (catalogoDaSeed, error) {
 		"tamanhos":           catalog.OptionList("sizes"),
 		"poderes concedidos": catalog.GrantedPowerNames(),
 	}
-	var vazias []string
-	for nome, lista := range listas {
-		if len(lista) == 0 {
-			vazias = append(vazias, nome)
+	var empty []string
+	for name, list := range lists {
+		if len(list) == 0 {
+			empty = append(empty, name)
 		}
 	}
-	if len(vazias) > 0 {
-		sort.Strings(vazias)
+	if len(empty) > 0 {
+		sort.Strings(empty)
 		return catalogoDaSeed{}, fmt.Errorf(
 			"o catálogo embutido não carregou (%s vieram vazios): o defeito é do build e não do seed — "+
-				"conferir se `catalog/data/*.json` foi para o binário", strings.Join(vazias, ", "))
+				"conferir se `catalog/data/*.json` foi para o binário", strings.Join(empty, ", "))
 	}
-	return catalogoDaSeed{listas: listas}, nil
+	return catalogoDaSeed{lists: lists}, nil
 }
 
-func (c catalogoDaSeed) confereUmPersonagem(onde string, ch seedCharacter) []referenciaQuebrada {
-	var quebradas []referenciaQuebrada
-	for _, magia := range ch.Spells {
-		if _, ok := catalog.LookupSpell(magia.ID); !ok {
-			quebradas = append(quebradas, referenciaQuebrada{
-				onde: onde + ", spells[].id", valor: magia.ID, catalogo: "magias",
-				vizinho: oVizinho(magia.ID, catalog.SpellIDs()),
+func (c catalogoDaSeed) confereUmPersonagem(where string, ch seedCharacter) []referenciaQuebrada {
+	var broken []referenciaQuebrada
+	for _, spell := range ch.Spells {
+		if _, ok := catalog.LookupSpell(spell.ID); !ok {
+			broken = append(broken, referenciaQuebrada{
+				where: where + ", spells[].id", value: spell.ID, catalog: "magias",
+				neighbor: oVizinho(spell.ID, catalog.SpellIDs()),
 			})
 		}
 	}
-	var criar map[string]json.RawMessage
-	if err := json.Unmarshal(ch.Create, &criar); err != nil {
-		return append(quebradas, referenciaQuebrada{
-			onde: onde + ", create", valor: err.Error(), catalogo: "JSON válido",
+	var create map[string]json.RawMessage
+	if err := json.Unmarshal(ch.Create, &create); err != nil {
+		return append(broken, referenciaQuebrada{
+			where: where + ", create", value: err.Error(), catalog: "JSON válido",
 		})
 	}
-	for campo, lista := range map[string]string{
+	for field, list := range map[string]string{
 		"origin": "origens", "god": "deuses", "godPower": "poderes concedidos", "size": "tamanhos",
 	} {
-		if nome, ok := textoDe(criar, campo); ok {
-			quebradas = append(quebradas, c.confere(onde+", create."+campo, nome, lista)...)
+		if name, ok := textoDe(create, field); ok {
+			broken = append(broken, c.confere(where+", create."+field, name, list)...)
 		}
 	}
-	for _, raca := range listaDe(criar, "races") {
-		quebradas = append(quebradas, c.confere(onde+", create.races", raca, "raças")...)
+	for _, race := range listaDe(create, "races") {
+		broken = append(broken, c.confere(where+", create.races", race, "raças")...)
 	}
-	for _, nome := range osNomesDasClasses(criar) {
-		quebradas = append(quebradas, c.confere(onde+", create.classes[].className", nome, "classes")...)
+	for _, name := range osNomesDasClasses(create) {
+		broken = append(broken, c.confere(where+", create.classes[].className", name, "classes")...)
 	}
 	// A CHAVE do `classChoices` é um nome de CLASSE — `{"Arcanista": {…}}` —, e
 	// é referência de catálogo como qualquer outra. Referência escondida em
 	// CHAVE de objeto não se parece com referência, e foi assim que ela escapou
 	// da primeira versão.
-	for _, nome := range asChavesDe(criar, "classChoices") {
-		quebradas = append(quebradas, c.confere(onde+", create.classChoices{}", nome, "classes")...)
+	for _, name := range asChavesDe(create, "classChoices") {
+		broken = append(broken, c.confere(where+", create.classChoices{}", name, "classes")...)
 	}
-	for _, id := range osIdsDosItens(criar) {
+	for _, id := range osIdsDosItens(create) {
 		if _, ok := catalog.LookupItem(id); !ok {
-			quebradas = append(quebradas, referenciaQuebrada{
-				onde: onde + ", create.items[].catalogId", valor: id, catalogo: "itens",
-				vizinho: oVizinho(id, catalog.ItemIDs()),
+			broken = append(broken, referenciaQuebrada{
+				where: where + ", create.items[].catalogId", value: id, catalog: "itens",
+				neighbor: oVizinho(id, catalog.ItemIDs()),
 			})
 		}
 	}
-	return quebradas
+	return broken
 }
 
-func (c catalogoDaSeed) confere(onde, valor, catalogo string) []referenciaQuebrada {
-	lista := c.listas[catalogo]
-	for _, aceito := range lista {
-		if aceito == valor {
+func (c catalogoDaSeed) confere(where, value, catalog string) []referenciaQuebrada {
+	list := c.lists[catalog]
+	for _, accepted := range list {
+		if accepted == value {
 			return nil
 		}
 	}
-	return []referenciaQuebrada{{onde: onde, valor: valor, catalogo: catalogo, vizinho: oVizinho(valor, lista)}}
+	return []referenciaQuebrada{{where: where, value: value, catalog: catalog, neighbor: oVizinho(value, list)}}
 }
 
 // oVizinho devolve o valor aceito mais parecido, ou "" quando nenhum é parecido
@@ -172,95 +172,95 @@ func (c catalogoDaSeed) confere(onde, valor, catalogo string) []referenciaQuebra
 // sugestão errada é pior que sugestão nenhuma, porque quem lê a segue. Errar id
 // é erro de DIGITAÇÃO, e digitação erra por pouco: `machado-de-batalha` está a
 // 3 de `machado-batalha` num catálogo que também tem `machado-guerra`.
-func oVizinho(valor string, aceitos []string) string {
-	melhor, menor := "", len(valor)/3+1
-	for _, aceito := range aceitos {
-		if d := distancia(valor, aceito); d < menor {
-			melhor, menor = aceito, d
+func oVizinho(value string, accepted []string) string {
+	best, min := "", len(value)/3+1
+	for _, ok := range accepted {
+		if d := distancia(value, ok); d < min {
+			best, min = ok, d
 		}
 	}
-	return melhor
+	return best
 }
 
 // distancia é a de Levenshtein, em duas linhas de matriz.
 func distancia(a, b string) int {
 	ra, rb := []rune(a), []rune(b)
 	anterior := make([]int, len(rb)+1)
-	atual := make([]int, len(rb)+1)
+	current := make([]int, len(rb)+1)
 	for j := range anterior {
 		anterior[j] = j
 	}
 	for i := 1; i <= len(ra); i++ {
-		atual[0] = i
+		current[0] = i
 		for j := 1; j <= len(rb); j++ {
-			custo := 1
+			cost := 1
 			if ra[i-1] == rb[j-1] {
-				custo = 0
+				cost = 0
 			}
-			atual[j] = min(min(atual[j-1]+1, anterior[j]+1), anterior[j-1]+custo)
+			current[j] = min(min(current[j-1]+1, anterior[j]+1), anterior[j-1]+cost)
 		}
-		anterior, atual = atual, anterior
+		anterior, current = current, anterior
 	}
 	return anterior[len(rb)]
 }
 
-func textoDe(criar map[string]json.RawMessage, campo string) (string, bool) {
-	bruto, tem := criar[campo]
-	if !tem {
+func textoDe(create map[string]json.RawMessage, field string) (string, bool) {
+	raw, found := create[field]
+	if !found {
 		return "", false
 	}
-	var texto string
-	if err := json.Unmarshal(bruto, &texto); err != nil || texto == "" {
+	var text string
+	if err := json.Unmarshal(raw, &text); err != nil || text == "" {
 		return "", false
 	}
-	return texto, true
+	return text, true
 }
 
-func listaDe(criar map[string]json.RawMessage, campo string) []string {
-	bruto, tem := criar[campo]
-	if !tem {
+func listaDe(create map[string]json.RawMessage, field string) []string {
+	raw, found := create[field]
+	if !found {
 		return nil
 	}
-	var lista []string
-	if err := json.Unmarshal(bruto, &lista); err != nil {
+	var list []string
+	if err := json.Unmarshal(raw, &list); err != nil {
 		return nil
 	}
-	return lista
+	return list
 }
 
-func osNomesDasClasses(criar map[string]json.RawMessage) []string {
-	bruto, tem := criar["classes"]
-	if !tem {
+func osNomesDasClasses(create map[string]json.RawMessage) []string {
+	raw, found := create["classes"]
+	if !found {
 		return nil
 	}
 	var classes []struct {
 		ClassName string `json:"className"`
 	}
-	if err := json.Unmarshal(bruto, &classes); err != nil {
+	if err := json.Unmarshal(raw, &classes); err != nil {
 		return nil
 	}
-	nomes := make([]string, 0, len(classes))
+	names := make([]string, 0, len(classes))
 	for _, c := range classes {
 		if c.ClassName != "" {
-			nomes = append(nomes, c.ClassName)
+			names = append(names, c.ClassName)
 		}
 	}
-	return nomes
+	return names
 }
 
-func osIdsDosItens(criar map[string]json.RawMessage) []string {
-	bruto, tem := criar["items"]
-	if !tem {
+func osIdsDosItens(create map[string]json.RawMessage) []string {
+	raw, found := create["items"]
+	if !found {
 		return nil
 	}
-	var itens []struct {
+	var items []struct {
 		CatalogID string `json:"catalogId"`
 	}
-	if err := json.Unmarshal(bruto, &itens); err != nil {
+	if err := json.Unmarshal(raw, &items); err != nil {
 		return nil
 	}
-	ids := make([]string, 0, len(itens))
-	for _, it := range itens {
+	ids := make([]string, 0, len(items))
+	for _, it := range items {
 		if it.CatalogID != "" {
 			ids = append(ids, it.CatalogID)
 		}
@@ -268,19 +268,19 @@ func osIdsDosItens(criar map[string]json.RawMessage) []string {
 	return ids
 }
 
-func asChavesDe(criar map[string]json.RawMessage, campo string) []string {
-	bruto, tem := criar[campo]
-	if !tem {
+func asChavesDe(create map[string]json.RawMessage, field string) []string {
+	raw, found := create[field]
+	if !found {
 		return nil
 	}
 	var obj map[string]json.RawMessage
-	if err := json.Unmarshal(bruto, &obj); err != nil {
+	if err := json.Unmarshal(raw, &obj); err != nil {
 		return nil
 	}
-	chaves := make([]string, 0, len(obj))
+	keys := make([]string, 0, len(obj))
 	for k := range obj {
-		chaves = append(chaves, k)
+		keys = append(keys, k)
 	}
-	sort.Strings(chaves)
-	return chaves
+	sort.Strings(keys)
+	return keys
 }

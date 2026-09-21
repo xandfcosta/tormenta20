@@ -27,17 +27,17 @@ func TestAFreshDatabaseOpensThroughProduction(t *testing.T) {
 	}
 	defer func() { _ = base.Close() }()
 
-	var tabelas int
-	linha := base.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type = 'table'`)
-	if err := linha.Scan(&tabelas); err != nil {
+	var tables int
+	row := base.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type = 'table'`)
+	if err := row.Scan(&tables); err != nil {
 		t.Fatalf("contar tabelas: %v", err)
 	}
 	// O DENOMINADOR: um banco vazio também "abre", e sem esta conta o caso
 	// acima passaria sobre um arquivo de zero byte que o goose acabou de migrar
 	// do nada. Dez é folgado — são mais de vinte —, e o número exato mudaria a
 	// cada migração nova sem dizer nada.
-	if tabelas < 10 {
-		t.Errorf("%d tabelas no banco copiado: o molde não trouxe o schema", tabelas)
+	if tables < 10 {
+		t.Errorf("%d tabelas no banco copiado: o molde não trouxe o schema", tables)
 	}
 }
 
@@ -48,12 +48,12 @@ func TestAFreshDatabaseOpensThroughProduction(t *testing.T) {
 // uns dos outros na ordem em que rodassem. É o pior defeito possível numa
 // bancada: ele não falha, ele acopla.
 func TestTwoFreshDatabasesDoNotShareState(t *testing.T) {
-	primeiro, segundo := Fresh(t), Fresh(t)
-	if primeiro == segundo {
+	first, segundo := Fresh(t), Fresh(t)
+	if first == segundo {
 		t.Fatal("as duas cópias são o mesmo arquivo")
 	}
 
-	a, err := db.Open(primeiro)
+	a, err := db.Open(first)
 	if err != nil {
 		t.Fatalf("abrir a primeira: %v", err)
 	}
@@ -69,11 +69,11 @@ func TestTwoFreshDatabasesDoNotShareState(t *testing.T) {
 		t.Fatalf("abrir a segunda: %v", err)
 	}
 	defer func() { _ = b.Close() }()
-	var quantos int
-	if err := b.QueryRow(`SELECT count(*) FROM users`).Scan(&quantos); err != nil {
+	var howMany int
+	if err := b.QueryRow(`SELECT count(*) FROM users`).Scan(&howMany); err != nil {
 		t.Fatalf("contar na segunda: %v", err)
 	}
-	if quantos != 0 {
-		t.Errorf("a segunda cópia já tem %d usuário(s): as bancadas estão compartilhando estado", quantos)
+	if howMany != 0 {
+		t.Errorf("a segunda cópia já tem %d usuário(s): as bancadas estão compartilhando estado", howMany)
 	}
 }

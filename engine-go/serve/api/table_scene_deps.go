@@ -66,9 +66,9 @@ func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 // leitura natural de "isto emite para ninguém", já que o `SSEHub` não tem
 // ouvinte em produção — levaria a gravação junto, e a mesa passaria a viver só
 // em memória.
-func (h tableHost) PublishSessionState(sessionID int64, estado *live.SessionRuntimeState) {
+func (h tableHost) PublishSessionState(sessionID int64, state *live.SessionRuntimeState) {
 	h.rules.saveSession(sessionID)
-	h.rules.publishSessionState(sessionID, estado)
+	h.rules.publishSessionState(sessionID, state)
 }
 
 func (h tableHost) PublishBoardState(sessionID int64, board *board.BoardState) {
@@ -103,11 +103,11 @@ func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
 // silenciosa de propósito: estar numa mesa é mais importante que ver a própria
 // ficha dentro dela.
 func (h tableHost) PlayerSheet(r *http.Request, characterID int64) *sheetui.View {
-	ficha, _, err := sheetui.New(h.rules.sheetScene, h.rules.sheetPlays).Load(
+	sheet, _, err := sheetui.New(h.rules.sheetScene, h.rules.sheetPlays).Load(
 		r.Context(), currentUser(r).ID, characterID, sheetui.AskedTab(""), "", sheetui.Signals{})
 	if err != nil {
 		return nil
 	}
-	ficha.Embutida = true
-	return &ficha
+	sheet.Embedded = true
+	return &sheet
 }

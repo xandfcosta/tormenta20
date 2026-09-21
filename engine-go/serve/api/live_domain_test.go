@@ -96,12 +96,12 @@ var (
 func primedCatalogs(t *testing.T) *engine.Catalogs {
 	t.Helper()
 	catalogosUmaVez.Do(func() {
-		bruto, err := os.ReadFile(filepath.Join("..", "..", "parity", "_catalogs.json"))
+		raw, err := os.ReadFile(filepath.Join("..", "..", "parity", "_catalogs.json"))
 		if err != nil {
 			catalogosErro = fmt.Errorf("ler catálogos: %w (gere com `go run ./cmd/genoracle`)", err)
 			return
 		}
-		catalogosPrimos, catalogosErro = engine.PrimeEngineCatalogs(bruto)
+		catalogosPrimos, catalogosErro = engine.PrimeEngineCatalogs(raw)
 	})
 	if catalogosErro != nil {
 		t.Fatalf("preparar catálogo: %v", catalogosErro)
@@ -166,7 +166,7 @@ func seedCharacter(t *testing.T, s *Server, ownerID int64, name string) int64 {
 // quarenta chamadas o criavam. Sem classe o poço do livro é ZERO, então o
 // estado impossível só era invisível porque ninguém derivava.
 func seedCharacterAtLevel(
-	t *testing.T, s *Server, ownerID int64, name, classe string, level, hpDano, mpGasto int64,
+	t *testing.T, s *Server, ownerID int64, name, class string, level, hpDamage, mpSpent int64,
 ) int64 {
 	t.Helper()
 	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
@@ -179,10 +179,10 @@ func seedCharacterAtLevel(
 	if err != nil {
 		t.Fatalf("seed character %q: %v", name, err)
 	}
-	seedClasse(t, s, id, classe, level)
-	if hpDano > 0 || mpGasto > 0 {
+	seedClasse(t, s, id, class, level)
+	if hpDamage > 0 || mpSpent > 0 {
 		arrangePools(t, s, id, func(p sheet.Pools) (sheet.Pools, error) {
-			p.HpCurrent, p.MpCurrent = p.HpMax-hpDano, p.MpMax-mpGasto
+			p.HpCurrent, p.MpCurrent = p.HpMax-hpDamage, p.MpMax-mpSpent
 			return p, nil
 		})
 	}
@@ -196,15 +196,15 @@ func seedCharacterAtLevel(
 // perguntar o mesmo que a cena pergunta (ALE-355).
 func poolsOf(t *testing.T, s *Server, id int64) sheet.Pools {
 	t.Helper()
-	pocos, err := sheet.PoolsForCharacters(context.Background(), s.queries, s.catalogs, []int64{id})
+	pools, err := sheet.PoolsForCharacters(context.Background(), s.queries, s.catalogs, []int64{id})
 	if err != nil {
 		t.Fatalf("derivar o poço da ficha %d: %v", id, err)
 	}
-	poco, tem := pocos[id]
-	if !tem {
+	pool, found := pools[id]
+	if !found {
 		t.Fatalf("a ficha %d não existe", id)
 	}
-	return poco
+	return pool
 }
 
 // arrangePools arranja o estado vital de uma ficha PELO FUNIL, que é o único
@@ -214,17 +214,17 @@ func poolsOf(t *testing.T, s *Server, id int64) sheet.Pools {
 // que ela arranja tem de ser um estado que a produção CONSEGUE produzir, senão o
 // caso mede um banco impossível. O `TestEveryVitalWriteGoesThroughTheFunnel`
 // cobra isso desta bancada com a mesma régua que cobra do resto.
-func arrangePools(t *testing.T, s *Server, id int64, regra sheet.PoolRule) sheet.Pools {
+func arrangePools(t *testing.T, s *Server, id int64, rule sheet.PoolRule) sheet.Pools {
 	t.Helper()
 	row, err := s.queries.GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler a ficha %d para arranjar os poços: %v", id, err)
 	}
-	pocos, err := sheet.ApplyToPools(context.Background(), s.queries, s.catalogs, row, regra)
+	pools, err := sheet.ApplyToPools(context.Background(), s.queries, s.catalogs, row, rule)
 	if err != nil {
 		t.Fatalf("arranjar os poços da ficha %d: %v", id, err)
 	}
-	return pocos
+	return pools
 }
 
 // bookPools é quanto o LIVRO dá de PV/PM para esta classe neste nível.
@@ -234,18 +234,18 @@ func arrangePools(t *testing.T, s *Server, id int64, regra sheet.PoolRule) sheet
 // afirmando metade quando a tabela de classe mudar.
 type seededPools struct{ PvMax, PmMax int64 }
 
-func bookPools(t *testing.T, s *Server, classe string, nivel int64) seededPools {
+func bookPools(t *testing.T, s *Server, class string, level int64) seededPools {
 	t.Helper()
-	pocos := s.catalogs.ComputeVitals(engine.VitalContext{
-		Level:      int(nivel),
-		Classes:    []engine.ClassEntry{{ClassName: classe, Level: int(nivel)}},
+	pools := s.catalogs.ComputeVitals(engine.VitalContext{
+		Level:      int(level),
+		Classes:    []engine.ClassEntry{{ClassName: class, Level: int(level)}},
 		AttrTotals: map[string]int{},
 	})
-	if pocos.PvMax <= 0 {
+	if pools.PvMax <= 0 {
 		t.Fatalf("a classe %q no nível %d deu %d de PV — ela existe na tabela do livro?",
-			classe, nivel, pocos.PvMax)
+			class, level, pools.PvMax)
 	}
-	return seededPools{PvMax: int64(pocos.PvMax), PmMax: int64(pocos.PmMax)}
+	return seededPools{PvMax: int64(pools.PvMax), PmMax: int64(pools.PmMax)}
 }
 
 // seedMember senta um personagem à mesa.
@@ -284,11 +284,11 @@ func TestTheRoleInACampaignIsOwnerGmMemberPlayerAndNobodyElse(t *testing.T) {
 	pc := seedCharacter(t, s, player, "PC")
 	seedMember(t, s, campaignID, pc)
 
-	casos := []struct {
-		nome     string
-		quem     app.Caller
-		papel    string
-		recusado error
+	cases := []struct {
+		name    string
+		who     app.Caller
+		role    string
+		refused error
 	}{
 		{"o dono mestra", app.Caller{ID: gm}, app.RoleGM, nil},
 		{"o membro joga", app.Caller{ID: player}, app.RolePlayer, nil},
@@ -297,16 +297,16 @@ func TestTheRoleInACampaignIsOwnerGmMemberPlayerAndNobodyElse(t *testing.T) {
 		// participar de uma sessão ao vivo.
 		{"o admin mestra em qualquer mesa", app.Caller{ID: stranger, IsAdmin: true}, app.RoleGM, nil},
 	}
-	for _, c := range casos {
-		papel, err := s.sessionAccess().RoleInCampaign(ctx, c.quem, campaignID)
-		if papel != c.papel {
-			t.Errorf("%s: papel=%q, esperado %q (err=%v)", c.nome, papel, c.papel, err)
+	for _, c := range cases {
+		role, err := s.sessionAccess().RoleInCampaign(ctx, c.who, campaignID)
+		if role != c.role {
+			t.Errorf("%s: papel=%q, esperado %q (err=%v)", c.name, role, c.role, err)
 		}
-		if c.recusado == nil && err != nil {
-			t.Errorf("%s: recusado com %v", c.nome, err)
+		if c.refused == nil && err != nil {
+			t.Errorf("%s: recusado com %v", c.name, err)
 		}
-		if c.recusado != nil && !errors.Is(err, c.recusado) {
-			t.Errorf("%s: err=%v, esperado %v", c.nome, err, c.recusado)
+		if c.refused != nil && !errors.Is(err, c.refused) {
+			t.Errorf("%s: err=%v, esperado %v", c.name, err, c.refused)
 		}
 	}
 	// A campanha que NÃO EXISTE é uma recusa diferente, e a diferença importa:
@@ -382,25 +382,25 @@ func TestSessionForCaller(t *testing.T) {
 		t.Fatalf("seed session: %v", err)
 	}
 
-	trava := s.sessionLifecycle().Access()
+	lock := s.sessionLifecycle().Access()
 
 	t.Run("o mestre recebe a sessão e o papel", func(t *testing.T) {
-		got, papel, err := trava.Session(ctx, app.Caller{ID: gm}, campaignID, sess.ID)
-		if err != nil || papel != app.RoleGM || got.ID != sess.ID {
-			t.Errorf("papel=%q id=%d err=%v", papel, got.ID, err)
+		got, role, err := lock.Session(ctx, app.Caller{ID: gm}, campaignID, sess.ID)
+		if err != nil || role != app.RoleGM || got.ID != sess.ID {
+			t.Errorf("papel=%q id=%d err=%v", role, got.ID, err)
 		}
 	})
 	// A ORDEM importa: o estranho é barrado ANTES de a sessão ser lida. Sem
 	// isso, a diferença entre 403 e 404 contaria a quem não pertence à campanha
 	// quais sessões existem nela.
 	t.Run("estranho é barrado antes de a sessão ser lida", func(t *testing.T) {
-		_, _, err := trava.Session(ctx, app.Caller{ID: stranger}, campaignID, sess.ID)
+		_, _, err := lock.Session(ctx, app.Caller{ID: stranger}, campaignID, sess.ID)
 		if !errors.Is(err, app.ErrForbidden) {
 			t.Errorf("a recusa foi %v, e queria ErrForbidden", err)
 		}
 	})
 	t.Run("sessão que não existe", func(t *testing.T) {
-		_, _, err := trava.Session(ctx, app.Caller{ID: gm}, campaignID, 999999)
+		_, _, err := lock.Session(ctx, app.Caller{ID: gm}, campaignID, 999999)
 		if !errors.Is(err, app.ErrNotFound) {
 			t.Errorf("a recusa foi %v, e queria ErrNotFound", err)
 		}

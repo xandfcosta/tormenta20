@@ -25,16 +25,16 @@ import (
 // cena servida: a varredura é o que faz a convenção valer para a próxima tela
 // também.
 func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
-	folha := compiledStylesheet(t)
-	arquivos := houseSources(t)
-	usadas := map[string][]string{}
-	for _, caminho := range arquivos {
-		fonte, err := os.ReadFile(caminho)
+	sheet := compiledStylesheet(t)
+	files := houseSources(t)
+	used := map[string][]string{}
+	for _, path := range files {
+		source, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("ler %s: %v", caminho, err)
+			t.Fatalf("ler %s: %v", path, err)
 		}
-		for _, tinta := range tintasDaCasaEm(semOsComentarios(string(fonte))) {
-			usadas[tinta] = append(usadas[tinta], filepath.Base(caminho))
+		for _, paint := range tintasDaCasaEm(semOsComentarios(string(source))) {
+			used[paint] = append(used[paint], filepath.Base(path))
 		}
 	}
 	// O DENOMINADOR, e ele é o que separa "nenhuma tinta reprovou" de "não varri
@@ -44,21 +44,21 @@ func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 	// O piso mede o conjunto de HOJE, e SOBE quando a varredura cresce. Deixar
 	// um piso que o conjunto ANTIGO já satisfazia faria a volta acidental à
 	// lista curta passar verde.
-	if len(usadas) < 40 {
-		t.Fatalf("a varredura achou %d tintas da casa, e são dezenas: o padrão parou de casar", len(usadas))
+	if len(used) < 40 {
+		t.Fatalf("a varredura achou %d tintas da casa, e são dezenas: o padrão parou de casar", len(used))
 	}
 
-	nomes := make([]string, 0, len(usadas))
-	for nome := range usadas {
-		nomes = append(nomes, nome)
+	names := make([]string, 0, len(used))
+	for name := range used {
+		names = append(names, name)
 	}
-	sort.Strings(nomes)
-	for _, nome := range nomes {
-		if aFolhaConhece(folha, nome) {
+	sort.Strings(names)
+	for _, name := range names {
+		if aFolhaConhece(sheet, name) {
 			continue
 		}
 		t.Errorf("a tinta %q não existe na folha (usada em %s): o elemento sai com a cor herdada e ninguém reclama",
-			nome, strings.Join(usadas[nome], ", "))
+			name, strings.Join(used[name], ", "))
 	}
 }
 
@@ -71,12 +71,12 @@ func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 // são justamente os arquivos onde uma tinta errada aparece em TODA tela.
 func houseSources(t *testing.T) []string {
 	t.Helper()
-	fora := []string{}
-	interessa := func(caminho string) bool {
-		if strings.HasSuffix(caminho, "_test.go") || strings.HasSuffix(caminho, "_templ.go") {
+	outside := []string{}
+	matters := func(path string) bool {
+		if strings.HasSuffix(path, "_test.go") || strings.HasSuffix(path, "_templ.go") {
 			return false
 		}
-		return strings.HasSuffix(caminho, ".templ") || strings.HasSuffix(caminho, ".go")
+		return strings.HasSuffix(path, ".templ") || strings.HasSuffix(path, ".go")
 	}
 
 	// O DIRETÓRIO INTEIRO, e não um padrão de nome. O glob daqui já foi
@@ -84,49 +84,49 @@ func houseSources(t *testing.T) []string {
 	// quando os arquivos perderam o prefixo —, e nas duas o guarda seguiria
 	// VERDE medindo menos. Um padrão de NOME acopla o guarda à nomenclatura; o
 	// diretório é o terreno, e ele não muda de nome sozinho.
-	daqui, err := os.ReadDir(".")
+	fromHere, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o diretório do api: %v", err)
 	}
-	for _, entrada := range daqui {
-		if !entrada.IsDir() && interessa(entrada.Name()) {
-			fora = append(fora, entrada.Name())
+	for _, entry := range fromHere {
+		if !entry.IsDir() && matters(entry.Name()) {
+			outside = append(outside, entry.Name())
 		}
 	}
 
 	// O `web/` INTEIRO, e não um pacote por linha: uma cena que caia fora da
 	// lista enumerada derruba o denominador, e enumerar faria a PRÓXIMA cena
 	// nascer sem medição.
-	if err := filepath.WalkDir("../web", func(caminho string, entrada fs.DirEntry, err error) error {
+	if err := filepath.WalkDir("../web", func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !entrada.IsDir() && interessa(caminho) {
-			fora = append(fora, caminho)
+		if !entry.IsDir() && matters(path) {
+			outside = append(outside, path)
 		}
 		return nil
 	}); err != nil {
 		t.Fatalf("varrer o web/: %v", err)
 	}
-	if len(fora) == 0 {
+	if len(outside) == 0 {
 		t.Fatal("nenhuma fonte do app encontrada: este guarda mediria o vazio")
 	}
-	return fora
+	return outside
 }
 
 // semOsComentarios tira as linhas de comentário antes da varredura: uma
 // docstring que CITA a classe errada — como a que explica este guarda — não é
 // tinta escrita em elemento nenhum, e cobrá-la faria o guarda acusar prosa.
-func semOsComentarios(fonte string) string {
-	linhas := strings.Split(fonte, "\n")
-	fora := make([]string, 0, len(linhas))
-	for _, linha := range linhas {
-		if strings.HasPrefix(strings.TrimSpace(linha), "//") {
+func semOsComentarios(source string) string {
+	rows := strings.Split(source, "\n")
+	outside := make([]string, 0, len(rows))
+	for _, row := range rows {
+		if strings.HasPrefix(strings.TrimSpace(row), "//") {
 			continue
 		}
-		fora = append(fora, linha)
+		outside = append(outside, row)
 	}
-	return strings.Join(fora, "\n")
+	return strings.Join(outside, "\n")
 }
 
 // asPaletasDaCasa são os prefixos de token DESTE projeto. A paleta embutida do
@@ -156,23 +156,23 @@ var oUtilitarioDeCor = regexp.MustCompile(
 // O nome, e não a classe inteira, porque a folha escreve o mesmo token de
 // várias formas — `.text-arcane-ink`, `.text-arcane-ink\/80`, `--arcane-ink` —
 // e cobrar uma forma específica cobraria a implementação do Tailwind.
-func tintasDaCasaEm(fonte string) []string {
-	fora := []string{}
-	vistos := map[string]bool{}
-	for _, achado := range oUtilitarioDeCor.FindAllStringSubmatch(fonte, -1) {
-		nome := achado[1]
-		if !daCasa(nome) || vistos[nome] {
+func tintasDaCasaEm(source string) []string {
+	outside := []string{}
+	seen := map[string]bool{}
+	for _, found := range oUtilitarioDeCor.FindAllStringSubmatch(source, -1) {
+		name := found[1]
+		if !daCasa(name) || seen[name] {
 			continue
 		}
-		vistos[nome] = true
-		fora = append(fora, nome)
+		seen[name] = true
+		outside = append(outside, name)
 	}
-	return fora
+	return outside
 }
 
-func daCasa(nome string) bool {
-	for _, paleta := range asPaletasDaCasa {
-		if nome == paleta || strings.HasPrefix(nome, paleta+"-") {
+func daCasa(name string) bool {
+	for _, palette := range asPaletasDaCasa {
+		if name == palette || strings.HasPrefix(name, palette+"-") {
 			return true
 		}
 	}
@@ -182,7 +182,7 @@ func daCasa(nome string) bool {
 // aFolhaConhece procura o nome do token seguido de algo que NÃO continue o
 // nome. Sem essa borda, `arcane` passaria por causa de `arcane-ink` — e um
 // token inventado que fosse prefixo de um real nunca seria pego.
-func aFolhaConhece(folha, nome string) bool {
-	borda := regexp.MustCompile(regexp.QuoteMeta(nome) + `([^a-z0-9-]|$)`)
-	return borda.MatchString(folha)
+func aFolhaConhece(sheet, name string) bool {
+	border := regexp.MustCompile(regexp.QuoteMeta(name) + `([^a-z0-9-]|$)`)
+	return border.MatchString(sheet)
 }

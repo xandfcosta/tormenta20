@@ -86,11 +86,11 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	sinaisDaPagina := sheetSignals(r)
+	pageSignals := sheetSignals(r)
 	view, status, err := s.Load(
 		r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")),
-		sinaisDaPagina.term(), sinaisDaPagina)
-	view.Embutida = insideSessionAsked(r)
+		pageSignals.term(), pageSignals)
+	view.Embedded = insideSessionAsked(r)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
@@ -98,23 +98,23 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	// A FICHA DENTRO DA SESSÃO responde só o pedaço: quem pediu foi a aba "Minha
 	// ficha" da Mesa, e mandar a página inteira faria o Datastar remendar a cena
 	// da sessão com uma ficha de corpo inteiro.
-	if view.Embutida {
-		fragmento, err := ui.RenderFragment(r.Context(), SceneBody(view))
+	if view.Embedded {
+		fragment, err := ui.RenderFragment(r.Context(), SceneBody(view))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		_ = datastar.NewSSE(w, r).PatchElements(fragmento)
+		_ = datastar.NewSSE(w, r).PatchElements(fragment)
 		return
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: view.Nome + " · Tormenta 20",
+		Title: view.Name + " · Tormenta 20",
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, com a volta e o nome.
-		Forma: ui.ShellBare,
+		Shape: ui.ShellBare,
 		// Os sinais moram no <body> porque o <body> NUNCA é remendado: declarado
 		// dentro de um painel, o `@post` de qualquer gesto redeclararia o sinal a
 		// cada toque e fecharia o diálogo que o jogador acabou de abrir.
-		Sinais: "{detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
+		Signals: "{detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
 			" condition_dialog: false, buff_dialog: false, conditional: ''," +
 			" learn_dialog: false, augment0: 0, augment1: 0, augment2: 0, augment3: 0, augment4: 0, augment5: 0," +
 			" spell_search: '', spell_circle: '', spell_school: ''," +
@@ -143,7 +143,7 @@ func insideSessionAsked(r *http.Request) bool {
 // A POSSE é conferida aqui, uma vez. A ficha é do dono e de mais ninguém: a
 // regra é a mesma da API JSON (`characterFor`), e a cena não ganha uma segunda.
 func (s Scene) sheetCommand(
-	mutar func(Scene, *http.Request, sqlcgen.Character, Signals) error,
+	mutate func(Scene, *http.Request, sqlcgen.Character, Signals) error,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := uRLCharacter(w, r)
@@ -153,7 +153,7 @@ func (s Scene) sheetCommand(
 		// UMA leitura de sinais por requisição, e ela vem ANTES de tudo: o
 		// `ReadSignals` consome o corpo do POST, então a segunda chamada
 		// receberia vazio sem erro nenhum. Ver `signals.go`.
-		sinais := sheetSignals(r)
+		signals := sheetSignals(r)
 		row, err := s.deps.Queries().GetCharacter(r.Context(), id)
 		if err != nil {
 			http.Error(w, "este personagem não existe", http.StatusNotFound)
@@ -173,9 +173,9 @@ func (s Scene) sheetCommand(
 		// para quem joga. Ela sobe com a cena inteira redesenhada, que é o que
 		// prova que nada mudou, mais a frase. A API JSON continua respondendo os
 		// status dela; esta rota desenha página.
-		recusa := ""
-		if err := mutar(s, r, row, sinais); err != nil {
-			recusa = err.Error()
+		refusal := ""
+		if err := mutate(s, r, row, signals); err != nil {
+			refusal = err.Error()
 		} else {
 			// A FICHA MUDOU, e quem avisa é o GATEWAY e não cada comando: são
 			// mais de trinta mutações passando por aqui, e uma que esquecesse a
@@ -187,19 +187,19 @@ func (s Scene) sheetCommand(
 			s.deps.CharacterChanged(row.ID)
 		}
 		view, status, err := s.Load(
-			r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")), sinais.term(), sinais)
-		view.Embutida = insideSessionAsked(r)
+			r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")), signals.term(), signals)
+		view.Embedded = insideSessionAsked(r)
 		if err != nil {
 			http.Error(w, err.Error(), status)
 			return
 		}
-		view.Recusa = recusa
+		view.Refusal = refusal
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := ui.RenderFragment(r.Context(), SceneBody(view))
+		fragment, err := ui.RenderFragment(r.Context(), SceneBody(view))
 		if err != nil {
 			return
 		}
-		_ = sse.PatchElements(fragmento)
+		_ = sse.PatchElements(fragment)
 	}
 }
 
@@ -214,11 +214,11 @@ func (s Scene) sheetCommand(
 // O TETO é o máximo do personagem: curar além do máximo não é PV temporário, que
 // é outra regra e tem dono no motor (`TempHpFuria`).
 func touchesVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	passo, err := uRLStep(r)
+	step, err := uRLStep(r)
 	if err != nil {
 		return err
 	}
-	return s.plays.TouchVital(r.Context(), row, chi.URLParam(r, "qual"), passo)
+	return s.plays.TouchVital(r.Context(), row, chi.URLParam(r, "qual"), step)
 }
 
 // mudaONivel sobe ou desce UMA CLASSE, e o nível do personagem acompanha.
@@ -231,11 +231,11 @@ func touchesVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) er
 // A regra mora no caso de uso (`character.Plays.LevelClass`): a classe tem de
 // ser do personagem, o total para em 20, e os poços sincronizam.
 func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	passo, err := uRLStep(r)
+	step, err := uRLStep(r)
 	if err != nil {
 		return err
 	}
-	classe, err := url.PathUnescape(chi.URLParam(r, "classe"))
+	class, err := url.PathUnescape(chi.URLParam(r, "classe"))
 	if err != nil {
 		return fmt.Errorf("classe %q não é um nome válido", chi.URLParam(r, "classe"))
 	}
@@ -244,16 +244,16 @@ func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 		return err
 	}
 	for _, cl := range dto.Classes {
-		if cl.ClassName != classe {
+		if cl.ClassName != class {
 			continue
 		}
-		alvo := cl.Level + int64(passo)
-		if alvo < 1 {
-			return fmt.Errorf("%s está no nível 1: descer apagaria a classe", classe)
+		target := cl.Level + int64(step)
+		if target < 1 {
+			return fmt.Errorf("%s está no nível 1: descer apagaria a classe", class)
 		}
-		return s.plays.LevelClass(r.Context(), row, classe, alvo)
+		return s.plays.LevelClass(r.Context(), row, class, target)
 	}
-	return fmt.Errorf("%s não é uma classe deste personagem", classe)
+	return fmt.Errorf("%s não é uma classe deste personagem", class)
 }
 
 // uRLCharacter lê o id do caminho. Erro aqui é URL digitada errada, e a
@@ -269,10 +269,10 @@ func uRLCharacter(w http.ResponseWriter, r *http.Request) (int64, bool) {
 
 // uRLStep aceita o sinal de menos: o passo é para os dois lados.
 func uRLStep(r *http.Request) (int, error) {
-	bruto := chi.URLParam(r, "passo")
-	passo, err := strconv.Atoi(bruto)
-	if err != nil || passo == 0 {
-		return 0, fmt.Errorf("passo %q não é um número diferente de zero", bruto)
+	raw := chi.URLParam(r, "passo")
+	step, err := strconv.Atoi(raw)
+	if err != nil || step == 0 {
+		return 0, fmt.Errorf("passo %q não é um número diferente de zero", raw)
 	}
-	return passo, nil
+	return step, nil
 }

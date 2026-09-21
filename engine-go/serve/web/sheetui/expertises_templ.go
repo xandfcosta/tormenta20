@@ -144,8 +144,8 @@ func expertisePanelBody(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			for _, linha := range v.Expertises.Rows {
-				templ_7745c5c3_Err = expertiseRowBody(v, linha).Render(ctx, templ_7745c5c3_Buffer)
+			for _, row := range v.Expertises.Rows {
+				templ_7745c5c3_Err = expertiseRowBody(v, row).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -155,8 +155,8 @@ func expertisePanelBody(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, linha := range v.Expertises.Rows {
-			templ_7745c5c3_Err = expertiseDetail(linha).Render(ctx, templ_7745c5c3_Buffer)
+		for _, row := range v.Expertises.Rows {
+			templ_7745c5c3_Err = expertiseDetail(row).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -238,7 +238,7 @@ func expertiseTerm(v View) templ.Component {
 }
 
 // expertiseRowBody é uma perícia: o número, o nome, o atributo e o treino.
-func expertiseRowBody(v View, linha expertiseRow) templ.Component {
+func expertiseRowBody(v View, row expertiseRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -260,7 +260,7 @@ func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var12 = []any{"flex min-w-0 items-center gap-2 rounded-none border border-grimorio-iron p-1.5 transition-colors hover:border-grimorio-gold/50",
-			templ.KV("bg-grimorio-panel", linha.Trained)}
+			templ.KV("bg-grimorio-panel", row.Trained)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var12...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -282,7 +282,7 @@ func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = expertiseTotal(linha).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = expertiseTotal(row).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -299,9 +299,9 @@ func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			var templ_7745c5c3_Var15 string
-			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Name)
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 94, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 94, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -309,25 +309,25 @@ func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + linha.Name, "data-on:click": "$detail = '" + linha.Key + "'"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + row.Name, "data-on:click": "$detail = '" + row.Key + "'"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if linha.TrainedOnly {
-			templ_7745c5c3_Err = onlyTrainedStar(linha).Render(ctx, templ_7745c5c3_Buffer)
+		if row.TrainedOnly {
+			templ_7745c5c3_Err = onlyTrainedStar(row).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = attributePicker(v, linha).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = attributePicker(v, row).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = trainingButton(v, linha).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = trainingButton(v, row).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if linha.Custom {
+		if row.Custom {
 			templ_7745c5c3_Var16 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -346,7 +346,7 @@ func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = ui.Button(ui.VariantGhostDanger, ui.SizeIconSmall, "", templ.Attributes{"type": "button", "aria-label": "Remover " + linha.Name, "data-on:click": sheetPost(v, "/pericias/remover/"+linha.Command)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Button(ui.VariantGhostDanger, ui.SizeIconSmall, "", templ.Attributes{"type": "button", "aria-label": "Remover " + row.Name, "data-on:click": sheetPost(v, "/pericias/remover/"+row.Command)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -365,7 +365,7 @@ func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 // sentido no desenho e o rótulo acessível o diz por extenso. A composição
 // continua no diálogo, porque quem falha automaticamente ainda quer saber o que
 // perdeu.
-func expertiseTotal(linha expertiseRow) templ.Component {
+func expertiseTotal(row expertiseRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -387,9 +387,9 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var18 = []any{"flex size-11 shrink-0 items-center justify-center rounded-none border font-mono text-lg font-bold outline-none",
-			templ.KV("border-destructive/60 bg-destructive/10 text-penalty-ink", linha.AutoFail),
-			templ.KV("border-dashed border-grimorio-iron text-muted-foreground", linha.Locked && !linha.AutoFail),
-			templ.KV("border-grimorio-iron bg-grimorio-panel-raised text-grimorio-gold", !linha.Locked && !linha.AutoFail)}
+			templ.KV("border-destructive/60 bg-destructive/10 text-penalty-ink", row.AutoFail),
+			templ.KV("border-dashed border-grimorio-iron text-muted-foreground", row.Locked && !row.AutoFail),
+			templ.KV("border-grimorio-iron bg-grimorio-panel-raised text-grimorio-gold", !row.Locked && !row.AutoFail)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var18...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -399,9 +399,9 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(totalLabel(linha))
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(totalLabel(row))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 118, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 118, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -412,9 +412,9 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = '" + linha.Key + "'")
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = '" + row.Key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 120, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 120, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -437,7 +437,7 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if linha.AutoFail {
+		if row.AutoFail {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs("—")
 			if templ_7745c5c3_Err != nil {
@@ -449,9 +449,9 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 			}
 		} else {
 			var templ_7745c5c3_Var23 string
-			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Total)
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(row.Total)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 129, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 129, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -470,7 +470,7 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 //
 // Ela é um `<span>` com `title`, e não um botão com dica: um botão que não faz
 // nada é uma parada muda para quem navega por teclado, e seriam nove delas.
-func onlyTrainedStar(linha expertiseRow) templ.Component {
+func onlyTrainedStar(row expertiseRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -492,8 +492,8 @@ func onlyTrainedStar(linha expertiseRow) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var25 = []any{"inline-flex shrink-0",
-			templ.KV("text-warning-ink", linha.Locked),
-			templ.KV("text-muted-foreground", !linha.Locked)}
+			templ.KV("text-warning-ink", row.Locked),
+			templ.KV("text-muted-foreground", !row.Locked)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var25...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -531,7 +531,7 @@ func onlyTrainedStar(linha expertiseRow) templ.Component {
 //
 // As opções mostram o modificador FINAL — raça e itens já dentro —, porque um
 // valor cru aqui faria a linha discordar do próprio total.
-func attributePicker(v View, linha expertiseRow) templ.Component {
+func attributePicker(v View, row expertiseRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -562,9 +562,9 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var29 string
-		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(linha.Name + " atributo")
+		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(row.Name + " atributo")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 155, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 155, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -575,9 +575,9 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var30 string
-		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(attributeCommand(v, linha.Command))
+		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(attributeCommand(v, row.Command))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 156, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 156, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 		if templ_7745c5c3_Err != nil {
@@ -601,7 +601,7 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		for _, opcao := range v.Expertises.Attributes {
-			if opcao.Key == linha.Attribute {
+			if opcao.Key == row.Attribute {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<option value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -674,7 +674,7 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 }
 
 // trainingButton liga e desliga o treino.
-func trainingButton(v View, linha expertiseRow) templ.Component {
+func trainingButton(v View, row expertiseRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -696,8 +696,8 @@ func trainingButton(v View, linha expertiseRow) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var37 = []any{ui.BadgeClasses("inline-flex shrink-0 items-center gap-1 text-3xs uppercase tracking-wider"),
-			templ.KV("border-grimorio-gold/60 text-grimorio-gold", linha.Trained),
-			templ.KV("border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40", !linha.Trained)}
+			templ.KV("border-grimorio-gold/60 text-grimorio-gold", row.Trained),
+			templ.KV("border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40", !row.Trained)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var37...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -707,9 +707,9 @@ func trainingButton(v View, linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var38 string
-		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", linha.Trained))
+		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", row.Trained))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 174, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 174, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 		if templ_7745c5c3_Err != nil {
@@ -720,9 +720,9 @@ func trainingButton(v View, linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var39 string
-		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(linha.Name + " treinada")
+		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(row.Name + " treinada")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 175, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 175, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 		if templ_7745c5c3_Err != nil {
@@ -733,9 +733,9 @@ func trainingButton(v View, linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var40 string
-		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/pericias/treino/"+linha.Command))
+		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/pericias/treino/"+row.Command))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 176, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 176, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 		if templ_7745c5c3_Err != nil {
@@ -771,7 +771,7 @@ func trainingButton(v View, linha expertiseRow) templ.Component {
 }
 
 // expertiseDetail é a decomposição de UMA perícia.
-func expertiseDetail(linha expertiseRow) templ.Component {
+func expertiseDetail(row expertiseRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -804,7 +804,7 @@ func expertiseDetail(linha expertiseRow) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = breakdownRows(linha.Rows).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = breakdownRows(row.Rows).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -835,8 +835,8 @@ func expertiseDetail(linha expertiseRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var46 = []any{"flex items-center gap-1.5 font-mono text-2xl font-bold",
-				templ.KV("text-muted-foreground", linha.Locked),
-				templ.KV("text-grimorio-gold", !linha.Locked)}
+				templ.KV("text-muted-foreground", row.Locked),
+				templ.KV("text-grimorio-gold", !row.Locked)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var46...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -858,16 +858,16 @@ func expertiseDetail(linha expertiseRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if linha.Locked {
+			if row.Locked {
 				templ_7745c5c3_Err = ui.Icon("Lock", "size-4 text-warning-ink").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			var templ_7745c5c3_Var48 string
-			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Total)
+			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(row.Total)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 200, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 200, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -879,7 +879,7 @@ func expertiseDetail(linha expertiseRow) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = overlay(linha.Key, linha.Name, "Scroll", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var43), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = overlay(row.Key, row.Name, "Scroll", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var43), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

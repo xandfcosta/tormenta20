@@ -18,26 +18,26 @@ import (
 // fallback e, de quebra, prende que ele aponta para uma variável que EXISTE —
 // era exatamente aí que o defeito antigo morava.
 func TestAnUnknownMarkerColorFallsBackToTheDefault(t *testing.T) {
-	padrao := markerColor(board.DefaultMarkerColor())
+	standard := markerColor(board.DefaultMarkerColor())
 
-	for _, torta := range []string{"gold", "red", "'; background: url(x)", ""} {
-		if got := markerColor(torta); got != padrao {
-			t.Errorf("a cor %q devolveu %q em vez do padrão %q", torta, got, padrao)
+	for _, crooked := range []string{"gold", "red", "'; background: url(x)", ""} {
+		if got := markerColor(crooked); got != standard {
+			t.Errorf("a cor %q devolveu %q em vez do padrão %q", crooked, got, standard)
 		}
 	}
 	// O CONTROLE: uma cor BOA não cai no padrão por acidente, senão o teste
 	// acima seria verdade sobre uma função que devolve sempre a mesma coisa.
-	outra := ""
+	other := ""
 	for _, c := range board.MarkerColors {
 		if c.ID != board.DefaultMarkerColor() {
-			outra = c.ID
+			other = c.ID
 			break
 		}
 	}
-	if outra == "" {
+	if other == "" {
 		t.Fatal("só há uma cor — o controle não tem como distinguir nada")
 	}
-	if markerColor(outra) == padrao {
-		t.Errorf("a cor %q devolveu o padrão: a função não distingue cor nenhuma", outra)
+	if markerColor(other) == standard {
+		t.Errorf("a cor %q devolveu o padrão: a função não distingue cor nenhuma", other)
 	}
 }

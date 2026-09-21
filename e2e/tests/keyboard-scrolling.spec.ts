@@ -34,18 +34,18 @@ const CENAS = [
   { nome: 'personagens', url: '/personagens' },
 ]
 
-for (const cena of CENAS) {
-  test(`o teclado alcança tudo que rola na cena de ${cena.nome}`, async ({ page }) => {
+for (const scene of CENAS) {
+  test(`o teclado alcança tudo que rola na cena de ${scene.nome}`, async ({ page }) => {
     await page.setViewportSize({ width: 1200, height: 700 })
-    await page.goto(cena.url)
+    await page.goto(scene.url)
     await page.waitForLoadState('networkidle')
 
-    const medida = await page.evaluate(() => {
-      const rola = (e: Element) => {
+    const measure = await page.evaluate(() => {
+      const scrolls = (e: Element) => {
         const cs = getComputedStyle(e)
         return /auto|scroll/.test(cs.overflowY) && e.scrollHeight > e.clientHeight + 4
       }
-      const FOCAVEL = 'a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])'
+      const FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])'
       return {
         // O CONTROLE: a cena desenhou. Sem ele, "nenhuma caixa presa" seria
         // verdade também sobre uma página que não carregou ou deu 404 — que é
@@ -54,9 +54,9 @@ for (const cena of CENAS) {
         documentoRola:
           document.documentElement.scrollHeight > document.documentElement.clientHeight,
         presas: [...document.querySelectorAll('*')]
-          .filter(rola)
+          .filter(scrolls)
           .filter((e) => (e as HTMLElement).tabIndex < 0)
-          .filter((e) => e.querySelectorAll(FOCAVEL).length === 0)
+          .filter((e) => e.querySelectorAll(FOCUSABLE).length === 0)
           .map((e) => ({
             classe: String((e as HTMLElement).className).slice(0, 60),
             escondido: e.scrollHeight - e.clientHeight,
@@ -64,18 +64,18 @@ for (const cena of CENAS) {
       }
     })
 
-    expect(medida.desenhou, `a cena de ${cena.nome} não desenhou`).toBe(true)
+    expect(measure.desenhou, `a cena de ${scene.nome} não desenhou`).toBe(true)
 
     // Se o documento inteiro rola, o teclado já alcança tudo pelo corpo — e a
     // regra abaixo não se aplica. Hoje nenhuma cena do app é assim, mas
     // afirmar a condição em vez de assumi-la é o que impede este guarda de
     // acusar uma cena que mudou de casca por um motivo legítimo.
-    if (medida.documentoRola) return
+    if (measure.documentoRola) return
 
     expect(
-      medida.presas,
-      `caixas que rolam sem foco nem descendente focável em ${cena.nome}: ` +
-        `o teclado não alcança o conteúdo escondido (${medida.presas
+      measure.presas,
+      `caixas que rolam sem foco nem descendente focável em ${scene.nome}: ` +
+        `o teclado não alcança o conteúdo escondido (${measure.presas
           .map((p) => `${p.escondido}px em .${p.classe}`)
           .join('; ')})`,
     ).toEqual([])

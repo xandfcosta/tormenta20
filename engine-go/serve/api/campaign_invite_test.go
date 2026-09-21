@@ -19,20 +19,20 @@ import (
 // com os mesmos argumentos e mais nada.
 func TestACampaignBornOnScreenLetsAPlayerIn(t *testing.T) {
 	s := newTestServer(t)
-	mestre := seedUser(t, s, "mestre@t20.local")
-	jogador := seedUser(t, s, "jogador@t20.local")
-	heroi := seedCharacter(t, s, jogador, "Visitante")
+	gm := seedUser(t, s, "mestre@t20.local")
+	player := seedUser(t, s, "jogador@t20.local")
+	hero := seedCharacter(t, s, player, "Visitante")
 
-	id, err := s.campaignLifecycle().Open(context.Background(), mestre, "Mesa Nova", "")
+	id, err := s.campaignLifecycle().Open(context.Background(), gm, "Mesa Nova", "")
 	if err != nil {
 		t.Fatalf("abrir campanha: %v", err)
 	}
 
-	convite := s.campaignLifecycle().InviteOf(context.Background(), id)
-	if len(convite) < 16 {
-		t.Fatalf("a mesa nasceu sem link de convite (%q) — sem ele ninguém entra", convite)
+	invite := s.campaignLifecycle().InviteOf(context.Background(), id)
+	if len(invite) < 16 {
+		t.Fatalf("a mesa nasceu sem link de convite (%q) — sem ele ninguém entra", invite)
 	}
-	if err := s.campaignSeating().Seat(context.Background(), jogador, id, heroi, convite); err != nil {
+	if err := s.campaignSeating().Seat(context.Background(), player, id, hero, invite); err != nil {
 		t.Fatalf("o jogador foi recusado (%v) com o link que a própria mesa cunhou", err)
 	}
 	if n := membrosDaMesa(t, s, id); n != 1 {
@@ -44,34 +44,34 @@ func TestACampaignBornOnScreenLetsAPlayerIn(t *testing.T) {
 // "cunhar no nascimento" de virar "um token abre qualquer porta".
 func TestALinkOnlyOpensItsOwnTable(t *testing.T) {
 	s := newTestServer(t)
-	mestre := seedUser(t, s, "mestre@t20.local")
-	jogador := seedUser(t, s, "jogador@t20.local")
-	heroi := seedCharacter(t, s, jogador, "Visitante")
+	gm := seedUser(t, s, "mestre@t20.local")
+	player := seedUser(t, s, "jogador@t20.local")
+	hero := seedCharacter(t, s, player, "Visitante")
 
-	minha, err := s.campaignLifecycle().Open(context.Background(), mestre, "A minha", "")
+	mine, err := s.campaignLifecycle().Open(context.Background(), gm, "A minha", "")
 	if err != nil {
 		t.Fatalf("abrir: %v", err)
 	}
-	outra, err := s.campaignLifecycle().Open(context.Background(), mestre, "A outra", "")
+	other, err := s.campaignLifecycle().Open(context.Background(), gm, "A outra", "")
 	if err != nil {
 		t.Fatalf("abrir: %v", err)
 	}
 
-	conviteDaMinha := s.campaignLifecycle().InviteOf(context.Background(), minha)
-	conviteDaOutra := s.campaignLifecycle().InviteOf(context.Background(), outra)
-	if conviteDaMinha == conviteDaOutra {
+	myInvite := s.campaignLifecycle().InviteOf(context.Background(), mine)
+	otherInvite := s.campaignLifecycle().InviteOf(context.Background(), other)
+	if myInvite == otherInvite {
 		t.Fatal("duas mesas nasceram com o MESMO link")
 	}
-	if err := s.campaignSeating().Seat(context.Background(), jogador, minha, heroi, conviteDaOutra); err == nil {
+	if err := s.campaignSeating().Seat(context.Background(), player, mine, hero, otherInvite); err == nil {
 		t.Error("o link de uma mesa abriu a porta de OUTRA")
 	}
 }
 
-func membrosDaMesa(t *testing.T, s *Server, campanhaID int64) int {
+func membrosDaMesa(t *testing.T, s *Server, campaignID int64) int {
 	t.Helper()
 	var n int
 	if err := s.db.QueryRowContext(context.Background(),
-		"SELECT COUNT(*) FROM campaign_members WHERE campaignId = ?", campanhaID).Scan(&n); err != nil {
+		"SELECT COUNT(*) FROM campaign_members WHERE campaignId = ?", campaignID).Scan(&n); err != nil {
 		t.Fatalf("contar membros: %v", err)
 	}
 	return n

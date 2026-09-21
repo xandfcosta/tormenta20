@@ -23,9 +23,9 @@ import (
 // que curto são 9m, enquanto "alcance médio" já é a resposta. E o "além" não é
 // uma faixa com nome — ele é a ausência de uma —, então a frase dele é outra.
 func TestTheRulerSentenceSaysTheBookRangeBand(t *testing.T) {
-	casos := []struct {
-		de, ate  engine.Square
-		esperado string
+	cases := []struct {
+		de, ate engine.Square
+		want    string
 	}{
 		// Um quadrado no SINGULAR: a frase é lida em voz alta na mesa.
 		{engine.Square{}, engine.Square{X: 1}, "1 quadrado (1,5m) · alcance curto"},
@@ -38,9 +38,9 @@ func TestTheRulerSentenceSaysTheBookRangeBand(t *testing.T) {
 		// (p238): 3 na diagonal são 6 quadrados, não 3.
 		{engine.Square{}, engine.Square{X: 3, Y: 3}, "6 quadrados (9,0m) · alcance curto"},
 	}
-	for _, c := range casos {
-		if lido := rulerReading(engine.Measure(c.de, c.ate)); lido != c.esperado {
-			t.Errorf("de %v a %v a régua disse %q, esperado %q", c.de, c.ate, lido, c.esperado)
+	for _, c := range cases {
+		if read := rulerReading(engine.Measure(c.de, c.ate)); read != c.want {
+			t.Errorf("de %v a %v a régua disse %q, esperado %q", c.de, c.ate, read, c.want)
 		}
 	}
 }
@@ -53,11 +53,11 @@ func TestTheRulerSentenceSaysTheBookRangeBand(t *testing.T) {
 // a direção só pode sair ortogonal ou diagonal — nunca um passo com um eixo
 // parado que não seja um dos dois.
 func TestTheTemplateDirectionHasADeadZone(t *testing.T) {
-	origem := engine.Square{X: 5, Y: 5}
-	casos := []struct {
-		mira     engine.Square
-		esperado engine.Square
-		porque   string
+	origin := engine.Square{X: 5, Y: 5}
+	cases := []struct {
+		mira   engine.Square
+		want   engine.Square
+		reason string
 	}{
 		{engine.Square{X: 15, Y: 5}, engine.Square{X: 1}, "reto para a direita"},
 		{engine.Square{X: 15, Y: 6}, engine.Square{X: 1}, "quase reto ainda é reto"},
@@ -69,11 +69,11 @@ func TestTheTemplateDirectionHasADeadZone(t *testing.T) {
 		// é o do "clique de novo para apontar", e este valor nunca chega ao
 		// desenho. Fica preso mesmo assim porque um (0,0) que vazasse faria o
 		// `AreaSquares` desenhar um cone sem lado nenhum.
-		{origem, engine.Square{X: 1}, "mira parada não é direção"},
+		{origin, engine.Square{X: 1}, "mira parada não é direção"},
 	}
-	for _, c := range casos {
-		if lido := templateDirection(origem, c.mira); lido != c.esperado {
-			t.Errorf("%s: mira %v deu %v, esperado %v", c.porque, c.mira, lido, c.esperado)
+	for _, c := range cases {
+		if read := templateDirection(origin, c.mira); read != c.want {
+			t.Errorf("%s: mira %v deu %v, esperado %v", c.reason, c.mira, read, c.want)
 		}
 	}
 }
@@ -83,10 +83,10 @@ func TestTheTemplateDirectionHasADeadZone(t *testing.T) {
 // moldura. Se o caminho já viesse relativo à moldura, uma moldura que crescesse
 // deslocaria o gabarito sem que nada mudasse na tela.
 func TestTheTemplatePathUsesThePlaneCoordinate(t *testing.T) {
-	lido := squaresPath([]engine.Square{{X: -1, Y: 2}, {X: 0, Y: 2}})
-	const esperado = "M -1 2 h 1 v 1 h -1 Z M 0 2 h 1 v 1 h -1 Z"
-	if lido != esperado {
-		t.Errorf("o caminho saiu %q, esperado %q", lido, esperado)
+	read := squaresPath([]engine.Square{{X: -1, Y: 2}, {X: 0, Y: 2}})
+	const want = "M -1 2 h 1 v 1 h -1 Z M 0 2 h 1 v 1 h -1 Z"
+	if read != want {
+		t.Errorf("o caminho saiu %q, esperado %q", read, want)
 	}
 	if squaresPath(nil) != "" {
 		t.Error("área vazia devolveu caminho — o `data-show` do desenho depende do vazio")
@@ -102,20 +102,20 @@ func TestTheTemplateCatchesTheLargeTokenByItsBody(t *testing.T) {
 	}}
 	// Uma casa só, na quina de baixo do corpo do dragão: a âncora dele é (10,10)
 	// e o corpo vai até (15,15).
-	dentro := takesTemplateWho(b, []engine.Square{{X: 15, Y: 15}})
-	if !strings.Contains(dentro, "Dragão") {
-		t.Errorf("a área pegou %q — o corpo da peça grande ficou de fora", dentro)
+	inside := takesTemplateWho(b, []engine.Square{{X: 15, Y: 15}})
+	if !strings.Contains(inside, "Dragão") {
+		t.Errorf("a área pegou %q — o corpo da peça grande ficou de fora", inside)
 	}
-	if strings.Contains(dentro, "Rato") {
-		t.Errorf("a área pegou %q — quem está longe entrou", dentro)
+	if strings.Contains(inside, "Rato") {
+		t.Errorf("a área pegou %q — quem está longe entrou", inside)
 	}
-	if fora := takesTemplateWho(b, []engine.Square{{X: 100, Y: 100}}); fora != "Ninguém dentro." {
-		t.Errorf("área sem ninguém disse %q", fora)
+	if outside := takesTemplateWho(b, []engine.Square{{X: 100, Y: 100}}); outside != "Ninguém dentro." {
+		t.Errorf("área sem ninguém disse %q", outside)
 	}
 	// A frase VAZIA é a dica, e não "0 peças": antes do primeiro clique não há
 	// área nenhuma, e dizer que ela não pega ninguém descreveria mal o estado.
-	if vazio := takesTemplateWho(b, nil); !strings.Contains(vazio, "Clique") {
-		t.Errorf("sem gabarito posto a barra disse %q, esperado a dica do clique", vazio)
+	if empty := takesTemplateWho(b, nil); !strings.Contains(empty, "Clique") {
+		t.Errorf("sem gabarito posto a barra disse %q, esperado a dica do clique", empty)
 	}
 }
 
@@ -123,7 +123,7 @@ func TestTheTemplateCatchesTheLargeTokenByItsBody(t *testing.T) {
 // dela passa por zero e por vazio no caminho. Recusar com uma frase acenderia um
 // erro no meio da digitação; travar desenha o menor gabarito e segue.
 func TestTheTemplateSizeClampsInsteadOfRefusing(t *testing.T) {
-	casos := map[string]int{
+	cases := map[string]int{
 		"":     1,
 		"0":    1,
 		"-4":   1,
@@ -135,9 +135,9 @@ func TestTheTemplateSizeClampsInsteadOfRefusing(t *testing.T) {
 		"2.5":  2, // o `Sscanf` lê o inteiro e larga o resto: 2 é gabarito, não erro.
 		"  7 ": 7,
 	}
-	for bruto, esperado := range casos {
-		if lido := templateSize(bruto); lido != esperado {
-			t.Errorf("tamanho %q virou %d, esperado %d", bruto, lido, esperado)
+	for raw, want := range cases {
+		if read := templateSize(raw); read != want {
+			t.Errorf("tamanho %q virou %d, esperado %d", raw, read, want)
 		}
 	}
 }
@@ -149,22 +149,22 @@ func TestTheTemplateSizeClampsInsteadOfRefusing(t *testing.T) {
 func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 	// Um rato em (0,0) e um dragão cuja âncora é (10,10) e cujo corpo vai até
 	// (15,15): o centro pelo corpo é 7, pela âncora seria 5.
-	v := BoardView{Pecas: []boardToken{
-		{X: 0, Y: 0, Pegada: 1},
-		{X: 10, Y: 10, Pegada: 6},
+	v := BoardView{Tokens: []boardToken{
+		{X: 0, Y: 0, Footprint: 1},
+		{X: 10, Y: 10, Footprint: 6},
 	}}
 	if x, y := centerScene(v); x != 7 || y != 7 {
 		t.Errorf("o centro saiu (%d,%d), esperado (7,7) — o corpo da peça grande ficou fora da conta", x, y)
 	}
 	// SEM PEÇA o alvo é a ORIGEM do plano: num plano infinito e vazio, o (0,0) é
 	// o único lugar sobre o qual duas pessoas concordam.
-	vazia := BoardView{}
-	if x, y := centerScene(vazia); x != 0 || y != 0 {
+	empty := BoardView{}
+	if x, y := centerScene(empty); x != 0 || y != 0 {
 		t.Errorf("a cena vazia mirou (%d,%d), esperado a origem do plano (0,0)", x, y)
 	}
 	// E o RÓTULO acompanha: "nas peças" numa cena sem peça nenhuma ensina que o
 	// botão está quebrado.
-	if CenterTarget(vazia) == CenterTarget(v) {
+	if CenterTarget(empty) == CenterTarget(v) {
 		t.Errorf("o rótulo não distingue cena com peça de cena vazia: %q", CenterTarget(v))
 	}
 }
@@ -177,15 +177,15 @@ func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 // A lista sai das espécies e nunca de um literal, e é isso que este guarda
 // prende: a quinta espécie nasce dentro da condição em vez de fora dela.
 func TestThePaintLayerOnlyLightsUpWithABrush(t *testing.T) {
-	condicao := onIsBrush()
+	condition := onIsBrush()
 	for _, e := range board.TerrainKinds {
-		if !strings.Contains(condicao, `"`+string(e.ID)+`"`) {
-			t.Errorf("a espécie %q ficou fora da condição da pintura: %s", e.ID, condicao)
+		if !strings.Contains(condition, `"`+string(e.ID)+`"`) {
+			t.Errorf("a espécie %q ficou fora da condição da pintura: %s", e.ID, condition)
 		}
 	}
-	for _, fora := range []string{FerramentaDaRegua, FerramentaDoGabarito, MarkTool} {
-		if strings.Contains(condicao, `"`+fora+`"`) {
-			t.Errorf("a ferramenta %q entrou na condição da pintura: %s", fora, condicao)
+	for _, outside := range []string{FerramentaDaRegua, FerramentaDoGabarito, MarkTool} {
+		if strings.Contains(condition, `"`+outside+`"`) {
+			t.Errorf("a ferramenta %q entrou na condição da pintura: %s", outside, condition)
 		}
 	}
 }

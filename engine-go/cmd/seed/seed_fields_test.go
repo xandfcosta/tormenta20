@@ -28,13 +28,13 @@ func TestEveryCreateFieldOfTheSeedIsClassified(t *testing.T) {
 	// APONTAM para o catálogo, e o `validateCatalogRefs` confere cada um.
 	// Mexeu aqui? Mexa lá — e o `TestTheSeedRefusesEveryUnknownCatalogReference`
 	// é quem prova que a conferência morde.
-	doCatalogo := map[string]bool{
+	fromCatalog := map[string]bool{
 		"races": true, "origin": true, "classes": true, "god": true,
 		"godPower": true, "items": true, "size": true, "classChoices": true,
 	}
 	// NÃO apontam: são números, texto livre do dono, ou nomes de ATRIBUTO, que
 	// são do motor e não do catálogo.
-	proprios := map[string]bool{
+	own := map[string]bool{
 		"name": true, "displacement": true, "raceAttributeChoices": true,
 		"strength": true, "dexterity": true, "constitution": true,
 		"intelligence": true, "wisdom": true, "charisma": true,
@@ -44,46 +44,46 @@ func TestEveryCreateFieldOfTheSeedIsClassified(t *testing.T) {
 	if err := json.Unmarshal(seedData, &sf); err != nil {
 		t.Fatalf("seed-data.json: %v", err)
 	}
-	vistos, campos := map[string]bool{}, 0
+	seen, fields := map[string]bool{}, 0
 	for _, u := range sf.Users {
 		for _, ch := range u.Characters {
-			var criar map[string]json.RawMessage
-			if err := json.Unmarshal(ch.Create, &criar); err != nil {
+			var create map[string]json.RawMessage
+			if err := json.Unmarshal(ch.Create, &create); err != nil {
 				t.Fatalf("create: %v", err)
 			}
-			for campo := range criar {
-				campos++
-				vistos[campo] = true
+			for field := range create {
+				fields++
+				seen[field] = true
 			}
 		}
 	}
-	naoClassificados := []string{}
-	for campo := range vistos {
-		if !doCatalogo[campo] && !proprios[campo] {
-			naoClassificados = append(naoClassificados, campo)
+	unclassified := []string{}
+	for field := range seen {
+		if !fromCatalog[field] && !own[field] {
+			unclassified = append(unclassified, field)
 		}
 	}
-	sort.Strings(naoClassificados)
-	for _, campo := range naoClassificados {
+	sort.Strings(unclassified)
+	for _, field := range unclassified {
 		t.Errorf("o `create` do seed tem o campo %q e este guarda não sabe o que ele é.\n"+
 			"    Se ele aponta para o catálogo, acrescente a conferência no `validateCatalogRefs` e o nome em `doCatalogo`.\n"+
 			"    Se não aponta, o nome vai em `proprios`. Campo novo nasce DESCOBERTO, e é assim que o seed volta a mentir.",
-			campo)
+			field)
 	}
 
 	// O DENOMINADOR. Sem ele, um `seed-data.json` que deixasse de ter `create`
 	// nenhum passaria verde — e "nenhum campo não classificado" e "nenhum campo"
 	// são a mesma lista vazia.
-	if campos < 100 {
-		t.Fatalf("o guarda viu só %d campos de `create` em todo o seed: ele parou de achar o que veio medir", campos)
+	if fields < 100 {
+		t.Fatalf("o guarda viu só %d campos de `create` em todo o seed: ele parou de achar o que veio medir", fields)
 	}
 	// E o outro lado: os campos que EU classifiquei como do catálogo têm de
-	// existir mesmo no arquivo. Um nome sobrando em `doCatalogo` é conferência
+	// existir mesmo no arquivo. Um nome sobrando em `fromCatalog` é conferência
 	// escrita para um campo que ninguém usa, e ela apodrece calada.
-	for campo := range doCatalogo {
-		if !vistos[campo] {
+	for field := range fromCatalog {
+		if !seen[field] {
 			t.Errorf("`doCatalogo` lista %q, que não existe em nenhum `create` do seed: "+
-				"ou o campo foi removido do arquivo, ou o nome está errado aqui", campo)
+				"ou o campo foi removido do arquivo, ou o nome está errado aqui", field)
 		}
 	}
 }

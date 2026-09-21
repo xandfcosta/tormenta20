@@ -32,11 +32,11 @@ func TestPopulateBringsOnlyTheChosen(t *testing.T) {
 	_ = live.AddEntry(st, npc("Assassino", 20), id)
 	b := NewBoard("t1", "Cripta", "stone")
 
-	escolhidos := EntrySelection{
+	chosen := EntrySelection{
 		entryIDByLabel(t, st, "Sílfide"):  true,
 		entryIDByLabel(t, st, "Paladino"): true,
 	}
-	if placed := PopulateBoard(b, st, boardCounter(), escolhidos); placed != 2 {
+	if placed := PopulateBoard(b, st, boardCounter(), chosen); placed != 2 {
 		t.Fatalf("colocou %d peças, esperado 2", placed)
 	}
 	for _, token := range b.Tokens {
@@ -50,26 +50,26 @@ func TestPopulateBringsOnlyTheChosen(t *testing.T) {
 // (que manda `board-Populate` pelado e espera a fila inteira) de um mestre que
 // desmarcou todo mundo no diálogo.
 func TestChosenEntriesTellsAbsentFromEmpty(t *testing.T) {
-	if ausente := ChosenEntries(map[string]any{}, "entryIds"); ausente != nil {
-		t.Errorf("corpo sem entryIds virou seleção %v — o cliente antigo pararia de trazer alguém", ausente)
+	if absent := ChosenEntries(map[string]any{}, "entryIds"); absent != nil {
+		t.Errorf("corpo sem entryIds virou seleção %v — o cliente antigo pararia de trazer alguém", absent)
 	}
 	if !ChosenEntries(map[string]any{}, "entryIds").wants("e1") {
 		t.Error("seleção ausente recusou uma linha — ausente é TODAS")
 	}
 
-	vazia := ChosenEntries(map[string]any{"entryIds": []any{}}, "entryIds")
-	if vazia == nil {
+	empty := ChosenEntries(map[string]any{"entryIds": []any{}}, "entryIds")
+	if empty == nil {
 		t.Fatal("lista vazia virou 'todas' — o mestre pediu ninguém e receberia a fila inteira")
 	}
-	if vazia.wants("e1") {
+	if empty.wants("e1") {
 		t.Error("lista vazia aceitou uma linha")
 	}
 
-	uma := ChosenEntries(map[string]any{"entryIds": []any{"e2", 7, nil}}, "entryIds")
-	if !uma.wants("e2") {
+	one := ChosenEntries(map[string]any{"entryIds": []any{"e2", 7, nil}}, "entryIds")
+	if !one.wants("e2") {
 		t.Error("a linha nomeada ficou de fora")
 	}
-	if uma.wants("e1") {
+	if one.wants("e1") {
 		t.Error("uma linha que ninguém nomeou entrou na escolha")
 	}
 }

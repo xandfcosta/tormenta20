@@ -17,26 +17,26 @@ import (
 // mão — uma lista à mão seria a implementação copiada, e ela passaria verde com
 // as duas erradas do mesmo jeito.
 func TestTheStrokeHasNoGap(t *testing.T) {
-	casos := []struct{ de, ate engine.Square }{
+	cases := []struct{ de, ate engine.Square }{
 		{engine.Square{}, engine.Square{X: 9, Y: 4}},            // quase horizontal
 		{engine.Square{}, engine.Square{X: 4, Y: 9}},            // quase vertical
 		{engine.Square{}, engine.Square{X: 6, Y: 6}},            // diagonal exata
 		{engine.Square{X: 3, Y: 7}, engine.Square{X: -5, Y: 2}}, // para trás e para o negativo
 		{engine.Square{X: 2, Y: 2}, engine.Square{X: 2, Y: 2}},  // parado
 	}
-	for _, caso := range casos {
-		casas := StrokeSquares(caso.de, caso.ate)
-		if casas[0] != caso.de {
-			t.Errorf("%v→%v: o traço não começa na casa de origem (%v)", caso.de, caso.ate, casas[0])
+	for _, tc := range cases {
+		squares := StrokeSquares(tc.de, tc.ate)
+		if squares[0] != tc.de {
+			t.Errorf("%v→%v: o traço não começa na casa de origem (%v)", tc.de, tc.ate, squares[0])
 		}
-		if fim := casas[len(casas)-1]; fim != caso.ate {
-			t.Errorf("%v→%v: o traço não chega ao destino (parou em %v)", caso.de, caso.ate, fim)
+		if end := squares[len(squares)-1]; end != tc.ate {
+			t.Errorf("%v→%v: o traço não chega ao destino (parou em %v)", tc.de, tc.ate, end)
 		}
-		for i := 1; i < len(casas); i++ {
-			dx, dy := abs(casas[i].X-casas[i-1].X), abs(casas[i].Y-casas[i-1].Y)
+		for i := 1; i < len(squares); i++ {
+			dx, dy := abs(squares[i].X-squares[i-1].X), abs(squares[i].Y-squares[i-1].Y)
 			if dx > 1 || dy > 1 || dx+dy == 0 {
 				t.Errorf("%v→%v: buraco entre %v e %v — o muro tem passagem",
-					caso.de, caso.ate, casas[i-1], casas[i])
+					tc.de, tc.ate, squares[i-1], squares[i])
 			}
 		}
 	}
@@ -47,18 +47,18 @@ func TestTheStrokeHasNoGap(t *testing.T) {
 // este que separa os dois algoritmos: nenhum passo mexe nos DOIS eixos ao mesmo
 // tempo.
 func TestTheStrokeDoesNotGoDiagonalWhenItGrazes(t *testing.T) {
-	casas := StrokeSquares(engine.Square{}, engine.Square{X: 2, Y: 1})
-	for i := 1; i < len(casas); i++ {
-		dx, dy := abs(casas[i].X-casas[i-1].X), abs(casas[i].Y-casas[i-1].Y)
+	squares := StrokeSquares(engine.Square{}, engine.Square{X: 2, Y: 1})
+	for i := 1; i < len(squares); i++ {
+		dx, dy := abs(squares[i].X-squares[i-1].X), abs(squares[i].Y-squares[i-1].Y)
 		if dx == 1 && dy == 1 {
 			t.Errorf("o traço pulou na diagonal de %v para %v: a casa roçada ficou vazia",
-				casas[i-1], casas[i])
+				squares[i-1], squares[i])
 		}
 	}
 	// O CONTROLE: sem isto, um `StrokeSquares` que devolvesse só a origem passaria
 	// no laço acima sobre uma lista de um item.
-	if len(casas) != 4 {
-		t.Errorf("o traço (0,0)→(2,1) tem %d casas, esperado 4 — %v", len(casas), casas)
+	if len(squares) != 4 {
+		t.Errorf("o traço (0,0)→(2,1) tem %d casas, esperado 4 — %v", len(squares), squares)
 	}
 }
 
@@ -102,18 +102,18 @@ func TestAPossessedStrokeIsRefused(t *testing.T) {
 // que é a pior forma de falhar.
 func TestTheRectangleIsTheSameInAllFourDirections(t *testing.T) {
 	a, b := engine.Square{X: 0, Y: 0}, engine.Square{X: 2, Y: 1}
-	referencia := RectangleSquares(a, b)
-	if len(referencia) != 6 {
-		t.Fatalf("(0,0)→(2,1) deu %d casas, esperado 6 — o guarda mediria o vazio", len(referencia))
+	reference := RectangleSquares(a, b)
+	if len(reference) != 6 {
+		t.Fatalf("(0,0)→(2,1) deu %d casas, esperado 6 — o guarda mediria o vazio", len(reference))
 	}
 	for _, par := range [][2]engine.Square{
 		{b, a},
 		{{X: 2, Y: 0}, {X: 0, Y: 1}},
 		{{X: 0, Y: 1}, {X: 2, Y: 0}},
 	} {
-		if outro := RectangleSquares(par[0], par[1]); len(outro) != len(referencia) {
+		if other := RectangleSquares(par[0], par[1]); len(other) != len(reference) {
 			t.Errorf("%v→%v deu %d casas, e %v→%v deu %d: a direção do arrasto mudou o retângulo",
-				par[0], par[1], len(outro), a, b, len(referencia))
+				par[0], par[1], len(other), a, b, len(reference))
 		}
 	}
 }

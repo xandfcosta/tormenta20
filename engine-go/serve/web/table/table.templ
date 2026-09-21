@@ -35,7 +35,7 @@ templ tableScene(v View) {
 		// MINHA FICHA fica FORA de `TableRegions` de propósito: o stream nunca a
 		// toca, e quem a mantém em dia são os comandos dela, que remendam o
 		// `#sheet-scene` por conta.
-		if v.MinhaFicha != nil {
+		if v.MySheet != nil {
 			// O OUVIDO DA FICHA: o stream só avisa que o personagem mudou, e é o
 			// CLIENTE que repede a ficha — na aba em que a pessoa está, que só
 			// ele sabe.
@@ -50,11 +50,11 @@ templ tableScene(v View) {
 			// de um gesto que não tem nada a ver com ela.
 			<div
 				data-on-signal-patch-filter="{include: /^sheet_version$/}"
-				data-on-signal-patch={ sheetui.SheetRefetch(*v.MinhaFicha) }
+				data-on-signal-patch={ sheetui.SheetRefetch(*v.MySheet) }
 				class="hidden"
 			></div>
 			<div data-show={ surface(superficieDaFicha) } class="flex min-h-0 flex-1 flex-col">
-				@sheetui.SceneBody(*v.MinhaFicha)
+				@sheetui.SceneBody(*v.MySheet)
 			</div>
 		}
 		// A MESA: quem está na cena e em que ordem. Rola por dentro, nunca a
@@ -102,8 +102,8 @@ templ surfaceSelector(v View) {
 				data-on:click={ pickSurface(superficie.ID) }
 				class="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-none border px-2 text-xs uppercase tracking-wide outline-none transition-colors"
 			>
-				@ui.Icon(superficie.Icone, "size-4 shrink-0")
-				<span class="truncate">{ superficie.Rotulo }</span>
+				@ui.Icon(superficie.Icon, "size-4 shrink-0")
+				<span class="truncate">{ superficie.Label }</span>
 			</button>
 		}
 	</div>
@@ -167,9 +167,9 @@ templ tableHeader(v View) {
 // "item 1 de 3" em leitor de tela, e o `›` desenhado seria lido como "sinal de
 // maior" no meio de cada nome.
 templ turnStrip(v View) {
-	if len(v.Proximos) > 0 {
+	if len(v.Upcoming) > 0 {
 		<ol class="flex min-w-0 items-center gap-1.5 text-sm">
-			for i, p := range v.Proximos {
+			for i, p := range v.Upcoming {
 				if i > 0 {
 					<li aria-hidden="true" class="shrink-0 text-muted-foreground/50">›</li>
 				}
@@ -177,7 +177,7 @@ templ turnStrip(v View) {
 				// ali que ela acontece. O símbolo tem `title` e nome acessível:
 				// um `⟲` mudo seria enfeite para quem enxerga e nada para quem
 				// não.
-				if p.ViraARodada {
+				if p.WrapsRound {
 					<li
 						title={ fmt.Sprintf("Daqui começa a rodada %d", v.Round+1) }
 						class="shrink-0 text-sm text-grimorio-gold"
@@ -195,13 +195,13 @@ templ turnStrip(v View) {
 // turnStripName escreve "você" no lugar do próprio nome — quando ele é UM.
 //
 // Com dois meus na faixa a palavra deixa de responder e passa a atrapalhar
-// ("você › Tanque › você"), e aí o nome volta. Quem decide isso é o `DizVoce`,
+// ("você › Tanque › você"), e aí o nome volta. Quem decide isso é o `SaysYou`,
 // que enxerga a faixa inteira; aqui só se escreve o que ele já decidiu.
 func turnStripName(p turnAhead) string {
-	if p.DizVoce {
+	if p.SaysYou {
 		return "você"
 	}
-	return p.Rotulo
+	return p.Label
 }
 
 // turnStripInk: a da VEZ é a que se lê primeiro, a minha é dourada, o resto é
@@ -211,9 +211,9 @@ func turnStripName(p turnAhead) string {
 // existe no templ, e o segundo some sem erro.
 func turnStripInk(p turnAhead) string {
 	switch {
-	case p.Agora:
+	case p.Now:
 		return "min-w-0 truncate font-semibold text-foreground"
-	case p.Meu:
+	case p.Mine:
 		return "min-w-0 truncate text-grimorio-gold"
 	default:
 		return "min-w-0 truncate text-muted-foreground"
@@ -238,7 +238,7 @@ func turnStripInk(p turnAhead) string {
 // nenhum caminho do e2e desenha este aviso — uma variante nova aqui nasceria
 // sem medição.
 templ savingWarning(v View) {
-	if v.Mestre != nil && v.Mestre.GravacaoFalhando {
+	if v.GM != nil && v.GM.SaveFailing {
 		<p
 			role="alert"
 			class="flex shrink-0 items-center gap-1.5 rounded-sm border border-destructive/60 bg-destructive/10 px-2 py-1 text-xs font-semibold text-destructive-ink"
@@ -264,9 +264,9 @@ templ tableRegisterRegion(v View) {
 templ tableParty(v View) {
 	<div
 		id="table-party"
-		class={ templ.KV("flex min-h-0 flex-1 flex-col", v.Mestre != nil) }
+		class={ templ.KV("flex min-h-0 flex-1 flex-col", v.GM != nil) }
 	>
-		if v.Mestre != nil {
+		if v.GM != nil {
 			@gmCast(v)
 		} else {
 			@cardsParty(v)
@@ -277,11 +277,11 @@ templ tableParty(v View) {
 // O GRUPO em cartões, a superfície do JOGADOR. Aparece FORA de cena de
 // propósito: PV do grupo não é informação de combate.
 templ cardsParty(v View) {
-	if len(v.Grupo) > 0 {
+	if len(v.Group) > 0 {
 		<section class="space-y-1.5">
 			<h2 class={ ui.SectionLabelClasses("muted", "") }>Grupo</h2>
 			<div class="grid gap-2 sm:grid-cols-2">
-				for _, m := range v.Grupo {
+				for _, m := range v.Group {
 					// O RETRATO ANCORA O CARTÃO: sem nada à esquerda, o nome e as barras
 					// ficam soltos e gastam altura sem dizer quem é.
 					//
@@ -293,8 +293,8 @@ templ cardsParty(v View) {
 						<span
 							aria-hidden="true"
 							class="monogram size-11 rounded-sm text-sm"
-							style={ "background: " + ui.NameGradient(m.Nome) }
-						>{ m.Iniciais }</span>
+							style={ "background: " + ui.NameGradient(m.Name) }
+						>{ m.Initials }</span>
 						<div class="flex min-w-0 flex-1 flex-col gap-1">
 							<div class="flex items-baseline justify-between gap-2">
 								<span class="flex min-w-0 items-baseline gap-1.5">
@@ -304,18 +304,18 @@ templ cardsParty(v View) {
 									// E ele nunca vai sozinho: cor não existe para quem usa leitor
 									// de tela, então a frase viaja no `title` e num rótulo
 									// só-para-leitor.
-									if m.Presenca != nil {
+									if m.Presence != nil {
 										<span
-											title={ m.Nome + " — " + m.Presenca.Frase }
+											title={ m.Name + " — " + m.Presence.Sentence }
 											class={ "size-2 shrink-0 self-center rounded-full",
-												templ.KV("bg-hp-full", m.Presenca.NaMesa),
-												templ.KV("bg-grimorio-iron", !m.Presenca.NaMesa) }
+												templ.KV("bg-hp-full", m.Presence.AtTable),
+												templ.KV("bg-grimorio-iron", !m.Presence.AtTable) }
 										></span>
-										<span class="sr-only">{ m.Presenca.Frase }</span>
+										<span class="sr-only">{ m.Presence.Sentence }</span>
 									}
-									<span class="truncate font-medium">{ m.Nome }</span>
+									<span class="truncate font-medium">{ m.Name }</span>
 								</span>
-								<span class="shrink-0 bg-muted px-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Nv { fmt.Sprint(m.Nivel) }</span>
+								<span class="shrink-0 bg-muted px-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Nv { fmt.Sprint(m.Level) }</span>
 							</div>
 							if m.Classes != "" {
 								<p class="truncate text-xs text-muted-foreground">{ m.Classes }</p>
@@ -349,7 +349,7 @@ templ cardsParty(v View) {
 // nasce com a altura do nada, e quem rola passa a ser a PÁGINA em vez do mapa.
 templ tableBoard(v View) {
 	<div id="table-board" class="flex min-h-0 flex-1 flex-col">
-		@boardTable(v.Tabuleiro)
+		@boardTable(v.Board)
 		// A RECUSA de uma parada mora aqui: quem move é o jogador, que não tem o
 		// rodapé do mestre onde o `command_error` acende.
 		//
@@ -374,7 +374,7 @@ templ tableTracker(v View) {
 					<h2 class={ ui.SectionLabelClasses("muted", "") }>Iniciativa</h2>
 					// "Adicionar grupo" fica com a LISTA e não com o rodapé: ele
 					// MONTA a fila, e os verbos do rodapé andam com ela pronta.
-					if v.Mestre != nil {
+					if v.GM != nil {
 						<span class="flex items-center gap-1.5">
 							@addParty(v)
 							// O "+ Combatente" fica ao lado do "Adicionar grupo": os dois
@@ -405,7 +405,7 @@ templ tableTracker(v View) {
 						</span>
 					}
 				</div>
-				if v.Mestre != nil {
+				if v.GM != nil {
 					@formDeCombatente(v)
 				}
 				// Desenha O QUE CHEGOU, e nada mais. Quem esconde a fila fora de cena
@@ -413,7 +413,7 @@ templ tableTracker(v View) {
 				// v.SceneActive` seria a MESMA regra em dois lugares, e no dia em que
 				// divergissem a tela mentiria com toda a confiança. Ao template sobra
 				// escolher a FRASE do vazio.
-				if len(v.Fila) == 0 {
+				if len(v.Queue) == 0 {
 					<p class="border border-dashed border-grimorio-iron p-4 text-center text-sm text-muted-foreground">
 						if v.SceneActive {
 							Em cena · ninguém na fila ainda.
@@ -423,7 +423,7 @@ templ tableTracker(v View) {
 					</p>
 				} else {
 					<ol class="space-y-1">
-						for _, l := range v.Fila {
+						for _, l := range v.Queue {
 							@tableRowTracker(v, l)
 						}
 					</ol>
@@ -431,12 +431,12 @@ templ tableTracker(v View) {
 					// diz em quem ele mexe é o sinal que o número semeia. Um por
 					// linha seriam N ids para colidir e N cópias para o morph
 					// reconciliar a cada remendo.
-					if v.Mestre != nil {
+					if v.GM != nil {
 						@editarCombatente(v)
 					}
 				}
 			</section>
-			if v.Mestre != nil {
+			if v.GM != nil {
 				@condicoesDoCombatente(v)
 			}
 	</div>
@@ -466,7 +466,7 @@ templ condicoesDoCombatente(v View) {
 			As condições do livro (p394-395). Aqui elas são RASTREIO: o bloco de uma criatura é escrito à mão, então o app não recalcula Defesa nem ataque — quem aplica o efeito é você.
 		</p>
 		<ul class="mt-3 flex max-h-[50vh] flex-wrap gap-1.5 overflow-y-auto">
-			for _, c := range book.Catalogs().Condicoes {
+			for _, c := range book.Catalogs().Conditions {
 				<li>
 					<button
 						type="button"
@@ -496,8 +496,8 @@ templ condicoesDoCombatente(v View) {
 // vazia em vez de um id que some e leva o remendo junto.
 templ tableCommands(v View) {
 	<div id="table-commands" class="contents">
-		if v.Mestre != nil {
-			@gmControls(v, *v.Mestre)
+		if v.GM != nil {
+			@gmControls(v, *v.GM)
 		}
 	</div>
 }
@@ -506,12 +506,12 @@ templ tableCommands(v View) {
 templ tableRegister(v View) {
 	<section class="space-y-2 border border-grimorio-iron bg-grimorio-panel p-3">
 		<h2 class="font-heading text-sm font-semibold text-grimorio-gold">
-			if v.Eu.NaFila {
+			if v.Eu.InQueue {
 				Rolar de novo
 			} else {
 				Registrar iniciativa
 			}
-			· { v.Eu.Nome }
+			· { v.Eu.Name }
 		</h2>
 		<div class="flex flex-wrap items-end gap-2">
 			<div class="space-y-1">
@@ -584,24 +584,24 @@ templ tableRegister(v View) {
 // sintoma seria a tela inteira piscando de vermelho quando alguém perde 1 PV.
 templ tableRowTracker(v View, l tableRow) {
 	<li
-		if l.NaVez {
+		if l.OnTurn {
 			aria-current="true"
 		}
 		class={ "relative flex items-center gap-2.5 border p-2",
-			templ.KV("border-grimorio-gold/60 bg-grimorio-gold/10", l.NaVez),
-			templ.KV("border-border/60 bg-card/60", !l.NaVez) }
+			templ.KV("border-grimorio-gold/60 bg-grimorio-gold/10", l.OnTurn),
+			templ.KV("border-border/60 bg-card/60", !l.OnTurn) }
 	>
-		if v.Mestre != nil {
+		if v.GM != nil {
 			@numberEditable(v, l)
 		} else {
 			<span class={ "w-8 shrink-0 text-center font-mono text-lg font-bold tabular-nums",
-				templ.KV("text-grimorio-gold", l.NaVez), templ.KV("text-muted-foreground", !l.NaVez) }>
-				{ fmt.Sprint(l.Iniciativa) }
+				templ.KV("text-grimorio-gold", l.OnTurn), templ.KV("text-muted-foreground", !l.OnTurn) }>
+				{ fmt.Sprint(l.Initiative) }
 			</span>
 		}
 		<div class="min-w-0 flex-1 space-y-1">
 			<div class="flex flex-wrap items-center gap-1.5">
-				<span class="truncate font-medium">{ l.Rotulo }</span>
+				<span class="truncate font-medium">{ l.Label }</span>
 				// O crachá é `--marker` e nunca a primária: crachá não se clica,
 				// então não compete com a ação.
 				//
@@ -610,21 +610,21 @@ templ tableRowTracker(v View, l tableRow) {
 				// responde é "esta linha é ficha ou é NPC?". "Personagem" ainda
 				// transbordaria: dez letras em `tracking-widest` numa linha de
 				// 390px que já leva quatro alvos de 36px.
-				if l.EhFicha {
+				if l.IsSheet {
 					<span class="shrink-0 bg-marker px-1 text-[10px] font-bold uppercase tracking-widest text-marker-foreground">Ficha</span>
 				}
-				if l.Minha {
+				if l.Mine {
 					<span class="shrink-0 bg-marker px-1 text-[10px] font-bold uppercase tracking-widest text-marker-foreground">Seu</span>
 				}
 				// "Na vez" por ESCRITO e não só pela cor dourada: um fundo colorido
 				// não existe para leitor de tela.
-				if l.NaVez {
+				if l.OnTurn {
 					<span class={ ui.SectionLabelClasses("gold", "shrink-0 text-[10px]") }>Na vez</span>
 				}
 			</div>
 			@trackerBar(v, l, "hp", "PV", l.PV)
 			@trackerBar(v, l, "mp", "PM", l.PM)
-			if len(l.Condicoes) > 0 {
+			if len(l.Conditions) > 0 {
 				<ul class="flex flex-wrap gap-1">
 					// Fundo a 15% da MESMA cor e a cor como TEXTO, e não a tinta de
 					// penalidade sobre preenchimento sólido: sobre o sólido ela fica
@@ -637,7 +637,7 @@ templ tableRowTracker(v View, l tableRow) {
 					// EFEITO porque a condição aqui é RASTREIO e não regra — o motor
 					// não recalcula os números de um bloco escrito à mão, então quem
 					// aplica é o mestre e ele precisa ler o que ela faz.
-					for _, c := range l.Condicoes {
+					for _, c := range l.Conditions {
 						<li
 							data-condicao
 							title={ conditionEffect(c) }
@@ -647,7 +647,7 @@ templ tableRowTracker(v View, l tableRow) {
 				</ul>
 			}
 		</div>
-		if v.Mestre != nil {
+		if v.GM != nil {
 			@rowVerbs(v, l)
 		}
 	</li>
@@ -666,8 +666,8 @@ templ rowVerbs(v View, l tableRow) {
 	<div class="flex shrink-0 items-center gap-1">
 		<button
 			type="button"
-			aria-label={ "Condições de " + l.Rotulo }
-			title={ "Condições de " + l.Rotulo + " (p394-395)" }
+			aria-label={ "Condições de " + l.Label }
+			title={ "Condições de " + l.Label + " (p394-395)" }
 			data-on:click={ openConditions(l) }
 			class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 		>
@@ -675,8 +675,8 @@ templ rowVerbs(v View, l tableRow) {
 		</button>
 		<button
 			type="button"
-			aria-label={ "Remover " + l.Rotulo + " da fila" }
-			title={ "Remover " + l.Rotulo + " da fila" }
+			aria-label={ "Remover " + l.Label + " da fila" }
+			title={ "Remover " + l.Label + " da fila" }
 			data-on:click={ rowCommand(v, l, "remover") }
 			class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 		>
@@ -695,18 +695,18 @@ templ rowVerbs(v View, l tableRow) {
 // rastreia aquele pool e não sai nada; com a barra ESCONDIDA sai a frase, porque
 // "não tem PV" e "o mestre escondeu" são coisas diferentes; com número sai a
 // barra. Os verbos só existem para o mestre — o jogador lê.
-templ trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) {
+templ trackerBar(v View, l tableRow, pool, label string, b *tableBar) {
 	if b != nil {
 		<div class="flex items-center gap-1">
-			if b.Hidden && v.Mestre == nil {
-				<p class="text-xs italic text-muted-foreground">{ rotulo } ocultos pelo mestre</p>
+			if b.Hidden && v.GM == nil {
+				<p class="text-xs italic text-muted-foreground">{ label } ocultos pelo mestre</p>
 			} else {
-				@barra(rotulo, *b)
+				@barra(label, *b)
 			}
-			if v.Mestre != nil {
+			if v.GM != nil {
 				@vitalStep(v, l, pool, "curar", "+", healVerb(pool))
 				@vitalStep(v, l, pool, "ferir", "−", harmVerb(pool))
-				@rowEye(v, l, pool, rotulo, b.Hidden)
+				@rowEye(v, l, pool, label, b.Hidden)
 			}
 		</div>
 	}
@@ -721,8 +721,8 @@ templ trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) {
 templ vitalStep(v View, l tableRow, pool, verb, sign, label string) {
 	<button
 		type="button"
-		aria-label={ label + " " + l.Rotulo }
-		title={ label + " " + l.Rotulo + " — clique 1, Shift+clique 5" }
+		aria-label={ label + " " + l.Label }
+		title={ label + " " + l.Label + " — clique 1, Shift+clique 5" }
 		data-on:click={ rowVital(v, l, pool, verb) }
 		class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent"
 	>{ sign }</button>
@@ -733,16 +733,16 @@ templ vitalStep(v View, l tableRow, pool, verb, sign, label string) {
 // `aria-pressed` porque é um estado que fica, não uma ação que passa. E o
 // `title` diz de quem se esconde: o ícone sozinho não conta que o segredo é dos
 // jogadores e não do mestre.
-templ rowEye(v View, l tableRow, pool, rotulo string, hidden bool) {
+templ rowEye(v View, l tableRow, pool, label string, hidden bool) {
 	<button
 		type="button"
 		aria-pressed={ fmt.Sprint(hidden) }
 		if hidden {
-			aria-label={ "Revelar os " + rotulo + " de " + l.Rotulo }
-			title={ "Revelar os " + rotulo + " de " + l.Rotulo + " para os jogadores" }
+			aria-label={ "Revelar os " + label + " de " + l.Label }
+			title={ "Revelar os " + label + " de " + l.Label + " para os jogadores" }
 		} else {
-			aria-label={ "Ocultar os " + rotulo + " de " + l.Rotulo }
-			title={ "Ocultar os " + rotulo + " de " + l.Rotulo + " dos jogadores" }
+			aria-label={ "Ocultar os " + label + " de " + l.Label }
+			title={ "Ocultar os " + label + " de " + l.Label + " dos jogadores" }
 		}
 		data-on:click={ rowCommand(v, l, "vitais/"+pool+"/oculto") }
 		class={ "flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent",
@@ -759,15 +759,15 @@ templ rowEye(v View, l tableRow, pool, rotulo string, hidden bool) {
 // barraCompacta é a barra do cartão do Grupo, feita para duas caberem numa
 // linha. A diferença para a `barra` é só o que ocupa largura: o rótulo encolhe e
 // o número perde o máximo, que já viaja no `aria-label`.
-templ barraCompacta(rotulo string, b tableBar) {
+templ barraCompacta(label string, b tableBar) {
 	<div class="flex min-w-0 flex-1 items-center gap-1">
-		<span class={ ui.SectionLabelClasses("muted", "shrink-0") }>{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "shrink-0") }>{ label }</span>
 		<div
 			role="progressbar"
 			aria-valuenow={ fmt.Sprint(b.Current) }
 			aria-valuemin="0"
 			aria-valuemax={ fmt.Sprint(b.Max) }
-			aria-label={ barLabel(rotulo, b) }
+			aria-label={ barLabel(label, b) }
 			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
 		>
 			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
@@ -826,15 +826,15 @@ templ reservaDeTemporarios(b tableBar) {
 // FRAÇÃO; o `progressbar` serve a quem usa leitor de tela. Quem for consertar
 // isto mexe na fileira de todo mundo — por isso ficou registrado e não
 // remendado de passagem.
-templ barra(rotulo string, b tableBar) {
+templ barra(label string, b tableBar) {
 	<div class="flex items-center gap-1.5">
-		<span class={ ui.SectionLabelClasses("muted", "w-7 shrink-0") }>{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "w-7 shrink-0") }>{ label }</span>
 		<div
 			role="progressbar"
 			aria-valuenow={ fmt.Sprint(b.Current) }
 			aria-valuemin="0"
 			aria-valuemax={ fmt.Sprint(b.Max) }
-			aria-label={ barLabel(rotulo, b) }
+			aria-label={ barLabel(label, b) }
 			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
 		>
 			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
@@ -907,16 +907,16 @@ templ formDeCombatente(v View) {
 	</div>
 }
 
-templ campoDeNumero(id, rotulo, sinal, min, max string) {
+templ campoDeNumero(id, label, signal, min, max string) {
 	<div class="w-20 space-y-1">
-		<label for={ id } class={ ui.FieldLabelClasses("muted", "block") }>{ rotulo }</label>
+		<label for={ id } class={ ui.FieldLabelClasses("muted", "block") }>{ label }</label>
 		<input
 			id={ id }
 			type="number"
 			min={ min }
 			max={ max }
 			inputmode="numeric"
-			data-bind={ sinal }
+			data-bind={ signal }
 			class="w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none"
 		/>
 	</div>
@@ -924,14 +924,14 @@ templ campoDeNumero(id, rotulo, sinal, min, max string) {
 
 // O `aria-pressed` sai como STRING e não como booleano: o `data-attr` do
 // Datastar daria `aria-pressed=""`, que é inválido e não anuncia estado nenhum.
-templ combatantKind(tipo, rotulo string) {
+templ combatantKind(kind, label string) {
 	<button
 		type="button"
-		data-attr:aria-pressed={ fmt.Sprintf("$new_type === '%s' ? 'true' : 'false'", tipo) }
-		data-on:click={ fmt.Sprintf("$new_type = '%s'", tipo) }
-		data-class={ fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $new_type === '%s', 'border-grimorio-iron text-muted-foreground': $new_type !== '%s'}", tipo, tipo) }
+		data-attr:aria-pressed={ fmt.Sprintf("$new_type === '%s' ? 'true' : 'false'", kind) }
+		data-on:click={ fmt.Sprintf("$new_type = '%s'", kind) }
+		data-class={ fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $new_type === '%s', 'border-grimorio-iron text-muted-foreground': $new_type !== '%s'}", kind, kind) }
 		class="min-h-11 rounded-sm border px-3 text-sm outline-none transition-colors hover:bg-accent"
-	>{ rotulo }</button>
+	>{ label }</button>
 }
 
 // numberEditable: para o mestre, a INICIATIVA é botão — sem ela, consertar um
@@ -944,12 +944,12 @@ templ combatantKind(tipo, rotulo string) {
 templ numberEditable(v View, l tableRow) {
 	<button
 		type="button"
-		aria-label={ "Editar " + l.Rotulo }
-		title={ "Editar " + l.Rotulo + " — iniciativa e PV" }
+		aria-label={ "Editar " + l.Label }
+		title={ "Editar " + l.Label + " — iniciativa e PV" }
 		data-on:click={ openEdit(v, l) }
 		class={ "w-8 shrink-0 rounded-sm text-center font-mono text-lg font-bold tabular-nums outline-none transition-colors hover:bg-accent",
-			templ.KV("text-grimorio-gold", l.NaVez), templ.KV("text-muted-foreground", !l.NaVez) }
-	>{ fmt.Sprint(l.Iniciativa) }</button>
+			templ.KV("text-grimorio-gold", l.OnTurn), templ.KV("text-muted-foreground", !l.OnTurn) }
+	>{ fmt.Sprint(l.Initiative) }</button>
 }
 
 // editarCombatente é DIÁLOGO e não campo na linha: a cena é remendada a cada

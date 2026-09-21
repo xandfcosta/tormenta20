@@ -53,29 +53,29 @@ var (
 
 func TestEveryAppliedClassExistsInTheStylesheet(t *testing.T) {
 	root := filepath.Join("..", "..")
-	folha, err := os.ReadFile(filepath.Join(root, "engine-go", "serve", "web", "assets", "static", "app.css"))
+	sheet, err := os.ReadFile(filepath.Join(root, "engine-go", "serve", "web", "assets", "static", "app.css"))
 	if err != nil {
 		t.Fatalf("ler a folha compilada: %v", err)
 	}
-	naFolha := map[string]bool{}
-	for _, m := range cssRule.FindAllStringSubmatch(string(folha), -1) {
-		naFolha[m[1]] = true
+	inSheet := map[string]bool{}
+	for _, m := range cssRule.FindAllStringSubmatch(string(sheet), -1) {
+		inSheet[m[1]] = true
 	}
 	// O DENOMINADOR DA FOLHA: uma folha vazia faria todo token reprovar, e uma
 	// folha que o `ReadFile` pegou pela metade faria uma lista de falhas com
 	// cara de descoberta.
-	if len(naFolha) < 500 {
-		t.Fatalf("a folha compilada tem só %d classes — ela é o denominador, e está curta demais", len(naFolha))
+	if len(inSheet) < 500 {
+		t.Fatalf("a folha compilada tem só %d classes — ela é o denominador, e está curta demais", len(inSheet))
 	}
 
-	saida, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached", "*.templ", "*.go").Output()
+	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached", "*.templ", "*.go").Output()
 	if err != nil {
 		t.Fatalf("git ls-files: %v", err)
 	}
 
 	checked := map[string]string{}
 	filesRead := 0
-	for _, relative := range strings.Split(strings.TrimRight(string(saida), "\x00"), "\x00") {
+	for _, relative := range strings.Split(strings.TrimRight(string(output), "\x00"), "\x00") {
 		if relative == "" || strings.HasSuffix(relative, "_templ.go") ||
 			strings.HasSuffix(relative, "_test.go") {
 			continue
@@ -85,11 +85,11 @@ func TestEveryAppliedClassExistsInTheStylesheet(t *testing.T) {
 			t.Fatalf("ler %s: %v", relative, err)
 		}
 		filesRead++
-		for _, linha := range strings.Split(string(body), "\n") {
-			if strings.HasPrefix(strings.TrimSpace(linha), "//") {
+		for _, row := range strings.Split(string(body), "\n") {
+			if strings.HasPrefix(strings.TrimSpace(row), "//") {
 				continue
 			}
-			for _, attr := range classAttribute.FindAllString(linha, -1) {
+			for _, attr := range classAttribute.FindAllString(row, -1) {
 				for _, lit := range classLiteral.FindAllStringSubmatch(attr, -1) {
 					for _, tok := range strings.Fields(lit[1]) {
 						if !plainClassName.MatchString(tok) || strings.HasSuffix(tok, "-") {
@@ -109,19 +109,19 @@ func TestEveryAppliedClassExistsInTheStylesheet(t *testing.T) {
 			filesRead, len(checked))
 	}
 
-	var soltas []string
-	for tok, onde := range checked {
-		if !naFolha[tok] {
-			soltas = append(soltas, tok+" — aplicada em "+onde)
+	var loose []string
+	for tok, where := range checked {
+		if !inSheet[tok] {
+			loose = append(loose, tok+" — aplicada em "+where)
 		}
 	}
-	sort.Strings(soltas)
-	if len(soltas) > 0 {
+	sort.Strings(loose)
+	if len(loose) > 0 {
 		t.Errorf("classe aplicada que NÃO existe na folha compilada — %d de %d:\n  %s\n"+
 			"O elemento aparece SEM ESTILO e nada estoura. Ou a classe foi renomeada só de um "+
 			"lado (a folha-fonte e o `.templ` são dois lugares que nada liga), ou ela é nova e "+
 			"falta rodar `engine-go/scripts/build-css.sh`.",
-			len(soltas), len(checked), strings.Join(soltas, "\n  "))
+			len(loose), len(checked), strings.Join(loose, "\n  "))
 	}
-	t.Logf("classes aplicadas: %d, todas na folha, de %d arquivos e %d regras", len(checked), filesRead, len(naFolha))
+	t.Logf("classes aplicadas: %d, todas na folha, de %d arquivos e %d regras", len(checked), filesRead, len(inSheet))
 }

@@ -34,19 +34,19 @@ func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/iniciativa/"+npc+"/condicao/caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar deu %d", rec.Code)
 	}
 
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O SELETOR É O CRACHÁ (`</li>`) e não a palavra solta, e esta linha custou
 	// uma sabotagem: procurar "Caído" na página passava VERDE com o crachá
 	// imprimindo o id, porque o DIÁLOGO lista as 35 condições pelo nome — a
 	// palavra estava lá, só não no lugar medido. É a terceira vez que substring
 	// comum mente neste repositório; asserção de tela pede âncora de elemento.
-	if !strings.Contains(tela, ">Caído</li>") {
+	if !strings.Contains(screen, ">Caído</li>") {
 		t.Error(`o crachá da fila não diz "Caído" — voltou a imprimir o id`)
 	}
 	// E o EFEITO viaja no `title`, porque a condição aqui é rastreio e não
@@ -56,7 +56,7 @@ func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 	// cabeça "O personagem cai no chão" e o guarda ficou vermelho contra a
 	// descrição de verdade. Esperado escrito à mão sobre dado que existe é
 	// convite a testar a minha memória em vez do app.
-	if !strings.Contains(tela, conditionEffectOf("caido")) {
+	if !strings.Contains(screen, conditionEffectOf("caido")) {
 		t.Error("o crachá não carrega o efeito da condição")
 	}
 	// O CONTROLE: o efeito não é string vazia, senão a asserção acima é
@@ -77,21 +77,21 @@ func TestTogglingTurnsTheConditionOnAndOff(t *testing.T) {
 	_, npc := sceneIds(t, f)
 	base := f.tableUrl() + "/iniciativa/" + npc + "/condicao/"
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ligar deu %d", rec.Code)
 	}
 	if c := rowConditions(t, f, npc); len(c) != 1 || c[0] != "abalado" {
 		t.Fatalf("depois de ligar a linha tem %v", c)
 	}
 	// Uma SEGUNDA condição não substitui a primeira.
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"caido", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ligar a segunda deu %d", rec.Code)
 	}
 	if c := rowConditions(t, f, npc); len(c) != 2 {
 		t.Errorf("a segunda condição substituiu a primeira: %v", c)
 	}
 	// E o mesmo clique DESLIGA, sem tocar na vizinha.
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desligar deu %d", rec.Code)
 	}
 	c := rowConditions(t, f, npc)
@@ -111,10 +111,10 @@ func TestTheNewSetComesBackInTheSignal(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", "")
+	body := f.posta(t, f.gm, f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", "")
 
-	if !strings.Contains(corpo, `"row_conditions":"abalado"`) {
-		t.Errorf("o conjunto novo não voltou no sinal; resposta: %.300s", corpo)
+	if !strings.Contains(body, `"row_conditions":"abalado"`) {
+		t.Errorf("o conjunto novo não voltou no sinal; resposta: %.300s", body)
 	}
 }
 
@@ -126,10 +126,10 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/"+npc+"/condicao/maldicao-inventada", "")
+	body := f.posta(t, f.gm, f.tableUrl()+"/iniciativa/"+npc+"/condicao/maldicao-inventada", "")
 
-	if !strings.Contains(corpo, "p394-395") {
-		t.Errorf("a recusa não cita a página da tabela; resposta: %.300s", corpo)
+	if !strings.Contains(body, "p394-395") {
+		t.Errorf("a recusa não cita a página da tabela; resposta: %.300s", body)
 	}
 	if c := rowConditions(t, f, npc); len(c) != 0 {
 		t.Errorf("a condição inventada entrou na linha: %v", c)
@@ -140,7 +140,7 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	if !catalog.IsCondition("enfeiticado") {
 		t.Fatal("o catálogo não tem `enfeiticado` — o controle está medindo outra coisa")
 	}
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/iniciativa/"+npc+"/condicao/enfeiticado", ""); rec.Code != http.StatusOK {
 		t.Errorf("a condição do livro foi recusada: %d", rec.Code)
 	}
@@ -152,7 +152,7 @@ func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	rec := f.pede(t, f.jogador, http.MethodPost,
+	rec := f.pede(t, f.player, http.MethodPost,
 		f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", "")
 
 	if rec.Code != http.StatusForbidden {
@@ -171,14 +171,14 @@ func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	condicoes := book.Catalogs().Condicoes
-	if len(condicoes) == 0 {
+	conditions := book.Catalogs().Conditions
+	if len(conditions) == 0 {
 		t.Fatal("o catálogo não tem condição nenhuma — o laço abaixo não mediria nada")
 	}
-	for _, c := range condicoes {
-		if !strings.Contains(tela, c.Name) {
+	for _, c := range conditions {
+		if !strings.Contains(screen, c.Name) {
 			t.Errorf("a condição %q (%s) não é oferecida na Mesa", c.Name, c.ID)
 		}
 	}
@@ -190,7 +190,7 @@ func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
 // esperado sair do código sob teste, e os dois andariam juntos com o defeito. O
 // catálogo é a fonte dos dois lados, e é dele que a asserção lê.
 func conditionEffectOf(id string) string {
-	for _, c := range book.Catalogs().Condicoes {
+	for _, c := range book.Catalogs().Conditions {
 		if c.ID == id {
 			return c.Description
 		}

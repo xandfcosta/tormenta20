@@ -17,10 +17,10 @@ import (
 func TestTheTableShowsTheTemporaryHpOfWhoIsInTheQueue(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
-	const frase = "mais 30 temporários"
+	const sentence = "mais 30 temporários"
 
-	antes := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(antes, frase) {
+	before := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(before, sentence) {
 		t.Fatal("a Mesa SEM poça já fala em temporários — o caso mediria o repouso")
 	}
 
@@ -30,14 +30,14 @@ func TestTheTableShowsTheTemporaryHpOfWhoIsInTheQueue(t *testing.T) {
 		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
 	}
 
-	depois := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	after := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O NOME ACESSÍVEL é o canal ÚNICO no trilho da fila, que não tem número
 	// nenhum — é ele, e não o filete dourado, que responde para quem não vê.
-	if !strings.Contains(depois, frase) {
+	if !strings.Contains(after, sentence) {
 		t.Error("a reserva não chegou ao nome acessível da barra")
 	}
 	// E o número sai escrito onde há espaço para ele: o cartão do Grupo.
-	if !strings.Contains(depois, ">+30</span>") {
+	if !strings.Contains(after, ">+30</span>") {
 		t.Error("a reserva não saiu escrita em lugar nenhum da Mesa")
 	}
 }
@@ -61,16 +61,16 @@ func TestAHiddenPoolHidesItsTemporaryHpToo(t *testing.T) {
 	if rec := effect(t, f, f.charID, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
 	}
-	ficha, _ := sceneIds(t, f)
+	sheet, _ := sceneIds(t, f)
 
-	reservaNaFila := func(quem int64) int64 {
+	queuedReserve := func(who int64) int64 {
 		t.Helper()
-		view, _, err := f.s.tableScene.LoadView(t.Context(), quem, f.campaignID, f.sessionID)
+		view, _, err := f.s.tableScene.LoadView(t.Context(), who, f.campaignID, f.sessionID)
 		if err != nil {
 			t.Fatalf("carregar a Mesa: %v", err)
 		}
-		for _, l := range view.Fila {
-			if l.ID == ficha {
+		for _, l := range view.Queue {
+			if l.ID == sheet {
 				if l.PV == nil {
 					return 0
 				}
@@ -83,21 +83,21 @@ func TestAHiddenPoolHidesItsTemporaryHpToo(t *testing.T) {
 
 	// CONTROLE: com o PV à vista, a linha do JOGADOR carrega a reserva. Sem esta
 	// metade, o caso abaixo ficaria verde sobre uma fila que nunca a carrega.
-	if aberto := reservaNaFila(f.jogador); aberto != 30 {
-		t.Fatalf("com o PV à vista a linha diz %d de reserva, e o Campo de Força dá 30", aberto)
+	if open := queuedReserve(f.player); open != 30 {
+		t.Fatalf("com o PV à vista a linha diz %d de reserva, e o Campo de Força dá 30", open)
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/iniciativa/"+ficha+"/vitais/hp/oculto", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost,
+		f.tableUrl()+"/iniciativa/"+sheet+"/vitais/hp/oculto", ""); rec.Code != http.StatusOK {
 		t.Fatalf("esconder o PV devolveu %d", rec.Code)
 	}
 
-	if escondido := reservaNaFila(f.jogador); escondido != 0 {
-		t.Errorf("o PV oculto vazou %d de reserva para a mesa", escondido)
+	if hidden := queuedReserve(f.player); hidden != 0 {
+		t.Errorf("o PV oculto vazou %d de reserva para a mesa", hidden)
 	}
 	// E O MESTRE continua vendo: esconder é decisão sobre o que a MESA vê, e
 	// uma redação que cegasse quem a tomou seria outro defeito.
-	if doMestre := reservaNaFila(f.mestre); doMestre != 30 {
-		t.Errorf("o mestre perdeu a própria reserva de vista: %d", doMestre)
+	if forGM := queuedReserve(f.gm); forGM != 30 {
+		t.Errorf("o mestre perdeu a própria reserva de vista: %d", forGM)
 	}
 }

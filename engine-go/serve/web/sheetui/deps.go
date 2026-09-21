@@ -56,7 +56,7 @@ type Deps interface {
 	SpendActionOnTurn(characterID int64, cost engine.ActionCost) error
 	// As ESCRITAS, uma por gesto: a cena decide QUANDO, o hospedeiro sabe COMO.
 	// WritePage é a montagem da casca.
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 }
 
 // Scene é a cena montada com as dependências dela.
@@ -69,4 +69,4 @@ type Scene struct {
 	plays character.Plays
 }
 
-func New(d Deps, gestos character.Plays) Scene { return Scene{deps: d, plays: gestos} }
+func New(d Deps, gestures character.Plays) Scene { return Scene{deps: d, plays: gestures} }

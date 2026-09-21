@@ -32,48 +32,48 @@ import (
 // `sheetWithConditionals`), e os testes de paridade prendem cada um. Fora dali,
 // quem computa está desenhando a ficha de ALGUÉM, e essa pessoa tem condicionais.
 func TestNoCallerInventsAnEmptyConditionalSet(t *testing.T) {
-	const oDono = "domain/engine"
+	const ownerFile = "domain/engine"
 
 	// As funções que RECEBEM o conjunto. Uma função nova que o receba precisa
 	// entrar aqui — é lista de quem se VIGIA, e o custo de esquecer é o guarda
 	// ficar verde sobre o caminho novo.
-	recebemCondicionais := map[string]bool{
+	receiveConditionals := map[string]bool{
 		"ComputeSheet": true, "ComputeWeaponCards": true,
 		"SpellPmCostFor": true, "SpellPmLimitFor": true,
 		"ApplyActiveConditionals": true,
 	}
 
-	raiz, err := filepath.Abs("..")
+	root, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatalf("achar a raiz: %v", err)
 	}
-	conjunto := token.NewFileSet()
-	medidos, chamadasVistas := 0, 0
-	err = filepath.WalkDir(raiz, func(caminho string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") ||
-			strings.HasSuffix(caminho, "_templ.go") {
+	set := token.NewFileSet()
+	measured, callsSeen := 0, 0
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") ||
+			strings.HasSuffix(path, "_templ.go") {
 			return err
 		}
-		rel, _ := filepath.Rel(raiz, caminho)
-		if strings.HasPrefix(rel, oDono) || strings.HasSuffix(rel, "conditional_set_test.go") {
+		rel, _ := filepath.Rel(root, path)
+		if strings.HasPrefix(rel, ownerFile) || strings.HasSuffix(rel, "conditional_set_test.go") {
 			return nil
 		}
-		arquivo, err := parser.ParseFile(conjunto, caminho, nil, 0)
+		file, err := parser.ParseFile(set, path, nil, 0)
 		if err != nil {
 			return err
 		}
-		medidos++
-		ast.Inspect(arquivo, func(n ast.Node) bool {
-			chamada, ok := n.(*ast.CallExpr)
+		measured++
+		ast.Inspect(file, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
 			if !ok {
 				return true
 			}
-			alvo, ok := chamada.Fun.(*ast.SelectorExpr)
-			if !ok || !recebemCondicionais[alvo.Sel.Name] {
+			target, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok || !receiveConditionals[target.Sel.Name] {
 				return true
 			}
-			chamadasVistas++
-			for _, arg := range chamada.Args {
+			callsSeen++
+			for _, arg := range call.Args {
 				if !isEmptyStringBoolMap(arg) {
 					continue
 				}
@@ -82,7 +82,7 @@ func TestNoCallerInventsAnEmptyConditionalSet(t *testing.T) {
 					"`dto.Conditionals` — passe `sheet.ToStringSet(dto.Conditionals)`. Inventar\n"+
 					"o vazio computa um personagem plausível que não é o que está na tela, e\n"+
 					"não deixa erro nenhum para trás.",
-					rel, conjunto.Position(chamada.Pos()).Line, alvo.Sel.Name)
+					rel, set.Position(call.Pos()).Line, target.Sel.Name)
 			}
 			return true
 		})
@@ -94,12 +94,12 @@ func TestNoCallerInventsAnEmptyConditionalSet(t *testing.T) {
 
 	// O DENOMINADOR, nas duas pontas: uma varredura que não abriu arquivo e um
 	// seletor que deixou de casar com as chamadas se parecem com "nada reprovou".
-	if medidos < 200 {
-		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", medidos)
+	if measured < 200 {
+		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", measured)
 	}
-	if chamadasVistas < 3 {
+	if callsSeen < 3 {
 		t.Fatalf("o guarda viu só %d chamadas que recebem condicionais fora do `%s` — "+
-			"os nomes da lista mudaram e ele parou de procurar", chamadasVistas, oDono)
+			"os nomes da lista mudaram e ele parou de procurar", callsSeen, ownerFile)
 	}
 }
 
@@ -114,11 +114,11 @@ func isEmptyStringBoolMap(arg ast.Expr) bool {
 	if !ok || len(lit.Elts) > 0 {
 		return false
 	}
-	tipo, ok := lit.Type.(*ast.MapType)
+	kind, ok := lit.Type.(*ast.MapType)
 	if !ok {
 		return false
 	}
-	chave, okChave := tipo.Key.(*ast.Ident)
-	valor, okValor := tipo.Value.(*ast.Ident)
-	return okChave && okValor && chave.Name == "string" && valor.Name == "bool"
+	key, okKey := kind.Key.(*ast.Ident)
+	value, okValue := kind.Value.(*ast.Ident)
+	return okKey && okValue && key.Name == "string" && value.Name == "bool"
 }

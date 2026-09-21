@@ -25,12 +25,12 @@ import (
 func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: as expressões da régua ESTÃO na página. Sem ele, não achar
 	// `$ruler_points[` seria verdade também sobre uma cena que não desenhou régua
 	// nenhuma.
-	if !strings.Contains(tela, "ruler_points") {
+	if !strings.Contains(screen, "ruler_points") {
 		t.Fatal("a cena não tem as expressões da régua — o guarda mediria o vazio")
 	}
 	// A REGRA: depois de `$lista` só pode vir `=` (uma escrita) ou `]` (o fim de
@@ -41,16 +41,16 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	// `const lista = $ruler_points;` põe o PROXY na constante, e `lista[12]` cria
 	// o índice do mesmo jeito. Por isso a regra é sobre o que PODE vir depois, e
 	// não sobre uma forma errada conhecida.
-	for _, lista := range []string{"ruler_points", "ruler_labels"} {
-		acessos := regexp.MustCompile(`\$`+lista+`\s*(.)`).FindAllStringSubmatch(tela, -1)
-		if len(acessos) == 0 {
-			t.Errorf("`$%s` não aparece na cena — o controle acima não alcançou esta lista", lista)
+	for _, list := range []string{"ruler_points", "ruler_labels"} {
+		accesses := regexp.MustCompile(`\$`+list+`\s*(.)`).FindAllStringSubmatch(screen, -1)
+		if len(accesses) == 0 {
+			t.Errorf("`$%s` não aparece na cena — o controle acima não alcançou esta lista", list)
 		}
-		for _, a := range acessos {
+		for _, a := range accesses {
 			if a[1] != "=" && a[1] != "]" {
 				t.Errorf("a cena acessa `$%s` seguido de %q: o proxy do Datastar CRIA o que se lê "+
 					"e a lista se enche de strings vazias, sem erro nenhum. Copie com `[...$%s]`.",
-					lista, a[1], lista)
+					list, a[1], list)
 			}
 		}
 	}
@@ -66,17 +66,17 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	for _, pedaco := range []string{
+	for _, chunk := range []string{
 		"data-on:dblclick",
 		"data-on:contextmenu",
 		"data-on:pointermove",
 		"evt.button !== 0",
 		"tabuleiro/regua",
 	} {
-		if !strings.Contains(tela, pedaco) {
-			t.Errorf("a cena não tem %q: um dos gestos da régua não acontece", pedaco)
+		if !strings.Contains(screen, chunk) {
+			t.Errorf("a cena não tem %q: um dos gestos da régua não acontece", chunk)
 		}
 	}
 }
@@ -90,15 +90,15 @@ func TestAForgedRulerIsRefused(t *testing.T) {
 	// O TETO vai escrito à mão (12 paradas, o tamanho da reserva de nós no
 	// `.templ`): lê-lo do `stopsMax` da cena faria o esperado sair do código sob
 	// teste, e um teto trocado passaria verde dos dois lados.
-	const tetoDeParadas = 12
-	pontos := make([]string, 0, tetoDeParadas+2)
-	for i := range tetoDeParadas + 2 {
-		pontos = append(pontos, "["+string(rune('0'+i%10))+",0]")
+	const stopCeiling = 12
+	points := make([]string, 0, stopCeiling+2)
+	for i := range stopCeiling + 2 {
+		points = append(points, "["+string(rune('0'+i%10))+",0]")
 	}
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/regua",
-		`{"ruler_points":[`+strings.Join(pontos, ",")+`],"ruler_phase":2}`)
-	if !strings.Contains(corpo, "teto") {
-		t.Errorf("uma régua com %d paradas não foi recusada: %q", len(pontos), corpo)
+	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/regua",
+		`{"ruler_points":[`+strings.Join(points, ",")+`],"ruler_phase":2}`)
+	if !strings.Contains(body, "teto") {
+		t.Errorf("uma régua com %d paradas não foi recusada: %q", len(points), body)
 	}
 }
 
@@ -122,12 +122,12 @@ func TestTheSphereIsBornAtTheIntersection(t *testing.T) {
 	// servidor montado prova.
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(tela, "Math.round((evt.offsetX") {
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(screen, "Math.round((evt.offsetX") {
 		t.Error("a tela não arredonda o clique para o canto: com `floor` a esfera cai " +
 			"meio quadrado longe do dedo, e o defeito é silencioso")
 	}
-	if !strings.Contains(tela, "template_at_intersection") {
+	if !strings.Contains(screen, "template_at_intersection") {
 		t.Error("a tela não pergunta ao servidor onde a forma nasce — a regra virou " +
 			"uma segunda cópia na expressão")
 	}

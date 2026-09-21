@@ -58,37 +58,37 @@ var permitidos = map[string]bool{
 }
 
 func TestTheBoardDoesNotKnowTheCharacterSheet(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
-			if !strings.HasPrefix(caminho, "t20engine/") || permitidos[caminho] {
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
+			if !strings.HasPrefix(path, "t20engine/") || permitidos[path] {
 				continue
 			}
 			t.Errorf("%s importa %q — o tabuleiro não conhece esse contexto.\n"+
 				"Se ele precisa de algo de lá, DECLARE UMA PORTA aqui e receba quem\n"+
 				"a cumpre por parâmetro. Acrescentar o import à lista acima é\n"+
 				"apagar a fronteira sem que ninguém perceba.",
-				nome, caminho)
+				name, path)
 		}
 	}
 
-	if visitados == 0 {
+	if visited == 0 {
 		t.Fatal("nenhum arquivo .go visitado — o guarda ficou cego")
 	}
 }

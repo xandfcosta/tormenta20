@@ -63,7 +63,7 @@ func TestNoNewSignalBreaksTheNamingStandard(t *testing.T) {
 	}
 
 	root := filepath.Join("..", "..")
-	saida, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
+	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
 		"*.templ", "*.go", "*.ts", "*.tsx").Output()
 	if err != nil {
 		t.Fatalf("git ls-files em %s: %v", root, err)
@@ -71,7 +71,7 @@ func TestNoNewSignalBreaksTheNamingStandard(t *testing.T) {
 
 	found := map[string]string{}
 	filesRead := 0
-	for _, relative := range strings.Split(strings.TrimRight(string(saida), "\x00"), "\x00") {
+	for _, relative := range strings.Split(strings.TrimRight(string(output), "\x00"), "\x00") {
 		// O `_templ.go` repete o `.templ`, e o `dump.go` da seed carrega um hash
 		// bcrypt — `$2a$12$Ku…` — que casa com qualquer sonda de `$nome`.
 		if relative == "" || strings.HasSuffix(relative, "_templ.go") ||
@@ -112,37 +112,37 @@ func TestNoNewSignalBreaksTheNamingStandard(t *testing.T) {
 	// baselinado que sumiu. Ele NÃO cobra tradução — um `$search` é `snake_case`
 	// válido e passaria se não estivesse na linha de base. Quem força a tradução
 	// é a linha de base encolher: renomear um sinal o tira de `found`, e aí o
-	// ramo `sumidos` abaixo cobra que ele saia do arquivo também.
-	var novos, sumidos []string
-	for nome, onde := range found {
-		if debt[nome] {
+	// ramo `gone` abaixo cobra que ele saia do arquivo também.
+	var fresh, gone []string
+	for name, where := range found {
+		if debt[name] {
 			continue
 		}
-		if !signalIsSnakeCase.MatchString(nome) {
-			novos = append(novos, nome+" — "+onde)
+		if !signalIsSnakeCase.MatchString(name) {
+			fresh = append(fresh, name+" — "+where)
 		}
 	}
-	for nome := range debt {
-		if _, ainda := found[nome]; !ainda {
-			sumidos = append(sumidos, nome)
+	for name := range debt {
+		if _, still := found[name]; !still {
+			gone = append(gone, name)
 		}
 	}
-	sort.Strings(novos)
-	sort.Strings(sumidos)
+	sort.Strings(fresh)
+	sort.Strings(gone)
 
-	if len(novos) > 0 {
+	if len(fresh) > 0 {
 		t.Errorf("sinal fora do padrão de nome — %d:\n  %s\n"+
 			"Nome de sinal é `snake_case`, em inglês, com UMA grafia em todos os canais "+
 			"(CLAUDE.md, \"Idioma\"). Caixa alta em chave de atributo é minusculada pelo parser e "+
 			"liga um sinal NOVO — o gesto passa a \"não fazer nada\", sem erro em lugar nenhum. "+
 			"A linha de base em %s registra a dívida ANTIGA e não aceita nome novo.",
-			len(novos), strings.Join(novos, "\n  "), signalDebt)
+			len(fresh), strings.Join(fresh, "\n  "), signalDebt)
 	}
-	if len(sumidos) > 0 {
+	if len(gone) > 0 {
 		t.Errorf("a linha de base cita %d sinal(is) que não existem mais:\n  %s\n"+
 			"Tire-os de %s: uma catraca que não encolhe deixa de ser catraca, e um arquivo que "+
 			"descreve o que já não existe é defeito entregue igual a qualquer outro.",
-			len(sumidos), strings.Join(sumidos, "\n  "), signalDebt)
+			len(gone), strings.Join(gone, "\n  "), signalDebt)
 	}
 	t.Logf("sinais: %d achados em %d arquivos, %d ainda na dívida", len(found), filesRead, len(debt))
 }
@@ -180,7 +180,7 @@ var (
 
 func TestEverySignalDeclaredByValueHasAReader(t *testing.T) {
 	root := filepath.Join("..", "..")
-	saida, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
+	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
 		"*.templ", "*.go", "*.ts").Output()
 	if err != nil {
 		t.Fatalf("git ls-files em %s: %v", root, err)
@@ -189,7 +189,7 @@ func TestEverySignalDeclaredByValueHasAReader(t *testing.T) {
 	declared := map[string]string{}
 	readers := map[string]bool{}
 	filesRead := 0
-	for _, relative := range strings.Split(strings.TrimRight(string(saida), "\x00"), "\x00") {
+	for _, relative := range strings.Split(strings.TrimRight(string(output), "\x00"), "\x00") {
 		if relative == "" || strings.HasSuffix(relative, "_templ.go") ||
 			relative == "engine-go/cmd/seed/dump.go" {
 			continue
@@ -226,20 +226,20 @@ func TestEverySignalDeclaredByValueHasAReader(t *testing.T) {
 			filesRead, len(declared))
 	}
 
-	var soltos []string
-	for nome, onde := range declared {
-		if !readers[nome] {
-			soltos = append(soltos, nome+" — declarado em "+onde)
+	var loose []string
+	for name, where := range declared {
+		if !readers[name] {
+			loose = append(loose, name+" — declarado em "+where)
 		}
 	}
-	sort.Strings(soltos)
-	if len(soltos) > 0 {
+	sort.Strings(loose)
+	if len(loose) > 0 {
 		t.Errorf("sinal declarado por VALOR que ninguém lê — %d de %d:\n  %s\n"+
 			"Leitor é uma expressão `$nome` no cliente OU uma tag `json:\"nome\"` no servidor. Sem "+
 			"nenhum dos dois: ou o renome deixou a declaração para trás (o leitor mudou de nome e o "+
 			"`data-ref=\"…\"` não), ou o sinal morreu e a declaração ficou. Nos dois casos o gesto "+
 			"passa a não fazer nada, em silêncio: a expressão lê `undefined` e nada estoura.",
-			len(soltos), len(declared), strings.Join(soltos, "\n  "))
+			len(loose), len(declared), strings.Join(loose, "\n  "))
 	}
 	t.Logf("sinais declarados por valor: %d, todos com leitor, de %d arquivos", len(declared), filesRead)
 }

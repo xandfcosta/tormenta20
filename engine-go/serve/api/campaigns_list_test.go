@@ -19,19 +19,19 @@ import (
 // navegador testemunha.
 
 type cenaFixture struct {
-	s    *Server
-	dono int64
+	s     *Server
+	owner int64
 }
 
 func novaCena(t *testing.T, admins ...string) cenaFixture {
 	t.Helper()
 	s := newTestServer(t, admins...)
-	return cenaFixture{s: s, dono: seedUser(t, s, "mestre@t20.local")}
+	return cenaFixture{s: s, owner: seedUser(t, s, "mestre@t20.local")}
 }
 
 func (f cenaFixture) eu(t *testing.T) AuthUser {
 	t.Helper()
-	u, err := f.s.queries.GetUserByID(context.Background(), f.dono)
+	u, err := f.s.queries.GetUserByID(context.Background(), f.owner)
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
@@ -40,17 +40,17 @@ func (f cenaFixture) eu(t *testing.T) AuthUser {
 
 // ── a lista ──────────────────────────────────────────────────────────────────
 
-func (f cenaFixture) campanha(t *testing.T, nome, sinopse string) int64 {
+func (f cenaFixture) campanha(t *testing.T, name, synopsis string) int64 {
 	t.Helper()
 	c, err := f.s.queries.CreateCampaign(context.Background(), sqlcgen.CreateCampaignParams{
-		Ownerid: f.dono, Name: nome, Createdat: dbvalue.NowISO(), Updatedat: dbvalue.NowISO(),
+		Ownerid: f.owner, Name: name, Createdat: dbvalue.NowISO(), Updatedat: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("criar campanha: %v", err)
 	}
-	if sinopse != "" {
+	if synopsis != "" {
 		if _, err := f.s.db.ExecContext(context.Background(),
-			`UPDATE campaigns SET description = ? WHERE id = ?`, sinopse, c.ID); err != nil {
+			`UPDATE campaigns SET description = ? WHERE id = ?`, synopsis, c.ID); err != nil {
 			t.Fatalf("sinopse: %v", err)
 		}
 	}
@@ -65,20 +65,20 @@ func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 	f.campanha(t, "A Queda de Tauron", "")
 	f.campanha(t, "Segredos de Wynlla", "Uma trama sobre a Tormenta")
 
-	porNome, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "queda", "todas")
+	byName, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "queda", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(porNome.Campanhas) != 1 || porNome.Campanhas[0].Nome != "A Queda de Tauron" {
-		t.Errorf("busca por nome devolveu %d resultados", len(porNome.Campanhas))
+	if len(byName.Campaigns) != 1 || byName.Campaigns[0].Name != "A Queda de Tauron" {
+		t.Errorf("busca por nome devolveu %d resultados", len(byName.Campaigns))
 	}
 
-	porSinopse, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "tormenta", "todas")
+	bySynopsis, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "tormenta", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(porSinopse.Campanhas) != 1 || porSinopse.Campanhas[0].Nome != "Segredos de Wynlla" {
-		t.Errorf("busca por sinopse devolveu %d resultados", len(porSinopse.Campanhas))
+	if len(bySynopsis.Campaigns) != 1 || bySynopsis.Campaigns[0].Name != "Segredos de Wynlla" {
+		t.Errorf("busca por sinopse devolveu %d resultados", len(bySynopsis.Campaigns))
 	}
 }
 
@@ -88,37 +88,37 @@ func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 func TestTheCursorIsBornOnTheFirstOfTheFilteredList(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
-	segunda := f.campanha(t, "Segredos de Wynlla", "")
+	second := f.campanha(t, "Segredos de Wynlla", "")
 
-	v, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "wynlla", "todas")
+	v, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "wynlla", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if v.CursorID != segunda {
-		t.Errorf("cursor = %d, queria %d (a única que sobrou)", v.CursorID, segunda)
+	if v.CursorID != second {
+		t.Errorf("cursor = %d, queria %d (a única que sobrou)", v.CursorID, second)
 	}
 }
 
 // Buscar e não achar nada é DIFERENTE de não ter campanha nenhuma: uma pede
 // para limpar o filtro, a outra para criar a primeira.
 func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
-	vazia := novaCena(t)
-	semNada, err := campaigns.New(vazia.s.campaignsHost(), vazia.s.sessionAccess(), vazia.s.campaignDirectory(), vazia.s.campaignLifecycle(), vazia.s.campaignSeating(), vazia.s.boards).LoadList(context.Background(), vazia.eu(t).ID, vazia.eu(t).IsAdmin, "", "todas")
+	empty := novaCena(t)
+	nothing, err := campaigns.New(empty.s.campaignsHost(), empty.s.sessionAccess(), empty.s.campaignDirectory(), empty.s.campaignLifecycle(), empty.s.campaignSeating(), empty.s.boards).LoadList(context.Background(), empty.eu(t).ID, empty.eu(t).IsAdmin, "", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if semNada.TemAlguma || semNada.FiltrouTudo {
-		t.Errorf("lista vazia: TemAlguma=%v FiltrouTudo=%v", semNada.TemAlguma, semNada.FiltrouTudo)
+	if nothing.HasAny || nothing.FilteredAll {
+		t.Errorf("lista vazia: TemAlguma=%v FiltrouTudo=%v", nothing.HasAny, nothing.FilteredAll)
 	}
 
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
-	semResultado, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "zzzzz", "todas")
+	noResult, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "zzzzz", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if !semResultado.TemAlguma || !semResultado.FiltrouTudo {
-		t.Errorf("busca sem resultado: TemAlguma=%v FiltrouTudo=%v", semResultado.TemAlguma, semResultado.FiltrouTudo)
+	if !noResult.HasAny || !noResult.FilteredAll {
+		t.Errorf("busca sem resultado: TemAlguma=%v FiltrouTudo=%v", noResult.HasAny, noResult.FilteredAll)
 	}
 }
 
@@ -129,30 +129,30 @@ func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
 // mesa errada.
 func TestALiveSessionGoesToTheRightCampaign(t *testing.T) {
 	f := novaCena(t)
-	parada := f.campanha(t, "A Queda de Tauron", "")
-	rolando := f.campanha(t, "Segredos de Wynlla", "")
+	stop := f.campanha(t, "A Queda de Tauron", "")
+	scrolling := f.campanha(t, "Segredos de Wynlla", "")
 	f.campanha(t, "O Chamado", "")
 
-	sessaoParada := seedSession(t, f.s, parada)
-	sessaoViva := seedSession(t, f.s, rolando)
-	_ = sessaoParada
+	stoppedSession := seedSession(t, f.s, stop)
+	liveSession := seedSession(t, f.s, scrolling)
+	_ = stoppedSession
 	if _, err := f.s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		UpdatedAt: dbvalue.NowISO(), ID: sessaoViva,
+		UpdatedAt: dbvalue.NowISO(), ID: liveSession,
 	}); err != nil {
 		t.Fatalf("iniciar: %v", err)
 	}
 
-	v, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "todas")
+	v, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	for _, c := range v.Campanhas {
-		querAoVivo := c.ID == rolando
-		if c.AoVivo != querAoVivo {
-			t.Errorf("%q: AoVivo=%v, queria %v", c.Nome, c.AoVivo, querAoVivo)
+	for _, c := range v.Campaigns {
+		wantLive := c.ID == scrolling
+		if c.Live != wantLive {
+			t.Errorf("%q: AoVivo=%v, queria %v", c.Name, c.Live, wantLive)
 		}
-		if c.AoVivo && c.SessaoID != sessaoViva {
-			t.Errorf("%q aponta para a sessão %d, queria %d", c.Nome, c.SessaoID, sessaoViva)
+		if c.Live && c.SessionID != liveSession {
+			t.Errorf("%q aponta para a sessão %d, queria %d", c.Name, c.SessionID, liveSession)
 		}
 	}
 }
@@ -166,13 +166,13 @@ func TestAnInvalidRoleInTheUrlDoesNotHideTheList(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
 
-	for _, papel := range []string{"", "mestre", "GM", "'; drop table"} {
-		v, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", papel)
+	for _, role := range []string{"", "mestre", "GM", "'; drop table"} {
+		v, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "", role)
 		if err != nil {
 			t.Fatalf("carregar: %v", err)
 		}
-		if v.Papel != "todas" || len(v.Campanhas) != 1 {
-			t.Errorf("papel %q virou %q com %d campanhas", papel, v.Papel, len(v.Campanhas))
+		if v.Role != "todas" || len(v.Campaigns) != 1 {
+			t.Errorf("papel %q virou %q com %d campanhas", role, v.Role, len(v.Campaigns))
 		}
 	}
 }
@@ -181,20 +181,20 @@ func TestTheRoleFilterSeparatesRunningFromPlaying(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
 
-	mestrando, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "gm")
+	mastering, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "", "gm")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(mestrando.Campanhas) != 1 {
-		t.Errorf("mestrando devolveu %d — o dono mestra a própria mesa", len(mestrando.Campanhas))
+	if len(mastering.Campaigns) != 1 {
+		t.Errorf("mestrando devolveu %d — o dono mestra a própria mesa", len(mastering.Campaigns))
 	}
 
-	jogando, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "player")
+	playing, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "", "player")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(jogando.Campanhas) != 0 {
-		t.Errorf("jogando devolveu %d — o dono não JOGA na própria mesa", len(jogando.Campanhas))
+	if len(playing.Campaigns) != 0 {
+		t.Errorf("jogando devolveu %d — o dono não JOGA na própria mesa", len(playing.Campaigns))
 	}
 }
 
@@ -205,11 +205,11 @@ func TestTheRoleFilterSeparatesRunningFromPlaying(t *testing.T) {
 func TestTheSceneAnswersPageOrPatchDependingOnWhoAsks(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
-	tok, err := f.s.accountGate().SignSession(sqlcgen.User{ID: f.dono, Email: "mestre@t20.local"})
+	tok, err := f.s.accountGate().SignSession(sqlcgen.User{ID: f.owner, Email: "mestre@t20.local"})
 	if err != nil {
 		t.Fatalf("assinar: %v", err)
 	}
-	pede := func(datastar bool) string {
+	asks := func(datastar bool) string {
 		req := httptest.NewRequest(http.MethodGet, "/campanhas", nil)
 		req.AddCookie(&http.Cookie{Name: f.s.cfg.CookieName, Value: tok})
 		if datastar {
@@ -220,15 +220,15 @@ func TestTheSceneAnswersPageOrPatchDependingOnWhoAsks(t *testing.T) {
 		return rec.Body.String()
 	}
 
-	pagina := pede(false)
-	if !strings.Contains(pagina, "<!doctype html>") && !strings.Contains(pagina, "<!DOCTYPE html>") {
+	page := asks(false)
+	if !strings.Contains(page, "<!doctype html>") && !strings.Contains(page, "<!DOCTYPE html>") {
 		t.Error("a carga fria não devolveu o documento inteiro")
 	}
-	remendo := pede(true)
-	if strings.Contains(remendo, "<html") {
+	patch := asks(true)
+	if strings.Contains(patch, "<html") {
 		t.Error("o pedido do Datastar recebeu a página inteira — o remendo viraria um documento dentro do outro")
 	}
-	if !strings.Contains(remendo, "campaigns-scene") {
+	if !strings.Contains(patch, "campaigns-scene") {
 		t.Error("o remendo não trouxe o id que o morph casa")
 	}
 }

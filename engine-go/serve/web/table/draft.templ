@@ -42,14 +42,14 @@ templ draftHeader(v draftView) {
 		<div class="flex min-w-0 items-center gap-2">
 			<a
 				href={ templ.SafeURL(routes.CampaignTab(v.CampaignID, "lugares")) }
-				title={ "Voltar para " + v.CampanhaNome }
+				title={ "Voltar para " + v.CampaignName }
 				class="inline-flex min-h-11 items-center gap-1 rounded-sm px-1 text-sm text-muted-foreground outline-none transition-colors hover:text-grimorio-gold"
 			>
 				@ui.Icon("ChevronLeft", "size-4")
-				<span class="max-w-40 truncate">{ v.CampanhaNome }</span>
+				<span class="max-w-40 truncate">{ v.CampaignName }</span>
 			</a>
 			<span aria-hidden="true" class="text-muted-foreground">·</span>
-			<h1 class="min-w-0 truncate font-heading text-base tracking-wide text-foreground">{ v.Lugar }</h1>
+			<h1 class="min-w-0 truncate font-heading text-base tracking-wide text-foreground">{ v.Place }</h1>
 		</div>
 		<p class="flex items-center gap-2">
 			@ui.Icon("EyeOff", "size-4 text-grimorio-gold/70")
@@ -71,7 +71,7 @@ templ draftHeader(v draftView) {
 // mas um remendo mandado para o id errado é escrito no vazio e some SEM ERRO.
 templ draftBoardRegion(v draftView) {
 	<div id="draft-board" class="flex min-h-0 flex-1 flex-col">
-		@boardTable(v.Tabuleiro)
+		@boardTable(v.Board)
 		<div class="flex items-center justify-between gap-2 px-1 pt-1">
 			// A RECUSA do gesto, no mesmo sinal que o rodapé do mestre usa na
 			// Mesa: é a mesma pergunta ("o servidor não aceitou o quê?") e um
@@ -86,7 +86,7 @@ templ draftBoardRegion(v draftView) {
 			// A HORA da gravação, e ela é o par da tarja: uma diz que grava
 			// sozinho, a outra prova que gravou. Sem a prova, a promessa é
 			// exatamente tão confiável quanto a memória de quem lê.
-			<p class="ml-auto shrink-0 text-xs text-muted-foreground">{ v.GravadoEm }</p>
+			<p class="ml-auto shrink-0 text-xs text-muted-foreground">{ v.SavedAt }</p>
 		</div>
 	</div>
 }

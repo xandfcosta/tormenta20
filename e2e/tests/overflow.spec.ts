@@ -20,33 +20,33 @@ test.use({ storageState: '.auth/user.json' })
  */
 async function cenasDosCatalogos(page: Page): Promise<string[]> {
   await page.goto('/mestre/condicoes')
-  const enderecos = await page
+  const addresses = await page
     .locator('nav[aria-label="Ferramentas do mestre"] a')
     .evaluateAll((links) =>
       links.map((a) => (a as HTMLAnchorElement).getAttribute('href') ?? ''),
     )
   // As FERRAMENTAS ficam de fora: encontros e improviso não desenham cartão de
   // acervo, e cobrar transbordo delas mediria outra coisa.
-  return enderecos.filter((e) => !e.endsWith('/encontros') && !e.endsWith('/improviso'))
+  return addresses.filter((e) => !e.endsWith('/encontros') && !e.endsWith('/improviso'))
 }
 
 test('nenhum cartão do acervo transborda a coluna, em nenhuma cena', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  const cenas = await cenasDosCatalogos(page)
+  const scenes = await cenasDosCatalogos(page)
   // O CONTROLE: o trilho tem catálogos de verdade. Uma lista vazia faria o
   // laço abaixo não medir nada e passar verde.
-  expect(cenas.length, 'o trilho não ofereceu catálogo nenhum').toBeGreaterThan(8)
+  expect(scenes.length, 'o trilho não ofereceu catálogo nenhum').toBeGreaterThan(8)
 
-  let medidas = 0
-  for (const cena of cenas) {
-    await page.goto(cena)
+  let measured = 0
+  for (const scene of scenes) {
+    await page.goto(scene)
 
-    const medida = await page.evaluate(() => {
-      const cartoes = [...document.querySelectorAll('.collection-in-columns > div')]
+    const measurement = await page.evaluate(() => {
+      const cards = [...document.querySelectorAll('.collection-in-columns > div')]
       return {
         temGrade: !!document.querySelector('.collection-in-columns'),
-        quantos: cartoes.length,
-        estouram: cartoes
+        quantos: cards.length,
+        estouram: cards
           .filter((c) => c.scrollWidth > c.clientWidth + 1)
           .slice(0, 3)
           .map((c) => ({
@@ -60,18 +60,18 @@ test('nenhum cartão do acervo transborda a coluna, em nenhuma cena', async ({ p
     // cartões: ele tem lista e painel, com os filtros próprios dele. Cena sem
     // grade é pulada, e a conta abaixo é o que impede isso de virar um jeito de
     // não medir nada.
-    if (!medida.temGrade) continue
-    medidas++
+    if (!measurement.temGrade) continue
+    measured++
 
     // O CONTROLE: a cena desenhou cartões. Sem ele, "nada transbordou" seria
     // verdade sobre uma tela vazia.
-    expect(medida.quantos, `${cena} não desenhou cartão nenhum`).toBeGreaterThan(0)
-    expect(medida.estouram, `cartões de ${cena} pintam por cima do vizinho`).toEqual([])
+    expect(measurement.quantos, `${scene} não desenhou cartão nenhum`).toBeGreaterThan(0)
+    expect(measurement.estouram, `cartões de ${scene} pintam por cima do vizinho`).toEqual([])
   }
 
   // Nove ou mais cenas MEDIDAS de verdade: sem isto, um seletor que parasse de
   // casar transformaria o guarda inteiro num laço que não afirma nada.
-  expect(medidas, 'quase nenhuma cena foi medida').toBeGreaterThan(8)
+  expect(measured, 'quase nenhuma cena foi medida').toBeGreaterThan(8)
 })
 
 test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', async ({ page }) => {
@@ -82,23 +82,23 @@ test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', as
   // verbete. É o caso que o dono trouxe.
   // Pelo `title` e não pelo nome acessível: o texto do elo é "Medo." (com o
   // ponto do livro), e é ele que vira o nome — o `title` é a explicação.
-  const elo = page.locator('a[title="Ver Medo"]').first()
-  await expect(elo).toBeVisible()
+  const link = page.locator('a[title="Ver Medo"]').first()
+  await expect(link).toBeVisible()
 
-  const caixa = page.locator('#entry-in-dialog')
-  expect(await caixa.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
+  const crate = page.locator('#entry-in-dialog')
+  expect(await crate.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
 
-  await elo.click()
+  await link.click()
 
-  expect(await caixa.evaluate((d: HTMLDialogElement) => d.open)).toBe(true)
-  await expect(caixa).toContainText('Medo capaz de prejudicar o alvo')
+  expect(await crate.evaluate((d: HTMLDialogElement) => d.open)).toBe(true)
+  await expect(crate).toContainText('Medo capaz de prejudicar o alvo')
   // A CENA CONTINUA: o endereço não mudou e a condição que se estava lendo está
   // lá atrás. Era isso que a navegação para uma busca destruía.
   expect(page.url()).toContain('/mestre/condicoes')
   await expect(page.getByText('-2 em testes de perícia.')).toBeVisible()
 
   await page.keyboard.press('Escape')
-  expect(await caixa.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
+  expect(await crate.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
 })
 
 test('a ficha do monstro usa a largura: duas colunas quando cabe, empilhada quando não', async ({
@@ -118,20 +118,20 @@ test('a ficha do monstro usa a largura: duas colunas quando cabe, empilhada quan
   // telefone, que o CSS esconde nesta largura. Medir o do painel é medir o que
   // está na tela; o outro tem largura zero, e medir caixa escondida é medir
   // nada com cara de medição.
-  const colunas = page.locator('.mesa-painel .entry-block-columns')
-  await expect(colunas).toBeVisible()
+  const columns = page.locator('.mesa-painel .entry-block-columns')
+  await expect(columns).toBeVisible()
 
-  const largo = await colunas.evaluate((el) => ({
+  const wide = await columns.evaluate((el) => ({
     colunas: getComputedStyle(el).gridTemplateColumns.split(' ').length,
     // Os dois filhos lado a lado: mesma linha significa mesmo topo.
     mesmoTopo:
       el.children[0].getBoundingClientRect().top === el.children[1].getBoundingClientRect().top,
     sobra: el.parentElement!.getBoundingClientRect().width - el.getBoundingClientRect().width,
   }))
-  expect(largo.colunas, 'a ficha não abriu em duas colunas com 1500px').toBe(2)
-  expect(largo.mesmoTopo, 'as duas colunas não estão lado a lado').toBe(true)
+  expect(wide.colunas, 'a ficha não abriu em duas colunas com 1500px').toBe(2)
+  expect(wide.mesmoTopo, 'as duas colunas não estão lado a lado').toBe(true)
   // E ela USA a largura: o bloco não pode parar muito antes do painel.
-  expect(largo.sobra, 'a ficha deixou meia tela vazia ao lado').toBeLessThan(40)
+  expect(wide.sobra, 'a ficha deixou meia tela vazia ao lado').toBeLessThan(40)
 
   // Num painel ESTREITO volta a empilhar — a mesma árvore, sem segundo desenho:
   // duas árvores para o mesmo bloco se desencontram.
@@ -140,13 +140,13 @@ test('a ficha do monstro usa a largura: duas colunas quando cabe, empilhada quan
   // 50rem que a `.mesa-duas-colunas` pede) mas dá ao bloco menos que 46rem. A
   // 420 o painel some inteiro, e a asserção mediria um elemento escondido.
   await page.setViewportSize({ width: 1000, height: 900 })
-  await expect(colunas).toBeVisible()
-  const estreito = await colunas.evaluate((el) => ({
+  await expect(columns).toBeVisible()
+  const narrow = await columns.evaluate((el) => ({
     colunas: getComputedStyle(el).gridTemplateColumns.split(' ').length,
     largura: el.getBoundingClientRect().width,
   }))
-  expect(estreito.largura, 'o painel não ficou estreito o bastante para medir').toBeLessThan(46 * 16)
-  expect(estreito.colunas, 'a ficha continuou em duas colunas num painel estreito').toBe(1)
+  expect(narrow.largura, 'o painel não ficou estreito o bastante para medir').toBeLessThan(46 * 16)
+  expect(narrow.colunas, 'a ficha continuou em duas colunas num painel estreito').toBe(1)
 })
 
 test('a cena de campanhas tem a mesma forma da de personagens: palco em cima, lista embaixo', async ({
@@ -160,25 +160,25 @@ test('a cena de campanhas tem a mesma forma da de personagens: palco em cima, li
   // livro recebe de largura. Em jsdom todo elemento mede zero.
   await page.setViewportSize({ width: 1500, height: 900 })
 
-  const medidas: Record<string, { livro: number; tiraAbaixo: boolean; tiraDeitada: boolean }> = {}
-  for (const cena of ['/campanhas', '/personagens']) {
-    await page.goto(cena)
-    medidas[cena] = await page.evaluate(() => {
+  const measured: Record<string, { livro: number; tiraAbaixo: boolean; tiraDeitada: boolean }> = {}
+  for (const scene of ['/campanhas', '/personagens']) {
+    await page.goto(scene)
+    measured[scene] = await page.evaluate(() => {
       // A tira é a região que o driver de teclado dirige: `rail` nas campanhas
       // (o nome é contrato com o driver) e `filme` nos personagens.
-      const tira = document.querySelector('[data-nav-region="rail"]')!
-      const palco = tira.previousElementSibling!
-      const t = tira.getBoundingClientRect()
-      const p = palco.getBoundingClientRect()
+      const strip = document.querySelector('[data-nav-region="rail"]')!
+      const stage = strip.previousElementSibling!
+      const t = strip.getBoundingClientRect()
+      const p = stage.getBoundingClientRect()
       return { livro: p.width, tiraAbaixo: t.top >= p.bottom - 1, tiraDeitada: t.width > t.height }
     })
   }
 
-  for (const [cena, m] of Object.entries(medidas)) {
-    expect(m.tiraAbaixo, `${cena}: a lista não está abaixo do palco`).toBe(true)
-    expect(m.tiraDeitada, `${cena}: a lista não está deitada`).toBe(true)
+  for (const [scene, m] of Object.entries(measured)) {
+    expect(m.tiraAbaixo, `${scene}: a lista não está abaixo do palco`).toBe(true)
+    expect(m.tiraDeitada, `${scene}: a lista não está deitada`).toBe(true)
     // O palco toma a janela inteira: era isto que a coluna ao lado comia.
-    expect(m.livro, `${cena}: o palco não usa a largura`).toBeGreaterThan(1400)
+    expect(m.livro, `${scene}: o palco não usa a largura`).toBeGreaterThan(1400)
   }
 })
 
@@ -205,31 +205,31 @@ test('o crachá da Defesa partida cabe no rodapé da ficha a 390px', async ({ pa
 
   // O CONTROLE: em pé, o crachá é curto — é assim que se sabe que a medição
   // depois é do caso novo e não do que já estava lá.
-  const cracha = page.locator('span', { hasText: /^DEF$/ }).locator('..')
-  await expect(cracha).toBeVisible()
-  const curto = await cracha.evaluate((el) => el.getBoundingClientRect().width)
+  const badge = page.locator('span', { hasText: /^DEF$/ }).locator('..')
+  await expect(badge).toBeVisible()
+  const short = await badge.evaluate((el) => el.getBoundingClientRect().width)
 
   await page.getByRole('button', { name: 'Aplicar condição' }).click()
   await page.getByRole('button', { name: /^Caído/ }).click()
-  await expect(cracha).toContainText('CaC')
+  await expect(badge).toContainText('CaC')
 
-  const medida = await cracha.evaluate((el) => {
-    const caixa = el.getBoundingClientRect()
-    const linha = el.parentElement as HTMLElement
-    const pai = linha.getBoundingClientRect()
-    const nome = linha.querySelector('p') as HTMLElement | null
+  const measurement = await badge.evaluate((el) => {
+    const box = el.getBoundingClientRect()
+    const row = el.parentElement as HTMLElement
+    const father = row.getBoundingClientRect()
+    const label = row.querySelector('p') as HTMLElement | null
     return {
-      largura: caixa.width,
-      foraPelaDireita: caixa.right - pai.right,
-      recorteDaLinha: linha.scrollWidth - linha.clientWidth,
-      nomeVisivel: nome ? nome.getBoundingClientRect().width : -1,
+      largura: box.width,
+      foraPelaDireita: box.right - father.right,
+      recorteDaLinha: row.scrollWidth - row.clientWidth,
+      nomeVisivel: label ? label.getBoundingClientRect().width : -1,
     }
   })
 
-  expect(medida.largura, 'o crachá não cresceu: o caso não está medindo a Defesa partida')
-    .toBeGreaterThan(curto)
-  expect(medida.foraPelaDireita, 'o crachá saiu pela direita da linha').toBeLessThanOrEqual(1)
-  expect(medida.recorteDaLinha, 'a linha recortou o próprio conteúdo').toBeLessThanOrEqual(1)
+  expect(measurement.largura, 'o crachá não cresceu: o caso não está medindo a Defesa partida')
+    .toBeGreaterThan(short)
+  expect(measurement.foraPelaDireita, 'o crachá saiu pela direita da linha').toBeLessThanOrEqual(1)
+  expect(measurement.recorteDaLinha, 'a linha recortou o próprio conteúdo').toBeLessThanOrEqual(1)
   // O nome não pode ser espremido a nada: truncar é o desenho, sumir não é.
-  expect(medida.nomeVisivel, 'o crachá espremeu o nome do herói até sumir').toBeGreaterThan(24)
+  expect(measurement.nomeVisivel, 'o crachá espremeu o nome do herói até sumir').toBeGreaterThan(24)
 })

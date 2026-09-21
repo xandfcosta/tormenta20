@@ -93,63 +93,63 @@ type itemOption struct {
 // Ela é chamada nas três situações e devolve a mesma coisa nas três: a folha
 // vazia do primeiro GET, a folha redesenhada quando a classe muda, e a folha
 // recusada com os erros por campo.
-func blankForgeSheet(folha forgeAnswers, erros wire.FieldErrorMap) forgeView {
-	racas, classes, _ := book.CharacterCatalogs()
-	v := forgeView{Name: folha.Name, Errors: erros}
-	for _, raca := range racas {
-		v.Races = append(v.Races, raceCardOf(raca, folha.Race))
+func blankForgeSheet(sheet forgeAnswers, errs wire.FieldErrorMap) forgeView {
+	races, classes, _ := book.CharacterCatalogs()
+	v := forgeView{Name: sheet.Name, Errors: errs}
+	for _, race := range races {
+		v.Races = append(v.Races, raceCardOf(race, sheet.Race))
 	}
-	for _, classe := range classes {
-		v.Classes = append(v.Classes, classCardOf(classe, folha.Class))
+	for _, class := range classes {
+		v.Classes = append(v.Classes, classCardOf(class, sheet.Class))
 	}
-	v.Origins = originOptions(folha.Origin)
-	if classe := classByName(folha.Class); classe != nil {
-		v.Gear = startingGearFor(folha, *classe)
+	v.Origins = originOptions(sheet.Origin)
+	if class := classByName(sheet.Class); class != nil {
+		v.Gear = startingGearFor(sheet, *class)
 	}
-	v.OrphanRefusals = orphanRefusals(erros, v.Gear)
+	v.OrphanRefusals = orphanRefusals(errs, v.Gear)
 	return v
 }
 
 // orphanRefusals junta as recusas dos campos que esta folha não desenha.
-func orphanRefusals(erros wire.FieldErrorMap, gear *startingGear) []string {
-	naTela := map[string]bool{"name": true, "race": true, "class": true, "origin": true}
+func orphanRefusals(errs wire.FieldErrorMap, gear *startingGear) []string {
+	onScreen := map[string]bool{"name": true, "race": true, "class": true, "origin": true}
 	if gear != nil {
-		naTela["weaponSimple"] = true
-		naTela["weaponMartial"] = len(gear.MartialWeapons) > 0
-		naTela["armor"] = len(gear.Armors) > 0
-		naTela["shield"] = gear.Shield != ""
+		onScreen["weaponSimple"] = true
+		onScreen["weaponMartial"] = len(gear.MartialWeapons) > 0
+		onScreen["armor"] = len(gear.Armors) > 0
+		onScreen["shield"] = gear.Shield != ""
 	}
-	var orfas []string
-	for campo, mensagens := range erros {
-		if naTela[campo] {
+	var orphans []string
+	for field, messages := range errs {
+		if onScreen[field] {
 			continue
 		}
-		orfas = append(orfas, mensagens...)
+		orphans = append(orphans, messages...)
 	}
-	sort.Strings(orfas)
-	return orfas
+	sort.Strings(orphans)
+	return orphans
 }
 
-func raceCardOf(raca book.Race, escolhida string) raceCard {
-	nomes := make([]string, 0, 2)
-	for _, habilidade := range raca.Abilities {
-		if len(nomes) == 2 {
+func raceCardOf(race book.Race, chosen string) raceCard {
+	names := make([]string, 0, 2)
+	for _, ability := range race.Abilities {
+		if len(names) == 2 {
 			break
 		}
-		nomes = append(nomes, habilidade.Name)
+		names = append(names, ability.Name)
 	}
 	return raceCard{
-		Name: raca.Name, Attributes: raca.AttributeMod.Escrito(),
-		Size: raca.Tamanho, Displacement: raca.Deslocamento,
-		Abilities: strings.Join(nomes, ", "), Chosen: raca.Name == escolhida,
+		Name: race.Name, Attributes: race.AttributeMod.Escrito(),
+		Size: race.Size, Displacement: race.Speed,
+		Abilities: strings.Join(names, ", "), Chosen: race.Name == chosen,
 	}
 }
 
-func classCardOf(classe book.Class, escolhida string) classCard {
-	pv, pm, _ := engine.ClassStartingVitals(classe.Name)
+func classCardOf(class book.Class, chosen string) classCard {
+	pv, pm, _ := engine.ClassStartingVitals(class.Name)
 	return classCard{
-		Name: classe.Name, PV: pv, PM: pm,
-		Expertises: cardExpertisesLine(classe), Chosen: classe.Name == escolhida,
+		Name: class.Name, PV: pv, PM: pm,
+		Expertises: cardExpertisesLine(class), Chosen: class.Name == chosen,
 	}
 }
 
@@ -157,104 +157,104 @@ func classCardOf(classe book.Class, escolhida string) classCard {
 // treinadas de saída e quantas ainda se escolhem.
 //
 //	"Fortitude · mais 2 a escolher"
-func cardExpertisesLine(classe book.Class) string {
-	fixas := strings.Join(classe.Pericias, ", ")
-	if classe.Escolhe == 0 {
-		return fixas
+func cardExpertisesLine(class book.Class) string {
+	fixed := strings.Join(class.Expertises, ", ")
+	if class.Chooses == 0 {
+		return fixed
 	}
-	escolha := fmt.Sprintf("mais %d a escolher", classe.Escolhe)
-	if fixas == "" {
-		return escolha
+	choice := fmt.Sprintf("mais %d a escolher", class.Chooses)
+	if fixed == "" {
+		return choice
 	}
-	return fixas + " · " + escolha
+	return fixed + " · " + choice
 }
 
 // originOptions são as 35 origens com uma linha do que elas dão.
-func originOptions(escolhida string) []originOption {
-	origens := book.Origins()
-	nomes := make([]string, 0, len(origens))
-	for nome := range origens {
-		nomes = append(nomes, nome)
+func originOptions(chosen string) []originOption {
+	origins := book.Origins()
+	names := make([]string, 0, len(origins))
+	for name := range origins {
+		names = append(names, name)
 	}
-	book.SortByName(nomes, func(n string) string { return n })
+	book.SortByName(names, func(n string) string { return n })
 
-	lista := make([]originOption, 0, len(nomes))
-	for _, nome := range nomes {
-		lista = append(lista, originOption{
-			Name: nome, Benefit: benefitsLine(origens[nome]),
-			Chosen: nome == escolhida,
+	list := make([]originOption, 0, len(names))
+	for _, name := range names {
+		list = append(list, originOption{
+			Name: name, Benefit: benefitsLine(origins[name]),
+			Chosen: name == chosen,
 		})
 	}
-	return lista
+	return list
 }
 
 // benefitsLine resume a lista de benefícios da origem. São dois a
 // escolher (p85), e a escolha é da ficha — aqui é só o que a origem oferece.
-func benefitsLine(origem book.Origin) string {
-	nomes := make([]string, 0, len(origem.Benefits))
-	for _, beneficio := range origem.Benefits {
-		nomes = append(nomes, beneficio.Name)
+func benefitsLine(origin book.Origin) string {
+	names := make([]string, 0, len(origin.Benefits))
+	for _, benefit := range origin.Benefits {
+		names = append(names, benefit.Name)
 	}
-	return strings.Join(nomes, ", ")
+	return strings.Join(names, ", ")
 }
 
 // startingGearFor monta os seletores do kit desta classe.
-func startingGearFor(folha forgeAnswers, classe book.Class) *startingGear {
-	kit := engine.StartingKitFor(classe.Name, classe.Proficiencias)
+func startingGearFor(sheet forgeAnswers, class book.Class) *startingGear {
+	kit := engine.StartingKitFor(class.Name, class.Proficiencies)
 	eq := &startingGear{
-		SimpleWeapons: itemOptionsInCategory("weapon-simple", folha.SimpleWeapon),
-		Armors:        itemOptionsByID(kit.Armors, folha.Armor),
-		ToResolve:     grantsToResolve(folha.Origin),
+		SimpleWeapons: itemOptionsInCategory("weapon-simple", sheet.SimpleWeapon),
+		Armors:        itemOptionsByID(kit.Armors, sheet.Armor),
+		ToResolve:     grantsToResolve(sheet.Origin),
 	}
 	if kit.MartialWeapon {
-		eq.MartialWeapons = itemOptionsInCategory("weapon-martial", folha.MartialWeapon)
+		eq.MartialWeapons = itemOptionsInCategory("weapon-martial", sheet.MartialWeapon)
 	}
 	if item := book.ItemByID(kit.Shield); item != nil {
-		eq.Shield, eq.ShieldChosen = item.Name, folha.Shield
+		eq.Shield, eq.ShieldChosen = item.Name, sheet.Shield
 	}
 	return eq
 }
 
 // itemOptionsInCategory são todos os itens de uma categoria do catálogo, na ordem
 // em que o acervo já os guarda.
-func itemOptionsInCategory(categoria, escolhido string) []itemOption {
-	var opcoes []itemOption
-	for _, item := range book.Catalogs().Itens {
-		if item.Category == categoria {
-			opcoes = append(opcoes, itemOptionOf(item, escolhido))
+func itemOptionsInCategory(category, chosen string) []itemOption {
+	var options []itemOption
+	for _, item := range book.Catalogs().Items {
+		if item.Category == category {
+			options = append(options, itemOptionOf(item, chosen))
 		}
 	}
-	return opcoes
+	return options
 }
 
 // itemOptionsByID são os itens que o kit nomeia, na ordem do kit — as armaduras
 // leves antes da brunea, como o livro as escreve.
-func itemOptionsByID(ids []string, escolhido string) []itemOption {
-	opcoes := make([]itemOption, 0, len(ids))
+func itemOptionsByID(ids []string, chosen string) []itemOption {
+	options := make([]itemOption, 0, len(ids))
 	for _, id := range ids {
 		if item := book.ItemByID(id); item != nil {
-			opcoes = append(opcoes, itemOptionOf(*item, escolhido))
+			options = append(options, itemOptionOf(*item, chosen))
 		}
 	}
-	return opcoes
+	return options
 }
 
-func itemOptionOf(item book.Item, escolhido string) itemOption {
-	return itemOption{ID: item.ID, Label: item.Name, Chosen: item.ID == escolhido}
+func itemOptionOf(item book.Item, chosen string) itemOption {
+	return itemOption{ID: item.ID, Label: item.Name, Chosen: item.ID == chosen}
 }
 
 // grantsToResolve são as linhas "Itens" da origem que pedem uma decisão —
 // "Estojo de disfarces OU gazua", "Arma marcial", "Um item estrangeiro (até T$
 // 100)". Elas não nascem na mochila; a folha as anuncia e a Mochila as resolve.
-func grantsToResolve(origem string) []string {
-	var rotulos []string
-	for _, concessao := range originGrants(origem) {
-		switch concessao.Kind {
+func grantsToResolve(origin string) []string {
+	var labels []string
+	for _, grant := range originGrants(origin) {
+		switch grant.Kind {
 		case engine.OriginItemFixed, engine.OriginItemMoney:
 			continue
 		default:
-			rotulos = append(rotulos, concessao.Label)
+			labels = append(labels, grant.Label)
 		}
 	}
-	return rotulos
+	return labels
 }

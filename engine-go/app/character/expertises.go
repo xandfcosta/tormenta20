@@ -28,37 +28,37 @@ import (
 //
 // Recebe a PERÍCIA e não o estado desejado: mandar "treinada" perde para o
 // clique repetido e para a segunda aba aberta no mesmo personagem.
-func (p Plays) ToggleTraining(ctx context.Context, characterID int64, nome string) error {
+func (p Plays) ToggleTraining(ctx context.Context, characterID int64, name string) error {
 	// O estado ATUAL vem da lista e não do `GetExpertiseMeta`, que devolve só o
 	// id e o `custom` — inverter exige saber o que está lá.
-	todas, err := p.queries.ListExpertisesByCharacter(ctx, characterID)
+	all, err := p.queries.ListExpertisesByCharacter(ctx, characterID)
 	if err != nil {
 		return fmt.Errorf("ler as perícias da ficha %d: %w", characterID, err)
 	}
-	for _, e := range todas {
-		if e.Name != nome {
+	for _, e := range all {
+		if e.Name != name {
 			continue
 		}
-		depois := e.Trained == 0
+		after := e.Trained == 0
 		if _, err := p.queries.UpdateExpertise(ctx, sqlcgen.UpdateExpertiseParams{
-			Trained: dbvalue.NullBool(&depois), CharacterId: characterID, Name: nome,
+			Trained: dbvalue.NullBool(&after), CharacterId: characterID, Name: name,
 		}); err != nil {
-			return fmt.Errorf("gravar o treino de %q: %w", nome, err)
+			return fmt.Errorf("gravar o treino de %q: %w", name, err)
 		}
 		return nil
 	}
-	return fmt.Errorf("a perícia %q não é desta ficha", nome)
+	return fmt.Errorf("a perícia %q não é desta ficha", name)
 }
 
 // SwapAttribute repõe a perícia em outro atributo.
-func (p Plays) SwapAttribute(ctx context.Context, characterID int64, nome, atributo string) error {
-	if !engine.IsAttributeKey(atributo) {
-		return fmt.Errorf("%q não é um atributo: são %v", atributo, engine.AttributeKeys)
+func (p Plays) SwapAttribute(ctx context.Context, characterID int64, name, attribute string) error {
+	if !engine.IsAttributeKey(attribute) {
+		return fmt.Errorf("%q não é um atributo: são %v", attribute, engine.AttributeKeys)
 	}
 	if _, err := p.queries.UpdateExpertise(ctx, sqlcgen.UpdateExpertiseParams{
-		Attribute: dbvalue.NullString(&atributo), CharacterId: characterID, Name: nome,
+		Attribute: dbvalue.NullString(&attribute), CharacterId: characterID, Name: name,
 	}); err != nil {
-		return fmt.Errorf("a perícia %q não é desta ficha", nome)
+		return fmt.Errorf("a perícia %q não é desta ficha", name)
 	}
 	return nil
 }
@@ -68,22 +68,22 @@ func (p Plays) SwapAttribute(ctx context.Context, characterID int64, nome, atrib
 // As do livro não se apagam, e a recusa é do SERVIDOR e não da tela: travar só
 // na interface deixaria a regra sem fronteira, e quem montasse o `@post` à mão
 // apagaria a Fortitude.
-func (p Plays) RemoveCraft(ctx context.Context, characterID int64, nome string) error {
+func (p Plays) RemoveCraft(ctx context.Context, characterID int64, name string) error {
 	meta, err := p.queries.GetExpertiseMeta(ctx, sqlcgen.GetExpertiseMetaParams{
-		Characterid: characterID, Name: nome,
+		Characterid: characterID, Name: name,
 	})
 	if err != nil {
-		return fmt.Errorf("a perícia %q não é desta ficha", nome)
+		return fmt.Errorf("a perícia %q não é desta ficha", name)
 	}
 	// A COLUNA decide, e não a lista das 29: `custom` é o que o banco guarda
 	// sobre esta linha, enquanto a lista é uma opinião do código sobre o nome. As
 	// duas concordam hoje; no dia em que uma perícia nova entrar no livro, a
 	// coluna continua certa e a lista fica velha.
 	if meta.Custom == 0 {
-		return fmt.Errorf("%q é uma perícia do livro e não se remove da ficha", nome)
+		return fmt.Errorf("%q é uma perícia do livro e não se remove da ficha", name)
 	}
 	if err := p.queries.DeleteExpertiseByID(ctx, meta.ID); err != nil {
-		return fmt.Errorf("apagar o ofício %q: %w", nome, err)
+		return fmt.Errorf("apagar o ofício %q: %w", name, err)
 	}
 	return nil
 }
@@ -105,24 +105,24 @@ func (p Plays) RemoveCraft(ctx context.Context, characterID int64, nome string) 
 // A lista das 29 vem do `domain/sheet`, que é onde a tabela do livro mora. Ela
 // estava COPIADA no `serve/api`, a dois arquivos da original — e o comentário da
 // original já avisava que duas cópias divergem num acento.
-func (p Plays) AddCraft(ctx context.Context, characterID int64, nome, atributo string) error {
-	if nome == "" {
+func (p Plays) AddCraft(ctx context.Context, characterID int64, name, attribute string) error {
+	if name == "" {
 		return fmt.Errorf("dê um nome ao ofício")
 	}
-	if sheet.IsBuiltinExpertise(nome) {
-		return fmt.Errorf("%q é uma perícia do livro — escolha outro nome", nome)
+	if sheet.IsBuiltinExpertise(name) {
+		return fmt.Errorf("%q é uma perícia do livro — escolha outro nome", name)
 	}
-	if !engine.IsAttributeKey(atributo) {
-		return fmt.Errorf("%q não é um atributo: são %v", atributo, engine.AttributeKeys)
+	if !engine.IsAttributeKey(attribute) {
+		return fmt.Errorf("%q não é um atributo: são %v", attribute, engine.AttributeKeys)
 	}
 	_, err := p.queries.CreateExpertise(ctx, sqlcgen.CreateExpertiseParams{
-		Characterid: characterID, Name: nome, Attribute: atributo, Trained: 1, Custom: 1,
+		Characterid: characterID, Name: name, Attribute: attribute, Trained: 1, Custom: 1,
 	})
 	if db.IsUniqueViolation(err) {
-		return fmt.Errorf("esta ficha já tem %q", nome)
+		return fmt.Errorf("esta ficha já tem %q", name)
 	}
 	if err != nil {
-		return fmt.Errorf("gravar o ofício %q: %w", nome, err)
+		return fmt.Errorf("gravar o ofício %q: %w", name, err)
 	}
 	return nil
 }
@@ -140,24 +140,24 @@ func (p Plays) AddCraft(ctx context.Context, characterID int64, nome, atributo s
 // Uma categoria fora do catálogo não é erro do JOGADOR: a tela só oferece o que
 // o catálogo tem. É o guarda contra a tela e a validação divergirem, e por isso
 // a mensagem NOMEIA as desconhecidas — quem vai lê-la é quem mexeu no código.
-func (p Plays) SaveProficiencies(ctx context.Context, characterID int64, categorias []string) error {
-	var desconhecidas []string
-	vistas := map[string]bool{}
-	semRepetir := []string{}
-	for _, cat := range categorias {
+func (p Plays) SaveProficiencies(ctx context.Context, characterID int64, categories []string) error {
+	var unknown []string
+	seen := map[string]bool{}
+	noRepeat := []string{}
+	for _, cat := range categories {
 		if !book.IsProficiencyCategory(cat) {
-			desconhecidas = append(desconhecidas, cat)
+			unknown = append(unknown, cat)
 		}
-		if !vistas[cat] {
-			vistas[cat] = true
-			semRepetir = append(semRepetir, cat)
+		if !seen[cat] {
+			seen[cat] = true
+			noRepeat = append(noRepeat, cat)
 		}
 	}
-	if len(desconhecidas) > 0 {
-		return fmt.Errorf("proficiência fora do catálogo: %v", desconhecidas)
+	if len(unknown) > 0 {
+		return fmt.Errorf("proficiência fora do catálogo: %v", unknown)
 	}
 	if err := p.queries.SetProficiencies(ctx, sqlcgen.SetProficienciesParams{
-		Proficiencies: sheet.MarshalStrings(&semRepetir),
+		Proficiencies: sheet.MarshalStrings(&noRepeat),
 		UpdatedAt:     dbvalue.NowISO(),
 		ID:            characterID,
 	}); err != nil {

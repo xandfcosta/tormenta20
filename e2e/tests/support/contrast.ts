@@ -36,10 +36,10 @@ export type MedicaoDeContraste = { falhas: string[]; medidos: number }
 export async function medeOContraste(page: Page): Promise<MedicaoDeContraste> {
   return page.evaluate(() => {
 
-    const tela = document.createElement('canvas')
-    tela.width = 1
-    tela.height = 1
-    const ctx = tela.getContext('2d')
+    const readerCanvas = document.createElement('canvas')
+    readerCanvas.width = 1
+    readerCanvas.height = 1
+    const ctx = readerCanvas.getContext('2d')
     if (!ctx) return { falhas: ['sem canvas'], medidos: 0 }
 
     const rgb = (css: string): number[] => {
@@ -48,14 +48,14 @@ export async function medeOContraste(page: Page): Promise<MedicaoDeContraste> {
       ctx.fillRect(0, 0, 1, 1)
       return [...ctx.getImageData(0, 0, 1, 1).data]
     }
-    const luz = (c: number[]) => {
+    const glow = (c: number[]) => {
       const [r, g, b] = c.slice(0, 3).map((v) => {
         const x = v / 255
         return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
       })
       return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
     }
-    const fundoDe = (el: Element): number[] => {
+    const bgOf = (el: Element): number[] => {
       let n: Element | null = el
       while (n && n !== document.documentElement) {
         const c = rgb(getComputedStyle(n).backgroundColor)
@@ -64,19 +64,19 @@ export async function medeOContraste(page: Page): Promise<MedicaoDeContraste> {
       }
       return rgb(getComputedStyle(document.body).backgroundColor)
     }
-    const razao = (a: number[], b: number[]) => {
-      const [x, y] = [luz(a), luz(b)].sort((p, q) => q - p)
+    const ratio = (a: number[], b: number[]) => {
+      const [x, y] = [glow(a), glow(b)].sort((p, q) => q - p)
       return ((x ?? 0) + 0.05) / ((y ?? 0) + 0.05)
     }
 
-    const olhados: string[] = []
-    const falhas = [...document.querySelectorAll('.scene-grimorio *')]
+    const checked: string[] = []
+    const fails = [...document.querySelectorAll('.scene-grimorio *')]
       .map((el) => {
-        const texto = [...el.childNodes]
+        const text = [...el.childNodes]
           .filter((n) => n.nodeType === 3)
           .map((n) => n.textContent?.trim() ?? '')
           .join('')
-        if (!texto) return null
+        if (!text) return null
         const cs = getComputedStyle(el)
         if (cs.visibility === 'hidden' || cs.display === 'none') return null
         // Texto DECORATIVO não entra na conta, e isto não é afrouxar o guarda:
@@ -91,15 +91,15 @@ export async function medeOContraste(page: Page): Promise<MedicaoDeContraste> {
         // errado que estaria reclamando.
         if (el.closest('[aria-hidden="true"]')) return null
         const px = Number.parseFloat(cs.fontSize)
-        const peso = Number.parseInt(cs.fontWeight, 10) || 400
+        const weight = Number.parseInt(cs.fontWeight, 10) || 400
         // A regra do AA: texto grande (24px, ou 18.66px em negrito) pede 3:1.
-        const minimo = px >= 24 || (px >= 18.66 && peso >= 700) ? 3 : 4.5
-        olhados.push(texto)
-        const r = razao(rgb(cs.color), fundoDe(el))
-        return r < minimo ? `"${texto.slice(0, 24)}" dá ${r.toFixed(2)}:1 (pede ${minimo})` : null
+        const min = px >= 24 || (px >= 18.66 && weight >= 700) ? 3 : 4.5
+        checked.push(text)
+        const r = ratio(rgb(cs.color), bgOf(el))
+        return r < min ? `"${text.slice(0, 24)}" dá ${r.toFixed(2)}:1 (pede ${min})` : null
       })
       .filter((x): x is string => x !== null)
-    return { falhas, medidos: olhados.length }
+    return { falhas: fails, medidos: checked.length }
   })
 }
 

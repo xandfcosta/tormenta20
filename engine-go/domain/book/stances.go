@@ -66,9 +66,9 @@ func StancesFromCatalog() map[string]Stance {
 // ligasse uma flag, a postura errada herdaria a dele.
 func stanceStep(flags map[string]string, base string) string {
 	for i := 1; i <= 9; i++ {
-		sufixo := "-" + strconv.Itoa(i)
-		if flags[base+sufixo] != "" {
-			return sufixo
+		suffix := "-" + strconv.Itoa(i)
+		if flags[base+suffix] != "" {
+			return suffix
 		}
 	}
 	return ""
@@ -80,11 +80,11 @@ func stanceStep(flags map[string]string, base string) string {
 // quem chega aqui já entrou na postura, e a postura é de uma classe. Filtrar
 // duas vezes daria uma segunda leitura da posse.
 func FlagGrants(flag string) []Activation {
-	fora := []Activation{}
+	outside := []Activation{}
 	for _, spec := range Activations() {
 		if spec.RequiresFlag == flag && spec.Grant != nil {
-			fora = append(fora, spec)
+			outside = append(outside, spec)
 		}
 	}
-	return fora
+	return outside
 }

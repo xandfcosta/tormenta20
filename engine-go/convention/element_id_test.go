@@ -54,7 +54,7 @@ var (
 
 func TestEveryReferencedElementIdExists(t *testing.T) {
 	root := filepath.Join("..", "..")
-	saida, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
+	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
 		"*.templ", "*.go", "*.ts").Output()
 	if err != nil {
 		t.Fatalf("git ls-files: %v", err)
@@ -64,7 +64,7 @@ func TestEveryReferencedElementIdExists(t *testing.T) {
 	referenced := map[string][]string{}
 	filesRead := 0
 	refsRead := 0
-	for _, relative := range strings.Split(strings.TrimRight(string(saida), "\x00"), "\x00") {
+	for _, relative := range strings.Split(strings.TrimRight(string(output), "\x00"), "\x00") {
 		if relative == "" || strings.HasSuffix(relative, "_templ.go") {
 			continue
 		}
@@ -73,15 +73,15 @@ func TestEveryReferencedElementIdExists(t *testing.T) {
 			t.Fatalf("ler %s: %v", relative, err)
 		}
 		filesRead++
-		for n, linha := range strings.Split(string(body), "\n") {
-			if strings.HasPrefix(strings.TrimSpace(linha), "//") {
+		for n, row := range strings.Split(string(body), "\n") {
+			if strings.HasPrefix(strings.TrimSpace(row), "//") {
 				continue
 			}
-			for _, m := range idDeclaration.FindAllStringSubmatch(linha, -1) {
+			for _, m := range idDeclaration.FindAllStringSubmatch(row, -1) {
 				declared[m[1]] = true
 			}
 			for _, rx := range idReferences {
-				for _, m := range rx.FindAllStringSubmatch(linha, -1) {
+				for _, m := range rx.FindAllStringSubmatch(row, -1) {
 					refsRead++
 					// TODOS os sítios, e não só o primeiro: quem renomeou um id
 					// precisa da lista para fechar as pontas de uma vez.
@@ -103,20 +103,20 @@ func TestEveryReferencedElementIdExists(t *testing.T) {
 			filesRead, len(declared), refsRead)
 	}
 
-	var soltas []string
-	for id, onde := range referenced {
+	var loose []string
+	for id, where := range referenced {
 		if !declared[id] {
-			sort.Strings(onde)
-			soltas = append(soltas, id+" — apontado em "+strings.Join(onde, ", "))
+			sort.Strings(where)
+			loose = append(loose, id+" — apontado em "+strings.Join(where, ", "))
 		}
 	}
-	sort.Strings(soltas)
-	if len(soltas) > 0 {
+	sort.Strings(loose)
+	if len(loose) > 0 {
 		t.Errorf("id apontado que NÃO existe em `.templ` nenhum — %d de %d referências distintas:\n  %s\n"+
 			"Um `getElementById` assim devolve `null` e o gesto não faz nada; um `aria-labelledby` assim "+
 			"tira o nome do diálogo do leitor de tela, e a TELA NÃO MUDA. Se o id foi renomeado, as duas "+
 			"pontas andam juntas.",
-			len(soltas), len(referenced), strings.Join(soltas, "\n  "))
+			len(loose), len(referenced), strings.Join(loose, "\n  "))
 	}
 	t.Logf("ids: %d declarados, %d referências distintas (%d no total), de %d arquivos",
 		len(declared), len(referenced), refsRead, filesRead)

@@ -17,12 +17,12 @@ LOSANGOS, não círculos — a mesma régua do movimento (p238) e do alcance (p2
 
 // desenho devolve o gabarito como linhas de texto, para o teste comparar FORMA e
 // não uma lista de pares que ninguém consegue ler.
-func desenho(casas []Square) []string {
-	if len(casas) == 0 {
+func desenho(squares []Square) []string {
+	if len(squares) == 0 {
 		return nil
 	}
-	minX, maxX, minY, maxY := casas[0].X, casas[0].X, casas[0].Y, casas[0].Y
-	for _, c := range casas {
+	minX, maxX, minY, maxY := squares[0].X, squares[0].X, squares[0].Y, squares[0].Y
+	for _, c := range squares {
 		if c.X < minX {
 			minX = c.X
 		}
@@ -36,34 +36,34 @@ func desenho(casas []Square) []string {
 			maxY = c.Y
 		}
 	}
-	dentro := map[Square]bool{}
-	for _, c := range casas {
-		dentro[c] = true
+	inside := map[Square]bool{}
+	for _, c := range squares {
+		inside[c] = true
 	}
-	var linhas []string
+	var rows []string
 	for y := minY; y <= maxY; y++ {
-		linha := ""
+		row := ""
 		for x := minX; x <= maxX; x++ {
-			if dentro[Square{X: x, Y: y}] {
-				linha += "#"
+			if inside[Square{X: x, Y: y}] {
+				row += "#"
 				continue
 			}
-			linha += "."
+			row += "."
 		}
-		linhas = append(linhas, linha)
+		rows = append(rows, row)
 	}
-	return linhas
+	return rows
 }
 
-func exigeDesenho(t *testing.T, casas []Square, quer []string) {
+func exigeDesenho(t *testing.T, squares []Square, want []string) {
 	t.Helper()
-	got := desenho(casas)
-	if len(got) != len(quer) {
-		t.Fatalf("o gabarito tem %d linhas, esperado %d:\n%v", len(got), len(quer), got)
+	got := desenho(squares)
+	if len(got) != len(want) {
+		t.Fatalf("o gabarito tem %d linhas, esperado %d:\n%v", len(got), len(want), got)
 	}
-	for i := range quer {
-		if got[i] != quer[i] {
-			t.Errorf("linha %d:\n  veio  %q\n  quer  %q\n(inteiro: %v)", i, got[i], quer[i], got)
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("linha %d:\n  veio  %q\n  quer  %q\n(inteiro: %v)", i, got[i], want[i], got)
 		}
 	}
 }
@@ -72,11 +72,11 @@ func exigeDesenho(t *testing.T, casas []Square, quer []string) {
 // (4). A esfera nasce na interseção de quatro quadrados, então não há casa
 // central — há quatro.
 func TestTheSpheresFromTheIllustration(t *testing.T) {
-	quatro := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaSphere, Size: 1})
-	if len(quatro) != 4 {
-		t.Errorf("o raio de 1,5m cobriu %d casas, a figura mostra 4", len(quatro))
+	four := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaSphere, Size: 1})
+	if len(four) != 4 {
+		t.Errorf("o raio de 1,5m cobriu %d casas, a figura mostra 4", len(four))
 	}
-	exigeDesenho(t, quatro, []string{
+	exigeDesenho(t, four, []string{
 		"##",
 		"##",
 	})
@@ -92,11 +92,11 @@ func TestTheSpheresFromTheIllustration(t *testing.T) {
 		".##.",
 	})
 
-	quarenta := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaSphere, Size: 4})
-	if len(quarenta) != 40 {
-		t.Errorf("o raio de 6m cobriu %d casas, a figura mostra 40", len(quarenta))
+	forty := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaSphere, Size: 4})
+	if len(forty) != 40 {
+		t.Errorf("o raio de 6m cobriu %d casas, a figura mostra 40", len(forty))
 	}
-	exigeDesenho(t, quarenta, []string{
+	exigeDesenho(t, forty, []string{
 		"...##...",
 		"..####..",
 		".######.",
@@ -111,26 +111,26 @@ func TestTheSpheresFromTheIllustration(t *testing.T) {
 // Os cones da figura, nas DUAS orientações que ela desenha. As contagens são
 // diferentes entre elas para o mesmo tamanho, e isso é da figura.
 func TestTheConesFromTheIllustration(t *testing.T) {
-	direita := Square{X: 1, Y: 0}
-	casos := []struct {
-		nome  string
-		lado  int
-		casas int
+	right := Square{X: 1, Y: 0}
+	cases := []struct {
+		name    string
+		side    int
+		squares int
 	}{
 		{"cone de 4,5m (3 quadrados), ortogonal", 3, 7},
 		{"cone de 6m (4 quadrados), ortogonal", 4, 12},
 		{"cone de 9m (6 quadrados), ortogonal", 6, 24},
 	}
-	for _, caso := range casos {
-		got := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaCone, Size: caso.lado, Direction: direita})
-		if len(got) != caso.casas {
-			t.Errorf("%s cobriu %d casas, a figura mostra %d", caso.nome, len(got), caso.casas)
+	for _, tc := range cases {
+		got := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaCone, Size: tc.side, Direction: right})
+		if len(got) != tc.squares {
+			t.Errorf("%s cobriu %d casas, a figura mostra %d", tc.name, len(got), tc.squares)
 		}
 	}
 
 	// A forma do cone de 6m ortogonal, que é a que mostra o alargamento de dois
 	// em dois: 1, 3, 3, 5.
-	exigeDesenho(t, AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaCone, Size: 4, Direction: direita}), []string{
+	exigeDesenho(t, AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaCone, Size: 4, Direction: right}), []string{
 		"...#",
 		".###",
 		"####",
@@ -138,14 +138,14 @@ func TestTheConesFromTheIllustration(t *testing.T) {
 		"...#",
 	})
 
-	diagonais := []struct {
-		lado  int
-		casas int
+	diagonals := []struct {
+		side    int
+		squares int
 	}{{3, 6}, {4, 10}, {6, 21}}
-	for _, caso := range diagonais {
-		got := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaCone, Size: caso.lado, Direction: Square{X: 1, Y: 1}})
-		if len(got) != caso.casas {
-			t.Errorf("o cone diagonal de %d quadrados cobriu %d casas, a figura mostra %d", caso.lado, len(got), caso.casas)
+	for _, tc := range diagonals {
+		got := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaCone, Size: tc.side, Direction: Square{X: 1, Y: 1}})
+		if len(got) != tc.squares {
+			t.Errorf("o cone diagonal de %d quadrados cobriu %d casas, a figura mostra %d", tc.side, len(got), tc.squares)
 		}
 	}
 	// E a forma da escada, no modelo de 4,5m.
@@ -158,15 +158,15 @@ func TestTheConesFromTheIllustration(t *testing.T) {
 
 // A linha de 15m da figura: dez quadrados, um de largura (p225).
 func TestTheLineFromTheIllustration(t *testing.T) {
-	linha := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaLine, Size: 10, Direction: Square{X: 1, Y: 0}})
+	row := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaLine, Size: 10, Direction: Square{X: 1, Y: 0}})
 
-	if len(linha) != 10 {
-		t.Errorf("a linha de 15m cobriu %d casas, a figura mostra 10", len(linha))
+	if len(row) != 10 {
+		t.Errorf("a linha de 15m cobriu %d casas, a figura mostra 10", len(row))
 	}
-	exigeDesenho(t, linha, []string{"##########"})
+	exigeDesenho(t, row, []string{"##########"})
 	// E ela começa ADJACENTE à origem, não em cima dela: "surge adjacente a você".
-	if linha[0].X != 1 {
-		t.Errorf("a linha começou em x=%d; ela surge adjacente à origem", linha[0].X)
+	if row[0].X != 1 {
+		t.Errorf("a linha começou em x=%d; ela surge adjacente à origem", row[0].X)
 	}
 }
 
@@ -176,8 +176,8 @@ func TestTheCubesFromTheIllustration(t *testing.T) {
 	if len(um) != 1 {
 		t.Errorf("o cubo de 1,5m cobriu %d casas, a figura mostra 1", len(um))
 	}
-	quatro := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaSquare, Size: 2})
-	exigeDesenho(t, quatro, []string{
+	four := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaSquare, Size: 2})
+	exigeDesenho(t, four, []string{
 		"##",
 		"##",
 	})

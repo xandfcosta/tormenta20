@@ -35,11 +35,11 @@ import "t20engine/serve/web/ui"
 // verdade: o `target="_blank"` é o que sobra para o clique do meio, o Ctrl e o
 // "abrir em nova aba", que o `pageLink` deixa passar de propósito.
 //
-// O `termo` é o que o leitor DESTACA na página. Vem de quem chama e não do
+// O `term` é o que o leitor DESTACA na página. Vem de quem chama e não do
 // número: é o nome do verbete, e é ele que o olho procura ao chegar.
-templ pageLink(livro BookAddress, pagina int, termo string) {
-	@bookAnchor(livro, pagina, termo) {
-		{ fmt.Sprintf("p%d ↗", pagina) }
+templ pageLink(book BookAddress, page int, term string) {
+	@bookAnchor(book, page, term) {
+		{ fmt.Sprintf("p%d ↗", page) }
 	}
 }
 
@@ -48,14 +48,14 @@ templ pageLink(livro BookAddress, pagina int, termo string) {
 // Ele existe porque o livro se cita dentro do próprio texto ("veja a página
 // 230"), e ali o link tem de ser a frase que já está escrita — trocá-la por
 // "p230 ↗" reescreveria o livro na tela.
-templ bookAnchor(livro BookAddress, pagina int, termo string) {
+templ bookAnchor(book BookAddress, page int, term string) {
 	<a
-		href={ templ.SafeURL(livro.AtPage(pagina, termo)) }
+		href={ templ.SafeURL(book.AtPage(page, term)) }
 		data-on:click={ ui.OpenBookOverlay }
 		target="_blank"
 		rel="noopener"
 		data-nav-skip
-		title={ fmt.Sprintf("Abrir o livro na página %d", pagina) }
+		title={ fmt.Sprintf("Abrir o livro na página %d", page) }
 		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
 	>{ children... }</a>
 }
@@ -65,17 +65,17 @@ templ bookAnchor(livro BookAddress, pagina int, termo string) {
 //
 // Um componente porque o `for` que o consome aparece em cada cartão que tem
 // texto, e três `if` copiados divergem no primeiro que alguém ajustar.
-templ Chunk(pedaco book.Chunk, livro BookAddress) {
-	if pedaco.Aba != "" {
-		@CrossRef(pedaco.Aba, pedaco.ID, pedaco.Texto) {
-			{ pedaco.Texto }
+templ Chunk(chunk book.Chunk, bookRef BookAddress) {
+	if chunk.Aba != "" {
+		@CrossRef(chunk.Aba, chunk.ID, chunk.Text) {
+			{ chunk.Text }
 		}
-	} else if pedaco.Pagina > 0 && livro.AtPage(pedaco.Pagina, "") != "" {
-		@bookAnchor(livro, pedaco.Pagina, "") {
-			{ pedaco.Texto }
+	} else if chunk.Page > 0 && bookRef.AtPage(chunk.Page, "") != "" {
+		@bookAnchor(bookRef, chunk.Page, "") {
+			{ chunk.Text }
 		}
 	} else {
-		{ pedaco.Texto }
+		{ chunk.Text }
 	}
 }
 
@@ -115,12 +115,12 @@ templ BookDialog() {
 // a regra "zero significa que o catálogo não sabe" escrita sete vezes é a que
 // alguém esquece no oitavo. O número puro NÃO é consolo: o mestre com o livro de
 // papel na mesa usa exatamente isso.
-templ PageSeal(livro BookAddress, pagina int, termo string) {
-	if pagina > 0 {
-		if livro.AtPage(pagina, termo) != "" {
-			@pageLink(livro, pagina, termo)
+templ PageSeal(book BookAddress, page int, term string) {
+	if page > 0 {
+		if book.AtPage(page, term) != "" {
+			@pageLink(book, page, term)
 		} else {
-			<span class="font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", pagina) }</span>
+			<span class="font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", page) }</span>
 		}
 	}
 }
@@ -145,14 +145,14 @@ templ PageSeal(livro BookAddress, pagina int, termo string) {
 // A caixa existe porque a alternativa confunde: navegar tira a pessoa da regra
 // que ela estava lendo, e antes disso o endereço era uma BUSCA — clicar em
 // "Medo" caía numa lista de oito grupos com o verbete no quinto.
-templ CrossRef(aba, id, nome string) {
+templ CrossRef(aba, id, name string) {
 	<a
 		href={ templ.SafeURL(routes.MasterEntry(aba, id)) }
 		data-aba={ aba }
 		data-entrada={ id }
 		data-on:click={ openEntryOver }
 		data-nav-skip
-		title={ "Ver " + nome }
+		title={ "Ver " + name }
 		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
 	>{ children... }</a>
 }

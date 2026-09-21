@@ -46,85 +46,85 @@ import (
 // `TestNoRouteCarriesACoordinateInThePath`, e é o que faz o piso abaixo poder
 // ser o número de rotas do processo em vez de um chute.
 func TestAWireRouteStartsLowercase(t *testing.T) {
-	rotas := walkTheRouter(t, newTestServer(t))
+	routes := walkTheRouter(t, newTestServer(t))
 
-	for rota := range rotas {
+	for route := range routes {
 		// O método vem colado no padrão (`"POST /campanhas/…"`), e ele é
 		// MAIÚSCULO por definição — o que se mede é o caminho.
-		caminho := rota
-		if espaco := strings.IndexByte(rota, ' '); espaco >= 0 {
-			caminho = rota[espaco+1:]
+		path := route
+		if slot := strings.IndexByte(route, ' '); slot >= 0 {
+			path = route[slot+1:]
 		}
-		for _, pedaco := range strings.Split(strings.Trim(caminho, "/"), "/") {
+		for _, chunk := range strings.Split(strings.Trim(path, "/"), "/") {
 			// `{id}` é parâmetro e segue o nome do campo, não a rota; `*` é o
 			// curinga do chi.
-			if pedaco == "" || pedaco == "*" || strings.HasPrefix(pedaco, "{") {
+			if chunk == "" || chunk == "*" || strings.HasPrefix(chunk, "{") {
 				continue
 			}
 			// Qualquer maiúscula, e não só a primeira: em `password-Reset` o
 			// segmento COMEÇA minúsculo e a capitalização caiu depois do hífen.
 			// Um guarda que olhasse só a inicial passaria verde sobre ele.
-			if strings.ContainsAny(pedaco, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+			if strings.ContainsAny(chunk, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
 				t.Errorf("a rota %q tem segmento em MAIÚSCULA (%q).\n"+
 					"O cliente chama a grafia minúscula; capitalizar vira 404, e o\n"+
 					"404 chega à tela como funcionalidade que sumiu.",
-					caminho, pedaco)
+					path, chunk)
 			}
 		}
 	}
 
 	// O DENOMINADOR é EXATO porque vem do roteador, e o piso denuncia um
 	// roteador que deixou de montar — que é como este guarda ficaria inerte.
-	if len(rotas) < 150 {
-		t.Fatalf("guarda cego: só %d rotas no roteador", len(rotas))
+	if len(routes) < 150 {
+		t.Fatalf("guarda cego: só %d rotas no roteador", len(routes))
 	}
 }
 
 func TestAWireTagStartsLowercase(t *testing.T) {
 	tag := regexp.MustCompile(`json:"([^",]+)`)
 
-	visitados, achadas := 0, 0
+	visited, found := 0, 0
 	{
-		var arquivos []string
-		raiz, err := os.Getwd()
+		var files []string
+		root, err := os.Getwd()
 		if err != nil {
 			t.Fatalf("achar a raiz: %v", err)
 		}
-		if err := filepath.WalkDir(filepath.Dir(filepath.Dir(raiz)), func(caminho string, d fs.DirEntry, err error) error {
-			if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") {
+		if err := filepath.WalkDir(filepath.Dir(filepath.Dir(root)), func(path string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") {
 				return err
 			}
-			arquivos = append(arquivos, caminho)
+			files = append(files, path)
 			return nil
 		}); err != nil {
 			t.Fatalf("caminhar a árvore: %v", err)
 		}
-		for _, nome := range arquivos {
-			bruto, err := os.ReadFile(nome)
+		for _, name := range files {
+			raw, err := os.ReadFile(name)
 			if err != nil {
-				t.Fatalf("ler %s: %v", nome, err)
+				t.Fatalf("ler %s: %v", name, err)
 			}
-			visitados++
-			for linha, texto := range strings.Split(string(bruto), "\n") {
+			visited++
+			for row, text := range strings.Split(string(raw), "\n") {
 				// Comentário não é contrato. Sem isto o guarda lê o próprio texto
 				// explicativo — que cita a tag defeituosa — e falha para sempre
 				// sobre si mesmo. Achado ao provar o vermelho: ele já estava
 				// vermelho ANTES da sabotagem, o que denunciou o autoexame.
-				if corte := strings.Index(texto, "//"); corte >= 0 {
-					texto = texto[:corte]
+				if cut := strings.Index(text, "//"); cut >= 0 {
+					text = text[:cut]
 				}
-				for _, m := range tag.FindAllStringSubmatch(texto, -1) {
-					campo := m[1]
-					achadas++
-					if campo == "" || campo == "-" {
+				for _, m := range tag.FindAllStringSubmatch(text, -1) {
+					field := m[1]
+					found++
+					if field == "" || field == "-" {
 						continue
 					}
-					if campo[0] >= 'A' && campo[0] <= 'Z' {
+					if field[0] >= 'A' && field[0] <= 'Z' {
 						t.Errorf("%s:%d: a tag `json:%q` começa em MAIÚSCULA.\n"+
 							"O cliente lê a grafia minúscula; capitalizar entrega o campo como\n"+
 							"`undefined` sem erro nenhum. Se isto veio de um rename automático,\n"+
 							"a expressão casou dentro da string da tag — conserte a tag, não o guarda.",
-							nome, linha+1, campo)
+							name, row+1, field)
 					}
 				}
 			}
@@ -135,7 +135,7 @@ func TestAWireTagStartsLowercase(t *testing.T) {
 	// guarda foi escrito: folga para o código encolher, e barulho na hora em que
 	// o padrão parar de casar. Um guarda que varre zero arquivos passa verde
 	// sobre nada.
-	if visitados == 0 || achadas < 300 {
-		t.Fatalf("guarda cego: %d arquivos, %d tags — o padrão parou de casar", visitados, achadas)
+	if visited == 0 || found < 300 {
+		t.Fatalf("guarda cego: %d arquivos, %d tags — o padrão parou de casar", visited, found)
 	}
 }

@@ -44,8 +44,8 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 	// carimbo próprio — itens, efeitos, magias — levam um `now` fresco: a cópia
 	// nasce agora, e herdar o carimbo do molde faria a mesa dizer que o item
 	// entrou na mochila antes de o herói existir nela.
-	passos := []struct {
-		oQue string
+	steps := []struct {
+		what string
 		sql  string
 		args []any
 	}{
@@ -68,9 +68,9 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		{"damage", `INSERT INTO character_damage (characterId, hpDamage, mpSpent)
 			SELECT ?, hpDamage, mpSpent FROM character_damage WHERE characterId = ?`, []any{destID, sourceID}},
 	}
-	for _, passo := range passos {
-		if _, err := tx.ExecContext(ctx, passo.sql, passo.args...); err != nil {
-			return 0, fmt.Errorf("clonar %s do molde %d: %w", passo.oQue, sourceID, err)
+	for _, step := range steps {
+		if _, err := tx.ExecContext(ctx, step.sql, step.args...); err != nil {
+			return 0, fmt.Errorf("clonar %s do molde %d: %w", step.what, sourceID, err)
 		}
 	}
 

@@ -25,7 +25,7 @@ import (
 // digitado numa caixa reaparece na próxima.
 
 // itemSheetDialog é a ficha de UM item — o alvo de todo toque na Mochila.
-func itemSheetDialog(v View, ficha itemSheet) templ.Component {
+func itemSheetDialog(v View, sheet itemSheet) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -63,7 +63,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(writtenWeight(ficha))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(writtenWeight(sheet))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 23, Col: 25}
 			}
@@ -75,7 +75,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if ficha.NoProficiency {
+			if sheet.NoProficiency {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<span class=\"ml-2 font-semibold text-penalty-ink\">sem proficiência</span>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -85,7 +85,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(ficha.Equip) > 0 {
+			if len(sheet.Equip) > 0 {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"space-y-1\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -112,7 +112,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, lugar := range ficha.Equip {
+				for _, place := range sheet.Equip {
 					var templ_7745c5c3_Var6 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "")}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 					if templ_7745c5c3_Err != nil {
@@ -123,7 +123,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var7 string
-					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(equipCommand(v, ficha, lugar) + "; $detail = ''")
+					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(equipCommand(v, sheet, place) + "; $detail = ''")
 					if templ_7745c5c3_Err != nil {
 						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 35, Col: 71}
 					}
@@ -149,9 +149,9 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var9 string
-					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(lugar.Rotulo)
+					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(place.Label)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 37, Col: 21}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 37, Col: 20}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -171,8 +171,8 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if ficha.Consumable != nil {
-				templ_7745c5c3_Err = consumeBlock(v, ficha).Render(ctx, templ_7745c5c3_Buffer)
+			if sheet.Consumable != nil {
+				templ_7745c5c3_Err = consumeBlock(v, sheet).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -181,8 +181,8 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if ficha.Book != nil {
-				templ_7745c5c3_Err = bookBlock(ficha).Render(ctx, templ_7745c5c3_Buffer)
+			if sheet.Book != nil {
+				templ_7745c5c3_Err = bookBlock(sheet).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -191,7 +191,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(ficha.Overlays) > 0 {
+			if len(sheet.Overlays) > 0 {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"space-y-1 rounded-sm border border-grimorio-iron p-2\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -218,13 +218,13 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, melhoria := range ficha.Overlays {
+				for _, melhoria := range sheet.Overlays {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<p class=\"text-xs\"><span class=\"font-semibold text-grimorio-gold\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var12 string
-					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(melhoria.Nome)
+					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(melhoria.Name)
 					if templ_7745c5c3_Err != nil {
 						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 53, Col: 68}
 					}
@@ -237,7 +237,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var13 string
-					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(melhoria.Efeito)
+					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(melhoria.Effect)
 					if templ_7745c5c3_Err != nil {
 						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 54, Col: 64}
 					}
@@ -259,7 +259,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if ficha.Overlayable {
+			if sheet.Overlayable {
 				var templ_7745c5c3_Var14 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "")}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var14...)
 				if templ_7745c5c3_Err != nil {
@@ -270,7 +270,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("Melhorias de " + ficha.Name)
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("Melhorias de " + sheet.Name)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 63, Col: 46}
 				}
@@ -283,7 +283,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var16 string
-				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(thatOpensTheImprovementsGesture(ficha))
+				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(thatOpensTheImprovementsGesture(sheet))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 65, Col: 59}
 				}
@@ -319,7 +319,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var19 string
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue("Editar " + ficha.Name)
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue("Editar " + sheet.Name)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 71, Col: 39}
 			}
@@ -332,7 +332,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(thatOpensEditGesture(ficha))
+			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(thatOpensEditGesture(sheet))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 73, Col: 47}
 			}
@@ -367,7 +367,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var23 string
-			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("Remover " + ficha.Name)
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("Remover " + sheet.Name)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 78, Col: 40}
 			}
@@ -380,7 +380,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var24 string
-			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/itens/"+ficha.Command+"/remover") + "; $detail = ''")
+			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/itens/"+sheet.Command+"/remover") + "; $detail = ''")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 79, Col: 87}
 			}
@@ -407,18 +407,18 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = overlay("item-"+ficha.Command, ficha.Name, "Backpack", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = overlay("item-"+sheet.Command, sheet.Name, "Backpack", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if ficha.Overlayable {
-			templ_7745c5c3_Err = overlayDialog(v, ficha).Render(ctx, templ_7745c5c3_Buffer)
+		if sheet.Overlayable {
+			templ_7745c5c3_Err = overlayDialog(v, sheet).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = itemFormDialog(v, "editar-"+ficha.Command, "Editar "+ficha.Name, "Salvar",
-			sheetPost(v, "/itens/"+ficha.Command+"/edita")).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = itemFormDialog(v, "editar-"+sheet.Command, "Editar "+sheet.Name, "Salvar",
+			sheetPost(v, "/itens/"+sheet.Command+"/edita")).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -432,7 +432,7 @@ func itemSheetDialog(v View, ficha itemSheet) templ.Component {
 // mandar. A ficha rolando por conta própria tiraria da mesa o gesto que ela
 // gosta de fazer — e obrigaria a inventar uma política para o crítico, para o
 // dado emprestado e para o "rolei de novo porque caiu no chão".
-func consumeBlock(v View, ficha itemSheet) templ.Component {
+func consumeBlock(v View, sheet itemSheet) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -480,9 +480,9 @@ func consumeBlock(v View, ficha itemSheet) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var29 string
-		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs("Usar · " + ficha.Consumable.Escopo)
+		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs("Usar · " + sheet.Consumable.Scope)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 100, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 100, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -492,14 +492,14 @@ func consumeBlock(v View, ficha itemSheet) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if ficha.Consumable.HpDice != "" {
-			templ_7745c5c3_Err = rollField("item_roll_hp", "PV rolados ("+ficha.Consumable.HpDice+")").Render(ctx, templ_7745c5c3_Buffer)
+		if sheet.Consumable.HpDice != "" {
+			templ_7745c5c3_Err = rollField("item_roll_hp", "PV rolados ("+sheet.Consumable.HpDice+")").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if ficha.Consumable.MpDice != "" {
-			templ_7745c5c3_Err = rollField("item_roll_mp", "PM rolados ("+ficha.Consumable.MpDice+")").Render(ctx, templ_7745c5c3_Buffer)
+		if sheet.Consumable.MpDice != "" {
+			templ_7745c5c3_Err = rollField("item_roll_mp", "PM rolados ("+sheet.Consumable.MpDice+")").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -514,7 +514,7 @@ func consumeBlock(v View, ficha itemSheet) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var31 string
-		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue("Usar " + ficha.Name)
+		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue("Usar " + sheet.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 110, Col: 36}
 		}
@@ -527,7 +527,7 @@ func consumeBlock(v View, ficha itemSheet) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var32 string
-		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/itens/"+ficha.Command+"/usa") + "; $detail = ''")
+		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/itens/"+sheet.Command+"/usa") + "; $detail = ''")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 111, Col: 82}
 		}
@@ -556,7 +556,7 @@ func consumeBlock(v View, ficha itemSheet) templ.Component {
 	})
 }
 
-func rollField(sinal, rotulo string) templ.Component {
+func rollField(signal, label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -582,9 +582,9 @@ func rollField(sinal, rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var35 string
-		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 119, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 119, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -595,9 +595,9 @@ func rollField(sinal, rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var36 string
-		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinal)
+		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(signal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 123, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 123, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 		if templ_7745c5c3_Err != nil {
@@ -612,7 +612,7 @@ func rollField(sinal, rotulo string) templ.Component {
 }
 
 // bookBlock é o que o livro diz do item.
-func bookBlock(ficha itemSheet) templ.Component {
+func bookBlock(sheet itemSheet) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -638,9 +638,9 @@ func bookBlock(ficha itemSheet) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var38 string
-		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(ficha.Book.Categoria + " · T$ " + ficha.Book.Preco + " · p" + strconv.Itoa(ficha.Book.Pagina))
+		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(sheet.Book.Category + " · T$ " + sheet.Book.Price + " · p" + strconv.Itoa(sheet.Book.Page))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 132, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 132, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
@@ -650,15 +650,15 @@ func bookBlock(ficha itemSheet) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, linha := range ficha.Book.Linhas {
+		for _, row := range sheet.Book.Rows {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var39 string
-			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(linha)
+			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(row)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 134, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 134, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 			if templ_7745c5c3_Err != nil {
@@ -682,7 +682,7 @@ func bookBlock(ficha itemSheet) templ.Component {
 // As duas listas já vêm FILTRADAS pela família do item — não se põe corda de
 // arco num escudo —, e quem recusa o resto é o servidor: o filtro aqui é
 // conveniência, `fitsItemImprovement` é a fronteira.
-func overlayDialog(v View, ficha itemSheet) templ.Component {
+func overlayDialog(v View, sheet itemSheet) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -741,13 +741,13 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, escolha := range ficha.Improvements {
+			for _, choice := range sheet.Improvements {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "<button type=\"button\" role=\"switch\" aria-checked=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var44 string
-				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(escolha.Ativa))
+				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(choice.Active))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 152, Col: 46}
 				}
@@ -760,9 +760,9 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var45 string
-				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolha.Nome)
+				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(choice.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 153, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 153, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 				if templ_7745c5c3_Err != nil {
@@ -773,9 +773,9 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var46 string
-				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(thatTogglesImprovementGesture(escolha))
+				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(thatTogglesImprovementGesture(choice))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 154, Col: 59}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 154, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 				if templ_7745c5c3_Err != nil {
@@ -786,9 +786,9 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var47 string
-				templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(improvementSignal(escolha))
+				templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(improvementSignal(choice))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 155, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 155, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 				if templ_7745c5c3_Err != nil {
@@ -799,9 +799,9 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var48 string
-				templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(escolha.Nome)
+				templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(choice.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 158, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 158, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 				if templ_7745c5c3_Err != nil {
@@ -812,9 +812,9 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var49 string
-				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(escolha.Efeito)
+				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(choice.Effect)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 159, Col: 81}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 159, Col: 80}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 				if templ_7745c5c3_Err != nil {
@@ -825,9 +825,9 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var50 string
-				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs("T$ " + escolha.Preco)
+				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs("T$ " + choice.Price)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 160, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 160, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 				if templ_7745c5c3_Err != nil {
@@ -865,7 +865,7 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var53 string
-			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue("Material de " + ficha.Name)
+			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue("Material de " + sheet.Name)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 168, Col: 44}
 			}
@@ -877,15 +877,15 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, escolha := range ficha.Materials {
+			for _, choice := range sheet.Materials {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<option value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var54 string
-				templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolha.ID)
+				templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(choice.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 173, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 173, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 				if templ_7745c5c3_Err != nil {
@@ -895,7 +895,7 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if escolha.Ativa {
+				if choice.Active {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, " selected")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -906,9 +906,9 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var55 string
-				templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(escolha.Nome + " · T$ " + escolha.Preco)
+				templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(choice.Name + " · T$ " + choice.Price)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 174, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 174, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 				if templ_7745c5c3_Err != nil {
@@ -933,7 +933,7 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var57 string
-			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/itens/"+ficha.Command+"/melhorias") + "; $detail = ''")
+			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/itens/"+sheet.Command+"/melhorias") + "; $detail = ''")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 181, Col: 88}
 			}
@@ -960,7 +960,7 @@ func overlayDialog(v View, ficha itemSheet) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = overlay("melhorias-"+ficha.Command, "Melhorias de "+ficha.Name, "Sparkles", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var41), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = overlay("melhorias-"+sheet.Command, "Melhorias de "+sheet.Name, "Sparkles", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var41), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1051,7 +1051,7 @@ func catalogAddDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var64 string
-				templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Valor)
+				templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Value)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 207, Col: 32}
 				}
@@ -1063,7 +1063,7 @@ func catalogAddDialog(v View) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if opcao.Ativo {
+				if opcao.Active {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, " selected")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1074,7 +1074,7 @@ func catalogAddDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var65 string
-				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Rotulo)
+				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 207, Col: 75}
 				}
@@ -1113,7 +1113,7 @@ func catalogAddDialog(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(v.Bag.Catalogo) == 0 {
+			if len(v.Bag.Catalog) == 0 {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "<p class=\"py-4 text-center text-xs text-muted-foreground\">Nenhum item para essa busca.</p>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1123,15 +1123,15 @@ func catalogAddDialog(v View) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, linha := range v.Bag.Catalogo {
+				for _, row := range v.Bag.Catalog {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "<button type=\"button\" aria-label=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var68 string
-					templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue("Adicionar " + linha.Nome)
+					templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue("Adicionar " + row.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 228, Col: 44}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 228, Col: 42}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 					if templ_7745c5c3_Err != nil {
@@ -1142,9 +1142,9 @@ func catalogAddDialog(v View) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var69 string
-					templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/itens/adiciona/"+linha.ID) + "; $detail = ''")
+					templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/itens/adiciona/"+row.ID) + "; $detail = ''")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 229, Col: 82}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 229, Col: 80}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 					if templ_7745c5c3_Err != nil {
@@ -1155,9 +1155,9 @@ func catalogAddDialog(v View) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var70 string
-					templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Nome)
+					templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 232, Col: 72}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 232, Col: 70}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 					if templ_7745c5c3_Err != nil {
@@ -1168,9 +1168,9 @@ func catalogAddDialog(v View) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var71 string
-					templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Categoria)
+					templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(row.Category)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 233, Col: 77}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 233, Col: 74}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 					if templ_7745c5c3_Err != nil {
@@ -1181,9 +1181,9 @@ func catalogAddDialog(v View) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var72 string
-					templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs("esp " + linha.Espacos + " · T$ " + linha.Preco)
+					templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs("esp " + row.Slots + " · T$ " + row.Price)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 235, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 235, Col: 51}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 					if templ_7745c5c3_Err != nil {
@@ -1212,7 +1212,7 @@ func catalogAddDialog(v View) templ.Component {
 // itemFormDialog é o formulário de um item CUSTOM — nome, quantidade e espaços.
 // Ele serve tanto ao "novo" quanto ao "editar", que é o mesmo formulário com
 // outro destino.
-func itemFormDialog(v View, chave, titulo, botao, comando string) templ.Component {
+func itemFormDialog(v View, key, title, button, command string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1325,7 +1325,7 @@ func itemFormDialog(v View, chave, titulo, botao, comando string) templ.Componen
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var82 string
-			templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.ResolveAttributeValue(comando + "; $detail = ''")
+			templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.ResolveAttributeValue(command + "; $detail = ''")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 282, Col: 45}
 			}
@@ -1351,9 +1351,9 @@ func itemFormDialog(v View, chave, titulo, botao, comando string) templ.Componen
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var84 string
-			templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(botao)
+			templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(button)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 284, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 284, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 			if templ_7745c5c3_Err != nil {
@@ -1365,7 +1365,7 @@ func itemFormDialog(v View, chave, titulo, botao, comando string) templ.Componen
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = overlay(chave, titulo, "Pencil", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var74), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = overlay(key, title, "Pencil", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var74), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1464,22 +1464,22 @@ func bagAddButtons(v View) templ.Component {
 }
 
 // writtenWeight é "2 × 0,5 espaço = 1", que é o que a carga conta.
-func writtenWeight(ficha itemSheet) string {
-	return strconv.FormatInt(ficha.Quantity, 10) + " × " + ficha.Slots + " espaço = " + ficha.Total
+func writtenWeight(sheet itemSheet) string {
+	return strconv.FormatInt(sheet.Quantity, 10) + " × " + sheet.Slots + " espaço = " + sheet.Total
 }
 
 // equipCommand escreve o `@post` do lugar escolhido — guardar tem rota
 // própria, porque guardar não passa por teto nenhum.
-func equipCommand(v View, ficha itemSheet, lugar equipChoice) string {
-	if lugar.Slot == "" {
-		return sheetPost(v, "/itens/"+ficha.Command+"/guarda")
+func equipCommand(v View, sheet itemSheet, place equipChoice) string {
+	if place.Slot == "" {
+		return sheetPost(v, "/itens/"+sheet.Command+"/guarda")
 	}
-	return sheetPost(v, "/itens/"+ficha.Command+"/equipa/"+lugar.Slot)
+	return sheetPost(v, "/itens/"+sheet.Command+"/equipa/"+place.Slot)
 }
 
 // improvementSignal é a expressão que diz se a melhoria está escolhida AGORA.
-func improvementSignal(escolha overlayChoice) string {
-	return "$item_improvements.includes('" + escolha.ID + "')"
+func improvementSignal(choice overlayChoice) string {
+	return "$item_improvements.includes('" + choice.ID + "')"
 }
 
 // thatTogglesImprovementGesture liga ou desliga uma melhoria na lista do sinal.
@@ -1487,9 +1487,9 @@ func improvementSignal(escolha overlayChoice) string {
 // A lista é COPIADA antes de ser mexida (`[...$item_improvements]`): o sinal é um
 // proxy, e escrever dentro dele item a item é a armadilha que o guia do Go
 // registra — ler um índice que não existe o CRIA.
-func thatTogglesImprovementGesture(escolha overlayChoice) string {
-	return "const escolhidas = [...$item_improvements]; const onde = escolhidas.indexOf('" + escolha.ID + "'); " +
-		"if (onde >= 0) { escolhidas.splice(onde, 1) } else { escolhidas.push('" + escolha.ID + "') }; " +
+func thatTogglesImprovementGesture(choice overlayChoice) string {
+	return "const escolhidas = [...$item_improvements]; const onde = escolhidas.indexOf('" + choice.ID + "'); " +
+		"if (onde >= 0) { escolhidas.splice(onde, 1) } else { escolhidas.push('" + choice.ID + "') }; " +
 		"$item_improvements = escolhidas"
 }
 
@@ -1498,34 +1498,34 @@ func thatTogglesImprovementGesture(escolha overlayChoice) string {
 // Quem TROCA de item limpa: sem isto, as melhorias marcadas numa espada
 // apareceriam marcadas na armadura aberta em seguida — e o botão Aplicar
 // gravaria nela o que era de outra.
-func thatOpensTheImprovementsGesture(ficha itemSheet) string {
-	return "$item_improvements = " + improvementWrittenList(ficha) +
-		"; $item_material = '" + chosenMaterial(ficha) + "'" +
-		"; $detail = 'melhorias-" + ficha.Command + "'"
+func thatOpensTheImprovementsGesture(sheet itemSheet) string {
+	return "$item_improvements = " + improvementWrittenList(sheet) +
+		"; $item_material = '" + chosenMaterial(sheet) + "'" +
+		"; $detail = 'melhorias-" + sheet.Command + "'"
 }
 
 // thatOpensEditGesture põe os valores atuais no formulário.
-func thatOpensEditGesture(ficha itemSheet) string {
-	return "$item_name = " + strconv.Quote(ficha.Name) +
-		"; $item_qty = " + strconv.FormatInt(ficha.Quantity, 10) +
-		"; $item_slots = " + strings.Replace(ficha.Slots, ",", ".", 1) +
-		"; $detail = 'editar-" + ficha.Command + "'"
+func thatOpensEditGesture(sheet itemSheet) string {
+	return "$item_name = " + strconv.Quote(sheet.Name) +
+		"; $item_qty = " + strconv.FormatInt(sheet.Quantity, 10) +
+		"; $item_slots = " + strings.Replace(sheet.Slots, ",", ".", 1) +
+		"; $detail = 'editar-" + sheet.Command + "'"
 }
 
-func improvementWrittenList(ficha itemSheet) string {
+func improvementWrittenList(sheet itemSheet) string {
 	ids := []string{}
-	for _, escolha := range ficha.Improvements {
-		if escolha.Ativa {
-			ids = append(ids, "'"+escolha.ID+"'")
+	for _, choice := range sheet.Improvements {
+		if choice.Active {
+			ids = append(ids, "'"+choice.ID+"'")
 		}
 	}
 	return "[" + strings.Join(ids, ", ") + "]"
 }
 
-func chosenMaterial(ficha itemSheet) string {
-	for _, escolha := range ficha.Materials {
-		if escolha.Ativa {
-			return escolha.ID
+func chosenMaterial(sheet itemSheet) string {
+	for _, choice := range sheet.Materials {
+		if choice.Active {
+			return choice.ID
 		}
 	}
 	return ""

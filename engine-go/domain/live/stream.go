@@ -31,22 +31,22 @@ func StreamFrames(
 	w io.Writer,
 	flusher http.Flusher,
 	conn *SSEConn,
-	batidaCada time.Duration,
+	beatEvery time.Duration,
 ) {
-	batida := time.NewTicker(batidaCada)
-	defer batida.Stop()
+	hit := time.NewTicker(beatEvery)
+	defer hit.Stop()
 
 	for {
 		select {
-		case frame, aberta := <-conn.Frames:
-			if !aberta {
+		case frame, open := <-conn.Frames:
+			if !open {
 				return
 			}
 			if _, err := w.Write(frame); err != nil {
 				return
 			}
 			flusher.Flush()
-		case <-batida.C:
+		case <-hit.C:
 			// Comentário SSE: o cliente ignora, o intermediário vê tráfego.
 			if _, err := w.Write([]byte(": ping\n\n")); err != nil {
 				return

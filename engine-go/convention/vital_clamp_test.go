@@ -45,35 +45,35 @@ import (
 // Este terceiro item saiu do próprio guarda: ele foi escrito achando que só
 // havia uma cópia a consertar e apontou a do Bucaneiro na primeira corrida.
 func TestNoSecondSpellingOfTheVitalClamp(t *testing.T) {
-	const oDono = "domain/sheet/pools.go"
+	const ownerFile = "domain/sheet/pools.go"
 
-	raiz, err := filepath.Abs("..")
+	root, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatalf("achar a raiz: %v", err)
 	}
-	conjunto := token.NewFileSet()
-	medidos, noDono := 0, 0
-	err = filepath.WalkDir(raiz, func(caminho string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") ||
-			strings.HasSuffix(caminho, "_templ.go") {
+	set := token.NewFileSet()
+	measured, onOwner := 0, 0
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") ||
+			strings.HasSuffix(path, "_templ.go") {
 			return err
 		}
-		rel, _ := filepath.Rel(raiz, caminho)
+		rel, _ := filepath.Rel(root, path)
 		if strings.HasSuffix(rel, "vital_clamp_test.go") ||
 			strings.HasPrefix(rel, "domain/engine") {
 			return nil
 		}
-		arquivo, err := parser.ParseFile(conjunto, caminho, nil, 0)
+		file, err := parser.ParseFile(set, path, nil, 0)
 		if err != nil {
 			return err
 		}
-		medidos++
-		ast.Inspect(arquivo, func(n ast.Node) bool {
+		measured++
+		ast.Inspect(file, func(n ast.Node) bool {
 			if !isNestedMinMax(n) {
 				return true
 			}
-			if rel == oDono {
-				noDono++
+			if rel == ownerFile {
+				onOwner++
 				return true
 			}
 			t.Errorf("%s:%d escreve um `min(max(…))` — é a segunda grafia de "+
@@ -81,7 +81,7 @@ func TestNoSecondSpellingOfTheVitalClamp(t *testing.T) {
 				"Use o `sheet.WithinPool`. A primeira vez que esta regra se duplicou, as duas\n"+
 				"cópias ficaram a um diretório de distância e o comentário de uma delas\n"+
 				"afirmava que a contagem estava fechada.",
-				rel, conjunto.Position(n.Pos()).Line)
+				rel, set.Position(n.Pos()).Line)
 			return true
 		})
 		return nil
@@ -92,36 +92,36 @@ func TestNoSecondSpellingOfTheVitalClamp(t *testing.T) {
 
 	// O DENOMINADOR nas duas pontas: uma varredura que não abriu arquivo e um
 	// dono que perdeu a forma se parecem com "nada reprovou".
-	if medidos < 200 {
-		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", medidos)
+	if measured < 200 {
+		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", measured)
 	}
-	if noDono != 1 {
+	if onOwner != 1 {
 		t.Fatalf("o `%s` tem %d aninhamentos e devia ter exatamente 1 (o `WithinPool`) — "+
-			"ou ele mudou de forma, e aí este guarda procura o que não existe mais", oDono, noDono)
+			"ou ele mudou de forma, e aí este guarda procura o que não existe mais", ownerFile, onOwner)
 	}
 }
 
 // isNestedMinMax reconhece `min(max(…), …)` e `max(min(…), …)` — o clamp de duas
 // pontas escrito em uma linha.
 func isNestedMinMax(n ast.Node) bool {
-	fora, ok := n.(*ast.CallExpr)
+	outside, ok := n.(*ast.CallExpr)
 	if !ok {
 		return false
 	}
-	nomeFora, ok := fora.Fun.(*ast.Ident)
-	if !ok || (nomeFora.Name != "min" && nomeFora.Name != "max") {
+	outsideName, ok := outside.Fun.(*ast.Ident)
+	if !ok || (outsideName.Name != "min" && outsideName.Name != "max") {
 		return false
 	}
-	oOutro := "max"
-	if nomeFora.Name == "max" {
-		oOutro = "min"
+	theOther := "max"
+	if outsideName.Name == "max" {
+		theOther = "min"
 	}
-	for _, arg := range fora.Args {
-		dentro, ok := arg.(*ast.CallExpr)
+	for _, arg := range outside.Args {
+		inside, ok := arg.(*ast.CallExpr)
 		if !ok {
 			continue
 		}
-		if nomeDentro, ok := dentro.Fun.(*ast.Ident); ok && nomeDentro.Name == oOutro {
+		if insideName, ok := inside.Fun.(*ast.Ident); ok && insideName.Name == theOther {
 			return true
 		}
 	}

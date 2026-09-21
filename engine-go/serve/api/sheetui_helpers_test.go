@@ -18,43 +18,43 @@ import (
 // do Datastar que diz por que a recusa é CONTEÚDO e não status.
 var sceneAlert = regexp.MustCompile(`role="alert"[^>]*>([^<]*)</p>`)
 
-func actionsSlice(tela string) string {
-	inicio := strings.Index(tela, ">Ações</h3>")
-	if inicio < 0 {
+func actionsSlice(screen string) string {
+	start := strings.Index(screen, ">Ações</h3>")
+	if start < 0 {
 		return ""
 	}
-	fim := strings.Index(tela[inicio:], "Passivas ·")
-	if fim < 0 {
-		return tela[inicio:]
+	end := strings.Index(screen[start:], "Passivas ·")
+	if end < 0 {
+		return screen[start:]
 	}
-	return tela[inicio : inicio+fim]
+	return screen[start : start+end]
 }
-func existe(m map[string]bool, chave string) bool {
-	_, tem := m[chave]
-	return tem
+func existe(m map[string]bool, key string) bool {
+	_, found := m[key]
+	return found
 }
 
-func improvementScreenDialog(tela, nome string) string {
-	inicio := strings.Index(tela, `aria-label="Melhorias de `+nome+`"`)
-	if inicio < 0 {
+func improvementScreenDialog(screen, name string) string {
+	start := strings.Index(screen, `aria-label="Melhorias de `+name+`"`)
+	if start < 0 {
 		return ""
 	}
-	fim := strings.Index(tela[inicio:], "Aplicar")
-	if fim < 0 {
-		return tela[inicio:]
+	end := strings.Index(screen[start:], "Aplicar")
+	if end < 0 {
+		return screen[start:]
 	}
-	return tela[inicio : inicio+fim]
+	return screen[start : start+end]
 }
-func itemScreenSheet(tela, nome string) string {
-	inicio := strings.Index(tela, `aria-label="`+nome+`"`)
-	if inicio < 0 {
+func itemScreenSheet(screen, name string) string {
+	start := strings.Index(screen, `aria-label="`+name+`"`)
+	if start < 0 {
 		return ""
 	}
-	fim := strings.Index(tela[inicio:], "</div></div>")
-	if fim < 0 {
-		return tela[inicio:]
+	end := strings.Index(screen[start:], "</div></div>")
+	if end < 0 {
+		return screen[start:]
 	}
-	return tela[inicio : inicio+fim]
+	return screen[start : start+end]
 }
 
 var panelTitle = map[string]string{
@@ -67,16 +67,16 @@ var panelTitle = map[string]string{
 	"abilities":     "Poderes",
 }
 
-func powerPanel(tela string) string {
+func powerPanel(screen string) string {
 	// O CORTE é no ABRIR do primeiro diálogo, e não no primeiro `</section>`: as
 	// duas seções da lista são `<section>` ANINHADAS, e cortar no primeiro
 	// fechamento deixaria de fora justamente as passivas. Os diálogos começam
 	// depois do painel, e todos são sobreposições de tela cheia.
-	fim := strings.Index(tela, `class="fixed inset-0`)
-	if fim < 0 {
-		return tela
+	end := strings.Index(screen, `class="fixed inset-0`)
+	if end < 0 {
+		return screen
 	}
-	return tela[:fim]
+	return screen[:end]
 }
 
 type responseRecorderLike struct {
@@ -84,24 +84,24 @@ type responseRecorderLike struct {
 	Body string
 }
 
-func sceneRefusal(corpo string) string {
-	achado := sceneAlert.FindStringSubmatch(corpo)
-	if achado == nil {
+func sceneRefusal(body string) string {
+	found := sceneAlert.FindStringSubmatch(body)
+	if found == nil {
 		return ""
 	}
-	return html.UnescapeString(achado[1])
+	return html.UnescapeString(found[1])
 }
 
-func screenSaved(tela string) string {
-	inicio := strings.Index(tela, "grid-cols-3")
-	if inicio < 0 {
+func screenSaved(screen string) string {
+	start := strings.Index(screen, "grid-cols-3")
+	if start < 0 {
 		return ""
 	}
-	fim := strings.Index(tela[inicio:], "</section>")
-	if fim < 0 {
-		return tela[inicio:]
+	end := strings.Index(screen[start:], "</section>")
+	if end < 0 {
+		return screen[start:]
 	}
-	return tela[inicio : inicio+fim]
+	return screen[start : start+end]
 }
 
 // hpTintOf devolve a tinta com que a FAIXA de PV foi pintada na tela, e falha
@@ -112,16 +112,16 @@ func screenSaved(tela string) string {
 // as duas grafias que o repositório usa para a mesma tinta: a classe da paleta
 // (`bg-hp-full`) e o valor arbitrário (`bg-[color:var(--hp-full)]`). Aceitar as
 // duas é o que impede o guarda de passar verde sobre um renome de grafia.
-func hpTintOf(t *testing.T, tela string) string {
+func hpTintOf(t *testing.T, screen string) string {
 	t.Helper()
-	corte := strings.Index(tela, `data-vital="PV"`)
-	if corte < 0 {
+	cut := strings.Index(screen, `data-vital="PV"`)
+	if cut < 0 {
 		t.Fatal("a tela não desenha o PV: o guarda mediria o vazio")
 	}
-	achados := regexp.MustCompile(`hp-(full|hurt|critical)`).FindAllStringSubmatch(tela[:corte], -1)
-	if len(achados) == 0 {
+	findings := regexp.MustCompile(`hp-(full|hurt|critical)`).FindAllStringSubmatch(screen[:cut], -1)
+	if len(findings) == 0 {
 		t.Fatal("a faixa de PV não foi pintada com nenhuma tinta da escada")
 	}
 	// A ÚLTIMA é a da barra: as anteriores podem ser de outra fileira da cena.
-	return achados[len(achados)-1][1]
+	return findings[len(findings)-1][1]
 }

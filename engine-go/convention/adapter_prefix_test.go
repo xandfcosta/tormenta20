@@ -63,67 +63,67 @@ var methodReceiver = regexp.MustCompile(`^func \(\w+ \*?(\w+)\)`)
 
 func TestEveryAdapterFileCarriesItsPrefix(t *testing.T) {
 	dir := filepath.Join("..", "serve", "api")
-	entradas, err := os.ReadDir(dir)
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		t.Fatalf("ler %s: %v", dir, err)
 	}
 
-	medidos := 0
-	vistos := map[string]int{}
-	for _, e := range entradas {
-		nome := e.Name()
-		if e.IsDir() || !strings.HasSuffix(nome, ".go") || strings.HasSuffix(nome, "_test.go") {
+	measured := 0
+	seen := map[string]int{}
+	for _, e := range entries {
+		name := e.Name()
+		if e.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
 			continue
 		}
-		conteudo, err := os.ReadFile(filepath.Join(dir, nome))
+		content, err := os.ReadFile(filepath.Join(dir, name))
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		donos := map[string]bool{}
-		for _, linha := range strings.Split(string(conteudo), "\n") {
-			m := methodReceiver.FindStringSubmatch(linha)
+		owners := map[string]bool{}
+		for _, row := range strings.Split(string(content), "\n") {
+			m := methodReceiver.FindStringSubmatch(row)
 			if m == nil {
 				continue
 			}
-			if _, ehAdaptador := adapterPrefixes[m[1]]; ehAdaptador {
-				donos[m[1]] = true
+			if _, isAdapter := adapterPrefixes[m[1]]; isAdapter {
+				owners[m[1]] = true
 			}
 		}
-		if len(donos) == 0 {
+		if len(owners) == 0 {
 			continue
 		}
-		medidos++
-		for d := range donos {
-			vistos[d]++
+		measured++
+		for d := range owners {
+			seen[d]++
 		}
 
-		if len(donos) > 1 {
-			nomes := make([]string, 0, len(donos))
-			for d := range donos {
-				nomes = append(nomes, d)
+		if len(owners) > 1 {
+			names := make([]string, 0, len(owners))
+			for d := range owners {
+				names = append(names, d)
 			}
-			sort.Strings(nomes)
+			sort.Strings(names)
 			t.Errorf("%s declara métodos de %s. Um arquivo, um dono: parta-o, "+
 				"uma metade por adaptador. Foi o defeito que a ALE-330 consertou em "+
 				"`character.go`, que tinha três donos, e no arquivo dos membros, que "+
 				"tinha dois.",
-				nome, strings.Join(nomes, " e "))
+				name, strings.Join(names, " e "))
 			continue
 		}
 
-		var dono string
-		for d := range donos {
-			dono = d
+		var owner string
+		for d := range owners {
+			owner = d
 		}
-		if motivo, ok := adapterPrefixExceptions[nome]; ok {
-			t.Logf("%s é exceção declarada (%s): %s", nome, dono, motivo)
+		if reason, ok := adapterPrefixExceptions[name]; ok {
+			t.Logf("%s é exceção declarada (%s): %s", name, owner, reason)
 			continue
 		}
-		if prefixo := adapterPrefixes[dono]; !strings.HasPrefix(nome, prefixo) {
+		if prefix := adapterPrefixes[owner]; !strings.HasPrefix(name, prefix) {
 			t.Errorf("%s declara métodos de %s e devia começar com %q. "+
 				"O nome do arquivo diz o ADAPTADOR que o possui; o assunto vem depois "+
 				"do prefixo (CLAUDE.md do engine-go, \"Onde procurar\").",
-				nome, dono, prefixo+"_")
+				name, owner, prefix+"_")
 		}
 	}
 
@@ -143,13 +143,13 @@ func TestEveryAdapterFileCarriesItsPrefix(t *testing.T) {
 	// QUATRO somem de uma vez. E se um adaptador de fato acabar — o `sheetRules`
 	// está a caminho disso —, apagar a linha dele da tabela é um ato deliberado,
 	// que é o que se quer exigir.
-	for _, dono := range []string{"tableRules", "sheetRules", "campaignRules", "accountRules"} {
-		if vistos[dono] == 0 {
+	for _, owner := range []string{"tableRules", "sheetRules", "campaignRules", "accountRules"} {
+		if seen[owner] == 0 {
 			t.Errorf("nenhum arquivo de produção declara método de %s.\n"+
 				"Ou o adaptador deixou de existir — e então a linha dele sai do "+
 				"`adapterPrefixes`, de propósito e à vista —, ou o padrão do receptor "+
-				"parou de casar e o verde não significa nada.", dono)
+				"parou de casar e o verde não significa nada.", owner)
 		}
 	}
-	t.Logf("%d arquivos de produção com adaptador dono: %v", medidos, vistos)
+	t.Logf("%d arquivos de produção com adaptador dono: %v", measured, seen)
 }

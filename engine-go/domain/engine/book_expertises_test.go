@@ -21,34 +21,34 @@ import (
 // Vive em `engine/` e não em `api/` porque o dono da regra é o motor: é ele que
 // aplica a penalidade no cálculo.
 func TestTheArmorPenaltyAgreesWithTheBook(t *testing.T) {
-	bruto, ok := catalog.Resource("expertises")
+	raw, ok := catalog.Resource("expertises")
 	if !ok {
 		t.Fatal("catálogo de perícias ausente")
 	}
-	var pericias []struct {
-		Name                 string `json:"name"`
-		PenalidadeDeArmadura bool   `json:"penalidadeDeArmadura"`
+	var expertises []struct {
+		Name         string `json:"name"`
+		ArmorPenalty bool   `json:"penalidadeDeArmadura"`
 	}
-	if err := json.Unmarshal(bruto, &pericias); err != nil {
+	if err := json.Unmarshal(raw, &expertises); err != nil {
 		t.Fatalf("perícias: %v", err)
 	}
-	if len(pericias) != 29 {
-		t.Fatalf("%d perícias — o livro tem 29", len(pericias))
+	if len(expertises) != 29 {
+		t.Fatalf("%d perícias — o livro tem 29", len(expertises))
 	}
 
-	doLivro := map[string]bool{}
-	for _, p := range pericias {
-		if p.PenalidadeDeArmadura {
-			doLivro[p.Name] = true
+	fromBook := map[string]bool{}
+	for _, p := range expertises {
+		if p.ArmorPenalty {
+			fromBook[p.Name] = true
 		}
 	}
-	if len(doLivro) != len(armorPenaltyExpertises) {
+	if len(fromBook) != len(armorPenaltyExpertises) {
 		t.Fatalf("o livro marca %d perícias com penalidade e o motor conhece %d",
-			len(doLivro), len(armorPenaltyExpertises))
+			len(fromBook), len(armorPenaltyExpertises))
 	}
-	for nome := range armorPenaltyExpertises {
-		if !doLivro[nome] {
-			t.Errorf("o motor aplica penalidade de armadura em %q e a Tabela 2-1 não marca", nome)
+	for name := range armorPenaltyExpertises {
+		if !fromBook[name] {
+			t.Errorf("o motor aplica penalidade de armadura em %q e a Tabela 2-1 não marca", name)
 		}
 	}
 }

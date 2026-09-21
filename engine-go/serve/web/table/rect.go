@@ -41,13 +41,13 @@ var rectSignals = fmt.Sprintf(
 // isso não é redundância: o texto vai para a rota no fim, e os números desenham o
 // laço a cada quadro. Derivar um do outro na expressão custaria um `split` por
 // movimento do ponteiro.
-func takesRect(modo string) string {
+func takesRect(mode string) string {
 	return fmt.Sprintf(
 		"evt.preventDefault(); const cx = %s, cy = %s; "+
 			"$%s = %q; $%s = cx + '/' + cy; "+
 			"$rect_from_x = cx; $rect_from_y = cy; $rect_to_x = cx; $rect_to_y = cy; "+
 			"evt.currentTarget.setPointerCapture(evt.pointerId)",
-		clicouEmX, clicouEmY, sinalDoRetangulo, modo, sinalDoRetanguloDe,
+		clicouEmX, clicouEmY, sinalDoRetangulo, mode, sinalDoRetanguloDe,
 	)
 }
 
@@ -56,10 +56,10 @@ func takesRect(modo string) string {
 // NÃO fala com o servidor: o laço é geometria, e o resultado só é pedido quando o
 // dedo solta. É a diferença para o pincel — lá cada casa cruzada é uma ação, aqui
 // o gesto inteiro é UMA.
-func followsRect(modo string) string {
+func followsRect(mode string) string {
 	return fmt.Sprintf(
 		"$%s === %q && ($rect_to_x = %s, $rect_to_y = %s)",
-		sinalDoRetangulo, modo, clicouEmX, clicouEmY,
+		sinalDoRetangulo, mode, clicouEmX, clicouEmY,
 	)
 }
 
@@ -189,14 +189,14 @@ func dropParty(v BoardView) string {
 // UM `data-class` só porque atributo repetido não existe: o navegador guarda o
 // primeiro e descarta o segundo, e a marca do grupo nasceria morta.
 func tokenStyling(id string, movesItself bool) string {
-	marcada := fmt.Sprintf("'board-token-marked': %s", markedIsToken(id))
+	marked := fmt.Sprintf("'board-token-marked': %s", markedIsToken(id))
 	if !movesItself {
-		return "{" + marcada + "}"
+		return "{" + marked + "}"
 	}
 	// O ID e não um literal fixo: com um literal, a classe cola numa peça só, e
 	// pegar a segunda faz a PRIMEIRA correr atrás do dedo. A classe segue quem o
 	// gesto marcou.
-	return fmt.Sprintf("{'board-dragging': $dragging === '%s', %s}", id, marcada)
+	return fmt.Sprintf("{'board-dragging': $dragging === '%s', %s}", id, marked)
 }
 
 // brushGesture decide entre TRAÇO e RETÂNGULO no `pointerdown`.
@@ -209,9 +209,9 @@ func tokenStyling(id string, movesItself bool) string {
 // sequência entre parênteses é erro de SINTAXE em JavaScript. O Datastar engole
 // o erro de parse e o `pointerdown` INTEIRO vira nada — não só o retângulo —,
 // sem uma linha no console.
-func brushGesture(v BoardView, modoFixo string) string {
+func brushGesture(v BoardView, fixedMode string) string {
 	return fmt.Sprintf("if (evt.shiftKey) { %s } else { %s }",
-		takesRect(retanguloDeTerreno), takesBrush(v, modoFixo))
+		takesRect(retanguloDeTerreno), takesBrush(v, fixedMode))
 }
 
 // restLayerName diz os dois gestos que ela aceita.
@@ -219,13 +219,13 @@ func brushGesture(v BoardView, modoFixo string) string {
 // O nome acessível é onde o gesto de ARRASTO fica descoberto: ele não tem ícone
 // nem botão, e quem navega por teclado não tem outro lugar para achá-lo.
 func restLayerName(v BoardView) string {
-	if v.AlvoDoMovimento == "" {
+	if v.MoveTarget == "" {
 		return "Marcar peças — arraste um retângulo em volta delas"
 	}
-	if !v.Mestre {
-		return "Mover " + v.RotuloDoAlvo + " — escolha a casa"
+	if !v.GM {
+		return "Mover " + v.TargetLabel + " — escolha a casa"
 	}
-	return "Mover " + v.RotuloDoAlvo + " — escolha a casa, ou arraste para marcar um grupo"
+	return "Mover " + v.TargetLabel + " — escolha a casa, ou arraste para marcar um grupo"
 }
 
 // clickRest é o clique da camada, com o ENGOLE na frente.
@@ -234,9 +234,9 @@ func restLayerName(v BoardView) string {
 // engole — que continua precisando existir, porque o `click` vem do mesmo jeito
 // depois de um laço.
 func clickRest(v BoardView) string {
-	engole := fmt.Sprintf("if ($%s) { $%s = false; return }", sinalDoCliqueEngolido, sinalDoCliqueEngolido)
-	if v.AlvoDoMovimento == "" {
-		return engole
+	swallows := fmt.Sprintf("if ($%s) { $%s = false; return }", sinalDoCliqueEngolido, sinalDoCliqueEngolido)
+	if v.MoveTarget == "" {
+		return swallows
 	}
-	return engole + "; " + clickedPointStop(v)
+	return swallows + "; " + clickedPointStop(v)
 }

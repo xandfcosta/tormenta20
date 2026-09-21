@@ -125,13 +125,13 @@ func (s Scene) effectsPanelOf(dto sheet.CharacterDTO) effectsPanel {
 	if err != nil {
 		return effectsPanelFor(dto, nil, nil)
 	}
-	oferecidos := engine.ComputeItemEffects(s.deps.Catalogs().ActiveItemsFor(ec)).Conditional
-	return effectsPanelFor(dto, oferecidos, s.deps.Catalogs().ComputeEquippedFlags(ec.Items))
+	offered := engine.ComputeItemEffects(s.deps.Catalogs().ActiveItemsFor(ec)).Conditional
+	return effectsPanelFor(dto, offered, s.deps.Catalogs().ComputeEquippedFlags(ec.Items))
 }
 
 // effectsPanelFor monta a aba inteira.
 func effectsPanelFor(dto sheet.CharacterDTO, offered []engine.ConditionalEffect, flags []engine.EquippedFlag) effectsPanel {
-	ativos := sheet.ToStringSet(dto.Conditionals)
+	active := sheet.ToStringSet(dto.Conditionals)
 	panel := effectsPanel{
 		Conditions:       conditionRowsOf(dto),
 		ConditionOptions: conditionOptionsFor(dto),
@@ -139,15 +139,15 @@ func effectsPanelFor(dto sheet.CharacterDTO, offered []engine.ConditionalEffect,
 		Applied:          appliedEffectRowsOf(dto),
 		BuffOptions:      buffOptions(),
 	}
-	panel.Situational, _ = situationalRowsOf(offered, ativos)
+	panel.Situational, _ = situationalRowsOf(offered, active)
 	panel.AlwaysOn = alwaysOnRowsOf(flags)
 	panel.Count = len(panel.Conditions) + len(panel.Applied) + len(panel.Stances) + activeCountOf(panel.Situational)
 	return panel
 }
 
-func activeCountOf(linhas []situationalRow) int {
+func activeCountOf(rows []situationalRow) int {
 	n := 0
-	for _, l := range linhas {
+	for _, l := range rows {
 		if l.Active {
 			n++
 		}
@@ -160,62 +160,62 @@ func activeCountOf(linhas []situationalRow) int {
 // Id desconhecido é DESCARTADO: o catálogo é a autoridade sobre o que é uma
 // condição, e um blob velho não pode injetar uma condição fantasma na ficha.
 func conditionRowsOf(dto sheet.CharacterDTO) []conditionRow {
-	porID := map[string]book.Condition{}
-	for _, c := range book.Catalogs().Condicoes {
-		porID[c.ID] = c
+	byID := map[string]book.Condition{}
+	for _, c := range book.Catalogs().Conditions {
+		byID[c.ID] = c
 	}
-	linhas := []conditionRow{}
+	rows := []conditionRow{}
 	for _, id := range sheet.UnmarshalStrings(dto.ActiveConditions) {
-		c, conhecida := porID[id]
-		if !conhecida {
+		c, known := byID[id]
+		if !known {
 			continue
 		}
-		linhas = append(linhas, conditionRow{
+		rows = append(rows, conditionRow{
 			ID: c.ID, Name: c.Name, Effect: c.Description, Page: c.BookPage, Command: c.ID,
 		})
 	}
-	sort.SliceStable(linhas, func(a, b int) bool { return linhas[a].Name < linhas[b].Name })
-	return linhas
+	sort.SliceStable(rows, func(a, b int) bool { return rows[a].Name < rows[b].Name })
+	return rows
 }
 
 func conditionOptionsFor(dto sheet.CharacterDTO) []pickerOption {
-	ligadas := sheet.ToStringSet(sheet.UnmarshalStrings(dto.ActiveConditions))
-	opcoes := []pickerOption{}
-	for _, c := range book.Catalogs().Condicoes {
-		if ligadas[c.ID] {
+	on := sheet.ToStringSet(sheet.UnmarshalStrings(dto.ActiveConditions))
+	options := []pickerOption{}
+	for _, c := range book.Catalogs().Conditions {
+		if on[c.ID] {
 			continue
 		}
-		opcoes = append(opcoes, pickerOption{ID: c.ID, Label: c.Name, Detail: c.Description, Command: c.ID})
+		options = append(options, pickerOption{ID: c.ID, Label: c.Name, Detail: c.Description, Command: c.ID})
 	}
-	return opcoes
+	return options
 }
 
 // stanceRowsOf são as posturas em curso.
 func stanceRowsOf(dto sheet.CharacterDTO) []stanceRow {
-	doLivro := book.StancesFromCatalog()
-	linhas := []stanceRow{}
+	fromBook := book.StancesFromCatalog()
+	rows := []stanceRow{}
 	for _, s := range dto.Stances {
-		nome := s.Flag
-		if posture, conhecida := doLivro[s.Flag]; conhecida {
-			nome = posture.Name
+		name := s.Flag
+		if posture, known := fromBook[s.Flag]; known {
+			name = posture.Name
 		}
-		linha := stanceRow{Flag: s.Flag, Name: nome, Command: s.Flag}
+		row := stanceRow{Flag: s.Flag, Name: name, Command: s.Flag}
 		if s.PmPaid > 0 {
-			linha.Paid = strconv.FormatInt(s.PmPaid, 10) + " PM"
+			row.Paid = strconv.FormatInt(s.PmPaid, 10) + " PM"
 		}
 		if s.Steps > 0 {
-			linha.Steps = "+" + strconv.FormatInt(s.Steps, 10)
+			row.Steps = "+" + strconv.FormatInt(s.Steps, 10)
 		}
-		linhas = append(linhas, linha)
+		rows = append(rows, row)
 	}
-	return linhas
+	return rows
 }
 
 // appliedEffectRowsOf são os consumíveis e as magias de bônus em curso.
 func appliedEffectRowsOf(dto sheet.CharacterDTO) []appliedEffectRow {
-	linhas := []appliedEffectRow{}
+	rows := []appliedEffectRow{}
 	for _, e := range dto.ActiveEffects {
-		linhas = append(linhas, appliedEffectRow{
+		rows = append(rows, appliedEffectRow{
 			ID:        e.ID,
 			Name:      effectDisplayName(e.CatalogID),
 			Scope:     scopeLabel(e.Scope),
@@ -223,30 +223,30 @@ func appliedEffectRowsOf(dto sheet.CharacterDTO) []appliedEffectRow {
 			Command:   strconv.FormatInt(e.ID, 10),
 		})
 	}
-	return linhas
+	return rows
 }
 
 // modifierRowsOf traduz o blob de modificadores em linhas legíveis.
-func modifierRowsOf(bruto string) []breakdownRow {
+func modifierRowsOf(raw string) []breakdownRow {
 	var mods []engine.Modifier
-	if err := json.Unmarshal([]byte(bruto), &mods); err != nil {
+	if err := json.Unmarshal([]byte(raw), &mods); err != nil {
 		return nil
 	}
-	linhas := make([]breakdownRow, 0, len(mods))
+	rows := make([]breakdownRow, 0, len(mods))
 	for _, m := range mods {
-		linhas = append(linhas, breakdownRow{
+		rows = append(rows, breakdownRow{
 			Label: targetLabel(m.Target), Value: book.WithSign(m.Amount), Note: m.Note,
 		})
 	}
-	return linhas
+	return rows
 }
 
 // buffOptions são as magias com efeito aplicável.
 func buffOptions() []pickerOption {
-	opcoes := []pickerOption{}
-	for _, m := range book.Catalogs().Magias {
-		spell, conhecida := catalog.LookupSpell(m.ID)
-		if !conhecida || spell.Buff == nil {
+	options := []pickerOption{}
+	for _, m := range book.Catalogs().Spells {
+		spell, known := catalog.LookupSpell(m.ID)
+		if !known || spell.Buff == nil {
 			continue
 		}
 		// A DURAÇÃO DA MAGIA MANDA, aqui como na gravação. Ler o
@@ -259,14 +259,14 @@ func buffOptions() []pickerOption {
 			// exista é o que o `TestEveryBuffLastsAsLongAsItsSpell` cobra.
 			continue
 		}
-		opcoes = append(opcoes, pickerOption{
+		options = append(options, pickerOption{
 			ID:      m.ID,
 			Label:   m.Name,
 			Detail:  circleLabel(m.Circle) + " · " + scopeLabel(scope),
 			Command: m.ID,
 		})
 	}
-	return opcoes
+	return options
 }
 
 // situationalRowsOf agrupa os condicionais que o motor oferece.
@@ -276,50 +276,50 @@ func buffOptions() []pickerOption {
 // Um item caseiro com três modificadores é uma coisa só na mesa; como três
 // linhas, a pessoa deixaria metade do efeito ligado. As POSTURAS ficam de fora:
 // o interruptor delas mora nos Poderes, porque entrar custa PM.
-func situationalRowsOf(offered []engine.ConditionalEffect, ativos map[string]bool) ([]situationalRow, []alwaysOnRow) {
-	posturas := book.StancesFromCatalog()
-	porFlag := map[string][]engine.ConditionalEffect{}
-	ordem := []string{}
-	soltos := []engine.ConditionalEffect{}
+func situationalRowsOf(offered []engine.ConditionalEffect, active map[string]bool) ([]situationalRow, []alwaysOnRow) {
+	stances := book.StancesFromCatalog()
+	byFlag := map[string][]engine.ConditionalEffect{}
+	order := []string{}
+	loose := []engine.ConditionalEffect{}
 	for _, c := range offered {
 		if c.Flag == "" {
-			soltos = append(soltos, c)
+			loose = append(loose, c)
 			continue
 		}
-		if _, ehPostura := posturas[c.Flag]; ehPostura {
+		if _, isStance := stances[c.Flag]; isStance {
 			continue
 		}
-		if _, visto := porFlag[c.Flag]; !visto {
-			ordem = append(ordem, c.Flag)
+		if _, seen := byFlag[c.Flag]; !seen {
+			order = append(order, c.Flag)
 		}
-		porFlag[c.Flag] = append(porFlag[c.Flag], c)
+		byFlag[c.Flag] = append(byFlag[c.Flag], c)
 	}
 
-	linhas := []situationalRow{}
-	for _, c := range soltos {
+	rows := []situationalRow{}
+	for _, c := range loose {
 		id := engine.ConditionalID(c)
-		linhas = append(linhas, situationalRow{
-			Key: id, Label: conditionalLabel(c), Source: c.Source, Active: ativos[id],
+		rows = append(rows, situationalRow{
+			Key: id, Label: conditionalLabel(c), Source: c.Source, Active: active[id],
 			Modifiers: []breakdownRow{{Label: targetLabel(c.Target), Value: book.WithSign(c.Amount)}},
 			Command:   id,
 		})
 	}
-	for _, flag := range ordem {
-		grupo := porFlag[flag]
-		linha := situationalRow{
-			Key: engine.ConditionalID(grupo[0]), Label: conditionalLabel(grupo[0]),
-			Source: grupo[0].Source, Folded: len(grupo) > 1,
-			Active:  ativos[engine.ConditionalID(grupo[0])],
-			Command: engine.ConditionalID(grupo[0]),
+	for _, flag := range order {
+		group := byFlag[flag]
+		row := situationalRow{
+			Key: engine.ConditionalID(group[0]), Label: conditionalLabel(group[0]),
+			Source: group[0].Source, Folded: len(group) > 1,
+			Active:  active[engine.ConditionalID(group[0])],
+			Command: engine.ConditionalID(group[0]),
 		}
-		for _, c := range grupo {
-			linha.Modifiers = append(linha.Modifiers, breakdownRow{
+		for _, c := range group {
+			row.Modifiers = append(row.Modifiers, breakdownRow{
 				Label: targetLabel(c.Target), Value: book.WithSign(c.Amount),
 			})
 		}
-		linhas = append(linhas, linha)
+		rows = append(rows, row)
 	}
-	return linhas, nil
+	return rows, nil
 }
 
 // alwaysOnRowsOf são as flags de item equipado que NÃO têm interruptor.
@@ -334,13 +334,13 @@ func situationalRowsOf(offered []engine.ConditionalEffect, ativos map[string]boo
 // escrita aqui: ele resolve as condições de uso (vestido, empunhado) e sabe
 // quais modificadores do item contam.
 func alwaysOnRowsOf(flags []engine.EquippedFlag) []alwaysOnRow {
-	linhas := []alwaysOnRow{}
+	rows := []alwaysOnRow{}
 	for _, f := range flags {
-		rotulo, conhecida := itemFlagLabel[f.Flag]
-		if !conhecida {
-			rotulo = f.Flag
+		label, known := itemFlagLabel[f.Flag]
+		if !known {
+			label = f.Flag
 		}
-		linhas = append(linhas, alwaysOnRow{Label: rotulo, Source: f.Source})
+		rows = append(rows, alwaysOnRow{Label: label, Source: f.Source})
 	}
-	return linhas
+	return rows
 }

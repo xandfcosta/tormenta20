@@ -135,25 +135,25 @@ var declaracaoDeTeste = regexp.MustCompile(`(?m)^func (Test\w+)`)
 // O guarda é o que impede o 774º. Sem ele a lista volta a crescer em silêncio, um
 // nome por vez, e cada um parece pequeno demais para justificar uma varredura.
 func TestEveryTestNameIsEnglish(t *testing.T) {
-	raiz := ".."
-	medidos := 0
-	for _, caminho := range arquivosDeTeste(t, raiz) {
-		conteudo, err := os.ReadFile(caminho)
+	root := ".."
+	measured := 0
+	for _, path := range arquivosDeTeste(t, root) {
+		content, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("ler %s: %v", caminho, err)
+			t.Fatalf("ler %s: %v", path, err)
 		}
-		for _, achado := range declaracaoDeTeste.FindAllStringSubmatch(string(conteudo), -1) {
-			nome := achado[1]
-			medidos++
-			for _, palavra := range palavrasDe(nome) {
-				if !portugueseMarkers[strings.ToLower(palavra)] {
+		for _, found := range declaracaoDeTeste.FindAllStringSubmatch(string(content), -1) {
+			name := found[1]
+			measured++
+			for _, word := range palavrasDe(name) {
+				if !portugueseMarkers[strings.ToLower(word)] {
 					continue
 				}
 				t.Errorf("%s: %s tem %q, que é português.\n"+
 					"Nome de teste é IDENTIFICADOR, e identificador é em inglês (CLAUDE.md § Idioma).\n"+
 					"A grafia do termo sai do GLOSSARY — traduzir na hora, duas vezes, é como um\n"+
 					"conceito vira dois.",
-					caminho, nome, palavra)
+					path, name, word)
 				break
 			}
 		}
@@ -161,8 +161,8 @@ func TestEveryTestNameIsEnglish(t *testing.T) {
 
 	// O denominador: uma lista de reprovados vazia e um caminho que não casa com
 	// nada se parecem no terminal. Em setembro de 2026 eram 1.051 casos.
-	if medidos < 900 {
-		t.Fatalf("só %d nomes medidos — o guarda ficou cego", medidos)
+	if measured < 900 {
+		t.Fatalf("só %d nomes medidos — o guarda ficou cego", measured)
 	}
 }
 
@@ -182,43 +182,43 @@ func TestEveryTestNameIsEnglish(t *testing.T) {
 //
 // A sigla gritada continua sendo uma palavra só:
 // `…LimitesContamCARACTERESENaoBytes` tem "CARACTERES".
-func palavrasDe(nome string) []string {
-	corpo := []rune(strings.TrimPrefix(nome, "Test"))
-	var palavras []string
-	inicio := 0
-	for i := 1; i < len(corpo); i++ {
-		anterior, atual := corpo[i-1], corpo[i]
-		seguinteEhMinuscula := i+1 < len(corpo) && unicode.IsLower(corpo[i+1])
-		corta := unicode.IsUpper(atual) && !unicode.IsUpper(anterior)
-		corta = corta || (unicode.IsUpper(anterior) && unicode.IsUpper(atual) && seguinteEhMinuscula)
-		if corta {
-			palavras = append(palavras, string(corpo[inicio:i]))
-			inicio = i
+func palavrasDe(name string) []string {
+	body := []rune(strings.TrimPrefix(name, "Test"))
+	var words []string
+	start := 0
+	for i := 1; i < len(body); i++ {
+		anterior, current := body[i-1], body[i]
+		nextIsLowercase := i+1 < len(body) && unicode.IsLower(body[i+1])
+		cuts := unicode.IsUpper(current) && !unicode.IsUpper(anterior)
+		cuts = cuts || (unicode.IsUpper(anterior) && unicode.IsUpper(current) && nextIsLowercase)
+		if cuts {
+			words = append(words, string(body[start:i]))
+			start = i
 		}
 	}
-	if inicio < len(corpo) {
-		palavras = append(palavras, string(corpo[inicio:]))
+	if start < len(body) {
+		words = append(words, string(body[start:]))
 	}
-	return palavras
+	return words
 }
 
-func arquivosDeTeste(t *testing.T, raiz string) []string {
+func arquivosDeTeste(t *testing.T, root string) []string {
 	t.Helper()
-	var achados []string
-	err := filepath.WalkDir(raiz, func(caminho string, entrada os.DirEntry, err error) error {
+	var findings []string
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() && (entrada.Name() == "node_modules" || entrada.Name() == ".git") {
+		if entry.IsDir() && (entry.Name() == "node_modules" || entry.Name() == ".git") {
 			return filepath.SkipDir
 		}
-		if !entrada.IsDir() && strings.HasSuffix(entrada.Name(), "_test.go") {
-			achados = append(achados, caminho)
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), "_test.go") {
+			findings = append(findings, path)
 		}
 		return nil
 	})
 	if err != nil {
-		t.Fatalf("varrer %s: %v", raiz, err)
+		t.Fatalf("varrer %s: %v", root, err)
 	}
-	return achados
+	return findings
 }

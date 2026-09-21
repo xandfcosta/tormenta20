@@ -49,8 +49,8 @@ type bagPanel struct {
 	Categories  []filterOption
 	// Sheets é uma ficha por item — o diálogo que o ladrilho e o cartão abrem.
 	Sheets []itemSheet
-	// Catalogo é o Capítulo 3 filtrado, para o diálogo de adicionar.
-	Catalogo          []catalogItemRow
+	// Catalog é o Capítulo 3 filtrado, para o diálogo de adicionar.
+	Catalog           []catalogItemRow
 	CatalogSearch     string
 	CatalogCategory   string
 	CatalogCategories []filterOption
@@ -127,48 +127,48 @@ type moneyLine struct {
 // diálogo do catálogo. Uma struct e não quatro parâmetros — quatro strings em
 // sequência é a assinatura em que se troca a ordem sem o compilador reclamar.
 type bagFilters struct {
-	Busca               string
-	Categoria           string
-	BuscaNoCatalogo     string
-	CategoriaNoCatalogo string
+	Search          string
+	Category        string
+	CatalogSearch   string
+	CatalogCategory string
 }
 
 // bagPanelOf monta a aba.
-func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filtros bagFilters) bagPanel {
-	busca, categoria := filtros.Busca, filtros.Categoria
-	proficiencias := savedProficiencies(dto.Proficiencies)
+func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
+	search, category := filters.Search, filters.Category
+	proficiencies := savedProficiencies(dto.Proficiencies)
 	panel := bagPanel{
-		Search:            busca,
-		Category:          categoria,
-		Categories:        bagCategoryOptions(categoria),
+		Search:            search,
+		Category:          category,
+		Categories:        bagCategoryOptions(category),
 		Money:             moneyLineOf(dto),
-		CatalogSearch:     filtros.BuscaNoCatalogo,
-		CatalogCategory:   filtros.CategoriaNoCatalogo,
-		CatalogCategories: catalogCategories(filtros.CategoriaNoCatalogo),
+		CatalogSearch:     filters.CatalogSearch,
+		CatalogCategory:   filters.CatalogCategory,
+		CatalogCategories: catalogCategories(filters.CatalogCategory),
 	}
-	panel.Catalogo = catalogItemRowsOf(filtros.BuscaNoCatalogo, filtros.CategoriaNoCatalogo)
-	panel.CatalogTotal = len(panel.Catalogo)
-	guardados := []sheet.ItemDTO{}
+	panel.Catalog = catalogItemRowsOf(filters.CatalogSearch, filters.CatalogCategory)
+	panel.CatalogTotal = len(panel.Catalog)
+	saved := []sheet.ItemDTO{}
 	for _, item := range dto.Items {
 		switch equippedSlotOf(item) {
 		case "wielded2":
-			panel.Hands.TwoHand = equippedCardOf(item, "Duas mãos", proficiencias)
+			panel.Hands.TwoHand = equippedCardOf(item, "Duas mãos", proficiencies)
 		case "wielded":
 			panel.Hands.Wielded = append(panel.Hands.Wielded,
-				equippedCardOf(item, handLabel(len(panel.Hands.Wielded)), proficiencias))
+				equippedCardOf(item, handLabel(len(panel.Hands.Wielded)), proficiencies))
 		case "vested":
-			panel.Vested = append(panel.Vested, equippedCardOf(item, "Vestido", proficiencias))
+			panel.Vested = append(panel.Vested, equippedCardOf(item, "Vestido", proficiencies))
 		default:
-			guardados = append(guardados, item)
+			saved = append(saved, item)
 		}
 	}
 	panel.VestedUsed = len(panel.Vested)
 	panel.Vested = quatroPosicoesCom(panel.Vested)
 	panel.HandsUsed = usedInHands(panel.Hands)
 	panel.Hands.Wielded = handsTwo(panel.Hands.Wielded)
-	panel.StowedTotal = len(guardados)
-	panel.Stowed = stowedTilesOf(bagFiltered(guardados, busca, categoria))
-	panel.Sheets = itemSheetsOf(dto, proficiencias)
+	panel.StowedTotal = len(saved)
+	panel.Stowed = stowedTilesOf(bagFiltered(saved, search, category))
+	panel.Sheets = itemSheetsOf(dto, proficiencies)
 	if sheet, _, ok := s.sheetForPanels(dto); ok {
 		panel.Load = loadMeterOf(sheet)
 	}
@@ -204,8 +204,8 @@ func usedInHands(hands handSlots) int {
 // handLabel nomeia a posição pela ORDEM. A terceira em diante não tem nome
 // no livro porque não deveria existir — e é justamente por isso que ela é
 // nomeada do jeito que denuncia.
-func handLabel(indice int) string {
-	switch indice {
+func handLabel(index int) string {
+	switch index {
 	case 0:
 		return "Mão principal"
 	case 1:
@@ -224,13 +224,13 @@ func handsTwo(cards []*equippedCard) []*equippedCard {
 }
 
 // equippedCardOf traduz um item equipado para o cartão da tira.
-func equippedCardOf(item sheet.ItemDTO, rotulo string, proficiencias map[string]bool) *equippedCard {
+func equippedCardOf(item sheet.ItemDTO, label string, proficiencies map[string]bool) *equippedCard {
 	return &equippedCard{
 		ID:            item.ID,
-		Label:         rotulo,
+		Label:         label,
 		Name:          item.Name,
 		Chips:         append(itemOverlays(item), thatGrantsItem(item)...),
-		NoProficiency: !proficienteEh(item, proficiencias),
+		NoProficiency: !proficienteEh(item, proficiencies),
 		Command:       strconv.FormatInt(item.ID, 10),
 	}
 }
@@ -242,27 +242,27 @@ func equippedCardOf(item sheet.ItemDTO, rotulo string, proficiencias map[string]
 // sobre um item e um motor que penaliza outro. Item custom e item fora do
 // catálogo contam como proficientes — não há categoria de onde tirar exigência,
 // e acusar o que não se sabe seria pior que calar.
-func proficienteEh(item sheet.ItemDTO, proficiencias map[string]bool) bool {
-	catalogo := catalogItem(item)
-	if catalogo == nil {
+func proficienteEh(item sheet.ItemDTO, proficiencies map[string]bool) bool {
+	catalog := catalogItem(item)
+	if catalog == nil {
 		return true
 	}
-	exigida := engine.RequiredProficiency(&engine.CatalogItem{Category: catalogo.Category})
-	return exigida == "" || proficiencias[exigida]
+	required := engine.RequiredProficiency(&engine.CatalogItem{Category: catalog.Category})
+	return required == "" || proficiencies[required]
 }
 
 // stowedTilesOf traduz os itens guardados em ladrilhos.
-func stowedTilesOf(itens []sheet.ItemDTO) []stowedTile {
-	linhas := make([]stowedTile, 0, len(itens))
-	for _, item := range itens {
-		linhas = append(linhas, stowedTile{
+func stowedTilesOf(items []sheet.ItemDTO) []stowedTile {
+	rows := make([]stowedTile, 0, len(items))
+	for _, item := range items {
+		rows = append(rows, stowedTile{
 			ID: item.ID, Name: item.Name, Quantity: item.Quantity,
 			Glyph:    itemGlyph(item),
 			Overlays: itemOverlays(item),
 			Command:  strconv.FormatInt(item.ID, 10),
 		})
 	}
-	return linhas
+	return rows
 }
 
 // itemGlyph escolhe o desenho do ladrilho pela categoria.
@@ -270,22 +270,22 @@ func stowedTilesOf(itens []sheet.ItemDTO) []stowedTile {
 // Item sem catálogo cai no pacote genérico, que é honesto: não há o que
 // adivinhar sobre um item que a pessoa inventou.
 func itemGlyph(item sheet.ItemDTO) string {
-	catalogo := catalogItem(item)
-	if catalogo == nil {
+	catalog := catalogItem(item)
+	if catalog == nil {
 		return "Package"
 	}
 	switch {
-	case strings.HasPrefix(catalogo.Category, "weapon-"):
+	case strings.HasPrefix(catalog.Category, "weapon-"):
 		return "Sword"
-	case strings.HasPrefix(catalogo.Category, "armor-"), catalogo.Category == "shield":
+	case strings.HasPrefix(catalog.Category, "armor-"), catalog.Category == "shield":
 		return "Shield"
-	case catalogo.Category == "apparel" && catalogo.Equip == "wielded":
+	case catalog.Category == "apparel" && catalog.Equip == "wielded":
 		return "Wand2"
-	case catalogo.Category == "apparel":
+	case catalog.Category == "apparel":
 		return "Shirt"
-	case catalogo.Category == "consumable":
+	case catalog.Category == "consumable":
 		return "FlaskConical"
-	case catalogo.Category == "meal":
+	case catalog.Category == "meal":
 		return "Utensils"
 	}
 	return "Package"
@@ -295,19 +295,19 @@ func itemGlyph(item sheet.ItemDTO) string {
 //
 // A busca ignora acento pela mesma razão das Perícias: quem digita "balsamo"
 // tem de achar "Bálsamo restaurador".
-func bagFiltered(itens []sheet.ItemDTO, busca, categoria string) []sheet.ItemDTO {
-	termo := search.Fold(strings.TrimSpace(busca))
-	fora := []sheet.ItemDTO{}
-	for _, item := range itens {
-		if termo != "" && !strings.Contains(search.Fold(item.Name), termo) {
+func bagFiltered(items []sheet.ItemDTO, query, category string) []sheet.ItemDTO {
+	term := search.Fold(strings.TrimSpace(query))
+	outside := []sheet.ItemDTO{}
+	for _, item := range items {
+		if term != "" && !strings.Contains(search.Fold(item.Name), term) {
 			continue
 		}
-		if !categoryBagDa(item, categoria) {
+		if !categoryBagDa(item, category) {
 			continue
 		}
-		fora = append(fora, item)
+		outside = append(outside, item)
 	}
-	return fora
+	return outside
 }
 
 // bagCategories são os chips, na ordem em que aparecem.
@@ -316,19 +316,19 @@ func bagFiltered(itens []sheet.ItemDTO, busca, categoria string) []sheet.ItemDTO
 // meio de trinta ladrilhos, e quinze chips numa tela de 390px seriam outra
 // lista para procurar dentro.
 var bagCategories = []filterOption{
-	{Valor: "", Rotulo: "tudo"},
-	{Valor: "weapons", Rotulo: "armas"},
-	{Valor: "defense", Rotulo: "defesa"},
-	{Valor: "consumables", Rotulo: "consumo"},
-	{Valor: "other", Rotulo: "outros"},
+	{Value: "", Label: "tudo"},
+	{Value: "weapons", Label: "armas"},
+	{Value: "defense", Label: "defesa"},
+	{Value: "consumables", Label: "consumo"},
+	{Value: "other", Label: "outros"},
 }
 
-func bagCategoryOptions(ativa string) []filterOption {
-	fora := make([]filterOption, 0, len(bagCategories))
+func bagCategoryOptions(active string) []filterOption {
+	outside := make([]filterOption, 0, len(bagCategories))
 	for _, badge := range bagCategories {
-		fora = append(fora, filterOption{Valor: badge.Valor, Rotulo: badge.Rotulo, Ativo: badge.Valor == ativa})
+		outside = append(outside, filterOption{Value: badge.Value, Label: badge.Label, Active: badge.Value == active})
 	}
-	return fora
+	return outside
 }
 
 // categoryBagDa diz se o item aparece sob o crachá escolhido.
@@ -339,21 +339,21 @@ func categoryBagDa(item sheet.ItemDTO, chip string) bool {
 	if chip == "" {
 		return true
 	}
-	categoria := "gear"
-	if catalogo := catalogItem(item); catalogo != nil {
-		categoria = catalogo.Category
+	category := "gear"
+	if catalog := catalogItem(item); catalog != nil {
+		category = catalog.Category
 	}
 	switch chip {
 	case "weapons":
-		return strings.HasPrefix(categoria, "weapon-")
+		return strings.HasPrefix(category, "weapon-")
 	case "defense":
-		return strings.HasPrefix(categoria, "armor-") || categoria == "shield"
+		return strings.HasPrefix(category, "armor-") || category == "shield"
 	case "consumables":
-		return categoria == "consumable" || categoria == "meal"
+		return category == "consumable" || category == "meal"
 	case "other":
-		return !strings.HasPrefix(categoria, "weapon-") &&
-			!strings.HasPrefix(categoria, "armor-") &&
-			categoria != "shield" && categoria != "consumable" && categoria != "meal"
+		return !strings.HasPrefix(category, "weapon-") &&
+			!strings.HasPrefix(category, "armor-") &&
+			category != "shield" && category != "consumable" && category != "meal"
 	}
 	return true
 }
@@ -364,29 +364,29 @@ func categoryBagDa(item sheet.ItemDTO, chip string) bool {
 // não podia mais alcançar nada de `domain/sheet` sem que o compilador
 // procurasse um método na struct.
 func loadMeterOf(computed engine.ComputedSheet) loadMeter {
-	carga := computed.Carga
+	load := computed.Load
 	return loadMeter{
-		Used:                sheet.WithComma(carga.Used),
-		Limit:               carga.Limit,
-		Max:                 carga.Max,
-		Percent:             barWidth(carga.Used, carga.Limit),
-		Coins:               sheet.WithComma(carga.Coins),
-		CoinSlots:           carga.Coins,
-		Overloaded:          carga.Overloaded,
-		OverMax:             carga.OverMax,
-		Enforced:            carga.Enforced,
-		ArmorPenalty:        book.WithSign(carga.ArmorPenalty),
-		DisplacementPenalty: book.WithSign(carga.DisplacementPenalty),
-		LimitLabel:          limitLabel(carga.Limit, computed.Attributes["strength"].Total),
+		Used:                sheet.WithComma(load.Used),
+		Limit:               load.Limit,
+		Max:                 load.Max,
+		Percent:             barWidth(load.Used, load.Limit),
+		Coins:               sheet.WithComma(load.Coins),
+		CoinSlots:           load.Coins,
+		Overloaded:          load.Overloaded,
+		OverMax:             load.OverMax,
+		Enforced:            load.Enforced,
+		ArmorPenalty:        book.WithSign(load.ArmorPenalty),
+		DisplacementPenalty: book.WithSign(load.DisplacementPenalty),
+		LimitLabel:          limitLabel(load.Limit, computed.Attributes["strength"].Total),
 	}
 }
 
 // barWidth é a porcentagem já presa em 100.
-func barWidth(usado float64, limite int) int {
-	if limite <= 0 {
+func barWidth(used float64, limit int) int {
+	if limit <= 0 {
 		return 0
 	}
-	percent := int(usado * 100 / float64(limite))
+	percent := int(used * 100 / float64(limit))
 	if percent > 100 {
 		return 100
 	}
@@ -396,17 +396,17 @@ func barWidth(usado float64, limite int) int {
 // limitLabel mostra a CONTA que produziu o limite, com o valor de Força
 // resolvido — e não a notação "10 + 2×|FOR|", que manda a pessoa fazer a conta
 // de cabeça para conferir o número que já está do lado.
-func limitLabel(limite, forca int) string {
-	return "limite " + strconv.Itoa(limite) + " · 10 + 2×For " + book.WithSign(forca)
+func limitLabel(limit, strength int) string {
+	return "limite " + strconv.Itoa(limit) + " · 10 + 2×For " + book.WithSign(strength)
 }
 
 // moneyLineOf escreve o dinheiro e o espaço que ele ocupa.
 func moneyLineOf(dto sheet.CharacterDTO) moneyLine {
-	linha := moneyLine{Tibar: sheet.WithComma(dto.Tibar)}
-	if espacos := coinSlots(dto.Tibar); espacos > 0 {
-		linha.Slots = sheet.WithComma(espacos) + slotPlural(espacos)
+	row := moneyLine{Tibar: sheet.WithComma(dto.Tibar)}
+	if spaces := coinSlots(dto.Tibar); spaces > 0 {
+		row.Slots = sheet.WithComma(spaces) + slotPlural(spaces)
 	}
-	return linha
+	return row
 }
 
 // coinSlots são os milheiros COMPLETOS: "cada 1.000 moedas ocupam um
@@ -415,8 +415,8 @@ func coinSlots(tibar float64) float64 {
 	return float64(int(tibar) / int(engine.CoinsPerSlot))
 }
 
-func slotPlural(espacos float64) string {
-	if espacos == 1 {
+func slotPlural(spaces float64) string {
+	if spaces == 1 {
 		return " espaço"
 	}
 	return " espaços"
@@ -425,9 +425,9 @@ func slotPlural(espacos float64) string {
 // sortedImprovements devolve as sobreposições do item ordenadas por nome,
 // para a ficha do item listá-las sempre na mesma ordem.
 func sortedImprovements(item sheet.ItemDTO) []book.Item {
-	entradas := bookOverlays(item)
-	sort.SliceStable(entradas, func(a, b int) bool { return entradas[a].Name < entradas[b].Name })
-	return entradas
+	entries := bookOverlays(item)
+	sort.SliceStable(entries, func(a, b int) bool { return entries[a].Name < entries[b].Name })
+	return entries
 }
 
 // ── o que a TELA precisa escrever ────────────────────────────────────────────
@@ -441,8 +441,8 @@ func writtenItems(n int) string {
 }
 
 // juntoComPonto é a lista de sobreposições numa linha só.
-func juntoComPonto(nomes []string) string {
-	return strings.Join(nomes, " · ")
+func juntoComPonto(names []string) string {
+	return strings.Join(names, " · ")
 }
 
 // overloadNotice diz o que a sobrecarga CUSTA, com os dois números que o
@@ -453,19 +453,19 @@ func juntoComPonto(nomes []string) string {
 // recusa a linha, porque o próprio livro deixa a carga a critério do mestre —
 // então quem diz que passou é a tela.
 func overloadNotice(load loadMeter) string {
-	aviso := "Sobrecarregado (p141): " + load.ArmorPenalty +
+	notice := "Sobrecarregado (p141): " + load.ArmorPenalty +
 		" em Acrobacia, Furtividade e Ladinagem · " + load.DisplacementPenalty + "m de deslocamento"
 	if load.OverMax {
-		aviso += " · acima de " + strconv.Itoa(load.Max) + " espaços o livro diz que não dá para carregar"
+		notice += " · acima de " + strconv.Itoa(load.Max) + " espaços o livro diz que não dá para carregar"
 	}
-	return aviso
+	return notice
 }
 
 // moneyModes são as três coisas que se fazem com dinheiro na mesa: "achamos 350
 // no baú", "paguei 80 pela estalagem", e escrever o total — que é o gesto da
 // forja (Tabela 3-1, p140) e o de consertar um erro de digitação.
 var moneyModes = []filterOption{
-	{Valor: "receber", Rotulo: "Receber"},
-	{Valor: "gastar", Rotulo: "Gastar"},
-	{Valor: "corrigir", Rotulo: "Corrigir"},
+	{Value: "receber", Label: "Receber"},
+	{Value: "gastar", Label: "Gastar"},
+	{Value: "corrigir", Label: "Corrigir"},
 }

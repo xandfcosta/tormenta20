@@ -41,65 +41,65 @@ import (
 // rotas de 242 porque lia a fonte com regex. O `.templ` não é Go e não tem AST
 // aqui, então ele é varrido por texto, com o comentário tirado antes.
 func TestNoHandwrittenSessionAddress(t *testing.T) {
-	const ondeOEnderecoMora = "serve/web/routes/routes.go"
+	const addressHome = "serve/web/routes/routes.go"
 
-	raiz, err := filepath.Abs("..")
+	root, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatalf("achar a raiz: %v", err)
 	}
-	conjunto := token.NewFileSet()
+	set := token.NewFileSet()
 	go_, templs := 0, 0
-	err = filepath.WalkDir(raiz, func(caminho string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
-		rel, _ := filepath.Rel(raiz, caminho)
+		rel, _ := filepath.Rel(root, path)
 		// O GERADO não conta: ele é a saída do `.templ`, e uma violação nele já
 		// foi acusada na fonte. O de TESTE também não — um teste afirma o
 		// endereço concreto que o servidor devolveu, e é para isso que ele
 		// existe.
-		if strings.HasSuffix(caminho, "_templ.go") || strings.HasSuffix(caminho, "_test.go") ||
-			rel == ondeOEnderecoMora {
+		if strings.HasSuffix(path, "_templ.go") || strings.HasSuffix(path, "_test.go") ||
+			rel == addressHome {
 			return nil
 		}
 
-		acusa := func(linha int, literal string) {
+		flags := func(row int, literal string) {
 			t.Errorf("%s:%d escreve o endereço da sessão à mão: %s\n"+
 				"Use o `routes.Session(campanha, sessao)` e pendure o verbo nele —\n"+
 				"numa cena da Mesa, o `v.SessionBase()` já o resolve.\n"+
 				"Uma segunda grafia do mesmo endereço é a que sobra apontando para\n"+
-				"o lugar errado no dia em que o prefixo mudar.", rel, linha, literal)
+				"o lugar errado no dia em que o prefixo mudar.", rel, row, literal)
 		}
 
 		switch {
-		case strings.HasSuffix(caminho, ".go"):
-			arquivo, err := parser.ParseFile(conjunto, caminho, nil, 0)
+		case strings.HasSuffix(path, ".go"):
+			file, err := parser.ParseFile(set, path, nil, 0)
 			if err != nil {
 				return err
 			}
 			go_++
-			ast.Inspect(arquivo, func(n ast.Node) bool {
+			ast.Inspect(file, func(n ast.Node) bool {
 				lit, ok := n.(*ast.BasicLit)
 				if !ok || lit.Kind != token.STRING || !isResolvedSessionAddress(lit.Value) {
 					return true
 				}
-				acusa(conjunto.Position(lit.Pos()).Line, lit.Value)
+				flags(set.Position(lit.Pos()).Line, lit.Value)
 				return true
 			})
-		case strings.HasSuffix(caminho, ".templ"):
-			bruto, err := os.ReadFile(caminho)
+		case strings.HasSuffix(path, ".templ"):
+			raw, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
 			templs++
-			for numero, linha := range strings.Split(string(bruto), "\n") {
+			for number, row := range strings.Split(string(raw), "\n") {
 				// O comentário sai ANTES de medir: sem isto, o bloco que
 				// EXPLICA a regra seria o primeiro reprovado por ela.
-				if j := strings.Index(linha, "//"); j >= 0 {
-					linha = linha[:j]
+				if j := strings.Index(row, "//"); j >= 0 {
+					row = row[:j]
 				}
-				if isResolvedSessionAddress(linha) {
-					acusa(numero+1, strings.TrimSpace(linha))
+				if isResolvedSessionAddress(row) {
+					flags(number+1, strings.TrimSpace(row))
 				}
 			}
 		}

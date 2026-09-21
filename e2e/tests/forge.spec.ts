@@ -27,8 +27,8 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 test.use({ storageState: '.auth/user.json' })
 
 /** O rádio é `sr-only`: quem recebe o clique é o rótulo inteiro, a carta. */
-async function escolheACarta(page: import('@playwright/test').Page, grupo: string, valor: string) {
-  await page.locator(`label:has(input[name="${grupo}"][value="${valor}"])`).click()
+async function escolheACarta(page: import('@playwright/test').Page, group: string, value: string) {
+  await page.locator(`label:has(input[name="${group}"][value="${value}"])`).click()
 }
 
 test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async ({ page }) => {
@@ -57,9 +57,9 @@ test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async 
   await expect(page.locator('#weaponMartial')).toHaveCount(0)
   await expect(page.getByLabel('Nome')).toHaveValue('Thessa de Valkaria')
 
-  const contraste = await medeOContraste(page)
-  expect(contraste.medidos, 'o medidor não achou texto: a folha não carregou').toBeGreaterThan(100)
-  expect(contraste.falhas, 'texto abaixo do AA na folha da forja').toEqual([])
+  const ratio = await medeOContraste(page)
+  expect(ratio.medidos, 'o medidor não achou texto: a folha não carregou').toBeGreaterThan(100)
+  expect(ratio.falhas, 'texto abaixo do AA na folha da forja').toEqual([])
   await expectCinzelAcimaDoPiso(page, 'na folha da forja')
   // O ANEL DE FOCO entra aqui e não numa lista própria, e a forja é a cena que
   // o medidor precisa visitar: as cartas de raça e de classe escondem o
@@ -91,9 +91,9 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   await page.getByRole('button', { name: 'Aumentar Força' }).click()
   await expect(page.getByText('9 de 10 pontos')).toBeVisible()
 
-  const contraste = await medeOContraste(page)
-  expect(contraste.medidos, 'o medidor não achou texto: a cena não carregou').toBeGreaterThan(20)
-  expect(contraste.falhas, 'texto abaixo do AA nos atributos da forja').toEqual([])
+  const contrast = await medeOContraste(page)
+  expect(contrast.medidos, 'o medidor não achou texto: a cena não carregou').toBeGreaterThan(20)
+  expect(contrast.falhas, 'texto abaixo do AA nos atributos da forja').toEqual([])
   await expectCinzelAcimaDoPiso(page, 'nos atributos da forja')
   await expectNoHorizontalOverflow(page, VIEWPORTS)
 
@@ -104,10 +104,10 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   // dinâmico nasceria fora do regime — que é a forma exata do defeito que
   // aquele guarda existe para prender.
   await page.setViewportSize({ width: 1400, height: 900 })
-  const regiao = page.locator('[data-nav-region="content"]')
-  await expect(regiao).toHaveCount(1)
+  const region = page.locator('[data-nav-region="content"]')
+  await expect(region).toHaveCount(1)
   expect(
-    await regiao.locator('button:not([disabled]),a[href]').count(),
+    await region.locator('button:not([disabled]),a[href]').count(),
     'a região da cena não tem item nenhum para as setas dirigirem',
   ).toBeGreaterThan(0)
 })

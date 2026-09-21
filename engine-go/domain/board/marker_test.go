@@ -19,23 +19,23 @@ func TestTheNextLetterSkipsTheUsedOnesInsteadOfCounting(t *testing.T) {
 
 	// A ARMADILHA: dois marcadores no mapa, mas o "B" foi apagado. Contar daria
 	// "C" e deixaria o "B" órfão para sempre; o certo é a primeira LIVRE.
-	mapa := []BoardMarker{{Text: "A"}, {Text: "C"}}
-	if got := NextMarkerLetter(mapa); got != "B" {
+	board := []BoardMarker{{Text: "A"}, {Text: "C"}}
+	if got := NextMarkerLetter(board); got != "B" {
 		t.Errorf("com A e C no mapa saiu %q, esperado \"B\" — a regra está contando em vez de procurar", got)
 	}
 }
 
 func TestWithTheLettersSpentTheLabelGivesUp(t *testing.T) {
-	var mapa []BoardMarker
-	for letra := 'A'; letra <= 'Z'; letra++ {
-		mapa = append(mapa, BoardMarker{Text: string(letra)})
+	var board []BoardMarker
+	for letter := 'A'; letter <= 'Z'; letter++ {
+		board = append(board, BoardMarker{Text: string(letter)})
 	}
 	// O CONTROLE: com 25 ainda há letra, senão "??" seria verdade sobre um laço
 	// que nunca entra.
-	if got := NextMarkerLetter(mapa[:25]); got != "Z" {
+	if got := NextMarkerLetter(board[:25]); got != "Z" {
 		t.Fatalf("com 25 usadas saiu %q, esperado \"Z\"", got)
 	}
-	if got := NextMarkerLetter(mapa); got != "??" {
+	if got := NextMarkerLetter(board); got != "??" {
 		t.Errorf("com as 26 usadas saiu %q, esperado \"??\"", got)
 	}
 }
@@ -54,9 +54,9 @@ func TestTheColorPredicateFollowsTheList(t *testing.T) {
 			t.Errorf("a cor %q está na lista e a função não a reconhece", c.ID)
 		}
 	}
-	for _, torta := range []string{"gold", "carmesim", "", "red"} {
-		if KnownMarkerColor(torta) {
-			t.Errorf("a cor %q passou pelo conjunto fechado", torta)
+	for _, crooked := range []string{"gold", "carmesim", "", "red"} {
+		if KnownMarkerColor(crooked) {
+			t.Errorf("a cor %q passou pelo conjunto fechado", crooked)
 		}
 	}
 	if !KnownMarkerColor(DefaultMarkerColor()) {

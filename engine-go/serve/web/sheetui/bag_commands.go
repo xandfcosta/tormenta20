@@ -20,42 +20,42 @@ import (
 // O NOME e os ESPAÇOS vêm do catálogo, e não do cliente: são dado transcrito do
 // livro, e deixar o navegador mandá-los abriria a porta para uma "Espada longa"
 // de 0 espaços.
-func addCatalogItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
-	catalogo := book.ItemByID(chi.URLParam(r, "catalogo"))
-	if catalogo == nil {
+func addCatalogItem(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	catalog := book.ItemByID(chi.URLParam(r, "catalogo"))
+	if catalog == nil {
 		return fmt.Errorf("o item %q não existe no livro", chi.URLParam(r, "catalogo"))
 	}
-	quantidade, err := askedQuantity(sinais)
+	amount, err := askedQuantity(signals)
 	if err != nil {
 		return err
 	}
-	return s.plays.AddCatalogItem(r.Context(), row.ID, catalogo.ID, quantidade)
+	return s.plays.AddCatalogItem(r.Context(), row.ID, catalog.ID, amount)
 }
 
 // addCustomItem cria o item que o livro não tem — a lembrança de um NPC, a
 // chave de um cofre.
-func addCustomItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
-	nome, quantidade, espacos, err := customRequestItem(sinais)
+func addCustomItem(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	name, amount, spaces, err := customRequestItem(signals)
 	if err != nil {
 		return err
 	}
-	return s.plays.AddCustomItem(r.Context(), row.ID, nome, quantidade, espacos)
+	return s.plays.AddCustomItem(r.Context(), row.ID, name, amount, spaces)
 }
 
 // editItem muda nome, quantidade e espaços de um item já na ficha.
-func editItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
+func editItem(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {
 		return err
 	}
-	nome, quantidade, espacos, err := customRequestItem(sinais)
+	name, amount, spaces, err := customRequestItem(signals)
 	if err != nil {
 		return err
 	}
 	// A gravação é do CASO DE USO e não um SQL montado aqui: quem sabe o nome
 	// das colunas é ele. Mesma decisão que o `campaign.Lifecycle` tomou com o
 	// texto da campanha.
-	return s.plays.SaveCustomItem(r.Context(), item.ID, nome, quantidade, espacos)
+	return s.plays.SaveCustomItem(r.Context(), item.ID, name, amount, spaces)
 }
 
 // removeItemFromSheet tira o item da ficha.
@@ -72,7 +72,7 @@ func removeItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 // A regra inteira — a rolagem presa no máximo, a linha de efeito de cena ou dia,
 // a porção diária, a baixa do item — mora no `Plays.Consume`. Os números rolados
 // vêm por sinal porque quem rola é a MESA: a ficha não rola dado por ninguém.
-func useItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
+func useItem(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func useItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) er
 	// O RESULTADO não atravessa: a cena redesenha a ficha inteira depois do
 	// gesto, e a única recusa que ela precisa — a porção diária — já chega como
 	// erro.
-	_, err = s.plays.Consume(r.Context(), row, item.ID, sinais.ItemRolagemPv, sinais.ItemRolagemPm)
+	_, err = s.plays.Consume(r.Context(), row, item.ID, signals.ItemHPRoll, signals.ItemMPRoll)
 	return err
 }
 
@@ -88,63 +88,63 @@ func useItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) er
 //
 // A COMPATIBILIDADE é conferida AQUI (`fitsItemImprovement`), no servidor, e não
 // só pelo filtro do diálogo: filtro é UX, e quem postar na mão passa por cima.
-func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
+func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {
 		return err
 	}
-	catalogo := book.ItemByID(itemCatalog(item))
-	if err := fitsItemImprovement(catalogo, sinais.ItemMelhorias, "improvement"); err != nil {
+	catalog := book.ItemByID(itemCatalog(item))
+	if err := fitsItemImprovement(catalog, signals.ItemImprovements, "improvement"); err != nil {
 		return err
 	}
-	materiais := []string{}
-	if sinais.ItemMaterial != "" {
-		materiais = append(materiais, sinais.ItemMaterial)
+	materials := []string{}
+	if signals.ItemMaterial != "" {
+		materials = append(materials, signals.ItemMaterial)
 	}
-	if err := fitsItemImprovement(catalogo, materiais, "material"); err != nil {
+	if err := fitsItemImprovement(catalog, materials, "material"); err != nil {
 		return err
 	}
-	return s.plays.SaveItemOverlays(r.Context(), item.ID, sinais.ItemMelhorias, sinais.ItemMaterial)
+	return s.plays.SaveItemOverlays(r.Context(), item.ID, signals.ItemImprovements, signals.ItemMaterial)
 }
 
 // askedQuantity lê a quantidade, com as bordas do formulário.
-func askedQuantity(sinais Signals) (int64, error) {
-	if sinais.ItemQtd == nil {
+func askedQuantity(signals Signals) (int64, error) {
+	if signals.ItemQtd == nil {
 		return 1, nil
 	}
-	if *sinais.ItemQtd < 1 || *sinais.ItemQtd > 9999 {
-		return 0, fmt.Errorf("a quantidade %d está fora de 1 a 9999", *sinais.ItemQtd)
+	if *signals.ItemQtd < 1 || *signals.ItemQtd > 9999 {
+		return 0, fmt.Errorf("a quantidade %d está fora de 1 a 9999", *signals.ItemQtd)
 	}
-	return *sinais.ItemQtd, nil
+	return *signals.ItemQtd, nil
 }
 
 // customRequestItem lê nome, quantidade e espaços, com as bordas do formulário.
 //
 // Os ESPAÇOS são múltiplos de meio porque é assim que o livro conta carga
 // (p141) — e essa é a mesma borda que a API JSON cobra, `sheet.SlotsNotMultiple`.
-func customRequestItem(sinais Signals) (string, int64, float64, error) {
-	nome := ""
-	if sinais.ItemNome != nil {
-		nome = strings.TrimSpace(*sinais.ItemNome)
+func customRequestItem(signals Signals) (string, int64, float64, error) {
+	name := ""
+	if signals.ItemName != nil {
+		name = strings.TrimSpace(*signals.ItemName)
 	}
-	if nome == "" {
+	if name == "" {
 		return "", 0, 0, fmt.Errorf("informe um nome para o item")
 	}
-	if len([]rune(nome)) > 80 {
-		return "", 0, 0, fmt.Errorf("o nome tem %d letras, e o máximo são 80", len([]rune(nome)))
+	if len([]rune(name)) > 80 {
+		return "", 0, 0, fmt.Errorf("o nome tem %d letras, e o máximo são 80", len([]rune(name)))
 	}
-	quantidade, err := askedQuantity(sinais)
+	amount, err := askedQuantity(signals)
 	if err != nil {
 		return "", 0, 0, err
 	}
-	espacos := 1.0
-	if sinais.ItemEspacos != nil {
-		espacos = *sinais.ItemEspacos
+	spaces := 1.0
+	if signals.ItemSlots != nil {
+		spaces = *signals.ItemSlots
 	}
-	if espacos < 0 || sheet.SlotsNotMultiple(espacos) {
-		return "", 0, 0, fmt.Errorf("os espaços (%v) têm de ser múltiplos de 0,5", espacos)
+	if spaces < 0 || sheet.SlotsNotMultiple(spaces) {
+		return "", 0, 0, fmt.Errorf("os espaços (%v) têm de ser múltiplos de 0,5", spaces)
 	}
-	return nome, quantidade, espacos, nil
+	return name, amount, spaces, nil
 }
 
 // stowItem tira o item da mão ou do corpo e o devolve à mochila.
@@ -182,15 +182,15 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 	// se DESLIGA sozinha quando um arquivo some não é uma regra — com o
 	// catálogo vazio, um escudo passa a ser vestível. O `catalog.Resource` é
 	// `go:embed`: ele existe sempre que o binário existe.
-	if _, recusa := sheet.EquipAxisError(howEngineItem(book.ItemByID(itemCatalog(item))), slot); recusa != "" {
-		return fmt.Errorf("%s", recusa)
+	if _, refusal := sheet.EquipAxisError(howEngineItem(book.ItemByID(itemCatalog(item))), slot); refusal != "" {
+		return fmt.Errorf("%s", refusal)
 	}
-	equipados, err := s.deps.Queries().ListEquippedItems(r.Context(), row.ID)
+	equipped, err := s.deps.Queries().ListEquippedItems(r.Context(), row.ID)
 	if err != nil {
 		return err
 	}
-	if recusa := sheet.EquipLimitErrorOver(equipados, item.ID, slot); recusa != "" {
-		return fmt.Errorf("%s", recusa)
+	if refusal := sheet.EquipLimitErrorOver(equipped, item.ID, slot); refusal != "" {
+		return fmt.Errorf("%s", refusal)
 	}
 	return saveEquipped(r, s, item.ID, slot)
 }
@@ -200,8 +200,8 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 // A cena diz o LUGAR e nada mais: que o vazio vira NULL, e que
 // `character_items` não tem carimbo para tocar, é do caso de uso. Ela sabe que
 // o item foi para a mão.
-func saveEquipped(r *http.Request, s Scene, itemID int64, lugar string) error {
-	return s.plays.SaveEquipped(r.Context(), itemID, lugar)
+func saveEquipped(r *http.Request, s Scene, itemID int64, place string) error {
+	return s.plays.SaveEquipped(r.Context(), itemID, place)
 }
 
 // slotEquipEh aceita só os três lugares do livro.
@@ -232,9 +232,9 @@ func (s Scene) sheetItem(r *http.Request, characterID int64) (sqlcgen.GetItemRow
 // Os TRÊS modos existem porque são três gestos diferentes na mesa: "achamos 350
 // no baú", "paguei 80 pela estalagem", e escrever o total — que é o gesto da
 // forja (Tabela 3-1, p140) e o de consertar um erro de digitação.
-func changeMoney(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
-	if sinais.TibarValor == nil {
+func changeMoney(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	if signals.TibarValue == nil {
 		return fmt.Errorf("informe um valor a partir de 0")
 	}
-	return s.plays.ChangeMoney(r.Context(), row, sinais.TibarModo, *sinais.TibarValor)
+	return s.plays.ChangeMoney(r.Context(), row, signals.TibarMode, *signals.TibarValue)
 }

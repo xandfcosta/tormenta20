@@ -28,7 +28,7 @@ import templruntime "github.com/a-h/templ/runtime"
 // CAMPANHA vale enquanto o mestre não gerar outro. Escrever "serve para uma
 // conta" embaixo de um link reutilizável faria o mestre gerar um por jogador e
 // derrubar o dos anteriores a cada vez.
-func MintedInvite(caminho, nota string) templ.Component {
+func MintedInvite(path, note string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -54,9 +54,9 @@ func MintedInvite(caminho, nota string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/invite.templ`, Line: 32, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/invite.templ`, Line: 32, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -96,7 +96,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(nota)
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(note)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/invite.templ`, Line: 44, Col: 49}
 		}
@@ -123,7 +123,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 // O link chega por remendo do servidor (`#invite-link`) e NÃO passa por sinal:
 // um token de uso único em estado de cliente viajaria de volta ao servidor em
 // toda requisição seguinte da página.
-func InviteDialog(rota string) templ.Component {
+func InviteDialog(route string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -201,7 +201,7 @@ func InviteDialog(rota string) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = Button(VariantPrimary, SizeDefault, "", templ.Attributes{
-			"type": "button", "data-on:click": "@post('" + rota + "')",
+			"type": "button", "data-on:click": "@post('" + route + "')",
 			"data-indicator:generating": true, "data-attr:disabled": "$generating",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

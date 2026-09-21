@@ -21,7 +21,7 @@ import (
 
 // O caminho inteiro contra o hub de verdade, o mesmo que o handler usa.
 func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
-	umPersonagem := func(id int64) *int64 { return &id }
+	charIDOf := func(id int64) *int64 { return &id }
 	s := &Server{
 		// O barramento é OBRIGATÓRIO, e um `Server` montado à mão sem ele explode
 		// no primeiro `characterChanged`. É o desenho: nulo que EXPLODE é melhor
@@ -29,7 +29,7 @@ func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
 		bus: &events.Bus{},
 		sse: live.NewSSEHub(),
 		sessions: &session.Store{States: map[int64]*live.SessionRuntimeState{
-			7: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
+			7: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: charIDOf(14)}}},
 		}},
 	}
 	conn := s.sse.Add(7, "c1", "player")
@@ -50,12 +50,12 @@ func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
 // Mesa que NÃO tem o personagem não recebe nada. O recorte é o que impede uma
 // ficha salva de mandar toda a casa refazer busca.
 func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
-	umPersonagem := func(id int64) *int64 { return &id }
+	charIDOf := func(id int64) *int64 { return &id }
 	s := &Server{
 		bus: &events.Bus{},
 		sse: live.NewSSEHub(),
 		sessions: &session.Store{States: map[int64]*live.SessionRuntimeState{
-			7: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(99)}}},
+			7: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: charIDOf(99)}}},
 		}},
 	}
 	conn := s.sse.Add(7, "c1", "player")
@@ -75,22 +75,22 @@ func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
 // refazer busca a cada ficha salva — e a sala é o recorte natural de quem pode
 // estar olhando.
 func TestOnlyTheLiveSessionsHoldingTheCharacter(t *testing.T) {
-	umPersonagem := func(id int64) *int64 { return &id }
+	charIDOf := func(id int64) *int64 { return &id }
 	st := &session.Store{States: map[int64]*live.SessionRuntimeState{
-		1: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
-		2: {Initiative: []live.InitiativeEntry{{ID: "b", CharacterID: umPersonagem(99)}}},
+		1: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: charIDOf(14)}}},
+		2: {Initiative: []live.InitiativeEntry{{ID: "b", CharacterID: charIDOf(99)}}},
 		// NPC na fila: `CharacterID` nulo não pode ser confundido com o 14.
-		3: {Initiative: []live.InitiativeEntry{{ID: "c"}, {ID: "d", CharacterID: umPersonagem(14)}}},
+		3: {Initiative: []live.InitiativeEntry{{ID: "c"}, {ID: "d", CharacterID: charIDOf(14)}}},
 	}}
 
-	achadas := st.LiveSessionsWithCharacter(14)
+	found := st.LiveSessionsWithCharacter(14)
 
-	if len(achadas) != 2 {
-		t.Fatalf("sessões = %v, queria as duas que têm o 14", achadas)
+	if len(found) != 2 {
+		t.Fatalf("sessões = %v, queria as duas que têm o 14", found)
 	}
-	for _, id := range achadas {
+	for _, id := range found {
 		if id != 1 && id != 3 {
-			t.Fatalf("sessões = %v — a %d não tem o personagem 14", achadas, id)
+			t.Fatalf("sessões = %v — a %d não tem o personagem 14", found, id)
 		}
 	}
 }
@@ -99,16 +99,16 @@ func TestOnlyTheLiveSessionsHoldingTheCharacter(t *testing.T) {
 // entrou sozinho) avisa a sessão UMA vez. Avisar duas faria o cliente refazer a
 // mesma busca duas vezes por escrita.
 func TestARepeatedSessionIsAnnouncedOnce(t *testing.T) {
-	umPersonagem := func(id int64) *int64 { return &id }
+	charIDOf := func(id int64) *int64 { return &id }
 	st := &session.Store{States: map[int64]*live.SessionRuntimeState{
 		1: {Initiative: []live.InitiativeEntry{
-			{ID: "a", CharacterID: umPersonagem(14)},
-			{ID: "b", CharacterID: umPersonagem(14)},
+			{ID: "a", CharacterID: charIDOf(14)},
+			{ID: "b", CharacterID: charIDOf(14)},
 		}},
 	}}
 
-	if achadas := st.LiveSessionsWithCharacter(14); len(achadas) != 1 {
-		t.Fatalf("sessões = %v, queria uma só", achadas)
+	if found := st.LiveSessionsWithCharacter(14); len(found) != 1 {
+		t.Fatalf("sessões = %v, queria uma só", found)
 	}
 }
 
@@ -130,7 +130,7 @@ func TestOffTableNobodyIsAnnouncedTo(t *testing.T) {
 		1: {Initiative: []live.InitiativeEntry{{ID: "a"}}},
 	}}
 
-	if achadas := st.LiveSessionsWithCharacter(14); len(achadas) != 0 {
-		t.Fatalf("sessões = %v, queria nenhuma", achadas)
+	if found := st.LiveSessionsWithCharacter(14); len(found) != 0 {
+		t.Fatalf("sessões = %v, queria nenhuma", found)
 	}
 }

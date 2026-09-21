@@ -10,11 +10,11 @@ import (
 
 func onLens(t *testing.T, f sceneFixture) string {
 	t.Helper()
-	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
+	rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acender a lente deu %d", rec.Code)
 	}
-	return f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	return f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 }
 
 // O caso que a lente existe para resolver.
@@ -35,16 +35,16 @@ func TestTheLensHidesFromTheGmWhatIsHiddenFromTheTable(t *testing.T) {
 	}
 
 	// O CONTROLE: sem a lente, o mestre vê as duas.
-	semLente := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(semLente, "Ogro emboscado") {
+	noLens := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(noLens, "Ogro emboscado") {
 		t.Fatal("o mestre não via a própria peça escondida — o caso não mede nada")
 	}
 
-	comLente := onLens(t, f)
-	if strings.Contains(comLente, "Ogro emboscado") {
+	withLens := onLens(t, f)
+	if strings.Contains(withLens, "Ogro emboscado") {
 		t.Error("a peça escondida continuou na tela do mestre com a lente ligada")
 	}
-	if !strings.Contains(comLente, "Taverneiro") {
+	if !strings.Contains(withLens, "Taverneiro") {
 		t.Error("a lente escondeu também o que a mesa VÊ")
 	}
 }
@@ -73,11 +73,11 @@ func TestTheLensSaysHowManyVanished(t *testing.T) {
 func TestTheLensDoesNotTakeTheGmControlsAway(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := onLens(t, f)
+	screen := onLens(t, f)
 
-	for _, controle := range []string{"Borracha", "Encerrar o tabuleiro", "Voltar à vista do mestre"} {
-		if !strings.Contains(tela, controle) {
-			t.Errorf("a lente tirou %q do mestre", controle)
+	for _, control := range []string{"Borracha", "Encerrar o tabuleiro", "Voltar à vista do mestre"} {
+		if !strings.Contains(screen, control) {
+			t.Errorf("a lente tirou %q do mestre", control)
 		}
 	}
 }
@@ -92,12 +92,12 @@ func TestTheLensDiesWithTheScene(t *testing.T) {
 		t.Fatal("a lente não acendeu — o resto não mede nada")
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 	f.seedOpenBoard(t, "tavern")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(tela, "Voltar à vista do mestre") {
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(screen, "Voltar à vista do mestre") {
 		t.Error("a lente sobreviveu ao fim da cena e acendeu sobre a cena seguinte")
 	}
 }
@@ -112,14 +112,14 @@ func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
 		board.BoardToken{ID: "visivel", Label: "Taverneiro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
-	antes := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	before := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	onLens(t, f)
-	depois := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	after := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if strings.Contains(depois, "vendo a cena como a mesa") {
+	if strings.Contains(after, "vendo a cena como a mesa") {
 		t.Error("a tira da lente do mestre apareceu na tela do jogador")
 	}
-	if strings.Contains(antes, "Taverneiro") != strings.Contains(depois, "Taverneiro") {
+	if strings.Contains(before, "Taverneiro") != strings.Contains(after, "Taverneiro") {
 		t.Error("acender a lente do mestre mudou o que o jogador vê")
 	}
 }
@@ -128,7 +128,7 @@ func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
 func TestOnlyTheGmLightsTheLens(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
+	rec := f.pede(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador acendeu a lente: %d", rec.Code)
 	}

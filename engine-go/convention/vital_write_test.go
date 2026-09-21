@@ -34,47 +34,47 @@ import (
 // aqui sozinha, porque a lista abaixo é de quem PODE e o teste falha no que não
 // conhece (ALE-301).
 func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
-	const oFunil = "domain/sheet/pools.go"
+	const funnelFile = "domain/sheet/pools.go"
 
 	// As queries que tocam o estado vital. Eram sete: cinco escreviam as quatro
 	// colunas de `characters`, e elas saíram na 00015 junto com as queries. O que
 	// resta é o DANO, que é o que se guarda. Mexeu no `query.sql`? Esta lista
 	// acompanha, e o `TestEveryVitalQueryIsKnownToTheFunnelGuard` cobra.
-	escritasVitais := map[string]bool{
+	vitalWrites := map[string]bool{
 		"SaveCharacterDamage": true, "ClearCharacterDamage": true,
 	}
 
-	raiz, err := filepath.Abs("..")
+	root, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatalf("achar a raiz: %v", err)
 	}
-	conjunto := token.NewFileSet()
-	medidos, chamadasNoFunil := 0, 0
-	err = filepath.WalkDir(raiz, func(caminho string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") ||
-			strings.HasSuffix(caminho, "_templ.go") {
+	set := token.NewFileSet()
+	measured, funnelCalls := 0, 0
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") ||
+			strings.HasSuffix(path, "_templ.go") {
 			return err
 		}
-		rel, _ := filepath.Rel(raiz, caminho)
+		rel, _ := filepath.Rel(root, path)
 		if strings.HasPrefix(rel, "infra/db/sqlcgen") || strings.HasSuffix(rel, "vital_write_test.go") {
 			return nil
 		}
-		arquivo, err := parser.ParseFile(conjunto, caminho, nil, 0)
+		file, err := parser.ParseFile(set, path, nil, 0)
 		if err != nil {
 			return err
 		}
-		medidos++
-		ast.Inspect(arquivo, func(n ast.Node) bool {
-			chamada, ok := n.(*ast.CallExpr)
+		measured++
+		ast.Inspect(file, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
 			if !ok {
 				return true
 			}
-			alvo, ok := chamada.Fun.(*ast.SelectorExpr)
-			if !ok || !escritasVitais[alvo.Sel.Name] {
+			target, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok || !vitalWrites[target.Sel.Name] {
 				return true
 			}
-			if rel == oFunil {
-				chamadasNoFunil++
+			if rel == funnelFile {
+				funnelCalls++
 				return true
 			}
 			t.Errorf("%s:%d chama %s fora do funil.\n"+
@@ -82,7 +82,7 @@ func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
 				"que a próxima leitura do agregado joga fora, sem erro nenhum. Use o\n"+
 				"`sheet.ApplyToPools` (ou `ApplyToLoadedPools`, se já tiver a ficha) e\n"+
 				"devolva o atual que a regra do seu gesto decidiu — o %s grava.",
-				rel, conjunto.Position(chamada.Pos()).Line, alvo.Sel.Name, oFunil)
+				rel, set.Position(call.Pos()).Line, target.Sel.Name, funnelFile)
 			return true
 		})
 		return nil
@@ -93,12 +93,12 @@ func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
 
 	// O DENOMINADOR, nas duas pontas: uma varredura que não abriu arquivo nenhum
 	// e um funil que deixou de escrever se parecem com "nada reprovou".
-	if medidos < 200 {
-		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", medidos)
+	if measured < 200 {
+		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", measured)
 	}
-	if chamadasNoFunil < 2 {
+	if funnelCalls < 2 {
 		t.Fatalf("o funil chama só %d das escritas vitais — se ele parou de gravar, "+
-			"este guarda estaria verde sobre um repositório que não persiste PV", chamadasNoFunil)
+			"este guarda estaria verde sobre um repositório que não persiste PV", funnelCalls)
 	}
 }
 
@@ -109,37 +109,37 @@ func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
 // Aqui a pergunta é invertida: o que o SQL escreve é conferido contra o que o
 // guarda conhece.
 func TestEveryVitalQueryIsKnownToTheFunnelGuard(t *testing.T) {
-	conhecidas := map[string]bool{
+	known := map[string]bool{
 		"SaveCharacterDamage": true, "ClearCharacterDamage": true,
 	}
-	bruto, err := os.ReadFile(filepath.Join("..", "infra", "db", "query.sql"))
+	raw, err := os.ReadFile(filepath.Join("..", "infra", "db", "query.sql"))
 	if err != nil {
 		t.Fatalf("ler o query.sql: %v", err)
 	}
 
-	medidas := 0
-	for _, bloco := range strings.Split(string(bruto), "-- name: ")[1:] {
-		nome, _, _ := strings.Cut(bloco, " ")
-		corpo := strings.ToLower(bloco)
-		escreve := strings.Contains(corpo, "update ") ||
-			strings.Contains(corpo, "insert ") || strings.Contains(corpo, "delete ")
-		if !escreve || !touchesVitalState(corpo) {
+	measured := 0
+	for _, block := range strings.Split(string(raw), "-- name: ")[1:] {
+		name, _, _ := strings.Cut(block, " ")
+		body := strings.ToLower(block)
+		writes := strings.Contains(body, "update ") ||
+			strings.Contains(body, "insert ") || strings.Contains(body, "delete ")
+		if !writes || !touchesVitalState(body) {
 			continue
 		}
-		medidas++
-		if !conhecidas[nome] {
+		measured++
+		if !known[name] {
 			t.Errorf("a query %q escreve num campo vital e o "+
 				"`TestEveryVitalWriteGoesThroughTheFunnel` não a conhece — "+
 				"ele varreria a árvore inteira sem procurar por ela.\n"+
-				"Ponha o nome na lista de lá (ou aqui, se ela não for um gesto).", nome)
+				"Ponha o nome na lista de lá (ou aqui, se ela não for um gesto).", name)
 		}
 	}
 	// Duas, e o piso é o número exato: depois da 00015 não existe mais campo
 	// vital em `characters`, então tudo o que o `query.sql` pode escrever é a
 	// tabela do dano. Um piso maior só voltaria com uma coluna nova.
-	if medidas != 2 {
+	if measured != 2 {
 		t.Fatalf("o guarda achou %d queries vitais no query.sql, e são 2 (o dano) — "+
-			"ou nasceu uma escrita nova, ou o formato do arquivo mudou e ele parou de ler", medidas)
+			"ou nasceu uma escrita nova, ou o formato do arquivo mudou e ele parou de ler", measured)
 	}
 }
 
@@ -154,8 +154,8 @@ func touchesVitalState(lowercaseBody string) bool {
 	if strings.Contains(lowercaseBody, "character_damage") {
 		return true
 	}
-	for _, campo := range []string{"hpcurrent", "hpmax", "mpcurrent", "mpmax", "hpdamage", "mpspent"} {
-		if strings.Contains(lowercaseBody, campo) {
+	for _, field := range []string{"hpcurrent", "hpmax", "mpcurrent", "mpmax", "hpdamage", "mpspent"} {
+		if strings.Contains(lowercaseBody, field) {
 			return true
 		}
 	}

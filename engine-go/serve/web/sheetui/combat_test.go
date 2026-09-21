@@ -34,23 +34,23 @@ import (
 //
 // Os dois ramos importam: com Destreza aplicada e com ela bloqueada.
 func TestTheDefenseRowsAddUpToTheTotal(t *testing.T) {
-	casos := []struct {
-		nome     string
-		aplicada bool
+	cases := []struct {
+		name    string
+		applied bool
 	}{
 		{"com a Destreza aplicada", true},
 		{"com a Destreza bloqueada por armadura pesada", false},
 	}
-	for _, caso := range casos {
-		t.Run(caso.nome, func(t *testing.T) {
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
 			sheet := engine.ComputedSheet{
 				Defense: engine.DefenseBreakdown{
-					Base: 10, Total: 15, VsMelee: 15, VsRanged: 15, DexApplied: caso.aplicada,
+					Base: 10, Total: 15, VsMelee: 15, VsRanged: 15, DexApplied: tc.applied,
 					Contributions: []engine.BreakdownContribution{{Source: "Armadura", Amount: 5}},
 				},
 				Attributes: map[string]engine.AttributeBreakdown{"dexterity": {Total: 3}},
 			}
-			if caso.aplicada {
+			if tc.applied {
 				// O motor embute a Destreza no `Base`; o total sobe junto.
 				sheet.Defense.Base = 13
 				sheet.Defense.Total = 18
@@ -58,8 +58,8 @@ func TestTheDefenseRowsAddUpToTheTotal(t *testing.T) {
 			}
 
 			soma := 0
-			for _, linha := range defenseRows(sheet) {
-				soma += rowValue(t, linha.Value)
+			for _, row := range defenseRows(sheet) {
+				soma += rowValue(t, row.Value)
 			}
 			if soma != sheet.Defense.Total {
 				t.Errorf("as linhas somam %d e a caixa mostra %d: o diálogo mente sobre de onde vem a Defesa",
@@ -79,11 +79,11 @@ func TestBlockedDexterityComesOutAsADimmedRow(t *testing.T) {
 		Defense:    engine.DefenseBreakdown{Base: 10, Total: 10, VsMelee: 10, VsRanged: 10, DexApplied: false},
 		Attributes: map[string]engine.AttributeBreakdown{"dexterity": {Total: 3}},
 	}
-	linhas := defenseRows(sheet)
-	if len(linhas) < 2 {
-		t.Fatalf("a Defesa saiu com %d linhas: nem a base e a Destreza estão lá", len(linhas))
+	rows := defenseRows(sheet)
+	if len(rows) < 2 {
+		t.Fatalf("a Defesa saiu com %d linhas: nem a base e a Destreza estão lá", len(rows))
 	}
-	dex := linhas[1]
+	dex := rows[1]
 	if !strings.Contains(dex.Label, "bloqueada por armadura pesada") {
 		t.Errorf("a linha da Destreza é %q e não diz que ela está bloqueada", dex.Label)
 	}
@@ -102,27 +102,27 @@ func TestBlockedDexterityComesOutAsADimmedRow(t *testing.T) {
 // conjurador de mãos livres não vê o bloco — para ele o assunto é a tripla
 // mágica, e um "nenhuma arma empunhada" seria ruído sobre o que ele nunca teve.
 func TestTheWeaponBlockFollowsWhoWieldsAndWhoCasts(t *testing.T) {
-	umaArma := []engine.WeaponCard{{Name: "Machado", Skill: "Luta", Damage: "1d12", CritRange: 20, CritMult: 3}}
-	casos := []struct {
-		nome        string
-		cards       []engine.WeaponCard
-		caster      bool
-		querBloco   bool
-		querCartoes int
+	oneWeapon := []engine.WeaponCard{{Name: "Machado", Skill: "Luta", Damage: "1d12", CritRange: 20, CritMult: 3}}
+	cases := []struct {
+		name      string
+		cards     []engine.WeaponCard
+		caster    bool
+		wantBlock bool
+		wantCards int
 	}{
-		{"o marcial que empunha vê o cartão", umaArma, false, true, 1},
+		{"o marcial que empunha vê o cartão", oneWeapon, false, true, 1},
 		{"o marcial de mãos livres vê o texto de vazio", nil, false, true, 0},
-		{"o conjurador que empunha vê o cartão", umaArma, true, true, 1},
+		{"o conjurador que empunha vê o cartão", oneWeapon, true, true, 1},
 		{"o conjurador de mãos livres não vê o bloco", nil, true, false, 0},
 	}
-	for _, caso := range casos {
-		t.Run(caso.nome, func(t *testing.T) {
-			painel := panelForCombat(engine.ComputedSheet{}, caso.cards, caso.caster)
-			if painel.ShowWeapons != caso.querBloco {
-				t.Errorf("ShowWeapons = %v, quer %v", painel.ShowWeapons, caso.querBloco)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			panel := panelForCombat(engine.ComputedSheet{}, tc.cards, tc.caster)
+			if panel.ShowWeapons != tc.wantBlock {
+				t.Errorf("ShowWeapons = %v, quer %v", panel.ShowWeapons, tc.wantBlock)
 			}
-			if len(painel.Weapons) != caso.querCartoes {
-				t.Errorf("saíram %d cartões, quer %d", len(painel.Weapons), caso.querCartoes)
+			if len(panel.Weapons) != tc.wantCards {
+				t.Errorf("saíram %d cartões, quer %d", len(panel.Weapons), tc.wantCards)
 			}
 		})
 	}
@@ -145,11 +145,11 @@ func TestTheSpellTripletOnlyShowsForWhoCasts(t *testing.T) {
 }
 
 // rowValue lê o "+5" de uma linha de volta para inteiro.
-func rowValue(t *testing.T, texto string) int {
+func rowValue(t *testing.T, text string) int {
 	t.Helper()
 	var n int
-	if _, err := fmt.Sscanf(strings.Replace(texto, "+", "", 1), "%d", &n); err != nil {
-		t.Fatalf("a linha tem o valor %q, que não é um número com sinal", texto)
+	if _, err := fmt.Sscanf(strings.Replace(text, "+", "", 1), "%d", &n); err != nil {
+		t.Fatalf("a linha tem o valor %q, que não é um número com sinal", text)
 	}
 	return n
 }

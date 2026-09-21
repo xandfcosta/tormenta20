@@ -80,13 +80,13 @@ func loadTheActivations() {
 }
 
 func Activations() []Activation {
-	bruto, ok := catalog.Resource("activations")
+	raw, ok := catalog.Resource("activations")
 	if !ok {
 		return nil
 	}
-	var lista []Activation
-	_ = json.Unmarshal(bruto, &lista)
-	return lista
+	var list []Activation
+	_ = json.Unmarshal(raw, &list)
+	return list
 }
 
 // ActivationOf acha a ativação de um poder pelo ID e, se falhar, pelo NOME.
@@ -99,16 +99,16 @@ func Activations() []Activation {
 // E há o caso dos DEGRAUS: "Inspiração +1" e "Fúria +3" são linhas de mesma
 // postura, e o nome delas traz o sufixo do degrau. Sem tirar o sufixo, cada
 // degrau cairia como passiva silenciosa em vez de resolver para a postura.
-func ActivationOf(id, nome string) *Activation {
+func ActivationOf(id, name string) *Activation {
 	loadTheActivations()
-	if spec, tem := ativacoesPorID[id]; tem && id != "" {
+	if spec, found := ativacoesPorID[id]; found && id != "" {
 		return &spec
 	}
-	if spec, tem := ativacoesPorNome[nome]; tem {
+	if spec, found := ativacoesPorNome[name]; found {
 		return &spec
 	}
-	if semDegrau := suffixStepSem(nome); semDegrau != nome {
-		if spec, tem := ativacoesPorNome[semDegrau]; tem {
+	if noStep := suffixStepSem(name); noStep != name {
+		if spec, found := ativacoesPorNome[noStep]; found {
 			return &spec
 		}
 	}
@@ -116,16 +116,16 @@ func ActivationOf(id, nome string) *Activation {
 }
 
 // suffixStepSem tira o " +N" do fim de "Inspiração +2".
-func suffixStepSem(nome string) string {
-	if len(nome) < 4 {
-		return nome
+func suffixStepSem(name string) string {
+	if len(name) < 4 {
+		return name
 	}
-	fim := len(nome)
-	for fim > 0 && nome[fim-1] >= '0' && nome[fim-1] <= '9' {
-		fim--
+	end := len(name)
+	for end > 0 && name[end-1] >= '0' && name[end-1] <= '9' {
+		end--
 	}
-	if fim == len(nome) || fim < 2 || nome[fim-1] != '+' || nome[fim-2] != ' ' {
-		return nome
+	if end == len(name) || end < 2 || name[end-1] != '+' || name[end-2] != ' ' {
+		return name
 	}
-	return nome[:fim-2]
+	return name[:end-2]
 }

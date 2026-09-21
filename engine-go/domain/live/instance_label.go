@@ -26,11 +26,11 @@ func speciesOf(label string) (string, int) {
 	if match == nil {
 		return strings.TrimSpace(label), 0
 	}
-	numero, err := strconv.Atoi(match[2])
+	number, err := strconv.Atoi(match[2])
 	if err != nil {
 		return strings.TrimSpace(label), 0
 	}
-	return match[1], numero
+	return match[1], number
 }
 
 // NextInstanceLabelAmong é a regra sozinha, sobre uma lista de rótulos — o
@@ -38,22 +38,22 @@ func speciesOf(label string) (string, int) {
 // adicionar quatro ogros à iniciativa tem exatamente o mesmo problema que
 // duplicar um zumbi no mapa, e resolvê-lo duas vezes é como as duas telas passam
 // a numerar diferente.
-func NextInstanceLabelAmong(usados []string, label string) string {
-	especie, _ := speciesOf(label)
-	ocupados := map[int]bool{}
-	for _, outro := range usados {
-		outra, numero := speciesOf(outro)
-		if outra != especie {
+func NextInstanceLabelAmong(used []string, label string) string {
+	species, _ := speciesOf(label)
+	occupied := map[int]bool{}
+	for _, other := range used {
+		another, number := speciesOf(other)
+		if another != species {
 			continue
 		}
-		if numero == 0 {
-			numero = 1 // quem está sem número ocupa o 1
+		if number == 0 {
+			number = 1 // quem está sem número ocupa o 1
 		}
-		ocupados[numero] = true
+		occupied[number] = true
 	}
-	for numero := 1; ; numero++ {
-		if !ocupados[numero] {
-			return fmt.Sprintf("%s %d", especie, numero)
+	for number := 1; ; number++ {
+		if !occupied[number] {
+			return fmt.Sprintf("%s %d", species, number)
 		}
 	}
 }
@@ -69,7 +69,7 @@ func NextInstanceLabelAmong(usados []string, label string) string {
 // Devolve 0 quando não há sufixo. "Recruta Nv1 Simples" não tem instância: o
 // número está no MEIO do nome, e separar por qualquer dígito faria a cópia
 // nascer como outra espécie.
-func Species(rotulo string) (string, int) { return speciesOf(rotulo) }
+func Species(label string) (string, int) { return speciesOf(label) }
 
 // NewUUID gera um id v4 aleatório para entrada de iniciativa. Injetado no store
 // para o teste trocar por um gerador determinístico.

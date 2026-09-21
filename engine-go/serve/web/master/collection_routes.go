@@ -27,20 +27,20 @@ func (s Scene) handleCollection(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := ui.RenderFragment(r.Context(), collectionScene(v))
+		fragment, err := ui.RenderFragment(r.Context(), collectionScene(v))
 		if err != nil {
 			return
 		}
-		_ = sse.PatchElements(fragmento)
+		_ = sse.PatchElements(fragment)
 		return
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo:        tabLabel(v.Aba) + " · Mesa do Mestre · Tormenta 20",
-		Forma:         ui.ShellDense,
-		Voltar:        "/",
-		VoltarRotulo:  "Hub",
-		TituloVisivel: "Mesa do Mestre",
+		Title:        tabLabel(v.Aba) + " · Mesa do Mestre · Tormenta 20",
+		Shape:        ui.ShellDense,
+		Back:         "/",
+		BackLabel:    "Hub",
+		VisibleTitle: "Mesa do Mestre",
 	}, masterBody(v.Aba, collectionScene(v)))
 }
 
@@ -48,13 +48,13 @@ func (s Scene) handleCollection(w http.ResponseWriter, r *http.Request) {
 // na cena das condições não filtra nada, e aceitá-lo faria a cena carregar um
 // estado que ela não sabe desenhar.
 func filtersFromURL(q url.Values, aba string) map[string][]string {
-	fora := map[string][]string{}
+	outside := map[string][]string{}
 	for _, f := range filtersForTab(knownTab(aba)) {
-		if valores := q[f.Chave]; len(valores) > 0 {
-			fora[f.Chave] = valores
+		if values := q[f.Key]; len(values) > 0 {
+			outside[f.Key] = values
 		}
 	}
-	return fora
+	return outside
 }
 
 // collectionCriteriaFromRequest lê a busca e a ENTRADA da URL na carga fria e
@@ -76,37 +76,37 @@ func collectionCriteriaFromRequest(r *http.Request) collectionCriteria {
 	// que nunca é alcançada não avisa que não funciona.
 	aba := path.Base(r.URL.Path)
 	c := collectionCriteria{
-		Term: q.Get("busca"), Aba: aba, Entrada: q.Get("entrada"),
-		Filtros: filtersFromURL(q, aba),
+		Term: q.Get("busca"), Aba: aba, Entry: q.Get("entrada"),
+		Filters: filtersFromURL(q, aba),
 	}
 
 	// Os FILTROS vêm num mapa cru e não numa struct: as chaves dependem da aba
 	// (`circulo` só existe em magias), e uma struct com os seis campos faria
 	// toda cena declarar os filtros das outras.
-	var todos map[string]json.RawMessage
-	if err := datastar.ReadSignals(r, &todos); err == nil {
+	var all map[string]json.RawMessage
+	if err := datastar.ReadSignals(r, &all); err == nil {
 		for _, f := range filtersForTab(knownTab(aba)) {
-			var valores []string
-			if bruto, tem := todos[f.Chave]; tem && json.Unmarshal(bruto, &valores) == nil {
-				c.Filtros[f.Chave] = valores
+			var values []string
+			if raw, found := all[f.Key]; found && json.Unmarshal(raw, &values) == nil {
+				c.Filters[f.Key] = values
 			}
 		}
 	}
 
-	sinais := struct {
+	signals := struct {
 		Term *string `json:"search"`
 		Aba  *string `json:"aba"`
 	}{}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return c
 	}
 	// Ponteiro para separar "não veio" de "veio vazio": busca APAGADA é valor
 	// legítimo, e tratá-la como ausente ressuscitaria o texto da URL.
-	if sinais.Term != nil {
-		c.Term = *sinais.Term
+	if signals.Term != nil {
+		c.Term = *signals.Term
 	}
-	if sinais.Aba != nil {
-		c.Aba = *sinais.Aba
+	if signals.Aba != nil {
+		c.Aba = *signals.Aba
 	}
 	return c
 }

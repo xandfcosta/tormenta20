@@ -45,7 +45,7 @@ func TestNoDataShowNodeIsBornVisible(t *testing.T) {
 	// atravessa o valor de um atributo que contenha `>` — e eles contêm: todo
 	// `data-on:` deste repositório carrega expressão com `>` e `&&`.
 	no := regexp.MustCompile(`<(\w+)((?:[^<>"]|"[^"]*")*?)>`)
-	classe := regexp.MustCompile(`class="([^"]*)"`)
+	class := regexp.MustCompile(`class="([^"]*)"`)
 
 	// `data-show="$x"` PURO — sem negação e sem operador — quer dizer "escondido
 	// até o sinal ficar verdadeiro", e todos os seis sinais assim deste
@@ -57,31 +57,31 @@ func TestNoDataShowNodeIsBornVisible(t *testing.T) {
 	// caiu de 16 nós julgáveis para 13 — e teria passado VERDE se o piso do
 	// denominador não estivesse ali. É a mesma cegueira do `TestNoTableSignalIsDeclaredTwice`,
 	// no mesmo dia: parser que não entende a forma nova mede menos e não reclama.
-	sinalPuro := regexp.MustCompile(`^\$[a-z0-9_]+$`)
+	rawSignal := regexp.MustCompile(`^\$[a-z0-9_]+$`)
 
-	var candidatos, arquivosLidos int
-	err := filepath.WalkDir("..", func(nome string, entrada fs.DirEntry, err error) error {
+	var candidates, filesRead int
+	err := filepath.WalkDir("..", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() {
-			if entrada.Name() == "node_modules" || entrada.Name() == ".git" {
+		if entry.IsDir() {
+			if entry.Name() == "node_modules" || entry.Name() == ".git" {
 				return fs.SkipDir
 			}
 			return nil
 		}
-		if !strings.HasSuffix(nome, ".templ") {
+		if !strings.HasSuffix(name, ".templ") {
 			return nil
 		}
-		arquivosLidos++
-		bruto, err := os.ReadFile(nome)
+		filesRead++
+		raw, err := os.ReadFile(name)
 		if err != nil {
 			return err
 		}
-		texto := strings.Join(semComentario(strings.Split(string(bruto), "\n")), "\n")
-		for _, m := range no.FindAllStringSubmatchIndex(texto, -1) {
-			atributos := texto[m[4]:m[5]]
-			if !strings.Contains(atributos, "data-show") {
+		text := strings.Join(semComentario(strings.Split(string(raw), "\n")), "\n")
+		for _, m := range no.FindAllStringSubmatchIndex(text, -1) {
+			attributes := text[m[4]:m[5]]
+			if !strings.Contains(attributes, "data-show") {
 				continue
 			}
 			// A CLASSE é opcional, e isto foi um furo: a primeira versão exigia
@@ -89,29 +89,29 @@ func TestNoDataShowNodeIsBornVisible(t *testing.T) {
 			// sem classe nenhuma — que pisca igual — passava por baixo do guarda.
 			// Só a regra da SOBREPOSIÇÃO precisa da classe; a do sinal puro não.
 			var tokens []string
-			if c := classe.FindStringSubmatch(atributos); c != nil {
+			if c := class.FindStringSubmatch(attributes); c != nil {
 				tokens = strings.Fields(c[1])
 			}
 			// SOBREPOSIÇÃO é o que sai do fluxo E cobre: fora do fluxo sozinho
 			// não basta (um crachá `absolute` no canto de um cartão não cobre
 			// nada), e é por isso que o `inset-0` ou uma camada `z-` entram na
 			// conta.
-			cobre := (contem(tokens, "fixed") || contem(tokens, "absolute")) &&
+			covers := (contem(tokens, "fixed") || contem(tokens, "absolute")) &&
 				(contem(tokens, "inset-0") || comPrefixo(tokens, "z-"))
-			mostra := regexp.MustCompile(`data-show="([^"]*)"`).FindStringSubmatch(atributos)
-			puro := mostra != nil && sinalPuro.MatchString(strings.TrimSpace(mostra[1]))
-			if !cobre && !puro {
+			shows := regexp.MustCompile(`data-show="([^"]*)"`).FindStringSubmatch(attributes)
+			pure := shows != nil && rawSignal.MatchString(strings.TrimSpace(shows[1]))
+			if !covers && !pure {
 				continue
 			}
-			candidatos++
-			if strings.Contains(atributos, "display:none") || contem(tokens, "hidden") {
+			candidates++
+			if strings.Contains(attributes, "display:none") || contem(tokens, "hidden") {
 				continue
 			}
-			linha := strings.Count(texto[:m[0]], "\n") + 1
+			row := strings.Count(text[:m[0]], "\n") + 1
 			t.Errorf("%s:%d — <%s> se esconde SÓ pelo `data-show`: ele nasce visível e pinta até o "+
 				"Datastar chegar (medido: até 30 quadros). "+
 				"Ponha `style=\"display:none\"` ao lado, como o `web/table/notes.templ` faz.",
-				nome, linha, texto[m[2]:m[3]])
+				name, row, text[m[2]:m[3]])
 		}
 		return nil
 	})
@@ -122,10 +122,10 @@ func TestNoDataShowNodeIsBornVisible(t *testing.T) {
 	// O DENOMINADOR. Sem ele, um regex que parou de casar e um repositório sem
 	// sobreposição nenhuma dizem a mesma coisa — e este guarda inteiro é uma
 	// afirmação de AUSÊNCIA.
-	if arquivosLidos < 40 {
-		t.Fatalf("o guarda leu só %d arquivos `.templ`: a caminhada parou de achar as cenas", arquivosLidos)
+	if filesRead < 40 {
+		t.Fatalf("o guarda leu só %d arquivos `.templ`: a caminhada parou de achar as cenas", filesRead)
 	}
-	if candidatos < 15 {
-		t.Fatalf("o guarda achou só %d nós que ele sabe julgar: o padrão parou de casar e o verde não significa nada", candidatos)
+	if candidates < 15 {
+		t.Fatalf("o guarda achou só %d nós que ele sabe julgar: o padrão parou de casar e o verde não significa nada", candidates)
 	}
 }

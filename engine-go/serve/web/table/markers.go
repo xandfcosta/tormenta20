@@ -32,16 +32,16 @@ func (s Scene) MarkerRoutes(r chi.Router) {
 // A LETRA vem do motor (`NextMarkerLetter`) e não da tela: duas telas
 // escolhendo letra por conta própria é como nasce o segundo "C" no mesmo mapa.
 func marcaOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
-	casa, err := squareOnly(c.R)
+	square, err := squareOnly(c.R)
 	if err != nil {
 		return nil, err
 	}
-	b := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID)
+	b := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
 	if b == nil {
 		return nil, errors.New("não há tabuleiro aberto para marcar")
 	}
-	return st.deps.Boards().AddMarker(c.R.Context(), c.SessionID, c.TabuleiroID, board.BoardMarker{
-		X: casa.X, Y: casa.Y,
+	return st.deps.Boards().AddMarker(c.R.Context(), c.SessionID, c.BoardID, board.BoardMarker{
+		X: square.X, Y: square.Y,
 		Text:  board.NextMarkerLetter(b.Markers),
 		Color: board.DefaultMarkerColor(),
 		// ESCONDIDO ao nascer, e é a razão de o marcador existir.
@@ -55,38 +55,38 @@ func marcaOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 // demais precisa poder esconder de volta, e um segundo botão para desfazer o
 // primeiro seria a mesma decisão em dois lugares.
 func revealMarker(st Scene, c commandCtx) (*board.BoardState, error) {
-	marcador, err := urlMarker(st, c)
+	marker, err := urlMarker(st, c)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().UpdateMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID,
-		board.MarkerReveal(!marcador.Hidden))
+	return st.deps.Boards().UpdateMarker(c.R.Context(), c.SessionID, c.BoardID, marker.ID,
+		board.MarkerReveal(!marker.Hidden))
 }
 
 // paintMarker troca a cor.
 func paintMarker(st Scene, c commandCtx) (*board.BoardState, error) {
-	marcador, err := urlMarker(st, c)
+	marker, err := urlMarker(st, c)
 	if err != nil {
 		return nil, err
 	}
-	cor := chi.URLParam(c.R, "cor")
+	color := chi.URLParam(c.R, "cor")
 	// A RECUSA é aqui e explícita, apesar de o `UpdateMarker` ignorar cor
 	// desconhecida: ignorar em silêncio é um clique que não faz nada e não diz
 	// nada, que o mestre lê como tela travada.
-	if !board.KnownMarkerColor(cor) {
-		return nil, fmt.Errorf("a cor %q não existe; as do mapa são %s", cor, coresEmPortugues())
+	if !board.KnownMarkerColor(color) {
+		return nil, fmt.Errorf("a cor %q não existe; as do mapa são %s", color, coresEmPortugues())
 	}
-	return st.deps.Boards().UpdateMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID,
-		board.NewMarkerColor(cor))
+	return st.deps.Boards().UpdateMarker(c.R.Context(), c.SessionID, c.BoardID, marker.ID,
+		board.NewMarkerColor(color))
 }
 
 // eraseMarker tira o ponto do mapa.
 func eraseMarker(st Scene, c commandCtx) (*board.BoardState, error) {
-	marcador, err := urlMarker(st, c)
+	marker, err := urlMarker(st, c)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().RemoveMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID)
+	return st.deps.Boards().RemoveMarker(c.R.Context(), c.SessionID, c.BoardID, marker.ID)
 }
 
 // urlMarker acha o marcador que o gesto aponta.
@@ -97,7 +97,7 @@ func eraseMarker(st Scene, c commandCtx) (*board.BoardState, error) {
 // de mutação silenciosa que não acha ninguém.
 func urlMarker(st Scene, c commandCtx) (board.BoardMarker, error) {
 	id := chi.URLParam(c.R, "id")
-	b := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID)
+	b := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
 	if b == nil {
 		return board.BoardMarker{}, errors.New("não há tabuleiro aberto")
 	}
@@ -112,12 +112,12 @@ func urlMarker(st Scene, c commandCtx) (board.BoardMarker, error) {
 // coresEmPortugues lista as cores para a frase da recusa — a mensagem tem de
 // dizer o que era esperado, não só o que veio errado.
 func coresEmPortugues() string {
-	nomes := ""
+	names := ""
 	for i, c := range board.MarkerColors {
 		if i > 0 {
-			nomes += ", "
+			names += ", "
 		}
-		nomes += c.Rotulo
+		names += c.Label
 	}
-	return nomes
+	return names
 }

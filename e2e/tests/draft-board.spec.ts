@@ -18,23 +18,23 @@ test.use({ storageState: '.auth/user.json' })
 /** Um lugar do acervo com as peças pedidas, e como se livrar dele. */
 async function aDraftWith(
   page: Page,
-  pecas: Array<{ nome: string; x: number; y: number }>,
+  tokens: Array<{ nome: string; x: number; y: number }>,
 ): Promise<{ endereco: string; apagar: () => Promise<void> }> {
-  const criada = await page.request.post('/api/campanhas', {
+  const created = await page.request.post('/api/campanhas', {
     data: { name: `E2E rascunho ${Date.now()}-${Math.floor(Math.random() * 1e6)}`, description: 'ALE-299' },
   })
-  expect(criada.ok(), `criar a campanha: ${criada.status()}`).toBeTruthy()
-  const campanha = (await criada.json()).id as number
+  expect(created.ok(), `criar a campanha: ${created.status()}`).toBeTruthy()
+  const campaign = (await created.json()).id as number
 
-  const nova = await page.request.post(`/campanhas/${campanha}/lugares/novo`, {
+  const nova = await page.request.post(`/campanhas/${campaign}/lugares/novo`, {
     form: { name: 'Cripta do E2E', ground: 'stone' },
     maxRedirects: 0,
   })
-  const endereco = nova.headers().location
-  expect(endereco, `criar o lugar: ${nova.status()}`).toContain('/lugares/')
+  const url = nova.headers().location
+  expect(url, `criar o lugar: ${nova.status()}`).toContain('/lugares/')
 
-  for (const p of pecas) {
-    const posta = await page.request.post(`${endereco}/tabuleiro/pecas/nova`, {
+  for (const p of tokens) {
+    const placed = await page.request.post(`${url}/tabuleiro/pecas/nova`, {
       data: {
         from: { X: p.x, Y: p.y },
         new_token_name: p.nome,
@@ -42,17 +42,17 @@ async function aDraftWith(
         new_token_look: 'object',
       },
     })
-    expect(posta.ok(), `pôr a peça ${p.nome}: ${posta.status()}`).toBeTruthy()
+    expect(placed.ok(), `pôr a peça ${p.nome}: ${placed.status()}`).toBeTruthy()
   }
-  await page.goto(endereco)
+  await page.goto(url)
   await page.locator('.board-scene').waitFor({ timeout: 10_000 })
   return {
-    endereco,
+    endereco: url,
     // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO: um `finally` que estoura
     // substitui o erro de verdade.
     apagar: async () => {
       try {
-        await page.request.delete(`/api/campanhas/${campanha}`)
+        await page.request.delete(`/api/campanhas/${campaign}`)
       } catch {
         // O lugar fica para trás. É o preço certo.
       }
@@ -83,7 +83,7 @@ async function theSquareSide(page: Page) {
 }
 
 test('no rascunho, arrastar a segunda peça move a SEGUNDA — e nenhuma outra', async ({ page }) => {
-  const { apagar } = await aDraftWith(page, [
+  const { apagar: remove } = await aDraftWith(page, [
     { nome: 'Alfa', x: 3, y: 3 },
     { nome: 'Beta', x: 8, y: 3 },
   ])
@@ -92,15 +92,15 @@ test('no rascunho, arrastar a segunda peça move a SEGUNDA — e nenhuma outra',
     expect(await whereEachTokenIs(page)).toEqual(['Alfa em 3, 3', 'Beta em 8, 3'])
 
     const beta = page.locator('.board-token').nth(1)
-    const caixa = await beta.boundingBox()
-    if (!caixa) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
-    const quadrado = await theSquareSide(page)
-    const meio = { x: caixa.x + caixa.width / 2, y: caixa.y + caixa.height / 2 }
+    const box = await beta.boundingBox()
+    if (!box) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
+    const square = await theSquareSide(page)
+    const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
 
-    await page.mouse.move(meio.x, meio.y)
+    await page.mouse.move(middle.x, middle.y)
     await page.mouse.down()
     // PASSOS INTERMEDIÁRIOS: um salto direto não atravessa casa nenhuma.
-    for (let i = 1; i <= 6; i++) await page.mouse.move(meio.x + (quadrado * 2 * i) / 6, meio.y)
+    for (let i = 1; i <= 6; i++) await page.mouse.move(middle.x + (square * 2 * i) / 6, middle.y)
 
     // QUEM DESLIZA SOB O DEDO, e este pedaço é metade do defeito: com ele no
     // lugar quem ganha a classe é o ALFA, que ninguém pegou — a peça errada
@@ -112,7 +112,7 @@ test('no rascunho, arrastar a segunda peça move a SEGUNDA — e nenhuma outra',
       .poll(() => whereEachTokenIs(page), { timeout: 5_000 })
       .toEqual(['Alfa em 3, 3', 'Beta em 10, 3'])
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -123,20 +123,20 @@ test('no rascunho, arrastar a segunda peça move a SEGUNDA — e nenhuma outra',
  * que é exatamente por que ele sobreviveu.
  */
 test('no rascunho com UMA peça, arrastar move essa peça', async ({ page }) => {
-  const { apagar } = await aDraftWith(page, [{ nome: 'Alfa', x: 3, y: 3 }])
+  const { apagar: remove } = await aDraftWith(page, [{ nome: 'Alfa', x: 3, y: 3 }])
   try {
-    const alfa = page.locator('.board-token').first()
-    const caixa = await alfa.boundingBox()
-    if (!caixa) throw new Error('a peça não tem caixa')
-    const quadrado = await theSquareSide(page)
-    const meio = { x: caixa.x + caixa.width / 2, y: caixa.y + caixa.height / 2 }
-    await page.mouse.move(meio.x, meio.y)
+    const alpha = page.locator('.board-token').first()
+    const box = await alpha.boundingBox()
+    if (!box) throw new Error('a peça não tem caixa')
+    const square = await theSquareSide(page)
+    const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+    await page.mouse.move(middle.x, middle.y)
     await page.mouse.down()
-    for (let i = 1; i <= 6; i++) await page.mouse.move(meio.x, meio.y + (quadrado * 2 * i) / 6)
+    for (let i = 1; i <= 6; i++) await page.mouse.move(middle.x, middle.y + (square * 2 * i) / 6)
     expect(await whoIsSlidingNow(page), 'a peça pega não deslizou').toEqual(['Alfa'])
     await page.mouse.up()
     await expect.poll(() => whereEachTokenIs(page), { timeout: 5_000 }).toEqual(['Alfa em 3, 5'])
   } finally {
-    await apagar()
+    await remove()
   }
 })

@@ -17,25 +17,25 @@ const MESA = '/campanhas/1/sessoes/5'
 
 /** As duas telas da mesma mesa, uma por papel. */
 async function asDuasTelas(browser: Browser) {
-  const mestre = await browser.newContext({ storageState: '.auth/user.json' })
-  const jogador = await browser.newContext({ storageState: '.auth/player.json' })
-  const telaDoMestre = await mestre.newPage()
-  const telaDoJogador = await jogador.newPage()
-  await telaDoMestre.goto(MESA)
-  await telaDoJogador.goto(MESA)
+  const gm = await browser.newContext({ storageState: '.auth/user.json' })
+  const player = await browser.newContext({ storageState: '.auth/player.json' })
+  const gmScreen = await gm.newPage()
+  const playerScreen = await player.newPage()
+  await gmScreen.goto(MESA)
+  await playerScreen.goto(MESA)
   // OS DOIS CONECTADOS ANTES DE AGIR. Sem isto o caso mede uma corrida: o
   // mestre agiria antes de o stream do jogador existir, e a ausência do eco
   // seria lida como "não propagou".
-  await expect(telaDoMestre.getByRole('button', { name: /^Abrir a iniciativa/ }).first()).toBeVisible()
-  await expect(telaDoJogador.getByRole('group', { name: 'O que ver na sessão' })).toBeVisible()
+  await expect(gmScreen.getByRole('button', { name: /^Abrir a iniciativa/ }).first()).toBeVisible()
+  await expect(playerScreen.getByRole('group', { name: 'O que ver na sessão' })).toBeVisible()
   return {
-    telaDoMestre,
-    telaDoJogador,
+    telaDoMestre: gmScreen,
+    telaDoJogador: playerScreen,
     // `catch` na limpeza, sempre: fechar contexto pode lançar e SUBSTITUIR o
     // erro de verdade do caso.
     fecha: async () => {
-      await mestre.close().catch(() => {})
-      await jogador.close().catch(() => {})
+      await gm.close().catch(() => {})
+      await player.close().catch(() => {})
     },
   }
 }
@@ -49,14 +49,14 @@ async function asDuasTelas(browser: Browser) {
  * events" no log, que aponta para o lugar errado.
  */
 async function openTheTracker(page: Page) {
-  const gaveta = page.locator('#tracker-drawer')
-  if (await gaveta.getAttribute('open') === null) {
+  const drawer = page.locator('#tracker-drawer')
+  if (await drawer.getAttribute('open') === null) {
     await page
       .getByRole('button', { name: /^Abrir a iniciativa/ })
       .filter({ visible: true })
       .click()
   }
-  await expect(gaveta).toHaveAttribute('open', '')
+  await expect(drawer).toHaveAttribute('open', '')
 }
 
 async function closeTheTracker(page: Page) {
@@ -65,17 +65,17 @@ async function closeTheTracker(page: Page) {
 }
 
 /** Põe um combatente na fila pelo gesto do mestre, e devolve o nome dele. */
-async function poeNaFila(page: Page, nome: string) {
+async function poeNaFila(page: Page, displayName: string) {
   await openTheTracker(page)
   await page.getByRole('button', { name: '+ Combatente' }).click()
-  await page.getByLabel('Nome', { exact: true }).fill(nome)
+  await page.getByLabel('Nome', { exact: true }).fill(displayName)
   await page.getByRole('button', { name: 'Acrescentar' }).click()
-  await expect(page.locator('#tracker-drawer').getByText(nome).first()).toBeVisible()
+  await expect(page.locator('#tracker-drawer').getByText(displayName).first()).toBeVisible()
 }
 
-async function tiraDaFila(page: Page, nome: string) {
+async function tiraDaFila(page: Page, displayName: string) {
   await openTheTracker(page)
-  await page.getByRole('button', { name: `Remover ${nome} da fila` }).click()
+  await page.getByRole('button', { name: `Remover ${displayName} da fila` }).click()
   await closeTheTracker(page)
 }
 
@@ -86,9 +86,9 @@ async function tiraDaFila(page: Page, nome: string) {
  * (p252) e a fila só existe na cena de AÇÃO, que é a que este caso quer.
  */
 async function garanteACena(page: Page) {
-  const iniciar = page.locator('summary[aria-label="Iniciar uma cena"]').filter({ visible: true })
-  if (await iniciar.count()) {
-    await iniciar.first().click()
+  const start = page.locator('summary[aria-label="Iniciar uma cena"]').filter({ visible: true })
+  if (await start.count()) {
+    await start.first().click()
     await page.getByRole('button', { name: 'Iniciar uma cena de Ação' }).filter({ visible: true }).first().click()
   }
   await expect(
@@ -97,52 +97,52 @@ async function garanteACena(page: Page) {
 }
 
 test('cada papel recebe a SUA cena, e não a do outro', async ({ browser }) => {
-  const { telaDoMestre, telaDoJogador, fecha } = await asDuasTelas(browser)
+  const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)
   try {
     // O SELETOR DE SUPERFÍCIE é do jogador: ele escolhe entre a própria ficha, a
     // mesa e o tabuleiro. O mestre vê tudo junto, no palco dele.
     await expect(
-      telaDoJogador.getByRole('group', { name: 'O que ver na sessão' }),
+      playerScreen.getByRole('group', { name: 'O que ver na sessão' }),
       'o jogador não recebeu a cena do jogador',
     ).toBeVisible()
     await expect(
-      telaDoMestre.getByRole('group', { name: 'O que ver na sessão' }),
+      gmScreen.getByRole('group', { name: 'O que ver na sessão' }),
       'o mestre recebeu a cena do JOGADOR',
     ).toHaveCount(0)
 
     // E os COMANDOS são do mestre. A trava é na view (`v.Mestre` nil), então o
     // que se afirma aqui é que ela chegou íntegra até o navegador do jogador.
     await expect(
-      telaDoMestre.getByRole('region', { name: 'Controles do mestre' }).first(),
+      gmScreen.getByRole('region', { name: 'Controles do mestre' }).first(),
       'o mestre não recebeu os controles do mestre',
     ).toBeVisible()
     await expect(
-      telaDoJogador.getByRole('region', { name: 'Controles do mestre' }),
+      playerScreen.getByRole('region', { name: 'Controles do mestre' }),
       'o jogador recebeu os controles do MESTRE',
     ).toHaveCount(0)
   } finally {
-    await fecha()
+    await closes()
   }
 })
 
 test('o que o mestre põe na fila aparece na tela do jogador', async ({ browser }) => {
-  const eco = `Eco de teste ${Date.now()}`
-  const { telaDoMestre, telaDoJogador, fecha } = await asDuasTelas(browser)
+  const echo = `Eco de teste ${Date.now()}`
+  const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)
   try {
-    await garanteACena(telaDoMestre)
+    await garanteACena(gmScreen)
     // O jogador olha a MESA — é onde a fila mora para ele.
-    await telaDoJogador.getByRole('button', { name: 'Mesa', exact: true }).click()
+    await playerScreen.getByRole('button', { name: 'Mesa', exact: true }).click()
 
-    await poeNaFila(telaDoMestre, eco)
-    await closeTheTracker(telaDoMestre)
+    await poeNaFila(gmScreen, echo)
+    await closeTheTracker(gmScreen)
 
     // A tela do jogador não recarrega: o combatente chega pelo stream.
-    await expect(telaDoJogador.getByText(eco).first()).toBeVisible()
+    await expect(playerScreen.getByText(echo).first()).toBeVisible()
 
-    await tiraDaFila(telaDoMestre, eco)
-    await expect(telaDoJogador.getByText(eco)).toHaveCount(0)
+    await tiraDaFila(gmScreen, echo)
+    await expect(playerScreen.getByText(echo)).toHaveCount(0)
   } finally {
-    await fecha()
+    await closes()
   }
 })
 
@@ -157,30 +157,30 @@ test('o que o mestre põe na fila aparece na tela do jogador', async ({ browser 
  * mensagem saiu de um navegador e chegou no outro, na sala certa.
  */
 test('a condição que o mestre aplica aparece na fila do jogador', async ({ browser }) => {
-  const alvo = `Condenado ${Date.now()}`
-  const { telaDoMestre, telaDoJogador, fecha } = await asDuasTelas(browser)
+  const target = `Condenado ${Date.now()}`
+  const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)
   try {
-    await garanteACena(telaDoMestre)
-    await telaDoJogador.getByRole('button', { name: 'Mesa', exact: true }).click()
-    await poeNaFila(telaDoMestre, alvo)
+    await garanteACena(gmScreen)
+    await playerScreen.getByRole('button', { name: 'Mesa', exact: true }).click()
+    await poeNaFila(gmScreen, target)
 
     // O CONTROLE: a linha chegou limpa antes. Sem ele, uma condição herdada de
     // outra corrida faria o caso passar sem nada ter propagado.
-    await expect(telaDoJogador.getByText(alvo).first()).toBeVisible()
-    await expect(telaDoJogador.getByTitle(/Abalado|-2 em testes/).first()).toHaveCount(0)
+    await expect(playerScreen.getByText(target).first()).toBeVisible()
+    await expect(playerScreen.getByTitle(/Abalado|-2 em testes/).first()).toHaveCount(0)
 
-    await telaDoMestre.getByRole('button', { name: `Condições de ${alvo}` }).click()
-    const dialogo = telaDoMestre.locator('#combatant-conditions')
-    await dialogo.getByRole('button', { name: 'Abalado', exact: true }).click()
-    await telaDoMestre.keyboard.press('Escape')
+    await gmScreen.getByRole('button', { name: `Condições de ${target}` }).click()
+    const dialog = gmScreen.locator('#combatant-conditions')
+    await dialog.getByRole('button', { name: 'Abalado', exact: true }).click()
+    await gmScreen.keyboard.press('Escape')
 
     // E a tela do jogador aprende sozinha, sem recarregar. É a issue inteira.
-    await expect(telaDoJogador.getByText('ABALADO').first()).toBeVisible()
+    await expect(playerScreen.getByText('ABALADO').first()).toBeVisible()
 
-    await tiraDaFila(telaDoMestre, alvo)
-    await expect(telaDoJogador.getByText(alvo)).toHaveCount(0)
+    await tiraDaFila(gmScreen, target)
+    await expect(playerScreen.getByText(target)).toHaveCount(0)
   } finally {
-    await fecha()
+    await closes()
   }
 })
 
@@ -193,36 +193,36 @@ test('a condição que o mestre aplica aparece na fila do jogador', async ({ bro
  * segunda leitura passaria verde afirmando só a primeira.
  */
 test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ browser }) => {
-  const eco = `Cortina de teste ${Date.now()}`
-  const { telaDoMestre, telaDoJogador, fecha } = await asDuasTelas(browser)
+  const echo = `Cortina de teste ${Date.now()}`
+  const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)
   try {
-    await garanteACena(telaDoMestre)
-    await telaDoJogador.getByRole('button', { name: 'Mesa', exact: true }).click()
-    await poeNaFila(telaDoMestre, eco)
-    await closeTheTracker(telaDoMestre)
-    await expect(telaDoJogador.getByText(eco).first()).toBeVisible()
+    await garanteACena(gmScreen)
+    await playerScreen.getByRole('button', { name: 'Mesa', exact: true }).click()
+    await poeNaFila(gmScreen, echo)
+    await closeTheTracker(gmScreen)
+    await expect(playerScreen.getByText(echo).first()).toBeVisible()
 
-    await telaDoMestre
+    await gmScreen
       .getByRole('button', { name: 'Encerrar cena' })
       .filter({ visible: true })
       .first()
       .click()
 
-    await expect(telaDoJogador.getByText(eco)).toHaveCount(0)
-    await openTheTracker(telaDoMestre)
+    await expect(playerScreen.getByText(echo)).toHaveCount(0)
+    await openTheTracker(gmScreen)
     await expect(
-      telaDoMestre.locator('#tracker-drawer').getByText(eco).first(),
+      gmScreen.locator('#tracker-drawer').getByText(echo).first(),
       'a fila sumiu da tela do MESTRE: isso é apagar, não redigir',
     ).toBeVisible()
-    await closeTheTracker(telaDoMestre)
+    await closeTheTracker(gmScreen)
 
     // E volta pelo mesmo caminho: a fila estava guardada o tempo todo.
-    await garanteACena(telaDoMestre)
-    await expect(telaDoJogador.getByText(eco).first()).toBeVisible()
+    await garanteACena(gmScreen)
+    await expect(playerScreen.getByText(echo).first()).toBeVisible()
 
-    await tiraDaFila(telaDoMestre, eco)
+    await tiraDaFila(gmScreen, echo)
   } finally {
-    await fecha()
+    await closes()
   }
 })
 
@@ -235,47 +235,47 @@ test('o tabuleiro que o mestre abre aparece na tela do jogador, e a cortina o es
   browser,
 }) => {
   test.setTimeout(90_000)
-  const lugar = `Cripta de teste ${Date.now()}`
-  const oMapa = new RegExp(`Tabuleiro · ${lugar}`)
-  const { telaDoMestre, telaDoJogador, fecha } = await asDuasTelas(browser)
+  const place = `Cripta de teste ${Date.now()}`
+  const theBoard = new RegExp(`Tabuleiro · ${place}`)
+  const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)
   try {
-    await telaDoJogador.getByRole('button', { name: 'Tabuleiro', exact: true }).click()
+    await playerScreen.getByRole('button', { name: 'Tabuleiro', exact: true }).click()
 
     // O terreno pode ter sobrado de outra corrida: encerrar antes é o que faz o
     // caso medir o tabuleiro DELE e não o ambiente.
-    const encerrar = telaDoMestre.getByRole('button', { name: 'Encerrar o tabuleiro' })
-    if (await encerrar.count()) {
-      await encerrar.first().click()
-      await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+    const end = gmScreen.getByRole('button', { name: 'Encerrar o tabuleiro' })
+    if (await end.count()) {
+      await end.first().click()
+      await gmScreen.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
     }
-    await telaDoMestre.getByRole('button', { name: 'Abrir tabuleiro' }).first().click()
-    await telaDoMestre.locator('#new-place-field').fill(lugar)
-    await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Abrir' }).click()
-    await expect(telaDoMestre.getByRole('region', { name: oMapa })).toBeVisible()
+    await gmScreen.getByRole('button', { name: 'Abrir tabuleiro' }).first().click()
+    await gmScreen.locator('#new-place-field').fill(place)
+    await gmScreen.getByRole('dialog').getByRole('button', { name: 'Abrir' }).click()
+    await expect(gmScreen.getByRole('region', { name: theBoard })).toBeVisible()
 
     await expect(
-      telaDoJogador.getByRole('region', { name: oMapa }),
+      playerScreen.getByRole('region', { name: theBoard }),
       'o tabuleiro do mestre não chegou à mesa',
     ).toBeVisible()
 
     // A CORTINA: o tabuleiro continua existindo para o mestre e a mesa vê o
     // pano. É a metade que separa "escondi" de "apaguei".
-    await telaDoMestre.getByRole('button', { name: 'Fechar a cortina' }).first().click()
-    await expect(telaDoJogador.getByRole('region', { name: 'Cortina' })).toBeVisible()
-    await expect(telaDoJogador.getByRole('region', { name: oMapa })).toHaveCount(0)
+    await gmScreen.getByRole('button', { name: 'Fechar a cortina' }).first().click()
+    await expect(playerScreen.getByRole('region', { name: 'Cortina' })).toBeVisible()
+    await expect(playerScreen.getByRole('region', { name: theBoard })).toHaveCount(0)
     await expect(
-      telaDoMestre.getByRole('region', { name: oMapa }),
+      gmScreen.getByRole('region', { name: theBoard }),
       'a cortina apagou o tabuleiro do MESTRE',
     ).toBeVisible()
 
-    await telaDoMestre.getByRole('button', { name: 'Abrir a cortina para a mesa' }).first().click()
-    await expect(telaDoJogador.getByRole('region', { name: oMapa })).toBeVisible()
+    await gmScreen.getByRole('button', { name: 'Abrir a cortina para a mesa' }).first().click()
+    await expect(playerScreen.getByRole('region', { name: theBoard })).toBeVisible()
 
-    await telaDoMestre.getByRole('button', { name: 'Encerrar o tabuleiro' }).first().click()
-    await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
-    await expect(telaDoJogador.getByRole('region', { name: oMapa })).toHaveCount(0)
+    await gmScreen.getByRole('button', { name: 'Encerrar o tabuleiro' }).first().click()
+    await gmScreen.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+    await expect(playerScreen.getByRole('region', { name: theBoard })).toHaveCount(0)
   } finally {
-    await fecha()
+    await closes()
   }
 })
 
@@ -298,54 +298,54 @@ test('o dano do mestre chega na ficha do jogador, na seção em que ele está', 
   browser,
 }) => {
   test.setTimeout(90_000)
-  const { telaDoMestre, telaDoJogador, fecha } = await asDuasTelas(browser)
+  const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)
   try {
-    await garanteACena(telaDoMestre)
-    await openTheTracker(telaDoMestre)
-    await telaDoMestre.getByRole('button', { name: 'Adicionar grupo' }).click()
+    await garanteACena(gmScreen)
+    await openTheTracker(gmScreen)
+    await gmScreen.getByRole('button', { name: 'Adicionar grupo' }).click()
 
     // O NOME do personagem deste jogador, lido na superfície MESA — que é onde
     // ele está antes de o jogador abrir a ficha, e é o nome que o botão "Ferir
     // …" da gaveta do mestre carrega.
-    const cabecalhoDaIniciativa = telaDoJogador.locator('h2', { hasText: '·' }).first()
-    await expect(cabecalhoDaIniciativa).toBeVisible()
-    const nomeDoPc = (await cabecalhoDaIniciativa.innerText()).split('·').pop()?.trim() ?? ''
-    expect(nomeDoPc, 'não achei o nome do personagem do jogador').not.toBe('')
+    const initiativeHeader = playerScreen.locator('h2', { hasText: '·' }).first()
+    await expect(initiativeHeader).toBeVisible()
+    const pcName = (await initiativeHeader.innerText()).split('·').pop()?.trim() ?? ''
+    expect(pcName, 'não achei o nome do personagem do jogador').not.toBe('')
 
-    await telaDoJogador.getByRole('button', { name: 'Ficha', exact: true }).click()
+    await playerScreen.getByRole('button', { name: 'Ficha', exact: true }).click()
     // Uma seção que NÃO é a que abre: é ela que prova que o remendo respeita
     // onde a pessoa está.
-    await telaDoJogador.getByRole('button', { name: 'Combate' }).click()
-    await expect(telaDoJogador.getByRole('heading', { name: 'Combate' })).toBeVisible()
+    await playerScreen.getByRole('button', { name: 'Combate' }).click()
+    await expect(playerScreen.getByRole('heading', { name: 'Combate' })).toBeVisible()
 
     // A barra da ficha é `aria-hidden` de propósito — o que se LÊ é a fração.
-    const oPVdaFicha = async () => {
-      const texto = await telaDoJogador.locator('#sheet-scene').innerText()
-      return texto.match(/\d+\/\d+/)?.[0] ?? ''
+    const sheetHP = async () => {
+      const text = await playerScreen.locator('#sheet-scene').innerText()
+      return text.match(/\d+\/\d+/)?.[0] ?? ''
     }
-    await expect.poll(oPVdaFicha).toMatch(/\d+\/\d+/)
-    const antes = await oPVdaFicha()
+    await expect.poll(sheetHP).toMatch(/\d+\/\d+/)
+    const earlier = await sheetHP()
 
     // O mestre fere O PERSONAGEM DESTE JOGADOR, e não o primeiro da fila: a
     // ordem sai de um d20, então mirar "o primeiro" editaria a ficha de outra
     // pessoa e o caso passaria a afirmar nada.
-    await telaDoMestre
+    await gmScreen
       .locator('#tracker-drawer')
-      .getByRole('button', { name: `Ferir ${nomeDoPc}` })
+      .getByRole('button', { name: `Ferir ${pcName}` })
       .first()
       .click()
 
     await expect
-      .poll(oPVdaFicha, { timeout: 8000, message: 'a ficha do jogador não soube do dano' })
-      .not.toBe(antes)
+      .poll(sheetHP, { timeout: 8000, message: 'a ficha do jogador não soube do dano' })
+      .not.toBe(earlier)
     // E ele continua em Combate: o remendo trouxe a seção dele, não a padrão.
     await expect(
-      telaDoJogador.getByRole('heading', { name: 'Combate' }),
+      playerScreen.getByRole('heading', { name: 'Combate' }),
       'o remendo devolveu a ficha na aba padrão e tirou o jogador de onde ele estava',
     ).toBeVisible()
 
-    await tiraDaFila(telaDoMestre, nomeDoPc)
+    await tiraDaFila(gmScreen, pcName)
   } finally {
-    await fecha()
+    await closes()
   }
 })

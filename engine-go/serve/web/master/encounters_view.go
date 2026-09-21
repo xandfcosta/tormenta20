@@ -35,9 +35,9 @@ type encounterRow struct {
 
 // encounterParty é a linha já resolvida, com o ND que ela vale.
 type encounterParty struct {
-	Verbete book.Entry
-	Qtd     int
-	ND      float64
+	Entry book.Entry
+	Qtd   int
+	ND    float64
 }
 
 const (
@@ -56,80 +56,80 @@ const (
 )
 
 type encountersView struct {
-	Nivel  int
-	Grupo  int
-	Linhas []encounterParty
+	Level int
+	Group int
+	Rows  []encounterParty
 	// Busca e Achados são do painel de adicionar criatura, que reusa o filtro
 	// do bestiário — o mestre que aprendeu a buscar lá não reaprende aqui.
-	Term    string
-	Achados []book.Entry
+	Term     string
+	Findings []book.Entry
 }
 
 // ND do encontro é a SOMA dos grupos. O livro cala sobre composição mista,
 // então somar é o padrão permissivo e o mestre confere no olho.
 func (v encountersView) ND() float64 {
 	total := 0.0
-	for _, l := range v.Linhas {
+	for _, l := range v.Rows {
 		total += l.ND
 	}
 	return total
 }
 
 func (v encountersView) Difficulty() engine.Difficulty {
-	return engine.EncounterDifficulty(v.ND() - float64(v.Nivel))
+	return engine.EncounterDifficulty(v.ND() - float64(v.Level))
 }
 
 // XPPerCharacter assume VITÓRIA: o construtor planeja o combate, e planejar
 // perder não é o caso de uso. O desfecho existe na regra para quando a sessão
 // registrar o resultado.
 func (v encountersView) XPPerCharacter() int {
-	return engine.EncounterXP(v.ND(), v.Nivel, v.Grupo, engine.Vitoria)
+	return engine.EncounterXP(v.ND(), v.Level, v.Group, engine.Vitoria)
 }
 
-func (v encountersView) Empty() bool { return len(v.Linhas) == 0 }
+func (v encountersView) Empty() bool { return len(v.Rows) == 0 }
 
 // loadEncounters resolve as linhas em verbetes e faz as contas.
 //
 // Linha cujo verbete sumiu do bestiário é DESCARTADA, e não desenhada vazia:
 // um id velho colado numa URL renderizaria uma linha sem nome com quantidade
 // viva, que é pior que não existir.
-func loadEncounters(nivel, grupo int, linhas []encounterRow, busca string) encountersView {
+func loadEncounters(level, group int, rows []encounterRow, search string) encountersView {
 	v := encountersView{
-		Nivel: clamp(nivel, nivelMinimo, nivelMaximo, nivelPadrao),
-		Grupo: clamp(grupo, grupoMinimo, grupoMaximo, grupoPadrao),
-		Term:  busca,
+		Level: clamp(level, nivelMinimo, nivelMaximo, nivelPadrao),
+		Group: clamp(group, grupoMinimo, grupoMaximo, grupoPadrao),
+		Term:  search,
 	}
-	porID := map[string]book.Entry{}
+	byID := map[string]book.Entry{}
 	for _, m := range book.Creatures() {
-		porID[m.ID] = m
+		byID[m.ID] = m
 	}
-	for _, l := range linhas {
-		m, ok := porID[l.ID]
+	for _, l := range rows {
+		m, ok := byID[l.ID]
 		if !ok {
 			continue
 		}
 		qtd := clamp(l.Qtd, 1, quantidadeMax, 1)
-		v.Linhas = append(v.Linhas, encounterParty{
-			Verbete: m,
-			Qtd:     qtd,
-			ND:      engine.PartyChallengeLevel(m.ND, qtd),
+		v.Rows = append(v.Rows, encounterParty{
+			Entry: m,
+			Qtd:   qtd,
+			ND:    engine.PartyChallengeLevel(m.ND, qtd),
 		})
 	}
 	// A busca do painel de adicionar só corre quando há termo: mostrar as 80
 	// criaturas abaixo do encontro empurraria a conta para fora da tela, e a
 	// conta é o assunto desta ferramenta.
-	if strings.TrimSpace(busca) != "" {
-		v.Achados = book.FilterCreatures(book.Creatures(), book.CreatureFilter{
-			Busca: busca, NDMin: book.CRMin, NDMax: book.CRMax,
+	if strings.TrimSpace(search) != "" {
+		v.Findings = book.FilterCreatures(book.Creatures(), book.CreatureFilter{
+			Search: search, NDMin: book.CRMin, NDMax: book.CRMax,
 		})
 	}
 	return v
 }
 
 // aperta prende um número na faixa; fora dela ou ausente, cai no padrão.
-func clamp(v, min, max, padrao int) int {
+func clamp(v, min, max, standard int) int {
 	if v < min || v > max {
-		return padrao
+		return standard
 	}
 	return v
 }
@@ -141,44 +141,44 @@ func clamp(v, min, max, padrao int) int {
 // Duas linhas do mesmo verbete calculariam cada uma o próprio ND de grupo, e a
 // regra da dobra (p282) só significa alguma coisa sobre UM grupo — dois grupos
 // de dois ogros valeriam menos que um grupo de quatro, que é o oposto da regra.
-func addRow(linhas []encounterRow, id string) []encounterRow {
-	for i := range linhas {
-		if linhas[i].ID == id {
-			if linhas[i].Qtd < quantidadeMax {
-				linhas[i].Qtd++
+func addRow(rows []encounterRow, id string) []encounterRow {
+	for i := range rows {
+		if rows[i].ID == id {
+			if rows[i].Qtd < quantidadeMax {
+				rows[i].Qtd++
 			}
-			return linhas
+			return rows
 		}
 	}
-	return append(linhas, encounterRow{ID: id, Qtd: 1})
+	return append(rows, encounterRow{ID: id, Qtd: 1})
 }
 
 // diminui tira um da contagem, e a última unidade TIRA A LINHA: um grupo de
 // zero criaturas não é um grupo, e deixar a linha com 0 mostraria "ND 0" numa
 // linha que ainda parece parte do encontro.
-func lessRow(linhas []encounterRow, id string) []encounterRow {
-	var fora []encounterRow
-	for _, l := range linhas {
+func lessRow(rows []encounterRow, id string) []encounterRow {
+	var outside []encounterRow
+	for _, l := range rows {
 		if l.ID != id {
-			fora = append(fora, l)
+			outside = append(outside, l)
 			continue
 		}
 		if l.Qtd > 1 {
 			l.Qtd--
-			fora = append(fora, l)
+			outside = append(outside, l)
 		}
 	}
-	return fora
+	return outside
 }
 
-func removeRow(linhas []encounterRow, id string) []encounterRow {
-	var fora []encounterRow
-	for _, l := range linhas {
+func removeRow(rows []encounterRow, id string) []encounterRow {
+	var outside []encounterRow
+	for _, l := range rows {
 		if l.ID != id {
-			fora = append(fora, l)
+			outside = append(outside, l)
 		}
 	}
-	return fora
+	return outside
 }
 
 // ── o encontro como ENDEREÇO, sob demanda ────────────────────────────────────
@@ -191,14 +191,14 @@ func removeRow(linhas []encounterRow, id string) []encounterRow {
 // o mestre a montou.
 func encounterAddress(v encountersView) string {
 	q := url.Values{}
-	q.Set("nivel", strconv.Itoa(v.Nivel))
-	q.Set("grupo", strconv.Itoa(v.Grupo))
-	if len(v.Linhas) > 0 {
-		var partes []string
-		for _, l := range v.Linhas {
-			partes = append(partes, fmt.Sprintf("%s:%d", l.Verbete.ID, l.Qtd))
+	q.Set("nivel", strconv.Itoa(v.Level))
+	q.Set("grupo", strconv.Itoa(v.Group))
+	if len(v.Rows) > 0 {
+		var parts []string
+		for _, l := range v.Rows {
+			parts = append(parts, fmt.Sprintf("%s:%d", l.Entry.ID, l.Qtd))
 		}
-		q.Set("c", strings.Join(partes, ","))
+		q.Set("c", strings.Join(parts, ","))
 	}
 	return "/mestre/encontros?" + q.Encode()
 }
@@ -207,23 +207,23 @@ func encounterAddress(v encountersView) string {
 //
 // Entrada mal formada é DESCARTADA por linha, não recusada em bloco: o link
 // chega por chat e um caractere a mais não pode custar o encontro inteiro.
-func rowsFromURL(bruto string) []encounterRow {
-	if bruto == "" {
+func rowsFromURL(raw string) []encounterRow {
+	if raw == "" {
 		return nil
 	}
-	var fora []encounterRow
-	for _, parte := range strings.Split(bruto, ",") {
-		id, qtd, achou := strings.Cut(strings.TrimSpace(parte), ":")
-		if !achou || id == "" {
+	var outside []encounterRow
+	for _, part := range strings.Split(raw, ",") {
+		id, qtd, found := strings.Cut(strings.TrimSpace(part), ":")
+		if !found || id == "" {
 			continue
 		}
 		n, err := strconv.Atoi(qtd)
 		if err != nil || n < 1 {
 			continue
 		}
-		fora = append(fora, encounterRow{ID: id, Qtd: min(n, quantidadeMax)})
+		outside = append(outside, encounterRow{ID: id, Qtd: min(n, quantidadeMax)})
 	}
-	return fora
+	return outside
 }
 
 // ── o que a cena escreve ─────────────────────────────────────────────────────
@@ -231,14 +231,14 @@ func rowsFromURL(bruto string) []encounterRow {
 // encounterSignals: o rascunho inteiro vive aqui, e é isso que faz o clique
 // não mexer no histórico.
 func encounterSignals(v encountersView) string {
-	linhas := make([]encounterRow, 0, len(v.Linhas))
-	for _, l := range v.Linhas {
-		linhas = append(linhas, encounterRow{ID: l.Verbete.ID, Qtd: l.Qtd})
+	rows := make([]encounterRow, 0, len(v.Rows))
+	for _, l := range v.Rows {
+		rows = append(rows, encounterRow{ID: l.Entry.ID, Qtd: l.Qtd})
 	}
-	encontro, _ := json.Marshal(linhas)
-	busca, _ := json.Marshal(v.Term)
+	encounter, _ := json.Marshal(rows)
+	search, _ := json.Marshal(v.Term)
 	return fmt.Sprintf(`{nivel: %d, grupo: %d, encontro: %s, creature_search: %s, copied: false}`,
-		v.Nivel, v.Grupo, encontro, busca)
+		v.Level, v.Group, encounter, search)
 }
 
 // roundedCR é o que a tela mostra: duas casas, porque o log2 da regra da
@@ -269,18 +269,18 @@ func xpWritten(n int) string {
 	if len(s) <= 3 {
 		return s
 	}
-	var partes []string
+	var parts []string
 	for len(s) > 3 {
-		partes = append([]string{s[len(s)-3:]}, partes...)
+		parts = append([]string{s[len(s)-3:]}, parts...)
 		s = s[:len(s)-3]
 	}
-	return strings.Join(append([]string{s}, partes...), ".")
+	return strings.Join(append([]string{s}, parts...), ".")
 }
 
 // stepLabel escreve o nome acessível do botão de quantidade.
-func stepLabel(passo, nome string) string {
-	if passo == "mais" {
-		return "Mais um " + nome
+func stepLabel(step, name string) string {
+	if step == "mais" {
+		return "Mais um " + name
 	}
-	return "Menos um " + nome
+	return "Menos um " + name
 }

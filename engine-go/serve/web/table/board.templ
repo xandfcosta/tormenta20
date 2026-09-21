@@ -18,13 +18,13 @@ import (
 // ONDE. Num canvas isso viraria um DOM espelho invisível, escrito duas vezes.
 
 templ boardTable(v BoardView) {
-	if !v.Aberto {
+	if !v.Open {
 		// As duas frases são DIFERENTES de propósito: o jogador não tem o que fazer
 		// além de esperar, e o mestre tem — dizer ao mestre "o mestre abre quando a
 		// cena tiver lugar" é a tela mandando ele fazer o que ela não deixa.
 		<div class="flex flex-col items-center gap-3 border border-dashed border-grimorio-iron p-6 text-center">
 			<span aria-hidden="true" class="text-2xl text-muted-foreground">▦</span>
-			if v.Mestre {
+			if v.GM {
 				<p class="text-sm text-muted-foreground">Nenhum tabuleiro aberto. Vale para combate e para cena de interpretação.</p>
 				<button
 					type="button"
@@ -33,17 +33,17 @@ templ boardTable(v BoardView) {
 				>Abrir tabuleiro</button>
 				// Só aparece com lugares guardados: um botão que abre uma lista
 				// vazia ensina que o acervo não serve para nada.
-				if len(v.Acervo) > 0 {
+				if len(v.Collection) > 0 {
 					@botaoDoAcervo(v)
 				}
 			} else {
 				<p class="text-sm text-muted-foreground">O mestre ainda não abriu um tabuleiro.</p>
 			}
 		</div>
-		if v.Mestre {
+		if v.GM {
 			@openBoardButton(v)
 		}
-	} else if v.Cortina {
+	} else if v.Curtain {
 		// A CORTINA ocupa o lugar da cena e NÃO desenha grade, de propósito: a cena
 		// vazia mostra grade, e as duas telas têm de se parecer o menos possível. O
 		// nome do lugar não aparece porque o servidor já o apagou.
@@ -53,22 +53,22 @@ templ boardTable(v BoardView) {
 		</section>
 	} else {
 		<section
-			aria-label={ "Tabuleiro · " + v.Lugar }
+			aria-label={ "Tabuleiro · " + v.Place }
 			class="flex min-h-0 flex-1 flex-col space-y-1.5"
 		>
-			if v.Mestre {
+			if v.GM {
 				// ENCERRAR e ABRIR OUTRO são gestos da SESSÃO e ficam fora do rascunho:
 				// não há mesa para encerrar nem aba para acrescentar quando o que está
 				// na tela é uma cena do acervo. O diálogo de editar peça FICA — ele é
 				// sobre a peça, e o rascunho é feito de peças.
-				if !v.Rascunho {
+				if !v.Draft {
 					@endBoardButton(v)
 				}
 				// UM diálogo de editar para TODAS as peças, semeado pelo gesto que o
 				// abre. Ele mora aqui, fora do plano, porque um `<dialog>` dentro do
 				// mapa herdaria o `--quadrado` e o empilhamento das camadas.
 				@tokenEdit(v)
-				if !v.Rascunho {
+				if !v.Draft {
 					@openBoardButton(v)
 				}
 			}
@@ -116,22 +116,22 @@ templ boardTable(v BoardView) {
 					//
 					// Um laço só para as quatro espécies, com a classe saindo do nome
 					// dela: quatro laços dariam quatro lugares para esquecer o quinto.
-					for _, q := range v.Terreno {
+					for _, q := range v.Terrain {
 						// O ÍCONE mora DENTRO da casa e o CSS o põe no canto da espécie.
 						// Ver `terrain_drawing.go`.
-						<div aria-hidden="true" class={ squareClass(q.Especie) } style={ posicaoNoPlano(q.X, q.Y, 1) }>
-							@ui.Icon(drawing(board.TerrainKind(q.Especie)).Icone, "terrain-mark")
+						<div aria-hidden="true" class={ squareClass(q.Species) } style={ posicaoNoPlano(q.X, q.Y, 1) }>
+							@ui.Icon(drawing(board.TerrainKind(q.Species)).Icon, "terrain-mark")
 						</div>
 					}
 					// A TRILHA é rastro: vem antes das peças para que a peça que anda por
 					// cima dela continue sendo a peça que se clica.
-					if v.Movimento != nil {
-						for _, q := range v.Movimento.Trilha {
+					if v.Movement != nil {
+						for _, q := range v.Movement.Trail {
 							<div aria-hidden="true" class="board-trail" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 						}
 						// Sem as PARADAS marcadas, o caminho é uma faixa contínua e não há
 						// como ver quantas pernas o "Desfazer parada" vai encontrar.
-						for _, q := range v.Movimento.Paradas {
+						for _, q := range v.Movement.Stops {
 							<div aria-hidden="true" class="board-stop" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 						}
 					}
@@ -143,10 +143,10 @@ templ boardTable(v BoardView) {
 					// O SEGUNDO MOVIMENTO vem ANTES do primeiro no HTML: as duas faixas
 					// chegam disjuntas do motor, e ter o ouro por cima garante que uma casa
 					// de fronteira nunca apareça azul por acidente de empate.
-					for _, q := range v.AlcanceSegundo {
+					for _, q := range v.SecondReach {
 						<div aria-hidden="true" class="board-range board-range-second" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 					}
-					for _, q := range v.Alcance {
+					for _, q := range v.Range {
 						<div aria-hidden="true" class="board-range" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 					}
 					// O LAÇO do retângulo mora no plano do CHÃO: o que ele delimita é área,
@@ -178,21 +178,21 @@ templ boardTable(v BoardView) {
 				// `transform` da janela — os dois planos andam juntos, e o preço
 				// de dois `translate` é o mesmo de um, porque quem compõe é a GPU.
 				<div class="board-plane board-plane-tokens">
-					for _, m := range v.Marcadores {
+					for _, m := range v.Markers {
 						@planMarker(v, m)
 					}
 					// O FANTASMA vem ANTES das peças: uma peça grande parada ao lado da
 					// origem invade a casa dele, e quem tem de ficar por cima é a peça —
 					// ela se clica, ele não.
-					if v.Fantasma != nil {
-						@originGhost(*v.Fantasma)
+					if v.Ghost != nil {
+						@originGhost(*v.Ghost)
 					}
-					for _, p := range v.Pecas {
+					for _, p := range v.Tokens {
 						@planToken(v, p)
 						// O MENU vem logo depois da peça e é irmão dela no plano,
 						// como o do marcador: ele é posicionado pela mesma casa, e
 						// pendurá-lo DENTRO do botão faria um botão dentro de outro.
-						if v.Mestre {
+						if v.GM {
 							@tokenMenu(v, p)
 						}
 					}
@@ -240,11 +240,11 @@ templ boardTable(v BoardView) {
 // Com UM tabuleiro aberto a `v.Abas` chega vazia (ver `tableTabs`) e a tira não
 // existe: barra de uma aba só é enfeite ocupando mapa.
 templ sceneName(v BoardView) {
-	if len(v.Abas) == 0 {
-		<h2 class="board-scene-name">{ v.Lugar }</h2>
+	if len(v.Tabs) == 0 {
+		<h2 class="board-scene-name">{ v.Place }</h2>
 	} else {
 		<div class="board-scene-name" role="group" aria-label="Tabuleiros abertos">
-			for _, aba := range v.Abas {
+			for _, aba := range v.Tabs {
 				@boardTabLink(aba)
 			}
 		</div>
@@ -262,28 +262,28 @@ templ sceneName(v BoardView) {
 // informação que ela carrega: o nome não atravessa a cortina (ver
 // `BoardForRole`), então a ficha dele diz "Cena 2" e mais nada.
 templ boardTabLink(aba boardTab) {
-	if aba.Ativa {
+	if aba.Active {
 		<h2 class="board-tab board-tab-active" aria-current="true">
-			if aba.Cortina {
+			if aba.Curtain {
 				@ui.Icon("Theater", "size-3.5 shrink-0")
 			}
-			{ aba.Nome }
+			{ aba.Name }
 		</h2>
-		if aba.MostraAMesa != "" {
+		if aba.ShowsTable != "" {
 			@showIsTable(aba)
 		}
 	} else {
 		<button
 			type="button"
-			aria-label={ "Ver o tabuleiro " + aba.Nome }
-			title={ "Ver o tabuleiro " + aba.Nome }
-			data-on:click={ aba.Comando }
+			aria-label={ "Ver o tabuleiro " + aba.Name }
+			title={ "Ver o tabuleiro " + aba.Name }
+			data-on:click={ aba.Command }
 			class="board-tab"
 		>
-			if aba.Cortina {
+			if aba.Curtain {
 				@ui.Icon("Theater", "size-3.5 shrink-0")
 			}
-			{ aba.Nome }
+			{ aba.Name }
 		</button>
 	}
 }
@@ -301,9 +301,9 @@ templ boardTabLink(aba boardTab) {
 templ showIsTable(aba boardTab) {
 	<button
 		type="button"
-		aria-label={ "Mostrar " + aba.Nome + " à mesa" }
+		aria-label={ "Mostrar " + aba.Name + " à mesa" }
 		title="Mostrar esta cena à mesa: todo mundo salta para ela"
-		data-on:click={ aba.MostraAMesa }
+		data-on:click={ aba.ShowsTable }
 		class="board-tab-pull"
 	>
 		@ui.Icon("Users2", "size-3.5")
@@ -358,7 +358,7 @@ templ sceneVerbs(v BoardView) {
 		// O ENQUADRAMENTO é o único verbo que atravessa para o rascunho: ele é
 		// sobre a JANELA, que é de quem olha. Os outros são da SESSÃO, e cada um
 		// deles precisa de uma mesa do outro lado.
-		if v.Mestre && !v.Rascunho {
+		if v.GM && !v.Draft {
 			@clipboardStrip(v)
 			// O acervo alcançável COM cena na mesa: trocar da taverna para a cripta
 			// sem encerrar primeiro.
@@ -381,7 +381,7 @@ templ sceneVerbs(v BoardView) {
 			>
 				@ui.Icon("LayoutGrid", "size-4")
 			</button>
-			if len(v.Acervo) > 0 {
+			if len(v.Collection) > 0 {
 				@botaoDoAcervo(v)
 			}
 			// ÍCONE e não texto: o painel flutua sobre o mapa e cada palavra nele
@@ -411,21 +411,21 @@ templ sceneVerbs(v BoardView) {
 // `role="status"` porque são estado da cena, e não ações. Cada um carrega a
 // própria saída: quem percebe o modo tem de poder desfazê-lo de onde percebeu.
 templ boardNotices(v BoardView) {
-	if v.AvisoDaCortina || v.Lente || v.Puxado != nil {
+	if v.CurtainNotice || v.Lens || v.Pulled != nil {
 		<div class="board-notices">
-			if v.Puxado != nil {
+			if v.Pulled != nil {
 				// A TIRA DO PUXÃO é a única aqui que fala de uma mudança que quem lê
 				// NÃO fez. Por isso ela nomeia a cena: "o mestre trouxe você" sobre um
 				// mapa que trocou sozinho deixaria a pessoa procurando o que aconteceu.
 				<p role="status" class="board-notice">
 					@ui.Icon("Users2", "size-4 shrink-0")
-					{ "O mestre trouxe a mesa para " + v.Puxado.Cena + "." }
-					if v.Puxado.Volta != "" {
+					{ "O mestre trouxe a mesa para " + v.Pulled.Scene + "." }
+					if v.Pulled.Back != "" {
 						<button
 							type="button"
-							data-on:click={ v.Puxado.ComandoDeVolta }
+							data-on:click={ v.Pulled.ReturnCommand }
 							class="board-notice-exit"
-						>{ "Voltar para " + v.Puxado.Volta }</button>
+						>{ "Voltar para " + v.Pulled.Back }</button>
 					} else {
 						// Quem JÁ estava nesta aba não tem para onde voltar: o gesto que
 						// sobra é dizer "vi", que é escolher esta aba — o mesmo comando que
@@ -433,13 +433,13 @@ templ boardNotices(v BoardView) {
 						// que a desfaça, porque a aba ativa é um `<h2>` e não se clica.
 						<button
 							type="button"
-							data-on:click={ v.Puxado.ComandoDeVolta }
+							data-on:click={ v.Pulled.ReturnCommand }
 							class="board-notice-exit"
 						>Continuar aqui</button>
 					}
 				</p>
 			}
-			if v.AvisoDaCortina {
+			if v.CurtainNotice {
 				<p role="status" class="board-notice">
 					@ui.Icon("Theater", "size-4 shrink-0")
 					A cortina está fechada: a mesa não vê esta cena.
@@ -450,10 +450,10 @@ templ boardNotices(v BoardView) {
 					>Abrir a cortina</button>
 				</p>
 			}
-			if v.Lente {
+			if v.Lens {
 				<p role="status" class="board-notice">
 					@ui.Icon("Eye", "size-4 shrink-0")
-					{ lensPhrase(v.PecasEscondidas) }
+					{ lensPhrase(v.HiddenTokens) }
 					<button
 						type="button"
 						data-on:click={ lensCommand(v) }
@@ -470,13 +470,13 @@ templ boardNotices(v BoardView) {
 // troca de lugar no meio do gesto.
 templ toolHelpers(v BoardView) {
 	<div class="board-helpers">
-		if v.Mestre {
+		if v.GM {
 			@partyBar(v)
 		}
 		@rulerReadingBox()
 		@previewReading()
 		@templateBar(v)
-		if v.Movimento != nil && v.Movimento.Meu {
+		if v.Movement != nil && v.Movement.Mine {
 			@moveProposed(v)
 		}
 	</div>
@@ -640,27 +640,27 @@ templ templateBar(v BoardView) {
 		data-show={ "$tool === '" + FerramentaDoGabarito + "'" }
 		class="board-helper gap-1.5"
 	>
-		for _, forma := range bookShapes {
+		for _, form := range bookShapes {
 			<button
 				type="button"
-				title={ shapeLabel(forma) + ": o " + shapeMeasure(forma) + " em quadrados (p225)" }
-				data-attr:aria-pressed={ fmt.Sprintf("$template === %q ? 'true' : 'false'", string(forma)) }
-				data-class={ fmt.Sprintf("{'brush-on': $template === %q}", string(forma)) }
-				data-on:click={ pickShape(forma) }
+				title={ shapeLabel(form) + ": o " + shapeMeasure(form) + " em quadrados (p225)" }
+				data-attr:aria-pressed={ fmt.Sprintf("$template === %q ? 'true' : 'false'", string(form)) }
+				data-class={ fmt.Sprintf("{'brush-on': $template === %q}", string(form)) }
+				data-on:click={ pickShape(form) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
-			>{ shapeLabel(forma) }</button>
+			>{ shapeLabel(form) }</button>
 		}
 		// O RÓTULO muda com a forma porque "tamanho" não responde a pergunta de
 		// nenhuma das quatro: o conjurador está lendo "raio 6m" na ficha, e é esse
 		// número que ele quer digitar. O `for` desenha os quatro e o `data-show`
 		// escolhe — o rótulo tem de casar com o `id` do campo, e um `id` só com
 		// quatro textos alternados deixaria três rótulos apontando para o nada.
-		for _, forma := range bookShapes {
+		for _, form := range bookShapes {
 			<label
 				for="template-size"
-				data-show={ fmt.Sprintf("$template === %q", string(forma)) }
+				data-show={ fmt.Sprintf("$template === %q", string(form)) }
 				class="text-xs text-muted-foreground"
-			>{ shapeMeasure(forma) }</label>
+			>{ shapeMeasure(form) }</label>
 		}
 		<input
 			id="template-size"
@@ -701,23 +701,23 @@ templ moveProposed(v BoardView) {
 		// RASCUNHO é a palavra do lado do jogador, e ela vem primeiro porque é ela
 		// que explica a ausência do Confirmar: sem nomear a natureza do traço, a
 		// tela dele parece a do mestre com um botão faltando.
-		if !v.Mestre {
+		if !v.GM {
 			<span class="board-draft-seal">Rascunho</span>
 		}
 		<p aria-live="polite" class="text-muted-foreground">
-			{ v.Movimento.Rotulo } ·
-			if v.Movimento.Orcamento < 0 {
+			{ v.Movement.Label } ·
+			if v.Movement.Budget < 0 {
 				// Fora de combate não há vez nem ação de movimento a gastar: o custo
 				// continua sendo dito, porque ele informa, mas não há ação para nomear.
-				<span class="font-mono tabular-nums text-foreground">{ fmt.Sprint(v.Movimento.Custo) }</span>
+				<span class="font-mono tabular-nums text-foreground">{ fmt.Sprint(v.Movement.Cost) }</span>
 				{ " quadrados" }
 			} else {
 				<span class="font-mono tabular-nums text-foreground">
-					{ fmt.Sprintf("%d de %d", v.Movimento.Custo, v.Movimento.Orcamento) }
+					{ fmt.Sprintf("%d de %d", v.Movement.Cost, v.Movement.Budget) }
 				</span>
 				{ " quadrados" }
-				if saldo := moveBalance(v.Movimento); saldo != "" {
-					{ " · " + saldo }
+				if balance := moveBalance(v.Movement); balance != "" {
+					{ " · " + balance }
 				}
 			}
 		</p>
@@ -729,11 +729,11 @@ templ moveProposed(v BoardView) {
 		// Só em combate: fora dele não há ação de movimento a gastar, a seta sai de
 		// uma cor só, e uma legenda de três cores sobre um desenho de uma seria
 		// explicar o que não está na tela.
-		if v.Movimento.Orcamento >= 0 {
+		if v.Movement.Budget >= 0 {
 			<ul aria-label="O que as cores do movimento querem dizer" class="board-bands">
-				for _, faixa := range moveLegend(v.Movimento) {
-					<li class={ "board-band", faixa.Classe, templ.KV("board-band-active", faixa.Ativa) }>
-						{ faixa.Texto }
+				for _, strip := range moveLegend(v.Movement) {
+					<li class={ "board-band", strip.Class, templ.KV("board-band-active", strip.Active) }>
+						{ strip.Text }
 					</li>
 				}
 			</ul>
@@ -742,7 +742,7 @@ templ moveProposed(v BoardView) {
 		// painel já diz de quem é o movimento, e repetir empurra a linha para
 		// duas a 390px. A legenda acima continua sendo o PREÇO do caminho; esta
 		// linha é o saldo do turno, e as duas não se contradizem.
-		if v.Movimento.NoActionLeft {
+		if v.Movement.NoActionLeft {
 			<p class="text-xs font-semibold text-destructive-ink">não sobrou ação neste turno para mover</p>
 		}
 		<span class="ml-auto flex items-center gap-2">
@@ -751,7 +751,7 @@ templ moveProposed(v BoardView) {
 			// fora. Some quando não há perna a desfazer — um botão que não faz nada
 			// é pior que nenhum, e com uma perna só desfazer JÁ É cancelar, que está
 			// ali do lado dizendo isso com a palavra certa.
-			if v.Movimento.PodeDesfazer {
+			if v.Movement.CanUndo {
 				<button
 					type="button"
 					data-on:click={ moveCommand(v, "desfazer-parada") }
@@ -771,7 +771,7 @@ templ moveProposed(v BoardView) {
 			// fronteira de verdade é o `CommitMove`, e isto aqui é só não oferecer o
 			// que seria recusado. Vale igual para o turno sem ação: o servidor já
 			// recusa, e o botão ali convidaria para um beco (p233).
-			if v.Mestre && !v.Movimento.NoActionLeft {
+			if v.GM && !v.Movement.NoActionLeft {
 				<button
 					type="button"
 					data-on:click={ moveCommand(v, "confirmar") }
@@ -799,27 +799,27 @@ templ planToken(v BoardView, p boardToken) {
 		type="button"
 		aria-label={ tokenName(p) }
 		title={ tokenName(p) }
-		style={ posicaoNoPlano(p.X, p.Y, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz) }
+		style={ posicaoNoPlano(p.X, p.Y, p.Footprint) + fmt.Sprintf("--matiz:%d;", p.Hue) }
 		data-class={ tokenStyling(p.ID, dragsItself(v, p.ID)) }
 		if tokenReceivesGesture(v, p.ID) {
 			data-on:pointerdown={ takeToken(v, p.ID) }
 			data-on:pointermove__window={ followToken(v, p) }
 			data-on:pointerup__window={ dropToken(v, p) }
 		}
-		if v.Mestre {
+		if v.GM {
 			data-on:contextmenu={ openMenuToken(p.ID) }
 			data-attr:aria-expanded={ chosenToken(p.ID) + " ? 'true' : 'false'" }
 		}
 		class={ "board-token",
-			templ.KV("board-token-on-turn", p.NaVez),
+			templ.KV("board-token-on-turn", p.OnTurn),
 			templ.KV("board-token-object", p.IsObject),
-			templ.KV("board-token-hidden", p.Oculta) }
+			templ.KV("board-token-hidden", p.Hidden) }
 	>
-		<span class="board-monogram">{ p.Monograma }</span>
-		if p.Instancia != "" {
+		<span class="board-monogram">{ p.Monogram }</span>
+		if p.Instance != "" {
 			// O selo é TEXTO e não só cor: "eu ataco o Zumbi 3" precisa de
 			// resposta num relance inclusive para quem não distingue matiz.
-			<span class="board-seal">{ p.Instancia }</span>
+			<span class="board-seal">{ p.Instance }</span>
 		}
 		if p.PV != nil {
 			<span aria-hidden="true" class="board-vitals">
@@ -849,12 +849,12 @@ templ planToken(v BoardView, p boardToken) {
 templ originGhost(p boardToken) {
 	<div
 		aria-hidden="true"
-		style={ posicaoNoPlano(p.X, p.Y, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz) }
+		style={ posicaoNoPlano(p.X, p.Y, p.Footprint) + fmt.Sprintf("--matiz:%d;", p.Hue) }
 		class="board-token board-token-ghost"
 	>
-		<span class="board-monogram">{ p.Monograma }</span>
-		if p.Instancia != "" {
-			<span class="board-seal">{ p.Instancia }</span>
+		<span class="board-monogram">{ p.Monogram }</span>
+		if p.Instance != "" {
+			<span class="board-seal">{ p.Instance }</span>
 		}
 	</div>
 }
@@ -874,7 +874,7 @@ templ originGhost(p boardToken) {
 // o calcula e o guarda no provisório. Montá-lo aqui obrigaria a mandar as
 // paradas para o navegador para ele redesenhá-las.
 templ moveArrow(v BoardView) {
-	if v.Movimento != nil && v.Movimento.Fio != "" {
+	if v.Movement != nil && v.Movement.Wire != "" {
 		<svg aria-hidden="true" class="board-measure board-measure-front">
 			<defs>
 				<marker
@@ -916,8 +916,8 @@ templ moveArrow(v BoardView) {
 			</defs>
 			<g data-attr:transform={ viewportDrawing }>
 				<path
-					d={ v.Movimento.Fio }
-					marker-end={ endWireFits(v.Movimento) }
+					d={ v.Movement.Wire }
+					marker-end={ endWireFits(v.Movement) }
 					vector-effect="non-scaling-stroke"
 					class="board-move-arrow"
 				></path>
@@ -926,20 +926,20 @@ templ moveArrow(v BoardView) {
 				//
 				// Cada faixa só existe no HTML quando existe de fato: um `<path>` de `d`
 				// vazio esperando um sinal seria um nó a mais em toda cena para o caso raro.
-				if v.Movimento.FioSegundo != "" {
+				if v.Movement.SecondWire != "" {
 					<path
-						d={ v.Movimento.FioSegundo }
-						marker-end={ endWireSecond(v.Movimento) }
+						d={ v.Movement.SecondWire }
+						marker-end={ endWireSecond(v.Movement) }
 						vector-effect="non-scaling-stroke"
 						class="board-move-arrow board-move-second"
 					></path>
 				}
 				// O QUE NÃO CABE NO TURNO, em vermelho: passou das duas ações, e não
 				// há terceira ação de movimento para pagá-lo.
-				if v.Movimento.FioAlem != "" {
+				if v.Movement.BeyondWire != "" {
 					<path
-						d={ v.Movimento.FioAlem }
-						marker-end={ endWireBeyond(v.Movimento) }
+						d={ v.Movement.BeyondWire }
+						marker-end={ endWireBeyond(v.Movement) }
 						vector-effect="non-scaling-stroke"
 						class="board-move-arrow board-move-beyond"
 					></path>
@@ -957,14 +957,14 @@ templ moveArrow(v BoardView) {
 			// responde "quanto anda esta perna", que é fato neutro, e a cor responde
 			// "quanto disso cabe". Uma perna que ATRAVESSA a virada não tem cor única,
 			// e pintar o número dela mentiria metade das vezes.
-			for _, perna := range v.Movimento.Pernas {
+			for _, leg := range v.Movement.Legs {
 				<text
-					data-attr:x={ numeroDoFio(perna.MeioX) + " * $square - $viewport_x" }
-					data-attr:y={ numeroDoFio(perna.MeioY) + " * $square - $viewport_y" }
+					data-attr:x={ numeroDoFio(leg.MidX) + " * $square - $viewport_x" }
+					data-attr:y={ numeroDoFio(leg.MidY) + " * $square - $viewport_y" }
 					text-anchor="middle"
 					dominant-baseline="middle"
 					class="board-ruler-label"
-				>{ perna.Rotulo }</text>
+				>{ leg.Label }</text>
 			}
 		</svg>
 	}
@@ -977,24 +977,24 @@ templ moveArrow(v BoardView) {
 // POR CIMA do plano, então capturar o clique de quem não pode mexer nele
 // roubaria o gesto de mover a peça que estiver embaixo.
 templ planMarker(v BoardView, m boardMarker) {
-	if v.Mestre {
+	if v.GM {
 		<button
 			type="button"
 			aria-label={ markerName(m) }
 			title={ markerName(m) }
 			data-attr:aria-pressed={ chosenMarker(m.ID) + " ? 'true' : 'false'" }
 			data-on:click={ pickMarker(m.ID) }
-			style={ posicaoNoPlano(m.X, m.Y, 1) + fmt.Sprintf("--marcador:%s;", markerColor(m.Cor)) }
-			class={ "board-marker", templ.KV("board-marker-hidden", m.Escondido) }
-		>{ m.Texto }</button>
+			style={ posicaoNoPlano(m.X, m.Y, 1) + fmt.Sprintf("--marcador:%s;", markerColor(m.Color)) }
+			class={ "board-marker", templ.KV("board-marker-hidden", m.Hidden) }
+		>{ m.Text }</button>
 		@markerActions(v, m)
 	} else {
 		<span
-			aria-label={ "Marcador " + m.Texto + " em " + m.Onde }
-			title={ m.Texto + " · " + m.Onde }
-			style={ posicaoNoPlano(m.X, m.Y, 1) + fmt.Sprintf("--marcador:%s;", markerColor(m.Cor)) }
+			aria-label={ "Marcador " + m.Text + " em " + m.Where }
+			title={ m.Text + " · " + m.Where }
+			style={ posicaoNoPlano(m.X, m.Y, 1) + fmt.Sprintf("--marcador:%s;", markerColor(m.Color)) }
 			class="board-marker"
-		>{ m.Texto }</span>
+		>{ m.Text }</span>
 	}
 }
 
@@ -1010,43 +1010,43 @@ templ planMarker(v BoardView, m boardMarker) {
 templ markerActions(v BoardView, m boardMarker) {
 	<div
 		role="group"
-		aria-label={ "O que fazer com o marcador " + m.Texto }
+		aria-label={ "O que fazer com o marcador " + m.Text }
 		data-show={ chosenMarker(m.ID) }
 		style={ posicaoNoPlano(m.X, m.Y, 1) }
 		class="board-marker-actions"
 	>
 		<button
 			type="button"
-			if m.Escondido {
-				aria-label={ "Revelar o marcador " + m.Texto + " para a mesa" }
+			if m.Hidden {
+				aria-label={ "Revelar o marcador " + m.Text + " para a mesa" }
 				title="Revelar para a mesa"
 			} else {
-				aria-label={ "Esconder o marcador " + m.Texto + " da mesa" }
+				aria-label={ "Esconder o marcador " + m.Text + " da mesa" }
 				title="Esconder da mesa"
 			}
 			data-on:click={ markerCommand(v, m.ID, "revelar") }
 			class="inline-flex size-6 items-center justify-center rounded-sm text-xs outline-none hover:bg-accent"
 		>
-			if m.Escondido {
+			if m.Hidden {
 				@ui.Icon("Eye", "size-4")
 			} else {
 				@ui.Icon("EyeOff", "size-4")
 			}
 		</button>
-		for _, cor := range board.MarkerColors {
+		for _, color := range board.MarkerColors {
 			<button
 				type="button"
-				aria-label={ "Pintar o marcador " + m.Texto + " de " + cor.Rotulo }
-				title={ cor.Rotulo }
-				aria-pressed={ fmt.Sprintf("%t", cor.ID == m.Cor) }
-				data-on:click={ markerCommand(v, m.ID, "cor/"+cor.ID) }
-				style={ fmt.Sprintf("--marcador:var(--marcador-%s);", cor.ID) }
+				aria-label={ "Pintar o marcador " + m.Text + " de " + color.Label }
+				title={ color.Label }
+				aria-pressed={ fmt.Sprintf("%t", color.ID == m.Color) }
+				data-on:click={ markerCommand(v, m.ID, "cor/"+color.ID) }
+				style={ fmt.Sprintf("--marcador:var(--marcador-%s);", color.ID) }
 				class="board-marker-color"
 			></button>
 		}
 		<button
 			type="button"
-			aria-label={ "Apagar o marcador " + m.Texto }
+			aria-label={ "Apagar o marcador " + m.Text }
 			title="Apagar"
 			data-on:click={ pickMarker("") + "; " + markerCommand(v, m.ID, "remover") }
 			class="inline-flex size-6 items-center justify-center rounded-sm text-xs text-muted-foreground outline-none hover:border hover:border-destructive hover:text-destructive-ink"
@@ -1103,7 +1103,7 @@ templ openBoardButton(v BoardView) {
 			// mão é como nasce a opção que a tela oferece e o navegador desenha em
 			// branco.
 			for _, chao := range board.PlaceGrounds {
-				<option value={ chao.ID }>{ chao.Rotulo }</option>
+				<option value={ chao.ID }>{ chao.Label }</option>
 			}
 		</select>
 		<div class="mt-4 flex justify-end gap-2">
@@ -1179,14 +1179,14 @@ templ botaoDoAcervo(v BoardView) {
 		// (`display:none` não é `sr-only`), e um botão que vira "3" para quem usa
 		// leitor de tela é pior que um botão largo.
 		<span class="hidden sm:inline">Lugares da campanha ·</span>
-		{ fmt.Sprint(len(v.Acervo)) }
+		{ fmt.Sprint(len(v.Collection)) }
 	</button>
 }
 
 // collectionLabel é a frase inteira, e ela é o nome acessível do botão em toda
 // largura — o que encolhe é só o que se VÊ.
 func collectionLabel(v BoardView) string {
-	return fmt.Sprintf("Lugares da campanha · %d", len(v.Acervo))
+	return fmt.Sprintf("Lugares da campanha · %d", len(v.Collection))
 }
 
 // O ACERVO de cenas guardadas.
@@ -1210,30 +1210,30 @@ templ placesCollection(v BoardView) {
 			As cenas que você encerrou, com as peças onde estavam. Reabrir traz a cena numa aba nova, sem fechar as que já estão abertas.
 		</p>
 		<ul class="mt-3 max-h-[50vh] space-y-1 overflow-y-auto">
-			for _, l := range v.Acervo {
+			for _, l := range v.Collection {
 				<li class="flex flex-wrap items-center gap-2 border border-grimorio-iron px-2 py-1.5">
 					<span class="min-w-0 flex-1">
-						<span class="block truncate text-sm text-foreground">{ l.Nome }</span>
+						<span class="block truncate text-sm text-foreground">{ l.Name }</span>
 						<span class="block text-xs text-muted-foreground">
-							if l.AbertaEm != "" {
+							if l.OpenedAt != "" {
 								// A LINHA DIZ O ESTADO, e não só a data: numa lista
 								// longa, o que está na mesa agora se perde no meio
 								// dos outros sem nada que o distinga.
 								@ui.Icon("LayoutGrid", "mr-1 inline size-3")
-								{ "nesta mesa agora · " + ui.TokenCount(l.Pecas) }
+								{ "nesta mesa agora · " + ui.TokenCount(l.Tokens) }
 							} else {
-								{ fmt.Sprintf("%s · %s", ui.TokenCount(l.Pecas), l.Quando) }
+								{ fmt.Sprintf("%s · %s", ui.TokenCount(l.Tokens), l.When) }
 							}
 						</span>
 					</span>
-					if l.AbertaEm != "" {
+					if l.OpenedAt != "" {
 						// O QUE JÁ ESTÁ ABERTO NÃO SE REABRE: uma segunda aba da
 						// mesma cena seriam duas verdades sobre onde as peças
 						// estão, e a que fechasse por último apagaria a outra no
 						// acervo. O gesto que sobra é ir até ela.
 						<button
 							type="button"
-							data-on:click={ "document.getElementById('place-archive').close(); " + tabCommand(v, l.AbertaEm) }
+							data-on:click={ "document.getElementById('place-archive').close(); " + tabCommand(v, l.OpenedAt) }
 							class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-gold px-3 text-sm font-semibold text-grimorio-gold outline-none transition-colors hover:bg-accent"
 						>Ver</button>
 					} else {
@@ -1254,11 +1254,11 @@ templ placesCollection(v BoardView) {
 					// volta com o mesmo nome. A trava de verdade é do servidor
 					// (`removeOLugar`); isto é a cortesia de não oferecer o gesto que ele
 					// vai recusar.
-					if l.AbertaEm == "" {
+					if l.OpenedAt == "" {
 						<button
 							type="button"
-							aria-label={ "Apagar " + l.Nome }
-							title={ "Apagar " + l.Nome + " do acervo" }
+							aria-label={ "Apagar " + l.Name }
+							title={ "Apagar " + l.Name + " do acervo" }
 							data-on:click={ placeCommand(v, l.ID, "remover") }
 							class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 						>
@@ -1298,9 +1298,9 @@ templ placesCollection(v BoardView) {
 templ tokenMenu(v BoardView, p boardToken) {
 	<div
 		role="group"
-		aria-label={ "O que fazer com " + p.Rotulo }
+		aria-label={ "O que fazer com " + p.Label }
 		data-show={ chosenToken(p.ID) }
-		style={ posicaoNoPlano(p.X, p.Y, p.Pegada) }
+		style={ posicaoNoPlano(p.X, p.Y, p.Footprint) }
 		class="board-token-menu"
 	>
 		// VISIBILIDADE primeiro: é o verbo que a mesa vê, e o único cujo esquecimento
@@ -1310,11 +1310,11 @@ templ tokenMenu(v BoardView, p boardToken) {
 			type="button"
 			aria-label={ visibilityName(p) }
 			title={ visibilityName(p) }
-			aria-pressed={ fmt.Sprintf("%t", p.Oculta) }
+			aria-pressed={ fmt.Sprintf("%t", p.Hidden) }
 			data-on:click={ tokenCommand(v, p.ID, "visibilidade") }
 			class="board-token-verb"
 		>
-			if p.Oculta {
+			if p.Hidden {
 				@ui.Icon("EyeOff", "size-4")
 			} else {
 				@ui.Icon("Eye", "size-4")
@@ -1326,7 +1326,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 		// fileira de 28px sobre o mapa.
 		<button
 			type="button"
-			aria-label={ "Duplicar " + p.Rotulo }
+			aria-label={ "Duplicar " + p.Label }
 			title="Duplicar: escolher o que a cópia leva"
 			popovertarget={ copyMenuId(p.ID) }
 			class="board-token-verb"
@@ -1335,7 +1335,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 		</button>
 		<button
 			type="button"
-			aria-label={ "Editar " + p.Rotulo }
+			aria-label={ "Editar " + p.Label }
 			title="Editar o nome e o tamanho"
 			data-on:click={ openEditToken(p) }
 			class="board-token-verb"
@@ -1344,11 +1344,11 @@ templ tokenMenu(v BoardView, p boardToken) {
 		</button>
 		// VOLTAR só existe quando há para onde, e a frase diz a casa: "voltar" sem
 		// destino é um botão que promete desfazer algo que ninguém lembra.
-		if p.DeOndeVeio != nil {
+		if p.CameFrom != nil {
 			<button
 				type="button"
-				aria-label={ "Voltar " + p.Rotulo + " para " + tokenSquare(p.DeOndeVeio) }
-				title={ "Voltar para onde estava (" + tokenSquare(p.DeOndeVeio) + ")" }
+				aria-label={ "Voltar " + p.Label + " para " + tokenSquare(p.CameFrom) }
+				title={ "Voltar para onde estava (" + tokenSquare(p.CameFrom) + ")" }
 				data-on:click={ tokenCommand(v, p.ID, "voltar") }
 				class="board-token-verb"
 			>
@@ -1361,7 +1361,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 		// duplicar três zumbis seguidos.
 		<button
 			type="button"
-			aria-label={ "Tirar " + p.Rotulo + " do tabuleiro" }
+			aria-label={ "Tirar " + p.Label + " do tabuleiro" }
 			title="Tirar do tabuleiro (a linha da iniciativa fica)"
 			data-on:click={ tokenCommand(v, p.ID, "remover") }
 			class="board-token-verb board-token-verb-danger"
@@ -1370,7 +1370,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 		</button>
 		<button
 			type="button"
-			aria-label={ "Fechar o menu de " + p.Rotulo }
+			aria-label={ "Fechar o menu de " + p.Label }
 			data-on:click={ closeMenuToken }
 			class="board-token-verb"
 		>
@@ -1410,7 +1410,7 @@ templ tokenCopyMenu(v BoardView, p boardToken) {
 	<div
 		id={ copyMenuId(p.ID) }
 		popover
-		aria-label={ "O que a cópia de " + p.Rotulo + " leva" }
+		aria-label={ "O que a cópia de " + p.Label + " leva" }
 		class="board-token-copy"
 	>
 		@tokenCopyGroup("Duplicar aqui")
@@ -1422,7 +1422,7 @@ templ tokenCopyMenu(v BoardView, p boardToken) {
 		// O BLOCO PRÓPRIO só aparece para quem TEM bloco: o herói e o NPC digitado
 		// à mão não têm o que copiar, e oferecer o que o servidor vai recusar é
 		// desenhar um erro.
-		if p.TemBloco {
+		if p.HasBlock {
 			@tokenCopyMode(v, p, "bloco", "Outro, com bloco próprio", "copia a ficha da criatura: dá para editar o chefe sem mexer nos outros")
 		}
 		@tokenCopyMode(v, p, "peca", "Só a peça", "sem fila e sem PV — cenário, ou entra na fila depois")
@@ -1441,8 +1441,8 @@ templ tokenCopyMenu(v BoardView, p boardToken) {
 // `<p>` e não cabeçalho: a camada já tem `aria-label`, e um `<h4>` faria o leitor
 // de tela anunciar um nível novo no meio de uma lista de seis botões. O que
 // separa para quem NÃO vê é o rótulo de cada botão, que diz o verbo inteiro.
-templ tokenCopyGroup(rotulo string) {
-	<p aria-hidden="true" class="board-token-copy-group">{ rotulo }</p>
+templ tokenCopyGroup(label string) {
+	<p aria-hidden="true" class="board-token-copy-group">{ label }</p>
 }
 
 // tokenClipboardMode põe a peça na área com um modo grudado.
@@ -1450,14 +1450,14 @@ templ tokenCopyGroup(rotulo string) {
 // O rótulo acessível diz o VERBO inteiro — "Copiar Zumbi para colar: com PV
 // próprio" — porque o cabeçalho do grupo é `aria-hidden`, e sem ele o botão se
 // anunciaria só como "com PV próprio", que é a metade que não diz o que acontece.
-templ tokenClipboardMode(v BoardView, p boardToken, modo, nome string) {
+templ tokenClipboardMode(v BoardView, p boardToken, mode, name string) {
 	<button
 		type="button"
-		aria-label={ "Copiar " + p.Rotulo + " para colar: " + nome }
-		data-on:click={ putsInTheClipboard(v, p, modo, nome) }
+		aria-label={ "Copiar " + p.Label + " para colar: " + name }
+		data-on:click={ putsInTheClipboard(v, p, mode, name) }
 		class="board-token-copy-mode"
 	>
-		<span class="board-token-copy-name">{ nome }</span>
+		<span class="board-token-copy-name">{ name }</span>
 	</button>
 }
 
@@ -1466,15 +1466,15 @@ templ tokenClipboardMode(v BoardView, p boardToken, modo, nome string) {
 // O `title` NÃO repete a frase que já está desenhada: o rótulo acessível é o
 // nome mais a frase, e um `title` igual faria o leitor de tela dizer a mesma
 // coisa duas vezes — a armadilha que o `ui.Icon` já registra.
-templ tokenCopyMode(v BoardView, p boardToken, modo, nome, frase string) {
+templ tokenCopyMode(v BoardView, p boardToken, mode, name, sentence string) {
 	<button
 		type="button"
-		aria-label={ nome + ": " + frase }
-		data-on:click={ copyCommand(v, p.ID, modo) }
+		aria-label={ name + ": " + sentence }
+		data-on:click={ copyCommand(v, p.ID, mode) }
 		class="board-token-copy-mode"
 	>
-		<span class="board-token-copy-name">{ nome }</span>
-		<span aria-hidden="true" class="board-token-copy-phrase">{ frase }</span>
+		<span class="board-token-copy-name">{ name }</span>
+		<span aria-hidden="true" class="board-token-copy-phrase">{ sentence }</span>
 	</button>
 }
 
@@ -1512,7 +1512,7 @@ templ tokenEdit(v BoardView) {
 				class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 			>
 				for _, t := range tokenSizes {
-					<option value={ fmt.Sprint(t.Lado) }>{ t.Rotulo }</option>
+					<option value={ fmt.Sprint(t.Side) }>{ t.Label }</option>
 				}
 			</select>
 		</div>
@@ -1548,14 +1548,14 @@ templ tokenEdit(v BoardView) {
 templ toolsRail(v BoardView) {
 	<nav
 		aria-label="Ferramentas do mapa"
-		data-on:keydown__window={ railKeyboard(v.Mestre) }
+		data-on:keydown__window={ railKeyboard(v.GM) }
 		class="board-rail"
 	>
-		for i, f := range rail(v.Mestre) {
+		for i, f := range rail(v.GM) {
 			// O VINCO separa o que é de todo mundo do que é do mestre. Ele sai do
 			// PAPEL da ferramenta e não de um índice mágico: a primeira só-do-mestre
 			// leva o vinco, e acrescentar uma quinta espécie não move nada.
-			if i > 0 && f.SoMestre && !rail(v.Mestre)[i-1].SoMestre {
+			if i > 0 && f.GMOnly && !rail(v.GM)[i-1].GMOnly {
 				<span aria-hidden="true" class="board-rail-crease"></span>
 			}
 			@railTool(f)
@@ -1567,7 +1567,7 @@ templ toolsRail(v BoardView) {
 		//
 		// O sinal é o MESMO (`$tool`), então ela exclui as outras por construção. O
 		// que ela não tem é número, e o `NewPieceTool` registra por quê.
-		if v.Mestre {
+		if v.GM {
 			<span aria-hidden="true" class="board-rail-crease"></span>
 			<button
 				type="button"
@@ -1592,15 +1592,15 @@ templ toolsRail(v BoardView) {
 templ railTool(f mapTool) {
 	<button
 		type="button"
-		title={ f.Dica + " (tecla " + f.Atalho + ")" }
+		title={ f.Hint + " (tecla " + f.Shortcut + ")" }
 		aria-label={ shortcutName(f) }
 		data-attr:aria-pressed={ onIsTool(f.ID) + " ? 'true' : 'false'" }
 		data-class={ toolStyling(f.ID) }
 		data-on:click={ pickTool(f.ID) }
 		class="board-tool"
 	>
-		@ui.Icon(f.Icone, "size-4 "+f.Matiz)
-		<span aria-hidden="true" class="board-tool-key">{ f.Atalho }</span>
+		@ui.Icon(f.Icon, "size-4 "+f.Hue)
+		<span aria-hidden="true" class="board-tool-key">{ f.Shortcut }</span>
 	</button>
 }
 
@@ -1698,8 +1698,8 @@ templ centerer(v BoardView) {
 templ lensButton(v BoardView) {
 	<button
 		type="button"
-		aria-pressed={ fmt.Sprintf("%t", v.Lente) }
-		if v.Lente {
+		aria-pressed={ fmt.Sprintf("%t", v.Lens) }
+		if v.Lens {
 			aria-label="Voltar à vista do mestre"
 			title="Voltar à vista do mestre"
 		} else {
@@ -1708,10 +1708,10 @@ templ lensButton(v BoardView) {
 		}
 		data-on:click={ lensCommand(v) }
 		class={ "flex size-8 items-center justify-center rounded-sm border text-sm outline-none transition-colors",
-			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.Lente),
-			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.Lente) }
+			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.Lens),
+			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.Lens) }
 	>
-		if v.Lente {
+		if v.Lens {
 			@ui.Icon("EyeOff", "size-5")
 		} else {
 			@ui.Icon("Eye", "size-5")
@@ -1731,18 +1731,18 @@ templ lensButton(v BoardView) {
 templ curtainButton(v BoardView) {
 	<button
 		type="button"
-		aria-pressed={ fmt.Sprintf("%t", v.AvisoDaCortina) }
-		if v.AvisoDaCortina {
+		aria-pressed={ fmt.Sprintf("%t", v.CurtainNotice) }
+		if v.CurtainNotice {
 			aria-label="Abrir a cortina para a mesa"
 			title="Abrir a cortina: a mesa volta a ver a cena"
 		} else {
 			aria-label="Fechar a cortina"
 			title="Fechar a cortina: montar a cena sem a mesa ver"
 		}
-		data-on:click={ curtainCommand(v, curtainTarget(v.AvisoDaCortina)) }
+		data-on:click={ curtainCommand(v, curtainTarget(v.CurtainNotice)) }
 		class={ "flex size-8 items-center justify-center rounded-sm border text-sm outline-none transition-colors",
-			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.AvisoDaCortina),
-			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.AvisoDaCortina) }
+			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.CurtainNotice),
+			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.CurtainNotice) }
 	>
 			@ui.Icon("Theater", "size-5")
 		</button>
@@ -1800,7 +1800,7 @@ templ clickLayers(v BoardView) {
 	// que guarda o ID, e o leitor de tela anunciaria "Pintar dificil" — sem
 	// acento, porque id não é texto de gente. Quem diz a espécie é o
 	// TRILHO, pelo botão que está `aria-pressed`.
-	if v.Mestre {
+	if v.GM {
 		// PINTAR É UM TRAÇO e não um clique (ALE-203, item 8 do dono). O
 		// `pointerdown` começa, o `pointermove` continua enquanto o dedo
 		// atravessa casas novas, e o `pointerup` larga. O botão DIREITO apaga
@@ -1900,13 +1900,13 @@ templ clickLayers(v BoardView) {
 	// E a camada existe para o mestre MESMO SEM alvo de movimento: fora de
 	// combate ninguém tem a vez, e é justamente quando ele está arrumando a
 	// cena que marcar um grupo serve.
-	if v.AlvoDoMovimento != "" || v.Mestre {
+	if v.MoveTarget != "" || v.GM {
 		<button
 			type="button"
 			data-show="$tool === ''"
 			aria-label={ restLayerName(v) }
 			data-on:click={ clickRest(v) }
-			if v.Mestre {
+			if v.GM {
 				data-on:pointerdown={ takesRect(retanguloDePecas) }
 				data-on:pointermove={ followsRect(retanguloDePecas) }
 				data-on:pointerup={ dropTokensRect(v) }
@@ -1933,8 +1933,8 @@ templ clickLayers(v BoardView) {
 // peso morto que a busca da página ainda encontra.
 templ tableCollectionPlaces(v View) {
 	<div id="table-archive">
-		if v.Tabuleiro.Mestre && len(v.Tabuleiro.Acervo) > 0 {
-			@placesCollection(v.Tabuleiro)
+		if v.Board.GM && len(v.Board.Collection) > 0 {
+			@placesCollection(v.Board)
 		}
 	</div>
 }
@@ -2068,24 +2068,24 @@ templ newPieceBar(v BoardView) {
 		for _, t := range piecesFootprints {
 			<button
 				type="button"
-				title={ t.Rotulo + ": " + t.Lado + " (p107)" }
-				aria-label={ "Tamanho " + t.Rotulo }
-				data-attr:aria-pressed={ fmt.Sprintf("$new_token_size === %d ? 'true' : 'false'", t.Lados) }
-				data-class={ fmt.Sprintf("{'brush-on': $new_token_size === %d}", t.Lados) }
-				data-on:click={ fmt.Sprintf("$new_token_size = %d", t.Lados) }
+				title={ t.Label + ": " + t.Side + " (p107)" }
+				aria-label={ "Tamanho " + t.Label }
+				data-attr:aria-pressed={ fmt.Sprintf("$new_token_size === %d ? 'true' : 'false'", t.Sides) }
+				data-class={ fmt.Sprintf("{'brush-on': $new_token_size === %d}", t.Sides) }
+				data-on:click={ fmt.Sprintf("$new_token_size = %d", t.Sides) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
-			>{ t.Lado }</button>
+			>{ t.Side }</button>
 		}
 		for _, a := range piecesLooks {
 			<button
 				type="button"
-				title={ a.Dica }
-				aria-label={ "Aparência: " + a.Rotulo }
+				title={ a.Hint }
+				aria-label={ "Aparência: " + a.Label }
 				data-attr:aria-pressed={ fmt.Sprintf("$new_token_look === %q ? 'true' : 'false'", a.ID) }
 				data-class={ fmt.Sprintf("{'brush-on': $new_token_look === %q}", a.ID) }
 				data-on:click={ fmt.Sprintf("$new_token_look = %q", a.ID) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
-			>{ a.Rotulo }</button>
+			>{ a.Label }</button>
 		}
 		<span class="text-xs text-muted-foreground">clique numa casa para pôr</span>
 	</div>

@@ -165,27 +165,27 @@ var oCaminhoCitado = regexp.MustCompile(
 // não exigir que o teste citado esteja no pacote certo.
 
 func TestNoCitationNamesAMissingFile(t *testing.T) {
-	existentes := osNomesDeArquivoDoRepositorio(t)
-	arquivos := arquivosParaCitacao(t)
+	existing := osNomesDeArquivoDoRepositorio(t)
+	files := arquivosParaCitacao(t)
 
-	medidas := 0
-	for _, caminho := range arquivos {
-		conteudo, err := os.ReadFile(caminho)
+	measured := 0
+	for _, path := range files {
+		content, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("ler %s: %v", caminho, err)
+			t.Fatalf("ler %s: %v", path, err)
 		}
-		for numero, linha := range strings.Split(string(conteudo), "\n") {
-			for _, citado := range oCaminhoCitado.FindAllString(linha, -1) {
-				nome := filepath.Base(citado)
-				medidas++
-				if existentes[nome] || arquivosAusentesDePROPOSITO[nome] {
+		for number, row := range strings.Split(string(content), "\n") {
+			for _, cited := range oCaminhoCitado.FindAllString(row, -1) {
+				name := filepath.Base(cited)
+				measured++
+				if existing[name] || arquivosAusentesDePROPOSITO[name] {
 					continue
 				}
 				t.Errorf("%s:%d cita %s, que não existe na árvore.\n"+
 					"Se o arquivo foi MOVIDO ou RENOMEADO, a citação acompanha; se ele foi\n"+
 					"APAGADO de propósito, declare o nome em `arquivosAusentesDePROPOSITO` —\n"+
 					"dizer por que uma coisa saiu é bom, e o que falta é o ato ser explícito.",
-					caminho, numero+1, citado)
+					path, number+1, cited)
 			}
 		}
 	}
@@ -194,8 +194,8 @@ func TestNoCitationNamesAMissingFile(t *testing.T) {
 	// um regex que parou de casar são a mesma linha verde. O piso fica longe do
 	// número real de propósito — o que ele pega é a varredura QUEBRAR, não a
 	// prosa encolher.
-	if medidas < 300 {
-		t.Fatalf("só %d citações de arquivo lidas — o guarda ficou cego", medidas)
+	if measured < 300 {
+		t.Fatalf("só %d citações de arquivo lidas — o guarda ficou cego", measured)
 	}
 }
 
@@ -205,18 +205,18 @@ func TestNoCitationNamesAMissingFile(t *testing.T) {
 // silenciosa deste guarda.
 func osNomesDeArquivoDoRepositorio(t *testing.T) map[string]bool {
 	t.Helper()
-	fora := map[string]bool{}
-	if err := filepath.WalkDir("../..", func(caminho string, entrada os.DirEntry, err error) error {
+	outside := map[string]bool{}
+	if err := filepath.WalkDir("../..", func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() {
-			if entrada.Name() == "node_modules" || entrada.Name() == ".git" {
+		if entry.IsDir() {
+			if entry.Name() == "node_modules" || entry.Name() == ".git" {
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		fora[entrada.Name()] = true
+		outside[entry.Name()] = true
 		return nil
 	}); err != nil {
 		t.Fatalf("varrer a árvore: %v", err)
@@ -224,8 +224,8 @@ func osNomesDeArquivoDoRepositorio(t *testing.T) map[string]bool {
 	// CONTROLE: um arquivo que sabidamente existe. Sem ele, uma varredura que
 	// voltasse vazia faria todas as citações reprovarem de uma vez — e o
 	// diagnóstico apontaria para a prosa, que é o lugar errado.
-	if !fora["GLOSSARY.md"] {
+	if !outside["GLOSSARY.md"] {
 		t.Fatal("a varredura da árvore não achou o GLOSSARY.md: ela está medindo o lugar errado")
 	}
-	return fora
+	return outside
 }

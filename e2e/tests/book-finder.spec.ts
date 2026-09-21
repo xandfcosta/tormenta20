@@ -28,10 +28,10 @@ const CENAS = [
   { nome: 'bestiário', url: '/mestre/bestiario' },
 ]
 
-for (const cena of CENAS) {
-  test(`⌃K abre o buscador na cena de ${cena.nome}`, async ({ page }) => {
+for (const scene of CENAS) {
+  test(`⌃K abre o buscador na cena de ${scene.nome}`, async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 })
-    await page.goto(cena.url)
+    await page.goto(scene.url)
 
     // O CONTROLE: a caixa existe no documento e está FECHADA. Sem ele, "abriu"
     // seria verdade sobre uma caixa que nasce aberta, e a asserção não mediria
@@ -54,11 +54,11 @@ test('a seta desce do campo para o primeiro achado e o Enter abre a cena', async
   await page.keyboard.press('Control+k')
   await page.keyboard.type('abalado')
 
-  const primeiro = page.locator(ACHADO).first()
-  await expect(primeiro).toHaveText(/Abalado/)
+  const first = page.locator(ACHADO).first()
+  await expect(first).toHaveText(/Abalado/)
 
   await page.keyboard.press('ArrowDown')
-  await expect(primeiro).toBeFocused()
+  await expect(first).toBeFocused()
 
   await page.keyboard.press('Enter')
   // `waitForURL` e NUNCA `networkidle` depois de uma tecla que navega: o
@@ -107,17 +107,17 @@ test('o campo do buscador acende a linha, e não um retângulo colado na caixa',
   //
   // E2E porque a pergunta é de CASCATA: quem ganha entre duas folhas, e um
   // `:has()` que acende o pai. Só o navegador resolve isso.
-  const medida = await page.evaluate(() => {
-    const campo = document.getElementById('finder-field')!
-    const linha = campo.closest('.finder-row')!
+  const measure = await page.evaluate(() => {
+    const field = document.getElementById('finder-field')!
+    const row = field.closest('.finder-row')!
     return {
-      anelDoCampo: getComputedStyle(campo).outlineStyle,
-      bordaDaLinha: getComputedStyle(linha).borderBottomColor,
+      anelDoCampo: getComputedStyle(field).outlineStyle,
+      bordaDaLinha: getComputedStyle(row).borderBottomColor,
       bordaDeFora: getComputedStyle(document.getElementById('finder')!).borderTopColor,
     }
   })
-  expect(medida.anelDoCampo, 'o campo ainda desenha o anel do navegador').toBe('none')
+  expect(measure.anelDoCampo, 'o campo ainda desenha o anel do navegador').toBe('none')
   // O CONTROLE: a linha acende com uma cor DIFERENTE da borda da caixa. Sem ele,
   // "tem borda" seria verdade sobre a borda de sempre.
-  expect(medida.bordaDaLinha).not.toBe(medida.bordaDeFora)
+  expect(measure.bordaDaLinha).not.toBe(measure.bordaDeFora)
 })

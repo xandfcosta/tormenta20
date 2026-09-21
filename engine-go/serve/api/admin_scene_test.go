@@ -23,20 +23,20 @@ import (
 // dentro. Um link esquecido numa conversa vale mais para um estranho.
 func TestTheResetLinkLastsTwentyFourHours(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
+	owner := seedUser(t, s, "dono@t20.local")
 
-	antes := time.Now()
-	reset, err := s.accountResets().Mint(context.Background(), dono, dono)
+	before := time.Now()
+	reset, err := s.accountResets().Mint(context.Background(), owner, owner)
 	if err != nil {
 		t.Fatalf("cunhar: %v", err)
 	}
-	expira, err := time.Parse(time.RFC3339, reset.Expiresat)
+	expires, err := time.Parse(time.RFC3339, reset.Expiresat)
 	if err != nil {
 		t.Fatalf("expiresat %q não é RFC3339: %v", reset.Expiresat, err)
 	}
-	vida := expira.Sub(antes)
-	if vida < 23*time.Hour || vida > 25*time.Hour {
-		t.Errorf("o link vale %v, queria ~24h — o prazo do CONVITE é 7 dias e são coisas diferentes", vida)
+	life := expires.Sub(before)
+	if life < 23*time.Hour || life > 25*time.Hour {
+		t.Errorf("o link vale %v, queria ~24h — o prazo do CONVITE é 7 dias e são coisas diferentes", life)
 	}
 }
 
@@ -45,9 +45,9 @@ func TestTheResetLinkLastsTwentyFourHours(t *testing.T) {
 // para um aviso na tela — e nenhuma das duas repete a consulta.
 func TestMintingForAMissingAccountSaysItIsMissing(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
+	owner := seedUser(t, s, "dono@t20.local")
 
-	_, err := s.accountResets().Mint(context.Background(), 999999, dono)
+	_, err := s.accountResets().Mint(context.Background(), 999999, owner)
 	if !errors.Is(err, accounts.ErrUnknownAccount) {
 		t.Errorf("erro = %v, queria errUsuarioInexistente", err)
 	}
@@ -74,19 +74,19 @@ func TestMintingForAMissingAccountSaysItIsMissing(t *testing.T) {
 // no banco a cada corrida. Aqui o banco é descartável.
 func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
-	chefe := seedUser(t, s, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
 
-	rec := askScene(t, s, chefe, http.MethodPost, "/admin/convites")
-	corpo := rec.Body.String()
+	rec := askScene(t, s, boss, http.MethodPost, "/admin/convites")
+	body := rec.Body.String()
 
-	if !strings.Contains(corpo, "invite-url") {
-		t.Errorf("o remendo do link não veio:\n%s", corpo)
+	if !strings.Contains(body, "invite-url") {
+		t.Errorf("o remendo do link não veio:\n%s", body)
 	}
-	if !strings.Contains(corpo, `id="invites-panel"`) {
+	if !strings.Contains(body, `id="invites-panel"`) {
 		t.Error("o painel de convites não foi remendado — a contagem ao lado do botão fica velha")
 	}
-	if !strings.Contains(corpo, "Convites abertos (1)") {
-		t.Errorf("o painel voltou sem contar o convite recém-cunhado:\n%s", corpo)
+	if !strings.Contains(body, "Convites abertos (1)") {
+		t.Errorf("o painel voltou sem contar o convite recém-cunhado:\n%s", body)
 	}
 }
 
@@ -100,22 +100,22 @@ func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 func TestANonAdminDoesNotReachTheInviteRoute(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	seedUser(t, s, "chefe@t20.local")
-	qualquerUm := seedUser(t, s, "outro@t20.local")
+	anyone := seedUser(t, s, "outro@t20.local")
 
-	rec := askScene(t, s, qualquerUm, http.MethodPost, "/admin/convites")
+	rec := askScene(t, s, anyone, http.MethodPost, "/admin/convites")
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("a rota respondeu %d para quem não é admin, esperado 403", rec.Code)
 	}
 
-	semSessao := httptest.NewRecorder()
-	s.WebRouter().ServeHTTP(semSessao, httptest.NewRequest(http.MethodPost, "/admin/convites", nil))
-	if semSessao.Code != http.StatusSeeOther {
-		t.Errorf("sem credencial a cena respondeu %d, esperado 303 para a porta", semSessao.Code)
+	noSession := httptest.NewRecorder()
+	s.WebRouter().ServeHTTP(noSession, httptest.NewRequest(http.MethodPost, "/admin/convites", nil))
+	if noSession.Code != http.StatusSeeOther {
+		t.Errorf("sem credencial a cena respondeu %d, esperado 303 para a porta", noSession.Code)
 	}
 }
 
 // askScene bate no roteador do app, que é OUTRO que o `Router()` da API.
-func askScene(t *testing.T, s *Server, userID int64, metodo, caminho string) *httptest.ResponseRecorder {
+func askScene(t *testing.T, s *Server, userID int64, method, path string) *httptest.ResponseRecorder {
 	t.Helper()
 	u, err := s.queries.GetUserByID(context.Background(), userID)
 	if err != nil {
@@ -125,7 +125,7 @@ func askScene(t *testing.T, s *Server, userID int64, metodo, caminho string) *ht
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}
-	req := httptest.NewRequest(metodo, caminho, nil)
+	req := httptest.NewRequest(method, path, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
 	s.WebRouter().ServeHTTP(rec, req)

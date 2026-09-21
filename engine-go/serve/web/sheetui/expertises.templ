@@ -50,14 +50,14 @@ templ expertisePanelBody(v View) {
 					{ "Nenhuma perícia para \"" + v.Expertises.Search + "\"" }
 				</p>
 			} else {
-				for _, linha := range v.Expertises.Rows {
-					@expertiseRowBody(v, linha)
+				for _, row := range v.Expertises.Rows {
+					@expertiseRowBody(v, row)
 				}
 			}
 		</div>
 	</section>
-	for _, linha := range v.Expertises.Rows {
-		@expertiseDetail(linha)
+	for _, row := range v.Expertises.Rows {
+		@expertiseDetail(row)
 	}
 	@craftDialog(v)
 }
@@ -84,22 +84,22 @@ templ expertiseTerm(v View) {
 }
 
 // expertiseRowBody é uma perícia: o número, o nome, o atributo e o treino.
-templ expertiseRowBody(v View, linha expertiseRow) {
+templ expertiseRowBody(v View, row expertiseRow) {
 	<div
 		class={ "flex min-w-0 items-center gap-2 rounded-none border border-grimorio-iron p-1.5 transition-colors hover:border-grimorio-gold/50",
-			templ.KV("bg-grimorio-panel", linha.Trained) }
+			templ.KV("bg-grimorio-panel", row.Trained) }
 	>
-		@expertiseTotal(linha)
-		@ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + linha.Name, "data-on:click": "$detail = '" + linha.Key + "'"}) {
-			{ linha.Name }
+		@expertiseTotal(row)
+		@ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + row.Name, "data-on:click": "$detail = '" + row.Key + "'"}) {
+			{ row.Name }
 		}
-		if linha.TrainedOnly {
-			@onlyTrainedStar(linha)
+		if row.TrainedOnly {
+			@onlyTrainedStar(row)
 		}
-		@attributePicker(v, linha)
-		@trainingButton(v, linha)
-		if linha.Custom {
-			@ui.Button(ui.VariantGhostDanger, ui.SizeIconSmall, "", templ.Attributes{"type": "button", "aria-label": "Remover " + linha.Name, "data-on:click": sheetPost(v, "/pericias/remover/"+linha.Command)}) {
+		@attributePicker(v, row)
+		@trainingButton(v, row)
+		if row.Custom {
+			@ui.Button(ui.VariantGhostDanger, ui.SizeIconSmall, "", templ.Attributes{"type": "button", "aria-label": "Remover " + row.Name, "data-on:click": sheetPost(v, "/pericias/remover/"+row.Command)}) {
 				@ui.Icon("Trash2", "size-3.5")
 			}
 		}
@@ -112,21 +112,21 @@ templ expertiseRowBody(v View, linha expertiseRow) {
 // sentido no desenho e o rótulo acessível o diz por extenso. A composição
 // continua no diálogo, porque quem falha automaticamente ainda quer saber o que
 // perdeu.
-templ expertiseTotal(linha expertiseRow) {
+templ expertiseTotal(row expertiseRow) {
 	<button
 		type="button"
-		aria-label={ totalLabel(linha) }
+		aria-label={ totalLabel(row) }
 		aria-haspopup="dialog"
-		data-on:click={ "$detail = '" + linha.Key + "'" }
+		data-on:click={ "$detail = '" + row.Key + "'" }
 		class={ "flex size-11 shrink-0 items-center justify-center rounded-none border font-mono text-lg font-bold outline-none",
-			templ.KV("border-destructive/60 bg-destructive/10 text-penalty-ink", linha.AutoFail),
-			templ.KV("border-dashed border-grimorio-iron text-muted-foreground", linha.Locked && !linha.AutoFail),
-			templ.KV("border-grimorio-iron bg-grimorio-panel-raised text-grimorio-gold", !linha.Locked && !linha.AutoFail) }
+			templ.KV("border-destructive/60 bg-destructive/10 text-penalty-ink", row.AutoFail),
+			templ.KV("border-dashed border-grimorio-iron text-muted-foreground", row.Locked && !row.AutoFail),
+			templ.KV("border-grimorio-iron bg-grimorio-panel-raised text-grimorio-gold", !row.Locked && !row.AutoFail) }
 	>
-		if linha.AutoFail {
+		if row.AutoFail {
 			{ "—" }
 		} else {
-			{ linha.Total }
+			{ row.Total }
 		}
 	</button>
 }
@@ -135,12 +135,12 @@ templ expertiseTotal(linha expertiseRow) {
 //
 // Ela é um `<span>` com `title`, e não um botão com dica: um botão que não faz
 // nada é uma parada muda para quem navega por teclado, e seriam nove delas.
-templ onlyTrainedStar(linha expertiseRow) {
+templ onlyTrainedStar(row expertiseRow) {
 	<span
 		title="Pode ser usada apenas quando treinada"
 		class={ "inline-flex shrink-0",
-			templ.KV("text-warning-ink", linha.Locked),
-			templ.KV("text-muted-foreground", !linha.Locked) }
+			templ.KV("text-warning-ink", row.Locked),
+			templ.KV("text-muted-foreground", !row.Locked) }
 	>
 		@ui.Icon("Star", "size-3")
 	</span>
@@ -150,14 +150,14 @@ templ onlyTrainedStar(linha expertiseRow) {
 //
 // As opções mostram o modificador FINAL — raça e itens já dentro —, porque um
 // valor cru aqui faria a linha discordar do próprio total.
-templ attributePicker(v View, linha expertiseRow) {
+templ attributePicker(v View, row expertiseRow) {
 	<select
-		aria-label={ linha.Name + " atributo" }
-		data-on:change={ attributeCommand(v, linha.Command) }
+		aria-label={ row.Name + " atributo" }
+		data-on:change={ attributeCommand(v, row.Command) }
 		class={ ui.BadgeClasses("min-w-0 max-w-full shrink cursor-pointer border-grimorio-iron bg-transparent font-mono text-2xs text-foreground") }
 	>
 		for _, opcao := range v.Expertises.Attributes {
-			if opcao.Key == linha.Attribute {
+			if opcao.Key == row.Attribute {
 				<option value={ opcao.Key } selected>{ opcao.Label }</option>
 			} else {
 				<option value={ opcao.Key }>{ opcao.Label }</option>
@@ -167,16 +167,16 @@ templ attributePicker(v View, linha expertiseRow) {
 }
 
 // trainingButton liga e desliga o treino.
-templ trainingButton(v View, linha expertiseRow) {
+templ trainingButton(v View, row expertiseRow) {
 	<button
 		type="button"
 		role="switch"
-		aria-checked={ fmt.Sprintf("%t", linha.Trained) }
-		aria-label={ linha.Name + " treinada" }
-		data-on:click={ sheetPost(v, "/pericias/treino/"+linha.Command) }
+		aria-checked={ fmt.Sprintf("%t", row.Trained) }
+		aria-label={ row.Name + " treinada" }
+		data-on:click={ sheetPost(v, "/pericias/treino/"+row.Command) }
 		class={ ui.BadgeClasses("inline-flex shrink-0 items-center gap-1 text-3xs uppercase tracking-wider"),
-			templ.KV("border-grimorio-gold/60 text-grimorio-gold", linha.Trained),
-			templ.KV("border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40", !linha.Trained) }
+			templ.KV("border-grimorio-gold/60 text-grimorio-gold", row.Trained),
+			templ.KV("border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40", !row.Trained) }
 	>
 		@ui.Icon("Dumbbell", "size-3")
 		Treino
@@ -184,20 +184,20 @@ templ trainingButton(v View, linha expertiseRow) {
 }
 
 // expertiseDetail é a decomposição de UMA perícia.
-templ expertiseDetail(linha expertiseRow) {
-	@overlay(linha.Key, linha.Name, "Scroll", false) {
-		@breakdownRows(linha.Rows)
+templ expertiseDetail(row expertiseRow) {
+	@overlay(row.Key, row.Name, "Scroll", false) {
+		@breakdownRows(row.Rows)
 		<div class="flex items-center justify-between rounded-none border border-grimorio-iron bg-grimorio-panel-raised px-3 py-2">
 			<span class={ ui.SectionLabelClasses("muted", "") }>Total</span>
 			<span
 				class={ "flex items-center gap-1.5 font-mono text-2xl font-bold",
-					templ.KV("text-muted-foreground", linha.Locked),
-					templ.KV("text-grimorio-gold", !linha.Locked) }
+					templ.KV("text-muted-foreground", row.Locked),
+					templ.KV("text-grimorio-gold", !row.Locked) }
 			>
-				if linha.Locked {
+				if row.Locked {
 					@ui.Icon("Lock", "size-4 text-warning-ink")
 				}
-				{ linha.Total }
+				{ row.Total }
 			</span>
 		</div>
 	}

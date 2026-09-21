@@ -73,9 +73,9 @@ vida morte nivel niveis raca racas origem origens poder poderes divindade divind
 sentido sentidos idioma idiomas tamanho tamanhos deslocamento pontos ponto valor valores
 nome nomes numero numeros ordem ordens lista listas grupo grupos`)
 
-func wordSet(bruto string) map[string]bool {
+func wordSet(raw string) map[string]bool {
 	m := map[string]bool{}
-	for _, p := range strings.Fields(bruto) {
+	for _, p := range strings.Fields(raw) {
 		m[p] = true
 	}
 	return m
@@ -102,71 +102,71 @@ var declarations = map[string][]*regexp.Regexp{
 var camelBoundary = regexp.MustCompile(`([a-z0-9])([A-Z])`)
 
 // portugueseIn devolve os segmentos portugueses de um nome, ou nil.
-func portugueseIn(nome string) []string {
-	espacado := camelBoundary.ReplaceAllString(strings.ReplaceAll(nome, "_", " "), "$1 $2")
-	var achados []string
-	for _, seg := range strings.Fields(espacado) {
+func portugueseIn(name string) []string {
+	spaced := camelBoundary.ReplaceAllString(strings.ReplaceAll(name, "_", " "), "$1 $2")
+	var findings []string
+	for _, seg := range strings.Fields(spaced) {
 		if s := strings.ToLower(seg); portugueseWords[s] {
-			achados = append(achados, s)
+			findings = append(findings, s)
 		}
 	}
-	return achados
+	return findings
 }
 
 // TestNoNewIdentifierIsWrittenInPortuguese varre `.go`, `.templ` e `.ts` dos DOIS
 // pacotes e cobra a regra de idioma contra a linha de base.
 func TestNoNewIdentifierIsWrittenInPortuguese(t *testing.T) {
-	linhaDeBase := map[string]bool{}
-	bruto, err := os.ReadFile(portugueseBaseline)
+	baseline := map[string]bool{}
+	raw, err := os.ReadFile(portugueseBaseline)
 	if err != nil {
 		t.Fatalf("ler a linha de base %s: %v", portugueseBaseline, err)
 	}
-	for _, l := range strings.Split(string(bruto), "\n") {
+	for _, l := range strings.Split(string(raw), "\n") {
 		if l = strings.TrimSpace(l); l != "" && !strings.HasPrefix(l, "#") {
-			linhaDeBase[l] = true
+			baseline[l] = true
 		}
 	}
 
-	achados := map[string]string{}
-	medidos, arquivos := 0, 0
+	findings := map[string]string{}
+	measured, files := 0, 0
 	// A RAIZ é o repositório e não o `engine-go`: metade dos identificadores que
 	// originaram este guarda mora no `e2e/`, e um varredor que parasse no pacote
 	// de cima passaria verde sobre eles.
-	raiz := filepath.Join("..", "..")
-	err = filepath.WalkDir(raiz, func(caminho string, entrada fs.DirEntry, err error) error {
+	root := filepath.Join("..", "..")
+	err = filepath.WalkDir(root, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() {
-			switch entrada.Name() {
+		if entry.IsDir() {
+			switch entry.Name() {
 			case ".git", "node_modules", "test-results", "playwright-report", "dist", "backups", "data":
 				return fs.SkipDir
 			}
 			return nil
 		}
-		ext := filepath.Ext(caminho)
-		regras, tem := declarations[ext]
-		if !tem || strings.HasSuffix(caminho, "_templ.go") {
+		ext := filepath.Ext(path)
+		rules, found := declarations[ext]
+		if !found || strings.HasSuffix(path, "_templ.go") {
 			return nil
 		}
 		if ext == ".templ" {
-			regras = append(append([]*regexp.Regexp{}, regras...), declarations[".go"]...)
+			rules = append(append([]*regexp.Regexp{}, rules...), declarations[".go"]...)
 		}
-		corpo, err := os.ReadFile(caminho)
+		body, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		arquivos++
-		relativo := strings.TrimPrefix(filepath.ToSlash(strings.TrimPrefix(caminho, raiz)), "/")
-		for _, linha := range strings.Split(string(corpo), "\n") {
-			for _, rx := range regras {
-				m := rx.FindStringSubmatch(linha)
+		files++
+		relative := strings.TrimPrefix(filepath.ToSlash(strings.TrimPrefix(path, root)), "/")
+		for _, row := range strings.Split(string(body), "\n") {
+			for _, rx := range rules {
+				m := rx.FindStringSubmatch(row)
 				if m == nil {
 					continue
 				}
-				medidos++
+				measured++
 				if segs := portugueseIn(strings.TrimPrefix(m[1], "Test")); segs != nil {
-					achados[m[1]] = relativo + " (" + strings.Join(segs, ", ") + ")"
+					findings[m[1]] = relative + " (" + strings.Join(segs, ", ") + ")"
 				}
 				break
 			}
@@ -181,34 +181,34 @@ func TestNoNewIdentifierIsWrittenInPortuguese(t *testing.T) {
 	// terminal. Os pisos são folgados de propósito: eles denunciam a raiz trocada
 	// e o `WalkDir` que parou no primeiro diretório, não uma fatia que apagou dez
 	// funções.
-	if arquivos < 300 || medidos < 3000 {
-		t.Fatalf("a varredura leu %d arquivos e %d declarações — a raiz é o primeiro suspeito", arquivos, medidos)
+	if files < 300 || measured < 3000 {
+		t.Fatalf("a varredura leu %d arquivos e %d declarações — a raiz é o primeiro suspeito", files, measured)
 	}
 
-	var novos, sumidos []string
-	for nome, onde := range achados {
-		if !linhaDeBase[nome] {
-			novos = append(novos, nome+" — "+onde)
+	var fresh, gone []string
+	for name, where := range findings {
+		if !baseline[name] {
+			fresh = append(fresh, name+" — "+where)
 		}
 	}
-	for nome := range linhaDeBase {
-		if _, ainda := achados[nome]; !ainda {
-			sumidos = append(sumidos, nome)
+	for name := range baseline {
+		if _, still := findings[name]; !still {
+			gone = append(gone, name)
 		}
 	}
-	sort.Strings(novos)
-	sort.Strings(sumidos)
-	if len(novos) > 0 {
+	sort.Strings(fresh)
+	sort.Strings(gone)
+	if len(fresh) > 0 {
 		t.Errorf("identificador em PORTUGUÊS, e a regra pede inglês (CLAUDE.md, \"Idioma\") — %d:\n  %s\n"+
 			"Renomeie. A linha de base em %s registra a dívida ANTIGA e não aceita nome novo.",
-			len(novos), strings.Join(novos, "\n  "), portugueseBaseline)
+			len(fresh), strings.Join(fresh, "\n  "), portugueseBaseline)
 	}
-	if len(sumidos) > 0 {
+	if len(gone) > 0 {
 		t.Errorf("a linha de base cita %d nome(s) que não existem mais:\n  %s\n"+
 			"Tire-os de %s: uma catraca que não encolhe deixa de ser catraca, e um arquivo "+
 			"que descreve o que já não existe é defeito entregue igual a qualquer outro.",
-			len(sumidos), strings.Join(sumidos, "\n  "), portugueseBaseline)
+			len(gone), strings.Join(gone, "\n  "), portugueseBaseline)
 	}
 	t.Logf("dívida de idioma: %d identificadores em português, de %d medidos em %d arquivos",
-		len(achados), medidos, arquivos)
+		len(findings), measured, files)
 }

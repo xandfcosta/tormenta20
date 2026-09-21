@@ -46,7 +46,7 @@ type Access struct {
 func NewAccess(q *sqlcgen.Queries) Access { return Access{queries: q} }
 
 // Character carrega a ficha e cobra a trava.
-func (a Access) Character(ctx context.Context, quem app.Caller, id int64) (sqlcgen.Character, error) {
+func (a Access) Character(ctx context.Context, who app.Caller, id int64) (sqlcgen.Character, error) {
 	row, err := a.queries.GetCharacter(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, fmt.Errorf("o personagem %d não existe: %w", id, app.ErrNotFound)
@@ -54,16 +54,16 @@ func (a Access) Character(ctx context.Context, quem app.Caller, id int64) (sqlcg
 	if err != nil {
 		return row, fmt.Errorf("carregar o personagem %d: %w", id, err)
 	}
-	if row.Ownerid == quem.ID || quem.IsAdmin {
+	if row.Ownerid == who.ID || who.IsAdmin {
 		return row, nil
 	}
-	mestra, err := a.queries.IsCampaignGmForCharacter(ctx, sqlcgen.IsCampaignGmForCharacterParams{
-		Characterid: id, Ownerid: quem.ID,
+	gm, err := a.queries.IsCampaignGmForCharacter(ctx, sqlcgen.IsCampaignGmForCharacterParams{
+		Characterid: id, Ownerid: who.ID,
 	})
 	if err != nil {
-		return row, fmt.Errorf("conferir se %d mestra o personagem %d: %w", quem.ID, id, err)
+		return row, fmt.Errorf("conferir se %d mestra o personagem %d: %w", who.ID, id, err)
 	}
-	if !mestra {
+	if !gm {
 		return row, fmt.Errorf("o personagem %d é de outra pessoa: %w", id, app.ErrForbidden)
 	}
 	return row, nil
@@ -89,8 +89,8 @@ func (s Scopes) Access() Access { return s.access }
 // Os três juntos, e é isso que a ALE-220 consertou: o encerrar da SESSÃO não
 // limpava efeito nenhum, e a bênção de duração "cena" sobrevivia à cena. Hoje
 // existe um caminho só, e o da sessão chega aqui uma ficha por vez.
-func (s Scopes) EndScene(ctx context.Context, quem app.Caller, characterID int64) error {
-	if _, err := s.access.Character(ctx, quem, characterID); err != nil {
+func (s Scopes) EndScene(ctx context.Context, who app.Caller, characterID int64) error {
+	if _, err := s.access.Character(ctx, who, characterID); err != nil {
 		return err
 	}
 	if err := s.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
@@ -103,8 +103,8 @@ func (s Scopes) EndScene(ctx context.Context, quem app.Caller, characterID int64
 
 // EndDay expira a cena E o dia. É o descanso do livro, e por isso leva os dois
 // escopos: dormir encerra a cena em curso junto.
-func (s Scopes) EndDay(ctx context.Context, quem app.Caller, characterID int64) error {
-	if _, err := s.access.Character(ctx, quem, characterID); err != nil {
+func (s Scopes) EndDay(ctx context.Context, who app.Caller, characterID int64) error {
+	if _, err := s.access.Character(ctx, who, characterID); err != nil {
 		return err
 	}
 	if err := s.queries.DeleteSceneAndDayEffects(ctx, characterID); err != nil {
@@ -151,25 +151,25 @@ func (s Scopes) clearScenePlay(ctx context.Context, characterID int64) error {
 // A conta é do livro e mora pura no `domain/sheet`: aqui só se autoriza, chama e
 // grava.
 func (s Scopes) NightRest(
-	ctx context.Context, quem app.Caller, characterID int64, condicao string,
+	ctx context.Context, who app.Caller, characterID int64, condition string,
 ) (sheet.RestedVitals, error) {
-	row, err := s.access.Character(ctx, quem, characterID)
+	row, err := s.access.Character(ctx, who, characterID)
 	if err != nil {
 		return sheet.RestedVitals{}, err
 	}
 	// A conta do livro recebe o poço DERIVADO e não a coluna: o descanso devolve
 	// uma fração do máximo, e com o máximo velho um personagem que subiu de nível
 	// recuperaria pelo teto de ontem.
-	var depois sheet.RestedVitals
+	var after sheet.RestedVitals
 	if _, err := sheet.ApplyToPools(ctx, s.queries, s.catalogs, row,
-		func(pocos sheet.Pools) (sheet.Pools, error) {
-			depois = sheet.AfterNightRest(row.Level, condicao,
-				sheet.RestedVitals{HpCurrent: pocos.HpCurrent, MpCurrent: pocos.MpCurrent},
-				pocos.HpMax, pocos.MpMax)
-			pocos.HpCurrent, pocos.MpCurrent = depois.HpCurrent, depois.MpCurrent
-			return pocos, nil
+		func(pools sheet.Pools) (sheet.Pools, error) {
+			after = sheet.AfterNightRest(row.Level, condition,
+				sheet.RestedVitals{HpCurrent: pools.HpCurrent, MpCurrent: pools.MpCurrent},
+				pools.HpMax, pools.MpMax)
+			pools.HpCurrent, pools.MpCurrent = after.HpCurrent, after.MpCurrent
+			return pools, nil
 		}); err != nil {
 		return sheet.RestedVitals{}, fmt.Errorf("gravar os vitais do personagem %d: %w", characterID, err)
 	}
-	return depois, nil
+	return after, nil
 }

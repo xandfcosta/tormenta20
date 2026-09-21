@@ -1,4 +1,4 @@
-//#region ../node_modules/.pnpm/pdfjs-dist@6.2.108/node_modules/pdfjs-dist/build/pdf.mjs
+//#region ../../../tormenta20/node_modules/.pnpm/pdfjs-dist@6.2.108/node_modules/pdfjs-dist/build/pdf.mjs
 var e = typeof process == "object" && process + "" == "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser"), t = [
 	Infinity,
 	Infinity,
@@ -16420,22 +16420,22 @@ var la = class {
 	zoom = 1;
 	renderizando = Promise.resolve();
 	constructor(e, t, n, r, i) {
-		this.raiz = e, this.cartaz = t, this.tela = n, this.camada = r, this.rotulo = i;
+		this.root = e, this.poster = t, this.page = n, this.layer = r, this.label = i;
 	}
 	get noArquivo() {
-		return this.cartaz.pagina + this.cartaz.abertura;
+		return this.poster.pagina + this.poster.abertura;
 	}
 	async abre() {
-		gr.workerSrc = this.cartaz.worker, this.doc = await kr({
-			url: this.cartaz.livro,
+		gr.workerSrc = this.poster.worker, this.doc = await kr({
+			url: this.poster.livro,
 			rangeChunkSize: 262144
-		}).promise, await this.desenha(), this.raiz.dataset.pronto = "";
+		}).promise, await this.desenha(), this.root.dataset.pronto = "";
 		for (let e of document.querySelectorAll("[data-acao]")) e.disabled = !1;
 	}
 	vai(e) {
 		if (!this.doc) return;
 		let t = this.noArquivo + e;
-		t < 1 || t > this.doc.numPages || (this.cartaz.pagina += e, this.desenha());
+		t < 1 || t > this.doc.numPages || (this.poster.pagina += e, this.desenha());
 	}
 	aproxima(e) {
 		this.zoom = Math.min(ra, Math.max(na, this.zoom * e)), this.desenha();
@@ -16445,20 +16445,20 @@ var la = class {
 	}
 	async pinta() {
 		if (!this.doc) return;
-		let e = await this.doc.getPage(this.noArquivo), t = Math.min(this.raiz.clientWidth - 32, ia) / e.getViewport({ scale: 1 }).width * this.zoom, n = e.getViewport({ scale: t }), r = Math.min(window.devicePixelRatio || 1, aa);
-		this.tela.width = Math.floor(n.width * r), this.tela.height = Math.floor(n.height * r), this.tela.style.width = `${Math.floor(n.width)}px`, this.tela.style.height = `${Math.floor(n.height)}px`;
-		let i = this.tela.getContext("2d");
+		let e = await this.doc.getPage(this.noArquivo), t = Math.min(this.root.clientWidth - 32, ia) / e.getViewport({ scale: 1 }).width * this.zoom, n = e.getViewport({ scale: t }), r = Math.min(window.devicePixelRatio || 1, aa);
+		this.page.width = Math.floor(n.width * r), this.page.height = Math.floor(n.height * r), this.page.style.width = `${Math.floor(n.width)}px`, this.page.style.height = `${Math.floor(n.height)}px`;
+		let i = this.page.getContext("2d");
 		if (!i) return;
 		i.setTransform(r, 0, 0, r, 0, 0), await e.render({
-			canvas: this.tela,
+			canvas: this.page,
 			canvasContext: i,
 			viewport: n
 		}).promise;
 		let a = await e.getTextContent();
-		this.camada.style.width = `${Math.floor(n.width)}px`, this.camada.style.height = `${Math.floor(n.height)}px`, this.camada.replaceChildren(...ca(a.items, this.cartaz.termo, n).map((e) => {
+		this.layer.style.width = `${Math.floor(n.width)}px`, this.layer.style.height = `${Math.floor(n.height)}px`, this.layer.replaceChildren(...ca(a.items, this.poster.termo, n).map((e) => {
 			let t = document.createElement("span");
 			return t.className = "reader-mark", t.style.left = `${e.esquerda}px`, t.style.top = `${e.topo}px`, t.style.width = `${e.largura}px`, t.style.height = `${e.altura}px`, t;
-		})), this.rotulo.textContent = `p${this.cartaz.pagina} de ${this.doc.numPages - this.cartaz.abertura}`;
+		})), this.label.textContent = `p${this.poster.pagina} de ${this.doc.numPages - this.poster.abertura}`;
 	}
 };
 function ua() {

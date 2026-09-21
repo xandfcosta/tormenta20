@@ -87,15 +87,15 @@ func stepCost(from, to Square, terrain MoveTerrain) (int, stepDoubling, error) {
 	if dx > 1 || dy > 1 || (dx == 0 && dy == 0) {
 		return 0, stepDoubling{}, fmt.Errorf("passo inválido de (%d,%d) para (%d,%d): o caminho tem de ser quadrado a quadrado", from.X, from.Y, to.X, to.Y)
 	}
-	por := stepDoubling{diagonal: dx == 1 && dy == 1, difficult: terrain.Difficult[to]}
+	by := stepDoubling{diagonal: dx == 1 && dy == 1, difficult: terrain.Difficult[to]}
 	cost := 1
-	if por.diagonal {
+	if by.diagonal {
 		cost = 2
 	}
-	if por.difficult {
+	if by.difficult {
 		cost *= 2
 	}
-	return cost, por, nil
+	return cost, by, nil
 }
 
 // PathCost soma o custo de um caminho, passo a passo, em quadrados (T20 p238).
@@ -108,15 +108,15 @@ func stepCost(from, to Square, terrain MoveTerrain) (int, stepDoubling, error) {
 func PathCost(path []Square, terrain MoveTerrain, budgetSquares int) MoveCost {
 	out := MoveCost{Budget: budgetSquares, Legal: true, StoppedAt: -1}
 	for i := 1; i < len(path); i++ {
-		cost, por, err := stepCost(path[i-1], path[i], terrain)
+		cost, by, err := stepCost(path[i-1], path[i], terrain)
 		if err != nil {
 			return MoveCost{Budget: budgetSquares, Legal: false, Malformed: true, StoppedAt: i, Reason: err.Error()}
 		}
 		out.Squares += cost
-		if por.diagonal {
+		if by.diagonal {
 			out.Diagonals++
 		}
-		if por.difficult {
+		if by.difficult {
 			out.Difficult++
 		}
 		if budgetSquares >= 0 && out.Squares > budgetSquares && out.Legal {
@@ -234,10 +234,10 @@ func costToEachSquare(from Square, budget int, terrain MoveTerrain) map[Square]i
 // A ponta de baixo é ABERTA e a de cima FECHADA, e é o que faz duas faixas
 // vizinhas cobrirem tudo sem pintar a mesma casa duas vezes: o ouro é
 // `(0, deslocamento]` e o azul é `(deslocamento, 2×deslocamento]`.
-func withinReach(cost map[Square]int, from Square, minimo, maximo int) []Square {
+func withinReach(cost map[Square]int, from Square, min, max int) []Square {
 	out := make([]Square, 0, len(cost))
 	for square, c := range cost {
-		if square != from && c > minimo && c <= maximo {
+		if square != from && c > min && c <= max {
 			out = append(out, square)
 		}
 	}
@@ -289,14 +289,14 @@ func sortSquares(list []Square) {
 // manda só o DESTINO, e o servidor diz por onde ela passou e quanto custou. O
 // cliente não tem opinião sobre a régua do livro.
 func PathBetween(de, ate Square) []Square {
-	caminho := []Square{de}
+	path := []Square{de}
 	x, y := de.X, de.Y
 	for x != ate.X || y != ate.Y {
 		x += signOf(ate.X - x)
 		y += signOf(ate.Y - y)
-		caminho = append(caminho, Square{X: x, Y: y})
+		path = append(path, Square{X: x, Y: y})
 	}
-	return caminho
+	return path
 }
 
 // signOf é o `Math.sign` que o Go não tem. Devolve -1, 0 ou 1.
@@ -326,16 +326,16 @@ func signOf(n int) int {
 // Uma parada IGUAL à anterior (quem soltou a peça onde ela já estava) não
 // acrescenta nada, e isso cai fora sozinho: o `PathBetween` devolve um quadrado
 // só e a emenda o descarta.
-func PathThroughStops(paradas []Square) []Square {
-	if len(paradas) == 0 {
+func PathThroughStops(stops []Square) []Square {
+	if len(stops) == 0 {
 		return nil
 	}
-	caminho := []Square{paradas[0]}
-	for i := 1; i < len(paradas); i++ {
-		trecho := PathBetween(paradas[i-1], paradas[i])
-		caminho = append(caminho, trecho[1:]...)
+	path := []Square{stops[0]}
+	for i := 1; i < len(stops); i++ {
+		excerpt := PathBetween(stops[i-1], stops[i])
+		path = append(path, excerpt[1:]...)
 	}
-	return caminho
+	return path
 }
 
 // ReachFromStops é o que a tela precisa mostrar ENQUANTO a pessoa monta
@@ -349,25 +349,25 @@ func PathThroughStops(paradas []Square) []Square {
 // restante pode ser ZERO: aí o alcance é VAZIO — a tela diz "acabou" em vez de
 // oferecer casas que o servidor recusaria. Ele nunca inclui o quadrado onde a
 // peça está, porque ficar parado não é para onde se pode andar.
-func ReachFromStops(paradas []Square, orcamento int, terreno MoveTerrain) (dentro, segundo []Square, restante int) {
-	if len(paradas) == 0 {
-		return nil, nil, orcamento
+func ReachFromStops(stops []Square, budget int, terrain MoveTerrain) (inside, segundo []Square, remaining int) {
+	if len(stops) == 0 {
+		return nil, nil, budget
 	}
-	ultima := paradas[len(paradas)-1]
-	gasto := PathCost(PathThroughStops(paradas), terreno, -1).Squares
-	restante = atLeastZero(orcamento - gasto)
-	if orcamento < 0 {
-		return nil, nil, restante
+	last := stops[len(stops)-1]
+	spent := PathCost(PathThroughStops(stops), terrain, -1).Squares
+	remaining = atLeastZero(budget - spent)
+	if budget < 0 {
+		return nil, nil, remaining
 	}
 	// AS DUAS FAIXAS descontam o que JÁ FOI GASTO, e é isso que as faz encolher
 	// enquanto a pessoa empilha paradas: o ouro é o que sobra da ação de
 	// movimento, e o azul é o que sobra das duas juntas (p233). Quando o caminho
 	// já passou do deslocamento, o ouro seca e só o azul continua oferecendo
 	// casa — que é exatamente a leitura certa da cena.
-	cost := costToEachSquare(ultima, atLeastZero(2*orcamento-gasto), terreno)
-	return withinReach(cost, ultima, 0, restante),
-		withinReach(cost, ultima, restante, atLeastZero(2*orcamento-gasto)),
-		restante
+	cost := costToEachSquare(last, atLeastZero(2*budget-spent), terrain)
+	return withinReach(cost, last, 0, remaining),
+		withinReach(cost, last, remaining, atLeastZero(2*budget-spent)),
+		remaining
 }
 
 func atLeastZero(n int) int {

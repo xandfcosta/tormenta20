@@ -59,10 +59,10 @@ func (f rulesFixture) Join(t *testing.T, campaignID int64) {
 // O dono entra como ADMIN porque a fixture semeia a campanha sem dizer de quem
 // ela é para este caso: o que se mede aqui é a regra opcional, e a trava tem
 // guarda próprio na cena.
-func (f rulesFixture) putRules(t *testing.T, campaignID int64, regras ...string) error {
+func (f rulesFixture) putRules(t *testing.T, campaignID int64, rules ...string) error {
 	t.Helper()
 	return f.s.campaignLifecycle().SaveIgnoredRules(
-		context.Background(), app.Caller{IsAdmin: true}, campaignID, regras)
+		context.Background(), app.Caller{IsAdmin: true}, campaignID, rules)
 }
 
 // cargaIgnorada pergunta ao CARREGAMENTO da ficha, e não à tabela: é o que o
@@ -77,7 +77,7 @@ func (f rulesFixture) cargaIgnorada(t *testing.T) bool {
 	if err != nil {
 		t.Fatalf("carregar ficha: %v", err)
 	}
-	return dto.IgnoredRules.Carga
+	return dto.IgnoredRules.Load
 }
 
 func TestReplaceCampaignRules(t *testing.T) {

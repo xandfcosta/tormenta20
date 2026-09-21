@@ -38,10 +38,10 @@ type VitalPools struct {
 // (classVitalsTable/multiclass*).
 func (c *Catalogs) ComputeVitals(ctx VitalContext) VitalPools {
 	con := ctx.AttrTotals["constitution"]
-	gpv, gpm := c.sumVitalGrants(ctx)
+	groupHP, groupMP := c.sumVitalGrants(ctx)
 	return VitalPools{
-		PvMax: max(0, multiclassPvPool(ctx.Classes, con)+gpv),
-		PmMax: max(0, multiclassMpPool(ctx.Classes)+gpm),
+		PvMax: max(0, multiclassPvPool(ctx.Classes, con)+groupHP),
+		PmMax: max(0, multiclassMpPool(ctx.Classes)+groupMP),
 	}
 }
 

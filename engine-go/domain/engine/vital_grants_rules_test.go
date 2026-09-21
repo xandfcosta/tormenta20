@@ -30,7 +30,7 @@ func TestSameAttributeGrantedTwiceCountsOnce(t *testing.T) {
 	c := vitalCatalogs(t)
 	attrs := map[string]int{"wisdom": 4, "constitution": 0}
 
-	clerigoDruida := VitalContext{
+	clericDruid := VitalContext{
 		Level: 8,
 		Classes: []ClassEntry{
 			{ClassName: "Clérigo", Level: 4},
@@ -38,21 +38,21 @@ func TestSameAttributeGrantedTwiceCountsOnce(t *testing.T) {
 		},
 		AttrTotals: attrs,
 	}
-	soClerigo := VitalContext{
+	clericOnly := VitalContext{
 		Level:      8,
 		Classes:    []ClassEntry{{ClassName: "Clérigo", Level: 8}},
 		AttrTotals: attrs,
 	}
 
-	_, pmDupla := c.sumVitalGrants(clerigoDruida)
-	_, pmSimples := c.sumVitalGrants(soClerigo)
+	_, doublePM := c.sumVitalGrants(clericDruid)
+	_, simplePM := c.sumVitalGrants(clericOnly)
 
-	if pmDupla != pmSimples {
-		t.Errorf("Clérigo/Druida concedeu %d PM e o Clérigo puro %d — a Sabedoria entrou duas vezes (p226)", pmDupla, pmSimples)
+	if doublePM != simplePM {
+		t.Errorf("Clérigo/Druida concedeu %d PM e o Clérigo puro %d — a Sabedoria entrou duas vezes (p226)", doublePM, simplePM)
 	}
 	// E entrou UMA vez, não zero: a regra é não dobrar, não anular.
-	if pmSimples != attrs["wisdom"] {
-		t.Errorf("PM concedido = %d, want %d (a Sabedoria uma vez)", pmSimples, attrs["wisdom"])
+	if simplePM != attrs["wisdom"] {
+		t.Errorf("PM concedido = %d, want %d (a Sabedoria uma vez)", simplePM, attrs["wisdom"])
 	}
 }
 

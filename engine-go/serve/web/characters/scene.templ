@@ -52,7 +52,7 @@ templ charactersBody(v View) {
 templ charactersBar(v View) {
 	<div
 		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
-		data-signals={ fmt.Sprintf("{search: %q, dossier: false, %s}", v.Busca, ui.StageSignals(v.CursorID)) }
+		data-signals={ fmt.Sprintf("{search: %q, dossier: false, %s}", v.Search, ui.StageSignals(v.CursorID)) }
 		data-on:keydown__window="(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossier = !$dossier)"
 	>
 		<a
@@ -70,7 +70,7 @@ templ charactersBar(v View) {
 					data-busca
 					data-bind:search
 					data-on:input__debounce.250ms="@get('/personagens')"
-					value={ v.Busca }
+					value={ v.Search }
 					placeholder="Buscar personagem"
 					aria-label="Buscar personagem"
 					class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none md:text-sm"
@@ -82,7 +82,7 @@ templ charactersBar(v View) {
 
 // ── o palco ──────────────────────────────────────────────────────────────────
 
-templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
+templ heroStage(h HeroCard, anterior, next *ui.Neighbor) {
 	<div
 		data-show={ fmt.Sprintf("$cursor == %d", h.ID) }
 		data-class={ ui.EnteringStage(h.ID) }
@@ -108,7 +108,7 @@ templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
 				</span>
 				<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
 			</a>
-			@ui.NeighborPortrait(proximo, "Próximo")
+			@ui.NeighborPortrait(next, "Próximo")
 		</div>
 		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
 		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
@@ -159,10 +159,10 @@ templ heroVitals(h HeroCard) {
 	</dl>
 }
 
-templ oneVital(rotulo, valor, tom string, apagado bool) {
+templ oneVital(label, value, tom string, apagado bool) {
 	<div class={ "flex items-baseline gap-1.5", templ.KV("opacity-50", apagado) }>
-		<dt class={ ui.FieldLabelClasses("muted", "") }>{ rotulo }</dt>
-		<dd class={ "font-mono text-lg font-semibold tabular-nums", tom }>{ valor }</dd>
+		<dt class={ ui.FieldLabelClasses("muted", "") }>{ label }</dt>
+		<dd class={ "font-mono text-lg font-semibold tabular-nums", tom }>{ value }</dd>
 	</div>
 }
 
@@ -250,7 +250,7 @@ templ filmFrame(h HeroCard, i int) {
 		// conteúdo já diz quem é, e um nome acessível escrito à mão por cima
 		// seriam duas fontes para a mesma frase.
 		Name: h.Name, Sub: h.Role,
-		Destino: "/personagens/" + strconv.FormatInt(h.ID, 10),
+		Destination: "/personagens/" + strconv.FormatInt(h.ID, 10),
 	}) {
 	}
 }
@@ -259,8 +259,8 @@ templ filmFrame(h HeroCard, i int) {
 // do teclado morre na última posição do trilho: a seta chega na vaga e a tecla
 // que abriu tudo até ali não faz nada. (Ele mora aqui fora porque o `templ` NÃO
 // aceita comentário dentro de uma lista de atributos — o `generate` cai.)
-templ createFrame(indice int) {
-	@ui.BlankMarker(indice, "Forjar um herói", "/personagens/nova")
+templ createFrame(index int) {
+	@ui.BlankMarker(index, "Forjar um herói", "/personagens/nova")
 }
 
 // ── o dossiê ─────────────────────────────────────────────────────────────────
@@ -306,10 +306,10 @@ templ heroDossier(h HeroCard) {
 				Habilidades de { h.Race }
 			</h3>
 			<ul class="mt-2 space-y-3">
-				for _, hab := range h.Dossier {
+				for _, ability := range h.Dossier {
 					<li>
-						<p class="font-heading text-sm tracking-wide text-foreground">{ hab.Name }</p>
-						<p class="text-xs leading-relaxed text-muted-foreground">{ hab.Description }</p>
+						<p class="font-heading text-sm tracking-wide text-foreground">{ ability.Name }</p>
+						<p class="text-xs leading-relaxed text-muted-foreground">{ ability.Description }</p>
 					</li>
 				}
 			</ul>
@@ -317,11 +317,11 @@ templ heroDossier(h HeroCard) {
 	</aside>
 }
 
-templ dossierRow(rotulo, valor string) {
-	if valor != "" {
+templ dossierRow(label, value string) {
+	if value != "" {
 		<div class="flex justify-between gap-3">
-			<dt class="shrink-0 text-muted-foreground">{ rotulo }</dt>
-			<dd class="text-right text-foreground">{ valor }</dd>
+			<dt class="shrink-0 text-muted-foreground">{ label }</dt>
+			<dd class="text-right text-foreground">{ value }</dd>
 		</div>
 	}
 }

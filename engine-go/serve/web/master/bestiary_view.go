@@ -60,16 +60,16 @@ type BestiaryView struct {
 //
 // Quando o filtro muda e a criatura escolhida sai da lista, cai na primeira em
 // vez de esvaziar — painel vazio ao lado de uma lista cheia parece defeito.
-func chosenOrFirst(lista []book.Entry, id string) *book.Entry {
-	if len(lista) == 0 {
+func chosenOrFirst(list []book.Entry, id string) *book.Entry {
+	if len(list) == 0 {
 		return nil
 	}
-	for i := range lista {
-		if lista[i].ID == id {
-			return &lista[i]
+	for i := range list {
+		if list[i].ID == id {
+			return &list[i]
 		}
 	}
-	return &lista[0]
+	return &list[0]
 }
 
 // LoadBestiaryFrom monta a cena a partir do que veio na URL ou nos sinais.
@@ -77,25 +77,25 @@ func chosenOrFirst(lista []book.Entry, id string) *book.Entry {
 // A BASE é o primeiro parâmetro e é obrigatória: construtor que consegue
 // produzir valor inválido é o próprio defeito — pedir aqui torna o
 // esquecimento impossível em vez de detectável.
-func LoadBestiaryFrom(base string, livro bookui.BookAddress, busca string, tipos []string, ndMin, ndMax float64, escolhido string) BestiaryView {
-	todos := book.Creatures()
-	lista := book.FilterCreatures(todos, book.CreatureFilter{Busca: busca, Tipos: tipos, NDMin: ndMin, NDMax: ndMax})
+func LoadBestiaryFrom(base string, bookRef bookui.BookAddress, search string, kinds []string, ndMin, ndMax float64, chosen string) BestiaryView {
+	all := book.Creatures()
+	list := book.FilterCreatures(all, book.CreatureFilter{Search: search, Kinds: kinds, NDMin: ndMin, NDMax: ndMax})
 	return BestiaryView{
 		Base:    base,
-		Book:    livro,
-		Entries: lista,
-		Total:   len(todos),
-		Chosen:  chosenOrFirst(lista, escolhido),
-		Term:    busca,
-		Types:   tipos,
+		Book:    bookRef,
+		Entries: list,
+		Total:   len(all),
+		Chosen:  chosenOrFirst(list, chosen),
+		Term:    search,
+		Types:   kinds,
 		CRMin:   ndMin,
 		CRMax:   ndMax,
 	}
 }
 
 // typeOn diz se o crachá está ligado, para a cena não precisar de `slices`.
-func (v BestiaryView) typeOn(tipo string) bool {
-	return slices.Contains(v.Types, tipo)
+func (v BestiaryView) typeOn(kind string) bool {
+	return slices.Contains(v.Types, kind)
 }
 
 // crInBox escreve o número do campo sem o `.0` que o float traria: a caixa
@@ -110,16 +110,16 @@ func crInBox(nd float64) string {
 // bloco. O que se vê chega desenhado; o que viaja de volta é o que o mestre
 // escolheu.
 func BestiarySignals(v BestiaryView) string {
-	tipos, _ := json.Marshal(v.Types)
+	kinds, _ := json.Marshal(v.Types)
 	if v.Types == nil {
-		tipos = []byte("[]")
+		kinds = []byte("[]")
 	}
-	escolhida := ""
+	chosen := ""
 	if v.Chosen != nil {
-		escolhida = v.Chosen.ID
+		chosen = v.Chosen.ID
 	}
-	busca, _ := json.Marshal(v.Term)
-	criatura, _ := json.Marshal(escolhida)
+	search, _ := json.Marshal(v.Term)
+	creature, _ := json.Marshal(chosen)
 	// `sheet_open` sai DAQUI e não de um evento de sinal separado: este
 	// `data-signals` mora no `#bestiary`, que É o elemento remendado, então ele
 	// REDECLARA os sinais a cada remendo. Um evento de sinal mandado depois do
@@ -131,7 +131,7 @@ func BestiarySignals(v BestiaryView) string {
 	// aberto chegam no MESMO remendo — atômicos, sem janela em que um esteja
 	// aplicado e o outro não.
 	return fmt.Sprintf(`{search: %s, ndMin: %s, ndMax: %s, tipos: %s, creature: %s, sheet_open: %t}`,
-		busca, crInBox(v.CRMin), crInBox(v.CRMax), tipos, criatura, v.Open)
+		search, crInBox(v.CRMin), crInBox(v.CRMax), kinds, creature, v.Open)
 }
 
 // BestiaryBase é o prefixo de rota da cena, e ele NÃO tem padrão.
@@ -154,20 +154,20 @@ func (v BestiaryView) BestiaryBase() string {
 // "Nenhuma criatura casa com os filtros" sem explicar por quê. É diferente do
 // `knownTypes`, que descarta de propósito porque lá o conjunto inteiro vem
 // da URL e uma vírgula sobrando não deve esvaziar a tela.
-func ToggleType(tipos []string, tipo string) ([]string, error) {
-	if !slices.Contains(book.CreatureTypes, tipo) {
-		return nil, fmt.Errorf("tipo de criatura desconhecido: %s", tipo)
+func ToggleType(kinds []string, kind string) ([]string, error) {
+	if !slices.Contains(book.CreatureTypes, kind) {
+		return nil, fmt.Errorf("tipo de criatura desconhecido: %s", kind)
 	}
-	if i := slices.Index(tipos, tipo); i >= 0 {
-		return slices.Delete(slices.Clone(tipos), i, i+1), nil
+	if i := slices.Index(kinds, kind); i >= 0 {
+		return slices.Delete(slices.Clone(kinds), i, i+1), nil
 	}
-	return append(slices.Clone(tipos), tipo), nil
+	return append(slices.Clone(kinds), kind), nil
 }
 
 // openTheEntry marca o pedido que deve ABRIR a ficha ao terminar.
 //
 // A marca vai na URL e não num sinal porque a MESMA rota serve a busca e os
-// filtros de tipo, e os dois mandam os sinais todos — inclusive o `criatura`.
+// filtros de tipo, e os dois mandam os sinais todos — inclusive o `creature`.
 // Um sinal não distinguiria "escolhi esta criatura" de "digitei uma letra na
 // busca com uma criatura já escolhida", e a busca passaria a abrir a ficha
 // sozinha a cada tecla.

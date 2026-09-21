@@ -37,10 +37,10 @@ type Lifecycle struct {
 }
 
 func NewLifecycle(
-	db *sql.DB, q *sqlcgen.Queries, trava session.Access,
-	tabuleiros *boards.Store, sessoes *session.Store,
+	db *sql.DB, q *sqlcgen.Queries, lock session.Access,
+	boardList *boards.Store, sessions *session.Store,
 ) Lifecycle {
-	return Lifecycle{db: db, queries: q, access: trava, boards: tabuleiros, sessions: sessoes}
+	return Lifecycle{db: db, queries: q, access: lock, boards: boardList, sessions: sessions}
 }
 
 // Open abre uma mesa, e ela nasce COM link de convite.
@@ -59,15 +59,15 @@ func NewLifecycle(
 // tela (`RotateInvite`). Abrir mesa não AUTORIZA nada — quem está autenticado
 // abre a própria.
 func (l Lifecycle) Open(
-	ctx context.Context, dono int64, nome, descricao string,
+	ctx context.Context, owner int64, name, description string,
 ) (int64, error) {
-	agora := dbvalue.NowISO()
+	now := dbvalue.NowISO()
 	c, err := l.queries.CreateCampaign(ctx, sqlcgen.CreateCampaignParams{
-		Ownerid: dono, Name: nome, Description: textOrNull(descricao),
-		Createdat: agora, Updatedat: agora,
+		Ownerid: owner, Name: name, Description: textOrNull(description),
+		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		return 0, fmt.Errorf("abrir a campanha %q de %d: %w", nome, dono, err)
+		return 0, fmt.Errorf("abrir a campanha %q de %d: %w", name, owner, err)
 	}
 	if _, err := l.mintInvite(ctx, c.ID); err != nil {
 		return 0, err
@@ -87,16 +87,16 @@ func (l Lifecycle) Open(
 // — a mesma decisão que o `session.Rename` e o `character.SaveCustomItem`
 // tomaram.
 func (l Lifecycle) Rename(
-	ctx context.Context, quem app.Caller, campanhaID int64, nome, descricao string,
+	ctx context.Context, who app.Caller, campaignID int64, name, description string,
 ) error {
-	if _, err := l.access.OwnedCampaign(ctx, quem, campanhaID); err != nil {
+	if _, err := l.access.OwnedCampaign(ctx, who, campaignID); err != nil {
 		return err
 	}
 	if _, err := l.db.ExecContext(ctx,
 		"UPDATE campaigns SET name = ?, description = ?, updatedAt = ? WHERE id = ?",
-		nome, nullOrText(descricao), dbvalue.NowISO(), campanhaID,
+		name, nullOrText(description), dbvalue.NowISO(), campaignID,
 	); err != nil {
-		return fmt.Errorf("gravar o texto da campanha %d: %w", campanhaID, err)
+		return fmt.Errorf("gravar o texto da campanha %d: %w", campaignID, err)
 	}
 	return nil
 }
@@ -109,26 +109,26 @@ func (l Lifecycle) Rename(
 //
 // Cunhar link é DAR ACESSO à mesa, então a trava é a do dono e não a de membro.
 func (l Lifecycle) RotateInvite(
-	ctx context.Context, quem app.Caller, campanhaID int64,
+	ctx context.Context, who app.Caller, campaignID int64,
 ) (string, error) {
-	if _, err := l.access.OwnedCampaign(ctx, quem, campanhaID); err != nil {
+	if _, err := l.access.OwnedCampaign(ctx, who, campaignID); err != nil {
 		return "", err
 	}
-	return l.mintInvite(ctx, campanhaID)
+	return l.mintInvite(ctx, campaignID)
 }
 
 // mintInvite é a cunhagem sem trava, para o nascimento — que não tem dono a
 // conferir porque acabou de escolher um.
-func (l Lifecycle) mintInvite(ctx context.Context, campanhaID int64) (string, error) {
+func (l Lifecycle) mintInvite(ctx context.Context, campaignID int64) (string, error) {
 	token, err := secret.Token()
 	if err != nil {
 		return "", err
 	}
 	if _, err := l.queries.SetInviteToken(ctx, sqlcgen.SetInviteTokenParams{
 		InviteToken: sql.NullString{String: token, Valid: true},
-		UpdatedAt:   dbvalue.NowISO(), ID: campanhaID,
+		UpdatedAt:   dbvalue.NowISO(), ID: campaignID,
 	}); err != nil {
-		return "", fmt.Errorf("cunhar o convite da campanha %d: %w", campanhaID, err)
+		return "", fmt.Errorf("cunhar o convite da campanha %d: %w", campaignID, err)
 	}
 	return token, nil
 }
@@ -137,8 +137,8 @@ func (l Lifecycle) mintInvite(ctx context.Context, campanhaID int64) (string, er
 //
 // Vazio é estado NORMAL e não erro — campanhas antigas nasceram sem link, e o
 // que a tela faz com isso é oferecer o botão de gerar.
-func (l Lifecycle) InviteOf(ctx context.Context, campanhaID int64) string {
-	c, err := l.queries.GetCampaign(ctx, campanhaID)
+func (l Lifecycle) InviteOf(ctx context.Context, campaignID int64) string {
+	c, err := l.queries.GetCampaign(ctx, campaignID)
 	if err != nil || !c.Invitetoken.Valid {
 		return ""
 	}
@@ -149,12 +149,12 @@ func (l Lifecycle) InviteOf(ctx context.Context, campanhaID int64) string {
 //
 // Devolve fatia vazia e nunca nula: `null` e `[]` chegam diferentes no JSON e
 // quem lê teria de tratar os dois.
-func (l Lifecycle) IgnoredRules(ctx context.Context, campanhaID int64) []string {
-	ignoradas, err := l.queries.ListIgnoredRulesForCampaign(ctx, campanhaID)
-	if err != nil || ignoradas == nil {
+func (l Lifecycle) IgnoredRules(ctx context.Context, campaignID int64) []string {
+	ignored, err := l.queries.ListIgnoredRulesForCampaign(ctx, campaignID)
+	if err != nil || ignored == nil {
 		return []string{}
 	}
-	return ignoradas
+	return ignored
 }
 
 // SaveIgnoredRules troca o conjunto INTEIRO: limpa e reinsere.
@@ -164,20 +164,20 @@ func (l Lifecycle) IgnoredRules(ctx context.Context, campanhaID int64) []string 
 // alternaria a regra duas vezes, que é exatamente o que um clique repetido numa
 // conexão ruim produz.
 func (l Lifecycle) SaveIgnoredRules(
-	ctx context.Context, quem app.Caller, campanhaID int64, regras []string,
+	ctx context.Context, who app.Caller, campaignID int64, rules []string,
 ) error {
-	if _, err := l.access.OwnedCampaign(ctx, quem, campanhaID); err != nil {
+	if _, err := l.access.OwnedCampaign(ctx, who, campaignID); err != nil {
 		return err
 	}
-	if err := l.queries.ClearIgnoredRulesForCampaign(ctx, campanhaID); err != nil {
-		return fmt.Errorf("limpar as regras ignoradas da campanha %d: %w", campanhaID, err)
+	if err := l.queries.ClearIgnoredRulesForCampaign(ctx, campaignID); err != nil {
+		return fmt.Errorf("limpar as regras ignoradas da campanha %d: %w", campaignID, err)
 	}
-	agora := dbvalue.NowISO()
-	for _, regra := range regras {
+	now := dbvalue.NowISO()
+	for _, rule := range rules {
 		if err := l.queries.IgnoreRuleInCampaign(ctx, sqlcgen.IgnoreRuleInCampaignParams{
-			Campaignid: campanhaID, Rule: regra, Updatedat: agora,
+			Campaignid: campaignID, Rule: rule, Updatedat: now,
 		}); err != nil {
-			return fmt.Errorf("desligar a regra %q na campanha %d: %w", regra, campanhaID, err)
+			return fmt.Errorf("desligar a regra %q na campanha %d: %w", rule, campaignID, err)
 		}
 	}
 	return nil
@@ -188,8 +188,8 @@ func (l Lifecycle) SaveIgnoredRules(
 // Os dois querem dizer "sem descrição", e a diferença importa numa direção só:
 // gravar string vazia faria a coluna distinguir "não escreveu" de "apagou o que
 // tinha", e a tela não oferece essa diferença a ninguém.
-func textOrNull(texto string) sql.NullString {
-	if t := strings.TrimSpace(texto); t != "" {
+func textOrNull(text string) sql.NullString {
+	if t := strings.TrimSpace(text); t != "" {
 		return sql.NullString{String: t, Valid: true}
 	}
 	return sql.NullString{}
@@ -197,8 +197,8 @@ func textOrNull(texto string) sql.NullString {
 
 // nullOrText é o mesmo para um `ExecContext`, que quer `nil` e não um
 // `sql.NullString` inválido.
-func nullOrText(texto string) any {
-	if ns := textOrNull(texto); ns.Valid {
+func nullOrText(text string) any {
+	if ns := textOrNull(text); ns.Valid {
 		return ns.String
 	}
 	return nil
@@ -224,26 +224,26 @@ func nullOrText(texto string) any {
 // apagada assim mesmo: o usuário pediu para apagar, e recusar por causa de um
 // mapa em memória seria trocar o gesto dele por um detalhe de processo. O preço
 // é estado obsoleto até o reinício, e ele está dito no log.
-func (l Lifecycle) Delete(ctx context.Context, quem app.Caller, campanhaID int64) error {
-	if _, err := l.access.OwnedCampaign(ctx, quem, campanhaID); err != nil {
+func (l Lifecycle) Delete(ctx context.Context, who app.Caller, campaignID int64) error {
+	if _, err := l.access.OwnedCampaign(ctx, who, campaignID); err != nil {
 		return err
 	}
-	l.forgetSessionsInMemory(ctx, campanhaID)
-	if err := l.queries.DeleteCampaign(ctx, campanhaID); err != nil {
-		return fmt.Errorf("apagar a campanha %d: %w", campanhaID, err)
+	l.forgetSessionsInMemory(ctx, campaignID)
+	if err := l.queries.DeleteCampaign(ctx, campaignID); err != nil {
+		return fmt.Errorf("apagar a campanha %d: %w", campaignID, err)
 	}
 	return nil
 }
 
 // forgetSessionsInMemory tira do mapa o estado vivo de toda sessão da campanha.
-func (l Lifecycle) forgetSessionsInMemory(ctx context.Context, campanhaID int64) {
-	sessoes, err := l.queries.ListSessions(ctx, campanhaID)
+func (l Lifecycle) forgetSessionsInMemory(ctx context.Context, campaignID int64) {
+	sessions, err := l.queries.ListSessions(ctx, campaignID)
 	if err != nil {
 		log.Printf("campanha %d: não deu para listar as sessões antes de apagar (%v); "+
-			"o estado em memória delas fica até o reinício", campanhaID, err)
+			"o estado em memória delas fica até o reinício", campaignID, err)
 		return
 	}
-	for _, sess := range sessoes {
+	for _, sess := range sessions {
 		l.boards.SessionDeleted(sess.ID)
 		l.sessions.SessionDeleted(sess.ID)
 	}

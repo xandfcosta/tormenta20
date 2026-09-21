@@ -60,21 +60,21 @@ func TestAbsurdCoordinatesAreRefused(t *testing.T) {
 func TestBoardVersionRisesOnEveryAcceptedChange(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
-	inicio := b.Version
+	start := b.Version
 
 	_ = AddToken(b, BoardToken{Label: "Goblin"}, id)
-	depoisDeAdicionar := b.Version
-	if depoisDeAdicionar <= inicio {
+	afterAdding := b.Version
+	if afterAdding <= start {
 		t.Error("adicionar peça não moveu a versão")
 	}
 	// Recusa NÃO conta: uma versão que sobe sem o estado mudar faria o cliente
 	// descartar broadcast bom.
 	_ = AddToken(b, BoardToken{Label: "Lixo", X: boardCoordLimit + 1}, id)
-	if b.Version != depoisDeAdicionar {
+	if b.Version != afterAdding {
 		t.Error("uma mutação RECUSADA mexeu na versão")
 	}
 	RemoveToken(b, "t1")
-	if b.Version <= depoisDeAdicionar {
+	if b.Version <= afterAdding {
 		t.Error("remover peça não moveu a versão")
 	}
 }
@@ -88,13 +88,13 @@ func TestHiddenTokenVanishesForPlayers(t *testing.T) {
 	_ = AddToken(b, BoardToken{Label: "Bandido", X: 1, Y: 1}, id)
 	_ = AddToken(b, BoardToken{Label: "Assassino na viga", X: 2, Y: 2, Hidden: true}, id)
 
-	doJogador := BoardForRole("player", b)
+	forPlayer := BoardForRole("player", b)
 
-	if len(doJogador.Tokens) != 1 || doJogador.Tokens[0].Label != "Bandido" {
-		t.Errorf("o jogador recebeu %d peças: %+v", len(doJogador.Tokens), doJogador.Tokens)
+	if len(forPlayer.Tokens) != 1 || forPlayer.Tokens[0].Label != "Bandido" {
+		t.Errorf("o jogador recebeu %d peças: %+v", len(forPlayer.Tokens), forPlayer.Tokens)
 	}
-	if doMestre := BoardForRole("gm", b); len(doMestre.Tokens) != 2 {
-		t.Errorf("o mestre perdeu a própria emboscada: %d peças", len(doMestre.Tokens))
+	if forGM := BoardForRole("gm", b); len(forGM.Tokens) != 2 {
+		t.Errorf("o mestre perdeu a própria emboscada: %d peças", len(forGM.Tokens))
 	}
 	// Papel desconhecido cai em jogador: errar para o lado que MOSTRA seria
 	// vazar por omissão.
@@ -147,11 +147,11 @@ func tabuleiroCom(labels ...string) *BoardState {
 }
 
 func TestTheCopyGetsTheNextFreeNumber(t *testing.T) {
-	casos := []struct {
-		nome    string
-		cena    []string
-		duplica string
-		quer    string
+	cases := []struct {
+		name       string
+		scene      []string
+		duplicates string
+		want       string
 	}{
 		{"a fila continua", []string{"Zumbi 1", "Zumbi 2"}, "Zumbi 1", "Zumbi 3"},
 		// Menor livre e não maior+1: tirado o Zumbi 2, a próxima cópia volta a
@@ -164,20 +164,20 @@ func TestTheCopyGetsTheNextFreeNumber(t *testing.T) {
 		// Espécies diferentes não disputam número.
 		{"outra espécie não atrapalha", []string{"Zumbi 1", "Goblin 2"}, "Zumbi 1", "Zumbi 2"},
 	}
-	for _, caso := range casos {
-		b := tabuleiroCom(caso.cena...)
-		alvo := ""
+	for _, tc := range cases {
+		b := tabuleiroCom(tc.scene...)
+		target := ""
 		for _, token := range b.Tokens {
-			if token.Label == caso.duplica {
-				alvo = token.ID
+			if token.Label == tc.duplicates {
+				target = token.ID
 			}
 		}
-		if err := DuplicateToken(b, alvo, nil, novoIDFixo()); err != nil {
-			t.Fatalf("%s: duplicar: %v", caso.nome, err)
+		if err := DuplicateToken(b, target, nil, novoIDFixo()); err != nil {
+			t.Fatalf("%s: duplicar: %v", tc.name, err)
 		}
-		copia := b.Tokens[len(b.Tokens)-1]
-		if copia.Label != caso.quer {
-			t.Errorf("%s: a cópia se chama %q, esperado %q", caso.nome, copia.Label, caso.quer)
+		dup := b.Tokens[len(b.Tokens)-1]
+		if dup.Label != tc.want {
+			t.Errorf("%s: a cópia se chama %q, esperado %q", tc.name, dup.Label, tc.want)
 		}
 	}
 }
@@ -186,10 +186,10 @@ func TestTheCopyGetsTheNextFreeNumber(t *testing.T) {
 // trás, que é o certo para cenário e para a peça que vai entrar na fila depois.
 func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
-	entrada := "e7"
-	var personagem int64 = 42
-	b.Tokens[0].EntryID = &entrada
-	b.Tokens[0].CharacterID = &personagem
+	entry := "e7"
+	var character int64 = 42
+	b.Tokens[0].EntryID = &entry
+	b.Tokens[0].CharacterID = &character
 	b.Tokens[0].Footprint = 2
 	b.Tokens[0].Hidden = true
 
@@ -197,15 +197,15 @@ func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
 		t.Fatalf("duplicar: %v", err)
 	}
 
-	copia := b.Tokens[len(b.Tokens)-1]
-	if copia.EntryID != nil || copia.CharacterID != nil {
-		t.Errorf("a cópia levou o vínculo junto: entryId=%v characterId=%v", copia.EntryID, copia.CharacterID)
+	dup := b.Tokens[len(b.Tokens)-1]
+	if dup.EntryID != nil || dup.CharacterID != nil {
+		t.Errorf("a cópia levou o vínculo junto: entryId=%v characterId=%v", dup.EntryID, dup.CharacterID)
 	}
-	if copia.Footprint != 2 {
-		t.Errorf("a cópia nasceu com tamanho %d, esperado 2", copia.Footprint)
+	if dup.Footprint != 2 {
+		t.Errorf("a cópia nasceu com tamanho %d, esperado 2", dup.Footprint)
 	}
 	// O segundo zumbi da emboscada também está escondido.
-	if !copia.Hidden {
+	if !dup.Hidden {
 		t.Error("a cópia de uma peça escondida nasceu visível")
 	}
 }
@@ -219,17 +219,17 @@ func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
 // `characterId` nulo por construção.
 func TestTheCopyWithALoopSharesTheQueueLine(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
-	entrada := "e7"
-	b.Tokens[0].EntryID = &entrada
+	entry := "e7"
+	b.Tokens[0].EntryID = &entry
 
-	linha := live.InitiativeEntry{ID: "e7", Label: "Zumbi", Type: "npc"}
-	if err := DuplicateToken(b, "t0", &linha, novoIDFixo()); err != nil {
+	row := live.InitiativeEntry{ID: "e7", Label: "Zumbi", Type: "npc"}
+	if err := DuplicateToken(b, "t0", &row, novoIDFixo()); err != nil {
 		t.Fatalf("duplicar: %v", err)
 	}
 
-	copia := b.Tokens[len(b.Tokens)-1]
-	if copia.EntryID == nil || *copia.EntryID != "e7" {
-		t.Errorf("a cópia aponta para a linha %v, esperado e7 — sem ela não há barra de PV", copia.EntryID)
+	dup := b.Tokens[len(b.Tokens)-1]
+	if dup.EntryID == nil || *dup.EntryID != "e7" {
+		t.Errorf("a cópia aponta para a linha %v, esperado e7 — sem ela não há barra de PV", dup.EntryID)
 	}
 }
 
@@ -242,23 +242,23 @@ func TestTheCopyWithALoopSharesTheQueueLine(t *testing.T) {
 // que não é a daquele combatente.
 func TestTheCopyTakesTheSheetFromTheLineAndNotFromTheOriginal(t *testing.T) {
 	b := tabuleiroCom("Arwen")
-	entrada := "e1"
-	var daOriginal int64 = 42
-	b.Tokens[0].EntryID = &entrada
-	b.Tokens[0].CharacterID = &daOriginal
+	entry := "e1"
+	var fromOriginal int64 = 42
+	b.Tokens[0].EntryID = &entry
+	b.Tokens[0].CharacterID = &fromOriginal
 
 	// A linha nova é de NPC: sem ficha.
-	linha := live.InitiativeEntry{ID: "e9", Label: "Zumbi 2", Type: "npc"}
-	if err := DuplicateToken(b, "t0", &linha, novoIDFixo()); err != nil {
+	row := live.InitiativeEntry{ID: "e9", Label: "Zumbi 2", Type: "npc"}
+	if err := DuplicateToken(b, "t0", &row, novoIDFixo()); err != nil {
 		t.Fatalf("duplicar: %v", err)
 	}
 
-	copia := b.Tokens[len(b.Tokens)-1]
-	if copia.CharacterID != nil {
-		t.Errorf("a cópia levou a ficha %d da original, e a linha dela não tem ficha nenhuma", *copia.CharacterID)
+	dup := b.Tokens[len(b.Tokens)-1]
+	if dup.CharacterID != nil {
+		t.Errorf("a cópia levou a ficha %d da original, e a linha dela não tem ficha nenhuma", *dup.CharacterID)
 	}
-	if copia.EntryID == nil || *copia.EntryID != "e9" {
-		t.Errorf("a cópia aponta para %v, esperado a linha nova e9", copia.EntryID)
+	if dup.EntryID == nil || *dup.EntryID != "e9" {
+		t.Errorf("a cópia aponta para %v, esperado a linha nova e9", dup.EntryID)
 	}
 }
 
@@ -269,17 +269,17 @@ func TestTheCopyTakesTheSheetFromTheLineAndNotFromTheOriginal(t *testing.T) {
 func TestThePasteLandsOnTheGivenSquare(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
 	b.Tokens[0].X, b.Tokens[0].Y = 0, 0
-	modelo := b.Tokens[0]
+	template := b.Tokens[0]
 
-	if err := PasteToken(b, modelo, nil, 12, 7, novoIDFixo()); err != nil {
+	if err := PasteToken(b, template, nil, 12, 7, novoIDFixo()); err != nil {
 		t.Fatalf("colar: %v", err)
 	}
 
-	copia := b.Tokens[len(b.Tokens)-1]
-	if copia.X != 12 || copia.Y != 7 {
-		t.Errorf("a cópia pousou em (%d,%d), esperado (12,7)", copia.X, copia.Y)
+	dup := b.Tokens[len(b.Tokens)-1]
+	if dup.X != 12 || dup.Y != 7 {
+		t.Errorf("a cópia pousou em (%d,%d), esperado (12,7)", dup.X, dup.Y)
 	}
-	if copia.Label == "Zumbi 1" {
+	if dup.Label == "Zumbi 1" {
 		t.Error("a cópia ficou com o mesmo nome — dois 'Zumbi 1' no mesmo mapa")
 	}
 }
@@ -291,16 +291,16 @@ func TestThePasteLandsOnTheGivenSquare(t *testing.T) {
 // para um quadrado de OUTRO mapa.
 func TestThePastedCopyHasNowhereToGoBackTo(t *testing.T) {
 	b := tabuleiroCom("Ogro")
-	b.Tokens[0].DeOndeVeio = &engine.Square{X: 3, Y: 4}
-	modelo := b.Tokens[0]
+	b.Tokens[0].CameFrom = &engine.Square{X: 3, Y: 4}
+	template := b.Tokens[0]
 
-	if err := PasteToken(b, modelo, nil, 9, 9, novoIDFixo()); err != nil {
+	if err := PasteToken(b, template, nil, 9, 9, novoIDFixo()); err != nil {
 		t.Fatalf("colar: %v", err)
 	}
 
-	if copia := b.Tokens[len(b.Tokens)-1]; copia.DeOndeVeio != nil {
+	if dup := b.Tokens[len(b.Tokens)-1]; dup.CameFrom != nil {
 		t.Errorf("a cópia nasceu com um voltar para (%d,%d), onde ela nunca esteve",
-			copia.DeOndeVeio.X, copia.DeOndeVeio.Y)
+			dup.CameFrom.X, dup.CameFrom.Y)
 	}
 }
 
@@ -309,14 +309,14 @@ func TestThePastedCopyHasNowhereToGoBackTo(t *testing.T) {
 func TestThePasteDoesNotLandOnTopOfAnother(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
 	b.Tokens[0].X, b.Tokens[0].Y = 5, 5
-	modelo := b.Tokens[0]
+	template := b.Tokens[0]
 
-	if err := PasteToken(b, modelo, nil, 5, 5, novoIDFixo()); err != nil {
+	if err := PasteToken(b, template, nil, 5, 5, novoIDFixo()); err != nil {
 		t.Fatalf("colar: %v", err)
 	}
 
-	copia := b.Tokens[len(b.Tokens)-1]
-	if copia.X == 5 && copia.Y == 5 {
+	dup := b.Tokens[len(b.Tokens)-1]
+	if dup.X == 5 && dup.Y == 5 {
 		t.Error("a cópia pousou em cima da original, e uma some debaixo da outra")
 	}
 }
@@ -331,12 +331,12 @@ func TestTheCopyIsBornBesideAndNotOnTop(t *testing.T) {
 		t.Fatalf("duplicar: %v", err)
 	}
 
-	copia := b.Tokens[len(b.Tokens)-1]
-	if copia.X == 30 && copia.Y == 12 {
+	dup := b.Tokens[len(b.Tokens)-1]
+	if dup.X == 30 && dup.Y == 12 {
 		t.Error("a cópia nasceu em cima do original")
 	}
-	if abs(copia.X-30) > 1 || abs(copia.Y-12) > 1 {
-		t.Errorf("a cópia nasceu em (%d,%d), longe do original (30,12)", copia.X, copia.Y)
+	if abs(dup.X-30) > 1 || abs(dup.Y-12) > 1 {
+		t.Errorf("a cópia nasceu em (%d,%d), longe do original (30,12)", dup.X, dup.Y)
 	}
 }
 
@@ -368,13 +368,13 @@ func TestTheHiddenMarkerVanishesForThePlayer(t *testing.T) {
 		t.Fatalf("marcar: %v", err)
 	}
 
-	daMesa := BoardForRole("player", b)
+	fromTable := BoardForRole("player", b)
 
 	if len(b.Markers) != 2 {
 		t.Fatalf("o mestre ficou com %d marcadores", len(b.Markers))
 	}
-	if len(daMesa.Markers) != 1 || daMesa.Markers[0].Text != "B" {
-		t.Errorf("a mesa recebeu %+v; o escondido tinha de sumir inteiro", daMesa.Markers)
+	if len(fromTable.Markers) != 1 || fromTable.Markers[0].Text != "B" {
+		t.Errorf("a mesa recebeu %+v; o escondido tinha de sumir inteiro", fromTable.Markers)
 	}
 }
 
@@ -403,8 +403,8 @@ func TestTheMarkerColorComesFromAClosedSet(t *testing.T) {
 		t.Errorf("a cor virou %q; fora do conjunto ela tem de cair no padrão", got)
 	}
 	// E o mesmo vale ao ALTERAR: o patch não é uma porta de trás.
-	fora := "vermelho-do-cliente"
-	if err := UpdateMarker(b, b.Markers[0].ID, MarkerPatch{Color: &fora}); err != nil {
+	outside := "vermelho-do-cliente"
+	if err := UpdateMarker(b, b.Markers[0].ID, MarkerPatch{Color: &outside}); err != nil {
 		t.Fatalf("alterar: %v", err)
 	}
 	if got := b.Markers[0].Color; got != "ouro" {
@@ -418,9 +418,9 @@ func TestRevealingTheMarkerHandsItToTheTable(t *testing.T) {
 	if err := AddMarker(b, BoardMarker{X: 1, Y: 1, Text: "A", Color: "ouro", Hidden: true}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
-	visivel := false
+	visible := false
 
-	if err := UpdateMarker(b, b.Markers[0].ID, MarkerPatch{Hidden: &visivel}); err != nil {
+	if err := UpdateMarker(b, b.Markers[0].ID, MarkerPatch{Hidden: &visible}); err != nil {
 		t.Fatalf("revelar: %v", err)
 	}
 
@@ -444,12 +444,12 @@ func TestRevealingTheMarkerHandsItToTheTable(t *testing.T) {
 // e a frase carrega o valor ofensor, que é o que a casa cobra de toda recusa.
 func TestTheBoardAcceptsTwoHundredTokensAndRefusesTheNextOne(t *testing.T) {
 	b := NewBoard("b", "Cripta", "stone")
-	proximoID := boardCounter()
+	nextID := boardCounter()
 
 	// AS 200 PRIMEIRAS ENTRAM. Sem esta metade, um teto trocado por 1 passaria
 	// no caso de baixo — "a 201ª é recusada" é verdade também quando a 2ª é.
 	for i := 0; i < 200; i++ {
-		if err := AddToken(b, BoardToken{Label: "Goblin", X: i % 40, Y: i / 40}, proximoID); err != nil {
+		if err := AddToken(b, BoardToken{Label: "Goblin", X: i % 40, Y: i / 40}, nextID); err != nil {
 			t.Fatalf("a peça %d de 200 foi recusada: %v", i+1, err)
 		}
 	}
@@ -457,7 +457,7 @@ func TestTheBoardAcceptsTwoHundredTokensAndRefusesTheNextOne(t *testing.T) {
 		t.Fatalf("o tabuleiro ficou com %d peças, e as 200 entraram", len(b.Tokens))
 	}
 
-	err := AddToken(b, BoardToken{Label: "A gota d'água", X: 0, Y: 0}, proximoID)
+	err := AddToken(b, BoardToken{Label: "A gota d'água", X: 0, Y: 0}, nextID)
 	if err == nil {
 		t.Fatal("a 201ª peça entrou — sem teto o estado cresce sem limite, e TODO broadcast o carrega")
 	}
@@ -475,10 +475,10 @@ func TestTheBoardAcceptsTwoHundredTokensAndRefusesTheNextOne(t *testing.T) {
 // outro de propósito — marcador é anotação, peça é gente.
 func TestTheBoardAcceptsOneHundredMarkersAndRefusesTheNextOne(t *testing.T) {
 	b := NewBoard("b", "Cripta", "stone")
-	proximoID := boardCounter()
+	nextID := boardCounter()
 
 	for i := 0; i < 100; i++ {
-		if err := AddMarker(b, BoardMarker{X: i % 20, Y: i / 20}, proximoID); err != nil {
+		if err := AddMarker(b, BoardMarker{X: i % 20, Y: i / 20}, nextID); err != nil {
 			t.Fatalf("o marcador %d de 100 foi recusado: %v", i+1, err)
 		}
 	}
@@ -486,7 +486,7 @@ func TestTheBoardAcceptsOneHundredMarkersAndRefusesTheNextOne(t *testing.T) {
 		t.Fatalf("o tabuleiro ficou com %d marcadores, e os 100 entraram", len(b.Markers))
 	}
 
-	err := AddMarker(b, BoardMarker{X: 0, Y: 0}, proximoID)
+	err := AddMarker(b, BoardMarker{X: 0, Y: 0}, nextID)
 	if err == nil {
 		t.Fatal("o 101º marcador entrou — o estado inteiro viaja em todo broadcast")
 	}

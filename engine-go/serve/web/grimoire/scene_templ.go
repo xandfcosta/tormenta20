@@ -28,69 +28,69 @@ import "t20engine/serve/web/ui"
 // possível de quebrar uma página cujo trabalho é mostrar cores.
 
 type colorSample struct {
-	Classe string
-	Token  string
-	Nota   string
+	Class string
+	Token string
+	Note  string
 	// Superficie não vira texto: para ela a razão contra o painel não diz nada.
 	Superficie bool
 }
 
 // A pilha do escuro para o claro. Toda cena empilha nesta ordem.
 var surfaces = []colorSample{
-	{Classe: "bg-grimorio-bg", Token: "--grimorio-bg", Nota: "fundo da cena", Superficie: true},
-	{Classe: "bg-grimorio-bg-2", Token: "--grimorio-bg-2", Nota: "fundo elevado", Superficie: true},
-	{Classe: "bg-grimorio-panel", Token: "--grimorio-panel", Nota: "painel", Superficie: true},
-	{Classe: "bg-grimorio-panel-raised", Token: "--grimorio-panel-raised", Nota: "painel elevado", Superficie: true},
+	{Class: "bg-grimorio-bg", Token: "--grimorio-bg", Note: "fundo da cena", Superficie: true},
+	{Class: "bg-grimorio-bg-2", Token: "--grimorio-bg-2", Note: "fundo elevado", Superficie: true},
+	{Class: "bg-grimorio-panel", Token: "--grimorio-panel", Note: "painel", Superficie: true},
+	{Class: "bg-grimorio-panel-raised", Token: "--grimorio-panel-raised", Note: "painel elevado", Superficie: true},
 }
 
 var accents = []colorSample{
-	{Classe: "bg-grimorio-gold", Token: "--grimorio-gold", Nota: "a VEZ e a AÇÃO (ALE-200)"},
-	{Classe: "bg-grimorio-iron", Token: "--grimorio-iron", Nota: "borda padrão"},
-	{Classe: "bg-grimorio-iron-light", Token: "--grimorio-iron-light", Nota: "borda em relevo"},
-	{Classe: "bg-grimorio-crimson", Token: "--grimorio-crimson", Nota: "destruir, e o crachá"},
-	{Classe: "bg-grimorio-purple", Token: "--grimorio-purple", Nota: "arcano — ZERO usos"},
-	{Classe: "bg-grimorio-parchment", Token: "--grimorio-parchment", Nota: "superfície clara"},
+	{Class: "bg-grimorio-gold", Token: "--grimorio-gold", Note: "a VEZ e a AÇÃO (ALE-200)"},
+	{Class: "bg-grimorio-iron", Token: "--grimorio-iron", Note: "borda padrão"},
+	{Class: "bg-grimorio-iron-light", Token: "--grimorio-iron-light", Note: "borda em relevo"},
+	{Class: "bg-grimorio-crimson", Token: "--grimorio-crimson", Note: "destruir, e o crachá"},
+	{Class: "bg-grimorio-purple", Token: "--grimorio-purple", Note: "arcano — ZERO usos"},
+	{Class: "bg-grimorio-parchment", Token: "--grimorio-parchment", Note: "superfície clara"},
 }
 
 // Os papéis, cada um com o par bloco + tinta. Ficam lado a lado
 // de propósito: é aqui que se vê que a cor de PREENCHER e a de ESCREVER não
 // podem ser a mesma — a de baixo passa de 4,5:1 e a de cima não.
 var roles = []colorSample{
-	{Classe: "bg-penalty", Token: "--penalty", Nota: "penalidade — bloco"},
-	{Classe: "bg-penalty-ink", Token: "--penalty-ink", Nota: "penalidade — tinta"},
-	{Classe: "bg-bonus", Token: "--bonus", Nota: "bônus — bloco"},
-	{Classe: "bg-bonus-ink", Token: "--bonus-ink", Nota: "bônus — tinta"},
-	{Classe: "bg-arcane", Token: "--arcane", Nota: "arcano — bloco"},
-	{Classe: "bg-arcane-ink", Token: "--arcane-ink", Nota: "arcano — tinta"},
-	{Classe: "bg-warning", Token: "--warning", Nota: "aviso — bloco"},
-	{Classe: "bg-warning-ink", Token: "--warning-ink", Nota: "aviso — tinta"},
-	{Classe: "bg-marker", Token: "--marker", Nota: "crachá — bloco"},
-	{Classe: "bg-marker-foreground", Token: "--marker-foreground", Nota: "crachá — tinta"},
+	{Class: "bg-penalty", Token: "--penalty", Note: "penalidade — bloco"},
+	{Class: "bg-penalty-ink", Token: "--penalty-ink", Note: "penalidade — tinta"},
+	{Class: "bg-bonus", Token: "--bonus", Note: "bônus — bloco"},
+	{Class: "bg-bonus-ink", Token: "--bonus-ink", Note: "bônus — tinta"},
+	{Class: "bg-arcane", Token: "--arcane", Note: "arcano — bloco"},
+	{Class: "bg-arcane-ink", Token: "--arcane-ink", Note: "arcano — tinta"},
+	{Class: "bg-warning", Token: "--warning", Note: "aviso — bloco"},
+	{Class: "bg-warning-ink", Token: "--warning-ink", Note: "aviso — tinta"},
+	{Class: "bg-marker", Token: "--marker", Note: "crachá — bloco"},
+	{Class: "bg-marker-foreground", Token: "--marker-foreground", Note: "crachá — tinta"},
 }
 
 // A armadilha que meia seção existe para mostrar: `--hp-hurt` é âmbar em matiz
 // 70, a um fio do dourado em 85, e uma barra pintada com ele LÊ COMO CHEIA.
 var vitals = []colorSample{
-	{Classe: "bg-[var(--hp-full)]", Token: "--hp-full", Nota: "vida cheia"},
-	{Classe: "bg-[var(--hp-hurt)]", Token: "--hp-hurt", Nota: "ferido — LÊ como cheia"},
-	{Classe: "bg-[var(--hp-critical)]", Token: "--hp-critical", Nota: "crítico; use este p/ ruim"},
-	{Classe: "bg-[var(--mp-arcane)]", Token: "--mp-arcane", Nota: "mana"},
-	{Classe: "bg-[var(--hp-temp)]", Token: "--hp-temp", Nota: "PV temporário — NÃO é o mana"},
+	{Class: "bg-[var(--hp-full)]", Token: "--hp-full", Note: "vida cheia"},
+	{Class: "bg-[var(--hp-hurt)]", Token: "--hp-hurt", Note: "ferido — LÊ como cheia"},
+	{Class: "bg-[var(--hp-critical)]", Token: "--hp-critical", Note: "crítico; use este p/ ruim"},
+	{Class: "bg-[var(--mp-arcane)]", Token: "--mp-arcane", Note: "mana"},
+	{Class: "bg-[var(--hp-temp)]", Token: "--hp-temp", Note: "PV temporário — NÃO é o mana"},
 }
 
 type simpleSample struct {
-	Classe string
-	Nome   string
-	Uso    string
+	Class string
+	Name  string
+	Uso   string
 }
 
 var radiusScale = []simpleSample{
-	{Classe: "rounded-none", Nome: "rounded-none"},
-	{Classe: "rounded-sm", Nome: "rounded-sm"},
-	{Classe: "rounded-md", Nome: "rounded-md"},
-	{Classe: "rounded-lg", Nome: "rounded-lg"},
-	{Classe: "rounded-xl", Nome: "rounded-xl"},
-	{Classe: "rounded-full", Nome: "rounded-full"},
+	{Class: "rounded-none", Name: "rounded-none"},
+	{Class: "rounded-sm", Name: "rounded-sm"},
+	{Class: "rounded-md", Name: "rounded-md"},
+	{Class: "rounded-lg", Name: "rounded-lg"},
+	{Class: "rounded-xl", Name: "rounded-xl"},
+	{Class: "rounded-full", Name: "rounded-full"},
 }
 
 // Raios que NÃO pertencem à escala e não devem ser alinhados a ela: são a
@@ -98,37 +98,37 @@ var radiusScale = []simpleSample{
 // página dentro dela, e forçar as duas ao mesmo degrau desenharia um objeto que
 // não existe.
 var objectRadii = []simpleSample{
-	{Classe: "grimorio-frame", Nome: "moldura"},
-	{Classe: "grimorio-leather", Nome: "capa do livro"},
-	{Classe: "rounded-[3px]", Nome: "peça do tabuleiro"},
+	{Class: "grimorio-frame", Name: "moldura"},
+	{Class: "grimorio-leather", Name: "capa do livro"},
+	{Class: "rounded-[3px]", Name: "peça do tabuleiro"},
 }
 
 var families = []simpleSample{
-	{Classe: "font-heading", Nome: "font-heading", Uso: "Cinzel — títulos e rótulos de seção"},
-	{Classe: "font-sans", Nome: "font-sans", Uso: "corpo de texto"},
-	{Classe: "font-mono", Nome: "font-mono", Uso: "números de jogo, com tabular-nums"},
+	{Class: "font-heading", Name: "font-heading", Uso: "Cinzel — títulos e rótulos de seção"},
+	{Class: "font-sans", Name: "font-sans", Uso: "corpo de texto"},
+	{Class: "font-mono", Name: "font-mono", Uso: "números de jogo, com tabular-nums"},
 }
 
 var shadcnSteps = []simpleSample{
-	{Classe: "text-2xl", Nome: "text-2xl"},
-	{Classe: "text-xl", Nome: "text-xl"},
-	{Classe: "text-lg", Nome: "text-lg"},
-	{Classe: "text-base", Nome: "text-base"},
-	{Classe: "text-sm", Nome: "text-sm"},
-	{Classe: "text-xs", Nome: "text-xs"},
+	{Class: "text-2xl", Name: "text-2xl"},
+	{Class: "text-xl", Name: "text-xl"},
+	{Class: "text-lg", Name: "text-lg"},
+	{Class: "text-base", Name: "text-base"},
+	{Class: "text-sm", Name: "text-sm"},
+	{Class: "text-xs", Name: "text-xs"},
 }
 
 // Os três que a casa acrescentou ABAIXO do piso do shadcn.
 var houseSteps = []simpleSample{
-	{Classe: "text-2xs", Nome: "text-2xs", Uso: "rótulo de seção"},
-	{Classe: "text-3xs", Nome: "text-3xs", Uso: "rótulo de campo"},
-	{Classe: "text-4xs", Nome: "text-4xs", Uso: "crachá"},
+	{Class: "text-2xs", Name: "text-2xs", Uso: "rótulo de seção"},
+	{Class: "text-3xs", Name: "text-3xs", Uso: "rótulo de campo"},
+	{Class: "text-4xs", Name: "text-4xs", Uso: "crachá"},
 }
 
 // ── as primitivas da folha ───────────────────────────────────────────────────
 
 // sheetSection: cabeçalho com âncora, para a trilha lateral pular até aqui.
-func sheetSection(id, titulo string) templ.Component {
+func sheetSection(id, title string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -215,9 +215,9 @@ func sheetSection(id, titulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 126, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 126, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -242,7 +242,7 @@ func sheetSection(id, titulo string) templ.Component {
 // sheetBlock: um grupo de amostras com o título curto e a explicação do que
 // ele PROVA. A nota não é enfeite — é o que separa uma paleta de uma folha de
 // especificação.
-func sheetBlock(titulo, nota string) templ.Component {
+func sheetBlock(title, note string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -280,9 +280,9 @@ func sheetBlock(titulo, nota string) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 138, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 138, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -294,13 +294,13 @@ func sheetBlock(titulo, nota string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if nota != "" {
+		if note != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<p class=\"max-w-prose text-xs text-muted-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(nota)
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(note)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 141, Col: 62}
 			}
@@ -357,7 +357,7 @@ func colorSwatch(a colorSample) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var13 = []any{"h-12 w-full rounded-sm border border-grimorio-iron", a.Classe}
+		var templ_7745c5c3_Var13 = []any{"h-12 w-full rounded-sm border border-grimorio-iron", a.Class}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -398,13 +398,13 @@ func colorSwatch(a colorSample) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if a.Nota != "" {
+		if a.Note != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<p class=\"text-3xs text-muted-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(a.Nota)
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(a.Note)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 162, Col: 54}
 			}
@@ -453,7 +453,7 @@ func radiusCorner(a simpleSample) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var18 = []any{"h-14 w-full border border-grimorio-gold/60 bg-grimorio-panel-raised", a.Classe}
+		var templ_7745c5c3_Var18 = []any{"h-14 w-full border border-grimorio-gold/60 bg-grimorio-panel-raised", a.Class}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var18...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -476,7 +476,7 @@ func radiusCorner(a simpleSample) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(a.Nome)
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(a.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 175, Col: 57}
 		}
@@ -518,7 +518,7 @@ func textRow(a simpleSample) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var22 = []any{"min-w-0 flex-1 truncate text-foreground", a.Classe}
+		var templ_7745c5c3_Var22 = []any{"min-w-0 flex-1 truncate text-foreground", a.Class}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var22...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -541,7 +541,7 @@ func textRow(a simpleSample) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var24 string
-		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(a.Nome)
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(a.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 187, Col: 74}
 		}
@@ -921,7 +921,7 @@ func typographySection() templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				for _, a := range families {
-					templ_7745c5c3_Err = textRow(simpleSample{Classe: a.Classe + " text-base", Nome: a.Nome, Uso: a.Uso}).Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = textRow(simpleSample{Class: a.Class + " text-base", Name: a.Name, Uso: a.Uso}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1001,12 +1001,12 @@ func typographySection() templ.Component {
 // ── a folha ──────────────────────────────────────────────────────────────────
 
 var sheetTrail = []simpleSample{
-	{Nome: "cor", Uso: "Cor"},
-	{Nome: "raio", Uso: "Raio"},
-	{Nome: "tipografia", Uso: "Tipografia"},
-	{Nome: "pecas", Uso: "Peças"},
-	{Nome: "foco", Uso: "Foco"},
-	{Nome: "movimento", Uso: "Movimento"},
+	{Name: "cor", Uso: "Cor"},
+	{Name: "raio", Uso: "Raio"},
+	{Name: "tipografia", Uso: "Tipografia"},
+	{Name: "pecas", Uso: "Peças"},
+	{Name: "foco", Uso: "Foco"},
+	{Name: "movimento", Uso: "Movimento"},
 }
 
 func grimoire() templ.Component {
@@ -1040,7 +1040,7 @@ func grimoire() templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var45 templ.SafeURL
-			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("#" + item.Nome))
+			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("#" + item.Name))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 291, Col: 42}
 			}
@@ -1106,7 +1106,7 @@ func grimoire() templ.Component {
 
 // Esta seção mostra cada peça de `web/ui` com o que o navegador RESOLVEU para
 // ela, e a medida é o ponto: sem ela, duas peças parecidas passam por iguais.
-func partPart(nome string, peca templ.Component) templ.Component {
+func partPart(name string, token templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1132,7 +1132,7 @@ func partPart(nome string, peca templ.Component) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var48 string
-		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(nome)
+		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 317, Col: 77}
 		}
@@ -1156,7 +1156,7 @@ func partPart(nome string, peca templ.Component) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = peca.Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = token.Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1495,7 +1495,7 @@ func sheetBadge() templ.Component {
 	})
 }
 
-func sheetButtonInSize(t ui.Size, texto string) templ.Component {
+func sheetButtonInSize(t ui.Size, text string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1529,9 +1529,9 @@ func sheetButtonInSize(t ui.Size, texto string) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			var templ_7745c5c3_Var64 string
-			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(texto)
+			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 376, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 376, Col: 8}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
@@ -1572,7 +1572,7 @@ func sheetField() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.TextField(ui.Field{Nome: "amostra-campo", Label: "Nome do combatente"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.TextField(ui.Field{Name: "amostra-campo", Label: "Nome do combatente"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1747,7 +1747,7 @@ func motionSection() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, d := range []simpleSample{{Nome: "ferir", Uso: "Ferir"}, {Nome: "curar", Uso: "Curar"}, {Nome: "vez", Uso: "Passar a vez"}} {
+				for _, d := range []simpleSample{{Name: "ferir", Uso: "Ferir"}, {Name: "curar", Uso: "Curar"}, {Name: "vez", Uso: "Passar a vez"}} {
 					templ_7745c5c3_Var74 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -1771,7 +1771,7 @@ func motionSection() templ.Component {
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{"type": "button", "data-disparar": d.Nome}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var74), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{"type": "button", "data-disparar": d.Name}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var74), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

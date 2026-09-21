@@ -46,7 +46,7 @@ func (st *Store) payUpkeep(s *live.SessionRuntimeState) upkeepCharge {
 	// acabado de entrar na fila tem `MpCurrent` nulo até a primeira operação de
 	// vitais. Ler dali derrubaria a Velocidade de quem está com o mana cheio, e
 	// o teste que prende isto começou vermelho exatamente assim.
-	pools, err := st.ficha.PoolsOf(context.Background(), []int64{*entry.CharacterID})
+	pools, err := st.sheet.PoolsOf(context.Background(), []int64{*entry.CharacterID})
 	if err != nil {
 		return upkeepCharge{}
 	}

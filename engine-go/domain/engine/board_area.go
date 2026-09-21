@@ -52,24 +52,24 @@ type Area struct {
 //
 // @example AreaSquares(Square{0,0}, Area{Kind: AreaSphere, Size: 1}) // as 4 casas em volta
 func AreaSquares(origin Square, area Area) []Square {
-	var casas []Square
+	var squares []Square
 	switch area.Kind {
 	case AreaSphere:
-		casas = sphereSquares(origin, area.Size)
+		squares = sphereSquares(origin, area.Size)
 	case AreaCone:
-		casas = coneSquares(origin, area.Size, area.Direction)
+		squares = coneSquares(origin, area.Size, area.Direction)
 	case AreaLine:
-		casas = lineSquares(origin, area.Size, area.Direction)
+		squares = lineSquares(origin, area.Size, area.Direction)
 	case AreaSquare:
-		casas = squareSquares(origin, area.Size)
+		squares = squareSquares(origin, area.Size)
 	}
-	sort.Slice(casas, func(a, b int) bool {
-		if casas[a].Y != casas[b].Y {
-			return casas[a].Y < casas[b].Y
+	sort.Slice(squares, func(a, b int) bool {
+		if squares[a].Y != squares[b].Y {
+			return squares[a].Y < squares[b].Y
 		}
-		return casas[a].X < casas[b].X
+		return squares[a].X < squares[b].X
 	})
-	return casas
+	return squares
 }
 
 // sphereSquares desenha a esfera a partir da interseção (p225).
@@ -82,13 +82,13 @@ func sphereSquares(corner Square, radius int) []Square {
 	if radius < 1 {
 		return nil
 	}
-	var casas []Square
+	var squares []Square
 	for i := 1; i <= radius; i++ {
 		for j := 1; j <= radius; j++ {
 			if i+j > radius+1 {
 				continue
 			}
-			casas = append(casas,
+			squares = append(squares,
 				Square{X: corner.X + i - 1, Y: corner.Y + j - 1},
 				Square{X: corner.X - i, Y: corner.Y + j - 1},
 				Square{X: corner.X + i - 1, Y: corner.Y - j},
@@ -96,7 +96,7 @@ func sphereSquares(corner Square, radius int) []Square {
 			)
 		}
 	}
-	return casas
+	return squares
 }
 
 // coneSquares desenha o cone, e são DUAS formas porque a figura desenha duas.
@@ -120,31 +120,31 @@ func coneSquares(origin Square, length int, dir Square) []Square {
 }
 
 func orthogonalCone(origin Square, length int, dir Square) []Square {
-	var casas []Square
+	var squares []Square
 	for d := 1; d <= length; d++ {
-		meia := d / 2 // 2·⌊d/2⌋+1 de largura, centrada na fileira da origem
-		for k := -meia; k <= meia; k++ {
+		half := d / 2 // 2·⌊d/2⌋+1 de largura, centrada na fileira da origem
+		for k := -half; k <= half; k++ {
 			if dir.X != 0 {
-				casas = append(casas, Square{X: origin.X + dir.X*d, Y: origin.Y + k})
+				squares = append(squares, Square{X: origin.X + dir.X*d, Y: origin.Y + k})
 				continue
 			}
-			casas = append(casas, Square{X: origin.X + k, Y: origin.Y + dir.Y*d})
+			squares = append(squares, Square{X: origin.X + k, Y: origin.Y + dir.Y*d})
 		}
 	}
-	return casas
+	return squares
 }
 
 func diagonalCone(origin Square, length int, dir Square) []Square {
-	var casas []Square
+	var squares []Square
 	for dx := 1; dx <= length; dx++ {
 		for dy := 1; dy <= length; dy++ {
 			if dx+dy > length+1 {
 				continue
 			}
-			casas = append(casas, Square{X: origin.X + dir.X*dx, Y: origin.Y + dir.Y*dy})
+			squares = append(squares, Square{X: origin.X + dir.X*dx, Y: origin.Y + dir.Y*dy})
 		}
 	}
-	return casas
+	return squares
 }
 
 // lineSquares desenha a linha: reta, de um quadrado de largura (1,5m, p225),
@@ -157,11 +157,11 @@ func lineSquares(origin Square, length int, dir Square) []Square {
 	if length < 1 || (dir.X == 0 && dir.Y == 0) {
 		return nil
 	}
-	casas := make([]Square, 0, length)
+	squares := make([]Square, 0, length)
 	for d := 1; d <= length; d++ {
-		casas = append(casas, Square{X: origin.X + dir.X*d, Y: origin.Y + dir.Y*d})
+		squares = append(squares, Square{X: origin.X + dir.X*d, Y: origin.Y + dir.Y*d})
 	}
-	return casas
+	return squares
 }
 
 // squareSquares desenha o quadrado/cubo com a casa clicada no canto
@@ -170,11 +170,11 @@ func squareSquares(origin Square, side int) []Square {
 	if side < 1 {
 		return nil
 	}
-	casas := make([]Square, 0, side*side)
+	squares := make([]Square, 0, side*side)
 	for j := 0; j < side; j++ {
 		for i := 0; i < side; i++ {
-			casas = append(casas, Square{X: origin.X + i, Y: origin.Y + j})
+			squares = append(squares, Square{X: origin.X + i, Y: origin.Y + j})
 		}
 	}
-	return casas
+	return squares
 }

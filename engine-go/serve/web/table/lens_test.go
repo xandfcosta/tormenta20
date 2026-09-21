@@ -23,18 +23,18 @@ import (
 // simplesmente não vê. Comparar os dois retratos cobre tudo o que a redação tira,
 // inclusive o que ela vier a tirar depois.
 func TestTheLensCountComesFromTheDifference(t *testing.T) {
-	doMestre := &board.BoardState{
+	forGM := &board.BoardState{
 		Curtained: true,
 		Tokens: []board.BoardToken{
 			{ID: "a", Label: "Taverneiro"}, {ID: "b", Label: "Ogro"},
 		},
 	}
-	daMesa, escondidas := seesTableHowScene(doMestre)
-	if escondidas != 2 {
-		t.Errorf("com a cortina fechada a lente contou %d escondidas, esperado 2", escondidas)
+	fromTable, hidden := seesTableHowScene(forGM)
+	if hidden != 2 {
+		t.Errorf("com a cortina fechada a lente contou %d escondidas, esperado 2", hidden)
 	}
-	if daMesa != nil && len(daMesa.Tokens) != 0 {
-		t.Errorf("a cortina deixou %d peças na cena da mesa", len(daMesa.Tokens))
+	if fromTable != nil && len(fromTable.Tokens) != 0 {
+		t.Errorf("a cortina deixou %d peças na cena da mesa", len(fromTable.Tokens))
 	}
 }
 
@@ -44,14 +44,14 @@ func TestTheLensCountComesFromTheDifference(t *testing.T) {
 // `fmt.Sprintf` do mesmo jeito — o teste re-derivaria o erro. Os três casos são
 // escritos por extenso.
 func TestTheLensSentenceAgreesInNumber(t *testing.T) {
-	casos := map[int]string{
+	cases := map[int]string{
 		0: "Nenhuma peça escondida nesta cena.",
 		1: "1 peça escondida não aparece.",
 		3: "3 peças escondidas não aparecem.",
 	}
-	for quantas, esperado := range casos {
-		if frase := lensPhrase(quantas); !strings.HasSuffix(frase, esperado) {
-			t.Errorf("com %d escondidas a tira disse %q, esperado terminar em %q", quantas, frase, esperado)
+	for howMany, want := range cases {
+		if sentence := lensPhrase(howMany); !strings.HasSuffix(sentence, want) {
+			t.Errorf("com %d escondidas a tira disse %q, esperado terminar em %q", howMany, sentence, want)
 		}
 	}
 }

@@ -43,7 +43,7 @@ func botaoDePorNoMapa(v BoardView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if v.Mestre {
+		if v.GM {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<button type=\"button\" aria-label=\"Pôr no mapa\" title=\"Escolher quem vem para o mapa. Clique direito põe só as fichas.\" data-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -118,8 +118,8 @@ func tableMap(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if v.Tabuleiro.Mestre {
-			templ_7745c5c3_Err = poeNoMapaDialogo(v.Tabuleiro).Render(ctx, templ_7745c5c3_Buffer)
+		if v.Board.GM {
+			templ_7745c5c3_Err = poeNoMapaDialogo(v.Board).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -161,18 +161,18 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, cand := range v.Candidatos {
+		for _, cand := range v.Candidates {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<li>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if cand.NoMapa {
+			if cand.OnBoard {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "    <span class=\"inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-dashed border-grimorio-iron px-3 text-sm text-muted-foreground\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var6 string
-				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(cand.Nome)
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(cand.Name)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 77, Col: 18}
 				}
@@ -224,7 +224,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if cand.Ficha {
+				if cand.Sheet {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " data-ficha")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -274,7 +274,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var13 string
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(cand.Nome)
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(cand.Name)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 90, Col: 18}
 				}
@@ -282,7 +282,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if cand.Ficha {
+				if cand.Sheet {
 					var templ_7745c5c3_Var14 = []any{ui.SectionLabelClasses("muted", "")}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var14...)
 					if templ_7745c5c3_Err != nil {

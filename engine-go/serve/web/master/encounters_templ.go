@@ -129,11 +129,11 @@ func encounterPartyPanel(v encountersView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = partyField("nivel", "Nível", v.Nivel, nivelMinimo, nivelMaximo).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = partyField("nivel", "Nível", v.Level, nivelMinimo, nivelMaximo).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = partyField("grupo", "Personagens", v.Grupo, grupoMinimo, grupoMaximo).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = partyField("grupo", "Personagens", v.Group, grupoMinimo, grupoMaximo).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -148,7 +148,7 @@ func encounterPartyPanel(v encountersView) templ.Component {
 // partyField: `aria-label` diz "<rótulo> do grupo" e não só o rótulo, porque
 // "Nível" sozinho, numa tela que também tem ND de criatura, não diz nível DE
 // QUÊ para quem ouve a página em vez de vê-la.
-func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component {
+func partyField(signal, label string, value, min, max int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -190,9 +190,9 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue("encontro-" + sinal)
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue("encontro-" + signal)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 49, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 49, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -203,7 +203,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 49, Col: 46}
 			}
@@ -226,9 +226,9 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue("encontro-" + sinal)
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue("encontro-" + signal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 52, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 52, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -239,9 +239,9 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(minimo))
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(min))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 54, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 54, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -252,9 +252,9 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(maximo))
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(max))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 55, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 55, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -265,7 +265,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(valor))
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(value))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 56, Col: 24}
 		}
@@ -278,9 +278,9 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinal)
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(signal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 57, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 57, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -291,9 +291,9 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo + " do grupo")
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(label + " do grupo")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 59, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 59, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -411,9 +411,9 @@ func verdict(v encountersView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(v.Difficulty().Rotulo)
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(v.Difficulty().Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 80, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 80, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -556,15 +556,15 @@ func composition(v encountersView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, l := range v.Linhas {
+			for _, l := range v.Rows {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<li class=\"flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm border border-grimorio-iron p-2\"><span class=\"text-sm font-medium\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var26 string
-				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(l.Verbete.Name)
+				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(l.Entry.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 123, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 123, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -575,9 +575,9 @@ func composition(v encountersView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var27 string
-				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs("ND " + book.CRWritten(l.Verbete.ND))
+				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs("ND " + book.CRWritten(l.Entry.ND))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 124, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 124, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -600,7 +600,7 @@ func composition(v encountersView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = quantityStep(l.Verbete, "menos", "−").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = quantityStep(l.Entry, "menos", "−").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -621,7 +621,7 @@ func composition(v encountersView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = quantityStep(l.Verbete, "mais", "+").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = quantityStep(l.Entry, "mais", "+").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -643,7 +643,7 @@ func composition(v encountersView) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = ui.Button(ui.VariantGhostDanger, ui.SizeIcon, "", templ.Attributes{"type": "button", "aria-label": "Remover " + l.Verbete.Name + " do encontro", "data-on:click": fmt.Sprintf("@post('/mestre/encontros/remover/%s')", l.Verbete.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Button(ui.VariantGhostDanger, ui.SizeIcon, "", templ.Attributes{"type": "button", "aria-label": "Remover " + l.Entry.Name + " do encontro", "data-on:click": fmt.Sprintf("@post('/mestre/encontros/remover/%s')", l.Entry.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -664,7 +664,7 @@ func composition(v encountersView) templ.Component {
 // quantityStep: o nome acessível diz o VERBO e a criatura, porque numa
 // lista de seis linhas "mais" sozinho não distingue os seis botões iguais — e
 // nem o `getByRole` nem um leitor de tela separam homônimos.
-func quantityStep(m book.Entry, passo, sinal string) templ.Component {
+func quantityStep(m book.Entry, step, signal string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -690,9 +690,9 @@ func quantityStep(m book.Entry, passo, sinal string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var32 string
-		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepLabel(passo, m.Name))
+		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepLabel(step, m.Name))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 146, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 146, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 		if templ_7745c5c3_Err != nil {
@@ -703,9 +703,9 @@ func quantityStep(m book.Entry, passo, sinal string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var33 string
-		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/encontros/%s/%s')", passo, m.ID))
+		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/encontros/%s/%s')", step, m.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 147, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 147, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 		if templ_7745c5c3_Err != nil {
@@ -716,9 +716,9 @@ func quantityStep(m book.Entry, passo, sinal string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var34 string
-		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(sinal)
+		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(signal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 149, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 149, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -785,7 +785,7 @@ func addPanel(v encountersView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Term != "" {
-			if len(v.Achados) == 0 {
+			if len(v.Findings) == 0 {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<p class=\"p-3 text-center text-xs text-muted-foreground\">Nenhuma criatura com esse nome.</p>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -795,7 +795,7 @@ func addPanel(v encountersView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, m := range v.Achados {
+				for _, m := range v.Findings {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<li><button type=\"button\" aria-label=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -853,7 +853,7 @@ func addPanel(v encountersView) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var41 string
-					templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(book.TypeName(m.Tipo))
+					templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(book.TypeName(m.Kind))
 					if templ_7745c5c3_Err != nil {
 						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 188, Col: 76}
 					}

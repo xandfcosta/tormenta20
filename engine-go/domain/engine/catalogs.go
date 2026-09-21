@@ -53,7 +53,7 @@ type RaceDefinition struct {
 	Name             string         `json:"name"`
 	AttributeBonuses map[string]int `json:"attributeBonuses"`
 	Abilities        []RaceAbility  `json:"abilities"`
-	HasDeformidade   bool           `json:"hasDeformidade"`
+	HasDeformity     bool           `json:"hasDeformidade"`
 }
 
 type RaceAbility struct {
@@ -68,10 +68,10 @@ type RaceAbilityVariant struct {
 
 // OriginDefinition é a origem do catálogo de habilidades.
 type OriginDefinition struct {
-	ID         string          `json:"id"`
-	Name       string          `json:"name"`
-	Benefits   []OriginBenefit `json:"benefits"`
-	PoderUnico OriginBenefit   `json:"poderUnico"`
+	ID          string          `json:"id"`
+	Name        string          `json:"name"`
+	Benefits    []OriginBenefit `json:"benefits"`
+	UniquePower OriginBenefit   `json:"poderUnico"`
 }
 
 type OriginBenefit struct {
@@ -183,7 +183,7 @@ type Catalogs struct {
 	classPowers   []*ClassPower
 	generalByID   map[string]*GeneralPower
 	grantedByName map[string]*GrantedPower
-	racasByName   map[string]*RaceAttributeEntry
+	racesByName   map[string]*RaceAttributeEntry
 	tormentaIDs   map[string]bool
 }
 
@@ -196,7 +196,7 @@ type enginePayload struct {
 	ClassPowers   []ClassPower                  `json:"classPowers"`
 	GeneralPowers []GeneralPower                `json:"generalPowers"`
 	GrantedPowers []GrantedPower                `json:"grantedPowers"`
-	Racas         map[string]RaceAttributeEntry `json:"racas"`
+	Ancestries    map[string]RaceAttributeEntry `json:"racas"`
 	TormentaIDs   []string                      `json:"tormentaPowerIds"`
 }
 
@@ -213,7 +213,7 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 		racesByID:     make(map[string]*RaceDefinition, len(p.Races)),
 		generalByID:   make(map[string]*GeneralPower, len(p.GeneralPowers)),
 		grantedByName: make(map[string]*GrantedPower, len(p.GrantedPowers)),
-		racasByName:   make(map[string]*RaceAttributeEntry, len(p.Racas)),
+		racesByName:   make(map[string]*RaceAttributeEntry, len(p.Ancestries)),
 		tormentaIDs:   make(map[string]bool, len(p.TormentaIDs)),
 	}
 	for i := range p.Items {
@@ -234,9 +234,9 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	for i := range p.GrantedPowers {
 		c.grantedByName[p.GrantedPowers[i].Name] = &p.GrantedPowers[i]
 	}
-	for id := range p.Racas {
-		r := p.Racas[id]
-		c.racasByName[r.Name] = &r
+	for id := range p.Ancestries {
+		r := p.Ancestries[id]
+		c.racesByName[r.Name] = &r
 	}
 	for _, id := range p.TormentaIDs {
 		c.tormentaIDs[id] = true
@@ -275,8 +275,8 @@ func (c *Catalogs) getOriginBenefit(benefitID string) *OriginBenefit {
 				return &o.Benefits[i]
 			}
 		}
-		if o.PoderUnico.ID == benefitID {
-			return &o.PoderUnico
+		if o.UniquePower.ID == benefitID {
+			return &o.UniquePower
 		}
 	}
 	return nil
@@ -284,13 +284,13 @@ func (c *Catalogs) getOriginBenefit(benefitID string) *OriginBenefit {
 
 // raceEntryByName acha a entrada de atributo de uma raça pelo nome. O mapa é
 // montado uma vez, quando os catálogos são primados.
-func (c *Catalogs) raceEntryByName(name string) *RaceAttributeEntry { return c.racasByName[name] }
+func (c *Catalogs) raceEntryByName(name string) *RaceAttributeEntry { return c.racesByName[name] }
 
 // raceWithDeformidade devolve o primeiro nome que tem Deformidade (Lefou p23).
 func (c *Catalogs) raceWithDeformidade(names ...string) string {
 	owners := map[string]bool{}
 	for _, r := range c.racesByID {
-		if r.HasDeformidade {
+		if r.HasDeformity {
 			owners[r.Name] = true
 		}
 	}

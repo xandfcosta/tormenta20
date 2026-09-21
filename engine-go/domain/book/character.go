@@ -18,21 +18,21 @@ type RaceTrait struct {
 }
 
 type Race struct {
-	ID              string        `json:"id"`
-	Name            string        `json:"name"`
-	Tier            string        `json:"tier"`
-	Tamanho         string        `json:"tamanho"`
-	Deslocamento    int           `json:"deslocamento"`
-	VisaoNoEscuro   bool          `json:"visaoNoEscuro"`
-	VisaoNaPenumbra bool          `json:"visaoNaPenumbra"`
-	AttributeMod    RaceAttribute `json:"atributoMod"`
-	// Ascendencias são as metades de uma raça que se escolhe na criação — o
+	ID             string        `json:"id"`
+	Name           string        `json:"name"`
+	Tier           string        `json:"tier"`
+	Size           string        `json:"tamanho"`
+	Speed          int           `json:"deslocamento"`
+	Darkvision     bool          `json:"visaoNoEscuro"`
+	LowLightVision bool          `json:"visaoNaPenumbra"`
+	AttributeMod   RaceAttribute `json:"atributoMod"`
+	// Ancestries são as metades de uma raça que se escolhe na criação — o
 	// suraggel é "aggelus" ou "sulfure". Elas importam aqui porque os DEUSES
 	// citam a ascendência e não a raça ("Devotos: Aggelus"), e sem isto o elo
 	// desses dois não existiria.
-	Ascendencias []string    `json:"ascendencias"`
-	Abilities    []RaceTrait `json:"abilities"`
-	BookPage     int         `json:"bookPage"`
+	Ancestries []string    `json:"ascendencias"`
+	Abilities  []RaceTrait `json:"abilities"`
+	BookPage   int         `json:"bookPage"`
 }
 
 // RaceAttribute são as DUAS formas do livro, e elas não se reduzem a uma: o
@@ -59,24 +59,24 @@ func (a RaceAttribute) Escrito() string {
 	if a.Kind == "floating" {
 		return fmt.Sprintf("%s em %s", WithSign(a.Value), InWords(a.Count))
 	}
-	var partes []string
-	for _, atributo := range AttributeOrder {
-		if mod, tem := a.Mods[atributo.Chave]; tem && mod != 0 {
-			partes = append(partes, WithSign(mod)+" "+atributo.Sigla)
+	var parts []string
+	for _, attribute := range AttributeOrder {
+		if mod, found := a.Mods[attribute.Key]; found && mod != 0 {
+			parts = append(parts, WithSign(mod)+" "+attribute.Abbreviation)
 		}
 	}
-	return strings.Join(partes, ", ")
+	return strings.Join(parts, ", ")
 }
 
 // InWords escreve a contagem da escolha livre. Vai até seis porque são seis
 // atributos — não há sétima escolha possível.
 func InWords(n int) string {
-	nomes := []string{"nenhum atributo", "um atributo", "dois atributos", "três atributos",
+	names := []string{"nenhum atributo", "um atributo", "dois atributos", "três atributos",
 		"quatro atributos", "cinco atributos", "seis atributos"}
-	if n < 0 || n >= len(nomes) {
+	if n < 0 || n >= len(names) {
 		return fmt.Sprintf("%d atributos", n)
 	}
-	return nomes[n]
+	return names[n]
 }
 
 // ── classe ───────────────────────────────────────────────────────────────────
@@ -85,16 +85,16 @@ type Class struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	BookPage int    `json:"bookPage"`
-	// Proficiencias é a linha "Proficiências." do bloco da classe (p36–83),
+	// Proficiencies é a linha "Proficiências." do bloco da classe (p36–83),
 	// transcrita — ver `web/sheetui/proficiencies.go`.
-	Proficiencias []string `json:"proficiencies"`
+	Proficiencies []string `json:"proficiencies"`
 	// Spellcasting é a tabela de progressão de círculo, e ela é NULA para as
 	// classes que não conjuram — ver `spellcasting.go`.
 	Spellcasting *SpellProgression `json:"spellcasting"`
 	// Derivados do que já existe — ver o cabeçalho do arquivo.
-	Pericias []string `json:"-"`
-	Escolhe  int      `json:"-"`
-	Poderes  int      `json:"-"`
+	Expertises []string `json:"-"`
+	Chooses    int      `json:"-"`
+	Powers     int      `json:"-"`
 }
 
 // ClassExpertises é o que `class-expertises` guarda: as treinadas de saída mais
@@ -114,11 +114,11 @@ type Expertise struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Attribute string `json:"attribute"`
-	// SoTreinada: sem treinamento, nem se rola.
-	SoTreinada bool `json:"soTreinada"`
-	// PenalidadeDeArmadura: armadura pesada atrapalha.
-	PenalidadeDeArmadura bool `json:"penalidadeDeArmadura"`
-	BookPage             int  `json:"bookPage"`
+	// TrainedOnly: sem treinamento, nem se rola.
+	TrainedOnly bool `json:"soTreinada"`
+	// ArmorPenalty: armadura pesada atrapalha.
+	ArmorPenalty bool `json:"penalidadeDeArmadura"`
+	BookPage     int  `json:"bookPage"`
 	// Classes são as que treinam a perícia de saída, DERIVADAS de
 	// `class-expertises` — ver o cabeçalho do arquivo.
 	Classes []string `json:"-"`
@@ -126,23 +126,23 @@ type Expertise struct {
 
 // ClassOrder devolve os nomes em ordem estável: a de um `map` é aleatória,
 // e sem isto a lista de classes de cada perícia mudaria a cada render.
-func ClassOrder(pericias map[string]ClassExpertises) []string {
-	nomes := make([]string, 0, len(pericias))
-	for nome := range pericias {
-		nomes = append(nomes, nome)
+func ClassOrder(expertises map[string]ClassExpertises) []string {
+	names := make([]string, 0, len(expertises))
+	for name := range expertises {
+		names = append(names, name)
 	}
-	slices.Sort(nomes)
-	return nomes
+	slices.Sort(names)
+	return names
 }
 
 // AttributeAbbrev escreve o atributo como a ficha e a tabela do livro escrevem.
-func AttributeAbbrev(chave string) string {
+func AttributeAbbrev(key string) string {
 	for _, a := range AttributeOrder {
-		if a.Chave == chave {
-			return a.Sigla
+		if a.Key == key {
+			return a.Abbreviation
 		}
 	}
-	return chave
+	return key
 }
 
 func ExpertiseFields(p Expertise) []string {
@@ -160,25 +160,25 @@ type God struct {
 	Major bool   `json:"major"`
 	// O Paladino e o Druida escolhem devoto de listas próprias (p82 e p61), e é
 	// o catálogo que diz quem entra em cada uma.
-	PaladinoEligible  bool     `json:"paladinoEligible"`
-	DruidaEligible    bool     `json:"druidaEligible"`
-	Portfolio         string   `json:"portfolio"`
-	Energia           string   `json:"energia"`
-	Simbolo           string   `json:"simbolo"`
-	ArmaPreferida     string   `json:"armaPreferida"`
-	PoderesConcedidos []string `json:"poderesConcedidos"`
-	Devotos           []string `json:"devotos"`
-	BookPage          int      `json:"bookPage"`
+	PaladinEligible bool     `json:"paladinoEligible"`
+	DruidEligible   bool     `json:"druidaEligible"`
+	Portfolio       string   `json:"portfolio"`
+	Energy          string   `json:"energia"`
+	Symbol          string   `json:"simbolo"`
+	PreferredWeapon string   `json:"armaPreferida"`
+	GrantedPowers   []string `json:"poderesConcedidos"`
+	Devotees        []string `json:"devotos"`
+	BookPage        int      `json:"bookPage"`
 }
 
 // ── a leitura, uma vez só ────────────────────────────────────────────────────
 
 // SortByName usa o MESMO colador pt-BR do resto do acervo: sem ele "Ártico"
 // cai depois de "Zumbi", porque a comparação de bytes põe todo acento no fim.
-func SortByName[T any](lista []T, nome func(T) string) {
+func SortByName[T any](list []T, name func(T) string) {
 	col := collate.New(language.BrazilianPortuguese)
-	slices.SortStableFunc(lista, func(a, b T) int {
-		return col.CompareString(nome(a), nome(b))
+	slices.SortStableFunc(list, func(a, b T) int {
+		return col.CompareString(name(a), name(b))
 	})
 }
 
@@ -186,21 +186,21 @@ func SortByName[T any](lista []T, nome func(T) string) {
 func ClassesWithKnownExpertises() []Class {
 	classes := ListOf[Class]("classes")
 
-	var pericias map[string]ClassExpertises
-	if bruto, ok := catalog.Resource("class-expertises"); ok {
-		_ = json.Unmarshal(bruto, &pericias)
+	var expertises map[string]ClassExpertises
+	if raw, ok := catalog.Resource("class-expertises"); ok {
+		_ = json.Unmarshal(raw, &expertises)
 	}
-	poderes := map[string]int{}
+	powers := map[string]int{}
 	for _, p := range FlattenedPowers() {
-		poderes[p.Fonte]++
+		powers[p.Source]++
 	}
 
 	for i := range classes {
-		if p, tem := pericias[classes[i].Name]; tem {
-			classes[i].Pericias = p.Fixed
-			classes[i].Escolhe = p.ChooseCount
+		if p, found := expertises[classes[i].Name]; found {
+			classes[i].Expertises = p.Fixed
+			classes[i].Chooses = p.ChooseCount
 		}
-		classes[i].Poderes = poderes[classes[i].Name]
+		classes[i].Powers = powers[classes[i].Name]
 	}
 	return classes
 }
@@ -211,21 +211,21 @@ func ClassesWithKnownExpertises() []Class {
 // a aba e a busca unificada concordarem por construção.
 
 func RaceFields(r Race) []string {
-	campos := []string{r.Name, r.Tier, r.Tamanho}
+	fields := []string{r.Name, r.Tier, r.Size}
 	for _, h := range r.Abilities {
-		campos = append(campos, h.Name, h.Summary)
+		fields = append(fields, h.Name, h.Summary)
 	}
-	return campos
+	return fields
 }
 
 func ClassFields(c Class) []string {
-	return append([]string{c.Name}, c.Pericias...)
+	return append([]string{c.Name}, c.Expertises...)
 }
 
 func GodFields(d God) []string {
-	campos := []string{d.Name, d.Portfolio, d.Simbolo, d.ArmaPreferida}
-	campos = append(campos, d.PoderesConcedidos...)
-	return append(campos, d.Devotos...)
+	fields := []string{d.Name, d.Portfolio, d.Symbol, d.PreferredWeapon}
+	fields = append(fields, d.GrantedPowers...)
+	return append(fields, d.Devotees...)
 }
 
 // TierName escreve o `tier` da raça. Fica com a palavra do DADO no
@@ -255,21 +255,21 @@ var (
 func Expertises() []Expertise {
 	periciasUmaVez.Do(func() {
 		periciasDoLivro = ListOf[Expertise]("expertises")
-		treinadaPor := map[string][]string{}
-		var pericias map[string]ClassExpertises
-		if bruto, ok := catalog.Resource("class-expertises"); ok {
-			_ = json.Unmarshal(bruto, &pericias)
+		trainedBy := map[string][]string{}
+		var expertises map[string]ClassExpertises
+		if raw, ok := catalog.Resource("class-expertises"); ok {
+			_ = json.Unmarshal(raw, &expertises)
 		}
 		// Só as FIXAS: a piscina de escolha tem quase tudo em quase toda classe,
 		// e dizer que Acrobacia é "treinada por" doze classes porque ela está em
 		// doze piscinas seria informação que não separa nada.
-		for _, classe := range ClassOrder(pericias) {
-			for _, nome := range pericias[classe].Fixed {
-				treinadaPor[nome] = append(treinadaPor[nome], classe)
+		for _, class := range ClassOrder(expertises) {
+			for _, name := range expertises[class].Fixed {
+				trainedBy[name] = append(trainedBy[name], class)
 			}
 		}
 		for i := range periciasDoLivro {
-			periciasDoLivro[i].Classes = treinadaPor[periciasDoLivro[i].Name]
+			periciasDoLivro[i].Classes = trainedBy[periciasDoLivro[i].Name]
 		}
 	})
 	return periciasDoLivro
@@ -316,7 +316,7 @@ func CharacterCatalogs() ([]Race, []Class, []God) {
 // `map` em Go é ALEATÓRIA por projeto, então imprimir os modificadores direto do
 // mapa daria uma ordem diferente a cada render — a página mudaria sozinha entre
 // dois pedidos iguais, e qualquer teste sobre o texto seria intermitente.
-var AttributeOrder = []struct{ Chave, Sigla string }{
+var AttributeOrder = []struct{ Key, Abbreviation string }{
 	{"strength", "For"}, {"dexterity", "Des"}, {"constitution", "Con"},
 	{"intelligence", "Int"}, {"wisdom", "Sab"}, {"charisma", "Car"},
 }

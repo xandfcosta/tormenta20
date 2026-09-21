@@ -8,11 +8,11 @@ type Origin struct {
 	ID       string          `json:"id"`
 	Name     string          `json:"name"`
 	Benefits []OriginBenefit `json:"benefits"`
-	// PoderUnico é o poder exclusivo da origem, e ele NÃO está na lista de
+	// UniquePower é o poder exclusivo da origem, e ele NÃO está na lista de
 	// benefícios — é um campo à parte no catálogo. Ele conta como um dos dois
 	// que a pessoa leva (p85), e esquecê-lo torna o poder da origem inescolhível.
-	PoderUnico OriginBenefit `json:"poderUnico"`
-	BookPage   int           `json:"bookPage"`
+	UniquePower OriginBenefit `json:"poderUnico"`
+	BookPage    int           `json:"bookPage"`
 }
 
 type OriginBenefit struct {

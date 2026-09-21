@@ -19,7 +19,7 @@ import (
 func guerreiro(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, "Guerreiro", "Guerreiro", 3, 0, 0)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Guerreiro", "Guerreiro", 3, 0, 0)
 	return f, id
 }
 
@@ -53,20 +53,20 @@ func saveHand(t *testing.T, f sceneFixture, id int64, blob string) {
 func TestTheProficienciesPanelSaysWhatTheClassGrants(t *testing.T) {
 	f, id := guerreiro(t)
 
-	tela := f.pede(t, f.jogador, http.MethodGet,
+	screen := f.pede(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=proficiencies", id), "").Body.String()
 
-	if !strings.Contains(tela, "Padrão: Guerreiro") {
+	if !strings.Contains(screen, "Padrão: Guerreiro") {
 		t.Error("a etiqueta não diz de qual classe vem a proficiência")
 	}
 	// A ETIQUETA "classe" é o que separa um ajuste deliberado do que veio de
 	// fábrica; sem ela, uma proficiência tirada na mão parece defeito da conta.
-	if strings.Count(tela, ">classe</span>") == 0 {
+	if strings.Count(screen, ">classe</span>") == 0 {
 		t.Error("nenhuma linha está marcada como padrão de classe")
 	}
-	for _, rotulo := range []string{"Armas simples", "Armas marciais", "Armas exóticas", "Escudos"} {
-		if !strings.Contains(tela, rotulo) {
-			t.Errorf("a categoria %q não está no painel", rotulo)
+	for _, label := range []string{"Armas simples", "Armas marciais", "Armas exóticas", "Escudos"} {
+		if !strings.Contains(screen, label) {
+			t.Errorf("a categoria %q não está no painel", label)
 		}
 	}
 }
@@ -84,17 +84,17 @@ func TestTheProficienciesPanelSaysWhatTheClassGrants(t *testing.T) {
 func TestHeavyArmorGrantsTheLightOne(t *testing.T) {
 	f, id := guerreiro(t)
 
-	rec := f.pede(t, f.jogador, http.MethodPost,
+	rec := f.pede(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/proficiencias/padrao", id), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("restaurar deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	tem := saved(t, f, id)
-	if !tem["armaduras-leves"] {
+	found := saved(t, f, id)
+	if !found["armaduras-leves"] {
 		t.Error("o guerreiro ficou sem armadura leve: o motor vai penalizá-lo por vestir couro")
 	}
-	if !tem["armaduras-pesadas"] {
+	if !found["armaduras-pesadas"] {
 		t.Error("o guerreiro ficou sem armadura pesada, que a p64 concede")
 	}
 }
@@ -111,17 +111,17 @@ func TestRestoringTheDefaultDiscardsTheManualAdjustment(t *testing.T) {
 	// AUSENTE — os dois lados do erro, num blob só.
 	saveHand(t, f, id, `["armas-exoticas"]`)
 
-	rec := f.pede(t, f.jogador, http.MethodPost,
+	rec := f.pede(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/proficiencias/padrao", id), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("restaurar deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	tem := saved(t, f, id)
-	if tem["armas-exoticas"] {
+	found := saved(t, f, id)
+	if found["armas-exoticas"] {
 		t.Error("o acréscimo manual sobreviveu ao restaurar: ele fez união, não substituição")
 	}
-	if !tem["armas-marciais"] {
+	if !found["armas-marciais"] {
 		t.Error("a proficiência da classe não voltou: o restaurar não restaurou nada")
 	}
 }
@@ -134,16 +134,16 @@ func TestRestoringTheDefaultDiscardsTheManualAdjustment(t *testing.T) {
 func TestTogglingTurnsTheProficiencyOnAndOff(t *testing.T) {
 	f, id := guerreiro(t)
 	saveHand(t, f, id, `["armas-marciais"]`)
-	rota := fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-marciais", id)
+	route := fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-marciais", id)
 
-	if rec := f.pede(t, f.jogador, http.MethodPost, rota, ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.player, http.MethodPost, route, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar deu %d: %s", rec.Code, rec.Body.String())
 	}
 	if saved(t, f, id)["armas-marciais"] {
 		t.Fatal("o primeiro toque não DESLIGOU a proficiência")
 	}
 
-	if rec := f.pede(t, f.jogador, http.MethodPost, rota, ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.player, http.MethodPost, route, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar de volta deu %d: %s", rec.Code, rec.Body.String())
 	}
 	if !saved(t, f, id)["armas-marciais"] {
@@ -160,17 +160,17 @@ func TestAProficiencyOutsideTheCatalogIsNotSaved(t *testing.T) {
 	f, id := guerreiro(t)
 	saveHand(t, f, id, `["armas-marciais"]`)
 
-	rec := f.pede(t, f.jogador, http.MethodPost,
+	rec := f.pede(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-de-laser", id), "")
 
 	// A MENSAGEM CARREGA O VALOR OFENSOR E O FORMATO ESPERADO: "proficiência
 	// inválida" não ajudaria ninguém a descobrir o que digitar.
-	recusa := sceneRefusal(rec.Body.String())
-	if recusa == "" {
+	refusal := sceneRefusal(rec.Body.String())
+	if refusal == "" {
 		t.Fatal("uma categoria inventada foi aceita sem uma palavra na tela")
 	}
-	if !strings.Contains(recusa, "armas-de-laser") || !strings.Contains(recusa, "armas-simples") {
-		t.Errorf("a recusa não diz o valor recusado e as opções: %q", recusa)
+	if !strings.Contains(refusal, "armas-de-laser") || !strings.Contains(refusal, "armas-simples") {
+		t.Errorf("a recusa não diz o valor recusado e as opções: %q", refusal)
 	}
 	if !saved(t, f, id)["armas-marciais"] {
 		t.Error("a recusa mexeu no que já estava guardado")
@@ -193,7 +193,7 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 	// Valores plausíveis por parâmetro. O 403 tem de vir ANTES de qualquer
 	// validação de conteúdo, então o valor só precisa existir — mas um valor
 	// impossível esconderia uma rota que valida primeiro e barra depois.
-	valores := map[string]string{
+	values := map[string]string{
 		"id":        fmt.Sprintf("%d", id),
 		"qual":      "pv",
 		"passo":     "1",
@@ -222,64 +222,64 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 		"ascendencia": "aggelus",
 	}
 
-	var visitadas int
-	andar := func(metodo string, rota string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
-		if metodo != http.MethodPost || !strings.HasPrefix(rota, "/personagens/{id}/") {
+	var visited int
+	walk := func(method string, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
+		if method != http.MethodPost || !strings.HasPrefix(route, "/personagens/{id}/") {
 			return nil
 		}
-		caminho := rota
-		for _, pedaco := range strings.Split(rota, "/") {
-			if !strings.HasPrefix(pedaco, "{") {
+		path := route
+		for _, chunk := range strings.Split(route, "/") {
+			if !strings.HasPrefix(chunk, "{") {
 				continue
 			}
-			nome := strings.Trim(pedaco, "{}")
-			valor, sabe := valores[nome]
-			if !sabe {
+			name := strings.Trim(chunk, "{}")
+			value, knows := values[name]
+			if !knows {
 				t.Errorf("a rota %s tem o parâmetro {%s} e este guarda não sabe preenchê-lo — "+
-					"acrescente um valor plausível ao mapa `valores`", rota, nome)
+					"acrescente um valor plausível ao mapa `valores`", route, name)
 				return nil
 			}
-			caminho = strings.Replace(caminho, pedaco, valor, 1)
+			path = strings.Replace(path, chunk, value, 1)
 		}
-		visitadas++
-		rec := f.pede(t, f.mestre, http.MethodPost, caminho, "")
+		visited++
+		rec := f.pede(t, f.gm, http.MethodPost, path, "")
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("%s aceitou quem não é dono: %d — a rota não passa pelo `comandoDaFicha`",
-				rota, rec.Code)
+				route, rec.Code)
 		}
 		return nil
 	}
-	roteador, ok := f.s.WebRouter().(chi.Routes)
+	router, ok := f.s.WebRouter().(chi.Routes)
 	if !ok {
 		t.Fatal("o roteador do app deixou de ser um chi.Mux: esta varredura não alcança mais as rotas")
 	}
-	if err := chi.Walk(roteador, andar); err != nil {
+	if err := chi.Walk(router, walk); err != nil {
 		t.Fatalf("varrer as rotas: %v", err)
 	}
 	// CONTROLE: sem ele, um filtro que não casa com rota nenhuma passaria verde
 	// afirmando que zero rotas estão seguras.
-	if visitadas < 4 {
+	if visited < 4 {
 		t.Fatalf("a varredura achou %d rotas de escrita da ficha, e existem pelo menos 4: "+
-			"o filtro parou de casar com o roteador", visitadas)
+			"o filtro parou de casar com o roteador", visited)
 	}
 }
 
 func TestEverySheetTabDrawsSomething(t *testing.T) {
 	f, id := guerreiro(t)
 
-	var visitadas int
+	var visited int
 	for _, aba := range sheetui.Tabs() {
-		titulo, sabe := panelTitle[aba.Valor]
-		if !sabe {
+		title, knows := panelTitle[aba.Value]
+		if !knows {
 			t.Errorf("a aba %q não tem título esperado neste guarda — acrescente a "+
-				"linha ao mapa `panelTitle`", aba.Valor)
+				"linha ao mapa `panelTitle`", aba.Value)
 			continue
 		}
-		visitadas++
-		tela := f.pede(t, f.jogador, http.MethodGet,
-			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
-		if !strings.Contains(tela, ">"+titulo+"</h2>") {
-			t.Errorf("a aba %q não desenhou painel nenhum", aba.Valor)
+		visited++
+		screen := f.pede(t, f.player, http.MethodGet,
+			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Value), "").Body.String()
+		if !strings.Contains(screen, ">"+title+"</h2>") {
+			t.Errorf("a aba %q não desenhou painel nenhum", aba.Value)
 		}
 		// E ELA SE ANUNCIA: ler `aria-current` é ler HTML, e HTML o servidor
 		// escreve — a camada mais barata que segura isto é esta, e aqui ela varre
@@ -287,20 +287,20 @@ func TestEverySheetTabDrawsSomething(t *testing.T) {
 		//
 		// O par CONTA + LUGAR é o guarda inteiro: uma aba ativa a mais não
 		// estoura nada na tela, ela só põe duas seções acesas ao mesmo tempo.
-		if n := strings.Count(tela, `aria-current="page"`); n != 1 {
-			t.Errorf("a aba %q desenhou %d marcas de aba ativa, e a ficha tem UMA", aba.Valor, n)
+		if n := strings.Count(screen, `aria-current="page"`); n != 1 {
+			t.Errorf("a aba %q desenhou %d marcas de aba ativa, e a ficha tem UMA", aba.Value, n)
 			continue
 		}
-		depoisDaMarca := tela[strings.Index(tela, `aria-current="page"`):]
-		rotulado, _, _ := strings.Cut(depoisDaMarca, "</a>")
-		if !strings.Contains(rotulado, aba.Rotulo) {
-			t.Errorf("com ?tab=%s a marca de aba ativa não caiu no link %q", aba.Valor, aba.Rotulo)
+		afterMark := screen[strings.Index(screen, `aria-current="page"`):]
+		labeled, _, _ := strings.Cut(afterMark, "</a>")
+		if !strings.Contains(labeled, aba.Label) {
+			t.Errorf("com ?tab=%s a marca de aba ativa não caiu no link %q", aba.Value, aba.Label)
 		}
 	}
 	// CONTROLE: sem ele, um `Tabs` que virasse vazio faria o laço não
 	// rodar nenhuma vez e o guarda passar afirmando nada.
-	if visitadas != 7 {
-		t.Fatalf("%d abas visitadas, e a ficha tem sete: o guarda mediu outra coisa", visitadas)
+	if visited != 7 {
+		t.Fatalf("%d abas visitadas, e a ficha tem sete: o guarda mediu outra coisa", visited)
 	}
 }
 
@@ -324,16 +324,16 @@ func TestNoSheetCommandLosesTheTab(t *testing.T) {
 	// HTML do templ (`&#39;`), enquanto uma constante sai literal — a armadilha
 	// está no `engine-go/CLAUDE.md`. Procurar só a aspa crua acha ZERO comandos,
 	// e quem denuncia isso é o CONTROLE lá embaixo.
-	postados := regexp.MustCompile(`@post\((?:&#39;|')([^'&]+)(?:&#39;|')\)`)
-	var vistos int
+	posted := regexp.MustCompile(`@post\((?:&#39;|')([^'&]+)(?:&#39;|')\)`)
+	var seen int
 	for _, aba := range sheetui.Tabs() {
-		tela := f.pede(t, f.jogador, http.MethodGet,
-			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
-		for _, achado := range postados.FindAllStringSubmatch(tela, -1) {
-			vistos++
-			if !strings.HasSuffix(achado[1], "?tab="+aba.Valor) {
+		screen := f.pede(t, f.player, http.MethodGet,
+			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Value), "").Body.String()
+		for _, found := range posted.FindAllStringSubmatch(screen, -1) {
+			seen++
+			if !strings.HasSuffix(found[1], "?tab="+aba.Value) {
 				t.Errorf("na aba %q o comando %q não carrega a aba: o clique joga o jogador para %q",
-					aba.Valor, achado[1], sheetui.Tabs()[0].Valor)
+					aba.Value, found[1], sheetui.Tabs()[0].Value)
 			}
 		}
 	}
@@ -341,8 +341,8 @@ func TestNoSheetCommandLosesTheTab(t *testing.T) {
 	// expressão regular que parasse de casar — daria verde afirmando que zero
 	// comandos estão certos. São 12 por aba no mínimo (8 passos de vital, 2 do
 	// degrau, 2 do diálogo do multiclasse).
-	if vistos < 12*len(sheetui.Tabs()) {
+	if seen < 12*len(sheetui.Tabs()) {
 		t.Fatalf("a varredura achou %d comandos nas sete abas, e são pelo menos %d: "+
-			"a expressão parou de casar com o HTML", vistos, 12*len(sheetui.Tabs()))
+			"a expressão parou de casar com o HTML", seen, 12*len(sheetui.Tabs()))
 	}
 }

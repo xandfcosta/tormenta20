@@ -13,13 +13,13 @@ import (
 // TestTheHeaderSaysTheTrainingForTheLevel é uma ficha com perícias de verdade e um ofício inventado.
 // O TREINO POR NÍVEL tem três degraus, e o cabeçalho os diz.
 func TestTheHeaderSaysTheTrainingForTheLevel(t *testing.T) {
-	casos := []struct {
-		nivel int64
-		quer  int
+	cases := []struct {
+		level int64
+		want  int
 	}{{1, 2}, {6, 2}, {7, 4}, {14, 4}, {15, 6}, {20, 6}}
-	for _, caso := range casos {
-		if got := trainingBonusFor(caso.nivel); got != caso.quer {
-			t.Errorf("no nível %d o treino é %d, quer %d", caso.nivel, got, caso.quer)
+	for _, tc := range cases {
+		if got := trainingBonusFor(tc.level); got != tc.want {
+			t.Errorf("no nível %d o treino é %d, quer %d", tc.level, got, tc.want)
 		}
 	}
 }

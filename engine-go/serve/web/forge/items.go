@@ -27,25 +27,25 @@ import (
 // disfarces OU gazua" não é item, é uma pergunta, e gravá-la como nome poria na
 // mochila uma linha que ocupa carga e não existe no livro. A folha diz quais
 // são, e a Mochila é onde elas viram item.
-func birthItems(folha forgeAnswers, kit engine.StartingKit) []sheet.StartingItem {
-	escolhidos := append([]string{}, kit.BaseItems...)
-	escolhidos = append(escolhidos, folha.SimpleWeapon, folha.MartialWeapon, folha.Armor)
-	if folha.Shield {
-		escolhidos = append(escolhidos, kit.Shield)
+func birthItems(stylesheet forgeAnswers, kit engine.StartingKit) []sheet.StartingItem {
+	chosen := append([]string{}, kit.BaseItems...)
+	chosen = append(chosen, stylesheet.SimpleWeapon, stylesheet.MartialWeapon, stylesheet.Armor)
+	if stylesheet.Shield {
+		chosen = append(chosen, kit.Shield)
 	}
 
-	itens := make([]sheet.StartingItem, 0, len(escolhidos)+2)
-	for _, id := range escolhidos {
-		if linha := catalogRow(id); linha != nil {
-			itens = append(itens, *linha)
+	items := make([]sheet.StartingItem, 0, len(chosen)+2)
+	for _, id := range chosen {
+		if row := catalogRow(id); row != nil {
+			items = append(items, *row)
 		}
 	}
-	for _, concessao := range originGrants(folha.Origin) {
-		if concessao.Kind == engine.OriginItemFixed {
-			itens = append(itens, originRow(concessao.Name))
+	for _, grant := range originGrants(stylesheet.Origin) {
+		if grant.Kind == engine.OriginItemFixed {
+			items = append(items, originRow(grant.Name))
 		}
 	}
-	return itens
+	return items
 }
 
 // catalogRow é um item do livro virando linha da mochila. Id vazio ou
@@ -56,9 +56,9 @@ func catalogRow(id string) *sheet.StartingItem {
 	if item == nil {
 		return nil
 	}
-	quantidade := int64(1)
+	amount := int64(1)
 	return &sheet.StartingItem{
-		CatalogID: &item.ID, Name: &item.Name, Quantity: &quantidade, Slots: &item.Slots,
+		CatalogID: &item.ID, Name: &item.Name, Quantity: &amount, Slots: &item.Slots,
 	}
 }
 
@@ -68,29 +68,29 @@ func catalogRow(id string) *sheet.StartingItem {
 // escrito e não por id — "Símbolo sagrado" é uma entrada de `items.json`. Quando
 // não casa (a origem cita coisas que o catálogo não vende, como "Traje de
 // sacerdote"), a linha nasce sem catálogo, ocupando um espaço.
-func originRow(nome string) sheet.StartingItem {
-	if item := book.ItemByName(nome); item != nil {
-		quantidade := int64(1)
+func originRow(name string) sheet.StartingItem {
+	if item := book.ItemByName(name); item != nil {
+		amount := int64(1)
 		return sheet.StartingItem{
-			CatalogID: &item.ID, Name: &item.Name, Quantity: &quantidade, Slots: &item.Slots,
+			CatalogID: &item.ID, Name: &item.Name, Quantity: &amount, Slots: &item.Slots,
 		}
 	}
-	quantidade, espacos := int64(1), 1.0
-	return sheet.StartingItem{Name: &nome, Quantity: &quantidade, Slots: &espacos}
+	quantity, spaces := int64(1), 1.0
+	return sheet.StartingItem{Name: &name, Quantity: &quantity, Slots: &spaces}
 }
 
 // birthPurse rola os T$ 4d6 de p140 e soma o dinheiro que a origem
 // conceder ("T$ 2d6 (último salário)", do Artesão).
-func birthPurse(origem string) (float64, error) {
+func birthPurse(origin string) (float64, error) {
 	total, err := engine.RollStartingMoney()
 	if err != nil {
 		return 0, err
 	}
-	for _, concessao := range originGrants(origem) {
-		if concessao.Kind != engine.OriginItemMoney {
+	for _, grant := range originGrants(origin) {
+		if grant.Kind != engine.OriginItemMoney {
 			continue
 		}
-		extra, err := engine.RollDiceNotation(concessao.Dice)
+		extra, err := engine.RollDiceNotation(grant.Dice)
 		if err != nil {
 			return 0, err
 		}
@@ -100,11 +100,11 @@ func birthPurse(origem string) (float64, error) {
 }
 
 // originGrants são as linhas "Itens" da origem, já classificadas.
-func originGrants(origem string) []engine.OriginItemGrant {
-	frases := book.OriginItemsByName()[origem]
-	concessoes := make([]engine.OriginItemGrant, 0, len(frases))
-	for _, frase := range frases {
-		concessoes = append(concessoes, engine.ParseOriginItem(frase))
+func originGrants(origin string) []engine.OriginItemGrant {
+	sentences := book.OriginItemsByName()[origin]
+	grants := make([]engine.OriginItemGrant, 0, len(sentences))
+	for _, sentence := range sentences {
+		grants = append(grants, engine.ParseOriginItem(sentence))
 	}
-	return concessoes
+	return grants
 }

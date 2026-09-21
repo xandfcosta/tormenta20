@@ -36,8 +36,8 @@ import (
 // a regra de leitura tem um caso ("não sou mestre, não há lente") que precisa
 // morar junto do dado.
 type lenses struct {
-	mu     sync.RWMutex
-	ligada map[lensKey]bool
+	mu sync.RWMutex
+	on map[lensKey]bool
 }
 
 type lensKey struct {
@@ -46,7 +46,7 @@ type lensKey struct {
 }
 
 func newLenses() *lenses {
-	return &lenses{ligada: map[lensKey]bool{}}
+	return &lenses{on: map[lensKey]bool{}}
 }
 
 // Alterna liga ou desliga, e devolve como ficou.
@@ -58,22 +58,22 @@ func newLenses() *lenses {
 func (l *lenses) Toggle(sessionID, userID int64) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	chave := lensKey{SessionID: sessionID, UserID: userID}
-	if l.ligada[chave] {
+	key := lensKey{SessionID: sessionID, UserID: userID}
+	if l.on[key] {
 		// APAGA a entrada em vez de gravar `false`: o mapa vive enquanto o
 		// processo viver, e uma sessão que acumulasse um `false` por pessoa nunca
 		// devolveria a memória.
-		delete(l.ligada, chave)
+		delete(l.on, key)
 		return false
 	}
-	l.ligada[chave] = true
+	l.on[key] = true
 	return true
 }
 
 func (l *lenses) On(sessionID, userID int64) bool {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	return l.ligada[lensKey{SessionID: sessionID, UserID: userID}]
+	return l.on[lensKey{SessionID: sessionID, UserID: userID}]
 }
 
 // Apaga desliga a lente de todo mundo naquela sessão.
@@ -84,9 +84,9 @@ func (l *lenses) On(sessionID, userID int64) bool {
 func (l *lenses) Erase(sessionID int64) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	for chave := range l.ligada {
-		if chave.SessionID == sessionID {
-			delete(l.ligada, chave)
+	for key := range l.on {
+		if key.SessionID == sessionID {
+			delete(l.on, key)
 		}
 	}
 }
@@ -116,16 +116,16 @@ func toggleLens(st Scene, c commandCtx) (*board.BoardState, error) {
 // assim ela cobre tudo o que a redação tira, inclusive o que ela vier a tirar
 // depois — a cortina esvazia a cena inteira, e uma contagem por campo diria zero
 // escondidas sobre um mapa que a mesa não vê.
-func seesTableHowScene(doMestre *board.BoardState) (daMesa *board.BoardState, escondidas int) {
-	daMesa = board.BoardForRole("player", doMestre)
-	if doMestre == nil {
-		return daMesa, 0
+func seesTableHowScene(forGM *board.BoardState) (fromTable *board.BoardState, hidden int) {
+	fromTable = board.BoardForRole("player", forGM)
+	if forGM == nil {
+		return fromTable, 0
 	}
-	vistas := 0
-	if daMesa != nil {
-		vistas = len(daMesa.Tokens)
+	seen := 0
+	if fromTable != nil {
+		seen = len(fromTable.Tokens)
 	}
-	return daMesa, len(doMestre.Tokens) - vistas
+	return fromTable, len(forGM.Tokens) - seen
 }
 
 // lensCommand escreve o gesto que acende ou apaga.
@@ -139,13 +139,13 @@ func lensCommand(v BoardView) string {
 // vista da mesa não vê a peça que ele mesmo escondeu, e vai concluir que ela
 // sumiu. Por isso a tira é PERSISTENTE, nomeia o modo em texto e carrega a
 // própria saída.
-func lensPhrase(escondidas int) string {
+func lensPhrase(hidden int) string {
 	switch {
-	case escondidas <= 0:
+	case hidden <= 0:
 		return "Você está vendo a cena como a mesa. Nenhuma peça escondida nesta cena."
-	case escondidas == 1:
+	case hidden == 1:
 		return "Você está vendo a cena como a mesa. 1 peça escondida não aparece."
 	default:
-		return fmt.Sprintf("Você está vendo a cena como a mesa. %d peças escondidas não aparecem.", escondidas)
+		return fmt.Sprintf("Você está vendo a cena como a mesa. %d peças escondidas não aparecem.", hidden)
 	}
 }

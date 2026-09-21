@@ -45,7 +45,7 @@ export default defineConfig({
         table: resolve(import.meta.dirname, 'serve/web/assets/src/table.ts'),
       },
       formats: ['es'],
-      fileName: (_formato, nome) => `${nome}.js`,
+      fileName: (_format, label) => `${label}.js`,
     },
     rollupOptions: {
       output: {

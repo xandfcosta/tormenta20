@@ -8,20 +8,20 @@ import (
 // As regras do rastreador. Os casos são as BORDAS, e não uma transcrição do
 // comportamento.
 
-func fila(nomes ...string) []InitiativeEntry {
-	fora := make([]InitiativeEntry, 0, len(nomes))
-	for _, n := range nomes {
-		fora = append(fora, InitiativeEntry{Label: n})
+func fila(names ...string) []InitiativeEntry {
+	outside := make([]InitiativeEntry, 0, len(names))
+	for _, n := range names {
+		outside = append(outside, InitiativeEntry{Label: n})
 	}
-	return fora
+	return outside
 }
 
-func rotulos(linhas []InitiativeEntry) []string {
-	fora := make([]string, 0, len(linhas))
-	for _, l := range linhas {
-		fora = append(fora, l.Label)
+func rotulos(rows []InitiativeEntry) []string {
+	outside := make([]string, 0, len(rows))
+	for _, l := range rows {
+		outside = append(outside, l.Label)
 	}
-	return fora
+	return outside
 }
 
 func iguais(a, b []string) bool {
@@ -80,11 +80,11 @@ func TestTheButtonSaysWhereItGoes(t *testing.T) {
 		t.Errorf("fora de combate o botão diz %q, quero o verbo de começar", got.Label)
 	}
 	// Fila vazia diz o MOTIVO de estar desligado, não o verbo que não acontece.
-	vazia := NextTurnButton(nil, -1)
-	if vazia.Label != "Ninguém na fila" {
-		t.Errorf("fila vazia diz %q", vazia.Label)
+	empty := NextTurnButton(nil, -1)
+	if empty.Label != "Ninguém na fila" {
+		t.Errorf("fila vazia diz %q", empty.Label)
 	}
-	if vazia.Entry != nil {
+	if empty.Entry != nil {
 		t.Error("fila vazia prometeu uma linha — seria inventá-la")
 	}
 }
@@ -95,13 +95,13 @@ func TestTheButtonSaysWhereItGoes(t *testing.T) {
 // cena é (p252).
 func TestTheCounterHasFiveStates(t *testing.T) {
 	action := &Scene{Kind: SceneAction, Number: 1, StandardLeft: true, MovementLeft: true}
-	casos := []struct {
-		nome   string
-		scene  *Scene
-		rodada int
-		turno  int
-		naFila int
-		quero  string
+	cases := []struct {
+		name    string
+		scene   *Scene
+		round   int
+		turn    int
+		inQueue int
+		want    string
 	}{
 		{"fora de cena vence tudo", nil, 3, 2, 5, "Fora de cena"},
 		{"numa conversa não há rodada", &Scene{Kind: SceneRoleplay, Number: 2}, 0, -1, 0,
@@ -123,10 +123,10 @@ func TestTheCounterHasFiveStates(t *testing.T) {
 			"Rodada 2 · Turno 2/4 · sem ação"},
 		{"o turno é 1-indexado na tela", action, 1, 0, 3, "Rodada 1 · Turno 1/3 · padrão e movimento"},
 	}
-	for _, c := range casos {
-		got := TurnCounter(c.scene, c.rodada, c.turno, c.naFila)
-		if got != c.quero {
-			t.Errorf("%s: %q, quero %q", c.nome, got, c.quero)
+	for _, c := range cases {
+		got := TurnCounter(c.scene, c.round, c.turn, c.inQueue)
+		if got != c.want {
+			t.Errorf("%s: %q, quero %q", c.name, got, c.want)
 		}
 	}
 }
@@ -134,20 +134,20 @@ func TestTheCounterHasFiveStates(t *testing.T) {
 // Não é que ele esteja offline: é que não há personagem para marcar, e um zero
 // na lista viraria "o personagem 0 está online" na tela.
 func TestAMemberWithoutACharacterDoesNotEnterPresence(t *testing.T) {
-	membros := []TableMember{
+	members := []TableMember{
 		{CharacterID: 10, OwnerID: 1},
 		{CharacterID: 11, OwnerID: 2},
 		{CharacterID: 13, OwnerID: 0},
 	}
-	conectados := ConnectedCharacters(membros, []int64{1, 3})
-	if len(conectados) != 1 || !conectados[10] {
-		t.Errorf("conectados vieram %v, quero só o 10", conectados)
+	connected := ConnectedCharacters(members, []int64{1, 3})
+	if len(connected) != 1 || !connected[10] {
+		t.Errorf("conectados vieram %v, quero só o 10", connected)
 	}
-	if conectados[0] {
+	if connected[0] {
 		t.Error("o personagem 0 entrou na presença")
 	}
 	// Ninguém online é lista vazia, não lista inteira.
-	if got := ConnectedCharacters(membros, nil); len(got) != 0 {
+	if got := ConnectedCharacters(members, nil); len(got) != 0 {
 		t.Errorf("sem ninguém online vieram %d", len(got))
 	}
 }
@@ -156,13 +156,13 @@ func TestAMemberWithoutACharacterDoesNotEnterPresence(t *testing.T) {
 // forma por causa de um papel que ali não muda nada.
 func TestTheGmEyeWatchesTheTrackerNotTheRole(t *testing.T) {
 	pv := int64(30)
-	comNPC := []InitiativeEntry{{Label: "Arwen"}, {Label: "Ogro", HpMax: &pv}}
+	withNPC := []InitiativeEntry{{Label: "Arwen"}, {Label: "Ogro", HpMax: &pv}}
 	soPCs := []InitiativeEntry{{Label: "Arwen"}, {Label: "Bruna"}}
 
-	if !GmSeesVitals(comNPC, true) {
+	if !GmSeesVitals(withNPC, true) {
 		t.Error("o mestre não vê os vitais numa fila que tem NPC")
 	}
-	if GmSeesVitals(comNPC, false) {
+	if GmSeesVitals(withNPC, false) {
 		t.Error("o jogador viu os vitais do NPC")
 	}
 	if GmSeesVitals(soPCs, true) {
@@ -174,8 +174,8 @@ func TestTheGmEyeWatchesTheTrackerNotTheRole(t *testing.T) {
 // vive como atributo de campo de formulário é UI, e quem posta na mão passa por
 // cima dos quatro.
 func TestValidatingANewCombatantPinsTheFourEdges(t *testing.T) {
-	bom := CombatantDraft{Label: "Ogro", Initiative: 12, HP: 45, Kind: "npc"}
-	if err := ValidateCombatantDraft(bom); err != nil {
+	good := CombatantDraft{Label: "Ogro", Initiative: 12, HP: 45, Kind: "npc"}
+	if err := ValidateCombatantDraft(good); err != nil {
 		t.Fatalf("o combatente bom foi recusado: %v — sem isto as recusas abaixo não provariam nada", err)
 	}
 	// PV zero é ESTADO VÁLIDO e não ausência: é "sem vida registrada", e o
@@ -184,10 +184,10 @@ func TestValidatingANewCombatantPinsTheFourEdges(t *testing.T) {
 		t.Errorf("PV 0 foi recusado, e ele é o capanga sem vida rastreada: %v", err)
 	}
 
-	casos := []struct {
-		nome string
-		c    CombatantDraft
-		cita string
+	cases := []struct {
+		name  string
+		c     CombatantDraft
+		cites string
 	}{
 		{"sem nome", CombatantDraft{Label: "   ", Initiative: 10, Kind: "npc"}, "nome"},
 		{"nome comprido", CombatantDraft{Label: strings.Repeat("a", 61), Initiative: 10, Kind: "npc"}, "61"},
@@ -196,16 +196,16 @@ func TestValidatingANewCombatantPinsTheFourEdges(t *testing.T) {
 		{"PV demais", CombatantDraft{Label: "Ogro", Initiative: 10, HP: 1000, Kind: "npc"}, "1000"},
 		{"tipo inventado", CombatantDraft{Label: "Ogro", Initiative: 10, Kind: "dragão"}, "dragão"},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		err := ValidateCombatantDraft(c.c)
 		if err == nil {
-			t.Errorf("%s: passou", c.nome)
+			t.Errorf("%s: passou", c.name)
 			continue
 		}
 		// A mensagem tem de nomear o VALOR ofensivo: quem a lê está no meio de
 		// um combate e precisa consertar sem sair da tela.
-		if !strings.Contains(err.Error(), c.cita) {
-			t.Errorf("%s: a recusa %q não cita %q", c.nome, err, c.cita)
+		if !strings.Contains(err.Error(), c.cites) {
+			t.Errorf("%s: a recusa %q não cita %q", c.name, err, c.cites)
 		}
 	}
 }
@@ -214,8 +214,8 @@ func TestValidatingANewCombatantPinsTheFourEdges(t *testing.T) {
 // mais de 60 bytes, e contar bytes recusaria um nome mais curto do que o que
 // deixa passar em ASCII.
 func TestTheNameLimitCountsLettersNotBytes(t *testing.T) {
-	acentuado := strings.Repeat("ã", MaxLabelLetters) // 60 letras, 120 bytes
-	if err := ValidateCombatantDraft(CombatantDraft{Label: acentuado, Initiative: 10, Kind: "npc"}); err != nil {
+	accented := strings.Repeat("ã", MaxLabelLetters) // 60 letras, 120 bytes
+	if err := ValidateCombatantDraft(CombatantDraft{Label: accented, Initiative: 10, Kind: "npc"}); err != nil {
 		t.Errorf("60 letras acentuadas foram recusadas: %v", err)
 	}
 }
@@ -223,37 +223,37 @@ func TestTheNameLimitCountsLettersNotBytes(t *testing.T) {
 // O EXTRATO DA MANUTENÇÃO é a segunda linha da faixa: quem entrou na vez pagou
 // o quê, e o que caiu por falta de mana (p227).
 func TestTheStripTellsWhatSustainingCostThisTurn(t *testing.T) {
-	casos := []struct {
-		nome      string
+	cases := []struct {
+		name      string
 		statement *TurnUpkeep
-		quero     string
+		want      string
 	}{
-		{nome: "sem sustentada a linha não existe"},
+		{name: "sem sustentada a linha não existe"},
 		// O SALDO vem junto do gasto: "−1 PM" diz o preço e não diz se dá para
 		// pagar de novo, que é a decisão de quem sustenta.
-		{nome: "uma paga diz o nome, o custo e o que sobrou",
+		{name: "uma paga diz o nome, o custo e o que sobrou",
 			statement: &TurnUpkeep{Paid: []string{"Velocidade"}, Cost: 1, MpBefore: 12, MpAfter: 11},
-			quero:     "Velocidade · −1 PM (12 → 11)"},
-		{nome: "duas pagas somam o custo numa linha só",
+			want:      "Velocidade · −1 PM (12 → 11)"},
+		{name: "duas pagas somam o custo numa linha só",
 			statement: &TurnUpkeep{Paid: []string{"Velocidade", "Oração"}, Cost: 2, MpBefore: 58, MpAfter: 56},
-			quero:     "Velocidade e Oração · −2 PM (58 → 56)"},
+			want:      "Velocidade e Oração · −2 PM (58 → 56)"},
 		// A QUE CAIU é a notícia, e ela vem por último porque é o que muda a
 		// ficha de quem está jogando.
-		{nome: "a que caiu é nomeada",
+		{name: "a que caiu é nomeada",
 			statement: &TurnUpkeep{Dropped: []string{"Velocidade"}, Cost: 0},
-			quero:     "Velocidade acabou: sem PM para sustentar"},
+			want:      "Velocidade acabou: sem PM para sustentar"},
 		// A RAZÃO muda a frase: no chão não é falta de mana.
-		{nome: "quem caiu a 0 PV não sustenta, e a faixa diz isso",
+		{name: "quem caiu a 0 PV não sustenta, e a faixa diz isso",
 			statement: &TurnUpkeep{Dropped: []string{"Velocidade", "Oração"}, Unconscious: true},
-			quero:     "Velocidade e Oração acabaram: inconsciente não sustenta"},
-		{nome: "paga e caída convivem",
+			want:      "Velocidade e Oração acabaram: inconsciente não sustenta"},
+		{name: "paga e caída convivem",
 			statement: &TurnUpkeep{Paid: []string{"Oração"}, Dropped: []string{"Velocidade"}, Cost: 1, MpBefore: 1},
-			quero:     "Oração · −1 PM (1 → 0) · Velocidade acabou: sem PM para sustentar"},
+			want:      "Oração · −1 PM (1 → 0) · Velocidade acabou: sem PM para sustentar"},
 	}
-	for _, c := range casos {
-		t.Run(c.nome, func(t *testing.T) {
-			if got := UpkeepLine(c.statement); got != c.quero {
-				t.Errorf("a faixa diz %q, quero %q", got, c.quero)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := UpkeepLine(c.statement); got != c.want {
+				t.Errorf("a faixa diz %q, quero %q", got, c.want)
 			}
 		})
 	}

@@ -128,8 +128,8 @@ func TestConsumeUsesRolledValueWhenTheTableRolls(t *testing.T) {
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 1)
 
 	// A média é o padrão de quem não quer rolar; quem rola manda o resultado.
-	pvRolado := int64(8)
-	dose, errDose := consumeItem(t, s, char, item, &pvRolado, nil)
+	rolledHP := int64(8)
+	dose, errDose := consumeItem(t, s, char, item, &rolledHP, nil)
 	if errDose != nil {
 		t.Fatalf("a dose foi recusada: %v", errDose)
 	}

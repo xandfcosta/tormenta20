@@ -33,8 +33,8 @@ test.use({ storageState: '.auth/user.json' })
  * é PREFIXO do nome da camada ("Mover" casa com o trilho E com "Mover Ogro —
  * escolha a casa"). A classe é o que define a camada.
  */
-const camadaDe = (page: Page, gesto: RegExp) =>
-  page.locator('.board-squares').and(page.getByRole('button', { name: gesto }))
+const camadaDe = (page: Page, gesture: RegExp) =>
+  page.locator('.board-squares').and(page.getByRole('button', { name: gesture }))
 
 /**
  * A FERRAMENTA no trilho, e não qualquer botão com aquele nome.
@@ -43,8 +43,8 @@ const camadaDe = (page: Page, gesto: RegExp) =>
  * (tecla 4)"), de propósito, para quem navega por teclado descobrir o atalho.
  * Perguntar DENTRO do trilho resolve o prefixo e o número ao mesmo tempo.
  */
-const ferramenta = (page: Page, nome: string) =>
-  page.getByRole('navigation', { name: 'Ferramentas do mapa' }).getByRole('button', { name: nome })
+const ferramenta = (page: Page, label: string) =>
+  page.getByRole('navigation', { name: 'Ferramentas do mapa' }).getByRole('button', { name: label })
 
 /**
  * Quem guarda o enquadramento é a CENA, a janela que recorta — e não o palco:
@@ -67,14 +67,14 @@ const quadrado = (page: Page) =>
  * o caso passaria verde sobre um stream morto.
  */
 test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
 
     await page.getByRole('button', { name: 'Aproximar o mapa' }).click()
     await page.getByRole('button', { name: 'Aproximar o mapa' }).click()
-    const zoomAntes = await quadrado(page)
-    expect(zoomAntes, 'o zoom não saiu do padrão — não há o que sobreviver').not.toBe('44px')
+    const zoomBefore = await quadrado(page)
+    expect(zoomBefore, 'o zoom não saiu do padrão — não há o que sobreviver').not.toBe('44px')
 
     // Uma mudança que vem DO SERVIDOR e redesenha a região do mapa.
     await ferramenta(page, 'Difícil').click()
@@ -91,9 +91,9 @@ test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => 
       'o terreno não apareceu — o remendo não aconteceu e o resto não mede nada',
     ).toHaveCount(1)
 
-    expect(await quadrado(page), 'o remendo levou o zoom junto').toBe(zoomAntes)
+    expect(await quadrado(page), 'o remendo levou o zoom junto').toBe(zoomBefore)
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -110,38 +110,38 @@ test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => 
  * duas erradas do mesmo jeito.
  */
 test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
     // Aproxima ao máximo: com a casa grande, um erro de conversão de um quadrado
     // já sai da caixa e a asserção o pega. No zoom padrão um erro pequeno pode
     // cair dentro da mesma casa por sorte.
-    const mais = page.getByRole('button', { name: 'Aproximar o mapa' })
-    while (!(await mais.isDisabled())) await mais.click()
+    const more = page.getByRole('button', { name: 'Aproximar o mapa' })
+    while (!(await more.isDisabled())) await more.click()
 
     await page.getByRole('button', { name: 'Camuflagem' }).click()
-    const casas = camadaDe(page, /Pintar terreno/)
-    const alvo = { x: 150, y: 110 }
-    await casas.click({ position: alvo })
+    const squares = camadaDe(page, /Pintar terreno/)
+    const target = { x: 150, y: 110 }
+    await squares.click({ position: target })
 
-    const pintada = page.locator('.board-terrain.board-concealment')
-    await expect(pintada, 'nada foi pintado').toHaveCount(1)
+    const painted = page.locator('.board-terrain.board-concealment')
+    await expect(painted, 'nada foi pintado').toHaveCount(1)
 
-    const caixaDaCamada = (await casas.boundingBox())!
-    const caixaDaCasa = (await pintada.boundingBox())!
-    const pontoX = caixaDaCamada.x + alvo.x
-    const pontoY = caixaDaCamada.y + alvo.y
+    const layerBox = (await squares.boundingBox())!
+    const squareBox = (await painted.boundingBox())!
+    const pointX = layerBox.x + target.x
+    const pointY = layerBox.y + target.y
 
     expect(
-      pontoX >= caixaDaCasa.x && pontoX <= caixaDaCasa.x + caixaDaCasa.width,
-      `o clique em x=${pontoX} caiu fora da casa pintada (${caixaDaCasa.x}–${caixaDaCasa.x + caixaDaCasa.width})`,
+      pointX >= squareBox.x && pointX <= squareBox.x + squareBox.width,
+      `o clique em x=${pointX} caiu fora da casa pintada (${squareBox.x}–${squareBox.x + squareBox.width})`,
     ).toBe(true)
     expect(
-      pontoY >= caixaDaCasa.y && pontoY <= caixaDaCasa.y + caixaDaCasa.height,
-      `o clique em y=${pontoY} caiu fora da casa pintada (${caixaDaCasa.y}–${caixaDaCasa.y + caixaDaCasa.height})`,
+      pointY >= squareBox.y && pointY <= squareBox.y + squareBox.height,
+      `o clique em y=${pointY} caiu fora da casa pintada (${squareBox.y}–${squareBox.y + squareBox.height})`,
     ).toBe(true)
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -162,53 +162,53 @@ test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ 
  * mesma.
  */
 test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
 
     // ARRASTA A VISTA um bom pedaço, com a ferramenta da mão. O deslocamento é
     // deliberadamente NÃO múltiplo do quadrado: um múltiplo esconderia um erro
     // de fase, porque a casa certa e a errada cairiam no mesmo lugar da grade.
     await ferramenta(page, 'Arrastar a vista').click()
     const mao = page.locator('.board-viewport')
-    const caixaDaMao = (await mao.boundingBox())!
-    await page.mouse.move(caixaDaMao.x + 400, caixaDaMao.y + 300)
+    const handBox = (await mao.boundingBox())!
+    await page.mouse.move(handBox.x + 400, handBox.y + 300)
     await page.mouse.down()
-    await page.mouse.move(caixaDaMao.x + 173, caixaDaMao.y + 191, { steps: 8 })
+    await page.mouse.move(handBox.x + 173, handBox.y + 191, { steps: 8 })
     await page.mouse.up()
 
     // O CONTROLE: a vista ANDOU. Sem ele, "a casa está certa" é verdade também
     // numa tela onde o arrasto não fez nada — que é o verde mais caro que existe.
-    const vista = await page
+    const view = await page
       .locator('.board-scene')
       .evaluate((e) => getComputedStyle(e).getPropertyValue('--vista-x').trim())
-    expect(vista, 'a vista não saiu do lugar — o arrasto não aconteceu e o resto não mede nada').not.toBe('0px')
+    expect(view, 'a vista não saiu do lugar — o arrasto não aconteceu e o resto não mede nada').not.toBe('0px')
 
     await ferramenta(page, 'Camuflagem').click()
-    const casas = camadaDe(page, /Pintar terreno/)
-    const alvo = { x: 260, y: 180 }
-    await casas.click({ position: alvo })
+    const squares = camadaDe(page, /Pintar terreno/)
+    const target = { x: 260, y: 180 }
+    await squares.click({ position: target })
 
-    const pintada = page.locator('.board-terrain.board-concealment')
-    await expect(pintada, 'nada foi pintado').toHaveCount(1)
+    const painted = page.locator('.board-terrain.board-concealment')
+    await expect(painted, 'nada foi pintado').toHaveCount(1)
 
-    const caixaDaCamada = (await casas.boundingBox())!
-    const caixaDaCasa = (await pintada.boundingBox())!
-    const pontoX = caixaDaCamada.x + alvo.x
-    const pontoY = caixaDaCamada.y + alvo.y
+    const layerBox = (await squares.boundingBox())!
+    const squareBox = (await painted.boundingBox())!
+    const pointX = layerBox.x + target.x
+    const pointY = layerBox.y + target.y
 
     expect(
-      pontoX >= caixaDaCasa.x && pontoX <= caixaDaCasa.x + caixaDaCasa.width,
-      `com a vista em ${vista}, o clique em x=${pontoX} caiu fora da casa pintada ` +
-        `(${caixaDaCasa.x}–${caixaDaCasa.x + caixaDaCasa.width})`,
+      pointX >= squareBox.x && pointX <= squareBox.x + squareBox.width,
+      `com a vista em ${view}, o clique em x=${pointX} caiu fora da casa pintada ` +
+        `(${squareBox.x}–${squareBox.x + squareBox.width})`,
     ).toBe(true)
     expect(
-      pontoY >= caixaDaCasa.y && pontoY <= caixaDaCasa.y + caixaDaCasa.height,
-      `o clique em y=${pontoY} caiu fora da casa pintada ` +
-        `(${caixaDaCasa.y}–${caixaDaCasa.y + caixaDaCasa.height})`,
+      pointY >= squareBox.y && pointY <= squareBox.y + squareBox.height,
+      `o clique em y=${pointY} caiu fora da casa pintada ` +
+        `(${squareBox.y}–${squareBox.y + squareBox.height})`,
     ).toBe(true)
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -231,34 +231,34 @@ test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', as
  * navegador tem viewport para recortar.
  */
 test('o gabarito desenhado cabe dentro do SVG que o carrega', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
 
     await ferramenta(page, 'Gabarito').click()
     await camadaDe(page, /Pôr o gabarito/).click({ position: { x: 300, y: 200 } })
 
     const svg = page.locator('.board-measure-back')
-    const desenho = svg.locator('path')
+    const drawing = svg.locator('path')
 
     // O CONTROLE: o servidor respondeu e há desenho. Sem ele, "cabe no SVG" seria
     // verdade sobre um `<path>` vazio, que é o verde que este caso existe para
     // não dar.
-    await expect(desenho, 'o gabarito não foi desenhado — não há o que medir').toHaveAttribute('d', /\S/)
+    await expect(drawing, 'o gabarito não foi desenhado — não há o que medir').toHaveAttribute('d', /\S/)
 
-    const caixaDoSvg = (await svg.boundingBox())!
-    const caixaDoDesenho = (await desenho.boundingBox())!
+    const svgBox = (await svg.boundingBox())!
+    const drawingBox = (await drawing.boundingBox())!
     expect(
-      caixaDoDesenho.x >= caixaDoSvg.x &&
-        caixaDoDesenho.x + caixaDoDesenho.width <= caixaDoSvg.x + caixaDoSvg.width &&
-        caixaDoDesenho.y >= caixaDoSvg.y &&
-        caixaDoDesenho.y + caixaDoDesenho.height <= caixaDoSvg.y + caixaDoSvg.height,
-      `o desenho está em (${caixaDoDesenho.x},${caixaDoDesenho.y},${caixaDoDesenho.width}×${caixaDoDesenho.height}) ` +
-        `e o SVG em (${caixaDoSvg.x},${caixaDoSvg.y},${caixaDoSvg.width}×${caixaDoSvg.height}): ` +
+      drawingBox.x >= svgBox.x &&
+        drawingBox.x + drawingBox.width <= svgBox.x + svgBox.width &&
+        drawingBox.y >= svgBox.y &&
+        drawingBox.y + drawingBox.height <= svgBox.y + svgBox.height,
+      `o desenho está em (${drawingBox.x},${drawingBox.y},${drawingBox.width}×${drawingBox.height}) ` +
+        `e o SVG em (${svgBox.x},${svgBox.y},${svgBox.width}×${svgBox.height}): ` +
         `o viewport do svg recorta o gabarito, e ninguém na mesa o vê`,
     ).toBe(true)
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -279,39 +279,39 @@ test('o gabarito desenhado cabe dentro do SVG que o carrega', async ({ page }) =
  * "a peça está dentro" é verdade também numa janela que nunca saiu do lugar.
  */
 test('a janela vai atrás do foco quando a peça está fora dela', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
     await putATokenOnTheMap(page)
 
-    const cena = page.locator('.board-scene')
-    const peca = page.locator('.board-token')
+    const scene = page.locator('.board-scene')
+    const token = page.locator('.board-token')
 
     // Arrasta a vista para BEM longe da peça, com a ferramenta da mão.
     await ferramenta(page, 'Arrastar a vista').click()
-    const caixaDaMao = (await page.locator('.board-viewport').boundingBox())!
-    await page.mouse.move(caixaDaMao.x + caixaDaMao.width - 40, caixaDaMao.y + caixaDaMao.height - 40)
+    const handBox = (await page.locator('.board-viewport').boundingBox())!
+    await page.mouse.move(handBox.x + handBox.width - 40, handBox.y + handBox.height - 40)
     await page.mouse.down()
-    await page.mouse.move(caixaDaMao.x + 20, caixaDaMao.y + 20, { steps: 10 })
+    await page.mouse.move(handBox.x + 20, handBox.y + 20, { steps: 10 })
     await page.mouse.up()
 
-    const dentroDaJanela = async () => {
-      const j = (await cena.boundingBox())!
-      const p = (await peca.boundingBox())!
+    const insideWindow = async () => {
+      const j = (await scene.boundingBox())!
+      const p = (await token.boundingBox())!
       return p.x >= j.x && p.x + p.width <= j.x + j.width && p.y >= j.y && p.y + p.height <= j.y + j.height
     }
 
     // O CONTROLE: a peça ficou FORA da janela.
-    expect(await dentroDaJanela(), 'a peça continuou visível — o arrasto não afastou nada e o resto não mede').toBe(false)
+    expect(await insideWindow(), 'a peça continuou visível — o arrasto não afastou nada e o resto não mede').toBe(false)
 
-    await peca.focus()
+    await token.focus()
 
     expect(
-      await dentroDaJanela(),
+      await insideWindow(),
       'a peça focada continuou fora da janela: quem navega por teclado pode alcançá-la e nunca vê-la',
     ).toBe(true)
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -329,14 +329,14 @@ test('a janela vai atrás do foco quando a peça está fora dela', async ({ page
  * para um app que ignorasse a tecla e enchesse sempre.
  */
 test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
     await ferramenta(page, 'Difícil').click()
 
-    const casas = camadaDe(page, /Pintar terreno/)
-    const caixa = (await casas.boundingBox())!
-    const de = { x: caixa.x + 120, y: caixa.y + 120 }
+    const squares = camadaDe(page, /Pintar terreno/)
+    const box = (await squares.boundingBox())!
+    const de = { x: box.x + 120, y: box.y + 120 }
     const ate = { x: de.x + 120, y: de.y + 90 }
 
     // O CONTROLE: o MESMO arrasto sem Shift pinta uma linha, não uma área.
@@ -344,10 +344,10 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
     await page.mouse.down()
     await page.mouse.move(ate.x, ate.y, { steps: 10 })
     await page.mouse.up()
-    const doTraco = await page.locator('.board-terrain.board-difficult').count()
+    const strokeOf = await page.locator('.board-terrain.board-difficult').count()
 
     // E agora COM Shift, num pedaço virgem do plano.
-    const deB = { x: caixa.x + 420, y: caixa.y + 120 }
+    const deB = { x: box.x + 420, y: box.y + 120 }
     const ateB = { x: deB.x + 120, y: deB.y + 90 }
     await page.keyboard.down('Shift')
     await page.mouse.move(deB.x, deB.y)
@@ -363,12 +363,12 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
       .poll(() => page.locator('.board-terrain.board-difficult').count(), {
         message: 'o retângulo não encheu a área',
       })
-      .toBeGreaterThan(doTraco * 2)
+      .toBeGreaterThan(strokeOf * 2)
 
     // E o laço some quando o dedo solta — ele é intenção, não resultado.
     await expect(page.locator('.board-lasso'), 'o laço ficou na tela depois de soltar').toBeHidden()
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -381,15 +381,15 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
  * nenhum dizendo que havia um elemento coberto. Só o navegador vê isso.
  */
 test('o marcador continua clicável por baixo da camada de mover', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
     await putATokenOnTheMap(page)
 
     await ferramenta(page, 'Marcar').click()
     await camadaDe(page, /Marcar um lugar/).click({ position: { x: 90, y: 90 } })
-    const marcador = page.locator('.board-marker')
-    await expect(marcador, 'o marcador não nasceu').toHaveCount(1)
+    const marker = page.locator('.board-marker')
+    await expect(marker, 'o marcador não nasceu').toHaveCount(1)
 
     // De volta ao padrão: é assim que a ferramenta fica enquanto o mestre joga,
     // e era exatamente aí que o marcador ficava inalcançável.
@@ -403,18 +403,18 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
       'a camada de mover não está no ar — o caso não enfrenta o empilhamento que veio medir',
     ).toBeVisible()
 
-    await marcador.click()
+    await marker.click()
     await expect(
       page.locator('.board-marker-actions'),
       'o clique não chegou ao marcador — alguma camada o cobriu de novo',
     ).toBeVisible()
 
     // E o que o gesto existe para fazer: revelar para a mesa.
-    await expect(marcador, 'o marcador não nasceu escondido').toHaveClass(/board-marker-hidden/)
+    await expect(marker, 'o marcador não nasceu escondido').toHaveClass(/board-marker-hidden/)
     await page.getByRole('button', { name: /^Revelar o marcador/ }).click()
-    await expect(marcador, 'revelar não mudou nada na tela do mestre').not.toHaveClass(/board-marker-hidden/)
+    await expect(marker, 'revelar não mudou nada na tela do mestre').not.toHaveClass(/board-marker-hidden/)
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -435,25 +435,25 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
  * certo.
  */
 test('a seta e a distância aparecem durante o arrasto da peça', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
     await putATokenOnTheMap(page)
     await page.getByLabel('Centralizar nas peças').click()
 
-    const peca = page.locator('.board-token').first()
+    const token = page.locator('.board-token').first()
     // O CONTROLE, antes de qualquer ausência virar conclusão: o gesto está
     // pendurado nesta peça? Sem isto, "não achei prévia" seria verdade também
     // sobre uma peça que ninguém pode arrastar.
-    await expect(peca, 'a peça não tem o gesto de arrasto: o canal não está aberto').toHaveAttribute(
+    await expect(token, 'a peça não tem o gesto de arrasto: o canal não está aberto').toHaveAttribute(
       'data-on:pointermove__window',
       /previa/,
     )
 
-    const caixa = await peca.boundingBox()
-    if (!caixa) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
-    const x = caixa.x + caixa.width / 2
-    const y = caixa.y + caixa.height / 2
+    const box = await token.boundingBox()
+    if (!box) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
+    const x = box.x + box.width / 2
+    const y = box.y + box.height / 2
 
     await page.mouse.move(x, y)
     await page.mouse.down()
@@ -483,7 +483,7 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
       'a seta viva sobreviveu ao soltar',
     ).toHaveAttribute('d', '')
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -500,34 +500,34 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
  * estado que a quebra em lugar nenhum.
  */
 test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    const campanha = mesa.split('/')[2]
+    const campaign = table.split('/')[2]
     // O ACERVO pela porta de verdade — a mesma que a aba de lugares usa. Três
     // basta: o que muda a largura é o botão EXISTIR e a contagem ter dígito.
-    for (const nome of ['Taverna do E2E', 'Cripta do E2E', 'Ruínas do E2E']) {
-      const criado = await page.request.post(`/campanhas/${campanha}/lugares/novo`, {
-        form: { name: nome, ground: 'crypt' },
+    for (const label of ['Taverna do E2E', 'Cripta do E2E', 'Ruínas do E2E']) {
+      const created = await page.request.post(`/campanhas/${campaign}/lugares/novo`, {
+        form: { name: label, ground: 'crypt' },
       })
-      expect(criado.ok(), `semear o lugar ${nome}: ${criado.status()}`).toBeTruthy()
+      expect(created.ok(), `semear o lugar ${label}: ${created.status()}`).toBeTruthy()
     }
 
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
     await page.setViewportSize({ width: 390, height: 844 })
     await page.waitForTimeout(300)
 
     // O CONTROLE, e sem ele o caso não mede nada: se o botão do acervo não
     // estiver na tela, o painel medido é o estreito, e o guarda passa verde
     // sobre o painel que nunca quebrou.
-    const acervo = page.locator('.board-scene-verbs button').filter({ hasText: /Lugares|3/ })
+    const collection = page.locator('.board-scene-verbs button').filter({ hasText: /Lugares|3/ })
     await expect(
-      acervo.first(),
+      collection.first(),
       'o botão do acervo não está no painel — o caso mediria um painel sem o item que o estoura',
     ).toBeVisible()
 
     await expectDentroDaJanela(page)
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -552,12 +552,12 @@ test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ pag
  * os seis botões no ar.
  */
 test('o submenu de duplicar só entra no caminho do teclado quando é aberto', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
     await putATokenOnTheMap(page)
 
-    const botoesDoSubmenu = () =>
+    const submenuButtons = () =>
       page.evaluate(
         () =>
           [...document.querySelectorAll('.board-token-copy button')].filter((b) =>
@@ -568,22 +568,22 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
     // O MENU ABERTO é a premissa: com ele fechado, o submenu seria invisível pela
     // herança do pai e o caso não mediria o popover.
     await page.locator('.board-token').first().click({ button: 'right' })
-    const duplicar = page.getByRole('button', { name: /^Duplicar / })
+    const duplicate = page.getByRole('button', { name: /^Duplicar / })
     await expect(
-      duplicar,
+      duplicate,
       'o menu da peça não abriu: sem ele o caso mede a herança do pai, não o popover',
     ).toBeVisible()
 
     expect(
-      await botoesDoSubmenu(),
+      await submenuButtons(),
       'o submenu fechado deixou botão alcançável pelo Tab dentro de um menu aberto',
     ).toBe(0)
 
     // O CONTROLE POSITIVO: aberto, os seis aparecem — três de duplicar aqui e
     // três de copiar para colar.
-    await duplicar.click()
+    await duplicate.click()
     await expect
-      .poll(botoesDoSubmenu, {
+      .poll(submenuButtons, {
         message: 'o submenu não abriu: a asserção acima estaria medindo uma camada que nunca aparece',
       })
       .toBe(6)
@@ -599,7 +599,7 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
     // painel mais alto ou zoom padrão menor põem a peça de volta debaixo do
     // painel de verbos, o clique direito vai para o botão de afastar, o menu não
     // abre e o `.board-token-copy` não existe para medir.
-    for (const [nome, w, h] of [
+    for (const [label, w, h] of [
       ['deitado', 844, 390],
       ['em pé', 390, 844],
     ] as const) {
@@ -616,18 +616,18 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
       await page.locator('.board-token').first().click({ button: 'right' })
       await page.getByRole('button', { name: /^Duplicar / }).click()
       await page.waitForTimeout(300)
-      const escapou = await page.evaluate(() => {
+      const escaped = await page.evaluate(() => {
         const p = document.querySelector('.board-token-copy')!.getBoundingClientRect()
         return {
           abaixo: Math.round(p.bottom - window.innerHeight),
           direita: Math.round(p.right - window.innerWidth),
         }
       })
-      expect(escapou.abaixo, `a camada passa ${escapou.abaixo}px do pé da janela ${nome}`).toBeLessThanOrEqual(1)
-      expect(escapou.direita, `a camada passa ${escapou.direita}px da borda direita ${nome}`).toBeLessThanOrEqual(1)
+      expect(escaped.abaixo, `a camada passa ${escaped.abaixo}px do pé da janela ${label}`).toBeLessThanOrEqual(1)
+      expect(escaped.direita, `a camada passa ${escaped.direita}px da borda direita ${label}`).toBeLessThanOrEqual(1)
     }
   } finally {
-    await apagar()
+    await remove()
   }
 })
 
@@ -646,46 +646,46 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
  * CTRL+V põe outro.
  */
 test('copiar guarda o modo, e cada CTRL+V põe outro igual', async ({ page }) => {
-  const { mesa, apagar } = await disposableTable(page)
+  const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    await openTheBoard(page, mesa)
+    await openTheBoard(page, table)
     await putATokenOnTheMap(page)
 
     // A FAIXA da área começa VAZIA, e este é o controle: sem ele, uma faixa que
     // aparecesse sempre passaria pelas asserções de baixo sem provar nada.
-    const faixa = page.locator('.board-area')
-    await expect(faixa, 'a faixa da área nasceu visível com a área vazia').toBeHidden()
+    const strip = page.locator('.board-area')
+    await expect(strip, 'a faixa da área nasceu visível com a área vazia').toBeHidden()
 
     await page.locator('.board-token').first().click({ button: 'right' })
     await page.getByRole('button', { name: /^Duplicar / }).click()
     await page.getByRole('button', { name: /^Copiar .* para colar: com PV próprio/ }).click()
 
-    await expect(faixa, 'copiar não acendeu a faixa da área').toBeVisible()
-    await expect(faixa).toContainText('com PV próprio')
+    await expect(strip, 'copiar não acendeu a faixa da área').toBeVisible()
+    await expect(strip).toContainText('com PV próprio')
 
-    const antes = await page.locator('.board-token').count()
+    const before = await page.locator('.board-token').count()
     await page.keyboard.press('Control+v')
     await expect
       .poll(() => page.locator('.board-token').count(), { message: 'o primeiro CTRL+V não colou' })
-      .toBe(antes + 1)
+      .toBe(before + 1)
     await page.keyboard.press('Control+v')
     await expect
       .poll(() => page.locator('.board-token').count(), {
         message: 'o segundo CTRL+V não colou: a área não sobreviveu ao remendo da cena',
       })
-      .toBe(antes + 2)
+      .toBe(before + 2)
 
     // ESVAZIAR é um BOTÃO e nunca o Esc: o `scene.js` mapeia Escape para "voltar"
     // e o mata no documento — medido, e o `railKeyboard` já o registra.
     await page.getByRole('button', { name: 'Esvaziar a área de transferência' }).click()
-    await expect(faixa, 'esvaziar não apagou a faixa').toBeHidden()
+    await expect(strip, 'esvaziar não apagou a faixa').toBeHidden()
     await page.keyboard.press('Control+v')
     await page.waitForTimeout(500)
     expect(
       await page.locator('.board-token').count(),
       'o CTRL+V colou com a área vazia',
-    ).toBe(antes + 2)
+    ).toBe(before + 2)
   } finally {
-    await apagar()
+    await remove()
   }
 })

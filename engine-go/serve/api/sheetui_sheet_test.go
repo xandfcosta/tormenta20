@@ -10,13 +10,13 @@ import (
 )
 
 func TestTheSheetTabAddressSurvives(t *testing.T) {
-	for _, caso := range []struct{ pedido, esperado string }{
+	for _, tc := range []struct{ requested, want string }{
 		{"abilities", "abilities"},
 		{"", "expertises"},
 		{"nao-existe", "expertises"},
 	} {
-		if achou := sheetui.AskedTab(caso.pedido); achou != caso.esperado {
-			t.Errorf("?tab=%q abriu %q, esperado %q", caso.pedido, achou, caso.esperado)
+		if found := sheetui.AskedTab(tc.requested); found != tc.want {
+			t.Errorf("?tab=%q abriu %q, esperado %q", tc.requested, found, tc.want)
 		}
 	}
 }
@@ -25,10 +25,10 @@ func TestTheSheetTabAddressSurvives(t *testing.T) {
 // propósito: não existe mais aba sem painel, e quem cobra painel de TODA aba é o
 // `TestEverySheetTabDrawsSomething`.
 
-func sheetOf(t *testing.T, nome string, nivel int64) (sceneFixture, int64) {
+func sheetOf(t *testing.T, name string, level int64) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
-	id := seedCharacterAtLevel(t, f.s, f.jogador, nome, "Arcanista", nivel, 0, 0)
+	id := seedCharacterAtLevel(t, f.s, f.player, name, "Arcanista", level, 0, 0)
 	return f, id
 }
 
@@ -42,15 +42,15 @@ func sheetOf(t *testing.T, nome string, nivel int64) (sceneFixture, int64) {
 func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	f, id := sheetOf(t, "Arcanista Nv3", 3)
 	ctx := context.Background()
-	antes := poolsOf(t, f.s, id)
+	before := poolsOf(t, f.s, id)
 
-	rec := f.pede(t, f.jogador, http.MethodPost,
+	rec := f.pede(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/nivel/Arcanista/1", id), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("subir de nível deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	depois, err := f.s.sceneCore().Queries().GetCharacter(ctx, id)
+	after, err := f.s.sceneCore().Queries().GetCharacter(ctx, id)
 	if err != nil {
 		t.Fatalf("reler: %v", err)
 	}
@@ -65,8 +65,8 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	if soma != 4 {
 		t.Errorf("a CLASSE não subiu: as classes somam %d, esperado 4", soma)
 	}
-	if depois.Level != soma {
-		t.Errorf("o nível do personagem (%d) não é a soma das classes (%d)", depois.Level, soma)
+	if after.Level != soma {
+		t.Errorf("o nível do personagem (%d) não é a soma das classes (%d)", after.Level, soma)
 	}
 	// E OS POÇOS ACOMPANHAM. O número é do LIVRO e escrito à mão: *"Um arcanista
 	// começa com 8 pontos de vida (+ Constituição) e ganha 2 PV (+ Constituição)
@@ -80,11 +80,11 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	// cada leitura, e o degrau só precisa gravar o nível. As duas metades
 	// continuam prendidas — o número do livro e o fato de ele ter MEXIDO —
 	// porque um degrau que não gravasse a classe deixaria os dois parados.
-	poco := poolsOf(t, f.s, id)
-	if poco.HpMax != 14 {
-		t.Errorf("o PV máximo do Arcanista 4 ficou em %d, e o livro dá 14 (8 inicial + 3×2, p36)", poco.HpMax)
+	pool := poolsOf(t, f.s, id)
+	if pool.HpMax != 14 {
+		t.Errorf("o PV máximo do Arcanista 4 ficou em %d, e o livro dá 14 (8 inicial + 3×2, p36)", pool.HpMax)
 	}
-	if antes.HpMax == poco.HpMax {
+	if before.HpMax == pool.HpMax {
 		t.Error("o PV máximo não se mexeu: o degrau não gravou o nível da classe")
 	}
 }
@@ -95,15 +95,15 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 func TestTheLevelStepDoesNotEraseALevelOneClass(t *testing.T) {
 	f, id := sheetOf(t, "Aprendiz", 1)
 
-	rec := f.pede(t, f.jogador, http.MethodPost,
+	rec := f.pede(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/nivel/Arcanista/-1", id), "")
 
-	recusa := sceneRefusal(rec.Body.String())
-	if recusa == "" {
+	refusal := sceneRefusal(rec.Body.String())
+	if refusal == "" {
 		t.Fatal("desceu uma classe de nível 1: a classe teria sumido da ficha")
 	}
-	if !strings.Contains(recusa, "apagaria a classe") {
-		t.Errorf("a recusa não diz o que ia acontecer: %q", recusa)
+	if !strings.Contains(refusal, "apagaria a classe") {
+		t.Errorf("a recusa não diz o que ia acontecer: %q", refusal)
 	}
 }
 
@@ -119,21 +119,21 @@ func TestTheVitalClampsAtZeroAndAtTheMaximum(t *testing.T) {
 
 	// Cinco golpes de −5 sobre 20 de PV: para em zero e não vira negativo.
 	for i := 0; i < 5; i++ {
-		if rec := f.pede(t, f.jogador, http.MethodPost, url+"-5", ""); rec.Code != http.StatusOK {
+		if rec := f.pede(t, f.player, http.MethodPost, url+"-5", ""); rec.Code != http.StatusOK {
 			t.Fatalf("ferir deu %d", rec.Code)
 		}
 	}
-	if ferido := poolsOf(t, f.s, id); ferido.HpCurrent != 0 {
-		t.Errorf("o PV foi para %d: o passo tinha de prender em zero", ferido.HpCurrent)
+	if wounded := poolsOf(t, f.s, id); wounded.HpCurrent != 0 {
+		t.Errorf("o PV foi para %d: o passo tinha de prender em zero", wounded.HpCurrent)
 	}
 
 	// E curar além do máximo para NO máximo: passar dele seria PV temporário,
 	// que é outra regra e tem dono no motor.
 	for i := 0; i < 6; i++ {
-		f.pede(t, f.jogador, http.MethodPost, url+"5", "")
+		f.pede(t, f.player, http.MethodPost, url+"5", "")
 	}
-	if curado := poolsOf(t, f.s, id); curado.HpCurrent != curado.HpMax {
-		t.Errorf("o PV parou em %d com máximo %d", curado.HpCurrent, curado.HpMax)
+	if healed := poolsOf(t, f.s, id); healed.HpCurrent != healed.HpMax {
+		t.Errorf("o PV parou em %d com máximo %d", healed.HpCurrent, healed.HpMax)
 	}
 }
 
@@ -142,17 +142,17 @@ func TestTheVitalClampsAtZeroAndAtTheMaximum(t *testing.T) {
 func TestSomeoneElsesSheetDoesNotOpen(t *testing.T) {
 	f, id := sheetOf(t, "Segredo", 3)
 
-	rec := f.pede(t, f.mestre, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "")
+	rec := f.pede(t, f.gm, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "")
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("a ficha de outra pessoa abriu com %d", rec.Code)
 	}
 	// E o gesto também: barrar a leitura e deixar a escrita passar seria pior
 	// que não barrar nada.
-	escrita := f.pede(t, f.mestre, http.MethodPost,
+	write := f.pede(t, f.gm, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/vitais/pv/-5", id), "")
-	if escrita.Code != http.StatusForbidden {
-		t.Errorf("alguém feriu o personagem de outra pessoa: %d", escrita.Code)
+	if write.Code != http.StatusForbidden {
+		t.Errorf("alguém feriu o personagem de outra pessoa: %d", write.Code)
 	}
 }
 
@@ -169,14 +169,14 @@ func TestSomeoneElsesSheetDoesNotOpen(t *testing.T) {
 func TestTheRefusalComesBackInTheSceneAndNotInAnErrorStatus(t *testing.T) {
 	f, id := sheetOf(t, "Herói", 3)
 
-	rec := f.pede(t, f.jogador, http.MethodPost,
+	rec := f.pede(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-de-laser?tab=proficiencies", id), "")
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("a recusa respondeu %d: o cliente do Datastar descarta o remendo e a tela não muda",
 			rec.Code)
 	}
-	if recusa := sceneRefusal(rec.Body.String()); recusa == "" {
+	if refusal := sceneRefusal(rec.Body.String()); refusal == "" {
 		t.Error("a recusa não escreveu nada na cena")
 	}
 	if !strings.Contains(rec.Body.String(), "Seções da ficha") {
@@ -202,30 +202,30 @@ func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 	// O PASSO é um QUARTO do poço, e não um número escolhido: o poço vem do
 	// livro, e um passo fixo de 5 atravessaria as fronteiras em outro lugar no
 	// dia em que a tabela de classe mudasse — sem ninguém mexer no teste.
-	poco := bookPools(t, f.s, "Arcanista", 3).PvMax
-	url := fmt.Sprintf("/personagens/%d/vitais/pv/-%d", id, poco/4)
+	pool := bookPools(t, f.s, "Arcanista", 3).PvMax
+	url := fmt.Sprintf("/personagens/%d/vitais/pv/-%d", id, pool/4)
 
 	// CHEIO, e este é o controle: sem ele, pintar crítico sempre passaria em
 	// tudo que vem depois.
-	tela := f.pede(t, f.jogador, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "").Body.String()
-	if tom := hpTintOf(t, tela); tom != "full" {
+	screen := f.pede(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "").Body.String()
+	if tom := hpTintOf(t, screen); tom != "full" {
 		t.Errorf("com o poço cheio a faixa saiu %q, e vida cheia é `full`", tom)
 	}
 
 	// A descida, degrau por degrau, nas fronteiras da escada.
-	for _, caso := range []struct {
-		fracao string
-		pct    int
-		tom    string
+	for _, tc := range []struct {
+		fraction string
+		pct      int
+		tom      string
 	}{
 		{"três quartos", 75, "full"},
 		{"metade", 50, "hurt"},
 		{"um quarto", 25, "critical"},
 	} {
-		corpo := f.pede(t, f.jogador, http.MethodPost, url, "").Body.String()
-		if tom := hpTintOf(t, corpo); tom != caso.tom {
+		body := f.pede(t, f.player, http.MethodPost, url, "").Body.String()
+		if tom := hpTintOf(t, body); tom != tc.tom {
 			t.Errorf("com %s do poço (%d%%) a faixa saiu %q, e o esperado é %q",
-				caso.fracao, caso.pct, tom, caso.tom)
+				tc.fraction, tc.pct, tom, tc.tom)
 		}
 	}
 }
@@ -241,39 +241,39 @@ func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 // este caso ficaria verde sobre uma tela que mostra a reserva o tempo todo.
 func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 	f, id := barbaro(t, 5)
-	const marca = "PV temporários — o dano gasta estes primeiro (p106)"
+	const marker = "PV temporários — o dano gasta estes primeiro (p106)"
 
-	if tela := powerScreen(t, f, id); strings.Contains(tela, marca) {
+	if page := powerScreen(t, f, id); strings.Contains(page, marker) {
 		t.Fatal("a ficha SEM poça já mostra a reserva — o caso mediria o repouso")
 	}
 
 	// A fração do PV é LIDA antes, e não escrita à mão: o poço do bárbaro vem do
 	// catálogo (ALE-355), e o que este caso afirma é que ela não MUDA.
-	fracao := pvFraction(t, f, id)
+	fraction := pvFraction(t, f, id)
 
 	if rec := effect(t, f, id, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
 	}
 
-	tela := powerScreen(t, f, id)
-	if !strings.Contains(tela, marca) {
+	screen := powerScreen(t, f, id)
+	if !strings.Contains(screen, marker) {
 		t.Error("a reserva não chegou ao crachá")
 	}
 	// O número é do LIVRO e escrito à mão: o Campo de Força dá 30 PV
 	// temporários de cena.
-	if !strings.Contains(tela, ">+30</span>") {
+	if !strings.Contains(screen, ">+30</span>") {
 		t.Error("o crachá não diz QUANTO é a reserva")
 	}
 	// E o PV de verdade não se mexeu: a reserva é parcela à parte, não um
 	// somando.
-	if !strings.Contains(tela, fracao) {
-		t.Errorf("a fração do PV saiu de %q — a reserva virou somando em vez de parcela", fracao)
+	if !strings.Contains(screen, fraction) {
+		t.Errorf("a fração do PV saiu de %q — a reserva virou somando em vez de parcela", fraction)
 	}
 }
 
 // pvFraction é o "atual/máximo" do PV como o crachá o escreve.
 func pvFraction(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	poco := poolsOf(t, f.s, id)
-	return fmt.Sprintf("%d/%d", poco.HpCurrent, poco.HpMax)
+	pool := poolsOf(t, f.s, id)
+	return fmt.Sprintf("%d/%d", pool.HpCurrent, pool.HpMax)
 }

@@ -63,15 +63,15 @@ func newMemberFixture(t *testing.T) memberFixture {
 
 func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 	f := newMemberFixture(t)
-	outroHeroi := seedCharacter(t, f.s, f.owner, "Segundo Herói")
-	antes := membersOf(t, f.s, f.campaignID)
+	otherHero := seedCharacter(t, f.s, f.owner, "Segundo Herói")
+	before := membersOf(t, f.s, f.campaignID)
 
 	// A checagem de unicidade não consegue responder. Antes disto, o erro virava
 	// "pode entrar" e o jogador ganhava um segundo PC na mesma mesa.
 	if _, err := f.s.db.Exec("ALTER TABLE campaign_members RENAME TO campaign_members_fora"); err != nil {
 		t.Fatalf("esconder a tabela: %v", err)
 	}
-	err := f.addMember(t, f.owner, f.campaignID, outroHeroi)
+	err := f.addMember(t, f.owner, f.campaignID, otherHero)
 	if _, err := f.s.db.Exec("ALTER TABLE campaign_members_fora RENAME TO campaign_members"); err != nil {
 		t.Fatalf("devolver a tabela: %v", err)
 	}
@@ -79,8 +79,8 @@ func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 	if err == nil {
 		t.Error("erro de banco passou — a trava tem de FECHAR, não abrir")
 	}
-	if depois := membersOf(t, f.s, f.campaignID); depois != antes {
-		t.Errorf("entrou membro apesar do erro: %d → %d. O status importa menos que a escrita", antes, depois)
+	if after := membersOf(t, f.s, f.campaignID); after != before {
+		t.Errorf("entrou membro apesar do erro: %d → %d. O status importa menos que a escrita", before, after)
 	}
 }
 
@@ -90,20 +90,20 @@ func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 // remover.
 func TestAFailedJoinLeavesNoOrphanSnapshot(t *testing.T) {
 	f := newMemberFixture(t)
-	heroi := seedCharacter(t, f.s, f.owner, "Terceiro Herói")
-	copiasAntes := copiesOf(t, f.s, heroi)
+	hero := seedCharacter(t, f.s, f.owner, "Terceiro Herói")
+	copiesBefore := copiesOf(t, f.s, hero)
 
 	// A criação do membro falha DEPOIS de o clone já ter acontecido.
 	if _, err := f.s.db.Exec("DROP TABLE campaign_members"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	err := f.addMember(t, f.owner, f.campaignID, heroi)
+	err := f.addMember(t, f.owner, f.campaignID, hero)
 
 	if err == nil {
 		t.Error("a escrita falhou e o `joinTable` disse que deu certo")
 	}
-	if copias := copiesOf(t, f.s, heroi); copias != copiasAntes {
-		t.Errorf("sobrou cópia órfã: %d → %d. O herói fica impedido de entrar para sempre", copiasAntes, copias)
+	if copies := copiesOf(t, f.s, hero); copies != copiesBefore {
+		t.Errorf("sobrou cópia órfã: %d → %d. O herói fica impedido de entrar para sempre", copiesBefore, copies)
 	}
 }
 
@@ -111,15 +111,15 @@ func TestAFailedJoinLeavesNoOrphanSnapshot(t *testing.T) {
 // quem tem direito de entrar.
 func TestJoiningStillWorks(t *testing.T) {
 	f := newMemberFixture(t)
-	heroi := seedCharacter(t, f.s, f.owner, "Quarto Herói")
-	outraMesa := seedCampaign(t, f.s, f.owner)
+	hero := seedCharacter(t, f.s, f.owner, "Quarto Herói")
+	otherTable := seedCampaign(t, f.s, f.owner)
 
-	if err := f.addMember(t, f.owner, outraMesa, heroi); err != nil {
+	if err := f.addMember(t, f.owner, otherTable, hero); err != nil {
 		t.Fatalf("entrada legítima foi recusada: %v", err)
 	}
 	// E a cópia de mesa nasceu junto: é ela que entra, não o original.
-	if copias := copiesOf(t, f.s, heroi); copias != 1 {
-		t.Errorf("a mesa ficou com %d cópias do herói, esperava 1", copias)
+	if copies := copiesOf(t, f.s, hero); copies != 1 {
+		t.Errorf("a mesa ficou com %d cópias do herói, esperava 1", copies)
 	}
 }
 
@@ -177,35 +177,35 @@ func copiesOf(t *testing.T, s *Server, sourceID int64) int {
 func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	f := newMemberFixture(t)
 	table := seedCampaign(t, f.s, f.owner)
-	heroi := seedCharacter(t, f.s, f.owner, "Herói Disputado")
+	hero := seedCharacter(t, f.s, f.owner, "Herói Disputado")
 
-	const pedidos = 8
+	const requests = 8
 	var wg sync.WaitGroup
-	erros := make([]error, pedidos)
-	for i := 0; i < pedidos; i++ {
+	errs := make([]error, requests)
+	for i := 0; i < requests; i++ {
 		wg.Add(1)
 		go func(n int) {
 			defer wg.Done()
-			erros[n] = f.addMember(t, f.owner, table, heroi)
+			errs[n] = f.addMember(t, f.owner, table, hero)
 		}(i)
 	}
 	wg.Wait()
 
-	criados := 0
-	for _, err := range erros {
+	created := 0
+	for _, err := range errs {
 		if err == nil {
-			criados++
+			created++
 		}
 	}
-	if criados != 1 {
-		t.Errorf("%d pedidos simultâneos criaram %d membros (erros %v), esperava 1", pedidos, criados, erros)
+	if created != 1 {
+		t.Errorf("%d pedidos simultâneos criaram %d membros (erros %v), esperava 1", requests, created, errs)
 	}
 	if n := membersOf(t, f.s, table); n != 1 {
 		t.Errorf("a mesa ficou com %d membros", n)
 	}
 	// E nenhuma cópia sobrando: o pedido que perde a corrida desfaz o clone.
-	if copias := copiesOf(t, f.s, heroi); copias != 1 {
-		t.Errorf("sobraram %d cópias do herói, esperava 1", copias)
+	if copies := copiesOf(t, f.s, hero); copies != 1 {
+		t.Errorf("sobraram %d cópias do herói, esperava 1", copies)
 	}
 	// Quem perde a corrida merece uma RECUSA, e não um erro de banco.
 	//
@@ -214,7 +214,7 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	// passa por ela e perde a releitura DENTRO da transação leva
 	// `ErrHeroAlreadyThere` — a trava dupla funcionando, e não um descuido.
 	// Prender só o primeiro fazia este teste reprovar em três de dez corridas.
-	for _, err := range erros {
+	for _, err := range errs {
 		if err != nil && !errors.Is(err, campaign.ErrAlreadyHasHero) && !errors.Is(err, campaign.ErrHeroAlreadyThere) {
 			t.Errorf("um perdedor recebeu um erro que não é recusa nenhuma: %v", err)
 			break
@@ -240,23 +240,23 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 // um clone pela metade também satisfaria.
 func TestTheTableCopyEntersAsWoundedAsTheHero(t *testing.T) {
 	f := newMemberFixture(t)
-	heroi := seedCharacterAtLevel(t, f.s, f.owner, "Ferido", "Guerreiro", 5, 12, 4)
-	outraMesa := seedCampaign(t, f.s, f.owner)
+	hero := seedCharacterAtLevel(t, f.s, f.owner, "Ferido", "Guerreiro", 5, 12, 4)
+	otherTable := seedCampaign(t, f.s, f.owner)
 
-	original := poolsOf(t, f.s, heroi)
+	original := poolsOf(t, f.s, hero)
 	if original.HpCurrent == original.HpMax || original.MpCurrent == original.MpMax {
 		t.Fatalf("o herói entrou CHEIO em %d/%d PV e %d/%d PM — o caso mediria o repouso",
 			original.HpCurrent, original.HpMax, original.MpCurrent, original.MpMax)
 	}
 
-	if err := f.addMember(t, f.owner, outraMesa, heroi); err != nil {
+	if err := f.addMember(t, f.owner, otherTable, hero); err != nil {
 		t.Fatalf("entrada legítima foi recusada: %v", err)
 	}
 
-	copia := poolsOf(t, f.s, onlyCopyOf(t, f.s, heroi))
-	if copia != original {
+	dup := poolsOf(t, f.s, onlyCopyOf(t, f.s, hero))
+	if dup != original {
 		t.Errorf("a cópia entrou em %+v e o original está em %+v — a dívida não veio junto",
-			copia, original)
+			dup, original)
 	}
 }
 
@@ -265,20 +265,20 @@ func TestTheTableCopyEntersAsWoundedAsTheHero(t *testing.T) {
 func onlyCopyOf(t *testing.T, s *Server, sourceID int64) int64 {
 	t.Helper()
 	var id int64
-	linhas, err := s.db.Query(`SELECT id FROM characters WHERE sourceCharacterId = ?`, sourceID)
+	rows, err := s.db.Query(`SELECT id FROM characters WHERE sourceCharacterId = ?`, sourceID)
 	if err != nil {
 		t.Fatalf("achar a cópia: %v", err)
 	}
-	defer linhas.Close()
-	achadas := 0
-	for linhas.Next() {
-		if err := linhas.Scan(&id); err != nil {
+	defer rows.Close()
+	found := 0
+	for rows.Next() {
+		if err := rows.Scan(&id); err != nil {
 			t.Fatalf("ler a cópia: %v", err)
 		}
-		achadas++
+		found++
 	}
-	if achadas != 1 {
-		t.Fatalf("o molde %d tem %d cópias, e o caso precisa de exatamente uma", sourceID, achadas)
+	if found != 1 {
+		t.Fatalf("o molde %d tem %d cópias, e o caso precisa de exatamente uma", sourceID, found)
 	}
 	return id
 }

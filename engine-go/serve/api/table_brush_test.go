@@ -14,14 +14,14 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	rec := f.pede(t, f.mestre, http.MethodPost,
+	rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 2, 2, 8, 5))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o traço deu %d", rec.Code)
 	}
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	casas := board.SquaresOf(b, "dificil")
+	squares := board.SquaresOf(b, "dificil")
 
 	// DEZ, escrito à mão: derivar a contagem de `board.StrokeSquares` — a MESMA
 	// função que o handler chama — anda junto com o defeito.
@@ -30,23 +30,23 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	// depois em cada degrau, porque um pincel que pula deixa buraco. De (2,2) a
 	// (8,5) são as dez de `{2 2} {3 2} {4 2} {4 3} {5 3} {6 3} {6 4} {7 4}
 	// {8 4} {8 5}`.
-	if len(casas) != 10 {
-		t.Errorf("o traço (2,2)→(8,5) pintou %d casas, e o segmento tem 10: %v", len(casas), casas)
+	if len(squares) != 10 {
+		t.Errorf("o traço (2,2)→(8,5) pintou %d casas, e o segmento tem 10: %v", len(squares), squares)
 	}
 	// E o traço não tem buraco na ponta que este lado controla: a primeira e a
 	// última casa do segmento estão lá. O meio é problema do `StrokeSquares`, que
 	// tem guarda próprio.
-	for _, ponta := range []engine.Square{{X: 2, Y: 2}, {X: 8, Y: 5}} {
-		if !contem(casas, ponta) {
-			t.Errorf("a casa %v não foi pintada: o traço não chega às pontas", ponta)
+	for _, tip := range []engine.Square{{X: 2, Y: 2}, {X: 8, Y: 5}} {
+		if !contem(squares, tip) {
+			t.Errorf("a casa %v não foi pintada: o traço não chega às pontas", tip)
 		}
 	}
 	// E NADA FORA DA CAIXA do traço, que é a metade que faltava: sabotado para
 	// pintar um bloco além do pedido, este caso era VERDE — contar casas e
 	// conferir as pontas não diz nada sobre o que foi pintado a mais.
-	for _, casa := range casas {
-		if casa.X < 2 || casa.X > 8 || casa.Y < 2 || casa.Y > 5 {
-			t.Errorf("o traço (2,2)→(8,5) pintou %v, que está fora da caixa dele", casa)
+	for _, square := range squares {
+		if square.X < 2 || square.X > 8 || square.Y < 2 || square.Y > 5 {
+			t.Errorf("o traço (2,2)→(8,5) pintou %v, que está fora da caixa dele", square)
 		}
 	}
 }
@@ -59,7 +59,7 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	// A ORIGEM NÃO É (0,0), porque (0,0) é o VALOR-ZERO do struct: um `from` que
 	// parasse de ser lido — a tag `json:"from"` trocada, o corpo chegando vazio —
 	// decodifica exatamente para (0,0), e o caso passaria sem medir nada.
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("cobertura", 4, 4, 6, 6)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
@@ -67,7 +67,7 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	// que faltava: sabotado para apagar um bloco 10×10 na origem ALÉM do pedido,
 	// este caso era verde — "sobrou zero do traço" não diz nada sobre o que foi
 	// apagado a mais.
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 9, 1, 9)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar a testemunha deu %d", rec.Code)
 	}
@@ -79,17 +79,17 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 			len(board.SquaresOf(b, "cobertura")))
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno/limpar", stroke("", 4, 4, 6, 6)); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if sobrou := board.SquaresOf(b, "cobertura"); len(sobrou) != 0 {
-		t.Errorf("a borracha deixou %v pelo caminho", sobrou)
+	if left := board.SquaresOf(b, "cobertura"); len(left) != 0 {
+		t.Errorf("a borracha deixou %v pelo caminho", left)
 	}
-	if testemunha := board.SquaresOf(b, "dificil"); len(testemunha) != 1 {
+	if witness := board.SquaresOf(b, "dificil"); len(witness) != 1 {
 		t.Errorf("a casa (1,9), que está fora do traço da borracha, virou %v — a borracha apagou além do pedido",
-			testemunha)
+			witness)
 	}
 }
 
@@ -100,14 +100,14 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	corpo := f.pede(t, f.mestre, http.MethodPost,
+	body := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 0, 0, 9999999, 0)).Body.String()
-	if !strings.Contains(corpo, "longo demais") {
-		t.Errorf("o traço forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
+	if !strings.Contains(body, "longo demais") {
+		t.Errorf("o traço forjado não foi recusado com frase: %q", body[max(0, len(body)-200):])
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if casas := board.SquaresOf(b, "dificil"); len(casas) != 0 {
-		t.Errorf("o traço recusado pintou %d casas assim mesmo", len(casas))
+	if squares := board.SquaresOf(b, "dificil"); len(squares) != 0 {
+		t.Errorf("o traço recusado pintou %d casas assim mesmo", len(squares))
 	}
 }
 
@@ -122,14 +122,14 @@ func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	corpo := f.pede(t, f.mestre, http.MethodPost,
+	body := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1)).Body.String()
 
-	if !strings.Contains(corpo, `id="table-board"`) {
+	if !strings.Contains(body, `id="table-board"`) {
 		t.Error("a resposta do pincel não traz o mapa — a casa pintada não apareceria")
 	}
 	for _, region := range []string{"table-archive", "table-tracker", "table-party", "table-npcs"} {
-		if strings.Contains(corpo, `id="`+region+`"`) {
+		if strings.Contains(body, `id="`+region+`"`) {
 			t.Errorf("a resposta do pincel repinta a região %q, que não muda ao pintar uma casa", region)
 		}
 	}
@@ -144,9 +144,9 @@ func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	for _, pedaco := range []string{
+	for _, chunk := range []string{
 		"data-on:pointerdown",
 		"data-on:pointermove",
 		"data-on:pointerup",
@@ -156,12 +156,12 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 		"to: {x: ",
 		"evt.button === 2",
 	} {
-		if !strings.Contains(tela, pedaco) {
-			t.Errorf("a cena não tem %q: o traço do pincel não acontece", pedaco)
+		if !strings.Contains(screen, chunk) {
+			t.Errorf("a cena não tem %q: o traço do pincel não acontece", chunk)
 		}
 	}
 	// A CAMADA DE PINTURA não pode ter voltado ao clique de um quadrado só.
-	if strings.Contains(tela, `aria-label="Pintar terreno — escolha a casa"`) {
+	if strings.Contains(screen, `aria-label="Pintar terreno — escolha a casa"`) {
 		t.Error("a camada de pintura voltou a ser um clique por casa")
 	}
 }
@@ -171,23 +171,23 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("camuflagem", 3, 3, 3, 3)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CANTO vai escrito à mão ("sudeste" é o da camuflagem na tabela do
 	// desenho): ler o valor do `drawing` da cena faria o esperado sair do código
 	// sob teste, e os dois andariam juntos com o defeito.
-	if !strings.Contains(tela, "terrain-corner-southeast") {
+	if !strings.Contains(screen, "terrain-corner-southeast") {
 		t.Error("a casa de camuflagem não veste o canto sudeste")
 	}
-	if !strings.Contains(tela, "terrain-mark") {
+	if !strings.Contains(screen, "terrain-mark") {
 		t.Error("a casa pintada não tem a marca da espécie")
 	}
 	// E o TRILHO usa a mesma tabela: o botão do pincel tinge com a cor dela.
-	if !strings.Contains(tela, "board-hue-concealment") {
+	if !strings.Contains(screen, "board-hue-concealment") {
 		t.Error("o pincel do trilho não veste o matiz da espécie")
 	}
 }
@@ -200,23 +200,23 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno/retangulo", stroke("dificil", 2, 2, 4, 5)); rec.Code != http.StatusOK {
 		t.Fatalf("o retângulo deu %d", rec.Code)
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	// 3 colunas × 4 linhas = 12 casas, e as duas pontas incluídas.
-	if casas := board.SquaresOf(b, "dificil"); len(casas) != 12 {
-		t.Errorf("(2,2)→(4,5) pintou %d casas, esperado as 12 do retângulo: %v", len(casas), casas)
+	if squares := board.SquaresOf(b, "dificil"); len(squares) != 12 {
+		t.Errorf("(2,2)→(4,5) pintou %d casas, esperado as 12 do retângulo: %v", len(squares), squares)
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno/limpar/retangulo", stroke("", 2, 2, 4, 5)); rec.Code != http.StatusOK {
 		t.Fatalf("limpar o retângulo deu %d", rec.Code)
 	}
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if sobrou := board.SquaresOf(b, "dificil"); len(sobrou) != 0 {
-		t.Errorf("a borracha em área deixou %v", sobrou)
+	if left := board.SquaresOf(b, "dificil"); len(left) != 0 {
+		t.Errorf("a borracha em área deixou %v", left)
 	}
 }
 
@@ -232,14 +232,14 @@ func TestTheWholeViewportFitsInOneRectangle(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 
 	// 68×29 é o viewport no zoom MÍNIMO, que é o maior gesto que um dedo alcança.
-	rec := f.pede(t, f.mestre, http.MethodPost,
+	rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno/retangulo", stroke("dificil", 0, 0, 67, 28))
-	if corpo := rec.Body.String(); strings.Contains(corpo, "grande demais") {
-		t.Errorf("o retângulo do viewport inteiro foi recusado: %q", corpo[max(0, len(corpo)-200):])
+	if body := rec.Body.String(); strings.Contains(body, "grande demais") {
+		t.Errorf("o retângulo do viewport inteiro foi recusado: %q", body[max(0, len(body)-200):])
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if casas := board.SquaresOf(b, "dificil"); len(casas) != 68*29 {
-		t.Errorf("o retângulo 68×29 pintou %d casas, e a caixa tem %d", len(casas), 68*29)
+	if squares := board.SquaresOf(b, "dificil"); len(squares) != 68*29 {
+		t.Errorf("o retângulo 68×29 pintou %d casas, e a caixa tem %d", len(squares), 68*29)
 	}
 }
 
@@ -249,11 +249,11 @@ func TestTheWholeViewportFitsInOneRectangle(t *testing.T) {
 func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	for _, pedaco := range []string{"evt.shiftKey", "/terreno/retangulo", "board-lasso"} {
-		if !strings.Contains(tela, pedaco) {
-			t.Errorf("a cena não tem %q: o retângulo do pincel não acontece", pedaco)
+	for _, chunk := range []string{"evt.shiftKey", "/terreno/retangulo", "board-lasso"} {
+		if !strings.Contains(screen, chunk) {
+			t.Errorf("a cena não tem %q: o retângulo do pincel não acontece", chunk)
 		}
 	}
 }
@@ -270,20 +270,20 @@ func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: as duas diretivas existem na cena, em nós diferentes. Sem ele,
 	// não achar a combinação seria verdade também sobre uma página vazia.
-	for _, diretiva := range []string{"data-show=", "data-attr:style="} {
-		if !strings.Contains(tela, diretiva) {
-			t.Fatalf("a cena não usa %q — o guarda mediria o vazio", diretiva)
+	for _, directive := range []string{"data-show=", "data-attr:style="} {
+		if !strings.Contains(screen, directive) {
+			t.Fatalf("a cena não usa %q — o guarda mediria o vazio", directive)
 		}
 	}
 
 	// Cada tag aberta é uma lista de atributos até o `>`. Um `<` dentro de valor
 	// de atributo não acontece no HTML servido (o templ escapa), então o corte
 	// simples basta.
-	for _, tag := range regexp.MustCompile(`<[a-zA-Z][^>]*>`).FindAllString(tela, -1) {
+	for _, tag := range regexp.MustCompile(`<[a-zA-Z][^>]*>`).FindAllString(screen, -1) {
 		if strings.Contains(tag, "data-show=") && strings.Contains(tag, "data-attr:style=") {
 			t.Errorf("um nó tem `data-show` e `data-attr:style` juntos e vai CONGELAR a aba "+
 				"em laço de escrita: %s", primeirosAtributos(tag))
@@ -298,21 +298,21 @@ func TestAStrokeInTheNegativeQuadrantPaintsThere(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", -3, -5, -1, -5)); rec.Code != http.StatusOK {
 		t.Fatalf("o traço negativo deu %d", rec.Code)
 	}
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	casas := board.SquaresOf(b, "dificil")
-	esperadas := board.StrokeSquares(engine.Square{X: -3, Y: -5}, engine.Square{X: -1, Y: -5})
-	if len(casas) != len(esperadas) {
+	squares := board.SquaresOf(b, "dificil")
+	expected := board.StrokeSquares(engine.Square{X: -3, Y: -5}, engine.Square{X: -1, Y: -5})
+	if len(squares) != len(expected) {
 		t.Fatalf("o traço (−3,−5)→(−1,−5) pintou %d casas, esperado %d: %v",
-			len(casas), len(esperadas), casas)
+			len(squares), len(expected), squares)
 	}
 	// E elas estão MESMO no quadrante negativo: contar as casas certas não
 	// distingue "pintou lá" de "pintou o espelho em (3,5)".
-	for _, q := range casas {
+	for _, q := range squares {
 		if q.X >= 0 || q.Y >= 0 {
 			t.Errorf("a casa %v não está no quadrante negativo — o sinal se perdeu na travessia", q)
 		}
@@ -356,7 +356,7 @@ func TestEveryGestureThatReadsPointsRefusesABrokenBody(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	casos := []struct{ rota, frase, corpoBom string }{
+	cases := []struct{ route, sentence, goodBody string }{
 		{"/tabuleiro/terreno", "não entendi o gesto enviado", stroke("dificil", 2, 3, 4, 3)},
 		{"/tabuleiro/terreno/limpar", "não entendi o gesto enviado", stroke("", 2, 3, 4, 3)},
 		{"/tabuleiro/terreno/retangulo", "não entendi o gesto enviado", stroke("dificil", 2, 3, 4, 5)},
@@ -374,29 +374,29 @@ func TestEveryGestureThatReadsPointsRefusesABrokenBody(t *testing.T) {
 	}
 	// `undefined` é o que uma expressão do Datastar manda quando um sinal do
 	// meio dela não existe — o corpo quebrado que acontece de verdade.
-	const corpoQuebrado = `{"from":{"X":undefined}}`
+	const brokenBody = `{"from":{"X":undefined}}`
 
-	medidos := 0
-	for _, caso := range casos {
-		t.Run(caso.rota, func(t *testing.T) {
-			medidos++
-			quebrado := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+caso.rota, corpoQuebrado).Body.String()
-			if !strings.Contains(quebrado, caso.frase) {
+	measured := 0
+	for _, tc := range cases {
+		t.Run(tc.route, func(t *testing.T) {
+			measured++
+			broken := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+tc.route, brokenBody).Body.String()
+			if !strings.Contains(broken, tc.sentence) {
 				t.Errorf("corpo quebrado em %s não trouxe %q — o servidor decidiu sozinho onde foi o gesto:\n%s",
-					caso.rota, caso.frase, firstChunk(quebrado))
+					tc.route, tc.sentence, firstChunk(broken))
 			}
 			// O CONTROLE, na mesma rota e no mesmo gesto.
-			bom := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+caso.rota, caso.corpoBom).Body.String()
-			if strings.Contains(bom, caso.frase) {
+			good := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+tc.route, tc.goodBody).Body.String()
+			if strings.Contains(good, tc.sentence) {
 				t.Errorf("%s recusou um corpo BEM FORMADO com %q — a frase acima não prova nada",
-					caso.rota, caso.frase)
+					tc.route, tc.sentence)
 			}
 		})
 	}
 	// O DENOMINADOR. Uma tabela que encolhesse sem ninguém notar deixaria rotas
 	// sem o caminho de recusa medido, que é exatamente o estado de antes.
-	if medidos < 9 {
-		t.Errorf("a varredura mediu %d rotas, e são pelo menos nove", medidos)
+	if measured < 9 {
+		t.Errorf("a varredura mediu %d rotas, e são pelo menos nove", measured)
 	}
 }
 

@@ -40,8 +40,8 @@ type RailMarker struct {
 	Gradient string
 	Name     string
 	Sub      string
-	// Destino é para onde o ⏎ vai.
-	Destino string
+	// Destination é para onde o ⏎ vai.
+	Destination string
 }
 
 // Marker desenha um item do trilho.
@@ -56,7 +56,7 @@ templ Marker(m RailMarker) {
 		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", m.ID) }
 		data-on:focusin={ CursorGesture(m.Index, m.ID) }
 		data-on:click={ CursorGesture(m.Index, m.ID) }
-		data-on:keydown={ theEnterThatOpens(m.Destino) }
+		data-on:keydown={ theEnterThatOpens(m.Destination) }
 		class={ "flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised",
 			"aria-selected:border-grimorio-gold aria-selected:bg-grimorio-panel-raised" }
 	>
@@ -83,22 +83,22 @@ templ Marker(m RailMarker) {
 // O `Rotulo` é o nome da coisa que nasce, e ele vem de fora porque cada cena o
 // chama de um jeito — "Folha em branco" na campanha, "Forjar um herói" no
 // elenco —, e o kit não deve escolher a palavra de nenhuma das duas.
-templ BlankMarker(indice int, rotulo, destino string) {
+templ BlankMarker(index int, label, destination string) {
 	<button
 		type="button"
 		role="option"
 		data-nav-item
 		data-cue-hover
-		aria-label={ rotulo }
+		aria-label={ label }
 		data-attr:aria-selected="$cursor == 0 ? 'true' : 'false'"
-		data-on:focusin={ CursorGesture(indice, 0) }
-		data-on:click={ CursorGesture(indice, 0) }
-		data-on:keydown={ theEnterThatOpens(destino) }
+		data-on:focusin={ CursorGesture(index, 0) }
+		data-on:click={ CursorGesture(index, 0) }
+		data-on:keydown={ theEnterThatOpens(destination) }
 		class="flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-dashed border-grimorio-iron-light px-3 py-2 text-left text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
 	>
 		<span aria-hidden="true" class="flex size-8 shrink-0 items-center justify-center border border-dashed border-grimorio-iron-light">
 			@Icon("Plus", "size-4")
 		</span>
-		<span class="truncate font-heading text-sm tracking-wide">{ rotulo }</span>
+		<span class="truncate font-heading text-sm tracking-wide">{ label }</span>
 	</button>
 }

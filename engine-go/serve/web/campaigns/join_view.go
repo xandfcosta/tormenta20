@@ -23,58 +23,58 @@ import (
 // aqui o nome da campanha já vem na primeira resposta. Some o estado de
 // "carregando" inteiro — não porque foi escondido, porque não existe.
 type joinView struct {
-	Convite     string
-	TemConvite  bool
-	ConviteVale bool
-	// NomeDaCampanha só vale quando o convite vale. É o que diz à pessoa PARA
+	Invite      string
+	HasInvite   bool
+	InviteValid bool
+	// CampaignName só vale quando o convite vale. É o que diz à pessoa PARA
 	// QUAL mesa ela foi chamada antes de comprometer um herói com ela.
-	NomeDaCampanha string
-	CampanhaID     int64
-	// NumeroDigitado volta preenchido numa recusa, como todo campo desta casa.
-	NumeroDigitado string
-	Herois         []joinHero
-	EscolhidoID    int64
-	Erros          wire.FieldErrorMap
-	Aviso          string
+	CampaignName string
+	CampaignID   int64
+	// TypedNumber volta preenchido numa recusa, como todo campo desta casa.
+	TypedNumber string
+	Heroes      []joinHero
+	ChosenID    int64
+	Errors      wire.FieldErrorMap
+	Notice      string
 }
 
 // joinHero é uma plaqueta escolhível: o mínimo para reconhecer o herói.
 type joinHero struct {
-	ID        int64
-	Nome      string
-	Subtitulo string
-	Iniciais  string
-	Gradiente string
+	ID       int64
+	Name     string
+	Subtitle string
+	Initials string
+	Gradient string
 }
 
 func (s Scene) LoadJoin(ctx context.Context, euID int64, token string) (joinView, error) {
-	v := joinView{Convite: token, TemConvite: token != "", Erros: wire.FieldErrorMap{}}
+	v := joinView{Invite: token, HasInvite: token != "", Errors: wire.FieldErrorMap{}}
 
-	if v.TemConvite {
+	if v.HasInvite {
 		// Convite morto NÃO é erro da página: é uma resposta, e a carta diz
 		// isso em voz alta para a pessoa pedir outro link em vez de ficar
 		// olhando um botão que não envia (ALE-80).
 		c, err := s.deps.Queries().GetCampaignByToken(ctx, sql.NullString{String: token, Valid: true})
 		switch {
 		case err == nil:
-			v.ConviteVale, v.NomeDaCampanha, v.CampanhaID = true, c.Name, c.ID
+			v.InviteValid, v.CampaignName, v.CampaignID = true, c.Name, c.ID
 		case errors.Is(err, sql.ErrNoRows):
-			// deixa `ConviteVale` falso — a carta mostra a recusa
+			// deixa `InviteValid` falso — a carta mostra a recusa
 		default:
 			return joinView{}, err
 		}
 	}
 
-	elenco, err := s.deps.CharacterList(ctx, euID)
+	cast, err := s.deps.CharacterList(ctx, euID)
 	if err != nil {
 		return joinView{}, err
 	}
-	for _, c := range elenco {
-		v.Herois = append(v.Herois, joinHero{
-			ID: c.ID, Nome: c.Name,
-			Subtitulo: heroSubtitle(c),
-			Iniciais:  ui.Monogram(c.Name),
-			Gradiente: ui.NameGradient(c.Name),
+	for _, c := range cast {
+		v.Heroes = append(v.Heroes, joinHero{
+			ID: c.ID, Name: c.Name,
+			Subtitle: heroSubtitle(c),
+			Initials: ui.Monogram(c.Name),
+			Gradient: ui.NameGradient(c.Name),
 		})
 	}
 	return v, nil
@@ -84,8 +84,8 @@ func (s Scene) LoadJoin(ctx context.Context, euID int64, token string) (joinView
 // nível sozinho para quem ainda não tem classe. É o `classLevelLine` da SPA com
 // o mesmo recuo.
 func heroSubtitle(c sheet.CharacterDTO) string {
-	if linha := characters.ClassesOf(c); linha != "" {
-		return linha
+	if row := characters.ClassesOf(c); row != "" {
+		return row
 	}
 	return "Nv " + strconv.FormatInt(c.Level, 10)
 }

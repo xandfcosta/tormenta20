@@ -24,13 +24,13 @@ import (
 // Ele varre todos os recursos do catálogo, e não só as condições: o próximo
 // arquivo entra coberto sem ninguém acrescentar uma linha.
 func TestNoCatalogIDIsAccented(t *testing.T) {
-	var vistos, nomes, comAcento int
-	for _, nome := range Resources() {
-		bruto, ok := Resource(nome)
+	var seen, names, withAccent int
+	for _, name := range Resources() {
+		raw, ok := Resource(name)
 		if !ok {
-			t.Fatalf("o recurso %q está no índice e não abre: o guarda não pode confiar no resto", nome)
+			t.Fatalf("o recurso %q está no índice e não abre: o guarda não pode confiar no resto", name)
 		}
-		for _, id := range idsDe(t, nome, bruto) {
+		for _, id := range idsDe(t, name, raw) {
 			// SÓ O QUE É SLUG. Metade dos catálogos é chaveada pelo NOME de
 			// exibição — `origins` tem "Acólito", `gods` tem "Allihanna" —, e ali o
 			// acento é o texto do livro, não grafia de identificador: sem a linha
@@ -40,53 +40,53 @@ func TestNoCatalogIDIsAccented(t *testing.T) {
 			// sem espaço. `enfeitiçado` é slug e por isso entra; "Acólito" tem
 			// maiúscula e por isso é nome.
 			if id != strings.ToLower(id) || strings.ContainsAny(id, " ") {
-				nomes++
+				names++
 				continue
 			}
-			vistos++
-			if fora := naoASCII(id); fora != "" {
-				comAcento++
+			seen++
+			if outside := naoASCII(id); outside != "" {
+				withAccent++
 				t.Errorf("%s: o id %q tem %q, e id de catálogo é ASCII.\n"+
 					"    Ele viaja em URL, em JSON gravado e em código escrito de memória — a grafia irregular\n"+
 					"    é o que faz errar NELE e em nenhum outro (ALE-122). O `name` continua acentuado.",
-					nome, id, fora)
+					name, id, outside)
 			}
 		}
 	}
 	// O DENOMINADOR: sem ele, um extrator que parou de achar ids e um catálogo
 	// inteiramente ASCII dizem a mesma coisa.
-	if vistos < 150 {
+	if seen < 150 {
 		t.Fatalf("o guarda olhou só %d ids em %d recursos: o extrator parou de casar com a forma dos arquivos",
-			vistos, len(Resources()))
+			seen, len(Resources()))
 	}
 	t.Logf("%d slugs olhados em %d recursos (%d chaves de NOME puladas), %d com acento",
-		vistos, len(Resources()), nomes, comAcento)
+		seen, len(Resources()), names, withAccent)
 }
 
 // idsDe tira os ids de um recurso, cobrindo as DUAS formas que o catálogo usa:
 // lista de objetos com `id`, e mapa cujo id é a chave.
-func idsDe(t *testing.T, nome string, bruto []byte) []string {
+func idsDe(t *testing.T, name string, raw []byte) []string {
 	t.Helper()
-	var lista []struct {
+	var list []struct {
 		ID string `json:"id"`
 	}
-	if json.Unmarshal(bruto, &lista) == nil {
-		ids := make([]string, 0, len(lista))
-		for _, e := range lista {
+	if json.Unmarshal(raw, &list) == nil {
+		ids := make([]string, 0, len(list))
+		for _, e := range list {
 			if e.ID != "" {
 				ids = append(ids, e.ID)
 			}
 		}
 		return ids
 	}
-	var mapa map[string]struct {
+	var board map[string]struct {
 		ID string `json:"id"`
 	}
-	if json.Unmarshal(bruto, &mapa) == nil {
-		ids := make([]string, 0, len(mapa))
-		for chave, e := range mapa {
-			ids = append(ids, chave)
-			if e.ID != "" && e.ID != chave {
+	if json.Unmarshal(raw, &board) == nil {
+		ids := make([]string, 0, len(board))
+		for key, e := range board {
+			ids = append(ids, key)
+			if e.ID != "" && e.ID != key {
 				ids = append(ids, e.ID)
 			}
 		}
@@ -98,11 +98,11 @@ func idsDe(t *testing.T, nome string, bruto []byte) []string {
 }
 
 func naoASCII(id string) string {
-	var fora []string
+	var outside []string
 	for _, r := range id {
 		if r > unicode.MaxASCII {
-			fora = append(fora, fmt.Sprintf("%c", r))
+			outside = append(outside, fmt.Sprintf("%c", r))
 		}
 	}
-	return strings.Join(fora, "")
+	return strings.Join(outside, "")
 }

@@ -43,9 +43,9 @@ var builtinExpertises = []Expertise{
 // `serve/api` como uma segunda cópia dos 29 nomes — com esta tabela a dois
 // arquivos de distância e o comentário acima avisando que duas cópias divergem
 // num acento (ALE-350).
-func IsBuiltinExpertise(nome string) bool {
+func IsBuiltinExpertise(name string) bool {
 	for _, e := range builtinExpertises {
-		if e.Name == nome {
+		if e.Name == name {
 			return true
 		}
 	}
@@ -56,7 +56,7 @@ func IsBuiltinExpertise(nome string) bool {
 // quem a recebesse por referência poderia reordenar a tabela do livro para todo
 // mundo sem sair do próprio arquivo.
 func BuiltinExpertises() []Expertise {
-	fora := make([]Expertise, len(builtinExpertises))
-	copy(fora, builtinExpertises)
-	return fora
+	outside := make([]Expertise, len(builtinExpertises))
+	copy(outside, builtinExpertises)
+	return outside
 }

@@ -17,24 +17,24 @@ import "math"
 // O `Log2` estende a regra para dobras não-inteiras, então um grupo de 3 cai
 // entre 1× e 2×. Quem quiser ND inteiro arredonda o resultado — o livro dá a
 // regra para dobras exatas e cala sobre o resto.
-func PartyChallengeLevel(ndDaCriatura float64, quantidade int) float64 {
-	if quantidade <= 0 {
+func PartyChallengeLevel(creatureCR float64, amount int) float64 {
+	if amount <= 0 {
 		return 0
 	}
-	if ndDaCriatura < 1 {
-		return ndDaCriatura * float64(quantidade)
+	if creatureCR < 1 {
+		return creatureCR * float64(amount)
 	}
-	if quantidade == 1 {
-		return ndDaCriatura
+	if amount == 1 {
+		return creatureCR
 	}
-	return ndDaCriatura + 2*math.Log2(float64(quantidade))
+	return creatureCR + 2*math.Log2(float64(amount))
 }
 
 // Difficulty é a faixa em que o encontro cai, e o TOM é para a cor — nunca
 // para o texto, que é o que a tela lê.
 type Difficulty struct {
-	Rotulo string
-	Tom    string // calmo | parelho | duro | mortal
+	Label string
+	Tom   string // calmo | parelho | duro | mortal
 }
 
 // EncounterDifficulty mapeia a diferença entre o ND do encontro e o nível do
@@ -45,16 +45,16 @@ type Difficulty struct {
 // inteiros. Por isso ela é ARREDONDADA primeiro: sem isso, uma diferença pequena
 // e negativa como −0,75 (uma criatura de ND 1/4 contra um grupo de nível 1)
 // escapa tanto do `<= -1` quanto do `== 0` e cai em "Difícil".
-func EncounterDifficulty(diferenca float64) Difficulty {
-	degrau := math.Round(diferenca)
+func EncounterDifficulty(difference float64) Difficulty {
+	step := math.Round(difference)
 	switch {
-	case degrau <= -3:
+	case step <= -3:
 		return Difficulty{"Trivial", "calmo"}
-	case degrau <= -1:
+	case step <= -1:
 		return Difficulty{"Fácil", "calmo"}
-	case degrau == 0:
+	case step == 0:
 		return Difficulty{"Médio", "parelho"}
-	case degrau <= 2:
+	case step <= 2:
 		return Difficulty{"Difícil", "duro"}
 	default:
 		return Difficulty{"Mortal", "mortal"}
@@ -87,16 +87,16 @@ const IrrelevantDifference = 5.0
 //
 // Zero quando não há grupo, quando o ND não é positivo, ou quando o desafio é
 // irrelevante para o nível.
-func EncounterXP(nd float64, nivelDoGrupo, tamanhoDoGrupo int, desfecho EncounterOutcome) int {
-	if tamanhoDoGrupo <= 0 || nd <= 0 {
+func EncounterXP(nd float64, partyLevel, partySize int, outcome EncounterOutcome) int {
+	if partySize <= 0 || nd <= 0 {
 		return 0
 	}
-	if nd <= float64(nivelDoGrupo)-IrrelevantDifference {
+	if nd <= float64(partyLevel)-IrrelevantDifference {
 		return 0
 	}
-	mult, ok := outcomeMultiplier[desfecho]
+	mult, ok := outcomeMultiplier[outcome]
 	if !ok {
 		mult = outcomeMultiplier[Vitoria]
 	}
-	return int(math.Floor(nd * 1000 * mult / float64(tamanhoDoGrupo)))
+	return int(math.Floor(nd * 1000 * mult / float64(partySize)))
 }

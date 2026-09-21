@@ -25,7 +25,7 @@ import (
 // mesa ao vivo, e a mesa ao vivo é o que esses stores guardam.
 //
 // A diferença entre isto e receber o `*Server` não é o tamanho da lista, é o
-// que ela **não** tem — o `livro`, o `charMu`, o `emSegundoPlano`, a cena da
+// que ela **não** tem — o `livro`, o `charMu`, o `inBackground`, a cena da
 // Mesa dentro dela mesma, e os métodos das outras dez cenas. Aqui está escrito
 // de que a mesa depende; no `*Server` estava escrito "de tudo".
 //
@@ -51,12 +51,12 @@ type tableRules struct {
 	// gestos dela, e o painel embutido só LÊ. Passá-lo zerado seria guardar um
 	// ponteiro nulo esperando o primeiro gesto que alguém chamasse daqui.
 	sheetPlays character.Plays
-	// emSegundoPlano é PONTEIRO e vem do servidor: a gravação do estado da sessão
+	// inBackground é PONTEIRO e vem do servidor: a gravação do estado da sessão
 	// roda em goroutine, e quem espera por ela no `Shutdown` é o servidor. Uma
 	// cópia do `sync.WaitGroup` seria um contador que ninguém espera — e o
 	// sintoma é o banco fechando debaixo da escrita, que aparece como falha de
 	// LIMPEZA de diretório temporário e não como o defeito que é.
-	emSegundoPlano *sync.WaitGroup
+	inBackground *sync.WaitGroup
 }
 
 func (s *Server) tableRules() tableRules {
@@ -67,6 +67,6 @@ func (s *Server) tableRules() tableRules {
 		sse: s.sse, bus: s.bus,
 		campaign: s.campaignRules(), sheet: s.sheetRules(),
 		sheetScene: s.sheetHost(), sheetPlays: s.characterPlays(),
-		emSegundoPlano: &s.emSegundoPlano,
+		inBackground: &s.inBackground,
 	}
 }

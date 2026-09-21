@@ -21,7 +21,7 @@ type Deps interface {
 	// travessão no lugar da Defesa e a lista continua de pé (ver `HeroCardOf`).
 	Catalogs() *engine.Catalogs
 	// WritePage é a montagem da casca (ver `web/ui`).
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 }
 
 // Scene é a cena montada com as dependências dela.

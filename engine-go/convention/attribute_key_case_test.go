@@ -47,7 +47,7 @@ var attributeKeyWithCase = regexp.MustCompile(`\bdata-[a-z][a-z-]*:([a-zA-Z0-9_-
 
 func TestNoDatastarAttributeKeyCarriesUppercase(t *testing.T) {
 	root := filepath.Join("..", "..")
-	saida, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
+	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
 		"*.templ", "*.go").Output()
 	if err != nil {
 		t.Fatalf("git ls-files em %s: %v", root, err)
@@ -55,7 +55,7 @@ func TestNoDatastarAttributeKeyCarriesUppercase(t *testing.T) {
 
 	filesRead, keysRead := 0, 0
 	var offenders []string
-	for _, relative := range strings.Split(strings.TrimRight(string(saida), "\x00"), "\x00") {
+	for _, relative := range strings.Split(strings.TrimRight(string(output), "\x00"), "\x00") {
 		// O `_templ.go` fica de FORA: ele repete o que o `.templ` já disse, e
 		// contá-lo faria toda falha aparecer duas vezes com dois endereços, um
 		// deles gerado — o que manda quem for consertar para o arquivo errado.

@@ -47,9 +47,9 @@ func TestWeaponFinesse(t *testing.T) {
 		t.Errorf("espada-curta com Acuidade = %q, quer dexterity", got)
 	}
 	// A Acuidade leva a Destreza pro DANO da adaga (o finesse inerente é só ataque).
-	semAcu := card("adaga", "[]").StrDamage
-	comAcu := card("adaga", `["acuidade-com-arma"]`).StrDamage
-	if comAcu <= semAcu {
-		t.Errorf("Acuidade deveria aumentar o dano da adaga: sem=%d com=%d", semAcu, comAcu)
+	noFinesse := card("adaga", "[]").StrDamage
+	withFinesse := card("adaga", `["acuidade-com-arma"]`).StrDamage
+	if withFinesse <= noFinesse {
+		t.Errorf("Acuidade deveria aumentar o dano da adaga: sem=%d com=%d", noFinesse, withFinesse)
 	}
 }

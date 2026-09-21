@@ -69,7 +69,7 @@ type Spell struct {
 type Power struct {
 	ID          string
 	Name        string
-	Fonte       string
+	Source      string
 	Description string
 	BookPage    int
 }
@@ -141,31 +141,31 @@ type GainRoll struct {
 func Catalogs() GMCatalogs {
 	acervoUmaVez.Do(func() {
 		col := collate.New(language.BrazilianPortuguese)
-		porNome := func(a, b string) int { return col.CompareString(a, b) }
+		byName := func(a, b string) int { return col.CompareString(a, b) }
 
-		acervo.Condicoes = MapOf[Condition]("conditions")
-		slices.SortStableFunc(acervo.Condicoes, func(a, b Condition) int {
-			return porNome(a.Name, b.Name)
+		acervo.Conditions = MapOf[Condition]("conditions")
+		slices.SortStableFunc(acervo.Conditions, func(a, b Condition) int {
+			return byName(a.Name, b.Name)
 		})
 
-		acervo.Magias = MapOf[Spell]("spells")
+		acervo.Spells = MapOf[Spell]("spells")
 		// Magia ordena por CÍRCULO e depois por nome: o mestre procura "o que
 		// existe de 3º círculo", e alfabético puro embaralharia os círculos.
-		slices.SortStableFunc(acervo.Magias, func(a, b Spell) int {
+		slices.SortStableFunc(acervo.Spells, func(a, b Spell) int {
 			if a.Circle != b.Circle {
 				return a.Circle - b.Circle
 			}
-			return porNome(a.Name, b.Name)
+			return byName(a.Name, b.Name)
 		})
 
-		acervo.Poderes = FlattenedPowers()
-		slices.SortStableFunc(acervo.Poderes, func(a, b Power) int {
-			return porNome(a.Name, b.Name)
+		acervo.Powers = FlattenedPowers()
+		slices.SortStableFunc(acervo.Powers, func(a, b Power) int {
+			return byName(a.Name, b.Name)
 		})
 
-		acervo.Itens = ListOf[Item]("items")
-		slices.SortStableFunc(acervo.Itens, func(a, b Item) int {
-			return porNome(a.Name, b.Name)
+		acervo.Items = ListOf[Item]("items")
+		slices.SortStableFunc(acervo.Items, func(a, b Item) int {
+			return byName(a.Name, b.Name)
 		})
 	})
 	return acervo
@@ -175,39 +175,39 @@ func Catalogs() GMCatalogs {
 //
 // Catálogo ausente ou malformado devolve lista vazia em vez de derrubar a Mesa:
 // a ferramenta abre sem aquela aba, e as outras três continuam servindo.
-func MapOf[T any](nome string) []T {
-	bruto, ok := catalog.Resource(nome)
+func MapOf[T any](name string) []T {
+	raw, ok := catalog.Resource(name)
 	if !ok {
 		return nil
 	}
-	var porID map[string]T
-	if err := json.Unmarshal(bruto, &porID); err != nil {
+	var byID map[string]T
+	if err := json.Unmarshal(raw, &byID); err != nil {
 		return nil
 	}
-	fora := make([]T, 0, len(porID))
-	for _, v := range porID {
-		fora = append(fora, v)
+	outside := make([]T, 0, len(byID))
+	for _, v := range byID {
+		outside = append(outside, v)
 	}
-	return fora
+	return outside
 }
 
 // ListOf lê um recurso guardado como ARRAY.
-func ListOf[T any](nome string) []T {
-	bruto, ok := catalog.Resource(nome)
+func ListOf[T any](name string) []T {
+	raw, ok := catalog.Resource(name)
 	if !ok {
 		return nil
 	}
-	var lista []T
-	if err := json.Unmarshal(bruto, &lista); err != nil {
+	var list []T
+	if err := json.Unmarshal(raw, &list); err != nil {
 		return nil
 	}
-	return lista
+	return list
 }
 
 // FlattenedPowers junta os três catálogos de poder numa lista só: habilidade de
 // classe, poder geral/de combate e poder concedido pelos deuses.
 func FlattenedPowers() []Power {
-	var fora []Power
+	var outside []Power
 
 	for _, p := range ListOf[struct {
 		ID          string `json:"id"`
@@ -216,8 +216,8 @@ func FlattenedPowers() []Power {
 		Description string `json:"description"`
 		BookPage    int    `json:"bookPage"`
 	}]("class-powers") {
-		fora = append(fora, Power{
-			ID: p.ID, Name: p.Name, Fonte: p.ClassName, Description: p.Description, BookPage: p.BookPage,
+		outside = append(outside, Power{
+			ID: p.ID, Name: p.Name, Source: p.ClassName, Description: p.Description, BookPage: p.BookPage,
 		})
 	}
 
@@ -228,13 +228,13 @@ func FlattenedPowers() []Power {
 		Description string `json:"description"`
 		BookPage    int    `json:"bookPage"`
 	}]("general-powers") {
-		fora = append(fora, Power{
-			ID: "general." + p.ID, Name: p.Name, Fonte: "Geral · " + p.Kind,
+		outside = append(outside, Power{
+			ID: "general." + p.ID, Name: p.Name, Source: "Geral · " + p.Kind,
 			Description: p.Description, BookPage: p.BookPage,
 		})
 	}
 
-	return append(fora, DivinePowers()...)
+	return append(outside, DivinePowers()...)
 }
 
 // DivinePowers são os que os DEUSES concedem.
@@ -252,37 +252,37 @@ func DivinePowers() []Power {
 		BookPage    int    `json:"bookPage"`
 	}
 
-	porNome := map[string]*Power{}
-	var ordem []string
+	byName := map[string]*Power{}
+	var order []string
 	for _, p := range ListOf[divino]("divine-powers") {
-		if achado, tem := porNome[p.Name]; tem {
-			achado.Fonte += ", " + GodName(p.DeusID)
+		if found, present := byName[p.Name]; present {
+			found.Source += ", " + GodName(p.DeusID)
 			continue
 		}
-		porNome[p.Name] = &Power{
+		byName[p.Name] = &Power{
 			// O id é o NOME em forma de chave: o `divine-powers` não traz `id`,
 			// e o elo endereça por id. Prefixado para não colidir com um poder
 			// de classe de mesmo nome.
 			ID:          "divino." + KeyOfName(p.Name),
 			Name:        p.Name,
-			Fonte:       "Divino · " + GodName(p.DeusID),
+			Source:      "Divino · " + GodName(p.DeusID),
 			Description: p.Description,
 			BookPage:    p.BookPage,
 		}
-		ordem = append(ordem, p.Name)
+		order = append(order, p.Name)
 	}
 
-	fora := make([]Power, 0, len(ordem))
-	for _, nome := range ordem {
-		fora = append(fora, *porNome[nome])
+	outside := make([]Power, 0, len(order))
+	for _, name := range order {
+		outside = append(outside, *byName[name])
 	}
-	return fora
+	return outside
 }
 
 // KeyOfName transforma um nome em chave de endereço: sem acento, minúsculo,
 // espaços viram hífen. É a mesma forma dos ids que os catálogos já usam.
-func KeyOfName(nome string) string {
-	return strings.ReplaceAll(search.Fold(nome), " ", "-")
+func KeyOfName(name string) string {
+	return strings.ReplaceAll(search.Fold(name), " ", "-")
 }
 
 // ── o que cada catálogo busca ────────────────────────────────────────────────
@@ -294,7 +294,7 @@ func ConditionFields(c Condition) []string {
 	return append([]string{c.Name, c.Description}, c.Tags...)
 }
 func SpellFields(m Spell) []string { return []string{m.Name, m.BaseEffect} }
-func PowerFields(p Power) []string { return []string{p.Name, p.Fonte, p.Description} }
+func PowerFields(p Power) []string { return []string{p.Name, p.Source, p.Description} }
 func ItemFields(i Item) []string   { return []string{i.Name, i.Category} }
 
 // ── a busca unificada ────────────────────────────────────────────────────────
@@ -326,7 +326,7 @@ func CategoryName(c string) string {
 // sai "Agrava para apavorado" em caixa baixa: o dado do agravamento é um id, e o
 // nome existe no mesmo catálogo.
 func ConditionName(id string) string {
-	for _, c := range Catalogs().Condicoes {
+	for _, c := range Catalogs().Conditions {
 		if c.ID == id {
 			return c.Name
 		}
@@ -338,10 +338,10 @@ func ConditionName(id string) string {
 func (a SpellAugment) Escrito() string { return fmt.Sprintf("+%d PM", a.PmCost) }
 
 type GMCatalogs struct {
-	Condicoes []Condition
-	Magias    []Spell
-	Poderes   []Power
-	Itens     []Item
+	Conditions []Condition
+	Spells     []Spell
+	Powers     []Power
+	Items      []Item
 }
 
 var (
@@ -371,8 +371,8 @@ func GodName(id string) string {
 			nomePorDeus[d.ID] = d.Name
 		}
 	})
-	if nome, tem := nomePorDeus[id]; tem {
-		return nome
+	if name, found := nomePorDeus[id]; found {
+		return name
 	}
 	return id
 }
@@ -443,16 +443,16 @@ func WithSign(n int) string {
 // templ como qualquer outro, e montar `<a>` aqui seria abrir mão disso para
 // sempre — a primeira descrição com um `<` viraria tela quebrada ou pior.
 type Chunk struct {
-	Texto string
-	Aba   string
+	Text string
+	Aba  string
 	// ID é a chave do verbete de destino. O elo endereça por ID e não pelo
 	// texto: nome é tela e muda com revisão do livro, id é como os catálogos já
 	// se referem uns aos outros.
 	ID string
-	// Pagina, quando maior que zero, faz o pedaço virar um elo para o LIVRO em
+	// Page, quando maior que zero, faz o pedaço virar um elo para o LIVRO em
 	// vez de para o acervo: é uma referência escrita no texto ("veja a página
 	// 230"), e ela merece o mesmo clique que o botão de página do cartão.
-	Pagina int
+	Page int
 }
 
 // WithConditionLinks parte a descrição nos nomes de CONDIÇÃO que ela cita.
@@ -466,8 +466,8 @@ type Chunk struct {
 //
 // A própria entrada é excluída: um elo que aponta para a página em que já se
 // está é ruído com cara de saída.
-func WithConditionLinks(texto, exceto string) []Chunk {
-	return WithPageLinks(splitOnNames(texto, conditionNamesBySize(), exceto, "condicoes"))
+func WithConditionLinks(text, except string) []Chunk {
+	return WithPageLinks(splitOnNames(text, conditionNamesBySize(), except, "condicoes"))
 }
 
 // pageRef é como o livro cita a si mesmo: "veja a página 230", "pág. 172".
@@ -478,53 +478,53 @@ var pageRef = regexp.MustCompile(`(?i)p[áa]g(?:ina)?\.?\s*(\d{1,3})`)
 // Roda DEPOIS da varredura de nomes e só sobre o que sobrou como texto: um
 // pedaço que já virou elo para um verbete não pode virar elo para o livro
 // também — dois destinos na mesma palavra é uma escolha que ninguém pediu.
-func WithPageLinks(pedacos []Chunk) []Chunk {
-	var fora []Chunk
-	for _, pedaco := range pedacos {
-		if pedaco.Aba != "" {
-			fora = append(fora, pedaco)
+func WithPageLinks(chunks []Chunk) []Chunk {
+	var outside []Chunk
+	for _, chunk := range chunks {
+		if chunk.Aba != "" {
+			outside = append(outside, chunk)
 			continue
 		}
-		fora = append(fora, splitOnPages(pedaco.Texto)...)
+		outside = append(outside, splitOnPages(chunk.Text)...)
 	}
-	return fora
+	return outside
 }
 
-func splitOnPages(texto string) []Chunk {
-	marcas := pageRef.FindAllStringSubmatchIndex(texto, -1)
-	if marcas == nil {
-		return []Chunk{{Texto: texto}}
+func splitOnPages(text string) []Chunk {
+	marks := pageRef.FindAllStringSubmatchIndex(text, -1)
+	if marks == nil {
+		return []Chunk{{Text: text}}
 	}
-	var fora []Chunk
-	fim := 0
-	for _, m := range marcas {
-		pagina, err := strconv.Atoi(texto[m[2]:m[3]])
-		if err != nil || pagina <= 0 {
+	var outside []Chunk
+	end := 0
+	for _, m := range marks {
+		page, err := strconv.Atoi(text[m[2]:m[3]])
+		if err != nil || page <= 0 {
 			continue
 		}
-		if antes := texto[fim:m[0]]; antes != "" {
-			fora = append(fora, Chunk{Texto: antes})
+		if before := text[end:m[0]]; before != "" {
+			outside = append(outside, Chunk{Text: before})
 		}
-		fora = append(fora, Chunk{Texto: texto[m[0]:m[1]], Pagina: pagina})
-		fim = m[1]
+		outside = append(outside, Chunk{Text: text[m[0]:m[1]], Page: page})
+		end = m[1]
 	}
-	if resto := texto[fim:]; resto != "" {
-		fora = append(fora, Chunk{Texto: resto})
+	if rest := text[end:]; rest != "" {
+		outside = append(outside, Chunk{Text: rest})
 	}
-	return fora
+	return outside
 }
 
 // WithLinks é a varredura para os catálogos que NÃO citam condições — só as
 // referências de página. Ver o cabeçalho para por que magia e poder ficam de
 // fora da varredura de nomes.
-func WithLinks(texto string) []Chunk {
-	return splitOnPages(texto)
+func WithLinks(text string) []Chunk {
+	return splitOnPages(text)
 }
 
 // conditionID resolve o nome no id com que o catálogo a guarda.
-func conditionID(nome string) string {
-	for _, c := range Catalogs().Condicoes {
-		if c.Name == nome {
+func conditionID(name string) string {
+	for _, c := range Catalogs().Conditions {
+		if c.Name == name {
 			return c.ID
 		}
 	}
@@ -538,7 +538,7 @@ var (
 
 func conditionNamesBySize() []string {
 	nomesUmaVez.Do(func() {
-		for _, c := range Catalogs().Condicoes {
+		for _, c := range Catalogs().Conditions {
 			nomesLongos = append(nomesLongos, c.Name)
 		}
 		slices.SortFunc(nomesLongos, func(a, b string) int { return len(b) - len(a) })
@@ -551,50 +551,50 @@ func conditionNamesBySize() []string {
 // Caixa exata porque no texto do livro a condição é escrita com maiúscula
 // ("fica Abalado") e a palavra comum não ("um efeito de medo") — casar sem caixa
 // encheria a tela de elos que não são citação nenhuma.
-func splitOnNames(texto string, nomes []string, exceto, aba string) []Chunk {
-	for _, nome := range nomes {
-		if nome == exceto {
+func splitOnNames(text string, names []string, except, aba string) []Chunk {
+	for _, name := range names {
+		if name == except {
 			continue
 		}
-		onde := wholeWordIndex(texto, nome)
-		if onde < 0 {
+		where := wholeWordIndex(text, name)
+		if where < 0 {
 			continue
 		}
-		var fora []Chunk
-		if antes := texto[:onde]; antes != "" {
-			fora = append(fora, splitOnNames(antes, nomes, exceto, aba)...)
+		var outside []Chunk
+		if before := text[:where]; before != "" {
+			outside = append(outside, splitOnNames(before, names, except, aba)...)
 		}
-		fora = append(fora, Chunk{Texto: nome, Aba: aba, ID: conditionID(nome)})
-		if depois := texto[onde+len(nome):]; depois != "" {
-			fora = append(fora, splitOnNames(depois, nomes, exceto, aba)...)
+		outside = append(outside, Chunk{Text: name, Aba: aba, ID: conditionID(name)})
+		if after := text[where+len(name):]; after != "" {
+			outside = append(outside, splitOnNames(after, names, except, aba)...)
 		}
-		return fora
+		return outside
 	}
-	return []Chunk{{Texto: texto}}
+	return []Chunk{{Text: text}}
 }
 
 // wholeWordIndex acha o nome com fronteira dos dois lados, ou -1.
-func wholeWordIndex(texto, nome string) int {
+func wholeWordIndex(text, name string) int {
 	de := 0
 	for {
-		onde := strings.Index(texto[de:], nome)
-		if onde < 0 {
+		where := strings.Index(text[de:], name)
+		if where < 0 {
 			return -1
 		}
-		onde += de
-		if isBoundary(texto, onde-1) && isBoundary(texto, onde+len(nome)) {
-			return onde
+		where += de
+		if isBoundary(text, where-1) && isBoundary(text, where+len(name)) {
+			return where
 		}
-		de = onde + 1
+		de = where + 1
 	}
 }
 
 // fronteira: fora do texto conta como fronteira, e letra não conta.
-func isBoundary(texto string, i int) bool {
-	if i < 0 || i >= len(texto) {
+func isBoundary(text string, i int) bool {
+	if i < 0 || i >= len(text) {
 		return true
 	}
-	r := rune(texto[i])
+	r := rune(text[i])
 	return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r >= 0x80)
 }
 
@@ -613,22 +613,22 @@ func isBoundary(texto string, i int) bool {
 //
 // Não achou, não vira elo: "Quaisquer" e "Aventureiros (todas as classes)" não
 // são verbete de nada.
-func DevoteeLink(nome string) (aba, id string) {
-	racas, classes, _ := CharacterCatalogs()
-	for _, candidato := range singular(nome) {
-		for _, r := range racas {
-			if r.Name == candidato {
+func DevoteeLink(name string) (aba, id string) {
+	races, classes, _ := CharacterCatalogs()
+	for _, candidate := range singular(name) {
+		for _, r := range races {
+			if r.Name == candidate {
 				return "racas", r.ID
 			}
 		}
 		for _, c := range classes {
-			if c.Name == candidato {
+			if c.Name == candidate {
 				return "classes", c.ID
 			}
 		}
 	}
-	for _, r := range racas {
-		if slices.Contains(r.Ascendencias, fold(nome)) {
+	for _, r := range races {
+		if slices.Contains(r.Ancestries, fold(name)) {
 			return "racas", r.ID
 		}
 	}
@@ -643,32 +643,32 @@ func DevoteeLink(nome string) (aba, id string) {
 //	"Anões"            → "Anão"      (ões → ão)
 //	"Golens"           → "Golem"     (ns → m)
 //	"Sereias/Tritões"  → "Sereia/Tritão"  (as duas metades)
-func singular(nome string) []string {
-	singular := func(palavra string) []string {
-		fora := []string{palavra}
-		for de, para := range map[string]string{"ões": "ão", "ãos": "ão", "ns": "m", "es": "", "s": ""} {
-			if strings.HasSuffix(palavra, de) {
-				fora = append(fora, strings.TrimSuffix(palavra, de)+para)
+func singular(name string) []string {
+	singular := func(word string) []string {
+		outside := []string{word}
+		for de, to := range map[string]string{"ões": "ão", "ãos": "ão", "ns": "m", "es": "", "s": ""} {
+			if strings.HasSuffix(word, de) {
+				outside = append(outside, strings.TrimSuffix(word, de)+to)
 			}
 		}
-		return fora
+		return outside
 	}
-	if !strings.Contains(nome, "/") {
-		return singular(nome)
+	if !strings.Contains(name, "/") {
+		return singular(name)
 	}
 	// Nome composto: cada metade vai para o singular, e só a combinação de todas
 	// as metades no singular casa "Sereia/Tritão".
-	var partes [][]string
-	for _, parte := range strings.Split(nome, "/") {
-		partes = append(partes, singular(parte))
+	var parts [][]string
+	for _, part := range strings.Split(name, "/") {
+		parts = append(parts, singular(part))
 	}
-	fora := []string{nome}
-	for _, esquerda := range partes[0] {
-		for _, direita := range partes[len(partes)-1] {
-			fora = append(fora, esquerda+"/"+direita)
+	excluded := []string{name}
+	for _, left := range parts[0] {
+		for _, right := range parts[len(parts)-1] {
+			excluded = append(excluded, left+"/"+right)
 		}
 	}
-	return fora
+	return excluded
 }
 
 // fold é minúsculas sem acento, para casar a ascendência que o catálogo

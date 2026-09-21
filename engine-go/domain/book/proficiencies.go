@@ -10,9 +10,9 @@ package book
 // default proficiency categories for a class set, in catalog order.
 func GrantedProficiencies(classNames []string) []string {
 	granted := map[string]bool{"armas-simples": true}
-	porClasse := ProficienciesByClass()
+	byClass := ProficienciesByClass()
 	for _, cls := range classNames {
-		for _, cat := range porClasse[cls] {
+		for _, cat := range byClass[cls] {
 			granted[cat] = true
 			if cat == "armaduras-pesadas" {
 				granted["armaduras-leves"] = true
@@ -63,9 +63,9 @@ var ProficiencyCategories = []ProficiencyCategory{
 }
 
 // IsProficiencyCategory diz se a chave é uma das sete.
-func IsProficiencyCategory(chave string) bool {
+func IsProficiencyCategory(key string) bool {
 	for _, c := range ProficiencyCategories {
-		if c.Key == chave {
+		if c.Key == key {
 			return true
 		}
 	}
@@ -74,11 +74,11 @@ func IsProficiencyCategory(chave string) bool {
 
 // ProficiencyKeys são as sete chaves na ordem do livro.
 func ProficiencyKeys() []string {
-	chaves := make([]string, 0, len(ProficiencyCategories))
+	keys := make([]string, 0, len(ProficiencyCategories))
 	for _, c := range ProficiencyCategories {
-		chaves = append(chaves, c.Key)
+		keys = append(keys, c.Key)
 	}
-	return chaves
+	return keys
 }
 
 // ProficienciesByClass é a tabela do livro, lida do catálogo de classes.
@@ -89,9 +89,9 @@ func ProficiencyKeys() []string {
 // onde a validação de schema o alcança.
 func ProficienciesByClass() map[string][]string {
 	_, classes, _ := CharacterCatalogs()
-	tabela := make(map[string][]string, len(classes))
+	table := make(map[string][]string, len(classes))
 	for _, c := range classes {
-		tabela[c.Name] = c.Proficiencias
+		table[c.Name] = c.Proficiencies
 	}
-	return tabela
+	return table
 }

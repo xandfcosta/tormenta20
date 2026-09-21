@@ -32,31 +32,31 @@ import (
 func TestDeletingACampaignForgetsItsSessionsFirst(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
-	dono := seedUser(t, s, "dono@t.com")
-	campanha := seedCampaign(t, s, dono)
-	sessao := seedSession(t, s, campanha)
+	owner := seedUser(t, s, "dono@t.com")
+	campaign := seedCampaign(t, s, owner)
+	session := seedSession(t, s, campaign)
 
-	if _, err := s.sessions.Load(ctx, sessao); err != nil {
+	if _, err := s.sessions.Load(ctx, session); err != nil {
 		t.Fatalf("hidratar a sessão: %v", err)
 	}
-	if _, err := s.sessions.AddInitiativeEntry(sessao, npc("Goblin", 12)); err != nil {
+	if _, err := s.sessions.AddInitiativeEntry(session, npc("Goblin", 12)); err != nil {
 		t.Fatalf("pôr alguém na fila: %v", err)
 	}
 	// O CONTROLE: sem uma fila de verdade em memória, "a fila ficou vazia"
 	// depois seria verdade desde o começo e não testemunharia nada.
-	if n := len(s.sessions.GetState(sessao).Initiative); n != 1 {
+	if n := len(s.sessions.GetState(session).Initiative); n != 1 {
 		t.Fatalf("a sessão tem %d na fila antes de apagar, e o caso precisa de 1", n)
 	}
 
-	rec := sceneFixture{s: s}.pede(t, dono, http.MethodPost,
-		fmt.Sprintf("/campanhas/%d/excluir", campanha), "")
+	rec := sceneFixture{s: s}.pede(t, owner, http.MethodPost,
+		fmt.Sprintf("/campanhas/%d/excluir", campaign), "")
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("excluir respondeu %d, queria 303", rec.Code)
 	}
 
-	if n := len(s.sessions.GetState(sessao).Initiative); n != 0 {
+	if n := len(s.sessions.GetState(session).Initiative); n != 0 {
 		t.Errorf("a fila da sessão %d sobreviveu com %d combatente(s) depois de a campanha "+
 			"ser apagada.\nO estado em memória tem de ser esquecido ANTES da linha sumir: "+
-			"depois da cascata\nnão há como perguntar quais sessões eram.", sessao, n)
+			"depois da cascata\nnão há como perguntar quais sessões eram.", session, n)
 	}
 }

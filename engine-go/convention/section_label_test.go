@@ -45,25 +45,25 @@ import (
 // cabeçalho usa `ui.SectionLabelClasses` no próprio elemento.
 func TestNoFlowContentInsideASectionLabel(t *testing.T) {
 	// O bloco do componente e as duas linhas seguintes: é onde o filho entra.
-	abre := regexp.MustCompile(`@ui.SectionLabel\([^)]*\)\s*\{`)
-	fluxo := regexp.MustCompile(`<(h[1-6]|div|p|ul|ol|dl|section|article|table|form|fieldset)[\s>]`)
+	opens := regexp.MustCompile(`@ui.SectionLabel\([^)]*\)\s*\{`)
+	flow := regexp.MustCompile(`<(h[1-6]|div|p|ul|ol|dl|section|article|table|form|fieldset)[\s>]`)
 
-	var visitados, arquivosLidos int
-	err := filepath.WalkDir("..", func(nome string, entrada fs.DirEntry, err error) error {
+	var visited, filesRead int
+	err := filepath.WalkDir("..", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() {
-			if entrada.Name() == "node_modules" || entrada.Name() == ".git" {
+		if entry.IsDir() {
+			if entry.Name() == "node_modules" || entry.Name() == ".git" {
 				return fs.SkipDir
 			}
 			return nil
 		}
-		if !strings.HasSuffix(nome, ".templ") {
+		if !strings.HasSuffix(name, ".templ") {
 			return nil
 		}
-		arquivosLidos++
-		conteudo, err := os.ReadFile(nome)
+		filesRead++
+		content, err := os.ReadFile(name)
 		if err != nil {
 			return err
 		}
@@ -74,22 +74,22 @@ func TestNoFlowContentInsideASectionLabel(t *testing.T) {
 		// hoje num guarda irmão: ele nasceu VERMELHO sobre o próprio texto, e
 		// só a prova de vermelho revelou — sem ela, entregaria um teste que
 		// falha sobre si mesmo para sempre, e o próximo o desligaria.
-		linhas := semComentario(strings.Split(string(conteudo), "\n"))
-		for i, linha := range linhas {
-			if !abre.MatchString(linha) {
+		rows := semComentario(strings.Split(string(content), "\n"))
+		for i, row := range rows {
+			if !opens.MatchString(row) {
 				continue
 			}
-			visitados++
+			visited++
 			// Até o fecho do bloco, ou 6 linhas — o rótulo é curto por natureza.
-			for j := i + 1; j < len(linhas) && j <= i+6; j++ {
-				if strings.TrimSpace(linhas[j]) == "}" {
+			for j := i + 1; j < len(rows) && j <= i+6; j++ {
+				if strings.TrimSpace(rows[j]) == "}" {
 					break
 				}
-				if m := fluxo.FindString(linhas[j]); m != "" {
+				if m := flow.FindString(rows[j]); m != "" {
 					t.Errorf("%s:%d — `%s` dentro de @ui.SectionLabel. O `<p>` dele não aceita "+
 						"conteúdo de fluxo: o navegador expulsa o elemento e a classe fica "+
 						"num parágrafo vazio. Use `classesDoRotulo` no próprio elemento.",
-						nome, j+1, strings.TrimSpace(m))
+						name, j+1, strings.TrimSpace(m))
 				}
 			}
 		}
@@ -104,30 +104,30 @@ func TestNoFlowContentInsideASectionLabel(t *testing.T) {
 	// A primeira é a que já existia e é a que FALHOU quando as campanhas
 	// mudaram de pacote: sem nenhum uso encontrado, um regex que parou de casar
 	// e um diretório que ficou vazio dizem a mesma coisa.
-	if visitados == 0 {
+	if visited == 0 {
 		t.Fatal("o guarda não achou nenhum uso de @ui.SectionLabel: o padrão parou de casar " +
 			"e o verde não significa nada")
 	}
 	// A segunda é nova, e é a lição do guarda irmão: a caminhada pode ENCOLHER
 	// sem zerar. Um piso de arquivos lidos denuncia a raiz trocada.
-	if arquivosLidos < 40 {
+	if filesRead < 40 {
 		t.Fatalf("a caminhada leu só %d arquivos `.templ`, e o repositório tem dezenas: "+
-			"a raiz da varredura é o primeiro suspeito", arquivosLidos)
+			"a raiz da varredura é o primeiro suspeito", filesRead)
 	}
-	t.Logf("%d usos de @ui.SectionLabel em %d arquivos", visitados, arquivosLidos)
+	t.Logf("%d usos de @ui.SectionLabel em %d arquivos", visited, filesRead)
 }
 
 // semComentario corta o que vier depois de `//` em cada linha. Grosseiro de
 // propósito: `//` dentro de string literal viraria corte indevido, mas em
 // template isso é raro e o custo do erro é um falso NEGATIVO — o guarda deixa
 // passar —, não um falso positivo que faz alguém desligá-lo.
-func semComentario(linhas []string) []string {
-	fora := make([]string, len(linhas))
-	for i, l := range linhas {
+func semComentario(rows []string) []string {
+	outside := make([]string, len(rows))
+	for i, l := range rows {
 		if j := strings.Index(l, "//"); j >= 0 {
 			l = l[:j]
 		}
-		fora[i] = l
+		outside[i] = l
 	}
-	return fora
+	return outside
 }

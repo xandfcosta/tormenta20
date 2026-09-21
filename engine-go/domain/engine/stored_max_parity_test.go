@@ -39,7 +39,7 @@ import (
 func TestTheStoredMaxMatchesTheDerivedMax(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	catalogs := primeFromDump(t, dir)
-	comparados := 0
+	compared := 0
 
 	for _, slug := range parityOracleSlugs(t, dir) {
 		t.Run(slug, func(t *testing.T) {
@@ -52,23 +52,23 @@ func TestTheStoredMaxMatchesTheDerivedMax(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			derivado := catalogs.VitalsForCharacter(oracle.Char.Character)
-			comparados++
-			if oracle.Char.HpMax != derivado.PvMax {
+			derived := catalogs.VitalsForCharacter(oracle.Char.Character)
+			compared++
+			if oracle.Char.HpMax != derived.PvMax {
 				t.Errorf("PV máximo gravado %d, derivado %d (diferença de %d).\n"+
 					"O número na coluna é o retrato de um catálogo anterior — ver o cabeçalho.",
-					oracle.Char.HpMax, derivado.PvMax, oracle.Char.HpMax-derivado.PvMax)
+					oracle.Char.HpMax, derived.PvMax, oracle.Char.HpMax-derived.PvMax)
 			}
-			if oracle.Char.MpMax != derivado.PmMax {
+			if oracle.Char.MpMax != derived.PmMax {
 				t.Errorf("PM máximo gravado %d, derivado %d (diferença de %d).\n"+
 					"O número na coluna é o retrato de um catálogo anterior — ver o cabeçalho.",
-					oracle.Char.MpMax, derivado.PmMax, oracle.Char.MpMax-derivado.PmMax)
+					oracle.Char.MpMax, derived.PmMax, oracle.Char.MpMax-derived.PmMax)
 			}
 		})
 	}
 
-	if comparados != parityOracleCount {
+	if compared != parityOracleCount {
 		t.Fatalf("o guarda comparou %d personagens de %d — o extrator do `char` parou de casar,\n"+
-			"e zero divergências não quer dizer nada quando nada foi lido.", comparados, parityOracleCount)
+			"e zero divergências não quer dizer nada quando nada foi lido.", compared, parityOracleCount)
 	}
 }

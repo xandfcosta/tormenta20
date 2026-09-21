@@ -11,8 +11,8 @@ import (
 // Elas moram num arquivo à parte do `npc.go` pela regra da casa: lá
 // estão as ROTAS e o que decide, aqui está o que a tela dispara.
 
-func npcCommand(v View, npc castNpc, acao string) string {
-	return fmt.Sprintf("@post('%s/elenco/npc/%d/%s')", v.SessionBase(), npc.ID, acao)
+func npcCommand(v View, npc castNpc, action string) string {
+	return fmt.Sprintf("@post('%s/elenco/npc/%d/%s')", v.SessionBase(), npc.ID, action)
 }
 
 // saveToCastPost LIMPA o campo do nome depois de postar, e isso não é

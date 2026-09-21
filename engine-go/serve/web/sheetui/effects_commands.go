@@ -66,10 +66,10 @@ func endStance(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error
 }
 
 // toggleSituational liga ou desliga um condicional de contexto.
-func toggleSituational(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
-	chave := ""
-	if sinais.Situacao != nil {
-		chave = *sinais.Situacao
+func toggleSituational(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	key := ""
+	if signals.Status != nil {
+		key = *signals.Status
 	}
-	return s.plays.ToggleSituational(r.Context(), row.ID, chave)
+	return s.plays.ToggleSituational(r.Context(), row.ID, key)
 }

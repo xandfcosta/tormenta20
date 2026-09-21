@@ -30,7 +30,7 @@ import { expect, test } from '@playwright/test'
 test.use({ storageState: '.auth/user.json' })
 
 /** Arma a escuta ANTES do gesto e devolve o que tocou. */
-async function animacoesDoGesto(page: import('@playwright/test').Page, gesto: () => Promise<void>) {
+async function animacoesDoGesto(page: import('@playwright/test').Page, action: () => Promise<void>) {
   await page.evaluate(() => {
     ;(window as unknown as { __anim: string[] }).__anim = []
     document.addEventListener(
@@ -39,7 +39,7 @@ async function animacoesDoGesto(page: import('@playwright/test').Page, gesto: ()
       true,
     )
   })
-  await gesto()
+  await action()
   // A animação dura 220ms e a placa começa 80ms depois dela.
   await page.waitForTimeout(500)
   return page.evaluate(() => (window as unknown as { __anim: string[] }).__anim)
@@ -53,29 +53,29 @@ const SCENES_WITH_A_STAGE = [
   { nome: 'campanhas', url: '/campanhas' },
 ]
 
-for (const cena of SCENES_WITH_A_STAGE) {
-  test(`o palco de ${cena.nome} entra pelo lado para onde o cursor foi`, async ({ page }) => {
+for (const scene of SCENES_WITH_A_STAGE) {
+  test(`o palco de ${scene.nome} entra pelo lado para onde o cursor foi`, async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 })
-    await page.goto(cena.url)
+    await page.goto(scene.url)
     await page.waitForLoadState('networkidle')
 
-    const quadros = page.locator('[role="option"]')
+    const tiles = page.locator('[role="option"]')
     // O CONTROLE: com menos de três quadros não há como andar para frente E para
     // trás, e "a direção não mudou" seria verdade sobre uma cena que não tem para
     // onde andar — a mensagem apontaria o lugar errado.
-    expect(await quadros.count()).toBeGreaterThanOrEqual(3)
+    expect(await tiles.count()).toBeGreaterThanOrEqual(3)
 
-    const adiante = await animacoesDoGesto(page, () => quadros.nth(2).click())
-    expect(adiante, 'andar para frente no trilho toca a entrada pela direita').toContain(
+    const ahead = await animacoesDoGesto(page, () => tiles.nth(2).click())
+    expect(ahead, 'andar para frente no trilho toca a entrada pela direita').toContain(
       'palcoEntraAdiante',
     )
     // A PLACA sobe junto, e é ela que carrega o atraso: sem ela o palco inteiro
     // desliza como um bloco só.
-    expect(adiante, 'a placa não subiu').toContain('placaSobe')
+    expect(ahead, 'a placa não subiu').toContain('placaSobe')
 
-    const atras = await animacoesDoGesto(page, () => quadros.nth(0).click())
-    expect(atras, 'voltar no trilho tem de entrar pelo outro lado').toContain('palcoEntraAtras')
-    expect(atras, 'voltar tocou a entrada de ir adiante').not.toContain('palcoEntraAdiante')
+    const behind = await animacoesDoGesto(page, () => tiles.nth(0).click())
+    expect(behind, 'voltar no trilho tem de entrar pelo outro lado').toContain('palcoEntraAtras')
+    expect(behind, 'voltar tocou a entrada de ir adiante').not.toContain('palcoEntraAdiante')
   })
 }
 
@@ -97,38 +97,38 @@ for (const cena of SCENES_WITH_A_STAGE) {
  * numa largura, e onde isso põe os irmãos. Em jsdom todo elemento mede zero e a
  * resposta seria "não dança" para qualquer código.
  */
-for (const cena of SCENES_WITH_A_STAGE) {
-  test(`a capa de ${cena.nome} pousa no mesmo y em toda posição do trilho`, async ({ page }) => {
+for (const scene of SCENES_WITH_A_STAGE) {
+  test(`a capa de ${scene.nome} pousa no mesmo y em toda posição do trilho`, async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 })
-    await page.goto(cena.url)
+    await page.goto(scene.url)
     await page.waitForLoadState('networkidle')
 
-    const opcoes = page.locator('[role="option"]')
-    const quantas = await opcoes.count()
+    const options = page.locator('[role="option"]')
+    const howMany = await options.count()
     // O CONTROLE: menos de três posições e "não dançou" seria verdade sobre uma
     // cena que quase não tem por onde andar.
-    expect(quantas, 'o trilho é curto demais para o guarda dizer alguma coisa').toBeGreaterThanOrEqual(3)
+    expect(howMany, 'o trilho é curto demais para o guarda dizer alguma coisa').toBeGreaterThanOrEqual(3)
 
-    const topos: number[] = []
-    for (let i = 0; i < quantas; i++) {
-      await opcoes.nth(i).click()
+    const tops: number[] = []
+    for (let i = 0; i < howMany; i++) {
+      await options.nth(i).click()
       // A entrada dura 220ms + 80ms de atraso da placa; medir antes pegaria o
       // palco no meio do `translateX` e o número seria da animação, não do
       // leiaute.
       await page.waitForTimeout(350)
-      topos.push(
+      tops.push(
         await page.evaluate(() => {
-          const palcos = [...document.querySelectorAll('[data-show^="$cursor =="]')]
-          const ativo = palcos.find((p) => p.getBoundingClientRect().height > 0)
-          if (!ativo) return -1
-          return Math.round(ativo.querySelector('.stage-portrait')!.getBoundingClientRect().top)
+          const stages = [...document.querySelectorAll('[data-show^="$cursor =="]')]
+          const active = stages.find((p) => p.getBoundingClientRect().height > 0)
+          if (!active) return -1
+          return Math.round(active.querySelector('.stage-portrait')!.getBoundingClientRect().top)
         }),
       )
     }
 
     expect(
-      [...new Set(topos)],
-      `a capa pousou em alturas diferentes ao percorrer o trilho: ${topos.join(', ')}`,
+      [...new Set(tops)],
+      `a capa pousou em alturas diferentes ao percorrer o trilho: ${tops.join(', ')}`,
     ).toHaveLength(1)
   })
 }
@@ -144,25 +144,25 @@ for (const cena of SCENES_WITH_A_STAGE) {
  * clique não chegou" — e as duas passam verde.
  */
 test('sob movimento reduzido o palco troca sem animar', async ({ browser }) => {
-  const medir = async (reducedMotion: 'reduce' | 'no-preference') => {
+  const measure = async (reducedMotion: 'reduce' | 'no-preference') => {
     const ctx = await browser.newContext({ storageState: '.auth/user.json', reducedMotion })
     const page = await ctx.newPage()
     try {
       await page.setViewportSize({ width: 1400, height: 900 })
       await page.goto('/personagens')
       await page.waitForLoadState('networkidle')
-      const quadros = page.locator('[role="option"]')
-      return await animacoesDoGesto(page, () => quadros.nth(2).click())
+      const tiles = page.locator('[role="option"]')
+      return await animacoesDoGesto(page, () => tiles.nth(2).click())
     } finally {
       // Limpeza com `catch`: ela não pode falar mais alto que o defeito.
       await ctx.close().catch(() => {})
     }
   }
 
-  expect(await medir('no-preference'), 'o CONTROLE não animou — o gesto não chegou').toContain(
+  expect(await measure('no-preference'), 'o CONTROLE não animou — o gesto não chegou').toContain(
     'palcoEntraAdiante',
   )
-  expect(await medir('reduce'), 'quem pediu menos movimento recebeu a entrada mesmo assim').toEqual(
+  expect(await measure('reduce'), 'quem pediu menos movimento recebeu a entrada mesmo assim').toEqual(
     [],
   )
 })
@@ -179,35 +179,35 @@ test('o palco que entra é o que o cursor escolheu, e a placa espera o retrato',
   // A animação vive no palco VISÍVEL, e o `both` a deixa no estado final — um
   // palco preso no primeiro quadro (transparente, deslocado) seria a falha que
   // este caso existe para pegar.
-  const medida = await page.evaluate(() => {
-    const palcos = [...document.querySelectorAll('[data-show^="$cursor =="]')]
-    const ativo = palcos.find((p) => p.getBoundingClientRect().height > 0)
-    if (!ativo) return null
-    const retrato = ativo.querySelector('.stage-portrait')
-    const placa = ativo.querySelector('.stage-plate')
-    if (!retrato || !placa) return null
+  const result = await page.evaluate(() => {
+    const stages = [...document.querySelectorAll('[data-show^="$cursor =="]')]
+    const active = stages.find((p) => p.getBoundingClientRect().height > 0)
+    if (!active) return null
+    const portrait = active.querySelector('.stage-portrait')
+    const plate = active.querySelector('.stage-plate')
+    if (!portrait || !plate) return null
     const cs = (el: Element) => {
       const s = getComputedStyle(el)
       return { nome: s.animationName, atraso: s.animationDelay, opacidade: s.opacity }
     }
-    return { retrato: cs(retrato), placa: cs(placa) }
+    return { retrato: cs(portrait), placa: cs(plate) }
   })
 
-  expect(medida, 'o palco ativo não tem as duas partes que animam').not.toBeNull()
-  expect(medida?.retrato.nome).toMatch(/^palcoEntra/)
-  expect(medida?.placa.nome).toBe('placaSobe')
+  expect(result, 'o palco ativo não tem as duas partes que animam').not.toBeNull()
+  expect(result?.retrato.nome).toMatch(/^palcoEntra/)
+  expect(result?.placa.nome).toBe('placaSobe')
   // Os 80ms são metade do efeito: o retrato chega primeiro e o nome pousa em
   // cima dele.
-  expect(medida?.placa.atraso).toBe('0.08s')
+  expect(result?.placa.atraso).toBe('0.08s')
   // E nada fica preso transparente depois que a animação termina.
   await expect
     .poll(
       async () =>
         page.evaluate(() => {
-          const palcos = [...document.querySelectorAll('[data-show^="$cursor =="]')]
-          const ativo = palcos.find((p) => p.getBoundingClientRect().height > 0)
-          const placa = ativo?.querySelector('.stage-plate')
-          return placa ? getComputedStyle(placa).opacity : '0'
+          const stages = [...document.querySelectorAll('[data-show^="$cursor =="]')]
+          const active = stages.find((p) => p.getBoundingClientRect().height > 0)
+          const plate = active?.querySelector('.stage-plate')
+          return plate ? getComputedStyle(plate).opacity : '0'
         }),
       { timeout: 3000 },
     )

@@ -15,24 +15,24 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 	ctx := context.Background()
 
 	// PLANEJADA: iniciar sim, encerrar não.
-	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(tela, "Iniciar sessão") {
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(screen, "Iniciar sessão") {
 		t.Error("a sessão planejada não oferece iniciar")
 	}
-	if strings.Contains(tela, "Encerrar sessão") {
+	if strings.Contains(screen, "Encerrar sessão") {
 		t.Error("a sessão planejada oferece encerrar — o servidor recusaria")
 	}
 
 	// ATIVA: o contrário. O pedido é um REMENDO no recurso — o status que se
 	// quer —, e não uma rota com o verbo no caminho.
-	if rec := f.pede(t, f.mestre, http.MethodPatch, f.tableUrl(), `{"status":"active"}`); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPatch, f.tableUrl(), `{"status":"active"}`); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar deu %d", rec.Code)
 	}
-	ativa := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(ativa, "Encerrar sessão") {
+	active := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(active, "Encerrar sessão") {
 		t.Error("a sessão ao vivo não oferece encerrar")
 	}
-	if strings.Contains(ativa, "Iniciar sessão") {
+	if strings.Contains(active, "Iniciar sessão") {
 		t.Error("a sessão ao vivo ainda oferece iniciar")
 	}
 
@@ -43,12 +43,12 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 	// DESENHO em cada status, e chegar ao status pela tela faria a montagem do
 	// caso depender do gesto que vem logo abaixo.
 	if _, err := f.s.sessionLifecycle().SetStatus(
-		ctx, app.Caller{ID: f.mestre}, f.campaignID, f.sessionID, "ended",
+		ctx, app.Caller{ID: f.gm}, f.campaignID, f.sessionID, "ended",
 	); err != nil {
 		t.Fatalf("encerrar: %v", err)
 	}
-	encerrada := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(encerrada, "Reabrir") {
+	ended := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(ended, "Reabrir") {
 		t.Error("a sessão encerrada não oferece reabrir")
 	}
 }
@@ -56,15 +56,15 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 // Sair não é do mestre: quem entrou numa mesa precisa poder sair dela.
 func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 	f := newSceneFixture(t)
-	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if strings.Contains(tela, "Configurações da sessão") {
+	if strings.Contains(screen, "Configurações da sessão") {
 		t.Error("o jogador recebeu as configurações da sessão")
 	}
-	if strings.Contains(tela, "Excluir sessão") {
+	if strings.Contains(screen, "Excluir sessão") {
 		t.Error("o jogador recebeu o excluir")
 	}
-	if !strings.Contains(tela, "Sair da sessão") {
+	if !strings.Contains(screen, "Sair da sessão") {
 		t.Error("o jogador não tem como sair da mesa")
 	}
 
@@ -72,11 +72,11 @@ func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 	// os quatro gestos passam pela mesma linha dele. São os quatro, e não uma
 	// amostra: a trava é por gesto, e um gesto novo que esquecesse a chamada
 	// passaria despercebido se este laço fosse menor que a família.
-	for _, gesto := range []struct {
-		nome    string
-		metodo  string
-		caminho string
-		corpo   string
+	for _, gesture := range []struct {
+		name   string
+		method string
+		path   string
+		body   string
 	}{
 		{"iniciar", http.MethodPatch, f.tableUrl(), `{"status":"active"}`},
 		{"encerrar", http.MethodPatch, f.tableUrl(), `{"status":"ended"}`},
@@ -84,9 +84,9 @@ func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 		{"reiniciar o combate", http.MethodPost, f.tableUrl() + "/combate/reiniciar", ""},
 		{"excluir", http.MethodDelete, f.tableUrl(), ""},
 	} {
-		rec := f.pede(t, f.jogador, gesto.metodo, gesto.caminho, gesto.corpo)
+		rec := f.pede(t, f.player, gesture.method, gesture.path, gesture.body)
 		if rec.Code != http.StatusForbidden {
-			t.Errorf("o jogador passou em %q: %d", gesto.nome, rec.Code)
+			t.Errorf("o jogador passou em %q: %d", gesture.name, rec.Code)
 		}
 	}
 }
@@ -97,13 +97,13 @@ func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
 
-	f.pede(t, f.mestre, http.MethodPatch, f.tableUrl(), `{"session_title":"A cripta do rio"}`)
+	f.pede(t, f.gm, http.MethodPatch, f.tableUrl(), `{"session_title":"A cripta do rio"}`)
 	sess, _ := f.s.queries.GetSession(ctx, f.sessionID)
 	if !sess.Title.Valid || sess.Title.String != "A cripta do rio" {
 		t.Fatalf("o título não foi salvo: %+v", sess.Title)
 	}
 
-	f.pede(t, f.mestre, http.MethodPatch, f.tableUrl(), `{"session_title":"   "}`)
+	f.pede(t, f.gm, http.MethodPatch, f.tableUrl(), `{"session_title":"   "}`)
 	sess, _ = f.s.queries.GetSession(ctx, f.sessionID)
 	if sess.Title.Valid && strings.TrimSpace(sess.Title.String) != "" {
 		t.Errorf("o título em branco não virou nulo: %+v", sess.Title)
@@ -117,7 +117,7 @@ func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
 // de investigar porque não deixa erro em lugar nenhum.
 func TestAPatchThatAsksForNothingIsRefused(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.mestre, http.MethodPatch, f.tableUrl(), `{"outra_coisa":1}`); rec.Code != http.StatusBadRequest {
+	if rec := f.pede(t, f.gm, http.MethodPatch, f.tableUrl(), `{"outra_coisa":1}`); rec.Code != http.StatusBadRequest {
 		t.Errorf("o remendo vazio deu %d, e ele tem de ser recusado", rec.Code)
 	}
 }
@@ -132,7 +132,7 @@ func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 		t.Fatalf("a cena montou %d combatentes — não há o que reiniciar", n)
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/combate/reiniciar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/combate/reiniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("reiniciar deu %d", rec.Code)
 	}
 
@@ -150,14 +150,14 @@ func TestDeletingErasesAndSendsTheGmToTheCampaign(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
 
-	rec := f.pede(t, f.mestre, http.MethodDelete, f.tableUrl(), "")
+	rec := f.pede(t, f.gm, http.MethodDelete, f.tableUrl(), "")
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("excluir deu %d", rec.Code)
 	}
-	destino := "/campanhas/" + strconv.FormatInt(f.campaignID, 10)
-	if !strings.Contains(rec.Body.String(), destino) {
-		t.Errorf("a resposta não manda o mestre para %q:\n%s", destino, rec.Body.String())
+	destination := "/campanhas/" + strconv.FormatInt(f.campaignID, 10)
+	if !strings.Contains(rec.Body.String(), destination) {
+		t.Errorf("a resposta não manda o mestre para %q:\n%s", destination, rec.Body.String())
 	}
 	if _, err := f.s.queries.GetSession(ctx, f.sessionID); err == nil {
 		t.Error("a sessão continua no banco depois de excluída")

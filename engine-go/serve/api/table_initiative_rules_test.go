@@ -16,16 +16,16 @@ func TestAConditionEntersAndLeavesTheEntry(t *testing.T) {
 	id := idCounter()
 	_ = live.AddEntry(st, npc("Ogro", 12), id)
 
-	aplicadas := []string{"caido", "atordoado"}
-	if err := live.UpdateEntry(st, "e1", live.EntryPatch{Conditions: &aplicadas}); err != nil {
+	applied := []string{"caido", "atordoado"}
+	if err := live.UpdateEntry(st, "e1", live.EntryPatch{Conditions: &applied}); err != nil {
 		t.Fatalf("aplicar: %v", err)
 	}
 	if len(st.Initiative[0].Conditions) != 2 {
 		t.Fatalf("aplicou %v", st.Initiative[0].Conditions)
 	}
 
-	vazio := []string{}
-	_ = live.UpdateEntry(st, "e1", live.EntryPatch{Conditions: &vazio})
+	empty := []string{}
+	_ = live.UpdateEntry(st, "e1", live.EntryPatch{Conditions: &empty})
 	if len(st.Initiative[0].Conditions) != 0 {
 		t.Fatalf("limpar deixou %v", st.Initiative[0].Conditions)
 	}
@@ -170,15 +170,15 @@ func TestEndingTheSceneExpiresThePartySceneEffects(t *testing.T) {
 // nunca chegou a pôr no rastreador.
 func TestEndingTheSceneReachesWhoIsNotInTheTracker(t *testing.T) {
 	f := newEndSceneFixture(t)
-	ausente := seedCharacter(t, f.srv, f.player, "Ladino de fora")
-	seedMember(t, f.srv, f.campaignID, ausente)
-	seedEffect(t, f.srv, ausente, "bencao", "scene")
+	absent := seedCharacter(t, f.srv, f.player, "Ladino de fora")
+	seedMember(t, f.srv, f.campaignID, absent)
+	seedEffect(t, f.srv, absent, "bencao", "scene")
 
 	if _, err := f.srv.restParty().EndScene(context.Background(), app.Caller{ID: f.gm.ID}, f.campaignID, f.sessionID); err != nil {
 		t.Fatalf("encerrar a cena: %v", err)
 	}
 
-	if got := effectScopes(t, f.srv, ausente); len(got) != 0 {
+	if got := effectScopes(t, f.srv, absent); len(got) != 0 {
 		t.Errorf("a ficha fora da fila ficou com %v", got)
 	}
 }

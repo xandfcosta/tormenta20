@@ -30,7 +30,7 @@ import (
 // resolve id → palavra do livro. Uma segunda cópia da tabela do livro é uma
 // cópia que desvia.
 func conditionEffect(id string) string {
-	for _, c := range book.Catalogs().Condicoes {
+	for _, c := range book.Catalogs().Conditions {
 		if c.ID == id {
 			return c.Description
 		}
@@ -58,35 +58,35 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	if !catalog.IsCondition(id) {
 		return nil, fmt.Errorf("%q não é uma condição do livro (p394-395)", id)
 	}
-	estado := st.deps.Sessions().GetState(c.SessionID)
-	i := live.FindEntryIndex(estado, entryID)
+	state := st.deps.Sessions().GetState(c.SessionID)
+	i := live.FindEntryIndex(state, entryID)
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
 	}
 
-	atuais := estado.Initiative[i].Conditions
-	novas := make([]string, 0, len(atuais)+1)
-	achou := false
-	for _, atual := range atuais {
-		if atual == id {
-			achou = true
+	current := state.Initiative[i].Conditions
+	fresh := make([]string, 0, len(current)+1)
+	found := false
+	for _, now := range current {
+		if now == id {
+			found = true
 			continue
 		}
-		novas = append(novas, atual)
+		fresh = append(fresh, now)
 	}
-	if !achou {
-		novas = append(novas, id)
+	if !found {
+		fresh = append(fresh, id)
 	}
-	estadoNovo, err := st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID,
-		live.EntryPatch{Conditions: &novas})
+	newState, err := st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID,
+		live.EntryPatch{Conditions: &fresh})
 	if err != nil {
-		return estadoNovo, err
+		return newState, err
 	}
 	// O CONJUNTO NOVO VOLTA NUM SINAL, e sem isto o diálogo aberto mente: os
 	// crachás dele são pintados a partir do sinal que a ABERTURA escreveu, e
 	// depois de um clique aquele sinal descreve o estado de antes. O mestre
 	// aplicaria "abalado", veria o crachá apagado, e clicaria de novo — tirando
 	// a condição que ele acabou de pôr.
-	c.Sinais["row_conditions"] = strings.Join(novas, ",")
-	return estadoNovo, nil
+	c.Signals["row_conditions"] = strings.Join(fresh, ",")
+	return newState, nil
 }

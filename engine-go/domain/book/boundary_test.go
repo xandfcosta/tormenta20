@@ -35,38 +35,38 @@ var permitidos = map[string]bool{
 }
 
 func TestTheBookKnowsNoHTTPAndNoScreen(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
-			if !strings.HasPrefix(caminho, "t20engine/") || permitidos[caminho] {
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
+			if !strings.HasPrefix(path, "t20engine/") || permitidos[path] {
 				continue
 			}
 			t.Errorf("%s importa %q — o livro é consultado por TREZE famílias.\n"+
 				"Um import daqui dá %q a todas elas de graça, e o guarda de fronteira\n"+
 				"de cada uma continua verde porque só olha os imports dela.",
-				nome, caminho, caminho)
+				name, path, path)
 		}
 	}
 
 	// Sem isto, apagar o pacote deixaria o guarda VERDE — ausência lida como
 	// aprovação, que é a família que o `CLAUDE.md` da raiz descreve.
-	if visitados == 0 {
+	if visited == 0 {
 		t.Fatal("nenhum arquivo .go visitado — o guarda ficou cego")
 	}
 }
@@ -83,15 +83,15 @@ func TestTheBookKnowsNoHTTPAndNoScreen(t *testing.T) {
 // Quem pegou foi um teste de CENA, dois pacotes acima. Este aqui prende a regra
 // onde ela mora, que é o que o guia chama de "uma regra, uma camada".
 func TestTheAddressKeyDropsAccents(t *testing.T) {
-	casos := map[string]string{
+	cases := map[string]string{
 		"Atuação":      "atuacao",
 		"Anão":         "anao",
 		"Luta":         "luta",
 		"Jogo de Sina": "jogo-de-sina",
 	}
-	for nome, esperado := range casos {
-		if obtido := KeyOfName(nome); obtido != esperado {
-			t.Errorf("KeyOfName(%q) = %q, esperado %q", nome, obtido, esperado)
+	for name, want := range cases {
+		if obtained := KeyOfName(name); obtained != want {
+			t.Errorf("KeyOfName(%q) = %q, esperado %q", name, obtained, want)
 		}
 	}
 }

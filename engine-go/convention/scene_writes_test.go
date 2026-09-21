@@ -40,45 +40,45 @@ import (
 // `Queries()` continua na porta de quem lê. O que ele proíbe é a cena ser a
 // última a saber o que foi gravado.
 func TestNoSceneWritesSql(t *testing.T) {
-	escritoras := writingQueries(t)
-	if len(escritoras) < 30 {
+	writers := writingQueries(t)
+	if len(writers) < 30 {
 		t.Fatalf("o guarda achou só %d queries de escrita no `query.sql` — "+
-			"o formato do arquivo mudou e ele parou de ler", len(escritoras))
+			"o formato do arquivo mudou e ele parou de ler", len(writers))
 	}
 
-	raiz, err := filepath.Abs("..")
+	root, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatalf("achar a raiz: %v", err)
 	}
-	conjunto := token.NewFileSet()
-	medidos, leiturasVistas := 0, 0
-	err = filepath.WalkDir(filepath.Join(raiz, "serve", "web"), func(
-		caminho string, d fs.DirEntry, err error,
+	set := token.NewFileSet()
+	measured, readingsSeen := 0, 0
+	err = filepath.WalkDir(filepath.Join(root, "serve", "web"), func(
+		path string, d fs.DirEntry, err error,
 	) error {
-		if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") ||
-			strings.HasSuffix(caminho, "_templ.go") || strings.HasSuffix(caminho, "_test.go") {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") ||
+			strings.HasSuffix(path, "_templ.go") || strings.HasSuffix(path, "_test.go") {
 			return err
 		}
-		rel, _ := filepath.Rel(raiz, caminho)
-		arquivo, err := parser.ParseFile(conjunto, caminho, nil, 0)
+		rel, _ := filepath.Rel(root, path)
+		file, err := parser.ParseFile(set, path, nil, 0)
 		if err != nil {
 			return err
 		}
-		medidos++
-		ast.Inspect(arquivo, func(n ast.Node) bool {
-			chamada, ok := n.(*ast.CallExpr)
+		measured++
+		ast.Inspect(file, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
 			if !ok {
 				return true
 			}
-			alvo, ok := chamada.Fun.(*ast.SelectorExpr)
+			target, ok := call.Fun.(*ast.SelectorExpr)
 			if !ok {
 				return true
 			}
-			if !escritoras[alvo.Sel.Name] {
+			if !writers[target.Sel.Name] {
 				// O denominador: conta as LEITURAS de query para saber que o
 				// seletor ainda casa com a forma "receptor ponto nome-da-query".
-				if strings.HasPrefix(alvo.Sel.Name, "List") || strings.HasPrefix(alvo.Sel.Name, "Get") {
-					leiturasVistas++
+				if strings.HasPrefix(target.Sel.Name, "List") || strings.HasPrefix(target.Sel.Name, "Get") {
+					readingsSeen++
 				}
 				return true
 			}
@@ -86,7 +86,7 @@ func TestNoSceneWritesSql(t *testing.T) {
 				"Cena não grava: ela desenha. Quem decide o que vai para o banco é um caso\n"+
 				"de uso em `app/`, e é lá que a autorização e a ORDEM das escritas moram —\n"+
 				"onze famílias desceram por esse motivo entre a ALE-347 e a ALE-353.",
-				rel, conjunto.Position(chamada.Pos()).Line, alvo.Sel.Name)
+				rel, set.Position(call.Pos()).Line, target.Sel.Name)
 			return true
 		})
 		return nil
@@ -97,12 +97,12 @@ func TestNoSceneWritesSql(t *testing.T) {
 
 	// O DENOMINADOR, nas duas pontas: uma varredura que não abriu arquivo e um
 	// seletor que deixou de casar se parecem com "nada reprovou".
-	if medidos < 40 {
-		t.Fatalf("o guarda leu só %d arquivos de cena — está medindo a árvore errada", medidos)
+	if measured < 40 {
+		t.Fatalf("o guarda leu só %d arquivos de cena — está medindo a árvore errada", measured)
 	}
-	if leiturasVistas < 5 {
+	if readingsSeen < 5 {
 		t.Fatalf("o guarda não viu nenhuma LEITURA de query nas cenas (%d) — "+
-			"a forma da chamada mudou e ele parou de reconhecer query nenhuma", leiturasVistas)
+			"a forma da chamada mudou e ele parou de reconhecer query nenhuma", readingsSeen)
 	}
 }
 
@@ -112,18 +112,18 @@ func TestNoSceneWritesSql(t *testing.T) {
 // de escrita em SQL, e uma query nova com qualquer um deles entra sozinha.
 func writingQueries(t *testing.T) map[string]bool {
 	t.Helper()
-	bruto, err := os.ReadFile(filepath.Join("..", "infra", "db", "query.sql"))
+	raw, err := os.ReadFile(filepath.Join("..", "infra", "db", "query.sql"))
 	if err != nil {
 		t.Fatalf("ler o query.sql: %v", err)
 	}
-	escritoras := map[string]bool{}
-	for _, bloco := range strings.Split(string(bruto), "-- name: ")[1:] {
-		nome, _, _ := strings.Cut(bloco, " ")
-		corpo := strings.ToLower(bloco)
-		if strings.Contains(corpo, "insert ") || strings.Contains(corpo, "update ") ||
-			strings.Contains(corpo, "delete ") {
-			escritoras[nome] = true
+	writers := map[string]bool{}
+	for _, block := range strings.Split(string(raw), "-- name: ")[1:] {
+		name, _, _ := strings.Cut(block, " ")
+		body := strings.ToLower(block)
+		if strings.Contains(body, "insert ") || strings.Contains(body, "update ") ||
+			strings.Contains(body, "delete ") {
+			writers[name] = true
 		}
 	}
-	return escritoras
+	return writers
 }

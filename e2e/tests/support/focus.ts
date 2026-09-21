@@ -173,11 +173,11 @@ export async function measureFocusRing(page: Page): Promise<FocusRingMeasurement
  * `onde` entra na mensagem porque os chamadores são uma ENUMERAÇÃO de cenas: a
  * falha precisa dizer em qual, senão a busca começa do zero.
  */
-export async function expectOneFocusRing(page: Page, onde: string, piso = 1): Promise<void> {
-  const { falhas, medidos } = await measureFocusRing(page)
+export async function expectOneFocusRing(page: Page, where: string, floor = 1): Promise<void> {
+  const { falhas: failures, medidos: measured } = await measureFocusRing(page)
   expect(
-    medidos,
-    `${onde}: o medidor não conseguiu focar NENHUM elemento — ou a cena não desenhou, ou o seletor parou de casar, e a asserção seguinte não seria evidência de nada`,
-  ).toBeGreaterThanOrEqual(piso)
-  expect(falhas, `o realce de foco ${onde}`).toEqual([])
+    measured,
+    `${where}: o medidor não conseguiu focar NENHUM elemento — ou a cena não desenhou, ou o seletor parou de casar, e a asserção seguinte não seria evidência de nada`,
+  ).toBeGreaterThanOrEqual(floor)
+  expect(failures, `o realce de foco ${where}`).toEqual([])
 }

@@ -49,30 +49,30 @@ func (s Scene) handleEncounterRemove(w http.ResponseWriter, r *http.Request) {
 // recalcular.
 func (s Scene) respondEncounter(
 	w http.ResponseWriter, r *http.Request,
-	gesto func([]encounterRow, string) []encounterRow,
+	gesture func([]encounterRow, string) []encounterRow,
 ) {
-	nivel, grupo, linhas, busca := draftFromRequest(r)
-	if gesto != nil {
-		linhas = gesto(linhas, chi.URLParam(r, "id"))
+	level, group, rows, search := draftFromRequest(r)
+	if gesture != nil {
+		rows = gesture(rows, chi.URLParam(r, "id"))
 	}
-	v := loadEncounters(nivel, grupo, linhas, busca)
+	v := loadEncounters(level, group, rows, search)
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := ui.RenderFragment(r.Context(), encountersScene(v))
+		fragment, err := ui.RenderFragment(r.Context(), encountersScene(v))
 		if err != nil {
 			return
 		}
-		_ = sse.PatchElements(fragmento)
+		_ = sse.PatchElements(fragment)
 		return
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo:        "Encontros · Mesa do Mestre · Tormenta 20",
-		Forma:         ui.ShellDense,
-		Voltar:        "/",
-		VoltarRotulo:  "Hub",
-		TituloVisivel: "Mesa do Mestre",
+		Title:        "Encontros · Mesa do Mestre · Tormenta 20",
+		Shape:        ui.ShellDense,
+		Back:         "/",
+		BackLabel:    "Hub",
+		VisibleTitle: "Mesa do Mestre",
 	}, masterBody("encontros", encountersScene(v)))
 }
 
@@ -83,39 +83,39 @@ func (s Scene) respondEncounter(
 // que o mestre acabou de clicar.
 func draftFromRequest(r *http.Request) (int, int, []encounterRow, string) {
 	q := r.URL.Query()
-	nivel := numberFromURL(q.Get("nivel"), nivelPadrao)
-	grupo := numberFromURL(q.Get("grupo"), grupoPadrao)
-	linhas := rowsFromURL(q.Get("c"))
-	busca := q.Get("busca")
+	level := numberFromURL(q.Get("nivel"), nivelPadrao)
+	group := numberFromURL(q.Get("grupo"), grupoPadrao)
+	rows := rowsFromURL(q.Get("c"))
+	search := q.Get("busca")
 
-	sinais := struct {
-		Nivel         *int            `json:"nivel"`
-		Grupo         *int            `json:"grupo"`
-		Encontro      *[]encounterRow `json:"encontro"`
-		BuscaCriatura *string         `json:"creature_search"`
+	signals := struct {
+		Level          *int            `json:"nivel"`
+		Group          *int            `json:"grupo"`
+		Encounter      *[]encounterRow `json:"encontro"`
+		CreatureSearch *string         `json:"creature_search"`
 	}{}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
-		return nivel, grupo, linhas, busca
+	if err := datastar.ReadSignals(r, &signals); err != nil {
+		return level, group, rows, search
 	}
-	if sinais.Nivel != nil {
-		nivel = *sinais.Nivel
+	if signals.Level != nil {
+		level = *signals.Level
 	}
-	if sinais.Grupo != nil {
-		grupo = *sinais.Grupo
+	if signals.Group != nil {
+		group = *signals.Group
 	}
-	if sinais.Encontro != nil {
-		linhas = *sinais.Encontro
+	if signals.Encounter != nil {
+		rows = *signals.Encounter
 	}
-	if sinais.BuscaCriatura != nil {
-		busca = *sinais.BuscaCriatura
+	if signals.CreatureSearch != nil {
+		search = *signals.CreatureSearch
 	}
-	return nivel, grupo, linhas, busca
+	return level, group, rows, search
 }
 
-func numberFromURL(bruto string, padrao int) int {
-	n, err := strconv.Atoi(strings.TrimSpace(bruto))
+func numberFromURL(raw string, standard int) int {
+	n, err := strconv.Atoi(strings.TrimSpace(raw))
 	if err != nil {
-		return padrao
+		return standard
 	}
 	return n
 }

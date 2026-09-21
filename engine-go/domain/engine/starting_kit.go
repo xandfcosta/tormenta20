@@ -62,17 +62,17 @@ type StartingKit struct {
 //	StartingKitFor("Guerreiro", []string{"armas-marciais", "armaduras-pesadas", "escudos"})
 func StartingKitFor(className string, proficiencies []string) StartingKit {
 	usa := map[string]bool{}
-	for _, categoria := range proficiencies {
-		usa[categoria] = true
+	for _, category := range proficiencies {
+		usa[category] = true
 	}
-	semArmadura := className == arcanistaClassName
+	noArmor := className == arcanistaClassName
 
 	kit := StartingKit{
 		BaseItems:     startingKitBaseItems,
 		MartialWeapon: usa["armas-marciais"],
 		MoneyDice:     StartingMoneyDice,
 	}
-	if semArmadura {
+	if noArmor {
 		return kit
 	}
 	kit.Armors = startingLightArmors

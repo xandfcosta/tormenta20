@@ -39,36 +39,36 @@ const theCeiling = 500
 // essa metade, a base vira um arquivo que afirma uma dívida que já foi paga, e
 // ninguém a relê.
 func TestNoNewFileGoesOverTheLineCeiling(t *testing.T) {
-	raiz, err := filepath.Abs("..")
+	root, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatalf("achar a raiz: %v", err)
 	}
 	base := longFileBaseline(t)
-	medidos := 0
-	acimaDoTeto := map[string]bool{}
+	measured := 0
+	overCeiling := map[string]bool{}
 
-	err = filepath.WalkDir(raiz, func(caminho string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !isHandWritten(caminho) {
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !isHandWritten(path) {
 			return err
 		}
-		rel, _ := filepath.Rel(raiz, caminho)
+		rel, _ := filepath.Rel(root, path)
 		rel = filepath.ToSlash(rel)
-		medidos++
-		linhas, err := countLines(caminho)
+		measured++
+		rows, err := countLines(path)
 		if err != nil {
 			return err
 		}
-		if linhas <= theCeiling {
+		if rows <= theCeiling {
 			return nil
 		}
-		acimaDoTeto[rel] = true
+		overCeiling[rel] = true
 		if base[rel] {
 			return nil
 		}
 		t.Errorf("%s tem %d linhas, e o teto é %d.\n"+
 			"Arquivo é unidade de RESPONSABILIDADE: se ele passou do teto, ele ganhou uma\n"+
 			"segunda razão para mudar. Divida por essa razão — e se a divisão não tiver\n"+
-			"nome, ela não é divisão.", rel, linhas, theCeiling)
+			"nome, ela não é divisão.", rel, rows, theCeiling)
 		return nil
 	})
 	if err != nil {
@@ -77,25 +77,25 @@ func TestNoNewFileGoesOverTheLineCeiling(t *testing.T) {
 
 	// A DÍVIDA QUE FOI PAGA sai da lista, e o guarda cobra isso: uma base que só
 	// cresce é uma base que ninguém relê.
-	pagos := []string{}
-	for arquivo := range base {
-		if !acimaDoTeto[arquivo] {
-			pagos = append(pagos, arquivo)
+	paid := []string{}
+	for file := range base {
+		if !overCeiling[file] {
+			paid = append(paid, file)
 		}
 	}
-	sort.Strings(pagos)
-	for _, arquivo := range pagos {
+	sort.Strings(paid)
+	for _, file := range paid {
 		t.Errorf("%s está na linha de base de arquivos longos e hoje cabe no teto.\n"+
 			"Tire a linha dele de `convention/testdata/long_files.txt` — a base registra\n"+
-			"dívida ANTIGA, e uma que afirma o que já foi pago vira mentira sozinha.", arquivo)
+			"dívida ANTIGA, e uma que afirma o que já foi pago vira mentira sozinha.", file)
 	}
 
 	// O DENOMINADOR: uma varredura que não abriu arquivo e uma árvore sem
 	// violação se parecem no terminal.
-	if medidos < 300 {
-		t.Fatalf("o guarda leu só %d arquivos — está medindo a árvore errada", medidos)
+	if measured < 300 {
+		t.Fatalf("o guarda leu só %d arquivos — está medindo a árvore errada", measured)
 	}
-	t.Logf("teto de %d linhas: %d arquivos medidos, %d na dívida", theCeiling, medidos, len(base))
+	t.Logf("teto de %d linhas: %d arquivos medidos, %d na dívida", theCeiling, measured, len(base))
 }
 
 // # Os `.templ` entram, e a divisão deles é POSSÍVEL
@@ -113,45 +113,45 @@ func TestNoNewFileGoesOverTheLineCeiling(t *testing.T) {
 // a responsabilidade de um arquivo que uma ferramenta emite: o `_templ.go` é o
 // `.templ` compilado, e o `sqlcgen` é o `query.sql`. Cobrar deles seria cobrar
 // da ferramenta.
-func isHandWritten(caminho string) bool {
-	if strings.HasSuffix(caminho, "_templ.go") || strings.Contains(caminho, "/sqlcgen/") {
+func isHandWritten(path string) bool {
+	if strings.HasSuffix(path, "_templ.go") || strings.Contains(path, "/sqlcgen/") {
 		return false
 	}
 	// TESTE fica de fora, e é decisão e não concessão: um caso vem com o
 	// cabeçalho que explica o mecanismo, e o guia PEDE esse cabeçalho. Cobrar o
 	// teto deles empurraria na direção contrária à seção "Comentários".
-	if strings.HasSuffix(caminho, "_test.go") {
+	if strings.HasSuffix(path, "_test.go") {
 		return false
 	}
-	return strings.HasSuffix(caminho, ".go") || strings.HasSuffix(caminho, ".templ")
+	return strings.HasSuffix(path, ".go") || strings.HasSuffix(path, ".templ")
 }
 
-func countLines(caminho string) (int, error) {
-	f, err := os.Open(caminho)
+func countLines(path string) (int, error) {
+	f, err := os.Open(path)
 	if err != nil {
 		return 0, err
 	}
 	defer f.Close()
 	n := 0
-	leitor := bufio.NewScanner(f)
-	leitor.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
-	for leitor.Scan() {
+	reader := bufio.NewScanner(f)
+	reader.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
+	for reader.Scan() {
 		n++
 	}
-	return n, leitor.Err()
+	return n, reader.Err()
 }
 
 // longFileBaseline lê a dívida registrada — um caminho por linha.
 func longFileBaseline(t *testing.T) map[string]bool {
 	t.Helper()
-	bruto, err := os.ReadFile(filepath.Join("testdata", "long_files.txt"))
+	raw, err := os.ReadFile(filepath.Join("testdata", "long_files.txt"))
 	if err != nil {
 		t.Fatalf("ler a linha de base: %v", err)
 	}
 	base := map[string]bool{}
-	for _, linha := range strings.Split(string(bruto), "\n") {
-		if linha = strings.TrimSpace(linha); linha != "" {
-			base[linha] = true
+	for _, row := range strings.Split(string(raw), "\n") {
+		if row = strings.TrimSpace(row); row != "" {
+			base[row] = true
 		}
 	}
 	return base

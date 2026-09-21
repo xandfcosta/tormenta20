@@ -59,8 +59,8 @@ func spellcastingAttributeFor(ch Character, className string) string {
 	if className != "Arcanista" {
 		return base
 	}
-	caminho := parseClassChoices(ch.ClassChoices)["Arcanista"].Caminho
-	if attr, ok := arcanistaPathAttribute[caminho]; ok {
+	path := parseClassChoices(ch.ClassChoices)["Arcanista"].Path
+	if attr, ok := arcanistaPathAttribute[path]; ok {
 		return attr
 	}
 	// Ficha ainda sem a escolha obrigatória do 1º nível: Inteligência, que é o

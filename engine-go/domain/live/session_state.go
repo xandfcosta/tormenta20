@@ -185,10 +185,10 @@ func numberedLabel(st *SessionRuntimeState, label string) string {
 	if strings.TrimSpace(label) == "" {
 		return label
 	}
-	usados := make([]string, 0, len(st.Initiative))
+	used := make([]string, 0, len(st.Initiative))
 	livre := true
 	for _, entry := range st.Initiative {
-		usados = append(usados, entry.Label)
+		used = append(used, entry.Label)
 		if entry.Label == label {
 			livre = false
 		}
@@ -199,7 +199,7 @@ func numberedLabel(st *SessionRuntimeState, label string) string {
 	if livre {
 		return label
 	}
-	return NextInstanceLabelAmong(usados, label)
+	return NextInstanceLabelAmong(used, label)
 }
 
 // UpsertCharacterEntry acrescenta a linha do personagem ou — se ele já está na

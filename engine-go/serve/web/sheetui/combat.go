@@ -190,12 +190,12 @@ func panelForCombat(sheet engine.ComputedSheet, cards []engine.WeaponCard, caste
 
 // defenseAndAttackTiles são os três números do meio do turno.
 func defenseAndAttackTiles(sheet engine.ComputedSheet) []statTile {
-	luta := expertiseOrZero(sheet, "Luta", "strength")
-	pontaria := expertiseOrZero(sheet, "Pontaria", "dexterity")
+	fight := expertiseOrZero(sheet, "Luta", "strength")
+	aim := expertiseOrZero(sheet, "Pontaria", "dexterity")
 	return []statTile{
 		defenseTile(sheet),
-		attackTile("attack-melee", "Atq CaC", "Ataque Corpo a Corpo (Luta)", luta, sheet.AttackAll),
-		attackTile("attack-ranged", "Atq Dist", "Ataque à Distância (Pontaria)", pontaria, sheet.AttackAll),
+		attackTile("attack-melee", "Atq CaC", "Ataque Corpo a Corpo (Luta)", fight, sheet.AttackAll),
+		attackTile("attack-ranged", "Atq Dist", "Ataque à Distância (Pontaria)", aim, sheet.AttackAll),
 	}
 }
 

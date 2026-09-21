@@ -18,12 +18,12 @@ import templruntime "github.com/a-h/templ/runtime"
 //
 // Ícone novo: acrescente o nome em `QUERIDOS` e rode o gerador.
 
-// Icon desenha um ícone do lucide. `nome` é o nome que a SPA usa.
+// Icon desenha um ícone do lucide. `name` é o nome que a SPA usa.
 //
 // Sempre `aria-hidden`: nos doze usos deste app o ícone acompanha um rótulo em
 // texto, e um nome acessível a mais faria o leitor de tela dizer a mesma coisa
 // duas vezes. Ícone que precisar de nome próprio pede um componente próprio.
-func Icon(nome, classe string) templ.Component {
+func Icon(name, class string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -44,7 +44,7 @@ func Icon(nome, classe string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{classe}
+		var templ_7745c5c3_Var2 = []any{class}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -66,7 +66,7 @@ func Icon(nome, classe string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		switch nome {
+		switch name {
 		case "Users2":
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<path d=\"M18 21a8 8 0 0 0-16 0\"></path> <circle cx=\"10\" cy=\"8\" r=\"5\"></circle> <path d=\"M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3\"></path>")
 			if templ_7745c5c3_Err != nil {

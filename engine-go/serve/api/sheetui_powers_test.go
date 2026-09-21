@@ -11,9 +11,9 @@ import (
 	"testing"
 )
 
-func barbaro(t *testing.T, nivel int64) (sceneFixture, int64) {
+func barbaro(t *testing.T, level int64) (sceneFixture, int64) {
 	t.Helper()
-	return barbarianWithMpSpent(t, nivel, 0)
+	return barbarianWithMpSpent(t, level, 0)
 }
 
 // barbarianWithMpSpent semeia o mesmo bárbaro com um tanto de PM JÁ GASTO, para
@@ -23,11 +23,11 @@ func barbaro(t *testing.T, nivel int64) (sceneFixture, int64) {
 // Ele diz quanto foi GASTO e não quanto sobrou porque o poço é do catálogo: o
 // máximo de um bárbaro de nível 5 é o que o livro dá, e uma bancada que o
 // escolhesse estaria medindo um personagem que não pode existir (ALE-355).
-func barbarianWithMpSpent(t *testing.T, nivel, pmGasto int64) (sceneFixture, int64) {
+func barbarianWithMpSpent(t *testing.T, level, pmSpent int64) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: f.jogador, Name: "Furioso", Origin: "Batedor", Level: nivel,
+		OwnerId: f.player, Name: "Furioso", Origin: "Batedor", Level: level,
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -37,24 +37,24 @@ func barbarianWithMpSpent(t *testing.T, nivel, pmGasto int64) (sceneFixture, int
 	if err != nil {
 		t.Fatalf("semear o bárbaro: %v", err)
 	}
-	seedClasse(t, f.s, id, "Bárbaro", nivel)
-	arrangePools(t, f.s, id, func(pocos sheet.Pools) (sheet.Pools, error) {
-		pocos.HpCurrent, pocos.MpCurrent = pocos.HpMax, pocos.MpMax-pmGasto
-		return pocos, nil
+	seedClasse(t, f.s, id, "Bárbaro", level)
+	arrangePools(t, f.s, id, func(pools sheet.Pools) (sheet.Pools, error) {
+		pools.HpCurrent, pools.MpCurrent = pools.HpMax, pools.MpMax-pmSpent
+		return pools, nil
 	})
 	return f, id
 }
 
 func powerScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.pede(t, f.jogador, http.MethodGet,
+	return f.pede(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=abilities", id), "").Body.String()
 }
 
-func powerCommand(t *testing.T, f sceneFixture, id int64, caminho, corpo string) string {
+func powerCommand(t *testing.T, f sceneFixture, id int64, path, body string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/personagens/%d/poderes/%s?tab=abilities", id, caminho)
-	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
+	target := fmt.Sprintf("/personagens/%d/poderes/%s?tab=abilities", id, path)
+	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 // O ACERVO junta as cinco procedências, e SÓ o que o personagem tem.
@@ -67,15 +67,15 @@ func TestTheCollectionJoinsTheFiveOrigins(t *testing.T) {
 	// os benefícios e TODOS os poderes eletivos como opções, então procurar na
 	// tela inteira acharia justamente o que a lista não deve mostrar — e o
 	// guarda afirmaria o contrário do que mede.
-	tela := powerPanel(powerScreen(t, f, id))
-	for _, esperado := range []string{
+	screen := powerPanel(powerScreen(t, f, id))
+	for _, want := range []string{
 		"Fúria",          // automática da classe, nível 1
 		"Golpe Poderoso", // escolhida
 		"Sobrevivência",  // benefício de origem escolhido
 		"Bárbaro",        // o crachá da fonte, encurtado
 	} {
-		if !strings.Contains(tela, esperado) {
-			t.Errorf("a tela não tem %q", esperado)
+		if !strings.Contains(screen, want) {
+			t.Errorf("a tela não tem %q", want)
 		}
 	}
 	// O QUE NÃO FOI ESCOLHIDO não aparece: a origem oferece cinco benefícios e o
@@ -86,20 +86,20 @@ func TestTheCollectionJoinsTheFiveOrigins(t *testing.T) {
 	// escreve nomes, então um id aqui seria uma string que nunca poderia
 	// aparecer — asserção que não pode falhar. Medido: com o filtro de escolha
 	// REMOVIDO, a versão por id continuava verde.
-	if strings.Contains(tela, "À Prova de Tudo") {
+	if strings.Contains(screen, "À Prova de Tudo") {
 		t.Error("um benefício de origem não escolhido apareceu como possuído")
 	}
 	// E O QUE O NÍVEL AINDA NÃO DEU também não: a Fúria Raivosa é do 6º.
-	if strings.Contains(tela, "Fúria Raivosa") {
+	if strings.Contains(screen, "Fúria Raivosa") {
 		t.Error("um poder acima do nível apareceu como possuído")
 	}
 }
 
-func choiceCom(t *testing.T, f sceneFixture, id int64, poderes, origem string) {
+func choiceCom(t *testing.T, f sceneFixture, id int64, powers, origin string) {
 	t.Helper()
 	if _, err := f.s.db.ExecContext(context.Background(),
 		"UPDATE characters SET classPowers = ?, originChoices = ? WHERE id = ?",
-		poderes, origem, id,
+		powers, origin, id,
 	); err != nil {
 		t.Fatalf("semear as escolhas: %v", err)
 	}
@@ -108,17 +108,17 @@ func choiceCom(t *testing.T, f sceneFixture, id int64, poderes, origem string) {
 // AS AÇÕES vêm em cima e ordenadas; as passivas ficam na outra seção.
 func TestActionsComeSortedAndPassivesComeApart(t *testing.T) {
 	f, id := barbaro(t, 5)
-	tela := powerScreen(t, f, id)
+	screen := powerScreen(t, f, id)
 
-	if !strings.Contains(tela, "Ações") || !strings.Contains(tela, "Passivas · mostrar") {
+	if !strings.Contains(screen, "Ações") || !strings.Contains(screen, "Passivas · mostrar") {
 		t.Fatal("a tela não desenhou as duas seções")
 	}
 	// A FÚRIA é postura e vai para as ações; o Instinto Selvagem é passivo.
-	acoes := actionsSlice(tela)
-	if !strings.Contains(acoes, "Ativar Fúria") {
+	actions := actionsSlice(screen)
+	if !strings.Contains(actions, "Ativar Fúria") {
 		t.Error("a postura não está entre as ações")
 	}
-	if strings.Contains(acoes, "Instinto Selvagem") {
+	if strings.Contains(actions, "Instinto Selvagem") {
 		t.Error("uma passiva foi para a seção de ações")
 	}
 }
@@ -131,12 +131,12 @@ func TestActionsComeSortedAndPassivesComeApart(t *testing.T) {
 // vazia.
 func TestWithoutActionsTheScreenExplainsInsteadOfShowingAVoid(t *testing.T) {
 	f, id := fighterFixture(t)
-	if tela := powerScreen(t, f, id); !strings.Contains(tela, "Suas habilidades são passivas") {
+	if screen := powerScreen(t, f, id); !strings.Contains(screen, "Suas habilidades são passivas") {
 		t.Error("o guerreiro sem ação não recebeu a frase que não manda a lugar nenhum")
 	}
 
-	fArcano, idArcano := arcanista(t)
-	if tela := powerScreen(t, fArcano, idArcano); !strings.Contains(tela, "aba Magias") {
+	arcanistF, arcanistID := arcanista(t)
+	if screen := powerScreen(t, arcanistF, arcanistID); !strings.Contains(screen, "aba Magias") {
 		t.Error("quem conjura não foi mandado para as Magias")
 	}
 }
@@ -144,18 +144,18 @@ func TestWithoutActionsTheScreenExplainsInsteadOfShowingAVoid(t *testing.T) {
 // OS DEGRAUS da postura saem do nível NA CLASSE (p40).
 func TestTheStanceStepsComeFromTheLevelInTheClass(t *testing.T) {
 	// A Fúria abre o primeiro degrau no 5º e ganha outro a cada 5 níveis.
-	semDegrau, id4 := barbaro(t, 4)
-	if tela := powerScreen(t, semDegrau, id4); !strings.Contains(tela, "Ativar 2 PM") {
+	noStep, id4 := barbaro(t, 4)
+	if screen := powerScreen(t, noStep, id4); !strings.Contains(screen, "Ativar 2 PM") {
 		t.Error("no 4º nível a Fúria devia entrar num toque só, por 2 PM")
 	}
 
-	comDegrau, id10 := barbaro(t, 10)
-	tela := powerScreen(t, comDegrau, id10)
-	if !strings.Contains(tela, "POSTURA · 2+ PM") {
+	withStep, id10 := barbaro(t, 10)
+	page := powerScreen(t, withStep, id10)
+	if !strings.Contains(page, "POSTURA · 2+ PM") {
 		t.Error("a postura que escala não avisa o '+' no custo")
 	}
 	// Dois degraus no 10º: o primeiro no 5º, o segundo no 10º.
-	if !strings.Contains(tela, "Math.min(2,") {
+	if !strings.Contains(page, "Math.min(2,") {
 		t.Error("o contador não conhece o teto de dois degraus do 10º nível")
 	}
 }
@@ -164,23 +164,23 @@ func TestTheStanceStepsComeFromTheLevelInTheClass(t *testing.T) {
 func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
 	f, id := barbaro(t, 10)
 
-	antes := pm(t, f, id)
-	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":2}`); recusa != "" {
-		t.Fatalf("entrar foi recusado: %q", recusa)
+	before := pm(t, f, id)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":2}`); refusal != "" {
+		t.Fatalf("entrar foi recusado: %q", refusal)
 	}
 	// O que se prende é o CUSTO e não o saldo: base 2 + dois degraus de 1 PM.
 	// Em delta, porque o saldo de partida é o poço que o livro dá ao bárbaro de
 	// nível 10, e não um número que a bancada escolha.
-	if depois := pm(t, f, id); antes-depois != 4 {
+	if after := pm(t, f, id); before-after != 4 {
 		t.Errorf("a entrada cobrou %d PM (%d → %d), quer 4: 2 de base + 2 degraus de 1",
-			antes-depois, antes, depois)
+			before-after, before, after)
 	}
-	posturas, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
+	stances, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler as posturas: %v", err)
 	}
-	if len(posturas) != 1 || posturas[0].Pmpaid != 4 || posturas[0].Steps != 2 {
-		t.Errorf("o pagamento gravado foi %+v, quer 4 PM em 2 degraus", posturas)
+	if len(stances) != 1 || stances[0].Pmpaid != 4 || stances[0].Steps != 2 {
+		t.Errorf("o pagamento gravado foi %+v, quer 4 PM em 2 degraus", stances)
 	}
 	// E A TELA passa a oferecer o encerrar.
 	if !strings.Contains(powerScreen(t, f, id), "Encerrar Fúria") {
@@ -192,13 +192,13 @@ func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
 func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
 	f, id := barbaro(t, 5)
 
-	antes := pm(t, f, id)
-	recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":3}`)
-	if !strings.Contains(recusa, "1 degraus") {
-		t.Errorf("a recusa não diz o teto: %q", recusa)
+	before := pm(t, f, id)
+	refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":3}`)
+	if !strings.Contains(refusal, "1 degraus") {
+		t.Errorf("a recusa não diz o teto: %q", refusal)
 	}
-	if depois := pm(t, f, id); depois != antes {
-		t.Errorf("a recusa cobrou assim mesmo: %d → %d", antes, depois)
+	if after := pm(t, f, id); after != before {
+		t.Errorf("a recusa cobrou assim mesmo: %d → %d", before, after)
 	}
 }
 
@@ -223,56 +223,56 @@ func TestWithoutMpNeitherThePowerNorTheStanceGoesThrough(t *testing.T) {
 	f, id := barbarianWithMpSpent(t, 5, 15)
 	choiceCom(t, f, id, `["class.barbaro.brado-assustador"]`, `[]`)
 
-	usar := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", "")
-	if !strings.Contains(usar, "PM insuficiente") {
-		t.Errorf("o poder saiu com o bolso vazio: %q", usar)
+	use := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", "")
+	if !strings.Contains(use, "PM insuficiente") {
+		t.Errorf("o poder saiu com o bolso vazio: %q", use)
 	}
-	entrar := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`)
-	if !strings.Contains(entrar, "PM insuficiente") {
-		t.Errorf("a postura abriu com o bolso vazio: %q", entrar)
+	enter := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`)
+	if !strings.Contains(enter, "PM insuficiente") {
+		t.Errorf("a postura abriu com o bolso vazio: %q", enter)
 	}
 	// NADA foi gravado por nenhum dos dois: sem esta metade, "a recusa apareceu"
 	// não diz se ela apareceu ANTES ou DEPOIS da escrita.
 	if pm := pm(t, f, id); pm != 0 {
 		t.Errorf("o PM saiu do zero: %d", pm)
 	}
-	usos, err := f.s.sceneCore().Queries().ListCharacterPowerUses(context.Background(), id)
+	uses, err := f.s.sceneCore().Queries().ListCharacterPowerUses(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler os usos: %v", err)
 	}
-	if len(usos) != 0 {
-		t.Errorf("a recusa somou um uso assim mesmo: %+v", usos)
+	if len(uses) != 0 {
+		t.Errorf("a recusa somou um uso assim mesmo: %+v", uses)
 	}
-	posturas, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
+	stances, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler as posturas: %v", err)
 	}
-	if len(posturas) != 0 {
-		t.Errorf("a recusa abriu a postura assim mesmo: %+v", posturas)
+	if len(stances) != 0 {
+		t.Errorf("a recusa abriu a postura assim mesmo: %+v", stances)
 	}
 }
 
 // ENCERRAR não devolve PM — é o que a tabela de posturas existe para lembrar.
 func TestEndingTheStanceGivesNoMpBack(t *testing.T) {
 	f, id := barbaro(t, 5)
-	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); recusa != "" {
-		t.Fatalf("entrar foi recusado: %q", recusa)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); refusal != "" {
+		t.Fatalf("entrar foi recusado: %q", refusal)
 	}
-	antes := pm(t, f, id)
+	before := pm(t, f, id)
 
-	alvo := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
-	if recusa := sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String()); recusa != "" {
-		t.Fatalf("encerrar foi recusado: %q", recusa)
+	target := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
+	if refusal := sceneRefusal(f.pede(t, f.player, http.MethodPost, target, "").Body.String()); refusal != "" {
+		t.Fatalf("encerrar foi recusado: %q", refusal)
 	}
-	if depois := pm(t, f, id); depois != antes {
-		t.Errorf("encerrar devolveu PM: %d → %d", antes, depois)
+	if after := pm(t, f, id); after != before {
+		t.Errorf("encerrar devolveu PM: %d → %d", before, after)
 	}
-	posturas, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
+	stances, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler as posturas: %v", err)
 	}
-	if len(posturas) != 0 {
-		t.Errorf("a postura sobreviveu ao encerrar: %+v", posturas)
+	if len(stances) != 0 {
+		t.Errorf("a postura sobreviveu ao encerrar: %+v", stances)
 	}
 }
 
@@ -281,29 +281,29 @@ func TestUsingChargesTheMpAndCountsTheUse(t *testing.T) {
 	f, id := barbaro(t, 5)
 	choiceCom(t, f, id, `["class.barbaro.brado-assustador"]`, `[]`)
 
-	antes := pm(t, f, id)
-	if recusa := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", ""); recusa != "" {
-		t.Fatalf("usar foi recusado: %q", recusa)
+	before := pm(t, f, id)
+	if refusal := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", ""); refusal != "" {
+		t.Fatalf("usar foi recusado: %q", refusal)
 	}
-	depois := pm(t, f, id)
-	if antes-depois != 1 {
-		t.Errorf("o uso cobrou %d PM (%d → %d), quer 1", antes-depois, antes, depois)
+	after := pm(t, f, id)
+	if before-after != 1 {
+		t.Errorf("o uso cobrou %d PM (%d → %d), quer 1", before-after, before, after)
 	}
-	usos, err := f.s.sceneCore().Queries().ListCharacterPowerUses(context.Background(), id)
+	uses, err := f.s.sceneCore().Queries().ListCharacterPowerUses(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler os usos: %v", err)
 	}
-	if len(usos) != 1 || usos[0].Scope != "scene" || usos[0].Used != 1 {
-		t.Errorf("o uso gravado foi %+v, quer 1 na cena", usos)
+	if len(uses) != 1 || uses[0].Scope != "scene" || uses[0].Used != 1 {
+		t.Errorf("o uso gravado foi %+v, quer 1 na cena", uses)
 	}
 
 	// O SEGUNDO uso é barrado, e o PM não sai de novo.
-	recusa := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", "")
-	if !strings.Contains(recusa, "limite por cena") {
-		t.Errorf("o segundo uso não foi barrado pelo limite: %q", recusa)
+	refused := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", "")
+	if !strings.Contains(refused, "limite por cena") {
+		t.Errorf("o segundo uso não foi barrado pelo limite: %q", refused)
 	}
-	if outra := pm(t, f, id); outra != depois {
-		t.Errorf("a recusa cobrou de novo: %d → %d", depois, outra)
+	if other := pm(t, f, id); other != after {
+		t.Errorf("a recusa cobrou de novo: %d → %d", after, other)
 	}
 }
 
@@ -316,19 +316,19 @@ func TestAVariableCostCannotBeSpentFromTheSheet(t *testing.T) {
 	f, id := barbaro(t, 10)
 	choiceCom(t, f, id, `["class.barbaro.vigor-primal"]`, `[]`)
 
-	tela := powerScreen(t, f, id)
+	screen := powerScreen(t, f, id)
 	// A CAIXA ALTA da tela é do CSS: o HTML escreve "PM variável" e o
 	// `uppercase` do crachá é que a mostra gritada. Afirmar o que o navegador
 	// pinta seria afirmar a folha de estilo.
-	if !strings.Contains(tela, "PM variável") {
+	if !strings.Contains(screen, "PM variável") {
 		t.Error("o custo variável não é anunciado na tela")
 	}
-	antes := pm(t, f, id)
-	if recusa := powerCommand(t, f, id, "usa/class.barbaro.vigor-primal", ""); !strings.Contains(recusa, "variável") {
-		t.Errorf("a ficha aceitou usar um poder de custo variável: %q", recusa)
+	before := pm(t, f, id)
+	if refusal := powerCommand(t, f, id, "usa/class.barbaro.vigor-primal", ""); !strings.Contains(refusal, "variável") {
+		t.Errorf("a ficha aceitou usar um poder de custo variável: %q", refusal)
 	}
-	if depois := pm(t, f, id); depois != antes {
-		t.Errorf("a recusa cobrou assim mesmo: %d → %d", antes, depois)
+	if after := pm(t, f, id); after != before {
+		t.Errorf("a recusa cobrou assim mesmo: %d → %d", before, after)
 	}
 }
 
@@ -340,49 +340,49 @@ func TestAVariableCostCannotBeSpentFromTheSheet(t *testing.T) {
 func TestTheStanceGrantComesAndGoesWithIt(t *testing.T) {
 	f, id := barbaro(t, 5)
 
-	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); recusa != "" {
-		t.Fatalf("entrar foi recusado: %q", recusa)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); refusal != "" {
+		t.Fatalf("entrar foi recusado: %q", refusal)
 	}
-	efeitos := effects(t, f, id)
-	if !efeitos["class.barbaro.alma-de-bronze"] {
-		t.Fatalf("a Alma de Bronze não virou efeito ao entrar na Fúria: %v", efeitos)
+	effectList := effects(t, f, id)
+	if !effectList["class.barbaro.alma-de-bronze"] {
+		t.Fatalf("a Alma de Bronze não virou efeito ao entrar na Fúria: %v", effectList)
 	}
 
-	alvo := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
-	f.pede(t, f.jogador, http.MethodPost, alvo, "")
-	if efeitos := effects(t, f, id); efeitos["class.barbaro.alma-de-bronze"] {
+	target := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
+	f.pede(t, f.player, http.MethodPost, target, "")
+	if gotEffects := effects(t, f, id); gotEffects["class.barbaro.alma-de-bronze"] {
 		t.Error("a reserva de PV temporários sobreviveu ao fim da postura")
 	}
 }
 
 func effects(t *testing.T, f sceneFixture, id int64) map[string]bool {
 	t.Helper()
-	linhas, err := f.s.sceneCore().Queries().ListActiveEffectsByCharacter(context.Background(), id)
+	rows, err := f.s.sceneCore().Queries().ListActiveEffectsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler os efeitos: %v", err)
 	}
-	fora := map[string]bool{}
-	for _, l := range linhas {
-		fora[l.Catalogid] = true
+	outside := map[string]bool{}
+	for _, l := range rows {
+		outside[l.Catalogid] = true
 	}
-	return fora
+	return outside
 }
 
 // A BUSCA achata as duas seções e ignora acento.
 func TestThePowerSearchFoldsAndIgnoresAccents(t *testing.T) {
 	f, id := barbaro(t, 5)
 
-	tela := f.pede(t, f.jogador, http.MethodGet,
+	screen := f.pede(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=abilities&poderbusca=furia", id), "").Body.String()
 
-	if !strings.Contains(tela, "Fúria") {
+	if !strings.Contains(screen, "Fúria") {
 		t.Error("a busca sem acento não achou a Fúria")
 	}
 	// COM BUSCA as seções somem: o resultado é uma lista só, por nome.
-	if strings.Contains(tela, "Passivas · mostrar") {
+	if strings.Contains(screen, "Passivas · mostrar") {
 		t.Error("a busca deixou as seções em pé")
 	}
-	if strings.Contains(tela, "Instinto Selvagem") {
+	if strings.Contains(screen, "Instinto Selvagem") {
 		t.Error("a busca trouxe quem não casa com o termo")
 	}
 }

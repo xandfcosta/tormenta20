@@ -37,7 +37,7 @@ func (s Scene) RoutesNote(r chi.Router) {
 // ligaria um sinal NOVO e deixaria o declarado intocado, com o servidor lendo
 // para sempre um texto vazio.
 type notesSignals struct {
-	Notas string `json:"notes"`
+	Notes string `json:"notes"`
 }
 
 // readsNotesClient pega o texto que está na tela de quem pediu.
@@ -47,24 +47,24 @@ type notesSignals struct {
 // desfaria as últimas palavras dele sem aviso.
 func readsNotesClient(r *http.Request) (string, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
-	var sinais notesSignals
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	var signals notesSignals
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return "", fmt.Errorf("não entendi as notas enviadas: %v", err)
 	}
-	return sinais.Notas, nil
+	return signals.Notes, nil
 }
 
 // saveNote pede a gravação ao caso de uso e traduz a falha na frase que o mestre
 // lê. A razão de o texto NÃO ser aparado está lá, junto da escrita.
-func (s Scene) saveNote(r *http.Request, campaignID, sessionID int64, texto string) error {
-	if err := s.lifecycle.SaveNotes(r.Context(), s.callerOf(r), campaignID, sessionID, texto); err != nil {
+func (s Scene) saveNote(r *http.Request, campaignID, sessionID int64, text string) error {
+	if err := s.lifecycle.SaveNotes(r.Context(), s.callerOf(r), campaignID, sessionID, text); err != nil {
 		return fmt.Errorf("não deu para salvar as notas: %v", err)
 	}
 	return nil
 }
 
 func (s Scene) saveNoteSession(w http.ResponseWriter, r *http.Request) {
-	s.notesCommand(w, r, func(texto string) (string, error) { return texto, nil })
+	s.notesCommand(w, r, func(text string) (string, error) { return text, nil })
 }
 
 // toggleTask marca ou desmarca o quadrinho de UMA linha.
@@ -73,14 +73,14 @@ func (s Scene) saveNoteSession(w http.ResponseWriter, r *http.Request) {
 // Mesa: o alvo é o que o clique carrega, e um sinal compartilhado por todos os
 // quadrinhos seria um lugar a mais para o item errado sobreviver à troca.
 func (s Scene) toggleTask(w http.ResponseWriter, r *http.Request) {
-	linha, err := strconv.Atoi(chi.URLParam(r, "linha"))
+	row, err := strconv.Atoi(chi.URLParam(r, "linha"))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("linha inválida: %q", chi.URLParam(r, "linha")), http.StatusBadRequest)
 		return
 	}
-	marcada := chi.URLParam(r, "estado") == "marcar"
-	s.notesCommand(w, r, func(texto string) (string, error) {
-		return markdown.ToggleTask(texto, linha, marcada), nil
+	marked := chi.URLParam(r, "estado") == "marcar"
+	s.notesCommand(w, r, func(text string) (string, error) {
+		return markdown.ToggleTask(text, row, marked), nil
 	})
 }
 
@@ -93,20 +93,20 @@ func (s Scene) toggleTask(w http.ResponseWriter, r *http.Request) {
 // reflete o valor sem mexer no cursor de quem digita.
 func (s Scene) notesCommand(
 	w http.ResponseWriter, r *http.Request,
-	transforma func(string) (string, error),
+	transforms func(string) (string, error),
 ) {
 	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
 		return
 	}
 	userID := s.deps.CurrentUserID(r)
-	_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+	_, role, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
 	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	if papel != "gm" {
+	if role != "gm" {
 		http.Error(w, "as notas da sessão são do mestre", http.StatusForbidden)
 		return
 	}
@@ -114,19 +114,19 @@ func (s Scene) notesCommand(
 	// do pedido, então um `ReadSignals` depois dele encontra o corpo fechado.
 	// A ordem inversa passa VERDE em teste de handler e falha no servidor de
 	// verdade — o `httptest.NewRequest` não reproduz esse ciclo de vida.
-	texto, erroDeLeitura := readsNotesClient(r)
-	novo, erroDaRegra := texto, error(nil)
-	if erroDeLeitura == nil {
-		novo, erroDaRegra = transforma(texto)
+	text, readErr := readsNotesClient(r)
+	novo, ruleErr := text, error(nil)
+	if readErr == nil {
+		novo, ruleErr = transforms(text)
 	}
-	if erroDeLeitura == nil && erroDaRegra == nil {
-		erroDaRegra = s.saveNote(r, campaignID, sessionID, novo)
+	if readErr == nil && ruleErr == nil {
+		ruleErr = s.saveNote(r, campaignID, sessionID, novo)
 	}
-	s.respondNotes(w, r, campaignID, sessionID, novo, primeiroErro(erroDeLeitura, erroDaRegra))
+	s.respondNotes(w, r, campaignID, sessionID, novo, primeiroErro(readErr, ruleErr))
 }
 
-func primeiroErro(erros ...error) error {
-	for _, e := range erros {
+func primeiroErro(errs ...error) error {
+	for _, e := range errs {
 		if e != nil {
 			return e
 		}
@@ -150,23 +150,23 @@ func primeiroErro(erros ...error) error {
 // é `TestThePatchedPreviewCarriesTheTableIds`.
 func (s Scene) respondNotes(
 	w http.ResponseWriter, r *http.Request,
-	campaignID, sessionID int64, texto string, recusa error,
+	campaignID, sessionID int64, text string, refusal error,
 ) {
 	sse := datastar.NewSSE(w, r)
-	sinais := map[string]any{"notes": texto, "notes_error": ""}
-	if recusa != nil {
-		sinais["notes_error"] = recusa.Error()
+	signals := map[string]any{"notes": text, "notes_error": ""}
+	if refusal != nil {
+		signals["notes_error"] = refusal.Error()
 	} else {
-		sinais["notes_saved"] = texto
-		previa := tableNotesPreview(View{
+		signals["notes_saved"] = text
+		preview := tableNotesPreview(View{
 			CampaignID: campaignID, SessionID: sessionID,
-			Notas: texto, NotasBlocos: markdown.Parse(texto),
+			Notes: text, NoteBlocks: markdown.Parse(text),
 		})
-		if fragmento, err := ui.RenderFragment(r.Context(), previa); err == nil {
-			_ = sse.PatchElements(fragmento)
+		if fragment, err := ui.RenderFragment(r.Context(), preview); err == nil {
+			_ = sse.PatchElements(fragment)
 		}
 	}
-	_ = sse.MarshalAndPatchSignals(sinais)
+	_ = sse.MarshalAndPatchSignals(signals)
 }
 
 // ── as expressões que o Datastar executa ────────────────────────────────────
@@ -177,16 +177,16 @@ func (s Scene) respondNotes(
 // uma quebra de linha na nota fecharia a expressão e derrubaria a página
 // inteira — e nota de mesa é feita de aspas e quebras de linha.
 func seedNotes(v View) string {
-	texto, err := json.Marshal(v.Notas)
+	text, err := json.Marshal(v.Notes)
 	if err != nil {
-		texto = []byte(`""`)
+		text = []byte(`""`)
 	}
 	return fmt.Sprintf(
 		"$notes = %s; $notes_saved = %s; $notes_mode = localStorage.getItem('%s') || 'duplo'; "+
 			"$notes_width = Number(localStorage.getItem('%s')) || 0; "+
 			"$notes_floating = localStorage.getItem('%s') === 'true'; "+
 			"$notes_window = localStorage.getItem('%s') === '%d'",
-		texto, texto, notesModeKey, notesWidthKey, notesFloatKey, notesWindowKey, v.SessionID,
+		text, text, notesModeKey, notesWidthKey, notesFloatKey, notesWindowKey, v.SessionID,
 	)
 }
 
@@ -194,8 +194,8 @@ func seedNotes(v View) string {
 // não deve reescolher a cada sessão.
 const notesModeKey = "t20:notas-view"
 
-func escolheOModo(valor string) string {
-	return fmt.Sprintf("$notes_mode = '%s'; localStorage.setItem('%s', '%s')", valor, notesModeKey, valor)
+func escolheOModo(value string) string {
+	return fmt.Sprintf("$notes_mode = '%s'; localStorage.setItem('%s', '%s')", value, notesModeKey, value)
 }
 
 // A LARGURA DA COLUNA, e ela GRUDA como os modos grudam: é preferência de
@@ -294,15 +294,15 @@ func saveNotes(v View) string {
 }
 
 func toggleTaskNote(v View, t markdown.Task) string {
-	estado := "marcar"
-	if t.Marcada {
-		estado = "desmarcar"
+	state := "marcar"
+	if t.Marked {
+		state = "desmarcar"
 	}
-	return fmt.Sprintf("@post('%s/tarefa/%d/%s')", notesAddress(v), t.Linha, estado)
+	return fmt.Sprintf("@post('%s/tarefa/%d/%s')", notesAddress(v), t.Row, state)
 }
 
-func marked(marcada bool) string {
-	if marcada {
+func marked(checked bool) string {
+	if checked {
 		return "true"
 	}
 	return "false"

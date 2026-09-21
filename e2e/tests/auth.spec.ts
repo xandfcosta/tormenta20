@@ -15,18 +15,18 @@ import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 test.describe('A porta do jogo', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
-  for (const rota of ['/entrar', '/redefinir-senha']) {
-    test(`${rota} é escura como a mesa`, async ({ page }) => {
-      await page.goto(rota)
+  for (const route of ['/entrar', '/redefinir-senha']) {
+    test(`${route} é escura como a mesa`, async ({ page }) => {
+      await page.goto(route)
       await expect(page.getByRole('heading', { name: 'Tormenta 20' })).toBeVisible()
 
       // Compara token com token, lidos do mesmo nó: prender o oklch literal
       // seria prender uma decisão de paleta que pode mudar sem que a porta
       // deixe de ser a mesa.
-      const cores = await page.evaluate(() => {
-        const cena = document.querySelector('[data-slot=scene-shell]')
-        if (!cena) return null
-        const cs = getComputedStyle(cena)
+      const colors = await page.evaluate(() => {
+        const scene = document.querySelector('[data-slot=scene-shell]')
+        if (!scene) return null
+        const cs = getComputedStyle(scene)
         return {
           fundo: cs.getPropertyValue('--background').trim(),
           mesa: cs.getPropertyValue('--grimorio-bg').trim(),
@@ -34,11 +34,11 @@ test.describe('A porta do jogo', () => {
         }
       })
 
-      expect(cores, 'a porta não montou dentro de uma cena').not.toBeNull()
+      expect(colors, 'a porta não montou dentro de uma cena').not.toBeNull()
       expect(
-        cores?.fundo,
+        colors?.fundo,
         'a porta não pinta a cor da mesa — voltou a resolver o tema claro do template',
-      ).toBe(cores?.mesa)
+      ).toBe(colors?.mesa)
     })
   }
 

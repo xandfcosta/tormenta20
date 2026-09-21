@@ -19,10 +19,10 @@ import templruntime "github.com/a-h/templ/runtime"
 // Vizinho nulo vira ESPAÇADOR da mesma largura, nunca elemento ausente — ver
 // `NeighborAt`.
 //
-// `lado` é a palavra que abre o rótulo acessível ("Anterior: Sombra"), e ela é
+// `side` é a palavra que abre o rótulo acessível ("Anterior: Sombra"), e ela é
 // parâmetro em vez de derivada do índice porque quem sabe de que lado o vizinho
 // está é quem o desenha, não ele.
-func NeighborPortrait(vz *Neighbor, lado string) templ.Component {
+func NeighborPortrait(vz *Neighbor, side string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -67,7 +67,7 @@ func NeighborPortrait(vz *Neighbor, lado string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(lado + ": " + vz.Name)
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(side + ": " + vz.Name)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/stage.templ`, Line: 24, Col: 37}
 			}

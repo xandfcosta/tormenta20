@@ -31,9 +31,9 @@ import (
 // asPortasParaASessao são as três cenas de onde se entra numa sessão. Uma
 // esquecida é uma porta que continua levando para lugar nenhum, e ninguém nota
 // até tentar jogar por ela.
-func asPortasParaASessao(campanha int64) []struct{ Nome, Caminho string } {
-	id := strconv.FormatInt(campanha, 10)
-	return []struct{ Nome, Caminho string }{
+func asPortasParaASessao(campaign int64) []struct{ Name, Path string } {
+	id := strconv.FormatInt(campaign, 10)
+	return []struct{ Name, Path string }{
 		{"o Hub", "/"},
 		{"a lista de campanhas", "/campanhas"},
 		{"a crônica da campanha", "/campanhas/" + id},
@@ -41,25 +41,25 @@ func asPortasParaASessao(campanha int64) []struct{ Nome, Caminho string } {
 }
 
 func TestEveryDoorLeadsToTheSessionScene(t *testing.T) {
-	s, dono := hubFixture(t)
-	campanha := seedCampaign(t, s, dono)
-	sessao := seedSession(t, s, campanha)
+	s, owner := hubFixture(t)
+	campaign := seedCampaign(t, s, owner)
+	session := seedSession(t, s, campaign)
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		UpdatedAt: dbvalue.NowISO(), ID: sessao,
+		UpdatedAt: dbvalue.NowISO(), ID: session,
 	}); err != nil {
 		t.Fatalf("iniciar sessão: %v", err)
 	}
 
 	// Escrito à mão e não derivado da produção: derivar o destino faria o teste
 	// concordar com o defeito.
-	daSessao := "/campanhas/" + strconv.FormatInt(campanha, 10) +
-		"/sessoes/" + strconv.FormatInt(sessao, 10)
+	ofSession := "/campanhas/" + strconv.FormatInt(campaign, 10) +
+		"/sessoes/" + strconv.FormatInt(session, 10)
 
-	for _, porta := range asPortasParaASessao(campanha) {
-		html := pedeHub(t, s, dono, http.MethodGet, porta.Caminho).Body.String()
+	for _, door := range asPortasParaASessao(campaign) {
+		html := pedeHub(t, s, owner, http.MethodGet, door.Path).Body.String()
 
-		if !strings.Contains(html, daSessao) {
-			t.Errorf("%s não leva à cena da sessão (%s)", porta.Nome, daSessao)
+		if !strings.Contains(html, ofSession) {
+			t.Errorf("%s não leva à cena da sessão (%s)", door.Name, ofSession)
 		}
 	}
 }
@@ -69,19 +69,19 @@ func TestEveryDoorLeadsToTheSessionScene(t *testing.T) {
 // sessão, viva ou não). O de cima cobre o primeiro; este cobre o segundo, que é o
 // único jeito de reabrir uma sessão encerrada.
 func TestTheCampaignRowLeadsThereToo(t *testing.T) {
-	s, dono := hubFixture(t)
-	campanha := seedCampaign(t, s, dono)
+	s, owner := hubFixture(t)
+	campaign := seedCampaign(t, s, owner)
 	// Uma sessão PLANEJADA: sem `StartSessionFresh`, então não há "viva" e o
 	// botão do cabeçalho não existe. O que sobra é a linha do tempo.
-	sessao := seedSession(t, s, campanha)
+	session := seedSession(t, s, campaign)
 
-	html := pedeHub(t, s, dono, http.MethodGet,
-		"/campanhas/"+strconv.FormatInt(campanha, 10)).Body.String()
+	html := pedeHub(t, s, owner, http.MethodGet,
+		"/campanhas/"+strconv.FormatInt(campaign, 10)).Body.String()
 
-	daSessao := "/campanhas/" + strconv.FormatInt(campanha, 10) +
-		"/sessoes/" + strconv.FormatInt(sessao, 10)
-	if !strings.Contains(html, daSessao) {
-		t.Errorf("a linha da crônica não leva à cena da sessão (%s)", daSessao)
+	ofSession := "/campanhas/" + strconv.FormatInt(campaign, 10) +
+		"/sessoes/" + strconv.FormatInt(session, 10)
+	if !strings.Contains(html, ofSession) {
+		t.Errorf("a linha da crônica não leva à cena da sessão (%s)", ofSession)
 	}
 	if strings.Contains(html, "/campaigns/") {
 		t.Error("a crônica ainda tem um caminho para a tela antiga")

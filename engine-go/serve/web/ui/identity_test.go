@@ -13,7 +13,7 @@ import (
 // Sem isso o port ficaria "parecido", e parecido aqui significa a mesma
 // campanha com duas capas diferentes nas duas telas.
 func TestTheNameHueMatchesTheJs(t *testing.T) {
-	casos := map[string]int{
+	cases := map[string]int{
 		"Sombras de Valkaria": 181,
 		"Anão":                153,
 		"Thal, o Errante":     71,
@@ -21,15 +21,15 @@ func TestTheNameHueMatchesTheJs(t *testing.T) {
 		"Tormenta 20":         194,
 		"Mesa do Mestre":      351,
 	}
-	for nome, quer := range casos {
-		if got := NameHue(nome); got != quer {
-			t.Errorf("NameHue(%q) = %d, o JS dá %d", nome, got, quer)
+	for name, want := range cases {
+		if got := NameHue(name); got != want {
+			t.Errorf("NameHue(%q) = %d, o JS dá %d", name, got, want)
 		}
 	}
 }
 
 func TestTheInitialsMatchTheJs(t *testing.T) {
-	casos := map[string]string{
+	cases := map[string]string{
 		"Sombras de Valkaria": "SD",
 		"Anão":                "A",
 		"Thal, o Errante":     "TO",
@@ -39,9 +39,9 @@ func TestTheInitialsMatchTheJs(t *testing.T) {
 		"   ":                 "?",
 		"":                    "?",
 	}
-	for nome, quer := range casos {
-		if got := Monogram(nome); got != quer {
-			t.Errorf("Monogram(%q) = %q, queria %q", nome, got, quer)
+	for name, want := range cases {
+		if got := Monogram(name); got != want {
+			t.Errorf("Monogram(%q) = %q, queria %q", name, got, want)
 		}
 	}
 }

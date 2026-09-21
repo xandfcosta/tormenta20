@@ -73,7 +73,7 @@ func (c sceneCore) CharacterList(ctx context.Context, ownerID int64) ([]sheet.Ch
 // compõe é o compilador, e não sobra passada intermediária onde escapar
 // errado.
 func (c sceneCore) WritePage(
-	w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component,
+	w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component,
 ) {
 	var buf bytes.Buffer
 	// A CASCA RECEBE o que ela não pode conhecer: o endereço dos estáticos e as
@@ -81,7 +81,7 @@ func (c sceneCore) WritePage(
 	// campos em cada `ui.Page{…}` seria repetir dezoito vezes o que não varia.
 	p.Asset = assets.URL
 	p.Overlays = []templ.Component{finder.Dialog(), bookui.BookDialog(), bookui.EntryDialog()}
-	if err := ui.Layout(p, corpo).Render(r.Context(), &buf); err != nil {
+	if err := ui.Layout(p, body).Render(r.Context(), &buf); err != nil {
 		// Em buffer e não direto no `w`: um erro no meio da renderização já
 		// teria mandado 200 e meia página, e o jogador veria uma tela cortada
 		// sem nenhum sinal de que faltou coisa.

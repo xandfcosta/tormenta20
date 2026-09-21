@@ -44,7 +44,7 @@ func originModifiers(origin *OriginDefinition, choiceSet map[string]bool) []Modi
 	out := []Modifier{}
 	all := make([]OriginBenefit, 0, len(origin.Benefits)+1)
 	all = append(all, origin.Benefits...)
-	all = append(all, origin.PoderUnico)
+	all = append(all, origin.UniquePower)
 	for _, benefit := range all {
 		if !choiceSet[benefit.ID] {
 			continue
@@ -58,35 +58,35 @@ func originModifiers(origin *OriginDefinition, choiceSet map[string]bool) []Modi
 // de deltas — a ordem em que o oráculo os compara byte a byte. Escolha inválida
 // volta como erro, e quem chama o engole em "nenhum mod": coluna ruim degrada a
 // ficha, nunca a quebra.
-func resolveAttributeDeltas(raca *RaceAttributeEntry, floatingPicks []string, ascendencia string) ([]attrDelta, error) {
-	mod := raca.AttributeMod
+func resolveAttributeDeltas(race *RaceAttributeEntry, floatingPicks []string, ancestry string) ([]attrDelta, error) {
+	mod := race.AttributeMod
 	switch mod.Kind {
 	case "fixed":
 		return mod.Mods.pairs, nil
 	case "floating":
-		return resolveFloating(raca, mod, floatingPicks)
+		return resolveFloating(race, mod, floatingPicks)
 	default: // subraca-gated
-		variant, ok := mod.Variants[ascendencia]
-		if ascendencia == "" || !ok {
+		variant, ok := mod.Variants[ancestry]
+		if ancestry == "" || !ok {
 			return nil, fmt.Errorf(
-				"resolveAtributoMod: %s requires a valid ascendência, got %q", raca.Name, ascendencia)
+				"resolveAtributoMod: %s requires a valid ascendência, got %q", race.Name, ancestry)
 		}
 		return variant.pairs, nil
 	}
 }
 
-func resolveFloating(raca *RaceAttributeEntry, mod AttributeMod, picks []string) ([]attrDelta, error) {
+func resolveFloating(race *RaceAttributeEntry, mod AttributeMod, picks []string) ([]attrDelta, error) {
 	if len(picks) != mod.Count {
 		return nil, fmt.Errorf(
 			"resolveAtributoMod: %s requires exactly %d floating picks, got %d",
-			raca.Name, mod.Count, len(picks))
+			race.Name, mod.Count, len(picks))
 	}
 	if hasDuplicates(picks) {
-		return nil, fmt.Errorf("resolveAtributoMod: %s floating picks must be distinct", raca.Name)
+		return nil, fmt.Errorf("resolveAtributoMod: %s floating picks must be distinct", race.Name)
 	}
 	if mod.Exclude != "" && contains(picks, mod.Exclude) {
 		return nil, fmt.Errorf(
-			"resolveAtributoMod: %s cannot place +%d in %s", raca.Name, mod.Value, mod.Exclude)
+			"resolveAtributoMod: %s cannot place +%d in %s", race.Name, mod.Value, mod.Exclude)
 	}
 	result := make([]attrDelta, 0, len(picks)+1)
 	for _, a := range picks {
@@ -110,12 +110,12 @@ func resolveFloating(raca *RaceAttributeEntry, mod AttributeMod, picks []string)
 // Raça desconhecida conta como completa: não dá para cobrar escolha de uma raça
 // que o catálogo não tem.
 func (c *Catalogs) RaceAttributeChoiceIsComplete(raceName, choicesJSON string) bool {
-	raca := c.raceEntryByName(raceName)
-	if raca == nil {
+	race := c.raceEntryByName(raceName)
+	if race == nil {
 		return true
 	}
-	escolha := parseRaceAttributeChoices(choicesJSON)
-	_, err := resolveAttributeDeltas(raca, escolha.floatingPicks, escolha.ascendencia)
+	choice := parseRaceAttributeChoices(choicesJSON)
+	_, err := resolveAttributeDeltas(race, choice.floatingPicks, choice.ancestry)
 	return err == nil
 }
 
@@ -191,16 +191,16 @@ func ownsClassPower(
 
 // ClassChoiceSelections são as escolhas de devoto e de caminho de UMA classe.
 type ClassChoiceSelections struct {
-	Devoto  string `json:"devoto"`
-	Caminho string `json:"caminho"`
+	Devotee string `json:"devoto"`
+	Path    string `json:"caminho"`
 }
 
 func (s ClassChoiceSelections) value(field string) string {
 	if field == "devoto" {
-		return s.Devoto
+		return s.Devotee
 	}
 	if field == "caminho" {
-		return s.Caminho
+		return s.Path
 	}
 	return ""
 }

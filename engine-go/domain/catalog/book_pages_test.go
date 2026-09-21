@@ -25,55 +25,55 @@ const ultimaDeConteudo = 395
 // Varre TODO catálogo embutido por AMOSTRAGEM: quem passar a ter `bookPage`
 // amanhã nasce medido, sem entrada nova aqui.
 func TestNoPageFallsOutsideTheContent(t *testing.T) {
-	arquivos, err := fs.Glob(files, "data/*.json")
+	fileNames, err := fs.Glob(files, "data/*.json")
 	if err != nil {
 		t.Fatalf("listar catálogos: %v", err)
 	}
-	if len(arquivos) < 10 {
-		t.Fatalf("só %d catálogos embutidos — o guarda mediria quase nada", len(arquivos))
+	if len(fileNames) < 10 {
+		t.Fatalf("só %d catálogos embutidos — o guarda mediria quase nada", len(fileNames))
 	}
 
-	comPagina := 0
-	for _, arquivo := range arquivos {
-		bruto, err := files.ReadFile(arquivo)
+	withPage := 0
+	for _, file := range fileNames {
+		raw, err := files.ReadFile(file)
 		if err != nil {
-			t.Fatalf("%s: %v", arquivo, err)
+			t.Fatalf("%s: %v", file, err)
 		}
-		for _, entrada := range entradasComNome(t, arquivo, bruto) {
-			if entrada.Pagina == 0 {
+		for _, entry := range entradasComNome(t, file, raw) {
+			if entry.Page == 0 {
 				continue
 			}
-			comPagina++
-			if entrada.Pagina < 1 || entrada.Pagina > ultimaDeConteudo {
+			withPage++
+			if entry.Page < 1 || entry.Page > ultimaDeConteudo {
 				t.Errorf("%s → %q: p%d fora do conteúdo (1–%d) — p396+ é o índice remissivo",
-					arquivo, entrada.Nome, entrada.Pagina, ultimaDeConteudo)
+					file, entry.Name, entry.Page, ultimaDeConteudo)
 			}
 		}
 	}
 	// O CONTROLE: sem ele, apagar o `bookPage` de todo mundo passaria verde.
-	if comPagina < 700 {
-		t.Errorf("só %d entradas com página — eram 745 quando isto foi escrito", comPagina)
+	if withPage < 700 {
+		t.Errorf("só %d entradas com página — eram 745 quando isto foi escrito", withPage)
 	}
 }
 
 // As condições estão todas na mesma lista do apêndice, então "algumas sem
 // página" é defeito, e não lacuna do livro.
 func TestEveryConditionKnowsItsPage(t *testing.T) {
-	bruto, ok := Resource("conditions")
+	raw, ok := Resource("conditions")
 	if !ok {
 		t.Fatal("catálogo de condições ausente")
 	}
-	var porID map[string]struct {
+	var byID map[string]struct {
 		Name     string `json:"name"`
 		BookPage int    `json:"bookPage"`
 	}
-	if err := json.Unmarshal(bruto, &porID); err != nil {
+	if err := json.Unmarshal(raw, &byID); err != nil {
 		t.Fatalf("condições: %v", err)
 	}
-	if len(porID) < 30 {
-		t.Fatalf("só %d condições — o guarda mediria outra coisa", len(porID))
+	if len(byID) < 30 {
+		t.Fatalf("só %d condições — o guarda mediria outra coisa", len(byID))
 	}
-	for _, c := range porID {
+	for _, c := range byID {
 		if c.BookPage == 0 {
 			t.Errorf("a condição %q ficou sem página do livro", c.Name)
 		}
@@ -81,8 +81,8 @@ func TestEveryConditionKnowsItsPage(t *testing.T) {
 }
 
 type entradaComPagina struct {
-	Nome   string
-	Pagina int
+	Name string
+	Page int
 }
 
 // entradasComNome lê um catálogo nas DUAS formas em que eles existem — lista e
@@ -90,36 +90,36 @@ type entradaComPagina struct {
 //
 // Catálogo com outra forma (as tabelas do mestre, as ativações aninhadas) não é
 // erro: ele simplesmente não tem entrada com página para medir.
-func entradasComNome(t *testing.T, arquivo string, bruto []byte) []entradaComPagina {
+func entradasComNome(t *testing.T, file string, raw []byte) []entradaComPagina {
 	t.Helper()
 	type crua struct {
 		Name     string `json:"name"`
 		ID       string `json:"id"`
 		BookPage int    `json:"bookPage"`
 	}
-	converte := func(lista []crua) []entradaComPagina {
-		fora := make([]entradaComPagina, 0, len(lista))
-		for _, c := range lista {
-			nome := c.Name
-			if nome == "" {
-				nome = c.ID
+	converts := func(list []crua) []entradaComPagina {
+		outside := make([]entradaComPagina, 0, len(list))
+		for _, c := range list {
+			name := c.Name
+			if name == "" {
+				name = c.ID
 			}
-			fora = append(fora, entradaComPagina{Nome: nome, Pagina: c.BookPage})
+			outside = append(outside, entradaComPagina{Name: name, Page: c.BookPage})
 		}
-		return fora
+		return outside
 	}
 
-	var lista []crua
-	if err := json.Unmarshal(bruto, &lista); err == nil {
-		return converte(lista)
+	var items []crua
+	if err := json.Unmarshal(raw, &items); err == nil {
+		return converts(items)
 	}
-	var mapa map[string]crua
-	if err := json.Unmarshal(bruto, &mapa); err == nil {
-		fora := make([]crua, 0, len(mapa))
-		for _, v := range mapa {
-			fora = append(fora, v)
+	var board map[string]crua
+	if err := json.Unmarshal(raw, &board); err == nil {
+		outside := make([]crua, 0, len(board))
+		for _, v := range board {
+			outside = append(outside, v)
 		}
-		return converte(fora)
+		return converts(outside)
 	}
 	return nil
 }
@@ -127,7 +127,7 @@ func entradasComNome(t *testing.T, arquivo string, bruto []byte) []entradaComPag
 // A PÁGINA é o motivo de o catálogo de classes existir — sem ela, ele não teria
 // por quê.
 func TestEveryClassKnowsItsPage(t *testing.T) {
-	bruto, ok := Resource("classes")
+	raw, ok := Resource("classes")
 	if !ok {
 		t.Fatal("catálogo de classes ausente — a aba nasce vazia e nada estoura")
 	}
@@ -135,7 +135,7 @@ func TestEveryClassKnowsItsPage(t *testing.T) {
 		Name     string `json:"name"`
 		BookPage int    `json:"bookPage"`
 	}
-	if err := json.Unmarshal(bruto, &classes); err != nil {
+	if err := json.Unmarshal(raw, &classes); err != nil {
 		t.Fatalf("classes: %v", err)
 	}
 	if len(classes) != 14 {
@@ -157,31 +157,31 @@ func TestEveryClassKnowsItsPage(t *testing.T) {
 // começo de todo bloco. Uma regeneração desatenta do catálogo traz as três de
 // volta em silêncio.
 func TestTheThreeBlocksThatOpenOnePageLater(t *testing.T) {
-	bruto, ok := Resource("bestiary")
+	raw, ok := Resource("bestiary")
 	if !ok {
 		t.Fatal("bestiário ausente")
 	}
-	var criaturas []struct {
+	var creatures []struct {
 		Name     string `json:"name"`
 		BookPage int    `json:"bookPage"`
 	}
-	if err := json.Unmarshal(bruto, &criaturas); err != nil {
+	if err := json.Unmarshal(raw, &creatures); err != nil {
 		t.Fatalf("bestiário: %v", err)
 	}
-	esperado := map[string]int{"Lobo": 290, "Troll": 308, "Trog": 291}
-	visto := 0
-	for _, c := range criaturas {
-		pagina, cobrada := esperado[c.Name]
-		if !cobrada {
+	want := map[string]int{"Lobo": 290, "Troll": 308, "Trog": 291}
+	seen := 0
+	for _, c := range creatures {
+		page, charged := want[c.Name]
+		if !charged {
 			continue
 		}
-		visto++
-		if c.BookPage != pagina {
-			t.Errorf("%s: p%d — o bloco dele abre na p%d", c.Name, c.BookPage, pagina)
+		seen++
+		if c.BookPage != page {
+			t.Errorf("%s: p%d — o bloco dele abre na p%d", c.Name, c.BookPage, page)
 		}
 	}
-	if visto != len(esperado) {
-		t.Errorf("só %d das %d criaturas cobradas existem no catálogo", visto, len(esperado))
+	if seen != len(want) {
+		t.Errorf("só %d das %d criaturas cobradas existem no catálogo", seen, len(want))
 	}
 }
 
@@ -197,36 +197,36 @@ func TestTheThreeBlocksThatOpenOnePageLater(t *testing.T) {
 // Este teste não tem o livro — ele mora fora do repositório. O que ele mede é a
 // FORMA do que foi extraído, que é o que sobrevive sem o PDF na mão.
 func TestNoExtractedEntryCarriesPageDirt(t *testing.T) {
-	for _, recurso := range []string{"effect-types", "spell-schools"} {
-		bruto, ok := Resource(recurso)
+	for _, resource := range []string{"effect-types", "spell-schools"} {
+		raw, ok := Resource(resource)
 		if !ok {
-			t.Errorf("catálogo %q ausente", recurso)
+			t.Errorf("catálogo %q ausente", resource)
 			continue
 		}
-		var verbetes []struct {
+		var entries []struct {
 			Name        string `json:"name"`
 			Description string `json:"description"`
 		}
-		if err := json.Unmarshal(bruto, &verbetes); err != nil {
-			t.Errorf("%s: %v", recurso, err)
+		if err := json.Unmarshal(raw, &entries); err != nil {
+			t.Errorf("%s: %v", resource, err)
 			continue
 		}
-		if len(verbetes) < 8 {
-			t.Errorf("%s tem só %d verbetes", recurso, len(verbetes))
+		if len(entries) < 8 {
+			t.Errorf("%s tem só %d verbetes", resource, len(entries))
 		}
-		for _, v := range verbetes {
+		for _, v := range entries {
 			if strings.Contains(v.Description, "- ") {
-				t.Errorf("%s → %q: hífen de quebra solto no meio do texto", recurso, v.Name)
+				t.Errorf("%s → %q: hífen de quebra solto no meio do texto", resource, v.Name)
 			}
 			// Uma definição do livro é uma ou duas frases. Passando disto, o
 			// extrator comeu a seção vizinha.
 			if len(v.Description) > 700 {
 				t.Errorf("%s → %q: %d caracteres, a página vizinha entrou junto",
-					recurso, v.Name, len(v.Description))
+					resource, v.Name, len(v.Description))
 			}
 			if !strings.HasSuffix(strings.TrimSpace(v.Description), ".") {
 				t.Errorf("%s → %q: a definição não termina em ponto — foi cortada no meio",
-					recurso, v.Name)
+					resource, v.Name)
 			}
 		}
 	}

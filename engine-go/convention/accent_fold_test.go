@@ -34,39 +34,39 @@ import (
 // a tabela tinha, e é a forma que a próxima teria: ninguém escreve uma dobra de
 // acento sem listar os pares.
 func TestNoSecondAccentFolderIsWritten(t *testing.T) {
-	const ondeADobraMora = "domain/search"
+	const foldHome = "domain/search"
 
-	raiz, err := filepath.Abs("..")
+	root, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatalf("achar a raiz: %v", err)
 	}
-	conjunto := token.NewFileSet()
-	medidos := 0
-	err = filepath.WalkDir(raiz, func(caminho string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") ||
-			strings.HasSuffix(caminho, "_templ.go") {
+	set := token.NewFileSet()
+	measured := 0
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") ||
+			strings.HasSuffix(path, "_templ.go") {
 			return err
 		}
-		rel, _ := filepath.Rel(raiz, caminho)
+		rel, _ := filepath.Rel(root, path)
 		// O guarda cita as letras para poder proibi-las, e o dono da dobra pode
 		// listá-las à vontade.
-		if strings.HasPrefix(rel, ondeADobraMora) || strings.HasSuffix(rel, "accent_fold_test.go") {
+		if strings.HasPrefix(rel, foldHome) || strings.HasSuffix(rel, "accent_fold_test.go") {
 			return nil
 		}
-		arquivo, err := parser.ParseFile(conjunto, caminho, nil, 0)
+		file, err := parser.ParseFile(set, path, nil, 0)
 		if err != nil {
 			return err
 		}
-		medidos++
-		ast.Inspect(arquivo, func(n ast.Node) bool {
-			chamada, ok := n.(*ast.CallExpr)
-			if !ok || !isNewReplacer(chamada) || !hasAccentedArgument(chamada) {
+		measured++
+		ast.Inspect(file, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
+			if !ok || !isNewReplacer(call) || !hasAccentedArgument(call) {
 				return true
 			}
 			t.Errorf("%s:%d monta uma SEGUNDA dobra de acento.\n"+
 				"Use o `search.Fold` do `%s`: uma tabela a mais acha quase tudo, e o que\n"+
 				"ela produz é a mesma palavra achando numa aba e não achando na outra.",
-				rel, conjunto.Position(chamada.Pos()).Line, ondeADobraMora)
+				rel, set.Position(call.Pos()).Line, foldHome)
 			return true
 		})
 		return nil
@@ -77,24 +77,24 @@ func TestNoSecondAccentFolderIsWritten(t *testing.T) {
 
 	// O DENOMINADOR: uma lista de reprovados vazia e uma varredura que não abriu
 	// arquivo nenhum se parecem no terminal.
-	if medidos < 200 {
-		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", medidos)
+	if measured < 200 {
+		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", measured)
 	}
 }
 
-func isNewReplacer(chamada *ast.CallExpr) bool {
-	alvo, ok := chamada.Fun.(*ast.SelectorExpr)
-	if !ok || alvo.Sel.Name != "NewReplacer" {
+func isNewReplacer(call *ast.CallExpr) bool {
+	target, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok || target.Sel.Name != "NewReplacer" {
 		return false
 	}
-	pacote, ok := alvo.X.(*ast.Ident)
-	return ok && pacote.Name == "strings"
+	pkg, ok := target.X.(*ast.Ident)
+	return ok && pkg.Name == "strings"
 }
 
 // hasAccentedArgument separa a dobra de acento de um `NewReplacer` legítimo —
 // escapar HTML, trocar barra por traço. O que denuncia é a LETRA acentuada.
-func hasAccentedArgument(chamada *ast.CallExpr) bool {
-	for _, arg := range chamada.Args {
+func hasAccentedArgument(call *ast.CallExpr) bool {
+	for _, arg := range call.Args {
 		lit, ok := arg.(*ast.BasicLit)
 		if !ok || lit.Kind != token.STRING {
 			continue

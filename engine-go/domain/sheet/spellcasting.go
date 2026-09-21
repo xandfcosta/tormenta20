@@ -27,23 +27,23 @@ var alwaysPrepareClasses = map[string]bool{"Clérigo": true, "Druida": true}
 // RequiresPreparation diz se esta ficha precisa PREPARAR a magia antes de
 // conjurar: Clérigo e Druida sempre, e o Arcanista quando o caminho é "mago".
 func RequiresPreparation(classes []ClassDTO, classChoicesRaw string) bool {
-	hasArcanista := false
+	hasArcanist := false
 	for _, c := range classes {
 		if alwaysPrepareClasses[c.ClassName] {
 			return true
 		}
 		if c.ClassName == "Arcanista" {
-			hasArcanista = true
+			hasArcanist = true
 		}
 	}
-	if !hasArcanista {
+	if !hasArcanist {
 		return false
 	}
 	var choices map[string]struct {
-		Caminho string `json:"caminho"`
+		Path string `json:"caminho"`
 	}
 	_ = json.Unmarshal([]byte(classChoicesRaw), &choices)
-	return choices["Arcanista"].Caminho == "mago"
+	return choices["Arcanista"].Path == "mago"
 }
 
 // HighestCastableCircle é o maior círculo que o personagem alcança.
@@ -53,28 +53,28 @@ func RequiresPreparation(classes []ClassDTO, classChoicesRaw string) bool {
 // tem classe nenhuma de conjurador — no círculo dela, e só nele. Sem o piso, um
 // bárbaro com Totem não conseguiria conjurar a magia que o poder lhe deu.
 func HighestCastableCircle(classes []ClassDTO, spellCircle int) int {
-	melhor := spellCircle
-	progressoes := book.SpellProgressions()
-	for _, entrada := range classes {
-		prog, conjura := progressoes[entrada.ClassName]
-		if !conjura {
+	best := spellCircle
+	progressions := book.SpellProgressions()
+	for _, entry := range classes {
+		prog, casts := progressions[entry.ClassName]
+		if !casts {
 			continue
 		}
-		for circulo := 1; circulo <= prog.MaxCircle; circulo++ {
-			nivel := prog.UnlockLevel[strconv.Itoa(circulo)]
-			if nivel == nil || entrada.Level < int64(*nivel) {
+		for circle := 1; circle <= prog.MaxCircle; circle++ {
+			level := prog.UnlockLevel[strconv.Itoa(circle)]
+			if level == nil || entry.Level < int64(*level) {
 				continue
 			}
-			if circulo > melhor {
-				melhor = circulo
+			if circle > best {
+				best = circle
 			}
 		}
 	}
-	return melhor
+	return best
 }
 
 // IsCasterClass diz se a classe conjura.
-func IsCasterClass(nome string) bool {
-	_, conjura := book.SpellProgressions()[nome]
-	return conjura
+func IsCasterClass(name string) bool {
+	_, casts := book.SpellProgressions()[name]
+	return casts
 }

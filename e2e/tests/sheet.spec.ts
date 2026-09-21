@@ -54,15 +54,15 @@ test('a ficha cabe nos seis formatos, e nenhum botão do crachá sai da janela',
  */
 test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
   await aFichaDoPrimeiro(page)
-  const enderecos = await page
+  const addresses = await page
     .getByRole('navigation', { name: 'Seções da ficha' })
     .getByRole('link')
     .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href))
-  expect(enderecos, 'a barra de abas veio vazia: este caso não mediria nada').toHaveLength(7)
+  expect(addresses, 'a barra de abas veio vazia: este caso não mediria nada').toHaveLength(7)
 
   await page.setViewportSize({ width: 390, height: 844 })
-  for (const endereco of enderecos) {
-    await page.goto(endereco)
+  for (const address of addresses) {
+    await page.goto(address)
     await expect(page.getByRole('navigation', { name: 'Seções da ficha' })).toBeVisible()
     await expectDentroDaJanela(page)
     // AS DUAS, e a segunda não é redundância — foi medida.
@@ -78,28 +78,28 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
     // O CONTRASTE entra no MESMO caminhar, e não num caso à parte com uma lista
     // de abas: à parte ele seria enumeração, e a aba que nascer amanhã ficaria
     // sem medição.
-    const contraste = await medeOContraste(page)
+    const ratio = await medeOContraste(page)
     // O DENOMINADOR: sem ele, uma lista de falhas vazia é indistinguível de "o
     // seletor não achou nada", e as duas se parecem no terminal. Trinta é bem
     // abaixo do que a aba mais pobre desenha (medido: a de Poderes, a mais
     // vazia das sete, passa de 40) e bem acima de zero.
     expect(
-      contraste.medidos,
-      `em ${endereco} o medidor olhou ${contraste.medidos} textos: o seletor da cena parou de casar`,
+      ratio.medidos,
+      `em ${address} o medidor olhou ${ratio.medidos} textos: o seletor da cena parou de casar`,
     ).toBeGreaterThan(30)
-    expect(contraste.falhas, `texto abaixo do AA em ${endereco}`).toEqual([])
+    expect(ratio.falhas, `texto abaixo do AA em ${address}`).toEqual([])
 
     // A TIPOGRAFIA entra no MESMO caminhar, pela mesma razão que o contraste.
-    const tipografia = await medeATipografia(page)
+    const typography = await medeATipografia(page)
     expect(
-      tipografia.medidos,
-      `em ${endereco} o medidor não achou NENHUM texto em Cinzel: ou a fonte não carregou, ou o filtro parou de casar — e o silêncio abaixo não seria evidência`,
+      typography.medidos,
+      `em ${address} o medidor não achou NENHUM texto em Cinzel: ou a fonte não carregou, ou o filtro parou de casar — e o silêncio abaixo não seria evidência`,
     ).toBeGreaterThan(0)
-    expect(tipografia.falhas, `Cinzel abaixo do piso de leitura em ${endereco}`).toEqual([])
+    expect(typography.falhas, `Cinzel abaixo do piso de leitura em ${address}`).toEqual([])
 
     // E O ANEL DE FOCO entra no MESMO caminhar, pela terceira vez e pela mesma
     // razão: à parte ele seria enumeração.
-    await expectOneFocusRing(page, `em ${endereco}`, 10)
+    await expectOneFocusRing(page, `em ${address}`, 10)
   }
 })
 
@@ -108,12 +108,12 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
  * última alteração, então "o primeiro do elenco" muda conforme o spec que rodou
  * antes — buscar pelo nome é o que torna os casos abaixo independentes.
  */
-async function oIdDoHeroi(page: import('@playwright/test').Page, nome: string) {
+async function oIdDoHeroi(page: import('@playwright/test').Page, label: string) {
   await page.goto('/personagens')
-  await page.getByRole('searchbox', { name: 'Buscar personagem' }).fill(nome)
-  const abrir = page.getByRole('link', { name: `Abrir ficha de ${nome}` })
-  await expect(abrir, `a semente não tem ${nome}`).toBeVisible()
-  const href = await abrir.getAttribute('href')
+  await page.getByRole('searchbox', { name: 'Buscar personagem' }).fill(label)
+  const openLink = page.getByRole('link', { name: `Abrir ficha de ${label}` })
+  await expect(openLink, `a semente não tem ${label}`).toBeVisible()
+  const href = await openLink.getAttribute('href')
   return href?.match(/\d+/)?.[0] as string
 }
 
@@ -138,8 +138,8 @@ test('a paleta arcana do Combate é legível para quem conjura', async ({ page }
     'a ficha do conjurador não desenhou a tripla mágica: a paleta arcana não entrou na medição',
   ).toBeVisible()
 
-  const contraste = await medeOContraste(page)
-  expect(contraste.falhas, 'texto abaixo do AA no Combate de um conjurador').toEqual([])
+  const contrast = await medeOContraste(page)
+  expect(contrast.falhas, 'texto abaixo do AA no Combate de um conjurador').toEqual([])
 })
 
 /**
@@ -161,9 +161,9 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
     'o grimório do conjurador não desenhou as magias: nada abaixo mediria a fatia 6',
   ).toBeVisible()
   await expectNadaRolaDeLado(page)
-  const noPainel = await medeOContraste(page)
-  expect(noPainel.medidos, 'o medidor não achou texto no grimório').toBeGreaterThan(30)
-  expect(noPainel.falhas, 'texto abaixo do AA no grimório').toEqual([])
+  const inPanel = await medeOContraste(page)
+  expect(inPanel.medidos, 'o medidor não achou texto no grimório').toBeGreaterThan(30)
+  expect(inPanel.falhas, 'texto abaixo do AA no grimório').toEqual([])
 
   // O DENOMINADOR DE UM DIÁLOGO NÃO É COMPARATIVO: `medidos` dá o mesmo número
   // com o diálogo fechado e com ele aberto, porque o medidor descarta o nó que
@@ -182,8 +182,8 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
 
   // O DIÁLOGO DE APRENDER leva o Capítulo 4 inteiro.
   await page.getByRole('button', { name: 'Aprender magia' }).click()
-  const caixa = page.getByRole('dialog', { name: 'Aprender magia' })
-  await expect(caixa).toBeVisible()
+  const crate = page.getByRole('dialog', { name: 'Aprender magia' })
+  await expect(crate).toBeVisible()
   await expectDentroDaJanela(page)
   await expectNadaRolaDeLado(page)
 })
@@ -209,9 +209,9 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
   await page.goto(`/personagens/${id}?tab=spells`)
 
   await page.getByRole('button', { name: 'Aprender magia' }).click()
-  const aprender = page.getByRole('dialog', { name: 'Aprender magia' })
-  await aprender.getByRole('searchbox').fill('Explosão de Chamas')
-  await aprender.getByText('Explosão de Chamas', { exact: true }).click()
+  const learn = page.getByRole('dialog', { name: 'Aprender magia' })
+  await learn.getByRole('searchbox').fill('Explosão de Chamas')
+  await learn.getByText('Explosão de Chamas', { exact: true }).click()
   await expect(
     page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }),
     'a magia com truque não entrou no grimório: não há o que medir abaixo',
@@ -219,27 +219,27 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
   await page.getByRole('button', { name: 'Fechar aprender magia' }).click()
 
   await page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }).click()
-  const conjurar = page.getByRole('dialog', { name: 'Explosão de Chamas' })
-  const custo = conjurar.getByText(/^\d+ PM$/)
-  const maisDano = conjurar.getByRole('button', { name: 'Mais de Aumenta o dano em +1d6.' })
-  const truque = conjurar.getByRole('switch').first()
+  const cast = page.getByRole('dialog', { name: 'Explosão de Chamas' })
+  const cost = cast.getByText(/^\d+ PM$/)
+  const moreDamage = cast.getByRole('button', { name: 'Mais de Aumenta o dano em +1d6.' })
+  const cantrip = cast.getByRole('switch').first()
 
   // O CONTROLE em duas medidas: o mostrador tem de MUDAR antes do que eu vim
   // medir, senão um repouso igual ao sucesso não testemunha nada (ALE-218).
-  await expect(custo, 'a Explosão de Chamas é de 1º círculo: 1 PM de base').toHaveText('1 PM')
-  await maisDano.click()
-  await expect(custo, 'o aprimoramento de +1 PM não entrou na prévia').toHaveText('2 PM')
+  await expect(cost, 'a Explosão de Chamas é de 1º círculo: 1 PM de base').toHaveText('1 PM')
+  await moreDamage.click()
+  await expect(cost, 'o aprimoramento de +1 PM não entrou na prévia').toHaveText('2 PM')
 
-  await truque.click()
-  await expect(custo, 'o truque não zerou a prévia: a tela cobra o que o servidor não cobra (p171)').toHaveText('0 PM')
+  await cantrip.click()
+  await expect(cost, 'o truque não zerou a prévia: a tela cobra o que o servidor não cobra (p171)').toHaveText('0 PM')
   await expect(
-    truque,
+    cantrip,
     'o truque não ficou ligado',
   ).toHaveAttribute('aria-checked', 'true')
   // E o aprimoramento que estava ligado tem de ter SUMIDO da escolha: a tela não
   // pode oferecer uma combinação que o servidor recusa.
   await expect(
-    conjurar.getByText('0', { exact: true }),
+    cast.getByText('0', { exact: true }),
     'o contador do aprimoramento comum não voltou a zero ao ligar o truque',
   ).toBeVisible()
 })
@@ -263,15 +263,15 @@ test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', asy
     'a mochila do tanque não desenhou os equipados: nada abaixo mediria a fatia 7',
   ).toBeVisible()
   await expectNadaRolaDeLado(page)
-  const noPainel = await medeOContraste(page)
-  expect(noPainel.medidos, 'o medidor não achou texto na mochila').toBeGreaterThan(30)
-  expect(noPainel.falhas, 'texto abaixo do AA na mochila').toEqual([])
+  const inPanel = await medeOContraste(page)
+  expect(inPanel.medidos, 'o medidor não achou texto na mochila').toBeGreaterThan(30)
+  expect(inPanel.falhas, 'texto abaixo do AA na mochila').toEqual([])
 
   // A FICHA DO ITEM, aberta pelo cartão da tira.
   await page.getByRole('button', { name: 'Abrir Machado de batalha' }).click()
-  const ficha = page.getByRole('dialog', { name: 'Machado de batalha' })
-  await expect(ficha).toBeVisible()
-  await expect(ficha.getByRole('button', { name: 'Melhorias de Machado de batalha' })).toBeVisible()
+  const sheet = page.getByRole('dialog', { name: 'Machado de batalha' })
+  await expect(sheet).toBeVisible()
+  await expect(sheet.getByRole('button', { name: 'Melhorias de Machado de batalha' })).toBeVisible()
   await expectDentroDaJanela(page)
   await expectNadaRolaDeLado(page)
   await page.keyboard.press('Escape')
@@ -301,18 +301,18 @@ test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({
     'a aba Poderes não desenhou o gesto de escolher: nada abaixo mediria a fatia 8',
   ).toBeVisible()
   await expectNadaRolaDeLado(page)
-  const naLista = await medeOContraste(page)
-  expect(naLista.medidos, 'o medidor não achou texto nos Poderes').toBeGreaterThan(30)
-  expect(naLista.falhas, 'texto abaixo do AA nos Poderes').toEqual([])
+  const inList = await medeOContraste(page)
+  expect(inList.medidos, 'o medidor não achou texto nos Poderes').toBeGreaterThan(30)
+  expect(inList.falhas, 'texto abaixo do AA nos Poderes').toEqual([])
 
   await page.getByRole('button', { name: 'Escolher poderes', exact: true }).click()
-  const dialogo = page.getByRole('dialog', { name: 'Escolher poderes' })
-  await expect(dialogo).toBeVisible()
-  await dialogo.getByRole('button', { name: 'Classe', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Escolher poderes' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('button', { name: 'Classe', exact: true }).click()
   // O `:visible` não é preciosismo: as três abas são desenhadas de uma vez e
   // alternadas por `data-show`, então o primeiro `switch` do DOM é o da Origem,
   // que está escondido — e esperar por ele é esperar para sempre.
-  await expect(dialogo.locator('[role="switch"]:visible').first()).toBeVisible()
+  await expect(dialog.locator('[role="switch"]:visible').first()).toBeVisible()
   await expectDentroDaJanela(page)
   await expectNadaRolaDeLado(page)
 })
@@ -344,29 +344,29 @@ test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({
  */
 test('deitado, o crachá do jogador não come metade da tela', async ({ page }) => {
   await aFichaDoPrimeiro(page)
-  const enderecos = await page
+  const addresses = await page
     .getByRole('navigation', { name: 'Seções da ficha' })
     .getByRole('link')
     .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href))
-  expect(enderecos, 'a barra de abas veio vazia: este caso não mediria nada').toHaveLength(7)
+  expect(addresses, 'a barra de abas veio vazia: este caso não mediria nada').toHaveLength(7)
 
   // 44 é o alvo mínimo de toque; o respiro é o `py-1` (8), o `gap-y-1` (4) e a
   // borda de cima (1), com três de folga.
-  const ALVO_DE_TOQUE = 44
-  const TETO_DO_CRACHA = 2 * ALVO_DE_TOQUE + 8 + 4 + 1 + 3
+  const TOUCH_TARGET = 44
+  const BADGE_CEILING = 2 * TOUCH_TARGET + 8 + 4 + 1 + 3
 
   await page.setViewportSize({ width: 844, height: 390 })
-  for (const endereco of enderecos) {
-    await page.goto(endereco)
-    const cracha = page.locator('#player-badge')
+  for (const address of addresses) {
+    await page.goto(address)
+    const badge = page.locator('#player-badge')
     // `toBeVisible` ANTES de medir: uma caixa escondida devolve zero sem
     // reclamar, e um zero passaria neste teto com folga.
-    await expect(cracha, `o crachá sumiu em ${endereco}: sem ele não há medição`).toBeVisible()
-    const caixa = await cracha.boundingBox()
+    await expect(badge, `o crachá sumiu em ${address}: sem ele não há medição`).toBeVisible()
+    const box = await badge.boundingBox()
     expect(
-      caixa?.height,
-      `o crachá come ${Math.round(caixa?.height ?? 0)}px dos 390 em ${endereco}`,
-    ).toBeLessThanOrEqual(TETO_DO_CRACHA)
+      box?.height,
+      `o crachá come ${Math.round(box?.height ?? 0)}px dos 390 em ${address}`,
+    ).toBeLessThanOrEqual(BADGE_CEILING)
 
     // E o que o corte NÃO pode custar: mexer no PV é o gesto mais frequente da
     // noite, e o crachá existe para que ele não dependa de qual aba está

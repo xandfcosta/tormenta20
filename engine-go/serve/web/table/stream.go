@@ -64,13 +64,13 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	//
 	// Não há evento novo: o `writeTable` só manda bytes quando o HTML MUDA, e o
 	// batimento de 1s já leva a mudança às outras abas.
-	papel := "player"
-	if view.Mestre != nil {
-		papel = "gm"
+	role := "player"
+	if view.GM != nil {
+		role = "gm"
 	}
-	conexao := live.NewUUID()
-	s.deps.Presence().Join(sessionID, conexao, live.PresenceUser{UserID: userID, Role: papel})
-	defer s.deps.Presence().Leave(sessionID, conexao)
+	connection := live.NewUUID()
+	s.deps.Presence().Join(sessionID, connection, live.PresenceUser{UserID: userID, Role: role})
+	defer s.deps.Presence().Leave(sessionID, connection)
 
 	// A ASSINATURA vem ANTES do primeiro quadro, senão uma mutação que caia entre
 	// render e assinatura se perde e a tela fica velha até o batimento.
@@ -79,14 +79,14 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	// `case` por store no `select` abaixo, só para juntar de novo o que está
 	// separado por acidente de onde o estado mora. Quem não tem ficha nesta mesa (o
 	// mestre, e quem só assiste) simplesmente não pede o interesse dela.
-	sub, parar := s.deps.Bus().Subscribe(readerInterests(view)...)
-	defer parar()
+	sub, stop := s.deps.Bus().Subscribe(readerInterests(view)...)
+	defer stop()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
-	ultimo := writeTable(r.Context(), sse, view, nil)
+	last := writeTable(r.Context(), sse, view, nil)
 	// O PUXÃO já empurrado NESTA conexão. Ver `PushForMap`.
-	var puxaoEmpurrado int64
-	puxaoEmpurrado = PushForMap(s, sse, sessionID, userID, puxaoEmpurrado)
+	var pushedPull int64
+	pushedPull = PushForMap(s, sse, sessionID, userID, pushedPull)
 	// A ficha do jogador SEMEADA e não empurrada: o valor de agora entra como
 	// "já avisado" para o primeiro AVISO não disparar um repedido do que a
 	// página acabou de desenhar — e o primeiro aviso pode chegar no mesmo
@@ -94,8 +94,8 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	sheetAnnounced := sheetVersion(s, r.Context(), view)
 	sheetTouched := false
 
-	batimento := time.NewTicker(tableHeartbeat)
-	defer batimento.Stop()
+	beat := time.NewTicker(tableHeartbeat)
+	defer beat.Stop()
 	for {
 		select {
 		case <-r.Context().Done():
@@ -107,7 +107,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// tique é uma linha por segundo por jogador conectado, quase sempre para
 			// descobrir que nada mudou.
 			sheetTouched = sheetTouched || sheetChanged(ev)
-		case <-batimento.C:
+		case <-beat.C:
 		}
 		view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID)
 		if err != nil {
@@ -116,8 +116,8 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// de piscar.
 			continue
 		}
-		ultimo = writeTable(r.Context(), sse, view, ultimo)
-		puxaoEmpurrado = PushForMap(s, sse, sessionID, userID, puxaoEmpurrado)
+		last = writeTable(r.Context(), sse, view, last)
+		pushedPull = PushForMap(s, sse, sessionID, userID, pushedPull)
 		if sheetTouched {
 			sheetAnnounced = announceSheetChange(s, r.Context(), sse, view, sheetAnnounced)
 			sheetTouched = false
@@ -141,16 +141,16 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 // A SUPERFÍCIE é sinal do navegador — é o cliente que decide o que aparece —,
 // então o que vai daqui é um remendo de SINAL e não de HTML. É o único lugar
 // desta cena em que o servidor escreve num sinal pelo stream.
-func PushForMap(s Scene, sse *datastar.ServerSentEventGenerator, sessionID, userID, jaEmpurrado int64) int64 {
+func PushForMap(s Scene, sse *datastar.ServerSentEventGenerator, sessionID, userID, alreadyPushed int64) int64 {
 	seq := s.chosenTabs.PullProgress(sessionID, userID)
-	if seq == 0 || seq == jaEmpurrado {
-		return jaEmpurrado
+	if seq == 0 || seq == alreadyPushed {
+		return alreadyPushed
 	}
 	if err := sse.PatchSignals([]byte(`{"surface":"` + superficieDoTabuleiro + `"}`)); err != nil {
 		// O leitor foi embora; o laço do stream descobre isso no próximo ciclo.
 		// NÃO grava o número: gravar faria este puxão ser considerado empurrado
 		// numa tela que nunca o recebeu.
-		return jaEmpurrado
+		return alreadyPushed
 	}
 	return seq
 }
@@ -162,11 +162,11 @@ func PushForMap(s Scene, sse *datastar.ServerSentEventGenerator, sessionID, user
 // coisa sem exigir que quem lê saiba que um canal nulo num `select` nunca
 // dispara.
 func readerInterests(view View) []events.Interest {
-	interesses := []events.Interest{events.OfSession(view.SessionID)}
-	if view.Mestre == nil && view.Eu != nil {
-		interesses = append(interesses, events.OfCharacter(view.Eu.CharacterID))
+	interests := []events.Interest{events.OfSession(view.SessionID)}
+	if view.GM == nil && view.Eu != nil {
+		interests = append(interests, events.OfCharacter(view.Eu.CharacterID))
 	}
-	return interesses
+	return interests
 }
 
 // sheetChanged diz se este evento mexeu na ficha de quem está olhando.
@@ -203,18 +203,18 @@ func sheetChanged(ev events.Event) bool {
 // aqui é barata: uma linha por MUDANÇA.
 func announceSheetChange(
 	s Scene, ctx context.Context, sse *datastar.ServerSentEventGenerator,
-	view View, jaAvisada string,
+	view View, alreadyWarned string,
 ) string {
-	versao := sheetVersion(s, ctx, view)
-	if versao == "" || versao == jaAvisada {
-		return jaAvisada
+	version := sheetVersion(s, ctx, view)
+	if version == "" || version == alreadyWarned {
+		return alreadyWarned
 	}
-	if err := sse.PatchSignals([]byte(`{"sheet_version":` + strconv.Quote(versao) + `}`)); err != nil {
+	if err := sse.PatchSignals([]byte(`{"sheet_version":` + strconv.Quote(version) + `}`)); err != nil {
 		// O leitor foi embora. NÃO grava: gravar faria esta mudança ser
 		// considerada avisada numa tela que nunca a recebeu.
-		return jaAvisada
+		return alreadyWarned
 	}
-	return versao
+	return version
 }
 
 // sheetVersion é o `updatedAt` do personagem de quem está olhando, ou "" para
@@ -227,7 +227,7 @@ func announceSheetChange(
 // e isso é aceitável porque elas só mudam pelas mãos do próprio dono, que já
 // está remendando a ficha ao mexer nelas.
 func sheetVersion(s Scene, ctx context.Context, view View) string {
-	if view.Mestre != nil || view.Eu == nil {
+	if view.GM != nil || view.Eu == nil {
 		return ""
 	}
 	row, err := s.deps.Queries().GetCharacter(ctx, view.Eu.CharacterID)
@@ -254,15 +254,15 @@ func writeTable(ctx context.Context, sse *datastar.ServerSentEventGenerator, vie
 		anterior = digitais{}
 	}
 	for _, r := range TableRegions(view) {
-		fragmento, err := ui.RenderFragment(ctx, r.No)
+		fragment, err := ui.RenderFragment(ctx, r.No)
 		if err != nil {
 			continue
 		}
-		digital := sha256.Sum256([]byte(fragmento))
+		digital := sha256.Sum256([]byte(fragment))
 		if digital == anterior[r.ID] {
 			continue
 		}
-		if err := sse.PatchElements(fragmento); err != nil {
+		if err := sse.PatchElements(fragment); err != nil {
 			// Falhar ao escrever é o leitor tendo ido embora. NÃO grava a
 			// digital: gravar faria a região ser pulada no próximo ciclo, e a
 			// tela ficaria com o estado velho para sempre.
@@ -293,7 +293,7 @@ type tableRegion struct {
 // pergunta ao MESMO cálculo da produção quais regiões o stream mandaria para
 // cada papel, e este pacote não tem banco para montar a view de verdade.
 func TableRegions(v View) []tableRegion {
-	regioes := []tableRegion{
+	regions := []tableRegion{
 		{"table-header", tableHeader(v)},
 		{"table-register", tableRegisterRegion(v)},
 		{"table-party", tableParty(v)},
@@ -317,9 +317,9 @@ func TableRegions(v View) []tableRegion {
 	// no documento é escrever no vazio — e a lista e a página não podem discordar
 	// sobre quais regiões existem, o que só se garante fazendo as duas perguntarem
 	// à mesma `view`.
-	if v.Mestre != nil {
-		regioes = append(regioes, tableRegion{"table-tracker-rail", tableRailTracker(v)})
-		regioes = append(regioes, tableRegion{"table-npcs", tableListNpCs(v)})
+	if v.GM != nil {
+		regions = append(regions, tableRegion{"table-tracker-rail", tableRailTracker(v)})
+		regions = append(regions, tableRegion{"table-npcs", tableListNpCs(v)})
 	}
-	return regioes
+	return regions
 }

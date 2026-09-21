@@ -38,67 +38,67 @@ test.use({ storageState: '.auth/user.json' })
  * Depois do arrasto não há corrida: a animação só começa quando o remendo do
  * servidor chega, e isso é depois do clique.
  */
-async function posicoesPintadas(page: Page, gesto: () => Promise<void>, ms = 800): Promise<number[]> {
-  await page.evaluate((limite) => {
+async function posicoesPintadas(page: Page, gesture: () => Promise<void>, ms = 800): Promise<number[]> {
+  await page.evaluate((limit) => {
     const w = window as unknown as { __x: number[] }
     w.__x = []
-    const inicio = performance.now()
-    const passo = () => {
-      const peca = document.querySelector('.board-token')
-      if (peca) w.__x.push(Math.round(peca.getBoundingClientRect().x))
-      if (performance.now() - inicio < limite) requestAnimationFrame(passo)
+    const start = performance.now()
+    const step = () => {
+      const token = document.querySelector('.board-token')
+      if (token) w.__x.push(Math.round(token.getBoundingClientRect().x))
+      if (performance.now() - start < limit) requestAnimationFrame(step)
     }
-    requestAnimationFrame(passo)
+    requestAnimationFrame(step)
   }, ms)
-  await gesto()
+  await gesture()
   await page.waitForTimeout(ms + 100)
   const xs = await page.evaluate(() => (window as unknown as { __x: number[] }).__x)
   return [...new Set(xs)]
 }
 
 /** Arrasta a peça `casas` para a direita, deixando o movimento PROPOSTO. */
-async function drag(page: Page, casas: number): Promise<void> {
-  const peca = page.locator('.board-token').first()
-  const caixa = await peca.boundingBox()
-  if (!caixa) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
-  const x = caixa.x + caixa.width / 2
-  const y = caixa.y + caixa.height / 2
+async function drag(page: Page, squares: number): Promise<void> {
+  const token = page.locator('.board-token').first()
+  const box = await token.boundingBox()
+  if (!box) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
+  const x = box.x + box.width / 2
+  const y = box.y + box.height / 2
   await page.mouse.move(x, y)
   await page.mouse.down()
   // PASSOS INTERMEDIÁRIOS, como o guarda da seta viva: a prévia é pedida a cada
   // casa atravessada, e um salto direto não constrói caminho nenhum.
-  for (let i = 1; i <= casas; i++) await page.mouse.move(x + i * caixa.width, y)
+  for (let i = 1; i <= squares; i++) await page.mouse.move(x + i * box.width, y)
   await page.mouse.up()
 }
 
 /** Arrasta, arma a sonda e confirma — nesta ordem, ver `posicoesPintadas`. */
-async function slideOnConfirm(page: Page, casas: number): Promise<number[]> {
-  await drag(page, casas)
+async function slideOnConfirm(page: Page, squares: number): Promise<number[]> {
+  await drag(page, squares)
   return posicoesPintadas(page, () => page.getByRole('button', { name: 'Confirmar' }).click())
 }
 
 async function aBoardWithOneToken(page: Page) {
-  const mesa = await disposableTable(page)
-  await openTheBoard(page, mesa.mesa)
+  const tableState = await disposableTable(page)
+  await openTheBoard(page, tableState.mesa)
   await putATokenOnTheMap(page)
   await page.getByLabel('Centralizar nas peças').click()
-  return mesa
+  return tableState
 }
 
 test('confirmar um movimento desliza a peça em vez de teleportá-la', async ({ page }) => {
-  const { apagar } = await aBoardWithOneToken(page)
+  const { apagar: erase } = await aBoardWithOneToken(page)
   try {
-    const posicoes = await slideOnConfirm(page, 4)
+    const positions = await slideOnConfirm(page, 4)
 
     // TRÊS é o piso do que se pode chamar de deslize: origem, destino e ao menos
     // um lugar no meio. Um teleporte dá exatamente duas.
     expect(
-      posicoes.length,
-      `a peça foi pintada em ${posicoes.length} posições (${posicoes.join(' → ')}): ` +
+      positions.length,
+      `a peça foi pintada em ${positions.length} posições (${positions.join(' → ')}): ` +
         'com duas ou menos ela teleportou, que é o defeito que a ALE-174 existe para consertar',
     ).toBeGreaterThan(2)
   } finally {
-    await apagar()
+    await erase()
   }
 })
 
@@ -114,21 +114,21 @@ test('confirmar um movimento desliza a peça em vez de teleportá-la', async ({ 
  * E não é o PAN: ele é `transform` do contêiner e não toca na peça.
  */
 test('aproximar o mapa não faz as peças deslizarem', async ({ page }) => {
-  const { apagar } = await aBoardWithOneToken(page)
+  const { apagar: remove } = await aBoardWithOneToken(page)
   try {
     // O CONTROLE vem primeiro, e é a metade que importa: um movimento de
     // verdade TEM de deslizar nesta mesma página. Sem ele, "o zoom não animou"
     // seria verdade também sobre uma sonda que não está amostrando nada.
-    const movendo = await slideOnConfirm(page, 3)
-    expect(movendo.length, 'o CONTROLE não deslizou: a sonda não está medindo').toBeGreaterThan(2)
+    const moving = await slideOnConfirm(page, 3)
+    expect(moving.length, 'o CONTROLE não deslizou: a sonda não está medindo').toBeGreaterThan(2)
 
-    const aproximando = await posicoesPintadas(page, () => page.getByLabel('Aproximar').click(), 600)
+    const approaching = await posicoesPintadas(page, () => page.getByLabel('Aproximar').click(), 600)
     expect(
-      aproximando.length,
-      `aproximar pintou a peça em ${aproximando.length} posições (${aproximando.join(' → ')}): ` +
+      approaching.length,
+      `aproximar pintou a peça em ${approaching.length} posições (${approaching.join(' → ')}): ` +
         'ela está presa ao TAMANHO da casa e não à casa, e a mesa vê um movimento que ninguém fez',
     ).toBeLessThanOrEqual(2)
   } finally {
-    await apagar()
+    await remove()
   }
 })

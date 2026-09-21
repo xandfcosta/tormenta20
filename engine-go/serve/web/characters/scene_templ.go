@@ -136,9 +136,9 @@ func charactersBar(v View) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{search: %q, dossier: false, %s}", v.Busca, ui.StageSignals(v.CursorID)))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{search: %q, dossier: false, %s}", v.Search, ui.StageSignals(v.CursorID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 55, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 55, Col: 103}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -175,9 +175,9 @@ func charactersBar(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Busca)
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Search)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 73, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 73, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -197,7 +197,7 @@ func charactersBar(v View) templ.Component {
 }
 
 // ── o palco ──────────────────────────────────────────────────────────────────
-func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
+func heroStage(h HeroCard, anterior, next *ui.Neighbor) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -321,7 +321,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.NeighborPortrait(proximo, "Próximo").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.NeighborPortrait(next, "Próximo").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -531,7 +531,7 @@ func heroVitals(h HeroCard) templ.Component {
 	})
 }
 
-func oneVital(rotulo, valor, tom string, apagado bool) templ.Component {
+func oneVital(label, value, tom string, apagado bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -597,9 +597,9 @@ func oneVital(rotulo, valor, tom string, apagado bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var28 string
-		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 164, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 164, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -632,7 +632,7 @@ func oneVital(rotulo, valor, tom string, apagado bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var31 string
-		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(valor)
+		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 165, Col: 75}
 		}
@@ -882,7 +882,7 @@ func filmFrame(h HeroCard, i int) templ.Component {
 			// conteúdo já diz quem é, e um nome acessível escrito à mão por cima
 			// seriam duas fontes para a mesma frase.
 			Name: h.Name, Sub: h.Role,
-			Destino: "/personagens/" + strconv.FormatInt(h.ID, 10),
+			Destination: "/personagens/" + strconv.FormatInt(h.ID, 10),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -895,7 +895,7 @@ func filmFrame(h HeroCard, i int) templ.Component {
 // do teclado morre na última posição do trilho: a seta chega na vaga e a tecla
 // que abriu tudo até ali não faz nada. (Ele mora aqui fora porque o `templ` NÃO
 // aceita comentário dentro de uma lista de atributos — o `generate` cai.)
-func createFrame(indice int) templ.Component {
+func createFrame(index int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -916,7 +916,7 @@ func createFrame(indice int) templ.Component {
 			templ_7745c5c3_Var40 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = ui.BlankMarker(indice, "Forjar um herói", "/personagens/nova").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.BlankMarker(index, "Forjar um herói", "/personagens/nova").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1079,15 +1079,15 @@ func heroDossier(h HeroCard) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, hab := range h.Dossier {
+			for _, ability := range h.Dossier {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<li><p class=\"font-heading text-sm tracking-wide text-foreground\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var49 string
-				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(hab.Name)
+				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(ability.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 311, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 311, Col: 82}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 				if templ_7745c5c3_Err != nil {
@@ -1098,9 +1098,9 @@ func heroDossier(h HeroCard) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var50 string
-				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(hab.Description)
+				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(ability.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 312, Col: 80}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 312, Col: 84}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 				if templ_7745c5c3_Err != nil {
@@ -1124,7 +1124,7 @@ func heroDossier(h HeroCard) templ.Component {
 	})
 }
 
-func dossierRow(rotulo, valor string) templ.Component {
+func dossierRow(label, value string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1145,15 +1145,15 @@ func dossierRow(rotulo, valor string) templ.Component {
 			templ_7745c5c3_Var51 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if valor != "" {
+		if value != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<div class=\"flex justify-between gap-3\"><dt class=\"shrink-0 text-muted-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var52 string
-			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 323, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 323, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
@@ -1164,7 +1164,7 @@ func dossierRow(rotulo, valor string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var53 string
-			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(valor)
+			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 324, Col: 49}
 			}

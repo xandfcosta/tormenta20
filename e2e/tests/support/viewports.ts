@@ -74,33 +74,33 @@ export async function expectOnlyTheScrollerScrolls(
 ): Promise<void> {
   for (const vp of viewports) {
     await page.setViewportSize({ width: vp.width, height: vp.height })
-    const medida = await page.evaluate((seletor) => {
-      const rolador = document.querySelector(seletor)
-      if (!rolador) return null
-      const transbordando: string[] = []
-      for (let n = rolador.parentElement; n; n = n.parentElement) {
-        const sobra = n.scrollHeight - n.clientHeight
-        if (sobra > 2) {
+    const measure = await page.evaluate((selector) => {
+      const scrollEl = document.querySelector(selector)
+      if (!scrollEl) return null
+      const overflowing: string[] = []
+      for (let n = scrollEl.parentElement; n; n = n.parentElement) {
+        const spare = n.scrollHeight - n.clientHeight
+        if (spare > 2) {
           // A CLASSE vai na mensagem porque `div` não endereça nada: o
           // primeiro vermelho deste instrumento foi um `lg:flex-row` da casca
           // do mestre, e sem as classes a falha dizia "procure" em vez de
           // "conserte isto".
-          transbordando.push(
+          overflowing.push(
             `${n.tagName.toLowerCase()}${n.id ? `#${n.id}` : ''} tem ${n.scrollHeight}px de conteúdo em ${n.clientHeight}px de caixa — class="${n.className}"`,
           )
         }
       }
-      return { rola: rolador.scrollHeight - rolador.clientHeight, transbordando }
+      return { rola: scrollEl.scrollHeight - scrollEl.clientHeight, transbordando: overflowing }
     }, scroller)
 
-    expect(medida, `nenhum "${scroller}" na cena @ ${vp.name} (${vp.width}×${vp.height})`).not.toBeNull()
-    const { rola, transbordando } = medida as { rola: number; transbordando: string[] }
+    expect(measure, `nenhum "${scroller}" na cena @ ${vp.name} (${vp.width}×${vp.height})`).not.toBeNull()
+    const { rola: scrolls, transbordando: overflowList } = measure as { rola: number; transbordando: string[] }
     expect(
-      rola,
+      scrolls,
       `o rolador não está rolando @ ${vp.name} (${vp.width}×${vp.height}) — sem conteúdo sobrando não há transbordo possível, e a varredura dos ancestrais não mede nada`,
     ).toBeGreaterThan(0)
     expect(
-      transbordando,
+      overflowList,
       `algo acima do rolador transbordou @ ${vp.name} (${vp.width}×${vp.height}) — a lista está vazando para fora do cartão (ALE-149)`,
     ).toEqual([])
   }

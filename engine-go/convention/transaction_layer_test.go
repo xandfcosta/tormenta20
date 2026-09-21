@@ -34,39 +34,39 @@ import (
 func TestNoPresentationLayerOpensATransaction(t *testing.T) {
 	// `Begin` entra junto com `BeginTx` porque o `database/sql` tem os dois, e
 	// varrer só o nomeado deixaria a porta aberta pelo irmão sem contexto.
-	aberturas := map[string]bool{"BeginTx": true, "Begin": true}
+	openings := map[string]bool{"BeginTx": true, "Begin": true}
 
-	raiz, err := filepath.Abs("../serve")
+	root, err := filepath.Abs("../serve")
 	if err != nil {
 		t.Fatalf("achar o `serve/`: %v", err)
 	}
-	conjunto := token.NewFileSet()
-	medidos := 0
-	err = filepath.WalkDir(raiz, func(caminho string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") ||
-			strings.HasSuffix(caminho, "_test.go") {
+	set := token.NewFileSet()
+	measured := 0
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") ||
+			strings.HasSuffix(path, "_test.go") {
 			return err
 		}
-		arquivo, err := parser.ParseFile(conjunto, caminho, nil, 0)
+		file, err := parser.ParseFile(set, path, nil, 0)
 		if err != nil {
 			return err
 		}
-		medidos++
-		rel, _ := filepath.Rel(filepath.Join(raiz, ".."), caminho)
-		ast.Inspect(arquivo, func(n ast.Node) bool {
-			chamada, ok := n.(*ast.CallExpr)
+		measured++
+		rel, _ := filepath.Rel(filepath.Join(root, ".."), path)
+		ast.Inspect(file, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
 			if !ok {
 				return true
 			}
-			alvo, ok := chamada.Fun.(*ast.SelectorExpr)
-			if !ok || !aberturas[alvo.Sel.Name] {
+			target, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok || !openings[target.Sel.Name] {
 				return true
 			}
 			t.Errorf("%s:%d abre uma transação (`%s`) na camada de APRESENTAÇÃO.\n"+
 				"O contorno de um gesto é o caso de uso: mova o corpo para um tipo do\n"+
 				"`app/`, que a cena recebe por PARÂMETRO do `New` — e devolva recusa\n"+
 				"TIPADA (`app.ErrForbidden`), nunca um número de HTTP.",
-				rel, conjunto.Position(chamada.Pos()).Line, alvo.Sel.Name)
+				rel, set.Position(call.Pos()).Line, target.Sel.Name)
 			return true
 		})
 		return nil
@@ -77,7 +77,7 @@ func TestNoPresentationLayerOpensATransaction(t *testing.T) {
 
 	// O DENOMINADOR: uma lista de reprovados vazia e um diretório não lido se
 	// parecem no terminal.
-	if medidos < 50 {
-		t.Fatalf("o guarda leu só %d arquivos em `serve/` — ele está medindo o diretório errado", medidos)
+	if measured < 50 {
+		t.Fatalf("o guarda leu só %d arquivos em `serve/` — ele está medindo o diretório errado", measured)
 	}
 }

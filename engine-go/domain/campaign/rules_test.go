@@ -10,15 +10,15 @@ import (
 // O nome é aparado ANTES de medido, e é isso que faz um nome de puros espaços
 // ser recusado em vez de virar campanha sem título no livro.
 func TestACampaignNameIsTrimmedBeforeItIsMeasured(t *testing.T) {
-	if _, erros := Name("   "); len(erros) == 0 {
+	if _, errs := Name("   "); len(errs) == 0 {
 		t.Error("nome de puros espaços passou — a campanha nasceria sem título")
 	}
-	nome, erros := Name("  A Queda de Tauron  ")
-	if len(erros) > 0 {
-		t.Fatalf("nome válido recusado: %v", erros)
+	name, failures := Name("  A Queda de Tauron  ")
+	if len(failures) > 0 {
+		t.Fatalf("nome válido recusado: %v", failures)
 	}
-	if nome != "A Queda de Tauron" {
-		t.Errorf("nome = %q, queria sem os espaços das pontas", nome)
+	if name != "A Queda de Tauron" {
+		t.Errorf("nome = %q, queria sem os espaços das pontas", name)
 	}
 }
 
@@ -28,26 +28,26 @@ func TestACampaignNameIsTrimmedBeforeItIsMeasured(t *testing.T) {
 func TestTheLimitsCountCharactersAndNotBytes(t *testing.T) {
 	// 120 runas acentuadas = 240 bytes. Se a conta fosse em bytes, este nome
 	// legítimo seria recusado.
-	nome := strings.Repeat("ç", MaxNameLength)
-	if _, erros := Name(nome); len(erros) > 0 {
-		t.Errorf("nome de %d caracteres acentuados recusado: %v", MaxNameLength, erros)
+	name := strings.Repeat("ç", MaxNameLength)
+	if _, errs := Name(name); len(errs) > 0 {
+		t.Errorf("nome de %d caracteres acentuados recusado: %v", MaxNameLength, errs)
 	}
-	if _, erros := Name(nome + "ç"); len(erros) == 0 {
+	if _, errs := Name(name + "ç"); len(errs) == 0 {
 		t.Error("nome com uma runa a mais que o teto passou")
 	}
 
-	texto := strings.Repeat("ã", MaxDescriptionLength)
-	if _, erros := Description(&texto); len(erros) > 0 {
-		t.Errorf("descrição de %d caracteres acentuados recusada: %v", MaxDescriptionLength, erros)
+	text := strings.Repeat("ã", MaxDescriptionLength)
+	if _, errs := Description(&text); len(errs) > 0 {
+		t.Errorf("descrição de %d caracteres acentuados recusada: %v", MaxDescriptionLength, errs)
 	}
 }
 
 // O teto de 2000 do texto é do SERVIDOR: uma regra que mora só no formulário
 // some junto com ele.
 func TestTheDescriptionCeilingIsOnTheServerAndNotOnlyOnTheScreen(t *testing.T) {
-	longa := strings.Repeat("a", MaxDescriptionLength+1)
-	if _, erros := Description(&longa); len(erros) == 0 {
-		t.Errorf("descrição de %d caracteres passou — o teto vivia só no cliente", len(longa))
+	long := strings.Repeat("a", MaxDescriptionLength+1)
+	if _, errs := Description(&long); len(errs) == 0 {
+		t.Errorf("descrição de %d caracteres passou — o teto vivia só no cliente", len(long))
 	}
 }
 
@@ -55,13 +55,13 @@ func TestTheDescriptionCeilingIsOnTheServerAndNotOnlyOnTheScreen(t *testing.T) {
 // NULL nos DOIS caminhos, criar e editar. Sem isso o cliente lê "" de um e null
 // do outro para a mesma entrada.
 func TestAnEmptyDescriptionIsNullAndNotAnEmptyString(t *testing.T) {
-	for _, entrada := range []string{"", "   ", "\n\t "} {
-		got, erros := Description(&entrada)
-		if len(erros) > 0 {
-			t.Fatalf("descrição %q recusada: %v", entrada, erros)
+	for _, entry := range []string{"", "   ", "\n\t "} {
+		got, errs := Description(&entry)
+		if len(errs) > 0 {
+			t.Fatalf("descrição %q recusada: %v", entry, errs)
 		}
 		if got != "" {
-			t.Errorf("descrição %q virou %q em vez de vazia", entrada, got)
+			t.Errorf("descrição %q virou %q em vez de vazia", entry, got)
 		}
 	}
 	// Ausente também é vazia, e é caso diferente: "não mandei o campo". Quem
@@ -80,7 +80,7 @@ func TestAnEmptyDescriptionIsNullAndNotAnEmptyString(t *testing.T) {
 // daqui que a cena das campanhas a chama, no comando que grava os
 // interruptores.
 func TestAnUnknownRuleIsRefusedNamingTheValue(t *testing.T) {
-	aceitas, msg := NormalizeIgnoredRules([]string{"munição"})
+	accepted, msg := NormalizeIgnoredRules([]string{"munição"})
 
 	if msg == "" {
 		t.Fatal("a regra inventada foi aceita")
@@ -96,5 +96,5 @@ func TestAnUnknownRuleIsRefusedNamingTheValue(t *testing.T) {
 	if _, msg := NormalizeIgnoredRules([]string{"carga"}); msg != "" {
 		t.Errorf("a `carga` é uma regra do catálogo e foi recusada: %q", msg)
 	}
-	_ = aceitas
+	_ = accepted
 }

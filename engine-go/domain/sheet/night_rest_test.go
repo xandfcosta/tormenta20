@@ -7,20 +7,20 @@ import "testing"
 // relento. Metade de 7 é 3,5 — arredondar para cima daria 4, e o livro escreve
 // 3. Uma asserção inventada não pegaria a diferença.
 func TestHeliorRecoversWhatTheBookSays(t *testing.T) {
-	if ganho := NightRestGain(7, "normal"); ganho != 7 {
-		t.Errorf("o Helior na estalagem recuperou %d, e o livro diz 7 (p106)", ganho)
+	if gain := NightRestGain(7, "normal"); gain != 7 {
+		t.Errorf("o Helior na estalagem recuperou %d, e o livro diz 7 (p106)", gain)
 	}
-	if ganho := NightRestGain(7, "ruim"); ganho != 3 {
-		t.Errorf("o Helior ao relento recuperou %d, e o livro diz 3 — metade de 7 DESCE (p106)", ganho)
+	if gain := NightRestGain(7, "ruim"); gain != 3 {
+		t.Errorf("o Helior ao relento recuperou %d, e o livro diz 3 — metade de 7 DESCE (p106)", gain)
 	}
 }
 
 func TestEachLodgingHasItsFactor(t *testing.T) {
-	for _, caso := range []struct {
-		caso     string
-		condicao string
-		nivel    int64
-		quer     int64
+	for _, tc := range []struct {
+		tc        string
+		condition string
+		level     int64
+		want      int64
 	}{
 		{"ruim é metade do nível", "ruim", 10, 5},
 		{"normal é o nível", "normal", 10, 10},
@@ -29,10 +29,10 @@ func TestEachLodgingHasItsFactor(t *testing.T) {
 		{"condição que o servidor não conhece vira normal", "palacete", 10, 10},
 		{"nível 1 ao relento não recupera nada, e isso é a regra", "ruim", 1, 0},
 	} {
-		t.Run(caso.caso, func(t *testing.T) {
-			if ganho := NightRestGain(caso.nivel, caso.condicao); ganho != caso.quer {
+		t.Run(tc.tc, func(t *testing.T) {
+			if gain := NightRestGain(tc.level, tc.condition); gain != tc.want {
 				t.Errorf("nível %d em %q deu %d, e o caso pede %d",
-					caso.nivel, caso.condicao, ganho, caso.quer)
+					tc.level, tc.condition, gain, tc.want)
 			}
 		})
 	}
@@ -40,19 +40,19 @@ func TestEachLodgingHasItsFactor(t *testing.T) {
 
 // O TETO é do livro: "não pode ultrapassar seu máximo".
 func TestTheNightNeverGoesPastTheMaximum(t *testing.T) {
-	depois := AfterNightRest(7, "luxuosa", RestedVitals{HpCurrent: 10, MpCurrent: 2}, 20, 5)
-	if depois.HpCurrent != 20 {
-		t.Errorf("o PV parou em %d, e o máximo é 20", depois.HpCurrent)
+	after := AfterNightRest(7, "luxuosa", RestedVitals{HpCurrent: 10, MpCurrent: 2}, 20, 5)
+	if after.HpCurrent != 20 {
+		t.Errorf("o PV parou em %d, e o máximo é 20", after.HpCurrent)
 	}
-	if depois.MpCurrent != 5 {
-		t.Errorf("o PM parou em %d, e o máximo é 5", depois.MpCurrent)
+	if after.MpCurrent != 5 {
+		t.Errorf("o PM parou em %d, e o máximo é 5", after.MpCurrent)
 	}
 }
 
 // Ficha ferida que não chega ao máximo recebe o ganho inteiro.
 func TestAWoundedSheetGetsTheWholeGain(t *testing.T) {
-	depois := AfterNightRest(7, "normal", RestedVitals{HpCurrent: 1, MpCurrent: 0}, 40, 40)
-	if depois.HpCurrent != 8 || depois.MpCurrent != 7 {
-		t.Errorf("deu %+v, e o caso pede 8 PV e 7 PM", depois)
+	after := AfterNightRest(7, "normal", RestedVitals{HpCurrent: 1, MpCurrent: 0}, 40, 40)
+	if after.HpCurrent != 8 || after.MpCurrent != 7 {
+		t.Errorf("deu %+v, e o caso pede 8 PV e 7 PM", after)
 	}
 }

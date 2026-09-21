@@ -17,32 +17,32 @@ A ABA "LUGARES" da crônica: de onde se chega ao rascunho. O que se prende aqui
 capacidade do domínio que ninguém alcança.
 */
 
-func placesTabUrl(campanha int64) string {
-	return "/campanhas/" + strconv.FormatInt(campanha, 10) + "?tab=lugares"
+func placesTabUrl(campaign int64) string {
+	return "/campanhas/" + strconv.FormatInt(campaign, 10) + "?tab=lugares"
 }
 
 // A aba lista o acervo e oferece MONTAR em cada lugar.
 func TestThePlacesTabListsTheArchiveAndOffersToBuild(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	cripta, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt")
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "A Queda de Tauron", "")
+	crypt, err := s.boards.NewPlace(context.Background(), campaign, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
 
-	corpo := pedeNaCronica(t, s, dono, http.MethodGet, placesTabUrl(campanha), "").Body.String()
+	body := pedeNaCronica(t, s, owner, http.MethodGet, placesTabUrl(campaign), "").Body.String()
 
-	if !strings.Contains(corpo, "Cripta de Thwor") {
+	if !strings.Contains(body, "Cripta de Thwor") {
 		t.Error("o lugar guardado não apareceu na aba")
 	}
-	destino := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/lugares/" + strconv.FormatInt(cripta.ID, 10)
-	if !strings.Contains(corpo, destino) {
-		t.Errorf("a aba não leva ao rascunho (%s)", destino)
+	destination := "/campanhas/" + strconv.FormatInt(campaign, 10) + "/lugares/" + strconv.FormatInt(crypt.ID, 10)
+	if !strings.Contains(body, destination) {
+		t.Errorf("a aba não leva ao rascunho (%s)", destination)
 	}
 	// A CONTAGEM diz o que a linha é: "cena vazia" é o lugar que ainda não foi
 	// montado, e é o que o mestre acabou de criar.
-	if !strings.Contains(corpo, "cena vazia") {
+	if !strings.Contains(body, "cena vazia") {
 		t.Error("a linha não diz que o lugar ainda está vazio")
 	}
 }
@@ -53,27 +53,27 @@ func TestThePlacesTabListsTheArchiveAndOffersToBuild(t *testing.T) {
 // convite desta cena já toma. O que ele veria é a cripta de sábado, com nome.
 func TestThePlacesTabDoesNotExistForThePlayer(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	jogador := seedUser(t, s, "jogador@t20.local")
-	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	heroi := seedCharacterAtLevel(t, s, jogador, "Guerreiro", "Guerreiro", 1, 0, 5)
-	seedMember(t, s, campanha, heroi)
-	if _, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt"); err != nil {
+	owner := seedUser(t, s, "dono@t20.local")
+	player := seedUser(t, s, "jogador@t20.local")
+	campaign := seedCampanha(t, s, owner, "A Queda de Tauron", "")
+	hero := seedCharacterAtLevel(t, s, player, "Guerreiro", "Guerreiro", 1, 0, 5)
+	seedMember(t, s, campaign, hero)
+	if _, err := s.boards.NewPlace(context.Background(), campaign, "Cripta de Thwor", "crypt"); err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
 
-	corpo := pedeNaCronica(t, s, jogador, http.MethodGet, placesTabUrl(campanha), "").Body.String()
+	body := pedeNaCronica(t, s, player, http.MethodGet, placesTabUrl(campaign), "").Body.String()
 
-	if strings.Contains(corpo, "Cripta de Thwor") {
+	if strings.Contains(body, "Cripta de Thwor") {
 		t.Error("o jogador viu o nome de um lugar do acervo do mestre")
 	}
-	if strings.Contains(corpo, "Acervo da campanha") {
+	if strings.Contains(body, "Acervo da campanha") {
 		t.Error("a aba de lugares foi desenhada para o jogador")
 	}
 	// CONTROLE: ele recebeu a CRÔNICA, e não uma recusa. `?tab=lugares` cai para
 	// a visão geral, como `?tab=config` já cai — sem isto, uma página de erro
 	// passaria por "a aba não apareceu".
-	if !strings.Contains(corpo, "A Queda de Tauron") {
+	if !strings.Contains(body, "A Queda de Tauron") {
 		t.Fatal("o jogador não recebeu a crônica: o guarda mediu outra coisa")
 	}
 }
@@ -81,27 +81,27 @@ func TestThePlacesTabDoesNotExistForThePlayer(t *testing.T) {
 // O lugar NOVO nasce e a tela LEVA para ele — quem digitou um nome quer montar.
 func TestANewPlaceTakesTheMasterStraightToTheDraft(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "A Queda de Tauron", "")
 
 	form := url.Values{"name": {"Cripta de Thwor"}, "ground": {"crypt"}}
-	resp := pedeNaCronica(t, s, dono, http.MethodPost,
-		"/campanhas/"+strconv.FormatInt(campanha, 10)+"/lugares/novo", form.Encode())
+	resp := pedeNaCronica(t, s, owner, http.MethodPost,
+		"/campanhas/"+strconv.FormatInt(campaign, 10)+"/lugares/novo", form.Encode())
 
 	if resp.Code != http.StatusSeeOther {
 		t.Fatalf("criar o lugar respondeu %d", resp.Code)
 	}
-	lugares := s.boards.Places(context.Background(), campanha)
-	if len(lugares) != 1 || lugares[0].Name != "Cripta de Thwor" {
-		t.Fatalf("o lugar não entrou no acervo: %+v", lugares)
+	places := s.boards.Places(context.Background(), campaign)
+	if len(places) != 1 || places[0].Name != "Cripta de Thwor" {
+		t.Fatalf("o lugar não entrou no acervo: %+v", places)
 	}
-	destino := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/lugares/" + strconv.FormatInt(lugares[0].ID, 10)
-	if para := resp.Header().Get("Location"); para != destino {
-		t.Errorf("levou para %q em vez do rascunho (%s)", para, destino)
+	destination := "/campanhas/" + strconv.FormatInt(campaign, 10) + "/lugares/" + strconv.FormatInt(places[0].ID, 10)
+	if to := resp.Header().Get("Location"); to != destination {
+		t.Errorf("levou para %q em vez do rascunho (%s)", to, destination)
 	}
-	cena, _ := s.boards.PlaceScene(context.Background(), campanha, lugares[0].ID)
-	if cena.Terrain != "crypt" {
-		t.Errorf("o chão escolhido não ficou: %q", cena.Terrain)
+	scene, _ := s.boards.PlaceScene(context.Background(), campaign, places[0].ID)
+	if scene.Terrain != "crypt" {
+		t.Errorf("o chão escolhido não ficou: %q", scene.Terrain)
 	}
 }
 
@@ -112,12 +112,12 @@ func TestANewPlaceTakesTheMasterStraightToTheDraft(t *testing.T) {
 // linha que ninguém consegue escolher.
 func TestAPlaceWithoutANameIsRefusedWithTheReasonInTheField(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "A Queda de Tauron", "")
 
 	form := url.Values{"name": {"   "}, "ground": {"crypt"}}
-	resp := pedeNaCronica(t, s, dono, http.MethodPost,
-		"/campanhas/"+strconv.FormatInt(campanha, 10)+"/lugares/novo", form.Encode())
+	resp := pedeNaCronica(t, s, owner, http.MethodPost,
+		"/campanhas/"+strconv.FormatInt(campaign, 10)+"/lugares/novo", form.Encode())
 
 	if resp.Code != http.StatusUnprocessableEntity {
 		t.Errorf("o lugar sem nome respondeu %d", resp.Code)
@@ -125,8 +125,8 @@ func TestAPlaceWithoutANameIsRefusedWithTheReasonInTheField(t *testing.T) {
 	if !strings.Contains(resp.Body.String(), "dê um nome ao lugar") {
 		t.Error("a recusa não voltou escrita no campo")
 	}
-	if lugares := s.boards.Places(context.Background(), campanha); len(lugares) != 0 {
-		t.Errorf("nasceu um lugar sem nome: %+v", lugares)
+	if places := s.boards.Places(context.Background(), campaign); len(places) != 0 {
+		t.Errorf("nasceu um lugar sem nome: %+v", places)
 	}
 }
 
@@ -137,51 +137,51 @@ func TestAPlaceWithoutANameIsRefusedWithTheReasonInTheField(t *testing.T) {
 // chama o `Archive`, que desfaz tanto o rascunho quanto o apagar.
 func TestThePlaceOnATableOffersGoingToItInstead(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	sessao := seedSessao(t, s, campanha, 1)
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "A Queda de Tauron", "")
+	session := seedSessao(t, s, campaign, 1)
 	ctx := context.Background()
-	if _, err := s.boards.Open(ctx, sessao, "Taverna do Javali", "tavern"); err != nil {
+	if _, err := s.boards.Open(ctx, session, "Taverna do Javali", "tavern"); err != nil {
 		t.Fatalf("abrir a taverna: %v", err)
 	}
-	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, "")); err != nil {
+	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, "")); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 
-	corpo := pedeNaCronica(t, s, dono, http.MethodGet, placesTabUrl(campanha), "").Body.String()
+	body := pedeNaCronica(t, s, owner, http.MethodGet, placesTabUrl(campaign), "").Body.String()
 
-	if !strings.Contains(corpo, "nesta mesa agora") {
+	if !strings.Contains(body, "nesta mesa agora") {
 		t.Error("a linha não diz que a cena está numa mesa")
 	}
-	if !strings.Contains(corpo, "Ver na mesa") {
+	if !strings.Contains(body, "Ver na mesa") {
 		t.Error("a linha não oferece ir até a mesa que mostra a cena")
 	}
 	// PELO ENDEREÇO e não pelo rótulo: "Montar" é também o botão de submeter do
 	// diálogo do lugar novo, que está sempre na página — a primeira versão desta
 	// asserção procurava a PALAVRA e teria passado por cima do defeito. O que
 	// distingue os dois é o link para o rascunho DAQUELE lugar.
-	taverna := placeNamed(t, s.boards.Places(ctx, campanha), "Taverna do Javali")
-	rascunhoDaTaverna := "/campanhas/" + strconv.FormatInt(campanha, 10) +
-		"/lugares/" + strconv.FormatInt(taverna.ID, 10)
-	if strings.Contains(corpo, rascunhoDaTaverna) {
+	tavern := placeNamed(t, s.boards.Places(ctx, campaign), "Taverna do Javali")
+	tavernDraft := "/campanhas/" + strconv.FormatInt(campaign, 10) +
+		"/lugares/" + strconv.FormatInt(tavern.ID, 10)
+	if strings.Contains(body, tavernDraft) {
 		t.Error("ofereceu montar o rascunho de um lugar que está na mesa — o `Archive` apagaria o trabalho")
 	}
-	if strings.Contains(corpo, "Apagar Taverna do Javali") {
+	if strings.Contains(body, "Apagar Taverna do Javali") {
 		t.Error("ofereceu apagar um lugar que está na mesa — encerrar a aba o traria de volta")
 	}
 	// CONTROLE: um lugar FORA da mesa, na mesma tela, ganha os dois gestos. Sem
 	// ele, uma aba que falhasse em desenhar as linhas passaria neste caso.
-	cripta, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "crypt")
+	crypt, err := s.boards.NewPlace(ctx, campaign, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar a cripta: %v", err)
 	}
-	comAsDuas := pedeNaCronica(t, s, dono, http.MethodGet, placesTabUrl(campanha), "").Body.String()
-	rascunhoDaCripta := "/campanhas/" + strconv.FormatInt(campanha, 10) +
-		"/lugares/" + strconv.FormatInt(cripta.ID, 10)
-	if !strings.Contains(comAsDuas, rascunhoDaCripta) {
+	withBoth := pedeNaCronica(t, s, owner, http.MethodGet, placesTabUrl(campaign), "").Body.String()
+	cryptDraft := "/campanhas/" + strconv.FormatInt(campaign, 10) +
+		"/lugares/" + strconv.FormatInt(crypt.ID, 10)
+	if !strings.Contains(withBoth, cryptDraft) {
 		t.Fatal("o lugar fora da mesa também não leva ao rascunho: o guarda mediu uma tela vazia")
 	}
-	if !strings.Contains(comAsDuas, "Apagar Cripta de Thwor") {
+	if !strings.Contains(withBoth, "Apagar Cripta de Thwor") {
 		t.Fatal("o lugar fora da mesa também não ganhou a lixeira: o guarda mediu uma tela vazia")
 	}
 }
@@ -189,24 +189,24 @@ func TestThePlaceOnATableOffersGoingToItInstead(t *testing.T) {
 // APAGAR tira o lugar do acervo e devolve a lista.
 func TestRemovingAPlaceReturnsToTheList(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	cripta, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt")
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "A Queda de Tauron", "")
+	crypt, err := s.boards.NewPlace(context.Background(), campaign, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
 
-	resp := pedeNaCronica(t, s, dono, http.MethodPost,
-		"/campanhas/"+strconv.FormatInt(campanha, 10)+"/lugares/"+strconv.FormatInt(cripta.ID, 10)+"/excluir", "")
+	resp := pedeNaCronica(t, s, owner, http.MethodPost,
+		"/campanhas/"+strconv.FormatInt(campaign, 10)+"/lugares/"+strconv.FormatInt(crypt.ID, 10)+"/excluir", "")
 
 	if resp.Code != http.StatusSeeOther {
 		t.Fatalf("apagar respondeu %d", resp.Code)
 	}
-	if para := resp.Header().Get("Location"); para != placesTabUrl(campanha) {
-		t.Errorf("voltou para %q em vez da lista", para)
+	if to := resp.Header().Get("Location"); to != placesTabUrl(campaign) {
+		t.Errorf("voltou para %q em vez da lista", to)
 	}
-	if lugares := s.boards.Places(context.Background(), campanha); len(lugares) != 0 {
-		t.Errorf("o lugar continuou no acervo: %+v", lugares)
+	if places := s.boards.Places(context.Background(), campaign); len(places) != 0 {
+		t.Errorf("o lugar continuou no acervo: %+v", places)
 	}
 }
 
@@ -222,30 +222,30 @@ func TestRemovingAPlaceReturnsToTheList(t *testing.T) {
 // três sinetes é o custo que a condição existe para não pagar.
 func TestTheArchiveIsNotReadOutsideItsTab(t *testing.T) {
 	s := newTestServer(t)
-	dono := seedUser(t, s, "dono@t20.local")
-	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	if _, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt"); err != nil {
+	owner := seedUser(t, s, "dono@t20.local")
+	campaign := seedCampanha(t, s, owner, "A Queda de Tauron", "")
+	if _, err := s.boards.NewPlace(context.Background(), campaign, "Cripta de Thwor", "crypt"); err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
-	cena := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards)
+	scene := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards)
 
-	visao, err := cena.LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
+	vision, err := scene.LoadOne(context.Background(), owner, s.ehAdmin(t, owner), campaign, "")
 	if err != nil {
 		t.Fatalf("carregar a visão geral: %v", err)
 	}
-	if len(visao.Lugares) != 0 {
-		t.Errorf("a visão geral leu %d lugares do acervo", len(visao.Lugares))
+	if len(vision.Places) != 0 {
+		t.Errorf("a visão geral leu %d lugares do acervo", len(vision.Places))
 	}
 
 	// O CONTROLE, e ele é o denominador: na aba dos lugares a leitura ACONTECE.
 	// Sem ele, uma porta que devolvesse lista vazia sempre passaria por
 	// "carregamento sob demanda funcionando".
-	aba, err := cena.LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "lugares")
+	aba, err := scene.LoadOne(context.Background(), owner, s.ehAdmin(t, owner), campaign, "lugares")
 	if err != nil {
 		t.Fatalf("carregar a aba dos lugares: %v", err)
 	}
-	if len(aba.Lugares) != 1 {
-		t.Fatalf("a aba dos lugares leu %d lugares — o guarda mediu uma porta muda", len(aba.Lugares))
+	if len(aba.Places) != 1 {
+		t.Fatalf("a aba dos lugares leu %d lugares — o guarda mediu uma porta muda", len(aba.Places))
 	}
 	if len(aba.Chaos) == 0 {
 		t.Error("a aba não recebeu as aparências para o formulário do lugar novo")

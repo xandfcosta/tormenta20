@@ -62,7 +62,7 @@ func loadBreakdownOf(ch Character, limit int) LoadBreakdown {
 	items := itemSlotsUsed(ch.Items)
 	coins := coinSlots(ch.Tibar)
 	used := items + coins
-	enforced := !ch.IgnoredRules.Carga
+	enforced := !ch.IgnoredRules.Load
 	out := LoadBreakdown{
 		Items:      items,
 		Coins:      coins,
