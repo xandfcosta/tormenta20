@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { medeOContraste } from './support/contrast'
-import { expectNothingIsClippedSideways } from './support/geometry'
+import { expectTextIsDrawnWithAShippedFace } from './support/fonts'
+import { expectNothingIsClippedSideways, measureSidewaysClipping } from './support/geometry'
 import { MEASURED_SCENES, SESSION_FILE } from './support/measured-scenes'
 import { expectCinzelAcimaDoPiso } from './support/typography'
 
@@ -53,6 +54,40 @@ import { expectCinzelAcimaDoPiso } from './support/typography'
 // envelhecer, e o que este controle precisa pegar é a página que não carregou —
 // não "esta tela tem pouco texto".
 const MEASURED_TEXT_FLOOR = 8
+
+// A FACE MAIS LARGA, e o passo é MEDIDO e não escolhido.
+//
+// A folha pede a face com `font-display: swap`: até o `.woff2` chegar, TODA
+// primeira pintura é desenhada com a fonte da máquina de quem abriu. Então um
+// leiaute que só cabe com a face entregue corta de verdade, na vida real, em
+// todo carregamento frio — e corta de novo no dia em que a face mudar.
+//
+// O passo de letra é a forma de perguntar isso com um número que não depende da
+// máquina: ele perturba a face ENTREGUE em uma quantidade conhecida, enquanto
+// medir com a face do sistema devolveria a resposta do computador que rodou a
+// suíte — que é o defeito que esta fatia veio consertar.
+//
+// 0,2em é o que a face do runner do GitHub custou, medida no caso que derrubou
+// a CI: o número do atributo pedia 27px nesta bancada e 37px lá, e 0,2em leva
+// os 27 a exatamente 37 (ALE-362).
+const WIDER_FACE_STEP = '0.2em'
+
+// A DÍVIDA, e ela só ENCOLHE.
+//
+// Três cenas não aguentam o passo hoje, e as duas primeiras são a mesma causa
+// que esta fatia consertou no cartão de herói: item de GRADE tem `min-width:
+// auto`, então a coluna não desce abaixo do min-content do cartão e o `truncate`
+// nunca chega a agir. A terceira é o monograma gigante do palco (`absolute
+// inset-0`, `text-[7rem]`), que transborda de propósito e o que falta a ele é a
+// marca de isenção que o guarda irmão já tem.
+//
+// Cena que sair da dívida e continuar na lista REPROVA, senão a lista vira
+// mentira sozinha — é a segunda direção da catraca dos arquivos longos.
+const WIDER_FACE_DEBT = new Set([
+  'campaigns · /campanhas · gm',
+  'characters · /personagens · gm',
+  'table · /campanhas/1/sessoes/4 · player',
+])
 
 for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
   for (const visit of scene.visits) {
@@ -112,6 +147,47 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
         }
         expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
         await expectNothingIsClippedSideways(page, 'body')
+      })
+
+      test(`o leiaute aguenta uma face mais larga em ${where}`, async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 })
+        const response = await page.goto(visit.address)
+        if (visit.mayBeAbsent && response?.status() === 404) {
+          test.skip(true, `esta bancada não serve ${visit.address}`)
+          return
+        }
+        expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
+        await page.addStyleTag({
+          content: `body * { letter-spacing: ${WIDER_FACE_STEP} !important }`,
+        })
+        const { cortados: clipped, medidos: measured } = await measureSidewaysClipping(page, 'body')
+        expect(measured, `${where}: a varredura não achou nó nenhum`).toBeGreaterThan(5)
+        if (WIDER_FACE_DEBT.has(where)) {
+          expect(
+            clipped,
+            `${where} está na dívida da face mais larga e hoje aguenta o passo. Tire a linha de WIDER_FACE_DEBT — uma dívida que afirma o que já foi pago não é relida por ninguém`,
+          ).not.toEqual([])
+          return
+        }
+        expect(
+          clipped,
+          `${where}: com uma face ${WIDER_FACE_STEP} mais larga o conteúdo é cortado. Toda primeira pintura usa a fonte da máquina (\`font-display: swap\`), então isto corta de verdade em carregamento frio`,
+        ).toEqual([])
+      })
+
+      // A FACE DESENHADA entra no mesmo laço pela razão do corte lateral: ela é
+      // o que torna os outros três medidores repetíveis. Contraste, piso da
+      // Cinzel e corte lateral medem texto DESENHADO, e com a face vindo da
+      // máquina os três respondem sobre o computador que rodou a suíte
+      // (ALE-362).
+      test(`o texto é desenhado com a fonte que o app entrega em ${where}`, async ({ page }) => {
+        const response = await page.goto(visit.address)
+        if (visit.mayBeAbsent && response?.status() === 404) {
+          test.skip(true, `esta bancada não serve ${visit.address}`)
+          return
+        }
+        expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
+        await expectTextIsDrawnWithAShippedFace(page, where)
       })
     })
   }
