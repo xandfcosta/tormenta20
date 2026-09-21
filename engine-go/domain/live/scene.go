@@ -60,6 +60,11 @@ type Scene struct {
 	// sessão tem uma SEQUÊNCIA de cenas — sem número, "a terceira cena da noite"
 	// não tem como ser dita.
 	Number int `json:"number"`
+	// Upkeep é o extrato da manutenção que o início desta vez cobrou (p227) —
+	// nil quando quem entrou não sustenta nada. Ele mora na cena, e não numa
+	// notícia à parte, porque é estado do turno EM CURSO: quem recarrega a
+	// página no meio do turno tem de ler a mesma coisa.
+	Upkeep *TurnUpkeep `json:"upkeep,omitempty"`
 }
 
 // CountsRounds diz se esta cena mede tempo em rodadas. Só a de ação (p252).
@@ -98,6 +103,24 @@ func EndScene(st *SessionRuntimeState) {
 	st.TurnsTaken = 0
 }
 
+// TurnUpkeep é o que a manutenção das sustentadas cobrou ao entrar nesta vez.
+//
+// Os nomes são os que a MESA lê, e não os ids: quem olha a faixa precisa saber
+// que "Velocidade" caiu, não que "velocidade" caiu.
+type TurnUpkeep struct {
+	Paid    []string `json:"paid,omitempty"`
+	Dropped []string `json:"dropped,omitempty"`
+	Cost    int      `json:"cost"`
+	// Unconscious diz que tudo caiu porque quem entrou na vez está a 0 PV, e
+	// não por falta de mana: manter é ação livre, e quem está no chão não age.
+	Unconscious bool `json:"unconscious,omitempty"`
+	// MpBefore e MpAfter são o poço ANTES e DEPOIS da manutenção. O gasto
+	// sozinho diz o preço e não diz se dá para pagar no turno seguinte, que é a
+	// decisão de quem sustenta.
+	MpBefore int `json:"mpBefore"`
+	MpAfter  int `json:"mpAfter"`
+}
+
 // RefreshTurn devolve o turno inteiro a quem acabou de entrar nele.
 //
 // Ela é chamada pelo `AdvanceTurn` e pelo irmão que volta: um turno que começa
@@ -107,6 +130,9 @@ func RefreshTurn(st *SessionRuntimeState) {
 		return
 	}
 	st.Scene.StandardLeft, st.Scene.MovementLeft = true, true
+	// A MANUTENÇÃO DA VEZ ANTERIOR SAI JUNTO: ela é o extrato deste turno, e
+	// deixá-la faria a faixa dizer que a Velocidade de outra pessoa caiu agora.
+	st.Scene.Upkeep = nil
 }
 
 // actionsLeft escreve o que ainda cabe no turno.

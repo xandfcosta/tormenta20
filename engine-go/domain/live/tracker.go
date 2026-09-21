@@ -212,3 +212,55 @@ func ValidateInitiative(v int) error {
 	}
 	return nil
 }
+
+// UpkeepLine é a SEGUNDA linha da faixa: o que sustentar custou nesta vez, e o
+// que acabou por falta de mana (T20 p227).
+//
+// Vazia quando quem entrou não sustenta nada, e a cena não desenha linha
+// nenhuma: uma linha que diz "0 PM" todo turno é ruído que ensina a ignorar a
+// faixa, e é justamente nela que a notícia da magia caída aparece.
+//
+// @example UpkeepLine(&TurnUpkeep{Paid: []string{"Velocidade"}, Cost: 1})
+//
+//	// "Velocidade · −1 PM"
+func UpkeepLine(extrato *TurnUpkeep) string {
+	if extrato == nil {
+		return ""
+	}
+	var partes []string
+	if len(extrato.Paid) > 0 {
+		partes = append(partes, fmt.Sprintf("%s · −%d PM (%d → %d)",
+			joinWithAnd(extrato.Paid), extrato.Cost, extrato.MpBefore, extrato.MpAfter))
+	}
+	// A RAZÃO da queda entra na frase: sem mana é uma escolha que acabou;
+	// inconsciente é um personagem no chão, e quem lê a mesa precisa saber qual
+	// dos dois aconteceu para decidir se vale curar ou reconjurar.
+	if len(extrato.Dropped) > 0 {
+		if extrato.Unconscious {
+			partes = append(partes, joinWithAnd(extrato.Dropped)+" "+
+				endedVerb(extrato.Dropped)+": inconsciente não sustenta")
+		} else {
+			for _, caiu := range extrato.Dropped {
+				partes = append(partes, caiu+" acabou: sem PM para sustentar")
+			}
+		}
+	}
+	return strings.Join(partes, " · ")
+}
+
+// joinWithAnd escreve uma lista como uma pessoa a lê: "A, B e C".
+func joinWithAnd(nomes []string) string {
+	if len(nomes) < 2 {
+		return strings.Join(nomes, "")
+	}
+	return strings.Join(nomes[:len(nomes)-1], ", ") + " e " + nomes[len(nomes)-1]
+}
+
+// endedVerb concorda o verbo com quantas habilidades caíram. Plural fixo sobre
+// contagem variável lê "Velocidade acabaram", e isso já foi visto na tela.
+func endedVerb(caidos []string) string {
+	if len(caidos) == 1 {
+		return "acabou"
+	}
+	return "acabaram"
+}

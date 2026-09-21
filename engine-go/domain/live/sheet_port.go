@@ -42,6 +42,27 @@ type SheetVitals interface {
 	PoolsOf(ctx context.Context, charIDs []int64) (map[int64]VitalPool, error)
 }
 
+// SheetSustained é a porta do que a manutenção do turno precisa da ficha.
+//
+// SEPARADA da `SheetVitals` porque muda por outra razão: aquela é o poço de
+// PV/PM, esta é a lista de efeitos que cobram por turno (p227). O mesmo
+// adaptador cumpre as duas — quem as separa é o motivo de mudar, não o número
+// de structs.
+type SheetSustained interface {
+	// SustainedOf lista os efeitos SUSTENTADOS da ficha, do mais antigo para o
+	// mais novo. A ordem é a de pagamento quando o mana não cobre todos.
+	SustainedOf(ctx context.Context, charID int64) ([]SustainedEffect, error)
+	// EndSustained derruba um efeito que não foi pago.
+	EndSustained(ctx context.Context, charID int64, catalogID string) error
+}
+
+// SustainedEffect é um efeito que cobra mana por turno, como o regime precisa
+// dele: o id para derrubar, e o NOME para a mesa ler qual caiu.
+type SustainedEffect struct {
+	CatalogID string
+	Label     string
+}
+
 // VitalPool é o par máximo/atual de um personagem, como o regime precisa dele.
 //
 // O regime tem o seu porque não pode conhecer o `sheet.Pools`: quem cumpre a

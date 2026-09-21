@@ -486,6 +486,9 @@ func tableViewOf(
 type viewGm struct {
 	// Contador é a frase que diz ONDE a sessão está.
 	Contador string
+	// Manutencao é o que sustentar cobrou de quem entrou na vez (p227). Vazia
+	// quando não há sustentada, e aí a linha não é desenhada.
+	Manutencao string
 	// Avanco é o rótulo do botão mais clicado da sessão, e ele diz PARA ONDE vai
 	// em vez de o que faz.
 	Avanco live.NextTurnTarget
@@ -517,6 +520,7 @@ func ofViewGm(
 	return viewGm{
 		GravacaoFalhando: gravacaoFalhando,
 		Contador:         live.TurnCounter(st.Scene, st.Round, st.TurnIndex, len(st.Initiative)),
+		Manutencao:       live.UpkeepLine(upkeepOf(st)),
 		Avanco:           live.NextTurnButton(st.Initiative, st.TurnIndex),
 		VeVitais:         live.GmSeesVitals(st.Initiative, ehMestre),
 		Conectados:       live.ConnectedCharacters(membros, presentes),
@@ -753,4 +757,12 @@ func portugueseCycle(status string) string {
 // de turno apagaria o que o mestre está digitando.
 func openConfigSession(v View) string {
 	return fmt.Sprintf("$session_title = %q; document.getElementById('session-config').showModal()", v.Titulo)
+}
+
+// upkeepOf lê o extrato da manutenção da cena em curso, se houver cena.
+func upkeepOf(st *live.SessionRuntimeState) *live.TurnUpkeep {
+	if st == nil || st.Scene == nil {
+		return nil
+	}
+	return st.Scene.Upkeep
 }

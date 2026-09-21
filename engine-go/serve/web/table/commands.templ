@@ -32,6 +32,12 @@ templ gmControls(v View, r viewGm) {
 		// `aria-live` porque num app de remendo a rodada muda sem navegação, e
 		// quem não vê a tela não tem outro sinal.
 		<p aria-live="polite" class="text-xs text-muted-foreground">{ r.Contador }</p>
+		// A MANUTENÇÃO é uma linha PRÓPRIA e não um sufixo do contador: ela some
+		// no turno seguinte, e costurá-la na mesma frase faria o contador mudar
+		// de comprimento a cada vez — a 390px ele é a linha mais larga da faixa.
+		if r.Manutencao != "" {
+			<p aria-live="polite" class="text-xs text-grimorio-gold">{ r.Manutencao }</p>
+		}
 		// A RECUSA de um comando, e ela mora aqui e não na caixa de registrar: o
 		// mestre que também joga tem as duas na tela, e a frase do "Adicionar
 		// grupo" acesa dentro do "Registrar iniciativa" seria a frase certa no

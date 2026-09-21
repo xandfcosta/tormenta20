@@ -18,6 +18,10 @@ var files embed.FS
 
 // Spell is the subset of a SPELL_CATALOG entry the API's cast/apply paths read.
 type Spell struct {
+	// Name é o nome do livro, e ele é TEXTO DE TELA: o extrato da manutenção
+	// diz qual sustentada caiu, e "velocidade" não é o que a mesa chama de
+	// Velocidade.
+	Name   string `json:"name"`
 	Circle int    `json:"circle"`
 	School string `json:"school"`
 	// Class lists the spell appears on — the per-spell PM limit is the level in
@@ -25,6 +29,11 @@ type Spell struct {
 	Classes  []string  `json:"classes"`
 	Augments []Augment `json:"augments"`
 	Buff     *Buff     `json:"buff"`
+	// Duration é a duração do livro, uma das seis da p227. Ela estava
+	// transcrita nas 198 magias e NENHUM código a lia — o efeito aplicado
+	// seguia um segundo campo, escrito à mão e em inglês, que divergia em oito
+	// (ALE-365). Quem a traduz em duração de efeito é o `engine.EffectScope`.
+	Duration string `json:"duration"`
 }
 
 type Augment struct {
@@ -62,6 +71,10 @@ type Augment struct {
 // Buff carries the modifiers an applied spell effect stores (raw JSON so it
 // re-serializes byte-identical to the catalog).
 type Buff struct {
+	// DefaultScope só existe onde a magia NÃO PODE dizer quanto o efeito dura:
+	// a instantânea, cuja consequência não é a magia, e a definida sem quantia.
+	// Nos outros 29 casos ele era uma cópia da duração e foi apagado — quem
+	// recusa o retorno dele é o `TestEveryBuffLastsAsLongAsItsSpell`.
 	DefaultScope string          `json:"defaultScope"`
 	Modifiers    json.RawMessage `json:"modifiers"`
 }

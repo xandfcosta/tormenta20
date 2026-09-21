@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
@@ -143,4 +144,50 @@ func (v sheetVitals) PoolsOf(
 		}
 	}
 	return daFila, nil
+}
+
+// SUSTENTADA: o que a manutenção do turno precisa da ficha (T20 p227).
+//
+// O adaptador é o MESMO da `SheetVitals` porque a fonte é a mesma tabela e a
+// mesma conexão; as portas é que são duas, porque mudam por razões diferentes.
+
+// SustainedOf lista os efeitos que cobram mana por turno, do mais antigo para o
+// mais novo — a ordem em que serão pagos quando o mana não cobrir todos.
+func (v sheetVitals) SustainedOf(ctx context.Context, charID int64) ([]live.SustainedEffect, error) {
+	linhas, err := v.q.ListActiveEffectsByCharacter(ctx, charID)
+	if err != nil {
+		return nil, err
+	}
+	var sustentados []live.SustainedEffect
+	for _, l := range linhas {
+		dura, err := engine.ParseDuration(l.Scope)
+		if err != nil || dura.Kind != engine.DurationSustained {
+			continue
+		}
+		sustentados = append(sustentados, live.SustainedEffect{
+			CatalogID: l.Catalogid, Label: spellLabel(l.Catalogid),
+		})
+	}
+	return sustentados, nil
+}
+
+// EndSustained derruba o efeito que não foi pago.
+func (v sheetVitals) EndSustained(ctx context.Context, charID int64, catalogID string) error {
+	return v.q.DeleteEffectsByCatalog(ctx, sqlcgen.DeleteEffectsByCatalogParams{
+		Characterid: charID, Catalogid: catalogID,
+	})
+}
+
+// spellLabel é o nome que a MESA lê. Sem verbete, o id serve: um extrato que
+// diz "velocidade" ainda responde qual efeito caiu, e um extrato vazio não.
+//
+// Ele mora AQUI e não no motor porque o `engine.Catalogs` não carrega magias —
+// e é por isso que a aba Efeitos da ficha mostra "velocidade (cena)" no lugar
+// do nome até hoje. Consertar aquilo é mexer no que o motor carrega, e é outra
+// fatia.
+func spellLabel(catalogID string) string {
+	if magia, known := catalog.LookupSpell(catalogID); known && magia.Name != "" {
+		return magia.Name
+	}
+	return catalogID
 }

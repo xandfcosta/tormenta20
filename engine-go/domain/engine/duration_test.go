@@ -189,3 +189,165 @@ func TestEveryTimeWordInTheCatalogIsOneTheBookHas(t *testing.T) {
 	}
 	t.Logf("%d janelas de uso e %d durações conferidas contra o vocabulário do livro", janelas, duracoes)
 }
+
+// EFEITO DE MAGIA GRAVADO COM A DURAÇÃO DA MAGIA (T20 p227).
+//
+// A tabela é sobre as três respostas possíveis: a magia manda, a declaração
+// manda, ou não há duração nenhuma para gravar.
+func TestTheSpellDurationDecidesHowLongItsEffectLasts(t *testing.T) {
+	casos := []struct {
+		nome      string
+		daMagia   string
+		declarada string
+		quero     string
+		recusa    bool
+	}{
+		// O QUE SE GRAVA É A GRAFIA DA FRONTEIRA, em inglês: a coluna `scope` é
+		// lida por SQL que casa a palavra (`scope IN ('scene','day')`), e o
+		// catálogo escreve a duração em português. Duas grafias na mesma coluna
+		// seriam um efeito que nunca expira, sem erro em lugar nenhum.
+		{nome: "a cena da magia manda, gravada em inglês", daMagia: "cena", quero: "scene"},
+		{nome: "a declaração redundante não muda nada", daMagia: "cena", declarada: "scene", quero: "scene"},
+		{nome: "a sustentada manda, e não o que o efeito dizia",
+			daMagia: "sustentada", declarada: "scene", quero: "sustained"},
+		{nome: "o dia da magia manda", daMagia: "dia", quero: "day"},
+		// A INSTANTÂNEA não pode mandar: a consequência é outra coisa que não a
+		// magia — "Curar Ferimentos age instantaneamente, mas os ferimentos
+		// continuam curados" (p227).
+		{nome: "a instantânea cede à consequência declarada",
+			daMagia: "instantanea", declarada: "cena", quero: "scene"},
+		{nome: "a instantânea sem consequência declarada é recusada",
+			daMagia: "instantanea", recusa: true},
+		// DEFINIDA é a ESPÉCIE e não a medida: sem as rodadas ou os dias não há
+		// quando expirar, e o efeito precisa da declaração.
+		{nome: "a definida sem quantia cede à declarada",
+			daMagia: "definida", declarada: "cena", quero: "scene"},
+		{nome: "a definida sem quantia e sem declaração é recusada",
+			daMagia: "definida", recusa: true},
+		{nome: "palavra que o livro não tem é recusada", daMagia: "eterna", recusa: true},
+		{nome: "declaração que o livro não tem é recusada",
+			daMagia: "instantanea", declarada: "eterna", recusa: true},
+	}
+	for _, c := range casos {
+		t.Run(c.nome, func(t *testing.T) {
+			teve, err := EffectScope(c.daMagia, c.declarada)
+			if c.recusa {
+				if err == nil {
+					t.Fatalf("%q + %q tinha de ser recusado, e devolveu %q", c.daMagia, c.declarada, teve)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("%q + %q: %v", c.daMagia, c.declarada, err)
+			}
+			if teve != c.quero {
+				t.Errorf("%q + %q gravou %q, quero %q", c.daMagia, c.declarada, teve, c.quero)
+			}
+		})
+	}
+}
+
+// TODO EFEITO DE MAGIA DURA O QUE A MAGIA DURA, e o catálogo não guarda a
+// resposta duas vezes.
+//
+// O `buff.defaultScope` era uma SEGUNDA transcrição da duração, em inglês, e
+// oito das trinta e uma divergiam da primeira. Ele sobrevive só onde a magia
+// não pode mandar — instantânea, e definida sem quantia —, e aí ele é a
+// declaração que o `EffectScope` exige. Em qualquer outro lugar é uma cópia,
+// e cópia envelhece.
+func TestEveryBuffLastsAsLongAsItsSpell(t *testing.T) {
+	bruto, ok := catalog.Resource("spells")
+	if !ok {
+		t.Fatal("o catálogo de magias não está embutido")
+	}
+	var magias map[string]struct {
+		Duration string `json:"duration"`
+		Buff     *struct {
+			DefaultScope string `json:"defaultScope"`
+		} `json:"buff"`
+	}
+	if err := json.Unmarshal(bruto, &magias); err != nil {
+		t.Fatalf("magias ilegíveis: %v", err)
+	}
+	comBuff, declarados := 0, 0
+	for id, m := range magias {
+		if m.Buff == nil {
+			continue
+		}
+		comBuff++
+		escopo, err := EffectScope(m.Duration, m.Buff.DefaultScope)
+		if err != nil {
+			t.Errorf("a magia %q: %v", id, err)
+			continue
+		}
+		dura, _ := ParseDuration(m.Duration)
+		if dura.tellsTheEffectWhenToEnd() && m.Buff.DefaultScope != "" {
+			t.Errorf("a magia %q dura %q e o efeito dela declara %q por cima: apague o `defaultScope`, "+
+				"que a duração da magia já responde (grava %q)", id, m.Duration, m.Buff.DefaultScope, escopo)
+			continue
+		}
+		if m.Buff.DefaultScope != "" {
+			declarados++
+		}
+	}
+	// O DENOMINADOR: sem ele, um seletor que não casa com nada e um catálogo
+	// impecável têm a mesma cor no terminal.
+	if comBuff < 25 {
+		t.Fatalf("só %d magias com efeito de %d — a varredura está olhando o campo errado", comBuff, len(magias))
+	}
+	t.Logf("%d magias com efeito conferidas; %d declaram a duração do efeito porque a magia não pode", comBuff, declarados)
+}
+
+// O RÓTULO QUE A FICHA LÊ sai da duração, e ele é o que separa um efeito que
+// cai no fim da cena de um que cobra PM todo turno.
+func TestTheSheetNamesHowLongAnEffectLasts(t *testing.T) {
+	casos := map[string]string{
+		"cena":        "cena",
+		"scene":       "cena",
+		"dia":         "dia",
+		"day":         "dia",
+		"sustentada":  "sustentada",
+		"permanente":  "permanente",
+		"descarregar": "até descarregar",
+		// Palavra que o livro não tem cai em "cena" no caminho do DESENHO: um
+		// efeito sem rótulo SOME da lista de quem o carrega, e quem recusa a
+		// palavra é a validação do catálogo, no despejo.
+		"abracadabra": "cena",
+	}
+	for escrito, quero := range casos {
+		if teve := DurationLabel(escrito); teve != quero {
+			t.Errorf("%q é rotulado %q, quero %q", escrito, teve, quero)
+		}
+	}
+}
+
+// UMA GRAFIA POR CANAL, e a da coluna é a de fronteira.
+//
+// O catálogo escreve a duração em português e o SQL que expira efeito casa a
+// palavra (`scope IN ('scene','day')`). Gravar a palavra do catálogo deixaria
+// toda magia conjurada de hoje em diante sem nunca expirar — e sem erro em
+// lugar nenhum, que é a marca desta família.
+func TestEveryDurationHasOneSpellingOnTheWire(t *testing.T) {
+	doLivro := map[string]string{
+		"instantanea": "instant", "cena": "scene", "sustentada": "sustained",
+		"definida": "fixed", "dia": "day", "permanente": "permanent", "descarregar": "discharge",
+	}
+	for escrito, quero := range doLivro {
+		d, err := ParseDuration(escrito)
+		if err != nil {
+			t.Fatalf("%q: %v", escrito, err)
+		}
+		teve := d.Stored()
+		if teve != quero {
+			t.Errorf("%q é gravado %q, quero %q", escrito, teve, quero)
+		}
+		// IDA E VOLTA: o que foi gravado tem de voltar a ser lido, senão a
+		// segunda leitura do próprio dado cai no erro.
+		volta, err := ParseDuration(teve)
+		if err != nil {
+			t.Errorf("o gravado %q não é relido: %v", teve, err)
+		} else if volta.Stored() != teve {
+			t.Errorf("%q ida e volta virou %q", teve, volta.Stored())
+		}
+	}
+}
