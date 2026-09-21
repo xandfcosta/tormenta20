@@ -203,12 +203,12 @@ const conteudo = `package ui
 //
 // Ícone novo: acrescente o nome em \`QUERIDOS\` e rode o gerador.
 
-// Icon desenha um ícone do lucide. \`nome\` é o nome que a SPA usa.
+// Icon desenha um ícone do lucide. \`name\` é o nome que a SPA usa.
 //
 // Sempre \`aria-hidden\`: nos doze usos deste app o ícone acompanha um rótulo em
 // texto, e um nome acessível a mais faria o leitor de tela dizer a mesma coisa
 // duas vezes. Ícone que precisar de nome próprio pede um componente próprio.
-templ Icon(nome, classe string) {
+templ Icon(name, class string) {
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="24"
@@ -220,9 +220,9 @@ templ Icon(nome, classe string) {
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		aria-hidden="true"
-		class={ classe }
+		class={ class }
 	>
-		switch nome {
+		switch name {
 ${casos}
 		}
 	</svg>

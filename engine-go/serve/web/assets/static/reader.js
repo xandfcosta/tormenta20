@@ -1,4 +1,4 @@
-//#region ../../../tormenta20/node_modules/.pnpm/pdfjs-dist@6.2.108/node_modules/pdfjs-dist/build/pdf.mjs
+//#region ../node_modules/.pnpm/pdfjs-dist@6.2.108/node_modules/pdfjs-dist/build/pdf.mjs
 var e = typeof process == "object" && process + "" == "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser"), t = [
 	Infinity,
 	Infinity,
