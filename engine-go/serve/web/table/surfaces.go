@@ -20,9 +20,9 @@ const (
 )
 
 type playerSurface struct {
-	ID     string
-	Rotulo string
-	Icone  string
+	ID    string
+	Label string
+	Icon  string
 }
 
 // PlayerSurfaces, na ordem em que aparecem.
@@ -40,28 +40,28 @@ var PlayerSurfaces = []playerSurface{
 // que é da mesa —, mas ela não é a que ABRE: quem entra na sessão quer saber de
 // quem é a vez, e o `DefaultOpeningSurface` continua na Mesa.
 func surfaces(v View) []playerSurface {
-	if v.MinhaFicha == nil {
+	if v.MySheet == nil {
 		return PlayerSurfaces
 	}
 	// "Ficha" e não "Minha ficha": com três superfícies o telefone dá ~124px
 	// por botão, e a 390px o rótulo longo sai truncado. A palavra é a do
 	// glossário.
-	comAFicha := []playerSurface{{superficieDaFicha, "Ficha", "ScrollText"}}
-	return append(comAFicha, PlayerSurfaces...)
+	withSheet := []playerSurface{{superficieDaFicha, "Ficha", "ScrollText"}}
+	return append(withSheet, PlayerSurfaces...)
 }
 
 // surface é a condição que mostra uma superfície — e o mesmo teste marca o
 // botão dela. Escrita aqui e não no `.templ` porque o id do botão tem de casar
 // com o do painel, e dois literais divergem no dia em que alguém renomear um.
-func surface(qual string) string {
-	return fmt.Sprintf("$surface === %q", qual)
+func surface(which string) string {
+	return fmt.Sprintf("$surface === %q", which)
 }
 
 // pickSurface liga a pedida. Não desliga ao reclicar, ao contrário do
 // trilho de ferramentas do mapa: uma superfície desligada não deixaria nada na
 // tela.
-func pickSurface(qual string) string {
-	return fmt.Sprintf("$surface = %q", qual)
+func pickSurface(which string) string {
+	return fmt.Sprintf("$surface = %q", which)
 }
 
 // surfaceStyling liga UMA das duas aparências, e nunca deixa as duas.
@@ -70,8 +70,8 @@ func pickSurface(qual string) string {
 // editor de bloco documenta: a marca de escolhida mora em `@layer components` e
 // as cores do Tailwind são utilidades, que vivem numa camada POSTERIOR — camada
 // vence especificidade, e o dourado perderia para o cinza sem nada acusar.
-func surfaceStyling(qual string) string {
+func surfaceStyling(which string) string {
 	return fmt.Sprintf(
 		"{'surface-chosen': %s, 'border-grimorio-iron': !(%s), 'text-muted-foreground': !(%s)}",
-		surface(qual), surface(qual), surface(qual))
+		surface(which), surface(which), surface(which))
 }

@@ -45,7 +45,7 @@ import (
 // mexeu em nada.
 //
 // Então o puxão mora na SESSÃO, com um número que só sobe, e cada pessoa guarda
-// qual puxão ela já viu. Quem tem `ForcaVista` menor está sendo puxado agora —
+// qual puxão ela já viu. Quem tem `StrengthSeen` menor está sendo puxado agora —
 // inclusive quem nunca apareceu no mapa, cujo zero é menor que qualquer puxão.
 //
 // E ele **não sobrescreve a escolha de ninguém**, o que dá o "voltar para onde
@@ -53,10 +53,10 @@ import (
 // tira do jogador oferece como saída. Sobrescrever seria apagar a informação de
 // que a tira precisa.
 type chosenTabs struct {
-	mu        sync.RWMutex
-	escolhida map[tabKey]tabChoice
-	// puxao é o "parem tudo e olhem isto" de cada sessão.
-	puxao map[int64]pullTable
+	mu     sync.RWMutex
+	chosen map[tabKey]tabChoice
+	// pull é o "parem tudo e olhem isto" de cada sessão.
+	pull map[int64]pullTable
 }
 
 type tabKey struct {
@@ -66,22 +66,22 @@ type tabKey struct {
 
 // tabChoice é o que uma pessoa escolheu, mais o puxão que ela já consumiu.
 type tabChoice struct {
-	Tabuleiro string
-	// ForcaVista é o número do último puxão que esta pessoa já viu. É o que faz
+	Board string
+	// StrengthSeen é o número do último puxão que esta pessoa já viu. É o que faz
 	// o puxão ser UM EMPURRÃO e não uma trava (decisão do dono): assim que ela
 	// escolhe qualquer aba, ela consome o puxão e volta a decidir sozinha.
-	ForcaVista int64
+	StrengthSeen int64
 }
 
 type pullTable struct {
-	Tabuleiro string
-	Seq       int64
+	Board string
+	Seq   int64
 }
 
 func newTabs() *chosenTabs {
 	return &chosenTabs{
-		escolhida: map[tabKey]tabChoice{},
-		puxao:     map[int64]pullTable{},
+		chosen: map[tabKey]tabChoice{},
+		pull:   map[int64]pullTable{},
 	}
 }
 
@@ -91,21 +91,21 @@ func newTabs() *chosenTabs {
 // coisa — a partir daí a decisão é dela de novo, e a tira do puxão some. Vale
 // também quando ela escolhe a própria aba para onde foi trazida: ficar é uma
 // escolha, e a tira que continuasse acesa depois dela seria um modo sem gesto.
-func (a *chosenTabs) Escolhe(sessionID, userID int64, tabuleiroID string) {
+func (a *chosenTabs) Escolhe(sessionID, userID int64, boardID string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	chave := tabKey{SessionID: sessionID, UserID: userID}
-	visto := a.puxao[sessionID].Seq
-	if tabuleiroID == "" && visto == 0 {
+	key := tabKey{SessionID: sessionID, UserID: userID}
+	seen := a.pull[sessionID].Seq
+	if boardID == "" && seen == 0 {
 		// APAGA em vez de gravar vazio, como o `Toggle` da lente: o mapa vive
 		// enquanto o processo viver, e uma sessão que acumulasse uma entrada
 		// morta por pessoa nunca devolveria a memória. Com puxão em curso a
 		// entrada TEM de existir, mesmo apontando para a padrão — ela é o
 		// registro de que esta pessoa já o consumiu.
-		delete(a.escolhida, chave)
+		delete(a.chosen, key)
 		return
 	}
-	a.escolhida[chave] = tabChoice{Tabuleiro: tabuleiroID, ForcaVista: visto}
+	a.chosen[key] = tabChoice{Board: boardID, StrengthSeen: seen}
 }
 
 // Puxa traz a mesa para uma aba, e devolve o número do puxão.
@@ -113,13 +113,13 @@ func (a *chosenTabs) Escolhe(sessionID, userID int64, tabuleiroID string) {
 // Quem puxa já CONSUMIU o próprio puxão: ele está olhando aquela aba — foi por
 // isso que a mostrou —, e a tira "o mestre trouxe você para cá" na tela do
 // próprio mestre seria a cena contando a ele o que ele acabou de fazer.
-func (a *chosenTabs) Pull(sessionID, userID int64, tabuleiroID string) int64 {
+func (a *chosenTabs) Pull(sessionID, userID int64, boardID string) int64 {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	seq := a.puxao[sessionID].Seq + 1
-	a.puxao[sessionID] = pullTable{Tabuleiro: tabuleiroID, Seq: seq}
-	a.escolhida[tabKey{SessionID: sessionID, UserID: userID}] = tabChoice{
-		Tabuleiro: tabuleiroID, ForcaVista: seq,
+	seq := a.pull[sessionID].Seq + 1
+	a.pull[sessionID] = pullTable{Board: boardID, Seq: seq}
+	a.chosen[tabKey{SessionID: sessionID, UserID: userID}] = tabChoice{
+		Board: boardID, StrengthSeen: seq,
 	}
 	return seq
 }
@@ -129,14 +129,14 @@ func (a *chosenTabs) Pull(sessionID, userID int64, tabuleiroID string) int64 {
 //
 // A ordem importa e é a regra inteira: o puxão ainda não consumido VENCE a
 // escolha, e a escolha vence o padrão.
-func (a *chosenTabs) Resolve(sessionID, userID int64) (tabuleiroID string, puxado bool, deOnde string) {
+func (a *chosenTabs) Resolve(sessionID, userID int64) (boardID string, pulled bool, pulledFrom string) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	minha := a.escolhida[tabKey{SessionID: sessionID, UserID: userID}]
-	if puxao := a.puxao[sessionID]; puxao.Seq > minha.ForcaVista {
-		return puxao.Tabuleiro, true, minha.Tabuleiro
+	mine := a.chosen[tabKey{SessionID: sessionID, UserID: userID}]
+	if pull := a.pull[sessionID]; pull.Seq > mine.StrengthSeen {
+		return pull.Board, true, mine.Board
 	}
-	return minha.Tabuleiro, false, ""
+	return mine.Board, false, ""
 }
 
 // PullProgress é o número do puxão que esta pessoa ainda NÃO consumiu (0 = nenhum).
@@ -148,9 +148,9 @@ func (a *chosenTabs) Resolve(sessionID, userID int64) (tabuleiroID string, puxad
 func (a *chosenTabs) PullProgress(sessionID, userID int64) int64 {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	minha := a.escolhida[tabKey{SessionID: sessionID, UserID: userID}]
-	if puxao := a.puxao[sessionID]; puxao.Seq > minha.ForcaVista {
-		return puxao.Seq
+	mine := a.chosen[tabKey{SessionID: sessionID, UserID: userID}]
+	if pull := a.pull[sessionID]; pull.Seq > mine.StrengthSeen {
+		return pull.Seq
 	}
 	return 0
 }
@@ -162,12 +162,12 @@ func (a *chosenTabs) PullProgress(sessionID, userID int64) int64 {
 func (a *chosenTabs) Erase(sessionID int64) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	for chave := range a.escolhida {
-		if chave.SessionID == sessionID {
-			delete(a.escolhida, chave)
+	for key := range a.chosen {
+		if key.SessionID == sessionID {
+			delete(a.chosen, key)
 		}
 	}
-	delete(a.puxao, sessionID)
+	delete(a.pull, sessionID)
 }
 
 // chosenTabOf resolve qual tabuleiro esta pessoa está olhando AGORA, conferindo
@@ -193,32 +193,32 @@ func (s Scene) chosenTabOf(ctx context.Context, sessionID, userID int64) string 
 // O puxão para uma cena JÁ ENCERRADA cai na escolha de quem olha, e não numa
 // tela morta: o mestre mostra a cripta, encerra a cripta, e quem foi trazido
 // volta para onde estava em vez de ficar olhando um tabuleiro que não existe.
-func (s Scene) pullTab(ctx context.Context, sessionID, userID int64) (aba string, puxado bool, deOnde string) {
-	abertos := s.deps.Boards().OpenBoards(ctx, sessionID)
-	aberta := func(id string) bool {
+func (s Scene) pullTab(ctx context.Context, sessionID, userID int64) (aba string, pulled bool, pulledFrom string) {
+	open := s.deps.Boards().OpenBoards(ctx, sessionID)
+	isOpen := func(id string) bool {
 		if id == "" {
 			return false
 		}
-		for _, b := range abertos {
+		for _, b := range open {
 			if b.ID == id {
 				return true
 			}
 		}
 		return false
 	}
-	alvo, puxado, deOnde := s.chosenTabs.Resolve(sessionID, userID)
-	if puxado && !aberta(alvo) {
-		alvo, puxado, deOnde = deOnde, false, ""
+	target, pulled, pulledFrom := s.chosenTabs.Resolve(sessionID, userID)
+	if pulled && !isOpen(target) {
+		target, pulled, pulledFrom = pulledFrom, false, ""
 	}
-	if !aberta(alvo) {
+	if !isOpen(target) {
 		// A aba que a pessoa escolheu pode ter sido fechada pelo mestre enquanto
 		// ela olhava. Sem cair no padrão, a tela dela ficaria dizendo "esta sessão
 		// não tem tabuleiro" com duas cenas abertas na mesa ao lado — e o gesto
 		// que causou isso foi de outra pessoa, então ela não teria como ligar uma
 		// coisa à outra.
-		alvo = ""
+		target = ""
 	}
-	return alvo, puxado, deOnde
+	return target, pulled, pulledFrom
 }
 
 func (s Scene) TabRoutes(r chi.Router) {
@@ -243,17 +243,17 @@ func (s Scene) TabRoutes(r chi.Router) {
 // stream, que redesenha a cena de cada um a cada batimento e já pergunta ao
 // `pullTab` qual aba vale.
 func showTableIsTab(st Scene, c commandCtx) (*board.BoardState, error) {
-	alvo := chi.URLParam(c.R, "tabuleiroId")
+	target := chi.URLParam(c.R, "tabuleiroId")
 	// Puxar para uma aba que não existe deixaria a mesa inteira caindo no padrão
 	// sem nada dizendo por quê. O id vem do caminho, então isto é a conferência
 	// de sempre: o que o cliente manda não é a verdade.
-	for _, aberto := range st.deps.Boards().OpenBoards(c.R.Context(), c.SessionID) {
-		if aberto.ID == alvo {
-			st.chosenTabs.Pull(c.SessionID, c.User, alvo)
+	for _, open := range st.deps.Boards().OpenBoards(c.R.Context(), c.SessionID) {
+		if open.ID == target {
+			st.chosenTabs.Pull(c.SessionID, c.User, target)
 			return nil, nil
 		}
 	}
-	return nil, fmt.Errorf("o tabuleiro %q não está aberto nesta sessão", alvo)
+	return nil, fmt.Errorf("o tabuleiro %q não está aberto nesta sessão", target)
 }
 
 // swapBoard põe outra aba na tela de quem clicou.
@@ -278,20 +278,20 @@ func swapBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 // boardTab é uma ficha da barra de abas.
 type boardTab struct {
 	ID   string
-	Nome string
-	// Ativa é a que esta pessoa está olhando. Ela não vira botão: é o `<h2>` que
+	Name string
+	// Active é a que esta pessoa está olhando. Ela não vira botão: é o `<h2>` que
 	// nomeia a região.
-	Ativa bool
-	// Cortina diz que esta aba está sob cortina PARA QUEM OLHA. Para o mestre é
+	Active bool
+	// Curtain diz que esta aba está sob cortina PARA QUEM OLHA. Para o mestre é
 	// a marca de que ele está montando escondido; para o jogador é tudo o que
 	// existe daquela aba — o nome não atravessa (ver `BoardForRole`).
-	Cortina bool
-	Comando string
-	// MostraAMesa é o gesto do mestre "parem tudo e olhem isto", e ele só é
+	Curtain bool
+	Command string
+	// ShowsTable é o gesto do mestre "parem tudo e olhem isto", e ele só é
 	// escrito na aba ATIVA (decisão do dono): ele já está olhando a cena que quer
 	// mostrar — foi por isso que trocou para ela —, e um alvo de clique por ficha
 	// encheria uma barra que é estreita por natureza.
-	MostraAMesa string
+	ShowsTable string
 }
 
 // pullScreen é a tira "o mestre trouxe você para cá", com a saída dela.
@@ -301,15 +301,15 @@ type boardTab struct {
 // próprio dono da tela ligou; este não — e um mapa que troca sozinho, no meio de
 // um turno, é lido como defeito.
 type pullScreen struct {
-	// Cena é para onde a mesa foi trazida, e Volta é de onde esta pessoa veio.
+	// Scene é para onde a mesa foi trazida, e Volta é de onde esta pessoa veio.
 	//
 	// `Volta` VAZIO é quem já estava nesta aba: para essa pessoa o puxão mudou a
-	// superfície e não a cena, então não há para onde voltar — o `ComandoDeVolta`
+	// superfície e não a cena, então não há para onde voltar — o `ReturnCommand`
 	// aponta para a aba atual, e clicar nele é dizer "vi", que é o mesmo gesto
 	// que solta qualquer um do puxão.
-	Cena           string
-	Volta          string
-	ComandoDeVolta string
+	Scene         string
+	Back          string
+	ReturnCommand string
 }
 
 // tableTabs monta a barra a partir dos tabuleiros abertos, JÁ REDIGIDOS pelo
@@ -320,29 +320,29 @@ type pullScreen struct {
 // não pelo que o servidor guardou. Ler o nome do estado CRU e "esconder na tela"
 // seria pôr "Cripta do Rei" no HTML de quem não pode saber que há uma cripta —
 // o vazamento que não aparece na tela, só no ver-código-fonte.
-func tableTabs(abertos []*board.BoardState, papel, ativa string, campaignID, sessionID int64) []boardTab {
+func tableTabs(open []*board.BoardState, role, active string, campaignID, sessionID int64) []boardTab {
 	// UMA aba não é uma barra: com um tabuleiro só não há o que trocar, e a
 	// tira de fichas seria enfeite ocupando mapa. A tela cai no `<h2>` de sempre.
-	if len(abertos) < 2 {
+	if len(open) < 2 {
 		return nil
 	}
-	barra := make([]boardTab, 0, len(abertos))
-	for i, aberto := range abertos {
-		daMesa := board.BoardForRole(papel, aberto)
-		ficha := boardTab{
-			ID:      daMesa.ID,
-			Nome:    tabName(daMesa, i),
-			Ativa:   activeTabIs(daMesa.ID, ativa, i),
-			Cortina: daMesa.Curtained,
-			Comando: fmt.Sprintf("@post('%s/aba/%s')", tableBoardBase(campaignID, sessionID), daMesa.ID),
+	bar := make([]boardTab, 0, len(open))
+	for i, isOpen := range open {
+		fromTable := board.BoardForRole(role, isOpen)
+		sheet := boardTab{
+			ID:      fromTable.ID,
+			Name:    tabName(fromTable, i),
+			Active:  activeTabIs(fromTable.ID, active, i),
+			Curtain: fromTable.Curtained,
+			Command: fmt.Sprintf("@post('%s/aba/%s')", tableBoardBase(campaignID, sessionID), fromTable.ID),
 		}
-		if ficha.Ativa && papel == "gm" {
-			ficha.MostraAMesa = fmt.Sprintf("@post('%s/aba/%s/mostrar')",
-				tableBoardBase(campaignID, sessionID), daMesa.ID)
+		if sheet.Active && role == "gm" {
+			sheet.ShowsTable = fmt.Sprintf("@post('%s/aba/%s/mostrar')",
+				tableBoardBase(campaignID, sessionID), fromTable.ID)
 		}
-		barra = append(barra, ficha)
+		bar = append(bar, sheet)
 	}
-	return barra
+	return bar
 }
 
 // removePull monta o aviso a partir da barra JÁ REDIGIDA, ou devolve nil.
@@ -357,22 +357,22 @@ func tableTabs(abertos []*board.BoardState, papel, ativa string, campaignID, ses
 // tem como desfazer, e a casa já decidiu que cada tira carrega a própria saída.
 // Acontece de verdade — o mestre puxa e depois encerra a cena de onde a pessoa
 // veio — e o caminho de volta passa a ser a barra, que está ali do lado.
-func removePull(barra []boardTab, deOnde string) *pullScreen {
-	if len(barra) == 0 {
+func removePull(bar []boardTab, pulledFrom string) *pullScreen {
+	if len(bar) == 0 {
 		return nil
 	}
-	var atual, volta *boardTab
-	for i := range barra {
-		if barra[i].Ativa {
-			atual = &barra[i]
+	var current, back *boardTab
+	for i := range bar {
+		if bar[i].Active {
+			current = &bar[i]
 		}
-		// `deOnde` vazio é a aba PADRÃO, que é a primeira da barra: quem nunca
+		// `pulledFrom` vazio é a aba PADRÃO, que é a primeira da barra: quem nunca
 		// escolheu estava nela, e é para lá que "voltar" o leva.
-		if barra[i].ID == deOnde || (deOnde == "" && i == 0) {
-			volta = &barra[i]
+		if bar[i].ID == pulledFrom || (pulledFrom == "" && i == 0) {
+			back = &bar[i]
 		}
 	}
-	if atual == nil {
+	if current == nil {
 		return nil
 	}
 	// QUEM JÁ ESTAVA NA CENA também recebe a tira, e isso não é ruído: o puxão
@@ -384,18 +384,18 @@ func removePull(barra []boardTab, deOnde string) *pullScreen {
 	// O que muda é a SAÍDA: quem veio de outra aba tem para onde voltar; quem já
 	// estava aqui só precisa de um jeito de dizer "vi" — e dizer "vi" é escolher
 	// esta aba, que é o mesmo gesto que solta qualquer um do puxão.
-	if volta == nil || volta.ID == atual.ID {
-		return &pullScreen{Cena: atual.Nome, ComandoDeVolta: atual.Comando}
+	if back == nil || back.ID == current.ID {
+		return &pullScreen{Scene: current.Name, ReturnCommand: current.Command}
 	}
-	return &pullScreen{Cena: atual.Nome, Volta: volta.Nome, ComandoDeVolta: volta.Comando}
+	return &pullScreen{Scene: current.Name, Back: back.Name, ReturnCommand: back.Command}
 }
 
 // activeTabIs resolve o id vazio, que é "a primeira aberta".
-func activeTabIs(id, ativa string, posicao int) bool {
-	if ativa == "" {
-		return posicao == 0
+func activeTabIs(id, active string, position int) bool {
+	if active == "" {
+		return position == 0
 	}
-	return id == ativa
+	return id == active
 }
 
 // tabName escreve o rótulo da ficha.
@@ -407,9 +407,9 @@ func activeTabIs(id, ativa string, posicao int) bool {
 // é o que se pode dizer sem contar nada: "Cena 2".
 //
 // Para o MESTRE o nome atravessa, porque a cortina não é sobre ele.
-func tabName(daMesa *board.BoardState, posicao int) string {
-	if daMesa.Place != "" {
-		return daMesa.Place
+func tabName(fromTable *board.BoardState, position int) string {
+	if fromTable.Place != "" {
+		return fromTable.Place
 	}
-	return fmt.Sprintf("Cena %d", posicao+1)
+	return fmt.Sprintf("Cena %d", position+1)
 }

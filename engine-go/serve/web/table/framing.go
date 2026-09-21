@@ -42,9 +42,9 @@ const (
 // (`deltaY < 0 ? ...`), e ela precisa dos mesmos limites que os botões. Escritos
 // à mão lá, seriam a segunda cópia dos tetos — e a que divergiria no dia em que
 // o zoom máximo mudasse.
-func zoomPlan(passo string) string {
+func zoomPlan(step string) string {
 	return fmt.Sprintf("$square = Math.min(%d, Math.max(%d, $square + (%s)))",
-		quadradoMaximo, quadradoMinimo, passo)
+		quadradoMaximo, quadradoMinimo, step)
 }
 
 // ZoomAtLimit é a pergunta que desabilita o botão que não faria nada.
@@ -66,10 +66,10 @@ func ZoomAtLimit(delta int) string {
 // que está sob a âncora, mude a escala, e reescreva a janela para que aquele
 // mesmo ponto do plano volte para a mesma âncora. Os dois `const` vêm ANTES do
 // `zoomPlan` porque leem `$square`.
-func zoomAnchored(passo, pixelX, pixelY string) string {
+func zoomAnchored(step, pixelX, pixelY string) string {
 	x, y := planPoint(pixelX, pixelY)
 	return fmt.Sprintf("const ancorax = %s, ancoray = %s; %s; $%s = ancorax * $square - (%s); $%s = ancoray * $square - (%s)",
-		x, y, zoomPlan(passo), sinalDaVistaX, pixelX, sinalDaVistaY, pixelY)
+		x, y, zoomPlan(step), sinalDaVistaX, pixelX, sinalDaVistaY, pixelY)
 }
 
 // zoomMidScene é o zoom SEM ponteiro: os botões e as teclas.
@@ -77,9 +77,9 @@ func zoomAnchored(passo, pixelX, pixelY string) string {
 // A âncora é o MEIO da janela porque é ali que está o que a pessoa escolheu
 // olhar. A quina seria o mesmo defeito do parágrafo acima, só que sem ninguém
 // para culpar pelo lugar do dedo.
-func zoomMidScene(passo string) string {
+func zoomMidScene(step string) string {
 	return fmt.Sprintf("const janela = document.getElementById(%q).getBoundingClientRect(); %s",
-		sceneId, zoomAnchored(passo, "janela.width / 2", "janela.height / 2"))
+		sceneId, zoomAnchored(step, "janela.width / 2", "janela.height / 2"))
 }
 
 // zoomPeloTeclado: `+` e `-`.
@@ -127,18 +127,18 @@ func centerTokens(v BoardView) string {
 // SEM PEÇA o alvo é a ORIGEM do plano: num plano infinito e vazio, o (0,0) é o
 // único lugar sobre o qual duas pessoas concordam.
 func centerScene(v BoardView) (x, y int) {
-	if len(v.Pecas) == 0 {
+	if len(v.Tokens) == 0 {
 		return 0, 0
 	}
-	menorX, maiorX := v.Pecas[0].X, v.Pecas[0].X
-	menorY, maiorY := v.Pecas[0].Y, v.Pecas[0].Y
-	for _, p := range v.Pecas {
-		menorX = min(menorX, p.X)
-		menorY = min(menorY, p.Y)
-		maiorX = max(maiorX, p.X+p.Pegada-1)
-		maiorY = max(maiorY, p.Y+p.Pegada-1)
+	minX, maxX := v.Tokens[0].X, v.Tokens[0].X
+	minY, maxY := v.Tokens[0].Y, v.Tokens[0].Y
+	for _, p := range v.Tokens {
+		minX = min(minX, p.X)
+		minY = min(minY, p.Y)
+		maxX = max(maxX, p.X+p.Footprint-1)
+		maxY = max(maxY, p.Y+p.Footprint-1)
 	}
-	return (menorX + maiorX) / 2, (menorY + maiorY) / 2
+	return (minX + maxX) / 2, (minY + maxY) / 2
 }
 
 // CenterTarget é o que o botão PROMETE, e ele muda com a cena.
@@ -148,7 +148,7 @@ func centerScene(v BoardView) (x, y int) {
 // numa das duas — e "Centralizar nas peças" numa cena sem peça nenhuma é
 // exatamente o tipo de rótulo que ensina que o botão está quebrado.
 func CenterTarget(v BoardView) string {
-	if len(v.Pecas) == 0 {
+	if len(v.Tokens) == 0 {
 		return "Centralizar o mapa"
 	}
 	return "Centralizar nas peças"

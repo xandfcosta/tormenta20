@@ -16,7 +16,7 @@ import (
 func dbNpc(t *testing.T, f sceneFixture, name string) creature.Block {
 	t.Helper()
 	for _, npc := range f.s.tableScene.CampaignCast(context.Background(), f.campaignID) {
-		if npc.Nome != name {
+		if npc.Name != name {
 			continue
 		}
 		rows, err := f.s.queries.ListCampaignCreatures(context.Background(), f.campaignID)
@@ -267,7 +267,7 @@ func TestCreatingFromScratchAndEditingAreTheSameForm(t *testing.T) {
 func npcId(t *testing.T, f sceneFixture, name string) string {
 	t.Helper()
 	for _, npc := range f.s.tableScene.CampaignCast(context.Background(), f.campaignID) {
-		if npc.Nome == name {
+		if npc.Name == name {
 			return strconv.FormatInt(npc.ID, 10)
 		}
 	}

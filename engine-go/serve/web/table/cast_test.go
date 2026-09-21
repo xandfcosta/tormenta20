@@ -20,9 +20,9 @@ import (
 // O guarda vale mais que "o botão não aparece": o botão é cortesia; isto é o
 // que responde a um `curl`.
 func firstRows(s string, n int) string {
-	linhas := strings.Split(s, "\n")
-	if len(linhas) > n {
-		linhas = linhas[:n]
+	rows := strings.Split(s, "\n")
+	if len(rows) > n {
+		rows = rows[:n]
 	}
-	return strings.Join(linhas, "\n")
+	return strings.Join(rows, "\n")
 }

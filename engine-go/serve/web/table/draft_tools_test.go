@@ -9,7 +9,7 @@ import (
 // TODA FERRAMENTA DESENHADA NO RASCUNHO TEM ROTA NELE.
 //
 // O rascunho reusa o `boardTable` inteiro, e com ele o TRILHO inteiro: as
-// ferramentas que não são `SoMestre` aparecem lá numeradas e com atalho de
+// ferramentas que não são `GMOnly` aparecem lá numeradas e com atalho de
 // teclado, sem ninguém as ter escolhido para aquela tela.
 //
 // **O modo de falha é o pior desta casa: o gesto oferecido que o servidor não
@@ -22,15 +22,15 @@ import (
 // concordaria consigo mesma para sempre. A ferramenta que nascer amanhã entra
 // aqui sozinha, e quem esquecer a rota dela descobre pelo nome dela.
 func TestEveryDraftToolHasARoute(t *testing.T) {
-	roteador := chi.NewRouter()
-	Scene{}.DraftRoutes(roteador)
+	router := chi.NewRouter()
+	Scene{}.DraftRoutes(router)
 
 	// O que cada ferramenta POSTA, com um caminho de exemplo. Não é a expressão
 	// que o `.templ` monta — ela é JavaScript com concatenação, e reimplementá-la
 	// aqui mediria a reimplementação. É o VERBO de cada uma, e ele muda junto com
 	// a rota: uma rota renomeada derruba este caso.
 	const base = "/campanhas/12/lugares/7/tabuleiro"
-	posta := map[string]string{
+	placed := map[string]string{
 		"":                   base + "/pecas/alguma/mover",
 		ViewTool:             "", // a mão é do NAVEGADOR: ela arrasta a vista e não fala com o servidor
 		FerramentaDaRegua:    base + "/regua",
@@ -40,35 +40,35 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 		NewPieceTool:         base + "/pecas/nova",
 	}
 
-	medidas := 0
+	measured := 0
 	for _, f := range rail(true) {
-		caminho, declarada := posta[f.ID]
-		if !declarada {
+		path, declared := placed[f.ID]
+		if !declared {
 			// O PINCEL de terreno: TODOS na mesma rota, porque a espécie viaja no
 			// corpo. O laço percorre a lista de espécies para afirmar que nenhuma
 			// delas ficou sem rota.
-			caminho = base + "/terreno"
+			path = base + "/terreno"
 		}
-		if caminho == "" {
+		if path == "" {
 			continue
 		}
-		medidas++
-		if !rotaExiste(roteador, caminho) {
+		measured++
+		if !rotaExiste(router, path) {
 			t.Errorf("a ferramenta %q (%s) é desenhada no rascunho e posta em %s, que não existe lá",
-				f.Rotulo, f.ID, caminho)
+				f.Label, f.ID, path)
 		}
 	}
 	// A peça avulsa fica FORA da fileira numerada (ver `toolsRail`), então o
 	// `rail` não a devolve — e ela é desenhada no rascunho do mesmo jeito.
-	medidas++
-	if !rotaExiste(roteador, posta[NewPieceTool]) {
-		t.Errorf("a peça avulsa é desenhada no rascunho e posta em %s, que não existe lá", posta[NewPieceTool])
+	measured++
+	if !rotaExiste(router, placed[NewPieceTool]) {
+		t.Errorf("a peça avulsa é desenhada no rascunho e posta em %s, que não existe lá", placed[NewPieceTool])
 	}
 
 	// O DENOMINADOR. Uma lista de reprovados vazia e um trilho que não devolveu
 	// ferramenta nenhuma se parecem no terminal.
-	if medidas < 8 {
-		t.Fatalf("só %d ferramentas medidas — o guarda ficou cego", medidas)
+	if measured < 8 {
+		t.Fatalf("só %d ferramentas medidas — o guarda ficou cego", measured)
 	}
 }
 
@@ -77,9 +77,9 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 // Pelo `chi.RouteContext` e não por um `ServeHTTP`: servir exigiria uma `Scene`
 // com porta de verdade, e o que se quer saber é se o caminho CASA — quem
 // responde 403 ou 500 depois já é outra pergunta, presa noutro caso.
-func rotaExiste(roteador chi.Router, caminho string) bool {
+func rotaExiste(router chi.Router, path string) bool {
 	ctx := chi.NewRouteContext()
-	return roteador.Match(ctx, "POST", caminho)
+	return router.Match(ctx, "POST", path)
 }
 
 // A TRAVA das duas rotas de medir NÃO mora aqui, e é deliberado.

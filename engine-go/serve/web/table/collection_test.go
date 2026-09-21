@@ -20,16 +20,16 @@ import (
 // mudo: uma busca que não acha nada faria toda asserção seguinte passar sobre
 // uma string vazia — o `strings.Contains(vazio, x)` é falso, e "não contém" é
 // exatamente o que a maioria dos guardas daqui afirma.
-func collectionRow(t *testing.T, tela, marca string) string {
+func collectionRow(t *testing.T, screen, mark string) string {
 	t.Helper()
-	pos := strings.Index(tela, marca)
+	pos := strings.Index(screen, mark)
 	if pos < 0 {
-		t.Fatalf("não achei %q na tela: a asserção seguinte mediria uma string vazia", marca)
+		t.Fatalf("não achei %q na tela: a asserção seguinte mediria uma string vazia", mark)
 	}
-	inicio := strings.LastIndex(tela[:pos], "<li ")
-	fim := strings.Index(tela[pos:], "</li>")
-	if inicio < 0 || fim < 0 {
-		t.Fatalf("a marca %q não está dentro de um <li> do acervo", marca)
+	start := strings.LastIndex(screen[:pos], "<li ")
+	end := strings.Index(screen[pos:], "</li>")
+	if start < 0 || end < 0 {
+		t.Fatalf("a marca %q não está dentro de um <li> do acervo", mark)
 	}
-	return tela[inicio : pos+fim]
+	return screen[start : pos+end]
 }

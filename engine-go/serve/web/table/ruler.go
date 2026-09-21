@@ -44,12 +44,12 @@ func (s Scene) handleRulerTable(w http.ResponseWriter, r *http.Request) {
 	if _, _, _, ok := s.whoMeasuresTheTable(w, r); !ok {
 		return
 	}
-	paradas, err := rulerStops(r)
+	stops, err := rulerStops(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	writeSignals(w, r, polylineReading(paradas))
+	writeSignals(w, r, polylineReading(stops))
 }
 
 // stopsMax é o teto da polilinha.
@@ -66,29 +66,29 @@ const stopsMax = 12
 // isso que faz a perna viva ter medida antes de alguém clicar. Ela só entra
 // enquanto a régua está MEDINDO: congelada, o ponteiro passeia e a medida fica.
 func rulerStops(r *http.Request) ([]engine.Square, error) {
-	var sinais struct {
-		Pontos [][]int `json:"ruler_points"`
+	var signals struct {
+		Points [][]int `json:"ruler_points"`
 		MiraX  int     `json:"ruler_aim_x"`
 		MiraY  int     `json:"ruler_aim_y"`
-		Fase   int     `json:"ruler_phase"`
+		Phase  int     `json:"ruler_phase"`
 	}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return nil, fmt.Errorf("as paradas da régua não vieram: %w", err)
 	}
-	paradas := make([]engine.Square, 0, len(sinais.Pontos)+1)
-	for _, p := range sinais.Pontos {
+	stops := make([]engine.Square, 0, len(signals.Points)+1)
+	for _, p := range signals.Points {
 		if len(p) != 2 {
 			return nil, fmt.Errorf("parada %v não é um par de números", p)
 		}
-		paradas = append(paradas, engine.Square{X: p[0], Y: p[1]})
+		stops = append(stops, engine.Square{X: p[0], Y: p[1]})
 	}
-	if sinais.Fase == reguaMedindo {
-		paradas = append(paradas, engine.Square{X: sinais.MiraX, Y: sinais.MiraY})
+	if signals.Phase == reguaMedindo {
+		stops = append(stops, engine.Square{X: signals.MiraX, Y: signals.MiraY})
 	}
-	if len(paradas) > stopsMax {
-		return nil, fmt.Errorf("a régua tem %d paradas e o teto é %d", len(paradas), stopsMax)
+	if len(stops) > stopsMax {
+		return nil, fmt.Errorf("a régua tem %d paradas e o teto é %d", len(stops), stopsMax)
 	}
-	return paradas, nil
+	return stops, nil
 }
 
 // polylineReading escreve o rótulo de cada perna e a frase do TOTAL.
@@ -102,19 +102,19 @@ func rulerStops(r *http.Request) ([]engine.Square, error) {
 // exatamente a régua de sempre, e a mesa pergunta "dá para acertar daqui?". Com
 // mais paradas o total é o custo do CAMINHO, e a faixa continua sendo a leitura
 // certa do número — só que da pergunta "cabe no meu deslocamento?".
-func polylineReading(paradas []engine.Square) map[string]any {
-	rotulos := make([]string, 0, stopsMax)
+func polylineReading(stops []engine.Square) map[string]any {
+	labels := make([]string, 0, stopsMax)
 	total := 0
-	for i := 1; i < len(paradas); i++ {
-		perna := engine.Measure(paradas[i-1], paradas[i])
-		total += perna.Squares
-		rotulos = append(rotulos, metersLeg(perna))
+	for i := 1; i < len(stops); i++ {
+		leg := engine.Measure(stops[i-1], stops[i])
+		total += leg.Squares
+		labels = append(labels, metersLeg(leg))
 	}
-	if len(paradas) < 2 {
-		return map[string]any{"ruler_labels": rotulos, "ruler_text": emptyRulerHint}
+	if len(stops) < 2 {
+		return map[string]any{"ruler_labels": labels, "ruler_text": emptyRulerHint}
 	}
 	return map[string]any{
-		"ruler_labels": rotulos,
+		"ruler_labels": labels,
 		"ruler_text": rulerReading(engine.Measurement{
 			Squares: total,
 			Metres:  float64(total) * engine.SquareMetres,
@@ -130,11 +130,11 @@ func polylineReading(paradas []engine.Square) map[string]any {
 //
 // @example rulerReading(engine.Measure(a, b)) // "3 quadrados (4,5m) · alcance curto"
 func rulerReading(m engine.Measurement) string {
-	faixa := "alcance " + string(m.Band)
+	strip := "alcance " + string(m.Band)
 	if m.Band == engine.RangeBeyond {
-		faixa = "além do alcance longo"
+		strip = "além do alcance longo"
 	}
-	return fmt.Sprintf("%d %s (%sm) · %s", m.Squares, quadradosEmPortugues(m.Squares), meters(m.Metres), faixa)
+	return fmt.Sprintf("%d %s (%sm) · %s", m.Squares, quadradosEmPortugues(m.Squares), meters(m.Metres), strip)
 }
 
 // metersLeg é o rótulo que pousa sobre a linha entre duas paradas (pedido
@@ -166,42 +166,42 @@ const emptyRulerHint = "Clique para acrescentar paradas · duplo clique fecha ·
 // A lista de nomes é o que ela tem de maior, e não o desenho: o desenho mostra
 // onde, mas é o nome que resolve a dúvida e é o nome que a mesa fala em voz alta.
 func (s Scene) handleTemplateTable(w http.ResponseWriter, r *http.Request) {
-	papel, sessionID, tabuleiroID, ok := s.whoMeasuresTheTable(w, r)
+	role, sessionID, boardID, ok := s.whoMeasuresTheTable(w, r)
 	if !ok {
 		return
 	}
-	pedido, origem, mira, err := pointsFromBody(r)
+	requested, origin, mira, err := pointsFromBody(r)
 	if err != nil {
 		http.Error(w, "a origem e a mira do gabarito precisam ser dois pares de números", http.StatusBadRequest)
 		return
 	}
-	tipo, err := urlTemplate(pedido.Shape)
+	kind, err := urlTemplate(requested.Shape)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	area := engine.Area{
-		Kind:      tipo,
-		Size:      templateSize(pedido.Size),
-		Direction: templateDirection(origem, mira),
+		Kind:      kind,
+		Size:      templateSize(requested.Size),
+		Direction: templateDirection(origin, mira),
 	}
 	// A mira AINDA NÃO FOI DADA quando ela é a própria origem: o cone e a linha
 	// precisam apontar para algum lado, e desenhá-los para um lado escolhido pelo
 	// servidor seria inventar a decisão que falta.
-	if pointsTemplate(tipo) && mira == origem {
+	if pointsTemplate(kind) && mira == origin {
 		writeSignals(w, r, map[string]any{
 			"template_path": "", "template_text": "Clique de novo para apontar.",
 		})
 		return
 	}
-	casas := engine.AreaSquares(origem, area)
+	squares := engine.AreaSquares(origin, area)
 	// O tabuleiro passa pelo MESMO gargalo por papel do resto da Mesa: quem
 	// pergunta quem o cone pega não pode descobrir por aí a peça que a cortina e
 	// o `Hidden` escondem dele.
-	b := board.BoardForRole(papel, s.deps.Boards().Get(r.Context(), sessionID, tabuleiroID))
+	b := board.BoardForRole(role, s.deps.Boards().Get(r.Context(), sessionID, boardID))
 	writeSignals(w, r, map[string]any{
-		"template_path": squaresPath(casas),
-		"template_text": takesTemplateWho(b, casas),
+		"template_path": squaresPath(squares),
+		"template_text": takesTemplateWho(b, squares),
 	})
 }
 
@@ -215,19 +215,19 @@ func (s Scene) handleTemplateTable(w http.ResponseWriter, r *http.Request) {
 // que perguntasse "o tabuleiro da sessão" mediria a distância na taverna para
 // quem está olhando a cripta, e o número sairia certo sobre o mapa errado — sem
 // nada na tela dizendo que ele é de outro lugar.
-func (s Scene) whoMeasuresTheTable(w http.ResponseWriter, r *http.Request) (papel string, sessionID int64, tabuleiroID string, ok bool) {
+func (s Scene) whoMeasuresTheTable(w http.ResponseWriter, r *http.Request) (role string, sessionID int64, boardID string, ok bool) {
 	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
 		return "", 0, "", false
 	}
 	userID := s.deps.CurrentUserID(r)
-	_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+	_, role, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
 	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return "", 0, "", false
 	}
-	return papel, sessionID, s.chosenTabOf(r.Context(), sessionID, userID), true
+	return role, sessionID, s.chosenTabOf(r.Context(), sessionID, userID), true
 }
 
 // writeSignals responde SÓ com sinais, e é o que separa medir de comandar.
@@ -236,9 +236,9 @@ func (s Scene) whoMeasuresTheTable(w http.ResponseWriter, r *http.Request) (pape
 // clicou precisa ver a cena nova. Aqui não há cena nova: a resposta são duas
 // cordas, e mandar o mapa junto seria remendar o nó que a pessoa está usando
 // para medir.
-func writeSignals(w http.ResponseWriter, r *http.Request, sinais map[string]any) {
+func writeSignals(w http.ResponseWriter, r *http.Request, signals map[string]any) {
 	sse := datastar.NewSSE(w, r)
-	_ = sse.MarshalAndPatchSignals(sinais)
+	_ = sse.MarshalAndPatchSignals(signals)
 }
 
 // squaresPath vira UM `<path>` e não um nó por quadrado.
@@ -252,12 +252,12 @@ func writeSignals(w http.ResponseWriter, r *http.Request, sinais map[string]any)
 // `transform` do grupo, que o servidor redesenha quando a moldura cresce.
 //
 // @example squaresPath([]engine.Square{{X: -1, Y: 2}}) // "M -1 2 h 1 v 1 h -1 Z"
-func squaresPath(casas []engine.Square) string {
-	if len(casas) == 0 {
+func squaresPath(squares []engine.Square) string {
+	if len(squares) == 0 {
 		return ""
 	}
 	var b strings.Builder
-	for i, q := range casas {
+	for i, q := range squares {
 		if i > 0 {
 			b.WriteString(" ")
 		}
@@ -271,36 +271,36 @@ func squaresPath(casas []engine.Square) string {
 // A peça entra se QUALQUER quadrado do corpo dela cair na área — uma Colossal
 // ocupa 6×6 (p107), e exigir que ela caiba inteira deixaria o dragão de fora do
 // próprio incêndio.
-func takesTemplateWho(b *board.BoardState, casas []engine.Square) string {
-	if len(casas) == 0 {
+func takesTemplateWho(b *board.BoardState, squares []engine.Square) string {
+	if len(squares) == 0 {
 		return "Clique numa casa para pôr o gabarito."
 	}
-	dentro := map[engine.Square]bool{}
-	for _, q := range casas {
-		dentro[q] = true
+	inside := map[engine.Square]bool{}
+	for _, q := range squares {
+		inside[q] = true
 	}
-	var nomes []string
+	var names []string
 	if b != nil {
 		for i := range b.Tokens {
-			if t := &b.Tokens[i]; tokenTakes(dentro, t) {
-				nomes = append(nomes, t.Label)
+			if t := &b.Tokens[i]; tokenTakes(inside, t) {
+				names = append(names, t.Label)
 			}
 		}
 	}
-	if len(nomes) == 0 {
+	if len(names) == 0 {
 		return "Ninguém dentro."
 	}
-	return fmt.Sprintf("Pega %s: %s", ui.TokenCount(len(nomes)), strings.Join(nomes, ", "))
+	return fmt.Sprintf("Pega %s: %s", ui.TokenCount(len(names)), strings.Join(names, ", "))
 }
 
-func tokenTakes(dentro map[engine.Square]bool, t *board.BoardToken) bool {
-	lado := t.Footprint
-	if lado < 1 {
-		lado = 1
+func tokenTakes(inside map[engine.Square]bool, t *board.BoardToken) bool {
+	side := t.Footprint
+	if side < 1 {
+		side = 1
 	}
-	for dx := 0; dx < lado; dx++ {
-		for dy := 0; dy < lado; dy++ {
-			if dentro[engine.Square{X: t.X + dx, Y: t.Y + dy}] {
+	for dx := 0; dx < side; dx++ {
+		for dy := 0; dy < side; dy++ {
+			if inside[engine.Square{X: t.X + dx, Y: t.Y + dy}] {
 				return true
 			}
 		}
@@ -318,8 +318,8 @@ func tokenTakes(dentro map[engine.Square]bool, t *board.BoardToken) bool {
 // Isto é decisão de TELA e não regra do livro — o que o livro dá é a figura, e
 // ela é transcrita em `engine.AreaSquares`. O que mora aqui é o arredondamento
 // do gesto, e por isso ele fica no caminho HTTP e não no motor.
-func templateDirection(origem, mira engine.Square) engine.Square {
-	dx, dy := mira.X-origem.X, mira.Y-origem.Y
+func templateDirection(origin, mira engine.Square) engine.Square {
+	dx, dy := mira.X-origin.X, mira.Y-origin.Y
 	if dx == 0 && dy == 0 {
 		return engine.Square{X: 1}
 	}
@@ -382,12 +382,12 @@ func shapeStartsAtIntersection(k engine.AreaKind) bool {
 
 // urlTemplate recusa forma que o livro não tem, e a mensagem diz o valor
 // recebido e a lista do que existe.
-func urlTemplate(bruto string) (engine.AreaKind, error) {
-	switch k := engine.AreaKind(bruto); k {
+func urlTemplate(raw string) (engine.AreaKind, error) {
+	switch k := engine.AreaKind(raw); k {
 	case engine.AreaSphere, engine.AreaCone, engine.AreaLine, engine.AreaSquare:
 		return k, nil
 	default:
-		return "", fmt.Errorf("gabarito %q não existe; são esfera, cone, linha e quadrado (p225)", bruto)
+		return "", fmt.Errorf("gabarito %q não existe; são esfera, cone, linha e quadrado (p225)", raw)
 	}
 }
 
@@ -396,8 +396,8 @@ func urlTemplate(bruto string) (engine.AreaKind, error) {
 // Zero e negativo não desenham nada, e a recusa cairia numa frase enquanto a
 // pessoa ainda está digitando o número — 60 quadrados é o alcance longo do livro
 // (p224), que é o maior gabarito que cabe numa mesa.
-func templateSize(bruto string) int {
-	n, err := intDoCaminho(bruto)
+func templateSize(raw string) int {
+	n, err := intDoCaminho(raw)
 	if err != nil || n < 1 {
 		return 1
 	}

@@ -22,43 +22,43 @@ import (
 // moveView é o movimento proposto, do ponto de vista de quem olha.
 type moveView struct {
 	TokenID string
-	Rotulo  string
-	// Trilha são as casas por onde a peça passa, já em Coordinate da tela.
-	Trilha []boardSquare
-	Custo  int
-	// Orcamento -1 é "sem orçamento": o mestre move qualquer peça a qualquer
+	Label   string
+	// Trail são as casas por onde a peça passa, já em Coordinate da tela.
+	Trail []boardSquare
+	Cost  int
+	// Budget -1 é "sem orçamento": o mestre move qualquer peça a qualquer
 	// hora, e fora de combate cada um anda com a sua. Nesses casos não há
 	// alcance para desenhar, porque não há teto que ele desenharia.
-	Orcamento int
-	Restante  int
+	Budget    int
+	Remaining int
 	// NoActionLeft é "o turno de quem está na vez não paga este caminho". Ele é
 	// SEPARADO do `Orcamento`, que fala de metros: a peça pode ter deslocamento
 	// de sobra e o turno já ter acabado.
 	NoActionLeft bool
-	// Meu diz se quem olha decide sobre este movimento. O mestre decide por
+	// Mine diz se quem olha decide sobre este movimento. O mestre decide por
 	// qualquer um — é ele quem toca a mesa.
-	Meu bool
-	// Paradas são as casas onde a pessoa CLICOU, sem a primeira nem a última:
+	Mine bool
+	// Stops são as casas onde a pessoa CLICOU, sem a primeira nem a última:
 	// elas viram um pingo na trilha, e é ele que faz o "Desfazer parada" ter o
 	// que desfazer aos olhos de quem clica. As duas pontas ficam de fora porque
 	// já têm desenho próprio — a origem é o FANTASMA e o fim é a PEÇA.
-	Paradas []boardSquare
-	// PodeDesfazer é ter mais de UMA perna. Com uma só, desfazer é cancelar — e o
+	Stops []boardSquare
+	// CanUndo é ter mais de UMA perna. Com uma só, desfazer é cancelar — e o
 	// Cancelar está ali do lado, dizendo isso com a palavra certa.
-	PodeDesfazer bool
-	// Origem é a casa de onde a peça SAIU, e ela existe porque a peça deixou de
+	CanUndo bool
+	// Origin é a casa de onde a peça SAIU, e ela existe porque a peça deixou de
 	// ficar lá: a peça é desenhada onde foi SOLTA, e quem marca o começo do
 	// movimento é o fantasma nesta casa.
-	Origem boardSquare
-	// Fim é a casa onde a peça pousa, que é o fim do caminho. É dela que o
+	Origin boardSquare
+	// End é a casa onde a peça pousa, que é o fim do caminho. É dela que o
 	// arrasto da próxima parada conta o deslocamento — a peça está lá.
-	Fim boardSquare
-	// Fio é o `d` da seta que liga o fantasma à peça, dobrando nas paradas. Vem
+	End boardSquare
+	// Wire é o `d` da seta que liga o fantasma à peça, dobrando nas paradas. Vem
 	// pronto do servidor porque o caminho é dele; ver
 	// `move_drawing.go` para por que ela dobra na PARADA e não
 	// em cada casa.
-	Fio string
-	// FioSegundo é o trecho que passa da ação de movimento e ainda cabe na ação
+	Wire string
+	// SecondWire é o trecho que passa da ação de movimento e ainda cabe na ação
 	// PADRÃO trocada por movimento (T20 p233): sai AZUL.
 	//
 	// FioAlem é o que passa das duas: sai VERMELHO, e não há terceira ação de
@@ -66,12 +66,12 @@ type moveView struct {
 	//
 	// Os dois são vazios quando o caminho cabe, e também fora de combate — sem vez
 	// não há ação padrão para trocar, e desenhar as faixas inventaria um teto.
-	FioSegundo string
-	FioAlem    string
-	// Pernas são os rótulos em metros, um por trecho entre duas paradas. Eles
+	SecondWire string
+	BeyondWire string
+	// Legs são os rótulos em metros, um por trecho entre duas paradas. Eles
 	// contam o CUSTO da perna e não a distância geométrica dela, para que o metro
-	// do rótulo seja o mesmo metro que decide onde o `FioAlem` começa.
-	Pernas []moveLeg
+	// do rótulo seja o mesmo metro que decide onde o `BeyondWire` começa.
+	Legs []moveLeg
 }
 
 // moveBoard monta o movimento em curso, ou nil quando não há.
@@ -83,13 +83,13 @@ func moveBoard(b *board.BoardState, st *live.SessionRuntimeState, m board.Mover)
 		return nil
 	}
 	p := b.Pending
-	peca := board.FindToken(b, p.TokenID)
-	if peca == nil {
+	token := board.FindToken(b, p.TokenID)
+	if token == nil {
 		return nil
 	}
 	v := &moveView{
-		TokenID: p.TokenID, Rotulo: peca.Label, Custo: p.Cost, Orcamento: p.Budget,
-		Meu: m.Role == "gm" || p.ByUserID == m.UserID,
+		TokenID: p.TokenID, Label: token.Label, Cost: p.Cost, Budget: p.Budget,
+		Mine: m.Role == "gm" || p.ByUserID == m.UserID,
 		// O CAMINHO CABER NO DESLOCAMENTO E O TURNO NÃO PAGAR são perguntas
 		// diferentes, e a segunda é a que faz a tela mentir quando falta: um
 		// passo de 1,5m cabe em qualquer orçamento e não acontece se a padrão e
@@ -97,29 +97,29 @@ func moveBoard(b *board.BoardState, st *live.SessionRuntimeState, m board.Mover)
 		NoActionLeft: turnCannotPay(b, st, p.Cost, p.Budget),
 	}
 	for _, q := range p.Path {
-		v.Trilha = append(v.Trilha, boardSquare{X: q.X, Y: q.Y})
+		v.Trail = append(v.Trail, boardSquare{X: q.X, Y: q.Y})
 	}
 	// As duas PONTAS do caminho têm desenho de peça: o fantasma sai da origem e
 	// a peça pousa no fim.
 	if len(p.Path) > 0 {
-		inicio, fim := p.Path[0], p.Path[len(p.Path)-1]
-		v.Origem = boardSquare{X: inicio.X, Y: inicio.Y}
-		v.Fim = boardSquare{X: fim.X, Y: fim.Y}
+		start, end := p.Path[0], p.Path[len(p.Path)-1]
+		v.Origin = boardSquare{X: start.X, Y: start.Y}
+		v.End = boardSquare{X: end.X, Y: end.Y}
 	}
 	// A SETA, os RÓTULOS em metros e a divisão dourado/vermelho saem das MESMAS
 	// dobras e do MESMO terreno: é o que faz o número escrito sobre a linha
 	// explicar a cor dela em vez de contradizê-la.
-	dobras := moveFolds(p)
-	custos := legsCosts(dobras, moveTerrain(b))
-	v.Fio, v.FioSegundo, v.FioAlem = moveWires(dobras, custos, p.Budget)
-	v.Pernas = moveLegs(dobras, custos)
+	folds := moveFolds(p)
+	costs := legsCosts(folds, moveTerrain(b))
+	v.Wire, v.SecondWire, v.BeyondWire = moveWires(folds, costs, p.Budget)
+	v.Legs = moveLegs(folds, costs)
 	// As paradas INTERMEDIÁRIAS: a última é onde a peça pousou e a primeira é de
 	// onde ela saiu — as duas já são um disco na tela, e marcá-las de novo
 	// contaria a mesma coisa duas vezes.
 	if len(p.Stops) > 2 {
-		v.PodeDesfazer = true
+		v.CanUndo = true
 		for _, q := range p.Stops[1 : len(p.Stops)-1] {
-			v.Paradas = append(v.Paradas, boardSquare{X: q.X, Y: q.Y})
+			v.Stops = append(v.Stops, boardSquare{X: q.X, Y: q.Y})
 		}
 	}
 	// O `Restante` é preenchido pelo chamador: ele sai da MESMA chamada que
@@ -136,11 +136,11 @@ func moveTerrain(b *board.BoardState) engine.MoveTerrain {
 	if len(b.Difficult) == 0 {
 		return engine.MoveTerrain{}
 	}
-	dificil := make(map[engine.Square]bool, len(b.Difficult))
+	hard := make(map[engine.Square]bool, len(b.Difficult))
 	for _, q := range b.Difficult {
-		dificil[q] = true
+		hard[q] = true
 	}
-	return engine.MoveTerrain{Difficult: dificil}
+	return engine.MoveTerrain{Difficult: hard}
 }
 
 // reachAndTarget é a peça que quem olha pode COMEÇAR a mover agora, ou "".
@@ -157,50 +157,50 @@ func moveTerrain(b *board.BoardState) engine.MoveTerrain {
 // O `Restante` sai daqui junto com as casas porque é a MESMA conta. Duas
 // chamadas com os mesmos argumentos, cada uma jogando fora metade, é como este
 // repositório já mostrou dois números diferentes para o mesmo combatente.
-func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, quem board.Mover, meus map[int64]bool) boardReach {
+func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, who board.Mover, mine map[int64]bool) boardReach {
 	if b == nil {
 		return boardReach{}
 	}
-	var alvo, rotulo string
+	var target, label string
 	// COM movimento em curso o alvo é a peça dele, e o alcance sai do fim do
 	// caminho com o que sobrou. Sem, é a primeira peça que quem olha pode mover,
 	// e o alcance sai de onde ela está com o orçamento inteiro.
 	de := []engine.Square(nil)
-	orcamento := 0
-	if p := b.Pending; p != nil && (quem.Role == "gm" || p.ByUserID == quem.UserID) {
-		if peca := board.FindToken(b, p.TokenID); peca != nil {
-			alvo, rotulo, de, orcamento = p.TokenID, peca.Label, p.Path, p.Budget
+	budget := 0
+	if p := b.Pending; p != nil && (who.Role == "gm" || p.ByUserID == who.UserID) {
+		if token := board.FindToken(b, p.TokenID); token != nil {
+			target, label, de, budget = p.TokenID, token.Label, p.Path, p.Budget
 		}
 	}
-	if alvo == "" && b.Pending == nil {
+	if target == "" && b.Pending == nil {
 		for i := range b.Tokens {
 			// A POSSE é por PEÇA e não por pessoa: o `Mover` carrega um booleano
 			// só, e deixá-lo em falso aqui tira o alcance do jogador NA VEZ dele
 			// — a tela diria que ele não pode mover a própria peça.
 			//
-			// Quem responde é o `meus`, montado contra o banco pelo `tableRoster`:
+			// Quem responde é o `mine`, montado contra o banco pelo `tableRoster`:
 			// a ponte até a pessoa é o DONO do personagem.
-			dela := quem
+			hers := who
 			if id := b.Tokens[i].CharacterID; id != nil {
-				dela.OwnsCharacter = meus[*id]
+				hers.OwnsCharacter = mine[*id]
 			}
-			podeMover, orcamentoDela := board.CanMoveWith(b, st, b.Tokens[i].ID, dela)
-			if !podeMover {
+			canMove, herBudget := board.CanMoveWith(b, st, b.Tokens[i].ID, hers)
+			if !canMove {
 				continue
 			}
-			alvo, rotulo = b.Tokens[i].ID, b.Tokens[i].Label
+			target, label = b.Tokens[i].ID, b.Tokens[i].Label
 			de = []engine.Square{{X: b.Tokens[i].X, Y: b.Tokens[i].Y}}
-			orcamento = orcamentoDela
+			budget = herBudget
 			break
 		}
 	}
-	if alvo == "" {
+	if target == "" {
 		return boardReach{}
 	}
-	dentro, segundo, restante := engine.ReachFromStops(de, orcamento, moveTerrain(b))
+	inside, segundo, remaining := engine.ReachFromStops(de, budget, moveTerrain(b))
 	return boardReach{
-		Alvo: alvo, Rotulo: rotulo, Restante: restante,
-		Dentro: screenSquares(dentro), Segundo: screenSquares(segundo),
+		Target: target, Label: label, Remaining: remaining,
+		Inside: screenSquares(inside), Segundo: screenSquares(segundo),
 	}
 }
 
@@ -211,16 +211,16 @@ func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, quem boar
 // — o `Restante` é medido a partir do mesmo caminho que produz as faixas —, e
 // porque a lista de retornos já tinha passado de quatro.
 type boardReach struct {
-	Alvo     string
-	Rotulo   string
-	Dentro   []boardSquare
-	Segundo  []boardSquare
-	Restante int
+	Target    string
+	Label     string
+	Inside    []boardSquare
+	Segundo   []boardSquare
+	Remaining int
 }
 
-func screenSquares(casas []engine.Square) []boardSquare {
-	out := make([]boardSquare, 0, len(casas))
-	for _, q := range casas {
+func screenSquares(squares []engine.Square) []boardSquare {
+	out := make([]boardSquare, 0, len(squares))
+	for _, q := range squares {
 		out = append(out, boardSquare{X: q.X, Y: q.Y})
 	}
 	return out
@@ -234,8 +234,8 @@ func screenSquares(casas []engine.Square) []boardSquare {
 //
 // @example moveBalance(&moveView{Custo: 4, Orcamento: 6, Restante: 2}) // "sobram 2"
 func moveBalance(m *moveView) string {
-	if m.Custo <= m.Orcamento {
-		return fmt.Sprintf("sobram %d", m.Restante)
+	if m.Cost <= m.Budget {
+		return fmt.Sprintf("sobram %d", m.Remaining)
 	}
 	// PASSANDO DO DESLOCAMENTO não há saldo a dizer, e quem conta a história é a
 	// LEGENDA logo abaixo. Um "além do deslocamento" mediria a mesma coisa que a
@@ -254,7 +254,7 @@ func moveBalance(m *moveView) string {
 //
 // @example spentActions(&moveView{Custo: 8, Orcamento: 6}) // "ação de movimento + ação principal"
 func spentActions(m *moveView) string {
-	return rangesThree[costRange(m)].Texto
+	return rangesThree[costRange(m)].Text
 }
 
 // turnCannotPay diz se o turno de quem está na vez NÃO tem como pagar este
@@ -264,12 +264,12 @@ func spentActions(m *moveView) string {
 // Quem decide é o MOTOR, e não uma segunda conta aqui: as ações de movimento
 // que o caminho pede são gastas uma a uma contra o que sobrou, então a troca da
 // padrão (p233) vale aqui exatamente como vale na cobrança.
-func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, cost, orcamento int) bool {
-	if orcamento <= 0 || !movedTokenIsOnTurn(st, b) || st.Scene == nil || !st.Scene.CountsRounds() {
+func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, cost, budget int) bool {
+	if budget <= 0 || !movedTokenIsOnTurn(st, b) || st.Scene == nil || !st.Scene.CountsRounds() {
 		return false
 	}
 	left := engine.TurnBudget{Standard: st.Scene.StandardLeft, Movement: st.Scene.MovementLeft}
-	for paid := 0; paid < cost; paid += orcamento {
+	for paid := 0; paid < cost; paid += budget {
 		next, err := left.Spend(engine.ActionMovement)
 		if err != nil {
 			return true
@@ -284,12 +284,12 @@ func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, cost, orca
 // Um mapa que ensina a regra pela cor só ensina se disser o que a cor quer dizer
 // — senão ele pede que a mesa adivinhe, e adivinhar cor é pior que não ter cor.
 type moveRange struct {
-	Classe string
-	Texto  string
-	// Ativa é a faixa em que o caminho INTEIRO cai, e é a que fica acesa. As
+	Class string
+	Text  string
+	// Active é a faixa em que o caminho INTEIRO cai, e é a que fica acesa. As
 	// outras continuam na tela, apagadas: quem nunca viu o azul não descobriria
 	// que ele existe se só a faixa da vez aparecesse.
-	Ativa bool
+	Active bool
 }
 
 // rangesThree são as faixas na ordem em que se gastam, e a ÚNICA lista delas.
@@ -299,9 +299,9 @@ type moveRange struct {
 // que alguém reescrevesse uma — com a tela dizendo "gasta a ação principal" ao
 // lado de uma bolinha que diz outra coisa.
 var rangesThree = []moveRange{
-	{Classe: "board-band-fits", Texto: "ação de movimento"},
-	{Classe: "board-band-second", Texto: "ação de movimento + ação principal"},
-	{Classe: "board-band-beyond", Texto: "não cabe no turno"},
+	{Class: "board-band-fits", Text: "ação de movimento"},
+	{Class: "board-band-second", Text: "ação de movimento + ação principal"},
+	{Class: "board-band-beyond", Text: "não cabe no turno"},
 }
 
 // costRange diz em qual das três faixas o caminho INTEIRO cai (T20 p233).
@@ -311,9 +311,9 @@ var rangesThree = []moveRange{
 // legenda acesa concorda com a cor da PONTA da seta, que é onde o caminho acaba.
 func costRange(m *moveView) int {
 	switch {
-	case m.Custo <= m.Orcamento:
+	case m.Cost <= m.Budget:
 		return 0
-	case m.Custo <= 2*m.Orcamento:
+	case m.Cost <= 2*m.Budget:
 		return 1
 	default:
 		return 2
@@ -322,13 +322,13 @@ func costRange(m *moveView) int {
 
 // moveLegend monta as três linhas, com a da vez acesa.
 func moveLegend(m *moveView) []moveRange {
-	ativa := costRange(m)
-	legenda := make([]moveRange, 0, len(rangesThree))
+	active := costRange(m)
+	caption := make([]moveRange, 0, len(rangesThree))
 	for i, f := range rangesThree {
-		f.Ativa = i == ativa
-		legenda = append(legenda, f)
+		f.Active = i == active
+		caption = append(caption, f)
 	}
-	return legenda
+	return caption
 }
 
 // endWireFits é a ponta da seta, ou `none` quando ela não é dele.
@@ -338,13 +338,13 @@ func moveLegend(m *moveView) []moveRange {
 // acabou —, e uma ponta ali apontaria para o nada e pareceria um segundo
 // destino.
 func endWireFits(m *moveView) string {
-	return endForEnd(m, m.FioSegundo == "" && m.FioAlem == "", "move")
+	return endForEnd(m, m.SecondWire == "" && m.BeyondWire == "", "move")
 }
 
 // endWireSecond e endWireBeyond completam a regra: a ponta vai em quem
 // TERMINA o caminho, e cada faixa a carrega na cor dela.
 func endWireSecond(m *moveView) string {
-	return endForEnd(m, m.FioAlem == "", "second")
+	return endForEnd(m, m.BeyondWire == "", "second")
 }
 
 func endWireBeyond(m *moveView) string {
@@ -356,9 +356,9 @@ func endWireBeyond(m *moveView) string {
 // `none` e não atributo ausente: `marker-end` é escrito pela mesma linha do
 // `.templ` nos dois casos, e o templ não aceita `else if` numa lista de
 // atributos — os DOIS ramos sairiam e o navegador guardaria o primeiro.
-func endForEnd(m *moveView, eOFim bool, cor string) string {
-	if !eOFim {
+func endForEnd(m *moveView, isEnd bool, color string) string {
+	if !isEnd {
 		return "none"
 	}
-	return "url(#board-tip-" + cor + ")"
+	return "url(#board-tip-" + color + ")"
 }

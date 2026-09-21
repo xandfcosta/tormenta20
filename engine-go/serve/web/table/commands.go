@@ -83,21 +83,21 @@ func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err := live.ValidateCombatantDraft(novo); err != nil {
 		return nil, err
 	}
-	rolada := int64(novo.Initiative)
-	pedido := initiative.EntryRequest{
-		Label: strings.TrimSpace(novo.Label), Initiative: &rolada, Kind: novo.Kind,
+	rolled := int64(novo.Initiative)
+	requested := initiative.EntryRequest{
+		Label: strings.TrimSpace(novo.Label), Initiative: &rolled, Kind: novo.Kind,
 	}
 	// PV ZERO fica de fora em vez de virar 0/0: "sem vida registrada" é a
 	// ausência do campo, e uma barra 0/0 diria que o capanga já está morto.
 	if novo.HP > 0 {
 		pv := int64(novo.HP)
-		pedido.HpCurrent, pedido.HpMax = &pv, &pv
+		requested.HpCurrent, requested.HpMax = &pv, &pv
 	}
-	linha, err := st.queue.Roster().Entry(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, pedido)
+	row, err := st.queue.Roster().Entry(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, requested)
 	if err != nil {
 		return nil, err
 	}
-	estado, err := st.deps.Sessions().AddInitiativeEntry(c.SessionID, linha)
+	state, err := st.deps.Sessions().AddInitiativeEntry(c.SessionID, row)
 	if err != nil {
 		return nil, err
 	}
@@ -105,11 +105,11 @@ func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// seguinte acrescenta o MESMO capanga de novo — e no meio de um combate
 	// ninguém confere a fila antes de clicar. Volta para NPC porque é o caso
 	// comum; o PC digitado à mão é a exceção.
-	c.Sinais["new_name"] = ""
-	c.Sinais["new_initiative"] = 10
-	c.Sinais["new_hp"] = 0
-	c.Sinais["new_type"] = "npc"
-	return estado, nil
+	c.Signals["new_name"] = ""
+	c.Signals["new_initiative"] = 10
+	c.Signals["new_hp"] = 0
+	c.Signals["new_type"] = "npc"
+	return state, nil
 }
 
 // signalsCombatant lê o formulário da página.
@@ -120,17 +120,17 @@ func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // fio leva os dois e o servidor lê o errado, sem erro em lugar nenhum.
 func signalsCombatant(r *http.Request) (live.CombatantDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
-	var sinais struct {
-		Nome       string `json:"new_name"`
-		Iniciativa int    `json:"new_initiative"`
+	var signals struct {
+		Name       string `json:"new_name"`
+		Initiative int    `json:"new_initiative"`
 		PV         int64  `json:"new_hp"`
-		Tipo       string `json:"new_type"`
+		Kind       string `json:"new_type"`
 	}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return live.CombatantDraft{}, fmt.Errorf("não entendi o combatente enviado: %v", err)
 	}
 	return live.CombatantDraft{
-		Label: sinais.Nome, Initiative: sinais.Iniciativa, HP: sinais.PV, Kind: sinais.Tipo,
+		Label: signals.Name, Initiative: signals.Initiative, HP: signals.PV, Kind: signals.Kind,
 	}, nil
 }
 
@@ -240,53 +240,53 @@ func toggleEye(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // os vitais depois, pelo id — que não muda com a reordenação.
 func editaOCombatente(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
-	edicao, err := edicaoDosSinais(c.R)
+	edit, err := edicaoDosSinais(c.R)
 	if err != nil {
 		return nil, err
 	}
-	if err := live.ValidateInitiative(edicao.Iniciativa); err != nil {
+	if err := live.ValidateInitiative(edit.Initiative); err != nil {
 		return nil, err
 	}
-	antes := st.deps.Sessions().GetState(c.SessionID)
-	i := live.FindEntryIndex(antes, entryID)
+	before := st.deps.Sessions().GetState(c.SessionID)
+	i := live.FindEntryIndex(before, entryID)
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
 	}
-	temVitais := antes.Initiative[i].HpMax != nil
+	hasVitals := before.Initiative[i].HpMax != nil
 
-	estado, err := st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID,
-		live.EntryPatch{Initiative: &edicao.Iniciativa})
+	state, err := st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID,
+		live.EntryPatch{Initiative: &edit.Initiative})
 	if err != nil {
 		return nil, err
 	}
-	if !temVitais {
-		return estado, nil
+	if !hasVitals {
+		return state, nil
 	}
 	// Com personagem atrás da linha o `PatchVitals` escreve na FICHA e espelha,
 	// como o delta faz. Quem prende o valor ao teto é ele, não uma conta aqui.
-	return st.deps.Sessions().PatchVitals(c.SessionID, entryID, &edicao.PV, nil)
+	return st.deps.Sessions().PatchVitals(c.SessionID, entryID, &edit.PV, nil)
 }
 
 // edicaoDosSinais lê o diálogo de editar. Nomes minúsculos pelo mesmo motivo de
 // sempre: são chaves de `data-bind:`, e nome de atributo é minusculado.
 func edicaoDosSinais(r *http.Request) (struct {
-	Iniciativa int
+	Initiative int
 	PV         int64
 }, error) {
-	var fora struct {
-		Iniciativa int
+	var outside struct {
+		Initiative int
 		PV         int64
 	}
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
-	var sinais struct {
-		Iniciativa int   `json:"edit_initiative"`
+	var signals struct {
+		Initiative int   `json:"edit_initiative"`
 		PV         int64 `json:"edit_hp"`
 	}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
-		return fora, fmt.Errorf("não entendi a edição enviada: %v", err)
+	if err := datastar.ReadSignals(r, &signals); err != nil {
+		return outside, fmt.Errorf("não entendi a edição enviada: %v", err)
 	}
-	fora.Iniciativa, fora.PV = sinais.Iniciativa, sinais.PV
-	return fora, nil
+	outside.Initiative, outside.PV = signals.Initiative, signals.PV
+	return outside, nil
 }
 
 // tiraDaFila remove o combatente. Sem confirmação: o gesto é do meio do
@@ -305,27 +305,27 @@ func tiraDaFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem está com a
 // ficha aberta continua vendo o PV de antes até recarregar.
 func expiresTheSceneOfTheParty(
-	st Scene, r *http.Request, quem app.Caller, campaignID, sessionID int64,
+	st Scene, r *http.Request, who app.Caller, campaignID, sessionID int64,
 ) (*live.SessionRuntimeState, error) {
-	feitos, total, err := st.party.ExpireScene(r.Context(), quem, campaignID, sessionID)
+	done, total, err := st.party.ExpireScene(r.Context(), who, campaignID, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	return st.announcesTheRest(sessionID, "scene", "normal", feitos, total)
+	return st.announcesTheRest(sessionID, "scene", "normal", done, total)
 }
 
 func restsForTheDay(
-	st Scene, r *http.Request, quem app.Caller, campaignID, sessionID int64,
+	st Scene, r *http.Request, who app.Caller, campaignID, sessionID int64,
 ) (*live.SessionRuntimeState, error) {
-	qualidade, err := restQuality(r)
+	quality, err := restQuality(r)
 	if err != nil {
 		return nil, err
 	}
-	feitos, total, err := st.party.RestForTheDay(r.Context(), quem, campaignID, sessionID, qualidade)
+	done, total, err := st.party.RestForTheDay(r.Context(), who, campaignID, sessionID, quality)
 	if err != nil {
 		return nil, err
 	}
-	return st.announcesTheRest(sessionID, "day", qualidade, feitos, total)
+	return st.announcesTheRest(sessionID, "day", quality, done, total)
 }
 
 // announcesTheRest avisa as fichas e devolve o estado com a contagem.
@@ -334,21 +334,21 @@ func restsForTheDay(
 // FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem está com a
 // ficha aberta continua vendo o PV de antes até recarregar.
 func (s Scene) announcesTheRest(
-	sessionID int64, escopo, qualidade string, feitos, total int,
+	sessionID int64, scope, quality string, done, total int,
 ) (*live.SessionRuntimeState, error) {
 	s.deps.SSE().Emit(sessionID, "", "session-rest", map[string]any{
-		"sessionId": sessionID, "scope": escopo, "condition": qualidade,
+		"sessionId": sessionID, "scope": scope, "condition": quality,
 	})
-	estado := s.deps.Sessions().GetState(sessionID)
+	state := s.deps.Sessions().GetState(sessionID)
 	// O PARCIAL é contado e DITO: descartar a contagem faria o mestre ler
 	// "descansou" com duas de cinco fichas de fora. Volta como recusa porque é o
 	// caminho que acende a frase — e "3 de 5" é o que ele precisa ver para saber
 	// que tem de olhar as outras duas.
-	if feitos < total {
-		return estado, fmt.Errorf("%d de %d fichas descansaram; as outras %d falharam",
-			feitos, total, total-feitos)
+	if done < total {
+		return state, fmt.Errorf("%d de %d fichas descansaram; as outras %d falharam",
+			done, total, total-done)
 	}
-	return estado, nil
+	return state, nil
 }
 
 // restQualities são as quatro do livro (T20 p106), e a lista existe aqui para
@@ -366,16 +366,16 @@ var restQualities = map[string]bool{"ruim": true, "normal": true, "confortavel":
 // passa VERDE em teste de handler e só falha no navegador.
 func restQuality(r *http.Request) (string, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // o mesmo teto de 1 MB do `httpio.DecodeJSON`
-	var sinais struct {
-		Qualidade string `json:"rest_quality"`
+	var signals struct {
+		Quality string `json:"rest_quality"`
 	}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return "", fmt.Errorf("não entendi a qualidade do descanso: %v", err)
 	}
-	if !restQualities[sinais.Qualidade] {
-		return "", fmt.Errorf("qualidade %q não existe; o livro tem ruim, normal, confortavel e luxuosa (p106)", sinais.Qualidade)
+	if !restQualities[signals.Quality] {
+		return "", fmt.Errorf("qualidade %q não existe; o livro tem ruim, normal, confortavel e luxuosa (p106)", signals.Quality)
 	}
-	return sinais.Qualidade, nil
+	return signals.Quality, nil
 }
 
 // bringParty põe na fila cada personagem do grupo que ainda não está lá.
@@ -388,18 +388,18 @@ func restQuality(r *http.Request) (string, error) {
 // campanha, inclusive o PC que o mestre também joga. Uma segunda opinião sobre
 // quem é o grupo faria duas superfícies responderem diferente à mesma pergunta.
 func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	combatentes, err := st.queue.Roster().PartyCombatants(c.R.Context(), c.CampaignID)
+	combatants, err := st.queue.Roster().PartyCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
 	}
 	// O erro vem JUNTO com o estado parcial de propósito: pôr quatro dos cinco e
 	// tropeçar no quinto deixa a mesa com quatro combatentes novos, e é esse o
 	// estado que as outras telas precisam receber.
-	estado, err := st.queue.PopulateParty(c.SessionID, combatentes)
-	if estado == nil {
-		estado = st.deps.Sessions().GetState(c.SessionID)
+	state, err := st.queue.PopulateParty(c.SessionID, combatants)
+	if state == nil {
+		state = st.deps.Sessions().GetState(c.SessionID)
 	}
-	return estado, err
+	return state, err
 }
 
 // commandCtx é o que a mutação de um comando do mestre recebe. É um struct e
@@ -411,7 +411,7 @@ type commandCtx struct {
 	User       int64
 	CampaignID int64
 	SessionID  int64
-	// TabuleiroID é a ABA em que este comando age, e ela é a aba que QUEM CLICOU
+	// BoardID é a ABA em que este comando age, e ela é a aba que QUEM CLICOU
 	// está olhando.
 	//
 	// Ela não vem do caminho nem de um sinal da página: o gateway a resolve no
@@ -420,8 +420,8 @@ type commandCtx struct {
 	// no caminho deixaria essa porta aberta sem nenhum gesto que a abrisse.
 	//
 	// Vazia significa a aba PADRÃO — quem entrou na sessão e ainda não escolheu.
-	TabuleiroID string
-	// Sinais é o que a cena recebe de volta ALÉM do HTML, e a mutação escreve
+	BoardID string
+	// Signals é o que a cena recebe de volta ALÉM do HTML, e a mutação escreve
 	// nele quando quer mexer no estado do CLIENTE.
 	//
 	// Hoje só o formulário de acrescentar usa, e o motivo dele é o que justifica
@@ -433,7 +433,7 @@ type commandCtx struct {
 	// QUEM GARANTE que a recusa não limpa nada é a ORDEM, e não um descarte:
 	// a mutação só escreve neste mapa depois de a sua própria escrita ter dado
 	// certo, então numa recusa ele chega vazio.
-	Sinais map[string]any
+	Signals map[string]any
 }
 
 // endScene é o gesto INTEIRO, e por isso é função nomeada e não um literal na
@@ -450,16 +450,16 @@ type commandCtx struct {
 // `session-rest` o efeito morto e o "usado 1/cena" ficam na tela até alguém
 // recarregar.
 func endsTheScene(
-	st Scene, r *http.Request, quem app.Caller, campaignID, sessionID int64,
+	st Scene, r *http.Request, who app.Caller, campaignID, sessionID int64,
 ) (*live.SessionRuntimeState, error) {
-	estado, err := st.party.EndScene(r.Context(), quem, campaignID, sessionID)
+	state, err := st.party.EndScene(r.Context(), who, campaignID, sessionID)
 	if err != nil {
 		return nil, err
 	}
 	st.deps.SSE().Emit(sessionID, "", "session-rest", map[string]any{
 		"sessionId": sessionID, "scope": "scene",
 	})
-	return estado, nil
+	return state, nil
 }
 
 // gmCommand é o caminho único dos comandos do mestre.
@@ -469,7 +469,7 @@ func endsTheScene(
 // cópias, e é numa delas que alguém esquece de publicar e a mesa fica vendo o
 // turno velho.
 func (s Scene) gmCommand(
-	mutar func(Scene, commandCtx) (*live.SessionRuntimeState, error),
+	mutate func(Scene, commandCtx) (*live.SessionRuntimeState, error),
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		campaignID, sessionID, ok := tableParams(w, r)
@@ -477,7 +477,7 @@ func (s Scene) gmCommand(
 			return
 		}
 		userID := s.deps.CurrentUserID(r)
-		_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+		_, role, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
 		status := statusOf(err)
 		if err != nil {
 			http.Error(w, err.Error(), status)
@@ -485,24 +485,24 @@ func (s Scene) gmCommand(
 		}
 		// A trava é aqui e não na tela: quem postar na mão leva 403, e o botão
 		// escondido é só cortesia para quem não pode.
-		if papel != "gm" {
+		if role != "gm" {
 			http.Error(w, "só o mestre comanda a mesa", http.StatusForbidden)
 			return
 		}
 
-		sinais := map[string]any{}
-		estado, err := mutar(s, commandCtx{
-			R: r, User: userID, CampaignID: campaignID, SessionID: sessionID, Sinais: sinais,
+		signals := map[string]any{}
+		state, err := mutate(s, commandCtx{
+			R: r, User: userID, CampaignID: campaignID, SessionID: sessionID, Signals: signals,
 		})
 		// O que POUSOU se transmite mesmo quando a chamada devolveu erro, e o
 		// `bringParty` é quem o exige: ele põe quatro dos cinco e tropeça no
 		// quinto, e os quatro já são o estado da mesa. Segurar a transmissão
 		// porque houve erro deixaria as outras telas com a fila de antes —
 		// best-effort é sobre continuar apesar da falha, não sobre escondê-la.
-		if estado != nil {
-			s.deps.PublishSessionState(sessionID, estado)
+		if state != nil {
+			s.deps.PublishSessionState(sessionID, state)
 		}
-		s.respondGm(w, r, userID, campaignID, sessionID, err, sinais)
+		s.respondGm(w, r, userID, campaignID, sessionID, err, signals)
 	}
 }
 
@@ -522,8 +522,8 @@ func (s Scene) gmCommand(
 // precisa ver ao lado da frase.
 func (s Scene) respondGm(
 	w http.ResponseWriter, r *http.Request,
-	userID int64, campaignID, sessionID int64, recusa error, sinais map[string]any,
-	soAsRegioes ...string,
+	userID int64, campaignID, sessionID int64, refusal error, signals map[string]any,
+	onlyRegions ...string,
 ) {
 	sse := datastar.NewSSE(w, r)
 	if view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID); err == nil {
@@ -532,37 +532,37 @@ func (s Scene) respondGm(
 		// responde a um pedido, não mantém uma conexão. Vale porque quem recebe
 		// acabou de CLICAR.
 		//
-		// O GESTO CONTÍNUO é a exceção que criou o `soAsRegioes`: no arrasto do
+		// O GESTO CONTÍNUO é a exceção que criou o `onlyRegions`: no arrasto do
 		// pincel cada casa cruzada devolveria a Mesa inteira, 353 KB por casa.
 		//
 		// Falhar ao redesenhar não desfaz a mutação, que já aconteceu e já foi
 		// transmitida; o stream corrige no próximo tique. Por isso é best-effort e
 		// a frase sai de qualquer jeito.
-		for _, regiao := range TableRegions(view) {
-			if !pedidaOuTodas(regiao.ID, soAsRegioes) {
+		for _, region := range TableRegions(view) {
+			if !pedidaOuTodas(region.ID, onlyRegions) {
 				continue
 			}
-			if fragmento, err := ui.RenderFragment(r.Context(), regiao.No); err == nil {
-				_ = sse.PatchElements(fragmento)
+			if fragment, err := ui.RenderFragment(r.Context(), region.No); err == nil {
+				_ = sse.PatchElements(fragment)
 			}
 		}
 	}
-	frase := ""
-	if recusa != nil {
-		frase = recusa.Error()
+	sentence := ""
+	if refusal != nil {
+		sentence = refusal.Error()
 	}
 	// Sai nos DOIS caminhos: no da recusa para acender a frase, e no do acerto
 	// para APAGAR a anterior. Um sinal que só se escreve quando dá errado deixa
 	// a recusa de dois cliques atrás acesa sobre um comando que funcionou.
-	sinais["command_error"] = frase
-	_ = sse.MarshalAndPatchSignals(sinais)
+	signals["command_error"] = sentence
+	_ = sse.MarshalAndPatchSignals(signals)
 }
 
 // pedidaOuTodas: lista vazia quer dizer "a Mesa inteira", que é o padrão de
 // quase todo comando.
-func pedidaOuTodas(id string, pedidas []string) bool {
-	if len(pedidas) == 0 {
+func pedidaOuTodas(id string, requested []string) bool {
+	if len(requested) == 0 {
 		return true
 	}
-	return slices.Contains(pedidas, id)
+	return slices.Contains(requested, id)
 }

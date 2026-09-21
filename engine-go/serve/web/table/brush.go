@@ -56,7 +56,7 @@ var brushSignals = fmt.Sprintf("%s: '', %s: ''", brushSignal, squareLastSignal)
 
 // takesBrush começa o traço na casa clicada.
 //
-// `modoFixo` vazio quer dizer "o botão decide" — é a camada de PINTAR, onde o
+// `fixedMode` vazio quer dizer "o botão decide" — é a camada de PINTAR, onde o
 // direito apaga. A camada da borracha passa `pincelApaga` porque lá os dois
 // botões fazem a mesma coisa: a ferramenta já disse o que o gesto é.
 //
@@ -69,15 +69,15 @@ var brushSignals = fmt.Sprintf("%s: '', %s: ''", brushSignal, squareLastSignal)
 // no meio da expressão essa exceção engoliria a pintura da primeira casa — o
 // gesto começaria mudo. Por último, o pior que acontece é o traço perder a
 // captura e terminar quando o dedo sai do elemento.
-func takesBrush(v BoardView, modoFixo string) string {
-	modo := fmt.Sprintf("evt.button === 2 ? %q : %q", pincelApaga, pincelPinta)
-	if modoFixo != "" {
-		modo = fmt.Sprintf("%q", modoFixo)
+func takesBrush(v BoardView, fixedMode string) string {
+	mode := fmt.Sprintf("evt.button === 2 ? %q : %q", pincelApaga, pincelPinta)
+	if fixedMode != "" {
+		mode = fmt.Sprintf("%q", fixedMode)
 	}
 	return fmt.Sprintf(
 		"evt.preventDefault(); $%s = %s; $%s = ''; %s; "+
 			"evt.currentTarget.setPointerCapture(evt.pointerId)",
-		brushSignal, modo, squareLastSignal, brushActsOnSquare(v),
+		brushSignal, mode, squareLastSignal, brushActsOnSquare(v),
 	)
 }
 

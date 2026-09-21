@@ -78,8 +78,8 @@ func TestThePlayerRailLacksWhatThePlayerCannotDo(t *testing.T) {
 		t.Fatal("o jogador não recebeu o trilho — a página não é o que este teste pensa que é")
 	}
 	for _, f := range table.MapTools() {
-		if f.SoMestre && strings.Contains(screen, f.Rotulo+" (tecla ") {
-			t.Errorf("o jogador recebeu %q, que é do mestre", f.Rotulo)
+		if f.GMOnly && strings.Contains(screen, f.Label+" (tecla ") {
+			t.Errorf("o jogador recebeu %q, que é do mestre", f.Label)
 		}
 	}
 }

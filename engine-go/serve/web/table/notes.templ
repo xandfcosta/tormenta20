@@ -117,7 +117,7 @@ templ notesBody(v View) {
 			aria-label="Notas da sessão"
 			placeholder={ "# Cena 1\n- O ogro **fugiu** pela ponte\n> \"voltarei\", ele disse" }
 			class="field-sizing-fixed h-full min-h-0 w-full resize-none rounded-sm border border-input bg-background p-2 font-mono text-xs outline-none"
-		>{ v.Notas }</textarea>
+		>{ v.Notes }</textarea>
 		<div data-show="$notes_mode != 'escrever'" class="min-h-0 overflow-y-auto rounded-sm border border-grimorio-iron p-3">
 			@tableNotesPreview(v)
 		</div>
@@ -130,10 +130,10 @@ templ notesBody(v View) {
 // junto, e o remendo seguinte não acha onde pousar.
 templ tableNotesPreview(v View) {
 	<div id="table-notes-preview" class="space-y-2 text-sm">
-		if len(v.NotasBlocos) == 0 {
+		if len(v.NoteBlocks) == 0 {
 			<p class="text-sm text-muted-foreground">Nenhuma nota ainda.</p>
 		} else {
-			for _, b := range v.NotasBlocos {
+			for _, b := range v.NoteBlocks {
 				@noteBlock(v, b)
 			}
 		}

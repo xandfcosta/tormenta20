@@ -86,12 +86,12 @@ func TestTheCastSaysWhoIsAlreadyInTheTracker(t *testing.T) {
 	route := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 
 	before := f.castMember(t, f.charID)
-	if before.NaFila {
+	if before.InQueue {
 		t.Fatal("o personagem já nasceu marcado como na fila — o teste mediria nada")
 	}
 	f.posta(t, f.gm, route, "{}")
 
-	if after := f.castMember(t, f.charID); !after.NaFila {
+	if after := f.castMember(t, f.charID); !after.InQueue {
 		t.Error("pôs na fila e o elenco não soube: o botão continuaria oferecendo o gesto")
 	}
 }
@@ -105,7 +105,7 @@ func (f sceneFixture) castMember(t *testing.T, characterID int64) table.Member {
 	if err != nil {
 		t.Fatalf("montar a view: %v", err)
 	}
-	for _, m := range view.Grupo {
+	for _, m := range view.Group {
 		if m.CharacterID == characterID {
 			return m
 		}

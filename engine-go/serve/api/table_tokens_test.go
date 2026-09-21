@@ -158,14 +158,14 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	for _, c := range candidates {
 		switch c.ID {
 		case sheet:
-			if !c.NoMapa {
+			if !c.OnBoard {
 				t.Error("quem acabou de virar peça continua sendo oferecido para trazer")
 			}
-			if !c.Ficha {
+			if !c.Sheet {
 				t.Error("o PC não foi marcado como ficha — ele nasceria do lado errado do mapa")
 			}
 		case npc:
-			if c.NoMapa {
+			if c.OnBoard {
 				t.Error("o NPC que não foi escolhido aparece como se já estivesse no mapa")
 			}
 		}

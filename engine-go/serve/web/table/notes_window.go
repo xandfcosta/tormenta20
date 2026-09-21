@@ -39,13 +39,13 @@ func (s Scene) notesWindowPage(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	sess, papel, err := s.access.Session(r.Context(), app.Caller{ID: s.deps.CurrentUserID(r)}, campaignID, sessionID)
+	sess, role, err := s.access.Session(r.Context(), app.Caller{ID: s.deps.CurrentUserID(r)}, campaignID, sessionID)
 	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	if papel != "gm" {
+	if role != "gm" {
 		http.Error(w, "as notas da sessão são do mestre", http.StatusForbidden)
 		return
 	}
@@ -55,7 +55,7 @@ func (s Scene) notesWindowPage(w http.ResponseWriter, r *http.Request) {
 	// cada vez que o mestre a chama de volta.
 	v := View{
 		CampaignID: campaignID, SessionID: sessionID, SessionNum: sess.Sessionnumber,
-		Notas: sess.Notes.String, NotasBlocos: markdown.Parse(sess.Notes.String),
+		Notes: sess.Notes.String, NoteBlocks: markdown.Parse(sess.Notes.String),
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: fmt.Sprintf("Notas · Sessão %d", v.SessionNum),
@@ -81,13 +81,13 @@ func notesWindowSignals() string {
 // lado" ao lado do mapa quer "Lado a lado" na janela também. É a mesma
 // preferência de trabalho, e ela não deveria depender de onde o painel está.
 func seedNotesWindow(v View) string {
-	texto, err := json.Marshal(v.Notas)
+	text, err := json.Marshal(v.Notes)
 	if err != nil {
-		texto = []byte(`""`)
+		text = []byte(`""`)
 	}
 	return fmt.Sprintf(
 		"$notes = %s; $notes_saved = %s; $notes_mode = localStorage.getItem('%s') || 'duplo'; %s",
-		texto, texto, notesModeKey, takesTheNotes(v),
+		text, text, notesModeKey, takesTheNotes(v),
 	)
 }
 

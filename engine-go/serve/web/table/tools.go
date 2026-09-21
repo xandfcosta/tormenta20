@@ -24,19 +24,19 @@ type mapTool struct {
 	// ID é o valor que o sinal `$tool` guarda. Vazio é MOVER, que é o
 	// estado de repouso da cena.
 	ID string
-	// Atalho é a tecla, e ela é fixa por ferramenta (ver o comentário do topo).
-	Atalho string
-	Rotulo string
-	Icone  string
-	Dica   string
-	// SoMestre: pintar chão e marcar lugar são gestos de quem MONTA a mesa.
-	SoMestre bool
-	// Matiz é a classe que tinge o ícone com a cor da espécie, nos pincéis de
+	// Shortcut é a tecla, e ela é fixa por ferramenta (ver o comentário do topo).
+	Shortcut string
+	Label    string
+	Icon     string
+	Hint     string
+	// GMOnly: pintar chão e marcar lugar são gestos de quem MONTA a mesa.
+	GMOnly bool
+	// Hue é a classe que tinge o ícone com a cor da espécie, nos pincéis de
 	// terreno. Vazio nas outras.
 	//
 	// O botão mostra o MESMO ícone que a casa recebe — o mestre reconhece o pincel
 	// pelo que ele pinta, e não por uma amostra de cor ao lado.
-	Matiz string
+	Hue string
 }
 
 // EraserTool é o valor do sinal quando o clique LIMPA a casa.
@@ -54,36 +54,36 @@ const EraserTool = "borracha"
 // para acertar daqui?" é pergunta de quem ataca; e as do mestre por último,
 // agrupadas, com a borracha fechando porque ela é o desfazer das quatro acima.
 func MapTools() []mapTool {
-	trilho := []mapTool{
-		{ID: "", Rotulo: "Mover a peça", Icone: "MousePointer2",
-			Dica: "Mover a peça: o clique escolhe a casa para onde ela vai"},
+	rail := []mapTool{
+		{ID: "", Label: "Mover a peça", Icon: "MousePointer2",
+			Hint: "Mover a peça: o clique escolhe a casa para onde ela vai"},
 		// A MÃO é a SEGUNDA e não a última, e ela é de TODO MUNDO: sem moldura não há
 		// rolagem nativa, então arrastar a vista deixou de ser conforto e virou o único
 		// jeito de chegar ao outro lado do plano.
-		{ID: ViewTool, Rotulo: "Arrastar a vista", Icone: "Hand",
-			Dica: "Arrastar a vista: o clique e o arrasto percorrem o plano, que não tem bordas"},
-		{ID: FerramentaDaRegua, Rotulo: "Régua", Icone: "Ruler",
-			Dica: "Régua: mede a distância e diz a faixa de alcance do livro (p224)"},
-		{ID: FerramentaDoGabarito, Rotulo: "Gabarito", Icone: "Radar",
-			Dica: "Gabarito de área: a esfera, o cone, a linha e o quadrado (p225), e quem eles pegam"},
-		{ID: MarkTool, Rotulo: "Marcar", Icone: "MapPin", SoMestre: true,
-			Dica: "Marcar um lugar: o clique põe um ponto ESCONDIDO no mapa, para revelar quando quiser"},
+		{ID: ViewTool, Label: "Arrastar a vista", Icon: "Hand",
+			Hint: "Arrastar a vista: o clique e o arrasto percorrem o plano, que não tem bordas"},
+		{ID: FerramentaDaRegua, Label: "Régua", Icon: "Ruler",
+			Hint: "Régua: mede a distância e diz a faixa de alcance do livro (p224)"},
+		{ID: FerramentaDoGabarito, Label: "Gabarito", Icon: "Radar",
+			Hint: "Gabarito de área: a esfera, o cone, a linha e o quadrado (p225), e quem eles pegam"},
+		{ID: MarkTool, Label: "Marcar", Icon: "MapPin", GMOnly: true,
+			Hint: "Marcar um lugar: o clique põe um ponto ESCONDIDO no mapa, para revelar quando quiser"},
 	}
 	// Os PINCÉIS saem da lista de espécies e nunca de uma cópia escrita à mão: a
 	// quinta espécie nasce no trilho, com atalho, sem ninguém lembrar disto.
-	for _, pincel := range board.TerrainKinds {
-		trilho = append(trilho, mapTool{
-			ID: string(pincel.ID), Rotulo: pincel.Label, SoMestre: true,
-			Icone: drawing(pincel.ID).Icone,
-			Dica:  pincel.Label + ": " + pincel.Effect + " (p238)",
-			Matiz: "brush-hue board-hue-" + board.ClassOf(pincel.ID),
+	for _, brush := range board.TerrainKinds {
+		rail = append(rail, mapTool{
+			ID: string(brush.ID), Label: brush.Label, GMOnly: true,
+			Icon: drawing(brush.ID).Icon,
+			Hint: brush.Label + ": " + brush.Effect + " (p238)",
+			Hue:  "brush-hue board-hue-" + board.ClassOf(brush.ID),
 		})
 	}
-	trilho = append(trilho, mapTool{
-		ID: EraserTool, Rotulo: "Borracha", Icone: "Eraser", SoMestre: true,
-		Dica: "Borracha: o clique limpa a casa inteira, seja qual for o terreno nela",
+	rail = append(rail, mapTool{
+		ID: EraserTool, Label: "Borracha", Icon: "Eraser", GMOnly: true,
+		Hint: "Borracha: o clique limpa a casa inteira, seja qual for o terreno nela",
 	})
-	return numberRail(trilho)
+	return numberRail(rail)
 }
 
 // railKeys é a fileira de números do teclado, na ordem em que a mão a
@@ -100,15 +100,15 @@ var railKeys = []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
 // Digitados à mão em cada linha, inserir uma ferramenta no meio exigiria
 // renumerar as de baixo, e uma esquecida daria duas ferramentas com a mesma
 // tecla — a segunda simplesmente nunca ligaria, sem erro nenhum.
-func numberRail(trilho []mapTool) []mapTool {
-	if len(trilho) > len(railKeys) {
+func numberRail(rail []mapTool) []mapTool {
+	if len(rail) > len(railKeys) {
 		panic(fmt.Sprintf("o trilho tem %d ferramentas e só há %d teclas: %v",
-			len(trilho), len(railKeys), railKeys))
+			len(rail), len(railKeys), railKeys))
 	}
-	for i := range trilho {
-		trilho[i].Atalho = railKeys[i]
+	for i := range rail {
+		rail[i].Shortcut = railKeys[i]
 	}
-	return trilho
+	return rail
 }
 
 // rail devolve as ferramentas que aquele papel realmente tem.
@@ -116,8 +116,8 @@ func numberRail(trilho []mapTool) []mapTool {
 // Filtrar AQUI e não no `.templ` é o que faz o atalho de teclado e o botão
 // concordarem sobre quem existe: os dois leem esta função. Escritos em dois
 // lugares, o jogador ganharia uma tecla que liga uma ferramenta sem botão.
-func rail(mestre bool) []mapTool {
-	return forVisible(mestre, MapTools())
+func rail(gm bool) []mapTool {
+	return forVisible(gm, MapTools())
 }
 
 // forVisible é o filtro, e ele recebe o trilho em vez de buscá-lo.
@@ -127,14 +127,14 @@ func rail(mestre bool) []mapTool {
 // as do mestre estão no fim, e um teste sobre o trilho real passaria mesmo com a
 // numeração feita depois do filtro. Com o trilho como parâmetro, o guarda monta
 // o caso que importa em vez de esperar que a ordem real o produza um dia.
-func forVisible(mestre bool, trilho []mapTool) []mapTool {
-	fora := make([]mapTool, 0, len(trilho))
-	for _, f := range trilho {
-		if mestre || !f.SoMestre {
-			fora = append(fora, f)
+func forVisible(gm bool, rail []mapTool) []mapTool {
+	outside := make([]mapTool, 0, len(rail))
+	for _, f := range rail {
+		if gm || !f.GMOnly {
+			outside = append(outside, f)
 		}
 	}
-	return fora
+	return outside
 }
 
 // railKeyboard liga as ferramentas às teclas numéricas.
@@ -145,10 +145,10 @@ func forVisible(mestre bool, trilho []mapTool) []mapTool {
 //
 // Montado a partir do MESMO trilho que desenha os botões: uma tabela escrita à
 // mão aqui seria a segunda verdade sobre qual tecla liga o quê.
-func railKeyboard(mestre bool) string {
-	var casos []string
-	for _, f := range rail(mestre) {
-		casos = append(casos, fmt.Sprintf("evt.key === %q ? ($tool = %q)", f.Atalho, f.ID))
+func railKeyboard(gm bool) string {
+	var cases []string
+	for _, f := range rail(gm) {
+		cases = append(cases, fmt.Sprintf("evt.key === %q ? ($tool = %q)", f.Shortcut, f.ID))
 	}
 	// ESC NÃO ENTRA AQUI, e isto é medido e não escolhido.
 	//
@@ -160,8 +160,8 @@ func railKeyboard(mestre bool) string {
 	//
 	// A saída para quem ligou a régua sem querer é a TECLA 1, que é a ferramenta de
 	// repouso — ou clicar de novo na que está acesa, que o `pickTool` já desliga.
-	casos = append(casos, "null")
-	return typingTargetWithout + "(" + strings.Join(casos, " : ") + ")"
+	cases = append(cases, "null")
+	return typingTargetWithout + "(" + strings.Join(cases, " : ") + ")"
 }
 
 // typingTargetWithout é o prefixo que impede um atalho de roubar a tecla de quem
@@ -192,7 +192,7 @@ func toolStyling(id string) string {
 // balão do mouse é um atalho que quem navega por teclado nunca descobre — e é
 // justamente essa pessoa que mais o usaria.
 func shortcutName(f mapTool) string {
-	return fmt.Sprintf("%s (tecla %s)", f.Rotulo, f.Atalho)
+	return fmt.Sprintf("%s (tecla %s)", f.Label, f.Shortcut)
 }
 
 // piecesFootprints são os tamanhos que a Tabela 1-21 produz (T20 p107).
@@ -202,9 +202,9 @@ func shortcutName(f mapTool) string {
 // servidor vai recusar, e recusa que se descobre clicando é pior que a escolha
 // não existir.
 var piecesFootprints = []struct {
-	Lados  int
-	Lado   string
-	Rotulo string
+	Sides int
+	Side  string
+	Label string
 }{
 	{1, "1×1", "Médio"},
 	{2, "2×2", "Grande"},
@@ -218,9 +218,9 @@ var piecesFootprints = []struct {
 // nasce ligada a um personagem pelo `Populate`, e uma "ficha" desenhada à mão
 // seria uma peça que PARECE de jogador sem ninguém atrás dela.
 var piecesLooks = []struct {
-	ID     string
-	Rotulo string
-	Dica   string
+	ID    string
+	Label string
+	Hint  string
 }{
 	{"object", "Objeto", "Objeto: a porta, o baú, o barril — cenário que ocupa casa"},
 	{"npc", "NPC", "NPC: a criatura que está no mapa e ainda não entrou na fila"},

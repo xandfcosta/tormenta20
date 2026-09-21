@@ -28,21 +28,21 @@ import (
 // guarda passaria sobre a sabotagem, que é o pior tipo de verde. O que quebra a
 // promessa é uma ferramenta do mestre no MEIO, e é ela que este trilho tem.
 func TestTheShortcutDoesNotShiftWhenAGmToolLeavesTheRail(t *testing.T) {
-	trilho := numberRail([]mapTool{
-		{ID: "mover", Rotulo: "Mover"},
-		{ID: "pintar", Rotulo: "Pintar", SoMestre: true},
-		{ID: "regua", Rotulo: "Régua"},
+	rail := numberRail([]mapTool{
+		{ID: "mover", Label: "Mover"},
+		{ID: "pintar", Label: "Pintar", GMOnly: true},
+		{ID: "regua", Label: "Régua"},
 	})
-	doMestre := forVisible(true, trilho)
-	doJogador := forVisible(false, trilho)
+	forGM := forVisible(true, rail)
+	forPlayer := forVisible(false, rail)
 
 	// O CONTROLE: os dois trilhos têm de DIFERIR, senão não há filtro medindo.
-	if len(doMestre) == len(doJogador) {
-		t.Fatalf("o filtro não tirou nada (%d entradas nos dois): não há o que comparar", len(doMestre))
+	if len(forGM) == len(forPlayer) {
+		t.Fatalf("o filtro não tirou nada (%d entradas nos dois): não há o que comparar", len(forGM))
 	}
-	if doJogador[len(doJogador)-1].Atalho != doMestre[len(doMestre)-1].Atalho {
+	if forPlayer[len(forPlayer)-1].Shortcut != forGM[len(forGM)-1].Shortcut {
 		t.Errorf("a régua é a tecla %s para o mestre e %s para o jogador — a ferramenta que sumiu do meio renumerou o resto",
-			doMestre[len(doMestre)-1].Atalho, doJogador[len(doJogador)-1].Atalho)
+			forGM[len(forGM)-1].Shortcut, forPlayer[len(forPlayer)-1].Shortcut)
 	}
 }
 
@@ -51,16 +51,16 @@ func TestTheShortcutDoesNotShiftWhenAGmToolLeavesTheRail(t *testing.T) {
 // ramo vence. Foi o defeito que os números escritos à mão convidavam, e é o
 // motivo de o `numberRail` existir.
 func TestEachToolHasAKeyOfItsOwn(t *testing.T) {
-	vistas := map[string]string{}
+	seen := map[string]string{}
 	for _, f := range MapTools() {
-		if f.Atalho == "" {
-			t.Errorf("a ferramenta %q nasceu sem atalho", f.Rotulo)
+		if f.Shortcut == "" {
+			t.Errorf("a ferramenta %q nasceu sem atalho", f.Label)
 			continue
 		}
-		if dono, tem := vistas[f.Atalho]; tem {
-			t.Errorf("a tecla %s liga %q e %q — a segunda nunca acende", f.Atalho, dono, f.Rotulo)
+		if owner, found := seen[f.Shortcut]; found {
+			t.Errorf("a tecla %s liga %q e %q — a segunda nunca acende", f.Shortcut, owner, f.Label)
 		}
-		vistas[f.Atalho] = f.Rotulo
+		seen[f.Shortcut] = f.Label
 	}
 }
 
@@ -69,13 +69,13 @@ func TestEachToolHasAKeyOfItsOwn(t *testing.T) {
 // Um trilho de jogador sem a mão seria um jogador preso no enquadramento em que
 // a página abriu.
 func TestThePanHandBelongsToBothRoles(t *testing.T) {
-	for _, mestre := range []bool{true, false} {
-		achou := false
-		for _, f := range rail(mestre) {
-			achou = achou || f.ID == ViewTool
+	for _, gm := range []bool{true, false} {
+		found := false
+		for _, f := range rail(gm) {
+			found = found || f.ID == ViewTool
 		}
-		if !achou {
-			t.Errorf("mestre=%v não tem a mão de arrastar a vista, e sem ela não há como percorrer o plano", mestre)
+		if !found {
+			t.Errorf("mestre=%v não tem a mão de arrastar a vista, e sem ela não há como percorrer o plano", gm)
 		}
 	}
 }

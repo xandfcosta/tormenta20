@@ -39,11 +39,11 @@ const (
 // toda ferramenta que ainda não existe, e uma lista escrita à mão no `.templ`
 // tem o mesmo defeito adiado: a espécie nova nasce fora dela.
 func onIsBrush() string {
-	nomes := make([]string, 0, len(board.TerrainKinds))
+	names := make([]string, 0, len(board.TerrainKinds))
 	for _, e := range board.TerrainKinds {
-		nomes = append(nomes, fmt.Sprintf("%q", string(e.ID)))
+		names = append(names, fmt.Sprintf("%q", string(e.ID)))
 	}
-	return fmt.Sprintf("[%s].includes($tool)", strings.Join(nomes, ", "))
+	return fmt.Sprintf("[%s].includes($tool)", strings.Join(names, ", "))
 }
 
 // AS FASES da régua, nomeadas e não 0/1/2 à mão: a terceira é CONGELADA — para
@@ -207,9 +207,9 @@ func repatchTemplate(v BoardView) string {
 //
 // O `$template_aims` sai daqui com o valor do SERVIDOR: é o botão que sabe qual
 // forma ele liga, e é o `pointsTemplate` que sabe quais formas apontam.
-func pickShape(forma engine.AreaKind) string {
+func pickShape(form engine.AreaKind) string {
 	return fmt.Sprintf("$template = %q; $template_aims = %t; $template_at_intersection = %t; %s",
-		string(forma), pointsTemplate(forma), shapeStartsAtIntersection(forma), saveTemplate)
+		string(form), pointsTemplate(form), shapeStartsAtIntersection(form), saveTemplate)
 }
 
 // emptyTemplateHint é o que a barra diz enquanto não há gabarito posto, e ela
@@ -299,13 +299,13 @@ var rulerPath = fmt.Sprintf(
 //
 // Daí este helper: toda leitura de lista passa por aqui, e nenhuma expressão
 // escreve `$lista[` no meio do código.
-func list(sinal, corpo string) string {
-	return fmt.Sprintf("(() => { const lista = [...$%s]; return %s })()", sinal, corpo)
+func list(signal, body string) string {
+	return fmt.Sprintf("(() => { const lista = [...$%s]; return %s })()", signal, body)
 }
 
 // rulerStop é o centro da i-ésima parada, para o pingo que a marca.
-func rulerStop(i int, eixo int) string {
-	return list("ruler_points", fmt.Sprintf("(lista[%d]?.[%d] ?? 0) + 0.5", i, eixo))
+func rulerStop(i int, axis int) string {
+	return list("ruler_points", fmt.Sprintf("(lista[%d]?.[%d] ?? 0) + 0.5", i, axis))
 }
 
 // existsDot esconde o pingo da reserva que ainda não tem parada.
@@ -334,23 +334,23 @@ func legLabel(i int) string {
 
 // legMid é onde o rótulo pousa: o meio do segmento entre a parada `i` e a
 // seguinte — que pode ser a MIRA, quando a perna é a viva.
-func legMid(i int, eixo int) string {
+func legMid(i int, axis int) string {
 	return list("ruler_points", fmt.Sprintf(
 		"(() => { const a = lista[%d], b = lista[%d] ?? "+
 			"($ruler_phase === %d ? [$ruler_aim_x, $ruler_aim_y] : a); "+
 			"return a && b ? ((a[%d] + b[%d]) / 2) + 0.5 : 0 })()",
-		i, i+1, reguaMedindo, eixo, eixo))
+		i, i+1, reguaMedindo, axis, axis))
 }
 
 // stopsReserve é a contagem que o `.templ` percorre para desenhar os nós
 // fixos. Sai do MESMO teto que o servidor recusa — escritos em dois lugares,
 // uma perna nasceria medida e sem rótulo.
 func stopsReserve() []int {
-	reserva := make([]int, stopsMax)
-	for i := range reserva {
-		reserva[i] = i
+	reserve := make([]int, stopsMax)
+	for i := range reserve {
+		reserve[i] = i
 	}
-	return reserva
+	return reserve
 }
 
 // viewportDrawing põe o SVG a falar a língua do tabuleiro: a JANELA e o ZOOM.

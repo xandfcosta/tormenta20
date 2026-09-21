@@ -78,7 +78,7 @@ func queueHp(t *testing.T, f sceneFixture, entryID string) int64 {
 	if err != nil {
 		t.Fatalf("carregar a cena da Mesa: %v", err)
 	}
-	for _, row := range v.Fila {
+	for _, row := range v.Queue {
 		if row.ID != entryID {
 			continue
 		}

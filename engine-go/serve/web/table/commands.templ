@@ -31,7 +31,7 @@ templ gmControls(v View, r viewGm) {
 		//
 		// `aria-live` porque num app de remendo a rodada muda sem navegação, e
 		// quem não vê a tela não tem outro sinal.
-		<p aria-live="polite" class="text-xs text-muted-foreground">{ r.Contador }</p>
+		<p aria-live="polite" class="text-xs text-muted-foreground">{ r.Counter }</p>
 		// A MANUTENÇÃO é uma linha PRÓPRIA e não um sufixo do contador: ela some
 		// no turno seguinte, e costurá-la na mesma frase faria o contador mudar
 		// de comprimento a cada vez — a 390px ele é a linha mais larga da faixa.
@@ -53,19 +53,19 @@ templ gmControls(v View, r viewGm) {
 			class="order-last w-full text-xs text-destructive-ink"
 		></p>
 		<div class="ml-auto flex flex-wrap items-center gap-2">
-			@turnStep(v, "iniciativa/vez-anterior", "Turno anterior", "‹", r.PodeAvancar)
+			@turnStep(v, "iniciativa/vez-anterior", "Turno anterior", "‹", r.CanAdvance)
 			// O rótulo do avanço diz PARA ONDE vai: com um "▶" o mestre tem de
 			// contar a lista para saber quem entra.
 			<button
 				type="button"
-				if r.PodeAvancar {
+				if r.CanAdvance {
 					data-on:click={ tableCommand(v, "POST", "iniciativa/proxima-vez") }
 					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-gold bg-accent px-3 text-sm font-medium text-grimorio-gold outline-none transition-colors hover:bg-grimorio-gold/20"
 				} else {
 					disabled
 					class="inline-flex min-h-11 cursor-not-allowed items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground opacity-60"
 				}
-			>{ r.Avanco.Label }</button>
+			>{ r.Advance.Label }</button>
 			// O "Iniciar cena" fica SEMPRE na fileira, em qualquer altura de
 			// palco: abaixo de 1024 o ciclo sai do trilho, e sem esta exceção o
 			// mestre no celular ficaria sem caminho nenhum para COMEÇAR. O que

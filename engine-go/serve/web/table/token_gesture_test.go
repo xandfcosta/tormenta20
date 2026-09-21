@@ -38,10 +38,10 @@ func tokenGesturePieces(v BoardView, p boardToken) map[string]string {
 }
 
 func TestNoTokenGestureAnswersForAnotherToken(t *testing.T) {
-	pecas := []boardToken{
-		{ID: "alfa-1111", Rotulo: "Alfa", X: 3, Y: 3, Onde: "3, 3"},
-		{ID: "beta-2222", Rotulo: "Beta", X: 8, Y: 3, Onde: "8, 3"},
-		{ID: "gama-3333", Rotulo: "Gama", X: 8, Y: 9, Onde: "8, 9"},
+	tokens := []boardToken{
+		{ID: "alfa-1111", Label: "Alfa", X: 3, Y: 3, Where: "3, 3"},
+		{ID: "beta-2222", Label: "Beta", X: 8, Y: 3, Where: "8, 3"},
+		{ID: "gama-3333", Label: "Gama", X: 8, Y: 9, Where: "8, 9"},
 	}
 	// AS DUAS SUPERFÍCIES, e uma por vez não basta: o rascunho dá o gesto a TODAS
 	// as peças, e a mesa dá a uma só e o do grupo às outras. O defeito morava no
@@ -50,27 +50,27 @@ func TestNoTokenGestureAnswersForAnotherToken(t *testing.T) {
 	// Na mesa o alvo é a peça do MEIO de propósito. Com o alvo em primeiro lugar,
 	// a ordem do DOM esconde a mistura sozinha — que é exatamente por que a mesa
 	// nunca acusou nada.
-	tabuleiros := map[string]BoardView{
-		"rascunho":                 {Pecas: pecas, Mestre: true, Rascunho: true, Base: "/campanhas/1/lugares/2/tabuleiro"},
-		"mesa, alvo no meio":       {Pecas: pecas, Mestre: true, ArrastaAPeca: "beta-2222", Base: "/campanhas/1/sessoes/2/tabuleiro"},
-		"mesa, ninguém pode mover": {Pecas: pecas, Mestre: true, Base: "/campanhas/1/sessoes/2/tabuleiro"},
+	boards := map[string]BoardView{
+		"rascunho":                 {Tokens: tokens, GM: true, Draft: true, Base: "/campanhas/1/lugares/2/tabuleiro"},
+		"mesa, alvo no meio":       {Tokens: tokens, GM: true, DragsToken: "beta-2222", Base: "/campanhas/1/sessoes/2/tabuleiro"},
+		"mesa, ninguém pode mover": {Tokens: tokens, GM: true, Base: "/campanhas/1/sessoes/2/tabuleiro"},
 	}
 
-	medidos := 0
-	for cena, v := range tabuleiros {
-		for _, p := range v.Pecas {
-			for onde, expressao := range tokenGesturePieces(v, p) {
-				medidos++
-				for _, m := range dragComparison.FindAllStringSubmatch(expressao, -1) {
-					valor := m[1]
+	measured := 0
+	for scene, v := range boards {
+		for _, p := range v.Tokens {
+			for where, expression := range tokenGesturePieces(v, p) {
+				measured++
+				for _, m := range dragComparison.FindAllStringSubmatch(expression, -1) {
+					value := m[1]
 					// Vazio é o FIM do gesto ("$dragging = ''"), e vale para todo mundo.
-					if valor == "" || valor == p.ID || valor == dragsTheParty {
+					if value == "" || value == p.ID || value == dragsTheParty {
 						continue
 					}
 					t.Errorf("[%s] o %s da peça %s reconhece `$dragging === %q`, que não é o id dela nem %q.\n"+
 						"Um valor compartilhado faz o gesto de uma peça responder pelas outras: a janela entrega o "+
 						"evento a todas, e quem vence é a ORDEM DO DOM.\n  expressão: %s",
-						cena, onde, p.ID, valor, dragsTheParty, expressao)
+						scene, where, p.ID, value, dragsTheParty, expression)
 				}
 			}
 		}
@@ -78,8 +78,8 @@ func TestNoTokenGestureAnswersForAnotherToken(t *testing.T) {
 
 	// O DENOMINADOR, porque uma lista de falhas vazia e um laço que não rodou se
 	// parecem no terminal: três cenas × três peças × quatro pedaços.
-	if medidos != 36 {
-		t.Fatalf("o guarda mediu %d expressões, e não 36 — a montagem das cenas é o primeiro suspeito", medidos)
+	if measured != 36 {
+		t.Fatalf("o guarda mediu %d expressões, e não 36 — a montagem das cenas é o primeiro suspeito", measured)
 	}
 }
 
@@ -87,15 +87,15 @@ func TestNoTokenGestureAnswersForAnotherToken(t *testing.T) {
 // uma expressão que não mencione `$dragging` nenhuma vez — um gesto morto e um
 // gesto correto se parecem numa lista de violações vazia.
 func TestEveryTokenThatDragsItselfIsGuardedByItsOwnId(t *testing.T) {
-	pecas := []boardToken{
-		{ID: "alfa-1111", Rotulo: "Alfa", X: 3, Y: 3, Onde: "3, 3"},
-		{ID: "beta-2222", Rotulo: "Beta", X: 8, Y: 3, Onde: "8, 3"},
+	tokens := []boardToken{
+		{ID: "alfa-1111", Label: "Alfa", X: 3, Y: 3, Where: "3, 3"},
+		{ID: "beta-2222", Label: "Beta", X: 8, Y: 3, Where: "8, 3"},
 	}
-	v := BoardView{Pecas: pecas, Mestre: true, Rascunho: true, Base: "/campanhas/1/lugares/2/tabuleiro"}
-	for _, p := range v.Pecas {
-		for onde, expressao := range tokenGesturePieces(v, p) {
-			if !strings.Contains(expressao, "'"+p.ID+"'") {
-				t.Errorf("o %s da peça %s não cita o id dela em lugar nenhum: %s", onde, p.ID, expressao)
+	v := BoardView{Tokens: tokens, GM: true, Draft: true, Base: "/campanhas/1/lugares/2/tabuleiro"}
+	for _, p := range v.Tokens {
+		for where, expression := range tokenGesturePieces(v, p) {
+			if !strings.Contains(expression, "'"+p.ID+"'") {
+				t.Errorf("o %s da peça %s não cita o id dela em lugar nenhum: %s", where, p.ID, expression)
 			}
 		}
 	}

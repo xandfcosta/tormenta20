@@ -22,9 +22,9 @@ func TestOnlyTheSphereStartsAtTheIntersection(t *testing.T) {
 	if !shapeStartsAtIntersection(engine.AreaSphere) {
 		t.Error("a esfera deixou de nascer na interseção (p225)")
 	}
-	for _, outra := range []engine.AreaKind{engine.AreaSquare, engine.AreaCone, engine.AreaLine} {
-		if shapeStartsAtIntersection(outra) {
-			t.Errorf("%q passou a nascer na interseção, e o livro só diz isso da esfera (p225)", outra)
+	for _, other := range []engine.AreaKind{engine.AreaSquare, engine.AreaCone, engine.AreaLine} {
+		if shapeStartsAtIntersection(other) {
+			t.Errorf("%q passou a nascer na interseção, e o livro só diz isso da esfera (p225)", other)
 		}
 	}
 }

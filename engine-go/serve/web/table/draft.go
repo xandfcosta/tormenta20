@@ -62,7 +62,7 @@ func (s Scene) DraftRoutes(r chi.Router) {
 
 // ── MEDIR o rascunho ─────────────────────────────────────────────────────────
 //
-// A régua e o gabarito são desenhados no rascunho porque não são `SoMestre` e o
+// A régua e o gabarito são desenhados no rascunho porque não são `GMOnly` e o
 // trilho inteiro veio junto com o `boardTable`. As rotas PRECISAM vir junto: sem
 // elas o trilho oferece um gesto que o servidor não atende — 404, tela que não
 // muda, e nada explicando por quê. Quem varre isso é o
@@ -82,12 +82,12 @@ func (s Scene) handleDraftRuler(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.draftGm(w, r); !ok {
 		return
 	}
-	paradas, err := rulerStops(r)
+	stops, err := rulerStops(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	writeSignals(w, r, polylineReading(paradas))
+	writeSignals(w, r, polylineReading(stops))
 }
 
 // handleDraftTemplate desenha a área e diz quem ela pega (T20 p225).
@@ -107,12 +107,12 @@ func (s Scene) handleDraftTemplate(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	pedido, origem, mira, err := pointsFromBody(r)
+	requested, origin, mira, err := pointsFromBody(r)
 	if err != nil {
 		http.Error(w, "a origem e a mira do gabarito precisam ser dois pares de números", http.StatusBadRequest)
 		return
 	}
-	tipo, err := urlTemplate(pedido.Shape)
+	kind, err := urlTemplate(requested.Shape)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -120,27 +120,27 @@ func (s Scene) handleDraftTemplate(w http.ResponseWriter, r *http.Request) {
 	// A MIRA ainda não foi dada quando ela é a própria origem: o cone e a linha
 	// precisam apontar para algum lado, e escolher um pelo servidor seria
 	// inventar a decisão que falta.
-	if pointsTemplate(tipo) && mira == origem {
+	if pointsTemplate(kind) && mira == origin {
 		writeSignals(w, r, map[string]any{
 			"template_path": "", "template_text": "Clique de novo para apontar.",
 		})
 		return
 	}
-	casas := engine.AreaSquares(origem, engine.Area{
-		Kind: tipo, Size: templateSize(pedido.Size),
-		Direction: templateDirection(origem, mira),
+	squares := engine.AreaSquares(origin, engine.Area{
+		Kind: kind, Size: templateSize(requested.Size),
+		Direction: templateDirection(origin, mira),
 	})
 	// A cena pode ter sumido entre desenhar a tela e medir — outro navegador do
 	// mestre pode ter apagado o lugar. O desenho sai de qualquer jeito; o que
 	// falta é a lista de quem ele pega, e "ninguém" é a resposta honesta para um
 	// mapa que não existe mais.
-	cena, err := s.deps.Boards().PlaceScene(r.Context(), c.CampaignID, c.PlaceID)
+	scene, err := s.deps.Boards().PlaceScene(r.Context(), c.CampaignID, c.PlaceID)
 	if err != nil {
-		cena = nil
+		scene = nil
 	}
 	writeSignals(w, r, map[string]any{
-		"template_path": squaresPath(casas),
-		"template_text": takesTemplateWho(cena, casas),
+		"template_path": squaresPath(squares),
+		"template_text": takesTemplateWho(scene, squares),
 	})
 }
 
@@ -159,7 +159,7 @@ func (s Scene) handleDraftPage(w http.ResponseWriter, r *http.Request) {
 	// só e nada acontece nele que não tenha sido esta pessoa fazendo — uma
 	// conexão SSE aberta aqui ficaria esperando um evento que ninguém publica.
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: "Rascunho · " + view.Lugar,
+		Titulo: "Rascunho · " + view.Place,
 		Sinais: tableSignalsExpr(),
 	}, draftBody(view))
 }
@@ -171,7 +171,7 @@ func (s Scene) handleDraftPage(w http.ResponseWriter, r *http.Request) {
 // mesa esperando; e a resposta redesenha UMA região, porque a página do rascunho
 // tem uma só — a Mesa manda nove.
 func (s Scene) draftCommand(
-	mutar func(Scene, draftCtx, *board.BoardState) error,
+	mutate func(Scene, draftCtx, *board.BoardState) error,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, ok := s.draftGm(w, r)
@@ -182,72 +182,72 @@ func (s Scene) draftCommand(
 		// `NewSSE` assume a resposta e fecha o corpo do pedido. A ordem inversa passa
 		// VERDE em teste de handler e falha no servidor de verdade.
 		_, err := s.deps.Boards().EditPlace(r.Context(), c.CampaignID, c.PlaceID,
-			func(b *board.BoardState) error { return mutar(s, c, b) })
+			func(b *board.BoardState) error { return mutate(s, c, b) })
 
 		sse := datastar.NewSSE(w, r)
-		frase := ""
+		sentence := ""
 		if err != nil {
-			frase = err.Error()
+			sentence = err.Error()
 		}
 		// REDESENHA NOS DOIS CAMINHOS, inclusive na recusa: é o que mostra que a
 		// cena continua como estava, ao lado da frase que diz por quê. Sem isso
 		// uma recusa deixa a tela mostrando o gesto que o servidor não aceitou.
-		if view, erroDeLeitura := s.draftPageOf(r.Context(), c); erroDeLeitura == nil {
-			if fragmento, erroDeDesenho := ui.RenderFragment(r.Context(), draftBoardRegion(view)); erroDeDesenho == nil {
-				_ = sse.PatchElements(fragmento)
+		if view, readErr := s.draftPageOf(r.Context(), c); readErr == nil {
+			if fragment, drawErr := ui.RenderFragment(r.Context(), draftBoardRegion(view)); drawErr == nil {
+				_ = sse.PatchElements(fragment)
 			}
 		}
-		_ = sse.MarshalAndPatchSignals(map[string]any{"command_error": frase})
+		_ = sse.MarshalAndPatchSignals(map[string]any{"command_error": sentence})
 	}
 }
 
 // ── o TERRENO (T20 p238) ─────────────────────────────────────────────────────
 
 func draftPaintsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
-	pedido, traco, err := strokeFromBody(c.R)
+	requested, trait, err := strokeFromBody(c.R)
 	if err != nil {
 		return err
 	}
-	especie := board.KnownTerrainKind(pedido.Kind)
+	species := board.KnownTerrainKind(requested.Kind)
 	// O `erase` continua sendo MODO da ferramenta e não uma rota própria, como
 	// na mesa: ele vale para o arraste inteiro, e não para um quadrado.
-	ligado := !pedido.Erase
-	for _, casa := range traco {
-		board.PaintTerrain(b, casa, especie, ligado)
+	on := !requested.Erase
+	for _, square := range trait {
+		board.PaintTerrain(b, square, species, on)
 	}
 	return nil
 }
 
 func draftClearsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
-	_, traco, err := strokeFromBody(c.R)
+	_, trait, err := strokeFromBody(c.R)
 	if err != nil {
 		return err
 	}
-	for _, casa := range traco {
-		board.ClearSquare(b, casa)
+	for _, square := range trait {
+		board.ClearSquare(b, square)
 	}
 	return nil
 }
 
 func draftFillsRect(st Scene, c draftCtx, b *board.BoardState) error {
-	pedido, casas, err := rectFromBody(c.R)
+	requested, squares, err := rectFromBody(c.R)
 	if err != nil {
 		return err
 	}
-	especie := board.KnownTerrainKind(pedido.Kind)
-	for _, casa := range casas {
-		board.PaintTerrain(b, casa, especie, true)
+	species := board.KnownTerrainKind(requested.Kind)
+	for _, square := range squares {
+		board.PaintTerrain(b, square, species, true)
 	}
 	return nil
 }
 
 func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
-	_, casas, err := rectFromBody(c.R)
+	_, squares, err := rectFromBody(c.R)
 	if err != nil {
 		return err
 	}
-	for _, casa := range casas {
-		board.ClearSquare(b, casa)
+	for _, square := range squares {
+		board.ClearSquare(b, square)
 	}
 	return nil
 }
@@ -259,40 +259,40 @@ func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
 // Ela lê a MESMA tira que a mesa lê (`loosePieceSignals`), com as mesmas
 // recusas — nome obrigatório, tamanho do livro (p107), aparência conhecida.
 func draftNewLoosePiece(st Scene, c draftCtx, b *board.BoardState) error {
-	desenho, casa, err := loosePieceSignals(c.R)
+	drawing, square, err := loosePieceSignals(c.R)
 	if err != nil {
 		return err
 	}
 	return board.AddToken(b, board.BoardToken{
-		Label: desenho.Nome, Kind: desenho.Aparencia, Footprint: desenho.Tamanho,
-		X: casa.X, Y: casa.Y,
+		Label: drawing.Name, Kind: drawing.Appearance, Footprint: drawing.Size,
+		X: square.X, Y: square.Y,
 	}, st.deps.Boards().NewID)
 }
 
 // draftMovesToken põe a peça na casa, sem proposta e sem custo.
 func draftMovesToken(st Scene, c draftCtx, b *board.BoardState) error {
-	casa, err := squareOnly(c.R)
+	square, err := squareOnly(c.R)
 	if err != nil {
 		return err
 	}
 	return board.UpdateToken(b, chi.URLParam(c.R, "id"),
-		board.ParseTokenPatch(map[string]any{"x": casa.X, "y": casa.Y}))
+		board.ParseTokenPatch(map[string]any{"x": square.X, "y": square.Y}))
 }
 
 func draftEditsToken(st Scene, c draftCtx, b *board.BoardState) error {
-	var sinais tokenSignals
-	if err := datastar.ReadSignals(c.R, &sinais); err != nil {
+	var signals tokenSignals
+	if err := datastar.ReadSignals(c.R, &signals); err != nil {
 		return fmt.Errorf("não entendi o formulário da peça: %v", err)
 	}
-	nome := strings.TrimSpace(sinais.Nome)
-	if nome == "" {
+	name := strings.TrimSpace(signals.Name)
+	if name == "" {
 		return errors.New("a peça precisa de um nome")
 	}
-	if !tokenSize(sinais.Tamanho) {
-		return fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", sinais.Tamanho)
+	if !tokenSize(signals.Size) {
+		return fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", signals.Size)
 	}
 	return board.UpdateToken(b, chi.URLParam(c.R, "id"),
-		board.ParseTokenPatch(map[string]any{"label": nome, "footprint": sinais.Tamanho}))
+		board.ParseTokenPatch(map[string]any{"label": name, "footprint": signals.Size}))
 }
 
 func draftDuplicatesToken(st Scene, c draftCtx, b *board.BoardState) error {
@@ -316,23 +316,23 @@ func draftRemovesToken(st Scene, c draftCtx, b *board.BoardState) error {
 // tela ser a fonte da verdade de um estado que é do servidor.
 func draftTogglesVisibility(st Scene, c draftCtx, b *board.BoardState) error {
 	id := chi.URLParam(c.R, "id")
-	peca := board.FindToken(b, id)
-	if peca == nil {
+	token := board.FindToken(b, id)
+	if token == nil {
 		return fmt.Errorf("peça %q não está no rascunho", id)
 	}
-	escondida := !peca.Hidden
-	return board.UpdateToken(b, id, board.ParseTokenPatch(map[string]any{"hidden": escondida}))
+	hidden := !token.Hidden
+	return board.UpdateToken(b, id, board.ParseTokenPatch(map[string]any{"hidden": hidden}))
 }
 
 // ── os MARCADORES ────────────────────────────────────────────────────────────
 
 func draftMarksTheSpot(st Scene, c draftCtx, b *board.BoardState) error {
-	casa, err := squareOnly(c.R)
+	square, err := squareOnly(c.R)
 	if err != nil {
 		return err
 	}
 	return board.AddMarker(b, board.BoardMarker{
-		X: casa.X, Y: casa.Y,
+		X: square.X, Y: square.Y,
 		Text:  board.NextMarkerLetter(b.Markers),
 		Color: board.DefaultMarkerColor(),
 		// ESCONDIDO ao nascer, e é a razão de o marcador existir: marcar a
@@ -342,31 +342,31 @@ func draftMarksTheSpot(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftRevealsMarker(st Scene, c draftCtx, b *board.BoardState) error {
-	marcador, err := draftMarker(c, b)
+	marker, err := draftMarker(c, b)
 	if err != nil {
 		return err
 	}
-	return board.UpdateMarker(b, marcador.ID, board.MarkerReveal(!marcador.Hidden))
+	return board.UpdateMarker(b, marker.ID, board.MarkerReveal(!marker.Hidden))
 }
 
 func draftPaintsMarker(st Scene, c draftCtx, b *board.BoardState) error {
-	marcador, err := draftMarker(c, b)
+	marker, err := draftMarker(c, b)
 	if err != nil {
 		return err
 	}
-	cor := chi.URLParam(c.R, "cor")
-	if !board.KnownMarkerColor(cor) {
-		return fmt.Errorf("a cor %q não existe; as do mapa são %s", cor, coresEmPortugues())
+	color := chi.URLParam(c.R, "cor")
+	if !board.KnownMarkerColor(color) {
+		return fmt.Errorf("a cor %q não existe; as do mapa são %s", color, coresEmPortugues())
 	}
-	return board.UpdateMarker(b, marcador.ID, board.NewMarkerColor(cor))
+	return board.UpdateMarker(b, marker.ID, board.NewMarkerColor(color))
 }
 
 func draftErasesMarker(st Scene, c draftCtx, b *board.BoardState) error {
-	marcador, err := draftMarker(c, b)
+	marker, err := draftMarker(c, b)
 	if err != nil {
 		return err
 	}
-	board.RemoveMarker(b, marcador.ID)
+	board.RemoveMarker(b, marker.ID)
 	return nil
 }
 

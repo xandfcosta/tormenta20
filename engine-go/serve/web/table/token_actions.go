@@ -49,12 +49,12 @@ func (s Scene) TokenActionRoutes(r chi.Router) {
 // apagarem um ao outro — e o resultado desse empate é a emboscada aparecendo
 // para a mesa.
 func toggleVisibility(st Scene, c commandCtx) (*board.BoardState, error) {
-	peca, err := st.tokenOfCommand(c)
+	token, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID,
-		board.ParseTokenPatch(map[string]any{"hidden": !peca.Hidden}))
+	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
+		board.ParseTokenPatch(map[string]any{"hidden": !token.Hidden}))
 }
 
 // OS DUPLICARES, e a diferença entre eles é o que a cópia faz com a LINHA DA
@@ -76,31 +76,31 @@ func toggleVisibility(st Scene, c commandCtx) (*board.BoardState, error) {
 // Um construtor e não três funções porque a diferença entre eles cabe inteira no
 // `bondForMode` — três corpos seriam três lugares para o "sangrando junto" do
 // duplicar e o do colar discordarem sobre o que a palavra significa.
-func duplicatesWith(modo string) func(Scene, commandCtx) (*board.BoardState, error) {
+func duplicatesWith(mode string) func(Scene, commandCtx) (*board.BoardState, error) {
 	return func(st Scene, c commandCtx) (*board.BoardState, error) {
-		peca, err := st.tokenOfCommand(c)
+		token, err := st.tokenOfCommand(c)
 		if err != nil {
 			return nil, err
 		}
-		laco, err := st.bondForMode(c, modo, peca)
+		loop, err := st.bondForMode(c, mode, token)
 		if err != nil {
 			return nil, err
 		}
-		return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID, laco)
+		return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID, loop)
 	}
 }
 
 // clipboardSignals é a ÁREA DE TRANSFERÊNCIA de quem clicou, e ela viaja do
 // cliente porque é dele: a área é de quem copiou, não da mesa.
 type clipboardSignals struct {
-	Peca      string `json:"area_token"`
-	Tabuleiro string `json:"area_board"`
-	Modo      string `json:"area_mode"`
+	Token string `json:"area_token"`
+	Board string `json:"area_board"`
+	Mode  string `json:"area_mode"`
 	// O DESTINO viaja no mesmo corpo, calculado no instante do Ctrl+V. O
 	// `payload` do Datastar SUBSTITUI os sinais em vez de somar a eles, então os
 	// três campos acima precisam estar listados na expressão ao lado dele — ver
 	// `pasteInTheMiddleOfTheView`.
-	Destino struct{ X, Y int } `json:"from"`
+	Destination struct{ X, Y int } `json:"from"`
 }
 
 // pastesToken põe outra igual onde a pessoa está OLHANDO.
@@ -122,22 +122,22 @@ func pastesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err := datastar.ReadSignals(c.R, &area); err != nil {
 		return nil, fmt.Errorf("não entendi o que há na área: %v", err)
 	}
-	if area.Peca == "" {
+	if area.Token == "" {
 		return nil, fmt.Errorf("não há peça na área — copie uma primeiro, pelo menu dela")
 	}
 	// A ORIGEM é o tabuleiro de onde a peça foi copiada, e não o que está na
 	// tela: são diferentes justamente quando o colar mais serve.
-	origem := st.deps.Boards().Get(c.R.Context(), c.SessionID, area.Tabuleiro)
-	modelo := board.FindToken(origem, area.Peca)
-	if modelo == nil {
+	origin := st.deps.Boards().Get(c.R.Context(), c.SessionID, area.Board)
+	template := board.FindToken(origin, area.Token)
+	if template == nil {
 		return nil, fmt.Errorf("a peça que estava na área não está mais no tabuleiro de origem")
 	}
-	laco, err := st.bondForMode(c, area.Modo, modelo)
+	loop, err := st.bondForMode(c, area.Mode, template)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().PasteToken(c.R.Context(), c.SessionID, c.TabuleiroID, *modelo, laco,
-		area.Destino.X, area.Destino.Y)
+	return st.deps.Boards().PasteToken(c.R.Context(), c.SessionID, c.BoardID, *template, loop,
+		area.Destination.X, area.Destination.Y)
 }
 
 // bondForMode traduz o modo guardado na área para o LAÇO da cópia.
@@ -145,43 +145,43 @@ func pastesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 // Ele é o mesmo mapa que os três verbos de duplicar usam, escrito uma vez: o
 // colar e o duplicar têm de concordar sobre o que "sangrando junto" significa, e
 // duas traduções seriam dois lugares para discordar.
-func (s Scene) bondForMode(c commandCtx, modo string, modelo *board.BoardToken) (*live.InitiativeEntry, error) {
-	if modo == modoSoAPeca {
+func (s Scene) bondForMode(c commandCtx, mode string, template *board.BoardToken) (*live.InitiativeEntry, error) {
+	if mode == modoSoAPeca {
 		return nil, nil
 	}
-	linha := s.queueLineOf(c.SessionID, modelo)
-	if linha == nil {
-		return nil, fmt.Errorf("%s não é um combatente da fila, e sem PV não há o que dividir nem o que copiar", modelo.Label)
+	row := s.queueLineOf(c.SessionID, template)
+	if row == nil {
+		return nil, fmt.Errorf("%s não é um combatente da fila, e sem PV não há o que dividir nem o que copiar", template.Label)
 	}
-	if modo == modoJunto {
-		return linha, nil
+	if mode == modoJunto {
+		return row, nil
 	}
-	if modo != modoSozinha && modo != modoBloco {
-		return nil, fmt.Errorf("modo de cópia desconhecido: %q", modo)
+	if mode != modoSozinha && mode != modoBloco {
+		return nil, fmt.Errorf("modo de cópia desconhecido: %q", mode)
 	}
-	linhaModelo := *linha
-	if modo == modoBloco {
+	templateRow := *row
+	if mode == modoBloco {
 		// O BLOCO é clonado ANTES da linha, e a ordem importa: a linha nova já
 		// nasce apontando para a cópia. Criar a linha primeiro e remendá-la
 		// depois deixaria uma janela em que ela aponta para o bloco da original —
 		// e nessa janela um remendo da cena desenharia o chefe com a ficha errada.
-		if linha.CreatureID == nil {
-			return nil, fmt.Errorf("%s não tem bloco de criatura: não há o que copiar", linha.Label)
+		if row.CreatureID == nil {
+			return nil, fmt.Errorf("%s não tem bloco de criatura: não há o que copiar", row.Label)
 		}
-		nomeDaCopia := s.nextNameForTheLine(c.SessionID, linha.Label)
-		blocoNovo, err := s.cast.CloneBlock(
-			c.R.Context(), s.callerOf(c.R), c.CampaignID, *linha.CreatureID, nomeDaCopia)
+		copyName := s.nextNameForTheLine(c.SessionID, row.Label)
+		newBlock, err := s.cast.CloneBlock(
+			c.R.Context(), s.callerOf(c.R), c.CampaignID, *row.CreatureID, copyName)
 		if err != nil {
-			return nil, castRefusal(err, strconv.Quote(linha.Label))
+			return nil, castRefusal(err, strconv.Quote(row.Label))
 		}
-		linhaModelo.CreatureID = &blocoNovo
+		templateRow.CreatureID = &newBlock
 	}
-	nova, err := s.addsACopyOfTheLine(c.SessionID, linhaModelo)
+	nova, err := s.addsACopyOfTheLine(c.SessionID, templateRow)
 	if err != nil {
 		return nil, err
 	}
-	if fila := s.deps.Sessions().GetState(c.SessionID); fila != nil {
-		s.deps.PublishSessionState(c.SessionID, fila)
+	if queue := s.deps.Sessions().GetState(c.SessionID); queue != nil {
+		s.deps.PublishSessionState(c.SessionID, queue)
 	}
 	return nova, nil
 }
@@ -199,17 +199,17 @@ const (
 )
 
 // queueLineOf é a linha da fila por trás de uma peça, ou nulo.
-func (s Scene) queueLineOf(sessionID int64, peca *board.BoardToken) *live.InitiativeEntry {
-	if peca.EntryID == nil {
+func (s Scene) queueLineOf(sessionID int64, token *board.BoardToken) *live.InitiativeEntry {
+	if token.EntryID == nil {
 		return nil
 	}
-	estado := s.deps.Sessions().GetState(sessionID)
-	if estado == nil {
+	state := s.deps.Sessions().GetState(sessionID)
+	if state == nil {
 		return nil
 	}
-	for i := range estado.Initiative {
-		if estado.Initiative[i].ID == *peca.EntryID {
-			return &estado.Initiative[i]
+	for i := range state.Initiative {
+		if state.Initiative[i].ID == *token.EntryID {
+			return &state.Initiative[i]
 		}
 	}
 	return nil
@@ -223,16 +223,16 @@ func (s Scene) queueLineOf(sessionID int64, peca *board.BoardToken) *live.Initia
 // A conta é a MESMA do `AddEntry` (o `numberedLabel`), e repeti-la aqui é o
 // preço de precisar do nome cedo. Quem numera de verdade continua sendo o
 // `AddEntry`; este valor só decide como o BLOCO se chama.
-func (s Scene) nextNameForTheLine(sessionID int64, rotulo string) string {
-	estado := s.deps.Sessions().GetState(sessionID)
-	if estado == nil {
-		return rotulo
+func (s Scene) nextNameForTheLine(sessionID int64, label string) string {
+	state := s.deps.Sessions().GetState(sessionID)
+	if state == nil {
+		return label
 	}
-	usados := make([]string, 0, len(estado.Initiative))
-	for i := range estado.Initiative {
-		usados = append(usados, estado.Initiative[i].Label)
+	used := make([]string, 0, len(state.Initiative))
+	for i := range state.Initiative {
+		used = append(used, state.Initiative[i].Label)
 	}
-	return live.NextInstanceLabelAmong(usados, rotulo)
+	return live.NextInstanceLabelAmong(used, label)
 }
 
 // addsACopyOfTheLine põe na fila outra linha igual à dada, e devolve a que
@@ -249,30 +249,30 @@ func (s Scene) nextNameForTheLine(sessionID int64, rotulo string) string {
 // ORDENA a fila por iniciativa depois de inserir, então a recém-chegada pode
 // pousar em qualquer posição. Pegar `Initiative[len-1]` daria a de menor
 // iniciativa da mesa, e daria certo por acaso sempre que o zumbi fosse lento.
-func (s Scene) addsACopyOfTheLine(sessionID int64, modelo live.InitiativeEntry) (*live.InitiativeEntry, error) {
-	antes := map[string]bool{}
-	if estado := s.deps.Sessions().GetState(sessionID); estado != nil {
-		for i := range estado.Initiative {
-			antes[estado.Initiative[i].ID] = true
+func (s Scene) addsACopyOfTheLine(sessionID int64, template live.InitiativeEntry) (*live.InitiativeEntry, error) {
+	before := map[string]bool{}
+	if state := s.deps.Sessions().GetState(sessionID); state != nil {
+		for i := range state.Initiative {
+			before[state.Initiative[i].ID] = true
 		}
 	}
-	nova := modelo
+	nova := template
 	nova.ID = ""
 	nova.Conditions = nil
-	if modelo.HpMax != nil {
-		cheia := live.DerefOr(modelo.HpMax, 0)
-		nova.HpCurrent, nova.HpMax = &cheia, &cheia
+	if template.HpMax != nil {
+		full := live.DerefOr(template.HpMax, 0)
+		nova.HpCurrent, nova.HpMax = &full, &full
 	}
-	depois, err := s.deps.Sessions().AddInitiativeEntry(sessionID, nova)
+	after, err := s.deps.Sessions().AddInitiativeEntry(sessionID, nova)
 	if err != nil {
 		return nil, err
 	}
-	for i := range depois.Initiative {
-		if !antes[depois.Initiative[i].ID] {
-			return &depois.Initiative[i], nil
+	for i := range after.Initiative {
+		if !before[after.Initiative[i].ID] {
+			return &after.Initiative[i], nil
 		}
 	}
-	return nil, fmt.Errorf("a linha de %s não entrou na fila", modelo.Label)
+	return nil, fmt.Errorf("a linha de %s não entrou na fila", template.Label)
 }
 
 // wasWhereForTokenBack desfaz o último pouso.
@@ -284,20 +284,20 @@ func (s Scene) addsACopyOfTheLine(sessionID int64, modelo live.InitiativeEntry) 
 // usado. Um "voltar" que continuasse disponível andaria para trás na cena sem
 // dizer até onde vai.
 func wasWhereForTokenBack(st Scene, c commandCtx) (*board.BoardState, error) {
-	peca, err := st.tokenOfCommand(c)
+	token, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
-	if peca.CameFrom == nil {
-		return nil, fmt.Errorf("%s não foi movida nesta cena: não há para onde voltar", peca.Label)
+	if token.CameFrom == nil {
+		return nil, fmt.Errorf("%s não foi movida nesta cena: não há para onde voltar", token.Label)
 	}
-	return st.deps.Boards().ReturnToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
+	return st.deps.Boards().ReturnToken(c.R.Context(), c.SessionID, c.BoardID, token.ID)
 }
 
 // tokenSignals é o que o diálogo de editar manda.
 type tokenSignals struct {
-	Nome    string `json:"token_name"`
-	Tamanho int    `json:"token_size"`
+	Name string `json:"token_name"`
+	Size int    `json:"token_size"`
 }
 
 // editsToken muda o NOME e o TAMANHO.
@@ -307,23 +307,23 @@ type tokenSignals struct {
 // peça Grande desenhada em 1×1 mente sobre quem o gabarito pega e sobre onde cabe
 // passar.
 func editsToken(st Scene, c commandCtx) (*board.BoardState, error) {
-	peca, err := st.tokenOfCommand(c)
+	token, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
-	var sinais tokenSignals
-	if err := datastar.ReadSignals(c.R, &sinais); err != nil {
+	var signals tokenSignals
+	if err := datastar.ReadSignals(c.R, &signals); err != nil {
 		return nil, fmt.Errorf("não entendi o formulário da peça: %v", err)
 	}
-	nome := strings.TrimSpace(sinais.Nome)
-	if nome == "" {
+	name := strings.TrimSpace(signals.Name)
+	if name == "" {
 		return nil, fmt.Errorf("a peça precisa de um nome")
 	}
-	if !tokenSize(sinais.Tamanho) {
-		return nil, fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", sinais.Tamanho)
+	if !tokenSize(signals.Size) {
+		return nil, fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", signals.Size)
 	}
-	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID,
-		board.ParseTokenPatch(map[string]any{"label": nome, "footprint": sinais.Tamanho}))
+	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
+		board.ParseTokenPatch(map[string]any{"label": name, "footprint": signals.Size}))
 }
 
 // removesToken tira a peça do tabuleiro, e SÓ do tabuleiro.
@@ -332,11 +332,11 @@ func editsToken(st Scene, c commandCtx) (*board.BoardState, error) {
 // — "ele saiu do mapa" e "ele saiu do combate" —, e juntá-los faria o mestre
 // perder o combatente ao arrumar a cena.
 func removesToken(st Scene, c commandCtx) (*board.BoardState, error) {
-	peca, err := st.tokenOfCommand(c)
+	token, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().RemoveToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
+	return st.deps.Boards().RemoveToken(c.R.Context(), c.SessionID, c.BoardID, token.ID)
 }
 
 // tokenOfCommand lê a peça pelo id do CAMINHO, e recusa a que não existe.
@@ -345,16 +345,16 @@ func removesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 // ela some de verdade: outra aba do mestre pode ter removido a mesma peça meio
 // segundo antes. A frase diz o id porque é ele que o botão carregava.
 func (s Scene) tokenOfCommand(c commandCtx) (*board.BoardToken, error) {
-	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID)
+	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
 	tokenID := chi.URLParam(c.R, "tokenId")
-	peca := board.FindToken(b, tokenID)
-	if peca == nil {
+	token := board.FindToken(b, tokenID)
+	if token == nil {
 		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
-	return peca, nil
+	return token, nil
 }
 
 // tokenSizes são os lados que o livro define (T20 p107, Tab. 1-21).
@@ -364,8 +364,8 @@ func (s Scene) tokenOfCommand(c commandCtx) (*board.BoardToken, error) {
 // Um seletor com os números do livro impede a peça de lado 4 que nenhuma criatura
 // tem.
 var tokenSizes = []struct {
-	Lado   int
-	Rotulo string
+	Side  int
+	Label string
 }{
 	{1, "Médio ou menor · 1×1"},
 	{2, "Grande · 2×2"},
@@ -373,9 +373,9 @@ var tokenSizes = []struct {
 	{6, "Colossal · 6×6"},
 }
 
-func tokenSize(lado int) bool {
+func tokenSize(side int) bool {
 	for _, t := range tokenSizes {
-		if t.Lado == lado {
+		if t.Side == side {
 			return true
 		}
 	}
@@ -440,10 +440,10 @@ func closesTheCopyMenu(tokenID string) string {
 // O RÓTULO viaja junto para a faixa dizer o que está na área sem uma segunda ida
 // ao servidor. Ele é só para ler: quem manda no que se cola é o par
 // `$area_token` + `$area_board`.
-func putsInTheClipboard(v BoardView, p boardToken, modo, frase string) string {
+func putsInTheClipboard(v BoardView, p boardToken, mode, sentence string) string {
 	return closesTheCopyMenu(p.ID) + fmt.Sprintf(
 		"$area_token = %q; $area_board = %q; $area_mode = %q; $area_label = %q; $area_phrase = %q; ",
-		p.ID, v.TabuleiroID, modo, p.Rotulo, frase,
+		p.ID, v.BoardID, mode, p.Label, sentence,
 	) + closeMenuToken
 }
 
@@ -463,13 +463,13 @@ const emptiesTheClipboard = "$area_token = ''; $area_board = ''; $area_mode = ''
 // mesma promessa: dentro de um campo de texto a tecla continua sendo do texto,
 // que é o que a issue pede com todas as letras.
 func pasteInTheMiddleOfTheView(v BoardView) string {
-	meioX := fmt.Sprintf("Math.floor(($viewport_x + document.getElementById(%q).clientWidth / 2) / $square)", sceneId)
-	meioY := fmt.Sprintf("Math.floor(($viewport_y + document.getElementById(%q).clientHeight / 2) / $square)", sceneId)
+	midX := fmt.Sprintf("Math.floor(($viewport_x + document.getElementById(%q).clientWidth / 2) / $square)", sceneId)
+	midY := fmt.Sprintf("Math.floor(($viewport_y + document.getElementById(%q).clientHeight / 2) / $square)", sceneId)
 	return typingTargetWithout +
 		fmt.Sprintf("(evt.key === 'v' || evt.key === 'V') && (evt.ctrlKey || evt.metaKey) && $area_token !== '' "+
 			"? (evt.preventDefault(), @post('%s/colar', {payload: {from: {x: %s, y: %s}, "+
 			"area_token: $area_token, area_board: $area_board, area_mode: $area_mode}})) : null",
-			v.Base, meioX, meioY)
+			v.Base, midX, midY)
 }
 
 // copyCommand é o gesto de um dos três modos: manda e fecha as duas camadas.
@@ -477,13 +477,13 @@ func pasteInTheMiddleOfTheView(v BoardView) string {
 // Fechar faz parte do gesto porque a resposta REDESENHA o tabuleiro inteiro, e um
 // submenu que sobrevive ao redesenho fica pendurado sobre uma peça que já ganhou
 // irmã — pedindo um segundo clique para dizer que acabou.
-func copyCommand(v BoardView, id, modo string) string {
-	return closesTheCopyMenu(id) + tokenCommand(v, id, "duplicar/"+modo) + "; " + closeMenuToken
+func copyCommand(v BoardView, id, mode string) string {
+	return closesTheCopyMenu(id) + tokenCommand(v, id, "duplicar/"+mode) + "; " + closeMenuToken
 }
 
 // tokenCommand escreve o gesto de um verbo do menu.
-func tokenCommand(v BoardView, id, acao string) string {
-	return fmt.Sprintf("@post('%s/pecas/%s/%s')", v.Base, id, acao)
+func tokenCommand(v BoardView, id, action string) string {
+	return fmt.Sprintf("@post('%s/pecas/%s/%s')", v.Base, id, action)
 }
 
 // openEditToken semeia o formulário com o que a peça É hoje, e só então abre.
@@ -496,7 +496,7 @@ func tokenCommand(v BoardView, id, acao string) string {
 func openEditToken(p boardToken) string {
 	return fmt.Sprintf("$token_edited = %q; $token_name = %q; $token_size = %d; %s; "+
 		"document.getElementById('edit-token').showModal()",
-		p.ID, p.Rotulo, p.Pegada, closeMenuToken)
+		p.ID, p.Label, p.Footprint, closeMenuToken)
 }
 
 // saveEditToken manda o formulário para a peça que o gesto de abrir marcou.
@@ -520,10 +520,10 @@ func saveEditToken(v BoardView) string {
 // "Esconder" numa peça visível e "Mostrar" numa escondida: nome acessível de
 // botão é o que ele FAZ. O estado quem carrega é o `aria-pressed`.
 func visibilityName(p boardToken) string {
-	if p.Oculta {
-		return "Mostrar " + p.Rotulo + " à mesa"
+	if p.Hidden {
+		return "Mostrar " + p.Label + " à mesa"
 	}
-	return "Esconder " + p.Rotulo + " da mesa"
+	return "Esconder " + p.Label + " da mesa"
 }
 
 // tokenSquare é onde ela estava, para a frase do "voltar" dizer o destino.

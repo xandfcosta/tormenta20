@@ -58,7 +58,7 @@ type Deps interface {
 	//
 	// Os três saem quando os STORES saírem, e não antes: eles são a gravação dos
 	// stores, não um gesto. Ver a nota do `app/` no guia.
-	PublishSessionState(sessionID int64, estado *live.SessionRuntimeState)
+	PublishSessionState(sessionID int64, state *live.SessionRuntimeState)
 	PublishBoardState(sessionID int64, board *board.BoardState)
 	PublishWhatIsLeft(ctx context.Context, sessionID int64)
 	// CharacterChanged é a regra da FICHA, que a Mesa pede emprestada: avisa a
@@ -77,9 +77,9 @@ type Deps interface {
 	BookAddress() bookui.BookAddress
 	// Asset é o endereço VERSIONADO de um estático: os arquivos são `go:embed`
 	// do hospedeiro.
-	Asset(arquivo string) string
+	Asset(file string) string
 	// WritePage é a montagem da casca.
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 }
 
 // Scene é a cena montada, com as dependências dela e o estado que é DELA: as
@@ -117,12 +117,12 @@ type Scene struct {
 }
 
 func New(
-	d Deps, ciclo session.Lifecycle, grupo rest.Party,
-	fila initiative.Queue, elenco campaign.Cast,
+	d Deps, cycle session.Lifecycle, group rest.Party,
+	queue initiative.Queue, cast campaign.Cast,
 ) Scene {
 	return Scene{
-		deps: d, lifecycle: ciclo, party: grupo, queue: fila, cast: elenco,
-		access: ciclo.Access(),
+		deps: d, lifecycle: cycle, party: group, queue: queue, cast: cast,
+		access: cycle.Access(),
 		lenses: newLenses(), chosenTabs: newTabs(),
 	}
 }

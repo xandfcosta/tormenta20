@@ -29,17 +29,17 @@ import (
 // draftView é a página do rascunho.
 type draftView struct {
 	CampaignID int64
-	// CampanhaNome é para onde o "voltar" leva, escrito: fora da sessão o mestre
+	// CampaignName é para onde o "voltar" leva, escrito: fora da sessão o mestre
 	// veio da crônica, e um "voltar" sem nome não diz para onde.
-	CampanhaNome string
-	Lugar        string
-	// GravadoEm é o instante da última gravação, já legível.
+	CampaignName string
+	Place        string
+	// SavedAt é o instante da última gravação, já legível.
 	//
 	// Ele existe porque o rascunho grava a CADA GESTO, sem botão de salvar: sem
 	// nada na tela dizendo isso, a única leitura possível é "será que perdi o
 	// que fiz?", e a resposta certa é invisível.
-	GravadoEm string
-	Tabuleiro BoardView
+	SavedAt string
+	Board   BoardView
 }
 
 // draftBoardOf monta o tabuleiro do rascunho a partir da cena guardada.
@@ -53,12 +53,12 @@ type draftView struct {
 // O papel é `gm` porque o rascunho é privativo por construção — quem não mestra
 // a campanha não chega até aqui (ver `draftGm`). Não é a redação do
 // `BoardForRole` sendo pulada: é que não há mesa para redigir nada PARA.
-func draftBoardOf(cena *board.BoardState, campaignID, placeID int64) BoardView {
-	v := boardViewOf(cena, nil, nil, "", board.Mover{Role: "gm"}, nil, campaignID, 0)
+func draftBoardOf(scene *board.BoardState, campaignID, placeID int64) BoardView {
+	v := boardViewOf(scene, nil, nil, "", board.Mover{Role: "gm"}, nil, campaignID, 0)
 	// O `boardViewOf` escreve o `Base` da MESA, que é o destino de 99% das
 	// chamadas dele. Aqui ele é reescrito, e o par é o que faz os gestos
 	// desta tela postarem no acervo em vez de numa sessão que não existe.
-	v.Rascunho = true
+	v.Draft = true
 	v.Base = placeDraftBase(campaignID, placeID)
 	return v
 }
@@ -70,14 +70,14 @@ func draftBoardOf(cena *board.BoardState, campaignID, placeID int64) BoardView {
 // "os dois ids" esconderia justamente a diferença que esta issue existe para
 // desenhar.
 func draftParams(w http.ResponseWriter, r *http.Request) (campaignID, placeID int64, ok bool) {
-	campanha, erroCampanha := strconv.ParseInt(chi.URLParam(r, "campaignId"), 10, 64)
-	lugar, erroLugar := strconv.ParseInt(chi.URLParam(r, "placeId"), 10, 64)
-	if erroCampanha != nil || erroLugar != nil {
+	campaign, campaignErr := strconv.ParseInt(chi.URLParam(r, "campaignId"), 10, 64)
+	place, placeErr := strconv.ParseInt(chi.URLParam(r, "placeId"), 10, 64)
+	if campaignErr != nil || placeErr != nil {
 		http.Error(w, fmt.Sprintf("endereço de rascunho inválido: campanha %q, lugar %q",
 			chi.URLParam(r, "campaignId"), chi.URLParam(r, "placeId")), http.StatusBadRequest)
 		return 0, 0, false
 	}
-	return campanha, lugar, true
+	return campaign, place, true
 }
 
 // draftGm é a trava, e ela é do SERVIDOR: só quem MESTRA a campanha monta o
@@ -93,14 +93,14 @@ func (s Scene) draftGm(w http.ResponseWriter, r *http.Request) (draftCtx, bool) 
 		return draftCtx{}, false
 	}
 	userID := s.deps.CurrentUserID(r)
-	campanha, err := s.access.OwnedCampaign(r.Context(), app.Caller{ID: userID}, campaignID)
+	campaign, err := s.access.OwnedCampaign(r.Context(), app.Caller{ID: userID}, campaignID)
 	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return draftCtx{}, false
 	}
 	return draftCtx{
-		R: r, CampaignID: campaignID, PlaceID: placeID, CampanhaNome: campanha.Name,
+		R: r, CampaignID: campaignID, PlaceID: placeID, CampaignName: campaign.Name,
 	}, true
 }
 
@@ -109,28 +109,28 @@ type draftCtx struct {
 	R          *http.Request
 	CampaignID int64
 	PlaceID    int64
-	// CampanhaNome é o nome da crônica, para o cabeçalho e o "voltar".
-	CampanhaNome string
+	// CampaignName é o nome da crônica, para o cabeçalho e o "voltar".
+	CampaignName string
 }
 
 // draftPageOf monta a página inteira: a cena guardada, o tabuleiro e a moldura.
 func (s Scene) draftPageOf(ctx context.Context, c draftCtx) (draftView, error) {
-	cena, err := s.deps.Boards().PlaceScene(ctx, c.CampaignID, c.PlaceID)
+	scene, err := s.deps.Boards().PlaceScene(ctx, c.CampaignID, c.PlaceID)
 	if err != nil {
 		return draftView{}, err
 	}
 	return draftView{
 		CampaignID:   c.CampaignID,
-		CampanhaNome: c.CampanhaNome,
-		Lugar:        cena.Place,
-		GravadoEm:    savedAt(time.Now()),
-		Tabuleiro:    draftBoardOf(cena, c.CampaignID, c.PlaceID),
+		CampaignName: c.CampaignName,
+		Place:        scene.Place,
+		SavedAt:      savedAt(time.Now()),
+		Board:        draftBoardOf(scene, c.CampaignID, c.PlaceID),
 	}, nil
 }
 
 // savedAt escreve a HORA e não a data: o rascunho grava a cada gesto, então o
 // que a pessoa quer confirmar é "isto acabou de acontecer" — uma data completa
 // responderia a outra pergunta e ocuparia a linha inteira.
-func savedAt(quando time.Time) string {
-	return fmt.Sprintf("gravado às %s", quando.Format("15:04"))
+func savedAt(when time.Time) string {
+	return fmt.Sprintf("gravado às %s", when.Format("15:04"))
 }

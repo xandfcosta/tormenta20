@@ -40,16 +40,16 @@ func (s Scene) MoveRoutes(r chi.Router) {
 
 // paraNoQuadrado acrescenta uma parada ao movimento — ou começa um.
 func paraNoQuadrado(st Scene, c commandCtx) (*board.BoardState, error) {
-	destino, err := squareOnly(c.R)
+	destination, err := squareOnly(c.R)
 	if err != nil {
 		return nil, err
 	}
 	tokenID := chi.URLParam(c.R, "tokenId")
-	paradas, err := st.paradasDaProposta(c, tokenID)
+	stops, err := st.paradasDaProposta(c, tokenID)
 	if err != nil {
 		return nil, err
 	}
-	return st.propoePorParadas(c, tokenID, append(paradas, destino))
+	return st.propoePorParadas(c, tokenID, append(stops, destination))
 }
 
 // undoLastStop corrige a última perna sem jogar a rota inteira fora.
@@ -64,17 +64,17 @@ func paraNoQuadrado(st Scene, c commandCtx) (*board.BoardState, error) {
 // redesenhar é o que o `PathThroughStops` faz de graça.
 func undoLastStop(st Scene, c commandCtx) (*board.BoardState, error) {
 	tokenID := chi.URLParam(c.R, "tokenId")
-	paradas, err := st.paradasDaProposta(c, tokenID)
+	stops, err := st.paradasDaProposta(c, tokenID)
 	if err != nil {
 		return nil, err
 	}
-	if len(paradas) < 2 {
+	if len(stops) < 2 {
 		return nil, fmt.Errorf("não há parada a desfazer em %q", tokenID)
 	}
-	if paradas = paradas[:len(paradas)-1]; len(paradas) < 2 {
+	if stops = stops[:len(stops)-1]; len(stops) < 2 {
 		return cancelMove(st, c)
 	}
-	return st.propoePorParadas(c, tokenID, paradas)
+	return st.propoePorParadas(c, tokenID, stops)
 }
 
 // paradasDaProposta devolve as paradas já acumuladas, ou só o lugar da peça.
@@ -83,12 +83,12 @@ func undoLastStop(st Scene, c commandCtx) (*board.BoardState, error) {
 // movimento é o estado que o `ByUserID` existe para evitar, e sem esta conferência
 // um segundo jogador estenderia o caminho que o primeiro está montando.
 func (s Scene) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square, error) {
-	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID)
+	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
-	peca := board.FindToken(b, tokenID)
-	if peca == nil {
+	token := board.FindToken(b, tokenID)
+	if token == nil {
 		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
 	if p := b.Pending; p != nil && p.TokenID == tokenID && p.ByUserID == c.User && len(p.Stops) > 0 {
@@ -97,12 +97,12 @@ func (s Scene) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square,
 		// proposta RECUSADA teria deixado a parada lá.
 		return append([]engine.Square(nil), p.Stops...), nil
 	}
-	return []engine.Square{{X: peca.X, Y: peca.Y}}, nil
+	return []engine.Square{{X: token.X, Y: token.Y}}, nil
 }
 
-func (s Scene) propoePorParadas(c commandCtx, tokenID string, paradas []engine.Square) (*board.BoardState, error) {
-	return s.deps.Boards().ProposeMoveWithStops(c.R.Context(), c.SessionID, c.TabuleiroID,
-		s.deps.Sessions().GetState(c.SessionID), tokenID, paradas, s.moveWho(c), 0)
+func (s Scene) propoePorParadas(c commandCtx, tokenID string, stops []engine.Square) (*board.BoardState, error) {
+	return s.deps.Boards().ProposeMoveWithStops(c.R.Context(), c.SessionID, c.BoardID,
+		s.deps.Sessions().GetState(c.SessionID), tokenID, stops, s.moveWho(c), 0)
 }
 
 func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
@@ -110,12 +110,12 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	// confirma acabou de ver a cena que o servidor desenhou — não há uma versão
 	// vinda do cliente para conferir contra. A trava contra a mesa ter mudado
 	// continua sendo a REVALIDAÇÃO da vez, que o `CommitMove` faz de novo.
-	estado := st.deps.Sessions().GetState(c.SessionID)
+	state := st.deps.Sessions().GetState(c.SessionID)
 	// QUEM ANDA É QUEM ESTÁ NA VEZ, e só então a ação é cobrada: o mestre move
 	// peça fora de turno o tempo todo — arrumando a cena, empurrando um NPC —, e
 	// cobrar dele a ação de outro combatente tiraria do turno de quem não se
 	// mexeu (p233).
-	onTurn := movedTokenIsOnTurn(estado, st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID))
+	onTurn := movedTokenIsOnTurn(state, st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID))
 	// A CONFERÊNCIA vem ANTES do pouso, e a COBRANÇA depois.
 	//
 	// Cobrar depois basta para o número ficar certo e NÃO basta para a mesa:
@@ -128,8 +128,8 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 			return nil, err
 		}
 	}
-	boardState, err := st.deps.Boards().CommitMove(c.R.Context(), c.SessionID, c.TabuleiroID,
-		estado, 0, st.moveWho(c))
+	boardState, err := st.deps.Boards().CommitMove(c.R.Context(), c.SessionID, c.BoardID,
+		state, 0, st.moveWho(c))
 	if err != nil || !onTurn {
 		return boardState, err
 	}
@@ -141,19 +141,19 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 
 // movedTokenIsOnTurn diz se a peça do movimento proposto é a de quem está na
 // vez. Sem tabuleiro, sem provisório ou sem combate, não é.
-func movedTokenIsOnTurn(estado *live.SessionRuntimeState, boardState *board.BoardState) bool {
-	if estado == nil || boardState == nil || boardState.Pending == nil {
+func movedTokenIsOnTurn(state *live.SessionRuntimeState, boardState *board.BoardState) bool {
+	if state == nil || boardState == nil || boardState.Pending == nil {
 		return false
 	}
-	if estado.TurnIndex < 0 || estado.TurnIndex >= len(estado.Initiative) {
+	if state.TurnIndex < 0 || state.TurnIndex >= len(state.Initiative) {
 		return false
 	}
-	peca := board.FindToken(boardState, boardState.Pending.TokenID)
-	return peca != nil && peca.EntryID != nil && *peca.EntryID == estado.Initiative[estado.TurnIndex].ID
+	token := board.FindToken(boardState, boardState.Pending.TokenID)
+	return token != nil && token.EntryID != nil && *token.EntryID == state.Initiative[state.TurnIndex].ID
 }
 
 func cancelMove(st Scene, c commandCtx) (*board.BoardState, error) {
-	return st.deps.Boards().CancelMove(c.R.Context(), c.SessionID, c.TabuleiroID, st.moveWho(c))
+	return st.deps.Boards().CancelMove(c.R.Context(), c.SessionID, c.BoardID, st.moveWho(c))
 }
 
 // moveWho resolve a POSSE contra o banco, e nunca contra o cliente.
@@ -163,20 +163,20 @@ func cancelMove(st Scene, c commandCtx) (*board.BoardState, error) {
 // campanha — o mesmo caminho que o `tableRoster` usa para saber quais são os
 // MEUS.
 func (s Scene) moveWho(c commandCtx) board.Mover {
-	_, papel, err := s.access.Session(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, c.SessionID)
+	_, role, err := s.access.Session(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, c.SessionID)
 	if err != nil {
-		papel = "player"
+		role = "player"
 	}
-	quem := board.Mover{UserID: c.User, Role: papel}
-	if papel == "gm" {
-		return quem
+	who := board.Mover{UserID: c.User, Role: role}
+	if role == "gm" {
+		return who
 	}
-	_, meus, _ := s.tableRoster(c.R.Context(), c.User, c.CampaignID)
-	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID)
-	if peca := board.FindToken(b, chi.URLParam(c.R, "tokenId")); peca != nil && peca.CharacterID != nil {
-		quem.OwnsCharacter = meus[*peca.CharacterID]
+	_, mine, _ := s.tableRoster(c.R.Context(), c.User, c.CampaignID)
+	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	if token := board.FindToken(b, chi.URLParam(c.R, "tokenId")); token != nil && token.CharacterID != nil {
+		who.OwnsCharacter = mine[*token.CharacterID]
 	}
-	return quem
+	return who
 }
 
 // tableCommand é o irmão do `gmCommand` para o que o JOGADOR também faz.
@@ -187,9 +187,9 @@ func (s Scene) moveWho(c commandCtx) board.Mover {
 // regra, com a frase que ela escreve ("não é a vez de Arwen"), e não de um 403
 // que diria a coisa errada.
 func (s Scene) tableCommand(
-	mutar func(Scene, commandCtx) (*board.BoardState, error),
+	mutate func(Scene, commandCtx) (*board.BoardState, error),
 ) http.HandlerFunc {
-	return s.boardCommand(mutar, false)
+	return s.boardCommand(mutate, false)
 }
 
 // gmBoardCommand é abrir e encerrar a cena: mutação de TABULEIRO,
@@ -201,9 +201,9 @@ func (s Scene) tableCommand(
 // fala no TABULEIRO, porque jogador não renderiza rodapé nenhum — foi assim que
 // uma recusa de movimento ficou muda por meia sessão.
 func (s Scene) gmBoardCommand(
-	mutar func(Scene, commandCtx) (*board.BoardState, error),
+	mutate func(Scene, commandCtx) (*board.BoardState, error),
 ) http.HandlerFunc {
-	return s.boardCommand(mutar, true)
+	return s.boardCommand(mutate, true)
 }
 
 // gmContinuousCommand é o irmão do de cima para o gesto que se REPETE enquanto
@@ -220,18 +220,18 @@ func (s Scene) gmBoardCommand(
 // nenhum. Quem precisar de outra região não usa este atalho — é uma lista
 // explícita, não um padrão.
 func (s Scene) gmContinuousCommand(
-	mutar func(Scene, commandCtx) (*board.BoardState, error),
+	mutate func(Scene, commandCtx) (*board.BoardState, error),
 ) http.HandlerFunc {
-	return s.boardCommand(mutar, true, "table-board")
+	return s.boardCommand(mutate, true, "table-board")
 }
 
 // boardCommand é o corpo dos dois. Separá-los em duas cópias seria repetir
 // resolver a mesa, mutar, publicar e redesenhar — e é numa delas que alguém
 // esquece de publicar e a mesa fica vendo a cena velha.
 func (s Scene) boardCommand(
-	mutar func(Scene, commandCtx) (*board.BoardState, error),
-	soODoMestre bool,
-	soAsRegioes ...string,
+	mutate func(Scene, commandCtx) (*board.BoardState, error),
+	gmOnly bool,
+	onlyRegions ...string,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		campaignID, sessionID, ok := tableParams(w, r)
@@ -239,7 +239,7 @@ func (s Scene) boardCommand(
 			return
 		}
 		userID := s.deps.CurrentUserID(r)
-		_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+		_, role, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
 		status := statusOf(err)
 		if err != nil {
 			http.Error(w, err.Error(), status)
@@ -247,26 +247,26 @@ func (s Scene) boardCommand(
 		}
 		// A trava é aqui e não na tela: quem postar na mão leva 403, e o botão
 		// escondido é só cortesia para quem não pode.
-		if soODoMestre && papel != "gm" {
+		if gmOnly && role != "gm" {
 			http.Error(w, "só o mestre monta a cena", http.StatusForbidden)
 			return
 		}
-		sinais := map[string]any{}
-		estado, err := mutar(s, commandCtx{
+		signals := map[string]any{}
+		state, err := mutate(s, commandCtx{
 			R: r, User: userID, CampaignID: campaignID, SessionID: sessionID,
 			// A ABA de quem clicou, resolvida aqui e uma vez só: é ela que diz em
 			// QUAL tabuleiro o gesto acontece. Resolver dentro de cada mutação seria
 			// a mesma pergunta escrita vinte vezes, e a vigésima primeira é a que
 			// esquece.
-			TabuleiroID: s.chosenTabOf(r.Context(), sessionID, userID),
-			Sinais:      sinais,
+			BoardID: s.chosenTabOf(r.Context(), sessionID, userID),
+			Signals: signals,
 		})
-		if estado != nil {
-			s.deps.PublishBoardState(sessionID, estado)
+		if state != nil {
+			s.deps.PublishBoardState(sessionID, state)
 		}
-		if soODoMestre {
+		if gmOnly {
 			// O `respondGm` escreve o `command_error` do rodapé sozinho.
-			s.respondGm(w, r, userID, campaignID, sessionID, err, sinais, soAsRegioes...)
+			s.respondGm(w, r, userID, campaignID, sessionID, err, signals, onlyRegions...)
 			return
 		}
 		// A recusa vai para `move_error` e NÃO para o `command_error` do
@@ -274,18 +274,18 @@ func (s Scene) boardCommand(
 		// nenhum — a frase cairia num elemento que a tela dele nem renderiza.
 		// Escrita nos DOIS caminhos pelo mesmo motivo do outro sinal: só acender
 		// deixa a recusa de duas paradas atrás acesa sobre uma que deu certo.
-		frase := ""
+		sentence := ""
 		if err != nil {
-			frase = err.Error()
+			sentence = err.Error()
 		}
-		sinais["move_error"] = frase
-		s.respondGm(w, r, userID, campaignID, sessionID, nil, sinais)
+		signals["move_error"] = sentence
+		s.respondGm(w, r, userID, campaignID, sessionID, nil, signals)
 	}
 }
 
 // intDoCaminho aceita o sinal de menos, porque o plano não tem bordas.
-func intDoCaminho(bruto string) (int, error) {
+func intDoCaminho(raw string) (int, error) {
 	var n int
-	_, err := fmt.Sscanf(bruto, "%d", &n)
+	_, err := fmt.Sscanf(raw, "%d", &n)
 	return n, err
 }

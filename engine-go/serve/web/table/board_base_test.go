@@ -29,7 +29,7 @@ func TestNoBoardRouteIsHandwritten(t *testing.T) {
 	// são a definição do prefixo; proibi-los seria proibir a regra de existir.
 	const ondeOPrefixoMora = "board_view.go"
 
-	arquivos, err := filepath.Glob("*.go")
+	files, err := filepath.Glob("*.go")
 	if err != nil {
 		t.Fatalf("varrer o pacote: %v", err)
 	}
@@ -37,49 +37,49 @@ func TestNoBoardRouteIsHandwritten(t *testing.T) {
 	if err != nil {
 		t.Fatalf("varrer os templs: %v", err)
 	}
-	arquivos = append(arquivos, templs...)
+	files = append(files, templs...)
 
-	medidos, usosDaBase := 0, 0
-	for _, arquivo := range arquivos {
+	measured, baseUses := 0, 0
+	for _, file := range files {
 		// O GERADO não conta: ele é a saída do `.templ`, e uma violação nele já
 		// foi acusada na fonte. O de teste também não — este arquivo cita o
 		// literal proibido para poder proibi-lo.
-		if strings.HasSuffix(arquivo, "_templ.go") || strings.HasSuffix(arquivo, "_test.go") {
+		if strings.HasSuffix(file, "_templ.go") || strings.HasSuffix(file, "_test.go") {
 			continue
 		}
-		bruto, err := os.ReadFile(arquivo)
+		raw, err := os.ReadFile(file)
 		if err != nil {
-			t.Fatalf("ler %s: %v", arquivo, err)
+			t.Fatalf("ler %s: %v", file, err)
 		}
-		medidos++
-		for numero, linha := range strings.Split(string(bruto), "\n") {
-			usosDaBase += strings.Count(linha, "v.Base")
+		measured++
+		for number, row := range strings.Split(string(raw), "\n") {
+			baseUses += strings.Count(row, "v.Base")
 			// O que se procura é um CAMINHO, e não a palavra: o import do
 			// pacote `t20engine/domain/board` casa com ela e não é rota nenhuma.
 			// Por isso a linha só conta quando o caminho vem montado — com o
 			// `/campanhas/` na frente ou com um `%d` para o id.
-			ehCaminho := strings.Contains(linha, "/tabuleiro") &&
-				(strings.Contains(linha, "/campanhas/") || strings.Contains(linha, "%d"))
-			if !ehCaminho || arquivo == ondeOPrefixoMora {
+			isPath := strings.Contains(row, "/tabuleiro") &&
+				(strings.Contains(row, "/campanhas/") || strings.Contains(row, "%d"))
+			if !isPath || file == ondeOPrefixoMora {
 				continue
 			}
 			// A REGISTRAÇÃO da rota é o chi, e ela escreve o padrão com os
 			// parâmetros nomeados (`{campaignId}`) — não é um gesto postando.
-			if strings.Contains(linha, "{campaignId}") || strings.Contains(linha, "{placeId}") {
+			if strings.Contains(row, "{campaignId}") || strings.Contains(row, "{placeId}") {
 				continue
 			}
 			t.Errorf("%s:%d escreve o caminho do tabuleiro à mão: use o `v.Base`, senão o gesto do rascunho posta na mesa\n\t%s",
-				arquivo, numero+1, strings.TrimSpace(linha))
+				file, number+1, strings.TrimSpace(row))
 		}
 	}
 
 	// O DENOMINADOR, nas duas pontas. Uma lista de reprovados vazia e uma
 	// varredura que não abriu arquivo nenhum se parecem no terminal — e um
 	// `Base` que ninguém usasse diria que o campo é enfeite.
-	if medidos < 20 {
-		t.Fatalf("só %d arquivos varridos — o guarda ficou cego", medidos)
+	if measured < 20 {
+		t.Fatalf("só %d arquivos varridos — o guarda ficou cego", measured)
 	}
-	if usosDaBase < 15 {
-		t.Fatalf("só %d usos de `v.Base` — o prefixo voltou a ser literal em algum lugar", usosDaBase)
+	if baseUses < 15 {
+		t.Fatalf("só %d usos de `v.Base` — o prefixo voltou a ser literal em algum lugar", baseUses)
 	}
 }

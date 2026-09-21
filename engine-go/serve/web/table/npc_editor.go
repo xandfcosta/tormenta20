@@ -57,10 +57,10 @@ func (s Scene) RoutesEditorNpc(r chi.Router) {
 // digitar "ausente", então a caixa guarda um número e o interruptor diz se ele
 // conta. Quem traduz de volta é o `draftBlock`, num lugar só.
 type npcDraft struct {
-	ID      int64          `json:"id"`
-	Nome    string         `json:"nome"`
-	Conjura bool           `json:"conjura"`
-	Bloco   creature.Block `json:"bloco"`
+	ID    int64          `json:"id"`
+	Name  string         `json:"nome"`
+	Casts bool           `json:"conjura"`
+	Block creature.Block `json:"bloco"`
 }
 
 // pageDraft lê o rascunho que veio nos sinais.
@@ -71,13 +71,13 @@ type npcDraft struct {
 // que estava sendo digitado nos outros campos.
 func pageDraft(r *http.Request) (npcDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
-	var sinais struct {
-		Rascunho npcDraft `json:"draft"`
+	var signals struct {
+		Draft npcDraft `json:"draft"`
 	}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return npcDraft{}, fmt.Errorf("não entendi o formulário: %v", err)
 	}
-	return sinais.Rascunho, nil
+	return signals.Draft, nil
 }
 
 // openDraft serve os dois caminhos, e é de propósito que seja um só.
@@ -90,16 +90,16 @@ func (s Scene) openDraft(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	rascunho := paraOFormulario(0, "", blocoEmBranco())
+	draft := paraOFormulario(0, "", blocoEmBranco())
 	if chi.URLParam(r, "npcId") != "" {
-		linha, bloco, err := s.campaignNpc(c)
+		row, block, err := s.campaignNpc(c)
 		if err != nil {
 			writeSignals(w, r, map[string]any{"command_error": err.Error()})
 			return
 		}
-		rascunho = paraOFormulario(linha.ID, linha.Name, bloco)
+		draft = paraOFormulario(row.ID, row.Name, block)
 	}
-	s.respondDraft(w, r, c, rascunho)
+	s.respondDraft(w, r, c, draft)
 }
 
 // moveList é o corpo dos quatro gestos de forma — acrescentar e tirar, em
@@ -110,14 +110,14 @@ func (s Scene) openDraft(w http.ResponseWriter, r *http.Request) {
 // alguém esquecer de devolver o fragmento — com o sintoma de a linha nova só
 // aparecer no próximo clique.
 func (s Scene) moveList(
-	mexer func(*npcDraft, string, int) error,
+	move func(*npcDraft, string, int) error,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, ok := s.tableGm(w, r)
 		if !ok {
 			return
 		}
-		rascunho, err := pageDraft(r)
+		draft, err := pageDraft(r)
 		if err != nil {
 			writeSignals(w, r, map[string]any{"draft_error": err.Error()})
 			return
@@ -125,17 +125,17 @@ func (s Scene) moveList(
 		// O índice é opcional: acrescentar não tem um. `-1` e não zero, porque
 		// zero é a primeira linha — um erro de leitura silencioso apagaria a
 		// linha de cima em vez de não fazer nada.
-		indice := -1
-		if bruto := chi.URLParam(r, "indice"); bruto != "" {
-			if n, err := strconv.Atoi(bruto); err == nil {
-				indice = n
+		index := -1
+		if raw := chi.URLParam(r, "indice"); raw != "" {
+			if n, err := strconv.Atoi(raw); err == nil {
+				index = n
 			}
 		}
-		if err := mexer(&rascunho, chi.URLParam(r, "lista"), indice); err != nil {
+		if err := move(&draft, chi.URLParam(r, "lista"), index); err != nil {
 			writeSignals(w, r, map[string]any{"draft_error": err.Error()})
 			return
 		}
-		s.respondDraft(w, r, c, rascunho)
+		s.respondDraft(w, r, c, draft)
 	}
 }
 
@@ -145,39 +145,39 @@ func (s Scene) moveList(
 // esquecesse de trocar viraria um ataque de verdade na mesa. O `validateCreature`
 // recusa ataque sem nome, então a linha em branco não chega ao banco — ela é uma
 // pergunta, não um dado.
-func addList(rascunho *npcDraft, lista string, _ int) error {
-	switch lista {
+func addList(draft *npcDraft, list string, _ int) error {
+	switch list {
 	case listaDeAtaques:
-		rascunho.Bloco.Attacks = append(rascunho.Bloco.Attacks, creature.Attack{})
+		draft.Block.Attacks = append(draft.Block.Attacks, creature.Attack{})
 	case listaDePericias:
-		rascunho.Bloco.Skills = append(rascunho.Bloco.Skills, creature.Skill{})
+		draft.Block.Skills = append(draft.Block.Skills, creature.Skill{})
 	case listaDeHabilidades:
-		rascunho.Bloco.SpecialAbilities = append(rascunho.Bloco.SpecialAbilities, "")
+		draft.Block.SpecialAbilities = append(draft.Block.SpecialAbilities, "")
 	default:
 		return fmt.Errorf("lista %q não existe no bloco; são %s, %s e %s",
-			lista, listaDeAtaques, listaDePericias, listaDeHabilidades)
+			list, listaDeAtaques, listaDePericias, listaDeHabilidades)
 	}
 	return nil
 }
 
 // tiraDaLista remove UMA linha pelo índice.
-func tiraDaLista(rascunho *npcDraft, lista string, indice int) error {
-	switch lista {
+func tiraDaLista(draft *npcDraft, list string, index int) error {
+	switch list {
 	case listaDeAtaques:
-		fora, err := itemWithout(rascunho.Bloco.Attacks, indice)
-		rascunho.Bloco.Attacks = fora
+		outside, err := itemWithout(draft.Block.Attacks, index)
+		draft.Block.Attacks = outside
 		return err
 	case listaDePericias:
-		fora, err := itemWithout(rascunho.Bloco.Skills, indice)
-		rascunho.Bloco.Skills = fora
+		outside, err := itemWithout(draft.Block.Skills, index)
+		draft.Block.Skills = outside
 		return err
 	case listaDeHabilidades:
-		fora, err := itemWithout(rascunho.Bloco.SpecialAbilities, indice)
-		rascunho.Bloco.SpecialAbilities = fora
+		outside, err := itemWithout(draft.Block.SpecialAbilities, index)
+		draft.Block.SpecialAbilities = outside
 		return err
 	default:
 		return fmt.Errorf("lista %q não existe no bloco; são %s, %s e %s",
-			lista, listaDeAtaques, listaDePericias, listaDeHabilidades)
+			list, listaDeAtaques, listaDePericias, listaDeHabilidades)
 	}
 }
 
@@ -187,13 +187,13 @@ func tiraDaLista(rascunho *npcDraft, lista string, indice int) error {
 // cima da memória de quem chamou, e aqui quem chamou é o rascunho que ainda pode
 // ser recusado no passo seguinte. Um índice fora da faixa é o botão de uma linha
 // que outra aba já apagou — recusa com o número, não estoura.
-func itemWithout[T any](itens []T, indice int) ([]T, error) {
-	if indice < 0 || indice >= len(itens) {
-		return itens, fmt.Errorf("a linha %d não existe: a lista tem %d", indice+1, len(itens))
+func itemWithout[T any](items []T, index int) ([]T, error) {
+	if index < 0 || index >= len(items) {
+		return items, fmt.Errorf("a linha %d não existe: a lista tem %d", index+1, len(items))
 	}
-	fora := make([]T, 0, len(itens)-1)
-	fora = append(fora, itens[:indice]...)
-	return append(fora, itens[indice+1:]...), nil
+	outside := make([]T, 0, len(items)-1)
+	outside = append(outside, items[:index]...)
+	return append(outside, items[index+1:]...), nil
 }
 
 // saveDraft é o ÚNICO caminho desta tela que toca o banco.
@@ -214,15 +214,15 @@ func saveDraft(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// Por isso o erro é devolvido como SINAL e a função sai sem erro: o comando
 	// não falhou, ele recusou — e quem tinha de saber já soube.
 	if err := st.triesSaveDraft(c); err != nil {
-		c.Sinais["draft_error"] = err.Error()
+		c.Signals["draft_error"] = err.Error()
 		return st.deps.Sessions().GetState(c.SessionID), nil
 	}
 	// FECHA o editor no mesmo passo em que grava, e não num clique à parte: o
 	// gesto do mestre é "salvar e voltar", e deixar o formulário aberto sobre uma
 	// lista já atualizada faria ele clicar em Salvar de novo por não saber se
 	// pegou.
-	c.Sinais["draft_open"] = false
-	c.Sinais["draft_error"] = ""
+	c.Signals["draft_open"] = false
+	c.Signals["draft_error"] = ""
 	// O ELENCO NÃO É ESTADO DE SESSÃO — guardar um NPC não muda a fila nem o
 	// mapa. O estado volta mesmo assim porque é dele que o `gmCommand`
 	// redesenha as regiões, e sem isso a lista só mostraria a mudança no F5.
@@ -236,24 +236,24 @@ func saveDraft(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // cada uma teria de lembrar de escrever no sinal certo, e a que esquecesse
 // falaria atrás do diálogo.
 func (s Scene) triesSaveDraft(c commandCtx) error {
-	rascunho, err := pageDraft(c.R)
+	draft, err := pageDraft(c.R)
 	if err != nil {
 		return err
 	}
-	return s.gravaOBloco(c, rascunho, draftBlock(rascunho))
+	return s.gravaOBloco(c, draft, draftBlock(draft))
 }
 
 // gravaOBloco escolhe entre nascer e reescrever, e nada mais: a validação, a
 // normalização e a trava de campanha são do `campaign.Cast`, que é onde o outro
 // caminho de criação também passa (ALE-353).
-func (s Scene) gravaOBloco(c commandCtx, rascunho npcDraft, bloco creature.Block) error {
-	if rascunho.ID == 0 {
-		_, err := s.cast.Save(c.R.Context(), s.callerOf(c.R), c.CampaignID, rascunho.Nome, bloco)
-		return castRefusal(err, strconv.Quote(rascunho.Nome))
+func (s Scene) gravaOBloco(c commandCtx, draft npcDraft, block creature.Block) error {
+	if draft.ID == 0 {
+		_, err := s.cast.Save(c.R.Context(), s.callerOf(c.R), c.CampaignID, draft.Name, block)
+		return castRefusal(err, strconv.Quote(draft.Name))
 	}
 	return castRefusal(
-		s.cast.Update(c.R.Context(), s.callerOf(c.R), c.CampaignID, rascunho.ID, rascunho.Nome, bloco),
-		strconv.Quote(rascunho.Nome))
+		s.cast.Update(c.R.Context(), s.callerOf(c.R), c.CampaignID, draft.ID, draft.Name, block),
+		strconv.Quote(draft.Name))
 }
 
 // paraOFormulario traduz o modelo para o formulário, e é a metade que faltava do
@@ -265,17 +265,17 @@ func (s Scene) gravaOBloco(c commandCtx, rascunho npcDraft, bloco creature.Block
 // nasceria com a palavra escrita dentro no instante em que o mestre marcasse
 // "Conjura". O formulário guarda sempre um número; quem diz se ele conta é o
 // interruptor.
-func paraOFormulario(id int64, nome string, bloco creature.Block) npcDraft {
-	conjura := bloco.PM != nil
-	if bloco.PM == nil {
+func paraOFormulario(id int64, name string, block creature.Block) npcDraft {
+	casts := block.PM != nil
+	if block.PM == nil {
 		zero := 0
-		bloco.PM = &zero
+		block.PM = &zero
 	}
 	// As três listas nunca chegam nulas ao navegador: `$draft.bloco.attacks.length`
 	// numa lista ausente estoura a expressão do contador da aba, e o número some
 	// sem erro em lugar nenhum.
-	creature.Normalize(&bloco)
-	return npcDraft{ID: id, Nome: nome, Conjura: conjura, Bloco: bloco}
+	creature.Normalize(&block)
+	return npcDraft{ID: id, Name: name, Casts: casts, Block: block}
 }
 
 // draftBlock traduz o formulário de volta para o modelo.
@@ -285,17 +285,17 @@ func paraOFormulario(id int64, nome string, bloco creature.Block) npcDraft {
 // p290; o Bandido não tem linha nenhuma), e um zero ali diria "tem mana e está
 // sem" — que é outro estado. O formulário guarda um número e um interruptor; o
 // bloco guarda a AUSÊNCIA.
-func draftBlock(rascunho npcDraft) creature.Block {
-	bloco := rascunho.Bloco
-	if !rascunho.Conjura {
-		bloco.PM = nil
-		return bloco
+func draftBlock(draft npcDraft) creature.Block {
+	block := draft.Block
+	if !draft.Casts {
+		block.PM = nil
+		return block
 	}
-	if bloco.PM == nil {
+	if block.PM == nil {
 		zero := 0
-		bloco.PM = &zero
+		block.PM = &zero
 	}
-	return bloco
+	return block
 }
 
 // respondDraft devolve o rascunho E as linhas redesenhadas.
@@ -303,15 +303,15 @@ func draftBlock(rascunho npcDraft) creature.Block {
 // AS DUAS COISAS, sempre. Só os sinais deixaria a lista com o número de linhas
 // antigo — o ataque existiria no rascunho e não na tela. Só o HTML deixaria a
 // linha nova ligada a um caminho de sinal que não existe, e ela nasceria muda.
-func (s Scene) respondDraft(w http.ResponseWriter, r *http.Request, c commandCtx, rascunho npcDraft) {
+func (s Scene) respondDraft(w http.ResponseWriter, r *http.Request, c commandCtx, draft npcDraft) {
 	sse := datastar.NewSSE(w, r)
-	for _, fragmento := range draftLists(c, rascunho) {
-		if html, err := ui.RenderFragment(r.Context(), fragmento); err == nil {
+	for _, fragment := range draftLists(c, draft) {
+		if html, err := ui.RenderFragment(r.Context(), fragment); err == nil {
 			_ = sse.PatchElements(html)
 		}
 	}
 	_ = sse.MarshalAndPatchSignals(map[string]any{
-		"draft": rascunho,
+		"draft": draft,
 		// ABRIR o editor e apagar a recusa anterior fazem parte da resposta: uma
 		// frase de erro de dois gestos atrás sobre um formulário que acabou de
 		// abrir é a recusa certa na tela errada.
@@ -330,13 +330,13 @@ func (s Scene) tableGm(w http.ResponseWriter, r *http.Request) (commandCtx, bool
 		return commandCtx{}, false
 	}
 	userID := s.deps.CurrentUserID(r)
-	_, papel, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
+	_, role, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID)
 	status := statusOf(err)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return commandCtx{}, false
 	}
-	if papel != "gm" {
+	if role != "gm" {
 		http.Error(w, "só o mestre monta o elenco", http.StatusForbidden)
 		return commandCtx{}, false
 	}

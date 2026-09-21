@@ -26,16 +26,16 @@ import (
 // precisa saber sobre ele.
 type candidatoAoMapa struct {
 	ID   string
-	Nome string
-	// Ficha responde "é ficha de jogador ou é NPC?" (`type == "character"`), que
+	Name string
+	// Sheet responde "é ficha de jogador ou é NPC?" (`type == "character"`), que
 	// é o predicado com que o SERVIDOR escolhe o lado do mapa. Usar o mesmo aqui
 	// é o que faz o atalho pôr as peças exatamente na fileira do grupo — ver a
 	// colisão C4 do GLOSSARY.
-	Ficha bool
-	// NoMapa: já tem peça. A linha continua aparecendo, marcada e travada, em vez
+	Sheet bool
+	// OnBoard: já tem peça. A linha continua aparecendo, marcada e travada, em vez
 	// de sumir: esconder faria o mestre procurar um nome que ele acabou de ver na
 	// fila, e trazer de novo não faria nada de qualquer forma.
-	NoMapa bool
+	OnBoard bool
 }
 
 // MapCandidates lista a fila com quem já está no mapa marcado.
@@ -46,22 +46,22 @@ func MapCandidates(b *board.BoardState, st *live.SessionRuntimeState) []candidat
 	if b == nil || st == nil {
 		return nil
 	}
-	jaTemPeca := map[string]bool{}
+	hasToken := map[string]bool{}
 	for i := range b.Tokens {
 		if id := b.Tokens[i].EntryID; id != nil {
-			jaTemPeca[*id] = true
+			hasToken[*id] = true
 		}
 	}
-	lista := make([]candidatoAoMapa, 0, len(st.Initiative))
-	for _, entrada := range st.Initiative {
-		lista = append(lista, candidatoAoMapa{
-			ID:     entrada.ID,
-			Nome:   entrada.Label,
-			Ficha:  entrada.Type == "character",
-			NoMapa: jaTemPeca[entrada.ID],
+	list := make([]candidatoAoMapa, 0, len(st.Initiative))
+	for _, entry := range st.Initiative {
+		list = append(list, candidatoAoMapa{
+			ID:      entry.ID,
+			Name:    entry.Label,
+			Sheet:   entry.Type == "character",
+			OnBoard: hasToken[entry.ID],
 		})
 	}
-	return lista
+	return list
 }
 
 // MapOutsideSheets são os ids que o atalho e a abertura do diálogo escolhem.
@@ -69,10 +69,10 @@ func MapCandidates(b *board.BoardState, st *live.SessionRuntimeState) []candidat
 // Devolve uma LISTA e não um conjunto porque ela vai virar texto numa expressão
 // do navegador — e a ordem estável é o que faz duas aberturas seguidas do
 // diálogo desenharem a mesma coisa.
-func MapOutsideSheets(candidatos []candidatoAoMapa) []string {
+func MapOutsideSheets(candidates []candidatoAoMapa) []string {
 	var ids []string
-	for _, c := range candidatos {
-		if c.Ficha && !c.NoMapa {
+	for _, c := range candidates {
+		if c.Sheet && !c.OnBoard {
 			ids = append(ids, c.ID)
 		}
 	}
@@ -86,12 +86,12 @@ func MapOutsideSheets(candidatos []candidatoAoMapa) []string {
 // deslocamento, o alcance não acende e o jogador vê uma peça que não anda — um
 // meio-recurso que ninguém reporta porque parece regra.
 func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
-	escolhidos, err := escolhidosDosSinais(c.R)
+	chosen, err := escolhidosDosSinais(c.R)
 	if err != nil {
 		return nil, err
 	}
 	board, err := st.deps.Boards().Populate(
-		c.R.Context(), c.SessionID, c.TabuleiroID, st.deps.Sessions().GetState(c.SessionID), escolhidos,
+		c.R.Context(), c.SessionID, c.BoardID, st.deps.Sessions().GetState(c.SessionID), chosen,
 	)
 	if err != nil {
 		return board, err
@@ -100,8 +100,8 @@ func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
 		// O erro do deslocamento NÃO derruba o comando: as peças já nasceram e a
 		// mesa precisa vê-las. Devolver erro aqui deixaria o mestre achando que
 		// nada aconteceu sobre um mapa que mudou.
-		if comVelocidade, err := st.deps.Boards().SetSpeeds(c.R.Context(), c.SessionID, c.TabuleiroID, speeds); err == nil {
-			board = comVelocidade
+		if withSpeed, err := st.deps.Boards().SetSpeeds(c.R.Context(), c.SessionID, c.BoardID, speeds); err == nil {
+			board = withSpeed
 		}
 	}
 	return board, nil
@@ -120,22 +120,22 @@ func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
 // um sinal perdido.
 func escolhidosDosSinais(r *http.Request) (board.EntrySelection, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
-	var sinais struct {
-		Escolhidos string `json:"map_selection"`
+	var signals struct {
+		Chosen string `json:"map_selection"`
 	}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return nil, fmt.Errorf("não entendi quem pôr no mapa: %v", err)
 	}
-	escolha := board.EntrySelection{}
-	for _, id := range strings.Split(sinais.Escolhidos, ",") {
+	choice := board.EntrySelection{}
+	for _, id := range strings.Split(signals.Chosen, ",") {
 		if id = strings.TrimSpace(id); id != "" {
-			escolha[id] = true
+			choice[id] = true
 		}
 	}
-	if len(escolha) == 0 {
+	if len(choice) == 0 {
 		return nil, errors.New("escolha ao menos um combatente para pôr no mapa")
 	}
-	return escolha, nil
+	return choice, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -214,25 +214,25 @@ func sheetsShortcut(v BoardView) string {
 // `loosePieceSignals` logo abaixo lê os dois do mesmo corpo, porque o
 // `ReadSignals` o consome inteiro e não há segunda leitura.
 func newLoosePiece(st Scene, c commandCtx) (*board.BoardState, error) {
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
+	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
 		return nil, errors.New("não há tabuleiro aberto para pôr uma peça")
 	}
-	desenho, casa, err := loosePieceSignals(c.R)
+	drawing, square, err := loosePieceSignals(c.R)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().AddToken(c.R.Context(), c.SessionID, c.TabuleiroID, board.BoardToken{
-		Label: desenho.Nome, Kind: desenho.Aparencia, Footprint: desenho.Tamanho,
-		X: casa.X, Y: casa.Y,
+	return st.deps.Boards().AddToken(c.R.Context(), c.SessionID, c.BoardID, board.BoardToken{
+		Label: drawing.Name, Kind: drawing.Appearance, Footprint: drawing.Size,
+		X: square.X, Y: square.Y,
 	})
 }
 
 // loosePieceDraft é o que o mestre escolhe na tira: o nome, o tamanho e a
 // aparência.
 type loosePieceDraft struct {
-	Nome      string
-	Tamanho   int
-	Aparencia string
+	Name       string
+	Size       int
+	Appearance string
 }
 
 // loosePieceSignals lê a tira e RECUSA o que não serve.
@@ -249,30 +249,30 @@ func loosePieceSignals(r *http.Request) (loosePieceDraft, engine.Square, error) 
 	// UMA leitura e um struct só, porque o CORPO NÃO SE LÊ DUAS VEZES: o
 	// `ReadSignals` do datastar-go copia `r.Body` inteiro num buffer, e um
 	// segundo leitor pega vazio.
-	var sinais struct {
-		Nome      string             `json:"new_token_name"`
-		Tamanho   int                `json:"new_token_size"`
-		Aparencia string             `json:"new_token_look"`
-		Casa      struct{ X, Y int } `json:"from"`
+	var signals struct {
+		Name       string             `json:"new_token_name"`
+		Size       int                `json:"new_token_size"`
+		Appearance string             `json:"new_token_look"`
+		Square     struct{ X, Y int } `json:"from"`
 	}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return loosePieceDraft{}, engine.Square{}, fmt.Errorf("não entendi a peça: %v", err)
 	}
-	casa := engine.Square{X: sinais.Casa.X, Y: sinais.Casa.Y}
-	nome := strings.TrimSpace(sinais.Nome)
-	if nome == "" {
-		return loosePieceDraft{}, casa, errors.New("dê um nome à peça: é ele que aparece no mapa e no laço")
+	square := engine.Square{X: signals.Square.X, Y: signals.Square.Y}
+	name := strings.TrimSpace(signals.Name)
+	if name == "" {
+		return loosePieceDraft{}, square, errors.New("dê um nome à peça: é ele que aparece no mapa e no laço")
 	}
-	if !footprintsDaCasa[sinais.Tamanho] {
-		return loosePieceDraft{}, casa, fmt.Errorf(
+	if !footprintsDaCasa[signals.Size] {
+		return loosePieceDraft{}, square, fmt.Errorf(
 			"tamanho %d não é de criatura nenhuma; o livro tem 1 (Médio), 2 (Grande), 3 (Enorme) e 6 (Colossal, p107)",
-			sinais.Tamanho)
+			signals.Size)
 	}
-	if !aparenciasDaPeca[sinais.Aparencia] {
-		return loosePieceDraft{}, casa, fmt.Errorf(
-			"aparência %q não existe; a peça avulsa é objeto ou cenário", sinais.Aparencia)
+	if !aparenciasDaPeca[signals.Appearance] {
+		return loosePieceDraft{}, square, fmt.Errorf(
+			"aparência %q não existe; a peça avulsa é objeto ou cenário", signals.Appearance)
 	}
-	return loosePieceDraft{Nome: nome, Tamanho: sinais.Tamanho, Aparencia: sinais.Aparencia}, casa, nil
+	return loosePieceDraft{Name: name, Size: signals.Size, Appearance: signals.Appearance}, square, nil
 }
 
 // footprintsDaCasa são os lados que a Tabela 1-21 produz (p107).
@@ -297,20 +297,20 @@ var aparenciasDaPeca = map[string]bool{"object": true, "npc": true}
 // nada e não decide nada — é a conta que o desenho da prévia de movimento pede,
 // montada com o `Queries` e o `Catalogs` que a cena já recebe, como a Defesa do
 // Grupo. A REGRA é do motor (`engine.SquaresForDisplacement`).
-func (s Scene) speedsForBoard(ctx context.Context, tabuleiro *board.BoardState) map[string]int {
-	quadrados := map[string]int{}
-	if tabuleiro == nil {
-		return quadrados
+func (s Scene) speedsForBoard(ctx context.Context, boardState *board.BoardState) map[string]int {
+	squares := map[string]int{}
+	if boardState == nil {
+		return squares
 	}
-	for _, peca := range tabuleiro.Tokens {
-		if peca.CharacterID == nil || peca.SpeedSquares > 0 {
+	for _, token := range boardState.Tokens {
+		if token.CharacterID == nil || token.SpeedSquares > 0 {
 			continue
 		}
-		if n := s.speedSquaresOf(ctx, *peca.CharacterID); n > 0 {
-			quadrados[peca.ID] = n
+		if n := s.speedSquaresOf(ctx, *token.CharacterID); n > 0 {
+			squares[token.ID] = n
 		}
 	}
-	return quadrados
+	return squares
 }
 
 // speedSquaresOf converte o deslocamento da ficha computada em quadrados.
@@ -323,10 +323,10 @@ func (s Scene) speedSquaresOf(ctx context.Context, characterID int64) int {
 	if err != nil {
 		return 0
 	}
-	ficha, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
+	character, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
 	if err != nil {
 		log.Printf("tabuleiro: ficha do personagem %d não computada (%v)", characterID, err)
 		return 0
 	}
-	return engine.SquaresForDisplacement(float64(ficha.Displacement.Total))
+	return engine.SquaresForDisplacement(float64(character.Displacement.Total))
 }

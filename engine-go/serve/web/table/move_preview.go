@@ -44,24 +44,24 @@ const previewLegsMax = 12
 
 // handlePreviewMove responde "se eu soltar aqui, como fica" em sinais.
 func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
-	papel, sessionID, tabuleiroID, ok := s.whoMeasuresTheTable(w, r)
+	role, sessionID, boardID, ok := s.whoMeasuresTheTable(w, r)
 	if !ok {
 		return
 	}
-	destino, err := squareOnly(r)
+	destination, err := squareOnly(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	tokenID := chi.URLParam(r, "tokenId")
-	b := board.BoardForRole(papel, s.deps.Boards().Get(r.Context(), sessionID, tabuleiroID))
-	previa, err := dragPreview(b, s.deps.Sessions().GetState(sessionID), tokenID, destino,
-		s.whoDragsInPreview(r, papel, board.FindToken(b, tokenID)))
+	b := board.BoardForRole(role, s.deps.Boards().Get(r.Context(), sessionID, boardID))
+	preview, err := dragPreview(b, s.deps.Sessions().GetState(sessionID), tokenID, destination,
+		s.whoDragsInPreview(r, role, board.FindToken(b, tokenID)))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	writeSignals(w, r, previa)
+	writeSignals(w, r, preview)
 }
 
 // whoDragsInPreview monta o `Mover` de quem pergunta.
@@ -70,23 +70,23 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 // quem não pode mover aquela peça recebe uma prévia sem faixas — e não uma
 // prévia mentindo o deslocamento de uma peça que não é dele.
 //
-// A POSSE é resolvida contra o BANCO (o `meus` do roster), como no `moveWho`, e
+// A POSSE é resolvida contra o BANCO (o `mine` do roster), como no `moveWho`, e
 // nunca assumida: um `OwnsCharacter: true` escrito direto daria a qualquer
 // jogador o deslocamento da peça de qualquer outro — não pela tela, que só
 // oferece o arrasto da peça dele, mas pela ROTA, que é onde a fronteira mora.
-func (s Scene) whoDragsInPreview(r *http.Request, papel string, peca *board.BoardToken) board.Mover {
+func (s Scene) whoDragsInPreview(r *http.Request, role string, token *board.BoardToken) board.Mover {
 	userID := s.deps.CurrentUserID(r)
-	quem := board.Mover{UserID: userID, Role: papel}
-	if papel == "gm" || peca == nil || peca.CharacterID == nil {
-		return quem
+	who := board.Mover{UserID: userID, Role: role}
+	if role == "gm" || token == nil || token.CharacterID == nil {
+		return who
 	}
 	campaignID, err := intDoCaminho(chi.URLParam(r, "campaignId"))
 	if err != nil {
-		return quem
+		return who
 	}
-	_, meus, _ := s.tableRoster(r.Context(), userID, int64(campaignID))
-	quem.OwnsCharacter = meus[*peca.CharacterID]
-	return quem
+	_, mine, _ := s.tableRoster(r.Context(), userID, int64(campaignID))
+	who.OwnsCharacter = mine[*token.CharacterID]
+	return who
 }
 
 // dragPreview mede o caminho ATUAL mais a casa sob o dedo.
@@ -96,33 +96,33 @@ func (s Scene) whoDragsInPreview(r *http.Request, papel string, peca *board.Boar
 // não. É a mesma leitura do `paradasDaProposta`, e ela é refeita aqui em vez de
 // reusada porque aquela vive num `commandCtx` (o caminho da MUTAÇÃO) e esta não
 // pode ter direito de escrita nenhum.
-func dragPreview(b *board.BoardState, st *live.SessionRuntimeState, tokenID string, destino engine.Square, quem board.Mover) (map[string]any, error) {
+func dragPreview(b *board.BoardState, st *live.SessionRuntimeState, tokenID string, destination engine.Square, who board.Mover) (map[string]any, error) {
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
-	peca := board.FindToken(b, tokenID)
-	if peca == nil {
+	token := board.FindToken(b, tokenID)
+	if token == nil {
 		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
-	dobras := append(progressStops(b, tokenID, peca), destino)
-	_, orcamento := board.CanMoveWith(b, st, tokenID, quem)
-	custos := legsCosts(dobras, moveTerrain(b))
-	cabe, segundo, alem := moveWires(dobras, custos, orcamento)
+	folds := append(progressStops(b, tokenID, token), destination)
+	_, budget := board.CanMoveWith(b, st, tokenID, who)
+	costs := legsCosts(folds, moveTerrain(b))
+	fits, segundo, beyond := moveWires(folds, costs, budget)
 	return map[string]any{
-		"preview_arrow_fits":   cabe,
+		"preview_arrow_fits":   fits,
 		"preview_arrow_second": segundo,
-		"preview_arrow_beyond": alem,
-		"preview_labels":       previewLabels(dobras, custos),
-		"preview_text":         previewPhrase(custos, orcamento),
+		"preview_arrow_beyond": beyond,
+		"preview_labels":       previewLabels(folds, costs),
+		"preview_text":         previewPhrase(costs, budget),
 	}, nil
 }
 
 // progressStops são as dobras do caminho já desenhado, ou a casa da peça.
-func progressStops(b *board.BoardState, tokenID string, peca *board.BoardToken) []engine.Square {
+func progressStops(b *board.BoardState, tokenID string, token *board.BoardToken) []engine.Square {
 	if p := b.Pending; p != nil && p.TokenID == tokenID && len(p.Stops) > 0 {
 		return append([]engine.Square(nil), p.Stops...)
 	}
-	return []engine.Square{{X: peca.X, Y: peca.Y}}
+	return []engine.Square{{X: token.X, Y: token.Y}}
 }
 
 // previewLabels empacota cada perna num trio de números que a tela desenha:
@@ -131,14 +131,14 @@ func progressStops(b *board.BoardState, tokenID string, peca *board.BoardToken) 
 // Trio e não três listas paralelas: três listas se desalinham no dia em que uma
 // delas for filtrada, e o desalinhamento aparece como um número pousado sobre a
 // perna errada — que é uma mentira convincente, não um erro.
-func previewLabels(dobras []engine.Square, custos []int) []map[string]any {
-	pernas := moveLegs(dobras, custos)
-	if len(pernas) > previewLegsMax {
-		pernas = pernas[:previewLegsMax]
+func previewLabels(folds []engine.Square, costs []int) []map[string]any {
+	legs := moveLegs(folds, costs)
+	if len(legs) > previewLegsMax {
+		legs = legs[:previewLegsMax]
 	}
-	out := make([]map[string]any, 0, len(pernas))
-	for _, p := range pernas {
-		out = append(out, map[string]any{"t": p.Rotulo, "x": p.MeioX, "y": p.MeioY})
+	out := make([]map[string]any, 0, len(legs))
+	for _, p := range legs {
+		out = append(out, map[string]any{"t": p.Label, "x": p.MidX, "y": p.MidY})
 	}
 	return out
 }
@@ -160,11 +160,11 @@ const previewSignals = "preview_arrow_fits: '', preview_arrow_second: '', previe
 // fixos dos rótulos. Sai do MESMO teto que o servidor corta — escritos em dois
 // lugares, uma perna nasceria medida e sem rótulo.
 func legsReserve() []int {
-	reserva := make([]int, previewLegsMax)
-	for i := range reserva {
-		reserva[i] = i
+	reserve := make([]int, previewLegsMax)
+	for i := range reserve {
+		reserve[i] = i
 	}
-	return reserva
+	return reserve
 }
 
 // existsPreviewLabel esconde o nó da perna que a prévia não tem.
@@ -186,8 +186,8 @@ func previewText(i int) string {
 // Ele sai multiplicado pelo `--quadrado` e menos a vista na própria expressão do
 // atributo, porque o rótulo mora FORA do grupo que escala — se morasse dentro, o
 // `scale` multiplicaria a fonte e 12px virariam 1000px no zoom máximo.
-func previewMid(i int, eixo string) string {
-	return list("preview_labels", fmt.Sprintf("lista[%d]?.%s ?? 0", i, eixo))
+func previewMid(i int, axis string) string {
+	return list("preview_labels", fmt.Sprintf("lista[%d]?.%s ?? 0", i, axis))
 }
 
 // previewPhrase diz o custo e a faixa, na mesma língua do rodapé.
@@ -196,15 +196,15 @@ func previewMid(i int, eixo string) string {
 // mede uma proposta que ainda não existe. O que ela NÃO faz é reescrever a
 // regra — o `spentActions` é o mesmo do rodapé, e é ele que garante que soltar
 // a peça não mude a frase que a pessoa acabou de ler.
-func previewPhrase(custos []int, orcamento int) string {
+func previewPhrase(costs []int, budget int) string {
 	total := 0
-	for _, c := range custos {
+	for _, c := range costs {
 		total += c
 	}
-	metros := meters(float64(total)*engine.SquareMetres) + "m"
-	if orcamento < 0 {
-		return fmt.Sprintf("%d %s (%s)", total, quadradosEmPortugues(total), metros)
+	metres := meters(float64(total)*engine.SquareMetres) + "m"
+	if budget < 0 {
+		return fmt.Sprintf("%d %s (%s)", total, quadradosEmPortugues(total), metres)
 	}
 	return fmt.Sprintf("%d de %d quadrados (%s) · %s",
-		total, orcamento, metros, spentActions(&moveView{Custo: total, Orcamento: orcamento}))
+		total, budget, metres, spentActions(&moveView{Cost: total, Budget: budget}))
 }

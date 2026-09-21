@@ -108,7 +108,7 @@ func ValidateText(rawName string, rawDescription *string) (string, string, wire.
 // mensagem de erro — "regra inválida" mandaria o mestre adivinhar qual das
 // dezenas ele digitou errado.
 //
-// A frase CHEGA NA TELA: a cena a manda para o navegador no sinal `erroDaRegra`,
+// A frase CHEGA NA TELA: a cena a manda para o navegador no sinal `ruleErr`,
 // então ela é em português pelo mesmo motivo que as duas mensagens acima.
 func NormalizeIgnoredRules(raw []string) ([]string, string) {
 	seen := map[string]bool{}

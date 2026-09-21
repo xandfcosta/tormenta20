@@ -22,9 +22,9 @@ type View struct {
 	// QUAIS verbos a tela oferece: o servidor recusa encerrar o que nunca
 	// começou, e um botão que existe para levar recusa é um erro desenhado.
 	Status string
-	// Titulo é o apelido da noite, e pode ser VAZIO: a identidade da sessão é o
+	// Title é o apelido da noite, e pode ser VAZIO: a identidade da sessão é o
 	// NÚMERO. Obrigar a um título faria o mestre inventar texto para salvar.
-	Titulo     string
+	Title      string
 	CampaignID int64
 	SessionID  int64
 	SessionNum int64
@@ -38,13 +38,13 @@ type View struct {
 	Scene *sceneView
 	Round int
 	Turn  tableTurn
-	// Proximos é a faixa de quem vem depois: a vez e as duas seguintes, dando a
+	// Upcoming é a faixa de quem vem depois: a vez e as duas seguintes, dando a
 	// volta. Vazia fora de combate.
-	Proximos []turnAhead
-	Grupo    []Member
-	Fila     []tableRow
+	Upcoming []turnAhead
+	Group    []Member
+	Queue    []tableRow
 	Eu       *tableMe
-	// MinhaFicha é a ficha do personagem DESTE jogador, desenhada dentro da
+	// MySheet é a ficha do personagem DESTE jogador, desenhada dentro da
 	// sessão. Nil para o mestre e para quem não tem personagem na campanha — é a
 	// mesma trava do `Mestre`: o que a view não tem, a cena não desenha.
 	//
@@ -52,22 +52,22 @@ type View struct {
 	// e muda pelos comandos DELA, não pelo que acontece na mesa. Pendurá-la em
 	// `TableRegions` faria cada tique do stream recomputar sete painéis para
 	// descobrir que nada mudou.
-	MinhaFicha *sheetui.View
-	// Tabuleiro é o mapa da cena. `Aberto` falso é o estado normal — a maior
+	MySheet *sheetui.View
+	// Board é o mapa da cena. `Aberto` falso é o estado normal — a maior
 	// parte de uma sessão não tem mapa —, e ele desenha a frase e nenhuma grade.
-	Tabuleiro BoardView
-	// Mestre é nil para o jogador, e essa é a trava na CENA: não há como
+	Board BoardView
+	// GM é nil para o jogador, e essa é a trava na CENA: não há como
 	// desenhar controle que não existe na view. Esconder por classe deixaria o
 	// HTML na página para quem abrisse o inspetor.
-	Mestre *viewGm
-	// Notas é o caderno da noite, e ele é DO MESTRE. Vazio para quem não é
+	GM *viewGm
+	// Notes é o caderno da noite, e ele é DO MESTRE. Vazio para quem não é
 	// mestre, pela mesma trava do resto — a view não tem o que desenhar, em vez
 	// de a tela esconder.
-	Notas string
-	// NotasBlocos é a mesma nota já em ÁRVORE, para o templ montar elementos em
+	Notes string
+	// NoteBlocks é a mesma nota já em ÁRVORE, para o templ montar elementos em
 	// vez de cuspir HTML. Nasce aqui e não no template porque parsear em
 	// template é regra escondida onde ninguém a testa.
-	NotasBlocos []markdown.Block
+	NoteBlocks []markdown.Block
 	// NPCs é o elenco da CAMPANHA — o taverneiro que não briga e o chefe da
 	// semana que vem. Do mestre, como as notas.
 	NPCs []castNpc
@@ -123,74 +123,74 @@ type tableBar struct {
 type Member struct {
 	// CharacterID não é desenhado: é a chave que casa o cartão com a presença.
 	CharacterID int64
-	Nome        string
-	// Iniciais é o monogram do elenco no trilho do mestre. O jogador continua
+	Name        string
+	// Initials é o monogram do elenco no trilho do mestre. O jogador continua
 	// lendo o nome inteiro no cartão.
-	Iniciais string
-	Nivel    int64
+	Initials string
+	Level    int64
 	Classes  string
 	PV       tableBar
 	PM       tableBar
-	// Presenca chega para os DOIS papéis: saber quem caiu é o que faz a mesa
+	// Presence chega para os DOIS papéis: saber quem caiu é o que faz a mesa
 	// ESPERAR em vez de continuar sem alguém, e isso vale mais que a discrição
 	// de não dizer ao jogador quem está fora.
 	//
 	// É PONTEIRO e não `bool`: "não sei" e "está fora" são coisas diferentes, e
 	// um cartão sem dado de presença não pode afirmar ausência. Nil é o que o
 	// remendo desenha quando a cena ainda não resolveu quem está na mesa.
-	Presenca *presencaDoMembro
-	// Defesa é TEXTO e nunca número, pela mesma razão do cartão de personagem:
+	Presence *presencaDoMembro
+	// Defense é TEXTO e nunca número, pela mesma razão do cartão de personagem:
 	// sem motor ela é desconhecida, e um ZERO é um valor de Defesa plausível e
 	// errado. Travessão diz "não sei"; zero mente com cara de dado.
-	Defesa string
-	// NaFila responde "este já está no combate?", e é o que decide se o elenco
+	Defense string
+	// InQueue responde "este já está no combate?", e é o que decide se o elenco
 	// OFERECE pô-lo na fila. Oferecer o que só pode dar linha repetida é
 	// desenhar um erro — a mesma regra que trava os verbos do ciclo da sessão.
-	NaFila bool
+	InQueue bool
 }
 
 // presencaDoMembro é "está com a aba aberta agora?", já com a frase pronta.
 type presencaDoMembro struct {
-	NaMesa bool
-	// Frase é o nome acessível, porque anel colorido não existe para leitor de
+	AtTable bool
+	// Sentence é o nome acessível, porque anel colorido não existe para leitor de
 	// tela.
-	Frase string
+	Sentence string
 }
 
 // marcaAPresenca escreve em cada cartão do Grupo se aquele personagem está na
 // mesa agora. Chamada para os DOIS papéis — ver o campo `Presenca`.
-func marcaAPresenca(grupo []Member, conectados map[int64]bool) {
-	for i := range grupo {
-		naMesa := conectados[grupo[i].CharacterID]
-		frase := "fora da mesa"
-		if naMesa {
-			frase = "na mesa"
+func marcaAPresenca(group []Member, connected map[int64]bool) {
+	for i := range group {
+		onTable := connected[group[i].CharacterID]
+		sentence := "fora da mesa"
+		if onTable {
+			sentence = "na mesa"
 		}
-		grupo[i].Presenca = &presencaDoMembro{NaMesa: naMesa, Frase: frase}
+		group[i].Presence = &presencaDoMembro{AtTable: onTable, Sentence: sentence}
 	}
 }
 
 // tableRow é uma linha da fila de iniciativa como o jogador a vê.
 type tableRow struct {
 	ID         string
-	Rotulo     string
-	Iniciativa int
-	// EhFicha responde "esta linha é ficha ou é NPC?". O par na tela é
+	Label      string
+	Initiative int
+	// IsSheet responde "esta linha é ficha ou é NPC?". O par na tela é
 	// `Ficha`/`NPC`, porque `PC` é termo proibido pelo GLOSSARY.
-	EhFicha bool
-	Minha   bool
-	NaVez   bool
+	IsSheet bool
+	Mine    bool
+	OnTurn  bool
 	// PV nil = linha sem vida rastreada. Escondido é outra coisa: o mestre
 	// escondeu de propósito, e a marca sobrevive à redação — "sem barra" e
 	// "escondido" não são a mesma coisa, e a segunda é informação.
 	PV *tableBar
 	// PM é o mana da linha.
-	PM        *tableBar
-	Condicoes []string
-	// Iniciais é o monogram do trilho de 80px. Nasce na view e não no template
+	PM         *tableBar
+	Conditions []string
+	// Initials é o monogram do trilho de 80px. Nasce na view e não no template
 	// porque duas letras NÃO são um nome: quem desenha o retrato precisa do
 	// rótulo inteiro ao lado, no `aria-label`.
-	Iniciais string
+	Initials string
 }
 
 // portraitLabel é o nome INTEIRO de um combatente do trilho, com os vitais
@@ -204,12 +204,12 @@ type tableRow struct {
 // @example portraitLabel(tableRow{Rotulo: "Ogro", PV: &tableBar{Current: 22, Max: 40}}) // "Ogro — PV 22 de 40"
 func portraitLabel(l tableRow) string {
 	if l.PV == nil {
-		return l.Rotulo
+		return l.Label
 	}
 	if l.PV.Hidden {
-		return fmt.Sprintf("%s — PV oculto", l.Rotulo)
+		return fmt.Sprintf("%s — PV oculto", l.Label)
 	}
-	return fmt.Sprintf("%s — %s", l.Rotulo, barLabel("PV", *l.PV))
+	return fmt.Sprintf("%s — %s", l.Label, barLabel("PV", *l.PV))
 }
 
 // barLabel é o nome ACESSÍVEL de uma barra: "PV 22 de 40", mais a reserva
@@ -220,12 +220,12 @@ func portraitLabel(l tableRow) string {
 // abaixo. Aqui ela é o canal ÚNICO no trilho da fila, que não tem número
 // nenhum: sem esta frase, a reserva simplesmente não existiria para quem não vê
 // a tela.
-func barLabel(rotulo string, b tableBar) string {
-	frase := fmt.Sprintf("%s %d de %d", rotulo, b.Current, b.Max)
+func barLabel(label string, b tableBar) string {
+	sentence := fmt.Sprintf("%s %d de %d", label, b.Current, b.Max)
 	if b.Temp > 0 {
-		frase += fmt.Sprintf(", mais %d temporários", b.Temp)
+		sentence += fmt.Sprintf(", mais %d temporários", b.Temp)
 	}
-	return frase
+	return sentence
 }
 
 // castLabel é o nome de um personagem do elenco recolhido, com a presença
@@ -234,35 +234,35 @@ func barLabel(rotulo string, b tableBar) string {
 //
 // @example castLabel(Member{Nome: "Arwen", Nivel: 3}) // "Arwen, Nv 3"
 func castLabel(m Member) string {
-	rotulo := fmt.Sprintf("%s, Nv %d", m.Nome, m.Nivel)
-	if m.Presenca == nil {
-		return rotulo
+	label := fmt.Sprintf("%s, Nv %d", m.Name, m.Level)
+	if m.Presence == nil {
+		return label
 	}
-	return fmt.Sprintf("%s — %s", rotulo, m.Presenca.Frase)
+	return fmt.Sprintf("%s — %s", label, m.Presence.Sentence)
 }
 
 // tableMe é o personagem de quem olha, quando ele tem um nesta mesa. Nil é um
 // estado normal: o convidado que assiste não registra iniciativa.
 type tableMe struct {
 	CharacterID int64
-	Nome        string
+	Name        string
 	Bonus       int64
-	NaFila      bool
+	InQueue     bool
 }
 
 // tableTurnOf responde de quem é a vez para quem está olhando.
 //
 // Fora de combate ninguém está na vez. A linha na vez sendo de um personagem
 // MEU é o único caso em que a faixa acende.
-func tableTurnOf(st *live.SessionRuntimeState, meus map[int64]bool) tableTurn {
+func tableTurnOf(st *live.SessionRuntimeState, mine map[int64]bool) tableTurn {
 	if st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return tableTurn{Kind: "idle"}
 	}
-	naVez := st.Initiative[st.TurnIndex]
-	if naVez.CharacterID != nil && meus[*naVez.CharacterID] {
+	onTurn := st.Initiative[st.TurnIndex]
+	if onTurn.CharacterID != nil && mine[*onTurn.CharacterID] {
 		return tableTurn{Kind: "mine"}
 	}
-	return tableTurn{Kind: "other", Label: naVez.Label}
+	return tableTurn{Kind: "other", Label: onTurn.Label}
 }
 
 // A FAIXA DE QUEM VEM DEPOIS: a vez de agora e as duas seguintes, na ordem da
@@ -276,22 +276,22 @@ func tableTurnOf(st *live.SessionRuntimeState, meus map[int64]bool) tableTurn {
 
 // turnAhead é um lugar na faixa.
 type turnAhead struct {
-	Rotulo string
-	// Meu é o meu personagem, e é o que faz a faixa responder "quanto falta para
+	Label string
+	// Mine é o meu personagem, e é o que faz a faixa responder "quanto falta para
 	// mim?" — a pergunta do JOGADOR, que é quem mais precisa dela.
-	Meu bool
-	// Agora é a vez em curso. Sempre a primeira, e escrito mesmo assim: o
+	Mine bool
+	// Now é a vez em curso. Sempre a primeira, e escrito mesmo assim: o
 	// desenho não deve depender da posição no laço para saber o que destacar.
-	Agora bool
-	// ViraARodada marca o lugar onde a rodada seguinte começa — o ponto em que a
+	Now bool
+	// WrapsRound marca o lugar onde a rodada seguinte começa — o ponto em que a
 	// lista deu a volta. Sem ele a faixa mentiria por omissão: "Zumbi 2 › Ogro"
 	// parece a mesma rodada, e não é.
-	ViraARodada bool
-	// DizVoce troca o nome pela palavra, e ela é uma decisão da faixa INTEIRA e
+	WrapsRound bool
+	// SaysYou troca o nome pela palavra, e ela é uma decisão da faixa INTEIRA e
 	// não desta linha: a palavra só desambigua enquanto for UMA. Com dois
 	// personagens meus na faixa, "você › Fulano › ⟲ você" deixa de responder
 	// quanto falta para mim.
-	DizVoce bool
+	SaysYou bool
 }
 
 // turnStripOf traduz a janela circular para a tela.
@@ -306,35 +306,35 @@ type turnAhead struct {
 //
 // A fila que chega aqui é a que o `StateForRole` já redigiu: um segundo caminho
 // até os nomes seria um segundo lugar por onde vazar o que a mesa não vê.
-func turnStripOf(st *live.SessionRuntimeState, meus map[int64]bool) []turnAhead {
-	janela := live.UpcomingTurns(st.Initiative, st.TurnIndex, turnsAhead)
-	faixa := make([]turnAhead, 0, len(janela))
-	for passo, entrada := range janela {
-		faixa = append(faixa, turnAhead{
-			Rotulo:      entrada.Label,
-			Meu:         entrada.CharacterID != nil && meus[*entrada.CharacterID],
-			Agora:       passo == 0,
-			ViraARodada: st.TurnIndex+passo == len(st.Initiative),
+func turnStripOf(st *live.SessionRuntimeState, mine map[int64]bool) []turnAhead {
+	window := live.UpcomingTurns(st.Initiative, st.TurnIndex, turnsAhead)
+	strip := make([]turnAhead, 0, len(window))
+	for step, entry := range window {
+		strip = append(strip, turnAhead{
+			Label:      entry.Label,
+			Mine:       entry.CharacterID != nil && mine[*entry.CharacterID],
+			Now:        step == 0,
+			WrapsRound: st.TurnIndex+step == len(st.Initiative),
 		})
 	}
 	// "VOCÊ" é decisão da faixa inteira, então ela é tomada com ela pronta: a
-	// palavra só desambigua enquanto for UMA. Ver o `DizVoce`.
-	if meusNaFaixa(faixa) == 1 {
-		for i := range faixa {
-			faixa[i].DizVoce = faixa[i].Meu
+	// palavra só desambigua enquanto for UMA. Ver o `SaysYou`.
+	if meusNaFaixa(strip) == 1 {
+		for i := range strip {
+			strip[i].SaysYou = strip[i].Mine
 		}
 	}
-	return faixa
+	return strip
 }
 
-func meusNaFaixa(faixa []turnAhead) int {
-	quantos := 0
-	for _, p := range faixa {
-		if p.Meu {
-			quantos++
+func meusNaFaixa(strip []turnAhead) int {
+	howMany := 0
+	for _, p := range strip {
+		if p.Mine {
+			howMany++
 		}
 	}
-	return quantos
+	return howMany
 }
 
 // turnsAhead é o tamanho da faixa: a vez e as duas seguintes.
@@ -360,27 +360,27 @@ func tableBarOf(current, max int64, arcane bool) tableBar {
 
 // tableTrackerOf desenha a fila que o jogador recebeu — já redigida.
 func tableTrackerOf(
-	st *live.SessionRuntimeState, meus map[int64]bool, reservas map[int64]int64,
+	st *live.SessionRuntimeState, mine map[int64]bool, pools map[int64]int64,
 ) []tableRow {
-	fila := make([]tableRow, 0, len(st.Initiative))
+	queue := make([]tableRow, 0, len(st.Initiative))
 	for i := range st.Initiative {
 		e := &st.Initiative[i]
-		linha := tableRow{
+		row := tableRow{
 			ID:         e.ID,
-			Rotulo:     e.Label,
-			Iniciativa: e.Initiative,
-			EhFicha:    e.Type == "character",
-			Minha:      e.CharacterID != nil && meus[*e.CharacterID],
-			NaVez:      i == st.TurnIndex,
-			Condicoes:  e.Conditions,
-			Iniciais:   ui.Monogram(e.Label),
+			Label:      e.Label,
+			Initiative: e.Initiative,
+			IsSheet:    e.Type == "character",
+			Mine:       e.CharacterID != nil && mine[*e.CharacterID],
+			OnTurn:     i == st.TurnIndex,
+			Conditions: e.Conditions,
+			Initials:   ui.Monogram(e.Label),
 		}
 		// O `HpMax` nil depois da redação é como o servidor DIZ "isto não é seu
 		// para ver". Desenhar barra aqui inventaria um número — mas a MARCA que
 		// veio junto ainda tem de virar tela, senão "não tem PV" e "o mestre
 		// escondeu" ficam iguais.
-		linha.PV = poolBar(e.HpCurrent, e.HpMax, e.HpHidden, false)
-		linha.PM = poolBar(e.MpCurrent, e.MpMax, e.MpHidden, true)
+		row.PV = poolBar(e.HpCurrent, e.HpMax, e.HpHidden, false)
+		row.PM = poolBar(e.MpCurrent, e.MpMax, e.MpHidden, true)
 		// A RESERVA pega carona no gargalo da REDAÇÃO, e o que a segura é o
 		// MÁXIMO e não a marca do olho.
 		//
@@ -393,11 +393,11 @@ func tableTrackerOf(
 		//
 		// Só linha com personagem atrás tem reserva — NPC não tem ficha.
 		if e.CharacterID != nil {
-			withTempHp(linha.PV, reservas[*e.CharacterID])
+			withTempHp(row.PV, pools[*e.CharacterID])
 		}
-		fila = append(fila, linha)
+		queue = append(queue, row)
 	}
-	return fila
+	return queue
 }
 
 // poolBar traduz UM pool da linha em barra, ou em nada.
@@ -436,16 +436,16 @@ func withTempHp(b *tableBar, temp int64) {
 func tableViewOf(
 	st *live.SessionRuntimeState,
 	campaignID, sessionID, sessionNum int64,
-	grupo []Member,
-	meus map[int64]bool,
+	group []Member,
+	mine map[int64]bool,
 	eu *tableMe,
-	reservas map[int64]int64,
+	pools map[int64]int64,
 ) View {
 	if eu != nil {
-		eu.NaFila = false
+		eu.InQueue = false
 		for i := range st.Initiative {
 			if id := st.Initiative[i].CharacterID; id != nil && *id == eu.CharacterID {
-				eu.NaFila = true
+				eu.InQueue = true
 				break
 			}
 		}
@@ -459,8 +459,8 @@ func tableViewOf(
 			tracker[*id] = true
 		}
 	}
-	for i := range grupo {
-		grupo[i].NaFila = tracker[grupo[i].CharacterID]
+	for i := range group {
+		group[i].InQueue = tracker[group[i].CharacterID]
 	}
 	return View{
 		CampaignID:  campaignID,
@@ -468,10 +468,10 @@ func tableViewOf(
 		SessionNum:  sessionNum,
 		SceneActive: st.InScene(), Scene: sceneOf(st),
 		Round:    st.Round,
-		Turn:     tableTurnOf(st, meus),
-		Proximos: turnStripOf(st, meus),
-		Grupo:    grupo,
-		Fila:     tableTrackerOf(st, meus, reservas),
+		Turn:     tableTurnOf(st, mine),
+		Upcoming: turnStripOf(st, mine),
+		Group:    group,
+		Queue:    tableTrackerOf(st, mine, pools),
 		Eu:       eu,
 	}
 }
@@ -484,47 +484,47 @@ func tableViewOf(
 
 // viewGm é o acréscimo do mestre sobre a `View`.
 type viewGm struct {
-	// Contador é a frase que diz ONDE a sessão está.
-	Contador string
+	// Counter é a frase que diz ONDE a sessão está.
+	Counter string
 	// Upkeep é o que sustentar cobrou de quem entrou na vez (p227). Vazia
 	// quando não há sustentada, e aí a linha não é desenhada.
 	Upkeep string
-	// Avanco é o rótulo do botão mais clicado da sessão, e ele diz PARA ONDE vai
+	// Advance é o rótulo do botão mais clicado da sessão, e ele diz PARA ONDE vai
 	// em vez de o que faz.
-	Avanco live.NextTurnTarget
-	// VeVitais decide se a fila mostra PV de NPC. A pergunta é sobre a FILA e
+	Advance live.NextTurnTarget
+	// SeesVitals decide se a fila mostra PV de NPC. A pergunta é sobre a FILA e
 	// não sobre o papel: numa fila só de PCs não há o que reservar.
-	VeVitais bool
-	// Conectados são os personagens de quem está com a aba aberta agora.
-	Conectados map[int64]bool
-	// PodeAvancar separa "não há para onde ir" de "o botão está quebrado": sem
+	SeesVitals bool
+	// Connected são os personagens de quem está com a aba aberta agora.
+	Connected map[int64]bool
+	// CanAdvance separa "não há para onde ir" de "o botão está quebrado": sem
 	// cena aberta o avanço não existe, e um botão aceso que recusa é pior que um
 	// apagado que explica.
-	PodeAvancar bool
-	// GravacaoFalhando: a mesa está rodando de MEMÓRIA e o disco não recebeu a
+	CanAdvance bool
+	// SaveFailing: a mesa está rodando de MEMÓRIA e o disco não recebeu a
 	// última escrita.
 	//
 	// Ele vive no bloco do MESTRE e não na `View` porque quem pode parar a sessão
 	// e chamar alguém é ele; para o jogador seria um alarme sobre o qual não há o
 	// que fazer.
-	GravacaoFalhando bool
+	SaveFailing bool
 }
 
 func ofViewGm(
 	st *live.SessionRuntimeState,
-	membros []live.TableMember,
-	presentes []int64,
-	ehMestre bool,
-	gravacaoFalhando bool,
+	members []live.TableMember,
+	present []int64,
+	isGM bool,
+	saveFailing bool,
 ) viewGm {
 	return viewGm{
-		GravacaoFalhando: gravacaoFalhando,
-		Contador:         live.TurnCounter(st.Scene, st.Round, st.TurnIndex, len(st.Initiative)),
-		Upkeep:           live.UpkeepLine(upkeepOf(st)),
-		Avanco:           live.NextTurnButton(st.Initiative, st.TurnIndex),
-		VeVitais:         live.GmSeesVitals(st.Initiative, ehMestre),
-		Conectados:       live.ConnectedCharacters(membros, presentes),
-		PodeAvancar:      st.CountsRounds() && len(st.Initiative) > 0,
+		SaveFailing: saveFailing,
+		Counter:     live.TurnCounter(st.Scene, st.Round, st.TurnIndex, len(st.Initiative)),
+		Upkeep:      live.UpkeepLine(upkeepOf(st)),
+		Advance:     live.NextTurnButton(st.Initiative, st.TurnIndex),
+		SeesVitals:  live.GmSeesVitals(st.Initiative, isGM),
+		Connected:   live.ConnectedCharacters(members, present),
+		CanAdvance:  st.CountsRounds() && len(st.Initiative) > 0,
 	}
 }
 
@@ -548,12 +548,12 @@ func (v View) SessionBase() string { return routes.Session(v.CampaignID, v.Sessi
 // O caminho é o da CENA e não o da API JSON: as rotas próprias chamam as MESMAS
 // regras extraídas, e o que impede as duas telas de divergirem é compartilhar a
 // REGRA, não a rota.
-func tableCommand(v View, metodo, acao string) string {
-	caminho := v.SessionBase() + "/" + acao
-	if metodo == "POST" {
-		return fmt.Sprintf("@post('%s')", caminho)
+func tableCommand(v View, method, action string) string {
+	path := v.SessionBase() + "/" + action
+	if method == "POST" {
+		return fmt.Sprintf("@post('%s')", path)
 	}
-	return fmt.Sprintf("@%s('%s')", strings.ToLower(metodo), caminho)
+	return fmt.Sprintf("@%s('%s')", strings.ToLower(method), path)
 }
 
 // rowCommand escreve a chamada de um verbo que age sobre UM combatente.
@@ -562,8 +562,8 @@ func tableCommand(v View, metodo, acao string) string {
 // sinal é da página inteira, e nove linhas escrevendo no mesmo sinal antes de
 // postar é uma corrida esperando por um mestre de dedo rápido. Caminho é do
 // botão que foi clicado, e não há segundo escritor.
-func rowCommand(v View, l tableRow, acao string) string {
-	return fmt.Sprintf("@post('%s/iniciativa/%s/%s')", v.SessionBase(), l.ID, acao)
+func rowCommand(v View, l tableRow, action string) string {
+	return fmt.Sprintf("@post('%s/iniciativa/%s/%s')", v.SessionBase(), l.ID, action)
 }
 
 // rowVital escreve o ferir/curar com os DOIS passos já resolvidos em duas
@@ -611,7 +611,7 @@ func openEdit(v View, l tableRow) string {
 	}
 	return fmt.Sprintf(
 		"$edit_row = '%s'; $edit_name = %s; $edit_initiative = %d; $edit_hp = %d; $edit_hp_max = %d; document.getElementById('edit-combatant').showModal()",
-		l.ID, jsTextHow(l.Rotulo), l.Iniciativa, pv, pvMax,
+		l.ID, jsTextHow(l.Label), l.Initiative, pv, pvMax,
 	)
 }
 
@@ -632,11 +632,11 @@ func saveEdit(v View) string {
 // escape de HTML não é o escape de JS, e confundir os dois é como se escreve uma
 // injeção sem querer.
 func jsTextHow(s string) string {
-	cru, err := json.Marshal(s)
+	raw, err := json.Marshal(s)
 	if err != nil {
 		return "''"
 	}
-	return string(cru)
+	return string(raw)
 }
 
 // ── As CONDIÇÕES do combatente na tela ──────────────────────────────────────
@@ -649,7 +649,7 @@ func openConditions(l tableRow) string {
 	return fmt.Sprintf(
 		"$condition_row = %q; $row_conditions = %q; $row_label = %q;"+
 			" document.getElementById('combatant-conditions').showModal()",
-		l.ID, strings.Join(l.Condicoes, ","), l.Rotulo,
+		l.ID, strings.Join(l.Conditions, ","), l.Label,
 	)
 }
 
@@ -756,7 +756,7 @@ func portugueseCycle(status string) string {
 // um SINAL e nunca recebe `value` do servidor, senão o remendo da próxima troca
 // de turno apagaria o que o mestre está digitando.
 func openConfigSession(v View) string {
-	return fmt.Sprintf("$session_title = %q; document.getElementById('session-config').showModal()", v.Titulo)
+	return fmt.Sprintf("$session_title = %q; document.getElementById('session-config').showModal()", v.Title)
 }
 
 // upkeepOf lê o extrato da manutenção da cena em curso, se houver cena.

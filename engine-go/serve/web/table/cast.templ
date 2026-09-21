@@ -27,16 +27,16 @@ import (
 // fila CARREGA significado (acima já agiu, abaixo ainda vai) e rolar
 // embaralharia isso; o elenco é lista sem ordem própria.
 templ gmCast(v View) {
-	if len(v.Grupo) > 0 {
+	if len(v.Group) > 0 {
 		<nav
 			aria-label="Elenco"
 			class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto border border-grimorio-iron bg-grimorio-panel p-1"
 		>
-			for _, m := range v.Grupo {
+			for _, m := range v.Group {
 				@castPortrait(v, m)
 			}
 		</nav>
-		for _, m := range v.Grupo {
+		for _, m := range v.Group {
 			@castSheet(v, m)
 		}
 	}
@@ -55,13 +55,13 @@ templ castPortrait(v View, m Member) {
 		data-on:click={ openSheetCast(m) }
 		class="relative flex flex-col items-center rounded-sm border border-grimorio-iron px-1 py-1.5 outline-none transition-colors hover:bg-accent"
 	>
-		<span class="text-sm font-semibold text-foreground">{ m.Iniciais }</span>
-		if m.Presenca != nil {
+		<span class="text-sm font-semibold text-foreground">{ m.Initials }</span>
+		if m.Presence != nil {
 			<span
 				aria-hidden="true"
 				class={ "absolute right-0.5 top-0.5 size-2 rounded-full",
-					templ.KV("bg-hp-full", m.Presenca.NaMesa),
-					templ.KV("bg-grimorio-iron", !m.Presenca.NaMesa) }
+					templ.KV("bg-hp-full", m.Presence.AtTable),
+					templ.KV("bg-grimorio-iron", !m.Presence.AtTable) }
 			></span>
 		}
 	</button>
@@ -77,9 +77,9 @@ templ castSheet(v View, m Member) {
 	>
 		<div class="flex items-start justify-between gap-3">
 			<div class="min-w-0">
-				<h2 id={ fmt.Sprintf("elenco-%d-titulo", m.CharacterID) } class="truncate font-heading text-lg tracking-wide text-grimorio-gold">{ m.Nome }</h2>
+				<h2 id={ fmt.Sprintf("elenco-%d-titulo", m.CharacterID) } class="truncate font-heading text-lg tracking-wide text-grimorio-gold">{ m.Name }</h2>
 				<p class="text-xs text-muted-foreground">
-					Nível { fmt.Sprint(m.Nivel) }
+					Nível { fmt.Sprint(m.Level) }
 					if m.Classes != "" {
 						· { m.Classes }
 					}
@@ -94,15 +94,15 @@ templ castSheet(v View, m Member) {
 				@ui.Icon("X", "size-4")
 			</button>
 		</div>
-		if m.Presenca != nil {
+		if m.Presence != nil {
 			<p class="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
 				<span
 					aria-hidden="true"
 					class={ "size-2 rounded-full",
-						templ.KV("bg-hp-full", m.Presenca.NaMesa),
-						templ.KV("bg-grimorio-iron", !m.Presenca.NaMesa) }
+						templ.KV("bg-hp-full", m.Presence.AtTable),
+						templ.KV("bg-grimorio-iron", !m.Presence.AtTable) }
 				></span>
-				{ m.Presenca.Frase }
+				{ m.Presence.Sentence }
 			</p>
 		}
 		<dl class="mt-3 space-y-2">
@@ -111,10 +111,10 @@ templ castSheet(v View, m Member) {
 		</dl>
 		<p class="mt-3 flex items-baseline justify-between gap-2 border-t border-grimorio-iron pt-3 text-sm">
 			<span class="text-muted-foreground">Defesa</span>
-			<span class="font-mono tabular-nums text-foreground">{ m.Defesa }</span>
+			<span class="font-mono tabular-nums text-foreground">{ m.Defense }</span>
 		</p>
 		<div class="mt-4 flex justify-end">
-			if m.NaFila {
+			if m.InQueue {
 				<p class="text-xs text-muted-foreground">Já está na fila do combate.</p>
 			} else {
 				<button
@@ -156,8 +156,8 @@ templ castBar(v View, m Member, pool, rotulo string, b tableBar) {
 templ castStep(v View, m Member, pool, verb, sign, label string) {
 	<button
 		type="button"
-		aria-label={ label + " " + m.Nome }
-		title={ label + " " + m.Nome + " — clique 1, Shift+clique 5" }
+		aria-label={ label + " " + m.Name }
+		title={ label + " " + m.Name + " — clique 1, Shift+clique 5" }
 		data-on:click={ castVital(v, m, pool, verb) }
 		class="flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent"
 	>{ sign }</button>

@@ -37,8 +37,8 @@ const (
 )
 
 type editorTab struct {
-	ID     string
-	Rotulo string
+	ID    string
+	Label string
 }
 
 var editorTabs = []editorTab{
@@ -69,13 +69,13 @@ func blocoEmBranco() creature.Block {
 // Sai como JSON e não como texto escrito à mão: uma segunda grafia dos vinte e
 // cinco campos seria a que envelhece.
 func blankDraft() string {
-	bruto, err := json.Marshal(paraOFormulario(0, "", blocoEmBranco()))
+	raw, err := json.Marshal(paraOFormulario(0, "", blocoEmBranco()))
 	if err != nil {
 		// Um `CreatureBlock` de campos simples não tem como falhar aqui, e cair
 		// num objeto vazio deixaria a página sem sinal em vez de sem servidor.
 		return "{}"
 	}
-	return string(bruto)
+	return string(raw)
 }
 
 // draftLists são os três fragmentos que o servidor redesenha.
@@ -84,12 +84,12 @@ func blankDraft() string {
 // gesto de forma, e mandar só o que mudou exigiria saber qual mudou — informação
 // que o handler tem e que não vale o acoplamento. Três fragmentos por clique é
 // HTML de meia dúzia de linhas.
-func draftLists(c commandCtx, rascunho npcDraft) []templ.Component {
+func draftLists(c commandCtx, draft npcDraft) []templ.Component {
 	v := c.sessionView()
 	return []templ.Component{
-		draftAttacks(v, rascunho.Bloco.Attacks),
-		draftExpertises(v, rascunho.Bloco.Skills),
-		draftAbilities(v, rascunho.Bloco.SpecialAbilities),
+		draftAttacks(v, draft.Block.Attacks),
+		draftExpertises(v, draft.Block.Skills),
+		draftAbilities(v, draft.Block.SpecialAbilities),
 	}
 }
 
@@ -112,17 +112,17 @@ func (c commandCtx) sessionView() View {
 // servidor lê o antigo para sempre vazio, e o número some ao salvar.
 //
 // @example draftField("hp") // "draft.bloco.hp"
-func draftField(campo string) string { return "draft.bloco." + campo }
+func draftField(field string) string { return "draft.bloco." + field }
 
 // rowField é o mesmo para um item de lista, com o índice no meio.
 //
 // @example rowField(listaDeAtaques, 0, "name") // "draft.bloco.attacks.0.name"
-func rowField(lista string, indice int, campo string) string {
-	caminho := fmt.Sprintf("draft.bloco.%s.%d", blockName(lista), indice)
-	if campo == "" {
-		return caminho
+func rowField(list string, index int, field string) string {
+	path := fmt.Sprintf("draft.bloco.%s.%d", blockName(list), index)
+	if field == "" {
+		return path
 	}
-	return caminho + "." + campo
+	return path + "." + field
 }
 
 // blockName traduz o nome da ROTA para o nome do campo no JSON do bloco.
@@ -130,8 +130,8 @@ func rowField(lista string, indice int, campo string) string {
 // Os dois divergem e é deliberado: a rota fala a língua do usuário ("ataque") e
 // o bloco fala a do fio, que é inglês ("attacks"). Traduzir num lugar só é o que
 // impede a terceira grafia de aparecer num `data-bind`.
-func blockName(lista string) string {
-	switch lista {
+func blockName(list string) string {
+	switch list {
 	case listaDeAtaques:
 		return "attacks"
 	case listaDePericias:
@@ -163,12 +163,12 @@ const closeEditor = "$draft_open = false; $draft_error = ''"
 //
 // Ela recebe a VIEW e não os dois ids: o endereço da sessão tem um dono, e
 // passar os ids soltos seria reconstruí-lo aqui.
-func listCommand(v View, lista string, indice int) string {
-	base := fmt.Sprintf("%s/elenco/npc/rascunho/%s", v.SessionBase(), lista)
-	if indice < 0 {
+func listCommand(v View, list string, index int) string {
+	base := fmt.Sprintf("%s/elenco/npc/rascunho/%s", v.SessionBase(), list)
+	if index < 0 {
 		return fmt.Sprintf("@post('%s/nova')", base)
 	}
-	return fmt.Sprintf("@post('%s/%d/remover')", base, indice)
+	return fmt.Sprintf("@post('%s/%d/remover')", base, index)
 }
 
 // salvaOBloco é o único gesto desta tela que grava.
@@ -195,16 +195,16 @@ func kindOptions() []blockOption { return options(creatureTiposNaOrdem, book.Typ
 func sizeOptions() []blockOption { return options(creatureSizesNaOrdem, book.SizeName) }
 
 type blockOption struct {
-	Valor  string
-	Rotulo string
+	Value string
+	Label string
 }
 
-func options(valores []string, rotulo func(string) string) []blockOption {
-	fora := make([]blockOption, 0, len(valores))
-	for _, v := range valores {
-		fora = append(fora, blockOption{Valor: v, Rotulo: rotulo(v)})
+func options(values []string, label func(string) string) []blockOption {
+	outside := make([]blockOption, 0, len(values))
+	for _, v := range values {
+		outside = append(outside, blockOption{Value: v, Label: label(v)})
 	}
-	return fora
+	return outside
 }
 
 // tabSummary é o que o botão da aba diz além do nome: quantas linhas há dentro.
@@ -247,19 +247,19 @@ func tabStyling(aba string) string {
 // idênticos para quem navega por leitor de tela — e o que se apaga por engano é
 // justamente o que se acabou de escrever. A linha em branco (a que acabou de
 // nascer) cai no número, que é o que ela tem.
-func attackName(a creature.Attack, indice int) string {
-	return orderOrName(a.Name, "o ataque", indice)
+func attackName(a creature.Attack, index int) string {
+	return orderOrName(a.Name, "o ataque", index)
 }
 
-func expertiseName(p creature.Skill, indice int) string {
-	return orderOrName(p.Name, "a perícia", indice)
+func expertiseName(p creature.Skill, index int) string {
+	return orderOrName(p.Name, "a perícia", index)
 }
 
-func orderOrName(nome, oQue string, indice int) string {
-	if nome == "" {
-		return fmt.Sprintf("%s %d", oQue, indice+1)
+func orderOrName(name, what string, index int) string {
+	if name == "" {
+		return fmt.Sprintf("%s %d", what, index+1)
 	}
-	return nome
+	return name
 }
 
 // abilityPlaceholder lembra a FORMA da linha do livro (p289) sem preencher

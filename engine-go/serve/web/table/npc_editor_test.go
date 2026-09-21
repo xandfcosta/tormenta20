@@ -20,8 +20,8 @@ import (
 // Escrito como TEXTO e não `json.Marshal` de um `npcDraft`: marshalar a
 // struct faria o teste mandar exatamente o que o servidor espera, e um campo
 // renomeado passaria verde nos dois lados. Aqui o teste fala a língua do FIO.
-func bodyDraft(dentro string) string {
-	return `{"draft":{` + dentro + `}}`
+func bodyDraft(inside string) string {
+	return `{"draft":{` + inside + `}}`
 }
 
 const blocoMinimo = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":10,` +
@@ -33,25 +33,25 @@ const blocoMinimo = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":1
 // sabotagem para descobrir: `Contains(resposta, "Ogro Capitão")` passa verde com
 // o sinal renomeado, porque o nome continua no corpo — ligado a coisa nenhuma. O
 // que a tela precisa é do valor sob `rascunho`, e é isso que se afirma.
-func responseDraft(t *testing.T, resposta string) map[string]any {
+func responseDraft(t *testing.T, response string) map[string]any {
 	t.Helper()
 	const marca = "data: signals "
-	i := strings.Index(resposta, marca)
+	i := strings.Index(response, marca)
 	if i < 0 {
-		t.Fatalf("a resposta não trouxe sinais:\n%s", resposta)
+		t.Fatalf("a resposta não trouxe sinais:\n%s", response)
 	}
-	linha := resposta[i+len(marca):]
-	if fim := strings.IndexByte(linha, '\n'); fim >= 0 {
-		linha = linha[:fim]
+	row := response[i+len(marca):]
+	if end := strings.IndexByte(row, '\n'); end >= 0 {
+		row = row[:end]
 	}
-	var sinais struct {
-		Rascunho map[string]any `json:"draft"`
+	var signals struct {
+		Draft map[string]any `json:"draft"`
 	}
-	if err := json.Unmarshal([]byte(linha), &sinais); err != nil {
-		t.Fatalf("os sinais não são JSON: %v\n%s", err, linha)
+	if err := json.Unmarshal([]byte(row), &signals); err != nil {
+		t.Fatalf("os sinais não são JSON: %v\n%s", err, row)
 	}
-	if sinais.Rascunho == nil {
-		t.Fatalf("a resposta não trouxe `rascunho`:\n%s", linha)
+	if signals.Draft == nil {
+		t.Fatalf("a resposta não trouxe `rascunho`:\n%s", row)
 	}
-	return sinais.Rascunho
+	return signals.Draft
 }

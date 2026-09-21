@@ -21,18 +21,18 @@ import (
 // paradas ela é uma reta e o total é a régua de sempre, que é o caso que não
 // pode ter mudado.
 func TestTheTotalIsTheSumOfTheLegs(t *testing.T) {
-	reta := polylineReading([]engine.Square{{}, {X: 3}})
-	if reta["ruler_text"] != rulerReading(engine.Measure(engine.Square{}, engine.Square{X: 3})) {
-		t.Errorf("a régua de duas paradas deixou de ser a régua de sempre: %q", reta["ruler_text"])
+	line := polylineReading([]engine.Square{{}, {X: 3}})
+	if line["ruler_text"] != rulerReading(engine.Measure(engine.Square{}, engine.Square{X: 3})) {
+		t.Errorf("a régua de duas paradas deixou de ser a régua de sempre: %q", line["ruler_text"])
 	}
 
 	// Três paradas: 3 + 4 = 7 quadrados de caminho.
-	caminho := polylineReading([]engine.Square{{}, {X: 3}, {X: 3, Y: 4}})
-	if !strings.HasPrefix(caminho["ruler_text"].(string), "7 quadrados") {
-		t.Errorf("o total de 3+4 pernas saiu %q, esperado 7 quadrados", caminho["ruler_text"])
+	path := polylineReading([]engine.Square{{}, {X: 3}, {X: 3, Y: 4}})
+	if !strings.HasPrefix(path["ruler_text"].(string), "7 quadrados") {
+		t.Errorf("o total de 3+4 pernas saiu %q, esperado 7 quadrados", path["ruler_text"])
 	}
-	if rotulos := caminho["ruler_labels"].([]string); len(rotulos) != 2 {
-		t.Errorf("três paradas deram %d rótulos, esperado 2 pernas: %v", len(rotulos), rotulos)
+	if labels := path["ruler_labels"].([]string); len(labels) != 2 {
+		t.Errorf("três paradas deram %d rótulos, esperado 2 pernas: %v", len(labels), labels)
 	}
 }
 
@@ -42,16 +42,16 @@ func TestTheTotalIsTheSumOfTheLegs(t *testing.T) {
 // "ele está a nove metros" é a frase do turno, e "seis quadrados" obriga a
 // converter de cabeça. A frase do TOTAL continua trazendo as duas, porque lá cabe.
 func TestTheLegLabelComesInMetres(t *testing.T) {
-	leitura := polylineReading([]engine.Square{{}, {X: 6}})
-	rotulos := leitura["ruler_labels"].([]string)
-	if len(rotulos) != 1 || rotulos[0] != "9,0m" {
-		t.Errorf("a perna de 6 quadrados saiu %v, esperado [\"9,0m\"] — 6 × 1,5m (p236)", rotulos)
+	reading := polylineReading([]engine.Square{{}, {X: 6}})
+	labels := reading["ruler_labels"].([]string)
+	if len(labels) != 1 || labels[0] != "9,0m" {
+		t.Errorf("a perna de 6 quadrados saiu %v, esperado [\"9,0m\"] — 6 × 1,5m (p236)", labels)
 	}
 	// E o TOTAL continua trazendo as duas unidades e a faixa.
-	total := leitura["ruler_text"].(string)
-	for _, pedaco := range []string{"6 quadrados", "9,0m", "alcance"} {
-		if !strings.Contains(total, pedaco) {
-			t.Errorf("a frase do total perdeu %q: %q", pedaco, total)
+	total := reading["ruler_text"].(string)
+	for _, chunk := range []string{"6 quadrados", "9,0m", "alcance"} {
+		if !strings.Contains(total, chunk) {
+			t.Errorf("a frase do total perdeu %q: %q", chunk, total)
 		}
 	}
 }
@@ -60,8 +60,8 @@ func TestTheLegLabelComesInMetres(t *testing.T) {
 // nascer. Um "0,0m" piscando sob o dedo é ruído sobre o gesto que a pessoa está
 // fazendo, e o vazio é o que apaga o nó (ver `existsLabel`).
 func TestAZeroLengthLegHasNoLabel(t *testing.T) {
-	leitura := polylineReading([]engine.Square{{X: 4, Y: 4}, {X: 4, Y: 4}})
-	if rotulos := leitura["ruler_labels"].([]string); len(rotulos) != 1 || rotulos[0] != "" {
-		t.Errorf("a perna de zero saiu %v, esperado um rótulo VAZIO", rotulos)
+	reading := polylineReading([]engine.Square{{X: 4, Y: 4}, {X: 4, Y: 4}})
+	if labels := reading["ruler_labels"].([]string); len(labels) != 1 || labels[0] != "" {
+		t.Errorf("a perna de zero saiu %v, esperado um rótulo VAZIO", labels)
 	}
 }

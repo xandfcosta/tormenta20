@@ -69,7 +69,7 @@ func TestAHiddenPoolHidesItsTemporaryHpToo(t *testing.T) {
 		if err != nil {
 			t.Fatalf("carregar a Mesa: %v", err)
 		}
-		for _, l := range view.Fila {
+		for _, l := range view.Queue {
 			if l.ID == sheet {
 				if l.PV == nil {
 					return 0

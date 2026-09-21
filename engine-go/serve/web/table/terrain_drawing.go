@@ -26,10 +26,10 @@ import (
 
 // speciesDrawing é como uma espécie de terreno aparece na casa e no trilho.
 type speciesDrawing struct {
-	// Icone é o nome do lucide, o mesmo que a casa e o botão do pincel usam. UM
+	// Icon é o nome do lucide, o mesmo que a casa e o botão do pincel usam. UM
 	// desenho para os dois lugares: o mestre reconhece o pincel pelo que ele
 	// PINTA, e não por uma legenda que ele teria de decorar.
-	Icone string
+	Icon string
 	// Canto é o sufixo da classe que põe o ícone no lugar dele
 	// (`terrain-corner-<Canto>`). Quatro espécies, quatro cantos.
 	Canto string
@@ -43,10 +43,10 @@ type speciesDrawing struct {
 // espécie nova poder nascer sem desenho — e é por isso que o guarda existe e que
 // o `drawing` recusa em vez de devolver um branco.
 var drawingBySpecies = map[board.TerrainKind]speciesDrawing{
-	board.TerrenoDificil:    {Icone: "Waves", Canto: "northwest"},
-	board.TerrenoCobertura:  {Icone: "Shield", Canto: "northeast"},
-	board.TerrenoCamuflagem: {Icone: "EyeOff", Canto: "southeast"},
-	board.TerrenoElevado:    {Icone: "Mountain", Canto: "southwest"},
+	board.TerrenoDificil:    {Icon: "Waves", Canto: "northwest"},
+	board.TerrenoCobertura:  {Icon: "Shield", Canto: "northeast"},
+	board.TerrenoCamuflagem: {Icon: "EyeOff", Canto: "southeast"},
+	board.TerrenoElevado:    {Icon: "Mountain", Canto: "southwest"},
 }
 
 // drawing devolve o desenho da espécie, e ENTRA EM PÂNICO se não houver.
@@ -55,17 +55,17 @@ var drawingBySpecies = map[board.TerrainKind]speciesDrawing{
 // não se distingue de nenhuma outra, e isso é indistinguível de "o pincel não
 // funcionou". O `TestEveryKindHasADrawing` faz o pânico acontecer na suíte e não
 // na mesa de alguém.
-func drawing(especie board.TerrainKind) speciesDrawing {
-	d, tem := drawingBySpecies[especie]
-	if !tem {
-		panic(fmt.Sprintf("a espécie de terreno %q não tem desenho: acrescente-a em oDesenhoDasEspecies", especie))
+func drawing(species board.TerrainKind) speciesDrawing {
+	d, found := drawingBySpecies[species]
+	if !found {
+		panic(fmt.Sprintf("a espécie de terreno %q não tem desenho: acrescente-a em oDesenhoDasEspecies", species))
 	}
 	return d
 }
 
 // squareClass é o que a casa pintada veste: a espécie (que traz a tinta) e o
 // canto do ícone.
-func squareClass(especie string) string {
-	d := drawing(board.TerrainKind(especie))
-	return "board-terrain board-" + board.ClassOf(board.TerrainKind(especie)) + " terrain-corner-" + d.Canto
+func squareClass(species string) string {
+	d := drawing(board.TerrainKind(species))
+	return "board-terrain board-" + board.ClassOf(board.TerrainKind(species)) + " terrain-corner-" + d.Canto
 }

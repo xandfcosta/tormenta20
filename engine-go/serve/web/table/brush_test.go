@@ -22,9 +22,9 @@ import (
 // dentro de um `apply` só. Quem garante a gravação única é a estrutura
 // (`PaintStroke` chama `apply` uma vez, e o `boardCommand` publica uma vez), e
 // um teste que afirme o contrário fica vermelho sobre um app correto.
-func contem(casas []engine.Square, alvo engine.Square) bool {
-	for _, c := range casas {
-		if c == alvo {
+func contem(squares []engine.Square, target engine.Square) bool {
+	for _, c := range squares {
+		if c == target {
 			return true
 		}
 	}
@@ -41,17 +41,17 @@ func contem(casas []engine.Square, alvo engine.Square) bool {
 // desenham uma por cima da outra, e a casa com folhagens (difícil E camuflagem,
 // p267) mostraria uma só.
 func TestEveryKindHasADrawing(t *testing.T) {
-	cantos := map[string]string{}
-	for _, pincel := range board.TerrainKinds {
-		d := drawing(pincel.ID)
-		if d.Icone == "" || d.Canto == "" {
-			t.Errorf("a espécie %q tem desenho incompleto: %+v", pincel.ID, d)
+	corners := map[string]string{}
+	for _, brush := range board.TerrainKinds {
+		d := drawing(brush.ID)
+		if d.Icon == "" || d.Canto == "" {
+			t.Errorf("a espécie %q tem desenho incompleto: %+v", brush.ID, d)
 		}
-		if dono, tem := cantos[d.Canto]; tem {
+		if owner, found := corners[d.Canto]; found {
 			t.Errorf("o canto %q é de %q e de %q — uma desenha por cima da outra",
-				d.Canto, dono, pincel.ID)
+				d.Canto, owner, brush.ID)
 		}
-		cantos[d.Canto] = string(pincel.ID)
+		corners[d.Canto] = string(brush.ID)
 	}
 }
 

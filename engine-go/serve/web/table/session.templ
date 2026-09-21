@@ -15,7 +15,7 @@ import (
 // dentro dela: o resto da tela é sobre a cena, a fila e o mapa.
 templ sessionVerbs(v View) {
 	<span class="ml-auto flex shrink-0 items-center gap-1">
-		if v.Mestre != nil {
+		if v.GM != nil {
 			<button
 				type="button"
 				aria-label="Configurações da sessão"
@@ -54,7 +54,7 @@ templ sessionVerbs(v View) {
 // região que o remendo não acha. Quem a porta do mestre esconde é o CONTEÚDO.
 templ tableConfigSession(v View) {
 	<div id="table-session-config">
-		if v.Mestre != nil {
+		if v.GM != nil {
 			@sessionConfig(v)
 		}
 	</div>

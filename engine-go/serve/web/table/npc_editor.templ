@@ -104,7 +104,7 @@ templ editorTabLink(aba editorTab) {
 		data-on:click={ pickTab(aba.ID) }
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-t-sm border border-transparent px-3 text-sm outline-none transition-colors hover:text-foreground"
 	>
-		{ aba.Rotulo }
+		{ aba.Label }
 		if tabSummary(aba.ID) != "" {
 			<span
 				data-text={ tabSummary(aba.ID) }
@@ -342,7 +342,7 @@ templ blockChoice(campo, rotulo string, opcoes []blockOption) {
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		>
 			for _, opcao := range opcoes {
-				<option value={ opcao.Valor }>{ opcao.Rotulo }</option>
+				<option value={ opcao.Value }>{ opcao.Label }</option>
 			}
 		</select>
 	</div>

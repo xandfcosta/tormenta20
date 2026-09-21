@@ -28,8 +28,8 @@ import (
 // lugares dizendo a mesma URL.
 
 // moveCommand escreve a chamada de confirmar ou cancelar.
-func moveCommand(v BoardView, acao string) string {
-	return fmt.Sprintf("@post('%s/%s/%s')", v.Base, v.Movimento.TokenID, acao)
+func moveCommand(v BoardView, action string) string {
+	return fmt.Sprintf("@post('%s/%s/%s')", v.Base, v.Movement.TokenID, action)
 }
 
 // clickedPointStop traduz o PONTO do clique em quadrado do plano.
@@ -44,7 +44,7 @@ func moveCommand(v BoardView, acao string) string {
 func clickedPointStop(v BoardView) string {
 	return fmt.Sprintf(
 		"@post('%s/%s/parada', {payload: {from: {x: (%s), y: (%s)}}})",
-		v.Base, v.AlvoDoMovimento, clicouEmX, clicouEmY,
+		v.Base, v.MoveTarget, clicouEmX, clicouEmY,
 	)
 }
 
@@ -81,10 +81,10 @@ func clickedPointStop(v BoardView) string {
 // `pointerup` de todas passarem na mesma guarda e o primeiro do DOM vencer —
 // pegar uma peça moveria outra. Com o ID, cada expressão só reconhece a si
 // mesma e a ordem dos ouvintes não importa.
-func startsTheDrag(quem string) string {
+func startsTheDrag(who string) string {
 	return fmt.Sprintf(
 		"$dragging = '%s'; $drag_start_x = evt.clientX; $drag_start_y = evt.clientY; "+
-			"$drag_x = 0; $drag_y = 0", quem)
+			"$drag_x = 0; $drag_y = 0", who)
 }
 
 // dragsTheParty é o valor de `$dragging` quando o gesto move o GRUPO marcado.
@@ -100,14 +100,14 @@ const dragsTheParty = "grupo"
 // concordar sobre isso, e por isso a divisa mora aqui numa vez só. Cada um com a
 // sua pergunta dá a classe de arrasto a UMA peça e o gesto a todas.
 func dragsItself(v BoardView, id string) bool {
-	return v.Rascunho || v.ArrastaAPeca == id
+	return v.Draft || v.DragsToken == id
 }
 
 // followsFinger escreve o `pointermove`. Só mexe nos sinais se for ESTE que está
 // sendo arrastado: os dois alvos escutam a mesma janela.
-func followsFinger(quem string) string {
+func followsFinger(who string) string {
 	return fmt.Sprintf(
-		"$dragging === '%s' && ($drag_x = evt.clientX - $drag_start_x, $drag_y = evt.clientY - $drag_start_y)", quem)
+		"$dragging === '%s' && ($drag_x = evt.clientX - $drag_start_x, $drag_y = evt.clientY - $drag_start_y)", who)
 }
 
 // fingerFollowsWithPreview é o `followsFinger` da PEÇA, com a seta viva por cima.
@@ -166,19 +166,19 @@ const erasePreview = "$preview_arrow_fits = ''; $preview_arrow_second = ''; $pre
 // está na ponta do dedo.
 //
 // MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
-func dropFor(v BoardView, quem string, x, y int) string {
-	parada := fmt.Sprintf("'%s/%s/parada', {payload: {from: {x: %d + dx, y: %d + dy}}}",
-		v.Base, v.AlvoDoMovimento, x, y)
-	destino := "@post(" + parada + ")"
-	if quem == "peca" && v.Mestre && v.AlvoDoMovimento != "" {
-		grupo := fmt.Sprintf("@post('%s/grupo/mover', {payload: {delta: {x: dx, y: dy}, marked_tokens: $marked_tokens}})", v.Base)
-		destino = fmt.Sprintf("%s ? %s : %s", markedIsToken(v.AlvoDoMovimento), grupo, destino)
+func dropFor(v BoardView, who string, x, y int) string {
+	stop := fmt.Sprintf("'%s/%s/parada', {payload: {from: {x: %d + dx, y: %d + dy}}}",
+		v.Base, v.MoveTarget, x, y)
+	destination := "@post(" + stop + ")"
+	if who == "peca" && v.GM && v.MoveTarget != "" {
+		group := fmt.Sprintf("@post('%s/grupo/mover', {payload: {delta: {x: dx, y: dy}, marked_tokens: $marked_tokens}})", v.Base)
+		destination = fmt.Sprintf("%s ? %s : %s", markedIsToken(v.MoveTarget), group, destination)
 	}
 	return fmt.Sprintf(
 		"if ($dragging === '%s') { "+
 			"const dx = Math.round($drag_x / $square), dy = Math.round($drag_y / $square); "+
 			"$dragging = ''; $drag_x = 0; $drag_y = 0; "+
-			"if (dx || dy) %s }", quem, destino)
+			"if (dx || dy) %s }", who, destination)
 }
 
 // As variáveis do arrasto moram SÓ no `#table`, e descem por herança até quem
@@ -207,7 +207,7 @@ func dropFor(v BoardView, quem string, x, y int) string {
 // movimento ainda pode estar num grupo marcado, e o `partyTakes` é quem checa a
 // marca. Para o jogador só a peça dele responde.
 func tokenReceivesGesture(v BoardView, id string) bool {
-	return v.ArrastaAPeca == id || v.Mestre
+	return v.DragsToken == id || v.GM
 }
 
 // takeToken escolhe entre começar o arrasto DA PEÇA e o DO GRUPO.
@@ -232,7 +232,7 @@ func dropToken(v BoardView, p boardToken) string {
 	if !dragsItself(v, p.ID) {
 		return dropParty(v)
 	}
-	if v.Rascunho {
+	if v.Draft {
 		return draftMoveDrop(v, p)
 	}
 	return erasePreview + "; " + dropFor(v, p.ID, p.X, p.Y)
@@ -273,7 +273,7 @@ func followToken(v BoardView, p boardToken) string {
 	if !dragsItself(v, p.ID) {
 		return followsFinger(dragsTheParty)
 	}
-	if v.Rascunho {
+	if v.Draft {
 		return followsFinger(p.ID)
 	}
 	return fingerFollowsWithPreview(v, p)
@@ -284,8 +284,8 @@ func followToken(v BoardView, p boardToken) string {
 // Irmão do `moveCommand` e separado dele de propósito: aquele leva o id
 // da PEÇA no caminho, e este não tem peça nenhuma — abrir acontece justamente
 // quando não há tabuleiro.
-func sceneBoardCommand(v BoardView, acao string) string {
-	return fmt.Sprintf("@post('%s/%s')", v.Base, acao)
+func sceneBoardCommand(v BoardView, action string) string {
+	return fmt.Sprintf("@post('%s/%s')", v.Base, action)
 }
 
 // campaignCollection traduz os lugares guardados para a tela.
@@ -294,36 +294,36 @@ func sceneBoardCommand(v BoardView, acao string) string {
 // hora não ajuda a escolher entre a taverna de ontem e a cripta de março. O
 // formato vem do banco em ISO, e cortar no `T` é mais honesto que reformatar —
 // não inventa fuso que o servidor não guardou.
-func campaignCollection(lugares []board.Place, abertos []*board.BoardState) []lugarDoAcervo {
+func campaignCollection(places []board.Place, open []*board.BoardState) []lugarDoAcervo {
 	// O índice é montado UMA vez: comparar cada linha com cada aba é a lista
 	// inteira multiplicada pelo número de cenas abertas, a cada carga da página
 	// e a cada quadro do stream.
-	naMesa := make(map[string]string, len(abertos))
-	for _, aberto := range abertos {
-		naMesa[aberto.Place] = aberto.ID
+	onTable := make(map[string]string, len(open))
+	for _, isOpen := range open {
+		onTable[isOpen.Place] = isOpen.ID
 	}
-	acervo := make([]lugarDoAcervo, 0, len(lugares))
-	for _, l := range lugares {
-		acervo = append(acervo, lugarDoAcervo{
-			ID: l.ID, Nome: l.Name, Pecas: l.Tokens, Quando: diaDe(l.UpdatedAt),
+	collection := make([]lugarDoAcervo, 0, len(places))
+	for _, l := range places {
+		collection = append(collection, lugarDoAcervo{
+			ID: l.ID, Name: l.Name, Tokens: l.Tokens, When: diaDe(l.UpdatedAt),
 			// Pelo NOME, que é a identidade que o `Archive` já dá ao lugar — ver
 			// `placeTab`, onde o argumento inteiro está escrito.
-			AbertaEm: naMesa[l.Name],
+			OpenedAt: onTable[l.Name],
 		})
 	}
-	return acervo
+	return collection
 }
 
 func diaDe(iso string) string {
-	if dia, _, achou := strings.Cut(iso, "T"); achou {
-		return dia
+	if day, _, found := strings.Cut(iso, "T"); found {
+		return day
 	}
 	return iso
 }
 
 // placeCommand escreve a chamada de reabrir ou apagar um lugar do acervo.
-func placeCommand(v BoardView, placeID int64, acao string) string {
-	return fmt.Sprintf("@post('%s/lugares/%d/%s')", v.Base, placeID, acao)
+func placeCommand(v BoardView, placeID int64, action string) string {
+	return fmt.Sprintf("@post('%s/lugares/%d/%s')", v.Base, placeID, action)
 }
 
 // tabCommand escreve a troca de aba a partir do acervo.
@@ -331,8 +331,8 @@ func placeCommand(v BoardView, placeID int64, acao string) string {
 // A MESMA rota que a barra de abas usa, e não uma "reabrir que só troca": o que
 // se quer aqui é literalmente ir até a aba que já existe, e uma segunda porta
 // para isso seria uma segunda regra sobre o que significa escolher uma cena.
-func tabCommand(v BoardView, tabuleiroID string) string {
-	return fmt.Sprintf("@post('%s/aba/%s')", v.Base, tabuleiroID)
+func tabCommand(v BoardView, boardID string) string {
+	return fmt.Sprintf("@post('%s/aba/%s')", v.Base, boardID)
 }
 
 // ── ONDE O TABULEIRO POSTA ───────────────────────────────────────────────────
@@ -377,8 +377,8 @@ func placeDraftBase(campaignID, placeID int64) string {
 // ao mesmo tempo, e o estado impossível não estoura — ele aparece como o clique
 // indo para a ferramenta errada. Aqui a exclusão fica POR CONSTRUÇÃO, e ninguém
 // precisa lembrar de desligar a vizinha ao acrescentar a sexta.
-func pickTool(qual string) string {
-	return fmt.Sprintf("$tool = ($tool === %q ? '' : %q)", qual, qual)
+func pickTool(which string) string {
+	return fmt.Sprintf("$tool = ($tool === %q ? '' : %q)", which, which)
 }
 
 // MarkTool é o valor do sinal quando o clique MARCA.
@@ -434,8 +434,8 @@ func clickedPointMarking(v BoardView) string {
 }
 
 // markerCommand escreve o gesto sobre um marcador que já existe.
-func markerCommand(v BoardView, id, acao string) string {
-	return fmt.Sprintf("@post('%s/marcadores/%s/%s')", v.Base, id, acao)
+func markerCommand(v BoardView, id, action string) string {
+	return fmt.Sprintf("@post('%s/marcadores/%s/%s')", v.Base, id, action)
 }
 
 // markerName é o que o leitor de tela anuncia, e ele DIZ o estado.
@@ -444,11 +444,11 @@ func markerCommand(v BoardView, id, acao string) string {
 // de clicar: se a mesa já está vendo aquilo. O estado entra no nome porque é
 // aqui que ele muda o que a pessoa vai fazer.
 func markerName(m boardMarker) string {
-	estado := "visível para a mesa"
-	if m.Escondido {
-		estado = "escondido da mesa"
+	state := "visível para a mesa"
+	if m.Hidden {
+		state = "escondido da mesa"
 	}
-	return fmt.Sprintf("Marcador %s em %s, %s", m.Texto, m.Onde, estado)
+	return fmt.Sprintf("Marcador %s em %s, %s", m.Text, m.Where, state)
 }
 
 // chosenMarker é a pergunta que mostra as ações de UM marcador.
@@ -471,8 +471,8 @@ func pickMarker(id string) string {
 }
 
 // curtainCommand escreve o gesto que fecha ou abre.
-func curtainCommand(v BoardView, estado string) string {
-	return fmt.Sprintf("@post('%s/cortina/%s')", v.Base, estado)
+func curtainCommand(v BoardView, state string) string {
+	return fmt.Sprintf("@post('%s/cortina/%s')", v.Base, state)
 }
 
 // curtainTarget é para onde o botão do cabeçalho leva.
@@ -480,8 +480,8 @@ func curtainCommand(v BoardView, estado string) string {
 // O botão ALTERNA e a tira só ABRE, e são dois destinos e não um alternar cego —
 // a razão está no `runsCurtain`. Aqui é só a tradução do estado atual para o
 // verbo que falta.
-func curtainTarget(fechada bool) string {
-	if fechada {
+func curtainTarget(closed bool) string {
+	if closed {
 		return "abrir"
 	}
 	return "fechar"

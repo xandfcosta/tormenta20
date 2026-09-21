@@ -35,24 +35,24 @@ func (s Scene) handleTableInitiative(w http.ResponseWriter, r *http.Request) {
 	// servidor de verdade: o `httptest.NewRequest` não reproduz esse ciclo de
 	// vida.
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // teto de 1 MB, como o `httpio.DecodeJSON` da casa
-	var sinais tableSignals
-	erroDeLeitura := datastar.ReadSignals(r, &sinais)
+	var signals tableSignals
+	readErr := datastar.ReadSignals(r, &signals)
 
 	// Responde SEMPRE em SSE, inclusive na recusa: aqui a resposta É a tela. Um
 	// caminho de volta que o cliente não escuta faz a recusa sumir em silêncio, e
 	// o jogador clica olhando para uma tela que não muda.
 	sse := datastar.NewSSE(w, r)
-	erro := ""
-	if erroDeLeitura != nil {
-		erro = fmt.Sprintf("não entendi o dado enviado: %v", erroDeLeitura)
-	} else if err := s.registerInitiativeTable(r, campaignID, sessionID, sinais.D20); err != nil {
-		erro = err.Error()
+	failure := ""
+	if readErr != nil {
+		failure = fmt.Sprintf("não entendi o dado enviado: %v", readErr)
+	} else if err := s.registerInitiativeTable(r, campaignID, sessionID, signals.D20); err != nil {
+		failure = err.Error()
 	}
 	// Sai o sinal nos DOIS caminhos: no do erro para acender a frase, e no do
 	// acerto para APAGAR a frase anterior. Quem redesenha a fila é o stream, que
 	// já está aberto — mandar o fragmento aqui também a desenharia por dois
 	// caminhos que podem discordar.
-	_ = sse.MarshalAndPatchSignals(map[string]string{"error": erro})
+	_ = sse.MarshalAndPatchSignals(map[string]string{"error": failure})
 }
 
 // registerInitiativeTable é o caminho inteiro da escrita: autoriza, acha o
@@ -75,11 +75,11 @@ func (s Scene) registerInitiativeTable(r *http.Request, campaignID, sessionID, d
 	if err != nil {
 		return err
 	}
-	estado, err := s.deps.Sessions().UpsertInitiativeEntry(sessionID, entry)
+	state, err := s.deps.Sessions().UpsertInitiativeEntry(sessionID, entry)
 	if err != nil {
 		return err
 	}
 	// Sem este aviso a linha nova só apareceria para o mestre no próximo F5.
-	s.deps.PublishSessionState(sessionID, estado)
+	s.deps.PublishSessionState(sessionID, state)
 	return nil
 }
