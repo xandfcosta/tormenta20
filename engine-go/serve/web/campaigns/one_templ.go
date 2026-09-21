@@ -743,7 +743,7 @@ func oneSeal(iconName string, value int, label string) templ.Component {
 	})
 }
 
-func onePanel(sobrancelha, title string) templ.Component {
+func onePanel(eyebrow, title string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -781,9 +781,9 @@ func onePanel(sobrancelha, title string) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			var templ_7745c5c3_Var35 string
-			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(sobrancelha)
+			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(eyebrow)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/one.templ`, Line: 242, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/one.templ`, Line: 242, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
@@ -1378,7 +1378,7 @@ func campaignForm(v oneView) templ.Component {
 		}
 		templ_7745c5c3_Err = ui.TextField(ui.Field{
 			Name: "name", Label: "Nome", Value: v.Name,
-			Obrigatorio: true, MaxSize: campaign.MaxNameLength,
+			Required: true, MaxSize: campaign.MaxNameLength,
 			Errors: v.Errors["name"],
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

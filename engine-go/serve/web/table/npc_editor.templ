@@ -272,12 +272,12 @@ templ draftExpertises(v View, expertises []creature.Skill) {
 // `<input>` — o livro escreve habilidade especial em prosa ("Faro apurado.
 // Recebe +2 em testes de Percepção baseados em olfato", p289), e uma caixa de uma
 // linha faria o mestre resumir o que ele vai precisar ler em voz alta.
-templ draftAbilities(v View, habilidades []string) {
+templ draftAbilities(v View, abilities []string) {
 	<div id="npc-abilities" class="space-y-2">
-		if len(habilidades) == 0 {
+		if len(abilities) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhuma habilidade especial.</p>
 		}
-		for i := range habilidades {
+		for i := range abilities {
 			<div class="flex items-start gap-2">
 				<textarea
 					rows="2"
@@ -341,8 +341,8 @@ templ blockChoice(field, label string, options []blockOption) {
 			data-bind={ draftField(field) }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		>
-			for _, opcao := range options {
-				<option value={ opcao.Value }>{ opcao.Label }</option>
+			for _, option := range options {
+				<option value={ option.Value }>{ option.Label }</option>
 			}
 		</select>
 	</div>

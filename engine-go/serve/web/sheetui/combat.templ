@@ -134,12 +134,12 @@ templ attributeBox(attr attributeTile) {
 // O texto de vazio existe para a caixa não PARECER quebrada: um marcial de mãos
 // livres veria um buraco entre os atributos e o fim da aba, e buraco em tela de
 // ficha se lê como defeito.
-templ weaponCards(armas []weaponTile) {
-	if len(armas) == 0 {
+templ weaponCards(weapons []weaponTile) {
+	if len(weapons) == 0 {
 		<p class="self-center text-center text-xs italic text-muted-foreground">Nenhuma arma empunhada.</p>
 	} else {
-		<div class={ "grid gap-2", templ.KV("grid-cols-2", len(armas) > 1) }>
-			for _, weapon := range armas {
+		<div class={ "grid gap-2", templ.KV("grid-cols-2", len(weapons) > 1) }>
+			for _, weapon := range weapons {
 				@weaponCard(weapon)
 			}
 		</div>

@@ -20,7 +20,7 @@ import templruntime "github.com/a-h/templ/runtime"
 // tela e o formulário começa abaixo da dobra. É `max-height` e não `landscape`
 // AQUI de propósito, ao contrário da folha — o que importa para o cabeçalho é
 // quanta altura sobra, inclusive com o teclado virtual aberto.
-func SheetTitle(sobrancelha, title string) templ.Component {
+func SheetTitle(eyebrow, title string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -46,9 +46,9 @@ func SheetTitle(sobrancelha, title string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(sobrancelha)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(eyebrow)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/sheet_title.templ`, Line: 18, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/sheet_title.templ`, Line: 18, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {

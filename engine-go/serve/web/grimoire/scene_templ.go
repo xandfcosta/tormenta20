@@ -31,16 +31,16 @@ type colorSample struct {
 	Class string
 	Token string
 	Note  string
-	// Superficie não vira texto: para ela a razão contra o painel não diz nada.
-	Superficie bool
+	// Surface não vira texto: para ela a razão contra o painel não diz nada.
+	Surface bool
 }
 
 // A pilha do escuro para o claro. Toda cena empilha nesta ordem.
 var surfaces = []colorSample{
-	{Class: "bg-grimorio-bg", Token: "--grimorio-bg", Note: "fundo da cena", Superficie: true},
-	{Class: "bg-grimorio-bg-2", Token: "--grimorio-bg-2", Note: "fundo elevado", Superficie: true},
-	{Class: "bg-grimorio-panel", Token: "--grimorio-panel", Note: "painel", Superficie: true},
-	{Class: "bg-grimorio-panel-raised", Token: "--grimorio-panel-raised", Note: "painel elevado", Superficie: true},
+	{Class: "bg-grimorio-bg", Token: "--grimorio-bg", Note: "fundo da cena", Surface: true},
+	{Class: "bg-grimorio-bg-2", Token: "--grimorio-bg-2", Note: "fundo elevado", Surface: true},
+	{Class: "bg-grimorio-panel", Token: "--grimorio-panel", Note: "painel", Surface: true},
+	{Class: "bg-grimorio-panel-raised", Token: "--grimorio-panel-raised", Note: "painel elevado", Surface: true},
 }
 
 var accents = []colorSample{
@@ -81,7 +81,7 @@ var vitals = []colorSample{
 type simpleSample struct {
 	Class string
 	Name  string
-	Uso   string
+	Usage string
 }
 
 var radiusScale = []simpleSample{
@@ -104,9 +104,9 @@ var objectRadii = []simpleSample{
 }
 
 var families = []simpleSample{
-	{Class: "font-heading", Name: "font-heading", Uso: "Cinzel — títulos e rótulos de seção"},
-	{Class: "font-sans", Name: "font-sans", Uso: "corpo de texto"},
-	{Class: "font-mono", Name: "font-mono", Uso: "números de jogo, com tabular-nums"},
+	{Class: "font-heading", Name: "font-heading", Usage: "Cinzel — títulos e rótulos de seção"},
+	{Class: "font-sans", Name: "font-sans", Usage: "corpo de texto"},
+	{Class: "font-mono", Name: "font-mono", Usage: "números de jogo, com tabular-nums"},
 }
 
 var shadcnSteps = []simpleSample{
@@ -120,9 +120,9 @@ var shadcnSteps = []simpleSample{
 
 // Os três que a casa acrescentou ABAIXO do piso do shadcn.
 var houseSteps = []simpleSample{
-	{Class: "text-2xs", Name: "text-2xs", Uso: "rótulo de seção"},
-	{Class: "text-3xs", Name: "text-3xs", Uso: "rótulo de campo"},
-	{Class: "text-4xs", Name: "text-4xs", Uso: "crachá"},
+	{Class: "text-2xs", Name: "text-2xs", Usage: "rótulo de seção"},
+	{Class: "text-3xs", Name: "text-3xs", Usage: "rótulo de campo"},
+	{Class: "text-4xs", Name: "text-4xs", Usage: "crachá"},
 }
 
 // ── as primitivas da folha ───────────────────────────────────────────────────
@@ -392,7 +392,7 @@ func colorSwatch(a colorSample) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if !a.Superficie {
+		if !a.Surface {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<p data-contraste class=\"font-mono text-3xs text-muted-foreground\"></p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -553,15 +553,15 @@ func textRow(a simpleSample) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if a.Uso != "" {
+		if a.Usage != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<span class=\"hidden w-52 shrink-0 text-3xs text-muted-foreground sm:block\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var25 string
-			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(a.Uso)
+			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(a.Usage)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 190, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 190, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -921,7 +921,7 @@ func typographySection() templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				for _, a := range families {
-					templ_7745c5c3_Err = textRow(simpleSample{Class: a.Class + " text-base", Name: a.Name, Uso: a.Uso}).Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = textRow(simpleSample{Class: a.Class + " text-base", Name: a.Name, Usage: a.Usage}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1001,12 +1001,12 @@ func typographySection() templ.Component {
 // ── a folha ──────────────────────────────────────────────────────────────────
 
 var sheetTrail = []simpleSample{
-	{Name: "cor", Uso: "Cor"},
-	{Name: "raio", Uso: "Raio"},
-	{Name: "tipografia", Uso: "Tipografia"},
-	{Name: "pecas", Uso: "Peças"},
-	{Name: "foco", Uso: "Foco"},
-	{Name: "movimento", Uso: "Movimento"},
+	{Name: "cor", Usage: "Cor"},
+	{Name: "raio", Usage: "Raio"},
+	{Name: "tipografia", Usage: "Tipografia"},
+	{Name: "pecas", Usage: "Peças"},
+	{Name: "foco", Usage: "Foco"},
+	{Name: "movimento", Usage: "Movimento"},
 }
 
 func grimoire() templ.Component {
@@ -1053,9 +1053,9 @@ func grimoire() templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var46 string
-			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(item.Uso)
+			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(item.Usage)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 293, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 293, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -1747,7 +1747,7 @@ func motionSection() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, d := range []simpleSample{{Name: "ferir", Uso: "Ferir"}, {Name: "curar", Uso: "Curar"}, {Name: "vez", Uso: "Passar a vez"}} {
+				for _, d := range []simpleSample{{Name: "ferir", Usage: "Ferir"}, {Name: "curar", Usage: "Curar"}, {Name: "vez", Usage: "Passar a vez"}} {
 					templ_7745c5c3_Var74 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -1761,9 +1761,9 @@ func motionSection() templ.Component {
 						}
 						ctx = templ.InitializeContext(ctx)
 						var templ_7745c5c3_Var75 string
-						templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(d.Uso)
+						templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(d.Usage)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 429, Col: 14}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 429, Col: 16}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 						if templ_7745c5c3_Err != nil {

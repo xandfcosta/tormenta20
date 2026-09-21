@@ -1022,8 +1022,8 @@ func stowedBlock(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, ladrilho := range v.Bag.Stowed {
-				templ_7745c5c3_Err = stowedTileItem(ladrilho).Render(ctx, templ_7745c5c3_Buffer)
+			for _, tile := range v.Bag.Stowed {
+				templ_7745c5c3_Err = stowedTileItem(tile).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1286,7 +1286,7 @@ func bagFiltersBody(v View) templ.Component {
 }
 
 // stowedTileItem é um ladrilho da grade.
-func stowedTileItem(ladrilho stowedTile) templ.Component {
+func stowedTileItem(tile stowedTile) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1312,9 +1312,9 @@ func stowedTileItem(ladrilho stowedTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var70 string
-		templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir " + ladrilho.Name)
+		templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir " + tile.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 286, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 286, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var70)
 		if templ_7745c5c3_Err != nil {
@@ -1325,9 +1325,9 @@ func stowedTileItem(ladrilho stowedTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var71 string
-		templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = 'item-" + ladrilho.Command + "'")
+		templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = 'item-" + tile.Command + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 288, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 288, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var71)
 		if templ_7745c5c3_Err != nil {
@@ -1337,15 +1337,15 @@ func stowedTileItem(ladrilho stowedTile) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if ladrilho.Quantity > 1 {
+		if tile.Quantity > 1 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "<span class=\"absolute right-1 top-1 rounded-full bg-accent px-1.5 font-mono text-3xs font-semibold text-grimorio-gold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var72 string
-			templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs("×" + strconv.FormatInt(ladrilho.Quantity, 10))
+			templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs("×" + strconv.FormatInt(tile.Quantity, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 293, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 293, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 			if templ_7745c5c3_Err != nil {
@@ -1356,7 +1356,7 @@ func stowedTileItem(ladrilho stowedTile) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = ui.Icon(ladrilho.Glyph, "size-5 text-muted-foreground").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon(tile.Glyph, "size-5 text-muted-foreground").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1365,9 +1365,9 @@ func stowedTileItem(ladrilho stowedTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var73 string
-		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(ladrilho.Name)
+		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(tile.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 297, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 297, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 		if templ_7745c5c3_Err != nil {
@@ -1377,15 +1377,15 @@ func stowedTileItem(ladrilho stowedTile) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if len(ladrilho.Overlays) > 0 {
+		if len(tile.Overlays) > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "<span class=\"line-clamp-1 w-full text-3xs text-muted-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var74 string
-			templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(juntoComPonto(ladrilho.Overlays))
+			templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(juntoComPonto(tile.Overlays))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 299, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 299, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 			if templ_7745c5c3_Err != nil {

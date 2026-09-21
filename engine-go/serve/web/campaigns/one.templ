@@ -235,11 +235,11 @@ templ oneSeal(iconName string, value int, label string) {
 	</div>
 }
 
-templ onePanel(sobrancelha, title string) {
+templ onePanel(eyebrow, title string) {
 	<section class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
 		<header class="space-y-0.5">
 			@ui.SectionLabel("muted", "") {
-				{ sobrancelha }
+				{ eyebrow }
 			}
 			<h2 class="font-heading text-base tracking-wide text-foreground">{ title }</h2>
 		</header>
@@ -370,7 +370,7 @@ templ campaignForm(v oneView) {
 		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/editar", v.ID)) } class="space-y-4">
 			@ui.TextField(ui.Field{
 				Name: "name", Label: "Nome", Value: v.Name,
-				Obrigatorio: true, MaxSize: campaign.MaxNameLength,
+				Required: true, MaxSize: campaign.MaxNameLength,
 				Errors: v.Errors["name"],
 			})
 			@ui.TextArea(ui.Field{

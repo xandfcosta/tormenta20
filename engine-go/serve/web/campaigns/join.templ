@@ -32,7 +32,7 @@ templ JoinBody(v joinView) {
 			} else {
 				@ui.TextField(ui.Field{
 					Name: "campaignId", Label: "Número da campanha", Kind: "number",
-					Value: v.TypedNumber, Obrigatorio: true,
+					Value: v.TypedNumber, Required: true,
 					Hint:  "O mestre da mesa envia esse número.",
 					Errors: v.Errors["campaignId"],
 				})
@@ -125,13 +125,13 @@ templ heroChoice(v joinView) {
 //
 // O anel de foco mora no RÓTULO e não no rádio, pela razão que o `raceTile` da
 // forja registra por extenso — e com o mesmo afastamento de 1px da casa.
-templ heroPlate(h joinHero, marcado bool) {
+templ heroPlate(h joinHero, checked bool) {
 	<label class="flex cursor-pointer items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring">
 		<input
 			type="radio"
 			name="characterId"
 			value={ strconv.FormatInt(h.ID, 10) }
-			checked?={ marcado }
+			checked?={ checked }
 			required
 			class="sr-only"
 		/>

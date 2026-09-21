@@ -701,8 +701,8 @@ func castSpellDialog(v View, spell learnedSpellRow) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, aprimoramento := range spell.Augments {
-					templ_7745c5c3_Err = augmentPicker(aprimoramento).Render(ctx, templ_7745c5c3_Buffer)
+				for _, augment := range spell.Augments {
+					templ_7745c5c3_Err = augmentPicker(augment).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1330,16 +1330,16 @@ func spellFilters(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, opcao := range v.Spells.Schools {
-			if opcao.Active {
+		for _, option := range v.Spells.Schools {
+			if option.Active {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "<option value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var75 string
-				templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Value)
+				templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue(option.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 334, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 334, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 				if templ_7745c5c3_Err != nil {
@@ -1350,9 +1350,9 @@ func spellFilters(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var76 string
-				templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
+				templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(option.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 334, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 334, Col: 59}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 				if templ_7745c5c3_Err != nil {
@@ -1368,9 +1368,9 @@ func spellFilters(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var77 string
-				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Value)
+				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue(option.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 336, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 336, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 				if templ_7745c5c3_Err != nil {
@@ -1381,9 +1381,9 @@ func spellFilters(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var78 string
-				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
+				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(option.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 336, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 336, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {

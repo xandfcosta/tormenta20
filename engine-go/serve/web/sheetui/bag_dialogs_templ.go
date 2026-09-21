@@ -218,15 +218,15 @@ func itemSheetDialog(v View, sheet itemSheet) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, melhoria := range sheet.Overlays {
+				for _, improvement := range sheet.Overlays {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<p class=\"text-xs\"><span class=\"font-semibold text-grimorio-gold\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var12 string
-					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(melhoria.Name)
+					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(improvement.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 53, Col: 68}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 53, Col: 71}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 					if templ_7745c5c3_Err != nil {
@@ -237,9 +237,9 @@ func itemSheetDialog(v View, sheet itemSheet) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var13 string
-					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(melhoria.Effect)
+					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(improvement.Effect)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 54, Col: 64}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 54, Col: 67}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 					if templ_7745c5c3_Err != nil {
@@ -1045,15 +1045,15 @@ func catalogAddDialog(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, opcao := range v.Bag.CatalogCategories {
+			for _, option := range v.Bag.CatalogCategories {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "<option value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var64 string
-				templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Value)
+				templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(option.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 207, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 207, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 				if templ_7745c5c3_Err != nil {
@@ -1063,7 +1063,7 @@ func catalogAddDialog(v View) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if opcao.Active {
+				if option.Active {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, " selected")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1074,9 +1074,9 @@ func catalogAddDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var65 string
-				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
+				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(option.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 207, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag_dialogs.templ`, Line: 207, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 				if templ_7745c5c3_Err != nil {

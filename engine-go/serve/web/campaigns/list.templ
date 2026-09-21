@@ -214,13 +214,13 @@ templ myHeroBand(c campaignCard) {
 	}
 }
 
-templ oneHeroCard(initials, name, classes, gradient string, espacador bool) {
+templ oneHeroCard(initials, name, classes, gradient string, spacer bool) {
 	<div
-		if espacador {
+		if spacer {
 			aria-hidden="true"
 		}
 		class={ "flex w-full max-w-xs items-center gap-2 rounded-sm border border-grimorio-iron p-2 text-left",
-			templ.KV("invisible", espacador) }
+			templ.KV("invisible", spacer) }
 	>
 		<span
 			aria-hidden="true"
@@ -320,9 +320,9 @@ func ifLive(c campaignCard, live, stopped ui.Variant) ui.Variant {
 // Os botões **Entrar** e **Nova** do cabeçalho FICAM: a vaga representa só um
 // dos dois caminhos de entrada, e "entrar com o link que o mestre mandou" não
 // tem palco — não há campanha para pôr nele antes de aceitar o convite.
-templ blankSheetStage(sozinha bool, anterior *ui.Neighbor) {
+templ blankSheetStage(alone bool, anterior *ui.Neighbor) {
 	<div
-		if !sozinha {
+		if !alone {
 			data-show="$cursor == 0"
 			data-class={ ui.EnteringStage(0) }
 		}
@@ -357,7 +357,7 @@ templ blankSheetStage(sozinha bool, anterior *ui.Neighbor) {
 		// mudar.
 		@myHeroBand(campaignCard{})
 		@synopsisSpacer()
-		if sozinha {
+		if alone {
 			<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">
 				Você ainda não tem campanha nenhuma. Comece a sua, ou entre numa com o link que o mestre enviou.
 			</p>

@@ -1091,7 +1091,7 @@ func classChoice(v View, step int, title string) templ.Component {
 // fixo, o herói a 17,5% de vida sai verde aqui e vermelho na Mesa, com a largura
 // certa nas duas — e quem lê a barra pela cor, que é como se lê uma barra, lê a
 // resposta errada.
-func vitalBar(v View, label string, vital sheetVital, apagado bool) templ.Component {
+func vitalBar(v View, label string, vital sheetVital, dimmed bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1112,7 +1112,7 @@ func vitalBar(v View, label string, vital sheetVital, apagado bool) templ.Compon
 			templ_7745c5c3_Var46 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var47 = []any{"relative flex flex-wrap items-center gap-2", templ.KV("opacity-50", apagado)}
+		var templ_7745c5c3_Var47 = []any{"relative flex flex-wrap items-center gap-2", templ.KV("opacity-50", dimmed)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var47...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1249,7 +1249,7 @@ func vitalBar(v View, label string, vital sheetVital, apagado bool) templ.Compon
 				return templ_7745c5c3_Err
 			}
 		}
-		if !apagado {
+		if !dimmed {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "       <div class=\"flex shrink-0 items-center gap-1\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

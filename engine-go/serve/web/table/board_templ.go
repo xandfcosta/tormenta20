@@ -3110,15 +3110,15 @@ func openBoardButton(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, chao := range board.PlaceGrounds {
+		for _, floor := range board.PlaceGrounds {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 237, "<option value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var152 string
-			templ_7745c5c3_Var152, templ_7745c5c3_Err = templ.ResolveAttributeValue(chao.ID)
+			templ_7745c5c3_Var152, templ_7745c5c3_Err = templ.ResolveAttributeValue(floor.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1106, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1106, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var152)
 			if templ_7745c5c3_Err != nil {
@@ -3129,9 +3129,9 @@ func openBoardButton(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var153 string
-			templ_7745c5c3_Var153, templ_7745c5c3_Err = templ.JoinStringErrs(chao.Label)
+			templ_7745c5c3_Var153, templ_7745c5c3_Err = templ.JoinStringErrs(floor.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1106, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1106, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var153))
 			if templ_7745c5c3_Err != nil {

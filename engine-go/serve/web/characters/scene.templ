@@ -159,8 +159,8 @@ templ heroVitals(h HeroCard) {
 	</dl>
 }
 
-templ oneVital(label, value, tom string, apagado bool) {
-	<div class={ "flex items-baseline gap-1.5", templ.KV("opacity-50", apagado) }>
+templ oneVital(label, value, tom string, dimmed bool) {
+	<div class={ "flex items-baseline gap-1.5", templ.KV("opacity-50", dimmed) }>
 		<dt class={ ui.FieldLabelClasses("muted", "") }>{ label }</dt>
 		<dd class={ "font-mono text-lg font-semibold tabular-nums", tom }>{ value }</dd>
 	</div>
@@ -168,9 +168,9 @@ templ oneVital(label, value, tom string, apagado bool) {
 
 // createStage é a vaga do fim — e ela existe TAMBÉM com o elenco vazio, porque
 // aí ela é a única coisa que dá o que fazer.
-templ createStage(sozinha bool, anterior *ui.Neighbor) {
+templ createStage(alone bool, anterior *ui.Neighbor) {
 	<div
-		if !sozinha {
+		if !alone {
 			data-show="$cursor == 0"
 			data-class={ ui.EnteringStage(0) }
 		}
@@ -205,7 +205,7 @@ templ createStage(sozinha bool, anterior *ui.Neighbor) {
 			<span class="font-mono text-lg font-semibold tabular-nums">0</span>
 		</div>
 		<p aria-hidden="true" class="invisible max-w-xl px-4 text-center text-sm">.</p>
-		if sozinha {
+		if alone {
 			<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">
 				Seu elenco está vazio. O primeiro herói começa aqui.
 			</p>

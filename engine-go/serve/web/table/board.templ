@@ -1102,8 +1102,8 @@ templ openBoardButton(v BoardView) {
 			// A lista vem do `tabuleiro` e não é digitada aqui: uma terceira cópia à
 			// mão é como nasce a opção que a tela oferece e o navegador desenha em
 			// branco.
-			for _, chao := range board.PlaceGrounds {
-				<option value={ chao.ID }>{ chao.Label }</option>
+			for _, floor := range board.PlaceGrounds {
+				<option value={ floor.ID }>{ floor.Label }</option>
 			}
 		</select>
 		<div class="mt-4 flex justify-end gap-2">

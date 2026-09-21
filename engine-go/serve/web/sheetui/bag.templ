@@ -212,8 +212,8 @@ templ stowedBlock(v View) {
 			</p>
 		} else {
 			<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-				for _, ladrilho := range v.Bag.Stowed {
-					@stowedTileItem(ladrilho)
+				for _, tile := range v.Bag.Stowed {
+					@stowedTileItem(tile)
 				}
 			</div>
 		}
@@ -280,23 +280,23 @@ templ bagFiltersBody(v View) {
 }
 
 // stowedTileItem é um ladrilho da grade.
-templ stowedTileItem(ladrilho stowedTile) {
+templ stowedTileItem(tile stowedTile) {
 	<button
 		type="button"
-		aria-label={ "Abrir " + ladrilho.Name }
+		aria-label={ "Abrir " + tile.Name }
 		aria-haspopup="dialog"
-		data-on:click={ "$detail = 'item-" + ladrilho.Command + "'" }
+		data-on:click={ "$detail = 'item-" + tile.Command + "'" }
 		class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-center outline-none transition-colors hover:border-grimorio-gold/50"
 	>
-		if ladrilho.Quantity > 1 {
+		if tile.Quantity > 1 {
 			<span class="absolute right-1 top-1 rounded-full bg-accent px-1.5 font-mono text-3xs font-semibold text-grimorio-gold">
-				{ "×" + strconv.FormatInt(ladrilho.Quantity, 10) }
+				{ "×" + strconv.FormatInt(tile.Quantity, 10) }
 			</span>
 		}
-		@ui.Icon(ladrilho.Glyph, "size-5 text-muted-foreground")
-		<span class="line-clamp-2 w-full text-2xs leading-tight text-foreground">{ ladrilho.Name }</span>
-		if len(ladrilho.Overlays) > 0 {
-			<span class="line-clamp-1 w-full text-3xs text-muted-foreground">{ juntoComPonto(ladrilho.Overlays) }</span>
+		@ui.Icon(tile.Glyph, "size-5 text-muted-foreground")
+		<span class="line-clamp-2 w-full text-2xs leading-tight text-foreground">{ tile.Name }</span>
+		if len(tile.Overlays) > 0 {
+			<span class="line-clamp-1 w-full text-3xs text-muted-foreground">{ juntoComPonto(tile.Overlays) }</span>
 		}
 	</button>
 }

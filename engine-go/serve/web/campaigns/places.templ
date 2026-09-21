@@ -131,7 +131,7 @@ templ newPlaceDialog(v oneView) {
 			// cabem, e a que fica para trás é sempre a da tela.
 			@ui.TextField(ui.Field{
 				Name: "name", Label: "Nome do lugar", Value: "",
-				Obrigatorio: true, Errors: v.Errors["place"],
+				Required: true, Errors: v.Errors["place"],
 			})
 			<div class="space-y-1">
 				<label for="place-ground" class={ ui.FieldLabelClasses("muted", "block") }>Chão</label>

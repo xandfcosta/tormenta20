@@ -71,7 +71,7 @@ func newBody(v newView) templ.Component {
 			}
 			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Name: "name", Label: "Nome", Value: v.Name,
-				Obrigatorio: true, MaxSize: campaign.MaxNameLength,
+				Required: true, MaxSize: campaign.MaxNameLength,
 				Errors: v.Errors["name"],
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {

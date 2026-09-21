@@ -531,7 +531,7 @@ func heroVitals(h HeroCard) templ.Component {
 	})
 }
 
-func oneVital(label, value, tom string, apagado bool) templ.Component {
+func oneVital(label, value, tom string, dimmed bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -552,7 +552,7 @@ func oneVital(label, value, tom string, apagado bool) templ.Component {
 			templ_7745c5c3_Var23 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var24 = []any{"flex items-baseline gap-1.5", templ.KV("opacity-50", apagado)}
+		var templ_7745c5c3_Var24 = []any{"flex items-baseline gap-1.5", templ.KV("opacity-50", dimmed)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -650,7 +650,7 @@ func oneVital(label, value, tom string, apagado bool) templ.Component {
 
 // createStage é a vaga do fim — e ela existe TAMBÉM com o elenco vazio, porque
 // aí ela é a única coisa que dá o que fazer.
-func createStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
+func createStage(alone bool, anterior *ui.Neighbor) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -675,7 +675,7 @@ func createStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if !sozinha {
+		if !alone {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, " data-show=\"$cursor == 0\" data-class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -748,7 +748,7 @@ func createStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if sozinha {
+		if alone {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "<p class=\"max-w-xl px-4 text-center text-sm text-muted-foreground\">Seu elenco está vazio. O primeiro herói começa aqui.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

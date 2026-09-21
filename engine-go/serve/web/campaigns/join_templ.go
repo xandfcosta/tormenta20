@@ -91,7 +91,7 @@ func JoinBody(v joinView) templ.Component {
 			} else {
 				templ_7745c5c3_Err = ui.TextField(ui.Field{
 					Name: "campaignId", Label: "Número da campanha", Kind: "number",
-					Value: v.TypedNumber, Obrigatorio: true,
+					Value: v.TypedNumber, Required: true,
 					Hint:   "O mestre da mesa envia esse número.",
 					Errors: v.Errors["campaignId"],
 				}).Render(ctx, templ_7745c5c3_Buffer)
@@ -394,7 +394,7 @@ func heroChoice(v joinView) templ.Component {
 //
 // O anel de foco mora no RÓTULO e não no rádio, pela razão que o `raceTile` da
 // forja registra por extenso — e com o mesmo afastamento de 1px da casa.
-func heroPlate(h joinHero, marcado bool) templ.Component {
+func heroPlate(h joinHero, checked bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -432,7 +432,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if marcado {
+		if checked {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, " checked")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

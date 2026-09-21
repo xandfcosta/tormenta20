@@ -48,10 +48,10 @@ templ itemSheetDialog(v View, sheet itemSheet) {
 		if len(sheet.Overlays) > 0 {
 			<div class="space-y-1 rounded-sm border border-grimorio-iron p-2">
 				<p class={ ui.FieldLabelClasses("muted", "") }>Melhorias & material</p>
-				for _, melhoria := range sheet.Overlays {
+				for _, improvement := range sheet.Overlays {
 					<p class="text-xs">
-						<span class="font-semibold text-grimorio-gold">{ melhoria.Name }</span>
-						<span class="ml-2 text-muted-foreground">{ melhoria.Effect }</span>
+						<span class="font-semibold text-grimorio-gold">{ improvement.Name }</span>
+						<span class="ml-2 text-muted-foreground">{ improvement.Effect }</span>
 					</p>
 				}
 			</div>
@@ -203,8 +203,8 @@ templ catalogAddDialog(v View) {
 				aria-label="Categoria do catálogo"
 				class="h-9 max-w-[45%] rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 			>
-				for _, opcao := range v.Bag.CatalogCategories {
-					<option value={ opcao.Value } selected?={ opcao.Active }>{ opcao.Label }</option>
+				for _, option := range v.Bag.CatalogCategories {
+					<option value={ option.Value } selected?={ option.Active }>{ option.Label }</option>
 				}
 			</select>
 		</div>

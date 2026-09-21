@@ -456,7 +456,7 @@ func attributeBox(attr attributeTile) templ.Component {
 // O texto de vazio existe para a caixa não PARECER quebrada: um marcial de mãos
 // livres veria um buraco entre os atributos e o fim da aba, e buraco em tela de
 // ficha se lê como defeito.
-func weaponCards(armas []weaponTile) templ.Component {
+func weaponCards(weapons []weaponTile) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -477,13 +477,13 @@ func weaponCards(armas []weaponTile) templ.Component {
 			templ_7745c5c3_Var23 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if len(armas) == 0 {
+		if len(weapons) == 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<p class=\"self-center text-center text-xs italic text-muted-foreground\">Nenhuma arma empunhada.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var24 = []any{"grid gap-2", templ.KV("grid-cols-2", len(armas) > 1)}
+			var templ_7745c5c3_Var24 = []any{"grid gap-2", templ.KV("grid-cols-2", len(weapons) > 1)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -505,7 +505,7 @@ func weaponCards(armas []weaponTile) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, weapon := range armas {
+			for _, weapon := range weapons {
 				templ_7745c5c3_Err = weaponCard(weapon).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
