@@ -350,7 +350,7 @@ func TestTheStanceGrantComesAndGoesWithIt(t *testing.T) {
 
 	target := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
 	f.pede(t, f.player, http.MethodPost, target, "")
-	if efeitos := effects(t, f, id); efeitos["class.barbaro.alma-de-bronze"] {
+	if gotEffects := effects(t, f, id); gotEffects["class.barbaro.alma-de-bronze"] {
 		t.Error("a reserva de PV temporários sobreviveu ao fim da postura")
 	}
 }

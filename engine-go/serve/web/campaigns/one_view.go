@@ -72,8 +72,8 @@ type oneView struct {
 	// um. Caminho e não URL: quem prefixa a origem é o navegador — ver a razão
 	// em `ui.MintedInvite`.
 	InviteLink string
-	// Erros e Aviso servem à aba de configuração, que é a única com formulário.
-	Erros  wire.FieldErrorMap
+	// Errors e Aviso servem à aba de configuração, que é a única com formulário.
+	Errors wire.FieldErrorMap
 	Notice string
 }
 
@@ -187,7 +187,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		IsGM:         role == "gm",
 		CreatedAt:    shortDate(c.Createdat),
 		IgnoredRules: s.life.IgnoredRules(ctx, c.ID),
-		Erros:        wire.FieldErrorMap{},
+		Errors:       wire.FieldErrorMap{},
 	}
 	// O nome do DONO só aparece numa campanha que não é de quem está olhando, o
 	// que hoje quer dizer um admin. A pergunta "sou admin?" chega por parâmetro

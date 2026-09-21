@@ -34,7 +34,7 @@ import (
 // aqui sozinha, porque a lista abaixo é de quem PODE e o teste falha no que não
 // conhece (ALE-301).
 func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
-	const oFunil = "domain/sheet/pools.go"
+	const funnelFile = "domain/sheet/pools.go"
 
 	// As queries que tocam o estado vital. Eram sete: cinco escreviam as quatro
 	// colunas de `characters`, e elas saíram na 00015 junto com as queries. O que
@@ -73,7 +73,7 @@ func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
 			if !ok || !vitalWrites[target.Sel.Name] {
 				return true
 			}
-			if rel == oFunil {
+			if rel == funnelFile {
 				funnelCalls++
 				return true
 			}
@@ -82,7 +82,7 @@ func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
 				"que a próxima leitura do agregado joga fora, sem erro nenhum. Use o\n"+
 				"`sheet.ApplyToPools` (ou `ApplyToLoadedPools`, se já tiver a ficha) e\n"+
 				"devolva o atual que a regra do seu gesto decidiu — o %s grava.",
-				rel, set.Position(call.Pos()).Line, target.Sel.Name, oFunil)
+				rel, set.Position(call.Pos()).Line, target.Sel.Name, funnelFile)
 			return true
 		})
 		return nil

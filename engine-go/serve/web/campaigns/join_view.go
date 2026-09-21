@@ -34,7 +34,7 @@ type joinView struct {
 	TypedNumber string
 	Heroes      []joinHero
 	ChosenID    int64
-	Erros       wire.FieldErrorMap
+	Errors      wire.FieldErrorMap
 	Notice      string
 }
 
@@ -48,7 +48,7 @@ type joinHero struct {
 }
 
 func (s Scene) LoadJoin(ctx context.Context, euID int64, token string) (joinView, error) {
-	v := joinView{Invite: token, HasInvite: token != "", Erros: wire.FieldErrorMap{}}
+	v := joinView{Invite: token, HasInvite: token != "", Errors: wire.FieldErrorMap{}}
 
 	if v.HasInvite {
 		// Convite morto NÃO é erro da página: é uma resposta, e a carta diz

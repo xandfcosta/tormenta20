@@ -117,14 +117,14 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 	v := newView{
 		Name:        r.PostFormValue("name"),
 		Description: r.PostFormValue("description"),
-		Erros:       wire.FieldErrorMap{},
+		Errors:      wire.FieldErrorMap{},
 	}
 	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campaign/rules.go`.
 	name, descriptionText, errs := rules.ValidateText(v.Name, &v.Description)
 	for field, sentences := range errs {
-		v.Erros[field] = sentences
+		v.Errors[field] = sentences
 	}
-	if len(v.Erros) > 0 {
+	if len(v.Errors) > 0 {
 		s.writeNewPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
@@ -190,7 +190,7 @@ func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 	if !v.HasInvite {
 		n, numErr := strconv.ParseInt(strings.TrimSpace(v.TypedNumber), 10, 64)
 		if numErr != nil || n <= 0 {
-			v.Erros["campaignId"] = []string{"Informe o número da campanha."}
+			v.Errors["campaignId"] = []string{"Informe o número da campanha."}
 			s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 			return
 		}
@@ -199,14 +199,14 @@ func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 
 	heroID, heroErr := strconv.ParseInt(r.PostFormValue("characterId"), 10, 64)
 	if heroErr != nil {
-		v.Erros["characterId"] = []string{"Escolha o herói que entra na mesa."}
+		v.Errors["characterId"] = []string{"Escolha o herói que entra na mesa."}
 		s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
 	v.ChosenID = heroID
 
 	if err := s.seats.Seat(r.Context(), s.deps.CurrentUserID(r), campaignID, heroID, token); err != nil {
-		v.Erros, v.Notice = joinRefusalPhrase(err)
+		v.Errors, v.Notice = joinRefusalPhrase(err)
 		s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
@@ -247,8 +247,8 @@ func joinRefusalPhrase(err error) (wire.FieldErrorMap, string) {
 }
 
 func (s Scene) writeJoinPage(w http.ResponseWriter, r *http.Request, status int, v joinView) {
-	if v.Erros == nil {
-		v.Erros = wire.FieldErrorMap{}
+	if v.Errors == nil {
+		v.Errors = wire.FieldErrorMap{}
 	}
 	s.deps.WritePage(w, r, status, ui.Page{
 		Titulo: "Entrar na mesa",
@@ -339,7 +339,7 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 		// para o próprio texto, e devolver o antigo apagaria a edição dela.
 		v.Name, v.Description = rawName, rawDescription
 		for field, sentences := range errs {
-			v.Erros[field] = sentences
+			v.Errors[field] = sentences
 		}
 		s.writeOnePage(w, r, http.StatusUnprocessableEntity, v)
 		return
@@ -545,7 +545,7 @@ func (s Scene) redrawPlacesWithError(w http.ResponseWriter, r *http.Request, id 
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
-	v.Erros["place"] = []string{refusal.Error()}
+	v.Errors["place"] = []string{refusal.Error()}
 	s.writeOnePage(w, r, http.StatusUnprocessableEntity, v)
 }
 

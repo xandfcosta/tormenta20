@@ -102,18 +102,18 @@ func TestAPossessedStrokeIsRefused(t *testing.T) {
 // que é a pior forma de falhar.
 func TestTheRectangleIsTheSameInAllFourDirections(t *testing.T) {
 	a, b := engine.Square{X: 0, Y: 0}, engine.Square{X: 2, Y: 1}
-	referencia := RectangleSquares(a, b)
-	if len(referencia) != 6 {
-		t.Fatalf("(0,0)→(2,1) deu %d casas, esperado 6 — o guarda mediria o vazio", len(referencia))
+	reference := RectangleSquares(a, b)
+	if len(reference) != 6 {
+		t.Fatalf("(0,0)→(2,1) deu %d casas, esperado 6 — o guarda mediria o vazio", len(reference))
 	}
 	for _, par := range [][2]engine.Square{
 		{b, a},
 		{{X: 2, Y: 0}, {X: 0, Y: 1}},
 		{{X: 0, Y: 1}, {X: 2, Y: 0}},
 	} {
-		if other := RectangleSquares(par[0], par[1]); len(other) != len(referencia) {
+		if other := RectangleSquares(par[0], par[1]); len(other) != len(reference) {
 			t.Errorf("%v→%v deu %d casas, e %v→%v deu %d: a direção do arrasto mudou o retângulo",
-				par[0], par[1], len(other), a, b, len(referencia))
+				par[0], par[1], len(other), a, b, len(reference))
 		}
 	}
 }

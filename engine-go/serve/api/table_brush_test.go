@@ -374,13 +374,13 @@ func TestEveryGestureThatReadsPointsRefusesABrokenBody(t *testing.T) {
 	}
 	// `undefined` é o que uma expressão do Datastar manda quando um sinal do
 	// meio dela não existe — o corpo quebrado que acontece de verdade.
-	const corpoQuebrado = `{"from":{"X":undefined}}`
+	const brokenBody = `{"from":{"X":undefined}}`
 
 	measured := 0
 	for _, tc := range cases {
 		t.Run(tc.route, func(t *testing.T) {
 			measured++
-			broken := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+tc.route, corpoQuebrado).Body.String()
+			broken := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+tc.route, brokenBody).Body.String()
 			if !strings.Contains(broken, tc.sentence) {
 				t.Errorf("corpo quebrado em %s não trouxe %q — o servidor decidiu sozinho onde foi o gesto:\n%s",
 					tc.route, tc.sentence, firstChunk(broken))

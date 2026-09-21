@@ -18,9 +18,9 @@ func TestModifiersComeOutInTheBookOrder(t *testing.T) {
 		Kind: "fixed",
 		Mods: map[string]int{"intelligence": 2, "dexterity": 1, "constitution": -1},
 	}
-	const esperado = "+1 Des, -1 Con, +2 Int"
+	const want = "+1 Des, -1 Con, +2 Int"
 	for i := 0; i < 100; i++ {
-		if written := elf.Escrito(); written != esperado {
+		if written := elf.Escrito(); written != want {
 			t.Fatalf("volta %d: %q — a ordem do livro é For, Des, Con, Int, Sab, Car", i, written)
 		}
 	}

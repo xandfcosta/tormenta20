@@ -84,9 +84,9 @@ func TestTheTemplateDirectionHasADeadZone(t *testing.T) {
 // deslocaria o gabarito sem que nada mudasse na tela.
 func TestTheTemplatePathUsesThePlaneCoordinate(t *testing.T) {
 	read := squaresPath([]engine.Square{{X: -1, Y: 2}, {X: 0, Y: 2}})
-	const esperado = "M -1 2 h 1 v 1 h -1 Z M 0 2 h 1 v 1 h -1 Z"
-	if read != esperado {
-		t.Errorf("o caminho saiu %q, esperado %q", read, esperado)
+	const want = "M -1 2 h 1 v 1 h -1 Z M 0 2 h 1 v 1 h -1 Z"
+	if read != want {
+		t.Errorf("o caminho saiu %q, esperado %q", read, want)
 	}
 	if squaresPath(nil) != "" {
 		t.Error("área vazia devolveu caminho — o `data-show` do desenho depende do vazio")

@@ -179,10 +179,10 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	table := seedCampaign(t, f.s, f.owner)
 	hero := seedCharacter(t, f.s, f.owner, "Herói Disputado")
 
-	const pedidos = 8
+	const requests = 8
 	var wg sync.WaitGroup
-	errs := make([]error, pedidos)
-	for i := 0; i < pedidos; i++ {
+	errs := make([]error, requests)
+	for i := 0; i < requests; i++ {
 		wg.Add(1)
 		go func(n int) {
 			defer wg.Done()
@@ -198,7 +198,7 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 		}
 	}
 	if created != 1 {
-		t.Errorf("%d pedidos simultâneos criaram %d membros (erros %v), esperava 1", pedidos, created, errs)
+		t.Errorf("%d pedidos simultâneos criaram %d membros (erros %v), esperava 1", requests, created, errs)
 	}
 	if n := membersOf(t, f.s, table); n != 1 {
 		t.Errorf("a mesa ficou com %d membros", n)

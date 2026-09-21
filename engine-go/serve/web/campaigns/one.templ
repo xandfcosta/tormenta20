@@ -371,12 +371,12 @@ templ campaignForm(v oneView) {
 			@ui.TextField(ui.Field{
 				Nome: "name", Label: "Nome", Valor: v.Name,
 				Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
-				Erros: v.Erros["name"],
+				Erros: v.Errors["name"],
 			})
 			@ui.TextArea(ui.Field{
 				Nome: "description", Label: "Descrição", Valor: v.Description,
 				TamanhoMaximo: campaign.MaxDescriptionLength,
-				Erros:         v.Erros["description"],
+				Erros:         v.Errors["description"],
 			}, 6)
 			if v.Notice != "" {
 				<p class="text-sm text-destructive-ink">{ v.Notice }</p>

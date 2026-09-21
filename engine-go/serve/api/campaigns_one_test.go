@@ -150,16 +150,16 @@ func TestTheSignUpRefusalGivesBackTheTypedText(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
 	campaign := seedCampanha(t, s, owner, "Nome antigo", "")
-	const novaDescricao = "A caravana parte de Valkaria ao amanhecer."
+	const newDescription = "A caravana parte de Valkaria ao amanhecer."
 
-	form := url.Values{"name": {"   "}, "description": {novaDescricao}}
+	form := url.Values{"name": {"   "}, "description": {newDescription}}
 	rec := pedeNaCronica(t, s, owner, http.MethodPost,
 		"/campanhas/"+strconv.FormatInt(campaign, 10)+"/editar", form.Encode())
 
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("status = %d, queria 422", rec.Code)
 	}
-	if !strings.Contains(rec.Body.String(), novaDescricao) {
+	if !strings.Contains(rec.Body.String(), newDescription) {
 		t.Error("a descrição digitada sumiu na recusa")
 	}
 	if !strings.Contains(rec.Body.String(), "O nome é obrigatório") {

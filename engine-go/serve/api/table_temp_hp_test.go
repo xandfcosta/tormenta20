@@ -17,10 +17,10 @@ import (
 func TestTheTableShowsTheTemporaryHpOfWhoIsInTheQueue(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
-	const frase = "mais 30 temporários"
+	const sentence = "mais 30 temporários"
 
 	before := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(before, frase) {
+	if strings.Contains(before, sentence) {
 		t.Fatal("a Mesa SEM poça já fala em temporários — o caso mediria o repouso")
 	}
 
@@ -33,7 +33,7 @@ func TestTheTableShowsTheTemporaryHpOfWhoIsInTheQueue(t *testing.T) {
 	after := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O NOME ACESSÍVEL é o canal ÚNICO no trilho da fila, que não tem número
 	// nenhum — é ele, e não o filete dourado, que responde para quem não vê.
-	if !strings.Contains(after, frase) {
+	if !strings.Contains(after, sentence) {
 		t.Error("a reserva não chegou ao nome acessível da barra")
 	}
 	// E o número sai escrito onde há espaço para ele: o cartão do Grupo.

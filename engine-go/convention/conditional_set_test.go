@@ -32,7 +32,7 @@ import (
 // `sheetWithConditionals`), e os testes de paridade prendem cada um. Fora dali,
 // quem computa está desenhando a ficha de ALGUÉM, e essa pessoa tem condicionais.
 func TestNoCallerInventsAnEmptyConditionalSet(t *testing.T) {
-	const oDono = "domain/engine"
+	const ownerFile = "domain/engine"
 
 	// As funções que RECEBEM o conjunto. Uma função nova que o receba precisa
 	// entrar aqui — é lista de quem se VIGIA, e o custo de esquecer é o guarda
@@ -55,7 +55,7 @@ func TestNoCallerInventsAnEmptyConditionalSet(t *testing.T) {
 			return err
 		}
 		rel, _ := filepath.Rel(root, path)
-		if strings.HasPrefix(rel, oDono) || strings.HasSuffix(rel, "conditional_set_test.go") {
+		if strings.HasPrefix(rel, ownerFile) || strings.HasSuffix(rel, "conditional_set_test.go") {
 			return nil
 		}
 		file, err := parser.ParseFile(set, path, nil, 0)
@@ -99,7 +99,7 @@ func TestNoCallerInventsAnEmptyConditionalSet(t *testing.T) {
 	}
 	if callsSeen < 3 {
 		t.Fatalf("o guarda viu só %d chamadas que recebem condicionais fora do `%s` — "+
-			"os nomes da lista mudaram e ele parou de procurar", callsSeen, oDono)
+			"os nomes da lista mudaram e ele parou de procurar", callsSeen, ownerFile)
 	}
 }
 

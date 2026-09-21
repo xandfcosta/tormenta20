@@ -34,7 +34,7 @@ templ JoinBody(v joinView) {
 					Nome: "campaignId", Label: "Número da campanha", Tipo: "number",
 					Valor: v.TypedNumber, Obrigatorio: true,
 					Dica:  "O mestre da mesa envia esse número.",
-					Erros: v.Erros["campaignId"],
+					Erros: v.Errors["campaignId"],
 				})
 			}
 			if len(v.Heroes) == 0 {
@@ -102,8 +102,8 @@ templ heroChoice(v joinView) {
 				@heroPlate(h, h.ID == v.ChosenID)
 			}
 		</div>
-		if len(v.Erros["characterId"]) > 0 {
-			for _, e := range v.Erros["characterId"] {
+		if len(v.Errors["characterId"]) > 0 {
+			for _, e := range v.Errors["characterId"] {
 				<p class="text-sm text-destructive-ink">{ e }</p>
 			}
 		}

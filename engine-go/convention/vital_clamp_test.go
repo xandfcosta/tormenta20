@@ -45,7 +45,7 @@ import (
 // Este terceiro item saiu do próprio guarda: ele foi escrito achando que só
 // havia uma cópia a consertar e apontou a do Bucaneiro na primeira corrida.
 func TestNoSecondSpellingOfTheVitalClamp(t *testing.T) {
-	const oDono = "domain/sheet/pools.go"
+	const ownerFile = "domain/sheet/pools.go"
 
 	root, err := filepath.Abs("..")
 	if err != nil {
@@ -72,7 +72,7 @@ func TestNoSecondSpellingOfTheVitalClamp(t *testing.T) {
 			if !isNestedMinMax(n) {
 				return true
 			}
-			if rel == oDono {
+			if rel == ownerFile {
 				onOwner++
 				return true
 			}
@@ -97,7 +97,7 @@ func TestNoSecondSpellingOfTheVitalClamp(t *testing.T) {
 	}
 	if onOwner != 1 {
 		t.Fatalf("o `%s` tem %d aninhamentos e devia ter exatamente 1 (o `WithinPool`) — "+
-			"ou ele mudou de forma, e aí este guarda procura o que não existe mais", oDono, onOwner)
+			"ou ele mudou de forma, e aí este guarda procura o que não existe mais", ownerFile, onOwner)
 	}
 }
 

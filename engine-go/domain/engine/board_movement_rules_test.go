@@ -374,18 +374,18 @@ func TestInDifficultTerrainTheDetourCanCostLessThanTheStraightLine(t *testing.T)
 // Sem ele a pessoa empilha paradas, o total passa do deslocamento, e ela não
 // sabe o que desfazer para corrigir.
 func TestTheReachShrinksAtEachStopAndHitsZeroAtTheEnd(t *testing.T) {
-	const orcamento = 6
+	const budget = 6
 
-	reach, segundo, remaining := ReachFromStops([]Square{{X: 0, Y: 0}}, orcamento, MoveTerrain{})
-	if remaining != orcamento {
-		t.Errorf("sem andar, sobravam %d de %d", remaining, orcamento)
+	reach, segundo, remaining := ReachFromStops([]Square{{X: 0, Y: 0}}, budget, MoveTerrain{})
+	if remaining != budget {
+		t.Errorf("sem andar, sobravam %d de %d", remaining, budget)
 	}
 	if len(reach) == 0 {
 		t.Fatal("com orçamento inteiro não havia para onde ir")
 	}
 
-	after, _, remainingAfter := ReachFromStops([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}}, orcamento, MoveTerrain{})
-	if remainingAfter != orcamento-2 {
+	after, _, remainingAfter := ReachFromStops([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}}, budget, MoveTerrain{})
+	if remainingAfter != budget-2 {
 		t.Errorf("depois de andar 2, sobravam %d", remainingAfter)
 	}
 	if len(after) >= len(reach) {
@@ -394,7 +394,7 @@ func TestTheReachShrinksAtEachStopAndHitsZeroAtTheEnd(t *testing.T) {
 
 	// Gastou tudo: o alcance é VAZIO, e a tela diz "acabou" em vez de oferecer
 	// casas que o servidor recusaria.
-	end, stillSecond, noSpare := ReachFromStops([]Square{{X: 0, Y: 0}, {X: 6, Y: 0}}, orcamento, MoveTerrain{})
+	end, stillSecond, noSpare := ReachFromStops([]Square{{X: 0, Y: 0}, {X: 6, Y: 0}}, budget, MoveTerrain{})
 	if noSpare != 0 {
 		t.Errorf("depois de gastar tudo, sobravam %d", noSpare)
 	}
@@ -426,16 +426,16 @@ func TestTheReachShrinksAtEachStopAndHitsZeroAtTheEnd(t *testing.T) {
 // leitura pedida pelo dono depende: "até onde vou com uma ação" e "até onde vou
 // gastando as duas" só são duas perguntas se as respostas não se sobrepõem.
 func TestTheTwoReachBandsDoNotOverlap(t *testing.T) {
-	const orcamento = 4
+	const budget = 4
 
-	inside, segundo, _ := ReachFromStops([]Square{{}}, orcamento, MoveTerrain{})
+	inside, segundo, _ := ReachFromStops([]Square{{}}, budget, MoveTerrain{})
 
-	na := map[Square]bool{}
+	visited := map[Square]bool{}
 	for _, q := range inside {
-		na[q] = true
+		visited[q] = true
 	}
 	for _, q := range segundo {
-		if na[q] {
+		if visited[q] {
 			t.Errorf("a casa %+v foi pintada nas duas faixas", q)
 		}
 	}
@@ -450,13 +450,13 @@ func TestTheTwoReachBandsDoNotOverlap(t *testing.T) {
 	//
 	//	B=4 → 2·16+8  =  40 casas com UMA ação de movimento
 	//	B=8 → 2·64+16 = 144 casas com as DUAS (p233)
-	const umaAcao, duasAcoes = 40, 144
-	if len(inside) != umaAcao {
+	const oneAction, twoActions = 40, 144
+	if len(inside) != oneAction {
 		t.Errorf("a faixa de dentro tem %d casas, e o losango de raio %d tem %d",
-			len(inside), orcamento, umaAcao)
+			len(inside), budget, oneAction)
 	}
-	if soma := len(inside) + len(segundo); soma != duasAcoes {
+	if soma := len(inside) + len(segundo); soma != twoActions {
 		t.Errorf("as duas faixas somam %d casas, e o losango de raio %d tem %d",
-			soma, 2*orcamento, duasAcoes)
+			soma, 2*budget, twoActions)
 	}
 }

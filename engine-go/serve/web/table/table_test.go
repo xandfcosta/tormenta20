@@ -82,8 +82,8 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 
 	// LITERAL e não escapado: o atributo é CONSTANTE, e o templ só escapa os
 	// dinâmicos. Procurar a forma ESCAPADA aqui reprova com o guarda certo.
-	const faixa = "$d20 >= 1 && $d20 <= 20"
-	if !strings.Contains(html, faixa) {
+	const strip = "$d20 >= 1 && $d20 <= 20"
+	if !strings.Contains(html, strip) {
 		t.Errorf("a prévia não é condicionada à faixa do dado — campo vazio vira um total inventado")
 	}
 	if !strings.Contains(html, "informe o dado") {

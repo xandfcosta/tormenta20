@@ -151,12 +151,12 @@ func quadrados(pares ...[2]int) []engine.Square {
 // `rascunho`.
 func responseDraft(t *testing.T, response string) map[string]any {
 	t.Helper()
-	const marca = "data: signals "
-	i := strings.Index(response, marca)
+	const marker = "data: signals "
+	i := strings.Index(response, marker)
 	if i < 0 {
 		t.Fatalf("a resposta não trouxe sinais:\n%s", response)
 	}
-	row := response[i+len(marca):]
+	row := response[i+len(marker):]
 	if end := strings.IndexByte(row, '\n'); end >= 0 {
 		row = row[:end]
 	}

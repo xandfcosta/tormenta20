@@ -1379,7 +1379,7 @@ func campaignForm(v oneView) templ.Component {
 		templ_7745c5c3_Err = ui.TextField(ui.Field{
 			Nome: "name", Label: "Nome", Valor: v.Name,
 			Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
-			Erros: v.Erros["name"],
+			Erros: v.Errors["name"],
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1387,7 +1387,7 @@ func campaignForm(v oneView) templ.Component {
 		templ_7745c5c3_Err = ui.TextArea(ui.Field{
 			Nome: "description", Label: "Descrição", Valor: v.Description,
 			TamanhoMaximo: campaign.MaxDescriptionLength,
-			Erros:         v.Erros["description"],
+			Erros:         v.Errors["description"],
 		}, 6).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

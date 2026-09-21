@@ -168,9 +168,9 @@ func TestTheEncounterInTheUrlHoldsOnAColdLoad(t *testing.T) {
 	// Chamar a mesma função que a página chama e afirmar que a página contém o
 	// resultado dela fica verde mesmo com a conta errada, porque os dois lados
 	// erram junto.
-	const dificuldadeEsperada = "Mortal"
-	if !strings.Contains(body, dificuldadeEsperada) {
+	const expectedDifficulty = "Mortal"
+	if !strings.Contains(body, expectedDifficulty) {
 		t.Errorf("dois ogros contra um grupo de nível 3 são %q pelo livro, e a página não diz",
-			dificuldadeEsperada)
+			expectedDifficulty)
 	}
 }

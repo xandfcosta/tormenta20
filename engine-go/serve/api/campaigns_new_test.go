@@ -39,15 +39,15 @@ func postaFolhaNova(t *testing.T, s *Server, userID int64, name, description str
 func TestTheRefusalGivesBackWhatWasTyped(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
-	const texto = "A caravana parte de Valkaria ao amanhecer."
+	const text = "A caravana parte de Valkaria ao amanhecer."
 
-	rec := postaFolhaNova(t, s, owner, "   ", texto)
+	rec := postaFolhaNova(t, s, owner, "   ", text)
 
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Errorf("status = %d, queria 422", rec.Code)
 	}
 	body := rec.Body.String()
-	if !strings.Contains(body, texto) {
+	if !strings.Contains(body, text) {
 		t.Error("a descrição sumiu na recusa — o trabalho da pessoa foi embora junto com o erro")
 	}
 	if !strings.Contains(body, "O nome é obrigatório") {

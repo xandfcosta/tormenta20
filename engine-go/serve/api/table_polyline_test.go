@@ -90,9 +90,9 @@ func TestAForgedRulerIsRefused(t *testing.T) {
 	// O TETO vai escrito à mão (12 paradas, o tamanho da reserva de nós no
 	// `.templ`): lê-lo do `stopsMax` da cena faria o esperado sair do código sob
 	// teste, e um teto trocado passaria verde dos dois lados.
-	const tetoDeParadas = 12
-	points := make([]string, 0, tetoDeParadas+2)
-	for i := range tetoDeParadas + 2 {
+	const stopCeiling = 12
+	points := make([]string, 0, stopCeiling+2)
+	for i := range stopCeiling + 2 {
 		points = append(points, "["+string(rune('0'+i%10))+",0]")
 	}
 	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/regua",

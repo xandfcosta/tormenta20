@@ -136,9 +136,9 @@ func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
 	f := newSceneFixture(t)
 	bs := f.s.tableHost().Boards()
 	ctx := context.Background()
-	const sessao = int64(1)
+	const session = int64(1)
 
-	sub, stop := f.s.tableHost().Bus().Subscribe(events.OfSession(sessao))
+	sub, stop := f.s.tableHost().Bus().Subscribe(events.OfSession(session))
 	defer stop()
 	drain := func() {
 		for len(sub.C) > 0 {
@@ -158,19 +158,19 @@ func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
 	}
 
 	drain()
-	if _, err := bs.Open(ctx, sessao, "Taverna", "tavern"); err != nil {
+	if _, err := bs.Open(ctx, session, "Taverna", "tavern"); err != nil {
 		t.Fatalf("abrir: %v", err)
 	}
 	warned("abrir o tabuleiro", events.BoardOpened{})
 
 	drain()
-	if _, err := bs.AddToken(ctx, sessao, defaultTab, board.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}); err != nil {
+	if _, err := bs.AddToken(ctx, session, defaultTab, board.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	warned("pôr uma peça (pelo apply)", events.BoardChanged{})
 
 	drain()
-	bs.Close(ctx, sessao, defaultTab)
+	bs.Close(ctx, session, defaultTab)
 	warned("fechar o tabuleiro", events.BoardClosed{})
 }
 
@@ -180,12 +180,12 @@ func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
 func TestARefusedMutationTellsNobody(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
-	const sessao = int64(2)
+	const session = int64(2)
 
-	sub, stop := f.s.tableHost().Bus().Subscribe(events.OfSession(sessao))
+	sub, stop := f.s.tableHost().Bus().Subscribe(events.OfSession(session))
 	defer stop()
 	// SEM tabuleiro aberto: o `apply` recusa antes de mexer em nada.
-	if _, err := f.s.tableHost().Boards().AddToken(ctx, sessao, defaultTab, board.BoardToken{ID: "p", Label: "Ogro"}); err == nil {
+	if _, err := f.s.tableHost().Boards().AddToken(ctx, session, defaultTab, board.BoardToken{ID: "p", Label: "Ogro"}); err == nil {
 		t.Fatal("pôr peça sem tabuleiro devia recusar; sem a recusa este teste não mede nada")
 	}
 	select {

@@ -93,7 +93,7 @@ func JoinBody(v joinView) templ.Component {
 					Nome: "campaignId", Label: "Número da campanha", Tipo: "number",
 					Valor: v.TypedNumber, Obrigatorio: true,
 					Dica:  "O mestre da mesa envia esse número.",
-					Erros: v.Erros["campaignId"],
+					Erros: v.Errors["campaignId"],
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -350,8 +350,8 @@ func heroChoice(v joinView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if len(v.Erros["characterId"]) > 0 {
-			for _, e := range v.Erros["characterId"] {
+		if len(v.Errors["characterId"]) > 0 {
+			for _, e := range v.Errors["characterId"] {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<p class=\"text-sm text-destructive-ink\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

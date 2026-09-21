@@ -35,12 +35,12 @@ const blocoMinimo = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":1
 // que a tela precisa é do valor sob `rascunho`, e é isso que se afirma.
 func responseDraft(t *testing.T, response string) map[string]any {
 	t.Helper()
-	const marca = "data: signals "
-	i := strings.Index(response, marca)
+	const marker = "data: signals "
+	i := strings.Index(response, marker)
 	if i < 0 {
 		t.Fatalf("a resposta não trouxe sinais:\n%s", response)
 	}
-	row := response[i+len(marca):]
+	row := response[i+len(marker):]
 	if end := strings.IndexByte(row, '\n'); end >= 0 {
 		row = row[:end]
 	}

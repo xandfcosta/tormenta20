@@ -241,9 +241,9 @@ func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 // este caso ficaria verde sobre uma tela que mostra a reserva o tempo todo.
 func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 	f, id := barbaro(t, 5)
-	const marca = "PV temporários — o dano gasta estes primeiro (p106)"
+	const marker = "PV temporários — o dano gasta estes primeiro (p106)"
 
-	if page := powerScreen(t, f, id); strings.Contains(page, marca) {
+	if page := powerScreen(t, f, id); strings.Contains(page, marker) {
 		t.Fatal("a ficha SEM poça já mostra a reserva — o caso mediria o repouso")
 	}
 
@@ -256,7 +256,7 @@ func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 	}
 
 	screen := powerScreen(t, f, id)
-	if !strings.Contains(screen, marca) {
+	if !strings.Contains(screen, marker) {
 		t.Error("a reserva não chegou ao crachá")
 	}
 	// O número é do LIVRO e escrito à mão: o Campo de Força dá 30 PV

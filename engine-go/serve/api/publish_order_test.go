@@ -34,9 +34,9 @@ func TestTheFrameFollowsTheOrderOfTheMutation(t *testing.T) {
 	const sessionID = int64(7)
 	// Repetição porque a corrida é de agendamento: uma passada só não a
 	// visita. Sem o conserto isto fica vermelho em poucas dezenas.
-	const tentativas = 200
+	const attempts = 200
 
-	for attempt := range tentativas {
+	for attempt := range attempts {
 		s := newTestServer(t)
 		conn := s.sse.Add(sessionID, "c1", "gm")
 

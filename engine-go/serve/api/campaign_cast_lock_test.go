@@ -77,8 +77,8 @@ func TestEveryCastGestureGoesThroughTheCampaignLock(t *testing.T) {
 		},
 	}
 
-	autorizados, noCaller := gesturesTakingACaller(t)
-	for _, name := range autorizados {
+	authorized, noCaller := gesturesTakingACaller(t)
+	for _, name := range authorized {
 		exercises, hasCase := gestures[name]
 		if !hasCase {
 			t.Errorf("o gesto %q do `campaign.Cast` recebe um `app.Caller` e este caso não o "+
@@ -94,12 +94,12 @@ func TestEveryCastGestureGoesThroughTheCampaignLock(t *testing.T) {
 
 	// O DENOMINADOR, e ele tem duas metades. A primeira: um `Cast` que perdesse
 	// os métodos daria zero gestos e o laço acima passaria sobre nada.
-	if len(autorizados) < 5 {
+	if len(authorized) < 5 {
 		t.Fatalf("a reflexão achou só %d gestos autorizados no `campaign.Cast` — "+
-			"ou eles sumiram, ou o critério do `app.Caller` deixou de casar", len(autorizados))
+			"ou eles sumiram, ou o critério do `app.Caller` deixou de casar", len(authorized))
 	}
 	// A segunda: o que ficou de FORA aparece, para a decisão ser dita.
-	t.Logf("gestos autorizados: %v | sem `app.Caller` (leitura): %v", autorizados, noCaller)
+	t.Logf("gestos autorizados: %v | sem `app.Caller` (leitura): %v", authorized, noCaller)
 	if len(noCaller) != 1 || noCaller[0] != "List" {
 		t.Errorf("o `campaign.Cast` tem %v sem `app.Caller`, e só o `List` devia estar aí.\n"+
 			"Um gesto que ESCREVE sem receber quem pede não tem como ser recusado.", noCaller)

@@ -12,7 +12,7 @@ import (
 type newView struct {
 	Name        string
 	Description string
-	Erros       wire.FieldErrorMap
+	Errors      wire.FieldErrorMap
 	// Notice é a recusa do formulário inteiro, quando nenhum campo é dono do
 	// problema. Mesma divisão da porta.
 	Notice string

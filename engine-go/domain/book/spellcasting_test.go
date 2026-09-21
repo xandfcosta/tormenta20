@@ -33,7 +33,7 @@ import (
 // valores: um círculo que o livro não tem reprova com o nome dele.
 func TestTheCircleProgressionMatchesTheBook(t *testing.T) {
 	level := func(n int) *int { return &n }
-	const naoAlcanca = "nunca"
+	const unreachable = "nunca"
 
 	book := []struct {
 		class     string
@@ -123,7 +123,7 @@ func TestTheCircleProgressionMatchesTheBook(t *testing.T) {
 				if hasLevel != nil {
 					t.Errorf(
 						"%s abre o %dº círculo no %dº nível, e no livro ele %s abre (p%d)",
-						want.class, circle, *hasLevel, naoAlcanca, want.page,
+						want.class, circle, *hasLevel, unreachable, want.page,
 					)
 				}
 				continue

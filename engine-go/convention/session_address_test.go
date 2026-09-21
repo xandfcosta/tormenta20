@@ -41,7 +41,7 @@ import (
 // rotas de 242 porque lia a fonte com regex. O `.templ` não é Go e não tem AST
 // aqui, então ele é varrido por texto, com o comentário tirado antes.
 func TestNoHandwrittenSessionAddress(t *testing.T) {
-	const ondeOEnderecoMora = "serve/web/routes/routes.go"
+	const addressHome = "serve/web/routes/routes.go"
 
 	root, err := filepath.Abs("..")
 	if err != nil {
@@ -59,7 +59,7 @@ func TestNoHandwrittenSessionAddress(t *testing.T) {
 		// endereço concreto que o servidor devolveu, e é para isso que ele
 		// existe.
 		if strings.HasSuffix(path, "_templ.go") || strings.HasSuffix(path, "_test.go") ||
-			rel == ondeOEnderecoMora {
+			rel == addressHome {
 			return nil
 		}
 

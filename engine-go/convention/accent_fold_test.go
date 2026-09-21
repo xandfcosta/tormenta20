@@ -34,7 +34,7 @@ import (
 // a tabela tinha, e é a forma que a próxima teria: ninguém escreve uma dobra de
 // acento sem listar os pares.
 func TestNoSecondAccentFolderIsWritten(t *testing.T) {
-	const ondeADobraMora = "domain/search"
+	const foldHome = "domain/search"
 
 	root, err := filepath.Abs("..")
 	if err != nil {
@@ -50,7 +50,7 @@ func TestNoSecondAccentFolderIsWritten(t *testing.T) {
 		rel, _ := filepath.Rel(root, path)
 		// O guarda cita as letras para poder proibi-las, e o dono da dobra pode
 		// listá-las à vontade.
-		if strings.HasPrefix(rel, ondeADobraMora) || strings.HasSuffix(rel, "accent_fold_test.go") {
+		if strings.HasPrefix(rel, foldHome) || strings.HasSuffix(rel, "accent_fold_test.go") {
 			return nil
 		}
 		file, err := parser.ParseFile(set, path, nil, 0)
@@ -66,7 +66,7 @@ func TestNoSecondAccentFolderIsWritten(t *testing.T) {
 			t.Errorf("%s:%d monta uma SEGUNDA dobra de acento.\n"+
 				"Use o `search.Fold` do `%s`: uma tabela a mais acha quase tudo, e o que\n"+
 				"ela produz é a mesma palavra achando numa aba e não achando na outra.",
-				rel, set.Position(call.Pos()).Line, ondeADobraMora)
+				rel, set.Position(call.Pos()).Line, foldHome)
 			return true
 		})
 		return nil

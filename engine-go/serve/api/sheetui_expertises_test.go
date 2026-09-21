@@ -289,11 +289,11 @@ func TestACraftDoesNotStealTheNameOfABookExpertise(t *testing.T) {
 // LIGAÇÃO: a rota chega na regra, e o texto do driver não alcança a tela.
 func TestTheSecondCraftWithTheSameNameSaysWhyInsteadOfLeakingTheDriver(t *testing.T) {
 	f, id := expertiseFixture(t)
-	const corpo = `{"new_expertise":"Marinheiro","new_attribute":"intelligence"}`
+	const body = `{"new_expertise":"Marinheiro","new_attribute":"intelligence"}`
 	path := fmt.Sprintf("/personagens/%d/pericias/nova?tab=expertises", id)
 
-	first := f.posta(t, f.player, path, corpo)
-	second := f.posta(t, f.player, path, corpo)
+	first := f.posta(t, f.player, path, body)
+	second := f.posta(t, f.player, path, body)
 
 	// O CONTROLE: sem ele, "a segunda recusou" não diz se a primeira gravou.
 	if strings.Contains(first, "UNIQUE") || strings.Contains(first, "constraint") {

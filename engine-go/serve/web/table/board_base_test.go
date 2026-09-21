@@ -27,7 +27,7 @@ import (
 func TestNoBoardRouteIsHandwritten(t *testing.T) {
 	// Os dois ÚNICOS lugares onde o caminho do tabuleiro pode ser escrito. Eles
 	// são a definição do prefixo; proibi-los seria proibir a regra de existir.
-	const ondeOPrefixoMora = "board_view.go"
+	const prefixHome = "board_view.go"
 
 	files, err := filepath.Glob("*.go")
 	if err != nil {
@@ -60,7 +60,7 @@ func TestNoBoardRouteIsHandwritten(t *testing.T) {
 			// `/campanhas/` na frente ou com um `%d` para o id.
 			isPath := strings.Contains(row, "/tabuleiro") &&
 				(strings.Contains(row, "/campanhas/") || strings.Contains(row, "%d"))
-			if !isPath || file == ondeOPrefixoMora {
+			if !isPath || file == prefixHome {
 				continue
 			}
 			// A REGISTRAÇÃO da rota é o chi, e ela escreve o padrão com os
