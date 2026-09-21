@@ -40,6 +40,11 @@ type Spell struct {
 	// magia. São 26 definidas e dezesseis notas diferentes, quase todas
 	// condicionais; quem separa medida de prosa é o `engine.SpellDuration`.
 	DurationNote string `json:"durationNote"`
+	// Execution é o TIPO DE AÇÃO que conjurar custa, uma das cinco da p233:
+	// `padrao` 160, `completa` 31, `reacao` 3, `livre` 2, `movimento` 2. A
+	// palavra é a do catálogo e a mesma do `engine.ActionCost` — traduzi-la na
+	// leitura daria duas grafias para um conceito.
+	Execution string `json:"execution"`
 }
 
 type Augment struct {

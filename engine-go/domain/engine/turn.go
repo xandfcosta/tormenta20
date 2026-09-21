@@ -169,8 +169,11 @@ func UsableNow(custo ActionCost, quando ActionMoment) error {
 	default:
 		return unknownActionCost(custo)
 	}
+	// AS DUAS FRASES NÃO CITAM O CUSTO, e isso é escolha: `padrao` é a grafia do
+	// CATÁLOGO, e quem lê a recusa é uma pessoa. Dizer o que FUNCIONARIA — a
+	// reação — informa mais que repetir o nome do que ela acabou de clicar.
 	if !quando.OnTurn {
-		return fmt.Errorf("%w, e o custo %q só se paga no seu turno (p233)", ErrNotYourTurn, custo)
+		return fmt.Errorf("%w, e só a reação acontece fora dela (p233)", ErrNotYourTurn)
 	}
 	if !quando.CanAct {
 		return fmt.Errorf("%w, e o livro isenta só a reação (p233)", ErrCannotAct)

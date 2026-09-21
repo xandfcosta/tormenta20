@@ -43,6 +43,17 @@ type Deps interface {
 	// só — o funil dos comandos. Passam trinta mutações por ali, e a linha
 	// esquecida numa delas seria uma ficha que não atualiza só naquele gesto.
 	CharacterChanged(characterID int64)
+	// O TURNO DA MESA, para um gesto que sai da ficha (p233). São DUAS porque
+	// quem precisa RECUSAR pergunta antes de aplicar, e cobra depois de o gesto
+	// ter saído — cobrar antes tiraria a ação de alguém por uma magia que a
+	// regra seguinte recusou.
+	//
+	// Elas entram na porta porque a ficha NÃO CONHECE a mesa e não deve
+	// conhecer: quem sabe em que sessão este personagem está é o hospedeiro. A
+	// cena diz o que o gesto custa; onde isso é cobrado é de quem cumpre a
+	// porta. Fora de uma cena de ação nenhuma das duas cobra nem recusa.
+	ActionFitsOnTurn(characterID int64, custo engine.ActionCost) error
+	SpendActionOnTurn(characterID int64, custo engine.ActionCost) error
 	// As ESCRITAS, uma por gesto: a cena decide QUANDO, o hospedeiro sabe COMO.
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
