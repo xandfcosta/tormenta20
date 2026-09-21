@@ -395,8 +395,8 @@ func newPlaceDialog(v oneView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = ui.TextField(ui.Field{
-			Nome: "name", Label: "Nome do lugar", Valor: "",
-			Obrigatorio: true, Erros: v.Errors["place"],
+			Name: "name", Label: "Nome do lugar", Value: "",
+			Obrigatorio: true, Errors: v.Errors["place"],
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

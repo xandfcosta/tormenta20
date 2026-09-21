@@ -162,10 +162,10 @@ func TestTheTrailSlugsAreUnique(t *testing.T) {
 	for _, f := range railStops {
 		if before, repeated := seen[f.Slug]; repeated {
 			t.Errorf("o slug %q é de %q e de %q — a segunda fica inalcançável",
-				f.Slug, before, f.Rotulo)
+				f.Slug, before, f.Label)
 		}
-		seen[f.Slug] = f.Rotulo
-		if f.Slug == "" || f.Rotulo == "" || f.Icone == "" {
+		seen[f.Slug] = f.Label
+		if f.Slug == "" || f.Label == "" || f.Icon == "" {
 			t.Errorf("a ferramenta %+v tem campo vazio", f)
 		}
 	}
@@ -190,7 +190,7 @@ func TestTheRailOffersEveryStop(t *testing.T) {
 			if rec.Code != http.StatusOK {
 				t.Fatalf("%s respondeu %d", f.Slug, rec.Code)
 			}
-			if !strings.Contains(rec.Body.String(), f.Rotulo) {
+			if !strings.Contains(rec.Body.String(), f.Label) {
 				t.Errorf("a cena de %s não desenha o próprio nome", f.Slug)
 			}
 		})

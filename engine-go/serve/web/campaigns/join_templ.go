@@ -90,10 +90,10 @@ func JoinBody(v joinView) templ.Component {
 				}
 			} else {
 				templ_7745c5c3_Err = ui.TextField(ui.Field{
-					Nome: "campaignId", Label: "Número da campanha", Tipo: "number",
-					Valor: v.TypedNumber, Obrigatorio: true,
-					Dica:  "O mestre da mesa envia esse número.",
-					Erros: v.Errors["campaignId"],
+					Name: "campaignId", Label: "Número da campanha", Kind: "number",
+					Value: v.TypedNumber, Obrigatorio: true,
+					Hint:   "O mestre da mesa envia esse número.",
+					Errors: v.Errors["campaignId"],
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

@@ -11,17 +11,17 @@ package ui
 // Vizinho nulo vira ESPAÇADOR da mesma largura, nunca elemento ausente — ver
 // `NeighborAt`.
 //
-// `lado` é a palavra que abre o rótulo acessível ("Anterior: Sombra"), e ela é
+// `side` é a palavra que abre o rótulo acessível ("Anterior: Sombra"), e ela é
 // parâmetro em vez de derivada do índice porque quem sabe de que lado o vizinho
 // está é quem o desenha, não ele.
-templ NeighborPortrait(vz *Neighbor, lado string) {
+templ NeighborPortrait(vz *Neighbor, side string) {
 	if vz == nil {
 		<div class="w-20 shrink-0 sm:w-28 lg:w-32" aria-hidden="true"></div>
 	} else {
 		<button
 			type="button"
 			title={ vz.Name }
-			aria-label={ lado + ": " + vz.Name }
+			aria-label={ side + ": " + vz.Name }
 			data-cue-hover
 			data-on:click={ CursorGesture(vz.Index, vz.ID) }
 			class="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-sm border border-grimorio-iron opacity-50 outline-none transition-all hover:opacity-80 focus-visible:opacity-80 sm:w-28 lg:w-32"

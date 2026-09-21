@@ -18,11 +18,11 @@ import "t20engine/serve/web/ui"
 
 // doorFrame é a moldura de ferro no meio da tela-título, com o rodapé embaixo e
 // o aviso legal por último.
-templ doorFrame(titulo, subtitulo string, rodape templ.Component) {
+templ doorFrame(title, subtitulo string, rodape templ.Component) {
 	<div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 py-6">
 		@ui.PanelFrame("space-y-5") {
 			<div class="space-y-1.5">
-				<h2 class={ ui.SectionTitleClasses("cena", "", "") }>{ titulo }</h2>
+				<h2 class={ ui.SectionTitleClasses("cena", "", "") }>{ title }</h2>
 				if subtitulo != "" {
 					<p class="text-sm text-muted-foreground">{ subtitulo }</p>
 				}
@@ -44,9 +44,9 @@ templ doorFrame(titulo, subtitulo string, rodape templ.Component) {
 //
 // `role="alert"` porque ela aparece DEPOIS de um envio, sem navegação e sem
 // mover o foco: quem não vê a tela não teria como saber que a tentativa falhou.
-templ formNotice(aviso string) {
-	if aviso != "" {
-		<p role="alert" class="text-sm text-destructive-ink">{ aviso }</p>
+templ formNotice(notice string) {
+	if notice != "" {
+		<p role="alert" class="text-sm text-destructive-ink">{ notice }</p>
 	}
 }
 
@@ -59,12 +59,12 @@ templ signInPage(v signInView) {
 				<input type="hidden" name="destino" value={ v.Destination }/>
 			}
 			@ui.TextField(ui.Field{
-				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
-				Valor: v.Email, Erros: v.Errors["email"], Obrigatorio: true,
+				Name: "email", Label: "E-mail", Kind: "email", Autocomplete: "email",
+				Value: v.Email, Errors: v.Errors["email"], Obrigatorio: true,
 			})
 			@ui.TextField(ui.Field{
-				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "current-password",
-				Erros: v.Errors["senha"], Obrigatorio: true,
+				Name: "senha", Label: "Senha", Kind: "password", Autocomplete: "current-password",
+				Errors: v.Errors["senha"], Obrigatorio: true,
 			})
 			@formNotice(v.Notice)
 			@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
@@ -87,16 +87,16 @@ templ signUpPage(v signUpView) {
 		<form method="post" action="/criar-conta" class="space-y-4">
 			<input type="hidden" name="convite" value={ v.Invite }/>
 			@ui.TextField(ui.Field{
-				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
-				Valor: v.Email, Erros: v.Errors["email"], Obrigatorio: true,
+				Name: "email", Label: "E-mail", Kind: "email", Autocomplete: "email",
+				Value: v.Email, Errors: v.Errors["email"], Obrigatorio: true,
 			})
 			@ui.TextField(ui.Field{
-				Nome: "nome", Label: "Nome (opcional)", Autocomplete: "name",
-				Valor: v.Name, Erros: v.Errors["nome"], TamanhoMaximo: 80,
+				Name: "nome", Label: "Nome (opcional)", Autocomplete: "name",
+				Value: v.Name, Errors: v.Errors["nome"], TamanhoMaximo: 80,
 			})
 			@ui.TextField(ui.Field{
-				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "new-password",
-				Dica: "Ao menos 8 caracteres.", Erros: v.Errors["senha"],
+				Name: "senha", Label: "Senha", Kind: "password", Autocomplete: "new-password",
+				Hint: "Ao menos 8 caracteres.", Errors: v.Errors["senha"],
 				Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
 			})
 			@passwordConfirmation(v.Errors["confirmar"])
@@ -121,8 +121,8 @@ templ resetPage(v resetView) {
 			<form method="post" action="/redefinir-senha" class="space-y-4">
 				<input type="hidden" name="token" value={ v.Token }/>
 				@ui.TextField(ui.Field{
-					Nome: "senha", Label: "Nova senha", Tipo: "password", Autocomplete: "new-password",
-					Dica: "Ao menos 8 caracteres.", Erros: v.Errors["senha"],
+					Name: "senha", Label: "Nova senha", Kind: "password", Autocomplete: "new-password",
+					Hint: "Ao menos 8 caracteres.", Errors: v.Errors["senha"],
 					Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
 				})
 				@passwordConfirmation(v.Errors["confirmar"])
@@ -155,7 +155,7 @@ func linkSubtitle(v resetView) string {
 //
 // A comparação lê o campo irmão pelo DOM (`el.form.senha.value`) em vez de por
 // um sinal, e isso é o ponto: a senha não entra em estado de cliente nenhum.
-templ passwordConfirmation(erros []string) {
+templ passwordConfirmation(errs []string) {
 	<div class="space-y-2">
 		<label for="confirm" class="flex items-center gap-2 text-sm leading-none font-medium select-none">
 			Confirmar senha
@@ -167,15 +167,15 @@ templ passwordConfirmation(erros []string) {
 			autocomplete="new-password"
 			required
 			data-on:input={ "el.setCustomValidity(el.value === el.form.senha.value ? '' : '" + noticePasswordMismatch + "')" }
-			if len(erros) > 0 {
+			if len(errs) > 0 {
 				aria-invalid="true"
 				aria-describedby="confirm-error"
 			}
 			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
 		/>
-		if len(erros) > 0 {
+		if len(errs) > 0 {
 			<div id="confirm-error">
-				for _, e := range erros {
+				for _, e := range errs {
 					<p class="text-sm text-destructive-ink">{ e }</p>
 				}
 			</div>

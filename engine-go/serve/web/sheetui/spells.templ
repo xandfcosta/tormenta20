@@ -51,14 +51,14 @@ templ spellsPanelSection(v View) {
 					}
 				</p>
 			} else {
-				for _, magia := range v.Spells.Learned {
-					@learnedSpellRowItem(v, magia)
+				for _, spell := range v.Spells.Learned {
+					@learnedSpellRowItem(v, spell)
 				}
 			}
 		</div>
 	</section>
-	for _, magia := range v.Spells.Learned {
-		@castSpellDialog(v, magia)
+	for _, spell := range v.Spells.Learned {
+		@castSpellDialog(v, spell)
 	}
 	// O diálogo só existe para quem CONJURA. Não é só o botão que some: o
 	// catálogo do Capítulo 4 são ~198 linhas de HTML, e mandá-las para um
@@ -77,11 +77,11 @@ templ grantedSpellsBlock(v View) {
 	if len(v.Spells.Granted) > 0 {
 		<div class="space-y-1 rounded-none border border-grimorio-iron p-2">
 			<p class={ ui.FieldLabelClasses("muted", "") }>Concedidas por poderes</p>
-			for _, magia := range v.Spells.Granted {
+			for _, spell := range v.Spells.Granted {
 				<div class="flex items-center gap-2 rounded-sm border border-arcane/40 bg-grimorio-panel px-2 py-1.5">
-					<span class="shrink-0 rounded-full border border-arcane/40 px-1.5 font-mono text-3xs text-arcane-ink">{ magia.Circle }</span>
-					<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ magia.Name }</span>
-					<span class="shrink-0 truncate text-2xs text-muted-foreground">{ magia.Source }</span>
+					<span class="shrink-0 rounded-full border border-arcane/40 px-1.5 font-mono text-3xs text-arcane-ink">{ spell.Circle }</span>
+					<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ spell.Name }</span>
+					<span class="shrink-0 truncate text-2xs text-muted-foreground">{ spell.Source }</span>
 				</div>
 			}
 		</div>
@@ -89,26 +89,26 @@ templ grantedSpellsBlock(v View) {
 }
 
 // learnedSpellRowItem é uma magia do grimório.
-templ learnedSpellRowItem(v View, magia learnedSpellRow) {
+templ learnedSpellRowItem(v View, spell learnedSpellRow) {
 	<div class="flex min-w-0 items-center gap-2 rounded-none border border-grimorio-iron p-1.5">
-		<span class="shrink-0 rounded-full border border-arcane/40 px-1.5 font-mono text-3xs text-arcane-ink">{ magia.Circle }</span>
-		@ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + magia.Name, "aria-haspopup": "dialog", "data-on:click": thatOpensCastGesture(magia)}) {
-			{ magia.Name }
+		<span class="shrink-0 rounded-full border border-arcane/40 px-1.5 font-mono text-3xs text-arcane-ink">{ spell.Circle }</span>
+		@ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + spell.Name, "aria-haspopup": "dialog", "data-on:click": thatOpensCastGesture(spell)}) {
+			{ spell.Name }
 		}
-		if magia.CD != "—" {
-			<span class="shrink-0 font-mono text-2xs text-muted-foreground">{ "CD " + magia.CD }</span>
+		if spell.CD != "—" {
+			<span class="shrink-0 font-mono text-2xs text-muted-foreground">{ "CD " + spell.CD }</span>
 		}
 		if v.Spells.RequiresPrep {
-			@preparedToggle(v, magia)
+			@preparedToggle(v, spell)
 		}
 		<button
 			type="button"
-			aria-label={ "Conjurar " + magia.Name }
+			aria-label={ "Conjurar " + spell.Name }
 			aria-haspopup="dialog"
-			data-on:click={ thatOpensCastGesture(magia) }
+			data-on:click={ thatOpensCastGesture(spell) }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "shrink-0") }
 		>Conjurar</button>
-		@ui.Button(ui.VariantGhostDanger, ui.SizeIconSmall, "", templ.Attributes{"type": "button", "aria-label": "Esquecer " + magia.Name, "data-on:click": sheetPost(v, "/magias/esquece/"+magia.Command)}) {
+		@ui.Button(ui.VariantGhostDanger, ui.SizeIconSmall, "", templ.Attributes{"type": "button", "aria-label": "Esquecer " + spell.Name, "data-on:click": sheetPost(v, "/magias/esquece/"+spell.Command)}) {
 			@ui.Icon("Trash2", "size-3.5")
 		}
 	</div>
@@ -117,16 +117,16 @@ templ learnedSpellRowItem(v View, magia learnedSpellRow) {
 // preparedToggle só existe para quem PREPARA magia — Clérigo, Druida e o
 // Arcanista do caminho `mago`. Para os outros, um botão de preparar seria um
 // controle que não significa nada.
-templ preparedToggle(v View, magia learnedSpellRow) {
+templ preparedToggle(v View, spell learnedSpellRow) {
 	<button
 		type="button"
 		role="switch"
-		aria-checked={ fmt.Sprintf("%t", magia.Prepared) }
-		aria-label={ magia.Name + " preparada" }
-		data-on:click={ sheetPost(v, "/magias/prepara/"+magia.Command) }
+		aria-checked={ fmt.Sprintf("%t", spell.Prepared) }
+		aria-label={ spell.Name + " preparada" }
+		data-on:click={ sheetPost(v, "/magias/prepara/"+spell.Command) }
 		class={ ui.BadgeClasses("inline-flex shrink-0 items-center gap-1 text-3xs uppercase tracking-wider"),
-			templ.KV("border-grimorio-gold/60 text-grimorio-gold", magia.Prepared),
-			templ.KV("border-grimorio-iron text-muted-foreground", !magia.Prepared) }
+			templ.KV("border-grimorio-gold/60 text-grimorio-gold", spell.Prepared),
+			templ.KV("border-grimorio-iron text-muted-foreground", !spell.Prepared) }
 	>Preparada</button>
 }
 
@@ -136,30 +136,30 @@ templ preparedToggle(v View, magia learnedSpellRow) {
 // ela nunca decide nada: quem recusa é o `@post`, com a regra inteira. Uma
 // prévia que decidisse seria uma segunda regra, e duas contas do mesmo custo
 // divergem.
-templ castSpellDialog(v View, magia learnedSpellRow) {
-	@overlay("conjura-"+magia.Command, magia.Name, "Sparkles", true) {
+templ castSpellDialog(v View, spell learnedSpellRow) {
+	@overlay("conjura-"+spell.Command, spell.Name, "Sparkles", true) {
 		<p class="text-xs text-muted-foreground">
-			{ magia.Execution + " · " + magia.Range + " · " + magia.Duration }
+			{ spell.Execution + " · " + spell.Range + " · " + spell.Duration }
 		</p>
-		<p class="text-xs text-foreground">{ magia.Effect }</p>
+		<p class="text-xs text-foreground">{ spell.Effect }</p>
 		<div class="flex items-baseline gap-2 rounded-sm border border-arcane/40 bg-arcane/10 px-3 py-2">
 			<span class={ ui.SectionLabelClasses("herda", "text-arcane-ink") }>Custo</span>
-			<span class="font-mono text-2xl font-bold text-arcane-ink" data-text={ costPreview(magia) }></span>
+			<span class="font-mono text-2xl font-bold text-arcane-ink" data-text={ costPreview(spell) }></span>
 			<span class="ml-auto font-mono text-2xs text-muted-foreground">{ "PM " + strconv.FormatInt(v.Spells.PmCurrent, 10) }</span>
 		</div>
-		if len(magia.Augments) > 0 {
+		if len(spell.Augments) > 0 {
 			<div class="space-y-1">
 				<p class={ ui.SectionLabelClasses("muted", "") }>Aprimoramentos</p>
-				for _, aprimoramento := range magia.Augments {
+				for _, aprimoramento := range spell.Augments {
 					@augmentPicker(aprimoramento)
 				}
 			</div>
 		}
 		<button
 			type="button"
-			data-on:click={ sheetPost(v, "/magias/conjura/"+magia.Command) + "; $detail = ''" }
+			data-on:click={ sheetPost(v, "/magias/conjura/"+spell.Command) + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
-		>{ "Conjurar " + magia.Name }</button>
+		>{ "Conjurar " + spell.Name }</button>
 	}
 }
 
@@ -272,16 +272,16 @@ templ learnSpellDialog(v View) {
 				if len(v.Spells.Catalog) == 0 {
 					<p class="py-3 text-center text-xs text-muted-foreground">Nenhuma magia com esses filtros.</p>
 				} else {
-					for _, magia := range v.Spells.Catalog {
+					for _, spell := range v.Spells.Catalog {
 						<button
 							type="button"
-							data-on:click={ sheetPost(v, "/magias/aprende/"+magia.Command) }
+							data-on:click={ sheetPost(v, "/magias/aprende/"+spell.Command) }
 							class="block w-full rounded-sm border border-grimorio-iron px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent"
 						>
 							<span class="flex items-baseline gap-2">
-								<span class="shrink-0 font-mono text-3xs text-arcane-ink">{ magia.Circle }</span>
-								<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ magia.Name }</span>
-								<span class="shrink-0 text-3xs text-muted-foreground">{ magia.School }</span>
+								<span class="shrink-0 font-mono text-3xs text-arcane-ink">{ spell.Circle }</span>
+								<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ spell.Name }</span>
+								<span class="shrink-0 text-3xs text-muted-foreground">{ spell.School }</span>
 							</span>
 						</button>
 					}
@@ -340,10 +340,10 @@ templ spellFilters(v View) {
 	</div>
 }
 
-templ circleOption(valor, rotulo, ativo string) {
-	if valor == ativo {
-		<option value={ valor } selected>{ rotulo }</option>
+templ circleOption(value, label, active string) {
+	if value == active {
+		<option value={ value } selected>{ label }</option>
 	} else {
-		<option value={ valor }>{ rotulo }</option>
+		<option value={ value }>{ label }</option>
 	}
 }

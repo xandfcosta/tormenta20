@@ -36,7 +36,7 @@ func (s Scene) handleCollection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo:        tabLabel(v.Aba) + " · Mesa do Mestre · Tormenta 20",
+		Title:         tabLabel(v.Aba) + " · Mesa do Mestre · Tormenta 20",
 		Forma:         ui.ShellDense,
 		Voltar:        "/",
 		VoltarRotulo:  "Hub",

@@ -43,9 +43,9 @@ import "t20engine/serve/web/ui"
 // verdade: o `target="_blank"` é o que sobra para o clique do meio, o Ctrl e o
 // "abrir em nova aba", que o `pageLink` deixa passar de propósito.
 //
-// O `termo` é o que o leitor DESTACA na página. Vem de quem chama e não do
+// O `term` é o que o leitor DESTACA na página. Vem de quem chama e não do
 // número: é o nome do verbete, e é ele que o olho procura ao chegar.
-func pageLink(livro BookAddress, pagina int, termo string) templ.Component {
+func pageLink(book BookAddress, page int, term string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -79,9 +79,9 @@ func pageLink(livro BookAddress, pagina int, termo string) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d ↗", pagina))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d ↗", page))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 42, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 42, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -89,7 +89,7 @@ func pageLink(livro BookAddress, pagina int, termo string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = bookAnchor(livro, pagina, termo).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = bookAnchor(book, page, term).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -102,7 +102,7 @@ func pageLink(livro BookAddress, pagina int, termo string) templ.Component {
 // Ele existe porque o livro se cita dentro do próprio texto ("veja a página
 // 230"), e ali o link tem de ser a frase que já está escrita — trocá-la por
 // "p230 ↗" reescreveria o livro na tela.
-func bookAnchor(livro BookAddress, pagina int, termo string) templ.Component {
+func bookAnchor(book BookAddress, page int, term string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -128,9 +128,9 @@ func bookAnchor(livro BookAddress, pagina int, termo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 templ.SafeURL
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(livro.AtPage(pagina, termo)))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(book.AtPage(page, term)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 53, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 53, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -154,9 +154,9 @@ func bookAnchor(livro BookAddress, pagina int, termo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Abrir o livro na página %d", pagina))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Abrir o livro na página %d", page))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 58, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 58, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -183,7 +183,7 @@ func bookAnchor(livro BookAddress, pagina int, termo string) templ.Component {
 //
 // Um componente porque o `for` que o consome aparece em cada cartão que tem
 // texto, e três `if` copiados divergem no primeiro que alguém ajustar.
-func Chunk(pedaco book.Chunk, livro BookAddress) templ.Component {
+func Chunk(chunk book.Chunk, bookRef BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -204,7 +204,7 @@ func Chunk(pedaco book.Chunk, livro BookAddress) templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if pedaco.Aba != "" {
+		if chunk.Aba != "" {
 			templ_7745c5c3_Var9 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -218,9 +218,9 @@ func Chunk(pedaco book.Chunk, livro BookAddress) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var10 string
-				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(pedaco.Text)
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(chunk.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 71, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 71, Col: 15}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -228,11 +228,11 @@ func Chunk(pedaco book.Chunk, livro BookAddress) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = CrossRef(pedaco.Aba, pedaco.ID, pedaco.Text).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CrossRef(chunk.Aba, chunk.ID, chunk.Text).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		} else if pedaco.Page > 0 && livro.AtPage(pedaco.Page, "") != "" {
+		} else if chunk.Page > 0 && bookRef.AtPage(chunk.Page, "") != "" {
 			templ_7745c5c3_Var11 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -246,9 +246,9 @@ func Chunk(pedaco book.Chunk, livro BookAddress) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var12 string
-				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(pedaco.Text)
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(chunk.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 75, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 75, Col: 15}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -256,15 +256,15 @@ func Chunk(pedaco book.Chunk, livro BookAddress) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = bookAnchor(livro, pedaco.Page, "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookAnchor(bookRef, chunk.Page, "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(pedaco.Text)
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(chunk.Text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 78, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 78, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -322,7 +322,7 @@ func BookDialog() templ.Component {
 // a regra "zero significa que o catálogo não sabe" escrita sete vezes é a que
 // alguém esquece no oitavo. O número puro NÃO é consolo: o mestre com o livro de
 // papel na mesa usa exatamente isso.
-func PageSeal(livro BookAddress, pagina int, termo string) templ.Component {
+func PageSeal(book BookAddress, page int, term string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -343,9 +343,9 @@ func PageSeal(livro BookAddress, pagina int, termo string) templ.Component {
 			templ_7745c5c3_Var15 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if pagina > 0 {
-			if livro.AtPage(pagina, termo) != "" {
-				templ_7745c5c3_Err = pageLink(livro, pagina, termo).Render(ctx, templ_7745c5c3_Buffer)
+		if page > 0 {
+			if book.AtPage(page, term) != "" {
+				templ_7745c5c3_Err = pageLink(book, page, term).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -355,9 +355,9 @@ func PageSeal(livro BookAddress, pagina int, termo string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var16 string
-				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d", pagina))
+				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d", page))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 123, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 123, Col: 84}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -392,7 +392,7 @@ func PageSeal(livro BookAddress, pagina int, termo string) templ.Component {
 // A caixa existe porque a alternativa confunde: navegar tira a pessoa da regra
 // que ela estava lendo, e antes disso o endereço era uma BUSCA — clicar em
 // "Medo" caía numa lista de oito grupos com o verbete no quinto.
-func CrossRef(aba, id, nome string) templ.Component {
+func CrossRef(aba, id, name string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -470,7 +470,7 @@ func CrossRef(aba, id, nome string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ver " + nome)
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ver " + name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 155, Col: 23}
 		}

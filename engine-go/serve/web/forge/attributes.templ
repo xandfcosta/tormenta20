@@ -31,8 +31,8 @@ templ attributesBody(v attributesView) {
 			<p role="alert" class="text-center text-sm text-destructive-ink">{ v.Refusal }</p>
 		}
 		<div data-nav-region="content" data-nav-layout="column" class="space-y-2">
-			for _, linha := range v.Rows {
-				@attributeStepper(v.ID, linha)
+			for _, row := range v.Rows {
+				@attributeStepper(v.ID, row)
 			}
 		</div>
 		<p class="text-xs text-muted-foreground">
@@ -61,44 +61,44 @@ templ pointCount(v attributesView) {
 // O botão desligado é conveniência sobre a MESMA regra do servidor — ele é
 // desligado com a resposta que o motor daria ao clique, e não com uma segunda
 // conta escrita aqui.
-templ attributeStepper(id int64, linha attributeRow) {
+templ attributeStepper(id int64, row attributeRow) {
 	// As folgas e a coluna do total são apertadas de propósito: com `gap-3` e
 	// `w-16`, "Constituição" e "Inteligência" truncavam a 390px — medido na
 	// bancada. O nome do atributo é a única coisa desta linha que não se deduz
 	// do resto.
 	<div class="flex items-center gap-2 rounded-none border border-grimorio-iron bg-grimorio-panel p-2">
-		<span class="min-w-0 flex-1 text-sm text-foreground">{ linha.Label }</span>
-		@attributeStepCmd(id, linha, -1, "−", "Diminuir "+linha.Label)
+		<span class="min-w-0 flex-1 text-sm text-foreground">{ row.Label }</span>
+		@attributeStepCmd(id, row, -1, "−", "Diminuir "+row.Label)
 		<span class="w-8 text-center font-mono text-base text-foreground">
-			{ book.WithSign(linha.Base) }
+			{ book.WithSign(row.Base) }
 		</span>
-		@attributeStepCmd(id, linha, 1, "+", "Aumentar "+linha.Label)
+		@attributeStepCmd(id, row, 1, "+", "Aumentar "+row.Label)
 		<span class="w-14 shrink-0 text-right text-xs text-muted-foreground">
-			{ "total " + book.WithSign(linha.Total) }
+			{ "total " + book.WithSign(row.Total) }
 		</span>
 	</div>
 }
 
-templ attributeStepCmd(id int64, linha attributeRow, passo int, simbolo, rotulo string) {
+templ attributeStepCmd(id int64, row attributeRow, step int, simbolo, label string) {
 	<button
 		type="button"
-		aria-label={ rotulo }
-		disabled?={ !buttonFits(linha, passo) }
-		data-on:click={ attributePost(id, linha.Key, passo) }
+		aria-label={ label }
+		disabled?={ !buttonFits(row, step) }
+		data-on:click={ attributePost(id, row.Key, step) }
 		class="inline-flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-base text-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold disabled:cursor-not-allowed disabled:opacity-40"
 	>{ simbolo }</button>
 }
 
-func buttonFits(linha attributeRow, passo int) bool {
-	if passo > 0 {
-		return linha.CanRaise
+func buttonFits(row attributeRow, step int) bool {
+	if step > 0 {
+		return row.CanRaise
 	}
-	return linha.CanLower
+	return row.CanLower
 }
 
 // attributePost monta o comando. Ele não carrega estado nenhum na URL — esta
 // cena não tem aba nem busca —, e é por isso que ela não precisa do cuidado do
 // `sheetPost`.
-func attributePost(id int64, chave string, passo int) string {
-	return fmt.Sprintf("@post('/personagens/%d/atributos/%s/%d')", id, chave, passo)
+func attributePost(id int64, key string, step int) string {
+	return fmt.Sprintf("@post('/personagens/%d/atributos/%s/%d')", id, key, step)
 }

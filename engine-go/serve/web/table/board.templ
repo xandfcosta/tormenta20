@@ -640,27 +640,27 @@ templ templateBar(v BoardView) {
 		data-show={ "$tool === '" + FerramentaDoGabarito + "'" }
 		class="board-helper gap-1.5"
 	>
-		for _, forma := range bookShapes {
+		for _, form := range bookShapes {
 			<button
 				type="button"
-				title={ shapeLabel(forma) + ": o " + shapeMeasure(forma) + " em quadrados (p225)" }
-				data-attr:aria-pressed={ fmt.Sprintf("$template === %q ? 'true' : 'false'", string(forma)) }
-				data-class={ fmt.Sprintf("{'brush-on': $template === %q}", string(forma)) }
-				data-on:click={ pickShape(forma) }
+				title={ shapeLabel(form) + ": o " + shapeMeasure(form) + " em quadrados (p225)" }
+				data-attr:aria-pressed={ fmt.Sprintf("$template === %q ? 'true' : 'false'", string(form)) }
+				data-class={ fmt.Sprintf("{'brush-on': $template === %q}", string(form)) }
+				data-on:click={ pickShape(form) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
-			>{ shapeLabel(forma) }</button>
+			>{ shapeLabel(form) }</button>
 		}
 		// O RÓTULO muda com a forma porque "tamanho" não responde a pergunta de
 		// nenhuma das quatro: o conjurador está lendo "raio 6m" na ficha, e é esse
 		// número que ele quer digitar. O `for` desenha os quatro e o `data-show`
 		// escolhe — o rótulo tem de casar com o `id` do campo, e um `id` só com
 		// quatro textos alternados deixaria três rótulos apontando para o nada.
-		for _, forma := range bookShapes {
+		for _, form := range bookShapes {
 			<label
 				for="template-size"
-				data-show={ fmt.Sprintf("$template === %q", string(forma)) }
+				data-show={ fmt.Sprintf("$template === %q", string(form)) }
 				class="text-xs text-muted-foreground"
-			>{ shapeMeasure(forma) }</label>
+			>{ shapeMeasure(form) }</label>
 		}
 		<input
 			id="template-size"
@@ -716,8 +716,8 @@ templ moveProposed(v BoardView) {
 					{ fmt.Sprintf("%d de %d", v.Movement.Cost, v.Movement.Budget) }
 				</span>
 				{ " quadrados" }
-				if saldo := moveBalance(v.Movement); saldo != "" {
-					{ " · " + saldo }
+				if balance := moveBalance(v.Movement); balance != "" {
+					{ " · " + balance }
 				}
 			}
 		</p>
@@ -731,9 +731,9 @@ templ moveProposed(v BoardView) {
 		// explicar o que não está na tela.
 		if v.Movement.Budget >= 0 {
 			<ul aria-label="O que as cores do movimento querem dizer" class="board-bands">
-				for _, faixa := range moveLegend(v.Movement) {
-					<li class={ "board-band", faixa.Class, templ.KV("board-band-active", faixa.Active) }>
-						{ faixa.Text }
+				for _, strip := range moveLegend(v.Movement) {
+					<li class={ "board-band", strip.Class, templ.KV("board-band-active", strip.Active) }>
+						{ strip.Text }
 					</li>
 				}
 			</ul>
@@ -957,14 +957,14 @@ templ moveArrow(v BoardView) {
 			// responde "quanto anda esta perna", que é fato neutro, e a cor responde
 			// "quanto disso cabe". Uma perna que ATRAVESSA a virada não tem cor única,
 			// e pintar o número dela mentiria metade das vezes.
-			for _, perna := range v.Movement.Legs {
+			for _, leg := range v.Movement.Legs {
 				<text
-					data-attr:x={ numeroDoFio(perna.MidX) + " * $square - $viewport_x" }
-					data-attr:y={ numeroDoFio(perna.MidY) + " * $square - $viewport_y" }
+					data-attr:x={ numeroDoFio(leg.MidX) + " * $square - $viewport_x" }
+					data-attr:y={ numeroDoFio(leg.MidY) + " * $square - $viewport_y" }
 					text-anchor="middle"
 					dominant-baseline="middle"
 					class="board-ruler-label"
-				>{ perna.Label }</text>
+				>{ leg.Label }</text>
 			}
 		</svg>
 	}
@@ -1033,14 +1033,14 @@ templ markerActions(v BoardView, m boardMarker) {
 				@ui.Icon("EyeOff", "size-4")
 			}
 		</button>
-		for _, cor := range board.MarkerColors {
+		for _, color := range board.MarkerColors {
 			<button
 				type="button"
-				aria-label={ "Pintar o marcador " + m.Text + " de " + cor.Label }
-				title={ cor.Label }
-				aria-pressed={ fmt.Sprintf("%t", cor.ID == m.Color) }
-				data-on:click={ markerCommand(v, m.ID, "cor/"+cor.ID) }
-				style={ fmt.Sprintf("--marcador:var(--marcador-%s);", cor.ID) }
+				aria-label={ "Pintar o marcador " + m.Text + " de " + color.Label }
+				title={ color.Label }
+				aria-pressed={ fmt.Sprintf("%t", color.ID == m.Color) }
+				data-on:click={ markerCommand(v, m.ID, "cor/"+color.ID) }
+				style={ fmt.Sprintf("--marcador:var(--marcador-%s);", color.ID) }
 				class="board-marker-color"
 			></button>
 		}
@@ -1441,8 +1441,8 @@ templ tokenCopyMenu(v BoardView, p boardToken) {
 // `<p>` e não cabeçalho: a camada já tem `aria-label`, e um `<h4>` faria o leitor
 // de tela anunciar um nível novo no meio de uma lista de seis botões. O que
 // separa para quem NÃO vê é o rótulo de cada botão, que diz o verbo inteiro.
-templ tokenCopyGroup(rotulo string) {
-	<p aria-hidden="true" class="board-token-copy-group">{ rotulo }</p>
+templ tokenCopyGroup(label string) {
+	<p aria-hidden="true" class="board-token-copy-group">{ label }</p>
 }
 
 // tokenClipboardMode põe a peça na área com um modo grudado.
@@ -1450,14 +1450,14 @@ templ tokenCopyGroup(rotulo string) {
 // O rótulo acessível diz o VERBO inteiro — "Copiar Zumbi para colar: com PV
 // próprio" — porque o cabeçalho do grupo é `aria-hidden`, e sem ele o botão se
 // anunciaria só como "com PV próprio", que é a metade que não diz o que acontece.
-templ tokenClipboardMode(v BoardView, p boardToken, modo, nome string) {
+templ tokenClipboardMode(v BoardView, p boardToken, mode, name string) {
 	<button
 		type="button"
-		aria-label={ "Copiar " + p.Label + " para colar: " + nome }
-		data-on:click={ putsInTheClipboard(v, p, modo, nome) }
+		aria-label={ "Copiar " + p.Label + " para colar: " + name }
+		data-on:click={ putsInTheClipboard(v, p, mode, name) }
 		class="board-token-copy-mode"
 	>
-		<span class="board-token-copy-name">{ nome }</span>
+		<span class="board-token-copy-name">{ name }</span>
 	</button>
 }
 
@@ -1466,15 +1466,15 @@ templ tokenClipboardMode(v BoardView, p boardToken, modo, nome string) {
 // O `title` NÃO repete a frase que já está desenhada: o rótulo acessível é o
 // nome mais a frase, e um `title` igual faria o leitor de tela dizer a mesma
 // coisa duas vezes — a armadilha que o `ui.Icon` já registra.
-templ tokenCopyMode(v BoardView, p boardToken, modo, nome, frase string) {
+templ tokenCopyMode(v BoardView, p boardToken, mode, name, sentence string) {
 	<button
 		type="button"
-		aria-label={ nome + ": " + frase }
-		data-on:click={ copyCommand(v, p.ID, modo) }
+		aria-label={ name + ": " + sentence }
+		data-on:click={ copyCommand(v, p.ID, mode) }
 		class="board-token-copy-mode"
 	>
-		<span class="board-token-copy-name">{ nome }</span>
-		<span aria-hidden="true" class="board-token-copy-phrase">{ frase }</span>
+		<span class="board-token-copy-name">{ name }</span>
+		<span aria-hidden="true" class="board-token-copy-phrase">{ sentence }</span>
 	</button>
 }
 

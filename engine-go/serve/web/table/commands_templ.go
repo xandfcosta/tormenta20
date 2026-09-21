@@ -610,7 +610,7 @@ func startScene(v View) templ.Component {
 // startSceneVerb é um dos três. A FRASE do livro vem junto do nome porque
 // "exploração" e "interpretação" não dizem, sozinhas, o que muda — e o que muda
 // é se a mesa vai contar rodadas.
-func startSceneVerb(v View, tipo live.SceneKind, frase string) templ.Component {
+func startSceneVerb(v View, kind live.SceneKind, sentence string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -636,7 +636,7 @@ func startSceneVerb(v View, tipo live.SceneKind, frase string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("Iniciar uma cena de " + tipo.Name())
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("Iniciar uma cena de " + kind.Name())
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 308, Col: 51}
 		}
@@ -649,7 +649,7 @@ func startSceneVerb(v View, tipo live.SceneKind, frase string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var23 string
-		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "cena/iniciar/"+string(tipo)))
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "cena/iniciar/"+string(kind)))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 309, Col: 71}
 		}
@@ -662,7 +662,7 @@ func startSceneVerb(v View, tipo live.SceneKind, frase string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var24 string
-		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(tipo.Name())
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(kind.Name())
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 312, Col: 43}
 		}
@@ -675,9 +675,9 @@ func startSceneVerb(v View, tipo live.SceneKind, frase string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(frase)
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(sentence)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 313, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 313, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {

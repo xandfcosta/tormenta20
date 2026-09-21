@@ -151,11 +151,11 @@ templ noteBlock(v View, b markdown.Block) {
 			@noteTitle(b)
 		case "paragraph":
 			<p class="whitespace-pre-wrap">
-				for i, linha := range b.Rows {
+				for i, row := range b.Rows {
 					if i > 0 {
 						<br/>
 					}
-					@noteSpans(linha)
+					@noteSpans(row)
 				}
 			</p>
 		case "list":
@@ -316,13 +316,13 @@ templ floatToggle() {
 	</button>
 }
 
-templ notesMode(valor, rotulo string) {
+templ notesMode(value, label string) {
 	<button
 		type="button"
-		data-attr:aria-pressed={ fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", valor) }
-		data-on:click={ escolheOModo(valor) }
+		data-attr:aria-pressed={ fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", value) }
+		data-on:click={ escolheOModo(value) }
 		class="inline-flex h-7 items-center rounded-sm border border-grimorio-iron px-2 text-2xs outline-none transition-colors hover:bg-accent aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary"
-	>{ rotulo }</button>
+	>{ label }</button>
 }
 
 // SEM BOTÃO DE SALVAR, o estado do texto tem de estar VISÍVEL o tempo todo.

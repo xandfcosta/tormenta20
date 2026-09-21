@@ -411,7 +411,7 @@ func collectionCard() templ.Component {
 	})
 }
 
-func conditionCard(c book.Condition, livro bookui.BookAddress) templ.Component {
+func conditionCard(c book.Condition, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -457,7 +457,7 @@ func conditionCard(c book.Condition, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, c.BookPage, c.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, c.BookPage, c.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -465,8 +465,8 @@ func conditionCard(c book.Condition, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, pedaco := range book.WithConditionLinks(c.Description, c.Name) {
-				templ_7745c5c3_Err = bookui.Chunk(pedaco, livro).Render(ctx, templ_7745c5c3_Buffer)
+			for _, chunk := range book.WithConditionLinks(c.Description, c.Name) {
+				templ_7745c5c3_Err = bookui.Chunk(chunk, bookRef).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -577,7 +577,7 @@ func conditionCard(c book.Condition, livro bookui.BookAddress) templ.Component {
 //
 // "Treinada por" são só as classes que a treinam DE SAÍDA. Ver o comentário do
 // carregador: a piscina de escolha tem quase tudo em quase toda classe.
-func expertiseCard(p book.Expertise, livro bookui.BookAddress) templ.Component {
+func expertiseCard(p book.Expertise, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -652,7 +652,7 @@ func expertiseCard(p book.Expertise, livro bookui.BookAddress) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, p.BookPage, p.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, p.BookPage, p.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -665,7 +665,7 @@ func expertiseCard(p book.Expertise, livro bookui.BookAddress) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for i, classe := range p.Classes {
+				for i, class := range p.Classes {
 					if i > 0 {
 						var templ_7745c5c3_Var27 string
 						templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(", ")
@@ -694,9 +694,9 @@ func expertiseCard(p book.Expertise, livro bookui.BookAddress) templ.Component {
 						}
 						ctx = templ.InitializeContext(ctx)
 						var templ_7745c5c3_Var29 string
-						templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(classe)
+						templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(class)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 237, Col: 14}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 237, Col: 13}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 						if templ_7745c5c3_Err != nil {
@@ -704,7 +704,7 @@ func expertiseCard(p book.Expertise, livro bookui.BookAddress) templ.Component {
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = bookui.CrossRef("classes", book.KeyOfName(classe), classe).Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = bookui.CrossRef("classes", book.KeyOfName(class), class).Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -729,7 +729,7 @@ func expertiseCard(p book.Expertise, livro bookui.BookAddress) templ.Component {
 // A ABREVIATURA fica ao lado do nome porque é o que as tabelas do livro imprimem
 // — quem lê "Evoc" numa ficha precisa poder achar aqui. Ilusão não tem, e o
 // crachá simplesmente não sai.
-func schoolCard(e book.SpellSchool, livro bookui.BookAddress) templ.Component {
+func schoolCard(e book.SpellSchool, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -798,7 +798,7 @@ func schoolCard(e book.SpellSchool, livro bookui.BookAddress) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, e.BookPage, e.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, e.BookPage, e.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -806,8 +806,8 @@ func schoolCard(e book.SpellSchool, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, pedaco := range book.WithLinks(e.Description) {
-				templ_7745c5c3_Err = bookui.Chunk(pedaco, livro).Render(ctx, templ_7745c5c3_Buffer)
+			for _, chunk := range book.WithLinks(e.Description) {
+				templ_7745c5c3_Err = bookui.Chunk(chunk, bookRef).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -828,7 +828,7 @@ func schoolCard(e book.SpellSchool, livro bookui.BookAddress) templ.Component {
 
 // O cartão do TIPO DE EFEITO. Ele é o destino dos elos que saem das condições, e
 // o livro o define em uma frase na p228.
-func effectCard(e book.EffectKind, livro bookui.BookAddress) templ.Component {
+func effectCard(e book.EffectKind, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -874,7 +874,7 @@ func effectCard(e book.EffectKind, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, e.BookPage, e.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, e.BookPage, e.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -882,8 +882,8 @@ func effectCard(e book.EffectKind, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, pedaco := range book.WithLinks(e.Description) {
-				templ_7745c5c3_Err = bookui.Chunk(pedaco, livro).Render(ctx, templ_7745c5c3_Buffer)
+			for _, chunk := range book.WithLinks(e.Description) {
+				templ_7745c5c3_Err = bookui.Chunk(chunk, bookRef).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -902,7 +902,7 @@ func effectCard(e book.EffectKind, livro bookui.BookAddress) templ.Component {
 	})
 }
 
-func spellCard(m book.Spell, livro bookui.BookAddress) templ.Component {
+func spellCard(m book.Spell, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -992,7 +992,7 @@ func spellCard(m book.Spell, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, m.BookPage, m.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, m.BookPage, m.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1062,8 +1062,8 @@ func spellCard(m book.Spell, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, pedaco := range book.WithLinks(m.BaseEffect) {
-				templ_7745c5c3_Err = bookui.Chunk(pedaco, livro).Render(ctx, templ_7745c5c3_Buffer)
+			for _, chunk := range book.WithLinks(m.BaseEffect) {
+				templ_7745c5c3_Err = bookui.Chunk(chunk, bookRef).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1114,7 +1114,7 @@ func spellCard(m book.Spell, livro bookui.BookAddress) templ.Component {
 	})
 }
 
-func powerCard(p book.Power, livro bookui.BookAddress) templ.Component {
+func powerCard(p book.Power, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1177,7 +1177,7 @@ func powerCard(p book.Power, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, p.BookPage, p.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, p.BookPage, p.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1185,8 +1185,8 @@ func powerCard(p book.Power, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, pedaco := range book.WithLinks(p.Description) {
-				templ_7745c5c3_Err = bookui.Chunk(pedaco, livro).Render(ctx, templ_7745c5c3_Buffer)
+			for _, chunk := range book.WithLinks(p.Description) {
+				templ_7745c5c3_Err = bookui.Chunk(chunk, bookRef).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1205,7 +1205,7 @@ func powerCard(p book.Power, livro bookui.BookAddress) templ.Component {
 	})
 }
 
-func itemCard(i book.Item, livro bookui.BookAddress) templ.Component {
+func itemCard(i book.Item, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1268,7 +1268,7 @@ func itemCard(i book.Item, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, i.BookPage, i.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, i.BookPage, i.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1317,7 +1317,7 @@ func itemCard(i book.Item, livro bookui.BookAddress) templ.Component {
 // O cartão da RAÇA diz o que muda numa ficha: os modificadores, o tamanho, o
 // deslocamento e a visão. As habilidades vêm com o resumo de uma linha que o
 // catálogo já guarda — o texto inteiro está no livro, a um clique de distância.
-func raceCard(r book.Race, livro bookui.BookAddress) templ.Component {
+func raceCard(r book.Race, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1380,7 +1380,7 @@ func raceCard(r book.Race, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, r.BookPage, r.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, r.BookPage, r.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1488,7 +1488,7 @@ func raceCard(r book.Race, livro bookui.BookAddress) templ.Component {
 // moram em `book/character.go`. É pouco de propósito: o bloco da classe é uma
 // tabela de vinte níveis, e transcrevê-la à mão é a fonte de erro que o catálogo
 // existe para evitar.
-func classCard(c book.Class, livro bookui.BookAddress) templ.Component {
+func classCard(c book.Class, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1534,7 +1534,7 @@ func classCard(c book.Class, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, c.BookPage, c.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, c.BookPage, c.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1560,7 +1560,7 @@ func classCard(c book.Class, livro bookui.BookAddress) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for i, pericia := range c.Expertises {
+				for i, expertise := range c.Expertises {
 					if i > 0 {
 						var templ_7745c5c3_Var72 string
 						templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(", ")
@@ -1589,9 +1589,9 @@ func classCard(c book.Class, livro bookui.BookAddress) templ.Component {
 						}
 						ctx = templ.InitializeContext(ctx)
 						var templ_7745c5c3_Var74 string
-						templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(pericia)
+						templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(expertise)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 408, Col: 16}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 408, Col: 18}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 						if templ_7745c5c3_Err != nil {
@@ -1599,7 +1599,7 @@ func classCard(c book.Class, livro bookui.BookAddress) templ.Component {
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = bookui.CrossRef("pericias", book.KeyOfName(pericia), pericia).Render(templ.WithChildren(ctx, templ_7745c5c3_Var73), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = bookui.CrossRef("pericias", book.KeyOfName(expertise), expertise).Render(templ.WithChildren(ctx, templ_7745c5c3_Var73), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1645,7 +1645,7 @@ func classCard(c book.Class, livro bookui.BookAddress) templ.Component {
 // O cartão do DEUS traz o que o mestre consulta na hora: o que o deus cobra dos
 // devotos e o que ele concede. O símbolo e a arma preferida entram porque são o
 // que aparece na cena — o clérigo saca a arma preferida, o símbolo está no altar.
-func godCard(d book.God, livro bookui.BookAddress) templ.Component {
+func godCard(d book.God, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1691,7 +1691,7 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = bookui.PageSeal(livro, d.BookPage, d.Name).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = bookui.PageSeal(bookRef, d.BookPage, d.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1778,7 +1778,7 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for i, poder := range d.GrantedPowers {
+				for i, power := range d.GrantedPowers {
 					if i > 0 {
 						var templ_7745c5c3_Var83 string
 						templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(", ")
@@ -1794,7 +1794,7 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					if id := bookui.PowerID(poder); id != "" {
+					if id := bookui.PowerID(power); id != "" {
 						templ_7745c5c3_Var84 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -1808,7 +1808,7 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 							}
 							ctx = templ.InitializeContext(ctx)
 							var templ_7745c5c3_Var85 string
-							templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinStringErrs(poder)
+							templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinStringErrs(power)
 							if templ_7745c5c3_Err != nil {
 								return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 459, Col: 14}
 							}
@@ -1818,13 +1818,13 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 							}
 							return nil
 						})
-						templ_7745c5c3_Err = bookui.CrossRef("poderes", id, poder).Render(templ.WithChildren(ctx, templ_7745c5c3_Var84), templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = bookui.CrossRef("poderes", id, power).Render(templ.WithChildren(ctx, templ_7745c5c3_Var84), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					} else {
 						var templ_7745c5c3_Var86 string
-						templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(poder)
+						templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(power)
 						if templ_7745c5c3_Err != nil {
 							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 462, Col: 13}
 						}
@@ -1848,7 +1848,7 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for i, devoto := range d.Devotees {
+				for i, devotee := range d.Devotees {
 					if i > 0 {
 						var templ_7745c5c3_Var87 string
 						templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.JoinStringErrs(", ")
@@ -1864,7 +1864,7 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					if aba, id := book.DevoteeLink(devoto); aba != "" {
+					if aba, id := book.DevoteeLink(devotee); aba != "" {
 						templ_7745c5c3_Var88 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -1878,9 +1878,9 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 							}
 							ctx = templ.InitializeContext(ctx)
 							var templ_7745c5c3_Var89 string
-							templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(devoto)
+							templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(devotee)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 476, Col: 15}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 476, Col: 16}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 							if templ_7745c5c3_Err != nil {
@@ -1888,15 +1888,15 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 							}
 							return nil
 						})
-						templ_7745c5c3_Err = bookui.CrossRef(aba, id, devoto).Render(templ.WithChildren(ctx, templ_7745c5c3_Var88), templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = bookui.CrossRef(aba, id, devotee).Render(templ.WithChildren(ctx, templ_7745c5c3_Var88), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					} else {
 						var templ_7745c5c3_Var90 string
-						templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.JoinStringErrs(devoto)
+						templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.JoinStringErrs(devotee)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 479, Col: 14}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/collection.templ`, Line: 479, Col: 15}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var90))
 						if templ_7745c5c3_Err != nil {
@@ -1924,7 +1924,7 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 //
 // O mesmo id (`#crossref-entry`) porque é a mesma caixa — o que muda é o miolo,
 // e quem decide é a rota.
-func SpellAugments(m book.Spell, livro bookui.BookAddress) templ.Component {
+func SpellAugments(m book.Spell, bookRef bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1958,7 +1958,7 @@ func SpellAugments(m book.Spell, livro bookui.BookAddress) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = bookui.PageSeal(livro, m.BookPage, m.Name).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = bookui.PageSeal(bookRef, m.BookPage, m.Name).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2019,8 +2019,8 @@ func SpellAugments(m book.Spell, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, pedaco := range book.WithLinks(a.Description) {
-				templ_7745c5c3_Err = bookui.Chunk(pedaco, livro).Render(ctx, templ_7745c5c3_Buffer)
+			for _, chunk := range book.WithLinks(a.Description) {
+				templ_7745c5c3_Err = bookui.Chunk(chunk, bookRef).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -2042,7 +2042,7 @@ func SpellAugments(m book.Spell, livro bookui.BookAddress) templ.Component {
 //
 // Reusa os MESMOS cartões da aba — o verbete tem um desenho só, e um segundo
 // desenho "para a caixa" divergiria do primeiro na terceira issue.
-func CrossRefEntry(g collectionGroup, livro bookui.BookAddress) templ.Component {
+func CrossRefEntry(g collectionGroup, book bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2074,49 +2074,49 @@ func CrossRefEntry(g collectionGroup, livro bookui.BookAddress) templ.Component 
 			}
 		}
 		for _, c := range g.Conditions {
-			templ_7745c5c3_Err = conditionCard(c, livro).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = conditionCard(c, book).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		for _, m := range g.Spells {
-			templ_7745c5c3_Err = spellCard(m, livro).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = spellCard(m, book).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		for _, p := range g.Powers {
-			templ_7745c5c3_Err = powerCard(p, livro).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = powerCard(p, book).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		for _, i := range g.Items {
-			templ_7745c5c3_Err = itemCard(i, livro).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = itemCard(i, book).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		for _, e := range g.Effects {
-			templ_7745c5c3_Err = effectCard(e, livro).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = effectCard(e, book).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		for _, r := range g.Races {
-			templ_7745c5c3_Err = raceCard(r, livro).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = raceCard(r, book).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		for _, c := range g.Classes {
-			templ_7745c5c3_Err = classCard(c, livro).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = classCard(c, book).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		for _, d := range g.Gods {
-			templ_7745c5c3_Err = godCard(d, livro).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = godCard(d, book).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -19,9 +19,9 @@ import (
 // railStop é uma parada da trilha.
 type railStop struct {
 	Slug   string
-	Rotulo string
-	Icone  string
-	Dica   string
+	Label string
+	Icon  string
+	Hint   string
 }
 
 // railSection separa o que o mestre FAZ do que ele CONSULTA — bestiário,
@@ -32,8 +32,8 @@ type railStop struct {
 // está é o trilho, e ter as duas coisas seria o mesmo estado desenhado em dois
 // lugares.
 type railSection struct {
-	Rotulo  string
-	Paradas []railStop
+	Label  string
+	Stops []railStop
 }
 
 // A ordem dentro de CATÁLOGOS é alfabética, com o bestiário na frente — é o
@@ -63,18 +63,18 @@ var masterRail = []railSection{
 var railStops = flattenRail()
 
 func flattenRail() []railStop {
-	var fora []railStop
+	var outside []railStop
 	for _, secao := range masterRail {
-		fora = append(fora, secao.Paradas...)
+		outside = append(outside, secao.Stops...)
 	}
-	return fora
+	return outside
 }
 
-templ masterBody(atual string, cena templ.Component) {
+templ masterBody(current string, scene templ.Component) {
 	<div class="flex min-h-0 flex-1 flex-col gap-3 px-4 py-3 lg:flex-row lg:gap-4">
-		@railNav(atual)
+		@railNav(current)
 		<div class="flex min-h-0 flex-1 flex-col">
-			@cena
+			@scene
 			// A legenda mora na CASCA e não em cada cena, pelo mesmo motivo do
 			// trilho: as quatro ferramentas do mestre passam por aqui, então uma
 			// declaração cobre as quatro e a quinta já nasce anunciada.
@@ -93,7 +93,7 @@ templ masterBody(atual string, cena templ.Component) {
 //
 // São LINKS e não botões: trocar de ferramenta é navegar, e o botão perde o
 // clique do meio, o "abrir em nova aba" e o endereço que se cola no chat.
-templ railNav(atual string) {
+templ railNav(current string) {
 	// O nome `rail` é RESERVADO pelo driver e não é escolha de estilo: o `Esc`
 	// sobe um nível procurando literalmente `[data-nav-region="rail"]`, e o
 	// `enterScene` prefere essa região ao entrar na cena. Batizado de "trilha",
@@ -123,21 +123,21 @@ templ railNav(atual string) {
 			// horizontal, e um rótulo de seção ali roubaria uma parada inteira de
 			// espaço sem separar nada — em fileira, o que separa é a ordem.
 			<p class={ ui.SectionLabelClasses("muted", "hidden shrink-0 px-3 pt-2 lg:block") }>
-				{ secao.Rotulo }
+				{ secao.Label }
 			</p>
-			for _, f := range secao.Paradas {
+			for _, f := range secao.Stops {
 				<a
 					href={ templ.SafeURL("/mestre/" + f.Slug) }
 					data-on:keydown={ ui.KeyboardSwapMark }
-					title={ f.Dica }
-					if f.Slug == atual {
+					title={ f.Hint }
+					if f.Slug == current {
 						aria-current="page"
 						class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-gold bg-accent px-3 py-2 text-left text-xs font-medium text-grimorio-gold transition-colors outline-none lg:w-full"
 					} else {
 						class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron px-3 py-2 text-left text-xs text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground lg:w-full"
 					}
 				>
-					@ui.Icon(f.Icone, "size-4 shrink-0")
+					@ui.Icon(f.Icon, "size-4 shrink-0")
 					// SEM Cinzel, e o motivo não se lê neste `<span>`: o tamanho mora no
 					// `<a>` que o contém (`text-xs`, 12px), e a Cinzel aqui descia abaixo do
 					// piso de 14px por HERANÇA — os dois tokens nunca estão na mesma `class=`,
@@ -145,7 +145,7 @@ templ railNav(atual string) {
 					//
 					// Sai a Cinzel e fica o tamanho: subir para 14 mexeria no leiaute do
 					// trilho, que rola na horizontal no telefone.
-					<span class={ ui.SectionLabelClasses("herda", "truncate") }>{ f.Rotulo }</span>
+					<span class={ ui.SectionLabelClasses("herda", "truncate") }>{ f.Label }</span>
 				</a>
 			}
 		}
@@ -236,7 +236,7 @@ templ bestiaryScene(v BestiaryView) {
 // O Esc e o clique fora fecham, porque diálogo sem saída é tela travada — e o
 // botão de fechar existe além dos dois, para quem navega por teclado não
 // depender de descobrir o Esc.
-templ CreatureDialog(m book.Entry, livro bookui.BookAddress) {
+templ CreatureDialog(m book.Entry, bookRef bookui.BookAddress) {
 	// NASCE ESCONDIDO, e o `style` estático é o conserto inteiro.
 	//
 	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
@@ -273,7 +273,7 @@ templ CreatureDialog(m book.Entry, livro bookui.BookAddress) {
 			@ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar a ficha de " + m.Name, "data-on:click": "$sheet_open = false"}) {
 				×
 			}
-			@EntryBlock(m, livro)
+			@EntryBlock(m, bookRef)
 		</div>
 	</div>
 }
@@ -347,10 +347,10 @@ templ BestiaryFilters(v BestiaryView) {
 // O `step` de 0,25 é do livro: o ND anda em quartos abaixo de 1 (ND 1/4, 1/2).
 // O `min`/`max` nativos NÃO são a trava — o servidor aperta a faixa de novo,
 // porque o número chega pela URL e qualquer um a edita à mão.
-templ crBox(base, id, rotulo, sinal, valor string) {
+templ crBox(base, id, label, signal, value string) {
 	<div class="space-y-1">
 		@ui.SectionLabel("muted", "block") {
-			<label for={ "bestiario-" + id }>{ rotulo }</label>
+			<label for={ "bestiario-" + id }>{ label }</label>
 		}
 		<input
 			id={ "bestiario-" + id }
@@ -359,10 +359,10 @@ templ crBox(base, id, rotulo, sinal, valor string) {
 			min="0"
 			max="20"
 			step="0.25"
-			value={ valor }
-			data-bind={ sinal }
+			value={ value }
+			data-bind={ signal }
 			data-on:input__debounce.400ms={ fmt.Sprintf("@get('%s')", base) }
-			aria-label={ rotulo }
+			aria-label={ label }
 			class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none md:text-sm"
 		/>
 	</div>
@@ -451,7 +451,7 @@ templ EntryList(v BestiaryView) {
 // A ORDEM é regra: Ataques e Habilidades vêm ANTES de Atributos e Resistências.
 // O mestre abre o bestiário no meio do combate para saber o que a criatura rola
 // AGORA, e não para atravessar doze estatísticas até chegar nos ataques.
-templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
+templ EntryBlock(m book.Entry, bookRef bookui.BookAddress) {
 	// O TETO de 56rem é da COLUNA dos números e não do bloco inteiro: a 1920 as
 	// caixas de atributo esticam para ~220px só para segurar dois caracteres, mas
 	// limitar o bloco todo parava a ficha numa coluna estreita com meia tela vazia
@@ -466,7 +466,7 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
 			<p class="text-xs text-muted-foreground">
 				{ fmt.Sprintf("ND %s · %s · %s · ", book.CRWritten(m.ND), book.TypeName(m.Kind), book.SizeName(m.Size)) }
-				@bookui.PageSeal(livro, m.BookPage, m.Name)
+				@bookui.PageSeal(bookRef, m.BookPage, m.Name)
 				{ fmt.Sprintf(" · XP %d", book.XPForCR(m.ND)) }
 			</p>
 		</div>
@@ -535,8 +535,8 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 						<ul class="list-disc space-y-1 pl-5 text-xs">
 							for _, h := range m.SpecialAbilities {
 								<li>
-									for _, pedaco := range book.WithLinks(h) {
-										@bookui.Chunk(pedaco, livro)
+									for _, chunk := range book.WithLinks(h) {
+										@bookui.Chunk(chunk, bookRef)
 									}
 								</li>
 							}
@@ -572,8 +572,8 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 				if m.Equipment != "" {
 					@blockSection("Equipamento") {
 						<p class="text-xs">
-							for _, pedaco := range book.WithLinks(m.Equipment) {
-								@bookui.Chunk(pedaco, livro)
+							for _, chunk := range book.WithLinks(m.Equipment) {
+								@bookui.Chunk(chunk, bookRef)
 							}
 						</p>
 					}
@@ -581,8 +581,8 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 				if m.Treasure != "" {
 					@blockSection("Tesouro") {
 						<p class="text-xs">
-							for _, pedaco := range book.WithLinks(m.Treasure) {
-								@bookui.Chunk(pedaco, livro)
+							for _, chunk := range book.WithLinks(m.Treasure) {
+								@bookui.Chunk(chunk, bookRef)
 							}
 						</p>
 					}
@@ -595,18 +595,18 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 // blockSection leva `aria-label` além do `h4`: uma `<section>` SEM nome
 // acessível não é uma região para o leitor de tela — vira caixa anônima, e o
 // mestre que navega por regiões não consegue pular para Ataques.
-templ blockSection(titulo string) {
-	<section aria-label={ titulo }>
-		<h4 class={ ui.SectionLabelClasses("muted", "mb-1") }>{ titulo }</h4>
+templ blockSection(title string) {
+	<section aria-label={ title }>
+		<h4 class={ ui.SectionLabelClasses("muted", "mb-1") }>{ title }</h4>
 		{ children... }
 	</section>
 }
 
-templ stat(rotulo, valor string) {
+templ stat(label, value string) {
 	<div class="rounded-sm border border-grimorio-iron p-2 text-center">
 		@ui.SectionLabel("muted", "") {
-			{ rotulo }
+			{ label }
 		}
-		<p class="text-sm font-semibold tabular-nums">{ valor }</p>
+		<p class="text-sm font-semibold tabular-nums">{ value }</p>
 	</div>
 }

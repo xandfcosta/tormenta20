@@ -130,8 +130,8 @@ templ newPlaceDialog(v oneView) {
 			// alcança. Repeti-lo aqui seria a segunda verdade sobre quantas letras
 			// cabem, e a que fica para trás é sempre a da tela.
 			@ui.TextField(ui.Field{
-				Nome: "name", Label: "Nome do lugar", Valor: "",
-				Obrigatorio: true, Erros: v.Errors["place"],
+				Name: "name", Label: "Nome do lugar", Value: "",
+				Obrigatorio: true, Errors: v.Errors["place"],
 			})
 			<div class="space-y-1">
 				<label for="place-ground" class={ ui.FieldLabelClasses("muted", "block") }>Chão</label>

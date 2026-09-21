@@ -22,7 +22,7 @@ func Routes(r chi.Router, s Scene) {
 
 func (s Scene) handleGrimoire(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo:        "Grimório",
+		Title:         "Grimório",
 		Forma:         ui.ShellDense,
 		TituloVisivel: "Grimório",
 		Voltar:        "/",

@@ -70,17 +70,17 @@ func newBody(v newView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = ui.TextField(ui.Field{
-				Nome: "name", Label: "Nome", Valor: v.Name,
+				Name: "name", Label: "Nome", Value: v.Name,
 				Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
-				Erros: v.Errors["name"],
+				Errors: v.Errors["name"],
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = ui.TextArea(ui.Field{
-				Nome: "description", Label: "Descrição", Valor: v.Description,
+				Name: "description", Label: "Descrição", Value: v.Description,
 				TamanhoMaximo: campaign.MaxDescriptionLength,
-				Erros:         v.Errors["description"],
+				Errors:        v.Errors["description"],
 			}, 6).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

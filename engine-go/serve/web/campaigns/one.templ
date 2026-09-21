@@ -106,11 +106,11 @@ func roleAtTable(v oneView) string {
 
 // tableMeta é a linha de baixo: o tamanho do grupo e desde quando ela existe.
 func tableMeta(v oneView) string {
-	linha := ui.Plural(int64(v.TotalHeroes), "herói", "heróis")
+	row := ui.Plural(int64(v.TotalHeroes), "herói", "heróis")
 	if v.CreatedAt != "" {
-		linha += " · Criada em " + v.CreatedAt
+		row += " · Criada em " + v.CreatedAt
 	}
-	return linha
+	return row
 }
 
 // tabLayout: o painel e o elenco são grades; a linha do tempo e o formulário
@@ -155,8 +155,8 @@ templ oneNav(v oneView) {
 // `aria-current="page"` e não `aria-selected`: estes são LINKS de navegação, e
 // o leitor de tela anuncia "página atual". `aria-selected` é de opção dentro de
 // um listbox, e usá-lo aqui mentiria sobre o que a peça é.
-func ariaCurrent(ativa bool) string {
-	if ativa {
+func ariaCurrent(active bool) string {
+	if active {
 		return "page"
 	}
 	return "false"
@@ -223,35 +223,35 @@ templ overviewTab(v oneView) {
 	</div>
 }
 
-templ oneSeal(nomeDoIcone string, valor int, rotulo string) {
+templ oneSeal(nomeDoIcone string, value int, label string) {
 	<div class="flex flex-col items-center gap-1 border border-grimorio-iron bg-grimorio-panel px-3 py-4 text-center">
 		<span aria-hidden="true" class="text-grimorio-gold/70">
 			@ui.Icon(nomeDoIcone, "size-4")
 		</span>
-		<span class="font-mono text-xl font-semibold tabular-nums text-foreground">{ strconv.Itoa(valor) }</span>
+		<span class="font-mono text-xl font-semibold tabular-nums text-foreground">{ strconv.Itoa(value) }</span>
 		@ui.SectionLabel("muted", "") {
-			{ rotulo }
+			{ label }
 		}
 	</div>
 }
 
-templ onePanel(sobrancelha, titulo string) {
+templ onePanel(sobrancelha, title string) {
 	<section class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
 		<header class="space-y-0.5">
 			@ui.SectionLabel("muted", "") {
 				{ sobrancelha }
 			}
-			<h2 class="font-heading text-base tracking-wide text-foreground">{ titulo }</h2>
+			<h2 class="font-heading text-base tracking-wide text-foreground">{ title }</h2>
 		</header>
 		{ children... }
 	</section>
 }
 
-templ seeAll(campanhaID int64, aba, texto string) {
+templ seeAll(campaignID int64, aba, text string) {
 	<a
-		href={ templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", campanhaID, aba)) }
+		href={ templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", campaignID, aba)) }
 		class="inline-flex min-h-11 items-center text-xs text-muted-foreground underline-offset-4 outline-none hover:text-grimorio-gold hover:underline"
-	>{ texto }</a>
+	>{ text }</a>
 }
 
 templ heroRow(h heroAtTable) {
@@ -277,10 +277,10 @@ templ heroRow(h heroAtTable) {
 // A linha da sessão é uma LINHA DO TEMPO: número, título, data e estado. Sem a
 // data, "Sessão 4" não diz se foi ontem ou em março; sem o número, duas sessões
 // sem título viram a mesma linha.
-templ sessionLine(campanhaID int64, sess sessionRow) {
+templ sessionLine(campaignID int64, sess sessionRow) {
 	<li>
 		<a
-			href={ templ.SafeURL(routes.Session(campanhaID, sess.ID)) }
+			href={ templ.SafeURL(routes.Session(campaignID, sess.ID)) }
 			data-nav-item
 			class="flex min-h-11 items-center gap-3 px-1 text-sm outline-none transition-colors hover:text-grimorio-gold"
 		>
@@ -297,14 +297,14 @@ templ sessionLine(campanhaID int64, sess sessionRow) {
 // que é uma tinta verificada contra uma superfície e usada noutra. O vivo é
 // `--hp-full` (4,66:1), o planejado é o dourado e o encerrado é o texto
 // apagado.
-templ stateBadge(estado string) {
-	switch estado {
+templ stateBadge(state string) {
+	switch state {
 		case "Ao vivo":
-			<span class="shrink-0 rounded-none border border-[color:var(--hp-full)]/70 bg-[color:var(--hp-full)]/12 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest text-[color:var(--hp-full)]">{ estado }</span>
+			<span class="shrink-0 rounded-none border border-[color:var(--hp-full)]/70 bg-[color:var(--hp-full)]/12 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest text-[color:var(--hp-full)]">{ state }</span>
 		case "Planejada":
-			<span class="shrink-0 rounded-none border border-grimorio-gold/50 bg-grimorio-gold/10 px-1.5 py-0.5 text-2xs uppercase tracking-widest text-grimorio-gold">{ estado }</span>
+			<span class="shrink-0 rounded-none border border-grimorio-gold/50 bg-grimorio-gold/10 px-1.5 py-0.5 text-2xs uppercase tracking-widest text-grimorio-gold">{ state }</span>
 		default:
-			<span class="shrink-0 rounded-none border border-grimorio-iron px-1.5 py-0.5 text-2xs uppercase tracking-widest text-muted-foreground">{ estado }</span>
+			<span class="shrink-0 rounded-none border border-grimorio-iron px-1.5 py-0.5 text-2xs uppercase tracking-widest text-muted-foreground">{ state }</span>
 	}
 }
 
@@ -369,14 +369,14 @@ templ campaignForm(v oneView) {
 		<h2 class="font-heading text-base tracking-wide text-foreground">Editar campanha</h2>
 		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/editar", v.ID)) } class="space-y-4">
 			@ui.TextField(ui.Field{
-				Nome: "name", Label: "Nome", Valor: v.Name,
+				Name: "name", Label: "Nome", Value: v.Name,
 				Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
-				Erros: v.Errors["name"],
+				Errors: v.Errors["name"],
 			})
 			@ui.TextArea(ui.Field{
-				Nome: "description", Label: "Descrição", Valor: v.Description,
+				Name: "description", Label: "Descrição", Value: v.Description,
 				TamanhoMaximo: campaign.MaxDescriptionLength,
-				Erros:         v.Errors["description"],
+				Errors:         v.Errors["description"],
 			}, 6)
 			if v.Notice != "" {
 				<p class="text-sm text-destructive-ink">{ v.Notice }</p>
@@ -453,13 +453,13 @@ templ rulesPanel(v oneView) {
 			}
 			<h2 class="font-heading text-base tracking-wide text-foreground">Regras opcionais</h2>
 		</header>
-		for _, regra := range optionalRules {
+		for _, rule := range optionalRules {
 			<div class="flex items-start justify-between gap-4">
 				<div class="min-w-0 flex-1 space-y-0.5">
-					<p class="text-sm text-foreground">{ regra.Title }</p>
-					<p class="text-xs text-muted-foreground">{ regra.Description }</p>
+					<p class="text-sm text-foreground">{ rule.Title }</p>
+					<p class="text-xs text-muted-foreground">{ rule.Description }</p>
 				</div>
-				@ruleSwitch(v, regra)
+				@ruleSwitch(v, rule)
 			</div>
 		}
 		<p class="text-sm text-destructive-ink" data-show="$rule_error != ''" data-text="$rule_error"></p>
@@ -470,24 +470,24 @@ templ rulesPanel(v oneView) {
 // vive num formulário e não tem valor a enviar — o que ele faz é DISPARAR uma
 // ação. `aria-pressed` é o que diz "ligado" para o leitor de tela sem mentir
 // sobre o elemento ser um campo.
-templ ruleSwitch(v oneView, regra optionalRule) {
+templ ruleSwitch(v oneView, rule optionalRule) {
 	<button
 		type="button"
 		role="switch"
-		aria-checked={ ui.AriaBool(v.RegraEmVigor(regra.ID)) }
-		aria-label={ regra.Title }
+		aria-checked={ ui.AriaBool(v.RegraEmVigor(rule.ID)) }
+		aria-label={ rule.Title }
 		data-indicator:saving
 		data-attr:disabled="$saving"
-		data-on:click={ fmt.Sprintf("@post('/campanhas/%d/regras/%s')", v.ID, regra.ID) }
+		data-on:click={ fmt.Sprintf("@post('/campanhas/%d/regras/%s')", v.ID, rule.ID) }
 		class={ "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none disabled:opacity-50",
-			templ.KV("border-grimorio-gold bg-grimorio-gold/80", v.RegraEmVigor(regra.ID)),
-			templ.KV("border-grimorio-iron-light bg-grimorio-panel-raised", !v.RegraEmVigor(regra.ID)) }
+			templ.KV("border-grimorio-gold bg-grimorio-gold/80", v.RegraEmVigor(rule.ID)),
+			templ.KV("border-grimorio-iron-light bg-grimorio-panel-raised", !v.RegraEmVigor(rule.ID)) }
 	>
 		<span
 			aria-hidden="true"
 			class={ "size-4 rounded-full bg-white transition-transform",
-				templ.KV("translate-x-6", v.RegraEmVigor(regra.ID)),
-				templ.KV("translate-x-1", !v.RegraEmVigor(regra.ID)) }
+				templ.KV("translate-x-6", v.RegraEmVigor(rule.ID)),
+				templ.KV("translate-x-1", !v.RegraEmVigor(rule.ID)) }
 		></span>
 	</button>
 }

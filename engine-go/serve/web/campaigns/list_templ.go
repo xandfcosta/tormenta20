@@ -329,7 +329,7 @@ func roleFilter(v listView) templ.Component {
 
 // roleChip é `aria-pressed` e não `data-selected`: um botão que fica ligado
 // é um alternador, e é isso que o leitor de tela precisa ouvir.
-func roleChip(v listView, valor, rotulo string) templ.Component {
+func roleChip(v listView, value, label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -351,8 +351,8 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var12 = []any{"h-8 rounded-sm px-3 text-sm font-medium outline-none transition-colors",
-			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Role == valor),
-			templ.KV("text-muted-foreground hover:text-foreground", v.Role != valor)}
+			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Role == value),
+			templ.KV("text-muted-foreground hover:text-foreground", v.Role != value)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var12...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -362,7 +362,7 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolText(v.Role == valor))
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolText(v.Role == value))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 123, Col: 42}
 		}
@@ -375,7 +375,7 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$role = %q; @get('/campanhas')", valor))
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$role = %q; @get('/campanhas')", value))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 124, Col: 70}
 		}
@@ -401,9 +401,9 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 129, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 129, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -713,7 +713,7 @@ func myHeroBand(c campaignCard) templ.Component {
 	})
 }
 
-func oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) templ.Component {
+func oneHeroCard(iniciais, name, classes, gradiente string, espacador bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -794,7 +794,7 @@ func oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) temp
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var35 string
-		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(nome)
+		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 231, Col: 65}
 		}
@@ -845,7 +845,7 @@ func oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) temp
 // para uma sinopse de duas.
 const synopsisBox = "line-clamp-2 min-h-[2lh] max-w-xl px-4 text-center text-sm"
 
-func synopsisTaste(sinopse string) templ.Component {
+func synopsisTaste(synopsis string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -866,7 +866,7 @@ func synopsisTaste(sinopse string) templ.Component {
 			templ_7745c5c3_Var37 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if sinopse == "" {
+		if synopsis == "" {
 			var templ_7745c5c3_Var38 = []any{synopsisBox, "italic text-muted-foreground opacity-70"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var38...)
 			if templ_7745c5c3_Err != nil {
@@ -913,9 +913,9 @@ func synopsisTaste(sinopse string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var42 string
-			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(sinopse)
+			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(synopsis)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 265, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 265, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -1334,7 +1334,7 @@ func campaignRail(v listView) templ.Component {
 	})
 }
 
-func campaignMarker(c campaignCard, indice int) templ.Component {
+func campaignMarker(c campaignCard, index int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1376,11 +1376,11 @@ func campaignMarker(c campaignCard, indice int) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = ui.Marker(ui.RailMarker{
-			ID: c.ID, Index: indice, Monogram: c.Initials, Gradient: c.Gradient,
+			ID: c.ID, Index: index, Monogram: c.Initials, Gradient: c.Gradient,
 			// Nome E papel: o papel não é enfeite na lista de um admin, que vê mesas
 			// de outras pessoas e precisa distinguir a própria.
 			Name: c.Name, Sub: c.Role,
-			Destino: "/campanhas/" + strconv.FormatInt(c.ID, 10),
+			Destination: "/campanhas/" + strconv.FormatInt(c.ID, 10),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var60), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1393,7 +1393,7 @@ func campaignMarker(c campaignCard, indice int) templ.Component {
 // ele a gramática do teclado morre na última posição do trilho: a seta chega na
 // vaga e a tecla que abriu tudo até ali não faz nada. (E o comentário fica FORA
 // da lista de atributos: o `templ` não o aceita lá dentro.)
-func blankSheetMarker(indice int) templ.Component {
+func blankSheetMarker(index int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1414,7 +1414,7 @@ func blankSheetMarker(indice int) templ.Component {
 			templ_7745c5c3_Var61 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = ui.BlankMarker(indice, "Folha em branco", "/campanhas/nova").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.BlankMarker(index, "Folha em branco", "/campanhas/nova").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

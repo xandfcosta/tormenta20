@@ -236,7 +236,7 @@ func (s Scene) writeDoor(
 	s.deps.WritePage(w, r, status, ui.Page{
 		// O `<title>` é o do JOGO e não o da tela: a porta é a tela-título, e o
 		// nome dela já está desenhado em Cinzel no meio da página.
-		Titulo: "Tormenta 20",
+		Title:  "Tormenta 20",
 		Forma:  ui.ShellTitled,
 		Kicker: "— Grimório de Arton —",
 		// Sem `Sinais` e sem `Init`: esta superfície não tem estado de cliente

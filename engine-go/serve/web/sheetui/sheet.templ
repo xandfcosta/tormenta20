@@ -145,8 +145,8 @@ func tabSheetVested(aba Tab) string {
 		tabSheetTint(aba.Active))
 }
 
-func tabSheetTint(ativa bool) string {
-	if ativa {
+func tabSheetTint(active bool) string {
+	if active {
 		return "border-grimorio-gold text-grimorio-gold"
 	}
 	return "border-transparent text-muted-foreground hover:border-grimorio-iron hover:text-foreground"
@@ -273,20 +273,20 @@ templ levelRow(v View) {
 // SEM classe elegível o botão fica desabilitado: no total 20 não há para onde
 // subir (p32), e uma classe de nível 1 não desce sem sumir. Desabilitado e não
 // escondido, porque um controle que some deixa a fileira dançando.
-templ levelStep(v View, passo int, rotulo, desenho string) {
+templ levelStep(v View, step int, label, drawing string) {
 	<button
 		type="button"
-		aria-label={ rotulo }
-		title={ rotulo }
-		disabled?={ len(thatCan(v.AsClasses, passo)) == 0 }
-		if directStep(v, passo) != "" {
-			data-on:click={ directStep(v, passo) }
+		aria-label={ label }
+		title={ label }
+		disabled?={ len(thatCan(v.AsClasses, step)) == 0 }
+		if directStep(v, step) != "" {
+			data-on:click={ directStep(v, step) }
 		} else {
-			data-on:click={ "document.getElementById('" + stepDialog(passo) + "').showModal()" }
+			data-on:click={ "document.getElementById('" + stepDialog(step) + "').showModal()" }
 		}
 		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-grimorio-iron disabled:hover:text-muted-foreground"
 	>
-		@ui.Icon(desenho, "size-4")
+		@ui.Icon(drawing, "size-4")
 	</button>
 }
 
@@ -296,28 +296,28 @@ templ levelStep(v View, passo int, rotulo, desenho string) {
 // direto e um diálogo no DOM seria um nó que nunca abre. `<dialog>` nativo, como
 // o resto da casa — ele entrega modalidade, foco, Esc e devolução do foco sem
 // biblioteca.
-templ classChoice(v View, passo int, titulo string) {
-	if len(thatCan(v.AsClasses, passo)) > 1 {
+templ classChoice(v View, step int, title string) {
+	if len(thatCan(v.AsClasses, step)) > 1 {
 		<dialog
-			id={ stepDialog(passo) }
+			id={ stepDialog(step) }
 			data-preserve-attr="open"
-			aria-labelledby={ stepDialog(passo) + "-titulo" }
+			aria-labelledby={ stepDialog(step) + "-titulo" }
 			class="scene-grimorio m-auto w-[min(22rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 		>
-			<h2 id={ stepDialog(passo) + "-titulo" } class="font-heading text-lg tracking-wide text-grimorio-gold">{ titulo }</h2>
+			<h2 id={ stepDialog(step) + "-titulo" } class="font-heading text-lg tracking-wide text-grimorio-gold">{ title }</h2>
 			<p class="mt-1 text-sm text-muted-foreground">
 				O nível do personagem é a soma dos níveis de classe, então o nível é sempre de UMA delas.
 			</p>
 			<ul class="mt-3 space-y-1">
-				for _, classe := range thatCan(v.AsClasses, passo) {
+				for _, class := range thatCan(v.AsClasses, step) {
 					<li>
 						<button
 							type="button"
-							data-on:click={ "document.getElementById('" + stepDialog(passo) + "').close(); " + stepCommand(v, classe.Name, passo) }
+							data-on:click={ "document.getElementById('" + stepDialog(step) + "').close(); " + stepCommand(v, class.Name, step) }
 							class="flex min-h-11 w-full items-center justify-between gap-2 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
 						>
-							<span>{ classe.Name }</span>
-							<span class="font-mono tabular-nums text-muted-foreground">{ strconv.FormatInt(classe.Level, 10) }</span>
+							<span>{ class.Name }</span>
+							<span class="font-mono tabular-nums text-muted-foreground">{ strconv.FormatInt(class.Level, 10) }</span>
 						</button>
 					</li>
 				}
@@ -325,7 +325,7 @@ templ classChoice(v View, passo int, titulo string) {
 			<div class="mt-4 flex justify-end">
 				<button
 					type="button"
-					data-on:click={ "document.getElementById('" + stepDialog(passo) + "').close()" }
+					data-on:click={ "document.getElementById('" + stepDialog(step) + "').close()" }
 					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 				>Cancelar</button>
 			</div>
@@ -345,14 +345,14 @@ templ classChoice(v View, passo int, titulo string) {
 // fixo, o herói a 17,5% de vida sai verde aqui e vermelho na Mesa, com a largura
 // certa nas duas — e quem lê a barra pela cor, que é como se lê uma barra, lê a
 // resposta errada.
-templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
+templ vitalBar(v View, label string, vital sheetVital, apagado bool) {
 	// O `relative` é CONTEXTO DE POSICIONAMENTO e não estilo: a piscada pinta um
 	// véu `absolute inset-0` sobre a fileira.
 	<div class={ "relative flex flex-wrap items-center gap-2", templ.KV("opacity-50", apagado) }>
-		<span class={ ui.SectionLabelClasses("muted", "w-6 shrink-0") }>{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "w-6 shrink-0") }>{ label }</span>
 		<div aria-hidden="true" class="h-2 min-w-16 flex-1 overflow-hidden rounded-sm bg-grimorio-iron">
 			<div
-				class={ "h-full", templ.KV(ui.HpFillTone(vital.Percent), rotulo == "PV"), templ.KV("bg-mp-arcane", rotulo == "PM") }
+				class={ "h-full", templ.KV(ui.HpFillTone(vital.Percent), label == "PV"), templ.KV("bg-mp-arcane", label == "PM") }
 				style={ fmt.Sprintf("width: %d%%", vital.Percent) }
 			></div>
 		</div>
@@ -361,7 +361,7 @@ templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
 		// o cabeçalho). Pôr `role="progressbar"` aqui só para o JS achar o nó
 		// faria a ficha anunciar "PV 39 de 40" e "39/40" em seguida — duas vozes
 		// para o mesmo dado.
-		<span data-vital={ rotulo } class="shrink-0 font-mono text-sm tabular-nums text-foreground">{ vital.Fraction }</span>
+		<span data-vital={ label } class="shrink-0 font-mono text-sm tabular-nums text-foreground">{ vital.Fraction }</span>
 		// A RESERVA é uma parcela à parte, e ela SÓ NASCE quando existe: sem
 		// poça a fileira fica igual à de sempre, sem um "+0" que não quer dizer
 		// nada.
@@ -393,24 +393,24 @@ templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
 			// ENROLAR e não encolher: os 44px são o mínimo de toque, e um passo
 			// menor trocaria um defeito por outro.
 			<div class="flex shrink-0 items-center gap-1">
-				@vitalStep(v, rotulo, -5)
-				@vitalStep(v, rotulo, -1)
-				@vitalStep(v, rotulo, +1)
-				@vitalStep(v, rotulo, +5)
+				@vitalStep(v, label, -5)
+				@vitalStep(v, label, -1)
+				@vitalStep(v, label, +1)
+				@vitalStep(v, label, +5)
 			</div>
 		}
 	</div>
 }
 
-templ vitalStep(v View, rotulo string, passo int) {
+templ vitalStep(v View, label string, step int) {
 	<button
 		type="button"
-		aria-label={ stepLabel(rotulo, passo) }
-		title={ stepLabel(rotulo, passo) }
-		data-on:click={ vitalCommand(v, rotulo, passo) }
+		aria-label={ stepLabel(label, step) }
+		title={ stepLabel(label, step) }
+		data-on:click={ vitalCommand(v, label, step) }
 		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-xs text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
 	>
-		{ stepSignal(passo) }
+		{ stepSignal(step) }
 	</button>
 }
 

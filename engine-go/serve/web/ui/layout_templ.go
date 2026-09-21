@@ -36,15 +36,15 @@ type Page struct {
 	// Asset monta o endereço VERSIONADO de um estático, e é injetado porque os
 	// arquivos são embutidos noutro pacote. Escrever o caminho à mão continua
 	// funcionando e é servido SEM cache — a página volta a piscar, em silêncio.
-	Asset func(arquivo string) string
+	Asset func(file string) string
 	// Overlays são os diálogos que vivem na casca e aparecem por cima de
 	// qualquer cena: o livro, o verbete, o buscador. A casca NÃO os conhece — ela
 	// só reserva o lugar —, porque os três leem catálogo e o pacote de
 	// apresentação não pode.
 	Overlays []templ.Component
-	// Titulo é sempre o do `<title>`. O que aparece na TELA depende da Forma.
-	Titulo string
-	Forma  ShellShape
+	// Title é sempre o do `<title>`. O que aparece na TELA depende da Forma.
+	Title string
+	Forma ShellShape
 	// TituloVisivel e Voltar são da casca DENSA; Kicker é da casca TÍTULO.
 	TituloVisivel string
 	Voltar        string
@@ -59,7 +59,7 @@ type Page struct {
 	// sumindo no dia em que alguém usar a mesma casca noutra tela.
 	SemEstadoDeCliente bool
 	Kicker             string
-	Sinais             string
+	Signals            string
 	Init               string
 	// Scripts são os módulos EXTRA de UMA cena. O `scene.js` vale para toda
 	// página; estes são para o que é de uma só. Carregá-los em toda cena seria
@@ -91,7 +91,7 @@ const (
 	ShellTitled ShellShape = "titulo"
 )
 
-func Layout(p Page, corpo templ.Component) templ.Component {
+func Layout(p Page, body templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -117,9 +117,9 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(p.Titulo)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(p.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 92, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 92, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -191,15 +191,15 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if p.Sinais != "" {
+		if p.Signals != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, " data-signals=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Sinais)
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Signals)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 117, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 117, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -376,12 +376,12 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if p.Forma == ShellTitled {
-			templ_7745c5c3_Err = SceneTitle(p.Titulo, p.Kicker).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = SceneTitle(p.Title, p.Kicker).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = corpo.Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = body.Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -390,8 +390,8 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if !p.SemEstadoDeCliente {
-			for _, sobreposicao := range p.Overlays {
-				templ_7745c5c3_Err = sobreposicao.Render(ctx, templ_7745c5c3_Buffer)
+			for _, overlap := range p.Overlays {
+				templ_7745c5c3_Err = overlap.Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

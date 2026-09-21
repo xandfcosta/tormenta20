@@ -141,9 +141,9 @@ templ castSheet(v View, m Member) {
 // `entryId`, e metade do elenco não tem linha na iniciativa na maior parte da
 // sessão. Quem manda nos dois é a FICHA, que é o que impede as duas telas de
 // divergirem sobre o mesmo herói.
-templ castBar(v View, m Member, pool, rotulo string, b tableBar) {
+templ castBar(v View, m Member, pool, label string, b tableBar) {
 	<div class="flex items-center gap-1">
-		@barra(rotulo, b)
+		@barra(label, b)
 		@castStep(v, m, pool, "curar", "+", healVerb(pool))
 		@castStep(v, m, pool, "ferir", "−", harmVerb(pool))
 	</div>

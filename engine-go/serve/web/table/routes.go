@@ -102,9 +102,9 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
-		Sinais: tableSignalsExpr(),
-		Init:   fmt.Sprintf("@get('%s/fluxo')", view.SessionBase()),
+		Title:   fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
+		Signals: tableSignalsExpr(),
+		Init:    fmt.Sprintf("@get('%s/fluxo')", view.SessionBase()),
 		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um

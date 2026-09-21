@@ -12,14 +12,14 @@ package ui
 // tela e o formulário começa abaixo da dobra. É `max-height` e não `landscape`
 // AQUI de propósito, ao contrário da folha — o que importa para o cabeçalho é
 // quanta altura sobra, inclusive com o teclado virtual aberto.
-templ SheetTitle(sobrancelha, titulo string) {
+templ SheetTitle(sobrancelha, title string) {
 	<header class="space-y-3 text-center [@media(max-height:520px)]:space-y-1.5">
 		<p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground [@media(max-height:520px)]:hidden">
 			{ sobrancelha }
 		</p>
 		<h1 class="font-display text-3xl uppercase leading-tight tracking-wide text-grimorio-gold sm:text-4xl [@media(max-height:520px)]:text-2xl">
 			<span aria-hidden="true" class="mr-2 text-grimorio-gold/60">✦</span>
-			{ titulo }
+			{ title }
 		</h1>
 		<div aria-hidden="true" class="h-px w-full bg-gradient-to-r from-transparent via-grimorio-gold/40 to-transparent"></div>
 	</header>

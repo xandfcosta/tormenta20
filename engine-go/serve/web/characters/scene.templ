@@ -159,10 +159,10 @@ templ heroVitals(h HeroCard) {
 	</dl>
 }
 
-templ oneVital(rotulo, valor, tom string, apagado bool) {
+templ oneVital(label, value, tom string, apagado bool) {
 	<div class={ "flex items-baseline gap-1.5", templ.KV("opacity-50", apagado) }>
-		<dt class={ ui.FieldLabelClasses("muted", "") }>{ rotulo }</dt>
-		<dd class={ "font-mono text-lg font-semibold tabular-nums", tom }>{ valor }</dd>
+		<dt class={ ui.FieldLabelClasses("muted", "") }>{ label }</dt>
+		<dd class={ "font-mono text-lg font-semibold tabular-nums", tom }>{ value }</dd>
 	</div>
 }
 
@@ -250,7 +250,7 @@ templ filmFrame(h HeroCard, i int) {
 		// conteúdo já diz quem é, e um nome acessível escrito à mão por cima
 		// seriam duas fontes para a mesma frase.
 		Name: h.Name, Sub: h.Role,
-		Destino: "/personagens/" + strconv.FormatInt(h.ID, 10),
+		Destination: "/personagens/" + strconv.FormatInt(h.ID, 10),
 	}) {
 	}
 }
@@ -259,8 +259,8 @@ templ filmFrame(h HeroCard, i int) {
 // do teclado morre na última posição do trilho: a seta chega na vaga e a tecla
 // que abriu tudo até ali não faz nada. (Ele mora aqui fora porque o `templ` NÃO
 // aceita comentário dentro de uma lista de atributos — o `generate` cai.)
-templ createFrame(indice int) {
-	@ui.BlankMarker(indice, "Forjar um herói", "/personagens/nova")
+templ createFrame(index int) {
+	@ui.BlankMarker(index, "Forjar um herói", "/personagens/nova")
 }
 
 // ── o dossiê ─────────────────────────────────────────────────────────────────
@@ -306,10 +306,10 @@ templ heroDossier(h HeroCard) {
 				Habilidades de { h.Race }
 			</h3>
 			<ul class="mt-2 space-y-3">
-				for _, hab := range h.Dossier {
+				for _, ability := range h.Dossier {
 					<li>
-						<p class="font-heading text-sm tracking-wide text-foreground">{ hab.Name }</p>
-						<p class="text-xs leading-relaxed text-muted-foreground">{ hab.Description }</p>
+						<p class="font-heading text-sm tracking-wide text-foreground">{ ability.Name }</p>
+						<p class="text-xs leading-relaxed text-muted-foreground">{ ability.Description }</p>
 					</li>
 				}
 			</ul>
@@ -317,11 +317,11 @@ templ heroDossier(h HeroCard) {
 	</aside>
 }
 
-templ dossierRow(rotulo, valor string) {
-	if valor != "" {
+templ dossierRow(label, value string) {
+	if value != "" {
 		<div class="flex justify-between gap-3">
-			<dt class="shrink-0 text-muted-foreground">{ rotulo }</dt>
-			<dd class="text-right text-foreground">{ valor }</dd>
+			<dt class="shrink-0 text-muted-foreground">{ label }</dt>
+			<dd class="text-right text-foreground">{ value }</dd>
 		</div>
 	}
 }

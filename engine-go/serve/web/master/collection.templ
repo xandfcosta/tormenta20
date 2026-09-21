@@ -165,17 +165,17 @@ templ collectionCard() {
 	</div>
 }
 
-templ conditionCard(c book.Condition, livro bookui.BookAddress) {
+templ conditionCard(c book.Condition, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ c.Name }
-			@bookui.PageSeal(livro, c.BookPage, c.Name)
+			@bookui.PageSeal(bookRef, c.BookPage, c.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
 			// A descrição CITA outras condições ("Desprevenido e imóvel"), e são
 			// 11 citações nas 35 — a densidade que justifica varrer o texto.
-			for _, pedaco := range book.WithConditionLinks(c.Description, c.Name) {
-				@bookui.Chunk(pedaco, livro)
+			for _, chunk := range book.WithConditionLinks(c.Description, c.Name) {
+				@bookui.Chunk(chunk, bookRef)
 			}
 			// O TIPO DE EFEITO fecha a descrição, em itálico, exatamente onde o
 			// livro o imprime: "Abalado. O personagem sofre –2 … *Medo.*". Colado
@@ -213,7 +213,7 @@ templ conditionCard(c book.Condition, livro bookui.BookAddress) {
 //
 // "Treinada por" são só as classes que a treinam DE SAÍDA. Ver o comentário do
 // carregador: a piscina de escolha tem quase tudo em quase toda classe.
-templ expertiseCard(p book.Expertise, livro bookui.BookAddress) {
+templ expertiseCard(p book.Expertise, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ p.Name }
@@ -224,17 +224,17 @@ templ expertiseCard(p book.Expertise, livro bookui.BookAddress) {
 			if p.ArmorPenalty {
 				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">Penalidade de armadura</span>
 			}
-			@bookui.PageSeal(livro, p.BookPage, p.Name)
+			@bookui.PageSeal(bookRef, p.BookPage, p.Name)
 		</p>
 		if len(p.Classes) > 0 {
 			<p class="mt-1 text-xs text-muted-foreground">
 				Treinada de saída por: 
-				for i, classe := range p.Classes {
+				for i, class := range p.Classes {
 					if i > 0 {
 						{ ", " }
 					}
-					@bookui.CrossRef("classes", book.KeyOfName(classe), classe) {
-						{ classe }
+					@bookui.CrossRef("classes", book.KeyOfName(class), class) {
+						{ class }
 					}
 				}
 			</p>
@@ -247,18 +247,18 @@ templ expertiseCard(p book.Expertise, livro bookui.BookAddress) {
 // A ABREVIATURA fica ao lado do nome porque é o que as tabelas do livro imprimem
 // — quem lê "Evoc" numa ficha precisa poder achar aqui. Ilusão não tem, e o
 // crachá simplesmente não sai.
-templ schoolCard(e book.SpellSchool, livro bookui.BookAddress) {
+templ schoolCard(e book.SpellSchool, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ e.Name }
 			if e.Abbrev != "" {
 				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ e.Abbrev }</span>
 			}
-			@bookui.PageSeal(livro, e.BookPage, e.Name)
+			@bookui.PageSeal(bookRef, e.BookPage, e.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
-			for _, pedaco := range book.WithLinks(e.Description) {
-				@bookui.Chunk(pedaco, livro)
+			for _, chunk := range book.WithLinks(e.Description) {
+				@bookui.Chunk(chunk, bookRef)
 			}
 		</p>
 	}
@@ -266,21 +266,21 @@ templ schoolCard(e book.SpellSchool, livro bookui.BookAddress) {
 
 // O cartão do TIPO DE EFEITO. Ele é o destino dos elos que saem das condições, e
 // o livro o define em uma frase na p228.
-templ effectCard(e book.EffectKind, livro bookui.BookAddress) {
+templ effectCard(e book.EffectKind, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ e.Name }
-			@bookui.PageSeal(livro, e.BookPage, e.Name)
+			@bookui.PageSeal(bookRef, e.BookPage, e.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
-			for _, pedaco := range book.WithLinks(e.Description) {
-				@bookui.Chunk(pedaco, livro)
+			for _, chunk := range book.WithLinks(e.Description) {
+				@bookui.Chunk(chunk, bookRef)
 			}
 		</p>
 	}
 }
 
-templ spellCard(m book.Spell, livro bookui.BookAddress) {
+templ spellCard(m book.Spell, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ m.Name }
@@ -293,7 +293,7 @@ templ spellCard(m book.Spell, livro bookui.BookAddress) {
 			@bookui.CrossRef("escolas", m.School, book.SchoolName(m.School)) {
 				{ book.SchoolName(m.School) }
 			}
-			@bookui.PageSeal(livro, m.BookPage, m.Name)
+			@bookui.PageSeal(bookRef, m.BookPage, m.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
 			<span>{ "Execução: " + book.CastingName(m.Execution) }</span>
@@ -304,8 +304,8 @@ templ spellCard(m book.Spell, livro bookui.BookAddress) {
 			}
 		</p>
 		<p class="mt-1 text-muted-foreground">
-			for _, pedaco := range book.WithLinks(m.BaseEffect) {
-				@bookui.Chunk(pedaco, livro)
+			for _, chunk := range book.WithLinks(m.BaseEffect) {
+				@bookui.Chunk(chunk, bookRef)
 			}
 		</p>
 		// Os APRIMORAMENTOS abrem numa caixa e não no cartão: são três a cinco
@@ -322,27 +322,27 @@ templ spellCard(m book.Spell, livro bookui.BookAddress) {
 	}
 }
 
-templ powerCard(p book.Power, livro bookui.BookAddress) {
+templ powerCard(p book.Power, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ p.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ p.Source }</span>
-			@bookui.PageSeal(livro, p.BookPage, p.Name)
+			@bookui.PageSeal(bookRef, p.BookPage, p.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
-			for _, pedaco := range book.WithLinks(p.Description) {
-				@bookui.Chunk(pedaco, livro)
+			for _, chunk := range book.WithLinks(p.Description) {
+				@bookui.Chunk(chunk, bookRef)
 			}
 		</p>
 	}
 }
 
-templ itemCard(i book.Item, livro bookui.BookAddress) {
+templ itemCard(i book.Item, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ i.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ book.CategoryName(i.Category) }</span>
-			@bookui.PageSeal(livro, i.BookPage, i.Name)
+			@bookui.PageSeal(bookRef, i.BookPage, i.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
 			<span>{ "Preço: " + priceWritten(i.Price) }</span>
@@ -356,12 +356,12 @@ templ itemCard(i book.Item, livro bookui.BookAddress) {
 // O cartão da RAÇA diz o que muda numa ficha: os modificadores, o tamanho, o
 // deslocamento e a visão. As habilidades vêm com o resumo de uma linha que o
 // catálogo já guarda — o texto inteiro está no livro, a um clique de distância.
-templ raceCard(r book.Race, livro bookui.BookAddress) {
+templ raceCard(r book.Race, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ r.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ r.AttributeMod.Escrito() }</span>
-			@bookui.PageSeal(livro, r.BookPage, r.Name)
+			@bookui.PageSeal(bookRef, r.BookPage, r.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
 			<span>{ book.TierName(r.Tier) }</span>
@@ -386,11 +386,11 @@ templ raceCard(r book.Race, livro bookui.BookAddress) {
 // moram em `book/character.go`. É pouco de propósito: o bloco da classe é uma
 // tabela de vinte níveis, e transcrevê-la à mão é a fonte de erro que o catálogo
 // existe para evitar.
-templ classCard(c book.Class, livro bookui.BookAddress) {
+templ classCard(c book.Class, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ c.Name }
-			@bookui.PageSeal(livro, c.BookPage, c.Name)
+			@bookui.PageSeal(bookRef, c.BookPage, c.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
 			<span>{ fmt.Sprintf("%d poderes de classe", c.Powers) }</span>
@@ -400,12 +400,12 @@ templ classCard(c book.Class, livro bookui.BookAddress) {
 			if len(c.Expertises) > 0 {
 				<span>
 					Treinado em: 
-					for i, pericia := range c.Expertises {
+					for i, expertise := range c.Expertises {
 						if i > 0 {
 							{ ", " }
 						}
-						@bookui.CrossRef("pericias", book.KeyOfName(pericia), pericia) {
-							{ pericia }
+						@bookui.CrossRef("pericias", book.KeyOfName(expertise), expertise) {
+							{ expertise }
 						}
 					}
 				</span>
@@ -420,14 +420,14 @@ templ classCard(c book.Class, livro bookui.BookAddress) {
 // O cartão do DEUS traz o que o mestre consulta na hora: o que o deus cobra dos
 // devotos e o que ele concede. O símbolo e a arma preferida entram porque são o
 // que aparece na cena — o clérigo saca a arma preferida, o símbolo está no altar.
-templ godCard(d book.God, livro bookui.BookAddress) {
+templ godCard(d book.God, bookRef bookui.BookAddress) {
 	@collectionCard() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ d.Name }
 			// SEM crachá "Maior/Menor": `major` é verdadeiro nos vinte deuses do
 			// catálogo, então ele diria a mesma coisa em todos. Volta no dia em
 			// que existir um deus menor.
-			@bookui.PageSeal(livro, d.BookPage, d.Name)
+			@bookui.PageSeal(bookRef, d.BookPage, d.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">{ d.Portfolio }</p>
 		// Campo VAZIO não vira rótulo órfão: Lena e Marah não têm arma preferida
@@ -450,16 +450,16 @@ templ godCard(d book.God, livro bookui.BookAddress) {
 		if len(d.GrantedPowers) > 0 {
 			<p class="mt-1 text-xs text-muted-foreground">
 				Concede: 
-				for i, poder := range d.GrantedPowers {
+				for i, power := range d.GrantedPowers {
 					if i > 0 {
 						{ ", " }
 					}
-					if id := bookui.PowerID(poder); id != "" {
-						@bookui.CrossRef("poderes", id, poder) {
-							{ poder }
+					if id := bookui.PowerID(power); id != "" {
+						@bookui.CrossRef("poderes", id, power) {
+							{ power }
 						}
 					} else {
-						{ poder }
+						{ power }
 					}
 				}
 			</p>
@@ -467,16 +467,16 @@ templ godCard(d book.God, livro bookui.BookAddress) {
 		if len(d.Devotees) > 0 {
 			<p class="mt-1 text-xs text-muted-foreground">
 				Devotos: 
-				for i, devoto := range d.Devotees {
+				for i, devotee := range d.Devotees {
 					if i > 0 {
 						{ ", " }
 					}
-					if aba, id := book.DevoteeLink(devoto); aba != "" {
-						@bookui.CrossRef(aba, id, devoto) {
-							{ devoto }
+					if aba, id := book.DevoteeLink(devotee); aba != "" {
+						@bookui.CrossRef(aba, id, devotee) {
+							{ devotee }
 						}
 					} else {
-						{ devoto }
+						{ devotee }
 					}
 				}
 			</p>
@@ -489,11 +489,11 @@ templ godCard(d book.God, livro bookui.BookAddress) {
 //
 // O mesmo id (`#crossref-entry`) porque é a mesma caixa — o que muda é o miolo,
 // e quem decide é a rota.
-templ SpellAugments(m book.Spell, livro bookui.BookAddress) {
+templ SpellAugments(m book.Spell, bookRef bookui.BookAddress) {
 	<div id="crossref-entry" class="space-y-2 pr-8">
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ m.Name }
-			@bookui.PageSeal(livro, m.BookPage, m.Name)
+			@bookui.PageSeal(bookRef, m.BookPage, m.Name)
 		</p>
 		<ul class="space-y-1.5">
 			for _, a := range m.Augments {
@@ -512,8 +512,8 @@ templ SpellAugments(m book.Spell, livro bookui.BookAddress) {
 					<span class="text-right font-mono text-xs text-grimorio-gold">{ a.Escrito() }</span>
 					<span class="text-muted-foreground">
 						<span class={ ui.FieldLabelClasses("herda", "mr-1 opacity-70") }>{ book.AugmentKindName(a.Kind) }</span>
-						for _, pedaco := range book.WithLinks(a.Description) {
-							@bookui.Chunk(pedaco, livro)
+						for _, chunk := range book.WithLinks(a.Description) {
+							@bookui.Chunk(chunk, bookRef)
 						}
 					</span>
 				</li>
@@ -526,34 +526,34 @@ templ SpellAugments(m book.Spell, livro bookui.BookAddress) {
 //
 // Reusa os MESMOS cartões da aba — o verbete tem um desenho só, e um segundo
 // desenho "para a caixa" divergiria do primeiro na terceira issue.
-templ CrossRefEntry(g collectionGroup, livro bookui.BookAddress) {
+templ CrossRefEntry(g collectionGroup, book bookui.BookAddress) {
 	<div id="crossref-entry" class="pr-8">
 		if g.Count() == 0 {
 			<p class="text-xs text-muted-foreground">Este verbete não está no acervo.</p>
 		}
 		for _, c := range g.Conditions {
-			@conditionCard(c, livro)
+			@conditionCard(c, book)
 		}
 		for _, m := range g.Spells {
-			@spellCard(m, livro)
+			@spellCard(m, book)
 		}
 		for _, p := range g.Powers {
-			@powerCard(p, livro)
+			@powerCard(p, book)
 		}
 		for _, i := range g.Items {
-			@itemCard(i, livro)
+			@itemCard(i, book)
 		}
 		for _, e := range g.Effects {
-			@effectCard(e, livro)
+			@effectCard(e, book)
 		}
 		for _, r := range g.Races {
-			@raceCard(r, livro)
+			@raceCard(r, book)
 		}
 		for _, c := range g.Classes {
-			@classCard(c, livro)
+			@classCard(c, book)
 		}
 		for _, d := range g.Gods {
-			@godCard(d, livro)
+			@godCard(d, book)
 		}
 	</div>
 }

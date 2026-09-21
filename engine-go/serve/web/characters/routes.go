@@ -39,7 +39,7 @@ func (s Scene) handleCharacters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: "Personagens · Tormenta 20",
+		Title: "Personagens · Tormenta 20",
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, que carrega a busca.
 		Forma: ui.ShellBare,
 	}, SceneBody(view))

@@ -31,10 +31,10 @@ templ JoinBody(v joinView) {
 				@inviteLetter(v)
 			} else {
 				@ui.TextField(ui.Field{
-					Nome: "campaignId", Label: "Número da campanha", Tipo: "number",
-					Valor: v.TypedNumber, Obrigatorio: true,
-					Dica:  "O mestre da mesa envia esse número.",
-					Erros: v.Errors["campaignId"],
+					Name: "campaignId", Label: "Número da campanha", Kind: "number",
+					Value: v.TypedNumber, Obrigatorio: true,
+					Hint:  "O mestre da mesa envia esse número.",
+					Errors: v.Errors["campaignId"],
 				})
 			}
 			if len(v.Heroes) == 0 {

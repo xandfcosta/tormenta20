@@ -451,7 +451,7 @@ func castSheet(v View, m Member) templ.Component {
 // `entryId`, e metade do elenco não tem linha na iniciativa na maior parte da
 // sessão. Quem manda nos dois é a FICHA, que é o que impede as duas telas de
 // divergirem sobre o mesmo herói.
-func castBar(v View, m Member, pool, rotulo string, b tableBar) templ.Component {
+func castBar(v View, m Member, pool, label string, b tableBar) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -476,7 +476,7 @@ func castBar(v View, m Member, pool, rotulo string, b tableBar) templ.Component 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = barra(rotulo, b).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = barra(label, b).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

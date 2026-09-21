@@ -298,18 +298,18 @@ templ startScene(v View) {
 // startSceneVerb é um dos três. A FRASE do livro vem junto do nome porque
 // "exploração" e "interpretação" não dizem, sozinhas, o que muda — e o que muda
 // é se a mesa vai contar rodadas.
-templ startSceneVerb(v View, tipo live.SceneKind, frase string) {
+templ startSceneVerb(v View, kind live.SceneKind, sentence string) {
 	// O NOME ACESSÍVEL é o que o botão FAZ, e não o que ele mostra. Sem ele o
 	// nome vira o conteúdo inteiro — "Ação combate, perseguição · o tempo corre
 	// em rodadas" —, e aí "Exploração" e "Interpretação" também CONTÊM "ação":
 	// procurar o verbo pelo nome acha os três.
 	<button
 		type="button"
-		aria-label={ "Iniciar uma cena de " + tipo.Name() }
-		data-on:click={ tableCommand(v, "POST", "cena/iniciar/"+string(tipo)) }
+		aria-label={ "Iniciar uma cena de " + kind.Name() }
+		data-on:click={ tableCommand(v, "POST", "cena/iniciar/"+string(kind)) }
 		class="flex min-h-11 flex-col items-start rounded-sm px-2 py-1 text-left text-sm outline-none transition-colors hover:bg-accent"
 	>
-		<span class="font-semibold">{ tipo.Name() }</span>
-		<span class="text-2xs text-muted-foreground">{ frase }</span>
+		<span class="font-semibold">{ kind.Name() }</span>
+		<span class="text-2xs text-muted-foreground">{ sentence }</span>
 	</button>
 }

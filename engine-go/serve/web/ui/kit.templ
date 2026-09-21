@@ -107,19 +107,19 @@ templ Button(v Variant, t Size, extra string, attrs templ.Attributes) {
 // O `Nome` é o `id` E o `name`, porque é ele que liga o `<label for>` ao
 // controle; um rótulo sem controle é o defeito que essa amarração previne.
 type Field struct {
-	Nome  string
+	Name  string
 	Label string
-	Tipo  string
-	// Valor volta preenchido quando o servidor rejeita, para o jogador não
+	Kind  string
+	// Value volta preenchido quando o servidor rejeita, para o jogador não
 	// redigitar o que estava certo. Campo de SENHA nunca volta: o navegador não
 	// deve receber de volta o que ele mandou, e redigitar é o comportamento
 	// esperado depois de uma recusa.
-	Valor        string
+	Value        string
 	Autocomplete string
-	Dica         string
-	// Erros vem do `FieldErrorMap` do servidor: a porta não tem validação
+	Hint         string
+	// Errors vem do `FieldErrorMap` do servidor: a porta não tem validação
 	// própria.
-	Erros []string
+	Errors []string
 	// Viram validação NATIVA do navegador, que não substitui o servidor: ele
 	// continua sendo a autoridade. O que se ganha é a mensagem localizada e
 	// acessível de graça, antes da ida à rede.
@@ -130,14 +130,14 @@ type Field struct {
 
 templ TextField(c Field) {
 	<div class="space-y-2">
-		<label for={ c.Nome } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
+		<label for={ c.Name } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
 			{ c.Label }
 		</label>
 		<input
-			id={ c.Nome }
-			name={ c.Nome }
-			type={ InputType(c.Tipo) }
-			value={ c.Valor }
+			id={ c.Name }
+			name={ c.Name }
+			type={ InputType(c.Kind) }
+			value={ c.Value }
 			if c.Autocomplete != "" {
 				autocomplete={ c.Autocomplete }
 			}
@@ -150,18 +150,18 @@ templ TextField(c Field) {
 			if c.TamanhoMaximo > 0 {
 				maxlength={ Int(c.TamanhoMaximo) }
 			}
-			if len(c.Erros) > 0 {
+			if len(c.Errors) > 0 {
 				aria-invalid="true"
-				aria-describedby={ c.Nome + "-erro" }
+				aria-describedby={ c.Name + "-erro" }
 			}
 			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
 		/>
-		if len(c.Erros) == 0 && c.Dica != "" {
-			<p class="text-xs text-muted-foreground">{ c.Dica }</p>
+		if len(c.Errors) == 0 && c.Hint != "" {
+			<p class="text-xs text-muted-foreground">{ c.Hint }</p>
 		}
-		if len(c.Erros) > 0 {
-			<div id={ c.Nome + "-erro" }>
-				for _, e := range c.Erros {
+		if len(c.Errors) > 0 {
+			<div id={ c.Name + "-erro" }>
+				for _, e := range c.Errors {
 					<p class="text-sm text-destructive-ink">{ e }</p>
 				}
 			</div>
@@ -179,10 +179,10 @@ templ PanelFrame(extra string) {
 
 // SceneTitle é o título cinematográfico do Grimório: Cinzel em caixa alta,
 // entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
-templ SceneTitle(titulo, kicker string) {
+templ SceneTitle(title, kicker string) {
 	<div data-slot="scene-title" class="flex flex-col items-center gap-1 text-center">
 		<h1 class="scene-title-glow font-heading font-bold text-[clamp(2.2rem,8vw,3.4rem)] uppercase leading-tight tracking-[0.18em] text-foreground">
-			{ titulo }
+			{ title }
 		</h1>
 		if kicker != "" {
 			// 14px e não 12: a Cinzel abaixo de 14 vira desenho antes de virar
@@ -202,33 +202,33 @@ templ SceneTitle(titulo, kicker string) {
 // `maxlength` não sobrevive a um POST feito na mão.
 //
 // A altura NÃO é fixa: com `field-sizing-content` a caixa cresce com o texto, e
-// `linhas` é só o piso para quem não suporta a propriedade. Fixar a altura em
+// `rows` é só o piso para quem não suporta a propriedade. Fixar a altura em
 // "3 linhas" custa 13px num telefone deitado, que é a diferença entre o botão
 // de enviar estar na tela e não estar.
-templ TextArea(c Field, linhas int) {
+templ TextArea(c Field, rows int) {
 	<div class="space-y-2">
-		<label for={ c.Nome } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
+		<label for={ c.Name } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
 			{ c.Label }
 		</label>
 		<textarea
-			id={ c.Nome }
-			name={ c.Nome }
-			rows={ Int(linhas) }
+			id={ c.Name }
+			name={ c.Name }
+			rows={ Int(rows) }
 			if c.TamanhoMaximo > 0 {
 				maxlength={ Int(c.TamanhoMaximo) }
 			}
-			if len(c.Erros) > 0 {
+			if len(c.Errors) > 0 {
 				aria-invalid="true"
-				aria-describedby={ c.Nome + "-erro" }
+				aria-describedby={ c.Name + "-erro" }
 			}
 			class="field-sizing-content min-h-16 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
-		>{ c.Valor }</textarea>
-		if len(c.Erros) == 0 && c.Dica != "" {
-			<p class="text-xs text-muted-foreground">{ c.Dica }</p>
+		>{ c.Value }</textarea>
+		if len(c.Errors) == 0 && c.Hint != "" {
+			<p class="text-xs text-muted-foreground">{ c.Hint }</p>
 		}
-		if len(c.Erros) > 0 {
-			<div id={ c.Nome + "-erro" }>
-				for _, e := range c.Erros {
+		if len(c.Errors) > 0 {
+			<div id={ c.Name + "-erro" }>
+				for _, e := range c.Errors {
 					<p class="text-sm text-destructive-ink">{ e }</p>
 				}
 			</div>
@@ -303,9 +303,9 @@ func SectionLabelClasses(tom, extra string) string {
 // passo de forja e ferramenta do mestre. Um passo de cena é o único assunto da
 // tela e o título pode respirar; um cabeçalho de painel disputa espaço com nove
 // outros, e apertar é o que o mantém legível ao lado dos vizinhos.
-func SectionTitleClasses(contexto, tom, extra string) string {
+func SectionTitleClasses(context, tom, extra string) string {
 	entreletra := "tracking-[0.16em]"
-	if contexto == "painel" {
+	if context == "painel" {
 		entreletra = "tracking-wide"
 	}
 	if tom == "" {
@@ -370,10 +370,10 @@ func SectionLabelTone(tom string) string {
 // Existir como COMPONENTE é o ponto: enquanto cada cena escrever `overflow-y-auto`
 // à mão, cobrir isto é ENUMERAÇÃO — uma entrada por tela, para sempre, e a que
 // alguém esquecer nasce sem alcance. Passando por aqui, volta a ser amostragem.
-templ ScrollBox(rotulo string, extra string) {
+templ ScrollBox(label string, extra string) {
 	<div
 		role="region"
-		aria-label={ rotulo }
+		aria-label={ label }
 		tabindex="0"
 		class={ Join("min-h-0 flex-1 overflow-y-auto outline-none", extra) }
 	>
@@ -541,8 +541,8 @@ const WalkTheSearch = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preven
 //
 // E some abaixo de `xl`: a tecla não existe no toque, e anunciar atalho para
 // quem não tem teclado é ruído.
-templ Key(rotulo string) {
-	<kbd class="ml-1 hidden text-3xs opacity-70 xl:inline">{ rotulo }</kbd>
+templ Key(label string) {
+	<kbd class="ml-1 hidden text-3xs opacity-70 xl:inline">{ label }</kbd>
 }
 
 // FilterDrawer recolhe os filtros de uma cena de lista no celular DEITADO, e em
@@ -560,7 +560,7 @@ templ Key(rotulo string) {
 //
 // O rótulo vem por parâmetro porque as duas cenas filtram coisas diferentes, e
 // "Filtros" sozinho num leitor de tela não diz filtros de quê.
-templ FilterDrawer(rotulo string) {
+templ FilterDrawer(label string) {
 	<details class="filters-in-drawer shrink-0">
 		// `min-h-11` porque no deitado ele é um alvo de toque de verdade, e é a
 		// única porta para os filtros ali dentro.
@@ -568,7 +568,7 @@ templ FilterDrawer(rotulo string) {
 			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 		>
 			@Icon("SlidersHorizontal", "size-4 shrink-0")
-			{ rotulo }
+			{ label }
 		</summary>
 		{ children... }
 	</details>

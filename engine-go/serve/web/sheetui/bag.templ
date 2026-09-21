@@ -35,8 +35,8 @@ templ bagPanelSection(v View) {
 	@moneyDialog(v)
 	@catalogAddDialog(v)
 	@itemFormDialog(v, "item-custom", "Novo item", "Adicionar", sheetPost(v, "/itens/custom"))
-	for _, ficha := range v.Bag.Sheets {
-		@itemSheetDialog(v, ficha)
+	for _, sheet := range v.Bag.Sheets {
+		@itemSheetDialog(v, sheet)
 	}
 }
 
@@ -101,11 +101,11 @@ templ equippedStrip(v View) {
 }
 
 // handSlot desenha a mão, cheia ou vazia.
-templ handSlot(v View, card *equippedCard, rotulo string) {
+templ handSlot(v View, card *equippedCard, label string) {
 	if card != nil {
 		@equippedCardItem(v, card, false)
 	} else {
-		@emptySlot(rotulo, false)
+		@emptySlot(label, false)
 	}
 }
 
@@ -118,14 +118,14 @@ templ vestedSlot(v View, card *equippedCard) {
 }
 
 // poolBox é um teto do livro com o contador x/max.
-templ poolBox(titulo string, usados, teto int) {
+templ poolBox(title string, used, ceiling int) {
 	<div class="space-y-1.5">
 		<div class="flex items-baseline justify-between">
-			<h3 class={ ui.SectionLabelClasses("gold", "") }>{ titulo }</h3>
+			<h3 class={ ui.SectionLabelClasses("gold", "") }>{ title }</h3>
 			<span
-				class={ "font-mono text-xs", templ.KV("text-foreground", usados >= teto),
-					templ.KV("text-muted-foreground", usados < teto) }
-			>{ strconv.Itoa(usados) + "/" + strconv.Itoa(teto) }</span>
+				class={ "font-mono text-xs", templ.KV("text-foreground", used >= ceiling),
+					templ.KV("text-muted-foreground", used < ceiling) }
+			>{ strconv.Itoa(used) + "/" + strconv.Itoa(ceiling) }</span>
 		</div>
 		<div class="grid grid-cols-2 gap-2">
 			{ children... }
@@ -183,12 +183,12 @@ templ equippedCardItem(v View, card *equippedCard, largo bool) {
 }
 
 // emptySlot é a posição livre — ela existe para o teto aparecer.
-templ emptySlot(rotulo string, largo bool) {
+templ emptySlot(label string, largo bool) {
 	<div
 		class={ "flex min-h-[3.75rem] flex-col justify-center rounded-none border border-dashed border-grimorio-iron bg-grimorio-panel px-2 py-1.5",
 			templ.KV("col-span-2", largo) }
 	>
-		<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ rotulo }</p>
+		<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ label }</p>
 		<p class="text-xs text-muted-foreground">vazio</p>
 	</div>
 }
@@ -310,13 +310,13 @@ templ moneyDialog(v View) {
 			{ "Você tem T$ " + v.Bag.Money.Tibar + "." }
 		</p>
 		<div class="flex gap-1">
-			for _, modo := range moneyModes {
+			for _, mode := range moneyModes {
 				<button
 					type="button"
-					data-on:click={ "$tibar_mode = '" + modo.Value + "'" }
-					data-attr:aria-pressed={ "$tibar_mode === '" + modo.Value + "' ? 'true' : 'false'" }
+					data-on:click={ "$tibar_mode = '" + mode.Value + "'" }
+					data-attr:aria-pressed={ "$tibar_mode === '" + mode.Value + "' ? 'true' : 'false'" }
 					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold"
-				>{ modo.Label }</button>
+				>{ mode.Label }</button>
 			}
 		</div>
 		<label class="block space-y-1">

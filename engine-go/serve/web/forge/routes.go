@@ -93,7 +93,7 @@ func answersFromForm(r *http.Request) (forgeAnswers, error) {
 
 func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, v forgeView) {
 	s.deps.WritePage(w, r, status, ui.Page{
-		Titulo: "Forja · Tormenta 20",
+		Title: "Forja · Tormenta 20",
 		// `ui.ShellDense`: o cabeçalho compacto com o "‹ Voltar", como a folha em
 		// branco da campanha. Sem ele a folha nasce sem saída visível.
 		Forma:        ui.ShellDense,

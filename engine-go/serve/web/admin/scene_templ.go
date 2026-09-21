@@ -664,7 +664,7 @@ func resetDialog() templ.Component {
 //
 // `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
 // "copiar" do teclado, e copiar é a única coisa que se faz com ele.
-func mintedReset(caminho string) templ.Component {
+func mintedReset(path string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -712,9 +712,9 @@ func mintedReset(caminho string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var37 string
-		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
+		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 289, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 289, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 		if templ_7745c5c3_Err != nil {

@@ -117,16 +117,16 @@ templ roleFilter(v listView) {
 
 // roleChip é `aria-pressed` e não `data-selected`: um botão que fica ligado
 // é um alternador, e é isso que o leitor de tela precisa ouvir.
-templ roleChip(v listView, valor, rotulo string) {
+templ roleChip(v listView, value, label string) {
 	<button
 		type="button"
-		aria-pressed={ boolText(v.Role == valor) }
-		data-on:click={ fmt.Sprintf("$role = %q; @get('/campanhas')", valor) }
+		aria-pressed={ boolText(v.Role == value) }
+		data-on:click={ fmt.Sprintf("$role = %q; @get('/campanhas')", value) }
 		class={ "h-8 rounded-sm px-3 text-sm font-medium outline-none transition-colors",
-			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Role == valor),
-			templ.KV("text-muted-foreground hover:text-foreground", v.Role != valor) }
+			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Role == value),
+			templ.KV("text-muted-foreground hover:text-foreground", v.Role != value) }
 	>
-		{ rotulo }
+		{ label }
 	</button>
 }
 
@@ -214,7 +214,7 @@ templ myHeroBand(c campaignCard) {
 	}
 }
 
-templ oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) {
+templ oneHeroCard(iniciais, name, classes, gradiente string, espacador bool) {
 	<div
 		if espacador {
 			aria-hidden="true"
@@ -228,7 +228,7 @@ templ oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) {
 			style={ "background: " + gradiente }
 		>{ iniciais }</span>
 		<div class="min-w-0">
-			<p class="truncate text-sm font-medium text-foreground">{ nome }</p>
+			<p class="truncate text-sm font-medium text-foreground">{ name }</p>
 			<p class="truncate text-xs text-muted-foreground">{ classes }</p>
 		</div>
 	</div>
@@ -256,13 +256,13 @@ templ oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) {
 // para uma sinopse de duas.
 const synopsisBox = "line-clamp-2 min-h-[2lh] max-w-xl px-4 text-center text-sm"
 
-templ synopsisTaste(sinopse string) {
-	if sinopse == "" {
+templ synopsisTaste(synopsis string) {
+	if synopsis == "" {
 		<p class={ synopsisBox, "italic text-muted-foreground opacity-70" }>
 			Esta campanha ainda não tem uma sinopse.
 		</p>
 	} else {
-		<p class={ synopsisBox, "text-muted-foreground" }>{ sinopse }</p>
+		<p class={ synopsisBox, "text-muted-foreground" }>{ synopsis }</p>
 	}
 }
 
@@ -403,13 +403,13 @@ templ campaignRail(v listView) {
 	</div>
 }
 
-templ campaignMarker(c campaignCard, indice int) {
+templ campaignMarker(c campaignCard, index int) {
 	@ui.Marker(ui.RailMarker{
-		ID: c.ID, Index: indice, Monogram: c.Initials, Gradient: c.Gradient,
+		ID: c.ID, Index: index, Monogram: c.Initials, Gradient: c.Gradient,
 		// Nome E papel: o papel não é enfeite na lista de um admin, que vê mesas
 		// de outras pessoas e precisa distinguir a própria.
 		Name: c.Name, Sub: c.Role,
-		Destino: "/campanhas/" + strconv.FormatInt(c.ID, 10),
+		Destination: "/campanhas/" + strconv.FormatInt(c.ID, 10),
 	}) {
 		if c.Live {
 			<span aria-hidden="true" class="size-2 shrink-0 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none"></span>
@@ -422,8 +422,8 @@ templ campaignMarker(c campaignCard, indice int) {
 // ele a gramática do teclado morre na última posição do trilho: a seta chega na
 // vaga e a tecla que abriu tudo até ali não faz nada. (E o comentário fica FORA
 // da lista de atributos: o `templ` não o aceita lá dentro.)
-templ blankSheetMarker(indice int) {
-	@ui.BlankMarker(indice, "Folha em branco", "/campanhas/nova")
+templ blankSheetMarker(index int) {
+	@ui.BlankMarker(index, "Folha em branco", "/campanhas/nova")
 }
 
 // ── o vazio ──────────────────────────────────────────────────────────────────

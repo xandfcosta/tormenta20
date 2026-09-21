@@ -114,8 +114,8 @@ func bagPanelSection(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, ficha := range v.Bag.Sheets {
-			templ_7745c5c3_Err = itemSheetDialog(v, ficha).Render(ctx, templ_7745c5c3_Buffer)
+		for _, sheet := range v.Bag.Sheets {
+			templ_7745c5c3_Err = itemSheetDialog(v, sheet).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -436,7 +436,7 @@ func equippedStrip(v View) templ.Component {
 }
 
 // handSlot desenha a mão, cheia ou vazia.
-func handSlot(v View, card *equippedCard, rotulo string) templ.Component {
+func handSlot(v View, card *equippedCard, label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -463,7 +463,7 @@ func handSlot(v View, card *equippedCard, rotulo string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = emptySlot(rotulo, false).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = emptySlot(label, false).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -509,7 +509,7 @@ func vestedSlot(v View, card *equippedCard) templ.Component {
 }
 
 // poolBox é um teto do livro com o contador x/max.
-func poolBox(titulo string, usados, teto int) templ.Component {
+func poolBox(title string, used, ceiling int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -557,9 +557,9 @@ func poolBox(titulo string, usados, teto int) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 124, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 124, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -569,8 +569,8 @@ func poolBox(titulo string, usados, teto int) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var26 = []any{"font-mono text-xs", templ.KV("text-foreground", usados >= teto),
-			templ.KV("text-muted-foreground", usados < teto)}
+		var templ_7745c5c3_Var26 = []any{"font-mono text-xs", templ.KV("text-foreground", used >= ceiling),
+			templ.KV("text-muted-foreground", used < ceiling)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var26...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -593,9 +593,9 @@ func poolBox(titulo string, usados, teto int) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var28 string
-		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(usados) + "/" + strconv.Itoa(teto))
+		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(used) + "/" + strconv.Itoa(ceiling))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 128, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 128, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -835,7 +835,7 @@ func equippedCardItem(v View, card *equippedCard, largo bool) templ.Component {
 }
 
 // emptySlot é a posição livre — ela existe para o teto aparecer.
-func emptySlot(rotulo string, largo bool) templ.Component {
+func emptySlot(label string, largo bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -902,9 +902,9 @@ func emptySlot(rotulo string, largo bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var47 string
-		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 191, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 191, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 		if templ_7745c5c3_Err != nil {
@@ -1457,13 +1457,13 @@ func moneyDialog(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, modo := range moneyModes {
+			for _, mode := range moneyModes {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<button type=\"button\" data-on:click=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var78 string
-				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibar_mode = '" + modo.Value + "'")
+				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibar_mode = '" + mode.Value + "'")
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 316, Col: 57}
 				}
@@ -1476,7 +1476,7 @@ func moneyDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var79 string
-				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibar_mode === '" + modo.Value + "' ? 'true' : 'false'")
+				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibar_mode === '" + mode.Value + "' ? 'true' : 'false'")
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 317, Col: 87}
 				}
@@ -1489,7 +1489,7 @@ func moneyDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var80 string
-				templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(modo.Label)
+				templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(mode.Label)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 319, Col: 17}
 				}

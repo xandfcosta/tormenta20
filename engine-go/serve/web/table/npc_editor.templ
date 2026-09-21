@@ -207,16 +207,16 @@ templ ownedTab(v View) {
 	</div>
 }
 
-templ listHeader(v View, lista, titulo, oQue string) {
+templ listHeader(v View, list, title, what string) {
 	<div class="flex items-center justify-between gap-2">
-		<h4 class={ ui.SectionLabelClasses("gold", "") }>{ titulo }</h4>
+		<h4 class={ ui.SectionLabelClasses("gold", "") }>{ title }</h4>
 		<button
 			type="button"
-			data-on:click={ listCommand(v, lista, -1) }
+			data-on:click={ listCommand(v, list, -1) }
 			class="inline-flex min-h-9 items-center gap-1 rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent"
 		>
 			@ui.Icon("Plus", "size-3.5")
-			{ oQue }
+			{ what }
 		</button>
 	</div>
 }
@@ -248,12 +248,12 @@ templ draftAttacks(v View, ataques []creature.Attack) {
 	</div>
 }
 
-templ draftExpertises(v View, pericias []creature.Skill) {
+templ draftExpertises(v View, expertises []creature.Skill) {
 	<div id="npc-expertises" class="space-y-2">
-		if len(pericias) == 0 {
+		if len(expertises) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhuma perícia.</p>
 		}
-		for i, pericia := range pericias {
+		for i, expertise := range expertises {
 			<div class="flex flex-wrap items-end gap-2">
 				@rowBox(rowField(listaDePericias, i, "name"), "Perícia", "Furtividade", "min-w-36 flex-1")
 				@numberRow(rowField(listaDePericias, i, "bonus"), "Bônus", -20, 60)
@@ -262,7 +262,7 @@ templ draftExpertises(v View, pericias []creature.Skill) {
 				// parêntese, o de `Ofício (armeiro)`, vem ANTES do número e faz
 				// parte do NOME: por isso são dois campos e não um.
 				@rowBox(rowField(listaDePericias, i, "nota"), "Nota", "+14 em pântanos", "w-40")
-				@removeRowButton(v, listaDePericias, i, expertiseName(pericia, i))
+				@removeRowButton(v, listaDePericias, i, expertiseName(expertise, i))
 			</div>
 		}
 	</div>
@@ -294,36 +294,36 @@ templ draftAbilities(v View, habilidades []string) {
 
 // ── as peças pequenas ────────────────────────────────────────────────────────
 
-templ blockSection(titulo string) {
+templ blockSection(title string) {
 	<section class="space-y-2">
-		<h4 class={ ui.SectionLabelClasses("gold", "") }>{ titulo }</h4>
+		<h4 class={ ui.SectionLabelClasses("gold", "") }>{ title }</h4>
 		<div class="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
 			{ children... }
 		</div>
 	</section>
 }
 
-templ numberBlock(campo, rotulo string, minimo, maximo int) {
+templ numberBlock(field, label string, min, max int) {
 	<div class="space-y-1">
-		<label for={ "npc-" + campo } class={ ui.FieldLabelClasses("muted", "block") }>{ rotulo }</label>
+		<label for={ "npc-" + field } class={ ui.FieldLabelClasses("muted", "block") }>{ label }</label>
 		<input
-			id={ "npc-" + campo }
+			id={ "npc-" + field }
 			type="number"
-			min={ fmt.Sprint(minimo) }
-			max={ fmt.Sprint(maximo) }
-			data-bind={ draftField(campo) }
+			min={ fmt.Sprint(min) }
+			max={ fmt.Sprint(max) }
+			data-bind={ draftField(field) }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none"
 		/>
 	</div>
 }
 
-templ blockText(campo, rotulo, dica string) {
+templ blockText(field, label, dica string) {
 	<div class="col-span-2 space-y-1 sm:col-span-3">
-		<label for={ "npc-" + campo } class={ ui.FieldLabelClasses("muted", "block") }>{ rotulo }</label>
+		<label for={ "npc-" + field } class={ ui.FieldLabelClasses("muted", "block") }>{ label }</label>
 		<input
-			id={ "npc-" + campo }
+			id={ "npc-" + field }
 			type="text"
-			data-bind={ draftField(campo) }
+			data-bind={ draftField(field) }
 			placeholder={ dica }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		/>
@@ -333,43 +333,43 @@ templ blockText(campo, rotulo, dica string) {
 // blockChoice é um `<select>` de verdade, e não um trilho de botões: são
 // sete tipos e seis tamanhos, a escolha é rara (uma vez por NPC) e o `<select>`
 // nativo já traz teclado, busca por letra e o menu do sistema no telefone.
-templ blockChoice(campo, rotulo string, opcoes []blockOption) {
+templ blockChoice(field, label string, options []blockOption) {
 	<div class="space-y-1">
-		<label for={ "npc-" + campo } class={ ui.FieldLabelClasses("muted", "block") }>{ rotulo }</label>
+		<label for={ "npc-" + field } class={ ui.FieldLabelClasses("muted", "block") }>{ label }</label>
 		<select
-			id={ "npc-" + campo }
-			data-bind={ draftField(campo) }
+			id={ "npc-" + field }
+			data-bind={ draftField(field) }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		>
-			for _, opcao := range opcoes {
+			for _, opcao := range options {
 				<option value={ opcao.Value }>{ opcao.Label }</option>
 			}
 		</select>
 	</div>
 }
 
-templ rowBox(caminho, rotulo, dica, largura string) {
+templ rowBox(path, label, dica, largura string) {
 	<div class={ "space-y-1", largura }>
-		<span class={ ui.SectionLabelClasses("muted", "block") }>{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "block") }>{ label }</span>
 		<input
 			type="text"
-			aria-label={ rotulo }
-			data-bind={ caminho }
+			aria-label={ label }
+			data-bind={ path }
 			placeholder={ dica }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		/>
 	</div>
 }
 
-templ numberRow(caminho, rotulo string, minimo, maximo int) {
+templ numberRow(path, label string, min, max int) {
 	<div class="w-24 space-y-1">
-		<span class={ ui.SectionLabelClasses("muted", "block") }>{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "block") }>{ label }</span>
 		<input
 			type="number"
-			aria-label={ rotulo }
-			min={ fmt.Sprint(minimo) }
-			max={ fmt.Sprint(maximo) }
-			data-bind={ caminho }
+			aria-label={ label }
+			min={ fmt.Sprint(min) }
+			max={ fmt.Sprint(max) }
+			data-bind={ path }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none"
 		/>
 	</div>
@@ -380,12 +380,12 @@ templ numberRow(caminho, rotulo string, minimo, maximo int) {
 // Com cinco ataques na tela, cinco botões chamados "Remover" são cinco botões
 // idênticos para quem navega por leitor de tela — e o que se apaga por engano é
 // justamente o que se acabou de escrever.
-templ removeRowButton(v View, lista string, indice int, oQue string) {
+templ removeRowButton(v View, list string, index int, what string) {
 	<button
 		type="button"
-		aria-label={ "Tirar " + oQue }
-		title={ "Tirar " + oQue }
-		data-on:click={ listCommand(v, lista, indice) }
+		aria-label={ "Tirar " + what }
+		title={ "Tirar " + what }
+		data-on:click={ listCommand(v, list, index) }
 		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 	>
 		@ui.Icon("Trash2", "size-4")

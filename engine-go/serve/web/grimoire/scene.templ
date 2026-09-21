@@ -20,69 +20,69 @@ import "t20engine/serve/web/ui"
 // possível de quebrar uma página cujo trabalho é mostrar cores.
 
 type colorSample struct {
-	Classe string
+	Class string
 	Token  string
-	Nota   string
+	Note   string
 	// Superficie não vira texto: para ela a razão contra o painel não diz nada.
 	Superficie bool
 }
 
 // A pilha do escuro para o claro. Toda cena empilha nesta ordem.
 var surfaces = []colorSample{
-	{Classe: "bg-grimorio-bg", Token: "--grimorio-bg", Nota: "fundo da cena", Superficie: true},
-	{Classe: "bg-grimorio-bg-2", Token: "--grimorio-bg-2", Nota: "fundo elevado", Superficie: true},
-	{Classe: "bg-grimorio-panel", Token: "--grimorio-panel", Nota: "painel", Superficie: true},
-	{Classe: "bg-grimorio-panel-raised", Token: "--grimorio-panel-raised", Nota: "painel elevado", Superficie: true},
+	{Class: "bg-grimorio-bg", Token: "--grimorio-bg", Note: "fundo da cena", Superficie: true},
+	{Class: "bg-grimorio-bg-2", Token: "--grimorio-bg-2", Note: "fundo elevado", Superficie: true},
+	{Class: "bg-grimorio-panel", Token: "--grimorio-panel", Note: "painel", Superficie: true},
+	{Class: "bg-grimorio-panel-raised", Token: "--grimorio-panel-raised", Note: "painel elevado", Superficie: true},
 }
 
 var accents = []colorSample{
-	{Classe: "bg-grimorio-gold", Token: "--grimorio-gold", Nota: "a VEZ e a AÇÃO (ALE-200)"},
-	{Classe: "bg-grimorio-iron", Token: "--grimorio-iron", Nota: "borda padrão"},
-	{Classe: "bg-grimorio-iron-light", Token: "--grimorio-iron-light", Nota: "borda em relevo"},
-	{Classe: "bg-grimorio-crimson", Token: "--grimorio-crimson", Nota: "destruir, e o crachá"},
-	{Classe: "bg-grimorio-purple", Token: "--grimorio-purple", Nota: "arcano — ZERO usos"},
-	{Classe: "bg-grimorio-parchment", Token: "--grimorio-parchment", Nota: "superfície clara"},
+	{Class: "bg-grimorio-gold", Token: "--grimorio-gold", Note: "a VEZ e a AÇÃO (ALE-200)"},
+	{Class: "bg-grimorio-iron", Token: "--grimorio-iron", Note: "borda padrão"},
+	{Class: "bg-grimorio-iron-light", Token: "--grimorio-iron-light", Note: "borda em relevo"},
+	{Class: "bg-grimorio-crimson", Token: "--grimorio-crimson", Note: "destruir, e o crachá"},
+	{Class: "bg-grimorio-purple", Token: "--grimorio-purple", Note: "arcano — ZERO usos"},
+	{Class: "bg-grimorio-parchment", Token: "--grimorio-parchment", Note: "superfície clara"},
 }
 
 // Os papéis, cada um com o par bloco + tinta. Ficam lado a lado
 // de propósito: é aqui que se vê que a cor de PREENCHER e a de ESCREVER não
 // podem ser a mesma — a de baixo passa de 4,5:1 e a de cima não.
 var roles = []colorSample{
-	{Classe: "bg-penalty", Token: "--penalty", Nota: "penalidade — bloco"},
-	{Classe: "bg-penalty-ink", Token: "--penalty-ink", Nota: "penalidade — tinta"},
-	{Classe: "bg-bonus", Token: "--bonus", Nota: "bônus — bloco"},
-	{Classe: "bg-bonus-ink", Token: "--bonus-ink", Nota: "bônus — tinta"},
-	{Classe: "bg-arcane", Token: "--arcane", Nota: "arcano — bloco"},
-	{Classe: "bg-arcane-ink", Token: "--arcane-ink", Nota: "arcano — tinta"},
-	{Classe: "bg-warning", Token: "--warning", Nota: "aviso — bloco"},
-	{Classe: "bg-warning-ink", Token: "--warning-ink", Nota: "aviso — tinta"},
-	{Classe: "bg-marker", Token: "--marker", Nota: "crachá — bloco"},
-	{Classe: "bg-marker-foreground", Token: "--marker-foreground", Nota: "crachá — tinta"},
+	{Class: "bg-penalty", Token: "--penalty", Note: "penalidade — bloco"},
+	{Class: "bg-penalty-ink", Token: "--penalty-ink", Note: "penalidade — tinta"},
+	{Class: "bg-bonus", Token: "--bonus", Note: "bônus — bloco"},
+	{Class: "bg-bonus-ink", Token: "--bonus-ink", Note: "bônus — tinta"},
+	{Class: "bg-arcane", Token: "--arcane", Note: "arcano — bloco"},
+	{Class: "bg-arcane-ink", Token: "--arcane-ink", Note: "arcano — tinta"},
+	{Class: "bg-warning", Token: "--warning", Note: "aviso — bloco"},
+	{Class: "bg-warning-ink", Token: "--warning-ink", Note: "aviso — tinta"},
+	{Class: "bg-marker", Token: "--marker", Note: "crachá — bloco"},
+	{Class: "bg-marker-foreground", Token: "--marker-foreground", Note: "crachá — tinta"},
 }
 
 // A armadilha que meia seção existe para mostrar: `--hp-hurt` é âmbar em matiz
 // 70, a um fio do dourado em 85, e uma barra pintada com ele LÊ COMO CHEIA.
 var vitals = []colorSample{
-	{Classe: "bg-[var(--hp-full)]", Token: "--hp-full", Nota: "vida cheia"},
-	{Classe: "bg-[var(--hp-hurt)]", Token: "--hp-hurt", Nota: "ferido — LÊ como cheia"},
-	{Classe: "bg-[var(--hp-critical)]", Token: "--hp-critical", Nota: "crítico; use este p/ ruim"},
-	{Classe: "bg-[var(--mp-arcane)]", Token: "--mp-arcane", Nota: "mana"},
-	{Classe: "bg-[var(--hp-temp)]", Token: "--hp-temp", Nota: "PV temporário — NÃO é o mana"},
+	{Class: "bg-[var(--hp-full)]", Token: "--hp-full", Note: "vida cheia"},
+	{Class: "bg-[var(--hp-hurt)]", Token: "--hp-hurt", Note: "ferido — LÊ como cheia"},
+	{Class: "bg-[var(--hp-critical)]", Token: "--hp-critical", Note: "crítico; use este p/ ruim"},
+	{Class: "bg-[var(--mp-arcane)]", Token: "--mp-arcane", Note: "mana"},
+	{Class: "bg-[var(--hp-temp)]", Token: "--hp-temp", Note: "PV temporário — NÃO é o mana"},
 }
 
 type simpleSample struct {
-	Classe string
-	Nome   string
+	Class string
+	Name   string
 	Uso    string
 }
 
 var radiusScale = []simpleSample{
-	{Classe: "rounded-none", Nome: "rounded-none"},
-	{Classe: "rounded-sm", Nome: "rounded-sm"},
-	{Classe: "rounded-md", Nome: "rounded-md"},
-	{Classe: "rounded-lg", Nome: "rounded-lg"},
-	{Classe: "rounded-xl", Nome: "rounded-xl"},
-	{Classe: "rounded-full", Nome: "rounded-full"},
+	{Class: "rounded-none", Name: "rounded-none"},
+	{Class: "rounded-sm", Name: "rounded-sm"},
+	{Class: "rounded-md", Name: "rounded-md"},
+	{Class: "rounded-lg", Name: "rounded-lg"},
+	{Class: "rounded-xl", Name: "rounded-xl"},
+	{Class: "rounded-full", Name: "rounded-full"},
 }
 
 // Raios que NÃO pertencem à escala e não devem ser alinhados a ela: são a
@@ -90,40 +90,40 @@ var radiusScale = []simpleSample{
 // página dentro dela, e forçar as duas ao mesmo degrau desenharia um objeto que
 // não existe.
 var objectRadii = []simpleSample{
-	{Classe: "grimorio-frame", Nome: "moldura"},
-	{Classe: "grimorio-leather", Nome: "capa do livro"},
-	{Classe: "rounded-[3px]", Nome: "peça do tabuleiro"},
+	{Class: "grimorio-frame", Name: "moldura"},
+	{Class: "grimorio-leather", Name: "capa do livro"},
+	{Class: "rounded-[3px]", Name: "peça do tabuleiro"},
 }
 
 var families = []simpleSample{
-	{Classe: "font-heading", Nome: "font-heading", Uso: "Cinzel — títulos e rótulos de seção"},
-	{Classe: "font-sans", Nome: "font-sans", Uso: "corpo de texto"},
-	{Classe: "font-mono", Nome: "font-mono", Uso: "números de jogo, com tabular-nums"},
+	{Class: "font-heading", Name: "font-heading", Uso: "Cinzel — títulos e rótulos de seção"},
+	{Class: "font-sans", Name: "font-sans", Uso: "corpo de texto"},
+	{Class: "font-mono", Name: "font-mono", Uso: "números de jogo, com tabular-nums"},
 }
 
 var shadcnSteps = []simpleSample{
-	{Classe: "text-2xl", Nome: "text-2xl"},
-	{Classe: "text-xl", Nome: "text-xl"},
-	{Classe: "text-lg", Nome: "text-lg"},
-	{Classe: "text-base", Nome: "text-base"},
-	{Classe: "text-sm", Nome: "text-sm"},
-	{Classe: "text-xs", Nome: "text-xs"},
+	{Class: "text-2xl", Name: "text-2xl"},
+	{Class: "text-xl", Name: "text-xl"},
+	{Class: "text-lg", Name: "text-lg"},
+	{Class: "text-base", Name: "text-base"},
+	{Class: "text-sm", Name: "text-sm"},
+	{Class: "text-xs", Name: "text-xs"},
 }
 
 // Os três que a casa acrescentou ABAIXO do piso do shadcn.
 var houseSteps = []simpleSample{
-	{Classe: "text-2xs", Nome: "text-2xs", Uso: "rótulo de seção"},
-	{Classe: "text-3xs", Nome: "text-3xs", Uso: "rótulo de campo"},
-	{Classe: "text-4xs", Nome: "text-4xs", Uso: "crachá"},
+	{Class: "text-2xs", Name: "text-2xs", Uso: "rótulo de seção"},
+	{Class: "text-3xs", Name: "text-3xs", Uso: "rótulo de campo"},
+	{Class: "text-4xs", Name: "text-4xs", Uso: "crachá"},
 }
 
 // ── as primitivas da folha ───────────────────────────────────────────────────
 
 // sheetSection: cabeçalho com âncora, para a trilha lateral pular até aqui.
-templ sheetSection(id, titulo string) {
+templ sheetSection(id, title string) {
 	<section id={ id } aria-labelledby={ id + "-titulo" } class="scroll-mt-4 space-y-3">
 		<h2 id={ id + "-titulo" } class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>
-			{ titulo }
+			{ title }
 		</h2>
 		{ children... }
 	</section>
@@ -132,13 +132,13 @@ templ sheetSection(id, titulo string) {
 // sheetBlock: um grupo de amostras com o título curto e a explicação do que
 // ele PROVA. A nota não é enfeite — é o que separa uma paleta de uma folha de
 // especificação.
-templ sheetBlock(titulo, nota string) {
+templ sheetBlock(title, note string) {
 	<div class="space-y-2">
 		@ui.SectionLabel("muted", "") {
-			{ titulo }
+			{ title }
 		}
-		if nota != "" {
-			<p class="max-w-prose text-xs text-muted-foreground">{ nota }</p>
+		if note != "" {
+			<p class="max-w-prose text-xs text-muted-foreground">{ note }</p>
 		}
 		<div class="flex flex-wrap gap-3">
 			{ children... }
@@ -151,15 +151,15 @@ templ sheetBlock(titulo, nota string) {
 // aqui seria a transcrição que esta página existe para não fazer.
 templ colorSwatch(a colorSample) {
 	<figure class="w-40 space-y-1">
-		<div data-amostra class={ "h-12 w-full rounded-sm border border-grimorio-iron", a.Classe }></div>
+		<div data-amostra class={ "h-12 w-full rounded-sm border border-grimorio-iron", a.Class }></div>
 		<figcaption class="space-y-0.5">
 			<p class="font-mono text-2xs text-foreground">{ a.Token }</p>
 			<p data-medir="background-color" class="font-mono text-3xs text-muted-foreground">—</p>
 			if !a.Superficie {
 				<p data-contraste class="font-mono text-3xs text-muted-foreground"></p>
 			}
-			if a.Nota != "" {
-				<p class="text-3xs text-muted-foreground">{ a.Nota }</p>
+			if a.Note != "" {
+				<p class="text-3xs text-muted-foreground">{ a.Note }</p>
 			}
 		</figcaption>
 	</figure>
@@ -170,9 +170,9 @@ templ colorSwatch(a colorSample) {
 // código, porque a cena redefine o `--radius`.
 templ radiusCorner(a simpleSample) {
 	<figure class="w-28 space-y-1">
-		<div data-amostra class={ "h-14 w-full border border-grimorio-gold/60 bg-grimorio-panel-raised", a.Classe }></div>
+		<div data-amostra class={ "h-14 w-full border border-grimorio-gold/60 bg-grimorio-panel-raised", a.Class }></div>
 		<figcaption>
-			<p class="font-mono text-2xs text-foreground">{ a.Nome }</p>
+			<p class="font-mono text-2xs text-foreground">{ a.Name }</p>
 			<p data-medir="border-radius" class="font-mono text-3xs text-grimorio-gold">—</p>
 		</figcaption>
 	</figure>
@@ -181,10 +181,10 @@ templ radiusCorner(a simpleSample) {
 // textRow: a frase desenhada pelo degrau, com o tamanho que ele resolveu.
 templ textRow(a simpleSample) {
 	<figure data-par class="flex w-full items-baseline gap-3">
-		<span data-amostra class={ "min-w-0 flex-1 truncate text-foreground", a.Classe }>
+		<span data-amostra class={ "min-w-0 flex-1 truncate text-foreground", a.Class }>
 			Um dragão dorme sob Valkaria
 		</span>
-		<span class="shrink-0 font-mono text-2xs text-muted-foreground">{ a.Nome }</span>
+		<span class="shrink-0 font-mono text-2xs text-muted-foreground">{ a.Name }</span>
 		<span data-medir="font-size" class="w-14 shrink-0 text-right font-mono text-2xs text-grimorio-gold">—</span>
 		if a.Uso != "" {
 			<span class="hidden w-52 shrink-0 text-3xs text-muted-foreground sm:block">{ a.Uso }</span>
@@ -248,7 +248,7 @@ templ typographySection() {
 	@sheetSection("tipografia", "Tipografia") {
 		@sheetBlock("Famílias", "") {
 			for _, a := range families {
-				@textRow(simpleSample{Classe: a.Classe + " text-base", Nome: a.Nome, Uso: a.Uso})
+				@textRow(simpleSample{Class: a.Class + " text-base", Name: a.Name, Uso: a.Uso})
 			}
 		}
 		@sheetBlock("A escala do shadcn", "") {
@@ -267,12 +267,12 @@ templ typographySection() {
 // ── a folha ──────────────────────────────────────────────────────────────────
 
 var sheetTrail = []simpleSample{
-	{Nome: "cor", Uso: "Cor"},
-	{Nome: "raio", Uso: "Raio"},
-	{Nome: "tipografia", Uso: "Tipografia"},
-	{Nome: "pecas", Uso: "Peças"},
-	{Nome: "foco", Uso: "Foco"},
-	{Nome: "movimento", Uso: "Movimento"},
+	{Name: "cor", Uso: "Cor"},
+	{Name: "raio", Uso: "Raio"},
+	{Name: "tipografia", Uso: "Tipografia"},
+	{Name: "pecas", Uso: "Peças"},
+	{Name: "foco", Uso: "Foco"},
+	{Name: "movimento", Uso: "Movimento"},
 }
 
 templ grimoire() {
@@ -288,7 +288,7 @@ templ grimoire() {
 		>
 			for _, item := range sheetTrail {
 				<a
-					href={ templ.SafeURL("#" + item.Nome) }
+					href={ templ.SafeURL("#" + item.Name) }
 					class="shrink-0 rounded-none border border-grimorio-iron px-3 py-1.5 text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
 				>{ item.Uso }</a>
 			}
@@ -312,11 +312,11 @@ templ grimoire() {
 // Esta seção mostra cada peça de `web/ui` com o que o navegador RESOLVEU para
 // ela, e a medida é o ponto: sem ela, duas peças parecidas passam por iguais.
 
-templ partPart(nome string, peca templ.Component) {
+templ partPart(name string, token templ.Component) {
 	<div data-par class="flex w-full items-center gap-4 border-b border-grimorio-iron/40 py-2 last:border-0">
-		<span class="w-24 shrink-0 font-mono text-3xs text-muted-foreground">{ nome }</span>
+		<span class="w-24 shrink-0 font-mono text-3xs text-muted-foreground">{ name }</span>
 		@measuredCell() {
-			@peca
+			@token
 		}
 	</div>
 }
@@ -371,15 +371,15 @@ templ sheetBadge() {
 	</button>
 }
 
-templ sheetButtonInSize(t ui.Size, texto string) {
+templ sheetButtonInSize(t ui.Size, text string) {
 	@ui.Button(ui.VariantPrimary, t, "", templ.Attributes{"type": "button"}) {
-		{ texto }
+		{ text }
 	}
 }
 
 templ sheetField() {
 	<span class="w-full min-w-0">
-		@ui.TextField(ui.Field{Nome: "amostra-campo", Label: "Nome do combatente"})
+		@ui.TextField(ui.Field{Name: "amostra-campo", Label: "Nome do combatente"})
 	</span>
 }
 
@@ -424,8 +424,8 @@ templ motionSection() {
 					<span class="font-medium">Ogro das Cavernas</span>
 				</div>
 				<div class="flex flex-wrap gap-2">
-					for _, d := range []simpleSample{{Nome: "ferir", Uso: "Ferir"}, {Nome: "curar", Uso: "Curar"}, {Nome: "vez", Uso: "Passar a vez"}} {
-						@ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{"type": "button", "data-disparar": d.Nome}) {
+					for _, d := range []simpleSample{{Name: "ferir", Uso: "Ferir"}, {Name: "curar", Uso: "Curar"}, {Name: "vez", Uso: "Passar a vez"}} {
+						@ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{"type": "button", "data-disparar": d.Name}) {
 							{ d.Uso }
 						}
 					}

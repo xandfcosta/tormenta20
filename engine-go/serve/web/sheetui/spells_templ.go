@@ -163,8 +163,8 @@ func spellsPanelSection(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			for _, magia := range v.Spells.Learned {
-				templ_7745c5c3_Err = learnedSpellRowItem(v, magia).Render(ctx, templ_7745c5c3_Buffer)
+			for _, spell := range v.Spells.Learned {
+				templ_7745c5c3_Err = learnedSpellRowItem(v, spell).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -174,8 +174,8 @@ func spellsPanelSection(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, magia := range v.Spells.Learned {
-			templ_7745c5c3_Err = castSpellDialog(v, magia).Render(ctx, templ_7745c5c3_Buffer)
+		for _, spell := range v.Spells.Learned {
+			templ_7745c5c3_Err = castSpellDialog(v, spell).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -243,13 +243,13 @@ func grantedSpellsBlock(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, magia := range v.Spells.Granted {
+			for _, spell := range v.Spells.Granted {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"flex items-center gap-2 rounded-sm border border-arcane/40 bg-grimorio-panel px-2 py-1.5\"><span class=\"shrink-0 rounded-full border border-arcane/40 px-1.5 font-mono text-3xs text-arcane-ink\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var12 string
-				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Circle)
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(spell.Circle)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 82, Col: 121}
 				}
@@ -262,7 +262,7 @@ func grantedSpellsBlock(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var13 string
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Name)
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(spell.Name)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 83, Col: 79}
 				}
@@ -275,7 +275,7 @@ func grantedSpellsBlock(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Source)
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(spell.Source)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 84, Col: 82}
 				}
@@ -298,7 +298,7 @@ func grantedSpellsBlock(v View) templ.Component {
 }
 
 // learnedSpellRowItem é uma magia do grimório.
-func learnedSpellRowItem(v View, magia learnedSpellRow) templ.Component {
+func learnedSpellRowItem(v View, spell learnedSpellRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -324,7 +324,7 @@ func learnedSpellRowItem(v View, magia learnedSpellRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Circle)
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(spell.Circle)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 94, Col: 118}
 		}
@@ -349,7 +349,7 @@ func learnedSpellRowItem(v View, magia learnedSpellRow) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			var templ_7745c5c3_Var18 string
-			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Name)
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(spell.Name)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 96, Col: 15}
 			}
@@ -359,17 +359,17 @@ func learnedSpellRowItem(v View, magia learnedSpellRow) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + magia.Name, "aria-haspopup": "dialog", "data-on:click": thatOpensCastGesture(magia)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + spell.Name, "aria-haspopup": "dialog", "data-on:click": thatOpensCastGesture(spell)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if magia.CD != "—" {
+		if spell.CD != "—" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<span class=\"shrink-0 font-mono text-2xs text-muted-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var19 string
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs("CD " + magia.CD)
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs("CD " + spell.CD)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 99, Col: 85}
 			}
@@ -383,7 +383,7 @@ func learnedSpellRowItem(v View, magia learnedSpellRow) templ.Component {
 			}
 		}
 		if v.Spells.RequiresPrep {
-			templ_7745c5c3_Err = preparedToggle(v, magia).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = preparedToggle(v, spell).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -398,7 +398,7 @@ func learnedSpellRowItem(v View, magia learnedSpellRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue("Conjurar " + magia.Name)
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue("Conjurar " + spell.Name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 106, Col: 40}
 		}
@@ -411,7 +411,7 @@ func learnedSpellRowItem(v View, magia learnedSpellRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(thatOpensCastGesture(magia))
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(thatOpensCastGesture(spell))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 108, Col: 46}
 		}
@@ -454,7 +454,7 @@ func learnedSpellRowItem(v View, magia learnedSpellRow) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ui.Button(ui.VariantGhostDanger, ui.SizeIconSmall, "", templ.Attributes{"type": "button", "aria-label": "Esquecer " + magia.Name, "data-on:click": sheetPost(v, "/magias/esquece/"+magia.Command)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Button(ui.VariantGhostDanger, ui.SizeIconSmall, "", templ.Attributes{"type": "button", "aria-label": "Esquecer " + spell.Name, "data-on:click": sheetPost(v, "/magias/esquece/"+spell.Command)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -469,7 +469,7 @@ func learnedSpellRowItem(v View, magia learnedSpellRow) templ.Component {
 // preparedToggle só existe para quem PREPARA magia — Clérigo, Druida e o
 // Arcanista do caminho `mago`. Para os outros, um botão de preparar seria um
 // controle que não significa nada.
-func preparedToggle(v View, magia learnedSpellRow) templ.Component {
+func preparedToggle(v View, spell learnedSpellRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -491,8 +491,8 @@ func preparedToggle(v View, magia learnedSpellRow) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		var templ_7745c5c3_Var26 = []any{ui.BadgeClasses("inline-flex shrink-0 items-center gap-1 text-3xs uppercase tracking-wider"),
-			templ.KV("border-grimorio-gold/60 text-grimorio-gold", magia.Prepared),
-			templ.KV("border-grimorio-iron text-muted-foreground", !magia.Prepared)}
+			templ.KV("border-grimorio-gold/60 text-grimorio-gold", spell.Prepared),
+			templ.KV("border-grimorio-iron text-muted-foreground", !spell.Prepared)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var26...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -502,7 +502,7 @@ func preparedToggle(v View, magia learnedSpellRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var27 string
-		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", magia.Prepared))
+		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", spell.Prepared))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 124, Col: 50}
 		}
@@ -515,7 +515,7 @@ func preparedToggle(v View, magia learnedSpellRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var28 string
-		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(magia.Name + " preparada")
+		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(spell.Name + " preparada")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 125, Col: 40}
 		}
@@ -528,7 +528,7 @@ func preparedToggle(v View, magia learnedSpellRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var29 string
-		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/magias/prepara/"+magia.Command))
+		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/magias/prepara/"+spell.Command))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 126, Col: 64}
 		}
@@ -563,7 +563,7 @@ func preparedToggle(v View, magia learnedSpellRow) templ.Component {
 // ela nunca decide nada: quem recusa é o `@post`, com a regra inteira. Uma
 // prévia que decidisse seria uma segunda regra, e duas contas do mesmo custo
 // divergem.
-func castSpellDialog(v View, magia learnedSpellRow) templ.Component {
+func castSpellDialog(v View, spell learnedSpellRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -601,7 +601,7 @@ func castSpellDialog(v View, magia learnedSpellRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var33 string
-			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Execution + " · " + magia.Range + " · " + magia.Duration)
+			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(spell.Execution + " · " + spell.Range + " · " + spell.Duration)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 142, Col: 69}
 			}
@@ -614,7 +614,7 @@ func castSpellDialog(v View, magia learnedSpellRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var34 string
-			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Effect)
+			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(spell.Effect)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 144, Col: 51}
 			}
@@ -649,7 +649,7 @@ func castSpellDialog(v View, magia learnedSpellRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var37 string
-			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(costPreview(magia))
+			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(costPreview(spell))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 147, Col: 92}
 			}
@@ -674,7 +674,7 @@ func castSpellDialog(v View, magia learnedSpellRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(magia.Augments) > 0 {
+			if len(spell.Augments) > 0 {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<div class=\"space-y-1\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -701,7 +701,7 @@ func castSpellDialog(v View, magia learnedSpellRow) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, aprimoramento := range magia.Augments {
+				for _, aprimoramento := range spell.Augments {
 					templ_7745c5c3_Err = augmentPicker(aprimoramento).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -726,7 +726,7 @@ func castSpellDialog(v View, magia learnedSpellRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var42 string
-			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/magias/conjura/"+magia.Command) + "; $detail = ''")
+			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/magias/conjura/"+spell.Command) + "; $detail = ''")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 160, Col: 84}
 			}
@@ -752,7 +752,7 @@ func castSpellDialog(v View, magia learnedSpellRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var44 string
-			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs("Conjurar " + magia.Name)
+			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs("Conjurar " + spell.Name)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 162, Col: 29}
 			}
@@ -766,7 +766,7 @@ func castSpellDialog(v View, magia learnedSpellRow) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = overlay("conjura-"+magia.Command, magia.Name, "Sparkles", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = overlay("conjura-"+spell.Command, spell.Name, "Sparkles", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1145,13 +1145,13 @@ func learnSpellDialog(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			for _, magia := range v.Spells.Catalog {
+			for _, spell := range v.Spells.Catalog {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "<button type=\"button\" data-on:click=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var66 string
-				templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/magias/aprende/"+magia.Command))
+				templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/magias/aprende/"+spell.Command))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 278, Col: 69}
 				}
@@ -1164,7 +1164,7 @@ func learnSpellDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var67 string
-				templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Circle)
+				templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(spell.Circle)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 282, Col: 80}
 				}
@@ -1177,7 +1177,7 @@ func learnSpellDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var68 string
-				templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Name)
+				templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(spell.Name)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 283, Col: 82}
 				}
@@ -1190,7 +1190,7 @@ func learnSpellDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var69 string
-				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(magia.School)
+				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(spell.School)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 284, Col: 76}
 				}
@@ -1403,7 +1403,7 @@ func spellFilters(v View) templ.Component {
 	})
 }
 
-func circleOption(valor, rotulo, ativo string) templ.Component {
+func circleOption(value, label, active string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1424,13 +1424,13 @@ func circleOption(valor, rotulo, ativo string) templ.Component {
 			templ_7745c5c3_Var79 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if valor == ativo {
+		if value == active {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<option value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var80 string
-			templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.ResolveAttributeValue(valor)
+			templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.ResolveAttributeValue(value)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 345, Col: 23}
 			}
@@ -1443,9 +1443,9 @@ func circleOption(valor, rotulo, ativo string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var81 string
-			templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+			templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 345, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 345, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 			if templ_7745c5c3_Err != nil {
@@ -1461,7 +1461,7 @@ func circleOption(valor, rotulo, ativo string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var82 string
-			templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.ResolveAttributeValue(valor)
+			templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.ResolveAttributeValue(value)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 347, Col: 23}
 			}
@@ -1474,9 +1474,9 @@ func circleOption(valor, rotulo, ativo string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var83 string
-			templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+			templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 347, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/spells.templ`, Line: 347, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 			if templ_7745c5c3_Err != nil {

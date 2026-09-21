@@ -195,11 +195,11 @@ templ confirmDeleteSession(v View) {
 
 // adjustRow: uma decisão por linha — o nome, o que ela faz numa frase, e o
 // botão à direita. A frase não é enfeite: é ela que deixa o botão ser curto.
-templ adjustRow(nome, frase string) {
+templ adjustRow(name, sentence string) {
 	<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
 		<div class="min-w-0 flex-1">
-			<p class="text-sm text-foreground">{ nome }</p>
-			<p class="text-xs text-muted-foreground">{ frase }</p>
+			<p class="text-sm text-foreground">{ name }</p>
+			<p class="text-xs text-muted-foreground">{ sentence }</p>
 		</div>
 		{ children... }
 	</div>

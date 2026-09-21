@@ -56,9 +56,9 @@ templ hubMenu(v hubView) {
 // Os `data-cue-*` são o gancho dos sons: o `scene.js` escuta por DELEGAÇÃO num
 // ouvinte só, porque o HTML pode ser remendado a qualquer tique e ouvinte preso
 // a nó morre no remendo.
-templ menuItem(icone_, rotulo, destino string, temProximo bool) {
+templ menuItem(icone_, label, destination string, temProximo bool) {
 	<a
-		href={ templ.SafeURL(destino) }
+		href={ templ.SafeURL(destination) }
 		data-nav-item
 		data-cue-hover
 		data-cue-select
@@ -66,7 +66,7 @@ templ menuItem(icone_, rotulo, destino string, temProximo bool) {
 	>
 		<span aria-hidden="true" class="text-sm text-grimorio-crimson-bright">▸</span>
 		@ui.Icon(icone_, "size-5 text-grimorio-gold")
-		<span class="flex-1">{ rotulo }</span>
+		<span class="flex-1">{ label }</span>
 		if temProximo {
 			<span aria-hidden="true" class="text-sm text-grimorio-gold">►</span>
 		}

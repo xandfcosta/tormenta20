@@ -195,7 +195,7 @@ templ turnStrip(v View) {
 // turnStripName escreve "você" no lugar do próprio nome — quando ele é UM.
 //
 // Com dois meus na faixa a palavra deixa de responder e passa a atrapalhar
-// ("você › Tanque › você"), e aí o nome volta. Quem decide isso é o `DizVoce`,
+// ("você › Tanque › você"), e aí o nome volta. Quem decide isso é o `SaysYou`,
 // que enxerga a faixa inteira; aqui só se escreve o que ele já decidiu.
 func turnStripName(p turnAhead) string {
 	if p.SaysYou {
@@ -695,18 +695,18 @@ templ rowVerbs(v View, l tableRow) {
 // rastreia aquele pool e não sai nada; com a barra ESCONDIDA sai a frase, porque
 // "não tem PV" e "o mestre escondeu" são coisas diferentes; com número sai a
 // barra. Os verbos só existem para o mestre — o jogador lê.
-templ trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) {
+templ trackerBar(v View, l tableRow, pool, label string, b *tableBar) {
 	if b != nil {
 		<div class="flex items-center gap-1">
 			if b.Hidden && v.GM == nil {
-				<p class="text-xs italic text-muted-foreground">{ rotulo } ocultos pelo mestre</p>
+				<p class="text-xs italic text-muted-foreground">{ label } ocultos pelo mestre</p>
 			} else {
-				@barra(rotulo, *b)
+				@barra(label, *b)
 			}
 			if v.GM != nil {
 				@vitalStep(v, l, pool, "curar", "+", healVerb(pool))
 				@vitalStep(v, l, pool, "ferir", "−", harmVerb(pool))
-				@rowEye(v, l, pool, rotulo, b.Hidden)
+				@rowEye(v, l, pool, label, b.Hidden)
 			}
 		</div>
 	}
@@ -733,16 +733,16 @@ templ vitalStep(v View, l tableRow, pool, verb, sign, label string) {
 // `aria-pressed` porque é um estado que fica, não uma ação que passa. E o
 // `title` diz de quem se esconde: o ícone sozinho não conta que o segredo é dos
 // jogadores e não do mestre.
-templ rowEye(v View, l tableRow, pool, rotulo string, hidden bool) {
+templ rowEye(v View, l tableRow, pool, label string, hidden bool) {
 	<button
 		type="button"
 		aria-pressed={ fmt.Sprint(hidden) }
 		if hidden {
-			aria-label={ "Revelar os " + rotulo + " de " + l.Label }
-			title={ "Revelar os " + rotulo + " de " + l.Label + " para os jogadores" }
+			aria-label={ "Revelar os " + label + " de " + l.Label }
+			title={ "Revelar os " + label + " de " + l.Label + " para os jogadores" }
 		} else {
-			aria-label={ "Ocultar os " + rotulo + " de " + l.Label }
-			title={ "Ocultar os " + rotulo + " de " + l.Label + " dos jogadores" }
+			aria-label={ "Ocultar os " + label + " de " + l.Label }
+			title={ "Ocultar os " + label + " de " + l.Label + " dos jogadores" }
 		}
 		data-on:click={ rowCommand(v, l, "vitais/"+pool+"/oculto") }
 		class={ "flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent",
@@ -759,15 +759,15 @@ templ rowEye(v View, l tableRow, pool, rotulo string, hidden bool) {
 // barraCompacta é a barra do cartão do Grupo, feita para duas caberem numa
 // linha. A diferença para a `barra` é só o que ocupa largura: o rótulo encolhe e
 // o número perde o máximo, que já viaja no `aria-label`.
-templ barraCompacta(rotulo string, b tableBar) {
+templ barraCompacta(label string, b tableBar) {
 	<div class="flex min-w-0 flex-1 items-center gap-1">
-		<span class={ ui.SectionLabelClasses("muted", "shrink-0") }>{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "shrink-0") }>{ label }</span>
 		<div
 			role="progressbar"
 			aria-valuenow={ fmt.Sprint(b.Current) }
 			aria-valuemin="0"
 			aria-valuemax={ fmt.Sprint(b.Max) }
-			aria-label={ barLabel(rotulo, b) }
+			aria-label={ barLabel(label, b) }
 			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
 		>
 			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
@@ -826,15 +826,15 @@ templ reservaDeTemporarios(b tableBar) {
 // FRAÇÃO; o `progressbar` serve a quem usa leitor de tela. Quem for consertar
 // isto mexe na fileira de todo mundo — por isso ficou registrado e não
 // remendado de passagem.
-templ barra(rotulo string, b tableBar) {
+templ barra(label string, b tableBar) {
 	<div class="flex items-center gap-1.5">
-		<span class={ ui.SectionLabelClasses("muted", "w-7 shrink-0") }>{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "w-7 shrink-0") }>{ label }</span>
 		<div
 			role="progressbar"
 			aria-valuenow={ fmt.Sprint(b.Current) }
 			aria-valuemin="0"
 			aria-valuemax={ fmt.Sprint(b.Max) }
-			aria-label={ barLabel(rotulo, b) }
+			aria-label={ barLabel(label, b) }
 			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
 		>
 			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
@@ -907,16 +907,16 @@ templ formDeCombatente(v View) {
 	</div>
 }
 
-templ campoDeNumero(id, rotulo, sinal, min, max string) {
+templ campoDeNumero(id, label, signal, min, max string) {
 	<div class="w-20 space-y-1">
-		<label for={ id } class={ ui.FieldLabelClasses("muted", "block") }>{ rotulo }</label>
+		<label for={ id } class={ ui.FieldLabelClasses("muted", "block") }>{ label }</label>
 		<input
 			id={ id }
 			type="number"
 			min={ min }
 			max={ max }
 			inputmode="numeric"
-			data-bind={ sinal }
+			data-bind={ signal }
 			class="w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none"
 		/>
 	</div>
@@ -924,14 +924,14 @@ templ campoDeNumero(id, rotulo, sinal, min, max string) {
 
 // O `aria-pressed` sai como STRING e não como booleano: o `data-attr` do
 // Datastar daria `aria-pressed=""`, que é inválido e não anuncia estado nenhum.
-templ combatantKind(tipo, rotulo string) {
+templ combatantKind(kind, label string) {
 	<button
 		type="button"
-		data-attr:aria-pressed={ fmt.Sprintf("$new_type === '%s' ? 'true' : 'false'", tipo) }
-		data-on:click={ fmt.Sprintf("$new_type = '%s'", tipo) }
-		data-class={ fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $new_type === '%s', 'border-grimorio-iron text-muted-foreground': $new_type !== '%s'}", tipo, tipo) }
+		data-attr:aria-pressed={ fmt.Sprintf("$new_type === '%s' ? 'true' : 'false'", kind) }
+		data-on:click={ fmt.Sprintf("$new_type = '%s'", kind) }
+		data-class={ fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $new_type === '%s', 'border-grimorio-iron text-muted-foreground': $new_type !== '%s'}", kind, kind) }
 		class="min-h-11 rounded-sm border px-3 text-sm outline-none transition-colors hover:bg-accent"
-	>{ rotulo }</button>
+	>{ label }</button>
 }
 
 // numberEditable: para o mestre, a INICIATIVA é botão — sem ela, consertar um

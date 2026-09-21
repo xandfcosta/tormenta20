@@ -35,9 +35,9 @@ templ powersPanelSection(v View) {
 			}
 		</div>
 	</section>
-	for _, linha := range v.Powers.Actions {
-		if linha.Stance != nil && linha.Stance.MaxSteps > 0 {
-			@stanceStepperDialog(v, linha)
+	for _, row := range v.Powers.Actions {
+		if row.Stance != nil && row.Stance.MaxSteps > 0 {
+			@stanceStepperDialog(v, row)
 		}
 	}
 	@choicesDialog(v)
@@ -63,8 +63,8 @@ templ powerSearchResults(v View) {
 		</p>
 	} else {
 		<ul class="space-y-1.5">
-			for _, linha := range v.Powers.Results {
-				@powerRowItem(v, linha)
+			for _, row := range v.Powers.Results {
+				@powerRowItem(v, row)
 			}
 		</ul>
 	}
@@ -84,8 +84,8 @@ templ actionsBlock(v View) {
 			<p class="text-xs italic text-muted-foreground">{ noActionsPhrase(v.Powers.IsCaster) }</p>
 		} else {
 			<ul class="space-y-1.5">
-				for _, linha := range v.Powers.Actions {
-					@powerRowItem(v, linha)
+				for _, row := range v.Powers.Actions {
+					@powerRowItem(v, row)
 				}
 			</ul>
 		}
@@ -105,13 +105,13 @@ templ passivesBlock(v View) {
 				<span style="display:none" data-show="$show_passives">Passivas · ocultar</span>
 			}
 			<div data-show="!$show_passives" class="space-y-1">
-				for _, linha := range v.Powers.LiveTriggers {
-					<p class="text-2xs text-bonus-ink">{ "● gatilho ativo: " + linha.Name }</p>
+				for _, row := range v.Powers.LiveTriggers {
+					<p class="text-2xs text-bonus-ink">{ "● gatilho ativo: " + row.Name }</p>
 				}
 			</div>
 			<ul style="display:none" data-show="$show_passives" class="space-y-1.5">
-				for _, linha := range v.Powers.Passives {
-					@powerRowItem(v, linha)
+				for _, row := range v.Powers.Passives {
+					@powerRowItem(v, row)
 				}
 			</ul>
 		</section>
@@ -123,56 +123,56 @@ templ passivesBlock(v View) {
 // O texto da regra fica CORTADO numa linha e o toque no nome abre o resto: são
 // 26 a 34 poderes num personagem de nível 20, e a descrição inteira de cada um
 // faria a lista virar um livro que ninguém percorre no meio de um turno.
-templ powerRowItem(v View, linha powerRow) {
+templ powerRowItem(v View, row powerRow) {
 	<li class="rounded-none border border-grimorio-iron p-2">
 		<div class="flex flex-wrap items-start gap-1.5">
 			<button
 				type="button"
-				aria-label={ "Detalhes de " + linha.Name }
-				data-on:click={ "$power = $power === '" + linha.ID + "' ? '' : '" + linha.ID + "'" }
-				data-attr:aria-expanded={ "$power === '" + linha.ID + "' ? 'true' : 'false'" }
+				aria-label={ "Detalhes de " + row.Name }
+				data-on:click={ "$power = $power === '" + row.ID + "' ? '' : '" + row.ID + "'" }
+				data-attr:aria-expanded={ "$power === '" + row.ID + "' ? 'true' : 'false'" }
 				class="flex min-w-0 flex-1 basis-40 flex-col gap-0.5 text-left outline-none"
 			>
 				<span class="flex flex-wrap items-center gap-1.5">
-					@ui.Icon(linha.Glyph, "size-3.5 shrink-0 text-muted-foreground")
-					<span class="text-xs font-semibold text-foreground">{ linha.Name }</span>
-					<span class="rounded-none bg-muted px-1 text-3xs text-muted-foreground">{ linha.Source }</span>
+					@ui.Icon(row.Glyph, "size-3.5 shrink-0 text-muted-foreground")
+					<span class="text-xs font-semibold text-foreground">{ row.Name }</span>
+					<span class="rounded-none bg-muted px-1 text-3xs text-muted-foreground">{ row.Source }</span>
 				</span>
-				<span data-show={ "$power !== '" + linha.ID + "'" } class="line-clamp-1 text-2xs leading-snug text-muted-foreground">
-					{ linha.Detail }
+				<span data-show={ "$power !== '" + row.ID + "'" } class="line-clamp-1 text-2xs leading-snug text-muted-foreground">
+					{ row.Detail }
 				</span>
 			</button>
-			@powerActionSlot(v, linha)
+			@powerActionSlot(v, row)
 		</div>
-		<p data-show={ "$power === '" + linha.ID + "'" } class="mt-1 text-2xs leading-snug text-muted-foreground">
-			{ linha.Detail }
-			if linha.Page > 0 {
-				<span class="ml-1 opacity-70">{ "(p" + strconv.Itoa(linha.Page) + ")" }</span>
+		<p data-show={ "$power === '" + row.ID + "'" } class="mt-1 text-2xs leading-snug text-muted-foreground">
+			{ row.Detail }
+			if row.Page > 0 {
+				<span class="ml-1 opacity-70">{ "(p" + strconv.Itoa(row.Page) + ")" }</span>
 			}
 		</p>
 	</li>
 }
 
 // powerActionSlot é o que dá para fazer com o poder, no fim da linha.
-templ powerActionSlot(v View, linha powerRow) {
+templ powerActionSlot(v View, row powerRow) {
 	<span class="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1">
-		if linha.Cost != "" {
-			<span class={ powerBadge(linha.Kind) }>{ linha.Cost }</span>
+		if row.Cost != "" {
+			<span class={ powerBadge(row.Kind) }>{ row.Cost }</span>
 		}
-		if linha.Spent != "" {
-			<span class={ powerBadge("") }>{ linha.Spent }</span>
-		} else if linha.Limit != "" {
-			<span class={ powerBadge("") }>{ linha.Limit }</span>
+		if row.Spent != "" {
+			<span class={ powerBadge("") }>{ row.Spent }</span>
+		} else if row.Limit != "" {
+			<span class={ powerBadge("") }>{ row.Limit }</span>
 		}
-		if linha.Stance != nil {
-			@stanceButton(v, linha)
-		} else if linha.Kind == "instant" {
+		if row.Stance != nil {
+			@stanceButton(v, row)
+		} else if row.Kind == "instant" {
 			<button
 				type="button"
-				aria-label={ "Usar " + linha.Name }
-				disabled?={ !linha.Can }
-				title={ linha.Why }
-				data-on:click={ sheetPost(v, "/poderes/usa/"+linha.Command) }
+				aria-label={ "Usar " + row.Name }
+				disabled?={ !row.Can }
+				title={ row.Why }
+				data-on:click={ sheetPost(v, "/poderes/usa/"+row.Command) }
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 			>
 				@ui.Icon("Zap", "size-3")
@@ -186,22 +186,22 @@ templ powerActionSlot(v View, linha powerRow) {
 //
 // Uma postura de custo FIXO entra num toque só; a que escala com o nível abre o
 // contador de degraus, porque aí o preço depende de uma escolha.
-templ stanceButton(v View, linha powerRow) {
-	if linha.Stance.Active {
+templ stanceButton(v View, row powerRow) {
+	if row.Stance.Active {
 		<button
 			type="button"
-			aria-label={ "Encerrar " + linha.Name }
-			data-on:click={ sheetPost(v, "/efeitos/postura/"+linha.Stance.Flag) }
+			aria-label={ "Encerrar " + row.Name }
+			data-on:click={ sheetPost(v, "/efeitos/postura/"+row.Stance.Flag) }
 			class={ ui.ButtonClasses(ui.VariantDestructive, ui.SizeSmall, "") }
 		>ATIVA · Encerrar</button>
-	} else if linha.Stance.MaxSteps > 0 {
+	} else if row.Stance.MaxSteps > 0 {
 		<button
 			type="button"
-			aria-label={ "Ativar " + linha.Name }
+			aria-label={ "Ativar " + row.Name }
 			aria-haspopup="dialog"
-			disabled?={ !linha.Can }
-			title={ linha.Why }
-			data-on:click={ "$stance_degrees = 0; $detail = 'postura-" + linha.Stance.Flag + "'" }
+			disabled?={ !row.Can }
+			title={ row.Why }
+			data-on:click={ "$stance_degrees = 0; $detail = 'postura-" + row.Stance.Flag + "'" }
 			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
 			@ui.Icon("Flame", "size-3")
@@ -210,14 +210,14 @@ templ stanceButton(v View, linha powerRow) {
 	} else {
 		<button
 			type="button"
-			aria-label={ "Ativar " + linha.Name }
-			disabled?={ !linha.Can }
-			title={ linha.Why }
-			data-on:click={ "$stance_degrees = 0; " + sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") }
+			aria-label={ "Ativar " + row.Name }
+			disabled?={ !row.Can }
+			title={ row.Why }
+			data-on:click={ "$stance_degrees = 0; " + sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra") }
 			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
 			@ui.Icon("Flame", "size-3")
-			{ "Ativar " + strconv.Itoa(linha.Stance.BasePm) + " PM" }
+			{ "Ativar " + strconv.Itoa(row.Stance.BasePm) + " PM" }
 		</button>
 	}
 }
@@ -226,9 +226,9 @@ templ stanceButton(v View, linha powerRow) {
 //
 // O custo aparece antes de confirmar, somado por expressão sobre números que o
 // servidor mandou — é PRÉVIA, e quem cobra é o servidor com a regra inteira.
-templ stanceStepperDialog(v View, linha powerRow) {
-	@overlay("postura-"+linha.Stance.Flag, linha.Name, "Flame", false) {
-		<p class="text-xs text-muted-foreground">{ linha.Stance.StepLabel }</p>
+templ stanceStepperDialog(v View, row powerRow) {
+	@overlay("postura-"+row.Stance.Flag, row.Name, "Flame", false) {
+		<p class="text-xs text-muted-foreground">{ row.Stance.StepLabel }</p>
 		<div class="flex items-center justify-center gap-3">
 			<button
 				type="button"
@@ -240,17 +240,17 @@ templ stanceStepperDialog(v View, linha powerRow) {
 			<button
 				type="button"
 				aria-label="Mais um degrau"
-				data-on:click={ "$stance_degrees = Math.min(" + strconv.Itoa(linha.Stance.MaxSteps) + ", $stance_degrees + 1)" }
+				data-on:click={ "$stance_degrees = Math.min(" + strconv.Itoa(row.Stance.MaxSteps) + ", $stance_degrees + 1)" }
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>+</button>
 		</div>
 		<p class="text-center text-xs text-muted-foreground">
-			<span data-text={ costStancePreview(linha) }></span>
+			<span data-text={ costStancePreview(row) }></span>
 		</p>
 		<button
 			type="button"
-			aria-label={ "Confirmar " + linha.Name }
-			data-on:click={ sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") + "; $detail = ''" }
+			aria-label={ "Confirmar " + row.Name }
+			data-on:click={ sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra") + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>Ativar</button>
 	}

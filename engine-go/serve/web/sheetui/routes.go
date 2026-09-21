@@ -108,13 +108,13 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: view.Name + " · Tormenta 20",
+		Title: view.Name + " · Tormenta 20",
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, com a volta e o nome.
 		Forma: ui.ShellBare,
 		// Os sinais moram no <body> porque o <body> NUNCA é remendado: declarado
 		// dentro de um painel, o `@post` de qualquer gesto redeclararia o sinal a
 		// cada toque e fecharia o diálogo que o jogador acabou de abrir.
-		Sinais: "{detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
+		Signals: "{detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
 			" condition_dialog: false, buff_dialog: false, conditional: ''," +
 			" learn_dialog: false, augment0: 0, augment1: 0, augment2: 0, augment3: 0, augment4: 0, augment5: 0," +
 			" spell_search: '', spell_circle: '', spell_school: ''," +

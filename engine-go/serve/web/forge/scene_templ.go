@@ -117,8 +117,8 @@ func forgeBody(v forgeView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = ui.TextField(ui.Field{
-			Nome: "name", Label: "Nome", Valor: v.Name,
-			TamanhoMaximo: heroNameMax, Erros: v.Errors["name"],
+			Name: "name", Label: "Nome", Value: v.Name,
+			TamanhoMaximo: heroNameMax, Errors: v.Errors["name"],
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -762,7 +762,7 @@ func originChoice(v forgeView) templ.Component {
 // gearChoice é o Equipamento Inicial de p140, já estreitado pela classe. Ele só
 // aparece depois da classe escolhida porque antes disso não existe kit para
 // oferecer — e oferecer o errado é pior que não oferecer.
-func gearChoice(g startingGear, erros map[string][]string) templ.Component {
+func gearChoice(g startingGear, errs map[string][]string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -813,18 +813,18 @@ func gearChoice(g startingGear, erros map[string][]string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = itemSelect("weaponSimple", "Arma simples", g.SimpleWeapons, erros["weaponSimple"]).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = itemSelect("weaponSimple", "Arma simples", g.SimpleWeapons, errs["weaponSimple"]).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(g.MartialWeapons) > 0 {
-			templ_7745c5c3_Err = itemSelect("weaponMartial", "Arma marcial", g.MartialWeapons, erros["weaponMartial"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = itemSelect("weaponMartial", "Arma marcial", g.MartialWeapons, errs["weaponMartial"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if len(g.Armors) > 0 {
-			templ_7745c5c3_Err = itemSelect("armor", "Armadura", g.Armors, erros["armor"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = itemSelect("armor", "Armadura", g.Armors, errs["armor"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -890,15 +890,15 @@ func gearChoice(g startingGear, erros map[string][]string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, rotulo := range g.ToResolve {
+			for _, label := range g.ToResolve {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<p class=\"text-xs text-muted-foreground\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var37 string
-				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/scene.templ`, Line: 221, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/scene.templ`, Line: 221, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
@@ -922,7 +922,7 @@ func gearChoice(g startingGear, erros map[string][]string) templ.Component {
 	})
 }
 
-func itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) templ.Component {
+func itemSelect(name, label string, options []itemOption, errs []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -948,7 +948,7 @@ func itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) templ.
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var39 string
-		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(nome)
+		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/scene.templ`, Line: 230, Col: 19}
 		}
@@ -961,9 +961,9 @@ func itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) templ.
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var40 string
-		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
+		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/scene.templ`, Line: 230, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/scene.templ`, Line: 230, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -974,7 +974,7 @@ func itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) templ.
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var41 string
-		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue(nome)
+		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue(name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/scene.templ`, Line: 232, Col: 12}
 		}
@@ -987,7 +987,7 @@ func itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) templ.
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var42 string
-		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(nome)
+		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(name)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/forge/scene.templ`, Line: 233, Col: 14}
 		}
@@ -999,7 +999,7 @@ func itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) templ.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, o := range opcoes {
+		for _, o := range options {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<option value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1045,7 +1045,7 @@ func itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) templ.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = fieldRefusals(erros).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = fieldRefusals(errs).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1057,7 +1057,7 @@ func itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) templ.
 	})
 }
 
-func fieldRefusals(mensagens []string) templ.Component {
+func fieldRefusals(messages []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1078,12 +1078,12 @@ func fieldRefusals(mensagens []string) templ.Component {
 			templ_7745c5c3_Var45 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if len(mensagens) > 0 {
+		if len(messages) > 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<div role=\"alert\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, m := range mensagens {
+			for _, m := range messages {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "<p class=\"text-sm text-destructive-ink\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

@@ -58,8 +58,8 @@ func (s Scene) notesWindowPage(w http.ResponseWriter, r *http.Request) {
 		Notes: sess.Notes.String, NoteBlocks: markdown.Parse(sess.Notes.String),
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: fmt.Sprintf("Notas · Sessão %d", v.SessionNum),
-		Sinais: notesWindowSignals(),
+		Title:   fmt.Sprintf("Notas · Sessão %d", v.SessionNum),
+		Signals: notesWindowSignals(),
 	}, notesWindow(v))
 }
 

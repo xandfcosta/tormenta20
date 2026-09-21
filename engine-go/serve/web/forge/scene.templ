@@ -43,8 +43,8 @@ templ forgeBody(v forgeView) {
 		>
 			@fieldRefusals(v.OrphanRefusals)
 			@ui.TextField(ui.Field{
-				Nome: "name", Label: "Nome", Valor: v.Name,
-				TamanhoMaximo: heroNameMax, Erros: v.Errors["name"],
+				Name: "name", Label: "Nome", Value: v.Name,
+				TamanhoMaximo: heroNameMax, Errors: v.Errors["name"],
 			})
 			@raceChoice(v)
 			@classChoice(v)
@@ -188,7 +188,7 @@ templ originChoice(v forgeView) {
 // gearChoice é o Equipamento Inicial de p140, já estreitado pela classe. Ele só
 // aparece depois da classe escolhida porque antes disso não existe kit para
 // oferecer — e oferecer o errado é pior que não oferecer.
-templ gearChoice(g startingGear, erros map[string][]string) {
+templ gearChoice(g startingGear, errs map[string][]string) {
 	<fieldset class="space-y-3 border-t border-grimorio-iron pt-4">
 		@ui.SectionCaption("gold", "") {
 			Equipamento inicial
@@ -197,12 +197,12 @@ templ gearChoice(g startingGear, erros map[string][]string) {
 			Mochila, saco de dormir e traje de viajante vêm com todo mundo, mais T$ 4d6
 			rolados na hora (p140).
 		</p>
-		@itemSelect("weaponSimple", "Arma simples", g.SimpleWeapons, erros["weaponSimple"])
+		@itemSelect("weaponSimple", "Arma simples", g.SimpleWeapons, errs["weaponSimple"])
 		if len(g.MartialWeapons) > 0 {
-			@itemSelect("weaponMartial", "Arma marcial", g.MartialWeapons, erros["weaponMartial"])
+			@itemSelect("weaponMartial", "Arma marcial", g.MartialWeapons, errs["weaponMartial"])
 		}
 		if len(g.Armors) > 0 {
-			@itemSelect("armor", "Armadura", g.Armors, erros["armor"])
+			@itemSelect("armor", "Armadura", g.Armors, errs["armor"])
 		} else {
 			<p class="text-xs text-muted-foreground">Arcanistas começam sem armadura.</p>
 		}
@@ -217,35 +217,35 @@ templ gearChoice(g startingGear, erros map[string][]string) {
 				<p class={ ui.SectionLabelClasses("muted", "") }>
 					A origem ainda dá, e isto se escolhe na Mochila
 				</p>
-				for _, rotulo := range g.ToResolve {
-					<p class="text-xs text-muted-foreground">{ rotulo }</p>
+				for _, label := range g.ToResolve {
+					<p class="text-xs text-muted-foreground">{ label }</p>
 				}
 			</div>
 		}
 	</fieldset>
 }
 
-templ itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) {
+templ itemSelect(name, label string, options []itemOption, errs []string) {
 	<div class="space-y-1">
-		<label for={ nome } class="block text-sm text-foreground">{ rotulo }</label>
+		<label for={ name } class="block text-sm text-foreground">{ label }</label>
 		<select
-			id={ nome }
-			name={ nome }
+			id={ name }
+			name={ name }
 			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 		>
 			<option value="">Escolha…</option>
-			for _, o := range opcoes {
+			for _, o := range options {
 				<option value={ o.ID } selected?={ o.Chosen }>{ o.Label }</option>
 			}
 		</select>
-		@fieldRefusals(erros)
+		@fieldRefusals(errs)
 	</div>
 }
 
-templ fieldRefusals(mensagens []string) {
-	if len(mensagens) > 0 {
+templ fieldRefusals(messages []string) {
+	if len(messages) > 0 {
 		<div role="alert">
-			for _, m := range mensagens {
+			for _, m := range messages {
 				<p class="text-sm text-destructive-ink">{ m }</p>
 			}
 		</div>

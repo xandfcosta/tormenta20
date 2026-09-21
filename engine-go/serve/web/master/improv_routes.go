@@ -83,7 +83,7 @@ func (s Scene) respondImprov(w http.ResponseWriter, r *http.Request, table strin
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo:        "Improviso · Mesa do Mestre · Tormenta 20",
+		Title:         "Improviso · Mesa do Mestre · Tormenta 20",
 		Forma:         ui.ShellDense,
 		Voltar:        "/",
 		VoltarRotulo:  "Hub",

@@ -44,7 +44,7 @@ func (s Scene) handleBestiary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: "Bestiário · Mesa do Mestre · Tormenta 20",
+		Title:  "Bestiário · Mesa do Mestre · Tormenta 20",
 		Forma:  ui.ShellDense,
 		Voltar: "/",
 		// "Hub" e não a seta genérica: a Mesa do Mestre não é filha óbvia de
