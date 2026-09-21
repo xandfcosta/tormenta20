@@ -25,18 +25,18 @@ import (
 
 // filterOption é um crachá: o valor que vai para o endereço e o rótulo que se lê.
 type filterOption struct {
-	Valor  string
-	Rotulo string
+	Value string
+	Label string
 }
 
 // collectionFilter é uma LINHA de crachás.
 type collectionFilter struct {
-	// Chave é o nome no endereço e no sinal (`?circulo=3`). Minúscula e uma
+	// Key é o nome no endereço e no sinal (`?circulo=3`). Minúscula e uma
 	// palavra: ela vira nome de sinal do Datastar, e o analisador de HTML
 	// minuscula nome de atributo.
-	Chave  string
-	Rotulo string
-	Opcoes []filterOption
+	Key     string
+	Label   string
+	Options []filterOption
 }
 
 // filtersForTab diz quais linhas de crachá aquele catálogo mostra.
@@ -46,30 +46,30 @@ type collectionFilter struct {
 func filtersForTab(aba string) []collectionFilter {
 	switch aba {
 	case "condicoes":
-		return []collectionFilter{{Chave: "efeito", Rotulo: "Tipo de efeito", Opcoes: effectOptions()}}
+		return []collectionFilter{{Key: "efeito", Label: "Tipo de efeito", Options: effectOptions()}}
 	case "magias":
 		return []collectionFilter{
-			{Chave: "circulo", Rotulo: "Círculo", Opcoes: circleOptions()},
-			{Chave: "escola", Rotulo: "Escola", Opcoes: schoolOptions()},
-			{Chave: "classe", Rotulo: "Classe", Opcoes: spellClassOptions()},
+			{Key: "circulo", Label: "Círculo", Options: circleOptions()},
+			{Key: "escola", Label: "Escola", Options: schoolOptions()},
+			{Key: "classe", Label: "Classe", Options: spellClassOptions()},
 		}
 	case "pericias":
 		return []collectionFilter{
-			{Chave: "atributo", Rotulo: "Atributo", Opcoes: attributeOptions()},
-			{Chave: "treino", Rotulo: "Treino", Opcoes: []filterOption{
+			{Key: "atributo", Label: "Atributo", Options: attributeOptions()},
+			{Key: "treino", Label: "Treino", Options: []filterOption{
 				{"so-treinada", "Só treinada"}, {"armadura", "Penalidade de armadura"},
 			}},
 		}
 	case "poderes":
-		return []collectionFilter{{Chave: "fonte", Rotulo: "Fonte", Opcoes: powerSourceOptions()}}
+		return []collectionFilter{{Key: "fonte", Label: "Fonte", Options: powerSourceOptions()}}
 	case "itens":
-		return []collectionFilter{{Chave: "familia", Rotulo: "Família", Opcoes: itemFamilies}}
+		return []collectionFilter{{Key: "familia", Label: "Família", Options: itemFamilies}}
 	case "deuses":
-		return []collectionFilter{{Chave: "energia", Rotulo: "Energia", Opcoes: []filterOption{
+		return []collectionFilter{{Key: "energia", Label: "Energia", Options: []filterOption{
 			{"positiva", "Positiva"}, {"negativa", "Negativa"}, {"qualquer", "Qualquer"},
 		}}}
 	case "racas":
-		return []collectionFilter{{Chave: "linhagem", Rotulo: "Linhagem", Opcoes: []filterOption{
+		return []collectionFilter{{Key: "linhagem", Label: "Linhagem", Options: []filterOption{
 			{"comum", "Comum"}, {"extra", "Exótica"},
 		}}}
 	}
@@ -82,54 +82,54 @@ func filtersForTab(aba string) []collectionFilter {
 // uma lista fixa aqui seria a que fica para trás em silêncio.
 
 func effectOptions() []filterOption {
-	usados := map[string]bool{}
+	used := map[string]bool{}
 	for _, c := range book.Catalogs().Conditions {
 		for _, t := range c.Tags {
-			usados[t] = true
+			used[t] = true
 		}
 	}
-	var fora []filterOption
+	var outside []filterOption
 	for _, e := range book.EffectKinds() {
-		if usados[e.ID] {
-			fora = append(fora, filterOption{e.ID, e.Name})
+		if used[e.ID] {
+			outside = append(outside, filterOption{e.ID, e.Name})
 		}
 	}
-	return fora
+	return outside
 }
 
 func circleOptions() []filterOption {
-	var fora []filterOption
-	for _, circulo := range distinctValues(book.Catalogs().Spells, func(m book.Spell) string {
+	var outside []filterOption
+	for _, circle := range distinctValues(book.Catalogs().Spells, func(m book.Spell) string {
 		return strconv.Itoa(m.Circle)
 	}) {
-		fora = append(fora, filterOption{circulo, circulo + "º"})
+		outside = append(outside, filterOption{circle, circle + "º"})
 	}
-	return fora
+	return outside
 }
 
 func schoolOptions() []filterOption {
-	var fora []filterOption
-	for _, escola := range distinctValues(book.Catalogs().Spells, func(m book.Spell) string {
+	var outside []filterOption
+	for _, school := range distinctValues(book.Catalogs().Spells, func(m book.Spell) string {
 		return m.School
 	}) {
-		fora = append(fora, filterOption{escola, book.SchoolName(escola)})
+		outside = append(outside, filterOption{school, book.SchoolName(school)})
 	}
-	return fora
+	return outside
 }
 
 func spellClassOptions() []filterOption {
-	vistos := map[string]bool{}
-	var fora []filterOption
+	seen := map[string]bool{}
+	var outside []filterOption
 	for _, m := range book.Catalogs().Spells {
 		for _, c := range m.Classes {
-			if !vistos[c] {
-				vistos[c] = true
-				fora = append(fora, filterOption{c, c})
+			if !seen[c] {
+				seen[c] = true
+				outside = append(outside, filterOption{c, c})
 			}
 		}
 	}
-	slices.SortFunc(fora, func(a, b filterOption) int { return strings.Compare(a.Rotulo, b.Rotulo) })
-	return fora
+	slices.SortFunc(outside, func(a, b filterOption) int { return strings.Compare(a.Label, b.Label) })
+	return outside
 }
 
 // powerSourceOptions: as 14 classes mais "geral" e "divino".
@@ -138,12 +138,12 @@ func spellClassOptions() []filterOption {
 // combate", "Divino · Khalmyr"), e filtrar por ela inteira daria um crachá por
 // deus. O filtro casa pelo COMEÇO — ver `powerMatches`.
 func powerSourceOptions() []filterOption {
-	fora := []filterOption{{"Geral", "Geral"}, {"Divino", "Divino"}}
+	outside := []filterOption{{"Geral", "Geral"}, {"Divino", "Divino"}}
 	_, classes, _ := book.CharacterCatalogs()
 	for _, c := range classes {
-		fora = append(fora, filterOption{c.Name, c.Name})
+		outside = append(outside, filterOption{c.Name, c.Name})
 	}
-	return fora
+	return outside
 }
 
 // itemFamilies agrupa as quinze categorias em seis famílias.
@@ -161,111 +161,111 @@ var itemFamilies = []filterOption{
 }
 
 // familyOfCategory mapeia a categoria do dado para a família do crachá.
-func familyOfCategory(categoria string) string {
+func familyOfCategory(category string) string {
 	switch {
-	case strings.HasPrefix(categoria, "weapon"):
+	case strings.HasPrefix(category, "weapon"):
 		return "armas"
-	case strings.HasPrefix(categoria, "armor"), categoria == "shield":
+	case strings.HasPrefix(category, "armor"), category == "shield":
 		return "protecao"
-	case categoria == "apparel":
+	case category == "apparel":
 		return "vestuario"
-	case categoria == "consumable", categoria == "meal", categoria == "catalyst":
+	case category == "consumable", category == "meal", category == "catalyst":
 		return "consumo"
-	case categoria == "animal", categoria == "vehicle":
+	case category == "animal", category == "vehicle":
 		return "montaria"
 	}
 	return "outros"
 }
 
-func distinctValues[T any](lista []T, de func(T) string) []string {
-	vistos := map[string]bool{}
-	var fora []string
-	for _, e := range lista {
-		if v := de(e); v != "" && !vistos[v] {
-			vistos[v] = true
-			fora = append(fora, v)
+func distinctValues[T any](list []T, de func(T) string) []string {
+	seen := map[string]bool{}
+	var outside []string
+	for _, e := range list {
+		if v := de(e); v != "" && !seen[v] {
+			seen[v] = true
+			outside = append(outside, v)
 		}
 	}
-	slices.Sort(fora)
-	return fora
+	slices.Sort(outside)
+	return outside
 }
 
 // ── o casamento, catálogo a catálogo ─────────────────────────────────────────
 
 // attributeOptions são os seis, na ordem da ficha e do livro — nunca alfabética.
 func attributeOptions() []filterOption {
-	usados := map[string]bool{}
+	used := map[string]bool{}
 	for _, p := range book.Expertises() {
-		usados[p.Attribute] = true
+		used[p.Attribute] = true
 	}
-	var fora []filterOption
+	var outside []filterOption
 	for _, a := range book.AttributeOrder {
-		if usados[a.Key] {
-			fora = append(fora, filterOption{a.Key, a.Abbreviation})
+		if used[a.Key] {
+			outside = append(outside, filterOption{a.Key, a.Abbreviation})
 		}
 	}
-	return fora
+	return outside
 }
 
-func expertiseMatches(p book.Expertise, chave, valor string) bool {
-	switch chave {
+func expertiseMatches(p book.Expertise, key, value string) bool {
+	switch key {
 	case "atributo":
-		return p.Attribute == valor
+		return p.Attribute == value
 	case "treino":
 		// As duas marcas do livro num filtro só: são as duas coisas que mudam
 		// COMO a perícia se usa, e separá-las em duas linhas de um crachá cada
 		// gastaria duas linhas para dizer o que uma diz.
-		return (valor == "so-treinada" && p.TrainedOnly) ||
-			(valor == "armadura" && p.ArmorPenalty)
+		return (value == "so-treinada" && p.TrainedOnly) ||
+			(value == "armadura" && p.ArmorPenalty)
 	}
 	return true
 }
 
-func conditionMatches(c book.Condition, chave, valor string) bool {
-	if chave == "efeito" {
-		return slices.Contains(c.Tags, valor)
+func conditionMatches(c book.Condition, key, value string) bool {
+	if key == "efeito" {
+		return slices.Contains(c.Tags, value)
 	}
 	return true
 }
 
-func spellMatches(m book.Spell, chave, valor string) bool {
-	switch chave {
+func spellMatches(m book.Spell, key, value string) bool {
+	switch key {
 	case "circulo":
-		return strconv.Itoa(m.Circle) == valor
+		return strconv.Itoa(m.Circle) == value
 	case "escola":
-		return m.School == valor
+		return m.School == value
 	case "classe":
-		return slices.Contains(m.Classes, valor)
+		return slices.Contains(m.Classes, value)
 	}
 	return true
 }
 
 // powerMatches pelo COMEÇO da fonte: ela é "Geral · combate" e "Divino · Khalmyr",
 // e o crachá diz "Geral" e "Divino". Para classe a fonte é o nome puro.
-func powerMatches(p book.Power, chave, valor string) bool {
-	if chave == "fonte" {
-		return p.Source == valor || strings.HasPrefix(p.Source, valor+" ·")
+func powerMatches(p book.Power, key, value string) bool {
+	if key == "fonte" {
+		return p.Source == value || strings.HasPrefix(p.Source, value+" ·")
 	}
 	return true
 }
 
-func itemMatches(i book.Item, chave, valor string) bool {
-	if chave == "familia" {
-		return familyOfCategory(i.Category) == valor
+func itemMatches(i book.Item, key, value string) bool {
+	if key == "familia" {
+		return familyOfCategory(i.Category) == value
 	}
 	return true
 }
 
-func godMatches(d book.God, chave, valor string) bool {
-	if chave == "energia" {
-		return d.Energy == valor
+func godMatches(d book.God, key, value string) bool {
+	if key == "energia" {
+		return d.Energy == value
 	}
 	return true
 }
 
-func raceMatches(r book.Race, chave, valor string) bool {
-	if chave == "linhagem" {
-		return r.Tier == valor
+func raceMatches(r book.Race, key, value string) bool {
+	if key == "linhagem" {
+		return r.Tier == value
 	}
 	return true
 }
@@ -275,21 +275,21 @@ func raceMatches(r book.Race, chave, valor string) bool {
 // A ordem em que as chaves saem do mapa não importa porque tudo entre filtros é
 // E — mas vale dizer, porque um dia alguém acrescenta um "ou" e a ordem passa a
 // decidir o resultado.
-func applyFilters[T any](lista []T, escolhidos map[string][]string, casa func(T, string, string) bool) []T {
-	for chave, valores := range escolhidos {
-		if len(valores) == 0 {
+func applyFilters[T any](list []T, chosen map[string][]string, square func(T, string, string) bool) []T {
+	for key, values := range chosen {
+		if len(values) == 0 {
 			continue
 		}
-		var restantes []T
-		for _, entrada := range lista {
-			for _, valor := range valores {
-				if casa(entrada, chave, valor) {
-					restantes = append(restantes, entrada)
+		var remaining []T
+		for _, entry := range list {
+			for _, value := range values {
+				if square(entry, key, value) {
+					remaining = append(remaining, entry)
 					break
 				}
 			}
 		}
-		lista = restantes
+		list = remaining
 	}
-	return lista
+	return list
 }

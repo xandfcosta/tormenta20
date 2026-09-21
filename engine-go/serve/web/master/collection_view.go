@@ -31,14 +31,14 @@ import (
 //
 // O que as duas compartilham é a `search.Fold`: acento não separa "ilusão" de
 // "ilusao", porque ninguém digita til numa busca apressada.
-func matchesAllTerms(campos []string, busca string) bool {
-	alvo := search.Fold(strings.TrimSpace(busca))
-	if alvo == "" {
+func matchesAllTerms(fields []string, query string) bool {
+	target := search.Fold(strings.TrimSpace(query))
+	if target == "" {
 		return true
 	}
-	palheiro := search.Fold(strings.Join(campos, " "))
-	for _, termo := range strings.Fields(alvo) {
-		if !strings.Contains(palheiro, termo) {
+	haystack := search.Fold(strings.Join(fields, " "))
+	for _, term := range strings.Fields(target) {
+		if !strings.Contains(haystack, term) {
 			return false
 		}
 	}
@@ -49,8 +49,8 @@ func matchesAllTerms(campos []string, busca string) bool {
 
 // collectionTab é uma parada da fileira de abas.
 type collectionTab struct {
-	ID     string
-	Rotulo string
+	ID    string
+	Label string
 }
 
 // A ORDEM é por frequência na mesa: condição primeiro, porque é a consulta mais
@@ -74,7 +74,7 @@ var collectionTabs = []collectionTab{
 func tabLabel(id string) string {
 	for _, a := range collectionTabs {
 		if a.ID == id {
-			return a.Rotulo
+			return a.Label
 		}
 	}
 	return id
@@ -94,35 +94,35 @@ func knownTab(id string) string {
 // collectionGroup é um catálogo com o que sobrou do filtro. Grupo VAZIO não é
 // montado: cabeçalho sobre nada é ruído numa consulta no meio do combate.
 type collectionGroup struct {
-	Rotulo    string
-	Condicoes []book.Condition
-	Magias    []book.Spell
-	Poderes   []book.Power
-	Itens     []book.Item
-	Efeitos   []book.EffectKind
-	Escolas   []book.SpellSchool
-	Pericias  []book.Expertise
-	Racas     []book.Race
-	Classes   []book.Class
-	Deuses    []book.God
+	Label      string
+	Conditions []book.Condition
+	Spells     []book.Spell
+	Powers     []book.Power
+	Items      []book.Item
+	Effects    []book.EffectKind
+	Schools    []book.SpellSchool
+	Expertises []book.Expertise
+	Races      []book.Race
+	Classes    []book.Class
+	Gods       []book.God
 }
 
 func (g collectionGroup) Count() int {
-	return len(g.Condicoes) + len(g.Magias) + len(g.Poderes) + len(g.Itens) +
-		len(g.Efeitos) + len(g.Escolas) + len(g.Pericias) + len(g.Racas) + len(g.Classes) + len(g.Deuses)
+	return len(g.Conditions) + len(g.Spells) + len(g.Powers) + len(g.Items) +
+		len(g.Effects) + len(g.Schools) + len(g.Expertises) + len(g.Races) + len(g.Classes) + len(g.Gods)
 }
 
 // collectionCriteria é o que a URL (ou os sinais) pedem da cena.
 type collectionCriteria struct {
 	Term string
 	Aba  string
-	// Entrada é o ID de UM verbete, e ela ganha de tudo: com ela a cena mostra
+	// Entry é o ID de UM verbete, e ela ganha de tudo: com ela a cena mostra
 	// aquele verbete sozinho. É o endereço que um ELO usa — quem clica em "Medo"
 	// pediu o Medo, não uma busca por "medo" nos oito catálogos.
-	Entrada string
-	// Filtros são os crachás acesos, por chave (`{"circulo": ["2","3"]}`). Vêm
+	Entry string
+	// Filters são os crachás acesos, por chave (`{"circulo": ["2","3"]}`). Vêm
 	// da URL na carga fria e dos sinais quando o Datastar chama, como a busca.
-	Filtros map[string][]string
+	Filters map[string][]string
 }
 
 // collectionView é a cena inteira numa resposta.
@@ -136,59 +136,59 @@ type collectionView struct {
 	// TODOS os catálogos agrupados. Filtrando só a aba ativa, "bola de fogo"
 	// digitado em Condições diria "nada encontrado" com a magia existindo.
 	Aba string
-	// Entrada é o id do verbete que a cena está mostrando sozinho, ou vazio.
-	Entrada string
-	// Filtros é o que a cena tem para oferecer, e Acesos o que está ligado.
-	Filtros []collectionFilter
-	Acesos  map[string][]string
-	Grupos  []collectionGroup
-	Achados int
+	// Entry é o id do verbete que a cena está mostrando sozinho, ou vazio.
+	Entry string
+	// Filters é o que a cena tem para oferecer, e Acesos o que está ligado.
+	Filters  []collectionFilter
+	Lit      map[string][]string
+	Groups   []collectionGroup
+	Findings int
 }
 
 func (v collectionView) Searching() bool { return strings.TrimSpace(v.Term) != "" }
 
 // loadCollection monta a cena: os quatro catálogos quando há busca, um só
 // quando não há.
-func loadCollection(c collectionCriteria, livro bookui.BookAddress) collectionView {
+func loadCollection(c collectionCriteria, bookRef bookui.BookAddress) collectionView {
 	v := collectionView{
-		Term: c.Term, Aba: knownTab(c.Aba), Book: livro, Entrada: c.Entrada,
-		Acesos: c.Filtros,
+		Term: c.Term, Aba: knownTab(c.Aba), Book: bookRef, Entry: c.Entry,
+		Lit: c.Filters,
 	}
-	v.Filtros = filtersForTab(v.Aba)
+	v.Filters = filtersForTab(v.Aba)
 	// A ENTRADA vem primeiro e encerra: ela é um endereço para um verbete só, e
 	// misturá-la com busca daria uma tela que responde duas perguntas.
-	if c.Entrada != "" {
-		v.Grupos = []collectionGroup{groupForEntry(v.Aba, c.Entrada)}
-		v.Achados = v.Grupos[0].Count()
+	if c.Entry != "" {
+		v.Groups = []collectionGroup{groupForEntry(v.Aba, c.Entry)}
+		v.Findings = v.Groups[0].Count()
 		return v
 	}
-	busca := c.Term
+	search := c.Term
 	a := book.Catalogs()
 
 	if !v.Searching() {
-		v.Grupos = []collectionGroup{groupForTab(a, v.Aba, c.Filtros)}
-		v.Achados = v.Grupos[0].Count()
+		v.Groups = []collectionGroup{groupForTab(a, v.Aba, c.Filters)}
+		v.Findings = v.Groups[0].Count()
 		return v
 	}
 
-	racas, classes, deuses := book.CharacterCatalogs()
+	races, classes, gods := book.CharacterCatalogs()
 	for _, g := range []collectionGroup{
-		{Rotulo: "Condições", Condicoes: filter(a.Conditions, book.ConditionFields, busca)},
-		{Rotulo: "Magias", Magias: filter(a.Spells, book.SpellFields, busca)},
-		{Rotulo: "Poderes", Poderes: filter(a.Powers, book.PowerFields, busca)},
-		{Rotulo: "Itens", Itens: filter(a.Items, book.ItemFields, busca)},
-		{Rotulo: "Efeitos", Efeitos: filter(book.EffectKinds(), book.EffectFields, busca)},
-		{Rotulo: "Escolas", Escolas: filter(book.SpellSchools(), book.SchoolFields, busca)},
-		{Rotulo: "Perícias", Pericias: filter(book.Expertises(), book.ExpertiseFields, busca)},
-		{Rotulo: "Raças", Racas: filter(racas, book.RaceFields, busca)},
-		{Rotulo: "Classes", Classes: filter(classes, book.ClassFields, busca)},
-		{Rotulo: "Deuses", Deuses: filter(deuses, book.GodFields, busca)},
+		{Label: "Condições", Conditions: filter(a.Conditions, book.ConditionFields, search)},
+		{Label: "Magias", Spells: filter(a.Spells, book.SpellFields, search)},
+		{Label: "Poderes", Powers: filter(a.Powers, book.PowerFields, search)},
+		{Label: "Itens", Items: filter(a.Items, book.ItemFields, search)},
+		{Label: "Efeitos", Effects: filter(book.EffectKinds(), book.EffectFields, search)},
+		{Label: "Escolas", Schools: filter(book.SpellSchools(), book.SchoolFields, search)},
+		{Label: "Perícias", Expertises: filter(book.Expertises(), book.ExpertiseFields, search)},
+		{Label: "Raças", Races: filter(races, book.RaceFields, search)},
+		{Label: "Classes", Classes: filter(classes, book.ClassFields, search)},
+		{Label: "Deuses", Gods: filter(gods, book.GodFields, search)},
 	} {
 		if g.Count() == 0 {
 			continue
 		}
-		v.Achados += g.Count()
-		v.Grupos = append(v.Grupos, g)
+		v.Findings += g.Count()
+		v.Groups = append(v.Groups, g)
 	}
 	return v
 }
@@ -205,121 +205,121 @@ func loadCollection(c collectionCriteria, livro bookui.BookAddress) collectionVi
 func groupForEntry(aba, id string) collectionGroup {
 	// Sem filtro: o elo pede UM verbete pelo id, e um crachá aceso na cena de
 	// origem não pode esconder o destino do elo.
-	inteiro := groupForTab(book.Catalogs(), aba, nil)
-	fora := collectionGroup{Rotulo: inteiro.Rotulo}
-	for _, c := range inteiro.Condicoes {
+	whole := groupForTab(book.Catalogs(), aba, nil)
+	outside := collectionGroup{Label: whole.Label}
+	for _, c := range whole.Conditions {
 		if c.ID == id {
-			fora.Condicoes = append(fora.Condicoes, c)
+			outside.Conditions = append(outside.Conditions, c)
 		}
 	}
-	for _, m := range inteiro.Magias {
+	for _, m := range whole.Spells {
 		if m.ID == id {
-			fora.Magias = append(fora.Magias, m)
+			outside.Spells = append(outside.Spells, m)
 		}
 	}
-	for _, p := range inteiro.Poderes {
+	for _, p := range whole.Powers {
 		if p.ID == id {
-			fora.Poderes = append(fora.Poderes, p)
+			outside.Powers = append(outside.Powers, p)
 		}
 	}
-	for _, i := range inteiro.Itens {
+	for _, i := range whole.Items {
 		if i.ID == id {
-			fora.Itens = append(fora.Itens, i)
+			outside.Items = append(outside.Items, i)
 		}
 	}
-	for _, e := range inteiro.Efeitos {
+	for _, e := range whole.Effects {
 		if e.ID == id {
-			fora.Efeitos = append(fora.Efeitos, e)
+			outside.Effects = append(outside.Effects, e)
 		}
 	}
-	for _, e := range inteiro.Escolas {
+	for _, e := range whole.Schools {
 		if e.ID == id {
-			fora.Escolas = append(fora.Escolas, e)
+			outside.Schools = append(outside.Schools, e)
 		}
 	}
-	for _, p := range inteiro.Pericias {
+	for _, p := range whole.Expertises {
 		if p.ID == id {
-			fora.Pericias = append(fora.Pericias, p)
+			outside.Expertises = append(outside.Expertises, p)
 		}
 	}
-	for _, r := range inteiro.Racas {
+	for _, r := range whole.Races {
 		if r.ID == id {
-			fora.Racas = append(fora.Racas, r)
+			outside.Races = append(outside.Races, r)
 		}
 	}
-	for _, c := range inteiro.Classes {
+	for _, c := range whole.Classes {
 		if c.ID == id {
-			fora.Classes = append(fora.Classes, c)
+			outside.Classes = append(outside.Classes, c)
 		}
 	}
-	for _, d := range inteiro.Deuses {
+	for _, d := range whole.Gods {
 		if d.ID == id {
-			fora.Deuses = append(fora.Deuses, d)
+			outside.Gods = append(outside.Gods, d)
 		}
 	}
-	return fora
+	return outside
 }
 
 // groupForTab monta o catálogo da cena, já com os crachás aplicados.
-func groupForTab(a book.GMCatalogs, aba string, acesos map[string][]string) collectionGroup {
-	racas, classes, deuses := book.CharacterCatalogs()
+func groupForTab(a book.GMCatalogs, aba string, lit map[string][]string) collectionGroup {
+	races, classes, gods := book.CharacterCatalogs()
 	switch aba {
 	case "magias":
-		return collectionGroup{Rotulo: "Magias", Magias: applyFilters(a.Spells, acesos, spellMatches)}
+		return collectionGroup{Label: "Magias", Spells: applyFilters(a.Spells, lit, spellMatches)}
 	case "poderes":
-		return collectionGroup{Rotulo: "Poderes", Poderes: applyFilters(a.Powers, acesos, powerMatches)}
+		return collectionGroup{Label: "Poderes", Powers: applyFilters(a.Powers, lit, powerMatches)}
 	case "itens":
-		return collectionGroup{Rotulo: "Itens", Itens: applyFilters(a.Items, acesos, itemMatches)}
+		return collectionGroup{Label: "Itens", Items: applyFilters(a.Items, lit, itemMatches)}
 	case "efeitos":
-		return collectionGroup{Rotulo: "Efeitos", Efeitos: book.EffectKinds()}
+		return collectionGroup{Label: "Efeitos", Effects: book.EffectKinds()}
 	case "escolas":
-		return collectionGroup{Rotulo: "Escolas", Escolas: book.SpellSchools()}
+		return collectionGroup{Label: "Escolas", Schools: book.SpellSchools()}
 	case "pericias":
-		return collectionGroup{Rotulo: "Perícias", Pericias: applyFilters(book.Expertises(), acesos, expertiseMatches)}
+		return collectionGroup{Label: "Perícias", Expertises: applyFilters(book.Expertises(), lit, expertiseMatches)}
 	case "racas":
-		return collectionGroup{Rotulo: "Raças", Racas: applyFilters(racas, acesos, raceMatches)}
+		return collectionGroup{Label: "Raças", Races: applyFilters(races, lit, raceMatches)}
 	case "classes":
-		return collectionGroup{Rotulo: "Classes", Classes: classes}
+		return collectionGroup{Label: "Classes", Classes: classes}
 	case "deuses":
-		return collectionGroup{Rotulo: "Deuses", Deuses: applyFilters(deuses, acesos, godMatches)}
+		return collectionGroup{Label: "Deuses", Gods: applyFilters(gods, lit, godMatches)}
 	default:
-		return collectionGroup{Rotulo: "Condições", Condicoes: applyFilters(a.Conditions, acesos, conditionMatches)}
+		return collectionGroup{Label: "Condições", Conditions: applyFilters(a.Conditions, lit, conditionMatches)}
 	}
 }
 
-func filter[T any](lista []T, campos func(T) []string, busca string) []T {
-	var fora []T
-	for _, e := range lista {
-		if matchesAllTerms(campos(e), busca) {
-			fora = append(fora, e)
+func filter[T any](list []T, fields func(T) []string, search string) []T {
+	var outside []T
+	for _, e := range list {
+		if matchesAllTerms(fields(e), search) {
+			outside = append(outside, e)
 		}
 	}
-	return fora
+	return outside
 }
 
 // ── como o livro escreve ─────────────────────────────────────────────────────
 
 // collectionSignals: só a busca e a aba viajam. O que se vê chega desenhado.
 func collectionSignals(v collectionView) string {
-	busca, _ := json.Marshal(v.Term)
+	search, _ := json.Marshal(v.Term)
 	aba, _ := json.Marshal(v.Aba)
-	partes := []string{fmt.Sprintf("search: %s", busca), fmt.Sprintf("aba: %s", aba)}
+	parts := []string{fmt.Sprintf("search: %s", search), fmt.Sprintf("aba: %s", aba)}
 	// UM sinal por filtro da cena, e só os DELA: um sinal de círculo declarado
 	// na cena das condições viajaria em toda requisição dali para nada.
-	for _, f := range v.Filtros {
-		valores, _ := json.Marshal(v.Acesos[f.Chave])
-		if v.Acesos[f.Chave] == nil {
-			valores = []byte("[]")
+	for _, f := range v.Filters {
+		values, _ := json.Marshal(v.Lit[f.Key])
+		if v.Lit[f.Key] == nil {
+			values = []byte("[]")
 		}
-		partes = append(partes, fmt.Sprintf("%s: %s", f.Chave, valores))
+		parts = append(parts, fmt.Sprintf("%s: %s", f.Key, values))
 	}
-	return "{" + strings.Join(partes, ", ") + "}"
+	return "{" + strings.Join(parts, ", ") + "}"
 }
 
 // badgeOn diz se aquele valor está ligado, para a cena não precisar de
 // `slices`.
-func (v collectionView) badgeOn(chave, valor string) bool {
-	return slices.Contains(v.Acesos[chave], valor)
+func (v collectionView) badgeOn(key, value string) bool {
+	return slices.Contains(v.Lit[key], value)
 }
 
 // toggleBadge é a expressão que o clique roda: liga o que está desligado e
@@ -327,11 +327,11 @@ func (v collectionView) badgeOn(chave, valor string) bool {
 //
 // Escrita aqui e não no templ porque é a MESMA para os seis filtros, e uma
 // linha de JavaScript copiada seis vezes é a que diverge na sétima.
-func toggleBadge(aba, chave, valor string) string {
-	sinal := "$" + chave
+func toggleBadge(aba, key, value string) string {
+	signal := "$" + key
 	return fmt.Sprintf(
 		"%s = %s.includes(%q) ? %s.filter(v => v !== %q) : [...%s, %q]; @get('/mestre/%s')",
-		sinal, sinal, valor, sinal, valor, sinal, valor, aba,
+		signal, signal, value, signal, value, signal, value, aba,
 	)
 }
 

@@ -95,15 +95,15 @@ func improvScene(v improvView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = rollingTable("ruina", "Ermos — Ruína", "d6", "p269", v.Ruina).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = rollingTable("ruina", "Ermos — Ruína", "d6", "p269", v.Ruin).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = rollingTable("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5 · p274", v.Perseguicao).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = rollingTable("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5 · p274", v.Chase).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = rollingTable("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p279", v.Recompensa).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = rollingTable("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p279", v.Reward).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -137,7 +137,7 @@ func improvScene(v improvView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = rollingTable("ideias", "Ideias de masmorra", "d20", "Tabela 6-2 · p263", v.Ideias).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = rollingTable("ideias", "Ideias de masmorra", "d20", "Tabela 6-2 · p263", v.Ideas).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -311,9 +311,9 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(historico[0].Rolagem))
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(historico[0].Roll))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 103, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 103, Col: 110}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -324,9 +324,9 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(historico[0].Texto)
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(historico[0].Text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 104, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 104, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -336,15 +336,15 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if historico[0].Detalhe != "" {
+			if historico[0].Detail != "" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<p class=\"pl-9 text-xs text-muted-foreground\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(historico[0].Detalhe)
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(historico[0].Detail)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 107, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 107, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -370,9 +370,9 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var16 string
-					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(s.Rolagem))
+					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(s.Roll))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 117, Col: 87}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 117, Col: 84}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
@@ -383,9 +383,9 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var17 string
-					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(s.Texto)
+					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 118, Col: 39}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 118, Col: 38}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
@@ -491,7 +491,7 @@ func dungeonPlanner(v improvView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(v.Salas))
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(v.Rooms))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 145, Col: 27}
 		}
@@ -503,30 +503,30 @@ func dungeonPlanner(v improvView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if v.AcimaDoTeto {
+		if v.OverCeiling {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "  <p class=\"text-xs text-muted-foreground\">Acima do maior tamanho de masmorra do livro. Ele recomenda parar aqui e quebrar em masmorras menores.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		} else if v.Tamanho != nil {
+		} else if v.Size != nil {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<dl class=\"space-y-1 text-xs\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = skeletonRow("Tamanho", v.Tamanho.Label).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = skeletonRow("Tamanho", v.Size.Label).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = skeletonRow("Ritmo", pacingName(v.Tamanho.Pacing)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = skeletonRow("Ritmo", pacingName(v.Size.Pacing)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = skeletonRow("Ameaças a distribuir", ui.Int(v.Ameacas)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = skeletonRow("Ameaças a distribuir", ui.Int(v.Threats)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if v.Tamanho.MaxSecondaryObjectives > 0 {
-				templ_7745c5c3_Err = skeletonRow("Objetivos secundários (até)", ui.Int(v.Tamanho.MaxSecondaryObjectives)).Render(ctx, templ_7745c5c3_Buffer)
+			if v.Size.MaxSecondaryObjectives > 0 {
+				templ_7745c5c3_Err = skeletonRow("Objetivos secundários (até)", ui.Int(v.Size.MaxSecondaryObjectives)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

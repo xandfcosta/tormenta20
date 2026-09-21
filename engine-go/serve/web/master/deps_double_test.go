@@ -41,10 +41,10 @@ func (semLivro) BookAddress() bookui.BookAddress { return bookui.BookAddress{} }
 // vez do conteúdo da cena — dezenas de subcasos reprovando com "a cena não
 // desenha o próprio nome" sobre uma cena inteira.
 func (semLivro) WritePage(
-	w http.ResponseWriter, r *http.Request, status int, _ ui.Page, corpo templ.Component,
+	w http.ResponseWriter, r *http.Request, status int, _ ui.Page, body templ.Component,
 ) {
 	w.WriteHeader(status)
-	_ = corpo.Render(r.Context(), w)
+	_ = body.Render(r.Context(), w)
 }
 
 // cenaSemLivro é a cena montada com o dublê, para os casos que só precisam do
@@ -60,12 +60,12 @@ func cenaSemLivro() Scene { return New(semLivro{}) }
 //
 // O que fica no hospedeiro é a outra pergunta: a cena está MONTADA e atrás do
 // login? Uma camada afirma a fronteira; as outras afirmam presença e ligação.
-func pedeNaCena(t *testing.T, alvo string) *httptest.ResponseRecorder {
+func pedeNaCena(t *testing.T, target string) *httptest.ResponseRecorder {
 	t.Helper()
 	r := chi.NewRouter()
 	Routes(r, cenaSemLivro())
 	rec := httptest.NewRecorder()
-	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, alvo, nil))
+	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
 	return rec
 }
 
@@ -77,11 +77,11 @@ func (comLivro) BookAddress() bookui.BookAddress {
 	return bookui.BookAddress{Base: routes.Book, Abertura: 6}
 }
 
-func pedeNaCenaComLivro(t *testing.T, alvo string) *httptest.ResponseRecorder {
+func pedeNaCenaComLivro(t *testing.T, target string) *httptest.ResponseRecorder {
 	t.Helper()
 	r := chi.NewRouter()
 	Routes(r, New(comLivro{}))
 	rec := httptest.NewRecorder()
-	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, alvo, nil))
+	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
 	return rec
 }

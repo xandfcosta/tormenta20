@@ -36,37 +36,37 @@ import (
 // **Cena nova que não entrar aqui nasce sem medição.**
 func sceneAddresses(t *testing.T) map[string]string {
 	t.Helper()
-	fora := map[string]string{}
-	monta := func(nome string, render func() (string, error)) {
+	outside := map[string]string{}
+	builds := func(name string, render func() (string, error)) {
 		html, err := render()
 		if err != nil {
-			t.Fatalf("renderizar %s: %v", nome, err)
+			t.Fatalf("renderizar %s: %v", name, err)
 		}
-		fora[nome] = html
+		outside[name] = html
 	}
 
 	ctx := context.Background()
-	monta("bestiario", func() (string, error) {
+	builds("bestiario", func() (string, error) {
 		return ui.RenderFragment(ctx, bestiaryScene(LoadBestiaryFrom(routes.MasterBestiary, bookui.BookAddress{}, "", nil, book.CRMin, book.CRMax, "")))
 	})
-	monta("catalogos", func() (string, error) {
+	builds("catalogos", func() (string, error) {
 		return ui.RenderFragment(ctx, collectionScene(loadCollection(collectionCriteria{Term: "", Aba: "condicoes"}, bookui.BookAddress{})))
 	})
-	monta("catalogos-busca", func() (string, error) {
+	builds("catalogos-busca", func() (string, error) {
 		return ui.RenderFragment(ctx, collectionScene(loadCollection(collectionCriteria{Term: "fogo", Aba: ""}, bookui.BookAddress{})))
 	})
-	monta("encontros", func() (string, error) {
+	builds("encontros", func() (string, error) {
 		v := loadEncounters(3, 4, []encounterRow{{ID: "ogro", Qtd: 2}}, "ogro")
 		return ui.RenderFragment(ctx, encountersScene(v))
 	})
-	monta("improviso", func() (string, error) {
+	builds("improviso", func() (string, error) {
 		v := loadImprov(improvView{
-			Salas: 14,
-			Ruina: []roll{{Rolagem: 4, Texto: "Vazia"}, {Rolagem: 2, Texto: "Vazia"}},
+			Rooms: 14,
+			Ruin:  []roll{{Roll: 4, Text: "Vazia"}, {Roll: 2, Text: "Vazia"}},
 		})
 		return ui.RenderFragment(ctx, improvScene(v))
 	})
-	return fora
+	return outside
 }
 
 // O sinal é o PARÁGRAFO VAZIO: quando o parser encontra conteúdo de fluxo
@@ -78,23 +78,23 @@ func sceneAddresses(t *testing.T) map[string]string {
 // Provado VERMELHO pondo o `<h4>` de volta dentro do `@ui.SectionLabel`: acusa o
 // bestiário com 24 parágrafos vazios.
 func TestTheBrowserDoesNotHaveToFixTheMarkup(t *testing.T) {
-	cenas := sceneAddresses(t)
-	if len(cenas) == 0 {
+	scenes := sceneAddresses(t)
+	if len(scenes) == 0 {
 		t.Fatal("nenhuma cena foi montada: o guarda não visitaria nada e o verde não valeria")
 	}
-	for nome, marcacao := range cenas {
-		t.Run(nome, func(t *testing.T) {
-			raiz, err := html.Parse(strings.NewReader(marcacao))
+	for name, marking := range scenes {
+		t.Run(name, func(t *testing.T) {
+			root, err := html.Parse(strings.NewReader(marking))
 			if err != nil {
 				t.Fatalf("o parser recusou a marcação: %v", err)
 			}
-			vazios := parágrafosVazios(raiz)
-			if len(vazios) > 0 {
+			empty := parágrafosVazios(root)
+			if len(empty) > 0 {
 				t.Errorf("%d parágrafo(s) vazio(s) na árvore de %s — o navegador CONSERTOU "+
 					"aninhamento inválido, expulsando conteúdo de fluxo de dentro de um `<p>` "+
 					"e deixando a casca para trás. A classe do parágrafo não alcança mais o "+
 					"conteúdo, e nenhum guarda de contraste vê isso porque casca vazia não "+
-					"tem texto para medir.", len(vazios), nome)
+					"tem texto para medir.", len(empty), name)
 			}
 		})
 	}
@@ -104,17 +104,17 @@ func TestTheBrowserDoesNotHaveToFixTheMarkup(t *testing.T) {
 // pega o caso em que o parser hoista SEM deixar casca — quando o `<p>` tinha
 // texto antes do cabeçalho, ele fica com o texto e o cabeçalho sai.
 func TestHeadingsAreNotChildrenOfAParagraph(t *testing.T) {
-	for nome, marcacao := range sceneAddresses(t) {
-		t.Run(nome, func(t *testing.T) {
-			raiz, err := html.Parse(strings.NewReader(marcacao))
+	for name, marking := range sceneAddresses(t) {
+		t.Run(name, func(t *testing.T) {
+			root, err := html.Parse(strings.NewReader(marking))
 			if err != nil {
 				t.Fatalf("parser: %v", err)
 			}
 			// Reserializar e comparar a CONTAGEM de cabeçalhos por pai é caro;
 			// o que basta é afirmar que a árvore não tem cabeçalho órfão logo
 			// depois de um parágrafo vazio, que é a assinatura do hoist.
-			var problemas []string
-			percorre(raiz, func(n *html.Node) {
+			var problems []string
+			percorre(root, func(n *html.Node) {
 				if n.Type != html.ElementNode || n.DataAtom != atom.P {
 					return
 				}
@@ -122,25 +122,25 @@ func TestHeadingsAreNotChildrenOfAParagraph(t *testing.T) {
 					return
 				}
 				if s := n.NextSibling; s != nil && ehCabecalho(s) {
-					problemas = append(problemas, s.Data)
+					problems = append(problems, s.Data)
 				}
 			})
-			if len(problemas) > 0 {
+			if len(problems) > 0 {
 				t.Errorf("em %s, %v vieram logo depois de um parágrafo vazio — assinatura de "+
-					"cabeçalho expulso de dentro do `<p>`", nome, problemas)
+					"cabeçalho expulso de dentro do `<p>`", name, problems)
 			}
 		})
 	}
 }
 
-func parágrafosVazios(raiz *html.Node) []*html.Node {
-	var fora []*html.Node
-	percorre(raiz, func(n *html.Node) {
+func parágrafosVazios(root *html.Node) []*html.Node {
+	var outside []*html.Node
+	percorre(root, func(n *html.Node) {
 		if n.Type == html.ElementNode && n.DataAtom == atom.P && textoDe(n) == "" && n.FirstChild == nil {
-			fora = append(fora, n)
+			outside = append(outside, n)
 		}
 	})
-	return fora
+	return outside
 }
 
 func percorre(n *html.Node, f func(*html.Node)) {

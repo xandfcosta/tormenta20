@@ -35,8 +35,8 @@ templ encounterPartyPanel(v encountersView) {
 		@ui.SectionLabel("muted", "self-center") {
 			O grupo
 		}
-		@partyField("nivel", "Nível", v.Nivel, nivelMinimo, nivelMaximo)
-		@partyField("grupo", "Personagens", v.Grupo, grupoMinimo, grupoMaximo)
+		@partyField("nivel", "Nível", v.Level, nivelMinimo, nivelMaximo)
+		@partyField("grupo", "Personagens", v.Group, grupoMinimo, grupoMaximo)
 	</div>
 }
 
@@ -118,16 +118,16 @@ templ composition(v encountersView) {
 		</p>
 	} else {
 		<ul class="min-h-0 shrink-0 space-y-1 overflow-y-auto">
-			for _, l := range v.Linhas {
+			for _, l := range v.Rows {
 				<li class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm border border-grimorio-iron p-2">
-					<span class="text-sm font-medium">{ l.Verbete.Name }</span>
-					<span class="font-mono text-3xs text-grimorio-gold">{ "ND " + book.CRWritten(l.Verbete.ND) }</span>
+					<span class="text-sm font-medium">{ l.Entry.Name }</span>
+					<span class="font-mono text-3xs text-grimorio-gold">{ "ND " + book.CRWritten(l.Entry.ND) }</span>
 					<span class="font-mono text-3xs text-muted-foreground">{ "grupo ND " + roundedCR(l.ND) }</span>
 					<div class="ml-auto flex items-center gap-1">
-						@quantityStep(l.Verbete, "menos", "−")
+						@quantityStep(l.Entry, "menos", "−")
 						<span class="w-8 text-center font-mono text-sm tabular-nums">{ ui.Int(l.Qtd) }</span>
-						@quantityStep(l.Verbete, "mais", "+")
-						@ui.Button(ui.VariantGhostDanger, ui.SizeIcon, "", templ.Attributes{"type": "button", "aria-label": "Remover " + l.Verbete.Name + " do encontro", "data-on:click": fmt.Sprintf("@post('/mestre/encontros/remover/%s')", l.Verbete.ID)}) {
+						@quantityStep(l.Entry, "mais", "+")
+						@ui.Button(ui.VariantGhostDanger, ui.SizeIcon, "", templ.Attributes{"type": "button", "aria-label": "Remover " + l.Entry.Name + " do encontro", "data-on:click": fmt.Sprintf("@post('/mestre/encontros/remover/%s')", l.Entry.ID)}) {
 							✕
 						}
 					</div>
@@ -171,11 +171,11 @@ templ addPanel(v encountersView) {
 			/>
 		</div>
 		if v.Term != "" {
-			if len(v.Achados) == 0 {
+			if len(v.Findings) == 0 {
 				<p class="p-3 text-center text-xs text-muted-foreground">Nenhuma criatura com esse nome.</p>
 			} else {
 				<ul class="min-h-0 flex-1 space-y-1 overflow-y-auto rounded-sm border border-grimorio-iron p-1">
-					for _, m := range v.Achados {
+					for _, m := range v.Findings {
 						<li>
 							<button
 								type="button"

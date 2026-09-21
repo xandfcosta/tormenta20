@@ -38,21 +38,21 @@ func (s Scene) entryRoutes(r chi.Router) {
 // formato faria o link e o remendo poderem discordar sobre o que mostrar.
 func (s Scene) handleCrossRefEntry(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	grupo := groupForEntry(knownTab(q.Get("aba")), q.Get("entrada"))
+	group := groupForEntry(knownTab(q.Get("aba")), q.Get("entrada"))
 
 	// `parte` pede um PEDAÇO do verbete em vez do cartão inteiro — hoje só os
 	// aprimoramentos da magia. Parâmetro e não segunda rota porque o que muda é
 	// o miolo da mesma caixa: duas rotas obrigariam o cliente a saber qual
 	// chamar, e o dia em que houver um terceiro pedaço seriam três.
-	miolo := CrossRefEntry(grupo, s.deps.BookAddress())
-	if q.Get("parte") == "aprimoramentos" && len(grupo.Magias) == 1 {
-		miolo = SpellAugments(grupo.Magias[0], s.deps.BookAddress())
+	core := CrossRefEntry(group, s.deps.BookAddress())
+	if q.Get("parte") == "aprimoramentos" && len(group.Spells) == 1 {
+		core = SpellAugments(group.Spells[0], s.deps.BookAddress())
 	}
 
 	sse := datastar.NewSSE(w, r)
-	fragmento, err := ui.RenderFragment(r.Context(), miolo)
+	fragment, err := ui.RenderFragment(r.Context(), core)
 	if err != nil {
 		return
 	}
-	_ = sse.PatchElements(fragmento)
+	_ = sse.PatchElements(fragment)
 }

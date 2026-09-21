@@ -49,7 +49,7 @@ templ collectionScene(v collectionView) {
 		// outra pergunta — os oito catálogos, não este —, e um crachá de círculo
 		// aceso sobre uma lista que tem itens e condições diria que ele está
 		// filtrando o que não filtra.
-		if !v.Searching() && len(v.Filtros) > 0 {
+		if !v.Searching() && len(v.Filters) > 0 {
 			@collectionFilters(v)
 		}
 		// NÃO há fileira de abas: cada catálogo é uma parada do trilho, e ter as
@@ -61,7 +61,7 @@ templ collectionScene(v collectionView) {
 		// A saída de quem chegou por um ELO com o endereço na barra (ctrl+clique,
 		// link colado): a cena mostra UM verbete, e sem esta linha a pessoa fica
 		// sem entender por que a aba tem uma entrada só.
-		if v.Entrada != "" {
+		if v.Entry != "" {
 			<p class="shrink-0 text-xs text-muted-foreground">
 				<a
 					href={ templ.SafeURL("/mestre/" + v.Aba) }
@@ -75,9 +75,9 @@ templ collectionScene(v collectionView) {
 
 func collectionCount(v collectionView) string {
 	if v.Searching() {
-		return fmt.Sprintf("%d achados", v.Achados)
+		return fmt.Sprintf("%d achados", v.Findings)
 	}
-	return fmt.Sprintf("%d entradas", v.Achados)
+	return fmt.Sprintf("%d entradas", v.Findings)
 }
 
 
@@ -89,49 +89,49 @@ func collectionCount(v collectionView) string {
 // O `max()` no piso é o que impõe o TETO de três colunas, que é medida de
 // leitura e não gosto: `auto-fill minmax(22rem, 1fr)` puro dá QUATRO a 1920.
 templ collectionResults(v collectionView) {
-	if v.Achados == 0 {
+	if v.Findings == 0 {
 		<p class="p-4 text-center text-xs text-muted-foreground">Nada nos catálogos casa com essa busca.</p>
 	} else {
 		@ui.ScrollBox("Resultados dos catálogos", "space-y-4 rounded-sm border border-grimorio-iron p-2") {
-			for _, g := range v.Grupos {
-				<section aria-label={ g.Rotulo }>
+			for _, g := range v.Groups {
+				<section aria-label={ g.Label }>
 					if v.Searching() {
 						// O cabeçalho de grupo só existe na busca unificada: sem
 						// termo há um catálogo só na tela, e nomeá-lo duas vezes
 						// (na aba e aqui) é repetição.
 						@ui.SectionLabel("gold", "mb-1.5") {
-							{ fmt.Sprintf("%s · %d", g.Rotulo, g.Count()) }
+							{ fmt.Sprintf("%s · %d", g.Label, g.Count()) }
 						}
 					}
 					<div class="collection-in-columns">
-						for _, c := range g.Condicoes {
+						for _, c := range g.Conditions {
 							@conditionCard(c, v.Book)
 						}
-						for _, m := range g.Magias {
+						for _, m := range g.Spells {
 							@spellCard(m, v.Book)
 						}
-						for _, p := range g.Poderes {
+						for _, p := range g.Powers {
 							@powerCard(p, v.Book)
 						}
-						for _, i := range g.Itens {
+						for _, i := range g.Items {
 							@itemCard(i, v.Book)
 						}
-						for _, e := range g.Efeitos {
+						for _, e := range g.Effects {
 							@effectCard(e, v.Book)
 						}
-						for _, e := range g.Escolas {
+						for _, e := range g.Schools {
 							@schoolCard(e, v.Book)
 						}
-						for _, p := range g.Pericias {
+						for _, p := range g.Expertises {
 							@expertiseCard(p, v.Book)
 						}
-						for _, r := range g.Racas {
+						for _, r := range g.Races {
 							@raceCard(r, v.Book)
 						}
 						for _, c := range g.Classes {
 							@classCard(c, v.Book)
 						}
-						for _, d := range g.Deuses {
+						for _, d := range g.Gods {
 							@godCard(d, v.Book)
 						}
 					</div>
@@ -531,28 +531,28 @@ templ CrossRefEntry(g collectionGroup, livro bookui.BookAddress) {
 		if g.Count() == 0 {
 			<p class="text-xs text-muted-foreground">Este verbete não está no acervo.</p>
 		}
-		for _, c := range g.Condicoes {
+		for _, c := range g.Conditions {
 			@conditionCard(c, livro)
 		}
-		for _, m := range g.Magias {
+		for _, m := range g.Spells {
 			@spellCard(m, livro)
 		}
-		for _, p := range g.Poderes {
+		for _, p := range g.Powers {
 			@powerCard(p, livro)
 		}
-		for _, i := range g.Itens {
+		for _, i := range g.Items {
 			@itemCard(i, livro)
 		}
-		for _, e := range g.Efeitos {
+		for _, e := range g.Effects {
 			@effectCard(e, livro)
 		}
-		for _, r := range g.Racas {
+		for _, r := range g.Races {
 			@raceCard(r, livro)
 		}
 		for _, c := range g.Classes {
 			@classCard(c, livro)
 		}
-		for _, d := range g.Deuses {
+		for _, d := range g.Gods {
 			@godCard(d, livro)
 		}
 	</div>
@@ -572,26 +572,26 @@ templ collectionFilters(v collectionView) {
 	// inteiras.
 	@ui.FilterDrawer("Filtros") {
 		<div class="mt-2 flex shrink-0 flex-col gap-1.5">
-			for _, f := range v.Filtros {
+			for _, f := range v.Filters {
 				<fieldset class="flex flex-wrap items-center gap-1.5 border-0 p-0">
-					<legend class="sr-only">{ "Filtrar por " + f.Rotulo }</legend>
+					<legend class="sr-only">{ "Filtrar por " + f.Label }</legend>
 					<span aria-hidden="true" class={ ui.SectionLabelClasses("muted", "w-24 shrink-0") }>
-						{ f.Rotulo }
+						{ f.Label }
 					</span>
-					for _, o := range f.Opcoes {
+					for _, o := range f.Options {
 						// `aria-pressed` com a STRING e não com booleano: o Datastar
 						// trata valor booleano como atributo de PRESENÇA, e um
 						// `aria-pressed=""` não anuncia estado nenhum.
 						<button
 							type="button"
-							aria-pressed={ ui.AriaBool(v.badgeOn(f.Chave, o.Valor)) }
-							data-on:click={ toggleBadge(v.Aba, f.Chave, o.Valor) }
-							if v.badgeOn(f.Chave, o.Valor) {
+							aria-pressed={ ui.AriaBool(v.badgeOn(f.Key, o.Value)) }
+							data-on:click={ toggleBadge(v.Aba, f.Key, o.Value) }
+							if v.badgeOn(f.Key, o.Value) {
 								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none"
 							} else {
 								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent"
 							}
-						>{ o.Rotulo }</button>
+						>{ o.Label }</button>
 					}
 				</fieldset>
 			}

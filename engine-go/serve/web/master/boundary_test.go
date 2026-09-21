@@ -34,26 +34,26 @@ var permitidos = map[string]bool{
 }
 
 func TestTheMasterDoesNotImportItsHost(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
-			if !strings.HasPrefix(caminho, "t20engine/") || permitidos[caminho] {
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
+			if !strings.HasPrefix(path, "t20engine/") || permitidos[path] {
 				continue
 			}
 			t.Errorf("%s importa %q.\n"+
@@ -62,7 +62,7 @@ func TestTheMasterDoesNotImportItsHost(t *testing.T) {
 				"o `api`, é ciclo, porque ele importa esta cena para montar rota.\n"+
 				"Se for `t20engine/domain/catalog`, a resposta é outra: o leitor tipado vai para o\n"+
 				"`book` e a cena o chama de lá. Foi o que o Improviso fez nesta fatia.",
-				nome, caminho, caminho)
+				name, path, path)
 		}
 	}
 
@@ -70,8 +70,8 @@ func TestTheMasterDoesNotImportItsHost(t *testing.T) {
 	// lido se parecem no terminal. O piso é alto de propósito porque esta cena é
 	// grande — se ela encolher para menos de dez arquivos `.go`, alguma coisa
 	// saiu e o guarda precisa ser reolhado, não silenciado.
-	if visitados < 10 {
+	if visited < 10 {
 		t.Fatalf("o guarda visitou só %d arquivos `.go`, e o pacote tem mais que isso: "+
-			"ele está medindo o diretório errado", visitados)
+			"ele está medindo o diretório errado", visited)
 	}
 }

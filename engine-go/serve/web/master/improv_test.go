@@ -22,8 +22,8 @@ import (
 // buraco é o defeito real aqui, e ele é invisível até alguém rolar o número que
 // falta no meio de uma sessão.
 func TestEveryDieFaceHitsARow(t *testing.T) {
-	tab, masmorra := book.ImprovTables()
-	if len(tab.Ruin) == 0 || len(tab.ChaseEvents) == 0 || len(masmorra.Ideas) == 0 {
+	tab, dungeon := book.ImprovTables()
+	if len(tab.Ruin) == 0 || len(tab.ChaseEvents) == 0 || len(dungeon.Ideas) == 0 {
 		t.Fatal("tabelas vazias: o catálogo não carregou, e verde aqui não valeria nada")
 	}
 	for face := 1; face <= 6; face++ {
@@ -38,20 +38,20 @@ func TestEveryDieFaceHitsARow(t *testing.T) {
 		if _, err := linhaOuErro(tab.ChaseEvents, face); err != nil {
 			t.Errorf("perseguição: %v", err)
 		}
-		if _, err := linhaOuErro(masmorra.Ideas, face); err != nil {
+		if _, err := linhaOuErro(dungeon.Ideas, face); err != nil {
 			t.Errorf("ideias: %v", err)
 		}
 	}
 }
 
-func linhaOuErro[T interface{ Covers(int) bool }](linhas []T, face int) (T, error) {
-	var vazio T
-	for _, l := range linhas {
+func linhaOuErro[T interface{ Covers(int) bool }](rows []T, face int) (T, error) {
+	var empty T
+	for _, l := range rows {
 		if l.Covers(face) {
 			return l, nil
 		}
 	}
-	return vazio, errFaceSemLinha(face)
+	return empty, errFaceSemLinha(face)
 }
 
 type erroDeFace int
@@ -67,7 +67,7 @@ func errFaceSemLinha(f int) error { return erroDeFace(f) }
 // exemplo do livro é um travessão, e o tipo se perde inteiro.
 func TestTheEventTypeAndNotTheExample(t *testing.T) {
 	tab, _ := book.ImprovTables()
-	vistos := map[string]bool{}
+	seen := map[string]bool{}
 	// 200 rolagens visitam as três faixas com folga; o que se mede é o FORMATO
 	// da resposta, não o sorteio.
 	for i := 0; i < 200; i++ {
@@ -75,14 +75,14 @@ func TestTheEventTypeAndNotTheExample(t *testing.T) {
 		if err != nil {
 			t.Fatalf("rolar: %v", err)
 		}
-		if s.Texto == "—" || s.Texto == "" {
-			t.Fatalf("rolagem %d saiu sem manchete: %+v", s.Rolagem, s)
+		if s.Text == "—" || s.Text == "" {
+			t.Fatalf("rolagem %d saiu sem manchete: %+v", s.Roll, s)
 		}
-		vistos[s.Texto] = true
+		seen[s.Text] = true
 	}
-	for _, quero := range []string{"Nenhum evento", "Obstáculo", "Atalho"} {
-		if !vistos[quero] {
-			t.Errorf("em 200 rolagens nunca saiu %q — as faixas são %d", quero, len(tab.ChaseEvents))
+	for _, want := range []string{"Nenhum evento", "Obstáculo", "Atalho"} {
+		if !seen[want] {
+			t.Errorf("em 200 rolagens nunca saiu %q — as faixas são %d", want, len(tab.ChaseEvents))
 		}
 	}
 }
@@ -91,44 +91,44 @@ func TestTheEventTypeAndNotTheExample(t *testing.T) {
 func TestTheHistoryKeepsFiveAndThrowsTheSixthAway(t *testing.T) {
 	var h []roll
 	for i := 1; i <= 8; i++ {
-		h = push(h, roll{Rolagem: i, Texto: "linha"})
+		h = push(h, roll{Roll: i, Text: "linha"})
 	}
 	if len(h) != historyDepth {
 		t.Fatalf("%d entradas, quero %d", len(h), historyDepth)
 	}
 	// O mais NOVO fica na frente: a tela mostra o último grande e os anteriores
 	// em voz baixa, então a ordem é parte do contrato.
-	if h[0].Rolagem != 8 {
-		t.Errorf("a frente é a rolagem %d, quero a última (8)", h[0].Rolagem)
+	if h[0].Roll != 8 {
+		t.Errorf("a frente é a rolagem %d, quero a última (8)", h[0].Roll)
 	}
-	if h[len(h)-1].Rolagem != 4 {
-		t.Errorf("o fundo é a rolagem %d, quero 4", h[len(h)-1].Rolagem)
+	if h[len(h)-1].Roll != 4 {
+		t.Errorf("o fundo é a rolagem %d, quero 4", h[len(h)-1].Roll)
 	}
 }
 
 // O esqueleto da masmorra segue o livro: uma ameaça a cada três salas (p263),
 // arredondando PARA CIMA — sete salas dão três ameaças, não duas.
 func TestTheDungeonSkeletonFollowsTheBook(t *testing.T) {
-	casos := map[int]struct {
-		ameacas int
-		tamanho string
+	cases := map[int]struct {
+		threats int
+		size    string
 	}{
 		3:  {1, "Pequena"},
 		6:  {2, "Pequena"},
 		7:  {3, "Média"},
 		14: {5, "Média"},
 	}
-	for salas, quero := range casos {
-		v := loadImprov(improvView{Salas: salas})
-		if v.Ameacas != quero.ameacas {
-			t.Errorf("%d salas deram %d ameaças, quero %d", salas, v.Ameacas, quero.ameacas)
+	for rooms, want := range cases {
+		v := loadImprov(improvView{Rooms: rooms})
+		if v.Threats != want.threats {
+			t.Errorf("%d salas deram %d ameaças, quero %d", rooms, v.Threats, want.threats)
 		}
-		if v.Tamanho == nil {
-			t.Errorf("%d salas não casaram com tamanho nenhum", salas)
+		if v.Size == nil {
+			t.Errorf("%d salas não casaram com tamanho nenhum", rooms)
 			continue
 		}
-		if v.Tamanho.Label != quero.tamanho {
-			t.Errorf("%d salas viraram %q, quero %q", salas, v.Tamanho.Label, quero.tamanho)
+		if v.Size.Label != want.size {
+			t.Errorf("%d salas viraram %q, quero %q", rooms, v.Size.Label, want.size)
 		}
 	}
 }
@@ -136,16 +136,16 @@ func TestTheDungeonSkeletonFollowsTheBook(t *testing.T) {
 // Acima do teto não é erro: o livro recomenda parar, e a tela diz isso em vez de
 // esconder o campo ou fingir um tamanho.
 func TestAboveTheCeilingIsNotAnError(t *testing.T) {
-	v := loadImprov(improvView{Salas: 120})
-	if !v.AcimaDoTeto {
+	v := loadImprov(improvView{Rooms: 120})
+	if !v.OverCeiling {
 		t.Fatal("120 salas não foram marcadas como acima do teto")
 	}
-	if v.Tamanho != nil {
-		t.Errorf("e ainda inventaram o tamanho %q", v.Tamanho.Label)
+	if v.Size != nil {
+		t.Errorf("e ainda inventaram o tamanho %q", v.Size.Label)
 	}
 	// Salas absurdas caem no padrão, como as outras cenas: o número vem dos
 	// sinais e alguém edita à mão.
-	if got := loadImprov(improvView{Salas: -4}).Salas; got != salasPadrao {
+	if got := loadImprov(improvView{Rooms: -4}).Rooms; got != salasPadrao {
 		t.Errorf("-4 salas viraram %d, quero o padrão %d", got, salasPadrao)
 	}
 }
@@ -158,13 +158,13 @@ func TestAboveTheCeilingIsNotAnError(t *testing.T) {
 // links para o mesmo endereço, e a segunda ferramenta fica inalcançável — com o
 // trilho mostrando as duas, o que é pior que faltar uma.
 func TestTheTrailSlugsAreUnique(t *testing.T) {
-	vistos := map[string]string{}
+	seen := map[string]string{}
 	for _, f := range railStops {
-		if antes, repetido := vistos[f.Slug]; repetido {
+		if before, repeated := seen[f.Slug]; repeated {
 			t.Errorf("o slug %q é de %q e de %q — a segunda fica inalcançável",
-				f.Slug, antes, f.Rotulo)
+				f.Slug, before, f.Rotulo)
 		}
-		vistos[f.Slug] = f.Rotulo
+		seen[f.Slug] = f.Rotulo
 		if f.Slug == "" || f.Rotulo == "" || f.Icone == "" {
 			t.Errorf("a ferramenta %+v tem campo vazio", f)
 		}

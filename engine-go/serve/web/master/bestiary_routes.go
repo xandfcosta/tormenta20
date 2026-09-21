@@ -35,11 +35,11 @@ func (s Scene) handleBestiary(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := ui.RenderFragment(r.Context(), bestiaryScene(v))
+		fragment, err := ui.RenderFragment(r.Context(), bestiaryScene(v))
 		if err != nil {
 			return
 		}
-		_ = sse.PatchElements(fragmento)
+		_ = sse.PatchElements(fragment)
 		return
 	}
 
@@ -69,22 +69,22 @@ func (s Scene) handleBestiary(w http.ResponseWriter, r *http.Request) {
 func (s Scene) handleBestiaryType(w http.ResponseWriter, r *http.Request) {
 	// `ReadSignals` ANTES do `NewSSE`: depois da resposta começar, o corpo do
 	// pedido já não se lê.
-	criterios := BestiaryCriteriaFromRequest(r)
+	criteria := BestiaryCriteriaFromRequest(r)
 	// A recusa vem ANTES da resposta começar, senão o 400 chega depois dos
 	// cabeçalhos de SSE e o cliente vê um stream vazio em vez de um erro.
-	tipos, err := ToggleType(criterios.Types, chi.URLParam(r, "tipo"))
+	kinds, err := ToggleType(criteria.Types, chi.URLParam(r, "tipo"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	criterios.Types = tipos
+	criteria.Types = kinds
 	sse := datastar.NewSSE(w, r)
 
-	fragmento, err := ui.RenderFragment(r.Context(), bestiaryScene(s.loadBestiary(criterios)))
+	fragment, err := ui.RenderFragment(r.Context(), bestiaryScene(s.loadBestiary(criteria)))
 	if err != nil {
 		return
 	}
-	_ = sse.PatchElements(fragmento)
+	_ = sse.PatchElements(fragment)
 }
 
 // BestiaryCriteria são os cinco valores que definem a cena.
@@ -122,41 +122,41 @@ func BestiaryCriteriaFromRequest(r *http.Request) BestiaryCriteria {
 	}
 	c.CRMin, c.CRMax = book.CRRange(q.Get("nd-min"), q.Get("nd-max"))
 
-	sinais := struct {
+	signals := struct {
 		Term     *string   `json:"search"`
 		Types    *[]string `json:"tipos"`
 		CRMin    *float64  `json:"ndMin"`
 		CRMax    *float64  `json:"ndMax"`
-		Criatura *string   `json:"creature"`
+		Creature *string   `json:"creature"`
 	}{}
-	if err := datastar.ReadSignals(r, &sinais); err != nil {
+	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return c
 	}
 	// Ponteiro em cada campo para separar "o sinal não veio" de "o sinal veio
 	// vazio": uma busca APAGADA é um valor legítimo, e tratá-la como ausente
 	// faria o texto antigo da URL ressuscitar no primeiro remendo.
-	if sinais.Term != nil {
-		c.Term = *sinais.Term
+	if signals.Term != nil {
+		c.Term = *signals.Term
 	}
-	if sinais.Criatura != nil {
-		c.Chosen = *sinais.Criatura
+	if signals.Creature != nil {
+		c.Chosen = *signals.Creature
 	}
-	if sinais.Types != nil {
-		c.Types = knownTypes(*sinais.Types)
+	if signals.Types != nil {
+		c.Types = knownTypes(*signals.Types)
 	}
-	if sinais.CRMin != nil || sinais.CRMax != nil {
-		c.CRMin, c.CRMax = numericCRRange(sinais.CRMin, sinais.CRMax, c.CRMin, c.CRMax)
+	if signals.CRMin != nil || signals.CRMax != nil {
+		c.CRMin, c.CRMax = numericCRRange(signals.CRMin, signals.CRMax, c.CRMin, c.CRMax)
 	}
 	return c
 }
 
 // typesFromURL lê `?tipos=animal,planar`. Vírgula e não repetição do parâmetro
 // porque é o que cabe numa URL que alguém digita.
-func typesFromURL(bruto string) []string {
-	if bruto == "" {
+func typesFromURL(raw string) []string {
+	if raw == "" {
 		return nil
 	}
-	return knownTypes(strings.Split(bruto, ","))
+	return knownTypes(strings.Split(raw, ","))
 }
 
 // knownTypes descarta o que o catálogo não tem, venha da URL ou do sinal.
@@ -165,32 +165,32 @@ func typesFromURL(bruto string) []string {
 // com nada, e esvaziar a tela por causa de uma vírgula sobrando seria punir o
 // mestre por um erro de digitação. A recusa dura fica no POST do crachá, que é
 // onde alguém está agindo em vez de navegando.
-func knownTypes(brutos []string) []string {
-	var fora []string
-	for _, t := range brutos {
-		if t = strings.TrimSpace(t); slices.Contains(book.CreatureTypes, t) && !slices.Contains(fora, t) {
-			fora = append(fora, t)
+func knownTypes(raw []string) []string {
+	var outside []string
+	for _, t := range raw {
+		if t = strings.TrimSpace(t); slices.Contains(book.CreatureTypes, t) && !slices.Contains(outside, t) {
+			outside = append(outside, t)
 		}
 	}
-	return fora
+	return outside
 }
 
 // numericCRRange aperta os números que vieram dos SINAIS, onde eles já são
 // número e não texto. Mesma faixa do livro, mesma razão do `book.CRRange`.
-func numericCRRange(min, max *float64, padraoMin, padraoMax float64) (float64, float64) {
-	saiMin, saiMax := padraoMin, padraoMax
+func numericCRRange(min, max *float64, standardMin, standardMax float64) (float64, float64) {
+	exitMin, exitMax := standardMin, standardMax
 	if min != nil {
-		saiMin = clampCR(*min, book.CRMin)
+		exitMin = clampCR(*min, book.CRMin)
 	}
 	if max != nil {
-		saiMax = clampCR(*max, book.CRMax)
+		exitMax = clampCR(*max, book.CRMax)
 	}
-	return saiMin, saiMax
+	return exitMin, exitMax
 }
 
-func clampCR(n, padrao float64) float64 {
+func clampCR(n, standard float64) float64 {
 	if n < book.CRMin || n > book.CRMax {
-		return padrao
+		return standard
 	}
 	return n
 }

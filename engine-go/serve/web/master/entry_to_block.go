@@ -71,19 +71,19 @@ func orZero(n *int) int {
 // bloco nasce para ser editado. Sem a cópia, mexer num ataque do NPC mexeria no
 // verbete que o bestiário desenha para a mesa inteira.
 func copyAttacks(de []creature.Attack) []creature.Attack {
-	fora := make([]creature.Attack, len(de))
-	copy(fora, de)
-	return fora
+	outside := make([]creature.Attack, len(de))
+	copy(outside, de)
+	return outside
 }
 
 func copyExpertises(de []creature.Skill) []creature.Skill {
-	fora := make([]creature.Skill, len(de))
-	copy(fora, de)
-	return fora
+	outside := make([]creature.Skill, len(de))
+	copy(outside, de)
+	return outside
 }
 
 func copyPhrases(de []string) []string {
-	fora := make([]string, len(de))
-	copy(fora, de)
-	return fora
+	outside := make([]string, len(de))
+	copy(outside, de)
+	return outside
 }

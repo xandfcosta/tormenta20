@@ -22,40 +22,40 @@ func TestEveryBookValueHasALabel(t *testing.T) {
 		t.Fatal("catálogo vazio: não há o que medir, e verde aqui não valeria nada")
 	}
 
-	cobra := func(campo string, valores map[string]int, rotulo func(string) string) {
-		for v, quantos := range valores {
+	cobra := func(field string, values map[string]int, label func(string) string) {
+		for v, howMany := range values {
 			if v == "" {
 				continue
 			}
-			if rotulo(v) == v {
-				t.Errorf("%s %q (%d entradas) sai na tela como o dado cru", campo, v, quantos)
+			if label(v) == v {
+				t.Errorf("%s %q (%d entradas) sai na tela como o dado cru", field, v, howMany)
 			}
 		}
 	}
 
-	execucoes, alcances := map[string]int{}, map[string]int{}
+	executions, reaches := map[string]int{}, map[string]int{}
 	for _, m := range a.Spells {
-		execucoes[m.Execution]++
-		alcances[m.Range]++
+		executions[m.Execution]++
+		reaches[m.Range]++
 	}
-	categorias := map[string]int{}
+	categories := map[string]int{}
 	for _, i := range a.Items {
-		categorias[i.Category]++
+		categories[i.Category]++
 	}
 
-	cobra("execução", execucoes, book.CastingName)
-	cobra("alcance", alcances, book.RangeName)
-	cobra("categoria", categorias, book.CategoryName)
+	cobra("execução", executions, book.CastingName)
+	cobra("alcance", reaches, book.RangeName)
+	cobra("categoria", categories, book.CategoryName)
 }
 
 // "luz cur" só casa com o que carrega as duas coisas. É a regra que separa esta
 // busca da das outras cenas.
 func TestTheSearchRequiresEveryTerm(t *testing.T) {
-	campos := []string{"Curar Ferimentos", "Restaura pontos de vida ao toque."}
-	casos := []struct {
-		busca string
-		casa  bool
-		por   string
+	fields := []string{"Curar Ferimentos", "Restaura pontos de vida ao toque."}
+	cases := []struct {
+		search string
+		square bool
+		by     string
 	}{
 		{"curar", true, "termo único que existe"},
 		{"curar toque", true, "dois termos, um no nome e outro na descrição"},
@@ -69,19 +69,19 @@ func TestTheSearchRequiresEveryTerm(t *testing.T) {
 		// quase-acerto no meio da sessão parece defeito.
 		{"crr", false, "subsequência NÃO casa: esta busca não é tolerante a typo"},
 	}
-	for _, c := range casos {
-		if got := matchesAllTerms(campos, c.busca); got != c.casa {
-			t.Errorf("casaTodosOsTermos(%q) = %v, quero %v — %s", c.busca, got, c.casa, c.por)
+	for _, c := range cases {
+		if got := matchesAllTerms(fields, c.search); got != c.square {
+			t.Errorf("casaTodosOsTermos(%q) = %v, quero %v — %s", c.search, got, c.square, c.by)
 		}
 	}
 }
 
 // Ninguém digita til no meio da sessão.
 func TestAnAccentDoesNotSplitTheSearch(t *testing.T) {
-	campos := []string{"Ilusão Lacerante", "Cria uma imagem que fere."}
-	for _, busca := range []string{"ilusao", "Ilusão", "ILUSAO", "imagem"} {
-		if !matchesAllTerms(campos, busca) {
-			t.Errorf("%q não casou com %v", busca, campos)
+	fields := []string{"Ilusão Lacerante", "Cria uma imagem que fere."}
+	for _, search := range []string{"ilusao", "Ilusão", "ILUSAO", "imagem"} {
+		if !matchesAllTerms(fields, search) {
+			t.Errorf("%q não casou com %v", search, fields)
 		}
 	}
 }
@@ -94,16 +94,16 @@ func TestSearchingSweepsTheFourCatalogs(t *testing.T) {
 	if !v.Searching() {
 		t.Fatal("a cena não se considerou em busca")
 	}
-	achouMagia := false
-	for _, g := range v.Grupos {
-		if g.Rotulo == "Magias" && len(g.Magias) > 0 {
-			achouMagia = true
+	foundSpell := false
+	for _, g := range v.Groups {
+		if g.Label == "Magias" && len(g.Spells) > 0 {
+			foundSpell = true
 		}
 		if g.Count() == 0 {
-			t.Errorf("o grupo %q veio vazio — cabeçalho sobre nada é ruído", g.Rotulo)
+			t.Errorf("o grupo %q veio vazio — cabeçalho sobre nada é ruído", g.Label)
 		}
 	}
-	if !achouMagia {
+	if !foundSpell {
 		t.Error("buscar 'fogo' com a aba em Condições não achou magia nenhuma (ALE-22)")
 	}
 }
@@ -111,26 +111,26 @@ func TestSearchingSweepsTheFourCatalogs(t *testing.T) {
 // Sem termo a cena é um catálogo por vez.
 func TestWithoutASearchOnlyTheOpenTabShows(t *testing.T) {
 	a := book.Catalogs()
-	for _, caso := range []struct {
+	for _, tc := range []struct {
 		aba     string
-		rotulo  string
-		quantas int
+		label   string
+		howMany int
 	}{
 		{"condicoes", "Condições", len(a.Conditions)},
 		{"magias", "Magias", len(a.Spells)},
 		{"poderes", "Poderes", len(a.Powers)},
 		{"itens", "Itens", len(a.Items)},
 	} {
-		t.Run(caso.aba, func(t *testing.T) {
-			v := loadCollection(collectionCriteria{Aba: caso.aba}, bookui.BookAddress{})
-			if len(v.Grupos) != 1 {
-				t.Fatalf("%d grupos, quero 1", len(v.Grupos))
+		t.Run(tc.aba, func(t *testing.T) {
+			v := loadCollection(collectionCriteria{Aba: tc.aba}, bookui.BookAddress{})
+			if len(v.Groups) != 1 {
+				t.Fatalf("%d grupos, quero 1", len(v.Groups))
 			}
-			if v.Grupos[0].Rotulo != caso.rotulo {
-				t.Errorf("grupo %q, quero %q", v.Grupos[0].Rotulo, caso.rotulo)
+			if v.Groups[0].Label != tc.label {
+				t.Errorf("grupo %q, quero %q", v.Groups[0].Label, tc.label)
 			}
-			if v.Achados != caso.quantas {
-				t.Errorf("%d entradas, quero as %d do catálogo inteiro", v.Achados, caso.quantas)
+			if v.Findings != tc.howMany {
+				t.Errorf("%d entradas, quero as %d do catálogo inteiro", v.Findings, tc.howMany)
 			}
 		})
 	}
@@ -143,7 +143,7 @@ func TestAnInventedTabFallsBackToTheFirst(t *testing.T) {
 	if v.Aba != "condicoes" {
 		t.Errorf("aba %q, quero cair em condicoes", v.Aba)
 	}
-	if v.Achados == 0 {
+	if v.Findings == 0 {
 		t.Error("aba inventada devolveu tela vazia")
 	}
 }
@@ -154,23 +154,23 @@ func TestAnInventedTabFallsBackToTheFirst(t *testing.T) {
 // lugares e o mestre quer uma lista só —, e o que ele não pode perder é DE ONDE
 // veio. Sem a fonte, "Ataque Poderoso" não diz se é poder de classe ou geral.
 func TestPowersComeFromTheThreeCatalogs(t *testing.T) {
-	fontes := map[string]int{}
+	sources := map[string]int{}
 	for _, p := range book.Catalogs().Powers {
 		switch {
 		case strings.HasPrefix(p.ID, "general."):
-			fontes["geral"]++
+			sources["geral"]++
 		case strings.HasPrefix(p.ID, "divino."):
-			fontes["divino"]++
+			sources["divino"]++
 		default:
-			fontes["classe"]++
+			sources["classe"]++
 		}
 		if p.Source == "" {
 			t.Fatalf("o poder %q não diz de onde veio", p.Name)
 		}
 	}
-	for _, esperada := range []string{"classe", "geral", "divino"} {
-		if fontes[esperada] == 0 {
-			t.Errorf("nenhum poder de %q — um dos três catálogos não entrou", esperada)
+	for _, expected := range []string{"classe", "geral", "divino"} {
+		if sources[expected] == 0 {
+			t.Errorf("nenhum poder de %q — um dos três catálogos não entrou", expected)
 		}
 	}
 	// O número dos DIVINOS está preso porque a lacuna é INVISÍVEL: o cartão do
@@ -178,8 +178,8 @@ func TestPowersComeFromTheThreeCatalogs(t *testing.T) {
 	// que é metade dos nomes) deixa metade sem virar elo sem ninguém ver. São 72
 	// porque os 80 do `divine-powers` juntam por nome os que vários deuses
 	// concedem — "Coragem Total" aparece quatro vezes.
-	if fontes["divino"] != 72 {
-		t.Errorf("%d poderes divinos no acervo — eram 72 quando isto foi escrito", fontes["divino"])
+	if sources["divino"] != 72 {
+		t.Errorf("%d poderes divinos no acervo — eram 72 quando isto foi escrito", sources["divino"])
 	}
 }
 
@@ -188,18 +188,18 @@ func TestPowersComeFromTheThreeCatalogs(t *testing.T) {
 // `?busca=` é endereço, e um link colado no chat da mesa tem de abrir já
 // filtrado.
 func TestTheSearchInTheUrlHoldsOnAColdLoad(t *testing.T) {
-	corpo := pedeNaCena(t, "/mestre/condicoes?busca=fogo").Body.String()
+	body := pedeNaCena(t, "/mestre/condicoes?busca=fogo").Body.String()
 
 	// A prova de que a página abriu FILTRADA é o que ela MOSTRA, e não uma
 	// contagem colhida do `loadCollection` — a mesma função que a desenhou. Um
 	// erro na busca sairia dos DOIS lados e o guarda ficaria verde.
-	if !strings.Contains(corpo, "Bola de Fogo") {
+	if !strings.Contains(body, "Bola de Fogo") {
 		t.Error("buscar fogo na cena das condições não trouxe a magia — a busca não varreu os oito")
 	}
 	// O CONTROLE pelo outro lado: uma condição que NÃO casa com o termo não
 	// pode estar na página. Sem ele, "achou a magia" também passaria numa cena
 	// que ignorou o filtro e desenhou tudo.
-	if strings.Contains(corpo, "Abalado") {
+	if strings.Contains(body, "Abalado") {
 		t.Error("a página trouxe uma condição que não casa com o termo: ela não abriu filtrada")
 	}
 }
@@ -218,18 +218,18 @@ func TestTheTabComesFromThePathAndTheQueryDoesNotMoveIt(t *testing.T) {
 	// O `</h2>` é parte da agulha porque "Poderes" também é o texto de uma parada
 	// do trilho, que a casca desenha em toda cena do mestre: procurar a palavra
 	// solta acharia o link e diria que a aba mudou.
-	corpo := pedeNaCena(t, "/mestre/condicoes?aba=poderes").Body.String()
-	if !strings.Contains(corpo, ">Condições</h2>") {
+	body := pedeNaCena(t, "/mestre/condicoes?aba=poderes").Body.String()
+	if !strings.Contains(body, ">Condições</h2>") {
 		t.Error("`?aba=poderes` levou a cena das condições para outra aba: a consulta voltou a ter leitor")
 	}
-	if strings.Contains(corpo, ">Poderes</h2>") {
+	if strings.Contains(body, ">Poderes</h2>") {
 		t.Error("`?aba=poderes` desenhou Poderes num endereço de Condições")
 	}
 
 	// O CONTROLE, senão "não virou Poderes" também seria verdade numa cena que
 	// não sabe desenhar Poderes em endereço nenhum.
-	pedido := pedeNaCena(t, "/mestre/poderes").Body.String()
-	if !strings.Contains(pedido, ">Poderes</h2>") {
+	requested := pedeNaCena(t, "/mestre/poderes").Body.String()
+	if !strings.Contains(requested, ">Poderes</h2>") {
 		t.Error("/mestre/poderes não abriu na aba de Poderes — o caminho é o único canal da aba")
 	}
 }
@@ -242,22 +242,22 @@ func TestTheTabComesFromThePathAndTheQueryDoesNotMoveIt(t *testing.T) {
 // que a cena escreve de qualquer jeito.
 func TestEveryCollectionTabOffersTheBook(t *testing.T) {
 	for _, aba := range collectionTabs {
-		corpo := pedeNaCenaComLivro(t, "/mestre/"+aba.ID).Body.String()
-		if !strings.Contains(corpo, "/livro/ler?p=") {
-			t.Errorf("a aba %q não oferece o livro em nenhuma entrada", aba.Rotulo)
+		body := pedeNaCenaComLivro(t, "/mestre/"+aba.ID).Body.String()
+		if !strings.Contains(body, "/livro/ler?p=") {
+			t.Errorf("a aba %q não oferece o livro em nenhuma entrada", aba.Label)
 		}
-		if !strings.Contains(corpo, "Abrir o livro na página") {
-			t.Errorf("a aba %q tem o endereço mas não o título que diz o que ele faz", aba.Rotulo)
+		if !strings.Contains(body, "Abrir o livro na página") {
+			t.Errorf("a aba %q tem o endereço mas não o título que diz o que ele faz", aba.Label)
 		}
 	}
 
 	// E o CONTROLE pelo outro lado da porta: sem `LIVRO_PDF` não há link.
-	sem := pedeNaCena(t, "/mestre/condicoes").Body.String()
-	if strings.Contains(sem, "/livro/ler") {
+	without := pedeNaCena(t, "/mestre/condicoes").Body.String()
+	if strings.Contains(without, "/livro/ler") {
 		t.Error("sem LIVRO_PDF a cena linkou um livro que não é servido")
 	}
 	// E a página continua ESCRITA: o mestre com o livro de papel usa o número.
-	if !strings.Contains(sem, "p394") {
+	if !strings.Contains(without, "p394") {
 		t.Error("sem livro a página impressa sumiu do cartão — ela não depende do PDF")
 	}
 }

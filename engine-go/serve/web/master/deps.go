@@ -14,7 +14,7 @@ import (
 // chega por `go:embed` — não há banco, campanha nem personagem.
 type Deps interface {
 	// WritePage é a montagem da casca (ver `web/ui`).
-	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 	// BookAddress é onde o PDF está, para o selo "p289" saber para onde apontar.
 	// Vem por aqui e não por `book` porque não é dado do livro: é CONFIGURAÇÃO
 	// (`LIVRO_PDF`), e sem ela o selo não é desenhado.

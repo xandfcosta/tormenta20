@@ -38,9 +38,9 @@ templ improvScene(v improvView) {
 					Tabelas do Cap 6
 				}
 				<div class="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
-					@rollingTable("ruina", "Ermos — Ruína", "d6", "p269", v.Ruina)
-					@rollingTable("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5 · p274", v.Perseguicao)
-					@rollingTable("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p279", v.Recompensa)
+					@rollingTable("ruina", "Ermos — Ruína", "d6", "p269", v.Ruin)
+					@rollingTable("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5 · p274", v.Chase)
+					@rollingTable("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p279", v.Reward)
 				</div>
 			</div>
 			<div class="border-t border-grimorio-iron pt-4">
@@ -48,7 +48,7 @@ templ improvScene(v improvView) {
 					Masmorra
 				}
 				<div class="grid items-start gap-3 sm:grid-cols-2">
-					@rollingTable("ideias", "Ideias de masmorra", "d20", "Tabela 6-2 · p263", v.Ideias)
+					@rollingTable("ideias", "Ideias de masmorra", "d20", "Tabela 6-2 · p263", v.Ideas)
 					@dungeonPlanner(v)
 				</div>
 			</div>
@@ -100,11 +100,11 @@ templ rollingTable(id, titulo, dado, fonte string, historico []roll) {
 			// acabou de pedir.
 			<div aria-live="polite" class="space-y-0.5">
 				<p class="flex items-baseline gap-2">
-					<span class="font-mono text-2xl leading-none tabular-nums text-grimorio-gold">{ ui.Int(historico[0].Rolagem) }</span>
-					<span class="text-sm text-foreground">{ historico[0].Texto }</span>
+					<span class="font-mono text-2xl leading-none tabular-nums text-grimorio-gold">{ ui.Int(historico[0].Roll) }</span>
+					<span class="text-sm text-foreground">{ historico[0].Text }</span>
 				</p>
-				if historico[0].Detalhe != "" {
-					<p class="pl-9 text-xs text-muted-foreground">{ historico[0].Detalhe }</p>
+				if historico[0].Detail != "" {
+					<p class="pl-9 text-xs text-muted-foreground">{ historico[0].Detail }</p>
 				}
 			</div>
 			if len(historico) > 1 {
@@ -114,8 +114,8 @@ templ rollingTable(id, titulo, dado, fonte string, historico []roll) {
 				<ul class="space-y-0.5 border-t border-grimorio-iron pt-1.5">
 					for _, s := range historico[1:] {
 						<li class="flex items-baseline gap-2 text-3xs text-muted-foreground">
-							<span class="w-5 shrink-0 text-right font-mono tabular-nums">{ ui.Int(s.Rolagem) }</span>
-							<span class="truncate">{ s.Texto }</span>
+							<span class="w-5 shrink-0 text-right font-mono tabular-nums">{ ui.Int(s.Roll) }</span>
+							<span class="truncate">{ s.Text }</span>
 						</li>
 					}
 				</ul>
@@ -142,26 +142,26 @@ templ dungeonPlanner(v improvView) {
 				type="number"
 				min={ ui.Int(salasMinimo) }
 				max={ ui.Int(salasMaximo) }
-				value={ ui.Int(v.Salas) }
+				value={ ui.Int(v.Rooms) }
 				data-bind:rooms
 				data-on:input__debounce.300ms="@get('/mestre/improviso')"
 				aria-label="Número de salas da masmorra"
 				class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none md:text-sm"
 			/>
 		</div>
-		if v.AcimaDoTeto {
+		if v.OverCeiling {
 			// Acima do teto não é ERRO: é o livro recomendando parar. A tela diz
 			// isso em vez de esconder o resultado ou fingir um tamanho.
 			<p class="text-xs text-muted-foreground">
 				Acima do maior tamanho de masmorra do livro. Ele recomenda parar aqui e quebrar em masmorras menores.
 			</p>
-		} else if v.Tamanho != nil {
+		} else if v.Size != nil {
 			<dl class="space-y-1 text-xs">
-				@skeletonRow("Tamanho", v.Tamanho.Label)
-				@skeletonRow("Ritmo", pacingName(v.Tamanho.Pacing))
-				@skeletonRow("Ameaças a distribuir", ui.Int(v.Ameacas))
-				if v.Tamanho.MaxSecondaryObjectives > 0 {
-					@skeletonRow("Objetivos secundários (até)", ui.Int(v.Tamanho.MaxSecondaryObjectives))
+				@skeletonRow("Tamanho", v.Size.Label)
+				@skeletonRow("Ritmo", pacingName(v.Size.Pacing))
+				@skeletonRow("Ameaças a distribuir", ui.Int(v.Threats))
+				if v.Size.MaxSecondaryObjectives > 0 {
+					@skeletonRow("Objetivos secundários (até)", ui.Int(v.Size.MaxSecondaryObjectives))
 				}
 			</dl>
 		}
