@@ -63,15 +63,15 @@ func gmControls(v View, r viewGm) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if r.Manutencao != "" {
+		if r.Upkeep != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p aria-live=\"polite\" class=\"text-xs text-grimorio-gold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(r.Manutencao)
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(r.Upkeep)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 39, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 39, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -568,15 +568,15 @@ func startScene(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if v.Cena != nil {
+		if v.Scene != nil {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<p class=\"px-2 pb-1 text-2xs text-destructive-ink\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs("Interrompe a cena " + fmt.Sprint(v.Cena.Numero) + " (" + v.Cena.Nome + ")")
+			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs("Interrompe a cena " + fmt.Sprint(v.Scene.Number) + " (" + v.Scene.Name + ")")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 288, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 288, Col: 84}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {

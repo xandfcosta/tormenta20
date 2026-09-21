@@ -35,21 +35,21 @@ import (
 // coisas eram um `switch` só, "a ficha não conta rodadas" era uma ausência no
 // meio de um `case` — e ausência não se lê (ALE-365).
 func ChargedScope(spec Activation) string {
-	limite, err := engine.ParseUsageLimit(unquoted(spec.Uses))
-	if err != nil || !limite.ChargedBySheet() {
+	limit, err := engine.ParseUsageLimit(unquoted(spec.Uses))
+	if err != nil || !limit.ChargedBySheet() {
 		return ""
 	}
-	return string(limite.Window)
+	return string(limit.Window)
 }
 
 // unquoted tira as aspas do JSON cru do `uses`. Ele é cru porque o catálogo
 // escreve naturezas diferentes ali — ver o `activations.go`.
-func unquoted(bruto json.RawMessage) string {
-	var texto string
-	if json.Unmarshal(bruto, &texto) != nil {
+func unquoted(raw json.RawMessage) string {
+	var text string
+	if json.Unmarshal(raw, &text) != nil {
 		return ""
 	}
-	return texto
+	return text
 }
 
 // CostIsVariable diz que o custo é NEGOCIADO com a mesa, e não um número.

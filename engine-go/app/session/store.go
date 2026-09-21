@@ -182,26 +182,26 @@ func (st *Store) RemoveInitiativeEntry(sessionID int64, entryID string) (*live.S
 }
 
 func (st *Store) NextTurn(sessionID int64) (*live.SessionRuntimeState, error) {
-	var cobranca upkeepCharge
-	virado, err := st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
+	var charge upkeepCharge
+	turned, err := st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error {
 			// O FIM DA VEZ vem ANTES do começo da próxima: o que durava a vez
 			// que acaba tem de sair antes de alguém entrar na sua.
 			st.expireTurnEffects(s)
 			live.AdvanceTurn(s)
-			cobranca = st.payUpkeep(s)
+			charge = st.payUpkeep(s)
 			return nil
 		})
-	if err != nil || cobranca.pm == 0 {
-		return virado, err
+	if err != nil || charge.pm == 0 {
+		return turned, err
 	}
 	// O TURNO VIRA MESMO QUE O MANA NÃO SAIA: a manutenção é uma consequência
 	// da virada, e uma gravação que falha não pode desfazer a vez de ninguém.
-	gasto := int64(-cobranca.pm)
-	if pago, err := st.DeltaVitals(sessionID, cobranca.entryID, nil, &gasto); err == nil {
-		return pago, nil
+	spent := int64(-charge.pm)
+	if paid, err := st.DeltaVitals(sessionID, charge.entryID, nil, &spent); err == nil {
+		return paid, nil
 	}
-	return virado, nil
+	return turned, nil
 }
 
 func (st *Store) PreviousTurn(sessionID int64) (*live.SessionRuntimeState, error) {
@@ -214,9 +214,9 @@ func (st *Store) Reset(sessionID int64) (*live.SessionRuntimeState, error) {
 		func(s *live.SessionRuntimeState) error { live.ResetInitiative(s); return nil })
 }
 
-func (st *Store) StartScene(sessionID int64, tipo live.SceneKind) (*live.SessionRuntimeState, error) {
+func (st *Store) StartScene(sessionID int64, kind live.SceneKind) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.SceneStarted{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { live.StartScene(s, tipo); return nil })
+		func(s *live.SessionRuntimeState) error { live.StartScene(s, kind); return nil })
 }
 
 func (st *Store) EndScene(sessionID int64) (*live.SessionRuntimeState, error) {

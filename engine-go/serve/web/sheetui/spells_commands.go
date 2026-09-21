@@ -36,25 +36,25 @@ func togglePrepared(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) 
 // recomputá-la dentro do caso de uso faria o mesmo trabalho duas vezes no mesmo
 // pedido.
 func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
-	magia := chi.URLParam(r, "magia")
-	spell, conhecida := catalog.LookupSpell(magia)
-	if !conhecida {
-		return fmt.Errorf("a magia %q não existe no livro", magia)
+	spellID := chi.URLParam(r, "magia")
+	spell, known := catalog.LookupSpell(spellID)
+	if !known {
+		return fmt.Errorf("a magia %q não existe no livro", spellID)
 	}
 	// A HORA É PERGUNTADA ANTES e a ação é cobrada DEPOIS. A execução da magia
 	// diz o que ela custa do turno (p233), e a conjuração ainda pode ser
 	// recusada pelo grimório, pela preparação ou pelo PM — cobrar antes tiraria
 	// a padrão de alguém por uma magia que nunca saiu.
-	custo := engine.ActionCost(spell.Execution)
-	if err := s.deps.ActionFitsOnTurn(row.ID, custo); err != nil {
+	cost := engine.ActionCost(spell.Execution)
+	if err := s.deps.ActionFitsOnTurn(row.ID, cost); err != nil {
 		return err
 	}
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
-	if err := s.plays.Cast(r.Context(), dto, magia, sinais.augments()); err != nil {
+	if err := s.plays.Cast(r.Context(), dto, spellID, sinais.augments()); err != nil {
 		return err
 	}
-	return s.deps.SpendActionOnTurn(row.ID, custo)
+	return s.deps.SpendActionOnTurn(row.ID, cost)
 }

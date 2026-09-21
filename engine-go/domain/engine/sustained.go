@@ -50,25 +50,25 @@ type SustainedUpkeep struct {
 // @example PaySustained([]string{"velocidade", "oracao"}, 1, ActionMoment{OnTurn: true, CanAct: true})
 //
 //	// Paid: ["velocidade"], Dropped: ["oracao"], Cost: 1
-func PaySustained(sustentados []string, pmAtual int, quando ActionMoment) SustainedUpkeep {
-	if err := UsableNow(ActionFree, quando); err != nil {
-		if len(sustentados) == 0 {
+func PaySustained(sustained []string, currentPM int, moment ActionMoment) SustainedUpkeep {
+	if err := UsableNow(ActionFree, moment); err != nil {
+		if len(sustained) == 0 {
 			return SustainedUpkeep{}
 		}
 		// A RAZÃO vem da recusa e não de um segundo `if`: a mesa lê frases
 		// diferentes para "está no chão" e para o resto.
-		return SustainedUpkeep{Dropped: sustentados, Unconscious: errors.Is(err, ErrCannotAct)}
+		return SustainedUpkeep{Dropped: sustained, Unconscious: errors.Is(err, ErrCannotAct)}
 	}
-	sobra := max(pmAtual, 0)
-	var feito SustainedUpkeep
-	for _, id := range sustentados {
-		if sobra < SustainedUpkeepPM {
-			feito.Dropped = append(feito.Dropped, id)
+	remaining := max(currentPM, 0)
+	var upkeep SustainedUpkeep
+	for _, id := range sustained {
+		if remaining < SustainedUpkeepPM {
+			upkeep.Dropped = append(upkeep.Dropped, id)
 			continue
 		}
-		sobra -= SustainedUpkeepPM
-		feito.Cost += SustainedUpkeepPM
-		feito.Paid = append(feito.Paid, id)
+		remaining -= SustainedUpkeepPM
+		upkeep.Cost += SustainedUpkeepPM
+		upkeep.Paid = append(upkeep.Paid, id)
 	}
-	return feito
+	return upkeep
 }

@@ -440,8 +440,8 @@ func attackExpertiseFor(purpose string) string {
 // no despejo que alimenta o oráculo — preço alto para um rótulo que o dado já
 // carrega.
 func (c *Catalogs) appliedEffectName(catalogID string, mods []Modifier) string {
-	if nome := c.effectSourceName(catalogID); nome != catalogID {
-		return nome
+	if name := c.effectSourceName(catalogID); name != catalogID {
+		return name
 	}
 	for _, m := range mods {
 		if m.Note != "" {

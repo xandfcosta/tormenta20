@@ -35,8 +35,8 @@ templ gmControls(v View, r viewGm) {
 		// A MANUTENÇÃO é uma linha PRÓPRIA e não um sufixo do contador: ela some
 		// no turno seguinte, e costurá-la na mesma frase faria o contador mudar
 		// de comprimento a cada vez — a 390px ele é a linha mais larga da faixa.
-		if r.Manutencao != "" {
-			<p aria-live="polite" class="text-xs text-grimorio-gold">{ r.Manutencao }</p>
+		if r.Upkeep != "" {
+			<p aria-live="polite" class="text-xs text-grimorio-gold">{ r.Upkeep }</p>
 		}
 		// A RECUSA de um comando, e ela mora aqui e não na caixa de registrar: o
 		// mestre que também joga tem as duas na tela, e a frase do "Adicionar
@@ -283,9 +283,9 @@ templ startScene(v View) {
 			// ele ocupava um terço do painel dizendo a mesma frase. Ele existe
 			// porque encerrar devolve a rodada e a vez ao começo, e um clique de
 			// inércia no meio de um combate custaria a contagem.
-			if v.Cena != nil {
+			if v.Scene != nil {
 				<p class="px-2 pb-1 text-2xs text-destructive-ink">
-					{ "Interrompe a cena " + fmt.Sprint(v.Cena.Numero) + " (" + v.Cena.Nome + ")" }
+					{ "Interrompe a cena " + fmt.Sprint(v.Scene.Number) + " (" + v.Scene.Name + ")" }
 				</p>
 			}
 			@startSceneVerb(v, live.SceneAction, "combate, perseguição · o tempo corre em rodadas")

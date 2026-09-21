@@ -392,26 +392,26 @@ func TestEnteringYourTurnPaysForEachSustainedAbility(t *testing.T) {
 	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 12, charID)); err != nil {
 		t.Fatalf("Add: %v", err)
 	}
-	antes := poolsOf(t, s, charID).MpCurrent
+	before := poolsOf(t, s, charID).MpCurrent
 
 	depois, err := store.NextTurn(sid)
 	if err != nil {
 		t.Fatalf("entrar na vez: %v", err)
 	}
 
-	if agora := poolsOf(t, s, charID).MpCurrent; agora != antes-1 {
-		t.Errorf("a sustentada cobra 1 PM da FICHA: era %d e ficou %d", antes, agora)
+	if now := poolsOf(t, s, charID).MpCurrent; now != before-1 {
+		t.Errorf("a sustentada cobra 1 PM da FICHA: era %d e ficou %d", before, now)
 	}
-	extrato := depois.Scene.Upkeep
-	if extrato == nil {
+	statement := depois.Scene.Upkeep
+	if statement == nil {
 		t.Fatal("a faixa não tem o que dizer: a manutenção não deixou extrato")
 	}
-	if extrato.Cost != 1 || len(extrato.Paid) != 1 || extrato.Paid[0] != "Velocidade" {
-		t.Errorf("o extrato diz %+v, quero 1 PM pago por Velocidade", extrato)
+	if statement.Cost != 1 || len(statement.Paid) != 1 || statement.Paid[0] != "Velocidade" {
+		t.Errorf("o extrato diz %+v, quero 1 PM pago por Velocidade", statement)
 	}
 	// E a FILA espelha o mana da ficha: os dois números da tela são um só.
-	if mp := live.DerefOr(depois.Initiative[0].MpCurrent, -1); mp != antes-1 {
-		t.Errorf("a fila mostra %d PM e a ficha tem %d", mp, antes-1)
+	if mp := live.DerefOr(depois.Initiative[0].MpCurrent, -1); mp != before-1 {
+		t.Errorf("a fila mostra %d PM e a ficha tem %d", mp, before-1)
 	}
 }
 
@@ -449,15 +449,15 @@ func TestWithoutManaTheSustainedAbilityEnds(t *testing.T) {
 		t.Fatalf("entrar na vez: %v", err)
 	}
 
-	extrato := depois.Scene.Upkeep
-	if extrato == nil || len(extrato.Dropped) != 1 || extrato.Dropped[0] != "Velocidade" {
-		t.Fatalf("o extrato diz %+v, quero Velocidade caída", extrato)
+	statement := depois.Scene.Upkeep
+	if statement == nil || len(statement.Dropped) != 1 || statement.Dropped[0] != "Velocidade" {
+		t.Fatalf("o extrato diz %+v, quero Velocidade caída", statement)
 	}
-	efeitos, err := s.queries.ListActiveEffectsByCharacter(ctx, charID)
+	effects, err := s.queries.ListActiveEffectsByCharacter(ctx, charID)
 	if err != nil {
 		t.Fatalf("listar efeitos: %v", err)
 	}
-	for _, e := range efeitos {
+	for _, e := range effects {
 		if e.Catalogid == "velocidade" {
 			t.Error("a sustentada não paga continua na ficha")
 		}
@@ -504,15 +504,15 @@ func TestFallingToZeroHitPointsEndsTheSustainedAbilities(t *testing.T) {
 		t.Fatalf("entrar na vez: %v", err)
 	}
 
-	extrato := depois.Scene.Upkeep
-	if extrato == nil || len(extrato.Dropped) != 1 || extrato.Dropped[0] != "Velocidade" {
-		t.Fatalf("o extrato diz %+v, quero Velocidade caída", extrato)
+	statement := depois.Scene.Upkeep
+	if statement == nil || len(statement.Dropped) != 1 || statement.Dropped[0] != "Velocidade" {
+		t.Fatalf("o extrato diz %+v, quero Velocidade caída", statement)
 	}
-	if !extrato.Unconscious {
+	if !statement.Unconscious {
 		t.Error("a razão é estar no chão, e não falta de mana — a faixa diz frases diferentes")
 	}
-	if extrato.Cost != 0 {
-		t.Errorf("quem está inconsciente não gasta PM, e gastou %d", extrato.Cost)
+	if statement.Cost != 0 {
+		t.Errorf("quem está inconsciente não gasta PM, e gastou %d", statement.Cost)
 	}
 	if mp := poolsOf(t, s, charID).MpCurrent; mp != poco.MpCurrent {
 		t.Errorf("o mana foi de %d para %d, e não devia ter saído do lugar", poco.MpCurrent, mp)
@@ -534,15 +534,15 @@ func seedEffectWithScope(t *testing.T, s *Server, charID int64, catalogID, scope
 // scopesOf devolve a duração de cada efeito que sobrou na ficha.
 func scopesOf(t *testing.T, s *Server, charID int64) []string {
 	t.Helper()
-	linhas, err := s.queries.ListActiveEffectsByCharacter(context.Background(), charID)
+	rows, err := s.queries.ListActiveEffectsByCharacter(context.Background(), charID)
 	if err != nil {
 		t.Fatalf("listar efeitos: %v", err)
 	}
-	var escopos []string
-	for _, l := range linhas {
-		escopos = append(escopos, l.Scope)
+	var scopes []string
+	for _, l := range rows {
+		scopes = append(scopes, l.Scope)
 	}
-	return escopos
+	return scopes
 }
 
 // A VEZ QUE ACABA LEVA O QUE DURAVA UMA VEZ, e a vez é a EM CURSO e não a de
@@ -560,13 +560,13 @@ func TestTheTurnThatEndsTakesTheEffectsThatLastOneTurn(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	gm := seedUser(t, s, "gm@t.com")
-	primeiro := seedCharacterAtLevel(t, s, gm, "A", "Arcanista", 3, 10, 4)
-	alvo := seedCharacterAtLevel(t, s, gm, "B", "Arcanista", 3, 10, 4)
-	seedEffectWithScope(t, s, alvo, "escudo-da-fe", "turn")
+	first := seedCharacterAtLevel(t, s, gm, "A", "Arcanista", 3, 10, 4)
+	target := seedCharacterAtLevel(t, s, gm, "B", "Arcanista", 3, 10, 4)
+	seedEffectWithScope(t, s, target, "escudo-da-fe", "turn")
 	// O CONTROLE: um efeito de CENA na mesma ficha. Sem ele, um `DELETE` largo
 	// demais passaria verde — "não sobrou nada" e "expirou o certo" se parecem
 	// quando só há uma linha.
-	seedEffectWithScope(t, s, alvo, "armadura-arcana", "scene")
+	seedEffectWithScope(t, s, target, "armadura-arcana", "scene")
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
 	if _, err := store.Load(ctx, sid); err != nil {
@@ -575,22 +575,22 @@ func TestTheTurnThatEndsTakesTheEffectsThatLastOneTurn(t *testing.T) {
 	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
 		t.Fatalf("começar a cena: %v", err)
 	}
-	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 20, primeiro)); err != nil {
+	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 20, first)); err != nil {
 		t.Fatalf("Add A: %v", err)
 	}
-	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("B", 10, alvo)); err != nil {
+	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("B", 10, target)); err != nil {
 		t.Fatalf("Add B: %v", err)
 	}
-	if teve := scopesOf(t, s, alvo); len(teve) != 2 {
-		t.Fatalf("o controle falhou: a ficha começou com %v, quero os dois efeitos", teve)
+	if got := scopesOf(t, s, target); len(got) != 2 {
+		t.Fatalf("o controle falhou: a ficha começou com %v, quero os dois efeitos", got)
 	}
 
 	if _, err := store.NextTurn(sid); err != nil {
 		t.Fatalf("girar a vez: %v", err)
 	}
 
-	teve := scopesOf(t, s, alvo)
-	if len(teve) != 1 || teve[0] != "scene" {
-		t.Errorf("sobraram os efeitos %v, e o giro da vez leva só o de duração `turn`", teve)
+	got := scopesOf(t, s, target)
+	if len(got) != 1 || got[0] != "scene" {
+		t.Errorf("sobraram os efeitos %v, e o giro da vez leva só o de duração `turn`", got)
 	}
 }

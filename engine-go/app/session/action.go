@@ -22,14 +22,14 @@ import (
 // FORA DA CENA DE AÇÃO ela não cobra nada e não recusa: numa conversa na corte
 // não há turno, e um gesto que fosse recusado ali estaria cobrando uma regra
 // que o livro não aplica (p252).
-func (st *Store) SpendAction(sessionID int64, custo engine.ActionCost) (*live.SessionRuntimeState, error) {
+func (st *Store) SpendAction(sessionID int64, cost engine.ActionCost) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error {
-			sobrou, cobra, err := spendsFromTurn(s, custo)
-			if err != nil || !cobra {
+			left, charges, err := spendsFromTurn(s, cost)
+			if err != nil || !charges {
 				return err
 			}
-			s.Scene.StandardLeft, s.Scene.MovementLeft = sobrou.Standard, sobrou.Movement
+			s.Scene.StandardLeft, s.Scene.MovementLeft = left.Standard, left.Movement
 			return nil
 		})
 }
@@ -40,24 +40,24 @@ func (st *Store) SpendAction(sessionID int64, custo engine.ActionCost) (*live.Se
 // aplicar parece equivalente e não é: a peça pousa na casa nova e a recusa vira
 // só uma frase vermelha embaixo do mapa — a mesa lê o erro e vê o movimento
 // feito. Medido na tela, e prendido por `TestMovingOnYourTurnSpendsTheMovementAction`.
-func (st *Store) ActionFits(sessionID int64, custo engine.ActionCost) error {
-	_, _, err := spendsFromTurn(st.GetState(sessionID), custo)
+func (st *Store) ActionFits(sessionID int64, cost engine.ActionCost) error {
+	_, _, err := spendsFromTurn(st.GetState(sessionID), cost)
 	return err
 }
 
 // spendsFromTurn é a decisão que as duas compartilham: o segundo valor diz se a
 // cena COBRA — fora de uma cena de ação, nada cabe porque nada custa (p252).
-func spendsFromTurn(s *live.SessionRuntimeState, custo engine.ActionCost) (engine.TurnBudget, bool, error) {
+func spendsFromTurn(s *live.SessionRuntimeState, cost engine.ActionCost) (engine.TurnBudget, bool, error) {
 	if s == nil || s.Scene == nil || !s.Scene.CountsRounds() {
 		return engine.TurnBudget{}, false, nil
 	}
-	sobrou, err := engine.TurnBudget{
+	left, err := engine.TurnBudget{
 		Standard: s.Scene.StandardLeft, Movement: s.Scene.MovementLeft,
-	}.Spend(custo)
+	}.Spend(cost)
 	if err != nil {
-		return sobrou, true, fmt.Errorf("%s: %w", whoIsOnTurn(s), err)
+		return left, true, fmt.Errorf("%s: %w", whoIsOnTurn(s), err)
 	}
-	return sobrou, true, nil
+	return left, true, nil
 }
 
 // whoIsOnTurn nomeia quem ficou sem ação, porque "não sobrou ação neste
@@ -88,24 +88,24 @@ func whoIsOnTurn(s *live.SessionRuntimeState) string {
 // As DUAS perguntas são feitas em ordem, e a ordem é a das frases: primeiro se é
 // a hora (`UsableNow`), depois se sobrou (`ActionFits`). Invertida, quem tenta
 // agir fora da vez com o turno cheio ouviria "não sobrou ação".
-func (st *Store) CharacterActionFits(characterID int64, custo engine.ActionCost) error {
-	sessionID, quando, emCena := st.momentOf(characterID)
-	if !emCena {
+func (st *Store) CharacterActionFits(characterID int64, cost engine.ActionCost) error {
+	sessionID, moment, inScene := st.momentOf(characterID)
+	if !inScene {
 		return nil
 	}
-	if err := engine.UsableNow(custo, quando); err != nil {
+	if err := engine.UsableNow(cost, moment); err != nil {
 		return err
 	}
-	return st.ActionFits(sessionID, custo)
+	return st.ActionFits(sessionID, cost)
 }
 
 // SpendCharacterAction cobra do turno o que o gesto FEITO custou.
-func (st *Store) SpendCharacterAction(characterID int64, custo engine.ActionCost) error {
-	sessionID, _, emCena := st.momentOf(characterID)
-	if !emCena {
+func (st *Store) SpendCharacterAction(characterID int64, cost engine.ActionCost) error {
+	sessionID, _, inScene := st.momentOf(characterID)
+	if !inScene {
 		return nil
 	}
-	_, err := st.SpendAction(sessionID, custo)
+	_, err := st.SpendAction(sessionID, cost)
 	return err
 }
 
@@ -131,8 +131,8 @@ func isOnTurn(s *live.SessionRuntimeState, characterID int64) bool {
 	if s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
 		return false
 	}
-	naVez := s.Initiative[s.TurnIndex].CharacterID
-	return naVez != nil && *naVez == characterID
+	onTurn := s.Initiative[s.TurnIndex].CharacterID
+	return onTurn != nil && *onTurn == characterID
 }
 
 // canAct é ter PV: a 0 "você cai inconsciente" (p236), e o poço do app tem piso
@@ -146,10 +146,10 @@ func (st *Store) canAct(characterID int64) bool {
 	if st.ficha == nil {
 		return true
 	}
-	pocos, err := st.ficha.PoolsOf(context.Background(), []int64{characterID})
+	pools, err := st.ficha.PoolsOf(context.Background(), []int64{characterID})
 	if err != nil {
 		return true
 	}
-	poco, tem := pocos[characterID]
-	return !tem || poco.HpCurrent > 0
+	pool, found := pools[characterID]
+	return !found || pool.HpCurrent > 0
 }

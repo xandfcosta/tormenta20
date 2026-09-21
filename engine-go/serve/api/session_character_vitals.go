@@ -154,21 +154,21 @@ func (v sheetVitals) PoolsOf(
 // SustainedOf lista os efeitos que cobram mana por turno, do mais antigo para o
 // mais novo — a ordem em que serão pagos quando o mana não cobrir todos.
 func (v sheetVitals) SustainedOf(ctx context.Context, charID int64) ([]live.SustainedEffect, error) {
-	linhas, err := v.q.ListActiveEffectsByCharacter(ctx, charID)
+	rows, err := v.q.ListActiveEffectsByCharacter(ctx, charID)
 	if err != nil {
 		return nil, err
 	}
-	var sustentados []live.SustainedEffect
-	for _, l := range linhas {
-		dura, err := engine.ParseDuration(l.Scope)
-		if err != nil || dura.Kind != engine.DurationSustained {
+	var sustained []live.SustainedEffect
+	for _, l := range rows {
+		duration, err := engine.ParseDuration(l.Scope)
+		if err != nil || duration.Kind != engine.DurationSustained {
 			continue
 		}
-		sustentados = append(sustentados, live.SustainedEffect{
+		sustained = append(sustained, live.SustainedEffect{
 			CatalogID: l.Catalogid, Label: spellLabel(l.Catalogid),
 		})
 	}
-	return sustentados, nil
+	return sustained, nil
 }
 
 // EndSustained derruba o efeito que não foi pago.
@@ -193,8 +193,8 @@ func (v sheetVitals) ExpireTurnEffects(ctx context.Context, charID int64) error 
 // do nome até hoje. Consertar aquilo é mexer no que o motor carrega, e é outra
 // fatia.
 func spellLabel(catalogID string) string {
-	if magia, known := catalog.LookupSpell(catalogID); known && magia.Name != "" {
-		return magia.Name
+	if spell, known := catalog.LookupSpell(catalogID); known && spell.Name != "" {
+		return spell.Name
 	}
 	return catalogID
 }

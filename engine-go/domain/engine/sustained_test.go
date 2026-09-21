@@ -13,53 +13,53 @@ import (
 // Se não o fizer, a habilidade termina. Você pode manter diversas habilidades
 // sustentadas, pagando o custo de cada uma".
 func TestSustainedAbilitiesCostAPointOfManaEachTurn(t *testing.T) {
-	casos := []struct {
-		nome        string
-		sustentados []string
+	cases := []struct {
+		name        string
+		sustained   []string
 		pm          int
-		caido       bool
-		quantos     int
-		mantidos    []string
-		caidos      []string
+		down        bool
+		wantCost    int
+		wantPaid    []string
+		wantDropped []string
 	}{
-		{nome: "sem sustentada não custa nada", pm: 9},
-		{nome: "uma sustentada custa 1 PM",
-			sustentados: []string{"velocidade"}, pm: 9, quantos: 1, mantidos: []string{"velocidade"}},
-		{nome: "três sustentadas custam 3 PM, uma por uma",
-			sustentados: []string{"velocidade", "oracao", "forma-eterea"}, pm: 9, quantos: 3,
-			mantidos: []string{"velocidade", "oracao", "forma-eterea"}},
+		{name: "sem sustentada não custa nada", pm: 9},
+		{name: "uma sustentada custa 1 PM",
+			sustained: []string{"velocidade"}, pm: 9, wantCost: 1, wantPaid: []string{"velocidade"}},
+		{name: "três sustentadas custam 3 PM, uma por uma",
+			sustained: []string{"velocidade", "oracao", "forma-eterea"}, pm: 9, wantCost: 3,
+			wantPaid: []string{"velocidade", "oracao", "forma-eterea"}},
 		// "Se não o fizer, a habilidade termina" — sem mana, o efeito CAI, e
 		// não fica de pé devendo.
-		{nome: "sem mana nenhuma a sustentada cai",
-			sustentados: []string{"velocidade"}, pm: 0, caidos: []string{"velocidade"}},
+		{name: "sem mana nenhuma a sustentada cai",
+			sustained: []string{"velocidade"}, pm: 0, wantDropped: []string{"velocidade"}},
 		// O MANA QUE HÁ paga o que der, e a ORDEM é a de quem foi conjurado
 		// primeiro: o livro deixa a escolha com o jogador, e uma ordem estável e
 		// explicável é o que permite a ele desfazer a diferença encerrando a
 		// que quiser — encerrar também é ação livre.
-		{nome: "com 2 PM e três sustentadas, as duas mais antigas ficam",
-			sustentados: []string{"velocidade", "oracao", "forma-eterea"}, pm: 2, quantos: 2,
-			mantidos: []string{"velocidade", "oracao"}, caidos: []string{"forma-eterea"}},
-		{nome: "mana negativa é tratada como nenhuma",
-			sustentados: []string{"velocidade"}, pm: -3, caidos: []string{"velocidade"}},
+		{name: "com 2 PM e três sustentadas, as duas mais antigas ficam",
+			sustained: []string{"velocidade", "oracao", "forma-eterea"}, pm: 2, wantCost: 2,
+			wantPaid: []string{"velocidade", "oracao"}, wantDropped: []string{"forma-eterea"}},
+		{name: "mana negativa é tratada como nenhuma",
+			sustained: []string{"velocidade"}, pm: -3, wantDropped: []string{"velocidade"}},
 		// INCONSCIENTE NÃO SUSTENTA, e o mana cheio não muda nada: a 0 PV "você
 		// cai inconsciente" (p236), e manter a habilidade exige uma AÇÃO LIVRE
 		// no início do turno — que quem não age não faz. É por aqui que a
 		// cláusula da morte da p227 chega ao app, cujo PV tem piso em zero.
-		{nome: "quem caiu a 0 PV não paga, mesmo com mana de sobra",
-			sustentados: []string{"velocidade", "oracao"}, pm: 99, caido: true,
-			caidos: []string{"velocidade", "oracao"}},
+		{name: "quem caiu a 0 PV não paga, mesmo com mana de sobra",
+			sustained: []string{"velocidade", "oracao"}, pm: 99, down: true,
+			wantDropped: []string{"velocidade", "oracao"}},
 	}
-	for _, c := range casos {
-		t.Run(c.nome, func(t *testing.T) {
-			teve := PaySustained(c.sustentados, c.pm, ActionMoment{OnTurn: true, CanAct: !c.caido})
-			if teve.Cost != c.quantos {
-				t.Errorf("custou %d PM, quero %d", teve.Cost, c.quantos)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := PaySustained(c.sustained, c.pm, ActionMoment{OnTurn: true, CanAct: !c.down})
+			if got.Cost != c.wantCost {
+				t.Errorf("custou %d PM, quero %d", got.Cost, c.wantCost)
 			}
-			if !reflect.DeepEqual(teve.Paid, c.mantidos) {
-				t.Errorf("ficaram de pé %v, quero %v", teve.Paid, c.mantidos)
+			if !reflect.DeepEqual(got.Paid, c.wantPaid) {
+				t.Errorf("ficaram de pé %v, quero %v", got.Paid, c.wantPaid)
 			}
-			if !reflect.DeepEqual(teve.Dropped, c.caidos) {
-				t.Errorf("caíram %v, quero %v", teve.Dropped, c.caidos)
+			if !reflect.DeepEqual(got.Dropped, c.wantDropped) {
+				t.Errorf("caíram %v, quero %v", got.Dropped, c.wantDropped)
 			}
 		})
 	}
@@ -75,30 +75,30 @@ func TestSustainedAbilitiesCostAPointOfManaEachTurn(t *testing.T) {
 // no dia em que uma aparecer, que é quando o
 // `assertOnlyOneSustainedSpell` precisa passar a filtrar pela fonte.
 func TestOnlySpellsAreSustainedInTheBook(t *testing.T) {
-	fora := map[string]int{}
-	medidos := 0
-	for _, nome := range catalog.Resources() {
-		bruto, ok := catalog.Resource(nome)
+	outside := map[string]int{}
+	measured := 0
+	for _, name := range catalog.Resources() {
+		payload, ok := catalog.Resource(name)
 		if !ok {
 			continue
 		}
-		medidos++
-		var cru any
-		if err := json.Unmarshal(bruto, &cru); err != nil {
+		measured++
+		var raw any
+		if err := json.Unmarshal(payload, &raw); err != nil {
 			continue
 		}
-		if n := countSustained(cru); n > 0 && nome != "spells" {
-			fora[nome] = n
+		if n := countSustained(raw); n > 0 && name != "spells" {
+			outside[name] = n
 		}
 	}
-	if medidos < 10 {
-		t.Fatalf("só %d catálogos varridos — a varredura está olhando o lugar errado", medidos)
+	if measured < 10 {
+		t.Fatalf("só %d catálogos varridos — a varredura está olhando o lugar errado", measured)
 	}
-	if len(fora) > 0 {
+	if len(outside) > 0 {
 		t.Errorf("habilidade sustentada FORA das magias: %v — o limite de uma sustentada por vez "+
-			"passa a precisar do filtro por fonte em `assertOnlyOneSustainedSpell` (p227)", fora)
+			"passa a precisar do filtro por fonte em `assertOnlyOneSustainedSpell` (p227)", outside)
 	}
-	t.Logf("%d catálogos varridos; a duração sustentada vive só nas magias", medidos)
+	t.Logf("%d catálogos varridos; a duração sustentada vive só nas magias", measured)
 }
 
 // countSustained conta `"duration": "sustentada"` em qualquer profundidade.
@@ -106,17 +106,17 @@ func countSustained(no any) int {
 	switch v := no.(type) {
 	case map[string]any:
 		n := 0
-		for k, filho := range v {
-			if k == "duration" && filho == "sustentada" {
+		for k, child := range v {
+			if k == "duration" && child == "sustentada" {
 				n++
 			}
-			n += countSustained(filho)
+			n += countSustained(child)
 		}
 		return n
 	case []any:
 		n := 0
-		for _, filho := range v {
-			n += countSustained(filho)
+		for _, child := range v {
+			n += countSustained(child)
 		}
 		return n
 	}
@@ -126,15 +126,15 @@ func countSustained(no any) int {
 // A RAZÃO DA QUEDA é diferente, e a mesa lê a diferença: sem mana é uma escolha
 // que acabou, inconsciente é um personagem no chão.
 func TestTheUpkeepSaysWhyTheAbilityEnded(t *testing.T) {
-	semMana := PaySustained([]string{"velocidade"}, 0, ActionMoment{OnTurn: true, CanAct: true})
-	if semMana.Unconscious {
+	noMana := PaySustained([]string{"velocidade"}, 0, ActionMoment{OnTurn: true, CanAct: true})
+	if noMana.Unconscious {
 		t.Error("cair por falta de mana não é cair por estar inconsciente")
 	}
-	noChao := PaySustained([]string{"velocidade"}, 99, ActionMoment{OnTurn: true, CanAct: false})
-	if !noChao.Unconscious {
+	unconscious := PaySustained([]string{"velocidade"}, 99, ActionMoment{OnTurn: true, CanAct: false})
+	if !unconscious.Unconscious {
 		t.Error("quem está a 0 PV cai por não poder agir, e não por falta de mana")
 	}
-	if noChao.Cost != 0 {
-		t.Errorf("inconsciente não gasta PM, e gastou %d", noChao.Cost)
+	if unconscious.Cost != 0 {
+		t.Errorf("inconsciente não gasta PM, e gastou %d", unconscious.Cost)
 	}
 }

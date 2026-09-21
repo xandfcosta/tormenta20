@@ -19,12 +19,12 @@ import (
 // learnAndCast ensina a magia e conjura, pelas rotas da aba Magias.
 func learnAndCast(t *testing.T, f sceneFixture, spellID string) *responseRecorderLike {
 	t.Helper()
-	aprende := fmt.Sprintf("/personagens/%d/magias/aprende/%s?tab=spells", f.charID, spellID)
-	if rec := f.pede(t, f.jogador, http.MethodPost, aprende, ""); rec.Code != http.StatusOK {
+	learnURL := fmt.Sprintf("/personagens/%d/magias/aprende/%s?tab=spells", f.charID, spellID)
+	if rec := f.pede(t, f.jogador, http.MethodPost, learnURL, ""); rec.Code != http.StatusOK {
 		t.Fatalf("aprender %q respondeu %d: %s", spellID, rec.Code, rec.Body.String())
 	}
-	conjura := fmt.Sprintf("/personagens/%d/magias/conjura/%s?tab=spells", f.charID, spellID)
-	rec := f.pede(t, f.jogador, http.MethodPost, conjura, "")
+	castURL := fmt.Sprintf("/personagens/%d/magias/conjura/%s?tab=spells", f.charID, spellID)
+	rec := f.pede(t, f.jogador, http.MethodPost, castURL, "")
 	return &responseRecorderLike{Code: rec.Code, Body: rec.Body.String()}
 }
 
@@ -54,9 +54,9 @@ func startCombatWithSomeoneElseOnTurn(t *testing.T, f sceneFixture) {
 	if _, err := store.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("girar para a primeira vez: %v", err)
 	}
-	estado := store.GetState(f.sessionID)
-	if quem := estado.Initiative[estado.TurnIndex]; quem.CharacterID != nil {
-		t.Fatalf("o controle falhou: a vez é do personagem (%s), e o caso precisa dela ser de outro", quem.Label)
+	state := store.GetState(f.sessionID)
+	if who := state.Initiative[state.TurnIndex]; who.CharacterID != nil {
+		t.Fatalf("o controle falhou: a vez é do personagem (%s), e o caso precisa dela ser de outro", who.Label)
 	}
 }
 
@@ -69,17 +69,17 @@ func TestCastingOutOfTurnRefusesTheStandardAndAllowsTheReaction(t *testing.T) {
 	startCombatWithSomeoneElseOnTurn(t, f)
 
 	// `luz` é execução PADRÃO (p197).
-	recusa := sceneRefusal(learnAndCast(t, f, "luz").Body)
-	if recusa == "" {
+	refusal := sceneRefusal(learnAndCast(t, f, "luz").Body)
+	if refusal == "" {
 		t.Fatal("conjurar uma magia de ação padrão fora da vez passou sem uma palavra na tela")
 	}
-	if !strings.Contains(recusa, "não é a sua vez") {
-		t.Errorf("a recusa diz %q, e quem lê precisa saber que é questão de VEZ", recusa)
+	if !strings.Contains(refusal, "não é a sua vez") {
+		t.Errorf("a recusa diz %q, e quem lê precisa saber que é questão de VEZ", refusal)
 	}
 
 	// `queda-suave` é execução REAÇÃO (p203), e o mesmo instante a permite.
-	if passou := learnAndCast(t, f, "queda-suave"); sceneRefusal(passou.Body) != "" {
-		t.Errorf("a reação foi recusada fora da vez: %q", sceneRefusal(passou.Body))
+	if passed := learnAndCast(t, f, "queda-suave"); sceneRefusal(passed.Body) != "" {
+		t.Errorf("a reação foi recusada fora da vez: %q", sceneRefusal(passed.Body))
 	}
 }
 
@@ -93,21 +93,21 @@ func TestTheSecondStandardSpellOfATurnIsRefusedForLackOfAction(t *testing.T) {
 	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("passar a vez ao personagem: %v", err)
 	}
-	estado := f.s.sessions.GetState(f.sessionID)
-	quem := estado.Initiative[estado.TurnIndex].CharacterID
-	if quem == nil || *quem != f.charID {
+	state := f.s.sessions.GetState(f.sessionID)
+	who := state.Initiative[state.TurnIndex].CharacterID
+	if who == nil || *who != f.charID {
 		t.Fatalf("o controle falhou: a vez não é do personagem")
 	}
 
 	if rec := learnAndCast(t, f, "luz"); sceneRefusal(rec.Body) != "" {
 		t.Fatalf("a primeira padrão da vez foi recusada: %q", sceneRefusal(rec.Body))
 	}
-	segunda := sceneRefusal(learnAndCast(t, f, "luz").Body)
-	if segunda == "" {
+	second := sceneRefusal(learnAndCast(t, f, "luz").Body)
+	if second == "" {
 		t.Fatal("a segunda ação padrão do mesmo turno passou: o turno tem UMA")
 	}
-	if !strings.Contains(segunda, "não sobrou ação") {
-		t.Errorf("a segunda recusa diz %q, e o motivo é falta de AÇÃO e não de vez", segunda)
+	if !strings.Contains(second, "não sobrou ação") {
+		t.Errorf("a segunda recusa diz %q, e o motivo é falta de AÇÃO e não de vez", second)
 	}
 }
 
@@ -134,16 +134,16 @@ func TestARefusedCastDoesNotSpendTheTurnAction(t *testing.T) {
 		t.Fatalf("passar a vez ao personagem: %v", err)
 	}
 
-	// `luz` sem estar no grimório: o instante permite e a conjuração recusa.
-	conjura := fmt.Sprintf("/personagens/%d/magias/conjura/luz?tab=spells", f.charID)
-	recusa := sceneRefusal(f.pede(t, f.jogador, http.MethodPost, conjura, "").Body.String())
-	if recusa == "" {
+	// `luz` sem estar no grimório: o instante permite e a castURLção recusa.
+	castURL := fmt.Sprintf("/personagens/%d/magias/conjura/luz?tab=spells", f.charID)
+	refusal := sceneRefusal(f.pede(t, f.jogador, http.MethodPost, castURL, "").Body.String())
+	if refusal == "" {
 		t.Fatal("o controle falhou: conjurar uma magia fora do grimório passou")
 	}
-	if strings.Contains(recusa, "sua vez") || strings.Contains(recusa, "sobrou ação") {
-		t.Fatalf("a recusa foi do TURNO e não do grimório: %q", recusa)
+	if strings.Contains(refusal, "sua vez") || strings.Contains(refusal, "sobrou ação") {
+		t.Fatalf("a recusa foi do TURNO e não do grimório: %q", refusal)
 	}
-	if sobrou := f.s.sessions.GetState(f.sessionID).Scene; !sobrou.StandardLeft {
+	if left := f.s.sessions.GetState(f.sessionID).Scene; !left.StandardLeft {
 		t.Error("a conjuração recusada cobrou a ação padrão mesmo assim")
 	}
 

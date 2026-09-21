@@ -64,8 +64,8 @@ func FullTurn() TurnBudget { return TurnBudget{Standard: true, Movement: true} }
 // Ele não muta: o chamador decide se guarda o resultado, e é isso que deixa a
 // TELA perguntar "daria para usar?" sem gastar nada — a mesma pergunta que o
 // `UseDecision` faz para desenhar o botão.
-func (b TurnBudget) Spend(custo ActionCost) (TurnBudget, error) {
-	switch custo {
+func (b TurnBudget) Spend(cost ActionCost) (TurnBudget, error) {
+	switch cost {
 	// Não custam nada e cabem sempre: "como ações livres, reações tomam tão
 	// pouco tempo que você pode realizar qualquer quantidade delas" (p233). A
 	// passiva não é acionada, e a variável é decidida pela mesa.
@@ -101,7 +101,7 @@ func (b TurnBudget) Spend(custo ActionCost) (TurnBudget, error) {
 		}
 		return TurnBudget{}, nil
 	}
-	return b, unknownActionCost(custo)
+	return b, unknownActionCost(cost)
 }
 
 // Spent diz se algo já foi gasto neste turno.
@@ -110,8 +110,8 @@ func (b TurnBudget) Spent() bool { return !b.Standard || !b.Movement }
 // unknownActionCost é a recusa que o CUSTO e o INSTANTE devolvem para a mesma
 // palavra, e ela é uma só porque a pergunta é a mesma: o catálogo escreveu algo
 // que o livro não tem.
-func unknownActionCost(custo ActionCost) error {
-	return fmt.Errorf("custo de ação %q não é um dos do livro (p233): padrao, movimento, completa, livre, reacao", custo)
+func unknownActionCost(cost ActionCost) error {
+	return fmt.Errorf("custo de ação %q não é um dos do livro (p233): padrao, movimento, completa, livre, reacao", cost)
 }
 
 // ── O INSTANTE ──────────────────────────────────────────────────────────────
@@ -159,23 +159,23 @@ type ActionMoment struct {
 // depois se sobrou.
 //
 // @example UsableNow(ActionReaction, ActionMoment{}) // nil: reação vale sempre
-func UsableNow(custo ActionCost, quando ActionMoment) error {
-	switch custo {
+func UsableNow(cost ActionCost, moment ActionMoment) error {
+	switch cost {
 	case ActionReaction:
 		return nil
 	case ActionPassive, ActionVaries:
 		return nil
 	case ActionStandard, ActionMovement, ActionFull, ActionFree:
 	default:
-		return unknownActionCost(custo)
+		return unknownActionCost(cost)
 	}
 	// AS DUAS FRASES NÃO CITAM O CUSTO, e isso é escolha: `padrao` é a grafia do
 	// CATÁLOGO, e quem lê a recusa é uma pessoa. Dizer o que FUNCIONARIA — a
 	// reação — informa mais que repetir o nome do que ela acabou de clicar.
-	if !quando.OnTurn {
+	if !moment.OnTurn {
 		return fmt.Errorf("%w, e só a reação acontece fora dela (p233)", ErrNotYourTurn)
 	}
-	if !quando.CanAct {
+	if !moment.CanAct {
 		return fmt.Errorf("%w, e o livro isenta só a reação (p233)", ErrCannotAct)
 	}
 	return nil

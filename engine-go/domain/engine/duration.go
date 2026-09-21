@@ -97,8 +97,8 @@ type Duration struct {
 // PALAVRA DESCONHECIDA RECUSA, inclusive a vazia. É a diferença entre um erro
 // de digitação que aparece e um efeito que nunca expira porque ninguém soube
 // ler a palavra dele — e o segundo não deixa rastro nenhum.
-func ParseDuration(escrito string) (Duration, error) {
-	switch escrito {
+func ParseDuration(written string) (Duration, error) {
+	switch written {
 	case "instantanea":
 		return Duration{Kind: DurationInstant}, nil
 	case "instant":
@@ -127,7 +127,7 @@ func ParseDuration(escrito string) (Duration, error) {
 		return Duration{Kind: DurationDischarge}, nil
 	}
 	return Duration{}, fmt.Errorf(
-		"duração %q não é uma das seis do livro (p227): instantanea, cena, sustentada, definida, permanente, descarregar", escrito)
+		"duração %q não é uma das seis do livro (p227): instantanea, cena, sustentada, definida, permanente, descarregar", written)
 }
 
 // storableNotes são as MEDIDAS que o catálogo escreve em prosa e que o app sabe
@@ -171,18 +171,18 @@ func TurnScope() string {
 // defeito do `defaultScope` com outro nome.
 //
 // @example SpellDuration("definida", "1 turno") // {Fixed, 1, turn}
-func SpellDuration(escrito, nota string) (Duration, error) {
-	dura, err := ParseDuration(escrito)
+func SpellDuration(written, note string) (Duration, error) {
+	duration, err := ParseDuration(written)
 	if err != nil {
 		return Duration{}, err
 	}
-	if dura.Kind != DurationFixed || dura.Amount != 0 {
-		return dura, nil
+	if duration.Kind != DurationFixed || duration.Amount != 0 {
+		return duration, nil
 	}
-	if medida, tem := storableNotes[strings.ToLower(strings.TrimSpace(nota))]; tem {
-		return medida, nil
+	if measure, found := storableNotes[strings.ToLower(strings.TrimSpace(note))]; found {
+		return measure, nil
 	}
-	return dura, nil
+	return duration, nil
 }
 
 // EffectScope diz com que duração o efeito de uma magia é GRAVADO na ficha.
@@ -207,23 +207,23 @@ func SpellDuration(escrito, nota string) (Duration, error) {
 // por isso trocaria um efeito com duração errada por um efeito nenhum.
 //
 // @example EffectScope("sustentada", "", "scene") // "sustained", nil
-func EffectScope(daMagia, nota, declarada string) (string, error) {
-	dura, err := SpellDuration(daMagia, nota)
+func EffectScope(spellDuration, note, declared string) (string, error) {
+	duration, err := SpellDuration(spellDuration, note)
 	if err != nil {
-		return "", fmt.Errorf("a magia dura %q: %w", daMagia, err)
+		return "", fmt.Errorf("a magia dura %q: %w", spellDuration, err)
 	}
-	if !dura.tellsTheEffectWhenToEnd() {
-		if declarada == "" {
+	if !duration.tellsTheEffectWhenToEnd() {
+		if declared == "" {
 			return "", fmt.Errorf(
-				"a magia dura %q, que não diz quando o EFEITO acaba: o efeito tem de declarar a duração dele (p227)", daMagia)
+				"a magia dura %q, que não diz quando o EFEITO acaba: o efeito tem de declarar a duração dele (p227)", spellDuration)
 		}
-		doEfeito, err := ParseDuration(declarada)
+		effectDuration, err := ParseDuration(declared)
 		if err != nil {
-			return "", fmt.Errorf("o efeito declara durar %q: %w", declarada, err)
+			return "", fmt.Errorf("o efeito declara durar %q: %w", declared, err)
 		}
-		return doEfeito.Stored(), nil
+		return effectDuration.Stored(), nil
 	}
-	return dura.Stored(), nil
+	return duration.Stored(), nil
 }
 
 // tellsTheEffectWhenToEnd diz se a duração da magia serve de duração do efeito.
@@ -261,12 +261,12 @@ func (d Duration) Stored() string {
 // a palavra é a validação do catálogo, no despejo.
 //
 // @example DurationLabel("sustentada") // "sustentada"
-func DurationLabel(escrito string) string {
-	dura, err := ParseDuration(escrito)
+func DurationLabel(written string) string {
+	duration, err := ParseDuration(written)
 	if err != nil {
 		return "cena"
 	}
-	switch dura.Kind {
+	switch duration.Kind {
 	case DurationSustained:
 		return "sustentada"
 	case DurationPermanent:
@@ -274,7 +274,7 @@ func DurationLabel(escrito string) string {
 	case DurationDischarge:
 		return "até descarregar"
 	case DurationFixed:
-		switch dura.Unit {
+		switch duration.Unit {
 		case UnitDay:
 			return "dia"
 		case UnitTurn:
@@ -322,8 +322,8 @@ func (l UsageLimit) ChargedBySheet() bool {
 
 // ParseUsageLimit lê o `uses` da ativação — em PORTUGUÊS, que é como o catálogo
 // o escreve.
-func ParseUsageLimit(escrito string) (UsageLimit, error) {
-	switch escrito {
+func ParseUsageLimit(written string) (UsageLimit, error) {
+	switch written {
 	case "":
 		return UsageLimit{}, nil
 	case "rodada":
@@ -334,5 +334,5 @@ func ParseUsageLimit(escrito string) (UsageLimit, error) {
 		return UsageLimit{Times: 1, Window: WindowDay}, nil
 	}
 	return UsageLimit{}, fmt.Errorf(
-		"janela de uso %q não é uma das três que o catálogo usa: rodada, cena, dia", escrito)
+		"janela de uso %q não é uma das três que o catálogo usa: rodada, cena, dia", written)
 }

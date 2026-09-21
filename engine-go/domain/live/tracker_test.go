@@ -94,10 +94,10 @@ func TestTheButtonSaysWhereItGoes(t *testing.T) {
 // tipada — fora da de AÇÃO não há rodada para contar, e o contador diz qual
 // cena é (p252).
 func TestTheCounterHasFiveStates(t *testing.T) {
-	acao := &Scene{Kind: SceneAction, Number: 1, StandardLeft: true, MovementLeft: true}
+	action := &Scene{Kind: SceneAction, Number: 1, StandardLeft: true, MovementLeft: true}
 	casos := []struct {
 		nome   string
-		cena   *Scene
+		scene  *Scene
 		rodada int
 		turno  int
 		naFila int
@@ -108,10 +108,10 @@ func TestTheCounterHasFiveStates(t *testing.T) {
 			"Interpretação · cena 2"},
 		{"numa exploração também não", &Scene{Kind: SceneExploration, Number: 3}, 0, -1, 4,
 			"Exploração · cena 3"},
-		{"em cena sem fila", acao, 0, -1, 0, "Em cena · ninguém na fila"},
+		{"em cena sem fila", action, 0, -1, 0, "Em cena · ninguém na fila"},
 		// "Rodada 0" é de propósito: a rodada só vira 1 no primeiro avanço.
-		{"fila montada, combate não começou", acao, 0, -1, 4, "Rodada 0 · 4 na fila"},
-		{"em combate", acao, 2, 1, 4, "Rodada 2 · Turno 2/4 · padrão e movimento"},
+		{"fila montada, combate não começou", action, 0, -1, 4, "Rodada 0 · 4 na fila"},
+		{"em combate", action, 2, 1, 4, "Rodada 2 · Turno 2/4 · padrão e movimento"},
 		// O QUE SOBROU entra na frase porque quem vai clicar precisa saber ANTES
 		// (p233). A TROCA aparece: com a padrão de pé e o movimento gasto, ainda
 		// dá para mover.
@@ -121,10 +121,10 @@ func TestTheCounterHasFiveStates(t *testing.T) {
 			"Rodada 2 · Turno 2/4 · movimento"},
 		{"turno inteiro gasto", &Scene{Kind: SceneAction, Number: 1}, 2, 1, 4,
 			"Rodada 2 · Turno 2/4 · sem ação"},
-		{"o turno é 1-indexado na tela", acao, 1, 0, 3, "Rodada 1 · Turno 1/3 · padrão e movimento"},
+		{"o turno é 1-indexado na tela", action, 1, 0, 3, "Rodada 1 · Turno 1/3 · padrão e movimento"},
 	}
 	for _, c := range casos {
-		got := TurnCounter(c.cena, c.rodada, c.turno, c.naFila)
+		got := TurnCounter(c.scene, c.rodada, c.turno, c.naFila)
 		if got != c.quero {
 			t.Errorf("%s: %q, quero %q", c.nome, got, c.quero)
 		}
@@ -224,36 +224,36 @@ func TestTheNameLimitCountsLettersNotBytes(t *testing.T) {
 // o quê, e o que caiu por falta de mana (p227).
 func TestTheStripTellsWhatSustainingCostThisTurn(t *testing.T) {
 	casos := []struct {
-		nome    string
-		extrato *TurnUpkeep
-		quero   string
+		nome      string
+		statement *TurnUpkeep
+		quero     string
 	}{
 		{nome: "sem sustentada a linha não existe"},
 		// O SALDO vem junto do gasto: "−1 PM" diz o preço e não diz se dá para
 		// pagar de novo, que é a decisão de quem sustenta.
 		{nome: "uma paga diz o nome, o custo e o que sobrou",
-			extrato: &TurnUpkeep{Paid: []string{"Velocidade"}, Cost: 1, MpBefore: 12, MpAfter: 11},
-			quero:   "Velocidade · −1 PM (12 → 11)"},
+			statement: &TurnUpkeep{Paid: []string{"Velocidade"}, Cost: 1, MpBefore: 12, MpAfter: 11},
+			quero:     "Velocidade · −1 PM (12 → 11)"},
 		{nome: "duas pagas somam o custo numa linha só",
-			extrato: &TurnUpkeep{Paid: []string{"Velocidade", "Oração"}, Cost: 2, MpBefore: 58, MpAfter: 56},
-			quero:   "Velocidade e Oração · −2 PM (58 → 56)"},
+			statement: &TurnUpkeep{Paid: []string{"Velocidade", "Oração"}, Cost: 2, MpBefore: 58, MpAfter: 56},
+			quero:     "Velocidade e Oração · −2 PM (58 → 56)"},
 		// A QUE CAIU é a notícia, e ela vem por último porque é o que muda a
 		// ficha de quem está jogando.
 		{nome: "a que caiu é nomeada",
-			extrato: &TurnUpkeep{Dropped: []string{"Velocidade"}, Cost: 0},
-			quero:   "Velocidade acabou: sem PM para sustentar"},
+			statement: &TurnUpkeep{Dropped: []string{"Velocidade"}, Cost: 0},
+			quero:     "Velocidade acabou: sem PM para sustentar"},
 		// A RAZÃO muda a frase: no chão não é falta de mana.
 		{nome: "quem caiu a 0 PV não sustenta, e a faixa diz isso",
-			extrato: &TurnUpkeep{Dropped: []string{"Velocidade", "Oração"}, Unconscious: true},
-			quero:   "Velocidade e Oração acabaram: inconsciente não sustenta"},
+			statement: &TurnUpkeep{Dropped: []string{"Velocidade", "Oração"}, Unconscious: true},
+			quero:     "Velocidade e Oração acabaram: inconsciente não sustenta"},
 		{nome: "paga e caída convivem",
-			extrato: &TurnUpkeep{Paid: []string{"Oração"}, Dropped: []string{"Velocidade"}, Cost: 1, MpBefore: 1},
-			quero:   "Oração · −1 PM (1 → 0) · Velocidade acabou: sem PM para sustentar"},
+			statement: &TurnUpkeep{Paid: []string{"Oração"}, Dropped: []string{"Velocidade"}, Cost: 1, MpBefore: 1},
+			quero:     "Oração · −1 PM (1 → 0) · Velocidade acabou: sem PM para sustentar"},
 	}
 	for _, c := range casos {
 		t.Run(c.nome, func(t *testing.T) {
-			if teve := UpkeepLine(c.extrato); teve != c.quero {
-				t.Errorf("a faixa diz %q, quero %q", teve, c.quero)
+			if got := UpkeepLine(c.statement); got != c.quero {
+				t.Errorf("a faixa diz %q, quero %q", got, c.quero)
 			}
 		})
 	}

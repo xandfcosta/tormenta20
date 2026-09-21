@@ -252,7 +252,7 @@ func buffOptions() []pickerOption {
 		// A DURAÇÃO DA MAGIA MANDA, aqui como na gravação. Ler o
 		// `defaultScope` cru mostrava a SEGUNDA transcrição — a que divergia em
 		// oito magias, e que o Escudo da Fé deixou de ter (ALE-365).
-		escopo, err := engine.EffectScope(spell.Duration, spell.DurationNote, spell.Buff.DefaultScope)
+		scope, err := engine.EffectScope(spell.Duration, spell.DurationNote, spell.Buff.DefaultScope)
 		if err != nil {
 			// Magia cujo efeito não sabe quando acaba não é aplicável: some da
 			// lista em vez de virar uma opção que falha ao clicar. Que ela não
@@ -262,7 +262,7 @@ func buffOptions() []pickerOption {
 		opcoes = append(opcoes, pickerOption{
 			ID:      m.ID,
 			Label:   m.Name,
-			Detail:  circleLabel(m.Circle) + " · " + scopeLabel(escopo),
+			Detail:  circleLabel(m.Circle) + " · " + scopeLabel(scope),
 			Command: m.ID,
 		})
 	}
