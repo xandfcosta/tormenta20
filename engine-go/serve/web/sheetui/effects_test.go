@@ -198,28 +198,28 @@ func TestAGrantedEffectShowsThePowerNameInsteadOfTheCatalogId(t *testing.T) {
 // nasça amanhã reprova aqui com o nome da magia, em vez de esperar alguém
 // reler o comentário.
 func TestEveryDurationAnEffectCanCarryIsNamedOnTheSheet(t *testing.T) {
-	medidas := 0
+	measured := 0
 	for _, m := range book.Catalogs().Magias {
-		spell, conhecida := catalog.LookupSpell(m.ID)
-		if !conhecida || spell.Buff == nil {
+		spell, known := catalog.LookupSpell(m.ID)
+		if !known || spell.Buff == nil {
 			continue
 		}
 		id := m.ID
-		escopo, err := engine.EffectScope(spell.Duration, spell.DurationNote, spell.Buff.DefaultScope)
+		scope, err := engine.EffectScope(spell.Duration, spell.DurationNote, spell.Buff.DefaultScope)
 		if err != nil {
 			t.Errorf("a magia %q não sabe com que duração gravar o efeito dela: %v", id, err)
 			continue
 		}
-		medidas++
-		if rotulo := scopeLabel(escopo); rotulo == escopo {
+		measured++
+		if label := scopeLabel(scope); label == scope {
 			t.Errorf("a magia %q grava a duração %q e a aba a mostra CRUA: dê um rótulo a ela em `scopeLabel`",
-				id, escopo)
+				id, scope)
 		}
 	}
 	// O DENOMINADOR: uma varredura que não abriu nenhuma magia e um catálogo
 	// impecável têm a mesma cor no terminal.
-	if medidas < 25 {
-		t.Fatalf("só %d magias com efeito varridas — a varredura está olhando o campo errado", medidas)
+	if measured < 25 {
+		t.Fatalf("só %d magias com efeito varridas — a varredura está olhando o campo errado", measured)
 	}
-	t.Logf("%d durações de efeito conferidas contra o rótulo da aba", medidas)
+	t.Logf("%d durações de efeito conferidas contra o rótulo da aba", measured)
 }

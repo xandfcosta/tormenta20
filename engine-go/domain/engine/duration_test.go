@@ -18,7 +18,7 @@ import (
 // "Cena. A habilidade dura uma cena inteira" (p227) — o caso mais comum, e o
 // único que o app já sabia ler.
 func TestTheSixFormsOfTheBookAreReadFromTheCatalogSpelling(t *testing.T) {
-	casos := map[string]DurationKind{
+	cases := map[string]DurationKind{
 		"instantanea": DurationInstant,
 		"cena":        DurationScene,
 		"sustentada":  DurationSustained,
@@ -29,13 +29,13 @@ func TestTheSixFormsOfTheBookAreReadFromTheCatalogSpelling(t *testing.T) {
 		// sendo lidas até ela migrar.
 		"scene": DurationScene,
 	}
-	for escrito, quer := range casos {
-		d, err := ParseDuration(escrito)
+	for written, want := range cases {
+		d, err := ParseDuration(written)
 		if err != nil {
-			t.Fatalf("ler %q: %v", escrito, err)
+			t.Fatalf("ler %q: %v", written, err)
 		}
-		if d.Kind != quer {
-			t.Errorf("%q deu %q, queria %q", escrito, d.Kind, quer)
+		if d.Kind != want {
+			t.Errorf("%q deu %q, queria %q", written, d.Kind, want)
 		}
 	}
 }
@@ -70,17 +70,17 @@ func TestAnUnknownDurationRefusesInsteadOfMeaningNothing(t *testing.T) {
 
 // AS TRÊS JANELAS que o catálogo usa, e o `rodada` é uma delas — 23 ativações.
 func TestTheUsageWindowsAreTheThreeTheCatalogUses(t *testing.T) {
-	casos := map[string]UsageWindow{"cena": WindowScene, "rodada": WindowRound, "dia": WindowDay}
-	for escrito, quer := range casos {
-		limite, err := ParseUsageLimit(escrito)
+	cases := map[string]UsageWindow{"cena": WindowScene, "rodada": WindowRound, "dia": WindowDay}
+	for written, want := range cases {
+		limit, err := ParseUsageLimit(written)
 		if err != nil {
-			t.Fatalf("ler %q: %v", escrito, err)
+			t.Fatalf("ler %q: %v", written, err)
 		}
-		if limite.Window != quer {
-			t.Errorf("%q deu janela %q, queria %q", escrito, limite.Window, quer)
+		if limit.Window != want {
+			t.Errorf("%q deu janela %q, queria %q", written, limit.Window, want)
 		}
-		if limite.Times != 1 {
-			t.Errorf("%q deu %d vezes, e a forma do catálogo é UMA por janela", escrito, limite.Times)
+		if limit.Times != 1 {
+			t.Errorf("%q deu %d vezes, e a forma do catálogo é UMA por janela", written, limit.Times)
 		}
 	}
 }
@@ -88,11 +88,11 @@ func TestTheUsageWindowsAreTheThreeTheCatalogUses(t *testing.T) {
 // SEM LIMITE é um valor legítimo, e ele tem de ser distinguível de "não sei
 // ler": 338 das 411 ativações não têm limite nenhum.
 func TestNoLimitIsAValueAndNotAFailure(t *testing.T) {
-	limite, err := ParseUsageLimit("")
+	limit, err := ParseUsageLimit("")
 	if err != nil {
 		t.Fatalf("ler: %v", err)
 	}
-	if limite.Limited() {
+	if limit.Limited() {
 		t.Error("ativação sem limite não é limitada")
 	}
 	if _, err := ParseUsageLimit("semana"); err == nil {
@@ -107,17 +107,17 @@ func TestNoLimitIsAValueAndNotAFailure(t *testing.T) {
 // O tipo carrega a janela; o predicado carrega a decisão. Sem os dois
 // separados, cobrar rodada um dia exigiria reencontrar a razão.
 func TestTheRoundWindowIsNotChargedBySheet(t *testing.T) {
-	porRodada, _ := ParseUsageLimit("rodada")
-	if !porRodada.Limited() {
+	perRound, _ := ParseUsageLimit("rodada")
+	if !perRound.Limited() {
 		t.Error("o limite por rodada EXISTE no livro")
 	}
-	if porRodada.ChargedBySheet() {
+	if perRound.ChargedBySheet() {
 		t.Error("a ficha não conta rodadas: o limite por rodada é crachá")
 	}
-	for _, escrito := range []string{"cena", "dia"} {
-		limite, _ := ParseUsageLimit(escrito)
-		if !limite.ChargedBySheet() {
-			t.Errorf("%q é cobrado: ele tem contador no banco", escrito)
+	for _, written := range []string{"cena", "dia"} {
+		limit, _ := ParseUsageLimit(written)
+		if !limit.ChargedBySheet() {
+			t.Errorf("%q é cobrado: ele tem contador no banco", written)
 		}
 	}
 }
@@ -131,63 +131,63 @@ func TestTheRoundWindowIsNotChargedBySheet(t *testing.T) {
 // O DENOMINADOR vem junto: uma varredura que não abriu nenhuma entrada e um
 // catálogo em conformidade se parecem no terminal.
 func TestEveryTimeWordInTheCatalogIsOneTheBookHas(t *testing.T) {
-	bruto, ok := catalog.Resource("activations")
+	raw, ok := catalog.Resource("activations")
 	if !ok {
 		t.Fatal("o catálogo de ativações não está embutido")
 	}
-	var ativacoes []struct {
+	var activations []struct {
 		ID   string          `json:"id"`
 		Uses json.RawMessage `json:"uses"`
 	}
-	if err := json.Unmarshal(bruto, &ativacoes); err != nil {
+	if err := json.Unmarshal(raw, &activations); err != nil {
 		t.Fatalf("ativações ilegíveis: %v", err)
 	}
 
-	janelas := 0
-	for _, a := range ativacoes {
-		var escrito string
-		if json.Unmarshal(a.Uses, &escrito) != nil || escrito == "" {
+	windows := 0
+	for _, a := range activations {
+		var written string
+		if json.Unmarshal(a.Uses, &written) != nil || written == "" {
 			continue // `null` é sem limite, e sem limite é um valor
 		}
-		janelas++
-		if _, err := ParseUsageLimit(escrito); err != nil {
-			t.Errorf("a ativação %q usa a janela %q: %v", a.ID, escrito, err)
+		windows++
+		if _, err := ParseUsageLimit(written); err != nil {
+			t.Errorf("a ativação %q usa a janela %q: %v", a.ID, written, err)
 		}
 	}
-	if janelas < 50 {
+	if windows < 50 {
 		t.Fatalf("só %d janelas lidas de %d ativações — a varredura está olhando o campo errado",
-			janelas, len(ativacoes))
+			windows, len(activations))
 	}
 
 	// A DURAÇÃO vem das magias, no `buff.defaultScope`.
-	bruto, ok = catalog.Resource("spells")
+	raw, ok = catalog.Resource("spells")
 	if !ok {
 		t.Fatal("o catálogo de magias não está embutido")
 	}
-	var magias map[string]struct {
+	var spells map[string]struct {
 		ID       string `json:"id"`
 		Duration string `json:"duration"`
 	}
-	if err := json.Unmarshal(bruto, &magias); err != nil {
+	if err := json.Unmarshal(raw, &spells); err != nil {
 		t.Fatalf("magias ilegíveis: %v", err)
 	}
-	duracoes := 0
-	for _, m := range magias {
+	durations := 0
+	for _, m := range spells {
 		if m.Duration == "" {
 			continue
 		}
-		duracoes++
+		durations++
 		if _, err := ParseDuration(m.Duration); err != nil {
 			t.Errorf("a magia %q dura %q: %v", m.ID, m.Duration, err)
 		}
 	}
 	// O PISO é sobre as 198 magias: o campo `duration` está em todas, e uma
 	// varredura que lesse o campo errado devolveria zero em silêncio.
-	if duracoes < 150 {
+	if durations < 150 {
 		t.Fatalf("só %d durações lidas de %d magias — a varredura está olhando o campo errado",
-			duracoes, len(magias))
+			durations, len(spells))
 	}
-	t.Logf("%d janelas de uso e %d durações conferidas contra o vocabulário do livro", janelas, duracoes)
+	t.Logf("%d janelas de uso e %d durações conferidas contra o vocabulário do livro", windows, durations)
 }
 
 // EFEITO DE MAGIA GRAVADO COM A DURAÇÃO DA MAGIA (T20 p227).
@@ -195,67 +195,67 @@ func TestEveryTimeWordInTheCatalogIsOneTheBookHas(t *testing.T) {
 // A tabela é sobre as três respostas possíveis: a magia manda, a declaração
 // manda, ou não há duração nenhuma para gravar.
 func TestTheSpellDurationDecidesHowLongItsEffectLasts(t *testing.T) {
-	casos := []struct {
-		nome      string
-		daMagia   string
-		nota      string
-		declarada string
-		quero     string
-		recusa    bool
+	cases := []struct {
+		name          string
+		spellDuration string
+		note          string
+		declared      string
+		want          string
+		refuses       bool
 	}{
 		// O QUE SE GRAVA É A GRAFIA DA FRONTEIRA, em inglês: a coluna `scope` é
 		// lida por SQL que casa a palavra (`scope IN ('scene','day')`), e o
 		// catálogo escreve a duração em português. Duas grafias na mesma coluna
 		// seriam um efeito que nunca expira, sem erro em lugar nenhum.
-		{nome: "a cena da magia manda, gravada em inglês", daMagia: "cena", quero: "scene"},
-		{nome: "a declaração redundante não muda nada", daMagia: "cena", declarada: "scene", quero: "scene"},
-		{nome: "a sustentada manda, e não o que o efeito dizia",
-			daMagia: "sustentada", declarada: "scene", quero: "sustained"},
-		{nome: "o dia da magia manda", daMagia: "dia", quero: "day"},
+		{name: "a cena da magia manda, gravada em inglês", spellDuration: "cena", want: "scene"},
+		{name: "a declaração redundante não muda nada", spellDuration: "cena", declared: "scene", want: "scene"},
+		{name: "a sustentada manda, e não o que o efeito dizia",
+			spellDuration: "sustentada", declared: "scene", want: "sustained"},
+		{name: "o dia da magia manda", spellDuration: "dia", want: "day"},
 		// A INSTANTÂNEA não pode mandar: a consequência é outra coisa que não a
 		// magia — "Curar Ferimentos age instantaneamente, mas os ferimentos
 		// continuam curados" (p227).
-		{nome: "a instantânea cede à consequência declarada",
-			daMagia: "instantanea", declarada: "cena", quero: "scene"},
-		{nome: "a instantânea sem consequência declarada é recusada",
-			daMagia: "instantanea", recusa: true},
+		{name: "a instantânea cede à consequência declarada",
+			spellDuration: "instantanea", declared: "cena", want: "scene"},
+		{name: "a instantânea sem consequência declarada é recusada",
+			spellDuration: "instantanea", refuses: true},
 		// DEFINIDA é a ESPÉCIE e não a medida: sem as rodadas ou os dias não há
 		// quando expirar, e o efeito precisa da declaração.
-		{nome: "a definida sem quantia cede à declarada",
-			daMagia: "definida", declarada: "cena", quero: "scene"},
-		{nome: "a definida sem quantia e sem declaração é recusada",
-			daMagia: "definida", recusa: true},
+		{name: "a definida sem quantia cede à declarada",
+			spellDuration: "definida", declared: "cena", want: "scene"},
+		{name: "a definida sem quantia e sem declaração é recusada",
+			spellDuration: "definida", refuses: true},
 		// A DEFINIDA COM QUANTIA manda como qualquer outra: "1 turno" é a
 		// medida que o catálogo escreve em prosa, e ela deixa de precisar de
 		// declaração nenhuma (p227, e o Escudo da Fé na p192).
-		{nome: "a definida de 1 turno manda, gravada em inglês",
-			daMagia: "definida", nota: "1 turno", quero: "turn"},
-		{nome: "a quantia da magia manda sobre a declaração",
-			daMagia: "definida", nota: "1 turno", declarada: "scene", quero: "turn"},
+		{name: "a definida de 1 turno manda, gravada em inglês",
+			spellDuration: "definida", note: "1 turno", want: "turn"},
+		{name: "a quantia da magia manda sobre a declaração",
+			spellDuration: "definida", note: "1 turno", declared: "scene", want: "turn"},
 		// NOTA QUE O APP NÃO SABE EXPIRAR não vira quantia: ela cai no caso
 		// comum e legítimo da definida sem medida, que exige a declaração.
-		{nome: "3 rodadas não é medida que o app saiba derrubar",
-			daMagia: "definida", nota: "3 rodadas", declarada: "cena", quero: "scene"},
-		{nome: "prosa condicional continua sendo definida sem quantia",
-			daMagia: "definida", nota: "veja texto", recusa: true},
-		{nome: "palavra que o livro não tem é recusada", daMagia: "eterna", recusa: true},
-		{nome: "declaração que o livro não tem é recusada",
-			daMagia: "instantanea", declarada: "eterna", recusa: true},
+		{name: "3 rodadas não é medida que o app saiba derrubar",
+			spellDuration: "definida", note: "3 rodadas", declared: "cena", want: "scene"},
+		{name: "prosa condicional continua sendo definida sem quantia",
+			spellDuration: "definida", note: "veja texto", refuses: true},
+		{name: "palavra que o livro não tem é recusada", spellDuration: "eterna", refuses: true},
+		{name: "declaração que o livro não tem é recusada",
+			spellDuration: "instantanea", declared: "eterna", refuses: true},
 	}
-	for _, c := range casos {
-		t.Run(c.nome, func(t *testing.T) {
-			teve, err := EffectScope(c.daMagia, c.nota, c.declarada)
-			if c.recusa {
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got, err := EffectScope(c.spellDuration, c.note, c.declared)
+			if c.refuses {
 				if err == nil {
-					t.Fatalf("%q + %q tinha de ser recusado, e devolveu %q", c.daMagia, c.declarada, teve)
+					t.Fatalf("%q + %q tinha de ser recusado, e devolveu %q", c.spellDuration, c.declared, got)
 				}
 				return
 			}
 			if err != nil {
-				t.Fatalf("%q + %q: %v", c.daMagia, c.declarada, err)
+				t.Fatalf("%q + %q: %v", c.spellDuration, c.declared, err)
 			}
-			if teve != c.quero {
-				t.Errorf("%q + %q gravou %q, quero %q", c.daMagia, c.declarada, teve, c.quero)
+			if got != c.want {
+				t.Errorf("%q + %q gravou %q, quero %q", c.spellDuration, c.declared, got, c.want)
 			}
 		})
 	}
@@ -270,53 +270,53 @@ func TestTheSpellDurationDecidesHowLongItsEffectLasts(t *testing.T) {
 // declaração que o `EffectScope` exige. Em qualquer outro lugar é uma cópia,
 // e cópia envelhece.
 func TestEveryBuffLastsAsLongAsItsSpell(t *testing.T) {
-	bruto, ok := catalog.Resource("spells")
+	raw, ok := catalog.Resource("spells")
 	if !ok {
 		t.Fatal("o catálogo de magias não está embutido")
 	}
-	var magias map[string]struct {
+	var spells map[string]struct {
 		Duration     string `json:"duration"`
 		DurationNote string `json:"durationNote"`
 		Buff         *struct {
 			DefaultScope string `json:"defaultScope"`
 		} `json:"buff"`
 	}
-	if err := json.Unmarshal(bruto, &magias); err != nil {
+	if err := json.Unmarshal(raw, &spells); err != nil {
 		t.Fatalf("magias ilegíveis: %v", err)
 	}
-	comBuff, declarados := 0, 0
-	for id, m := range magias {
+	withBuff, declaredCount := 0, 0
+	for id, m := range spells {
 		if m.Buff == nil {
 			continue
 		}
-		comBuff++
-		escopo, err := EffectScope(m.Duration, m.DurationNote, m.Buff.DefaultScope)
+		withBuff++
+		scope, err := EffectScope(m.Duration, m.DurationNote, m.Buff.DefaultScope)
 		if err != nil {
 			t.Errorf("a magia %q: %v", id, err)
 			continue
 		}
-		dura, _ := SpellDuration(m.Duration, m.DurationNote)
-		if dura.tellsTheEffectWhenToEnd() && m.Buff.DefaultScope != "" {
+		duration, _ := SpellDuration(m.Duration, m.DurationNote)
+		if duration.tellsTheEffectWhenToEnd() && m.Buff.DefaultScope != "" {
 			t.Errorf("a magia %q dura %q e o efeito dela declara %q por cima: apague o `defaultScope`, "+
-				"que a duração da magia já responde (grava %q)", id, m.Duration, m.Buff.DefaultScope, escopo)
+				"que a duração da magia já responde (grava %q)", id, m.Duration, m.Buff.DefaultScope, scope)
 			continue
 		}
 		if m.Buff.DefaultScope != "" {
-			declarados++
+			declaredCount++
 		}
 	}
 	// O DENOMINADOR: sem ele, um seletor que não casa com nada e um catálogo
 	// impecável têm a mesma cor no terminal.
-	if comBuff < 25 {
-		t.Fatalf("só %d magias com efeito de %d — a varredura está olhando o campo errado", comBuff, len(magias))
+	if withBuff < 25 {
+		t.Fatalf("só %d magias com efeito de %d — a varredura está olhando o campo errado", withBuff, len(spells))
 	}
-	t.Logf("%d magias com efeito conferidas; %d declaram a duração do efeito porque a magia não pode", comBuff, declarados)
+	t.Logf("%d magias com efeito conferidas; %d declaram a duração do efeito porque a magia não pode", withBuff, declaredCount)
 }
 
 // O RÓTULO QUE A FICHA LÊ sai da duração, e ele é o que separa um efeito que
 // cai no fim da cena de um que cobra PM todo turno.
 func TestTheSheetNamesHowLongAnEffectLasts(t *testing.T) {
-	casos := map[string]string{
+	cases := map[string]string{
 		"cena":        "cena",
 		"scene":       "cena",
 		"dia":         "dia",
@@ -330,9 +330,9 @@ func TestTheSheetNamesHowLongAnEffectLasts(t *testing.T) {
 		// palavra é a validação do catálogo, no despejo.
 		"abracadabra": "cena",
 	}
-	for escrito, quero := range casos {
-		if teve := DurationLabel(escrito); teve != quero {
-			t.Errorf("%q é rotulado %q, quero %q", escrito, teve, quero)
+	for written, want := range cases {
+		if got := DurationLabel(written); got != want {
+			t.Errorf("%q é rotulado %q, quero %q", written, got, want)
 		}
 	}
 }
@@ -344,28 +344,28 @@ func TestTheSheetNamesHowLongAnEffectLasts(t *testing.T) {
 // toda magia conjurada de hoje em diante sem nunca expirar — e sem erro em
 // lugar nenhum, que é a marca desta família.
 func TestEveryDurationHasOneSpellingOnTheWire(t *testing.T) {
-	doLivro := map[string]string{
+	fromBook := map[string]string{
 		"instantanea": "instant", "cena": "scene", "sustentada": "sustained",
 		"definida": "fixed", "dia": "day", "permanente": "permanent", "descarregar": "discharge",
 		// A grafia da DEFINIDA de um turno, que o giro da vez casa.
 		"turn": "turn",
 	}
-	for escrito, quero := range doLivro {
-		d, err := ParseDuration(escrito)
+	for written, want := range fromBook {
+		d, err := ParseDuration(written)
 		if err != nil {
-			t.Fatalf("%q: %v", escrito, err)
+			t.Fatalf("%q: %v", written, err)
 		}
-		teve := d.Stored()
-		if teve != quero {
-			t.Errorf("%q é gravado %q, quero %q", escrito, teve, quero)
+		got := d.Stored()
+		if got != want {
+			t.Errorf("%q é gravado %q, quero %q", written, got, want)
 		}
 		// IDA E VOLTA: o que foi gravado tem de voltar a ser lido, senão a
 		// segunda leitura do próprio dado cai no erro.
-		volta, err := ParseDuration(teve)
+		back, err := ParseDuration(got)
 		if err != nil {
-			t.Errorf("o gravado %q não é relido: %v", teve, err)
-		} else if volta.Stored() != teve {
-			t.Errorf("%q ida e volta virou %q", teve, volta.Stored())
+			t.Errorf("o gravado %q não é relido: %v", got, err)
+		} else if back.Stored() != got {
+			t.Errorf("%q ida e volta virou %q", got, back.Stored())
 		}
 	}
 }
@@ -378,28 +378,28 @@ func TestEveryDurationHasOneSpellingOnTheWire(t *testing.T) {
 // primeiro". A lista lida é de PERMITIDOS: o que ela não conhece continua sendo
 // definida SEM quantia, que é o caso comum e legítimo.
 func TestOnlyTheMeasuresTheAppCanExpireAreReadFromTheNote(t *testing.T) {
-	medida, err := SpellDuration("definida", "1 turno")
+	measure, err := SpellDuration("definida", "1 turno")
 	if err != nil {
 		t.Fatalf("ler a definida de 1 turno: %v", err)
 	}
-	if medida.Kind != DurationFixed || medida.Amount != 1 || medida.Unit != UnitTurn {
-		t.Errorf("a duração = %+v, e o Escudo da Fé dura 1 turno (p192)", medida)
+	if measure.Kind != DurationFixed || measure.Amount != 1 || measure.Unit != UnitTurn {
+		t.Errorf("a duração = %+v, e o Escudo da Fé dura 1 turno (p192)", measure)
 	}
 
 	// O QUE FICA DE FORA, e cada um por um motivo: a unidade que ninguém conta
 	// (rodadas, horas), a quantia que não é número (dados), a unidade que o
 	// motor não tem (semana) e a prosa. Gravar qualquer um deles seria gravar um
 	// efeito ETERNO com cara de medido — sem erro em lugar nenhum.
-	semMedida := []string{"3 rodadas", "1d4 rodadas", "4d12 horas", "1 semana ou até ser descarregada",
+	unmeasured := []string{"3 rodadas", "1d4 rodadas", "4d12 horas", "1 semana ou até ser descarregada",
 		"veja texto", "até chegar ao solo ou cena, o que ocorrer primeiro", ""}
-	for _, nota := range semMedida {
-		d, err := SpellDuration("definida", nota)
+	for _, note := range unmeasured {
+		d, err := SpellDuration("definida", note)
 		if err != nil {
-			t.Fatalf("a nota %q: %v", nota, err)
+			t.Fatalf("a nota %q: %v", note, err)
 		}
 		if d.Amount != 0 {
 			t.Errorf("a nota %q virou uma medida de %d %q, e nada no app a derruba",
-				nota, d.Amount, d.Unit)
+				note, d.Amount, d.Unit)
 		}
 	}
 }
@@ -408,15 +408,15 @@ func TestOnlyTheMeasuresTheAppCanExpireAreReadFromTheNote(t *testing.T) {
 // quando acabam, e uma nota não as sobrescreve — senão a segunda transcrição
 // voltaria a mandar na primeira, que é o defeito que o `defaultScope` causou.
 func TestANoteDoesNotOverrideADurationThatAlreadySaysWhenItEnds(t *testing.T) {
-	for _, escrito := range []string{"cena", "sustentada", "permanente", "dia"} {
-		comNota, err := SpellDuration(escrito, "1 turno")
+	for _, written := range []string{"cena", "sustentada", "permanente", "dia"} {
+		withNote, err := SpellDuration(written, "1 turno")
 		if err != nil {
-			t.Fatalf("%q: %v", escrito, err)
+			t.Fatalf("%q: %v", written, err)
 		}
-		semNota, _ := ParseDuration(escrito)
-		if comNota != semNota {
+		withoutNote, _ := ParseDuration(written)
+		if withNote != withoutNote {
 			t.Errorf("%q com nota deu %+v e sem nota deu %+v — a nota mandou onde não devia",
-				escrito, comNota, semNota)
+				written, withNote, withoutNote)
 		}
 	}
 }

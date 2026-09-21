@@ -32,10 +32,10 @@ type View struct {
 	// devolve fila limpa, então o falso aqui É a trava e não uma segunda
 	// decisão tomada na tela.
 	SceneActive bool
-	// Cena é a cena EM CURSO, com o tipo e o número — nil fora de cena. O
+	// Scene é a cena EM CURSO, com o tipo e o número — nil fora de cena. O
 	// `SceneActive` continua ao lado porque a tela pergunta as duas coisas, e
 	// "há cena" é a pergunta de dezoito sítios.
-	Cena  *sceneView
+	Scene *sceneView
 	Round int
 	Turn  tableTurn
 	// Proximos é a faixa de quem vem depois: a vez e as duas seguintes, dando a
@@ -466,7 +466,7 @@ func tableViewOf(
 		CampaignID:  campaignID,
 		SessionID:   sessionID,
 		SessionNum:  sessionNum,
-		SceneActive: st.InScene(), Cena: sceneOf(st),
+		SceneActive: st.InScene(), Scene: sceneOf(st),
 		Round:    st.Round,
 		Turn:     tableTurnOf(st, meus),
 		Proximos: turnStripOf(st, meus),
@@ -486,9 +486,9 @@ func tableViewOf(
 type viewGm struct {
 	// Contador é a frase que diz ONDE a sessão está.
 	Contador string
-	// Manutencao é o que sustentar cobrou de quem entrou na vez (p227). Vazia
+	// Upkeep é o que sustentar cobrou de quem entrou na vez (p227). Vazia
 	// quando não há sustentada, e aí a linha não é desenhada.
-	Manutencao string
+	Upkeep string
 	// Avanco é o rótulo do botão mais clicado da sessão, e ele diz PARA ONDE vai
 	// em vez de o que faz.
 	Avanco live.NextTurnTarget
@@ -520,7 +520,7 @@ func ofViewGm(
 	return viewGm{
 		GravacaoFalhando: gravacaoFalhando,
 		Contador:         live.TurnCounter(st.Scene, st.Round, st.TurnIndex, len(st.Initiative)),
-		Manutencao:       live.UpkeepLine(upkeepOf(st)),
+		Upkeep:           live.UpkeepLine(upkeepOf(st)),
 		Avanco:           live.NextTurnButton(st.Initiative, st.TurnIndex),
 		VeVitais:         live.GmSeesVitals(st.Initiative, ehMestre),
 		Conectados:       live.ConnectedCharacters(membros, presentes),

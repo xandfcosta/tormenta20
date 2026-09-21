@@ -742,7 +742,7 @@ templ moveProposed(v BoardView) {
 		// painel já diz de quem é o movimento, e repetir empurra a linha para
 		// duas a 390px. A legenda acima continua sendo o PREÇO do caminho; esta
 		// linha é o saldo do turno, e as duas não se contradizem.
-		if v.Movimento.SemAcao {
+		if v.Movimento.NoActionLeft {
 			<p class="text-xs font-semibold text-destructive-ink">não sobrou ação neste turno para mover</p>
 		}
 		<span class="ml-auto flex items-center gap-2">
@@ -771,7 +771,7 @@ templ moveProposed(v BoardView) {
 			// fronteira de verdade é o `CommitMove`, e isto aqui é só não oferecer o
 			// que seria recusado. Vale igual para o turno sem ação: o servidor já
 			// recusa, e o botão ali convidaria para um beco (p233).
-			if v.Mestre && !v.Movimento.SemAcao {
+			if v.Mestre && !v.Movimento.NoActionLeft {
 				<button
 					type="button"
 					data-on:click={ moveCommand(v, "confirmar") }

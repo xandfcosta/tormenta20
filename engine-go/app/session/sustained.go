@@ -26,19 +26,19 @@ func (st *Store) payUpkeep(s *live.SessionRuntimeState) upkeepCharge {
 	if s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
 		return upkeepCharge{}
 	}
-	entrada := s.Initiative[s.TurnIndex]
-	if entrada.CharacterID == nil {
+	entry := s.Initiative[s.TurnIndex]
+	if entry.CharacterID == nil {
 		return upkeepCharge{}
 	}
-	efeitos, err := st.turnEffects.SustainedOf(context.Background(), *entrada.CharacterID)
-	if err != nil || len(efeitos) == 0 {
+	effects, err := st.turnEffects.SustainedOf(context.Background(), *entry.CharacterID)
+	if err != nil || len(effects) == 0 {
 		return upkeepCharge{}
 	}
-	ids := make([]string, 0, len(efeitos))
-	nome := make(map[string]string, len(efeitos))
-	for _, e := range efeitos {
+	ids := make([]string, 0, len(effects))
+	name := make(map[string]string, len(effects))
+	for _, e := range effects {
 		ids = append(ids, e.CatalogID)
-		nome[e.CatalogID] = e.Label
+		name[e.CatalogID] = e.Label
 	}
 	// O MANA VEM DA FICHA, e não da linha da fila.
 	//
@@ -46,42 +46,42 @@ func (st *Store) payUpkeep(s *live.SessionRuntimeState) upkeepCharge {
 	// acabado de entrar na fila tem `MpCurrent` nulo até a primeira operação de
 	// vitais. Ler dali derrubaria a Velocidade de quem está com o mana cheio, e
 	// o teste que prende isto começou vermelho exatamente assim.
-	pocos, err := st.ficha.PoolsOf(context.Background(), []int64{*entrada.CharacterID})
+	pools, err := st.ficha.PoolsOf(context.Background(), []int64{*entry.CharacterID})
 	if err != nil {
 		return upkeepCharge{}
 	}
-	poco := pocos[*entrada.CharacterID]
-	mana := int(poco.MpCurrent)
+	pool := pools[*entry.CharacterID]
+	mana := int(pool.MpCurrent)
 	// O INSTANTE é a vez de quem entrou, e PODER AGIR é ter PV: a 0 "você cai
 	// inconsciente" (p236), e o poço do app tem piso em zero, então é aqui que
 	// morrer e sangrar se encontram. O que uma ação LIVRE exige do instante
 	// quem sabe é o motor.
-	feito := engine.PaySustained(ids, mana, engine.ActionMoment{OnTurn: true, CanAct: poco.HpCurrent > 0})
-	for _, id := range feito.Dropped {
-		_ = st.turnEffects.EndSustained(context.Background(), *entrada.CharacterID, id)
+	upkeep := engine.PaySustained(ids, mana, engine.ActionMoment{OnTurn: true, CanAct: pool.HpCurrent > 0})
+	for _, id := range upkeep.Dropped {
+		_ = st.turnEffects.EndSustained(context.Background(), *entry.CharacterID, id)
 	}
 	s.Scene.Upkeep = &live.TurnUpkeep{
-		Paid: labelsOf(feito.Paid, nome), Dropped: labelsOf(feito.Dropped, nome), Cost: feito.Cost,
-		MpBefore: mana, MpAfter: mana - feito.Cost, Unconscious: feito.Unconscious,
+		Paid: labelsOf(upkeep.Paid, name), Dropped: labelsOf(upkeep.Dropped, name), Cost: upkeep.Cost,
+		MpBefore: mana, MpAfter: mana - upkeep.Cost, Unconscious: upkeep.Unconscious,
 	}
 	// O MANA SAI DEPOIS, e a cobrança VOLTA em vez de ficar guardada: quem
 	// grava na ficha e espelha na fila é o `DeltaVitals`, que toma o mesmo
 	// cadeado — chamá-lo daqui de dentro travaria a sessão contra si mesma. Um
 	// campo no `Store` seria pior ainda: ele é de TODAS as sessões, e duas mesas
 	// virando o turno ao mesmo tempo trocariam de cobrança.
-	return upkeepCharge{entryID: entrada.ID, pm: feito.Cost}
+	return upkeepCharge{entryID: entry.ID, pm: upkeep.Cost}
 }
 
 // labelsOf troca os ids pelos nomes que a mesa lê.
-func labelsOf(ids []string, nome map[string]string) []string {
+func labelsOf(ids []string, name map[string]string) []string {
 	if len(ids) == 0 {
 		return nil
 	}
-	lidos := make([]string, 0, len(ids))
+	labels := make([]string, 0, len(ids))
 	for _, id := range ids {
-		lidos = append(lidos, nome[id])
+		labels = append(labels, name[id])
 	}
-	return lidos
+	return labels
 }
 
 // upkeepCharge é o que a manutenção decidiu tirar de quem entrou na vez.
@@ -105,10 +105,10 @@ func (st *Store) expireTurnEffects(s *live.SessionRuntimeState) {
 	if !s.Scene.CountsRounds() || st.turnEffects == nil {
 		return
 	}
-	for _, entrada := range s.Initiative {
-		if entrada.CharacterID == nil {
+	for _, entry := range s.Initiative {
+		if entry.CharacterID == nil {
 			continue
 		}
-		_ = st.turnEffects.ExpireTurnEffects(context.Background(), *entrada.CharacterID)
+		_ = st.turnEffects.ExpireTurnEffects(context.Background(), *entry.CharacterID)
 	}
 }

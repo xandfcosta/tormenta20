@@ -145,13 +145,13 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 	// UM adaptador para as DUAS portas da ficha: a fonte é a mesma tabela e a
 	// mesma conexão, e o que as separa é o motivo de mudar, não o número de
 	// structs.
-	daFicha := sheetVitals{q: q, catalogs: func() *engine.Catalogs { return srv.catalogs }}
+	fromSheet := sheetVitals{q: q, catalogs: func() *engine.Catalogs { return srv.catalogs }}
 	srv = &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),
-		sessions: session.NewStore(q, live.NewUUID, daFicha, daFicha, bus),
+		sessions: session.NewStore(q, live.NewUUID, fromSheet, fromSheet, bus),
 		boards:   boards.NewStore(q, live.NewUUID, bus),
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),

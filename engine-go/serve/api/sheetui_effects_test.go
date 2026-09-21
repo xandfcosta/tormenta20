@@ -201,12 +201,12 @@ func TestOnlyOneSustainedSpellAtATime(t *testing.T) {
 // sustentadas conta as magias sustentadas de uma ficha.
 func sustentadas(t *testing.T, f sceneFixture, id int64) int {
 	t.Helper()
-	linhas, err := f.s.sceneCore().Queries().ListActiveEffectsByCharacter(context.Background(), id)
+	rows, err := f.s.sceneCore().Queries().ListActiveEffectsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar efeitos: %v", err)
 	}
 	n := 0
-	for _, l := range linhas {
+	for _, l := range rows {
 		if l.Scope == "sustained" {
 			n++
 		}

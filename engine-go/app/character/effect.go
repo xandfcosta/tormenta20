@@ -124,18 +124,18 @@ func effectFrom(e sqlcgen.UpsertActiveEffectRow) sheet.EffectDTO {
 //
 // Reaplicar A MESMA magia não é uma segunda: é a gravação que já era um upsert.
 func (p Plays) assertOnlyOneSustainedSpell(ctx context.Context, characterID int64, spellID, scope string) error {
-	if dura, err := engine.ParseDuration(scope); err != nil || dura.Kind != engine.DurationSustained {
+	if duration, err := engine.ParseDuration(scope); err != nil || duration.Kind != engine.DurationSustained {
 		return nil
 	}
-	ligados, err := p.queries.ListActiveEffectsByCharacter(ctx, characterID)
+	active, err := p.queries.ListActiveEffectsByCharacter(ctx, characterID)
 	if err != nil {
 		return fmt.Errorf("ler os efeitos da ficha %d: %w", characterID, err)
 	}
-	for _, e := range ligados {
+	for _, e := range active {
 		if e.Catalogid == spellID {
 			continue
 		}
-		if dura, err := engine.ParseDuration(e.Scope); err == nil && dura.Kind == engine.DurationSustained {
+		if duration, err := engine.ParseDuration(e.Scope); err == nil && duration.Kind == engine.DurationSustained {
 			return fmt.Errorf("%s já está sustentada, e o livro permite uma magia sustentada por vez (p227)",
 				spellName(e.Catalogid))
 		}
@@ -145,8 +145,8 @@ func (p Plays) assertOnlyOneSustainedSpell(ctx context.Context, characterID int6
 
 // spellName é o nome do livro; sem verbete, o id serve.
 func spellName(spellID string) string {
-	if magia, known := catalog.LookupSpell(spellID); known && magia.Name != "" {
-		return magia.Name
+	if spell, known := catalog.LookupSpell(spellID); known && spell.Name != "" {
+		return spell.Name
 	}
 	return spellID
 }

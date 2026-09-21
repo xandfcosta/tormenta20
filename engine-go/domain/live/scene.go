@@ -82,12 +82,12 @@ func (st *SessionRuntimeState) CountsRounds() bool { return st.Scene.CountsRound
 // "uma cena pode ser interrompida para dar lugar a outra… se os personagens
 // estão discutindo na corte e de repente são atacados, a cena da discussão
 // acaba e uma nova cena começa — um combate" (p252).
-func StartScene(st *SessionRuntimeState, tipo SceneKind) {
+func StartScene(st *SessionRuntimeState, kind SceneKind) {
 	if st.InScene() {
 		EndScene(st)
 	}
 	st.ScenesSoFar++
-	st.Scene = &Scene{Kind: tipo, Number: st.ScenesSoFar, StandardLeft: true, MovementLeft: true}
+	st.Scene = &Scene{Kind: kind, Number: st.ScenesSoFar, StandardLeft: true, MovementLeft: true}
 }
 
 // EndScene encerra a cena em curso e devolve o combate ao começo — mas GUARDA a

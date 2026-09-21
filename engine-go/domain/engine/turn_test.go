@@ -14,61 +14,61 @@ import (
 
 // UMA PADRÃO E UMA DE MOVIMENTO, em qualquer ordem.
 func TestATurnHasOneStandardAndOneMovement(t *testing.T) {
-	turno := FullTurn()
-	turno, err := turno.Spend(ActionStandard)
+	budget := FullTurn()
+	budget, err := budget.Spend(ActionStandard)
 	if err != nil {
 		t.Fatalf("a padrão do turno: %v", err)
 	}
-	turno, err = turno.Spend(ActionMovement)
+	budget, err = budget.Spend(ActionMovement)
 	if err != nil {
 		t.Fatalf("a de movimento do turno: %v", err)
 	}
-	if _, err := turno.Spend(ActionStandard); err == nil {
+	if _, err := budget.Spend(ActionStandard); err == nil {
 		t.Error("a segunda padrão não existe: o turno tem UMA")
 	}
 
 	// A ordem inversa dá no mesmo — "em qualquer ordem".
-	outro := FullTurn()
-	outro, _ = outro.Spend(ActionMovement)
-	if _, err := outro.Spend(ActionStandard); err != nil {
+	other := FullTurn()
+	other, _ = other.Spend(ActionMovement)
+	if _, err := other.Spend(ActionStandard); err != nil {
 		t.Errorf("mover e depois agir é a mesma coisa que agir e depois mover: %v", err)
 	}
 }
 
 // A TROCA É DE MÃO ÚNICA: a padrão vira movimento, e o inverso não.
 func TestTheStandardTradesDownForMovementButNotBack(t *testing.T) {
-	turno := FullTurn()
-	turno, _ = turno.Spend(ActionMovement) // gasta a de movimento
-	turno, err := turno.Spend(ActionMovement)
+	budget := FullTurn()
+	budget, _ = budget.Spend(ActionMovement) // gasta a de movimento
+	budget, err := budget.Spend(ActionMovement)
 	if err != nil {
 		t.Fatalf("a segunda de movimento sai da padrão (p233): %v", err)
 	}
-	if _, err := turno.Spend(ActionStandard); err == nil {
+	if _, err := budget.Spend(ActionStandard); err == nil {
 		t.Error("a padrão foi trocada: não há terceira ação")
 	}
 
 	// O INVERSO NÃO: duas padrão não saem de uma padrão mais um movimento.
-	outro := FullTurn()
-	outro, _ = outro.Spend(ActionStandard)
-	if _, err := outro.Spend(ActionStandard); err == nil {
+	other := FullTurn()
+	other, _ = other.Spend(ActionStandard)
+	if _, err := other.Spend(ActionStandard); err == nil {
 		t.Error("movimento não vira padrão — a troca é de mão única (p233)")
 	}
 }
 
 // A COMPLETA CUSTA AS DUAS.
 func TestTheFullActionGivesUpBoth(t *testing.T) {
-	turno, err := FullTurn().Spend(ActionFull)
+	budget, err := FullTurn().Spend(ActionFull)
 	if err != nil {
 		t.Fatalf("a completa: %v", err)
 	}
-	if _, err := turno.Spend(ActionMovement); err == nil {
+	if _, err := budget.Spend(ActionMovement); err == nil {
 		t.Error("a completa abre mão das DUAS: não sobra movimento")
 	}
 
 	// E ela não cabe num turno que já agiu.
-	meio := FullTurn()
-	meio, _ = meio.Spend(ActionStandard)
-	if _, err := meio.Spend(ActionFull); err == nil {
+	halfway := FullTurn()
+	halfway, _ = halfway.Spend(ActionStandard)
+	if _, err := halfway.Spend(ActionFull); err == nil {
 		t.Error("a completa exige a rodada inteira: não cabe depois da padrão")
 	}
 }
@@ -76,15 +76,15 @@ func TestTheFullActionGivesUpBoth(t *testing.T) {
 // LIVRE E REAÇÃO NÃO GASTAM NADA. "Como ações livres, reações tomam tão pouco
 // tempo que você pode realizar qualquer quantidade delas" (p233).
 func TestFreeActionsAndReactionsCostNothing(t *testing.T) {
-	turno := FullTurn()
-	turno, _ = turno.Spend(ActionFull) // o turno inteiro já foi
-	for _, custo := range []ActionCost{ActionFree, ActionReaction, ActionPassive} {
-		depois, err := turno.Spend(custo)
+	budget := FullTurn()
+	budget, _ = budget.Spend(ActionFull) // o turno inteiro já foi
+	for _, cost := range []ActionCost{ActionFree, ActionReaction, ActionPassive} {
+		after, err := budget.Spend(cost)
 		if err != nil {
-			t.Errorf("%q não gasta ação e cabe sempre: %v", custo, err)
+			t.Errorf("%q não gasta ação e cabe sempre: %v", cost, err)
 		}
-		if depois != turno {
-			t.Errorf("%q mudou o turno, e não devia: %+v", custo, depois)
+		if after != budget {
+			t.Errorf("%q mudou o turno, e não devia: %+v", cost, after)
 		}
 	}
 }
@@ -93,9 +93,9 @@ func TestFreeActionsAndReactionsCostNothing(t *testing.T) {
 // "varia", e quem decide o custo é a mesa. Cobrar um custo inventado seria pior
 // que não cobrar: o poder ficaria indisponível por uma conta que ninguém fez.
 func TestAVariableActionIsNotChargedByTheTurn(t *testing.T) {
-	turno := FullTurn()
-	turno, _ = turno.Spend(ActionFull)
-	if _, err := turno.Spend(ActionVaries); err != nil {
+	budget := FullTurn()
+	budget, _ = budget.Spend(ActionFull)
+	if _, err := budget.Spend(ActionVaries); err != nil {
 		t.Errorf("custo variável não é cobrado pelo turno: %v", err)
 	}
 }
@@ -103,9 +103,9 @@ func TestAVariableActionIsNotChargedByTheTurn(t *testing.T) {
 // PALAVRA DESCONHECIDA RECUSA, e a recusa diz o que sobrou — "sem ação padrão
 // neste turno" manda a pessoa esperar o próximo, e "recusado" manda procurar.
 func TestTheRefusalSaysWhatIsLeft(t *testing.T) {
-	turno := FullTurn()
-	turno, _ = turno.Spend(ActionStandard)
-	_, err := turno.Spend(ActionStandard)
+	budget := FullTurn()
+	budget, _ = budget.Spend(ActionStandard)
+	_, err := budget.Spend(ActionStandard)
 	if !errors.Is(err, ErrNoActionLeft) {
 		t.Fatalf("a recusa tem de ser reconhecível pelo chamador, e veio %v", err)
 	}
@@ -128,8 +128,8 @@ func TestTheRefusalSaysWhatIsLeft(t *testing.T) {
 // Ela é a razão de o instante existir separado do custo: o `Spend` já dizia que
 // reação não gasta nada, e "não gasta nada" não responde se PODE agora.
 func TestAReactionHappensOutOfTurnAndWithoutBeingAbleToAct(t *testing.T) {
-	fora := ActionMoment{OnTurn: false, CanAct: false}
-	if err := UsableNow(ActionReaction, fora); err != nil {
+	outside := ActionMoment{OnTurn: false, CanAct: false}
+	if err := UsableNow(ActionReaction, outside); err != nil {
 		t.Errorf("a reação ocorre fora do seu turno e mesmo sem poder agir (p233): %v", err)
 	}
 }
@@ -154,12 +154,12 @@ func TestAFreeActionIsAConsciousChoiceMadeOnYourTurn(t *testing.T) {
 // reconhecível separada da recusa por CUSTO: "espere a sua vez" e "não sobrou
 // ação" mandam a pessoa fazer coisas diferentes.
 func TestTheActionsThatSpendTheTurnOnlyHappenOnYourOwn(t *testing.T) {
-	for _, custo := range []ActionCost{ActionStandard, ActionMovement, ActionFull} {
-		if err := UsableNow(custo, ActionMoment{OnTurn: true, CanAct: true}); err != nil {
-			t.Errorf("%q cabe na sua vez: %v", custo, err)
+	for _, cost := range []ActionCost{ActionStandard, ActionMovement, ActionFull} {
+		if err := UsableNow(cost, ActionMoment{OnTurn: true, CanAct: true}); err != nil {
+			t.Errorf("%q cabe na sua vez: %v", cost, err)
 		}
-		if err := UsableNow(custo, ActionMoment{OnTurn: false, CanAct: true}); !errors.Is(err, ErrNotYourTurn) {
-			t.Errorf("%q fora da vez tinha de recusar por INSTANTE, e veio %v", custo, err)
+		if err := UsableNow(cost, ActionMoment{OnTurn: false, CanAct: true}); !errors.Is(err, ErrNotYourTurn) {
+			t.Errorf("%q fora da vez tinha de recusar por INSTANTE, e veio %v", cost, err)
 		}
 	}
 }
@@ -168,10 +168,10 @@ func TestTheActionsThatSpendTheTurnOnlyHappenOnYourOwn(t *testing.T) {
 // acionada (238 das 411 ativações) e a segunda é negociada com a mesa. É a
 // mesma isenção que o `Spend` lhes dá, e pela mesma razão.
 func TestThePassiveAndTheVariableHaveNoMomentToCheck(t *testing.T) {
-	nenhum := ActionMoment{OnTurn: false, CanAct: false}
-	for _, custo := range []ActionCost{ActionPassive, ActionVaries} {
-		if err := UsableNow(custo, nenhum); err != nil {
-			t.Errorf("%q não tem instante para conferir: %v", custo, err)
+	none := ActionMoment{OnTurn: false, CanAct: false}
+	for _, cost := range []ActionCost{ActionPassive, ActionVaries} {
+		if err := UsableNow(cost, none); err != nil {
+			t.Errorf("%q não tem instante para conferir: %v", cost, err)
 		}
 	}
 }

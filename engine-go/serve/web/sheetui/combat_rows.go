@@ -153,9 +153,9 @@ func rowsFromSourceAmounts(sources []engine.SourceAmount) []breakdownRow {
 // "Armadura Arcana (cena)" e a nota, "Armadura Arcana". Enquanto a procedência
 // saía com o ID, as duas diziam coisas diferentes e a nota era a única a dar o
 // nome — consertado o id, ela virou eco, e eco custa uma linha a 390px.
-func noteUnlessEchoed(procedencia, nota string) string {
-	if nota != "" && strings.HasPrefix(procedencia, nota) {
+func noteUnlessEchoed(provenance, note string) string {
+	if note != "" && strings.HasPrefix(provenance, note) {
 		return ""
 	}
-	return nota
+	return note
 }

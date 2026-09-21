@@ -31,10 +31,10 @@ type moveView struct {
 	// alcance para desenhar, porque não há teto que ele desenharia.
 	Orcamento int
 	Restante  int
-	// SemAcao é "o turno de quem está na vez não paga este caminho". Ele é
+	// NoActionLeft é "o turno de quem está na vez não paga este caminho". Ele é
 	// SEPARADO do `Orcamento`, que fala de metros: a peça pode ter deslocamento
 	// de sobra e o turno já ter acabado.
-	SemAcao bool
+	NoActionLeft bool
 	// Meu diz se quem olha decide sobre este movimento. O mestre decide por
 	// qualquer um — é ele quem toca a mesa.
 	Meu bool
@@ -94,7 +94,7 @@ func moveBoard(b *board.BoardState, st *live.SessionRuntimeState, m board.Mover)
 		// diferentes, e a segunda é a que faz a tela mentir quando falta: um
 		// passo de 1,5m cabe em qualquer orçamento e não acontece se a padrão e
 		// a de movimento já foram (p233).
-		SemAcao: turnCannotPay(b, st, p.Cost, p.Budget),
+		NoActionLeft: turnCannotPay(b, st, p.Cost, p.Budget),
 	}
 	for _, q := range p.Path {
 		v.Trilha = append(v.Trilha, boardSquare{X: q.X, Y: q.Y})
@@ -264,17 +264,17 @@ func spentActions(m *moveView) string {
 // Quem decide é o MOTOR, e não uma segunda conta aqui: as ações de movimento
 // que o caminho pede são gastas uma a uma contra o que sobrou, então a troca da
 // padrão (p233) vale aqui exatamente como vale na cobrança.
-func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, custo, orcamento int) bool {
+func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, cost, orcamento int) bool {
 	if orcamento <= 0 || !movedTokenIsOnTurn(st, b) || st.Scene == nil || !st.Scene.CountsRounds() {
 		return false
 	}
-	sobrou := engine.TurnBudget{Standard: st.Scene.StandardLeft, Movement: st.Scene.MovementLeft}
-	for pago := 0; pago < custo; pago += orcamento {
-		proximo, err := sobrou.Spend(engine.ActionMovement)
+	left := engine.TurnBudget{Standard: st.Scene.StandardLeft, Movement: st.Scene.MovementLeft}
+	for paid := 0; paid < cost; paid += orcamento {
+		next, err := left.Spend(engine.ActionMovement)
 		if err != nil {
 			return true
 		}
-		sobrou = proximo
+		left = next
 	}
 	return false
 }

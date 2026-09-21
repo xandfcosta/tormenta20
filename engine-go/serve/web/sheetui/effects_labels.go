@@ -79,7 +79,7 @@ func scopeLabel(scope string) string {
 // (`inventorySlots`, `spellDC`, `maneuver`, `critRange`), e é o único lugar do
 // repositório que a tem.
 func targetLabel(t engine.ModifierTarget) string {
-	nomes := map[string]string{
+	names := map[string]string{
 		"attack": "Ataque", "damage": "Dano", "defense": "Defesa",
 		"expertise": "Perícia", "expertiseAll": "Todas as perícias",
 		"expertiseRemovePenalty": "Remove penalidade em", "expertiseByAttribute": "Perícias de",
@@ -96,19 +96,19 @@ func targetLabel(t engine.ModifierTarget) string {
 	// FLAG é booleana e o rótulo dela é uma frase inteira ("Fadiga ao dormir"),
 	// não um alvo com complemento — por isso ela sai antes do resto.
 	if t.K == "flag" {
-		if rotulo, conhecida := itemFlagLabel[t.Name]; conhecida {
-			return rotulo
+		if label, known := itemFlagLabel[t.Name]; known {
+			return label
 		}
 		return t.Name
 	}
-	nome, tem := nomes[t.K]
-	if !tem {
-		nome = t.K
+	name, found := names[t.K]
+	if !found {
+		name = t.K
 	}
-	if complemento := targetComplement(t); complemento != "" {
-		return nome + " (" + complemento + ")"
+	if complement := targetComplement(t); complement != "" {
+		return name + " (" + complement + ")"
 	}
-	return nome
+	return name
 }
 
 // targetComplement é o que vem entre parênteses depois do alvo.
@@ -127,8 +127,8 @@ func targetComplement(t engine.ModifierTarget) string {
 	if t.School != "" {
 		return t.School
 	}
-	escopos := map[string]string{"all": "todos", "melee": "corpo a corpo", "ranged": "à distância"}
-	return escopos[t.Scope]
+	scopeWords := map[string]string{"all": "todos", "melee": "corpo a corpo", "ranged": "à distância"}
+	return scopeWords[t.Scope]
 }
 
 func circleLabel(circle int) string {
@@ -156,8 +156,8 @@ var itemFlagLabel = map[string]string{
 // nova — há a queda para o alvo quando a nota vem vazia, que é o caso de um
 // modificador caseiro sem texto.
 func conditionalLabel(c engine.ConditionalEffect) string {
-	if nota := strings.TrimSpace(c.Note); nota != "" {
-		return nota
+	if note := strings.TrimSpace(c.Note); note != "" {
+		return note
 	}
 	return targetLabel(c.Target)
 }

@@ -140,8 +140,8 @@ func trechoDaSemeadura(corpo string) string {
 
 // anActionScene monta a cena que o caso quer, ou nenhuma. Os casos deste arquivo
 // são todos sobre o COMBATE, que é a cena de ação.
-func anActionScene(ligada bool) *live.Scene {
-	if !ligada {
+func anActionScene(on bool) *live.Scene {
+	if !on {
 		return nil
 	}
 	return &live.Scene{Kind: live.SceneAction, Number: 1, StandardLeft: true, MovementLeft: true}

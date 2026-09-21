@@ -1934,7 +1934,7 @@ func moveProposed(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if v.Movimento.SemAcao {
+		if v.Movimento.NoActionLeft {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 144, "<p class=\"text-xs font-semibold text-destructive-ink\">não sobrou ação neste turno para mover</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1988,7 +1988,7 @@ func moveProposed(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if v.Mestre && !v.Movimento.SemAcao {
+		if v.Mestre && !v.Movimento.NoActionLeft {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 151, "<button type=\"button\" data-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

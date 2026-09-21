@@ -589,8 +589,8 @@ func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
 // tokenSquare devolve onde a peça está, pelo tabuleiro de verdade.
 func tokenSquare(t *testing.T, f sceneFixture, tokenID string) [2]int {
 	t.Helper()
-	tabuleiro := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	peca := board.FindToken(tabuleiro, tokenID)
+	boardState := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	peca := board.FindToken(boardState, tokenID)
 	if peca == nil {
 		t.Fatalf("a peça %q sumiu do tabuleiro", tokenID)
 	}
@@ -604,29 +604,29 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 
 	// A VEZ é a do Ogro, que tem a iniciativa mais alta. A peça dele precisa
 	// apontar para a LINHA — é o `entryId` que liga o gesto ao turno.
-	estado := f.s.sessions.GetState(f.sessionID)
+	state := f.s.sessions.GetState(f.sessionID)
 	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("começar o turno: %v", err)
 	}
-	estado = f.s.sessions.GetState(f.sessionID)
-	naVez := estado.Initiative[estado.TurnIndex]
+	state = f.s.sessions.GetState(f.sessionID)
+	onTurn := state.Initiative[state.TurnIndex]
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		board.BoardToken{Label: naVez.Label, X: 2, Y: 2, EntryID: &naVez.ID})
+		board.BoardToken{Label: onTurn.Label, X: 2, Y: 2, EntryID: &onTurn.ID})
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	pecaID := posto.Tokens[len(posto.Tokens)-1].ID
 
-	andar := func(destinoX int) *httptest.ResponseRecorder {
+	walk := func(destX int) *httptest.ResponseRecorder {
 		base := f.tableUrl() + "/tabuleiro/" + pecaID
 		if rec := f.pede(t, f.mestre, "POST", base+"/parada",
-			`{"from":{"X":`+strconv.Itoa(destinoX)+`,"Y":2}}`); rec.Code != http.StatusOK {
+			`{"from":{"X":`+strconv.Itoa(destX)+`,"Y":2}}`); rec.Code != http.StatusOK {
 			t.Fatalf("propor a parada deu %d", rec.Code)
 		}
 		return f.pede(t, f.mestre, "POST", base+"/confirmar", "")
 	}
 
-	if rec := andar(3); rec.Code != http.StatusOK {
+	if rec := walk(3); rec.Code != http.StatusOK {
 		t.Fatalf("o primeiro movimento deu %d", rec.Code)
 	}
 	depois := f.s.sessions.GetState(f.sessionID)
@@ -638,7 +638,7 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 	}
 
 	// A SEGUNDA sai da padrão, pela troca de mão única da p233.
-	if rec := andar(4); rec.Code != http.StatusOK {
+	if rec := walk(4); rec.Code != http.StatusOK {
 		t.Fatalf("o segundo movimento, que sai da padrão, deu %d", rec.Code)
 	}
 	depois = f.s.sessions.GetState(f.sessionID)
@@ -649,17 +649,17 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 	// A TERCEIRA NÃO ACONTECE — e o que se prende é a PEÇA, não a frase: uma
 	// recusa escrita sobre um movimento que pousou é a pior das duas saídas,
 	// porque a mesa lê o erro e vê a peça no lugar novo.
-	ondeEstava := tokenSquare(t, f, pecaID)
-	rec := andar(5)
-	if agora := tokenSquare(t, f, pecaID); agora != ondeEstava {
-		t.Errorf("sem ação no turno a peça não anda, e ela foi de %v para %v", ondeEstava, agora)
+	wasAt := tokenSquare(t, f, pecaID)
+	rec := walk(5)
+	if now := tokenSquare(t, f, pecaID); now != wasAt {
+		t.Errorf("sem ação no turno a peça não anda, e ela foi de %v para %v", wasAt, now)
 	}
 	if !strings.Contains(rec.Body.String(), "não sobrou ação neste turno") {
 		t.Errorf("a terceira andada tinha de ser recusada por falta de ação, e veio %q",
 			rec.Body.String()[:min(220, len(rec.Body.String()))])
 	}
-	if !strings.Contains(rec.Body.String(), naVez.Label) {
-		t.Errorf("a recusa diz de quem é o turno, e veio sem %q", naVez.Label)
+	if !strings.Contains(rec.Body.String(), onTurn.Label) {
+		t.Errorf("a recusa diz de quem é o turno, e veio sem %q", onTurn.Label)
 	}
 
 	// E A TELA NÃO OFERECE O QUE O SERVIDOR RECUSA: com o turno gasto, a
@@ -669,11 +669,11 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 		`{"from":{"X":6,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor com o turno gasto deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
-	if !strings.Contains(tela, "não sobrou ação neste turno") {
+	screen := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+	if !strings.Contains(screen, "não sobrou ação neste turno") {
 		t.Error("o painel do movimento não diz que o turno acabou")
 	}
-	if strings.Contains(tela, ">Confirmar</button>") {
+	if strings.Contains(screen, ">Confirmar</button>") {
 		t.Error("o painel oferece Confirmar num movimento que o servidor vai recusar")
 	}
 
@@ -681,7 +681,7 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("passar a vez: %v", err)
 	}
-	if novo := f.s.sessions.GetState(f.sessionID).Scene; !novo.StandardLeft || !novo.MovementLeft {
-		t.Errorf("quem entra no turno o recebe inteiro, e veio %+v", novo)
+	if fresh := f.s.sessions.GetState(f.sessionID).Scene; !fresh.StandardLeft || !fresh.MovementLeft {
+		t.Errorf("quem entra no turno o recebe inteiro, e veio %+v", fresh)
 	}
 }

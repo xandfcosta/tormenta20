@@ -75,16 +75,16 @@ func NextTurnButton(fila []InitiativeEntry, turno int) NextTurnTarget {
 //
 // "Rodada 0" aparece de propósito no terceiro caso: a rodada só vira 1 no
 // primeiro avanço.
-func TurnCounter(cena *Scene, rodada, turno int, naFila int) string {
-	if cena == nil {
+func TurnCounter(scene *Scene, rodada, turno int, naFila int) string {
+	if scene == nil {
 		return "Fora de cena"
 	}
 	// FORA DA CENA DE AÇÃO não há rodada nem vez (p252), então o contador conta
 	// outra coisa: QUAL cena é esta. Antes ele recebia um booleano e dizia
 	// "Fora de cena" para tudo que não fosse combate — o que era verdade
 	// enquanto combate era a única cena que existia.
-	if !cena.CountsRounds() {
-		return fmt.Sprintf("%s · cena %d", cena.Kind.Name(), cena.Number)
+	if !scene.CountsRounds() {
+		return fmt.Sprintf("%s · cena %d", scene.Kind.Name(), scene.Number)
 	}
 	if naFila == 0 {
 		return "Em cena · ninguém na fila"
@@ -95,7 +95,7 @@ func TurnCounter(cena *Scene, rodada, turno int, naFila int) string {
 	// O QUE SOBROU DO TURNO entra aqui e não numa segunda tira: a economia de
 	// ação (p233) é sobre o turno, e o turno já é o que esta frase conta. Quem
 	// vai clicar precisa saber ANTES — a recusa sozinha chega depois do gesto.
-	return fmt.Sprintf("Rodada %d · Turno %d/%d · %s", rodada, turno+1, naFila, cena.actionsLeft())
+	return fmt.Sprintf("Rodada %d · Turno %d/%d · %s", rodada, turno+1, naFila, scene.actionsLeft())
 }
 
 // ── presença ────────────────────────────────────────────────────────────────
@@ -223,43 +223,43 @@ func ValidateInitiative(v int) error {
 // @example UpkeepLine(&TurnUpkeep{Paid: []string{"Velocidade"}, Cost: 1})
 //
 //	// "Velocidade · −1 PM"
-func UpkeepLine(extrato *TurnUpkeep) string {
-	if extrato == nil {
+func UpkeepLine(statement *TurnUpkeep) string {
+	if statement == nil {
 		return ""
 	}
-	var partes []string
-	if len(extrato.Paid) > 0 {
-		partes = append(partes, fmt.Sprintf("%s · −%d PM (%d → %d)",
-			joinWithAnd(extrato.Paid), extrato.Cost, extrato.MpBefore, extrato.MpAfter))
+	var parts []string
+	if len(statement.Paid) > 0 {
+		parts = append(parts, fmt.Sprintf("%s · −%d PM (%d → %d)",
+			joinWithAnd(statement.Paid), statement.Cost, statement.MpBefore, statement.MpAfter))
 	}
 	// A RAZÃO da queda entra na frase: sem mana é uma escolha que acabou;
 	// inconsciente é um personagem no chão, e quem lê a mesa precisa saber qual
 	// dos dois aconteceu para decidir se vale curar ou reconjurar.
-	if len(extrato.Dropped) > 0 {
-		if extrato.Unconscious {
-			partes = append(partes, joinWithAnd(extrato.Dropped)+" "+
-				endedVerb(extrato.Dropped)+": inconsciente não sustenta")
+	if len(statement.Dropped) > 0 {
+		if statement.Unconscious {
+			parts = append(parts, joinWithAnd(statement.Dropped)+" "+
+				endedVerb(statement.Dropped)+": inconsciente não sustenta")
 		} else {
-			for _, caiu := range extrato.Dropped {
-				partes = append(partes, caiu+" acabou: sem PM para sustentar")
+			for _, fell := range statement.Dropped {
+				parts = append(parts, fell+" acabou: sem PM para sustentar")
 			}
 		}
 	}
-	return strings.Join(partes, " · ")
+	return strings.Join(parts, " · ")
 }
 
 // joinWithAnd escreve uma lista como uma pessoa a lê: "A, B e C".
-func joinWithAnd(nomes []string) string {
-	if len(nomes) < 2 {
-		return strings.Join(nomes, "")
+func joinWithAnd(names []string) string {
+	if len(names) < 2 {
+		return strings.Join(names, "")
 	}
-	return strings.Join(nomes[:len(nomes)-1], ", ") + " e " + nomes[len(nomes)-1]
+	return strings.Join(names[:len(names)-1], ", ") + " e " + names[len(names)-1]
 }
 
 // endedVerb concorda o verbo com quantas habilidades caíram. Plural fixo sobre
 // contagem variável lê "Velocidade acabaram", e isso já foi visto na tela.
-func endedVerb(caidos []string) string {
-	if len(caidos) == 1 {
+func endedVerb(dropped []string) string {
+	if len(dropped) == 1 {
 		return "acabou"
 	}
 	return "acabaram"

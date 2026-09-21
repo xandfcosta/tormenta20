@@ -115,7 +115,7 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	// peça fora de turno o tempo todo — arrumando a cena, empurrando um NPC —, e
 	// cobrar dele a ação de outro combatente tiraria do turno de quem não se
 	// mexeu (p233).
-	daVez := movedTokenIsOnTurn(estado, st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID))
+	onTurn := movedTokenIsOnTurn(estado, st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID))
 	// A CONFERÊNCIA vem ANTES do pouso, e a COBRANÇA depois.
 	//
 	// Cobrar depois basta para o número ficar certo e NÃO basta para a mesa:
@@ -123,32 +123,32 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	// recusa seria só uma frase vermelha embaixo de um movimento feito. Entre a
 	// conferência e a cobrança o `CommitMove` ainda pode recusar — e aí o turno
 	// não é cobrado, que é o lado seguro dos dois.
-	if daVez {
+	if onTurn {
 		if err := st.deps.Sessions().ActionFits(c.SessionID, engine.ActionMovement); err != nil {
 			return nil, err
 		}
 	}
-	tabuleiro, err := st.deps.Boards().CommitMove(c.R.Context(), c.SessionID, c.TabuleiroID,
+	boardState, err := st.deps.Boards().CommitMove(c.R.Context(), c.SessionID, c.TabuleiroID,
 		estado, 0, st.moveWho(c))
-	if err != nil || !daVez {
-		return tabuleiro, err
+	if err != nil || !onTurn {
+		return boardState, err
 	}
 	if _, err := st.deps.Sessions().SpendAction(c.SessionID, engine.ActionMovement); err != nil {
-		return tabuleiro, err
+		return boardState, err
 	}
-	return tabuleiro, nil
+	return boardState, nil
 }
 
 // movedTokenIsOnTurn diz se a peça do movimento proposto é a de quem está na
 // vez. Sem tabuleiro, sem provisório ou sem combate, não é.
-func movedTokenIsOnTurn(estado *live.SessionRuntimeState, tabuleiro *board.BoardState) bool {
-	if estado == nil || tabuleiro == nil || tabuleiro.Pending == nil {
+func movedTokenIsOnTurn(estado *live.SessionRuntimeState, boardState *board.BoardState) bool {
+	if estado == nil || boardState == nil || boardState.Pending == nil {
 		return false
 	}
 	if estado.TurnIndex < 0 || estado.TurnIndex >= len(estado.Initiative) {
 		return false
 	}
-	peca := board.FindToken(tabuleiro, tabuleiro.Pending.TokenID)
+	peca := board.FindToken(boardState, boardState.Pending.TokenID)
 	return peca != nil && peca.EntryID != nil && *peca.EntryID == estado.Initiative[estado.TurnIndex].ID
 }
 
