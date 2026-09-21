@@ -204,42 +204,42 @@ var aProcedenciaDeclarada = regexp.MustCompile(
 		`Aqui morava|apagad|morta`)
 
 func TestNoCitationNamesAMissingSymbol(t *testing.T) {
-	existe, semCaixa := oQueORepositorioDeclara(t)
-	arquivos := arquivosParaCitacao(t)
+	exists, noBox := oQueORepositorioDeclara(t)
+	files := arquivosParaCitacao(t)
 
-	medidas := 0
-	for _, caminho := range arquivos {
-		conteudo, err := os.ReadFile(caminho)
+	measured := 0
+	for _, path := range files {
+		content, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("ler %s: %v", caminho, err)
+			t.Fatalf("ler %s: %v", path, err)
 		}
-		linhas := strings.Split(string(conteudo), "\n")
-		for numero, linha := range linhas {
-			k := strings.Index(linha, "//")
+		rows := strings.Split(string(content), "\n")
+		for number, row := range rows {
+			k := strings.Index(row, "//")
 			if k < 0 {
 				continue
 			}
-			for _, achado := range oSimboloCitado.FindAllStringSubmatch(linha[k:], -1) {
-				citado := achado[1]
-				if citado == "" {
-					citado = achado[2]
+			for _, found := range oSimboloCitado.FindAllStringSubmatch(row[k:], -1) {
+				cited := found[1]
+				if cited == "" {
+					cited = found[2]
 				}
-				nome := citado[strings.LastIndex(citado, ".")+1:]
-				raiz := citado
-				if i := strings.Index(citado, "."); i >= 0 {
-					raiz = citado[:i]
+				name := cited[strings.LastIndex(cited, ".")+1:]
+				root := cited
+				if i := strings.Index(cited, "."); i >= 0 {
+					root = cited[:i]
 				}
-				if !ehCamelDeVerdade.MatchString(nome) {
+				if !ehCamelDeVerdade.MatchString(name) {
 					continue
 				}
-				medidas++
-				if existe[nome] || existe[raiz] || semCaixa[strings.ToLower(nome)] {
+				measured++
+				if exists[name] || exists[root] || noBox[strings.ToLower(name)] {
 					continue
 				}
-				if simbolosAusentesDePROPOSITO[nome] {
+				if simbolosAusentesDePROPOSITO[name] {
 					continue
 				}
-				if aProcedenciaDeclarada.MatchString(oBlocoDoComentario(linhas, numero)) {
+				if aProcedenciaDeclarada.MatchString(oBlocoDoComentario(rows, number)) {
 					continue
 				}
 				t.Errorf("%s:%d cita `%s`, que não existe na árvore.\n"+
@@ -249,7 +249,7 @@ func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 					"junto\", \"não existe mais\", o `.ts` de onde veio) ou o nome entra em\n"+
 					"`simbolosAusentesDePROPOSITO` — dizer por que uma coisa saiu é bom, e o\n"+
 					"que falta é o ato ser explícito.",
-					caminho, numero+1, citado)
+					path, number+1, cited)
 			}
 		}
 	}
@@ -258,8 +258,8 @@ func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 	// um regex que parou de casar são a mesma linha verde. O piso fica longe do
 	// número real de propósito — o que ele pega é a varredura QUEBRAR, não a
 	// prosa encolher.
-	if medidas < 1500 {
-		t.Fatalf("só %d citações de símbolo lidas — o guarda ficou cego", medidas)
+	if measured < 1500 {
+		t.Fatalf("só %d citações de símbolo lidas — o guarda ficou cego", measured)
 	}
 }
 
@@ -268,15 +268,15 @@ func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 // A procedência quase nunca está na mesma linha do nome: ela está na frase, que
 // ocupa três ou quatro linhas. Ler linha a linha faria a regra da procedência
 // não pegar quase nada.
-func oBlocoDoComentario(linhas []string, i int) string {
-	ini, fim := i, i
-	for ini > 0 && strings.Contains(linhas[ini-1], "//") {
+func oBlocoDoComentario(rows []string, i int) string {
+	ini, end := i, i
+	for ini > 0 && strings.Contains(rows[ini-1], "//") {
 		ini--
 	}
-	for fim+1 < len(linhas) && strings.Contains(linhas[fim+1], "//") {
-		fim++
+	for end+1 < len(rows) && strings.Contains(rows[end+1], "//") {
+		end++
 	}
-	return strings.Join(linhas[ini:fim+1], " ")
+	return strings.Join(rows[ini:end+1], " ")
 }
 
 // oQueORepositorioDeclara colhe as cinco naturezas mecânicas.
@@ -285,7 +285,7 @@ func oBlocoDoComentario(linhas []string, i int) string {
 // minúscula — o segundo é o que faz a regra da CAIXA funcionar.
 func oQueORepositorioDeclara(t *testing.T) (map[string]bool, map[string]bool) {
 	t.Helper()
-	existe := map[string]bool{}
+	exists := map[string]bool{}
 	// A última alternância é a CONSTANTE DE `iota` SEM TIPO, e ela entrou na
 	// ALE-287 depois de o guarda acusar FALSO.
 	//
@@ -311,78 +311,78 @@ func oQueORepositorioDeclara(t *testing.T) (map[string]bool, map[string]bool) {
 	local := regexp.MustCompile(`\b(\w+)\s*:=`)
 	// `var a, b bool` dentro de uma função: o `:=` não a pega, e ela é
 	// declaração igual.
-	varLocal := regexp.MustCompile(`\bvar\s+([\w,\s]+?)\s+[\w\[\]\*]`)
+	localVar := regexp.MustCompile(`\bvar\s+([\w,\s]+?)\s+[\w\[\]\*]`)
 	tagJSON := regexp.MustCompile(`json:"([^",]+)`)
-	chamada := regexp.MustCompile(`\.(\w+)\(`)
+	call := regexp.MustCompile(`\.(\w+)\(`)
 	literal := regexp.MustCompile(`"([^"\n]{2,60})"`)
-	palavra := regexp.MustCompile(`[A-Za-z_]\w*`)
+	word := regexp.MustCompile(`[A-Za-z_]\w*`)
 	param := regexp.MustCompile(`(?m)^func[^{]*\(([^)]*)\)`)
 	// CHAVE DE LITERAL COMPOSTO: `ReadHeaderTimeout: 5 * time.Second` nomeia um
 	// campo de um tipo de OUTRO pacote, que nenhuma das outras naturezas colhe.
-	campoLiteral := regexp.MustCompile(`(?m)^\s*(\w+):\s`)
+	literalField := regexp.MustCompile(`(?m)^\s*(\w+):\s`)
 
-	visitados := 0
-	err := filepath.WalkDir("../..", func(caminho string, entrada fs.DirEntry, err error) error {
+	visited := 0
+	err := filepath.WalkDir("../..", func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() {
-			if entrada.Name() == "node_modules" || entrada.Name() == ".git" {
+		if entry.IsDir() {
+			if entry.Name() == "node_modules" || entry.Name() == ".git" {
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		ext := filepath.Ext(caminho)
-		bruto, lerErr := os.ReadFile(caminho)
-		if lerErr != nil {
+		ext := filepath.Ext(path)
+		raw, readErr := os.ReadFile(path)
+		if readErr != nil {
 			return nil
 		}
-		s := string(bruto)
+		s := string(raw)
 		switch ext {
 		case ".go", ".templ":
-			visitados++
+			visited++
 			for _, m := range decl.FindAllStringSubmatch(s, -1) {
 				for _, g := range m[1:] {
 					if g != "" {
-						existe[g] = true
+						exists[g] = true
 					}
 				}
 			}
 			for _, m := range local.FindAllStringSubmatch(s, -1) {
-				existe[m[1]] = true
+				exists[m[1]] = true
 			}
-			for _, m := range varLocal.FindAllStringSubmatch(s, -1) {
-				for _, w := range palavra.FindAllString(m[1], -1) {
-					existe[w] = true
+			for _, m := range localVar.FindAllStringSubmatch(s, -1) {
+				for _, w := range word.FindAllString(m[1], -1) {
+					exists[w] = true
 				}
 			}
 			for _, m := range tagJSON.FindAllStringSubmatch(s, -1) {
-				existe[m[1]] = true
+				exists[m[1]] = true
 			}
-			for _, m := range chamada.FindAllStringSubmatch(s, -1) {
-				existe[m[1]] = true
+			for _, m := range call.FindAllStringSubmatch(s, -1) {
+				exists[m[1]] = true
 			}
 			for _, m := range literal.FindAllStringSubmatch(s, -1) {
-				for _, w := range palavra.FindAllString(m[1], -1) {
-					existe[w] = true
+				for _, w := range word.FindAllString(m[1], -1) {
+					exists[w] = true
 				}
 			}
 			for _, m := range param.FindAllStringSubmatch(s, -1) {
-				for _, w := range palavra.FindAllString(m[1], -1) {
-					existe[w] = true
+				for _, w := range word.FindAllString(m[1], -1) {
+					exists[w] = true
 				}
 			}
-			for _, m := range campoLiteral.FindAllStringSubmatch(s, -1) {
-				existe[m[1]] = true
+			for _, m := range literalField.FindAllStringSubmatch(s, -1) {
+				exists[m[1]] = true
 			}
 		case ".sql", ".ts", ".tsx", ".js":
-			for _, w := range palavra.FindAllString(s, -1) {
-				existe[w] = true
+			for _, w := range word.FindAllString(s, -1) {
+				exists[w] = true
 			}
 		case ".json":
-			var qualquer any
-			if json.Unmarshal(bruto, &qualquer) == nil {
-				colheChaves(qualquer, existe)
+			var anything any
+			if json.Unmarshal(raw, &anything) == nil {
+				colheChaves(anything, exists)
 			}
 		}
 		return nil
@@ -394,28 +394,28 @@ func oQueORepositorioDeclara(t *testing.T) (map[string]bool, map[string]bool) {
 	// O SEGUNDO DENOMINADOR: um conjunto vazio faria TODA citação reprovar, e um
 	// conjunto que engoliu o `node_modules` faria toda citação passar. Os dois
 	// são silêncio, e este piso separa os dois do caso normal.
-	if visitados < 300 || len(existe) < 10000 {
+	if visited < 300 || len(exists) < 10000 {
 		t.Fatalf("a coleta leu %d arquivos e achou %d símbolos — ela está medindo "+
-			"a árvore errada", visitados, len(existe))
+			"a árvore errada", visited, len(exists))
 	}
 
-	semCaixa := make(map[string]bool, len(existe))
-	for d := range existe {
-		semCaixa[strings.ToLower(d)] = true
+	noBox := make(map[string]bool, len(exists))
+	for d := range exists {
+		noBox[strings.ToLower(d)] = true
 	}
-	return existe, semCaixa
+	return exists, noBox
 }
 
-func colheChaves(o any, existe map[string]bool) {
+func colheChaves(o any, exists map[string]bool) {
 	switch v := o.(type) {
 	case map[string]any:
-		for k, filho := range v {
-			existe[k] = true
-			colheChaves(filho, existe)
+		for k, child := range v {
+			exists[k] = true
+			colheChaves(child, exists)
 		}
 	case []any:
-		for _, filho := range v {
-			colheChaves(filho, existe)
+		for _, child := range v {
+			colheChaves(child, exists)
 		}
 	}
 }

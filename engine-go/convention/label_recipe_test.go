@@ -56,33 +56,33 @@ import (
 // eles aqui seria fazer exatamente o que a ALE-252 puniu — escrever a receita em
 // vez de portá-la. Quando algum deles ganhar uma, ele entra nesta lista.
 func TestNoHandwrittenLabelRecipe(t *testing.T) {
-	classe := regexp.MustCompile(`class="([^"]*)"`)
-	abertura := regexp.MustCompile(`^<([a-zA-Z][a-zA-Z0-9]*)`)
-	receita := regexp.MustCompile(`ui\.(SectionTitle|SectionLabel|FieldLabel)Classes\(|@ui\.(SectionLabel|SectionCaption)\(`)
+	class := regexp.MustCompile(`class="([^"]*)"`)
+	opening := regexp.MustCompile(`^<([a-zA-Z][a-zA-Z0-9]*)`)
+	recipe := regexp.MustCompile(`ui\.(SectionTitle|SectionLabel|FieldLabel)Classes\(|@ui\.(SectionLabel|SectionCaption)\(`)
 
 	// Os elementos cujo papel TEM receita. O `<span>`/`<p>` entra pelo que ele
 	// NÃO tem: sem caixa, ele é rótulo; com caixa, é crachá.
-	titulo := map[string]bool{"h1": true, "h2": true, "h3": true, "h4": true, "h5": true, "h6": true, "th": true, "caption": true}
-	campo := map[string]bool{"label": true, "legend": true, "dt": true}
-	solto := map[string]bool{"span": true, "p": true, "li": true, "div": true}
+	title := map[string]bool{"h1": true, "h2": true, "h3": true, "h4": true, "h5": true, "h6": true, "th": true, "caption": true}
+	field := map[string]bool{"label": true, "legend": true, "dt": true}
+	loose := map[string]bool{"span": true, "p": true, "li": true, "div": true}
 
-	var aMao, pelaReceita, arquivosLidos int
-	err := filepath.WalkDir("..", func(nome string, entrada fs.DirEntry, err error) error {
+	var aMao, byRecipe, filesRead int
+	err := filepath.WalkDir("..", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() {
-			if entrada.Name() == "node_modules" || entrada.Name() == ".git" {
+		if entry.IsDir() {
+			if entry.Name() == "node_modules" || entry.Name() == ".git" {
 				return fs.SkipDir
 			}
 			return nil
 		}
 		// O KIT é onde a receita MORA: cobrá-la lá seria cobrar a definição.
-		if !strings.HasSuffix(nome, ".templ") || strings.Contains(nome, "/web/ui/") {
+		if !strings.HasSuffix(name, ".templ") || strings.Contains(name, "/web/ui/") {
 			return nil
 		}
-		arquivosLidos++
-		bruto, err := os.ReadFile(nome)
+		filesRead++
+		raw, err := os.ReadFile(name)
 		if err != nil {
 			return err
 		}
@@ -90,10 +90,10 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 		// o comentário de uma receita cita a grafia que ela substitui, e um guarda
 		// que lê a fonte crua acusa a explicação do defeito como se fosse o
 		// defeito.
-		texto := strings.Join(semComentario(strings.Split(string(bruto), "\n")), "\n")
-		pelaReceita += len(receita.FindAllString(texto, -1))
-		for _, achado := range classe.FindAllStringSubmatchIndex(texto, -1) {
-			tokens := strings.Fields(texto[achado[2]:achado[3]])
+		text := strings.Join(semComentario(strings.Split(string(raw), "\n")), "\n")
+		byRecipe += len(recipe.FindAllString(text, -1))
+		for _, found := range class.FindAllStringSubmatchIndex(text, -1) {
+			tokens := strings.Fields(text[found[2]:found[3]])
 			if !contem(tokens, "uppercase") || !comPrefixo(tokens, "tracking-") {
 				continue
 			}
@@ -102,38 +102,38 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 			// atributo mora numa linha própria em metade dos sítios, e procurar a
 			// tag "na mesma linha" ou "na linha de cima" acerta em uns e erra em
 			// outros sem dizer quais.
-			corte := strings.LastIndex(texto[:achado[0]], "<")
-			if corte < 0 {
+			cut := strings.LastIndex(text[:found[0]], "<")
+			if cut < 0 {
 				continue
 			}
-			m := abertura.FindStringSubmatch(texto[corte:min(corte+24, len(texto))])
+			m := opening.FindStringSubmatch(text[cut:min(cut+24, len(text))])
 			if m == nil {
 				continue
 			}
 			tag := m[1]
-			temCaixa := comPrefixo(tokens, "rounded") || comPrefixo(tokens, "border") || comPrefixo(tokens, "bg-")
+			hasBox := comPrefixo(tokens, "rounded") || comPrefixo(tokens, "border") || comPrefixo(tokens, "bg-")
 			// TAMANHO RESPONSIVO é a marca do título de PALCO, e não um detalhe:
 			// uma receita escreve UM tamanho, e um título que cresce com a janela
 			// não cabe em nenhuma das três. Ver a docstring.
-			responsivo := comPrefixo(tokens, "sm:text-") || comPrefixo(tokens, "lg:text-")
-			var papel string
+			responsive := comPrefixo(tokens, "sm:text-") || comPrefixo(tokens, "lg:text-")
+			var role string
 			switch {
-			case responsivo:
+			case responsive:
 				aMao++
 				continue
-			case titulo[tag]:
-				papel = "ui.SectionTitleClasses(contexto, tom, extra)"
-			case campo[tag] || (solto[tag] && !temCaixa):
-				papel = "ui.FieldLabelClasses(tom, extra)"
+			case title[tag]:
+				role = "ui.SectionTitleClasses(contexto, tom, extra)"
+			case field[tag] || (loose[tag] && !hasBox):
+				role = "ui.FieldLabelClasses(tom, extra)"
 			default:
 				aMao++ // crachá, controle e navegação: fora da família, ver a docstring.
 				continue
 			}
-			linha := strings.Count(texto[:achado[0]], "\n") + 1
+			row := strings.Count(text[:found[0]], "\n") + 1
 			t.Errorf("%s:%d — <%s> escreve a receita de rótulo à mão (%s). Use %s.\n"+
 				"    Escrever a receita em vez de chamá-la é o que produziu 59 grafias na SPA e 30 nas cenas em templ,\n"+
 				"    e é o que tira a cobertura do guarda de tipografia da AMOSTRAGEM para a ENUMERAÇÃO.",
-				nome, linha, tag, texto[achado[2]:achado[3]], papel)
+				name, row, tag, text[found[2]:found[3]], role)
 		}
 		return nil
 	})
@@ -145,14 +145,14 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 	//
 	// A primeira: sem arquivo lido, tudo abaixo é verde sobre nada — foi assim
 	// que o guarda irmão quase passou medindo um diretório que tinha esvaziado.
-	if arquivosLidos < 40 {
-		t.Fatalf("o guarda leu só %d arquivos `.templ`: a caminhada parou de achar as cenas", arquivosLidos)
+	if filesRead < 40 {
+		t.Fatalf("o guarda leu só %d arquivos `.templ`: a caminhada parou de achar as cenas", filesRead)
 	}
 	// A segunda: se o casamento da RECEITA parar de funcionar, o guarda continua
 	// verde porque ninguém a estaria usando — e "ninguém usa" e "não sei
 	// procurar" se parecem no terminal.
-	if pelaReceita < 100 {
-		t.Fatalf("só %d sítios chamam uma das três receitas: ou elas foram desfeitas, ou o padrão parou de casar", pelaReceita)
+	if byRecipe < 100 {
+		t.Fatalf("só %d sítios chamam uma das três receitas: ou elas foram desfeitas, ou o padrão parou de casar", byRecipe)
 	}
 	// A terceira: se o casamento do `class="…"` parar, o laço acima nunca entra e
 	// nada é cobrado. Os dezesseis de fora da família são a prova de que ele
@@ -163,18 +163,18 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 	}
 }
 
-func contem(tokens []string, alvo string) bool {
+func contem(tokens []string, target string) bool {
 	for _, t := range tokens {
-		if t == alvo {
+		if t == target {
 			return true
 		}
 	}
 	return false
 }
 
-func comPrefixo(tokens []string, prefixo string) bool {
+func comPrefixo(tokens []string, prefix string) bool {
 	for _, t := range tokens {
-		if strings.HasPrefix(t, prefixo) {
+		if strings.HasPrefix(t, prefix) {
 			return true
 		}
 	}

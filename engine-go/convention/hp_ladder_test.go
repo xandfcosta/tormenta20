@@ -37,26 +37,26 @@ import (
 func TestNoSurfacePaintsAVitalTintOutsideTheLadder(t *testing.T) {
 	root := filepath.Join("..", "..")
 
-	permitidos := map[string]bool{}
-	bruto, err := os.ReadFile(filepath.Join("testdata", "hp_tints_outside_the_ladder.txt"))
+	allowed := map[string]bool{}
+	raw, err := os.ReadFile(filepath.Join("testdata", "hp_tints_outside_the_ladder.txt"))
 	if err != nil {
 		t.Fatalf("ler a lista de permitidos: %v", err)
 	}
-	for _, linha := range strings.Split(string(bruto), "\n") {
-		linha = strings.TrimSpace(linha)
-		if linha == "" || strings.HasPrefix(linha, "#") {
+	for _, row := range strings.Split(string(raw), "\n") {
+		row = strings.TrimSpace(row)
+		if row == "" || strings.HasPrefix(row, "#") {
 			continue
 		}
-		permitidos[linha] = true
+		allowed[row] = true
 	}
 	// O DENOMINADOR DA LISTA: um arquivo vazio — ou um caminho que o `ReadFile`
 	// achou pela metade — faria todo sítio da árvore reprovar de uma vez, com
 	// cara de descoberta.
-	if len(permitidos) < 5 {
-		t.Fatalf("a lista de permitidos tem %d entradas, e ela é o denominador", len(permitidos))
+	if len(allowed) < 5 {
+		t.Fatalf("a lista de permitidos tem %d entradas, e ela é o denominador", len(allowed))
 	}
 
-	saida, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached", "*.templ", "*.go").Output()
+	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached", "*.templ", "*.go").Output()
 	if err != nil {
 		t.Fatalf("git ls-files: %v", err)
 	}
@@ -65,51 +65,51 @@ func TestNoSurfacePaintsAVitalTintOutsideTheLadder(t *testing.T) {
 	// arbitrário (`bg-[color:var(--hp-full)]`). Casar só uma faria o guarda
 	// passar verde sobre um renome de grafia — e as duas conviviam na árvore em
 	// que ele nasceu.
-	tintaVital := regexp.MustCompile(`(?:--|-)hp-(?:full|hurt|critical)\b`)
+	vitalInk := regexp.MustCompile(`(?:--|-)hp-(?:full|hurt|critical)\b`)
 
-	var reprovados []string
-	lidos, comTinta := 0, 0
-	for _, rel := range strings.Split(strings.TrimRight(string(saida), "\x00"), "\x00") {
+	var failed []string
+	read, withPaint := 0, 0
+	for _, rel := range strings.Split(strings.TrimRight(string(output), "\x00"), "\x00") {
 		if rel == "" || strings.HasSuffix(rel, "_templ.go") || strings.HasSuffix(rel, "_test.go") {
 			continue
 		}
-		corpo, err := os.ReadFile(filepath.Join(root, rel))
+		body, err := os.ReadFile(filepath.Join(root, rel))
 		if err != nil {
 			t.Fatalf("ler %s: %v", rel, err)
 		}
-		lidos++
+		read++
 
 		// COMENTÁRIO não pinta nada, e uma prosa que EXPLICA a escada citando os
 		// nomes dela viraria violação. É a contaminação que a ALE-313 mediu no
 		// guarda de payload, evitada de saída.
-		var codigo []string
-		for _, linha := range strings.Split(string(corpo), "\n") {
-			if s := strings.TrimSpace(linha); strings.HasPrefix(s, "//") {
+		var code []string
+		for _, row := range strings.Split(string(body), "\n") {
+			if s := strings.TrimSpace(row); strings.HasPrefix(s, "//") {
 				continue
 			}
-			codigo = append(codigo, linha)
+			code = append(code, row)
 		}
-		if !tintaVital.MatchString(strings.Join(codigo, "\n")) {
+		if !vitalInk.MatchString(strings.Join(code, "\n")) {
 			continue
 		}
-		comTinta++
-		if !permitidos[rel] {
-			reprovados = append(reprovados, rel)
+		withPaint++
+		if !allowed[rel] {
+			failed = append(failed, rel)
 		}
 	}
 
 	// O PISO dos ARQUIVOS LIDOS, e o dos que de fato escrevem tinta: a caminhada
 	// pode encolher sem zerar — foi como o guarda do foco quase passou verde
 	// medindo metade (ALE-278).
-	if lidos < 200 {
-		t.Fatalf("o guarda leu só %d arquivos, e a árvore tem centenas", lidos)
+	if read < 200 {
+		t.Fatalf("o guarda leu só %d arquivos, e a árvore tem centenas", read)
 	}
-	if comTinta < len(permitidos) {
+	if withPaint < len(allowed) {
 		t.Fatalf("só %d arquivos escrevem tinta vital, e a lista declara %d: "+
-			"a lista envelheceu ou a varredura encolheu", comTinta, len(permitidos))
+			"a lista envelheceu ou a varredura encolheu", withPaint, len(allowed))
 	}
 
-	for _, rel := range reprovados {
+	for _, rel := range failed {
 		t.Errorf("%s escreve uma tinta vital à mão.\n"+
 			"    A COR de um vital é da escada: `ui.HpFillTone` pinta a faixa e\n"+
 			"    `ui.HpInkTone` escreve o número. Se esta tinta NÃO está dizendo\n"+

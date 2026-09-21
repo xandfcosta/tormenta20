@@ -93,7 +93,7 @@ func TestNoFileIsNamedInPortuguese(t *testing.T) {
 	// `-z` porque nome de arquivo pode ter espaço, e `--cached` porque o que
 	// vale é o que está VERSIONADO: um arquivo novo ainda não adicionado não é
 	// do repositório, e um que alguém apagou sem commitar ainda é.
-	saida, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached").Output()
+	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached").Output()
 	if err != nil {
 		t.Fatalf("git ls-files em %s: %v", root, err)
 	}
@@ -102,7 +102,7 @@ func TestNoFileIsNamedInPortuguese(t *testing.T) {
 	var unknown []string
 	used := map[string]bool{}
 
-	for _, relative := range strings.Split(strings.TrimRight(string(saida), "\x00"), "\x00") {
+	for _, relative := range strings.Split(strings.TrimRight(string(output), "\x00"), "\x00") {
 		if relative == "" || strings.HasPrefix(relative, parityIsTheException) {
 			continue
 		}

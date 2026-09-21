@@ -38,37 +38,37 @@ func TestNoFocusAsksTheServerWithoutAKeyboardGuard(t *testing.T) {
 	// Um `data-on:focus…` inteiro, com os modificadores e o valor: o Datastar
 	// escreve `data-on:focus__throttle.100ms.leading={ … }`, e é o VALOR que diz
 	// se há pedido e se há guarda.
-	oFoco := regexp.MustCompile(`data-on:focus[a-zA-Z0-9_.]*=(\{[^}]*\}|"[^"]*")`)
+	theFocus := regexp.MustCompile(`data-on:focus[a-zA-Z0-9_.]*=(\{[^}]*\}|"[^"]*")`)
 
-	visitados, achados := 0, 0
-	err := filepath.WalkDir("..", func(caminho string, entrada fs.DirEntry, err error) error {
+	visited, findings := 0, 0
+	err := filepath.WalkDir("..", func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() {
-			if entrada.Name() == "node_modules" || entrada.Name() == ".git" {
+		if entry.IsDir() {
+			if entry.Name() == "node_modules" || entry.Name() == ".git" {
 				return fs.SkipDir
 			}
 			return nil
 		}
-		if !strings.HasSuffix(caminho, ".templ") {
+		if !strings.HasSuffix(path, ".templ") {
 			return nil
 		}
-		visitados++
-		corpo, err := os.ReadFile(caminho)
+		visited++
+		body, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		for _, gesto := range oFoco.FindAllString(string(corpo), -1) {
-			if !strings.Contains(gesto, "@get(") && !strings.Contains(gesto, "@post(") {
+		for _, gesture := range theFocus.FindAllString(string(body), -1) {
+			if !strings.Contains(gesture, "@get(") && !strings.Contains(gesture, "@post(") {
 				continue // só mexe em sinal local: não pede nada, não corre com ninguém
 			}
-			achados++
-			if !strings.Contains(gesto, ":focus-visible") {
+			findings++
+			if !strings.Contains(gesture, ":focus-visible") {
 				t.Errorf("%s: um foco pede ao servidor sem guarda de teclado — o clique do mouse "+
 					"foca também, e o pedido dele chega DEPOIS do pedido do clique numa máquina "+
 					"carregada, desfazendo o que o clique fez. Embrulhe em "+
-					"`el.matches(':focus-visible') && (…)`: %s", caminho, gesto)
+					"`el.matches(':focus-visible') && (…)`: %s", path, gesture)
 			}
 		}
 		return nil
@@ -84,11 +84,11 @@ func TestNoFocusAsksTheServerWithoutAKeyboardGuard(t *testing.T) {
 	// exigia `achados > 0`, então ele teria passado verde depois da mudança de
 	// pacote — havia um foco com `@get` no diretório novo, e ele bastava. O piso
 	// de arquivos VISITADOS é o que denuncia a caminhada que encolheu.
-	if visitados < 40 {
+	if visited < 40 {
 		t.Fatalf("a caminhada viu só %d arquivos `.templ`, e o repositório tem dezenas: "+
-			"a raiz da varredura é o primeiro suspeito", visitados)
+			"a raiz da varredura é o primeiro suspeito", visited)
 	}
-	if achados == 0 {
+	if findings == 0 {
 		t.Fatal("nenhum `data-on:focus…` com `@get`/`@post` foi encontrado na fonte: " +
 			"o guarda não mediu nada, e o casamento do padrão é o primeiro suspeito")
 	}

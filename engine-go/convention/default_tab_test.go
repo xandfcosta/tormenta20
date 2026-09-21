@@ -29,16 +29,16 @@ import (
 // glob deixou de casar com qualquer coisa — e desta vez o CONTROLE existia, então
 // ele falhou ALTO em vez de passar verde sobre zero arquivos.
 func TestNoSceneCommandUsesTheDefaultTab(t *testing.T) {
-	var arquivos []string
-	raiz, err := os.Getwd()
+	var files []string
+	root, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("achar a raiz: %v", err)
 	}
-	if err := filepath.WalkDir(filepath.Dir(raiz), func(caminho string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") {
+	if err := filepath.WalkDir(filepath.Dir(root), func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") {
 			return err
 		}
-		arquivos = append(arquivos, caminho)
+		files = append(files, path)
 		return nil
 	}); err != nil {
 		t.Fatalf("caminhar a árvore: %v", err)
@@ -46,25 +46,25 @@ func TestNoSceneCommandUsesTheDefaultTab(t *testing.T) {
 	// CONTROLE: sem ele, um glob que não casa com nada passaria VERDE — o teste
 	// diria "nenhum arquivo viola" sobre uma varredura que não visitou ninguém,
 	// que é a forma de silêncio que esta casa já pagou caro.
-	if len(arquivos) < 200 {
-		t.Fatalf("a varredura achou só %d arquivos `.go`: ela está caminhando a árvore errada", len(arquivos))
+	if len(files) < 200 {
+		t.Fatalf("a varredura achou só %d arquivos `.go`: ela está caminhando a árvore errada", len(files))
 	}
-	visitados := 0
-	for _, caminho := range arquivos {
-		if strings.HasSuffix(caminho, "_test.go") || strings.HasSuffix(caminho, "_templ.go") {
+	visited := 0
+	for _, path := range files {
+		if strings.HasSuffix(path, "_test.go") || strings.HasSuffix(path, "_templ.go") {
 			continue
 		}
-		fonte, err := os.ReadFile(caminho)
+		source, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("ler %s: %v", caminho, err)
+			t.Fatalf("ler %s: %v", path, err)
 		}
-		visitados++
-		if strings.Contains(string(fonte), "aAbaPadrao") {
+		visited++
+		if strings.Contains(string(source), "aAbaPadrao") {
 			t.Errorf("%s usa aAbaPadrao: o comando da cena age na aba de QUEM CLICOU (c.TabuleiroID), "+
-				"e a padrão é da tela antiga — este gesto mexeria na cena que outra pessoa está olhando", caminho)
+				"e a padrão é da tela antiga — este gesto mexeria na cena que outra pessoa está olhando", path)
 		}
 	}
-	if visitados < 200 {
-		t.Fatalf("a varredura leu só %d arquivos de produção", visitados)
+	if visited < 200 {
+		t.Fatalf("a varredura leu só %d arquivos de produção", visited)
 	}
 }

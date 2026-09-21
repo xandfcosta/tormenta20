@@ -40,31 +40,31 @@ import (
 // mais telas é ENUMERAÇÃO, e o que devolve a AMOSTRAGEM é perguntar "alguém
 // escreveu a receita à mão?" em vez de "esta tela está na lista?".
 func TestNoHandwrittenBadgeRecipe(t *testing.T) {
-	classe := regexp.MustCompile(`class=(?:"([^"]*)"|\{ "([^"]*)")`)
-	abertura := regexp.MustCompile(`^<([a-zA-Z][a-zA-Z0-9]*)`)
-	receita := regexp.MustCompile(`ui\.BadgeClasses\(`)
+	class := regexp.MustCompile(`class=(?:"([^"]*)"|\{ "([^"]*)")`)
+	opening := regexp.MustCompile(`^<([a-zA-Z][a-zA-Z0-9]*)`)
+	recipe := regexp.MustCompile(`ui\.BadgeClasses\(`)
 
 	// O ALVO é o que o dedo aperta. `div` e `span` de mesma aparência ficam de
 	// fora porque a norma mede ALVO, e um enfeite não é um.
-	alvo := map[string]bool{"button": true, "a": true, "select": true, "summary": true, "input": true, "textarea": true}
+	target := map[string]bool{"button": true, "a": true, "select": true, "summary": true, "input": true, "textarea": true}
 
-	var aMao, pelaReceita, arquivosLidos, atributosLidos int
-	err := filepath.WalkDir("..", func(nome string, entrada fs.DirEntry, err error) error {
+	var aMao, byRecipe, filesRead, attributesRead int
+	err := filepath.WalkDir("..", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() {
-			if entrada.Name() == "node_modules" || entrada.Name() == ".git" {
+		if entry.IsDir() {
+			if entry.Name() == "node_modules" || entry.Name() == ".git" {
 				return fs.SkipDir
 			}
 			return nil
 		}
 		// O KIT é onde a receita MORA: cobrá-la lá seria cobrar a definição.
-		if !strings.HasSuffix(nome, ".templ") || strings.Contains(nome, "/web/ui/") {
+		if !strings.HasSuffix(name, ".templ") || strings.Contains(name, "/web/ui/") {
 			return nil
 		}
-		arquivosLidos++
-		bruto, err := os.ReadFile(nome)
+		filesRead++
+		raw, err := os.ReadFile(name)
 		if err != nil {
 			return err
 		}
@@ -72,19 +72,19 @@ func TestNoHandwrittenBadgeRecipe(t *testing.T) {
 		// o comentário de uma receita cita a grafia que ela substitui, e um guarda
 		// que lê a fonte crua acusa a explicação do defeito como se fosse o
 		// defeito.
-		texto := strings.Join(semComentario(strings.Split(string(bruto), "\n")), "\n")
-		pelaReceita += len(receita.FindAllString(texto, -1))
-		for _, achado := range classe.FindAllStringSubmatchIndex(texto, -1) {
-			atributosLidos++
+		text := strings.Join(semComentario(strings.Split(string(raw), "\n")), "\n")
+		byRecipe += len(recipe.FindAllString(text, -1))
+		for _, found := range class.FindAllStringSubmatchIndex(text, -1) {
+			attributesRead++
 			// O `class` do templ tem duas formas — `class="…"` e `class={ "…",
 			// templ.KV(…) }` —, e o segundo grupo é o da segunda.
-			cru := ""
-			if achado[2] >= 0 {
-				cru = texto[achado[2]:achado[3]]
-			} else if achado[4] >= 0 {
-				cru = texto[achado[4]:achado[5]]
+			rawValue := ""
+			if found[2] >= 0 {
+				rawValue = text[found[2]:found[3]]
+			} else if found[4] >= 0 {
+				rawValue = text[found[4]:found[5]]
 			}
-			tokens := strings.Fields(cru)
+			tokens := strings.Fields(rawValue)
 			if !contem(tokens, "rounded-full") || !comPrefixo(tokens, "border") {
 				continue
 			}
@@ -97,23 +97,23 @@ func TestNoHandwrittenBadgeRecipe(t *testing.T) {
 			// O `<` mais próximo ANTES do atributo é o que abre o elemento que o
 			// carrega — a posição do caractere é exata onde a linha não é: o
 			// atributo mora numa linha própria em quase todos os sítios.
-			corte := strings.LastIndex(texto[:achado[0]], "<")
-			if corte < 0 {
+			cut := strings.LastIndex(text[:found[0]], "<")
+			if cut < 0 {
 				continue
 			}
-			m := abertura.FindStringSubmatch(texto[corte:min(corte+24, len(texto))])
+			m := opening.FindStringSubmatch(text[cut:min(cut+24, len(text))])
 			if m == nil {
 				continue
 			}
-			if !alvo[m[1]] {
+			if !target[m[1]] {
 				aMao++ // enfeite de mesma aparência: fora da família, ver a docstring.
 				continue
 			}
-			linha := strings.Count(texto[:achado[0]], "\n") + 1
+			row := strings.Count(text[:found[0]], "\n") + 1
 			t.Errorf("%s:%d — <%s> escreve a receita do crachá à mão (%s). Use ui.BadgeClasses(extra).\n"+
 				"    Sem o piso de 24px ele reprova o WCAG 2.5.8 assim que o conteúdo ao redor apertar — e a\n"+
 				"    exceção de espaçamento o perdoa até lá, então o defeito nasce mudo.",
-				nome, linha, m[1], cru)
+				name, row, m[1], rawValue)
 		}
 		return nil
 	})
@@ -124,18 +124,18 @@ func TestNoHandwrittenBadgeRecipe(t *testing.T) {
 	// O DENOMINADOR, em três metades, e nenhuma delas é enfeite.
 	//
 	// A primeira: sem arquivo lido, tudo acima é verde sobre nada.
-	if arquivosLidos < 40 {
-		t.Fatalf("o guarda leu só %d arquivos `.templ`: a caminhada parou de achar as cenas", arquivosLidos)
+	if filesRead < 40 {
+		t.Fatalf("o guarda leu só %d arquivos `.templ`: a caminhada parou de achar as cenas", filesRead)
 	}
 	// A segunda: se o casamento do `class=` parar de funcionar, o laço nunca
 	// entra e nada é cobrado — verde idêntico ao de "está tudo certo".
-	if atributosLidos < 300 {
-		t.Fatalf("o guarda leu só %d atributos `class`: o padrão parou de casar e ele deixou de cobrar qualquer coisa", atributosLidos)
+	if attributesRead < 300 {
+		t.Fatalf("o guarda leu só %d atributos `class`: o padrão parou de casar e ele deixou de cobrar qualquer coisa", attributesRead)
 	}
 	// A terceira: se a RECEITA for desfeita ou renomeada, ninguém a estaria
 	// usando — e "ninguém usa" e "não sei procurar" se parecem no terminal.
-	if pelaReceita < 6 {
-		t.Fatalf("só %d sítios chamam `ui.BadgeClasses`: ou ela foi desfeita, ou o padrão parou de casar", pelaReceita)
+	if byRecipe < 6 {
+		t.Fatalf("só %d sítios chamam `ui.BadgeClasses`: ou ela foi desfeita, ou o padrão parou de casar", byRecipe)
 	}
 	// E a prova de que o ramo do enfeite é alcançado: os `<span>` redondos da
 	// escala miúda (o círculo da magia, o crachá do item guardado) continuam

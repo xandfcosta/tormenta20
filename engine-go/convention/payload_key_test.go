@@ -64,22 +64,22 @@ var (
 //
 // Devolve `"", false` quando o valor do payload não é um objeto literal — é uma
 // VARIÁVEL —, e quem chama resolve ou conta como não lido.
-func balancedObject(texto string, i int) (string, bool) {
-	for i < len(texto) && (texto[i] == ' ' || texto[i] == '\t') {
+func balancedObject(text string, i int) (string, bool) {
+	for i < len(text) && (text[i] == ' ' || text[i] == '\t') {
 		i++
 	}
-	if i >= len(texto) || texto[i] != '{' {
+	if i >= len(text) || text[i] != '{' {
 		return "", false
 	}
-	profundidade := 0
-	for j := i; j < len(texto); j++ {
-		switch texto[j] {
+	depth := 0
+	for j := i; j < len(text); j++ {
+		switch text[j] {
 		case '{':
-			profundidade++
+			depth++
 		case '}':
-			profundidade--
-			if profundidade == 0 {
-				return texto[i : j+1], true
+			depth--
+			if depth == 0 {
+				return text[i : j+1], true
 			}
 		}
 	}
@@ -108,11 +108,11 @@ func balancedObject(texto string, i int) (string, bool) {
 // a mesma forma: o cliente escrevia `{X: cx, Y: cy}` e o `engine.Square` declara
 // `json:"x"`/`json:"y"`, que é também a grafia GRAVADA em `campaign_places` e
 // `open_boards` — foi o dado no banco que decidiu qual lado muda.
-func serverReaders(t *testing.T, root string, arquivos []string) map[string]bool {
+func serverReaders(t *testing.T, root string, files []string) map[string]bool {
 	t.Helper()
 	tag := regexp.MustCompile(`json:"([a-zA-Z_][\w]*)"`)
-	lidos := map[string]bool{}
-	for _, relative := range arquivos {
+	read := map[string]bool{}
+	for _, relative := range files {
 		if relative == "" || !strings.HasSuffix(relative, ".go") || strings.HasSuffix(relative, "_templ.go") {
 			continue
 		}
@@ -120,39 +120,39 @@ func serverReaders(t *testing.T, root string, arquivos []string) map[string]bool
 		if err != nil {
 			continue
 		}
-		for _, linha := range strings.Split(string(body), "\n") {
-			if strings.HasPrefix(strings.TrimSpace(linha), "//") {
+		for _, row := range strings.Split(string(body), "\n") {
+			if strings.HasPrefix(strings.TrimSpace(row), "//") {
 				continue
 			}
 			// A TAG GANHA, e o `else` é a regra inteira: um campo tagueado não
 			// se lê pelo nome dele. Somar os dois faria o guarda aceitar `X`
 			// num campo que só responde por `x`, que é o defeito.
-			if achados := tag.FindAllStringSubmatch(linha, -1); len(achados) > 0 {
-				for _, m := range achados {
-					lidos[m[1]] = true
+			if findings := tag.FindAllStringSubmatch(row, -1); len(findings) > 0 {
+				for _, m := range findings {
+					read[m[1]] = true
 				}
-			} else if m := goFieldName.FindStringSubmatch(linha); m != nil {
-				lidos[m[1]] = true
+			} else if m := goFieldName.FindStringSubmatch(row); m != nil {
+				read[m[1]] = true
 			}
 		}
 	}
-	return lidos
+	return read
 }
 
 func TestEveryPayloadKeyMatchesTheSignalItReads(t *testing.T) {
 	root := filepath.Join("..", "..")
-	saida, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
+	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",
 		"*.templ", "*.go").Output()
 	if err != nil {
 		t.Fatalf("git ls-files: %v", err)
 	}
-	arquivos := strings.Split(strings.TrimRight(string(saida), "\x00"), "\x00")
+	files := strings.Split(strings.TrimRight(string(output), "\x00"), "\x00")
 
 	// OS SINAIS DA ÁRVORE, colhidos como o `TestNoNewSignalBreaksTheNamingStandard`
 	// os colhe: é essa lista que separa "chave que também é sinal" de "campo de
 	// corpo com nome próprio".
-	sinais := map[string]bool{}
-	for _, relative := range arquivos {
+	signals := map[string]bool{}
+	for _, relative := range files {
 		if relative == "" || strings.HasSuffix(relative, "_templ.go") {
 			continue
 		}
@@ -166,16 +166,16 @@ func TestEveryPayloadKeyMatchesTheSignalItReads(t *testing.T) {
 		// chave de corpo perfeitamente correta, reprova como "chave que é sinal
 		// e carrega outro" (ALE-313). O instrumento contaminando a si mesmo com
 		// a prosa que o explica.
-		semProsa := strings.Join(semComentario(strings.Split(string(body), "\n")), "\n")
-		for _, m := range signalInExpression.FindAllStringSubmatch(semProsa, -1) {
-			sinais[m[1]] = true
+		noProse := strings.Join(semComentario(strings.Split(string(body), "\n")), "\n")
+		for _, m := range signalInExpression.FindAllStringSubmatch(noProse, -1) {
+			signals[m[1]] = true
 		}
 	}
-	lidosPeloServidor := serverReaders(t, root, arquivos)
+	readByServer := serverReaders(t, root, files)
 
-	sitios, pares, filesRead := 0, 0, 0
-	var tortos, semLeitor []string
-	for _, relative := range arquivos {
+	sites, pares, filesRead := 0, 0, 0
+	var crooked, noReader []string
+	for _, relative := range files {
 		if relative == "" || strings.HasSuffix(relative, "_templ.go") ||
 			strings.HasSuffix(relative, "_test.go") {
 			continue
@@ -188,53 +188,53 @@ func TestEveryPayloadKeyMatchesTheSignalItReads(t *testing.T) {
 		// COMENTÁRIO fora, e a primeira versão sem isso acusou o próprio
 		// cabeçalho deste arquivo: o exemplo errado está escrito ali de
 		// propósito, para quem lê entender o que se evita.
-		texto := strings.Join(semComentario(strings.Split(string(body), "\n")), "\n")
+		text := strings.Join(semComentario(strings.Split(string(body), "\n")), "\n")
 		// OS OBJETOS declarados por `const x = {…}` na mesma expressão, porque
 		// dois sítios mandam `{payload: traco}` com o objeto montado na linha de
 		// cima. Sem resolvê-los, esses sítios contribuem ZERO pares em silêncio.
-		objetos := map[string]string{}
-		for _, corte := range jsConstObject.FindAllStringSubmatchIndex(texto, -1) {
-			if corpo, ok := balancedObject(texto, corte[1]-1); ok {
-				objetos[texto[corte[2]:corte[3]]] = corpo
+		objects := map[string]string{}
+		for _, cut := range jsConstObject.FindAllStringSubmatchIndex(text, -1) {
+			if body, ok := balancedObject(text, cut[1]-1); ok {
+				objects[text[cut[2]:cut[3]]] = body
 			}
 		}
 
-		for _, corte := range payloadAnchor.FindAllStringIndex(texto, -1) {
-			sitios++
-			janela, ok := balancedObject(texto, corte[1])
+		for _, cut := range payloadAnchor.FindAllStringIndex(text, -1) {
+			sites++
+			window, ok := balancedObject(text, cut[1])
 			if !ok {
 				// `{payload: traco}`: o valor é a variável inteira, e as chaves
 				// dela já foram lidas onde ela foi declarada.
 				continue
 			}
 			// O SPREAD traz as chaves do objeto de origem junto.
-			for _, m := range jsSpread.FindAllStringSubmatch(janela, -1) {
-				janela += objetos[m[1]]
+			for _, m := range jsSpread.FindAllStringSubmatch(window, -1) {
+				window += objects[m[1]]
 			}
-			linha := strings.Count(texto[:corte[0]], "\n") + 1
-			onde := relative + ":" + strconv.Itoa(linha)
+			row := strings.Count(text[:cut[0]], "\n") + 1
+			where := relative + ":" + strconv.Itoa(row)
 
-			for _, m := range payloadPair.FindAllStringSubmatch(janela, -1) {
-				if !sinais[m[1]] {
+			for _, m := range payloadPair.FindAllStringSubmatch(window, -1) {
+				if !signals[m[1]] {
 					// A chave é campo de corpo com nome próprio (`kind`,
 					// `shape`), e não há o que casar.
 					continue
 				}
 				pares++
 				if m[1] != m[2] {
-					tortos = append(tortos, onde+" — a chave `"+m[1]+"` carrega o sinal `$"+m[2]+"`")
+					crooked = append(crooked, where+" — a chave `"+m[1]+"` carrega o sinal `$"+m[2]+"`")
 				}
 			}
 			// O TERCEIRO CANAL: a chave que o cliente escreve tem de ser lida
 			// pelo servidor. Nada prendia isso — o guarda só olhava o lado do
 			// cliente, e uma chave renomeada de um lado só pousa em `undefined`
 			// sem erro em lugar nenhum.
-			for _, m := range payloadKey.FindAllStringSubmatch(janela, -1) {
-				chave := m[1]
-				if chave == "payload" || lidosPeloServidor[chave] {
+			for _, m := range payloadKey.FindAllStringSubmatch(window, -1) {
+				key := m[1]
+				if key == "payload" || readByServer[key] {
 					continue
 				}
-				semLeitor = append(semLeitor, onde+" — a chave `"+chave+"`")
+				noReader = append(noReader, where+" — a chave `"+key+"`")
 			}
 		}
 	}
@@ -243,21 +243,21 @@ func TestEveryPayloadKeyMatchesTheSignalItReads(t *testing.T) {
 	// sobre nove, e trocar `payload:` por `payload :` em três lugares derrubava a
 	// conta para UM com o guarda passando: ele só afirmava "o regex ainda casa em
 	// algum lugar do repositório". Hoje são quinze sítios.
-	if filesRead < 300 || sitios < 12 {
+	if filesRead < 300 || sites < 12 {
 		t.Fatalf("a varredura leu %d arquivos e achou %d sítios de `payload:` — a raiz é o primeiro suspeito",
-			filesRead, sitios)
+			filesRead, sites)
 	}
 
-	sort.Strings(tortos)
-	if len(tortos) > 0 {
+	sort.Strings(crooked)
+	if len(crooked) > 0 {
 		t.Errorf("chave de payload que não tem o nome do sinal que lê — %d de %d pares:\n  %s\n"+
 			"O servidor aceita o valor errado no campo certo e nada estoura. Se a chave e o sinal "+
 			"são MESMO diferentes, o lugar de dizer isso é um campo de corpo com nome próprio, "+
 			"não um par que parece igual e não é.",
-			len(tortos), pares, strings.Join(tortos, "\n  "))
+			len(crooked), pares, strings.Join(crooked, "\n  "))
 	}
-	sort.Strings(semLeitor)
-	if len(semLeitor) > 0 {
+	sort.Strings(noReader)
+	if len(noReader) > 0 {
 		t.Errorf("chave de payload que nenhum campo do servidor lê NESTA GRAFIA — %d:\n  %s\n"+
 			"Leitor é uma tag `json:\"chave\"`, ou o nome do campo exportado quando ele não tem tag. "+
 			"A CAIXA conta: o `encoding/json` casa sem diferenciar caixa só quando não há "+
@@ -265,10 +265,10 @@ func TestEveryPayloadKeyMatchesTheSignalItReads(t *testing.T) {
 			"acidente que segurava o camelCase do construtor de encontros até a ALE-301. Sem "+
 			"leitor nenhum, o campo chega ao servidor e cai no chão: o gesto responde 200 com o "+
 			"valor-zero, sem erro em lugar nenhum.",
-			len(semLeitor), strings.Join(semLeitor, "\n  "))
+			len(noReader), strings.Join(noReader, "\n  "))
 	}
 	if !t.Failed() {
 		t.Logf("payload: %d sítios, %d pares `chave: $sinal`, todos casados e lidos, de %d arquivos",
-			sitios, pares, filesRead)
+			sites, pares, filesRead)
 	}
 }

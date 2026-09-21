@@ -30,13 +30,13 @@ func TestEveryMarkerColorCanBePainted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ler o CSS da casa: %v", err)
 	}
-	folha := string(css)
+	sheet := string(css)
 
 	// O CONTROLE: a folha tem a família que vamos procurar. Sem ele, um arquivo
 	// renomeado daria "nenhuma cor encontrada", que se parece com "todas
 	// faltando" e passaria verde se a asserção fosse ao contrário.
-	if !strings.Contains(folha, "--marcador-") {
-		t.Fatalf("o CSS da casa não tem nenhuma variável --marcador-* — o guarda está lendo o arquivo errado (%d bytes)", len(folha))
+	if !strings.Contains(sheet, "--marcador-") {
+		t.Fatalf("o CSS da casa não tem nenhuma variável --marcador-* — o guarda está lendo o arquivo errado (%d bytes)", len(sheet))
 	}
 	// E o CONTROLE da lista: uma lista vazia faria o laço abaixo não rodar
 	// nenhuma vez e o teste passaria afirmando nada.
@@ -44,13 +44,13 @@ func TestEveryMarkerColorCanBePainted(t *testing.T) {
 		t.Fatal("o domínio não oferece cor nenhuma — não há o que medir")
 	}
 
-	for _, cor := range board.MarkerColors {
-		if !strings.Contains(folha, "--marcador-"+cor.ID) {
+	for _, color := range board.MarkerColors {
+		if !strings.Contains(sheet, "--marcador-"+color.ID) {
 			t.Errorf("a cor %q (%s) é aceita pelo domínio e o CSS não sabe pintá-la: falta --marcador-%s",
-				cor.ID, cor.Label, cor.ID)
+				color.ID, color.Label, color.ID)
 		}
-		if cor.Label == "" {
-			t.Errorf("a cor %q não tem rótulo para o mestre ler", cor.ID)
+		if color.Label == "" {
+			t.Errorf("a cor %q não tem rótulo para o mestre ler", color.ID)
 		}
 	}
 }

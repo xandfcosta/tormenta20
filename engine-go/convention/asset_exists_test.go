@@ -80,10 +80,10 @@ func TestEveryAssetAskedForExists(t *testing.T) {
 	}
 
 	var missing []string
-	for name, onde := range asked {
+	for name, where := range asked {
 		if _, err := os.Stat(filepath.Join(staticDir, name)); err != nil {
-			sort.Strings(onde)
-			missing = append(missing, name+" — pedido em "+strings.Join(onde, ", "))
+			sort.Strings(where)
+			missing = append(missing, name+" — pedido em "+strings.Join(where, ", "))
 		}
 	}
 	sort.Strings(missing)

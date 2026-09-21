@@ -115,38 +115,38 @@ var citacaoDeTeste = regexp.MustCompile(`\bTest[A-Z]\w+`)
 // Ou seja: 120 defeitos de documentação viviam neste repositório sem que nada os
 // acusasse. Este guarda é o que impede o 121º.
 func TestNoCitationNamesAMissingTest(t *testing.T) {
-	declarados := map[string]bool{}
-	arquivos := arquivosParaCitacao(t)
-	for _, caminho := range arquivos {
-		conteudo, err := os.ReadFile(caminho)
+	declared := map[string]bool{}
+	files := arquivosParaCitacao(t)
+	for _, path := range files {
+		content, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("ler %s: %v", caminho, err)
+			t.Fatalf("ler %s: %v", path, err)
 		}
-		for _, achado := range declaracaoDeTeste.FindAllStringSubmatch(string(conteudo), -1) {
-			declarados[achado[1]] = true
+		for _, found := range declaracaoDeTeste.FindAllStringSubmatch(string(content), -1) {
+			declared[found[1]] = true
 		}
 	}
 
-	medidas := 0
-	for _, caminho := range arquivos {
-		conteudo, err := os.ReadFile(caminho)
+	measured := 0
+	for _, path := range files {
+		content, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("ler %s: %v", caminho, err)
+			t.Fatalf("ler %s: %v", path, err)
 		}
-		for numero, linha := range strings.Split(string(conteudo), "\n") {
-			if strings.HasPrefix(linha, "func Test") {
+		for number, row := range strings.Split(string(content), "\n") {
+			if strings.HasPrefix(row, "func Test") {
 				continue
 			}
-			for _, citado := range citacaoDeTeste.FindAllString(linha, -1) {
-				medidas++
-				if declarados[citado] || tombstones[citado] || familias[citado] {
+			for _, cited := range citacaoDeTeste.FindAllString(row, -1) {
+				measured++
+				if declared[cited] || tombstones[cited] || familias[cited] {
 					continue
 				}
 				t.Errorf("%s:%d cita %s, que não existe.\n"+
 					"Se o teste foi RENOMEADO, a citação acompanha; se ele foi APAGADO de\n"+
 					"propósito, declare o nome em `tombstones` — a lápide é boa, e o que ela\n"+
 					"precisa é de ser um ato explícito.",
-					caminho, numero+1, citado)
+					path, number+1, cited)
 			}
 		}
 	}
@@ -159,44 +159,44 @@ func TestNoCitationNamesAMissingTest(t *testing.T) {
 	// 485 para 264, e um piso de 300 passou a reprovar exatamente o caso que ele
 	// NÃO quer pegar. Medido dos dois lados — 264 hoje, ZERO se o regex parar de
 	// casar —, e 150 fica longe das duas pontas.
-	if medidas < 150 {
-		t.Fatalf("só %d citações lidas — o guarda ficou cego", medidas)
+	if measured < 150 {
+		t.Fatalf("só %d citações lidas — o guarda ficou cego", measured)
 	}
 }
 
 func arquivosParaCitacao(t *testing.T) []string {
 	t.Helper()
-	var achados []string
+	var findings []string
 	// O `e2e/` entra porque cada spec de Playwright se JUSTIFICA citando o teste
 	// de Go que já cobre a parte barata — é a regra "e2e é o menor conjunto
 	// possível" escrita caso a caso. Uma citação podre ali faz o próximo autor
 	// procurar uma garantia que não existe e escrever um e2e a mais.
-	for _, raiz := range []string{"..", "../..", "../../e2e"} {
-		err := filepath.WalkDir(raiz, func(caminho string, entrada os.DirEntry, err error) error {
+	for _, root := range []string{"..", "../..", "../../e2e"} {
+		err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
-			if entrada.IsDir() {
-				if entrada.Name() == "node_modules" || entrada.Name() == ".git" {
+			if entry.IsDir() {
+				if entry.Name() == "node_modules" || entry.Name() == ".git" {
 					return filepath.SkipDir
 				}
 				// A raiz do repositório entra só pelos `.md` dela: o `engine-go`
 				// já foi varrido inteiro pela primeira raiz.
-				if raiz == "../.." && caminho != raiz {
+				if root == "../.." && path != root {
 					return filepath.SkipDir
 				}
 				return nil
 			}
-			nome := entrada.Name()
-			if strings.HasSuffix(nome, ".go") || strings.HasSuffix(nome, ".md") ||
-				strings.HasSuffix(nome, ".ts") {
-				achados = append(achados, caminho)
+			name := entry.Name()
+			if strings.HasSuffix(name, ".go") || strings.HasSuffix(name, ".md") ||
+				strings.HasSuffix(name, ".ts") {
+				findings = append(findings, path)
 			}
 			return nil
 		})
 		if err != nil {
-			t.Fatalf("varrer %s: %v", raiz, err)
+			t.Fatalf("varrer %s: %v", root, err)
 		}
 	}
-	return achados
+	return findings
 }
