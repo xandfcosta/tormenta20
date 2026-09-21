@@ -44,6 +44,7 @@ block
 board
 boards
 body
+bold
 book
 boundary
 breakdown
@@ -177,6 +178,8 @@ flake
 flash
 focus
 fold
+font
+fonts
 footer
 forge
 format
@@ -231,6 +234,7 @@ invites
 is
 itemeffects
 items
+jetbrains
 join
 js
 json
@@ -249,6 +253,8 @@ layout
 length
 lens
 level
+liberation
+license
 lifecycle
 lifetime
 limit
@@ -280,6 +286,7 @@ mod
 models
 modifier
 money
+mono
 move
 movement
 moves
@@ -359,6 +366,7 @@ rect
 redaction
 reduction
 refs
+regular
 render
 reset
 resets
@@ -374,6 +382,7 @@ rows
 rule
 ruler
 rules
+sans
 scene
 scenes
 schema
@@ -428,6 +437,7 @@ sustained
 svg
 switchover
 symbol
+system
 tab
 table
 tables

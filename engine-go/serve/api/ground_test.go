@@ -2,6 +2,8 @@ package api
 
 import (
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -33,13 +35,13 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 		t.Fatalf("o CSS da casa não tem nenhuma classe .ground-* — o guarda está lendo o arquivo errado (%d bytes)", len(sheet))
 	}
 
-	for _, chao := range board.PlaceGrounds {
-		if !strings.Contains(sheet, ".ground-"+chao.ID) {
+	for _, floor := range board.PlaceGrounds {
+		if !strings.Contains(sheet, ".ground-"+floor.ID) {
 			t.Errorf("o chão %q (%s) é oferecido na tela e o CSS não sabe pintá-lo: falta .ground-%s",
-				chao.ID, chao.Label, chao.ID)
+				floor.ID, floor.Label, floor.ID)
 		}
-		if chao.Label == "" {
-			t.Errorf("o chão %q não tem rótulo para o mestre ler", chao.ID)
+		if floor.Label == "" {
+			t.Errorf("o chão %q não tem rótulo para o mestre ler", floor.ID)
 		}
 	}
 }
@@ -84,22 +86,55 @@ func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
 	}
 }
 
-// Estas SÃO as fontes: não há segundo lado para comparar. O que se prende é a
-// PRESENÇA — a folha pede `/fonts/…` por caminho absoluto, e sem arquivo a
-// Cinzel cai para uma serifada do sistema em toda tela, que é um defeito de
-// aparência que ninguém liga à causa.
+// A FOLHA E A PASTA DE FONTES DIZEM A MESMA COISA, NAS DUAS DIREÇÕES.
+//
+// A folha pede `/fonts/…` por caminho absoluto, e um pedido sem arquivo não dá
+// erro em lugar nenhum: o navegador cai na face do sistema e a tela inteira
+// muda de largura — o defeito que a ALE-362 mediu, com a bancada e a CI
+// medindo telas diferentes.
+//
+// A direção contrária é igualmente muda: um `.woff2` embutido que a folha não
+// pede é peso morto dentro do binário, e ninguém o encontra procurando.
+//
+// Aqui morava uma contagem à mão (`len(fontes) != 2`), e ela reprovou na
+// primeira fatia que acrescentou uma face. Número escrito à mão sobre família
+// que cresce envelhece sozinho; o denominador agora é a própria folha.
 func TestTheStylesheetFontsExist(t *testing.T) {
-	sources, err := os.ReadDir("../web/assets/static/fonts")
+	sheet, err := os.ReadFile("../web/assets/static/app.css")
+	if err != nil {
+		t.Fatalf("ler a folha compilada: %v", err)
+	}
+	requested := map[string]bool{}
+	for _, found := range fontURL.FindAllStringSubmatch(string(sheet), -1) {
+		requested[found[1]] = true
+	}
+	if len(requested) == 0 {
+		t.Fatalf("a folha compilada não pede fonte nenhuma — o guarda está lendo o arquivo errado (%d bytes)", len(sheet))
+	}
+
+	const folder = "../web/assets/static/fonts"
+	for file := range requested {
+		info, err := os.Stat(filepath.Join(folder, file))
+		if err != nil {
+			t.Errorf("a folha pede /fonts/%s e o arquivo não está embutido: o navegador cai na face do sistema, e a tela muda de largura sem ninguém ligar uma coisa à outra", file)
+			continue
+		}
+		if info.Size() == 0 {
+			t.Errorf("/fonts/%s está vazia: o navegador ignora a fonte e cai na do sistema", file)
+		}
+	}
+
+	embedded, err := os.ReadDir(folder)
 	if err != nil {
 		t.Fatalf("ler as fontes embutidas: %v", err)
 	}
-	if len(sources) != 2 {
-		t.Fatalf("%d fontes embutidas, e a folha declara duas (latin e latin-ext)", len(sources))
-	}
-	for _, f := range sources {
-		info, err := f.Info()
-		if err != nil || info.Size() == 0 {
-			t.Errorf("%s está vazia: o navegador ignora a fonte e cai na do sistema", f.Name())
+	for _, f := range embedded {
+		if !strings.HasSuffix(f.Name(), ".woff2") || requested[f.Name()] {
+			continue
 		}
+		t.Errorf("%s está embutida e a folha não a pede: peso morto no binário", f.Name())
 	}
+	t.Logf("%d fontes pedidas pela folha, %d arquivos na pasta", len(requested), len(embedded))
 }
+
+var fontURL = regexp.MustCompile(`url\(["\']?/fonts/([^"\')]+)`)

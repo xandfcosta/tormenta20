@@ -1,0 +1,8 @@
+# OS TOKENS DE FONTE QUE AINDA PEDEM A FACE DA MÁQUINA (ALE-362).
+#
+# Base que só ENCOLHE: token que passar a apontar para uma face entregue sai
+# daqui, e não sair reprova — senão o arquivo vira mentira sozinho.
+#
+# Hoje ela está VAZIA, e isso é o estado certo: nasceu com o `--font-mono`
+# dentro e ele saiu na mesma fatia. O arquivo fica porque a base é o mecanismo,
+# e a próxima dívida entra aqui em vez de virar exceção escrita no guarda.
