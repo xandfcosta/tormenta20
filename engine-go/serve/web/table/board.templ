@@ -1036,8 +1036,8 @@ templ markerActions(v BoardView, m boardMarker) {
 		for _, cor := range board.MarkerColors {
 			<button
 				type="button"
-				aria-label={ "Pintar o marcador " + m.Texto + " de " + cor.Rotulo }
-				title={ cor.Rotulo }
+				aria-label={ "Pintar o marcador " + m.Texto + " de " + cor.Label }
+				title={ cor.Label }
 				aria-pressed={ fmt.Sprintf("%t", cor.ID == m.Cor) }
 				data-on:click={ markerCommand(v, m.ID, "cor/"+cor.ID) }
 				style={ fmt.Sprintf("--marcador:var(--marcador-%s);", cor.ID) }
@@ -1103,7 +1103,7 @@ templ openBoardButton(v BoardView) {
 			// mão é como nasce a opção que a tela oferece e o navegador desenha em
 			// branco.
 			for _, chao := range board.PlaceGrounds {
-				<option value={ chao.ID }>{ chao.Rotulo }</option>
+				<option value={ chao.ID }>{ chao.Label }</option>
 			}
 		</select>
 		<div class="mt-4 flex justify-end gap-2">

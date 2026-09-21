@@ -288,7 +288,7 @@ func wasWhereForTokenBack(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if peca.DeOndeVeio == nil {
+	if peca.CameFrom == nil {
 		return nil, fmt.Errorf("%s não foi movida nesta cena: não há para onde voltar", peca.Label)
 	}
 	return st.deps.Boards().ReturnToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)

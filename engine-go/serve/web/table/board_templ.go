@@ -2923,9 +2923,9 @@ func markerActions(v BoardView, m boardMarker) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var140 string
-			templ_7745c5c3_Var140, templ_7745c5c3_Err = templ.ResolveAttributeValue("Pintar o marcador " + m.Texto + " de " + cor.Rotulo)
+			templ_7745c5c3_Var140, templ_7745c5c3_Err = templ.ResolveAttributeValue("Pintar o marcador " + m.Texto + " de " + cor.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1039, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1039, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var140)
 			if templ_7745c5c3_Err != nil {
@@ -2936,9 +2936,9 @@ func markerActions(v BoardView, m boardMarker) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var141 string
-			templ_7745c5c3_Var141, templ_7745c5c3_Err = templ.ResolveAttributeValue(cor.Rotulo)
+			templ_7745c5c3_Var141, templ_7745c5c3_Err = templ.ResolveAttributeValue(cor.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1040, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1040, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var141)
 			if templ_7745c5c3_Err != nil {
@@ -3129,9 +3129,9 @@ func openBoardButton(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var153 string
-			templ_7745c5c3_Var153, templ_7745c5c3_Err = templ.JoinStringErrs(chao.Rotulo)
+			templ_7745c5c3_Var153, templ_7745c5c3_Err = templ.JoinStringErrs(chao.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1106, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/board.templ`, Line: 1106, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var153))
 			if templ_7745c5c3_Err != nil {

@@ -195,11 +195,11 @@ func ProposeMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, pa
 // A validação inteira continua sendo a do `ProposeMove` — o orçamento, a vez, a
 // posse, a contiguidade. Esta função não afrouxa nada; ela só LEMBRA de onde o
 // caminho veio.
-func ProposeMoveWithStops(b *BoardState, st *live.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover) error {
-	if err := ProposeMove(b, st, tokenID, engine.PathThroughStops(paradas), by); err != nil {
+func ProposeMoveWithStops(b *BoardState, st *live.SessionRuntimeState, tokenID string, stops []engine.Square, by Mover) error {
+	if err := ProposeMove(b, st, tokenID, engine.PathThroughStops(stops), by); err != nil {
 		return err
 	}
-	b.Pending.Stops = paradas
+	b.Pending.Stops = stops
 	return nil
 }
 
@@ -253,7 +253,7 @@ func CommitMove(b *BoardState, st *live.SessionRuntimeState, version int64, by M
 	// No CONFIRMAR e não no propor, porque o provisório não moveu ninguém: a
 	// peça só sai do lugar aqui, e gravar antes daria um "voltar" para um
 	// movimento que foi cancelado.
-	token.DeOndeVeio = &engine.Square{X: token.X, Y: token.Y}
+	token.CameFrom = &engine.Square{X: token.X, Y: token.Y}
 	token.X, token.Y = destination.X, destination.Y
 	b.Pending = nil
 	b.Version++
@@ -275,11 +275,11 @@ func ReturnToken(b *BoardState, tokenID string) error {
 	if token == nil {
 		return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
-	if token.DeOndeVeio == nil {
+	if token.CameFrom == nil {
 		return fmt.Errorf("%s não foi movida nesta cena: não há para onde voltar", token.Label)
 	}
-	token.X, token.Y = token.DeOndeVeio.X, token.DeOndeVeio.Y
-	token.DeOndeVeio = nil
+	token.X, token.Y = token.CameFrom.X, token.CameFrom.Y
+	token.CameFrom = nil
 	b.Version++
 	return nil
 }
@@ -317,8 +317,8 @@ func pendingFor(b *BoardState, by Mover) (*PendingMove, error) {
 // Não devolve o porquê: quem só desenha não tem o que fazer com a frase, e a
 // frase certa é a que a RECUSA escreve, no instante em que ela acontece.
 func CanMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, by Mover) bool {
-	pode, _ := CanMoveWith(b, st, tokenID, by)
-	return pode
+	can, _ := CanMoveWith(b, st, tokenID, by)
+	return can
 }
 
 // CanMoveWith devolve também o ORÇAMENTO, que é o que a tela precisa para
@@ -327,6 +327,6 @@ func CanMoveWith(b *BoardState, st *live.SessionRuntimeState, tokenID string, by
 	if b == nil {
 		return false, 0
 	}
-	_, orcamento, err := assertMovable(b, st, tokenID, by)
-	return err == nil, orcamento
+	_, budget, err := assertMovable(b, st, tokenID, by)
+	return err == nil, budget
 }

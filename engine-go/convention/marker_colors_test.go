@@ -47,9 +47,9 @@ func TestEveryMarkerColorCanBePainted(t *testing.T) {
 	for _, cor := range board.MarkerColors {
 		if !strings.Contains(folha, "--marcador-"+cor.ID) {
 			t.Errorf("a cor %q (%s) é aceita pelo domínio e o CSS não sabe pintá-la: falta --marcador-%s",
-				cor.ID, cor.Rotulo, cor.ID)
+				cor.ID, cor.Label, cor.ID)
 		}
-		if cor.Rotulo == "" {
+		if cor.Label == "" {
 			t.Errorf("a cor %q não tem rótulo para o mestre ler", cor.ID)
 		}
 	}

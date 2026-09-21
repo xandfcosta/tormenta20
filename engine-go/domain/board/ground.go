@@ -12,8 +12,8 @@ package board
 // CHÃO, e não o terreno difícil — um é como a cena se parece, o outro é quanto
 // custa atravessá-la.
 type PlaceGround struct {
-	ID     string
-	Rotulo string
+	ID    string
+	Label string
 }
 
 // PlaceGrounds é a lista que o mestre escolhe ao abrir uma cena.

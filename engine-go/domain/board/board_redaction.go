@@ -12,8 +12,8 @@ package board
 // BoardForRole é o tabuleiro como UM papel pode vê-lo. Papel desconhecido cai em
 // jogador: errar para o lado que MOSTRA seria vazar por omissão, a mesma regra
 // do `live.StateForRole`.
-func BoardForRole(papel string, b *BoardState) *BoardState {
-	if b == nil || papel == "gm" {
+func BoardForRole(role string, b *BoardState) *BoardState {
+	if b == nil || role == "gm" {
 		return b
 	}
 	// A CORTINA vem ANTES da redação de peça: com ela fechada, a mesa

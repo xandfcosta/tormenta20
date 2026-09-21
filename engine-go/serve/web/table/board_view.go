@@ -340,9 +340,9 @@ func boardTokenOf(t *board.BoardToken, saude map[string]int, comBloco map[string
 		ID: t.ID, Rotulo: t.Label,
 		X: t.X, Y: t.Y, Onde: Coordinate(t.X, t.Y),
 		Pegada:    pegada,
-		Monograma: a.Monograma, Instancia: a.Instancia, Matiz: a.Matiz,
+		Monograma: a.Monogram, Instancia: a.Instance, Matiz: a.Hue,
 		Oculta:     t.Hidden,
-		DeOndeVeio: t.DeOndeVeio,
+		DeOndeVeio: t.CameFrom,
 		IsObject:   t.Kind == "object",
 	}
 	if t.EntryID != nil {

@@ -58,11 +58,11 @@ func AddMarker(b *BoardState, m BoardMarker, newID func() string) error {
 // trimMarkerText corta o rótulo em DUAS letras — em runas e não em bytes, senão
 // "Ê2" viraria meio caractere e a tela desenharia lixo.
 func trimMarkerText(text string) string {
-	runas := []rune(strings.TrimSpace(text))
-	if len(runas) > 2 {
-		runas = runas[:2]
+	runes := []rune(strings.TrimSpace(text))
+	if len(runes) > 2 {
+		runes = runes[:2]
 	}
-	return string(runas)
+	return string(runes)
 }
 
 // UpdateMarker altera texto, cor ou o ocultamento — a posição não muda porque
@@ -108,8 +108,8 @@ func RemoveMarker(b *BoardState, markerID string) {
 
 // MarkerColor é uma das cores que o mestre pode escolher.
 type MarkerColor struct {
-	ID     string
-	Rotulo string
+	ID    string
+	Label string
 }
 
 // MarkerColors é o conjunto FECHADO, e fechado não é economia: a cor vira
@@ -148,14 +148,14 @@ func KnownMarkerColor(id string) bool {
 // o estado do tabuleiro, e duas telas escolhendo por conta nomeariam diferente.
 //
 //	NextMarkerLetter(b.Markers) // => "C", com A e B já no mapa
-func NextMarkerLetter(marcadores []BoardMarker) string {
-	usadas := make(map[string]bool, len(marcadores))
-	for _, m := range marcadores {
-		usadas[m.Text] = true
+func NextMarkerLetter(markers []BoardMarker) string {
+	used := make(map[string]bool, len(markers))
+	for _, m := range markers {
+		used[m.Text] = true
 	}
-	for letra := 'A'; letra <= 'Z'; letra++ {
-		if !usadas[string(letra)] {
-			return string(letra)
+	for letter := 'A'; letter <= 'Z'; letter++ {
+		if !used[string(letter)] {
+			return string(letter)
 		}
 	}
 	return "??"
@@ -172,13 +172,13 @@ func NextMarkerLetter(marcadores []BoardMarker) string {
 //
 // REVELAR é o verbo que importa: o marcador nasce escondido porque marcar a
 // armadilha na frente da mesa entrega a armadilha.
-func MarkerReveal(escondido bool) MarkerPatch {
-	return MarkerPatch{Hidden: &escondido}
+func MarkerReveal(hidden bool) MarkerPatch {
+	return MarkerPatch{Hidden: &hidden}
 }
 
 // NewMarkerColor monta o patch da cor. Cor fora da lista é IGNORADA pelo
 // `UpdateMarker`, então o marcador fica com a que tinha — que é melhor do que
 // cair no padrão, porque aqui já existe uma escolha anterior a preservar.
-func NewMarkerColor(cor string) MarkerPatch {
-	return MarkerPatch{Color: &cor}
+func NewMarkerColor(color string) MarkerPatch {
+	return MarkerPatch{Color: &color}
 }

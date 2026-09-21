@@ -48,7 +48,7 @@ type BoardToken struct {
 	// re-sincronizado do motor a cada proposta, como o `RefreshCharacterVitals`
 	// faz com o `hpMax`. Zero = nunca medido; vale o padrão do livro.
 	SpeedSquares int `json:"speedSquares,omitempty"`
-	// DeOndeVeio é onde a peça estava ANTES do último movimento confirmado, e é
+	// CameFrom é onde a peça estava ANTES do último movimento confirmado, e é
 	// o que dá ao mestre o "voltar para onde estava".
 	//
 	// Guardado na PEÇA e não na memória da tela: o gesto que ele conserta —
@@ -58,7 +58,7 @@ type BoardToken struct {
 	// UMA posição e não uma pilha: o arrependimento é sobre o gesto que acabou
 	// de acontecer, e um histórico convidaria a andar para trás na cena com um
 	// botão que não diz até onde vai.
-	DeOndeVeio *engine.Square `json:"deOndeVeio,omitempty"`
+	CameFrom *engine.Square `json:"deOndeVeio,omitempty"`
 }
 
 // BoardState é o tabuleiro vivo de uma sessão. Ausente (sem linha em
@@ -180,11 +180,11 @@ func AddToken(b *BoardState, t BoardToken, newID func() string) error {
 // iniciativa, e mudar o nome dele por baixo faria a lista e o mapa discordarem
 // sobre quem é quem.
 func nextInstanceLabel(b *BoardState, label string) string {
-	usados := make([]string, 0, len(b.Tokens))
+	used := make([]string, 0, len(b.Tokens))
 	for _, token := range b.Tokens {
-		usados = append(usados, token.Label)
+		used = append(used, token.Label)
 	}
-	return live.NextInstanceLabelAmong(usados, label)
+	return live.NextInstanceLabelAmong(used, label)
 }
 
 // DuplicateToken põe outra igual no tabuleiro — "mais um zumbi" é a operação
@@ -200,31 +200,31 @@ func nextInstanceLabel(b *BoardState, label string) string {
 //
 //   - `laco == nil` → PEÃO MUDO: sem fila e sem PV, que é o certo para cenário
 //     e para a peça que entra na fila depois;
-//   - `laco` = a linha DA ORIGINAL → as duas peças sangram JUNTO, com uma barra
+//   - `loop` = a linha DA ORIGINAL → as duas peças sangram JUNTO, com uma barra
 //     só. Serve para o mesmo inimigo desenhado em dois pontos;
-//   - `laco` = uma linha NOVA → a cópia sangra SOZINHA, com PV próprio. Quem
+//   - `loop` = uma linha NOVA → a cópia sangra SOZINHA, com PV próprio. Quem
 //     cria a linha é o chamador, porque ela mora no `app/session` e não aqui.
 //
 // A FICHA vem do laço e nunca da original: a linha nova de um NPC não tem
 // ficha, e herdar o `characterId` da original ali daria uma peça dizendo ser de
 // um personagem que a fila dela não conhece — posse e deslocamento, os dois que
 // o `characterId` decide, sairiam da ficha errada.
-func DuplicateToken(b *BoardState, tokenID string, laco *live.InitiativeEntry, newID func() string) error {
+func DuplicateToken(b *BoardState, tokenID string, loop *live.InitiativeEntry, newID func() string) error {
 	original := FindToken(b, tokenID)
 	if original == nil {
 		return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
-	copia := *original
-	copia.EntryID, copia.CharacterID = nil, nil
-	if laco != nil {
-		copia.EntryID = strPtr(laco.ID)
-		copia.CharacterID = laco.CharacterID
+	dup := *original
+	dup.EntryID, dup.CharacterID = nil, nil
+	if loop != nil {
+		dup.EntryID = strPtr(loop.ID)
+		dup.CharacterID = loop.CharacterID
 	}
-	copia.SpeedSquares = original.SpeedSquares
-	copia.Label = nextInstanceLabel(b, original.Label)
+	dup.SpeedSquares = original.SpeedSquares
+	dup.Label = nextInstanceLabel(b, original.Label)
 	spot := freeSpotNear(b, boardSpot{x: original.X, y: original.Y})
-	copia.X, copia.Y = spot.x, spot.y
-	return AddToken(b, copia, newID)
+	dup.X, dup.Y = spot.x, spot.y
+	return AddToken(b, dup, newID)
 }
 
 // PasteToken põe no tabuleiro uma cópia de uma peça que veio de OUTRO LUGAR —
@@ -236,33 +236,33 @@ func DuplicateToken(b *BoardState, tokenID string, laco *live.InitiativeEntry, n
 // contra as peças DESTE tabuleiro, e a casa é a primeira livre a partir do alvo,
 // porque pousar uma peça em cima de outra esconde a de baixo sem dizer nada.
 //
-// O `modelo` é a peça de ORIGEM e ela pode não estar neste tabuleiro: por isso
-// ela chega por valor e não por id. O `laco` decide o que a cópia é, exatamente
+// O `template` é a peça de ORIGEM e ela pode não estar neste tabuleiro: por isso
+// ela chega por valor e não por id. O `loop` decide o que a cópia é, exatamente
 // como no `DuplicateToken` — ver a explicação lá, que é onde a decisão mora.
-func PasteToken(b *BoardState, modelo BoardToken, laco *live.InitiativeEntry, x, y int, newID func() string) error {
-	copia := modelo
-	copia.EntryID, copia.CharacterID = nil, nil
-	if laco != nil {
-		copia.EntryID = strPtr(laco.ID)
-		copia.CharacterID = laco.CharacterID
+func PasteToken(b *BoardState, template BoardToken, loop *live.InitiativeEntry, x, y int, newID func() string) error {
+	dup := template
+	dup.EntryID, dup.CharacterID = nil, nil
+	if loop != nil {
+		dup.EntryID = strPtr(loop.ID)
+		dup.CharacterID = loop.CharacterID
 	}
 	// O DE-ONDE-VEIO não viaja: ele é a memória do último pouso DESTA peça, e
 	// uma cópia que nasce agora não tem para onde voltar. Herdá-lo daria um
 	// "voltar" que manda a cópia para um lugar onde ela nunca esteve — e, colando
 	// entre abas, para um quadrado de outro mapa.
-	copia.DeOndeVeio = nil
-	copia.Label = nextInstanceLabel(b, modelo.Label)
+	dup.CameFrom = nil
+	dup.Label = nextInstanceLabel(b, template.Label)
 	// O ALVO PRIMEIRO, e só depois a vizinhança. O `freeSpotNear` começa no anel
 	// 1 e nunca olha o próprio quadrado — ele foi escrito para o duplicar, onde
 	// pousar EM CIMA da original é justamente o que não se quer. No colar o alvo
 	// é o alvo: quem apertou CTRL+V está olhando para aquele quadrado, e sem
 	// esta linha a cópia pousaria na primeira casa do anel de fora.
-	copia.X, copia.Y = x, y
+	dup.X, dup.Y = x, y
 	if occupied(b, x, y) {
 		spot := freeSpotNear(b, boardSpot{x: x, y: y})
-		copia.X, copia.Y = spot.x, spot.y
+		dup.X, dup.Y = spot.x, spot.y
 	}
-	return AddToken(b, copia, newID)
+	return AddToken(b, dup, newID)
 }
 
 // freeSpotNear acha o primeiro quadrado livre em volta de um ponto, em anéis
@@ -272,10 +272,10 @@ func PasteToken(b *BoardState, modelo BoardToken, laco *live.InitiativeEntry, x,
 // está no canto do mapa espera o irmão dele ali do lado, não a dez quadrados de
 // distância no lugar combinado onde as peças avulsas nascem.
 func freeSpotNear(b *BoardState, from boardSpot) boardSpot {
-	for anel := 1; anel <= boardCoordLimit; anel++ {
-		for dy := -anel; dy <= anel; dy++ {
-			for dx := -anel; dx <= anel; dx++ {
-				if abs(dx) != anel && abs(dy) != anel {
+	for ring := 1; ring <= boardCoordLimit; ring++ {
+		for dy := -ring; dy <= ring; dy++ {
+			for dx := -ring; dx <= ring; dx++ {
+				if abs(dx) != ring && abs(dy) != ring {
 					continue // o miolo já foi visto nos anéis de dentro
 				}
 				spot := boardSpot{x: from.x + dx, y: from.y + dy}

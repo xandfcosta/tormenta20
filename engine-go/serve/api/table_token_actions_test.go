@@ -138,8 +138,8 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 	// UMA vez e não uma pilha: voltar LIMPA o registro, então o botão some. Um
 	// "voltar" que continuasse disponível andaria para trás na cena com um botão
 	// que não diz até onde vai.
-	if peca.DeOndeVeio != nil {
-		t.Errorf("o voltar continuou disponível, apontando para %v", peca.DeOndeVeio)
+	if peca.CameFrom != nil {
+		t.Errorf("o voltar continuou disponível, apontando para %v", peca.CameFrom)
 	}
 }
 

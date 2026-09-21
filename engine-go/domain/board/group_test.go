@@ -26,14 +26,14 @@ func comHorda() *BoardState {
 func TestTheLassoCatchesTheTokenByItsBody(t *testing.T) {
 	b := comHorda()
 	// Um laço no MEIO do dragão, longe da âncora (10,10) que fica fora dele.
-	pegos := TokensInRectangle(b, engine.Square{X: 13, Y: 13}, engine.Square{X: 14, Y: 14})
-	if len(pegos) != 1 || pegos[0] != "dragao" {
-		t.Errorf("o laço no meio do corpo pegou %v, esperado só o dragão", pegos)
+	caught := TokensInRectangle(b, engine.Square{X: 13, Y: 13}, engine.Square{X: 14, Y: 14})
+	if len(caught) != 1 || caught[0] != "dragao" {
+		t.Errorf("o laço no meio do corpo pegou %v, esperado só o dragão", caught)
 	}
 	// O CONTROLE: um laço FORA de tudo não pega nada. Sem ele, "pegou o dragão"
 	// seria verdade também para uma função que devolve tudo sempre.
-	if vazio := TokensInRectangle(b, engine.Square{X: 100, Y: 100}, engine.Square{X: 101, Y: 101}); len(vazio) != 0 {
-		t.Errorf("um laço em lugar nenhum pegou %v", vazio)
+	if empty := TokensInRectangle(b, engine.Square{X: 100, Y: 100}, engine.Square{X: 101, Y: 101}); len(empty) != 0 {
+		t.Errorf("um laço em lugar nenhum pegou %v", empty)
 	}
 }
 
@@ -43,9 +43,9 @@ func TestTheLassoCatchesTheTokenByItsBody(t *testing.T) {
 // regra ou defeito.
 func TestTheGroupMovesTogetherOrDoesNotMove(t *testing.T) {
 	b := comHorda()
-	antes := map[string]engine.Square{}
+	before := map[string]engine.Square{}
 	for _, t := range b.Tokens {
-		antes[t.ID] = engine.Square{X: t.X, Y: t.Y}
+		before[t.ID] = engine.Square{X: t.X, Y: t.Y}
 	}
 
 	// O DELTA É ESCOLHIDO PARA A PEÇA QUE ESTOURA NÃO SER A PRIMEIRA, e isso é o
@@ -59,9 +59,9 @@ func TestTheGroupMovesTogetherOrDoesNotMove(t *testing.T) {
 	if err := MoveGroup(b, []string{"rato", "dragao", "longe"}, 4990, 0); err == nil {
 		t.Error("um delta que estoura para a última peça foi aceito")
 	}
-	for _, peca := range b.Tokens {
-		if antes[peca.ID] != (engine.Square{X: peca.X, Y: peca.Y}) {
-			t.Errorf("%s andou apesar da recusa: %v → (%d,%d)", peca.ID, antes[peca.ID], peca.X, peca.Y)
+	for _, token := range b.Tokens {
+		if before[token.ID] != (engine.Square{X: token.X, Y: token.Y}) {
+			t.Errorf("%s andou apesar da recusa: %v → (%d,%d)", token.ID, before[token.ID], token.X, token.Y)
 		}
 	}
 }
@@ -74,17 +74,17 @@ func TestTheGroupMovesOnlyWhoWasMarkedAndRemembersWhereFrom(t *testing.T) {
 	if err := MoveGroup(b, []string{"rato", "dragao"}, 3, -2); err != nil {
 		t.Fatalf("mover o grupo deu %v", err)
 	}
-	porID := map[string]BoardToken{}
-	for _, peca := range b.Tokens {
-		porID[peca.ID] = peca
+	byID := map[string]BoardToken{}
+	for _, token := range b.Tokens {
+		byID[token.ID] = token
 	}
-	if porID["rato"].X != 4 || porID["rato"].Y != -1 {
-		t.Errorf("o rato foi para (%d,%d), esperado (4,-1)", porID["rato"].X, porID["rato"].Y)
+	if byID["rato"].X != 4 || byID["rato"].Y != -1 {
+		t.Errorf("o rato foi para (%d,%d), esperado (4,-1)", byID["rato"].X, byID["rato"].Y)
 	}
-	if porID["longe"].X != 40 {
-		t.Errorf("a peça NÃO marcada andou: %d", porID["longe"].X)
+	if byID["longe"].X != 40 {
+		t.Errorf("a peça NÃO marcada andou: %d", byID["longe"].X)
 	}
-	if de := porID["dragao"].DeOndeVeio; de == nil || de.X != 10 || de.Y != 10 {
+	if de := byID["dragao"].CameFrom; de == nil || de.X != 10 || de.Y != 10 {
 		t.Errorf("o dragão não guardou de onde veio: %v", de)
 	}
 }

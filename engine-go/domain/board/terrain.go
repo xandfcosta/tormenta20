@@ -51,9 +51,9 @@ func ClassOf(k TerrainKind) string {
 
 // TerrainBrush é uma espécie pronta para a tela oferecer.
 type TerrainBrush struct {
-	ID     TerrainKind
-	Rotulo string
-	// Efeito é a frase do LIVRO, e ela vai para a tela porque hoje é tudo o que
+	ID    TerrainKind
+	Label string
+	// Effect é a frase do LIVRO, e ela vai para a tela porque hoje é tudo o que
 	// acontece: só o DIFÍCIL é consumido por regra (entra no custo do
 	// movimento). O app não resolve ataque contra Defesa em lugar nenhum — o
 	// dano é aplicado à mão pelos vitais —, então "+5 na Defesa" não teria a
@@ -63,7 +63,7 @@ type TerrainBrush struct {
 	// Quando a resolução de ataque chegar, o NÚMERO vira modificador no `engine`
 	// e esta frase passa a derivar dele. Até lá ela é a única cópia, e a
 	// autoridade é a página citada.
-	Efeito string
+	Effect string
 }
 
 // TerrainKinds é o que o pincel oferece, na ordem em que a tela mostra.
@@ -83,9 +83,9 @@ var TerrainKinds = []TerrainBrush{
 // O padrão é o difícil e não um erro porque o id vem do cliente: uma espécie que
 // a tela não oferece só chega por posse do fio, e a resposta a isso é pintar o
 // que o pincel sempre pintou — não discutir.
-func KnownTerrainKind(pedido string) TerrainKind {
+func KnownTerrainKind(requested string) TerrainKind {
 	for _, e := range TerrainKinds {
-		if string(e.ID) == pedido {
+		if string(e.ID) == requested {
 			return e.ID
 		}
 	}
@@ -99,25 +99,25 @@ func KnownTerrainKind(pedido string) TerrainKind {
 // alternar faria a casa piscar entre brejo e chão limpo debaixo do dedo. Com o
 // valor explícito a mensagem é idempotente, que é o que um arraste precisa.
 // Quem apaga é a borracha, que manda `false`.
-func PaintTerrain(b *BoardState, square engine.Square, especie TerrainKind, ligado bool) {
-	lista := listForKind(b, especie)
-	if lista == nil {
+func PaintTerrain(b *BoardState, square engine.Square, species TerrainKind, on bool) {
+	list := listForKind(b, species)
+	if list == nil {
 		return // espécie que não existe não pinta nada, e não derruba a mesa
 	}
-	for i, existente := range *lista {
-		if existente == square {
-			if ligado {
+	for i, existing := range *list {
+		if existing == square {
+			if on {
 				return // já é brejo: nada mudou, e a versão não sobe à toa
 			}
-			*lista = append((*lista)[:i], (*lista)[i+1:]...)
+			*list = append((*list)[:i], (*list)[i+1:]...)
 			b.Version++
 			return
 		}
 	}
-	if !ligado {
+	if !on {
 		return
 	}
-	*lista = append(*lista, square)
+	*list = append(*list, square)
 	b.Version++
 }
 
@@ -129,8 +129,8 @@ func PaintTerrain(b *BoardState, square engine.Square, especie TerrainKind, liga
 //
 // nil para espécie desconhecida, e o pincel trata: o id vem do cliente, e uma
 // espécie inventada não pode derrubar a mesa nem pintar a lista errada.
-func listForKind(b *BoardState, especie TerrainKind) *[]engine.Square {
-	switch especie {
+func listForKind(b *BoardState, species TerrainKind) *[]engine.Square {
+	switch species {
 	case TerrenoDificil:
 		return &b.Difficult
 	case TerrenoCobertura:
@@ -156,24 +156,24 @@ func listForKind(b *BoardState, especie TerrainKind) *[]engine.Square {
 // Devolve se ALGUMA COISA saiu: quem chama usa para não subir a versão (e não
 // acordar a mesa) por um clique em chão limpo.
 func ClearSquare(b *BoardState, square engine.Square) bool {
-	limpou := false
-	for _, pincel := range TerrainKinds {
-		lista := listForKind(b, pincel.ID)
-		if lista == nil {
+	cleared := false
+	for _, brush := range TerrainKinds {
+		list := listForKind(b, brush.ID)
+		if list == nil {
 			continue
 		}
-		for i, existente := range *lista {
-			if existente == square {
-				*lista = append((*lista)[:i], (*lista)[i+1:]...)
-				limpou = true
+		for i, existing := range *list {
+			if existing == square {
+				*list = append((*list)[:i], (*list)[i+1:]...)
+				cleared = true
 				break
 			}
 		}
 	}
-	if limpou {
+	if cleared {
 		b.Version++
 	}
-	return limpou
+	return cleared
 }
 
 // moveTerrainOf traduz a lista esparsa para o que o motor cobra. A conversão
@@ -196,12 +196,12 @@ func moveTerrainOf(b *BoardState) engine.MoveTerrain {
 // quem desenha refaz o `switch` do `listForKind` do lado de fora, e é a cópia
 // de fora que fica para trás quando a quinta espécie chegar. Devolve a fatia e
 // não o ponteiro justamente por ser leitura — o pincel é quem escreve.
-func SquaresOf(b *BoardState, especie TerrainKind) []engine.Square {
+func SquaresOf(b *BoardState, species TerrainKind) []engine.Square {
 	if b == nil {
 		return nil
 	}
-	if lista := listForKind(b, especie); lista != nil {
-		return *lista
+	if list := listForKind(b, species); list != nil {
+		return *list
 	}
 	return nil
 }

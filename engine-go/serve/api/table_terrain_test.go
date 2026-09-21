@@ -110,8 +110,8 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 		t.Error("o nome acessível da camada monta o rótulo com o id da ferramenta")
 	}
 	for _, pincel := range board.TerrainKinds {
-		if !strings.Contains(tela, pincel.Efeito) {
-			t.Errorf("o trilho não diz o que %s faz (%q)", pincel.ID, pincel.Efeito)
+		if !strings.Contains(tela, pincel.Effect) {
+			t.Errorf("o trilho não diz o que %s faz (%q)", pincel.ID, pincel.Effect)
 		}
 	}
 	// A PÁGINA, e não a regra: a citação vai junto para conferir sem reabrir o
@@ -125,7 +125,7 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	// é de quem ataca.
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	for _, pincel := range board.TerrainKinds {
-		if strings.Contains(doJogador, pincel.Efeito) {
+		if strings.Contains(doJogador, pincel.Effect) {
 			t.Errorf("o pincel %q apareceu na cena do jogador", pincel.ID)
 		}
 	}

@@ -73,9 +73,9 @@ func MapTools() []mapTool {
 	// quinta espécie nasce no trilho, com atalho, sem ninguém lembrar disto.
 	for _, pincel := range board.TerrainKinds {
 		trilho = append(trilho, mapTool{
-			ID: string(pincel.ID), Rotulo: pincel.Rotulo, SoMestre: true,
+			ID: string(pincel.ID), Rotulo: pincel.Label, SoMestre: true,
 			Icone: drawing(pincel.ID).Icone,
-			Dica:  pincel.Rotulo + ": " + pincel.Efeito + " (p238)",
+			Dica:  pincel.Label + ": " + pincel.Effect + " (p238)",
 			Matiz: "brush-hue board-hue-" + board.ClassOf(pincel.ID),
 		})
 	}

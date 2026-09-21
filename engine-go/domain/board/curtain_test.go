@@ -24,27 +24,27 @@ func TestTheCurtainHidesTheWholeSceneFromTheTable(t *testing.T) {
 	}
 	b.Curtained = true
 
-	daMesa := BoardForRole("player", b)
+	fromTable := BoardForRole("player", b)
 
-	if daMesa == nil {
+	if fromTable == nil {
 		t.Fatal("a mesa recebeu `nil`, que significa \"não há tabuleiro\" — outra coisa")
 	}
-	if len(daMesa.Tokens) != 0 {
-		t.Errorf("a peça visível atravessou a cortina: %+v", daMesa.Tokens)
+	if len(fromTable.Tokens) != 0 {
+		t.Errorf("a peça visível atravessou a cortina: %+v", fromTable.Tokens)
 	}
-	if len(daMesa.Markers) != 0 {
-		t.Errorf("o marcador visível atravessou a cortina: %+v", daMesa.Markers)
+	if len(fromTable.Markers) != 0 {
+		t.Errorf("o marcador visível atravessou a cortina: %+v", fromTable.Markers)
 	}
-	if daMesa.Place != "" {
-		t.Errorf("o nome do lugar atravessou a cortina e entrega a cena: %q", daMesa.Place)
+	if fromTable.Place != "" {
+		t.Errorf("o nome do lugar atravessou a cortina e entrega a cena: %q", fromTable.Place)
 	}
 	// O jogador precisa saber que vem cena sem ver qual (decisão do dono).
-	if !daMesa.Curtained {
+	if !fromTable.Curtained {
 		t.Error("a mesa não soube que há uma cortina, e a tela não tem como desenhá-la")
 	}
 	// O mestre continua vendo o que ele está montando — é o ponto todo.
-	if doMestre := BoardForRole("gm", b); len(doMestre.Tokens) != 1 || doMestre.Place == "" {
-		t.Errorf("o mestre perdeu a própria cena: %+v", doMestre)
+	if forGM := BoardForRole("gm", b); len(forGM.Tokens) != 1 || forGM.Place == "" {
+		t.Errorf("o mestre perdeu a própria cena: %+v", forGM)
 	}
 }
 
@@ -55,13 +55,13 @@ func TestWithoutTheCurtainTheTableKeepsSeeingTheBoard(t *testing.T) {
 	b := openBoard(t)
 	_ = AddToken(b, BoardToken{Label: "Taverneiro", X: 1, Y: 1}, boardCounter())
 
-	daMesa := BoardForRole("player", b)
+	fromTable := BoardForRole("player", b)
 
-	if daMesa.Curtained {
+	if fromTable.Curtained {
 		t.Error("o tabuleiro nasceu sob cortina sem ninguém fechá-la")
 	}
-	if len(daMesa.Tokens) != 1 || daMesa.Place == "" {
-		t.Errorf("a mesa perdeu a cena sem cortina nenhuma: %+v", daMesa)
+	if len(fromTable.Tokens) != 1 || fromTable.Place == "" {
+		t.Errorf("a mesa perdeu a cena sem cortina nenhuma: %+v", fromTable)
 	}
 }
 
@@ -75,12 +75,12 @@ func TestWithoutTheCurtainTheTableKeepsSeeingTheBoard(t *testing.T) {
 func TestTheCurtainDoesNotSendANullListOnTheWire(t *testing.T) {
 	b := &BoardState{Version: 3, Curtained: true}
 
-	fio, err := json.Marshal(BoardForRole("player", b))
+	wire, err := json.Marshal(BoardForRole("player", b))
 	if err != nil {
 		t.Fatalf("serializar: %v", err)
 	}
 
-	if strings.Contains(string(fio), `"tokens":null`) {
-		t.Errorf("a cortina mandou lista nula e o cliente indexa `tokens.length`: %s", fio)
+	if strings.Contains(string(wire), `"tokens":null`) {
+		t.Errorf("a cortina mandou lista nula e o cliente indexa `tokens.length`: %s", wire)
 	}
 }

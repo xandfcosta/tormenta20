@@ -11,15 +11,15 @@ import (
 
 // TokenAppearance é o que o desenho precisa saber sobre uma peça.
 type TokenAppearance struct {
-	// Monograma tem SEMPRE duas letras. Não é o `initials` da casa, que devolve
+	// Monogram tem SEMPRE duas letras. Não é o `initials` da casa, que devolve
 	// uma letra para nome de uma palavra: no retrato do herói uma letra grande
 	// funciona, mas no tabuleiro a peça é um disco cheio de vizinhos e um "O"
 	// solto tem metade da massa que ela precisa para ser achada num relance.
-	Monograma string
-	// Instancia é o número do selo, vazio quando não há.
-	Instancia string
-	// Matiz é 0..359, derivado da ESPÉCIE.
-	Matiz int
+	Monogram string
+	// Instance é o número do selo, vazio quando não há.
+	Instance string
+	// Hue é 0..359, derivado da ESPÉCIE.
+	Hue int
 }
 
 // AppearanceOf traduz o rótulo da peça em como ela se desenha.
@@ -31,24 +31,24 @@ type TokenAppearance struct {
 //
 // "Eu ataco o Zumbi 3" é a frase mais dita da noite, e ela tem resposta num
 // relance — inclusive para quem não distingue matiz, porque o selo é TEXTO.
-func AppearanceOf(rotulo string) TokenAppearance {
-	especie, numero := live.Species(rotulo)
-	a := TokenAppearance{Monograma: monogramOf(especie), Matiz: hueOf(especie)}
-	if numero > 0 {
-		a.Instancia = strconv.Itoa(numero)
+func AppearanceOf(label string) TokenAppearance {
+	species, number := live.Species(label)
+	a := TokenAppearance{Monogram: monogramOf(species), Hue: hueOf(species)}
+	if number > 0 {
+		a.Instance = strconv.Itoa(number)
 	}
 	return a
 }
 
-func monogramOf(especie string) string {
-	palavras := strings.Fields(especie)
-	if len(palavras) == 0 {
+func monogramOf(species string) string {
+	words := strings.Fields(species)
+	if len(words) == 0 {
 		return "?"
 	}
-	if len(palavras) == 1 {
-		return strings.ToUpper(firstTwoRunes(palavras[0]))
+	if len(words) == 1 {
+		return strings.ToUpper(firstTwoRunes(words[0]))
 	}
-	return strings.ToUpper(firstRune(palavras[0]) + firstRune(palavras[1]))
+	return strings.ToUpper(firstRune(words[0]) + firstRune(words[1]))
 }
 
 // As letras saem por RUNA e não por byte: "Ácido" começa com dois bytes, e
@@ -74,9 +74,9 @@ func firstRune(s string) string {
 //
 // Percorre por RUNA e usa o ponto de código, como o `for ch of name` do
 // JavaScript — iterar bytes daria outro número em todo nome acentuado.
-func hueOf(nome string) int {
+func hueOf(name string) int {
 	var hash uint32
-	for _, r := range nome {
+	for _, r := range name {
 		hash = hash*31 + uint32(r)
 	}
 	return int(hash % 360)

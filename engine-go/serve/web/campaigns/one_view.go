@@ -340,7 +340,7 @@ func (s Scene) placesOf(ctx context.Context, campanhaID int64) []PlaceRow {
 func groundOptions() []GroundOption {
 	fora := make([]GroundOption, 0, len(board.PlaceGrounds))
 	for _, c := range board.PlaceGrounds {
-		fora = append(fora, GroundOption{ID: c.ID, Rotulo: c.Rotulo})
+		fora = append(fora, GroundOption{ID: c.ID, Rotulo: c.Label})
 	}
 	return fora
 }

@@ -43,8 +43,8 @@ func TokensInRectangle(b *BoardState, de, ate engine.Square) []string {
 	var ids []string
 	for i := range b.Tokens {
 		t := &b.Tokens[i]
-		pegada := max(t.Footprint, 1)
-		if t.X <= x1 && t.X+pegada-1 >= x0 && t.Y <= y1 && t.Y+pegada-1 >= y0 {
+		footprint := max(t.Footprint, 1)
+		if t.X <= x1 && t.X+footprint-1 >= x0 && t.Y <= y1 && t.Y+footprint-1 >= y0 {
 			ids = append(ids, t.ID)
 		}
 	}
@@ -70,30 +70,30 @@ func MoveGroup(b *BoardState, ids []string, dx, dy int) error {
 	if dx == 0 && dy == 0 {
 		return nil
 	}
-	marcadas := map[string]bool{}
+	marked := map[string]bool{}
 	for _, id := range ids {
-		marcadas[id] = true
+		marked[id] = true
 	}
 	// DUAS passadas: a primeira confere que TODAS cabem, a segunda escreve. Sem
 	// isso, uma coordenada absurda no meio da lista deixaria metade do grupo
 	// movida — o pior estado possível, porque parece que o gesto funcionou.
 	for i := range b.Tokens {
-		if !marcadas[b.Tokens[i].ID] {
+		if !marked[b.Tokens[i].ID] {
 			continue
 		}
-		proposta := b.Tokens[i]
-		proposta.X += dx
-		proposta.Y += dy
-		if err := AssertSaneCoords(proposta); err != nil {
+		proposal := b.Tokens[i]
+		proposal.X += dx
+		proposal.Y += dy
+		if err := AssertSaneCoords(proposal); err != nil {
 			return err
 		}
 	}
 	for i := range b.Tokens {
 		t := &b.Tokens[i]
-		if !marcadas[t.ID] {
+		if !marked[t.ID] {
 			continue
 		}
-		t.DeOndeVeio = &engine.Square{X: t.X, Y: t.Y}
+		t.CameFrom = &engine.Square{X: t.X, Y: t.Y}
 		t.X += dx
 		t.Y += dy
 	}

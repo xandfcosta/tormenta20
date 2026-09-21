@@ -31,31 +31,31 @@ import "t20engine/domain/engine"
 //	StrokeSquares(engine.Square{X: 0, Y: 0}, engine.Square{X: 2, Y: 1})
 //	// → (0,0) (1,0) (1,1) (2,1)
 func StrokeSquares(de, ate engine.Square) []engine.Square {
-	casas := []engine.Square{de}
+	squares := []engine.Square{de}
 	x, y := de.X, de.Y
 	dx, sx := step(ate.X - x)
 	dy, sy := step(ate.Y - y)
-	// `erro` é a distância acumulada da linha ideal ao centro da casa atual,
+	// `failure` é a distância acumulada da linha ideal ao centro da casa atual,
 	// dobrada para caber em inteiros — é o Bresenham de sempre. O que muda é que
 	// aqui os dois eixos avançam SEPARADOS quando o erro está no meio, e é isso
 	// que faz a casa roçada entrar.
-	erro := dx - dy
+	failure := dx - dy
 	for x != ate.X || y != ate.Y {
-		dobro := 2 * erro
-		if dobro > -dy {
-			erro -= dy
+		double := 2 * failure
+		if double > -dy {
+			failure -= dy
 			x += sx
-		} else if dobro < dx {
-			erro += dx
+		} else if double < dx {
+			failure += dx
 			y += sy
 		}
-		casas = append(casas, engine.Square{X: x, Y: y})
+		squares = append(squares, engine.Square{X: x, Y: y})
 	}
-	return casas
+	return squares
 }
 
 // step devolve a distância absoluta e a direção (+1, -1 ou 0) de um eixo.
-func step(delta int) (distancia, sentido int) {
+func step(delta int) (distance, direction int) {
 	if delta < 0 {
 		return -delta, -1
 	}
@@ -107,11 +107,11 @@ func ValidStroke(de, ate engine.Square) bool {
 func RectangleSquares(de, ate engine.Square) []engine.Square {
 	x0, x1 := min(de.X, ate.X), max(de.X, ate.X)
 	y0, y1 := min(de.Y, ate.Y), max(de.Y, ate.Y)
-	casas := make([]engine.Square, 0, (x1-x0+1)*(y1-y0+1))
+	squares := make([]engine.Square, 0, (x1-x0+1)*(y1-y0+1))
 	for y := y0; y <= y1; y++ {
 		for x := x0; x <= x1; x++ {
-			casas = append(casas, engine.Square{X: x, Y: y})
+			squares = append(squares, engine.Square{X: x, Y: y})
 		}
 	}
-	return casas
+	return squares
 }

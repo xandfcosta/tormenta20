@@ -36,9 +36,9 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 	for _, chao := range board.PlaceGrounds {
 		if !strings.Contains(folha, ".ground-"+chao.ID) {
 			t.Errorf("o chão %q (%s) é oferecido na tela e o CSS não sabe pintá-lo: falta .ground-%s",
-				chao.ID, chao.Rotulo, chao.ID)
+				chao.ID, chao.Label, chao.ID)
 		}
-		if chao.Rotulo == "" {
+		if chao.Label == "" {
 			t.Errorf("o chão %q não tem rótulo para o mestre ler", chao.ID)
 		}
 	}

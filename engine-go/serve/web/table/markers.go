@@ -117,7 +117,7 @@ func coresEmPortugues() string {
 		if i > 0 {
 			nomes += ", "
 		}
-		nomes += c.Rotulo
+		nomes += c.Label
 	}
 	return nomes
 }
