@@ -507,6 +507,15 @@ mora numa linha de base que **só pode encolher** — nome novo reprova com o no
 dele, e nome baselinado que sumiu reprova também, senão o arquivo vira mentira
 sozinho.
 
+**Parâmetro, variável local e campo também são identificador**, e o guarda acima
+só vê declaração de TOPO — foi por esse buraco que passaram ~6.700 nomes
+(ALE-367). Quem os cobra é o `TestNoLocalNameIsWrittenInPortuguese`, com linha de
+base VAZIA: Go por AST (inclusive o `_templ.go`, cujo nome se renomeia no
+`.templ`) e, no TypeScript, `const`/`let` e parâmetro de arrow. O vocabulário
+dele é maior que o do guarda de topo — as palavras que este código de fato
+usou —, e nome próprio entra na lista `properNouns` do guarda, e só nome
+próprio.
+
 > A diferença entre a metade com guarda e a sem não foi cuidado, foi varredura: a
 > com guarda saiu 100% em inglês, a sem produziu 39 identificadores em português
 > em sete fatias seguidas (ALE-300).
