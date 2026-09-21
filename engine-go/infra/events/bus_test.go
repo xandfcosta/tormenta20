@@ -13,15 +13,15 @@ import (
 // afirmasse "o evento chegou".
 func TestOnlyInterestedListenersReceive(t *testing.T) {
 	var b Bus
-	mesa7, para7 := b.Subscribe(OfSession(7))
-	defer para7()
-	mesa9, para9 := b.Subscribe(OfSession(9))
-	defer para9()
+	table7, to7 := b.Subscribe(OfSession(7))
+	defer to7()
+	table9, to9 := b.Subscribe(OfSession(9))
+	defer to9()
 
 	b.Publish(TurnAdvanced{SessionID: 7})
 
 	select {
-	case ev := <-mesa7.C:
+	case ev := <-table7.C:
 		if _, ok := ev.(TurnAdvanced); !ok {
 			t.Fatalf("a mesa 7 recebeu %T", ev)
 		}
@@ -29,7 +29,7 @@ func TestOnlyInterestedListenersReceive(t *testing.T) {
 		t.Fatal("a mesa 7 não recebeu o turno da própria sessão")
 	}
 	select {
-	case ev := <-mesa9.C:
+	case ev := <-table9.C:
 		t.Fatalf("a mesa 9 recebeu %T de outra sessão", ev)
 	default:
 	}
@@ -39,13 +39,13 @@ func TestOnlyInterestedListenersReceive(t *testing.T) {
 // da mesa se atualizar quando o dono a edita de OUTRO lugar.
 func TestCharacterInterestIgnoresSession(t *testing.T) {
 	var b Bus
-	ficha, parar := b.Subscribe(OfCharacter(14))
-	defer parar()
+	sheet, stop := b.Subscribe(OfCharacter(14))
+	defer stop()
 
 	b.Publish(CharacterChanged{CharacterID: 14})
 
 	select {
-	case ev := <-ficha.C:
+	case ev := <-sheet.C:
 		if e, ok := ev.(CharacterChanged); !ok || e.CharacterID != 14 {
 			t.Fatalf("chegou %#v", ev)
 		}
@@ -58,8 +58,8 @@ func TestCharacterInterestIgnoresSession(t *testing.T) {
 // a própria ficha sem dois canais e dois `case`.
 func TestOneSubscriptionWithTwoInterests(t *testing.T) {
 	var b Bus
-	sub, parar := b.Subscribe(OfSession(7), OfCharacter(14))
-	defer parar()
+	sub, stop := b.Subscribe(OfSession(7), OfCharacter(14))
+	defer stop()
 
 	b.Publish(TurnAdvanced{SessionID: 7})
 	b.Publish(CharacterChanged{CharacterID: 14})
@@ -76,17 +76,17 @@ func TestOneSubscriptionWithTwoInterests(t *testing.T) {
 // jogador também — com UM evento, e não um canal por ouvinte.
 func TestVitalsWithSheetReachBothTableAndSheet(t *testing.T) {
 	var b Bus
-	mesa, pararMesa := b.Subscribe(OfSession(7))
-	defer pararMesa()
-	ficha, pararFicha := b.Subscribe(OfCharacter(14))
-	defer pararFicha()
+	table, stopTable := b.Subscribe(OfSession(7))
+	defer stopTable()
+	sheet, stopSheet := b.Subscribe(OfCharacter(14))
+	defer stopSheet()
 
 	b.Publish(VitalsChanged{SessionID: 7, EntryID: "a", CharacterID: 14})
 
-	if len(mesa.C) != 1 {
+	if len(table.C) != 1 {
 		t.Error("a mesa não soube do dano")
 	}
-	if len(ficha.C) != 1 {
+	if len(sheet.C) != 1 {
 		t.Error("a ficha do jogador ferido não soube do dano")
 	}
 }
@@ -98,12 +98,12 @@ func TestVitalsWithSheetReachBothTableAndSheet(t *testing.T) {
 // como tráfego.
 func TestNpcVitalsWakeNoSheet(t *testing.T) {
 	var b Bus
-	ficha, parar := b.Subscribe(OfCharacter(0))
-	defer parar()
+	sheet, stop := b.Subscribe(OfCharacter(0))
+	defer stop()
 
 	b.Publish(VitalsChanged{SessionID: 7, EntryID: "ogro"})
 
-	if n := len(ficha.C); n != 0 {
+	if n := len(sheet.C); n != 0 {
 		t.Fatalf("%d eventos chegaram a um interesse de personagem zero", n)
 	}
 }
@@ -113,8 +113,8 @@ func TestNpcVitalsWakeNoSheet(t *testing.T) {
 // deixa de ser invisível.
 func TestFullQueueDropsAndCounts(t *testing.T) {
 	var b Bus
-	sub, parar := b.Subscribe(OfSession(7))
-	defer parar()
+	sub, stop := b.Subscribe(OfSession(7))
+	defer stop()
 
 	for i := 0; i < queueSize+3; i++ {
 		b.Publish(BoardChanged{SessionID: 7})
@@ -132,8 +132,8 @@ func TestFullQueueDropsAndCounts(t *testing.T) {
 // originais documentam, e a que não se pode perder na troca.
 func TestSlowListenerDoesNotBlockTheWriter(t *testing.T) {
 	var b Bus
-	_, parar := b.Subscribe(OfSession(7))
-	defer parar()
+	_, stop := b.Subscribe(OfSession(7))
+	defer stop()
 
 	pronto := make(chan struct{})
 	go func() {
@@ -150,11 +150,11 @@ func TestSlowListenerDoesNotBlockTheWriter(t *testing.T) {
 // e o `Publish` percorre uma lista que só cresce.
 func TestUnsubscribeRemovesTheListener(t *testing.T) {
 	var b Bus
-	_, parar := b.Subscribe(OfSession(7))
+	_, stop := b.Subscribe(OfSession(7))
 	if n := b.Listeners(); n != 1 {
 		t.Fatalf("%d ouvintes depois de assinar, esperado 1", n)
 	}
-	parar()
+	stop()
 	if n := b.Listeners(); n != 0 {
 		t.Errorf("%d ouvintes depois da baixa, esperado 0", n)
 	}
@@ -168,7 +168,7 @@ func TestPublishAndSubscribeConcurrently(t *testing.T) {
 	for i := 0; i < 8; i++ {
 		wg.Add(2)
 		go func() { defer wg.Done(); b.Publish(TurnAdvanced{SessionID: 7}) }()
-		go func() { defer wg.Done(); _, parar := b.Subscribe(OfSession(7)); parar() }()
+		go func() { defer wg.Done(); _, stop := b.Subscribe(OfSession(7)); stop() }()
 	}
 	wg.Wait()
 

@@ -30,39 +30,39 @@ import (
 // um evento carrega os identificadores do que aconteceu, e quem quiser saber
 // mais vai ao store — que é o contrato escrito no `Publish`.
 func TestVocabularyImportsNothing(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
-			if !strings.HasPrefix(caminho, "t20engine/") {
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
+			if !strings.HasPrefix(path, "t20engine/") {
 				continue
 			}
 			t.Errorf("%s importa %q — o vocabulário da mesa é FOLHA.\n"+
 				"Ele está na lista de permitidos do `live` e do `tabuleiro`\n"+
 				"justamente porque não alcança nada; com um import daqui, os dois\n"+
 				"contextos passam a alcançar %q de graça, e o guarda de lá não vê.",
-				nome, caminho, caminho)
+				name, path, path)
 		}
 	}
 
 	// Sem isto, apagar o pacote deixaria o guarda VERDE — ausência lida como
 	// aprovação.
-	if visitados == 0 {
+	if visited == 0 {
 		t.Fatal("nenhum arquivo .go visitado — o guarda ficou cego")
 	}
 }

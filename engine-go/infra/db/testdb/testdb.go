@@ -67,9 +67,9 @@ func Run(m *testing.M) int {
 	// procurar defeito na migração e não na cópia.
 	_ = base.Close()
 
-	codigo := m.Run()
+	code := m.Run()
 	_ = os.RemoveAll(dir)
-	return codigo
+	return code
 }
 
 // Fresh devolve o caminho de um banco migrado e VIRGEM, copiado do molde. O
@@ -86,11 +86,11 @@ func Fresh(t *testing.T) string {
 			"\tfunc TestMain(m *testing.M) { os.Exit(testdb.Run(m)) }\n" +
 			"Sem ele cada teste migraria do zero, que é o que a ALE-260 tirou da conta.")
 	}
-	destino := filepath.Join(t.TempDir(), "test.db")
-	if err := copyFile(molde, destino); err != nil {
-		t.Fatalf("copiar o molde do banco para %q: %v", destino, err)
+	destination := filepath.Join(t.TempDir(), "test.db")
+	if err := copyFile(molde, destination); err != nil {
+		t.Fatalf("copiar o molde do banco para %q: %v", destination, err)
 	}
-	return destino
+	return destination
 }
 
 // copyFile copia o molde e CONFERE que ele chegou inteiro.
@@ -106,30 +106,30 @@ func Fresh(t *testing.T) string {
 //     `io.Copy` devolver nil só diz que os bytes saíram do processo.
 //  3. O TAMANHO é conferido, e esta é a que não depende de o sistema de arquivos
 //     reportar coisa alguma.
-func copyFile(de, para string) error {
-	origem, err := os.Open(de)
+func copyFile(de, to string) error {
+	origin, err := os.Open(de)
 	if err != nil {
 		return fmt.Errorf("abrir %q: %w", de, err)
 	}
-	defer func() { _ = origem.Close() }()
-	destino, err := os.Create(para)
+	defer func() { _ = origin.Close() }()
+	destination, err := os.Create(to)
 	if err != nil {
-		return fmt.Errorf("criar %q: %w", para, err)
+		return fmt.Errorf("criar %q: %w", to, err)
 	}
-	if _, err := io.Copy(destino, origem); err != nil {
-		_ = destino.Close()
-		return fmt.Errorf("copiar %q para %q: %w", de, para, err)
+	if _, err := io.Copy(destination, origin); err != nil {
+		_ = destination.Close()
+		return fmt.Errorf("copiar %q para %q: %w", de, to, err)
 	}
-	if err := destino.Sync(); err != nil {
-		_ = destino.Close()
-		return fmt.Errorf("gravar %q no disco: %w", para, err)
+	if err := destination.Sync(); err != nil {
+		_ = destination.Close()
+		return fmt.Errorf("gravar %q no disco: %w", to, err)
 	}
 	// O `Close` FECHA e o erro dele VOLTA — não é higiene: num sistema de
 	// arquivos com buffer, é aqui que a falha de escrita aparece.
-	if err := destino.Close(); err != nil {
-		return fmt.Errorf("fechar %q: %w", para, err)
+	if err := destination.Close(); err != nil {
+		return fmt.Errorf("fechar %q: %w", to, err)
 	}
-	return conferAcopia(de, para)
+	return conferAcopia(de, to)
 }
 
 // conferAcopia recusa uma cópia que não tem o tamanho da origem.
@@ -137,22 +137,22 @@ func copyFile(de, para string) error {
 // A mensagem carrega OS DOIS tamanhos porque quem a lê precisa saber se faltou
 // um byte ou o arquivo inteiro — e porque ela é o que aparece no lugar de um
 // `no such table` três camadas adiante.
-func conferAcopia(de, para string) error {
-	origem, err := os.Stat(de)
+func conferAcopia(de, to string) error {
+	origin, err := os.Stat(de)
 	if err != nil {
 		return fmt.Errorf("medir o molde %q: %w", de, err)
 	}
-	copia, err := os.Stat(para)
+	dup, err := os.Stat(to)
 	if err != nil {
-		return fmt.Errorf("medir a cópia %q: %w", para, err)
+		return fmt.Errorf("medir a cópia %q: %w", to, err)
 	}
-	if copia.Size() != origem.Size() {
+	if dup.Size() != origin.Size() {
 		return fmt.Errorf(
 			"a cópia do molde saiu incompleta: %q tem %d bytes e o molde %q tem %d. "+
 				"Um SQLite truncado se comporta como um banco SEM AS TABELAS, e o teste que "+
 				"o receber reprova dizendo `no such table` — que manda procurar defeito na "+
 				"migração (ALE-268)",
-			para, copia.Size(), de, origem.Size())
+			to, dup.Size(), de, origin.Size())
 	}
 	return nil
 }
