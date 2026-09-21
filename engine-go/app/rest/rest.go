@@ -121,8 +121,19 @@ func (s Scopes) EndDay(ctx context.Context, quem app.Caller, characterID int64) 
 	return nil
 }
 
-// clearScenePlay leva os usos "1/cena" e as posturas.
+// clearScenePlay leva os usos "1/cena", as posturas e o que durava UMA VEZ.
+//
+// A duração de turno entra aqui porque o fim da cena é a outra ponta dela: o
+// giro da vez a expira enquanto o combate corre (p233), e uma cena encerrada
+// logo depois de uma reação nunca gira. Sem isto o "1 turno" sobreviveria à
+// própria cena, que é o defeito que a ALE-220 já consertou para a duração
+// "cena".
 func (s Scopes) clearScenePlay(ctx context.Context, characterID int64) error {
+	if err := s.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
+		Characterid: characterID, Scope: engine.TurnScope(),
+	}); err != nil {
+		return fmt.Errorf("expirar os efeitos de turno do personagem %d: %w", characterID, err)
+	}
 	if err := s.queries.ClearCharacterPowerUsesByScope(ctx, sqlcgen.ClearCharacterPowerUsesByScopeParams{
 		Characterid: characterID, Scope: "scene",
 	}); err != nil {

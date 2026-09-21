@@ -42,18 +42,27 @@ type SheetVitals interface {
 	PoolsOf(ctx context.Context, charIDs []int64) (map[int64]VitalPool, error)
 }
 
-// SheetSustained é a porta do que a manutenção do turno precisa da ficha.
+// SheetTurnEffects é a porta do que o GIRO DA VEZ precisa fazer com os efeitos
+// da ficha, e são três coisas que acontecem juntas (p227): cobrar as
+// sustentadas de quem entra, derrubar a que não foi paga, e expirar as que
+// duravam a vez que acabou.
 //
 // SEPARADA da `SheetVitals` porque muda por outra razão: aquela é o poço de
-// PV/PM, esta é a lista de efeitos que cobram por turno (p227). O mesmo
-// adaptador cumpre as duas — quem as separa é o motivo de mudar, não o número
-// de structs.
-type SheetSustained interface {
+// PV/PM, esta é o que o turno faz com efeito. O mesmo adaptador cumpre as duas
+// — quem as separa é o motivo de mudar, não o número de structs.
+type SheetTurnEffects interface {
 	// SustainedOf lista os efeitos SUSTENTADOS da ficha, do mais antigo para o
 	// mais novo. A ordem é a de pagamento quando o mana não cobre todos.
 	SustainedOf(ctx context.Context, charID int64) ([]SustainedEffect, error)
 	// EndSustained derruba um efeito que não foi pago.
 	EndSustained(ctx context.Context, charID int64, catalogID string) error
+	// ExpireTurnEffects derruba os efeitos que duravam UMA VEZ — o "1 turno"
+	// do Escudo da Fé (p192).
+	//
+	// Uma por personagem e não em lote porque a fila mistura ficha e NPC, e só
+	// a primeira tem efeito guardado: um lote exigiria montar a lista de ids
+	// duas vezes, aqui e do lado de lá.
+	ExpireTurnEffects(ctx context.Context, charID int64) error
 }
 
 // SustainedEffect é um efeito que cobra mana por turno, como o regime precisa

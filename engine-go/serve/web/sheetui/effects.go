@@ -267,6 +267,11 @@ func scopeLabel(scope string) string {
 		return "para sempre"
 	case "discharge", "descarregar":
 		return "até descarregar"
+	case "turn":
+		// A VEZ, e não "o turno": a duração de "1 turno" do livro (p192) acaba
+		// com a vez EM CURSO, que pode não ser a de quem carrega o efeito —
+		// ela chega por reação, e reação acontece fora da sua vez (p233).
+		return "até o fim da vez"
 	}
 	return scope
 }
@@ -356,10 +361,20 @@ func buffOptions() []pickerOption {
 		if !conhecida || spell.Buff == nil {
 			continue
 		}
+		// A DURAÇÃO DA MAGIA MANDA, aqui como na gravação. Ler o
+		// `defaultScope` cru mostrava a SEGUNDA transcrição — a que divergia em
+		// oito magias, e que o Escudo da Fé deixou de ter (ALE-365).
+		escopo, err := engine.EffectScope(spell.Duration, spell.DurationNote, spell.Buff.DefaultScope)
+		if err != nil {
+			// Magia cujo efeito não sabe quando acaba não é aplicável: some da
+			// lista em vez de virar uma opção que falha ao clicar. Que ela não
+			// exista é o que o `TestEveryBuffLastsAsLongAsItsSpell` cobra.
+			continue
+		}
 		opcoes = append(opcoes, pickerOption{
 			ID:      m.ID,
 			Label:   m.Name,
-			Detail:  circleLabel(m.Circle) + " · " + scopeLabel(spell.Buff.DefaultScope),
+			Detail:  circleLabel(m.Circle) + " · " + scopeLabel(escopo),
 			Command: m.ID,
 		})
 	}

@@ -518,3 +518,79 @@ func TestFallingToZeroHitPointsEndsTheSustainedAbilities(t *testing.T) {
 		t.Errorf("o mana foi de %d para %d, e não devia ter saído do lugar", poco.MpCurrent, mp)
 	}
 }
+
+// seedEffectWithScope semeia um efeito com a duração pedida, pelo caminho do
+// banco — o que se está medindo é a EXPIRAÇÃO, e não a conjuração.
+func seedEffectWithScope(t *testing.T, s *Server, charID int64, catalogID, scope string) {
+	t.Helper()
+	if _, err := s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
+		Characterid: charID, Catalogid: catalogID, Scope: scope,
+		Modifiers: "[]", Createdat: dbvalue.NowISO(),
+	}); err != nil {
+		t.Fatalf("semear o efeito %q de duração %q: %v", catalogID, scope, err)
+	}
+}
+
+// scopesOf devolve a duração de cada efeito que sobrou na ficha.
+func scopesOf(t *testing.T, s *Server, charID int64) []string {
+	t.Helper()
+	linhas, err := s.queries.ListActiveEffectsByCharacter(context.Background(), charID)
+	if err != nil {
+		t.Fatalf("listar efeitos: %v", err)
+	}
+	var escopos []string
+	for _, l := range linhas {
+		escopos = append(escopos, l.Scope)
+	}
+	return escopos
+}
+
+// A VEZ QUE ACABA LEVA O QUE DURAVA UMA VEZ, e a vez é a EM CURSO e não a de
+// quem recebeu o efeito.
+//
+// O Escudo da Fé dura "1 turno" (p192) e é conjurado por REAÇÃO, que "pode
+// ocorrer mesmo fora do seu turno" (p233) — então ancorar a duração em quem
+// recebe daria a um alvo que ainda não jogou uma rodada inteira de escudo. Por
+// isso o alvo aqui é o SEGUNDO da fila: quem gira a vez é o primeiro, e o
+// efeito do segundo tem de cair junto.
+//
+// É caso de INTEGRAÇÃO porque o que se prende é a COSTURA: a duração é do
+// motor, o efeito mora na ficha, e quem os junta é o avanço do turno.
+func TestTheTurnThatEndsTakesTheEffectsThatLastOneTurn(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gm := seedUser(t, s, "gm@t.com")
+	primeiro := seedCharacterAtLevel(t, s, gm, "A", "Arcanista", 3, 10, 4)
+	alvo := seedCharacterAtLevel(t, s, gm, "B", "Arcanista", 3, 10, 4)
+	seedEffectWithScope(t, s, alvo, "escudo-da-fe", "turn")
+	// O CONTROLE: um efeito de CENA na mesma ficha. Sem ele, um `DELETE` largo
+	// demais passaria verde — "não sobrou nada" e "expirou o certo" se parecem
+	// quando só há uma linha.
+	seedEffectWithScope(t, s, alvo, "armadura-arcana", "scene")
+	sid := seedSession(t, s, seedCampaign(t, s, gm))
+	store := s.sessions
+	if _, err := store.Load(ctx, sid); err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
+		t.Fatalf("começar a cena: %v", err)
+	}
+	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 20, primeiro)); err != nil {
+		t.Fatalf("Add A: %v", err)
+	}
+	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("B", 10, alvo)); err != nil {
+		t.Fatalf("Add B: %v", err)
+	}
+	if teve := scopesOf(t, s, alvo); len(teve) != 2 {
+		t.Fatalf("o controle falhou: a ficha começou com %v, quero os dois efeitos", teve)
+	}
+
+	if _, err := store.NextTurn(sid); err != nil {
+		t.Fatalf("girar a vez: %v", err)
+	}
+
+	teve := scopesOf(t, s, alvo)
+	if len(teve) != 1 || teve[0] != "scene" {
+		t.Errorf("sobraram os efeitos %v, e o giro da vez leva só o de duração `turn`", teve)
+	}
+}

@@ -34,6 +34,12 @@ type Spell struct {
 	// seguia um segundo campo, escrito à mão e em inglês, que divergia em oito
 	// (ALE-365). Quem a traduz em duração de efeito é o `engine.EffectScope`.
 	Duration string `json:"duration"`
+	// DurationNote é a MEDIDA da definida, que o livro imprime em prosa no
+	// verbete: "Definida. A duração pode ser medida em rodadas, horas, dias ou
+	// outra unidade de tempo" (p227) nomeia a espécie e deixa o número para a
+	// magia. São 26 definidas e dezesseis notas diferentes, quase todas
+	// condicionais; quem separa medida de prosa é o `engine.SpellDuration`.
+	DurationNote string `json:"durationNote"`
 }
 
 type Augment struct {

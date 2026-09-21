@@ -198,6 +198,7 @@ func TestTheSpellDurationDecidesHowLongItsEffectLasts(t *testing.T) {
 	casos := []struct {
 		nome      string
 		daMagia   string
+		nota      string
 		declarada string
 		quero     string
 		recusa    bool
@@ -224,13 +225,26 @@ func TestTheSpellDurationDecidesHowLongItsEffectLasts(t *testing.T) {
 			daMagia: "definida", declarada: "cena", quero: "scene"},
 		{nome: "a definida sem quantia e sem declaração é recusada",
 			daMagia: "definida", recusa: true},
+		// A DEFINIDA COM QUANTIA manda como qualquer outra: "1 turno" é a
+		// medida que o catálogo escreve em prosa, e ela deixa de precisar de
+		// declaração nenhuma (p227, e o Escudo da Fé na p192).
+		{nome: "a definida de 1 turno manda, gravada em inglês",
+			daMagia: "definida", nota: "1 turno", quero: "turn"},
+		{nome: "a quantia da magia manda sobre a declaração",
+			daMagia: "definida", nota: "1 turno", declarada: "scene", quero: "turn"},
+		// NOTA QUE O APP NÃO SABE EXPIRAR não vira quantia: ela cai no caso
+		// comum e legítimo da definida sem medida, que exige a declaração.
+		{nome: "3 rodadas não é medida que o app saiba derrubar",
+			daMagia: "definida", nota: "3 rodadas", declarada: "cena", quero: "scene"},
+		{nome: "prosa condicional continua sendo definida sem quantia",
+			daMagia: "definida", nota: "veja texto", recusa: true},
 		{nome: "palavra que o livro não tem é recusada", daMagia: "eterna", recusa: true},
 		{nome: "declaração que o livro não tem é recusada",
 			daMagia: "instantanea", declarada: "eterna", recusa: true},
 	}
 	for _, c := range casos {
 		t.Run(c.nome, func(t *testing.T) {
-			teve, err := EffectScope(c.daMagia, c.declarada)
+			teve, err := EffectScope(c.daMagia, c.nota, c.declarada)
 			if c.recusa {
 				if err == nil {
 					t.Fatalf("%q + %q tinha de ser recusado, e devolveu %q", c.daMagia, c.declarada, teve)
@@ -261,8 +275,9 @@ func TestEveryBuffLastsAsLongAsItsSpell(t *testing.T) {
 		t.Fatal("o catálogo de magias não está embutido")
 	}
 	var magias map[string]struct {
-		Duration string `json:"duration"`
-		Buff     *struct {
+		Duration     string `json:"duration"`
+		DurationNote string `json:"durationNote"`
+		Buff         *struct {
 			DefaultScope string `json:"defaultScope"`
 		} `json:"buff"`
 	}
@@ -275,12 +290,12 @@ func TestEveryBuffLastsAsLongAsItsSpell(t *testing.T) {
 			continue
 		}
 		comBuff++
-		escopo, err := EffectScope(m.Duration, m.Buff.DefaultScope)
+		escopo, err := EffectScope(m.Duration, m.DurationNote, m.Buff.DefaultScope)
 		if err != nil {
 			t.Errorf("a magia %q: %v", id, err)
 			continue
 		}
-		dura, _ := ParseDuration(m.Duration)
+		dura, _ := SpellDuration(m.Duration, m.DurationNote)
 		if dura.tellsTheEffectWhenToEnd() && m.Buff.DefaultScope != "" {
 			t.Errorf("a magia %q dura %q e o efeito dela declara %q por cima: apague o `defaultScope`, "+
 				"que a duração da magia já responde (grava %q)", id, m.Duration, m.Buff.DefaultScope, escopo)
@@ -306,6 +321,7 @@ func TestTheSheetNamesHowLongAnEffectLasts(t *testing.T) {
 		"scene":       "cena",
 		"dia":         "dia",
 		"day":         "dia",
+		"turn":        "1 turno",
 		"sustentada":  "sustentada",
 		"permanente":  "permanente",
 		"descarregar": "até descarregar",
@@ -331,6 +347,8 @@ func TestEveryDurationHasOneSpellingOnTheWire(t *testing.T) {
 	doLivro := map[string]string{
 		"instantanea": "instant", "cena": "scene", "sustentada": "sustained",
 		"definida": "fixed", "dia": "day", "permanente": "permanent", "descarregar": "discharge",
+		// A grafia da DEFINIDA de um turno, que o giro da vez casa.
+		"turn": "turn",
 	}
 	for escrito, quero := range doLivro {
 		d, err := ParseDuration(escrito)
@@ -348,6 +366,57 @@ func TestEveryDurationHasOneSpellingOnTheWire(t *testing.T) {
 			t.Errorf("o gravado %q não é relido: %v", teve, err)
 		} else if volta.Stored() != teve {
 			t.Errorf("%q ida e volta virou %q", teve, volta.Stored())
+		}
+	}
+}
+
+// A MEDIDA DE UMA DEFINIDA mora em PROSA, no `durationNote` (T20 p227: "pode ser
+// medida em rodadas, horas, dias ou outra unidade de tempo").
+//
+// As 26 definidas do catálogo escrevem dezesseis notas diferentes, e a maioria é
+// condicional — "veja texto", "até chegar ao solo ou cena, o que ocorrer
+// primeiro". A lista lida é de PERMITIDOS: o que ela não conhece continua sendo
+// definida SEM quantia, que é o caso comum e legítimo.
+func TestOnlyTheMeasuresTheAppCanExpireAreReadFromTheNote(t *testing.T) {
+	medida, err := SpellDuration("definida", "1 turno")
+	if err != nil {
+		t.Fatalf("ler a definida de 1 turno: %v", err)
+	}
+	if medida.Kind != DurationFixed || medida.Amount != 1 || medida.Unit != UnitTurn {
+		t.Errorf("a duração = %+v, e o Escudo da Fé dura 1 turno (p192)", medida)
+	}
+
+	// O QUE FICA DE FORA, e cada um por um motivo: a unidade que ninguém conta
+	// (rodadas, horas), a quantia que não é número (dados), a unidade que o
+	// motor não tem (semana) e a prosa. Gravar qualquer um deles seria gravar um
+	// efeito ETERNO com cara de medido — sem erro em lugar nenhum.
+	semMedida := []string{"3 rodadas", "1d4 rodadas", "4d12 horas", "1 semana ou até ser descarregada",
+		"veja texto", "até chegar ao solo ou cena, o que ocorrer primeiro", ""}
+	for _, nota := range semMedida {
+		d, err := SpellDuration("definida", nota)
+		if err != nil {
+			t.Fatalf("a nota %q: %v", nota, err)
+		}
+		if d.Amount != 0 {
+			t.Errorf("a nota %q virou uma medida de %d %q, e nada no app a derruba",
+				nota, d.Amount, d.Unit)
+		}
+	}
+}
+
+// A NOTA SÓ FALA DA DEFINIDA. A cena, a sustentada e a permanente já dizem
+// quando acabam, e uma nota não as sobrescreve — senão a segunda transcrição
+// voltaria a mandar na primeira, que é o defeito que o `defaultScope` causou.
+func TestANoteDoesNotOverrideADurationThatAlreadySaysWhenItEnds(t *testing.T) {
+	for _, escrito := range []string{"cena", "sustentada", "permanente", "dia"} {
+		comNota, err := SpellDuration(escrito, "1 turno")
+		if err != nil {
+			t.Fatalf("%q: %v", escrito, err)
+		}
+		semNota, _ := ParseDuration(escrito)
+		if comNota != semNota {
+			t.Errorf("%q com nota deu %+v e sem nota deu %+v — a nota mandou onde não devia",
+				escrito, comNota, semNota)
 		}
 	}
 }
