@@ -65,7 +65,7 @@ type Augment struct {
 	// permanente de pó de rubi (p197). Um ramo que perguntasse "é truque?"
 	// deixaria os outros dois de fora. Ver GLOSSARY, **aprimoramento exclusivo**.
 	Exclusive bool `json:"exclusive"`
-	// Truque zera o custo da magia INTEIRA, e não só o do aprimoramento: "reduz
+	// Cantrip zera o custo da magia INTEIRA, e não só o do aprimoramento: "reduz
 	// seu custo em PM para zero" (p171).
 	//
 	// São dois campos e não um porque são duas perguntas: `Exclusive` responde se
@@ -76,7 +76,7 @@ type Augment struct {
 	// O nome fica em português pela regra do glossário: é termo do livro sem
 	// tradução assentada, como `tormenta` — e os valores deste catálogo já são
 	// assim (`kind: "muda"`, `classOnly: "arcanos"`).
-	Truque bool `json:"truque"`
+	Cantrip bool `json:"truque"`
 }
 
 // Buff carries the modifiers an applied spell effect stores (raw JSON so it
@@ -325,12 +325,12 @@ var (
 // Mana", e não um id.
 func GrantedPowerNames() []string {
 	grantedOnce.Do(func() {
-		var lista []struct {
+		var list []struct {
 			Name string `json:"name"`
 		}
 		if b, err := files.ReadFile("data/granted-powers.json"); err == nil {
-			if json.Unmarshal(b, &lista) == nil {
-				for _, p := range lista {
+			if json.Unmarshal(b, &list) == nil {
+				for _, p := range list {
 					grantedNames = append(grantedNames, p.Name)
 				}
 			}

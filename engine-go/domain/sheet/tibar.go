@@ -38,32 +38,32 @@ const MaxTibar = 1_000_000
 //
 // Ela veio da cena na ALE-350, pela mesma razão que trouxe o `MaxTibar` para cá:
 // quem grava é o caso de uso, e ele não alcança o `serve/web`.
-func BalanceAfterMoneyGesture(saldo float64, modo string, valor float64) (float64, string) {
-	if valor < 0 {
+func BalanceAfterMoneyGesture(balance float64, mode string, value float64) (float64, string) {
+	if value < 0 {
 		return 0, "informe um valor a partir de 0"
 	}
-	depois := saldo
-	switch modo {
+	after := balance
+	switch mode {
 	case "receber":
-		depois = roundedToCents(saldo + valor)
+		after = roundedToCents(balance + value)
 	case "gastar":
-		depois = roundedToCents(saldo - valor)
+		after = roundedToCents(balance - value)
 	case "corrigir":
-		depois = roundedToCents(valor)
+		after = roundedToCents(value)
 	default:
-		return 0, fmt.Sprintf("%q não é um jeito de mexer no dinheiro", modo)
+		return 0, fmt.Sprintf("%q não é um jeito de mexer no dinheiro", mode)
 	}
-	if depois < 0 {
-		return 0, "não dá para gastar T$ " + WithComma(valor) + ": você tem T$ " + WithComma(saldo) + "."
+	if after < 0 {
+		return 0, "não dá para gastar T$ " + WithComma(value) + ": você tem T$ " + WithComma(balance) + "."
 	}
-	if depois > MaxTibar {
-		return 0, "T$ " + WithComma(depois) + " passa do limite de T$ " + WithComma(MaxTibar) + " da ficha."
+	if after > MaxTibar {
+		return 0, "T$ " + WithComma(after) + " passa do limite de T$ " + WithComma(MaxTibar) + " da ficha."
 	}
-	return depois, ""
+	return after, ""
 }
 
-func roundedToCents(valor float64) float64 {
-	return math.Round(valor*100) / 100
+func roundedToCents(value float64) float64 {
+	return math.Round(value*100) / 100
 }
 
 // WithComma escreve o número como a mesa escreve: sem casa decimal quando ele é
@@ -71,9 +71,9 @@ func roundedToCents(valor float64) float64 {
 //
 // Ela mora ao lado da regra porque a RECUSA acima a usa, e uma segunda cópia na
 // cena diria "T$ 1120.2" numa frase e "T$ 1120,2" na de cima.
-func WithComma(valor float64) string {
-	if valor == float64(int64(valor)) {
-		return strconv.FormatInt(int64(valor), 10)
+func WithComma(value float64) string {
+	if value == float64(int64(value)) {
+		return strconv.FormatInt(int64(value), 10)
 	}
-	return strings.Replace(strconv.FormatFloat(valor, 'f', -1, 64), ".", ",", 1)
+	return strings.Replace(strconv.FormatFloat(value, 'f', -1, 64), ".", ",", 1)
 }

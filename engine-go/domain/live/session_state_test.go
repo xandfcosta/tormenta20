@@ -289,23 +289,23 @@ func TestRewindTurn(t *testing.T) {
 	}
 
 	// Antes do combate começar não há o que desfazer, e a rodada não pode ir a 0.
-	inicio := cenaEmCurso()
-	_ = AddEntry(inicio, npc("A", 30), counter())
-	RewindTurn(inicio)
-	if inicio.TurnIndex != -1 || inicio.Round != 0 {
-		t.Errorf("voltar antes do primeiro turno: turnIndex=%d round=%d, queria -1/0", inicio.TurnIndex, inicio.Round)
+	start := cenaEmCurso()
+	_ = AddEntry(start, npc("A", 30), counter())
+	RewindTurn(start)
+	if start.TurnIndex != -1 || start.Round != 0 {
+		t.Errorf("voltar antes do primeiro turno: turnIndex=%d round=%d, queria -1/0", start.TurnIndex, start.Round)
 	}
 
-	AdvanceTurn(inicio) // primeiro turno, rodada 1
-	RewindTurn(inicio)  // desfaz o primeiro: volta ao pré-combate
-	if inicio.TurnIndex != -1 || inicio.Round != 1 {
-		t.Errorf("desfazer o primeiro turno: turnIndex=%d round=%d, queria -1/1", inicio.TurnIndex, inicio.Round)
+	AdvanceTurn(start) // primeiro turno, rodada 1
+	RewindTurn(start)  // desfaz o primeiro: volta ao pré-combate
+	if start.TurnIndex != -1 || start.Round != 1 {
+		t.Errorf("desfazer o primeiro turno: turnIndex=%d round=%d, queria -1/1", start.TurnIndex, start.Round)
 	}
 
-	vazio := cenaEmCurso()
-	RewindTurn(vazio)
-	if vazio.TurnIndex != -1 {
-		t.Errorf("voltar sem combatente é no-op, got %d", vazio.TurnIndex)
+	empty := cenaEmCurso()
+	RewindTurn(empty)
+	if empty.TurnIndex != -1 {
+		t.Errorf("voltar sem combatente é no-op, got %d", empty.TurnIndex)
 	}
 }
 
@@ -326,18 +326,18 @@ func TestRedactForPlayers(t *testing.T) {
 	// `TestTheTableSeesThePartyHpAndNothingElseByDefault`, abaixo.
 	st.Initiative[1].HpHidden = &revealed
 
-	redigido := RedactForPlayers(st)
+	redacted := RedactForPlayers(st)
 
-	if redigido.Initiative[0].HpCurrent != nil || redigido.Initiative[0].HpMax != nil {
-		t.Errorf("linha oculta vazou PV: %+v", redigido.Initiative[0])
+	if redacted.Initiative[0].HpCurrent != nil || redacted.Initiative[0].HpMax != nil {
+		t.Errorf("linha oculta vazou PV: %+v", redacted.Initiative[0])
 	}
 	// A flag FICA: sem ela, "sem barra" e "escondido" viram a mesma coisa na
 	// tela do jogador, e o segundo é informação.
-	if redigido.Initiative[0].HpHidden == nil || !*redigido.Initiative[0].HpHidden {
+	if redacted.Initiative[0].HpHidden == nil || !*redacted.Initiative[0].HpHidden {
 		t.Error("a marca de oculto sumiu da cópia do jogador")
 	}
-	if redigido.Initiative[1].HpCurrent == nil || *redigido.Initiative[1].HpCurrent != 120 {
-		t.Errorf("linha aberta perdeu o PV: %+v", redigido.Initiative[1])
+	if redacted.Initiative[1].HpCurrent == nil || *redacted.Initiative[1].HpCurrent != 120 {
+		t.Errorf("linha aberta perdeu o PV: %+v", redacted.Initiative[1])
 	}
 	// O estado do MESTRE não pode ser tocado pela redação.
 	if st.Initiative[0].HpCurrent == nil || *st.Initiative[0].HpCurrent != 120 {
@@ -412,19 +412,19 @@ func TestStateForRole(t *testing.T) {
 	st := cenaEmCurso()
 	_ = AddEntry(st, npc("Ogro", 12), counter())
 	pv := int64(37)
-	sim := true
+	yes := true
 	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &pv, &pv
-	st.Initiative[0].HpHidden = &sim
+	st.Initiative[0].HpHidden = &yes
 
-	if paraJogador := StateForRole("player", st); paraJogador.Initiative[0].HpCurrent != nil {
+	if forPlayer := StateForRole("player", st); forPlayer.Initiative[0].HpCurrent != nil {
 		t.Error("o ack do jogador entregou o PV que o mestre escondeu")
 	}
-	if paraMestre := StateForRole("gm", st); paraMestre.Initiative[0].HpCurrent == nil {
+	if forGM := StateForRole("gm", st); forGM.Initiative[0].HpCurrent == nil {
 		t.Error("o mestre perdeu o próprio número")
 	}
 	// Papel desconhecido é tratado como jogador: errar para o lado que MOSTRA
 	// seria vazar por omissão.
-	if desconhecido := StateForRole("", st); desconhecido.Initiative[0].HpCurrent != nil {
+	if unknown := StateForRole("", st); unknown.Initiative[0].HpCurrent != nil {
 		t.Error("papel vazio recebeu estado inteiro")
 	}
 }
@@ -583,15 +583,15 @@ func TestCloneStatePreservesEveryField(t *testing.T) {
 	AdvanceTurn(st)
 	AdvanceTurn(st)
 
-	copia := CloneState(st)
+	dup := CloneState(st)
 
 	// DeepEqual e não campo a campo: conferir os campos que eu lembrar repete
 	// exatamente o erro que este teste existe para pegar.
-	if !reflect.DeepEqual(copia, st) {
-		t.Fatalf("a cópia divergiu do original:\n copia=%+v\n orig =%+v", *copia, *st)
+	if !reflect.DeepEqual(dup, st) {
+		t.Fatalf("a cópia divergiu do original:\n copia=%+v\n orig =%+v", *dup, *st)
 	}
 	// E é cópia DE VERDADE: mexer numa não pode mexer na outra.
-	copia.Initiative[0].Label = "mexido"
+	dup.Initiative[0].Label = "mexido"
 	if st.Initiative[0].Label == "mexido" {
 		t.Fatal("a cópia compartilhou a fatia com o original")
 	}
@@ -605,8 +605,8 @@ func TestLinkingACreatureBlockToAnEntryThatAlreadyExists(t *testing.T) {
 	id := counter()
 	_ = AddEntry(st, npc("Capanga", 12), id)
 
-	criatura := int64(7)
-	if err := UpdateEntry(st, "e1", EntryPatch{CreatureID: &criatura}); err != nil {
+	creature := int64(7)
+	if err := UpdateEntry(st, "e1", EntryPatch{CreatureID: &creature}); err != nil {
 		t.Fatalf("ligar: %v", err)
 	}
 	if st.Initiative[0].CreatureID == nil || *st.Initiative[0].CreatureID != 7 {
@@ -630,35 +630,35 @@ func TestOffSceneTheTrackerDoesNotReachTheTable(t *testing.T) {
 	AdvanceTurn(st)
 
 	// Em cena, a mesa vê tudo o que sempre viu.
-	if emCena := RedactForPlayers(st); len(emCena.Initiative) != 2 || emCena.Round != 1 {
-		t.Fatalf("em cena o jogador perdeu a fila: %+v", emCena)
+	if inScene := RedactForPlayers(st); len(inScene.Initiative) != 2 || inScene.Round != 1 {
+		t.Fatalf("em cena o jogador perdeu a fila: %+v", inScene)
 	}
 
 	EndScene(st)
 
-	fora := RedactForPlayers(st)
-	if len(fora.Initiative) != 0 {
-		t.Errorf("fora de cena a fila vazou para o jogador: %+v", fora.Initiative)
+	outside := RedactForPlayers(st)
+	if len(outside.Initiative) != 0 {
+		t.Errorf("fora de cena a fila vazou para o jogador: %+v", outside.Initiative)
 	}
 	// A rodada e o contador vão junto: "rodada 1, ninguém na fila" é uma
 	// contradição que o jogador leria como defeito da tela.
-	if fora.Round != 0 || fora.TurnIndex != -1 || fora.TurnsTaken != 0 {
-		t.Errorf("fora de cena sobrou relógio de combate: %+v", fora)
+	if outside.Round != 0 || outside.TurnIndex != -1 || outside.TurnsTaken != 0 {
+		t.Errorf("fora de cena sobrou relógio de combate: %+v", outside)
 	}
 	// O ack é o outro caminho, e papel desconhecido cai em jogador.
-	if pedido := StateForRole("", st); len(pedido.Initiative) != 0 {
-		t.Errorf("o ack entregou a fila fora de cena: %+v", pedido.Initiative)
+	if requested := StateForRole("", st); len(requested.Initiative) != 0 {
+		t.Errorf("o ack entregou a fila fora de cena: %+v", requested.Initiative)
 	}
 	// E o MESTRE continua com a fila inteira — encerrar não é apagar.
-	if doMestre := StateForRole("gm", st); len(doMestre.Initiative) != 2 {
-		t.Errorf("o mestre perdeu a fila ao encerrar: %+v", doMestre.Initiative)
+	if forGM := StateForRole("gm", st); len(forGM.Initiative) != 2 {
+		t.Errorf("o mestre perdeu a fila ao encerrar: %+v", forGM.Initiative)
 	}
 }
 
 // Encerrar GUARDA a fila e zera a vez; quem esvazia é o reiniciar. Essa é a
 // única diferença entre os dois botões do ciclo, então ela é a asserção.
 func TestEndingKeepsTheTrackerAndRestartingEmptiesIt(t *testing.T) {
-	monta := func() *SessionRuntimeState {
+	builds := func() *SessionRuntimeState {
 		st := cenaEmCurso()
 		id := counter()
 		_ = AddEntry(st, npc("Goblin", 18), id)
@@ -668,22 +668,22 @@ func TestEndingKeepsTheTrackerAndRestartingEmptiesIt(t *testing.T) {
 		return st
 	}
 
-	encerrada := monta()
-	EndScene(encerrada)
-	if len(encerrada.Initiative) != 2 {
-		t.Errorf("encerrar apagou a fila: %+v", encerrada.Initiative)
+	ended := builds()
+	EndScene(ended)
+	if len(ended.Initiative) != 2 {
+		t.Errorf("encerrar apagou a fila: %+v", ended.Initiative)
 	}
-	if encerrada.InScene() || encerrada.Round != 0 || encerrada.TurnIndex != -1 || encerrada.TurnsTaken != 0 {
-		t.Errorf("encerrar não voltou o combate ao começo: %+v", encerrada)
+	if ended.InScene() || ended.Round != 0 || ended.TurnIndex != -1 || ended.TurnsTaken != 0 {
+		t.Errorf("encerrar não voltou o combate ao começo: %+v", ended)
 	}
 
-	reiniciada := monta()
-	ResetInitiative(reiniciada)
-	if len(reiniciada.Initiative) != 0 {
-		t.Errorf("reiniciar deixou combatente na fila: %+v", reiniciada.Initiative)
+	restarted := builds()
+	ResetInitiative(restarted)
+	if len(restarted.Initiative) != 0 {
+		t.Errorf("reiniciar deixou combatente na fila: %+v", restarted.Initiative)
 	}
 	// Reiniciar volta ao PONTO DE PARTIDA, e o ponto de partida é fora de cena.
-	if reiniciada.InScene() {
+	if restarted.InScene() {
 		t.Error("reiniciar deixou a cena ligada, criando 'em cena com fila vazia' sem ninguém pedir")
 	}
 }

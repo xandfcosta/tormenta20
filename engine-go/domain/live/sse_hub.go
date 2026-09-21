@@ -48,15 +48,15 @@ type SSEHub struct {
 	Mu sync.Mutex
 	// sessionID → connID → conexão
 	conns map[int64]map[string]*SSEConn
-	// ultimaSeq guarda a maior ordem já emitida por destino, para reconhecer
+	// lastSeq guarda a maior ordem já emitida por destino, para reconhecer
 	// quadro atrasado. Ver `EmitOrdered`.
-	ultimaSeq map[destination]uint64
+	lastSeq map[destination]uint64
 }
 
 func NewSSEHub() *SSEHub {
 	return &SSEHub{
-		conns:     map[int64]map[string]*SSEConn{},
-		ultimaSeq: map[destination]uint64{},
+		conns:   map[int64]map[string]*SSEConn{},
+		lastSeq: map[destination]uint64{},
 	}
 }
 
@@ -79,15 +79,15 @@ func (h *SSEHub) Add(sessionID int64, connID, role string) *SSEConn {
 func (h *SSEHub) Remove(sessionID int64, connID string) {
 	h.Mu.Lock()
 	defer h.Mu.Unlock()
-	sala := h.conns[sessionID]
-	if sala == nil {
+	room := h.conns[sessionID]
+	if room == nil {
 		return
 	}
-	if conn, ok := sala[connID]; ok {
+	if conn, ok := room[connID]; ok {
 		close(conn.Frames)
-		delete(sala, connID)
+		delete(room, connID)
 	}
-	if len(sala) == 0 {
+	if len(room) == 0 {
 		delete(h.conns, sessionID)
 	}
 }
@@ -154,7 +154,7 @@ func (h *SSEHub) EmitOrdered(sessionID int64, role, event string, Seq uint64, pa
 	if err != nil {
 		return
 	}
-	chave := destination{sessionID: sessionID, role: role, event: event}
+	key := destination{sessionID: sessionID, role: role, event: event}
 
 	// A trava é UMA e cobre decidir E entregar. Decidir sob trava e entregar
 	// fora dela não conserta nada: outra goroutine se enfia entre as duas e
@@ -164,12 +164,12 @@ func (h *SSEHub) EmitOrdered(sessionID int64, role, event string, Seq uint64, pa
 	defer h.Mu.Unlock()
 
 	if Seq == 0 {
-		delete(h.ultimaSeq, chave) // sem ordem: passa e reinicia o destino
+		delete(h.lastSeq, key) // sem ordem: passa e reinicia o destino
 	} else {
-		if Seq < h.ultimaSeq[chave] {
+		if Seq < h.lastSeq[key] {
 			return // quadro atrasado: a tela já tem coisa mais nova
 		}
-		h.ultimaSeq[chave] = Seq
+		h.lastSeq[key] = Seq
 	}
 	h.entregaLocked(sessionID, role, frame)
 }

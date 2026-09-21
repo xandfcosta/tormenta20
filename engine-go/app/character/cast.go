@@ -148,7 +148,7 @@ func (p Plays) Cast(
 func truqueEscolhido(spell catalog.Spell, picks []sheet.AugmentPick) bool {
 	for _, p := range picks {
 		if p.AugmentIndex >= 0 && p.AugmentIndex < len(spell.Augments) &&
-			spell.Augments[p.AugmentIndex].Truque {
+			spell.Augments[p.AugmentIndex].Cantrip {
 			return true
 		}
 	}

@@ -162,24 +162,24 @@ func withDerivedPools(
 	if err != nil {
 		return fmt.Errorf("montar o personagem do motor (%d): %w", dto.ID, err)
 	}
-	pocos := cat.VitalsForCharacter(ec)
+	pools := cat.VitalsForCharacter(ec)
 
 	// AUSÊNCIA de linha quer dizer INTACTO: só quem apanhou tem registro (00014).
-	var dano sqlcgen.GetCharacterDamageRow
-	if linha, err := q.GetCharacterDamage(ctx, dto.ID); err == nil {
-		dano = linha
+	var damage sqlcgen.GetCharacterDamageRow
+	if row, err := q.GetCharacterDamage(ctx, dto.ID); err == nil {
+		damage = row
 	} else if !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("ler o dano da ficha %d: %w", dto.ID, err)
 	}
 
-	dto.HpMax, dto.MpMax = int64(pocos.PvMax), int64(pocos.PmMax)
+	dto.HpMax, dto.MpMax = int64(pools.PvMax), int64(pools.PmMax)
 	// O `WithinPool` e não uma conta própria: `máximo − gasto` preso entre zero e
 	// o teto é a MESMA regra que o funil aplica ao gravar, e o piso existe pela
 	// mesma razão nos dois — dano que sobreviveu a um máximo que ENCOLHEU. Um
 	// personagem com 60 de dano num poço que virou 50 tem zero, não dez
 	// negativos.
-	dto.HpCurrent = WithinPool(dto.HpMax-dano.Hpdamage, dto.HpMax)
-	dto.MpCurrent = WithinPool(dto.MpMax-dano.Mpspent, dto.MpMax)
+	dto.HpCurrent = WithinPool(dto.HpMax-damage.Hpdamage, dto.HpMax)
+	dto.MpCurrent = WithinPool(dto.MpMax-damage.Mpspent, dto.MpMax)
 	return nil
 }
 

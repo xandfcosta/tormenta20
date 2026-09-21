@@ -610,7 +610,7 @@ func (bs *Store) SetCurtain(ctx context.Context, sessionID int64, tabuleiroID st
 		// que mudou desde a proposta.
 		//
 		// Não é o bump que faz a cortina CHEGAR: o `EmitOrdered` descarta com `Seq <
-		// ultimaSeq`, estritamente menor, então versão repetida PASSA. O contador é o
+		// lastSeq`, estritamente menor, então versão repetida PASSA. O contador é o
 		// que mantém o número honesto.
 		b.Version++
 		return nil

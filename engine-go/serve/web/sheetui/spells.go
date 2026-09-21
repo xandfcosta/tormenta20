@@ -235,7 +235,7 @@ func augmentRowsOf(spellID string, magia catalog.Spell, castable int) []augmentR
 		linha := augmentRow{
 			Index: i, PM: a.PmCost, Stacks: a.Kind != "muda",
 			Description: augmentDescription(spellID, i),
-			Exclusive:   a.Exclusive, Truque: a.Truque,
+			Exclusive:   a.Exclusive, Truque: a.Cantrip,
 		}
 		if a.RequiresCircle != nil {
 			linha.RequiredCircle = *a.RequiresCircle

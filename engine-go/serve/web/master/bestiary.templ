@@ -558,8 +558,8 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 								}
 								{ " " }
 								<span class="font-mono">{ book.WithSign(p.Bonus) }</span>
-								if p.Nota != "" {
-									<span class="text-muted-foreground">{ " (" + p.Nota + ")" }</span>
+								if p.Note != "" {
+									<span class="text-muted-foreground">{ " (" + p.Note + ")" }</span>
 								}
 							}
 						</p>

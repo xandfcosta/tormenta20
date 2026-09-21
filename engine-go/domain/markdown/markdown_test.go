@@ -21,64 +21,64 @@ import (
 
 // oraculoDoMarkdown é a forma do arquivo gerado pelo script.
 type oraculoDoMarkdown struct {
-	Arvores []struct {
-		Nota   string  `json:"nota"`
-		Fonte  string  `json:"fonte"`
-		Blocos []Block `json:"blocos"`
+	Trees []struct {
+		Note   string  `json:"nota"`
+		Source string  `json:"fonte"`
+		Blocks []Block `json:"blocos"`
 	} `json:"arvores"`
-	Alterna []struct {
-		Nota    string `json:"nota"`
-		Fonte   string `json:"fonte"`
-		Linha   int    `json:"linha"`
-		Marcada bool   `json:"marcada"`
-		Saida   string `json:"saida"`
+	Toggle []struct {
+		Note   string `json:"nota"`
+		Source string `json:"fonte"`
+		Row    int    `json:"linha"`
+		Marked bool   `json:"marcada"`
+		Output string `json:"saida"`
 	} `json:"alterna"`
 }
 
 func leOOraculoDoMarkdown(t *testing.T) oraculoDoMarkdown {
 	t.Helper()
-	bruto, err := os.ReadFile("testdata/markdown-from-the-js.json")
+	raw, err := os.ReadFile("testdata/markdown-from-the-js.json")
 	if err != nil {
 		t.Fatalf("oráculo ausente — ele é versionado e não se regenera mais: %v", err)
 	}
 	var o oraculoDoMarkdown
-	if err := json.Unmarshal(bruto, &o); err != nil {
+	if err := json.Unmarshal(raw, &o); err != nil {
 		t.Fatalf("oráculo ilegível: %v", err)
 	}
 	// O CONTROLE: um oráculo vazio faria todos os laços abaixo passarem verde
 	// sem comparar nada, que é o formato exato do teste que não mede — o
 	// arquivo pode existir e estar vazio se o script mudar de forma.
-	if len(o.Arvores) == 0 || len(o.Alterna) == 0 {
+	if len(o.Trees) == 0 || len(o.Toggle) == 0 {
 		t.Fatal("o oráculo está vazio — os laços abaixo passariam verde sem comparar nada")
 	}
 	return o
 }
 
 func TestTheNoteMarkdownMatchesTheJs(t *testing.T) {
-	oraculo := leOOraculoDoMarkdown(t)
-	for _, caso := range oraculo.Arvores {
-		t.Run(caso.Nota, func(t *testing.T) {
-			meu := Parse(caso.Fonte)
-			if reflect.DeepEqual(meu, caso.Blocos) {
+	oracle := leOOraculoDoMarkdown(t)
+	for _, tc := range oracle.Trees {
+		t.Run(tc.Note, func(t *testing.T) {
+			mine := Parse(tc.Source)
+			if reflect.DeepEqual(mine, tc.Blocks) {
 				return
 			}
 			// O diff sai em JSON porque a árvore aninhada é ilegível no `%+v`
 			// do Go — e um erro que ninguém lê é um erro que vira `-run` de
 			// outro teste.
-			doJS, _ := json.Marshal(caso.Blocos)
-			doGo, _ := json.Marshal(meu)
-			t.Errorf("fonte %q\n  o JS dá: %s\n  o Go dá: %s", caso.Fonte, doJS, doGo)
+			doJS, _ := json.Marshal(tc.Blocks)
+			doGo, _ := json.Marshal(mine)
+			t.Errorf("fonte %q\n  o JS dá: %s\n  o Go dá: %s", tc.Source, doJS, doGo)
 		})
 	}
 }
 
 func TestTogglingATaskMatchesTheJs(t *testing.T) {
-	oraculo := leOOraculoDoMarkdown(t)
-	for _, caso := range oraculo.Alterna {
-		t.Run(caso.Nota, func(t *testing.T) {
-			if got := ToggleTask(caso.Fonte, caso.Linha, caso.Marcada); got != caso.Saida {
+	oracle := leOOraculoDoMarkdown(t)
+	for _, tc := range oracle.Toggle {
+		t.Run(tc.Note, func(t *testing.T) {
+			if got := ToggleTask(tc.Source, tc.Row, tc.Marked); got != tc.Output {
 				t.Errorf("ToggleTask(%q, %d, %v) = %q, o JS dá %q",
-					caso.Fonte, caso.Linha, caso.Marcada, got, caso.Saida)
+					tc.Source, tc.Row, tc.Marked, got, tc.Output)
 			}
 		})
 	}
@@ -93,10 +93,10 @@ func TestTogglingATaskMatchesTheJs(t *testing.T) {
 // errada é um `index out of range` derrubando o handler que estava salvando o
 // texto de alguém.
 func TestTogglingATaskDoesNotPanicOnAnOutOfRangeLine(t *testing.T) {
-	nota := "- [ ] dar XP"
-	for _, linha := range []int{-1, 1, 99} {
-		if got := ToggleTask(nota, linha, true); got != nota {
-			t.Errorf("linha %d mexeu na nota: %q", linha, got)
+	note := "- [ ] dar XP"
+	for _, row := range []int{-1, 1, 99} {
+		if got := ToggleTask(note, row, true); got != note {
+			t.Errorf("linha %d mexeu na nota: %q", row, got)
 		}
 	}
 }

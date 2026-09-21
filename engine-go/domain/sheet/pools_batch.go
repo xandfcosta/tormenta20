@@ -51,32 +51,32 @@ func PoolsForCharacters(
 	if cat == nil {
 		return nil, fmt.Errorf("sem catálogo primado não há poço a derivar para %d fichas", len(ids))
 	}
-	parciais, err := partialSheetsForPools(ctx, q, ids)
+	partials, err := partialSheetsForPools(ctx, q, ids)
 	if err != nil {
 		return nil, err
 	}
-	danos, err := q.ListCharacterDamage(ctx, ids)
+	damages, err := q.ListCharacterDamage(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("ler o dano de %d fichas: %w", len(ids), err)
 	}
-	dano := make(map[int64]sqlcgen.CharacterDamage, len(danos))
-	for _, d := range danos {
-		dano[d.Characterid] = d
+	damage := make(map[int64]sqlcgen.CharacterDamage, len(damages))
+	for _, d := range damages {
+		damage[d.Characterid] = d
 	}
 
-	pocos := make(map[int64]Pools, len(parciais))
-	for id, dto := range parciais {
+	pools := make(map[int64]Pools, len(partials))
+	for id, dto := range partials {
 		ec, err := EngineCharacterFrom(dto)
 		if err != nil {
 			return nil, fmt.Errorf("montar o personagem do motor (%d): %w", id, err)
 		}
-		derivado := cat.VitalsForCharacter(ec)
-		p := Pools{HpMax: int64(derivado.PvMax), MpMax: int64(derivado.PmMax)}
-		p.HpCurrent = WithinPool(p.HpMax-dano[id].Hpdamage, p.HpMax)
-		p.MpCurrent = WithinPool(p.MpMax-dano[id].Mpspent, p.MpMax)
-		pocos[id] = p
+		derived := cat.VitalsForCharacter(ec)
+		p := Pools{HpMax: int64(derived.PvMax), MpMax: int64(derived.PmMax)}
+		p.HpCurrent = WithinPool(p.HpMax-damage[id].Hpdamage, p.HpMax)
+		p.MpCurrent = WithinPool(p.MpMax-damage[id].Mpspent, p.MpMax)
+		pools[id] = p
 	}
-	return pocos, nil
+	return pools, nil
 }
 
 // partialSheetsForPools monta o agregado MÍNIMO de cada ficha em cinco
@@ -89,23 +89,23 @@ func PoolsForCharacters(
 func partialSheetsForPools(
 	ctx context.Context, q *sqlcgen.Queries, ids []int64,
 ) (map[int64]CharacterDTO, error) {
-	linhas, err := q.ListCharactersByIDs(ctx, ids)
+	rows, err := q.ListCharactersByIDs(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("ler %d fichas: %w", len(ids), err)
 	}
-	parciais := make(map[int64]CharacterDTO, len(linhas))
-	for _, c := range linhas {
-		parciais[c.ID] = CharacterScalarsFrom(c)
+	partials := make(map[int64]CharacterDTO, len(rows))
+	for _, c := range rows {
+		partials[c.ID] = CharacterScalarsFrom(c)
 	}
 
-	racas, err := q.ListRacesByCharacters(ctx, ids)
+	races, err := q.ListRacesByCharacters(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("ler as raças de %d fichas: %w", len(ids), err)
 	}
-	for _, r := range racas {
-		dto := parciais[r.Characterid]
+	for _, r := range races {
+		dto := partials[r.Characterid]
 		dto.Races = append(dto.Races, RaceDTO{Race: r.Race})
-		parciais[r.Characterid] = dto
+		partials[r.Characterid] = dto
 	}
 
 	classes, err := q.ListClassesByCharacters(ctx, ids)
@@ -113,36 +113,36 @@ func partialSheetsForPools(
 		return nil, fmt.Errorf("ler as classes de %d fichas: %w", len(ids), err)
 	}
 	for _, cl := range classes {
-		dto := parciais[cl.Characterid]
+		dto := partials[cl.Characterid]
 		dto.Classes = append(dto.Classes, ClassDTO{ClassName: cl.Classname, Level: cl.Level})
-		parciais[cl.Characterid] = dto
+		partials[cl.Characterid] = dto
 	}
 
-	itens, err := q.ListItemsByCharacters(ctx, ids)
+	items, err := q.ListItemsByCharacters(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("ler os itens de %d fichas: %w", len(ids), err)
 	}
-	for _, it := range itens {
-		dto := parciais[it.Characterid]
+	for _, it := range items {
+		dto := partials[it.Characterid]
 		dto.Items = append(dto.Items, ItemDTO{
 			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
 		})
-		parciais[it.Characterid] = dto
+		partials[it.Characterid] = dto
 	}
 
-	efeitos, err := q.ListActiveEffectsByCharacters(ctx, ids)
+	effects, err := q.ListActiveEffectsByCharacters(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("ler os efeitos de %d fichas: %w", len(ids), err)
 	}
-	for _, ef := range efeitos {
-		dto := parciais[ef.Characterid]
+	for _, ef := range effects {
+		dto := partials[ef.Characterid]
 		dto.ActiveEffects = append(dto.ActiveEffects, EffectDTO{
 			ID: ef.ID, CatalogID: ef.Catalogid, Scope: ef.Scope,
 			Modifiers: ef.Modifiers, CreatedAt: ef.Createdat,
 		})
-		parciais[ef.Characterid] = dto
+		partials[ef.Characterid] = dto
 	}
-	return parciais, nil
+	return partials, nil
 }

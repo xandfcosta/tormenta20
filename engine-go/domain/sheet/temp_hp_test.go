@@ -93,7 +93,7 @@ func TestTempHpTotalAddsThePoolsAndIgnoresWhatIsNotOne(t *testing.T) {
 	if total != 39 {
 		t.Errorf("as poças somaram %d, e 30 + 9 são 39", total)
 	}
-	if vazio := TempHpTotal(nil); vazio != 0 {
-		t.Errorf("sem efeito nenhum o total é %d, e tem de ser 0", vazio)
+	if empty := TempHpTotal(nil); empty != 0 {
+		t.Errorf("sem efeito nenhum o total é %d, e tem de ser 0", empty)
 	}
 }

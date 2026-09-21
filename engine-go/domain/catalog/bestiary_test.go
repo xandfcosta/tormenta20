@@ -22,30 +22,30 @@ type monsterRow struct {
 	ID           string `json:"id"`
 	Name         string `json:"name"`
 	ND           any    `json:"nd"`
-	Tipo         string `json:"tipo"`
+	Kind         string `json:"tipo"`
 	Size         string `json:"size"`
 	HP           *int   `json:"hp"`
-	Defesa       *int   `json:"defesa"`
-	Forca        *int   `json:"forca"`
-	Destreza     *int   `json:"destreza"`
-	Constituicao *int   `json:"constituicao"`
-	Inteligencia *int   `json:"inteligencia"`
-	Sabedoria    *int   `json:"sabedoria"`
-	Carisma      *int   `json:"carisma"`
+	Defense      *int   `json:"defesa"`
+	Strength     *int   `json:"forca"`
+	Dexterity    *int   `json:"destreza"`
+	Constitution *int   `json:"constituicao"`
+	Intelligence *int   `json:"inteligencia"`
+	Wisdom       *int   `json:"sabedoria"`
+	Charisma     *int   `json:"carisma"`
 	Fortitude    *int   `json:"fortitude"`
-	Reflexos     *int   `json:"reflexos"`
-	Vontade      *int   `json:"vontade"`
-	Deslocamento string `json:"deslocamento"`
-	Iniciativa   *int   `json:"iniciativa"`
-	Percepcao    *int   `json:"percepcao"`
+	Reflex       *int   `json:"reflexos"`
+	Will         *int   `json:"vontade"`
+	Speed        string `json:"deslocamento"`
+	Initiative   *int   `json:"iniciativa"`
+	Perception   *int   `json:"percepcao"`
 	PM           *int   `json:"pm"`
 	Skills       *[]struct {
 		Name  string `json:"name"`
 		Bonus int    `json:"bonus"`
-		Nota  string `json:"nota"`
+		Note  string `json:"nota"`
 	} `json:"skills"`
-	Equipamento *string `json:"equipamento"`
-	Tesouro     *string `json:"tesouro"`
+	Equipment *string `json:"equipamento"`
+	Treasure  *string `json:"tesouro"`
 	// TreasureXp não existe mais: era `nd * 1000` nos OITENTA verbetes, a mesma
 	// conta do `xpForNd`, e o nome mentia. O ponteiro fica para o teste poder
 	// afirmar a AUSÊNCIA — sem ele, um campo ressuscitado passaria despercebido.
@@ -59,55 +59,55 @@ func lerBestiario(t *testing.T) []monsterRow {
 	if err != nil {
 		t.Fatalf("ler bestiary.json: %v", err)
 	}
-	var linhas []monsterRow
-	if err := json.Unmarshal(raw, &linhas); err != nil {
+	var rows []monsterRow
+	if err := json.Unmarshal(raw, &rows); err != nil {
 		t.Fatalf("bestiary.json não casa com o schema: %v", err)
 	}
-	return linhas
+	return rows
 }
 
 // O schema: o que NUNCA pode faltar, e a faixa de página do capítulo.
 func TestBestiarySchema(t *testing.T) {
-	linhas := lerBestiario(t)
-	if len(linhas) != 80 {
-		t.Fatalf("verbetes=%d, queria 80", len(linhas))
+	rows := lerBestiario(t)
+	if len(rows) != 80 {
+		t.Fatalf("verbetes=%d, queria 80", len(rows))
 	}
-	vistos := map[string]bool{}
-	for _, m := range linhas {
-		if m.ID == "" || m.Name == "" || m.Tipo == "" || m.Size == "" {
+	seen := map[string]bool{}
+	for _, m := range rows {
+		if m.ID == "" || m.Name == "" || m.Kind == "" || m.Size == "" {
 			t.Errorf("%q: identidade incompleta", m.Name)
 		}
-		if vistos[m.ID] {
+		if seen[m.ID] {
 			t.Errorf("id repetido: %q", m.ID)
 		}
-		vistos[m.ID] = true
+		seen[m.ID] = true
 		// Vitais e resistências são do bloco de TODA criatura: o livro não tem
 		// verbete sem Defesa nem sem Pontos de Vida.
-		for nome, v := range map[string]*int{
-			"hp": m.HP, "defesa": m.Defesa,
-			"fortitude": m.Fortitude, "reflexos": m.Reflexos, "vontade": m.Vontade,
+		for name, v := range map[string]*int{
+			"hp": m.HP, "defesa": m.Defense,
+			"fortitude": m.Fortitude, "reflexos": m.Reflex, "vontade": m.Will,
 		} {
 			if v == nil {
-				t.Errorf("%q: %s ausente — nenhum verbete do livro omite isso", m.Name, nome)
+				t.Errorf("%q: %s ausente — nenhum verbete do livro omite isso", m.Name, name)
 			}
 		}
 		// Iniciativa, Percepção e Tesouro existem em TODO verbete do livro;
 		// perícias e equipamento existem como CAMPO em todos, vazios em quem não
 		// tem.
-		for nome, v := range map[string]any{
-			"iniciativa": m.Iniciativa, "percepcao": m.Percepcao,
+		for name, v := range map[string]any{
+			"iniciativa": m.Initiative, "percepcao": m.Perception,
 		} {
 			if v == (*int)(nil) {
-				t.Errorf("%q: %s ausente — abre o bloco de toda criatura", m.Name, nome)
+				t.Errorf("%q: %s ausente — abre o bloco de toda criatura", m.Name, name)
 			}
 		}
 		if m.Skills == nil {
 			t.Errorf("%q: skills ausente — vazio é uma lista vazia, não um buraco", m.Name)
 		}
-		if m.Equipamento == nil {
+		if m.Equipment == nil {
 			t.Errorf("%q: equipamento ausente — vazio é string vazia, não um buraco", m.Name)
 		}
-		if m.Tesouro == nil || *m.Tesouro == "" {
+		if m.Treasure == nil || *m.Treasure == "" {
 			t.Errorf("%q: tesouro vazio — o livro dá um a todo verbete", m.Name)
 		}
 		if m.TreasureXp != nil {
@@ -128,7 +128,7 @@ func TestBestiarySchema(t *testing.T) {
 // risco real é alguém preencher um deles de volta com zero, e uma asserção
 // frouxa passaria verde com nove dos dez consertados.
 func TestBestiaryMissingAttribute(t *testing.T) {
-	semAtributo := map[string]string{
+	noAttribute := map[string]string{
 		"zumbi":                 "inteligencia",
 		"esqueleto":             "inteligencia",
 		"esqueleto-elite":       "inteligencia",
@@ -140,30 +140,30 @@ func TestBestiaryMissingAttribute(t *testing.T) {
 		"engenho-guerra-goblin": "inteligencia",
 		"aparicao":              "forca",
 	}
-	atributos := func(m monsterRow) map[string]*int {
+	attributes := func(m monsterRow) map[string]*int {
 		return map[string]*int{
-			"forca": m.Forca, "destreza": m.Destreza, "constituicao": m.Constituicao,
-			"inteligencia": m.Inteligencia, "sabedoria": m.Sabedoria, "carisma": m.Carisma,
+			"forca": m.Strength, "destreza": m.Dexterity, "constituicao": m.Constitution,
+			"inteligencia": m.Intelligence, "sabedoria": m.Wisdom, "carisma": m.Charisma,
 		}
 	}
 
-	achados := map[string]string{}
+	findings := map[string]string{}
 	for _, m := range lerBestiario(t) {
-		for nome, v := range atributos(m) {
+		for name, v := range attributes(m) {
 			if v == nil {
-				achados[m.ID] = nome
+				findings[m.ID] = name
 			}
 		}
 	}
-	for id, campo := range semAtributo {
-		if achados[id] != campo {
+	for id, field := range noAttribute {
+		if findings[id] != field {
 			t.Errorf("%s: o livro marca %s com travessão, e o catálogo tem %v",
-				id, campo, achados[id])
+				id, field, findings[id])
 		}
 	}
-	for id, campo := range achados {
-		if semAtributo[id] != campo {
-			t.Errorf("%s: %s virou ausente e não está na lista do livro", id, campo)
+	for id, field := range findings {
+		if noAttribute[id] != field {
+			t.Errorf("%s: %s virou ausente e não está na lista do livro", id, field)
 		}
 	}
 }

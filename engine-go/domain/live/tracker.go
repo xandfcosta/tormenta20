@@ -15,23 +15,23 @@ import (
 // Cortar no fim deixaria a tira vazia justamente no turno em que saber "quem
 // vem depois" mais importa — o último antes de virar a rodada.
 //
-// Fora de combate (`turno` negativo) não há vez de ninguém e não há fila.
+// Fora de combate (`turn` negativo) não há vez de ninguém e não há fila.
 //
 // CUIDADO: ela devolve uma JANELA, não a fila. Usá-la para enumerar quem está em
-// combate devolve `quantos` de nove combatentes, e uma limpeza baseada nela
+// combate devolve `howMany` de nove combatentes, e uma limpeza baseada nela
 // deixa quatro para trás.
-func UpcomingTurns(fila []InitiativeEntry, turno, quantos int) []InitiativeEntry {
-	if turno < 0 || len(fila) == 0 || quantos <= 0 {
+func UpcomingTurns(queue []InitiativeEntry, turn, howMany int) []InitiativeEntry {
+	if turn < 0 || len(queue) == 0 || howMany <= 0 {
 		return nil
 	}
-	if quantos > len(fila) {
-		quantos = len(fila)
+	if howMany > len(queue) {
+		howMany = len(queue)
 	}
-	fora := make([]InitiativeEntry, 0, quantos)
-	for passo := 0; passo < quantos; passo++ {
-		fora = append(fora, fila[(turno+passo)%len(fila)])
+	outside := make([]InitiativeEntry, 0, howMany)
+	for step := 0; step < howMany; step++ {
+		outside = append(outside, queue[(turn+step)%len(queue)])
 	}
-	return fora
+	return outside
 }
 
 // NextTurnTarget é para onde o avanço vai, e como o botão o anuncia.
@@ -51,19 +51,19 @@ type NextTurnTarget struct {
 // diz o MOTIVO de estar desligado e não o verbo que não vai acontecer: "em cena
 // sem ninguém na fila" é o instante em que o mestre acabou de iniciar e vai
 // montar a ordem, e ali um "Próximo turno" apagado não explica o que falta.
-func NextTurnButton(fila []InitiativeEntry, turno int) NextTurnTarget {
-	if len(fila) == 0 {
+func NextTurnButton(queue []InitiativeEntry, turn int) NextTurnTarget {
+	if len(queue) == 0 {
 		return NextTurnTarget{Label: "Ninguém na fila"}
 	}
-	emCombate := turno >= 0
-	indice := 0
-	verbo := "Começar"
-	if emCombate {
-		indice = (turno + 1) % len(fila)
-		verbo = "Próximo"
+	inCombat := turn >= 0
+	index := 0
+	verb := "Começar"
+	if inCombat {
+		index = (turn + 1) % len(queue)
+		verb = "Próximo"
 	}
-	linha := fila[indice]
-	return NextTurnTarget{Label: verbo + ": " + linha.Label, Entry: &linha}
+	row := queue[index]
+	return NextTurnTarget{Label: verb + ": " + row.Label, Entry: &row}
 }
 
 // TurnCounter é a frase que diz ONDE a sessão está: fora de cena, em cena
@@ -75,7 +75,7 @@ func NextTurnButton(fila []InitiativeEntry, turno int) NextTurnTarget {
 //
 // "Rodada 0" aparece de propósito no terceiro caso: a rodada só vira 1 no
 // primeiro avanço.
-func TurnCounter(scene *Scene, rodada, turno int, naFila int) string {
+func TurnCounter(scene *Scene, round, turn int, inQueue int) string {
 	if scene == nil {
 		return "Fora de cena"
 	}
@@ -86,16 +86,16 @@ func TurnCounter(scene *Scene, rodada, turno int, naFila int) string {
 	if !scene.CountsRounds() {
 		return fmt.Sprintf("%s · cena %d", scene.Kind.Name(), scene.Number)
 	}
-	if naFila == 0 {
+	if inQueue == 0 {
 		return "Em cena · ninguém na fila"
 	}
-	if turno < 0 {
-		return fmt.Sprintf("Rodada %d · %d na fila", rodada, naFila)
+	if turn < 0 {
+		return fmt.Sprintf("Rodada %d · %d na fila", round, inQueue)
 	}
 	// O QUE SOBROU DO TURNO entra aqui e não numa segunda tira: a economia de
 	// ação (p233) é sobre o turno, e o turno já é o que esta frase conta. Quem
 	// vai clicar precisa saber ANTES — a recusa sozinha chega depois do gesto.
-	return fmt.Sprintf("Rodada %d · Turno %d/%d · %s", rodada, turno+1, naFila, scene.actionsLeft())
+	return fmt.Sprintf("Rodada %d · Turno %d/%d · %s", round, turn+1, inQueue, scene.actionsLeft())
 }
 
 // ── presença ────────────────────────────────────────────────────────────────
@@ -113,18 +113,18 @@ type TableMember struct {
 // Membro SEM personagem não entra — não é que ele esteja offline, é que não há
 // personagem para marcar, e um zero na lista viraria "o personagem 0 está
 // online" na tela.
-func ConnectedCharacters(membros []TableMember, presentes []int64) map[int64]bool {
+func ConnectedCharacters(members []TableMember, present []int64) map[int64]bool {
 	online := map[int64]bool{}
-	for _, id := range presentes {
+	for _, id := range present {
 		online[id] = true
 	}
-	conectados := map[int64]bool{}
-	for _, m := range membros {
+	connected := map[int64]bool{}
+	for _, m := range members {
 		if m.OwnerID != 0 && online[m.OwnerID] {
-			conectados[m.CharacterID] = true
+			connected[m.CharacterID] = true
 		}
 	}
-	return conectados
+	return connected
 }
 
 // GmSeesVitals: o mestre vê PV de NPC, o jogador não.
@@ -132,12 +132,12 @@ func ConnectedCharacters(membros []TableMember, presentes []int64) map[int64]boo
 // A pergunta é "há vitais nesta fila para esconder?", e não "quem é o mestre" —
 // numa fila só de PCs não há o que reservar, e a tela não deve mudar de forma
 // por causa de um papel que ali não muda nada.
-func GmSeesVitals(fila []InitiativeEntry, ehMestre bool) bool {
-	if !ehMestre {
+func GmSeesVitals(queue []InitiativeEntry, isGM bool) bool {
+	if !isGM {
 		return false
 	}
-	for i := range fila {
-		if fila[i].HpMax != nil {
+	for i := range queue {
+		if queue[i].HpMax != nil {
 			return true
 		}
 	}
@@ -179,13 +179,13 @@ type CombatantDraft struct {
 // As mensagens nomeiam o VALOR ofensivo e a forma esperada, porque quem as lê
 // está no meio de um combate e precisa consertar sem sair da tela.
 func ValidateCombatantDraft(c CombatantDraft) error {
-	rotulo := strings.TrimSpace(c.Label)
-	if rotulo == "" {
+	label := strings.TrimSpace(c.Label)
+	if label == "" {
 		return errors.New("o combatente precisa de um nome")
 	}
 	// Conta RUNAS e não bytes: "Ogro Ancião" tem acentos, e um limite em bytes
 	// recusaria um nome mais curto do que o que ele deixa passar em ASCII.
-	if n := len([]rune(rotulo)); n > MaxLabelLetters {
+	if n := len([]rune(label)); n > MaxLabelLetters {
 		return fmt.Errorf("o nome tem %d letras; o limite é %d", n, MaxLabelLetters)
 	}
 	if err := ValidateInitiative(c.Initiative); err != nil {

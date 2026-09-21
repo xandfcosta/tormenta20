@@ -54,8 +54,8 @@ var editorTabs = []editorTab{
 // deslocamento, PV 10) são o ponto de partida do livro e poupam seis campos.
 func blocoEmBranco() creature.Block {
 	return creature.Block{
-		ND: 1, Tipo: "humanoide", Size: "medio",
-		Defesa: 10, HP: 10, Deslocamento: "9m (6q)",
+		ND: 1, Kind: "humanoide", Size: "medio",
+		Defense: 10, HP: 10, Speed: "9m (6q)",
 		Attacks: []creature.Attack{}, Skills: []creature.Skill{}, SpecialAbilities: []string{},
 	}
 }

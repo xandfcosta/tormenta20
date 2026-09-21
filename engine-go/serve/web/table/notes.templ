@@ -151,7 +151,7 @@ templ noteBlock(v View, b markdown.Block) {
 			@noteTitle(b)
 		case "paragraph":
 			<p class="whitespace-pre-wrap">
-				for i, linha := range b.Linhas {
+				for i, linha := range b.Rows {
 					if i > 0 {
 						<br/>
 					}
@@ -172,7 +172,7 @@ templ noteBlock(v View, b markdown.Block) {
 // O título da nota começa em `h2`: o `h1` é da página, e uma nota não abre o
 // documento. Três níveis, que é o que a gramática conhece.
 templ noteTitle(b markdown.Block) {
-	switch b.Nivel {
+	switch b.Level {
 		case 1:
 			<h2 class="font-heading text-base tracking-wide text-grimorio-gold">
 				@noteSpans(b.Spans)
@@ -194,9 +194,9 @@ templ noteTitle(b markdown.Block) {
 // reescrever a nota em vez de guardar estado ao lado dela. Um checkbox que não
 // reescrevesse o texto seria enfeite, e o estado não sobreviveria a um F5.
 templ noteList(v View, b markdown.Block) {
-	if b.Ordenada {
+	if b.Sorted {
 		<ol class="list-decimal space-y-0.5 pl-5">
-			for _, it := range b.Itens {
+			for _, it := range b.Items {
 				<li>
 					@noteItem(v, it)
 				</li>
@@ -204,9 +204,9 @@ templ noteList(v View, b markdown.Block) {
 		</ol>
 	} else {
 		<ul class="space-y-0.5 pl-1">
-			for _, it := range b.Itens {
+			for _, it := range b.Items {
 				<li class="flex items-start gap-1.5">
-					if it.Tarefa == nil {
+					if it.Task == nil {
 						<span aria-hidden="true" class="select-none text-muted-foreground">•</span>
 					}
 					@noteItem(v, it)
@@ -217,20 +217,20 @@ templ noteList(v View, b markdown.Block) {
 }
 
 templ noteItem(v View, it markdown.Item) {
-	if it.Tarefa != nil {
+	if it.Task != nil {
 		<button
 			type="button"
 			role="checkbox"
-			aria-checked={ marked(it.Tarefa.Marcada) }
-			data-on:click={ toggleTaskNote(v, *it.Tarefa) }
+			aria-checked={ marked(it.Task.Marked) }
+			data-on:click={ toggleTaskNote(v, *it.Task) }
 			class="flex min-h-6 items-start gap-1.5 text-left outline-none"
 		>
-			if it.Tarefa.Marcada {
+			if it.Task.Marked {
 				@ui.Icon("SquareCheck", "size-4 shrink-0 text-grimorio-gold")
 			} else {
 				@ui.Icon("Square", "size-4 shrink-0 text-muted-foreground")
 			}
-			<span class={ templ.KV("text-muted-foreground line-through", it.Tarefa.Marcada) }>
+			<span class={ templ.KV("text-muted-foreground line-through", it.Task.Marked) }>
 				@noteSpans(it.Spans)
 			</span>
 		</button>

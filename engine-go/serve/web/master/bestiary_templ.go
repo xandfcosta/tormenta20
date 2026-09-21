@@ -1431,13 +1431,13 @@ func EntryBlock(m book.Entry, livro bookui.BookAddress) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					if p.Nota != "" {
+					if p.Note != "" {
 						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 99, "<span class=\"text-muted-foreground\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var60 string
-						templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(" (" + p.Nota + ")")
+						templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(" (" + p.Note + ")")
 						if templ_7745c5c3_Err != nil {
 							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 562, Col: 66}
 						}

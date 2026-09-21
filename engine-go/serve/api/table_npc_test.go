@@ -26,8 +26,8 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 	if err := json.Unmarshal([]byte(npcs[0].Block), &bloco); err != nil {
 		t.Fatalf("o bloco guardado está ilegível: %v", err)
 	}
-	if bloco.HP <= 0 || bloco.Defesa <= 0 {
-		t.Errorf("o bloco nasceu vazio: PV %d, Defesa %d", bloco.HP, bloco.Defesa)
+	if bloco.HP <= 0 || bloco.Defense <= 0 {
+		t.Errorf("o bloco nasceu vazio: PV %d, Defesa %d", bloco.HP, bloco.Defense)
 	}
 	// A ORIGEM fica gravada, e é ela que deixa a tela dizer "cópia de ogro"
 	// depois de o mestre renomear. Sem ela, "Ogro Capitão" perde o fio até o

@@ -21,20 +21,20 @@ import (
 func CopyOfEntry(v book.Entry) creature.Block {
 	return creature.Block{
 		ND:         v.ND,
-		Tipo:       v.Kind,
+		Kind:       v.Kind,
 		Size:       v.Size,
-		Iniciativa: v.Initiative,
-		Percepcao:  v.Perception,
+		Initiative: v.Initiative,
+		Perception: v.Perception,
 		// O PM ATRAVESSA COMO PONTEIRO, e não desreferenciado: a maioria das
 		// criaturas não tem a linha, e um zero diria "tem mana e está sem" —
 		// que é outro estado. Os dois lados guardam a ausência de propósito.
-		PM:           v.PM,
-		Defesa:       v.Defense,
-		Fortitude:    v.Fortitude,
-		Reflexos:     v.Reflex,
-		Vontade:      v.Will,
-		HP:           v.HP,
-		Deslocamento: v.Speed,
+		PM:        v.PM,
+		Defense:   v.Defense,
+		Fortitude: v.Fortitude,
+		Reflex:    v.Reflex,
+		Will:      v.Will,
+		HP:        v.HP,
+		Speed:     v.Speed,
 		// ATRIBUTO AUSENTE VIRA ZERO, e esta é uma PERDA CONHECIDA. O livro
 		// escreve TRAVESSÃO onde a criatura não tem o atributo — o Zumbi não tem
 		// Inteligência (p297) —, e no bloco do mestre isso vira 0, que "+0"
@@ -44,12 +44,12 @@ func CopyOfEntry(v book.Entry) creature.Block {
 		// tem", e ensiná-lo exigiria mexer no struct, no formulário e na
 		// validação. A partir da cópia o bloco é DELE e ele edita; quem guarda a
 		// ausência de verdade é o CATÁLOGO, que é a fonte.
-		Forca:            orZero(v.Strength),
-		Destreza:         orZero(v.Dexterity),
-		Constituicao:     orZero(v.Constitution),
-		Inteligencia:     orZero(v.Intelligence),
-		Sabedoria:        orZero(v.Wisdom),
-		Carisma:          orZero(v.Charisma),
+		Strength:         orZero(v.Strength),
+		Dexterity:        orZero(v.Dexterity),
+		Constitution:     orZero(v.Constitution),
+		Intelligence:     orZero(v.Intelligence),
+		Wisdom:           orZero(v.Wisdom),
+		Charisma:         orZero(v.Charisma),
 		Attacks:          copyAttacks(v.Attacks),
 		Skills:           copyExpertises(v.Skills),
 		Equipment:        v.Equipment,

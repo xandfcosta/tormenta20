@@ -44,12 +44,12 @@ const (
 //
 //	nome, erros := campaign.Name(bruto)
 //	if len(erros) > 0 { … }
-func Name(bruto string) (string, wire.FieldErrorMap) {
-	nome := strings.TrimSpace(bruto)
-	if nome == "" || utf8.RuneCountInString(nome) > MaxNameLength {
+func Name(raw string) (string, wire.FieldErrorMap) {
+	name := strings.TrimSpace(raw)
+	if name == "" || utf8.RuneCountInString(name) > MaxNameLength {
 		return "", wire.FieldErrorMap{"name": {msgNomeInvalido}}
 	}
-	return nome, nil
+	return name, nil
 }
 
 // Description apara e valida, devolvendo string VAZIA para ausente.
@@ -62,14 +62,14 @@ func Name(bruto string) (string, wire.FieldErrorMap) {
 // A medida é em RUNAS e não em bytes: "Coração" tem 7 caracteres para quem
 // escreve e 8 bytes para quem conta errado, e um limite que encolhe conforme os
 // acentos é um limite que mente.
-func Description(bruto *string) (string, wire.FieldErrorMap) {
-	if bruto == nil {
+func Description(raw *string) (string, wire.FieldErrorMap) {
+	if raw == nil {
 		return "", nil
 	}
-	if utf8.RuneCountInString(*bruto) > MaxDescriptionLength {
+	if utf8.RuneCountInString(*raw) > MaxDescriptionLength {
 		return "", wire.FieldErrorMap{"description": {msgDescricaoLonga}}
 	}
-	return strings.TrimSpace(*bruto), nil
+	return strings.TrimSpace(*raw), nil
 }
 
 // ValidateText é o PAR, para quem recebe os dois campos no mesmo formulário.
@@ -79,20 +79,20 @@ func Description(bruto *string) (string, wire.FieldErrorMap) {
 // reenviar, e só então descobrir que a descrição também estava longa. Um
 // formulário que devolve um erro por vez é um formulário que se preenche duas
 // vezes.
-func ValidateText(nomeBruto string, descricaoBruta *string) (string, string, wire.FieldErrorMap) {
-	erros := wire.FieldErrorMap{}
-	nome, errNome := Name(nomeBruto)
-	for campo, frases := range errNome {
-		erros[campo] = frases
+func ValidateText(rawName string, rawDescription *string) (string, string, wire.FieldErrorMap) {
+	errs := wire.FieldErrorMap{}
+	name, nameErr := Name(rawName)
+	for field, sentences := range nameErr {
+		errs[field] = sentences
 	}
-	descricao, errDesc := Description(descricaoBruta)
-	for campo, frases := range errDesc {
-		erros[campo] = frases
+	description, descErr := Description(rawDescription)
+	for field, sentences := range descErr {
+		errs[field] = sentences
 	}
-	if len(erros) == 0 {
-		return nome, descricao, nil
+	if len(errs) == 0 {
+		return name, description, nil
 	}
-	return nome, descricao, erros
+	return name, description, errs
 }
 
 // AS REGRAS OPCIONAIS: o que o mestre DESLIGOU na campanha.
@@ -110,19 +110,19 @@ func ValidateText(nomeBruto string, descricaoBruta *string) (string, string, wir
 //
 // A frase CHEGA NA TELA: a cena a manda para o navegador no sinal `erroDaRegra`,
 // então ela é em português pelo mesmo motivo que as duas mensagens acima.
-func NormalizeIgnoredRules(brutas []string) ([]string, string) {
-	vistas := map[string]bool{}
-	fora := []string{}
-	for _, regra := range brutas {
-		if !engine.IsKnownRule(regra) {
-			return nil, fmt.Sprintf("regra desconhecida %q — esperava uma de %v", regra, engine.KnownRules)
+func NormalizeIgnoredRules(raw []string) ([]string, string) {
+	seen := map[string]bool{}
+	outside := []string{}
+	for _, rule := range raw {
+		if !engine.IsKnownRule(rule) {
+			return nil, fmt.Sprintf("regra desconhecida %q — esperava uma de %v", rule, engine.KnownRules)
 		}
-		if vistas[regra] {
+		if seen[rule] {
 			continue
 		}
-		vistas[regra] = true
-		fora = append(fora, regra)
+		seen[rule] = true
+		outside = append(outside, rule)
 	}
-	sort.Strings(fora)
-	return fora, ""
+	sort.Strings(outside)
+	return outside, ""
 }

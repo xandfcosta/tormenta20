@@ -47,13 +47,13 @@ type PoolRule func(Pools) (Pools, error)
 // linha crua: era justamente esse atalho que produzia a segunda verdade.
 func ApplyToPools(
 	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs,
-	c sqlcgen.Character, regra PoolRule,
+	c sqlcgen.Character, rule PoolRule,
 ) (Pools, error) {
 	dto, err := Load(ctx, q, cat, c)
 	if err != nil {
 		return Pools{}, fmt.Errorf("carregar a ficha %d para mexer nos poços: %w", c.ID, err)
 	}
-	return ApplyToLoadedPools(ctx, q, &dto, regra)
+	return ApplyToLoadedPools(ctx, q, &dto, rule)
 }
 
 // ApplyToLoadedPools é o MESMO funil para quem já carregou o agregado, e ele
@@ -65,25 +65,25 @@ func ApplyToPools(
 // mesmo `savePools`, que é o que o guarda `TestEveryVitalWriteGoesThroughTheFunnel`
 // prende: o que não pode haver é uma SEGUNDA escrita, não uma segunda entrada.
 func ApplyToLoadedPools(
-	ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO, regra PoolRule,
+	ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO, rule PoolRule,
 ) (Pools, error) {
-	antes := Pools{
+	before := Pools{
 		HpMax: dto.HpMax, HpCurrent: dto.HpCurrent,
 		MpMax: dto.MpMax, MpCurrent: dto.MpCurrent,
 	}
-	depois, err := regra(antes)
+	after, err := rule(before)
 	if err != nil {
-		return antes, err
+		return before, err
 	}
 	// O máximo da regra é descartado sem aviso de propósito: a alternativa seria
 	// recusar quem devolvesse um máximo diferente, e isso convidaria o gesto a
 	// tentar. O poço é do catálogo, ponto.
-	depois.HpMax, depois.MpMax = antes.HpMax, antes.MpMax
-	depois.HpCurrent = WithinPool(depois.HpCurrent, depois.HpMax)
-	depois.MpCurrent = WithinPool(depois.MpCurrent, depois.MpMax)
-	dto.HpMax, dto.HpCurrent = depois.HpMax, depois.HpCurrent
-	dto.MpMax, dto.MpCurrent = depois.MpMax, depois.MpCurrent
-	return depois, savePools(ctx, q, dto.ID, depois)
+	after.HpMax, after.MpMax = before.HpMax, before.MpMax
+	after.HpCurrent = WithinPool(after.HpCurrent, after.HpMax)
+	after.MpCurrent = WithinPool(after.MpCurrent, after.MpMax)
+	dto.HpMax, dto.HpCurrent = after.HpMax, after.HpCurrent
+	dto.MpMax, dto.MpCurrent = after.MpMax, after.MpCurrent
+	return after, savePools(ctx, q, dto.ID, after)
 }
 
 // Aqui moravam o `RefreshPools` e o `FillPools`, e os dois viraram NADA.
@@ -114,7 +114,7 @@ func ApplyToLoadedPools(
 //   - o `domain/engine` prende teto de BÔNUS DO LIVRO — a Insolência do
 //     Bucaneiro é "+Carisma na Defesa, até o nível de Bucaneiro" (p47) —, e ele
 //     não pode chamar isto aqui: a direção de import é `sheet → engine`.
-func WithinPool(valor, teto int64) int64 { return min(max(int64(0), valor), teto) }
+func WithinPool(value, ceiling int64) int64 { return min(max(int64(0), value), ceiling) }
 
 // savePools grava o que de fato é ESTADO: o quanto se apanhou.
 //
@@ -140,21 +140,21 @@ func WithinPool(valor, teto int64) int64 { return min(max(int64(0), valor), teto
 // versão: o jogador ficaria com o PV de antes na tela, sem erro em lugar nenhum
 // (ALE-355).
 func savePools(ctx context.Context, q *sqlcgen.Queries, id int64, p Pools) error {
-	hpDano := WithinPool(p.HpMax-p.HpCurrent, p.HpMax)
-	mpGasto := WithinPool(p.MpMax-p.MpCurrent, p.MpMax)
-	gravado, err := storedDamage(ctx, q, id)
+	hpDamage := WithinPool(p.HpMax-p.HpCurrent, p.HpMax)
+	mpSpent := WithinPool(p.MpMax-p.MpCurrent, p.MpMax)
+	saved, err := storedDamage(ctx, q, id)
 	if err != nil {
 		return err
 	}
-	if gravado.Hpdamage == hpDano && gravado.Mpspent == mpGasto {
+	if saved.Hpdamage == hpDamage && saved.Mpspent == mpSpent {
 		return nil
 	}
-	if hpDano == 0 && mpGasto == 0 {
+	if hpDamage == 0 && mpSpent == 0 {
 		if err := q.ClearCharacterDamage(ctx, id); err != nil {
 			return fmt.Errorf("apagar o dano da ficha %d: %w", id, err)
 		}
 	} else if err := q.SaveCharacterDamage(ctx, sqlcgen.SaveCharacterDamageParams{
-		Characterid: id, Hpdamage: hpDano, Mpspent: mpGasto,
+		Characterid: id, Hpdamage: hpDamage, Mpspent: mpSpent,
 	}); err != nil {
 		return fmt.Errorf("gravar o dano da ficha %d: %w", id, err)
 	}
@@ -171,12 +171,12 @@ func savePools(ctx context.Context, q *sqlcgen.Queries, id int64, p Pools) error
 func storedDamage(
 	ctx context.Context, q *sqlcgen.Queries, id int64,
 ) (sqlcgen.GetCharacterDamageRow, error) {
-	dano, err := q.GetCharacterDamage(ctx, id)
+	damage, err := q.GetCharacterDamage(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return sqlcgen.GetCharacterDamageRow{}, nil
 	}
 	if err != nil {
-		return dano, fmt.Errorf("reler o dano da ficha %d: %w", id, err)
+		return damage, fmt.Errorf("reler o dano da ficha %d: %w", id, err)
 	}
-	return dano, nil
+	return damage, nil
 }

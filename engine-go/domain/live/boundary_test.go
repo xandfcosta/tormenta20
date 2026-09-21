@@ -53,39 +53,39 @@ var permitidos = map[string]bool{
 }
 
 func TestTheLiveRuntimeDoesNotKnowTheOtherContexts(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
-			if !strings.HasPrefix(caminho, "t20engine/") || permitidos[caminho] {
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
+			if !strings.HasPrefix(path, "t20engine/") || permitidos[path] {
 				continue
 			}
 			t.Errorf("%s importa %q — o regime não conhece outros contextos.\n"+
 				"Se o regime precisa de algo de lá, DECLARE UMA PORTA aqui e receba\n"+
 				"quem a cumpre por parâmetro, como `VitaisDaFicha` faz com a ficha.\n"+
 				"Acrescentar o import à lista transforma a porta em enfeite.",
-				nome, caminho)
+				name, path)
 		}
 	}
 
 	// Sem isto, apagar o pacote deixaria o guarda VERDE — ausência lida como
 	// aprovação, que é a família que o `CLAUDE.md` da raiz descreve.
-	if visitados == 0 {
+	if visited == 0 {
 		t.Fatal("nenhum arquivo .go visitado — o guarda ficou cego")
 	}
 }

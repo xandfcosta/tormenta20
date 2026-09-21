@@ -35,25 +35,25 @@ var combining = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), no
 //
 // "Anão" e "anao" viram a mesma coisa, que é o ponto.
 func Fold(s string) string {
-	limpo, _, err := transform.String(combining, s)
+	clean, _, err := transform.String(combining, s)
 	if err != nil {
 		// A transformação só falha em entrada mal formada; comparar o original
 		// é pior que nada, mas é melhor que a busca inteira parar de funcionar.
 		return strings.ToLower(s)
 	}
-	return strings.ToLower(limpo)
+	return strings.ToLower(clean)
 }
 
 // Matches responde se ALGUM dos campos casa com o que foi digitado.
 //
 // Busca vazia casa com tudo: não digitar não é filtrar.
-func Matches(campos []string, busca string) bool {
-	alvo := Fold(strings.TrimSpace(busca))
-	if alvo == "" {
+func Matches(fields []string, search string) bool {
+	target := Fold(strings.TrimSpace(search))
+	if target == "" {
 		return true
 	}
-	for _, campo := range campos {
-		if matchesField(Fold(campo), alvo) {
+	for _, field := range fields {
+		if matchesField(Fold(field), target) {
 			return true
 		}
 	}
@@ -61,11 +61,11 @@ func Matches(campos []string, busca string) bool {
 }
 
 // matchesField aplica as duas regras, da mais barata para a mais cara.
-func matchesField(campo, alvo string) bool {
-	if strings.Contains(campo, alvo) {
+func matchesField(field, target string) bool {
+	if strings.Contains(field, target) {
 		return true
 	}
-	return isSubsequence(campo, alvo)
+	return isSubsequence(field, target)
 }
 
 // isSubsequence é a tolerância a typo, e ela é DELIBERADAMENTE frouxa numa
@@ -79,15 +79,15 @@ func matchesField(campo, alvo string) bool {
 //
 // A busca de UMA letra exige prefixo: com subsequência, "a" casaria com
 // qualquer nome que tenha um "a" em qualquer lugar, que é a lista toda.
-func isSubsequence(campo, alvo string) bool {
-	if len([]rune(alvo)) < 2 {
-		return strings.HasPrefix(campo, alvo)
+func isSubsequence(field, target string) bool {
+	if len([]rune(target)) < 2 {
+		return strings.HasPrefix(field, target)
 	}
-	restante := []rune(alvo)
-	for _, r := range campo {
-		if r == restante[0] {
-			restante = restante[1:]
-			if len(restante) == 0 {
+	remaining := []rune(target)
+	for _, r := range field {
+		if r == remaining[0] {
+			remaining = remaining[1:]
+			if len(remaining) == 0 {
 				return true
 			}
 		}
@@ -116,39 +116,39 @@ func isSubsequence(campo, alvo string) bool {
 // não acha "Bola de Fogo": o nome não começa com a frase, não a contém, e pular
 // o "de " estoura a folga do quase-igual. Digitar duas palavras de um nome é
 // como se procura o que se lembra pela metade.
-func Score(nome, busca string) int {
-	alvo := Fold(strings.TrimSpace(busca))
-	if alvo == "" {
+func Score(name, search string) int {
+	target := Fold(strings.TrimSpace(search))
+	if target == "" {
 		return 0
 	}
-	campo := Fold(nome)
-	termos := strings.Fields(alvo)
-	if len(termos) == 1 {
-		return scoreTerm(campo, alvo)
+	field := Fold(name)
+	terms := strings.Fields(target)
+	if len(terms) == 1 {
+		return scoreTerm(field, target)
 	}
 	soma := 0
-	for _, termo := range termos {
-		ponto := scoreTerm(campo, termo)
-		if ponto == 0 {
+	for _, term := range terms {
+		point := scoreTerm(field, term)
+		if point == 0 {
 			return 0
 		}
-		soma += ponto
+		soma += point
 	}
-	return soma / len(termos)
+	return soma / len(terms)
 }
 
 // scoreTerm é a escada, do casamento mais forte para o mais fraco.
-func scoreTerm(campo, termo string) int {
+func scoreTerm(field, term string) int {
 	switch {
-	case campo == termo:
+	case field == term:
 		return 100
-	case strings.HasPrefix(campo, termo):
+	case strings.HasPrefix(field, term):
 		return 80
-	case startsAWord(campo, termo):
+	case startsAWord(field, term):
 		return 60
-	case strings.Contains(campo, termo):
+	case strings.Contains(field, term):
 		return 40
-	case isNearlyEqual(campo, termo):
+	case isNearlyEqual(field, term):
 		return 20
 	}
 	return 0
@@ -165,17 +165,17 @@ func scoreTerm(campo, termo string) int {
 // continua achando "Necromante" (uma letra pulada), e "abal" para de achar
 // "Capitão-Baluarte" (seis). É a diferença entre corrigir um dedo torto e
 // aceitar qualquer coisa.
-func isNearlyEqual(campo, alvo string) bool {
-	letras := []rune(campo)
-	procurado := []rune(alvo)
-	if len(procurado) < 2 {
-		return strings.HasPrefix(campo, alvo)
+func isNearlyEqual(field, target string) bool {
+	letters := []rune(field)
+	sought := []rune(target)
+	if len(sought) < 2 {
+		return strings.HasPrefix(field, target)
 	}
-	for inicio := range letras {
-		if letras[inicio] != procurado[0] {
+	for start := range letters {
+		if letters[start] != sought[0] {
 			continue
 		}
-		if gapUntil(letras[inicio:], procurado) <= 2 {
+		if gapUntil(letters[start:], sought) <= 2 {
 			return true
 		}
 	}
@@ -188,18 +188,18 @@ func isNearlyEqual(campo, alvo string) bool {
 // calculado a partir da entrada é sentinela que a entrada alcança.
 const noMatch = 1 << 30
 
-func gapUntil(letras, procurado []rune) int {
-	buraco, i := 0, 0
-	for _, r := range letras {
-		if r == procurado[i] {
+func gapUntil(letters, sought []rune) int {
+	hole, i := 0, 0
+	for _, r := range letters {
+		if r == sought[i] {
 			i++
-			if i == len(procurado) {
-				return buraco
+			if i == len(sought) {
+				return hole
 			}
 			continue
 		}
-		buraco++
-		if buraco > 2 {
+		hole++
+		if hole > 2 {
 			break
 		}
 	}
@@ -216,19 +216,19 @@ func gapUntil(letras, procurado []rune) int {
 // colada em pontuação ("(abalado", "abalado,"), e cortar só no espaço deixaria
 // esses casos de fora. A letra anterior é decodificada como RUNA porque o
 // domínio é pt-BR — um byte solto no meio de "ção" não é letra nenhuma.
-func startsAWord(campo, alvo string) bool {
+func startsAWord(field, target string) bool {
 	de := 0
 	for {
-		onde := strings.Index(campo[de:], alvo)
-		if onde < 0 {
+		where := strings.Index(field[de:], target)
+		if where < 0 {
 			return false
 		}
-		onde += de
-		anterior, _ := utf8.DecodeLastRuneInString(campo[:onde])
-		if onde == 0 || !(unicode.IsLetter(anterior) || unicode.IsDigit(anterior)) {
+		where += de
+		anterior, _ := utf8.DecodeLastRuneInString(field[:where])
+		if where == 0 || !(unicode.IsLetter(anterior) || unicode.IsDigit(anterior)) {
 			return true
 		}
-		de = onde + 1
+		de = where + 1
 	}
 }
 
@@ -244,14 +244,14 @@ func startsAWord(campo, alvo string) bool {
 //
 // Todos os termos, e cada um abrindo uma PALAVRA. "Contém" cru aqui é o que
 // fazia "abal" achar "trabalho".
-func ScoreText(textos []string, busca string) int {
-	alvo := Fold(strings.TrimSpace(busca))
-	if len([]rune(alvo)) < 3 {
+func ScoreText(texts []string, search string) int {
+	target := Fold(strings.TrimSpace(search))
+	if len([]rune(target)) < 3 {
 		return 0
 	}
-	junto := Fold(strings.Join(textos, " "))
-	for _, termo := range strings.Fields(alvo) {
-		if !startsAWord(junto, termo) {
+	together := Fold(strings.Join(texts, " "))
+	for _, term := range strings.Fields(target) {
+		if !startsAWord(together, term) {
 			return 0
 		}
 	}

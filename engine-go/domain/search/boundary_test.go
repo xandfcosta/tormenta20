@@ -23,37 +23,37 @@ import (
 // precisar do `Fold` vai copiar de novo — e a próxima cópia vai estar errada de
 // outro jeito.
 func TestSearchImportsNothing(t *testing.T) {
-	arquivos, err := os.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)
 	}
 
-	conjunto := token.NewFileSet()
-	visitados := 0
-	for _, entrada := range arquivos {
-		nome := entrada.Name()
-		if !strings.HasSuffix(nome, ".go") {
+	set := token.NewFileSet()
+	visited := 0
+	for _, entry := range files {
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".go") {
 			continue
 		}
-		visitados++
-		arquivo, err := parser.ParseFile(conjunto, nome, nil, parser.ImportsOnly)
+		visited++
+		file, err := parser.ParseFile(set, name, nil, parser.ImportsOnly)
 		if err != nil {
-			t.Fatalf("ler %s: %v", nome, err)
+			t.Fatalf("ler %s: %v", name, err)
 		}
-		for _, imp := range arquivo.Imports {
-			caminho := strings.Trim(imp.Path.Value, `"`)
-			if !strings.HasPrefix(caminho, "t20engine/") {
+		for _, imp := range file.Imports {
+			path := strings.Trim(imp.Path.Value, `"`)
+			if !strings.HasPrefix(path, "t20engine/") {
 				continue
 			}
 			t.Errorf("%s importa %q — a busca é FOLHA.\n"+
 				"Ela existe para qualquer um poder importá-la sem herdar nada; com um\n"+
 				"import daqui, quem precisar dela e não puder pagar %q vai COPIAR — e foi\n"+
 				"uma cópia dessas que quebrou o desacento em silêncio.",
-				nome, caminho, caminho)
+				name, path, path)
 		}
 	}
 
-	if visitados == 0 {
+	if visited == 0 {
 		t.Fatal("nenhum arquivo .go visitado — o guarda ficou cego")
 	}
 }
@@ -64,15 +64,15 @@ func TestSearchImportsNothing(t *testing.T) {
 // no endereço, este prende a função. Duas camadas, e é deliberado — foi
 // exatamente aqui que a cópia divergiu do original.
 func TestFoldDropsAccentsAndCase(t *testing.T) {
-	casos := map[string]string{
+	cases := map[string]string{
 		"Atuação": "atuacao",
 		"Anão":    "anao",
 		"ÉBANO":   "ebano",
 		"luta":    "luta",
 	}
-	for entrada, esperado := range casos {
-		if obtido := Fold(entrada); obtido != esperado {
-			t.Errorf("Fold(%q) = %q, esperado %q", entrada, obtido, esperado)
+	for entry, want := range cases {
+		if obtained := Fold(entry); obtained != want {
+			t.Errorf("Fold(%q) = %q, esperado %q", entry, obtained, want)
 		}
 	}
 }

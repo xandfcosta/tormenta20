@@ -43,27 +43,27 @@ func TestTheFrameLeavesInTheWireFormat(t *testing.T) {
 // fila inteira à mesa e passaria por todo teste que só conta mensagens.
 func TestTheRoleNarrowsTheRecipient(t *testing.T) {
 	h := NewSSEHub()
-	mestre := h.Add(7, "c1", "gm")
-	jogador := h.Add(7, "c2", "player")
+	gm := h.Add(7, "c1", "gm")
+	player := h.Add(7, "c2", "player")
 
 	h.Emit(7, "gm", "session-state", map[string]any{"segredo": true})
 
-	if recebe(t, mestre) == "" {
+	if recebe(t, gm) == "" {
 		t.Error("o mestre não recebeu o que era dele")
 	}
-	if got := recebe(t, jogador); got != "" {
+	if got := recebe(t, player); got != "" {
 		t.Errorf("o jogador recebeu o quadro do mestre: %q", got)
 	}
 }
 
 func TestAnEmptyRoleGoesToEveryone(t *testing.T) {
 	h := NewSSEHub()
-	mestre := h.Add(7, "c1", "gm")
-	jogador := h.Add(7, "c2", "player")
+	gm := h.Add(7, "c1", "gm")
+	player := h.Add(7, "c2", "player")
 
 	h.Emit(7, "", "presence", map[string]any{"users": []string{}})
 
-	if recebe(t, mestre) == "" || recebe(t, jogador) == "" {
+	if recebe(t, gm) == "" || recebe(t, player) == "" {
 		t.Error("papel vazio tinha de alcançar os dois")
 	}
 }
@@ -71,11 +71,11 @@ func TestAnEmptyRoleGoesToEveryone(t *testing.T) {
 // Sessão vizinha não escuta a sala alheia.
 func TestAnotherSessionDoesNotReceive(t *testing.T) {
 	h := NewSSEHub()
-	deOutraMesa := h.Add(8, "c1", "gm")
+	fromOtherTable := h.Add(8, "c1", "gm")
 
 	h.Emit(7, "", "session-state", map[string]any{})
 
-	if got := recebe(t, deOutraMesa); got != "" {
+	if got := recebe(t, fromOtherTable); got != "" {
 		t.Errorf("vazou para a sessão 8: %q", got)
 	}
 }
@@ -90,8 +90,8 @@ func TestAnotherSessionDoesNotReceive(t *testing.T) {
 // caminho da primeira carga.
 func TestASlowReaderDoesNotBlockTheBroadcast(t *testing.T) {
 	h := NewSSEHub()
-	lento := h.Add(7, "c1", "gm")
-	rapido := h.Add(7, "c2", "gm")
+	slow := h.Add(7, "c1", "gm")
+	fast := h.Add(7, "c2", "gm")
 	// Enche a fila do lento sem ninguém consumir.
 	for i := 0; i < sseBuffer+5; i++ {
 		h.Emit(7, "", "session-state", map[string]any{"i": i})
@@ -99,11 +99,11 @@ func TestASlowReaderDoesNotBlockTheBroadcast(t *testing.T) {
 
 	// Se o `Emit` bloqueasse, o teste não chegaria aqui. E o rápido tem de ter
 	// recebido — a perda é DELE, não da mesa.
-	if len(lento.Frames) != sseBuffer {
-		t.Errorf("fila do lento = %d, queria estar cheia em %d", len(lento.Frames), sseBuffer)
+	if len(slow.Frames) != sseBuffer {
+		t.Errorf("fila do lento = %d, queria estar cheia em %d", len(slow.Frames), sseBuffer)
 	}
-	if len(rapido.Frames) != sseBuffer {
-		t.Errorf("o leitor rápido também perdeu quadros: %d", len(rapido.Frames))
+	if len(fast.Frames) != sseBuffer {
+		t.Errorf("o leitor rápido também perdeu quadros: %d", len(fast.Frames))
 	}
 }
 
@@ -118,7 +118,7 @@ func TestLeavingClosesTheQueueAndVanishesFromTheRoom(t *testing.T) {
 	}
 	// A fila fechada é o que faz o laço do handler terminar; sem isso a
 	// goroutine da requisição vazaria a cada reconexão.
-	if _, aberta := <-conn.Frames; aberta {
+	if _, open := <-conn.Frames; open {
 		t.Error("a fila continuou aberta depois de sair")
 	}
 }

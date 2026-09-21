@@ -21,25 +21,25 @@ import (
 // e um vilão recorrente não guarda o dano da semana passada.
 type Block struct {
 	ND         float64 `json:"nd"`
-	Tipo       string  `json:"tipo"`
+	Kind       string  `json:"tipo"`
 	Size       string  `json:"size"`
-	Iniciativa int     `json:"iniciativa"`
-	Percepcao  int     `json:"percepcao"`
-	Defesa     int     `json:"defesa"`
+	Initiative int     `json:"iniciativa"`
+	Perception int     `json:"percepcao"`
+	Defense    int     `json:"defesa"`
 	Fortitude  int     `json:"fortitude"`
-	Reflexos   int     `json:"reflexos"`
-	Vontade    int     `json:"vontade"`
+	Reflex     int     `json:"reflexos"`
+	Will       int     `json:"vontade"`
 	HP         int     `json:"hp"`
 	// PM é ponteiro porque a maioria das criaturas não tem a linha: o Bandido
 	// não conjura, e um zero ali diria "tem mana e está sem", que é outra coisa.
 	PM               *int     `json:"pm,omitempty"`
-	Deslocamento     string   `json:"deslocamento"`
-	Forca            int      `json:"forca"`
-	Destreza         int      `json:"destreza"`
-	Constituicao     int      `json:"constituicao"`
-	Inteligencia     int      `json:"inteligencia"`
-	Sabedoria        int      `json:"sabedoria"`
-	Carisma          int      `json:"carisma"`
+	Speed            string   `json:"deslocamento"`
+	Strength         int      `json:"forca"`
+	Dexterity        int      `json:"destreza"`
+	Constitution     int      `json:"constituicao"`
+	Intelligence     int      `json:"inteligencia"`
+	Wisdom           int      `json:"sabedoria"`
+	Charisma         int      `json:"carisma"`
 	Attacks          []Attack `json:"attacks"`
 	Skills           []Skill  `json:"skills"`
 	Equipment        string   `json:"equipment"`
@@ -75,7 +75,7 @@ type Attack struct {
 type Skill struct {
 	Name  string `json:"name"`
 	Bonus int    `json:"bonus"`
-	// Nota é o bônus CONDICIONAL que o livro escreve entre parênteses depois do
+	// Note é o bônus CONDICIONAL que o livro escreve entre parênteses depois do
 	// número — "Furtividade +4 (+14 em pântanos)" na Hidra (p306). Irmã do
 	// `Special` do ataque, e pela mesma razão: é prosa que o livro grudou numa
 	// linha estruturada.
@@ -85,7 +85,7 @@ type Skill struct {
 	//
 	// SEM `omitempty` pela mesma razão do `Special` do ataque: ela é uma caixa de
 	// texto do editor, e ausente ela chegaria escrita "undefined".
-	Nota string `json:"nota"`
+	Note string `json:"nota"`
 }
 
 // creatureTipos são os tipos de criatura do livro. Fechado porque o livro os
@@ -131,8 +131,8 @@ func Validate(name string, b *Block) error {
 	if b.ND < 0 {
 		return fmt.Errorf("o ND é %v, e precisa ser 0 ou mais", b.ND)
 	}
-	if !creatureTipos[b.Tipo] {
-		return fmt.Errorf("o tipo %q não é um dos tipos de criatura do livro", b.Tipo)
+	if !creatureTipos[b.Kind] {
+		return fmt.Errorf("o tipo %q não é um dos tipos de criatura do livro", b.Kind)
 	}
 	if !creatureSizes[b.Size] {
 		return fmt.Errorf("o tamanho %q não é um dos tamanhos do livro", b.Size)

@@ -445,7 +445,7 @@ func noteBlock(v View, b markdown.Block) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for i, linha := range b.Linhas {
+			for i, linha := range b.Rows {
 				if i > 0 {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<br>")
 					if templ_7745c5c3_Err != nil {
@@ -516,7 +516,7 @@ func noteTitle(b markdown.Block) templ.Component {
 			templ_7745c5c3_Var19 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		switch b.Nivel {
+		switch b.Level {
 		case 1:
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<h2 class=\"font-heading text-base tracking-wide text-grimorio-gold\">")
 			if templ_7745c5c3_Err != nil {
@@ -587,12 +587,12 @@ func noteList(v View, b markdown.Block) templ.Component {
 			templ_7745c5c3_Var20 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if b.Ordenada {
+		if b.Sorted {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<ol class=\"list-decimal space-y-0.5 pl-5\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, it := range b.Itens {
+			for _, it := range b.Items {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<li>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -615,12 +615,12 @@ func noteList(v View, b markdown.Block) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, it := range b.Itens {
+			for _, it := range b.Items {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<li class=\"flex items-start gap-1.5\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if it.Tarefa == nil {
+				if it.Task == nil {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<span aria-hidden=\"true\" class=\"select-none text-muted-foreground\">•</span>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -665,15 +665,15 @@ func noteItem(v View, it markdown.Item) templ.Component {
 			templ_7745c5c3_Var21 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if it.Tarefa != nil {
+		if it.Task != nil {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<button type=\"button\" role=\"checkbox\" aria-checked=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var22 string
-			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(marked(it.Tarefa.Marcada))
+			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(marked(it.Task.Marked))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 224, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 224, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 			if templ_7745c5c3_Err != nil {
@@ -684,9 +684,9 @@ func noteItem(v View, it markdown.Item) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var23 string
-			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleTaskNote(v, *it.Tarefa))
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleTaskNote(v, *it.Task))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 225, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 225, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 			if templ_7745c5c3_Err != nil {
@@ -696,7 +696,7 @@ func noteItem(v View, it markdown.Item) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if it.Tarefa.Marcada {
+			if it.Task.Marked {
 				templ_7745c5c3_Err = ui.Icon("SquareCheck", "size-4 shrink-0 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -707,7 +707,7 @@ func noteItem(v View, it markdown.Item) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			var templ_7745c5c3_Var24 = []any{templ.KV("text-muted-foreground line-through", it.Tarefa.Marcada)}
+			var templ_7745c5c3_Var24 = []any{templ.KV("text-muted-foreground line-through", it.Task.Marked)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

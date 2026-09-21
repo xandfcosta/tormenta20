@@ -39,7 +39,7 @@ func TestTheCurtainComesBackFromTheDatabase(t *testing.T) {
 // movimento proposto sobre um tabuleiro que mudou desde então.
 //
 // O que este teste NÃO prova, e eu escrevi errado antes de medir: que sem o bump
-// a mesa não veria a cortina. O `EmitOrdered` descarta com `Seq < ultimaSeq` —
+// a mesa não veria a cortina. O `EmitOrdered` descarta com `Seq < lastSeq` —
 // estritamente menor —, então versão repetida passa. Tirei o bump, subi o
 // servidor e o e2e de dois clientes seguiu verde. O guarda continua valendo pelo
 // primeiro motivo; a consequência dramática é que era invenção minha.

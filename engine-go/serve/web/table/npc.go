@@ -148,7 +148,7 @@ func putNpcTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		return nil, err
 	}
 	novo := live.CombatantDraft{
-		Label: linha.Name, Initiative: bloco.Iniciativa, HP: int64(bloco.HP), Kind: "npc",
+		Label: linha.Name, Initiative: bloco.Initiative, HP: int64(bloco.HP), Kind: "npc",
 	}
 	if err := live.ValidateCombatantDraft(novo); err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func putNpcTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// `creatureId` liga a LINHA ao bloco guardado, e é o que faz o olho da fila
 	// abrir a ficha certa. É o mesmo campo que o `monsterId` do bestiário usa
 	// para apontar o verbete — um diz "veio do livro", o outro "é do elenco".
-	iniciativa, pv, blocoID := int64(bloco.Iniciativa), int64(bloco.HP), linha.ID
+	iniciativa, pv, blocoID := int64(bloco.Initiative), int64(bloco.HP), linha.ID
 	entrada, err := st.queue.Roster().Entry(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID,
 		initiative.EntryRequest{
 			Label: linha.Name, Initiative: &iniciativa, Kind: "npc",
@@ -233,9 +233,9 @@ func resumoDoBloco(b creature.Block) string {
 	// outra — e o mestre não teria como saber qual das duas está certa.
 	partes := []string{
 		"ND " + book.CRWritten(b.ND),
-		book.TypeName(b.Tipo) + " " + book.SizeName(b.Size),
+		book.TypeName(b.Kind) + " " + book.SizeName(b.Size),
 		"PV " + strconv.Itoa(b.HP),
-		"Defesa " + strconv.Itoa(b.Defesa),
+		"Defesa " + strconv.Itoa(b.Defense),
 	}
 	return strings.Join(partes, " · ")
 }

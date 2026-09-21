@@ -37,11 +37,11 @@ var nightRestFactor = map[string]float64{
 //	sheet.NightRestGain(7, "normal") // 7  — o Helior na estalagem
 //	sheet.NightRestGain(7, "ruim")   // 3  — e não 4: o livro desce
 func NightRestGain(level int64, condition string) int64 {
-	fator, conhecida := nightRestFactor[condition]
-	if !conhecida {
-		fator = nightRestFactor["normal"]
+	factor, known := nightRestFactor[condition]
+	if !known {
+		factor = nightRestFactor["normal"]
 	}
-	return int64(math.Floor(float64(level) * fator))
+	return int64(math.Floor(float64(level) * factor))
 }
 
 // RestedVitals são os PV e PM ATUAIS em que uma noite de descanso deixa a ficha.
@@ -60,11 +60,11 @@ type RestedVitals struct {
 //	sheet.AfterNightRest(7, "normal", sheet.RestedVitals{HpCurrent: 10, MpCurrent: 2}, 20, 5)
 //	// {17, 5} — o PM bateu no teto de 5
 func AfterNightRest(
-	level int64, condition string, atuais RestedVitals, hpMax, mpMax int64,
+	level int64, condition string, current RestedVitals, hpMax, mpMax int64,
 ) RestedVitals {
-	ganho := NightRestGain(level, condition)
+	gain := NightRestGain(level, condition)
 	return RestedVitals{
-		HpCurrent: min(hpMax, atuais.HpCurrent+ganho),
-		MpCurrent: min(mpMax, atuais.MpCurrent+ganho),
+		HpCurrent: min(hpMax, current.HpCurrent+gain),
+		MpCurrent: min(mpMax, current.MpCurrent+gain),
 	}
 }

@@ -295,10 +295,10 @@ func saveNotes(v View) string {
 
 func toggleTaskNote(v View, t markdown.Task) string {
 	estado := "marcar"
-	if t.Marcada {
+	if t.Marked {
 		estado = "desmarcar"
 	}
-	return fmt.Sprintf("@post('%s/tarefa/%d/%s')", notesAddress(v), t.Linha, estado)
+	return fmt.Sprintf("@post('%s/tarefa/%d/%s')", notesAddress(v), t.Row, estado)
 }
 
 func marked(marcada bool) string {
