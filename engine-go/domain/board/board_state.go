@@ -118,14 +118,14 @@ type BoardState struct {
 	// DOMÍNIO: as quatro não são variantes de uma coisa só. O difícil muda o
 	// CUSTO DO MOVIMENTO e é consumido por regra (`PathCost`, e o alcance que
 	// acende as casas); os outros três mudam Defesa, chance de falha e ataque, e
-	// hoje não são consumidos por nada — alimentam o OLHO, porque o app não
-	// resolve ataque contra Defesa em lugar nenhum. Um mapa afirmaria que são
-	// intercambiáveis, e a Tabela 5-3 diz que não; e chave de string ainda
-	// convida ao erro mudo, com `"elevated"` contra `"elevated"` virando lista
-	// vazia sem estourar.
+	// hoje não são consumidos por nada — alimentam o OLHO. O ataque se resolve
+	// entre LINHAS DA FILA (`engine.ResolveAttack`, ALE-364) e não sabe em que
+	// casa as peças estão. Um mapa afirmaria que são intercambiáveis, e a
+	// Tabela 5-3 diz que não; e chave de string ainda convida ao erro mudo, com
+	// `"elevated"` contra `"elevado"` virando lista vazia sem estourar.
 	//
 	// A assimetria é a parte que importa e a que um mapa esconderia: ela é
-	// exatamente o que quem for implementar a resolução de ataque precisa ver.
+	// exatamente o que quem for ligar o terreno ao ataque precisa ver.
 	//
 	// A repetição está contida no `listForKind`, que é o único lugar que sabe
 	// qual lista guarda qual espécie.
