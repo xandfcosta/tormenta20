@@ -38,6 +38,9 @@ templ gmControls(v View, r viewGm) {
 		if r.Upkeep != "" {
 			<p aria-live="polite" class="text-xs text-grimorio-gold">{ r.Upkeep }</p>
 		}
+		// O TESTE DE QUEM SANGRA, também uma linha própria: ele é da vez que está
+		// na tela e some no giro, como a manutenção (p236).
+		@bleedingPrompt(v)
 		// A RECUSA de um comando, e ela mora aqui e não na caixa de registrar: o
 		// mestre que também joga tem as duas na tela, e a frase do "Adicionar
 		// grupo" acesa dentro do "Registrar iniciativa" seria a frase certa no

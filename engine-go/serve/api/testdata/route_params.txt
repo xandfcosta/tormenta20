@@ -29,6 +29,7 @@ characterId
 classe
 cond
 cor
+die
 efeito
 entryId
 escolha

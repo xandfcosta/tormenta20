@@ -18,6 +18,8 @@ import (
 // View é uma tela inteira da Mesa. Campos exportados porque `html/template`
 // não enxerga os minúsculos — a única razão, e ela é do pacote de template.
 type View struct {
+	// Bleeding é o teste de quem sangra, pendente na vez (p236) — nil fora dele.
+	Bleeding *bleedingView
 	// Status é o ciclo da sessão — `planned`, `active` ou `ended`. Ele decide
 	// QUAIS verbos a tela oferece: o servidor recusa encerrar o que nunca
 	// começou, e um botão que existe para levar recusa é um erro desenhado.
@@ -86,6 +88,9 @@ type tableBar struct {
 	Current int64
 	Max     int64
 	Pct     int
+	// Down é a palavra de quem caiu — morrendo, estável, morto —, só em barra
+	// de PV de ficha (ver `downed.go`).
+	Down string
 	// Hidden é "o mestre está escondendo ESTE pool da mesa".
 	//
 	// Mora na BARRA e não na linha porque a decisão é por pool: o PV do grupo
@@ -222,6 +227,9 @@ func portraitLabel(l tableRow) string {
 // a tela.
 func barLabel(label string, b tableBar) string {
 	sentence := fmt.Sprintf("%s %d de %d", label, b.Current, b.Max)
+	if b.Down != "" {
+		sentence += ", " + b.Down
+	}
 	if b.Temp > 0 {
 		sentence += fmt.Sprintf(", mais %d temporários", b.Temp)
 	}

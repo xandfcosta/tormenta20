@@ -154,7 +154,17 @@ templ heroStage(h HeroCard, anterior, next *ui.Neighbor) {
 templ heroVitals(h HeroCard) {
 	<dl class="flex items-center justify-center gap-5 text-sm">
 		@oneVital("DEF", h.Defense, "", false)
-		@oneVital("PV", h.PV, h.PVInk, false)
+		// O PV não passa pelo `oneVital` porque carrega uma segunda parte: a
+		// palavra de quem caiu, DENTRO do mesmo `<dd>` (p236, ALE-366).
+		<div class="flex items-baseline gap-1.5">
+			<dt class={ ui.FieldLabelClasses("muted", "") }>PV</dt>
+			<dd class={ "font-mono text-lg font-semibold tabular-nums", h.PVInk }>
+				{ h.PV }
+				if h.PVDown != "" {
+					<span class={ "ml-1 font-sans text-xs", ui.DownedInk(h.PVDown) }>{ h.PVDown }</span>
+				}
+			</dd>
+		</div>
 		@oneVital("PM", h.PM, "text-[color:var(--mp-arcane)]", h.NoMana)
 	</dl>
 }

@@ -362,6 +362,11 @@ templ vitalBar(v View, label string, vital sheetVital, dimmed bool) {
 		// faria a ficha anunciar "PV 39 de 40" e "39/40" em seguida — duas vozes
 		// para o mesmo dado.
 		<span data-vital={ label } class="shrink-0 font-mono text-sm tabular-nums text-foreground">{ vital.Fraction }</span>
+		// A PALAVRA de quem caiu segue a fração: sem ela, o morto e o que está a
+		// –3 são a mesma barra vazia (p236, ALE-366).
+		if vital.Down != "" {
+			<span class={ "shrink-0 text-xs font-semibold", ui.DownedInk(vital.Down) }>{ vital.Down }</span>
+		}
 		// A RESERVA é uma parcela à parte, e ela SÓ NASCE quando existe: sem
 		// poça a fileira fica igual à de sempre, sem um "+0" que não quer dizer
 		// nada.

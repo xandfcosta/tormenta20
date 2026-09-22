@@ -2,6 +2,7 @@ package characters
 
 import (
 	"context"
+	"slices"
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
@@ -56,7 +57,10 @@ type HeroCard struct {
 	// cartão e não no `templ` porque quem decide é a view — o componente só pinta o
 	// que recebe.
 	PVInk string
-	PM    string
+	// PVDown é a palavra de quem caiu — morrendo, estável, morto (p236) —, que
+	// segue o número; vazia de pé.
+	PVDown string
+	PM     string
 	// Defesa é TEXTO e não número porque ela pode ser desconhecida, e aí é um
 	// travessão: nunca um zero, que é um valor de Defesa plausível e errado. O
 	// travessão também mantém a fileira do mesmo tamanho — uma coluna que some faz
@@ -140,11 +144,13 @@ func HeroCardOf(catalogs *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 		Level:    c.Level,
 		PV:       vital(c.HpCurrent, c.HpMax),
 		PVInk:    ui.HpInkTone(ui.VitalPercent(c.HpCurrent, c.HpMax)),
-		PM:       vital(c.MpCurrent, c.MpMax),
-		NoMana:   c.MpMax == 0,
-		Race:     mainRace(c),
-		Origin:   c.Origin,
-		Classes:  ClassesOf(c),
+		PVDown: ui.DownedWord(c.HpCurrent, c.HpMax,
+			slices.Contains(sheet.UnmarshalStrings(c.ActiveConditions), engine.ConditionBleeding)),
+		PM:      vital(c.MpCurrent, c.MpMax),
+		NoMana:  c.MpMax == 0,
+		Race:    mainRace(c),
+		Origin:  c.Origin,
+		Classes: ClassesOf(c),
 	}
 	// A DEFESA vem da mesma `ComputeSheet` que a ficha usa, e do agregado JÁ
 	// carregado — ver `sheet.Compute`. Sem motor (catálogo não primado) o cartão
@@ -235,5 +241,5 @@ func mainRace(c sheet.CharacterDTO) string {
 }
 
 func vital(current, max int64) string {
-	return strconv.FormatInt(current, 10) + "/" + strconv.FormatInt(max, 10)
+	return ui.HitPoints(current) + "/" + strconv.FormatInt(max, 10)
 }

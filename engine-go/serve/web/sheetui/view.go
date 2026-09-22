@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/characters"
 )
@@ -97,30 +98,11 @@ type View struct {
 type sheetClass struct {
 	Name  string
 	Level int64
-	// CanRaise e PodeDescer são a elegibilidade do livro, e elas são POR CLASSE
+	// CanRaise e CanLower são a elegibilidade do livro, e elas são POR CLASSE
 	// e não do personagem: descer uma classe de nível 1 a apagaria, e subir com
 	// o total em 20 (p32) passaria do teto.
 	CanRaise bool
 	CanLower bool
-}
-
-type sheetVital struct {
-	Current int64
-	Max     int64
-	// Fraction é "12/20", que é como a mesa fala.
-	Fraction string
-	// Percent é a largura da barra, entre 0 e 100.
-	Percent int
-	// Temp é o PV TEMPORÁRIO, e ele é uma parcela À PARTE e não um somando.
-	//
-	// A barra continua sendo o PV de verdade: somar o temporário ao atual faria
-	// um herói a 50/137 com 70 de reserva desenhar 88% de vida com 36% de
-	// carne. O livro autoriza os dois desenhos — *"são somados a seus pontos
-	// atuais, mesmo que ultrapassem o máximo"* (p106) —, e o que decide é a
-	// pergunta que a barra responde, que é "quanto apanhei".
-	//
-	// Vazio quer dizer que não há reserva, e aí a fileira fica IGUAL à de antes.
-	Temp string
 }
 
 // Tab é uma das sete seções da ficha.
@@ -202,7 +184,7 @@ func (s Scene) Load(
 		Summary:   card.Summary,
 		Level:     dto.Level,
 		Defense:   card.DefenseVs,
-		PV:        withTempHp(vital(dto.HpCurrent, dto.HpMax), dto.ActiveEffects),
+		PV:        withTempHp(downed(vital(dto.HpCurrent, dto.HpMax), dto.ActiveConditions), dto.ActiveEffects),
 		PM:        vital(dto.MpCurrent, dto.MpMax),
 		NoMana:    dto.MpMax == 0,
 		Classes:   card.Classes,
@@ -229,47 +211,6 @@ func (s Scene) Load(
 		v.Tabs = append(v.Tabs, item)
 	}
 	return v, 200, nil
-}
-
-// vital monta a barra de PV ou PM.
-//
-// A FRAÇÃO é o que a mesa fala em voz alta ("doze de vinte"), e a porcentagem é
-// só a largura da barra. Máximo ZERO não vira divisão por zero nem barra cheia:
-// quem não tem mana tem a barra vazia e apagada.
-func vital(current, max int64) sheetVital {
-	v := sheetVital{Current: current, Max: max, Fraction: strconv.FormatInt(current, 10) + "/" + strconv.FormatInt(max, 10)}
-	if max <= 0 {
-		return v
-	}
-	pct := int(current * 100 / max)
-	if pct < 0 {
-		pct = 0
-	}
-	if pct > 100 {
-		pct = 100
-	}
-	v.Percent = pct
-	return v
-}
-
-// withTempHp acrescenta ao PV a reserva que os efeitos ativos carregam.
-//
-// A conta é do `sheet` (`TempHpTotal`), e a leitura NÃO custa consulta: o
-// agregado já traz os efeitos, porque a aba Efeitos os desenha.
-//
-// PM não ganha o mesmo: o livro tem pontos de mana temporários (p106) e este
-// app ainda não os modela — o motor só conhece o alvo `tempMp` como
-// modificador, e nada os gasta. Desenhar um número que nada consome seria pior
-// que não desenhá-lo.
-func withTempHp(v sheetVital, effects []sheet.EffectDTO) sheetVital {
-	blobs := make([]string, 0, len(effects))
-	for _, e := range effects {
-		blobs = append(blobs, e.Modifiers)
-	}
-	if total := sheet.TempHpTotal(blobs); total > 0 {
-		v.Temp = "+" + strconv.Itoa(total)
-	}
-	return v
 }
 
 // sheetRoute é PARA ONDE se abre uma ficha no app — uma função e não um
