@@ -49,10 +49,15 @@ func TestEachCatalogOffersItsOwnFilters(t *testing.T) {
 
 // A regra de combinação: soma dentro do filtro, multiplica entre filtros.
 //
-// Medido na tela: 198 magias, 39 no 3º círculo, 6 no 3º círculo E da escola de
+// Medido na tela: 198 magias, 40 no 3º círculo, 6 no 3º círculo E da escola de
 // evocação. Os números ficam presos porque são o que separa "filtrou" de
-// "filtrou do jeito certo" — um E virando OU daria 39 + as evocações todas, que
+// "filtrou do jeito certo" — um E virando OU daria 40 + as evocações todas, que
 // também é uma lista plausível.
+//
+// O 3º círculo era 39 e virou 40 na ALE-340: o Contato Extraplanar (p186) está
+// no livro como `Arcana 3` e o catálogo o tinha como 2. Este guarda foi quem
+// ACUSOU a correção — é o efeito de prender o número, e não o sinal de que ela
+// esteja errada.
 func TestTheFilterAddsWithinAndMultipliesAcross(t *testing.T) {
 	all := len(book.Catalogs().Spells)
 	if all != 198 {
@@ -60,8 +65,8 @@ func TestTheFilterAddsWithinAndMultipliesAcross(t *testing.T) {
 	}
 
 	third := quantasMagias(map[string][]string{"circulo": {"3"}})
-	if third != 39 {
-		t.Errorf("%d magias de 3º círculo, esperado 39", third)
+	if third != 40 {
+		t.Errorf("%d magias de 3º círculo, esperado 40", third)
 	}
 	// OU dentro do mesmo filtro: 3º ou 4º é mais que só 3º.
 	twoCircles := quantasMagias(map[string][]string{"circulo": {"3", "4"}})
