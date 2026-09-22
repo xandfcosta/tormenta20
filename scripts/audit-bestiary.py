@@ -115,7 +115,7 @@ def texto_da_pagina(pagina: int) -> str:
 
 
 PRIMEIRA, ULTIMA = 292, 322  # PDF; livro = PDF - 6
-BESTIARIO = '/mnt/HD/projects/tormenta20/engine-go/catalog/data/bestiary.json'
+BESTIARIO = '/mnt/HD/projects/tormenta20/engine-go/domain/catalog/data/bestiary.json'
 LIXO = re.compile(r'Mateus Santos|mateush\.santos|^Capítulo|^\d{1,3}$|fim de coluna')
 MENOS = '–−—'  # o livro usa travessão, não hífen, nos negativos
 
