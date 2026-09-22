@@ -502,26 +502,32 @@ em inglês inteiros, não os do diff. **O nome que você CHAMA de fora e não va
 tocar segue o que está lá**, porque renomear o chamado obriga a varrer todos os
 chamadores.
 
-O resto tem CATRACA (`TestNoNewIdentifierIsWrittenInPortuguese`): a dívida antiga
-mora numa linha de base que **só pode encolher** — nome novo reprova com o nome
-dele, e nome baselinado que sumiu reprova também, senão o arquivo vira mentira
-sozinho.
+**Parâmetro, variável local e campo também são identificador**, e nome de teste
+também — um nome de teste não tem chamador, então ele é o mais barato de todos
+para sair certo na primeira vez.
 
-**Parâmetro, variável local e campo também são identificador**, e o guarda acima
-só vê declaração de TOPO — foi por esse buraco que passaram ~6.700 nomes
-(ALE-367). Quem os cobra é o `TestNoLocalNameIsWrittenInPortuguese`, com linha de
-base VAZIA: Go por AST (inclusive o `_templ.go`, cujo nome se renomeia no
-`.templ`) e, no TypeScript, `const`/`let` e parâmetro de arrow. O vocabulário
-dele é maior que o do guarda de topo — as palavras que este código de fato
-usou —, e nome próprio entra na lista `properNouns` do guarda, e só nome
-próprio.
+### Isto NÃO tem guarda, e é decisão do dono
 
-> A diferença entre a metade com guarda e a sem não foi cuidado, foi varredura: a
-> com guarda saiu 100% em inglês, a sem produziu 39 identificadores em português
-> em sete fatias seguidas (ALE-300).
+Havia quatro — um para declaração de topo, um para nome local, um para nome de
+teste e um para nome de arquivo —, com 1.620 linhas entre código e linhas de
+base. **Eles foram apagados.**
 
-**Nome de teste foi varrido de uma vez** (`TestEveryTestNameIsEnglish`), e o
-motivo é estrutural: um nome de teste **não tem chamador**.
+A razão é o que eles mediam. Idioma não é uma propriedade que um `map[string]bool`
+decida: os três primeiros perguntavam "esta palavra está numa lista de palavras
+portuguesas que eu conheço?", e a resposta era não para quase toda palavra
+portuguesa que ainda não tinha mordido alguém. Uma lista de PROIBIDOS subconta em
+silêncio — é a armadilha que a seção "O INSTRUMENTO MENTE" já nomeia —, e aqui
+ela subcontava sem nem ter um denominador para denunciar a subcontagem.
+
+O quarto invertia o erro e ficava pior de conviver: como lista de PERMITIDOS, o
+de nome de arquivo reprovava toda palavra INGLESA que ele ainda não conhecesse.
+Numa sessão só ele barrou `context`, `nested`, `request`, `read` e `swallowed` —
+cinco arquivos legítimos —, e cada um custava uma linha de manutenção numa lista
+que ninguém lê.
+
+**A regra continua valendo inteira; o que mudou é quem a cobra.** Ela se confere
+no OLHO, na revisão, como a composição de uma tela — e pela mesma razão: a
+máquina julga LIMIAR e LIGAÇÃO, e "isto é português?" não é nenhum dos dois.
 
 O conceito continua sendo o do livro — o que muda é a grafia. `sheet`, e não
 `characterData`: a tradução é do TERMO do glossário, não uma oportunidade de

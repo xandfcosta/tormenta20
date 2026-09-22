@@ -123,7 +123,14 @@ var citacaoDeTeste = regexp.MustCompile(`\bTest[A-Z]\w+`)
 //
 // Ou seja: 120 defeitos de documentação viviam neste repositório sem que nada os
 // acusasse. Este guarda é o que impede o 121º.
+//
+// O `declaracaoDeTeste` morava no `test_names_test.go`, que foi apagado junto
+// com os outros três guardas de IDIOMA — eles deixavam passar português demais
+// para valerem a manutenção das linhas de base, e a conferência de idioma
+// passou a ser de olho (decisão do dono). O que este guarda faz não tem nada a
+// ver com idioma: ele confere CITAÇÃO, e por isso fica.
 func TestNoCitationNamesAMissingTest(t *testing.T) {
+	declaracaoDeTeste := regexp.MustCompile(`(?m)^func (Test\w+)`)
 	declared := map[string]bool{}
 	files := arquivosParaCitacao(t)
 	for _, path := range files {
