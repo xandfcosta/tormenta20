@@ -131,3 +131,46 @@ func TestEveryCorrectedSpellCircleMatchesTheBook(t *testing.T) {
 		}
 	}
 }
+
+// ONDE CADA APRIMORAMENTO MORA, para os que estavam na magia ERRADA (ALE-340).
+//
+// Cinco aprimoramentos existiam no catálogo pendurados na magia vizinha da que
+// os tem no livro — não faltava transcrever, faltava MOVER. E eles contavam
+// duas vezes no relatório do auditor: como falta numa magia e como sobra na
+// outra.
+//
+// O que se prende aqui é a CONTAGEM de cada ponta, e ela basta para o defeito
+// não voltar: ele era sempre um par, uma magia inchada e a vizinha esvaziada.
+//
+// A PALAVRA PRIMORDIAL com ZERO é o caso que mais precisa de guarda, e é o mais
+// fácil de "consertar" de volta: o corpo dela no livro (p200) é uma lista de
+// efeitos a escolher — Atordoar, Cegar, Matar —, e a magia termina ali. Uma
+// lista de zero parece buraco para quem não foi ao livro.
+func TestEveryMovedAugmentIsOnTheRightSpell(t *testing.T) {
+	placed := []struct {
+		spell string
+		count int
+		page  int
+		// why explica a ponta: de onde veio ou para onde foi.
+		why string
+	}{
+		{"ancora-dimensional", 5, 179, "quatro destes estavam na Amarras Etéreas, a vizinha de página"},
+		{"amarras-etereas", 3, 179, "ela carregava quatro da Âncora Dimensional, e faltava o dela"},
+		{"palavra-primordial", 0, 200, "o livro não lhe dá aprimoramento nenhum: o corpo é a lista de efeitos"},
+		{"potencia-divina", 3, 201, "o terceiro estava na Palavra Primordial"},
+		{"conjurar-mortos-vivos", 3, 186, "tinha uma CÓPIA do +1 PM da Consagrar, que já tem o dela"},
+		{"consagrar", 3, 186, "o dono do +1 PM que a Conjurar Mortos-Vivos duplicava"},
+	}
+	spells := readSpells(t)
+	for _, p := range placed {
+		row, found := spells[p.spell]
+		if !found {
+			t.Errorf("a magia %q sumiu do catálogo", p.spell)
+			continue
+		}
+		if got := len(row.Augments); got != p.count {
+			t.Errorf("%s tem %d aprimoramentos e o livro (p%d) dá %d — %s",
+				p.spell, got, p.page, p.count, p.why)
+		}
+	}
+}
