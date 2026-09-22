@@ -61,7 +61,7 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 	// O id da entrada é do SERVIDOR (`live.AddEntry` sobrescreve o que vem do cliente),
 	// então o teste lê de volta o que ele gerou em vez de inventar um.
 	Add := func(label, kind string, characterID *int64) string {
-		state, err := srv.sessions.AddInitiativeEntry(sess.ID, live.InitiativeEntry{
+		state, err := srv.sessions.AddInitiativeEntry(context.Background(), sess.ID, live.InitiativeEntry{
 			Label: label, Initiative: 10, Type: kind, CharacterID: characterID,
 		})
 		if err != nil {

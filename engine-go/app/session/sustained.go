@@ -24,7 +24,7 @@ import (
 // não havia nada a cobrar. O banco é a fonte da verdade — sem ele não temos
 // certeza de nada, e uma mesa que segue jogando sobre uma incerteza é pior que
 // uma mesa parada, porque ninguém fica sabendo (decisão do dono).
-func (st *Store) payUpkeep(u Unit, s *live.SessionRuntimeState) error {
+func (st *Store) payUpkeep(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
 	if !s.Scene.CountsRounds() || u.TurnEffects == nil {
 		return nil
 	}
@@ -35,7 +35,7 @@ func (st *Store) payUpkeep(u Unit, s *live.SessionRuntimeState) error {
 	if entry.CharacterID == nil {
 		return nil
 	}
-	effects, err := u.TurnEffects.SustainedOf(context.Background(), *entry.CharacterID)
+	effects, err := u.TurnEffects.SustainedOf(ctx, *entry.CharacterID)
 	if err != nil {
 		return fmt.Errorf("ler as sustentadas de %s: %w", entry.Label, err)
 	}
@@ -54,7 +54,7 @@ func (st *Store) payUpkeep(u Unit, s *live.SessionRuntimeState) error {
 	// acabado de entrar na fila tem `MpCurrent` nulo até a primeira operação de
 	// vitais. Ler dali derrubaria a Velocidade de quem está com o mana cheio, e
 	// o teste que prende isto começou vermelho exatamente assim.
-	pools, err := u.Sheet.PoolsOf(context.Background(), []int64{*entry.CharacterID})
+	pools, err := u.Sheet.PoolsOf(ctx, []int64{*entry.CharacterID})
 	if err != nil {
 		return fmt.Errorf("ler o mana de %s: %w", entry.Label, err)
 	}
@@ -66,7 +66,7 @@ func (st *Store) payUpkeep(u Unit, s *live.SessionRuntimeState) error {
 	// quem sabe é o motor.
 	upkeep := engine.PaySustained(ids, mana, engine.MomentFor(true, pool.HpCurrent, nil))
 	for _, id := range upkeep.Dropped {
-		if err := u.TurnEffects.EndSustained(context.Background(), *entry.CharacterID, id); err != nil {
+		if err := u.TurnEffects.EndSustained(ctx, *entry.CharacterID, id); err != nil {
 			return fmt.Errorf("derrubar %s de %s: %w", name[id], entry.Label, err)
 		}
 	}
@@ -85,7 +85,7 @@ func (st *Store) payUpkeep(u Unit, s *live.SessionRuntimeState) error {
 	// unidade e a linha espelha o resultado, tudo antes de o retrato ser
 	// gravado (ALE-373).
 	spent := int64(-upkeep.Cost)
-	hp, mp, err := u.Sheet.ApplyDelta(context.Background(), *entry.CharacterID, nil, &spent)
+	hp, mp, err := u.Sheet.ApplyDelta(ctx, *entry.CharacterID, nil, &spent)
 	if err != nil {
 		return fmt.Errorf("cobrar a manutenção de %s: %w", entry.Label, err)
 	}
@@ -116,7 +116,7 @@ func labelsOf(ids []string, name map[string]string) []string {
 // O erro SOBE e desfaz a vez (ALE-373): um efeito que devia ter acabado e
 // continua ligado na ficha é pior que um clique recusado, porque a mesa segue
 // jogando sem saber.
-func (st *Store) expireTurnEffects(u Unit, s *live.SessionRuntimeState) error {
+func (st *Store) expireTurnEffects(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
 	if !s.Scene.CountsRounds() || u.TurnEffects == nil {
 		return nil
 	}
@@ -124,7 +124,7 @@ func (st *Store) expireTurnEffects(u Unit, s *live.SessionRuntimeState) error {
 		if entry.CharacterID == nil {
 			continue
 		}
-		if err := u.TurnEffects.ExpireTurnEffects(context.Background(), *entry.CharacterID); err != nil {
+		if err := u.TurnEffects.ExpireTurnEffects(ctx, *entry.CharacterID); err != nil {
 			return fmt.Errorf("expirar os efeitos de vez de %s: %w", entry.Label, err)
 		}
 	}

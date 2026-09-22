@@ -3,6 +3,7 @@ package api
 import "t20engine/domain/live"
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"sync"
@@ -47,7 +48,7 @@ func TestTheFrameFollowsTheOrderOfTheMutation(t *testing.T) {
 			wg.Add(1)
 			go func(label string) {
 				defer wg.Done()
-				state, err := s.sessions.AddInitiativeEntry(sessionID, live.InitiativeEntry{
+				state, err := s.sessions.AddInitiativeEntry(context.Background(), sessionID, live.InitiativeEntry{
 					Label: label, Type: "npc", Initiative: 10,
 				})
 				if err != nil {

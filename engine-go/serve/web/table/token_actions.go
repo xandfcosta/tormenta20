@@ -183,7 +183,7 @@ func (s Scene) bondForMode(c commandCtx, mode string, template *board.BoardToken
 		}
 		templateRow.CreatureID = &newBlock
 	}
-	nova, err := s.addsACopyOfTheLine(c.SessionID, templateRow)
+	nova, err := s.addsACopyOfTheLine(c.R.Context(), c.SessionID, templateRow)
 	if err != nil {
 		return nil, err
 	}
@@ -258,9 +258,9 @@ func (s Scene) nextNameForTheLine(ctx context.Context, sessionID int64, label st
 // ORDENA a fila por iniciativa depois de inserir, então a recém-chegada pode
 // pousar em qualquer posição. Pegar `Initiative[len-1]` daria a de menor
 // iniciativa da mesa, e daria certo por acaso sempre que o zumbi fosse lento.
-func (s Scene) addsACopyOfTheLine(sessionID int64, template live.InitiativeEntry) (*live.InitiativeEntry, error) {
+func (s Scene) addsACopyOfTheLine(ctx context.Context, sessionID int64, template live.InitiativeEntry) (*live.InitiativeEntry, error) {
 	before := map[string]bool{}
-	state, err := s.deps.Sessions().State(context.Background(), sessionID)
+	state, err := s.deps.Sessions().State(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +274,7 @@ func (s Scene) addsACopyOfTheLine(sessionID int64, template live.InitiativeEntry
 		full := live.DerefOr(template.HpMax, 0)
 		nova.HpCurrent, nova.HpMax = &full, &full
 	}
-	after, err := s.deps.Sessions().AddInitiativeEntry(sessionID, nova)
+	after, err := s.deps.Sessions().AddInitiativeEntry(ctx, sessionID, nova)
 	if err != nil {
 		return nil, err
 	}

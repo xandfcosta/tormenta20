@@ -119,16 +119,16 @@ func (f sceneFixture) scene(t *testing.T) {
 	t.Helper()
 	hidden := true
 	pv, pvMax := int64(12), int64(130)
-	if _, err := f.s.sessions.StartScene(f.sessionID, live.SceneAction); err != nil {
+	if _, err := f.s.sessions.StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
-	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
 		Label: "Ogro cansado", Initiative: 19, Type: "npc",
 		HpHidden: &hidden, HpCurrent: &pv, HpMax: &pvMax,
 	}); err != nil {
 		t.Fatalf("semear ogro: %v", err)
 	}
-	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
 		Label: "Arcanista", Initiative: 12, Type: "character", CharacterID: &f.charID,
 	}); err != nil {
 		t.Fatalf("semear PC: %v", err)

@@ -39,7 +39,7 @@ func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 	f := newSceneFixture(t)
 	// Fila CHEIA e cena DESLIGADA: é o mestre montando a briga antes de começar.
-	if _, err := f.s.tableHost().Sessions().AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
+	if _, err := f.s.tableHost().Sessions().AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
 		Label: "Chefe secreto", Initiative: 22, Type: "npc",
 	}); err != nil {
 		t.Fatalf("semear chefe: %v", err)
@@ -204,7 +204,7 @@ func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 	f := newSceneFixture(t)
 	sub, stop := f.s.tableHost().Bus().Subscribe(events.OfSession(f.sessionID))
 
-	if _, err := f.s.tableHost().Sessions().StartScene(f.sessionID, live.SceneAction); err != nil {
+	if _, err := f.s.tableHost().Sessions().StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	select {
@@ -220,7 +220,7 @@ func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 	// um canal para sempre, e o `Publish` passa a percorrer uma lista que só
 	// cresce escrevendo em canais que ninguém lê.
 	stop()
-	if _, err := f.s.tableHost().Sessions().EndScene(f.sessionID); err != nil {
+	if _, err := f.s.tableHost().Sessions().EndScene(context.Background(), f.sessionID); err != nil {
 		t.Fatalf("encerrar cena: %v", err)
 	}
 	select {

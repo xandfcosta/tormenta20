@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -279,7 +280,7 @@ func TestMarkingAConditionOnAnNPCRowStaysOnTheQueue(t *testing.T) {
 func TestAStunMarkedAtTheTableStopsTheCharacterFromActing(t *testing.T) {
 	f := newSceneFixture(t)
 	startCombatWithSomeoneElseOnTurn(t, f)
-	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
+	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil {
 		t.Fatalf("passar a vez ao personagem: %v", err)
 	}
 	var pc string
@@ -292,10 +293,10 @@ func TestAStunMarkedAtTheTableStopsTheCharacterFromActing(t *testing.T) {
 	if rec := learnAndCast(t, f, "luz"); sceneRefusal(rec.Body) != "" {
 		t.Fatalf("o controle falhou: a magia foi recusada antes do Atordoado: %q", sceneRefusal(rec.Body))
 	}
-	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil { // volta ao goblin
+	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil { // volta ao goblin
 		t.Fatalf("girar: %v", err)
 	}
-	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil { // e ao personagem, com o turno inteiro
+	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil { // e ao personagem, com o turno inteiro
 		t.Fatalf("girar: %v", err)
 	}
 	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+pc+"/condicao/atordoado", ""); rec.Code != http.StatusOK {

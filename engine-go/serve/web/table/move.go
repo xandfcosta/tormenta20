@@ -131,7 +131,7 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	// conferência e a cobrança o `CommitMove` ainda pode recusar — e aí o turno
 	// não é cobrado, que é o lado seguro dos dois.
 	if onTurn {
-		if err := st.deps.Sessions().ActionFits(c.SessionID, engine.ActionMovement); err != nil {
+		if err := st.deps.Sessions().ActionFits(c.R.Context(), c.SessionID, engine.ActionMovement); err != nil {
 			return nil, err
 		}
 	}
@@ -140,7 +140,7 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil || !onTurn {
 		return boardState, err
 	}
-	if _, err := st.deps.Sessions().SpendAction(c.SessionID, engine.ActionMovement); err != nil {
+	if _, err := st.deps.Sessions().SpendAction(c.R.Context(), c.SessionID, engine.ActionMovement); err != nil {
 		return boardState, err
 	}
 	return boardState, nil

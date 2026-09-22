@@ -49,11 +49,11 @@ func proposesAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 }
 
 func confirmsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	return st.deps.Sessions().CommitAttack(c.SessionID, live.Attacker{UserID: c.User, Role: c.Role})
+	return st.deps.Sessions().CommitAttack(c.R.Context(), c.SessionID, live.Attacker{UserID: c.User, Role: c.Role})
 }
 
 func cancelsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	return st.deps.Sessions().CancelAttack(c.SessionID, live.Attacker{UserID: c.User, Role: c.Role})
+	return st.deps.Sessions().CancelAttack(c.R.Context(), c.SessionID, live.Attacker{UserID: c.User, Role: c.Role})
 }
 
 // attackCommand escreve o `@post` dos dois verbos da faixa.

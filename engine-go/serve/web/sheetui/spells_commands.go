@@ -46,7 +46,7 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals
 	// recusada pelo grimório, pela preparação ou pelo PM — cobrar antes tiraria
 	// a padrão de alguém por uma magia que nunca saiu.
 	cost := engine.ActionCost(spell.Execution)
-	if err := s.deps.ActionFitsOnTurn(row.ID, cost); err != nil {
+	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
 		return err
 	}
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
@@ -56,5 +56,5 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals
 	if err := s.plays.Cast(r.Context(), dto, spellID, signals.augments()); err != nil {
 		return err
 	}
-	return s.deps.SpendActionOnTurn(row.ID, cost)
+	return s.deps.SpendActionOnTurn(r.Context(), row.ID, cost)
 }

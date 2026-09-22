@@ -183,7 +183,7 @@ func sendsForTable(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		}
 		// O parcial volta junto com o erro: quatro goblins que entraram são o
 		// estado da mesa, e o `gmCommand` o transmite.
-		if state, err = st.deps.Sessions().AddInitiativeEntry(c.SessionID, row); err != nil {
+		if state, err = st.deps.Sessions().AddInitiativeEntry(c.R.Context(), c.SessionID, row); err != nil {
 			return state, err
 		}
 	}

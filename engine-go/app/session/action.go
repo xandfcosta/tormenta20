@@ -22,8 +22,8 @@ import (
 // FORA DA CENA DE AÇÃO ela não cobra nada e não recusa: numa conversa na corte
 // não há turno, e um gesto que fosse recusado ali estaria cobrando uma regra
 // que o livro não aplica (p252).
-func (st *Store) SpendAction(sessionID int64, cost engine.ActionCost) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
+func (st *Store) SpendAction(ctx context.Context, sessionID int64, cost engine.ActionCost) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.TurnAdvanced{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { return chargeTurn(s, cost) })
 }
 
@@ -44,8 +44,8 @@ func chargeTurn(s *live.SessionRuntimeState, cost engine.ActionCost) error {
 // aplicar parece equivalente e não é: a peça pousa na casa nova e a recusa vira
 // só uma frase vermelha embaixo do mapa — a mesa lê o erro e vê o movimento
 // feito. Medido na tela, e prendido por `TestMovingOnYourTurnSpendsTheMovementAction`.
-func (st *Store) ActionFits(sessionID int64, cost engine.ActionCost) error {
-	state, err := st.State(context.Background(), sessionID)
+func (st *Store) ActionFits(ctx context.Context, sessionID int64, cost engine.ActionCost) error {
+	state, err := st.State(ctx, sessionID)
 	if err != nil {
 		return err
 	}
@@ -96,8 +96,8 @@ func whoIsOnTurn(s *live.SessionRuntimeState) string {
 // As DUAS perguntas são feitas em ordem, e a ordem é a das frases: primeiro se é
 // a hora (`UsableNow`), depois se sobrou (`ActionFits`). Invertida, quem tenta
 // agir fora da vez com o turno cheio ouviria "não sobrou ação".
-func (st *Store) CharacterActionFits(characterID int64, cost engine.ActionCost) error {
-	sessionID, moment, inScene, err := st.momentOf(characterID)
+func (st *Store) CharacterActionFits(ctx context.Context, characterID int64, cost engine.ActionCost) error {
+	sessionID, moment, inScene, err := st.momentOf(ctx, characterID)
 	if err != nil {
 		return err
 	}
@@ -107,35 +107,35 @@ func (st *Store) CharacterActionFits(characterID int64, cost engine.ActionCost) 
 	if err := engine.UsableNow(cost, moment); err != nil {
 		return err
 	}
-	return st.ActionFits(sessionID, cost)
+	return st.ActionFits(ctx, sessionID, cost)
 }
 
 // SpendCharacterAction cobra do turno o que o gesto FEITO custou.
-func (st *Store) SpendCharacterAction(characterID int64, cost engine.ActionCost) error {
-	sessionID, _, inScene, err := st.momentOf(characterID)
+func (st *Store) SpendCharacterAction(ctx context.Context, characterID int64, cost engine.ActionCost) error {
+	sessionID, _, inScene, err := st.momentOf(ctx, characterID)
 	if err != nil {
 		return err
 	}
 	if !inScene {
 		return nil
 	}
-	_, err = st.SpendAction(sessionID, cost)
+	_, err = st.SpendAction(ctx, sessionID, cost)
 	return err
 }
 
 // momentOf acha a cena de AÇÃO em que este personagem está e monta o instante
 // dele. O terceiro valor diz se há cena — sem ela os outros dois não querem
 // dizer nada.
-func (st *Store) momentOf(characterID int64) (int64, engine.ActionMoment, bool, error) {
+func (st *Store) momentOf(ctx context.Context, characterID int64) (int64, engine.ActionMoment, bool, error) {
 	for _, sessionID := range st.LiveSessionsWithCharacter(characterID) {
-		s, err := st.State(context.Background(), sessionID)
+		s, err := st.State(ctx, sessionID)
 		if err != nil {
 			return 0, engine.ActionMoment{}, false, err
 		}
 		if !s.CountsRounds() {
 			continue
 		}
-		return sessionID, st.characterMoment(characterID, isOnTurn(s, characterID)), true, nil
+		return sessionID, st.characterMoment(ctx, characterID, isOnTurn(s, characterID)), true, nil
 	}
 	return 0, engine.ActionMoment{}, false, nil
 }
@@ -156,12 +156,12 @@ func isOnTurn(s *live.SessionRuntimeState, characterID int64) bool {
 // pende para o lado de deixar jogar: recusar o gesto de alguém porque o banco
 // tossiu troca um número errado por uma mesa parada, e é o mesmo caminho que o
 // `payUpkeep` escolheu pela mesma razão.
-func (st *Store) characterMoment(characterID int64, onTurn bool) engine.ActionMoment {
+func (st *Store) characterMoment(ctx context.Context, characterID int64, onTurn bool) engine.ActionMoment {
 	standing := engine.ActionMoment{OnTurn: onTurn, CanAct: true, CanReact: true}
 	if st.sheet == nil || st.turnEffects == nil {
 		return standing
 	}
-	pools, err := st.sheet.PoolsOf(context.Background(), []int64{characterID})
+	pools, err := st.sheet.PoolsOf(ctx, []int64{characterID})
 	if err != nil {
 		return standing
 	}
@@ -169,7 +169,7 @@ func (st *Store) characterMoment(characterID int64, onTurn bool) engine.ActionMo
 	if !found {
 		return standing
 	}
-	conditions, err := st.turnEffects.ConditionsOf(context.Background(), characterID)
+	conditions, err := st.turnEffects.ConditionsOf(ctx, characterID)
 	if err != nil {
 		conditions = nil
 	}

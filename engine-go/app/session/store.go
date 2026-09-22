@@ -115,8 +115,8 @@ func (st *Store) LiveSessionsWithCharacter(characterID int64) []int64 {
 // dentro (ver `events.Bus.Publish`), mas quem acorda agora sabe o que houve e
 // pode ler o estado na hora — publicar sob a trava faria esse leitor esperar
 // pelo escritor no exato instante em que foi acordado para ler.
-func (st *Store) apply(sessionID int64, ev events.Event, fn func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error) {
-	clone, err := st.applyLocked(sessionID, fn)
+func (st *Store) apply(ctx context.Context, sessionID int64, ev events.Event, fn func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error) {
+	clone, err := st.applyLocked(ctx, sessionID, fn)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (st *Store) apply(sessionID int64, ev events.Event, fn func(*live.SessionRu
 // A `seq` nasce AQUI DENTRO e não na publicação: ela numera as mutações para o
 // hub reconhecer quadro atrasado, e decidir a sequência e entregar têm de ser
 // atômicos.
-func (st *Store) applyLocked(sessionID int64, fn func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error) {
+func (st *Store) applyLocked(ctx context.Context, sessionID int64, fn func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	// A GRAVAÇÃO É A MUTAÇÃO (ALE-371): o `Mutate` lê o retrato, deixa a regra
@@ -140,7 +140,7 @@ func (st *Store) applyLocked(sessionID int64, fn func(*live.SessionRuntimeState)
 	// numera as mutações para o hub reconhecer quadro atrasado, e numerar fora
 	// da ordem em que o banco as aceitou entregaria à tela o quadro velho por
 	// último.
-	saved, err := st.snapshots.Mutate(context.Background(), sessionID, fn)
+	saved, err := st.snapshots.Mutate(ctx, sessionID, fn)
 	if err != nil {
 		return nil, err
 	}
@@ -150,23 +150,23 @@ func (st *Store) applyLocked(sessionID int64, fn func(*live.SessionRuntimeState)
 	return clone, nil
 }
 
-func (st *Store) AddInitiativeEntry(sessionID int64, e live.InitiativeEntry) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.CombatantJoined{SessionID: sessionID, EntryID: e.ID},
+func (st *Store) AddInitiativeEntry(ctx context.Context, sessionID int64, e live.InitiativeEntry) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.CombatantJoined{SessionID: sessionID, EntryID: e.ID},
 		func(s *live.SessionRuntimeState) error { return live.AddEntry(s, e, st.newID) })
 }
 
-func (st *Store) UpsertInitiativeEntry(sessionID int64, e live.InitiativeEntry) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.CombatantJoined{SessionID: sessionID, EntryID: e.ID},
+func (st *Store) UpsertInitiativeEntry(ctx context.Context, sessionID int64, e live.InitiativeEntry) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.CombatantJoined{SessionID: sessionID, EntryID: e.ID},
 		func(s *live.SessionRuntimeState) error { return live.UpsertCharacterEntry(s, e, st.newID) })
 }
 
-func (st *Store) UpdateInitiativeEntry(sessionID int64, entryID string, patch live.EntryPatch) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.CombatantChanged{SessionID: sessionID, EntryID: entryID},
+func (st *Store) UpdateInitiativeEntry(ctx context.Context, sessionID int64, entryID string, patch live.EntryPatch) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.CombatantChanged{SessionID: sessionID, EntryID: entryID},
 		func(s *live.SessionRuntimeState) error { return live.UpdateEntry(s, entryID, patch) })
 }
 
-func (st *Store) RemoveInitiativeEntry(sessionID int64, entryID string) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.CombatantLeft{SessionID: sessionID, EntryID: entryID},
+func (st *Store) RemoveInitiativeEntry(ctx context.Context, sessionID int64, entryID string) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.CombatantLeft{SessionID: sessionID, EntryID: entryID},
 		func(s *live.SessionRuntimeState) error { return live.RemoveEntry(s, entryID) })
 }
 
@@ -184,33 +184,42 @@ func (st *Store) RemoveInitiativeEntry(sessionID int64, entryID string) (*live.S
 // consegue ler a ficha não sabe o que expirar nem o que cobrar, e seguir é
 // afirmar que não havia nada — decisão do dono, e é o princípio que sustenta a
 // fatia inteira: sem o banco não temos certeza de nada.
-func (st *Store) NextTurn(sessionID int64) (*live.SessionRuntimeState, error) {
-	return st.turnGesture(sessionID, func(u Unit, s *live.SessionRuntimeState) error {
+func (st *Store) NextTurn(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
+	return st.turnGesture(ctx, sessionID, func(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
 		// O FIM DA VEZ vem ANTES do começo da próxima: o que durava a vez que
 		// acaba tem de sair antes de alguém entrar na sua.
-		if err := st.expireTurnEffects(u, s); err != nil {
+		if err := st.expireTurnEffects(ctx, u, s); err != nil {
 			return err
 		}
 		live.AdvanceTurn(s)
-		return st.payUpkeep(u, s)
+		return st.payUpkeep(ctx, u, s)
 	})
 }
 
 // turnGesture é o corpo comum de quem gira a vez: abre a unidade, muta o
 // retrato dentro dela e só publica DEPOIS de a transação fechar — anunciar
 // antes seria contar à mesa um turno que o disco ainda pode recusar.
+//
+// O CONTEXTO QUE DESCE DAQUI CARREGA A UNIDADE (ALE-374), e é isso que arma a
+// rede do `Units.Do`: quem for chamado lá de dentro e abrir um `Do` REUSA a
+// transação aberta em vez de pedir a segunda conexão do pool — que é o impasse
+// da ALE-371, `SQLITE_BUSY` depois do `busy_timeout` inteiro. Sem esta linha a
+// reentrância existe escrita e nunca dispara, porque nenhum contexto carrega
+// unidade nenhuma.
 func (st *Store) turnGesture(
-	sessionID int64, change func(Unit, *live.SessionRuntimeState) error,
+	ctx context.Context, sessionID int64,
+	change func(context.Context, Unit, *live.SessionRuntimeState) error,
 ) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
 	var clone *live.SessionRuntimeState
-	err := st.units.Do(context.Background(), func(u Unit) error {
-		saved, err := u.Snapshots.Mutate(context.Background(), sessionID,
+	err := st.units.Do(ctx, func(u Unit) error {
+		inUnit := WithUnit(ctx, u)
+		saved, err := u.Snapshots.Mutate(inUnit, sessionID,
 			func(s *live.SessionRuntimeState) error {
-				if err := change(u, s); err != nil {
+				if err := change(inUnit, u, s); err != nil {
 					return err
 				}
-				return st.openBleedingCheck(u, s)
+				return st.openBleedingCheck(inUnit, u, s)
 			})
 		if err != nil {
 			return err
@@ -231,42 +240,42 @@ func (st *Store) turnGesture(
 // PreviousTurn volta a vez. Ele também é gesto de turno — a mesma unidade —,
 // mas não desfaz o que a vez que passou consumiu: voltar é conserto de mesa, e
 // ressuscitar efeito expirado exigiria guardar o que foi derrubado.
-func (st *Store) PreviousTurn(sessionID int64) (*live.SessionRuntimeState, error) {
-	return st.turnGesture(sessionID, func(_ Unit, s *live.SessionRuntimeState) error {
+func (st *Store) PreviousTurn(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
+	return st.turnGesture(ctx, sessionID, func(_ context.Context, _ Unit, s *live.SessionRuntimeState) error {
 		live.RewindTurn(s)
 		return nil
 	})
 }
 
-func (st *Store) Reset(sessionID int64) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.InitiativeReset{SessionID: sessionID},
+func (st *Store) Reset(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.InitiativeReset{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { live.ResetInitiative(s); return nil })
 }
 
-func (st *Store) StartScene(sessionID int64, kind live.SceneKind) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.SceneStarted{SessionID: sessionID},
+func (st *Store) StartScene(ctx context.Context, sessionID int64, kind live.SceneKind) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.SceneStarted{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { live.StartScene(s, kind); return nil })
 }
 
-func (st *Store) EndScene(sessionID int64) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.SceneEnded{SessionID: sessionID},
+func (st *Store) EndScene(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.SceneEnded{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { live.EndScene(s); return nil })
 }
 
 // PatchVitals fixa os vitais de uma entrada. Mesma regra do delta sobre quem é a
 // fonte; valor absoluto NÃO drena pool temporário, porque é uma afirmação sobre
 // o total e não uma pancada.
-func (st *Store) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*live.SessionRuntimeState, error) {
+func (st *Store) PatchVitals(ctx context.Context, sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*live.SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
-		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
+		return st.apply(ctx, sessionID, vitalsEvent(sessionID, entryID, nil),
 			patchEntryVitals(entryID, hpCurrent, mpCurrent))
 	}
-	hp, mp, err := st.sheet.ApplyAbsolute(context.Background(), *charID, hpCurrent, mpCurrent)
+	hp, mp, err := st.sheet.ApplyAbsolute(ctx, *charID, hpCurrent, mpCurrent)
 	if err != nil {
 		return nil, err
 	}
-	return st.apply(sessionID, vitalsEvent(sessionID, entryID, charID),
+	return st.apply(ctx, sessionID, vitalsEvent(sessionID, entryID, charID),
 		patchEntryVitals(entryID, hp, mp))
 }
 
@@ -283,19 +292,19 @@ func (st *Store) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurre
 // existe, não há o que espelhar e a ficha é a única a mudar — devolver o estado
 // como está é a resposta certa, e não um erro, porque "não está na fila" é o
 // caso comum aqui e não uma falha.
-func (st *Store) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpDelta *int64) (*live.SessionRuntimeState, error) {
-	hp, mp, err := st.sheet.ApplyDelta(context.Background(), characterID, hpDelta, mpDelta)
+func (st *Store) DeltaCharacterVitals(ctx context.Context, sessionID, characterID int64, hpDelta, mpDelta *int64) (*live.SessionRuntimeState, error) {
+	hp, mp, err := st.sheet.ApplyDelta(ctx, characterID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}
-	entryID, err := st.entryIDForCharacter(sessionID, characterID)
+	entryID, err := st.entryIDForCharacter(ctx, sessionID, characterID)
 	if err != nil {
 		return nil, err
 	}
 	if entryID == "" {
-		return st.State(context.Background(), sessionID)
+		return st.State(ctx, sessionID)
 	}
-	return st.apply(sessionID, vitalsEvent(sessionID, entryID, &characterID),
+	return st.apply(ctx, sessionID, vitalsEvent(sessionID, entryID, &characterID),
 		patchEntryVitals(entryID, hp, mp))
 }
 
@@ -305,8 +314,8 @@ func (st *Store) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpD
 // Vazio e não erro: no elenco, estar FORA da iniciativa é o estado normal — o
 // mestre cura a Arwen entre duas brigas —, e tratar isso como falha faria o
 // gesto recusar exatamente o caso que ele veio atender.
-func (st *Store) entryIDForCharacter(sessionID, characterID int64) (string, error) {
-	state, err := st.State(context.Background(), sessionID)
+func (st *Store) entryIDForCharacter(ctx context.Context, sessionID, characterID int64) (string, error) {
+	state, err := st.State(ctx, sessionID)
 	if err != nil {
 		return "", err
 	}
@@ -322,17 +331,17 @@ func (st *Store) entryIDForCharacter(sessionID, characterID int64) (string, erro
 // manda é a FICHA: o delta é aplicado na linha do personagem (dano drenando PV
 // temporários, como o endpoint de dano) e a entrada espelha o resultado. NPC não
 // tem ficha — ali o rastreador é o registro.
-func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*live.SessionRuntimeState, error) {
+func (st *Store) DeltaVitals(ctx context.Context, sessionID int64, entryID string, hpDelta, mpDelta *int64) (*live.SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
-		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
+		return st.apply(ctx, sessionID, vitalsEvent(sessionID, entryID, nil),
 			deltaEntryVitals(entryID, hpDelta, mpDelta))
 	}
-	hp, mp, err := st.sheet.ApplyDelta(context.Background(), *charID, hpDelta, mpDelta)
+	hp, mp, err := st.sheet.ApplyDelta(ctx, *charID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}
-	return st.apply(sessionID, vitalsEvent(sessionID, entryID, charID),
+	return st.apply(ctx, sessionID, vitalsEvent(sessionID, entryID, charID),
 		patchEntryVitals(entryID, hp, mp))
 }
 

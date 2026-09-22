@@ -205,12 +205,12 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 	seedEffect(t, s, charID, "heroismo", "day")
 
 	srv := s
-	if _, err := s.sessions.StartScene(sessionID, live.SceneAction); err != nil {
+	if _, err := s.sessions.StartScene(context.Background(), sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar a cena: %v", err)
 	}
 	// O Clérigo entra na FILA: sem ele lá, "quem não está na fila" seria todo
 	// mundo e o segundo teste não separaria nada.
-	if _, err := s.sessions.AddInitiativeEntry(sessionID, sheetCombatant("Clérigo", 14, charID)); err != nil {
+	if _, err := s.sessions.AddInitiativeEntry(context.Background(), sessionID, sheetCombatant("Clérigo", 14, charID)); err != nil {
 		t.Fatalf("pôr o Clérigo na fila: %v", err)
 	}
 	return endSceneFixture{

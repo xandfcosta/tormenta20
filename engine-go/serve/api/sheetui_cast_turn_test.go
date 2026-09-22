@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -41,19 +42,19 @@ func startCombatWithSomeoneElseOnTurn(t *testing.T, f sceneFixture) {
 	if _, err := store.State(t.Context(), f.sessionID); err != nil {
 		t.Fatalf("carregar a sessão: %v", err)
 	}
-	if _, err := store.StartScene(f.sessionID, live.SceneAction); err != nil {
+	if _, err := store.StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("começar a cena de ação: %v", err)
 	}
-	if _, err := store.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
+	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
 		ID: "npc", Label: "Goblin", Initiative: 20, Type: "npc",
 	}); err != nil {
 		t.Fatalf("pôr o NPC na fila: %v", err)
 	}
-	if _, err := store.AddInitiativeEntry(f.sessionID,
+	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID,
 		sheetCombatant("Arcanista", 5, f.charID)); err != nil {
 		t.Fatalf("pôr o personagem na fila: %v", err)
 	}
-	if _, err := store.NextTurn(f.sessionID); err != nil {
+	if _, err := store.NextTurn(context.Background(), f.sessionID); err != nil {
 		t.Fatalf("girar para a primeira vez: %v", err)
 	}
 	state := stateOf(t, store, f.sessionID)
@@ -92,7 +93,7 @@ func TestCastingOutOfTurnRefusesTheStandardAndAllowsTheReaction(t *testing.T) {
 func TestTheSecondStandardSpellOfATurnIsRefusedForLackOfAction(t *testing.T) {
 	f := newSceneFixture(t)
 	startCombatWithSomeoneElseOnTurn(t, f)
-	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
+	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil {
 		t.Fatalf("passar a vez ao personagem: %v", err)
 	}
 	state := stateOf(t, f.s.sessions, f.sessionID)
@@ -132,7 +133,7 @@ func TestCastingOutsideAnActionSceneCostsNoAction(t *testing.T) {
 func TestARefusedCastDoesNotSpendTheTurnAction(t *testing.T) {
 	f := newSceneFixture(t)
 	startCombatWithSomeoneElseOnTurn(t, f)
-	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
+	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil {
 		t.Fatalf("passar a vez ao personagem: %v", err)
 	}
 
