@@ -138,14 +138,19 @@ func (p Party) restOne(
 // mirrorToTracker copia os PV/PM recém-gravados para a linha viva do
 // rastreador, quando o personagem está na iniciativa, para as barras mudarem
 // sem recarga.
-func (p Party) mirrorToTracker(sessionID, characterID int64, vitals sheet.RestedVitals) {
-	for _, row := range p.sessions.GetState(sessionID).Initiative {
+func (p Party) mirrorToTracker(sessionID, characterID int64, vitals sheet.RestedVitals) error {
+	state, err := p.sessions.State(context.Background(), sessionID)
+	if err != nil {
+		return err
+	}
+	for _, row := range state.Initiative {
 		if row.CharacterID != nil && *row.CharacterID == characterID {
 			hp, mp := vitals.HpCurrent, vitals.MpCurrent
-			_, _ = p.sessions.PatchVitals(sessionID, row.ID, &hp, &mp)
-			return
+			_, err := p.sessions.PatchVitals(sessionID, row.ID, &hp, &mp)
+			return err
 		}
 	}
+	return nil
 }
 
 // memberCharacterIDs é o id do personagem de cada membro — o conjunto que um

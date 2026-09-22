@@ -2,7 +2,7 @@ package session
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"sync"
 
 	"t20engine/domain/live"
@@ -103,20 +103,6 @@ func (st *Store) LiveSessionsWithCharacter(characterID int64) []int64 {
 		}
 	}
 	return out
-}
-
-// GetState devolve um instantâneo do estado atual, lido do banco na primeira
-// vez. Se a leitura falha, o instantâneo é um rastreador VAZIO e NÃO fica em
-// memória: a próxima pergunta tenta o banco de novo.
-func (st *Store) GetState(sessionID int64) *live.SessionRuntimeState {
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	s, err := st.cachedLocked(context.Background(), sessionID)
-	if err != nil {
-		log.Printf("session %d: %v", sessionID, err)
-		return live.EmptyRuntimeState()
-	}
-	return live.CloneState(s)
 }
 
 // apply roda uma mutação pura sob a trava, publica o evento e devolve o
@@ -302,9 +288,12 @@ func (st *Store) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpD
 	if err != nil {
 		return nil, err
 	}
-	entryID := st.entryIDForCharacter(sessionID, characterID)
+	entryID, err := st.entryIDForCharacter(sessionID, characterID)
+	if err != nil {
+		return nil, err
+	}
 	if entryID == "" {
-		return st.GetState(sessionID), nil
+		return st.State(context.Background(), sessionID)
 	}
 	return st.apply(sessionID, vitalsEvent(sessionID, entryID, &characterID),
 		patchEntryVitals(entryID, hp, mp))
@@ -316,13 +305,17 @@ func (st *Store) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpD
 // Vazio e não erro: no elenco, estar FORA da iniciativa é o estado normal — o
 // mestre cura a Arwen entre duas brigas —, e tratar isso como falha faria o
 // gesto recusar exatamente o caso que ele veio atender.
-func (st *Store) entryIDForCharacter(sessionID, characterID int64) string {
-	for _, e := range st.GetState(sessionID).Initiative {
+func (st *Store) entryIDForCharacter(sessionID, characterID int64) (string, error) {
+	state, err := st.State(context.Background(), sessionID)
+	if err != nil {
+		return "", err
+	}
+	for _, e := range state.Initiative {
 		if e.CharacterID != nil && *e.CharacterID == characterID {
-			return e.ID
+			return e.ID, nil
 		}
 	}
-	return ""
+	return "", nil
 }
 
 // DeltaVitals move os vitais de uma entrada. Se há personagem atrás dela, quem
@@ -344,8 +337,12 @@ func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *
 }
 
 // RefreshCharacterVitals repergunta o POÇO INTEIRO — máximo e atual — de toda
-// entrada que tem personagem atrás. Melhor esforço: uma piscada do banco vira
-// log e devolve o instantâneo atual em vez de derrubar a leitura.
+// entrada que tem personagem atrás.
+//
+// ELA DEVOLVE ERRO desde a ALE-373: era "melhor esforço", logava a piscada do
+// banco e devolvia o instantâneo que tinha. O instantâneo que ela devolvia
+// nessa hora era o da memória, com os poços de antes — a mesa lia números
+// velhos achando que eram os de agora.
 //
 // # O atual TAMBÉM, e é isso que a ALE-358 consertou
 //
@@ -371,7 +368,7 @@ func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *
 // Havia um `clampCurrentTo` aqui para o caso de o máximo ENCOLHER com o atual
 // acima dele. Ele deixou de ter caso: o atual vem do poço derivado, que é
 // `máximo − dano` e já nasce na faixa (ALE-355).
-func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *live.SessionRuntimeState {
+func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
 	s, err := st.cachedLocked(ctx, sessionID)
 	var ids []int64
@@ -379,13 +376,15 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *l
 		ids = uniqueCharacterIDs(s)
 	}
 	st.Mu.Unlock()
+	if err != nil {
+		return nil, err
+	}
 	if len(ids) == 0 {
-		return st.GetState(sessionID)
+		return st.State(ctx, sessionID)
 	}
 	pools, err := st.sheet.PoolsOf(ctx, ids)
 	if err != nil {
-		log.Printf("session %d: hpMax refresh failed (%v)", sessionID, err)
-		return st.GetState(sessionID)
+		return nil, fmt.Errorf("reler os poços da sessão %d: %w", sessionID, err)
 	}
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
@@ -403,11 +402,10 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *l
 		return nil
 	})
 	if err != nil {
-		log.Printf("session %d: refrescar os poços falhou (%v)", sessionID, err)
-		return live.EmptyRuntimeState()
+		return nil, fmt.Errorf("gravar os poços refrescados da sessão %d: %w", sessionID, err)
 	}
 	st.States[sessionID] = saved
-	return live.CloneState(saved)
+	return live.CloneState(saved), nil
 }
 
 func uniqueCharacterIDs(s *live.SessionRuntimeState) []int64 {

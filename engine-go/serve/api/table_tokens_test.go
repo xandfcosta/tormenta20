@@ -11,7 +11,7 @@ import (
 
 func sceneIds(t *testing.T, f sceneFixture) (sheet, npc string) {
 	t.Helper()
-	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative {
 		switch e.Type {
 		case "character":
 			sheet = e.ID
@@ -151,7 +151,7 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	candidates := table.MapCandidates(b, f.s.tableHost().Sessions().GetState(f.sessionID))
+	candidates := table.MapCandidates(b, stateOf(t, f.s.tableHost().Sessions(), f.sessionID))
 	if len(candidates) != 2 {
 		t.Fatalf("a fila tem 2 combatentes e o diálogo ofereceu %d", len(candidates))
 	}

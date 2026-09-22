@@ -36,7 +36,7 @@ func TestDeletingACampaignForgetsItsSessionsFirst(t *testing.T) {
 	campaign := seedCampaign(t, s, owner)
 	session := seedSession(t, s, campaign)
 
-	if _, err := s.sessions.Load(ctx, session); err != nil {
+	if _, err := s.sessions.State(ctx, session); err != nil {
 		t.Fatalf("hidratar a sessão: %v", err)
 	}
 	if _, err := s.sessions.AddInitiativeEntry(session, npc("Goblin", 12)); err != nil {
@@ -44,7 +44,7 @@ func TestDeletingACampaignForgetsItsSessionsFirst(t *testing.T) {
 	}
 	// O CONTROLE: sem uma fila de verdade em memória, "a fila ficou vazia"
 	// depois seria verdade desde o começo e não testemunharia nada.
-	if n := len(s.sessions.GetState(session).Initiative); n != 1 {
+	if n := len(stateOf(t, s.sessions, session).Initiative); n != 1 {
 		t.Fatalf("a sessão tem %d na fila antes de apagar, e o caso precisa de 1", n)
 	}
 
@@ -54,9 +54,14 @@ func TestDeletingACampaignForgetsItsSessionsFirst(t *testing.T) {
 		t.Fatalf("excluir respondeu %d, queria 303", rec.Code)
 	}
 
-	if n := len(s.sessions.GetState(session).Initiative); n != 0 {
-		t.Errorf("a fila da sessão %d sobreviveu com %d combatente(s) depois de a campanha "+
+	// A LINHA SUMIU do banco com a cascata, então a leitura tem de FALHAR. Se ela
+	// responder, respondeu de MEMÓRIA — e memória que sobrevive à exclusão é
+	// exatamente o que este caso existe para pegar (ALE-373).
+	survivor, err := s.sessions.State(ctx, session)
+	if err == nil {
+		t.Errorf("a fila da sessão %d respondeu com %d combatente(s) depois de a campanha "+
 			"ser apagada.\nO estado em memória tem de ser esquecido ANTES da linha sumir: "+
-			"depois da cascata\nnão há como perguntar quais sessões eram.", session, n)
+			"depois da cascata\nnão há como perguntar quais sessões eram.",
+			session, len(survivor.Initiative))
 	}
 }

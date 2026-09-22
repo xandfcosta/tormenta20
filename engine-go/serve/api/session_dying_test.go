@@ -39,13 +39,13 @@ func TestFallingStabilizingWakingAndDyingFollowTheBook(t *testing.T) {
 	charID := seedCharacterAtLevel(t, s, gm, "A", "Guerreiro", 1, 10, 4)
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 12, charID)); err != nil {
 		t.Fatalf("Add: %v", err)
 	}
-	entryID := store.GetState(sid).Initiative[0].ID
+	entryID := stateOf(t, store, sid).Initiative[0].ID
 	pool := poolsOf(t, s, charID)
 	// O CONTROLE: o personagem começa de pé e sem condição, senão "caiu" mediria
 	// o estado de partida.
@@ -69,7 +69,7 @@ func TestFallingStabilizingWakingAndDyingFollowTheBook(t *testing.T) {
 		t.Errorf("a -3 PV as condições são %v, e o livro liga inconsciente e sangrando", got)
 	}
 	// E a FILA espelha o negativo: os dois números da tela são um só.
-	if mirror := live.DerefOr(store.GetState(sid).Initiative[0].HpCurrent, 0); mirror != -3 {
+	if mirror := live.DerefOr(stateOf(t, store, sid).Initiative[0].HpCurrent, 0); mirror != -3 {
 		t.Errorf("a fila mostra %d PV e a ficha tem -3", mirror)
 	}
 
@@ -108,7 +108,7 @@ func fallenCombatant(t *testing.T) (*Server, int64, int64) {
 	charID := seedCharacterAtLevel(t, s, gm, "A", "Guerreiro", 1, 10, 4)
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
@@ -121,7 +121,7 @@ func fallenCombatant(t *testing.T) (*Server, int64, int64) {
 		t.Fatalf("pôr o personagem: %v", err)
 	}
 	var entryID string
-	for _, e := range store.GetState(sid).Initiative {
+	for _, e := range stateOf(t, store, sid).Initiative {
 		if e.CharacterID != nil {
 			entryID = e.ID
 		}
@@ -133,7 +133,7 @@ func fallenCombatant(t *testing.T) (*Server, int64, int64) {
 	if _, err := store.NextTurn(sid); err != nil { // vez do goblin
 		t.Fatalf("girar: %v", err)
 	}
-	if st := store.GetState(sid); st.Scene.Bleeding != nil {
+	if st := stateOf(t, store, sid); st.Scene.Bleeding != nil {
 		t.Fatalf("o controle falhou: a vez é do goblin e já há teste de sangramento aberto")
 	}
 	if _, err := store.NextTurn(sid); err != nil { // vez de quem sangra
@@ -147,7 +147,7 @@ func fallenCombatant(t *testing.T) (*Server, int64, int64) {
 // Constituição — um 20 natural passa com qualquer Constituição plausível.
 func TestTheBleedingCheckOpensOnTheTurnAndPassingStabilizes(t *testing.T) {
 	s, sid, charID := fallenCombatant(t)
-	check := s.sessions.GetState(sid).Scene.Bleeding
+	check := stateOf(t, s.sessions, sid).Scene.Bleeding
 	if check == nil || check.CharacterID != charID || check.AwaitingD6 {
 		t.Fatalf("a vez chegou a quem sangra e o teste não abriu esperando o d20: %+v", check)
 	}
@@ -160,7 +160,7 @@ func TestTheBleedingCheckOpensOnTheTurnAndPassingStabilizes(t *testing.T) {
 	if hp := poolsOf(t, s, charID).HpCurrent; hp != -3 {
 		t.Errorf("passar não mexe no PV, e ele foi para %d", hp)
 	}
-	after := s.sessions.GetState(sid).Scene.Bleeding
+	after := stateOf(t, s.sessions, sid).Scene.Bleeding
 	if after == nil || after.Outcome == "" || after.AwaitingD6 {
 		t.Errorf("a faixa tem de dizer que estabilizou, e o teste ficou %+v", after)
 	}
@@ -178,7 +178,7 @@ func TestFailingTheBleedingCheckAsksForTheD6AndLosesIt(t *testing.T) {
 	if _, err := s.sessions.RollBleedingD20(sid, 1); err != nil {
 		t.Fatalf("mandar o d20: %v", err)
 	}
-	check := s.sessions.GetState(sid).Scene.Bleeding
+	check := stateOf(t, s.sessions, sid).Scene.Bleeding
 	if check == nil || !check.AwaitingD6 {
 		t.Fatalf("um 1 no d20 falha, e o teste tinha de esperar o d6: %+v", check)
 	}
@@ -196,7 +196,7 @@ func TestFailingTheBleedingCheckAsksForTheD6AndLosesIt(t *testing.T) {
 	if got := conditionsOf(t, s, charID); !reflect.DeepEqual(got, []string{"inconsciente", "sangrando"}) {
 		t.Errorf("falhou e continua sangrando, e as condições são %v", got)
 	}
-	if after := s.sessions.GetState(sid).Scene.Bleeding; after == nil || after.Outcome == "" || after.AwaitingD6 {
+	if after := stateOf(t, s.sessions, sid).Scene.Bleeding; after == nil || after.Outcome == "" || after.AwaitingD6 {
 		t.Errorf("a faixa tem de dizer quanto perdeu, e o teste ficou %+v", after)
 	}
 }
@@ -207,7 +207,7 @@ func TestTheNextTurnClearsAnUnansweredBleedingCheck(t *testing.T) {
 	if _, err := s.sessions.NextTurn(sid); err != nil {
 		t.Fatalf("girar: %v", err)
 	}
-	if check := s.sessions.GetState(sid).Scene.Bleeding; check != nil {
+	if check := stateOf(t, s.sessions, sid).Scene.Bleeding; check != nil {
 		t.Errorf("a vez saiu de quem sangra e o teste ficou aberto: %+v", check)
 	}
 }

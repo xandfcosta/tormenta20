@@ -101,8 +101,12 @@ func (s Scene) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square,
 }
 
 func (s Scene) propoePorParadas(c commandCtx, tokenID string, stops []engine.Square) (*board.BoardState, error) {
+	state, err := s.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
 	return s.deps.Boards().ProposeMoveWithStops(c.R.Context(), c.SessionID, c.BoardID,
-		s.deps.Sessions().GetState(c.SessionID), tokenID, stops, s.moveWho(c), 0)
+		state, tokenID, stops, s.moveWho(c), 0)
 }
 
 func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
@@ -110,7 +114,10 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	// confirma acabou de ver a cena que o servidor desenhou — não há uma versão
 	// vinda do cliente para conferir contra. A trava contra a mesa ter mudado
 	// continua sendo a REVALIDAÇÃO da vez, que o `CommitMove` faz de novo.
-	state := st.deps.Sessions().GetState(c.SessionID)
+	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
 	// QUEM ANDA É QUEM ESTÁ NA VEZ, e só então a ação é cobrada: o mestre move
 	// peça fora de turno o tempo todo — arrumando a cena, empurrando um NPC —, e
 	// cobrar dele a ação de outro combatente tiraria do turno de quem não se

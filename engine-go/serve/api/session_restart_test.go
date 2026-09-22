@@ -32,7 +32,7 @@ func TestACommandBeforeTheFirstPageActsOnTheStoredCombat(t *testing.T) {
 		t.Fatalf("passar a vez deu %d", rec.Code)
 	}
 
-	state := f.s.sessions.GetState(f.sessionID)
+	state := stateOf(t, f.s.sessions, f.sessionID)
 	if len(state.Initiative) != 2 {
 		t.Fatalf("o comando agiu sobre uma fila de %d linhas, e o banco tinha 2", len(state.Initiative))
 	}
@@ -57,7 +57,7 @@ func TestAReadBeforeTheFirstPageSeesTheStoredCombat(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("gravar o combate: %v", err)
 	}
-	if state := f.s.sessions.GetState(f.sessionID); len(state.Initiative) != 1 || state.TurnIndex != 0 {
+	if state := stateOf(t, f.s.sessions, f.sessionID); len(state.Initiative) != 1 || state.TurnIndex != 0 {
 		t.Errorf("a leitura antes do primeiro GET viu %d linhas e turnIndex %d; o banco tem 1 e 0",
 			len(state.Initiative), state.TurnIndex)
 	}

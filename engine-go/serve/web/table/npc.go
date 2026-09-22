@@ -85,7 +85,7 @@ func saveEntryCast(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// mapa. Devolver o estado mesmo assim é o que faz a cena ser redesenhada
 	// com a lista nova — o `gmCommand` remenda todas as regiões a partir
 	// dele, e sem isso o painel só mostraria o NPC no próximo F5.
-	return st.deps.Sessions().GetState(c.SessionID), nil
+	return st.deps.Sessions().State(c.R.Context(), c.SessionID)
 }
 
 // campaignNpc lê o NPC conferindo que ele é DESTA campanha.
@@ -163,7 +163,11 @@ func putNpcTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			HpCurrent: &pv, HpMax: &pv, CreatureID: &blockID,
 		})
 	if err != nil {
-		return st.deps.Sessions().GetState(c.SessionID), err
+		state, stateErr := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+		if stateErr != nil {
+			return nil, stateErr
+		}
+		return state, err
 	}
 	return st.deps.Sessions().AddInitiativeEntry(c.SessionID, entry)
 }
@@ -182,7 +186,7 @@ func eraseNpc(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if _, err := st.cast.Erase(c.R.Context(), st.callerOf(c.R), c.CampaignID, row.ID); err != nil {
 		return nil, castRefusal(err, strconv.Quote(row.Name))
 	}
-	return st.deps.Sessions().GetState(c.SessionID), nil
+	return st.deps.Sessions().State(c.R.Context(), c.SessionID)
 }
 
 // castNpc é um NPC guardado, já com o que a lista mostra.

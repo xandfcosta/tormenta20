@@ -39,6 +39,16 @@ func (d *snapshotsDouble) Mutate(_ context.Context, _ int64,
 	return live.CloneState(draft), nil
 }
 
+// stateOf lê a mesa e FALHA ALTO quando a leitura é recusada.
+func stateOf(t *testing.T, store *Store, sessionID int64) *live.SessionRuntimeState {
+	t.Helper()
+	state, err := store.State(context.Background(), sessionID)
+	if err != nil {
+		t.Fatalf("ler a mesa da sessão %d: %v", sessionID, err)
+	}
+	return state
+}
+
 func storeWithDouble(d *snapshotsDouble) *Store {
 	return NewStore(d, nil, func() string { return "id" }, nil, nil, &events.Bus{})
 }
@@ -56,7 +66,7 @@ func TestAWriteThatFailsRefusesTheCommandAndLeavesTheTableAsItWas(t *testing.T) 
 	if _, err := store.AddInitiativeEntry(7, live.InitiativeEntry{Label: "Ogro", Type: "npc"}); err != nil {
 		t.Fatalf("o controle falhou: %v", err)
 	}
-	if len(store.GetState(7).Initiative) != 1 {
+	if len(stateOf(t, store, 7).Initiative) != 1 {
 		t.Fatalf("o controle falhou: o ogro não entrou na fila")
 	}
 
@@ -68,7 +78,7 @@ func TestAWriteThatFailsRefusesTheCommandAndLeavesTheTableAsItWas(t *testing.T) 
 	if !errors.Is(err, double.refuse) {
 		t.Errorf("a recusa perdeu a causa pelo caminho: %v", err)
 	}
-	queue := store.GetState(7).Initiative
+	queue := stateOf(t, store, 7).Initiative
 	if len(queue) != 1 || queue[0].Label != "Ogro" {
 		t.Errorf("a fila que a mesa lê ficou %+v, e o goblin nunca foi gravado", queue)
 	}

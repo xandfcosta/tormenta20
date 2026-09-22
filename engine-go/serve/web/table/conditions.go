@@ -62,7 +62,10 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	if !catalog.IsCondition(id) {
 		return nil, fmt.Errorf("%q não é uma condição do livro (p394-395)", id)
 	}
-	state := st.deps.Sessions().GetState(c.SessionID)
+	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
 	i := live.FindEntryIndex(state, entryID)
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
@@ -119,5 +122,5 @@ func toggleSheetCondition(st Scene, c commandCtx, characterID int64, id string) 
 	}
 	// O conjunto novo volta no sinal pela razão do ramo do NPC, logo acima.
 	c.Signals["row_conditions"] = strings.Join(sheet.UnmarshalStrings(after.Activeconditions), ",")
-	return st.deps.Sessions().GetState(c.SessionID), nil
+	return st.deps.Sessions().State(c.R.Context(), c.SessionID)
 }

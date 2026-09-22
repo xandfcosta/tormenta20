@@ -16,7 +16,7 @@ func downFixture(t *testing.T) sceneFixture {
 	f := newSceneFixture(t)
 	startCombatWithSomeoneElseOnTurn(t, f)
 	var entryID string
-	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.sessions, f.sessionID).Initiative {
 		if e.CharacterID != nil && *e.CharacterID == f.charID {
 			entryID = e.ID
 		}
@@ -28,7 +28,7 @@ func downFixture(t *testing.T) sceneFixture {
 	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("girar para quem sangra: %v", err)
 	}
-	if f.s.sessions.GetState(f.sessionID).Scene.PendingBleeding(false) == nil {
+	if stateOf(t, f.s.sessions, f.sessionID).Scene.PendingBleeding(false) == nil {
 		t.Fatal("o controle falhou: a vez chegou a quem sangra e o teste não abriu")
 	}
 	return f
@@ -69,7 +69,7 @@ func TestOnlyTheOwnerOrTheGMAnswersTheBleedingCheck(t *testing.T) {
 	if !strings.Contains(refused, "só o dono da ficha ou o mestre") {
 		t.Errorf("outro jogador mandou o d20 do teste e a resposta foi %q", refused)
 	}
-	if f.s.sessions.GetState(f.sessionID).Scene.PendingBleeding(false) == nil {
+	if stateOf(t, f.s.sessions, f.sessionID).Scene.PendingBleeding(false) == nil {
 		t.Fatal("a recusa mexeu no teste mesmo assim")
 	}
 	// O dono manda um 1 (falha com qualquer Constituição plausível), e o
@@ -77,7 +77,7 @@ func TestOnlyTheOwnerOrTheGMAnswersTheBleedingCheck(t *testing.T) {
 	if body := send(f.player, "d20", 1); strings.Contains(body, "só o dono") {
 		t.Fatalf("o dono foi recusado: %q", body)
 	}
-	if f.s.sessions.GetState(f.sessionID).Scene.PendingBleeding(true) == nil {
+	if stateOf(t, f.s.sessions, f.sessionID).Scene.PendingBleeding(true) == nil {
 		t.Fatal("o d20 do dono não chegou: o teste não está esperando o d6")
 	}
 	if body := send(f.gm, "d6", 2); strings.Contains(body, "só o dono") {

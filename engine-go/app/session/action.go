@@ -45,7 +45,11 @@ func chargeTurn(s *live.SessionRuntimeState, cost engine.ActionCost) error {
 // só uma frase vermelha embaixo do mapa — a mesa lê o erro e vê o movimento
 // feito. Medido na tela, e prendido por `TestMovingOnYourTurnSpendsTheMovementAction`.
 func (st *Store) ActionFits(sessionID int64, cost engine.ActionCost) error {
-	_, _, err := spendsFromTurn(st.GetState(sessionID), cost)
+	state, err := st.State(context.Background(), sessionID)
+	if err != nil {
+		return err
+	}
+	_, _, err = spendsFromTurn(state, cost)
 	return err
 }
 
@@ -93,7 +97,10 @@ func whoIsOnTurn(s *live.SessionRuntimeState) string {
 // a hora (`UsableNow`), depois se sobrou (`ActionFits`). Invertida, quem tenta
 // agir fora da vez com o turno cheio ouviria "não sobrou ação".
 func (st *Store) CharacterActionFits(characterID int64, cost engine.ActionCost) error {
-	sessionID, moment, inScene := st.momentOf(characterID)
+	sessionID, moment, inScene, err := st.momentOf(characterID)
+	if err != nil {
+		return err
+	}
 	if !inScene {
 		return nil
 	}
@@ -105,26 +112,32 @@ func (st *Store) CharacterActionFits(characterID int64, cost engine.ActionCost) 
 
 // SpendCharacterAction cobra do turno o que o gesto FEITO custou.
 func (st *Store) SpendCharacterAction(characterID int64, cost engine.ActionCost) error {
-	sessionID, _, inScene := st.momentOf(characterID)
+	sessionID, _, inScene, err := st.momentOf(characterID)
+	if err != nil {
+		return err
+	}
 	if !inScene {
 		return nil
 	}
-	_, err := st.SpendAction(sessionID, cost)
+	_, err = st.SpendAction(sessionID, cost)
 	return err
 }
 
 // momentOf acha a cena de AÇÃO em que este personagem está e monta o instante
 // dele. O terceiro valor diz se há cena — sem ela os outros dois não querem
 // dizer nada.
-func (st *Store) momentOf(characterID int64) (int64, engine.ActionMoment, bool) {
+func (st *Store) momentOf(characterID int64) (int64, engine.ActionMoment, bool, error) {
 	for _, sessionID := range st.LiveSessionsWithCharacter(characterID) {
-		s := st.GetState(sessionID)
+		s, err := st.State(context.Background(), sessionID)
+		if err != nil {
+			return 0, engine.ActionMoment{}, false, err
+		}
 		if !s.CountsRounds() {
 			continue
 		}
-		return sessionID, st.characterMoment(characterID, isOnTurn(s, characterID)), true
+		return sessionID, st.characterMoment(characterID, isOnTurn(s, characterID)), true, nil
 	}
-	return 0, engine.ActionMoment{}, false
+	return 0, engine.ActionMoment{}, false, nil
 }
 
 // isOnTurn diz se a vez em curso é deste personagem.

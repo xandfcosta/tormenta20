@@ -10,7 +10,7 @@ import (
 // O guarda que justifica o app reusar `stateForRole` em vez de montar a
 // própria leitura: a PÁGINA obedece à mesma redação que o socket.
 //
-// Provado VERMELHO trocando `live.StateForRole(role, ...)` por `s.deps.Sessions().GetState(...)`
+// Provado VERMELHO trocando `live.StateForRole(role, ...)` por `stateOf(t, s.deps.Sessions(), ...)`
 // no `LoadView` — o HTML passou a carregar "12/130", os PV que o mestre
 // escondeu, para dentro da tela do jogador.
 // A vez é MINHA quando a linha na vez é de um personagem meu — e é "de outro"

@@ -1,6 +1,7 @@
 package table
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -149,7 +150,10 @@ func (s Scene) bondForMode(c commandCtx, mode string, template *board.BoardToken
 	if mode == modoSoAPeca {
 		return nil, nil
 	}
-	row := s.queueLineOf(c.SessionID, template)
+	row, err := s.queueLineOf(c.R.Context(), c.SessionID, template)
+	if err != nil {
+		return nil, err
+	}
 	if row == nil {
 		return nil, fmt.Errorf("%s não é um combatente da fila, e sem PV não há o que dividir nem o que copiar", template.Label)
 	}
@@ -168,7 +172,10 @@ func (s Scene) bondForMode(c commandCtx, mode string, template *board.BoardToken
 		if row.CreatureID == nil {
 			return nil, fmt.Errorf("%s não tem bloco de criatura: não há o que copiar", row.Label)
 		}
-		copyName := s.nextNameForTheLine(c.SessionID, row.Label)
+		copyName, err := s.nextNameForTheLine(c.R.Context(), c.SessionID, row.Label)
+		if err != nil {
+			return nil, err
+		}
 		newBlock, err := s.cast.CloneBlock(
 			c.R.Context(), s.callerOf(c.R), c.CampaignID, *row.CreatureID, copyName)
 		if err != nil {
@@ -180,9 +187,11 @@ func (s Scene) bondForMode(c commandCtx, mode string, template *board.BoardToken
 	if err != nil {
 		return nil, err
 	}
-	if queue := s.deps.Sessions().GetState(c.SessionID); queue != nil {
-		s.deps.PublishSessionState(c.SessionID, queue)
+	queue, err := s.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
 	}
+	s.deps.PublishSessionState(c.SessionID, queue)
 	return nova, nil
 }
 
@@ -199,20 +208,20 @@ const (
 )
 
 // queueLineOf é a linha da fila por trás de uma peça, ou nulo.
-func (s Scene) queueLineOf(sessionID int64, token *board.BoardToken) *live.InitiativeEntry {
+func (s Scene) queueLineOf(ctx context.Context, sessionID int64, token *board.BoardToken) (*live.InitiativeEntry, error) {
 	if token.EntryID == nil {
-		return nil
+		return nil, nil
 	}
-	state := s.deps.Sessions().GetState(sessionID)
-	if state == nil {
-		return nil
+	state, err := s.deps.Sessions().State(ctx, sessionID)
+	if err != nil {
+		return nil, err
 	}
 	for i := range state.Initiative {
 		if state.Initiative[i].ID == *token.EntryID {
-			return &state.Initiative[i]
+			return &state.Initiative[i], nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 // nextNameForTheLine é o nome que a cópia VAI receber, calculado ANTES de ela
@@ -223,16 +232,16 @@ func (s Scene) queueLineOf(sessionID int64, token *board.BoardToken) *live.Initi
 // A conta é a MESMA do `AddEntry` (o `numberedLabel`), e repeti-la aqui é o
 // preço de precisar do nome cedo. Quem numera de verdade continua sendo o
 // `AddEntry`; este valor só decide como o BLOCO se chama.
-func (s Scene) nextNameForTheLine(sessionID int64, label string) string {
-	state := s.deps.Sessions().GetState(sessionID)
-	if state == nil {
-		return label
+func (s Scene) nextNameForTheLine(ctx context.Context, sessionID int64, label string) (string, error) {
+	state, err := s.deps.Sessions().State(ctx, sessionID)
+	if err != nil {
+		return "", err
 	}
 	used := make([]string, 0, len(state.Initiative))
 	for i := range state.Initiative {
 		used = append(used, state.Initiative[i].Label)
 	}
-	return live.NextInstanceLabelAmong(used, label)
+	return live.NextInstanceLabelAmong(used, label), nil
 }
 
 // addsACopyOfTheLine põe na fila outra linha igual à dada, e devolve a que
@@ -251,10 +260,12 @@ func (s Scene) nextNameForTheLine(sessionID int64, label string) string {
 // iniciativa da mesa, e daria certo por acaso sempre que o zumbi fosse lento.
 func (s Scene) addsACopyOfTheLine(sessionID int64, template live.InitiativeEntry) (*live.InitiativeEntry, error) {
 	before := map[string]bool{}
-	if state := s.deps.Sessions().GetState(sessionID); state != nil {
-		for i := range state.Initiative {
-			before[state.Initiative[i].ID] = true
-		}
+	state, err := s.deps.Sessions().State(context.Background(), sessionID)
+	if err != nil {
+		return nil, err
+	}
+	for i := range state.Initiative {
+		before[state.Initiative[i].ID] = true
 	}
 	nova := template
 	nova.ID = ""

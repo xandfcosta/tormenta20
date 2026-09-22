@@ -31,9 +31,16 @@ func (st *Store) cachedLocked(ctx context.Context, sessionID int64) (*live.Sessi
 	return s, nil
 }
 
-// Load hidrata a mesa e devolve uma cópia. Ao contrário do `GetState`, ele
-// devolve o erro.
-func (st *Store) Load(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
+// State devolve a mesa desta sessão: do cache, ou do retrato gravado na
+// primeira vez.
+//
+// ELA DEVOLVE ERRO, e aqui morava uma leitura que não devolvia: ela logava a
+// falha de leitura e respondia um rastreador VAZIO. Fila vazia é uma resposta
+// como outra qualquer — a mesa em que ninguém entrou ainda tem exatamente essa
+// cara —, então o chamador seguia em frente afirmando um fato que o app não
+// tinha. O banco é a fonte da verdade: sem conseguir lê-lo não sabemos nada, e
+// dizer "não há ninguém na fila" é pior que recusar (ALE-373, decisão do dono).
+func (st *Store) State(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	s, err := st.cachedLocked(ctx, sessionID)

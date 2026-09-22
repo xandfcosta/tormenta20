@@ -133,7 +133,6 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 	"mutateBoard":            true,
 	"msgCtx":                 true,
 	"onSceneEnd":             true,
-	"onGetState":             true,
 	"notifyCharacterChanged": true,
 	"CharacterWatch":         true,
 	"persistAndWarn":         true,

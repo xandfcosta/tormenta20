@@ -146,8 +146,12 @@ func (q Queue) Roster() Roster { return q.roster }
 func (q Queue) PopulateParty(
 	sessionID int64, who []Combatant,
 ) (*live.SessionRuntimeState, error) {
+	current, err := q.sessions.State(context.Background(), sessionID)
+	if err != nil {
+		return nil, err
+	}
 	alreadyThere := map[int64]bool{}
-	for _, row := range q.sessions.GetState(sessionID).Initiative {
+	for _, row := range current.Initiative {
 		if row.CharacterID != nil {
 			alreadyThere[*row.CharacterID] = true
 		}

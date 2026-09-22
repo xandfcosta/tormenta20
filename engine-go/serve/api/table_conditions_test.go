@@ -13,7 +13,7 @@ import (
 
 func rowConditions(t *testing.T, f sceneFixture, entryID string) []string {
 	t.Helper()
-	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative {
 		if e.ID == entryID {
 			return e.Conditions
 		}
@@ -283,7 +283,7 @@ func TestAStunMarkedAtTheTableStopsTheCharacterFromActing(t *testing.T) {
 		t.Fatalf("passar a vez ao personagem: %v", err)
 	}
 	var pc string
-	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.sessions, f.sessionID).Initiative {
 		if e.CharacterID != nil {
 			pc = e.ID
 		}

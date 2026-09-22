@@ -107,7 +107,7 @@ func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 		t.Fatalf("a escrita não foi aceita, respondeu:\n%s", response)
 	}
 
-	state := f.s.tableHost().Sessions().GetState(f.sessionID)
+	state := stateOf(t, f.s.tableHost().Sessions(), f.sessionID)
 	for i := range state.Initiative {
 		e := &state.Initiative[i]
 		if e.CharacterID != nil && *e.CharacterID == f.charID {

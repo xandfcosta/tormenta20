@@ -55,7 +55,12 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 	}
 	tokenID := chi.URLParam(r, "tokenId")
 	b := board.BoardForRole(role, s.deps.Boards().Get(r.Context(), sessionID, boardID))
-	preview, err := dragPreview(b, s.deps.Sessions().GetState(sessionID), tokenID, destination,
+	state, err := s.deps.Sessions().State(r.Context(), sessionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	preview, err := dragPreview(b, state, tokenID, destination,
 		s.whoDragsInPreview(r, role, board.FindToken(b, tokenID)))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

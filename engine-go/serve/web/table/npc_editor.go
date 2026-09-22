@@ -215,7 +215,7 @@ func saveDraft(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// não falhou, ele recusou — e quem tinha de saber já soube.
 	if err := st.triesSaveDraft(c); err != nil {
 		c.Signals["draft_error"] = err.Error()
-		return st.deps.Sessions().GetState(c.SessionID), nil
+		return st.deps.Sessions().State(c.R.Context(), c.SessionID)
 	}
 	// FECHA o editor no mesmo passo em que grava, e não num clique à parte: o
 	// gesto do mestre é "salvar e voltar", e deixar o formulário aberto sobre uma
@@ -226,7 +226,7 @@ func saveDraft(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// O ELENCO NÃO É ESTADO DE SESSÃO — guardar um NPC não muda a fila nem o
 	// mapa. O estado volta mesmo assim porque é dele que o `gmCommand`
 	// redesenha as regiões, e sem isso a lista só mostraria a mudança no F5.
-	return st.deps.Sessions().GetState(c.SessionID), nil
+	return st.deps.Sessions().State(c.R.Context(), c.SessionID)
 }
 
 // triesSaveDraft é o caminho inteiro do salvar, do sinal ao banco.

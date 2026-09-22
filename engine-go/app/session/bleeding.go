@@ -56,12 +56,16 @@ func (st *Store) RollBleedingD20(sessionID int64, d20 int) (*live.SessionRuntime
 	if d20 < 1 || d20 > 20 {
 		return nil, fmt.Errorf("o d20 do teste de Constituição vai de 1 a 20, e veio %d", d20)
 	}
-	check := st.GetState(sessionID).Scene.PendingBleeding(false)
+	state, err := st.State(context.Background(), sessionID)
+	if err != nil {
+		return nil, err
+	}
+	check := state.Scene.PendingBleeding(false)
 	if check == nil {
 		return nil, fmt.Errorf("%w (o d20)", ErrNoBleedingCheck)
 	}
-	con, err := st.turnEffects.ConstitutionOf(context.Background(), check.CharacterID)
-	if err != nil {
+	con, err2 := st.turnEffects.ConstitutionOf(context.Background(), check.CharacterID)
+	if err = err2; err != nil {
 		return nil, fmt.Errorf("ler a Constituição de %s: %w", check.Label, err)
 	}
 	total := d20 + con
@@ -92,7 +96,11 @@ func (st *Store) RollBleedingD6(sessionID int64, d6 int) (*live.SessionRuntimeSt
 	if d6 < 1 || d6 > 6 {
 		return nil, fmt.Errorf("o d6 do dano vai de 1 a 6, e veio %d", d6)
 	}
-	check := st.GetState(sessionID).Scene.PendingBleeding(true)
+	state, err := st.State(context.Background(), sessionID)
+	if err != nil {
+		return nil, err
+	}
+	check := state.Scene.PendingBleeding(true)
 	if check == nil {
 		return nil, fmt.Errorf("%w (o d6)", ErrNoBleedingCheck)
 	}

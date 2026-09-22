@@ -41,7 +41,9 @@ type Combatants interface {
 
 // Tables é a porta do estado da mesa.
 type Tables interface {
-	GetState(sessionID int64) *live.SessionRuntimeState
+	// State devolve a mesa gravada, e DEVOLVE ERRO: sem conseguir ler não dá
+	// para saber de quem é a vez, e rolar um ataque assim é inventar (ALE-373).
+	State(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
 	ProposeAttack(sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
 	// CharacterActionFits diz se este personagem pode gastar o custo AGORA: se
 	// ele pode agir (o instante, pelo PV e pelas condições da ficha) e se sobrou
@@ -86,7 +88,10 @@ type Request struct {
 // Propose rola o ataque e guarda o provisório. Ninguém perde PV aqui: quem
 // confirma é o mestre, pela mesma divisa do movimento no tabuleiro.
 func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
-	state := s.tables.GetState(req.SessionID)
+	state, err := s.tables.State(ctx, req.SessionID)
+	if err != nil {
+		return live.PendingAttack{}, err
+	}
 	if state == nil {
 		return live.PendingAttack{}, fmt.Errorf("a sessão %d não tem mesa aberta: %w", req.SessionID, app.ErrNotFound)
 	}
