@@ -2,12 +2,10 @@ package session
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"sync"
 
 	"t20engine/domain/live"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 )
@@ -87,15 +85,6 @@ func (st *Store) nextSeqLocked(sessionID int64) uint64 {
 	return st.seqs[sessionID]
 }
 
-func (st *Store) getOrCreateLocked(sessionID int64) *live.SessionRuntimeState {
-	s := st.States[sessionID]
-	if s == nil {
-		s = live.EmptyRuntimeState()
-		st.States[sessionID] = s
-	}
-	return s
-}
-
 // LiveSessionsWithCharacter devolve as sessões EM MEMÓRIA que têm este
 // personagem na fila.
 //
@@ -117,12 +106,18 @@ func (st *Store) LiveSessionsWithCharacter(characterID int64) []int64 {
 	return out
 }
 
-// GetState devolve um instantâneo do estado atual (rastreador vazio quando a
-// sessão nunca foi carregada).
+// GetState devolve um instantâneo do estado atual, lido do banco na primeira
+// vez. Se a leitura falha, o instantâneo é um rastreador VAZIO e NÃO fica em
+// memória: a próxima pergunta tenta o banco de novo.
 func (st *Store) GetState(sessionID int64) *live.SessionRuntimeState {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
-	return live.CloneState(st.getOrCreateLocked(sessionID))
+	s, err := st.stateLocked(context.Background(), sessionID)
+	if err != nil {
+		log.Printf("session %d: %v", sessionID, err)
+		return live.EmptyRuntimeState()
+	}
+	return live.CloneState(s)
 }
 
 // apply roda uma mutação pura sob a trava, publica o evento e devolve o
@@ -152,7 +147,10 @@ func (st *Store) apply(sessionID int64, ev events.Event, fn func(*live.SessionRu
 func (st *Store) applyLocked(sessionID int64, fn func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
-	s := st.getOrCreateLocked(sessionID)
+	s, err := st.stateLocked(context.Background(), sessionID)
+	if err != nil {
+		return nil, err
+	}
 	if err := fn(s); err != nil {
 		return nil, err
 	}
@@ -301,120 +299,6 @@ func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *
 		patchEntryVitals(entryID, hp, mp))
 }
 
-// Load hidrata a sessão de `Session.runtimeState` no primeiro acesso e depois
-// serve a cópia em memória.
-func (st *Store) Load(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	if s := st.States[sessionID]; s != nil {
-		return live.CloneState(s), nil
-	}
-	sess, err := st.q.GetSession(ctx, sessionID)
-	if err != nil {
-		return nil, err
-	}
-	s := parseRuntimeBlob(sess.Runtimestate)
-	st.States[sessionID] = s
-	return live.CloneState(s), nil
-}
-
-// parseRuntimeBlob lê um blob gravado e cai para um rastreador vazio quando ele
-// vem malformado. Os blobs são sempre completos (o nosso Marshal e o default da
-// coluna carregam rodada e turno), então não há campo parcial a preencher.
-func parseRuntimeBlob(blob string) *live.SessionRuntimeState {
-	if blob == "" {
-		return live.EmptyRuntimeState()
-	}
-	var parsed live.SessionRuntimeState
-	if err := json.Unmarshal([]byte(blob), &parsed); err != nil {
-		return live.EmptyRuntimeState()
-	}
-	if parsed.Initiative == nil {
-		parsed.Initiative = []live.InitiativeEntry{}
-	}
-	// A INVARIANTE DO TURNO subiu para o `UnmarshalJSON` do estado (ALE-365): ela
-	// vale para todo blob que entra, e aqui ela só alcançava este chamador.
-	return &parsed
-}
-
-// SaveFailed diz se a última gravação do estado desta sessão falhou.
-//
-// ESTADO e não notícia, e a diferença é o que faz o aviso servir: ele vale
-// enquanto durar, então quem abre a aba dez minutos depois da primeira falha
-// merece vê-lo. Um evento perdido é um evento que não existiu. O irmão dele é o
-// `BoardStore.SaveFailed`.
-//
-// Sob a trava porque o `Dirty` é escrito pelo `Persist`, que roda em goroutine.
-func (st *Store) SaveFailed(sessionID int64) bool {
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	return st.Dirty[sessionID]
-}
-
-// Persist serializa o estado atual em `Session.runtimeState`. Dispara e esquece:
-// nunca devolve erro — devolve (Dirty, changed), com `changed` verdadeiro só
-// quando a saúde da gravação VIROU desde o último `Persist`, para quem chama
-// avisar a mesa exatamente nas transições. O store é o dono único da marca.
-//
-// Serializado para que gravações sobrepostas da mesma sessão cheguem em ordem: a
-// última a rodar retrata o estado mais novo, e o banco converge para ele em vez
-// de para uma captura velha.
-func (st *Store) Persist(ctx context.Context, sessionID int64) (Dirty, changed bool) {
-	pm := st.persistLock(sessionID)
-	pm.Lock()
-	defer pm.Unlock()
-
-	st.Mu.Lock()
-	s := st.States[sessionID]
-	if s == nil {
-		st.Mu.Unlock()
-		return false, false
-	}
-	blob, _ := json.Marshal(live.CloneState(s))
-	st.Mu.Unlock()
-
-	err := st.q.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: string(blob), UpdatedAt: dbvalue.NowISO(), ID: sessionID,
-	})
-
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	prev := st.Dirty[sessionID] // absent ⇒ false (healthy)
-	Dirty = err != nil
-	changed = prev != Dirty
-	if Dirty {
-		st.Dirty[sessionID] = true
-		log.Printf("session %d: Persist failed (%v); marked Dirty for retry", sessionID, err)
-	} else {
-		delete(st.Dirty, sessionID)
-	}
-	return Dirty, changed
-}
-
-// Forget descarta o rastreador em memória de uma sessão. Ele NÃO limpa o
-// `Dirty`: isso engoliria a recuperação suja→saudável — uma sessão deixada suja
-// ainda precisa avisar `persistence-warning{Dirty:false}` no próximo `Persist`
-// bem-sucedido, e o mapa se poda sozinho nesse sucesso.
-func (st *Store) Forget(sessionID int64) {
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	delete(st.States, sessionID)
-}
-
-// SessionDeleted é o `Forget` de uma sessão que deixou de EXISTIR, e a diferença
-// entre os dois é uma linha: esta apaga o `Dirty` também.
-//
-// O argumento do `Forget` acima — *"não limpa o Dirty: isso engoliria a
-// recuperação suja→saudável"* — depende de haver um próximo `Persist` que avise
-// que voltou a gravar. Com a sessão apagada não há: a marca ficaria acesa até o
-// processo reiniciar, sobre uma mesa que ninguém quer gravar.
-func (st *Store) SessionDeleted(sessionID int64) {
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	delete(st.States, sessionID)
-	delete(st.Dirty, sessionID)
-}
-
 // RefreshCharacterVitals repergunta o POÇO INTEIRO — máximo e atual — de toda
 // entrada que tem personagem atrás. Melhor esforço: uma piscada do banco vira
 // log e devolve o instantâneo atual em vez de derrubar a leitura.
@@ -445,7 +329,11 @@ func (st *Store) SessionDeleted(sessionID int64) {
 // `máximo − dano` e já nasce na faixa (ALE-355).
 func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *live.SessionRuntimeState {
 	st.Mu.Lock()
-	ids := uniqueCharacterIDs(st.getOrCreateLocked(sessionID))
+	s, err := st.stateLocked(ctx, sessionID)
+	var ids []int64
+	if err == nil {
+		ids = uniqueCharacterIDs(s)
+	}
 	st.Mu.Unlock()
 	if len(ids) == 0 {
 		return st.GetState(sessionID)
@@ -457,7 +345,11 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *l
 	}
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
-	s := st.getOrCreateLocked(sessionID)
+	s, err = st.stateLocked(ctx, sessionID)
+	if err != nil {
+		log.Printf("session %d: %v", sessionID, err)
+		return live.EmptyRuntimeState()
+	}
 	for i := range s.Initiative {
 		e := &s.Initiative[i]
 		if e.CharacterID == nil {

@@ -31,13 +31,15 @@ import (
 // quadro velho exigiria versão no fio e uma segunda cópia da regra em cada tela
 // que escuta.
 func TestTheFrameFollowsTheOrderOfTheMutation(t *testing.T) {
-	const sessionID = int64(7)
 	// Repetição porque a corrida é de agendamento: uma passada só não a
 	// visita. Sem o conserto isto fica vermelho em poucas dezenas.
 	const attempts = 200
 
 	for attempt := range attempts {
 		s := newTestServer(t)
+		// Uma sessão que EXISTE: o store lê a mesa do banco na primeira mutação, e
+		// uma sessão inventada é recusada (ALE-369).
+		sessionID := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 		conn := s.sse.Add(sessionID, "c1", "gm")
 
 		var wg sync.WaitGroup

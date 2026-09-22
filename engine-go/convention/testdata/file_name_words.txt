@@ -377,6 +377,7 @@ reset
 resets
 respond
 rest
+restart
 role
 roster
 route
