@@ -23,27 +23,31 @@ var ErrNoBleedingCheck = errors.New("não há teste de sangramento esperando est
 // O ERRO é engolido pela razão que o `payUpkeep` explica: uma mesa travada no
 // turno de alguém é pior que um teste que não abriu, e o mestre pode tirar o
 // Sangrando à mão.
-func (st *Store) openBleedingCheck(s *live.SessionRuntimeState) {
-	if !s.Scene.CountsRounds() || st.turnEffects == nil {
-		return
+func (st *Store) openBleedingCheck(u Unit, s *live.SessionRuntimeState) error {
+	if !s.Scene.CountsRounds() || u.TurnEffects == nil {
+		return nil
 	}
 	if s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
-		return
+		return nil
 	}
 	entry := s.Initiative[s.TurnIndex]
 	if entry.CharacterID == nil {
-		return
+		return nil
 	}
-	conditions, err := st.turnEffects.ConditionsOf(context.Background(), *entry.CharacterID)
+	// A LEITURA QUE FALHA RECUSA A VEZ (ALE-373): sem as condições não dá para
+	// saber se alguém entra na vez sangrando, e passar a vez assim mesmo é
+	// afirmar que ninguém estava.
+	conditions, err := u.TurnEffects.ConditionsOf(context.Background(), *entry.CharacterID)
 	if err != nil {
-		return
+		return fmt.Errorf("ler as condições de %s: %w", entry.Label, err)
 	}
 	for _, c := range conditions {
 		if c == engine.ConditionBleeding {
 			s.Scene.Bleeding = &live.BleedingCheck{EntryID: entry.ID, CharacterID: *entry.CharacterID, Label: entry.Label}
-			return
+			return nil
 		}
 	}
+	return nil
 }
 
 // RollBleedingD20 recebe o d20 do teste: alcançar 15 com a Constituição

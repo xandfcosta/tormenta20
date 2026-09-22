@@ -146,13 +146,21 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 	// UM adaptador para as DUAS portas da ficha: a fonte é a mesma tabela e a
 	// mesma conexão, e o que as separa é o motivo de mudar, não o número de
 	// structs.
-	fromSheet := sheetVitals{q: q, catalogs: func() *engine.Catalogs { return srv.catalogs }}
+	engineOfNow := func() *engine.Catalogs { return srv.catalogs }
+	fromSheet := sheetVitals{q: q, catalogs: engineOfNow}
+	// A UNIDADE DE TRABALHO de um gesto da mesa (ALE-373). O contorno dela é do
+	// caso de uso; daqui vai só o que o hospedeiro sabe: como montar as portas
+	// da ficha a partir de um caderno de consultas.
+	units := session.NewUnits(database, q, func(inTx *sqlcgen.Queries) (live.SheetVitals, live.SheetTurnEffects) {
+		ports := sheetVitals{q: inTx, catalogs: engineOfNow}
+		return ports, ports
+	})
 	srv = &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),
-		sessions: session.NewStore(session.NewSnapshots(q), live.NewUUID, fromSheet, fromSheet, bus),
+		sessions: session.NewStore(session.NewSnapshots(q), units, live.NewUUID, fromSheet, fromSheet, bus),
 		boards:   boards.NewStore(q, live.NewUUID, bus),
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),

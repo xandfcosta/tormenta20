@@ -40,7 +40,7 @@ func (d *snapshotsDouble) Mutate(_ context.Context, _ int64,
 }
 
 func storeWithDouble(d *snapshotsDouble) *Store {
-	return NewStore(d, func() string { return "id" }, nil, nil, &events.Bus{})
+	return NewStore(d, nil, func() string { return "id" }, nil, nil, &events.Bus{})
 }
 
 // A GRAVAÇÃO QUE FALHA RECUSA O COMANDO E NÃO DEIXA RASTRO NA MESA.

@@ -33,7 +33,13 @@ type Store struct {
 	newID func() string
 	// snapshots é o RETRATO no banco, e é ele a fonte da verdade: toda mutação
 	// passa por ele antes de existir para alguém (ALE-371).
+	//
+	// É o retrato SOLTO, para o gesto que só mexe na fila. O gesto que também
+	// escreve na FICHA usa o da unidade (ver `unit.go`).
 	snapshots SessionSnapshots
+	// units abre a unidade de trabalho de um gesto: uma transação para a fila e
+	// a ficha juntas (ALE-373).
+	units Units
 	// bus é por onde as mutações desta sessão viram notícia.
 	//
 	// Quem publica é o `apply`, DEPOIS de soltar a trava, e o evento diz o que
@@ -49,7 +55,10 @@ type Store struct {
 
 // NewStore recebe a PORTA da ficha por parâmetro — injetada e não
 // importada, que é o que impede o regime de conhecer as regras da ficha.
-func NewStore(snapshots SessionSnapshots, newID func() string, sheet live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus) *Store {
+func NewStore(
+	snapshots SessionSnapshots, units Units, newID func() string,
+	sheet live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus,
+) *Store {
 	return &Store{
 		States:      map[int64]*live.SessionRuntimeState{},
 		seqs:        map[int64]uint64{},
@@ -57,6 +66,7 @@ func NewStore(snapshots SessionSnapshots, newID func() string, sheet live.SheetV
 		sheet:       sheet,
 		turnEffects: turnEffects,
 		snapshots:   snapshots,
+		units:       units,
 		bus:         bus,
 	}
 }
@@ -174,33 +184,72 @@ func (st *Store) RemoveInitiativeEntry(sessionID int64, entryID string) (*live.S
 		func(s *live.SessionRuntimeState) error { return live.RemoveEntry(s, entryID) })
 }
 
+// NextTurn passa a vez, e é UM gesto: a fila, os efeitos que acabam com a vez,
+// a manutenção das sustentadas e o teste de sangramento gravam na MESMA
+// transação (ALE-373).
+//
+// TUDO-OU-NADA, e isto é decisão do dono que inverteu a de antes. Aqui as
+// escritas da ficha eram engolidas com `_ =`, e a razão escrita era boa: "uma
+// mesa travada no turno de alguém é pior que uma manutenção não cobrada". O
+// preço dela era pior — a vez passava com o efeito ainda ligado na ficha, sem
+// ninguém saber (ALE-372). Agora a escrita que falha RECUSA o clique.
+//
+// LER TAMBÉM: qualquer erro do banco recusa, e não só os de escrita. Quem não
+// consegue ler a ficha não sabe o que expirar nem o que cobrar, e seguir é
+// afirmar que não havia nada — decisão do dono, e é o princípio que sustenta a
+// fatia inteira: sem o banco não temos certeza de nada.
 func (st *Store) NextTurn(sessionID int64) (*live.SessionRuntimeState, error) {
-	var charge upkeepCharge
-	turned, err := st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error {
-			// O FIM DA VEZ vem ANTES do começo da próxima: o que durava a vez
-			// que acaba tem de sair antes de alguém entrar na sua.
-			st.expireTurnEffects(s)
-			live.AdvanceTurn(s)
-			charge = st.payUpkeep(s)
-			st.openBleedingCheck(s)
-			return nil
-		})
-	if err != nil || charge.pm == 0 {
-		return turned, err
-	}
-	// O TURNO VIRA MESMO QUE O MANA NÃO SAIA: a manutenção é uma consequência
-	// da virada, e uma gravação que falha não pode desfazer a vez de ninguém.
-	spent := int64(-charge.pm)
-	if paid, err := st.DeltaVitals(sessionID, charge.entryID, nil, &spent); err == nil {
-		return paid, nil
-	}
-	return turned, nil
+	return st.turnGesture(sessionID, func(u Unit, s *live.SessionRuntimeState) error {
+		// O FIM DA VEZ vem ANTES do começo da próxima: o que durava a vez que
+		// acaba tem de sair antes de alguém entrar na sua.
+		if err := st.expireTurnEffects(u, s); err != nil {
+			return err
+		}
+		live.AdvanceTurn(s)
+		return st.payUpkeep(u, s)
+	})
 }
 
+// turnGesture é o corpo comum de quem gira a vez: abre a unidade, muta o
+// retrato dentro dela e só publica DEPOIS de a transação fechar — anunciar
+// antes seria contar à mesa um turno que o disco ainda pode recusar.
+func (st *Store) turnGesture(
+	sessionID int64, change func(Unit, *live.SessionRuntimeState) error,
+) (*live.SessionRuntimeState, error) {
+	st.Mu.Lock()
+	var clone *live.SessionRuntimeState
+	err := st.units.Do(context.Background(), func(u Unit) error {
+		saved, err := u.Snapshots.Mutate(context.Background(), sessionID,
+			func(s *live.SessionRuntimeState) error {
+				if err := change(u, s); err != nil {
+					return err
+				}
+				return st.openBleedingCheck(u, s)
+			})
+		if err != nil {
+			return err
+		}
+		st.States[sessionID] = saved
+		clone = live.CloneState(saved)
+		clone.Seq = st.nextSeqLocked(sessionID)
+		return nil
+	})
+	st.Mu.Unlock()
+	if err != nil {
+		return nil, err
+	}
+	st.bus.Publish(events.TurnAdvanced{SessionID: sessionID})
+	return clone, nil
+}
+
+// PreviousTurn volta a vez. Ele também é gesto de turno — a mesma unidade —,
+// mas não desfaz o que a vez que passou consumiu: voltar é conserto de mesa, e
+// ressuscitar efeito expirado exigiria guardar o que foi derrubado.
 func (st *Store) PreviousTurn(sessionID int64) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { live.RewindTurn(s); return nil })
+	return st.turnGesture(sessionID, func(_ Unit, s *live.SessionRuntimeState) error {
+		live.RewindTurn(s)
+		return nil
+	})
 }
 
 func (st *Store) Reset(sessionID int64) (*live.SessionRuntimeState, error) {
