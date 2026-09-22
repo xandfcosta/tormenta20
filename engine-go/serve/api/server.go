@@ -170,7 +170,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 // antes.
 func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
-	s.tableScene = table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue(), s.campaignCast())
+	s.tableScene = table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue(), s.campaignCast(), s.characterPlays())
 }
 
 // sessionLifecycle é o caso de uso do ciclo, montado com o que o servidor tem.

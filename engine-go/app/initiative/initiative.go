@@ -168,11 +168,13 @@ func (r Roster) characterEntry(
 	id := *requested.CharacterID
 	return live.InitiativeEntry{
 		Label: label, Initiative: int(*requested.Initiative), Type: "character", CharacterID: &id,
-		HpCurrent:  overriddenOr(requested.HpCurrent, entrant.HpCurrent),
-		HpMax:      overriddenOr(requested.HpMax, entrant.HpMax),
-		MpCurrent:  overriddenOr(requested.MpCurrent, entrant.MpCurrent),
-		MpMax:      overriddenOr(requested.MpMax, entrant.MpMax),
-		Conditions: KnownConditions(requested.Conditions),
+		HpCurrent: overriddenOr(requested.HpCurrent, entrant.HpCurrent),
+		HpMax:     overriddenOr(requested.HpMax, entrant.HpMax),
+		MpCurrent: overriddenOr(requested.MpCurrent, entrant.MpCurrent),
+		MpMax:     overriddenOr(requested.MpMax, entrant.MpMax),
+		// SEM condições: as de um personagem moram na FICHA, e a fila as lê
+		// de lá a cada desenho (ALE-368). Aceitar aqui abriria de novo a
+		// segunda lista que não mexe em número nenhum.
 	}, nil
 }
 

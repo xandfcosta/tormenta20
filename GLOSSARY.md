@@ -261,7 +261,11 @@ entidade.
 **C6 — `condition` e `conditional` são conceitos DIFERENTES a uma letra de
 distância.** A **condição** é do livro (p394-395): Caído, Atordoado, Cego. Ela
 chega de fora — o mestre aplica, a magia impõe — e mora na coluna JSON
-`characters.activeConditions`. O **situacional** é escolha do jogador na própria
+`characters.activeConditions`. **Uma lista, uma verdade:** o mestre que a marca
+pela Mesa, na linha de um personagem, grava NA FICHA, e a fila a lê de lá a cada
+desenho (ALE-368). A lista própria da linha da fila (`InitiativeEntry.Conditions`)
+é só do NPC, que ficha não tem — antes ela valia também para PC, e o Atordoado
+marcado pela Mesa não atordoava ninguém. O **situacional** é escolha do jogador na própria
 ficha: Fúria, Ataque Poderoso, os homebrew. Ele muda o cálculo da ficha e, desde
 a ALE-222, mora na tabela `character_conditionals`.
 

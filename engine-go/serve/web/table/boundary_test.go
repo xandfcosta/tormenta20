@@ -55,6 +55,10 @@ var permitidos = map[string]bool{
 	"t20engine/app/campaign": true,
 	// O `app/rest` é o descanso e a expiração de escopo, pela mesma razão.
 	"t20engine/app/rest": true,
+	// O `app/character` são os GESTOS da ficha, pela mesma razão: a condição de
+	// um personagem marcada pela Mesa grava na ficha, pelo caso de uso que a
+	// aba Efeitos usa (ALE-368) — e a cena da ficha já o recebe assim.
+	"t20engine/app/character": true,
 	// O `app/session` NÃO é concessão, é a razão do guarda existir ficar menor
 	// (ALE-344): ele está ABAIXO desta cena e do `serve/api`, então não há ciclo
 	// para desviar — e por isso não há interface. Cinco entradas da porta saíram
