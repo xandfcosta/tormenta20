@@ -93,6 +93,7 @@ conditions
 config
 consequences
 consume
+context
 contrast
 copy
 core
@@ -300,6 +301,7 @@ moves
 name
 names
 nav
+nested
 new
 night
 # NOME PRÓPRIO entra aqui pela regra do glossário (é o nome da coisa, não
@@ -375,6 +377,7 @@ reduction
 refs
 regular
 render
+request
 reset
 resets
 respond
