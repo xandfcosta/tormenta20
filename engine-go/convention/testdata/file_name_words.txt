@@ -449,6 +449,7 @@ sum
 surfaces
 sustained
 svg
+swallowed
 switchover
 symbol
 system

@@ -93,7 +93,12 @@ func (bs *Store) openPlaceLocked(ctx context.Context, campaignID, sessionID, pla
 	}
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	bs.hydrateLocked(ctx, sessionID)
+	// A HIDRATAÇÃO QUE FALHA RECUSA (ALE-375): sem saber quais abas já estão
+	// abertas, abrir mais uma passa por cima do teto e pode duplicar a cena que
+	// já estava na mesa.
+	if err := bs.hydrateLocked(ctx, sessionID); err != nil {
+		return nil, err
+	}
 	return bs.inNewTabLocked(sessionID, scene)
 }
 

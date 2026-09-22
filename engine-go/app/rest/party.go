@@ -131,7 +131,20 @@ func (p Party) restOne(
 		log.Printf("sessão %d: o descanso do personagem %d falhou (%v)", sessionID, characterID, err)
 		return false
 	}
-	p.mirrorToTracker(ctx, sessionID, characterID, vitals)
+	// O ESPELHO QUE FALHA NÃO DESFAZ O DESCANSO, e é a única decisão desta
+	// família que pende para o outro lado (ALE-372). O descanso JÁ ACONTECEU:
+	// o dia foi encerrado e a ficha foi gravada dois passos acima. A linha da
+	// fila é o ESPELHO da ficha — dizer "o descanso falhou" porque o espelho
+	// não atualizou seria recusar o que o banco já aceitou.
+	//
+	// Mas ele deixa de ser SILENCIOSO, que era o defeito: o erro ia para o chão
+	// sem nem um `_ =` para o `grep` achar, e o mestre ficava escolhendo alvo
+	// pelo PV de antes do descanso. O log diz de QUEM é a linha que não
+	// atualizou, que é o que permite refrescar a mesa à mão.
+	if err := p.mirrorToTracker(ctx, sessionID, characterID, vitals); err != nil {
+		log.Printf("sessão %d: o personagem %d descansou, e a linha dele na fila não atualizou (%v)",
+			sessionID, characterID, err)
+	}
 	return true
 }
 
