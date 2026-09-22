@@ -38,10 +38,10 @@ func (h sheetHost) CharacterChanged(characterID int64) { h.rules.characterChange
 //
 // Achar a mesa é do hospedeiro porque só ele tem o `session.Store`: a ficha
 // pergunta por personagem, e a resposta atravessa a porta já decidida.
-func (h sheetHost) ActionFitsOnTurn(characterID int64, cost engine.ActionCost) error {
-	return h.rules.sessions.CharacterActionFits(characterID, cost)
+func (h sheetHost) ActionFitsOnTurn(ctx context.Context, characterID int64, cost engine.ActionCost) error {
+	return h.rules.sessions.CharacterActionFits(ctx, characterID, cost)
 }
 
-func (h sheetHost) SpendActionOnTurn(characterID int64, cost engine.ActionCost) error {
-	return h.rules.sessions.SpendCharacterAction(characterID, cost)
+func (h sheetHost) SpendActionOnTurn(ctx context.Context, characterID int64, cost engine.ActionCost) error {
+	return h.rules.sessions.SpendCharacterAction(ctx, characterID, cost)
 }

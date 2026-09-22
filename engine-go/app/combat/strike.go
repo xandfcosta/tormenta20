@@ -44,11 +44,11 @@ type Tables interface {
 	// State devolve a mesa gravada, e DEVOLVE ERRO: sem conseguir ler não dá
 	// para saber de quem é a vez, e rolar um ataque assim é inventar (ALE-373).
 	State(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
-	ProposeAttack(sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
+	ProposeAttack(ctx context.Context, sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
 	// CharacterActionFits diz se este personagem pode gastar o custo AGORA: se
 	// ele pode agir (o instante, pelo PV e pelas condições da ficha) e se sobrou
 	// ação no turno. Não cobra nada — quem cobra é a confirmação.
-	CharacterActionFits(characterID int64, cost engine.ActionCost) error
+	CharacterActionFits(ctx context.Context, characterID int64, cost engine.ActionCost) error
 }
 
 // Strike resolve e propõe ataques.
@@ -117,7 +117,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 	// rolado por quem está atordoado, ou já gastou a padrão, é um provisório que
 	// a mesa vê e que nunca poderia ter acontecido.
 	if attackerEntry.CharacterID != nil {
-		if err := s.tables.CharacterActionFits(*attackerEntry.CharacterID, engine.ActionStandard); err != nil {
+		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, engine.ActionStandard); err != nil {
 			return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
 		}
 	}
@@ -161,7 +161,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
 		Damage: out.Damage, ByUserID: who.ID,
 	}
-	if _, err := s.tables.ProposeAttack(req.SessionID, pending); err != nil {
+	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err
 	}
 	return pending, nil

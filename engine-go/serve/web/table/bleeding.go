@@ -102,9 +102,9 @@ func (s Scene) answerBleeding(r *http.Request, campaignID, sessionID int64, die 
 	}
 	switch die {
 	case "d20":
-		state, err = s.deps.Sessions().RollBleedingD20(sessionID, value)
+		state, err = s.deps.Sessions().RollBleedingD20(r.Context(), sessionID, value)
 	case "d6":
-		state, err = s.deps.Sessions().RollBleedingD6(sessionID, value)
+		state, err = s.deps.Sessions().RollBleedingD6(r.Context(), sessionID, value)
 	default:
 		return fmt.Errorf("o teste pede d20 ou d6, e veio %q", die)
 	}

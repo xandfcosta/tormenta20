@@ -80,7 +80,7 @@ func TestTheTurnDoesNotPassWhenTheSheetWriteIsRefused(t *testing.T) {
 	store := storeWithUnit(double)
 
 	// O CONTROLE: com a ficha aceitando, a vez passa e o efeito expira.
-	if _, err := store.NextTurn(7); err != nil {
+	if _, err := store.NextTurn(context.Background(), 7); err != nil {
 		t.Fatalf("o controle falhou: %v", err)
 	}
 	if got := double.snapshots.stored.TurnIndex; got != 0 {
@@ -91,7 +91,7 @@ func TestTheTurnDoesNotPassWhenTheSheetWriteIsRefused(t *testing.T) {
 	}
 
 	double.effects.refuseExpire = errors.New("o disco encheu")
-	_, err := store.NextTurn(7)
+	_, err := store.NextTurn(context.Background(), 7)
 	if err == nil {
 		t.Fatal("a ficha recusou a escrita e a vez passou mesmo assim")
 	}
@@ -118,7 +118,7 @@ func TestAGestureOpensExactlyOneUnit(t *testing.T) {
 	}
 	store := storeWithUnit(double)
 
-	if _, err := store.NextTurn(7); err != nil {
+	if _, err := store.NextTurn(context.Background(), 7); err != nil {
 		t.Fatalf("passar a vez: %v", err)
 	}
 	if double.opened != 1 {

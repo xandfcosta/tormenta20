@@ -22,7 +22,7 @@ func TestAMutationIsAlreadyInTheDatabaseWhenItReturns(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
 
-	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
 		Label: "Ogro cansado", Type: "npc", Initiative: 19,
 	}); err != nil {
 		t.Fatalf("pôr o ogro na fila: %v", err)

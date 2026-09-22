@@ -39,7 +39,7 @@ func putPlayerTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	if err != nil {
 		return nil, err
 	}
-	state, err := st.queue.PopulateParty(c.SessionID, []initiative.Combatant{*chosen})
+	state, err := st.queue.PopulateParty(c.R.Context(), c.SessionID, []initiative.Combatant{*chosen})
 	if state == nil {
 		fresh, stateErr := st.deps.Sessions().State(c.R.Context(), c.SessionID)
 		if stateErr != nil {
@@ -96,7 +96,7 @@ func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeSta
 		if err != nil {
 			return nil, err
 		}
-		state, err := st.deps.Sessions().DeltaCharacterVitals(c.SessionID, chosen.CharacterID, hp, mp)
+		state, err := st.deps.Sessions().DeltaCharacterVitals(c.R.Context(), c.SessionID, chosen.CharacterID, hp, mp)
 		// A ficha de quem está na mesa MUDOU, e a tela dele precisa saber —
 		// aqui sempre há personagem atrás do gesto, ao contrário da fila,
 		// onde o capanga anônimo não tem quem avisar.

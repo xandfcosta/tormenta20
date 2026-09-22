@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -22,10 +23,10 @@ func downFixture(t *testing.T) sceneFixture {
 		}
 	}
 	standing := poolsOf(t, f.s, f.charID).HpCurrent
-	if _, err := f.s.sessions.DeltaVitals(f.sessionID, entryID, live.PtrInt64(-(standing + 3)), nil); err != nil {
+	if _, err := f.s.sessions.DeltaVitals(context.Background(), f.sessionID, entryID, live.PtrInt64(-(standing + 3)), nil); err != nil {
 		t.Fatalf("derrubar: %v", err)
 	}
-	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
+	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil {
 		t.Fatalf("girar para quem sangra: %v", err)
 	}
 	if stateOf(t, f.s.sessions, f.sessionID).Scene.PendingBleeding(false) == nil {

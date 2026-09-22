@@ -63,7 +63,7 @@ func TestAWriteThatFailsRefusesTheCommandAndLeavesTheTableAsItWas(t *testing.T) 
 	store := storeWithDouble(double)
 
 	// O CONTROLE: com o retrato aceitando, a mesma chamada entra na fila.
-	if _, err := store.AddInitiativeEntry(7, live.InitiativeEntry{Label: "Ogro", Type: "npc"}); err != nil {
+	if _, err := store.AddInitiativeEntry(context.Background(), 7, live.InitiativeEntry{Label: "Ogro", Type: "npc"}); err != nil {
 		t.Fatalf("o controle falhou: %v", err)
 	}
 	if len(stateOf(t, store, 7).Initiative) != 1 {
@@ -71,7 +71,7 @@ func TestAWriteThatFailsRefusesTheCommandAndLeavesTheTableAsItWas(t *testing.T) 
 	}
 
 	double.refuse = errors.New("o disco encheu")
-	_, err := store.AddInitiativeEntry(7, live.InitiativeEntry{Label: "Goblin", Type: "npc"})
+	_, err := store.AddInitiativeEntry(context.Background(), 7, live.InitiativeEntry{Label: "Goblin", Type: "npc"})
 	if err == nil {
 		t.Fatal("a gravação falhou e o comando passou")
 	}
@@ -91,7 +91,7 @@ func TestEveryMutationStartsFromTheStoredTable(t *testing.T) {
 	store := storeWithDouble(double)
 
 	for range 3 {
-		if _, err := store.AddInitiativeEntry(7, live.InitiativeEntry{Label: "NPC", Type: "npc"}); err != nil {
+		if _, err := store.AddInitiativeEntry(context.Background(), 7, live.InitiativeEntry{Label: "NPC", Type: "npc"}); err != nil {
 			t.Fatalf("pôr na fila: %v", err)
 		}
 	}

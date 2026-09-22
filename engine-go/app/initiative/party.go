@@ -144,9 +144,9 @@ func (q Queue) Roster() Roster { return q.roster }
 // dos cinco e tropeçar no quinto deixa a mesa com quatro combatentes novos, e é
 // esse o estado que as outras telas precisam receber.
 func (q Queue) PopulateParty(
-	sessionID int64, who []Combatant,
+	ctx context.Context, sessionID int64, who []Combatant,
 ) (*live.SessionRuntimeState, error) {
-	current, err := q.sessions.State(context.Background(), sessionID)
+	current, err := q.sessions.State(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (q Queue) PopulateParty(
 			continue
 		}
 		id, currentHP, pvMax, currentPM, pmMax := c.CharacterID, c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax
-		novo, err := q.sessions.AddInitiativeEntry(sessionID, live.InitiativeEntry{
+		novo, err := q.sessions.AddInitiativeEntry(ctx, sessionID, live.InitiativeEntry{
 			Label: c.Name, Initiative: 0, Type: "character", CharacterID: &id,
 			HpCurrent: &currentHP, HpMax: &pvMax, MpCurrent: &currentPM, MpMax: &pmMax,
 		})

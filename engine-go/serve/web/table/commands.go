@@ -28,11 +28,11 @@ import (
 func (s Scene) TableCommandRoutes(r chi.Router) {
 	r.Post(sessionPattern+"/iniciativa/proxima-vez", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-			return st.deps.Sessions().NextTurn(c.SessionID)
+			return st.deps.Sessions().NextTurn(c.R.Context(), c.SessionID)
 		}))
 	r.Post(sessionPattern+"/iniciativa/vez-anterior", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-			return st.deps.Sessions().PreviousTurn(c.SessionID)
+			return st.deps.Sessions().PreviousTurn(c.R.Context(), c.SessionID)
 		}))
 	// O TIPO DA CENA vai no CAMINHO, como o estado da cortina: nesta superfície
 	// o verbo é o caminho, e os três tipos do livro (p252) são três verbos
@@ -43,7 +43,7 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 			if err != nil {
 				return nil, err
 			}
-			return st.deps.Sessions().StartScene(c.SessionID, kind)
+			return st.deps.Sessions().StartScene(c.R.Context(), c.SessionID, kind)
 		}))
 	r.Post(sessionPattern+"/cena/encerrar", s.sceneCommand(endsTheScene))
 	r.Post(sessionPattern+"/iniciativa/por-no-mapa", s.gmCommand(bringParty))
@@ -98,7 +98,7 @@ func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err != nil {
 		return nil, err
 	}
-	state, err := st.deps.Sessions().AddInitiativeEntry(c.SessionID, row)
+	state, err := st.deps.Sessions().AddInitiativeEntry(c.R.Context(), c.SessionID, row)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, 
 			return nil, fmt.Errorf("pool %q não existe; a fila mexe em 'hp' e em 'mp'", chi.URLParam(c.R, "pool"))
 		}
 		entryID := chi.URLParam(c.R, "entryId")
-		state, err := st.deps.Sessions().DeltaVitals(c.SessionID, entryID, hp, mp)
+		state, err := st.deps.Sessions().DeltaVitals(c.R.Context(), c.SessionID, entryID, hp, mp)
 		// QUANDO HÁ FICHA ATRÁS DA LINHA, quem levou o dano foi o PERSONAGEM e
 		// não o rastreador (ver `DeltaVitals`) — então a ficha de quem está na
 		// mesa mudou, e a tela dele precisa saber. NPC não tem ficha: ali o
@@ -228,7 +228,7 @@ func toggleEye(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if pool == "hp" {
 		patch = live.EntryPatch{HpHidden: &hidden}
 	}
-	return st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID, patch)
+	return st.deps.Sessions().UpdateInitiativeEntry(c.R.Context(), c.SessionID, entryID, patch)
 }
 
 // editaOCombatente corrige a iniciativa e o PV de quem já está na fila. "Pôr no
@@ -261,7 +261,7 @@ func editaOCombatente(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	}
 	hasVitals := before.Initiative[i].HpMax != nil
 
-	state, err := st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID,
+	state, err := st.deps.Sessions().UpdateInitiativeEntry(c.R.Context(), c.SessionID, entryID,
 		live.EntryPatch{Initiative: &edit.Initiative})
 	if err != nil {
 		return nil, err
@@ -271,7 +271,7 @@ func editaOCombatente(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	}
 	// Com personagem atrás da linha o `PatchVitals` escreve na FICHA e espelha,
 	// como o delta faz. Quem prende o valor ao teto é ele, não uma conta aqui.
-	return st.deps.Sessions().PatchVitals(c.SessionID, entryID, &edit.PV, nil)
+	return st.deps.Sessions().PatchVitals(c.R.Context(), c.SessionID, entryID, &edit.PV, nil)
 }
 
 // edicaoDosSinais lê o diálogo de editar. Nomes minúsculos pelo mesmo motivo de
@@ -300,7 +300,7 @@ func edicaoDosSinais(r *http.Request) (struct {
 // combate, e a fila é remontável — o que não é remontável (encerrar a cena) é
 // que ganhou dois verbos distintos em vez de um interruptor.
 func tiraDaFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	return st.deps.Sessions().RemoveInitiativeEntry(c.SessionID, chi.URLParam(c.R, "entryId"))
+	return st.deps.Sessions().RemoveInitiativeEntry(c.R.Context(), c.SessionID, chi.URLParam(c.R, "entryId"))
 }
 
 // restParty é a RECUPERAÇÃO (T20 p106): devolve PV e PM ao grupo inteiro.
@@ -318,7 +318,7 @@ func expiresTheSceneOfTheParty(
 	if err != nil {
 		return nil, err
 	}
-	return st.announcesTheRest(sessionID, "scene", "normal", done, total)
+	return st.announcesTheRest(r.Context(), sessionID, "scene", "normal", done, total)
 }
 
 func restsForTheDay(
@@ -332,7 +332,7 @@ func restsForTheDay(
 	if err != nil {
 		return nil, err
 	}
-	return st.announcesTheRest(sessionID, "day", quality, done, total)
+	return st.announcesTheRest(r.Context(), sessionID, "day", quality, done, total)
 }
 
 // announcesTheRest avisa as fichas e devolve o estado com a contagem.
@@ -341,12 +341,12 @@ func restsForTheDay(
 // FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem está com a
 // ficha aberta continua vendo o PV de antes até recarregar.
 func (s Scene) announcesTheRest(
-	sessionID int64, scope, quality string, done, total int,
+	ctx context.Context, sessionID int64, scope, quality string, done, total int,
 ) (*live.SessionRuntimeState, error) {
 	s.deps.SSE().Emit(sessionID, "", "session-rest", map[string]any{
 		"sessionId": sessionID, "scope": scope, "condition": quality,
 	})
-	state, err := s.deps.Sessions().State(context.Background(), sessionID)
+	state, err := s.deps.Sessions().State(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +405,7 @@ func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// O erro vem JUNTO com o estado parcial de propósito: pôr quatro dos cinco e
 	// tropeçar no quinto deixa a mesa com quatro combatentes novos, e é esse o
 	// estado que as outras telas precisam receber.
-	state, err := st.queue.PopulateParty(c.SessionID, combatants)
+	state, err := st.queue.PopulateParty(c.R.Context(), c.SessionID, combatants)
 	if state == nil {
 		fresh, stateErr := st.deps.Sessions().State(c.R.Context(), c.SessionID)
 		if stateErr != nil {

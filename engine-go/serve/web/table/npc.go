@@ -169,7 +169,7 @@ func putNpcTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		}
 		return state, err
 	}
-	return st.deps.Sessions().AddInitiativeEntry(c.SessionID, entry)
+	return st.deps.Sessions().AddInitiativeEntry(c.R.Context(), c.SessionID, entry)
 }
 
 // eraseNpc tira o NPC do elenco da campanha.

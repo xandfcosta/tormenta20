@@ -88,7 +88,7 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	if !found {
 		fresh = append(fresh, id)
 	}
-	newState, err := st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID,
+	newState, err := st.deps.Sessions().UpdateInitiativeEntry(c.R.Context(), c.SessionID, entryID,
 		live.EntryPatch{Conditions: &fresh})
 	if err != nil {
 		return newState, err

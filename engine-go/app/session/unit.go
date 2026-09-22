@@ -72,11 +72,17 @@ type unitKey struct{}
 // Do abre a transação, monta as portas ligadas a ela e desfaz tudo se o
 // trabalho devolver erro.
 //
-// REENTRANTE quando o contexto carrega a unidade aberta. HOJE ESSA REDE NÃO É
-// ACIONADA, e é honesto dizer: os gestos chamam com `context.Background()`,
-// então nenhum contexto carrega unidade. O que protege agora é ESTRUTURAL — um
-// gesto chama o `Do` uma vez e não chama método de store lá de dentro, e o
-// `TestAGestureOpensExactlyOneUnit` prende isso.
+// REENTRANTE quando o contexto carrega a unidade aberta, e desde a ALE-374 ele
+// CARREGA: o `turnGesture` embrulha o contexto da requisição com `WithUnit`
+// antes de descer, então um `Do` aninhado reusa em vez de pedir a segunda
+// conexão do pool. Quem prova é o `TestANestedUnitReusesTheOpenTransaction`, e
+// ele falha LENTO de propósito — sem a rede a espera é o `busy_timeout`
+// inteiro, que é o sintoma que a pessoa vai ver.
+//
+// O `TestAGestureOpensExactlyOneUnit` prende a outra metade, e as duas são
+// diferentes: um gesto abre UMA transação por desenho, e a rede é o que salva
+// quem escrever o gesto que chama outro. Contar só com a rede seria trocar uma
+// garantia por um resgate.
 func (u storedUnits) Do(ctx context.Context, work func(Unit) error) error {
 	if open, ok := ctx.Value(unitKey{}).(Unit); ok {
 		return work(open)

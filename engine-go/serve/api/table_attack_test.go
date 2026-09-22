@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"regexp"
@@ -26,20 +27,20 @@ func attackOnTurn(t *testing.T) (sceneFixture, string) {
 	if _, err := store.State(t.Context(), f.sessionID); err != nil {
 		t.Fatalf("carregar a sessão: %v", err)
 	}
-	if _, err := store.StartScene(f.sessionID, live.SceneAction); err != nil {
+	if _, err := store.StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("começar a cena de ação: %v", err)
 	}
 	goblin := "goblin-salteador"
-	if _, err := store.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
+	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
 		Label: "Goblin", Initiative: 20, Type: "npc", MonsterID: &goblin,
 	}); err != nil {
 		t.Fatalf("pôr o Goblin na fila: %v", err)
 	}
-	if _, err := store.AddInitiativeEntry(f.sessionID, sheetCombatant("Arcanista", 5, f.charID)); err != nil {
+	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID, sheetCombatant("Arcanista", 5, f.charID)); err != nil {
 		t.Fatalf("pôr o personagem na fila: %v", err)
 	}
 	for range 2 { // a primeira vez é do Goblin, a segunda do personagem
-		if _, err := store.NextTurn(f.sessionID); err != nil {
+		if _, err := store.NextTurn(context.Background(), f.sessionID); err != nil {
 			t.Fatalf("girar a vez: %v", err)
 		}
 	}

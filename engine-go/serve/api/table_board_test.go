@@ -357,7 +357,7 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 	}
 
 	// Agora UMA mudança na fila, e mais nada.
-	if _, err := f.s.tableHost().Sessions().AddInitiativeEntry(f.sessionID,
+	if _, err := f.s.tableHost().Sessions().AddInitiativeEntry(context.Background(), f.sessionID,
 		sheetCombatant("Arwen", 17, f.charID)); err != nil {
 		t.Fatalf("pôr na fila: %v", err)
 	}
@@ -605,7 +605,7 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 	// A VEZ é a do Ogro, que tem a iniciativa mais alta. A peça dele precisa
 	// apontar para a LINHA — é o `entryId` que liga o gesto ao turno.
 	state := stateOf(t, f.s.sessions, f.sessionID)
-	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
+	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil {
 		t.Fatalf("começar o turno: %v", err)
 	}
 	state = stateOf(t, f.s.sessions, f.sessionID)
@@ -678,7 +678,7 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 	}
 
 	// PASSAR A VEZ devolve o turno inteiro a quem entra nele.
-	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
+	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil {
 		t.Fatalf("passar a vez: %v", err)
 	}
 	if fresh := stateOf(t, f.s.sessions, f.sessionID).Scene; !fresh.StandardLeft || !fresh.MovementLeft {

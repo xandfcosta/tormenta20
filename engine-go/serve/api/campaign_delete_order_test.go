@@ -39,7 +39,7 @@ func TestDeletingACampaignForgetsItsSessionsFirst(t *testing.T) {
 	if _, err := s.sessions.State(ctx, session); err != nil {
 		t.Fatalf("hidratar a sessão: %v", err)
 	}
-	if _, err := s.sessions.AddInitiativeEntry(session, npc("Goblin", 12)); err != nil {
+	if _, err := s.sessions.AddInitiativeEntry(context.Background(), session, npc("Goblin", 12)); err != nil {
 		t.Fatalf("pôr alguém na fila: %v", err)
 	}
 	// O CONTROLE: sem uma fila de verdade em memória, "a fila ficou vazia"

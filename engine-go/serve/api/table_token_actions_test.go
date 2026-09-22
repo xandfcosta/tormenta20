@@ -511,11 +511,11 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	if err != nil {
 		t.Fatalf("semear o bloco: %v", err)
 	}
-	if _, err := f.s.sessions.StartScene(f.sessionID, live.SceneAction); err != nil {
+	if _, err := f.s.sessions.StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	pv := int64(20)
-	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
 		Label: "Zumbi", Initiative: 10, Type: "npc",
 		HpCurrent: &pv, HpMax: &pv, CreatureID: &block.ID,
 	}); err != nil {

@@ -75,7 +75,7 @@ func (s Scene) registerInitiativeTable(r *http.Request, campaignID, sessionID, d
 	if err != nil {
 		return err
 	}
-	state, err := s.deps.Sessions().UpsertInitiativeEntry(sessionID, entry)
+	state, err := s.deps.Sessions().UpsertInitiativeEntry(r.Context(), sessionID, entry)
 	if err != nil {
 		return err
 	}

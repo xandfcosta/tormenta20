@@ -23,7 +23,7 @@ var ErrNoBleedingCheck = errors.New("não há teste de sangramento esperando est
 // O ERRO é engolido pela razão que o `payUpkeep` explica: uma mesa travada no
 // turno de alguém é pior que um teste que não abriu, e o mestre pode tirar o
 // Sangrando à mão.
-func (st *Store) openBleedingCheck(u Unit, s *live.SessionRuntimeState) error {
+func (st *Store) openBleedingCheck(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
 	if !s.Scene.CountsRounds() || u.TurnEffects == nil {
 		return nil
 	}
@@ -37,7 +37,7 @@ func (st *Store) openBleedingCheck(u Unit, s *live.SessionRuntimeState) error {
 	// A LEITURA QUE FALHA RECUSA A VEZ (ALE-373): sem as condições não dá para
 	// saber se alguém entra na vez sangrando, e passar a vez assim mesmo é
 	// afirmar que ninguém estava.
-	conditions, err := u.TurnEffects.ConditionsOf(context.Background(), *entry.CharacterID)
+	conditions, err := u.TurnEffects.ConditionsOf(ctx, *entry.CharacterID)
 	if err != nil {
 		return fmt.Errorf("ler as condições de %s: %w", entry.Label, err)
 	}
@@ -52,11 +52,11 @@ func (st *Store) openBleedingCheck(u Unit, s *live.SessionRuntimeState) error {
 
 // RollBleedingD20 recebe o d20 do teste: alcançar 15 com a Constituição
 // estabiliza; ficar abaixo pede o d6.
-func (st *Store) RollBleedingD20(sessionID int64, d20 int) (*live.SessionRuntimeState, error) {
+func (st *Store) RollBleedingD20(ctx context.Context, sessionID int64, d20 int) (*live.SessionRuntimeState, error) {
 	if d20 < 1 || d20 > 20 {
 		return nil, fmt.Errorf("o d20 do teste de Constituição vai de 1 a 20, e veio %d", d20)
 	}
-	state, err := st.State(context.Background(), sessionID)
+	state, err := st.State(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,18 +64,18 @@ func (st *Store) RollBleedingD20(sessionID int64, d20 int) (*live.SessionRuntime
 	if check == nil {
 		return nil, fmt.Errorf("%w (o d20)", ErrNoBleedingCheck)
 	}
-	con, err2 := st.turnEffects.ConstitutionOf(context.Background(), check.CharacterID)
+	con, err2 := st.turnEffects.ConstitutionOf(ctx, check.CharacterID)
 	if err = err2; err != nil {
 		return nil, fmt.Errorf("ler a Constituição de %s: %w", check.Label, err)
 	}
 	total := d20 + con
 	passed := engine.BleedingCheckPasses(d20, con)
 	if passed {
-		if err := st.turnEffects.StabilizeBleeding(context.Background(), check.CharacterID); err != nil {
+		if err := st.turnEffects.StabilizeBleeding(ctx, check.CharacterID); err != nil {
 			return nil, fmt.Errorf("estabilizar %s: %w", check.Label, err)
 		}
 	}
-	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID}, func(s *live.SessionRuntimeState) error {
+	return st.apply(ctx, sessionID, events.TurnAdvanced{SessionID: sessionID}, func(s *live.SessionRuntimeState) error {
 		c := s.Scene.PendingBleeding(false)
 		if c == nil || c.CharacterID != check.CharacterID {
 			return fmt.Errorf("%w (a vez mudou)", ErrNoBleedingCheck)
@@ -92,11 +92,11 @@ func (st *Store) RollBleedingD20(sessionID int64, d20 int) (*live.SessionRuntime
 
 // RollBleedingD6 recebe o d6 da falha e o tira do PV pelo caminho de toda
 // pancada — ficha e espelho da fila —, que já sabe matar no limiar.
-func (st *Store) RollBleedingD6(sessionID int64, d6 int) (*live.SessionRuntimeState, error) {
+func (st *Store) RollBleedingD6(ctx context.Context, sessionID int64, d6 int) (*live.SessionRuntimeState, error) {
 	if d6 < 1 || d6 > 6 {
 		return nil, fmt.Errorf("o d6 do dano vai de 1 a 6, e veio %d", d6)
 	}
-	state, err := st.State(context.Background(), sessionID)
+	state, err := st.State(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -104,12 +104,12 @@ func (st *Store) RollBleedingD6(sessionID int64, d6 int) (*live.SessionRuntimeSt
 	if check == nil {
 		return nil, fmt.Errorf("%w (o d6)", ErrNoBleedingCheck)
 	}
-	before := st.hitPointsOf(check.CharacterID)
-	if _, err := st.DeltaCharacterVitals(sessionID, check.CharacterID, live.PtrInt64(int64(-d6)), nil); err != nil {
+	before := st.hitPointsOf(ctx, check.CharacterID)
+	if _, err := st.DeltaCharacterVitals(ctx, sessionID, check.CharacterID, live.PtrInt64(int64(-d6)), nil); err != nil {
 		return nil, fmt.Errorf("tirar o d6 de %s: %w", check.Label, err)
 	}
-	after := st.hitPointsOf(check.CharacterID)
-	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID}, func(s *live.SessionRuntimeState) error {
+	after := st.hitPointsOf(ctx, check.CharacterID)
+	return st.apply(ctx, sessionID, events.TurnAdvanced{SessionID: sessionID}, func(s *live.SessionRuntimeState) error {
 		c := s.Scene.PendingBleeding(true)
 		if c == nil || c.CharacterID != check.CharacterID {
 			return fmt.Errorf("%w (a vez mudou)", ErrNoBleedingCheck)
@@ -121,11 +121,11 @@ func (st *Store) RollBleedingD6(sessionID int64, d6 int) (*live.SessionRuntimeSt
 }
 
 // hitPointsOf lê o PV atual da ficha, para a frase do resultado.
-func (st *Store) hitPointsOf(characterID int64) int64 {
+func (st *Store) hitPointsOf(ctx context.Context, characterID int64) int64 {
 	if st.sheet == nil {
 		return 0
 	}
-	pools, err := st.sheet.PoolsOf(context.Background(), []int64{characterID})
+	pools, err := st.sheet.PoolsOf(ctx, []int64{characterID})
 	if err != nil {
 		return 0
 	}

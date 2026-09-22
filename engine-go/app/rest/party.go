@@ -57,7 +57,7 @@ func (p Party) EndScene(
 	if _, _, err := p.expireScene(ctx, who, campaignID); err != nil {
 		return nil, err
 	}
-	state, err := p.sessions.EndScene(sessionID)
+	state, err := p.sessions.EndScene(ctx, sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("zerar a fila da sessão %d: %w", sessionID, err)
 	}
@@ -131,22 +131,22 @@ func (p Party) restOne(
 		log.Printf("sessão %d: o descanso do personagem %d falhou (%v)", sessionID, characterID, err)
 		return false
 	}
-	p.mirrorToTracker(sessionID, characterID, vitals)
+	p.mirrorToTracker(ctx, sessionID, characterID, vitals)
 	return true
 }
 
 // mirrorToTracker copia os PV/PM recém-gravados para a linha viva do
 // rastreador, quando o personagem está na iniciativa, para as barras mudarem
 // sem recarga.
-func (p Party) mirrorToTracker(sessionID, characterID int64, vitals sheet.RestedVitals) error {
-	state, err := p.sessions.State(context.Background(), sessionID)
+func (p Party) mirrorToTracker(ctx context.Context, sessionID, characterID int64, vitals sheet.RestedVitals) error {
+	state, err := p.sessions.State(ctx, sessionID)
 	if err != nil {
 		return err
 	}
 	for _, row := range state.Initiative {
 		if row.CharacterID != nil && *row.CharacterID == characterID {
 			hp, mp := vitals.HpCurrent, vitals.MpCurrent
-			_, err := p.sessions.PatchVitals(sessionID, row.ID, &hp, &mp)
+			_, err := p.sessions.PatchVitals(ctx, sessionID, row.ID, &hp, &mp)
 			return err
 		}
 	}

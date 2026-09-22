@@ -16,8 +16,8 @@ import (
 // mesmo assunto.
 
 // ProposeAttack guarda o ataque rolado. Ninguém perde PV aqui.
-func (st *Store) ProposeAttack(sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.AttackRolled{SessionID: sessionID},
+func (st *Store) ProposeAttack(ctx context.Context, sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { return live.ProposeAttack(s, attack) })
 }
 
@@ -33,8 +33,8 @@ func (st *Store) ProposeAttack(sessionID int64, attack live.PendingAttack) (*liv
 // São DUAS mutações, e a ordem importa: o dano primeiro, o provisório depois.
 // Invertida, uma falha ao gravar o PV deixaria a mesa sem o provisório e sem o
 // dano — e ninguém saberia que o ataque existiu.
-func (st *Store) CommitAttack(sessionID int64, who live.Attacker) (*live.SessionRuntimeState, error) {
-	state, err := st.State(context.Background(), sessionID)
+func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Attacker) (*live.SessionRuntimeState, error) {
+	state, err := st.State(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -50,17 +50,17 @@ func (st *Store) CommitAttack(sessionID int64, who live.Attacker) (*live.Session
 	// dano de um ataque que não cabia mais não pode pousar.
 	onTurn := attackerIsOnTurn(state, attack)
 	if onTurn {
-		if err := st.ActionFits(sessionID, engine.ActionStandard); err != nil {
+		if err := st.ActionFits(ctx, sessionID, engine.ActionStandard); err != nil {
 			return nil, err
 		}
 	}
 	if attack.Damage > 0 {
 		loss := int64(-attack.Damage)
-		if _, err := st.DeltaVitals(sessionID, attack.TargetEntryID, &loss, nil); err != nil {
+		if _, err := st.DeltaVitals(ctx, sessionID, attack.TargetEntryID, &loss, nil); err != nil {
 			return nil, err
 		}
 	}
-	return st.apply(sessionID, events.AttackSettled{SessionID: sessionID},
+	return st.apply(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error {
 			// Conferido DE NOVO sob a trava: entre a leitura lá em cima e esta
 			// linha, outro pedido pode ter cancelado o mesmo provisório.
@@ -84,7 +84,7 @@ func attackerIsOnTurn(s *live.SessionRuntimeState, attack live.PendingAttack) bo
 }
 
 // CancelAttack descarta o provisório sem mexer em ninguém.
-func (st *Store) CancelAttack(sessionID int64, who live.Attacker) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.AttackSettled{SessionID: sessionID},
+func (st *Store) CancelAttack(ctx context.Context, sessionID int64, who live.Attacker) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { return live.CancelAttack(s, who) })
 }

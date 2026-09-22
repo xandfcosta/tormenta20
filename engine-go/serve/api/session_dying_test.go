@@ -42,7 +42,7 @@ func TestFallingStabilizingWakingAndDyingFollowTheBook(t *testing.T) {
 	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 12, charID)); err != nil {
+	if _, err := store.AddInitiativeEntry(context.Background(), sid, sheetCombatant("A", 12, charID)); err != nil {
 		t.Fatalf("Add: %v", err)
 	}
 	entryID := stateOf(t, store, sid).Initiative[0].ID
@@ -55,7 +55,7 @@ func TestFallingStabilizingWakingAndDyingFollowTheBook(t *testing.T) {
 	threshold := min(int64(-10), -(pool.HpMax / 2))
 	hit := func(delta int64) int64 {
 		t.Helper()
-		if _, err := store.DeltaVitals(sid, entryID, live.PtrInt64(delta), nil); err != nil {
+		if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(delta), nil); err != nil {
 			t.Fatalf("mexer %d no PV: %v", delta, err)
 		}
 		return poolsOf(t, s, charID).HpCurrent
@@ -111,13 +111,13 @@ func fallenCombatant(t *testing.T) (*Server, int64, int64) {
 	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
+	if _, err := store.StartScene(context.Background(), sid, live.SceneAction); err != nil {
 		t.Fatalf("começar a cena: %v", err)
 	}
-	if _, err := store.AddInitiativeEntry(sid, live.InitiativeEntry{ID: "npc", Label: "Goblin", Initiative: 20, Type: "npc"}); err != nil {
+	if _, err := store.AddInitiativeEntry(context.Background(), sid, live.InitiativeEntry{ID: "npc", Label: "Goblin", Initiative: 20, Type: "npc"}); err != nil {
 		t.Fatalf("pôr o NPC: %v", err)
 	}
-	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 5, charID)); err != nil {
+	if _, err := store.AddInitiativeEntry(context.Background(), sid, sheetCombatant("A", 5, charID)); err != nil {
 		t.Fatalf("pôr o personagem: %v", err)
 	}
 	var entryID string
@@ -127,16 +127,16 @@ func fallenCombatant(t *testing.T) (*Server, int64, int64) {
 		}
 	}
 	standing := poolsOf(t, s, charID).HpCurrent
-	if _, err := store.DeltaVitals(sid, entryID, live.PtrInt64(-(standing + 3)), nil); err != nil {
+	if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(-(standing + 3)), nil); err != nil {
 		t.Fatalf("derrubar: %v", err)
 	}
-	if _, err := store.NextTurn(sid); err != nil { // vez do goblin
+	if _, err := store.NextTurn(context.Background(), sid); err != nil { // vez do goblin
 		t.Fatalf("girar: %v", err)
 	}
 	if st := stateOf(t, store, sid); st.Scene.Bleeding != nil {
 		t.Fatalf("o controle falhou: a vez é do goblin e já há teste de sangramento aberto")
 	}
-	if _, err := store.NextTurn(sid); err != nil { // vez de quem sangra
+	if _, err := store.NextTurn(context.Background(), sid); err != nil { // vez de quem sangra
 		t.Fatalf("girar para quem sangra: %v", err)
 	}
 	return s, sid, charID
@@ -151,7 +151,7 @@ func TestTheBleedingCheckOpensOnTheTurnAndPassingStabilizes(t *testing.T) {
 	if check == nil || check.CharacterID != charID || check.AwaitingD6 {
 		t.Fatalf("a vez chegou a quem sangra e o teste não abriu esperando o d20: %+v", check)
 	}
-	if _, err := s.sessions.RollBleedingD20(sid, 20); err != nil {
+	if _, err := s.sessions.RollBleedingD20(context.Background(), sid, 20); err != nil {
 		t.Fatalf("mandar o d20: %v", err)
 	}
 	if got := conditionsOf(t, s, charID); !reflect.DeepEqual(got, []string{"inconsciente"}) {
@@ -164,7 +164,7 @@ func TestTheBleedingCheckOpensOnTheTurnAndPassingStabilizes(t *testing.T) {
 	if after == nil || after.Outcome == "" || after.AwaitingD6 {
 		t.Errorf("a faixa tem de dizer que estabilizou, e o teste ficou %+v", after)
 	}
-	if _, err := s.sessions.RollBleedingD20(sid, 20); err == nil {
+	if _, err := s.sessions.RollBleedingD20(context.Background(), sid, 20); err == nil {
 		t.Error("o teste já foi resolvido, e um segundo d20 foi aceito")
 	}
 }
@@ -172,10 +172,10 @@ func TestTheBleedingCheckOpensOnTheTurnAndPassingStabilizes(t *testing.T) {
 // FALHAR PEDE O d6, e o d6 sai do PV pelo caminho de toda pancada (p236).
 func TestFailingTheBleedingCheckAsksForTheD6AndLosesIt(t *testing.T) {
 	s, sid, charID := fallenCombatant(t)
-	if _, err := s.sessions.RollBleedingD6(sid, 4); err == nil {
+	if _, err := s.sessions.RollBleedingD6(context.Background(), sid, 4); err == nil {
 		t.Fatal("o d6 foi aceito antes do d20")
 	}
-	if _, err := s.sessions.RollBleedingD20(sid, 1); err != nil {
+	if _, err := s.sessions.RollBleedingD20(context.Background(), sid, 1); err != nil {
 		t.Fatalf("mandar o d20: %v", err)
 	}
 	check := stateOf(t, s.sessions, sid).Scene.Bleeding
@@ -183,11 +183,11 @@ func TestFailingTheBleedingCheckAsksForTheD6AndLosesIt(t *testing.T) {
 		t.Fatalf("um 1 no d20 falha, e o teste tinha de esperar o d6: %+v", check)
 	}
 	for _, bad := range []int{0, 7} {
-		if _, err := s.sessions.RollBleedingD6(sid, bad); err == nil {
+		if _, err := s.sessions.RollBleedingD6(context.Background(), sid, bad); err == nil {
 			t.Errorf("o d6 %d foi aceito", bad)
 		}
 	}
-	if _, err := s.sessions.RollBleedingD6(sid, 4); err != nil {
+	if _, err := s.sessions.RollBleedingD6(context.Background(), sid, 4); err != nil {
 		t.Fatalf("mandar o d6: %v", err)
 	}
 	if hp := poolsOf(t, s, charID).HpCurrent; hp != -7 {
@@ -204,7 +204,7 @@ func TestFailingTheBleedingCheckAsksForTheD6AndLosesIt(t *testing.T) {
 // A VEZ QUE GIRA LEVA O TESTE: o mestre conduz, e a mesa não trava esperando.
 func TestTheNextTurnClearsAnUnansweredBleedingCheck(t *testing.T) {
 	s, sid, _ := fallenCombatant(t)
-	if _, err := s.sessions.NextTurn(sid); err != nil {
+	if _, err := s.sessions.NextTurn(context.Background(), sid); err != nil {
 		t.Fatalf("girar: %v", err)
 	}
 	if check := stateOf(t, s.sessions, sid).Scene.Bleeding; check != nil {
