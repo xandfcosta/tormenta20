@@ -73,7 +73,7 @@ func (l Lifecycle) SetStatus(
 	if err != nil {
 		return nil, fmt.Errorf("gravar a sessão %d como %q: %w", sessionID, requested, err)
 	}
-	return l.sessions.GetState(sessionID), nil
+	return l.sessions.State(ctx, sessionID)
 }
 
 // Rename troca o título, e o VAZIO é legítimo: a sessão tem NÚMERO, que é a
@@ -142,8 +142,8 @@ func (l Lifecycle) SaveNotes(
 // "funciona" e nada muda na tela. Um guarda que medisse o BANCO não pega isto:
 // ele já está vazio antes do reinício, porque a fila nunca chegou lá.
 //
-// E o `Load` depois do `Forget` também é obrigatório: sem ele o `GetState`
-// recria um estado vazio sem passar pelo banco, e a próxima carga fria
+// E a releitura depois do `Forget` também é obrigatória: sem ela o `State`
+// devolve a cópia em memória sem passar pelo banco, e a próxima carga fria
 // discordaria desta.
 func (l Lifecycle) RestartCombat(
 	ctx context.Context, who app.Caller, campaignID, sessionID int64,
@@ -157,10 +157,11 @@ func (l Lifecycle) RestartCombat(
 		return nil, fmt.Errorf("limpar a fila da sessão %d: %w", sessionID, err)
 	}
 	l.sessions.Forget(sessionID)
-	if _, err := l.sessions.Load(ctx, sessionID); err != nil {
+	state, err := l.sessions.State(ctx, sessionID)
+	if err != nil {
 		return nil, fmt.Errorf("reler a fila da sessão %d: %w", sessionID, err)
 	}
-	return l.sessions.GetState(sessionID), nil
+	return state, nil
 }
 
 // Delete apaga a sessão e TUDO que ela deixou em memória.

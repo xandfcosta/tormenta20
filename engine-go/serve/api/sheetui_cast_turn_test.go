@@ -38,7 +38,7 @@ func learnAndCast(t *testing.T, f sceneFixture, spellID string) *responseRecorde
 func startCombatWithSomeoneElseOnTurn(t *testing.T, f sceneFixture) {
 	t.Helper()
 	store := f.s.sessions
-	if _, err := store.Load(t.Context(), f.sessionID); err != nil {
+	if _, err := store.State(t.Context(), f.sessionID); err != nil {
 		t.Fatalf("carregar a sessão: %v", err)
 	}
 	if _, err := store.StartScene(f.sessionID, live.SceneAction); err != nil {
@@ -56,7 +56,7 @@ func startCombatWithSomeoneElseOnTurn(t *testing.T, f sceneFixture) {
 	if _, err := store.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("girar para a primeira vez: %v", err)
 	}
-	state := store.GetState(f.sessionID)
+	state := stateOf(t, store, f.sessionID)
 	if who := state.Initiative[state.TurnIndex]; who.CharacterID != nil {
 		t.Fatalf("o controle falhou: a vez é do personagem (%s), e o caso precisa dela ser de outro", who.Label)
 	}
@@ -95,7 +95,7 @@ func TestTheSecondStandardSpellOfATurnIsRefusedForLackOfAction(t *testing.T) {
 	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("passar a vez ao personagem: %v", err)
 	}
-	state := f.s.sessions.GetState(f.sessionID)
+	state := stateOf(t, f.s.sessions, f.sessionID)
 	who := state.Initiative[state.TurnIndex].CharacterID
 	if who == nil || *who != f.charID {
 		t.Fatalf("o controle falhou: a vez não é do personagem")
@@ -145,7 +145,7 @@ func TestARefusedCastDoesNotSpendTheTurnAction(t *testing.T) {
 	if strings.Contains(refusal, "sua vez") || strings.Contains(refusal, "sobrou ação") {
 		t.Fatalf("a recusa foi do TURNO e não do grimório: %q", refusal)
 	}
-	if left := f.s.sessions.GetState(f.sessionID).Scene; !left.StandardLeft {
+	if left := stateOf(t, f.s.sessions, f.sessionID).Scene; !left.StandardLeft {
 		t.Error("a conjuração recusada cobrou a ação padrão mesmo assim")
 	}
 

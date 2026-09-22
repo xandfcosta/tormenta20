@@ -16,7 +16,10 @@ func (tr tableRules) assertVitalsEditableFor(ctx context.Context, asked liveCtx,
 	if asked.Role == "gm" {
 		return nil
 	}
-	state := tr.sessions.GetState(asked.sessionID)
+	state, err := tr.sessions.State(ctx, asked.sessionID)
+	if err != nil {
+		return err
+	}
 	idx := live.FindEntryIndex(state, entryID)
 	if idx < 0 {
 		return errors.New("Entry " + entryID + " not found")
@@ -25,6 +28,6 @@ func (tr tableRules) assertVitalsEditableFor(ctx context.Context, asked liveCtx,
 	if entry.CharacterID == nil {
 		return errors.New("Only the GM can edit NPC vitals")
 	}
-	_, err := tr.assertCharacterOwner(ctx, asked.UserID, *entry.CharacterID)
+	_, err = tr.assertCharacterOwner(ctx, asked.UserID, *entry.CharacterID)
 	return err
 }

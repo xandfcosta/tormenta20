@@ -1,6 +1,8 @@
 package session
 
 import (
+	"context"
+
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/infra/events"
@@ -32,7 +34,11 @@ func (st *Store) ProposeAttack(sessionID int64, attack live.PendingAttack) (*liv
 // Invertida, uma falha ao gravar o PV deixaria a mesa sem o provisório e sem o
 // dano — e ninguém saberia que o ataque existiu.
 func (st *Store) CommitAttack(sessionID int64, who live.Attacker) (*live.SessionRuntimeState, error) {
-	attack, err := live.AttackToCommit(st.GetState(sessionID), who)
+	state, err := st.State(context.Background(), sessionID)
+	if err != nil {
+		return nil, err
+	}
+	attack, err := live.AttackToCommit(state, who)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +48,7 @@ func (st *Store) CommitAttack(sessionID int64, who live.Attacker) (*live.Session
 	// CONFERÊNCIA vem antes do dano e a COBRANÇA depois, pela razão do
 	// `ActionFits`: entre propor e confirmar o jogador pode ter conjurado, e o
 	// dano de um ataque que não cabia mais não pode pousar.
-	onTurn := attackerIsOnTurn(st.GetState(sessionID), attack)
+	onTurn := attackerIsOnTurn(state, attack)
 	if onTurn {
 		if err := st.ActionFits(sessionID, engine.ActionStandard); err != nil {
 			return nil, err

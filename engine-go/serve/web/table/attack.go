@@ -26,7 +26,10 @@ func (s Scene) AttackRoutes(r chi.Router) {
 
 // proposesAttack rola o ataque de quem está na vez contra a linha do caminho.
 func proposesAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	state := st.deps.Sessions().GetState(c.SessionID)
+	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
 	if state == nil || state.TurnIndex < 0 || state.TurnIndex >= len(state.Initiative) {
 		return nil, fmt.Errorf("fora de combate não há vez, e é a vez que diz quem ataca")
 	}
@@ -42,7 +45,7 @@ func proposesAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	}); err != nil {
 		return nil, err
 	}
-	return st.deps.Sessions().GetState(c.SessionID), nil
+	return st.deps.Sessions().State(c.R.Context(), c.SessionID)
 }
 
 func confirmsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {

@@ -41,7 +41,11 @@ func putPlayerTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	}
 	state, err := st.queue.PopulateParty(c.SessionID, []initiative.Combatant{*chosen})
 	if state == nil {
-		state = st.deps.Sessions().GetState(c.SessionID)
+		fresh, stateErr := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+		if stateErr != nil {
+			return nil, stateErr
+		}
+		state = fresh
 	}
 	return state, err
 }

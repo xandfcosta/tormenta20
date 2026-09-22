@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"t20engine/app/session"
 	"t20engine/domain/live"
 	"testing"
 
@@ -145,4 +146,15 @@ func seedClasse(t *testing.T, s *Server, characterID int64, name string, level i
 	if err != nil {
 		t.Fatalf("seed classe %q: %v", name, err)
 	}
+}
+
+// stateOf lê a mesa e FALHA ALTO quando o banco recusa: um teste que seguisse
+// com uma fila vazia afirmaria sobre nada (ALE-373).
+func stateOf(t *testing.T, store *session.Store, sessionID int64) *live.SessionRuntimeState {
+	t.Helper()
+	state, err := store.State(context.Background(), sessionID)
+	if err != nil {
+		t.Fatalf("ler a mesa da sessão %d: %v", sessionID, err)
+	}
+	return state
 }

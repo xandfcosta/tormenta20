@@ -86,7 +86,11 @@ func (s Scene) answerBleeding(r *http.Request, campaignID, sessionID int64, die 
 	if err != nil {
 		return err
 	}
-	check := s.deps.Sessions().GetState(sessionID).Scene.PendingBleeding(die == "d6")
+	state, err := s.deps.Sessions().State(r.Context(), sessionID)
+	if err != nil {
+		return err
+	}
+	check := state.Scene.PendingBleeding(die == "d6")
 	if check == nil {
 		return errors.New("a vez não está esperando este dado")
 	}
@@ -96,7 +100,6 @@ func (s Scene) answerBleeding(r *http.Request, campaignID, sessionID int64, die 
 			return fmt.Errorf("o teste é de %s, e só o dono da ficha ou o mestre rolam por ele", check.Label)
 		}
 	}
-	var state *live.SessionRuntimeState
 	switch die {
 	case "d20":
 		state, err = s.deps.Sessions().RollBleedingD20(sessionID, value)

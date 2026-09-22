@@ -21,7 +21,7 @@ func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 	}
 	// O CONTROLE do erro: uma recusa que já tivesse ESCRITO seria pior que
 	// nenhuma, e o status sozinho não diria.
-	for _, l := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+	for _, l := range stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative {
 		if l.CharacterID != nil && *l.CharacterID == outsider {
 			t.Fatal("o forasteiro entrou na fila apesar da recusa")
 		}
@@ -40,7 +40,7 @@ func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 	f.posta(t, f.gm,
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
 
-	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative
 	if len(queue) != 1 {
 		t.Fatalf("a fila tem %d linhas, queria 1", len(queue))
 	}
@@ -60,7 +60,7 @@ func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 	f.posta(t, f.gm, route, "{}")
 	f.posta(t, f.gm, route, "{}")
 
-	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
+	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 1 {
 		t.Errorf("dois cliques deram %d linhas", n)
 	}
 }
@@ -128,7 +128,7 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 
 	// O CONTROLE: o herói NÃO está na fila. Sem ele o caso mediria o caminho da
 	// fila com outra URL, que é o que ele existe para não fazer.
-	if queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; len(queue) != 0 {
+	if queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative; len(queue) != 0 {
 		t.Fatalf("a bancada já pôs %d na fila — o caso mediria o outro caminho", len(queue))
 	}
 	before := poolsOf(t, f.s, f.charID)
@@ -195,7 +195,7 @@ func TestTheCastVitalsMirrorIntoTheTrackerWhenThereIsALine(t *testing.T) {
 	}
 
 	sheet := poolsOf(t, f.s, f.charID)
-	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative {
 		if e.ID != entryID {
 			continue
 		}

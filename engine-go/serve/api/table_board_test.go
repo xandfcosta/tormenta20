@@ -604,11 +604,11 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 
 	// A VEZ é a do Ogro, que tem a iniciativa mais alta. A peça dele precisa
 	// apontar para a LINHA — é o `entryId` que liga o gesto ao turno.
-	state := f.s.sessions.GetState(f.sessionID)
+	state := stateOf(t, f.s.sessions, f.sessionID)
 	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("começar o turno: %v", err)
 	}
-	state = f.s.sessions.GetState(f.sessionID)
+	state = stateOf(t, f.s.sessions, f.sessionID)
 	onTurn := state.Initiative[state.TurnIndex]
 	placed, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: onTurn.Label, X: 2, Y: 2, EntryID: &onTurn.ID})
@@ -629,7 +629,7 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 	if rec := walk(3); rec.Code != http.StatusOK {
 		t.Fatalf("o primeiro movimento deu %d", rec.Code)
 	}
-	after := f.s.sessions.GetState(f.sessionID)
+	after := stateOf(t, f.s.sessions, f.sessionID)
 	if after.Scene.MovementLeft {
 		t.Error("andar gastou a ação de MOVIMENTO, e ela continua de pé")
 	}
@@ -641,7 +641,7 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 	if rec := walk(4); rec.Code != http.StatusOK {
 		t.Fatalf("o segundo movimento, que sai da padrão, deu %d", rec.Code)
 	}
-	after = f.s.sessions.GetState(f.sessionID)
+	after = stateOf(t, f.s.sessions, f.sessionID)
 	if after.Scene.StandardLeft || after.Scene.MovementLeft {
 		t.Errorf("o turno inteiro foi gasto em dois movimentos, e sobrou %+v", after.Scene)
 	}
@@ -681,7 +681,7 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
 		t.Fatalf("passar a vez: %v", err)
 	}
-	if fresh := f.s.sessions.GetState(f.sessionID).Scene; !fresh.StandardLeft || !fresh.MovementLeft {
+	if fresh := stateOf(t, f.s.sessions, f.sessionID).Scene; !fresh.StandardLeft || !fresh.MovementLeft {
 		t.Errorf("quem entra no turno o recebe inteiro, e veio %+v", fresh)
 	}
 }

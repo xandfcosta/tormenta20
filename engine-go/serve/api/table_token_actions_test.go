@@ -87,7 +87,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	}
 	// A LINHA fica: quem estava no combate continua no combate.
 	tracker := false
-	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative {
 		tracker = tracker || e.ID == entryID
 	}
 	if !tracker {
@@ -205,7 +205,7 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 // modos mediria sempre a recusa.
 func tokenOnTheQueue(t *testing.T, f sceneFixture, label string) (string, string) {
 	t.Helper()
-	state := f.s.sessions.GetState(f.sessionID)
+	state := stateOf(t, f.s.sessions, f.sessionID)
 	var row string
 	for i := range state.Initiative {
 		if state.Initiative[i].Label == label {
@@ -232,14 +232,14 @@ func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	id, originalLine := tokenOnTheQueue(t, f, "Ogro cansado")
-	before := len(f.s.sessions.GetState(f.sessionID).Initiative)
+	before := len(stateOf(t, f.s.sessions, f.sessionID).Initiative)
 
 	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/sozinha", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar com PV próprio deu %d", rec.Code)
 	}
 
-	queue := f.s.sessions.GetState(f.sessionID)
+	queue := stateOf(t, f.s.sessions, f.sessionID)
 	if len(queue.Initiative) != before+1 {
 		t.Fatalf("a fila ficou com %d linhas, esperado %d", len(queue.Initiative), before+1)
 	}
@@ -274,14 +274,14 @@ func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	id, row := tokenOnTheQueue(t, f, "Ogro cansado")
-	before := len(f.s.sessions.GetState(f.sessionID).Initiative)
+	before := len(stateOf(t, f.s.sessions, f.sessionID).Initiative)
 
 	if rec := f.pede(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/junto", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar sangrando junto deu %d", rec.Code)
 	}
 
-	if after := len(f.s.sessions.GetState(f.sessionID).Initiative); after != before {
+	if after := len(stateOf(t, f.s.sessions, f.sessionID).Initiative); after != before {
 		t.Errorf("a fila ganhou linha: %d → %d, e o ponto deste modo é NÃO ganhar", before, after)
 	}
 	b := nowBoard(t, f)
@@ -460,13 +460,13 @@ func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 	f.scene(t)
 	b := f.seedOpenBoard(t, "stone")
 	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
-	before := len(f.s.sessions.GetState(f.sessionID).Initiative)
+	before := len(stateOf(t, f.s.sessions, f.sessionID).Initiative)
 
 	if refusal := colaNaAba(t, f, b.ID, id, "sozinha", 8, 8); strings.Contains(refusal, "não há peça") {
 		t.Fatalf("o colar recusou:\n%s", refusal)
 	}
 
-	queue := f.s.sessions.GetState(f.sessionID)
+	queue := stateOf(t, f.s.sessions, f.sessionID)
 	if len(queue.Initiative) != before+1 {
 		t.Fatalf("a fila ficou com %d linhas, esperado %d", len(queue.Initiative), before+1)
 	}
@@ -529,7 +529,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 		t.Fatalf("duplicar com bloco próprio deu %d", rec.Code)
 	}
 
-	queue := f.s.sessions.GetState(f.sessionID)
+	queue := stateOf(t, f.s.sessions, f.sessionID)
 	var nova *live.InitiativeEntry
 	for i := range queue.Initiative {
 		if queue.Initiative[i].ID != originalLine {

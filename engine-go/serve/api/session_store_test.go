@@ -31,7 +31,7 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	store := s.sessions
 
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("initial Load: %v", err)
 	}
 	// A cena precisa estar iniciada para o turno andar.
@@ -46,7 +46,7 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 	}
 	// Nenhuma gravação é pedida: a mutação já gravou (ALE-371).
 	store.Forget(sid) // joga o cache fora → o próximo Load relê o banco
-	loaded, err := store.Load(ctx, sid)
+	loaded, err := store.State(ctx, sid)
 	if err != nil {
 		t.Fatalf("reload: %v", err)
 	}
@@ -68,7 +68,7 @@ func TestStoreHydrateFromBlob(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("seed blob: %v", err)
 	}
-	loaded, err := s.sessions.Load(ctx, sid)
+	loaded, err := s.sessions.State(ctx, sid)
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -96,7 +96,7 @@ func TestABlobWithoutATurnInventsNoScene(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("seed blob: %v", err)
 	}
-	loaded, err := s.sessions.Load(ctx, sid)
+	loaded, err := s.sessions.State(ctx, sid)
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -135,7 +135,7 @@ func TestStoreRefreshTakesBothPoolsFromTheSheet(t *testing.T) {
 	charID := seedCharacterAtLevel(t, s, gm, "A", "Guerreiro", 1, 3, 0)
 	onSheet := poolsOf(t, s, charID)
 	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 
@@ -166,7 +166,10 @@ func TestStoreRefreshTakesBothPoolsFromTheSheet(t *testing.T) {
 				t.Fatalf("Add npc: %v", err)
 			}
 
-			after := store.RefreshCharacterVitals(ctx, sid)
+			after, err := store.RefreshCharacterVitals(ctx, sid)
+			if err != nil {
+				t.Fatalf("refrescar os poços: %v", err)
+			}
 
 			row := rowLabelled(t, after, "A")
 			if live.DerefOr(row.HpMax, -1) != onSheet.HpMax ||
@@ -194,7 +197,7 @@ func TestStoreRefreshTakesBothPoolsFromTheSheet(t *testing.T) {
 // linha que o primeiro deixou.
 func emptyTheQueue(t *testing.T, store *session.Store, sid int64) {
 	t.Helper()
-	for _, e := range store.GetState(sid).Initiative {
+	for _, e := range stateOf(t, store, sid).Initiative {
 		if _, err := store.RemoveInitiativeEntry(sid, e.ID); err != nil {
 			t.Fatalf("limpar a fila: %v", err)
 		}
@@ -233,7 +236,7 @@ func TestAMutationThatCannotBeWrittenIsRefusedAndLeavesNoTrace(t *testing.T) {
 	if _, err := store.AddInitiativeEntry(sid, npc("Goblin", 12)); err == nil {
 		t.Error("a gravação falhou e o comando passou: a mesa veria uma linha que o banco não tem")
 	}
-	queue := store.GetState(sid).Initiative
+	queue := stateOf(t, store, sid).Initiative
 	for _, e := range queue {
 		if e.Label == "Goblin" {
 			t.Errorf("o goblin ficou na fila que a mesa lê, com %d linhas", len(queue))
@@ -253,7 +256,7 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	charID := seedCharacterAtLevel(t, s, gm, "A", "Guerreiro", 3, 10, 4) // hp 20/30, mp 5/10
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	hp, hpm, mp, mpm := int64(20), int64(30), int64(5), int64(10)
@@ -262,7 +265,7 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
 		t.Fatalf("Add: %v", err)
 	}
-	entryID := store.GetState(sid).Initiative[0].ID
+	entryID := stateOf(t, store, sid).Initiative[0].ID
 
 	snap, err := store.DeltaVitals(sid, entryID, live.PtrInt64(-8), live.PtrInt64(-2))
 	if err != nil {
@@ -291,7 +294,7 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	seedTempHpPool(t, s, charID, 5)
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	hp, hpm := int64(20), int64(30)
@@ -300,7 +303,7 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
 		t.Fatalf("Add: %v", err)
 	}
-	entryID := store.GetState(sid).Initiative[0].ID
+	entryID := stateOf(t, store, sid).Initiative[0].ID
 
 	if _, err := store.DeltaVitals(sid, entryID, live.PtrInt64(-8), nil); err != nil {
 		t.Fatalf("delta: %v", err)
@@ -344,7 +347,7 @@ func TestStoreConcurrentMutations(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
-	if got := len(store.GetState(sid).Initiative); got != 20 {
+	if got := len(stateOf(t, store, sid).Initiative); got != 20 {
 		t.Errorf("entries=%d, want 20", got)
 	}
 }
@@ -373,7 +376,7 @@ func TestEnteringYourTurnPaysForEachSustainedAbility(t *testing.T) {
 	seedSustained(t, s, charID, "velocidade")
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
@@ -415,7 +418,7 @@ func TestWithoutManaTheSustainedAbilityEnds(t *testing.T) {
 	seedSustained(t, s, charID, "velocidade")
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
@@ -424,7 +427,7 @@ func TestWithoutManaTheSustainedAbilityEnds(t *testing.T) {
 	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 12, charID)); err != nil {
 		t.Fatalf("Add: %v", err)
 	}
-	entryID := store.GetState(sid).Initiative[0].ID
+	entryID := stateOf(t, store, sid).Initiative[0].ID
 	// Zera o mana pelo caminho de verdade, e o CONTROLE vem junto: sem isto o
 	// teste mediria uma ficha cheia e passaria verde sobre nada.
 	if _, err := store.DeltaVitals(sid, entryID, nil, live.PtrInt64(-99)); err != nil {
@@ -469,7 +472,7 @@ func TestFallingToZeroHitPointsEndsTheSustainedAbilities(t *testing.T) {
 	seedSustained(t, s, charID, "velocidade")
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	if _, err := store.StartScene(sid, live.SceneAction); err != nil {
@@ -478,7 +481,7 @@ func TestFallingToZeroHitPointsEndsTheSustainedAbilities(t *testing.T) {
 	if _, err := store.AddInitiativeEntry(sid, sheetCombatant("A", 12, charID)); err != nil {
 		t.Fatalf("Add: %v", err)
 	}
-	entryID := store.GetState(sid).Initiative[0].ID
+	entryID := stateOf(t, store, sid).Initiative[0].ID
 	// A EXATAMENTE 0: desde a ALE-366 o PV desce abaixo de zero, e uma pancada
 	// enorme mataria — o caso aqui é cair, não morrer.
 	standing := poolsOf(t, s, charID).HpCurrent
@@ -562,7 +565,7 @@ func TestTheTurnThatEndsTakesTheEffectsThatLastOneTurn(t *testing.T) {
 	seedEffectWithScope(t, s, target, "armadura-arcana", "scene")
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.Load(ctx, sid); err != nil {
+	if _, err := store.State(ctx, sid); err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	if _, err := store.StartScene(sid, live.SceneAction); err != nil {

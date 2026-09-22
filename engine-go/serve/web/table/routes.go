@@ -292,15 +292,20 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if err != nil {
 		return View{}, status, err
 	}
-	// Hidrata do banco na primeira leitura, como o `onGetState` faz — sem isto
-	// um servidor recém-subido serve fila vazia para um combate em andamento.
-	if _, err := s.deps.Sessions().Load(ctx, sessionID); err != nil {
+	// HIDRATA do banco antes de desenhar, e o erro SOBE: sem isto um servidor
+	// recém-subido serviria fila vazia para um combate em andamento, e uma
+	// leitura que falha viraria "não há ninguém na mesa" (ALE-369, ALE-373).
+	if _, err := s.deps.Sessions().State(ctx, sessionID); err != nil {
 		return View{}, http.StatusInternalServerError, err
 	}
 	// `stateForRole` e não `redactForPlayers` direto: é o mesmo gargalo que o
 	// socket usa, e papel desconhecido cai em jogador. Esta cena não ganha uma
 	// segunda decisão sobre quem vê o quê.
-	st := live.StateForRole(role, s.deps.Sessions().RefreshCharacterVitals(ctx, sessionID))
+	fresh, err := s.deps.Sessions().RefreshCharacterVitals(ctx, sessionID)
+	if err != nil {
+		return View{}, http.StatusInternalServerError, err
+	}
+	st := live.StateForRole(role, fresh)
 	group, mine, eu := s.tableRoster(ctx, userID, campaignID)
 	// A RESERVA de PV temporário é DERIVADA a cada desenho, e nunca espelhada na
 	// linha da fila. O estado ao vivo mora em memória e tem vários sítios de

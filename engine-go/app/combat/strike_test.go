@@ -22,7 +22,9 @@ type queueDouble struct {
 	stored *live.PendingAttack
 }
 
-func (f *queueDouble) GetState(int64) *live.SessionRuntimeState { return f.state }
+func (f *queueDouble) State(context.Context, int64) (*live.SessionRuntimeState, error) {
+	return f.state, nil
+}
 
 func (f *queueDouble) ProposeAttack(_ int64, a live.PendingAttack) (*live.SessionRuntimeState, error) {
 	f.stored = &a

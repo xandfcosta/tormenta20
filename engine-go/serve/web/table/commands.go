@@ -1,6 +1,7 @@
 package table
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -197,7 +198,10 @@ func poolDeltas(pool string, delta int64) (hp, mp *int64, ok bool) {
 // sem ninguém ter pedido. Quem sabe o estado é quem o guarda.
 func toggleEye(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
-	state := st.deps.Sessions().GetState(c.SessionID)
+	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
 	i := live.FindEntryIndex(state, entryID)
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
@@ -247,7 +251,10 @@ func editaOCombatente(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	if err := live.ValidateInitiative(edit.Initiative); err != nil {
 		return nil, err
 	}
-	before := st.deps.Sessions().GetState(c.SessionID)
+	before, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
 	i := live.FindEntryIndex(before, entryID)
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
@@ -339,7 +346,10 @@ func (s Scene) announcesTheRest(
 	s.deps.SSE().Emit(sessionID, "", "session-rest", map[string]any{
 		"sessionId": sessionID, "scope": scope, "condition": quality,
 	})
-	state := s.deps.Sessions().GetState(sessionID)
+	state, err := s.deps.Sessions().State(context.Background(), sessionID)
+	if err != nil {
+		return nil, err
+	}
 	// O PARCIAL é contado e DITO: descartar a contagem faria o mestre ler
 	// "descansou" com duas de cinco fichas de fora. Volta como recusa porque é o
 	// caminho que acende a frase — e "3 de 5" é o que ele precisa ver para saber
@@ -397,7 +407,11 @@ func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// estado que as outras telas precisam receber.
 	state, err := st.queue.PopulateParty(c.SessionID, combatants)
 	if state == nil {
-		state = st.deps.Sessions().GetState(c.SessionID)
+		fresh, stateErr := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+		if stateErr != nil {
+			return nil, stateErr
+		}
+		state = fresh
 	}
 	return state, err
 }

@@ -232,7 +232,7 @@ func TestEndingTheSceneDoesNotTurnItOffIfItDidNotReachTheSheets(t *testing.T) {
 		t.Fatal("encerrou sem ter conseguido alcançar as fichas do grupo")
 	}
 
-	if !f.srv.sessions.GetState(f.sessionID).InScene() {
+	if !stateOf(t, f.srv.sessions, f.sessionID).InScene() {
 		t.Error("a cena foi desligada mesmo assim")
 	}
 }

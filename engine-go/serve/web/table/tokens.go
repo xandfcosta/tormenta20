@@ -90,8 +90,12 @@ func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
+	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
 	board, err := st.deps.Boards().Populate(
-		c.R.Context(), c.SessionID, c.BoardID, st.deps.Sessions().GetState(c.SessionID), chosen,
+		c.R.Context(), c.SessionID, c.BoardID, state, chosen,
 	)
 	if err != nil {
 		return board, err

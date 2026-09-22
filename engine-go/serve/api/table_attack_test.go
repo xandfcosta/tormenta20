@@ -23,7 +23,7 @@ func attackOnTurn(t *testing.T) (sceneFixture, string) {
 	f := newSceneFixture(t)
 	itemSemeia(t, f, f.charID, "espada-longa", "Espada longa", "wielded")
 	store := f.s.sessions
-	if _, err := store.Load(t.Context(), f.sessionID); err != nil {
+	if _, err := store.State(t.Context(), f.sessionID); err != nil {
 		t.Fatalf("carregar a sessão: %v", err)
 	}
 	if _, err := store.StartScene(f.sessionID, live.SceneAction); err != nil {
@@ -43,7 +43,7 @@ func attackOnTurn(t *testing.T) (sceneFixture, string) {
 			t.Fatalf("girar a vez: %v", err)
 		}
 	}
-	state := store.GetState(f.sessionID)
+	state := stateOf(t, store, f.sessionID)
 	if state.Initiative[state.TurnIndex].CharacterID == nil {
 		t.Fatalf("a vez tinha de ser do personagem, e é de %q", state.Initiative[state.TurnIndex].Label)
 	}
@@ -84,18 +84,18 @@ func TestAttackingSpendsTheStandardAction(t *testing.T) {
 	}
 	// O CONTROLE: de pé, na vez e armado, o provisório NASCE. Sem isto, um
 	// ataque recusado por qualquer outro motivo passaria pelos casos abaixo.
-	if f.s.sessions.GetState(f.sessionID).PendingAttack == nil {
+	if stateOf(t, f.s.sessions, f.sessionID).PendingAttack == nil {
 		t.Fatalf("o ataque permitido não virou provisório: %q", tableRefusal(t, rec.Body.String()))
 	}
 	// PROPOR NÃO COBRA: o provisório ainda pode ser cancelado, e um ataque
 	// cancelado não aconteceu.
-	if scene := f.s.sessions.GetState(f.sessionID).Scene; !scene.StandardLeft {
+	if scene := stateOf(t, f.s.sessions, f.sessionID).Scene; !scene.StandardLeft {
 		t.Fatal("propor o ataque já gastou a ação padrão, antes de o mestre confirmar")
 	}
 	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("confirmar o ataque deu %d", rec.Code)
 	}
-	scene := f.s.sessions.GetState(f.sessionID).Scene
+	scene := stateOf(t, f.s.sessions, f.sessionID).Scene
 	if scene.StandardLeft {
 		t.Error("o ataque confirmado não gastou a ação padrão")
 	}
@@ -107,7 +107,7 @@ func TestAttackingSpendsTheStandardAction(t *testing.T) {
 	// única — movimento não vira padrão. O que se prende é o PROVISÓRIO, que
 	// não pode nascer.
 	rec = f.pede(t, f.player, http.MethodPost, attack, "")
-	if f.s.sessions.GetState(f.sessionID).PendingAttack != nil {
+	if stateOf(t, f.s.sessions, f.sessionID).PendingAttack != nil {
 		t.Error("sem ação padrão no turno, um segundo ataque foi rolado")
 	}
 	if refusal := tableRefusal(t, rec.Body.String()); !strings.Contains(refusal, "não sobrou ação neste turno") {
@@ -118,7 +118,7 @@ func TestAttackingSpendsTheStandardAction(t *testing.T) {
 func TestAStunnedCharacterDoesNotAttack(t *testing.T) {
 	f, goblin := attackOnTurn(t)
 	var pc string
-	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.sessions, f.sessionID).Initiative {
 		if e.CharacterID != nil {
 			pc = e.ID
 		}
@@ -127,7 +127,7 @@ func TestAStunnedCharacterDoesNotAttack(t *testing.T) {
 		t.Fatalf("marcar Atordoado deu %d", rec.Code)
 	}
 	rec := f.pede(t, f.player, http.MethodPost, f.tableUrl()+"/iniciativa/"+goblin+"/atacar", "")
-	if f.s.sessions.GetState(f.sessionID).PendingAttack != nil {
+	if stateOf(t, f.s.sessions, f.sessionID).PendingAttack != nil {
 		t.Error("atordoado, o personagem rolou um ataque")
 	}
 	if refusal := tableRefusal(t, rec.Body.String()); !strings.Contains(refusal, "não dá para agir") {

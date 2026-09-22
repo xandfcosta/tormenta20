@@ -122,13 +122,13 @@ func TestAPatchThatAsksForNothingIsRefused(t *testing.T) {
 	}
 }
 
-// O caminho: o comando recarrega a fila depois de limpá-la, senão o `GetState`
-// recria um estado vazio sem passar pelo banco e a próxima carga fria
+// O caminho: o comando recarrega a fila depois de limpá-la, senão o `State`
+// devolve a cópia em memória sem passar pelo banco e a próxima carga fria
 // discordaria desta.
 func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
-	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n < 2 {
+	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n < 2 {
 		t.Fatalf("a cena montou %d combatentes — não há o que reiniciar", n)
 	}
 
@@ -136,7 +136,7 @@ func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 		t.Fatalf("reiniciar deu %d", rec.Code)
 	}
 
-	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
+	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 0 {
 		t.Errorf("a fila ao vivo continua com %d combatentes", n)
 	}
 }

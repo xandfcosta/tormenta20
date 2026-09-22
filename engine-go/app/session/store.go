@@ -2,7 +2,7 @@ package session
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"sync"
 
 	"t20engine/domain/live"
@@ -33,7 +33,13 @@ type Store struct {
 	newID func() string
 	// snapshots é o RETRATO no banco, e é ele a fonte da verdade: toda mutação
 	// passa por ele antes de existir para alguém (ALE-371).
+	//
+	// É o retrato SOLTO, para o gesto que só mexe na fila. O gesto que também
+	// escreve na FICHA usa o da unidade (ver `unit.go`).
 	snapshots SessionSnapshots
+	// units abre a unidade de trabalho de um gesto: uma transação para a fila e
+	// a ficha juntas (ALE-373).
+	units Units
 	// bus é por onde as mutações desta sessão viram notícia.
 	//
 	// Quem publica é o `apply`, DEPOIS de soltar a trava, e o evento diz o que
@@ -49,7 +55,10 @@ type Store struct {
 
 // NewStore recebe a PORTA da ficha por parâmetro — injetada e não
 // importada, que é o que impede o regime de conhecer as regras da ficha.
-func NewStore(snapshots SessionSnapshots, newID func() string, sheet live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus) *Store {
+func NewStore(
+	snapshots SessionSnapshots, units Units, newID func() string,
+	sheet live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus,
+) *Store {
 	return &Store{
 		States:      map[int64]*live.SessionRuntimeState{},
 		seqs:        map[int64]uint64{},
@@ -57,6 +66,7 @@ func NewStore(snapshots SessionSnapshots, newID func() string, sheet live.SheetV
 		sheet:       sheet,
 		turnEffects: turnEffects,
 		snapshots:   snapshots,
+		units:       units,
 		bus:         bus,
 	}
 }
@@ -93,20 +103,6 @@ func (st *Store) LiveSessionsWithCharacter(characterID int64) []int64 {
 		}
 	}
 	return out
-}
-
-// GetState devolve um instantâneo do estado atual, lido do banco na primeira
-// vez. Se a leitura falha, o instantâneo é um rastreador VAZIO e NÃO fica em
-// memória: a próxima pergunta tenta o banco de novo.
-func (st *Store) GetState(sessionID int64) *live.SessionRuntimeState {
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	s, err := st.cachedLocked(context.Background(), sessionID)
-	if err != nil {
-		log.Printf("session %d: %v", sessionID, err)
-		return live.EmptyRuntimeState()
-	}
-	return live.CloneState(s)
 }
 
 // apply roda uma mutação pura sob a trava, publica o evento e devolve o
@@ -174,33 +170,72 @@ func (st *Store) RemoveInitiativeEntry(sessionID int64, entryID string) (*live.S
 		func(s *live.SessionRuntimeState) error { return live.RemoveEntry(s, entryID) })
 }
 
+// NextTurn passa a vez, e é UM gesto: a fila, os efeitos que acabam com a vez,
+// a manutenção das sustentadas e o teste de sangramento gravam na MESMA
+// transação (ALE-373).
+//
+// TUDO-OU-NADA, e isto é decisão do dono que inverteu a de antes. Aqui as
+// escritas da ficha eram engolidas com `_ =`, e a razão escrita era boa: "uma
+// mesa travada no turno de alguém é pior que uma manutenção não cobrada". O
+// preço dela era pior — a vez passava com o efeito ainda ligado na ficha, sem
+// ninguém saber (ALE-372). Agora a escrita que falha RECUSA o clique.
+//
+// LER TAMBÉM: qualquer erro do banco recusa, e não só os de escrita. Quem não
+// consegue ler a ficha não sabe o que expirar nem o que cobrar, e seguir é
+// afirmar que não havia nada — decisão do dono, e é o princípio que sustenta a
+// fatia inteira: sem o banco não temos certeza de nada.
 func (st *Store) NextTurn(sessionID int64) (*live.SessionRuntimeState, error) {
-	var charge upkeepCharge
-	turned, err := st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error {
-			// O FIM DA VEZ vem ANTES do começo da próxima: o que durava a vez
-			// que acaba tem de sair antes de alguém entrar na sua.
-			st.expireTurnEffects(s)
-			live.AdvanceTurn(s)
-			charge = st.payUpkeep(s)
-			st.openBleedingCheck(s)
-			return nil
-		})
-	if err != nil || charge.pm == 0 {
-		return turned, err
-	}
-	// O TURNO VIRA MESMO QUE O MANA NÃO SAIA: a manutenção é uma consequência
-	// da virada, e uma gravação que falha não pode desfazer a vez de ninguém.
-	spent := int64(-charge.pm)
-	if paid, err := st.DeltaVitals(sessionID, charge.entryID, nil, &spent); err == nil {
-		return paid, nil
-	}
-	return turned, nil
+	return st.turnGesture(sessionID, func(u Unit, s *live.SessionRuntimeState) error {
+		// O FIM DA VEZ vem ANTES do começo da próxima: o que durava a vez que
+		// acaba tem de sair antes de alguém entrar na sua.
+		if err := st.expireTurnEffects(u, s); err != nil {
+			return err
+		}
+		live.AdvanceTurn(s)
+		return st.payUpkeep(u, s)
+	})
 }
 
+// turnGesture é o corpo comum de quem gira a vez: abre a unidade, muta o
+// retrato dentro dela e só publica DEPOIS de a transação fechar — anunciar
+// antes seria contar à mesa um turno que o disco ainda pode recusar.
+func (st *Store) turnGesture(
+	sessionID int64, change func(Unit, *live.SessionRuntimeState) error,
+) (*live.SessionRuntimeState, error) {
+	st.Mu.Lock()
+	var clone *live.SessionRuntimeState
+	err := st.units.Do(context.Background(), func(u Unit) error {
+		saved, err := u.Snapshots.Mutate(context.Background(), sessionID,
+			func(s *live.SessionRuntimeState) error {
+				if err := change(u, s); err != nil {
+					return err
+				}
+				return st.openBleedingCheck(u, s)
+			})
+		if err != nil {
+			return err
+		}
+		st.States[sessionID] = saved
+		clone = live.CloneState(saved)
+		clone.Seq = st.nextSeqLocked(sessionID)
+		return nil
+	})
+	st.Mu.Unlock()
+	if err != nil {
+		return nil, err
+	}
+	st.bus.Publish(events.TurnAdvanced{SessionID: sessionID})
+	return clone, nil
+}
+
+// PreviousTurn volta a vez. Ele também é gesto de turno — a mesma unidade —,
+// mas não desfaz o que a vez que passou consumiu: voltar é conserto de mesa, e
+// ressuscitar efeito expirado exigiria guardar o que foi derrubado.
 func (st *Store) PreviousTurn(sessionID int64) (*live.SessionRuntimeState, error) {
-	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { live.RewindTurn(s); return nil })
+	return st.turnGesture(sessionID, func(_ Unit, s *live.SessionRuntimeState) error {
+		live.RewindTurn(s)
+		return nil
+	})
 }
 
 func (st *Store) Reset(sessionID int64) (*live.SessionRuntimeState, error) {
@@ -253,9 +288,12 @@ func (st *Store) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpD
 	if err != nil {
 		return nil, err
 	}
-	entryID := st.entryIDForCharacter(sessionID, characterID)
+	entryID, err := st.entryIDForCharacter(sessionID, characterID)
+	if err != nil {
+		return nil, err
+	}
 	if entryID == "" {
-		return st.GetState(sessionID), nil
+		return st.State(context.Background(), sessionID)
 	}
 	return st.apply(sessionID, vitalsEvent(sessionID, entryID, &characterID),
 		patchEntryVitals(entryID, hp, mp))
@@ -267,13 +305,17 @@ func (st *Store) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpD
 // Vazio e não erro: no elenco, estar FORA da iniciativa é o estado normal — o
 // mestre cura a Arwen entre duas brigas —, e tratar isso como falha faria o
 // gesto recusar exatamente o caso que ele veio atender.
-func (st *Store) entryIDForCharacter(sessionID, characterID int64) string {
-	for _, e := range st.GetState(sessionID).Initiative {
+func (st *Store) entryIDForCharacter(sessionID, characterID int64) (string, error) {
+	state, err := st.State(context.Background(), sessionID)
+	if err != nil {
+		return "", err
+	}
+	for _, e := range state.Initiative {
 		if e.CharacterID != nil && *e.CharacterID == characterID {
-			return e.ID
+			return e.ID, nil
 		}
 	}
-	return ""
+	return "", nil
 }
 
 // DeltaVitals move os vitais de uma entrada. Se há personagem atrás dela, quem
@@ -295,8 +337,12 @@ func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *
 }
 
 // RefreshCharacterVitals repergunta o POÇO INTEIRO — máximo e atual — de toda
-// entrada que tem personagem atrás. Melhor esforço: uma piscada do banco vira
-// log e devolve o instantâneo atual em vez de derrubar a leitura.
+// entrada que tem personagem atrás.
+//
+// ELA DEVOLVE ERRO desde a ALE-373: era "melhor esforço", logava a piscada do
+// banco e devolvia o instantâneo que tinha. O instantâneo que ela devolvia
+// nessa hora era o da memória, com os poços de antes — a mesa lia números
+// velhos achando que eram os de agora.
 //
 // # O atual TAMBÉM, e é isso que a ALE-358 consertou
 //
@@ -322,7 +368,7 @@ func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *
 // Havia um `clampCurrentTo` aqui para o caso de o máximo ENCOLHER com o atual
 // acima dele. Ele deixou de ter caso: o atual vem do poço derivado, que é
 // `máximo − dano` e já nasce na faixa (ALE-355).
-func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *live.SessionRuntimeState {
+func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
 	s, err := st.cachedLocked(ctx, sessionID)
 	var ids []int64
@@ -330,13 +376,15 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *l
 		ids = uniqueCharacterIDs(s)
 	}
 	st.Mu.Unlock()
+	if err != nil {
+		return nil, err
+	}
 	if len(ids) == 0 {
-		return st.GetState(sessionID)
+		return st.State(ctx, sessionID)
 	}
 	pools, err := st.sheet.PoolsOf(ctx, ids)
 	if err != nil {
-		log.Printf("session %d: hpMax refresh failed (%v)", sessionID, err)
-		return st.GetState(sessionID)
+		return nil, fmt.Errorf("reler os poços da sessão %d: %w", sessionID, err)
 	}
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
@@ -354,11 +402,10 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *l
 		return nil
 	})
 	if err != nil {
-		log.Printf("session %d: refrescar os poços falhou (%v)", sessionID, err)
-		return live.EmptyRuntimeState()
+		return nil, fmt.Errorf("gravar os poços refrescados da sessão %d: %w", sessionID, err)
 	}
 	st.States[sessionID] = saved
-	return live.CloneState(saved)
+	return live.CloneState(saved), nil
 }
 
 func uniqueCharacterIDs(s *live.SessionRuntimeState) []int64 {

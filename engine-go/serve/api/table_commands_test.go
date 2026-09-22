@@ -196,7 +196,7 @@ func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
 	}
-	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative
 	if len(queue) != 1 || queue[0].CharacterID == nil || *queue[0].CharacterID != f.charID {
 		t.Fatalf("a fila ficou %+v, queria só o personagem %d", queue, f.charID)
 	}
@@ -204,7 +204,7 @@ func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o segundo clique deu %d", rec.Code)
 	}
-	if after := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; len(after) != 1 {
+	if after := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative; len(after) != 1 {
 		t.Errorf("o segundo clique deixou %d combatentes na fila, queria 1", len(after))
 	}
 }
@@ -228,7 +228,7 @@ func TestAddPartyBringsEveryMemberIncludingTheGmsOwnCharacter(t *testing.T) {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
 	}
 
-	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative
 	inQueue := map[int64]bool{}
 	for _, e := range queue {
 		if e.CharacterID != nil {
@@ -378,7 +378,7 @@ func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 	// A diferença para o "Encerrar cena": a cena continua LIGADA. Recuperar ao
 	// fim de uma luta não acaba a cena, e confundir os dois tiraria a fila da
 	// mesa no meio do combate.
-	if !f.s.tableHost().Sessions().GetState(f.sessionID).InScene() {
+	if !stateOf(t, f.s.tableHost().Sessions(), f.sessionID).InScene() {
 		t.Error("a recuperação de cena desligou a cena")
 	}
 }
@@ -391,7 +391,7 @@ func (f sceneFixture) tracker(t *testing.T) string {
 	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
 	}
-	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative {
 		if e.CharacterID != nil && *e.CharacterID == f.charID {
 			return e.ID
 		}
@@ -427,7 +427,7 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 	}
 	// E a linha espelha, senão a fila mostraria o número velho ao lado da ficha
 	// certa.
-	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative {
 		if e.ID == entryID && (e.HpCurrent == nil || *e.HpCurrent != wanted) {
 			t.Errorf("a linha não espelhou a ficha: %v", e.HpCurrent)
 		}
@@ -465,7 +465,7 @@ func TestTheEyeInvertsTheStateTheServerKeeps(t *testing.T) {
 	eye := f.tableUrl() + "/iniciativa/" + entryID + "/vitais/hp/oculto"
 
 	hidden := func() bool {
-		for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+		for _, e := range stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative {
 			if e.ID == entryID {
 				return e.HpHidden != nil && *e.HpHidden
 			}
@@ -534,11 +534,11 @@ func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative
 	entryID := queue[0].ID
 
 	tableSeesHP := func() bool {
-		forTable := live.StateForRole("player", f.s.tableHost().Sessions().GetState(f.sessionID))
+		forTable := live.StateForRole("player", stateOf(t, f.s.tableHost().Sessions(), f.sessionID))
 		for _, e := range forTable.Initiative {
 			if e.ID == entryID {
 				return e.HpMax != nil
@@ -605,14 +605,14 @@ func TestTheRowVerbsBelongToTheGm(t *testing.T) {
 func TestRemoveTakesTheCombatantOutOfTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
-	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
+	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 1 {
 		t.Fatalf("a fila começou com %d, queria 1", n)
 	}
 
 	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/remover", ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
-	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
+	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 0 {
 		t.Errorf("a fila ficou com %d combatentes", n)
 	}
 }
@@ -674,7 +674,7 @@ func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d: %s", rec.Code, rec.Body.String())
 	}
-	queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative
 	if len(queue) != 1 {
 		t.Fatalf("a fila ficou com %d combatentes", len(queue))
 	}
@@ -695,7 +695,7 @@ func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar sem PV deu %d", rec.Code)
 	}
-	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative {
 		if e.Label == "Figurante" && e.HpMax != nil {
 			t.Errorf("PV 0 virou barra %v — o capanga sem vida rastreada apareceu morto", *e.HpMax)
 		}
@@ -715,7 +715,7 @@ func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {
 	if body := rec.Body.String(); !strings.Contains(body, "400") {
 		t.Errorf("a recusa não citou a iniciativa ofensiva; corpo = %q", body)
 	}
-	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
+	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 0 {
 		t.Errorf("o combatente recusado entrou na fila mesmo assim (%d na fila)", n)
 	}
 }
@@ -774,7 +774,7 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	// O CONTROLE do que a issue descreve: o grupo entra com iniciativa ZERO.
-	if queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; queue[0].Initiative != 0 {
+	if queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative; queue[0].Initiative != 0 {
 		t.Fatalf("o grupo entrou com iniciativa %d; o teste mede o conserto do zero", queue[0].Initiative)
 	}
 
@@ -784,7 +784,7 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 		t.Fatalf("editar deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
 	}
 
-	order := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	order := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative
 	if len(order) != 1 || order[0].ID != entryID {
 		t.Fatalf("a linha não sobreviveu à edição: %+v", order)
 	}
@@ -812,7 +812,7 @@ func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 	if body := trechoDeSinais(rec.Body.String()); !strings.Contains(body, "41") {
 		t.Errorf("a recusa não citou a iniciativa ofensiva; sinais = %s", body)
 	}
-	if queue := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; queue[0].Initiative != 0 {
+	if queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative; queue[0].Initiative != 0 {
 		t.Errorf("a iniciativa recusada foi gravada mesmo assim (%d)", queue[0].Initiative)
 	}
 }
@@ -826,7 +826,7 @@ func TestEditingInventsNoPoolOnALifelessEntry(t *testing.T) {
 		`{"new_name":"Figurante","new_initiative":5,"new_hp":0,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d", rec.Code)
 	}
-	entryID := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative[0].ID
+	entryID := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative[0].ID
 
 	// A página manda PV, como mandaria se estivesse defasada.
 	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
@@ -834,7 +834,7 @@ func TestEditingInventsNoPoolOnALifelessEntry(t *testing.T) {
 		t.Fatalf("editar deu %d", rec.Code)
 	}
 
-	row := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative[0]
+	row := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative[0]
 	if row.Initiative != 9 {
 		t.Errorf("a iniciativa não foi corrigida: %d", row.Initiative)
 	}
