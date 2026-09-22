@@ -67,6 +67,15 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 //	attackLine(...) // "24 vs 17 · 2d8+3 (8+5) · RD 5 → 11"
 func attackLine(pa live.PendingAttack) string {
 	line := fmt.Sprintf("%d vs %d", pa.Total, pa.Defense)
+	// O NATURAL QUE DESMENTE A COMPARAÇÃO é nomeado (p221): "ERROU · 14 vs 13"
+	// é a conta certa com cara de regra quebrada. Quando a comparação já conta a
+	// história, o natural não entra — seria ruído no meio do turno.
+	switch {
+	case pa.Roll == 1 && pa.Total >= pa.Defense:
+		line += " · 1 natural erra"
+	case pa.Roll == 20 && pa.Total < pa.Defense:
+		line += " · 20 natural acerta"
+	}
 	if !pa.Hit {
 		return line
 	}

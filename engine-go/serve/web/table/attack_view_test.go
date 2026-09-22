@@ -50,6 +50,31 @@ func TestTheAttackLineNamesTheReductionOnlyWhenItBit(t *testing.T) {
 	}
 }
 
+// O DADO NATURAL que desmente a comparação é NOMEADO (p221). Sem isso a faixa
+// diz "ERROU · 14 vs 13" — a conta certa com cara de regra quebrada, que foi
+// o que olhar a tela pegou.
+func TestTheAttackLineNamesTheNaturalRollThatOverridesTheComparison(t *testing.T) {
+	missOnOne := attackLine(live.PendingAttack{Roll: 1, Total: 14, Defense: 13})
+	if missOnOne != "14 vs 13 · 1 natural erra" {
+		t.Errorf("a linha = %q, e o 1 natural que erra contra Defesa menor tem de aparecer", missOnOne)
+	}
+	hitOnTwenty := attackLine(live.PendingAttack{
+		Roll: 20, Total: 22, Defense: 25, Hit: true, Critical: true,
+		Dice: []int{6, 3}, Faces: 8, RawDamage: 9, Damage: 9,
+	})
+	if hitOnTwenty != "22 vs 25 · 20 natural acerta · 2d8 (6+3) = 9 de dano" {
+		t.Errorf("a linha = %q, e o 20 natural que acerta contra Defesa maior tem de aparecer", hitOnTwenty)
+	}
+	// Quando a comparação já conta a história, o natural é ruído.
+	plainTwenty := attackLine(live.PendingAttack{
+		Roll: 20, Total: 30, Defense: 25, Hit: true, Critical: true,
+		Dice: []int{6, 3}, Faces: 8, RawDamage: 9, Damage: 9,
+	})
+	if plainTwenty != "30 vs 25 · 2d8 (6+3) = 9 de dano" {
+		t.Errorf("a linha = %q: o 20 que acertaria de qualquer jeito não precisa de nota", plainTwenty)
+	}
+}
+
 // O VEREDICTO é uma das três palavras, e a tinta segue a palavra.
 func TestTheVerdictIsOneOfThreeWords(t *testing.T) {
 	st := live.EmptyRuntimeState()
