@@ -26,12 +26,25 @@ type SessionSnapshots interface {
 	Read(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
 	// Mutate lê o retrato, deixa `change` mudar e GRAVA antes de devolver.
 	//
-	// Os três passos não moram numa transação só, e isso é medido, não
-	// esquecido: a função de mudança do `NextTurn` expira efeitos, paga
-	// manutenção e abre o teste de sangramento — tudo isso ESCREVE NA FICHA,
-	// por outra conexão. Com a transação de escrita aberta em volta dela, essas
-	// escritas esbarram na trava do SQLite e esperam o `busy_timeout` inteiro: a
-	// suíte foi de ~30s para 244s e dois casos reprovaram em 5s cada.
+	// OS TRÊS PASSOS NÃO MORAM NUMA TRANSAÇÃO SÓ, que é o desenho óbvio contra
+	// atualização perdida — e o motivo de não morarem foi medido, com o
+	// mecanismo confirmado até o fim (ALE-371).
+	//
+	// A função de mudança NÃO É PURA: a do `NextTurn` expira efeitos, paga
+	// manutenção e abre o teste de sangramento, e as três ESCREVEM NA FICHA, por
+	// outra conexão. Com a transação de escrita aberta em volta dela, essas
+	// escritas batem na trava do próprio chamador e esperam o `busy_timeout`.
+	//
+	// O que a medição mostrou, com a transação em volta:
+	//
+	//   - `TestWithoutManaTheSustainedAbilityEnds`: 0,037s → 9,84s, e REPROVANDO;
+	//   - o pacote `serve/api` inteiro: 9,9s → 244,2s;
+	//   - o erro engolido pelo `_ =` do `EndSustained` é, literalmente,
+	//     `database is locked (5) (SQLITE_BUSY)`;
+	//   - e o tempo da falha SEGUE o `busy_timeout` — 5000ms dá 9,84s, 1000ms dá
+	//     2,02s, 200ms dá 0,42s, sempre ~2× o limite, que são dois toques
+	//     bloqueados por caso. É isto que separa "a trava é a causa" de
+	//     "transação é lenta".
 	//
 	// O que serializa as mutações é a trava do store, que é do PROCESSO — e o
 	// app é um processo só, um serviço no compose. Ler aqui, e não do cache, é o
