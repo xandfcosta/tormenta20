@@ -442,7 +442,7 @@ func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
 
 	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":-3,"Y":7},"new_token_name":"  Porta da cripta  ","new_token_size":1,"new_token_look":"object"}`)
 
-	board := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	board := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(board.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças; a resposta foi:\n%s", len(board.Tokens), firstRows(body, 6))
 	}
@@ -491,7 +491,7 @@ func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
 	}
 	// O CONTROLE: nenhuma das três recusas pode ter escrito. Sem ele, uma recusa
 	// que já tivesse criado a peça passaria pelas asserções acima.
-	if board := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(board.Tokens) != 0 {
+	if board := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); len(board.Tokens) != 0 {
 		t.Errorf("as recusas deixaram %d peças no mapa", len(board.Tokens))
 	}
 }
@@ -509,7 +509,7 @@ func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça e levou %d, queria 403", rec.Code)
 	}
-	if board := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(board.Tokens) != 0 {
+	if board := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); len(board.Tokens) != 0 {
 		t.Errorf("a recusa deixou %d peças no mapa", len(board.Tokens))
 	}
 }
@@ -589,7 +589,7 @@ func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
 // tokenSquare devolve onde a peça está, pelo tabuleiro de verdade.
 func tokenSquare(t *testing.T, f sceneFixture, tokenID string) [2]int {
 	t.Helper()
-	boardState := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	boardState := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	token := board.FindToken(boardState, tokenID)
 	if token == nil {
 		t.Fatalf("a peça %q sumiu do tabuleiro", tokenID)

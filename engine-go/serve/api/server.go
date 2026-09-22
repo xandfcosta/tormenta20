@@ -45,27 +45,22 @@ type Server struct {
 	// charMu serializa as escritas por personagem (id → *sync.Mutex), para
 	// cliques rápidos de dano e vitais não se perderem no ler-computar-gravar.
 	charMu sync.Map
-	// inBackground conta o trabalho que continua DEPOIS da resposta: hoje, a
-	// gravação do TABULEIRO, disparada em goroutine para o mestre não esperar o
-	// disco no meio do turno. A da fila saiu da conta porque saiu da goroutine —
-	// ela virou parte da mutação (ALE-371).
-	//
-	// Ele existe porque uma goroutine que ninguém espera escreve num banco que
-	// já fechou. Em PRODUÇÃO isso é o `Shutdown` cortando a gravação da mesa. No TESTE é pior de ler: o `t.TempDir()` falha ao limpar com
-	// "directory not empty", porque o SQLite recria `-wal`/`-shm` depois do
-	// `RemoveAll` — e a mensagem que sobra fala da LIMPEZA, não do defeito.
-	inBackground sync.WaitGroup
 }
 
-// WaitForBackground bloqueia até o trabalho disparado por resposta terminar.
+// Aqui moravam o contador `inBackground` e o `WaitForBackground`, que faziam o
+// encerramento esperar o trabalho disparado DEPOIS da resposta.
 //
-// Quem chama é o encerramento — o `Shutdown` de produção e o `Cleanup` do teste
-// —, sempre ANTES de fechar o banco. Sem isto o último estado de sessão da noite
-// pode não chegar ao disco, e o log da falha aparece depois de o processo já
-// estar indo embora.
-func (s *Server) WaitForBackground() {
-	s.inBackground.Wait()
-}
+// **O terreno deles sumiu** (ALE-375): o único trabalho que eles contavam era a
+// gravação do tabuleiro em goroutine, e ela virou parte da mutação. Não há mais
+// nada que rode depois da resposta, então não há o que esperar — e um contador
+// que ninguém incrementa faz o `Shutdown` parecer que espera algo.
+//
+// O que eles protegiam, para quem for reintroduzir trabalho em segundo plano:
+// uma goroutine que ninguém espera escreve num banco que o encerramento já
+// fechou. Em produção isso corta a última gravação da noite; no TESTE o sintoma
+// é pior de ler — o `t.TempDir()` falha com "directory not empty", porque o
+// SQLite recria `-wal`/`-shm` depois do `RemoveAll`, e a mensagem fala da
+// LIMPEZA e não do defeito. Trabalho novo em goroutine traz o contador de volta.
 
 // characterChanged avisa as mesas AO VIVO que uma ficha mudou.
 //
@@ -161,7 +156,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),
 		sessions: session.NewStore(session.NewSnapshots(q), units, live.NewUUID, fromSheet, fromSheet, bus),
-		boards:   boards.NewStore(q, live.NewUUID, bus),
+		boards:   boards.NewStore(boards.NewSnapshots(q), q, live.NewUUID, bus),
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),
 		sse:      live.NewSSEHub(),

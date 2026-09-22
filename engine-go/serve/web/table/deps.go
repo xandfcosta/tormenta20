@@ -61,7 +61,7 @@ type Deps interface {
 	// Os três saem quando os STORES saírem, e não antes: eles são a gravação dos
 	// stores, não um gesto. Ver a nota do `app/` no guia.
 	PublishSessionState(sessionID int64, state *live.SessionRuntimeState)
-	PublishBoardState(sessionID int64, board *board.BoardState)
+	PublishBoardState(ctx context.Context, sessionID int64, board *board.BoardState)
 	PublishWhatIsLeft(ctx context.Context, sessionID int64)
 	// CharacterChanged é a regra da FICHA, que a Mesa pede emprestada: avisa a
 	// tela de quem tem aquela ficha aberta. Ela fica aqui porque o gesto que a

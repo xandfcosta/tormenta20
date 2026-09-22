@@ -344,8 +344,15 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// A ABA que ESTA pessoa está olhando, e não "o tabuleiro da sessão": não há
 	// tabuleiro único. Ela é resolvida contra os abertos, então a aba que o
 	// mestre fechou não deixa ninguém numa tela morta.
-	aba, pulled, pulledFrom := s.pullTab(ctx, sessionID, userID)
-	scene := board.BoardForRole(role, s.deps.Boards().Get(ctx, sessionID, aba))
+	aba, pulled, pulledFrom, err := s.pullTab(ctx, sessionID, userID)
+	if err != nil {
+		return View{}, http.StatusInternalServerError, err
+	}
+	onBoard, err := s.deps.Boards().Get(ctx, sessionID, aba)
+	if err != nil {
+		return View{}, http.StatusInternalServerError, err
+	}
+	scene := board.BoardForRole(role, onBoard)
 	// A LENTE DO MESTRE: com ela ligada, o que se desenha é a cena
 	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `viewer` continua
 	// dizendo "mestre", porque a lente é sobre o que ele vê e não sobre o que ele
@@ -364,7 +371,11 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// quem olha — e ela vem depois da lente de propósito: a lente é sobre a CENA
 	// que o mestre está vendo, não sobre quais cenas existem. Um mestre na lente
 	// que perdesse as abas não teria como sair da que está olhando.
-	view.Board.Tabs = tableTabs(s.deps.Boards().OpenBoards(ctx, sessionID), role, aba, campaignID, sessionID)
+	open, err := s.deps.Boards().OpenBoards(ctx, sessionID)
+	if err != nil {
+		return View{}, http.StatusInternalServerError, err
+	}
+	view.Board.Tabs = tableTabs(open, role, aba, campaignID, sessionID)
 	// A TIRA DO PUXÃO vem depois da barra porque ela é feita DELA: os nomes já
 	// passaram pelo papel de quem olha, e ler o estado cru aqui contaria o nome
 	// de uma cena sob cortina a quem não pode sabê-lo.
@@ -374,7 +385,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// O ACERVO é do mestre, pela mesma razão do rastreador: a mesa não escolhe
 	// onde joga. A trava é a view não ter o que desenhar, e não a tela esconder.
 	if role == "gm" {
-		view.Board.Collection = campaignCollection(s.deps.Boards().Places(ctx, campaignID), s.deps.Boards().OpenBoards(ctx, sessionID))
+		view.Board.Collection = campaignCollection(s.deps.Boards().Places(ctx, campaignID), open)
 	}
 	// AS NOTAS são do mestre e chegam JÁ EM ÁRVORE. Elas não entram no
 	// `tableViewOf` porque não vêm do estado ao vivo: moram na linha da sessão,
@@ -396,22 +407,17 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	connected := live.ConnectedCharacters(members, present)
 	marcaAPresenca(view.Group, connected)
 	if role == "gm" {
-		r := ofViewGm(st, members, present, true, s.saveFailed(sessionID))
+		r := ofViewGm(st, members, present, true)
 		view.GM = &r
 	}
 	return view, http.StatusOK, nil
 }
 
-// saveFailed é "a mesa não está sendo salva", e hoje ela pergunta só ao
-// TABULEIRO.
-//
-// A FILA saiu da pergunta porque deixou de ter resposta: a gravação dela mora
-// dentro da mutação, e um comando que o disco recusa é recusado na hora, com a
-// frase (ALE-371). O aviso continua para o tabuleiro, que ainda grava depois —
-// e some quando o tabuleiro fizer a mesma travessia.
-func (s Scene) saveFailed(sessionID int64) bool {
-	return s.deps.Boards().SaveFailed(sessionID)
-}
+// Aqui morava o `saveFailed`, que perguntava aos stores se a última gravação
+// tinha falhado — e a resposta acabou de deixar de existir. A fila saiu da
+// pergunta na ALE-371 e o TABULEIRO saiu agora (ALE-375): os dois gravam dentro
+// da mutação, e um comando que o disco recusa volta recusado, com a frase, sem
+// nada para avisar depois.
 
 // tableRoster traduz o roster da campanha nas três coisas que a tela quer: os
 // cartões do Grupo, o conjunto dos MEUS personagens, e qual deles registra

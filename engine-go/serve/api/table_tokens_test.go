@@ -37,7 +37,7 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 
 	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 1", len(b.Tokens))
 	}
@@ -62,7 +62,7 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 
 	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":""}`)
 
-	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
+	if b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); len(b.Tokens) != 0 {
 		t.Fatalf("escolha vazia trouxe %d peças — nil virou TODAS", len(b.Tokens))
 	}
 	// E a recusa FALA: um comando que não faz nada e não diz nada é lido como
@@ -84,7 +84,7 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 
 	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 1", len(b.Tokens))
 	}
@@ -134,7 +134,7 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça no mapa: %d", rec.Code)
 	}
-	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
+	if b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); len(b.Tokens) != 0 {
 		t.Errorf("o mapa mudou apesar do 403 (%d peças)", len(b.Tokens))
 	}
 }
@@ -150,7 +150,7 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 
 	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	candidates := table.MapCandidates(b, stateOf(t, f.s.tableHost().Sessions(), f.sessionID))
 	if len(candidates) != 2 {
 		t.Fatalf("a fila tem 2 combatentes e o diálogo ofereceu %d", len(candidates))
@@ -188,7 +188,7 @@ func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 
 	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	for _, species := range board.TerrainKinds {
 		if squares := board.SquaresOf(b, species.ID); len(squares) != 0 {
 			t.Errorf("pôr no mapa pintou %s em %v", species.ID, squares)

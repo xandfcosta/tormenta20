@@ -10,7 +10,7 @@ import (
 
 func boardStops(t *testing.T, f sceneFixture) []engine.Square {
 	t.Helper()
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if b == nil || b.Pending == nil {
 		return nil
 	}
@@ -32,7 +32,7 @@ func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 			t.Fatalf("a parada %s deu %d", square, rec.Code)
 		}
 	}
-	before := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
+	before := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending
 	if before == nil || before.Cost != 4 || len(before.Stops) != 3 {
 		t.Fatalf("as duas pernas ficaram %+v — sem o caso positivo o desfazer não mede nada", before)
 	}
@@ -40,7 +40,7 @@ func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 	if rec := f.pede(t, f.gm, http.MethodPost, base+"/desfazer-parada", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desfazer deu %d", rec.Code)
 	}
-	after := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
+	after := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending
 	if after == nil {
 		t.Fatal("desfazer UMA parada cancelou o movimento inteiro")
 	}
@@ -66,14 +66,14 @@ func TestUndoingTheLastStopCancelsTheMove(t *testing.T) {
 	if rec := f.pede(t, f.gm, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
-	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending == nil {
+	if boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending == nil {
 		t.Fatal("não havia movimento para desfazer — o caso positivo falhou")
 	}
 
 	if rec := f.pede(t, f.gm, http.MethodPost, base+"/desfazer-parada", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desfazer deu %d", rec.Code)
 	}
-	if p := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending; p != nil {
+	if p := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending; p != nil {
 		t.Errorf("sobrou um provisório de custo %d sem perna nenhuma: %+v", p.Cost, p)
 	}
 }

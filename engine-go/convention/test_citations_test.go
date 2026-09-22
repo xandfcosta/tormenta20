@@ -16,6 +16,15 @@ import (
 // Ela só precisa ser declarada, e é essa a fricção que esta lista existe para
 // criar: apagar um teste é um ato, e o ato aparece aqui.
 var tombstones = map[string]bool{
+	// Os três mediam a marca `Dirty` do tabuleiro e a tarja "a mesa não está
+	// sendo salva" que ela acendia. A ALE-375 pôs a gravação dentro da mutação:
+	// a marca, a tarja e a pergunta que elas respondiam deixaram de existir, e
+	// o que protegiam — a mesa não roda de memória em silêncio — passou a ser
+	// prendido pela RECUSA, no `TestABoardWriteRefusedLeavesTheMapUntouched` e
+	// no `TestACommandTheDiskRefusesComesBackRefused`.
+	"TestBoardPersistFailureIsReported":            true,
+	"TestTheGmIsWarnedWhenSavingFails":             true,
+	"TestThePlayerIsNotWarnedAboutSaving":          true,
 	"TestAAbaAindaNaoPortadaLevaParaAFichaAntiga":  true,
 	"TestABaixaLimpaOOuvinte":                      true,
 	"TestABaixaTiraOOuvinteDaFicha":                true,

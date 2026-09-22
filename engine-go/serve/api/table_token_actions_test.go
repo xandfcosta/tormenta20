@@ -25,7 +25,7 @@ func mapToken(t *testing.T, f sceneFixture, label string, x, y int) string {
 
 func nowBoard(t *testing.T, f sceneFixture) *board.BoardState {
 	t.Helper()
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if b == nil {
 		t.Fatal("não há tabuleiro — o gesto não tinha onde acontecer")
 	}
@@ -413,7 +413,7 @@ func TestThePasteCrossesTheTabs(t *testing.T) {
 		t.Fatalf("o colar recusou:\n%s", refusal)
 	}
 
-	inTavern := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, tavern.ID)
+	inTavern := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, tavern.ID))
 	if len(inTavern.Tokens) != 1 {
 		t.Fatalf("a taverna ficou com %d peças, esperado 1", len(inTavern.Tokens))
 	}
@@ -422,7 +422,7 @@ func TestThePasteCrossesTheTabs(t *testing.T) {
 		t.Errorf("a cópia pousou em (%d,%d), esperado o quadrado pedido (6,4)", pasted.X, pasted.Y)
 	}
 	// E a CRIPTA não perdeu a original: colar copia, não move.
-	if after := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, crypt.ID); len(after.Tokens) != 1 {
+	if after := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, crypt.ID)); len(after.Tokens) != 1 {
 		t.Errorf("a cripta ficou com %d peças — o colar levou a original junto", len(after.Tokens))
 	}
 }

@@ -68,6 +68,11 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 	"SameSite":            true,
 	"rc.SetWriteDeadline": true,
 	"EventSource":         true,
+	// O `context.WithoutCancel` protegia a limpeza do tabuleiro do cancelamento
+	// do cliente, e SAIU na ALE-375 — a gravação entrou no gesto, e o gesto
+	// cancelado passou a não fechar nada em vez de fechar pela metade. Os
+	// comentários que contam essa inversão precisam nomear o que saiu.
+	"WithoutCancel": true,
 	// A janela das notas usa `localStorage` + o evento `storage`, e o comentário
 	// que explica a escolha precisa NOMEAR a alternativa recusada (ALE-218).
 	"BroadcastChannel": true,

@@ -26,7 +26,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 			t.Fatalf("pintar %s deu %d", species, rec.Code)
 		}
 	}
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(b.Difficult) != 1 || len(b.Cover) != 1 || len(b.Elevated) != 1 {
 		t.Fatalf("as três não foram pintadas: %d/%d/%d — sem o caso positivo o resto não mede nada",
 			len(b.Difficult), len(b.Cover), len(b.Elevated))
@@ -35,7 +35,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 	if rec := f.pede(t, f.gm, http.MethodPost, square+"/limpar", stroke("", 4, 4, 4, 4)); rec.Code != http.StatusOK {
 		t.Fatalf("limpar deu %d", rec.Code)
 	}
-	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b = boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(b.Difficult)+len(b.Cover)+len(b.Concealment)+len(b.Elevated) != 0 {
 		t.Errorf("a borracha deixou terreno na casa: %d difícil, %d cobertura, %d camuflagem, %d elevado",
 			len(b.Difficult), len(b.Cover), len(b.Concealment), len(b.Elevated))

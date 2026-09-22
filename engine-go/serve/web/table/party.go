@@ -56,7 +56,11 @@ func (s Scene) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "os cantos do laço precisam ser dois pares de números", http.StatusBadRequest)
 		return
 	}
-	b := s.deps.Boards().Get(r.Context(), sessionID, boardID)
+	b, err := s.deps.Boards().Get(r.Context(), sessionID, boardID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	ids := board.TokensInRectangle(b, de, ate)
 	writeSignals(w, r, map[string]any{
 		markedTokensSignal: strings.Join(ids, ","),

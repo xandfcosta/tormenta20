@@ -97,10 +97,10 @@ func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
 
-	if n := len(f.s.tableHost().Boards().Get(ctx, f.sessionID, crypt.ID).Difficult); n != 1 {
+	if n := len(boardRead(f.s.tableHost().Boards().Get(ctx, f.sessionID, crypt.ID)).Difficult); n != 1 {
 		t.Errorf("a cripta — a aba aberta — recebeu %d casas de terreno, esperado 1", n)
 	}
-	if n := len(f.s.tableHost().Boards().Get(ctx, f.sessionID, tavern.ID).Difficult); n != 0 {
+	if n := len(boardRead(f.s.tableHost().Boards().Get(ctx, f.sessionID, tavern.ID)).Difficult); n != 0 {
 		t.Errorf("a taverna, que ninguém estava olhando, recebeu %d casas de terreno", n)
 	}
 }

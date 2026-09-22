@@ -61,10 +61,7 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	// Só aparece sob CPU escassa — verde em 8 núcleos, vermelho em 2 —, e no caso
 	// que derruba uma tabela de propósito, porque ele GARANTE a falha de
 	// persistência que abre a janela.
-	t.Cleanup(func() {
-		srv.WaitForBackground()
-		_ = database.Close()
-	})
+	t.Cleanup(func() { _ = database.Close() })
 	// O CATÁLOGO É O DE VERDADE, e não um `{"items":[]}` — nem nada.
 	//
 	// Catálogo vazio faz regra sumir do TESTE sem sumir da produção: um escudo

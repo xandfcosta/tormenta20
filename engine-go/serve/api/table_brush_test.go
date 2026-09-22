@@ -20,7 +20,7 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 		t.Fatalf("o traço deu %d", rec.Code)
 	}
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	squares := board.SquaresOf(b, "dificil")
 
 	// DEZ, escrito à mão: derivar a contagem de `board.StrokeSquares` — a MESMA
@@ -73,7 +73,7 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	}
 	// O CONTROLE: havia o que apagar. Sem ele, "sobrou zero" é verdade também
 	// sobre um tabuleiro em que nada foi pintado.
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(board.SquaresOf(b, "cobertura")) < 5 {
 		t.Fatalf("o traço de pintura só fez %d casas — não há o que a borracha apagar",
 			len(board.SquaresOf(b, "cobertura")))
@@ -83,7 +83,7 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 		f.tableUrl()+"/tabuleiro/terreno/limpar", stroke("", 4, 4, 6, 6)); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
-	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b = boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if left := board.SquaresOf(b, "cobertura"); len(left) != 0 {
 		t.Errorf("a borracha deixou %v pelo caminho", left)
 	}
@@ -105,7 +105,7 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 	if !strings.Contains(body, "longo demais") {
 		t.Errorf("o traço forjado não foi recusado com frase: %q", body[max(0, len(body)-200):])
 	}
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if squares := board.SquaresOf(b, "dificil"); len(squares) != 0 {
 		t.Errorf("o traço recusado pintou %d casas assim mesmo", len(squares))
 	}
@@ -204,7 +204,7 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 		f.tableUrl()+"/tabuleiro/terreno/retangulo", stroke("dificil", 2, 2, 4, 5)); rec.Code != http.StatusOK {
 		t.Fatalf("o retângulo deu %d", rec.Code)
 	}
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	// 3 colunas × 4 linhas = 12 casas, e as duas pontas incluídas.
 	if squares := board.SquaresOf(b, "dificil"); len(squares) != 12 {
 		t.Errorf("(2,2)→(4,5) pintou %d casas, esperado as 12 do retângulo: %v", len(squares), squares)
@@ -214,7 +214,7 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 		f.tableUrl()+"/tabuleiro/terreno/limpar/retangulo", stroke("", 2, 2, 4, 5)); rec.Code != http.StatusOK {
 		t.Fatalf("limpar o retângulo deu %d", rec.Code)
 	}
-	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b = boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if left := board.SquaresOf(b, "dificil"); len(left) != 0 {
 		t.Errorf("a borracha em área deixou %v", left)
 	}
@@ -237,7 +237,7 @@ func TestTheWholeViewportFitsInOneRectangle(t *testing.T) {
 	if body := rec.Body.String(); strings.Contains(body, "grande demais") {
 		t.Errorf("o retângulo do viewport inteiro foi recusado: %q", body[max(0, len(body)-200):])
 	}
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if squares := board.SquaresOf(b, "dificil"); len(squares) != 68*29 {
 		t.Errorf("o retângulo 68×29 pintou %d casas, e a caixa tem %d", len(squares), 68*29)
 	}
@@ -303,7 +303,7 @@ func TestAStrokeInTheNegativeQuadrantPaintsThere(t *testing.T) {
 		t.Fatalf("o traço negativo deu %d", rec.Code)
 	}
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	squares := board.SquaresOf(b, "dificil")
 	expected := board.StrokeSquares(engine.Square{X: -3, Y: -5}, engine.Square{X: -1, Y: -5})
 	if len(squares) != len(expected) {

@@ -37,7 +37,7 @@ func TestAdvanceOnlyLightsUpWithASceneAndATracker(t *testing.T) {
 		{"em combate", estadoDe(true, 2, 0, arwen), true},
 	}
 	for _, c := range cases {
-		v := ofViewGm(c.st, nil, nil, true, false)
+		v := ofViewGm(c.st, nil, nil, true)
 		if v.CanAdvance != c.want {
 			t.Errorf("%s: PodeAvancar = %v, quero %v", c.name, v.CanAdvance, c.want)
 		}
@@ -51,12 +51,12 @@ func TestAdvanceOnlyLightsUpWithASceneAndATracker(t *testing.T) {
 func TestTheCounterAndTheAdvanceTellTheSameStory(t *testing.T) {
 	queue := []live.InitiativeEntry{{Label: "Arwen"}, {Label: "Ogro"}}
 
-	outside := ofViewGm(estadoDe(false, 0, -1, queue...), nil, nil, true, false)
+	outside := ofViewGm(estadoDe(false, 0, -1, queue...), nil, nil, true)
 	if outside.Counter != "Fora de cena" {
 		t.Errorf("fora de cena o contador diz %q", outside.Counter)
 	}
 
-	building := ofViewGm(estadoDe(true, 0, -1, queue...), nil, nil, true, false)
+	building := ofViewGm(estadoDe(true, 0, -1, queue...), nil, nil, true)
 	if building.Counter != "Rodada 0 · 2 na fila" {
 		t.Errorf("montando a ordem o contador diz %q", building.Counter)
 	}
@@ -66,7 +66,7 @@ func TestTheCounterAndTheAdvanceTellTheSameStory(t *testing.T) {
 		t.Errorf("montando a ordem o botão diz %q", building.Advance.Label)
 	}
 
-	inCombat := ofViewGm(estadoDe(true, 1, 0, queue...), nil, nil, true, false)
+	inCombat := ofViewGm(estadoDe(true, 1, 0, queue...), nil, nil, true)
 	if inCombat.Counter != "Rodada 1 · Turno 1/2 · padrão e movimento" {
 		t.Errorf("em combate o contador diz %q", inCombat.Counter)
 	}
@@ -81,13 +81,13 @@ func TestVitalsFollowTheTrackerAndTheRole(t *testing.T) {
 	withNPC := estadoDe(true, 1, 0, live.InitiativeEntry{Label: "Ogro", HpMax: &pv})
 	soPCs := estadoDe(true, 1, 0, live.InitiativeEntry{Label: "Arwen"})
 
-	if !ofViewGm(withNPC, nil, nil, true, false).SeesVitals {
+	if !ofViewGm(withNPC, nil, nil, true).SeesVitals {
 		t.Error("o mestre não vê vitais numa fila com NPC")
 	}
-	if ofViewGm(withNPC, nil, nil, false, false).SeesVitals {
+	if ofViewGm(withNPC, nil, nil, false).SeesVitals {
 		t.Error("o jogador viu os vitais do NPC")
 	}
-	if ofViewGm(soPCs, nil, nil, true, false).SeesVitals {
+	if ofViewGm(soPCs, nil, nil, true).SeesVitals {
 		t.Error("numa fila só de PCs a tela mudou de forma sem ter o que reservar")
 	}
 }
@@ -100,7 +100,7 @@ func TestPresenceReachesTheScene(t *testing.T) {
 		{CharacterID: 11, OwnerID: 2},
 		{CharacterID: 12, OwnerID: 0},
 	}
-	v := ofViewGm(estadoDe(true, 1, 0), members, []int64{1}, true, false)
+	v := ofViewGm(estadoDe(true, 1, 0), members, []int64{1}, true)
 	if len(v.Connected) != 1 || !v.Connected[10] {
 		t.Errorf("conectados = %v, quero só o 10", v.Connected)
 	}

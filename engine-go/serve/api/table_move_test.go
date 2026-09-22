@@ -32,7 +32,7 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 	if rec := f.pede(t, f.gm, "POST", base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("primeira parada deu %d", rec.Code)
 	}
-	first := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
+	first := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending
 	if first == nil || len(first.Path) != 3 {
 		t.Fatalf("o primeiro caminho ficou %+v", first)
 	}
@@ -40,7 +40,7 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 	if rec := f.pede(t, f.gm, "POST", base+"/parada", `{"from":{"X":2,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("segunda parada deu %d", rec.Code)
 	}
-	after := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
+	after := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending
 	if after == nil {
 		t.Fatal("o movimento sumiu na segunda parada")
 	}
@@ -60,7 +60,7 @@ func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 	where := func() (int, int) {
-		p := board.FindToken(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
+		p := board.FindToken(boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)), tokenID)
 		return p.X, p.Y
 	}
 
@@ -77,7 +77,7 @@ func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 	if x, y := where(); x != 3 || y != 1 {
 		t.Errorf("depois de confirmar a peça está em %d,%d", x, y)
 	}
-	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending != nil {
+	if boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending != nil {
 		t.Error("o movimento continuou pendente depois de confirmado")
 	}
 }
@@ -95,7 +95,7 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 		t.Fatalf("cancelar deu %d", rec.Code)
 	}
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if b.Pending != nil {
 		t.Error("o cancelamento não limpou a proposta")
 	}
@@ -125,7 +125,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	if !strings.Contains(body, "não é sua") {
 		t.Errorf("a recusa não explica de quem é a peça; sinais = %s", trechoDeSinais(body))
 	}
-	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending != nil {
+	if boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending != nil {
 		t.Error("o movimento recusado virou proposta mesmo assim")
 	}
 }

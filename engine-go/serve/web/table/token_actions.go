@@ -128,7 +128,10 @@ func pastesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	}
 	// A ORIGEM é o tabuleiro de onde a peça foi copiada, e não o que está na
 	// tela: são diferentes justamente quando o colar mais serve.
-	origin := st.deps.Boards().Get(c.R.Context(), c.SessionID, area.Board)
+	origin, err := st.deps.Boards().Get(c.R.Context(), c.SessionID, area.Board)
+	if err != nil {
+		return nil, err
+	}
 	template := board.FindToken(origin, area.Token)
 	if template == nil {
 		return nil, fmt.Errorf("a peça que estava na área não está mais no tabuleiro de origem")
@@ -356,7 +359,10 @@ func removesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 // ela some de verdade: outra aba do mestre pode ter removido a mesma peça meio
 // segundo antes. A frase diz o id porque é ele que o botão carregava.
 func (s Scene) tokenOfCommand(c commandCtx) (*board.BoardToken, error) {
-	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	b, err := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	if err != nil {
+		return nil, err
+	}
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}

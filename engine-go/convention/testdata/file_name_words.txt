@@ -368,6 +368,7 @@ race
 races
 rail
 range
+read
 reader
 readme
 recipe

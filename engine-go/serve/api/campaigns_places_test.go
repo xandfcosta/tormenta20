@@ -144,7 +144,7 @@ func TestThePlaceOnATableOffersGoingToItInstead(t *testing.T) {
 	if _, err := s.boards.Open(ctx, session, "Taverna do Javali", "tavern"); err != nil {
 		t.Fatalf("abrir a taverna: %v", err)
 	}
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, "")); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, ""))); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 

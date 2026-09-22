@@ -64,7 +64,7 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	// E a METADE QUE NÃO PODE TER MUDADO: a peça continua GRAVADA em 4,2. Sem
 	// esta asserção o guarda acima passaria verde sobre uma peça que ANDOU sem
 	// confirmação, que é pior que o defeito que ele conserta.
-	saved := board.FindToken(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
+	saved := board.FindToken(boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)), tokenID)
 	if saved.X != 4 || saved.Y != 2 {
 		t.Errorf("a peça ANDOU na proposta, para %d,%d — o desenho virou gravação", saved.X, saved.Y)
 	}

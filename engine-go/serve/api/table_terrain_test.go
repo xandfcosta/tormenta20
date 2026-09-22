@@ -22,7 +22,7 @@ func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
 		}
 	}
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	for i, brush := range board.TerrainKinds {
 		squares := board.SquaresOf(b, brush.ID)
 		if len(squares) != 1 || squares[0].X != i {
@@ -51,7 +51,7 @@ func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if n := len(board.SquaresOf(b, board.TerrenoCamuflagem)); n != 0 {
 		t.Errorf("a camuflagem não foi apagada (%d casas)", n)
 	}
@@ -143,7 +143,7 @@ func TestOnlyTheGmPaints(t *testing.T) {
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pintou o chão: %d", rec.Code)
 	}
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if n := len(board.SquaresOf(b, board.TerrenoDificil)); n != 0 {
 		t.Errorf("a pintura do jogador entrou mesmo assim (%d casas)", n)
 	}
@@ -151,10 +151,16 @@ func TestOnlyTheGmPaints(t *testing.T) {
 
 // Não é 500 nem silêncio: pintar chão de uma cena que não está na mesa não tem
 // onde acontecer, e a recusa fala no `command_error` do rodapé do mestre.
+//
+// A FRASE é a do `errNoBoard`, e ela passou a ser a única com a ALE-375: a cena
+// tinha uma pré-conferência própria ("não há tabuleiro aberto para pintar") que
+// repetia, com outras palavras, a recusa que a mutação já dava — e custava uma
+// leitura a mais para dizer a mesma coisa. Escrita à mão aqui de propósito:
+// importar a constante faria o guarda andar junto com o defeito.
 func TestPaintingWithoutABoardRefusesWithASentence(t *testing.T) {
 	f := newSceneFixture(t)
 	body := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1)).Body.String()
-	if !strings.Contains(body, "não há tabuleiro aberto") {
+	if !strings.Contains(body, "esta sessão não tem tabuleiro aberto") {
 		t.Errorf("a recusa não explica o que faltou; sinais = %s", trechoDeSinais(body))
 	}
 }

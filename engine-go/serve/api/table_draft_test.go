@@ -195,7 +195,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 	// eles, então "está na mesa" é sobre o tabuleiro, não sobre a partida.
 	f.seedOpenBoard(t, "tavern")
 	if err := f.s.tableHost().Boards().Archive(context.Background(), f.campaignID,
-		f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); err != nil {
+		boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 	place := placeNamed(t, f.s.tableHost().Boards().Places(context.Background(), f.campaignID),

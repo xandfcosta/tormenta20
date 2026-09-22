@@ -5,96 +5,25 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-	"time"
 )
 
-// avisoDeGravacao é a frase que a Mesa desenha, escrita à mão aqui de propósito.
+// A GRAVAÇÃO DO TABULEIRO, pelo caminho inteiro: comando da Mesa, regra, disco.
 //
-// Importar a constante da cena faria o teste andar junto com o defeito: trocar
-// a frase nos dois lugares deixaria o guarda verde sobre um texto que ninguém
-// escolheu.
-const avisoDeGravacao = "não está sendo salva"
-
-// O MESTRE É AVISADO QUANDO A GRAVAÇÃO FALHA.
+// Aqui moravam o `TestTheGmIsWarnedWhenSavingFails` e o
+// `TestThePlayerIsNotWarnedAboutSaving`, que mediam a tarja "a mesa não está
+// sendo salva" no cabeçalho do mestre. **A tarja saiu com a ALE-375**, e o que
+// ela avisava deixou de poder acontecer: a gravação mora dentro da mutação, e o
+// gesto que o disco recusa volta RECUSADO em vez de mudar a tela sobre um disco
+// que não recebeu nada.
 //
-// A mesa roda de MEMÓRIA e grava no disco a cada mutação. Quando essa gravação
-// falha — disco cheio, banco fechado, permissão — os dois stores marcam a
-// sessão como suja e continuam servindo o estado da memória: a tela fica certa,
-// o jogo segue, e o disco não tem nada. Já custou um dia inteiro de mesa vivendo
-// só em memória, com cada gravação falhando numa linha de log que ninguém lê.
-//
-// ESTADO e não evento: um aviso perdido é um aviso que não existiu, e este
-// precisa valer enquanto durar — quem abre a aba dez minutos depois da primeira
-// falha merece vê-lo. A verdade mora no store, e a tela a LÊ a cada quadro.
-func TestTheGmIsWarnedWhenSavingFails(t *testing.T) {
-	f := newSceneFixture(t)
-	f.scene(t)
-
-	// O CONTROLE primeiro: com o disco saudável a frase NÃO está lá. Sem esta
-	// metade, "vi o aviso" não distingue a ligação certa de um texto fixo.
-	healthy := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(healthy, avisoDeGravacao) {
-		t.Fatalf("a mesa saudável já avisava que a gravação falhou")
-	}
-
-	quebraAGravacao(t, f)
-
-	withFailure := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(withFailure, avisoDeGravacao) {
-		t.Errorf("a gravação falhou e o mestre não foi avisado")
-	}
-}
-
-// O JOGADOR NÃO recebe o aviso, e isso é decisão de produto: quem pode parar a
-// sessão e chamar alguém é o mestre. Para o jogador seria um alarme sobre o qual
-// ele não tem o que fazer.
-func TestThePlayerIsNotWarnedAboutSaving(t *testing.T) {
-	f := newSceneFixture(t)
-	f.scene(t)
-	quebraAGravacao(t, f)
-
-	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
-
-	// O controle é afirmar que o jogador VIU a mesa: sem isto, um 403 passaria
-	// como "não recebeu o aviso".
-	if !strings.Contains(body, "Arcanista") {
-		t.Fatal("o jogador não viu a própria mesa; a ausência abaixo não prova nada")
-	}
-	if strings.Contains(body, avisoDeGravacao) {
-		t.Errorf("o jogador recebeu o aviso de gravação")
-	}
-}
-
-// quebraAGravacao faz a TABELA do tabuleiro sumir debaixo do store.
-//
-// As duas sabotagens óbvias não servem: sem tabuleiro aberto o `Persist` não
-// tenta escrever nada e devolve `changed=false`, e fechar o `*sql.DB` mata a
-// LEITURA junto, então a página nem renderiza. O defeito de verdade é escrita
-// falhando com leitura FUNCIONANDO, que é como ele fica invisível.
-//
-// Derrubar uma tabela dá exatamente isso — o `sessions`, o `users` e os membros
-// continuam lá, a mesa desenha normalmente, e só a gravação do tabuleiro falha.
-func quebraAGravacao(t *testing.T, f sceneFixture) {
-	t.Helper()
-	ctx := context.Background()
-	if _, err := f.s.boards.Open(ctx, f.sessionID, "Taverna do Javali", "tavern"); err != nil {
-		t.Fatalf("abrir tabuleiro: %v", err)
-	}
-	if _, err := f.s.db.ExecContext(ctx, "DROP TABLE open_boards"); err != nil {
-		t.Fatalf("derrubar a tabela: %v", err)
-	}
-	dirty, changed := f.s.boards.Persist(ctx, f.sessionID, "")
-	if !dirty || !changed {
-		t.Fatalf("a gravação não falhou (sujo=%v, mudou=%v) — o defeito não foi reproduzido", dirty, changed)
-	}
-}
+// O que aqueles dois protegiam — "a mesa não pode rodar de memória em silêncio"
+// — continua protegido, e pelos dois casos abaixo: um diz que a mutação CHEGA ao
+// disco, o outro que a mutação que NÃO chega é recusada com a frase.
 
 // UMA MUTAÇÃO PELA CENA CHEGA AO DISCO.
 //
-// Os casos do `board_store_test.go` dirigem o STORE direto (`bs.Open`,
-// `bs.Persist`); nenhum mede o caminho inteiro — comando da Mesa, regra, disco.
-// Sem este, apagar a gravação não quebra teste nenhum, e a mesa passa a viver só
-// em memória.
+// Os casos do `board_store_test.go` dirigem o STORE direto; nenhum mede o
+// caminho inteiro. Sem este, apagar a gravação não quebra teste nenhum.
 func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -105,30 +34,75 @@ func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 
 	// O CONTROLE: a peça entrou na memória. Sem isto, um disco vazio não
 	// distingue "não gravou" de "não havia o que gravar".
-	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) == 0 {
+	if b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); len(b.Tokens) == 0 {
 		t.Fatal("a peça não entrou no mapa — o guarda mediria o vazio")
 	}
-	esperaOTabuleiroNoDisco(t, f)
+	// SEM SONDAGEM, e isto é a fatia: a gravação era em goroutine e ler uma vez
+	// logo depois do comando era uma corrida, então este guarda sondava o disco
+	// por até dois segundos. Hoje o comando só responde depois de gravar.
+	var rows int
+	if err := f.s.db.QueryRowContext(context.Background(),
+		"SELECT COUNT(*) FROM open_boards WHERE sessionId = ?", f.sessionID).Scan(&rows); err != nil {
+		t.Fatalf("consultar o disco: %v", err)
+	}
+	if rows == 0 {
+		t.Error("o tabuleiro mexeu e o disco não recebeu nada — a mesa está vivendo só em memória")
+	}
 }
 
-// esperaOTabuleiroNoDisco sonda até a linha aparecer.
+// A MUTAÇÃO QUE O DISCO RECUSA VOLTA RECUSADA, com a frase na cena.
 //
-// A gravação é em GOROUTINE de propósito — o mestre não espera o disco no meio
-// do turno —, então ler uma vez logo depois do comando é uma corrida. Sondagem e
-// não `sleep` fixo: um tempo escolhido nesta máquina pisca na de outra pessoa.
-func esperaOTabuleiroNoDisco(t *testing.T, f sceneFixture) {
-	t.Helper()
-	limit := time.Now().Add(2 * time.Second)
-	for time.Now().Before(limit) {
-		var rows int
-		if err := f.s.db.QueryRowContext(context.Background(),
-			"SELECT COUNT(*) FROM open_boards WHERE sessionId = ?", f.sessionID).Scan(&rows); err != nil {
-			t.Fatalf("consultar o disco: %v", err)
-		}
-		if rows > 0 {
-			return
-		}
-		time.Sleep(10 * time.Millisecond)
+// É o substituto da tarja, e ele é melhor pelo mesmo motivo que a fatia inteira:
+// a tarja só podia aparecer DEPOIS de a peça já ter andado na tela sobre um
+// disco vazio. Aqui a peça não anda.
+//
+// A recusa volta em 200 com a cena redesenhada, e não em 4xx: o Datastar
+// DESCARTA o remendo de toda resposta não-2xx, e uma recusa em 400 não
+// apareceria na tela. Por isso o que se afirma é a FRASE.
+func TestACommandTheDiskRefusesComesBackRefused(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	f.seedOpenBoard(t, "stone")
+	sheet, _ := sceneIds(t, f)
+	ctx := context.Background()
+
+	// O CONTROLE primeiro: com o disco saudável o gesto passa e a peça entra.
+	// Sem esta metade, "a peça não entrou" não distingue a recusa de um pedido
+	// que nunca funcionou.
+	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	before := len(boardRead(f.s.tableHost().Boards().Get(ctx, f.sessionID, defaultTab)).Tokens)
+	if before == 0 {
+		t.Fatal("o controle falhou: a peça não entrou com o disco saudável")
 	}
-	t.Error("o tabuleiro mexeu e o disco não recebeu nada — a mesa está vivendo só em memória")
+
+	// A SABOTAGEM é derrubar a TABELA, e as duas óbvias não servem: sem
+	// tabuleiro aberto não há o que gravar, e fechar o `*sql.DB` mata a LEITURA
+	// junto — a página nem renderiza. O defeito de verdade é escrita falhando
+	// com leitura funcionando, que é como ele fica invisível.
+	if _, err := f.s.db.ExecContext(ctx, "DROP TABLE open_boards"); err != nil {
+		t.Fatalf("derrubar a tabela: %v", err)
+	}
+
+	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+
+	if !strings.Contains(body, "open_boards") {
+		t.Errorf("a gravação falhou e a cena não disse nada ao mestre.\ncorpo: %s", primeiros(body, 400))
+	}
+	// E A MESA NÃO MUDOU: a peça não pode ter andado sobre um disco que recusou.
+	after := len(boardRead(f.s.tableHost().Boards().Get(ctx, f.sessionID, defaultTab)).Tokens)
+	if after != before {
+		t.Errorf("o mapa foi de %d para %d peças sobre uma gravação recusada", before, after)
+	}
+}
+
+// O JOGADOR continua vendo a mesa — o controle de que a cena não quebrou.
+func TestThePlayerStillSeesTheTable(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+
+	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+
+	if !strings.Contains(body, "Arcanista") {
+		t.Error("o jogador não viu a própria mesa")
+	}
 }
