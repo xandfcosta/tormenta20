@@ -82,7 +82,15 @@ RE_PALAVRA = re.compile(
     r'<word xMin="([\d.]+)" yMin="([\d.]+)"[^>]*>(.*?)</word>', re.S)
 
 # `Arcana 2 (Ilusão)`, `Universal 1 (Evocação)`, `Divina 3 (Abjuração)`.
-RE_LISTA = re.compile(r'^(Arcana|Divina|Universal)\s+(\d)\s+\(([^)]+)\)\s*$')
+#
+# INSENSÍVEL A CAIXA, e isso não é frouxidão: o livro compõe alguns desses
+# cabeçalhos em versalete, e a camada de texto do PDF os entrega em MINÚSCULA —
+# `arcana 1 (Encantamento)`, `divina 2 (adivinhação)`. Exigindo maiúscula, o
+# Hipnotismo e o Globo da Verdade de Gwen (ambos na p194) ficavam sem cabeçalho,
+# e o corpo da magia ANTERIOR engolia os aprimoramentos deles: o Heroísmo
+# aparecia com sete quando tem um, e o catálogo — que estava certo — parecia ter
+# perdido seis.
+RE_LISTA = re.compile(r'^(Arcana|Divina|Universal)\s+(\d)\s+\(([^)]+)\)\s*$', re.I)
 RE_EXECUCAO = re.compile(r'^Execução:')
 # `+2 PM:`, `+0 PM (Apenas Arcanos):`, `Truque:` — as três formas do livro.
 RE_AUGMENT = re.compile(r'^(?:\+(\d+)\s*PM(?:\s*\(Apenas\s+([^)]+)\))?|Truque)\s*:\s*(.*)$')
@@ -319,11 +327,100 @@ def confere(spell: dict, lido: dict) -> dict:
     }
 
 
+def parecidas(a: str, b: str) -> float:
+    """Quanto duas frases dividem de vocabulário, de 0 a 1.
+
+    Jaccard sobre palavras e não distância de edição: o catálogo REESCREVE as
+    frases do livro em forma curta — "muda o alcance para curto e o alvo para 1
+    objeto" vira "Muda alcance para curto e alvo para 1 objeto" —, então o que
+    sobrevive é o vocabulário, não a sequência.
+    """
+    pa = set(normaliza_frase(a).split())
+    pb = set(normaliza_frase(b).split())
+    if not pa or not pb:
+        return 0.0
+    return len(pa & pb) / len(pa | pb)
+
+
+# Abaixo disto são duas frases diferentes que por acaso dividem "muda o alcance
+# para". Acima, é a MESMA frase reescrita. O valor foi calibrado nos três casos
+# conhecidos (Âncora Dimensional, Potência Divina, Consagrar), que dão 0,45+.
+PISO_DE_PARECENCA = 0.42
+
+
+def relatorioDeOrfaos(cat: dict, lidas: dict, resultados: list) -> None:
+    """Para cada aprimoramento que falta na magia dele, procura no catálogo INTEIRO.
+
+    A pergunta é outra e o achado é outro: um aprimoramento que existe no
+    catálogo mas pendurado na magia ERRADA não é transcrição a fazer, é
+    transcrição a MOVER — e ele conta duas vezes no relatório normal, como
+    falta numa magia e como sobra na vizinha.
+
+    Três casos foram achados à mão antes desta função, e os três eram a magia
+    VIZINHA na mesma página. É o que sugere que o deslize foi de importação e
+    não de leitura.
+
+    # O TERRENO É SÓ QUEM TEM CONTAGEM DIFERENTE, e isso não é economia
+
+    Rodando sobre as 196 casadas, esta função acusou 105 "a transcrever" contra
+    as 44 que a contagem acha — e as 61 de diferença eram RUÍDO: o catálogo
+    CONDENSA as frases do livro de propósito, então uma magia com a contagem
+    certa tem parecença baixa sem que falte nada. Uma lista de 105 com cara de
+    descoberta, que é o que esta ferramenta inteira existe para não produzir.
+
+    Onde a contagem BATE, parecença baixa quer dizer "foi reescrito", e a
+    pergunta sobre o texto é outra (o valor está certo?), que é a do relatório
+    normal. Aqui a pergunta é só: o que falta, e será que já está em outra magia?
+
+    # O QUE ELE DEVOLVE É PISTA, E NÃO VEREDICTO
+
+    Aprimoramento genérico existe, e é comum: "aumenta o número de alvos em +1"
+    aparece igual em várias magias. A Acalmar Animal (p178) FALTA um desses, e o
+    candidato que sai com parecença 1,00 é a Tranquilidade — que tem o dela, por
+    direito. Dois textos idênticos não são um deslocamento.
+
+    O que separa um do outro é ler as DUAS magias no livro, e só os casos em que
+    a magia candidata NÃO devia ter aquilo são deslocamento. Confirmados assim:
+    os quatro da Âncora Dimensional na Amarras Etéreas, e o da Potência Divina
+    na Palavra Primordial.
+    """
+    todos = [(sid, i, a['description'])
+             for sid, s in cat.items() for i, a in enumerate(s.get('augments', []))]
+    achados, semDono = 0, 0
+    print('--- APRIMORAMENTOS QUE FALTAM, e onde eles podem estar ---\n')
+    for r in resultados:
+        if len(r['livro']) <= len(r['catalogo']):
+            continue
+        doCatalogo = {normaliza_frase(a.get('description', '')) for a in r['catalogo']}
+        for a in r['livro']:
+            if any(parecidas(a['texto'], d) >= PISO_DE_PARECENCA for d in doCatalogo):
+                continue
+            candidatos = sorted(
+                ((parecidas(a['texto'], desc), sid, i, desc)
+                 for sid, i, desc in todos if sid != r['id']),
+                reverse=True)
+            melhor = candidatos[0] if candidatos else (0.0, '', 0, '')
+            marca = 'Truque' if a['truque'] else f"+{a['pmCost']} PM"
+            if melhor[0] >= PISO_DE_PARECENCA:
+                achados += 1
+                print(f"{r['id']} (p{r['pagina']}) {marca}")
+                print(f"   ESTÁ EM {melhor[1]}[{melhor[2]}] (parecença {melhor[0]:.2f})")
+                print(f"   catálogo: {melhor[3][:110]}")
+            else:
+                semDono += 1
+                print(f"{r['id']} (p{r['pagina']}) {marca}: FALTA MESMO")
+                print(f"   livro: {a['texto'][:110]}")
+    print(f"\nDESLOCADOS (existem, na magia errada): {achados}")
+    print(f"A TRANSCREVER (não existem em lugar nenhum): {semDono}")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--magia', help='confere UMA magia e mostra o texto do livro')
     p.add_argument('--suspeitas', action='store_true',
                    help='só as magias que divergem')
+    p.add_argument('--orfaos', action='store_true',
+                   help='procura cada aprimoramento faltante no catálogo INTEIRO')
     args = p.parse_args()
 
     cat = catalogo()
@@ -333,6 +430,10 @@ def main() -> None:
     naoMedidas = sorted(set(cat) - set(lidas))
     resultados = [confere(dict(cat[sid], id=sid), lidas[sid]) for sid in sorted(lidas)]
     divergentes = [r for r in resultados if r['queixas']]
+
+    if args.orfaos:
+        relatorioDeOrfaos(cat, lidas, resultados)
+        return
 
     if args.magia:
         alvo = [r for r in resultados if r['id'] == args.magia]
