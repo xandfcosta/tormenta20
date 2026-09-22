@@ -35,11 +35,11 @@ func TestNoChromeOverTheMapStealsTheClickOffItsControls(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	f.openSecond(t, "Cripta do Rei Caolho")
 	tokenID := f.onBoardAt(t, 4, 2)
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	noPointer, returns := pointerRulesOfTheMap(t)
 	if len(noPointer) < 3 {

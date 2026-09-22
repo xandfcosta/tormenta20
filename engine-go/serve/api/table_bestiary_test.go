@@ -9,7 +9,7 @@ import (
 func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
+	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"goblin-salteador","entry_hp":4,"entry_initiative":13,"entry_copies":3}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("mandar para a mesa deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
@@ -47,7 +47,7 @@ func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
+	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"goblin-salteador","entry_hp":4,"entry_initiative":13,"entry_copies":99}`)
 	if body := trechoDeSinais(rec.Body.String()); !strings.Contains(body, "99") {
 		t.Errorf("a recusa não citou o valor ofensivo; sinais = %s", body)
@@ -63,7 +63,7 @@ func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 func TestAnInventedCreatureIsRefused(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
+	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"grifo-de-neon","entry_hp":10,"entry_initiative":10,"entry_copies":1}`)
 	if body := trechoDeSinais(rec.Body.String()); !strings.Contains(body, "grifo-de-neon") {
 		t.Errorf("a recusa não citou a criatura; sinais = %s", body)
@@ -85,7 +85,7 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 	panel := f.tableUrl() + "/bestiario"
 
 	// Primeira abertura: o rascunho na tela não é de ninguém ainda.
-	opened := f.pede(t, f.gm, http.MethodGet, panel+signals(`{"creature":"zumbi","draft_of":""}`), "").Body.String()
+	opened := f.requests(t, f.gm, http.MethodGet, panel+signals(`{"creature":"zumbi","draft_of":""}`), "").Body.String()
 	if !strings.Contains(trechoDeSinais(opened), `"entry_hp":20`) {
 		t.Errorf("abrir o Zumbi não semeou o PV do livro (20); sinais = %s", trechoDeSinais(opened))
 	}
@@ -95,7 +95,7 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 
 	// Segunda visita à MESMA criatura, agora com o rascunho já sendo dela: é o
 	// que acontece a cada tecla da busca, e não pode semear nada.
-	again := f.pede(t, f.gm, http.MethodGet,
+	again := f.requests(t, f.gm, http.MethodGet,
 		panel+signals(`{"creature":"zumbi","search":"zu","draft_of":"zumbi"}`), "").Body.String()
 	// O CONTROLE: o painel FOI redesenhado, senão "não semeou" seria só "não
 	// respondeu".
@@ -122,13 +122,13 @@ func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 		{"POST", "/bestiario/enviar", `{"creature":"zumbi","entry_hp":20,"entry_initiative":10,"entry_copies":1}`},
 	}
 	for _, route := range routes {
-		rec := f.pede(t, f.player, route.method, f.tableUrl()+route.path, route.body)
+		rec := f.requests(t, f.player, route.method, f.tableUrl()+route.path, route.body)
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador chamou %q e levou %d, quero 403", route.path, rec.Code)
 		}
 	}
 
-	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(html, "Iniciativa") {
 		t.Fatal("o jogador não viu a cena; a ausência abaixo não provaria nada")
 	}
@@ -140,7 +140,7 @@ func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 			t.Errorf("o HTML do jogador veio com %q", mark)
 		}
 	}
-	if forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(forGM, "table-bestiary") {
+	if forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(forGM, "table-bestiary") {
 		t.Error("o mestre não recebeu o painel")
 	}
 }

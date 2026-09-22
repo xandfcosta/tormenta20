@@ -35,7 +35,7 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, npc := sceneIds(t, f)
 
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(b.Tokens) != 1 {
@@ -60,7 +60,7 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 
-	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":""}`)
+	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":""}`)
 
 	if b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); len(b.Tokens) != 0 {
 		t.Fatalf("escolha vazia trouxe %d peças — nil virou TODAS", len(b.Tokens))
@@ -82,7 +82,7 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, _ := sceneIds(t, f)
 
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(b.Tokens) != 1 {
@@ -106,12 +106,12 @@ func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forGM, `id="populate"`) {
 		t.Fatal("o diálogo não está na página do MESTRE — o controle falhou, e sem ele o resto não mede nada")
 	}
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(forPlayer, `id="populate"`) {
 		t.Error("o diálogo do mestre foi para o HTML do jogador, com a fila inteira dentro")
 	}
@@ -128,7 +128,7 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, _ := sceneIds(t, f)
 
-	rec := f.pede(t, f.player, http.MethodPost,
+	rec := f.requests(t, f.player, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	if rec.Code != http.StatusForbidden {
@@ -148,7 +148,7 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, npc := sceneIds(t, f)
 
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	candidates := table.MapCandidates(b, stateOf(t, f.s.tableHost().Sessions(), f.sessionID))
@@ -186,7 +186,7 @@ func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, _ := sceneIds(t, f)
 
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	for _, species := range board.TerrainKinds {

@@ -12,7 +12,7 @@ import (
 func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 	f := newSceneFixture(t)
 
-	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete",
+	f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete",
 		`{"creature":"ogro","npc_name":"Ogro Capitão"}`)
 
 	npcs := f.dbCast(t)
@@ -42,7 +42,7 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 	f := newSceneFixture(t)
 
-	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","npc_name":"   "}`)
+	f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","npc_name":"   "}`)
 
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 || npcs[0].Name == "" {
@@ -61,7 +61,7 @@ func TestTheCastBelongsToTheCampaignAndNotToTheSession(t *testing.T) {
 	f := newSceneFixture(t)
 	otherSession := seedSession(t, f.s, f.campaignID)
 
-	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 
 	// A view da OUTRA sessão da mesma campanha tem de enxergar o mesmo NPC.
 	view, _, err := f.s.tableScene.LoadView(t.Context(), f.gm, f.campaignID, otherSession)
@@ -88,7 +88,7 @@ func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 		t.Fatalf("semear o NPC alheio: %v", err)
 	}
 
-	body := f.posta(t, f.gm,
+	body := f.posts(t, f.gm,
 		f.tableUrl()+"/elenco/npc/"+strconv.FormatInt(foreign.ID, 10)+"/apagar", "{}")
 
 	if !strings.Contains(body, "não é desta campanha") {
@@ -107,18 +107,18 @@ func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 // perder o combatente EM CURSO ao arrumar a preparação, no meio da noite.
 func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
-	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 {
 		t.Fatalf("o NPC não foi guardado")
 	}
 	route := f.tableUrl() + "/elenco/npc/" + strconv.FormatInt(npcs[0].ID, 10)
-	f.posta(t, f.gm, route+"/na-fila", "{}")
+	f.posts(t, f.gm, route+"/na-fila", "{}")
 	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 1 {
 		t.Fatalf("o NPC não entrou na fila (%d linhas) — o resto do teste mediria nada", n)
 	}
 
-	f.posta(t, f.gm, route+"/apagar", "{}")
+	f.posts(t, f.gm, route+"/apagar", "{}")
 
 	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 1 {
 		t.Errorf("apagar do elenco tirou o combatente da cena: a fila tem %d linhas", n)
@@ -129,7 +129,7 @@ func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 func TestThePlayerDoesNotTouchTheCampaignCast(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.player, "POST", f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
+	rec := f.requests(t, f.player, "POST", f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 
 	if rec.Code != 403 {
 		t.Errorf("o jogador guardou NPC no elenco do mestre: %d", rec.Code)

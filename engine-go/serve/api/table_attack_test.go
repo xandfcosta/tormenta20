@@ -79,7 +79,7 @@ func TestAttackingSpendsTheStandardAction(t *testing.T) {
 	f, goblin := attackOnTurn(t)
 	attack := f.tableUrl() + "/iniciativa/" + goblin + "/atacar"
 
-	rec := f.pede(t, f.player, http.MethodPost, attack, "")
+	rec := f.requests(t, f.player, http.MethodPost, attack, "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("propor o ataque deu %d", rec.Code)
 	}
@@ -93,7 +93,7 @@ func TestAttackingSpendsTheStandardAction(t *testing.T) {
 	if scene := stateOf(t, f.s.sessions, f.sessionID).Scene; !scene.StandardLeft {
 		t.Fatal("propor o ataque já gastou a ação padrão, antes de o mestre confirmar")
 	}
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("confirmar o ataque deu %d", rec.Code)
 	}
 	scene := stateOf(t, f.s.sessions, f.sessionID).Scene
@@ -107,7 +107,7 @@ func TestAttackingSpendsTheStandardAction(t *testing.T) {
 	// O SEGUNDO ATAQUE NÃO SAI: a padrão acabou e a troca da p233 é de mão
 	// única — movimento não vira padrão. O que se prende é o PROVISÓRIO, que
 	// não pode nascer.
-	rec = f.pede(t, f.player, http.MethodPost, attack, "")
+	rec = f.requests(t, f.player, http.MethodPost, attack, "")
 	if stateOf(t, f.s.sessions, f.sessionID).PendingAttack != nil {
 		t.Error("sem ação padrão no turno, um segundo ataque foi rolado")
 	}
@@ -124,10 +124,10 @@ func TestAStunnedCharacterDoesNotAttack(t *testing.T) {
 			pc = e.ID
 		}
 	}
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+pc+"/condicao/atordoado", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+pc+"/condicao/atordoado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar Atordoado deu %d", rec.Code)
 	}
-	rec := f.pede(t, f.player, http.MethodPost, f.tableUrl()+"/iniciativa/"+goblin+"/atacar", "")
+	rec := f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/iniciativa/"+goblin+"/atacar", "")
 	if stateOf(t, f.s.sessions, f.sessionID).PendingAttack != nil {
 		t.Error("atordoado, o personagem rolou um ataque")
 	}

@@ -30,7 +30,7 @@ func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, _ := sceneIds(t, f)
 
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	// O CONTROLE: a peça entrou na memória. Sem isto, um disco vazio não
 	// distingue "não gravou" de "não havia o que gravar".
@@ -69,7 +69,7 @@ func TestACommandTheDiskRefusesComesBackRefused(t *testing.T) {
 	// O CONTROLE primeiro: com o disco saudável o gesto passa e a peça entra.
 	// Sem esta metade, "a peça não entrou" não distingue a recusa de um pedido
 	// que nunca funcionou.
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 	before := len(boardRead(f.s.tableHost().Boards().Get(ctx, f.sessionID, defaultTab)).Tokens)
 	if before == 0 {
 		t.Fatal("o controle falhou: a peça não entrou com o disco saudável")
@@ -83,7 +83,7 @@ func TestACommandTheDiskRefusesComesBackRefused(t *testing.T) {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
 
-	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	if !strings.Contains(body, "open_boards") {
 		t.Errorf("a gravação falhou e a cena não disse nada ao mestre.\ncorpo: %s", primeiros(body, 400))
@@ -100,7 +100,7 @@ func TestThePlayerStillSeesTheTable(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(body, "Arcanista") {
 		t.Error("o jogador não viu a própria mesa")

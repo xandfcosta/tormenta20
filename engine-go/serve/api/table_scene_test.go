@@ -17,7 +17,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 		t.Fatal("a sessão já nasceu com tabuleiro — o guarda mediria a cena errada")
 	}
 
-	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
+	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
@@ -45,7 +45,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 // do fio — a resposta a isso é desenhar pedra, não discutir.
 func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"   ","new_ground":"lava"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
@@ -68,7 +68,7 @@ func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *test
 // fronteira de segurança é o servidor e a tela é UX.
 func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.player, "POST", f.tableUrl()+"/tabuleiro/abrir",
+	if rec := f.requests(t, f.player, "POST", f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"Cripta","new_ground":"crypt"}`); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador abriu a cena: %d", rec.Code)
 	}
@@ -77,7 +77,7 @@ func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 	}
 
 	f.seedOpenBoard(t, "stone")
-	if rec := f.pede(t, f.player, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusForbidden {
+	if rec := f.requests(t, f.player, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador encerrou a cena: %d", rec.Code)
 	}
 	if boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)) == nil {
@@ -92,7 +92,7 @@ func TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")
 
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 	if boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)) != nil {
@@ -119,8 +119,8 @@ func TestAnEmptySceneSaysDifferentThingsToEachOfThem(t *testing.T) {
 
 	// O CONTROLE: os dois chegam na cena vazia. Sem ele, "o jogador não vê
 	// 'Abrir tabuleiro'" seria verdade também sobre uma página que não carregou.
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	for who, body := range map[string]string{"mestre": forGM, "jogador": forPlayer} {
 		if !strings.Contains(body, "Nenhum tabuleiro aberto") && !strings.Contains(body, "ainda não abriu") {
 			t.Fatalf("a cena vazia do %s não desenhou nada reconhecível", who)
@@ -148,11 +148,11 @@ func TestAnEmptySceneSaysDifferentThingsToEachOfThem(t *testing.T) {
 func TestTheArchiveListsWhatWasEnded(t *testing.T) {
 	f := newSceneFixture(t)
 	f.onBoard(t) // abre a Taverna e põe UMA peça
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(screen, "Lugares da campanha · 1") {
 		t.Errorf("o acervo não apareceu com a cena encerrada")
 	}
@@ -166,7 +166,7 @@ func TestTheArchiveListsWhatWasEnded(t *testing.T) {
 	}
 
 	// O acervo é do MESTRE: a mesa não escolhe onde joga.
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(forPlayer, "Lugares da campanha") {
 		t.Error("o jogador recebeu o acervo da campanha")
 	}
@@ -177,7 +177,7 @@ func TestTheArchiveListsWhatWasEnded(t *testing.T) {
 // apareceu" seria verdade sobre um botão que aparece sempre.
 func TestWithoutAStoredPlaceThereIsNoArchiveButton(t *testing.T) {
 	f := newSceneFixture(t)
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(screen, "Abrir tabuleiro") {
 		t.Fatal("a cena vazia do mestre não desenhou — o guarda mediria a tela errada")
 	}
@@ -195,10 +195,10 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 	f := newSceneFixture(t)
 	ctx := context.Background()
 	f.seedOpenBoard(t, "tavern") // "Taverna do Javali"
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar a taverna deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"Cripta","new_ground":"crypt"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir a cripta deu %d", rec.Code)
 	}
@@ -213,7 +213,7 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 		t.Fatal("a taverna não está no acervo — o guarda mediria a troca errada")
 	}
 
-	if rec := f.pede(t, f.gm, "POST",
+	if rec := f.requests(t, f.gm, "POST",
 		fmt.Sprintf("%s/tabuleiro/lugares/%d/reabrir", f.tableUrl(), tavern), ""); rec.Code != http.StatusOK {
 		t.Fatalf("reabrir deu %d", rec.Code)
 	}
@@ -237,7 +237,7 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 	}
 	// Quem reabriu VAI para a aba nova — ele acabou de escolher aquele lugar
 	// numa lista, e ficar na cena anterior faria o gesto parecer que não pegou.
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(screen, "Taverna do Javali</h2>") {
 		t.Error("o mestre reabriu a taverna e continuou olhando a cripta")
 	}
@@ -249,10 +249,10 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"Cripta","new_ground":"crypt"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir a cripta deu %d", rec.Code)
 	}
@@ -261,7 +261,7 @@ func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 		t.Fatal("o acervo está vazio — o guarda não teria o que apagar")
 	}
 
-	if rec := f.pede(t, f.gm, "POST",
+	if rec := f.requests(t, f.gm, "POST",
 		fmt.Sprintf("%s/tabuleiro/lugares/%d/remover", f.tableUrl(), saved[0].ID), ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
@@ -276,7 +276,7 @@ func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 	saved := f.s.tableHost().Boards().Places(context.Background(), f.campaignID)
@@ -286,7 +286,7 @@ func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 	id := saved[0].ID
 
 	for _, action := range []string{"reabrir", "remover"} {
-		rec := f.pede(t, f.player, "POST",
+		rec := f.requests(t, f.player, "POST",
 			fmt.Sprintf("%s/tabuleiro/lugares/%d/%s", f.tableUrl(), id, action), "")
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador conseguiu %s um lugar: %d", action, rec.Code)
@@ -302,15 +302,15 @@ func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 // dizer isso em vez de fazer ele contar zeros.
 func TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"Sala esquecida","new_ground":"stone"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE: a cena guardada está listada. Sem ele, não achar "0 peças"
 	// seria verdade também sobre um acervo que não desenhou nada.
 	if !strings.Contains(screen, "Sala esquecida") {
@@ -344,10 +344,10 @@ func TestTheTurnStripReachesBothScreens(t *testing.T) {
 	// DOIS avanços, e o segundo é o caso difícil: a fila tem dois, então o segundo
 	// turno é o ÚLTIMO da rodada, e "quem vem depois" está no TOPO da lista. É o
 	// turno em que ler de cima para baixo não acha ninguém.
-	f.posta(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "")
-	f.posta(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "")
+	f.posts(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "")
+	f.posts(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "")
 
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// ANCORADO NA VIRADA DA RODADA, que é texto que SÓ a faixa escreve: o nome
 	// do Ogro aparece na lista de iniciativa de qualquer jeito, e procurá-lo
 	// mediria a lista em vez da faixa.
@@ -364,7 +364,7 @@ func TestTheTurnStripReachesBothScreens(t *testing.T) {
 		t.Errorf("a faixa do mestre marcou uma linha como dele")
 	}
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forPlayer, ">você<") {
 		t.Errorf("a faixa do jogador não marca o personagem dele como \"você\"")
 	}
@@ -386,17 +386,17 @@ func TestTheTurnStripReachesBothScreens(t *testing.T) {
 func TestThePlayerTurnStripObeysTheSameRedaction(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
-	f.posta(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "")
-	f.posta(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "")
+	f.posts(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "")
+	f.posts(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "")
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if strings.Contains(forPlayer, "12/130") {
 		t.Errorf("os PV que o mestre escondeu chegaram à tela do jogador")
 	}
 	// CONTROLE: o MESTRE vê os PV. Sem ele, um HTML que não trouxesse a fila
 	// nenhuma passaria por "a redação funcionou".
-	if forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(forGM, "12") {
+	if forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(forGM, "12") {
 		t.Fatal("o mestre também não viu os PV — o guarda mediu uma tela vazia")
 	}
 }
@@ -408,7 +408,7 @@ func TestThePlayerTurnStripObeysTheSameRedaction(t *testing.T) {
 func TestOutOfCombatTheHeaderKeepsWaiting(t *testing.T) {
 	f := newSceneFixture(t)
 
-	body := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(body, "Aguardando iniciativa") {
 		t.Error("fora de combate o cabeçalho não diz que espera a iniciativa")

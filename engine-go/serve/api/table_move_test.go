@@ -29,7 +29,7 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 
 	// O mestre move sem orçamento, então ele serve para medir o acúmulo sem a
 	// regra da vez entrar no meio.
-	if rec := f.pede(t, f.gm, "POST", base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("primeira parada deu %d", rec.Code)
 	}
 	first := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending
@@ -37,7 +37,7 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 		t.Fatalf("o primeiro caminho ficou %+v", first)
 	}
 
-	if rec := f.pede(t, f.gm, "POST", base+"/parada", `{"from":{"X":2,"Y":2}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", base+"/parada", `{"from":{"X":2,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("segunda parada deu %d", rec.Code)
 	}
 	after := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending
@@ -64,14 +64,14 @@ func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 		return p.X, p.Y
 	}
 
-	if rec := f.pede(t, f.gm, "POST", base+"/parada", `{"from":{"X":3,"Y":1}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", base+"/parada", `{"from":{"X":3,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor deu %d", rec.Code)
 	}
 	if x, y := where(); x != 0 || y != 0 {
 		t.Errorf("a peça andou na PROPOSTA, para %d,%d", x, y)
 	}
 
-	if rec := f.pede(t, f.gm, "POST", base+"/confirmar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", base+"/confirmar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("confirmar deu %d", rec.Code)
 	}
 	if x, y := where(); x != 3 || y != 1 {
@@ -88,10 +88,10 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.gm, "POST", base+"/parada", `{"from":{"X":4,"Y":4}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", base+"/parada", `{"from":{"X":4,"Y":4}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", base+"/cancelar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", base+"/cancelar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("cancelar deu %d", rec.Code)
 	}
 
@@ -120,7 +120,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	}
 	ogre := placed.Tokens[len(placed.Tokens)-1].ID
 
-	body := f.pede(t, f.player, "POST",
+	body := f.requests(t, f.player, "POST",
 		f.tableUrl()+"/tabuleiro/"+ogre+"/parada", `{"from":{"X":6,"Y":5}}`).Body.String()
 	if !strings.Contains(body, "não é sua") {
 		t.Errorf("a recusa não explica de quem é a peça; sinais = %s", trechoDeSinais(body))
@@ -135,16 +135,16 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	f := newSceneFixture(t)
 	f.onBoard(t)
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 
 	// O CONTROLE: o jogador vê o tabuleiro. Sem isto, "não achei alcance" seria
 	// verdade também numa cena sem mapa.
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forPlayer, "board-plane") {
 		t.Fatal("o jogador não viu o tabuleiro")
 	}
@@ -160,7 +160,7 @@ func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	// O MESTRE VÊ O MESMO SOMBREADO sem ser barrado por ele (decisão do dono):
 	// esconder as faixas dele tiraria da pessoa que decide exatamente o que a
 	// mesa está lendo.
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forGM, "board-range-second") {
 		t.Error("o mestre não viu as faixas de alcance da peça que ele move")
 	}
@@ -177,7 +177,7 @@ func TestOutOfCombatNobodySeesReach(t *testing.T) {
 	f.onBoard(t)
 
 	for who, caller := range map[string]int64{"jogador": f.player, "mestre": f.gm} {
-		screen := f.pede(t, caller, http.MethodGet, f.tableUrl(), "").Body.String()
+		screen := f.requests(t, caller, http.MethodGet, f.tableUrl(), "").Body.String()
 		if !strings.Contains(screen, "board-plane") {
 			t.Fatalf("o %s não viu o tabuleiro: a ausência abaixo não é evidência", who)
 		}
@@ -197,10 +197,10 @@ func TestOutOfCombatNobodySeesReach(t *testing.T) {
 func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
@@ -208,7 +208,7 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	// O CANAL: a região do tabuleiro tem o elemento ligado ao sinal. Sem esta
 	// asserção, "a frase saiu" seria verdade sobre uma tela que não a mostra —
 	// que é exatamente o defeito que este guarda existe para pegar.
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forPlayer, "$move_error") {
 		t.Fatal("o tabuleiro do jogador não tem onde acender a recusa de uma parada")
 	}
@@ -217,7 +217,7 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	// os aceita de propósito, porque é o desenho que conta à pessoa onde ela
 	// estourou. Quem recusa é o CONFIRMAR, e é a recusa dele que precisa pousar
 	// aqui.
-	proposal := f.pede(t, f.player, "POST", base+"/parada", `{"from":{"X":9,"Y":0}}`)
+	proposal := f.requests(t, f.player, "POST", base+"/parada", `{"from":{"X":9,"Y":0}}`)
 	if proposal.Code != http.StatusOK {
 		t.Fatalf("a parada cara deu %d: sem provisório não há trecho vermelho para desenhar", proposal.Code)
 	}
@@ -225,7 +225,7 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 		t.Errorf("a parada cara acendeu uma recusa que já não é dela; sinais = %s", signals)
 	}
 
-	refused := f.pede(t, f.player, "POST", base+"/confirmar", "").Body.String()
+	refused := f.requests(t, f.player, "POST", base+"/confirmar", "").Body.String()
 	sig := trechoDeSinais(refused)
 	if !strings.Contains(sig, "move_error") {
 		t.Errorf("a recusa não saiu no sinal do movimento; sinais = %s", sig)
@@ -236,7 +236,7 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 
 	// E APAGA no acerto: um sinal que só se escreve quando dá errado deixa a
 	// recusa de duas paradas atrás acesa sobre uma que funcionou.
-	accepted := f.pede(t, f.player, "POST", base+"/parada", `{"from":{"X":2,"Y":0}}`).Body.String()
+	accepted := f.requests(t, f.player, "POST", base+"/parada", `{"from":{"X":2,"Y":0}}`).Body.String()
 	if !strings.Contains(trechoDeSinais(accepted), `"move_error":""`) {
 		t.Errorf("a parada válida não apagou a recusa anterior; sinais = %s", trechoDeSinais(accepted))
 	}
@@ -252,18 +252,18 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 
 	// Duas casas em linha reta custam 2 do deslocamento padrão de 6 (T20 p106).
-	if rec := f.pede(t, f.player, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.player, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: a frase do movimento está na tela. Sem ele, não achar "sobram"
 	// seria verdade também numa tela sem movimento proposto nenhum.
@@ -283,10 +283,10 @@ func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 // orçamento -1 e nunca vê vermelho.
 func (f sceneFixture) turnPlayer(t *testing.T) {
 	t.Helper()
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 }
@@ -305,10 +305,10 @@ func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 	f.turnPlayer(t)
 
 	// O deslocamento padrão são 6 quadrados (T20 p106); nove para o leste custam 9.
-	if rec := f.pede(t, f.player, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":9,"Y":0}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.player, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":9,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada cara deu %d: sem provisório não há seta para pintar", rec.Code)
 	}
-	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(screen, "board-move-second") {
 		t.Error("o caminho passou da ação de movimento e a seta saiu inteira dourada")
@@ -359,10 +359,10 @@ func TestTheControlForTheTwoColorArrow(t *testing.T) {
 	tokenID := f.onBoard(t)
 	f.turnPlayer(t)
 
-	if rec := f.pede(t, f.player, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":4,"Y":0}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.player, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":4,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada que cabe deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if strings.Contains(screen, "board-move-beyond") {
 		t.Error("quatro quadrados sobre um deslocamento de seis pintaram vermelho")

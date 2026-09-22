@@ -34,14 +34,14 @@ func expertiseScreen(t *testing.T, f sceneFixture, id int64, search string) stri
 	if search != "" {
 		target += "&busca=" + url.QueryEscape(search)
 	}
-	return f.pede(t, f.player, http.MethodGet, target, "").Body.String()
+	return f.requests(t, f.player, http.MethodGet, target, "").Body.String()
 }
 
 // expertiseAt manda um dos gestos e devolve a tela redesenhada.
 func expertiseAt(t *testing.T, f sceneFixture, id int64, path string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/pericias/%s?tab=expertises", id, path)
-	rec := f.pede(t, f.player, http.MethodPost, target, "")
+	rec := f.requests(t, f.player, http.MethodPost, target, "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o comando %q respondeu %d: %s", path, rec.Code, rec.Body.String())
 	}
@@ -167,7 +167,7 @@ func TestTheAttributeSwitchesAndOnlyAcceptsTheSix(t *testing.T) {
 	}
 
 	target := fmt.Sprintf("/personagens/%d/pericias/atributo/Acrobacia/sorte?tab=expertises", id)
-	if refusal := sceneRefusal(f.pede(t, f.player, http.MethodPost, target, "").Body.String()); refusal == "" {
+	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, "").Body.String()); refusal == "" {
 		t.Error("um atributo inventado foi aceito sem uma palavra na tela")
 	}
 	if _, attribute := training(t, f, id, "Acrobacia"); attribute != "strength" {
@@ -214,7 +214,7 @@ func TestACraftIsBornTrainedAndOnlyItCanBeRemoved(t *testing.T) {
 	}
 
 	target := fmt.Sprintf("/personagens/%d/pericias/remover/Fortitude?tab=expertises", id)
-	if refusal := sceneRefusal(f.pede(t, f.player, http.MethodPost, target, "").Body.String()); refusal == "" {
+	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, "").Body.String()); refusal == "" {
 		t.Error("uma perícia do LIVRO foi removida da ficha")
 	}
 	if _, _ = training(t, f, id, "Fortitude"); false {
@@ -292,8 +292,8 @@ func TestTheSecondCraftWithTheSameNameSaysWhyInsteadOfLeakingTheDriver(t *testin
 	const body = `{"new_expertise":"Marinheiro","new_attribute":"intelligence"}`
 	path := fmt.Sprintf("/personagens/%d/pericias/nova?tab=expertises", id)
 
-	first := f.posta(t, f.player, path, body)
-	second := f.posta(t, f.player, path, body)
+	first := f.posts(t, f.player, path, body)
+	second := f.posts(t, f.player, path, body)
 
 	// O CONTROLE: sem ele, "a segunda recusou" não diz se a primeira gravou.
 	if strings.Contains(first, "UNIQUE") || strings.Contains(first, "constraint") {

@@ -45,7 +45,7 @@ func aFolhaPreenchida() url.Values {
 // principais", que é como as cartas costumam começar.
 func TestEveryBookRaceAndClassHasACardInTheForge(t *testing.T) {
 	f := newSceneFixture(t)
-	body := f.pede(t, f.player, http.MethodGet, "/personagens/nova", "").Body.String()
+	body := f.requests(t, f.player, http.MethodGet, "/personagens/nova", "").Body.String()
 
 	races, classes, _ := book.CharacterCatalogs()
 	if len(races) < 17 || len(classes) != 14 {
@@ -67,7 +67,7 @@ func TestEveryBookRaceAndClassHasACardInTheForge(t *testing.T) {
 // O kit de p140 se conhece pela classe, e antes dela a seção não existe.
 func TestTheFormOnlyOffersEquipmentAfterTheClass(t *testing.T) {
 	f := newSceneFixture(t)
-	empty := f.pede(t, f.player, http.MethodGet, "/personagens/nova", "").Body.String()
+	empty := f.requests(t, f.player, http.MethodGet, "/personagens/nova", "").Body.String()
 	if strings.Contains(empty, "Equipamento inicial") {
 		t.Error("a folha vazia já oferece equipamento, sem saber a classe")
 	}
@@ -344,7 +344,7 @@ func TestTheForgeAttributesBelongToTheOwner(t *testing.T) {
 	if code := postaAForja(t, f, f.gm, path+"/strength/1", nil).Code; code != http.StatusForbidden {
 		t.Errorf("o mestre distribuiu atributo de herói alheio: status %d", code)
 	}
-	if code := f.pede(t, f.gm, http.MethodGet, path, "").Code; code != http.StatusForbidden {
+	if code := f.requests(t, f.gm, http.MethodGet, path, "").Code; code != http.StatusForbidden {
 		t.Errorf("o mestre abriu os atributos de herói alheio: status %d", code)
 	}
 }

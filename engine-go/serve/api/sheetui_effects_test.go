@@ -13,14 +13,14 @@ import (
 
 func effectScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.pede(t, f.player, http.MethodGet,
+	return f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=conditionals", id), "").Body.String()
 }
 
 func effect(t *testing.T, f sceneFixture, id int64, path string) *responseRecorderLike {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/efeitos/%s?tab=conditionals", id, path)
-	rec := f.pede(t, f.player, http.MethodPost, target, "")
+	rec := f.requests(t, f.player, http.MethodPost, target, "")
 	return &responseRecorderLike{Code: rec.Code, Body: rec.Body.String()}
 }
 
@@ -228,7 +228,7 @@ func TestAnAppliedSpellIsNamedByItsBookName(t *testing.T) {
 	}
 	// A DECOMPOSIÇÃO mora na aba COMBATE: é lá que o bônus de Defesa diz de
 	// onde veio, e foi lá que o id apareceu.
-	screen := f.pede(t, f.player, http.MethodGet,
+	screen := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
 
 	// O CONTROLE primeiro: a procedência TEM de estar na tela, senão as duas
@@ -280,7 +280,7 @@ func TestTheBreakdownDoesNotEchoTheSourceName(t *testing.T) {
 	if rec := effect(t, f, id, "aplica/armadura-arcana"); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar a magia deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.player, http.MethodGet,
+	screen := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
 
 	if !strings.Contains(screen, "Armadura Arcana (cena)") {

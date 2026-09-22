@@ -13,7 +13,7 @@ import (
 
 func bagScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.pede(t, f.player, http.MethodGet,
+	return f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=bag", id), "").Body.String()
 }
 
@@ -21,7 +21,7 @@ func bagScreen(t *testing.T, f sceneFixture, id int64) string {
 func bagCommand(t *testing.T, f sceneFixture, id int64, path string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/%s?tab=bag", id, path)
-	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, "").Body.String())
+	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, "").Body.String())
 }
 
 // itemSemeia põe um item na ficha e devolve o id.
@@ -246,7 +246,7 @@ func money(t *testing.T, f sceneFixture, id int64, mode string, value float64) s
 	t.Helper()
 	body := fmt.Sprintf(`{"tibar_mode":%q,"tibar_value":%v}`, mode, value)
 	target := fmt.Sprintf("/personagens/%d/dinheiro?tab=bag", id)
-	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String())
+	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 func tibar(t *testing.T, f sceneFixture, id int64) float64 {
@@ -264,7 +264,7 @@ func TestTheGridFiltersBySearchAndByCategory(t *testing.T) {
 	itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 	itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
 
-	withSearch := f.pede(t, f.player, http.MethodGet,
+	withSearch := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=bag&itembusca=balsamo", id), "").Body.String()
 	if !strings.Contains(withSearch, "Bálsamo restaurador") {
 		t.Error("a busca sem acento não achou o Bálsamo")
@@ -273,7 +273,7 @@ func TestTheGridFiltersBySearchAndByCategory(t *testing.T) {
 		t.Error("a busca deixou passar o que não casa")
 	}
 
-	withChip := f.pede(t, f.player, http.MethodGet,
+	withChip := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=bag&itemcategoria=weapons", id), "").Body.String()
 	if !strings.Contains(screenSaved(withChip), "Espada longa") {
 		t.Error("o chip de armas escondeu a espada")

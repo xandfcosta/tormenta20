@@ -70,7 +70,7 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 
 func combatScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.pede(t, f.player, http.MethodGet,
+	return f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
 }
 

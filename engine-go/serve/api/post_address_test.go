@@ -367,14 +367,14 @@ func scenesThatWriteAddresses(t *testing.T, f sceneFixture) []struct {
 // morto simplesmente não está no HTML.
 func openTheLiveTable(t *testing.T, f sceneFixture) {
 	t.Helper()
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Ogro","new_initiative":12,"new_hp":130,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("pôr o Ogro na fila deu %d — sem fila o rodapé de comandos nasce todo disabled", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar a cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/abrir", ""); rec.Code != http.StatusOK {
 		t.Logf("abrir o tabuleiro deu %d", rec.Code)
 	}
 }
@@ -414,7 +414,7 @@ func TestEveryAddressAPostWritesExistsInTheRouter(t *testing.T) {
 	var missing, unreadable []string
 	measured, scenesRead := map[string]bool{}, 0
 	for _, scene := range scenesThatWriteAddresses(t, f) {
-		rec := f.pede(t, scene.User, "GET", scene.Path, "")
+		rec := f.requests(t, scene.User, "GET", scene.Path, "")
 		if rec.Code != http.StatusOK {
 			t.Errorf("a cena %q (%s) respondeu %d: ela saiu da lista sem ninguém tirar, e uma cena que não abre não mede nada",
 				scene.Name, scene.Path, rec.Code)

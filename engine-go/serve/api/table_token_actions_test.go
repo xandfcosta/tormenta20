@@ -41,7 +41,7 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	id := mapToken(t, f, "Ogro", 4, 4)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
 		t.Fatalf("esconder deu %d", rec.Code)
 	}
 	if !board.FindToken(nowBoard(t, f), id).Hidden {
@@ -49,7 +49,7 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	}
 	// A MESA deixa de vê-la, que é o ponto inteiro: a trava é o `BoardForRole`, e
 	// este caso afirma que o gesto passa por ele em vez de só pintar diferente.
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(forPlayer, "Ogro") {
 		t.Error("a peça escondida continuou na tela do jogador")
 	}
@@ -57,7 +57,7 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	// ALTERNA: o mestre que escondeu cedo demais precisa poder mostrar de volta, e
 	// um segundo botão para desfazer o primeiro seria a mesma decisão em dois
 	// lugares.
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
 		t.Fatalf("mostrar deu %d", rec.Code)
 	}
 	if board.FindToken(nowBoard(t, f), id).Hidden {
@@ -78,7 +78,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	}
 	id := placed.Tokens[len(placed.Tokens)-1].ID
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/remover", ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
@@ -105,30 +105,30 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
 	// Sem movimento nenhum: o servidor recusa E a tela não desenha o verbo.
-	rec := f.pede(t, f.gm, http.MethodPost, base+"/voltar", "")
+	rec := f.requests(t, f.gm, http.MethodPost, base+"/voltar", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o comando deu %d — a recusa é uma frase, não um status", rec.Code)
 	}
 	if !strings.Contains(rec.Body.String(), "não há para onde voltar") {
 		t.Errorf("voltar sem movimento não recusou:\n%s", rec.Body.String())
 	}
-	if screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(screen, "Voltar Ogro para") {
+	if screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(screen, "Voltar Ogro para") {
 		t.Error("a tela ofereceu voltar numa peça que não se moveu")
 	}
 
 	// Agora com um movimento CONFIRMADO: o mestre move sem orçamento.
 	mover := f.tableUrl() + "/tabuleiro/" + id
-	if rec := f.pede(t, f.gm, http.MethodPost, mover+"/parada", `{"from":{"X":5,"Y":1}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, mover+"/parada", `{"from":{"X":5,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, http.MethodPost, mover+"/confirmar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, mover+"/confirmar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("confirmar deu %d", rec.Code)
 	}
 	if token := board.FindToken(nowBoard(t, f), id); token.X != 5 {
 		t.Fatalf("a peça não andou: está em (%d,%d)", token.X, token.Y)
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/voltar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/voltar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("voltar deu %d", rec.Code)
 	}
 	piece := board.FindToken(nowBoard(t, f), id)
@@ -155,13 +155,13 @@ func TestUndoSurvivesAReload(t *testing.T) {
 		{"/parada", `{"from":{"X":8,"Y":8}}`},
 		{"/confirmar", ""},
 	} {
-		if rec := f.pede(t, f.gm, http.MethodPost, mover+step.route, step.body); rec.Code != http.StatusOK {
+		if rec := f.requests(t, f.gm, http.MethodPost, mover+step.route, step.body); rec.Code != http.StatusOK {
 			t.Fatalf("%s deu %d", step.route, rec.Code)
 		}
 	}
 
 	// Uma carga fria, como quem apertou F5: nada do navegador anterior viaja.
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(screen, "Voltar Dragão para "+table.Coordinate(2, 2)) {
 		t.Error("a página recarregada perdeu o voltar — ele não sobreviveu ao F5")
 	}
@@ -175,7 +175,7 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Zumbi", 3, 3)
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/peca", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar deu %d", rec.Code)
 	}
@@ -234,7 +234,7 @@ func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
 	id, originalLine := tokenOnTheQueue(t, f, "Ogro cansado")
 	before := len(stateOf(t, f.s.sessions, f.sessionID).Initiative)
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/sozinha", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar com PV próprio deu %d", rec.Code)
 	}
@@ -276,7 +276,7 @@ func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
 	id, row := tokenOnTheQueue(t, f, "Ogro cansado")
 	before := len(stateOf(t, f.s.sessions, f.sessionID).Initiative)
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/junto", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar sangrando junto deu %d", rec.Code)
 	}
@@ -301,14 +301,14 @@ func TestTheModesThatNeedALineRefuseALoosePiece(t *testing.T) {
 	id := mapToken(t, f, "Baú", 1, 1)
 
 	for _, mode := range []string{"junto", "sozinha"} {
-		refusal := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/"+mode, "")
+		refusal := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/"+mode, "")
 		if !strings.Contains(refusal, "não é um combatente da fila") {
 			t.Errorf("o modo %q não recusou a peça solta:\n%s", mode, refusal)
 		}
 	}
 	// O CONTROLE: o peão mudo, na mesma peça, PASSA. Sem ele as duas recusas
 	// acima seriam verdade também numa rota que recusa tudo.
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/peca", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o peão mudo também foi recusado: %d", rec.Code)
 	}
@@ -326,17 +326,17 @@ func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id + "/editar"
 
-	refusal := f.posta(t, f.gm, base, `{"token_name":"Ogro","token_size":4}`)
+	refusal := f.posts(t, f.gm, base, `{"token_name":"Ogro","token_size":4}`)
 	if !strings.Contains(refusal, "1, 2, 3 ou 6") {
 		t.Errorf("o lado 4 não foi recusado:\n%s", refusal)
 	}
-	noName := f.posta(t, f.gm, base, `{"token_name":"  ","token_size":1}`)
+	noName := f.posts(t, f.gm, base, `{"token_name":"  ","token_size":1}`)
 	if !strings.Contains(noName, "precisa de um nome") {
 		t.Errorf("o nome vazio não foi recusado:\n%s", noName)
 	}
 	// E o caso positivo, sem o qual as duas recusas acima seriam verdade também
 	// numa rota que recusa tudo.
-	f.posta(t, f.gm, base, `{"token_name":"Ogro Capitão","token_size":2}`)
+	f.posts(t, f.gm, base, `{"token_name":"Ogro Capitão","token_size":2}`)
 	token := board.FindToken(nowBoard(t, f), id)
 	if token.Label != "Ogro Capitão" || token.Footprint != 2 {
 		t.Errorf("a edição válida não pegou: %q, lado %d", token.Label, token.Footprint)
@@ -352,12 +352,12 @@ func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
 	for _, verb := range []string{"/visibilidade", "/duplicar/peca", "/duplicar/junto", "/duplicar/sozinha", "/voltar", "/remover"} {
-		if rec := f.pede(t, f.player, http.MethodPost, base+verb, ""); rec.Code != http.StatusForbidden {
+		if rec := f.requests(t, f.player, http.MethodPost, base+verb, ""); rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador alcançou %s: %d", verb, rec.Code)
 		}
 	}
 	// E o MENU não é desenhado para ele — cortesia, não trava.
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forPlayer, "Ogro") {
 		t.Fatal("o jogador não viu nem a peça — a página não é o que este teste pensa que é")
 	}
@@ -377,7 +377,7 @@ func colaNaAba(t *testing.T, f sceneFixture, cameFrom, token, mode string, x, y 
 	t.Helper()
 	area := fmt.Sprintf(`{"area_token":%q,"area_board":%q,"area_mode":%q,"from":{"X":%d,"Y":%d}}`,
 		token, cameFrom, mode, x, y)
-	return f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/colar", area)
+	return f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/colar", area)
 }
 
 // Copiar o zumbi na Cripta e colá-lo na Taverna. O servidor procura a original
@@ -404,7 +404,7 @@ func TestThePasteCrossesTheTabs(t *testing.T) {
 	// A ABA é escolhida pela PORTA de verdade, e não mexendo no campo do
 	// servidor: é o mesmo gesto de clicar na aba, e ele é quem decide em qual
 	// tabuleiro o comando age.
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/aba/"+tavern.ID, ""); rec.Code != http.StatusOK {
 		t.Fatalf("escolher a aba da taverna deu %d", rec.Code)
 	}
@@ -434,7 +434,7 @@ func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	refusal := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/colar", `{"area_token":"","from":{"X":2,"Y":2}}`)
+	refusal := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/colar", `{"area_token":"","from":{"X":2,"Y":2}}`)
 	if !strings.Contains(refusal, "não há peça na área") {
 		t.Errorf("a área vazia não foi recusada:\n%s", refusal)
 	}
@@ -524,7 +524,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	id, originalLine := tokenOnTheQueue(t, f, "Zumbi")
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/bloco", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar com bloco próprio deu %d", rec.Code)
 	}
@@ -571,13 +571,13 @@ func TestTheOwnBlockModeRefusesWhoHasNone(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
 
-	refusal := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/bloco", "")
+	refusal := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/bloco", "")
 	if !strings.Contains(refusal, "não tem bloco de criatura") {
 		t.Errorf("o modo do bloco aceitou uma linha sem bloco:\n%s", refusal)
 	}
 	// O CONTROLE: o "com PV próprio", na MESMA peça, passa. Sem ele a recusa
 	// acima seria verdade também numa rota que recusa tudo.
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/sozinha", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o modo com PV próprio também foi recusado: %d", rec.Code)
 	}

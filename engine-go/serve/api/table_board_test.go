@@ -29,7 +29,7 @@ func (f sceneFixture) seedOpenBoard(t *testing.T, terrain string) *board.BoardSt
 // diria que o mestre abriu uma cena que ele não abriu.
 func TestWithoutABoardTheSceneSaysThereIsNoMap(t *testing.T) {
 	f := newSceneFixture(t)
-	body := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(body, "Nenhum tabuleiro aberto") {
 		t.Error("a cena não disse que não há mapa")
@@ -55,12 +55,12 @@ func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 		t.Fatalf("pôr a peça à vista: %v", err)
 	}
 
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forGM, "Ogro em") {
 		t.Error("o mestre não viu a própria peça escondida")
 	}
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE: o jogador está vendo o tabuleiro. Sem ele, "não achei o Ogro"
 	// seria verdade também numa cena sem mapa nenhum.
 	if !strings.Contains(forPlayer, "Arwen em") {
@@ -83,22 +83,22 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 		board.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
 	// FORA de combate ninguém está na vez, mesmo com a cena aberta e a fila
 	// montada — é o `TurnIndex` negativo, e a peça não pode acender por estar
 	// no mapa.
-	before := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	before := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(before, "board-token-on-turn") {
 		t.Error("a peça acendeu antes de o combate começar")
 	}
 
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
-	after := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	after := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(after, "board-token-on-turn") {
 		t.Error("chegou a vez do combatente e a peça dele não acendeu")
 	}
@@ -114,7 +114,7 @@ func TestAnInventedTerrainFallsBackToTheDefaultGround(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "vulcão-de-neon")
 
-	body := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(body, "ground-stone") {
 		t.Error("o terreno inventado não caiu no chão padrão")
 	}
@@ -402,7 +402,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 		t.Fatalf("fechar a cortina: %v", err)
 	}
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forPlayer, "O mestre está montando a cena") {
 		t.Error("a mesa não viu a cortina")
 	}
@@ -417,7 +417,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 
 	// O CONTROLE: o mestre continua vendo a cena inteira, senão "a mesa não viu"
 	// seria verdade também num tabuleiro que ninguém abriu.
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forGM, "Dragão") || !strings.Contains(forGM, "board-plane") {
 		t.Error("o mestre perdeu a própria cena com a cortina fechada")
 	}
@@ -440,7 +440,7 @@ func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 
-	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":-3,"Y":7},"new_token_name":"  Porta da cripta  ","new_token_size":1,"new_token_look":"object"}`)
+	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":-3,"Y":7},"new_token_name":"  Porta da cripta  ","new_token_size":1,"new_token_look":"object"}`)
 
 	board := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(board.Tokens) != 1 {
@@ -483,7 +483,7 @@ func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/nova", tc.signals)
+			body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/nova", tc.signals)
 			if !strings.Contains(body, tc.waits) {
 				t.Errorf("a recusa não citou %q; a resposta foi:\n%s", tc.waits, firstRows(body, 6))
 			}
@@ -504,7 +504,7 @@ func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 
-	rec := f.pede(t, f.player, "POST", f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
+	rec := f.requests(t, f.player, "POST", f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça e levou %d, queria 403", rec.Code)
@@ -526,7 +526,7 @@ func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 
-	forGM := f.pede(t, f.gm, "GET", f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 	for _, chunk := range []string{
 		"Nova peça — o clique escolhe a casa",       // o botão do modo
 		"Nova peça — escolha a casa onde ela nasce", // a camada de clique
@@ -546,7 +546,7 @@ func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 	// PÁGINA e sai igual para os dois papéis, e um sinal sem escritor é inerte.
 	// O que conta é não haver botão nem camada de clique — e a trava de verdade é
 	// o 403 do handler, medido no caso vizinho.
-	forPlayer := f.pede(t, f.player, "GET", f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, "GET", f.tableUrl(), "").Body.String()
 	if strings.Contains(forPlayer, "Nova peça") {
 		t.Error("o gesto de criar peça vazou para o HTML do jogador")
 	}
@@ -561,10 +561,10 @@ func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	base := f.tableUrl() + "/tabuleiro/pecas/nova"
-	f.posta(t, f.gm, base, `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
-	f.posta(t, f.gm, base, `{"from":{"X":5,"Y":5},"new_token_name":"Lobo","new_token_size":1,"new_token_look":"npc"}`)
+	f.posts(t, f.gm, base, `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
+	f.posts(t, f.gm, base, `{"from":{"X":5,"Y":5},"new_token_name":"Lobo","new_token_size":1,"new_token_look":"npc"}`)
 
-	html := f.pede(t, f.gm, "GET", f.tableUrl(), "").Body.String()
+	html := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 
 	// O CONTROLE vem primeiro: as duas peças TÊM de estar no mapa, senão o resto
 	// mede a ausência das duas e passa verde dizendo nada.
@@ -619,11 +619,11 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 
 	walk := func(destX int) *httptest.ResponseRecorder {
 		base := f.tableUrl() + "/tabuleiro/" + tokenID
-		if rec := f.pede(t, f.gm, "POST", base+"/parada",
+		if rec := f.requests(t, f.gm, "POST", base+"/parada",
 			`{"from":{"X":`+strconv.Itoa(destX)+`,"Y":2}}`); rec.Code != http.StatusOK {
 			t.Fatalf("propor a parada deu %d", rec.Code)
 		}
-		return f.pede(t, f.gm, "POST", base+"/confirmar", "")
+		return f.requests(t, f.gm, "POST", base+"/confirmar", "")
 	}
 
 	if rec := walk(3); rec.Code != http.StatusOK {
@@ -665,11 +665,11 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 	// E A TELA NÃO OFERECE O QUE O SERVIDOR RECUSA: com o turno gasto, a
 	// proposta continua desenhável — propor é rascunho — mas o painel dela diz
 	// que não há ação e não põe um "Confirmar" na frente de quem vai ouvir não.
-	if rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada",
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada",
 		`{"from":{"X":6,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor com o turno gasto deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.gm, "GET", f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 	if !strings.Contains(screen, "não sobrou ação neste turno") {
 		t.Error("o painel do movimento não diz que o turno acabou")
 	}

@@ -65,7 +65,7 @@ func (f sceneFixture) token(t *testing.T, userID int64) string {
 
 // pede manda uma requisição autenticada pelo MesaRouter — que é outro roteador
 // que o `Router()` da API, e por isso o `authed` da casa não serve.
-func (f sceneFixture) pede(t *testing.T, userID int64, method, path, body string) *httptest.ResponseRecorder {
+func (f sceneFixture) requests(t *testing.T, userID int64, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+f.token(t, userID))
@@ -91,7 +91,7 @@ func (f sceneFixture) tableUrl() string {
 // passou verde na suíte inteira e quebrou toda escrita no servidor real; o
 // defeito apareceu com um curl, não com um teste. Este helper existe para que
 // não apareça assim de novo.
-func (f sceneFixture) posta(t *testing.T, userID int64, path, body string) string {
+func (f sceneFixture) posts(t *testing.T, userID int64, path, body string) string {
 	t.Helper()
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()

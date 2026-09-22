@@ -28,11 +28,11 @@ func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 	// Um quadrado de lado 1 exatamente em cima dela.
 	path := f.tableUrl() + "/tabuleiro/gabarito"
 	square := templateBody("quadrado", "1", 4, 4, 4, 4)
-	forGM := f.posta(t, f.gm, path, square)
+	forGM := f.posts(t, f.gm, path, square)
 	if !strings.Contains(forGM, "Ogro emboscado") {
 		t.Fatalf("o MESTRE não viu a própria peça: %s\n— sem o caso positivo o resto não mede nada", forGM)
 	}
-	forPlayer := f.posta(t, f.player, path, square)
+	forPlayer := f.posts(t, f.player, path, square)
 	if strings.Contains(forPlayer, "Ogro emboscado") {
 		t.Errorf("a emboscada vazou no gabarito do jogador: %s", forPlayer)
 	}
@@ -56,7 +56,7 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 
 	// As paradas vêm nos SINAIS: com número variável de pernas, um caminho com
 	// as pontas dentro seria uma rota que muda de forma.
-	response := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/regua",
+	response := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/regua",
 		`{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
 	if !strings.Contains(response, "ruler_text") {
 		t.Fatalf("a medida não voltou: %s", response)
@@ -74,7 +74,7 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/gabarito", templateBody("piramide", "2", 0, 0, 0, 0))
+	rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/gabarito", templateBody("piramide", "2", 0, 0, 0, 0))
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("forma inventada deu %d, esperado 400", rec.Code)
 	}
@@ -104,13 +104,13 @@ func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 	path := f.tableUrl() + "/tabuleiro/regua"
 	stops := `{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`
 
-	rec := f.pede(t, stranger, http.MethodPost, path, stops)
+	rec := f.requests(t, stranger, http.MethodPost, path, stops)
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("quem não está na mesa recebeu %d, quero 403: %s", rec.Code, rec.Body.String())
 	}
 	// O CONTROLE. Ele responde a pergunta que o `!= 200` não respondia: o canal
 	// existe, e o 403 acima é uma RECUSA e não um endereço que não casa.
-	if rec := f.pede(t, f.player, http.MethodPost, path, stops); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.player, http.MethodPost, path, stops); rec.Code != http.StatusOK {
 		t.Fatalf("quem ESTÁ na mesa recebeu %d no mesmo endereço — o caso de cima passou a medir nada", rec.Code)
 	}
 }
@@ -125,7 +125,7 @@ func TestTheRailOffersTheRulerToThePlayer(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	for _, want := range []string{"Régua", "Gabarito", "Mover a peça"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("a cena do jogador não ofereceu %q", want)
@@ -135,7 +135,7 @@ func TestTheRailOffersTheRulerToThePlayer(t *testing.T) {
 		t.Error("o pincel do mestre apareceu na cena do jogador")
 	}
 
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forGM, "Borracha") {
 		t.Error("o mestre perdeu o pincel — sem o caso positivo o de cima não mede nada")
 	}

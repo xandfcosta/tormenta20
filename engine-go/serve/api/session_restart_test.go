@@ -28,7 +28,7 @@ func TestACommandBeforeTheFirstPageActsOnTheStoredCombat(t *testing.T) {
 		t.Fatalf("gravar o combate: %v", err)
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("passar a vez deu %d", rec.Code)
 	}
 

@@ -13,7 +13,7 @@ func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	for _, id := range tableRegionNames {
 		mark := `id="` + id + `"`
@@ -29,7 +29,7 @@ func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(html, "O que ver na sessão") {
 		t.Fatal("o jogador não recebeu o seletor de superfícies")
@@ -53,7 +53,7 @@ func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	insideSheet := html[strings.Index(html, `id="sheet-scene"`):]
 	if i := strings.Index(insideSheet, "Seções da ficha"); i >= 0 {
@@ -80,7 +80,7 @@ func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	onTable := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	onTable := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	embedded := onTable[strings.Index(onTable, `id="sheet-scene"`):]
 	header, _, _ := strings.Cut(embedded, "Seções da ficha")
 
@@ -91,7 +91,7 @@ func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 		t.Error("a ficha embutida tem a volta que tira o jogador da mesa")
 	}
 
-	loose := f.pede(t, f.player, http.MethodGet,
+	loose := f.requests(t, f.player, http.MethodGet,
 		"/personagens/"+strconv.FormatInt(f.charID, 10), "").Body.String()
 	if !strings.Contains(loose, "‹ Voltar") {
 		t.Fatal("a ficha de página inteira perdeu a volta — sem ela o caso acima não mede nada")
@@ -105,7 +105,7 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: a cena do mestre chegou inteira. Sem ele, "não achei o seletor"
 	// seria verdade também num 403 ou numa página vazia.
@@ -124,7 +124,7 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 // outro.
 func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 	f := newSceneFixture(t)
-	html := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	html := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(html, `surface: &#39;`+table.DefaultOpeningSurface+`&#39;`) {
 		t.Errorf("a página não semeia a superfície padrão (%q)", table.DefaultOpeningSurface)
@@ -156,7 +156,7 @@ func TestTheSheetInTheSessionHasAWayToKnowItChanged(t *testing.T) {
 	// DESESCAPADO: `data-signals` e `data-on-*` são valores DINÂMICOS de
 	// atributo, e o templ escapa a aspa simples deles (`&#39;`). Procurar a
 	// forma crua aqui daria um guarda que reprova o código certo.
-	scene := html.UnescapeString(f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String())
+	scene := html.UnescapeString(f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String())
 
 	if !strings.Contains(scene, "sheet_version: ''") {
 		t.Error("o sinal `sheet_version` não foi declarado: o remendo do servidor não teria onde pousar")

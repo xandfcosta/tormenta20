@@ -22,7 +22,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 	// Três espécies EMPILHADAS na mesma casa: é o caso que o modo antigo não
 	// sabia resolver, porque ele tinha de escolher uma.
 	for _, species := range []string{"dificil", "cobertura", "elevado"} {
-		if rec := f.pede(t, f.gm, http.MethodPost, square, stroke(species, 4, 4, 4, 4)); rec.Code != http.StatusOK {
+		if rec := f.requests(t, f.gm, http.MethodPost, square, stroke(species, 4, 4, 4, 4)); rec.Code != http.StatusOK {
 			t.Fatalf("pintar %s deu %d", species, rec.Code)
 		}
 	}
@@ -32,7 +32,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 			len(b.Difficult), len(b.Cover), len(b.Elevated))
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost, square+"/limpar", stroke("", 4, 4, 4, 4)); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, square+"/limpar", stroke("", 4, 4, 4, 4)); rec.Code != http.StatusOK {
 		t.Fatalf("limpar deu %d", rec.Code)
 	}
 	b = boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
@@ -51,7 +51,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(screen, "tabuleiro/terreno/limpar/") {
 		t.Error("a borracha não usa a rota sem espécie")
@@ -72,7 +72,7 @@ func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 func TestThePlayerRailLacksWhatThePlayerCannotDo(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(screen, "Régua (tecla ") {
 		t.Fatal("o jogador não recebeu o trilho — a página não é o que este teste pensa que é")

@@ -48,7 +48,7 @@ func TestDeletingACampaignForgetsItsSessionsFirst(t *testing.T) {
 		t.Fatalf("a sessão tem %d na fila antes de apagar, e o caso precisa de 1", n)
 	}
 
-	rec := sceneFixture{s: s}.pede(t, owner, http.MethodPost,
+	rec := sceneFixture{s: s}.requests(t, owner, http.MethodPost,
 		fmt.Sprintf("/campanhas/%d/excluir", campaign), "")
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("excluir respondeu %d, queria 303", rec.Code)

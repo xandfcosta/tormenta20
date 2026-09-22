@@ -28,7 +28,7 @@ func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 
 	// (0,0) → (2,0) são 2 quadrados; a segunda perna até (2,2) soma mais 2.
 	for _, square := range []string{`{"from":{"X":2,"Y":0}}`, `{"from":{"X":2,"Y":2}}`} {
-		if rec := f.pede(t, f.gm, http.MethodPost, base+"/parada", square); rec.Code != http.StatusOK {
+		if rec := f.requests(t, f.gm, http.MethodPost, base+"/parada", square); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", square, rec.Code)
 		}
 	}
@@ -37,7 +37,7 @@ func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 		t.Fatalf("as duas pernas ficaram %+v — sem o caso positivo o desfazer não mede nada", before)
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/desfazer-parada", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/desfazer-parada", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desfazer deu %d", rec.Code)
 	}
 	after := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending
@@ -63,14 +63,14 @@ func TestUndoingTheLastStopCancelsTheMove(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
 	if boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending == nil {
 		t.Fatal("não havia movimento para desfazer — o caso positivo falhou")
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/desfazer-parada", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/desfazer-parada", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desfazer deu %d", rec.Code)
 	}
 	if p := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending; p != nil {
@@ -85,10 +85,10 @@ func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
-	withOne := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	withOne := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE: a faixa do movimento ESTÁ na tela. Sem ele, não achar o botão
 	// seria verdade também numa tela sem movimento proposto nenhum — e a
 	// asserção de ausência passaria verde sobre nada.
@@ -99,10 +99,10 @@ func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 		t.Error("o botão apareceu com uma perna só, onde desfazer já é cancelar")
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":2}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a segunda parada deu %d", rec.Code)
 	}
-	withTwo := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	withTwo := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(withTwo, "Desfazer parada") {
 		t.Error("com duas pernas o botão não apareceu")
 	}
@@ -121,13 +121,13 @@ func TestTheStopsSurviveAPageReload(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 	for _, square := range []string{`{"from":{"X":2,"Y":0}}`, `{"from":{"X":2,"Y":2}}`} {
-		if rec := f.pede(t, f.gm, http.MethodPost, base+"/parada", square); rec.Code != http.StatusOK {
+		if rec := f.requests(t, f.gm, http.MethodPost, base+"/parada", square); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", square, rec.Code)
 		}
 	}
 
 	// Uma carga fria, como quem apertou F5: nada do navegador anterior viaja.
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(screen, "Desfazer parada") {
 		t.Error("a página recarregada perdeu o desfazer — as paradas não sobreviveram")
 	}
@@ -142,13 +142,13 @@ func TestSomeoneElsesProposalDoesNotExtendMine(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada do mestre deu %d", rec.Code)
 	}
 	// O jogador é dono da peça (ela aponta para a ficha dele) e a cena está fora
 	// de combate, então ele PODE propor — o que ele não pode é herdar as paradas
 	// de outra pessoa.
-	if rec := f.pede(t, f.player, http.MethodPost, base+"/parada", `{"from":{"X":0,"Y":2}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.player, http.MethodPost, base+"/parada", `{"from":{"X":0,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada do jogador deu %d", rec.Code)
 	}
 	stops := boardStops(t, f)

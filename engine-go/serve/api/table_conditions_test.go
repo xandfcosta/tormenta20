@@ -38,12 +38,12 @@ func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/iniciativa/"+npc+"/condicao/caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar deu %d", rec.Code)
 	}
 
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O SELETOR É O CRACHÁ (`</li>`) e não a palavra solta, e esta linha custou
 	// uma sabotagem: procurar "Caído" na página passava VERDE com o crachá
@@ -81,21 +81,21 @@ func TestTogglingTurnsTheConditionOnAndOff(t *testing.T) {
 	_, npc := sceneIds(t, f)
 	base := f.tableUrl() + "/iniciativa/" + npc + "/condicao/"
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ligar deu %d", rec.Code)
 	}
 	if c := rowConditions(t, f, npc); len(c) != 1 || c[0] != "abalado" {
 		t.Fatalf("depois de ligar a linha tem %v", c)
 	}
 	// Uma SEGUNDA condição não substitui a primeira.
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"caido", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ligar a segunda deu %d", rec.Code)
 	}
 	if c := rowConditions(t, f, npc); len(c) != 2 {
 		t.Errorf("a segunda condição substituiu a primeira: %v", c)
 	}
 	// E o mesmo clique DESLIGA, sem tocar na vizinha.
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desligar deu %d", rec.Code)
 	}
 	c := rowConditions(t, f, npc)
@@ -115,7 +115,7 @@ func TestTheNewSetComesBackInTheSignal(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	body := f.posta(t, f.gm, f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", "")
+	body := f.posts(t, f.gm, f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", "")
 
 	if !strings.Contains(body, `"row_conditions":"abalado"`) {
 		t.Errorf("o conjunto novo não voltou no sinal; resposta: %.300s", body)
@@ -130,7 +130,7 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	body := f.posta(t, f.gm, f.tableUrl()+"/iniciativa/"+npc+"/condicao/maldicao-inventada", "")
+	body := f.posts(t, f.gm, f.tableUrl()+"/iniciativa/"+npc+"/condicao/maldicao-inventada", "")
 
 	if !strings.Contains(body, "p394-395") {
 		t.Errorf("a recusa não cita a página da tabela; resposta: %.300s", body)
@@ -144,7 +144,7 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	if !catalog.IsCondition("enfeiticado") {
 		t.Fatal("o catálogo não tem `enfeiticado` — o controle está medindo outra coisa")
 	}
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/iniciativa/"+npc+"/condicao/enfeiticado", ""); rec.Code != http.StatusOK {
 		t.Errorf("a condição do livro foi recusada: %d", rec.Code)
 	}
@@ -156,7 +156,7 @@ func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	rec := f.pede(t, f.player, http.MethodPost,
+	rec := f.requests(t, f.player, http.MethodPost,
 		f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", "")
 
 	if rec.Code != http.StatusForbidden {
@@ -175,7 +175,7 @@ func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	conditions := book.Catalogs().Conditions
 	if len(conditions) == 0 {
@@ -223,7 +223,7 @@ func TestMarkingAConditionOnACharacterRowWritesTheSheet(t *testing.T) {
 	pc, _ := sceneIds(t, f)
 	base := f.tableUrl() + "/iniciativa/" + pc + "/condicao/"
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"atordoado", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"atordoado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	if got := sheetConditions(t, f, f.charID); len(got) != 1 || got[0] != "atordoado" {
@@ -232,13 +232,13 @@ func TestMarkingAConditionOnACharacterRowWritesTheSheet(t *testing.T) {
 	if got := rowConditions(t, f, pc); len(got) != 0 {
 		t.Errorf("a linha do PC guardou %v na fila: a condição dele mora na ficha", got)
 	}
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(screen, ">Atordoado</li>") {
 		t.Error("a fila não mostra o crachá da condição que está na ficha")
 	}
 
 	// O mesmo gesto desliga, na ficha.
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"atordoado", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"atordoado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desmarcar deu %d", rec.Code)
 	}
 	if got := sheetConditions(t, f, f.charID); len(got) != 0 {
@@ -251,11 +251,11 @@ func TestMarkingAConditionOnACharacterRowWritesTheSheet(t *testing.T) {
 func TestTheTableRowShowsTheSheetConditions(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
-	if rec := f.pede(t, f.player, http.MethodPost,
+	if rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/efeitos/condicao/caido?tab=conditionals", f.charID), ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar pela ficha deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(screen, ">Caído</li>") {
 		t.Error("a ficha está Caída e a fila da Mesa não mostra o crachá")
 	}
@@ -266,7 +266,7 @@ func TestMarkingAConditionOnAnNPCRowStaysOnTheQueue(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	_, npc := sceneIds(t, f)
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	if got := rowConditions(t, f, npc); len(got) != 1 || got[0] != "abalado" {
@@ -299,7 +299,7 @@ func TestAStunMarkedAtTheTableStopsTheCharacterFromActing(t *testing.T) {
 	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil { // e ao personagem, com o turno inteiro
 		t.Fatalf("girar: %v", err)
 	}
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+pc+"/condicao/atordoado", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+pc+"/condicao/atordoado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar Atordoado deu %d", rec.Code)
 	}
 	refusal := sceneRefusal(learnAndCast(t, f, "luz").Body)

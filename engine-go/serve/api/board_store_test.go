@@ -30,7 +30,7 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	abre(t, s, sid, "Taverna do Javali", "tavern")
+	opensBoard(t, s, sid, "Taverna do Javali", "tavern")
 	if _, err := s.boards.AddToken(ctx, sid, defaultTab, board.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestClosingBoardErasesItFromDiskToo(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	abre(t, s, sid, "Cripta", "stone")
+	opensBoard(t, s, sid, "Cripta", "stone")
 
 	if err := s.boards.Close(ctx, sid, defaultTab); err != nil {
 		t.Fatalf("encerrar o tabuleiro: %v", err)
@@ -101,12 +101,12 @@ func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	tavern := abre(t, s, sid, "Taverna", "tavern")
+	tavern := opensBoard(t, s, sid, "Taverna", "tavern")
 	if _, err := s.boards.AddToken(ctx, sid, tavern.ID, board.BoardToken{Label: "Bandido"}); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
 
-	dungeon := abre(t, s, sid, "Masmorra", "stone")
+	dungeon := opensBoard(t, s, sid, "Masmorra", "stone")
 
 	if dungeon.ID == tavern.ID {
 		t.Fatal("a segunda cena nasceu com o id da primeira: elas são a mesma aba")
@@ -143,8 +143,8 @@ func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	tavern := abre(t, s, sid, "Taverna", "tavern")
-	crypt := abre(t, s, sid, "Cripta", "stone")
+	tavern := opensBoard(t, s, sid, "Taverna", "tavern")
+	crypt := opensBoard(t, s, sid, "Cripta", "stone")
 	if _, err := s.boards.AddToken(ctx, sid, crypt.ID, board.BoardToken{Label: "Ogro", X: 7, Y: 7}); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
@@ -185,13 +185,13 @@ func TestClosingATabDoesNotMakeTheNextOneTie(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	bridge := abre(t, s, sid, "Ponte", "stone")
-	tavern := abre(t, s, sid, "Taverna", "tavern")
+	bridge := opensBoard(t, s, sid, "Ponte", "stone")
+	tavern := opensBoard(t, s, sid, "Taverna", "tavern")
 	if err := s.boards.Close(ctx, sid, bridge.ID); err != nil {
 		t.Fatalf("encerrar o tabuleiro: %v", err)
 	}
 
-	crypt := abre(t, s, sid, "Cripta", "stone")
+	crypt := opensBoard(t, s, sid, "Cripta", "stone")
 
 	if crypt.Seq == tavern.Seq {
 		t.Fatalf("a cripta nasceu com o número da taverna (%d): a ordem das abas passou a depender do desempate do banco", crypt.Seq)
@@ -232,7 +232,7 @@ func TestOpeningRefusesPastTheCeiling(t *testing.T) {
 
 // abre é o `Open` dos testes: eles não medem o teto, e um `if err` por chamada
 // esconderia o que cada caso está afirmando.
-func abre(t *testing.T, s *Server, sid int64, place, chao string) *board.BoardState {
+func opensBoard(t *testing.T, s *Server, sid int64, place, chao string) *board.BoardState {
 	t.Helper()
 	b, err := s.boards.Open(context.Background(), sid, place, chao)
 	if err != nil {
@@ -254,7 +254,7 @@ func TestABoardWriteRefusedLeavesTheMapUntouched(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	abre(t, s, sid, "Cripta", "stone")
+	opensBoard(t, s, sid, "Cripta", "stone")
 
 	// O CONTROLE: com o disco saudável a peça entra. Sem ele, "não entrou" não
 	// distingue a recusa de um caminho que nunca funcionou.
@@ -297,7 +297,7 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	abre(t, s, sid, "Cripta", "stone")
+	opensBoard(t, s, sid, "Cripta", "stone")
 	if _, err := s.boards.AddToken(ctx, sid, defaultTab, board.BoardToken{Label: "Ogro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
@@ -364,7 +364,7 @@ func TestClosingABoardTheDiskRefusesKeepsItOpen(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	abre(t, s, sid, "Cripta", "stone")
+	opensBoard(t, s, sid, "Cripta", "stone")
 
 	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)

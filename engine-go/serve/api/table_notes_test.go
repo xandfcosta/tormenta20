@@ -8,7 +8,7 @@ import (
 func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.player, "POST", f.tableUrl()+"/notas", `{"notes":"eu escrevi isto"}`)
+	rec := f.requests(t, f.player, "POST", f.tableUrl()+"/notas", `{"notes":"eu escrevi isto"}`)
 
 	if rec.Code != 403 {
 		t.Errorf("o jogador escreveu nas notas do mestre: %d", rec.Code)
@@ -24,7 +24,7 @@ func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
 func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 	f := newSceneFixture(t)
 
-	f.posta(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro fugiu"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro fugiu"}`)
 
 	if got := f.dbNote(t); got != "# Cena 1\nO ogro fugiu" {
 		t.Errorf("a nota no banco é %q", got)
@@ -40,7 +40,7 @@ func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 func TestTheNoteIsNotTrimmedMidTyping(t *testing.T) {
 	f := newSceneFixture(t)
 
-	f.posta(t, f.gm, f.tableUrl()+"/notas", `{"notes":"a cena acabou\n\n"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/notas", `{"notes":"a cena acabou\n\n"}`)
 
 	if got := f.dbNote(t); got != "a cena acabou\n\n" {
 		t.Errorf("a nota foi aparada: %q", got)
@@ -56,7 +56,7 @@ func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 	f := newSceneFixture(t)
 	note := `{"notes":"- [ ] pagar o taverneiro\n- [x] dar o XP"}`
 
-	body := f.posta(t, f.gm, f.tableUrl()+"/notas/tarefa/0/marcar", note)
+	body := f.posts(t, f.gm, f.tableUrl()+"/notas/tarefa/0/marcar", note)
 
 	if got := f.dbNote(t); got != "- [x] pagar o taverneiro\n- [x] dar o XP" {
 		t.Errorf("o quadrinho não reescreveu a nota: %q", got)
@@ -79,7 +79,7 @@ func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 	f := newSceneFixture(t)
 
-	f.posta(t, f.gm, f.tableUrl()+"/notas/tarefa/0/desmarcar", `{"notes":"- [x] dar o XP"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/notas/tarefa/0/desmarcar", `{"notes":"- [x] dar o XP"}`)
 
 	if got := f.dbNote(t); got != "- [ ] dar o XP" {
 		t.Errorf("desmarcar não voltou o quadrinho: %q", got)
@@ -94,7 +94,7 @@ func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 func TestAnOutOfRangeLineDoesNotBringTheHandlerDown(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.gm, "POST", f.tableUrl()+"/notas/tarefa/99/marcar", `{"notes":"- [ ] a"}`)
+	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/notas/tarefa/99/marcar", `{"notes":"- [ ] a"}`)
 
 	if rec.Code >= 500 {
 		t.Fatalf("uma linha fora da faixa derrubou o handler: %d", rec.Code)
@@ -134,7 +134,7 @@ func (f sceneFixture) dbNote(t *testing.T) string {
 func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 	f := newSceneFixture(t)
 
-	body := f.posta(t, f.gm, f.tableUrl()+"/notas", `{"notes":"- [ ] pagar o taverneiro"}`)
+	body := f.posts(t, f.gm, f.tableUrl()+"/notas", `{"notes":"- [ ] pagar o taverneiro"}`)
 
 	// O CONTROLE: a prévia tem de trazer um quadrinho, senão não há caminho
 	// nenhum para conferir e o teste passaria dizendo nada.
@@ -160,9 +160,9 @@ func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 // protege o POST, e o GET nasceu com a sua própria.
 func TestTheNotesWindowIsTheGmsAlone(t *testing.T) {
 	f := newSceneFixture(t)
-	f.posta(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# O que o jogador não vê"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# O que o jogador não vê"}`)
 
-	rec := f.pede(t, f.player, "GET", f.tableUrl()+"/notas", "")
+	rec := f.requests(t, f.player, "GET", f.tableUrl()+"/notas", "")
 
 	if rec.Code != 403 {
 		t.Errorf("o jogador abriu as notas do mestre: %d", rec.Code)
@@ -182,9 +182,9 @@ func TestTheNotesWindowIsTheGmsAlone(t *testing.T) {
 // certos — a mesma armadilha do `TestThePatchedPreviewCarriesTheTableIds`.
 func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
 	f := newSceneFixture(t)
-	f.posta(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro **fugiu**"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro **fugiu**"}`)
 
-	rec := f.pede(t, f.gm, "GET", f.tableUrl()+"/notas", "")
+	rec := f.requests(t, f.gm, "GET", f.tableUrl()+"/notas", "")
 
 	if rec.Code != 200 {
 		t.Fatalf("a janela das notas respondeu %d", rec.Code)
@@ -213,8 +213,8 @@ func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
 func TestTheNotesWindowAndTheColumnCannotBothHoldTheNotes(t *testing.T) {
 	f := newSceneFixture(t)
 
-	window := f.pede(t, f.gm, "GET", f.tableUrl()+"/notas", "").Body.String()
-	table := f.pede(t, f.gm, "GET", f.tableUrl(), "").Body.String()
+	window := f.requests(t, f.gm, "GET", f.tableUrl()+"/notas", "").Body.String()
+	table := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(window, "t20:notas-janela") {
 		t.Errorf("a janela não anuncia que tomou as notas: a coluna não teria como fechar")

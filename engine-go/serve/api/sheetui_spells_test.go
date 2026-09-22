@@ -38,21 +38,21 @@ func arcanista(t *testing.T) (sceneFixture, int64) {
 
 func spellScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.pede(t, f.player, http.MethodGet,
+	return f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=spells", id), "").Body.String()
 }
 
 func spell(t *testing.T, f sceneFixture, id int64, path string) int {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, path)
-	return f.pede(t, f.player, http.MethodPost, target, "").Code
+	return f.requests(t, f.player, http.MethodPost, target, "").Code
 }
 
 // spellRefusal é a frase da regra que barrou o comando, ou "".
 func spellRefusal(t *testing.T, f sceneFixture, id int64, path string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, path)
-	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, "").Body.String())
+	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, "").Body.String())
 }
 
 func spellbook(t *testing.T, f sceneFixture, id int64) map[string]bool {

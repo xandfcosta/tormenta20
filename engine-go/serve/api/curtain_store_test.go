@@ -19,7 +19,7 @@ func TestTheCurtainComesBackFromTheDatabase(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	abre(t, s, sid, "Taverna do Javali", "tavern")
+	opensBoard(t, s, sid, "Taverna do Javali", "tavern")
 	if _, _, err := s.boards.SetCurtain(ctx, sid, defaultTab, true); err != nil {
 		t.Fatalf("fechar a cortina: %v", err)
 	}
@@ -47,7 +47,7 @@ func TestClosingTheCurtainAdvancesTheBoardVersion(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	before := abre(t, s, sid, "Taverna do Javali", "tavern").Version
+	before := opensBoard(t, s, sid, "Taverna do Javali", "tavern").Version
 
 	closed, changed, err := s.boards.SetCurtain(ctx, sid, defaultTab, true)
 	if err != nil {

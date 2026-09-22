@@ -62,7 +62,7 @@ func stageScenes(t *testing.T) []stageScene {
 
 func (c stageScene) screen(t *testing.T) string {
 	t.Helper()
-	return c.f.pede(t, c.who, http.MethodGet, c.route, "").Body.String()
+	return c.f.requests(t, c.who, http.MethodGet, c.route, "").Body.String()
 }
 
 // TODO GESTO QUE MOVE O CURSOR DIZ O SENTIDO — a varredura da convenção.

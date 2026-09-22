@@ -4,7 +4,6 @@
 # aqui, e reprova também nome daqui que deixou de existir.
 #
 # Renomeou um? Tire a linha. Este arquivo é a dívida, não a permissão.
-abre
 aceitaAClasse
 aceitaAFamilia
 aceitaMelhoria
@@ -176,7 +175,6 @@ oUtilitarioDeCor
 paradasDaProposta
 paraNoQuadrado
 paraOFormulario
-pede
 pedeHub
 pedeNaCena
 pedeNaCenaComLivro
@@ -190,7 +188,6 @@ PISO_DA_CINZEL
 poeNaFila
 poeNoMapa
 poeNoMapaDialogo
-posta
 postaAForja
 postaCarta
 postaFolhaNova

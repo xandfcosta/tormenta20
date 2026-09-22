@@ -48,7 +48,7 @@ func TestTheDraftDrawsTheBoardAndSaysNobodyIsWatching(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	body := f.pede(t, f.gm, http.MethodGet, f.draftUrl(place), "").Body.String()
+	body := f.requests(t, f.gm, http.MethodGet, f.draftUrl(place), "").Body.String()
 
 	if !strings.Contains(body, "board-plane") {
 		t.Error("o rascunho não desenhou o plano do tabuleiro")
@@ -75,7 +75,7 @@ func TestTheDraftGesturesPostToTheArchiveAndNotToATable(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	body := f.pede(t, f.gm, http.MethodGet, f.draftUrl(place), "").Body.String()
+	body := f.requests(t, f.gm, http.MethodGet, f.draftUrl(place), "").Body.String()
 
 	want := fmt.Sprintf("/campanhas/%d/lugares/%d/tabuleiro", f.campaignID, place)
 	if !strings.Contains(body, want) {
@@ -104,7 +104,7 @@ func TestADraftGestureChangesTheArchivedScene(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	f.posta(t, f.gm, f.draftUrl(place)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Porta da cripta","new_token_size":1,"new_token_look":"object"}`)
+	f.posts(t, f.gm, f.draftUrl(place)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Porta da cripta","new_token_size":1,"new_token_look":"object"}`)
 
 	scene, err := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, place)
 	if err != nil {
@@ -132,7 +132,7 @@ func TestAStrangerDoesNotReachThePlaceDraft(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	page := f.pede(t, f.player, http.MethodGet, f.draftUrl(place), "")
+	page := f.requests(t, f.player, http.MethodGet, f.draftUrl(place), "")
 	if page.Code != http.StatusForbidden {
 		t.Errorf("o jogador abriu o rascunho com %d", page.Code)
 	}
@@ -141,7 +141,7 @@ func TestAStrangerDoesNotReachThePlaceDraft(t *testing.T) {
 	}
 
 	// E POSTANDO NA MÃO, que é o caso que o botão escondido não cobre.
-	gesture := f.posta(t, f.player, f.draftUrl(place)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Intruso","new_token_size":1,"new_token_look":"object"}`)
+	gesture := f.posts(t, f.player, f.draftUrl(place)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Intruso","new_token_size":1,"new_token_look":"object"}`)
 	if strings.Contains(gesture, "datastar") {
 		t.Errorf("o gesto do jogador foi atendido: %q", gesture)
 	}
@@ -161,7 +161,7 @@ func TestTheDraftDoesNotOfferTheSessionVerbs(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	body := f.pede(t, f.gm, http.MethodGet, f.draftUrl(place), "").Body.String()
+	body := f.requests(t, f.gm, http.MethodGet, f.draftUrl(place), "").Body.String()
 
 	for _, verb := range []string{
 		"Encerrar o tabuleiro",
@@ -201,7 +201,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 	place := placeNamed(t, f.s.tableHost().Boards().Places(context.Background(), f.campaignID),
 		"Taverna do Javali")
 
-	response := f.posta(t, f.gm, f.draftUrl(place.ID)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Fantasma","new_token_size":1,"new_token_look":"object"}`)
+	response := f.posts(t, f.gm, f.draftUrl(place.ID)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Fantasma","new_token_size":1,"new_token_look":"object"}`)
 
 	if !strings.Contains(response, "está aberto numa mesa agora") {
 		t.Errorf("a recusa não chegou à tela: %q", response)
@@ -216,7 +216,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 	// uma recusa por qualquer outro motivo — id errado, rota que não existe —
 	// seria lida como "a trava funcionou".
 	other := f.draftPlace(t, "Cripta de Thwor", "crypt")
-	f.posta(t, f.gm, f.draftUrl(other)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
+	f.posts(t, f.gm, f.draftUrl(other)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
 	if livre, _ := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, other); len(livre.Tokens) != 1 {
 		t.Fatalf("o gesto foi recusado no lugar que NÃO está na mesa: %+v", livre.Tokens)
 	}
@@ -244,7 +244,7 @@ func TestTheDraftMovesThePieceWithoutAProposal(t *testing.T) {
 	}
 	id := seeded.Tokens[0].ID
 
-	f.posta(t, f.gm, f.draftUrl(place)+"/tabuleiro/pecas/"+id+"/mover", `{"from":{"X":6,"Y":2}}`)
+	f.posts(t, f.gm, f.draftUrl(place)+"/tabuleiro/pecas/"+id+"/mover", `{"from":{"X":6,"Y":2}}`)
 
 	scene, _ := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, place)
 	token := board.FindToken(scene, id)
@@ -275,7 +275,7 @@ func TestTheRulerMeasuresInsideTheDraft(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	response := f.posta(t, f.gm, f.draftUrl(place)+"/tabuleiro/regua",
+	response := f.posts(t, f.gm, f.draftUrl(place)+"/tabuleiro/regua",
 		`{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
 
 	if !strings.Contains(response, "ruler_text") {
@@ -315,7 +315,7 @@ func TestTheDraftTemplateCountsTheHiddenTokenBecauseItIsTheMastersOwn(t *testing
 	}
 
 	// Um quadrado de lado 1 exatamente em cima dela.
-	response := f.posta(t, f.gm, f.draftUrl(place)+"/tabuleiro/gabarito", templateBody("quadrado", "1", 4, 4, 4, 4))
+	response := f.posts(t, f.gm, f.draftUrl(place)+"/tabuleiro/gabarito", templateBody("quadrado", "1", 4, 4, 4, 4))
 
 	if !strings.Contains(response, "Assassino emboscado") {
 		t.Errorf("o mestre não viu a própria peça escondida no rascunho: %s", response)
@@ -340,7 +340,7 @@ func TestTheDraftConeWithoutAimAsksForIt(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	response := f.posta(t, f.gm, f.draftUrl(place)+"/tabuleiro/gabarito", templateBody("cone", "6", 0, 0, 0, 0))
+	response := f.posts(t, f.gm, f.draftUrl(place)+"/tabuleiro/gabarito", templateBody("cone", "6", 0, 0, 0, 0))
 
 	if !strings.Contains(response, "Clique de novo para apontar") {
 		t.Errorf("o cone sem mira não pediu a mira: %s", response)
@@ -370,7 +370,7 @@ func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 		f.draftUrl(place) + "/tabuleiro/regua",
 		f.draftUrl(place) + "/tabuleiro/gabarito",
 	} {
-		response := f.posta(t, f.player, path, `{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
+		response := f.posts(t, f.player, path, `{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
 		if strings.Contains(response, "Assassino emboscado") {
 			t.Errorf("%s entregou a emboscada ao jogador: %s", path, response)
 		}
@@ -380,7 +380,7 @@ func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 	}
 	// CONTROLE: o MESTRE mede as duas. Sem ele, uma rota que respondesse 404
 	// para todo mundo passaria por "a trava funcionou".
-	if r := f.posta(t, f.gm, f.draftUrl(place)+"/tabuleiro/gabarito", templateBody("quadrado", "1", 4, 4, 4, 4)); !strings.Contains(r, "Assassino emboscado") {
+	if r := f.posts(t, f.gm, f.draftUrl(place)+"/tabuleiro/gabarito", templateBody("quadrado", "1", 4, 4, 4, 4)); !strings.Contains(r, "Assassino emboscado") {
 		t.Fatalf("o mestre também não mediu — o guarda mediu uma rota morta: %s", r)
 	}
 }
@@ -412,7 +412,7 @@ func TestTheDraftBrushPaintsWhereTheBodySays(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.draftUrl(place)+"/tabuleiro/terreno", stroke("dificil", 3, 4, 6, 4)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar no rascunho deu %d", rec.Code)
 	}
@@ -440,12 +440,12 @@ func TestTheDraftEraserClearsOnlyWhatItCrosses(t *testing.T) {
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	for _, trait := range []string{stroke("dificil", 3, 4, 6, 4), stroke("cobertura", 1, 9, 1, 9)} {
-		if rec := f.pede(t, f.gm, http.MethodPost,
+		if rec := f.requests(t, f.gm, http.MethodPost,
 			f.draftUrl(place)+"/tabuleiro/terreno", trait); rec.Code != http.StatusOK {
 			t.Fatalf("pintar no rascunho deu %d", rec.Code)
 		}
 	}
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.draftUrl(place)+"/tabuleiro/terreno/limpar", stroke("", 3, 4, 6, 4)); rec.Code != http.StatusOK {
 		t.Fatalf("apagar no rascunho deu %d", rec.Code)
 	}
@@ -467,7 +467,7 @@ func TestTheDraftRectangleFillsTheBoxAndTheEraserEmptiesIt(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.draftUrl(place)+"/tabuleiro/terreno/retangulo", stroke("dificil", 2, 3, 4, 5)); rec.Code != http.StatusOK {
 		t.Fatalf("encher o retângulo deu %d", rec.Code)
 	}
@@ -485,7 +485,7 @@ func TestTheDraftRectangleFillsTheBoxAndTheEraserEmptiesIt(t *testing.T) {
 		t.Errorf("a caixa alcançou (0,0), que é o valor-zero do corpo: um canto não foi lido")
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.draftUrl(place)+"/tabuleiro/terreno/limpar/retangulo", stroke("", 2, 3, 4, 5)); rec.Code != http.StatusOK {
 		t.Fatalf("limpar o retângulo deu %d", rec.Code)
 	}
@@ -500,7 +500,7 @@ func TestTheDraftMarkerLandsWhereTheBodySaysAndIsBornHidden(t *testing.T) {
 	f := newSceneFixture(t)
 	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	if rec := f.pede(t, f.gm, http.MethodPost, f.draftUrl(place)+"/tabuleiro/marcadores/novo",
+	if rec := f.requests(t, f.gm, http.MethodPost, f.draftUrl(place)+"/tabuleiro/marcadores/novo",
 		`{"from":{"X":7,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("pôr o marcador deu %d", rec.Code)
 	}

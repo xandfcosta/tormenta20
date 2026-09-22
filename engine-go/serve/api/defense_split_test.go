@@ -23,24 +23,24 @@ func TestTheProneDefenseIsSplitOnTheSheetAndInTheCast(t *testing.T) {
 
 	// O CONTROLE vem primeiro: em pé, a Defesa é UM número, e é assim que se sabe
 	// que o caso mede a mudança e não um texto que já estava lá.
-	emPe := f.pede(t, f.player, "GET", "/personagens/"+hero+"?tab=combat", "").Body.String()
+	emPe := f.requests(t, f.player, "GET", "/personagens/"+hero+"?tab=combat", "").Body.String()
 	if strings.Contains(emPe, " CaC · ") {
 		t.Fatal("a ficha já mostrava a Defesa partida em pé — o caso mediria o que não mudou")
 	}
 
-	if rec := f.pede(t, f.player, "POST",
+	if rec := f.requests(t, f.player, "POST",
 		"/personagens/"+hero+"/efeitos/condicao/caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Caído deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	down := f.pede(t, f.player, "GET", "/personagens/"+hero+"?tab=combat", "").Body.String()
+	down := f.requests(t, f.player, "GET", "/personagens/"+hero+"?tab=combat", "").Body.String()
 	if !strings.Contains(down, " CaC · ") || !strings.Contains(down, " Dist") {
 		t.Errorf("a ficha do caído não partiu a Defesa: %s", "(a caixa de Defesa não trouxe o par)")
 	}
 
 	// E o DIÁLOGO DO ELENCO, que é onde o mestre confere a Defesa de um jogador
 	// para decidir se o ataque acerta — o lugar onde o custo do erro é maior.
-	onTable := f.pede(t, f.gm, "GET", f.tableUrl(), "").Body.String()
+	onTable := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 	if !strings.Contains(onTable, " CaC · ") {
 		t.Errorf("o elenco da Mesa não partiu a Defesa do caído: %s", "(o elenco não trouxe o par)")
 	}
@@ -58,12 +58,12 @@ func TestTheProneDefenseIsSplitOnTheSheetAndInTheCast(t *testing.T) {
 func TestTheHeroListKeepsTheSingleDefenseNumber(t *testing.T) {
 	f := newSceneFixture(t)
 	hero := strconv.FormatInt(f.charID, 10)
-	if rec := f.pede(t, f.player, "POST",
+	if rec := f.requests(t, f.player, "POST",
 		"/personagens/"+hero+"/efeitos/condicao/caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Caído deu %d", rec.Code)
 	}
 
-	list := f.pede(t, f.player, "GET", "/personagens", "").Body.String()
+	list := f.requests(t, f.player, "GET", "/personagens", "").Body.String()
 
 	// O CONTROLE: o herói TEM de estar na lista, senão o caso mede a ausência
 	// dele e passa verde dizendo nada.
