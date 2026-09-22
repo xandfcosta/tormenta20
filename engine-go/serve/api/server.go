@@ -45,13 +45,13 @@ type Server struct {
 	// charMu serializa as escritas por personagem (id → *sync.Mutex), para
 	// cliques rápidos de dano e vitais não se perderem no ler-computar-gravar.
 	charMu sync.Map
-	// inBackground conta o trabalho que continua DEPOIS da resposta: a
-	// persistência do estado da sessão, disparada em goroutine para o mestre não
-	// esperar o disco no meio do turno.
+	// inBackground conta o trabalho que continua DEPOIS da resposta: hoje, a
+	// gravação do TABULEIRO, disparada em goroutine para o mestre não esperar o
+	// disco no meio do turno. A da fila saiu da conta porque saiu da goroutine —
+	// ela virou parte da mutação (ALE-371).
 	//
 	// Ele existe porque uma goroutine que ninguém espera escreve num banco que
-	// já fechou. Em PRODUÇÃO isso é o `Shutdown` cortando a gravação do estado
-	// da mesa. No TESTE é pior de ler: o `t.TempDir()` falha ao limpar com
+	// já fechou. Em PRODUÇÃO isso é o `Shutdown` cortando a gravação da mesa. No TESTE é pior de ler: o `t.TempDir()` falha ao limpar com
 	// "directory not empty", porque o SQLite recria `-wal`/`-shm` depois do
 	// `RemoveAll` — e a mensagem que sobra fala da LIMPEZA, não do defeito.
 	inBackground sync.WaitGroup
@@ -152,7 +152,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),
-		sessions: session.NewStore(q, live.NewUUID, fromSheet, fromSheet, bus),
+		sessions: session.NewStore(session.NewSnapshots(q), live.NewUUID, fromSheet, fromSheet, bus),
 		boards:   boards.NewStore(q, live.NewUUID, bus),
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),

@@ -176,6 +176,7 @@ file
 files
 filters
 finder
+first
 finesse
 fixture
 flags
@@ -415,6 +416,7 @@ sheetui
 signal
 signals
 snapshot
+snapshots
 source
 spatial
 spec

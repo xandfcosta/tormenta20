@@ -169,11 +169,11 @@ func (l Lifecycle) RestartCombat(
 // que a sessão ainda responde e o estado em memória já não existe — uma
 // requisição nesse instante recriaria o que se acabou de apagar.
 //
-// São DOIS esquecimentos e não um. Sem o primeiro, a sessão apagada continua
-// respondendo de memória; sem o segundo, o tabuleiro fica no mapa do
-// `BoardStore` batendo na chave estrangeira a cada gravação, e a marca de
-// gravação falhando não sai mais — só um `Persist` bem sucedido a apaga, e
-// nenhum vai suceder.
+// São DOIS esquecimentos e não um. Sem o primeiro, a fila em cache continua
+// respondendo por uma sessão que não existe mais; sem o segundo, o tabuleiro
+// fica no mapa do `BoardStore` batendo na chave estrangeira a cada gravação, e
+// a marca de gravação falhando não sai mais — só um `Persist` bem sucedido a
+// apaga, e nenhum vai suceder.
 //
 // O banco limpa o resto sozinho: `open_boards` sai por CASCATA com a sessão
 // (migração 00010), e a fila mora na própria linha dela.

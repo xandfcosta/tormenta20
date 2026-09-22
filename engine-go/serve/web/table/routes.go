@@ -397,14 +397,15 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	return view, http.StatusOK, nil
 }
 
-// saveFailed junta os DOIS stores numa pergunta só.
+// saveFailed é "a mesa não está sendo salva", e hoje ela pergunta só ao
+// TABULEIRO.
 //
-// Para quem está mestrando não existe "o tabuleiro não salvou" e "a fila não
-// salvou": existe "a mesa não está sendo salva". Separar daria à tela uma
-// decisão que ela não tem o que fazer com — os dois têm a mesma causa (o disco)
-// e o mesmo remédio (parar e chamar alguém).
+// A FILA saiu da pergunta porque deixou de ter resposta: a gravação dela mora
+// dentro da mutação, e um comando que o disco recusa é recusado na hora, com a
+// frase (ALE-371). O aviso continua para o tabuleiro, que ainda grava depois —
+// e some quando o tabuleiro fizer a mesma travessia.
 func (s Scene) saveFailed(sessionID int64) bool {
-	return s.deps.Boards().SaveFailed(sessionID) || s.deps.Sessions().SaveFailed(sessionID)
+	return s.deps.Boards().SaveFailed(sessionID)
 }
 
 // tableRoster traduz o roster da campanha nas três coisas que a tela quer: os

@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"t20engine/domain/live"
-	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 )
 
@@ -25,18 +24,16 @@ type Store struct {
 	// (p227). Separada da `sheet` porque muda por outra razão; o mesmo
 	// adaptador cumpre as duas.
 	turnEffects live.SheetTurnEffects
-	States      map[int64]*live.SessionRuntimeState
-	Dirty       map[int64]bool
+	// States é o CACHE da mesa (ver `cache.go`): quem manda é o retrato gravado.
+	States map[int64]*live.SessionRuntimeState
 	// seqs numera as mutações de cada sessão, para o hub reconhecer quadro
 	// atrasado. Mora aqui e não no estado: hidratar do banco troca o estado, e um
 	// contador que vivesse nele voltaria a zero.
 	seqs  map[int64]uint64
 	newID func() string
-	q     *sqlcgen.Queries
-	// persistMus guarda um mutex por sessão (sessionID → *sync.Mutex) serializando
-	// as gravações do estado daquela sessão, para mutações concorrentes não
-	// chegarem fora de ordem — SEM acoplar a latência entre sessões.
-	persistMus sync.Map
+	// snapshots é o RETRATO no banco, e é ele a fonte da verdade: toda mutação
+	// passa por ele antes de existir para alguém (ALE-371).
+	snapshots SessionSnapshots
 	// bus é por onde as mutações desta sessão viram notícia.
 	//
 	// Quem publica é o `apply`, DEPOIS de soltar a trava, e o evento diz o que
@@ -50,24 +47,16 @@ type Store struct {
 	bus *events.Bus
 }
 
-// persistLock devolve o mutex de gravação daquela sessão, criando-o no primeiro
-// uso.
-func (st *Store) persistLock(sessionID int64) *sync.Mutex {
-	m, _ := st.persistMus.LoadOrStore(sessionID, &sync.Mutex{})
-	return m.(*sync.Mutex)
-}
-
 // NewStore recebe a PORTA da ficha por parâmetro — injetada e não
 // importada, que é o que impede o regime de conhecer as regras da ficha.
-func NewStore(q *sqlcgen.Queries, newID func() string, sheet live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus) *Store {
+func NewStore(snapshots SessionSnapshots, newID func() string, sheet live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus) *Store {
 	return &Store{
 		States:      map[int64]*live.SessionRuntimeState{},
-		Dirty:       map[int64]bool{},
 		seqs:        map[int64]uint64{},
 		newID:       newID,
 		sheet:       sheet,
 		turnEffects: turnEffects,
-		q:           q,
+		snapshots:   snapshots,
 		bus:         bus,
 	}
 }
@@ -112,7 +101,7 @@ func (st *Store) LiveSessionsWithCharacter(characterID int64) []int64 {
 func (st *Store) GetState(sessionID int64) *live.SessionRuntimeState {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
-	s, err := st.stateLocked(context.Background(), sessionID)
+	s, err := st.cachedLocked(context.Background(), sessionID)
 	if err != nil {
 		log.Printf("session %d: %v", sessionID, err)
 		return live.EmptyRuntimeState()
@@ -147,14 +136,20 @@ func (st *Store) apply(sessionID int64, ev events.Event, fn func(*live.SessionRu
 func (st *Store) applyLocked(sessionID int64, fn func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
-	s, err := st.stateLocked(context.Background(), sessionID)
+	// A GRAVAÇÃO É A MUTAÇÃO (ALE-371): o `Mutate` lê o retrato, deixa a regra
+	// mudá-lo e grava, tudo numa transação. O que não gravou não aconteceu, e o
+	// erro sobe para quem clicou.
+	//
+	// A trava continua aqui, e agora ela guarda uma coisa só: a ORDEM. A `seq`
+	// numera as mutações para o hub reconhecer quadro atrasado, e numerar fora
+	// da ordem em que o banco as aceitou entregaria à tela o quadro velho por
+	// último.
+	saved, err := st.snapshots.Mutate(context.Background(), sessionID, fn)
 	if err != nil {
 		return nil, err
 	}
-	if err := fn(s); err != nil {
-		return nil, err
-	}
-	clone := live.CloneState(s)
+	st.States[sessionID] = saved
+	clone := live.CloneState(saved)
 	clone.Seq = st.nextSeqLocked(sessionID)
 	return clone, nil
 }
@@ -329,7 +324,7 @@ func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *
 // `máximo − dano` e já nasce na faixa (ALE-355).
 func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *live.SessionRuntimeState {
 	st.Mu.Lock()
-	s, err := st.stateLocked(ctx, sessionID)
+	s, err := st.cachedLocked(ctx, sessionID)
 	var ids []int64
 	if err == nil {
 		ids = uniqueCharacterIDs(s)
@@ -345,22 +340,25 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) *l
 	}
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
-	s, err = st.stateLocked(ctx, sessionID)
+	saved, err := st.snapshots.Mutate(ctx, sessionID, func(s *live.SessionRuntimeState) error {
+		for i := range s.Initiative {
+			e := &s.Initiative[i]
+			if e.CharacterID == nil {
+				continue
+			}
+			if fresh, ok := pools[*e.CharacterID]; ok {
+				e.HpMax, e.HpCurrent = live.PtrInt64(fresh.HpMax), live.PtrInt64(fresh.HpCurrent)
+				e.MpMax, e.MpCurrent = live.PtrInt64(fresh.MpMax), live.PtrInt64(fresh.MpCurrent)
+			}
+		}
+		return nil
+	})
 	if err != nil {
-		log.Printf("session %d: %v", sessionID, err)
+		log.Printf("session %d: refrescar os poços falhou (%v)", sessionID, err)
 		return live.EmptyRuntimeState()
 	}
-	for i := range s.Initiative {
-		e := &s.Initiative[i]
-		if e.CharacterID == nil {
-			continue
-		}
-		if fresh, ok := pools[*e.CharacterID]; ok {
-			e.HpMax, e.HpCurrent = live.PtrInt64(fresh.HpMax), live.PtrInt64(fresh.HpCurrent)
-			e.MpMax, e.MpCurrent = live.PtrInt64(fresh.MpMax), live.PtrInt64(fresh.MpCurrent)
-		}
-	}
-	return live.CloneState(s)
+	st.States[sessionID] = saved
+	return live.CloneState(saved)
 }
 
 func uniqueCharacterIDs(s *live.SessionRuntimeState) []int64 {
