@@ -489,7 +489,10 @@ func TestFallingToZeroHitPointsEndsTheSustainedAbilities(t *testing.T) {
 		t.Fatalf("Add: %v", err)
 	}
 	entryID := store.GetState(sid).Initiative[0].ID
-	if _, err := store.DeltaVitals(sid, entryID, live.PtrInt64(-999), nil); err != nil {
+	// A EXATAMENTE 0: desde a ALE-366 o PV desce abaixo de zero, e uma pancada
+	// enorme mataria — o caso aqui é cair, não morrer.
+	standing := poolsOf(t, s, charID).HpCurrent
+	if _, err := store.DeltaVitals(sid, entryID, live.PtrInt64(-standing), nil); err != nil {
 		t.Fatalf("derrubar: %v", err)
 	}
 	// O CONTROLE, e ele é a metade que importa: o mana tem de estar CHEIO,

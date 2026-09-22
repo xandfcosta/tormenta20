@@ -454,57 +454,6 @@ func ResetInitiative(st *SessionRuntimeState) {
 	st.Scene = nil
 }
 
-// PatchEntryVitals grava PV/PM absolutos numa linha, presos ao máximo quando ele
-// existe. A escrita no banco é da camada de store.
-func PatchEntryVitals(st *SessionRuntimeState, entryID string, hpCurrent, mpCurrent *int64) error {
-	idx := FindEntryIndex(st, entryID)
-	if idx < 0 {
-		return fmt.Errorf("Entry %s not found", entryID)
-	}
-	e := &st.Initiative[idx]
-	if hpCurrent != nil {
-		e.HpCurrent = PtrInt64(ClampVital(*hpCurrent, e.HpMax))
-	}
-	if mpCurrent != nil {
-		e.MpCurrent = PtrInt64(ClampVital(*mpCurrent, e.MpMax))
-	}
-	return nil
-}
-
-// DeltaEntryVitals aplica um delta de PV/PM ("sofreu 10 de dano" ⇒ hpDelta -10).
-// Atual ausente conta como 0.
-func DeltaEntryVitals(st *SessionRuntimeState, entryID string, hpDelta, mpDelta *int64) error {
-	idx := FindEntryIndex(st, entryID)
-	if idx < 0 {
-		return fmt.Errorf("Entry %s not found", entryID)
-	}
-	e := &st.Initiative[idx]
-	if hpDelta != nil {
-		e.HpCurrent = PtrInt64(ClampVital(DerefOr(e.HpCurrent, 0)+*hpDelta, e.HpMax))
-	}
-	if mpDelta != nil {
-		e.MpCurrent = PtrInt64(ClampVital(DerefOr(e.MpCurrent, 0)+*mpDelta, e.MpMax))
-	}
-	return nil
-}
-
-// ClampVital prende um recurso vital entre 0 e o máximo, quando há máximo. O
-// piso é 0: a fila nunca mostra abaixo disso — personagem a 0 está caído, e o
-// resto é narrativa.
-func ClampVital(value int64, max *int64) int64 {
-	floored := value
-	if floored < 0 {
-		floored = 0
-	}
-	if max == nil {
-		return floored
-	}
-	if floored > *max {
-		return *max
-	}
-	return floored
-}
-
 func PtrInt64(v int64) *int64 { return &v }
 
 func DerefOr(p *int64, def int64) int64 {

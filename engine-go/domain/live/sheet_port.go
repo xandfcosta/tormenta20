@@ -63,6 +63,16 @@ type SheetTurnEffects interface {
 	// a primeira tem efeito guardado: um lote exigiria montar a lista de ids
 	// duas vezes, aqui e do lado de lá.
 	ExpireTurnEffects(ctx context.Context, charID int64) error
+	// ConditionsOf devolve as condições ligadas na ficha. O instante de quem
+	// age sai delas — o inconsciente não reage, o atordoado não age —, e é
+	// nelas que o sangramento da p236 mora.
+	ConditionsOf(ctx context.Context, charID int64) ([]string, error)
+	// ConstitutionOf é o total de Constituição da ficha computada — o que se
+	// soma ao d20 do teste de quem sangra (p236).
+	ConstitutionOf(ctx context.Context, charID int64) (int, error)
+	// StabilizeBleeding tira a condição Sangrando: passou no teste, ou foi
+	// estabilizado (p236).
+	StabilizeBleeding(ctx context.Context, charID int64) error
 }
 
 // SustainedEffect é um efeito que cobra mana por turno, como o regime precisa

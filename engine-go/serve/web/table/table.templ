@@ -254,6 +254,12 @@ templ savingWarning(v View) {
 // clicou.
 templ tableRegisterRegion(v View) {
 	<div id="table-register">
+		// O teste de quem sangra, para o JOGADOR: o mestre o tem na faixa de
+		// baixo, e desenhá-lo aqui também daria duas perguntas iguais na tela
+		// dele (p236).
+		if v.GM == nil {
+			@bleedingPrompt(v)
+		}
 		if v.SceneActive && v.Eu != nil {
 			@tableRegister(v)
 		}
@@ -621,6 +627,12 @@ templ tableRowTracker(v View, l tableRow) {
 				if l.OnTurn {
 					<span class={ ui.SectionLabelClasses("gold", "shrink-0 text-[10px]") }>Na vez</span>
 				}
+				// QUEM CAIU mora aqui, com as outras marcas da pessoa, e não na
+				// fileira do PV: lá a palavra roubava largura dos três botões de
+				// passo, e a 390px eles viravam fitas (p236, ALE-366).
+				if l.PV != nil && l.PV.Down != "" {
+					<span class={ "shrink-0 text-[10px] font-bold uppercase tracking-widest", ui.DownedInk(l.PV.Down) }>{ l.PV.Down }</span>
+				}
 			</div>
 			@trackerBar(v, l, "hp", "PV", l.PV)
 			@trackerBar(v, l, "mp", "PM", l.PM)
@@ -765,15 +777,16 @@ templ barraCompacta(label string, b tableBar) {
 		<div
 			role="progressbar"
 			aria-valuenow={ fmt.Sprint(b.Current) }
-			aria-valuemin="0"
+			aria-valuemin={ fmt.Sprint(min(0, b.Current)) }
 			aria-valuemax={ fmt.Sprint(b.Max) }
 			aria-label={ barLabel(label, b) }
 			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
 		>
 			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
 		</div>
-		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ fmt.Sprint(b.Current) }/{ fmt.Sprint(b.Max) }</span>
+		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ ui.HitPoints(b.Current) }/{ fmt.Sprint(b.Max) }</span>
 		@reservaDeTemporarios(b)
+		@downedWord(b)
 	</div>
 }
 
@@ -832,14 +845,14 @@ templ barra(label string, b tableBar) {
 		<div
 			role="progressbar"
 			aria-valuenow={ fmt.Sprint(b.Current) }
-			aria-valuemin="0"
+			aria-valuemin={ fmt.Sprint(min(0, b.Current)) }
 			aria-valuemax={ fmt.Sprint(b.Max) }
 			aria-label={ barLabel(label, b) }
 			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
 		>
 			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
 		</div>
-		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ fmt.Sprint(b.Current) }/{ fmt.Sprint(b.Max) }</span>
+		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ ui.HitPoints(b.Current) }/{ fmt.Sprint(b.Max) }</span>
 		@reservaDeTemporarios(b)
 	</div>
 }
@@ -1011,4 +1024,14 @@ templ editarCombatente(v View) {
 			>Salvar</button>
 		</div>
 	</dialog>
+}
+
+// downedWord é a palavra de quem caiu, depois da fração: "morrendo", "estável"
+// ou "morto" (p236). Ela é TEXTO e não só cor, porque é o que separa três
+// barras vazias que, sem ela, dizem a mesma coisa — e o morto e o que sangra
+// pedem gestos diferentes do mestre.
+templ downedWord(b tableBar) {
+	if b.Down != "" {
+		<span class={ "shrink-0 text-2xs font-semibold", ui.DownedInk(b.Down) }>{ b.Down }</span>
+	}
 }

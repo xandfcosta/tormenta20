@@ -56,7 +56,7 @@ func (st *Store) payUpkeep(s *live.SessionRuntimeState) upkeepCharge {
 	// inconsciente" (p236), e o poço do app tem piso em zero, então é aqui que
 	// morrer e sangrar se encontram. O que uma ação LIVRE exige do instante
 	// quem sabe é o motor.
-	upkeep := engine.PaySustained(ids, mana, engine.ActionMoment{OnTurn: true, CanAct: pool.HpCurrent > 0})
+	upkeep := engine.PaySustained(ids, mana, engine.MomentFor(true, pool.HpCurrent, nil))
 	for _, id := range upkeep.Dropped {
 		_ = st.turnEffects.EndSustained(context.Background(), *entry.CharacterID, id)
 	}

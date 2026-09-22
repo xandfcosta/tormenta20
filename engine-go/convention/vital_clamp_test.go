@@ -10,7 +10,8 @@ import (
 	"testing"
 )
 
-// UMA GRAFIA SÓ PARA "PRENDA ESTE VITAL ENTRE ZERO E O TETO".
+// UMA GRAFIA SÓ PARA "PRENDA ESTE VITAL NA FAIXA DELE" — o PM entre zero e o
+// teto, o PV entre o limiar da morte e o teto (ALE-366).
 //
 // # Por que um guarda, e não a contagem no comentário
 //
@@ -77,8 +78,8 @@ func TestNoSecondSpellingOfTheVitalClamp(t *testing.T) {
 				return true
 			}
 			t.Errorf("%s:%d escreve um `min(max(…))` — é a segunda grafia de "+
-				"\"prenda este vital entre zero e o teto\".\n"+
-				"Use o `sheet.WithinPool`. A primeira vez que esta regra se duplicou, as duas\n"+
+				"\"prenda este vital na faixa dele\".\n"+
+				"Use o `sheet.WithinPool` (PM) ou o `sheet.WithinHitPoints` (PV). A primeira vez que esta regra se duplicou, as duas\n"+
 				"cópias ficaram a um diretório de distância e o comentário de uma delas\n"+
 				"afirmava que a contagem estava fechada.",
 				rel, set.Position(n.Pos()).Line)
@@ -95,8 +96,11 @@ func TestNoSecondSpellingOfTheVitalClamp(t *testing.T) {
 	if measured < 200 {
 		t.Fatalf("o guarda leu só %d arquivos — ele está medindo a árvore errada", measured)
 	}
-	if onOwner != 1 {
-		t.Fatalf("o `%s` tem %d aninhamentos e devia ter exatamente 1 (o `WithinPool`) — "+
+	// DOIS, e não um, desde a ALE-366: o PV desce até o limiar da morte e o PM
+	// para em zero, e são dois eixos com duas regras — `WithinHitPoints` e
+	// `WithinPool`, lado a lado no dono.
+	if onOwner != 2 {
+		t.Fatalf("o `%s` tem %d aninhamentos e devia ter exatamente 2 (o `WithinPool` e o `WithinHitPoints`) — "+
 			"ou ele mudou de forma, e aí este guarda procura o que não existe mais", ownerFile, onOwner)
 	}
 }

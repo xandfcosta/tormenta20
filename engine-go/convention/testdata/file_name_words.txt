@@ -40,6 +40,7 @@ bench
 bestiary
 biome
 birth
+bleeding
 block
 board
 boards
@@ -129,6 +130,7 @@ domain
 door
 dose
 double
+downed
 draft
 draw
 drawing
@@ -136,6 +138,7 @@ dto
 dump
 dungeon
 duration
+dying
 editor
 effect
 effects

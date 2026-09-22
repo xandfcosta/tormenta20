@@ -1,0 +1,54 @@
+package table
+
+import (
+	"fmt"
+	"strconv"
+
+	"t20engine/serve/web/ui"
+)
+
+// bleedingPrompt é o teste de quem sangra, na vez dele (T20 p236).
+//
+// A FRASE é da mesa inteira — quem sangra, a falha, o resultado. O CAMPO só
+// aparece para quem responde: o mestre, ou o dono da ficha. O botão fica
+// desligado com o dado fora da faixa, pela razão do registro da iniciativa:
+// oferecer o que o servidor vai recusar é fazer a pessoa descobrir o erro
+// depois de clicar.
+templ bleedingPrompt(v View) {
+	if v.Bleeding != nil {
+		<div class="flex w-full flex-wrap items-center gap-2">
+			<p
+				aria-live="polite"
+				class={ "text-xs font-semibold", templ.KV("text-grimorio-crimson-bright", v.Bleeding.Die != ""), templ.KV("text-foreground", v.Bleeding.Die == "") }
+			>{ v.Bleeding.Line }</p>
+			if v.Bleeding.CanAnswer && v.Bleeding.Die != "" {
+				<input
+					id="bleeding-roll"
+					type="number"
+					min="1"
+					max={ strconv.Itoa(v.Bleeding.Faces) }
+					inputmode="numeric"
+					aria-label={ "Resultado do " + v.Bleeding.Die }
+					data-bind:bleeding_roll
+					class="w-16 border border-input bg-background px-2 py-1.5 font-mono text-sm tabular-nums outline-none"
+				/>
+				<button
+					type="button"
+					data-on:click={ fmt.Sprintf("$bleeding_roll = Math.floor(Math.random() * %d) + 1", v.Bleeding.Faces) }
+					class="flex items-center gap-1 border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent"
+				>
+					@ui.Icon("Dices", "size-4")
+					Rolar
+				</button>
+				<button
+					type="button"
+					data-indicator:bleeding_sending
+					data-attr:disabled={ fmt.Sprintf("$bleeding_sending || !($bleeding_roll >= 1 && $bleeding_roll <= %d)", v.Bleeding.Faces) }
+					data-on:click={ tableCommand(v, "POST", "sangramento/"+v.Bleeding.Die) }
+					class="bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 disabled:opacity-50"
+				>{ "Enviar " + v.Bleeding.Die }</button>
+			}
+			<p data-show="$bleeding_error != ''" data-text="$bleeding_error" aria-live="assertive" class="w-full text-xs text-destructive-ink"></p>
+		</div>
+	}
+}

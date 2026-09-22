@@ -453,25 +453,37 @@ func TestPatchAndDeltaVitals(t *testing.T) {
 	t.Run("patch clamps to max and floor", func(t *testing.T) {
 		st, id := mk()
 		over := int64(99)
-		_ = PatchEntryVitals(st, id, &over, nil)
+		_ = PatchEntryVitals(st, id, &over, nil, -10)
 		if *st.Initiative[0].HpCurrent != 10 {
 			t.Errorf("hp=%d, want 10 (clamped to max)", *st.Initiative[0].HpCurrent)
 		}
+		// O PV desce abaixo de zero (p236): -5 fica -5, e -30 para no piso.
 		neg := int64(-5)
-		_ = PatchEntryVitals(st, id, &neg, nil)
-		if *st.Initiative[0].HpCurrent != 0 {
-			t.Errorf("hp=%d, want 0 (floored)", *st.Initiative[0].HpCurrent)
+		_ = PatchEntryVitals(st, id, &neg, nil, -10)
+		if *st.Initiative[0].HpCurrent != -5 {
+			t.Errorf("hp=%d, want -5 (o PV desce abaixo de zero)", *st.Initiative[0].HpCurrent)
+		}
+		deep := int64(-30)
+		_ = PatchEntryVitals(st, id, &deep, nil, -10)
+		if *st.Initiative[0].HpCurrent != -10 {
+			t.Errorf("hp=%d, want -10 (o piso é o limiar da morte)", *st.Initiative[0].HpCurrent)
 		}
 	})
 	t.Run("delta from current, clamped", func(t *testing.T) {
 		st, id := mk()
 		d := int64(-20)
-		_ = DeltaEntryVitals(st, id, &d, nil)
-		if *st.Initiative[0].HpCurrent != 0 {
-			t.Errorf("hp=%d, want 0", *st.Initiative[0].HpCurrent)
+		_ = DeltaEntryVitals(st, id, &d, nil, -10)
+		if *st.Initiative[0].HpCurrent != -10 {
+			t.Errorf("hp=%d, want -10 (8 - 20 para no piso)", *st.Initiative[0].HpCurrent)
+		}
+		// o PM não desce abaixo de zero
+		down := int64(-50)
+		_ = DeltaEntryVitals(st, id, nil, &down, -10)
+		if *st.Initiative[0].MpCurrent != 0 {
+			t.Errorf("mp=%d, want 0 (o PM tem piso em zero)", *st.Initiative[0].MpCurrent)
 		}
 		up := int64(100)
-		_ = DeltaEntryVitals(st, id, nil, &up)
+		_ = DeltaEntryVitals(st, id, nil, &up, -10)
 		if *st.Initiative[0].MpCurrent != 6 {
 			t.Errorf("mp=%d, want 6 (clamped)", *st.Initiative[0].MpCurrent)
 		}
@@ -484,7 +496,7 @@ func TestPatchAndDeltaVitals(t *testing.T) {
 		st.Initiative = []InitiativeEntry{e}
 		st.Initiative[0].ID = "e1"
 		d := int64(3)
-		_ = DeltaEntryVitals(st, "e1", &d, nil)
+		_ = DeltaEntryVitals(st, "e1", &d, nil, -10)
 		if st.Initiative[0].HpCurrent == nil || *st.Initiative[0].HpCurrent != 3 {
 			t.Errorf("hp=%v, want 3 (0 + 3)", st.Initiative[0].HpCurrent)
 		}
@@ -492,7 +504,7 @@ func TestPatchAndDeltaVitals(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		st, _ := mk()
 		v := int64(1)
-		if err := PatchEntryVitals(st, "missing", &v, nil); err == nil {
+		if err := PatchEntryVitals(st, "missing", &v, nil, -10); err == nil {
 			t.Error("expected not-found error")
 		}
 	})

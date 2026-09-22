@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
-	"t20engine/infra/db/dbvalue"
 
 	"t20engine/domain/live"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 )
@@ -190,6 +190,7 @@ func (st *Store) NextTurn(sessionID int64) (*live.SessionRuntimeState, error) {
 			st.expireTurnEffects(s)
 			live.AdvanceTurn(s)
 			charge = st.payUpkeep(s)
+			st.openBleedingCheck(s)
 			return nil
 		})
 	if err != nil || charge.pm == 0 {
@@ -231,16 +232,14 @@ func (st *Store) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurre
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
 		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
-			func(s *live.SessionRuntimeState) error {
-				return live.PatchEntryVitals(s, entryID, hpCurrent, mpCurrent)
-			})
+			patchEntryVitals(entryID, hpCurrent, mpCurrent))
 	}
 	hp, mp, err := st.sheet.ApplyAbsolute(context.Background(), *charID, hpCurrent, mpCurrent)
 	if err != nil {
 		return nil, err
 	}
 	return st.apply(sessionID, vitalsEvent(sessionID, entryID, charID),
-		func(s *live.SessionRuntimeState) error { return live.PatchEntryVitals(s, entryID, hp, mp) })
+		patchEntryVitals(entryID, hp, mp))
 }
 
 // DeltaCharacterVitals move os vitais de um PERSONAGEM, esteja ele na fila ou
@@ -266,7 +265,7 @@ func (st *Store) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpD
 		return st.GetState(sessionID), nil
 	}
 	return st.apply(sessionID, vitalsEvent(sessionID, entryID, &characterID),
-		func(s *live.SessionRuntimeState) error { return live.PatchEntryVitals(s, entryID, hp, mp) })
+		patchEntryVitals(entryID, hp, mp))
 }
 
 // entryIDForCharacter é o inverso do `CharacterIDOf`, e devolve "" para quem não
@@ -292,14 +291,14 @@ func (st *Store) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
 		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
-			func(s *live.SessionRuntimeState) error { return live.DeltaEntryVitals(s, entryID, hpDelta, mpDelta) })
+			deltaEntryVitals(entryID, hpDelta, mpDelta))
 	}
 	hp, mp, err := st.sheet.ApplyDelta(context.Background(), *charID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}
 	return st.apply(sessionID, vitalsEvent(sessionID, entryID, charID),
-		func(s *live.SessionRuntimeState) error { return live.PatchEntryVitals(s, entryID, hp, mp) })
+		patchEntryVitals(entryID, hp, mp))
 }
 
 // Load hidrata a sessão de `Session.runtimeState` no primeiro acesso e depois

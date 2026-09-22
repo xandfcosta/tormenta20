@@ -45,6 +45,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Get(sessionPattern, s.handleTablePage)
 	r.Get(sessionPattern+"/fluxo", s.handleTableStream)
 	r.Post(sessionPattern+"/iniciativa", s.handleTableInitiative)
+	r.Post(sessionPattern+"/sangramento/{die}", s.handleBleedingRoll)
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
 	s.MoveRoutes(r)
@@ -138,7 +139,7 @@ func tableSignalsExpr() string {
 		// `TestEverySignalDeclaredByValueHasAReader` não alcança este canal: ele
 		// lê o VALOR de atributo (`data-ref="x"`), e a declaração aqui é uma
 		// string montada em Go.
-		"d20: 10, error: '', command_error: '', move_error: ''",
+		"d20: 10, error: '', command_error: '', move_error: '', bleeding_roll: '', bleeding_error: ''",
 		// O chão padrão é DERIVADO e não digitado: escrever 'pedra' aqui seria a
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
@@ -306,11 +307,15 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// terceiro número espelhado ali envelheceria no primeiro que esquecesse de
 	// atualizá-lo, em silêncio. Aqui não há o que esquecer: o stream redesenha
 	// por este mesmo `LoadView`, então o que a mesa vê é o que o banco tem.
-	pools := s.tempHpOf(ctx, st, group)
+	onTable := characterIDsOnTable(st, group)
+	pools, bleeding := s.tempHpOf(ctx, onTable), s.bleedingOf(ctx, onTable)
 	for i := range group {
 		withTempHp(&group[i].PV, pools[group[i].CharacterID])
+		markDowned(&group[i].PV, group[i].CharacterID, bleeding)
 	}
 	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, group, mine, eu, pools)
+	markQueueDowned(&view, st, bleeding)
+	view.Bleeding = bleedingPromptOf(st, role, mine)
 	// O CICLO da sessão chega à tela porque, sem ele, os verbos teriam de ser
 	// oferecidos todos — e "encerrar" numa sessão que nunca começou é o gesto
 	// que o servidor recusa. Oferecer o que será recusado é desenhar um erro.
@@ -464,7 +469,8 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 }
 
 // tempHpOf lê a reserva de PV temporário de todo personagem que a tela desenha
-// — os da fila e os do Grupo —, numa consulta só.
+// — os da fila e os do Grupo, que o `characterIDsOnTable` junta —, numa
+// consulta só.
 //
 // UMA consulta e não uma por combatente: a fila redesenha a cada tique do
 // stream, e N+1 por quadro é o custo que a `sqlc.slice` existe para não pagar.
@@ -472,25 +478,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 // Falha não derruba a tela: sem o mapa as barras saem sem filete, que é o que
 // elas eram antes desta fatia. Mesma escolha do roster logo acima — a
 // iniciativa é o assunto da tela, a reserva é um detalhe dela.
-func (s Scene) tempHpOf(
-	ctx context.Context, st *live.SessionRuntimeState, group []Member,
-) map[int64]int64 {
-	seen := map[int64]bool{}
-	ids := []int64{}
-	joins := func(id int64) {
-		if !seen[id] {
-			seen[id] = true
-			ids = append(ids, id)
-		}
-	}
-	for i := range st.Initiative {
-		if id := st.Initiative[i].CharacterID; id != nil {
-			joins(*id)
-		}
-	}
-	for i := range group {
-		joins(group[i].CharacterID)
-	}
+func (s Scene) tempHpOf(ctx context.Context, ids []int64) map[int64]int64 {
 	if len(ids) == 0 {
 		return map[int64]int64{}
 	}
