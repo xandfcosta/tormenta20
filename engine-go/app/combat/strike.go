@@ -42,18 +42,18 @@ type Combatants interface {
 // Tables é a porta do estado da mesa.
 type Tables interface {
 	GetState(sessionID int64) *live.SessionRuntimeState
-	ProposeAttack(sessionID int64, ataque live.PendingAttack) (*live.SessionRuntimeState, error)
+	ProposeAttack(sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
 }
 
 // Strike resolve e propõe ataques.
 type Strike struct {
-	combatentes Combatants
-	mesas       Tables
-	rolar       func(faces int) (int, error)
+	combatants Combatants
+	tables     Tables
+	rollDie    func(faces int) (int, error)
 }
 
-func NewStrike(c Combatants, t Tables, rolar func(faces int) (int, error)) Strike {
-	return Strike{combatentes: c, mesas: t, rolar: rolar}
+func NewStrike(c Combatants, t Tables, rollDie func(faces int) (int, error)) Strike {
+	return Strike{combatants: c, tables: t, rollDie: rollDie}
 }
 
 // Request é o pedido de ataque.
@@ -81,70 +81,70 @@ type Request struct {
 
 // Propose rola o ataque e guarda o provisório. Ninguém perde PV aqui: quem
 // confirma é o mestre, pela mesma divisa do movimento no tabuleiro.
-func (s Strike) Propose(ctx context.Context, quem app.Caller, papel string, pedido Request) (live.PendingAttack, error) {
-	estado := s.mesas.GetState(pedido.SessionID)
-	if estado == nil {
-		return live.PendingAttack{}, fmt.Errorf("a sessão %d não tem mesa aberta: %w", pedido.SessionID, app.ErrNotFound)
+func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
+	state := s.tables.GetState(req.SessionID)
+	if state == nil {
+		return live.PendingAttack{}, fmt.Errorf("a sessão %d não tem mesa aberta: %w", req.SessionID, app.ErrNotFound)
 	}
-	atacante, err := entryOf(estado, pedido.AttackerEntryID)
+	atacante, err := entryOf(state, req.AttackerEntryID)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	alvo, err := entryOf(estado, pedido.TargetEntryID)
+	target, err := entryOf(state, req.TargetEntryID)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
 	// QUEM ROLA É O DONO, ou o mestre. Sem isto qualquer um na mesa rolaria o
 	// ataque do personagem alheio que estiver na vez — e o provisório sairia com
 	// o nome dele, que é pior do que não deixar atacar.
-	if papel != "gm" && !pedido.OwnsAttacker {
+	if role != "gm" && !req.OwnsAttacker {
 		return live.PendingAttack{}, fmt.Errorf(
 			"%s não é seu personagem: %w", atacante.Label, app.ErrRefused)
 	}
-	if atacante.ID == alvo.ID {
+	if atacante.ID == target.ID {
 		return live.PendingAttack{}, fmt.Errorf("ninguém ataca a si mesmo: %w", app.ErrRefused)
 	}
 
-	quemAtaca, err := s.combatentes.Of(ctx, atacante)
+	striker, err := s.combatants.Of(ctx, atacante)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	if len(quemAtaca.Weapons) == 0 {
+	if len(striker.Weapons) == 0 {
 		return live.PendingAttack{}, fmt.Errorf(
-			"%s não tem arma empunhada com que atacar: %w", quemAtaca.Label, app.ErrRefused)
+			"%s não tem arma empunhada com que atacar: %w", striker.Label, app.ErrRefused)
 	}
-	if pedido.Weapon < 0 || pedido.Weapon >= len(quemAtaca.Weapons) {
+	if req.Weapon < 0 || req.Weapon >= len(striker.Weapons) {
 		return live.PendingAttack{}, fmt.Errorf(
 			"%s empunha %d arma(s) e o pedido veio na %d: %w",
-			quemAtaca.Label, len(quemAtaca.Weapons), pedido.Weapon, app.ErrRefused)
+			striker.Label, len(striker.Weapons), req.Weapon, app.ErrRefused)
 	}
-	quemApanha, err := s.combatentes.Of(ctx, alvo)
+	victim, err := s.combatants.Of(ctx, target)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
 
-	d20, err := s.oD20(pedido.D20)
+	d20, err := s.oD20(req.D20)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	arma := quemAtaca.Weapons[pedido.Weapon]
-	fora, err := engine.ResolveAttack(arma, engine.AttackTarget{
-		Defense:         quemApanha.Defense,
-		DamageReduction: quemApanha.DamageReduction,
-		CritImmune:      quemApanha.CritImmune,
-	}, d20, s.rolar)
+	weapon := striker.Weapons[req.Weapon]
+	out, err := engine.ResolveAttack(weapon, engine.AttackTarget{
+		Defense:         victim.Defense,
+		DamageReduction: victim.DamageReduction,
+		CritImmune:      victim.CritImmune,
+	}, d20, s.rollDie)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
 
 	provisorio := live.PendingAttack{
-		AttackerEntryID: atacante.ID, TargetEntryID: alvo.ID, Weapon: arma.Name,
-		Roll: fora.Roll, Total: fora.Total, Defense: quemApanha.Defense,
-		Hit: fora.Hit, Critical: fora.Critical,
-		Dice: fora.Dice, Faces: fora.Faces, RawDamage: fora.RawDamage, Absorbed: fora.Absorbed,
-		Damage: fora.Damage, ByUserID: quem.ID,
+		AttackerEntryID: atacante.ID, TargetEntryID: target.ID, Weapon: weapon.Name,
+		Roll: out.Roll, Total: out.Total, Defense: victim.Defense,
+		Hit: out.Hit, Critical: out.Critical,
+		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
+		Damage: out.Damage, ByUserID: who.ID,
 	}
-	if _, err := s.mesas.ProposeAttack(pedido.SessionID, provisorio); err != nil {
+	if _, err := s.tables.ProposeAttack(req.SessionID, provisorio); err != nil {
 		return live.PendingAttack{}, err
 	}
 	return provisorio, nil
@@ -157,11 +157,11 @@ func (s Strike) Propose(ctx context.Context, quem app.Caller, papel string, pedi
 // que o aceita dá crítico a quem digitou 40.
 func (s Strike) oD20(recebido *int) (int, error) {
 	if recebido == nil {
-		rolagem, err := s.rolar(20)
+		roll, err := s.rollDie(20)
 		if err != nil {
 			return 0, fmt.Errorf("rolar o d20: %w", err)
 		}
-		return rolagem, nil
+		return roll, nil
 	}
 	if *recebido < 1 || *recebido > 20 {
 		return 0, fmt.Errorf("o d20 rolado foi %d, e um d20 vai de 1 a 20: %w", *recebido, app.ErrRefused)

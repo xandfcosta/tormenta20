@@ -62,14 +62,14 @@ type Attacker struct {
 // No máximo UM por sessão, e o novo substitui o antigo — dois provisórios
 // simultâneos são duas verdades sobre a mesma cena, e a mesa não teria como
 // saber qual confirmar. É a mesma decisão do `ProposeMove`.
-func ProposeAttack(st *SessionRuntimeState, ataque PendingAttack) error {
-	if FindEntryIndex(st, ataque.AttackerEntryID) < 0 {
-		return fmt.Errorf("quem ataca (%s) não está na fila", ataque.AttackerEntryID)
+func ProposeAttack(st *SessionRuntimeState, attack PendingAttack) error {
+	if FindEntryIndex(st, attack.AttackerEntryID) < 0 {
+		return fmt.Errorf("quem ataca (%s) não está na fila", attack.AttackerEntryID)
 	}
-	if FindEntryIndex(st, ataque.TargetEntryID) < 0 {
-		return fmt.Errorf("o alvo (%s) não está na fila", ataque.TargetEntryID)
+	if FindEntryIndex(st, attack.TargetEntryID) < 0 {
+		return fmt.Errorf("o alvo (%s) não está na fila", attack.TargetEntryID)
 	}
-	st.PendingAttack = &ataque
+	st.PendingAttack = &attack
 	return nil
 }
 
@@ -90,20 +90,20 @@ func ProposeAttack(st *SessionRuntimeState, ataque PendingAttack) error {
 // Aplicar aqui daria o caso do NPC certo e o do PC errado EM SILÊNCIO: a linha
 // da fila mostraria o dano e a ficha do jogador continuaria cheia, que é
 // exatamente a divergência que a fila espelhada existe para não ter.
-func AttackToCommit(st *SessionRuntimeState, quem Attacker) (PendingAttack, error) {
-	ataque := st.PendingAttack
-	if ataque == nil {
+func AttackToCommit(st *SessionRuntimeState, who Attacker) (PendingAttack, error) {
+	attack := st.PendingAttack
+	if attack == nil {
 		return PendingAttack{}, fmt.Errorf("não há ataque proposto para confirmar")
 	}
-	if quem.Role != "gm" {
+	if who.Role != "gm" {
 		return PendingAttack{}, fmt.Errorf("só o mestre põe o dano na ficha: o seu ataque é um rascunho para a mesa ver")
 	}
 	// O ALVO É CONFERIDO DE NOVO: entre rolar e confirmar ele pode ter saído da
 	// fila, e o que vale é a mesa no instante em que o PV muda.
-	if FindEntryIndex(st, ataque.TargetEntryID) < 0 {
+	if FindEntryIndex(st, attack.TargetEntryID) < 0 {
 		return PendingAttack{}, fmt.Errorf("o alvo saiu da fila entre a rolagem e a confirmação")
 	}
-	return *ataque, nil
+	return *attack, nil
 }
 
 // ClearPendingAttack tira o provisório da mesa. Um ataque que ERRA também sai
@@ -114,12 +114,12 @@ func ClearPendingAttack(st *SessionRuntimeState) { st.PendingAttack = nil }
 // CancelAttack descarta o provisório sem mexer em ninguém. O mestre cancela por
 // qualquer um — é ele quem toca a mesa quando o jogador caiu da rede —, e o
 // jogador só o que ele mesmo rolou.
-func CancelAttack(st *SessionRuntimeState, quem Attacker) error {
-	ataque := st.PendingAttack
-	if ataque == nil {
+func CancelAttack(st *SessionRuntimeState, who Attacker) error {
+	attack := st.PendingAttack
+	if attack == nil {
 		return fmt.Errorf("não há ataque proposto para cancelar")
 	}
-	if quem.Role != "gm" && ataque.ByUserID != quem.UserID {
+	if who.Role != "gm" && attack.ByUserID != who.UserID {
 		return fmt.Errorf("o ataque proposto não é seu")
 	}
 	st.PendingAttack = nil

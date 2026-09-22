@@ -58,24 +58,24 @@ func TestTheVerdictIsOneOfThreeWords(t *testing.T) {
 	}
 	cases := []struct {
 		hit, crit bool
-		quer      string
+		want      string
 	}{{false, false, "Errou"}, {true, false, "Acertou"}, {true, true, "Crítico"}}
-	for _, caso := range cases {
+	for _, tc := range cases {
 		st.PendingAttack = &live.PendingAttack{
-			AttackerEntryID: "a", TargetEntryID: "b", Hit: caso.hit, Critical: caso.crit, ByUserID: 7,
+			AttackerEntryID: "a", TargetEntryID: "b", Hit: tc.hit, Critical: tc.crit, ByUserID: 7,
 		}
-		faixa := attackProposalOf(st, 7)
-		if faixa == nil || faixa.Verdict != caso.quer {
-			t.Errorf("hit=%v crit=%v deu %v, queria %q", caso.hit, caso.crit, faixa, caso.quer)
+		band := attackProposalOf(st, 7)
+		if band == nil || band.Verdict != tc.want {
+			t.Errorf("hit=%v crit=%v deu %v, queria %q", tc.hit, tc.crit, band, tc.want)
 		}
-		if faixa.Attacker != "Arwen" || faixa.Target != "Ogro" {
-			t.Errorf("os nomes vêm da FILA, e vieram %q → %q", faixa.Attacker, faixa.Target)
+		if band.Attacker != "Arwen" || band.Target != "Ogro" {
+			t.Errorf("os nomes vêm da FILA, e vieram %q → %q", band.Attacker, band.Target)
 		}
-		if !faixa.Mine {
+		if !band.Mine {
 			t.Errorf("quem rolou (7) é quem olha (7): a faixa tem de deixar ele cancelar")
 		}
 	}
-	if faixa := attackProposalOf(st, 99); faixa.Mine {
+	if band := attackProposalOf(st, 99); band.Mine {
 		t.Errorf("quem NÃO rolou não cancela o que não é dele")
 	}
 }

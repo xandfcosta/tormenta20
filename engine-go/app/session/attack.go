@@ -13,9 +13,9 @@ import (
 // mesmo assunto.
 
 // ProposeAttack guarda o ataque rolado. Ninguém perde PV aqui.
-func (st *Store) ProposeAttack(sessionID int64, ataque live.PendingAttack) (*live.SessionRuntimeState, error) {
+func (st *Store) ProposeAttack(sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.AttackRolled{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { return live.ProposeAttack(s, ataque) })
+		func(s *live.SessionRuntimeState) error { return live.ProposeAttack(s, attack) })
 }
 
 // CommitAttack aplica o dano do provisório e o tira da mesa.
@@ -30,14 +30,14 @@ func (st *Store) ProposeAttack(sessionID int64, ataque live.PendingAttack) (*liv
 // São DUAS mutações, e a ordem importa: o dano primeiro, o provisório depois.
 // Invertida, uma falha ao gravar o PV deixaria a mesa sem o provisório e sem o
 // dano — e ninguém saberia que o ataque existiu.
-func (st *Store) CommitAttack(sessionID int64, quem live.Attacker) (*live.SessionRuntimeState, error) {
-	ataque, err := live.AttackToCommit(st.GetState(sessionID), quem)
+func (st *Store) CommitAttack(sessionID int64, who live.Attacker) (*live.SessionRuntimeState, error) {
+	attack, err := live.AttackToCommit(st.GetState(sessionID), who)
 	if err != nil {
 		return nil, err
 	}
-	if ataque.Damage > 0 {
-		perda := int64(-ataque.Damage)
-		if _, err := st.DeltaVitals(sessionID, ataque.TargetEntryID, &perda, nil); err != nil {
+	if attack.Damage > 0 {
+		perda := int64(-attack.Damage)
+		if _, err := st.DeltaVitals(sessionID, attack.TargetEntryID, &perda, nil); err != nil {
 			return nil, err
 		}
 	}
@@ -45,7 +45,7 @@ func (st *Store) CommitAttack(sessionID int64, quem live.Attacker) (*live.Sessio
 		func(s *live.SessionRuntimeState) error {
 			// Conferido DE NOVO sob a trava: entre a leitura lá em cima e esta
 			// linha, outro pedido pode ter cancelado o mesmo provisório.
-			if _, err := live.AttackToCommit(s, quem); err != nil {
+			if _, err := live.AttackToCommit(s, who); err != nil {
 				return err
 			}
 			live.ClearPendingAttack(s)
@@ -54,7 +54,7 @@ func (st *Store) CommitAttack(sessionID int64, quem live.Attacker) (*live.Sessio
 }
 
 // CancelAttack descarta o provisório sem mexer em ninguém.
-func (st *Store) CancelAttack(sessionID int64, quem live.Attacker) (*live.SessionRuntimeState, error) {
+func (st *Store) CancelAttack(sessionID int64, who live.Attacker) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.AttackSettled{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { return live.CancelAttack(s, quem) })
+		func(s *live.SessionRuntimeState) error { return live.CancelAttack(s, who) })
 }

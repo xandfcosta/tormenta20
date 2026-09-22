@@ -18,15 +18,15 @@ import (
 
 // queueDouble é a mesa dos casos: um herói e um ogro.
 type queueDouble struct {
-	estado   *live.SessionRuntimeState
-	guardado *live.PendingAttack
+	state  *live.SessionRuntimeState
+	stored *live.PendingAttack
 }
 
-func (f *queueDouble) GetState(int64) *live.SessionRuntimeState { return f.estado }
+func (f *queueDouble) GetState(int64) *live.SessionRuntimeState { return f.state }
 
 func (f *queueDouble) ProposeAttack(_ int64, a live.PendingAttack) (*live.SessionRuntimeState, error) {
-	f.guardado = &a
-	return f.estado, live.ProposeAttack(f.estado, a)
+	f.stored = &a
+	return f.state, live.ProposeAttack(f.state, a)
 }
 
 // sheetDouble é a porta traduzida à mão: cada linha da queueDouble vira um combatente com
@@ -48,15 +48,15 @@ func aTable(t *testing.T) *queueDouble {
 		{ID: "heroi", Label: "Arwen", Type: "character"},
 		{ID: "ogro", Label: "Ogro", Type: "npc"},
 	}
-	return &queueDouble{estado: st}
+	return &queueDouble{state: st}
 }
 
 func aLongsword() engine.WeaponCard {
 	return engine.WeaponCard{Name: "Espada longa", Damage: "1d8", DamageBonus: 3, Attack: 5, CritRange: 19, CritMult: 2}
 }
 
-func fixedDie(valor int) func(int) (int, error) {
-	return func(int) (int, error) { return valor, nil }
+func fixedDie(value int) func(int) (int, error) {
+	return func(int) (int, error) { return value, nil }
 }
 
 // A DEFESA MEDIDA É A DO ALVO, e este é o caso que separa "funciona" de
@@ -64,26 +64,26 @@ func fixedDie(valor int) func(int) (int, error) {
 // lesse a Defesa do atacante erraria o ataque — e um que lesse qualquer uma das
 // duas passaria se as duas fossem iguais.
 func TestTheDefenseThatMattersIsTheTargetOne(t *testing.T) {
-	mesa := aTable(t)
+	table := aTable(t)
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Defense: 30},
 		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 10},
-	}, mesa, fixedDie(4))
+	}, table, fixedDie(4))
 
 	d20 := 10
-	fora, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+	out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
 		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
 	})
 	if err != nil {
 		t.Fatalf("propor: %v", err)
 	}
-	if !fora.Hit {
+	if !out.Hit {
 		t.Errorf("15 contra a Defesa 10 do ALVO acerta; contra a 30 de quem ataca, erraria")
 	}
-	if fora.TargetEntryID != "ogro" || fora.AttackerEntryID != "heroi" {
-		t.Errorf("o provisório saiu com atacante %q e alvo %q", fora.AttackerEntryID, fora.TargetEntryID)
+	if out.TargetEntryID != "ogro" || out.AttackerEntryID != "heroi" {
+		t.Errorf("o provisório saiu com atacante %q e alvo %q", out.AttackerEntryID, out.TargetEntryID)
 	}
-	if mesa.guardado == nil || mesa.guardado.ByUserID != 7 {
+	if table.stored == nil || table.stored.ByUserID != 7 {
 		t.Errorf("o provisório tem de ser GUARDADO na mesa, com quem rolou junto")
 	}
 }
@@ -91,26 +91,26 @@ func TestTheDefenseThatMattersIsTheTargetOne(t *testing.T) {
 // QUEM NÃO É DONO NÃO ROLA pelo personagem alheio, e o mestre rola por
 // qualquer um. A posse chega RESOLVIDA do gateway, contra o banco.
 func TestOnlyTheOwnerOrTheGameMasterRollsTheAttack(t *testing.T) {
-	mesa := aTable(t)
+	table := aTable(t)
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}},
 		"ogro":  {EntryID: "ogro", Defense: 10},
-	}, mesa, fixedDie(15))
-	pedido := Request{SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro"}
+	}, table, fixedDie(15))
+	req := Request{SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro"}
 
-	_, err := strike.Propose(context.Background(), app.Caller{ID: 9}, "player", pedido)
+	_, err := strike.Propose(context.Background(), app.Caller{ID: 9}, "player", req)
 	if !errors.Is(err, app.ErrRefused) {
 		t.Errorf("quem não é dono não rola pelo personagem, e veio %v", err)
 	}
 	if !strings.Contains(err.Error(), "Arwen") {
 		t.Errorf("a recusa diz de quem se fala, e veio %q", err)
 	}
-	if _, err := strike.Propose(context.Background(), app.Caller{ID: 1}, "gm", pedido); err != nil {
+	if _, err := strike.Propose(context.Background(), app.Caller{ID: 1}, "gm", req); err != nil {
 		t.Errorf("o mestre rola por qualquer um, e veio %v", err)
 	}
-	dono := pedido
-	dono.OwnsAttacker = true
-	if _, err := strike.Propose(context.Background(), app.Caller{ID: 9}, "player", dono); err != nil {
+	owner := req
+	owner.OwnsAttacker = true
+	if _, err := strike.Propose(context.Background(), app.Caller{ID: 9}, "player", owner); err != nil {
 		t.Errorf("o dono rola pelo próprio personagem, e veio %v", err)
 	}
 }
@@ -118,22 +118,22 @@ func TestOnlyTheOwnerOrTheGameMasterRollsTheAttack(t *testing.T) {
 // O D20 RECEBIDO É CONFERIDO. É a mesma linha do `SelfEntry` da iniciativa: um
 // número fora da faixa não é um dado, é um pedido montado à mão.
 func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
-	mesa := aTable(t)
+	table := aTable(t)
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Weapons: []engine.WeaponCard{aLongsword()}},
 		"ogro":  {EntryID: "ogro", Defense: 10},
-	}, mesa, fixedDie(4))
+	}, table, fixedDie(4))
 
-	for _, valor := range []int{0, 21, -3, 40} {
-		v := valor
+	for _, value := range []int{0, 21, -3, 40} {
+		v := value
 		_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
 			SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &v, OwnsAttacker: true,
 		})
 		if !errors.Is(err, app.ErrRefused) {
-			t.Errorf("d20 %d tinha de ser recusado, e veio %v", valor, err)
+			t.Errorf("d20 %d tinha de ser recusado, e veio %v", value, err)
 		}
 	}
-	if mesa.guardado != nil {
+	if table.stored != nil {
 		t.Error("um pedido recusado não guarda provisório nenhum")
 	}
 }
@@ -141,22 +141,22 @@ func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
 // SEM D20 O SERVIDOR ROLA, e é o caminho do gesto de menu, que não tem onde
 // digitar.
 func TestWithoutAD20TheServerRollsIt(t *testing.T) {
-	mesa := aTable(t)
+	table := aTable(t)
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Weapons: []engine.WeaponCard{aLongsword()}},
 		"ogro":  {EntryID: "ogro", Defense: 10},
-	}, mesa, fixedDie(19))
+	}, table, fixedDie(19))
 
-	fora, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+	out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
 		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", OwnsAttacker: true,
 	})
 	if err != nil {
 		t.Fatalf("propor: %v", err)
 	}
-	if fora.Roll != 19 {
-		t.Errorf("o d20 = %d, e o dado desta mesa está cravado em 19", fora.Roll)
+	if out.Roll != 19 {
+		t.Errorf("o d20 = %d, e o dado desta mesa está cravado em 19", out.Roll)
 	}
-	if !fora.Critical {
+	if !out.Critical {
 		t.Errorf("19 com margem 19 é crítico, e o provisório tem de dizer isso à mesa")
 	}
 }
@@ -164,10 +164,10 @@ func TestWithoutAD20TheServerRollsIt(t *testing.T) {
 // NINGUÉM ATACA A SI MESMO, e recusar na porta é mais barato que descobrir
 // depois que o alvo e o atacante são a mesma linha da queueDouble.
 func TestNobodyAttacksThemselves(t *testing.T) {
-	mesa := aTable(t)
+	table := aTable(t)
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Weapons: []engine.WeaponCard{aLongsword()}},
-	}, mesa, fixedDie(10))
+	}, table, fixedDie(10))
 
 	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
 		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "heroi", OwnsAttacker: true,
@@ -180,11 +180,11 @@ func TestNobodyAttacksThemselves(t *testing.T) {
 // QUEM NÃO EMPUNHA ARMA não ataca, e a frase diz o nome de quem — "não tem arma
 // empunhada" sem sujeito manda procurar em nove sheetDouble.
 func TestWithoutAWieldedWeaponThereIsNoAttack(t *testing.T) {
-	mesa := aTable(t)
+	table := aTable(t)
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen"},
 		"ogro":  {EntryID: "ogro", Defense: 10},
-	}, mesa, fixedDie(10))
+	}, table, fixedDie(10))
 
 	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
 		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", OwnsAttacker: true,

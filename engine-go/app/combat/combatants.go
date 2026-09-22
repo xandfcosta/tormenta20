@@ -59,7 +59,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 	if err != nil {
 		return Combatant{}, fmt.Errorf("montar a ficha de %s: %w", e.Label, err)
 	}
-	computada, err := sheet.Compute(r.catalogs, dto)
+	computed, err := sheet.Compute(r.catalogs, dto)
 	if err != nil {
 		return Combatant{}, fmt.Errorf("computar a ficha de %s: %w", e.Label, err)
 	}
@@ -70,8 +70,8 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 	return Combatant{
 		EntryID: e.ID, Label: e.Label,
 		Weapons:         r.catalogs.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals)),
-		Defense:         computada.Defense.Total,
-		DamageReduction: computada.DamageReduction.Total,
+		Defense:         computed.Defense.Total,
+		DamageReduction: computed.DamageReduction.Total,
 	}, nil
 }
 
@@ -82,18 +82,18 @@ func (r Roster) fromBlock(ctx context.Context, e live.InitiativeEntry) (Combatan
 	if err != nil {
 		return Combatant{}, fmt.Errorf("carregar o bloco de %s: %w", e.Label, err)
 	}
-	var bloco creature.Block
-	if err := json.Unmarshal([]byte(row.Block), &bloco); err != nil {
+	var block creature.Block
+	if err := json.Unmarshal([]byte(row.Block), &block); err != nil {
 		return Combatant{}, fmt.Errorf("o bloco de %s está ilegível: %w", e.Label, err)
 	}
-	return Combatant{EntryID: e.ID, Label: e.Label, Defense: bloco.Defense}, nil
+	return Combatant{EntryID: e.ID, Label: e.Label, Defense: block.Defense}, nil
 }
 
 // fromBestiary: o bestiário do livro.
 func (r Roster) fromBestiary(e live.InitiativeEntry) (Combatant, error) {
-	for _, verbete := range book.Creatures() {
-		if verbete.ID == *e.MonsterID {
-			return Combatant{EntryID: e.ID, Label: e.Label, Defense: verbete.Defense}, nil
+	for _, entry := range book.Creatures() {
+		if entry.ID == *e.MonsterID {
+			return Combatant{EntryID: e.ID, Label: e.Label, Defense: entry.Defense}, nil
 		}
 	}
 	return Combatant{}, fmt.Errorf("o verbete %q não está no bestiário", *e.MonsterID)

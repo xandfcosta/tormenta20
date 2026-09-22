@@ -60,9 +60,9 @@ type AttackOutcome struct {
 //	fora, err := ResolveAttack(carta, AttackTarget{Defense: 15}, 19, rolar)
 //	// fora.Critical == true, fora.Damage == 16 para 1d8+3 com x2
 func ResolveAttack(
-	card WeaponCard, alvo AttackTarget, d20 int, rolar func(faces int) (int, error),
+	card WeaponCard, target AttackTarget, d20 int, rollDie func(faces int) (int, error),
 ) (AttackOutcome, error) {
-	fora := AttackOutcome{Roll: d20, Total: d20 + card.Attack}
+	out := AttackOutcome{Roll: d20, Total: d20 + card.Attack}
 
 	// "Se o resultado é igual ou maior que a Defesa do alvo, você acerta"
 	// (p230). O IGUAL decide todo ataque que empata, e é a metade que um `>`
@@ -78,9 +78,9 @@ func ResolveAttack(
 	// exceção nenhuma, e ler ali a AUSÊNCIA da regra é o erro — ela mora na
 	// página seguinte, em "Regras Adicionais de testes". Um 20 natural errava
 	// contra Defesa alta, e nada acusava.
-	fora.Hit = d20 == 20 || (d20 != 1 && fora.Total >= alvo.Defense)
-	if !fora.Hit {
-		return fora, nil
+	out.Hit = d20 == 20 || (d20 != 1 && out.Total >= target.Defense)
+	if !out.Hit {
+		return out, nil
 	}
 
 	// "Você faz um acerto crítico quando ACERTA um ataque rolando um valor igual
@@ -90,38 +90,38 @@ func ResolveAttack(
 	// "Quando nenhuma margem aparece, será 20. Quando nenhum multiplicador
 	// aparece, será x2" (p230) — por isso o zero do catálogo cai no padrão do
 	// livro em vez de virar uma arma que nunca critica.
-	margem, multiplicador := card.CritRange, card.CritMult
-	if margem <= 0 {
-		margem = 20
+	margin, multiplicador := card.CritRange, card.CritMult
+	if margin <= 0 {
+		margin = 20
 	}
 	if multiplicador <= 0 {
 		multiplicador = 2
 	}
 	// "Um alvo imune a acertos críticos ainda sofre o dano de um ataque normal"
 	// (p231): a imunidade tira o crítico, nunca o ataque.
-	fora.Critical = d20 >= margem && !alvo.CritImmune
+	out.Critical = d20 >= margin && !target.CritImmune
 
-	quantidade, faces, err := parseDiceNotation(card.Damage)
+	count, faces, err := parseDiceNotation(card.Damage)
 	if err != nil {
-		return fora, err
+		return out, err
 	}
 	// "Multiplica os DADOS de dano do ataque (incluindo quaisquer aumentos por
 	// passos) pelo multiplicador da arma. Bônus numéricos de dano, assim como
 	// dados extras, não são multiplicados" (p231). O exemplo trabalhado é da
 	// p142: um dano de 1d8+3 torna-se 2d8+3 — mais DADOS, e o +3 uma vez só.
-	if fora.Critical {
-		quantidade *= multiplicador
+	if out.Critical {
+		count *= multiplicador
 	}
-	fora.Faces = faces
-	for i := 0; i < quantidade; i++ {
-		valor, err := rolar(faces)
+	out.Faces = faces
+	for i := 0; i < count; i++ {
+		value, err := rollDie(faces)
 		if err != nil {
-			return fora, err
+			return out, err
 		}
-		fora.Dice = append(fora.Dice, valor)
-		fora.RawDamage += valor
+		out.Dice = append(out.Dice, value)
+		out.RawDamage += value
 	}
-	fora.RawDamage += card.DamageBonus
+	out.RawDamage += card.DamageBonus
 
 	// "Se uma criatura com RD 5 sofre um ataque que causa 8 pontos de dano,
 	// perde apenas 3 PV" (p229).
@@ -130,10 +130,10 @@ func ResolveAttack(
 	// dano, e "ignora parte do dano que sofre" não descreve um ataque que
 	// devolve PV. Sem o piso, uma RD alta viraria cura — e a cura tem regra
 	// própria, que não é esta.
-	fora.Absorbed = alvo.DamageReduction
-	if fora.Absorbed > fora.RawDamage {
-		fora.Absorbed = fora.RawDamage
+	out.Absorbed = target.DamageReduction
+	if out.Absorbed > out.RawDamage {
+		out.Absorbed = out.RawDamage
 	}
-	fora.Damage = fora.RawDamage - fora.Absorbed
-	return fora, nil
+	out.Damage = out.RawDamage - out.Absorbed
+	return out, nil
 }

@@ -64,12 +64,12 @@ func TestTheGameMasterGetsTheAttackToApply(t *testing.T) {
 	if err := ProposeAttack(st, umGolpe()); err != nil {
 		t.Fatalf("propor: %v", err)
 	}
-	ataque, err := AttackToCommit(st, Attacker{UserID: 1, Role: "gm"})
+	attack, err := AttackToCommit(st, Attacker{UserID: 1, Role: "gm"})
 	if err != nil {
 		t.Fatalf("confirmar: %v", err)
 	}
-	if ataque.Damage != 11 || ataque.TargetEntryID != "ogro" {
-		t.Errorf("veio %d de dano no alvo %q, e o golpe era 11 no ogro", ataque.Damage, ataque.TargetEntryID)
+	if attack.Damage != 11 || attack.TargetEntryID != "ogro" {
+		t.Errorf("veio %d de dano no alvo %q, e o golpe era 11 no ogro", attack.Damage, attack.TargetEntryID)
 	}
 	if got := DerefOr(st.Initiative[1].HpCurrent, 0); got != 30 {
 		t.Errorf("o PV do ogro = %d: o regime NÃO aplica dano, quem aplica é o store", got)
@@ -89,12 +89,12 @@ func TestConfirmingAMissChangesNoVitals(t *testing.T) {
 	if err := ProposeAttack(st, errou); err != nil {
 		t.Fatalf("propor: %v", err)
 	}
-	ataque, err := AttackToCommit(st, Attacker{UserID: 1, Role: "gm"})
+	attack, err := AttackToCommit(st, Attacker{UserID: 1, Role: "gm"})
 	if err != nil {
 		t.Fatalf("confirmar: %v", err)
 	}
-	if ataque.Damage != 0 {
-		t.Errorf("o dano = %d, e um ataque que erra não tira nada", ataque.Damage)
+	if attack.Damage != 0 {
+		t.Errorf("o dano = %d, e um ataque que erra não tira nada", attack.Damage)
 	}
 	ClearPendingAttack(st)
 	if st.PendingAttack != nil {
@@ -134,9 +134,9 @@ func TestConfirmingAgainstAGoneTargetRefuses(t *testing.T) {
 // PROPOR CONTRA QUEM NÃO ESTÁ NA FILA é recusado na porta.
 func TestProposingAgainstSomeoneOutsideTheQueueRefuses(t *testing.T) {
 	st := aQueue(t)
-	fora := umGolpe()
-	fora.TargetEntryID = "ninguem"
-	if err := ProposeAttack(st, fora); err == nil {
+	out := umGolpe()
+	out.TargetEntryID = "ninguem"
+	if err := ProposeAttack(st, out); err == nil {
 		t.Error("propor contra quem não está na fila tem de recusar")
 	}
 }
