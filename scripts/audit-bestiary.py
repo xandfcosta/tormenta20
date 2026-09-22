@@ -32,13 +32,33 @@ Precisa do `pdftotext` (poppler) e do PDF do livro na raiz do repositório.
 """
 import argparse
 import html
+import pathlib
 import json
+import os
 import re
 import subprocess
 import unicodedata
 from collections import Counter
 
-PDF = '/mnt/HD/projects/tormenta20/t20-book.pdf'
+# O CATÁLOGO sai da localização do script; o LIVRO, não — e a diferença é que o
+# PDF é gitignorado (ele não é nosso para distribuir). Numa worktree, o
+# catálogo a auditar é o de lá e o livro continua no checkout principal.
+#
+# Com um caminho fixo para os DOIS, rodar numa worktree audita o catálogo do
+# checkout principal: o relatório sai sobre um arquivo que não é o que se está
+# editando, e as correções parecem não ter pegado. Custou uma rodada.
+RAIZ = pathlib.Path(__file__).resolve().parent.parent
+PDF = os.environ.get('T20_BOOK_PDF') or str(RAIZ / 't20-book.pdf')
+if not pathlib.Path(PDF).exists():
+    # O checkout principal é o palpite seguinte, e ele é DITO: um auditor que
+    # caísse em silêncio num PDF vazio reportaria 198 "não medidas" com cara de
+    # resultado.
+    vizinho = pathlib.Path('/mnt/HD/projects/tormenta20/t20-book.pdf')
+    if not vizinho.exists():
+        raise SystemExit(
+            f'não achei o livro em {PDF}. Ele é gitignorado — aponte o '
+            f'T20_BOOK_PDF para o PDF do checkout principal.')
+    PDF = str(vizinho)
 RE_BLOCO = re.compile(
     r'<block xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)"[^>]*>(.*?)</block>', re.S)
 RE_LINHA = re.compile(r'<line[^>]*>(.*?)</line>', re.S)
@@ -115,7 +135,7 @@ def texto_da_pagina(pagina: int) -> str:
 
 
 PRIMEIRA, ULTIMA = 292, 322  # PDF; livro = PDF - 6
-BESTIARIO = '/mnt/HD/projects/tormenta20/engine-go/domain/catalog/data/bestiary.json'
+BESTIARIO = str(RAIZ / 'engine-go/domain/catalog/data/bestiary.json')
 LIXO = re.compile(r'Mateus Santos|mateush\.santos|^Capítulo|^\d{1,3}$|fim de coluna')
 MENOS = '–−—'  # o livro usa travessão, não hífen, nos negativos
 

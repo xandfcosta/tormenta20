@@ -41,15 +41,34 @@ Precisa do `pdftotext` (poppler) e do PDF do livro na raiz do repositório.
 """
 import argparse
 import html
+import os
+import pathlib
 import json
 import re
 import subprocess
 import unicodedata
 from collections import Counter
 
-RAIZ = '/mnt/HD/projects/tormenta20'
-PDF = f'{RAIZ}/t20-book.pdf'
-SPELLS = f'{RAIZ}/engine-go/domain/catalog/data/spells.json'
+# O CATÁLOGO sai da localização do script; o LIVRO, não — e a diferença é que o
+# PDF é gitignorado (ele não é nosso para distribuir). Numa worktree, o
+# catálogo a auditar é o de lá e o livro continua no checkout principal.
+#
+# Com um caminho fixo para os DOIS, rodar numa worktree audita o catálogo do
+# checkout principal: o relatório sai sobre um arquivo que não é o que se está
+# editando, e as correções parecem não ter pegado. Custou uma rodada.
+RAIZ = pathlib.Path(__file__).resolve().parent.parent
+PDF = os.environ.get('T20_BOOK_PDF') or str(RAIZ / 't20-book.pdf')
+if not pathlib.Path(PDF).exists():
+    # O checkout principal é o palpite seguinte, e ele é DITO: um auditor que
+    # caísse em silêncio num PDF vazio reportaria 198 "não medidas" com cara de
+    # resultado.
+    vizinho = pathlib.Path('/mnt/HD/projects/tormenta20/t20-book.pdf')
+    if not vizinho.exists():
+        raise SystemExit(
+            f'não achei o livro em {PDF}. Ele é gitignorado — aponte o '
+            f'T20_BOOK_PDF para o PDF do checkout principal.')
+    PDF = str(vizinho)
+SPELLS = str(RAIZ / 'engine-go/domain/catalog/data/spells.json')
 
 # O capítulo de Magia, em página de PDF. O livro = PDF - 6, e o catálogo guarda
 # a página do LIVRO em `bookPage`.
