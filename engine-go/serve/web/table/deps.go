@@ -8,6 +8,7 @@ import (
 	"github.com/a-h/templ"
 
 	"t20engine/app/campaign"
+	"t20engine/app/character"
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
@@ -107,6 +108,9 @@ type Scene struct {
 	// não desta cena: o NPC preparado na quinta sobrevive à sessão de sábado, e
 	// a Mesa é uma entrada do gesto (ALE-353).
 	cast campaign.Cast
+	// plays são os GESTOS da ficha, e chegam como os outros casos de uso: a
+	// condição de um personagem marcada pela Mesa grava na ficha (ALE-368).
+	plays character.Plays
 	// access é a TRAVA da sessão, e ela é o MESMO objeto que os casos de uso
 	// usam por dentro (ALE-344). A cena a chama para decidir o que DESENHAR —
 	// o rodapé do mestre, a recusa antes do gesto —, e quem decide se o gesto
@@ -118,10 +122,10 @@ type Scene struct {
 
 func New(
 	d Deps, cycle session.Lifecycle, group rest.Party,
-	queue initiative.Queue, cast campaign.Cast,
+	queue initiative.Queue, cast campaign.Cast, plays character.Plays,
 ) Scene {
 	return Scene{
-		deps: d, lifecycle: cycle, party: group, queue: queue, cast: cast,
+		deps: d, lifecycle: cycle, party: group, queue: queue, cast: cast, plays: plays,
 		access: cycle.Access(),
 		lenses: newLenses(), chosenTabs: newTabs(),
 	}

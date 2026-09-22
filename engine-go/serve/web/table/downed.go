@@ -10,13 +10,13 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// QUEM CAIU, na barra: a palavra do estado ao lado do PV de uma FICHA a 0 ou
-// menos — morrendo, estável, morto (T20 p236, ALE-366).
+// O QUE A MESA LÊ DA FICHA a cada desenho: as condições do personagem
+// (ALE-368) e, delas, a palavra de quem caiu — morrendo, estável, morto (T20
+// p236, ALE-366).
 //
-// O Sangrando que separa morrendo de estável mora na FICHA, e é lido a cada
-// desenho pelo mesmo motivo que a reserva de PV temporário é: um terceiro dado
-// espelhado na linha da fila envelheceria no primeiro sítio de escrita que
-// esquecesse dele.
+// Lido a cada desenho pelo mesmo motivo que a reserva de PV temporário é: um
+// dado espelhado na linha da fila envelheceria no primeiro sítio de escrita que
+// esquecesse dele — e a lista de condições espelhada foi exatamente isso.
 
 // characterIDsOnTable são as fichas que a tela desenha: na fila e no grupo,
 // sem repetir.
@@ -35,38 +35,44 @@ func characterIDsOnTable(st *live.SessionRuntimeState, group []Member) []int64 {
 	return ids
 }
 
-// bleedingOf diz quais dessas fichas estão com a condição Sangrando. Leitura que
-// falha devolve ninguém: a barra sai sem a palavra, e não com uma errada.
-func (s Scene) bleedingOf(ctx context.Context, ids []int64) map[int64]bool {
-	bleeding := map[int64]bool{}
+// sheetConditionsOf lê as condições de cada ficha na mesa — o que a linha da
+// fila MOSTRA para personagem (ALE-368) e de onde sai o Sangrando que separa
+// morrendo de estável. Leitura que falha devolve nenhuma: a linha sai sem
+// crachá e sem palavra, e não com um errado.
+func (s Scene) sheetConditionsOf(ctx context.Context, ids []int64) map[int64][]string {
+	conditions := map[int64][]string{}
 	if len(ids) == 0 {
-		return bleeding
+		return conditions
 	}
 	rows, err := s.deps.Queries().ListCharactersByIDs(ctx, ids)
 	if err != nil {
-		return bleeding
+		return conditions
 	}
 	for _, r := range rows {
-		bleeding[r.ID] = slices.Contains(sheet.UnmarshalStrings(r.Activeconditions), engine.ConditionBleeding)
+		conditions[r.ID] = sheet.UnmarshalStrings(r.Activeconditions)
 	}
-	return bleeding
+	return conditions
 }
 
 // markDowned escreve a palavra numa barra de PV de ficha. Barra escondida pelo
 // mestre não ganha palavra: ela contaria à mesa o que o mestre escondeu.
-func markDowned(b *tableBar, characterID int64, bleeding map[int64]bool) {
+func markDowned(b *tableBar, conditions []string) {
 	if b == nil || b.Hidden || b.Max <= 0 {
 		return
 	}
-	b.Down = ui.DownedWord(b.Current, b.Max, bleeding[characterID])
+	b.Down = ui.DownedWord(b.Current, b.Max, slices.Contains(conditions, engine.ConditionBleeding))
 }
 
-// markQueueDowned faz o mesmo nas linhas da fila que têm ficha atrás. A fila da
-// vista nasce na ordem da fila do estado, e é esse o casamento.
-func markQueueDowned(v *View, st *live.SessionRuntimeState, bleeding map[int64]bool) {
+// withSheetState põe nas linhas da fila que têm ficha atrás o que é DA FICHA:
+// as condições (o crachá) e a palavra de quem caiu. A fila da vista nasce na
+// ordem da fila do estado, e é esse o casamento.
+func withSheetState(v *View, st *live.SessionRuntimeState, conditions map[int64][]string) {
 	for i := range v.Queue {
-		if i < len(st.Initiative) && st.Initiative[i].CharacterID != nil {
-			markDowned(v.Queue[i].PV, *st.Initiative[i].CharacterID, bleeding)
+		if i >= len(st.Initiative) || st.Initiative[i].CharacterID == nil {
+			continue
 		}
+		id := *st.Initiative[i].CharacterID
+		v.Queue[i].Conditions = conditions[id]
+		markDowned(v.Queue[i].PV, conditions[id])
 	}
 }

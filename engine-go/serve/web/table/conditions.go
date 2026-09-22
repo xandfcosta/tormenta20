@@ -9,6 +9,7 @@ import (
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
 	"t20engine/domain/live"
+	"t20engine/domain/sheet"
 )
 
 // AS CONDIÇÕES do combatente na Mesa.
@@ -19,9 +20,12 @@ import (
 // dizer que recalcularia seria mentir sobre um número que ninguém derivou. Por
 // isso o crachá carrega o EFEITO por extenso: é o mestre quem aplica.
 //
-// O PC continua aplicando condição pela FICHA, que é onde elas moram e onde o
-// motor as lê para mexer nos números. A linha da fila é o caminho do NPC, que
-// ficha não tem.
+// A condição de um PERSONAGEM mora na FICHA, que é onde o motor a lê para mexer
+// nos números e no instante de agir: na linha dele, o gesto da Mesa grava lá,
+// pelo mesmo caso de uso da aba Efeitos (decisão do dono, ALE-368). A lista da
+// linha da fila é o caminho do NPC, que ficha não tem. Antes a fila guardava
+// uma lista própria também para PC, e o Atordoado marcado pela Mesa não
+// atordoava ninguém.
 
 // conditionEffect é o que o crachá diz ao passar o mouse.
 //
@@ -64,6 +68,10 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
 	}
 
+	if charID := state.Initiative[i].CharacterID; charID != nil {
+		return toggleSheetCondition(st, c, *charID, id)
+	}
+
 	current := state.Initiative[i].Conditions
 	fresh := make([]string, 0, len(current)+1)
 	found := false
@@ -89,4 +97,27 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	// a condição que ele acabou de pôr.
 	c.Signals["row_conditions"] = strings.Join(fresh, ",")
 	return newState, nil
+}
+
+// toggleSheetCondition alterna a condição NA FICHA do personagem da linha.
+//
+// A fila não muda — ela LÊ as condições da ficha a cada desenho —, e quem acorda
+// as duas telas é o aviso de ficha mexida: a Mesa redesenha a linha e a ficha
+// aberta do jogador redesenha a aba Efeitos.
+func toggleSheetCondition(st Scene, c commandCtx, characterID int64, id string) (*live.SessionRuntimeState, error) {
+	row, err := st.deps.Queries().GetCharacter(c.R.Context(), characterID)
+	if err != nil {
+		return nil, fmt.Errorf("ler a ficha %d: %w", characterID, err)
+	}
+	if err := st.plays.ToggleBookCondition(c.R.Context(), row, id); err != nil {
+		return nil, err
+	}
+	st.deps.CharacterChanged(characterID)
+	after, err := st.deps.Queries().GetCharacter(c.R.Context(), characterID)
+	if err != nil {
+		return nil, fmt.Errorf("reler a ficha %d: %w", characterID, err)
+	}
+	// O conjunto novo volta no sinal pela razão do ramo do NPC, logo acima.
+	c.Signals["row_conditions"] = strings.Join(sheet.UnmarshalStrings(after.Activeconditions), ",")
+	return st.deps.Sessions().GetState(c.SessionID), nil
 }

@@ -308,13 +308,13 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// atualizá-lo, em silêncio. Aqui não há o que esquecer: o stream redesenha
 	// por este mesmo `LoadView`, então o que a mesa vê é o que o banco tem.
 	onTable := characterIDsOnTable(st, group)
-	pools, bleeding := s.tempHpOf(ctx, onTable), s.bleedingOf(ctx, onTable)
+	pools, conditions := s.tempHpOf(ctx, onTable), s.sheetConditionsOf(ctx, onTable)
 	for i := range group {
 		withTempHp(&group[i].PV, pools[group[i].CharacterID])
-		markDowned(&group[i].PV, group[i].CharacterID, bleeding)
+		markDowned(&group[i].PV, conditions[group[i].CharacterID])
 	}
 	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, group, mine, eu, pools)
-	markQueueDowned(&view, st, bleeding)
+	withSheetState(&view, st, conditions)
 	view.Bleeding = bleedingPromptOf(st, role, mine)
 	// O CICLO da sessão chega à tela porque, sem ele, os verbos teriam de ser
 	// oferecidos todos — e "encerrar" numa sessão que nunca começou é o gesto

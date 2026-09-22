@@ -1,11 +1,14 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+	"testing"
+
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
-	"testing"
+	"t20engine/domain/sheet"
 )
 
 func rowConditions(t *testing.T, f sceneFixture, entryID string) []string {
@@ -196,4 +199,110 @@ func conditionEffectOf(id string) string {
 		}
 	}
 	return ""
+}
+
+// sheetConditions lê as condições gravadas NA FICHA.
+func sheetConditions(t *testing.T, f sceneFixture, charID int64) []string {
+	t.Helper()
+	row, err := f.s.queries.GetCharacter(t.Context(), charID)
+	if err != nil {
+		t.Fatalf("ler a ficha %d: %v", charID, err)
+	}
+	return sheet.UnmarshalStrings(row.Activeconditions)
+}
+
+// NA LINHA DE PERSONAGEM, A MESA GRAVA NA FICHA (decisão do dono, ALE-368).
+//
+// A condição de um personagem mora na ficha — é lá que o motor a lê para mexer
+// na Defesa e no instante de agir. A fila guardava uma lista própria também
+// para PC, e o Atordoado marcado pela Mesa não atordoava ninguém.
+func TestMarkingAConditionOnACharacterRowWritesTheSheet(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	pc, _ := sceneIds(t, f)
+	base := f.tableUrl() + "/iniciativa/" + pc + "/condicao/"
+
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"atordoado", ""); rec.Code != http.StatusOK {
+		t.Fatalf("marcar deu %d", rec.Code)
+	}
+	if got := sheetConditions(t, f, f.charID); len(got) != 1 || got[0] != "atordoado" {
+		t.Fatalf("a Mesa marcou Atordoado e a ficha tem %v", got)
+	}
+	if got := rowConditions(t, f, pc); len(got) != 0 {
+		t.Errorf("a linha do PC guardou %v na fila: a condição dele mora na ficha", got)
+	}
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(screen, ">Atordoado</li>") {
+		t.Error("a fila não mostra o crachá da condição que está na ficha")
+	}
+
+	// O mesmo gesto desliga, na ficha.
+	if rec := f.pede(t, f.gm, http.MethodPost, base+"atordoado", ""); rec.Code != http.StatusOK {
+		t.Fatalf("desmarcar deu %d", rec.Code)
+	}
+	if got := sheetConditions(t, f, f.charID); len(got) != 0 {
+		t.Errorf("o segundo toque não tirou a condição da ficha: %v", got)
+	}
+}
+
+// A FILA MOSTRA O QUE A FICHA TEM, venha de onde vier: o jogador que se marca
+// Caído pela aba Efeitos aparece Caído na Mesa.
+func TestTheTableRowShowsTheSheetConditions(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	if rec := f.pede(t, f.player, http.MethodPost,
+		fmt.Sprintf("/personagens/%d/efeitos/condicao/caido?tab=conditionals", f.charID), ""); rec.Code != http.StatusOK {
+		t.Fatalf("marcar pela ficha deu %d", rec.Code)
+	}
+	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(screen, ">Caído</li>") {
+		t.Error("a ficha está Caída e a fila da Mesa não mostra o crachá")
+	}
+}
+
+// O NPC CONTINUA NA FILA: ele não tem ficha, e a lista da linha é o lugar dele.
+func TestMarkingAConditionOnAnNPCRowStaysOnTheQueue(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	_, npc := sceneIds(t, f)
+	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", ""); rec.Code != http.StatusOK {
+		t.Fatalf("marcar deu %d", rec.Code)
+	}
+	if got := rowConditions(t, f, npc); len(got) != 1 || got[0] != "abalado" {
+		t.Errorf("o NPC marcado Abalado tem %v na linha", got)
+	}
+}
+
+// O ATORDOADO MARCADO PELA MESA VALE PARA A REGRA: o personagem "não pode fazer
+// ações" (p394), e a conjuração de ação padrão na vez dele é recusada. Era isto
+// que a lista própria da fila deixava passar — ela não mexia em número nenhum.
+func TestAStunMarkedAtTheTableStopsTheCharacterFromActing(t *testing.T) {
+	f := newSceneFixture(t)
+	startCombatWithSomeoneElseOnTurn(t, f)
+	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil {
+		t.Fatalf("passar a vez ao personagem: %v", err)
+	}
+	var pc string
+	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
+		if e.CharacterID != nil {
+			pc = e.ID
+		}
+	}
+	// O CONTROLE: de pé e na vez, a mesma magia sai.
+	if rec := learnAndCast(t, f, "luz"); sceneRefusal(rec.Body) != "" {
+		t.Fatalf("o controle falhou: a magia foi recusada antes do Atordoado: %q", sceneRefusal(rec.Body))
+	}
+	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil { // volta ao goblin
+		t.Fatalf("girar: %v", err)
+	}
+	if _, err := f.s.sessions.NextTurn(f.sessionID); err != nil { // e ao personagem, com o turno inteiro
+		t.Fatalf("girar: %v", err)
+	}
+	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+pc+"/condicao/atordoado", ""); rec.Code != http.StatusOK {
+		t.Fatalf("marcar Atordoado deu %d", rec.Code)
+	}
+	refusal := sceneRefusal(learnAndCast(t, f, "luz").Body)
+	if !strings.Contains(refusal, "não dá para agir") {
+		t.Errorf("atordoado pela Mesa, o personagem conjurou mesmo assim (recusa: %q)", refusal)
+	}
 }
