@@ -545,3 +545,65 @@ func TestBackupSchedulerStaysOffWhenDisabled(t *testing.T) {
 		t.Errorf("fez %d backups com o automático desligado", n)
 	}
 }
+
+// UMA FICHA CUJO ESPELHO NÃO ATUALIZOU NÃO CONTA COMO DESCANSADA (ALE-372).
+//
+// O descanso de uma ficha são TRÊS gravações: encerrar o dia, curar, e espelhar
+// os vitais na linha da fila. As duas primeiras já reprovavam a ficha ao
+// falhar; a terceira ia para o chão — sem nem um `_ =` para um `grep` achar.
+//
+// A tentação é tratá-la como menos grave, porque a ficha já foi gravada e a
+// linha da fila é só o espelho dela. É o contrário: o que a mesa OLHA para
+// decidir quem cura e quem apanha é a FILA, então um espelho parado é a mentira
+// chegando exatamente onde ela custa — e o ack dizia "1 de 1" por cima dela.
+//
+// # A sabotagem precisa ser CIRÚRGICA, e as óbvias não servem
+//
+// Derrubar uma tabela da ficha faz o `EndDay` falhar primeiro, e o caso mediria
+// o passo errado. Derrubar a `sessions` mata a AUTORIZAÇÃO, que lê a mesma
+// linha antes do laço começar — o gesto volta erro e nunca chega ao espelho.
+//
+// O que isola o terceiro passo é um GATILHO: a leitura da sessão continua
+// funcionando (a autorização passa, o estado é lido), e só o UPDATE aborta. É
+// exatamente o disco recusando a gravação do retrato, sem tocar em mais nada.
+func TestAPartyRestWithAStaleMirrorDoesNotCount(t *testing.T) {
+	s := newTestServer(t)
+	gm := seedUser(t, s, "gm@t.com")
+	campaignID := seedCampaign(t, s, gm)
+	sid := seedSession(t, s, campaignID)
+	hero := seedCharacter(t, s, gm, "Tanque")
+	seedMember(t, s, campaignID, hero)
+	who := app.Caller{ID: gm}
+	ctx := context.Background()
+
+	// O espelho só EXISTE se o personagem estiver na fila — sem linha não há o
+	// que espelhar, e o `mirrorToTracker` devolve nil sem tocar no banco. Sem
+	// esta montagem o caso passaria verde medindo o caminho que não falha.
+	if _, err := s.sessions.AddInitiativeEntry(ctx, sid, sheetCombatant("Tanque", 12, hero)); err != nil {
+		t.Fatalf("pôr o herói na fila: %v", err)
+	}
+
+	// O CONTROLE: com o disco saudável a ficha conta.
+	done, total, err := s.restParty().RestForTheDay(ctx, who, campaignID, sid, "normal")
+	if err != nil || total != 1 || done != 1 {
+		t.Fatalf("o controle falhou: done=%d total=%d err=%v", done, total, err)
+	}
+
+	if _, err := s.db.Exec(`CREATE TRIGGER o_disco_recusa BEFORE UPDATE ON sessions
+		BEGIN SELECT RAISE(ABORT, 'o disco recusou a gravação do retrato'); END;`); err != nil {
+		t.Fatalf("armar o gatilho: %v", err)
+	}
+
+	done, total, err = s.restParty().RestForTheDay(ctx, who, campaignID, sid, "normal")
+
+	if err != nil {
+		t.Fatalf("uma ficha que falha não pode derrubar o descanso inteiro: %v", err)
+	}
+	if total != 1 {
+		t.Errorf("o total deixou de contar o grupo: %d", total)
+	}
+	if done != 0 {
+		t.Errorf("contou %d de %d como descansados com o espelho parado — o mestre lê "+
+			"que a mesa está em dia e escolhe alvo pelo PV de antes", done, total)
+	}
+}
