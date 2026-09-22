@@ -198,7 +198,12 @@ func (s Scene) handleTemplateTable(w http.ResponseWriter, r *http.Request) {
 	// O tabuleiro passa pelo MESMO gargalo por papel do resto da Mesa: quem
 	// pergunta quem o cone pega não pode descobrir por aí a peça que a cortina e
 	// o `Hidden` escondem dele.
-	b := board.BoardForRole(role, s.deps.Boards().Get(r.Context(), sessionID, boardID))
+	onBoard, err := s.deps.Boards().Get(r.Context(), sessionID, boardID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	b := board.BoardForRole(role, onBoard)
 	writeSignals(w, r, map[string]any{
 		"template_path": squaresPath(squares),
 		"template_text": takesTemplateWho(b, squares),
@@ -227,7 +232,12 @@ func (s Scene) whoMeasuresTheTable(w http.ResponseWriter, r *http.Request) (role
 		http.Error(w, err.Error(), status)
 		return "", 0, "", false
 	}
-	return role, sessionID, s.chosenTabOf(r.Context(), sessionID, userID), true
+	aba, err := s.chosenTabOf(r.Context(), sessionID, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return "", 0, "", false
+	}
+	return role, sessionID, aba, true
 }
 
 // writeSignals responde SÓ com sinais, e é o que separa medir de comandar.

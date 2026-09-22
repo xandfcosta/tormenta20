@@ -44,7 +44,7 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	ctx := context.Background()
 	before := poolsOf(t, f.s, id)
 
-	rec := f.pede(t, f.player, http.MethodPost,
+	rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/nivel/Arcanista/1", id), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("subir de nível deu %d: %s", rec.Code, rec.Body.String())
@@ -95,7 +95,7 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 func TestTheLevelStepDoesNotEraseALevelOneClass(t *testing.T) {
 	f, id := sheetOf(t, "Aprendiz", 1)
 
-	rec := f.pede(t, f.player, http.MethodPost,
+	rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/nivel/Arcanista/-1", id), "")
 
 	refusal := sceneRefusal(rec.Body.String())
@@ -125,7 +125,7 @@ func TestTheVitalClampsAtTheDeathThresholdAndAtTheMaximum(t *testing.T) {
 
 	// Dez golpes de −5: bem abaixo do limiar, e o passo para nele.
 	for i := 0; i < 10; i++ {
-		if rec := f.pede(t, f.player, http.MethodPost, url+"-5", ""); rec.Code != http.StatusOK {
+		if rec := f.requests(t, f.player, http.MethodPost, url+"-5", ""); rec.Code != http.StatusOK {
 			t.Fatalf("ferir deu %d", rec.Code)
 		}
 	}
@@ -136,7 +136,7 @@ func TestTheVitalClampsAtTheDeathThresholdAndAtTheMaximum(t *testing.T) {
 	// E curar além do máximo para NO máximo: passar dele seria PV temporário,
 	// que é outra regra e tem dono no motor.
 	for i := 0; i < 6; i++ {
-		f.pede(t, f.player, http.MethodPost, url+"5", "")
+		f.requests(t, f.player, http.MethodPost, url+"5", "")
 	}
 	if healed := poolsOf(t, f.s, id); healed.HpCurrent != healed.HpMax {
 		t.Errorf("o PV parou em %d com máximo %d", healed.HpCurrent, healed.HpMax)
@@ -148,14 +148,14 @@ func TestTheVitalClampsAtTheDeathThresholdAndAtTheMaximum(t *testing.T) {
 func TestSomeoneElsesSheetDoesNotOpen(t *testing.T) {
 	f, id := sheetOf(t, "Segredo", 3)
 
-	rec := f.pede(t, f.gm, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "")
+	rec := f.requests(t, f.gm, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "")
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("a ficha de outra pessoa abriu com %d", rec.Code)
 	}
 	// E o gesto também: barrar a leitura e deixar a escrita passar seria pior
 	// que não barrar nada.
-	write := f.pede(t, f.gm, http.MethodPost,
+	write := f.requests(t, f.gm, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/vitais/pv/-5", id), "")
 	if write.Code != http.StatusForbidden {
 		t.Errorf("alguém feriu o personagem de outra pessoa: %d", write.Code)
@@ -175,7 +175,7 @@ func TestSomeoneElsesSheetDoesNotOpen(t *testing.T) {
 func TestTheRefusalComesBackInTheSceneAndNotInAnErrorStatus(t *testing.T) {
 	f, id := sheetOf(t, "Herói", 3)
 
-	rec := f.pede(t, f.player, http.MethodPost,
+	rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-de-laser?tab=proficiencies", id), "")
 
 	if rec.Code != http.StatusOK {
@@ -213,7 +213,7 @@ func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 
 	// CHEIO, e este é o controle: sem ele, pintar crítico sempre passaria em
 	// tudo que vem depois.
-	screen := f.pede(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "").Body.String()
+	screen := f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "").Body.String()
 	if tom := hpTintOf(t, screen); tom != "full" {
 		t.Errorf("com o poço cheio a faixa saiu %q, e vida cheia é `full`", tom)
 	}
@@ -228,7 +228,7 @@ func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 		{"metade", 50, "hurt"},
 		{"um quarto", 25, "critical"},
 	} {
-		body := f.pede(t, f.player, http.MethodPost, url, "").Body.String()
+		body := f.requests(t, f.player, http.MethodPost, url, "").Body.String()
 		if tom := hpTintOf(t, body); tom != tc.tom {
 			t.Errorf("com %s do poço (%d%%) a faixa saiu %q, e o esperado é %q",
 				tc.fraction, tc.pct, tom, tc.tom)

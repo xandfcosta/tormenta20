@@ -513,13 +513,6 @@ type viewGm struct {
 	// cena aberta o avanço não existe, e um botão aceso que recusa é pior que um
 	// apagado que explica.
 	CanAdvance bool
-	// SaveFailing: a mesa está rodando de MEMÓRIA e o disco não recebeu a
-	// última escrita.
-	//
-	// Ele vive no bloco do MESTRE e não na `View` porque quem pode parar a sessão
-	// e chamar alguém é ele; para o jogador seria um alarme sobre o qual não há o
-	// que fazer.
-	SaveFailing bool
 }
 
 func ofViewGm(
@@ -527,16 +520,14 @@ func ofViewGm(
 	members []live.TableMember,
 	present []int64,
 	isGM bool,
-	saveFailing bool,
 ) viewGm {
 	return viewGm{
-		SaveFailing: saveFailing,
-		Counter:     live.TurnCounter(st.Scene, st.Round, st.TurnIndex, len(st.Initiative)),
-		Upkeep:      live.UpkeepLine(upkeepOf(st)),
-		Advance:     live.NextTurnButton(st.Initiative, st.TurnIndex),
-		SeesVitals:  live.GmSeesVitals(st.Initiative, isGM),
-		Connected:   live.ConnectedCharacters(members, present),
-		CanAdvance:  st.CountsRounds() && len(st.Initiative) > 0,
+		Counter:    live.TurnCounter(st.Scene, st.Round, st.TurnIndex, len(st.Initiative)),
+		Upkeep:     live.UpkeepLine(upkeepOf(st)),
+		Advance:    live.NextTurnButton(st.Initiative, st.TurnIndex),
+		SeesVitals: live.GmSeesVitals(st.Initiative, isGM),
+		Connected:  live.ConnectedCharacters(members, present),
+		CanAdvance: st.CountsRounds() && len(st.Initiative) > 0,
 	}
 }
 

@@ -16,7 +16,7 @@ func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.gm, "GET", f.tableUrl(), "").Body.String()
+	html := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 
 	for _, id := range append(tableRegionNames, "table-tracker-rail") {
 		mark := `id="` + id + `"`
@@ -35,7 +35,7 @@ func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.pede(t, f.player, "GET", f.tableUrl(), "").Body.String()
+	html := f.requests(t, f.player, "GET", f.tableUrl(), "").Body.String()
 
 	// O CONTROLE primeiro: sem ele, "não achei o trilho" seria verdade também
 	// numa página que voltou vazia, num 403, ou num id que alguém renomeou.

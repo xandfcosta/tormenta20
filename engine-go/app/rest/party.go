@@ -131,7 +131,25 @@ func (p Party) restOne(
 		log.Printf("sessão %d: o descanso do personagem %d falhou (%v)", sessionID, characterID, err)
 		return false
 	}
-	p.mirrorToTracker(ctx, sessionID, characterID, vitals)
+	// O ESPELHO QUE FALHA REPROVA A FICHA, como os dois passos acima (ALE-372).
+	//
+	// Aqui o erro ia para o chão — sem nem um `_ =` para um `grep` achar —, e o
+	// mestre ficava escolhendo alvo pelo PV de ANTES do descanso. A tentação é
+	// tratá-lo como menos grave que os outros dois, porque a ficha já foi
+	// gravada e a linha da fila é só o espelho dela. **É o contrário:** o que a
+	// mesa OLHA para decidir quem cura e quem apanha é a fila, então um espelho
+	// parado é a mentira chegando exatamente onde ela custa.
+	//
+	// E a contagem é o que torna isso honesto: "uma ficha só conta quando ela
+	// INTEIRA deu certo" é o contrato desta função, e devolver `true` com o
+	// espelho parado faria o ack dizer "5 de 5" sobre cinco linhas que a mesa vê
+	// desatualizadas. O mestre lê "3 de 5" e clica de novo — o gesto é
+	// idempotente, e a segunda passada espelha o que a primeira não conseguiu.
+	if err := p.mirrorToTracker(ctx, sessionID, characterID, vitals); err != nil {
+		log.Printf("sessão %d: o personagem %d descansou e a linha dele na fila não atualizou (%v)",
+			sessionID, characterID, err)
+		return false
+	}
 	return true
 }
 

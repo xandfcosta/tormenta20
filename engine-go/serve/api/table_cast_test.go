@@ -13,7 +13,7 @@ func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 	// Um personagem que existe, mas de OUTRO dono e fora do roster desta mesa.
 	outsider := seedCharacterAtLevel(t, f.s, f.player, "Forasteiro", "Guerreiro", 3, 0, 2)
 
-	body := f.posta(t, f.gm,
+	body := f.posts(t, f.gm,
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(outsider, 10)+"/na-fila", "{}")
 
 	if !strings.Contains(body, "não é jogador desta campanha") {
@@ -37,7 +37,7 @@ func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 	f := newSceneFixture(t)
 
-	f.posta(t, f.gm,
+	f.posts(t, f.gm,
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
 
 	queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative
@@ -57,8 +57,8 @@ func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 	f := newSceneFixture(t)
 	route := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 
-	f.posta(t, f.gm, route, "{}")
-	f.posta(t, f.gm, route, "{}")
+	f.posts(t, f.gm, route, "{}")
+	f.posts(t, f.gm, route, "{}")
 
 	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 1 {
 		t.Errorf("dois cliques deram %d linhas", n)
@@ -69,7 +69,7 @@ func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
 	f := newSceneFixture(t)
 
-	rec := f.pede(t, f.player, "POST",
+	rec := f.requests(t, f.player, "POST",
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
 
 	if rec.Code != 403 {
@@ -89,7 +89,7 @@ func TestTheCastSaysWhoIsAlreadyInTheTracker(t *testing.T) {
 	if before.InQueue {
 		t.Fatal("o personagem já nasceu marcado como na fila — o teste mediria nada")
 	}
-	f.posta(t, f.gm, route, "{}")
+	f.posts(t, f.gm, route, "{}")
 
 	if after := f.castMember(t, f.charID); !after.InQueue {
 		t.Error("pôs na fila e o elenco não soube: o botão continuaria oferecendo o gesto")
@@ -140,7 +140,7 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 	// sabotagem produziu.
 	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitais/"
 	for _, path := range []string{"hp/ferir/5", "mp/ferir/1"} {
-		rec := f.pede(t, f.gm, "POST", base+path, "")
+		rec := f.requests(t, f.gm, "POST", base+path, "")
 		if rec.Code != http.StatusOK {
 			t.Fatalf("%s deu %d: %s", path, rec.Code, rec.Body.String())
 		}
@@ -170,7 +170,7 @@ func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
 	outsider := seedCharacterAtLevel(t, f.s, f.player, "Forasteiro", "Guerreiro", 3, 0, 2)
 	before := poolsOf(t, f.s, outsider)
 
-	body := f.posta(t, f.gm,
+	body := f.posts(t, f.gm,
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(outsider, 10)+"/vitais/hp/ferir/5", "")
 
 	if !strings.Contains(body, "não é jogador desta campanha") {
@@ -190,7 +190,7 @@ func TestTheCastVitalsMirrorIntoTheTrackerWhenThereIsALine(t *testing.T) {
 	entryID := f.tracker(t)
 
 	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitais/"
-	if rec := f.pede(t, f.gm, "POST", base+"hp/ferir/5", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", base+"hp/ferir/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ferir pelo elenco deu %d", rec.Code)
 	}
 

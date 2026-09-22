@@ -13,12 +13,12 @@ func TestOnlyTheGmMarksAGroup(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	rec := f.pede(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`)
+	rec := f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`)
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador marcou um grupo e recebeu %d, esperado 403", rec.Code)
 	}
 	// O CONTROLE: o mestre PODE. Sem ele, um 403 para todo mundo passaria igual.
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`); rec.Code != http.StatusOK {
 		t.Errorf("o mestre não conseguiu marcar: %d", rec.Code)
 	}
@@ -43,7 +43,7 @@ func TestTheLassoMarksOnlyWhatIsInsideIt(t *testing.T) {
 	outsideY := f.seedToken(t, "Goblin abaixo", 3, 9)
 
 	// O laço vai de (2,2) a (5,5): pega o (3,3) e deixa os dois vizinhos fora.
-	response := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/marcar-area",
+	response := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/marcar-area",
 		`{"from":{"X":2,"Y":2},"to":{"X":5,"Y":5}}`)
 
 	if !strings.Contains(response, inside) {
@@ -89,7 +89,7 @@ func TestTheLassoReadsTheCornersInAnyOrder(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	inside := f.seedToken(t, "Goblin de dentro", 3, 3)
 
-	inverted := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/marcar-area",
+	inverted := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/marcar-area",
 		`{"from":{"X":5,"Y":5},"to":{"X":2,"Y":2}}`)
 	if !strings.Contains(inverted, inside) {
 		t.Errorf("o laço arrastado de (5,5) para (2,2) não pegou a peça em (3,3):\n%s", inverted)
@@ -103,7 +103,7 @@ func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	response := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/marcar-area", "{}")
+	response := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/marcar-area", "{}")
 	if !strings.Contains(response, "marked_tokens") {
 		t.Fatalf("a marcação não voltou: %s", response)
 	}
@@ -118,7 +118,7 @@ func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/grupo/mover", `{"delta":{"X":1,"Y":1},"marked_tokens":""}`)
+	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/grupo/mover", `{"delta":{"X":1,"Y":1},"marked_tokens":""}`)
 	if !strings.Contains(body, "não há peça marcada") {
 		t.Errorf("mover um grupo vazio não foi recusado com frase: %q", body[max(0, len(body)-200):])
 	}
@@ -132,17 +132,17 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	sheet, _ := sceneIds(t, f)
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(b.Tokens) == 0 {
 		t.Fatal("a peça não entrou no mapa — o guarda mediria o vazio")
 	}
 	before := b.Tokens[0]
-	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/grupo/mover",
+	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/grupo/mover",
 		`{"delta":{"X":3,"Y":-2},"marked_tokens":"`+before.ID+`"}`)
 
-	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b = boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if b.Tokens[0].X != before.X+3 || b.Tokens[0].Y != before.Y-2 {
 		t.Errorf("a peça de %s foi para (%d,%d), esperado (%d,%d)",
 			sheet, b.Tokens[0].X, b.Tokens[0].Y, before.X+3, before.Y-2)
@@ -168,8 +168,8 @@ func TestTheRestingLayerServesBothGestures(t *testing.T) {
 	// vazio a classe não aparece — o guarda acusaria a ausência dela sobre uma
 	// cena que só não tem peça nenhuma.
 	sheet, _ := sceneIds(t, f)
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O valor é CONSTANTE no `.templ`, então ele sai LITERAL no HTML — só o
 	// dinâmico é escapado. Procurar a forma escapada acha zero e acusa

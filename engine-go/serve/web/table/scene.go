@@ -72,9 +72,6 @@ func paintTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
-		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
-	}
 	species := board.KnownTerrainKind(requested.Kind)
 	on := !requested.Erase
 	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.BoardID, trait, species, on)
@@ -91,9 +88,6 @@ func clearTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
-		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
-	}
 	return st.deps.Boards().ClearStroke(c.R.Context(), c.SessionID, c.BoardID, trait)
 }
 
@@ -107,9 +101,6 @@ func fillRect(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
-		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
-	}
 	species := board.KnownTerrainKind(requested.Kind)
 	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.BoardID, squares, species, true)
 }
@@ -118,9 +109,6 @@ func clearRect(st Scene, c commandCtx) (*board.BoardState, error) {
 	_, squares, err := rectFromBody(c.R)
 	if err != nil {
 		return nil, err
-	}
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
-		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
 	}
 	return st.deps.Boards().ClearStroke(c.R.Context(), c.SessionID, c.BoardID, squares)
 }
@@ -255,14 +243,18 @@ func removeOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 	//
 	// A recusa é do SERVIDOR e não da tela: a lista já não oferece a lixeira ao
 	// que está aberto, mas quem postar na mão passaria por cima.
-	if name, aba := st.placeTab(c.R.Context(), c.CampaignID, c.SessionID, id); aba != "" {
+	name, aba, err := st.placeTab(c.R.Context(), c.CampaignID, c.SessionID, id)
+	if err != nil {
+		return nil, err
+	}
+	if aba != "" {
 		return nil, fmt.Errorf(
 			"%q está aberta numa aba: encerre a cena antes de apagá-la do acervo", name)
 	}
 	if err := st.deps.Boards().RemovePlace(c.R.Context(), c.CampaignID, id); err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID), nil
+	return st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
 }
 
 // placeTab diz em qual aba um lugar guardado está aberto, e como ele se
@@ -278,19 +270,23 @@ func removeOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 // A consequência, dita para ninguém a redescobrir: uma cena ABERTA do zero com o
 // nome de um lugar guardado é tratada como aquele lugar. É a mesma conta que o
 // arquivamento fará quando ela fechar.
-func (s Scene) placeTab(ctx context.Context, campaignID, sessionID, placeID int64) (name, boardID string) {
+func (s Scene) placeTab(ctx context.Context, campaignID, sessionID, placeID int64) (name, boardID string, err error) {
 	for _, place := range s.deps.Boards().Places(ctx, campaignID) {
 		if place.ID != placeID {
 			continue
 		}
-		for _, open := range s.deps.Boards().OpenBoards(ctx, sessionID) {
-			if open.Place == place.Name {
-				return place.Name, open.ID
+		open, err := s.deps.Boards().OpenBoards(ctx, sessionID)
+		if err != nil {
+			return "", "", err
+		}
+		for _, openBoard := range open {
+			if openBoard.Place == place.Name {
+				return place.Name, openBoard.ID, nil
 			}
 		}
-		return place.Name, ""
+		return place.Name, "", nil
 	}
-	return "", ""
+	return "", "", nil
 }
 
 // lugarDaURL lê o id do CAMINHO, como o quadrado do movimento: o valor é do
@@ -338,19 +334,31 @@ func openBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 // mesa, e recusar isso porque o acervo falhou deixaria a mesa presa numa cena
 // que já acabou.
 func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
-	if current := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID); current != nil {
+	current, err := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	if err != nil {
+		return nil, err
+	}
+	if current != nil {
 		if err := st.deps.Boards().Archive(c.R.Context(), c.CampaignID, current); err != nil {
 			log.Printf("session %d: falha ao arquivar o lugar (%v)", c.SessionID, err)
 		}
 	}
-	st.deps.Boards().Close(c.R.Context(), c.SessionID, c.BoardID)
+	// O FECHAR QUE FALHA RECUSA (ALE-375): o DELETE mora dentro do gesto, e uma
+	// aba que sumisse da tela com a linha viva no banco voltaria no próximo boot.
+	if err := st.deps.Boards().Close(c.R.Context(), c.SessionID, c.BoardID); err != nil {
+		return nil, err
+	}
 	// AS ESCOLHAS DE ABA morrem com a ÚLTIMA cena, e não com esta.
 	//
 	// Fechar uma aba com outras abertas não é o fim do tabuleiro: quem estava
 	// olhando a que morreu cai na padrão sozinho, porque o `chosenTabOf` confere a
 	// escolha contra o que existe. Apagar tudo aqui arrastaria de volta para a
 	// padrão gente que estava numa aba que continua aberta.
-	if len(st.deps.Boards().OpenBoards(c.R.Context(), c.SessionID)) == 0 {
+	left, err := st.deps.Boards().OpenBoards(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
+	if len(left) == 0 {
 		// A LENTE morre com a cena: "você está vendo como a mesa" sobre uma tela
 		// sem tabuleiro faria o mestre concluir que o mapa sumiu PARA OS
 		// JOGADORES — a resposta errada exatamente à pergunta que a lente existe

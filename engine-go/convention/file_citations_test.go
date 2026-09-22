@@ -25,6 +25,15 @@ import (
 var arquivosAusentesDePROPOSITO = map[string]bool{
 	".env.production": true,
 
+	// OS QUATRO GUARDAS DE IDIOMA, apagados por decisão do dono: eles
+	// perguntavam "esta palavra está na minha lista?", e uma lista de proibidos
+	// subconta em silêncio. Ver a seção "Isto NÃO tem guarda" do CLAUDE.md da
+	// raiz — a regra de idioma continua valendo, e quem a cobra é o olho.
+	"test_names_test.go":          true,
+	"identifier_language_test.go": true,
+	"local_name_language_test.go": true,
+	"file_name_test.go":           true,
+
 	// APAGADO VAZIO na ALE-278. Quando o `book` levou as 330 linhas deste
 	// arquivo (`4260797d`), sobrou nele `package api` e um `import ()` — e ele
 	// atravessou três fatias assim, porque um arquivo vazio não quebra nada e

@@ -39,14 +39,14 @@ func downFixture(t *testing.T) sceneFixture {
 // morto e o que está a -3 são a mesma barra vazia (p236, ALE-366).
 func TestTheSheetAndTheTableSayWhoIsDown(t *testing.T) {
 	f := downFixture(t)
-	sheetPage := f.pede(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d", f.charID), "").Body.String()
+	sheetPage := f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d", f.charID), "").Body.String()
 	if !strings.Contains(sheetPage, "morrendo") {
 		t.Error("a ficha a -3 PV e sangrando não diz \"morrendo\"")
 	}
 	if !strings.Contains(sheetPage, "−3/") {
 		t.Error("o PV negativo da ficha não sai com o sinal de menos tipográfico, igual ao dos botões")
 	}
-	table := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	table := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(table, "morrendo") {
 		t.Error("a fila da Mesa não diz \"morrendo\" ao lado do PV de quem sangra")
 	}
@@ -63,7 +63,7 @@ func TestOnlyTheOwnerOrTheGMAnswersTheBleedingCheck(t *testing.T) {
 	otherChar := seedCharacterAtLevel(t, f.s, other, "Outro", "Guerreiro", 1, 10, 4)
 	seedMember(t, f.s, f.campaignID, otherChar)
 	send := func(user int64, die string, value int) string {
-		return f.posta(t, user, f.tableUrl()+"/sangramento/"+die, fmt.Sprintf(`{"bleeding_roll": %d}`, value))
+		return f.posts(t, user, f.tableUrl()+"/sangramento/"+die, fmt.Sprintf(`{"bleeding_roll": %d}`, value))
 	}
 
 	refused := send(other, "d20", 20)

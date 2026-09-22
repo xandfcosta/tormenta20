@@ -19,16 +19,15 @@ func TestTheCurtainComesBackFromTheDatabase(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	abre(t, s, sid, "Taverna do Javali", "tavern")
+	opensBoard(t, s, sid, "Taverna do Javali", "tavern")
 	if _, _, err := s.boards.SetCurtain(ctx, sid, defaultTab, true); err != nil {
 		t.Fatalf("fechar a cortina: %v", err)
 	}
-	s.boards.Persist(ctx, sid, defaultTab)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	cold := boards.NewStore(s.queries, live.NewUUID, &events.Bus{})
+	cold := boards.NewStore(boards.NewSnapshots(s.queries), s.queries, live.NewUUID, &events.Bus{})
 
-	if returned := cold.Get(ctx, sid, defaultTab); returned == nil || !returned.Curtained {
+	if returned := boardRead(cold.Get(ctx, sid, defaultTab)); returned == nil || !returned.Curtained {
 		t.Fatalf("a cortina não voltou do banco e a mesa veria a cena: %+v", returned)
 	}
 }
@@ -48,7 +47,7 @@ func TestClosingTheCurtainAdvancesTheBoardVersion(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	before := abre(t, s, sid, "Taverna do Javali", "tavern").Version
+	before := opensBoard(t, s, sid, "Taverna do Javali", "tavern").Version
 
 	closed, changed, err := s.boards.SetCurtain(ctx, sid, defaultTab, true)
 	if err != nil {

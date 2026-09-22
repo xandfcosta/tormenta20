@@ -67,9 +67,10 @@ func (h tableHost) PublishSessionState(sessionID int64, state *live.SessionRunti
 	h.rules.publishSessionState(sessionID, state)
 }
 
-func (h tableHost) PublishBoardState(sessionID int64, board *board.BoardState) {
-	h.rules.saveBoard(sessionID, board)
-	h.rules.publishBoardState(sessionID, board)
+// PublishBoardState só EMITE, como a irmã dela: o tabuleiro que chega aqui já
+// está gravado, porque a gravação virou parte da mutação (ALE-375).
+func (h tableHost) PublishBoardState(ctx context.Context, sessionID int64, board *board.BoardState) {
+	h.rules.publishBoardState(ctx, sessionID, board)
 }
 
 func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {

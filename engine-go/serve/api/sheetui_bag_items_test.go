@@ -131,7 +131,7 @@ func TestACustomItemRequiresANameAndHalfStepSlots(t *testing.T) {
 func customItem(t *testing.T, f sceneFixture, id int64, body string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/itens/custom?tab=bag", id)
-	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String())
+	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 // EDITAR muda os três campos, e REMOVER tira da ficha.
@@ -141,7 +141,7 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 
 	target := fmt.Sprintf("/personagens/%d/itens/%d/edita?tab=bag", id, item)
 	body := `{"item_name":"Lembrança da Ana","item_qty":3,"item_slots":0.5}`
-	if refusal := sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String()); refusal != "" {
+	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String()); refusal != "" {
 		t.Fatalf("editar foi recusado: %q", refusal)
 	}
 	edited := sheetNameItem(t, f, id, "Lembrança da Ana")
@@ -213,7 +213,7 @@ func TestWhatIsNotConsumableCannotBeUsed(t *testing.T) {
 func use(t *testing.T, f sceneFixture, id, item int64, body string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/itens/%d/usa?tab=bag", id, item)
-	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String())
+	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 // A MELHORIA QUE NÃO CABE É RECUSADA PELO SERVIDOR.
@@ -281,7 +281,7 @@ func TestAnInventedImprovementDoesNotEnter(t *testing.T) {
 func improvements(t *testing.T, f sceneFixture, id, item int64, body string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/itens/%d/melhorias?tab=bag", id, item)
-	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String())
+	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 func itemImprovements(t *testing.T, f sceneFixture, item int64) string {

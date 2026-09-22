@@ -25,7 +25,7 @@ import (
 func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: as expressões da régua ESTÃO na página. Sem ele, não achar
 	// `$ruler_points[` seria verdade também sobre uma cena que não desenhou régua
@@ -66,7 +66,7 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	for _, chunk := range []string{
 		"data-on:dblclick",
@@ -95,7 +95,7 @@ func TestAForgedRulerIsRefused(t *testing.T) {
 	for i := range stopCeiling + 2 {
 		points = append(points, "["+string(rune('0'+i%10))+",0]")
 	}
-	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/regua",
+	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/regua",
 		`{"ruler_points":[`+strings.Join(points, ",")+`],"ruler_phase":2}`)
 	if !strings.Contains(body, "teto") {
 		t.Errorf("uma régua com %d paradas não foi recusada: %q", len(points), body)
@@ -122,7 +122,7 @@ func TestTheSphereIsBornAtTheIntersection(t *testing.T) {
 	// servidor montado prova.
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(screen, "Math.round((evt.offsetX") {
 		t.Error("a tela não arredonda o clique para o canto: com `floor` a esfera cai " +
 			"meio quadrado longe do dedo, e o defeito é silencioso")

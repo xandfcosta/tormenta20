@@ -48,7 +48,7 @@ func dbNpc(t *testing.T, f sceneFixture, name string) creature.Block {
 func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	f := newSceneFixture(t)
 
-	response := f.posta(t, f.gm,
+	response := f.posts(t, f.gm,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/nova",
 		bodyDraft(`"id":0,"nome":"Ogro Capitão","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
@@ -91,7 +91,7 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 func TestRemovingARowRemovesThatRow(t *testing.T) {
 	f := newSceneFixture(t)
 	three := `"attacks":[{"name":"Clava"},{"name":"Mordida"},{"name":"Cauda"}],"skills":[],"specialAbilities":[]`
-	response := f.posta(t, f.gm,
+	response := f.posts(t, f.gm,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/1/remover",
 		bodyDraft(`"id":0,"nome":"Hidra","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+three+`}`))
 
@@ -110,7 +110,7 @@ func TestRemovingARowRemovesThatRow(t *testing.T) {
 // número diz o que aconteceu.
 func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
 	f := newSceneFixture(t)
-	response := f.posta(t, f.gm,
+	response := f.posts(t, f.gm,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/7/remover",
 		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
 	if !strings.Contains(response, "draft_error") {
@@ -129,14 +129,14 @@ func TestTheAbsenceOfManaSurvivesTheForm(t *testing.T) {
 	base := f.tableUrl() + "/elenco/npc/rascunho/salvar"
 
 	// Sem conjurar: o número no formulário é ignorado e o bloco fica SEM a linha.
-	f.posta(t, f.gm, base,
+	f.posts(t, f.gm, base,
 		bodyDraft(`"id":0,"nome":"Bandido","conjura":false,"bloco":{`+blocoMinimo+`,"pm":7}`))
 	if pm := dbNpc(t, f, "Bandido").PM; pm != nil {
 		t.Errorf("o Bandido guardou %d PM sem conjurar — a ausência virou número", *pm)
 	}
 
 	// Conjurando: o número atravessa.
-	f.posta(t, f.gm, base,
+	f.posts(t, f.gm, base,
 		bodyDraft(`"id":0,"nome":"Centauro Xamã","conjura":true,"bloco":{`+blocoMinimo+`,"pm":20}`))
 	pm := dbNpc(t, f, "Centauro Xamã").PM
 	if pm == nil || *pm != 20 {
@@ -154,11 +154,11 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 	f := newSceneFixture(t)
 	withEmptyOptionals := `"attacks":[{"name":"Clava","attackBonus":7,"damage":"1d6+3"}],` +
 		`"skills":[{"name":"Furtividade","bonus":5}],"specialAbilities":[]`
-	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+	f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
 		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+withEmptyOptionals+`}`))
 
 	id := npcId(t, f, "Ogro")
-	open := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/"+id+"/editar", "{}")
+	open := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/"+id+"/editar", "{}")
 	for _, field := range []string{`"special"`, `"nota"`, `"pm"`} {
 		if !strings.Contains(open, field) {
 			t.Errorf("o campo %s não veio no rascunho — a caixa dele nasceria escrita \"undefined\":\n%s", field, open)
@@ -174,7 +174,7 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 // escrita "Nome" manda o mestre procurar um campo que não existe.
 func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 	f := newSceneFixture(t)
-	response := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+	response := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
 		bodyDraft(`"id":0,"nome":"","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
 	if !strings.Contains(response, "draft_error") || !strings.Contains(response, "precisa de um nome") {
@@ -203,7 +203,7 @@ func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
 		t.Fatalf("semear o NPC vizinho: %v", err)
 	}
 
-	response := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+	response := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
 		bodyDraft(`"id":`+strconv.FormatInt(row.ID, 10)+`,"nome":"Sequestrado","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
 	if !strings.Contains(response, "não é desta campanha") {
@@ -226,7 +226,7 @@ func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 		"/elenco/npc/rascunho/ataque/nova",
 		"/elenco/npc/rascunho/salvar",
 	} {
-		rec := f.pede(t, f.player, http.MethodPost, f.tableUrl()+path,
+		rec := f.requests(t, f.player, http.MethodPost, f.tableUrl()+path,
 			bodyDraft(`"id":0,"nome":"Intruso","conjura":false,"bloco":{`+blocoMinimo+`}`))
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador alcançou %s: %d", path, rec.Code)
@@ -239,11 +239,11 @@ func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 // dois abrem devolvendo a MESMA forma de rascunho — o que muda é a semente.
 func TestCreatingFromScratchAndEditingAreTheSameForm(t *testing.T) {
 	f := newSceneFixture(t)
-	f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+	f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
 		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
-	doZero := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/novo", "{}")
-	fromCopy := f.posta(t, f.gm, f.tableUrl()+"/elenco/npc/"+npcId(t, f, "Ogro")+"/editar", "{}")
+	doZero := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/novo", "{}")
+	fromCopy := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/"+npcId(t, f, "Ogro")+"/editar", "{}")
 
 	for _, field := range []string{`"nd"`, `"tipo"`, `"size"`, `"attacks"`, `"skills"`, `"specialAbilities"`, `"conjura"`} {
 		if !strings.Contains(doZero, field) {

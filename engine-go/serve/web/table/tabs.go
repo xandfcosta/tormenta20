@@ -177,9 +177,9 @@ func (a *chosenTabs) Erase(sessionID int64) {
 // deliberado: vazio é a palavra do store para "a primeira aberta", e reescrevê-la
 // aqui como um id concreto faria a resposta envelhecer no instante em que a
 // primeira aba trocasse.
-func (s Scene) chosenTabOf(ctx context.Context, sessionID, userID int64) string {
-	aba, _, _ := s.pullTab(ctx, sessionID, userID)
-	return aba
+func (s Scene) chosenTabOf(ctx context.Context, sessionID, userID int64) (string, error) {
+	aba, _, _, err := s.pullTab(ctx, sessionID, userID)
+	return aba, err
 }
 
 // pullTab é a resolução INTEIRA: a aba que vale, se ela veio de um puxão
@@ -193,8 +193,11 @@ func (s Scene) chosenTabOf(ctx context.Context, sessionID, userID int64) string 
 // O puxão para uma cena JÁ ENCERRADA cai na escolha de quem olha, e não numa
 // tela morta: o mestre mostra a cripta, encerra a cripta, e quem foi trazido
 // volta para onde estava em vez de ficar olhando um tabuleiro que não existe.
-func (s Scene) pullTab(ctx context.Context, sessionID, userID int64) (aba string, pulled bool, pulledFrom string) {
-	open := s.deps.Boards().OpenBoards(ctx, sessionID)
+func (s Scene) pullTab(ctx context.Context, sessionID, userID int64) (aba string, pulled bool, pulledFrom string, err error) {
+	open, err := s.deps.Boards().OpenBoards(ctx, sessionID)
+	if err != nil {
+		return "", false, "", err
+	}
 	isOpen := func(id string) bool {
 		if id == "" {
 			return false
@@ -218,7 +221,7 @@ func (s Scene) pullTab(ctx context.Context, sessionID, userID int64) (aba string
 		// coisa à outra.
 		target = ""
 	}
-	return target, pulled, pulledFrom
+	return target, pulled, pulledFrom, nil
 }
 
 func (s Scene) TabRoutes(r chi.Router) {
@@ -247,7 +250,11 @@ func showTableIsTab(st Scene, c commandCtx) (*board.BoardState, error) {
 	// Puxar para uma aba que não existe deixaria a mesa inteira caindo no padrão
 	// sem nada dizendo por quê. O id vem do caminho, então isto é a conferência
 	// de sempre: o que o cliente manda não é a verdade.
-	for _, open := range st.deps.Boards().OpenBoards(c.R.Context(), c.SessionID) {
+	open, err := st.deps.Boards().OpenBoards(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
+	for _, open := range open {
 		if open.ID == target {
 			st.chosenTabs.Pull(c.SessionID, c.User, target)
 			return nil, nil

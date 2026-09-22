@@ -29,19 +29,20 @@ import (
 // contexto é legítima — é onde o processo nasce — e o `infra/` é chamado, nunca
 // chamador.
 //
-// # A linha de base só ENCOLHE
+// # A linha de base está VAZIA
 //
-// As duas entradas são a gravação do TABULEIRO, que ainda sai depois em
-// goroutine; elas saem com a ALE-375, que repete no tabuleiro o desenho que a
-// ALE-373 deu à fila. Entrada nova REPROVA, e entrada baselinada que sumiu
-// reprova também — senão o arquivo vira mentira sozinho.
+// Ela nasceu com duas entradas — a gravação do TABULEIRO, que saía depois em
+// goroutine — e a ALE-375 as quitou repetindo no tabuleiro o desenho que a
+// ALE-373 deu à fila. O guarda cobrou a quitação: quando os dois sítios sumiram,
+// ele reprovou pelas ENTRADAS ÓRFÃS, que é a metade que impede o arquivo de
+// virar mentira sozinho.
+//
+// Com a lista vazia ele não tem dívida a administrar: falha no PRIMEIRO que
+// voltar, com o nome do sítio.
 func TestNoGestureInventsItsOwnContext(t *testing.T) {
-	// A dívida de HOJE, uma linha por sítio. Não acrescente: o conserto é
-	// receber o contexto por parâmetro.
-	baseline := map[string]bool{
-		"serve/api/table_live_publish.go:DefaultBoardID": true,
-		"serve/api/table_live_publish.go:Persist":        true,
-	}
+	// VAZIA, e é para continuar. Não acrescente: o conserto é receber o
+	// contexto por parâmetro, e não registrar mais uma dívida.
+	baseline := map[string]bool{}
 
 	// `TODO` entra junto com `Background`: os dois nascem sem valor nenhum, e
 	// varrer só o nomeado deixaria a porta aberta pelo irmão.

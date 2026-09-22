@@ -35,9 +35,9 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, npc := sceneIds(t, f)
 
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 1", len(b.Tokens))
 	}
@@ -60,9 +60,9 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 
-	body := f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":""}`)
+	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":""}`)
 
-	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
+	if b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); len(b.Tokens) != 0 {
 		t.Fatalf("escolha vazia trouxe %d peças — nil virou TODAS", len(b.Tokens))
 	}
 	// E a recusa FALA: um comando que não faz nada e não diz nada é lido como
@@ -82,9 +82,9 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, _ := sceneIds(t, f)
 
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 1", len(b.Tokens))
 	}
@@ -106,12 +106,12 @@ func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forGM, `id="populate"`) {
 		t.Fatal("o diálogo não está na página do MESTRE — o controle falhou, e sem ele o resto não mede nada")
 	}
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(forPlayer, `id="populate"`) {
 		t.Error("o diálogo do mestre foi para o HTML do jogador, com a fila inteira dentro")
 	}
@@ -128,13 +128,13 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, _ := sceneIds(t, f)
 
-	rec := f.pede(t, f.player, http.MethodPost,
+	rec := f.requests(t, f.player, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça no mapa: %d", rec.Code)
 	}
-	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
+	if b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); len(b.Tokens) != 0 {
 		t.Errorf("o mapa mudou apesar do 403 (%d peças)", len(b.Tokens))
 	}
 }
@@ -148,9 +148,9 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, npc := sceneIds(t, f)
 
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	candidates := table.MapCandidates(b, stateOf(t, f.s.tableHost().Sessions(), f.sessionID))
 	if len(candidates) != 2 {
 		t.Fatalf("a fila tem 2 combatentes e o diálogo ofereceu %d", len(candidates))
@@ -186,9 +186,9 @@ func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	sheet, _ := sceneIds(t, f)
 
-	f.posta(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	for _, species := range board.TerrainKinds {
 		if squares := board.SquaresOf(b, species.ID); len(squares) != 0 {
 			t.Errorf("pôr no mapa pintou %s em %v", species.ID, squares)

@@ -88,13 +88,10 @@ func main() {
 	if err := serve(ctx, cfg, mux); err != nil {
 		log.Fatalf("listen: %v", err)
 	}
-	// O `Shutdown` do `net/http` espera as REQUISIÇÕES, e a gravação do
-	// tabuleiro não é uma: ela roda em goroutine depois da resposta. Sem esta
-	// linha, o último tabuleiro da noite é cortado pelo `defer database.Close()`.
-	//
-	// Aqui e não dentro do `serve` porque o `defer` do banco é de MAIN, e
-	// esperar tem de acontecer antes dele.
-	srv.WaitForBackground()
+	// Aqui morava um `srv.WaitForBackground()`, que esperava a gravação do
+	// tabuleiro em goroutine antes do `defer database.Close()`. Ela deixou de
+	// rodar em goroutine na ALE-375 — hoje o `Shutdown` do `net/http`, que espera
+	// as REQUISIÇÕES, já espera tudo que escreve.
 }
 
 // httpServerFor monta o servidor com os timeouts da casa. Separado da `serve`

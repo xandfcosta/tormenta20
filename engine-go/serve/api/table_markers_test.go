@@ -10,7 +10,7 @@ import (
 
 func mapMarkers(t *testing.T, f sceneFixture) []board.BoardMarker {
 	t.Helper()
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if b == nil {
 		t.Fatal("não há tabuleiro — o gesto não tinha onde acontecer")
 	}
@@ -27,10 +27,10 @@ func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":2,"Y":3}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":2,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":4,"Y":5}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":4,"Y":5}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar o segundo deu %d", rec.Code)
 	}
 
@@ -59,18 +59,18 @@ func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	id := mapMarkers(t, f)[0].ID
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/"+id+"/revelar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/"+id+"/revelar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("revelar deu %d", rec.Code)
 	}
 	if mapMarkers(t, f)[0].Hidden {
 		t.Fatal("revelar não revelou — e sem isto o resto não mede nada")
 	}
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/"+id+"/revelar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/"+id+"/revelar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("esconder de volta deu %d", rec.Code)
 	}
 	if !mapMarkers(t, f)[0].Hidden {
@@ -86,13 +86,13 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	id := mapMarkers(t, f)[0].ID
 	colorBefore := mapMarkers(t, f)[0].Color
 
-	body := f.posta(t, f.gm, base+"/"+id+"/cor/gold", "")
+	body := f.posts(t, f.gm, base+"/"+id+"/cor/gold", "")
 
 	// A FRASE INTEIRA e não as palavras soltas, provado por sabotagem: procurar
 	// "gold" e "Carmim" no corpo passa VERDE com a recusa apagada, porque as duas
@@ -115,7 +115,7 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 
 	// O CONTROLE: uma cor BOA passa. Sem ele, "a cor não mudou" seria verdade
 	// também num gesto que nunca funciona.
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/"+id+"/cor/carmim", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/"+id+"/cor/carmim", ""); rec.Code != http.StatusOK {
 		t.Fatalf("pintar de carmim deu %d", rec.Code)
 	}
 	if got := mapMarkers(t, f)[0].Color; got != "carmim" {
@@ -131,13 +131,13 @@ func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	id := mapMarkers(t, f)[0].ID
 
 	for _, gesture := range []string{"novo", id + "/revelar", id + "/cor/azul", id + "/remover"} {
-		rec := f.pede(t, f.player, http.MethodPost, base+"/"+gesture, "")
+		rec := f.requests(t, f.player, http.MethodPost, base+"/"+gesture, "")
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador passou em %q: %d", gesture, rec.Code)
 		}
@@ -156,11 +156,11 @@ func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) 
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forGM, "escondido da mesa") {
 		t.Fatal("a tela do mestre não diz que o marcador está escondido — ele revela e nada muda para ele")
 	}
@@ -170,16 +170,16 @@ func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) 
 		t.Fatal("o marcador não apareceu nem para o mestre — o guarda está medindo a tela errada")
 	}
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(forPlayer, "Marcador A") {
 		t.Error("o marcador ESCONDIDO chegou ao HTML do jogador")
 	}
 
 	id := mapMarkers(t, f)[0].ID
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/"+id+"/revelar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/"+id+"/revelar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("revelar deu %d", rec.Code)
 	}
-	revealed := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	revealed := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(revealed, "Marcador A") {
 		t.Error("revelado, o marcador continua sem chegar à mesa")
 	}
@@ -193,12 +193,12 @@ func TestDeleteRemovesTheMarkerAndAnInventedIdIsRefused(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	id := mapMarkers(t, f)[0].ID
 
-	body := f.posta(t, f.gm, base+"/nao-existe/remover", "")
+	body := f.posts(t, f.gm, base+"/nao-existe/remover", "")
 	if !strings.Contains(body, "nao-existe") {
 		t.Errorf("a recusa não nomeou o id inventado; resposta: %.200s", body)
 	}
@@ -206,7 +206,7 @@ func TestDeleteRemovesTheMarkerAndAnInventedIdIsRefused(t *testing.T) {
 		t.Fatal("o id inventado mexeu no mapa")
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost, base+"/"+id+"/remover", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, base+"/"+id+"/remover", ""); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 	if n := len(mapMarkers(t, f)); n != 0 {

@@ -16,7 +16,7 @@ import (
 // conhece cena nenhuma.
 func TestEveryStaticAddressOnThePageIsVersioned(t *testing.T) {
 	f := newSceneFixture(t)
-	screen := f.pede(t, f.gm, http.MethodGet, "/", "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, "/", "").Body.String()
 
 	// O CONTROLE: a página REFERENCIA estáticos. Sem ele, "nenhum endereço cru"
 	// seria verdade também sobre uma página que não carregou.

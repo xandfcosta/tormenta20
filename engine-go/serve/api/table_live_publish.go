@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"log"
+
 	"t20engine/domain/board"
 	"t20engine/domain/live"
 )
@@ -18,32 +20,18 @@ import (
 // por quem passar aqui.
 const defaultTab = ""
 
-// saveBoard GRAVA o tabuleiro no disco, e não faz mais nada.
+// Aqui moravam o `saveBoard` — a gravação do tabuleiro numa goroutine — e o
+// `persistBoardAndWarn`, que acendia a tarja quando ela falhava.
 //
-// Separada do `publishBoardState` e não uma linha dentro dele: o `SSEHub` não
-// tem ouvinte em produção, então a leitura natural de "publicar para ninguém" é
-// apagar a função — e ela levaria a gravação junto. **A mesa passaria a viver
-// só em memória.** Duas funções com nomes que dizem o que fazem custam uma
-// linha no chamador e tiram essa possibilidade do mapa.
+// Eles eram o ÚLTIMO trabalho em segundo plano do app. O argumento era o tempo:
+// "o mestre não espera o disco no meio do turno", e num prato girante o toque
+// chegava a centenas de milissegundos. O que derrubou o argumento foi a medição
+// da ALE-273: com `synchronous=NORMAL` o toque é de 1,7ms, e não há o que
+// economizar adiando. O que se pagava por esses milissegundos era uma mesa que
+// podia estar rodando de memória sem ninguém saber (ALE-375).
 //
-// Em GOROUTINE porque o mestre não espera o disco no meio do turno: num prato
-// girante o toque chega a centenas de milissegundos.
-//
-// Ela CONTA no `inBackground`, e passou a contar na ALE-371: quem contava era a
-// gravação da fila, que virou parte da mutação e não roda mais em goroutine
-// nenhuma. Sem isto o contador ficaria sem ninguém a contar, e o tabuleiro —
-// agora o único trabalho disparado depois da resposta — escreveria num banco
-// que o desligamento já fechou.
-func (tr tableRules) saveBoard(sessionID int64, board *board.BoardState) {
-	if board == nil {
-		return
-	}
-	tr.inBackground.Add(1)
-	go func() {
-		defer tr.inBackground.Done()
-		tr.persistBoardAndWarn(sessionID, board.ID)
-	}()
-}
+// Hoje quem grava é a MUTAÇÃO, dentro do gesto (`boards.Store.applyLocked`), e
+// a publicação só publica.
 
 // publishBoardState transmite às duas salas por papel. Ela NÃO grava — ver o
 // `saveBoard`.
@@ -58,12 +46,23 @@ func (tr tableRules) saveBoard(sessionID int64, board *board.BoardState) {
 // trocaria a cena na tela dele sem gesto nenhum e sem volta — a taverna viraria
 // a cripta porque o mestre pintou uma casa numa aba que ele nem sabe que existe.
 //
-// A GRAVAÇÃO acontece SEMPRE e a publicação não: quem não vê a aba não precisa
-// do quadro, mas o disco precisa de todas. Por isso o `return` abaixo é do
-// publicador e nunca do gravador — trocar as duas de lugar perderia em silêncio
-// a cena de quem não está na aba padrão.
-func (tr tableRules) publishBoardState(sessionID int64, state *board.BoardState) {
-	if state != nil && state.ID != tr.boards.DefaultBoardID(context.Background(), sessionID) {
+// > Aqui morava um parágrafo sobre a GRAVAÇÃO acontecer sempre e a publicação
+// > não, avisando que trocar as duas de lugar perderia em silêncio a cena de
+// > quem não está na aba padrão. Ele deixou de valer: esta função não grava
+// > mais nada (ALE-375), e o `return` abaixo é só do publicador porque não há
+// > outro passo do qual separá-lo.
+func (tr tableRules) publishBoardState(ctx context.Context, sessionID int64, state *board.BoardState) {
+	defaultID, err := tr.boards.DefaultBoardID(ctx, sessionID)
+	if err != nil {
+		// A publicação é AVISO e não gesto: quem mutou já recebeu o resultado, e
+		// não há a quem recusar aqui. Sem saber qual é a aba padrão não há como
+		// decidir se este quadro é o dela, e mandá-lo a todos trocaria a cena na
+		// tela de quem está noutra aba — o dano que o `return` abaixo existe para
+		// evitar.
+		log.Printf("session %d: não deu para saber a aba padrão para publicar (%v)", sessionID, err)
+		return
+	}
+	if state != nil && state.ID != defaultID {
 		return
 	}
 	// O tabuleiro já numera as próprias mutações, então a ordem sai de graça —
@@ -84,24 +83,16 @@ func (tr tableRules) publishBoardState(sessionID int64, state *board.BoardState)
 // grade da tela de quem nem sabia que a cripta existia. Quem responde é o
 // estado — sobrou aba, vai a PADRÃO; não sobrou, vai o `nil`, que aí é verdade.
 //
-// Ela GRAVA e publica, os dois passos escritos. O `Close` do store já apagou a
-// linha da aba fechada; o que esta regravação alcança é a que SOBROU.
+// Ela só PUBLICA. Aqui ela também regravava a aba que sobrou, e isso deixou de
+// ter sentido: o `Close` grava o que precisa gravar dentro do gesto, e a aba que
+// sobrou não mudou (ALE-375).
 func (tr tableRules) publishWhatIsLeft(ctx context.Context, sessionID int64) {
-	left := tr.boards.Get(ctx, sessionID, defaultTab)
-	tr.saveBoard(sessionID, left)
-	tr.publishBoardState(sessionID, left)
-}
-
-func (tr tableRules) persistBoardAndWarn(sessionID int64, boardID string) {
-	if Dirty, changed := tr.boards.Persist(context.Background(), sessionID, boardID); changed {
-		tr.warnPersistenceOnBoard(sessionID, Dirty)
+	left, err := tr.boards.Get(ctx, sessionID, defaultTab)
+	if err != nil {
+		log.Printf("session %d: não deu para ler o que sobrou para publicar (%v)", sessionID, err)
+		return
 	}
-}
-
-func (tr tableRules) warnPersistenceOnBoard(sessionID int64, Dirty bool) {
-	tr.sse.Emit(sessionID, "", "persistence-warning", map[string]any{
-		"sessionId": sessionID, "Dirty": Dirty,
-	})
+	tr.publishBoardState(ctx, sessionID, left)
 }
 
 // liveCtx é quem pediu, em que mesa, com que papel. Resolvido uma vez por

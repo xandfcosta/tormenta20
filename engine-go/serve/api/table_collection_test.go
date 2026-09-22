@@ -10,7 +10,7 @@ import (
 
 func (f sceneFixture) savePlace(t *testing.T, name string) int64 {
 	t.Helper()
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 	for _, l := range f.s.tableHost().Boards().Places(context.Background(), f.campaignID) {
@@ -34,7 +34,7 @@ func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
 	// Ela volta para a mesa, agora numa aba.
 	tavern := f.openSecond(t, "Taverna do Javali")
 
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(screen, "nesta mesa agora") {
 		t.Fatal("o acervo não distingue a cena que está na mesa das 147 que não estão")
@@ -69,7 +69,7 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 	id := f.savePlace(t, "Taverna do Javali")
 	f.openSecond(t, "Taverna do Javali")
 
-	rec := f.pede(t, f.gm, http.MethodPost,
+	rec := f.requests(t, f.gm, http.MethodPost,
 		fmt.Sprintf("%s/tabuleiro/lugares/%d/remover", f.tableUrl(), id), "")
 
 	// A recusa é 200 com a frase no rodapé do mestre: é o caminho do
@@ -90,7 +90,7 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 		t.Error("o lugar aberto foi apagado do acervo: ele voltaria sozinho ao encerrar a aba")
 	}
 	// E a lixeira nem é oferecida — cortesia, não a trava.
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(screen, "Apagar Taverna do Javali") {
 		t.Error("a lista ofereceu a lixeira para a cena que está na mesa")
 	}
@@ -109,7 +109,7 @@ func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
 		f.openSecond(t, fmt.Sprintf("Cena %d", i))
 	}
 
-	rec := f.pede(t, f.gm, http.MethodPost,
+	rec := f.requests(t, f.gm, http.MethodPost,
 		fmt.Sprintf("%s/tabuleiro/lugares/%d/reabrir", f.tableUrl(), id), "")
 
 	if rec.Code != http.StatusOK {
@@ -118,7 +118,7 @@ func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
 	if !strings.Contains(rec.Body.String(), "feche um antes") {
 		t.Error("a recusa não diz o que fazer para caber")
 	}
-	if n := len(f.s.tableHost().Boards().OpenBoards(context.Background(), f.sessionID)); n != 8 {
+	if n := len(boardsRead(f.s.tableHost().Boards().OpenBoards(context.Background(), f.sessionID))); n != 8 {
 		t.Errorf("a sessão passou do teto pela lista de lugares: %d cenas abertas", n)
 	}
 }

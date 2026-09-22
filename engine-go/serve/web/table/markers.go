@@ -36,7 +36,10 @@ func marcaOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	b := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	b, err := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	if err != nil {
+		return nil, err
+	}
 	if b == nil {
 		return nil, errors.New("não há tabuleiro aberto para marcar")
 	}
@@ -97,7 +100,10 @@ func eraseMarker(st Scene, c commandCtx) (*board.BoardState, error) {
 // de mutação silenciosa que não acha ninguém.
 func urlMarker(st Scene, c commandCtx) (board.BoardMarker, error) {
 	id := chi.URLParam(c.R, "id")
-	b := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	b, err := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	if err != nil {
+		return board.BoardMarker{}, err
+	}
 	if b == nil {
 		return board.BoardMarker{}, errors.New("não há tabuleiro aberto")
 	}

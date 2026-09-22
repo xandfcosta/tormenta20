@@ -218,9 +218,6 @@ func sheetsShortcut(v BoardView) string {
 // `loosePieceSignals` logo abaixo lê os dois do mesmo corpo, porque o
 // `ReadSignals` o consome inteiro e não há segunda leitura.
 func newLoosePiece(st Scene, c commandCtx) (*board.BoardState, error) {
-	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID) == nil {
-		return nil, errors.New("não há tabuleiro aberto para pôr uma peça")
-	}
 	drawing, square, err := loosePieceSignals(c.R)
 	if err != nil {
 		return nil, err

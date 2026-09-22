@@ -15,14 +15,14 @@ func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
 	for i, brush := range board.TerrainKinds {
 		// O caminho é um TRAÇO, e um clique parado é um traço de uma casa: a mesma
 		// casa nas duas pontas.
-		rec := f.pede(t, f.gm, "POST",
+		rec := f.requests(t, f.gm, "POST",
 			f.tableUrl()+"/tabuleiro/terreno", stroke(string(brush.ID), i, 0, i, 0))
 		if rec.Code != http.StatusOK {
 			t.Fatalf("pintar %s deu %d", brush.ID, rec.Code)
 		}
 	}
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	for i, brush := range board.TerrainKinds {
 		squares := board.SquaresOf(b, brush.ID)
 		if len(squares) != 1 || squares[0].X != i {
@@ -43,15 +43,15 @@ func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
 	base := f.tableUrl() + "/tabuleiro/terreno"
 
 	for _, species := range []string{"dificil", "camuflagem"} {
-		if rec := f.pede(t, f.gm, "POST", base, stroke(species, 3, 3, 3, 3)); rec.Code != http.StatusOK {
+		if rec := f.requests(t, f.gm, "POST", base, stroke(species, 3, 3, 3, 3)); rec.Code != http.StatusOK {
 			t.Fatalf("pintar %s deu %d", species, rec.Code)
 		}
 	}
-	if rec := f.pede(t, f.gm, "POST", base, strokeErasing("camuflagem", 3, 3, 3, 3)); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, "POST", base, strokeErasing("camuflagem", 3, 3, 3, 3)); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if n := len(board.SquaresOf(b, board.TerrenoCamuflagem)); n != 0 {
 		t.Errorf("a camuflagem não foi apagada (%d casas)", n)
 	}
@@ -67,13 +67,13 @@ func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	for i, brush := range board.TerrainKinds {
-		if rec := f.pede(t, f.gm, "POST",
+		if rec := f.requests(t, f.gm, "POST",
 			f.tableUrl()+"/tabuleiro/terreno", stroke(string(brush.ID), i, 0, i, 0)); rec.Code != http.StatusOK {
 			t.Fatalf("pintar %s deu %d", brush.ID, rec.Code)
 		}
 	}
 
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE: o tabuleiro desenhou. Sem ele, não achar as classes seria
 	// verdade também sobre uma cena que não abriu.
 	if !strings.Contains(screen, "board-plane") {
@@ -92,7 +92,7 @@ func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
 func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// "Ferramentas do mapa" e não "Pincel de terreno": o trilho carrega mais que
 	// o pincel, e um grupo que se anuncia como pincel mente para quem navega por
@@ -123,7 +123,7 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	// E o pincel é do MESTRE: o jogador não pinta chão. A asserção é sobre os
 	// PINCÉIS e não sobre o trilho, que existe para os dois papéis porque a régua
 	// é de quem ataca.
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	for _, brush := range board.TerrainKinds {
 		if strings.Contains(forPlayer, brush.Effect) {
 			t.Errorf("o pincel %q apareceu na cena do jogador", brush.ID)
@@ -139,11 +139,11 @@ func TestOnlyTheGmPaints(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	rec := f.pede(t, f.player, "POST", f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1))
+	rec := f.requests(t, f.player, "POST", f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1))
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pintou o chão: %d", rec.Code)
 	}
-	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if n := len(board.SquaresOf(b, board.TerrenoDificil)); n != 0 {
 		t.Errorf("a pintura do jogador entrou mesmo assim (%d casas)", n)
 	}
@@ -151,10 +151,16 @@ func TestOnlyTheGmPaints(t *testing.T) {
 
 // Não é 500 nem silêncio: pintar chão de uma cena que não está na mesa não tem
 // onde acontecer, e a recusa fala no `command_error` do rodapé do mestre.
+//
+// A FRASE é a do `errNoBoard`, e ela passou a ser a única com a ALE-375: a cena
+// tinha uma pré-conferência própria ("não há tabuleiro aberto para pintar") que
+// repetia, com outras palavras, a recusa que a mutação já dava — e custava uma
+// leitura a mais para dizer a mesma coisa. Escrita à mão aqui de propósito:
+// importar a constante faria o guarda andar junto com o defeito.
 func TestPaintingWithoutABoardRefusesWithASentence(t *testing.T) {
 	f := newSceneFixture(t)
-	body := f.pede(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1)).Body.String()
-	if !strings.Contains(body, "não há tabuleiro aberto") {
+	body := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1)).Body.String()
+	if !strings.Contains(body, "esta sessão não tem tabuleiro aberto") {
 		t.Errorf("a recusa não explica o que faltou; sinais = %s", trechoDeSinais(body))
 	}
 }

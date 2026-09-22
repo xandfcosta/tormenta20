@@ -10,11 +10,11 @@ import (
 
 func onLens(t *testing.T, f sceneFixture) string {
 	t.Helper()
-	rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
+	rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acender a lente deu %d", rec.Code)
 	}
-	return f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	return f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 }
 
 // O caso que a lente existe para resolver.
@@ -35,7 +35,7 @@ func TestTheLensHidesFromTheGmWhatIsHiddenFromTheTable(t *testing.T) {
 	}
 
 	// O CONTROLE: sem a lente, o mestre vê as duas.
-	noLens := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	noLens := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(noLens, "Ogro emboscado") {
 		t.Fatal("o mestre não via a própria peça escondida — o caso não mede nada")
 	}
@@ -92,11 +92,11 @@ func TestTheLensDiesWithTheScene(t *testing.T) {
 		t.Fatal("a lente não acendeu — o resto não mede nada")
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 	f.seedOpenBoard(t, "tavern")
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(screen, "Voltar à vista do mestre") {
 		t.Error("a lente sobreviveu ao fim da cena e acendeu sobre a cena seguinte")
 	}
@@ -112,9 +112,9 @@ func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
 		board.BoardToken{ID: "visivel", Label: "Taverneiro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
-	before := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	before := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	onLens(t, f)
-	after := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	after := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if strings.Contains(after, "vendo a cena como a mesa") {
 		t.Error("a tira da lente do mestre apareceu na tela do jogador")
@@ -128,7 +128,7 @@ func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
 func TestOnlyTheGmLightsTheLens(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	rec := f.pede(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
+	rec := f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador acendeu a lente: %d", rec.Code)
 	}

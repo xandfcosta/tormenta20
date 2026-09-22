@@ -47,14 +47,14 @@ func barbarianWithMpSpent(t *testing.T, level, pmSpent int64) (sceneFixture, int
 
 func powerScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.pede(t, f.player, http.MethodGet,
+	return f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=abilities", id), "").Body.String()
 }
 
 func powerCommand(t *testing.T, f sceneFixture, id int64, path, body string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/poderes/%s?tab=abilities", id, path)
-	return sceneRefusal(f.pede(t, f.player, http.MethodPost, target, body).Body.String())
+	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 // O ACERVO junta as cinco procedências, e SÓ o que o personagem tem.
@@ -261,7 +261,7 @@ func TestEndingTheStanceGivesNoMpBack(t *testing.T) {
 	before := pm(t, f, id)
 
 	target := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
-	if refusal := sceneRefusal(f.pede(t, f.player, http.MethodPost, target, "").Body.String()); refusal != "" {
+	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, "").Body.String()); refusal != "" {
 		t.Fatalf("encerrar foi recusado: %q", refusal)
 	}
 	if after := pm(t, f, id); after != before {
@@ -349,7 +349,7 @@ func TestTheStanceGrantComesAndGoesWithIt(t *testing.T) {
 	}
 
 	target := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
-	f.pede(t, f.player, http.MethodPost, target, "")
+	f.requests(t, f.player, http.MethodPost, target, "")
 	if gotEffects := effects(t, f, id); gotEffects["class.barbaro.alma-de-bronze"] {
 		t.Error("a reserva de PV temporários sobreviveu ao fim da postura")
 	}
@@ -372,7 +372,7 @@ func effects(t *testing.T, f sceneFixture, id int64) map[string]bool {
 func TestThePowerSearchFoldsAndIgnoresAccents(t *testing.T) {
 	f, id := barbaro(t, 5)
 
-	screen := f.pede(t, f.player, http.MethodGet,
+	screen := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=abilities&poderbusca=furia", id), "").Body.String()
 
 	if !strings.Contains(screen, "Fúria") {

@@ -90,7 +90,7 @@ func combatTabDefense(t *testing.T, f sceneFixture, id int64) string {
 
 func badgeDefense(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	body := f.pede(t, f.player, "GET",
+	body := f.requests(t, f.player, "GET",
 		fmt.Sprintf("/personagens/%d?tab=expertises", id), "").Body.String()
 	return firstMatchOf(t, badgeDefensePattern, body, "o crachá do topo")
 }

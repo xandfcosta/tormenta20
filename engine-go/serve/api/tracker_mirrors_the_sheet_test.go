@@ -52,7 +52,7 @@ func TestTheQueueMirrorsAWoundTakenOnTheSheet(t *testing.T) {
 
 	// O GESTO DA FICHA: o botão −5 da própria tela do jogador.
 	target := fmt.Sprintf("/personagens/%d/vitais/pv/-5", f.charID)
-	if rec := f.pede(t, f.player, http.MethodPost, target, ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.player, http.MethodPost, target, ""); rec.Code != http.StatusOK {
 		t.Fatalf("ferir pela ficha deu %d", rec.Code)
 	}
 

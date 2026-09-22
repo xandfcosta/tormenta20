@@ -96,9 +96,10 @@ func (bs *Store) NewID() string { return bs.newID() }
 //   - só a MEMÓRIA não vê o tabuleiro aberto ontem, numa sessão que este
 //     processo nunca hidratou. Depois de um `docker compose up` o mapa está
 //     vazio e a trava passaria a deixar tudo montar.
-//   - só o BANCO não vê o tabuleiro que acabou de ser aberto: a gravação é
-//     ASSÍNCRONA (ver `persistBoardAndWarn`), e entre o `Open` e o `Persist` a
-//     tabela ainda não sabe dele.
+//   - só o BANCO nunca deixou de ver o tabuleiro recém-aberto, e desde a
+//     ALE-375 isso é garantido em vez de provável: a gravação acontece DENTRO
+//     do `Open`, então um tabuleiro que existe na memória existe na tabela. A
+//     razão de olhar os dois é a de cima, que continua de pé.
 func (bs *Store) refusesIfOnATable(ctx context.Context, campaignID int64, name string) error {
 	if session := bs.sessionShowingLocked(name); session != 0 {
 		return placeOnATable(name)

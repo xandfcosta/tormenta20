@@ -16,6 +16,15 @@ import (
 // Ela só precisa ser declarada, e é essa a fricção que esta lista existe para
 // criar: apagar um teste é um ato, e o ato aparece aqui.
 var tombstones = map[string]bool{
+	// Os três mediam a marca `Dirty` do tabuleiro e a tarja "a mesa não está
+	// sendo salva" que ela acendia. A ALE-375 pôs a gravação dentro da mutação:
+	// a marca, a tarja e a pergunta que elas respondiam deixaram de existir, e
+	// o que protegiam — a mesa não roda de memória em silêncio — passou a ser
+	// prendido pela RECUSA, no `TestABoardWriteRefusedLeavesTheMapUntouched` e
+	// no `TestACommandTheDiskRefusesComesBackRefused`.
+	"TestBoardPersistFailureIsReported":            true,
+	"TestTheGmIsWarnedWhenSavingFails":             true,
+	"TestThePlayerIsNotWarnedAboutSaving":          true,
 	"TestAAbaAindaNaoPortadaLevaParaAFichaAntiga":  true,
 	"TestABaixaLimpaOOuvinte":                      true,
 	"TestABaixaTiraOOuvinteDaFicha":                true,
@@ -114,7 +123,14 @@ var citacaoDeTeste = regexp.MustCompile(`\bTest[A-Z]\w+`)
 //
 // Ou seja: 120 defeitos de documentação viviam neste repositório sem que nada os
 // acusasse. Este guarda é o que impede o 121º.
+//
+// O `declaracaoDeTeste` morava no `test_names_test.go`, que foi apagado junto
+// com os outros três guardas de IDIOMA — eles deixavam passar português demais
+// para valerem a manutenção das linhas de base, e a conferência de idioma
+// passou a ser de olho (decisão do dono). O que este guarda faz não tem nada a
+// ver com idioma: ele confere CITAÇÃO, e por isso fica.
 func TestNoCitationNamesAMissingTest(t *testing.T) {
+	declaracaoDeTeste := regexp.MustCompile(`(?m)^func (Test\w+)`)
 	declared := map[string]bool{}
 	files := arquivosParaCitacao(t)
 	for _, path := range files {

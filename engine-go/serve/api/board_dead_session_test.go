@@ -2,24 +2,28 @@ package api
 
 import (
 	"context"
+	"testing"
+
 	"t20engine/app"
 	"t20engine/app/boards"
-	"testing"
+	"t20engine/domain/board"
 )
 
 /*
 O TABULEIRO DE UMA SESSÃO QUE JÁ MORREU.
 
-O tabuleiro vive em MEMÓRIA num mapa por sessão, e o `Persist` grava o blob em
+O tabuleiro vive em MEMÓRIA num mapa por sessão, e a gravação escreve em
 `open_boards`, cuja chave estrangeira aponta para a sessão. Quando a sessão é
 APAGADA, o mapa em memória continua lá — e a gravação seguinte bate na FK.
 
-O estrago não é a linha de log. É o `Dirty`: ele existe para a mesa SABER
-quando parou de gravar, e só um `Persist` bem-sucedido o apaga.
-Nenhum vai suceder, porque a sessão não volta a existir. **Um alarme construído
-para gritar "PARE, não estou gravando" passa a gritar por um tabuleiro que
-ninguém quer que seja gravado** — e um alarme que toca sozinho é como se aprende
-a ignorar o alarme.
+O estrago MUDOU DE FORMA com a ALE-375, e por isso estes casos continuam. Antes
+ele era o `Dirty`: a mesa se declarava suja para sempre, porque só uma gravação
+bem-sucedida apagava a marca e nenhuma ia suceder. Agora não há marca — há
+RECUSA, e ela é pior de outro jeito: todo gesto no tabuleiro órfão passa a ser
+recusado com a frase do banco, num mapa que ninguém quer que seja gravado.
+
+Os dois estragos têm o mesmo conserto, e é ele que estes casos prendem: o
+`SessionDeleted` tira o mapa da memória junto com a sessão.
 */
 
 // deadSessionBoard abre um tabuleiro numa sessão e apaga a sessão por baixo dele.
@@ -43,10 +47,8 @@ func deadSessionBoardOfOwner(t *testing.T) (*Server, int64, int64, int64) {
 		t.Fatalf("abrir o tabuleiro: %v", err)
 	}
 	// A GRAVAÇÃO tem de dar certo ANTES, senão o caso mede uma sessão que nunca
-	// gravou e a conclusão seria sobre outra coisa.
-	if dirty, _ := s.boards.Persist(ctx, session, defaultTab); dirty {
-		t.Fatal("a gravação já falhava com a sessão VIVA — o caso mediria outro defeito")
-	}
+	// gravou e a conclusão seria sobre outra coisa. Ela acontece DENTRO do
+	// `Open` desde a ALE-375, então chegar aqui sem erro já é a prova.
 	return s, campaign, session, owner
 }
 
@@ -61,24 +63,18 @@ func TestADeletedSessionLeavesNoBoardBehind(t *testing.T) {
 	}
 	s.SessionDeleted(session)
 
-	// O MAPA: o tabuleiro morreu com a sessão. Sem isto, todo `Persist` seguinte
+	// O MAPA: o tabuleiro morreu com a sessão. Sem isto, toda gravação seguinte
 	// bate na FK, para sempre.
-	if open := s.boards.OpenBoards(ctx, session); len(open) != 0 {
+	open := boardsRead(s.boards.OpenBoards(ctx, session))
+	if len(open) != 0 {
 		t.Errorf("a sessão apagada continuou com %d tabuleiros em memória", len(open))
-	}
-	// E A MARCA saiu: um `Dirty` que ninguém pode limpar é um alarme travado.
-	if s.boards.SaveFailed(session) {
-		t.Error("a mesa continuou se declarando suja por uma sessão que não existe")
 	}
 	// CONTROLE do controle: a campanha segue de pé, e outra sessão dela grava
 	// normalmente. Sem isto, um esquecimento que limpasse o store INTEIRO
 	// passaria neste caso.
 	other := seedSession(t, s, campaign)
 	if _, err := s.boards.Open(ctx, other, "Cripta", "crypt"); err != nil {
-		t.Fatalf("abrir tabuleiro na sessão vizinha: %v", err)
-	}
-	if dirty, _ := s.boards.Persist(ctx, other, defaultTab); dirty {
-		t.Error("a sessão vizinha deixou de gravar")
+		t.Errorf("a sessão vizinha deixou de gravar: %v", err)
 	}
 }
 
@@ -93,9 +89,6 @@ func TestADeletedCampaignLeavesNoBoardBehind(t *testing.T) {
 	if _, err := s.boards.Open(ctx, second, "Cripta", "crypt"); err != nil {
 		t.Fatalf("abrir o segundo tabuleiro: %v", err)
 	}
-	if dirty, _ := s.boards.Persist(ctx, second, defaultTab); dirty {
-		t.Fatal("a segunda sessão já não gravava")
-	}
 
 	// PELO CASO DE USO, e não pelos dois passos à mão: a ordem — esquecer antes
 	// de apagar — é dele, e um caso que a repetisse aqui seria uma terceira
@@ -105,46 +98,59 @@ func TestADeletedCampaignLeavesNoBoardBehind(t *testing.T) {
 	}
 
 	for _, dead := range []int64{session, second} {
-		if open := s.boards.OpenBoards(ctx, dead); len(open) != 0 {
+		open := boardsRead(s.boards.OpenBoards(ctx, dead))
+		if len(open) != 0 {
 			t.Errorf("a sessão %d da campanha apagada ficou com %d tabuleiros", dead, len(open))
-		}
-		if s.boards.SaveFailed(dead) {
-			t.Errorf("a sessão %d da campanha apagada ficou marcada como suja", dead)
 		}
 	}
 }
 
-// A LIMPEZA NÃO DEPENDE DE O CLIENTE ESPERAR.
+// O CLIENTE QUE VAI EMBORA NÃO FECHA A ABA PELA METADE.
 //
-// O `Close` apaga a linha de `open_boards` com o contexto que recebeu, e na
-// produção esse é o contexto da REQUISIÇÃO — cancelado quando quem clicou vai
-// embora. A linha fica no banco, o `Dirty` acende, e não há quem tente de novo:
-// `board delete failed (context canceled)` foi medido numa corrida de e2e.
-func TestClosingABoardSurvivesTheClientLeaving(t *testing.T) {
+// ESTE CASO INVERTEU COM A ALE-375, e a inversão é o desenho. O `Close` tirava a
+// aba da memória primeiro e apagava a linha depois, com `WithoutCancel` — porque
+// com o contexto da REQUISIÇÃO um cliente que fosse embora deixava a linha no
+// banco e o `Dirty` aceso, sem ninguém para tentar de novo.
+//
+// Hoje o DELETE mora dentro do gesto e vem ANTES: o cliente que vai embora não
+// fecha nada. É o tudo-ou-nada da fila aplicado ao tabuleiro — a aba continua
+// aberta, a linha continua no banco, e o mestre clica de novo. O que não pode
+// acontecer é o meio do caminho, que era justamente o que o `WithoutCancel`
+// existia para evitar por outro lado.
+func TestALeavingClientDoesNotHalfCloseABoard(t *testing.T) {
 	s, _, session := deadSessionBoard(t)
 	canceled, cancels := context.WithCancel(context.Background())
 	cancels() // o cliente foi embora ANTES de a gravação acontecer
 
-	dirty, _ := s.boards.Close(canceled, session, defaultTab)
-
-	if dirty {
-		t.Error("fechar o tabuleiro com o cliente já embora declarou a mesa suja")
+	if err := s.boards.Close(canceled, session, defaultTab); err == nil {
+		t.Error("fechar o tabuleiro com o cliente já embora foi aceito, e o gesto não pôde ser gravado")
 	}
-	// E A LINHA SAIU do banco: sem isto, a próxima hidratação traz de volta um
-	// tabuleiro que o mestre encerrou.
-	after := boards.NewStore(s.queries, s.boards.NewID, s.bus)
-	if open := after.OpenBoards(context.Background(), session); len(open) != 0 {
-		t.Errorf("a linha do tabuleiro fechado ficou no banco: %d aberto(s) depois do reinício", len(open))
+
+	// E A ABA CONTINUA INTEIRA, dos dois lados. Na MEMÓRIA, porque o gesto
+	// recusado não pode ter tirado nada dela; e no BANCO, que é o que um store
+	// novo enxerga — sem isto, a memória poderia estar certa sobre uma linha que
+	// sumiu.
+	open := boardsRead(s.boards.OpenBoards(context.Background(), session))
+	if len(open) != 1 {
+		t.Errorf("a memória ficou com %d abas depois de um fechar RECUSADO, e era 1", len(open))
+	}
+	after := boards.NewStore(boards.NewSnapshots(s.queries), s.queries, s.boards.NewID, s.bus)
+	reread := boardsRead(after.OpenBoards(context.Background(), session))
+	if len(reread) != 1 {
+		t.Errorf("o banco ficou com %d abas depois de um fechar RECUSADO, e era 1", len(reread))
 	}
 }
 
-// O CONTROLE DA AUSÊNCIA, e a issue o exige com todas as letras: o log fica
-// quieto tanto no conserto quanto num caminho que nunca chega ao `Persist`.
+// O CONTROLE DA AUSÊNCIA, e a issue o exige com todas as letras: os casos acima
+// ficariam verdes tanto pelo conserto quanto por nunca chegarem ao lugar onde o
+// defeito mora.
 //
-// Este caso prova que o canal EXISTE — com a sessão apagada e o tabuleiro ainda
-// em memória (o estado de antes do conserto, montado à mão), a gravação falha e
-// o `Dirty` acende. É a garantia de que os casos acima não passam por não terem
-// chegado ao lugar onde o defeito morava.
+// Este caso prova que o CANAL EXISTE — com a sessão apagada e o tabuleiro ainda
+// em memória (o estado de antes do conserto, montado à mão), a chave estrangeira
+// morde e o gesto é recusado.
+//
+// Aqui ele media o `Dirty` acendendo e não saindo mais. A marca não existe desde
+// a ALE-375; o que se mede é a RECUSA, que é a forma que o mesmo estrago tomou.
 func TestTheForeignKeyStillBitesWhenTheBoardOutlivesTheSession(t *testing.T) {
 	s, _, session := deadSessionBoard(t)
 	ctx := context.Background()
@@ -155,16 +161,14 @@ func TestTheForeignKeyStillBitesWhenTheBoardOutlivesTheSession(t *testing.T) {
 		t.Fatalf("apagar a sessão: %v", err)
 	}
 
-	dirty, _ := s.boards.Persist(ctx, session, defaultTab)
+	_, err := s.boards.AddMarker(ctx, session, defaultTab, board.BoardMarker{X: 2, Y: 3})
 
-	if !dirty {
-		t.Fatal("a gravação de um tabuleiro órfão passou — o canal não existe, e os outros casos não provam nada")
+	if err == nil {
+		t.Fatal("gravar num tabuleiro órfão passou — o canal não existe, e os outros casos não provam nada")
 	}
-	if !s.boards.SaveFailed(session) {
-		t.Error("a marca de suja não acendeu")
-	}
-	// E ELA NÃO SAI SOZINHA: é o que torna o alarme travado, e não um susto.
-	if dirtyDeNovo, _ := s.boards.Persist(ctx, session, defaultTab); !dirtyDeNovo {
-		t.Error("a segunda gravação passou: o defeito não é o alarme travado que a issue descreve")
+	// E NÃO SAI SOZINHO: a sessão não volta a existir, então todo gesto seguinte
+	// bate na mesma chave. É o que torna o mapa órfão um estrago e não um susto.
+	if _, again := s.boards.AddMarker(ctx, session, defaultTab, board.BoardMarker{X: 4, Y: 5}); again == nil {
+		t.Error("o segundo gesto passou: o defeito não é o que a issue descreve")
 	}
 }

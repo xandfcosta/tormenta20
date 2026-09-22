@@ -30,15 +30,14 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	abre(t, s, sid, "Taverna do Javali", "tavern")
+	opensBoard(t, s, sid, "Taverna do Javali", "tavern")
 	if _, err := s.boards.AddToken(ctx, sid, defaultTab, board.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
-	s.boards.Persist(ctx, sid, defaultTab)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	cold := boards.NewStore(s.queries, live.NewUUID, &events.Bus{})
-	returned := cold.Get(ctx, sid, defaultTab)
+	cold := boards.NewStore(boards.NewSnapshots(s.queries), s.queries, live.NewUUID, &events.Bus{})
+	returned := boardRead(cold.Get(ctx, sid, defaultTab))
 
 	if returned == nil {
 		t.Fatal("o tabuleiro não voltou do banco")
@@ -63,7 +62,7 @@ func TestSessionWithoutBoardStaysWithout(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
+	if b := boardRead(s.boards.Get(ctx, sid, defaultTab)); b != nil {
 		t.Errorf("sessão nova já veio com tabuleiro: %+v", b)
 	}
 	if _, err := s.boards.AddToken(ctx, sid, defaultTab, board.BoardToken{Label: "Ninguém"}); err == nil {
@@ -75,15 +74,16 @@ func TestClosingBoardErasesItFromDiskToo(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	abre(t, s, sid, "Cripta", "stone")
-	s.boards.Persist(ctx, sid, defaultTab)
+	opensBoard(t, s, sid, "Cripta", "stone")
 
-	s.boards.Close(ctx, sid, defaultTab)
+	if err := s.boards.Close(ctx, sid, defaultTab); err != nil {
+		t.Fatalf("encerrar o tabuleiro: %v", err)
+	}
 
-	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
+	if b := boardRead(s.boards.Get(ctx, sid, defaultTab)); b != nil {
 		t.Error("o tabuleiro encerrado continua na memória")
 	}
-	if b := boards.NewStore(s.queries, live.NewUUID, &events.Bus{}).Get(ctx, sid, defaultTab); b != nil {
+	if b := boardRead(boards.NewStore(boards.NewSnapshots(s.queries), s.queries, live.NewUUID, &events.Bus{}).Get(ctx, sid, defaultTab)); b != nil {
 		t.Error("o tabuleiro encerrado voltou do banco no próximo reinício")
 	}
 }
@@ -101,12 +101,12 @@ func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	tavern := abre(t, s, sid, "Taverna", "tavern")
+	tavern := opensBoard(t, s, sid, "Taverna", "tavern")
 	if _, err := s.boards.AddToken(ctx, sid, tavern.ID, board.BoardToken{Label: "Bandido"}); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
 
-	dungeon := abre(t, s, sid, "Masmorra", "stone")
+	dungeon := opensBoard(t, s, sid, "Masmorra", "stone")
 
 	if dungeon.ID == tavern.ID {
 		t.Fatal("a segunda cena nasceu com o id da primeira: elas são a mesma aba")
@@ -114,7 +114,7 @@ func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 	if len(dungeon.Tokens) != 0 {
 		t.Errorf("a masmorra nasceu com as peças da taverna: %+v", dungeon.Tokens)
 	}
-	stillThere := s.boards.Get(ctx, sid, tavern.ID)
+	stillThere := boardRead(s.boards.Get(ctx, sid, tavern.ID))
 	if stillThere == nil {
 		t.Fatal("abrir a masmorra fechou a taverna — é a issue inteira")
 	}
@@ -124,7 +124,7 @@ func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 	// A PADRÃO continua sendo a mais antiga: quem não escolheu aba nenhuma não
 	// pode ser arrastado para a cena que o mestre acabou de abrir — ele pode
 	// estar montando a emboscada.
-	if standard := s.boards.Get(ctx, sid, defaultTab); standard == nil || standard.ID != tavern.ID {
+	if standard := boardRead(s.boards.Get(ctx, sid, defaultTab)); standard == nil || standard.ID != tavern.ID {
 		t.Errorf("a aba padrão pulou para a cena recém-aberta: %+v", standard)
 	}
 }
@@ -143,17 +143,15 @@ func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	tavern := abre(t, s, sid, "Taverna", "tavern")
-	crypt := abre(t, s, sid, "Cripta", "stone")
+	tavern := opensBoard(t, s, sid, "Taverna", "tavern")
+	crypt := opensBoard(t, s, sid, "Cripta", "stone")
 	if _, err := s.boards.AddToken(ctx, sid, crypt.ID, board.BoardToken{Label: "Ogro", X: 7, Y: 7}); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
-	s.boards.Persist(ctx, sid, tavern.ID)
-	s.boards.Persist(ctx, sid, crypt.ID)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	cold := boards.NewStore(s.queries, live.NewUUID, &events.Bus{})
-	returned := cold.OpenBoards(ctx, sid)
+	cold := boards.NewStore(boards.NewSnapshots(s.queries), s.queries, live.NewUUID, &events.Bus{})
+	returned := boardsRead(cold.OpenBoards(ctx, sid))
 
 	if len(returned) != 2 {
 		t.Fatalf("voltaram %d cenas do banco, esperado 2", len(returned))
@@ -163,6 +161,9 @@ func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 	}
 	// O id atravessa: é por ele que a escolha de aba de cada pessoa continua
 	// apontando para a mesma cena depois do reinício.
+	if returned[0].ID != tavern.ID {
+		t.Errorf("o id da taverna mudou no reinício: %q virou %q", tavern.ID, returned[0].ID)
+	}
 	if returned[1].ID != crypt.ID {
 		t.Errorf("o id da cripta mudou no reinício: %q virou %q", crypt.ID, returned[1].ID)
 	}
@@ -184,11 +185,13 @@ func TestClosingATabDoesNotMakeTheNextOneTie(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	bridge := abre(t, s, sid, "Ponte", "stone")
-	tavern := abre(t, s, sid, "Taverna", "tavern")
-	s.boards.Close(ctx, sid, bridge.ID)
+	bridge := opensBoard(t, s, sid, "Ponte", "stone")
+	tavern := opensBoard(t, s, sid, "Taverna", "tavern")
+	if err := s.boards.Close(ctx, sid, bridge.ID); err != nil {
+		t.Fatalf("encerrar o tabuleiro: %v", err)
+	}
 
-	crypt := abre(t, s, sid, "Cripta", "stone")
+	crypt := opensBoard(t, s, sid, "Cripta", "stone")
 
 	if crypt.Seq == tavern.Seq {
 		t.Fatalf("a cripta nasceu com o número da taverna (%d): a ordem das abas passou a depender do desempate do banco", crypt.Seq)
@@ -222,14 +225,14 @@ func TestOpeningRefusesPastTheCeiling(t *testing.T) {
 	if !strings.Contains(err.Error(), "8") {
 		t.Errorf("a recusa não diz quantas cabem: %v", err)
 	}
-	if n := len(s.boards.OpenBoards(ctx, sid)); n != 8 {
+	if n := len(boardsRead(s.boards.OpenBoards(ctx, sid))); n != 8 {
 		t.Errorf("a sessão ficou com %d cenas abertas depois da recusa", n)
 	}
 }
 
 // abre é o `Open` dos testes: eles não medem o teto, e um `if err` por chamada
 // esconderia o que cada caso está afirmando.
-func abre(t *testing.T, s *Server, sid int64, place, chao string) *board.BoardState {
+func opensBoard(t *testing.T, s *Server, sid int64, place, chao string) *board.BoardState {
 	t.Helper()
 	b, err := s.boards.Open(context.Background(), sid, place, chao)
 	if err != nil {
@@ -238,45 +241,48 @@ func abre(t *testing.T, s *Server, sid int64, place, chao string) *board.BoardSt
 	return b
 }
 
-// Gravação que falha PARA DE SER SILENCIOSA.
+// A GRAVAÇÃO QUE FALHA RECUSA A MUTAÇÃO E NÃO DEIXA RASTRO NO MAPA.
 //
-// Com a tabela do tabuleiro ausente do banco, a cena vive só em memória: a tela
-// fica impecável e cada gravação falha numa linha de log que ninguém lê. O que
-// falta não é a gravação — é a mesa SABER que ela parou.
+// Aqui morava o `TestBoardPersistFailureIsReported`, que prendia a TRANSIÇÃO da
+// marca `Dirty`: avisa quando começa a falhar, avisa quando volta, e não a cada
+// gravação. A marca saiu com a ALE-375, e com ela a pergunta que ela respondia.
 //
-// A transição é o que importa: avisa quando começa a falhar e avisa quando
-// volta, e não a cada mensagem — um aviso por tique de peça viraria ruído e
-// ninguém leria esse também.
-func TestBoardPersistFailureIsReported(t *testing.T) {
+// O que se prende agora é o ramo em volta da gravação, que é a garantia mais
+// forte: com a gravação saindo depois, a peça andava na tela e o disco ficava
+// sem ela — e a única saída era avisar. Agora a peça não anda.
+func TestABoardWriteRefusedLeavesTheMapUntouched(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	abre(t, s, sid, "Cripta", "stone")
+	opensBoard(t, s, sid, "Cripta", "stone")
 
-	if Dirty, changed := s.boards.Persist(ctx, sid, defaultTab); Dirty || changed {
-		t.Fatalf("gravação saudável já saiu como falha: Dirty=%v changed=%v", Dirty, changed)
+	// O CONTROLE: com o disco saudável a peça entra. Sem ele, "não entrou" não
+	// distingue a recusa de um caminho que nunca funcionou.
+	if _, err := s.boards.AddToken(ctx, sid, defaultTab,
+		board.BoardToken{Label: "Ogro", X: 3, Y: 4}); err != nil {
+		t.Fatalf("o controle falhou: %v", err)
 	}
+	before := boardRead(s.boards.Get(ctx, sid, defaultTab))
 
 	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	Dirty, changed := s.boards.Persist(ctx, sid, defaultTab)
-	if !Dirty || !changed {
-		t.Fatalf("a tabela sumiu e ninguém avisou: Dirty=%v changed=%v", Dirty, changed)
-	}
-	// Segunda falha seguida: continua falhando, mas NÃO é notícia nova.
-	if _, changed := s.boards.Persist(ctx, sid, defaultTab); changed {
-		t.Error("a mesa levou um aviso a cada gravação, e não só na transição")
-	}
 
-	if _, err := s.db.Exec(`CREATE TABLE open_boards (
-		sessionId INTEGER NOT NULL, boardId TEXT NOT NULL, state TEXT NOT NULL,
-		openSeq INTEGER NOT NULL, updatedAt TEXT NOT NULL,
-		PRIMARY KEY (sessionId, boardId))`); err != nil {
-		t.Fatalf("recriar a tabela: %v", err)
+	_, err := s.boards.AddToken(ctx, sid, defaultTab, board.BoardToken{Label: "Goblin", X: 9, Y: 9})
+
+	if err == nil {
+		t.Fatal("a tabela sumiu e a gravação passou — o gesto mudou a mesa sobre um disco que não recebeu nada")
 	}
-	if Dirty, changed := s.boards.Persist(ctx, sid, defaultTab); Dirty || !changed {
-		t.Errorf("a recuperação não foi anunciada: Dirty=%v changed=%v", Dirty, changed)
+	// E O MAPA NÃO MUDOU. É a metade que o `Dirty` não dava: ele avisava DEPOIS
+	// de a peça já estar na tela.
+	after := boardRead(s.boards.Get(ctx, sid, defaultTab))
+	if len(after.Tokens) != len(before.Tokens) {
+		t.Errorf("o mapa foi de %d para %d peças sobre uma gravação recusada",
+			len(before.Tokens), len(after.Tokens))
+	}
+	if after.Version != before.Version {
+		t.Errorf("a versão do tabuleiro subiu de %d para %d sobre uma gravação recusada",
+			before.Version, after.Version)
 	}
 }
 
@@ -291,20 +297,26 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	abre(t, s, sid, "Cripta", "stone")
+	opensBoard(t, s, sid, "Cripta", "stone")
 	if _, err := s.boards.AddToken(ctx, sid, defaultTab, board.BoardToken{Label: "Ogro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
-	s.boards.Persist(ctx, sid, defaultTab)
 
 	// Um servidor frio sobre o mesmo banco, e a leitura falha: é o disco
 	// piscando no primeiro acesso à sessão.
-	cold := boards.NewStore(s.queries, live.NewUUID, &events.Bus{})
+	cold := boards.NewStore(boards.NewSnapshots(s.queries), s.queries, live.NewUUID, &events.Bus{})
 	if _, err := s.db.Exec("ALTER TABLE open_boards RENAME TO open_boards_escondida"); err != nil {
 		t.Fatalf("esconder a tabela: %v", err)
 	}
-	if empty := cold.Get(ctx, sid, defaultTab); empty != nil {
-		t.Fatalf("leitura falhou e mesmo assim devolveu tabuleiro: %+v", empty)
+	// A LEITURA QUE FALHA DIZ QUE FALHOU (ALE-375), e aqui ela devolvia um `nil`
+	// calado — indistinguível de "esta sessão não tem tabuleiro". Esta metade do
+	// caso ficou mais forte com a fatia: o `nil` mudo passou a ser erro.
+	broken, err := cold.Get(ctx, sid, defaultTab)
+	if err == nil {
+		t.Fatalf("a tabela sumiu e a leitura respondeu sem erro: %+v", broken)
+	}
+	if broken != nil {
+		t.Fatalf("leitura falhou e mesmo assim devolveu tabuleiro: %+v", broken)
 	}
 
 	// O disco volta. A próxima leitura tem de ACHAR o tabuleiro — se a falha
@@ -312,7 +324,7 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	if _, err := s.db.Exec("ALTER TABLE open_boards_escondida RENAME TO open_boards"); err != nil {
 		t.Fatalf("devolver a tabela: %v", err)
 	}
-	returned := cold.Get(ctx, sid, defaultTab)
+	returned := boardRead(cold.Get(ctx, sid, defaultTab))
 
 	if returned == nil {
 		t.Fatal("a falha transiente ficou cacheada: a sessão perdeu o tabuleiro até o próximo reinício")
@@ -329,7 +341,7 @@ func TestNoBoardIsStillCached(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
+	if b := boardRead(s.boards.Get(ctx, sid, defaultTab)); b != nil {
 		t.Fatalf("sessão nova veio com tabuleiro: %+v", b)
 	}
 	// Com a tabela fora do ar, uma segunda leitura só pode responder se estiver
@@ -337,28 +349,35 @@ func TestNoBoardIsStillCached(t *testing.T) {
 	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
+	if b := boardRead(s.boards.Get(ctx, sid, defaultTab)); b != nil {
 		t.Errorf("a segunda leitura foi ao disco em vez de lembrar: %+v", b)
 	}
 }
 
-// Encerrar o tabuleiro também avisa quando a gravação falha: sem isso a memória
-// diz "fechado", o banco mantém a linha, e no próximo boot o tabuleiro fantasma
-// volta com as peças de uma cena que a mesa já encerrou.
-func TestClosingReportsAFailedDelete(t *testing.T) {
+// ENCERRAR QUE NÃO PODE APAGAR NÃO ENCERRA.
+//
+// Aqui o `Close` AVISAVA — a memória dizia "fechado", o banco mantinha a linha,
+// e no próximo boot o tabuleiro fantasma voltava com as peças de uma cena que a
+// mesa já encerrou. Com a ALE-375 o DELETE vem ANTES e o erro RECUSA: a aba
+// continua aberta, que é o estado em que mestre e banco concordam.
+func TestClosingABoardTheDiskRefusesKeepsItOpen(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	abre(t, s, sid, "Cripta", "stone")
-	s.boards.Persist(ctx, sid, defaultTab)
+	opensBoard(t, s, sid, "Cripta", "stone")
 
 	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	Dirty, changed := s.boards.Close(ctx, sid, defaultTab)
+	err := s.boards.Close(ctx, sid, defaultTab)
 
-	if !Dirty || !changed {
-		t.Fatalf("o encerramento falhou e ninguém soube: Dirty=%v changed=%v", Dirty, changed)
+	if err == nil {
+		t.Fatal("o encerramento passou sobre um DELETE que não podia acontecer")
+	}
+	// E A ABA CONTINUA NA MEMÓRIA: um "fechado" que o banco não aceitou é
+	// exatamente o tabuleiro fantasma que este caso existe para impedir.
+	if b := boardRead(s.boards.Get(ctx, sid, defaultTab)); b == nil {
+		t.Error("a aba sumiu da memória sobre um encerramento recusado")
 	}
 }
 
@@ -524,5 +543,67 @@ func TestBackupSchedulerStaysOffWhenDisabled(t *testing.T) {
 	}
 	if n := len(s.adminHost().listBackups()); n != 0 {
 		t.Errorf("fez %d backups com o automático desligado", n)
+	}
+}
+
+// UMA FICHA CUJO ESPELHO NÃO ATUALIZOU NÃO CONTA COMO DESCANSADA (ALE-372).
+//
+// O descanso de uma ficha são TRÊS gravações: encerrar o dia, curar, e espelhar
+// os vitais na linha da fila. As duas primeiras já reprovavam a ficha ao
+// falhar; a terceira ia para o chão — sem nem um `_ =` para um `grep` achar.
+//
+// A tentação é tratá-la como menos grave, porque a ficha já foi gravada e a
+// linha da fila é só o espelho dela. É o contrário: o que a mesa OLHA para
+// decidir quem cura e quem apanha é a FILA, então um espelho parado é a mentira
+// chegando exatamente onde ela custa — e o ack dizia "1 de 1" por cima dela.
+//
+// # A sabotagem precisa ser CIRÚRGICA, e as óbvias não servem
+//
+// Derrubar uma tabela da ficha faz o `EndDay` falhar primeiro, e o caso mediria
+// o passo errado. Derrubar a `sessions` mata a AUTORIZAÇÃO, que lê a mesma
+// linha antes do laço começar — o gesto volta erro e nunca chega ao espelho.
+//
+// O que isola o terceiro passo é um GATILHO: a leitura da sessão continua
+// funcionando (a autorização passa, o estado é lido), e só o UPDATE aborta. É
+// exatamente o disco recusando a gravação do retrato, sem tocar em mais nada.
+func TestAPartyRestWithAStaleMirrorDoesNotCount(t *testing.T) {
+	s := newTestServer(t)
+	gm := seedUser(t, s, "gm@t.com")
+	campaignID := seedCampaign(t, s, gm)
+	sid := seedSession(t, s, campaignID)
+	hero := seedCharacter(t, s, gm, "Tanque")
+	seedMember(t, s, campaignID, hero)
+	who := app.Caller{ID: gm}
+	ctx := context.Background()
+
+	// O espelho só EXISTE se o personagem estiver na fila — sem linha não há o
+	// que espelhar, e o `mirrorToTracker` devolve nil sem tocar no banco. Sem
+	// esta montagem o caso passaria verde medindo o caminho que não falha.
+	if _, err := s.sessions.AddInitiativeEntry(ctx, sid, sheetCombatant("Tanque", 12, hero)); err != nil {
+		t.Fatalf("pôr o herói na fila: %v", err)
+	}
+
+	// O CONTROLE: com o disco saudável a ficha conta.
+	done, total, err := s.restParty().RestForTheDay(ctx, who, campaignID, sid, "normal")
+	if err != nil || total != 1 || done != 1 {
+		t.Fatalf("o controle falhou: done=%d total=%d err=%v", done, total, err)
+	}
+
+	if _, err := s.db.Exec(`CREATE TRIGGER o_disco_recusa BEFORE UPDATE ON sessions
+		BEGIN SELECT RAISE(ABORT, 'o disco recusou a gravação do retrato'); END;`); err != nil {
+		t.Fatalf("armar o gatilho: %v", err)
+	}
+
+	done, total, err = s.restParty().RestForTheDay(ctx, who, campaignID, sid, "normal")
+
+	if err != nil {
+		t.Fatalf("uma ficha que falha não pode derrubar o descanso inteiro: %v", err)
+	}
+	if total != 1 {
+		t.Errorf("o total deixou de contar o grupo: %d", total)
+	}
+	if done != 0 {
+		t.Errorf("contou %d de %d como descansados com o espelho parado — o mestre lê "+
+			"que a mesa está em dia e escolhe alvo pelo PV de antes", done, total)
 	}
 }

@@ -54,7 +54,12 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tokenID := chi.URLParam(r, "tokenId")
-	b := board.BoardForRole(role, s.deps.Boards().Get(r.Context(), sessionID, boardID))
+	onBoard, err := s.deps.Boards().Get(r.Context(), sessionID, boardID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	b := board.BoardForRole(role, onBoard)
 	state, err := s.deps.Sessions().State(r.Context(), sessionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

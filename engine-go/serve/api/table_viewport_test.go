@@ -9,11 +9,11 @@ import (
 
 func TestNoLayerReadsThePointWithoutAddingTheViewport(t *testing.T) {
 	f := newSceneFixture(t)
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir o tabuleiro deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE vem primeiro: sem ele, "não achei nenhuma leitura crua" é
 	// indistinguível de "não achei leitura nenhuma" — e as duas passariam verde.

@@ -34,10 +34,12 @@ func TestEndingArchivesTheSceneInsteadOfDestroyingIt(t *testing.T) {
 	s, campaign, session := mesaComTaverna(t)
 	ctx := context.Background()
 
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
-	s.boards.Close(ctx, session, defaultTab)
+	if err := s.boards.Close(ctx, session, defaultTab); err != nil {
+		t.Fatalf("encerrar o tabuleiro: %v", err)
+	}
 
 	places := s.boards.Places(ctx, campaign)
 	if len(places) != 1 {
@@ -51,7 +53,7 @@ func TestEndingArchivesTheSceneInsteadOfDestroyingIt(t *testing.T) {
 		t.Errorf("a taverna guardada tem %d peças, esperado 1", places[0].Tokens)
 	}
 	// E a mesa fica MESMO sem tabuleiro: arquivar não é deixar a cena aberta.
-	if b := s.boards.Get(ctx, session, defaultTab); b != nil {
+	if b := boardRead(s.boards.Get(ctx, session, defaultTab)); b != nil {
 		t.Errorf("a sessão continuou com tabuleiro depois de encerrar: %+v", b)
 	}
 }
@@ -59,10 +61,12 @@ func TestEndingArchivesTheSceneInsteadOfDestroyingIt(t *testing.T) {
 func TestReopeningBringsTheTokensBackWhereTheyWere(t *testing.T) {
 	s, campaign, session := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
-	s.boards.Close(ctx, session, defaultTab)
+	if err := s.boards.Close(ctx, session, defaultTab); err != nil {
+		t.Fatalf("encerrar o tabuleiro: %v", err)
+	}
 	saved := s.boards.Places(ctx, campaign)[0]
 
 	back, err := s.boards.OpenPlace(ctx, campaign, session, saved.ID)
@@ -87,13 +91,13 @@ func TestArchivingTwiceDoesNotStackTheSamePlace(t *testing.T) {
 	s, campaign, session := mesaComTaverna(t)
 	ctx := context.Background()
 
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
 	if _, err := s.boards.AddToken(ctx, session, defaultTab, board.BoardToken{Label: "Bandido", X: 9, Y: 9}); err != nil {
 		t.Fatalf("segunda peça: %v", err)
 	}
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("arquivar de novo: %v", err)
 	}
 
@@ -111,13 +115,15 @@ func TestArchivingTwiceDoesNotStackTheSamePlace(t *testing.T) {
 func TestThePendingMoveDoesNotComeBackWithThePlace(t *testing.T) {
 	s, campaign, session := mesaComTaverna(t)
 	ctx := context.Background()
-	opened := s.boards.Get(ctx, session, defaultTab)
+	opened := boardRead(s.boards.Get(ctx, session, defaultTab))
 	opened.Pending = &board.PendingMove{TokenID: "t1", Cost: 3, Budget: 6}
 
 	if err := s.boards.Archive(ctx, campaign, opened); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
-	s.boards.Close(ctx, session, defaultTab)
+	if err := s.boards.Close(ctx, session, defaultTab); err != nil {
+		t.Fatalf("encerrar o tabuleiro: %v", err)
+	}
 	back, err := s.boards.OpenPlace(ctx, campaign, session, s.boards.Places(ctx, campaign)[0].ID)
 	if err != nil {
 		t.Fatalf("reabrir: %v", err)
@@ -133,7 +139,7 @@ func TestThePendingMoveDoesNotComeBackWithThePlace(t *testing.T) {
 func TestAPlaceFromAnotherCampaignCannotBeDeleted(t *testing.T) {
 	s, campaign, session := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
 	saved := s.boards.Places(ctx, campaign)[0]
@@ -170,13 +176,13 @@ func TestASceneFromAnotherCampaignCannotReachTheTableThroughOpenPlace(t *testing
 	if _, err := s.boards.OpenPlace(ctx, campaign, session, theirPlace.ID); err == nil {
 		t.Fatal("abriu na mesa a cena de outra crônica")
 	}
-	if onTable := s.boards.Get(ctx, session, defaultTab); onTable == nil || onTable.Place != "Taverna do Javali" {
+	if onTable := boardRead(s.boards.Get(ctx, session, defaultTab)); onTable == nil || onTable.Place != "Taverna do Javali" {
 		t.Errorf("a recusa mexeu na cena que estava na mesa: %+v", onTable)
 	}
 
 	// O CONTROLE, e sem ele o guarda não vale nada: um `OpenPlace` que recusasse
 	// TODO lugar passaria nas asserções acima. O da própria crônica tem de abrir.
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("arquivar a taverna: %v", err)
 	}
 	myPlace := placeNamed(t, s.boards.Places(ctx, campaign), "Taverna do Javali")
@@ -207,7 +213,7 @@ rascunho.
 func TestBuildingThePlaceStoresTheSceneWithAnIdForTheNewToken(t *testing.T) {
 	s, campaign, session := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 	place := s.boards.Places(ctx, campaign)[0]
@@ -234,7 +240,7 @@ func TestBuildingThePlaceStoresTheSceneWithAnIdForTheNewToken(t *testing.T) {
 		t.Errorf("o lugar passou a se chamar %q", back.Place)
 	}
 	// E a MESA não foi tocada: montar é preparação.
-	if onTable := s.boards.Get(ctx, session, defaultTab); onTable == nil || len(onTable.Tokens) != 1 {
+	if onTable := boardRead(s.boards.Get(ctx, session, defaultTab)); onTable == nil || len(onTable.Tokens) != 1 {
 		t.Errorf("montar o lugar mexeu na cena que está na mesa: %+v", onTable)
 	}
 }
@@ -245,7 +251,7 @@ func TestBuildingThePlaceStoresTheSceneWithAnIdForTheNewToken(t *testing.T) {
 func TestASceneBuiltWithAnAbsurdCoordinateIsRefused(t *testing.T) {
 	s, campaign, session := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 	place := s.boards.Places(ctx, campaign)[0]
@@ -326,10 +332,10 @@ func TestEditingThePlaceDraftChangesTheArchiveAndNotTheTable(t *testing.T) {
 		t.Errorf("o gesto não ficou gravado: %+v", back.Tokens)
 	}
 	// E a MESA continua com a peça que ela tinha: preparar não é jogar.
-	if onTable := s.boards.Get(ctx, session, defaultTab); onTable == nil || len(onTable.Tokens) != 1 {
+	if onTable := boardRead(s.boards.Get(ctx, session, defaultTab)); onTable == nil || len(onTable.Tokens) != 1 {
 		t.Errorf("montar o rascunho mexeu na cena que está na mesa: %+v", onTable)
 	}
-	if onTable := s.boards.Get(ctx, session, defaultTab); onTable != nil && onTable.Place != "Taverna do Javali" {
+	if onTable := boardRead(s.boards.Get(ctx, session, defaultTab)); onTable != nil && onTable.Place != "Taverna do Javali" {
 		t.Errorf("a cena da mesa virou outra: %q", onTable.Place)
 	}
 }
@@ -373,7 +379,7 @@ func TestThePlaceOpenOnALiveTableRefusesTheDraft(t *testing.T) {
 	ctx := context.Background()
 	// A taverna vai para o acervo E CONTINUA na mesa — que é o estado normal de
 	// uma sessão em andamento, não um arranjo do teste.
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 	place := s.boards.Places(ctx, campaign)[0]
@@ -413,17 +419,14 @@ func TestThePlaceOpenOnALiveTableRefusesTheDraft(t *testing.T) {
 func TestThePlaceOpenBeforeARestartStillRefusesTheDraft(t *testing.T) {
 	s, campaign, session := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 	place := s.boards.Places(ctx, campaign)[0]
-	// A GRAVAÇÃO é o que o servidor de verdade faz depois de todo gesto
-	// (`persistBoardAndWarn`), e sem ela o disco não sabe da taverna.
-	if dirty, _ := s.boards.Persist(ctx, session, defaultTab); dirty {
-		t.Fatal("a gravação do tabuleiro falhou")
-	}
+	// A GRAVAÇÃO acontece DENTRO do gesto desde a ALE-375: chegar aqui sem erro
+	// já quer dizer que o disco sabe da taverna.
 
-	afterRestart := boards.NewStore(s.queries, s.boards.NewID, &events.Bus{})
+	afterRestart := boards.NewStore(boards.NewSnapshots(s.queries), s.queries, s.boards.NewID, &events.Bus{})
 	_, err := afterRestart.EditPlace(ctx, campaign, place.ID, func(b *board.BoardState) error {
 		b.Tokens = nil
 		return nil
@@ -437,7 +440,7 @@ func TestThePlaceOpenBeforeARestartStillRefusesTheDraft(t *testing.T) {
 	}
 	// O CONTROLE do controle: o store novo está mesmo vazio de memória, então
 	// quem pegou só pode ter sido o disco.
-	if len(afterRestart.OpenBoards(ctx, session)) == 0 {
+	if len(boardsRead(afterRestart.OpenBoards(ctx, session))) == 0 {
 		t.Fatal("o store novo não hidratou nada — o caso mediu outra coisa")
 	}
 }
@@ -473,7 +476,7 @@ func TestANewPlaceIsBornEmptyWithTheChosenGround(t *testing.T) {
 func TestANewPlaceWithAnExistingNameOpensThatOne(t *testing.T) {
 	s, campaign, session := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campaign, s.boards.Get(ctx, session, defaultTab)); err != nil {
+	if err := s.boards.Archive(ctx, campaign, boardRead(s.boards.Get(ctx, session, defaultTab))); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 	saved := s.boards.Places(ctx, campaign)[0]

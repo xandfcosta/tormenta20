@@ -53,7 +53,7 @@ func saveHand(t *testing.T, f sceneFixture, id int64, blob string) {
 func TestTheProficienciesPanelSaysWhatTheClassGrants(t *testing.T) {
 	f, id := guerreiro(t)
 
-	screen := f.pede(t, f.player, http.MethodGet,
+	screen := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=proficiencies", id), "").Body.String()
 
 	if !strings.Contains(screen, "Padrão: Guerreiro") {
@@ -84,7 +84,7 @@ func TestTheProficienciesPanelSaysWhatTheClassGrants(t *testing.T) {
 func TestHeavyArmorGrantsTheLightOne(t *testing.T) {
 	f, id := guerreiro(t)
 
-	rec := f.pede(t, f.player, http.MethodPost,
+	rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/proficiencias/padrao", id), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("restaurar deu %d: %s", rec.Code, rec.Body.String())
@@ -111,7 +111,7 @@ func TestRestoringTheDefaultDiscardsTheManualAdjustment(t *testing.T) {
 	// AUSENTE — os dois lados do erro, num blob só.
 	saveHand(t, f, id, `["armas-exoticas"]`)
 
-	rec := f.pede(t, f.player, http.MethodPost,
+	rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/proficiencias/padrao", id), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("restaurar deu %d: %s", rec.Code, rec.Body.String())
@@ -136,14 +136,14 @@ func TestTogglingTurnsTheProficiencyOnAndOff(t *testing.T) {
 	saveHand(t, f, id, `["armas-marciais"]`)
 	route := fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-marciais", id)
 
-	if rec := f.pede(t, f.player, http.MethodPost, route, ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.player, http.MethodPost, route, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar deu %d: %s", rec.Code, rec.Body.String())
 	}
 	if saved(t, f, id)["armas-marciais"] {
 		t.Fatal("o primeiro toque não DESLIGOU a proficiência")
 	}
 
-	if rec := f.pede(t, f.player, http.MethodPost, route, ""); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.player, http.MethodPost, route, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar de volta deu %d: %s", rec.Code, rec.Body.String())
 	}
 	if !saved(t, f, id)["armas-marciais"] {
@@ -160,7 +160,7 @@ func TestAProficiencyOutsideTheCatalogIsNotSaved(t *testing.T) {
 	f, id := guerreiro(t)
 	saveHand(t, f, id, `["armas-marciais"]`)
 
-	rec := f.pede(t, f.player, http.MethodPost,
+	rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-de-laser", id), "")
 
 	// A MENSAGEM CARREGA O VALOR OFENSOR E O FORMATO ESPERADO: "proficiência
@@ -242,7 +242,7 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 			path = strings.Replace(path, chunk, value, 1)
 		}
 		visited++
-		rec := f.pede(t, f.gm, http.MethodPost, path, "")
+		rec := f.requests(t, f.gm, http.MethodPost, path, "")
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("%s aceitou quem não é dono: %d — a rota não passa pelo `comandoDaFicha`",
 				route, rec.Code)
@@ -276,7 +276,7 @@ func TestEverySheetTabDrawsSomething(t *testing.T) {
 			continue
 		}
 		visited++
-		screen := f.pede(t, f.player, http.MethodGet,
+		screen := f.requests(t, f.player, http.MethodGet,
 			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Value), "").Body.String()
 		if !strings.Contains(screen, ">"+title+"</h2>") {
 			t.Errorf("a aba %q não desenhou painel nenhum", aba.Value)
@@ -327,7 +327,7 @@ func TestNoSheetCommandLosesTheTab(t *testing.T) {
 	posted := regexp.MustCompile(`@post\((?:&#39;|')([^'&]+)(?:&#39;|')\)`)
 	var seen int
 	for _, aba := range sheetui.Tabs() {
-		screen := f.pede(t, f.player, http.MethodGet,
+		screen := f.requests(t, f.player, http.MethodGet,
 			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Value), "").Body.String()
 		for _, found := range posted.FindAllStringSubmatch(screen, -1) {
 			seen++

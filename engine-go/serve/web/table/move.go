@@ -83,7 +83,10 @@ func undoLastStop(st Scene, c commandCtx) (*board.BoardState, error) {
 // movimento é o estado que o `ByUserID` existe para evitar, e sem esta conferência
 // um segundo jogador estenderia o caminho que o primeiro está montando.
 func (s Scene) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square, error) {
-	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	b, err := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	if err != nil {
+		return nil, err
+	}
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
@@ -122,7 +125,11 @@ func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	// peça fora de turno o tempo todo — arrumando a cena, empurrando um NPC —, e
 	// cobrar dele a ação de outro combatente tiraria do turno de quem não se
 	// mexeu (p233).
-	onTurn := movedTokenIsOnTurn(state, st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID))
+	moved, err := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	if err != nil {
+		return nil, err
+	}
+	onTurn := movedTokenIsOnTurn(state, moved)
 	// A CONFERÊNCIA vem ANTES do pouso, e a COBRANÇA depois.
 	//
 	// Cobrar depois basta para o número ficar certo e NÃO basta para a mesa:
@@ -179,7 +186,15 @@ func (s Scene) moveWho(c commandCtx) board.Mover {
 		return who
 	}
 	_, mine, _ := s.tableRoster(c.R.Context(), c.User, c.CampaignID)
-	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	// A LEITURA QUE FALHA DEIXA A POSSE EM FALSO, e este é o lado seguro: sem
+	// saber de quem é a peça, a resposta é "não é sua", e o `assertMovable` do
+	// tabuleiro recusa com a frase dele. O erro não some da mesa — o gesto que
+	// vem a seguir lê o mesmo tabuleiro pela porta que DEVOLVE erro, e é ele
+	// quem conta o que houve.
+	b, err := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	if err != nil {
+		return who
+	}
 	if token := board.FindToken(b, chi.URLParam(c.R, "tokenId")); token != nil && token.CharacterID != nil {
 		who.OwnsCharacter = mine[*token.CharacterID]
 	}
@@ -259,17 +274,22 @@ func (s Scene) boardCommand(
 			return
 		}
 		signals := map[string]any{}
+		aba, err := s.chosenTabOf(r.Context(), sessionID, userID)
+		if err != nil {
+			s.respondGm(w, r, userID, campaignID, sessionID, err, signals, onlyRegions...)
+			return
+		}
 		state, err := mutate(s, commandCtx{
 			R: r, User: userID, CampaignID: campaignID, SessionID: sessionID,
 			// A ABA de quem clicou, resolvida aqui e uma vez só: é ela que diz em
 			// QUAL tabuleiro o gesto acontece. Resolver dentro de cada mutação seria
 			// a mesma pergunta escrita vinte vezes, e a vigésima primeira é a que
 			// esquece.
-			BoardID: s.chosenTabOf(r.Context(), sessionID, userID),
+			BoardID: aba,
 			Signals: signals,
 		})
 		if state != nil {
-			s.deps.PublishBoardState(sessionID, state)
+			s.deps.PublishBoardState(r.Context(), sessionID, state)
 		}
 		if gmOnly {
 			// O `respondGm` escreve o `command_error` do rodapé sozinho.

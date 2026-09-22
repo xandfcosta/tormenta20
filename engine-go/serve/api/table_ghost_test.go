@@ -32,7 +32,7 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	tokenID := f.onBoardAt(t, 4, 2)
 	f.turnPlayer(t)
 
-	before := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	before := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if token := element(t, before, "aria-label", "Arcanista em 4, 2"); token == nil {
 		t.Fatal("a peça não está em 4,2 ANTES da proposta: o canal não está aberto e o que vem abaixo não é evidência")
 	} else if !strings.Contains(token["style"], "--col:4; --lin:2;") {
@@ -42,11 +42,11 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	// O JOGADOR desenha, e é pelos olhos DELE que se lê: para quem pede, o
 	// destino é o fato — a peça sólida vai para lá. Para o mestre é o contrário,
 	// e o guarda disso é o `TestForTheGmTheTokenStaysAndTheGhostGoes`.
-	if rec := f.pede(t, f.player, http.MethodPost,
+	if rec := f.requests(t, f.player, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	after := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	after := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	piece := element(t, after, "aria-label", "Arcanista em 7, 3")
 	if piece == nil {
@@ -64,7 +64,7 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	// E a METADE QUE NÃO PODE TER MUDADO: a peça continua GRAVADA em 4,2. Sem
 	// esta asserção o guarda acima passaria verde sobre uma peça que ANDOU sem
 	// confirmação, que é pior que o defeito que ele conserta.
-	saved := board.FindToken(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
+	saved := board.FindToken(boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)), tokenID)
 	if saved.X != 4 || saved.Y != 2 {
 		t.Errorf("a peça ANDOU na proposta, para %d,%d — o desenho virou gravação", saved.X, saved.Y)
 	}
@@ -76,16 +76,16 @@ func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 
-	noMovement := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	noMovement := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(noMovement, "board-token-ghost") {
 		t.Fatal("há fantasma SEM movimento proposto: ele estaria marcando um começo que não existe")
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	ghost := element(t, screen, "class", "board-token-ghost")
 	if ghost == nil {
@@ -123,11 +123,11 @@ func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if token := element(t, screen, "aria-label", "Arcanista em 4, 2"); token == nil {
 		t.Error("a peça do mestre saiu da casa dela numa proposta que ele ainda não confirmou")
@@ -151,11 +151,11 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 
 	// Três paradas: (0,0) de onde ela saiu, depois (3,0) e (3,4).
 	for _, square := range []string{`{"from":{"X":3,"Y":0}}`, `{"from":{"X":3,"Y":4}}`} {
-		if rec := f.pede(t, f.gm, http.MethodPost, base+"/parada", square); rec.Code != http.StatusOK {
+		if rec := f.requests(t, f.gm, http.MethodPost, base+"/parada", square); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", square, rec.Code)
 		}
 	}
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	wire := element(t, screen, "class", "board-move-arrow")
 	if wire == nil {
@@ -196,17 +196,17 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 	tokenID := f.onBoardAt(t, 4, 2)
 	// A cena precisa ter as três famílias no ar, senão o guarda mede o que
 	// sobrou: terreno pintado, movimento proposto (trilha e paradas) e alcance.
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 5, 2, 5, 2)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar terreno deu %d", rec.Code)
 	}
 	for _, stop := range []string{`{"from":{"X":7,"Y":3}}`, `{"from":{"X":7,"Y":6}}`} {
-		if rec := f.pede(t, f.gm, http.MethodPost,
+		if rec := f.requests(t, f.gm, http.MethodPost,
 			f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", stop); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", stop, rec.Code)
 		}
 	}
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	withBox := classesThatReceiveBox(t)
 	if len(withBox) < 3 {
@@ -260,11 +260,11 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 func TestNoElementRepeatsAnAttribute(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	z := html.NewTokenizer(strings.NewReader(screen))
 	elements := 0

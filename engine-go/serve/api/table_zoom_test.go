@@ -17,7 +17,7 @@ import (
 func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
-	screen := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: a faixa está na página. Sem isto, as buscas abaixo falhariam
 	// por motivo errado e "não achei o limite" leria como "o limite sumiu"
@@ -51,7 +51,7 @@ func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	// depender do mestre para aproximar no telefone não é enquadramento, é
 	// pedido. Vale para o centralizar pela mesma razão — achar o grupo num plano
 	// sem bordas é problema de quem está olhando, não de quem montou a cena.
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forPlayer, "Enquadrar o mapa") {
 		t.Error("o jogador não recebeu os controles de enquadramento")
 	}

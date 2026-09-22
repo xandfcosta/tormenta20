@@ -16,7 +16,7 @@ func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(body, "Ogro cansado") {
 		t.Fatal("o ogro sumiu da fila do jogador — ele deve ver QUEM está lá")
@@ -45,7 +45,7 @@ func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 		t.Fatalf("semear chefe: %v", err)
 	}
 
-	body := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	body := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if strings.Contains(body, "Chefe secreto") {
 		t.Error("a fila de fora de cena vazou para o jogador")
@@ -55,7 +55,7 @@ func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 	}
 	// O mestre, na MESMA página, continua vendo o que montou — sem esta metade
 	// o teste passaria com um `redactForPlayers` aplicado a todo mundo.
-	gmBody := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	gmBody := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(gmBody, "Chefe secreto") {
 		t.Error("o mestre perdeu a própria fila — a redação está pegando o papel errado")
 	}
@@ -70,7 +70,7 @@ func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	body := f.posta(t, f.player, f.tableUrl()+"/iniciativa", `{"d20":47}`)
+	body := f.posts(t, f.player, f.tableUrl()+"/iniciativa", `{"d20":47}`)
 
 	if !strings.HasPrefix(body, "event: datastar-patch-signals") {
 		t.Fatalf("a recusa não saiu como evento do Datastar, saiu como:\n%s", body)
@@ -103,7 +103,7 @@ func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 
 	// O corpo é conferido, e não só o código: com a ordem trocada o servidor
 	// devolve 200 com um erro DENTRO do sinal, e "deu 200" não é resposta.
-	if response := f.posta(t, f.player, f.tableUrl()+"/iniciativa", `{"d20":14}`); !strings.Contains(response, `{"error":""}`) {
+	if response := f.posts(t, f.player, f.tableUrl()+"/iniciativa", `{"d20":14}`); !strings.Contains(response, `{"error":""}`) {
 		t.Fatalf("a escrita não foi aceita, respondeu:\n%s", response)
 	}
 

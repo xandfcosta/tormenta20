@@ -12,7 +12,7 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 	f.turnPlayer(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	rec := f.pede(t, f.player, http.MethodPost, base+"/previa", `{"from":{"X":9,"Y":2}}`)
+	rec := f.requests(t, f.player, http.MethodPost, base+"/previa", `{"from":{"X":9,"Y":2}}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("a prévia deu %d", rec.Code)
 	}
@@ -32,7 +32,7 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 	}
 
 	// E A CENA NÃO MUDOU: nem a peça andou, nem nasceu proposta.
-	screen := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	screen := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(screen, "board-token-ghost") {
 		t.Error("a prévia deixou uma proposta na cena: arrastar viraria uma proposta por casa")
 	}
@@ -52,10 +52,10 @@ func TestThePreviewExtendsThePathAlreadyDrawn(t *testing.T) {
 	f.turnPlayer(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.player, http.MethodPost, base+"/parada", `{"from":{"X":3,"Y":0}}`); rec.Code != http.StatusOK {
+	if rec := f.requests(t, f.player, http.MethodPost, base+"/parada", `{"from":{"X":3,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a primeira parada deu %d", rec.Code)
 	}
-	signals := trechoDeSinais(f.pede(t, f.player, http.MethodPost, base+"/previa", `{"from":{"X":6,"Y":0}}`).Body.String())
+	signals := trechoDeSinais(f.requests(t, f.player, http.MethodPost, base+"/previa", `{"from":{"X":6,"Y":0}}`).Body.String())
 
 	// Três mais três: o total é 6, e não 3. Recomeçar daria "3 de 6".
 	if !strings.Contains(signals, "6 de 6 quadrados") {
@@ -77,7 +77,7 @@ func TestThePreviewPaintsTheThreeBands(t *testing.T) {
 	tokenID := f.onBoardAt(t, 0, 0)
 	f.turnPlayer(t)
 
-	signals := trechoDeSinais(f.pede(t, f.player, http.MethodPost,
+	signals := trechoDeSinais(f.requests(t, f.player, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa", `{"from":{"X":15,"Y":0}}`).Body.String())
 
 	for _, wire := range []string{"preview_arrow_fits", "preview_arrow_second", "preview_arrow_beyond"} {
@@ -98,7 +98,7 @@ func TestOutOfCombatThePreviewMeasuresWithoutBands(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 0, 0)
 
-	signals := trechoDeSinais(f.pede(t, f.gm, http.MethodPost,
+	signals := trechoDeSinais(f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa", `{"from":{"X":15,"Y":0}}`).Body.String())
 
 	if !strings.Contains(signals, `"preview_arrow_second":""`) || !strings.Contains(signals, `"preview_arrow_beyond":""`) {

@@ -26,13 +26,13 @@ func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
-	one := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	one := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(one, "board-tab") {
 		t.Error("com uma cena aberta a barra de abas apareceu — é ficha só, sobre o mapa")
 	}
 
 	f.openSecond(t, "Cripta")
-	two := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	two := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(two, "Ver o tabuleiro Cripta") {
 		t.Fatal("com duas cenas abertas não há como chegar à segunda")
@@ -60,12 +60,12 @@ func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 	f.seedOpenBoard(t, "stone") // "Taverna do Javali", a primeira
 	crypt := f.openSecond(t, "Cripta")
 
-	rec := f.pede(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+crypt.ID, "")
+	rec := f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+crypt.ID, "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o jogador não conseguiu trocar de aba: %d", rec.Code)
 	}
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forPlayer, "Ver o tabuleiro Taverna do Javali") {
 		t.Error("o jogador trocou para a cripta e a taverna deixou de ser alcançável")
 	}
@@ -73,7 +73,7 @@ func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 		t.Error("a tela do jogador não seguiu a aba que ele escolheu")
 	}
 
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forGM, "Taverna do Javali</h2>") {
 		t.Error("o clique do jogador arrastou a tela do mestre junto")
 	}
@@ -91,16 +91,16 @@ func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 	crypt := f.openSecond(t, "Cripta")
 	ctx := context.Background()
 
-	f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+crypt.ID, "")
-	rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 2, 3, 2, 3))
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+crypt.ID, "")
+	rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 2, 3, 2, 3))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
 
-	if n := len(f.s.tableHost().Boards().Get(ctx, f.sessionID, crypt.ID).Difficult); n != 1 {
+	if n := len(boardRead(f.s.tableHost().Boards().Get(ctx, f.sessionID, crypt.ID)).Difficult); n != 1 {
 		t.Errorf("a cripta — a aba aberta — recebeu %d casas de terreno, esperado 1", n)
 	}
-	if n := len(f.s.tableHost().Boards().Get(ctx, f.sessionID, tavern.ID).Difficult); n != 0 {
+	if n := len(boardRead(f.s.tableHost().Boards().Get(ctx, f.sessionID, tavern.ID)).Difficult); n != 0 {
 		t.Errorf("a taverna, que ninguém estava olhando, recebeu %d casas de terreno", n)
 	}
 }
@@ -115,15 +115,15 @@ func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	crypt := f.openSecond(t, "Cripta")
-	f.pede(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+crypt.ID, "")
+	f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+crypt.ID, "")
 
 	// O mestre entra na cripta e a encerra.
-	f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+crypt.ID, "")
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+crypt.ID, "")
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	// A frase é a DO JOGADOR, copiada do `.templ`: uma paráfrase, ou a frase do
 	// MESTRE (que o jogador nunca lê), passa SEMPRE — verde sobre o defeito exato
 	// que este guarda nomeia.
@@ -146,12 +146,12 @@ func TestATabUnderTheCurtainDoesNotTellThePlayerTheSceneName(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	ambush := f.openSecond(t, "Cripta do Rei Caolho")
-	f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+ambush.ID, "")
-	if rec := f.pede(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/cortina/fechar", ""); rec.Code != http.StatusOK {
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+ambush.ID, "")
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/cortina/fechar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("fechar a cortina deu %d", rec.Code)
 	}
 
-	forPlayer := f.pede(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if strings.Contains(forPlayer, "Rei Caolho") {
 		t.Fatal("o nome da cena sob cortina saiu no HTML do jogador")
@@ -161,7 +161,7 @@ func TestATabUnderTheCurtainDoesNotTellThePlayerTheSceneName(t *testing.T) {
 		t.Error("a aba sob cortina sumiu da barra do jogador em vez de se chamar pela posição")
 	}
 	// Para o mestre a cortina não é sobre ele: o nome continua na barra dele.
-	forGM := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(forGM, "Rei Caolho") {
 		t.Error("o mestre perdeu o nome da própria cena por causa da cortina dele")
 	}

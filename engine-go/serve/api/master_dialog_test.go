@@ -89,7 +89,7 @@ func TestSearchAndFilterDoNotOpenTheEntryCard(t *testing.T) {
 // atribui a um commit.
 func TestClickingTheRowDoesNotOpenTheEntryCardOnItsOwn(t *testing.T) {
 	f := newSceneFixture(t)
-	screen := f.pede(t, f.gm, http.MethodGet, "/mestre/bestiario", "").Body.String()
+	screen := f.requests(t, f.gm, http.MethodGet, "/mestre/bestiario", "").Body.String()
 
 	if !strings.Contains(screen, "criatura=") {
 		t.Fatal("a lista não desenhou — o guarda mediria a tela errada")

@@ -19,7 +19,7 @@ func TestTheTableShowsTheTemporaryHpOfWhoIsInTheQueue(t *testing.T) {
 	f.scene(t)
 	const sentence = "mais 30 temporários"
 
-	before := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	before := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(before, sentence) {
 		t.Fatal("a Mesa SEM poça já fala em temporários — o caso mediria o repouso")
 	}
@@ -30,7 +30,7 @@ func TestTheTableShowsTheTemporaryHpOfWhoIsInTheQueue(t *testing.T) {
 		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
 	}
 
-	after := f.pede(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	after := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O NOME ACESSÍVEL é o canal ÚNICO no trilho da fila, que não tem número
 	// nenhum — é ele, e não o filete dourado, que responde para quem não vê.
 	if !strings.Contains(after, sentence) {
@@ -87,7 +87,7 @@ func TestAHiddenPoolHidesItsTemporaryHpToo(t *testing.T) {
 		t.Fatalf("com o PV à vista a linha diz %d de reserva, e o Campo de Força dá 30", open)
 	}
 
-	if rec := f.pede(t, f.gm, http.MethodPost,
+	if rec := f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/iniciativa/"+sheet+"/vitais/hp/oculto", ""); rec.Code != http.StatusOK {
 		t.Fatalf("esconder o PV devolveu %d", rec.Code)
 	}
