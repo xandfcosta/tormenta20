@@ -79,6 +79,10 @@ type SessionRuntimeState struct {
 	// é derivado da cena em curso porque a sessão continua tendo tido três
 	// cenas depois que a terceira acaba.
 	ScenesSoFar int `json:"scenesSoFar,omitempty"`
+	// PendingAttack é o ataque rolado e ainda não confirmado — no máximo um.
+	// Mora aqui, e não no tabuleiro, porque o ataque é entre LINHAS DA FILA: uma
+	// mesa sem mapa aberto continua tendo combate. Ver `attack.go`.
+	PendingAttack *PendingAttack `json:"pendingAttack,omitempty"`
 }
 
 // EmptyRuntimeState é um rastreador novo. Cada chamada devolve uma fatia nova,

@@ -582,6 +582,51 @@
   }
 
 
+  /* A FAIXA DO ATAQUE PROPOSTO, irmã da `board-helper` do movimento.
+   *
+   * Ela mora ACIMA da superfície e atravessa a largura, porque é a coisa que a
+   * mesa tem de decidir agora — embaixo do mapa, a 390px, ela nasceria fora da
+   * dobra no exato instante em que alguém precisa clicar. */
+  .mesa-ataque {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--grimorio-iron);
+    background: var(--grimorio-panel);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* O SELO do veredicto. Ele é o que decide o clique, então carrega a tinta —
+   * as três cores são as da casa, e nenhuma delas é nova: o crítico usa o ouro
+   * do grimório, o acerto a tinta de texto, e o erro a silenciada. */
+  .mesa-ataque-selo {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid currentColor;
+    border-radius: 0.125rem;
+    padding: 0.0625rem 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .mesa-ataque-critico {
+    color: var(--grimorio-gold);
+    background: color-mix(in oklab, var(--grimorio-gold) 12%, transparent);
+  }
+
+  .mesa-ataque-acerto {
+    color: var(--foreground);
+  }
+
+  .mesa-ataque-erro {
+    color: var(--muted-foreground);
+  }
+
   /* Hide native number spinners — replaced by the NumberInput buttons. */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {

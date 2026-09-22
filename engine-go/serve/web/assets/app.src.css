@@ -1397,6 +1397,22 @@ html {
   /* As peças e a trilha sobem acima da camada de casas. */
   .board-token { z-index: 2; }
 
+  /* A PEÇA ALVEJADA enquanto há ataque pendurado contra ela. O anel é
+   * PONTILHADO para não se confundir com o da vez, que é contínuo e dourado:
+   * são duas coisas diferentes, e a mesa não pode ter de olhar duas vezes.
+   *
+   * ELA MORA AQUI e não junto das regras da faixa do ataque, e a razão não é
+   * arrumação: a `.board-token` declara `outline: none` para matar o anel de
+   * foco do botão, e no Tailwind v4 a CAMADA decide antes da especificidade.
+   * Escrita no `index.css`, que é `base`, esta regra perdia para o
+   * `components` daqui mesmo com duas classes contra uma — e o realce
+   * simplesmente não desenhava: a classe no elemento, o `outline` computado em
+   * `none`, sem erro e sem aviso. Foi olhar a tela que pegou (ALE-364). */
+  .board-token.board-token-targeted {
+    outline: 2px dashed var(--destructive);
+    outline-offset: 2px;
+  }
+
   /* O MENU DE CONTEXTO DA PEÇA (ALE-206).
    *
    * Ancorado na CASA da peça e saindo dela para baixo, como o do marcador: o

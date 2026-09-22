@@ -61,7 +61,11 @@ type View struct {
 	// GM é nil para o jogador, e essa é a trava na CENA: não há como
 	// desenhar controle que não existe na view. Esconder por classe deixaria o
 	// HTML na página para quem abrisse o inspetor.
-	GM *viewGm
+	// Attack é o provisório rolado e ainda não decidido — nil quando não há.
+	// Ele é da CENA e não do tabuleiro: a mesa sem mapa aberto continua tendo
+	// combate, e a faixa tem de aparecer do mesmo jeito.
+	Attack *attackProposal
+	GM     *viewGm
 	// Notes é o caderno da noite, e ele é DO MESTRE. Vazio para quem não é
 	// mestre, pela mesma trava do resto — a view não tem o que desenhar, em vez
 	// de a tela esconder.

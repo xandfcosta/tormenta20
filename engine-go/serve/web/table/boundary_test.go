@@ -53,6 +53,15 @@ var permitidos = map[string]bool{
 	// esta cena escrevia nela direto, com uma segunda cópia da trava. As quatro
 	// escritas saíram daqui (ALE-353).
 	"t20engine/app/campaign": true,
+	// O `app/combat` é o gesto de ATACAR, pela mesma razão dos de cima: ele está
+	// ABAIXO desta cena, chega por parâmetro no `New`, e não há ciclo a desviar.
+	//
+	// Ele é o que junta a FICHA (com o que se ataca e quanto se defende), a
+	// REGRA do livro (d20 contra Defesa) e o REGIME (o provisório na fila) —
+	// três contextos que não se conhecem, e que a cena também não deve juntar
+	// sozinha: fazê-lo aqui poria regra de combate dentro de um handler
+	// (ALE-364).
+	"t20engine/app/combat": true,
 	// O `app/rest` é o descanso e a expiração de escopo, pela mesma razão.
 	"t20engine/app/rest": true,
 	// O `app/character` são os GESTOS da ficha, pela mesma razão: a condição de

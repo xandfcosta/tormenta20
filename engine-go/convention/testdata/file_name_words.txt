@@ -23,6 +23,7 @@ ascii
 # AS PALAVRAS QUE UM NOME DE ARQUIVO PODE USAR (ALE-301).
 asset
 assets
+attack
 attribute
 attributes
 audio
@@ -83,6 +84,7 @@ color
 colors
 columns
 combat
+combatants
 commands
 compose
 conditional
@@ -433,6 +435,7 @@ static
 store
 stored
 stream
+strike
 stroke
 sum
 surfaces

@@ -24,14 +24,18 @@ import (
 // que o livro não aplica (p252).
 func (st *Store) SpendAction(sessionID int64, cost engine.ActionCost) (*live.SessionRuntimeState, error) {
 	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error {
-			left, charges, err := spendsFromTurn(s, cost)
-			if err != nil || !charges {
-				return err
-			}
-			s.Scene.StandardLeft, s.Scene.MovementLeft = left.Standard, left.Movement
-			return nil
-		})
+		func(s *live.SessionRuntimeState) error { return chargeTurn(s, cost) })
+}
+
+// chargeTurn tira o custo do turno em curso, DENTRO de uma mutação — é o passo
+// que o `SpendAction` e a confirmação do ataque compartilham.
+func chargeTurn(s *live.SessionRuntimeState, cost engine.ActionCost) error {
+	left, charges, err := spendsFromTurn(s, cost)
+	if err != nil || !charges {
+		return err
+	}
+	s.Scene.StandardLeft, s.Scene.MovementLeft = left.Standard, left.Movement
+	return nil
 }
 
 // ActionFits diz se o custo CABERIA no turno, sem cobrar nada.
