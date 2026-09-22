@@ -32,7 +32,10 @@ type spellValueRow struct {
 	Circle   int `json:"circle"`
 	BookPage int `json:"bookPage"`
 	Augments []struct {
-		PmCost int `json:"pmCost"`
+		PmCost         int    `json:"pmCost"`
+		Exclusive      bool   `json:"exclusive"`
+		ClassOnly      string `json:"classOnly"`
+		RequiresCircle int    `json:"requiresCircle"`
 	} `json:"augments"`
 }
 
@@ -172,5 +175,74 @@ func TestEveryMovedAugmentIsOnTheRightSpell(t *testing.T) {
 			t.Errorf("%s tem %d aprimoramentos e o livro (p%d) dá %d — %s",
 				p.spell, got, p.page, p.count, p.why)
 		}
+	}
+}
+
+// QUANTOS APRIMORAMENTOS CADA MAGIA TEM, e por que AGORA isto pode ser preso.
+//
+// A issue pedia este guarda desde o começo, e ele não podia existir antes: o
+// catálogo divergia do livro em catorze magias, e prender número não conferido
+// é transcrever o palpite num segundo lugar. Com o `audit-spells.py` fechando em
+// **198 de 198 casadas, zero divergências**, o total passou a ser um fato
+// conferido — e é o total que se prende, não a tabela.
+//
+// A ARITMÉTICA É O CONTROLE, e é o que separa este guarda de um `expect` por
+// campo: 516 é a soma do que o livro dá às 198 magias. Uma magia que perca um
+// aprimoramento derruba a soma; uma que ganhe um inventado, também. Não é
+// preciso listar as 198 para isso, e listá-las seria a tabela transcrita de novo.
+//
+// As três contagens menores existem porque cada uma protege uma regra diferente,
+// e nenhuma delas se deduz do total.
+func TestTheSpellCatalogKeepsWhatTheBookGives(t *testing.T) {
+	spells := readSpells(t)
+	if len(spells) != 198 {
+		t.Fatalf("%d magias no catálogo, e o capítulo de Magia tem 198 — "+
+			"os números abaixo perderam o sentido", len(spells))
+	}
+
+	total, exclusive, classOnly, requiresCircle := 0, 0, 0, 0
+	for _, row := range spells {
+		total += len(row.Augments)
+		for _, a := range row.Augments {
+			if a.Exclusive {
+				exclusive++
+			}
+			if a.ClassOnly != "" {
+				classOnly++
+			}
+			if a.RequiresCircle > 0 {
+				requiresCircle++
+			}
+		}
+	}
+
+	if total != 516 {
+		t.Errorf("o catálogo tem %d aprimoramentos, e o livro dá 516 às 198 magias.\n"+
+			"Rode `python3 scripts/audit-spells.py` — ele diz QUAL magia e de que lado.", total)
+	}
+	// EXCLUSIVO: "não pode ser usado em conjunto com outros aprimoramentos"
+	// (p171). São 16 — os 14 truques, que são exclusivos por definição, MAIS
+	// dois que não são truque: o pó de rubi da Luz (p197) e a esfera da
+	// Invisibilidade (p195). Os dois faltavam, e a ALE-340 previu isso com todas
+	// as letras: eram os únicos dois exclusivos não-truque do livro, e por isso
+	// não havia registro nenhum carregando a marca sem o truque junto.
+	if exclusive != 16 {
+		t.Errorf("%d aprimoramentos exclusivos, e o livro tem 16 (os 14 truques + o pó de "+
+			"rubi da Luz e a esfera da Invisibilidade)", exclusive)
+	}
+	// APENAS ARCANOS / APENAS DIVINOS. Eram DOIS no catálogo inteiro quando a
+	// ALE-340 abriu, e isso era o sintoma: só a Luz tem quatro deles.
+	if classOnly != 5 {
+		t.Errorf("%d aprimoramentos restritos a uma lista, e o livro tem 5", classOnly)
+	}
+	// "REQUER Nº CÍRCULO" é o que a tela desenha com cadeado em vez de esconder.
+	//
+	// O 143 foi CONTADO NO LIVRO pelo leitor por coordenada do
+	// `audit-spells.py`, e não deduzido do catálogo — que é o que este guarda
+	// existe para conferir. O `pdftotext` liso conta 120, porque ele quebra
+	// "Requer 2º círculo" entre duas linhas e perde 23; os dois lados desta
+	// comparação têm de ser medidos pelo MESMO instrumento.
+	if requiresCircle != 143 {
+		t.Errorf("%d aprimoramentos exigem círculo, e o livro marca 143", requiresCircle)
 	}
 }

@@ -230,10 +230,14 @@ func TestAnAugmentOutOfReachShowsLocked(t *testing.T) {
 	if !strings.Contains(screen, "exige o 3º círculo") {
 		t.Error("o aprimoramento fora de alcance não diz que está trancado")
 	}
-	// A Invisibilidade tem TRÊS aprimoramentos e dois exigem círculo (3º e 4º).
-	// Contar é o CONTROLE: uma tela que trancasse tudo também conteria a frase
-	// acima, e uma que não trancasse nada nunca chegaria aqui.
-	if locked := strings.Count(screen, "exige o"); locked != 2 {
-		t.Errorf("a tela trancou %d aprimoramentos, quer 2 (3º e 4º círculo)", locked)
+	// A Invisibilidade tem QUATRO aprimoramentos e três exigem círculo (3º, 3º e
+	// 4º). Contar é o CONTROLE: uma tela que trancasse tudo também conteria a
+	// frase acima, e uma que não trancasse nada nunca chegaria aqui.
+	//
+	// Eram três e dois até a ALE-340: faltava no catálogo a ESFERA de
+	// invisibilidade (p195, +3 PM, 3º círculo), que é um dos dois aprimoramentos
+	// exclusivos não-truque do livro. Este guarda foi quem acusou a correção.
+	if locked := strings.Count(screen, "exige o"); locked != 3 {
+		t.Errorf("a tela trancou %d aprimoramentos, quer 3 (3º, 3º e 4º círculo)", locked)
 	}
 }
