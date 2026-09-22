@@ -29,6 +29,10 @@ func (f *queueDouble) ProposeAttack(_ int64, a live.PendingAttack) (*live.Sessio
 	return f.state, live.ProposeAttack(f.state, a)
 }
 
+// CharacterActionFits deixa agir: a economia de ação é prendida pelo handler,
+// na mesa de verdade (`serve/api/table_attack_test.go`).
+func (f *queueDouble) CharacterActionFits(int64, engine.ActionCost) error { return nil }
+
 // sheetDouble é a porta traduzida à mão: cada linha da queueDouble vira um combatente com
 // os números que o caso quer.
 type sheetDouble map[string]Combatant

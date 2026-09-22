@@ -43,6 +43,10 @@ type Combatants interface {
 type Tables interface {
 	GetState(sessionID int64) *live.SessionRuntimeState
 	ProposeAttack(sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
+	// CharacterActionFits diz se este personagem pode gastar o custo AGORA: se
+	// ele pode agir (o instante, pelo PV e pelas condições da ficha) e se sobrou
+	// ação no turno. Não cobra nada — quem cobra é a confirmação.
+	CharacterActionFits(characterID int64, cost engine.ActionCost) error
 }
 
 // Strike resolve e propõe ataques.
@@ -86,7 +90,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 	if state == nil {
 		return live.PendingAttack{}, fmt.Errorf("a sessão %d não tem mesa aberta: %w", req.SessionID, app.ErrNotFound)
 	}
-	atacante, err := entryOf(state, req.AttackerEntryID)
+	attackerEntry, err := entryOf(state, req.AttackerEntryID)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
@@ -99,13 +103,21 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 	// o nome dele, que é pior do que não deixar atacar.
 	if role != "gm" && !req.OwnsAttacker {
 		return live.PendingAttack{}, fmt.Errorf(
-			"%s não é seu personagem: %w", atacante.Label, app.ErrRefused)
+			"%s não é seu personagem: %w", attackerEntry.Label, app.ErrRefused)
 	}
-	if atacante.ID == target.ID {
+	if attackerEntry.ID == target.ID {
 		return live.PendingAttack{}, fmt.Errorf("ninguém ataca a si mesmo: %w", app.ErrRefused)
 	}
+	// AGREDIR É AÇÃO PADRÃO (p233), e a pergunta vem ANTES de rolar: um d20
+	// rolado por quem está atordoado, ou já gastou a padrão, é um provisório que
+	// a mesa vê e que nunca poderia ter acontecido.
+	if attackerEntry.CharacterID != nil {
+		if err := s.tables.CharacterActionFits(*attackerEntry.CharacterID, engine.ActionStandard); err != nil {
+			return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
+		}
+	}
 
-	striker, err := s.combatants.Of(ctx, atacante)
+	striker, err := s.combatants.Of(ctx, attackerEntry)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
@@ -123,7 +135,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		return live.PendingAttack{}, err
 	}
 
-	d20, err := s.oD20(req.D20)
+	d20, err := s.d20Of(req.D20)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
@@ -137,36 +149,36 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		return live.PendingAttack{}, err
 	}
 
-	provisorio := live.PendingAttack{
-		AttackerEntryID: atacante.ID, TargetEntryID: target.ID, Weapon: weapon.Name,
+	pending := live.PendingAttack{
+		AttackerEntryID: attackerEntry.ID, TargetEntryID: target.ID, Weapon: weapon.Name,
 		Roll: out.Roll, Total: out.Total, Defense: victim.Defense,
 		Hit: out.Hit, Critical: out.Critical,
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
 		Damage: out.Damage, ByUserID: who.ID,
 	}
-	if _, err := s.tables.ProposeAttack(req.SessionID, provisorio); err != nil {
+	if _, err := s.tables.ProposeAttack(req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err
 	}
-	return provisorio, nil
+	return pending, nil
 }
 
-// oD20 devolve a rolagem, do cliente ou do servidor.
+// d20Of devolve a rolagem, do cliente ou do servidor.
 //
 // O RECEBIDO É CONFERIDO, e é a mesma linha do `SelfEntry` da iniciativa: um
 // número fora de 1..20 não é um dado, é um pedido montado à mão — e o servidor
 // que o aceita dá crítico a quem digitou 40.
-func (s Strike) oD20(recebido *int) (int, error) {
-	if recebido == nil {
+func (s Strike) d20Of(given *int) (int, error) {
+	if given == nil {
 		roll, err := s.rollDie(20)
 		if err != nil {
 			return 0, fmt.Errorf("rolar o d20: %w", err)
 		}
 		return roll, nil
 	}
-	if *recebido < 1 || *recebido > 20 {
-		return 0, fmt.Errorf("o d20 rolado foi %d, e um d20 vai de 1 a 20: %w", *recebido, app.ErrRefused)
+	if *given < 1 || *given > 20 {
+		return 0, fmt.Errorf("o d20 rolado foi %d, e um d20 vai de 1 a 20: %w", *given, app.ErrRefused)
 	}
-	return *recebido, nil
+	return *given, nil
 }
 
 func entryOf(st *live.SessionRuntimeState, entryID string) (live.InitiativeEntry, error) {

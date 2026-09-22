@@ -1,6 +1,7 @@
 package session
 
 import (
+	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/infra/events"
 )
@@ -35,9 +36,21 @@ func (st *Store) CommitAttack(sessionID int64, who live.Attacker) (*live.Session
 	if err != nil {
 		return nil, err
 	}
+	// AGREDIR É AÇÃO PADRÃO (p233), cobrada de quem ataca SE ele ainda está na
+	// vez — a mesma regra do movimento: o mestre confirma fora de hora o tempo
+	// todo, e cobrar do turno de outro tiraria a ação de quem não atacou. A
+	// CONFERÊNCIA vem antes do dano e a COBRANÇA depois, pela razão do
+	// `ActionFits`: entre propor e confirmar o jogador pode ter conjurado, e o
+	// dano de um ataque que não cabia mais não pode pousar.
+	onTurn := attackerIsOnTurn(st.GetState(sessionID), attack)
+	if onTurn {
+		if err := st.ActionFits(sessionID, engine.ActionStandard); err != nil {
+			return nil, err
+		}
+	}
 	if attack.Damage > 0 {
-		perda := int64(-attack.Damage)
-		if _, err := st.DeltaVitals(sessionID, attack.TargetEntryID, &perda, nil); err != nil {
+		loss := int64(-attack.Damage)
+		if _, err := st.DeltaVitals(sessionID, attack.TargetEntryID, &loss, nil); err != nil {
 			return nil, err
 		}
 	}
@@ -49,8 +62,19 @@ func (st *Store) CommitAttack(sessionID int64, who live.Attacker) (*live.Session
 				return err
 			}
 			live.ClearPendingAttack(s)
-			return nil
+			if !onTurn {
+				return nil
+			}
+			return chargeTurn(s, engine.ActionStandard)
 		})
+}
+
+// attackerIsOnTurn diz se quem atacou é a linha da vez em curso.
+func attackerIsOnTurn(s *live.SessionRuntimeState, attack live.PendingAttack) bool {
+	if s == nil || s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
+		return false
+	}
+	return s.Initiative[s.TurnIndex].ID == attack.AttackerEntryID
 }
 
 // CancelAttack descarta o provisório sem mexer em ninguém.
