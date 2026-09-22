@@ -61,13 +61,9 @@ func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 
 // ── PUBLICAR, que é do hospedeiro ────────────────────────────────────────────
 
-// Os DOIS passos ficam escritos aqui, separados: o disco primeiro, o fio depois.
-// Com a gravação escondida dentro do publicador, apagar o publicador — que é a
-// leitura natural de "isto emite para ninguém", já que o `SSEHub` não tem
-// ouvinte em produção — levaria a gravação junto, e a mesa passaria a viver só
-// em memória.
+// PublishSessionState só EMITE: o estado que chega aqui já está gravado, porque
+// a gravação virou parte da mutação (ALE-371).
 func (h tableHost) PublishSessionState(sessionID int64, state *live.SessionRuntimeState) {
-	h.rules.saveSession(sessionID)
 	h.rules.publishSessionState(sessionID, state)
 }
 

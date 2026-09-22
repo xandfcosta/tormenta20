@@ -28,24 +28,20 @@ const defaultTab = ""
 //
 // Em GOROUTINE porque o mestre não espera o disco no meio do turno: num prato
 // girante o toque chega a centenas de milissegundos.
+//
+// Ela CONTA no `inBackground`, e passou a contar na ALE-371: quem contava era a
+// gravação da fila, que virou parte da mutação e não roda mais em goroutine
+// nenhuma. Sem isto o contador ficaria sem ninguém a contar, e o tabuleiro —
+// agora o único trabalho disparado depois da resposta — escreveria num banco
+// que o desligamento já fechou.
 func (tr tableRules) saveBoard(sessionID int64, board *board.BoardState) {
 	if board == nil {
 		return
 	}
-	go tr.persistBoardAndWarn(sessionID, board.ID)
-}
-
-// saveSession GRAVA o estado da sessão. O irmão do `saveBoard`, e pela mesma
-// razão — ver lá.
-//
-// Ela conta no `inBackground` e o tabuleiro não: quem espera no `Shutdown` é
-// este contador. Diferença conhecida e não "arrumada" de passagem — mexer no
-// que o desligamento espera é decisão de quem mediu o desligamento.
-func (tr tableRules) saveSession(sessionID int64) {
 	tr.inBackground.Add(1)
 	go func() {
 		defer tr.inBackground.Done()
-		tr.persistSessionAndWarn(sessionID)
+		tr.persistBoardAndWarn(sessionID, board.ID)
 	}()
 }
 
@@ -117,22 +113,10 @@ type liveCtx struct {
 	Role       string
 }
 
-// publishSessionState transmite o estado às duas salas por papel. Ela NÃO grava
-// — ver o `saveSession`.
+// publishSessionState transmite o estado às duas salas por papel. Ela não grava
+// porque não há o que gravar: quando o estado chega aqui, ele JÁ está no banco
+// (ALE-371).
 func (tr tableRules) publishSessionState(sessionID int64, state *live.SessionRuntimeState) {
 	tr.sse.EmitOrdered(sessionID, "gm", "session-state", state.Seq, state)
 	tr.sse.EmitOrdered(sessionID, "player", "session-state", state.Seq, live.RedactForPlayers(state))
-}
-
-// persistSessionAndWarn persiste e avisa a mesa SÓ quando o sinal de sujeira
-// vira — primeira falha, ou uma tentativa que se recuperou. Quem é dono do
-// sinal é o store.
-func (tr tableRules) persistSessionAndWarn(sessionID int64) {
-	Dirty, changed := tr.sessions.Persist(context.Background(), sessionID)
-	if !changed {
-		return
-	}
-	tr.sse.Emit(sessionID, "", "persistence-warning", map[string]any{
-		"sessionId": sessionID, "Dirty": Dirty,
-	})
 }

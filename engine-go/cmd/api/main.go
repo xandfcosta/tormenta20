@@ -88,9 +88,9 @@ func main() {
 	if err := serve(ctx, cfg, mux); err != nil {
 		log.Fatalf("listen: %v", err)
 	}
-	// O `Shutdown` do `net/http` espera as REQUISIÇÕES, e a gravação do estado
-	// da sessão não é uma: ela roda em goroutine depois da resposta. Sem esta
-	// linha, o último estado da noite é cortado pelo `defer database.Close()`.
+	// O `Shutdown` do `net/http` espera as REQUISIÇÕES, e a gravação do
+	// tabuleiro não é uma: ela roda em goroutine depois da resposta. Sem esta
+	// linha, o último tabuleiro da noite é cortado pelo `defer database.Close()`.
 	//
 	// Aqui e não dentro do `serve` porque o `defer` do banco é de MAIN, e
 	// esperar tem de acontecer antes dele.

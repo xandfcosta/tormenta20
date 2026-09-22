@@ -7,11 +7,12 @@ import (
 
 // O FIM DA VIDA de uma sessão, e de tudo que ela deixou em memória.
 //
-// A mesa roda de MEMÓRIA: o tabuleiro num mapa por sessão no `boards.Store`, a
-// fila noutro no `session.Store`. Apagar a linha do banco não esvazia nenhum dos
-// dois, e o que sobra não é inerte — o `Persist` seguinte bate na chave
-// estrangeira, acende o `Dirty`, e a marca não sai mais: só um `Persist` bem
-// sucedido a apaga, e nenhum vai suceder.
+// Os dois stores guardam a mesa em mapas por sessão, e apagar a linha do banco
+// não esvazia nenhum dos dois. O que sobra não é inerte, e por motivos
+// diferentes em cada um: a FILA é cache (ALE-371) e responderia por uma sessão
+// que não existe mais; o TABULEIRO ainda grava depois, então a gravação
+// seguinte bate na chave estrangeira, acende o `Dirty`, e a marca não sai mais
+// — só um `Persist` bem sucedido a apaga, e nenhum vai suceder.
 //
 // # Por que isto mora no hospedeiro
 //

@@ -44,11 +44,8 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 	if _, err := store.NextTurn(sid); err != nil {
 		t.Fatalf("NextTurn: %v", err)
 	}
-	if Dirty, _ := store.Persist(ctx, sid); Dirty {
-		t.Fatalf("Persist should succeed, got Dirty")
-	}
-
-	store.Forget(sid) // drop the cache → next Load re-hydrates from the DB
+	// Nenhuma gravação é pedida: a mutação já gravou (ALE-371).
+	store.Forget(sid) // joga o cache fora → o próximo Load relê o banco
 	loaded, err := store.Load(ctx, sid)
 	if err != nil {
 		t.Fatalf("reload: %v", err)
@@ -217,40 +214,33 @@ func rowLabelled(t *testing.T, st *live.SessionRuntimeState, label string) live.
 	return live.InitiativeEntry{}
 }
 
-func TestStoreDirtyOnPersistFailure(t *testing.T) {
+// A GRAVAÇÃO QUE FALHA RECUSA O COMANDO.
+//
+// Aqui moravam dois casos sobre a marca `Dirty` — a gravação saía depois, podia
+// falhar, e a tela acendia um aviso. Eles saíram com o mecanismo: hoje a
+// mutação grava dentro dela, e o que o disco recusa não chega a existir para a
+// mesa (ALE-371).
+func TestAMutationThatCannotBeWrittenIsRefusedAndLeavesNoTrace(t *testing.T) {
 	s := newTestServer(t)
-	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	store := s.sessions
-	if _, err := store.AddInitiativeEntry(sid, npc("x", 1)); err != nil {
-		t.Fatalf("Add: %v", err)
+	if _, err := store.AddInitiativeEntry(sid, npc("Ogro", 19)); err != nil {
+		t.Fatalf("o controle falhou: pôr o ogro na fila deu %v", err)
 	}
-	if d, _ := store.Persist(ctx, sid); d {
-		t.Fatalf("first Persist should succeed")
-	}
-	_ = s.db.Close() // break the DB so the next write fails
-	if d, _ := store.Persist(ctx, sid); !d {
-		t.Error("Persist after DB Close should report Dirty")
-	}
-	if !store.SaveFailed(sid) {
-		t.Error("SaveFailed should be true after a failed Persist")
-	}
-}
 
-func TestForgetPreservesDirtyForRecovery(t *testing.T) {
-	// O esquecer NÃO pode largar a flag `Dirty`: uma sessão deixada suja ainda
-	// precisa emitir `persistence-warning{Dirty:false}` no próximo `Persist` que
-	// der certo.
-	store := newTestServer(t).sessions
-	sid := int64(42)
-	store.Mu.Lock()
-	store.Dirty[sid] = true // simulate a prior failed Persist (banner shown)
-	store.Mu.Unlock()
+	_ = s.db.Close() // o disco some no meio da sessão
 
-	store.Forget(sid)
-
-	if !store.SaveFailed(sid) {
-		t.Error("Forget cleared the Dirty flag — the Dirty→healthy recovery broadcast would be lost")
+	if _, err := store.AddInitiativeEntry(sid, npc("Goblin", 12)); err == nil {
+		t.Error("a gravação falhou e o comando passou: a mesa veria uma linha que o banco não tem")
+	}
+	queue := store.GetState(sid).Initiative
+	for _, e := range queue {
+		if e.Label == "Goblin" {
+			t.Errorf("o goblin ficou na fila que a mesa lê, com %d linhas", len(queue))
+		}
+	}
+	if len(queue) != 1 {
+		t.Errorf("a fila tinha de ficar com o ogro e mais nada, e tem %d linhas", len(queue))
 	}
 }
 
