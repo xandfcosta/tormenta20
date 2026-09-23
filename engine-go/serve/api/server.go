@@ -188,7 +188,7 @@ func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 // boardGestures são os gestos que escrevem no tabuleiro E na fila, e que por
 // isso abrem a unidade de trabalho (ALE-376).
 func (s *Server) boardGestures() boards.Gestures {
-	return boards.NewGestures(s.boards, s.sessions, s.units)
+	return boards.NewGestures(s.boards, s.sessions, s.units, session.NewAccess(s.queries))
 }
 
 // combatStrike é o caso de uso de ATACAR.

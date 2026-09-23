@@ -398,3 +398,51 @@ func FindToken(b *BoardState, tokenID string) *BoardToken {
 }
 
 func strPtr(s string) *string { return &s }
+
+// UnbindOrphanTokens desamarra as peças cuja linha da fila não existe mais, e
+// devolve quantas foram. A peça FICA no mapa — só o vínculo sai.
+//
+// # Por que desamarrar, e não remover a peça
+//
+// Porque a peça sobreviver é o desenho, e não um efeito colateral. "Reiniciar o
+// combate" promete na tela que *"a partida CONTINUA no ar"*: o mestre reiniciou
+// o COMBATE, não a CENA, e o mapa que ele montou é trabalho dele (decisão do
+// dono, ALE-377).
+//
+// O que não pode sobreviver é o PONTEIRO. Uma peça apontando para uma linha
+// morta mente de um jeito silencioso: ela continua se anunciando como
+// combatente, com o botão "Atacar" no menu, e o gesto responde 200 sem fazer
+// nada nem recusar. O `EntryID` é `*string` com `omitempty` exatamente para
+// distinguir "sem linha" de "linha vazia" — a peça avulsa (porta, baú, barril)
+// já vive assim.
+//
+// # Ela é a reconciliação das TRÊS fontes
+//
+// Tirar um combatente da fila, reiniciar o combate e reabrir um lugar do acervo
+// noutra sessão deixavam o mesmo estado por três caminhos. Passar o estado da
+// fila que VALE AGORA responde aos três — inclusive ao terceiro, com `st` nulo:
+// no acervo da campanha não existe fila nenhuma, e nenhum `EntryID` de sessão
+// tem sentido lá.
+func UnbindOrphanTokens(b *BoardState, st *live.SessionRuntimeState) int {
+	if b == nil {
+		return 0
+	}
+	alive := map[string]bool{}
+	if st != nil {
+		for i := range st.Initiative {
+			alive[st.Initiative[i].ID] = true
+		}
+	}
+	unbound := 0
+	for i := range b.Tokens {
+		if b.Tokens[i].EntryID == nil || alive[*b.Tokens[i].EntryID] {
+			continue
+		}
+		// O `CharacterID` vai junto: ele é a outra metade do mesmo vínculo, e
+		// uma peça que diz ter ficha sem ter linha desenha barra de PV de um
+		// combatente que não está na mesa.
+		b.Tokens[i].EntryID, b.Tokens[i].CharacterID = nil, nil
+		unbound++
+	}
+	return unbound
+}

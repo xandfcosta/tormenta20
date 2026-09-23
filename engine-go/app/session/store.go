@@ -275,6 +275,23 @@ func (st *Store) PreviousTurn(ctx context.Context, sessionID int64) (*live.Sessi
 	})
 }
 
+// RestartCombat esvazia a fila e os turnos, pelo caminho das MUTAÇÕES.
+//
+// Ele escrevia direto na coluna (`queries.ResetSessionTracker`) e depois dava
+// `Forget` no cache, e o comentário do `Lifecycle` explicava por que as duas
+// metades eram obrigatórias. Passando pelo `apply`, as duas somem: o `Mutate`
+// grava e o store instala o estado novo no cache — não há cache velho a
+// esquecer (ALE-377).
+//
+// E o que isso compra de verdade é a UNIDADE: o `apply` usa o
+// `snapshotsFor(ctx)`, então um gesto que abra a transação leva o esvaziamento
+// junto. Escrevendo pelo caderno cru, o mesmo gesto bateria na própria trava e
+// esperaria o `busy_timeout` (ALE-371).
+func (st *Store) RestartCombat(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.InitiativeReset{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error { *s = *live.EmptyRuntimeState(); return nil })
+}
+
 func (st *Store) Reset(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	return st.apply(ctx, sessionID, events.InitiativeReset{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { live.ResetInitiative(s); return nil })

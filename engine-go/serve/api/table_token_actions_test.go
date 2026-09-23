@@ -630,3 +630,89 @@ func TestDuplicatingWithAFailedBoardWriteLeavesNoOrphanLine(t *testing.T) {
 		t.Errorf("o gesto foi recusado e a cena não disse nada: %.200s", rec.Body.String())
 	}
 }
+
+// A PEÇA FICA NO MAPA E O VÍNCULO MORTO SAI (ALE-377).
+//
+// Três caminhos esvaziavam ou encurtavam a fila deixando as peças apontando
+// para linhas que não existem mais. O estrago é silencioso e foi MEDIDO: a peça
+// órfã continuava se anunciando como combatente, com
+//
+//	<button aria-label="Atacar Fulano" data-on:click="@post(…/‹LINHA-MORTA›/atacar)">
+//
+// no HTML servido — e o gesto respondia 200 sem criar ataque nenhum e sem
+// escrever recusa. O botão não fazia nada, em silêncio.
+//
+// A DECISÃO DO DONO é que a peça FICA: "Reiniciar o combate" promete na tela
+// que *"a partida CONTINUA no ar"*, e o mestre reiniciou o COMBATE, não a CENA.
+// O que sai é o ponteiro, não a peça.
+func TestRemovingFromTheQueueKeepsThePieceAndDropsTheDeadLink(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	f.seedOpenBoard(t, "stone")
+	id, row := tokenOnTheQueue(t, f, "Ogro cansado")
+
+	// O CONTROLE: antes do gesto a peça está amarrada. Sem ele, "sem vínculo" não
+	// distingue o conserto de uma peça que nunca teve linha.
+	if antes := tokenNamed(t, f, id); antes.EntryID == nil || *antes.EntryID != row {
+		t.Fatalf("o controle falhou: a peça não está amarrada à linha %s", row)
+	}
+
+	if rec := f.requests(t, f.gm, http.MethodPost,
+		f.tableUrl()+"/iniciativa/"+row+"/remover", ""); rec.Code != http.StatusOK {
+		t.Fatalf("tirar da fila deu %d", rec.Code)
+	}
+
+	depois := tokenNamed(t, f, id)
+	if depois == nil {
+		t.Fatal("a peça sumiu do mapa: tirar da INICIATIVA não é tirar do tabuleiro")
+	}
+	if depois.EntryID != nil {
+		t.Errorf("a peça ficou apontando para %q, e a linha não existe mais — "+
+			"ela volta a se anunciar como combatente com um botão que não faz nada",
+			*depois.EntryID)
+	}
+	// O HTML é a outra metade: é lá que o botão morto aparecia.
+	if tela := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(tela, row) {
+		t.Errorf("a linha removida %s ainda aparece no HTML servido", row)
+	}
+}
+
+// REINICIAR O COMBATE desamarra TODAS as peças e não tira nenhuma.
+func TestRestartingCombatKeepsEveryPieceAndDropsEveryLink(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	f.seedOpenBoard(t, "stone")
+	id, row := tokenOnTheQueue(t, f, "Ogro cansado")
+
+	if antes := tokenNamed(t, f, id); antes.EntryID == nil || *antes.EntryID != row {
+		t.Fatalf("o controle falhou: a peça não está amarrada à linha %s", row)
+	}
+
+	if rec := f.requests(t, f.gm, http.MethodPost,
+		f.tableUrl()+"/combate/reiniciar", ""); rec.Code != http.StatusOK {
+		t.Fatalf("reiniciar o combate deu %d", rec.Code)
+	}
+
+	if fila := stateOf(t, f.s.sessions, f.sessionID); len(fila.Initiative) != 0 {
+		t.Fatalf("o reinício não esvaziou a fila: sobraram %d linhas", len(fila.Initiative))
+	}
+	depois := tokenNamed(t, f, id)
+	if depois == nil {
+		t.Fatal("a peça sumiu do mapa, e a tela promete que a partida CONTINUA no ar")
+	}
+	if depois.EntryID != nil {
+		t.Errorf("a fila foi esvaziada e a peça continuou apontando para %q", *depois.EntryID)
+	}
+}
+
+// tokenNamed acha a peça pelo id, ou nil.
+func tokenNamed(t *testing.T, f sceneFixture, tokenID string) *board.BoardToken {
+	t.Helper()
+	b := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
+	for i := range b.Tokens {
+		if b.Tokens[i].ID == tokenID {
+			return &b.Tokens[i]
+		}
+	}
+	return nil
+}

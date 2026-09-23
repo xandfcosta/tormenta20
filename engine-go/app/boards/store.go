@@ -422,6 +422,17 @@ func (bs *Store) AddToken(ctx context.Context, sessionID int64, boardID string, 
 	})
 }
 
+// UnbindTokens desamarra as peças cuja linha da fila não existe mais na fila
+// dada. A peça fica; só o vínculo sai (ALE-377).
+func (bs *Store) UnbindTokens(
+	ctx context.Context, sessionID int64, boardID string, queue *live.SessionRuntimeState,
+) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
+		board.UnbindOrphanTokens(b, queue)
+		return nil
+	})
+}
+
 func (bs *Store) RemoveToken(ctx context.Context, sessionID int64, boardID, tokenID string) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { board.RemoveToken(b, tokenID); return nil })
 }

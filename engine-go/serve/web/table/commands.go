@@ -299,8 +299,13 @@ func edicaoDosSinais(r *http.Request) (struct {
 // tiraDaFila remove o combatente. Sem confirmação: o gesto é do meio do
 // combate, e a fila é remontável — o que não é remontável (encerrar a cena) é
 // que ganhou dois verbos distintos em vez de um interruptor.
+// A PEÇA DELE FICA NO MAPA, e só o vínculo sai (ALE-377): tirar da INICIATIVA
+// não é tirar do tabuleiro, e o `removesToken` diz o contrário para o gesto
+// contrário. O que não pode ficar é o ponteiro — a peça continuava se
+// anunciando como combatente, com botão de atacar que respondia 200 sem fazer
+// nada.
 func tiraDaFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	return st.deps.Sessions().RemoveInitiativeEntry(c.R.Context(), c.SessionID, chi.URLParam(c.R, "entryId"))
+	return st.gestures.RemoveFromQueue(c.R.Context(), c.SessionID, chi.URLParam(c.R, "entryId"))
 }
 
 // restParty é a RECUPERAÇÃO (T20 p106): devolve PV e PM ao grupo inteiro.
