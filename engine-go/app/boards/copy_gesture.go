@@ -96,11 +96,11 @@ func (g Gestures) lineForCopy(ctx context.Context, req CopyRequest) (*live.Initi
 	if req.Bond == BondShared {
 		return row, nil
 	}
-	novaLinha := *row
+	ownLine := *row
 	if req.ClonedCreature != nil {
-		novaLinha.CreatureID = req.ClonedCreature
+		ownLine.CreatureID = req.ClonedCreature
 	}
-	return g.addsACopyOfTheLine(ctx, req.SessionID, novaLinha)
+	return g.addsACopyOfTheLine(ctx, req.SessionID, ownLine)
 }
 
 // queueLineOf é a linha da fila por trás de uma peça, ou nulo.

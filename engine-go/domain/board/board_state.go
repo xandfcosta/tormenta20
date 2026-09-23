@@ -427,22 +427,22 @@ func UnbindOrphanTokens(b *BoardState, st *live.SessionRuntimeState) int {
 	if b == nil {
 		return 0
 	}
-	vivas := map[string]bool{}
+	alive := map[string]bool{}
 	if st != nil {
 		for i := range st.Initiative {
-			vivas[st.Initiative[i].ID] = true
+			alive[st.Initiative[i].ID] = true
 		}
 	}
-	soltas := 0
+	unbound := 0
 	for i := range b.Tokens {
-		if b.Tokens[i].EntryID == nil || vivas[*b.Tokens[i].EntryID] {
+		if b.Tokens[i].EntryID == nil || alive[*b.Tokens[i].EntryID] {
 			continue
 		}
 		// O `CharacterID` vai junto: ele é a outra metade do mesmo vínculo, e
 		// uma peça que diz ter ficha sem ter linha desenha barra de PV de um
 		// combatente que não está na mesa.
 		b.Tokens[i].EntryID, b.Tokens[i].CharacterID = nil, nil
-		soltas++
+		unbound++
 	}
-	return soltas
+	return unbound
 }

@@ -22,10 +22,10 @@ func (bs *Store) Archive(ctx context.Context, campaignID int64, state *board.Boa
 	// O VÍNCULO COM A FILA FICA NA SESSÃO (ALE-377). Sobre uma CÓPIA, porque o
 	// que entra aqui é o tabuleiro VIVO da mesa: desamarrar o original tiraria
 	// as barras de PV da tela no instante em que o mestre arquiva.
-	guardado := *state
-	guardado.Tokens = append([]board.BoardToken(nil), state.Tokens...)
-	board.UnbindOrphanTokens(&guardado, nil)
-	blob, err := json.Marshal(&guardado)
+	archived := *state
+	archived.Tokens = append([]board.BoardToken(nil), state.Tokens...)
+	board.UnbindOrphanTokens(&archived, nil)
+	blob, err := json.Marshal(&archived)
 	if err != nil {
 		return err
 	}

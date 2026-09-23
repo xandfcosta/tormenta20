@@ -98,11 +98,11 @@ func (g Gestures) unbindOrphans(
 	if err != nil {
 		return err
 	}
-	for _, aberta := range open {
-		if board.UnbindOrphanTokens(aberta, queue) == 0 {
+	for _, openBoard := range open {
+		if board.UnbindOrphanTokens(openBoard, queue) == 0 {
 			continue
 		}
-		if _, err := g.boards.UnbindTokens(ctx, sessionID, aberta.ID, queue); err != nil {
+		if _, err := g.boards.UnbindTokens(ctx, sessionID, openBoard.ID, queue); err != nil {
 			return err
 		}
 	}
