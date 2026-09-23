@@ -709,9 +709,13 @@ Três práticas que o pacote firmou, e as três são regra e não história:
   `arquivosAusentesDePROPOSITO` ou `simbolosAusentesDePROPOSITO`. Apagar um teste
   é um ato, e o ato aparece numa linha.
 
-**A lista de nomes em inglês tem uma fresta declarada:** nome PRÓPRIO do livro
-passa. `TestBolaDeFogoWorkedExample` é o nome da magia, não prosa em português —
-a alternativa seria cobrar a tradução de um nome próprio.
+**E o idioma NÃO é guarda deste pacote, nem de nenhum.** Havia quatro aqui — nome
+de topo, nome local, nome de teste e nome de arquivo — e eles foram APAGADOS: a
+razão e a decisão estão na seção "Isto NÃO tem guarda" do
+[CLAUDE.md da raiz](../CLAUDE.md), que é o dono da regra. O que ficou desta
+passagem é a fresta, porque ela é sobre NOMEAR e não sobre medir: nome PRÓPRIO do
+livro passa, e o `TestBolaDeFogoWorkedExample` é o nome da magia, não prosa em
+português.
 
 ## templ — as armadilhas que já custaram tempo
 
