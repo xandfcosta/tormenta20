@@ -65,8 +65,11 @@ por mudar de pasta.
 **A orquestração já existia, com outro nome.** O `apply` do store dos
 tabuleiros carrega o estado, chama a regra PURA do `domain/board` e devolve o
 quadro: isso é um caso de uso, e ele passou anos arquivado dentro de `domain/`.
-Os dois stores mudaram de lugar na ALE-344, e o número que fecha a divisão é o
-do `domain/board`: **mais de 1.800 linhas, ZERO toques de persistência.**
+Os dois stores mudaram de lugar na ALE-344, e o que fecha a divisão é o
+`domain/board`: **ZERO toques de persistência**, e isso não é zelo de autor — o
+`boundary_test.go` dele proíbe o import do `sqlcgen`, então a próxima tentativa
+reprova. Aqui morava "mais de 1.800 linhas" junto: o pacote passou de 3.700 sem
+ninguém mexer nesta frase, e a contagem nunca foi a afirmação — a ausência é.
 
 **O que sobra em `domain/` é a regra, e ela é PÚBLICA.** As mutações que os
 stores chamam — `AddToken`, `AdvanceTurn`, `PatchEntryVitals` e as irmãs — eram
@@ -1002,8 +1005,14 @@ dado no lugar da navegação.
 A ALE-277 e a ALE-278 apagaram 104 manipuladores sem chamador e repartiram o
 `*Server`, que tinha 89 métodos exportados existindo para cumprir a UNIÃO das
 portas das onze cenas — quando **67 das 76 assinaturas tinham exatamente UMA cena
-pedindo**. Hoje ele tem onze. A crônica está nas issues; o que morde ao recortar
-está aqui.
+pedindo**. Quantos sobraram se pergunta ao código, nunca a esta linha — aqui
+estava escrito "onze" e o `grep` respondeu SEIS:
+
+```
+grep -c "^func (s \*Server) [A-Z]" serve/api/*.go
+```
+
+A crônica está nas issues; o que morde ao recortar está aqui.
 
 **O compilador pega três das quatro**, e a quarta é a que importa:
 
@@ -1631,7 +1640,9 @@ RESOLVIDO**, depois que o `templ` juntou a base, o id e o verbo; ler isso do
 código-fonte é o parser que a ALE-307 já mostrou não saber ler `base :=`.
 
 Quem cobra é o `TestEveryAddressAPostWritesExistsInTheRouter` (ALE-308), e ele
-RENDERIZA: tira todo `@post`/`@get` do HTML servido de 29 cenas e pergunta ao
+RENDERIZA: tira todo `@post`/`@get` do HTML servido das cenas que ele visita — e
+QUAIS são elas se lê no `scenesThatWriteAddresses`, cujo próprio cabeçalho declara
+a enumeração como o limite conhecido dele — e pergunta ao
 chi com `Match` se a rota existe. `Match` e não um pedido de verdade, porque um
 POST em `/personagens/spliced` levaria 404 do HANDLER ("personagem não existe")
 e o guarda leria isso como rota faltando.
