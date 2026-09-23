@@ -582,3 +582,51 @@ func TestTheOwnBlockModeRefusesWhoHasNone(t *testing.T) {
 		t.Fatalf("o modo com PV próprio também foi recusado: %d", rec.Code)
 	}
 }
+
+// DUPLICAR COM LINHA PRÓPRIA NÃO DEIXA LINHA ÓRFÃ NA FILA (ALE-376).
+//
+// Este gesto escreve nos DOIS donos de dado, e na ordem INVERSA à do movimento:
+// a linha entra na FILA primeiro e a peça nasce no TABULEIRO depois. Em duas
+// transações, uma falha na segunda deixava **um combatente na fila sem peça no
+// mapa** — e tirá-lo é um gesto que o mestre não sabe que precisa fazer, porque
+// nada na tela diz que aquela linha não tem corpo.
+//
+// # A sabotagem é do outro lado
+//
+// No caso do movimento, o gatilho aborta o UPDATE da `sessions`; aqui ele tem
+// de abortar o do `open_boards`, que é o segundo passo. É o que faz este caso
+// medir a MESMA garantia pela outra ponta: com a ordem invertida, quem tem de
+// ser desfeito é o primeiro.
+func TestDuplicatingWithAFailedBoardWriteLeavesNoOrphanLine(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	f.seedOpenBoard(t, "stone")
+	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
+
+	// O CONTROLE: com o disco saudável o gesto passa e a fila cresce.
+	before := len(stateOf(t, f.s.sessions, f.sessionID).Initiative)
+	if rec := f.requests(t, f.gm, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/sozinha", ""); rec.Code != http.StatusOK {
+		t.Fatalf("o controle falhou: duplicar deu %d", rec.Code)
+	}
+	if now := len(stateOf(t, f.s.sessions, f.sessionID).Initiative); now != before+1 {
+		t.Fatalf("o controle falhou: a fila foi de %d para %d", before, now)
+	}
+
+	if _, err := f.s.db.Exec(`CREATE TRIGGER o_tabuleiro_recusa BEFORE UPDATE ON open_boards
+		BEGIN SELECT RAISE(ABORT, 'o disco recusou a gravação do tabuleiro'); END;`); err != nil {
+		t.Fatalf("armar o gatilho: %v", err)
+	}
+
+	queueBefore := len(stateOf(t, f.s.sessions, f.sessionID).Initiative)
+	rec := f.requests(t, f.gm, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/sozinha", "")
+
+	if now := len(stateOf(t, f.s.sessions, f.sessionID).Initiative); now != queueBefore {
+		t.Errorf("a peça não pôde ser gravada e a fila cresceu de %d para %d — "+
+			"sobrou um combatente sem peça no mapa", queueBefore, now)
+	}
+	if !strings.Contains(rec.Body.String(), "recusou a gravação do tabuleiro") {
+		t.Errorf("o gesto foi recusado e a cena não disse nada: %.200s", rec.Body.String())
+	}
+}
