@@ -1,8 +1,9 @@
 package api
 
-import "t20engine/domain/board"
-
 import (
+	"t20engine/domain/board"
+	"t20engine/domain/live"
+
 	"context"
 	"t20engine/app/boards"
 
@@ -517,5 +518,69 @@ func TestAPlaceRefusesAGroundTheStylesheetCannotPaint(t *testing.T) {
 	}
 	if scene.Terrain != board.DefaultGround() {
 		t.Errorf("o chão gravado foi %q, e a folha não sabe pintá-lo", scene.Terrain)
+	}
+}
+
+// O VÍNCULO COM A FILA NÃO ATRAVESSA O ACERVO DA CAMPANHA (ALE-377).
+//
+// O `EntryID` é um id de LINHA DA FILA, e fila é da SESSÃO. O acervo é da
+// CAMPANHA e não tem fila nenhuma — um id de sessão ali não quer dizer nada.
+//
+// Sem o corte, ele era gravado no blob e voltava intacto: MEDIDO numa sonda,
+// uma peça reabria na sessão B apontando para uma linha da sessão A, numa fila
+// com ZERO linhas. É o achado que mostrou que a fronteira quebrada é
+// sessão × campanha, e não fila × tabuleiro.
+func TestTheQueueLinkDoesNotCrossIntoTheCampaignArchive(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gm := seedUser(t, s, "gm@t.com")
+	campanha := seedCampaign(t, s, gm)
+	sessaoA := seedSession(t, s, campanha)
+	sessaoB := seedSession(t, s, campanha)
+
+	fila, err := s.sessions.AddInitiativeEntry(ctx, sessaoA,
+		live.InitiativeEntry{Label: "Ogro", Initiative: 15, Type: "npc"})
+	if err != nil {
+		t.Fatalf("pôr na fila da sessão A: %v", err)
+	}
+	linhaA := fila.Initiative[0].ID
+	if _, err := s.boards.Open(ctx, sessaoA, "Taverna do Javali", "tavern"); err != nil {
+		t.Fatalf("abrir o tabuleiro: %v", err)
+	}
+	if _, err := s.boards.AddToken(ctx, sessaoA, defaultTab,
+		board.BoardToken{Label: "Ogro", X: 2, Y: 2, Kind: "npc", EntryID: &linhaA}); err != nil {
+		t.Fatalf("pôr a peça: %v", err)
+	}
+
+	// O CONTROLE: na sessão A, com a fila dela, o vínculo VALE e fica.
+	viva := boardRead(s.boards.Get(ctx, sessaoA, defaultTab))
+	if viva.Tokens[0].EntryID == nil {
+		t.Fatal("o controle falhou: a peça perdeu o vínculo na própria sessão")
+	}
+
+	if err := s.boards.Archive(ctx, campanha, viva); err != nil {
+		t.Fatalf("arquivar: %v", err)
+	}
+	// E O TABULEIRO VIVO NÃO PODE TER SIDO TOCADO pelo arquivamento: o mestre
+	// arquiva no meio da cena, e a barra de PV das peças some se o vínculo sair.
+	if depois := boardRead(s.boards.Get(ctx, sessaoA, defaultTab)); depois.Tokens[0].EntryID == nil {
+		t.Error("arquivar desamarrou a peça da mesa VIVA")
+	}
+
+	lugares := s.boards.Places(ctx, campanha)
+	if len(lugares) == 0 {
+		t.Fatal("o acervo ficou vazio: o caso não mediria nada")
+	}
+	reaberto, err := s.boards.OpenPlace(ctx, campanha, sessaoB, lugares[0].ID)
+	if err != nil {
+		t.Fatalf("reabrir na sessão B: %v", err)
+	}
+
+	for _, tk := range reaberto.Tokens {
+		if tk.EntryID != nil {
+			t.Errorf("a peça %q voltou na sessão B apontando para %q — um id de linha "+
+				"da sessão A, numa fila que tem %d linhas", tk.Label, *tk.EntryID,
+				len(stateOf(t, s.sessions, sessaoB).Initiative))
+		}
 	}
 }

@@ -98,7 +98,10 @@ func (s Scene) restartsTheCombat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	who := s.callerOf(r)
-	state, refusal := s.lifecycle.RestartCombat(r.Context(), who, campaignID, sessionID)
+	// O GESTO é do `app/boards` e não do ciclo da sessão desde a ALE-377: ele
+	// esvazia a fila E desamarra as peças do mapa, e as duas coisas têm de
+	// acontecer juntas. As peças FICAM — reiniciar o combate não reinicia a cena.
+	state, refusal := s.gestures.RestartCombat(r.Context(), who, campaignID, sessionID)
 	s.answersTheGesture(w, r, who, campaignID, sessionID, state, refusal)
 }
 

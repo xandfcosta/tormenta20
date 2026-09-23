@@ -19,7 +19,13 @@ import (
 // move duas peças e encerra de novo espera uma taverna — não uma pilha de
 // tavernas quase iguais. É memória do que importa, não histórico de tudo.
 func (bs *Store) Archive(ctx context.Context, campaignID int64, state *board.BoardState) error {
-	blob, err := json.Marshal(state)
+	// O VÍNCULO COM A FILA FICA NA SESSÃO (ALE-377). Sobre uma CÓPIA, porque o
+	// que entra aqui é o tabuleiro VIVO da mesa: desamarrar o original tiraria
+	// as barras de PV da tela no instante em que o mestre arquiva.
+	guardado := *state
+	guardado.Tokens = append([]board.BoardToken(nil), state.Tokens...)
+	board.UnbindOrphanTokens(&guardado, nil)
+	blob, err := json.Marshal(&guardado)
 	if err != nil {
 		return err
 	}
@@ -136,6 +142,10 @@ func storedScene(blob, name string) (*board.BoardState, error) {
 	// O provisório não volta: ele é de uma cena que já acabou, e a mesa que
 	// reabre a taverna não deve nada a um movimento proposto na semana passada.
 	scene.Pending = nil
+	// NEM O VÍNCULO COM A FILA, e aqui ele é a rede para o que JÁ ESTÁ GRAVADO:
+	// o corte na ida (o `Archive`) só vale para o que for arquivado de agora em
+	// diante, e este é o gargalo por onde todo leitor do acervo passa (ALE-377).
+	board.UnbindOrphanTokens(&scene, nil)
 	// O nome vem da COLUNA e não do JSON: renomear o lugar mexeria em dois
 	// lugares, e o de fora é o que a lista mostra.
 	scene.Place = name
@@ -229,6 +239,17 @@ func sanitizeScene(scene *board.BoardState, newID func() string) error {
 		}
 	}
 	scene.Pending = nil
+	// O VÍNCULO COM A FILA NÃO ATRAVESSA PARA O ACERVO (ALE-377).
+	//
+	// O `EntryID` é um id de LINHA DA FILA, e fila é da SESSÃO; o acervo é da
+	// CAMPANHA e não tem fila nenhuma. Sem esta linha ele era gravado no blob e
+	// voltava intacto ao reabrir o lugar — MEDIDO: numa sessão B, a peça
+	// ressuscitava apontando para uma linha da sessão A, numa fila com zero
+	// linhas.
+	//
+	// `nil` como fila porque é a verdade: aqui não existe nenhuma linha viva, e
+	// a mesma primitiva que reconcilia a sessão responde ao acervo.
+	board.UnbindOrphanTokens(scene, nil)
 	return nil
 }
 

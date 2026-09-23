@@ -34,10 +34,16 @@ type Gestures struct {
 	boards   *Store
 	sessions *session.Store
 	units    session.Units
+	// access é a TRAVA da sessão. Ela entra porque o `RestartCombat` é gesto do
+	// MESTRE e a conferência é do caso de uso — a cena decide o que desenhar, e
+	// quem decide se o gesto pode é quem o executa.
+	access session.Access
 }
 
-func NewGestures(boards *Store, sessions *session.Store, units session.Units) Gestures {
-	return Gestures{boards: boards, sessions: sessions, units: units}
+func NewGestures(
+	boards *Store, sessions *session.Store, units session.Units, access session.Access,
+) Gestures {
+	return Gestures{boards: boards, sessions: sessions, units: units, access: access}
 }
 
 // ConfirmMove faz a peça pousar E cobra a ação do turno, na MESMA transação.
