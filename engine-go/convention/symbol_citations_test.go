@@ -90,8 +90,21 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 	"scrollTo":          true,
 	"translateX":        true,
 	"ipNet":             true,
+	// O `elementFromPoint` e o `serviceWorker` passaram a aparecer aqui quando
+	// este guarda ganhou a PROSA (ALE-363): os dois são do navegador, e o guia da
+	// raiz e o `README` os nomeiam para explicar uma escolha — a coluna de sondas
+	// que mede o empilhamento dos 390px, e por que não há cache offline.
+	"elementFromPoint": true,
+	"serviceWorker":    true,
 
 	// ── PROCEDÊNCIA que a regra do bloco não alcança ─────────────────────────
+	//
+	// O `applySpellBuffEffect` é a forma mais pura disto: a frase que o nomeia
+	// está no PASSADO — "devolvia `(efeito, int, error)` e montava um erro de
+	// campo com status 400 lá dentro" — e é essa conjugação que declara a morte.
+	// A regra do bloco procura substantivo ("morto", "apagado"), não tempo verbal,
+	// e alargá-la para pegar todo pretérito imperfeito perdoaria meia casa.
+	"applySpellBuffEffect": true,
 	//
 	// A regra da procedência lê o bloco procurando o `.ts` de origem ou a frase
 	// que declara a morte. Estas ficam de fora porque a frase que as explica é
@@ -196,54 +209,82 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 // palavra só, sem maiúscula no meio, é prosa até prova em contrário.
 var oSimboloCitado = regexp.MustCompile("`([A-Za-z][\\w.]*)`|\\b([a-z]+[A-Z]\\w*)\\b")
 
-// DUAS minúsculas antes da maiúscula, e não uma: `vCPUs` e `mAh` são PROSA
-// (a máquina da CI tem "2 vCPUs"), e uma letra só antes da maiúscula é o que os
-// separa de um identificador de verdade.
+// A FORMA é exigida só de quem foi citado SEM crase, e a assimetria é o desenho.
+//
+// Numa palavra solta, duas minúsculas antes da maiúscula separam identificador de
+// prosa: vCPUs e mAh são unidades (a máquina da CI tem "2 vCPUs"), e uma letra só
+// antes da maiúscula é o que as delata.
+//
+// Entre CRASES, quem escreveu já declarou que aquilo é um símbolo, e cobrar forma
+// de novo é cobrar duas vezes — foi o que deixou passar `aMelhoriaCabeNoItem`,
+// citado como um lugar onde a regra mora HOJE, com a coisa apagada. O nome em
+// português começa em artigo de uma letra, e esta casa tem uma família deles
+// (ALE-363). Medido antes de mudar: nenhuma unidade aparece entre crases no
+// repositório, então a regra frouxa não abre porta para as duas que a estrita
+// existia para barrar.
 var ehCamelDeVerdade = regexp.MustCompile(`^[a-z]{2,}[A-Z]\w*$|^[A-Z][a-z]+[A-Z]\w*$`)
+
+// inBackticks aceita também o artigo de uma letra, como o `blockAround` daqui.
+var inBackticks = regexp.MustCompile(`^[a-z]+[A-Z]\w*$|^[A-Z][a-z]+[A-Z]\w*$`)
 
 // aProcedenciaDeclarada é o bloco dizendo, ele mesmo, que o nome não vive aqui.
 var aProcedenciaDeclarada = regexp.MustCompile(
 	`\.tsx?\b|\bports\b|\bmirrors\b|\bSPA\b|TypeScript|` +
 		`não veio junto|deixou de existir|não existe mais|morreu com|some junto|` +
-		`Aqui morava|apagad|morta`)
+		// GÊNERO E NÚMERO, e não só o feminino singular: "cinco leitores MORTOS"
+		// declara a morte tão bem quanto "a rota morta", e a forma estreita
+		// deixava cinco lápides legítimas reprovando (ALE-363).
+		`Aqui morava|apagad|mort[oa]s?\b`)
 
 func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 	exists, noBox := oQueORepositorioDeclara(t)
 	files := arquivosParaCitacao(t)
 
-	measured := 0
+	measured, inProseCount := 0, 0
 	for _, path := range files {
 		content, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("ler %s: %v", path, err)
 		}
 		rows := strings.Split(string(content), "\n")
+		inProse := strings.HasSuffix(path, ".md")
 		for number, row := range rows {
-			k := strings.Index(row, "//")
-			if k < 0 {
-				continue
+			cited := row
+			if !inProse {
+				k := strings.Index(row, "//")
+				if k < 0 {
+					continue
+				}
+				cited = row[k:]
 			}
-			for _, found := range oSimboloCitado.FindAllStringSubmatch(row[k:], -1) {
-				cited := found[1]
-				if cited == "" {
-					cited = found[2]
+			for _, found := range oSimboloCitado.FindAllStringSubmatch(cited, -1) {
+				symbol := found[1]
+				if symbol == "" {
+					symbol = found[2]
 				}
-				name := cited[strings.LastIndex(cited, ".")+1:]
-				root := cited
-				if i := strings.Index(cited, "."); i >= 0 {
-					root = cited[:i]
+				name := symbol[strings.LastIndex(symbol, ".")+1:]
+				root := symbol
+				if i := strings.Index(symbol, "."); i >= 0 {
+					root = symbol[:i]
 				}
-				if !ehCamelDeVerdade.MatchString(name) {
+				shape := ehCamelDeVerdade
+				if found[1] != "" {
+					shape = inBackticks
+				}
+				if !shape.MatchString(name) {
 					continue
 				}
 				measured++
+				if inProse {
+					inProseCount++
+				}
 				if exists[name] || exists[root] || noBox[strings.ToLower(name)] {
 					continue
 				}
 				if simbolosAusentesDePROPOSITO[name] {
 					continue
 				}
-				if aProcedenciaDeclarada.MatchString(oBlocoDoComentario(rows, number)) {
+				if aProcedenciaDeclarada.MatchString(blockAround(rows, number, inProse)) {
 					continue
 				}
 				t.Errorf("%s:%d cita `%s`, que não existe na árvore.\n"+
@@ -253,7 +294,7 @@ func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 					"junto\", \"não existe mais\", o `.ts` de onde veio) ou o nome entra em\n"+
 					"`simbolosAusentesDePROPOSITO` — dizer por que uma coisa saiu é bom, e o\n"+
 					"que falta é o ato ser explícito.",
-					path, number+1, cited)
+					path, number+1, symbol)
 			}
 		}
 	}
@@ -262,22 +303,45 @@ func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 	// um regex que parou de casar são a mesma linha verde. O piso fica longe do
 	// número real de propósito — o que ele pega é a varredura QUEBRAR, não a
 	// prosa encolher.
-	if measured < 1500 {
-		t.Fatalf("só %d citações de símbolo lidas — o guarda ficou cego", measured)
+	//
+	// SÃO DOIS PISOS, um por VARREDURA, e isso é o que a ALE-363 acrescentou.
+	// Medido no dia: 3.790 citações em código e 338 em prosa. Um piso só somando
+	// os dois seria cego justamente para o braço novo — a prosa é 8% do total, e
+	// ela poderia parar de ser lida inteira sem o número passar de 1.500. "Verde"
+	// e "não mediu" voltariam a ser a mesma cor no terreno que este guarda
+	// acabou de ganhar.
+	inCode := measured - inProseCount
+	if inCode < 1500 {
+		t.Fatalf("só %d citações lidas em CÓDIGO — a varredura de comentário ficou cega", inCode)
+	}
+	if inProseCount < 150 {
+		t.Fatalf("só %d citações lidas em PROSA — a varredura de `.md` ficou cega", inProseCount)
 	}
 }
 
-// oBlocoDoComentario devolve o bloco de comentário CONTÍGUO em volta da linha.
+// blockAround devolve o bloco CONTÍGUO em volta da linha — de comentário no
+// código, de parágrafo na prosa.
 //
 // A procedência quase nunca está na mesma linha do nome: ela está na frase, que
 // ocupa três ou quatro linhas. Ler linha a linha faria a regra da procedência
 // não pegar quase nada.
-func oBlocoDoComentario(rows []string, i int) string {
+//
+// O que delimita o bloco MUDA com o artefato, e é a única diferença entre varrer
+// código e varrer `.md`: no código o bloco são as linhas com `//`, na prosa é o
+// parágrafo, que termina em linha vazia. Um `.md` não tem marcador de comentário,
+// e exigir um era o que deixava este guarda cego para a prosa (ALE-363).
+func blockAround(rows []string, i int, inProse bool) string {
+	delimits := func(row string) bool {
+		if inProse {
+			return strings.TrimSpace(row) != ""
+		}
+		return strings.Contains(row, "//")
+	}
 	ini, end := i, i
-	for ini > 0 && strings.Contains(rows[ini-1], "//") {
+	for ini > 0 && delimits(rows[ini-1]) {
 		ini--
 	}
-	for end+1 < len(rows) && strings.Contains(rows[end+1], "//") {
+	for end+1 < len(rows) && delimits(rows[end+1]) {
 		end++
 	}
 	return strings.Join(rows[ini:end+1], " ")
