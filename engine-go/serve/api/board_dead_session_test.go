@@ -55,13 +55,15 @@ func deadSessionBoardOfOwner(t *testing.T) (*Server, int64, int64, int64) {
 // A sessão apagada deixa de ter tabuleiro em memória, e a mesa não se declara
 // suja por causa dela.
 func TestADeletedSessionLeavesNoBoardBehind(t *testing.T) {
-	s, campaign, session := deadSessionBoard(t)
+	s, campaign, session, owner := deadSessionBoardOfOwner(t)
 	ctx := context.Background()
 
-	if err := s.queries.DeleteSession(ctx, session); err != nil {
+	// PELO CASO DE USO, como o caso da campanha logo abaixo. Ele fazia o DELETE e
+	// o esquecimento à mão, e era esse chamador — um teste — que sustentava a
+	// cópia da sequência que morava no hospedeiro (ALE-377).
+	if err := s.sessionLifecycle().Delete(ctx, app.Caller{ID: owner}, campaign, session); err != nil {
 		t.Fatalf("apagar a sessão: %v", err)
 	}
-	s.SessionDeleted(session)
 
 	// O MAPA: o tabuleiro morreu com a sessão. Sem isto, toda gravação seguinte
 	// bate na FK, para sempre.

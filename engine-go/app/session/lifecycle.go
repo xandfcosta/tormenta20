@@ -177,15 +177,11 @@ func (l Lifecycle) RestartCombat(
 
 // Delete apaga a sessão e TUDO que ela deixou em memória.
 //
-// A ORDEM importa numa direção só: avisar os stores ANTES deixaria uma janela em
-// que a sessão ainda responde e o estado em memória já não existe — uma
-// requisição nesse instante recriaria o que se acabou de apagar.
-//
-// São DOIS esquecimentos e não um. Sem o primeiro, a fila em cache continua
-// respondendo por uma sessão que não existe mais; sem o segundo, o tabuleiro
-// fica no mapa do `BoardStore` batendo na chave estrangeira a cada gravação, e
-// a marca de gravação falhando não sai mais — só um `Persist` bem sucedido a
-// apaga, e nenhum vai suceder.
+// A ORDEM importa numa direção só: esquecer ANTES deixaria uma janela em que a
+// sessão ainda responde e o estado em memória já não existe — uma requisição
+// nesse instante recriaria o que se acabou de apagar. É o contrário do
+// `campaign.Lifecycle.Delete`, e não por gosto: lá a CASCATA leva as sessões, e
+// depois dela não há mais como perguntar quais eram.
 //
 // O banco limpa o resto sozinho: `open_boards` sai por CASCATA com a sessão
 // (migração 00010), e a fila mora na própria linha dela.
@@ -196,7 +192,24 @@ func (l Lifecycle) Delete(ctx context.Context, who app.Caller, campaignID, sessi
 	if err := l.queries.DeleteSession(ctx, sessionID); err != nil {
 		return fmt.Errorf("apagar a sessão %d: %w", sessionID, err)
 	}
+	l.ForgetSession(sessionID)
+	return nil
+}
+
+// ForgetSession tira da memória tudo que uma sessão que deixou de existir deixou
+// para trás. É o ÚNICO lugar onde este par é escrito (ALE-377).
+//
+// São DOIS esquecimentos e não um, e eles estragam coisas diferentes. Sem o
+// primeiro, o tabuleiro fica no mapa do store batendo na chave estrangeira a
+// cada gravação, e desde a ALE-375 isso não é mais uma marca de sujeira que
+// ninguém vê: é RECUSA, com a frase do banco, em todo gesto do tabuleiro órfão.
+// Sem o segundo, a fila em cache continua respondendo por uma sessão apagada.
+//
+// Exportado porque apagar a CAMPANHA precisa do mesmo par, uma vez por sessão, e
+// chega aqui por outro caminho. Era a terceira cópia da sequência que sumiu com
+// isto — e a que se dizia "escrita uma vez" era justamente a que já tinha só um
+// chamador de teste.
+func (l Lifecycle) ForgetSession(sessionID int64) {
 	l.boards.SessionDeleted(sessionID)
 	l.sessions.SessionDeleted(sessionID)
-	return nil
 }
