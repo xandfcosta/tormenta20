@@ -41,7 +41,7 @@ func (f *queueDouble) CharacterActionFits(context.Context, int64, engine.ActionC
 // os números que o caso quer.
 type sheetDouble map[string]Combatant
 
-func (f sheetDouble) Of(_ context.Context, e live.InitiativeEntry) (Combatant, error) {
+func (f sheetDouble) Of(_ context.Context, _ int64, e live.InitiativeEntry) (Combatant, error) {
 	c, ok := f[e.ID]
 	if !ok {
 		return Combatant{}, errors.New("combatente fora do caso")

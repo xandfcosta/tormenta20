@@ -36,7 +36,7 @@ type Combatant struct {
 
 // Combatants é a porta que traduz uma linha da fila em combatente.
 type Combatants interface {
-	Of(ctx context.Context, entry live.InitiativeEntry) (Combatant, error)
+	Of(ctx context.Context, campaignID int64, entry live.InitiativeEntry) (Combatant, error)
 }
 
 // Tables é a porta do estado da mesa.
@@ -64,6 +64,9 @@ func NewStrike(c Combatants, t Tables, rollDie func(faces int) (int, error)) Str
 
 // Request é o pedido de ataque.
 type Request struct {
+	// CampaignID é a dona do bloco de criatura, e por isso ela entra: sem ela
+	// o combate lia o bloco de outra mesa (ALE-377).
+	CampaignID      int64
 	SessionID       int64
 	AttackerEntryID string
 	TargetEntryID   string
@@ -122,7 +125,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		}
 	}
 
-	striker, err := s.combatants.Of(ctx, attackerEntry)
+	striker, err := s.combatants.Of(ctx, req.CampaignID, attackerEntry)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
@@ -135,7 +138,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 			"%s empunha %d arma(s) e o pedido veio na %d: %w",
 			striker.Label, len(striker.Weapons), req.Weapon, app.ErrRefused)
 	}
-	victim, err := s.combatants.Of(ctx, target)
+	victim, err := s.combatants.Of(ctx, req.CampaignID, target)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
