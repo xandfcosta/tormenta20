@@ -224,8 +224,8 @@ var oSimboloCitado = regexp.MustCompile("`([A-Za-z][\\w.]*)`|\\b([a-z]+[A-Z]\\w*
 // existia para barrar.
 var ehCamelDeVerdade = regexp.MustCompile(`^[a-z]{2,}[A-Z]\w*$|^[A-Z][a-z]+[A-Z]\w*$`)
 
-// entreCrases aceita também o artigo de uma letra, como o `oBlocoEmVolta` daqui.
-var entreCrases = regexp.MustCompile(`^[a-z]+[A-Z]\w*$|^[A-Z][a-z]+[A-Z]\w*$`)
+// inBackticks aceita também o artigo de uma letra, como o `blockAround` daqui.
+var inBackticks = regexp.MustCompile(`^[a-z]+[A-Z]\w*$|^[A-Z][a-z]+[A-Z]\w*$`)
 
 // aProcedenciaDeclarada é o bloco dizendo, ele mesmo, que o nome não vive aqui.
 var aProcedenciaDeclarada = regexp.MustCompile(
@@ -269,7 +269,7 @@ func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 				}
 				shape := ehCamelDeVerdade
 				if found[1] != "" {
-					shape = entreCrases
+					shape = inBackticks
 				}
 				if !shape.MatchString(name) {
 					continue
@@ -284,7 +284,7 @@ func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 				if simbolosAusentesDePROPOSITO[name] {
 					continue
 				}
-				if aProcedenciaDeclarada.MatchString(oBlocoEmVolta(rows, number, inProse)) {
+				if aProcedenciaDeclarada.MatchString(blockAround(rows, number, inProse)) {
 					continue
 				}
 				t.Errorf("%s:%d cita `%s`, que não existe na árvore.\n"+
@@ -319,7 +319,7 @@ func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 	}
 }
 
-// oBlocoEmVolta devolve o bloco CONTÍGUO em volta da linha — de comentário no
+// blockAround devolve o bloco CONTÍGUO em volta da linha — de comentário no
 // código, de parágrafo na prosa.
 //
 // A procedência quase nunca está na mesma linha do nome: ela está na frase, que
@@ -330,7 +330,7 @@ func TestNoCitationNamesAMissingSymbol(t *testing.T) {
 // código e varrer `.md`: no código o bloco são as linhas com `//`, na prosa é o
 // parágrafo, que termina em linha vazia. Um `.md` não tem marcador de comentário,
 // e exigir um era o que deixava este guarda cego para a prosa (ALE-363).
-func oBlocoEmVolta(rows []string, i int, inProse bool) string {
+func blockAround(rows []string, i int, inProse bool) string {
 	delimits := func(row string) bool {
 		if inProse {
 			return strings.TrimSpace(row) != ""
