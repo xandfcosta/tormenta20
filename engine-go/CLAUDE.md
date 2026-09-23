@@ -389,7 +389,7 @@ Antes, um Ctrl-C no meio de um `VACUUM INTO` morria no meio e o
 `defer database.Close()` nunca rodava — defer não roda quando o processo morre
 por sinal.
 
-Corpo de requisição tem teto de 1 MB no `decodeJSON`, com **413 próprio**: dizer
+Corpo de requisição tem teto de 1 MB no `httpio.DecodeJSON`, com **413 próprio**: dizer
 "JSON inválido" para um JSON válido manda procurar defeito de sintaxe onde o
 problema é tamanho.
 
@@ -518,8 +518,8 @@ que nível cada classe destrava cada círculo), a compatibilidade entre
 melhoria/material e o item que os recebe, e o limite de nome de campanha.
 
 Hoje as três moram no catálogo ou no domínio: `spellcasting` em `classes.json`,
-`aMelhoriaCabeNoItem`, `campaign.Description`. O filtro que a tela aplica é
-conveniência sobre a mesma regra, nunca a regra.
+`aceitaMelhoria` (em `web/sheetui/bag_improvements.go`), `campaign.Description`. O
+filtro que a tela aplica é conveniência sobre a mesma regra, nunca a regra.
 
 E a QUARTA era a maior: as regras de ESCOLHA de poder — quantas vagas o nível
 abre (uma por nível a partir do 2º, p33), quantos benefícios a origem dá, quais
@@ -1798,9 +1798,10 @@ errada.
 gera não sabe que vai haver um próximo; quem troca sabe que houve um anterior.
 
 ```
-data-on:click="$alvoId = el.dataset.id;
+data-on:click="$target_id = el.dataset.id; $target_name = el.dataset.nome;
+               $copied = '';
                document.getElementById('reset-link').innerHTML = '';
-               $redefinir.showModal()"
+               $reset_dialog.showModal()"
 ```
 
 A família é **estado de um item sobrevivendo à troca por outro**, e o `data-show`
