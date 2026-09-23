@@ -19,10 +19,6 @@ import (
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 	"t20engine/serve/web/table"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
 )
 
 // Server é a RAIZ DE COMPOSIÇÃO: ele guarda o que o app inteiro precisa e
@@ -281,61 +277,4 @@ func (s *Server) sessionLifecycle() session.Lifecycle {
 // consistente com ele mesmo.
 func (s *Server) sceneCore() sceneCore {
 	return sceneCore{queries: s.queries, catalogs: s.catalogs, book: s.book.address}
-}
-
-// Router é o que sobrou da API JSON, e nenhuma cena a chama — as cenas leem o
-// banco pelo `Queries` da porta delas e desenham HTML. As rotas daqui NÃO
-// carregam o prefixo `/api`: quem o põe é o `cmd/api`.
-//
-// `/health` é INFRAESTRUTURA — quem bate nele é o `healthcheck` do compose e o
-// `-health` do próprio binário. É o contra-exemplo da faxina de rotas: "rota sem
-// consumidor" se decide perguntando quem pergunta DE FORA.
-//
-// As demais são a bancada do e2e, e é o que faz a suíte ser REPETÍVEL — montar
-// tudo pela tela troca segundos de setup por minutos.
-func (s *Server) Router() http.Handler {
-	r := chi.NewRouter()
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	// Sem origem configurada, NENHUM middleware de CORS — que é produção: o
-	// binário serve as cenas, então toda chamada é da mesma origem. Montá-lo com
-	// `[]string{""}` negaria as mesmas requisições, mas por acidente; e este
-	// guarda mantém um `CORS_ORIGIN` vazio longe do padrão do go-chi para lista
-	// vazia, que é liberar TODA origem — com credenciais ligadas, todo site.
-	if len(s.cfg.CORSOrigins) > 0 {
-		r.Use(cors.Handler(cors.Options{
-			AllowedOrigins:   s.cfg.CORSOrigins,
-			AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
-			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
-			AllowCredentials: true,
-		}))
-	}
-
-	r.Get("/health", s.handleHealth)
-
-	r.Route("/campanhas", func(r chi.Router) {
-		r.Use(s.requireAuth)
-		// A varredura do `auth.setup.ts`: lista, filtra pelo prefixo "E2E
-		// Descartável" e apaga. Nomeia pelo PREFIXO e nunca por id — apagar por
-		// id seria apagar seed.
-		r.Get("/", s.handleListCampaigns)
-		r.Delete("/{id}", s.handleDeleteCampaign)
-		// A fixture do `board.spec.ts`: uma mesa descartável por corrida, montada
-		// em duas chamadas em vez de seis telas.
-		r.Post("/", s.handleCreateCampaign)
-		r.Route("/{campaignId}/sessoes", func(r chi.Router) {
-			r.Post("/", s.handleCreateSession)
-		})
-	})
-
-	r.Route("/personagens", func(r chi.Router) {
-		r.Use(s.requireAuth)
-		r.Use(s.serializeCharacterWrites)
-		// A varredura das CONDIÇÕES: o spec da sessão aplica Abalado, Agarrado e
-		// Cego para medir a faixa cheia, e a limpeza dele mora no corpo do teste
-		// — quando ele falha, a condição fica gravada e ele falha PARA SEMPRE.
-		r.Get("/", s.handleListCharacters)
-		r.Patch("/{id}/conditions", s.handleUpdateConditions)
-	})
-	return r
 }
