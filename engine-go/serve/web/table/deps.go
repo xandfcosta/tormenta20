@@ -115,6 +115,11 @@ type Scene struct {
 	// strike é o CASO DE USO de atacar, e chega pelo mesmo caminho dos outros:
 	// por parâmetro, porque o `app/` está abaixo desta cena.
 	strike combat.Strike
+	// gestures são os gestos que escrevem no tabuleiro E na fila, e por isso
+	// abrem a TRANSAÇÃO (ALE-376) — a cena não abre nenhuma. Eles chegam por
+	// parâmetro como os outros casos de uso, porque o `app/` está abaixo desta
+	// cena e não há ciclo a desviar.
+	gestures boards.Gestures
 	// access é a TRAVA da sessão, e ela é o MESMO objeto que os casos de uso
 	// usam por dentro (ALE-344). A cena a chama para decidir o que DESENHAR —
 	// o rodapé do mestre, a recusa antes do gesto —, e quem decide se o gesto
@@ -127,10 +132,12 @@ type Scene struct {
 func New(
 	d Deps, cycle session.Lifecycle, group rest.Party,
 	queue initiative.Queue, cast campaign.Cast, plays character.Plays, strike combat.Strike,
+	gestures boards.Gestures,
 ) Scene {
 	return Scene{
 		deps: d, lifecycle: cycle, party: group, queue: queue, cast: cast, plays: plays, strike: strike,
-		access: cycle.Access(),
-		lenses: newLenses(), chosenTabs: newTabs(),
+		gestures: gestures,
+		access:   cycle.Access(),
+		lenses:   newLenses(), chosenTabs: newTabs(),
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"t20engine/app/boards"
 
 	"t20engine/app"
 	"t20engine/domain/live"
@@ -17,16 +16,28 @@ import (
 // Cada método dele faz a mesma sequência, e é ela que define a camada: AUTORIZA,
 // pergunta a DECISÃO à regra pura, GRAVA, e acerta o estado em memória. A cena
 // recebe o resultado e desenha; ela não sabe em que ordem nada disso acontece.
+// BoardsOfASession é o que o CICLO precisa do tabuleiro, e é UM método: esquecer
+// os mapas de uma sessão que deixou de existir.
+//
+// Uma PORTA e não o `*boards.Store` inteiro, e a razão é de direção (ALE-376):
+// com o store, este pacote importava `app/boards`, e isso proibia o caminho
+// contrário — justo o que o gesto que atravessa tabuleiro e fila precisa. Pedir
+// a PERGUNTA em vez do objeto desfez o impedimento sem custar nada: era uma
+// chamada só.
+type BoardsOfASession interface {
+	SessionDeleted(sessionID int64)
+}
+
 type Lifecycle struct {
 	db       *sql.DB
 	queries  *sqlcgen.Queries
 	sessions *Store
-	boards   *boards.Store
+	boards   BoardsOfASession
 	access   Access
 }
 
 func NewLifecycle(
-	db *sql.DB, q *sqlcgen.Queries, sessions *Store, boards *boards.Store,
+	db *sql.DB, q *sqlcgen.Queries, sessions *Store, boards BoardsOfASession,
 ) Lifecycle {
 	return Lifecycle{db: db, queries: q, sessions: sessions, boards: boards, access: NewAccess(q)}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/app/boards"
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -83,11 +84,12 @@ func duplicatesWith(mode string) func(Scene, commandCtx) (*board.BoardState, err
 		if err != nil {
 			return nil, err
 		}
-		loop, err := st.bondForMode(c, mode, token)
+		req, err := st.copyRequestFor(c, mode, *token)
 		if err != nil {
 			return nil, err
 		}
-		return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID, loop)
+		out, err := st.gestures.Copy(c.R.Context(), req)
+		return st.afterCopy(c, out, err)
 	}
 }
 
@@ -136,71 +138,16 @@ func pastesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	if template == nil {
 		return nil, fmt.Errorf("a peça que estava na área não está mais no tabuleiro de origem")
 	}
-	loop, err := st.bondForMode(c, area.Mode, template)
+	req, err := st.copyRequestFor(c, area.Mode, *template)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().PasteToken(c.R.Context(), c.SessionID, c.BoardID, *template, loop,
-		area.Destination.X, area.Destination.Y)
+	req.Destination = &engine.Square{X: area.Destination.X, Y: area.Destination.Y}
+	out, err := st.gestures.Copy(c.R.Context(), req)
+	return st.afterCopy(c, out, err)
 }
 
-// bondForMode traduz o modo guardado na área para o LAÇO da cópia.
-//
-// Ele é o mesmo mapa que os três verbos de duplicar usam, escrito uma vez: o
-// colar e o duplicar têm de concordar sobre o que "sangrando junto" significa, e
-// duas traduções seriam dois lugares para discordar.
-func (s Scene) bondForMode(c commandCtx, mode string, template *board.BoardToken) (*live.InitiativeEntry, error) {
-	if mode == modoSoAPeca {
-		return nil, nil
-	}
-	row, err := s.queueLineOf(c.R.Context(), c.SessionID, template)
-	if err != nil {
-		return nil, err
-	}
-	if row == nil {
-		return nil, fmt.Errorf("%s não é um combatente da fila, e sem PV não há o que dividir nem o que copiar", template.Label)
-	}
-	if mode == modoJunto {
-		return row, nil
-	}
-	if mode != modoSozinha && mode != modoBloco {
-		return nil, fmt.Errorf("modo de cópia desconhecido: %q", mode)
-	}
-	templateRow := *row
-	if mode == modoBloco {
-		// O BLOCO é clonado ANTES da linha, e a ordem importa: a linha nova já
-		// nasce apontando para a cópia. Criar a linha primeiro e remendá-la
-		// depois deixaria uma janela em que ela aponta para o bloco da original —
-		// e nessa janela um remendo da cena desenharia o chefe com a ficha errada.
-		if row.CreatureID == nil {
-			return nil, fmt.Errorf("%s não tem bloco de criatura: não há o que copiar", row.Label)
-		}
-		copyName, err := s.nextNameForTheLine(c.R.Context(), c.SessionID, row.Label)
-		if err != nil {
-			return nil, err
-		}
-		newBlock, err := s.cast.CloneBlock(
-			c.R.Context(), s.callerOf(c.R), c.CampaignID, *row.CreatureID, copyName)
-		if err != nil {
-			return nil, castRefusal(err, strconv.Quote(row.Label))
-		}
-		templateRow.CreatureID = &newBlock
-	}
-	nova, err := s.addsACopyOfTheLine(c.R.Context(), c.SessionID, templateRow)
-	if err != nil {
-		return nil, err
-	}
-	queue, err := s.deps.Sessions().State(c.R.Context(), c.SessionID)
-	if err != nil {
-		return nil, err
-	}
-	s.deps.PublishSessionState(c.SessionID, queue)
-	return nova, nil
-}
-
-// Os três modos, e eles são a MESMA palavra na rota do duplicar, no sinal da
-// área e aqui. Escritos uma vez porque um terceiro lugar com a string à mão é o
-// lugar onde alguém digita "sozinho".
+// Os MODOS da cópia, como a tela os guarda na área de transferência.
 const (
 	modoSoAPeca = "peca"
 	modoJunto   = "junto"
@@ -209,6 +156,80 @@ const (
 	// próprio, para o mestre editar um sem mexer nos outros.
 	modoBloco = "bloco"
 )
+
+// copyRequestFor traduz o que veio do PEDIDO no que o caso de uso precisa.
+//
+// O corpo que gravava — achar a linha, criar a linha nova, duplicar a peça —
+// foi para o `app/boards` na ALE-376, porque escrever nos dois donos de dado é
+// UM gesto e o contorno dele é a transação. O que sobra aqui é leitura de
+// requisição e o CLONE DO BLOCO, e o clone fica de fora da transação de
+// propósito: o `Cast` escreve pelo caderno dele, que é outra conexão do pool, e
+// chamá-lo com a transação aberta bateria na própria trava (ALE-371).
+func (s Scene) copyRequestFor(
+	c commandCtx, mode string, template board.BoardToken,
+) (boards.CopyRequest, error) {
+	req := boards.CopyRequest{
+		SessionID: c.SessionID, BoardID: c.BoardID, Template: template,
+	}
+	switch mode {
+	case modoSoAPeca:
+		req.Bond = boards.BondNone
+		return req, nil
+	case modoJunto:
+		req.Bond = boards.BondShared
+		return req, nil
+	case modoSozinha:
+		req.Bond = boards.BondOwnLine
+		return req, nil
+	case modoBloco:
+	default:
+		return req, fmt.Errorf("modo de cópia desconhecido: %q", mode)
+	}
+
+	req.Bond = boards.BondOwnLine
+	row, err := s.queueLineOf(c.R.Context(), c.SessionID, &template)
+	if err != nil {
+		return req, err
+	}
+	if row == nil {
+		return req, fmt.Errorf(
+			"%s não é um combatente da fila, e sem PV não há o que dividir nem o que copiar",
+			template.Label)
+	}
+	if row.CreatureID == nil {
+		return req, fmt.Errorf("%s não tem bloco de criatura: não há o que copiar", row.Label)
+	}
+	// O NOME da cópia é calculado ANTES de ela existir, porque o bloco leva
+	// nome e é clonado primeiro. Sem isto o acervo ficaria com dois "Zumbi" e a
+	// linha com "Zumbi 2", e o olho da fila abriria um bloco de outro nome.
+	copyName, err := s.nextNameForTheLine(c.R.Context(), c.SessionID, row.Label)
+	if err != nil {
+		return req, err
+	}
+	newBlock, err := s.cast.CloneBlock(
+		c.R.Context(), s.callerOf(c.R), c.CampaignID, *row.CreatureID, copyName)
+	if err != nil {
+		return req, castRefusal(err, strconv.Quote(row.Label))
+	}
+	req.ClonedCreature = &newBlock
+	return req, nil
+}
+
+// afterCopy avisa a mesa que a FILA mudou, quando ela mudou.
+//
+// Publicar é do hospedeiro e fica na cena: o caso de uso grava e devolve, e
+// quem sabe que há gente olhando é quem atende o HTTP.
+func (s Scene) afterCopy(c commandCtx, out *board.BoardState, err error) (*board.BoardState, error) {
+	if err != nil {
+		return out, err
+	}
+	queue, err := s.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return out, err
+	}
+	s.deps.PublishSessionState(c.SessionID, queue)
+	return out, nil
+}
 
 // queueLineOf é a linha da fila por trás de uma peça, ou nulo.
 func (s Scene) queueLineOf(ctx context.Context, sessionID int64, token *board.BoardToken) (*live.InitiativeEntry, error) {

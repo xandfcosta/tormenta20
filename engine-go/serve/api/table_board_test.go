@@ -685,3 +685,76 @@ func TestMovingOnYourTurnSpendsTheMovementAction(t *testing.T) {
 		t.Errorf("quem entra no turno o recebe inteiro, e veio %+v", fresh)
 	}
 }
+
+// A PEÇA NÃO ANDA QUANDO A COBRANÇA DA AÇÃO NÃO PODE SER GRAVADA (ALE-376).
+//
+// Confirmar um movimento são DUAS gravações em donos de dado diferentes: a peça
+// pousa no TABULEIRO e a ação de movimento é cobrada da FILA. Elas saíam em
+// transações separadas, nesta ordem — e uma falha na segunda deixava **o
+// movimento feito e o turno intacto**.
+//
+// O estrago é dos que ninguém reporta: a tela mostra exatamente o que se espera
+// de um movimento que deu certo. O combatente andou de graça, e a única pista
+// seria alguém conferir o orçamento do turno à mão.
+//
+// # A sabotagem
+//
+// Um GATILHO que aborta só o UPDATE da `sessions`. A leitura continua de pé — a
+// autorização passa, o estado é lido, a peça chega a ser movida na memória —, e
+// só a gravação do retrato da fila é recusada. É a mesma forma da ALE-372, e
+// pela mesma razão: derrubar a tabela mataria a leitura e o gesto morreria
+// antes de chegar ao ponto que este caso mede.
+func TestAMoveTheTurnCannotBeChargedForDoesNotHappen(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	f.seedOpenBoard(t, "stone")
+	ctx := context.Background()
+
+	if _, err := f.s.sessions.NextTurn(ctx, f.sessionID); err != nil {
+		t.Fatalf("começar o turno: %v", err)
+	}
+	state := stateOf(t, f.s.sessions, f.sessionID)
+	onTurn := state.Initiative[state.TurnIndex]
+	placed, err := f.s.tableHost().Boards().AddToken(ctx, f.sessionID, defaultTab,
+		board.BoardToken{Label: onTurn.Label, X: 2, Y: 2, EntryID: &onTurn.ID})
+	if err != nil {
+		t.Fatalf("pôr a peça: %v", err)
+	}
+	tokenID := placed.Tokens[len(placed.Tokens)-1].ID
+
+	walk := func(destX int) *httptest.ResponseRecorder {
+		base := f.tableUrl() + "/tabuleiro/" + tokenID
+		if rec := f.requests(t, f.gm, "POST", base+"/parada",
+			`{"from":{"X":`+strconv.Itoa(destX)+`,"Y":2}}`); rec.Code != http.StatusOK {
+			t.Fatalf("propor a parada deu %d", rec.Code)
+		}
+		return f.requests(t, f.gm, "POST", base+"/confirmar", "")
+	}
+
+	// O CONTROLE: com o disco saudável a peça anda. Sem ele, "não andou" não
+	// distingue a atomicidade de um caminho que nunca funcionou.
+	if rec := walk(3); rec.Code != http.StatusOK {
+		t.Fatalf("o controle falhou: o movimento deu %d", rec.Code)
+	}
+	if at := tokenSquare(t, f, tokenID); at != [2]int{3, 2} {
+		t.Fatalf("o controle falhou: a peça devia estar em (3,2) e está em %v", at)
+	}
+
+	if _, err := f.s.db.Exec(`CREATE TRIGGER a_fila_recusa BEFORE UPDATE ON sessions
+		BEGIN SELECT RAISE(ABORT, 'o disco recusou a gravação da fila'); END;`); err != nil {
+		t.Fatalf("armar o gatilho: %v", err)
+	}
+
+	wasAt := tokenSquare(t, f, tokenID)
+	rec := walk(4)
+
+	// A RECUSA CHEGA, e é a outra metade: um gesto desfeito em silêncio deixaria
+	// o mestre clicando de novo sem saber por quê.
+	if !strings.Contains(rec.Body.String(), "recusou a gravação da fila") {
+		t.Errorf("a cobrança falhou e a cena não disse nada: %.200s", rec.Body.String())
+	}
+	if now := tokenSquare(t, f, tokenID); now != wasAt {
+		t.Errorf("a cobrança da ação não pôde ser gravada e a peça andou mesmo assim, "+
+			"de %v para %v — o gesto aconteceu pela metade", wasAt, now)
+	}
+}

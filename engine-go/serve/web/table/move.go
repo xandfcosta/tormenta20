@@ -9,7 +9,6 @@ import (
 
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
-	"t20engine/domain/live"
 )
 
 // O MOVIMENTO da peça na Mesa.
@@ -112,58 +111,18 @@ func (s Scene) propoePorParadas(c commandCtx, tokenID string, stops []engine.Squ
 		state, tokenID, stops, s.moveWho(c), 0)
 }
 
+// confirmMove entrega o gesto ao caso de uso, que abre a transação.
+//
+// O corpo dele morava aqui e foi para o `app/boards` na ALE-376: eram duas
+// gravações em transações diferentes — a peça pousava e só então a ação era
+// cobrada —, e uma falha na cobrança deixava o movimento feito e o turno
+// intacto. A cena não abre transação; quem desenha o contorno de um gesto é o
+// caso de uso.
+//
+// O `moveWho` fica: ele resolve a POSSE lendo o papel e o id da peça DO PEDIDO,
+// e isso é leitura de requisição — o caso de uso recebe a resposta pronta.
 func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
-	// Versão ZERO: o `CommitMove` só compara quando ela é positiva, e aqui quem
-	// confirma acabou de ver a cena que o servidor desenhou — não há uma versão
-	// vinda do cliente para conferir contra. A trava contra a mesa ter mudado
-	// continua sendo a REVALIDAÇÃO da vez, que o `CommitMove` faz de novo.
-	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
-	if err != nil {
-		return nil, err
-	}
-	// QUEM ANDA É QUEM ESTÁ NA VEZ, e só então a ação é cobrada: o mestre move
-	// peça fora de turno o tempo todo — arrumando a cena, empurrando um NPC —, e
-	// cobrar dele a ação de outro combatente tiraria do turno de quem não se
-	// mexeu (p233).
-	moved, err := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
-	if err != nil {
-		return nil, err
-	}
-	onTurn := movedTokenIsOnTurn(state, moved)
-	// A CONFERÊNCIA vem ANTES do pouso, e a COBRANÇA depois.
-	//
-	// Cobrar depois basta para o número ficar certo e NÃO basta para a mesa:
-	// sem ação no turno, o `CommitMove` já teria posto a peça na casa nova e a
-	// recusa seria só uma frase vermelha embaixo de um movimento feito. Entre a
-	// conferência e a cobrança o `CommitMove` ainda pode recusar — e aí o turno
-	// não é cobrado, que é o lado seguro dos dois.
-	if onTurn {
-		if err := st.deps.Sessions().ActionFits(c.R.Context(), c.SessionID, engine.ActionMovement); err != nil {
-			return nil, err
-		}
-	}
-	boardState, err := st.deps.Boards().CommitMove(c.R.Context(), c.SessionID, c.BoardID,
-		state, 0, st.moveWho(c))
-	if err != nil || !onTurn {
-		return boardState, err
-	}
-	if _, err := st.deps.Sessions().SpendAction(c.R.Context(), c.SessionID, engine.ActionMovement); err != nil {
-		return boardState, err
-	}
-	return boardState, nil
-}
-
-// movedTokenIsOnTurn diz se a peça do movimento proposto é a de quem está na
-// vez. Sem tabuleiro, sem provisório ou sem combate, não é.
-func movedTokenIsOnTurn(state *live.SessionRuntimeState, boardState *board.BoardState) bool {
-	if state == nil || boardState == nil || boardState.Pending == nil {
-		return false
-	}
-	if state.TurnIndex < 0 || state.TurnIndex >= len(state.Initiative) {
-		return false
-	}
-	token := board.FindToken(boardState, boardState.Pending.TokenID)
-	return token != nil && token.EntryID != nil && *token.EntryID == state.Initiative[state.TurnIndex].ID
+	return st.gestures.ConfirmMove(c.R.Context(), c.SessionID, c.BoardID, st.moveWho(c))
 }
 
 func cancelMove(st Scene, c commandCtx) (*board.BoardState, error) {

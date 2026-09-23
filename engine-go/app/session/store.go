@@ -71,6 +71,34 @@ func NewStore(
 	}
 }
 
+// installWhenItCounts põe a mesa mudada no cache — AGORA, ou depois do commit
+// quando há transação aberta. Ver o irmão em `boards.Store`, e a razão é a
+// mesma: a memória não participa do `rollback` (ALE-376).
+func (st *Store) installWhenItCounts(ctx context.Context, sessionID int64, saved *live.SessionRuntimeState) {
+	if open, ok := UnitFrom(ctx); ok && open.AfterCommit != nil {
+		open.AfterCommit(func() { st.States[sessionID] = saved })
+		return
+	}
+	st.States[sessionID] = saved
+}
+
+// snapshotsFor devolve o retrato que ESTE gesto tem de usar: o da unidade
+// aberta, quando o contexto carrega uma, e o do store no resto das vezes.
+//
+// Sem isto o `WithUnit` era meia rede (ALE-376). Ele já fazia um `Do` aninhado
+// REUSAR a transação, mas o store seguia gravando pelo retrato do construtor —
+// que é outra conexão do pool. O gesto que abria a unidade e chamava um método
+// de store lá de dentro batia na própria trava e esperava o `busy_timeout`
+// inteiro, que foi como este caso apareceu: 14s num teste de 0,1s.
+//
+// É a MESMA forma que o `boards.Store.snapshotsFor` usa, e pela mesma razão.
+func (st *Store) snapshotsFor(ctx context.Context) SessionSnapshots {
+	if open, ok := ctx.Value(unitKey{}).(Unit); ok && open.Snapshots != nil {
+		return open.Snapshots
+	}
+	return st.snapshots
+}
+
 // nextSeqLocked devolve a ordem da próxima mutação desta sessão. Chamada SEMPRE
 // com `st.Mu` seguro, que é o que faz a numeração coincidir com a ordem real
 // das mutações.
@@ -140,11 +168,11 @@ func (st *Store) applyLocked(ctx context.Context, sessionID int64, fn func(*live
 	// numera as mutações para o hub reconhecer quadro atrasado, e numerar fora
 	// da ordem em que o banco as aceitou entregaria à tela o quadro velho por
 	// último.
-	saved, err := st.snapshots.Mutate(ctx, sessionID, fn)
+	saved, err := st.snapshotsFor(ctx).Mutate(ctx, sessionID, fn)
 	if err != nil {
 		return nil, err
 	}
-	st.States[sessionID] = saved
+	st.installWhenItCounts(ctx, sessionID, saved)
 	clone := live.CloneState(saved)
 	clone.Seq = st.nextSeqLocked(sessionID)
 	return clone, nil
@@ -397,7 +425,7 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) (*
 	}
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
-	saved, err := st.snapshots.Mutate(ctx, sessionID, func(s *live.SessionRuntimeState) error {
+	saved, err := st.snapshotsFor(ctx).Mutate(ctx, sessionID, func(s *live.SessionRuntimeState) error {
 		for i := range s.Initiative {
 			e := &s.Initiative[i]
 			if e.CharacterID == nil {

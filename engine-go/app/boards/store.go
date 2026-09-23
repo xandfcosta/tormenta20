@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sync"
 
+	"t20engine/app/session"
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -74,6 +75,35 @@ func NewStore(snapshots BoardSnapshots, q *sqlcgen.Queries, newID func() string,
 		snapshots: snapshots,
 		q:         q,
 	}
+}
+
+// installWhenItCounts põe o tabuleiro mudado na memória — AGORA, ou depois do
+// commit quando há transação aberta.
+//
+// Dentro de uma unidade, gravar não é o fim: a transação ainda pode ser
+// desfeita por um passo seguinte, e a memória não participa disso. Instalando
+// na hora, o `rollback` desfaz o disco e deixa o mapa que a mesa VÊ adiantado —
+// medido na ALE-376, a peça ficava na casa nova depois de o gesto inteiro ser
+// recusado.
+func (bs *Store) installWhenItCounts(ctx context.Context, alvo, draft *board.BoardState) {
+	if open, ok := session.UnitFrom(ctx); ok && open.AfterCommit != nil {
+		pronto := *draft
+		open.AfterCommit(func() { *alvo = pronto })
+		return
+	}
+	*alvo = *draft
+}
+
+// snapshotsFor devolve o retrato que ESTE gesto tem de usar: o da transação
+// aberta, quando o contexto carrega um, e o do store no resto das vezes.
+//
+// O do contexto GANHA por construção, e é o que faz um gesto que atravessa
+// tabuleiro e fila gravar os dois na mesma transação (ALE-376).
+func (bs *Store) snapshotsFor(ctx context.Context) BoardSnapshots {
+	if inTx, ok := ctx.Value(snapshotsKey{}).(BoardSnapshots); ok && inTx != nil {
+		return inTx
+	}
+	return bs.snapshots
 }
 
 // cloneBoard copia o tabuleiro para o broadcast. As peças são valores; a cópia
@@ -206,7 +236,7 @@ func (bs *Store) hydrateLocked(ctx context.Context, sessionID int64) error {
 	if bs.loaded[sessionID] {
 		return nil
 	}
-	open, err := bs.snapshots.Read(ctx, sessionID)
+	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
 	if err != nil {
 		// Sem marcar: a próxima mensagem tenta de novo em vez de servir um
 		// "sem tabuleiro" que só existe porque o banco piscou.
@@ -253,7 +283,7 @@ func (bs *Store) openLocked(ctx context.Context, sessionID int64, place, terrain
 	// A GRAVAÇÃO VEM ANTES DE A ABA EXISTIR PARA ALGUÉM. Invertida, o mestre vê
 	// a aba nova na barra, monta a cena nela, e no próximo boot ela não está lá
 	// — porque o INSERT que nunca aconteceu era o que a fazia existir.
-	if err := bs.snapshots.Save(ctx, sessionID, b); err != nil {
+	if err := bs.snapshotsFor(ctx).Save(ctx, sessionID, b); err != nil {
 		return nil, err
 	}
 	bs.boards[sessionID] = append(bs.boards[sessionID], b)
@@ -285,7 +315,7 @@ func (bs *Store) Close(ctx context.Context, sessionID int64, boardID string) err
 		return nil
 	}
 	closed := target.ID
-	if err := bs.snapshots.Delete(ctx, sessionID, closed); err != nil {
+	if err := bs.snapshotsFor(ctx).Delete(ctx, sessionID, closed); err != nil {
 		bs.Mu.Unlock()
 		return err
 	}
@@ -376,10 +406,10 @@ func (bs *Store) applyLocked(
 	}
 	// A GRAVAÇÃO É A MUTAÇÃO (ALE-375): o que não gravou não aconteceu, e o erro
 	// sobe para quem clicou em vez de acender uma tarja que ninguém lê.
-	if err := bs.snapshots.Save(ctx, sessionID, draft); err != nil {
+	if err := bs.snapshotsFor(ctx).Save(ctx, sessionID, draft); err != nil {
 		return nil, err
 	}
-	*live = *draft
+	bs.installWhenItCounts(ctx, live, draft)
 	return cloneBoard(draft), nil
 }
 
