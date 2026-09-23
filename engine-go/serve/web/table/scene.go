@@ -220,7 +220,7 @@ func reopenPlace(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	st.chosenTabs.Escolhe(c.SessionID, c.User, scene.ID)
+	st.chosenTabs.Choose(c.SessionID, c.User, scene.ID)
 	return scene, nil
 }
 
@@ -320,7 +320,7 @@ func openBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	st.chosenTabs.Escolhe(c.SessionID, c.User, b.ID)
+	st.chosenTabs.Choose(c.SessionID, c.User, b.ID)
 	// O formulário volta ao zero, como o do combatente: sem isto o lugar fica no
 	// campo e a cena seguinte nasce com o nome da anterior.
 	c.Signals["new_place"] = ""

@@ -85,13 +85,13 @@ func newTabs() *chosenTabs {
 	}
 }
 
-// Escolhe grava a aba que esta pessoa está olhando, e CONSOME o puxão em curso.
+// Choose grava a aba que esta pessoa está olhando, e CONSOME o puxão em curso.
 //
 // Consumir aqui é o que solta a pessoa: ela foi trazida, olhou, e escolheu outra
 // coisa — a partir daí a decisão é dela de novo, e a tira do puxão some. Vale
 // também quando ela escolhe a própria aba para onde foi trazida: ficar é uma
 // escolha, e a tira que continuasse acesa depois dela seria um modo sem gesto.
-func (a *chosenTabs) Escolhe(sessionID, userID int64, boardID string) {
+func (a *chosenTabs) Choose(sessionID, userID int64, boardID string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	key := tabKey{SessionID: sessionID, UserID: userID}
@@ -108,7 +108,7 @@ func (a *chosenTabs) Escolhe(sessionID, userID int64, boardID string) {
 	a.chosen[key] = tabChoice{Board: boardID, StrengthSeen: seen}
 }
 
-// Puxa traz a mesa para uma aba, e devolve o número do puxão.
+// Pull traz a mesa para uma aba, e devolve o número do puxão.
 //
 // Quem puxa já CONSUMIU o próprio puxão: ele está olhando aquela aba — foi por
 // isso que a mostrou —, e a tira "o mestre trouxe você para cá" na tela do
@@ -155,7 +155,7 @@ func (a *chosenTabs) PullProgress(sessionID, userID int64) int64 {
 	return 0
 }
 
-// Apaga esquece as escolhas e o puxão de uma sessão inteira.
+// Erase esquece as escolhas e o puxão de uma sessão inteira.
 //
 // Chamado quando a última cena morre, pelo mesmo motivo da lente: uma escolha
 // apontando para um tabuleiro que não existe mais é lixo que sobrevive à sessão.
@@ -295,7 +295,7 @@ func showTableIsTab(st Scene, c commandCtx) (*board.BoardState, error) {
 // a cada leitura, porque a aba pode morrer DEPOIS da escolha. Uma conferência
 // aqui daria a mesma resposta e ainda deixaria a outra necessária.
 func swapBoard(st Scene, c commandCtx) (*board.BoardState, error) {
-	st.chosenTabs.Escolhe(c.SessionID, c.User, chi.URLParam(c.R, "tabuleiroId"))
+	st.chosenTabs.Choose(c.SessionID, c.User, chi.URLParam(c.R, "tabuleiroId"))
 	return nil, nil
 }
 
