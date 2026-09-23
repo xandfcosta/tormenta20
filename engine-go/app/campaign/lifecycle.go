@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"t20engine/app"
-	"t20engine/app/boards"
 	"t20engine/app/session"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -25,22 +24,28 @@ import (
 // Irmão do `session.Lifecycle` de propósito, e com os mesmos verbos: uma
 // campanha e uma sessão são coisas diferentes com o mesmo formato de gesto, e
 // dois nomes para isso fariam quem lê procurar a diferença onde não há.
+// SessionsForgotten é o que apagar uma CAMPANHA precisa do ciclo da sessão, e é
+// UM método: tirar da memória o que uma sessão que deixou de existir deixou.
+//
+// Aqui moravam os dois stores — o da fila e o do tabuleiro —, e eles existiam
+// para as DUAS linhas que este pacote escrevia à mão. Pedir o gesto em vez dos
+// objetos fez a sequência morar num lugar só e tirou a dependência deste pacote
+// em `app/boards`, que era de uma chamada (ALE-377).
+type SessionsForgotten interface {
+	ForgetSession(sessionID int64)
+}
+
 type Lifecycle struct {
-	db      *sql.DB
-	queries *sqlcgen.Queries
-	access  session.Access
-	// Os dois STORES existem para UM gesto: apagar. Eles são o estado em memória
-	// das sessões, e esquecê-lo é metade do que apagar uma campanha significa —
-	// ver a ordem no `Delete`.
-	boards   *boards.Store
-	sessions *session.Store
+	db       *sql.DB
+	queries  *sqlcgen.Queries
+	access   session.Access
+	sessions SessionsForgotten
 }
 
 func NewLifecycle(
-	db *sql.DB, q *sqlcgen.Queries, lock session.Access,
-	boardList *boards.Store, sessions *session.Store,
+	db *sql.DB, q *sqlcgen.Queries, lock session.Access, sessions SessionsForgotten,
 ) Lifecycle {
-	return Lifecycle{db: db, queries: q, access: lock, boards: boardList, sessions: sessions}
+	return Lifecycle{db: db, queries: q, access: lock, sessions: sessions}
 }
 
 // Open abre uma mesa, e ela nasce COM link de convite.
@@ -244,7 +249,6 @@ func (l Lifecycle) forgetSessionsInMemory(ctx context.Context, campaignID int64)
 		return
 	}
 	for _, sess := range sessions {
-		l.boards.SessionDeleted(sess.ID)
-		l.sessions.SessionDeleted(sess.ID)
+		l.sessions.ForgetSession(sess.ID)
 	}
 }

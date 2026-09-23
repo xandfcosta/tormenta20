@@ -49,9 +49,9 @@ func newLenses() *lenses {
 	return &lenses{on: map[lensKey]bool{}}
 }
 
-// Alterna liga ou desliga, e devolve como ficou.
+// Toggle liga ou desliga, e devolve como ficou.
 //
-// ALTERNA e não recebe o estado desejado, ao contrário do pincel de terreno: o
+// ALTERNA (`Toggle`) e não recebe o estado desejado, ao contrário do pincel de terreno: o
 // botão é UM, com `aria-pressed`, e mandar o valor faria a tela ser a fonte da
 // verdade de um estado que é do servidor — dois cliques rápidos com a resposta
 // atrasada apagariam um ao outro.
@@ -76,11 +76,25 @@ func (l *lenses) On(sessionID, userID int64) bool {
 	return l.on[lensKey{SessionID: sessionID, UserID: userID}]
 }
 
-// Apaga desliga a lente de todo mundo naquela sessão.
+// Erase desliga a lente de todo mundo naquela sessão.
 //
 // Chamado quando a CENA ACABA: uma lente ligada sobre um tabuleiro que não
 // existe mais mostraria "você está vendo como a mesa" sobre uma tela vazia, e o
 // mestre concluiria que o próprio mapa sumiu para os jogadores.
+// HowMany conta as lentes acesas desta sessão — ver o `Watching`, que soma as
+// duas metades da memória efêmera.
+func (l *lenses) HowMany(sessionID int64) int {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	lit := 0
+	for key := range l.on {
+		if key.SessionID == sessionID {
+			lit++
+		}
+	}
+	return lit
+}
+
 func (l *lenses) Erase(sessionID int64) {
 	l.mu.Lock()
 	defer l.mu.Unlock()

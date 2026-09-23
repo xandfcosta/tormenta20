@@ -868,7 +868,7 @@ ALE-347, ALE-348). Uma porta existe para desviar de um ciclo — a cena precisa 
 então não há interface a declarar. A assinatura do `New` diz o que a cena faz:
 
 ```go
-table.New(s.tableHost(), s.sessionLifecycle(), s.restParty(), s.initiativeQueue())
+table.New(s.tableHost(), s.sessionLifecycle(), s.tableMemory, s.restParty(), s.initiativeQueue(), …)
 sheetui.New(s.sheetHost(), s.characterPlays())
 campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), …)
 door.New(s.doorHost(), s.accountGate(), s.accountResets())
@@ -881,6 +881,14 @@ O efeito é a porta ENCOLHER em vez de crescer: a da ficha saiu de dezoito
 métodos para oito, a de campanhas de VINTE para seis, e a da porta de NOVE para
 três. Uma entrada que vira caso de uso SAI da `Deps` — ela não ganha um
 adaptador novo.
+
+**Estado que a CENA GUARDA e outro alcança nasce no HOSPEDEIRO, e não dentro do
+`New`.** A Mesa guarda dois mapas por `(sessão, pessoa)` — a lente e a aba que
+cada um escolheu —, e eles nasciam no `table.New`. O mecanismo é o que torna
+isso um defeito: quando a sessão é APAGADA, quem tem de esvaziá-los é o ciclo da
+sessão, que é montado ANTES da cena e não tem como alcançar o que ela criou por
+dentro. Montado no hospedeiro, o mesmo objeto vai para os dois (ALE-377). O
+sinal de que é este caso: "o fim de X tem de alcançar isto".
 
 **E o que o `app/` habilita não é só encolher: é a cena poder LER os
 sentinelas.** A porta das campanhas dizia, por escrito, que ler um erro do

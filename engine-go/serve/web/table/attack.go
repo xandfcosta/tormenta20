@@ -38,6 +38,7 @@ func proposesAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// caminho que o `Mover.OwnsCharacter` do tabuleiro usa.
 	_, mine, _ := st.tableRoster(c.R.Context(), c.User, c.CampaignID)
 	if _, err := st.strike.Propose(c.R.Context(), app.Caller{ID: c.User}, c.Role, combat.Request{
+		CampaignID:      c.CampaignID,
 		SessionID:       c.SessionID,
 		AttackerEntryID: onTurn.ID,
 		TargetEntryID:   chi.URLParam(c.R, "entryId"),
