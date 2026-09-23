@@ -42,6 +42,11 @@ type Server struct {
 	book servedBook // o PDF do book, quando `LIVRO_PDF` aponta para um
 	// tableScene é a cena da Mesa, montada UMA vez — ver o construtor.
 	tableScene table.Scene
+	// tableMemory é a memória efêmera da Mesa por `(sessão, pessoa)`, e é campo
+	// do servidor porque DOIS a querem: a cena, que a lê e escreve, e o ciclo da
+	// sessão, que a esvazia quando a sessão deixa de existir. Um `table.New` que
+	// a montasse por dentro não teria como ser esquecido (ALE-377).
+	tableMemory *table.EphemeralTableState
 	// units abre a unidade de trabalho de um gesto: uma transação para a fila, a
 	// ficha e o TABULEIRO juntos (ALE-373, ALE-376). O servidor a guarda porque
 	// mais de um caso de uso a pede.
@@ -165,10 +170,13 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),
 		sse:      live.NewSSEHub(),
+		// ANTES da cena e ANTES do ciclo, porque os dois a recebem: é o que faz
+		// o fim de uma sessão alcançar a lente e a aba escolhida.
+		tableMemory: table.NewEphemeralTableState(),
 	}
-	// A CENA DA MESA é montada UMA vez e o servidor guarda a instância: ela tem
-	// estado — a lente e a aba que cada pessoa escolheu —, e um `table.New` por
-	// requisição daria um estado novo a cada pedido.
+	// A CENA DA MESA é montada UMA vez e o servidor guarda a instância: ela lê e
+	// escreve a `tableMemory`, e um `table.New` por requisição daria um estado
+	// novo a cada pedido.
 	srv.primeCatalogs(catalogs)
 	return srv
 }
@@ -180,7 +188,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
 	s.tableScene = table.New(
-		s.tableHost(), s.sessionLifecycle(), s.restParty(),
+		s.tableHost(), s.sessionLifecycle(), s.tableMemory, s.restParty(),
 		s.initiativeQueue(), s.campaignCast(), s.characterPlays(), s.combatStrike(),
 		s.boardGestures())
 }
@@ -261,8 +269,11 @@ func (s *Server) restParty() rest.Party {
 	return rest.NewParty(s.queries, s.sessions, s.catalogs)
 }
 
+// sessionLifecycle é o ciclo com TODOS os mapas por sessão do processo: a fila
+// (que ele já tem), os tabuleiros, e a memória efêmera da Mesa. Um mapa que fique
+// fora desta lista sobrevive à sessão que o continha (ALE-377).
 func (s *Server) sessionLifecycle() session.Lifecycle {
-	return session.NewLifecycle(s.db, s.queries, s.sessions, s.boards)
+	return session.NewLifecycle(s.db, s.queries, s.sessions, s.boards, s.tableMemory)
 }
 
 // sceneCore é montado por chamada e não guardado num campo: são três ponteiros

@@ -159,6 +159,23 @@ func (a *chosenTabs) PullProgress(sessionID, userID int64) int64 {
 //
 // Chamado quando a última cena morre, pelo mesmo motivo da lente: uma escolha
 // apontando para um tabuleiro que não existe mais é lixo que sobrevive à sessão.
+// HowMany conta as escolhas guardadas desta sessão, mais o puxão dela se houver
+// — ver o `Watching`, que soma as duas metades da memória efêmera.
+func (a *chosenTabs) HowMany(sessionID int64) int {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	kept := 0
+	for key := range a.chosen {
+		if key.SessionID == sessionID {
+			kept++
+		}
+	}
+	if _, pulled := a.pull[sessionID]; pulled {
+		kept++
+	}
+	return kept
+}
+
 func (a *chosenTabs) Erase(sessionID int64) {
 	a.mu.Lock()
 	defer a.mu.Unlock()

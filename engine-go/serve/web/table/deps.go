@@ -124,13 +124,18 @@ type Scene struct {
 	// usam por dentro (ALE-344). A cena a chama para decidir o que DESENHAR —
 	// o rodapé do mestre, a recusa antes do gesto —, e quem decide se o gesto
 	// pode é o caso de uso. Duas perguntas, uma implementação.
-	access     session.Access
+	access session.Access
+	// Os dois mapas por `(sessão, pessoa)` vêm de FORA, dentro do
+	// `EphemeralTableState`: o fim de uma sessão tem de alcançá-los, e quem os
+	// montasse aqui dentro não teria como ser avisado — ver o
+	// `ephemeral_state.go`. A cena guarda as duas metades direto porque é assim
+	// que ela as usa; o objeto inteiro é do hospedeiro.
 	lenses     *lenses
 	chosenTabs *chosenTabs
 }
 
 func New(
-	d Deps, cycle session.Lifecycle, group rest.Party,
+	d Deps, cycle session.Lifecycle, ephemeral *EphemeralTableState, group rest.Party,
 	queue initiative.Queue, cast campaign.Cast, plays character.Plays, strike combat.Strike,
 	gestures boards.Gestures,
 ) Scene {
@@ -138,6 +143,6 @@ func New(
 		deps: d, lifecycle: cycle, party: group, queue: queue, cast: cast, plays: plays, strike: strike,
 		gestures: gestures,
 		access:   cycle.Access(),
-		lenses:   newLenses(), chosenTabs: newTabs(),
+		lenses:   ephemeral.lenses, chosenTabs: ephemeral.chosenTabs,
 	}
 }

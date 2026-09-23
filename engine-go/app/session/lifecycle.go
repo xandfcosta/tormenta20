@@ -16,30 +16,41 @@ import (
 // Cada método dele faz a mesma sequência, e é ela que define a camada: AUTORIZA,
 // pergunta a DECISÃO à regra pura, GRAVA, e acerta o estado em memória. A cena
 // recebe o resultado e desenha; ela não sabe em que ordem nada disso acontece.
-// BoardsOfASession é o que o CICLO precisa do tabuleiro, e é UM método: esquecer
-// os mapas de uma sessão que deixou de existir.
+// MemoryOfASession é um mapa por sessão que tem de esvaziar quando a sessão
+// deixa de existir, e é UM método.
 //
-// Uma PORTA e não o `*boards.Store` inteiro, e a razão é de direção (ALE-376):
-// com o store, este pacote importava `app/boards`, e isso proibia o caminho
+// Uma PORTA e não os stores inteiros, e a razão é de direção (ALE-376): com o
+// `*boards.Store`, este pacote importava `app/boards`, e isso proibia o caminho
 // contrário — justo o que o gesto que atravessa tabuleiro e fila precisa. Pedir
 // a PERGUNTA em vez do objeto desfez o impedimento sem custar nada: era uma
 // chamada só.
-type BoardsOfASession interface {
+//
+// Uma LISTA e não um campo por dono, porque eles não são dois: a fila, os
+// tabuleiros e a memória efêmera da Mesa são três mapas chaveados por sessão, e
+// um quarto é uma linha de fiação (ALE-377).
+type MemoryOfASession interface {
 	SessionDeleted(sessionID int64)
 }
 
 type Lifecycle struct {
-	db       *sql.DB
-	queries  *sqlcgen.Queries
+	db      *sql.DB
+	queries *sqlcgen.Queries
+	// sessions é a fila, e ela tem campo próprio além de estar em `memories`:
+	// os outros métodos do ciclo LEEM dela, e a porta só sabe esquecer.
 	sessions *Store
-	boards   BoardsOfASession
+	memories []MemoryOfASession
 	access   Access
 }
 
+// NewLifecycle monta o ciclo. As `memories` são os OUTROS mapas por sessão — a
+// fila entra sozinha, porque ela já está aqui.
 func NewLifecycle(
-	db *sql.DB, q *sqlcgen.Queries, sessions *Store, boards BoardsOfASession,
+	db *sql.DB, q *sqlcgen.Queries, sessions *Store, memories ...MemoryOfASession,
 ) Lifecycle {
-	return Lifecycle{db: db, queries: q, sessions: sessions, boards: boards, access: NewAccess(q)}
+	return Lifecycle{
+		db: db, queries: q, sessions: sessions, access: NewAccess(q),
+		memories: append([]MemoryOfASession{sessions}, memories...),
+	}
 }
 
 // Access é a trava que este caso de uso usa, exposta para quem precisa só dela.
@@ -199,17 +210,21 @@ func (l Lifecycle) Delete(ctx context.Context, who app.Caller, campaignID, sessi
 // ForgetSession tira da memória tudo que uma sessão que deixou de existir deixou
 // para trás. É o ÚNICO lugar onde este par é escrito (ALE-377).
 //
-// São DOIS esquecimentos e não um, e eles estragam coisas diferentes. Sem o
-// primeiro, o tabuleiro fica no mapa do store batendo na chave estrangeira a
-// cada gravação, e desde a ALE-375 isso não é mais uma marca de sujeira que
-// ninguém vê: é RECUSA, com a frase do banco, em todo gesto do tabuleiro órfão.
-// Sem o segundo, a fila em cache continua respondendo por uma sessão apagada.
+// São VÁRIOS esquecimentos e não um, e eles estragam coisas diferentes. Sem o
+// do TABULEIRO, o mapa fica batendo na chave estrangeira a cada gravação, e
+// desde a ALE-375 isso não é mais uma marca de sujeira que ninguém vê: é
+// RECUSA, com a frase do banco, em todo gesto do tabuleiro órfão. Sem o da
+// FILA, o cache continua respondendo por uma sessão apagada. Sem o da MESA, a
+// lente e a aba escolhida de cada pessoa ficam no processo para sempre — este
+// não tem sintoma na tela, porque quem os lê confere contra os tabuleiros
+// abertos, e é memória que nunca volta.
 //
-// Exportado porque apagar a CAMPANHA precisa do mesmo par, uma vez por sessão, e
-// chega aqui por outro caminho. Era a terceira cópia da sequência que sumiu com
-// isto — e a que se dizia "escrita uma vez" era justamente a que já tinha só um
-// chamador de teste.
+// Exportado porque apagar a CAMPANHA precisa da mesma faxina, uma vez por
+// sessão, e chega aqui por outro caminho. Era a terceira cópia da sequência que
+// sumiu com isto — e a que se dizia "escrita uma vez" era justamente a que já
+// tinha só um chamador de teste.
 func (l Lifecycle) ForgetSession(sessionID int64) {
-	l.boards.SessionDeleted(sessionID)
-	l.sessions.SessionDeleted(sessionID)
+	for _, memory := range l.memories {
+		memory.SessionDeleted(sessionID)
+	}
 }
