@@ -123,23 +123,13 @@ CENA é construída".
 
 **No `serve/api`, o nome do arquivo diz o ADAPTADOR que o possui**, e o assunto
 vem depois do prefixo: `table_*` é do `tableRules`, `sheet_*` do `sheetRules`,
-`campaign_*` e `account_*` dos outros dois. **Um arquivo, um dono** — o
-`character.go` tinha TRÊS donos, e o arquivo dos membros tinha dois — ele foi
-repartido um por dono, e nenhum dos dois nomes dizia qual (ALE-330). As duas
-metades acabaram descendo: a da mesa para o `app/initiative` na ALE-344, a de
-campanha para o `app/campaign` na ALE-348.
+`campaign_*` e `account_*` dos outros dois. **Um arquivo, um dono** (ALE-330).
 
 Quem cobra é o `TestEveryAdapterFileCarriesItsPrefix`: ele lê o RECEPTOR dos
 métodos e falha com o nome do arquivo e o do dono. Duas coisas que ele NÃO
 conta, e as duas são de propósito — o `*Server`, que é fiação e está em metade
 do diretório, e os hosts de cena (`tableHost`, `hubHost`), que já têm a
 convenção deles em `*_deps.go` e convivem com um adaptador no mesmo arquivo.
-
-> Aqui morava a contagem: quantos métodos o `*Server` tinha, quantos arquivos o
-> `api` tinha, quantas rotas sobraram. **Dois dos números estavam errados** — o
-> guia dizia oito métodos onde havia onze, e 36 arquivos onde havia 54. Número
-> escrito à mão sobre coisa que muda envelhece sozinho, e o `grep` é a fonte
-> (ALE-325).
 
 **As cenas atendem na RAIZ**, sem prefixo. Duas consequências que o `git grep`
 não mostra e que já morderam:
@@ -449,11 +439,10 @@ desligado.
 ## O barramento de eventos: o que acontece na mesa é TIPADO
 
 O `events.Bus` (ALE-279) entrega, dentro do processo, o que aconteceu numa mesa.
-Ele substituiu quatro mecanismos com a mesma forma e nenhum nome em comum — o
-`Assinar` de cada um dos dois stores, o `CharacterWatch.Assinar` e um
-`Emit` —, os três primeiros `chan struct{}`: diziam QUE algo mudou e nunca O
-QUÊ, e o `select` do stream da Mesa tinha um `case` para cada um só para juntar
-de volta o que estava separado por acidente de onde o estado mora.
+Ele substituiu quatro mecanismos com a mesma forma e nenhum nome em comum, três
+deles `chan struct{}`: eles diziam QUE algo mudou e nunca O QUÊ, e o `select` do
+stream da Mesa tinha um `case` para cada um só para juntar de volta o que estava
+separado por acidente de onde o estado mora.
 
 **Não é event sourcing, e a diferença é a decisão inteira.** O banco continua
 sendo o estado. As regras do livro são conta e não fluxo — empilhamento de
@@ -464,10 +453,8 @@ partir de eventos compraria versionamento de evento e snapshot sem nada em troca
 Três coisas que este desenho pede, e uma que ele proíbe:
 
 - **Nomear o evento é obrigação de COMPILAÇÃO.** O `apply` dos dois stores recebe
-  o evento por parâmetro, então não dá para mutar sem dizer o que aconteceu.
-  Antes o aviso era uma linha dentro do funil e um comentário prometia que
-  ninguém escapava — promessa que vale enquanto ninguém escrever a mutação de
-  fora.
+  o evento por parâmetro, então não dá para mutar sem dizer o que aconteceu — o
+  que um comentário prometendo que ninguém escapa não consegue fazer.
 - **Publicar acontece FORA da trava.** O barramento é folha e poderia ser chamado
   de dentro, mas quem acorda agora sabe o que houve e pode ler o estado na hora;
   publicar sob a trava faria esse leitor esperar pelo escritor no instante em que
@@ -1143,24 +1130,16 @@ A regra é global, mora no `index.css` desde a ALE-173 e **não é layerada** �
 então ela ganha de todo utilitário do Tailwind, que é layerado. Consequência que
 vale saber antes de escrever qualquer botão: `focus-visible:outline-*` escrito à
 mão não faz efeito nenhum dentro de uma cena, porque a regra de cima já decidiu.
-Eram **242 sítios** copiando a mesma tripla — 240 em 43 `.templ` e 2 em `.go` de
-produção —, e apagar os 242 não mudou um pixel (ALE-317). A issue os contava como
-147 porque a primeira medição olhou só `<button>`, e a tripla também estava em
-`<a>`, `<input>`, `<summary>` e `<label>`: *uma medição parcial não é um número
-menor, é um número de outra pergunta.* Quem impede o 243º é o
-`TestNoHandwrittenFocusRing`.
+Apagar todas as cópias dela não mudou um pixel (ALE-317), e quem impede a
+próxima é o `TestNoHandwrittenFocusRing`.
 
-O que MUDA o pixel é o REPOUSO, e foi só medindo que isso apareceu. O `@layer
-base` traz o `* { border-color; outline-color }` do shadcn, e o `outline-color`
-vinha a 50%; a largura vinha de `medium`, que o navegador computa como **3px**; o
-afastamento vinha de `0`. Nada disso pinta — o `outline-style` em repouso é
-`none`. Mas os três são o ponto de PARTIDA da transição, e o `transition-colors`
-e o `transition-all` do Tailwind v4 incluem `outline-*`: o anel era ALCANÇADO em
-150ms em vez de desenhado. Medido quadro a quadro num botão do kit: ouro a 0,50
-no primeiro quadro, 0,73 aos 54ms, cheio aos 154ms — e quem tabula na
-autorrepetição do teclado (~33ms por parada) nunca via o anel inteiro. O meio do
-caminho mede 3,25:1 contra os 10,46:1 do final, raspando o piso de 3:1 do WCAG
-1.4.11.
+O que MUDA o pixel é o REPOUSO, e o mecanismo é a regra: o `@layer base` traz um
+`* { outline-color }` do shadcn, e o `transition-colors`/`transition-all` do
+Tailwind v4 **incluem `outline-*`**. Nada daquilo pinta em repouso — o
+`outline-style` é `none` —, mas os três são o ponto de PARTIDA da transição, e o
+anel passa a ser ALCANÇADO em 150ms em vez de desenhado. Quem tabula na
+autorrepetição do teclado (~33ms por parada) nunca vê o anel inteiro, e o meio do
+caminho raspa o piso de 3:1 do WCAG 1.4.11 (ALE-318).
 
 **O conserto é escrever o repouso igual ao destino**, no mesmo `*`: sem
 diferença, não há o que interpolar. A duplicação do `2px`/`1px` com a regra de
