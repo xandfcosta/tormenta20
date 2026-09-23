@@ -265,7 +265,7 @@ func spentActions(m *moveView) string {
 // que o caminho pede são gastas uma a uma contra o que sobrou, então a troca da
 // padrão (p233) vale aqui exatamente como vale na cobrança.
 func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, cost, budget int) bool {
-	if budget <= 0 || !movedTokenIsOnTurn(st, b) || st.Scene == nil || !st.Scene.CountsRounds() {
+	if budget <= 0 || !board.MovedTokenIsOnTurn(st, b) || st.Scene == nil || !st.Scene.CountsRounds() {
 		return false
 	}
 	left := engine.TurnBudget{Standard: st.Scene.StandardLeft, Movement: st.Scene.MovementLeft}

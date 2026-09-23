@@ -42,6 +42,10 @@ type Server struct {
 	book servedBook // o PDF do book, quando `LIVRO_PDF` aponta para um
 	// tableScene é a cena da Mesa, montada UMA vez — ver o construtor.
 	tableScene table.Scene
+	// units abre a unidade de trabalho de um gesto: uma transação para a fila, a
+	// ficha e o TABULEIRO juntos (ALE-373, ALE-376). O servidor a guarda porque
+	// mais de um caso de uso a pede.
+	units session.Units
 	// charMu serializa as escritas por personagem (id → *sync.Mutex), para
 	// cliques rápidos de dano e vitais não se perderem no ler-computar-gravar.
 	charMu sync.Map
@@ -156,6 +160,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),
 		sessions: session.NewStore(session.NewSnapshots(q), units, live.NewUUID, fromSheet, fromSheet, bus),
+		units:    units,
 		boards:   boards.NewStore(boards.NewSnapshots(q), q, live.NewUUID, bus),
 		bus:      bus,
 		presence: live.NewPresenceRegistry(),
@@ -176,7 +181,14 @@ func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
 	s.tableScene = table.New(
 		s.tableHost(), s.sessionLifecycle(), s.restParty(),
-		s.initiativeQueue(), s.campaignCast(), s.characterPlays(), s.combatStrike())
+		s.initiativeQueue(), s.campaignCast(), s.characterPlays(), s.combatStrike(),
+		s.boardGestures())
+}
+
+// boardGestures são os gestos que escrevem no tabuleiro E na fila, e que por
+// isso abrem a unidade de trabalho (ALE-376).
+func (s *Server) boardGestures() boards.Gestures {
+	return boards.NewGestures(s.boards, s.sessions, s.units)
 }
 
 // combatStrike é o caso de uso de ATACAR.

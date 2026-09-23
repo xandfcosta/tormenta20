@@ -23,7 +23,7 @@ func (st *Store) cachedLocked(ctx context.Context, sessionID int64) (*live.Sessi
 	if s := st.States[sessionID]; s != nil {
 		return s, nil
 	}
-	s, err := st.snapshots.Read(ctx, sessionID)
+	s, err := st.snapshotsFor(ctx).Read(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}

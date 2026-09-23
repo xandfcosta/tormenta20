@@ -42,6 +42,26 @@ type BoardSnapshots interface {
 	Delete(ctx context.Context, sessionID int64, boardID string) error
 }
 
+// snapshotsKey marca no contexto o retrato de uma TRANSAÇÃO ABERTA. Chave de
+// tipo próprio e não string: é o jeito de o valor não colidir com o de outro
+// pacote — a mesma forma que o `unitKey` da unidade de trabalho usa.
+type snapshotsKey struct{}
+
+// WithSnapshots devolve um contexto que carrega o retrato de uma transação.
+//
+// É por aqui que o TABULEIRO entra na unidade de trabalho da fila (ALE-376). O
+// store guarda o retrato dele no construtor, e um gesto que atravessa os dois
+// donos de dado precisa que a gravação do tabuleiro vá pela MESMA transação —
+// senão ela pega a segunda conexão do pool e bate na trava da primeira, que é
+// o impasse da ALE-371.
+//
+// Pelo CONTEXTO e não por um parâmetro em cada método: são vinte e tantas
+// mutações no store, e um parâmetro a mais em todas elas seria pago por quem
+// nunca abre transação — que é quase todo chamador.
+func WithSnapshots(ctx context.Context, snapshots BoardSnapshots) context.Context {
+	return context.WithValue(ctx, snapshotsKey{}, snapshots)
+}
+
 // NewSnapshots é o retrato no SQLite deste app.
 func NewSnapshots(q *sqlcgen.Queries) BoardSnapshots {
 	return storedSnapshots{q: q}

@@ -330,3 +330,25 @@ func CanMoveWith(b *BoardState, st *live.SessionRuntimeState, tokenID string, by
 	_, budget, err := assertMovable(b, st, tokenID, by)
 	return err == nil, budget
 }
+
+// MovedTokenIsOnTurn diz se a peça do movimento proposto é a de quem está na
+// vez. Sem tabuleiro, sem provisório ou sem combate, não é.
+//
+// É quem decide se o movimento CUSTA a ação de movimento (p233): o mestre
+// empurra NPC fora de turno o tempo todo, e cobrar dele tiraria do turno de
+// quem não se mexeu.
+//
+// PURA e aqui porque ela lê os dois estados e não escreve em nenhum. Ela morava
+// em `serve/web/table`, e a ALE-376 a trouxe quando o gesto de confirmar virou
+// caso de uso: com ela na cena, o `app/` precisaria de uma cópia — e cópia de
+// função pura por causa de fronteira é lugar de defeito silencioso.
+func MovedTokenIsOnTurn(state *live.SessionRuntimeState, b *BoardState) bool {
+	if state == nil || b == nil || b.Pending == nil {
+		return false
+	}
+	if state.TurnIndex < 0 || state.TurnIndex >= len(state.Initiative) {
+		return false
+	}
+	token := FindToken(b, b.Pending.TokenID)
+	return token != nil && token.EntryID != nil && *token.EntryID == state.Initiative[state.TurnIndex].ID
+}

@@ -29,6 +29,42 @@ type Unit struct {
 	Snapshots   SessionSnapshots
 	Sheet       live.SheetVitals
 	TurnEffects live.SheetTurnEffects
+	// InTx é o caderno de consultas LIGADO a esta transação, para o gesto que
+	// precisa de uma porta que a unidade não carrega pronta.
+	//
+	// Ele existe por causa do TABULEIRO (ALE-376): o store dele guarda o
+	// retrato no construtor, então pôr uma `BoardSnapshots` aqui não faria o
+	// store usá-la — quem tem de receber a porta da transação é o STORE, e quem
+	// a monta é o gesto. Entregar o caderno é o que permite isso sem esta
+	// unidade conhecer o tabuleiro.
+	//
+	// O QUE ELE NÃO AFROUXA: tudo que se monta a partir dele continua preso à
+	// transação, então a garantia do `Unit` — "não dá para escrever por fora
+	// sem querer" — vale igual. O que ele permite é escrever por DENTRO de mais
+	// lugares, que é justamente o pedido.
+	InTx *sqlcgen.Queries
+	// AfterCommit guarda o que só vale DEPOIS de o disco aceitar.
+	//
+	// Os dois stores mantêm uma cópia em MEMÓRIA do que gravaram, e ela não
+	// participa da transação: o `rollback` desfaz o disco e deixa a memória
+	// adiantada. Medido na ALE-376 — com a gravação da fila recusada por um
+	// gatilho, a transação desfez tudo no banco e a peça continuou na casa nova
+	// no mapa que a mesa vê. **Um gesto que desfaz metade é o que a unidade
+	// existe para não ter.**
+	//
+	// Quem chama registra a instalação em memória aqui em vez de fazê-la na
+	// hora; o `Do` roda as registradas depois do `Commit`, e não roda nenhuma se
+	// ele falhar.
+	AfterCommit func(install func())
+}
+
+// UnitFrom devolve a unidade que o contexto carrega, se houver.
+//
+// Ela existe para o store do TABULEIRO, que mora noutro pacote e precisa saber
+// duas coisas da unidade aberta: por onde gravar e quando instalar na memória.
+func UnitFrom(ctx context.Context) (Unit, bool) {
+	open, ok := ctx.Value(unitKey{}).(Unit)
+	return open, ok
 }
 
 // Units abre a unidade de trabalho. Quem implementa é o hospedeiro, que é quem
@@ -97,12 +133,21 @@ func (u storedUnits) Do(ctx context.Context, work func(Unit) error) error {
 
 	inTx := u.q.WithTx(tx)
 	sheetPort, turnPort := u.ports(inTx)
-	unit := Unit{Snapshots: NewSnapshots(inTx), Sheet: sheetPort, TurnEffects: turnPort}
+	var pending []func()
+	unit := Unit{
+		Snapshots: NewSnapshots(inTx), Sheet: sheetPort, TurnEffects: turnPort, InTx: inTx,
+		AfterCommit: func(install func()) { pending = append(pending, install) },
+	}
 	if err := work(unit); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("fechar a transação do gesto: %w", err)
+	}
+	// DEPOIS do commit, e nunca antes: é o que faz a memória dos stores contar a
+	// mesma história que o disco.
+	for _, install := range pending {
+		install()
 	}
 	return nil
 }
