@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
 )
 
 // Os TEXTOS das habilidades de raça.
@@ -25,6 +26,11 @@ type RaceAbility struct {
 	Name        string           `json:"name"`
 	Description string           `json:"description"`
 	Variants    []AbilityVariant `json:"variants"`
+	// Modifiers é o que a habilidade CONCEDE, e ele entrou para a tela poder
+	// NOMEAR a habilidade responsável por uma isenção (ALE-384). O motor resolve
+	// os modificadores num conjunto de flags e perde a procedência no caminho —
+	// "quem me isentou" é pergunta de apresentação, e é aqui que ela se responde.
+	Modifiers []engine.Modifier `json:"modifiers,omitempty"`
 }
 
 type RaceForScreen struct {

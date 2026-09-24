@@ -163,10 +163,35 @@ templ equippedCardItem(v View, card *equippedCard, wide bool) {
 						// indivisível: o `flex-wrap` não quebra "Perícia
 						// Intimidação +1", e sem o corte ele é desenhado por
 						// cima do cartão vizinho.
-						<span
-							title={ chip }
-							class="max-w-full truncate rounded-full border border-grimorio-iron bg-muted px-1.5 py-0.5 text-3xs text-foreground"
-						>{ chip }</span>
+						//
+						// O RISCADO é o item concedendo algo que não alcança
+						// ESTE portador (ALE-384). Ele fica na tela, e não
+						// sumindo, porque o crachá descreve o ITEM: sumir
+						// esconderia que existe uma isenção agindo a favor da
+						// pessoa. O `title` diz em palavras o que o risco diz
+						// em desenho — risco sozinho não chega a leitor de tela.
+						if chip.Inactive {
+							<span
+								title={ chip.Text + " — não se aplica a você" }
+								class="max-w-full truncate rounded-full border border-grimorio-iron bg-muted px-1.5 py-0.5 text-3xs text-muted-foreground line-through"
+							>{ chip.Text }</span>
+						} else if chip.Reason {
+							// O crachá da RAZÃO quebra linha em vez de cortar.
+							// A 390px ele truncava em "isento por Devagar e
+							// Se…" — exatamente no nome da habilidade, que é o
+							// que este crachá existe para dizer. Ele é o único
+							// que pode crescer em altura: os outros são rótulos
+							// curtos e o corte neles nunca comeu informação.
+							<span
+								title={ chip.Text }
+								class="max-w-full whitespace-normal rounded-2xl border border-grimorio-iron bg-muted px-1.5 py-0.5 text-3xs text-muted-foreground"
+							>{ chip.Text }</span>
+						} else {
+							<span
+								title={ chip.Text }
+								class="max-w-full truncate rounded-full border border-grimorio-iron bg-muted px-1.5 py-0.5 text-3xs text-foreground"
+							>{ chip.Text }</span>
+						}
 					}
 				</span>
 			}

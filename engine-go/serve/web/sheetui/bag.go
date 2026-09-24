@@ -75,8 +75,9 @@ type equippedCard struct {
 	Label string
 	Name  string
 	// Chips são as sobreposições e o que o item concede — "Reforçada",
-	// "Defesa +2", "Dano 1d8".
-	Chips []string
+	// "Defesa +2", "Dano 1d8". Um deles pode vir INATIVO: o item concede, mas
+	// não a este portador (ALE-384).
+	Chips []itemChip
 	// NoProficiency marca o item equipado que o personagem não sabe usar. O
 	// motor já cobra a penalidade (p142); o crachá é para ela não ser uma
 	// surpresa no meio de um teste.
@@ -137,6 +138,7 @@ type bagFilters struct {
 func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	search, category := filters.Search, filters.Category
 	proficiencies := savedProficiencies(dto.Proficiencies)
+	exempt := exemptionsOf(dto)
 	panel := bagPanel{
 		Search:            search,
 		Category:          category,
@@ -152,12 +154,12 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	for _, item := range dto.Items {
 		switch equippedSlotOf(item) {
 		case "wielded2":
-			panel.Hands.TwoHand = equippedCardOf(item, "Duas mãos", proficiencies)
+			panel.Hands.TwoHand = equippedCardOf(item, "Duas mãos", proficiencies, exempt)
 		case "wielded":
 			panel.Hands.Wielded = append(panel.Hands.Wielded,
-				equippedCardOf(item, handLabel(len(panel.Hands.Wielded)), proficiencies))
+				equippedCardOf(item, handLabel(len(panel.Hands.Wielded)), proficiencies, exempt))
 		case "vested":
-			panel.Vested = append(panel.Vested, equippedCardOf(item, "Vestido", proficiencies))
+			panel.Vested = append(panel.Vested, equippedCardOf(item, "Vestido", proficiencies, exempt))
 		default:
 			saved = append(saved, item)
 		}
@@ -224,12 +226,16 @@ func handsTwo(cards []*equippedCard) []*equippedCard {
 }
 
 // equippedCardOf traduz um item equipado para o cartão da tira.
-func equippedCardOf(item sheet.ItemDTO, label string, proficiencies map[string]bool) *equippedCard {
+func equippedCardOf(item sheet.ItemDTO, label string, proficiencies map[string]bool, exempt wearerExemptions) *equippedCard {
+	overlays := []itemChip{}
+	for _, name := range itemOverlays(item) {
+		overlays = append(overlays, itemChip{Text: name})
+	}
 	return &equippedCard{
 		ID:            item.ID,
 		Label:         label,
 		Name:          item.Name,
-		Chips:         append(itemOverlays(item), thatGrantsItem(item)...),
+		Chips:         append(overlays, thatGrantsItem(item, exempt)...),
 		NoProficiency: !proficienteEh(item, proficiencies),
 		Command:       strconv.FormatInt(item.ID, 10),
 	}
