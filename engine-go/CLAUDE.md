@@ -782,6 +782,14 @@ segue foi todo descoberto errando — está aqui para ninguém redescobrir:
   reprovou com uma linha de diferença. A ordem do roteiro é **código → prosa →
   `build-css.sh` → `git add`**, e o mesmo vale quando a mudança APAGA
   classe: o artefato guarda o estado de antes.
+- **O `datastar.js` é VENDORIZADO, e quem o sobe é `scripts/vendor-datastar.sh`.**
+  Ele não passa pelo Vite — o `layout.templ` o referencia com um `<script>`
+  escrito à mão — então não há dependência no `package.json` para subir. O script
+  fixa a versão numa linha, baixa da tag e reprova se o cabeçalho do arquivo
+  baixado disser outra coisa. Ele fica FORA do `prebuild`: subir a versão é ato
+  deliberado, porque o reconciliador é o que mantém as cenas vivas. Depois de
+  subir, o Playwright INTEIRO — o guarda que responde pelo morph é `ferir duas
+  vezes seguidas não apaga a piscada da primeira`.
 - **Regra da casa que precisa GANHAR de um utilitário mora em `@layer utilities`,
   e não em `components`.** No Tailwind v4 a CAMADA decide antes da
   especificidade: `utilities` vence `components` mesmo quando o seletor de baixo

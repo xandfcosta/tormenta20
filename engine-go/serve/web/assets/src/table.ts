@@ -133,19 +133,20 @@ function wireTheVitalBlink(stopped: MediaQueryList): void {
       const line = bar.closest('li')
       if (!line) continue
 
-      // ESPERAR O MORPH ASSENTAR, e isto não é cautela: medido, sem o quadro de
-      // espera a piscada NUNCA PINTA.
+      // O QUADRO DE ESPERA PERDEU A RAZÃO QUE O TROUXE, e fica sem uma nova
+      // medida (ALE-370). Aqui estava escrito que o véu é filho da linha e que
+      // o morph o remove — isso deixou de ser verdade na ALE-322, quando o véu
+      // passou a morar no `<body>`, fora do alcance do remendo.
       //
-      // O véu é um filho que este módulo pendura na linha, e o observador roda
-      // como microtarefa — no meio do remendo. O morph reconcilia os filhos da
-      // linha logo depois e remove o nó estranho, porque ele não está no HTML
-      // que veio do servidor. A sonda mediu exatamente isso: `ligado` no
-      // instante do `animate()`, `ligado` na microtarefa, **DESLIGADO no
-      // primeiro quadro** — e o pior é que ela passa despercebida, porque a
-      // animação foi PEDIDA e o guarda que conta chamadas ficaria verde.
+      // O que sobrou é uma suspeita, não uma medição: o `piscarVital` lê o
+      // retângulo da linha para posicionar um véu `fixed`, e uma linha que mede
+      // 0×0 o faz desistir em silêncio. MEDIDO: tirar este `rAF` deixa os
+      // quatro guardas de `tracker-that-explains` VERDES — ou seja, nenhum
+      // deles responde por ele. Tirá-lo é fatia própria, e ela começa por um
+      // guarda que compare o retângulo lido aqui com o do quadro seguinte.
       //
-      // O pulso da vez não precisa disto: ele anima a própria linha, e o morph
-      // reusa esse nó em vez de trocá-lo.
+      // O pulso da vez nunca precisou disto: ele anima a própria linha, e o
+      // morph reusa esse nó em vez de trocá-lo.
       requestAnimationFrame(() => piscarVital(line, { curou: now > before }))
     }
   }).observe(document.body, {
@@ -187,8 +188,7 @@ function wireTheSheetBlink(still: MediaQueryList): void {
 
       const row = span.parentElement
       if (!row) continue
-      // O mesmo quadro de espera da fila, e pela mesma razão medida: o morph
-      // remove o véu se ele for pendurado de dentro do observador.
+      // O mesmo quadro de espera da fila, e com a mesma pendência: ver lá.
       requestAnimationFrame(() => piscarVital(row, { curou: now > before }))
     }
   }).observe(document.body, {

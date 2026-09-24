@@ -14,6 +14,7 @@
     "build:css": "bash ./scripts/build-css.sh",
     "build:js": "bash ./scripts/build-js.sh",
     "build:icons": "node ./scripts/gen-icons-templ.mjs",
+    "vendor:datastar": "bash ./scripts/vendor-datastar.sh",
     "prebuild": "bash ./scripts/build-css.sh && bash ./scripts/build-js.sh"
   },
   "devDependencies": {
