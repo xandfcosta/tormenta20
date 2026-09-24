@@ -43,7 +43,11 @@ async function trackerAnimations(
     const step = () => {
       // O VÉU da piscada nasce e morre com a animação: contá-lo é contar a
       // piscada, sem depender de qual cor ela usou.
-      w.__f.veus += document.querySelectorAll('#table-tracker li > div[aria-hidden="true"]').length
+      //
+      // Ele é irmão do `<body>` e não filho da linha, e por isso o seletor é o
+      // DATA-ATRIBUTO: dentro da linha ele era removido pelo segundo remendo do
+      // gesto (ALE-322). Casar forma de DOM aqui nos faria medir o lugar antigo.
+      w.__f.veus += document.querySelectorAll('[data-vital-blink]').length
       for (const row of document.querySelectorAll('#table-tracker li')) {
         if (row.getAnimations().length > 0) w.__f.linhas++
       }
@@ -92,11 +96,13 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
     //
     // Esperar a contagem chegar a ZERO torna o "apareceu" inequívoco.
     //
-    // A CAUSA RAIZ DA INTERMITÊNCIA SEGUE ABERTA — nunca reproduzida sob
-    // instrumentação —, e é por isso que a mensagem de falha carrega o estado:
-    // a próxima ocorrência chega diagnosticada em vez de exigir outra caçada.
+    // A CAUSA RAIZ FOI ACHADA, e não era a sonda: o véu morava DENTRO da linha e
+    // o segundo remendo do gesto o levava embora. Medido em 50 piscadas antes do
+    // conserto — 43 truncadas em ~200ms, SEIS abaixo de 30ms, uma completa — e 50
+    // de 50 completas depois (ALE-322). A mensagem de falha continua carregando o
+    // estado: o que ela diagnostica agora é a próxima causa, não esta.
     const measurement = await page.evaluate(async () => {
-      const veils = () => [...document.querySelectorAll('#table-tracker li > div[aria-hidden="true"]')]
+      const veils = () => [...document.querySelectorAll('[data-vital-blink]')]
       const frame = () => new Promise((p) => requestAnimationFrame(p))
 
       const clearing = performance.now()
@@ -142,6 +148,98 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
     ).toBe(false)
   } finally {
     await eraseBtn()
+  }
+})
+
+/**
+ * A PISCADA DE QUEM APANHA DUAS VEZES SEGUIDAS (ALE-322).
+ *
+ * O caso acima prende que a piscada EXISTE. Este prende que ela não é apagada
+ * pelo gesto seguinte — e o que estava quebrado era isto.
+ *
+ * O véu é um nó que o JS pendura; o reconciliador do Datastar remove todo filho
+ * que não veio no HTML do servidor. Enquanto ele morava dentro da `<li>`, o
+ * remendo do PRÓXIMO gesto o apagava: medido, **um gesto isolado deixava o véu
+ * viver 361ms e dois gestos a 60ms de distância matavam o primeiro em 17ms**.
+ * Quem sangra duas vezes seguidas não via a primeira piscada.
+ *
+ * O `requestAnimationFrame` do observador não cobre isso: ele só ganha do morph
+ * do próprio gesto.
+ *
+ * E2E porque a pergunta é sobre a LINHA DO TEMPO de um nó que um morph de
+ * verdade tenta remover. Não há morph no jsdom, e um teste de unidade que
+ * chamasse `piscarVital` mediria o NASCIMENTO — que nunca foi o defeito.
+ */
+test('ferir duas vezes seguidas não apaga a piscada da primeira', async ({ page }) => {
+  const { apagar: erase } = await aTrackerWithTwo(page)
+  try {
+    const life = await page.evaluate(async () => {
+      const blinks = () => document.querySelectorAll('[data-vital-blink]')
+      const frame = () => new Promise((paint) => requestAnimationFrame(paint))
+      const hurt = () =>
+        [...document.querySelectorAll('button')].find((b) =>
+          (b.getAttribute('aria-label') ?? '').startsWith('Ferir'),
+        )
+
+      // REPOUSO PRIMEIRO: com um véu pendurado de antes, "existe" responderia
+      // sobre a piscada anterior — ver "mostrador cujo REPOUSO é igual ao
+      // sucesso" no guia da raiz.
+      const clearing = performance.now()
+      while (blinks().length > 0 && performance.now() - clearing < 3000) await frame()
+      if (blinks().length > 0) return { born: false, secondGesture: false, ms: 0 }
+      if (!hurt()) return { born: false, secondGesture: false, ms: 0 }
+
+      hurt()?.click()
+      const waiting = performance.now()
+      while (blinks().length === 0 && performance.now() - waiting < 3000) await frame()
+      const first = blinks()[0]
+      if (!first) return { born: false, secondGesture: false, ms: 0 }
+      const born = performance.now()
+
+      // O SEGUNDO GESTO é o que este caso vem medir, e ele tem de ACONTECER: um
+      // clique que não pega deixaria a duração passar por não haver quem a
+      // interrompesse.
+      //
+      // O controle conta véus que NASCERAM, e não véus no ar ao mesmo tempo. A
+      // primeira versão contava concorrentes e era INÚTIL: com o defeito presente
+      // o primeiro véu já morreu quando o segundo nasce, então "dois no ar" nunca
+      // acontece — o controle falhava junto com o defeito e entregava a mensagem
+      // errada. Um controle tem de poder passar enquanto a asserção reprova.
+      let bornCount = 0
+      new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (node instanceof Element && node.hasAttribute('data-vital-blink')) bornCount++
+          }
+        }
+      }).observe(document.body, { subtree: true, childList: true })
+
+      await new Promise((later) => setTimeout(later, 60))
+      const secondButton = hurt()
+      secondButton?.click()
+      const counting = performance.now()
+      while (bornCount === 0 && performance.now() - counting < 1500) await frame()
+
+      while (first.isConnected && performance.now() - born < 2000) await frame()
+      return { born: true, secondGesture: !!secondButton && bornCount > 0, ms: Math.round(performance.now() - born) }
+    })
+
+    expect(life.born, 'a piscada não nasceu: sem ela este caso não mede duração nenhuma').toBe(true)
+    expect(
+      life.secondGesture,
+      'o SEGUNDO gesto não chegou a pôr um véu no ar, e é ele que este caso vem ' +
+        'medir — sem ele a duração passaria por não haver quem a interrompesse (ALE-322)',
+    ).toBe(true)
+    // A animação pede 380ms; o piso de 340 não prende jitter de quadro. O que ele
+    // barra é a ordem de grandeza do defeito: 17ms, medidos.
+    expect(
+      life.ms,
+      `a piscada do primeiro golpe viveu ${life.ms}ms e a animação pede 380 — o ` +
+        'remendo do segundo golpe a apagou, o que quer dizer que o véu voltou a ' +
+        'morar DENTRO da linha que o morph reconcilia (ALE-322)',
+    ).toBeGreaterThan(340)
+  } finally {
+    await erase()
   }
 })
 

@@ -1724,10 +1724,23 @@ também. Medido na ALE-174, com o mesmo nó consultado em quatro instantes:
 
     ao animar: ligado · microtask: ligado · raf1: DESLIGADO · +300ms: DESLIGADO
 
-O conserto é um `requestAnimationFrame` antes de pendurar — o quadro seguinte já
-tem o morph assentado. Animação que mexe no PRÓPRIO nó (escala, sombra, opacidade
-do elemento que já existe) não precisa disso: o morph reusa o nó e a animação
-sobrevive à reconciliação de atributos.
+**O `requestAnimationFrame` antes de pendurar NÃO BASTA, e isto custou a ALE-322.**
+O quadro de espera ganha do morph do PRÓPRIO gesto e de mais nada: o
+reconciliador remove todo filho que não veio no HTML do servidor, então o
+remendo SEGUINTE apaga o nó de novo, seja de que gesto for. Medido na piscada do
+vital — um gesto isolado deixava o véu viver 361ms dos 380 pedidos, e **dois
+gestos a 60ms de distância matavam o primeiro véu em 17ms**. E o
+`data-ignore-morph` do bundle não socorre: ele exige o atributo nos DOIS lados, e
+o lado do servidor nunca o tem.
+
+O conserto é o nó morar FORA da subárvore que o remendo alcança — `position:fixed`
+sobre o retângulo do alvo, filho do `<body>`. Depois disso, 50 de 50 piscadas
+completam, inclusive em rajada. O preço é a caixa não seguir o alvo se ele andar
+durante a animação, que é o mesmo preço que uma animação de transformação já paga.
+
+Animação que mexe no PRÓPRIO nó (escala, sombra, opacidade do elemento que já
+existe) não precisa de nada disso: o morph reusa o nó — medido, zero
+desconexões em 50 remendos — e a animação sobrevive à reconciliação de atributos.
 
 **E a mesma reconciliação é o que dispensa guarda contra repetição**: o morph não
 toca atributo que já bate, então um observador de `aria-current` (ou de qualquer
