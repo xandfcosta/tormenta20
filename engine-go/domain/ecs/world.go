@@ -33,40 +33,29 @@ import "reflect"
 // Entity é só um número: quem carrega significado é o componente.
 type Entity uint32
 
-// World guarda as entidades vivas e um armazenamento por TIPO de componente.
+// World é um contador de entidades e um armazenamento por TIPO de componente.
+//
+// NÃO há registro de "entidade viva", e a ausência é deliberada (ALE-381).
+// Havia `alive`, `Alive` e `Despawn`, e os três tinham um chamador só: o teste.
+// A ficha é calculada montando o mundo, fundindo e jogando fora — a coleta só
+// ACRESCENTA, e os condicionais também. Nada aqui mata uma entidade.
+//
+// Isso volta no dia em que o tabuleiro entrar: lá a peça sai do mapa de verdade.
 type World struct {
 	next   Entity
-	alive  map[Entity]bool
-	stores map[reflect.Type]anyStore
+	stores map[reflect.Type]any
 }
 
 func NewWorld() *World {
-	return &World{alive: map[Entity]bool{}, stores: map[reflect.Type]anyStore{}}
+	return &World{stores: map[reflect.Type]any{}}
 }
 
-// Spawn cunha uma entidade nova. O contador NÃO é reaproveitado depois de um
-// Despawn: um id reciclado faria um `Entity` guardado fora do mundo apontar,
-// silenciosamente, para outra coisa.
+// Spawn cunha uma entidade nova. O contador só sobe: um id reciclado faria um
+// `Entity` guardado fora do mundo apontar, em silêncio, para outra coisa.
 func (w *World) Spawn() Entity {
 	w.next++
-	w.alive[w.next] = true
 	return w.next
 }
-
-func (w *World) Alive(e Entity) bool { return w.alive[e] }
-
-// Despawn mata a entidade e apaga TODO componente dela, em todo armazenamento.
-// Sem isto o mundo responderia `Alive == false` e a consulta continuaria
-// visitando — que é o pior dos dois, porque só aparece na asserção seguinte.
-func (w *World) Despawn(e Entity) {
-	delete(w.alive, e)
-	for _, s := range w.stores {
-		s.remove(e)
-	}
-}
-
-// anyStore é o que o World consegue pedir sem saber o tipo do componente.
-type anyStore interface{ remove(e Entity) }
 
 // store guarda os componentes de UM tipo.
 //
@@ -110,14 +99,7 @@ func storeOf[C any](w *World, create bool) *store[C] {
 // Set escreve o componente na entidade. Escrever de novo SUBSTITUI sem
 // reordenar: a ordem da consulta é a de inserção da ENTIDADE, e não a da última
 // escrita — senão ela mudaria conforme a ordem das regras que tocam o valor.
-//
-// Entidade morta é ignorada em silêncio, e isso é deliberado: um sistema que
-// escreve em cima de algo que outro sistema matou no mesmo passe não deve
-// derrubar o cálculo da ficha.
 func Set[C any](w *World, e Entity, c C) {
-	if !w.alive[e] {
-		return
-	}
 	s := storeOf[C](w, true)
 	if at, ok := s.index[e]; ok {
 		s.values[at] = c

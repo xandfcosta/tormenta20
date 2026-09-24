@@ -83,27 +83,27 @@ func TestEach2VisitsOnlyWhoHasBothComponents(t *testing.T) {
 	}
 }
 
-// Despawn tira a entidade de TODA consulta, e não deixa buraco atrás.
+// Remove COMPACTA o armazenamento e a ordem dos sobreviventes fica de pé.
 //
-// O caso mata a do MEIO de propósito: matar a última esconderia um erro de
+// É o que separa este armazenamento de um que troca com o último: a troca seria
+// O(1) e REORDENARIA, e a ordem aqui é correção, não estilo.
+//
+// O caso tira a do MEIO de propósito — tirar a última esconderia um erro de
 // índice, porque não há ninguém depois dela para escorregar.
-func TestDespawnRemovesTheEntityFromEveryQuery(t *testing.T) {
+func TestRemoveCompactsAndKeepsTheOrderOfTheSurvivors(t *testing.T) {
 	world := ecs.NewWorld()
 
 	first := world.Spawn()
 	middle := world.Spawn()
 	last := world.Spawn()
 	for _, e := range []ecs.Entity{first, middle, last} {
-		ecs.Set(world, e, label{text: "vivo"})
+		ecs.Set(world, e, label{text: "presente"})
 	}
 
-	world.Despawn(middle)
+	ecs.Remove[label](world, middle)
 
-	if world.Alive(middle) {
-		t.Error("a entidade morta ainda se diz viva")
-	}
 	if _, ok := ecs.Get[label](world, middle); ok {
-		t.Error("o componente da entidade morta sobreviveu ao Despawn")
+		t.Error("o componente sobreviveu ao Remove")
 	}
 
 	got := []ecs.Entity{}
@@ -111,8 +111,19 @@ func TestDespawnRemovesTheEntityFromEveryQuery(t *testing.T) {
 
 	want := []ecs.Entity{first, last}
 	if len(got) != len(want) || got[0] != want[0] || got[1] != want[1] {
-		t.Fatalf("depois do Despawn a consulta devolveu %v, esperava %v — "+
+		t.Fatalf("depois do Remove a consulta devolveu %v, esperava %v — "+
 			"a ordem dos sobreviventes tem de ficar de pé", got, want)
+	}
+
+	// O ÍNDICE de quem veio DEPOIS tem de ter escorregado junto. Sem isto o
+	// `Get` do sobrevivente leria a posição errada da fatia — e com dois
+	// elementos iguais o teste de ordem acima passaria mesmo assim.
+	ecs.Set(world, last, label{text: "reescrito"})
+	if got, _ := ecs.Get[label](world, last); got.text != "reescrito" {
+		t.Fatalf("o índice não escorregou: escrevi em %d e li %q", last, got.text)
+	}
+	if got, _ := ecs.Get[label](world, first); got.text != "presente" {
+		t.Fatalf("escrever no último sujou o primeiro: %q", got.text)
 	}
 }
 
