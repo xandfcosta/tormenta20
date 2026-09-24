@@ -8,9 +8,16 @@
 //	O diff de um oráculo é revisado contra o LIVRO, nunca aceito porque "o
 //	teste ficou verde".
 //
+// **E essa regra deixou de ser só prosa (ALE-379).** O
+// `convention.TestNoOracleFixtureChangesWithoutRaisingTheBaseline` fixa o hash
+// de cada fixture: rodar este comando reprova a suíte até alguém levantar a
+// linha de base em `convention/testdata/oracle_freeze.txt`, de propósito e num
+// commit que diga contra o que o diff foi conferido.
+//
 // O que ele protege é a ficha inteira de 18 personagens, ponta a ponta, e ele
 // acusa qualquer mudança de número que não tenha sido pedida. O que ele NÃO
-// prova é que dois motores concordam, porque só existe um.
+// prova HOJE é que dois motores concordam, porque só existe um — e é isso que
+// muda durante a ALE-378, quando o motor em ECS nascer ao lado deste.
 package main
 
 import (
