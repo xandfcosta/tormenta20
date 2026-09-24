@@ -12,9 +12,16 @@ import (
 //
 // Ele PARECE uma segunda leitura do mesmo catálogo e não é: o
 // `engine.RaceDefinition` não serve aqui porque é um subconjunto DELIBERADO —
-// guarda `Modifiers` e `Variants`, que é do que o motor precisa, e não guarda
-// `Name` nem `Description`, que é do que a TELA precisa. Ampliar a struct do
-// motor para caber texto de tela faria o motor carregar dado que ele nunca lê.
+// não guarda `Name` nem `Description`, que é do que a TELA precisa. Ampliar a
+// struct do motor para caber texto de tela faria o motor carregar dado que ele
+// nunca lê.
+//
+// **A relação deixou de ser de subconjuntos disjuntos na ALE-384**, e vale
+// dizer por quê: os dois lêem `Modifiers` agora. O motor os RESOLVE — funde
+// tudo num conjunto de flags e perde a procedência no caminho —, e a tela
+// precisa justamente da procedência, para nomear a habilidade que isentou o
+// personagem de alguma coisa. É a mesma pergunta lida com dois propósitos, e
+// não uma cópia por descuido.
 //
 // São dois olhares sobre o MESMO arquivo, cada um com o seu tipo, e não duas
 // fontes de verdade: o `catalog/data/race-defs.json` continua autorado num lugar
