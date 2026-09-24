@@ -332,7 +332,8 @@
         },
         {
           "target": {
-            "k": "displacement"
+            "k": "displacement",
+            "scope": "armor"
           },
           "amount": -3,
           "bonusType": "untyped",
@@ -502,7 +503,7 @@
           }
         ]
       },
-      "displacement": {
+      "displacement:armor": {
         "total": -3,
         "contributions": [
           {

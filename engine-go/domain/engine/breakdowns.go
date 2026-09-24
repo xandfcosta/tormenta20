@@ -124,7 +124,7 @@ func (c *Catalogs) ComputeSheet(ch Character, activeConditionals map[string]bool
 
 	return ComputedSheet{
 		Defense:            defenseBreakdown(ch, effects),
-		Displacement:       displacementBreakdown(ch, effects, load),
+		Displacement:       displacementBreakdown(c.raceDisplacement(ch), effects, load),
 		FlySpeed:           flySpeedTotal(effects),
 		Load:               load,
 		Attributes:         attrs,
@@ -216,18 +216,63 @@ func hasActiveCondition(ch Character, id string) bool {
 // sobrecarga: −3m enquanto a mochila passa do limite (p141). Ela entra como
 // contribuição NOMEADA porque um deslocamento que cai sem dizer por quê é lido
 // como defeito.
-func displacementBreakdown(ch Character, e ItemEffects, load LoadBreakdown) ValueBreakdown {
+// displacementIgnoresArmorAndLoad é o sinal que o "Devagar e Sempre" do anão
+// (p20) pendura. Ele vive no catálogo da raça, como todo modificador de raça —
+// não há um `if raça == "Anão"` no motor, e não deve haver: a próxima raça com
+// a mesma isenção entra pelo catálogo.
+const displacementIgnoresArmorAndLoad = "displacement-ignores-armor-and-load"
+
+// bookDefaultDisplacement é o deslocamento de quem o catálogo não conhece.
+//
+// Nove metros é o padrão do livro, do qual as raças que fogem dizem fugir com
+// todas as letras ("é 6m EM VEZ DE 9m", p20). Cair aqui é o catálogo não
+// conhecer a raça — e o remédio é transcrevê-la, não consultar a coluna.
+const bookDefaultDisplacement = 9
+
+// raceDisplacement é o deslocamento da RAÇA PRIMÁRIA.
+//
+// Primária e não a soma das raças: o número do verbete é um valor, não um
+// bônus, e duas raças não andam somando metros. A secundária contribui
+// habilidade, não deslocamento.
+func (c *Catalogs) raceDisplacement(ch Character) int {
+	if len(ch.Races) == 0 {
+		return bookDefaultDisplacement
+	}
+	entry := c.raceEntryByName(ch.Races[0].Race)
+	if entry == nil || entry.Speed == 0 {
+		return bookDefaultDisplacement
+	}
+	return entry.Speed
+}
+
+// displacementBreakdown: o deslocamento da raça, mais o que modifica.
+//
+// A BASE VEM DA RAÇA E NÃO DA COLUNA (ALE-383). `characters.displacement` era
+// um espelho escrito no nascimento, e ele divergiu: a seed tinha DOIS anões com
+// 9m e um com 6m, com o livro dizendo 6m na p20 para os três.
+func displacementBreakdown(base int, e ItemEffects, load LoadBreakdown) ValueBreakdown {
+	// DEVAGAR E SEMPRE (p20): "seu deslocamento não é reduzido por uso de
+	// armadura ou excesso de carga". São DUAS fontes e elas chegam por caminhos
+	// diferentes — a armadura por modificador de catálogo, a carga pela conta de
+	// espaços —, então a isenção aparece duas vezes aqui. O que ela NÃO isenta é
+	// qualquer outra redução: uma magia de lentidão continua valendo.
+	exempt := e.Flags[displacementIgnoresArmorAndLoad]
+
 	stat := StatFor(e, ModifierTarget{K: "displacement"})
 	contribs := withNoteContribs(stat.Contributions)
 	bonus := stat.Total
-	if load.DisplacementPenalty != 0 {
+	if armor := StatFor(e, ModifierTarget{K: "displacement", Scope: "armor"}); !exempt {
+		bonus += armor.Total
+		contribs = append(contribs, withNoteContribs(armor.Contributions)...)
+	}
+	if load.DisplacementPenalty != 0 && !exempt {
 		bonus += load.DisplacementPenalty
 		contribs = append(contribs, overloadContrib(load.DisplacementPenalty))
 	}
 	return ValueBreakdown{
-		Base:          ch.Displacement,
+		Base:          base,
 		ItemBonus:     bonus,
-		Total:         max(0, ch.Displacement+bonus),
+		Total:         max(0, base+bonus),
 		Contributions: contribs,
 	}
 }

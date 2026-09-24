@@ -207,6 +207,14 @@ func targetKey(t ModifierTarget) string {
 	case "inventorySlots":
 		return "inventorySlots"
 	case "displacement":
+		// Escopo separa a redução por ARMADURA do resto, e a razão é a p20: o
+		// anão diz, com todas as letras, que seu deslocamento "não é reduzido
+		// por uso de armadura ou excesso de carga". Sem chave própria não há
+		// como isentar uma fonte sem isentar as outras — as botas reforçadas
+		// (+1,5m) e uma magia de lentidão cairiam junto.
+		if t.Scope != "" {
+			return "displacement:" + t.Scope
+		}
 		return "displacement"
 	case "flySpeed":
 		return "flySpeed"
