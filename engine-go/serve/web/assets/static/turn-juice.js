@@ -4,17 +4,23 @@ function e(e) {
 }
 function t(t, n) {
 	if (!e(t)) return;
-	let r = document.createElement("div");
-	r.setAttribute("aria-hidden", "true"), r.style.cssText = [
-		"position:absolute",
-		"inset:0",
-		"border-radius:inherit",
+	let r = t.getBoundingClientRect();
+	if (r.width === 0 || r.height === 0) return;
+	let i = document.createElement("div");
+	i.setAttribute("aria-hidden", "true"), i.setAttribute("data-vital-blink", n.curou ? "curou" : "feriu"), i.style.cssText = [
+		"position:fixed",
+		`top:${r.top}px`,
+		`left:${r.left}px`,
+		`width:${r.width}px`,
+		`height:${r.height}px`,
+		`border-radius:${getComputedStyle(t).borderRadius}`,
 		"pointer-events:none",
+		"z-index:40",
 		`background:var(${n.curou ? "--hp-full" : "--hp-critical"})`
-	].join(";"), t.appendChild(r), r.animate([{ opacity: .45 }, { opacity: 0 }], {
+	].join(";"), document.body.appendChild(i), i.animate([{ opacity: .45 }, { opacity: 0 }], {
 		duration: 380,
 		easing: "ease-out"
-	}).finished.then(() => r.remove()).catch(() => r.remove());
+	}).finished.then(() => i.remove()).catch(() => i.remove());
 }
 function n(t) {
 	e(t) && t.animate([

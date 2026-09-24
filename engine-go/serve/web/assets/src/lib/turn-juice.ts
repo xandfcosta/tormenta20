@@ -57,20 +57,54 @@ export function podeAnimar(target: Element | null | undefined): target is Elemen
  * O véu nasce e morre com a animação: guardá-lo no DOM significaria nove nós
  * permanentes esperando um evento raro.
  *
+ * # O véu mora FORA da linha, e o quadro de espera não basta (ALE-322)
+ *
+ * Ele era filho da `<li>`, pendurado um quadro depois do remendo para escapar do
+ * morph. Esse quadro ganha do morph do PRÓPRIO gesto e de mais nada: o
+ * reconciliador remove todo filho que não veio no HTML do servidor — e o véu
+ * nunca vem —, então **o remendo SEGUINTE o apaga**, seja de que gesto for.
+ * O `data-ignore-morph` do bundle não socorre: ele exige o atributo nos DOIS
+ * lados, e o lado do servidor nunca o tem.
+ *
+ * MEDIDO, com a versão antiga: um gesto isolado deixava o véu viver 361ms (quase
+ * os 380 pedidos), e **dois gestos a 60ms de distância matavam o primeiro véu em
+ * 17ms** — invisível. Quem sangra duas vezes seguidas não vê a primeira piscada.
+ *
+ * `position:fixed` sobre o retângulo da linha, filho do `<body>`: o remendo tem
+ * seletor, e nada que o servidor mande alcança um irmão do `<body>`. Medido
+ * depois: 50 de 50 piscadas completam, inclusive em rajada. A linha não anda
+ * durante 380ms — e se andar, o véu fica onde estava, que é o mesmo preço que o
+ * `pulsarVez` já paga por animar transformação.
+ *
+ * **O que isto NÃO afirma:** que era a causa do intermitente da ALE-322. Aquele
+ * nunca foi reproduzido, e o cenário que este conserto apaga — dois gestos em
+ * rajada — não é o que o guarda de lá faz. O conserto se justifica pelo defeito
+ * que ELE tem medição: a piscada que não acontece para quem apanha duas vezes.
+ *
  * @example piscarVital(linha, { curou: false })
  */
 export function piscarVital(target: Element | null | undefined, options: { curou: boolean }): void {
   if (!podeAnimar(target)) return
+  const box = target.getBoundingClientRect()
+  if (box.width === 0 || box.height === 0) return
   const veil = document.createElement('div')
   veil.setAttribute('aria-hidden', 'true')
+  // O DATA-ATRIBUTO é o que o guarda procura. Sem ele o teste teria de casar
+  // forma de DOM (`li > div[aria-hidden]`), que ninguém prometeu — e que deixou
+  // de ser verdade no instante em que o véu saiu de dentro da linha.
+  veil.setAttribute('data-vital-blink', options.curou ? 'curou' : 'feriu')
   veil.style.cssText = [
-    'position:absolute',
-    'inset:0',
-    'border-radius:inherit',
+    'position:fixed',
+    `top:${box.top}px`,
+    `left:${box.left}px`,
+    `width:${box.width}px`,
+    `height:${box.height}px`,
+    `border-radius:${getComputedStyle(target).borderRadius}`,
     'pointer-events:none',
+    'z-index:40',
     `background:var(${options.curou ? '--hp-full' : '--hp-critical'})`,
   ].join(';')
-  target.appendChild(veil)
+  document.body.appendChild(veil)
 
   const animation = veil.animate([{ opacity: 0.45 }, { opacity: 0 }], {
     duration: 380,
