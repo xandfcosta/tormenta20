@@ -110,11 +110,20 @@ type GrantedPower struct {
 	Modifiers []Modifier `json:"modifiers"`
 }
 
-// RaceAttributeEntry é a entrada de atributo de uma raça (só o nome e o
-// `atributoMod` são lidos aqui).
+// RaceAttributeEntry é a entrada de raça do `races.json` — o MESMO arquivo que o
+// forge lê para montar a carta de raça.
+//
+// `Size` e `Speed` entraram na ALE-383, e o que importa é de ONDE: eles já
+// chegavam no payload e ninguém os lia. Transcrevê-los para o `race-defs.json`
+// teria criado uma TERCEIRA cópia do mesmo número do livro — que é exatamente
+// como `characters.displacement` passou a discordar do catálogo.
 type RaceAttributeEntry struct {
 	Name         string       `json:"name"`
 	AttributeMod AttributeMod `json:"atributoMod"`
+	// Size é categórico ("Médio", "Pequeno", "Minúsculo") e NÃO determina o
+	// deslocamento: o goblin é Pequeno e anda 9m. São dois fatos do verbete.
+	Size  string `json:"tamanho"`
+	Speed int    `json:"deslocamento"`
 }
 
 // AttributeMod é a união de modificadores de raça, achatada por `kind`. `Mods` e

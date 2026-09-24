@@ -1155,7 +1155,8 @@
         },
         {
           "target": {
-            "k": "displacement"
+            "k": "displacement",
+            "scope": "armor"
           },
           "amount": -3,
           "bonusType": "untyped",
@@ -1234,7 +1235,8 @@
         },
         {
           "target": {
-            "k": "displacement"
+            "k": "displacement",
+            "scope": "armor"
           },
           "amount": -3,
           "bonusType": "untyped",
@@ -1313,7 +1315,8 @@
         },
         {
           "target": {
-            "k": "displacement"
+            "k": "displacement",
+            "scope": "armor"
           },
           "amount": -3,
           "bonusType": "untyped",
@@ -1392,7 +1395,8 @@
         },
         {
           "target": {
-            "k": "displacement"
+            "k": "displacement",
+            "scope": "armor"
           },
           "amount": -3,
           "bonusType": "untyped",
@@ -1471,7 +1475,8 @@
         },
         {
           "target": {
-            "k": "displacement"
+            "k": "displacement",
+            "scope": "armor"
           },
           "amount": -3,
           "bonusType": "untyped",
@@ -4131,7 +4136,17 @@
           "id": "anao-devagar-e-sempre",
           "raceId": "Anão",
           "name": "Devagar e Sempre",
-          "description": "Seu deslocamento é 6m (em vez de 9m). Porém, seu deslocamento não é reduzido por uso de armadura ou excesso de carga."
+          "description": "Seu deslocamento é 6m (em vez de 9m). Porém, seu deslocamento não é reduzido por uso de armadura ou excesso de carga.",
+          "modifiers": [
+            {
+              "target": {
+                "k": "flag",
+                "name": "displacement-ignores-armor-and-load"
+              },
+              "amount": 1,
+              "bonusType": "untyped"
+            }
+          ]
         },
         {
           "id": "anao-duro-como-pedra",

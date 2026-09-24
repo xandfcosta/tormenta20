@@ -490,9 +490,9 @@
       "contributions": []
     },
     "displacement": {
-      "base": 9,
+      "base": 12,
       "itemBonus": 0,
-      "total": 9,
+      "total": 12,
       "contributions": []
     },
     "flySpeed": 0,
@@ -967,9 +967,9 @@
       "contributions": []
     },
     "displacement": {
-      "base": 9,
+      "base": 12,
       "itemBonus": 0,
-      "total": 9,
+      "total": 12,
       "contributions": []
     },
     "flySpeed": 0,

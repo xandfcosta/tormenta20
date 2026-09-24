@@ -301,7 +301,8 @@
         },
         {
           "target": {
-            "k": "displacement"
+            "k": "displacement",
+            "scope": "armor"
           },
           "amount": -3,
           "bonusType": "untyped",
@@ -405,6 +406,14 @@
           "amount": -1,
           "bonusType": "untyped",
           "note": "Anão"
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "displacement-ignores-armor-and-load"
+          },
+          "amount": 1,
+          "bonusType": "untyped"
         },
         {
           "target": {
@@ -751,7 +760,7 @@
           }
         ]
       },
-      "displacement": {
+      "displacement:armor": {
         "total": -3,
         "contributions": [
           {
@@ -780,6 +789,7 @@
     "flags": [
       "armadura-pesada",
       "cannot-apply-dex-to-defense",
+      "displacement-ignores-armor-and-load",
       "fatigue-on-sleep"
     ],
     "conditional": [
@@ -975,15 +985,10 @@
       ]
     },
     "displacement": {
-      "base": 9,
-      "itemBonus": -3,
+      "base": 6,
+      "itemBonus": 0,
       "total": 6,
-      "contributions": [
-        {
-          "source": "Armadura completa",
-          "amount": -3
-        }
-      ]
+      "contributions": []
     },
     "flySpeed": 0,
     "carga": {
@@ -1490,15 +1495,10 @@
       ]
     },
     "displacement": {
-      "base": 9,
-      "itemBonus": -3,
+      "base": 6,
+      "itemBonus": 0,
       "total": 6,
-      "contributions": [
-        {
-          "source": "Armadura completa",
-          "amount": -3
-        }
-      ]
+      "contributions": []
     },
     "flySpeed": 0,
     "carga": {
