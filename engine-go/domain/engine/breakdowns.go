@@ -216,11 +216,11 @@ func hasActiveCondition(ch Character, id string) bool {
 // sobrecarga: −3m enquanto a mochila passa do limite (p141). Ela entra como
 // contribuição NOMEADA porque um deslocamento que cai sem dizer por quê é lido
 // como defeito.
-// displacementIgnoresArmorAndLoad é o sinal que o "Devagar e Sempre" do anão
+// DisplacementIgnoresArmorAndLoad é o sinal que o "Devagar e Sempre" do anão
 // (p20) pendura. Ele vive no catálogo da raça, como todo modificador de raça —
 // não há um `if raça == "Anão"` no motor, e não deve haver: a próxima raça com
 // a mesma isenção entra pelo catálogo.
-const displacementIgnoresArmorAndLoad = "displacement-ignores-armor-and-load"
+const DisplacementIgnoresArmorAndLoad = "displacement-ignores-armor-and-load"
 
 // bookDefaultDisplacement é o deslocamento de quem o catálogo não conhece.
 //
@@ -256,7 +256,7 @@ func displacementBreakdown(base int, e ItemEffects, load LoadBreakdown) ValueBre
 	// diferentes — a armadura por modificador de catálogo, a carga pela conta de
 	// espaços —, então a isenção aparece duas vezes aqui. O que ela NÃO isenta é
 	// qualquer outra redução: uma magia de lentidão continua valendo.
-	exempt := e.Flags[displacementIgnoresArmorAndLoad]
+	exempt := e.Flags[DisplacementIgnoresArmorAndLoad]
 
 	stat := StatFor(e, ModifierTarget{K: "displacement"})
 	contribs := withNoteContribs(stat.Contributions)

@@ -64,22 +64,81 @@ func savedImprovements(blob string) []string {
 // A Defesa base de armadura e escudo sai UMA vez: o catálogo traz o número em
 // `armor.defense` E como modificador de Defesa do mesmo valor, e desenhar os
 // dois daria "Defesa +2 · Defesa +2" em toda armadura.
-func thatGrantsItem(item sheet.ItemDTO) []string {
+func thatGrantsItem(item sheet.ItemDTO, exempt wearerExemptions) []itemChip {
 	catalog := catalogItem(item)
 	if catalog == nil {
 		return nil
 	}
-	badges := []string{}
+	chips := []itemChip{}
 	if base := baseItemDefense(*catalog); base != "" {
-		badges = append(badges, base)
+		chips = append(chips, itemChip{Text: base})
 	}
 	if catalog.Weapon != nil {
-		badges = append(badges, "Dano "+catalog.Weapon.Damage)
+		chips = append(chips, itemChip{Text: "Dano " + catalog.Weapon.Damage})
 	}
 	for _, m := range catalog.Modifiers {
-		badges = append(badges, modifierBadge(m))
+		chips = append(chips, itemChip{Text: modifierBadge(m)})
+		// A habilidade que anula entra como crachá PRÓPRIO, logo depois do que
+		// ela anulou. O par lado a lado é o que ensina: sem ele, ou o número
+		// mente (era o defeito) ou ele some e ninguém fica sabendo que existe
+		// uma isenção agindo a favor do personagem.
+		if why := exemptedBy(m, exempt); why != "" {
+			chips[len(chips)-1].Inactive = true
+			// "isento por" e não só o nome da habilidade: TODO crachá deste
+			// cartão descreve o ITEM, e um que diz "Devagar e Sempre" sozinho
+			// se lê como se a armadura concedesse isso. Visto na tela — o risco
+			// no vizinho não basta para desfazer a leitura.
+			chips = append(chips, itemChip{Text: "isento por " + why, Reason: true})
+		}
 	}
-	return repetidosSem(badges)
+	return chipsSem(chips)
+}
+
+// itemChip é um crachá do cartão. `Inactive` é o item concedendo algo que NÃO
+// alcança este portador — o crachá fica, riscado, porque ele descreve o item.
+type itemChip struct {
+	Text     string
+	Inactive bool
+	// Reason marca o crachá que EXPLICA o riscado ao lado. Ele é o único que
+	// pode crescer em altura, e o campo existe para a tela saber disso sem
+	// farejar o texto.
+	Reason bool
+}
+
+// wearerExemptions são as isenções do PORTADOR: flag → nome da habilidade que a
+// concede ("displacement-ignores-armor-and-load" → "Devagar e Sempre").
+//
+// O nome vem do catálogo e não do motor porque o motor resolve as flags num
+// CONJUNTO e perde a procedência. Ver `book.RaceAbility.Modifiers`.
+type wearerExemptions map[string]string
+
+// exemptedBy devolve a habilidade que anula este modificador para este
+// portador, ou vazio quando ele vale.
+//
+// HOJE É UM PAR SÓ — a redução de deslocamento por armadura contra o "Devagar e
+// Sempre" do anão (p20) —, e o `if` está escrito à mão de propósito: uma tabela
+// com uma linha esconde a regra em vez de mostrá-la. Quando o segundo par
+// chegar, isto vira mapa de `targetKey` para flag.
+func exemptedBy(m engine.Modifier, exempt wearerExemptions) string {
+	if m.Target.K != "displacement" || m.Target.Scope != "armor" {
+		return ""
+	}
+	return exempt[engine.DisplacementIgnoresArmorAndLoad]
+}
+
+// chipsSem tira os repetidos pelo TEXTO, preservando o primeiro — o mesmo que o
+// `repetidosSem` faz com as listas de string.
+func chipsSem(list []itemChip) []itemChip {
+	seen := map[string]bool{}
+	out := []itemChip{}
+	for _, chip := range list {
+		if chip.Text == "" || seen[chip.Text] {
+			continue
+		}
+		seen[chip.Text] = true
+		out = append(out, chip)
+	}
+	return out
 }
 
 func baseItemDefense(catalog book.Item) string {
@@ -142,4 +201,29 @@ func howEngineItem(catalog *book.Item) *engine.CatalogItem {
 		ID: catalog.ID, Name: catalog.Name, Category: catalog.Category,
 		Equip: catalog.Equip, Slots: catalog.Slots,
 	}
+}
+
+// exemptionsOf colhe as isenções que as RAÇAS do personagem concedem.
+//
+// Só raça hoje, e a razão é medida: a única isenção que existe no catálogo é o
+// "Devagar e Sempre" do anão. Classe, origem e poder concedem flags pelo mesmo
+// mecanismo, e quando uma delas isentar alguma coisa esta função cresce — não
+// antes, porque varrer quatro catálogos para achar uma entrada é custo por
+// nada.
+func exemptionsOf(dto sheet.CharacterDTO) wearerExemptions {
+	exempt := wearerExemptions{}
+	for _, entry := range dto.Races {
+		race, found := book.RaceTraitsByKey()[entry.Race]
+		if !found {
+			continue
+		}
+		for _, ability := range race.Abilities {
+			for _, m := range ability.Modifiers {
+				if m.Target.K == "flag" && m.Target.Name != "" {
+					exempt[m.Target.Name] = ability.Name
+				}
+			}
+		}
+	}
+	return exempt
 }
