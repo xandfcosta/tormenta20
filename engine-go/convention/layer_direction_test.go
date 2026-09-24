@@ -84,3 +84,64 @@ func TestNoLayerImportsUpwards(t *testing.T) {
 		t.Fatalf("o guarda leu só %d arquivos em `domain/` — ele está medindo o diretório errado", measured["domain"])
 	}
 }
+
+// O NÚCLEO DE ECS NÃO IMPORTA NADA DESTE PROJETO.
+//
+// O `domain/ecs` é mecanismo puro: entidade, componente, consulta e sistema, sem
+// saber o que é atributo, perícia ou modificador. O doc do pacote afirma isso, e
+// afirmação em doc apodrece — a ALE-378 vai passar quatro fatias encostando o
+// motor de regras nele, e o vazamento natural é o núcleo "só precisar de um
+// tipinho" do `domain/engine`.
+//
+// **O que a pureza compra**, e é por isso que ela vale um guarda: o núcleo se
+// exercita sem arranjar uma ficha inteira. No instante em que ele importar o
+// motor, testar a consulta passa a exigir um personagem válido — e aí o ciclo
+// se fecha, porque o motor vai importar o núcleo de volta.
+//
+// A seta de baixo (`engine` → `ecs`) é a certa e continua livre; o guarda
+// prende só a de cima.
+func TestNoEcsCoreImportsThisProject(t *testing.T) {
+	root, err := filepath.Abs("..")
+	if err != nil {
+		t.Fatalf("achar a raiz: %v", err)
+	}
+	dir := filepath.Join(root, "domain", "ecs")
+
+	set := token.NewFileSet()
+	measured := 0
+	err = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+		file, err := parser.ParseFile(set, path, nil, parser.ImportsOnly)
+		if err != nil {
+			return err
+		}
+		measured++
+		for _, imp := range file.Imports {
+			target := strings.Trim(imp.Path.Value, `"`)
+			// A ÚNICA exceção: o teste externo (`package ecs_test`) importa o
+			// pacote sob teste, que é a forma que o Go manda usar para provar a
+			// superfície pública. Ela é nominal de propósito — um teste que
+			// importe o `domain/engine` para arranjar um caso reprova, e deve:
+			// aí testar a consulta passaria a exigir um personagem válido.
+			if !strings.HasPrefix(target, "t20engine/") || target == "t20engine/domain/ecs" {
+				continue
+			}
+			rel, _ := filepath.Rel(root, path)
+			t.Errorf("%s importa %q — o núcleo de ECS é mecanismo PURO.\n"+
+				"O que ele precisa do domínio entra como parâmetro de tipo do componente, "+
+				"e não como import: quem define o componente é quem chama.", rel, target)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("caminhar domain/ecs: %v", err)
+	}
+
+	// O DENOMINADOR. Um diretório renomeado devolveria zero arquivo e zero
+	// reprovado — que é a mesma cor de "está tudo puro".
+	if measured == 0 {
+		t.Fatal("o guarda não leu arquivo nenhum em domain/ecs — ele está medindo o diretório errado")
+	}
+}
