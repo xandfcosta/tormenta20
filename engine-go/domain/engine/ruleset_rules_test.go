@@ -115,20 +115,84 @@ func TestTheCampaignAmendmentReachesTheComputedSheet(t *testing.T) {
 
 // A EMENDA QUE NÃO DECODIFICA RECUSA ALTO, em vez de virar uma emenda vazia.
 //
-// Ver `AmendmentsFrom`: perder um bônus que o mestre escreveu não tem aparência
+// Ver `ParseModifiers`: perder um bônus que o mestre escreveu não tem aparência
 // nenhuma na tela.
 func TestTheCampaignAmendmentRefusesModifiersItCannotRead(t *testing.T) {
-	ok, err := AmendmentsFrom(map[string]string{
-		"medalhao-de-prata": `[{"target":{"k":"expertise","name":"Luta"},"amount":1}]`,
-	})
+	ok, err := ParseModifiers(`[{"target":{"k":"expertise","name":"Luta"},"amount":1}]`)
 	if err != nil {
 		t.Fatalf("a emenda bem formada foi recusada: %v", err)
 	}
-	if len(ok.Entries["medalhao-de-prata"]) != 1 {
-		t.Fatalf("a emenda bem formada veio com %d modificadores", len(ok.Entries["medalhao-de-prata"]))
+	if len(ok) != 1 {
+		t.Fatalf("a emenda bem formada veio com %d modificadores", len(ok))
 	}
 
-	if _, err := AmendmentsFrom(map[string]string{"medalhao-de-prata": `{"amount":1}`}); err == nil {
+	if _, err := ParseModifiers(`{"amount":1}`); err == nil {
 		t.Fatal("um objeto onde se esperava lista passou — a emenda teria sumido em silêncio")
+	}
+}
+
+// O ESCOPO DE UMA CONCESSÃO É RESPEITADO, e o vizinho de mesa não leva junto.
+//
+// É a metade que o desenho anterior não conseguia nem representar: com as
+// emendas viajando no personagem, "a mesa inteira" e "só este herói" chegavam
+// ao motor já misturados.
+//
+// O caso põe DOIS heróis no mesmo mundo de propósito. Com um só, a concessão
+// específica e a de mesa dão o mesmo resultado, e o guarda mediria a metade em
+// que o defeito é invisível por construção.
+func TestACampaignGrantReachesOnlyWhoTheSelectorNames(t *testing.T) {
+	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
+	book := primeFromDump(t, dir)
+
+	heroi := func(id int) Character {
+		return Character{ID: id, Expertises: []CharacterExpertise{{Name: "Luta", Attribute: "strength"}}}
+	}
+	umaLuta := []Modifier{{Target: ModifierTarget{K: "expertise", Name: "Luta"}, Amount: 1, BonusType: "untyped"}}
+
+	mundo := RulesetOf(book, Amendments{Grants: []CampaignGrant{
+		{ID: "g-mesa", Applies: EveryoneIn(), Label: "Bênção da mesa", Modifiers: umaLuta},
+		{ID: "g-so-do-7", Applies: OnlyCharacter(7), Label: "Pacto do Sétimo", Modifiers: umaLuta},
+	}})
+
+	lutaEm := func(world *Ruleset, ch Character) int {
+		for _, ex := range world.ComputeSheet(ch, nil).Expertises {
+			if ex.Name == "Luta" {
+				return ex.Total
+			}
+		}
+		t.Fatal("a perícia Luta não apareceu na ficha")
+		return 0
+	}
+	// A base é o LIVRO, e não o mundo: medi-la dentro do mundo já traria a
+	// concessão da mesa embutida, e as duas contas se cancelariam.
+	base := lutaEm(BookRuleset(book), heroi(7))
+	lutaDe := func(ch Character) int { return lutaEm(mundo, ch) }
+
+	if got := lutaDe(heroi(7)); got != base+2 {
+		t.Errorf("o herói 7 tirou %d e esperava %d: a concessão da mesa MAIS a dele", got, base+2)
+	}
+	if got := lutaDe(heroi(9)); got != base+1 {
+		t.Errorf("o herói 9 tirou %d e esperava %d.\n"+
+			"Só a concessão da MESA o alcança; a do 7 é de outro personagem.", got, base+1)
+	}
+}
+
+// O PERSONAGEM SEM ID NÃO É ALCANÇADO POR UMA CONCESSÃO ESPECÍFICA.
+//
+// O `Character{}` dos fixtures e do oráculo tem `ID` zero, e um seletor que
+// casasse o zero faria a emenda de uma mesa aparecer no oráculo — que é a rede
+// de regressão da ficha inteira. Erra para o lado do LIVRO, de propósito.
+func TestACharacterGrantNeverMatchesTheZeroId(t *testing.T) {
+	if OnlyCharacter(0).Matches(Character{}) {
+		t.Error("um seletor de personagem sem id casou com o personagem sem id")
+	}
+	if OnlyCharacter(3).Matches(Character{}) {
+		t.Error("um seletor do herói 3 casou com um personagem sem id")
+	}
+	if !EveryoneIn().Matches(Character{}) {
+		t.Error("o seletor da mesa inteira deixou de fora um personagem — ele alcança todos")
+	}
+	if (Selector{Kind: "uma-espécie-do-futuro"}).Matches(Character{ID: 1}) {
+		t.Error("uma espécie de seletor desconhecida alcançou alguém; o lado seguro é não alcançar")
 	}
 }

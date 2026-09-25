@@ -659,3 +659,12 @@ DELETE FROM character_stances WHERE characterId = ?;
 -- toda ficha jogada nele. O MOLDE do elenco tem `characters.campaignId` nulo,
 -- entao ele nao chega aqui e ve o livro puro.
 SELECT itemId, adds FROM campaign_items WHERE campaignId = ? ORDER BY itemId;
+
+-- name: ListCampaignGrants :many
+-- O que a mesa concede, na ordem em que ela gravou.
+--
+-- `characterId` nulo e a campanha inteira; preenchido e aquela ficha. A ordem e
+-- por id porque ela vira a ordem das fontes na decomposicao, e o oraculo compara
+-- byte a byte.
+SELECT id, characterId, label, modifiers
+FROM campaign_grants WHERE campaignId = ? ORDER BY id;

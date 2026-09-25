@@ -48,26 +48,47 @@ type Amendments struct {
 	// campanha inteira — um item que significa uma coisa para você e outra para
 	// o vizinho de mesa não é um mundo, são dois.
 	Entries map[string][]Modifier
+
+	// Grants é a emenda de POPULAÇÃO: o que a mesa concede, e a QUEM. Ela muda
+	// quem TEM as coisas, e por isso carrega seletor — a de verbete muda o que
+	// uma coisa É, e isso vale para o mundo inteiro.
+	Grants []CampaignGrant
 }
 
-// AmendmentsFrom monta as emendas a partir do que a mesa GRAVOU: o id do
-// verbete do livro e o JSON dos modificadores que ela acrescenta.
+// CampaignGrant é o que a mesa concede a quem o seletor alcança.
 //
-// @example engine.AmendmentsFrom(map[string]string{"medalhao-de-prata": `[{"target":{"k":"expertise","name":"Luta"},"amount":1}]`})
-func AmendmentsFrom(addsByItem map[string]string) (Amendments, error) {
-	if len(addsByItem) == 0 {
-		return Amendments{}, nil
+// O nome carrega o `Campaign` porque `Grants` sem prefixo já é o componente do
+// ECS que segura as contribuições de uma fonte — duas coisas parecidas a um
+// caractere de distância é como nasce a leitura errada.
+//
+// @example engine.CampaignGrant{ID: "g1", Applies: engine.EveryoneIn(), Label: "Bênção da mesa", Modifiers: …}
+type CampaignGrant struct {
+	// ID é estável e vem do banco. Ele é o que a procedência mostra e o que o
+	// mestre desfaz — e, quando os silêncios chegarem, o que se pode calar.
+	ID string
+	// Applies é o ESCOPO: a mesa inteira, ou uma ficha.
+	Applies Selector
+	// Label é o que a ficha mostra como FONTE do termo. Sem ele o jogador vê um
+	// número aparecer sem nome, que é a pior forma de uma regra da mesa existir.
+	Label     string
+	Modifiers []Modifier
+}
+
+// ParseModifiers lê a lista de modificadores que a mesa gravou.
+//
+// Ela RECUSA alto o que não decodifica, e é o contrário do que o
+// `IgnoredRulesFrom` faz — o lado para o qual cada um erra é diferente. Regra
+// opcional que não carrega cai no padrão do livro, que é o severo; emenda que
+// não carrega tira da ficha um bônus que o mestre escreveu, sem uma palavra na
+// tela.
+//
+// @example engine.ParseModifiers(`[{"target":{"k":"expertise","name":"Luta"},"amount":1}]`)
+func ParseModifiers(raw string) ([]Modifier, error) {
+	var mods []Modifier
+	if err := json.Unmarshal([]byte(raw), &mods); err != nil {
+		return nil, fmt.Errorf("%q não é uma lista de modificadores: %w", raw, err)
 	}
-	out := Amendments{Entries: make(map[string][]Modifier, len(addsByItem))}
-	for id, raw := range addsByItem {
-		var mods []Modifier
-		if err := json.Unmarshal([]byte(raw), &mods); err != nil {
-			return Amendments{}, fmt.Errorf(
-				"a emenda da campanha para %q não é uma lista de modificadores (%s): %w", id, raw, err)
-		}
-		out.Entries[id] = mods
-	}
-	return out, nil
+	return mods, nil
 }
 
 // BookRuleset é o mundo SEM mesa nenhuma: só o livro.
@@ -109,6 +130,36 @@ func (r *Ruleset) itemOf(id string) *CatalogItem {
 	patched.Modifiers = append(append([]Modifier{}, book.Modifiers...), adds...)
 	return &patched
 }
+
+// campaignGrants são as concessões da mesa que alcançam ESTE personagem, na
+// ordem em que a mesa as gravou.
+//
+// Elas entram por ÚLTIMO na coleta, depois de tudo o que vem do livro, pela
+// mesma razão que a emenda de verbete entra no fim da lista de modificadores: o
+// livro primeiro, a mesa depois, e a decomposição lê de cima para baixo.
+//
+// `vestedWear` e não empunhada: uma concessão da mesa não depende de o
+// personagem estar segurando coisa nenhuma.
+func (r *Ruleset) campaignGrants(ch Character) []ActiveItem {
+	out := []ActiveItem{}
+	for _, g := range r.mesa.Grants {
+		if len(g.Modifiers) == 0 || !g.Applies.Matches(ch) {
+			continue
+		}
+		out = append(out, ActiveItem{
+			SourceID:  CampaignGrantSource + g.ID,
+			Source:    g.Label,
+			Equipped:  &vestedWear,
+			Modifiers: g.Modifiers,
+		})
+	}
+	return out
+}
+
+// CampaignGrantSource é o prefixo que separa a concessão da mesa de toda fonte
+// do livro. Sem ele, um id de concessão poderia colidir com um id de item e a
+// ficha diria que o bônus veio do machado.
+const CampaignGrantSource = "campaign-grant:"
 
 // ─── O que o mundo pergunta ao LIVRO sem mudar a resposta ────────────────────
 //

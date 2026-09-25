@@ -68,6 +68,7 @@ func (r *Ruleset) collectionSystems(ch Character) []ecs.System {
 		spawnAll(func() []ActiveItem { return r.generalPowerActiveItem(ch) }),
 		spawnOne(func() *ActiveItem { return r.tormentaCarismaItem(ch) }),
 		spawnOne(func() *ActiveItem { return conditionActiveItem(ch) }),
+		spawnAll(func() []ActiveItem { return r.campaignGrants(ch) }),
 	)
 }
 

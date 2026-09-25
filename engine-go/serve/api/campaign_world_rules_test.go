@@ -122,3 +122,88 @@ func lutaIn(t *testing.T, computed engine.ComputedSheet) int {
 	t.Fatal("a perícia Luta não apareceu na ficha computada")
 	return 0
 }
+
+// O ESCOPO DE UMA CONCESSÃO SOBREVIVE AO BANCO (ALE-387).
+//
+// O motor já prova que o seletor escolhe quem é alcançado; o que só o banco
+// prova é a TRADUÇÃO: `campaign_grants.characterId` nulo é a mesa inteira, e
+// preenchido é aquela ficha.
+//
+// DOIS heróis na MESMA mesa, de propósito. Com um só, a concessão específica e a
+// da mesa dão o mesmo número, e o caso mediria a metade em que o defeito é
+// invisível por construção.
+func TestACampaignGrantScopedToOneHeroDoesNotReachTheOther(t *testing.T) {
+	s := newTestServer(t)
+
+	owner := seedUser(t, s, "mestre@t20.local")
+	guest := seedUser(t, s, "jogadora@t20.local")
+	campaignID := seedCampaign(t, s, owner)
+	openTheTable(t, s, campaignID, "convite-do-caso")
+
+	mine := seatOwnHero(t, s, owner, campaignID, "Herói do mestre", "")
+	theirs := seatOwnHero(t, s, guest, campaignID, "Heroína", "convite-do-caso")
+
+	before, otherBefore := lutaOf(t, s, mine), lutaOf(t, s, theirs)
+	if before != otherBefore {
+		t.Fatalf("os dois heróis já nasceram com Luta diferente (%d e %d) — o caso mediria a diferença deles",
+			before, otherBefore)
+	}
+
+	umaLuta := `[{"target":{"k":"expertise","name":"Luta"},"amount":1,"bonusType":"untyped"}]`
+	seedCampaignGrant(t, s, "g-mesa", campaignID, sql.NullInt64{}, "Bênção da mesa", umaLuta)
+	seedCampaignGrant(t, s, "g-so-dela", campaignID,
+		sql.NullInt64{Int64: theirs, Valid: true}, "Pacto da Heroína", umaLuta)
+
+	if got := lutaOf(t, s, theirs); got != before+2 {
+		t.Errorf("a heroína tirou %d e esperava %d: a concessão da MESA mais a DELA", got, before+2)
+	}
+	if got := lutaOf(t, s, mine); got != before+1 {
+		t.Errorf("o herói do mestre tirou %d e esperava %d.\n"+
+			"Só a concessão da mesa o alcança — a outra tem `characterId` preenchido com a ficha DELA.",
+			got, before+1)
+	}
+}
+
+// openTheTable abre a mesa a quem tem o token: é o que o caminho de produção
+// exige de quem não é o dono.
+func openTheTable(t *testing.T, s *Server, campaignID int64, invite string) {
+	t.Helper()
+	if _, err := s.db.ExecContext(context.Background(),
+		`UPDATE campaigns SET inviteToken = ? WHERE id = ?`, invite, campaignID); err != nil {
+		t.Fatalf("abrir a campanha %d com convite: %v", campaignID, err)
+	}
+}
+
+// seatOwnHero cria o molde e o SENTA à mesa pelo caminho de produção, devolvendo
+// o id da CÓPIA — que é a ficha jogada, e a única que uma concessão alcança.
+func seatOwnHero(t *testing.T, s *Server, ownerID, campaignID int64, name, invite string) int64 {
+	t.Helper()
+	ctx := context.Background()
+	templateID := seedCharacter(t, s, ownerID, name)
+	seedFighterWithMedallion(t, s, templateID)
+	if err := s.campaignSeating().Seat(ctx, ownerID, campaignID, templateID, invite); err != nil {
+		t.Fatalf("sentar %q à mesa: %v", name, err)
+	}
+	var clonedID int64
+	if err := s.db.QueryRowContext(ctx,
+		`SELECT id FROM characters WHERE sourceCharacterId = ? AND campaignId = ?`,
+		templateID, campaignID).Scan(&clonedID); err != nil {
+		t.Fatalf("achar a cópia de %q na mesa: %v", name, err)
+	}
+	return clonedID
+}
+
+// seedCampaignGrant escreve a concessão direto na tabela: a tela do mestre que a
+// AUTORA ainda não existe.
+func seedCampaignGrant(
+	t *testing.T, s *Server, id string, campaignID int64,
+	characterID sql.NullInt64, label, modifiers string,
+) {
+	t.Helper()
+	if _, err := s.db.ExecContext(context.Background(),
+		`INSERT INTO campaign_grants (id, campaignId, characterId, label, modifiers, updatedAt)
+		 VALUES (?, ?, ?, ?, ?, ?)`,
+		id, campaignID, characterID, label, modifiers, dbvalue.NowISO()); err != nil {
+		t.Fatalf("gravar a concessão %q: %v", id, err)
+	}
+}

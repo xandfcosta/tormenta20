@@ -1554,6 +1554,51 @@ func (q *Queries) ListCampaignCreatures(ctx context.Context, campaignid int64) (
 	return items, nil
 }
 
+const listCampaignGrants = `-- name: ListCampaignGrants :many
+SELECT id, characterId, label, modifiers
+FROM campaign_grants WHERE campaignId = ? ORDER BY id
+`
+
+type ListCampaignGrantsRow struct {
+	ID          string        `json:"id"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Label       string        `json:"label"`
+	Modifiers   string        `json:"modifiers"`
+}
+
+// O que a mesa concede, na ordem em que ela gravou.
+//
+// `characterId` nulo e a campanha inteira; preenchido e aquela ficha. A ordem e
+// por id porque ela vira a ordem das fontes na decomposicao, e o oraculo compara
+// byte a byte.
+func (q *Queries) ListCampaignGrants(ctx context.Context, campaignid int64) ([]ListCampaignGrantsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignGrants, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignGrantsRow{}
+	for rows.Next() {
+		var i ListCampaignGrantsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Characterid,
+			&i.Label,
+			&i.Modifiers,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCampaignItemPatches = `-- name: ListCampaignItemPatches :many
 SELECT itemId, adds FROM campaign_items WHERE campaignId = ? ORDER BY itemId
 `
