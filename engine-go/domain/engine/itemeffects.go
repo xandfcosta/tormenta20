@@ -88,12 +88,23 @@ func (m *Modifier) UnmarshalJSON(b []byte) error {
 // ActiveItem é um item com os modificadores dele. `Equipped` é ponteiro para o
 // estado NULO (item presente e não equipado) se distinguir de "vestido".
 type ActiveItem struct {
+	// SourceID é o id ESTÁVEL do verbete que concede — `armadura-completa`,
+	// `anao-devagar-e-sempre`. Ele entrou na ALE-386 porque a coleta só guardava
+	// o `Source`, que é o TEXTO DE TELA: uma frase montada com prefixo e
+	// concatenação, que muda quando alguém corrige um acento. Uma regra da mesa
+	// que precise dizer "cancele o que vem daquele item" não tem como
+	// endereçá-lo por uma frase.
+	//
+	// Vazio é legítimo: as condições não vêm de verbete nenhum.
+	SourceID  string     `json:"sourceId,omitempty"`
 	Source    string     `json:"source"`
 	Equipped  *string    `json:"equipped"`
 	Modifiers []Modifier `json:"modifiers"`
 }
 
 type Contribution struct {
+	// SourceID atravessa a dobra junto com o `Source` — ver `ActiveItem`.
+	SourceID  string `json:"sourceId,omitempty"`
 	Source    string `json:"source"`
 	BonusType string `json:"bonusType"`
 	Amount    int    `json:"amount"`
@@ -106,6 +117,9 @@ type AggregatedStat struct {
 }
 
 type ConditionalEffect struct {
+	// SourceID atravessa junto — ver `ActiveItem`. Ele NÃO entra no
+	// `ConditionalID`: aquela string está gravada no banco.
+	SourceID  string         `json:"sourceId,omitempty"`
 	Source    string         `json:"source"`
 	BonusType string         `json:"bonusType"`
 	Amount    int            `json:"amount"`
@@ -414,6 +428,7 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 			}
 			if !isUnconditional(m) {
 				ce := ConditionalEffect{
+					SourceID:  item.SourceID,
 					Source:    item.Source,
 					BonusType: m.BonusType,
 					Amount:    m.Amount,
@@ -437,7 +452,7 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 			if _, ok := buckets[key]; !ok {
 				order = append(order, key)
 			}
-			c := Contribution{Source: item.Source, BonusType: m.BonusType, Amount: m.Amount}
+			c := Contribution{SourceID: item.SourceID, Source: item.Source, BonusType: m.BonusType, Amount: m.Amount}
 			if m.Note != "" {
 				c.Note = m.Note
 			}
@@ -502,7 +517,7 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 			continue
 		}
 		key := targetKey(c.Target)
-		fold := Contribution{Source: c.Source + " (cond.)", BonusType: c.BonusType, Amount: c.Amount}
+		fold := Contribution{SourceID: c.SourceID, Source: c.Source + " (cond.)", BonusType: c.BonusType, Amount: c.Amount}
 		if c.Note != "" {
 			fold.Note = c.Note
 		}

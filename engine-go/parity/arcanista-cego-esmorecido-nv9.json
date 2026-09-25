@@ -323,11 +323,13 @@
   },
   "activeItems": [
     {
+      "sourceId": "adaga",
       "source": "Adaga",
       "equipped": "wielded",
       "modifiers": []
     },
     {
+      "sourceId": "bandana",
       "source": "Bandana",
       "equipped": "vested",
       "modifiers": [
@@ -345,6 +347,7 @@
       ]
     },
     {
+      "sourceId": "cosmetico",
       "source": "Cosmético (cena)",
       "equipped": "vested",
       "modifiers": [
@@ -359,6 +362,7 @@
       ]
     },
     {
+      "sourceId": "Qareen",
       "source": "Raça: Qareen",
       "equipped": "vested",
       "modifiers": [
@@ -392,6 +396,7 @@
       ]
     },
     {
+      "sourceId": "class.arcanista.caminho-bruxo",
       "source": "Caminho: Bruxo",
       "equipped": "vested",
       "modifiers": [
@@ -476,11 +481,13 @@
         "total": 4,
         "contributions": [
           {
+            "sourceId": "cosmetico",
             "source": "Cosmético (cena)",
             "bonusType": "untyped",
             "amount": 2
           },
           {
+            "sourceId": "Qareen",
             "source": "Raça: Qareen",
             "bonusType": "untyped",
             "amount": 2,
@@ -492,6 +499,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Qareen",
             "source": "Raça: Qareen",
             "bonusType": "untyped",
             "amount": 1,
@@ -503,6 +511,7 @@
         "total": -1,
         "contributions": [
           {
+            "sourceId": "Qareen",
             "source": "Raça: Qareen",
             "bonusType": "untyped",
             "amount": -1,
@@ -524,6 +533,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "bandana",
             "source": "Bandana",
             "bonusType": "item",
             "amount": 1
@@ -594,6 +604,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "class.arcanista.caminho-bruxo",
             "source": "Caminho: Bruxo",
             "bonusType": "untyped",
             "amount": 1

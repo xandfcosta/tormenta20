@@ -276,6 +276,7 @@
   },
   "activeItems": [
     {
+      "sourceId": "armadura-completa",
       "source": "Armadura completa",
       "equipped": "vested",
       "modifiers": [
@@ -346,6 +347,7 @@
       ]
     },
     {
+      "sourceId": "escudo-pesado",
       "source": "Escudo pesado",
       "equipped": "wielded",
       "modifiers": [
@@ -372,11 +374,13 @@
       ]
     },
     {
+      "sourceId": "machado-batalha",
       "source": "Machado de batalha",
       "equipped": "wielded",
       "modifiers": []
     },
     {
+      "sourceId": "Anão",
       "source": "Raça: Anão",
       "equipped": "vested",
       "modifiers": [
@@ -435,6 +439,7 @@
       ]
     },
     {
+      "sourceId": "class.cavaleiro.baluarte-2",
       "source": "Baluarte +2",
       "equipped": "vested",
       "modifiers": [
@@ -463,6 +468,7 @@
       ]
     },
     {
+      "sourceId": "class.cavaleiro.duelo-2",
       "source": "Duelo +2",
       "equipped": "vested",
       "modifiers": [
@@ -493,6 +499,7 @@
       ]
     },
     {
+      "sourceId": "class.cavaleiro.baluarte-4",
       "source": "Baluarte +4",
       "equipped": "vested",
       "modifiers": [
@@ -521,6 +528,7 @@
       ]
     },
     {
+      "sourceId": "class.cavaleiro.duelo-3",
       "source": "Duelo +3",
       "equipped": "vested",
       "modifiers": [
@@ -551,6 +559,7 @@
       ]
     },
     {
+      "sourceId": "class.cavaleiro.baluarte-6",
       "source": "Baluarte +6",
       "equipped": "vested",
       "modifiers": [
@@ -579,6 +588,7 @@
       ]
     },
     {
+      "sourceId": "class.cavaleiro.duelo-4",
       "source": "Duelo +4",
       "equipped": "vested",
       "modifiers": [
@@ -609,6 +619,7 @@
       ]
     },
     {
+      "sourceId": "class.cavaleiro.baluarte-8",
       "source": "Baluarte +8",
       "equipped": "vested",
       "modifiers": [
@@ -637,6 +648,7 @@
       ]
     },
     {
+      "sourceId": "class.cavaleiro.baluarte-10",
       "source": "Baluarte +10",
       "equipped": "vested",
       "modifiers": [
@@ -665,6 +677,7 @@
       ]
     },
     {
+      "sourceId": "class.cavaleiro.duelo-5",
       "source": "Duelo +5",
       "equipped": "vested",
       "modifiers": [
@@ -701,11 +714,13 @@
         "total": -7,
         "contributions": [
           {
+            "sourceId": "armadura-completa",
             "source": "Armadura completa",
             "bonusType": "untyped",
             "amount": -5
           },
           {
+            "sourceId": "escudo-pesado",
             "source": "Escudo pesado",
             "bonusType": "untyped",
             "amount": -2
@@ -716,6 +731,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 2,
@@ -727,6 +743,7 @@
         "total": -1,
         "contributions": [
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": -1,
@@ -738,6 +755,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1,
@@ -749,11 +767,13 @@
         "total": 12,
         "contributions": [
           {
+            "sourceId": "armadura-completa",
             "source": "Armadura completa",
             "bonusType": "armor",
             "amount": 10
           },
           {
+            "sourceId": "escudo-pesado",
             "source": "Escudo pesado",
             "bonusType": "shield",
             "amount": 2
@@ -764,6 +784,7 @@
         "total": -3,
         "contributions": [
           {
+            "sourceId": "armadura-completa",
             "source": "Armadura completa",
             "bonusType": "untyped",
             "amount": -3
@@ -774,11 +795,13 @@
         "total": 3,
         "contributions": [
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 2
           },
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1
@@ -794,6 +817,7 @@
     ],
     "conditional": [
       {
+        "sourceId": "class.cavaleiro.baluarte-2",
         "source": "Baluarte +2",
         "bonusType": "training",
         "amount": 2,
@@ -803,6 +827,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.baluarte-2",
         "source": "Baluarte +2",
         "bonusType": "training",
         "amount": 2,
@@ -812,6 +837,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.duelo-2",
         "source": "Duelo +2",
         "bonusType": "training",
         "amount": 2,
@@ -822,6 +848,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.duelo-2",
         "source": "Duelo +2",
         "bonusType": "training",
         "amount": 2,
@@ -832,6 +859,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.baluarte-4",
         "source": "Baluarte +4",
         "bonusType": "training",
         "amount": 4,
@@ -841,6 +869,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.baluarte-4",
         "source": "Baluarte +4",
         "bonusType": "training",
         "amount": 4,
@@ -850,6 +879,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.duelo-3",
         "source": "Duelo +3",
         "bonusType": "training",
         "amount": 3,
@@ -860,6 +890,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.duelo-3",
         "source": "Duelo +3",
         "bonusType": "training",
         "amount": 3,
@@ -870,6 +901,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.baluarte-6",
         "source": "Baluarte +6",
         "bonusType": "training",
         "amount": 6,
@@ -879,6 +911,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.baluarte-6",
         "source": "Baluarte +6",
         "bonusType": "training",
         "amount": 6,
@@ -888,6 +921,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.duelo-4",
         "source": "Duelo +4",
         "bonusType": "training",
         "amount": 4,
@@ -898,6 +932,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.duelo-4",
         "source": "Duelo +4",
         "bonusType": "training",
         "amount": 4,
@@ -908,6 +943,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.baluarte-8",
         "source": "Baluarte +8",
         "bonusType": "training",
         "amount": 8,
@@ -917,6 +953,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.baluarte-8",
         "source": "Baluarte +8",
         "bonusType": "training",
         "amount": 8,
@@ -926,6 +963,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.baluarte-10",
         "source": "Baluarte +10",
         "bonusType": "training",
         "amount": 10,
@@ -935,6 +973,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.baluarte-10",
         "source": "Baluarte +10",
         "bonusType": "training",
         "amount": 10,
@@ -944,6 +983,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.duelo-5",
         "source": "Duelo +5",
         "bonusType": "training",
         "amount": 5,
@@ -954,6 +994,7 @@
         }
       },
       {
+        "sourceId": "class.cavaleiro.duelo-5",
         "source": "Duelo +5",
         "bonusType": "training",
         "amount": 5,

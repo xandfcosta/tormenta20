@@ -51,6 +51,7 @@ func (c *Catalogs) ActiveItemsFor(ch Character) []ActiveItem {
 		}
 		scope := DurationLabel(eff.Scope)
 		items = append(items, ActiveItem{
+			SourceID:  eff.CatalogID,
 			Source:    fmt.Sprintf("%s (%s)", c.appliedEffectName(eff.CatalogID, mods), scope),
 			Equipped:  &vestedWear,
 			Modifiers: mods,
@@ -86,6 +87,7 @@ func conditionActiveItem(ch Character) *ActiveItem {
 	if len(mods) == 0 {
 		return nil
 	}
+	// Sem id: a fonte é o CONJUNTO das condições ativas, não um verbete.
 	return &ActiveItem{Source: "Condições", Equipped: &vestedWear, Modifiers: mods}
 }
 
@@ -255,7 +257,7 @@ func (c *Catalogs) itemActiveItem(it CharacterItem, prof map[string]bool) Active
 	mods = append(mods, mirrorWeaponAttackMods(catalog, ownMods)...)
 	mods = append(mods, equilibradaHomebrewMods(catalog, improvementIDs)...)
 	mods = append(mods, vestedEsotericHomebrewMods(it.Equipped, catalog, ownMods)...)
-	return ActiveItem{Source: it.Name, Equipped: it.Equipped, Modifiers: mods}
+	return ActiveItem{SourceID: catalogItemID(it), Source: it.Name, Equipped: it.Equipped, Modifiers: mods}
 }
 
 // overlayModsWithProvenance: an overlay's modifiers with the
@@ -459,4 +461,13 @@ func (c *Catalogs) effectSourceName(catalogID string) string {
 		return item.Name
 	}
 	return catalogID
+}
+
+// catalogItemID é o id do verbete de um item da ficha, ou vazio quando o item é
+// custom — inventado pela pessoa, sem entrada no livro.
+func catalogItemID(it CharacterItem) string {
+	if it.CatalogID == nil {
+		return ""
+	}
+	return *it.CatalogID
 }

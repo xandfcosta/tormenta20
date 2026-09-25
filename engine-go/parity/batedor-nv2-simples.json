@@ -246,11 +246,13 @@
   },
   "activeItems": [
     {
+      "sourceId": "espada-curta",
       "source": "Espada curta",
       "equipped": "wielded",
       "modifiers": []
     },
     {
+      "sourceId": "armadura-couro",
       "source": "Armadura de couro",
       "equipped": "vested",
       "modifiers": [
@@ -290,6 +292,7 @@
       ]
     },
     {
+      "sourceId": "Sílfide",
       "source": "Raça: Sílfide",
       "equipped": "vested",
       "modifiers": [
@@ -329,6 +332,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "Sílfide",
             "source": "Raça: Sílfide",
             "bonusType": "untyped",
             "amount": 2,
@@ -340,6 +344,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Sílfide",
             "source": "Raça: Sílfide",
             "bonusType": "untyped",
             "amount": 1,
@@ -351,6 +356,7 @@
         "total": -2,
         "contributions": [
           {
+            "sourceId": "Sílfide",
             "source": "Raça: Sílfide",
             "bonusType": "untyped",
             "amount": -2,
@@ -362,6 +368,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "armadura-couro",
             "source": "Armadura de couro",
             "bonusType": "armor",
             "amount": 2
@@ -372,6 +379,7 @@
         "total": -1,
         "contributions": [
           {
+            "sourceId": "armadura-couro",
             "source": "Armadura de couro",
             "bonusType": "untyped",
             "amount": -1,

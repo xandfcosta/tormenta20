@@ -306,16 +306,19 @@
   },
   "activeItems": [
     {
+      "sourceId": "clava",
       "source": "Clava",
       "equipped": "wielded",
       "modifiers": []
     },
     {
+      "sourceId": "mochila",
       "source": "Mochila",
       "equipped": "vested",
       "modifiers": []
     },
     {
+      "sourceId": "Kliren",
       "source": "Raça: Kliren",
       "equipped": "vested",
       "modifiers": [
@@ -355,6 +358,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Kliren",
             "source": "Raça: Kliren",
             "bonusType": "untyped",
             "amount": 1,
@@ -366,6 +370,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "Kliren",
             "source": "Raça: Kliren",
             "bonusType": "untyped",
             "amount": 2,
@@ -377,6 +382,7 @@
         "total": -1,
         "contributions": [
           {
+            "sourceId": "Kliren",
             "source": "Raça: Kliren",
             "bonusType": "untyped",
             "amount": -1,

@@ -293,11 +293,13 @@
   },
   "activeItems": [
     {
+      "sourceId": "adaga",
       "source": "Adaga",
       "equipped": "wielded",
       "modifiers": []
     },
     {
+      "sourceId": "bandana",
       "source": "Bandana",
       "equipped": "vested",
       "modifiers": [
@@ -315,6 +317,7 @@
       ]
     },
     {
+      "sourceId": "cosmetico",
       "source": "Cosmético (cena)",
       "equipped": "vested",
       "modifiers": [
@@ -329,6 +332,7 @@
       ]
     },
     {
+      "sourceId": "Dahllan",
       "source": "Raça: Dahllan",
       "equipped": "vested",
       "modifiers": [
@@ -362,6 +366,7 @@
       ]
     },
     {
+      "sourceId": "class.druida.magias-1-circulo",
       "source": "Magias (1° círculo)",
       "equipped": "vested",
       "modifiers": [
@@ -385,6 +390,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "cosmetico",
             "source": "Cosmético (cena)",
             "bonusType": "untyped",
             "amount": 2
@@ -395,6 +401,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Dahllan",
             "source": "Raça: Dahllan",
             "bonusType": "untyped",
             "amount": 1,
@@ -406,6 +413,7 @@
         "total": -1,
         "contributions": [
           {
+            "sourceId": "Dahllan",
             "source": "Raça: Dahllan",
             "bonusType": "untyped",
             "amount": -1,
@@ -417,6 +425,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "Dahllan",
             "source": "Raça: Dahllan",
             "bonusType": "untyped",
             "amount": 2,
@@ -428,6 +437,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "bandana",
             "source": "Bandana",
             "bonusType": "item",
             "amount": 1
@@ -438,6 +448,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "class.druida.magias-1-circulo",
             "source": "Magias (1° círculo)",
             "bonusType": "untyped",
             "amount": 1

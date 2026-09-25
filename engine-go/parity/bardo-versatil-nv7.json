@@ -299,11 +299,13 @@
   },
   "activeItems": [
     {
+      "sourceId": "adaga",
       "source": "Adaga",
       "equipped": "wielded",
       "modifiers": []
     },
     {
+      "sourceId": "bandana",
       "source": "Bandana",
       "equipped": "vested",
       "modifiers": [
@@ -321,6 +323,7 @@
       ]
     },
     {
+      "sourceId": "cosmetico",
       "source": "Cosmético (cena)",
       "equipped": "vested",
       "modifiers": [
@@ -335,6 +338,7 @@
       ]
     },
     {
+      "sourceId": "Lefou",
       "source": "Raça: Lefou",
       "equipped": "vested",
       "modifiers": [
@@ -377,6 +381,7 @@
       ]
     },
     {
+      "sourceId": "class.bardo.inspiracao-1",
       "source": "Inspiração +1",
       "equipped": "vested",
       "modifiers": [
@@ -395,6 +400,7 @@
       ]
     },
     {
+      "sourceId": "class.bardo.magias-1-circulo",
       "source": "Magias (1° círculo)",
       "equipped": "vested",
       "modifiers": [
@@ -412,6 +418,7 @@
       ]
     },
     {
+      "sourceId": "class.bardo.inspiracao-2",
       "source": "Inspiração +2",
       "equipped": "vested",
       "modifiers": [
@@ -436,11 +443,13 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "cosmetico",
             "source": "Cosmético (cena)",
             "bonusType": "untyped",
             "amount": 2
           },
           {
+            "sourceId": "Lefou",
             "source": "Raça: Lefou",
             "bonusType": "untyped",
             "amount": -1,
@@ -452,6 +461,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Lefou",
             "source": "Raça: Lefou",
             "bonusType": "untyped",
             "amount": 1,
@@ -463,6 +473,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Lefou",
             "source": "Raça: Lefou",
             "bonusType": "untyped",
             "amount": 1,
@@ -474,6 +485,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Lefou",
             "source": "Raça: Lefou",
             "bonusType": "untyped",
             "amount": 1,
@@ -485,6 +497,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "bandana",
             "source": "Bandana",
             "bonusType": "item",
             "amount": 1
@@ -495,6 +508,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "class.bardo.magias-1-circulo",
             "source": "Magias (1° círculo)",
             "bonusType": "untyped",
             "amount": 1
@@ -505,6 +519,7 @@
     "flags": [],
     "conditional": [
       {
+        "sourceId": "class.bardo.inspiracao-1",
         "source": "Inspiração +1",
         "bonusType": "morale",
         "amount": 1,
@@ -515,6 +530,7 @@
         "flag": "inspiracao"
       },
       {
+        "sourceId": "class.bardo.inspiracao-2",
         "source": "Inspiração +2",
         "bonusType": "morale",
         "amount": 2,

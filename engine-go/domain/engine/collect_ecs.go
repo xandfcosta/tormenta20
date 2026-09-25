@@ -27,6 +27,8 @@ import (
 // nenhuma consulta que peça um sem o outro. O que varia é a ENTRADA: é lá que
 // nascem os componentes com consulta, na fatia que decompõe o equipamento.
 type Grants struct {
+	// SourceID é o id ESTÁVEL do verbete — ver `ActiveItem` (ALE-386).
+	SourceID  string
 	Source    string
 	Wear      *string
 	Modifiers []Modifier
@@ -41,7 +43,7 @@ func (c *Catalogs) ActiveItemsInWorld(ch Character) []ActiveItem {
 
 	items := []ActiveItem{}
 	ecs.Each(world, func(_ ecs.Entity, g Grants) {
-		items = append(items, ActiveItem{Source: g.Source, Equipped: g.Wear, Modifiers: g.Modifiers})
+		items = append(items, ActiveItem{SourceID: g.SourceID, Source: g.Source, Equipped: g.Wear, Modifiers: g.Modifiers})
 	})
 	return items
 }
@@ -72,6 +74,7 @@ func (c *Catalogs) collectionSystems(ch Character) []ecs.System {
 // grant pendura uma fonte no mundo. É o `append` do coletor velho.
 func grant(w *ecs.World, item ActiveItem) {
 	ecs.Set(w, w.Spawn(), Grants{
+		SourceID:  item.SourceID,
 		Source:    item.Source,
 		Wear:      item.Equipped,
 		Modifiers: item.Modifiers,
@@ -108,6 +111,7 @@ func (c *Catalogs) appliedEffects(ch Character) ecs.System {
 				continue
 			}
 			grant(w, ActiveItem{
+				SourceID:  eff.CatalogID,
 				Source:    fmt.Sprintf("%s (%s)", c.appliedEffectName(eff.CatalogID, mods), DurationLabel(eff.Scope)),
 				Equipped:  &vestedWear,
 				Modifiers: mods,

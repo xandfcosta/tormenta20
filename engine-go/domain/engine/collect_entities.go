@@ -41,6 +41,7 @@ func (c *Catalogs) raceActiveItems(ch Character) []ActiveItem {
 			continue
 		}
 		result = append(result, ActiveItem{
+			SourceID:  race.ID,
 			Source:    "Raça: " + race.Name,
 			Equipped:  &vestedWear,
 			Modifiers: mods,
@@ -139,7 +140,7 @@ func (c *Catalogs) originActiveItem(ch Character) *ActiveItem {
 	if len(mods) == 0 {
 		return nil
 	}
-	return &ActiveItem{Source: "Origem: " + origin.Name, Equipped: &vestedWear, Modifiers: mods}
+	return &ActiveItem{SourceID: origin.ID, Source: "Origem: " + origin.Name, Equipped: &vestedWear, Modifiers: mods}
 }
 
 // originPickedPowerIds: for each CHOSEN free-pick origin
@@ -181,7 +182,7 @@ func (c *Catalogs) classActiveItems(ch Character) []ActiveItem {
 			if len(power.Modifiers) == 0 {
 				continue
 			}
-			out = append(out, ActiveItem{Source: power.Name, Equipped: &vestedWear, Modifiers: power.Modifiers})
+			out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: power.Modifiers})
 		}
 	}
 	return out
@@ -197,7 +198,7 @@ func (c *Catalogs) generalPowerActiveItem(ch Character) []ActiveItem {
 		if power == nil || len(power.Modifiers) == 0 {
 			continue
 		}
-		out = append(out, ActiveItem{Source: power.Name, Equipped: &vestedWear, Modifiers: power.Modifiers})
+		out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: power.Modifiers})
 	}
 	return out
 }
@@ -227,6 +228,8 @@ func (c *Catalogs) tormentaCarismaItem(ch Character) *ActiveItem {
 		return nil
 	}
 	return &ActiveItem{
+		// Sem id de verbete: a fonte é o CONJUNTO de poderes da Tormenta, e não
+		// um deles. O id fica vazio de propósito.
 		Source:   "Poderes da Tormenta",
 		Equipped: &vestedWear,
 		Modifiers: []Modifier{{

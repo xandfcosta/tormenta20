@@ -284,6 +284,7 @@
   },
   "activeItems": [
     {
+      "sourceId": "armadura-completa",
       "source": "Armadura completa",
       "equipped": "vested",
       "modifiers": [
@@ -354,6 +355,7 @@
       ]
     },
     {
+      "sourceId": "escudo-pesado",
       "source": "Escudo pesado",
       "equipped": "wielded",
       "modifiers": [
@@ -380,11 +382,13 @@
       ]
     },
     {
+      "sourceId": "machado-batalha",
       "source": "Machado de batalha",
       "equipped": "wielded",
       "modifiers": []
     },
     {
+      "sourceId": "cosmetico",
       "source": "Cosmético (cena)",
       "equipped": "vested",
       "modifiers": [
@@ -399,6 +403,7 @@
       ]
     },
     {
+      "sourceId": "Anão",
       "source": "Raça: Anão",
       "equipped": "vested",
       "modifiers": [
@@ -463,11 +468,13 @@
         "total": -7,
         "contributions": [
           {
+            "sourceId": "armadura-completa",
             "source": "Armadura completa",
             "bonusType": "untyped",
             "amount": -5
           },
           {
+            "sourceId": "escudo-pesado",
             "source": "Escudo pesado",
             "bonusType": "untyped",
             "amount": -2
@@ -478,6 +485,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "cosmetico",
             "source": "Cosmético (cena)",
             "bonusType": "untyped",
             "amount": 2
@@ -488,6 +496,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 2,
@@ -499,6 +508,7 @@
         "total": -1,
         "contributions": [
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": -1,
@@ -510,6 +520,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1,
@@ -521,11 +532,13 @@
         "total": 12,
         "contributions": [
           {
+            "sourceId": "armadura-completa",
             "source": "Armadura completa",
             "bonusType": "armor",
             "amount": 10
           },
           {
+            "sourceId": "escudo-pesado",
             "source": "Escudo pesado",
             "bonusType": "shield",
             "amount": 2
@@ -536,6 +549,7 @@
         "total": -3,
         "contributions": [
           {
+            "sourceId": "armadura-completa",
             "source": "Armadura completa",
             "bonusType": "untyped",
             "amount": -3
@@ -546,11 +560,13 @@
         "total": 3,
         "contributions": [
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 2
           },
           {
+            "sourceId": "Anão",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1
