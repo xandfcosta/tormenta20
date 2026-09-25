@@ -421,6 +421,28 @@ func WithSign(n int) string {
 	return strconv.Itoa(n)
 }
 
+// MetresWithSign escreve uma DISTÂNCIA do livro, com sinal e unidade: "+1,5m",
+// "-3m".
+//
+// O inteiro sai sem casa decimal porque "−3,0m" não é como a mesa lê, e a
+// fração sai com VÍRGULA porque é como o livro imprime. Ela existe desde que o
+// motor passou a contar deslocamento em QUADRADOS (ALE-390): a tela continua
+// falando metros, e quem converte de volta é quem desenha.
+//
+// Não é o `meters` do medidor da Mesa: aquele mostra SEMPRE uma casa ("3,0"),
+// porque uma régua que alterna entre "3" e "3,5" pula de largura enquanto a
+// pessoa arrasta.
+//
+// @example book.MetresWithSign(-3) // "-3m"
+func MetresWithSign(m float64) string {
+	texto := strconv.FormatFloat(m, 'f', -1, 64)
+	texto = strings.Replace(texto, ".", ",", 1)
+	if m >= 0 {
+		texto = "+" + texto
+	}
+	return texto + "m"
+}
+
 // OS ELOS entre entradas do acervo.
 //
 // O livro é uma rede: a condição Abalado termina em "Medo.", que é um TIPO DE

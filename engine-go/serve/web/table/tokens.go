@@ -297,7 +297,8 @@ var aparenciasDaPeca = map[string]bool{"object": true, "npc": true}
 // Ela é da CENA e não de um caso de uso (ALE-344): não autoriza nada, não grava
 // nada e não decide nada — é a conta que o desenho da prévia de movimento pede,
 // montada com o `Queries` e o `Catalogs` que a cena já recebe, como a Defesa do
-// Grupo. A REGRA é do motor (`engine.SquaresForDisplacement`).
+// Grupo. A REGRA é do motor: desde a ALE-390 ele já conta em QUADRADOS, e esta
+// cena só repassa.
 func (s Scene) speedsForBoard(ctx context.Context, boardState *board.BoardState) map[string]int {
 	squares := map[string]int{}
 	if boardState == nil {
@@ -329,5 +330,6 @@ func (s Scene) speedSquaresOf(ctx context.Context, characterID int64) int {
 		log.Printf("tabuleiro: ficha do personagem %d não computada (%v)", characterID, err)
 		return 0
 	}
-	return engine.SquaresForDisplacement(float64(character.Displacement.Total))
+	// Já vem em QUADRADOS do motor (ALE-390); não há o que converter.
+	return character.Displacement.Total
 }

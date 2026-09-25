@@ -110,11 +110,12 @@ func TestOverloadPenalizesDisplacementAndArmorExpertises(t *testing.T) {
 	}
 
 	light, heavy := withLoad(10), withLoad(11)
-	if light.Displacement.Total != 9 {
-		t.Fatalf("dentro do limite o deslocamento é %d, want 9 — o caso de controle já estava errado", light.Displacement.Total)
+	// Em QUADRADOS (ALE-390): 9m são 6, e 6m são 4.
+	if light.Displacement.Total != 6 {
+		t.Fatalf("dentro do limite o deslocamento é %d quadrados, want 6 (9m) — o caso de controle já estava errado", light.Displacement.Total)
 	}
-	if heavy.Displacement.Total != 6 {
-		t.Errorf("sobrecarregado: deslocamento %d, want 6 (9 − 3, p141)", heavy.Displacement.Total)
+	if heavy.Displacement.Total != 4 {
+		t.Errorf("sobrecarregado: deslocamento %d quadrados, want 4 — 6m, que são 9m − 3m (p141)", heavy.Displacement.Total)
 	}
 	if got := periciaTotal(t, heavy, "Furtividade") - periciaTotal(t, light, "Furtividade"); got != -5 {
 		t.Errorf("sobrecarregado: Furtividade mudou %d, want −5 (p141 + p153)", got)

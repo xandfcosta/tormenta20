@@ -166,6 +166,12 @@ func modifierBadge(m engine.Modifier) string {
 	if m.Target.K == "flag" || m.Amount == 0 {
 		return label
 	}
+	// O DESLOCAMENTO é contado em QUADRADOS no motor e lido em METROS na mesa
+	// (ALE-390). O crachá é tela, então ele converte de volta — sem isso a
+	// armadura completa diria "−2" onde o livro diz "−3m".
+	if m.Target.K == "displacement" {
+		return label + " " + book.MetresWithSign(float64(m.Amount)*engine.SquareMetres)
+	}
 	return label + " " + book.WithSign(m.Amount)
 }
 

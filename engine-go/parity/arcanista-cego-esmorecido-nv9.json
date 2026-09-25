@@ -630,10 +630,10 @@
         }
       ]
     },
-    "displacement": {
-      "base": 9,
+    "displacementSquares": {
+      "base": 6,
       "itemBonus": 0,
-      "total": 9,
+      "total": 6,
       "contributions": []
     },
     "flySpeed": 0,
@@ -1245,10 +1245,10 @@
         }
       ]
     },
-    "displacement": {
-      "base": 9,
+    "displacementSquares": {
+      "base": 6,
       "itemBonus": 0,
-      "total": 9,
+      "total": 6,
       "contributions": []
     },
     "flySpeed": 0,

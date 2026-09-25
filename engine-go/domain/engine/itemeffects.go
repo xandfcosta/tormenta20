@@ -45,6 +45,70 @@ type VitalScale struct {
 	Attribute string `json:"attribute,omitempty"`
 }
 
+// amountInEngineUnits converte o valor do catálogo para a unidade do motor.
+//
+// # O DESLOCAMENTO vem em METROS e é guardado em QUADRADOS
+//
+// O livro mede deslocamento em metros e joga num grid de 1,5m, e TODO valor que
+// ele imprime é múltiplo de 1,5 — medido no catálogo: {-3, 1,5, 6, 9, 12}.
+// Guardar em metros obrigava a arredondar, e as botas reforçadas (+1,5m, p159)
+// viravam +2m: meio metro de bônus inventado pela fronteira do JSON.
+//
+// Em quadrados a conta fecha exata, e é a MESMA decisão que o
+// `board_movement.go` já tinha tomado para o mapa — "a conta é feita em
+// QUADRADOS inteiros, nunca em metros… metro é coisa de tela" (p236). De
+// quebra, a metade do Lento (p395: "arredonde para baixo para o primeiro
+// incremento de 1,5m") vira divisão inteira, sem regra de arredondamento
+// escrita à mão.
+//
+// Arredonda em vez de truncar porque um verbete NOVO pode trazer um valor que
+// não seja múltiplo de 1,5 — e aí o vizinho certo é melhor que o de baixo. Se
+// isso acontecer, o lugar de consertar é o verbete.
+func amountInEngineUnits(target ModifierTarget, amount float64) int {
+	if target.K == "displacement" {
+		return int(math.Round(amount / SquareMetres))
+	}
+	return int(math.Round(amount))
+}
+
+// amountInBookUnits é a VOLTA, e ela não é enfeite: sem a simetria a conversão
+// não é idempotente, e ler de volta o que o motor escreveu converte duas vezes
+// — a armadura ia de −3m para −2 quadrados e de −2 para −1 na segunda leitura.
+//
+// Quem denunciou foi o `roundTrip` dos casos de paridade, que serializa a saída
+// do motor e a relê. Ele não estava medindo unidade nenhuma: ele mede FORMA, e
+// tropeçou na assimetria de graça.
+//
+// O efeito colateral é o que se queria: o FIO fala a unidade do LIVRO. O
+// oráculo mostra −3 e +1,5 como a página imprime, e quem revisa o diff contra o
+// livro compara os mesmos números.
+func amountInBookUnits(target ModifierTarget, amount int) float64 {
+	if target.K == "displacement" {
+		return float64(amount) * SquareMetres
+	}
+	return float64(amount)
+}
+
+// MarshalJSON emite o modificador na unidade do LIVRO — ver `amountInBookUnits`.
+func (m Modifier) MarshalJSON() ([]byte, error) {
+	type wire struct {
+		Target    ModifierTarget     `json:"target"`
+		Amount    float64            `json:"amount"`
+		BonusType string             `json:"bonusType"`
+		Condition *ModifierCondition `json:"condition,omitempty"`
+		Note      string             `json:"note,omitempty"`
+		Scale     *VitalScale        `json:"scale,omitempty"`
+	}
+	return json.Marshal(wire{
+		Target:    m.Target,
+		Amount:    amountInBookUnits(m.Target, m.Amount),
+		BonusType: m.BonusType,
+		Condition: m.Condition,
+		Note:      m.Note,
+		Scale:     m.Scale,
+	})
+}
+
 // Modifier é um modificador de item. O `scale` (maxPv/maxPm) é ignorado pelo
 // motor de resolução e preservado para o despejo de paridade da coleta.
 type Modifier struct {
@@ -56,11 +120,12 @@ type Modifier struct {
 	Scale     *VitalScale        `json:"scale,omitempty"`
 }
 
-// UnmarshalJSON arredonda o `amount` para o inteiro mais próximo. O motor é
-// modelado em INTEIROS (ver types.go), mas quem traz o valor é o catálogo, e um
-// verbete tem fração (botas-reforcadas, +1,5m de deslocamento). Arredondar na
-// fronteira do JSON impede a análise de falhar sem alargar todo total para
-// float; valor inteiro passa intocado, então a paridade não muda.
+// UnmarshalJSON leva o `amount` do catálogo para a unidade do MOTOR.
+//
+// O motor é modelado em INTEIROS (ver types.go), e quem traz o valor é o
+// catálogo, que escreve na unidade do LIVRO. Para quase todo alvo as duas
+// coincidem e o valor passa intocado. O DESLOCAMENTO é a exceção, e ela tem
+// razão própria — ver `amountInEngineUnits`.
 func (m *Modifier) UnmarshalJSON(b []byte) error {
 	var shadow struct {
 		Target    ModifierTarget     `json:"target"`
@@ -75,7 +140,7 @@ func (m *Modifier) UnmarshalJSON(b []byte) error {
 	}
 	*m = Modifier{
 		Target:    shadow.Target,
-		Amount:    int(math.Round(shadow.Amount)),
+		Amount:    amountInEngineUnits(shadow.Target, shadow.Amount),
 		BonusType: shadow.BonusType,
 		Condition: shadow.Condition,
 		Note:      shadow.Note,

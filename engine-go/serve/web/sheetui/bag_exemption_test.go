@@ -42,7 +42,9 @@ func TestTheArmorChipIsStruckForWhoeverIsExemptAndNotForTheRest(t *testing.T) {
 
 			achou := false
 			for i, chip := range chips {
-				if chip.Text != "Deslocamento -3" {
+				// "-3m" e não "-3": o motor conta QUADRADOS e a tela converte de
+				// volta, e o crachá ganhou a unidade que lhe faltava (ALE-390).
+				if chip.Text != "Deslocamento -3m" {
 					continue
 				}
 				achou = true
