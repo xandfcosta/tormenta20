@@ -52,8 +52,13 @@ func (c *Catalogs) ActiveItemsInWorld(ch Character) []ActiveItem {
 // — que é o resultado certo. Esta fatia é a única coisa que precisa casar com a
 // sequência do `ActiveItemsFor`.
 func (c *Catalogs) collectionSystems(ch Character) []ecs.System {
-	return []ecs.System{
-		c.equippedItems(ch),
+	systems := []ecs.System{}
+	// O EQUIPAMENTO é o primeiro, e ele são SEIS passadas e não uma (ALE-385):
+	// as entidades nascem na primeira e as cinco seguintes acrescentam o que
+	// cada capacidade concede. As sete fontes abaixo continuam de uma passada
+	// só, porque o coletor delas já devolve `ActiveItem` pronto.
+	systems = append(systems, c.itemSystems(ch)...)
+	return append(systems,
 		c.appliedEffects(ch),
 		spawnAll(func() []ActiveItem { return c.raceActiveItems(ch) }),
 		spawnOne(func() *ActiveItem { return c.originActiveItem(ch) }),
@@ -61,7 +66,7 @@ func (c *Catalogs) collectionSystems(ch Character) []ecs.System {
 		spawnAll(func() []ActiveItem { return c.generalPowerActiveItem(ch) }),
 		spawnOne(func() *ActiveItem { return c.tormentaCarismaItem(ch) }),
 		spawnOne(func() *ActiveItem { return conditionActiveItem(ch) }),
-	}
+	)
 }
 
 // grant pendura uma fonte no mundo. É o `append` do coletor velho.
@@ -89,20 +94,6 @@ func spawnOne(collect func() *ActiveItem) ecs.System {
 	return func(w *ecs.World) {
 		if item := collect(); item != nil {
 			grant(w, *item)
-		}
-	}
-}
-
-// equippedItems: o que a pessoa está USANDO. Item sem estado de uso não entra —
-// uma espada na mochila não modifica nada.
-func (c *Catalogs) equippedItems(ch Character) ecs.System {
-	return func(w *ecs.World) {
-		proficiencies := parseProficiencySet(ch.Proficiencies)
-		for _, it := range ch.Items {
-			if it.Equipped == nil {
-				continue
-			}
-			grant(w, c.itemActiveItem(it, proficiencies))
 		}
 	}
 }
