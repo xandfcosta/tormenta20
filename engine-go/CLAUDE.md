@@ -520,6 +520,51 @@ ele viaja no agregado (`CharacterDTO.Ruleset`, `json:"-"`) até quem computa. O
 lote da mesa (`sheet.RulesetsFor`) faz uma consulta por campanha DISTINTA, e não
 uma por ficha.
 
+### As três espécies de emenda, e por que não são uma lista só
+
+| espécie | tabela | o que muda | escopo |
+|---|---|---|---|
+| **verbete** | `campaign_items` | o que uma COISA é | a campanha inteira |
+| **concessão** | `campaign_grants` | quem TEM as coisas | seletor |
+| **silêncio** | `campaign_silences` | o que esta mesa NÃO aplica | seletor |
+
+Elas não viram uma tabela de "regras" com um `kind` porque respondem a
+perguntas diferentes e cada uma tem a forma dela — o que as une é a campanha, e
+não o formato. A de verbete não tem escopo de propósito: um item que significa
+uma coisa para você e outra para o vizinho de mesa não é um mundo, são dois.
+
+O **seletor** (`engine.Selector`) é `characterId` nulo = a mesa inteira,
+preenchido = aquela ficha, e o id é o do CLONE. Espécie desconhecida não alcança
+ninguém, e o id ZERO nunca casa — o `Character{}` dos fixtures tem id zero, e
+casá-lo faria a emenda de uma mesa aparecer no oráculo.
+
+### O endereço de um termo NÃO carrega o valor
+
+`engine.TermID` é `fonte::alvo::escala::condição`. O jeito óbvio seria misturar
+o valor e o tipo de bônus — é o que o `ConditionalID` faz —, e é justamente o
+que o torna frágil: corrigir um número no livro troca o endereço, e o silêncio
+que o mestre escreveu evapora sem uma palavra em lugar nenhum.
+
+A escala e a condição são os discriminadores porque são eles que separam os
+pares que EXISTEM: o anão tem `maxPv +2` e `maxPv +1 por nível`, e a Força da
+Natureza do druida tem `pmCost -2` e o mesmo `-2` em terreno natural. A prosa
+(`note`, `label`) fica de fora: é texto que uma errata reescreve.
+
+Medido: 246 termos do catálogo, zero colisões. O que separa "é único hoje" de "é
+único" é o `TestEveryCatalogTermHasAUniqueAddress`, e ele tem duas sutilezas que
+custaram uma passada errada cada:
+
+- **A raça é UMA fonte**, e não uma por habilidade: o `raceActiveItems` junta os
+  modificadores de todas elas num `ActiveItem` com o `race.ID`.
+- **O mesmo benefício de origem é oferecido por VÁRIAS origens**, e o
+  `getOriginBenefit` lê o primeiro que casa o id. Medir cada cópia acusa a fonte
+  colidindo consigo mesma — foi o primeiro resultado da varredura, e ele parecia
+  uma descoberta.
+
+> O `ConditionalID` continua com a fragilidade que este endereço evita, e não é
+> descuido: ele está GRAVADO em `character_conditionals.conditionalId`, então
+> convergir os dois é migração de dado e não decisão de código.
+
 **E há DUAS fontes do mesmo `items.json` no processo, com durabilidades
 diferentes.** O `catalog.Resource` é `go:embed` — existe sempre que o binário
 existe. O `s.catalogs` é primado de um arquivo por caminho de configuração, e o

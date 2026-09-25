@@ -85,6 +85,13 @@ type CampaignPlace struct {
 	Updatedat  string `json:"updatedat"`
 }
 
+type CampaignSilence struct {
+	Campaignid  int64         `json:"campaignid"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Term        string        `json:"term"`
+	Updatedat   string        `json:"updatedat"`
+}
+
 type Character struct {
 	ID                   int64          `json:"id"`
 	Ownerid              int64          `json:"ownerid"`

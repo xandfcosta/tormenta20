@@ -207,3 +207,99 @@ func seedCampaignGrant(
 		t.Fatalf("gravar a concessão %q: %v", id, err)
 	}
 }
+
+// O MESTRE DESLIGA UM TERMO, E SÓ ELE (ALE-387).
+//
+// A granularidade que a mesa pediu é a do TERMO. Aqui o medalhão de prata está
+// emendado com um bônus de Luta, e o mestre cala ESSE bônus para UMA heroína: o
+// limite de PM da p160 continua de pé para ela, e a outra ficha continua com os
+// dois.
+//
+// É o caso que junta as três espécies de emenda numa mesa só, que é como elas
+// vão existir de verdade.
+func TestACampaignSilenceRemovesOneTermFromOneHero(t *testing.T) {
+	s := newTestServer(t)
+
+	owner := seedUser(t, s, "mestre@t20.local")
+	guest := seedUser(t, s, "jogadora@t20.local")
+	campaignID := seedCampaign(t, s, owner)
+	openTheTable(t, s, campaignID, "convite-do-caso")
+
+	mine := seatOwnHero(t, s, owner, campaignID, "Herói do mestre", "")
+	theirs := seatOwnHero(t, s, guest, campaignID, "Heroína", "convite-do-caso")
+
+	seedCampaignAmendment(t, s, campaignID, "medalhao-de-prata",
+		`[{"target":{"k":"expertise","name":"Luta"},"amount":1,"bonusType":"untyped"}]`)
+
+	comEmenda := lutaOf(t, s, mine)
+	if outro := lutaOf(t, s, theirs); outro != comEmenda {
+		t.Fatalf("os dois heróis divergiram antes do silêncio (%d e %d)", comEmenda, outro)
+	}
+
+	// O ENDEREÇO é montado pelo motor, e não escrito à mão: escrevê-lo no caso
+	// seria reimplementar na asserção a coisa que está sendo testada.
+	term := engine.TermID("medalhao-de-prata", engine.Modifier{
+		Target:    engine.ModifierTarget{K: "expertise", Name: "Luta"},
+		Amount:    1,
+		BonusType: "untyped",
+	})
+	seedCampaignSilence(t, s, campaignID, sql.NullInt64{Int64: theirs, Valid: true}, term)
+
+	if got := lutaOf(t, s, theirs); got != comEmenda-1 {
+		t.Errorf("a heroína tirou %d e esperava %d — o termo calado não saiu da conta dela", got, comEmenda-1)
+	}
+	if got := lutaOf(t, s, mine); got != comEmenda {
+		t.Errorf("o herói do mestre tirou %d e esperava %d.\n"+
+			"O silêncio tinha `characterId` preenchido com a ficha DELA.", got, comEmenda)
+	}
+
+	// E O IRMÃO DE FONTE SOBREVIVE: o `pmLimit` do livro continua vindo do mesmo
+	// medalhão. Sem isto, calar o termo e calar a FONTE dariam o mesmo resultado
+	// nas duas asserções acima.
+	if !heroHasPmLimitFromTheMedallion(t, s, theirs) {
+		t.Error("o `pmLimit` do medalhão sumiu junto — o silêncio comeu a fonte inteira em vez do termo")
+	}
+}
+
+// heroHasPmLimitFromTheMedallion pergunta à coleta se o outro termo do medalhão
+// continua de pé.
+func heroHasPmLimitFromTheMedallion(t *testing.T, s *Server, characterID int64) bool {
+	t.Helper()
+	ctx := context.Background()
+	row, err := s.queries.GetCharacter(ctx, characterID)
+	if err != nil {
+		t.Fatalf("ler a linha da ficha %d: %v", characterID, err)
+	}
+	dto, err := sheet.Load(ctx, s.queries, s.catalogs, row)
+	if err != nil {
+		t.Fatalf("montar a ficha %d: %v", characterID, err)
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		t.Fatalf("converter a ficha %d: %v", characterID, err)
+	}
+	for _, item := range dto.Ruleset.ActiveItemsFor(ec) {
+		if item.SourceID != "medalhao-de-prata" {
+			continue
+		}
+		for _, m := range item.Modifiers {
+			if m.Target.K == "pmLimit" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// seedCampaignSilence escreve o silêncio direto na tabela: a tela do mestre que
+// o AUTORA ainda não existe.
+func seedCampaignSilence(
+	t *testing.T, s *Server, campaignID int64, characterID sql.NullInt64, term string,
+) {
+	t.Helper()
+	if _, err := s.db.ExecContext(context.Background(),
+		`INSERT INTO campaign_silences (campaignId, characterId, term, updatedAt) VALUES (?, ?, ?, ?)`,
+		campaignID, characterID, term, dbvalue.NowISO()); err != nil {
+		t.Fatalf("gravar o silêncio de %q: %v", term, err)
+	}
+}

@@ -53,6 +53,11 @@ type Amendments struct {
 	// quem TEM as coisas, e por isso carrega seletor — a de verbete muda o que
 	// uma coisa É, e isso vale para o mundo inteiro.
 	Grants []CampaignGrant
+
+	// Silences são os termos que esta mesa NÃO aplica, com o escopo de cada um.
+	// Ver `silence.go`: o endereço de um termo não carrega o valor, para uma
+	// errata do livro não evaporar o que o mestre escreveu.
+	Silences []Silence
 }
 
 // CampaignGrant é o que a mesa concede a quem o seletor alcança.

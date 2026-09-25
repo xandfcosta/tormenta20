@@ -69,7 +69,7 @@ func (r *Ruleset) ActiveItemsFor(ch Character) []ActiveItem {
 	if cond := conditionActiveItem(ch); cond != nil {
 		items = append(items, *cond)
 	}
-	return append(items, r.campaignGrants(ch)...)
+	return applySilences(r.mesa.Silences, ch, append(items, r.campaignGrants(ch)...))
 }
 
 // conditionActiveItem builds the p394 status conditions as a synthetic

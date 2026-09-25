@@ -109,6 +109,17 @@ func amendmentsOf(
 			Modifiers: mods,
 		})
 	}
+	// O QUE A MESA DESLIGA, termo a termo.
+	silences, err := q.ListCampaignSilences(ctx, campaignID)
+	if err != nil {
+		return out, fmt.Errorf("ler os silêncios da campanha %d: %w", campaignID, err)
+	}
+	for _, row := range silences {
+		out.Silences = append(out.Silences, engine.Silence{
+			Applies: selectorOf(row.Characterid),
+			Term:    row.Term,
+		})
+	}
 	return out, nil
 }
 

@@ -668,3 +668,7 @@ SELECT itemId, adds FROM campaign_items WHERE campaignId = ? ORDER BY itemId;
 -- byte a byte.
 SELECT id, characterId, label, modifiers
 FROM campaign_grants WHERE campaignId = ? ORDER BY id;
+
+-- name: ListCampaignSilences :many
+-- Os termos que esta mesa nao aplica. Ver a migracao 00018.
+SELECT characterId, term FROM campaign_silences WHERE campaignId = ? ORDER BY term;

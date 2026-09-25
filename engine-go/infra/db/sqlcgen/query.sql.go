@@ -1673,6 +1673,39 @@ func (q *Queries) ListCampaignPlaces(ctx context.Context, campaignid int64) ([]C
 	return items, nil
 }
 
+const listCampaignSilences = `-- name: ListCampaignSilences :many
+SELECT characterId, term FROM campaign_silences WHERE campaignId = ? ORDER BY term
+`
+
+type ListCampaignSilencesRow struct {
+	Characterid sql.NullInt64 `json:"characterid"`
+	Term        string        `json:"term"`
+}
+
+// Os termos que esta mesa nao aplica. Ver a migracao 00018.
+func (q *Queries) ListCampaignSilences(ctx context.Context, campaignid int64) ([]ListCampaignSilencesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignSilences, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignSilencesRow{}
+	for rows.Next() {
+		var i ListCampaignSilencesRow
+		if err := rows.Scan(&i.Characterid, &i.Term); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCampaignsForCharacter = `-- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt
