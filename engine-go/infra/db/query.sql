@@ -651,3 +651,24 @@ DELETE FROM character_stances WHERE characterId = ? AND flag = ?;
 
 -- name: ClearCharacterStances :exec
 DELETE FROM character_stances WHERE characterId = ?;
+
+-- name: ListCampaignItemPatches :many
+-- A emenda de catalogo de UMA campanha: o mundo dela.
+--
+-- Por campanha e nao por personagem: o mundo e resolvido UMA vez e vale para
+-- toda ficha jogada nele. O MOLDE do elenco tem `characters.campaignId` nulo,
+-- entao ele nao chega aqui e ve o livro puro.
+SELECT itemId, adds FROM campaign_items WHERE campaignId = ? ORDER BY itemId;
+
+-- name: ListCampaignGrants :many
+-- O que a mesa concede, na ordem em que ela gravou.
+--
+-- `characterId` nulo e a campanha inteira; preenchido e aquela ficha. A ordem e
+-- por id porque ela vira a ordem das fontes na decomposicao, e o oraculo compara
+-- byte a byte.
+SELECT id, characterId, label, modifiers
+FROM campaign_grants WHERE campaignId = ? ORDER BY id;
+
+-- name: ListCampaignSilences :many
+-- Os termos que esta mesa nao aplica. Ver a migracao 00018.
+SELECT characterId, term FROM campaign_silences WHERE campaignId = ? ORDER BY term;

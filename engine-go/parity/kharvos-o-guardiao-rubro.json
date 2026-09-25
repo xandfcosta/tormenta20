@@ -1040,6 +1040,7 @@
     "flags": [],
     "conditional": [
       {
+        "term": "machado-taurico::expertise:Luta::::context///",
         "sourceId": "machado-taurico",
         "source": "Machado táurico",
         "bonusType": "untyped",
@@ -1051,6 +1052,7 @@
         }
       },
       {
+        "term": "medalhao-de-prata::pmLimit::::flagOn///homebrew-vestido-medalhao-de-prata",
         "sourceId": "medalhao-de-prata",
         "source": "Medalhão de prata",
         "bonusType": "enhancement",
@@ -1062,6 +1064,7 @@
         "flag": "homebrew-vestido-medalhao-de-prata"
       },
       {
+        "term": "medalhao-de-prata::defense::::flagOn///homebrew-vestido-medalhao-de-prata",
         "sourceId": "medalhao-de-prata",
         "source": "Medalhão de prata",
         "bonusType": "enhancement",
@@ -1073,6 +1076,7 @@
         "flag": "homebrew-vestido-medalhao-de-prata"
       },
       {
+        "term": "class.barbaro.furia::attack:all::::flagOn///furia",
         "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
@@ -1085,6 +1089,7 @@
         "flag": "furia"
       },
       {
+        "term": "class.barbaro.furia::damage:all::::flagOn///furia",
         "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
@@ -1097,6 +1102,7 @@
         "flag": "furia"
       },
       {
+        "term": "class.barbaro.furia::expertise:Fortitude::::flagOn///furia",
         "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
@@ -1109,6 +1115,7 @@
         "flag": "furia"
       },
       {
+        "term": "class.barbaro.furia::expertise:Vontade::::flagOn///furia",
         "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
@@ -1121,6 +1128,7 @@
         "flag": "furia"
       },
       {
+        "term": "class.barbaro.furia-3::attack:all::::flagOn///furia",
         "sourceId": "class.barbaro.furia-3",
         "source": "Fúria +3",
         "bonusType": "morale",
@@ -1133,6 +1141,7 @@
         "flag": "furia"
       },
       {
+        "term": "class.barbaro.furia-3::damage:all::::flagOn///furia",
         "sourceId": "class.barbaro.furia-3",
         "source": "Fúria +3",
         "bonusType": "morale",
@@ -1145,6 +1154,7 @@
         "flag": "furia"
       },
       {
+        "term": "class.barbaro.furia-3::expertise:Fortitude::::flagOn///furia",
         "sourceId": "class.barbaro.furia-3",
         "source": "Fúria +3",
         "bonusType": "morale",
@@ -1157,6 +1167,7 @@
         "flag": "furia"
       },
       {
+        "term": "class.barbaro.furia-3::expertise:Vontade::::flagOn///furia",
         "sourceId": "class.barbaro.furia-3",
         "source": "Fúria +3",
         "bonusType": "morale",
@@ -1707,17 +1718,17 @@
     "autoFailExpertises": []
   },
   "activeConditionals": [
-    "Fúria +3::attack:all::Em Fúria::3::morale",
-    "Fúria +3::damage:all::Em Fúria::3::morale",
-    "Fúria +3::expertise:Fortitude::Em Fúria::3::morale",
-    "Fúria +3::expertise:Vontade::Em Fúria::3::morale",
-    "Fúria::attack:all::Em Fúria::2::morale",
-    "Fúria::damage:all::Em Fúria::2::morale",
-    "Fúria::expertise:Fortitude::Em Fúria::2::morale",
-    "Fúria::expertise:Vontade::Em Fúria::2::morale",
-    "Machado táurico::expertise:Luta::Homebrew: Equilibrada anula a desbalanceada (-2 → 0)::2::untyped",
-    "Medalhão de prata::defense::Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)::2::enhancement",
-    "Medalhão de prata::pmLimit::Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)::1::enhancement"
+    "class.barbaro.furia-3::attack:all::::flagOn///furia",
+    "class.barbaro.furia-3::damage:all::::flagOn///furia",
+    "class.barbaro.furia-3::expertise:Fortitude::::flagOn///furia",
+    "class.barbaro.furia-3::expertise:Vontade::::flagOn///furia",
+    "class.barbaro.furia::attack:all::::flagOn///furia",
+    "class.barbaro.furia::damage:all::::flagOn///furia",
+    "class.barbaro.furia::expertise:Fortitude::::flagOn///furia",
+    "class.barbaro.furia::expertise:Vontade::::flagOn///furia",
+    "machado-taurico::expertise:Luta::::context///",
+    "medalhao-de-prata::defense::::flagOn///homebrew-vestido-medalhao-de-prata",
+    "medalhao-de-prata::pmLimit::::flagOn///homebrew-vestido-medalhao-de-prata"
   ],
   "sheetWithConditionals": {
     "defense": {

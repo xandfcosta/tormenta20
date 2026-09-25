@@ -489,9 +489,128 @@ A regra que governa quem o lê: **uma vez e guardado**, não por requisição, p
 o conteúdo vem de `go:embed` e não muda enquanto o binário for o mesmo. É o que
 o `race_traits.go` faz com `sync.Once`.
 
-`domain/catalog/data/*.json` é embutido no binário. **Este é o único lugar onde
-catálogo é autorado** — mudar uma magia é editar um arquivo só, e a cena, o
-motor e os testes leem o mesmo arquivo.
+`domain/catalog/data/*.json` é embutido no binário. **O LIVRO é autorado num
+lugar só** — mudar uma magia é editar um arquivo só, e a cena, o motor e os
+testes leem o mesmo arquivo.
+
+**O que uma CAMPANHA acrescenta ao livro não mora ali, e nem podia** (ALE-387):
+ele é `go:embed`, e a mesa autora a dela em tempo de execução. A `emenda de
+catálogo` vive em `campaign_items`, ACRESCENTA modificador a um verbete
+existente e nunca o substitui — ver a linha dela no
+[GLOSSARY.md](../GLOSSARY.md).
+
+**O mundo é um TIPO, e é o compilador que cobra.** `engine.Catalogs` é o LIVRO
+e só responde consulta de verbete; quem computa uma ficha precisa de um
+`engine.Ruleset`, que é o livro sob as emendas de UMA mesa. Não há como esquecer
+de dizer em que mundo a conta acontece: `book.ComputeSheet(…)` não compila.
+
+Fora de campanha se escreve `engine.BookRuleset(book)`, e a linha é explícita de
+propósito — o molde do elenco, o oráculo e os fixtures estão TOMANDO essa
+decisão, e ela aparece em vez de ser o que acontece quando ninguém disse nada.
+
+> Aqui morava a versão anterior, em que a emenda viajava no `engine.Character` e
+> um `TestEvery…` varria as portas cobrando `forCharacter`. Ela foi trocada
+> porque o ESCOPO não era representável: com as emendas no personagem,
+> campanha-inteira e personagem-específico chegam ao motor já misturados pelo
+> carregamento, e a procedência — que é o que a ficha usa para dizer de onde veio
+> cada termo — morre no caminho.
+
+Quem resolve o mundo é o carregamento da ficha (`sheet.RulesetFor`), UMA vez, e
+ele viaja no agregado (`CharacterDTO.Ruleset`, `json:"-"`) até quem computa. O
+lote da mesa (`sheet.RulesetsFor`) faz uma consulta por campanha DISTINTA, e não
+uma por ficha.
+
+### As três espécies de emenda, e por que não são uma lista só
+
+| espécie | tabela | o que muda | escopo |
+|---|---|---|---|
+| **verbete** | `campaign_items` | o que uma COISA é | a campanha inteira |
+| **concessão** | `campaign_grants` | quem TEM as coisas | seletor |
+| **silêncio** | `campaign_silences` | o que esta mesa NÃO aplica | seletor |
+
+Elas não viram uma tabela de "regras" com um `kind` porque respondem a
+perguntas diferentes e cada uma tem a forma dela — o que as une é a campanha, e
+não o formato. A de verbete não tem escopo de propósito: um item que significa
+uma coisa para você e outra para o vizinho de mesa não é um mundo, são dois.
+
+O **seletor** (`engine.Selector`) é `characterId` nulo = a mesa inteira,
+preenchido = aquela ficha, e o id é o do CLONE. Espécie desconhecida não alcança
+ninguém, e o id ZERO nunca casa — o `Character{}` dos fixtures tem id zero, e
+casá-lo faria a emenda de uma mesa aparecer no oráculo.
+
+### O endereço de um termo NÃO carrega o valor
+
+`engine.TermID` é `fonte::alvo::escala::condição`. O jeito óbvio seria misturar
+o valor e o tipo de bônus, e era o que o endereço dos condicionais fazia antes
+de os dois convergirem — é justamente o que torna um endereço frágil: corrigir
+um número no livro o troca, e o que estava preso a ele evapora sem uma palavra
+em lugar nenhum.
+
+A escala e a condição são os discriminadores porque são eles que separam os
+pares que EXISTEM: o anão tem `maxPv +2` e `maxPv +1 por nível`, e a Força da
+Natureza do druida tem `pmCost -2` e o mesmo `-2` em terreno natural. A prosa
+(`note`, `label`) fica de fora: é texto que uma errata reescreve.
+
+Medido: 246 termos do catálogo, zero colisões. O que separa "é único hoje" de "é
+único" é o `TestEveryCatalogTermHasAUniqueAddress`, e ele tem duas sutilezas que
+custaram uma passada errada cada:
+
+- **A raça é UMA fonte**, e não uma por habilidade: o `raceActiveItems` junta os
+  modificadores de todas elas num `ActiveItem` com o `race.ID`.
+- **O mesmo benefício de origem é oferecido por VÁRIAS origens**, e o
+  `getOriginBenefit` lê o primeiro que casa o id. Medir cada cópia acusa a fonte
+  colidindo consigo mesma — foi o primeiro resultado da varredura, e ele parecia
+  uma descoberta.
+
+### Um endereço só, e o opt-in do jogador usa o mesmo
+
+Havia DOIS endereços para a mesma coisa: o do jogador
+(`fonte::alvo::nota::valor::tipo`, gravado em `character_conditionals`) e o do
+mestre. Eles convergiram no `TermID` (ALE-387), e o antigo saiu — com a
+migração `00019`, que APAGA as linhas gravadas na forma velha, porque linha que
+não casa com nada é lixo invisível e a ficha mostraria o situacional desligado
+para sempre.
+
+A troca foi MEDIDA antes de ser feita: a tabela tinha zero linhas. O guarda que
+prendia a forma antiga dizia, com razão, que mudá-la exigiria uma migração — e
+o que autoriza a migração é a contagem, não a vontade.
+
+### JOGADOR NÃO MUDA REGRA — isso é do mestre (decisão do dono)
+
+É a linha que separa as duas famílias de escrita, e ela vale para toda tela que
+vier. O jogador alterna o OPT-IN de um condicional que a ficha dele já oferece;
+quem AUTORA regra — emenda de verbete, concessão, silêncio — é o mestre, na
+campanha dele.
+
+**Quem cobra é o servidor, e a tela esconder não conta.** Medido (ALE-387): o
+`ToggleSituational` gravava a chave crua do sinal do cliente, e um POST com
+`{"conditional":"flag:furia"}` dava ao bárbaro +3 em ataque e dano com o PM
+INTACTO e sem linha de postura. A lista de situacionais nunca ofereceu aquele
+interruptor — as posturas são excluídas dela, porque entrar custa PM.
+
+O conjunto aceito é de PERMITIDOS (`character.SituationalGroupsOf`), e ele tem
+UM dono: a cena desenha a partir dele e o caso de uso recusa o que não estiver
+nele. Enquanto eram duas implementações, a divergência aparecia como a tela
+escondendo o que o servidor aceita.
+
+**`character_conditionals` FICA, e não é o mesmo que `campaign_silences`**,
+ainda que as duas guardem endereços de termo. O opt-in nasce DESLIGADO e é do
+dono da ficha; o silêncio nasce LIGADO e é de quem manda na mesa. Juntá-las numa
+tabela só juntaria duas permissões de escrita que não podem ser a mesma.
+
+### O interruptor de GRUPO tem endereço próprio
+
+Os condicionais que dividem uma flag viram UM interruptor na tela — "um item
+caseiro com três modificadores é uma coisa só na mesa". Enquanto a chave era o
+endereço do PRIMEIRO membro, ligar o grupo dobrava um modificador e o crachá ao
+lado dizia "3 mods". Hoje a chave é o `engine.FlagGroupID`, e "metade ligada"
+deixou de ser representável — o que valia igual para a POSTURA, que gravava uma
+linha por condicional calculada no instante de entrar e recalculada no de sair.
+
+Não era defeito VIVO: as únicas flags do livro são `furia` e `inspiracao`, as
+duas posturas, e a tela de situacionais as exclui. O que o tornou alcançável foi
+a emenda de campanha — um mestre que conceda um item com dois modificadores
+`flagOn` cai exatamente ali.
 
 **E há DUAS fontes do mesmo `items.json` no processo, com durabilidades
 diferentes.** O `catalog.Resource` é `go:embed` — existe sempre que o binário

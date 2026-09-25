@@ -255,10 +255,10 @@ func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
 // Hoje ela tem a mesma forma do `SpellPmCostFor` abaixo: resolve os efeitos com
 // os condicionais recebidos e pergunta ao MESMO `pmLimitBreakdown` que a ficha
 // usa, em vez de reconstruir a conta.
-func (c *Catalogs) SpellPmLimitFor(
+func (r *Ruleset) SpellPmLimitFor(
 	ch Character, conditionals map[string]bool, spellClasses []string,
 ) int {
-	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), conditionals)
+	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), conditionals)
 	return SpellPmLimit(ch, pmLimitBreakdown(ch, effects).ItemBonus, spellClasses)
 }
 
@@ -308,12 +308,12 @@ func resolvePmCostMod(contribs []Contribution) int {
 // enquanto a conjuração cobra preço cheio.
 //
 // @example SpellPmCostFor(druida20, 3, 0, nil) // 1
-func (c *Catalogs) SpellPmCostFor(ch Character, basePm, augmentPm int, conditionals map[string]bool) int {
+func (r *Ruleset) SpellPmCostFor(ch Character, basePm, augmentPm int, conditionals map[string]bool) int {
 	raw := basePm + augmentPm
 	if raw <= 0 {
 		return 0
 	}
-	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), conditionals)
+	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), conditionals)
 	mod := resolvePmCostMod(StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions)
 	return max(1, raw+mod)
 }

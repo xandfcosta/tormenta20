@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"sort"
 	"strconv"
+	"t20engine/app/character"
 
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
@@ -118,15 +119,15 @@ type alwaysOnRow struct {
 // primado a aba mostra o que não depende do motor (condições, posturas e
 // efeitos aplicados) e perde a Situação, que é derivada.
 func (s Scene) effectsPanelOf(dto sheet.CharacterDTO) effectsPanel {
-	if s.deps.Catalogs() == nil {
+	if dto.Ruleset == nil {
 		return effectsPanelFor(dto, nil, nil)
 	}
 	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return effectsPanelFor(dto, nil, nil)
 	}
-	offered := engine.ComputeItemEffects(s.deps.Catalogs().ActiveItemsFor(ec)).Conditional
-	return effectsPanelFor(dto, offered, s.deps.Catalogs().ComputeEquippedFlags(ec.Items))
+	offered := engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional
+	return effectsPanelFor(dto, offered, dto.Ruleset.ComputeEquippedFlags(ec.Items))
 }
 
 // effectsPanelFor monta a aba inteira.
@@ -269,50 +270,24 @@ func buffOptions() []pickerOption {
 	return options
 }
 
-// situationalRowsOf agrupa os condicionais que o motor oferece.
+// situationalRowsOf desenha uma linha por interruptor.
 //
-// # Quem compartilha FLAG vira UM interruptor
-//
-// Um item caseiro com três modificadores é uma coisa só na mesa; como três
-// linhas, a pessoa deixaria metade do efeito ligado. As POSTURAS ficam de fora:
-// o interruptor delas mora nos Poderes, porque entrar custa PM.
+// A PARTIÇÃO — quem compartilha flag vira um interruptor só, e as posturas
+// ficam de fora — é do `character.SituationalGroupsOf`, e não daqui: o caso de
+// uso RECUSA a chave que não estiver nela, e esta tela desenha exatamente o que
+// ele aceita. Duas implementações divergiriam, e a divergência apareceria como
+// a tela escondendo o que o servidor deixa passar (ALE-387).
 func situationalRowsOf(offered []engine.ConditionalEffect, active map[string]bool) ([]situationalRow, []alwaysOnRow) {
-	stances := book.StancesFromCatalog()
-	byFlag := map[string][]engine.ConditionalEffect{}
-	order := []string{}
-	loose := []engine.ConditionalEffect{}
-	for _, c := range offered {
-		if c.Flag == "" {
-			loose = append(loose, c)
-			continue
-		}
-		if _, isStance := stances[c.Flag]; isStance {
-			continue
-		}
-		if _, seen := byFlag[c.Flag]; !seen {
-			order = append(order, c.Flag)
-		}
-		byFlag[c.Flag] = append(byFlag[c.Flag], c)
-	}
-
 	rows := []situationalRow{}
-	for _, c := range loose {
-		id := engine.ConditionalID(c)
-		rows = append(rows, situationalRow{
-			Key: id, Label: conditionalLabel(c), Source: c.Source, Active: active[id],
-			Modifiers: []breakdownRow{{Label: targetLabel(c.Target), Value: book.WithSign(c.Amount)}},
-			Command:   id,
-		})
-	}
-	for _, flag := range order {
-		group := byFlag[flag]
+	for _, g := range character.SituationalGroupsOf(offered) {
+		head := g.Members[0]
 		row := situationalRow{
-			Key: engine.ConditionalID(group[0]), Label: conditionalLabel(group[0]),
-			Source: group[0].Source, Folded: len(group) > 1,
-			Active:  active[engine.ConditionalID(group[0])],
-			Command: engine.ConditionalID(group[0]),
+			Key: g.Key, Label: conditionalLabel(head), Source: head.Source,
+			Folded:  len(g.Members) > 1,
+			Active:  active[g.Key],
+			Command: g.Key,
 		}
-		for _, c := range group {
+		for _, c := range g.Members {
 			row.Modifiers = append(row.Modifiers, breakdownRow{
 				Label: targetLabel(c.Target), Value: book.WithSign(c.Amount),
 			})

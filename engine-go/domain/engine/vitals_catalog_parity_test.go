@@ -27,8 +27,8 @@ func TestVitalsParity(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			ctx := catalogs.VitalContextFor(oracle.Char)
-			got := roundTrip(t, catalogs.ComputeVitals(ctx))
+			ctx := BookRuleset(catalogs).VitalContextFor(oracle.Char)
+			got := roundTrip(t, BookRuleset(catalogs).ComputeVitals(ctx))
 			if !reflect.DeepEqual(got, oracle.Vitals) {
 				diffReport(t, "vitals", got, oracle.Vitals)
 			}

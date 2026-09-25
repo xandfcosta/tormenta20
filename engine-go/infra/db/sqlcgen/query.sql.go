@@ -1214,7 +1214,7 @@ SELECT id, email, name, passwordhash, createdat, updatedat FROM users WHERE emai
 // "ULL" of an `IS NULL`, which still compiled).
 //
 // Queries compiled by sqlc into db/sqlcgen. One camelCase column set means the
-// generated json tags already match the frontend contract (hpMax, catalogSpellId).
+// generated json tags already match the wire contract (catalogSpellId).
 // Grouped by domain; grows per Fase B slice.
 // users / auth (B.2)
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -1554,6 +1554,88 @@ func (q *Queries) ListCampaignCreatures(ctx context.Context, campaignid int64) (
 	return items, nil
 }
 
+const listCampaignGrants = `-- name: ListCampaignGrants :many
+SELECT id, characterId, label, modifiers
+FROM campaign_grants WHERE campaignId = ? ORDER BY id
+`
+
+type ListCampaignGrantsRow struct {
+	ID          string        `json:"id"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Label       string        `json:"label"`
+	Modifiers   string        `json:"modifiers"`
+}
+
+// O que a mesa concede, na ordem em que ela gravou.
+//
+// `characterId` nulo e a campanha inteira; preenchido e aquela ficha. A ordem e
+// por id porque ela vira a ordem das fontes na decomposicao, e o oraculo compara
+// byte a byte.
+func (q *Queries) ListCampaignGrants(ctx context.Context, campaignid int64) ([]ListCampaignGrantsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignGrants, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignGrantsRow{}
+	for rows.Next() {
+		var i ListCampaignGrantsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Characterid,
+			&i.Label,
+			&i.Modifiers,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCampaignItemPatches = `-- name: ListCampaignItemPatches :many
+SELECT itemId, adds FROM campaign_items WHERE campaignId = ? ORDER BY itemId
+`
+
+type ListCampaignItemPatchesRow struct {
+	Itemid string `json:"itemid"`
+	Adds   string `json:"adds"`
+}
+
+// A emenda de catalogo de UMA campanha: o mundo dela.
+//
+// Por campanha e nao por personagem: o mundo e resolvido UMA vez e vale para
+// toda ficha jogada nele. O MOLDE do elenco tem `characters.campaignId` nulo,
+// entao ele nao chega aqui e ve o livro puro.
+func (q *Queries) ListCampaignItemPatches(ctx context.Context, campaignid int64) ([]ListCampaignItemPatchesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignItemPatches, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignItemPatchesRow{}
+	for rows.Next() {
+		var i ListCampaignItemPatchesRow
+		if err := rows.Scan(&i.Itemid, &i.Adds); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCampaignPlaces = `-- name: ListCampaignPlaces :many
 SELECT id, campaignid, name, state, createdat, updatedat FROM campaign_places WHERE campaignId = ? ORDER BY name
 `
@@ -1578,6 +1660,39 @@ func (q *Queries) ListCampaignPlaces(ctx context.Context, campaignid int64) ([]C
 			&i.Createdat,
 			&i.Updatedat,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCampaignSilences = `-- name: ListCampaignSilences :many
+SELECT characterId, term FROM campaign_silences WHERE campaignId = ? ORDER BY term
+`
+
+type ListCampaignSilencesRow struct {
+	Characterid sql.NullInt64 `json:"characterid"`
+	Term        string        `json:"term"`
+}
+
+// Os termos que esta mesa nao aplica. Ver a migracao 00018.
+func (q *Queries) ListCampaignSilences(ctx context.Context, campaignid int64) ([]ListCampaignSilencesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignSilences, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignSilencesRow{}
+	for rows.Next() {
+		var i ListCampaignSilencesRow
+		if err := rows.Scan(&i.Characterid, &i.Term); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

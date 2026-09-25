@@ -233,7 +233,7 @@ type seededPools struct{ PvMax, PmMax int64 }
 
 func bookPools(t *testing.T, s *Server, class string, level int64) seededPools {
 	t.Helper()
-	pools := s.catalogs.ComputeVitals(engine.VitalContext{
+	pools := engine.BookRuleset(s.catalogs).ComputeVitals(engine.VitalContext{
 		Level:      int(level),
 		Classes:    []engine.ClassEntry{{ClassName: class, Level: int(level)}},
 		AttrTotals: map[string]int{},

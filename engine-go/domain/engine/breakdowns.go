@@ -109,8 +109,8 @@ type ComputedSheet struct {
 
 // ComputeSheet monta a ficha decomposta de um `Character` cru sob os
 // condicionais ligados — o caminho coleta → resolução → decomposição.
-func (c *Catalogs) ComputeSheet(ch Character, activeConditionals map[string]bool) ComputedSheet {
-	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), activeConditionals)
+func (r *Ruleset) ComputeSheet(ch Character, activeConditionals map[string]bool) ComputedSheet {
+	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), activeConditionals)
 	load := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
 
 	attrs := make(map[string]AttributeBreakdown, len(AttributeKeys))
@@ -124,7 +124,7 @@ func (c *Catalogs) ComputeSheet(ch Character, activeConditionals map[string]bool
 
 	return ComputedSheet{
 		Defense:            defenseBreakdown(ch, effects),
-		Displacement:       displacementBreakdown(c.raceDisplacement(ch), effects, load),
+		Displacement:       displacementBreakdown(r.raceDisplacement(ch), effects, load),
 		FlySpeed:           flySpeedTotal(effects),
 		Load:               load,
 		Attributes:         attrs,
@@ -234,11 +234,11 @@ const bookDefaultDisplacement = 9
 // Primária e não a soma das raças: o número do verbete é um valor, não um
 // bônus, e duas raças não andam somando metros. A secundária contribui
 // habilidade, não deslocamento.
-func (c *Catalogs) raceDisplacement(ch Character) int {
+func (r *Ruleset) raceDisplacement(ch Character) int {
 	if len(ch.Races) == 0 {
 		return bookDefaultDisplacement
 	}
-	entry := c.raceEntryByName(ch.Races[0].Race)
+	entry := r.raceEntryByName(ch.Races[0].Race)
 	if entry == nil || entry.Speed == 0 {
 		return bookDefaultDisplacement
 	}

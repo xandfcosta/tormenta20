@@ -17,7 +17,7 @@ import (
 // modificadores, NA MESMA ORDEM. Um `reflect.DeepEqual` sobre fatia reprova por
 // ordem, e isso é a metade que importa — o núcleo de ECS foi desenhado em volta
 // dela, porque a iteração de `map` em Go é aleatória por construção.
-func TestActiveItemsInWorldMatchesTheOracle(t *testing.T) {
+func TestActiveItemsByEcsMatchesTheOracle(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	catalogs := primeFromDump(t, dir)
 	slugs := parityOracleSlugs(t, dir)
@@ -34,7 +34,7 @@ func TestActiveItemsInWorldMatchesTheOracle(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			got := roundTrip(t, catalogs.ActiveItemsInWorld(oracle.Char))
+			got := roundTrip(t, BookRuleset(catalogs).ActiveItemsByEcs(oracle.Char))
 			if !reflect.DeepEqual(got, oracle.ActiveItems) {
 				diffReport(t, "activeItems (ECS)", got, oracle.ActiveItems)
 			}
@@ -64,8 +64,8 @@ func TestBothCollectionPathsAgree(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			legacy := roundTrip(t, catalogs.ActiveItemsFor(oracle.Char))
-			world := roundTrip(t, catalogs.ActiveItemsInWorld(oracle.Char))
+			legacy := roundTrip(t, BookRuleset(catalogs).ActiveItemsFor(oracle.Char))
+			world := roundTrip(t, BookRuleset(catalogs).ActiveItemsByEcs(oracle.Char))
 			if !reflect.DeepEqual(world, legacy) {
 				diffReport(t, "ECS contra o coletor antigo", world, legacy)
 			}
@@ -100,8 +100,8 @@ func TestEffectWithoutModifiersIsNotCollected(t *testing.T) {
 		name    string
 		collect func(Character) []ActiveItem
 	}{
-		{"coletor antigo", catalogs.ActiveItemsFor},
-		{"em ECS", catalogs.ActiveItemsInWorld},
+		{"coletor antigo", BookRuleset(catalogs).ActiveItemsFor},
+		{"em ECS", BookRuleset(catalogs).ActiveItemsByEcs},
 	} {
 		t.Run(path.name, func(t *testing.T) {
 			got := path.collect(ch)

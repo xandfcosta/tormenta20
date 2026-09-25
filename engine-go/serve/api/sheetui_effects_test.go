@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/app/character"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -289,4 +291,78 @@ func TestTheBreakdownDoesNotEchoTheSourceName(t *testing.T) {
 	if n := strings.Count(screen, "Armadura Arcana"); n != 1 {
 		t.Errorf("o nome aparece %d vezes na decomposição, e uma basta", n)
 	}
+}
+
+// O JOGADOR NÃO ENTRA NA POSTURA PELO INTERRUPTOR DE SITUACIONAL (ALE-387).
+//
+// Jogador não muda REGRA — isso é do mestre. O que ele alterna é o opt-in de um
+// condicional que a ficha dele já oferece; a Fúria custa PM e se entra pelos
+// Poderes.
+//
+// MEDIDO antes do conserto: um POST com `{"conditional":"flag:furia"}` dava +3
+// em ataque e dano, com o PM INTACTO e sem linha de postura gravada. A tela
+// nunca ofereceu esse interruptor — ela exclui as posturas da lista —, e é
+// exatamente por isso que o caso existe: esconder na tela é UX, e a fronteira é
+// o servidor.
+func TestThePlayerCannotEnterAStanceThroughTheSituationalSwitch(t *testing.T) {
+	f, id := barbaro(t, 10)
+	// Um situacional LEGÍTIMO na ficha, para o controle positivo lá embaixo ter o
+	// que medir. Sem ele, um `ToggleSituational` que recusasse tudo passaria.
+	seedEfeitoCondicional(t, f.s, id, 3)
+
+	pmBefore := pm(t, f, id)
+	before := combatNumbersOf(t, f, id)
+
+	target := fmt.Sprintf("/personagens/%d/efeitos/situacao?tab=abilities", id)
+	resp := f.requests(t, f.player, http.MethodPost, target, `{"conditional":"flag:furia"}`)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("o comando respondeu %d — a cena tem de voltar 200 com a recusa dentro", resp.Code)
+	}
+	if refusal := sceneRefusal(resp.Body.String()); refusal == "" {
+		t.Error("o gesto passou SEM recusa; a cena tem de dizer que este efeito não é oferecido")
+	}
+
+	if after := combatNumbersOf(t, f, id); after != before {
+		t.Errorf("a ficha mudou: antes %+v, depois %+v.\n"+
+			"A Fúria entrou pelo interruptor de situacional, sem passar pelo custo em PM.", before, after)
+	}
+	if after := pm(t, f, id); after != pmBefore {
+		t.Errorf("o PM foi de %d para %d num gesto que tinha de ser recusado", pmBefore, after)
+	}
+
+	// O CONTROLE: o mesmo canal, com uma chave que a ficha OFERECE de verdade,
+	// tem de funcionar. Sem ele, um `ToggleSituational` que recusasse TUDO
+	// passaria neste caso.
+	offered := offeredSituationalKey(t, f, id)
+	ok := f.requests(t, f.player, http.MethodPost, target,
+		fmt.Sprintf(`{"conditional":%q}`, offered))
+	if refusal := sceneRefusal(ok.Body.String()); refusal != "" {
+		t.Fatalf("a chave legítima %q foi recusada: %q — o caso acima estaria medindo um gesto morto",
+			offered, refusal)
+	}
+}
+
+// offeredSituationalKey é a chave de um interruptor que ESTA ficha oferece,
+// perguntada ao mesmo lugar que o comando consulta.
+func offeredSituationalKey(t *testing.T, f sceneFixture, id int64) string {
+	t.Helper()
+	ctx := context.Background()
+	row, err := f.s.sceneCore().Queries().GetCharacter(ctx, id)
+	if err != nil {
+		t.Fatalf("ler a linha da ficha %d: %v", id, err)
+	}
+	dto, err := sheet.Load(ctx, f.s.sceneCore().Queries(), f.s.catalogs, row)
+	if err != nil {
+		t.Fatalf("montar a ficha %d: %v", id, err)
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		t.Fatalf("converter a ficha %d: %v", id, err)
+	}
+	groups := character.SituationalGroupsOf(
+		engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional)
+	if len(groups) == 0 {
+		t.Fatal("esta ficha não oferece situacional nenhum — o controle positivo não tem o que medir")
+	}
+	return groups[0].Key
 }

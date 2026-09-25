@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -384,5 +385,88 @@ func TestThePowerSearchFoldsAndIgnoresAccents(t *testing.T) {
 	}
 	if strings.Contains(screen, "Instinto Selvagem") {
 		t.Error("a busca trouxe quem não casa com o termo")
+	}
+}
+
+// ENTRAR NA POSTURA MOVE A REGRA INTEIRA, e não um pedaço dela (ALE-387).
+//
+// A Fúria do bárbaro dá +2 em testes de ataque e rolagens de dano corpo a corpo,
+// e sobe +1 a cada cinco níveis (p41) — no 10º nível são +3. São DOIS alvos
+// distintos no mesmo interruptor, e é isso que o caso precisa: com um alvo só,
+// ligar o grupo e ligar um membro dariam o mesmo resultado.
+//
+// # O que ele substitui
+//
+// A postura gravava UMA LINHA POR CONDICIONAL, calculada pela coleta no instante
+// de entrar e recalculada no de sair. Nada afirmava que os números da ficha se
+// mexiam — os casos vizinhos prendem o PM cobrado, a linha da postura e o botão
+// de encerrar —, então trocar aquilo pela chave do GRUPO teria passado verde
+// sobre uma ficha que somava um quarto da Fúria.
+func TestEnteringTheStanceMovesEveryNumberTheRuleGives(t *testing.T) {
+	f, id := barbaro(t, 10)
+
+	before := combatNumbersOf(t, f, id)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); refusal != "" {
+		t.Fatalf("entrar na Fúria foi recusado: %q", refusal)
+	}
+	during := combatNumbersOf(t, f, id)
+
+	// +3 no 10º nível: +2 de base (p41) mais um degrau da escala a cada cinco
+	// níveis. Os dois bônus são `morale`, então eles NÃO empilham — vale o maior.
+	if got := during.attack - before.attack; got != 3 {
+		t.Errorf("o ataque subiu %d e a Fúria de um bárbaro de 10º dá +3 (p41)", got)
+	}
+	if got := during.damage - before.damage; got != 3 {
+		t.Errorf("o dano subiu %d e a Fúria dá o MESMO +3 no dano (p41).\n"+
+			"Zero aqui com o ataque certo é o interruptor dobrando só o primeiro "+
+			"modificador do grupo — a ficha soma metade da regra.", got)
+	}
+
+	// O ENCERRAR mora em `/efeitos/`, e não em `/poderes/` como o entrar. Um
+	// endereço errado aqui responde 404, o Datastar descarta o remendo e a recusa
+	// volta VAZIA — o caso leria isso como sucesso. Quem o denunciou foi a
+	// asserção abaixo, e é por isso que ela compara a ficha INTEIRA de volta.
+	endTarget := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
+	resp := f.requests(t, f.player, http.MethodPost, endTarget, "")
+	if resp.Code != http.StatusOK {
+		t.Fatalf("encerrar a Fúria respondeu %d — o endereço não existe no roteador", resp.Code)
+	}
+	if refusal := sceneRefusal(resp.Body.String()); refusal != "" {
+		t.Fatalf("encerrar a Fúria foi recusado: %q", refusal)
+	}
+	if after := combatNumbersOf(t, f, id); after != before {
+		t.Errorf("encerrar não devolveu a ficha ao que era: antes %+v, depois %+v.\n"+
+			"Sobrou condicional ligado — é o que acontecia quando sair recalculava "+
+			"o conjunto em vez de apagar a chave do grupo.", before, after)
+	}
+}
+
+// combatNumbers são os dois totais que a Fúria mexe.
+type combatNumbers struct{ attack, damage int }
+
+// combatNumbersOf lê os totais pelo MOTOR, do agregado carregado como a cena o
+// carrega. Pela tela seria mais caro e mediria formatação junto.
+func combatNumbersOf(t *testing.T, f sceneFixture, id int64) combatNumbers {
+	t.Helper()
+	ctx := context.Background()
+	row, err := f.s.sceneCore().Queries().GetCharacter(ctx, id)
+	if err != nil {
+		t.Fatalf("ler a linha da ficha %d: %v", id, err)
+	}
+	dto, err := sheet.Load(ctx, f.s.sceneCore().Queries(), f.s.catalogs, row)
+	if err != nil {
+		t.Fatalf("montar a ficha %d: %v", id, err)
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		t.Fatalf("converter a ficha %d: %v", id, err)
+	}
+	effects := engine.ApplyActiveConditionals(
+		engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)),
+		sheet.ToStringSet(dto.Conditionals),
+	)
+	return combatNumbers{
+		attack: engine.StatFor(effects, engine.ModifierTarget{K: "attack", Scope: "all"}).Total,
+		damage: engine.StatFor(effects, engine.ModifierTarget{K: "damage", Scope: "all"}).Total,
 	}
 }

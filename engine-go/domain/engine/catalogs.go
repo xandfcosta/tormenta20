@@ -255,8 +255,6 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 
 // ─── As consultas ────────────────────────────────────────────────────────────
 
-func (c *Catalogs) getCatalogItem(id string) *CatalogItem { return c.itemsByID[id] }
-
 func (c *Catalogs) getRace(id string) *RaceDefinition { return c.racesByID[id] }
 
 func (c *Catalogs) getGeneralPower(id string) *GeneralPower { return c.generalByID[id] }

@@ -34,12 +34,12 @@ type Grants struct {
 	Modifiers []Modifier
 }
 
-// ActiveItemsInWorld é o `ActiveItemsFor` rodando no ECS.
+// ActiveItemsByEcs é o `ActiveItemsFor` rodando no ECS.
 //
-// @example engine.Catalogs{}.ActiveItemsInWorld(ch) // as mesmas fontes, na mesma ordem
-func (c *Catalogs) ActiveItemsInWorld(ch Character) []ActiveItem {
+// @example engine.Catalogs{}.ActiveItemsByEcs(ch) // as mesmas fontes, na mesma ordem
+func (r *Ruleset) ActiveItemsByEcs(ch Character) []ActiveItem {
 	world := ecs.NewWorld()
-	ecs.Run(world, c.collectionSystems(ch)...)
+	ecs.Run(world, r.collectionSystems(ch)...)
 
 	items := []ActiveItem{}
 	ecs.Each(world, func(_ ecs.Entity, g Grants) {
@@ -53,21 +53,25 @@ func (c *Catalogs) ActiveItemsInWorld(ch Character) []ActiveItem {
 // Trocar duas linhas aqui troca a ordem da lista, e o teste de paridade reprova
 // — que é o resultado certo. Esta fatia é a única coisa que precisa casar com a
 // sequência do `ActiveItemsFor`.
-func (c *Catalogs) collectionSystems(ch Character) []ecs.System {
+func (r *Ruleset) collectionSystems(ch Character) []ecs.System {
 	systems := []ecs.System{}
 	// O EQUIPAMENTO é o primeiro, e ele são SEIS passadas e não uma (ALE-385):
 	// as entidades nascem na primeira e as cinco seguintes acrescentam o que
 	// cada capacidade concede. As sete fontes abaixo continuam de uma passada
 	// só, porque o coletor delas já devolve `ActiveItem` pronto.
-	systems = append(systems, c.itemSystems(ch)...)
+	systems = append(systems, r.itemSystems(ch)...)
 	return append(systems,
-		c.appliedEffects(ch),
-		spawnAll(func() []ActiveItem { return c.raceActiveItems(ch) }),
-		spawnOne(func() *ActiveItem { return c.originActiveItem(ch) }),
-		spawnAll(func() []ActiveItem { return c.classActiveItems(ch) }),
-		spawnAll(func() []ActiveItem { return c.generalPowerActiveItem(ch) }),
-		spawnOne(func() *ActiveItem { return c.tormentaCarismaItem(ch) }),
+		r.appliedEffects(ch),
+		spawnAll(func() []ActiveItem { return r.raceActiveItems(ch) }),
+		spawnOne(func() *ActiveItem { return r.originActiveItem(ch) }),
+		spawnAll(func() []ActiveItem { return r.classActiveItems(ch) }),
+		spawnAll(func() []ActiveItem { return r.generalPowerActiveItem(ch) }),
+		spawnOne(func() *ActiveItem { return r.tormentaCarismaItem(ch) }),
 		spawnOne(func() *ActiveItem { return conditionActiveItem(ch) }),
+		spawnAll(func() []ActiveItem { return r.campaignGrants(ch) }),
+		// O SILÊNCIO é o último sistema, e tem de ser: ele age sobre o que os
+		// anteriores penduraram, inclusive sobre uma concessão da própria mesa.
+		r.silenceSystem(ch),
 	)
 }
 
@@ -103,7 +107,7 @@ func spawnOne(collect func() *ActiveItem) ecs.System {
 
 // appliedEffects: os efeitos em vigor. Efeito sem modificador NÃO entra — ele
 // existiria como linha vazia na decomposição, dizendo que algo contribuiu zero.
-func (c *Catalogs) appliedEffects(ch Character) ecs.System {
+func (r *Ruleset) appliedEffects(ch Character) ecs.System {
 	return func(w *ecs.World) {
 		for _, eff := range ch.ActiveEffects {
 			mods := parseEffectModifiers(eff.Modifiers)
@@ -112,10 +116,38 @@ func (c *Catalogs) appliedEffects(ch Character) ecs.System {
 			}
 			grant(w, ActiveItem{
 				SourceID:  eff.CatalogID,
-				Source:    fmt.Sprintf("%s (%s)", c.appliedEffectName(eff.CatalogID, mods), DurationLabel(eff.Scope)),
+				Source:    fmt.Sprintf("%s (%s)", r.appliedEffectName(eff.CatalogID, mods), DurationLabel(eff.Scope)),
 				Equipped:  &vestedWear,
 				Modifiers: mods,
 			})
 		}
+	}
+}
+
+// silenceSystem tira do mundo os termos que a mesa calou.
+//
+// Ele reusa o `applySilences` do coletor legado em vez de varrer as entidades
+// por conta: a regra de quem cala quem é UMA, e duas implementações dela
+// divergiriam na primeira vez que o endereço de um termo mudasse.
+//
+// Entidade que fica sem termo nenhum é REMOVIDA, e não deixada vazia: o
+// `ecs.Each` varre na ordem de inserção, e uma fonte vazia viraria linha de
+// decomposição dizendo que algo contribuiu zero.
+func (r *Ruleset) silenceSystem(ch Character) ecs.System {
+	return func(w *ecs.World) {
+		if len(r.mesa.Silences) == 0 {
+			return
+		}
+		ecs.Each(w, func(e ecs.Entity, g Grants) {
+			kept := applySilences(r.mesa.Silences, ch, []ActiveItem{{
+				SourceID: g.SourceID, Source: g.Source, Equipped: g.Wear, Modifiers: g.Modifiers,
+			}})
+			if len(kept) == 0 {
+				ecs.Remove[Grants](w, e)
+				return
+			}
+			g.Modifiers = kept[0].Modifiers
+			ecs.Set(w, e, g)
+		})
 	}
 }

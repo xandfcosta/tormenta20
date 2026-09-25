@@ -53,9 +53,9 @@ type (
 //
 // Trocar duas linhas aqui troca a ordem dos modificadores dentro do item, e o
 // teste de paridade reprova — que é o resultado certo.
-func (c *Catalogs) itemSystems(ch Character) []ecs.System {
+func (r *Ruleset) itemSystems(ch Character) []ecs.System {
 	return []ecs.System{
-		c.spawnWornItems(ch),
+		r.spawnWornItems(ch),
 		penalizeUnproficient,
 		mirrorWeaponAttack,
 		grantEquilibradaHomebrew,
@@ -66,7 +66,7 @@ func (c *Catalogs) itemSystems(ch Character) []ecs.System {
 // spawnWornItems cria uma entidade por item em uso e a CLASSIFICA.
 //
 // Item sem estado de uso não entra: uma espada na mochila não modifica nada.
-func (c *Catalogs) spawnWornItems(ch Character) ecs.System {
+func (r *Ruleset) spawnWornItems(ch Character) ecs.System {
 	return func(w *ecs.World) {
 		proficiencies := parseProficiencySet(ch.Proficiencies)
 		for _, it := range ch.Items {
@@ -75,9 +75,9 @@ func (c *Catalogs) spawnWornItems(ch Character) ecs.System {
 			}
 			var catalog *CatalogItem
 			if it.CatalogID != nil {
-				catalog = c.getCatalogItem(*it.CatalogID)
+				catalog = r.getCatalogItem(*it.CatalogID)
 			}
-			own := c.ownItemMods(it, catalog)
+			own := r.ownItemMods(it, catalog)
 
 			e := w.Spawn()
 			ecs.Set(w, e, WornItem{Item: it, Catalog: catalog})
@@ -93,13 +93,13 @@ func (c *Catalogs) spawnWornItems(ch Character) ecs.System {
 				Modifiers: append([]Modifier{}, own...),
 			})
 
-			c.classifyWornItem(w, e, it, catalog, proficiencies)
+			r.classifyWornItem(w, e, it, catalog, proficiencies)
 		}
 	}
 }
 
 // classifyWornItem responde, de uma vez, as perguntas que os sistemas fariam.
-func (c *Catalogs) classifyWornItem(w *ecs.World, e ecs.Entity, it CharacterItem, catalog *CatalogItem, prof map[string]bool) {
+func (r *Ruleset) classifyWornItem(w *ecs.World, e ecs.Entity, it CharacterItem, catalog *CatalogItem, prof map[string]bool) {
 	if catalog == nil {
 		return
 	}
@@ -124,16 +124,16 @@ func (c *Catalogs) classifyWornItem(w *ecs.World, e ecs.Entity, it CharacterItem
 }
 
 // ownItemMods é o estágio 1: o que o verbete e as sobreposições concedem.
-func (c *Catalogs) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier {
+func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier {
 	own := []Modifier{}
 	if catalog != nil {
 		own = append(own, catalog.Modifiers...)
 	}
 	for _, id := range parseStringArray(it.Improvements) {
-		own = append(own, overlayModsWithProvenance(c.getCatalogItem(id))...)
+		own = append(own, overlayModsWithProvenance(r.getCatalogItem(id))...)
 	}
 	if it.Material != nil {
-		own = append(own, overlayModsWithProvenance(c.getCatalogItem(*it.Material))...)
+		own = append(own, overlayModsWithProvenance(r.getCatalogItem(*it.Material))...)
 	}
 	return own
 }

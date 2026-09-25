@@ -144,7 +144,7 @@ var theSaves = []struct {
 // O segundo retorno diz se houve conta: sem catálogo primado não há ficha, e o
 // painel que chamar desenha o que sabe desenhar sem ela.
 func (s Scene) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheet, []engine.WeaponCard, bool) {
-	if s.deps.Catalogs() == nil {
+	if dto.Ruleset == nil {
 		return engine.ComputedSheet{}, nil, false
 	}
 	ec, err := sheet.EngineCharacterFrom(dto)
@@ -155,7 +155,7 @@ func (s Scene) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheet, []e
 	// com Fúria ligada, a base mostraria o ataque de quem não está em Fúria e a
 	// ficha discordaria da Mesa.
 	active := sheet.ToStringSet(dto.Conditionals)
-	return s.deps.Catalogs().ComputeSheet(ec, active), s.deps.Catalogs().ComputeWeaponCards(ec, active), true
+	return dto.Ruleset.ComputeSheet(ec, active), dto.Ruleset.ComputeWeaponCards(ec, active), true
 }
 
 // panelOfCombat computa a aba Combate de um personagem.

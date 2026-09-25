@@ -36,9 +36,9 @@ type VitalPools struct {
 // ComputeVitals: multiclass pools (p34-35) + the summed maxPv/maxPm grants,
 // floored at 0. The pool helpers are shared with vitals.go
 // (classVitalsTable/multiclass*).
-func (c *Catalogs) ComputeVitals(ctx VitalContext) VitalPools {
+func (r *Ruleset) ComputeVitals(ctx VitalContext) VitalPools {
 	con := ctx.AttrTotals["constitution"]
-	groupHP, groupMP := c.sumVitalGrants(ctx)
+	groupHP, groupMP := r.sumVitalGrants(ctx)
 	return VitalPools{
 		PvMax: max(0, multiclassPvPool(ctx.Classes, con)+groupHP),
 		PmMax: max(0, multiclassMpPool(ctx.Classes)+groupMP),
@@ -53,9 +53,9 @@ func (c *Catalogs) ComputeVitals(ctx VitalContext) VitalPools {
 //
 // A metade da DEFESA da mesma regra (o bucaneiro/nobre e o Carisma) não está
 // implementada — o resolveStack agrupa por bonusType, não por atributo.
-func (c *Catalogs) sumVitalGrants(ctx VitalContext) (pv, pm int) {
+func (r *Ruleset) sumVitalGrants(ctx VitalContext) (pv, pm int) {
 	seen := map[string]bool{}
-	for _, m := range c.vitalGrantMods(ctx) {
+	for _, m := range r.vitalGrantMods(ctx) {
 		if m.Target.K != "maxPv" && m.Target.K != "maxPm" {
 			continue
 		}
@@ -80,32 +80,32 @@ func (c *Catalogs) sumVitalGrants(ctx VitalContext) (pv, pm int) {
 // the character owns — race, class powers (per class at ITS level), general
 // powers, the god power, and origin benefits. NOT items/activeEffects (those
 // aren't vital-grant sources). Filtered to vital targets by the caller.
-func (c *Catalogs) vitalGrantMods(ctx VitalContext) []Modifier {
+func (r *Ruleset) vitalGrantMods(ctx VitalContext) []Modifier {
 	out := []Modifier{}
 	powers := toSet(ctx.PowerIDs)
 
 	if ctx.RaceID != "" {
-		if race := c.getRace(ctx.RaceID); race != nil {
+		if race := r.getRace(ctx.RaceID); race != nil {
 			out = append(out, raceModifiers(race, toSet(ctx.RaceAbilityChoices))...)
 		}
 	}
 	for _, ce := range ctx.Classes {
-		for _, power := range c.ownedClassPowers(ce.ClassName, ce.Level, powers, ctx.ClassChoices[ce.ClassName]) {
+		for _, power := range r.ownedClassPowers(ce.ClassName, ce.Level, powers, ctx.ClassChoices[ce.ClassName]) {
 			out = append(out, power.Modifiers...)
 		}
 	}
 	for _, id := range ctx.PowerIDs {
-		if gp := c.getGeneralPower(id); gp != nil {
+		if gp := r.getGeneralPower(id); gp != nil {
 			out = append(out, gp.Modifiers...)
 		}
 	}
 	if ctx.GodPower != "" {
-		if gp := c.grantedPowerByName(ctx.GodPower); gp != nil {
+		if gp := r.grantedPowerByName(ctx.GodPower); gp != nil {
 			out = append(out, gp.Modifiers...)
 		}
 	}
 	if ctx.Origin != "" {
-		if origin := c.getOrigin(ctx.Origin); origin != nil {
+		if origin := r.getOrigin(ctx.Origin); origin != nil {
 			out = append(out, originModifiers(origin, toSet(ctx.OriginChoices))...)
 		}
 	}

@@ -33,13 +33,13 @@ func TestWeaponCardsParity(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			got := roundTrip(t, catalogs.ComputeWeaponCards(oracle.Char, map[string]bool{}))
+			got := roundTrip(t, BookRuleset(catalogs).ComputeWeaponCards(oracle.Char, map[string]bool{}))
 			if !reflect.DeepEqual(got, oracle.WeaponCards) {
 				diffReport(t, "weaponCards", got, oracle.WeaponCards)
 			}
 
 			on := toSet(oracle.ActiveConditionals)
-			gotOn := roundTrip(t, catalogs.ComputeWeaponCards(oracle.Char, on))
+			gotOn := roundTrip(t, BookRuleset(catalogs).ComputeWeaponCards(oracle.Char, on))
 			if !reflect.DeepEqual(gotOn, oracle.WithConditionals) {
 				diffReport(t, "weaponCardsWithConditionals", gotOn, oracle.WithConditionals)
 			}

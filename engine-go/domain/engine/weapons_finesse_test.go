@@ -28,7 +28,7 @@ func TestWeaponFinesse(t *testing.T) {
 		ch.Items = []CharacterItem{{
 			CatalogID: ptr(catalogID), Name: catalogID, Equipped: ptr("wielded"), Improvements: "[]",
 		}}
-		cards := catalogs.ComputeWeaponCards(ch, none)
+		cards := BookRuleset(catalogs).ComputeWeaponCards(ch, none)
 		if len(cards) == 0 {
 			t.Fatalf("%s: no weapon card", catalogID)
 		}

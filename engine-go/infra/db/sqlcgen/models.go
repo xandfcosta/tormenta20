@@ -47,9 +47,25 @@ type CampaignCreature struct {
 	Updatedat  string `json:"updatedat"`
 }
 
+type CampaignGrant struct {
+	ID          string        `json:"id"`
+	Campaignid  int64         `json:"campaignid"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Label       string        `json:"label"`
+	Modifiers   string        `json:"modifiers"`
+	Updatedat   string        `json:"updatedat"`
+}
+
 type CampaignIgnoredRule struct {
 	Campaignid int64  `json:"campaignid"`
 	Rule       string `json:"rule"`
+	Updatedat  string `json:"updatedat"`
+}
+
+type CampaignItem struct {
+	Campaignid int64  `json:"campaignid"`
+	Itemid     string `json:"itemid"`
+	Adds       string `json:"adds"`
 	Updatedat  string `json:"updatedat"`
 }
 
@@ -67,6 +83,13 @@ type CampaignPlace struct {
 	State      string `json:"state"`
 	Createdat  string `json:"createdat"`
 	Updatedat  string `json:"updatedat"`
+}
+
+type CampaignSilence struct {
+	Campaignid  int64         `json:"campaignid"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Term        string        `json:"term"`
+	Updatedat   string        `json:"updatedat"`
 }
 
 type Character struct {

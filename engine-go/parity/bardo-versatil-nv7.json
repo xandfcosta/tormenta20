@@ -519,6 +519,7 @@
     "flags": [],
     "conditional": [
       {
+        "term": "class.bardo.inspiracao-1::expertiseAll::::flagOn///inspiracao",
         "sourceId": "class.bardo.inspiracao-1",
         "source": "Inspiração +1",
         "bonusType": "morale",
@@ -530,6 +531,7 @@
         "flag": "inspiracao"
       },
       {
+        "term": "class.bardo.inspiracao-2::expertiseAll::::flagOn///inspiracao",
         "sourceId": "class.bardo.inspiracao-2",
         "source": "Inspiração +2",
         "bonusType": "morale",
@@ -1018,8 +1020,8 @@
     "autoFailExpertises": []
   },
   "activeConditionals": [
-    "Inspiração +1::expertiseAll::Sob Inspiração::1::morale",
-    "Inspiração +2::expertiseAll::Sob Inspiração::2::morale"
+    "class.bardo.inspiracao-1::expertiseAll::::flagOn///inspiracao",
+    "class.bardo.inspiracao-2::expertiseAll::::flagOn///inspiracao"
   ],
   "sheetWithConditionals": {
     "defense": {

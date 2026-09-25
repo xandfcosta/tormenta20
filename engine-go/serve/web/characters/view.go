@@ -158,8 +158,8 @@ func HeroCardOf(catalogs *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 	// um número.
 	card.Defense = "—"
 	card.DefenseVs = "—"
-	if catalogs != nil {
-		if character, err := sheet.Compute(catalogs, c); err == nil {
+	if c.Ruleset != nil {
+		if character, err := sheet.Compute(c); err == nil {
 			card.Defense = strconv.Itoa(character.Defense.Total)
 			card.DefenseVs = book.DefenseLabel(character.Defense)
 		}

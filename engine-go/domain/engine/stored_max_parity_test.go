@@ -52,7 +52,7 @@ func TestTheStoredMaxMatchesTheDerivedMax(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			derived := catalogs.VitalsForCharacter(oracle.Char.Character)
+			derived := BookRuleset(catalogs).VitalsForCharacter(oracle.Char.Character)
 			compared++
 			if oracle.Char.HpMax != derived.PvMax {
 				t.Errorf("PV máximo gravado %d, derivado %d (diferença de %d).\n"+

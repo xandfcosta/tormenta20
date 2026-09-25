@@ -12,7 +12,7 @@ import (
 // raceActiveItems: the primary race always, plus
 // any opted-in secondary. Attribute mods come from the persisted choices; the
 // race's own attribute mods (fixed-race duplicates) are stripped.
-func (c *Catalogs) raceActiveItems(ch Character) []ActiveItem {
+func (r *Ruleset) raceActiveItems(ch Character) []ActiveItem {
 	variantChoices := parseChoiceSet(ch.RaceAbilityChoices).has
 	primary := parseRaceAttributeChoices(ch.RaceAttributeChoices)
 	secondaries := parseSecondaryRaceChoices(ch.SecondaryRaceChoices)
@@ -26,17 +26,17 @@ func (c *Catalogs) raceActiveItems(ch Character) []ActiveItem {
 			}
 			choice = sec
 		}
-		race := c.getRace(entry.Race)
+		race := r.getRace(entry.Race)
 		if race == nil {
 			continue
 		}
-		mods := c.raceAttributeMods(entry.Race, choice)
+		mods := r.raceAttributeMods(entry.Race, choice)
 		for _, m := range raceModifiers(race, variantChoices) {
 			if m.Target.K != "attribute" {
 				mods = append(mods, m)
 			}
 		}
-		mods = append(mods, c.deformidadeModifiers(entry.Race, choice.deformity)...)
+		mods = append(mods, r.deformidadeModifiers(entry.Race, choice.deformity)...)
 		if len(mods) == 0 {
 			continue
 		}
@@ -53,8 +53,8 @@ func (c *Catalogs) raceActiveItems(ch Character) []ActiveItem {
 // raceAttributeMods: a race's attribute deltas (from its
 // floating/ascendência choices) as `attribute` modifiers. Empty on incomplete
 // choices, sem lançar: dado ruim vira escolha vazia.
-func (c *Catalogs) raceAttributeMods(raceName string, choice raceAttrChoice) []Modifier {
-	race := c.raceEntryByName(raceName)
+func (r *Ruleset) raceAttributeMods(raceName string, choice raceAttrChoice) []Modifier {
+	race := r.raceEntryByName(raceName)
 	if race == nil {
 		return []Modifier{}
 	}
@@ -79,8 +79,8 @@ func (c *Catalogs) raceAttributeMods(raceName string, choice raceAttrChoice) []M
 
 // deformidadeModifiers: Deformidade (Lefou p23) as +2 on each
 // chosen perícia. The Carisma loss is emitted separately (tormentaCarismaItem).
-func (c *Catalogs) deformidadeModifiers(raceName string, draft *deformidadeStored) []Modifier {
-	if draft == nil || c.raceWithDeformidade(raceName) == "" {
+func (r *Ruleset) deformidadeModifiers(raceName string, draft *deformidadeStored) []Modifier {
+	if draft == nil || r.raceWithDeformidade(raceName) == "" {
 		return []Modifier{}
 	}
 	out := []Modifier{}
@@ -100,16 +100,16 @@ func (c *Catalogs) deformidadeModifiers(raceName string, draft *deformidadeStore
 
 // deformidadeHeldPower: the Deformidade-swapped poder da
 // Tormenta, from either race blob.
-func (c *Catalogs) deformidadeHeldPower(ch Character) string {
+func (r *Ruleset) deformidadeHeldPower(ch Character) string {
 	if len(ch.Races) > 0 {
 		primaryRace := ch.Races[0].Race
 		primary := parseRaceAttributeChoices(ch.RaceAttributeChoices)
-		if c.raceWithDeformidade(primaryRace) != "" && heldTormenta(primary.deformity) != "" {
+		if r.raceWithDeformidade(primaryRace) != "" && heldTormenta(primary.deformity) != "" {
 			return heldTormenta(primary.deformity)
 		}
 	}
 	for race, choice := range parseSecondaryRaceChoices(ch.SecondaryRaceChoices) {
-		if c.raceWithDeformidade(race) != "" && heldTormenta(choice.deformity) != "" {
+		if r.raceWithDeformidade(race) != "" && heldTormenta(choice.deformity) != "" {
 			return heldTormenta(choice.deformity)
 		}
 	}
@@ -125,15 +125,15 @@ func heldTormenta(d *deformidadeStored) string {
 
 // originActiveItem: chosen origin benefits' modifiers, plus the
 // modifiers of any concretely picked free-pick power. Nil when it grants nothing.
-func (c *Catalogs) originActiveItem(ch Character) *ActiveItem {
-	origin := c.getOrigin(ch.Origin)
+func (r *Ruleset) originActiveItem(ch Character) *ActiveItem {
+	origin := r.getOrigin(ch.Origin)
 	if origin == nil {
 		return nil
 	}
 	choices := parseChoiceSet(ch.OriginChoices)
 	mods := originModifiers(origin, choices.has)
-	for _, id := range c.originPickedPowerIds(ch) {
-		if p := c.getGeneralPower(id); p != nil {
+	for _, id := range r.originPickedPowerIds(ch) {
+		if p := r.getGeneralPower(id); p != nil {
 			mods = append(mods, p.Modifiers...)
 		}
 	}
@@ -146,7 +146,7 @@ func (c *Catalogs) originActiveItem(ch Character) *ActiveItem {
 // originPickedPowerIds: for each CHOSEN free-pick origin
 // benefit, the power ids named in powerChoices. Iterates originChoices in its
 // stored order so the resulting modifier order is stable.
-func (c *Catalogs) originPickedPowerIds(ch Character) []string {
+func (r *Ruleset) originPickedPowerIds(ch Character) []string {
 	chosen := parseChoiceSet(ch.OriginChoices)
 	if len(chosen.list) == 0 {
 		return []string{}
@@ -157,7 +157,7 @@ func (c *Catalogs) originPickedPowerIds(ch Character) []string {
 	}
 	out := []string{}
 	for _, benefitID := range chosen.list {
-		b := c.getOriginBenefit(benefitID)
+		b := r.getOriginBenefit(benefitID)
 		if b == nil || b.PowerPick == "" {
 			continue
 		}
@@ -172,12 +172,12 @@ func (c *Catalogs) originPickedPowerIds(ch Character) []string {
 
 // classActiveItems: one ActiveItem per owned class power that
 // carries modifiers, named by the poder (not an opaque class bundle).
-func (c *Catalogs) classActiveItems(ch Character) []ActiveItem {
+func (r *Ruleset) classActiveItems(ch Character) []ActiveItem {
 	chosen := parseChoiceSet(ch.ClassPowers)
 	choices := parseClassChoices(ch.ClassChoices)
 	out := []ActiveItem{}
 	for _, entry := range ch.Classes {
-		owned := c.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName])
+		owned := r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName])
 		for _, power := range owned {
 			if len(power.Modifiers) == 0 {
 				continue
@@ -190,11 +190,11 @@ func (c *Catalogs) classActiveItems(ch Character) []ActiveItem {
 
 // generalPowerActiveItem: general powers (Poder de Combate…)
 // stored in the classPowers blob by bare id. Iterates in stored order.
-func (c *Catalogs) generalPowerActiveItem(ch Character) []ActiveItem {
+func (r *Ruleset) generalPowerActiveItem(ch Character) []ActiveItem {
 	chosen := parseChoiceSet(ch.ClassPowers)
 	out := []ActiveItem{}
 	for _, id := range chosen.list {
-		power := c.getGeneralPower(id)
+		power := r.getGeneralPower(id)
 		if power == nil || len(power.Modifiers) == 0 {
 			continue
 		}
@@ -205,21 +205,21 @@ func (c *Catalogs) generalPowerActiveItem(ch Character) []ActiveItem {
 
 // tormentaCarismaItem: the escalating Carisma loss over the
 // TOTAL count of real poderes da Tormenta (picked + the Deformidade-held one).
-func (c *Catalogs) tormentaCarismaItem(ch Character) *ActiveItem {
+func (r *Ruleset) tormentaCarismaItem(ch Character) *ActiveItem {
 	uniq := newOrderedSet()
 	for _, id := range parseChoiceSet(ch.ClassPowers).list {
 		uniq.add(id)
 	}
-	for _, id := range c.originPickedPowerIds(ch) {
+	for _, id := range r.originPickedPowerIds(ch) {
 		uniq.add(id)
 	}
 	picked := []string{}
 	for _, id := range uniq.list {
-		if c.isTormentaPower(id) {
+		if r.isTormentaPower(id) {
 			picked = append(picked, id)
 		}
 	}
-	held := c.deformidadeHeldPower(ch)
+	held := r.deformidadeHeldPower(ch)
 	count := len(picked)
 	if held != "" && !contains(picked, held) {
 		count++

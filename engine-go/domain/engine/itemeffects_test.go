@@ -330,7 +330,7 @@ func TestApplyActiveConditionals(t *testing.T) {
 	base := ComputeItemEffects([]ActiveItem{
 		wielded("material-aco-rubi", Modifier{Target: damageThisTarget, Amount: 2, BonusType: "enhancement", Condition: &ModifierCondition{C: "against", Trait: "vivos"}, Note: "+2 dano vs vivos"}),
 	})
-	id := ConditionalID(base.Conditional[0])
+	id := base.Conditional[0].Term
 	next := ApplyActiveConditionals(base, map[string]bool{id: true})
 	if StatFor(next, damageThisTarget).Total != 2 || len(next.Conditional) != 0 {
 		t.Errorf("fold failed: total=%d remaining=%d", StatFor(next, damageThisTarget).Total, len(next.Conditional))
@@ -347,7 +347,7 @@ func TestApplyActiveConditionals(t *testing.T) {
 			Modifier{Target: damageThisTarget, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "terrain", Type: "urbano"}},
 		),
 	})
-	first := ConditionalID(multi.Conditional[0])
+	first := multi.Conditional[0].Term
 	if len(ApplyActiveConditionals(multi, map[string]bool{first: true}).Conditional) != 1 {
 		t.Error("unmatched conditional should remain")
 	}
@@ -361,7 +361,7 @@ func TestApplyActiveConditionalsReResolves(t *testing.T) {
 	if StatFor(base, defenseTarget).Total != 1 {
 		t.Fatalf("base total = %d, want 1", StatFor(base, defenseTarget).Total)
 	}
-	next := ApplyActiveConditionals(base, map[string]bool{ConditionalID(base.Conditional[0]): true})
+	next := ApplyActiveConditionals(base, map[string]bool{base.Conditional[0].Term: true})
 	def := StatFor(next, defenseTarget)
 	if def.Total != 3 || len(def.Contributions) != 1 || def.Contributions[0].Amount != 3 {
 		t.Errorf("conditional +3 should displace base +1, got %+v", def)
@@ -372,7 +372,7 @@ func TestApplyActiveConditionalsIgnoresFlagTargets(t *testing.T) {
 	base := ComputeItemEffects([]ActiveItem{
 		vested("weird", Modifier{Target: ModifierTarget{K: "flag", Name: "fatigue-on-sleep"}, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "context", Note: "durante a noite"}}),
 	})
-	next := ApplyActiveConditionals(base, map[string]bool{ConditionalID(base.Conditional[0]): true})
+	next := ApplyActiveConditionals(base, map[string]bool{base.Conditional[0].Term: true})
 	if next.Flags["fatigue-on-sleep"] {
 		t.Error("flag-target conditional should not set the flag on fold")
 	}
@@ -423,30 +423,22 @@ func TestResolveConditionalDisplayUntypedStacks(t *testing.T) {
 	}
 }
 
-// ─── statFor / conditionalId ──────────────────────────────────────────
+// ─── statFor ──────────────────────────────────────────────────────────
 
 // Não há caso próprio para "lista vazia produz lista vazia" nem para "alvo
 // ausente soma zero", e é de propósito: o `TestEmptyInputs` logo abaixo cobre a
 // família inteira num caso só, e o resto é encanamento.
 
-func TestConditionalIDDivergence(t *testing.T) {
-	// O que se protege é a DIVERGÊNCIA, e não a "estabilidade": comparar
-	// `ConditionalID(a)` com ELE MESMO só falharia se a função virasse
-	// aleatória. Dois conditionais diferentes que colidam na mesma chave viram
-	// um só na resolução, e o jogador perde um bônus sem aviso.
-	a := ConditionalEffect{Source: "a", BonusType: "untyped", Amount: 2, Note: "n", Target: defenseTarget}
-	diffs := []ConditionalEffect{
-		{Source: "b", BonusType: "untyped", Amount: 2, Note: "n", Target: defenseTarget},
-		{Source: "a", BonusType: "untyped", Amount: 2, Note: "n", Target: damageThisTarget},
-		{Source: "a", BonusType: "untyped", Amount: 3, Note: "n", Target: defenseTarget},
-		{Source: "a", BonusType: "enhancement", Amount: 2, Note: "n", Target: defenseTarget},
-	}
-	for _, d := range diffs {
-		if ConditionalID(a) == ConditionalID(d) {
-			t.Errorf("conditionalId should differ for %+v", d)
-		}
-	}
-}
+// Aqui morava o `TestConditionalIDDivergence`, que provava que quatro pares
+// inventados de condicional não colidiam na mesma chave. Ele saiu na ALE-387
+// junto com o `ConditionalID`: o endereço de hoje NÃO carrega o valor nem o
+// tipo de bônus — de propósito, para uma errata do livro não o invalidar —,
+// então dois dos quatro pares dele passariam a colidir por desenho.
+//
+// A garantia que ele buscava — duas contribuições que colidam viram uma só, e o
+// jogador perde um bônus sem aviso — mudou de casa e ficou mais forte: o
+// `TestEveryCatalogTermHasAUniqueAddress` mede os 246 termos do catálogo de
+// verdade, em vez de quatro pares escritos à mão.
 
 // ─── empty / trivial ──────────────────────────────────────────────────
 
