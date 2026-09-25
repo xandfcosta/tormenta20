@@ -541,9 +541,10 @@ casá-lo faria a emenda de uma mesa aparecer no oráculo.
 ### O endereço de um termo NÃO carrega o valor
 
 `engine.TermID` é `fonte::alvo::escala::condição`. O jeito óbvio seria misturar
-o valor e o tipo de bônus — é o que o `ConditionalID` faz —, e é justamente o
-que o torna frágil: corrigir um número no livro troca o endereço, e o silêncio
-que o mestre escreveu evapora sem uma palavra em lugar nenhum.
+o valor e o tipo de bônus, e era o que o endereço dos condicionais fazia antes
+de os dois convergirem — é justamente o que torna um endereço frágil: corrigir
+um número no livro o troca, e o que estava preso a ele evapora sem uma palavra
+em lugar nenhum.
 
 A escala e a condição são os discriminadores porque são eles que separam os
 pares que EXISTEM: o anão tem `maxPv +2` e `maxPv +1 por nível`, e a Força da
@@ -561,9 +562,38 @@ custaram uma passada errada cada:
   colidindo consigo mesma — foi o primeiro resultado da varredura, e ele parecia
   uma descoberta.
 
-> O `ConditionalID` continua com a fragilidade que este endereço evita, e não é
-> descuido: ele está GRAVADO em `character_conditionals.conditionalId`, então
-> convergir os dois é migração de dado e não decisão de código.
+### Um endereço só, e o opt-in do jogador usa o mesmo
+
+Havia DOIS endereços para a mesma coisa: o do jogador
+(`fonte::alvo::nota::valor::tipo`, gravado em `character_conditionals`) e o do
+mestre. Eles convergiram no `TermID` (ALE-387), e o antigo saiu — com a
+migração `00019`, que APAGA as linhas gravadas na forma velha, porque linha que
+não casa com nada é lixo invisível e a ficha mostraria o situacional desligado
+para sempre.
+
+A troca foi MEDIDA antes de ser feita: a tabela tinha zero linhas. O guarda que
+prendia a forma antiga dizia, com razão, que mudá-la exigiria uma migração — e
+o que autoriza a migração é a contagem, não a vontade.
+
+**`character_conditionals` FICA, e não é o mesmo que `campaign_silences`**,
+ainda que as duas guardem endereços de termo. São o JOGADOR e o MESTRE
+escrevendo coisas diferentes: o opt-in nasce DESLIGADO e é do dono da ficha; o
+silêncio nasce LIGADO e é de quem manda na mesa. Juntá-las numa tabela só
+juntaria duas permissões de escrita que não podem ser a mesma.
+
+### O interruptor de GRUPO tem endereço próprio
+
+Os condicionais que dividem uma flag viram UM interruptor na tela — "um item
+caseiro com três modificadores é uma coisa só na mesa". Enquanto a chave era o
+endereço do PRIMEIRO membro, ligar o grupo dobrava um modificador e o crachá ao
+lado dizia "3 mods". Hoje a chave é o `engine.FlagGroupID`, e "metade ligada"
+deixou de ser representável — o que valia igual para a POSTURA, que gravava uma
+linha por condicional calculada no instante de entrar e recalculada no de sair.
+
+Não era defeito VIVO: as únicas flags do livro são `furia` e `inspiracao`, as
+duas posturas, e a tela de situacionais as exclui. O que o tornou alcançável foi
+a emenda de campanha — um mestre que conceda um item com dois modificadores
+`flagOn` cai exatamente ali.
 
 **E há DUAS fontes do mesmo `items.json` no processo, com durabilidades
 diferentes.** O `catalog.Resource` é `go:embed` — existe sempre que o binário

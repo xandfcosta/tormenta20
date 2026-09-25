@@ -173,7 +173,7 @@ func ligaOCondicional(t *testing.T, f sceneFixture, id int64) {
 			"o efeito semeado não virou um opt-in, e ligar nada mediria o vazio", len(offered))
 	}
 	err = f.s.sceneCore().Queries().AddCharacterConditional(context.Background(), sqlcgen.AddCharacterConditionalParams{
-		Characterid: id, Conditionalid: engine.ConditionalID(offered[0]),
+		Characterid: id, Conditionalid: offered[0].Term,
 	})
 	if err != nil {
 		t.Fatalf("ligar o condicional: %v", err)

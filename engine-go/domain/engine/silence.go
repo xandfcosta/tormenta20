@@ -14,12 +14,12 @@ import (
 // # O endereço de um termo NÃO inclui o valor, e isso é a decisão
 //
 // `fonte :: alvo :: escala :: condição`. O jeito óbvio seria misturar o valor e
-// o tipo de bônus, que é o que o `ConditionalID` faz — e é justamente o que
-// torna aquele id frágil: corrigir um número no livro troca o endereço, e o
-// silêncio do mestre evapora em silêncio, que é a pior forma de uma regra
-// sumir.
+// o tipo de bônus — e era o que o id dos condicionais fazia antes de os dois
+// convergirem. É justamente o que torna um endereço frágil: corrigir um número
+// no livro o troca, e o que estava preso a ele evapora em silêncio.
 //
-// Sem o valor, uma errata do livro NÃO quebra o que a mesa escreveu.
+// Sem o valor, uma errata do livro NÃO quebra o que a mesa escreveu — nem o que
+// o JOGADOR ligou, porque o opt-in dele usa este mesmo endereço.
 //
 // # E a unicidade é MEDIDA, não suposta
 //

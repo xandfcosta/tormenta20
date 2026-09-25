@@ -218,7 +218,7 @@ func limitBadge(spec book.Activation) string {
 // activeFlags são as FLAGS levantadas agora, e elas não estão no banco.
 //
 // O que o banco guarda é a lista de condicionais LIGADOS, e o id de um
-// condicional é um encadeado que o motor monta (`engine.ConditionalID`). A flag
+// condicional é um encadeado que o motor monta (`engine.TermID`). A flag
 // mora do outro lado: é o motor quem diz, para cada condicional oferecido, qual
 // flag ele acende. Então a pergunta "a Fúria está em pé?" é uma junção entre o
 // que o jogador ligou e o que o motor oferece — e é por isso que ela não é uma
@@ -237,7 +237,7 @@ func (s Scene) activeFlags(dto sheet.CharacterDTO) map[string]bool {
 	}
 	on := sheet.ToStringSet(dto.Conditionals)
 	for _, c := range engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional {
-		if c.Flag != "" && on[engine.ConditionalID(c)] {
+		if c.Flag != "" && on[engine.FlagGroupID(c.Flag)] {
 			outside[c.Flag] = true
 		}
 	}

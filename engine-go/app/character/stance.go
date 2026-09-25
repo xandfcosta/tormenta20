@@ -57,15 +57,18 @@ func (p Plays) EnterStance(
 		}); err != nil {
 			return fmt.Errorf("registrar o pagamento da postura: %w", err)
 		}
-		// TODOS os condicionais da flag sobem juntos — a Fúria mexe em ataque,
-		// dano, Defesa e testes de Vontade, e metade ligada é uma ficha que soma
-		// metade de uma regra do livro.
-		for _, id := range p.conditionalsOfFlag(dto, flag) {
-			if err := q.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
-				Characterid: row.ID, Conditionalid: id,
-			}); err != nil {
-				return fmt.Errorf("ligar o condicional %q: %w", id, err)
-			}
+		// UMA CHAVE, a do GRUPO. A Fúria mexe em ataque, dano, Defesa e testes de
+		// Vontade, e metade ligada é uma ficha que soma metade de uma regra do
+		// livro — aqui isso deixou de ser possível de representar.
+		//
+		// Antes eram N linhas, uma por condicional, calculadas pela coleta no
+		// instante de entrar. Isso tinha um segundo defeito além do tamanho: sair
+		// recalculava o conjunto, então uma ficha que subisse de nível DENTRO da
+		// postura deixava condicional ligado para trás.
+		if err := q.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
+			Characterid: row.ID, Conditionalid: engine.FlagGroupID(flag),
+		}); err != nil {
+			return fmt.Errorf("ligar a postura %q: %w", flag, err)
 		}
 		return nil
 	}); err != nil {
@@ -84,7 +87,6 @@ func (p Plays) EnterStance(
 func (p Plays) EndStance(
 	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, flag string,
 ) error {
-	conditionals := p.conditionalsOfFlag(dto, flag)
 	granted, err := p.grantedEffectIDs(ctx, row, flag)
 	if err != nil {
 		return err
@@ -100,12 +102,10 @@ func (p Plays) EndStance(
 				return fmt.Errorf("apagar o efeito concedido %d: %w", id, err)
 			}
 		}
-		for _, id := range conditionals {
-			if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
-				Characterid: row.ID, Conditionalid: id,
-			}); err != nil {
-				return fmt.Errorf("desligar o condicional %q: %w", id, err)
-			}
+		if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
+			Characterid: row.ID, Conditionalid: engine.FlagGroupID(flag),
+		}); err != nil {
+			return fmt.Errorf("desligar a postura %q: %w", flag, err)
 		}
 		return nil
 	})
@@ -201,29 +201,6 @@ func stanceOfFlag(flag string) *book.Activation {
 		return nil
 	}
 	return book.ActivationOf("", stance.Name)
-}
-
-// conditionalsOfFlag são os ids dos condicionais que aquela flag acende.
-//
-// Motor ausente devolve vazio, e não erro: sem catálogo primado não há o que
-// ligar, e recusar o gesto inteiro deixaria a postura fora do alcance de quem
-// roda sem o arquivo. É o ÚLTIMO recuo desse tipo — o dos poços virou recusa
-// quando o arranque passou a exigir o catálogo (ALE-355).
-func (p Plays) conditionalsOfFlag(dto sheet.CharacterDTO, flag string) []string {
-	if dto.Ruleset == nil {
-		return nil
-	}
-	ec, err := sheet.EngineCharacterFrom(dto)
-	if err != nil {
-		return nil
-	}
-	outside := []string{}
-	for _, c := range engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional {
-		if c.Flag == flag {
-			outside = append(outside, engine.ConditionalID(c))
-		}
-	}
-	return outside
 }
 
 // activeFlags são as flags acesas agora, para a decisão de usar um poder que

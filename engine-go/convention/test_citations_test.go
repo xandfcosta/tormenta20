@@ -16,6 +16,13 @@ import (
 // Ela só precisa ser declarada, e é essa a fricção que esta lista existe para
 // criar: apagar um teste é um ato, e o ato aparece aqui.
 var tombstones = map[string]bool{
+	// Os dois saíram na ALE-387, quando o `ConditionalID` e o `TermID`
+	// convergiram num endereço só. O que prendia a FORMA virou o
+	// `TestTheTermAddressKeepsItsExactShape`; o que provava DIVERGÊNCIA entre
+	// chaves virou o `TestEveryCatalogTermHasAUniqueAddress`, que mede os 246
+	// termos do catálogo em vez de quatro pares escritos à mão.
+	"TestTheConditionalIdKeepsItsExactShape": true,
+	"TestConditionalIDDivergence":            true,
 	// Ele varria as portas de `*Catalogs` e exigia que cada uma abrisse aplicando
 	// a vista da campanha. Saiu na ALE-387 porque o TIPO passou a fazer o
 	// trabalho dele: computar uma ficha pede um `engine.Ruleset`, e quem tem só o

@@ -297,7 +297,7 @@ func situationalRowsOf(offered []engine.ConditionalEffect, active map[string]boo
 
 	rows := []situationalRow{}
 	for _, c := range loose {
-		id := engine.ConditionalID(c)
+		id := c.Term
 		rows = append(rows, situationalRow{
 			Key: id, Label: conditionalLabel(c), Source: c.Source, Active: active[id],
 			Modifiers: []breakdownRow{{Label: targetLabel(c.Target), Value: book.WithSign(c.Amount)}},
@@ -306,11 +306,15 @@ func situationalRowsOf(offered []engine.ConditionalEffect, active map[string]boo
 	}
 	for _, flag := range order {
 		group := byFlag[flag]
+		// A CHAVE É DO GRUPO, e não a do primeiro membro. Um interruptor que
+		// gravasse o endereço de um dos três modificadores ligaria um terço da
+		// regra — e o crachá ao lado dele diria "3 mods".
+		key := engine.FlagGroupID(flag)
 		row := situationalRow{
-			Key: engine.ConditionalID(group[0]), Label: conditionalLabel(group[0]),
+			Key: key, Label: conditionalLabel(group[0]),
 			Source: group[0].Source, Folded: len(group) > 1,
-			Active:  active[engine.ConditionalID(group[0])],
-			Command: engine.ConditionalID(group[0]),
+			Active:  active[key],
+			Command: key,
 		}
 		for _, c := range group {
 			row.Modifiers = append(row.Modifiers, breakdownRow{

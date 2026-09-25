@@ -224,10 +224,9 @@ func TestASilenceReachesOnlyWhoTheSelectorNames(t *testing.T) {
 // mestre cala um termo hoje, o catálogo corrige o número amanhã, e o silêncio
 // deixa de casar sem uma palavra em lugar nenhum.
 //
-// O `ConditionalID`, que é o irmão mais velho deste endereço, tem exatamente
-// essa fragilidade — e ele a tem porque está GRAVADO em
-// `character_conditionals`, então trocá-lo é migração de dado e não decisão de
-// código.
+// O endereço que os condicionais usavam antes da convergência tinha exatamente
+// essa fragilidade, e é por isso que ele não sobreviveu: hoje o opt-in do
+// jogador e o silêncio do mestre são a MESMA string.
 func TestTheTermAddressSurvivesAnErrataToTheAmount(t *testing.T) {
 	doLivro := Modifier{
 		Target:    ModifierTarget{K: "expertise", Name: "Luta"},

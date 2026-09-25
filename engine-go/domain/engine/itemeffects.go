@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"math"
 	"sort"
-	"strconv"
 )
 
 // O motor de RESOLUÇÃO: recebe uma `[]ActiveItem` já coletada e a resolve em
@@ -117,8 +116,15 @@ type AggregatedStat struct {
 }
 
 type ConditionalEffect struct {
-	// SourceID atravessa junto — ver `ActiveItem`. Ele NÃO entra no
-	// `ConditionalID`: aquela string está gravada no banco.
+	// Term é o ENDEREÇO deste condicional — o mesmo `engine.TermID` que o
+	// silêncio da mesa usa. É por ele que o opt-in do jogador casa de volta com o
+	// modificador que o gerou.
+	//
+	// Ele nasce AQUI e não é recalculado depois, porque a `Condition` e a `Scale`
+	// do modificador se PERDEM nesta conversão: a partir de um
+	// `ConditionalEffect` pronto já não há como endereçá-lo.
+	Term string `json:"term"`
+	// SourceID atravessa junto — ver `ActiveItem`.
 	SourceID  string         `json:"sourceId,omitempty"`
 	Source    string         `json:"source"`
 	BonusType string         `json:"bonusType"`
@@ -428,6 +434,7 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 			}
 			if !isUnconditional(m) {
 				ce := ConditionalEffect{
+					Term:      TermID(item.SourceID, m),
 					SourceID:  item.SourceID,
 					Source:    item.Source,
 					BonusType: m.BonusType,
@@ -483,15 +490,18 @@ func StatFor(effects ItemEffects, target ModifierTarget) AggregatedStat {
 	return AggregatedStat{Total: 0, Contributions: []Contribution{}}
 }
 
-// ConditionalID é o identificador estável de um efeito condicional, usado para
-// gravar quais opcionais estão ligados. Junta com `::`.
-func ConditionalID(c ConditionalEffect) string {
-	return c.Source + "::" +
-		targetKey(c.Target) + "::" +
-		c.Note + "::" +
-		strconv.Itoa(c.Amount) + "::" +
-		c.BonusType
-}
+// FlagGroupID é o endereço de um GRUPO de condicionais que dividem uma flag.
+//
+// Ele existe porque a tela oferece UM interruptor para o grupo — "um item
+// caseiro com três modificadores é uma coisa só na mesa" —, e um interruptor
+// que grave o endereço de UM dos membros liga um terço da regra. O grupo tem de
+// ter endereço PRÓPRIO, e não emprestado do primeiro membro.
+//
+// O prefixo é o que impede as duas famílias de chave de colidirem na mesma
+// coluna: endereço de termo sempre tem `::`, e endereço de grupo nunca tem.
+//
+// @example engine.FlagGroupID("furia") // "flag:furia"
+func FlagGroupID(flag string) string { return "flag:" + flag }
 
 // ApplyActiveConditionals dobra de volta em `byTarget` os efeitos condicionais
 // cujos ids estão em `activeIds`, refazendo a resolução de não-empilhamento por
@@ -509,7 +519,10 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	// estável porque cada balde é uma fatia acrescida na ordem da fonte.
 	remaining := []ConditionalEffect{}
 	for _, c := range effects.Conditional {
-		if !activeIds[ConditionalID(c)] {
+		// LIGADO PELO TERMO ou pelo GRUPO da flag. O grupo é o que faz o
+		// interruptor único da tela ligar a regra INTEIRA: só pelo termo, um
+		// condicional de três modificadores entraria com um.
+		if !activeIds[c.Term] && !(c.Flag != "" && activeIds[FlagGroupID(c.Flag)]) {
 			remaining = append(remaining, c)
 			continue
 		}

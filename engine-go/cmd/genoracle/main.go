@@ -102,7 +102,7 @@ func buildPayload(book *engine.Catalogs, f fixture) (oraclePayload, error) {
 	// segunda passada que exercita a dobra dos condicionais.
 	ids := make([]string, 0, len(effects.Conditional))
 	for _, cond := range effects.Conditional {
-		ids = append(ids, engine.ConditionalID(cond))
+		ids = append(ids, cond.Term)
 	}
 	sort.Strings(ids)
 	on := map[string]bool{}
