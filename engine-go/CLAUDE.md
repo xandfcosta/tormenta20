@@ -512,6 +512,37 @@ O efeito colateral é o que se queria: **o FIO fala a unidade do LIVRO.** O
 oráculo mostra −3 e +1,5 como a página imprime, e quem revisa o diff contra o
 livro compara os mesmos números.
 
+### O modificador que MULTIPLICA
+
+Quase toda regra do livro SOMA, e é por isso que o motor nasceu só com soma.
+Algumas multiplicam, e elas não cabiam em lugar nenhum — o Lento reduz o
+deslocamento à metade (p395), o Imóvel o reduz a 0m (p394), a Alta Arcana corta
+o custo em PM pela metade.
+
+O `engine.Ratio` é um fator racional em inteiros (`{1,2}` é metade, `{0,1}` é
+zero), e ele vive num campo PRÓPRIO do `Modifier`. Quem tem fator não é parcela
+da pilha: o `Amount` fica em zero e o valor sai do `byTarget` para o
+`ItemEffects.Factors`.
+
+**Ele age DEPOIS da soma, e sobre a BASE junto.** Quem diz é o livro: a Alta
+Arcana escreve "reduzido à metade (APÓS aplicar aprimoramentos e outros
+modificadores)". O Lento não corta o bônus de item de ninguém — corta o quanto a
+pessoa anda.
+
+**Dois fatores no mesmo alvo: vale o MAIS SEVERO, e eles não compõem.** É a
+regra que o livro já dá para condição — "aplique apenas o mais severo" (p394) —,
+e os dois que existem hoje vêm de condição: Lento mais Imóvel não dá 2,25m, dá
+0m. No dia em que chegar um fator que NÃO seja de condição, é esta linha que se
+revisa.
+
+Racional e não decimal porque o motor é modelado em inteiros — e porque a
+divisão inteira de um total em QUADRADOS é exatamente o "arredonde para baixo
+para o primeiro incremento de 1,5m" que o Lento pede. Não há regra de
+arredondamento escrita à mão em lugar nenhum.
+
+> **O que ainda NÃO cabe:** a Fúria Titânica (p42) dobra o bônus de UMA FONTE,
+> e não o total de um alvo. É outra forma, e ela continua sem representação.
+
 ### Onde a unidade aparece, e onde ela não aparece
 
 | lugar | unidade |

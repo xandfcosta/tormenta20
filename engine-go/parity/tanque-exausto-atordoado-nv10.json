@@ -498,6 +498,17 @@
         },
         {
           "target": {
+            "k": "displacement"
+          },
+          "amount": 0,
+          "bonusType": "condition",
+          "factor": {
+            "num": 1,
+            "den": 2
+          }
+        },
+        {
+          "target": {
             "k": "defense"
           },
           "amount": -5,
@@ -705,7 +716,7 @@
     "displacementSquares": {
       "base": 4,
       "itemBonus": 0,
-      "total": 4,
+      "total": 2,
       "contributions": []
     },
     "flySpeed": 0,
@@ -1252,7 +1263,7 @@
     "displacementSquares": {
       "base": 4,
       "itemBonus": 0,
-      "total": 4,
+      "total": 2,
       "contributions": []
     },
     "flySpeed": 0,

@@ -98,6 +98,7 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		Condition *ModifierCondition `json:"condition,omitempty"`
 		Note      string             `json:"note,omitempty"`
 		Scale     *VitalScale        `json:"scale,omitempty"`
+		Factor    *Ratio             `json:"factor,omitempty"`
 	}
 	return json.Marshal(wire{
 		Target:    m.Target,
@@ -106,6 +107,7 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		Condition: m.Condition,
 		Note:      m.Note,
 		Scale:     m.Scale,
+		Factor:    m.Factor,
 	})
 }
 
@@ -118,6 +120,9 @@ type Modifier struct {
 	Condition *ModifierCondition `json:"condition,omitempty"`
 	Note      string             `json:"note,omitempty"`
 	Scale     *VitalScale        `json:"scale,omitempty"`
+	// Factor MULTIPLICA o total do alvo, depois da soma — ver `factor.go`. Um
+	// modificador com fator ignora o `Amount`: ele não é parcela da pilha.
+	Factor *Ratio `json:"factor,omitempty"`
 }
 
 // UnmarshalJSON leva o `amount` do catálogo para a unidade do MOTOR.
@@ -134,6 +139,7 @@ func (m *Modifier) UnmarshalJSON(b []byte) error {
 		Condition *ModifierCondition `json:"condition"`
 		Note      string             `json:"note"`
 		Scale     *VitalScale        `json:"scale"`
+		Factor    *Ratio             `json:"factor"`
 	}
 	if err := json.Unmarshal(b, &shadow); err != nil {
 		return err
@@ -145,6 +151,7 @@ func (m *Modifier) UnmarshalJSON(b []byte) error {
 		Condition: shadow.Condition,
 		Note:      shadow.Note,
 		Scale:     shadow.Scale,
+		Factor:    shadow.Factor,
 	}
 	return nil
 }
@@ -203,8 +210,12 @@ type ConditionalEffect struct {
 // `MarshalJSON` o emite como array ORDENADO, para a paridade de JSON com o
 // oráculo não depender de ordem.
 type ItemEffects struct {
-	ByTarget    map[string]AggregatedStat
-	Flags       map[string]bool
+	ByTarget map[string]AggregatedStat
+	Flags    map[string]bool
+	// Factors é o fator JÁ RESOLVIDO por alvo — o mais severo vence, e eles não
+	// compõem (ver `factor.go`). Quem o APLICA é a decomposição, porque ele age
+	// sobre o total COM a base, e a base não passa por aqui.
+	Factors     map[string]Ratio
 	Conditional []ConditionalEffect
 }
 
@@ -472,6 +483,7 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 	order := []string{}
 	buckets := map[string][]Contribution{}
 	flags := map[string]bool{}
+	factors := map[string]Ratio{}
 	conditional := []ConditionalEffect{}
 
 	// Passada prévia: as flags de todo item equipado, antes de tudo.
@@ -516,6 +528,12 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 			if !conditionMet(m, item.Equipped) {
 				continue
 			}
+			// O FATOR não é parcela: ele sai da pilha e vai para o mapa próprio.
+			if m.Factor != nil {
+				key := targetKey(m.Target)
+				factors[key] = severest(factors[key], *m.Factor)
+				continue
+			}
 			if m.Target.K == "flag" {
 				flags[m.Target.Name] = true
 				continue
@@ -536,7 +554,7 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 	for _, key := range order {
 		byTarget[key] = resolveStack(buckets[key])
 	}
-	return ItemEffects{ByTarget: byTarget, Flags: flags, Conditional: conditional}
+	return ItemEffects{ByTarget: byTarget, Flags: flags, Factors: factors, Conditional: conditional}
 }
 
 // firstNonEmpty devolve a primeira não vazia.
@@ -605,5 +623,10 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	for key := range buckets {
 		byTarget[key] = resolveStack(buckets[key])
 	}
-	return ItemEffects{ByTarget: byTarget, Flags: effects.Flags, Conditional: remaining}
+	// Os FATORES atravessam intactos: nenhum condicional traz fator hoje — os
+	// dois que existem vêm da tabela de condições, que os declara sem condição —
+	// e perdê-los aqui faria a ficha com opt-in ligado andar mais que a sem.
+	return ItemEffects{
+		ByTarget: byTarget, Flags: effects.Flags, Factors: effects.Factors, Conditional: remaining,
+	}
 }

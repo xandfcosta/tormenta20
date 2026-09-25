@@ -282,10 +282,16 @@ func displacementBreakdown(base int, e ItemEffects, load LoadBreakdown) ValueBre
 		bonus += squaresOf(load.DisplacementPenalty)
 		contribs = append(contribs, overloadContrib(load.DisplacementPenalty))
 	}
+	// O FATOR age DEPOIS da soma, e sobre a BASE junto: o Lento não corta o
+	// bônus de item, corta o quanto a pessoa anda (p395). Em QUADRADOS a divisão
+	// inteira JÁ é o "arredonde para baixo para o primeiro incremento de 1,5m"
+	// que a condição pede — não há regra de arredondamento escrita aqui, e é de
+	// propósito.
+	total := e.Factors[targetKey(ModifierTarget{K: "displacement"})].Applied(max(0, base+bonus))
 	return ValueBreakdown{
 		Base:          base,
 		ItemBonus:     bonus,
-		Total:         max(0, base+bonus),
+		Total:         max(0, total),
 		Contributions: contribs,
 	}
 }
