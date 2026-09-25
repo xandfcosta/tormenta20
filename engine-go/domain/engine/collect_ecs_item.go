@@ -87,6 +87,7 @@ func (c *Catalogs) spawnWornItems(ch Character) ecs.System {
 			// dividiriam o mesmo arranjo e o primeiro `append` que couber na
 			// capacidade sobrescreveria o que o `OwnGrants` guarda.
 			ecs.Set(w, e, Grants{
+				SourceID:  catalogItemID(it),
 				Source:    it.Name,
 				Wear:      it.Equipped,
 				Modifiers: append([]Modifier{}, own...),

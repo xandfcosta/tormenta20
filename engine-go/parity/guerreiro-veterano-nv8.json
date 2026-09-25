@@ -284,11 +284,13 @@
   },
   "activeItems": [
     {
+      "sourceId": "espada-curta",
       "source": "Espada curta",
       "equipped": "wielded",
       "modifiers": []
     },
     {
+      "sourceId": "armadura-couro",
       "source": "Armadura de couro",
       "equipped": "vested",
       "modifiers": [
@@ -305,6 +307,7 @@
       ]
     },
     {
+      "sourceId": "bandana",
       "source": "Bandana",
       "equipped": "vested",
       "modifiers": [
@@ -322,6 +325,7 @@
       ]
     },
     {
+      "sourceId": "cosmetico",
       "source": "Cosmético (cena)",
       "equipped": "vested",
       "modifiers": [
@@ -336,6 +340,7 @@
       ]
     },
     {
+      "sourceId": "Humano",
       "source": "Raça: Humano",
       "equipped": "vested",
       "modifiers": [
@@ -375,6 +380,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "cosmetico",
             "source": "Cosmético (cena)",
             "bonusType": "untyped",
             "amount": 2
@@ -385,6 +391,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -396,6 +403,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -407,6 +415,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -418,6 +427,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "armadura-couro",
             "source": "Armadura de couro",
             "bonusType": "armor",
             "amount": 2
@@ -428,6 +438,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "bandana",
             "source": "Bandana",
             "bonusType": "item",
             "amount": 1

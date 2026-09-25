@@ -246,11 +246,13 @@
   },
   "activeItems": [
     {
+      "sourceId": "espada-curta",
       "source": "Espada curta",
       "equipped": "wielded",
       "modifiers": []
     },
     {
+      "sourceId": "armadura-couro",
       "source": "Armadura de couro",
       "equipped": "vested",
       "modifiers": [
@@ -267,6 +269,7 @@
       ]
     },
     {
+      "sourceId": "Humano",
       "source": "Raça: Humano",
       "equipped": "vested",
       "modifiers": [
@@ -341,6 +344,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -352,6 +356,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -363,6 +368,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -374,6 +380,7 @@
         "total": -3,
         "contributions": [
           {
+            "sourceId": "armadura-couro",
             "source": "Armadura de couro",
             "bonusType": "armor",
             "amount": 2

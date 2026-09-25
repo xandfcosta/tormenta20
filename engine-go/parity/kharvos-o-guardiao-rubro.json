@@ -339,6 +339,7 @@
   },
   "activeItems": [
     {
+      "sourceId": "machado-taurico",
       "source": "Machado táurico",
       "equipped": "wielded2",
       "modifiers": [
@@ -430,6 +431,7 @@
       ]
     },
     {
+      "sourceId": "couraca",
       "source": "Couraça",
       "equipped": "vested",
       "modifiers": [
@@ -478,6 +480,7 @@
       ]
     },
     {
+      "sourceId": "medalhao-de-prata",
       "source": "Medalhão de prata",
       "equipped": "vested",
       "modifiers": [
@@ -532,6 +535,7 @@
       ]
     },
     {
+      "sourceId": "Minotauro",
       "source": "Raça: Minotauro",
       "equipped": "vested",
       "modifiers": [
@@ -573,6 +577,7 @@
       ]
     },
     {
+      "sourceId": "Refugiado",
       "source": "Origem: Refugiado",
       "equipped": "vested",
       "modifiers": [
@@ -599,6 +604,7 @@
       ]
     },
     {
+      "sourceId": "class.barbaro.furia",
       "source": "Fúria",
       "equipped": "vested",
       "modifiers": [
@@ -657,6 +663,7 @@
       ]
     },
     {
+      "sourceId": "class.barbaro.instinto-selvagem-1",
       "source": "Instinto Selvagem +1",
       "equipped": "vested",
       "modifiers": [
@@ -687,6 +694,7 @@
       ]
     },
     {
+      "sourceId": "class.barbaro.furia-3",
       "source": "Fúria +3",
       "equipped": "vested",
       "modifiers": [
@@ -745,6 +753,7 @@
       ]
     },
     {
+      "sourceId": "class.barbaro.pele-de-ferro",
       "source": "Pele de Ferro",
       "equipped": "vested",
       "modifiers": [
@@ -763,6 +772,7 @@
       ]
     },
     {
+      "sourceId": "class.barbaro.totem-espiritual",
       "source": "Totem Espiritual",
       "equipped": "vested",
       "modifiers": [
@@ -801,11 +811,13 @@
         "total": -5,
         "contributions": [
           {
+            "sourceId": "couraca",
             "source": "Couraça",
             "bonusType": "untyped",
             "amount": -4
           },
           {
+            "sourceId": "couraca",
             "source": "Couraça",
             "bonusType": "untyped",
             "amount": -1,
@@ -817,6 +829,7 @@
         "total": -2,
         "contributions": [
           {
+            "sourceId": "machado-taurico",
             "source": "Machado táurico",
             "bonusType": "untyped",
             "amount": -2,
@@ -839,6 +852,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "Minotauro",
             "source": "Raça: Minotauro",
             "bonusType": "untyped",
             "amount": 1,
@@ -850,6 +864,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "Minotauro",
             "source": "Raça: Minotauro",
             "bonusType": "untyped",
             "amount": 2,
@@ -861,6 +876,7 @@
         "total": -1,
         "contributions": [
           {
+            "sourceId": "Minotauro",
             "source": "Raça: Minotauro",
             "bonusType": "untyped",
             "amount": -1,
@@ -872,6 +888,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "class.barbaro.instinto-selvagem-1",
             "source": "Instinto Selvagem +1",
             "bonusType": "enhancement",
             "amount": 1
@@ -882,23 +899,27 @@
         "total": 11,
         "contributions": [
           {
+            "sourceId": "couraca",
             "source": "Couraça",
             "bonusType": "armor",
             "amount": 5
           },
           {
+            "sourceId": "couraca",
             "source": "Couraça",
             "bonusType": "enhancement",
             "amount": 1,
             "note": "Reforçada: +1 Defesa"
           },
           {
+            "sourceId": "Minotauro",
             "source": "Raça: Minotauro",
             "bonusType": "untyped",
             "amount": 1,
             "note": "Couro Rígido"
           },
           {
+            "sourceId": "class.barbaro.pele-de-ferro",
             "source": "Pele de Ferro",
             "bonusType": "untyped",
             "amount": 4
@@ -909,6 +930,7 @@
         "total": -2,
         "contributions": [
           {
+            "sourceId": "machado-taurico",
             "source": "Machado táurico",
             "bonusType": "untyped",
             "amount": -2,
@@ -920,6 +942,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "class.barbaro.instinto-selvagem-1",
             "source": "Instinto Selvagem +1",
             "bonusType": "enhancement",
             "amount": 1
@@ -930,6 +953,7 @@
         "total": 1,
         "contributions": [
           {
+            "sourceId": "class.barbaro.instinto-selvagem-1",
             "source": "Instinto Selvagem +1",
             "bonusType": "enhancement",
             "amount": 1
@@ -940,6 +964,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "Refugiado",
             "source": "Origem: Refugiado",
             "bonusType": "untyped",
             "amount": 2
@@ -950,6 +975,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "machado-taurico",
             "source": "Machado táurico",
             "bonusType": "enhancement",
             "amount": 2,
@@ -961,6 +987,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "machado-taurico",
             "source": "Machado táurico",
             "bonusType": "enhancement",
             "amount": 2,
@@ -972,6 +999,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "machado-taurico",
             "source": "Machado táurico",
             "bonusType": "enhancement",
             "amount": 2,
@@ -983,6 +1011,7 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "machado-taurico",
             "source": "Machado táurico",
             "bonusType": "enhancement",
             "amount": 2,
@@ -994,11 +1023,13 @@
         "total": 2,
         "contributions": [
           {
+            "sourceId": "Refugiado",
             "source": "Origem: Refugiado",
             "bonusType": "untyped",
             "amount": 1
           },
           {
+            "sourceId": "class.barbaro.totem-espiritual",
             "source": "Totem Espiritual",
             "bonusType": "untyped",
             "amount": 1
@@ -1009,6 +1040,7 @@
     "flags": [],
     "conditional": [
       {
+        "sourceId": "machado-taurico",
         "source": "Machado táurico",
         "bonusType": "untyped",
         "amount": 2,
@@ -1019,6 +1051,7 @@
         }
       },
       {
+        "sourceId": "medalhao-de-prata",
         "source": "Medalhão de prata",
         "bonusType": "enhancement",
         "amount": 1,
@@ -1029,6 +1062,7 @@
         "flag": "homebrew-vestido-medalhao-de-prata"
       },
       {
+        "sourceId": "medalhao-de-prata",
         "source": "Medalhão de prata",
         "bonusType": "enhancement",
         "amount": 2,
@@ -1039,6 +1073,7 @@
         "flag": "homebrew-vestido-medalhao-de-prata"
       },
       {
+        "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
         "amount": 2,
@@ -1050,6 +1085,7 @@
         "flag": "furia"
       },
       {
+        "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
         "amount": 2,
@@ -1061,6 +1097,7 @@
         "flag": "furia"
       },
       {
+        "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
         "amount": 2,
@@ -1072,6 +1109,7 @@
         "flag": "furia"
       },
       {
+        "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
         "amount": 2,
@@ -1083,6 +1121,7 @@
         "flag": "furia"
       },
       {
+        "sourceId": "class.barbaro.furia-3",
         "source": "Fúria +3",
         "bonusType": "morale",
         "amount": 3,
@@ -1094,6 +1133,7 @@
         "flag": "furia"
       },
       {
+        "sourceId": "class.barbaro.furia-3",
         "source": "Fúria +3",
         "bonusType": "morale",
         "amount": 3,
@@ -1105,6 +1145,7 @@
         "flag": "furia"
       },
       {
+        "sourceId": "class.barbaro.furia-3",
         "source": "Fúria +3",
         "bonusType": "morale",
         "amount": 3,
@@ -1116,6 +1157,7 @@
         "flag": "furia"
       },
       {
+        "sourceId": "class.barbaro.furia-3",
         "source": "Fúria +3",
         "bonusType": "morale",
         "amount": 3,
