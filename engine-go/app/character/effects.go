@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -97,10 +98,26 @@ func (p Plays) EndAppliedEffect(ctx context.Context, characterID, effectID int64
 }
 
 // ToggleSituational liga ou desliga um condicional de contexto.
-func (p Plays) ToggleSituational(ctx context.Context, characterID int64, key string) error {
+//
+// # A CHAVE É CONFERIDA CONTRA O QUE A FICHA OFERECE
+//
+// Ela vem crua de um sinal do cliente, e a tela esconder um interruptor não é
+// garantia nenhuma — a fronteira é o servidor. Sem esta conferência um jogador
+// entrava na Fúria postando a chave da postura: +3 em ataque e dano, PM intacto,
+// nenhuma linha de postura. Jogador não muda REGRA; ele liga o que a ficha dele
+// já oferece (ALE-387).
+//
+// O conjunto é de PERMITIDOS, e não uma lista de proibidos com as posturas
+// dentro: uma lista de proibidos subconta em silêncio, e a primeira espécie de
+// chave que alguém inventasse passaria por ela.
+func (p Plays) ToggleSituational(ctx context.Context, dto sheet.CharacterDTO, key string) error {
 	if key == "" {
 		return fmt.Errorf("o gesto não disse qual efeito situacional alternar")
 	}
+	if err := p.refuseUnofferedSituational(dto, key); err != nil {
+		return err
+	}
+	characterID := dto.ID
 	current, err := p.queries.ListCharacterConditionals(ctx, characterID)
 	if err != nil {
 		return fmt.Errorf("ler os condicionais da ficha %d: %w", characterID, err)
@@ -122,4 +139,22 @@ func (p Plays) ToggleSituational(ctx context.Context, characterID int64, key str
 		return fmt.Errorf("ligar o condicional %q: %w", key, err)
 	}
 	return nil
+}
+
+// refuseUnofferedSituational recusa a chave que a ficha não oferece.
+func (p Plays) refuseUnofferedSituational(dto sheet.CharacterDTO, key string) error {
+	if dto.Ruleset == nil {
+		return fmt.Errorf("a ficha %d chegou sem o mundo dela; não dá para dizer o que ela oferece", dto.ID)
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return fmt.Errorf("montar o personagem do motor (%d): %w", dto.ID, err)
+	}
+	offered := engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional
+	for _, g := range SituationalGroupsOf(offered) {
+		if g.Key == key {
+			return nil
+		}
+	}
+	return fmt.Errorf("este efeito situacional não é oferecido por esta ficha")
 }

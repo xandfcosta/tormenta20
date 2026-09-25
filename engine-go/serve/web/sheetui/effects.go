@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"sort"
 	"strconv"
+	"t20engine/app/character"
 
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
@@ -269,54 +270,24 @@ func buffOptions() []pickerOption {
 	return options
 }
 
-// situationalRowsOf agrupa os condicionais que o motor oferece.
+// situationalRowsOf desenha uma linha por interruptor.
 //
-// # Quem compartilha FLAG vira UM interruptor
-//
-// Um item caseiro com três modificadores é uma coisa só na mesa; como três
-// linhas, a pessoa deixaria metade do efeito ligado. As POSTURAS ficam de fora:
-// o interruptor delas mora nos Poderes, porque entrar custa PM.
+// A PARTIÇÃO — quem compartilha flag vira um interruptor só, e as posturas
+// ficam de fora — é do `character.SituationalGroupsOf`, e não daqui: o caso de
+// uso RECUSA a chave que não estiver nela, e esta tela desenha exatamente o que
+// ele aceita. Duas implementações divergiriam, e a divergência apareceria como
+// a tela escondendo o que o servidor deixa passar (ALE-387).
 func situationalRowsOf(offered []engine.ConditionalEffect, active map[string]bool) ([]situationalRow, []alwaysOnRow) {
-	stances := book.StancesFromCatalog()
-	byFlag := map[string][]engine.ConditionalEffect{}
-	order := []string{}
-	loose := []engine.ConditionalEffect{}
-	for _, c := range offered {
-		if c.Flag == "" {
-			loose = append(loose, c)
-			continue
-		}
-		if _, isStance := stances[c.Flag]; isStance {
-			continue
-		}
-		if _, seen := byFlag[c.Flag]; !seen {
-			order = append(order, c.Flag)
-		}
-		byFlag[c.Flag] = append(byFlag[c.Flag], c)
-	}
-
 	rows := []situationalRow{}
-	for _, c := range loose {
-		id := c.Term
-		rows = append(rows, situationalRow{
-			Key: id, Label: conditionalLabel(c), Source: c.Source, Active: active[id],
-			Modifiers: []breakdownRow{{Label: targetLabel(c.Target), Value: book.WithSign(c.Amount)}},
-			Command:   id,
-		})
-	}
-	for _, flag := range order {
-		group := byFlag[flag]
-		// A CHAVE É DO GRUPO, e não a do primeiro membro. Um interruptor que
-		// gravasse o endereço de um dos três modificadores ligaria um terço da
-		// regra — e o crachá ao lado dele diria "3 mods".
-		key := engine.FlagGroupID(flag)
+	for _, g := range character.SituationalGroupsOf(offered) {
+		head := g.Members[0]
 		row := situationalRow{
-			Key: key, Label: conditionalLabel(group[0]),
-			Source: group[0].Source, Folded: len(group) > 1,
-			Active:  active[key],
-			Command: key,
+			Key: g.Key, Label: conditionalLabel(head), Source: head.Source,
+			Folded:  len(g.Members) > 1,
+			Active:  active[g.Key],
+			Command: g.Key,
 		}
-		for _, c := range group {
+		for _, c := range g.Members {
 			row.Modifiers = append(row.Modifiers, breakdownRow{
 				Label: targetLabel(c.Target), Value: book.WithSign(c.Amount),
 			})

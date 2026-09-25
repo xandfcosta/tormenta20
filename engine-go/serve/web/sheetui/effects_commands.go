@@ -71,5 +71,11 @@ func toggleSituational(s Scene, r *http.Request, row sqlcgen.Character, signals 
 	if signals.Status != nil {
 		key = *signals.Status
 	}
-	return s.plays.ToggleSituational(r.Context(), row.ID, key)
+	// O AGREGADO vai junto porque quem decide se a chave vale é o caso de uso, e
+	// ele precisa saber o que ESTA ficha oferece — a tela esconder não basta.
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	return s.plays.ToggleSituational(r.Context(), dto, key)
 }
