@@ -575,11 +575,28 @@ A troca foi MEDIDA antes de ser feita: a tabela tinha zero linhas. O guarda que
 prendia a forma antiga dizia, com razão, que mudá-la exigiria uma migração — e
 o que autoriza a migração é a contagem, não a vontade.
 
+### JOGADOR NÃO MUDA REGRA — isso é do mestre (decisão do dono)
+
+É a linha que separa as duas famílias de escrita, e ela vale para toda tela que
+vier. O jogador alterna o OPT-IN de um condicional que a ficha dele já oferece;
+quem AUTORA regra — emenda de verbete, concessão, silêncio — é o mestre, na
+campanha dele.
+
+**Quem cobra é o servidor, e a tela esconder não conta.** Medido (ALE-387): o
+`ToggleSituational` gravava a chave crua do sinal do cliente, e um POST com
+`{"conditional":"flag:furia"}` dava ao bárbaro +3 em ataque e dano com o PM
+INTACTO e sem linha de postura. A lista de situacionais nunca ofereceu aquele
+interruptor — as posturas são excluídas dela, porque entrar custa PM.
+
+O conjunto aceito é de PERMITIDOS (`character.SituationalGroupsOf`), e ele tem
+UM dono: a cena desenha a partir dele e o caso de uso recusa o que não estiver
+nele. Enquanto eram duas implementações, a divergência aparecia como a tela
+escondendo o que o servidor aceita.
+
 **`character_conditionals` FICA, e não é o mesmo que `campaign_silences`**,
-ainda que as duas guardem endereços de termo. São o JOGADOR e o MESTRE
-escrevendo coisas diferentes: o opt-in nasce DESLIGADO e é do dono da ficha; o
-silêncio nasce LIGADO e é de quem manda na mesa. Juntá-las numa tabela só
-juntaria duas permissões de escrita que não podem ser a mesma.
+ainda que as duas guardem endereços de termo. O opt-in nasce DESLIGADO e é do
+dono da ficha; o silêncio nasce LIGADO e é de quem manda na mesa. Juntá-las numa
+tabela só juntaria duas permissões de escrita que não podem ser a mesma.
 
 ### O interruptor de GRUPO tem endereço próprio
 
