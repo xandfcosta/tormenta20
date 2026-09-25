@@ -53,6 +53,13 @@ type CampaignIgnoredRule struct {
 	Updatedat  string `json:"updatedat"`
 }
 
+type CampaignItem struct {
+	Campaignid int64  `json:"campaignid"`
+	Itemid     string `json:"itemid"`
+	Adds       string `json:"adds"`
+	Updatedat  string `json:"updatedat"`
+}
+
 type CampaignMember struct {
 	ID          int64  `json:"id"`
 	Campaignid  int64  `json:"campaignid"`

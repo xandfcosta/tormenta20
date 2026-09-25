@@ -16,6 +16,12 @@ import (
 // Ela só precisa ser declarada, e é essa a fricção que esta lista existe para
 // criar: apagar um teste é um ato, e o ato aparece aqui.
 var tombstones = map[string]bool{
+	// Ele varria as portas de `*Catalogs` e exigia que cada uma abrisse aplicando
+	// a vista da campanha. Saiu na ALE-387 porque o TIPO passou a fazer o
+	// trabalho dele: computar uma ficha pede um `engine.Ruleset`, e quem tem só o
+	// livro na mão NÃO COMPILA. Um guarda precisa ser rodado para pegar o
+	// esquecimento; o compilador, não.
+	"TestEveryCatalogEntryPointAppliesTheCampaignView": true,
 	// Os três mediam a marca `Dirty` do tabuleiro e a tarja "a mesa não está
 	// sendo salva" que ela acendia. A ALE-375 pôs a gravação dentro da mutação:
 	// a marca, a tarja e a pergunta que elas respondiam deixaram de existir, e

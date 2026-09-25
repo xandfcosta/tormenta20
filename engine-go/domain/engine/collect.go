@@ -35,14 +35,14 @@ var expertiseNamesSet = toSet([]string{
 // ActiveItemsFor: collect every active modifier
 // source into []ActiveItem — the input the resolution engine consumes. Order is
 // significativa: o despejo de paridade compara byte a byte.
-func (c *Catalogs) ActiveItemsFor(ch Character) []ActiveItem {
+func (r *Ruleset) ActiveItemsFor(ch Character) []ActiveItem {
 	proficiencies := parseProficiencySet(ch.Proficiencies)
 	items := []ActiveItem{}
 	for _, it := range ch.Items {
 		if it.Equipped == nil {
 			continue
 		}
-		items = append(items, c.itemActiveItem(it, proficiencies))
+		items = append(items, r.itemActiveItem(it, proficiencies))
 	}
 	for _, eff := range ch.ActiveEffects {
 		mods := parseEffectModifiers(eff.Modifiers)
@@ -52,18 +52,18 @@ func (c *Catalogs) ActiveItemsFor(ch Character) []ActiveItem {
 		scope := DurationLabel(eff.Scope)
 		items = append(items, ActiveItem{
 			SourceID:  eff.CatalogID,
-			Source:    fmt.Sprintf("%s (%s)", c.appliedEffectName(eff.CatalogID, mods), scope),
+			Source:    fmt.Sprintf("%s (%s)", r.appliedEffectName(eff.CatalogID, mods), scope),
 			Equipped:  &vestedWear,
 			Modifiers: mods,
 		})
 	}
-	items = append(items, c.raceActiveItems(ch)...)
-	if origin := c.originActiveItem(ch); origin != nil {
+	items = append(items, r.raceActiveItems(ch)...)
+	if origin := r.originActiveItem(ch); origin != nil {
 		items = append(items, *origin)
 	}
-	items = append(items, c.classActiveItems(ch)...)
-	items = append(items, c.generalPowerActiveItem(ch)...)
-	if tormenta := c.tormentaCarismaItem(ch); tormenta != nil {
+	items = append(items, r.classActiveItems(ch)...)
+	items = append(items, r.generalPowerActiveItem(ch)...)
+	if tormenta := r.tormentaCarismaItem(ch); tormenta != nil {
 		items = append(items, *tormenta)
 	}
 	if cond := conditionActiveItem(ch); cond != nil {
@@ -232,10 +232,10 @@ var conditionModifierTable = map[string][]Modifier{
 // itemActiveItem ports the per-item branch of activeItemsFor's map: base +
 // overlay + material mods (ownMods), then penalties, mirrors, and homebrew, in
 // the exact TS concatenation order.
-func (c *Catalogs) itemActiveItem(it CharacterItem, prof map[string]bool) ActiveItem {
+func (r *Ruleset) itemActiveItem(it CharacterItem, prof map[string]bool) ActiveItem {
 	var catalog *CatalogItem
 	if it.CatalogID != nil {
-		catalog = c.getCatalogItem(*it.CatalogID)
+		catalog = r.getCatalogItem(*it.CatalogID)
 	}
 	improvementIDs := parseStringArray(it.Improvements)
 
@@ -244,10 +244,10 @@ func (c *Catalogs) itemActiveItem(it CharacterItem, prof map[string]bool) Active
 		ownMods = append(ownMods, catalog.Modifiers...)
 	}
 	for _, id := range improvementIDs {
-		ownMods = append(ownMods, overlayModsWithProvenance(c.getCatalogItem(id))...)
+		ownMods = append(ownMods, overlayModsWithProvenance(r.getCatalogItem(id))...)
 	}
 	if it.Material != nil {
-		ownMods = append(ownMods, overlayModsWithProvenance(c.getCatalogItem(*it.Material))...)
+		ownMods = append(ownMods, overlayModsWithProvenance(r.getCatalogItem(*it.Material))...)
 	}
 
 	mods := append([]Modifier{}, ownMods...)
@@ -441,8 +441,8 @@ func attackExpertiseFor(purpose string) string {
 // motor a carregar as 198 magias resolveria também, e custaria uma entrada nova
 // no despejo que alimenta o oráculo — preço alto para um rótulo que o dado já
 // carrega.
-func (c *Catalogs) appliedEffectName(catalogID string, mods []Modifier) string {
-	if name := c.effectSourceName(catalogID); name != catalogID {
+func (r *Ruleset) appliedEffectName(catalogID string, mods []Modifier) string {
+	if name := r.effectSourceName(catalogID); name != catalogID {
 		return name
 	}
 	for _, m := range mods {
@@ -453,11 +453,11 @@ func (c *Catalogs) appliedEffectName(catalogID string, mods []Modifier) string {
 	return catalogID
 }
 
-func (c *Catalogs) effectSourceName(catalogID string) string {
+func (r *Ruleset) effectSourceName(catalogID string) string {
 	if catalogID == "manual-temp-hp" {
 		return "PV temporários (manual)"
 	}
-	if item := c.getCatalogItem(catalogID); item != nil {
+	if item := r.getCatalogItem(catalogID); item != nil {
 		return item.Name
 	}
 	return catalogID

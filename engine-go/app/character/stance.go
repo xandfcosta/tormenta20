@@ -210,7 +210,7 @@ func stanceOfFlag(flag string) *book.Activation {
 // roda sem o arquivo. É o ÚLTIMO recuo desse tipo — o dos poços virou recusa
 // quando o arranque passou a exigir o catálogo (ALE-355).
 func (p Plays) conditionalsOfFlag(dto sheet.CharacterDTO, flag string) []string {
-	if p.catalogs == nil {
+	if dto.Ruleset == nil {
 		return nil
 	}
 	ec, err := sheet.EngineCharacterFrom(dto)
@@ -218,7 +218,7 @@ func (p Plays) conditionalsOfFlag(dto sheet.CharacterDTO, flag string) []string 
 		return nil
 	}
 	outside := []string{}
-	for _, c := range engine.ComputeItemEffects(p.catalogs.ActiveItemsFor(ec)).Conditional {
+	for _, c := range engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional {
 		if c.Flag == flag {
 			outside = append(outside, engine.ConditionalID(c))
 		}

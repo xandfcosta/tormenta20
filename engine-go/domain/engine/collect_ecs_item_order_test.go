@@ -50,7 +50,7 @@ func TestTheFourItemRulesLandInOrder(t *testing.T) {
 		Improvements: `["melhoria-equilibrada"]`,
 	}}}
 
-	items := catalogs.ActiveItemsInWorld(ch)
+	items := BookRuleset(catalogs).ActiveItemsByEcs(ch)
 	if len(items) != 1 {
 		t.Fatalf("colhi %d fontes, esperava 1", len(items))
 	}
@@ -114,8 +114,8 @@ func TestBothPathsAgreeOnTheItemThatFiresThreeRules(t *testing.T) {
 		Improvements: `["melhoria-equilibrada"]`,
 	}}}
 
-	legacy := roundTrip(t, catalogs.ActiveItemsFor(ch))
-	world := roundTrip(t, catalogs.ActiveItemsInWorld(ch))
+	legacy := roundTrip(t, BookRuleset(catalogs).ActiveItemsFor(ch))
+	world := roundTrip(t, BookRuleset(catalogs).ActiveItemsByEcs(ch))
 	if !reflect.DeepEqual(world, legacy) {
 		diffReport(t, "o machado táurico: ECS contra o coletor antigo", world, legacy)
 	}

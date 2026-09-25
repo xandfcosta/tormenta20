@@ -651,3 +651,11 @@ DELETE FROM character_stances WHERE characterId = ? AND flag = ?;
 
 -- name: ClearCharacterStances :exec
 DELETE FROM character_stances WHERE characterId = ?;
+
+-- name: ListCampaignItemPatches :many
+-- A emenda de catalogo de UMA campanha: o mundo dela.
+--
+-- Por campanha e nao por personagem: o mundo e resolvido UMA vez e vale para
+-- toda ficha jogada nele. O MOLDE do elenco tem `characters.campaignId` nulo,
+-- entao ele nao chega aqui e ve o livro puro.
+SELECT itemId, adds FROM campaign_items WHERE campaignId = ? ORDER BY itemId;

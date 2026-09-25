@@ -16,13 +16,13 @@ type EquippedFlag struct {
 // flags) through the item engine so wear conditions (vested/wielded) apply, then
 // emits the resulting flags with the item name as source. Flags are sorted per
 // item for a deterministic order (matching ItemEffects.MarshalJSON).
-func (c *Catalogs) ComputeEquippedFlags(items []CharacterItem) []EquippedFlag {
+func (r *Ruleset) ComputeEquippedFlags(items []CharacterItem) []EquippedFlag {
 	out := []EquippedFlag{}
 	for _, it := range items {
 		if it.Equipped == nil || it.CatalogID == nil {
 			continue
 		}
-		catalog := c.getCatalogItem(*it.CatalogID)
+		catalog := r.getCatalogItem(*it.CatalogID)
 		if catalog == nil {
 			continue
 		}

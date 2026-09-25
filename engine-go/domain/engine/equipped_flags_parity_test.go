@@ -30,7 +30,7 @@ func TestEquippedFlagsParity(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			got := roundTrip(t, catalogs.ComputeEquippedFlags(oracle.Char.Items))
+			got := roundTrip(t, BookRuleset(catalogs).ComputeEquippedFlags(oracle.Char.Items))
 			if !reflect.DeepEqual(got, oracle.EquippedFlags) {
 				diffReport(t, "equippedFlags", got, oracle.EquippedFlags)
 			}

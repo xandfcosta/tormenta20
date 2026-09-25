@@ -4,8 +4,8 @@ package engine
 // parsed ownership blobs + attrTotals from the base item/race effects (no
 // conditionals). The server-side vitals recompute (backend buildVitalContext +
 // vitals-sync) uses it to re-derive PV/PM máximos after a level/class change.
-func (c *Catalogs) VitalContextFor(ch Character) VitalContext {
-	effects := ComputeItemEffects(c.ActiveItemsFor(ch))
+func (r *Ruleset) VitalContextFor(ch Character) VitalContext {
+	effects := ComputeItemEffects(r.ActiveItemsFor(ch))
 	attrTotals := map[string]int{}
 	for _, a := range AttributeKeys {
 		attrTotals[a] = effectiveAttribute(ch, a, effects)
@@ -36,6 +36,6 @@ func (c *Catalogs) VitalContextFor(ch Character) VitalContext {
 
 // VitalsForCharacter re-derives PV/PM máximos for a raw Character — the API's
 // server-side vitals recompute after a level or class-level change.
-func (c *Catalogs) VitalsForCharacter(ch Character) VitalPools {
-	return c.ComputeVitals(c.VitalContextFor(ch))
+func (r *Ruleset) VitalsForCharacter(ch Character) VitalPools {
+	return r.ComputeVitals(r.VitalContextFor(ch))
 }

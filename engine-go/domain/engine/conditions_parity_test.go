@@ -24,7 +24,7 @@ func TestConditionEffects(t *testing.T) {
 	with := func(ids string) ComputedSheet {
 		c := clean
 		c.ActiveConditions = ids
-		return catalogs.ComputeSheet(c, none)
+		return BookRuleset(catalogs).ComputeSheet(c, none)
 	}
 	expertise := func(s ComputedSheet, name string) int {
 		for _, e := range s.Expertises {
@@ -36,7 +36,7 @@ func TestConditionEffects(t *testing.T) {
 		return 0
 	}
 
-	base := catalogs.ComputeSheet(clean, none)
+	base := BookRuleset(catalogs).ComputeSheet(clean, none)
 
 	if got := with(`["vulneravel"]`).Defense.Total; got != base.Defense.Total-2 {
 		t.Errorf("Vulnerável: Defesa = %d, quer %d", got, base.Defense.Total-2)

@@ -489,9 +489,36 @@ A regra que governa quem o lê: **uma vez e guardado**, não por requisição, p
 o conteúdo vem de `go:embed` e não muda enquanto o binário for o mesmo. É o que
 o `race_traits.go` faz com `sync.Once`.
 
-`domain/catalog/data/*.json` é embutido no binário. **Este é o único lugar onde
-catálogo é autorado** — mudar uma magia é editar um arquivo só, e a cena, o
-motor e os testes leem o mesmo arquivo.
+`domain/catalog/data/*.json` é embutido no binário. **O LIVRO é autorado num
+lugar só** — mudar uma magia é editar um arquivo só, e a cena, o motor e os
+testes leem o mesmo arquivo.
+
+**O que uma CAMPANHA acrescenta ao livro não mora ali, e nem podia** (ALE-387):
+ele é `go:embed`, e a mesa autora a dela em tempo de execução. A `emenda de
+catálogo` vive em `campaign_items`, ACRESCENTA modificador a um verbete
+existente e nunca o substitui — ver a linha dela no
+[GLOSSARY.md](../GLOSSARY.md).
+
+**O mundo é um TIPO, e é o compilador que cobra.** `engine.Catalogs` é o LIVRO
+e só responde consulta de verbete; quem computa uma ficha precisa de um
+`engine.Ruleset`, que é o livro sob as emendas de UMA mesa. Não há como esquecer
+de dizer em que mundo a conta acontece: `book.ComputeSheet(…)` não compila.
+
+Fora de campanha se escreve `engine.BookRuleset(book)`, e a linha é explícita de
+propósito — o molde do elenco, o oráculo e os fixtures estão TOMANDO essa
+decisão, e ela aparece em vez de ser o que acontece quando ninguém disse nada.
+
+> Aqui morava a versão anterior, em que a emenda viajava no `engine.Character` e
+> um `TestEvery…` varria as portas cobrando `forCharacter`. Ela foi trocada
+> porque o ESCOPO não era representável: com as emendas no personagem,
+> campanha-inteira e personagem-específico chegam ao motor já misturados pelo
+> carregamento, e a procedência — que é o que a ficha usa para dizer de onde veio
+> cada termo — morre no caminho.
+
+Quem resolve o mundo é o carregamento da ficha (`sheet.RulesetFor`), UMA vez, e
+ele viaja no agregado (`CharacterDTO.Ruleset`, `json:"-"`) até quem computa. O
+lote da mesa (`sheet.RulesetsFor`) faz uma consulta por campanha DISTINTA, e não
+uma por ficha.
 
 **E há DUAS fontes do mesmo `items.json` no processo, com durabilidades
 diferentes.** O `catalog.Resource` é `go:embed` — existe sempre que o binário

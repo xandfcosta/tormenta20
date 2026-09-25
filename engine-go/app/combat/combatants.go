@@ -65,7 +65,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 	if err != nil {
 		return Combatant{}, fmt.Errorf("montar a ficha de %s: %w", e.Label, err)
 	}
-	computed, err := sheet.Compute(r.catalogs, dto)
+	computed, err := sheet.Compute(dto)
 	if err != nil {
 		return Combatant{}, fmt.Errorf("computar a ficha de %s: %w", e.Label, err)
 	}
@@ -75,7 +75,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 	}
 	return Combatant{
 		EntryID: e.ID, Label: e.Label,
-		Weapons:         r.catalogs.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals)),
+		Weapons:         dto.Ruleset.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals)),
 		Defense:         computed.Defense.Total,
 		DamageReduction: computed.DamageReduction.Total,
 	}, nil

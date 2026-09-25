@@ -1214,7 +1214,7 @@ SELECT id, email, name, passwordhash, createdat, updatedat FROM users WHERE emai
 // "ULL" of an `IS NULL`, which still compiled).
 //
 // Queries compiled by sqlc into db/sqlcgen. One camelCase column set means the
-// generated json tags already match the frontend contract (hpMax, catalogSpellId).
+// generated json tags already match the wire contract (catalogSpellId).
 // Grouped by domain; grows per Fase B slice.
 // users / auth (B.2)
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -1541,6 +1541,43 @@ func (q *Queries) ListCampaignCreatures(ctx context.Context, campaignid int64) (
 			&i.Createdat,
 			&i.Updatedat,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCampaignItemPatches = `-- name: ListCampaignItemPatches :many
+SELECT itemId, adds FROM campaign_items WHERE campaignId = ? ORDER BY itemId
+`
+
+type ListCampaignItemPatchesRow struct {
+	Itemid string `json:"itemid"`
+	Adds   string `json:"adds"`
+}
+
+// A emenda de catalogo de UMA campanha: o mundo dela.
+//
+// Por campanha e nao por personagem: o mundo e resolvido UMA vez e vale para
+// toda ficha jogada nele. O MOLDE do elenco tem `characters.campaignId` nulo,
+// entao ele nao chega aqui e ve o livro puro.
+func (q *Queries) ListCampaignItemPatches(ctx context.Context, campaignid int64) ([]ListCampaignItemPatchesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignItemPatches, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignItemPatchesRow{}
+	for rows.Next() {
+		var i ListCampaignItemPatchesRow
+		if err := rows.Scan(&i.Itemid, &i.Adds); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

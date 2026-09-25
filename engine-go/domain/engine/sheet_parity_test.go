@@ -36,7 +36,7 @@ func TestSheetParity(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			got := roundTrip(t, catalogs.ComputeSheet(oracle.Char, map[string]bool{}))
+			got := roundTrip(t, BookRuleset(catalogs).ComputeSheet(oracle.Char, map[string]bool{}))
 			if !reflect.DeepEqual(got, oracle.Sheet) {
 				diffReport(t, "sheet", got, oracle.Sheet)
 			}
@@ -50,7 +50,7 @@ func TestSheetParity(t *testing.T) {
 			}
 			withConditionals++
 			on := toSet(oracle.ActiveConditionals)
-			gotOn := roundTrip(t, catalogs.ComputeSheet(oracle.Char, on))
+			gotOn := roundTrip(t, BookRuleset(catalogs).ComputeSheet(oracle.Char, on))
 			if !reflect.DeepEqual(gotOn, oracle.WithConditionals) {
 				diffReport(t, "sheetWithConditionals", gotOn, oracle.WithConditionals)
 			}

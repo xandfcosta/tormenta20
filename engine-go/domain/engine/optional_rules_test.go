@@ -28,7 +28,7 @@ func TestLoadTurnedOffPenalizesNeitherDisplacementNorExpertises(t *testing.T) {
 			Items:        []CharacterItem{{Name: "Barril", Quantity: 1, Slots: 11}},
 			IgnoredRules: IgnoredRules{Load: ignored},
 		}
-		return catalogs.ComputeSheet(ch, map[string]bool{})
+		return BookRuleset(catalogs).ComputeSheet(ch, map[string]bool{})
 	}
 
 	withRule, noRule := overloaded(false), overloaded(true)

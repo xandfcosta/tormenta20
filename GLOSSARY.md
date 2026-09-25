@@ -38,6 +38,8 @@ alguém já usou e que não voltam.
 | **mestre** | `role === 'gm'` | ~~GM~~ (na tela) | Quem conduz. `gm` continua no código e no fio. |
 | **elenco** | `cast` | — | Quem existe na campanha fora da iniciativa — jogadores e NPCs do mestre (ALE-212). |
 | **regra opcional** | `ignoredRules` | ~~regra da casa~~, ~~regra enforçada~~ | Regra do livro que o mestre pode desligar na campanha — o próprio T20 diz "O mestre pode ignorar essa regra" (p141). Na tela: **Regras da campanha**, e cada chave mostra a regra LIGADA. No código o campo nomeia o que está DESLIGADO, e isso é proposital: valor zero significa "tudo em vigor", que é o padrão do livro. Catálogo em ALE-221. |
+| **mundo** (da campanha) | `engine.Ruleset` | ~~override~~, ~~variante~~, ~~`World`~~ | **A versão de Arton que UMA campanha carrega**: o livro mais o que o mestre mudou. É o que justifica a ficha jogada ser um clone — dois mundos não se afetam, e o mesmo herói levado a outra mesa volta a ser o do livro. Fora de campanha vale o livro puro (`engine.BookRuleset`), e é o que o **molde** do elenco vê. `World` está proibido como identificador porque já é o contêiner de entidades do ECS (`ecs.World`) — ver a colisão C9. |
+| **emenda** | `engine.Amendments`, `campaign_items` | ~~remendo~~, ~~regra da mesa~~, ~~patch~~ | O que a mesa MUDA no livro dela. Hoje a espécie que existe é a **emenda de verbete**: a campanha ACRESCENTA modificador a uma entrada que o livro já tem — na mesa do dono, o medalhão de prata concede +1 em Luta além do +1 de limite de PM da p160. Ela acrescenta e nunca substitui: uma campanha que redeclarasse o verbete copiaria preço, espaços e eixo de equipar, e não seguiria o livro no dia em que ele fosse corrigido. **Não é a regra opcional**, que DESLIGA o que o livro imprime. `remendo` está proibido porque já é o quadro que o Datastar aplica na tela, e é uma palavra por conceito (ALE-387). |
 | **app instalado** | `manifest.webmanifest` | ~~atalho~~, ~~PWA~~ (na tela) | O app aberto pela própria janela, sem barra de endereço, depois de "Adicionar à Tela de Início". **Não é a Tela cheia** — ver a colisão C7. `atalho` é proibido porque é o que se ganha SEM manifest servido por HTTPS: um ícone que abre uma aba comum, com a barra de volta. |
 | **buscador do livro** | `buscador` | ~~paleta~~, ~~palette~~, ~~busca global~~ | A caixa que o ⌃K abre em qualquer cena e que procura nas 1.072 entradas do livro de uma vez (ALE-264). **Não é a busca da cena**, que é o campo que o `/` foca e que filtra a lista da tela atual — uma procura no LIVRO, a outra estreita o que já está na frente. O sinal se chama `buscador` justamente para não colidir com o `busca` das cenas, que vive no mesmo documento. |
 | **livro** | `…DoLivro` | ~~manual~~, ~~PDF~~ (na tela) | O Tormenta 20 impresso, e a AUTORIDADE das regras: `criaturasDoLivro`, `magiaDoLivro`, `condicaoDoLivro` são entradas dele. Quando o ARQUIVO importa — o PDF que o servidor entrega em `/livro` —, diga **PDF do livro**: quem serve é a mesa, e serve só se o dono configurar `LIVRO_PDF` (ALE-264). |
@@ -316,6 +318,15 @@ produto, o terceiro é a palavra da mesa. O identificador é que não pode ser s
 `spellbookPanelOf`.
 
 ---
+
+**C9 — `mundo` são dois, e os dois são legítimos.**
+1. o **contêiner de entidades do ECS** (`ecs.World`), que é o vocabulário da
+   literatura e onde as entidades da coleta vivem;
+2. a **versão de Arton de uma campanha**, que em código se chama
+   `engine.Ruleset` justamente para não disputar o nome com o primeiro.
+
+Não há renome pendente: a decisão já foi tomada na ALE-387, e está aqui para
+ninguém "arrumar" chamando o segundo de `World` ao ver a palavra na prosa.
 
 ## E-bis. Os contextos do servidor (ALE-254)
 

@@ -90,7 +90,11 @@ func main() {
 }
 
 // buildPayload calcula tudo o que o oráculo guarda para um personagem.
-func buildPayload(c *engine.Catalogs, f fixture) (oraclePayload, error) {
+func buildPayload(book *engine.Catalogs, f fixture) (oraclePayload, error) {
+	// O ORÁCULO É FORA DE CAMPANHA, e a linha diz isso em voz alta. Uma fixture
+	// que passasse a ser computada sob a emenda de uma mesa deixaria de descrever
+	// o LIVRO, que é a única coisa que ele existe para prender (ALE-387).
+	c := engine.BookRuleset(book)
 	none := map[string]bool{}
 	effects := engine.ComputeItemEffects(c.ActiveItemsFor(f.Char))
 

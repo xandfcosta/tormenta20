@@ -228,7 +228,7 @@ func limitBadge(spec book.Activation) string {
 // consequência é a tela não OFERECER o poder de gatilho, que é o lado seguro.
 func (s Scene) activeFlags(dto sheet.CharacterDTO) map[string]bool {
 	outside := map[string]bool{}
-	if s.deps.Catalogs() == nil {
+	if dto.Ruleset == nil {
 		return outside
 	}
 	ec, err := sheet.EngineCharacterFrom(dto)
@@ -236,7 +236,7 @@ func (s Scene) activeFlags(dto sheet.CharacterDTO) map[string]bool {
 		return outside
 	}
 	on := sheet.ToStringSet(dto.Conditionals)
-	for _, c := range engine.ComputeItemEffects(s.deps.Catalogs().ActiveItemsFor(ec)).Conditional {
+	for _, c := range engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional {
 		if c.Flag != "" && on[engine.ConditionalID(c)] {
 			outside[c.Flag] = true
 		}

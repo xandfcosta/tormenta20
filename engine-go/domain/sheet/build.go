@@ -101,6 +101,12 @@ func Load(
 		dto.IgnoredRules = engine.IgnoredRulesFrom(ignored)
 	}
 
+	// O MUNDO DA FICHA é resolvido aqui, uma vez, e viaja no agregado. Fora de
+	// campanha ele é o livro puro — que é o que o molde do elenco vê.
+	if dto.Ruleset, err = RulesetFor(ctx, q, cat, c.CampaignId); err != nil {
+		return dto, err
+	}
+
 	// O estado de JOGO vem junto e nao por rota propria: separado, a ficha abriria
 	// com a Furia desligada e a ligaria um instante depois, piscando os numeros
 	// que ela muda.
@@ -116,7 +122,7 @@ func Load(
 	// OS POÇOS SÃO DERIVADOS, e é o último passo de propósito: eles dependem do
 	// agregado inteiro — classes, raça, poderes, e os atributos já somados pelos
 	// itens que as linhas acima carregaram.
-	if err := withDerivedPools(ctx, q, cat, &dto); err != nil {
+	if err := withDerivedPools(ctx, q, &dto); err != nil {
 		return dto, err
 	}
 	return dto, nil
@@ -152,17 +158,15 @@ func Load(
 // coluna velha — a segunda verdade que esta mudança existe para apagar. O
 // `cmd/api` já se recusa a subir sem catálogo; aqui a recusa é a mesma, dita
 // para quem montar um agregado sem ele.
-func withDerivedPools(
-	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, dto *CharacterDTO,
-) error {
-	if cat == nil {
-		return fmt.Errorf("sem catálogo primado não há poço a derivar para a ficha %d", dto.ID)
+func withDerivedPools(ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO) error {
+	if dto.Ruleset == nil {
+		return fmt.Errorf("sem o mundo resolvido não há poço a derivar para a ficha %d", dto.ID)
 	}
 	ec, err := EngineCharacterFrom(*dto)
 	if err != nil {
 		return fmt.Errorf("montar o personagem do motor (%d): %w", dto.ID, err)
 	}
-	pools := cat.VitalsForCharacter(ec)
+	pools := dto.Ruleset.VitalsForCharacter(ec)
 
 	// AUSÊNCIA de linha quer dizer INTACTO: só quem apanhou tem registro (00014).
 	var damage sqlcgen.GetCharacterDamageRow
@@ -194,7 +198,7 @@ func LoadAndCompute(ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalog
 	if err != nil {
 		return engine.ComputedSheet{}, err
 	}
-	return Compute(cat, dto)
+	return Compute(dto)
 }
 
 // engineCharacterFrom leva o agregado até o `engine.Character` por JSON: os dois
@@ -228,12 +232,16 @@ func EngineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
 // São sete chamadores pelo `LoadAndCompute`, e entre eles a Defesa do cartão do
 // Grupo na Mesa — que é a tela que o cabeçalho do `sheetForPanels` citava como
 // aquela de quem a ficha não podia discordar.
-func Compute(cat *engine.Catalogs, dto CharacterDTO) (engine.ComputedSheet, error) {
+func Compute(dto CharacterDTO) (engine.ComputedSheet, error) {
+	if dto.Ruleset == nil {
+		return engine.ComputedSheet{}, fmt.Errorf(
+			"a ficha %d chegou sem o mundo dela; quem a montou não passou pelo `sheet.Load`", dto.ID)
+	}
 	ec, err := EngineCharacterFrom(dto)
 	if err != nil {
 		return engine.ComputedSheet{}, err
 	}
-	return cat.ComputeSheet(ec, ToStringSet(dto.Conditionals)), nil
+	return dto.Ruleset.ComputeSheet(ec, ToStringSet(dto.Conditionals)), nil
 }
 
 // loadPlayState anexa os três ao DTO da ficha.

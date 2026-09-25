@@ -1,6 +1,7 @@
 package sheet
 
 import (
+	"database/sql"
 	"encoding/json"
 	"t20engine/domain/engine"
 	"t20engine/infra/db/dbvalue"
@@ -48,13 +49,26 @@ type CharacterDTO struct {
 	// carimbada aqui para atravessar até o motor pelo `engineCharacterFrom`,
 	// que é um round-trip de JSON — e assim as duas pontas calculam com as
 	// mesmas regras sem nenhuma assinatura mudar.
-	IgnoredRules  engine.IgnoredRules `json:"ignoredRules"`
-	Races         []RaceDTO           `json:"races"`
-	Classes       []ClassDTO          `json:"classes"`
-	Expertises    []ExpertiseDTO      `json:"expertises"`
-	Items         []ItemDTO           `json:"items"`
-	ActiveEffects []EffectDTO         `json:"activeEffects"`
-	Spells        []SpellDTO          `json:"spells"`
+	IgnoredRules engine.IgnoredRules `json:"ignoredRules"`
+	// Ruleset é o MUNDO em que esta ficha foi carregada: o livro sob as emendas
+	// da campanha dela (ALE-387). Ele é resolvido UMA vez, pelo `Load`, e viaja
+	// até quem computa.
+	//
+	// `json:"-"` não é detalhe: o mundo NÃO atravessa para o `engine.Character`.
+	// Se atravessasse, campanha-inteira e personagem-específico chegariam ao
+	// motor já misturados e o ESCOPO deixaria de ser representável — que é o
+	// desenho que esta fatia trocou.
+	Ruleset *engine.Ruleset `json:"-"`
+	// CampaignID é a campanha da ficha, e é ela que DIZ qual mundo vale: o molde
+	// do elenco tem a coluna nula e vê o livro puro. Ela também não atravessa
+	// para o motor — o mundo já chega resolvido.
+	CampaignID    sql.NullInt64  `json:"-"`
+	Races         []RaceDTO      `json:"races"`
+	Classes       []ClassDTO     `json:"classes"`
+	Expertises    []ExpertiseDTO `json:"expertises"`
+	Items         []ItemDTO      `json:"items"`
+	ActiveEffects []EffectDTO    `json:"activeEffects"`
+	Spells        []SpellDTO     `json:"spells"`
 	// O estado de JOGO da ficha — situacionais ligados, usos gastos e o preço
 	// pago pelas posturas. Viaja com a ficha porque a tela precisa dos três
 	// para desenhar o primeiro quadro.
@@ -109,14 +123,15 @@ type SpellDTO struct {
 // penduradas pelo carregador.
 func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 	return CharacterDTO{
-		ID:       c.ID,
-		OwnerID:  c.Ownerid,
-		Name:     c.Name,
-		Origin:   c.Origin,
-		God:      dbvalue.NullToPtr(c.God),
-		GodPower: c.Godpower,
-		Tibar:    c.Tibar,
-		Level:    c.Level,
+		ID:         c.ID,
+		CampaignID: c.CampaignId,
+		OwnerID:    c.Ownerid,
+		Name:       c.Name,
+		Origin:     c.Origin,
+		God:        dbvalue.NullToPtr(c.God),
+		GodPower:   c.Godpower,
+		Tibar:      c.Tibar,
+		Level:      c.Level,
 		// Os quatro vitais NÃO saem daqui: eles são derivados, e o
 		// `withDerivedPools` os preenche no fim do `Load`. A linha nem os tem
 		// mais (migração 00015). Um agregado montado só pelos escalares sai com

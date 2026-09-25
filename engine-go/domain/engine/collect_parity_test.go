@@ -31,7 +31,7 @@ func TestActiveItemsParity(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			got := roundTrip(t, catalogs.ActiveItemsFor(oracle.Char))
+			got := roundTrip(t, BookRuleset(catalogs).ActiveItemsFor(oracle.Char))
 			if !reflect.DeepEqual(got, oracle.ActiveItems) {
 				diffReport(t, "activeItems", got, oracle.ActiveItems)
 			}

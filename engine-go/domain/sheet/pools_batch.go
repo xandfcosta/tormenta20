@@ -2,6 +2,7 @@ package sheet
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"t20engine/domain/engine"
@@ -64,13 +65,24 @@ func PoolsForCharacters(
 		damage[d.Characterid] = d
 	}
 
+	// O MUNDO DE CADA FICHA, com uma consulta por campanha DISTINTA: a mesa
+	// inteira costuma dividir um mundo só (ALE-387).
+	campaignOf := make(map[int64]sql.NullInt64, len(partials))
+	for id, dto := range partials {
+		campaignOf[id] = dto.CampaignID
+	}
+	worlds, err := RulesetsFor(ctx, q, cat, campaignOf)
+	if err != nil {
+		return nil, err
+	}
+
 	pools := make(map[int64]Pools, len(partials))
 	for id, dto := range partials {
 		ec, err := EngineCharacterFrom(dto)
 		if err != nil {
 			return nil, fmt.Errorf("montar o personagem do motor (%d): %w", id, err)
 		}
-		derived := cat.VitalsForCharacter(ec)
+		derived := worlds[id].VitalsForCharacter(ec)
 		p := Pools{HpMax: int64(derived.PvMax), MpMax: int64(derived.PmMax)}
 		p.HpCurrent = WithinHitPoints(p.HpMax-damage[id].Hpdamage, p.HpMax)
 		p.MpCurrent = WithinPool(p.MpMax-damage[id].Mpspent, p.MpMax)

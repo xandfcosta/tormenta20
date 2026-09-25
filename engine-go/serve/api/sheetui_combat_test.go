@@ -167,7 +167,7 @@ func ligaOCondicional(t *testing.T, f sceneFixture, id int64) {
 	if err != nil {
 		t.Fatalf("converter para o motor: %v", err)
 	}
-	offered := engine.ComputeItemEffects(f.s.sceneCore().Catalogs().ActiveItemsFor(ec)).Conditional
+	offered := engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional
 	if len(offered) != 1 {
 		t.Fatalf("o motor ofereceu %d condicionais e o caso precisa de exatamente 1: "+
 			"o efeito semeado não virou um opt-in, e ligar nada mediria o vazio", len(offered))

@@ -106,7 +106,7 @@ func TestOverloadPenalizesDisplacementAndArmorExpertises(t *testing.T) {
 			Level: 1, Displacement: 9, Expertises: expertises,
 			Items: []CharacterItem{{Name: "Barril", Quantity: 1, Slots: spaces}},
 		}
-		return catalogs.ComputeSheet(ch, map[string]bool{})
+		return BookRuleset(catalogs).ComputeSheet(ch, map[string]bool{})
 	}
 
 	light, heavy := withLoad(10), withLoad(11)

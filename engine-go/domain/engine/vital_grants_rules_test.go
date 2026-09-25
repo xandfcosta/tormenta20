@@ -44,8 +44,8 @@ func TestSameAttributeGrantedTwiceCountsOnce(t *testing.T) {
 		AttrTotals: attrs,
 	}
 
-	_, doublePM := c.sumVitalGrants(clericDruid)
-	_, simplePM := c.sumVitalGrants(clericOnly)
+	_, doublePM := BookRuleset(c).sumVitalGrants(clericDruid)
+	_, simplePM := BookRuleset(c).sumVitalGrants(clericOnly)
 
 	if doublePM != simplePM {
 		t.Errorf("Clérigo/Druida concedeu %d PM e o Clérigo puro %d — a Sabedoria entrou duas vezes (p226)", doublePM, simplePM)
@@ -64,7 +64,7 @@ func TestDifferentAttributesStillStack(t *testing.T) {
 	c := vitalCatalogs(t)
 	attrs := map[string]int{"charisma": 3, "wisdom": 2}
 
-	_, pm := c.sumVitalGrants(VitalContext{
+	_, pm := BookRuleset(c).sumVitalGrants(VitalContext{
 		Level: 4,
 		Classes: []ClassEntry{
 			{ClassName: "Bardo", Level: 2},
@@ -132,7 +132,7 @@ func TestModifierScaleEvaluation(t *testing.T) {
 // personagem com PV máximo negativo não é um estado que a ficha saiba desenhar.
 func TestVitalPoolsNeverGoNegative(t *testing.T) {
 	c := vitalCatalogs(t)
-	pools := c.ComputeVitals(VitalContext{
+	pools := BookRuleset(c).ComputeVitals(VitalContext{
 		Level:      1,
 		Classes:    []ClassEntry{{ClassName: "Arcanista", Level: 1}},
 		AttrTotals: map[string]int{"constitution": -20},

@@ -25,8 +25,8 @@ type WeaponCard struct {
 // ComputeWeaponCards resolves the wielded-weapon cards for a raw Character under
 // the given active conditionals (Fúria's global attack/damage mods land in
 // attackAll/damageAll). Only catalog weapons in a hand slot, capped at two.
-func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[string]bool) []WeaponCard {
-	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), activeConditionals)
+func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string]bool) []WeaponCard {
+	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), activeConditionals)
 	attackAll := totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"})
 	damageAll := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"})
 	forTotal := effectiveAttribute(ch, "strength", effects)
@@ -45,7 +45,7 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 		if it.CatalogID == nil {
 			continue
 		}
-		catalog := c.getCatalogItem(*it.CatalogID)
+		catalog := r.getCatalogItem(*it.CatalogID)
 		if catalog == nil || catalog.Weapon == nil {
 			continue
 		}
