@@ -54,6 +54,11 @@ import (
 // **É por isso que a lista de lápides é curta.** Ela sobrou para o que nenhuma
 // regra alcança, e cada entrada diz por quê.
 var simbolosAusentesDePROPOSITO = map[string]bool{
+	// A versão NÃO decomposta da coleta de equipamento, apagada na ALE-378 junto
+	// com o coletor legado. Ela é citada por duas lápides — a que a substituiu
+	// (`collect_ecs_item.go`, a de sistemas da ALE-385) e a do próprio coletor —,
+	// e nomeá-la é o que torna as duas legíveis.
+	"itemActiveItem": true,
 	// ── API DE FORA DO REPOSITÓRIO ───────────────────────────────────────────
 	//
 	// A coleta é do repositório: ela não conhece a biblioteca padrão do Go nem o

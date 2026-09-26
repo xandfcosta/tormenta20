@@ -2,76 +2,23 @@ package engine
 
 import (
 	"path/filepath"
-	"reflect"
 	"testing"
 )
 
-// O MOTOR EM ECS COLHE AS MESMAS FONTES, NA MESMA ORDEM (ALE-382).
+// AQUI MORAVAM DOIS CASOS DE PARIDADE CRUZADA (ALE-378).
 //
-// Este é o teste que o cabeçalho do `genoracle` dizia não existir: *"o que ele
-// NÃO prova é que dois motores concordam, porque só existe um"*. Agora existem
-// dois, e o oráculo — congelado na ALE-379, com o hash fixado para ninguém
-// regenerá-lo no lugar de consertar — julga os dois com o mesmo dado.
+// O `TestActiveItemsByEcsMatchesTheOracle` comparava o coletor de ECS com o
+// oráculo, e o `TestBothCollectionPathsAgree` comparava os dois coletores entre
+// si. Os dois saíram junto com o coletor legado.
 //
-// O que se prende é a lista INTEIRA: os mesmos itens, com os mesmos
-// modificadores, NA MESMA ORDEM. Um `reflect.DeepEqual` sobre fatia reprova por
-// ordem, e isso é a metade que importa — o núcleo de ECS foi desenhado em volta
-// dela, porque a iteração de `map` em Go é aleatória por construção.
-func TestActiveItemsByEcsMatchesTheOracle(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
-	slugs := parityOracleSlugs(t, dir)
-
-	if len(slugs) == 0 {
-		t.Fatal("nenhuma ficha no oráculo: o teste passaria sobre nada")
-	}
-
-	for _, slug := range slugs {
-		t.Run(slug, func(t *testing.T) {
-			var oracle struct {
-				Char        Character `json:"char"`
-				ActiveItems any       `json:"activeItems"`
-			}
-			readJSON(t, filepath.Join(dir, slug), &oracle)
-
-			got := roundTrip(t, BookRuleset(catalogs).ActiveItemsByEcs(oracle.Char))
-			if !reflect.DeepEqual(got, oracle.ActiveItems) {
-				diffReport(t, "activeItems (ECS)", got, oracle.ActiveItems)
-			}
-		})
-	}
-	t.Logf("fichas conferidas contra o caminho em ECS: %d", len(slugs))
-}
-
-// E OS DOIS CAMINHOS CONCORDAM ENTRE SI.
+// O primeiro virou DUPLICATA: com uma coleta só, ele e o `TestActiveItemsParity`
+// passaram a chamar a mesma função contra o mesmo arquivo. Ficou o de nome
+// genérico.
 //
-// Não é o mesmo teste acima com outra roupa. Aquele compara cada motor com um
-// ARQUIVO; este compara os dois entre si, e é o que continua respondendo no dia
-// em que a regra do livro mudar e o oráculo for levantado de propósito: os dois
-// motores têm de andar juntos, não só cada um com a foto de ontem.
-//
-// Ele morre junto com o motor velho, na fatia que apaga a coleta antiga — e aí
-// terá feito o trabalho dele.
-func TestBothCollectionPathsAgree(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
-	slugs := parityOracleSlugs(t, dir)
-
-	for _, slug := range slugs {
-		t.Run(slug, func(t *testing.T) {
-			var oracle struct {
-				Char Character `json:"char"`
-			}
-			readJSON(t, filepath.Join(dir, slug), &oracle)
-
-			legacy := roundTrip(t, BookRuleset(catalogs).ActiveItemsFor(oracle.Char))
-			world := roundTrip(t, BookRuleset(catalogs).ActiveItemsByEcs(oracle.Char))
-			if !reflect.DeepEqual(world, legacy) {
-				diffReport(t, "ECS contra o coletor antigo", world, legacy)
-			}
-		})
-	}
-}
+// O segundo foi previsto pelo próprio autor — "ele morre junto com o motor
+// velho, na fatia que apaga a coleta antiga, e aí terá feito o trabalho dele".
+// O que ele dava de graça e NÃO morre com ele é a ORDEM: quem a prende agora é
+// o `TestEveryCollectorLandsInTheDeclaredOrder`, escrito ANTES desta remoção.
 
 // EFEITO SEM MODIFICADOR NÃO ENTRA NA COLETA, E O ORÁCULO NÃO PROVA ISSO.
 //
@@ -96,21 +43,12 @@ func TestEffectWithoutModifiersIsNotCollected(t *testing.T) {
 		{CatalogID: "concede", Scope: "scene", Modifiers: `[{"target":{"k":"defense"},"amount":2,"bonusType":"untyped"}]`},
 	}}
 
-	for _, path := range []struct {
-		name    string
-		collect func(Character) []ActiveItem
-	}{
-		{"coletor antigo", BookRuleset(catalogs).ActiveItemsFor},
-		{"em ECS", BookRuleset(catalogs).ActiveItemsByEcs},
-	} {
-		t.Run(path.name, func(t *testing.T) {
-			got := path.collect(ch)
-			if len(got) != 1 {
-				t.Fatalf("colheu %d fontes, esperava 1 — o efeito vazio entrou, ou o que concede ficou de fora.\nColhido: %+v", len(got), got)
-			}
-			if len(got[0].Modifiers) != 1 {
-				t.Fatalf("a fonte colhida veio com %d modificadores, esperava 1: %+v", len(got[0].Modifiers), got[0])
-			}
-		})
+	got := BookRuleset(catalogs).ActiveItemsFor(ch)
+	if len(got) != 1 {
+		t.Fatalf("colheu %d fontes, esperava 1 — o efeito vazio entrou, ou o que concede "+
+			"ficou de fora.\nColhido: %+v", len(got), got)
+	}
+	if len(got[0].Modifiers) != 1 {
+		t.Fatalf("a fonte colhida veio com %d modificadores, esperava 1: %+v", len(got[0].Modifiers), got[0])
 	}
 }

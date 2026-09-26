@@ -2,7 +2,6 @@ package engine
 
 import (
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -50,7 +49,7 @@ func TestTheFourItemRulesLandInOrder(t *testing.T) {
 		Improvements: `["melhoria-equilibrada"]`,
 	}}}
 
-	items := BookRuleset(catalogs).ActiveItemsByEcs(ch)
+	items := BookRuleset(catalogs).ActiveItemsFor(ch)
 	if len(items) != 1 {
 		t.Fatalf("colhi %d fontes, esperava 1", len(items))
 	}
@@ -98,25 +97,10 @@ func TestTheFourItemRulesLandInOrder(t *testing.T) {
 	}
 }
 
-// E os dois motores concordam NESTE caso também.
+// Aqui morava o `TestBothPathsAgreeOnTheItemThatFiresThreeRules`, que conferia
+// este machado contra o coletor legado — o oráculo não tem uma ficha com ele, e
+// a paridade cruzada das 18 fichas não passava por aqui.
 //
-// O caso do machado não está no oráculo, então o `TestBothCollectionPathsAgree`
-// — que percorre as 18 fichas — não passa por ele. Sem esta linha, o item que
-// dispara três regras seria conferido só contra o motor novo.
-func TestBothPathsAgreeOnTheItemThatFiresThreeRules(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
-
-	wielded := "wielded"
-	axe := "machado-taurico"
-	ch := Character{Items: []CharacterItem{{
-		Name: "Machado táurico", CatalogID: &axe, Equipped: &wielded,
-		Improvements: `["melhoria-equilibrada"]`,
-	}}}
-
-	legacy := roundTrip(t, BookRuleset(catalogs).ActiveItemsFor(ch))
-	world := roundTrip(t, BookRuleset(catalogs).ActiveItemsByEcs(ch))
-	if !reflect.DeepEqual(world, legacy) {
-		diffReport(t, "o machado táurico: ECS contra o coletor antigo", world, legacy)
-	}
-}
+// Ele saiu com o coletor legado (ALE-378): com uma coleta só, ele comparava uma
+// função consigo mesma. O que ele protegia continua preso pelo caso ACIMA, que
+// afirma os quatro estágios do equipamento pela assinatura de cada um.

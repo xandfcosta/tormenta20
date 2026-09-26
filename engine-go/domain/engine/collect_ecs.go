@@ -34,10 +34,17 @@ type Grants struct {
 	Modifiers []Modifier
 }
 
-// ActiveItemsByEcs é o `ActiveItemsFor` rodando no ECS.
+// ActiveItemsFor colhe toda fonte de modificador ativa num `[]ActiveItem` — a
+// entrada que a resolução consome.
 //
-// @example engine.Catalogs{}.ActiveItemsByEcs(ch) // as mesmas fontes, na mesma ordem
-func (r *Ruleset) ActiveItemsByEcs(ch Character) []ActiveItem {
+// A ORDEM é significativa: o despejo de paridade a compara byte a byte, e quem
+// a prende é o `TestEveryCollectorLandsInTheDeclaredOrder`.
+//
+// Desde a ALE-378 esta é a ÚNICA coleta. A lista de sistemas é a especificação
+// dela, e regra nova entra ali — não em duas funções que alguém mantém iguais.
+//
+// @example engine.BookRuleset(catalogs).ActiveItemsFor(ch)
+func (r *Ruleset) ActiveItemsFor(ch Character) []ActiveItem {
 	world := ecs.NewWorld()
 	ecs.Run(world, r.collectionSystems(ch)...)
 

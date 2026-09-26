@@ -55,7 +55,7 @@ func TestEveryCollectorLandsInTheDeclaredOrder(t *testing.T) {
 	if strings.Join(vista, " → ") != strings.Join(esperada, " → ") {
 		t.Fatalf("a ordem dos coletores mudou.\n  declarada: %s\n  colhida:   %s\n"+
 			"Se foi de propósito, o `collectionSystems` e esta lista mudam JUNTOS — a "+
-			"ordem é a regra, e ela não tem outra rede desde que o coletor legado saiu.",
+			"ordem é a regra, e esta é a única rede dela desde que o coletor legado saiu.",
 			strings.Join(esperada, " → "), strings.Join(vista, " → "))
 	}
 }
