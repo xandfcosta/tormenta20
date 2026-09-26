@@ -151,6 +151,24 @@ def normaliza_frase(t: str) -> str:
         if unicodedata.category(c) != 'Mn')
     return re.sub(r'\s+', ' ', re.sub(r'[^a-z0-9 ]+', ' ', sem_acento)).strip()
 
+def palavras_da_pagina(pagina: int) -> list[tuple[float, float, str]]:
+    """(x, y, texto) de cada PALAVRA da página.
+
+    Um degrau abaixo do `linhas_com_coordenada`, e ele existe porque agrupar
+    por linha às vezes junta coisas que não têm relação: na p119 o elemento
+    `<line>` traz "Furtividade Des • Armadura Iniciativa" — o título de uma
+    perícia, o estado dela, e o título da perícia da COLUNA VIZINHA, tudo na
+    mesma altura. Quem lê a linha inteira não consegue separá-los; quem lê
+    palavra por palavra nem vê o problema, porque a coluna se decide pelo x de
+    cada uma.
+    """
+    xml = subprocess.run(
+        ['pdftotext', '-bbox-layout', '-f', str(pagina), '-l', str(pagina), PDF, '-'],
+        capture_output=True, text=True).stdout
+    return [(float(x), float(y), html.unescape(texto))
+            for x, y, texto in RE_PALAVRA.findall(xml)]
+
+
 def linhas_com_coordenada(pagina: int) -> list[tuple[float, float, str]]:
     """(x, y, texto) de cada LINHA da página, sem agrupar por bloco.
 
