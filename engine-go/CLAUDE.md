@@ -816,6 +816,7 @@ este verbete":
 | `audit-equipment.py` | `items.json` | nome + preço na tabela |
 | `audit-races.py` | `races.json` | linha de atributos, ligada por semântica |
 | `audit-expertises.py` | `expertises.json` | Tabela 2-1 **e** a linha de estado do verbete |
+| `audit-gods.py` | `gods.json` | Tabela 1-20 **e** os campos rotulados do verbete |
 
 Escolher a âncora é o trabalho; o resto é regex. E a do auditor de raças é a que
 explica por quê: **não serve o título nem a página.** O bloco de uma raça
@@ -837,6 +838,20 @@ E ele lê por PALAVRA, não por linha, porque agrupar por linha junta o que não
 tem relação: na p119 o elemento `<line>` traz `Furtividade Des • Armadura
 Iniciativa` — título, estado, e o título da perícia da COLUNA VIZINHA na mesma
 altura. O `palavras_da_pagina` do `t20pdf.py` é o degrau para esses casos.
+
+O de deuses acrescenta a terceira forma de âncora, e ela vale lembrar: **um
+campo pode não morar no verbete que o declara.** O `paladinoEligible` e o
+`druidaEligible` do deus não se derivam da lista de "Devotos" dele — a Valkaria
+aceita "membros de todas as classes" e mesmo assim não serve a druidas. Quem
+restringe é a CLASSE, e ela imprime a lista inteira numa frase: *"um deus
+disponível para druidas (Allihanna, Megalokk ou Oceano)"* na p61, e a dos oito
+paladinos na p82. Derivar teria acusado a Valkaria por um defeito que não
+existe.
+
+E a marca d'água do PDF **cola no texto vizinho** em vez de ocupar linha
+própria: "Golpista Divino. Mateus Santos mateush.santos42@gmail.com" chegou como
+o nome do último poder de uma lista. O filtro é o `sem_lixo` do `t20pdf.py` —
+ele morava em três auditores e as três cópias já tinham divergido.
 
 ### E o buraco INVERSO: o valor existe, mas não se confere que ele APONTA
 
