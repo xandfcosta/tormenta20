@@ -49,132 +49,18 @@ import subprocess
 import unicodedata
 from collections import Counter
 
-# O CATÁLOGO sai da localização do script; o LIVRO, não — e a diferença é que o
-# PDF é gitignorado (ele não é nosso para distribuir). Numa worktree, o
-# catálogo a auditar é o de lá e o livro continua no checkout principal.
-#
-# Com um caminho fixo para os DOIS, rodar numa worktree audita o catálogo do
-# checkout principal: o relatório sai sobre um arquivo que não é o que se está
-# editando, e as correções parecem não ter pegado. Custou uma rodada.
-RAIZ = pathlib.Path(__file__).resolve().parent.parent
-PDF = os.environ.get('T20_BOOK_PDF') or str(RAIZ / 't20-book.pdf')
-if not pathlib.Path(PDF).exists():
-    # O checkout principal é o palpite seguinte, e ele é DITO: um auditor que
-    # caísse em silêncio num PDF vazio reportaria 198 "não medidas" com cara de
-    # resultado.
-    vizinho = pathlib.Path('/mnt/HD/projects/tormenta20/t20-book.pdf')
-    if not vizinho.exists():
-        raise SystemExit(
-            f'não achei o livro em {PDF}. Ele é gitignorado — aponte o '
-            f'T20_BOOK_PDF para o PDF do checkout principal.')
-    PDF = str(vizinho)
-SPELLS = str(RAIZ / 'engine-go/domain/catalog/data/spells.json')
+# A leitura do PDF é do `t20pdf`, compartilhada com os outros auditores
+# (ALE-391).
+from t20pdf import (  # noqa: E402
+    RAIZ, chave, linhas_da_pagina, normaliza_frase)
 
-# O capítulo de Magia, em página de PDF. O livro = PDF - 6, e o catálogo guarda
-# a página do LIVRO em `bookPage`.
+SPELLS = str(RAIZ / 'engine-go/domain/catalog/data/spells.json')
 PRIMEIRA, ULTIMA = 184, 217
 OFFSET = 6
-
-RE_BLOCO = re.compile(
-    r'<block xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)"[^>]*>(.*?)</block>', re.S)
-RE_LINHA = re.compile(r'<line[^>]*>(.*?)</line>', re.S)
-RE_PALAVRA = re.compile(
-    r'<word xMin="([\d.]+)" yMin="([\d.]+)"[^>]*>(.*?)</word>', re.S)
-
-# `Arcana 2 (Ilusão)`, `Universal 1 (Evocação)`, `Divina 3 (Abjuração)`.
-#
-# INSENSÍVEL A CAIXA, e isso não é frouxidão: o livro compõe alguns desses
-# cabeçalhos em versalete, e a camada de texto do PDF os entrega em MINÚSCULA —
-# `arcana 1 (Encantamento)`, `divina 2 (adivinhação)`. Exigindo maiúscula, o
-# Hipnotismo e o Globo da Verdade de Gwen (ambos na p194) ficavam sem cabeçalho,
-# e o corpo da magia ANTERIOR engolia os aprimoramentos deles: o Heroísmo
-# aparecia com sete quando tem um, e o catálogo — que estava certo — parecia ter
-# perdido seis.
 RE_LISTA = re.compile(r'^(Arcana|Divina|Universal)\s+(\d)\s+\(([^)]+)\)\s*$', re.I)
 RE_EXECUCAO = re.compile(r'^Execução:')
-# `+2 PM:`, `+0 PM (Apenas Arcanos):`, `Truque:` — as três formas do livro.
 RE_AUGMENT = re.compile(r'^(?:\+(\d+)\s*PM(?:\s*\(Apenas\s+([^)]+)\))?|Truque)\s*:\s*(.*)$')
-
-# A MARCA D'ÁGUA do PDF e o rodapé entram no corpo como texto normal, e saem
-# grudados no último aprimoramento da página. O molde do bestiário tem a mesma
-# linha, e pela mesma razão: sem ela o texto lido não casa com nada e parece
-# erro de transcrição.
 LIXO = re.compile(r'Mateus Santos|mateush\.santos|^Capítulo|^\d{1,3}$')
-
-MINIMO_DE_BLOCOS_POR_COLUNA = 3
-
-
-def blocos_da_pagina(pagina: int):
-    """(xMin, xMax, yMin, [linhas]) de cada bloco declarado pelo PDF."""
-    xml = subprocess.run(
-        ['pdftotext', '-bbox-layout', '-f', str(pagina), '-l', str(pagina), PDF, '-'],
-        capture_output=True, text=True).stdout
-    for m in RE_BLOCO.finditer(xml):
-        x0, ybloco, x1 = float(m.group(1)), float(m.group(2)), float(m.group(3))
-        linhas, y0 = [], None
-        for lm in RE_LINHA.finditer(m.group(4)):
-            palavras = [
-                (float(x), float(y), html.unescape(t))
-                for x, y, t in RE_PALAVRA.findall(lm.group(1))
-            ]
-            if not palavras:
-                continue
-            if y0 is None:
-                y0 = palavras[0][1]
-            palavras.sort(key=lambda w: w[0])
-            linhas.append(' '.join(t for _x, _y, t in palavras))
-        if linhas:
-            yield x0, x1, y0 if y0 is not None else ybloco, linhas
-
-
-def inicios_das_colunas(bs) -> list[float]:
-    """Os x onde as colunas COMEÇAM, achados por FREQUÊNCIA.
-
-    Não serve fundir faixas de x: o título de seção é centralizado e atravessa a
-    calha, e uma linha dessas funde duas colunas numa só. O que é estável é o x
-    onde o corpo começa.
-    """
-    contagem = Counter(round(b[0], 1) for b in bs)
-    inicios = sorted(x for x, n in contagem.items() if n >= MINIMO_DE_BLOCOS_POR_COLUNA)
-    return inicios or [min((b[0] for b in bs), default=0.0)]
-
-
-def linhas_da_pagina(pagina: int) -> list[str]:
-    """As linhas da página na ordem de LEITURA: coluna por coluna, de cima para
-    baixo."""
-    bs = list(blocos_da_pagina(pagina))
-    if not bs:
-        return []
-    inicios = inicios_das_colunas(bs)
-
-    def coluna(x0: float) -> int:
-        cabem = [i for i, ini in enumerate(inicios) if x0 >= ini - 2]
-        return cabem[-1] if cabem else 0
-
-    bs.sort(key=lambda b: (coluna(b[0]), b[2]))
-    saida: list[str] = []
-    for _x0, _x1, _y, linhas in bs:
-        saida.extend(linhas)
-    return saida
-
-
-def chave(nome: str) -> str:
-    """Normaliza para casar nome do livro com nome do catálogo."""
-    sem_acento = ''.join(
-        c for c in unicodedata.normalize('NFD', nome.lower())
-        if unicodedata.category(c) != 'Mn')
-    return re.sub(r'[^a-z0-9]+', '', sem_acento)
-
-
-def normaliza_frase(t: str) -> str:
-    """O texto de um aprimoramento, comparável: sem acento, sem pontuação, sem
-    espaço duplicado. A comparação é por CONTEÚDO — o catálogo reescreve as
-    frases do livro em forma mais curta de propósito."""
-    sem_acento = ''.join(
-        c for c in unicodedata.normalize('NFD', t.lower())
-        if unicodedata.category(c) != 'Mn')
-    return re.sub(r'\s+', ' ', re.sub(r'[^a-z0-9 ]+', ' ', sem_acento)).strip()
-
 
 def catalogo() -> dict:
     with open(SPELLS, encoding='utf-8') as f:
