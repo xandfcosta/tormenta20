@@ -129,3 +129,25 @@ def normaliza_frase(t: str) -> str:
         c for c in unicodedata.normalize('NFD', t.lower())
         if unicodedata.category(c) != 'Mn')
     return re.sub(r'\s+', ' ', re.sub(r'[^a-z0-9 ]+', ' ', sem_acento)).strip()
+
+def linhas_com_coordenada(pagina: int) -> list[tuple[float, float, str]]:
+    """(x, y, texto) de cada LINHA da página, sem agrupar por bloco.
+
+    O `linhas_da_pagina` colapsa as linhas de um bloco numa lista e perde o y de
+    cada uma — o que serve para ler PROSA em ordem de leitura, e não serve para
+    ler TABELA.
+
+    Numa tabela, a coluna do nível e a da habilidade são blocos DIFERENTES, e o
+    que diz que "6º" e "Fúria +3" são a mesma LINHA é o y das duas ser igual.
+    Parear por índice erra na primeira habilidade que quebra em duas linhas —
+    e a do Bárbaro quebra (ALE-392).
+    """
+    xml = subprocess.run(
+        ['pdftotext', '-bbox-layout', '-f', str(pagina), '-l', str(pagina), PDF, '-'],
+        capture_output=True, text=True).stdout
+    saida = []
+    for m in re.finditer(r'<line xMin="([\d.]+)" yMin="([\d.]+)"[^>]*>(.*?)</line>', xml, re.S):
+        texto = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', m.group(3)))).strip()
+        if texto:
+            saida.append((float(m.group(1)), float(m.group(2)), texto))
+    return saida

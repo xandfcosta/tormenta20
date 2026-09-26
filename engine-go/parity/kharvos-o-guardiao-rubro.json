@@ -633,32 +633,6 @@
             "flag": "furia",
             "label": "Em Fúria"
           }
-        },
-        {
-          "target": {
-            "k": "expertise",
-            "name": "Fortitude"
-          },
-          "amount": 2,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
-        },
-        {
-          "target": {
-            "k": "expertise",
-            "name": "Vontade"
-          },
-          "amount": 2,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
         }
       ]
     },
@@ -715,32 +689,6 @@
           "target": {
             "k": "damage",
             "scope": "all"
-          },
-          "amount": 3,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
-        },
-        {
-          "target": {
-            "k": "expertise",
-            "name": "Fortitude"
-          },
-          "amount": 3,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
-        },
-        {
-          "target": {
-            "k": "expertise",
-            "name": "Vontade"
           },
           "amount": 3,
           "bonusType": "morale",
@@ -1102,32 +1050,6 @@
         "flag": "furia"
       },
       {
-        "term": "class.barbaro.furia::expertise:Fortitude::::flagOn///furia",
-        "sourceId": "class.barbaro.furia",
-        "source": "Fúria",
-        "bonusType": "morale",
-        "amount": 2,
-        "note": "Em Fúria",
-        "target": {
-          "k": "expertise",
-          "name": "Fortitude"
-        },
-        "flag": "furia"
-      },
-      {
-        "term": "class.barbaro.furia::expertise:Vontade::::flagOn///furia",
-        "sourceId": "class.barbaro.furia",
-        "source": "Fúria",
-        "bonusType": "morale",
-        "amount": 2,
-        "note": "Em Fúria",
-        "target": {
-          "k": "expertise",
-          "name": "Vontade"
-        },
-        "flag": "furia"
-      },
-      {
         "term": "class.barbaro.furia-3::attack:all::::flagOn///furia",
         "sourceId": "class.barbaro.furia-3",
         "source": "Fúria +3",
@@ -1150,32 +1072,6 @@
         "target": {
           "k": "damage",
           "scope": "all"
-        },
-        "flag": "furia"
-      },
-      {
-        "term": "class.barbaro.furia-3::expertise:Fortitude::::flagOn///furia",
-        "sourceId": "class.barbaro.furia-3",
-        "source": "Fúria +3",
-        "bonusType": "morale",
-        "amount": 3,
-        "note": "Em Fúria",
-        "target": {
-          "k": "expertise",
-          "name": "Fortitude"
-        },
-        "flag": "furia"
-      },
-      {
-        "term": "class.barbaro.furia-3::expertise:Vontade::::flagOn///furia",
-        "sourceId": "class.barbaro.furia-3",
-        "source": "Fúria +3",
-        "bonusType": "morale",
-        "amount": 3,
-        "note": "Em Fúria",
-        "target": {
-          "k": "expertise",
-          "name": "Vontade"
         },
         "flag": "furia"
       }
@@ -1720,12 +1616,8 @@
   "activeConditionals": [
     "class.barbaro.furia-3::attack:all::::flagOn///furia",
     "class.barbaro.furia-3::damage:all::::flagOn///furia",
-    "class.barbaro.furia-3::expertise:Fortitude::::flagOn///furia",
-    "class.barbaro.furia-3::expertise:Vontade::::flagOn///furia",
     "class.barbaro.furia::attack:all::::flagOn///furia",
     "class.barbaro.furia::damage:all::::flagOn///furia",
-    "class.barbaro.furia::expertise:Fortitude::::flagOn///furia",
-    "class.barbaro.furia::expertise:Vontade::::flagOn///furia",
     "machado-taurico::expertise:Luta::::context///",
     "medalhao-de-prata::defense::::flagOn///homebrew-vestido-medalhao-de-prata",
     "medalhao-de-prata::pmLimit::::flagOn///homebrew-vestido-medalhao-de-prata"
@@ -2013,18 +1905,12 @@
         "name": "Fortitude",
         "attribute": "constitution",
         "base": 8,
-        "itemBonus": 3,
-        "total": 11,
+        "itemBonus": 0,
+        "total": 8,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 4,
-        "itemContributions": [
-          {
-            "source": "Fúria +3 (cond.)",
-            "amount": 3,
-            "note": "Em Fúria"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
@@ -2278,8 +2164,8 @@
         "name": "Vontade",
         "attribute": "wisdom",
         "base": 8,
-        "itemBonus": 5,
-        "total": 13,
+        "itemBonus": 2,
+        "total": 10,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 4,
@@ -2287,11 +2173,6 @@
           {
             "source": "Origem: Refugiado",
             "amount": 2
-          },
-          {
-            "source": "Fúria +3 (cond.)",
-            "amount": 3,
-            "note": "Em Fúria"
           }
         ],
         "armorPenaltyApplied": 0
