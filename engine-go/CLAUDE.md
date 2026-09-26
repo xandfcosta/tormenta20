@@ -804,6 +804,27 @@ Uma armadilha que ela documenta e que vale para qualquer extração deste PDF: o
 linha de atributos aparece colada à criatura errada. Ler por coordenada, nunca
 por layout.
 
+**Mexeu num catálogo? rode o auditor dele.** São um por seção do sumário, e o
+que muda entre eles é a ÂNCORA — o par de campos que diz "este pedaço do livro é
+este verbete":
+
+| auditor | catálogo | âncora |
+|---|---|---|
+| `audit-bestiary.py` | `bestiary.json` | Defesa + Pontos de Vida |
+| `audit-spells.py` | `spells.json` | nome + escola |
+| `audit-classes.py` | `classes.json`, `class-powers.json` | nome na prosa, ou nível na tabela |
+| `audit-equipment.py` | `items.json` | nome + preço na tabela |
+| `audit-races.py` | `races.json` | linha de atributos, ligada por semântica |
+
+Escolher a âncora é o trabalho; o resto é regex. E a do auditor de raças é a que
+explica por quê: **não serve o título nem a página.** O bloco de uma raça
+ATRAVESSA a página — o Hynne tem título e prosa na p27, o Golem inteiro vem
+depois, e a linha de atributos do Hynne só aparece no alto da p28. Ordem de
+leitura por coluna não desembaralha isso, e na p30-31 o Suraggel e o Trog saem
+alternados: a habilidade colada à linha de atributos do Suraggel é do TROG. A
+ligação linha→raça é feita em três regras semânticas, e o que sobrar REPROVA com
+nome em vez de ser adivinhado.
+
 ### E o buraco INVERSO: o valor existe, mas não se confere que ele APONTA
 
 O schema pega FORMA e não VALOR — é o parágrafo acima. O `seed-data.json` tinha o
