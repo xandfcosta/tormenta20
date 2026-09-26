@@ -320,20 +320,33 @@ var (
 	grantedNames []string
 )
 
-// GrantedPowerNames devolve o nome de cada poder concedido pelos deuses
-// (`granted-powers.json`), que é a forma como a ficha os grava — "Bênção do
-// Mana", e não um id.
+// GrantedPowerNames devolve o nome de cada poder concedido pelos deuses — a
+// forma como a ficha os grava, "Bênção do Mana" e não um id.
+//
+// Ele lê o `divine-powers.json`, e NÃO o `granted-powers.json` (ALE-397). O
+// segundo só tem os poderes que carregam modificador, e por muito tempo teve
+// menos: com 36 dos 72 nomes, o validador da seed recusava um devoto de Marah
+// em diante — "Visão nas Trevas" e "Escudo Mágico" saíam como referência
+// quebrada de um catálogo que os tem.
+//
+// O `divine-powers.json` é por (deus, poder) e repete os seis poderes que mais
+// de um deus concede, então os nomes saem SEM repetição.
 func GrantedPowerNames() []string {
 	grantedOnce.Do(func() {
 		var list []struct {
 			Name string `json:"name"`
 		}
-		if b, err := files.ReadFile("data/granted-powers.json"); err == nil {
-			if json.Unmarshal(b, &list) == nil {
-				for _, p := range list {
-					grantedNames = append(grantedNames, p.Name)
-				}
+		b, err := files.ReadFile("data/divine-powers.json")
+		if err != nil || json.Unmarshal(b, &list) != nil {
+			return
+		}
+		seen := make(map[string]bool, len(list))
+		for _, p := range list {
+			if seen[p.Name] {
+				continue
 			}
+			seen[p.Name] = true
+			grantedNames = append(grantedNames, p.Name)
 		}
 	})
 	return grantedNames
