@@ -480,6 +480,84 @@ porta é interface declarada no consumidor, e ela só casa com tipos do consumid
 compartilhamento é ele ser *shared kernel*: pequeno, sem dependências, e de todos
 porque não é de ninguém.
 
+## O deslocamento é contado em QUADRADOS, e metro é coisa de tela
+
+O livro mede deslocamento em metros e joga num grid de 1,5m, e TODO valor que
+ele imprime é múltiplo de 1,5 — medido no catálogo: {-3, 1,5, 6, 9, 12}.
+Guardar em metros obrigava a arredondar na fronteira do JSON, e as botas
+reforçadas (+1,5m, p159) viravam **+2m**: meio metro de bônus inventado pela
+conversão (ALE-390).
+
+Em quadrados a conta fecha exata. É a MESMA decisão que o `board_movement.go` já
+tinha tomado para o mapa — *"a conta é feita em QUADRADOS inteiros, nunca em
+metros… metro é coisa de tela"* (p236) —, e agora a ficha e o tabuleiro falam a
+mesma unidade: a cena do mapa parou de converter.
+
+De quebra, a metade do Lento (p395: *"arredonde para baixo para o primeiro
+incremento de 1,5m"*) vira divisão inteira, sem regra de arredondamento escrita
+à mão.
+
+### A conversão é SIMÉTRICA, e isso não é enfeite
+
+`amountInEngineUnits` na leitura, `amountInBookUnits` na escrita
+(`Modifier.MarshalJSON`). Sem a volta, a conversão não é idempotente: ler de
+novo o que o motor escreveu converte duas vezes, e a armadura vai de −3m para
+−2 quadrados e de −2 para −1.
+
+**Quem denunciou foi o `roundTrip` dos casos de paridade**, que serializa a
+saída do motor e a relê. Ele não mede unidade nenhuma — ele mede FORMA, e
+tropeçou na assimetria de graça.
+
+O efeito colateral é o que se queria: **o FIO fala a unidade do LIVRO.** O
+oráculo mostra −3 e +1,5 como a página imprime, e quem revisa o diff contra o
+livro compara os mesmos números.
+
+### O modificador que MULTIPLICA
+
+Quase toda regra do livro SOMA, e é por isso que o motor nasceu só com soma.
+Algumas multiplicam, e elas não cabiam em lugar nenhum — o Lento reduz o
+deslocamento à metade (p395), o Imóvel o reduz a 0m (p394), a Alta Arcana corta
+o custo em PM pela metade.
+
+O `engine.Ratio` é um fator racional em inteiros (`{1,2}` é metade, `{0,1}` é
+zero), e ele vive num campo PRÓPRIO do `Modifier`. Quem tem fator não é parcela
+da pilha: o `Amount` fica em zero e o valor sai do `byTarget` para o
+`ItemEffects.Factors`.
+
+**Ele age DEPOIS da soma, e sobre a BASE junto.** Quem diz é o livro: a Alta
+Arcana escreve "reduzido à metade (APÓS aplicar aprimoramentos e outros
+modificadores)". O Lento não corta o bônus de item de ninguém — corta o quanto a
+pessoa anda.
+
+**Dois fatores no mesmo alvo: vale o MAIS SEVERO, e eles não compõem.** É a
+regra que o livro já dá para condição — "aplique apenas o mais severo" (p394) —,
+e os dois que existem hoje vêm de condição: Lento mais Imóvel não dá 2,25m, dá
+0m. No dia em que chegar um fator que NÃO seja de condição, é esta linha que se
+revisa.
+
+Racional e não decimal porque o motor é modelado em inteiros — e porque a
+divisão inteira de um total em QUADRADOS é exatamente o "arredonde para baixo
+para o primeiro incremento de 1,5m" que o Lento pede. Não há regra de
+arredondamento escrita à mão em lugar nenhum.
+
+> **O que ainda NÃO cabe:** a Fúria Titânica (p42) dobra o bônus de UMA FONTE,
+> e não o total de um alvo. É outra forma, e ela continua sem representação.
+
+### Onde a unidade aparece, e onde ela não aparece
+
+| lugar | unidade |
+|---|---|
+| catálogo (`items.json`, `races.json`) | metros |
+| `Modifier.Amount` em memória | quadrados |
+| `Modifier` no fio (JSON) | metros |
+| `ComputedSheet.displacementSquares` | quadrados — e o nome do campo diz |
+| `itemEffects.byTarget["displacement"]` | quadrados, e o nome do alvo é a única pista |
+| a tela (crachá da mochila, régua da Mesa) | metros |
+
+O campo do fio **mudou de nome** de propósito: `displacement` → `displacementSquares`. Trocar
+a unidade calada faria todo leitor antigo ler 6 onde lia 9, sem erro em lugar
+nenhum.
+
 ## Catálogos
 
 **As cenas leem o catálogo EMBUTIDO direto** — ele não viaja por HTTP, e não há

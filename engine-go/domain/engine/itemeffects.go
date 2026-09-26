@@ -45,6 +45,72 @@ type VitalScale struct {
 	Attribute string `json:"attribute,omitempty"`
 }
 
+// amountInEngineUnits converte o valor do catálogo para a unidade do motor.
+//
+// # O DESLOCAMENTO vem em METROS e é guardado em QUADRADOS
+//
+// O livro mede deslocamento em metros e joga num grid de 1,5m, e TODO valor que
+// ele imprime é múltiplo de 1,5 — medido no catálogo: {-3, 1,5, 6, 9, 12}.
+// Guardar em metros obrigava a arredondar, e as botas reforçadas (+1,5m, p159)
+// viravam +2m: meio metro de bônus inventado pela fronteira do JSON.
+//
+// Em quadrados a conta fecha exata, e é a MESMA decisão que o
+// `board_movement.go` já tinha tomado para o mapa — "a conta é feita em
+// QUADRADOS inteiros, nunca em metros… metro é coisa de tela" (p236). De
+// quebra, a metade do Lento (p395: "arredonde para baixo para o primeiro
+// incremento de 1,5m") vira divisão inteira, sem regra de arredondamento
+// escrita à mão.
+//
+// Arredonda em vez de truncar porque um verbete NOVO pode trazer um valor que
+// não seja múltiplo de 1,5 — e aí o vizinho certo é melhor que o de baixo. Se
+// isso acontecer, o lugar de consertar é o verbete.
+func amountInEngineUnits(target ModifierTarget, amount float64) int {
+	if target.K == "displacement" {
+		return int(math.Round(amount / SquareMetres))
+	}
+	return int(math.Round(amount))
+}
+
+// amountInBookUnits é a VOLTA, e ela não é enfeite: sem a simetria a conversão
+// não é idempotente, e ler de volta o que o motor escreveu converte duas vezes
+// — a armadura ia de −3m para −2 quadrados e de −2 para −1 na segunda leitura.
+//
+// Quem denunciou foi o `roundTrip` dos casos de paridade, que serializa a saída
+// do motor e a relê. Ele não estava medindo unidade nenhuma: ele mede FORMA, e
+// tropeçou na assimetria de graça.
+//
+// O efeito colateral é o que se queria: o FIO fala a unidade do LIVRO. O
+// oráculo mostra −3 e +1,5 como a página imprime, e quem revisa o diff contra o
+// livro compara os mesmos números.
+func amountInBookUnits(target ModifierTarget, amount int) float64 {
+	if target.K == "displacement" {
+		return float64(amount) * SquareMetres
+	}
+	return float64(amount)
+}
+
+// MarshalJSON emite o modificador na unidade do LIVRO — ver `amountInBookUnits`.
+func (m Modifier) MarshalJSON() ([]byte, error) {
+	type wire struct {
+		Target    ModifierTarget     `json:"target"`
+		Amount    float64            `json:"amount"`
+		BonusType string             `json:"bonusType"`
+		Condition *ModifierCondition `json:"condition,omitempty"`
+		Note      string             `json:"note,omitempty"`
+		Scale     *VitalScale        `json:"scale,omitempty"`
+		Factor    *Ratio             `json:"factor,omitempty"`
+	}
+	return json.Marshal(wire{
+		Target:    m.Target,
+		Amount:    amountInBookUnits(m.Target, m.Amount),
+		BonusType: m.BonusType,
+		Condition: m.Condition,
+		Note:      m.Note,
+		Scale:     m.Scale,
+		Factor:    m.Factor,
+	})
+}
+
 // Modifier é um modificador de item. O `scale` (maxPv/maxPm) é ignorado pelo
 // motor de resolução e preservado para o despejo de paridade da coleta.
 type Modifier struct {
@@ -54,13 +120,17 @@ type Modifier struct {
 	Condition *ModifierCondition `json:"condition,omitempty"`
 	Note      string             `json:"note,omitempty"`
 	Scale     *VitalScale        `json:"scale,omitempty"`
+	// Factor MULTIPLICA o total do alvo, depois da soma — ver `factor.go`. Um
+	// modificador com fator ignora o `Amount`: ele não é parcela da pilha.
+	Factor *Ratio `json:"factor,omitempty"`
 }
 
-// UnmarshalJSON arredonda o `amount` para o inteiro mais próximo. O motor é
-// modelado em INTEIROS (ver types.go), mas quem traz o valor é o catálogo, e um
-// verbete tem fração (botas-reforcadas, +1,5m de deslocamento). Arredondar na
-// fronteira do JSON impede a análise de falhar sem alargar todo total para
-// float; valor inteiro passa intocado, então a paridade não muda.
+// UnmarshalJSON leva o `amount` do catálogo para a unidade do MOTOR.
+//
+// O motor é modelado em INTEIROS (ver types.go), e quem traz o valor é o
+// catálogo, que escreve na unidade do LIVRO. Para quase todo alvo as duas
+// coincidem e o valor passa intocado. O DESLOCAMENTO é a exceção, e ela tem
+// razão própria — ver `amountInEngineUnits`.
 func (m *Modifier) UnmarshalJSON(b []byte) error {
 	var shadow struct {
 		Target    ModifierTarget     `json:"target"`
@@ -69,17 +139,19 @@ func (m *Modifier) UnmarshalJSON(b []byte) error {
 		Condition *ModifierCondition `json:"condition"`
 		Note      string             `json:"note"`
 		Scale     *VitalScale        `json:"scale"`
+		Factor    *Ratio             `json:"factor"`
 	}
 	if err := json.Unmarshal(b, &shadow); err != nil {
 		return err
 	}
 	*m = Modifier{
 		Target:    shadow.Target,
-		Amount:    int(math.Round(shadow.Amount)),
+		Amount:    amountInEngineUnits(shadow.Target, shadow.Amount),
 		BonusType: shadow.BonusType,
 		Condition: shadow.Condition,
 		Note:      shadow.Note,
 		Scale:     shadow.Scale,
+		Factor:    shadow.Factor,
 	}
 	return nil
 }
@@ -138,8 +210,12 @@ type ConditionalEffect struct {
 // `MarshalJSON` o emite como array ORDENADO, para a paridade de JSON com o
 // oráculo não depender de ordem.
 type ItemEffects struct {
-	ByTarget    map[string]AggregatedStat
-	Flags       map[string]bool
+	ByTarget map[string]AggregatedStat
+	Flags    map[string]bool
+	// Factors é o fator JÁ RESOLVIDO por alvo — o mais severo vence, e eles não
+	// compõem (ver `factor.go`). Quem o APLICA é a decomposição, porque ele age
+	// sobre o total COM a base, e a base não passa por aqui.
+	Factors     map[string]Ratio
 	Conditional []ConditionalEffect
 }
 
@@ -407,6 +483,7 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 	order := []string{}
 	buckets := map[string][]Contribution{}
 	flags := map[string]bool{}
+	factors := map[string]Ratio{}
 	conditional := []ConditionalEffect{}
 
 	// Passada prévia: as flags de todo item equipado, antes de tudo.
@@ -451,6 +528,12 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 			if !conditionMet(m, item.Equipped) {
 				continue
 			}
+			// O FATOR não é parcela: ele sai da pilha e vai para o mapa próprio.
+			if m.Factor != nil {
+				key := targetKey(m.Target)
+				factors[key] = severest(factors[key], *m.Factor)
+				continue
+			}
 			if m.Target.K == "flag" {
 				flags[m.Target.Name] = true
 				continue
@@ -471,7 +554,7 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 	for _, key := range order {
 		byTarget[key] = resolveStack(buckets[key])
 	}
-	return ItemEffects{ByTarget: byTarget, Flags: flags, Conditional: conditional}
+	return ItemEffects{ByTarget: byTarget, Flags: flags, Factors: factors, Conditional: conditional}
 }
 
 // firstNonEmpty devolve a primeira não vazia.
@@ -540,5 +623,10 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	for key := range buckets {
 		byTarget[key] = resolveStack(buckets[key])
 	}
-	return ItemEffects{ByTarget: byTarget, Flags: effects.Flags, Conditional: remaining}
+	// Os FATORES atravessam intactos: nenhum condicional traz fator hoje — os
+	// dois que existem vêm da tabela de condições, que os declara sem condição —
+	// e perdê-los aqui faria a ficha com opt-in ligado andar mais que a sem.
+	return ItemEffects{
+		ByTarget: byTarget, Flags: effects.Flags, Factors: effects.Factors, Conditional: remaining,
+	}
 }

@@ -781,13 +781,13 @@
         ]
       },
       "displacement:armor": {
-        "total": -3,
+        "total": -2,
         "contributions": [
           {
             "sourceId": "armadura-completa",
             "source": "Armadura completa",
             "bonusType": "untyped",
-            "amount": -3
+            "amount": -2
           }
         ]
       },
@@ -1043,10 +1043,10 @@
         }
       ]
     },
-    "displacement": {
-      "base": 6,
+    "displacementSquares": {
+      "base": 4,
       "itemBonus": 0,
-      "total": 6,
+      "total": 4,
       "contributions": []
     },
     "flySpeed": 0,
@@ -1553,10 +1553,10 @@
         }
       ]
     },
-    "displacement": {
-      "base": 6,
+    "displacementSquares": {
+      "base": 4,
       "itemBonus": 0,
-      "total": 6,
+      "total": 4,
       "contributions": []
     },
     "flySpeed": 0,

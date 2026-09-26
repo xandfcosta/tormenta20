@@ -123,6 +123,24 @@ func condForDesCon(n int) []Modifier {
 // total, porque virá-la em −5 inventaria uma regra mais branda que a do livro.
 const autoFailReflexosFlag = "auto-fail-reflexos"
 
+// condFactor é a condição que MULTIPLICA o alvo — ver `factor.go`. O `Amount`
+// fica em zero de propósito: um modificador com fator não é parcela da pilha.
+func condFactor(target ModifierTarget, num, den int) Modifier {
+	return Modifier{Target: target, BonusType: "condition", Factor: &Ratio{Num: num, Den: den}}
+}
+
+// lentoMods e imovelMods são as duas reduções de MOVIMENTO do livro, e as duas
+// são fator porque nenhuma é uma parcela:
+//
+//	"LENTO. Todas as formas de deslocamento do personagem são reduzidas à metade
+//	(arredonde para baixo para o primeiro incremento de 1,5m)" (p395)
+//	"IMÓVEL. Todas as formas de deslocamento do personagem são reduzidas a 0m."
+//	(p394)
+var (
+	lentoMods  = []Modifier{condFactor(ModifierTarget{K: "displacement"}, 1, 2)}
+	imovelMods = []Modifier{condFactor(ModifierTarget{K: "displacement"}, 0, 1)}
+)
+
 func condFlag(name string) Modifier {
 	return Modifier{Target: ModifierTarget{K: "flag", Name: name}, Amount: 1, BonusType: "condition"}
 }
@@ -177,6 +195,8 @@ func withPlus(base []Modifier, extra ...Modifier) []Modifier {
 // Cada linha derivada cita o texto da p394 que a obriga.
 var conditionModifierTable = map[string][]Modifier{
 	"abalado":      {condAllSkills(-2)},
+	"lento":        lentoMods,
+	"imovel":       imovelMods,
 	"apavorado":    {condAllSkills(-5)},
 	"vulneravel":   vulneravelMods,
 	"desprevenido": desprevenidoMods,
@@ -191,7 +211,7 @@ var conditionModifierTable = map[string][]Modifier{
 	// "SURPREENDIDO. O personagem fica desprevenido e não pode fazer ações."
 	"surpreendido": desprevenidoMods,
 	// "PARALISADO. Fica imóvel e indefeso […]"
-	"paralisado": indefesoMods,
+	"paralisado": withPlus(indefesoMods, imovelMods...),
 	// "INCONSCIENTE. O personagem fica indefeso e não pode fazer ações […]"
 	"inconsciente": indefesoMods,
 	// "PETRIFICADO. O personagem fica inconsciente e recebe redução de dano 8."
@@ -200,10 +220,14 @@ var conditionModifierTable = map[string][]Modifier{
 	// "FATIGADO. O personagem fica fraco e vulnerável."
 	"fatigado": withPlus(fracoMods, vulneravelMods...),
 	// "EXAUSTO. O personagem fica debilitado, lento e vulnerável."
-	"exausto": withPlus(debilitadoMods, vulneravelMods...),
+	"exausto": withPlus(debilitadoMods, append(append([]Modifier{}, vulneravelMods...), lentoMods...)...),
 	// "CEGO. O personagem fica desprevenido e lento […] e sofre −5 em testes de
 	// perícias baseadas em Força ou Destreza."
-	"cego": withPlus(desprevenidoMods, condByAttr("strength", -5), condByAttr("dexterity", -5)),
+	//
+	// O "e lento" ficou de fora por anos porque não havia como escrevê-lo: o
+	// motor só somava, e meia velocidade não é uma parcela (ALE-390).
+	"cego": withPlus(desprevenidoMods,
+		append([]Modifier{condByAttr("strength", -5), condByAttr("dexterity", -5)}, lentoMods...)...),
 	// "AGARRADO. O personagem fica desprevenido e imóvel, sofre −2 em testes de
 	// ataque […]"
 	"agarrado": withPlus(desprevenidoMods, condAttack(-2)),

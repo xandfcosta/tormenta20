@@ -450,6 +450,17 @@
         },
         {
           "target": {
+            "k": "displacement"
+          },
+          "amount": 0,
+          "bonusType": "condition",
+          "factor": {
+            "num": 1,
+            "den": 2
+          }
+        },
+        {
+          "target": {
             "k": "expertiseByAttribute",
             "attribute": "intelligence"
           },
@@ -630,10 +641,10 @@
         }
       ]
     },
-    "displacement": {
-      "base": 9,
+    "displacementSquares": {
+      "base": 6,
       "itemBonus": 0,
-      "total": 9,
+      "total": 3,
       "contributions": []
     },
     "flySpeed": 0,
@@ -1245,10 +1256,10 @@
         }
       ]
     },
-    "displacement": {
-      "base": 9,
+    "displacementSquares": {
+      "base": 6,
       "itemBonus": 0,
-      "total": 9,
+      "total": 3,
       "contributions": []
     },
     "flySpeed": 0,

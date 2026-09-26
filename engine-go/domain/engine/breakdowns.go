@@ -1,5 +1,7 @@
 package engine
 
+import "math"
+
 // A camada de DECOMPOSIÇÃO: ela transforma os `ItemEffects` resolvidos num
 // `ComputedSheet` em que nenhum número viaja sozinho — cada um leva as
 // contribuições que o formaram.
@@ -78,9 +80,12 @@ type ExpertiseBreakdown struct {
 // ComputedSheet junta todas as decomposições — a ficha rica que as cenas
 // desenham, em que cada número chega com as contribuições que o formaram.
 type ComputedSheet struct {
-	Defense      DefenseBreakdown `json:"defense"`
-	Displacement ValueBreakdown   `json:"displacement"`
-	FlySpeed     int              `json:"flySpeed"`
+	Defense DefenseBreakdown `json:"defense"`
+	// Displacement é contado em QUADRADOS de 1,5m, e não em metros. O nome do
+	// campo no fio diz a unidade de propósito: trocá-la em silêncio faria todo
+	// leitor antigo ler 6 onde lia 9, sem erro em lugar nenhum.
+	Displacement ValueBreakdown `json:"displacementSquares"`
+	FlySpeed     int            `json:"flySpeed"`
 	// Load é a p141 inteira — os espaços ocupados, o limite e a sobrecarga.
 	Load            LoadBreakdown                 `json:"carga"`
 	Attributes      map[string]AttributeBreakdown `json:"attributes"`
@@ -222,12 +227,13 @@ func hasActiveCondition(ch Character, id string) bool {
 // a mesma isenção entra pelo catálogo.
 const DisplacementIgnoresArmorAndLoad = "displacement-ignores-armor-and-load"
 
-// bookDefaultDisplacement é o deslocamento de quem o catálogo não conhece.
+// bookDefaultDisplacement é o deslocamento de quem o catálogo não conhece, em
+// QUADRADOS: nove metros são seis quadrados de 1,5m.
 //
 // Nove metros é o padrão do livro, do qual as raças que fogem dizem fugir com
 // todas as letras ("é 6m EM VEZ DE 9m", p20). Cair aqui é o catálogo não
 // conhecer a raça — e o remédio é transcrevê-la, não consultar a coluna.
-const bookDefaultDisplacement = 9
+const bookDefaultDisplacement = 6
 
 // raceDisplacement é o deslocamento da RAÇA PRIMÁRIA.
 //
@@ -242,8 +248,13 @@ func (r *Ruleset) raceDisplacement(ch Character) int {
 	if entry == nil || entry.Speed == 0 {
 		return bookDefaultDisplacement
 	}
-	return entry.Speed
+	// O verbete escreve METROS; o motor conta QUADRADOS — ver
+	// `amountInEngineUnits`.
+	return squaresOf(entry.Speed)
 }
+
+// squaresOf converte metros do livro em quadrados do motor.
+func squaresOf(metres int) int { return int(math.Round(float64(metres) / SquareMetres)) }
 
 // displacementBreakdown: o deslocamento da raça, mais o que modifica.
 //
@@ -265,14 +276,22 @@ func displacementBreakdown(base int, e ItemEffects, load LoadBreakdown) ValueBre
 		bonus += armor.Total
 		contribs = append(contribs, withNoteContribs(armor.Contributions)...)
 	}
+	// A CARGA fala em METROS — é o que a tela da mochila mostra — e aqui a conta
+	// é em quadrados.
 	if load.DisplacementPenalty != 0 && !exempt {
-		bonus += load.DisplacementPenalty
+		bonus += squaresOf(load.DisplacementPenalty)
 		contribs = append(contribs, overloadContrib(load.DisplacementPenalty))
 	}
+	// O FATOR age DEPOIS da soma, e sobre a BASE junto: o Lento não corta o
+	// bônus de item, corta o quanto a pessoa anda (p395). Em QUADRADOS a divisão
+	// inteira JÁ é o "arredonde para baixo para o primeiro incremento de 1,5m"
+	// que a condição pede — não há regra de arredondamento escrita aqui, e é de
+	// propósito.
+	total := e.Factors[targetKey(ModifierTarget{K: "displacement"})].Applied(max(0, base+bonus))
 	return ValueBreakdown{
 		Base:          base,
 		ItemBonus:     bonus,
-		Total:         max(0, base+bonus),
+		Total:         max(0, total),
 		Contributions: contribs,
 	}
 }

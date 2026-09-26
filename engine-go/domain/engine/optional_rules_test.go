@@ -32,11 +32,12 @@ func TestLoadTurnedOffPenalizesNeitherDisplacementNorExpertises(t *testing.T) {
 	}
 
 	withRule, noRule := overloaded(false), overloaded(true)
-	if withRule.Displacement.Total != 6 {
-		t.Fatalf("com a regra ligada o deslocamento é %d, want 6 — o controle já estava errado", withRule.Displacement.Total)
+	// Em QUADRADOS (ALE-390): 6m são 4, e 9m são 6.
+	if withRule.Displacement.Total != 4 {
+		t.Fatalf("com a regra ligada o deslocamento é %d quadrados, want 4 (6m) — o controle já estava errado", withRule.Displacement.Total)
 	}
-	if noRule.Displacement.Total != 9 {
-		t.Errorf("mesa sem a regra de carga: deslocamento %d, want 9 (a penalidade não existe)", noRule.Displacement.Total)
+	if noRule.Displacement.Total != 6 {
+		t.Errorf("mesa sem a regra de carga: deslocamento %d quadrados, want 6 (9m, a penalidade não existe)", noRule.Displacement.Total)
 	}
 	if got := periciaTotal(t, noRule, "Furtividade") - periciaTotal(t, withRule, "Furtividade"); got != 5 {
 		t.Errorf("mesa sem a regra: Furtividade %+d contra a mesa com a regra, want +5 (os −5 da p141 não são aplicados)", got)

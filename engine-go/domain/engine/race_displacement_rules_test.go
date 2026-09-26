@@ -25,9 +25,10 @@ func TestDisplacementComesFromTheRaceAndNotTheColumn(t *testing.T) {
 		want   int
 		pagina string
 	}{
-		{"Anão", 6, "p20, Devagar e Sempre"},
-		{"Elfo", 12, "p22, Graça de Glórienn"},
-		{"Humano", 9, "o padrão do livro"},
+		// O `want` é em QUADRADOS de 1,5m (ALE-390); a página cita os metros.
+		{"Anão", 4, "6m, p20, Devagar e Sempre"},
+		{"Elfo", 8, "12m, p22, Graça de Glórienn"},
+		{"Humano", 6, "9m, o padrão do livro"},
 	} {
 		t.Run(caso.race, func(t *testing.T) {
 			ch := Character{
@@ -36,13 +37,13 @@ func TestDisplacementComesFromTheRaceAndNotTheColumn(t *testing.T) {
 			}
 			got := BookRuleset(catalogs).ComputeSheet(ch, nil).Displacement
 			if got.Base != caso.want {
-				t.Fatalf("%s: base %dm, esperava %dm (%s).\n"+
+				t.Fatalf("%s: base %d quadrados, esperava %d (%s).\n"+
 					"Se veio 9 para o anão ou o elfo, o motor voltou a ler a coluna "+
 					"`characters.displacement` em vez do catálogo da raça.",
 					caso.race, got.Base, caso.want, caso.pagina)
 			}
 			if got.Total != caso.want {
-				t.Fatalf("%s: total %dm, esperava %dm sem modificador nenhum", caso.race, got.Total, caso.want)
+				t.Fatalf("%s: total %d quadrados, esperava %d sem modificador nenhum", caso.race, got.Total, caso.want)
 			}
 		})
 	}
@@ -57,8 +58,8 @@ func TestUnknownRaceFallsBackToTheBookDefault(t *testing.T) {
 	catalogs := primeFromDump(t, dir)
 
 	ch := Character{Displacement: 42, Races: []CharacterRace{{Race: "Raça Inventada"}}}
-	if got := BookRuleset(catalogs).ComputeSheet(ch, nil).Displacement.Base; got != 9 {
-		t.Fatalf("raça desconhecida deu base %dm, esperava 9m — se veio 42, a coluna voltou a ter voto", got)
+	if got := BookRuleset(catalogs).ComputeSheet(ch, nil).Displacement.Base; got != 6 {
+		t.Fatalf("raça desconhecida deu base %d quadrados, esperava 6 (9m) — se veio 28, a coluna voltou a ter voto", got)
 	}
 }
 
@@ -93,8 +94,9 @@ func TestDwarfIgnoresArmorSlowdownAndTheHumanDoesNot(t *testing.T) {
 		want int
 		why  string
 	}{
-		{"Anão", 6, "isento da redução por armadura (p20): 6m e fica 6m"},
-		{"Humano", 6, "sem isenção: 9m menos os 3m da armadura completa"},
+		// Em QUADRADOS: os dois param em 6m, que são 4.
+		{"Anão", 4, "isento da redução por armadura (p20): 6m e fica 6m"},
+		{"Humano", 4, "sem isenção: 9m menos os 3m da armadura completa"},
 	} {
 		t.Run(caso.race, func(t *testing.T) {
 			ch := Character{
@@ -104,7 +106,7 @@ func TestDwarfIgnoresArmorSlowdownAndTheHumanDoesNot(t *testing.T) {
 			}
 			got := BookRuleset(catalogs).ComputeSheet(ch, nil).Displacement
 			if got.Total != caso.want {
-				t.Fatalf("%s de armadura completa: %dm, esperava %dm — %s.\n"+
+				t.Fatalf("%s de armadura completa: %d quadrados, esperava %d — %s.\n"+
 					"base=%d bônus=%d", caso.race, got.Total, caso.want, caso.why, got.Base, got.ItemBonus)
 			}
 		})
