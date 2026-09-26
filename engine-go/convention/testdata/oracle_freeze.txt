@@ -4,7 +4,7 @@
 # deliberado — o `convention.TestNoOracleFixtureChangesWithoutRaisingTheBaseline`
 # diz no vermelho o que fazer, e o commit que a levanta diz contra o que o diff
 # foi conferido.
-_catalogs.json ee4ae7bbeb463ffa35090dd9f2b8747310dda0c8580bca36721975297ee68084
+_catalogs.json 92e9eac7c919c6bbe897e687dd67eba75ed4bf22d8d88bf8234dac1d0aa28cb8
 _fixtures.json 8dd666435cc37359f3a6dfeeb756fd1cb68469a616f009a25fb1ecee13770d89
 aprendiz-nv1-simples.json fe94f44b75c5ecdcac7e7a7f5c08c2723a8e7388259664c701c395cac0ed23ad
 arcanista-cego-esmorecido-nv9.json 86c35b7dd002f5975fee1d528811de23fb2fea38cd4f37de971d772bb5af8ef9

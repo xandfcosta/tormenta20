@@ -13782,7 +13782,20 @@
       ],
       "effect": "Você recebe +10 em testes de resistência contra efeitos da Tormenta, de suas criaturas e de devotos de Aharadak. Além disso, seu primeiro poder da Tormenta não conta para perda de Carisma.",
       "kind": "defesa",
-      "bookPage": 132
+      "bookPage": 132,
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "tormenta"
+          }
+        }
+      ]
     },
     {
       "id": "extase-da-loucura",
@@ -13813,7 +13826,20 @@
       ],
       "effect": "Você recebe resistência a magia divina +5.",
       "kind": "defesa",
-      "bookPage": 135
+      "bookPage": 135,
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "magia divina"
+          }
+        }
+      ]
     },
     {
       "id": "compreender-os-ermos",
@@ -14084,7 +14110,20 @@
       ],
       "effect": "Você considera a katana uma arma simples e, se for proficiente em armas marciais, recebe +1 na margem de ameaça com ela.",
       "kind": "ataque",
-      "bookPage": 135
+      "bookPage": 135,
+      "modifiers": [
+        {
+          "target": {
+            "k": "critRange"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com a katana, se for proficiente em armas marciais"
+          }
+        }
+      ]
     },
     {
       "id": "aura-de-paz",
@@ -14225,6 +14264,99 @@
           },
           "amount": 2,
           "bonusType": "untyped"
+        }
+      ]
+    },
+    {
+      "id": "armas-da-ambicao",
+      "name": "Armas da Ambição",
+      "deuses": [
+        "Valkaria"
+      ],
+      "effect": "Você recebe +1 em testes de ataque e na margem de ameaça com armas nas quais é proficiente.",
+      "kind": "utilidade",
+      "bookPage": 132,
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com armas nas quais é proficiente"
+          }
+        },
+        {
+          "target": {
+            "k": "critRange"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com armas nas quais é proficiente"
+          }
+        }
+      ]
+    },
+    {
+      "id": "arsenal-das-profundezas",
+      "name": "Arsenal das Profundezas",
+      "deuses": [
+        "Oceano"
+      ],
+      "effect": "Você recebe +2 nas rolagens de dano com azagaias, lanças e tridentes e seu multiplicador de crítico com essas armas aumenta em +1.",
+      "kind": "utilidade",
+      "bookPage": 132,
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com azagaias, lanças e tridentes"
+          }
+        },
+        {
+          "target": {
+            "k": "critMult"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com azagaias, lanças e tridentes"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sangue-ofidico",
+      "name": "Sangue Ofídico",
+      "deuses": [
+        "Sszzaas"
+      ],
+      "effect": "Você recebe resistência a veneno +5 e a CD para resistir aos seus venenos aumenta em +2.",
+      "kind": "utilidade",
+      "bookPage": 135,
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "veneno"
+          }
         }
       ]
     }
