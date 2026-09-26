@@ -13046,7 +13046,17 @@
           "id": "combate-defensivo"
         }
       ],
-      "bookPage": 125
+      "bookPage": 125,
+      "modifiers": [
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "derrubar"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "desarmar-aprimorado",
@@ -13059,7 +13069,17 @@
           "id": "combate-defensivo"
         }
       ],
-      "bookPage": 125
+      "bookPage": 125,
+      "modifiers": [
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "desarmar"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "disparo-preciso",
@@ -13125,7 +13145,21 @@
           "expertise": "Luta"
         }
       ],
-      "bookPage": 126
+      "bookPage": 125,
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com armas alongadas"
+          }
+        }
+      ]
     },
     {
       "id": "fanatico",
@@ -13152,7 +13186,21 @@
           "expertise": "Enganação"
         }
       ],
-      "bookPage": 128
+      "bookPage": 128,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Enganação"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "para fintar"
+          }
+        }
+      ]
     },
     {
       "id": "inexpugnavel",
@@ -13223,7 +13271,17 @@
           "id": "ataque-poderoso"
         }
       ],
-      "bookPage": 129
+      "bookPage": 129,
+      "modifiers": [
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "quebrar"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "trespassar",
@@ -13309,7 +13367,21 @@
           "min": 1
         }
       ],
-      "bookPage": 130
+      "bookPage": 130,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseByAttribute",
+            "attribute": "charisma"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "criaturas que possam se sentir atraídas por você"
+          }
+        }
+      ]
     },
     {
       "id": "comandar",
@@ -13343,7 +13415,33 @@
       "kind": "destino",
       "name": "Lobo Solitário",
       "description": "+1 em perícia e Defesa quando sem aliados em alcance curto; sem penalidade ao usar Cura em si mesmo.",
-      "bookPage": 130
+      "bookPage": 130,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseAll"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "lobo-solitario",
+            "label": "sem nenhum aliado em alcance curto"
+          }
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "lobo-solitario",
+            "label": "sem nenhum aliado em alcance curto"
+          }
+        }
+      ]
     },
     {
       "id": "medicina",
@@ -13417,7 +13515,33 @@
           "min": 1
         }
       ],
-      "bookPage": 131
+      "bookPage": 131,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseAll"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "torcida",
+            "label": "com torcida a seu favor"
+          }
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "torcida",
+            "label": "com torcida a seu favor"
+          }
+        }
+      ]
     },
     {
       "id": "treinamento-em-pericia",
@@ -13782,7 +13906,20 @@
       ],
       "effect": "Você recebe +10 em testes de resistência contra efeitos da Tormenta, de suas criaturas e de devotos de Aharadak. Além disso, seu primeiro poder da Tormenta não conta para perda de Carisma.",
       "kind": "defesa",
-      "bookPage": 132
+      "bookPage": 132,
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "tormenta"
+          }
+        }
+      ]
     },
     {
       "id": "extase-da-loucura",
@@ -13813,7 +13950,20 @@
       ],
       "effect": "Você recebe resistência a magia divina +5.",
       "kind": "defesa",
-      "bookPage": 135
+      "bookPage": 135,
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "magia divina"
+          }
+        }
+      ]
     },
     {
       "id": "compreender-os-ermos",
@@ -14084,7 +14234,20 @@
       ],
       "effect": "Você considera a katana uma arma simples e, se for proficiente em armas marciais, recebe +1 na margem de ameaça com ela.",
       "kind": "ataque",
-      "bookPage": 135
+      "bookPage": 135,
+      "modifiers": [
+        {
+          "target": {
+            "k": "critRange"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com a katana, se for proficiente em armas marciais"
+          }
+        }
+      ]
     },
     {
       "id": "aura-de-paz",
@@ -14225,6 +14388,103 @@
           },
           "amount": 2,
           "bonusType": "untyped"
+        }
+      ]
+    },
+    {
+      "id": "armas-da-ambicao",
+      "name": "Armas da Ambição",
+      "deuses": [
+        "Valkaria"
+      ],
+      "effect": "Você recebe +1 em testes de ataque e na margem de ameaça com armas nas quais é proficiente.",
+      "kind": "utilidade",
+      "bookPage": 132,
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "armas-da-ambicao",
+            "label": "com armas nas quais é proficiente"
+          }
+        },
+        {
+          "target": {
+            "k": "critRange"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "armas-da-ambicao",
+            "label": "com armas nas quais é proficiente"
+          }
+        }
+      ]
+    },
+    {
+      "id": "arsenal-das-profundezas",
+      "name": "Arsenal das Profundezas",
+      "deuses": [
+        "Oceano"
+      ],
+      "effect": "Você recebe +2 nas rolagens de dano com azagaias, lanças e tridentes e seu multiplicador de crítico com essas armas aumenta em +1.",
+      "kind": "utilidade",
+      "bookPage": 132,
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "arsenal-das-profundezas",
+            "label": "com azagaias, lanças e tridentes"
+          }
+        },
+        {
+          "target": {
+            "k": "critMult"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "arsenal-das-profundezas",
+            "label": "com azagaias, lanças e tridentes"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sangue-ofidico",
+      "name": "Sangue Ofídico",
+      "deuses": [
+        "Sszzaas"
+      ],
+      "effect": "Você recebe resistência a veneno +5 e a CD para resistir aos seus venenos aumenta em +2.",
+      "kind": "utilidade",
+      "bookPage": 135,
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "veneno"
+          }
         }
       ]
     }
