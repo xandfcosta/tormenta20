@@ -159,9 +159,20 @@ var (
 	indefesoMods = []Modifier{condDefense(-10), condFlag(autoFailReflexosFlag)}
 )
 
-// withPlus devolve os modificadores de uma condição citada mais os próprios.
-func withPlus(base []Modifier, extra ...Modifier) []Modifier {
-	return append(append([]Modifier{}, base...), extra...)
+// juntar compõe os modificadores das condições que um verbete CITA, na ordem
+// em que o livro as escreve.
+//
+// Ele substituiu um ajudante que só aceitava UMA lista mais modificadores
+// soltos: juntar duas condições exigia `append(append([]Modifier{}, a...),
+// b...)...` no meio da chamada, e a frase do livro deixava de ser legível no
+// código. Dois verbetes perderam a condição de MOVIMENTO deles nessa forma,
+// com a frase certa citada no comentário logo acima (ALE-398).
+func juntar(grupos ...[]Modifier) []Modifier {
+	fora := []Modifier{}
+	for _, grupo := range grupos {
+		fora = append(fora, grupo...)
+	}
+	return fora
 }
 
 // conditionModifierTable IS the source of the condition rule (p394). It was a
@@ -186,29 +197,29 @@ var conditionModifierTable = map[string][]Modifier{
 	// "SURPREENDIDO. O personagem fica desprevenido e não pode fazer ações."
 	"surpreendido": desprevenidoMods,
 	// "PARALISADO. Fica imóvel e indefeso […]"
-	"paralisado": withPlus(indefesoMods, imovelMods...),
+	"paralisado": juntar(indefesoMods, imovelMods),
 	// "INCONSCIENTE. O personagem fica indefeso e não pode fazer ações […]"
 	"inconsciente": indefesoMods,
 	// "PETRIFICADO. O personagem fica inconsciente e recebe redução de dano 8."
-	"petrificado": withPlus(indefesoMods, condDamageReduction(8)),
+	"petrificado": juntar(indefesoMods, []Modifier{condDamageReduction(8)}),
 
 	// "FATIGADO. O personagem fica fraco e vulnerável."
-	"fatigado": withPlus(fracoMods, vulneravelMods...),
+	"fatigado": juntar(fracoMods, vulneravelMods),
 	// "EXAUSTO. O personagem fica debilitado, lento e vulnerável."
-	"exausto": withPlus(debilitadoMods, append(append([]Modifier{}, vulneravelMods...), lentoMods...)...),
+	"exausto": juntar(debilitadoMods, vulneravelMods, lentoMods),
 	// "CEGO. O personagem fica desprevenido e lento […] e sofre −5 em testes de
 	// perícias baseadas em Força ou Destreza."
 	//
 	// O "e lento" ficou de fora por anos porque não havia como escrevê-lo: o
 	// motor só somava, e meia velocidade não é uma parcela (ALE-390).
-	"cego": withPlus(desprevenidoMods,
-		append([]Modifier{condByAttr("strength", -5), condByAttr("dexterity", -5)}, lentoMods...)...),
+	"cego": juntar(desprevenidoMods,
+		[]Modifier{condByAttr("strength", -5), condByAttr("dexterity", -5)}, lentoMods),
 	// "AGARRADO. O personagem fica desprevenido e imóvel, sofre −2 em testes de
 	// ataque […]"
-	"agarrado": withPlus(desprevenidoMods, condAttack(-2)),
+	"agarrado": juntar(desprevenidoMods, []Modifier{condAttack(-2)}, imovelMods),
 	// "ENREDADO. O personagem fica lento, vulnerável e sofre −2 em testes de
 	// ataque."
-	"enredado": withPlus(vulneravelMods, condAttack(-2)),
+	"enredado": juntar(vulneravelMods, []Modifier{condAttack(-2)}, lentoMods),
 
 	// "ALQUEBRADO. O custo em pontos de mana das habilidades do personagem
 	// aumenta em +1." Aumento, não redução — soma normalmente (p226).
