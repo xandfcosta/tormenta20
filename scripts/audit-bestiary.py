@@ -43,8 +43,8 @@ from collections import Counter
 # A leitura do PDF é do `t20pdf`, compartilhada com os outros auditores — ela
 # nasceu aqui e virou módulo quando o terceiro ia copiá-la (ALE-391).
 from t20pdf import (  # noqa: E402
-    MENOS, RAIZ, blocos_da_pagina, chave, coluna_de, inicios_das_colunas, junta,
-    num)
+    LIXO, MENOS, RAIZ, blocos_da_pagina, chave, coluna_de, inicios_das_colunas,
+    junta, num)
 
 def texto_da_pagina(pagina: int) -> str:
     bs = list(blocos_da_pagina(pagina))
@@ -68,7 +68,6 @@ def texto_da_pagina(pagina: int) -> str:
 
 PRIMEIRA, ULTIMA = 292, 322  # PDF; livro = PDF - 6
 BESTIARIO = str(RAIZ / 'engine-go/domain/catalog/data/bestiary.json')
-LIXO = re.compile(r'Mateus Santos|mateush\.santos|^Capítulo|^\d{1,3}$|fim de coluna')
 def chave(nome: str) -> str:
     s = unicodedata.normalize('NFD', nome.lower())
     return re.sub(r'[^a-z0-9]', '', ''.join(c for c in s if not unicodedata.combining(c)))

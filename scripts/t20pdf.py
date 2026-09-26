@@ -115,6 +115,33 @@ def linhas_da_pagina(pagina: int) -> list[str]:
     for _x0, _x1, _y, linhas in bs:
         saida.extend(linhas)
     return saida
+# A MARCA D'ÁGUA e os cabeçalhos correntes do PDF, que entram na leitura como
+# se fossem conteúdo. A de água é a pior: ela não ocupa linha própria em ordem
+# de leitura e COLA no texto vizinho — "Golpista Divino. Mateus Santos
+# mateush.santos42@gmail.com" chegou como o nome do último poder de uma lista.
+#
+# Isto morava em TRÊS auditores e as três cópias já tinham divergido: uma
+# conhecia "fim de coluna", outra "Construção de Personagem", a terceira
+# nenhuma das duas. Aqui é a união delas.
+LIXO = re.compile(
+    r"Mateus Santos|mateush\.santos|^Capítulo|^\d{1,3}$|fim de coluna"
+    r"|Construção de Personagem")
+
+
+def sem_lixo(linhas):
+    """As linhas da página sem marca d'água nem cabeçalho corrente.
+
+    Aceita tanto `list[str]` quanto as tuplas `(x, y, texto)` do
+    `linhas_com_coordenada`.
+    """
+    fora = []
+    for linha in linhas:
+        texto = linha[2] if isinstance(linha, tuple) else linha
+        if texto and not LIXO.search(texto):
+            fora.append(linha)
+    return fora
+
+
 MENOS = '–−—'  # o livro usa travessão, não hífen, nos negativos
 
 

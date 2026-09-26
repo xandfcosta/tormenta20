@@ -51,7 +51,9 @@ import json
 import re
 import sys
 
-from t20pdf import RAIZ, chave, linhas_com_coordenada, linhas_da_pagina, normaliza_frase
+from t20pdf import (  # noqa: E402
+    RAIZ, chave, linhas_com_coordenada, linhas_da_pagina, normaliza_frase,
+    sem_lixo)
 
 PODERES = str(RAIZ / 'engine-go/domain/catalog/data/class-powers.json')
 # As páginas saem do SUMÁRIO do livro, lido por coordenada. Classes vão de 32 a
@@ -66,7 +68,6 @@ OFFSET = 6  # página do PDF = página do livro + 6
 
 RE_NIVEL = re.compile(r'^(\d{1,2})º$')
 RE_ENTRADA = re.compile(r'^(?:•\s*)?([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^.]{2,44})\.\s+(.*)$')
-LIXO = re.compile(r'Mateus Santos|mateush\.santos|Construção de Personagem|^\d{1,3}$|^Capítulo')
 # O poder que se define por referência a outro: o alvo não é nomeado, e está
 # certo que não seja.
 RE_REFERENCIA = re.compile(r'\b(b[oô]nus de|aumenta para|passa a ser|em vez disso)\b', re.I)
@@ -94,7 +95,7 @@ def faixas() -> dict:
 def tabela_da_classe(classe: str, primeira: int, ultima: int) -> dict:
     """{nível: texto da linha} da tabela da classe, pareado por Y."""
     for pagina in range(primeira + OFFSET, ultima + OFFSET + 1):
-        linhas = [l for l in linhas_com_coordenada(pagina) if not LIXO.search(l[2])]
+        linhas = sem_lixo(linhas_com_coordenada(pagina))
         titulo = [l for l in linhas
                   if l[2].startswith('Tabela') and chave(classe) in chave(l[2])]
         if not titulo:

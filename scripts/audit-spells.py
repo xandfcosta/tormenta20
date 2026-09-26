@@ -52,7 +52,7 @@ from collections import Counter
 # A leitura do PDF é do `t20pdf`, compartilhada com os outros auditores
 # (ALE-391).
 from t20pdf import (  # noqa: E402
-    RAIZ, chave, linhas_da_pagina, normaliza_frase)
+    LIXO, RAIZ, chave, linhas_da_pagina, normaliza_frase)
 
 SPELLS = str(RAIZ / 'engine-go/domain/catalog/data/spells.json')
 PRIMEIRA, ULTIMA = 184, 217
@@ -60,7 +60,6 @@ OFFSET = 6
 RE_LISTA = re.compile(r'^(Arcana|Divina|Universal)\s+(\d)\s+\(([^)]+)\)\s*$', re.I)
 RE_EXECUCAO = re.compile(r'^Execução:')
 RE_AUGMENT = re.compile(r'^(?:\+(\d+)\s*PM(?:\s*\(Apenas\s+([^)]+)\))?|Truque)\s*:\s*(.*)$')
-LIXO = re.compile(r'Mateus Santos|mateush\.santos|^Capítulo|^\d{1,3}$')
 
 def catalogo() -> dict:
     with open(SPELLS, encoding='utf-8') as f:
