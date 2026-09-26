@@ -399,6 +399,20 @@ func absInt(n int) int {
 
 // ─── non-stacking resolution ──────────────────────────────────────────
 
+// AS DUAS FRASES DO EMPILHAMENTO (T20 p107), num dono só.
+//
+// Elas existem como função porque DOIS percursos as usam: o `resolveStack`, que
+// dobra uma lista, e o sistema `resolveStacking` da resolução em ECS, que
+// percorre entidades. Os percursos são diferentes de propósito; a REGRA não
+// pode ser, ou ela diverge na primeira vez que alguém mexer num dos dois.
+
+// accumulates diz se o tipo de bônus SOMA em vez de disputar. Só o `untyped`.
+func accumulates(bonusType string) bool { return bonusType == "untyped" }
+
+// strongerThan é o critério da disputa: vence o de maior valor ABSOLUTO — uma
+// penalidade de −3 é mais forte que uma de −1.
+func strongerThan(amount, than int) bool { return absInt(amount) > absInt(than) }
+
 // resolveStack aplica a regra de NÃO-EMPILHAMENTO do T20: dentro de um alvo,
 // entradas do mesmo `bonusType` guardam só a de maior valor ABSOLUTO; `untyped`
 // empilha à vontade. A ordem das contribuições segue a de PRIMEIRA APARIÇÃO de
@@ -416,13 +430,13 @@ func resolveStack(contribs []Contribution) AggregatedStat {
 	kept := []Contribution{}
 	for _, bt := range order {
 		list := byType[bt]
-		if bt == "untyped" {
+		if accumulates(bt) {
 			kept = append(kept, list...)
 			continue
 		}
 		best := list[0]
 		for _, e := range list {
-			if absInt(e.Amount) > absInt(best.Amount) {
+			if strongerThan(e.Amount, best.Amount) {
 				best = e
 			}
 		}
@@ -476,85 +490,15 @@ func ResolveConditionalDisplay(effects []ConditionalDisplayInput) []ConditionalD
 // ─── computeItemEffects ───────────────────────────────────────────────
 
 // ComputeItemEffects dobra um conjunto de `ActiveItem` em `ItemEffects`
-// resolvidos. Uma passada PRÉVIA coleta as flags primeiro, para as condições
-// `flagOff` não dependerem da ordem dos itens; a principal agrupa os
-// modificadores incondicionais por alvo e adia os condicionais para a lista.
+// resolvidos.
+//
+// Desde a ALE-378 (fatia 3) ela é uma linha: a resolução mora em SISTEMAS, com
+// o TERMO como entidade — ver `resolve_ecs.go`. O nome fica porque ele está em
+// dez chamadores e descreve o que a coisa faz; o que mudou é quem faz.
+//
+// @example engine.ComputeItemEffects(world.ActiveItemsFor(ch))
 func ComputeItemEffects(items []ActiveItem) ItemEffects {
-	order := []string{}
-	buckets := map[string][]Contribution{}
-	flags := map[string]bool{}
-	factors := map[string]Ratio{}
-	conditional := []ConditionalEffect{}
-
-	// Passada prévia: as flags de todo item equipado, antes de tudo.
-	for i := range items {
-		item := items[i]
-		if item.Equipped == nil {
-			continue
-		}
-		for _, m := range item.Modifiers {
-			if m.Target.K == "flag" && conditionMet(m, item.Equipped) {
-				flags[m.Target.Name] = true
-			}
-		}
-	}
-
-	for i := range items {
-		item := items[i]
-		if item.Equipped == nil {
-			continue
-		}
-		for _, m := range item.Modifiers {
-			// flagOff: passivo do livro que se DESLIGA enquanto a flag está posta.
-			if m.Condition != nil && m.Condition.C == "flagOff" && flags[m.Condition.Flag] {
-				continue
-			}
-			if !isUnconditional(m) {
-				ce := ConditionalEffect{
-					Term:      TermID(item.SourceID, m),
-					SourceID:  item.SourceID,
-					Source:    item.Source,
-					BonusType: m.BonusType,
-					Amount:    m.Amount,
-					Note:      firstNonEmpty(describeCondition(m), m.Note),
-					Target:    m.Target,
-				}
-				if m.Condition != nil && m.Condition.C == "flagOn" {
-					ce.Flag = m.Condition.Flag
-				}
-				conditional = append(conditional, ce)
-				continue
-			}
-			if !conditionMet(m, item.Equipped) {
-				continue
-			}
-			// O FATOR não é parcela: ele sai da pilha e vai para o mapa próprio.
-			if m.Factor != nil {
-				key := targetKey(m.Target)
-				factors[key] = severest(factors[key], *m.Factor)
-				continue
-			}
-			if m.Target.K == "flag" {
-				flags[m.Target.Name] = true
-				continue
-			}
-			key := targetKey(m.Target)
-			if _, ok := buckets[key]; !ok {
-				order = append(order, key)
-			}
-			c := Contribution{SourceID: item.SourceID, Source: item.Source, BonusType: m.BonusType, Amount: m.Amount}
-			if m.Note != "" {
-				c.Note = m.Note
-			}
-			buckets[key] = append(buckets[key], c)
-		}
-	}
-
-	byTarget := map[string]AggregatedStat{}
-	for _, key := range order {
-		byTarget[key] = resolveStack(buckets[key])
-	}
-	return ItemEffects{ByTarget: byTarget, Flags: flags, Factors: factors, Conditional: conditional}
+	return resolveInWorld(items)
 }
 
 // firstNonEmpty devolve a primeira não vazia.
