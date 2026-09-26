@@ -40,13 +40,24 @@ func raceModifiers(race *RaceDefinition, variantChoices map[string]bool) []Modif
 
 // originModifiers soma os modificadores dos benefícios escolhidos (benefícios e
 // depois poderUnico), e a ORDEM importa: o oráculo compara byte a byte.
-func originModifiers(origin *OriginDefinition, choiceSet map[string]bool) []Modifier {
+func originModifiers(
+	origin *OriginDefinition, choiceSet map[string]bool,
+	poderPorUid func(string) *GeneralPower,
+) []Modifier {
 	out := []Modifier{}
 	all := make([]OriginBenefit, 0, len(origin.Benefits)+1)
 	all = append(all, origin.Benefits...)
 	all = append(all, origin.UniquePower)
 	for _, benefit := range all {
 		if !choiceSet[benefit.ID] {
+			continue
+		}
+		// O benefício que APONTA não tem modificador próprio: a regra é a do
+		// poder geral, uma vez só (ALE-401).
+		if benefit.PowerUid != "" {
+			if p := poderPorUid(benefit.PowerUid); p != nil {
+				out = append(out, p.Modifiers...)
+			}
 			continue
 		}
 		out = append(out, benefit.Modifiers...)

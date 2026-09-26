@@ -75,7 +75,15 @@ type OriginDefinition struct {
 }
 
 type OriginBenefit struct {
-	ID        string     `json:"id"`
+	ID string `json:"id"`
+	// PowerUid APONTA para o poder geral que este benefício concede, em vez de
+	// repetir a regra dele (ALE-401). A origem descreve a ORIGEM; o poder mora
+	// no `general-powers.json`, e o `uid` é a identidade que não muda.
+	//
+	// Quando ele está presente, `Modifiers` fica vazio: são as duas formas de
+	// dizer a mesma coisa, e ter as duas foi o que deixou dezenove poderes com
+	// duas regras diferentes.
+	PowerUid  string     `json:"powerUid,omitempty"`
 	Modifiers []Modifier `json:"modifiers"`
 	PowerPick string     `json:"powerPick,omitempty"` // 'combate' | 'tormenta'
 }
@@ -97,7 +105,10 @@ type GrantedByChoice struct {
 
 // GeneralPower é o poder geral ou de combate.
 type GeneralPower struct {
-	ID        string     `json:"id"`
+	ID string `json:"id"`
+	// Uid é a identidade estável — ver o guia. Ela entrou quando a origem
+	// passou a APONTAR para o poder em vez de copiá-lo (ALE-402).
+	Uid       string     `json:"uid"`
 	Name      string     `json:"name"`
 	Modifiers []Modifier `json:"modifiers"`
 }
@@ -195,6 +206,7 @@ type Catalogs struct {
 	origins       []*OriginDefinition
 	classPowers   []*ClassPower
 	generalByID   map[string]*GeneralPower
+	generalByUid  map[string]*GeneralPower
 	grantedByName map[string]*GrantedPower
 	racesByName   map[string]*RaceAttributeEntry
 	tormentaIDs   map[string]bool
@@ -225,6 +237,7 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 		itemsByID:     make(map[string]*CatalogItem, len(p.Items)),
 		racesByID:     make(map[string]*RaceDefinition, len(p.Races)),
 		generalByID:   make(map[string]*GeneralPower, len(p.GeneralPowers)),
+		generalByUid:  make(map[string]*GeneralPower, len(p.GeneralPowers)),
 		grantedByName: make(map[string]*GrantedPower, len(p.GrantedPowers)),
 		racesByName:   make(map[string]*RaceAttributeEntry, len(p.Ancestries)),
 		tormentaIDs:   make(map[string]bool, len(p.TormentaIDs)),
@@ -243,6 +256,9 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	}
 	for i := range p.GeneralPowers {
 		c.generalByID[p.GeneralPowers[i].ID] = &p.GeneralPowers[i]
+		if uid := p.GeneralPowers[i].Uid; uid != "" {
+			c.generalByUid[uid] = &p.GeneralPowers[i]
+		}
 	}
 	for i := range p.GrantedPowers {
 		c.grantedByName[p.GrantedPowers[i].Name] = &p.GrantedPowers[i]
@@ -262,6 +278,11 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 func (c *Catalogs) getRace(id string) *RaceDefinition { return c.racesByID[id] }
 
 func (c *Catalogs) getGeneralPower(id string) *GeneralPower { return c.generalByID[id] }
+
+// generalPowerByUid resolve o apontamento de um benefício de origem. Por UID e
+// não por id: o id é o nome em kebab-case e muda quando o nome muda, e um
+// apontamento que se quebra num renome não é apontamento.
+func (c *Catalogs) generalPowerByUid(uid string) *GeneralPower { return c.generalByUid[uid] }
 
 // grantedPowerByName é o poder concedido do deus indexado pelo nome do livro,
 // que é o que o `Character.godPower` guarda.

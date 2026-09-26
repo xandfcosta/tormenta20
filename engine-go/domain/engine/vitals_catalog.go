@@ -106,7 +106,7 @@ func (r *Ruleset) vitalGrantMods(ctx VitalContext) []Modifier {
 	}
 	if ctx.Origin != "" {
 		if origin := r.getOrigin(ctx.Origin); origin != nil {
-			out = append(out, originModifiers(origin, toSet(ctx.OriginChoices))...)
+			out = append(out, originModifiers(origin, toSet(ctx.OriginChoices), r.generalPowerByUid)...)
 		}
 	}
 	return out

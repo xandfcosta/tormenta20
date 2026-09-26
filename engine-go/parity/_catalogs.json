@@ -5212,47 +5212,15 @@
           "id": "poder-medicina",
           "name": "Medicina",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Cura. Pode estabilizar uma criatura em 0 PV com ação livre.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Cura"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_2zgq2rpnra"
+          "uid": "org_2zgq2rpnra",
+          "powerUid": "pwr_l2d2utqgsi"
         },
         {
           "id": "poder-vontade-de-ferro",
           "name": "Vontade de Ferro",
           "kind": "poder",
-          "description": "Você recebe +1 PM para cada dois níveis de personagem e +2 em Vontade.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Vontade"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "maxPm"
-              },
-              "amount": 1,
-              "bonusType": "untyped",
-              "scale": {
-                "per": "levelStep",
-                "step": 2,
-                "round": "down"
-              }
-            }
-          ],
-          "uid": "org_aoruv72qit"
+          "uid": "org_aoruv72qit",
+          "powerUid": "pwr_47dtscyybu"
         }
       ],
       "poderUnico": {
@@ -5336,8 +5304,8 @@
           "id": "poder-comandar",
           "name": "Comandar",
           "kind": "poder",
-          "description": "Pode gastar uma ação padrão e 2 PM para ordenar uma ação a um aliado em alcance curto. Se o aliado obedecer, ganha +2 em testes para realizar essa ação.",
-          "uid": "org_ogd2sjurk2"
+          "uid": "org_ogd2sjurk2",
+          "powerUid": "pwr_4bsm6m7nuz"
         }
       ],
       "poderUnico": {
@@ -5372,8 +5340,8 @@
           "id": "poder-sortudo",
           "name": "Sortudo",
           "kind": "poder",
-          "description": "Quando faz um teste, pode gastar 3 PM para rolá-lo novamente.",
-          "uid": "org_2tr3f4ou3r"
+          "uid": "org_2tr3f4ou3r",
+          "powerUid": "pwr_i2m5uckgz5"
         }
       ],
       "poderUnico": {
@@ -5408,48 +5376,22 @@
           "id": "poder-atraente",
           "name": "Atraente",
           "kind": "poder",
-          "description": "Você recebe +2 em Diplomacia, Enganação e Intimidação.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Diplomacia"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Enganação"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Intimidação"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_kribovda5v"
+          "uid": "org_kribovda5v",
+          "powerUid": "pwr_hxirqb2acl"
         },
         {
           "id": "poder-sortudo",
           "name": "Sortudo",
           "kind": "poder",
-          "description": "Quando faz um teste, pode gastar 3 PM para rolá-lo novamente.",
-          "uid": "org_2tr3f4ou3r"
+          "uid": "org_2tr3f4ou3r",
+          "powerUid": "pwr_i2m5uckgz5"
         },
         {
           "id": "poder-torcida",
           "name": "Torcida",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de perícia e Defesa quando tem a torcida a seu favor (qualquer número de criaturas inteligentes torcendo).",
-          "uid": "org_hccz3l6fai"
+          "uid": "org_hccz3l6fai",
+          "powerUid": "pwr_ul7sy4jjx6"
         }
       ],
       "poderUnico": {
@@ -5494,8 +5436,8 @@
           "id": "poder-venefico",
           "name": "Venefício",
           "kind": "poder",
-          "description": "Você é treinado em fabricar e aplicar venenos. Não corre risco de envenenar a si mesmo ao aplicar veneno em uma arma.",
-          "uid": "org_vhoyc666tx"
+          "uid": "org_vhoyc666tx",
+          "powerUid": "pwr_qxnqnn7tvz"
         },
         {
           "id": "origin-assistente-poder-poder-da-tormenta-escolha",
@@ -5563,26 +5505,8 @@
           "id": "poder-sentidos-agucados",
           "name": "Sentidos Aguçados",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Percepção e Sobrevivência.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Percepção"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Sobrevivência"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_xga44g233h"
+          "uid": "org_xga44g233h",
+          "powerUid": "pwr_ezgehku7wx"
         }
       ],
       "poderUnico": {
@@ -5654,15 +5578,15 @@
           "id": "poder-aparencia-inofensiva",
           "name": "Aparência Inofensiva",
           "kind": "poder",
-          "description": "Sua aparência faz com que ninguém o considere uma ameaça. Recebe +5 em Enganação para enganar inteligências e fica imune a Intuição direcionada a você.",
-          "uid": "org_5qb3jv4fq4"
+          "uid": "org_5qb3jv4fq4",
+          "powerUid": "pwr_logw3qwdse"
         },
         {
           "id": "poder-sortudo",
           "name": "Sortudo",
           "kind": "poder",
-          "description": "Quando faz um teste, pode gastar 3 PM para rolá-lo novamente.",
-          "uid": "org_2tr3f4ou3r"
+          "uid": "org_2tr3f4ou3r",
+          "powerUid": "pwr_i2m5uckgz5"
         }
       ],
       "poderUnico": {
@@ -5705,33 +5629,15 @@
           "id": "poder-acrobatico",
           "name": "Acrobático",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Acrobacia e Furtividade.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Acrobacia"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Furtividade"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_k4uoljdyby"
+          "uid": "org_k4uoljdyby",
+          "powerUid": "pwr_wdf3wshjub"
         },
         {
           "id": "poder-torcida",
           "name": "Torcida",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de perícia e Defesa quando tem a torcida a seu favor (qualquer número de criaturas inteligentes torcendo).",
-          "uid": "org_hccz3l6fai"
+          "uid": "org_hccz3l6fai",
+          "powerUid": "pwr_ul7sy4jjx6"
         }
       ],
       "poderUnico": {
@@ -5774,8 +5680,8 @@
           "id": "poder-venefico",
           "name": "Venefício",
           "kind": "poder",
-          "description": "Você é treinado em fabricar e aplicar venenos. Não corre risco de envenenar a si mesmo ao aplicar veneno em uma arma.",
-          "uid": "org_vhoyc666tx"
+          "uid": "org_vhoyc666tx",
+          "powerUid": "pwr_qxnqnn7tvz"
         }
       ],
       "poderUnico": {
@@ -5828,25 +5734,15 @@
           "id": "poder-medicina",
           "name": "Medicina",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Cura. Pode estabilizar uma criatura em 0 PV com ação livre.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Cura"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_2zgq2rpnra"
+          "uid": "org_2zgq2rpnra",
+          "powerUid": "pwr_l2d2utqgsi"
         },
         {
           "id": "poder-venefico",
           "name": "Venefício",
           "kind": "poder",
-          "description": "Você é treinado em fabricar e aplicar venenos. Não corre risco de envenenar a si mesmo ao aplicar veneno em uma arma.",
-          "uid": "org_vhoyc666tx"
+          "uid": "org_vhoyc666tx",
+          "powerUid": "pwr_qxnqnn7tvz"
         }
       ],
       "poderUnico": {
@@ -5889,8 +5785,8 @@
           "id": "poder-lobo-solitario",
           "name": "Lobo Solitário",
           "kind": "poder",
-          "description": "Quando está sozinho (sem aliados em alcance curto), recebe +2 em testes de perícia, ataque e Defesa.",
-          "uid": "org_ys65iguc6b"
+          "uid": "org_ys65iguc6b",
+          "powerUid": "pwr_4jhbuquahz"
         }
       ],
       "poderUnico": {
@@ -5933,28 +5829,8 @@
           "id": "poder-vitalidade",
           "name": "Vitalidade",
           "kind": "poder",
-          "description": "Você recebe +1 PV por nível de personagem e +2 em Fortitude.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Fortitude"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "maxPv"
-              },
-              "amount": 1,
-              "bonusType": "untyped",
-              "scale": {
-                "per": "level"
-              }
-            }
-          ],
-          "uid": "org_sy2luhrpyc"
+          "uid": "org_sy2luhrpyc",
+          "powerUid": "pwr_dpopbaajg4"
         }
       ],
       "poderUnico": {
@@ -5997,8 +5873,8 @@
           "id": "poder-aparencia-inofensiva",
           "name": "Aparência Inofensiva",
           "kind": "poder",
-          "description": "Sua aparência faz com que ninguém o considere uma ameaça. Recebe +5 em Enganação para enganar inteligências e fica imune a Intuição direcionada a você.",
-          "uid": "org_5qb3jv4fq4"
+          "uid": "org_5qb3jv4fq4",
+          "powerUid": "pwr_logw3qwdse"
         }
       ],
       "poderUnico": {
@@ -6049,8 +5925,8 @@
           "id": "origin-fazendeiro-poder-ginete",
           "name": "Ginete",
           "kind": "poder",
-          "description": "Quando montado, você ignora a penalidade de armadura em testes de Cavalgar e recebe +2 em testes de Cavalgar.",
-          "uid": "org_273drw4w6c"
+          "uid": "org_273drw4w6c",
+          "powerUid": "pwr_s5soatnvf5"
         }
       ],
       "poderUnico": {
@@ -6093,8 +5969,8 @@
           "id": "poder-lobo-solitario",
           "name": "Lobo Solitário",
           "kind": "poder",
-          "description": "Quando está sozinho (sem aliados em alcance curto), recebe +2 em testes de perícia, ataque e Defesa.",
-          "uid": "org_ys65iguc6b"
+          "uid": "org_ys65iguc6b",
+          "powerUid": "pwr_4jhbuquahz"
         }
       ],
       "poderUnico": {
@@ -6129,41 +6005,15 @@
           "id": "poder-atraente",
           "name": "Atraente",
           "kind": "poder",
-          "description": "Você recebe +2 em Diplomacia, Enganação e Intimidação.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Diplomacia"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Enganação"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Intimidação"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_kribovda5v"
+          "uid": "org_kribovda5v",
+          "powerUid": "pwr_hxirqb2acl"
         },
         {
           "id": "poder-torcida",
           "name": "Torcida",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de perícia e Defesa quando tem a torcida a seu favor (qualquer número de criaturas inteligentes torcendo).",
-          "uid": "org_hccz3l6fai"
+          "uid": "org_hccz3l6fai",
+          "powerUid": "pwr_ul7sy4jjx6"
         },
         {
           "id": "origin-gladiador-poder-poder-de-combate-escolha",
@@ -6214,8 +6064,8 @@
           "id": "origin-guarda-poder-investigador",
           "name": "Investigador",
           "kind": "poder",
-          "description": "Você recebe +2 em Investigação e Percepção. Pode dobrar o tempo de uma investigação para receber +5 no teste final.",
-          "uid": "org_vl4abwkool"
+          "uid": "org_vl4abwkool",
+          "powerUid": "pwr_5je6hd4up5"
         },
         {
           "id": "origin-guarda-poder-poder-de-combate-escolha",
@@ -6284,8 +6134,8 @@
           "id": "poder-comandar",
           "name": "Comandar",
           "kind": "poder",
-          "description": "Pode gastar uma ação padrão e 2 PM para ordenar uma ação a um aliado em alcance curto. Se o aliado obedecer, ganha +2 em testes para realizar essa ação.",
-          "uid": "org_ogd2sjurk2"
+          "uid": "org_ogd2sjurk2",
+          "powerUid": "pwr_4bsm6m7nuz"
         }
       ],
       "poderUnico": {
@@ -6320,22 +6170,22 @@
           "id": "poder-sortudo",
           "name": "Sortudo",
           "kind": "poder",
-          "description": "Quando faz um teste, pode gastar 3 PM para rolá-lo novamente.",
-          "uid": "org_2tr3f4ou3r"
+          "uid": "org_2tr3f4ou3r",
+          "powerUid": "pwr_i2m5uckgz5"
         },
         {
           "id": "poder-surto-heroico",
           "name": "Surto Heroico",
           "kind": "poder",
-          "description": "Uma vez por dia, pode gastar uma ação livre para receber +5 em um teste, ataque ou Defesa contra um único ataque.",
-          "uid": "org_frnxeb5v2s"
+          "uid": "org_frnxeb5v2s",
+          "powerUid": "pwr_hze63e3pw5"
         },
         {
           "id": "poder-torcida",
           "name": "Torcida",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de perícia e Defesa quando tem a torcida a seu favor (qualquer número de criaturas inteligentes torcendo).",
-          "uid": "org_hccz3l6fai"
+          "uid": "org_hccz3l6fai",
+          "powerUid": "pwr_ul7sy4jjx6"
         }
       ],
       "poderUnico": {
@@ -6378,26 +6228,8 @@
           "id": "poder-acrobatico",
           "name": "Acrobático",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Acrobacia e Furtividade.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Acrobacia"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Furtividade"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_k4uoljdyby"
+          "uid": "org_k4uoljdyby",
+          "powerUid": "pwr_wdf3wshjub"
         }
       ],
       "poderUnico": {
@@ -6440,33 +6272,15 @@
           "id": "poder-lobo-solitario",
           "name": "Lobo Solitário",
           "kind": "poder",
-          "description": "Quando está sozinho (sem aliados em alcance curto), recebe +2 em testes de perícia, ataque e Defesa.",
-          "uid": "org_ys65iguc6b"
+          "uid": "org_ys65iguc6b",
+          "powerUid": "pwr_4jhbuquahz"
         },
         {
           "id": "poder-sentidos-agucados",
           "name": "Sentidos Aguçados",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Percepção e Sobrevivência.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Percepção"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Sobrevivência"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_xga44g233h"
+          "uid": "org_xga44g233h",
+          "powerUid": "pwr_ezgehku7wx"
         }
       ],
       "poderUnico": {
@@ -6517,8 +6331,8 @@
           "id": "poder-foco-em-pericia",
           "name": "Foco em Perícia",
           "kind": "poder",
-          "description": "Escolha uma perícia. Você recebe +2 em testes desta perícia. Você pode escolher este poder várias vezes, para perícias diferentes.",
-          "uid": "org_tgy323iwfg"
+          "uid": "org_tgy323iwfg",
+          "powerUid": "pwr_soosqyxcbl"
         }
       ],
       "poderUnico": {
@@ -6561,15 +6375,15 @@
           "id": "poder-proficiencia",
           "name": "Proficiência",
           "kind": "poder",
-          "description": "Escolha uma das proficiências a seguir: armas marciais, armas exóticas, armas de fogo, armaduras pesadas ou escudos. Você se torna proficiente nelas.",
-          "uid": "org_lbf6ff3s4p"
+          "uid": "org_lbf6ff3s4p",
+          "powerUid": "pwr_v23jgvz3uj"
         },
         {
           "id": "poder-sortudo",
           "name": "Sortudo",
           "kind": "poder",
-          "description": "Quando faz um teste, pode gastar 3 PM para rolá-lo novamente.",
-          "uid": "org_2tr3f4ou3r"
+          "uid": "org_2tr3f4ou3r",
+          "powerUid": "pwr_i2m5uckgz5"
         }
       ],
       "poderUnico": {
@@ -6612,33 +6426,15 @@
           "id": "origin-minerador-poder-ataque-poderoso",
           "name": "Ataque Poderoso",
           "kind": "poder",
-          "description": "Quando faz um ataque corpo a corpo, pode reduzir sua chance de acertar para causar mais dano (–5 ataque, +10 dano).",
-          "uid": "org_znzzxvfh6y"
+          "uid": "org_znzzxvfh6y",
+          "powerUid": "pwr_pjqnme3ntu"
         },
         {
           "id": "poder-sentidos-agucados",
           "name": "Sentidos Aguçados",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Percepção e Sobrevivência.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Percepção"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Sobrevivência"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_xga44g233h"
+          "uid": "org_xga44g233h",
+          "powerUid": "pwr_ezgehku7wx"
         }
       ],
       "poderUnico": {
@@ -6681,33 +6477,15 @@
           "id": "poder-lobo-solitario",
           "name": "Lobo Solitário",
           "kind": "poder",
-          "description": "Quando está sozinho (sem aliados em alcance curto), recebe +2 em testes de perícia, ataque e Defesa.",
-          "uid": "org_ys65iguc6b"
+          "uid": "org_ys65iguc6b",
+          "powerUid": "pwr_4jhbuquahz"
         },
         {
           "id": "poder-sentidos-agucados",
           "name": "Sentidos Aguçados",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Percepção e Sobrevivência.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Percepção"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Sobrevivência"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_xga44g233h"
+          "uid": "org_xga44g233h",
+          "powerUid": "pwr_ezgehku7wx"
         }
       ],
       "poderUnico": {
@@ -6759,33 +6537,15 @@
           "id": "poder-acrobatico",
           "name": "Acrobático",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Acrobacia e Furtividade.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Acrobacia"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Furtividade"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_k4uoljdyby"
+          "uid": "org_k4uoljdyby",
+          "powerUid": "pwr_wdf3wshjub"
         },
         {
           "id": "poder-aparencia-inofensiva",
           "name": "Aparência Inofensiva",
           "kind": "poder",
-          "description": "Sua aparência faz com que ninguém o considere uma ameaça. Recebe +5 em Enganação para enganar inteligências e fica imune a Intuição direcionada a você.",
-          "uid": "org_5qb3jv4fq4"
+          "uid": "org_5qb3jv4fq4",
+          "powerUid": "pwr_logw3qwdse"
         }
       ],
       "poderUnico": {
@@ -6828,30 +6588,8 @@
           "id": "poder-vontade-de-ferro",
           "name": "Vontade de Ferro",
           "kind": "poder",
-          "description": "Você recebe +1 PM para cada dois níveis de personagem e +2 em Vontade.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Vontade"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "maxPm"
-              },
-              "amount": 1,
-              "bonusType": "untyped",
-              "scale": {
-                "per": "levelStep",
-                "step": 2,
-                "round": "down"
-              }
-            }
-          ],
-          "uid": "org_aoruv72qit"
+          "uid": "org_aoruv72qit",
+          "powerUid": "pwr_47dtscyybu"
         }
       ],
       "poderUnico": {
@@ -6886,15 +6624,15 @@
           "id": "poder-proficiencia",
           "name": "Proficiência",
           "kind": "poder",
-          "description": "Escolha uma das proficiências a seguir: armas marciais, armas exóticas, armas de fogo, armaduras pesadas ou escudos. Você se torna proficiente nelas.",
-          "uid": "org_lbf6ff3s4p"
+          "uid": "org_lbf6ff3s4p",
+          "powerUid": "pwr_v23jgvz3uj"
         },
         {
           "id": "poder-surto-heroico",
           "name": "Surto Heroico",
           "kind": "poder",
-          "description": "Uma vez por dia, pode gastar uma ação livre para receber +5 em um teste, ataque ou Defesa contra um único ataque.",
-          "uid": "org_frnxeb5v2s"
+          "uid": "org_frnxeb5v2s",
+          "powerUid": "pwr_hze63e3pw5"
         }
       ],
       "poderUnico": {
@@ -6937,35 +6675,15 @@
           "id": "poder-lobo-solitario",
           "name": "Lobo Solitário",
           "kind": "poder",
-          "description": "Quando está sozinho (sem aliados em alcance curto), recebe +2 em testes de perícia, ataque e Defesa.",
-          "uid": "org_ys65iguc6b"
+          "uid": "org_ys65iguc6b",
+          "powerUid": "pwr_4jhbuquahz"
         },
         {
           "id": "poder-vitalidade",
           "name": "Vitalidade",
           "kind": "poder",
-          "description": "Você recebe +1 PV por nível de personagem e +2 em Fortitude.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Fortitude"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "maxPv"
-              },
-              "amount": 1,
-              "bonusType": "untyped",
-              "scale": {
-                "per": "level"
-              }
-            }
-          ],
-          "uid": "org_sy2luhrpyc"
+          "uid": "org_sy2luhrpyc",
+          "powerUid": "pwr_dpopbaajg4"
         }
       ],
       "poderUnico": {
@@ -7061,35 +6779,15 @@
           "id": "poder-proficiencia",
           "name": "Proficiência",
           "kind": "poder",
-          "description": "Escolha uma das proficiências a seguir: armas marciais, armas exóticas, armas de fogo, armaduras pesadas ou escudos. Você se torna proficiente nelas.",
-          "uid": "org_lbf6ff3s4p"
+          "uid": "org_lbf6ff3s4p",
+          "powerUid": "pwr_v23jgvz3uj"
         },
         {
           "id": "poder-vitalidade",
           "name": "Vitalidade",
           "kind": "poder",
-          "description": "Você recebe +1 PV por nível de personagem e +2 em Fortitude.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Fortitude"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "maxPv"
-              },
-              "amount": 1,
-              "bonusType": "untyped",
-              "scale": {
-                "per": "level"
-              }
-            }
-          ],
-          "uid": "org_sy2luhrpyc"
+          "uid": "org_sy2luhrpyc",
+          "powerUid": "pwr_dpopbaajg4"
         }
       ],
       "poderUnico": {
@@ -7124,26 +6822,8 @@
           "id": "poder-atletico",
           "name": "Atlético",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de Atletismo e Fortitude.",
-          "modifiers": [
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Atletismo"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            },
-            {
-              "target": {
-                "k": "expertise",
-                "name": "Fortitude"
-              },
-              "amount": 2,
-              "bonusType": "untyped"
-            }
-          ],
-          "uid": "org_nsu6shuexr"
+          "uid": "org_nsu6shuexr",
+          "powerUid": "pwr_x4zxg223af"
         }
       ],
       "poderUnico": {

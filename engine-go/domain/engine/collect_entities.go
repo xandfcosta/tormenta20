@@ -131,7 +131,7 @@ func (r *Ruleset) originActiveItem(ch Character) *ActiveItem {
 		return nil
 	}
 	choices := parseChoiceSet(ch.OriginChoices)
-	mods := originModifiers(origin, choices.has)
+	mods := originModifiers(origin, choices.has, r.generalPowerByUid)
 	for _, id := range r.originPickedPowerIds(ch) {
 		if p := r.getGeneralPower(id); p != nil {
 			mods = append(mods, p.Modifiers...)
