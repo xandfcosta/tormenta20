@@ -557,6 +557,36 @@ ORDEM só mede os pares que o DADO dele põe na mesma ficha, e é por isso que o
 sabotar a ordem depois de mexer: trocar duas linhas tem de sair nomeando as
 duas espécies fora de lugar.
 
+### O verbete tem DOIS identificadores, e eles têm papéis opostos
+
+- **`id`** é o nome em kebab-case: `esquiva`, `bencao-do-mana`. Ele é o
+  PÚBLICO — a URL o mostra, o `grep` o acha, a fixture se lê com ele. Ele muda
+  quando o nome muda.
+- **`uid`** é opaco e estável: `pwr_k3m9x2ft4q`. Ele é a IDENTIDADE — é o que o
+  banco guarda e o que um catálogo usa para apontar para outro. Ele **nunca**
+  muda.
+
+O `uid` é opaco de propósito. Um identificador derivável do nome volta a mudar
+no dia em que alguém "corrigir" a derivação, e aí ele não identifica nada.
+
+Cunhar é `python3 scripts/mint-uids.py --aplicar`, e ela só CRIA: um verbete
+que já tem uid nunca é tocado. O escopo — quais arquivos e quais caminhos têm
+verbete — é declarado uma vez só, lá dentro, e **não se repete em Go**: três
+guardas em `domain/catalog/uid_rules_test.go` conferem o que a cunhagem
+produziu contra uma linha de base, sem precisar saber o escopo. A primeira
+versão deles repetia o predicado e as duas cópias divergiram na hora: lista
+vazia é falsa em Python e presente em Go, e 126 itens ficaram de fora de um
+lado só.
+
+Verbete NOVO nasce com uid e entra na base quando alguém a regerar. O que
+reprova é um uid EXISTENTE mudar — e a mensagem diz por que isso importa: o
+banco perde a referência e a ficha deixa de achar o verbete, sem erro nenhum.
+
+> A decisão de ter dois identificadores é do dono (ALE-402), tomada contra uma
+> recomendação medida de manter só o `id`: o catálogo tem UM renome em 1057
+> nomes de história, e ele era um hífen. O custo aceito é um campo a mais em
+> 1506 verbetes e uma segunda grafia por conceito.
+
 ### O bônus CIRCUNSTANCIAL já tem vocabulário — não invente um
 
 Antes de acrescentar forma nova ao `Modifier`, veja se o caso não é um destes:
