@@ -13046,7 +13046,17 @@
           "id": "combate-defensivo"
         }
       ],
-      "bookPage": 125
+      "bookPage": 125,
+      "modifiers": [
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "derrubar"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "desarmar-aprimorado",
@@ -13059,7 +13069,17 @@
           "id": "combate-defensivo"
         }
       ],
-      "bookPage": 125
+      "bookPage": 125,
+      "modifiers": [
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "desarmar"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "disparo-preciso",
@@ -13125,7 +13145,21 @@
           "expertise": "Luta"
         }
       ],
-      "bookPage": 126
+      "bookPage": 125,
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com armas alongadas"
+          }
+        }
+      ]
     },
     {
       "id": "fanatico",
@@ -13152,7 +13186,21 @@
           "expertise": "Enganação"
         }
       ],
-      "bookPage": 128
+      "bookPage": 128,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Enganação"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "para fintar"
+          }
+        }
+      ]
     },
     {
       "id": "inexpugnavel",
@@ -13223,7 +13271,17 @@
           "id": "ataque-poderoso"
         }
       ],
-      "bookPage": 129
+      "bookPage": 129,
+      "modifiers": [
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "quebrar"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "trespassar",
@@ -13309,7 +13367,21 @@
           "min": 1
         }
       ],
-      "bookPage": 130
+      "bookPage": 130,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseByAttribute",
+            "attribute": "charisma"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "criaturas que possam se sentir atraídas por você"
+          }
+        }
+      ]
     },
     {
       "id": "comandar",
@@ -13343,7 +13415,31 @@
       "kind": "destino",
       "name": "Lobo Solitário",
       "description": "+1 em perícia e Defesa quando sem aliados em alcance curto; sem penalidade ao usar Cura em si mesmo.",
-      "bookPage": 130
+      "bookPage": 130,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseAll"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "sem nenhum aliado em alcance curto"
+          }
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "sem nenhum aliado em alcance curto"
+          }
+        }
+      ]
     },
     {
       "id": "medicina",
@@ -13417,7 +13513,31 @@
           "min": 1
         }
       ],
-      "bookPage": 131
+      "bookPage": 131,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseAll"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com torcida a seu favor"
+          }
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com torcida a seu favor"
+          }
+        }
+      ]
     },
     {
       "id": "treinamento-em-pericia",

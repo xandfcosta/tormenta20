@@ -557,6 +557,32 @@ ORDEM só mede os pares que o DADO dele põe na mesma ficha, e é por isso que o
 sabotar a ordem depois de mexer: trocar duas linhas tem de sair nomeando as
 duas espécies fora de lugar.
 
+### O bônus CIRCUNSTANCIAL já tem vocabulário — não invente um
+
+Antes de acrescentar forma nova ao `Modifier`, veja se o caso não é um destes:
+`context` com nota é o interruptor que a PESSOA liga, `against` com traço é
+"contra o quê", e `terrain` é o tipo de terreno. Dos dezesseis poderes
+condicionais fechados na ALE-399, **catorze couberam sem nada novo** — o que
+faltava era o dado, não o motor.
+
+Duas escolhas que valem lembrar, porque errá-las é invisível:
+
+- **Alvo que já É o escopo dispensa condição.** "+2 em testes de ataque para
+  derrubar" (p125) é `maneuver:derrubar`, sem `condition`: pedir opt-in para uma
+  circunstância que a pessoa já escolheu ao usar a manobra faria o bônus valer
+  de menos. O inverso — circunstância sem interruptor — faz valer de mais. Os
+  dois erros somem num teste que só confere números.
+- **"Resistência a X +N" é bônus em TESTE**, não redução de dano, e quem decide
+  é o livro: "uma criatura com resistência a magia +2 recebe +2 em testes"
+  (p226). O alvo é `resistance`.
+
+E uma armadilha de LEITURA do PDF: o nome do poder é impresso em VERSALETE, e o
+`pdftotext` devolve "Armas da ambição" em caixa baixa. Busca exata pelo nome do
+catálogo não acha, e "não achei" se parece com "não existe" — case por `chave()`
+como os outros auditores fazem. Pior: procurar o nome no texto do capítulo
+inteiro cai na TABELA de pré-requisitos, que vem antes dos verbetes; procure
+dentro da página que o catálogo declara, o que de quebra confere a página.
+
 ### A devoção só chegava ao PV e ao PM
 
 Antes da ALE-397 o `GodPower` entrava no motor por **uma porta só** — o
