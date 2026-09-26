@@ -34,7 +34,8 @@ import (
 // condição, mesa.
 func TestEveryCollectorLandsInTheDeclaredOrder(t *testing.T) {
 	esperada := []string{
-		"item", "efeito", "raça", "origem", "classe", "geral", "tormenta", "condição", "mesa",
+		"item", "efeito", "raça", "origem", "classe", "geral", "devoção", "tormenta",
+		"condição", "mesa",
 	}
 
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
@@ -96,7 +97,7 @@ func TestTheSilenceRunsAfterEverythingItCanSilence(t *testing.T) {
 	}
 }
 
-// everyCollectorCharacter é o personagem que aciona as NOVE fontes de uma vez.
+// everyCollectorCharacter é o personagem que aciona as DEZ fontes de uma vez.
 //
 // Nenhuma fixture do oráculo faz isso, e é por isso que ele não pega troca de
 // ordem: a maior parte dos pares adjacentes nunca se encontra numa ficha.
@@ -113,6 +114,10 @@ func everyCollectorCharacter() Character {
 			Modifiers: `[{"target":{"k":"attack","scope":"all"},"amount":1,"bonusType":"untyped"}]`,
 		}},
 		ActiveConditions: `["abalado"]`,
+		// Escamas Dracônicas porque ela TEM modificador: a fonte da devoção só
+		// nasce quando o poder concede alguma coisa, então um poder sem
+		// modificador deixaria o caso medindo nove fontes de novo, em silêncio.
+		GodPower: "Escamas Dracônicas",
 		// `vitalidade` é poder GERAL e `pele-corrompida` é da TORMENTA: os dois
 		// entram pela mesma coluna e saem por coletores diferentes.
 		ClassPowers:          `["class.barbaro.golpe-poderoso","vitalidade","pele-corrompida"]`,
@@ -151,6 +156,8 @@ func collectorKindOf(item ActiveItem) string {
 		return "item"
 	case item.SourceID == "vitalidade":
 		return "geral"
+	case strings.HasPrefix(item.Source, "Devoção: "):
+		return "devoção"
 	}
 	return ""
 }

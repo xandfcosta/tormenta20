@@ -524,6 +524,27 @@ NÃO cobre:
 O segundo prende a ordem pela CONSEQUÊNCIA e não pela sequência, que é o
 formato melhor: ele continua valendo se alguém reescrever os sistemas.
 
+E o primeiro tem uma armadilha própria, medida na ALE-397: **acrescentar uma
+fonte NÃO o faz reprovar.** A devoção entrou como sétima fonte e o guarda
+passou verde, porque o personagem dele não era devoto de ninguém — um guarda de
+ORDEM só mede os pares que o DADO dele põe na mesma ficha, e é por isso que o
+`everyCollectorCharacter` cresce junto com o `collectionSystems`. O controle é
+sabotar a ordem depois de mexer: trocar duas linhas tem de sair nomeando as
+duas espécies fora de lugar.
+
+### A devoção só chegava ao PV e ao PM
+
+Antes da ALE-397 o `GodPower` entrava no motor por **uma porta só** — o
+`vitalGrantMods`, que existe para PV e PM e descarta todo alvo que não seja um
+dos dois. A lista de sistemas não tinha fonte de devoção nenhuma, então o texto
+de um poder concedido aparecia na ficha e o número não mudava. A Bênção do Mana
+funcionava por ser `maxPm`, a única família que aquela porta deixa passar.
+
+A porta continua lá, e é ela que soma PV/PM: a fonte nova NÃO duplica o número,
+porque o painel de decomposição e o total vêm de caminhos diferentes. O que a
+fonte conserta, além dos bônus que faltavam, é a própria decomposição — o
+"PM máximo" de um arcanista devoto mostrava +1 e o motor dava +2.
+
 ### Os acumuladores moram numa entidade SINGLETON
 
 As flags e os fatores são do mundo inteiro, não de uma entidade — e ficam numa

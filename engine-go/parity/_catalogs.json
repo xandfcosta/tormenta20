@@ -13823,7 +13823,17 @@
       ],
       "effect": "Você recebe +2 em Sobrevivência e pode usar Sabedoria para Adestramento (em vez de Carisma).",
       "kind": "utilidade",
-      "bookPage": 132
+      "bookPage": 132,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Sobrevivência"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "dedo-verde",
@@ -13883,7 +13893,33 @@
       ],
       "effect": "Você recebe +2 em Enganação, Jogatina e Ladinagem.",
       "kind": "social",
-      "bookPage": 134
+      "bookPage": 134,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Enganação"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Jogatina"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Ladinagem"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "forma-de-macaco",
@@ -13913,7 +13949,24 @@
       ],
       "effect": "Você recebe +2 na Defesa e em Fortitude.",
       "kind": "defesa",
-      "bookPage": 133
+      "bookPage": 133,
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Fortitude"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "presas-primordiais",
@@ -13995,7 +14048,33 @@
       ],
       "effect": "Você recebe +2 em Iniciativa, Percepção e Vontade.",
       "kind": "defesa",
-      "bookPage": 134
+      "bookPage": 134,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Iniciativa"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Percepção"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Vontade"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "tradicao-de-lin-wu",
@@ -14038,6 +14117,114 @@
             "step": 2,
             "round": "up"
           }
+        }
+      ]
+    },
+    {
+      "id": "astucia-da-serpente",
+      "name": "Astúcia da Serpente",
+      "deuses": [
+        "Sszzaas"
+      ],
+      "effect": "Você recebe +2 em Enganação, Furtividade e Intuição.",
+      "kind": "utilidade",
+      "bookPage": 132,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Enganação"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Furtividade"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intuição"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
+    },
+    {
+      "id": "mente-analitica",
+      "name": "Mente Analítica",
+      "deuses": [
+        "Tanna-Toh"
+      ],
+      "effect": "Você recebe +2 em Intuição, Investigação e Vontade.",
+      "kind": "utilidade",
+      "bookPage": 134,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intuição"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Investigação"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Vontade"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
+    },
+    {
+      "id": "talento-artistico",
+      "name": "Talento Artístico",
+      "deuses": [
+        "Marah"
+      ],
+      "effect": "Você recebe +2 em Acrobacia, Atuação e Diplomacia.",
+      "kind": "social",
+      "bookPage": 135,
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Acrobacia"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Atuação"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Diplomacia"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
         }
       ]
     }

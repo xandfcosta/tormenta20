@@ -106,6 +106,10 @@ type GeneralPower struct {
 // lidos (Bênção do Mana → maxPm). Indexado por NOME porque é o nome que o
 // `Character.godPower` guarda.
 type GrantedPower struct {
+	// ID já existia no catálogo e ninguém o lia. Ele entrou quando a devoção
+	// virou fonte do coletor (ALE-397): toda fonte precisa de um `SourceID`
+	// estável, e derivá-lo do nome criaria uma segunda grafia do mesmo id.
+	ID        string     `json:"id"`
 	Name      string     `json:"name"`
 	Modifiers []Modifier `json:"modifiers"`
 }
