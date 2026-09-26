@@ -114,37 +114,17 @@ type ComputedSheet struct {
 
 // ComputeSheet monta a ficha decomposta de um `Character` cru sob os
 // condicionais ligados — o caminho coleta → resolução → decomposição.
+//
+// As três fases são ECS desde a ALE-378, e a entidade muda entre elas: a FONTE
+// na coleta, o TERMO na resolução, a FICHA aqui. Ver `derive_ecs.go`.
+//
+// @example world.ComputeSheet(ch, nil)
 func (r *Ruleset) ComputeSheet(ch Character, activeConditionals map[string]bool) ComputedSheet {
-	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), activeConditionals)
-	load := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
-
-	attrs := make(map[string]AttributeBreakdown, len(AttributeKeys))
-	for _, a := range AttributeKeys {
-		attrs[a] = attributeBreakdown(ch, a, effects)
-	}
-	expertises := []ExpertiseBreakdown{}
-	for _, ex := range ch.Expertises {
-		expertises = append(expertises, expertiseBreakdown(ch, ex, effects, load))
-	}
-
-	return ComputedSheet{
-		Defense:            defenseBreakdown(ch, effects),
-		Displacement:       displacementBreakdown(r.raceDisplacement(ch), effects, load),
-		FlySpeed:           flySpeedTotal(effects),
-		Load:               load,
-		Attributes:         attrs,
-		PmLimit:            pmLimitBreakdown(ch, effects),
-		BestBaseSpellCd:    bestBaseSpellCd(ch, effects),
-		SpellCdByAttribute: spellCdByAttribute(ch, effects),
-		SpellDCBonus:       spellDCBonus(effects),
-		PmCostMod:          pmCostMod(effects),
-		AttackAll:          totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"}),
-		DamageAll:          totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"}),
-		DamageReduction:    characterDamageReduction(ch, effects),
-		TempHpFury:         tempHpFromPowers(ch, effects, true),
-		Expertises:         expertises,
-		AutoFailExpertises: autoFailExpertises(effects),
-	}
+	return deriveSheet(sheetInput{
+		char:        ch,
+		effects:     ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), activeConditionals),
+		raceSquares: r.raceDisplacement(ch),
+	})
 }
 
 // effectiveAttribute: o atributo cru mais os modificadores de `attribute`.

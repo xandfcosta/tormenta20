@@ -491,11 +491,36 @@ entidade não é a mesma nas duas — porque a pergunta não é a mesma.
 | **resolução** (`resolve_ecs.go`) | o TERMO | quanto vale `defense`, e por quê? |
 | decomposição (`breakdowns.go`) | — | qual é o número final? |
 
-A decomposição é função pura de `(ch, effects)`, e continua sendo: são catorze
-funções com UMA aresta de dependência, e hoje **o compilador é o escalonador** —
-não dá para calcular o deslocamento sem ter a carga na mão, porque a assinatura
-obriga. Com sistemas, dependência esquecida vira componente zerado em tempo de
-execução, em silêncio.
+| **derivação** (`derive_ecs.go`) | a FICHA | qual é o número final? |
+
+A entidade muda porque a pergunta muda, e é essa a lição das três fases.
+
+### A derivação, e o que ela CUSTOU
+
+O grafo de dependência é raso: só existe UMA aresta — a carga alimenta o
+deslocamento e as perícias. Todo o resto lê `(personagem, efeitos)`.
+
+Antes, **o compilador era o escalonador**: `displacementBreakdown(base, e, load)`
+não compila sem a carga na mão. Com sistemas, um que não rode deixa o componente
+ausente, e quem o lê recebe o valor ZERO — sem erro, sem log, com a ficha
+mostrando 0 como se fosse a conta.
+
+A troca foi decisão do dono (ALE-378): o critério passou a ser aprender ECS, e
+não o que paga em manutenção. **O preço se paga com dois guardas:**
+
+- `TestEveryDerivationSystemWritesItsComponent` — cada sistema escreveu o
+  componente dele. A lista é à mão porque não há como perguntar ao `ecs`
+  quantos componentes uma entidade tem; o que a mantém honesta é o DENOMINADOR,
+  que exige tantas conferências quantos sistemas.
+- `TestTheLoadIsDerivedBeforeWhatReadsIt` — a única aresta do grafo, prendida
+  pela consequência. O personagem do caso é SOBRECARREGADO de propósito: sem
+  isso, a carga zerada e a de verdade dão o mesmo deslocamento.
+
+### Os componentes são agrupados por PERGUNTA
+
+Sete, e não dezesseis: `derivedMagic` junta limite de PM, CD e custo porque quem
+lê um lê os outros. Agrupar pelo que se acessa junto é o critério de componente
+em ECS — um campo por componente seria a struct de volta, com cerimônia.
 
 ### O que a resolução em sistemas comprou
 
