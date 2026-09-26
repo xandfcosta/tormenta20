@@ -480,6 +480,57 @@ porta é interface declarada no consumidor, e ela só casa com tipos do consumid
 compartilhamento é ele ser *shared kernel*: pequeno, sem dependências, e de todos
 porque não é de ninguém.
 
+## O motor é ECS em duas fases, e a ENTIDADE muda entre elas
+
+O pipeline é coleta → resolução → decomposição. As duas primeiras são ECS, e a
+entidade não é a mesma nas duas — porque a pergunta não é a mesma.
+
+| fase | entidade | pergunta |
+|---|---|---|
+| **coleta** (`collect_ecs.go`) | a FONTE | quem concede alguma coisa a este personagem? |
+| **resolução** (`resolve_ecs.go`) | o TERMO | quanto vale `defense`, e por quê? |
+| decomposição (`breakdowns.go`) | — | qual é o número final? |
+
+A decomposição é função pura de `(ch, effects)`, e continua sendo: são catorze
+funções com UMA aresta de dependência, e hoje **o compilador é o escalonador** —
+não dá para calcular o deslocamento sem ter a carga na mão, porque a assinatura
+obriga. Com sistemas, dependência esquecida vira componente zerado em tempo de
+execução, em silêncio.
+
+### O que a resolução em sistemas comprou
+
+O `ComputeItemEffects` DESCARTAVA: o termo que não cumpria condição, o que
+perdia o empilhamento e o que virava fator saíam da lista e sumiam. Hoje eles
+ficam no mundo com a tag `Suppressed{Why}`.
+
+A ficha existe para responder *"por que 12?"*, e ela ainda não consegue dizer
+"−2 de X, não aplicado por não empilhar" — o número que perdeu não chegava à
+tela. Agora ele está lá para quando a tela pedir.
+
+### A ORDEM dos sistemas é a regra, nas duas fases
+
+Cada fase tem o guarda dela, e os dois nasceram de uma medição de que o oráculo
+NÃO cobre:
+
+- **coleta**: `TestEveryCollectorLandsInTheDeclaredOrder`. Sabotando a ordem, 3
+  dos 4 pares adjacentes passavam verdes — nenhuma das 18 fixtures tem todas as
+  fontes ao mesmo tempo.
+- **resolução**: `TestAFactorWhoseConditionFailsDoesNotApply`. Colher o fator
+  antes de julgar a condição passava verde na suíte INTEIRA, porque os dois
+  fatores de hoje vêm da tabela de condições e ela os declara sem condição —
+  eles sempre valem, e a ordem nunca era exercida. Uma emenda de campanha pode
+  escrever um fator condicionado, e aí ela passa a ser.
+
+O segundo prende a ordem pela CONSEQUÊNCIA e não pela sequência, que é o
+formato melhor: ele continua valendo se alguém reescrever os sistemas.
+
+### Os acumuladores moram numa entidade SINGLETON
+
+As flags e os fatores são do mundo inteiro, não de uma entidade — e ficam numa
+entidade só, com dois componentes (`worldFlags`, `worldFactors`). É o idioma de
+"recurso" do ECS. Sem ele, um sistema escreveria numa variável capturada e
+deixaria de ser função do mundo, que é o contrato do `ecs.System`.
+
 ## O deslocamento é contado em QUADRADOS, e metro é coisa de tela
 
 O livro mede deslocamento em metros e joga num grid de 1,5m, e TODO valor que
