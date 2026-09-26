@@ -184,6 +184,10 @@ func (r *Ruleset) getRace(id string) *RaceDefinition { return r.book.getRace(id)
 
 func (r *Ruleset) getGeneralPower(id string) *GeneralPower { return r.book.getGeneralPower(id) }
 
+func (r *Ruleset) generalPowerByUid(uid string) *GeneralPower {
+	return r.book.generalPowerByUid(uid)
+}
+
 func (r *Ruleset) grantedPowerByName(name string) *GrantedPower {
 	return r.book.grantedPowerByName(name)
 }
