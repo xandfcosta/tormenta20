@@ -45,6 +45,8 @@ Uso: `python3 scripts/mint-uids.py` (relatório) ou `--aplicar`.
 """
 import json
 import pathlib
+import re
+import unicodedata
 import secrets
 import sys
 
@@ -89,16 +91,21 @@ ESCOPO = {
     # a escolha de benefício de origem e a de habilidade de raça são gravadas
     # na ficha, então cada uma precisa de identidade.
     'origins.json':         ('org', [[], ['benefits']]),
+    # O `origins-source.json` é a transcrição do LIVRO das MESMAS 35 origens —
+    # itens, perícias e página —, enquanto o `origins.json` traz os benefícios
+    # derivados. Dois arquivos, um conceito: eles não ganham uid próprio, eles
+    # HERDAM o da origem. Duas identidades para a mesma origem seria o defeito
+    # que o uid existe para impedir.
+    'origins-source.json':  ('org', []),
     'race-defs.json':       ('rac', [[], ['abilities']]),
 }
 # Fora do escopo, e por quê — a lista existe para a ausência ser DITA:
 #   activations.json   o id é o do poder que a ativação descreve; ela é satélite
-#   origins-source.json  fonte de importação, não catálogo servido
 #   options.json       listas de strings para a tela, não verbetes
 #   gm-tables.json, dungeon-design.json, devotee-terms.json  tabelas de mestre
 #   class-expertises.json  é APONTAMENTO — classe para nomes de perícia, e as
 #                          perícias já têm identidade em expertises.json
-FORA = {'activations.json', 'origins-source.json', 'options.json',
+FORA = {'activations.json', 'options.json',
         'gm-tables.json', 'dungeon-design.json', 'devotee-terms.json',
         'class-expertises.json'}
 
@@ -139,6 +146,33 @@ def verbetes(dados, caminho: list):
             adiante.extend(colecao(no.get(passo)))
         atual = adiante
     return atual
+
+
+def espelha_origens(aplicar: bool) -> int:
+    """O `origins-source.json` herda o uid da origem correspondente em
+    `origins.json`. Casa pela chave, que é o id em kebab dos dois lados."""
+    fonte = json.loads((DADOS / 'origins.json').read_text(encoding='utf-8'))
+    porChave = {chave_kebab(o['id']): o['uid'] for o in fonte if o.get('uid')}
+    alvo = DADOS / 'origins-source.json'
+    dados = json.loads(alvo.read_text(encoding='utf-8'))
+    n = 0
+    for chave, origem in dados.items():
+        uid = porChave.get(chave)
+        if uid is None or origem.get('uid') == uid:
+            continue
+        origem['uid'] = uid
+        n += 1
+    if n and aplicar:
+        alvo.write_text(
+            json.dumps(dados, ensure_ascii=False, separators=(',', ':')) + '\n',
+            encoding='utf-8')
+    return n
+
+
+def chave_kebab(nome: str) -> str:
+    s = ''.join(c for c in unicodedata.normalize('NFD', nome.lower())
+                if unicodedata.category(c) != 'Mn')
+    return re.sub(r'[^a-z0-9]+', '-', s).strip('-')
 
 
 def main() -> int:
@@ -189,10 +223,16 @@ def main() -> int:
                 json.dumps(dados, ensure_ascii=False, separators=(',', ':')) + '\n',
                 encoding='utf-8')
 
+    # A HERANÇA entre arquivos que descrevem o mesmo conceito. Hoje é um caso
+    # só, e ele é declarado aqui em vez de deduzido: "mesmo nome, mesmo uid"
+    # como regra geral juntaria a perícia Cura com o efeito Cura.
+    herdados = espelha_origens(aplicar)
+
     for nome, (linhas, conceitos) in sorted(por_arquivo.items()):
         extra = f'  ({linhas - conceitos} linhas dividem uid)' if linhas != conceitos else ''
         print(f'  {conceitos:>4} conceitos em {linhas:>4} linhas  {nome}{extra}')
-    print(f'\nuids já existentes: {ja} | cunhados agora: {novos} | '
+    print(f'\nuids herdados por origins-source: {herdados}')
+    print(f'uids já existentes: {ja} | cunhados agora: {novos} | '
           f'{"GRAVADO" if aplicar else "simulação (use --aplicar)"}')
     # A ausência é DITA: arquivo de catálogo que ninguém declarou nem excluiu
     # sai nomeado, em vez de simplesmente não ser cunhado.

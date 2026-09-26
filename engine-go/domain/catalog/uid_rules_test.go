@@ -8,6 +8,9 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 
 	"t20engine/domain/catalog"
 )
@@ -59,9 +62,19 @@ func TestEveryCatalogEntryCarriesAUid(t *testing.T) {
 // conceitos é pior que nenhum: ele faz o apontamento resolver para o errado em
 // silêncio.
 //
-// Repetir o MESMO uid em linhas do mesmo conceito é esperado e não é erro: o
-// `divine-powers.json` tem 80 linhas para 72 poderes porque "Coragem Total"
-// aparece uma vez por deus que a concede, com o texto byte a byte igual.
+// Repetir o MESMO uid em linhas do mesmo conceito é esperado e não é erro, e
+// isso acontece de duas formas:
+//
+//   - dentro de um arquivo — o `divine-powers.json` tem 80 linhas para 72
+//     poderes, porque "Coragem Total" aparece uma vez por deus que a concede;
+//   - ENTRE arquivos — `origins.json` (benefícios derivados) e
+//     `origins-source.json` (a transcrição do livro) descrevem as mesmas 35
+//     origens, com campos diferentes. Uma origem, um uid.
+//
+// Por isso a comparação é pelo NOME normalizado e não pelo caminho do arquivo:
+// `origins.json/Acólito` e `origins-source.json/acolito` são a mesma coisa, e
+// tratá-los como dois faria o guarda reprovar o desenho que ele existe para
+// proteger.
 func TestNoUidNamesTwoDifferentThings(t *testing.T) {
 	todos := lerVerbetes(t)
 	identidades := map[string]map[string]bool{}
@@ -69,7 +82,7 @@ func TestNoUidNamesTwoDifferentThings(t *testing.T) {
 		if identidades[v.uid] == nil {
 			identidades[v.uid] = map[string]bool{}
 		}
-		identidades[v.uid][v.arquivo+"/"+v.identidade] = true
+		identidades[v.uid][chaveDoConceito(v.identidade)] = true
 	}
 	for uid, quais := range identidades {
 		if len(quais) == 1 {
@@ -196,6 +209,24 @@ func comUid(no any) []map[string]any {
 		}
 	}
 	return fora
+}
+
+// chaveDoConceito normaliza a identidade pública para comparar COISAS: sem
+// acento e sem caixa, porque o mesmo conceito aparece como "Acólito" num
+// arquivo e "acolito" no outro.
+func chaveDoConceito(identidade string) string {
+	semAcento := norm.NFD.String(strings.ToLower(identidade))
+	var b strings.Builder
+	for _, r := range semAcento {
+		if unicode.Is(unicode.Mn, r) {
+			continue
+		}
+		if r == '-' || r == ' ' || r == '_' {
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
 }
 
 func identidadeDe(no map[string]any) string {
