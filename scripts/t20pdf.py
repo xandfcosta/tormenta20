@@ -115,6 +115,27 @@ def linhas_da_pagina(pagina: int) -> list[str]:
     for _x0, _x1, _y, linhas in bs:
         saida.extend(linhas)
     return saida
+MENOS = '–−—'  # o livro usa travessão, não hífen, nos negativos
+
+
+def num(t: str) -> int:
+    """"+2", "–1" e "−1" viram int. O livro escreve o negativo com TRAVESSÃO."""
+    return int(t.strip().translate({ord(c): '-' for c in MENOS}).replace('+', ''))
+
+
+RE_HIFEN = re.compile(r'(\w)-\s+(\w)')
+
+
+def junta(corpo) -> str:
+    """Junta linhas DESFAZENDO a hifenização de quebra.
+
+    O livro quebra palavra no fim da linha ("subter-" / "râneos"), e juntar sem
+    cuidado produz "subter- râneos" no meio de uma frase — o que faz um `find`
+    pelo nome de uma habilidade não achar a habilidade que está lá.
+    """
+    return RE_HIFEN.sub(r'\1\2', ' '.join(corpo))
+
+
 def chave(nome: str) -> str:
     """Normaliza para casar nome do livro com nome do catálogo."""
     sem_acento = ''.join(
