@@ -815,6 +815,7 @@ este verbete":
 | `audit-classes.py` | `classes.json`, `class-powers.json` | nome na prosa, ou nível na tabela |
 | `audit-equipment.py` | `items.json` | nome + preço na tabela |
 | `audit-races.py` | `races.json` | linha de atributos, ligada por semântica |
+| `audit-expertises.py` | `expertises.json` | Tabela 2-1 **e** a linha de estado do verbete |
 
 Escolher a âncora é o trabalho; o resto é regex. E a do auditor de raças é a que
 explica por quê: **não serve o título nem a página.** O bloco de uma raça
@@ -824,6 +825,18 @@ leitura por coluna não desembaralha isso, e na p30-31 o Suraggel e o Trog saem
 alternados: a habilidade colada à linha de atributos do Suraggel é do TROG. A
 ligação linha→raça é feita em três regras semânticas, e o que sobrar REPROVA com
 nome em vez de ser adivinhado.
+
+O de perícias é o único com **duas âncoras**, e por isso é o mais barato de
+validar: o livro imprime a mesma verdade na Tabela 2-1 e na linha de estado de
+cada verbete, então os dois instrumentos se conferem um ao outro ANTES de
+qualquer um deles encostar no catálogo. Trocar duas colunas na leitura da tabela
+produz 24 discordâncias nomeadas; com uma leitura só, produziria uma tabela
+plausível.
+
+E ele lê por PALAVRA, não por linha, porque agrupar por linha junta o que não
+tem relação: na p119 o elemento `<line>` traz `Furtividade Des • Armadura
+Iniciativa` — título, estado, e o título da perícia da COLUNA VIZINHA na mesma
+altura. O `palavras_da_pagina` do `t20pdf.py` é o degrau para esses casos.
 
 ### E o buraco INVERSO: o valor existe, mas não se confere que ele APONTA
 
