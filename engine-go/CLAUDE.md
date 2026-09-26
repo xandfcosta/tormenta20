@@ -863,6 +863,7 @@ este verbete":
 | `audit-races.py` | `races.json` | linha de atributos, ligada por semântica |
 | `audit-expertises.py` | `expertises.json` | Tabela 2-1 **e** a linha de estado do verbete |
 | `audit-gods.py` | `gods.json` | Tabela 1-20 **e** os campos rotulados do verbete |
+| `audit-conditions.py` | `conditionModifierTable` (Go!) | a HERANÇA que a primeira frase do verbete declara |
 
 Escolher a âncora é o trabalho; o resto é regex. E a do auditor de raças é a que
 explica por quê: **não serve o título nem a página.** O bloco de uma raça
@@ -872,6 +873,13 @@ leitura por coluna não desembaralha isso, e na p30-31 o Suraggel e o Trog saem
 alternados: a habilidade colada à linha de atributos do Suraggel é do TROG. A
 ligação linha→raça é feita em três regras semânticas, e o que sobrar REPROVA com
 nome em vez de ser adivinhado.
+
+O de condições é o único que **não lê um `.json`**: o número da condição mora em
+Go, no `conditionModifierTable`, e o que ele compara é a HERANÇA — "Enredado. O
+personagem fica lento, vulnerável e sofre –2 em testes de ataque" contra os
+`lentoMods`/`vulneravelMods` que a tabela referencia. Ler Go é o preço, e ler
+MAL inventa defeito: a primeira versão pegava uma linha por entrada e perdia a
+continuação, acusando o Cego de não ficar lento quando ele fica.
 
 O de perícias é o único com **duas âncoras**, e por isso é o mais barato de
 validar: o livro imprime a mesma verdade na Tabela 2-1 e na linha de estado de

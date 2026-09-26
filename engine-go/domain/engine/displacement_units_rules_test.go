@@ -116,14 +116,27 @@ func TestSlowHalvesTheDisplacementAndImmobileZeroesIt(t *testing.T) {
 	}
 }
 
-// O CEGO E O EXAUSTO FICAM LENTOS, e o livro diz isso com todas as letras.
+// TODA CONDIÇÃO QUE O LIVRO MANDA FICAR LENTO OU IMÓVEL TEM DE MEXER NO
+// DESLOCAMENTO, e a lista abaixo é a lista inteira.
 //
-//	"CEGO. O personagem fica desprevenido e LENTO […]" — p394
+//	"CEGO. O personagem fica desprevenido e LENTO […]"          — p394
+//	"AGARRADO. O personagem fica desprevenido e IMÓVEL […]"      — p394
+//	"PARALISADO. Fica IMÓVEL e indefeso […]"                     — p394
+//	"ENREDADO. O personagem fica LENTO, vulnerável […]"          — p395
 //	"EXAUSTO. O personagem fica debilitado, LENTO e vulnerável." — p395
 //
-// Os comentários da tabela de condições já citavam as duas frases; o que faltava
-// era poder escrever a lentidão. Um personagem cego andava a velocidade cheia.
-func TestBlindAndExhaustedMoveAtHalfSpeed(t *testing.T) {
+// # Por que ela é uma lista e não dois casos
+//
+// O Cego e o Exausto foram consertados na ALE-390, quando o motor ganhou como
+// escrever "metade" — e a varredura parou neles. O Agarrado e o Enredado
+// ficaram para trás por mais uma issue inteira, com o comentário da tabela de
+// condições CITANDO a frase certa do livro logo acima do código que não a
+// cumpria (ALE-398). Uma convenção só foi adotada depois de varrida, e prender
+// a família inteira aqui é o que faz a varredura existir.
+//
+// Quem acha a família é o `scripts/audit-conditions.py`: ele compara a herança
+// que o verbete declara com a que o `conditionModifierTable` referencia.
+func TestEveryConditionTheBookSlowsOrStopsMovesLess(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	world := BookRuleset(primeFromDump(t, dir))
 
@@ -134,16 +147,28 @@ func TestBlindAndExhaustedMoveAtHalfSpeed(t *testing.T) {
 		}
 		return world.ComputeSheet(ch, nil).Displacement.Total
 	}
+
+	// O CONTROLE: o humano anda 6 quadrados. Sem ele, um deslocamento que
+	// nascesse zerado faria os casos de "imóvel" passarem por acidente.
+	if base := andar("caido"); base != 6 {
+		t.Fatalf("o controle já estava errado: uma condição que não mexe em "+
+			"deslocamento deu %d quadrados e o humano anda 6", base)
+	}
+
 	for _, caso := range []struct {
 		condicao string
-		pagina   string
+		quero    int
+		porque   string
 	}{
-		{"cego", "p394"},
-		{"exausto", "p395"},
+		{"cego", 3, "fica desprevenido e LENTO (p394)"},
+		{"exausto", 3, "fica debilitado, LENTO e vulnerável (p395)"},
+		{"enredado", 3, "fica LENTO, vulnerável e sofre –2 em ataque (p395)"},
+		{"agarrado", 0, "fica desprevenido e IMÓVEL (p394)"},
+		{"paralisado", 0, "fica IMÓVEL e indefeso (p394)"},
 	} {
-		if got := andar(caso.condicao); got != 3 {
-			t.Errorf("%s: %d quadrados, esperava 3 — o livro diz que ele fica LENTO (%s), "+
-				"e a metade de 6 é 3", caso.condicao, got, caso.pagina)
+		if got := andar(caso.condicao); got != caso.quero {
+			t.Errorf("%s: %d quadrados, esperava %d — o livro diz que ele %s",
+				caso.condicao, got, caso.quero, caso.porque)
 		}
 	}
 }
