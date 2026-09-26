@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -32,45 +31,21 @@ var expertiseNamesSet = toSet([]string{
 	"Reflexos", "Religião", "Sobrevivência", "Vontade",
 })
 
-// ActiveItemsFor: collect every active modifier
-// source into []ActiveItem — the input the resolution engine consumes. Order is
-// significativa: o despejo de paridade compara byte a byte.
-func (r *Ruleset) ActiveItemsFor(ch Character) []ActiveItem {
-	proficiencies := parseProficiencySet(ch.Proficiencies)
-	items := []ActiveItem{}
-	for _, it := range ch.Items {
-		if it.Equipped == nil {
-			continue
-		}
-		items = append(items, r.itemActiveItem(it, proficiencies))
-	}
-	for _, eff := range ch.ActiveEffects {
-		mods := parseEffectModifiers(eff.Modifiers)
-		if len(mods) == 0 {
-			continue
-		}
-		scope := DurationLabel(eff.Scope)
-		items = append(items, ActiveItem{
-			SourceID:  eff.CatalogID,
-			Source:    fmt.Sprintf("%s (%s)", r.appliedEffectName(eff.CatalogID, mods), scope),
-			Equipped:  &vestedWear,
-			Modifiers: mods,
-		})
-	}
-	items = append(items, r.raceActiveItems(ch)...)
-	if origin := r.originActiveItem(ch); origin != nil {
-		items = append(items, *origin)
-	}
-	items = append(items, r.classActiveItems(ch)...)
-	items = append(items, r.generalPowerActiveItem(ch)...)
-	if tormenta := r.tormentaCarismaItem(ch); tormenta != nil {
-		items = append(items, *tormenta)
-	}
-	if cond := conditionActiveItem(ch); cond != nil {
-		items = append(items, *cond)
-	}
-	return applySilences(r.mesa.Silences, ch, append(items, r.campaignGrants(ch)...))
-}
+// AQUI MORAVA A SEGUNDA IMPLEMENTAÇÃO DA COLETA (ALE-378).
+//
+// Ela montava a lista de fontes com `append`, na mesma ordem que os sistemas do
+// `collect_ecs.go` produzem, e as duas eram mantidas iguais por um teste de
+// paridade cruzada. Duas implementações da mesma coleta significavam que TODA
+// regra nova se escrevia duas vezes — foi o que aconteceu com o silêncio da
+// mesa, escrito como função pura só para poder ser chamado dos dois lados.
+//
+// O que ela dava de graça e teve de ser reposto ANTES de ela sair: a paridade
+// cruzada era o que prendia a ORDEM dos coletores. O substituto é o
+// `TestEveryCollectorLandsInTheDeclaredOrder`, que põe as nove fontes numa
+// ficha só — coisa que nenhuma fixture do oráculo faz.
+//
+// O `itemActiveItem` saiu junto: ele era a versão NÃO decomposta do
+// equipamento, e o `collect_ecs_item.go` tem a de sistemas desde a ALE-385.
 
 // conditionActiveItem builds the p394 status conditions as a synthetic
 // ActiveItem, so their numeric penalties flow through the resolution engine and
@@ -251,37 +226,6 @@ var conditionModifierTable = map[string][]Modifier{
 		condDefenseVs("melee", -5),
 		condDefenseVs("ranged", 5),
 	},
-}
-
-// itemActiveItem ports the per-item branch of activeItemsFor's map: base +
-// overlay + material mods (ownMods), then penalties, mirrors, and homebrew, in
-// the exact TS concatenation order.
-func (r *Ruleset) itemActiveItem(it CharacterItem, prof map[string]bool) ActiveItem {
-	var catalog *CatalogItem
-	if it.CatalogID != nil {
-		catalog = r.getCatalogItem(*it.CatalogID)
-	}
-	improvementIDs := parseStringArray(it.Improvements)
-
-	ownMods := []Modifier{}
-	if catalog != nil {
-		ownMods = append(ownMods, catalog.Modifiers...)
-	}
-	for _, id := range improvementIDs {
-		ownMods = append(ownMods, overlayModsWithProvenance(r.getCatalogItem(id))...)
-	}
-	if it.Material != nil {
-		ownMods = append(ownMods, overlayModsWithProvenance(r.getCatalogItem(*it.Material))...)
-	}
-
-	mods := append([]Modifier{}, ownMods...)
-	if catalog != nil {
-		mods = append(mods, nonProficiencyPenalties(catalog, prof)...)
-	}
-	mods = append(mods, mirrorWeaponAttackMods(catalog, ownMods)...)
-	mods = append(mods, equilibradaHomebrewMods(catalog, improvementIDs)...)
-	mods = append(mods, vestedEsotericHomebrewMods(it.Equipped, catalog, ownMods)...)
-	return ActiveItem{SourceID: catalogItemID(it), Source: it.Name, Equipped: it.Equipped, Modifiers: mods}
 }
 
 // overlayModsWithProvenance: an overlay's modifiers with the

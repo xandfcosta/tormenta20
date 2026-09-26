@@ -15,9 +15,12 @@
 // commit que diga contra o que o diff foi conferido.
 //
 // O que ele protege é a ficha inteira de 18 personagens, ponta a ponta, e ele
-// acusa qualquer mudança de número que não tenha sido pedida. O que ele NÃO
-// prova HOJE é que dois motores concordam, porque só existe um — e é isso que
-// muda durante a ALE-378, quando o motor em ECS nascer ao lado deste.
+// acusa qualquer mudança de número que não tenha sido pedida.
+//
+// Durante a ALE-378 existiram DOIS motores por um tempo, e um caso os comparava
+// entre si — a rede que permitiu trocar a coleta sem apostar no oráculo. Hoje
+// existe um só de novo, agora em ECS, e o que prende a ordem dos coletores é o
+// `TestEveryCollectorLandsInTheDeclaredOrder`.
 package main
 
 import (

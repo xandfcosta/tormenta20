@@ -16,6 +16,16 @@ import (
 // Ela só precisa ser declarada, e é essa a fricção que esta lista existe para
 // criar: apagar um teste é um ato, e o ato aparece aqui.
 var tombstones = map[string]bool{
+	// Os dois saíram na ALE-378, com o coletor legado. O primeiro virou
+	// duplicata do `TestActiveItemsParity` quando passou a existir uma coleta
+	// só; o segundo comparava os dois caminhos entre si, e o próprio autor tinha
+	// escrito que ele morreria aqui.
+	"TestActiveItemsByEcsMatchesTheOracle": true,
+	"TestBothCollectionPathsAgree":         true,
+	// Conferia o machado táurico contra o coletor legado, porque o oráculo não
+	// tem ficha com ele. Saiu na mesma remoção: com uma coleta só, ele comparava
+	// uma função consigo mesma.
+	"TestBothPathsAgreeOnTheItemThatFiresThreeRules": true,
 	// Os dois saíram na ALE-387, quando o `ConditionalID` e o `TermID`
 	// convergiram num endereço só. O que prendia a FORMA virou o
 	// `TestTheTermAddressKeepsItsExactShape`; o que provava DIVERGÊNCIA entre
