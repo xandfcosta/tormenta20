@@ -203,6 +203,32 @@ func (r *Ruleset) generalPowerActiveItem(ch Character) []ActiveItem {
 	return out
 }
 
+// godPowerActiveItem é o poder concedido pelo deus de quem é devoto.
+//
+// A devoção NÃO era fonte de modificador (ALE-397). O `GodPower` só entrava
+// pelo `vitalGrantMods`, que existe para PV e PM e descarta todo alvo que não
+// seja um dos dois — então a Bênção do Mana funcionava, por ser `maxPm`, e as
+// Escamas Dracônicas não mudavam a Defesa de ninguém.
+//
+// É UM poder e não uma lista: o livro dá um poder concedido ao se tornar
+// devoto (p96), e o druida, que recebe dois, ainda não é modelado — a coluna
+// `godPower` guarda um nome só.
+func (r *Ruleset) godPowerActiveItem(ch Character) *ActiveItem {
+	if ch.GodPower == "" {
+		return nil
+	}
+	power := r.grantedPowerByName(ch.GodPower)
+	if power == nil || len(power.Modifiers) == 0 {
+		return nil
+	}
+	return &ActiveItem{
+		SourceID:  power.ID,
+		Source:    "Devoção: " + power.Name,
+		Equipped:  &vestedWear,
+		Modifiers: power.Modifiers,
+	}
+}
+
 // tormentaCarismaItem: the escalating Carisma loss over the
 // TOTAL count of real poderes da Tormenta (picked + the Deformidade-held one).
 func (r *Ruleset) tormentaCarismaItem(ch Character) *ActiveItem {

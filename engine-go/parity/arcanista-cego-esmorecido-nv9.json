@@ -414,6 +414,25 @@
       ]
     },
     {
+      "sourceId": "bencao-do-mana",
+      "source": "Devoção: Bênção do Mana",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "levelStep",
+            "step": 2,
+            "round": "up"
+          }
+        }
+      ]
+    },
+    {
       "source": "Condições",
       "equipped": "vested",
       "modifiers": [
@@ -612,11 +631,17 @@
         ]
       },
       "maxPm": {
-        "total": 1,
+        "total": 2,
         "contributions": [
           {
             "sourceId": "class.arcanista.caminho-bruxo",
             "source": "Caminho: Bruxo",
+            "bonusType": "untyped",
+            "amount": 1
+          },
+          {
+            "sourceId": "bencao-do-mana",
+            "source": "Devoção: Bênção do Mana",
             "bonusType": "untyped",
             "amount": 1
           }
