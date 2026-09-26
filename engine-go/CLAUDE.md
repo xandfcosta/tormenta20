@@ -788,6 +788,12 @@ python3 scripts/audit-bestiary.py            # relatório
 python3 scripts/audit-bestiary.py --aplicar  # escreve as correções
 ```
 
+Os caminhos são da RAIZ do repositório, e não do `engine-go`. A leitura do PDF
+mora em `scripts/t20pdf.py`, compartilhada por todos os auditores: ela nasceu no
+do bestiário, foi copiada para o de magias, e virou módulo quando o terceiro ia
+copiá-la (ALE-391) — as duas cópias já tinham divergido na docstring, e uma
+delas descrevia uma tupla de três valores onde o código devolve quatro.
+
 Rodar é **ato deliberado**, como o `genoracle`, e pela mesma razão: a ferramenta
 PROPÕE lendo o PDF, e é o diff revisado contra o livro que decide. Ela só aceita
 um bloco contíguo e completo cuja Defesa e Pontos de Vida já batam com o
