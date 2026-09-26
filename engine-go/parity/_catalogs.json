@@ -13424,8 +13424,9 @@
           "amount": 1,
           "bonusType": "untyped",
           "condition": {
-            "c": "context",
-            "note": "sem nenhum aliado em alcance curto"
+            "c": "flagOn",
+            "flag": "lobo-solitario",
+            "label": "sem nenhum aliado em alcance curto"
           }
         },
         {
@@ -13435,8 +13436,9 @@
           "amount": 1,
           "bonusType": "untyped",
           "condition": {
-            "c": "context",
-            "note": "sem nenhum aliado em alcance curto"
+            "c": "flagOn",
+            "flag": "lobo-solitario",
+            "label": "sem nenhum aliado em alcance curto"
           }
         }
       ]
@@ -13522,8 +13524,9 @@
           "amount": 2,
           "bonusType": "untyped",
           "condition": {
-            "c": "context",
-            "note": "com torcida a seu favor"
+            "c": "flagOn",
+            "flag": "torcida",
+            "label": "com torcida a seu favor"
           }
         },
         {
@@ -13533,8 +13536,9 @@
           "amount": 2,
           "bonusType": "untyped",
           "condition": {
-            "c": "context",
-            "note": "com torcida a seu favor"
+            "c": "flagOn",
+            "flag": "torcida",
+            "label": "com torcida a seu favor"
           }
         }
       ]
@@ -14405,8 +14409,9 @@
           "amount": 1,
           "bonusType": "untyped",
           "condition": {
-            "c": "context",
-            "note": "com armas nas quais é proficiente"
+            "c": "flagOn",
+            "flag": "armas-da-ambicao",
+            "label": "com armas nas quais é proficiente"
           }
         },
         {
@@ -14416,8 +14421,9 @@
           "amount": 1,
           "bonusType": "untyped",
           "condition": {
-            "c": "context",
-            "note": "com armas nas quais é proficiente"
+            "c": "flagOn",
+            "flag": "armas-da-ambicao",
+            "label": "com armas nas quais é proficiente"
           }
         }
       ]
@@ -14440,8 +14446,9 @@
           "amount": 2,
           "bonusType": "untyped",
           "condition": {
-            "c": "context",
-            "note": "com azagaias, lanças e tridentes"
+            "c": "flagOn",
+            "flag": "arsenal-das-profundezas",
+            "label": "com azagaias, lanças e tridentes"
           }
         },
         {
@@ -14451,8 +14458,9 @@
           "amount": 1,
           "bonusType": "untyped",
           "condition": {
-            "c": "context",
-            "note": "com azagaias, lanças e tridentes"
+            "c": "flagOn",
+            "flag": "arsenal-das-profundezas",
+            "label": "com azagaias, lanças e tridentes"
           }
         }
       ]
