@@ -62,7 +62,7 @@ func (s Scene) attributeRacePending(dto sheet.CharacterDTO) []pendencia {
 			continue
 		}
 		outside = append(outside, pendencia{
-			Source: "raca", Label: "Raça: distribuir o bônus de atributo de " + r.Race,
+			Source: "raca", Label: "Raça: distribuir o bônus de atributo de " + book.RaceLabel(r.Race),
 		})
 	}
 	return outside

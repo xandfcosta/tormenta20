@@ -179,15 +179,28 @@ func optionNames(t *testing.T) map[string]bool {
 		t.Fatalf("ler options.json: %v", err)
 	}
 	var opts struct {
-		Races   []string `json:"races"`
 		Classes []string `json:"classes"`
 	}
 	if err := json.Unmarshal(raw, &opts); err != nil {
 		t.Fatalf("options.json ilegível: %v", err)
 	}
 	names := map[string]bool{}
-	for _, n := range append(opts.Races, opts.Classes...) {
+	for _, n := range opts.Classes {
 		names[n] = true
+	}
+	// A raça vem do CATÁLOGO e não do `options.json` (ALE-404): a lista de lá
+	// era a quarta cópia dos mesmos dezessete nomes. A pergunta aqui é sobre
+	// RÓTULO — "Sílfide", o que a tabela de devoção escreve —, e não sobre o
+	// slug que a ficha guarda.
+	racas := decodeResource[map[string]struct {
+		Name string `json:"name"`
+	}](t, "races")
+	if len(racas) < 17 {
+		t.Fatalf("o catálogo veio com %d raças e o livro tem 17 — sem denominador "+
+			"o caso passaria verde sobre nada", len(racas))
+	}
+	for _, r := range racas {
+		names[r.Name] = true
 	}
 	return names
 }

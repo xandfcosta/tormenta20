@@ -105,8 +105,8 @@ func everyCollectorCharacter() Character {
 	wielded := "wielded"
 	axe := "machado-taurico"
 	return Character{
-		ID: 7, Origin: "Batedor", Level: 10,
-		Races:   []CharacterRace{{Race: "Anão"}},
+		ID: 7, Origin: "batedor", Level: 10,
+		Races:   []CharacterRace{{Race: "anao"}},
 		Classes: []CharacterClass{{ClassName: "Bárbaro", Level: 10}},
 		Items:   []CharacterItem{{Name: "Machado", CatalogID: &axe, Equipped: &wielded}},
 		ActiveEffects: []ActiveEffectRow{{

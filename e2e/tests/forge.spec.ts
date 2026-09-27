@@ -27,8 +27,15 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 test.use({ storageState: '.auth/user.json' })
 
 /** O rádio é `sr-only`: quem recebe o clique é o rótulo inteiro, a carta. */
-async function escolheACarta(page: import('@playwright/test').Page, group: string, value: string) {
-  await page.locator(`label:has(input[name="${group}"][value="${value}"])`).click()
+// Pelo RÓTULO e não pelo `value` do rádio. Eram a mesma string até a ALE-404,
+// quando a carta passou a submeter o slug (`humano`) e a mostrar o nome
+// (`Humano`) — e um spec que casa pelo `value` mede o identificador, que é
+// justamente a metade que uma pessoa nunca vê.
+async function escolheACarta(page: import('@playwright/test').Page, group: string, rotulo: string) {
+  await page
+    .locator(`label:has(input[name="${group}"])`)
+    .filter({ has: page.getByText(rotulo, { exact: true }) })
+    .click()
 }
 
 test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async ({ page }) => {
@@ -78,7 +85,7 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   await escolheACarta(page, 'race', 'Humano')
   await escolheACarta(page, 'class', 'Guerreiro')
   await expect(page.getByText('Equipamento inicial')).toBeVisible()
-  await page.selectOption('#origin', 'Acólito')
+  await page.selectOption('#origin', { label: 'Acólito' })
   await expect(page.getByText('Equipamento inicial')).toBeVisible()
   await page.selectOption('#weaponSimple', { label: 'Adaga' })
   await page.selectOption('#weaponMartial', { label: 'Espada longa' })

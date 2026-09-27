@@ -4,7 +4,7 @@
     "id": 16,
     "ownerId": 1,
     "name": "Kharvos, O Guardião Rubro",
-    "origin": "Refugiado",
+    "origin": "refugiado",
     "god": "Tauron",
     "godPower": "",
     "tibar": 3000,
@@ -24,7 +24,7 @@
     "proficiencies": "[\"armas-simples\",\"armas-marciais\",\"escudos\",\"armaduras-leves\",\"armas-exoticas\"]",
     "raceAbilityChoices": "[]",
     "raceAttributeChoices": "{\"floatingPicks\":[]}",
-    "secondaryRaceChoices": "[{\"race\":\"Lefou\",\"floatingPicks\":[],\"deformidade\":{\"pericias\":[],\"tormentaPower\":\"olhos-vermelhos\"}}]",
+    "secondaryRaceChoices": "[{\"race\":\"lefou\",\"floatingPicks\":[],\"deformidade\":{\"pericias\":[],\"tormentaPower\":\"olhos-vermelhos\"}}]",
     "originChoices": "[\"poder-vontade-de-ferro\",\"origin-refugiado-unique\"]",
     "classPowers": "[\"class.barbaro.alma-de-bronze\",\"class.barbaro.destruidor\",\"class.barbaro.golpe-poderoso\",\"class.barbaro.pele-de-ferro\",\"class.barbaro.totem-espiritual\"]",
     "classChoices": "{}",
@@ -34,10 +34,10 @@
     "updatedAt": "2026-08-03T20:18:17.309Z",
     "races": [
       {
-        "race": "Minotauro"
+        "race": "minotauro"
       },
       {
-        "race": "Lefou"
+        "race": "lefou"
       }
     ],
     "classes": [
@@ -535,7 +535,7 @@
       ]
     },
     {
-      "sourceId": "Minotauro",
+      "sourceId": "minotauro",
       "source": "Raça: Minotauro",
       "equipped": "vested",
       "modifiers": [
@@ -577,7 +577,7 @@
       ]
     },
     {
-      "sourceId": "Refugiado",
+      "sourceId": "refugiado",
       "source": "Origem: Refugiado",
       "equipped": "vested",
       "modifiers": [
@@ -800,7 +800,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Minotauro",
+            "sourceId": "minotauro",
             "source": "Raça: Minotauro",
             "bonusType": "untyped",
             "amount": 1,
@@ -812,7 +812,7 @@
         "total": 2,
         "contributions": [
           {
-            "sourceId": "Minotauro",
+            "sourceId": "minotauro",
             "source": "Raça: Minotauro",
             "bonusType": "untyped",
             "amount": 2,
@@ -824,7 +824,7 @@
         "total": -1,
         "contributions": [
           {
-            "sourceId": "Minotauro",
+            "sourceId": "minotauro",
             "source": "Raça: Minotauro",
             "bonusType": "untyped",
             "amount": -1,
@@ -860,7 +860,7 @@
             "note": "Reforçada: +1 Defesa"
           },
           {
-            "sourceId": "Minotauro",
+            "sourceId": "minotauro",
             "source": "Raça: Minotauro",
             "bonusType": "untyped",
             "amount": 1,
@@ -912,7 +912,7 @@
         "total": 2,
         "contributions": [
           {
-            "sourceId": "Refugiado",
+            "sourceId": "refugiado",
             "source": "Origem: Refugiado",
             "bonusType": "untyped",
             "amount": 2
@@ -971,7 +971,7 @@
         "total": 2,
         "contributions": [
           {
-            "sourceId": "Refugiado",
+            "sourceId": "refugiado",
             "source": "Origem: Refugiado",
             "bonusType": "untyped",
             "amount": 1

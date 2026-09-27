@@ -31,8 +31,8 @@ func postaAForja(t *testing.T, f sceneFixture, userID int64, path string, fields
 // aFolhaPreenchida é uma resposta completa e válida — um guerreiro de couro.
 func aFolhaPreenchida() url.Values {
 	return url.Values{
-		"name": {"Thessa de Valkaria"}, "race": {"Elfo"}, "class": {"Guerreiro"},
-		"origin": {"Acólito"}, "weaponSimple": {"adaga"}, "weaponMartial": {"espada-longa"},
+		"name": {"Thessa de Valkaria"}, "race": {"elfo"}, "class": {"Guerreiro"},
+		"origin": {"acolito"}, "weaponSimple": {"adaga"}, "weaponMartial": {"espada-longa"},
 		"armor": {"couro-batido"}, "shield": {"1"},
 	}
 }
@@ -52,9 +52,15 @@ func TestEveryBookRaceAndClassHasACardInTheForge(t *testing.T) {
 		t.Fatalf("o catálogo chegou com %d raças e %d classes — o livro tem 17 e 14",
 			len(races), len(classes))
 	}
+	// A carta SUBMETE o slug e MOSTRA o rótulo, e as duas metades são
+	// afirmadas: era um campo só até a ALE-404, e um `value` que voltasse a ser
+	// o rótulo passaria despercebido se só o nome fosse conferido.
 	for _, race := range races {
-		if !strings.Contains(body, `value="`+race.Name+`"`) {
-			t.Errorf("a raça %q não tem carta na folha", race.Name)
+		if !strings.Contains(body, `value="`+race.ID+`"`) {
+			t.Errorf("a raça %q (%s) não tem carta na folha", race.Name, race.ID)
+		}
+		if !strings.Contains(body, race.Name) {
+			t.Errorf("a carta da raça %s não mostra o rótulo %q", race.ID, race.Name)
 		}
 	}
 	for _, class := range classes {
@@ -186,7 +192,7 @@ func TestTheRefusalGivesBackWhatWasAnswered(t *testing.T) {
 	if !strings.Contains(body, `value="Thessa de Valkaria"`) {
 		t.Error("o nome respondido não voltou no campo")
 	}
-	if !strings.Contains(body, `value="Elfo" checked`) {
+	if !strings.Contains(body, `value="elfo" checked`) {
 		t.Error("a raça respondida não voltou marcada")
 	}
 	if !strings.Contains(body, `value="couro-batido" selected`) {
@@ -211,7 +217,7 @@ func TestTheHeroIsBornDressedAndWithAPurse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("o herói não foi gravado: %v", err)
 	}
-	if row.Name != "Thessa de Valkaria" || row.Origin != "Acólito" || row.Level != 1 {
+	if row.Name != "Thessa de Valkaria" || row.Origin != "acolito" || row.Level != 1 {
 		t.Errorf("herói gravado: %q, origem %q, nível %d", row.Name, row.Origin, row.Level)
 	}
 	// O tamanho e o deslocamento saem da RAÇA e não de uma pergunta da folha.

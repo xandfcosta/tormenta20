@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/app/character"
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -120,7 +121,7 @@ func pickRaceAttributes(s Scene, r *http.Request, row sqlcgen.Character, signals
 	if s.deps.Catalogs() != nil {
 		for _, race := range dto.Races {
 			if !s.deps.Catalogs().RaceAttributeChoiceIsComplete(race.Race, dto.RaceAttributeChoices) {
-				return fmt.Errorf("a distribuição não fecha para %s: ela pede atributos distintos", race.Race)
+				return fmt.Errorf("a distribuição não fecha para %s: ela pede atributos distintos", book.RaceLabel(race.Race))
 			}
 		}
 	}

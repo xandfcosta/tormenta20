@@ -4,7 +4,7 @@
     "id": 8,
     "ownerId": 1,
     "name": "Bardo Versátil Nv7",
-    "origin": "Amnésico",
+    "origin": "amnesico",
     "god": null,
     "godPower": "",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-03T19:52:47.377Z",
     "races": [
       {
-        "race": "Lefou"
+        "race": "lefou"
       }
     ],
     "classes": [
@@ -338,7 +338,7 @@
       ]
     },
     {
-      "sourceId": "Lefou",
+      "sourceId": "lefou",
       "source": "Raça: Lefou",
       "equipped": "vested",
       "modifiers": [
@@ -449,7 +449,7 @@
             "amount": 2
           },
           {
-            "sourceId": "Lefou",
+            "sourceId": "lefou",
             "source": "Raça: Lefou",
             "bonusType": "untyped",
             "amount": -1,
@@ -461,7 +461,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Lefou",
+            "sourceId": "lefou",
             "source": "Raça: Lefou",
             "bonusType": "untyped",
             "amount": 1,
@@ -473,7 +473,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Lefou",
+            "sourceId": "lefou",
             "source": "Raça: Lefou",
             "bonusType": "untyped",
             "amount": 1,
@@ -485,7 +485,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Lefou",
+            "sourceId": "lefou",
             "source": "Raça: Lefou",
             "bonusType": "untyped",
             "amount": 1,

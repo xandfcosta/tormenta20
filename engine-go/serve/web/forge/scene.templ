@@ -107,7 +107,7 @@ templ raceChoice(v forgeView) {
 // viram uma segunda aparência de foco no app.
 templ raceTile(c raceCard) {
 	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring">
-		<input type="radio" name="race" value={ c.Name } checked?={ c.Chosen } class="sr-only"/>
+		<input type="radio" name="race" value={ c.ID } checked?={ c.Chosen } class="sr-only"/>
 		<span class="truncate text-sm font-medium text-foreground">{ c.Name }</span>
 		<span class="text-xs text-grimorio-gold">{ c.Attributes }</span>
 		<span class="text-2xs text-muted-foreground">
@@ -169,7 +169,7 @@ templ originChoice(v forgeView) {
 		>
 			<option value="">Escolha uma origem…</option>
 			for _, o := range v.Origins {
-				<option value={ o.Name } selected?={ o.Chosen }>{ o.Name }</option>
+				<option value={ o.ID } selected?={ o.Chosen }>{ o.Name }</option>
 			}
 		</select>
 		for _, o := range v.Origins {

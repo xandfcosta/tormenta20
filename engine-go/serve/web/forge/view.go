@@ -43,6 +43,10 @@ type forgeView struct {
 
 // raceCard é uma das 17 cartas da linhagem.
 type raceCard struct {
+	// O ID é o que o rádio SUBMETE e o Name é o que a pessoa lê. Eram o mesmo
+	// campo até a ALE-404, e por isso renomear a raça na tela renomeava a
+	// chave que a ficha guarda.
+	ID           string
 	Name         string
 	Attributes   string
 	Size         string
@@ -62,6 +66,7 @@ type classCard struct {
 
 // originOption é uma linha da lista de origens.
 type originOption struct {
+	ID      string
 	Name    string
 	Benefit string
 	Chosen  bool
@@ -139,9 +144,9 @@ func raceCardOf(race book.Race, chosen string) raceCard {
 		names = append(names, ability.Name)
 	}
 	return raceCard{
-		Name: race.Name, Attributes: race.AttributeMod.Escrito(),
+		ID: race.ID, Name: race.Name, Attributes: race.AttributeMod.Escrito(),
 		Size: race.Size, Displacement: race.Speed,
-		Abilities: strings.Join(names, ", "), Chosen: race.Name == chosen,
+		Abilities: strings.Join(names, ", "), Chosen: race.ID == chosen,
 	}
 }
 
@@ -172,17 +177,21 @@ func cardExpertisesLine(class book.Class) string {
 // originOptions são as 35 origens com uma linha do que elas dão.
 func originOptions(chosen string) []originOption {
 	origins := book.Origins()
-	names := make([]string, 0, len(origins))
-	for name := range origins {
-		names = append(names, name)
+	ids := make([]string, 0, len(origins))
+	for id := range origins {
+		ids = append(ids, id)
 	}
-	book.SortByName(names, func(n string) string { return n })
+	// Ordenado pelo RÓTULO, que é o que a pessoa lê na lista — o slug põe
+	// "Herói Camponês" entre "Guarda" e "Herdeiro" no mesmo lugar, mas
+	// `Assistente de Laboratório` e `assistente-de-laboratorio` não ordenam
+	// igual em toda origem.
+	book.SortByName(ids, func(id string) string { return origins[id].Name })
 
-	list := make([]originOption, 0, len(names))
-	for _, name := range names {
+	list := make([]originOption, 0, len(ids))
+	for _, id := range ids {
 		list = append(list, originOption{
-			Name: name, Benefit: benefitsLine(origins[name]),
-			Chosen: name == chosen,
+			ID: id, Name: origins[id].Name, Benefit: benefitsLine(origins[id]),
+			Chosen: id == chosen,
 		})
 	}
 	return list

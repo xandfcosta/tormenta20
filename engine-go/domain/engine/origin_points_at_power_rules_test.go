@@ -35,7 +35,7 @@ func TestTheOriginPointsAtTheGeneralPowerInsteadOfCopyingIt(t *testing.T) {
 
 	const benefício = "origin-guarda-poder-investigador"
 	base := Character{
-		Level: 1, Origin: "Guarda",
+		Level: 1, Origin: "guarda",
 		Expertises: []CharacterExpertise{
 			{Name: "Investigação", Attribute: "intelligence"},
 			{Name: "Percepção", Attribute: "wisdom"},

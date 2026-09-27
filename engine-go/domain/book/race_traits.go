@@ -75,9 +75,9 @@ func RaceTraitsByKey() map[string]RaceForScreen {
 			return
 		}
 		for _, r := range list {
-			// Por ID E por NOME, porque o personagem guarda a raça por um dos dois.
-			// No `race-defs.json` de hoje eles coincidem ("Humano"), mas coincidir
-			// não é o mesmo que ser garantido.
+			// Por ID E por NOME. Desde a ALE-404 a ficha guarda o SLUG e os dois
+			// deixaram de coincidir — `humano` e `Humano` —, e as fichas de
+			// desenvolvimento gravadas antes ainda trazem o rótulo.
 			raceTraitsByID[r.ID] = r
 			raceTraitsByID[r.Name] = r
 		}
@@ -99,4 +99,17 @@ func RaceAbilities(raceKey string, limit int) []RaceAbility {
 		return race.Abilities[:limit]
 	}
 	return race.Abilities
+}
+
+// RaceLabel devolve o rótulo da raça a partir do que a ficha guarda.
+//
+// Exemplo: `RaceLabel("humano")` devolve "Humano". Devolve a própria chave
+// quando o catálogo não a conhece — uma tela sem texto é pior que uma tela com
+// o slug, e a ficha antiga que ainda guarda o rótulo cai aqui e o mostra
+// intacto.
+func RaceLabel(raceKey string) string {
+	if race, ok := RaceTraitsByKey()[raceKey]; ok && race.Name != "" {
+		return race.Name
+	}
+	return raceKey
 }

@@ -4,7 +4,7 @@
     "id": 90,
     "ownerId": 1,
     "name": "Tanque Exausto e Atordoado Nv10",
-    "origin": "Soldado",
+    "origin": "soldado",
     "god": "Khalmyr",
     "godPower": "",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-02T13:16:05.028Z",
     "races": [
       {
-        "race": "Anão"
+        "race": "anao"
       }
     ],
     "classes": [
@@ -403,7 +403,7 @@
       ]
     },
     {
-      "sourceId": "Anão",
+      "sourceId": "anao",
       "source": "Raça: Anão",
       "equipped": "vested",
       "modifiers": [
@@ -559,7 +559,7 @@
         "total": 2,
         "contributions": [
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 2,
@@ -571,7 +571,7 @@
         "total": -1,
         "contributions": [
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": -1,
@@ -583,7 +583,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1,
@@ -668,13 +668,13 @@
         "total": 3,
         "contributions": [
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 2
           },
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1

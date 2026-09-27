@@ -15,7 +15,7 @@ func arcanista(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: f.player, Name: "Conjuradora", Origin: "Charlatão", Level: 9,
+		OwnerId: f.player, Name: "Conjuradora", Origin: "charlatao", Level: 9,
 		Strength: 0, Dexterity: 2, Constitution: 2, Intelligence: 4, Wisdom: 1, Charisma: 1,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -188,7 +188,7 @@ func TestWhoDoesNotCastDoesNotGetTheCatalog(t *testing.T) {
 func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: f.player, Name: "Totemista", Origin: "Batedor", Level: 3,
+		OwnerId: f.player, Name: "Totemista", Origin: "batedor", Level: 3,
 		Strength: 4, Dexterity: 1, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",

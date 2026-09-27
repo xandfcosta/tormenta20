@@ -4,7 +4,7 @@
     "id": 10,
     "ownerId": 2,
     "name": "Recruta Nv1 Simples",
-    "origin": "Capanga",
+    "origin": "capanga",
     "god": null,
     "godPower": "",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-02T13:17:20.973Z",
     "races": [
       {
-        "race": "Humano"
+        "race": "humano"
       }
     ],
     "classes": [
@@ -269,7 +269,7 @@
       ]
     },
     {
-      "sourceId": "Humano",
+      "sourceId": "humano",
       "source": "Raça: Humano",
       "equipped": "vested",
       "modifiers": [
@@ -344,7 +344,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Humano",
+            "sourceId": "humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -356,7 +356,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Humano",
+            "sourceId": "humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -368,7 +368,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Humano",
+            "sourceId": "humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,

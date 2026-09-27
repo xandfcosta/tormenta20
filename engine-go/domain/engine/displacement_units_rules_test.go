@@ -66,7 +66,7 @@ func TestTheRaceBaseIsInSquaresToo(t *testing.T) {
 	world := BookRuleset(primeFromDump(t, dir))
 
 	// O humano anda 9m (6 quadrados); o anão, 6m (4) — "é 6m EM VEZ DE 9m" (p20).
-	casos := map[string]int{"Humano": 6, "Anão": 4}
+	casos := map[string]int{"humano": 6, "anao": 4}
 	for raca, quadrados := range casos {
 		ch := Character{Races: []CharacterRace{{Race: raca}}}
 		if got := world.raceDisplacement(ch); got != quadrados {
@@ -94,7 +94,7 @@ func TestSlowHalvesTheDisplacementAndImmobileZeroesIt(t *testing.T) {
 	world := BookRuleset(primeFromDump(t, dir))
 
 	andar := func(condicoes string) int {
-		ch := Character{Races: []CharacterRace{{Race: "Humano"}}, ActiveConditions: condicoes}
+		ch := Character{Races: []CharacterRace{{Race: "humano"}}, ActiveConditions: condicoes}
 		return world.ComputeSheet(ch, nil).Displacement.Total
 	}
 
@@ -142,7 +142,7 @@ func TestEveryConditionTheBookSlowsOrStopsMovesLess(t *testing.T) {
 
 	andar := func(condicao string) int {
 		ch := Character{
-			Races:            []CharacterRace{{Race: "Humano"}},
+			Races:            []CharacterRace{{Race: "humano"}},
 			ActiveConditions: `["` + condicao + `"]`,
 		}
 		return world.ComputeSheet(ch, nil).Displacement.Total
@@ -182,7 +182,7 @@ func TestTheDwarfExemptionDoesNotCoverBeingSlowed(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	world := BookRuleset(primeFromDump(t, dir))
 
-	ch := Character{Races: []CharacterRace{{Race: "Anão"}}}
+	ch := Character{Races: []CharacterRace{{Race: "anao"}}}
 	if base := world.ComputeSheet(ch, nil).Displacement.Total; base != 4 {
 		t.Fatalf("o controle já estava errado: o anão anda %d quadrados e o livro dá 6m (4)", base)
 	}

@@ -4,7 +4,7 @@
     "id": 3,
     "ownerId": 1,
     "name": "Necromante Nv12 Magias",
-    "origin": "Criminoso",
+    "origin": "criminoso",
     "god": "Tenebra",
     "godPower": "",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-06T11:39:12.876Z",
     "races": [
       {
-        "race": "Osteon"
+        "race": "osteon"
       }
     ],
     "classes": [
@@ -339,7 +339,7 @@
       ]
     },
     {
-      "sourceId": "Osteon",
+      "sourceId": "osteon",
       "source": "Raça: Osteon",
       "equipped": "vested",
       "modifiers": [
@@ -406,7 +406,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Osteon",
+            "sourceId": "osteon",
             "source": "Raça: Osteon",
             "bonusType": "untyped",
             "amount": 1,
@@ -418,7 +418,7 @@
         "total": -1,
         "contributions": [
           {
-            "sourceId": "Osteon",
+            "sourceId": "osteon",
             "source": "Raça: Osteon",
             "bonusType": "untyped",
             "amount": -1,
@@ -430,7 +430,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Osteon",
+            "sourceId": "osteon",
             "source": "Raça: Osteon",
             "bonusType": "untyped",
             "amount": 1,
@@ -442,7 +442,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Osteon",
+            "sourceId": "osteon",
             "source": "Raça: Osteon",
             "bonusType": "untyped",
             "amount": 1,

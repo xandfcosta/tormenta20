@@ -4,7 +4,7 @@
     "id": 6,
     "ownerId": 1,
     "name": "Paladino Sagrado Nv11",
-    "origin": "Aristocrata",
+    "origin": "aristocrata",
     "god": "Khalmyr",
     "godPower": "",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-02T13:16:47.641Z",
     "races": [
       {
-        "race": "Suraggel"
+        "race": "suraggel"
       }
     ],
     "classes": [
@@ -411,7 +411,7 @@
       "modifiers": []
     },
     {
-      "sourceId": "Suraggel",
+      "sourceId": "suraggel",
       "source": "Raça: Suraggel",
       "equipped": "vested",
       "modifiers": [
@@ -477,7 +477,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Suraggel",
+            "sourceId": "suraggel",
             "source": "Raça: Suraggel",
             "bonusType": "untyped",
             "amount": 1,
@@ -489,7 +489,7 @@
         "total": 2,
         "contributions": [
           {
-            "sourceId": "Suraggel",
+            "sourceId": "suraggel",
             "source": "Raça: Suraggel",
             "bonusType": "untyped",
             "amount": 2,

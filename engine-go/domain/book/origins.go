@@ -45,8 +45,8 @@ func OriginItemsByName() map[string][]string {
 		if err := json.Unmarshal(raw, &byID); err != nil {
 			return
 		}
-		for _, origin := range byID {
-			originItemsIndex[origin.Name] = origin.StartingItems
+		for id, origin := range byID {
+			originItemsIndex[id] = origin.StartingItems
 		}
 	})
 	return originItemsIndex

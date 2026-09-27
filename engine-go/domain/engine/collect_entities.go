@@ -53,8 +53,8 @@ func (r *Ruleset) raceActiveItems(ch Character) []ActiveItem {
 // raceAttributeMods: a race's attribute deltas (from its
 // floating/ascendência choices) as `attribute` modifiers. Empty on incomplete
 // choices, sem lançar: dado ruim vira escolha vazia.
-func (r *Ruleset) raceAttributeMods(raceName string, choice raceAttrChoice) []Modifier {
-	race := r.raceEntryByName(raceName)
+func (r *Ruleset) raceAttributeMods(raceID string, choice raceAttrChoice) []Modifier {
+	race := r.raceEntryByID(raceID)
 	if race == nil {
 		return []Modifier{}
 	}
@@ -79,8 +79,8 @@ func (r *Ruleset) raceAttributeMods(raceName string, choice raceAttrChoice) []Mo
 
 // deformidadeModifiers: Deformidade (Lefou p23) as +2 on each
 // chosen perícia. The Carisma loss is emitted separately (tormentaCarismaItem).
-func (r *Ruleset) deformidadeModifiers(raceName string, draft *deformidadeStored) []Modifier {
-	if draft == nil || r.raceWithDeformidade(raceName) == "" {
+func (r *Ruleset) deformidadeModifiers(raceID string, draft *deformidadeStored) []Modifier {
+	if draft == nil || r.raceWithDeformidade(raceID) == "" {
 		return []Modifier{}
 	}
 	out := []Modifier{}

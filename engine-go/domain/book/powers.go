@@ -51,7 +51,7 @@ type GeneralPower struct {
 
 var (
 	acervoDePoderesUmaVez sync.Once
-	origensPorNome        map[string]Origin
+	origensPorId          map[string]Origin
 	poderesDeClassePorID  map[string]ClassPower
 	poderesGeraisPorID    map[string]GeneralPower
 )
@@ -63,9 +63,12 @@ var (
 // ficha de nível 20, que tem trinta e poucos.
 func PowerCatalogs() {
 	acervoDePoderesUmaVez.Do(func() {
-		origensPorNome = map[string]Origin{}
+		// Por ID e não por nome (ALE-404): o `dto.Origin` da ficha guarda o
+		// slug, e indexar pelo rótulo só funcionava enquanto o id do catálogo
+		// ERA o rótulo.
+		origensPorId = map[string]Origin{}
 		for _, o := range ListOf[Origin]("origins") {
-			origensPorNome[o.Name] = o
+			origensPorId[o.ID] = o
 		}
 		poderesDeClassePorID = map[string]ClassPower{}
 		// Não é `ListOf`: o arquivo guarda verbete e concessão em linhas
@@ -90,7 +93,7 @@ func PowerCatalogs() {
 
 func Origins() map[string]Origin {
 	PowerCatalogs()
-	return origensPorNome
+	return origensPorId
 }
 
 func ClassPowers() map[string]ClassPower {
@@ -104,3 +107,15 @@ func GeneralPowers() map[string]GeneralPower {
 }
 
 // ── o que a RAÇA pede escolher ───────────────────────────────────────────────
+
+// OriginLabel devolve o rótulo da origem a partir do que a ficha guarda.
+//
+// Exemplo: `OriginLabel("heroi-campones")` devolve "Herói Camponês". Devolve a
+// própria chave quando o catálogo não a conhece, pela mesma razão do
+// `RaceLabel`.
+func OriginLabel(originKey string) string {
+	if origin, ok := Origins()[originKey]; ok && origin.Name != "" {
+		return origin.Name
+	}
+	return originKey
+}

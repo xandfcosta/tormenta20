@@ -88,13 +88,13 @@ func TestDeformidadeSkillIDs(t *testing.T) {
 func TestRaceWithDeformidade(t *testing.T) {
 	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity")))
 
-	if got := catalogs.raceWithDeformidade("Lefou"); got != "Lefou" {
+	if got := catalogs.raceWithDeformidade("lefou"); got != "lefou" {
 		t.Errorf("raça primária: got=%q, queria Lefou", got)
 	}
-	if got := catalogs.raceWithDeformidade("Minotauro", "Lefou"); got != "Lefou" {
+	if got := catalogs.raceWithDeformidade("minotauro", "lefou"); got != "lefou" {
 		t.Errorf("Lefou como secundária: got=%q, queria Lefou", got)
 	}
-	if got := catalogs.raceWithDeformidade("Humano", "Minotauro"); got != "" {
+	if got := catalogs.raceWithDeformidade("humano", "minotauro"); got != "" {
 		t.Errorf("raça sem a habilidade devolveu %q, queria vazio", got)
 	}
 }
