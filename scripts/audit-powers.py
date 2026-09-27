@@ -38,8 +38,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from t20pdf import (  # noqa: E402
-    RAIZ, blocos_da_pagina, chave, cobertura, coluna_de, inicios_das_colunas,
-    junta, linhas_com_coordenada, normaliza_frase, sem_lixo)
+    RAIZ, blocos_de_tabela, celulas_da_tabela, chave, cobertura, junta, leitura,
+    linhas_do_par, normaliza_frase)
 
 PRIMEIRA, ULTIMA = 130, 143  # PDF; o livro abre a seção na p124 e fecha na p137
 OFFSET_DO_PDF = 6
@@ -47,20 +47,6 @@ GERAIS = RAIZ / 'engine-go/domain/catalog/data/general-powers.json'
 DA_TORMENTA = RAIZ / 'engine-go/domain/catalog/data/tormenta-powers.json'
 PERICIAS = RAIZ / 'engine-go/domain/catalog/data/expertises.json'
 
-MESMA_LINHA = 2.0
-MESMO_X = 1.0
-# O DEGRAU DA INDENTAÇÃO da tabela, medido: 10,8 pontos (55,0 → 65,8). A árvore
-# tem DOIS degraus — a "Mira Apurada" está a dois deles, e ela pede mesmo:
-# depende de "Disparo Preciso", que já depende de "Estilo de Disparo".
-#
-# O degrau é o que separa a TABELA da PROSA que divide a página com ela: a
-# primeira linha de um parágrafo começa 13,0 à direita da coluna, e 13,0 não é
-# múltiplo de 10,8. Sem essa conta, um par de colunas sem nenhuma linha
-# indentada de verdade adota o x do parágrafo e engole a prosa como se fosse
-# poder.
-PASSO_DE_INDENTACAO = 10.8
-NIVEIS_DA_ARVORE = 3
-SEPARACAO_MINIMA_DE_COLUNA = 40.0
 # As páginas que têm TABELA. A da p127 é dos Poderes Concedidos (ALE-408) e não
 # se lê aqui, mas as células dela saem da busca por verbete do mesmo jeito.
 PAGINAS_DE_TABELA = (132, 133, 134)
@@ -111,79 +97,6 @@ DISCORDANCIA_DECLARADA = {
 }
 
 
-def colunas(blocos) -> list[float]:
-    """Os x das colunas, com separação mínima — o `inicios_das_colunas` sozinho
-    devolve colunas a quatro pontos uma da outra em página com tabela."""
-    inicios = inicios_das_colunas(blocos)
-    juntas = [inicios[0]]
-    for x in inicios[1:]:
-        if x - juntas[-1] >= SEPARACAO_MINIMA_DE_COLUNA:
-            juntas.append(x)
-    return juntas
-
-
-def leitura(pagina: int) -> list[tuple[float, float, str]]:
-    """As linhas da página em ordem de leitura, com o (x, y) preservado."""
-    blocos = list(blocos_da_pagina(pagina))
-    inicios = colunas(blocos) if blocos else [0.0]
-    linhas = sem_lixo(linhas_com_coordenada(pagina))
-    linhas.sort(key=lambda t: (coluna_de(inicios, t[0]), t[1]))
-    return linhas
-
-
-def blocos_de_tabela(pagina: int):
-    """Cada bloco (Poder | Pré-requisitos) × 2 da página, com o corpo dele.
-
-    A p126 traz TRÊS blocos — Combate, Destino e Magia —, e o y do cabeçalho é o
-    REAL, não o arredondado: arredondar para cima e usar o valor como piso da
-    faixa deixa o próprio cabeçalho de fora, e o bloco sai sem par de colunas. Em
-    silêncio, com os outros blocos saindo certos.
-    """
-    linhas = sem_lixo(linhas_com_coordenada(pagina))
-    ys = sorted({y for _x, y, t in linhas if t == 'Poder'})
-    cabecalhos = [y for i, y in enumerate(ys) if i == 0 or y - ys[i - 1] > MESMA_LINHA]
-    for i, ycab in enumerate(cabecalhos):
-        fim = cabecalhos[i + 1] if i + 1 < len(cabecalhos) else 10_000
-        faixa = [(x, y, t) for x, y, t in linhas
-                 if ycab - MESMA_LINHA <= y < fim - MESMA_LINHA]
-        na_altura = [(x, t) for x, y, t in faixa if abs(y - ycab) < MESMA_LINHA]
-        pares = list(zip(sorted(x for x, t in na_altura if t == 'Poder'),
-                         sorted(x for x, t in na_altura if t == 'Pré-requisitos')))
-        yield pares, [linha for linha in faixa if linha[1] > ycab + MESMA_LINHA]
-
-
-def linhas_do_par(corpo, x_poder: float, x_pre: float):
-    """As (poder, pré-requisito, nível) de um par de colunas, e o que consumiu.
-
-    AS DUAS COLUNAS SÃO GRADE, e não faixa. A do pré-requisito ia até o início da
-    próxima coluna de poder, e nessa sobra cabia a prosa do verbete que divide a
-    página com a tabela: o título "Ginete" (x=289,1) caía na faixa do
-    pré-requisito da coluna esquerda (159,9 até 293,1) e sumia da busca por
-    verbete. Cinco poderes ficaram sem verbete assim.
-    """
-    degraus = [x_poder + n * PASSO_DE_INDENTACAO for n in range(NIVEIS_DA_ARVORE)]
-    celulas, consumidas = {}, set()
-    for x, y, t in corpo:
-        nivel = next((n for n, d in enumerate(degraus) if abs(x - d) < MESMO_X), None)
-        if nivel is not None:
-            celulas.setdefault(round(y, 1), {})['poder'] = (nivel, t)
-            consumidas.add((round(x, 1), round(y, 1)))
-        elif abs(x - x_pre) < MESMO_X:
-            celulas.setdefault(round(y, 1), {})['pre'] = t
-            consumidas.add((round(x, 1), round(y, 1)))
-    fora = []
-    for y in sorted(celulas):
-        celula = celulas[y]
-        if 'poder' in celula:
-            nivel, nome = celula['poder']
-            fora.append([nome, celula.get('pre', ''), nivel])
-        elif 'pre' in celula and fora:
-            # A célula de pré-requisito quebra em duas linhas ("Habilidade
-            # Magias," / "Ofício (escriba)"). Sem juntar, compara-se meia frase.
-            fora[-1][1] = (fora[-1][1] + ' ' + celula['pre']).strip()
-    return fora, consumidas
-
-
 def le_a_tabela():
     """Âncora 1: `{nome: (pré-requisito, nível, pai)}` das tabelas de p126 e p128.
 
@@ -201,16 +114,6 @@ def le_a_tabela():
                     pai = raizes.get(nivel - 1) if nivel else None
                     da_tabela[chave(nome)] = (nome, pre, nivel, pai)
     return da_tabela
-
-
-def celulas_da_tabela(pagina: int) -> set:
-    """Só os (x, y) que a tabela de fato LEU — nem um a mais."""
-    fora = set()
-    for pares, corpo in blocos_de_tabela(pagina):
-        for x_poder, x_pre in pares:
-            _linhas, consumidas = linhas_do_par(corpo, x_poder, x_pre)
-            fora |= consumidas
-    return fora
 
 
 def le_os_verbetes(nomes: list[str]):

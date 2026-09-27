@@ -258,3 +258,107 @@ def cobertura(do_livro: str, do_catalogo: str) -> tuple[float, int, int]:
         return 1.0, 0, 0
     juntas = livro & palavras_de_conteudo(do_catalogo)
     return len(juntas) / len(livro), len(juntas), len(livro)
+
+
+MESMA_LINHA = 2.0
+MESMO_X = 1.0
+# O DEGRAU DA INDENTAÇÃO da tabela, medido: 10,8 pontos (55,0 → 65,8). A árvore
+# tem DOIS degraus — a "Mira Apurada" está a dois deles, e ela pede mesmo:
+# depende de "Disparo Preciso", que já depende de "Estilo de Disparo".
+#
+# O degrau é o que separa a TABELA da PROSA que divide a página com ela: a
+# primeira linha de um parágrafo começa 13,0 à direita da coluna, e 13,0 não é
+# múltiplo de 10,8. Sem essa conta, um par de colunas sem nenhuma linha
+# indentada de verdade adota o x do parágrafo e engole a prosa como se fosse
+# poder.
+PASSO_DE_INDENTACAO = 10.8
+NIVEIS_DA_ARVORE = 3
+SEPARACAO_MINIMA_DE_COLUNA = 40.0
+
+def colunas(blocos) -> list[float]:
+    """Os x das colunas, com separação mínima entre dois inícios.
+
+    O `inicios_das_colunas` conta a FREQUÊNCIA do x e nada mais, e numa página
+    com tabela isso devolve colunas a quatro pontos uma da outra: a célula de
+    nome começa em x=74,9 e a prosa da coluna em x=70,9, e as duas passam o piso
+    de frequência. A página inteira sai fora de ordem quando isso acontece, e o
+    sintoma não se parece com desordem — um verbete "não ancora".
+    """
+    inicios = inicios_das_colunas(blocos)
+    juntas = [inicios[0]]
+    for x in inicios[1:]:
+        if x - juntas[-1] >= SEPARACAO_MINIMA_DE_COLUNA:
+            juntas.append(x)
+    return juntas
+
+
+def leitura(pagina: int) -> list[tuple[float, float, str]]:
+    """As linhas da página em ordem de leitura, com o (x, y) preservado."""
+    blocos = list(blocos_da_pagina(pagina))
+    inicios = colunas(blocos) if blocos else [0.0]
+    linhas = sem_lixo(linhas_com_coordenada(pagina))
+    linhas.sort(key=lambda t: (coluna_de(inicios, t[0]), t[1]))
+    return linhas
+
+
+def blocos_de_tabela(pagina: int):
+    """Cada bloco (Poder | Pré-requisitos) × 2 da página, com o corpo dele.
+
+    A p126 traz TRÊS blocos — Combate, Destino e Magia —, e o y do cabeçalho é o
+    REAL, não o arredondado: arredondar para cima e usar o valor como piso da
+    faixa deixa o próprio cabeçalho de fora, e o bloco sai sem par de colunas. Em
+    silêncio, com os outros blocos saindo certos.
+    """
+    linhas = sem_lixo(linhas_com_coordenada(pagina))
+    ys = sorted({y for _x, y, t in linhas if t == 'Poder'})
+    cabecalhos = [y for i, y in enumerate(ys) if i == 0 or y - ys[i - 1] > MESMA_LINHA]
+    for i, ycab in enumerate(cabecalhos):
+        fim = cabecalhos[i + 1] if i + 1 < len(cabecalhos) else 10_000
+        faixa = [(x, y, t) for x, y, t in linhas
+                 if ycab - MESMA_LINHA <= y < fim - MESMA_LINHA]
+        na_altura = [(x, t) for x, y, t in faixa if abs(y - ycab) < MESMA_LINHA]
+        pares = list(zip(sorted(x for x, t in na_altura if t == 'Poder'),
+                         sorted(x for x, t in na_altura if t == 'Pré-requisitos')))
+        yield pares, [linha for linha in faixa if linha[1] > ycab + MESMA_LINHA]
+
+
+def linhas_do_par(corpo, x_poder: float, x_pre: float):
+    """As (poder, pré-requisito, nível) de um par de colunas, e o que consumiu.
+
+    AS DUAS COLUNAS SÃO GRADE, e não faixa. A do pré-requisito ia até o início da
+    próxima coluna de poder, e nessa sobra cabia a prosa do verbete que divide a
+    página com a tabela: o título "Ginete" (x=289,1) caía na faixa do
+    pré-requisito da coluna esquerda (159,9 até 293,1) e sumia da busca por
+    verbete. Cinco poderes ficaram sem verbete assim.
+    """
+    degraus = [x_poder + n * PASSO_DE_INDENTACAO for n in range(NIVEIS_DA_ARVORE)]
+    celulas, consumidas = {}, set()
+    for x, y, t in corpo:
+        nivel = next((n for n, d in enumerate(degraus) if abs(x - d) < MESMO_X), None)
+        if nivel is not None:
+            celulas.setdefault(round(y, 1), {})['poder'] = (nivel, t)
+            consumidas.add((round(x, 1), round(y, 1)))
+        elif abs(x - x_pre) < MESMO_X:
+            celulas.setdefault(round(y, 1), {})['pre'] = t
+            consumidas.add((round(x, 1), round(y, 1)))
+    fora = []
+    for y in sorted(celulas):
+        celula = celulas[y]
+        if 'poder' in celula:
+            nivel, nome = celula['poder']
+            fora.append([nome, celula.get('pre', ''), nivel])
+        elif 'pre' in celula and fora:
+            # A célula de pré-requisito quebra em duas linhas ("Habilidade
+            # Magias," / "Ofício (escriba)"). Sem juntar, compara-se meia frase.
+            fora[-1][1] = (fora[-1][1] + ' ' + celula['pre']).strip()
+    return fora, consumidas
+
+
+def celulas_da_tabela(pagina: int) -> set:
+    """Só os (x, y) que a tabela de fato LEU — nem um a mais."""
+    fora = set()
+    for pares, corpo in blocos_de_tabela(pagina):
+        for x_poder, x_pre in pares:
+            _linhas, consumidas = linhas_do_par(corpo, x_poder, x_pre)
+            fora |= consumidas
+    return fora
