@@ -5495,11 +5495,11 @@
           "uid": "org_dsezfgm43b"
         },
         {
-          "id": "origin-batedor-poder-a-prova-de-tudo",
-          "name": "À Prova de Tudo",
+          "id": "poder-estilo-de-disparo",
+          "name": "Estilo de Disparo",
           "kind": "poder",
-          "description": "Você recebe +2 em testes de resistência contra fadiga e efeitos de terreno (frio, calor, sede, fome).",
-          "uid": "org_vh2r2xtdm7"
+          "powerUid": "pwr_nerh6ajpdd",
+          "uid": "org_zvgr5yycvf"
         },
         {
           "id": "poder-sentidos-agucados",
@@ -5511,9 +5511,9 @@
       ],
       "poderUnico": {
         "id": "origin-batedor-unique",
-        "name": "Estilo de Disparo",
+        "name": "À Prova de Tudo",
         "kind": "poder",
-        "description": "Escolha um tipo de arma à distância (arcos, bestas, armas de arremesso ou armas de fogo). Você não sofre penalidade ao atacar à distância contra alvos engajados em combate corpo a corpo."
+        "description": "Você não sofre penalidade em deslocamento e Sobrevivência por clima ruim e por terreno difícil natural."
       },
       "uid": "org_lzjmjzh7f6"
     },
@@ -5550,7 +5550,7 @@
         "id": "origin-capanga-unique",
         "name": "Confissão",
         "kind": "poder",
-        "description": "Pode gastar uma ação completa e 1 PM para forçar uma criatura indefesa a fazer um teste de Vontade contra Intimidação. Se falhar, revela informações ao alcance do conhecimento dela."
+        "description": "Você pode usar Intimidação para interrogar sem custo e em um minuto (veja Investigação)."
       },
       "uid": "org_euultxi3gx"
     },
@@ -5593,7 +5593,7 @@
         "id": "origin-charlatao-unique",
         "name": "Alpinista Social",
         "kind": "poder",
-        "description": "Você consegue forjar credenciais e se passar por membros de classes sociais altas. Recebe +5 em Enganação para se passar por outra pessoa de status social diferente."
+        "description": "Você pode substituir testes de Diplomacia por testes de Enganação."
       },
       "uid": "org_ro7sbvxdac"
     },
@@ -5644,7 +5644,7 @@
         "id": "origin-circense-unique",
         "name": "Truque de Mágica",
         "kind": "poder",
-        "description": "Você conhece truques de prestidigitação. Pode realizar pequenos efeitos mágicos cosméticos (acender velas, mudar a cor de um objeto pequeno) com ação livre."
+        "description": "Você pode lançar Explosão de Chamas, Hipnotismo e Queda Suave, mas apenas com o aprimoramento Truque. Não é uma habilidade mágica: os efeitos vêm de prestidigitação."
       },
       "uid": "org_auwgbwood7"
     },
@@ -5688,25 +5688,7 @@
         "id": "origin-criminoso-unique",
         "name": "Punguista",
         "kind": "poder",
-        "description": "Você recebe +2 em testes de Ladinagem para furtar e em testes de Furtividade. Pode esconder um objeto pequeno na manga ou bolso interno como ação livre.",
-        "modifiers": [
-          {
-            "target": {
-              "k": "expertise",
-              "name": "Ladinagem"
-            },
-            "amount": 2,
-            "bonusType": "untyped"
-          },
-          {
-            "target": {
-              "k": "expertise",
-              "name": "Furtividade"
-            },
-            "amount": 2,
-            "bonusType": "untyped"
-          }
-        ]
+        "description": "Você pode fazer testes de Ladinagem para sustento (como a perícia Ofício), mas em apenas um dia. Se passar, recebe o dobro do dinheiro; se falhar, pode ter problemas com a lei (a critério do mestre)."
       },
       "uid": "org_qbes2rlxbz"
     },
@@ -5749,7 +5731,7 @@
         "id": "origin-curandeiro-unique",
         "name": "Médico de Campo",
         "kind": "poder",
-        "description": "Pode gastar uma ação padrão e 1 PM para fazer um teste de Cura (CD 20) curando 1d8+Sabedoria PV. Cada criatura só pode ser alvo deste efeito uma vez por dia."
+        "description": "Você soma sua Sabedoria aos PV restaurados por suas habilidades e itens mundanos de cura."
       },
       "uid": "org_si3dk4bihz"
     },
@@ -5793,7 +5775,7 @@
         "id": "origin-eremita-unique",
         "name": "Busca Interior",
         "kind": "poder",
-        "description": "Você pode gastar 1 minuto meditando para receber +5 no próximo teste de perícia mental que fizer (Conhecimento, Misticismo, Religião, etc.). Limite uma vez por descanso."
+        "description": "Quando você e seus companheiros estão diante de um mistério, incapazes de prosseguir, você pode gastar 1 PM para meditar sozinho durante algum tempo e receber uma dica do mestre."
       },
       "uid": "org_d6eyqyu55q"
     },
@@ -5837,7 +5819,7 @@
         "id": "origin-escravo-unique",
         "name": "Desejo de Liberdade",
         "kind": "poder",
-        "description": "Você recebe +2 em testes de resistência contra efeitos que o agarrem, prendam, paralizem ou imobilizem."
+        "description": "Ninguém voltará a torná-lo um escravo: você recebe +5 em testes contra a manobra agarrar e efeitos de movimento."
       },
       "uid": "org_vkmiznfgwp"
     },
@@ -5881,7 +5863,7 @@
         "id": "origin-estudioso-unique",
         "name": "Palpite Fundamentado",
         "kind": "poder",
-        "description": "Quando faz um teste de perícia baseado em Inteligência, pode gastar 1 PM para somar +5 no resultado."
+        "description": "Quando vai fazer um teste de perícia originalmente baseada em Inteligência ou Sabedoria, você pode gastar 2 PM para substituí-la por Conhecimento."
       },
       "uid": "org_sbqx5rfsuk"
     },
@@ -5933,7 +5915,7 @@
         "id": "origin-fazendeiro-unique",
         "name": "Água no Feijão",
         "kind": "poder",
-        "description": "Você sabe esticar mantimentos. Cada ração que consome conta como dois dias de comida."
+        "description": "Você não sofre a penalidade de –5 e não gasta matéria-prima adicional para fabricar pratos para cinco pessoas."
       },
       "uid": "org_ugjqrcezxw"
     },
@@ -5977,7 +5959,7 @@
         "id": "origin-forasteiro-unique",
         "name": "Cultura Exótica",
         "kind": "poder",
-        "description": "Você é versado em uma cultura distante. Recebe +2 em testes de Conhecimento e Nobreza relacionados a essa cultura, e aprende um idioma exótico."
+        "description": "Por sua diferente visão de mundo, você encontra soluções inesperadas. Quando vai fazer um teste de perícia que requer treinamento, você pode gastar 1 PM para ignorar esse requerimento para esse teste."
       },
       "uid": "org_mebmwt3fbq"
     },
@@ -6028,7 +6010,7 @@
         "id": "origin-gladiador-unique",
         "name": "Pão e Circo",
         "kind": "poder",
-        "description": "Quando entra em combate na presença de uma plateia (10 ou mais criaturas), recebe +1 em ataque e Defesa enquanto a plateia o assistir."
+        "description": "Por seu treino em combates de exibição, você sabe “bater sem machucar”: pode escolher causar dano não letal sem sofrer a penalidade de –5."
       },
       "uid": "org_nkium7tsbv"
     },
@@ -6080,25 +6062,7 @@
         "id": "origin-guarda-unique",
         "name": "Detetive",
         "kind": "poder",
-        "description": "Você recebe +2 em testes de Intuição e Investigação. Sabe perceber rapidamente se uma criatura está mentindo ou escondendo informações.",
-        "modifiers": [
-          {
-            "target": {
-              "k": "expertise",
-              "name": "Intuição"
-            },
-            "amount": 2,
-            "bonusType": "untyped"
-          },
-          {
-            "target": {
-              "k": "expertise",
-              "name": "Investigação"
-            },
-            "amount": 2,
-            "bonusType": "untyped"
-          }
-        ]
+        "description": "Você pode gastar 1 PM para substituir testes de Percepção e Intuição por testes de Investigação até o fim da cena."
       },
       "uid": "org_lwvgitgjzg"
     },
@@ -6142,7 +6106,7 @@
         "id": "origin-herdeiro-unique",
         "name": "Herança",
         "kind": "poder",
-        "description": "No início de cada aventura, recebe um item mágico ou heirloom de até T$ 500 emprestado da família (T$ 1.500 veterano, T$ 5.000 campeão, T$ 15.000 lenda). O item retorna no fim da aventura."
+        "description": "Você herdou um item de preço de até T$ 1.000. Você pode escolher este poder duas vezes, para um item de até T$ 2.000."
       },
       "uid": "org_jugyiepbtd"
     },
@@ -6192,7 +6156,7 @@
         "id": "origin-heroi-camponel-unique",
         "name": "Coração Heroico",
         "kind": "poder",
-        "description": "Pode gastar 2 PM como ação livre para receber pontos de vida temporários iguais ao seu nível + sua Carisma até o fim da cena."
+        "description": "Você recebe +3 pontos de mana. Quando atinge um novo patamar (5º, 11º e 17º níveis), recebe +3 PM."
       },
       "uid": "org_teqszmsum6"
     },
@@ -6236,7 +6200,7 @@
         "id": "origin-marujo-unique",
         "name": "Passagem de Navio",
         "kind": "poder",
-        "description": "Você pode conseguir passagem grátis em qualquer navio mercante (geralmente em troca de pequenos serviços)."
+        "description": "Você consegue transporte marítimo sem custo para você e seus aliados, desde que todos paguem com trabalho (passar em pelo menos um teste de perícia adequado durante a viagem)."
       },
       "uid": "org_fnenijlmvn"
     },
@@ -6287,7 +6251,7 @@
         "id": "origin-mateiro-unique",
         "name": "Vendedor de Carcaças",
         "kind": "poder",
-        "description": "Você sabe extrair couro, presas e ingredientes alquímicos de criaturas abatidas. Cada carcaça apropriada gera até T$ 5 × ND da criatura em mercadorias quando vendida."
+        "description": "Você pode extrair recursos de criaturas em um minuto, em vez de uma hora, e recebe +5 no teste."
       },
       "uid": "org_ttz2yewozj"
     },
@@ -6339,7 +6303,7 @@
         "id": "origin-guilda-unique",
         "name": "Rede de Contatos",
         "kind": "poder",
-        "description": "Você tem contatos em sua guilda. Em uma cidade grande, pode encontrar um contato útil (mercador, informante, especialista) com um teste de Diplomacia CD 15."
+        "description": "Graças à influência de sua guilda, você pode usar Diplomacia para interrogar sem custo e em um minuto (veja Investigação)."
       },
       "uid": "org_aa5rds5fvw"
     },
@@ -6390,7 +6354,7 @@
         "id": "origin-mercador-unique",
         "name": "Negociação",
         "kind": "poder",
-        "description": "Você compra itens por 90% do preço e vende por 60% (em vez de 50%). Recebe +2 em testes de Diplomacia para barganhar."
+        "description": "Você pode vender itens 10% mais caro (não cumulativo com barganha)."
       },
       "uid": "org_qqhzlwj35s"
     },
@@ -6441,7 +6405,7 @@
         "id": "origin-minerador-unique",
         "name": "Escavador",
         "kind": "poder",
-        "description": "Em terreno apropriado, pode cavar a 1,5m por minuto com ferramentas, ou 3m por minuto com magia ou Força elevada. Detecta automaticamente passagens secretas em paredes de pedra a alcance curto."
+        "description": "Você se torna proficiente em picaretas, causa +1 de dano com elas e não é afetado por terreno difícil em masmorras e subterrâneos."
       },
       "uid": "org_t6hat3igcl"
     },
@@ -6492,13 +6456,13 @@
         "id": "origin-nomade-unique",
         "name": "Mochileiro",
         "kind": "poder",
-        "description": "Você recebe +2 espaços em seu limite de itens equipados e leves. Adicionalmente, não sofre penalidade de armadura por excesso de carga até o limite máximo.",
+        "description": "Seu limite de carga aumenta em 5 espaços.",
         "modifiers": [
           {
             "target": {
               "k": "inventorySlots"
             },
-            "amount": 2,
+            "amount": 5,
             "bonusType": "untyped"
           }
         ]
@@ -6552,7 +6516,7 @@
         "id": "origin-pivete-unique",
         "name": "Quebra-Galho",
         "kind": "poder",
-        "description": "Você consegue se adaptar a qualquer perícia. Quando faz um teste de perícia em que não é treinado, recebe metade do seu bônus de treino (em vez de nada)."
+        "description": "Em cidades ou metrópoles, você pode comprar qualquer item mundano não superior por metade do preço normal. Esses itens não podem ser matérias-primas nem podem ser revendidos."
       },
       "uid": "org_thehlcnbsd"
     },
@@ -6639,7 +6603,7 @@
         "id": "origin-seguidor-unique",
         "name": "Antigo Mestre",
         "kind": "poder",
-        "description": "Você aprendeu segredos com um mentor poderoso. Recebe um poder de classe a sua escolha (cumprindo pré-requisitos) cujo atributo-chave é Carisma."
+        "description": "Você ainda mantém contato com o herói que costumava servir. Uma vez por aventura, ele surge para ajudá-lo por uma cena, como um parceiro mestre de um tipo a sua escolha que não conta em seu limite de aliados."
       },
       "uid": "org_bxya5vbhu3"
     },
@@ -6690,7 +6654,7 @@
         "id": "origin-selvagem-unique",
         "name": "Vida Rústica",
         "kind": "poder",
-        "description": "Você é imune a doenças mundanas e sofre apenas metade do dano de exposição (frio, calor, fome, sede)."
+        "description": "Você é imune a efeitos prejudiciais de itens ingeríveis e consegue descansar nos lugares mais desconfortáveis: mesmo dormindo ao relento, sua recuperação de PV e PM nunca é inferior a seu próprio nível."
       },
       "uid": "org_dvyyu74qm5"
     },
@@ -6743,7 +6707,7 @@
         "id": "origin-soldado-unique",
         "name": "Influência Militar",
         "kind": "poder",
-        "description": "Você pode conseguir audiência com oficiais militares e obter informações sobre tropas, fortes e estradas militares."
+        "description": "Você fez amigos nas forças armadas. Onde houver acampamentos ou bases militares, você consegue hospedagem e informações para você e seus aliados."
       },
       "uid": "org_keq6j3iudc"
     },
@@ -6794,7 +6758,7 @@
         "id": "origin-taverneiro-unique",
         "name": "Gororoba",
         "kind": "poder",
-        "description": "Você sabe preparar pratos simples que aguentam o frio e a fome. Durante o descanso, sua refeição concede +1 PV temporário por nível a cada aliado que comer."
+        "description": "Você não sofre a penalidade de –5 para fabricar um prato especial adicional."
       },
       "uid": "org_y4nvjfbpt3"
     },
@@ -6830,7 +6794,7 @@
         "id": "origin-trabalhador-unique",
         "name": "Esforçado",
         "kind": "poder",
-        "description": "Você é resistente ao esforço. Pode trabalhar pesado por +4 horas além do normal sem sofrer penalidades de fadiga, e recebe +2 em testes de Atletismo para tarefas repetitivas."
+        "description": "Você não teme trabalho duro nem prazos apertados: recebe um bônus de +2 em todos os testes de perícias estendidos (incluindo perigos complexos)."
       },
       "uid": "org_n2y5ngk6cd"
     }

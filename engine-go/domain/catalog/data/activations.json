@@ -3016,8 +3016,8 @@
     "bookPage": 94
   },
   {
-    "id": "origin.trabalhador.atletico",
-    "name": "Atlético",
+    "id": "origin.trabalhador.esforcado",
+    "name": "Esforçado",
     "kind": "passive",
     "action": "passivo",
     "pmCost": 0,

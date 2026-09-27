@@ -1121,7 +1121,6 @@ origins.json	origin-assistente-poder-poder-da-tormenta-escolha	org_icztz4kobu
 origins.json	origin-batedor-pericia-furtividade	org_ndbn77svbu
 origins.json	origin-batedor-pericia-percepcao	org_ezyxybgeim
 origins.json	origin-batedor-pericia-sobrevivencia	org_dsezfgm43b
-origins.json	origin-batedor-poder-a-prova-de-tudo	org_vh2r2xtdm7
 origins.json	origin-capanga-pericia-intimidacao	org_ts6bamnvh5
 origins.json	origin-capanga-pericia-luta	org_duxzxiflqh
 origins.json	origin-capanga-poder-poder-de-combate-escolha	org_4ervdlci3m
