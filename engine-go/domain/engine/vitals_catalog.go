@@ -127,7 +127,38 @@ func evalModifierScale(amount int, scale *VitalScale, level int, attrTotals map[
 			steps++
 		}
 		return amount * steps
+	case "patamar":
+		return amount * patamarOf(level)
 	default: // attribute
 		return amount * attrTotals[scale.Attribute]
 	}
+}
+
+// OS LIMIARES DE PATAMAR: iniciante, veterano, campeão, lenda.
+//
+// O livro conta patamar o tempo todo e o motor não o conhecia. Quem o trouxe foi
+// o Coração Heroico (p91), que dá "+3 pontos de mana" e mais "+3 PM" a cada
+// patamar novo — e o próprio poder IMPRIME os limiares, então eles não vêm de
+// outra página.
+var patamarThresholds = [...]int{5, 11, 17}
+
+// patamarOf é o ORDINAL do patamar do nível: 1 no iniciante, 4 no lenda.
+//
+// É ordinal e não contagem de patamares ULTRAPASSADOS porque quem escala por ele
+// já recebe o valor no 1º nível: o Coração Heroico dá +3 de saída e +3 a cada
+// patamar, o que é 3×1, 3×2, 3×3 e 3×4 — um modificador só, em vez de um plano e
+// outro escalado.
+//
+// O `levelStep` não serve, e isso foi medido: com passo 6 ele erra CINCO dos oito
+// níveis de fronteira, nas duas direções de arredondamento. Arredondando para
+// baixo erra o 5, o 11 e o 17 (que são exatamente os limiares); para cima, erra
+// os níveis 1-4 e o 18-20.
+func patamarOf(level int) int {
+	ordinal := 1
+	for _, threshold := range patamarThresholds {
+		if level >= threshold {
+			ordinal++
+		}
+	}
+	return ordinal
 }

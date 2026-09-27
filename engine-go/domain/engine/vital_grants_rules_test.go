@@ -115,6 +115,32 @@ func TestModifierScaleEvaluation(t *testing.T) {
 		}
 	})
 
+	// O PATAMAR, e o exemplo trabalhado é o Coração Heroico (p91): "Você recebe
+	// +3 pontos de mana. Quando atinge um novo patamar (no 5º, 11º e 17º
+	// níveis), recebe +3 PM."
+	//
+	// Os oito níveis abaixo são as duas pontas de cada patamar, e os números
+	// estão escritos à mão a partir da frase do livro — 3 de saída, e mais 3 em
+	// cada limiar. Derivá-los de `patamarOf` faria o caso e o defeito andarem
+	// juntos.
+	//
+	// É a razão de a escala existir: nenhum `levelStep` produz esta coluna. Com
+	// passo 6 para baixo o nível 5 dá 3 (devia dar 6); para cima, o nível 1 dá 6
+	// (devia dar 3).
+	t.Run("per patamar: o Coração Heroico dá 3, 6, 9 e 12 PM", func(t *testing.T) {
+		scale := &VitalScale{Per: "patamar"}
+		for _, tt := range []struct{ level, want int }{
+			{1, 3}, {4, 3}, // iniciante
+			{5, 6}, {10, 6}, // veterano
+			{11, 9}, {16, 9}, // campeão
+			{17, 12}, {20, 12}, // lenda
+		} {
+			if got := evalModifierScale(3, scale, tt.level, attrs); got != tt.want {
+				t.Errorf("nível %d: = %d PM, want %d", tt.level, got, tt.want)
+			}
+		}
+	})
+
 	// Para BAIXO é a outra metade: no nível 1 ainda não vale nada.
 	t.Run("levelStep para baixo só conta o passo completo", func(t *testing.T) {
 		scale := &VitalScale{Per: "levelStep", Step: 2}
@@ -139,5 +165,42 @@ func TestVitalPoolsNeverGoNegative(t *testing.T) {
 	})
 	if pools.PvMax < 0 || pools.PmMax < 0 {
 		t.Errorf("poços = PV %d / PM %d, want nenhum negativo", pools.PvMax, pools.PmMax)
+	}
+}
+
+// O PATAMAR CHEGA À FICHA, e não só à função que o calcula.
+//
+// O `TestModifierScaleEvaluation` prende a ARITMÉTICA da escala; este prende a
+// COMPOSIÇÃO — que o modificador do poder único da origem, escolhido como
+// benefício, atravessa o `vitalGrantMods` e soma no poço de PM pelo mesmo
+// caminho que a ficha usa.
+//
+// As 18 fichas do oráculo não provam isto: nenhuma delas escolheu o Coração
+// Heroico, então o diff delas sai vazio por mais certo ou errado que o número
+// esteja. Um oráculo que não exercita o caminho não testemunha nada sobre ele.
+//
+// O CONTROLE é a mesma ficha SEM a escolha do benefício.
+func TestTheHeroicHeartGrantsManaByPatamar(t *testing.T) {
+	world := BookRuleset(vitalCatalogs(t))
+	const benefício = "origin-heroi-camponel-unique"
+
+	// nível → o PM que o livro promete (p91): +3 de saída, e +3 a cada patamar
+	// novo. Escrito à mão a partir da frase, não derivado da escala.
+	for _, tt := range []struct{ level, want int }{
+		{1, 3}, {4, 3}, {8, 6}, {12, 9}, {20, 12},
+	} {
+		semEscolha := VitalContext{Level: tt.level, Origin: "heroi-campones"}
+		comEscolha := semEscolha
+		comEscolha.OriginChoices = []string{benefício}
+
+		if _, pm := world.sumVitalGrants(semEscolha); pm != 0 {
+			t.Fatalf("nível %d: o controle já estava errado — sem escolher o "+
+				"benefício a origem soma %d PM, e o caso abaixo mediria um número "+
+				"que não é do poder", tt.level, pm)
+		}
+		if _, pm := world.sumVitalGrants(comEscolha); pm != tt.want {
+			t.Errorf("nível %d: o Coração Heroico somou %d PM e o livro dá %d (p91)",
+				tt.level, pm, tt.want)
+		}
 	}
 }

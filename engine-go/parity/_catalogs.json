@@ -5256,7 +5256,21 @@
         "id": "origin-amigo-animais-unique",
         "name": "Amigo Especial",
         "kind": "poder",
-        "description": "Você recebe +5 em testes de Adestramento com animais. Possui um animal de estimação que fornece +2 em uma perícia a sua escolha (exceto Luta ou Pontaria) e não conta em seu limite de parceiros."
+        "description": "Você recebe +5 em testes de Adestramento com animais. Possui um animal de estimação que fornece +2 em uma perícia a sua escolha (exceto Luta ou Pontaria) e não conta em seu limite de parceiros.",
+        "modifiers": [
+          {
+            "target": {
+              "k": "expertise",
+              "name": "Adestramento"
+            },
+            "amount": 5,
+            "bonusType": "untyped",
+            "condition": {
+              "c": "context",
+              "note": "com animais"
+            }
+          }
+        ]
       },
       "uid": "org_ymmaxtcak4"
     },
@@ -6156,7 +6170,19 @@
         "id": "origin-heroi-camponel-unique",
         "name": "Coração Heroico",
         "kind": "poder",
-        "description": "Você recebe +3 pontos de mana. Quando atinge um novo patamar (5º, 11º e 17º níveis), recebe +3 PM."
+        "description": "Você recebe +3 pontos de mana. Quando atinge um novo patamar (5º, 11º e 17º níveis), recebe +3 PM.",
+        "modifiers": [
+          {
+            "target": {
+              "k": "maxPm"
+            },
+            "amount": 3,
+            "bonusType": "untyped",
+            "scale": {
+              "per": "patamar"
+            }
+          }
+        ]
       },
       "uid": "org_teqszmsum6"
     },
@@ -6405,7 +6431,21 @@
         "id": "origin-minerador-unique",
         "name": "Escavador",
         "kind": "poder",
-        "description": "Você se torna proficiente em picaretas, causa +1 de dano com elas e não é afetado por terreno difícil em masmorras e subterrâneos."
+        "description": "Você se torna proficiente em picaretas, causa +1 de dano com elas e não é afetado por terreno difícil em masmorras e subterrâneos.",
+        "modifiers": [
+          {
+            "target": {
+              "k": "damage",
+              "scope": "all"
+            },
+            "amount": 1,
+            "bonusType": "untyped",
+            "condition": {
+              "c": "context",
+              "note": "com picaretas"
+            }
+          }
+        ]
       },
       "uid": "org_t6hat3igcl"
     },
@@ -6794,7 +6834,20 @@
         "id": "origin-trabalhador-unique",
         "name": "Esforçado",
         "kind": "poder",
-        "description": "Você não teme trabalho duro nem prazos apertados: recebe um bônus de +2 em todos os testes de perícias estendidos (incluindo perigos complexos)."
+        "description": "Você não teme trabalho duro nem prazos apertados: recebe um bônus de +2 em todos os testes de perícias estendidos (incluindo perigos complexos).",
+        "modifiers": [
+          {
+            "target": {
+              "k": "expertiseAll"
+            },
+            "amount": 2,
+            "bonusType": "untyped",
+            "condition": {
+              "c": "context",
+              "note": "em teste estendido"
+            }
+          }
+        ]
       },
       "uid": "org_n2y5ngk6cd"
     }
