@@ -101,6 +101,12 @@ func targetLabel(t engine.ModifierTarget) string {
 		}
 		return t.Name
 	}
+	// A MANOBRA tem dois lados, e o rótulo tem de dizer qual. Ela é um teste
+	// OPOSTO (p234): "Manobra (agarrar)" é o bônus de quem agarra, e quem lê a
+	// ficha precisa saber que o dele é o contrário disso.
+	if t.K == "maneuver" && t.Scope == "defense" {
+		return "Resistir à manobra (" + t.Name + ")"
+	}
 	name, found := names[t.K]
 	if !found {
 		name = t.K

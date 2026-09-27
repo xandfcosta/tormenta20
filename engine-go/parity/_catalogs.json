@@ -5837,15 +5837,12 @@
         "modifiers": [
           {
             "target": {
-              "k": "expertise",
-              "name": "Luta"
+              "k": "maneuver",
+              "name": "agarrar",
+              "scope": "defense"
             },
             "amount": 5,
-            "bonusType": "untyped",
-            "condition": {
-              "c": "context",
-              "note": "contra a manobra agarrar"
-            }
+            "bonusType": "untyped"
           }
         ]
       },

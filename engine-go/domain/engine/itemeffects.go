@@ -327,6 +327,18 @@ func targetKey(t ModifierTarget) string {
 	case "maxPm":
 		return "maxPm"
 	case "maneuver":
+		// O ESCOPO ENTRA NA CHAVE, e a ausência dele é a OFENSA.
+		//
+		// Uma manobra é um teste OPOSTO (p234): quem ataca rola e quem defende
+		// rola, e os dois bônus são coisas diferentes. Sem o escopo na chave, o
+		// +2 do `Derrubar Aprimorado` (que é de quem ATACA) e o +5 do `Desejo de
+		// Liberdade` (que é de quem DEFENDE) caem no mesmo balde e somam.
+		//
+		// Escopo ausente continua sendo a chave antiga, de propósito: as treze
+		// entradas que já existem são todas de ofensa e nenhuma muda de valor.
+		if t.Scope != "" {
+			return "maneuver:" + t.Name + ":" + t.Scope
+		}
 		return "maneuver:" + t.Name
 	case "flag":
 		return "flag:" + t.Name
