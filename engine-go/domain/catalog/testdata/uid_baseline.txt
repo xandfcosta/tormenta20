@@ -1166,8 +1166,8 @@ origins.json	origin-guilda-pericia-oficio	org_33pqrv6zu4
 origins.json	origin-herdeiro-pericia-misticismo	org_pk7fl755e7
 origins.json	origin-herdeiro-pericia-nobreza	org_orqtguvwht
 origins.json	origin-herdeiro-pericia-oficio	org_5hdzcpvdgp
-origins.json	origin-heroi-camponel-pericia-adestramento	org_wjnyno2xwf
-origins.json	origin-heroi-camponel-pericia-oficio	org_n77eoel2pr
+origins.json	origin-heroi-campones-pericia-adestramento	org_wjnyno2xwf
+origins.json	origin-heroi-campones-pericia-oficio	org_n77eoel2pr
 origins.json	origin-marujo-pericia-atletismo	org_lmnsqftfax
 origins.json	origin-marujo-pericia-jogatina	org_gve3nmxm3m
 origins.json	origin-marujo-pericia-pilotagem	org_cbwkx2ugbm

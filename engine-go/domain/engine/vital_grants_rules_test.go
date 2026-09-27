@@ -182,7 +182,7 @@ func TestVitalPoolsNeverGoNegative(t *testing.T) {
 // O CONTROLE é a mesma ficha SEM a escolha do benefício.
 func TestTheHeroicHeartGrantsManaByPatamar(t *testing.T) {
 	world := BookRuleset(vitalCatalogs(t))
-	const benefício = "origin-heroi-camponel-unique"
+	const benefício = "origin-heroi-campones-unique"
 
 	// nível → o PM que o livro promete (p91): +3 de saída, e +3 a cada patamar
 	// novo. Escrito à mão a partir da frase, não derivado da escala.

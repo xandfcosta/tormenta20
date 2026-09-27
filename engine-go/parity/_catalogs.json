@@ -6129,7 +6129,7 @@
       "name": "Herói Camponês",
       "benefits": [
         {
-          "id": "origin-heroi-camponel-pericia-adestramento",
+          "id": "origin-heroi-campones-pericia-adestramento",
           "name": "Adestramento",
           "kind": "pericia",
           "description": "Você se torna treinado em Adestramento.",
@@ -6137,7 +6137,7 @@
           "uid": "org_wjnyno2xwf"
         },
         {
-          "id": "origin-heroi-camponel-pericia-oficio",
+          "id": "origin-heroi-campones-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -6167,7 +6167,7 @@
         }
       ],
       "poderUnico": {
-        "id": "origin-heroi-camponel-unique",
+        "id": "origin-heroi-campones-unique",
         "name": "Coração Heroico",
         "kind": "poder",
         "description": "Você recebe +3 pontos de mana. Quando atinge um novo patamar (5º, 11º e 17º níveis), recebe +3 PM.",
