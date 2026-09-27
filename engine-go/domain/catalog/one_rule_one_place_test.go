@@ -69,23 +69,12 @@ func TestNoClassPowerRuleIsWrittenTwice(t *testing.T) {
 		porRegra[string(corpo)] = append(porRegra[string(corpo)], classe)
 	}
 
-	// A DÍVIDA NOMEADA, e ela só pode ENCOLHER (ALE-403).
-	//
-	// Apontar de verdade exige ensinar TRÊS consumidores a resolver o ponteiro —
-	// o `engine.Catalogs`, o `book.ClassPowers` e o `class_power_details` —, e
-	// isso é fatia própria. Enquanto ela não acontece, estes dez ficam
-	// registrados: nome NOVO com regra repetida reprova, e consertar um sem
-	// tirá-lo daqui também.
-	divida := map[string]bool{
-		"Aumento de Atributo": true, "Ímpeto": true, "Esquiva Sobrenatural": true,
-		"Evasão": true, "Autoridade Feudal": true, "Valentão": true,
-		"Magias (2° círculo)": true, "Magias (3° círculo)": true,
-		"Magias (4° círculo)": true,
-	}
-	// "Magias (5° círculo)" NÃO entra: o Arcanista lança arcanas e o Clérigo
-	// divinas, então as duas linhas dizem coisas diferentes. Ela estava na
-	// primeira versão desta lista e a catraca do denominador a expulsou —
-	// listei dez e só nove repetem.
+	// A DÍVIDA ACABOU (ALE-403). Ela nomeava nove poderes cuja regra estava
+	// escrita de duas a quatorze vezes; hoje cada um é um verbete e as 31
+	// concessões apontam. O mapa fica vazio de propósito, e não some: é ele que
+	// faz "consertar sem tirar da lista" reprovar, e um dia alguém vai
+	// precisar registrar uma dívida nova aqui.
+	divida := map[string]bool{}
 	repetidas, naDivida := 0, 0
 	for corpo, classes := range porRegra {
 		if len(classes) < 2 {
@@ -114,5 +103,52 @@ func TestNoClassPowerRuleIsWrittenTwice(t *testing.T) {
 	if repetidas == 0 {
 		t.Logf("regras de poder de classe conferidas: %d | na dívida: %d",
 			len(porRegra), naDivida)
+	}
+}
+
+// O VERBETE NÃO PODE CARREGAR MODIFICADOR (ALE-403).
+//
+// A divisão entre verbete e concessão é resolvida no `domain/book`, porque são
+// os leitores DELE que precisam de nome e descrição. O MOTOR não resolve: ele
+// lê o despejo cru e, para poder de classe, só olha `Modifiers`.
+//
+// Isso funciona porque nenhum dos nove poderes divididos tem modificador. É uma
+// coincidência feliz, não uma garantia — e sem este caso, o dia em que alguém
+// desse um `+2` a um verbete o motor o ignoraria em silêncio, enquanto a tela
+// mostraria o bônus. A ficha diria uma coisa e o número seria outro.
+//
+// Quando isso for preciso, o conserto não é afrouxar aqui: é o motor passar a
+// resolver o `powerUid`, como já faz com o benefício de origem.
+func TestNoClassPowerEntryCarriesModifiersTheEngineWouldIgnore(t *testing.T) {
+	raw, ok := catalog.Resource("class-powers")
+	if !ok {
+		t.Fatal("catálogo de poderes de classe ausente")
+	}
+	var powers []map[string]any
+	if err := json.Unmarshal(raw, &powers); err != nil {
+		t.Fatalf("poderes de classe: %v", err)
+	}
+
+	verbetes := 0
+	for _, p := range powers {
+		if _, éConcessão := p["className"]; éConcessão {
+			continue
+		}
+		verbetes++
+		mods, tem := p["modifiers"].([]any)
+		if !tem || len(mods) == 0 {
+			continue
+		}
+		nome, _ := p["name"].(string)
+		t.Errorf("o verbete %q tem %d modificador(es), e o MOTOR não resolve "+
+			"`powerUid` para poder de classe — ele os ignoraria, e a tela mostraria "+
+			"um bônus que a ficha não tem", nome, len(mods))
+	}
+
+	// O CONTROLE: havia verbete para medir. Zero verbetes passaria verde sobre
+	// nada, e é o que aconteceria se a divisão fosse desfeita.
+	if verbetes != 9 {
+		t.Errorf("achei %d verbetes e a divisão criou 9 — se mudou de propósito, "+
+			"mude o número; se não, alguém desfez a divisão", verbetes)
 	}
 }

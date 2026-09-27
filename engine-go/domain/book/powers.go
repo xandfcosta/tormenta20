@@ -1,6 +1,7 @@
 package book
 
 import (
+	"encoding/json"
 	"sync"
 )
 
@@ -67,7 +68,13 @@ func PowerCatalogs() {
 			origensPorNome[o.Name] = o
 		}
 		poderesDeClassePorID = map[string]ClassPower{}
-		for _, p := range ListOf[ClassPower]("class-powers") {
+		// Não é `ListOf`: o arquivo guarda verbete e concessão em linhas
+		// separadas desde a ALE-403, e quem as junta é o `classPowersResolved`.
+		var poderesDeClasse []ClassPower
+		if raw := classPowersResolved(); raw != nil {
+			_ = json.Unmarshal(raw, &poderesDeClasse)
+		}
+		for _, p := range poderesDeClasse {
 			poderesDeClassePorID[p.ID] = p
 		}
 		poderesGeraisPorID = map[string]GeneralPower{}

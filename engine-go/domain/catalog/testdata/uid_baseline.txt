@@ -540,6 +540,15 @@ class-powers.json	class.paladino.virtude-paladinesca-castidade	pwr_u2k5arnc7z
 class-powers.json	class.paladino.virtude-paladinesca-compaixao	pwr_3veknkiyye
 class-powers.json	class.paladino.virtude-paladinesca-humildade	pwr_xnvf73rjaf
 class-powers.json	class.paladino.virtude-paladinesca-temperanca	pwr_q4xmzxqlem
+class-powers.json	poder.aumento-de-atributo	pwr_qbiyubn2cs
+class-powers.json	poder.autoridade-feudal	pwr_miwbh67tef
+class-powers.json	poder.esquiva-sobrenatural	pwr_gnu2wcfdba
+class-powers.json	poder.evasao	pwr_enoa4lwutn
+class-powers.json	poder.impeto	pwr_ycwgrnb6oa
+class-powers.json	poder.magias-2-circulo	pwr_3mprtzixls
+class-powers.json	poder.magias-3-circulo	pwr_v22gvkya4o
+class-powers.json	poder.magias-4-circulo	pwr_cq2yqbaoiy
+class-powers.json	poder.valentao	pwr_hpf2masdfi
 classes.json	arcanista	cls_uov4q5z5jl
 classes.json	barbaro	cls_lxyxwsuxiz
 classes.json	bardo	cls_g45ckxsvny
