@@ -5833,7 +5833,18 @@
         "id": "origin-escravo-unique",
         "name": "Desejo de Liberdade",
         "kind": "poder",
-        "description": "Ninguém voltará a torná-lo um escravo: você recebe +5 em testes contra a manobra agarrar e efeitos de movimento."
+        "description": "Ninguém voltará a torná-lo um escravo: você recebe +5 em testes contra a manobra agarrar e efeitos de movimento.",
+        "modifiers": [
+          {
+            "target": {
+              "k": "maneuver",
+              "name": "agarrar",
+              "scope": "defense"
+            },
+            "amount": 5,
+            "bonusType": "untyped"
+          }
+        ]
       },
       "uid": "org_vkmiznfgwp"
     },
@@ -6129,7 +6140,7 @@
       "name": "Herói Camponês",
       "benefits": [
         {
-          "id": "origin-heroi-camponel-pericia-adestramento",
+          "id": "origin-heroi-campones-pericia-adestramento",
           "name": "Adestramento",
           "kind": "pericia",
           "description": "Você se torna treinado em Adestramento.",
@@ -6137,7 +6148,7 @@
           "uid": "org_wjnyno2xwf"
         },
         {
-          "id": "origin-heroi-camponel-pericia-oficio",
+          "id": "origin-heroi-campones-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -6167,7 +6178,7 @@
         }
       ],
       "poderUnico": {
-        "id": "origin-heroi-camponel-unique",
+        "id": "origin-heroi-campones-unique",
         "name": "Coração Heroico",
         "kind": "poder",
         "description": "Você recebe +3 pontos de mana. Quando atinge um novo patamar (5º, 11º e 17º níveis), recebe +3 PM.",

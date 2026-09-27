@@ -674,15 +674,27 @@ Duas escolhas que valem lembrar, porque errá-las é invisível:
 - **"Resistência a X +N" é bônus em TESTE**, não redução de dano, e quem decide
   é o livro: "uma criatura com resistência a magia +2 recebe +2 em testes"
   (p226). O alvo é `resistance`.
+- **A manobra tem DOIS lados, e o alvo diz qual.** Ela é um teste OPOSTO (p234):
+  *"Faça um teste de manobra (um teste de ataque corpo a corpo) OPOSTO com a
+  criatura […] deve fazer o teste usando seu valor de Luta."* O `maneuver:<nome>`
+  sem escopo é a rolagem de quem ATACA (o +2 do `Derrubar Aprimorado`); com
+  `scope: "defense"` é a de quem resiste (o +5 do `Desejo de Liberdade`, p89). O
+  escopo entra na CHAVE do efeito, ou os dois somam no mesmo balde.
+
+  **E saber QUE TESTE a pessoa rola não basta para escolher o alvo.** Este poder
+  foi modelado primeiro como `expertise:Luta`, que é literalmente o teste que a
+  p234 manda rolar — e estava errado, porque em T20 o ATAQUE também é um teste de
+  Luta: ligar o bônus defensivo subia o ataque da arma empunhada em 5. A pergunta
+  não é só "que teste ela rola?", é **"que OUTROS números saem desse mesmo
+  teste?"**. Uma perícia que alimenta combate não aceita bônus de recorte fino;
+  quem precisa de recorte precisa de alvo próprio.
 - **Número impresso SEM alvo não vira modificador**, e o motivo fica escrito.
   Três formas apareceram nas origens (ALE-406): o poder que NEGA uma penalidade
   que o motor não aplica (o "Água no Feijão" nega um –5 de fabricação, e um +5
   valeria sempre para um –5 que vale raramente — o poder geral `Disparo Preciso`
   já era assim, sem modificador); o poder cujo TESTE o livro não define (o
   "Vendedor de Carcaças" dá "+5 no teste" de extrair recursos, e `extrair
-  recursos` aparece uma vez no PDF inteiro, no texto dele); e o poder que pede
-  uma DIREÇÃO que o alvo não tem (o "Desejo de Liberdade" dá +5 *contra* a
-  manobra agarrar, e `maneuver` é a rolagem ofensiva). O guarda é o
+  recursos` aparece uma vez no PDF inteiro, no texto dele). O guarda é o
   `TestEveryBonusAnOriginUniquePowerPrintsBecomesAModifier`: lista de
   PERMITIDOS, cada linha dizendo POR QUE não há alvo.
 

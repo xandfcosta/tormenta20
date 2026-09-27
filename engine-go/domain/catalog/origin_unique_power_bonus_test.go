@@ -99,10 +99,6 @@ var uniquePowersWithoutAModifier = map[string]string{
 	"Vendedor de Carcaças": "dá +5 num teste que o livro NÃO define — `extrair recursos` " +
 		"aparece uma vez no PDF inteiro, no texto deste poder (p92). Sem teste nomeado " +
 		"não há alvo",
-	"Desejo de Liberdade": "dá +5 em testes CONTRA a manobra agarrar (p89), e o alvo " +
-		"`maneuver` significa a rolagem OFENSIVA — é o que o `Derrubar Aprimorado` usa. " +
-		"Pendurar o +5 ali daria o bônus para ATACAR com agarrar também. Precisa de uma " +
-		"direção no alvo, que é decisão separada (ALE-406)",
 }
 
 var printedBonus = regexp.MustCompile(`[+−–-]\s?\d+`)
