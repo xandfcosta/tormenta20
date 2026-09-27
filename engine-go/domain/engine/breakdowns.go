@@ -224,7 +224,7 @@ func (r *Ruleset) raceDisplacement(ch Character) int {
 	if len(ch.Races) == 0 {
 		return bookDefaultDisplacement
 	}
-	entry := r.raceEntryByName(ch.Races[0].Race)
+	entry := r.raceEntryByID(ch.Races[0].Race)
 	if entry == nil || entry.Speed == 0 {
 		return bookDefaultDisplacement
 	}

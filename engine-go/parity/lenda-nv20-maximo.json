@@ -4,7 +4,7 @@
     "id": 7,
     "ownerId": 1,
     "name": "Lenda Nv20 Maximo",
-    "origin": "Herdeiro",
+    "origin": "herdeiro",
     "god": "Valkaria",
     "godPower": "",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-02T13:16:57.489Z",
     "races": [
       {
-        "race": "Anão"
+        "race": "anao"
       }
     ],
     "classes": [
@@ -380,7 +380,7 @@
       "modifiers": []
     },
     {
-      "sourceId": "Anão",
+      "sourceId": "anao",
       "source": "Raça: Anão",
       "equipped": "vested",
       "modifiers": [
@@ -731,7 +731,7 @@
         "total": 2,
         "contributions": [
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 2,
@@ -743,7 +743,7 @@
         "total": -1,
         "contributions": [
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": -1,
@@ -755,7 +755,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1,
@@ -795,13 +795,13 @@
         "total": 3,
         "contributions": [
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 2
           },
           {
-            "sourceId": "Anão",
+            "sourceId": "anao",
             "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1

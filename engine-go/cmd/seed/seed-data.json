@@ -10,9 +10,9 @@
           "create": {
             "name": "Tanque Placas Nv10",
             "races": [
-              "Anão"
+              "anao"
             ],
-            "origin": "Soldado",
+            "origin": "soldado",
             "classes": [
               {
                 "className": "Guerreiro",
@@ -57,9 +57,9 @@
           "create": {
             "name": "Curandeira Divina Nv8",
             "races": [
-              "Elfo"
+              "elfo"
             ],
-            "origin": "Acólito",
+            "origin": "acolito",
             "classes": [
               {
                 "className": "Clérigo",
@@ -119,9 +119,9 @@
           "create": {
             "name": "Necromante Nv12 Magias",
             "races": [
-              "Osteon"
+              "osteon"
             ],
-            "origin": "Criminoso",
+            "origin": "criminoso",
             "classes": [
               {
                 "className": "Arcanista",
@@ -204,9 +204,9 @@
           "create": {
             "name": "Druida Natureza Nv9",
             "races": [
-              "Dahllan"
+              "dahllan"
             ],
-            "origin": "Eremita",
+            "origin": "eremita",
             "classes": [
               {
                 "className": "Druida",
@@ -259,9 +259,9 @@
           "create": {
             "name": "Multiclasse Guer+Arc Nv8",
             "races": [
-              "Humano"
+              "humano"
             ],
-            "origin": "Herói Camponês",
+            "origin": "heroi-campones",
             "classes": [
               {
                 "className": "Guerreiro",
@@ -339,9 +339,9 @@
           "create": {
             "name": "Paladino Sagrado Nv11",
             "races": [
-              "Suraggel"
+              "suraggel"
             ],
-            "origin": "Aristocrata",
+            "origin": "aristocrata",
             "classes": [
               {
                 "className": "Paladino",
@@ -410,9 +410,9 @@
           "create": {
             "name": "Lenda Nv20 Maximo",
             "races": [
-              "Anão"
+              "anao"
             ],
-            "origin": "Herdeiro",
+            "origin": "herdeiro",
             "classes": [
               {
                 "className": "Cavaleiro",
@@ -457,9 +457,9 @@
           "create": {
             "name": "Bardo Versátil Nv7",
             "races": [
-              "Lefou"
+              "lefou"
             ],
-            "origin": "Amnésico",
+            "origin": "amnesico",
             "classes": [
               {
                 "className": "Bardo",
@@ -523,9 +523,9 @@
           "create": {
             "name": "Inventor Genial Nv6",
             "races": [
-              "Kliren"
+              "kliren"
             ],
-            "origin": "Assistente de Laboratório",
+            "origin": "assistente-de-laboratorio",
             "classes": [
               {
                 "className": "Inventor",
@@ -588,9 +588,9 @@
           "create": {
             "name": "Recruta Nv1 Simples",
             "races": [
-              "Humano"
+              "humano"
             ],
-            "origin": "Capanga",
+            "origin": "capanga",
             "classes": [
               {
                 "className": "Guerreiro",
@@ -629,9 +629,9 @@
           "create": {
             "name": "Batedor Nv2 Simples",
             "races": [
-              "Sílfide"
+              "silfide"
             ],
-            "origin": "Batedor",
+            "origin": "batedor",
             "classes": [
               {
                 "className": "Ladino",
@@ -663,9 +663,9 @@
           "create": {
             "name": "Aprendiz Nv1 Simples",
             "races": [
-              "Humano"
+              "humano"
             ],
-            "origin": "Charlatão",
+            "origin": "charlatao",
             "classes": [
               {
                 "className": "Arcanista",
@@ -709,9 +709,9 @@
           "create": {
             "name": "Guerreiro Veterano Nv8",
             "races": [
-              "Humano"
+              "humano"
             ],
-            "origin": "Soldado",
+            "origin": "soldado",
             "classes": [
               {
                 "className": "Guerreiro",
@@ -763,9 +763,9 @@
           "create": {
             "name": "Arcanista Erudito Nv9",
             "races": [
-              "Qareen"
+              "qareen"
             ],
-            "origin": "Charlatão",
+            "origin": "charlatao",
             "classes": [
               {
                 "className": "Arcanista",
@@ -842,9 +842,9 @@
           "create": {
             "name": "Paladino Sagrado Nv10",
             "races": [
-              "Suraggel"
+              "suraggel"
             ],
-            "origin": "Aristocrata",
+            "origin": "aristocrata",
             "classes": [
               {
                 "className": "Paladino",
@@ -912,9 +912,9 @@
           "create": {
             "name": "Bárbaro Furioso Nv6",
             "races": [
-              "Anão"
+              "anao"
             ],
-            "origin": "Batedor",
+            "origin": "batedor",
             "classes": [
               {
                 "className": "Bárbaro",

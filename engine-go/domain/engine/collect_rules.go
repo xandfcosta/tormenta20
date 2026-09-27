@@ -120,8 +120,8 @@ func resolveFloating(race *RaceAttributeEntry, mod AttributeMod, picks []string)
 //
 // Raça desconhecida conta como completa: não dá para cobrar escolha de uma raça
 // que o catálogo não tem.
-func (c *Catalogs) RaceAttributeChoiceIsComplete(raceName, choicesJSON string) bool {
-	race := c.raceEntryByName(raceName)
+func (c *Catalogs) RaceAttributeChoiceIsComplete(raceID, choicesJSON string) bool {
+	race := c.raceEntryByID(raceID)
 	if race == nil {
 		return true
 	}

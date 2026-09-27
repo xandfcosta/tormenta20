@@ -78,14 +78,14 @@ func TestTheArmorChipIsStruckForWhoeverIsExemptAndNotForTheRest(t *testing.T) {
 // exemptionsOf lê a habilidade do CATÁLOGO, e o nome que ela devolve é o do
 // livro — não um rótulo inventado na tela.
 func TestExemptionsComeFromTheRaceCatalogWithTheAbilityName(t *testing.T) {
-	dto := sheet.CharacterDTO{Races: []sheet.RaceDTO{{Race: "Anão"}}}
+	dto := sheet.CharacterDTO{Races: []sheet.RaceDTO{{Race: "anao"}}}
 	got := exemptionsOf(dto)
 
 	if name := got[engine.DisplacementIgnoresArmorAndLoad]; name != "Devagar e Sempre" {
 		t.Fatalf("a isenção do anão veio como %q, esperava %q — o nome sai do `race-defs.json`",
 			name, "Devagar e Sempre")
 	}
-	if len(exemptionsOf(sheet.CharacterDTO{Races: []sheet.RaceDTO{{Race: "Humano"}}})) != 0 {
+	if len(exemptionsOf(sheet.CharacterDTO{Races: []sheet.RaceDTO{{Race: "humano"}}})) != 0 {
 		t.Fatal("o humano veio com isenção: o varredor está pegando habilidade que não concede flag")
 	}
 }

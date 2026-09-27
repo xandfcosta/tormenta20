@@ -33,6 +33,8 @@ type choicesPanel struct {
 
 // raceChoiceCard é o que uma raça pede: o bônus de atributo e as variantes.
 type raceChoiceCard struct {
+	// O RÓTULO, que é o que o `<h4>` do diálogo mostra. A ficha guarda o slug
+	// desde a ALE-404; quem precisa da chave lê `r.Race`.
 	Race string
 	// Attribute existe quando a raça distribui bônus — o `+1 ×3` do humano — ou
 	// escolhe ascendência, como o suraggel.
@@ -113,7 +115,7 @@ func (s Scene) choicesPanelOf(dto sheet.CharacterDTO, search string) choicesPane
 func (s Scene) raceChoices(dto sheet.CharacterDTO) []raceChoiceCard {
 	cards := []raceChoiceCard{}
 	for _, r := range dto.Races {
-		card := raceChoiceCard{Race: r.Race, Variants: raceVariants(dto, r.Race)}
+		card := raceChoiceCard{Race: book.RaceLabel(r.Race), Variants: raceVariants(dto, r.Race)}
 		card.Attribute = s.attributeRaceBonus(dto, r.Race)
 		if card.Attribute == nil && len(card.Variants) == 0 {
 			continue

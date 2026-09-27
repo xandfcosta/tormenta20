@@ -126,7 +126,7 @@ func (s Scene) Load(ctx context.Context, ownerID int64, query string) (View, err
 // origem e raças. Buscar por RAÇA é o que faz "anao" achar o anão, e é o caso
 // que a regra de acento existe para servir.
 func searchFields(c sheet.CharacterDTO) []string {
-	return []string{c.Name, primaryClass(c), c.Origin, racesInLine(c)}
+	return []string{c.Name, primaryClass(c), book.OriginLabel(c.Origin), racesInLine(c)}
 }
 
 // HeroCardOf é função LIVRE e não método da cena, e a razão é a regra da menor
@@ -149,7 +149,7 @@ func HeroCardOf(catalogs *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 		PM:      vital(c.MpCurrent, c.MpMax),
 		NoMana:  c.MpMax == 0,
 		Race:    mainRace(c),
-		Origin:  c.Origin,
+		Origin:  book.OriginLabel(c.Origin),
 		Classes: ClassesOf(c),
 	}
 	// A DEFESA vem da mesma `ComputeSheet` que a ficha usa, e do agregado JÁ
@@ -178,7 +178,7 @@ func stageLine(c sheet.CharacterDTO) string {
 	if c.God != nil && *c.God != "" {
 		parts = append(parts, "Devoto de "+*c.God)
 	}
-	parts = append(parts, c.Origin, c.Size)
+	parts = append(parts, book.OriginLabel(c.Origin), c.Size)
 	// Fatia nova em vez do filtro no lugar (`partes[:0]`): aquele é correto e é
 	// idioma conhecido, mas escreve no mesmo array que lê, e a lista aqui tem
 	// cinco itens. Não vale um segundo de leitura a mais para quem passar.
@@ -205,7 +205,7 @@ func heroPlate(c sheet.CharacterDTO) string {
 // não tem classe. É o "cargo" do herói na lista.
 func classOrOrigin(c sheet.CharacterDTO) string {
 	if len(c.Classes) == 0 {
-		return c.Origin
+		return book.OriginLabel(c.Origin)
 	}
 	return c.Classes[0].ClassName + " " + strconv.FormatInt(c.Classes[0].Level, 10)
 }
@@ -225,10 +225,13 @@ func ClassesOf(c sheet.CharacterDTO) string {
 	return strings.Join(parts, " / ")
 }
 
+// racesInLine e mainRace devolvem o RÓTULO, não o que a ficha guarda. A ficha
+// guarda o slug desde a ALE-404, e tudo neste arquivo é tela ou busca — os dois
+// querem "Anão" e não "anao". Quem precisa da chave lê `c.Races[0].Race`.
 func racesInLine(c sheet.CharacterDTO) string {
 	parts := make([]string, 0, len(c.Races))
 	for _, r := range c.Races {
-		parts = append(parts, r.Race)
+		parts = append(parts, book.RaceLabel(r.Race))
 	}
 	return strings.Join(parts, ", ")
 }
@@ -237,7 +240,7 @@ func mainRace(c sheet.CharacterDTO) string {
 	if len(c.Races) == 0 {
 		return ""
 	}
-	return c.Races[0].Race
+	return book.RaceLabel(c.Races[0].Race)
 }
 
 func vital(current, max int64) string {

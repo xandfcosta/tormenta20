@@ -4,7 +4,7 @@
     "id": 9,
     "ownerId": 1,
     "name": "Inventor Genial Nv6",
-    "origin": "Assistente de Laboratório",
+    "origin": "assistente-de-laboratorio",
     "god": "Tanna-Toh",
     "godPower": "",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-02T13:17:13.753Z",
     "races": [
       {
-        "race": "Kliren"
+        "race": "kliren"
       }
     ],
     "classes": [
@@ -318,7 +318,7 @@
       "modifiers": []
     },
     {
-      "sourceId": "Kliren",
+      "sourceId": "kliren",
       "source": "Raça: Kliren",
       "equipped": "vested",
       "modifiers": [
@@ -358,7 +358,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Kliren",
+            "sourceId": "kliren",
             "source": "Raça: Kliren",
             "bonusType": "untyped",
             "amount": 1,
@@ -370,7 +370,7 @@
         "total": 2,
         "contributions": [
           {
-            "sourceId": "Kliren",
+            "sourceId": "kliren",
             "source": "Raça: Kliren",
             "bonusType": "untyped",
             "amount": 2,
@@ -382,7 +382,7 @@
         "total": -1,
         "contributions": [
           {
-            "sourceId": "Kliren",
+            "sourceId": "kliren",
             "source": "Raça: Kliren",
             "bonusType": "untyped",
             "amount": -1,

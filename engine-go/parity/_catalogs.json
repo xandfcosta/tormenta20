@@ -4286,20 +4286,20 @@
   ],
   "races": [
     {
-      "id": "Humano",
+      "id": "humano",
       "name": "Humano",
       "attributeBonuses": {},
       "abilities": [
         {
           "id": "humano-tres-atributos",
-          "raceId": "Humano",
+          "raceId": "humano",
           "name": "+1 em Três Atributos Diferentes",
           "description": "Filhos de Valkaria, humanos podem se destacar em qualquer caminho. Distribua +1 em três atributos diferentes (já aplicado na ficha).",
           "uid": "rac_xvpdlnv5av"
         },
         {
           "id": "humano-versatil",
-          "raceId": "Humano",
+          "raceId": "humano",
           "name": "Versátil",
           "description": "Você se torna treinado em duas perícias a sua escolha (não precisam ser da sua classe). Pode trocar uma dessas perícias por um poder geral a sua escolha.",
           "uid": "rac_r4izqcoo75"
@@ -4308,7 +4308,7 @@
       "uid": "rac_lamjkhw3wn"
     },
     {
-      "id": "Anão",
+      "id": "anao",
       "name": "Anão",
       "attributeBonuses": {
         "constitution": 2,
@@ -4318,7 +4318,7 @@
       "abilities": [
         {
           "id": "anao-conhecimento-das-rochas",
-          "raceId": "Anão",
+          "raceId": "anao",
           "name": "Conhecimento das Rochas",
           "description": "Recebe visão no escuro e +2 em testes de Percepção e Sobrevivência realizados no subterrâneo.",
           "facts": [
@@ -4331,7 +4331,7 @@
         },
         {
           "id": "anao-devagar-e-sempre",
-          "raceId": "Anão",
+          "raceId": "anao",
           "name": "Devagar e Sempre",
           "description": "Seu deslocamento é 6m (em vez de 9m). Porém, seu deslocamento não é reduzido por uso de armadura ou excesso de carga.",
           "modifiers": [
@@ -4348,7 +4348,7 @@
         },
         {
           "id": "anao-duro-como-pedra",
-          "raceId": "Anão",
+          "raceId": "anao",
           "name": "Duro como Pedra",
           "description": "Você recebe +3 pontos de vida no 1º nível e +1 por nível seguinte.",
           "modifiers": [
@@ -4374,7 +4374,7 @@
         },
         {
           "id": "anao-tradicao-de-heredrimm",
-          "raceId": "Anão",
+          "raceId": "anao",
           "name": "Tradição de Heredrimm",
           "description": "Você é perito nas armas tradicionais anãs. Para você, todos os machados, martelos, marretas e picaretas são armas simples. Recebe +2 em ataques com essas armas.",
           "uid": "rac_6yvby3oao3"
@@ -4383,7 +4383,7 @@
       "uid": "rac_hg27fnvss3"
     },
     {
-      "id": "Dahllan",
+      "id": "dahllan",
       "name": "Dahllan",
       "attributeBonuses": {
         "wisdom": 2,
@@ -4393,21 +4393,21 @@
       "abilities": [
         {
           "id": "dahllan-amiga-das-plantas",
-          "raceId": "Dahllan",
+          "raceId": "dahllan",
           "name": "Amiga das Plantas",
           "description": "Você pode lançar a magia Controlar Plantas (atributo-chave Sabedoria). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
           "uid": "rac_zdkffv2kws"
         },
         {
           "id": "dahllan-armadura-de-allihanna",
-          "raceId": "Dahllan",
+          "raceId": "dahllan",
           "name": "Armadura de Allihanna",
           "description": "Você pode gastar uma ação de movimento e 1 PM para transformar sua pele em casca de árvore, recebendo +2 na Defesa até o fim da cena.",
           "uid": "rac_z62ya34txk"
         },
         {
           "id": "dahllan-empatia-selvagem",
-          "raceId": "Dahllan",
+          "raceId": "dahllan",
           "name": "Empatia Selvagem",
           "description": "Você pode se comunicar com animais por meio de linguagem corporal e vocalizações. Pode usar Adestramento para mudar atitude e persuasão com animais. Caso receba esta habilidade novamente, recebe +2 em Adestramento.",
           "uid": "rac_lzc3gcrbqm"
@@ -4416,7 +4416,7 @@
       "uid": "rac_rxqoqutcio"
     },
     {
-      "id": "Elfo",
+      "id": "elfo",
       "name": "Elfo",
       "attributeBonuses": {
         "intelligence": 2,
@@ -4426,14 +4426,14 @@
       "abilities": [
         {
           "id": "elfo-graca-de-glorienn",
-          "raceId": "Elfo",
+          "raceId": "elfo",
           "name": "Graça de Glórienn",
           "description": "Seu deslocamento é 12m (em vez de 9m).",
           "uid": "rac_t5jpldgezj"
         },
         {
           "id": "elfo-sangue-magico",
-          "raceId": "Elfo",
+          "raceId": "elfo",
           "name": "Sangue Mágico",
           "description": "Você recebe +1 ponto de mana por nível.",
           "modifiers": [
@@ -4452,7 +4452,7 @@
         },
         {
           "id": "elfo-sentidos-elficos",
-          "raceId": "Elfo",
+          "raceId": "elfo",
           "name": "Sentidos Élficos",
           "description": "Você recebe visão na penumbra e +2 em Misticismo e Percepção.",
           "facts": [
@@ -4485,7 +4485,7 @@
       "uid": "rac_siykfr2udr"
     },
     {
-      "id": "Goblin",
+      "id": "goblin",
       "name": "Goblin",
       "attributeBonuses": {
         "dexterity": 2,
@@ -4495,14 +4495,14 @@
       "abilities": [
         {
           "id": "goblin-engenhoso",
-          "raceId": "Goblin",
+          "raceId": "goblin",
           "name": "Engenhoso",
           "description": "Você não sofre penalidades em testes de perícia por não usar ferramentas. Se usar a ferramenta necessária, recebe +2 no teste de perícia.",
           "uid": "rac_mdfpptz3vo"
         },
         {
           "id": "goblin-espelunqueiro",
-          "raceId": "Goblin",
+          "raceId": "goblin",
           "name": "Espelunqueiro",
           "description": "Você recebe visão no escuro e deslocamento de escalada igual ao seu deslocamento terrestre.",
           "facts": [
@@ -4519,14 +4519,14 @@
         },
         {
           "id": "goblin-peste-esguia",
-          "raceId": "Goblin",
+          "raceId": "goblin",
           "name": "Peste Esguia",
           "description": "Seu tamanho é Pequeno, mas seu deslocamento se mantém 9m.",
           "uid": "rac_vwvkbcnw3t"
         },
         {
           "id": "goblin-rato-das-ruas",
-          "raceId": "Goblin",
+          "raceId": "goblin",
           "name": "Rato das Ruas",
           "description": "Você recebe +2 em Fortitude e sua recuperação de PV e PM nunca é inferior ao seu nível.",
           "modifiers": [
@@ -4545,7 +4545,7 @@
       "uid": "rac_auksdcz3ym"
     },
     {
-      "id": "Lefou",
+      "id": "lefou",
       "name": "Lefou",
       "attributeBonuses": {
         "charisma": -1
@@ -4555,21 +4555,21 @@
       "abilities": [
         {
           "id": "lefou-tres-atributos",
-          "raceId": "Lefou",
+          "raceId": "lefou",
           "name": "+1 em Três Atributos Diferentes (exceto Carisma)",
           "description": "Distribua +1 em três atributos diferentes, exceto Carisma (já aplicado na ficha).",
           "uid": "rac_oet5hty4e2"
         },
         {
           "id": "lefou-cria-da-tormenta",
-          "raceId": "Lefou",
+          "raceId": "lefou",
           "name": "Cria da Tormenta",
           "description": "Você é uma criatura do tipo monstro e recebe +5 em testes de resistência contra efeitos causados por lefeu e pela Tormenta.",
           "uid": "rac_jqrbr6pho5"
         },
         {
           "id": "lefou-deformidade",
-          "raceId": "Lefou",
+          "raceId": "lefou",
           "name": "Deformidade",
           "description": "Recebe +2 em duas perícias a sua escolha (contam como poder da Tormenta, exceto para perda de Carisma). Pode trocar um desses bônus por um poder da Tormenta a sua escolha.",
           "uid": "rac_fkjq7hg3b5"
@@ -4578,7 +4578,7 @@
       "uid": "rac_re62lwdmhj"
     },
     {
-      "id": "Minotauro",
+      "id": "minotauro",
       "name": "Minotauro",
       "attributeBonuses": {
         "strength": 2,
@@ -4588,14 +4588,14 @@
       "abilities": [
         {
           "id": "minotauro-chifres",
-          "raceId": "Minotauro",
+          "raceId": "minotauro",
           "name": "Chifres",
           "description": "Arma natural de chifres (dano 1d6, crítico x2, perfuração). Uma vez por rodada, ao usar agredir com outra arma, pode gastar 1 PM para fazer um ataque corpo a corpo extra com os chifres.",
           "uid": "rac_ufu4k272et"
         },
         {
           "id": "minotauro-couro-rigido",
-          "raceId": "Minotauro",
+          "raceId": "minotauro",
           "name": "Couro Rígido",
           "description": "Sua pele é dura como a de um touro. Você recebe +1 na Defesa.",
           "modifiers": [
@@ -4612,14 +4612,14 @@
         },
         {
           "id": "minotauro-faro",
-          "raceId": "Minotauro",
+          "raceId": "minotauro",
           "name": "Faro",
           "description": "Você tem olfato apurado. Contra inimigos em alcance curto que não possa perceber, não fica desprevenido e camuflagem total lhe causa apenas 20% de chance de falha.",
           "uid": "rac_zffbu4bjdi"
         },
         {
           "id": "minotauro-medo-de-altura",
-          "raceId": "Minotauro",
+          "raceId": "minotauro",
           "name": "Medo de Altura",
           "description": "Se estiver adjacente a uma queda de 3m ou mais de altura (como um buraco ou penhasco), você fica abalado.",
           "uid": "rac_gwa5247uhv"
@@ -4628,7 +4628,7 @@
       "uid": "rac_nubjjli57n"
     },
     {
-      "id": "Qareen",
+      "id": "qareen",
       "name": "Qareen",
       "attributeBonuses": {
         "charisma": 2,
@@ -4638,14 +4638,14 @@
       "abilities": [
         {
           "id": "qareen-desejos",
-          "raceId": "Qareen",
+          "raceId": "qareen",
           "name": "Desejos",
           "description": "Se lançar uma magia que alguém tenha pedido desde seu último turno, o custo da magia diminui em –1 PM. Fazer um desejo ao qareen é uma ação livre.",
           "uid": "rac_5tafsebqv6"
         },
         {
           "id": "qareen-resistencia-elemental",
-          "raceId": "Qareen",
+          "raceId": "qareen",
           "name": "Resistência Elemental",
           "description": "Conforme sua ascendência, recebe redução 10 a um tipo de dano. Escolha uma das variantes abaixo.",
           "variants": [
@@ -4684,7 +4684,7 @@
         },
         {
           "id": "qareen-tatuagem-mistica",
-          "raceId": "Qareen",
+          "raceId": "qareen",
           "name": "Tatuagem Mística",
           "description": "Você pode lançar uma magia de 1º círculo a sua escolha (atributo-chave Carisma). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
           "uid": "rac_gonx6fnbue"
@@ -4693,13 +4693,13 @@
       "uid": "rac_7zdkeazq4b"
     },
     {
-      "id": "Suraggel",
+      "id": "suraggel",
       "name": "Suraggel",
       "attributeBonuses": {},
       "abilities": [
         {
           "id": "suraggel-heranca",
-          "raceId": "Suraggel",
+          "raceId": "suraggel",
           "name": "Herança Divina",
           "description": "Escolha sua ascendência: aggelus (celestial) ou sulfure (abissal). A escolha define seus bônus de atributo e habilidades adicionais.",
           "variants": [
@@ -4788,7 +4788,7 @@
       "uid": "rac_jfdp3txvv4"
     },
     {
-      "id": "Sílfide",
+      "id": "silfide",
       "name": "Sílfide",
       "attributeBonuses": {
         "charisma": 2,
@@ -4798,21 +4798,21 @@
       "abilities": [
         {
           "id": "silfide-asas-de-borboleta",
-          "raceId": "Sílfide",
+          "raceId": "silfide",
           "name": "Asas de Borboleta",
           "description": "Seu tamanho é Minúsculo. Pode pairar a 1,5m do chão com deslocamento 9m, ignorando terreno difícil e imune a dano por queda. Gastando 1 PM por rodada, voa com deslocamento 12m.",
           "uid": "rac_ljzrjw3hlq"
         },
         {
           "id": "silfide-espirito-da-natureza",
-          "raceId": "Sílfide",
+          "raceId": "silfide",
           "name": "Espírito da Natureza",
           "description": "Você é uma criatura do tipo espírito, recebe visão na penumbra e pode falar com animais livremente.",
           "uid": "rac_yspdaw2jpl"
         },
         {
           "id": "silfide-magia-das-fadas",
-          "raceId": "Sílfide",
+          "raceId": "silfide",
           "name": "Magia das Fadas",
           "description": "Pode lançar duas das magias a seguir (atributo-chave Carisma): Criar Ilusão, Enfeitiçar, Luz (como magia arcana) e Sono. Caso aprenda novamente uma dessas magias, seu custo diminui em –1 PM.",
           "uid": "rac_gihxnrd5o7"
@@ -4821,34 +4821,34 @@
       "uid": "rac_m5u3mczntv"
     },
     {
-      "id": "Sereia/Tritão",
+      "id": "sereia-tritao",
       "name": "Sereia/Tritão",
       "attributeBonuses": {},
       "abilities": [
         {
           "id": "sereia-tres-atributos",
-          "raceId": "Sereia/Tritão",
+          "raceId": "sereia-tritao",
           "name": "+1 em Três Atributos Diferentes",
           "description": "Distribua +1 em três atributos diferentes (já aplicado na ficha).",
           "uid": "rac_dg7bnsv4h7"
         },
         {
           "id": "sereia-cancao-dos-mares",
-          "raceId": "Sereia/Tritão",
+          "raceId": "sereia-tritao",
           "name": "Canção dos Mares",
           "description": "Pode lançar duas das magias a seguir: Amedrontar, Comando, Despedaçar, Enfeitiçar, Hipnotismo ou Sono (atributo-chave Carisma). Caso aprenda novamente uma dessas magias, seu custo diminui em –1 PM.",
           "uid": "rac_cvz63biaim"
         },
         {
           "id": "sereia-mestre-do-tridente",
-          "raceId": "Sereia/Tritão",
+          "raceId": "sereia-tritao",
           "name": "Mestre do Tridente",
           "description": "Para você, o tridente é uma arma simples. Você recebe +2 em rolagens de dano com azagaias, lanças e tridentes.",
           "uid": "rac_rojbbpkrph"
         },
         {
           "id": "sereia-transformacao-anfibia",
-          "raceId": "Sereia/Tritão",
+          "raceId": "sereia-tritao",
           "name": "Transformação Anfíbia",
           "description": "Pode respirar debaixo d’água e possui cauda com deslocamento de natação 12m. Fora d’água, a cauda dá lugar a pernas (deslocamento 9m). Mais de um dia sem contato com água impede recuperação de PM por descanso.",
           "uid": "rac_axjfztusy3"
@@ -4857,7 +4857,7 @@
       "uid": "rac_kcyddre5st"
     },
     {
-      "id": "Osteon",
+      "id": "osteon",
       "name": "Osteon",
       "attributeBonuses": {
         "constitution": -1
@@ -4865,14 +4865,14 @@
       "abilities": [
         {
           "id": "osteon-tres-atributos",
-          "raceId": "Osteon",
+          "raceId": "osteon",
           "name": "+1 em Três Atributos Diferentes (exceto Constituição)",
           "description": "Distribua +1 em três atributos diferentes, exceto Constituição (já aplicado na ficha).",
           "uid": "rac_xr2sef46ac"
         },
         {
           "id": "osteon-armadura-ossea",
-          "raceId": "Osteon",
+          "raceId": "osteon",
           "name": "Armadura Óssea",
           "description": "Você recebe redução de corte, frio e perfuração 5.",
           "facts": [
@@ -4885,14 +4885,14 @@
         },
         {
           "id": "osteon-memoria-postuma",
-          "raceId": "Osteon",
+          "raceId": "osteon",
           "name": "Memória Póstuma",
           "description": "Você se torna treinado em uma perícia (não precisa ser da sua classe) ou recebe um poder geral a sua escolha. Alternativamente, escolha uma habilidade de outra raça humanoide (que não humano); herda também o tamanho dessa raça se diferente de Médio.",
           "uid": "rac_ewrcutxhsw"
         },
         {
           "id": "osteon-natureza-esqueletica",
-          "raceId": "Osteon",
+          "raceId": "osteon",
           "name": "Natureza Esquelética",
           "description": "Criatura do tipo morto-vivo. Visão no escuro e imunidade a cansaço, metabólicos, trevas e veneno. Não precisa respirar, comer ou dormir. Efeitos mágicos de cura de luz causam dano; dano de trevas recupera PV.",
           "facts": [
@@ -4909,7 +4909,7 @@
         },
         {
           "id": "osteon-preco-da-nao-vida",
-          "raceId": "Osteon",
+          "raceId": "osteon",
           "name": "Preço da Não Vida",
           "description": "Precisa passar oito horas sob luz de estrelas ou no subterrâneo. Se fizer isso, recupera PV e PM por descanso normalmente. Caso contrário, sofre efeitos de fome.",
           "uid": "rac_ffhjotbnr5"
@@ -4918,7 +4918,7 @@
       "uid": "rac_qqg3zuo5ec"
     },
     {
-      "id": "Medusa",
+      "id": "medusa",
       "name": "Medusa",
       "attributeBonuses": {
         "dexterity": 2,
@@ -4927,7 +4927,7 @@
       "abilities": [
         {
           "id": "medusa-cria-de-megalokk",
-          "raceId": "Medusa",
+          "raceId": "medusa",
           "name": "Cria de Megalokk",
           "description": "Você é uma criatura do tipo monstro e recebe visão no escuro.",
           "facts": [
@@ -4940,14 +4940,14 @@
         },
         {
           "id": "medusa-natureza-venenosa",
-          "raceId": "Medusa",
+          "raceId": "medusa",
           "name": "Natureza Venenosa",
           "description": "Recebe resistência a veneno +5 e pode gastar uma ação de movimento e 1 PM para envenenar uma arma. A arma causa perda de 1d12 PV adicional. Veneno dura até acertar um ataque ou fim da cena.",
           "uid": "rac_3dyes2cszk"
         },
         {
           "id": "medusa-olhar-atordoante",
-          "raceId": "Medusa",
+          "raceId": "medusa",
           "name": "Olhar Atordoante",
           "description": "Pode gastar uma ação de movimento e 1 PM para forçar uma criatura em alcance curto a fazer Fortitude (CD Car). Se falhar, fica atordoada por uma rodada (apenas uma vez por cena).",
           "uid": "rac_m45ak3bgq6"
@@ -4956,7 +4956,7 @@
       "uid": "rac_7ynliohbbn"
     },
     {
-      "id": "Kliren",
+      "id": "kliren",
       "name": "Kliren",
       "attributeBonuses": {
         "intelligence": 2,
@@ -4966,28 +4966,28 @@
       "abilities": [
         {
           "id": "kiiren-hibrido",
-          "raceId": "Kliren",
+          "raceId": "kliren",
           "name": "Híbrido",
           "description": "Sua natureza multifacetada o fez aprender conhecimentos variados. Você se torna treinado em uma perícia a sua escolha (não precisa ser da sua classe).",
           "uid": "rac_e7iz2ymt7d"
         },
         {
           "id": "kiiren-engenhosidade",
-          "raceId": "Kliren",
+          "raceId": "kliren",
           "name": "Engenhosidade",
           "description": "Quando faz um teste de perícia, pode gastar 2 PM para somar sua Inteligência no teste. Não pode usar em testes de ataque. Caso receba esta habilidade novamente, seu custo é reduzido em –1 PM.",
           "uid": "rac_xse6geohcx"
         },
         {
           "id": "kiiren-ossos-frageis",
-          "raceId": "Kliren",
+          "raceId": "kliren",
           "name": "Ossos Frágeis",
           "description": "Você sofre 1 ponto de dano adicional por dado de dano de impacto.",
           "uid": "rac_bvxnjgjfnv"
         },
         {
           "id": "kiiren-vanguardista",
-          "raceId": "Kliren",
+          "raceId": "kliren",
           "name": "Vanguardista",
           "description": "Recebe proficiência em armas de fogo e +2 em Ofício (um qualquer, a sua escolha).",
           "uid": "rac_nswmnwe2uc"
@@ -4996,7 +4996,7 @@
       "uid": "rac_fmeindoywi"
     },
     {
-      "id": "Hynne",
+      "id": "hynne",
       "name": "Hynne",
       "attributeBonuses": {
         "dexterity": 2,
@@ -5006,14 +5006,14 @@
       "abilities": [
         {
           "id": "hynne-arremessador",
-          "raceId": "Hynne",
+          "raceId": "hynne",
           "name": "Arremessador",
           "description": "Quando faz um ataque à distância com uma funda ou uma arma de arremesso, seu dano aumenta em um passo.",
           "uid": "rac_rdh4sutt2c"
         },
         {
           "id": "hynne-pequeno-e-rechonchudo",
-          "raceId": "Hynne",
+          "raceId": "hynne",
           "name": "Pequeno e Rechonchudo",
           "description": "Seu tamanho é Pequeno e seu deslocamento é 6m. Recebe +2 em Enganação e pode usar Destreza como atributo-chave de Atletismo (em vez de Força).",
           "modifiers": [
@@ -5030,7 +5030,7 @@
         },
         {
           "id": "hynne-sorte-salvadora",
-          "raceId": "Hynne",
+          "raceId": "hynne",
           "name": "Sorte Salvadora",
           "description": "Quando faz um teste de resistência, você pode gastar 1 PM para rolar este teste novamente.",
           "uid": "rac_fljkqob7lk"
@@ -5039,7 +5039,7 @@
       "uid": "rac_76vs5luayw"
     },
     {
-      "id": "Golem",
+      "id": "golem",
       "name": "Golem",
       "attributeBonuses": {
         "strength": 2,
@@ -5049,7 +5049,7 @@
       "abilities": [
         {
           "id": "golem-chassi",
-          "raceId": "Golem",
+          "raceId": "golem",
           "name": "Chassi",
           "description": "Seu corpo artificial é resistente, mas rígido. Deslocamento 6m, não reduzido por armadura ou excesso de carga. Recebe +2 na Defesa, mas possui penalidade de armadura –2. Sua armadura precisa de um dia para vestir/remover e não conta no limite de itens em uso.",
           "modifiers": [
@@ -5074,7 +5074,7 @@
         },
         {
           "id": "golem-criatura-artificial",
-          "raceId": "Golem",
+          "raceId": "golem",
           "name": "Criatura Artificial",
           "description": "Você é uma criatura do tipo construto. Visão no escuro e imunidade a cansaço, metabólicos e veneno. Não respira, alimenta-se ou dorme, mas não se beneficia de cura mundana ou itens de alimentação. Precisa ficar inerte 8h por dia para recarregar (descansa em condições normais sempre).",
           "facts": [
@@ -5091,7 +5091,7 @@
         },
         {
           "id": "golem-fonte-elemental",
-          "raceId": "Golem",
+          "raceId": "golem",
           "name": "Fonte Elemental",
           "description": "Você possui um espírito elemental preso em seu corpo. Imune ao tipo de dano associado; se sofreria dano mágico desse tipo, em vez disso cura PV em metade do dano. Escolha sua origem elemental:",
           "variants": [
@@ -5120,7 +5120,7 @@
         },
         {
           "id": "golem-proposito-de-criacao",
-          "raceId": "Golem",
+          "raceId": "golem",
           "name": "Propósito de Criação",
           "description": "Você foi construído pronto para um propósito específico e não teve infância. Não tem direito a escolher uma origem, mas recebe um poder geral a sua escolha.",
           "uid": "rac_itj2en6aii"
@@ -5129,7 +5129,7 @@
       "uid": "rac_slnpwagamn"
     },
     {
-      "id": "Trog",
+      "id": "trog",
       "name": "Trog",
       "attributeBonuses": {
         "constitution": 2,
@@ -5139,21 +5139,21 @@
       "abilities": [
         {
           "id": "trog-mau-cheiro",
-          "raceId": "Trog",
+          "raceId": "trog",
           "name": "Mau Cheiro",
           "description": "Pode gastar uma ação padrão e 2 PM para expelir um gás fétido. Criaturas (exceto trogs) em alcance curto devem passar em Fortitude contra veneno (CD Con) ou ficam enjoadas por 1d6 rodadas. Quem passar fica imune por um dia.",
           "uid": "rac_5szvbiermh"
         },
         {
           "id": "trog-mordida",
-          "raceId": "Trog",
+          "raceId": "trog",
           "name": "Mordida",
           "description": "Arma natural de mordida (dano 1d6, crítico x2, perfuração). Uma vez por rodada, ao usar agredir com outra arma, pode gastar 1 PM para fazer ataque corpo a corpo extra com a mordida.",
           "uid": "rac_xx6tdynfxt"
         },
         {
           "id": "trog-reptiliano",
-          "raceId": "Trog",
+          "raceId": "trog",
           "name": "Reptiliano",
           "description": "Criatura do tipo monstro, visão no escuro, +1 na Defesa e, se estiver sem armadura ou roupas pesadas, +5 em Furtividade.",
           "modifiers": [
@@ -5170,7 +5170,7 @@
         },
         {
           "id": "trog-sangue-frio",
-          "raceId": "Trog",
+          "raceId": "trog",
           "name": "Sangue Frio",
           "description": "Você sofre 1 ponto de dano adicional por dado de dano de frio.",
           "uid": "rac_d7ur63vhtr"
@@ -5181,11 +5181,11 @@
   ],
   "origins": [
     {
-      "id": "Acólito",
+      "id": "acolito",
       "name": "Acólito",
       "benefits": [
         {
-          "id": "origin-acolito-pericia-Cura",
+          "id": "origin-acolito-pericia-cura",
           "name": "Cura",
           "kind": "pericia",
           "description": "Você se torna treinado em Cura.",
@@ -5193,7 +5193,7 @@
           "uid": "org_g2ac43z2lq"
         },
         {
-          "id": "origin-acolito-pericia-Religião",
+          "id": "origin-acolito-pericia-religiao",
           "name": "Religião",
           "kind": "pericia",
           "description": "Você se torna treinado em Religião.",
@@ -5201,7 +5201,7 @@
           "uid": "org_ofj3i3rynp"
         },
         {
-          "id": "origin-acolito-pericia-Vontade",
+          "id": "origin-acolito-pericia-vontade",
           "name": "Vontade",
           "kind": "pericia",
           "description": "Você se torna treinado em Vontade.",
@@ -5232,11 +5232,11 @@
       "uid": "org_nlgeb3o3fp"
     },
     {
-      "id": "Amigo dos Animais",
+      "id": "amigo-dos-animais",
       "name": "Amigo dos Animais",
       "benefits": [
         {
-          "id": "origin-amigo-animais-pericia-Adestramento",
+          "id": "origin-amigo-animais-pericia-adestramento",
           "name": "Adestramento",
           "kind": "pericia",
           "description": "Você se torna treinado em Adestramento.",
@@ -5244,7 +5244,7 @@
           "uid": "org_aknheleg24"
         },
         {
-          "id": "origin-amigo-animais-pericia-Cavalgar",
+          "id": "origin-amigo-animais-pericia-cavalgar",
           "name": "Cavalgar",
           "kind": "pericia",
           "description": "Você se torna treinado em Cavalgar.",
@@ -5261,7 +5261,7 @@
       "uid": "org_ymmaxtcak4"
     },
     {
-      "id": "Amnésico",
+      "id": "amnesico",
       "name": "Amnésico",
       "benefits": [],
       "poderUnico": {
@@ -5273,11 +5273,11 @@
       "uid": "org_wtydx73jnx"
     },
     {
-      "id": "Aristocrata",
+      "id": "aristocrata",
       "name": "Aristocrata",
       "benefits": [
         {
-          "id": "origin-aristocrata-pericia-Diplomacia",
+          "id": "origin-aristocrata-pericia-diplomacia",
           "name": "Diplomacia",
           "kind": "pericia",
           "description": "Você se torna treinado em Diplomacia.",
@@ -5285,7 +5285,7 @@
           "uid": "org_zouhwhopi2"
         },
         {
-          "id": "origin-aristocrata-pericia-Enganação",
+          "id": "origin-aristocrata-pericia-enganacao",
           "name": "Enganação",
           "kind": "pericia",
           "description": "Você se torna treinado em Enganação.",
@@ -5293,7 +5293,7 @@
           "uid": "org_oov6ngnvzz"
         },
         {
-          "id": "origin-aristocrata-pericia-Nobreza",
+          "id": "origin-aristocrata-pericia-nobreza",
           "name": "Nobreza",
           "kind": "pericia",
           "description": "Você se torna treinado em Nobreza.",
@@ -5317,11 +5317,11 @@
       "uid": "org_5pu5eo2irv"
     },
     {
-      "id": "Artesão",
+      "id": "artesao",
       "name": "Artesão",
       "benefits": [
         {
-          "id": "origin-artesao-pericia-Ofício",
+          "id": "origin-artesao-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -5329,7 +5329,7 @@
           "uid": "org_e65pwpwlwt"
         },
         {
-          "id": "origin-artesao-pericia-Vontade",
+          "id": "origin-artesao-pericia-vontade",
           "name": "Vontade",
           "kind": "pericia",
           "description": "Você se torna treinado em Vontade.",
@@ -5353,11 +5353,11 @@
       "uid": "org_bij2urrdwa"
     },
     {
-      "id": "Artista",
+      "id": "artista",
       "name": "Artista",
       "benefits": [
         {
-          "id": "origin-artista-pericia-Atuação",
+          "id": "origin-artista-pericia-atuacao",
           "name": "Atuação",
           "kind": "pericia",
           "description": "Você se torna treinado em Atuação.",
@@ -5365,7 +5365,7 @@
           "uid": "org_fz7dfjhhin"
         },
         {
-          "id": "origin-artista-pericia-Enganação",
+          "id": "origin-artista-pericia-enganacao",
           "name": "Enganação",
           "kind": "pericia",
           "description": "Você se torna treinado em Enganação.",
@@ -5413,11 +5413,11 @@
       "uid": "org_6sjlbc3ker"
     },
     {
-      "id": "Assistente de Laboratório",
+      "id": "assistente-de-laboratorio",
       "name": "Assistente de Laboratório",
       "benefits": [
         {
-          "id": "origin-assistente-pericia-Ofício",
+          "id": "origin-assistente-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -5425,7 +5425,7 @@
           "uid": "org_fgnbvzw4p4"
         },
         {
-          "id": "origin-assistente-pericia-Misticismo",
+          "id": "origin-assistente-pericia-misticismo",
           "name": "Misticismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Misticismo.",
@@ -5467,11 +5467,11 @@
       "uid": "org_kdyk5ldvdd"
     },
     {
-      "id": "Batedor",
+      "id": "batedor",
       "name": "Batedor",
       "benefits": [
         {
-          "id": "origin-batedor-pericia-Furtividade",
+          "id": "origin-batedor-pericia-furtividade",
           "name": "Furtividade",
           "kind": "pericia",
           "description": "Você se torna treinado em Furtividade.",
@@ -5479,7 +5479,7 @@
           "uid": "org_ndbn77svbu"
         },
         {
-          "id": "origin-batedor-pericia-Percepção",
+          "id": "origin-batedor-pericia-percepcao",
           "name": "Percepção",
           "kind": "pericia",
           "description": "Você se torna treinado em Percepção.",
@@ -5487,7 +5487,7 @@
           "uid": "org_ezyxybgeim"
         },
         {
-          "id": "origin-batedor-pericia-Sobrevivência",
+          "id": "origin-batedor-pericia-sobrevivencia",
           "name": "Sobrevivência",
           "kind": "pericia",
           "description": "Você se torna treinado em Sobrevivência.",
@@ -5518,11 +5518,11 @@
       "uid": "org_lzjmjzh7f6"
     },
     {
-      "id": "Capanga",
+      "id": "capanga",
       "name": "Capanga",
       "benefits": [
         {
-          "id": "origin-capanga-pericia-Luta",
+          "id": "origin-capanga-pericia-luta",
           "name": "Luta",
           "kind": "pericia",
           "description": "Você se torna treinado em Luta.",
@@ -5530,7 +5530,7 @@
           "uid": "org_duxzxiflqh"
         },
         {
-          "id": "origin-capanga-pericia-Intimidação",
+          "id": "origin-capanga-pericia-intimidacao",
           "name": "Intimidação",
           "kind": "pericia",
           "description": "Você se torna treinado em Intimidação.",
@@ -5555,11 +5555,11 @@
       "uid": "org_euultxi3gx"
     },
     {
-      "id": "Charlatão",
+      "id": "charlatao",
       "name": "Charlatão",
       "benefits": [
         {
-          "id": "origin-charlatao-pericia-Enganação",
+          "id": "origin-charlatao-pericia-enganacao",
           "name": "Enganação",
           "kind": "pericia",
           "description": "Você se torna treinado em Enganação.",
@@ -5567,7 +5567,7 @@
           "uid": "org_4gdrqtcggf"
         },
         {
-          "id": "origin-charlatao-pericia-Jogatina",
+          "id": "origin-charlatao-pericia-jogatina",
           "name": "Jogatina",
           "kind": "pericia",
           "description": "Você se torna treinado em Jogatina.",
@@ -5598,11 +5598,11 @@
       "uid": "org_ro7sbvxdac"
     },
     {
-      "id": "Circense",
+      "id": "circense",
       "name": "Circense",
       "benefits": [
         {
-          "id": "origin-circense-pericia-Acrobacia",
+          "id": "origin-circense-pericia-acrobacia",
           "name": "Acrobacia",
           "kind": "pericia",
           "description": "Você se torna treinado em Acrobacia.",
@@ -5610,7 +5610,7 @@
           "uid": "org_rbylf6s2ir"
         },
         {
-          "id": "origin-circense-pericia-Atuação",
+          "id": "origin-circense-pericia-atuacao",
           "name": "Atuação",
           "kind": "pericia",
           "description": "Você se torna treinado em Atuação.",
@@ -5618,7 +5618,7 @@
           "uid": "org_xhd372h7to"
         },
         {
-          "id": "origin-circense-pericia-Reflexos",
+          "id": "origin-circense-pericia-reflexos",
           "name": "Reflexos",
           "kind": "pericia",
           "description": "Você se torna treinado em Reflexos.",
@@ -5649,11 +5649,11 @@
       "uid": "org_auwgbwood7"
     },
     {
-      "id": "Criminoso",
+      "id": "criminoso",
       "name": "Criminoso",
       "benefits": [
         {
-          "id": "origin-criminoso-pericia-Enganação",
+          "id": "origin-criminoso-pericia-enganacao",
           "name": "Enganação",
           "kind": "pericia",
           "description": "Você se torna treinado em Enganação.",
@@ -5661,7 +5661,7 @@
           "uid": "org_z5wg5vjty2"
         },
         {
-          "id": "origin-criminoso-pericia-Furtividade",
+          "id": "origin-criminoso-pericia-furtividade",
           "name": "Furtividade",
           "kind": "pericia",
           "description": "Você se torna treinado em Furtividade.",
@@ -5669,7 +5669,7 @@
           "uid": "org_xdb3vppoe6"
         },
         {
-          "id": "origin-criminoso-pericia-Ladinagem",
+          "id": "origin-criminoso-pericia-ladinagem",
           "name": "Ladinagem",
           "kind": "pericia",
           "description": "Você se torna treinado em Ladinagem.",
@@ -5711,11 +5711,11 @@
       "uid": "org_qbes2rlxbz"
     },
     {
-      "id": "Curandeiro",
+      "id": "curandeiro",
       "name": "Curandeiro",
       "benefits": [
         {
-          "id": "origin-curandeiro-pericia-Cura",
+          "id": "origin-curandeiro-pericia-cura",
           "name": "Cura",
           "kind": "pericia",
           "description": "Você se torna treinado em Cura.",
@@ -5723,7 +5723,7 @@
           "uid": "org_hbwqnjx2ue"
         },
         {
-          "id": "origin-curandeiro-pericia-Vontade",
+          "id": "origin-curandeiro-pericia-vontade",
           "name": "Vontade",
           "kind": "pericia",
           "description": "Você se torna treinado em Vontade.",
@@ -5754,11 +5754,11 @@
       "uid": "org_si3dk4bihz"
     },
     {
-      "id": "Eremita",
+      "id": "eremita",
       "name": "Eremita",
       "benefits": [
         {
-          "id": "origin-eremita-pericia-Misticismo",
+          "id": "origin-eremita-pericia-misticismo",
           "name": "Misticismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Misticismo.",
@@ -5766,7 +5766,7 @@
           "uid": "org_ziiue5zfwh"
         },
         {
-          "id": "origin-eremita-pericia-Religião",
+          "id": "origin-eremita-pericia-religiao",
           "name": "Religião",
           "kind": "pericia",
           "description": "Você se torna treinado em Religião.",
@@ -5774,7 +5774,7 @@
           "uid": "org_znncnfeb4s"
         },
         {
-          "id": "origin-eremita-pericia-Sobrevivência",
+          "id": "origin-eremita-pericia-sobrevivencia",
           "name": "Sobrevivência",
           "kind": "pericia",
           "description": "Você se torna treinado em Sobrevivência.",
@@ -5798,11 +5798,11 @@
       "uid": "org_d6eyqyu55q"
     },
     {
-      "id": "Escravo",
+      "id": "escravo",
       "name": "Escravo",
       "benefits": [
         {
-          "id": "origin-escravo-pericia-Atletismo",
+          "id": "origin-escravo-pericia-atletismo",
           "name": "Atletismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Atletismo.",
@@ -5810,7 +5810,7 @@
           "uid": "org_fdjeu6aubv"
         },
         {
-          "id": "origin-escravo-pericia-Fortitude",
+          "id": "origin-escravo-pericia-fortitude",
           "name": "Fortitude",
           "kind": "pericia",
           "description": "Você se torna treinado em Fortitude.",
@@ -5818,7 +5818,7 @@
           "uid": "org_fixtxq3uco"
         },
         {
-          "id": "origin-escravo-pericia-Furtividade",
+          "id": "origin-escravo-pericia-furtividade",
           "name": "Furtividade",
           "kind": "pericia",
           "description": "Você se torna treinado em Furtividade.",
@@ -5842,11 +5842,11 @@
       "uid": "org_vkmiznfgwp"
     },
     {
-      "id": "Estudioso",
+      "id": "estudioso",
       "name": "Estudioso",
       "benefits": [
         {
-          "id": "origin-estudioso-pericia-Conhecimento",
+          "id": "origin-estudioso-pericia-conhecimento",
           "name": "Conhecimento",
           "kind": "pericia",
           "description": "Você se torna treinado em Conhecimento.",
@@ -5854,7 +5854,7 @@
           "uid": "org_ud7ejyge4l"
         },
         {
-          "id": "origin-estudioso-pericia-Guerra",
+          "id": "origin-estudioso-pericia-guerra",
           "name": "Guerra",
           "kind": "pericia",
           "description": "Você se torna treinado em Guerra.",
@@ -5862,7 +5862,7 @@
           "uid": "org_ri27qdm34n"
         },
         {
-          "id": "origin-estudioso-pericia-Misticismo",
+          "id": "origin-estudioso-pericia-misticismo",
           "name": "Misticismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Misticismo.",
@@ -5886,11 +5886,11 @@
       "uid": "org_sbqx5rfsuk"
     },
     {
-      "id": "Fazendeiro",
+      "id": "fazendeiro",
       "name": "Fazendeiro",
       "benefits": [
         {
-          "id": "origin-fazendeiro-pericia-Adestramento",
+          "id": "origin-fazendeiro-pericia-adestramento",
           "name": "Adestramento",
           "kind": "pericia",
           "description": "Você se torna treinado em Adestramento.",
@@ -5898,7 +5898,7 @@
           "uid": "org_te2epzzxti"
         },
         {
-          "id": "origin-fazendeiro-pericia-Cavalgar",
+          "id": "origin-fazendeiro-pericia-cavalgar",
           "name": "Cavalgar",
           "kind": "pericia",
           "description": "Você se torna treinado em Cavalgar.",
@@ -5906,7 +5906,7 @@
           "uid": "org_at2oirbuvh"
         },
         {
-          "id": "origin-fazendeiro-pericia-Ofício",
+          "id": "origin-fazendeiro-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -5914,7 +5914,7 @@
           "uid": "org_tikg5pamrx"
         },
         {
-          "id": "origin-fazendeiro-pericia-Sobrevivência",
+          "id": "origin-fazendeiro-pericia-sobrevivencia",
           "name": "Sobrevivência",
           "kind": "pericia",
           "description": "Você se torna treinado em Sobrevivência.",
@@ -5938,11 +5938,11 @@
       "uid": "org_ugjqrcezxw"
     },
     {
-      "id": "Forasteiro",
+      "id": "forasteiro",
       "name": "Forasteiro",
       "benefits": [
         {
-          "id": "origin-forasteiro-pericia-Cavalgar",
+          "id": "origin-forasteiro-pericia-cavalgar",
           "name": "Cavalgar",
           "kind": "pericia",
           "description": "Você se torna treinado em Cavalgar.",
@@ -5950,7 +5950,7 @@
           "uid": "org_cymcxw5qcr"
         },
         {
-          "id": "origin-forasteiro-pericia-Pilotagem",
+          "id": "origin-forasteiro-pericia-pilotagem",
           "name": "Pilotagem",
           "kind": "pericia",
           "description": "Você se torna treinado em Pilotagem.",
@@ -5958,7 +5958,7 @@
           "uid": "org_bm2drmwoag"
         },
         {
-          "id": "origin-forasteiro-pericia-Sobrevivência",
+          "id": "origin-forasteiro-pericia-sobrevivencia",
           "name": "Sobrevivência",
           "kind": "pericia",
           "description": "Você se torna treinado em Sobrevivência.",
@@ -5982,11 +5982,11 @@
       "uid": "org_mebmwt3fbq"
     },
     {
-      "id": "Gladiador",
+      "id": "gladiador",
       "name": "Gladiador",
       "benefits": [
         {
-          "id": "origin-gladiador-pericia-Atuação",
+          "id": "origin-gladiador-pericia-atuacao",
           "name": "Atuação",
           "kind": "pericia",
           "description": "Você se torna treinado em Atuação.",
@@ -5994,7 +5994,7 @@
           "uid": "org_fnvk2ukxv4"
         },
         {
-          "id": "origin-gladiador-pericia-Luta",
+          "id": "origin-gladiador-pericia-luta",
           "name": "Luta",
           "kind": "pericia",
           "description": "Você se torna treinado em Luta.",
@@ -6033,11 +6033,11 @@
       "uid": "org_nkium7tsbv"
     },
     {
-      "id": "Guarda",
+      "id": "guarda",
       "name": "Guarda",
       "benefits": [
         {
-          "id": "origin-guarda-pericia-Investigação",
+          "id": "origin-guarda-pericia-investigacao",
           "name": "Investigação",
           "kind": "pericia",
           "description": "Você se torna treinado em Investigação.",
@@ -6045,7 +6045,7 @@
           "uid": "org_ycrg5xc6wz"
         },
         {
-          "id": "origin-guarda-pericia-Luta",
+          "id": "origin-guarda-pericia-luta",
           "name": "Luta",
           "kind": "pericia",
           "description": "Você se torna treinado em Luta.",
@@ -6053,7 +6053,7 @@
           "uid": "org_y3h3v5w3c6"
         },
         {
-          "id": "origin-guarda-pericia-Percepção",
+          "id": "origin-guarda-pericia-percepcao",
           "name": "Percepção",
           "kind": "pericia",
           "description": "Você se torna treinado em Percepção.",
@@ -6103,11 +6103,11 @@
       "uid": "org_lwvgitgjzg"
     },
     {
-      "id": "Herdeiro",
+      "id": "herdeiro",
       "name": "Herdeiro",
       "benefits": [
         {
-          "id": "origin-herdeiro-pericia-Misticismo",
+          "id": "origin-herdeiro-pericia-misticismo",
           "name": "Misticismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Misticismo.",
@@ -6115,7 +6115,7 @@
           "uid": "org_pk7fl755e7"
         },
         {
-          "id": "origin-herdeiro-pericia-Nobreza",
+          "id": "origin-herdeiro-pericia-nobreza",
           "name": "Nobreza",
           "kind": "pericia",
           "description": "Você se torna treinado em Nobreza.",
@@ -6123,7 +6123,7 @@
           "uid": "org_orqtguvwht"
         },
         {
-          "id": "origin-herdeiro-pericia-Ofício",
+          "id": "origin-herdeiro-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -6147,11 +6147,11 @@
       "uid": "org_jugyiepbtd"
     },
     {
-      "id": "Herói Camponês",
+      "id": "heroi-campones",
       "name": "Herói Camponês",
       "benefits": [
         {
-          "id": "origin-heroi-camponel-pericia-Adestramento",
+          "id": "origin-heroi-camponel-pericia-adestramento",
           "name": "Adestramento",
           "kind": "pericia",
           "description": "Você se torna treinado em Adestramento.",
@@ -6159,7 +6159,7 @@
           "uid": "org_wjnyno2xwf"
         },
         {
-          "id": "origin-heroi-camponel-pericia-Ofício",
+          "id": "origin-heroi-camponel-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -6197,11 +6197,11 @@
       "uid": "org_teqszmsum6"
     },
     {
-      "id": "Marujo",
+      "id": "marujo",
       "name": "Marujo",
       "benefits": [
         {
-          "id": "origin-marujo-pericia-Atletismo",
+          "id": "origin-marujo-pericia-atletismo",
           "name": "Atletismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Atletismo.",
@@ -6209,7 +6209,7 @@
           "uid": "org_lmnsqftfax"
         },
         {
-          "id": "origin-marujo-pericia-Jogatina",
+          "id": "origin-marujo-pericia-jogatina",
           "name": "Jogatina",
           "kind": "pericia",
           "description": "Você se torna treinado em Jogatina.",
@@ -6217,7 +6217,7 @@
           "uid": "org_gve3nmxm3m"
         },
         {
-          "id": "origin-marujo-pericia-Pilotagem",
+          "id": "origin-marujo-pericia-pilotagem",
           "name": "Pilotagem",
           "kind": "pericia",
           "description": "Você se torna treinado em Pilotagem.",
@@ -6241,11 +6241,11 @@
       "uid": "org_fnenijlmvn"
     },
     {
-      "id": "Mateiro",
+      "id": "mateiro",
       "name": "Mateiro",
       "benefits": [
         {
-          "id": "origin-mateiro-pericia-Atletismo",
+          "id": "origin-mateiro-pericia-atletismo",
           "name": "Atletismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Atletismo.",
@@ -6253,7 +6253,7 @@
           "uid": "org_3xqqnkvm7r"
         },
         {
-          "id": "origin-mateiro-pericia-Furtividade",
+          "id": "origin-mateiro-pericia-furtividade",
           "name": "Furtividade",
           "kind": "pericia",
           "description": "Você se torna treinado em Furtividade.",
@@ -6261,7 +6261,7 @@
           "uid": "org_sxw7puktcx"
         },
         {
-          "id": "origin-mateiro-pericia-Sobrevivência",
+          "id": "origin-mateiro-pericia-sobrevivencia",
           "name": "Sobrevivência",
           "kind": "pericia",
           "description": "Você se torna treinado em Sobrevivência.",
@@ -6292,11 +6292,11 @@
       "uid": "org_ttz2yewozj"
     },
     {
-      "id": "Membro de Guilda",
+      "id": "membro-de-guilda",
       "name": "Membro de Guilda",
       "benefits": [
         {
-          "id": "origin-guilda-pericia-Diplomacia",
+          "id": "origin-guilda-pericia-diplomacia",
           "name": "Diplomacia",
           "kind": "pericia",
           "description": "Você se torna treinado em Diplomacia.",
@@ -6304,7 +6304,7 @@
           "uid": "org_h43oqjplx3"
         },
         {
-          "id": "origin-guilda-pericia-Enganação",
+          "id": "origin-guilda-pericia-enganacao",
           "name": "Enganação",
           "kind": "pericia",
           "description": "Você se torna treinado em Enganação.",
@@ -6312,7 +6312,7 @@
           "uid": "org_2olzd42j4l"
         },
         {
-          "id": "origin-guilda-pericia-Misticismo",
+          "id": "origin-guilda-pericia-misticismo",
           "name": "Misticismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Misticismo.",
@@ -6320,7 +6320,7 @@
           "uid": "org_n2oudcmjzw"
         },
         {
-          "id": "origin-guilda-pericia-Ofício",
+          "id": "origin-guilda-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -6344,11 +6344,11 @@
       "uid": "org_aa5rds5fvw"
     },
     {
-      "id": "Mercador",
+      "id": "mercador",
       "name": "Mercador",
       "benefits": [
         {
-          "id": "origin-mercador-pericia-Diplomacia",
+          "id": "origin-mercador-pericia-diplomacia",
           "name": "Diplomacia",
           "kind": "pericia",
           "description": "Você se torna treinado em Diplomacia.",
@@ -6356,7 +6356,7 @@
           "uid": "org_dnf26spylj"
         },
         {
-          "id": "origin-mercador-pericia-Intuição",
+          "id": "origin-mercador-pericia-intuicao",
           "name": "Intuição",
           "kind": "pericia",
           "description": "Você se torna treinado em Intuição.",
@@ -6364,7 +6364,7 @@
           "uid": "org_v2ghfcnooe"
         },
         {
-          "id": "origin-mercador-pericia-Ofício",
+          "id": "origin-mercador-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -6395,11 +6395,11 @@
       "uid": "org_qqhzlwj35s"
     },
     {
-      "id": "Minerador",
+      "id": "minerador",
       "name": "Minerador",
       "benefits": [
         {
-          "id": "origin-minerador-pericia-Atletismo",
+          "id": "origin-minerador-pericia-atletismo",
           "name": "Atletismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Atletismo.",
@@ -6407,7 +6407,7 @@
           "uid": "org_b65g5jww63"
         },
         {
-          "id": "origin-minerador-pericia-Fortitude",
+          "id": "origin-minerador-pericia-fortitude",
           "name": "Fortitude",
           "kind": "pericia",
           "description": "Você se torna treinado em Fortitude.",
@@ -6415,7 +6415,7 @@
           "uid": "org_kh2j6xm3tu"
         },
         {
-          "id": "origin-minerador-pericia-Ofício",
+          "id": "origin-minerador-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -6446,11 +6446,11 @@
       "uid": "org_t6hat3igcl"
     },
     {
-      "id": "Nômade",
+      "id": "nomade",
       "name": "Nômade",
       "benefits": [
         {
-          "id": "origin-nomade-pericia-Cavalgar",
+          "id": "origin-nomade-pericia-cavalgar",
           "name": "Cavalgar",
           "kind": "pericia",
           "description": "Você se torna treinado em Cavalgar.",
@@ -6458,7 +6458,7 @@
           "uid": "org_266rtaloia"
         },
         {
-          "id": "origin-nomade-pericia-Pilotagem",
+          "id": "origin-nomade-pericia-pilotagem",
           "name": "Pilotagem",
           "kind": "pericia",
           "description": "Você se torna treinado em Pilotagem.",
@@ -6466,7 +6466,7 @@
           "uid": "org_sefwasawrs"
         },
         {
-          "id": "origin-nomade-pericia-Sobrevivência",
+          "id": "origin-nomade-pericia-sobrevivencia",
           "name": "Sobrevivência",
           "kind": "pericia",
           "description": "Você se torna treinado em Sobrevivência.",
@@ -6506,11 +6506,11 @@
       "uid": "org_jeofgf3noz"
     },
     {
-      "id": "Pivete",
+      "id": "pivete",
       "name": "Pivete",
       "benefits": [
         {
-          "id": "origin-pivete-pericia-Furtividade",
+          "id": "origin-pivete-pericia-furtividade",
           "name": "Furtividade",
           "kind": "pericia",
           "description": "Você se torna treinado em Furtividade.",
@@ -6518,7 +6518,7 @@
           "uid": "org_6fehwsylro"
         },
         {
-          "id": "origin-pivete-pericia-Iniciativa",
+          "id": "origin-pivete-pericia-iniciativa",
           "name": "Iniciativa",
           "kind": "pericia",
           "description": "Você se torna treinado em Iniciativa.",
@@ -6526,7 +6526,7 @@
           "uid": "org_ubd2t43urg"
         },
         {
-          "id": "origin-pivete-pericia-Ladinagem",
+          "id": "origin-pivete-pericia-ladinagem",
           "name": "Ladinagem",
           "kind": "pericia",
           "description": "Você se torna treinado em Ladinagem.",
@@ -6557,11 +6557,11 @@
       "uid": "org_thehlcnbsd"
     },
     {
-      "id": "Refugiado",
+      "id": "refugiado",
       "name": "Refugiado",
       "benefits": [
         {
-          "id": "origin-refugiado-pericia-Fortitude",
+          "id": "origin-refugiado-pericia-fortitude",
           "name": "Fortitude",
           "kind": "pericia",
           "description": "Você se torna treinado em Fortitude.",
@@ -6569,7 +6569,7 @@
           "uid": "org_zrkgtn5tpt"
         },
         {
-          "id": "origin-refugiado-pericia-Reflexos",
+          "id": "origin-refugiado-pericia-reflexos",
           "name": "Reflexos",
           "kind": "pericia",
           "description": "Você se torna treinado em Reflexos.",
@@ -6577,7 +6577,7 @@
           "uid": "org_oz4lcc4hk7"
         },
         {
-          "id": "origin-refugiado-pericia-Vontade",
+          "id": "origin-refugiado-pericia-vontade",
           "name": "Vontade",
           "kind": "pericia",
           "description": "Você se torna treinado em Vontade.",
@@ -6601,11 +6601,11 @@
       "uid": "org_qpgnux37xo"
     },
     {
-      "id": "Seguidor",
+      "id": "seguidor",
       "name": "Seguidor",
       "benefits": [
         {
-          "id": "origin-seguidor-pericia-Adestramento",
+          "id": "origin-seguidor-pericia-adestramento",
           "name": "Adestramento",
           "kind": "pericia",
           "description": "Você se torna treinado em Adestramento.",
@@ -6613,7 +6613,7 @@
           "uid": "org_llpxosjbxf"
         },
         {
-          "id": "origin-seguidor-pericia-Ofício",
+          "id": "origin-seguidor-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -6644,11 +6644,11 @@
       "uid": "org_bxya5vbhu3"
     },
     {
-      "id": "Selvagem",
+      "id": "selvagem",
       "name": "Selvagem",
       "benefits": [
         {
-          "id": "origin-selvagem-pericia-Percepção",
+          "id": "origin-selvagem-pericia-percepcao",
           "name": "Percepção",
           "kind": "pericia",
           "description": "Você se torna treinado em Percepção.",
@@ -6656,7 +6656,7 @@
           "uid": "org_m7rrcddg5o"
         },
         {
-          "id": "origin-selvagem-pericia-Reflexos",
+          "id": "origin-selvagem-pericia-reflexos",
           "name": "Reflexos",
           "kind": "pericia",
           "description": "Você se torna treinado em Reflexos.",
@@ -6664,7 +6664,7 @@
           "uid": "org_nvhc6rrv6w"
         },
         {
-          "id": "origin-selvagem-pericia-Sobrevivência",
+          "id": "origin-selvagem-pericia-sobrevivencia",
           "name": "Sobrevivência",
           "kind": "pericia",
           "description": "Você se torna treinado em Sobrevivência.",
@@ -6695,11 +6695,11 @@
       "uid": "org_dvyyu74qm5"
     },
     {
-      "id": "Soldado",
+      "id": "soldado",
       "name": "Soldado",
       "benefits": [
         {
-          "id": "origin-soldado-pericia-Fortitude",
+          "id": "origin-soldado-pericia-fortitude",
           "name": "Fortitude",
           "kind": "pericia",
           "description": "Você se torna treinado em Fortitude.",
@@ -6707,7 +6707,7 @@
           "uid": "org_kjmcmmmb56"
         },
         {
-          "id": "origin-soldado-pericia-Guerra",
+          "id": "origin-soldado-pericia-guerra",
           "name": "Guerra",
           "kind": "pericia",
           "description": "Você se torna treinado em Guerra.",
@@ -6715,7 +6715,7 @@
           "uid": "org_ccgna76gix"
         },
         {
-          "id": "origin-soldado-pericia-Luta",
+          "id": "origin-soldado-pericia-luta",
           "name": "Luta",
           "kind": "pericia",
           "description": "Você se torna treinado em Luta.",
@@ -6723,7 +6723,7 @@
           "uid": "org_vf2x3hctdz"
         },
         {
-          "id": "origin-soldado-pericia-Pontaria",
+          "id": "origin-soldado-pericia-pontaria",
           "name": "Pontaria",
           "kind": "pericia",
           "description": "Você se torna treinado em Pontaria.",
@@ -6748,11 +6748,11 @@
       "uid": "org_keq6j3iudc"
     },
     {
-      "id": "Taverneiro",
+      "id": "taverneiro",
       "name": "Taverneiro",
       "benefits": [
         {
-          "id": "origin-taverneiro-pericia-Diplomacia",
+          "id": "origin-taverneiro-pericia-diplomacia",
           "name": "Diplomacia",
           "kind": "pericia",
           "description": "Você se torna treinado em Diplomacia.",
@@ -6760,7 +6760,7 @@
           "uid": "org_rtydkki2df"
         },
         {
-          "id": "origin-taverneiro-pericia-Jogatina",
+          "id": "origin-taverneiro-pericia-jogatina",
           "name": "Jogatina",
           "kind": "pericia",
           "description": "Você se torna treinado em Jogatina.",
@@ -6768,7 +6768,7 @@
           "uid": "org_leu6hbkk3s"
         },
         {
-          "id": "origin-taverneiro-pericia-Ofício",
+          "id": "origin-taverneiro-pericia-oficio",
           "name": "Ofício",
           "kind": "pericia",
           "description": "Você se torna treinado em Ofício.",
@@ -6799,11 +6799,11 @@
       "uid": "org_y4nvjfbpt3"
     },
     {
-      "id": "Trabalhador",
+      "id": "trabalhador",
       "name": "Trabalhador",
       "benefits": [
         {
-          "id": "origin-trabalhador-pericia-Atletismo",
+          "id": "origin-trabalhador-pericia-atletismo",
           "name": "Atletismo",
           "kind": "pericia",
           "description": "Você se torna treinado em Atletismo.",
@@ -6811,7 +6811,7 @@
           "uid": "org_imgpbuc3av"
         },
         {
-          "id": "origin-trabalhador-pericia-Fortitude",
+          "id": "origin-trabalhador-pericia-fortitude",
           "name": "Fortitude",
           "kind": "pericia",
           "description": "Você se torna treinado em Fortitude.",

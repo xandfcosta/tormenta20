@@ -28,7 +28,7 @@ func barbarianWithMpSpent(t *testing.T, level, pmSpent int64) (sceneFixture, int
 	t.Helper()
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: f.player, Name: "Furioso", Origin: "Batedor", Level: level,
+		OwnerId: f.player, Name: "Furioso", Origin: "batedor", Level: level,
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -62,7 +62,7 @@ func powerCommand(t *testing.T, f sceneFixture, id int64, path, body string) str
 func TestTheCollectionJoinsTheFiveOrigins(t *testing.T) {
 	f, id := barbaro(t, 5)
 	seedRaca(t, f.s, id, "Anão")
-	choiceCom(t, f, id, `["class.barbaro.golpe-poderoso"]`, `["origin-batedor-pericia-Sobrevivência"]`)
+	choiceCom(t, f, id, `["class.barbaro.golpe-poderoso"]`, `["origin-batedor-pericia-sobrevivencia"]`)
 
 	// O RECORTE É DO PAINEL, e não da tela: o diálogo de escolher desenha TODOS
 	// os benefícios e TODOS os poderes eletivos como opções, então procurar na

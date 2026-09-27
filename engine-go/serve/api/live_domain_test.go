@@ -167,7 +167,7 @@ func seedCharacterAtLevel(
 ) int64 {
 	t.Helper()
 	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: ownerID, Name: name, Origin: "Soldado", Level: level,
+		OwnerId: ownerID, Name: name, Origin: "soldado", Level: level,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",

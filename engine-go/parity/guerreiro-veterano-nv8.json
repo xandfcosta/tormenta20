@@ -4,7 +4,7 @@
     "id": 13,
     "ownerId": 2,
     "name": "Guerreiro Veterano Nv8",
-    "origin": "Soldado",
+    "origin": "soldado",
     "god": "Khalmyr",
     "godPower": "",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-03T20:17:41.307Z",
     "races": [
       {
-        "race": "Humano"
+        "race": "humano"
       }
     ],
     "classes": [
@@ -340,7 +340,7 @@
       ]
     },
     {
-      "sourceId": "Humano",
+      "sourceId": "humano",
       "source": "Raça: Humano",
       "equipped": "vested",
       "modifiers": [
@@ -391,7 +391,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Humano",
+            "sourceId": "humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -403,7 +403,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Humano",
+            "sourceId": "humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -415,7 +415,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Humano",
+            "sourceId": "humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,

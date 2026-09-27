@@ -5,7 +5,7 @@
       "id": 5,
       "ownerId": 1,
       "name": "Multiclasse Guer+Arc Nv8",
-      "origin": "Herói Camponês",
+      "origin": "heroi-campones",
       "god": "Valkaria",
       "godPower": "",
       "tibar": 0,
@@ -35,7 +35,7 @@
       "updatedAt": "2026-08-06T11:39:13.352Z",
       "races": [
         {
-          "race": "Humano"
+          "race": "humano"
         }
       ],
       "classes": [
@@ -363,7 +363,7 @@
           "heavy": false
         }
       },
-      "origin": "Herói Camponês",
+      "origin": "heroi-campones",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -381,7 +381,7 @@
       "id": 3,
       "ownerId": 1,
       "name": "Necromante Nv12 Magias",
-      "origin": "Criminoso",
+      "origin": "criminoso",
       "god": "Tenebra",
       "godPower": "",
       "tibar": 0,
@@ -411,7 +411,7 @@
       "updatedAt": "2026-08-06T11:39:12.876Z",
       "races": [
         {
-          "race": "Osteon"
+          "race": "osteon"
         }
       ],
       "classes": [
@@ -739,7 +739,7 @@
           "damageType": "perfuracao"
         }
       },
-      "origin": "Criminoso",
+      "origin": "criminoso",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -757,7 +757,7 @@
       "id": 16,
       "ownerId": 1,
       "name": "Kharvos, O Guardião Rubro",
-      "origin": "Refugiado",
+      "origin": "refugiado",
       "god": "Tauron",
       "godPower": "",
       "tibar": 3000,
@@ -777,7 +777,7 @@
       "proficiencies": "[\"armas-simples\",\"armas-marciais\",\"escudos\",\"armaduras-leves\",\"armas-exoticas\"]",
       "raceAbilityChoices": "[]",
       "raceAttributeChoices": "{\"floatingPicks\":[]}",
-      "secondaryRaceChoices": "[{\"race\":\"Lefou\",\"floatingPicks\":[],\"deformidade\":{\"pericias\":[],\"tormentaPower\":\"olhos-vermelhos\"}}]",
+      "secondaryRaceChoices": "[{\"race\":\"lefou\",\"floatingPicks\":[],\"deformidade\":{\"pericias\":[],\"tormentaPower\":\"olhos-vermelhos\"}}]",
       "originChoices": "[\"poder-vontade-de-ferro\",\"origin-refugiado-unique\"]",
       "classPowers": "[\"class.barbaro.alma-de-bronze\",\"class.barbaro.destruidor\",\"class.barbaro.golpe-poderoso\",\"class.barbaro.pele-de-ferro\",\"class.barbaro.totem-espiritual\"]",
       "classChoices": "{}",
@@ -787,10 +787,10 @@
       "updatedAt": "2026-08-03T20:18:17.309Z",
       "races": [
         {
-          "race": "Minotauro"
+          "race": "minotauro"
         },
         {
-          "race": "Lefou"
+          "race": "lefou"
         }
       ],
       "classes": [
@@ -1142,7 +1142,7 @@
           "heavy": false
         }
       },
-      "origin": "Refugiado",
+      "origin": "refugiado",
       "powerIds": [
         "class.barbaro.alma-de-bronze",
         "class.barbaro.destruidor",
@@ -1169,7 +1169,7 @@
       "id": 8,
       "ownerId": 1,
       "name": "Bardo Versátil Nv7",
-      "origin": "Amnésico",
+      "origin": "amnesico",
       "god": null,
       "godPower": "",
       "tibar": 0,
@@ -1199,7 +1199,7 @@
       "updatedAt": "2026-08-03T19:52:47.377Z",
       "races": [
         {
-          "race": "Lefou"
+          "race": "lefou"
         }
       ],
       "classes": [
@@ -1511,7 +1511,7 @@
           "damageType": "perfuracao"
         }
       },
-      "origin": "Amnésico",
+      "origin": "amnesico",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -1525,7 +1525,7 @@
       "id": 4,
       "ownerId": 1,
       "name": "Druida Natureza Nv9",
-      "origin": "Eremita",
+      "origin": "eremita",
       "god": "Allihanna",
       "godPower": "",
       "tibar": 0,
@@ -1555,7 +1555,7 @@
       "updatedAt": "2026-08-03T19:52:46.497Z",
       "races": [
         {
-          "race": "Dahllan"
+          "race": "dahllan"
         }
       ],
       "classes": [
@@ -1857,7 +1857,7 @@
           "damageType": "perfuracao"
         }
       },
-      "origin": "Eremita",
+      "origin": "eremita",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -1871,7 +1871,7 @@
       "id": 9,
       "ownerId": 1,
       "name": "Inventor Genial Nv6",
-      "origin": "Assistente de Laboratório",
+      "origin": "assistente-de-laboratorio",
       "god": "Tanna-Toh",
       "godPower": "",
       "tibar": 0,
@@ -1901,7 +1901,7 @@
       "updatedAt": "2026-08-02T13:17:13.753Z",
       "races": [
         {
-          "race": "Kliren"
+          "race": "kliren"
         }
       ],
       "classes": [
@@ -2216,7 +2216,7 @@
           "damageType": "impacto"
         }
       },
-      "origin": "Assistente de Laboratório",
+      "origin": "assistente-de-laboratorio",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -2230,7 +2230,7 @@
       "id": 7,
       "ownerId": 1,
       "name": "Lenda Nv20 Maximo",
-      "origin": "Herdeiro",
+      "origin": "herdeiro",
       "god": "Valkaria",
       "godPower": "",
       "tibar": 0,
@@ -2260,7 +2260,7 @@
       "updatedAt": "2026-08-02T13:16:57.489Z",
       "races": [
         {
-          "race": "Anão"
+          "race": "anao"
         }
       ],
       "classes": [
@@ -2557,7 +2557,7 @@
           "damageType": "corte"
         }
       },
-      "origin": "Herdeiro",
+      "origin": "herdeiro",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -2571,7 +2571,7 @@
       "id": 6,
       "ownerId": 1,
       "name": "Paladino Sagrado Nv11",
-      "origin": "Aristocrata",
+      "origin": "aristocrata",
       "god": "Khalmyr",
       "godPower": "",
       "tibar": 0,
@@ -2601,7 +2601,7 @@
       "updatedAt": "2026-08-02T13:16:47.641Z",
       "races": [
         {
-          "race": "Suraggel"
+          "race": "suraggel"
         }
       ],
       "classes": [
@@ -2930,7 +2930,7 @@
           "damageType": "corte"
         }
       },
-      "origin": "Aristocrata",
+      "origin": "aristocrata",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -2944,7 +2944,7 @@
       "id": 2,
       "ownerId": 1,
       "name": "Curandeira Divina Nv8",
-      "origin": "Acólito",
+      "origin": "acolito",
       "god": "Lena",
       "godPower": "",
       "tibar": 0,
@@ -2974,7 +2974,7 @@
       "updatedAt": "2026-08-02T13:16:11.583Z",
       "races": [
         {
-          "race": "Elfo"
+          "race": "elfo"
         }
       ],
       "classes": [
@@ -3280,7 +3280,7 @@
           "damageType": "perfuracao"
         }
       },
-      "origin": "Acólito",
+      "origin": "acolito",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -3294,7 +3294,7 @@
       "id": 1,
       "ownerId": 1,
       "name": "Tanque Placas Nv10",
-      "origin": "Soldado",
+      "origin": "soldado",
       "god": "Khalmyr",
       "godPower": "",
       "tibar": 0,
@@ -3324,7 +3324,7 @@
       "updatedAt": "2026-08-02T13:16:05.028Z",
       "races": [
         {
-          "race": "Anão"
+          "race": "anao"
         }
       ],
       "classes": [
@@ -3629,7 +3629,7 @@
           "damageType": "corte"
         }
       },
-      "origin": "Soldado",
+      "origin": "soldado",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -3643,7 +3643,7 @@
       "id": 14,
       "ownerId": 2,
       "name": "Arcanista Erudito Nv9",
-      "origin": "Charlatão",
+      "origin": "charlatao",
       "god": "Wynna",
       "godPower": "Bênção do Mana",
       "tibar": 0,
@@ -3673,7 +3673,7 @@
       "updatedAt": "2026-08-06T11:39:14.085Z",
       "races": [
         {
-          "race": "Qareen"
+          "race": "qareen"
         }
       ],
       "classes": [
@@ -4005,7 +4005,7 @@
           "damageType": "perfuracao"
         }
       },
-      "origin": "Charlatão",
+      "origin": "charlatao",
       "godPower": "Bênção do Mana",
       "powerIds": [],
       "originChoices": [],
@@ -4024,7 +4024,7 @@
       "id": 12,
       "ownerId": 2,
       "name": "Aprendiz Nv1 Simples",
-      "origin": "Charlatão",
+      "origin": "charlatao",
       "god": null,
       "godPower": "",
       "tibar": 0,
@@ -4054,7 +4054,7 @@
       "updatedAt": "2026-08-06T11:39:13.781Z",
       "races": [
         {
-          "race": "Humano"
+          "race": "humano"
         }
       ],
       "classes": [
@@ -4308,7 +4308,7 @@
           "heavy": false
         }
       },
-      "origin": "Charlatão",
+      "origin": "charlatao",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -4326,7 +4326,7 @@
       "id": 13,
       "ownerId": 2,
       "name": "Guerreiro Veterano Nv8",
-      "origin": "Soldado",
+      "origin": "soldado",
       "god": "Khalmyr",
       "godPower": "",
       "tibar": 0,
@@ -4356,7 +4356,7 @@
       "updatedAt": "2026-08-03T20:17:41.307Z",
       "races": [
         {
-          "race": "Humano"
+          "race": "humano"
         }
       ],
       "classes": [
@@ -4659,7 +4659,7 @@
           "heavy": false
         }
       },
-      "origin": "Soldado",
+      "origin": "soldado",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -4673,7 +4673,7 @@
       "id": 15,
       "ownerId": 2,
       "name": "Paladino Sagrado Nv10",
-      "origin": "Aristocrata",
+      "origin": "aristocrata",
       "god": "Khalmyr",
       "godPower": "",
       "tibar": 0,
@@ -4703,7 +4703,7 @@
       "updatedAt": "2026-08-02T13:17:42.526Z",
       "races": [
         {
-          "race": "Suraggel"
+          "race": "suraggel"
         }
       ],
       "classes": [
@@ -5032,7 +5032,7 @@
           "damageType": "corte"
         }
       },
-      "origin": "Aristocrata",
+      "origin": "aristocrata",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -5046,7 +5046,7 @@
       "id": 11,
       "ownerId": 2,
       "name": "Batedor Nv2 Simples",
-      "origin": "Batedor",
+      "origin": "batedor",
       "god": null,
       "godPower": "",
       "tibar": 0,
@@ -5076,7 +5076,7 @@
       "updatedAt": "2026-08-02T13:17:22.470Z",
       "races": [
         {
-          "race": "Sílfide"
+          "race": "silfide"
         }
       ],
       "classes": [
@@ -5326,7 +5326,7 @@
           "heavy": false
         }
       },
-      "origin": "Batedor",
+      "origin": "batedor",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -5340,7 +5340,7 @@
       "id": 10,
       "ownerId": 2,
       "name": "Recruta Nv1 Simples",
-      "origin": "Capanga",
+      "origin": "capanga",
       "god": null,
       "godPower": "",
       "tibar": 0,
@@ -5370,7 +5370,7 @@
       "updatedAt": "2026-08-02T13:17:20.973Z",
       "races": [
         {
-          "race": "Humano"
+          "race": "humano"
         }
       ],
       "classes": [
@@ -5624,7 +5624,7 @@
           "heavy": false
         }
       },
-      "origin": "Capanga",
+      "origin": "capanga",
       "powerIds": [],
       "originChoices": [],
       "raceAbilityChoices": [],
@@ -5642,7 +5642,7 @@
       "id": 90,
       "ownerId": 1,
       "name": "Tanque Exausto e Atordoado Nv10",
-      "origin": "Soldado",
+      "origin": "soldado",
       "god": "Khalmyr",
       "godPower": "",
       "tibar": 0,
@@ -5672,7 +5672,7 @@
       "updatedAt": "2026-08-02T13:16:05.028Z",
       "races": [
         {
-          "race": "Anão"
+          "race": "anao"
         }
       ],
       "classes": [
@@ -5927,7 +5927,7 @@
       "id": 91,
       "ownerId": 2,
       "name": "Arcanista Cego e Esmorecido Nv9",
-      "origin": "Charlatão",
+      "origin": "charlatao",
       "god": "Wynna",
       "godPower": "Bênção do Mana",
       "tibar": 0,
@@ -5957,7 +5957,7 @@
       "updatedAt": "2026-08-06T11:39:14.085Z",
       "races": [
         {
-          "race": "Qareen"
+          "race": "qareen"
         }
       ],
       "classes": [

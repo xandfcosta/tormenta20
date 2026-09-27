@@ -60,7 +60,7 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 	t.Helper()
 	ctx := context.Background()
 	id, err := s.queries.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
-		OwnerId: ownerID, Name: "Conjurador", Origin: "Estudioso", Level: int64(classLevel),
+		OwnerId: ownerID, Name: "Conjurador", Origin: "estudioso", Level: int64(classLevel),
 		Intelligence: 4, Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: classPowers, ClassChoices: "{}", PowerChoices: "{}",

@@ -208,21 +208,24 @@ type Catalogs struct {
 	generalByID   map[string]*GeneralPower
 	generalByUid  map[string]*GeneralPower
 	grantedByName map[string]*GrantedPower
-	racesByName   map[string]*RaceAttributeEntry
+	raceAttrsByID map[string]*RaceAttributeEntry
 	tormentaIDs   map[string]bool
 }
 
 // enginePayload é a forma JSON que o `cmd/genoracle` despeja em
 // `engine-go/parity/_catalogs.json`.
 type enginePayload struct {
-	Items         []CatalogItem                 `json:"items"`
-	Races         []RaceDefinition              `json:"races"`
-	Origins       []OriginDefinition            `json:"origins"`
-	ClassPowers   []ClassPower                  `json:"classPowers"`
-	GeneralPowers []GeneralPower                `json:"generalPowers"`
-	GrantedPowers []GrantedPower                `json:"grantedPowers"`
-	Ancestries    map[string]RaceAttributeEntry `json:"racas"`
-	TormentaIDs   []string                      `json:"tormentaPowerIds"`
+	Items         []CatalogItem      `json:"items"`
+	Races         []RaceDefinition   `json:"races"`
+	Origins       []OriginDefinition `json:"origins"`
+	ClassPowers   []ClassPower       `json:"classPowers"`
+	GeneralPowers []GeneralPower     `json:"generalPowers"`
+	GrantedPowers []GrantedPower     `json:"grantedPowers"`
+	// NÃO se chama `Ancestries`: ascendência neste motor é a metade que o
+	// suraggel escolhe (`choice.ancestry`), e uma palavra por conceito. Isto é
+	// a tabela de atributo POR RAÇA, que o dump guarda sob `racas`.
+	RaceAttributes map[string]RaceAttributeEntry `json:"racas"`
+	TormentaIDs    []string                      `json:"tormentaPowerIds"`
 }
 
 // PrimeEngineCatalogs ingere o JSON dos catálogos num `Catalogs` indexado.
@@ -239,7 +242,7 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 		generalByID:   make(map[string]*GeneralPower, len(p.GeneralPowers)),
 		generalByUid:  make(map[string]*GeneralPower, len(p.GeneralPowers)),
 		grantedByName: make(map[string]*GrantedPower, len(p.GrantedPowers)),
-		racesByName:   make(map[string]*RaceAttributeEntry, len(p.Ancestries)),
+		raceAttrsByID: make(map[string]*RaceAttributeEntry, len(p.RaceAttributes)),
 		tormentaIDs:   make(map[string]bool, len(p.TormentaIDs)),
 	}
 	for i := range p.Items {
@@ -263,9 +266,14 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	for i := range p.GrantedPowers {
 		c.grantedByName[p.GrantedPowers[i].Name] = &p.GrantedPowers[i]
 	}
-	for id := range p.Ancestries {
-		r := p.Ancestries[id]
-		c.racesByName[r.Name] = &r
+	// Pela CHAVE do mapa, que é o id, e não pelo `Name` de dentro (ALE-404).
+	// Indexar pelo nome funcionava por coincidência: o id de `race-defs.json`
+	// era o rótulo, então a mesma string guardada na ficha achava a raça nos
+	// DOIS índices. Slugificar o id desfez a coincidência e a busca por nome
+	// passou a devolver nil — sem erro, só o humano perdendo os +1.
+	for id := range p.RaceAttributes {
+		r := p.RaceAttributes[id]
+		c.raceAttrsByID[id] = &r
 	}
 	for _, id := range p.TormentaIDs {
 		c.tormentaIDs[id] = true
@@ -314,21 +322,21 @@ func (c *Catalogs) getOriginBenefit(benefitID string) *OriginBenefit {
 	return nil
 }
 
-// raceEntryByName acha a entrada de atributo de uma raça pelo nome. O mapa é
+// raceEntryByID acha a entrada de atributo de uma raça pelo slug. O mapa é
 // montado uma vez, quando os catálogos são primados.
-func (c *Catalogs) raceEntryByName(name string) *RaceAttributeEntry { return c.racesByName[name] }
+func (c *Catalogs) raceEntryByID(id string) *RaceAttributeEntry { return c.raceAttrsByID[id] }
 
-// raceWithDeformidade devolve o primeiro nome que tem Deformidade (Lefou p23).
-func (c *Catalogs) raceWithDeformidade(names ...string) string {
+// raceWithDeformidade devolve o primeiro slug que tem Deformidade (Lefou p23).
+func (c *Catalogs) raceWithDeformidade(ids ...string) string {
 	owners := map[string]bool{}
 	for _, r := range c.racesByID {
 		if r.HasDeformity {
-			owners[r.Name] = true
+			owners[r.ID] = true
 		}
 	}
-	for _, n := range names {
-		if owners[n] {
-			return n
+	for _, id := range ids {
+		if owners[id] {
+			return id
 		}
 	}
 	return ""

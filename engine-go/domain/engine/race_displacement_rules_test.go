@@ -26,9 +26,9 @@ func TestDisplacementComesFromTheRaceAndNotTheColumn(t *testing.T) {
 		pagina string
 	}{
 		// O `want` é em QUADRADOS de 1,5m (ALE-390); a página cita os metros.
-		{"Anão", 4, "6m, p20, Devagar e Sempre"},
-		{"Elfo", 8, "12m, p22, Graça de Glórienn"},
-		{"Humano", 6, "9m, o padrão do livro"},
+		{"anao", 4, "6m, p20, Devagar e Sempre"},
+		{"elfo", 8, "12m, p22, Graça de Glórienn"},
+		{"humano", 6, "9m, o padrão do livro"},
 	} {
 		t.Run(caso.race, func(t *testing.T) {
 			ch := Character{
@@ -57,7 +57,7 @@ func TestUnknownRaceFallsBackToTheBookDefault(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	catalogs := primeFromDump(t, dir)
 
-	ch := Character{Displacement: 42, Races: []CharacterRace{{Race: "Raça Inventada"}}}
+	ch := Character{Displacement: 42, Races: []CharacterRace{{Race: "raca-inventada"}}}
 	if got := BookRuleset(catalogs).ComputeSheet(ch, nil).Displacement.Base; got != 6 {
 		t.Fatalf("raça desconhecida deu base %d quadrados, esperava 6 (9m) — se veio 28, a coluna voltou a ter voto", got)
 	}
@@ -95,8 +95,8 @@ func TestDwarfIgnoresArmorSlowdownAndTheHumanDoesNot(t *testing.T) {
 		why  string
 	}{
 		// Em QUADRADOS: os dois param em 6m, que são 4.
-		{"Anão", 4, "isento da redução por armadura (p20): 6m e fica 6m"},
-		{"Humano", 4, "sem isenção: 9m menos os 3m da armadura completa"},
+		{"anao", 4, "isento da redução por armadura (p20): 6m e fica 6m"},
+		{"humano", 4, "sem isenção: 9m menos os 3m da armadura completa"},
 	} {
 		t.Run(caso.race, func(t *testing.T) {
 			ch := Character{
@@ -114,8 +114,8 @@ func TestDwarfIgnoresArmorSlowdownAndTheHumanDoesNot(t *testing.T) {
 
 	// E a prova de que os dois chegam a 6m por caminhos DIFERENTES: se a
 	// isenção não existisse, o anão daria 3m. Bases distintas, total igual.
-	anao := BookRuleset(catalogs).ComputeSheet(Character{Races: []CharacterRace{{Race: "Anão"}}, Items: plate}, nil).Displacement
-	humano := BookRuleset(catalogs).ComputeSheet(Character{Races: []CharacterRace{{Race: "Humano"}}, Items: plate}, nil).Displacement
+	anao := BookRuleset(catalogs).ComputeSheet(Character{Races: []CharacterRace{{Race: "anao"}}, Items: plate}, nil).Displacement
+	humano := BookRuleset(catalogs).ComputeSheet(Character{Races: []CharacterRace{{Race: "humano"}}, Items: plate}, nil).Displacement
 	if anao.Base == humano.Base {
 		t.Fatalf("as bases ficaram iguais (%d): o anão devia partir de 6 e o humano de 9", anao.Base)
 	}

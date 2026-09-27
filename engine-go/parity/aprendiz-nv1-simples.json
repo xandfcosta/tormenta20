@@ -4,7 +4,7 @@
     "id": 12,
     "ownerId": 2,
     "name": "Aprendiz Nv1 Simples",
-    "origin": "Charlatão",
+    "origin": "charlatao",
     "god": null,
     "godPower": "",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-06T11:39:13.781Z",
     "races": [
       {
-        "race": "Humano"
+        "race": "humano"
       }
     ],
     "classes": [
@@ -292,7 +292,7 @@
       ]
     },
     {
-      "sourceId": "Humano",
+      "sourceId": "humano",
       "source": "Raça: Humano",
       "equipped": "vested",
       "modifiers": [
@@ -350,7 +350,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Humano",
+            "sourceId": "humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -362,7 +362,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Humano",
+            "sourceId": "humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,
@@ -374,7 +374,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Humano",
+            "sourceId": "humano",
             "source": "Raça: Humano",
             "bonusType": "untyped",
             "amount": 1,

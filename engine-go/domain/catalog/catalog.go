@@ -298,8 +298,14 @@ var (
 // digitação não tinham contra o que ser conferidos, e o seed os escrevia no
 // banco em silêncio.
 //
-// São NOMES e não ids, e isso é do dado: o `options.json` lista "Humano",
-// "Arcanista", "Acólito" — é o que a ficha grava e é o que se confere.
+// São o que a FICHA GRAVA, e isso mudou de forma na ALE-404: raça e origem
+// são SLUG (`humano`, `acolito`) e vêm do catálogo de verdade, não do
+// `options.json`. Ele listava as duas por rótulo e era a quarta cópia da mesma
+// lista — uma cópia que não tinha como divergir em silêncio de novo se não
+// existisse.
+//
+// Classe, deus e tamanho seguem por nome no `options.json` porque é assim que
+// a ficha os grava; quando eles virarem slug, saem daqui do mesmo jeito.
 //
 // **Lista VAZIA e lista DESCONHECIDA são coisas diferentes**, e quem chama
 // precisa distinguir: com o embed quebrado toda lista vem vazia, e um chamador
@@ -311,8 +317,48 @@ func OptionList(kind string) []string {
 		if b, err := files.ReadFile("data/options.json"); err == nil {
 			_ = json.Unmarshal(b, &optionLists)
 		}
+		optionLists["races"] = idsDoRecurso("races")
+		optionLists["origins"] = idsDoRecurso("origins")
 	})
 	return optionLists[kind]
+}
+
+// idsDoRecurso lê o `id` de cada linha de topo de um catálogo. Vazio quando o
+// recurso não carrega, que é o que distingue "nenhum valor vale" de "o embed
+// quebrou" para quem chama.
+func idsDoRecurso(resource string) []string {
+	raw, ok := Resource(resource)
+	if !ok {
+		return nil
+	}
+	// Lista OU mapa: `origins.json` é lista e `races.json` é mapa por id, e
+	// tentar só a lista devolvia vazio com cara de "nenhuma raça vale".
+	type linha struct {
+		ID string `json:"id"`
+	}
+	fora := []string{}
+	var lista []linha
+	if json.Unmarshal(raw, &lista) == nil {
+		for _, l := range lista {
+			if l.ID != "" {
+				fora = append(fora, l.ID)
+			}
+		}
+		return fora
+	}
+	var mapa map[string]linha
+	if json.Unmarshal(raw, &mapa) != nil {
+		return nil
+	}
+	for chave, l := range mapa {
+		if l.ID != "" {
+			fora = append(fora, l.ID)
+			continue
+		}
+		fora = append(fora, chave)
+	}
+	sort.Strings(fora)
+	return fora
 }
 
 var (

@@ -198,12 +198,12 @@ func (r *Ruleset) getOriginBenefit(benefitID string) *OriginBenefit {
 	return r.book.getOriginBenefit(benefitID)
 }
 
-func (r *Ruleset) raceEntryByName(name string) *RaceAttributeEntry {
-	return r.book.raceEntryByName(name)
+func (r *Ruleset) raceEntryByID(id string) *RaceAttributeEntry {
+	return r.book.raceEntryByID(id)
 }
 
-func (r *Ruleset) raceWithDeformidade(names ...string) string {
-	return r.book.raceWithDeformidade(names...)
+func (r *Ruleset) raceWithDeformidade(ids ...string) string {
+	return r.book.raceWithDeformidade(ids...)
 }
 
 func (r *Ruleset) isTormentaPower(id string) bool { return r.book.isTormentaPower(id) }

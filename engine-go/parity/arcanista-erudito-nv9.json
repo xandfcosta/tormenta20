@@ -4,7 +4,7 @@
     "id": 14,
     "ownerId": 2,
     "name": "Arcanista Erudito Nv9",
-    "origin": "Charlatão",
+    "origin": "charlatao",
     "god": "Wynna",
     "godPower": "Bênção do Mana",
     "tibar": 0,
@@ -34,7 +34,7 @@
     "updatedAt": "2026-08-06T11:39:14.085Z",
     "races": [
       {
-        "race": "Qareen"
+        "race": "qareen"
       }
     ],
     "classes": [
@@ -362,7 +362,7 @@
       ]
     },
     {
-      "sourceId": "Qareen",
+      "sourceId": "qareen",
       "source": "Raça: Qareen",
       "equipped": "vested",
       "modifiers": [
@@ -445,7 +445,7 @@
             "amount": 2
           },
           {
-            "sourceId": "Qareen",
+            "sourceId": "qareen",
             "source": "Raça: Qareen",
             "bonusType": "untyped",
             "amount": 2,
@@ -457,7 +457,7 @@
         "total": 1,
         "contributions": [
           {
-            "sourceId": "Qareen",
+            "sourceId": "qareen",
             "source": "Raça: Qareen",
             "bonusType": "untyped",
             "amount": 1,
@@ -469,7 +469,7 @@
         "total": -1,
         "contributions": [
           {
-            "sourceId": "Qareen",
+            "sourceId": "qareen",
             "source": "Raça: Qareen",
             "bonusType": "untyped",
             "amount": -1,

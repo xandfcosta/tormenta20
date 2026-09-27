@@ -44,12 +44,12 @@ func TestAnAutomaticPowerTakesNoSlot(t *testing.T) {
 func TestTheOriginGivesTwoBenefits(t *testing.T) {
 	f, id := barbaro(t, 3)
 
-	for _, b := range []string{"pericia-Furtividade", "pericia-Percepção"} {
+	for _, b := range []string{"pericia-furtividade", "pericia-percepcao"} {
 		if refusal := powerCommand(t, f, id, "origem/origin-batedor-"+b, ""); refusal != "" {
 			t.Fatalf("o benefício %q foi recusado: %q", b, refusal)
 		}
 	}
-	refused := powerCommand(t, f, id, "origem/origin-batedor-pericia-Sobrevivência", "")
+	refused := powerCommand(t, f, id, "origem/origin-batedor-pericia-sobrevivencia", "")
 	if !strings.Contains(refused, "2 benefícios") {
 		t.Errorf("o terceiro benefício foi aceito: %q", refused)
 	}
@@ -81,7 +81,7 @@ func TestTheOnlyOriginPowerIsStillAChoice(t *testing.T) {
 func TestAnOriginWithoutBenefitsDoesNotDemandTwo(t *testing.T) {
 	f, id := barbaro(t, 1)
 	if _, err := f.s.db.ExecContext(context.Background(),
-		"UPDATE characters SET origin = ? WHERE id = ?", "Amnésico", id,
+		"UPDATE characters SET origin = ? WHERE id = ?", "amnesico", id,
 	); err != nil {
 		t.Fatalf("trocar a origem: %v", err)
 	}
@@ -99,7 +99,7 @@ func TestAnOriginWithoutBenefitsDoesNotDemandTwo(t *testing.T) {
 func TestABenefitFromAnotherOriginDoesNotEnter(t *testing.T) {
 	f, id := barbaro(t, 3)
 
-	refusal := powerCommand(t, f, id, "origem/origin-acolito-pericia-Cura", "")
+	refusal := powerCommand(t, f, id, "origem/origin-acolito-pericia-cura", "")
 	if !strings.Contains(refusal, "Batedor") {
 		t.Errorf("a recusa não diz qual é a origem da ficha: %q", refusal)
 	}
@@ -197,7 +197,7 @@ func TestPowerSlotsAreOnePerLevelFromTheSecondOn(t *testing.T) {
 // terminar na ficha", ALE-169).
 func TestTheRaceAttributePendencyAppearsAndCloses(t *testing.T) {
 	f, id := barbaro(t, 1)
-	seedRaca(t, f.s, id, "Humano")
+	seedRaca(t, f.s, id, "humano")
 
 	if screen := powerScreen(t, f, id); !strings.Contains(screen, "distribuir o bônus de atributo") {
 		t.Fatal("o humano sem distribuição não mostra a pendência")
@@ -215,7 +215,7 @@ func TestTheRaceAttributePendencyAppearsAndCloses(t *testing.T) {
 // A DISTRIBUIÇÃO REPETIDA é recusada — o livro pede atributos DIFERENTES.
 func TestARepeatedDistributionIsRefused(t *testing.T) {
 	f, id := barbaro(t, 1)
-	seedRaca(t, f.s, id, "Humano")
+	seedRaca(t, f.s, id, "humano")
 
 	body := `{"race_attributes":["strength","strength","strength"]}`
 	if refusal := powerCommand(t, f, id, "atributos", body); !strings.Contains(refusal, "distintos") {
@@ -246,7 +246,7 @@ func TestARepeatedDistributionIsRefused(t *testing.T) {
 // inteira, e por isso é a que teria mais chance de levar as vizinhas junto.
 func TestWritingOneChoiceDoesNotEraseTheOthers(t *testing.T) {
 	f, id := barbaro(t, 5)
-	seedRaca(t, f.s, id, "Humano")
+	seedRaca(t, f.s, id, "humano")
 
 	if refusal := powerCommand(t, f, id, "escolhe/ataque-poderoso", ""); refusal != "" {
 		t.Fatalf("escolher o poder geral foi recusado: %q", refusal)

@@ -54,7 +54,7 @@ func forgeRefusals(sheet forgeAnswers) wire.FieldErrorMap {
 		errs["name"] = []string{fmt.Sprintf(
 			"O nome é obrigatório e cabe em %d caracteres.", heroNameMax)}
 	}
-	if raceByName(sheet.Race) == nil {
+	if raceBySlug(sheet.Race) == nil {
 		errs["race"] = []string{choiceRefusal(sheet.Race, "a linhagem", "raça")}
 	}
 	if _, found := book.Origins()[sheet.Origin]; !found {
@@ -141,11 +141,12 @@ func armorFitsKit(id string, offered []string) string {
 	return "Escolha uma das armaduras que o kit oferece."
 }
 
-// raceByName acha a raça pelo nome, ou nil.
-func raceByName(name string) *book.Race {
+// raceBySlug acha a raça pelo que o rádio SUBMETE, que é o slug (ALE-404). O
+// rótulo continua sendo o que a carta mostra.
+func raceBySlug(id string) *book.Race {
 	races, _, _ := book.CharacterCatalogs()
 	for i := range races {
-		if races[i].Name == name {
+		if races[i].ID == id {
 			return &races[i]
 		}
 	}
@@ -167,7 +168,7 @@ func classByName(name string) *book.Class {
 //
 // Assume a folha JÁ conferida por `forgeRefusals` — quem chama recusa antes.
 func (s Scene) birthHero(r *http.Request, ownerID int64, stylesheet forgeAnswers) (int64, error) {
-	race, class := raceByName(stylesheet.Race), classByName(stylesheet.Class)
+	race, class := raceBySlug(stylesheet.Race), classByName(stylesheet.Class)
 	if race == nil || class == nil {
 		return 0, fmt.Errorf("nascimento com folha não conferida: raça %q, classe %q", stylesheet.Race, stylesheet.Class)
 	}
@@ -205,7 +206,7 @@ func birthBody(stylesheet forgeAnswers, race book.Race, class book.Class) (sheet
 	kit := engine.StartingKitFor(class.Name, class.Proficiencies)
 	return sheet.CreateBody{
 		Name:              strings.TrimSpace(stylesheet.Name),
-		Races:             []string{race.Name},
+		Races:             []string{race.ID},
 		Origin:            stylesheet.Origin,
 		Classes:           []sheet.ClassEntry{{ClassName: class.Name, Level: 1}},
 		Tibar:             &tibar,

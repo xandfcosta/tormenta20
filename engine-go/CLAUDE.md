@@ -594,9 +594,10 @@ a ficha não o teria.
 
 ### O verbete tem DOIS identificadores, e eles têm papéis opostos
 
-- **`id`** é o nome em kebab-case: `esquiva`, `bencao-do-mana`. Ele é o
-  PÚBLICO — a URL o mostra, o `grep` o acha, a fixture se lê com ele. Ele muda
-  quando o nome muda.
+- **`id`** é o SLUG: minúsculo, sem acento, `[a-z0-9-]`, único dentro do
+  recurso — `esquiva`, `bencao-do-mana`, `heroi-campones`. Ele é o PÚBLICO — é
+  o que a URL carrega no padrão `/<recurso>/<id>`, o que o `grep` acha, o que a
+  fixture se lê. Ele muda quando o nome muda.
 - **`uid`** é opaco e estável: `pwr_k3m9x2ft4q`. Ele é a IDENTIDADE — é o que o
   banco guarda e o que um catálogo usa para apontar para outro. Ele **nunca**
   muda.
@@ -621,6 +622,39 @@ banco perde a referência e a ficha deixa de achar o verbete, sem erro nenhum.
 > recomendação medida de manter só o `id`: o catálogo tem UM renome em 1057
 > nomes de história, e ele era um hífen. O custo aceito é um campo a mais em
 > 1506 verbetes e uma segunda grafia por conceito.
+>
+> O renome em massa veio dez horas depois: a ALE-404 trocou 146 ids e **nenhum
+> uid mudou**. O campo a mais pagou a primeira conta que lhe apresentaram.
+
+#### Endereço não carrega RÓTULO, e a coincidência esconde isso
+
+O `TestEveryCatalogIdIsASlug` varre todo objeto com `id`, sem linha de base, e
+recusa caixa alta, acento e espaço. O ponto é namespacing e passa
+(`class.barbaro.impeto`): cada pedaço entre pontos é um slug por si.
+
+Ele existe porque `race-defs.json` guardava `{"id": "Humano", "name":
+"Humano"}` e `origins.json` guardava `{"id": "Acólito"}` — o id ERA o rótulo, e
+o `raceId` das habilidades apontava para ele. Renomear a raça na tela renomeava
+a chave.
+
+**O que torna isso difícil de ver é que a mesma string casava em DOIS índices
+por coincidência.** O motor indexava as raças duas vezes — o `racesByID`, de
+`race-defs.json`, cujo id era `Humano`, e um segundo mapa chaveado pelo NOME,
+de `races.json`, que também era `Humano` —, e a ficha guardava uma string só.
+Slugificar desfez a coincidência, e a busca por nome passou a devolver `nil` —
+que não é erro: é o humano perdendo os `+1` em três atributos, calado. Hoje o
+segundo mapa é o `raceAttrsByID`, chaveado pelo slug, e o mesmo par existia do
+lado da origem (`origensPorId` e `originItemsIndex`).
+
+Quem pegou foram as 18 fichas do oráculo, e é o controle que vale a pena
+lembrar: **a prova de que um renome de chave preservou o comportamento é o
+diff do oráculo não ter NENHUMA linha de número.** O da ALE-404 tem 760 linhas,
+todas `id`, `sourceId`, `raceId`, `race` ou `origin`.
+
+E há um canal que nenhuma varredura de campo alcança: a ficha guarda escolha
+como **JSON dentro de uma string**, e o `"race":"Lefou"` do
+`secondaryRaceChoices` não se parece com ponteiro. Quem o achou foi o Kharvos
+perdendo o −1 de Carisma da Deformidade.
 
 ### O bônus CIRCUNSTANCIAL já tem vocabulário — não invente um
 
