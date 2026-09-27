@@ -13096,8 +13096,8 @@
       "id": "proficiencia",
       "kind": "combate",
       "name": "Proficiência",
-      "description": "Ganha proficiência em armas marciais, armas de fogo, armaduras pesadas ou escudos (à escolha).",
-      "bookPage": 32,
+      "description": "Escolha uma proficiência: armas marciais, armas de fogo, armaduras pesadas ou escudos (se for proficiente em armas marciais, pode escolher armas exóticas). Pode ser pego várias vezes, para proficiências diferentes.",
+      "bookPage": 129,
       "uid": "pwr_v23jgvz3uj"
     },
     {
@@ -14033,7 +14033,7 @@
       "id": "magia-discreta",
       "kind": "magia",
       "name": "Magia Discreta",
-      "description": "Aprimoramento: lança a magia sem componentes verbais/gestuais; +2 PM.",
+      "description": "Aprimoramento: lança a magia sem gesticular nem falar, usando só concentração — permite conjurar com as mãos presas ou amordaçado, e lançar magias arcanas usando armadura sem teste de Misticismo. Outros só percebem a conjuração passando em Misticismo (CD 20); +2 PM.",
       "prerequisites": [
         {
           "kind": "note",
