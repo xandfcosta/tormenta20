@@ -208,21 +208,24 @@ type Catalogs struct {
 	generalByID   map[string]*GeneralPower
 	generalByUid  map[string]*GeneralPower
 	grantedByName map[string]*GrantedPower
-	ancestryByID  map[string]*RaceAttributeEntry
+	raceAttrsByID map[string]*RaceAttributeEntry
 	tormentaIDs   map[string]bool
 }
 
 // enginePayload é a forma JSON que o `cmd/genoracle` despeja em
 // `engine-go/parity/_catalogs.json`.
 type enginePayload struct {
-	Items         []CatalogItem                 `json:"items"`
-	Races         []RaceDefinition              `json:"races"`
-	Origins       []OriginDefinition            `json:"origins"`
-	ClassPowers   []ClassPower                  `json:"classPowers"`
-	GeneralPowers []GeneralPower                `json:"generalPowers"`
-	GrantedPowers []GrantedPower                `json:"grantedPowers"`
-	Ancestries    map[string]RaceAttributeEntry `json:"racas"`
-	TormentaIDs   []string                      `json:"tormentaPowerIds"`
+	Items         []CatalogItem      `json:"items"`
+	Races         []RaceDefinition   `json:"races"`
+	Origins       []OriginDefinition `json:"origins"`
+	ClassPowers   []ClassPower       `json:"classPowers"`
+	GeneralPowers []GeneralPower     `json:"generalPowers"`
+	GrantedPowers []GrantedPower     `json:"grantedPowers"`
+	// NÃO se chama `Ancestries`: ascendência neste motor é a metade que o
+	// suraggel escolhe (`choice.ancestry`), e uma palavra por conceito. Isto é
+	// a tabela de atributo POR RAÇA, que o dump guarda sob `racas`.
+	RaceAttributes map[string]RaceAttributeEntry `json:"racas"`
+	TormentaIDs    []string                      `json:"tormentaPowerIds"`
 }
 
 // PrimeEngineCatalogs ingere o JSON dos catálogos num `Catalogs` indexado.
@@ -239,7 +242,7 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 		generalByID:   make(map[string]*GeneralPower, len(p.GeneralPowers)),
 		generalByUid:  make(map[string]*GeneralPower, len(p.GeneralPowers)),
 		grantedByName: make(map[string]*GrantedPower, len(p.GrantedPowers)),
-		ancestryByID:  make(map[string]*RaceAttributeEntry, len(p.Ancestries)),
+		raceAttrsByID: make(map[string]*RaceAttributeEntry, len(p.RaceAttributes)),
 		tormentaIDs:   make(map[string]bool, len(p.TormentaIDs)),
 	}
 	for i := range p.Items {
@@ -268,9 +271,9 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	// era o rótulo, então a mesma string guardada na ficha achava a raça nos
 	// DOIS índices. Slugificar o id desfez a coincidência e a busca por nome
 	// passou a devolver nil — sem erro, só o humano perdendo os +1.
-	for id := range p.Ancestries {
-		r := p.Ancestries[id]
-		c.ancestryByID[id] = &r
+	for id := range p.RaceAttributes {
+		r := p.RaceAttributes[id]
+		c.raceAttrsByID[id] = &r
 	}
 	for _, id := range p.TormentaIDs {
 		c.tormentaIDs[id] = true
@@ -321,7 +324,7 @@ func (c *Catalogs) getOriginBenefit(benefitID string) *OriginBenefit {
 
 // raceEntryByID acha a entrada de atributo de uma raça pelo slug. O mapa é
 // montado uma vez, quando os catálogos são primados.
-func (c *Catalogs) raceEntryByID(id string) *RaceAttributeEntry { return c.ancestryByID[id] }
+func (c *Catalogs) raceEntryByID(id string) *RaceAttributeEntry { return c.raceAttrsByID[id] }
 
 // raceWithDeformidade devolve o primeiro slug que tem Deformidade (Lefou p23).
 func (c *Catalogs) raceWithDeformidade(ids ...string) string {

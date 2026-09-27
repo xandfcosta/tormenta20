@@ -643,7 +643,7 @@ por coincidência.** O motor indexava as raças duas vezes — o `racesByID`, de
 de `races.json`, que também era `Humano` —, e a ficha guardava uma string só.
 Slugificar desfez a coincidência, e a busca por nome passou a devolver `nil` —
 que não é erro: é o humano perdendo os `+1` em três atributos, calado. Hoje o
-segundo mapa é o `ancestryByID`, chaveado pelo slug, e o mesmo par existia do
+segundo mapa é o `raceAttrsByID`, chaveado pelo slug, e o mesmo par existia do
 lado da origem (`origensPorId` e `originItemsIndex`).
 
 Quem pegou foram as 18 fichas do oráculo, e é o controle que vale a pena
