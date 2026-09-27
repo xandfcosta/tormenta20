@@ -674,15 +674,23 @@ Duas escolhas que valem lembrar, porque errá-las é invisível:
 - **"Resistência a X +N" é bônus em TESTE**, não redução de dano, e quem decide
   é o livro: "uma criatura com resistência a magia +2 recebe +2 em testes"
   (p226). O alvo é `resistance`.
+- **Quem DEFENDE de uma manobra faz um teste de LUTA**, e é esse o alvo — não o
+  `maneuver`, que é a rolagem de quem ATACA (é o que o `Derrubar Aprimorado`
+  usa). A p234 é explícita: *"Faça um teste de manobra (um teste de ataque corpo
+  a corpo) OPOSTO com a criatura. Mesmo que ela esteja usando uma arma de ataque
+  à distância, deve fazer o teste usando seu valor de Luta."* O "Desejo de
+  Liberdade" (+5 contra agarrar, p89) chegou a ser dado como impossível sem uma
+  DIREÇÃO nova no alvo `maneuver`; ler a p234 desfez a forma nova inteira, e o
+  poder virou `expertise:Luta` com `context`. **Ler a regra do teste antes de
+  desenhar o alvo** — a pergunta é "que teste a pessoa ROLA?", e ela costuma ter
+  resposta impressa.
 - **Número impresso SEM alvo não vira modificador**, e o motivo fica escrito.
   Três formas apareceram nas origens (ALE-406): o poder que NEGA uma penalidade
   que o motor não aplica (o "Água no Feijão" nega um –5 de fabricação, e um +5
   valeria sempre para um –5 que vale raramente — o poder geral `Disparo Preciso`
   já era assim, sem modificador); o poder cujo TESTE o livro não define (o
   "Vendedor de Carcaças" dá "+5 no teste" de extrair recursos, e `extrair
-  recursos` aparece uma vez no PDF inteiro, no texto dele); e o poder que pede
-  uma DIREÇÃO que o alvo não tem (o "Desejo de Liberdade" dá +5 *contra* a
-  manobra agarrar, e `maneuver` é a rolagem ofensiva). O guarda é o
+  recursos` aparece uma vez no PDF inteiro, no texto dele). O guarda é o
   `TestEveryBonusAnOriginUniquePowerPrintsBecomesAModifier`: lista de
   PERMITIDOS, cada linha dizendo POR QUE não há alvo.
 

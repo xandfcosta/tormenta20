@@ -5833,7 +5833,21 @@
         "id": "origin-escravo-unique",
         "name": "Desejo de Liberdade",
         "kind": "poder",
-        "description": "Ninguém voltará a torná-lo um escravo: você recebe +5 em testes contra a manobra agarrar e efeitos de movimento."
+        "description": "Ninguém voltará a torná-lo um escravo: você recebe +5 em testes contra a manobra agarrar e efeitos de movimento.",
+        "modifiers": [
+          {
+            "target": {
+              "k": "expertise",
+              "name": "Luta"
+            },
+            "amount": 5,
+            "bonusType": "untyped",
+            "condition": {
+              "c": "context",
+              "note": "contra a manobra agarrar"
+            }
+          }
+        ]
       },
       "uid": "org_vkmiznfgwp"
     },
