@@ -1031,6 +1031,7 @@ este verbete":
 | `audit-gods.py` | `gods.json` | Tabela 1-20 **e** os campos rotulados do verbete |
 | `audit-conditions.py` | `conditionModifierTable` (Go!) | a HERANÇA que a primeira frase do verbete declara |
 | `audit-origins.py` | `origins-source.json`, `origins.json` | Tabela 1-19 **e** o verbete, que é o título com `Benefícios.` abaixo |
+| `audit-powers.py` | `general-powers.json`, `tormenta-powers.json` | a tabela de pré-requisitos **e** a linha `Pré-requisito:` do verbete |
 
 Escolher a âncora é o trabalho; o resto é regex. E a do auditor de raças é a que
 explica por quê: **não serve o título nem a página.** O bloco de uma raça
@@ -1063,13 +1064,23 @@ título — e a tabela é lida PRIMEIRO, com as linhas dela retiradas da busca, 
 rodapé da coluna da p87 (que traz o `Benefícios.` do Artista, cujo verbete abre na
 página anterior) dá ao "Trabalhador" um verbete que não é o dele.
 
-Ele é também o único que compara PROSA, e só porque tem como: a descrição do
-poder único carrega a regra, e três dimensões mecanizáveis a cercam — os números
-que ela imprime, as perícias que ela nomeia, e quanto das palavras de conteúdo do
-livro ela repete. As duas primeiras não bastaram: os números do "Vendedor de
-Carcaças" coincidiram por acaso e seis regras trocadas passaram verdes (ALE-405).
-O veredito sobre a frase continua humano, e é por isso que as duas saem impressas
-lado a lado.
+Os de ORIGENS e de PODERES comparam PROSA, e só porque têm como: a descrição
+carrega a regra, e três dimensões mecanizáveis a cercam — os números que ela
+imprime, as perícias que ela nomeia, e a cobertura de palavras de conteúdo (o
+`cobertura` do `t20pdf`). As duas primeiras não bastaram: os números do "Vendedor
+de Carcaças" coincidiram por acaso e seis regras trocadas passaram verdes
+(ALE-405). O veredito sobre a frase continua humano, e é por isso que as duas
+saem impressas lado a lado.
+
+**A DIREÇÃO da medida é do TERRENO, e não da dimensão.** Nas origens o catálogo
+escrevia uma forma curta EQUIVALENTE à do livro, e a pergunta era "a regra do
+livro está aqui?". Nos poderes ele RESUME — `+2 nos ataques com a arma escolhida`
+para um parágrafo inteiro —, e essa mesma pergunta dá 20% para a `Torcida`, cuja
+regra está perfeita. Para um resumo a pergunta é a INVERSA: *tudo o que o
+catálogo afirma está na página?* Um resumo fiel só usa palavras que a página tem;
+uma regra inventada traz palavras que não estão lá. Vale para as três dimensões,
+não só para a cobertura — medir "todo número do livro está no catálogo" acusa
+todo verbete que o livro ilustra com exemplo trabalhado (ALE-407).
 
 E ele lê por PALAVRA, não por linha, porque agrupar por linha junta o que não
 tem relação: na p119 o elemento `<line>` traz `Furtividade Des • Armadura
