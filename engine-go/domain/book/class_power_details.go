@@ -3,8 +3,6 @@ package book
 import (
 	"encoding/json"
 
-	"t20engine/domain/catalog"
-
 	"t20engine/domain/engine"
 )
 
@@ -22,8 +20,8 @@ import (
 
 // ClassPowerFlags mapeia id do poder → flag que os modificadores dele ligam.
 func ClassPowerFlags() map[string]string {
-	raw, ok := catalog.Resource("class-powers")
-	if !ok {
+	raw := classPowersResolved()
+	if raw == nil {
 		return map[string]string{}
 	}
 	var powers []struct {
@@ -54,8 +52,8 @@ type PowerTeachingSpells struct {
 
 // PowersThatTeachSpells são os poderes cujo bloco de escolha concede magia.
 func PowersThatTeachSpells() []PowerTeachingSpells {
-	raw, ok := catalog.Resource("class-powers")
-	if !ok {
+	raw := classPowersResolved()
+	if raw == nil {
 		return nil
 	}
 	var powers []struct {

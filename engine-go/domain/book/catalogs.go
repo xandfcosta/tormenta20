@@ -209,13 +209,21 @@ func ListOf[T any](name string) []T {
 func FlattenedPowers() []Power {
 	var outside []Power
 
-	for _, p := range ListOf[struct {
+	// Não é `ListOf`: desde a ALE-403 o arquivo tem o VERBETE (a regra, sem
+	// classe) e a CONCESSÃO (a classe e o nível, apontando). O acervo lista
+	// concessões — uma linha por poder que uma classe dá —, e uma linha de
+	// verbete aqui apareceria sem fonte.
+	var poderesDeClasse []struct {
 		ID          string `json:"id"`
 		ClassName   string `json:"className"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
 		BookPage    int    `json:"bookPage"`
-	}]("class-powers") {
+	}
+	if raw := classPowersResolved(); raw != nil {
+		_ = json.Unmarshal(raw, &poderesDeClasse)
+	}
+	for _, p := range poderesDeClasse {
 		outside = append(outside, Power{
 			ID: p.ID, Name: p.Name, Source: p.ClassName, Description: p.Description, BookPage: p.BookPage,
 		})

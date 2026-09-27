@@ -6856,26 +6856,23 @@
     {
       "id": "class.arcanista.magias-2-circulo",
       "className": "Arcanista",
-      "name": "Magias (2° círculo)",
-      "description": "Pode lançar magias arcanas de 2° círculo.",
       "grantedAtLevel": 5,
-      "uid": "pwr_bzr2mdicbo"
+      "uid": "pwr_bzr2mdicbo",
+      "powerUid": "pwr_3mprtzixls"
     },
     {
       "id": "class.arcanista.magias-3-circulo",
       "className": "Arcanista",
-      "name": "Magias (3° círculo)",
-      "description": "Pode lançar magias arcanas de 3° círculo.",
       "grantedAtLevel": 9,
-      "uid": "pwr_lgjwrei4kt"
+      "uid": "pwr_lgjwrei4kt",
+      "powerUid": "pwr_v22gvkya4o"
     },
     {
       "id": "class.arcanista.magias-4-circulo",
       "className": "Arcanista",
-      "name": "Magias (4° círculo)",
-      "description": "Pode lançar magias arcanas de 4° círculo.",
       "grantedAtLevel": 13,
-      "uid": "pwr_ape6cyqpro"
+      "uid": "pwr_ape6cyqpro",
+      "powerUid": "pwr_cq2yqbaoiy"
     },
     {
       "id": "class.arcanista.magias-5-circulo",
@@ -6905,41 +6902,8 @@
     {
       "id": "class.arcanista.aumento-de-atributo",
       "className": "Arcanista",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_63kbeukl6h"
+      "uid": "pwr_63kbeukl6h",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.arcanista.caldeirao-do-bruxo",
@@ -7624,41 +7588,8 @@
     {
       "id": "class.barbaro.aumento-de-atributo",
       "className": "Bárbaro",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_m6ifjogwjm"
+      "uid": "pwr_m6ifjogwjm",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.barbaro.brado-assustador",
@@ -7715,10 +7646,8 @@
     {
       "id": "class.barbaro.esquiva-sobrenatural",
       "className": "Bárbaro",
-      "name": "Esquiva Sobrenatural",
-      "description": "Instintos apurados — nunca fica surpreendido.",
-      "bookPage": 42,
-      "uid": "pwr_mx4gd6prjs"
+      "uid": "pwr_mx4gd6prjs",
+      "powerUid": "pwr_gnu2wcfdba"
     },
     {
       "id": "class.barbaro.forca-indomavel",
@@ -7765,10 +7694,8 @@
     {
       "id": "class.barbaro.impeto",
       "className": "Bárbaro",
-      "name": "Ímpeto",
-      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada.",
-      "bookPage": 42,
-      "uid": "pwr_c64w2tcrwh"
+      "uid": "pwr_c64w2tcrwh",
+      "powerUid": "pwr_ycwgrnb6oa"
     },
     {
       "id": "class.barbaro.investida-imprudente",
@@ -8008,10 +7935,9 @@
     {
       "id": "class.bardo.magias-2-circulo",
       "className": "Bardo",
-      "name": "Magias (2° círculo)",
-      "description": "Pode lançar magias arcanas de 2° círculo.",
       "grantedAtLevel": 6,
-      "uid": "pwr_izytohq7cz"
+      "uid": "pwr_izytohq7cz",
+      "powerUid": "pwr_3mprtzixls"
     },
     {
       "id": "class.bardo.inspiracao-3",
@@ -8039,10 +7965,9 @@
     {
       "id": "class.bardo.magias-3-circulo",
       "className": "Bardo",
-      "name": "Magias (3° círculo)",
-      "description": "Pode lançar magias arcanas de 3° círculo.",
       "grantedAtLevel": 10,
-      "uid": "pwr_m4noumr2qv"
+      "uid": "pwr_m4noumr2qv",
+      "powerUid": "pwr_v22gvkya4o"
     },
     {
       "id": "class.bardo.inspiracao-4",
@@ -8070,10 +7995,9 @@
     {
       "id": "class.bardo.magias-4-circulo",
       "className": "Bardo",
-      "name": "Magias (4° círculo)",
-      "description": "Pode lançar magias arcanas de 4° círculo.",
       "grantedAtLevel": 14,
-      "uid": "pwr_z4kcokw2ac"
+      "uid": "pwr_z4kcokw2ac",
+      "powerUid": "pwr_cq2yqbaoiy"
     },
     {
       "id": "class.bardo.inspiracao-5",
@@ -8126,41 +8050,8 @@
     {
       "id": "class.bardo.aumento-de-atributo",
       "className": "Bardo",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_7pqcv35p7a"
+      "uid": "pwr_7pqcv35p7a",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.bardo.danca-das-laminas",
@@ -8391,11 +8282,9 @@
     {
       "id": "class.bucaneiro.evasao",
       "className": "Bucaneiro",
-      "name": "Evasão",
-      "description": "Em teste de Reflexos que reduziria dano à metade, sucesso = 0 dano. Falha = dano normal. Exige liberdade de movimentos.",
       "grantedAtLevel": 2,
-      "bookPage": 47,
-      "uid": "pwr_vguoq2c7hv"
+      "uid": "pwr_vguoq2c7hv",
+      "powerUid": "pwr_enoa4lwutn"
     },
     {
       "id": "class.bucaneiro.esquiva-sagaz-1",
@@ -8673,41 +8562,8 @@
     {
       "id": "class.bucaneiro.aumento-de-atributo",
       "className": "Bucaneiro",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_wl4ennklnv"
+      "uid": "pwr_wl4ennklnv",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.bucaneiro.aventureiro-avido",
@@ -9054,41 +8910,8 @@
     {
       "id": "class.cacador.aumento-de-atributo",
       "className": "Caçador",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_jhpz7ukbvh"
+      "uid": "pwr_jhpz7ukbvh",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.cacador.bote",
@@ -9291,10 +9114,8 @@
     {
       "id": "class.cacador.impeto",
       "className": "Caçador",
-      "name": "Ímpeto",
-      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada.",
-      "bookPage": 42,
-      "uid": "pwr_4pojmlsnjj"
+      "uid": "pwr_4pojmlsnjj",
+      "powerUid": "pwr_ycwgrnb6oa"
     },
     {
       "id": "class.cacador.inimigo-de-criatura",
@@ -9687,50 +9508,14 @@
     {
       "id": "class.cavaleiro.aumento-de-atributo",
       "className": "Cavaleiro",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_jqgtevs5dw"
+      "uid": "pwr_jqgtevs5dw",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.cavaleiro.autoridade-feudal",
       "className": "Cavaleiro",
-      "name": "Autoridade Feudal",
-      "description": "Em locais com influência (mestre decide), gasta 1 hora + 2 PM para conclamar parceiro iniciante até fim da aventura.",
-      "minLevel": 6,
-      "bookPage": 54,
-      "uid": "pwr_x7ryumhqpa"
+      "uid": "pwr_x7ryumhqpa",
+      "powerUid": "pwr_miwbh67tef"
     },
     {
       "id": "class.cavaleiro.desprezar-os-covardes",
@@ -10004,41 +9789,8 @@
     {
       "id": "class.clerigo.aumento-de-atributo",
       "className": "Clérigo",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_nbi3kf6yll"
+      "uid": "pwr_nbi3kf6yll",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.clerigo.autoridade-eclesiastica",
@@ -10371,41 +10123,8 @@
     {
       "id": "class.druida.aumento-de-atributo",
       "className": "Druida",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_obnnx6jj6g"
+      "uid": "pwr_obnnx6jj6g",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.druida.companheiro-animal",
@@ -10778,41 +10497,8 @@
     {
       "id": "class.guerreiro.aumento-de-atributo",
       "className": "Guerreiro",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_5kdkcc5yku"
+      "uid": "pwr_5kdkcc5yku",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.guerreiro.bater-e-correr",
@@ -10902,10 +10588,8 @@
     {
       "id": "class.guerreiro.impeto",
       "className": "Guerreiro",
-      "name": "Ímpeto",
-      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada.",
-      "bookPage": 42,
-      "uid": "pwr_rin2gv2wco"
+      "uid": "pwr_rin2gv2wco",
+      "powerUid": "pwr_ycwgrnb6oa"
     },
     {
       "id": "class.guerreiro.mestre-em-arma",
@@ -10965,10 +10649,8 @@
     {
       "id": "class.guerreiro.valentao",
       "className": "Guerreiro",
-      "name": "Valentão",
-      "description": "+2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos.",
-      "bookPage": 66,
-      "uid": "pwr_ysjmveqjhu"
+      "uid": "pwr_ysjmveqjhu",
+      "powerUid": "pwr_hpf2masdfi"
     },
     {
       "id": "class.inventor.engenhosidade",
@@ -11200,41 +10882,8 @@
     {
       "id": "class.inventor.aumento-de-atributo",
       "className": "Inventor",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_brrumuthnq"
+      "uid": "pwr_brrumuthnq",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.inventor.automato",
@@ -11597,11 +11246,9 @@
     {
       "id": "class.ladino.evasao",
       "className": "Ladino",
-      "name": "Evasão",
-      "description": "Em teste de Reflexos que reduziria dano à metade, sucesso = 0 dano. Falha = dano normal. Exige liberdade de movimentos.",
       "grantedAtLevel": 2,
-      "bookPage": 47,
-      "uid": "pwr_jumrxvrd52"
+      "uid": "pwr_jumrxvrd52",
+      "powerUid": "pwr_enoa4lwutn"
     },
     {
       "id": "class.ladino.ataque-furtivo-2d6",
@@ -11615,11 +11262,9 @@
     {
       "id": "class.ladino.esquiva-sobrenatural",
       "className": "Ladino",
-      "name": "Esquiva Sobrenatural",
-      "description": "Instintos apurados — nunca fica surpreendido.",
       "grantedAtLevel": 4,
-      "bookPage": 42,
-      "uid": "pwr_f6zgusza4q"
+      "uid": "pwr_f6zgusza4q",
+      "powerUid": "pwr_gnu2wcfdba"
     },
     {
       "id": "class.ladino.ataque-furtivo-3d6",
@@ -11732,41 +11377,8 @@
     {
       "id": "class.ladino.aumento-de-atributo",
       "className": "Ladino",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_ityb6k5lke"
+      "uid": "pwr_ityb6k5lke",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.ladino.contatos-no-submundo",
@@ -12215,41 +11827,8 @@
     {
       "id": "class.lutador.aumento-de-atributo",
       "className": "Lutador",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_xbm3gsip4n"
+      "uid": "pwr_xbm3gsip4n",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.lutador.bracos-calejados",
@@ -12472,10 +12051,8 @@
     {
       "id": "class.lutador.valentao",
       "className": "Lutador",
-      "name": "Valentão",
-      "description": "+2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos.",
-      "bookPage": 66,
-      "uid": "pwr_3ikfe5s4ug"
+      "uid": "pwr_3ikfe5s4ug",
+      "powerUid": "pwr_hpf2masdfi"
     },
     {
       "id": "class.lutador.voadora",
@@ -12604,50 +12181,14 @@
     {
       "id": "class.nobre.aumento-de-atributo",
       "className": "Nobre",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_pheabfxysg"
+      "uid": "pwr_pheabfxysg",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.nobre.autoridade-feudal",
       "className": "Nobre",
-      "name": "Autoridade Feudal",
-      "description": "Em locais com influência (mestre decide), gasta 1 hora + 2 PM para conclamar parceiro iniciante até fim da aventura.",
-      "minLevel": 6,
-      "bookPage": 54,
-      "uid": "pwr_kdq7dijpfz"
+      "uid": "pwr_kdq7dijpfz",
+      "powerUid": "pwr_miwbh67tef"
     },
     {
       "id": "class.nobre.educacao-privilegiada",
@@ -12979,41 +12520,8 @@
     {
       "id": "class.paladino.aumento-de-atributo",
       "className": "Paladino",
-      "name": "Aumento de Atributo",
-      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
-      "choice": {
-        "kind": "attribute",
-        "label": "Atributo",
-        "repeatable": true,
-        "options": [
-          {
-            "id": "strength",
-            "name": "Força"
-          },
-          {
-            "id": "dexterity",
-            "name": "Destreza"
-          },
-          {
-            "id": "constitution",
-            "name": "Constituição"
-          },
-          {
-            "id": "intelligence",
-            "name": "Inteligência"
-          },
-          {
-            "id": "wisdom",
-            "name": "Sabedoria"
-          },
-          {
-            "id": "charisma",
-            "name": "Carisma"
-          }
-        ]
-      },
-      "bookPage": 38,
-      "uid": "pwr_glzakmng43"
+      "uid": "pwr_glzakmng43",
+      "powerUid": "pwr_qbiyubn2cs"
     },
     {
       "id": "class.paladino.aura-antimagia",
@@ -13215,6 +12723,98 @@
       ],
       "bookPage": 84,
       "uid": "pwr_ynd4hpdhu4"
+    },
+    {
+      "id": "poder.magias-2-circulo",
+      "description": "Pode lançar magias arcanas de 2° círculo.",
+      "name": "Magias (2° círculo)",
+      "uid": "pwr_3mprtzixls"
+    },
+    {
+      "id": "poder.magias-3-circulo",
+      "description": "Pode lançar magias arcanas de 3° círculo.",
+      "name": "Magias (3° círculo)",
+      "uid": "pwr_v22gvkya4o"
+    },
+    {
+      "id": "poder.magias-4-circulo",
+      "description": "Pode lançar magias arcanas de 4° círculo.",
+      "name": "Magias (4° círculo)",
+      "uid": "pwr_cq2yqbaoiy"
+    },
+    {
+      "id": "poder.aumento-de-atributo",
+      "bookPage": 38,
+      "choice": {
+        "kind": "attribute",
+        "label": "Atributo",
+        "options": [
+          {
+            "id": "strength",
+            "name": "Força"
+          },
+          {
+            "id": "dexterity",
+            "name": "Destreza"
+          },
+          {
+            "id": "constitution",
+            "name": "Constituição"
+          },
+          {
+            "id": "intelligence",
+            "name": "Inteligência"
+          },
+          {
+            "id": "wisdom",
+            "name": "Sabedoria"
+          },
+          {
+            "id": "charisma",
+            "name": "Carisma"
+          }
+        ],
+        "repeatable": true
+      },
+      "description": "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
+      "name": "Aumento de Atributo",
+      "uid": "pwr_qbiyubn2cs"
+    },
+    {
+      "id": "poder.esquiva-sobrenatural",
+      "bookPage": 42,
+      "description": "Instintos apurados — nunca fica surpreendido.",
+      "name": "Esquiva Sobrenatural",
+      "uid": "pwr_gnu2wcfdba"
+    },
+    {
+      "id": "poder.impeto",
+      "bookPage": 42,
+      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada.",
+      "name": "Ímpeto",
+      "uid": "pwr_ycwgrnb6oa"
+    },
+    {
+      "id": "poder.evasao",
+      "bookPage": 47,
+      "description": "Em teste de Reflexos que reduziria dano à metade, sucesso = 0 dano. Falha = dano normal. Exige liberdade de movimentos.",
+      "name": "Evasão",
+      "uid": "pwr_enoa4lwutn"
+    },
+    {
+      "id": "poder.autoridade-feudal",
+      "bookPage": 54,
+      "description": "Em locais com influência (mestre decide), gasta 1 hora + 2 PM para conclamar parceiro iniciante até fim da aventura.",
+      "minLevel": 6,
+      "name": "Autoridade Feudal",
+      "uid": "pwr_miwbh67tef"
+    },
+    {
+      "id": "poder.valentao",
+      "bookPage": 66,
+      "description": "+2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos.",
+      "name": "Valentão",
+      "uid": "pwr_hpf2masdfi"
     }
   ],
   "generalPowers": [

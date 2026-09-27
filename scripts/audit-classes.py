@@ -56,6 +56,31 @@ from t20pdf import (  # noqa: E402
     sem_lixo)
 
 PODERES = str(RAIZ / 'engine-go/domain/catalog/data/class-powers.json')
+
+
+def poderes_de_classe() -> list:
+    """As CONCESSÕES de poder de classe, com a regra do verbete já juntada.
+
+    Desde a ALE-403 o arquivo tem duas espécies de linha: o VERBETE, sem
+    `className`, que carrega a regra uma vez; e a CONCESSÃO, com a classe e o
+    nível, apontando por `powerUid`. O "Aumento de Atributo" era quatorze
+    cópias byte a byte iguais, uma por classe.
+
+    Este auditor pergunta "a classe X concede o poder Y no nível Z?", então ele
+    lê concessões — mas precisa do NOME, que mora no verbete. Ler o arquivo cru
+    estoura num `KeyError: 'name'`, que foi como esta função nasceu.
+    """
+    with open(PODERES, encoding='utf-8') as f:
+        bruto = json.load(f)
+    linhas = bruto if isinstance(bruto, list) else list(bruto.values())
+    verbetePorUid = {x['uid']: x for x in linhas if 'className' not in x}
+    fora = []
+    for linha in linhas:
+        if 'className' not in linha:
+            continue
+        verbete = verbetePorUid.get(linha.get('powerUid'))
+        fora.append({**verbete, **linha} if verbete else linha)
+    return fora
 # As páginas saem do SUMÁRIO do livro, lido por coordenada. Classes vão de 32 a
 # 84 — Origens começam em 85.
 PRIMEIRA_PAGINA_DA_CLASSE = {
@@ -157,9 +182,7 @@ def main() -> None:
 
     faixa = faixas()
     alvo = [args.classe] if args.classe else list(faixa)
-    with open(PODERES, encoding='utf-8') as f:
-        bruto = json.load(f)
-    poderes = bruto if isinstance(bruto, list) else list(bruto.values())
+    poderes = poderes_de_classe()
 
     tabelas = {c: tabela_da_classe(c, *faixa[c]) for c in alvo}
     prosas = {c: prosa_da_classe(*faixa[c]) for c in alvo}

@@ -557,6 +557,41 @@ ORDEM só mede os pares que o DADO dele põe na mesma ficha, e é por isso que o
 sabotar a ordem depois de mexer: trocar duas linhas tem de sair nomeando as
 duas espécies fora de lugar.
 
+### O PODER é uma coisa; a CONCESSÃO dele é outra
+
+O `class-powers.json` tem duas espécies de linha desde a ALE-403:
+
+- o **verbete**, sem `className`, com a regra — nome, descrição, página, bloco
+  de escolha;
+- a **concessão**, com `className`, o nível ou a escolha que destrava, e um
+  `powerUid` apontando para o verbete.
+
+Antes as duas moravam na mesma linha, e por isso a regra era COPIADA quando
+mais de uma classe concedia o mesmo poder: o "Aumento de Atributo" tinha
+quatorze cópias byte a byte iguais. Elas não tinham divergido, e nada as
+impedia — é o caminho que `general-powers` × `origins` percorreu até ter
+dezenove poderes com duas regras.
+
+**Quem resolve é o `domain/book`**, num ponto só (`classPowersResolved`), e os
+quatro leitores passam por lá. O MOTOR não resolve, e isso é deliberado: ele lê
+o despejo cru e, para poder de classe, só olha `Modifiers` — e nenhum dos nove
+verbetes tem modificador. Compartilhar a resolução com ele exigiria uma aresta
+entre `domain/engine` e `domain/catalog`, que hoje não se conhecem.
+
+Essa escolha tem um guarda, porque ela é uma coincidência feliz e não uma
+garantia: `TestNoClassPowerEntryCarriesModifiersTheEngineWouldIgnore` reprova
+se alguém der um modificador a um verbete. Sem ele, a tela mostraria o bônus e
+a ficha não o teria.
+
+> **O quarto leitor não estava na minha lista.** Mapeei três — o
+> `PowerCatalogs`, o `ClassPowerFlags` e o `PowersThatTeachSpells` — e o
+> `FlattenedPowers`, que monta o acervo do mestre, só apareceu quando o
+> `TestPowersComeFromTheThreeCatalogs` reprovou com "o poder não diz de onde
+> veio". E havia um QUINTO fora do Go: o `scripts/audit-classes.py`, que
+> estourou em `KeyError: 'name'`. A lição não é "mapear com mais cuidado": é
+> que `grep -rn '"class-powers"'` responde em um segundo o que a memória
+> responde errado.
+
 ### O verbete tem DOIS identificadores, e eles têm papéis opostos
 
 - **`id`** é o nome em kebab-case: `esquiva`, `bencao-do-mana`. Ele é o
