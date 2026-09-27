@@ -369,11 +369,22 @@ var (
 // GrantedPowerNames devolve o nome de cada poder concedido pelos deuses — a
 // forma como a ficha os grava, "Bênção do Mana" e não um id.
 //
-// Ele lê o `divine-powers.json`, e NÃO o `granted-powers.json` (ALE-397). O
-// segundo só tem os poderes que carregam modificador, e por muito tempo teve
-// menos: com 36 dos 72 nomes, o validador da seed recusava um devoto de Marah
-// em diante — "Visão nas Trevas" e "Escudo Mágico" saíam como referência
-// quebrada de um catálogo que os tem.
+// Ele lê o `divine-powers.json`, e NÃO o `granted-powers.json` (ALE-397): o
+// segundo é um SUBCONJUNTO, e ler o subconjunto fazia o validador da seed
+// recusar um devoto de Marah em diante — "Visão nas Trevas" e "Escudo Mágico"
+// saíam como referência quebrada de um catálogo que os tem.
+//
+// Aqui morava "o segundo só tem os poderes que carregam modificador", e a
+// ALE-408 mediu: são 14 de 42. O recorte real é outro — o `granted-powers` é a
+// lista por PODER, com os deuses que o concedem e os modificadores de quem os
+// tem; o `divine-powers` é a lista por PAR (deus, poder), com a ação, o custo em
+// PM e o limite de usos. Quem precisa de NOME pergunta ao segundo, que é
+// completo; quem precisa de MODIFICADOR pergunta ao primeiro.
+//
+// Onde os dois falam do mesmo par, a regra é a mesma, e quem cobra é o
+// `TestEveryGrantedPowerSaysTheSameThingInBothFiles`. Ela não era: doze pares
+// divergiam, e em todos os doze quem tinha desviado do livro era o
+// `granted-powers`.
 //
 // O `divine-powers.json` é por (deus, poder) e repete os seis poderes que mais
 // de um deus concede, então os nomes saem SEM repetição.
