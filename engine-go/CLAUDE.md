@@ -674,16 +674,20 @@ Duas escolhas que valem lembrar, porque errá-las é invisível:
 - **"Resistência a X +N" é bônus em TESTE**, não redução de dano, e quem decide
   é o livro: "uma criatura com resistência a magia +2 recebe +2 em testes"
   (p226). O alvo é `resistance`.
-- **Quem DEFENDE de uma manobra faz um teste de LUTA**, e é esse o alvo — não o
-  `maneuver`, que é a rolagem de quem ATACA (é o que o `Derrubar Aprimorado`
-  usa). A p234 é explícita: *"Faça um teste de manobra (um teste de ataque corpo
-  a corpo) OPOSTO com a criatura. Mesmo que ela esteja usando uma arma de ataque
-  à distância, deve fazer o teste usando seu valor de Luta."* O "Desejo de
-  Liberdade" (+5 contra agarrar, p89) chegou a ser dado como impossível sem uma
-  DIREÇÃO nova no alvo `maneuver`; ler a p234 desfez a forma nova inteira, e o
-  poder virou `expertise:Luta` com `context`. **Ler a regra do teste antes de
-  desenhar o alvo** — a pergunta é "que teste a pessoa ROLA?", e ela costuma ter
-  resposta impressa.
+- **A manobra tem DOIS lados, e o alvo diz qual.** Ela é um teste OPOSTO (p234):
+  *"Faça um teste de manobra (um teste de ataque corpo a corpo) OPOSTO com a
+  criatura […] deve fazer o teste usando seu valor de Luta."* O `maneuver:<nome>`
+  sem escopo é a rolagem de quem ATACA (o +2 do `Derrubar Aprimorado`); com
+  `scope: "defense"` é a de quem resiste (o +5 do `Desejo de Liberdade`, p89). O
+  escopo entra na CHAVE do efeito, ou os dois somam no mesmo balde.
+
+  **E saber QUE TESTE a pessoa rola não basta para escolher o alvo.** Este poder
+  foi modelado primeiro como `expertise:Luta`, que é literalmente o teste que a
+  p234 manda rolar — e estava errado, porque em T20 o ATAQUE também é um teste de
+  Luta: ligar o bônus defensivo subia o ataque da arma empunhada em 5. A pergunta
+  não é só "que teste ela rola?", é **"que OUTROS números saem desse mesmo
+  teste?"**. Uma perícia que alimenta combate não aceita bônus de recorte fino;
+  quem precisa de recorte precisa de alvo próprio.
 - **Número impresso SEM alvo não vira modificador**, e o motivo fica escrito.
   Três formas apareceram nas origens (ALE-406): o poder que NEGA uma penalidade
   que o motor não aplica (o "Água no Feijão" nega um –5 de fabricação, e um +5
