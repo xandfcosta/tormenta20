@@ -674,6 +674,35 @@ Duas escolhas que valem lembrar, porque errá-las é invisível:
 - **"Resistência a X +N" é bônus em TESTE**, não redução de dano, e quem decide
   é o livro: "uma criatura com resistência a magia +2 recebe +2 em testes"
   (p226). O alvo é `resistance`.
+- **Número impresso SEM alvo não vira modificador**, e o motivo fica escrito.
+  Três formas apareceram nas origens (ALE-406): o poder que NEGA uma penalidade
+  que o motor não aplica (o "Água no Feijão" nega um –5 de fabricação, e um +5
+  valeria sempre para um –5 que vale raramente — o poder geral `Disparo Preciso`
+  já era assim, sem modificador); o poder cujo TESTE o livro não define (o
+  "Vendedor de Carcaças" dá "+5 no teste" de extrair recursos, e `extrair
+  recursos` aparece uma vez no PDF inteiro, no texto dele); e o poder que pede
+  uma DIREÇÃO que o alvo não tem (o "Desejo de Liberdade" dá +5 *contra* a
+  manobra agarrar, e `maneuver` é a rolagem ofensiva). O guarda é o
+  `TestEveryBonusAnOriginUniquePowerPrintsBecomesAModifier`: lista de
+  PERMITIDOS, cada linha dizendo POR QUE não há alvo.
+
+### A escala por PATAMAR, e o `default` que engole o `per` desconhecido
+
+`scale.per` tem quatro valores, e `patamar` é o mais novo (ALE-406): o fator é o
+ORDINAL do patamar — 1 no iniciante, 2 no veterano, 3 no campeão, 4 no lenda —,
+o que deixa o "Coração Heroico" (p91) caber num modificador só, `maxPm 3`, dando
+3/6/9/12.
+
+**O `levelStep` não serve, e isso foi medido**: com passo 6 ele erra CINCO dos
+oito níveis de fronteira. Para baixo erra justamente o 5, o 11 e o 17; para cima
+erra o 1-4 e o 18-20.
+
+E há uma armadilha na FORMA do `evalModifierScale`: o `switch` dele tem
+`attribute` no `default`, então um `per` desconhecido não estoura — ele procura
+`attrTotals[""]`, acha zero, e o modificador some da ficha **sem erro nenhum**.
+Um `per` digitado errado é indistinguível de um bônus que o livro não dá. Quem
+torna a diferença visível é o `TestNoCatalogScaleIsOneTheEngineCannotRead`, que
+varre o catálogo inteiro contra a lista de escalas conhecidas.
 
 E uma armadilha de LEITURA do PDF: o nome do poder é impresso em VERSALETE, e o
 `pdftotext` devolve "Armas da ambição" em caixa baixa. Busca exata pelo nome do
