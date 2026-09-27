@@ -217,3 +217,44 @@ def linhas_com_coordenada(pagina: int) -> list[tuple[float, float, str]]:
         if texto:
             saida.append((float(m.group(1)), float(m.group(2)), texto))
     return saida
+
+
+# As PALAVRAS VAZIAS da cobertura: artigo, preposição, pronome e verbo de ligação
+# estão em toda frase, e contá-los daria a qualquer par de frases em português
+# uma semelhança de base que esconderia a diferença que importa.
+PALAVRAS_VAZIAS = frozenset(
+    'a o as os um uma uns umas de do da dos das em no na nos nas e ou que se por '
+    'para com sem seu sua seus suas voce ele ela isso este esta esse essa ao aos '
+    'nao mas como mesmo ate entre sobre pelo pela mais menos tambem cada qualquer '
+    'todos todas outro outra sao ser tem pode podem quando onde apenas alem disso '
+    'muito seja ja la'.split())
+
+
+def palavras_de_conteudo(texto: str) -> set[str]:
+    """As palavras que carregam a regra, sem as vazias e sem acento."""
+    sem_acento = ''.join(
+        c for c in unicodedata.normalize('NFD', texto.lower())
+        if unicodedata.category(c) != 'Mn')
+    return {p for p in re.findall(r'[a-z0-9]+', sem_acento)
+            if len(p) > 2 and p not in PALAVRAS_VAZIAS}
+
+
+def cobertura(do_livro: str, do_catalogo: str) -> tuple[float, int, int]:
+    """Quanto das palavras de conteúdo do LIVRO a frase do catálogo repete.
+
+    A direção importa: o denominador é o LIVRO, porque a pergunta é "a regra do
+    livro está aqui?" e não "o catálogo é conciso?". Uma frase mais curta que
+    preserve a regra pontua alto; uma frase longa que fale de outra coisa pontua
+    zero por mais bem escrita que seja.
+
+    Ela nasceu no `audit-origins.py` (ALE-405), onde as outras duas dimensões —
+    os números impressos e as perícias nomeadas — deixaram passar SEIS regras
+    trocadas: os números do "Vendedor de Carcaças" coincidiram por acaso e as
+    outras cinco não citam perícia. Virou módulo no segundo auditor a precisar
+    dela (ALE-407), antes de existir uma segunda cópia para divergir.
+    """
+    livro = palavras_de_conteudo(do_livro)
+    if not livro:
+        return 1.0, 0, 0
+    juntas = livro & palavras_de_conteudo(do_catalogo)
+    return len(juntas) / len(livro), len(juntas), len(livro)

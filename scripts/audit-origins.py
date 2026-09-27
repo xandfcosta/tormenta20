@@ -31,13 +31,12 @@ Ele PROPÕE: nada é escrito, e cada correção se revisa contra a página citad
 import json
 import re
 import sys
-import unicodedata
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from t20pdf import (  # noqa: E402
-    RAIZ, blocos_da_pagina, chave, coluna_de, inicios_das_colunas, junta,
-    linhas_com_coordenada, sem_lixo)
+    RAIZ, blocos_da_pagina, chave, cobertura, coluna_de, inicios_das_colunas,
+    junta, linhas_com_coordenada, sem_lixo)
 
 PRIMEIRA, ULTIMA = 91, 101  # PDF; o livro abre a seção na p85 e fecha na p95
 OFFSET_DO_PDF = 6  # livro = PDF - 6
@@ -93,15 +92,6 @@ RE_REMISSAO = re.compile(r'(?:p[áa]g(?:ina|s?\.)?)\s*\d+')
 # frase inteira acusaria as quatro origens que têm especialização.
 RE_ESPECIALIZACAO = re.compile(r'\s*\([^)]*\)\s*$')
 
-# As PALAVRAS VAZIAS da cobertura: artigo, preposição, pronome e verbo de ligação
-# estão em toda frase, e contá-los daria a qualquer par de frases em português uma
-# semelhança de base que esconderia a diferença que importa.
-PALAVRAS_VAZIAS = frozenset(
-    'a o as os um uma uns umas de do da dos das em no na nos nas e ou que se por '
-    'para com sem seu sua seus suas voce ele ela isso este esta esse essa ao aos '
-    'nao mas como mesmo ate entre sobre pelo pela mais menos tambem cada qualquer '
-    'todos todas outro outra sao ser tem pode podem quando onde apenas alem disso '
-    'muito seja ja la'.split())
 # O PISO DE COBERTURA das palavras de conteúdo do livro, e ele foi MEDIDO, não
 # escolhido: sobre os 34 poderes únicos antes da correção da ALE-405, as 27 regras
 # trocadas ficaram todas em 38% ou menos e as 7 formas curtas fiéis em 67% ou
@@ -366,30 +356,6 @@ def numeros(texto: str) -> set[str]:
 
 def pericias_citadas(texto: str, nomes: list[str]) -> set[str]:
     return {n for n in nomes if re.search(rf'\b{re.escape(n)}\b', texto)}
-
-
-def palavras_de_conteudo(texto: str) -> set[str]:
-    """As palavras que carregam a regra, sem as vazias e sem acento."""
-    sem_acento = ''.join(
-        c for c in unicodedata.normalize('NFD', texto.lower())
-        if unicodedata.category(c) != 'Mn')
-    return {p for p in re.findall(r'[a-z0-9]+', sem_acento)
-            if len(p) > 2 and p not in PALAVRAS_VAZIAS}
-
-
-def cobertura(do_livro: str, do_catalogo: str) -> tuple[float, int, int]:
-    """Quanto das palavras de conteúdo do LIVRO a frase do catálogo repete.
-
-    A direção importa: o denominador é o LIVRO, porque a pergunta é "a regra do
-    livro está aqui?" e não "o catálogo é conciso?". Uma frase mais curta que
-    preserve a regra pontua alto; uma frase longa que fale de outra coisa pontua
-    zero por mais bem escrita que seja.
-    """
-    livro = palavras_de_conteudo(do_livro)
-    if not livro:
-        return 1.0, 0, 0
-    juntas = livro & palavras_de_conteudo(do_catalogo)
-    return len(juntas) / len(livro), len(juntas), len(livro)
 
 
 def pericia_base(nome: str) -> str:
