@@ -989,6 +989,7 @@ este verbete":
 | `audit-expertises.py` | `expertises.json` | Tabela 2-1 **e** a linha de estado do verbete |
 | `audit-gods.py` | `gods.json` | Tabela 1-20 **e** os campos rotulados do verbete |
 | `audit-conditions.py` | `conditionModifierTable` (Go!) | a HERANÇA que a primeira frase do verbete declara |
+| `audit-origins.py` | `origins-source.json`, `origins.json` | Tabela 1-19 **e** o verbete, que é o título com `Benefícios.` abaixo |
 
 Escolher a âncora é o trabalho; o resto é regex. E a do auditor de raças é a que
 explica por quê: **não serve o título nem a página.** O bloco de uma raça
@@ -1006,12 +1007,28 @@ personagem fica lento, vulnerável e sofre –2 em testes de ataque" contra os
 MAL inventa defeito: a primeira versão pegava uma linha por entrada e perdia a
 continuação, acusando o Cego de não ficar lento quando ele fica.
 
-O de perícias é o único com **duas âncoras**, e por isso é o mais barato de
-validar: o livro imprime a mesma verdade na Tabela 2-1 e na linha de estado de
-cada verbete, então os dois instrumentos se conferem um ao outro ANTES de
-qualquer um deles encostar no catálogo. Trocar duas colunas na leitura da tabela
-produz 24 discordâncias nomeadas; com uma leitura só, produziria uma tabela
-plausível.
+Três deles têm **duas âncoras**, e são os mais baratos de validar: o livro imprime
+a mesma verdade em dois lugares, então os dois instrumentos se conferem um ao
+outro ANTES de qualquer um deles encostar no catálogo. No de perícias, trocar duas
+colunas na leitura da Tabela 2-1 produz 24 discordâncias nomeadas; com uma leitura
+só, produziria uma tabela plausível.
+
+E a segunda âncora do de ORIGENS não é conforto — é o que separa verbete de
+índice. A Tabela 1-19 lista os 35 nomes um por linha, então "Batedor" é impresso
+na p87 antes da p88: casar por título acha a linha da TABELA, e a varredura
+ingênua acusa 29 das 35 origens com `bookPage` errado. Lista plausível, nomes
+certos, zero defeitos. O verbete se reconhece por ter `Benefícios.` abaixo do
+título — e a tabela é lida PRIMEIRO, com as linhas dela retiradas da busca, ou o
+rodapé da coluna da p87 (que traz o `Benefícios.` do Artista, cujo verbete abre na
+página anterior) dá ao "Trabalhador" um verbete que não é o dele.
+
+Ele é também o único que compara PROSA, e só porque tem como: a descrição do
+poder único carrega a regra, e três dimensões mecanizáveis a cercam — os números
+que ela imprime, as perícias que ela nomeia, e quanto das palavras de conteúdo do
+livro ela repete. As duas primeiras não bastaram: os números do "Vendedor de
+Carcaças" coincidiram por acaso e seis regras trocadas passaram verdes (ALE-405).
+O veredito sobre a frase continua humano, e é por isso que as duas saem impressas
+lado a lado.
 
 E ele lê por PALAVRA, não por linha, porque agrupar por linha junta o que não
 tem relação: na p119 o elemento `<line>` traz `Furtividade Des • Armadura
