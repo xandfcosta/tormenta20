@@ -1310,6 +1310,20 @@ segue foi todo descoberto errando — está aqui para ninguém redescobrir:
   reprovou com uma linha de diferença. A ordem do roteiro é **código → prosa →
   `build-css.sh` → `git add`**, e o mesmo vale quando a mudança APAGA
   classe: o artefato guarda o estado de antes.
+
+  **E não é preciso CITAR uma classe para disparar isso: basta um IDENTIFICADOR
+  que coincida com o nome de uma utilidade.** A frase acima diz "prosa", e isso
+  fez parecer que o risco era mencionar uma classe num `.md`; não é. Na ALE-406
+  uma variável local de Go com o nome do número que ela representa acrescentou
+  uma utilidade de `font-variant-numeric` ao bundle, e a CI reprovou uma fatia
+  que não tinha encostado em tela nenhuma. Duas consequências:
+
+  - **rode o `build-css.sh` mesmo quando a mudança não é de tela** — o gatilho
+    pode ser um nome de variável em `domain/`;
+  - **o comentário que explica a armadilha não pode escrever a palavra** em
+    minúsculas. A primeira versão daquele comentário explicava o caso e o
+    disparava de novo, e foi preciso reescrevê-la nomeando o mecanismo sem
+    nomear o token.
 - **O `datastar.js` é VENDORIZADO, e quem o sobe é `scripts/vendor-datastar.sh`.**
   Ele não passa pelo Vite — o `layout.templ` o referencia com um `<script>`
   escrito à mão — então não há dependência no `package.json` para subir. O script

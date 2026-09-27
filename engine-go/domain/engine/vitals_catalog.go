@@ -144,21 +144,26 @@ var patamarThresholds = [...]int{5, 11, 17}
 
 // patamarOf é o ORDINAL do patamar do nível: 1 no iniciante, 4 no lenda.
 //
-// É ordinal e não contagem de patamares ULTRAPASSADOS porque quem escala por ele
+// É ORDINAL e não contagem de patamares ULTRAPASSADOS porque quem escala por ele
 // já recebe o valor no 1º nível: o Coração Heroico dá +3 de saída e +3 a cada
 // patamar, o que é 3×1, 3×2, 3×3 e 3×4 — um modificador só, em vez de um plano e
 // outro escalado.
 //
-// O `levelStep` não serve, e isso foi medido: com passo 6 ele erra CINCO dos oito
-// níveis de fronteira, nas duas direções de arredondamento. Arredondando para
-// baixo erra o 5, o 11 e o 17 (que são exatamente os limiares); para cima, erra
-// os níveis 1-4 e o 18-20.
+// A variável NÃO se chama como o número que ela representa, e o motivo não é de
+// Go: o Tailwind detecta fontes sozinho além dos `@source` da folha — é assim que
+// as classes das cenas entram, já que o glob explícito é de um nível só — e a
+// varredura alcança os arquivos .go. Um nome de variável que coincida com uma
+// utilidade dele (aqui seria a de `font-variant-numeric`) vira classe no bundle, e
+// o passo "Fail if the stylesheet was stale" da CI reprova a folha por obsoleta.
+//
+// Este comentário evita escrever a palavra em minúsculas pela mesma razão — a
+// primeira versão dele explicava a armadilha e a disparava de novo.
 func patamarOf(level int) int {
-	ordinal := 1
+	rank := 1
 	for _, threshold := range patamarThresholds {
 		if level >= threshold {
-			ordinal++
+			rank++
 		}
 	}
-	return ordinal
+	return rank
 }
