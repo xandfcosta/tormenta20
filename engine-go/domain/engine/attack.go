@@ -1,5 +1,7 @@
 package engine
 
+import "t20engine/domain/ecs"
+
 // A RESOLUÇÃO DE UM ATAQUE (T20 p230-231).
 //
 // É a primeira regra do capítulo 5 a existir em código: até aqui o motor era
@@ -14,6 +16,9 @@ package engine
 // crítico, que de outro jeito precisaria de mil execuções para aparecer.
 //
 // Quem sorteia é o `RollDie`, uma camada acima.
+//
+// A REGRA em si mora em `attack_ecs.go`, em sistemas sobre parcelas de dano.
+// Aqui ficam o vocabulário da fronteira e a montagem do mundo.
 
 // AttackTarget é o alvo, do ponto de vista da regra — e só isto: a Defesa que
 // ele opõe, a redução que ele aplica e se ele é imune a crítico.
@@ -32,12 +37,6 @@ type AttackTarget struct {
 	CritImmune bool
 }
 
-// AttackOutcome é tudo que a mesa precisa ver, e não só o número final.
-//
-// A conta viaja inteira de propósito, pela mesma razão que o `ExpertiseBreakdown`
-// existe: uma mesa que vê "8 de dano" e uma que vê "1d8 deu 8, a RD 5 comeu
-// cinco, sobraram 3" são mesas diferentes — a segunda entende a regra sem
-// perguntar, e a primeira desconfia do servidor.
 // ExtraRoll é uma parcela extra já rolada.
 type ExtraRoll struct {
 	Dice  []int  `json:"dice"`
@@ -46,6 +45,12 @@ type ExtraRoll struct {
 	Total int    `json:"total"`
 }
 
+// AttackOutcome é tudo que a mesa precisa ver, e não só o número final.
+//
+// A conta viaja inteira de propósito, pela mesma razão que o `ExpertiseBreakdown`
+// existe: uma mesa que vê "8 de dano" e uma que vê "1d8 deu 8, a RD 5 comeu
+// cinco, sobraram 3" são mesas diferentes — a segunda entende a regra sem
+// perguntar, e a primeira desconfia do servidor.
 type AttackOutcome struct {
 	Roll     int  `json:"roll"`     // o d20 natural
 	Total    int  `json:"total"`    // d20 + bônus de ataque
@@ -74,105 +79,22 @@ type AttackOutcome struct {
 func ResolveAttack(
 	card WeaponCard, target AttackTarget, d20 int, rollDie func(faces int) (int, error),
 ) (AttackOutcome, error) {
-	out := AttackOutcome{Roll: d20, Total: d20 + card.Attack}
-
-	// "Se o resultado é igual ou maior que a Defesa do alvo, você acerta"
-	// (p230). O IGUAL decide todo ataque que empata, e é a metade que um `>`
-	// perderia em silêncio.
-	//
-	// AS DUAS PONTAS DO DADO MANDAM, e elas não estão na página do teste:
-	//
-	//	"Ao fazer um teste, um 20 natural sempre é um sucesso, e um 1 natural
-	//	sempre é uma falha, não importando o valor a ser alcançado." (p221)
-	//
-	// Aqui morava o contrário, escrito com citação: "não há 20 automático nem 1
-	// automático, e a ausência é deliberada (p220)". A p220 define o teste sem
-	// exceção nenhuma, e ler ali a AUSÊNCIA da regra é o erro — ela mora na
-	// página seguinte, em "Regras Adicionais de testes". Um 20 natural errava
-	// contra Defesa alta, e nada acusava.
-	out.Hit = d20 == 20 || (d20 != 1 && out.Total >= target.Defense)
-	if !out.Hit {
-		return out, nil
+	w := attackWorld(card, target, d20, rollDie)
+	out := outcomeFromWorld(w)
+	if fault, has := ecs.Get[attackFault](w, theResource(w)); has {
+		return out, fault.Err
 	}
-
-	// "Você faz um acerto crítico quando ACERTA um ataque rolando um valor igual
-	// ou maior que a margem de ameaça" (p231). São as duas condições: bater a
-	// margem num ataque que erra não é crítico coisa nenhuma.
-	//
-	// "Quando nenhuma margem aparece, será 20. Quando nenhum multiplicador
-	// aparece, será x2" (p230) — por isso o zero do catálogo cai no padrão do
-	// livro em vez de virar uma arma que nunca critica.
-	margin, multiplicador := card.CritRange, card.CritMult
-	if margin <= 0 {
-		margin = 20
-	}
-	if multiplicador <= 0 {
-		multiplicador = 2
-	}
-	// "Um alvo imune a acertos críticos ainda sofre o dano de um ataque normal"
-	// (p231): a imunidade tira o crítico, nunca o ataque.
-	out.Critical = d20 >= margin && !target.CritImmune
-
-	count, faces, err := parseDiceNotation(card.Damage)
-	if err != nil {
-		return out, err
-	}
-	// "Multiplica os DADOS de dano do ataque (incluindo quaisquer aumentos por
-	// passos) pelo multiplicador da arma. Bônus numéricos de dano, assim como
-	// dados extras, não são multiplicados" (p231). O exemplo trabalhado é da
-	// p142: um dano de 1d8+3 torna-se 2d8+3 — mais DADOS, e o +3 uma vez só.
-	if out.Critical {
-		count *= multiplicador
-	}
-	out.Faces = faces
-	for i := 0; i < count; i++ {
-		value, err := rollDie(faces)
-		if err != nil {
-			return out, err
-		}
-		out.Dice = append(out.Dice, value)
-		out.RawDamage += value
-	}
-	// AS PARCELAS EXTRAS ROLAM DEPOIS DA MULTIPLICAÇÃO, e é o que as mantém
-	// fora dela: "bônus numéricos de dano, assim como DADOS EXTRAS, não são
-	// multiplicados" (p231). Uma espada flamejante num crítico x2 causa
-	// 2d8 + 1d6, e não 2d8 + 2d6.
-	for _, extra := range card.ExtraDamage {
-		count, faces, err := parseDiceNotation(extra.Dice)
-		if err != nil {
-			return out, err
-		}
-		rolled := ExtraRoll{Faces: faces, Type: extra.Type}
-		for i := 0; i < count; i++ {
-			value, err := rollDie(faces)
-			if err != nil {
-				return out, err
-			}
-			rolled.Dice = append(rolled.Dice, value)
-			rolled.Total += value
-		}
-		out.Extra = append(out.Extra, rolled)
-		out.RawDamage += rolled.Total
-	}
-
-	out.RawDamage += card.DamageBonus
-	// O bônus que só existe no crítico (Dilacerante, p336). Numérico, então não
-	// multiplica; e fora do crítico ele não entra.
-	if out.Critical {
-		out.RawDamage += card.CriticalBonus
-	}
-
-	// "Se uma criatura com RD 5 sofre um ataque que causa 8 pontos de dano,
-	// perde apenas 3 PV" (p229).
-	//
-	// O PISO EM ZERO é decisão desta casa: o livro só dá o caso em que sobra
-	// dano, e "ignora parte do dano que sofre" não descreve um ataque que
-	// devolve PV. Sem o piso, uma RD alta viraria cura — e a cura tem regra
-	// própria, que não é esta.
-	out.Absorbed = target.DamageReduction
-	if out.Absorbed > out.RawDamage {
-		out.Absorbed = out.RawDamage
-	}
-	out.Damage = out.RawDamage - out.Absorbed
 	return out, nil
+}
+
+// attackWorld monta o mundo e roda os sistemas. Separado do `ResolveAttack`
+// porque os guardas precisam do MUNDO e não da conta: o que a fatia comprou —
+// a parcela suprimida que continua lá — não aparece na saída.
+func attackWorld(
+	card WeaponCard, target AttackTarget, d20 int, rollDie func(faces int) (int, error),
+) *ecs.World {
+	w := ecs.NewWorld()
+	ecs.Set(w, w.Spawn(), theAttackResource{})
+	ecs.Run(w, attackSystems(card, target, d20, rollDie)...)
+	return w
 }
