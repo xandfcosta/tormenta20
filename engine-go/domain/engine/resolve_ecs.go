@@ -60,12 +60,21 @@ type Deferred struct{}
 type worldFlags struct{ set map[string]bool }
 type worldFactors struct{ byTarget map[string]Ratio }
 
+// worldRiders são as parcelas que a CARTA DA ARMA aplica, e não a pilha: o dado
+// extra de um encanto e o bônus que só existe no crítico. Moram num recurso
+// pelo mesmo motivo dos fatores — são do mundo, não de um termo.
+type worldRiders struct {
+	extra    []ExtraDamage
+	critical map[string]int
+}
+
 // resolveInWorld dobra as fontes colhidas em `ItemEffects`, em sistemas.
 func resolveInWorld(items []ActiveItem) ItemEffects {
 	w := ecs.NewWorld()
 	resource := w.Spawn()
 	ecs.Set(w, resource, worldFlags{set: map[string]bool{}})
 	ecs.Set(w, resource, worldFactors{byTarget: map[string]Ratio{}})
+	ecs.Set(w, resource, worldRiders{critical: map[string]int{}})
 
 	ecs.Run(w,
 		explodeIntoTerms(items),
@@ -74,6 +83,10 @@ func resolveInWorld(items []ActiveItem) ItemEffects {
 		// — era a "passada prévia" da função antiga, e aqui ela é um sistema com
 		// nome. A dependência deixou de ser um comentário e virou posição.
 		dropWhatTheFlagTurnsOff,
+		// ANTES do `deferConditionals`: o dado extra e o bônus de crítico saem
+		// da pilha aqui, ou virariam interruptor na aba Efeitos — e crítico não
+		// se liga.
+		harvestWeaponRiders,
 		deferConditionals,
 		dropWhatTheConditionRefuses,
 		harvestFactors,
@@ -141,6 +154,37 @@ func dropWhatTheConditionRefuses(w *ecs.World) {
 		}
 		ecs.Set(w, e, Suppressed{Why: "a condição não se cumpre"})
 	})
+}
+
+// harvestWeaponRiders tira da pilha o que a CARTA DA ARMA aplica.
+//
+// São duas coisas que o `Amount` não sabe expressar: o dado extra de um encanto
+// (`+1d6 de fogo`) e o bônus que só vale no acerto crítico (`+10` do
+// Dilacerante). Nenhuma das duas é parcela somável — a primeira é um dado que
+// ainda vai rolar, a segunda depende de um resultado que a ficha não conhece.
+//
+// O sistema roda ANTES do `deferConditionals` de propósito: o `onCritical` é
+// uma condição que NÃO se liga, e deixá-lo chegar lá o ofereceria como
+// interruptor na aba Efeitos.
+func harvestWeaponRiders(w *ecs.World) {
+	riders := ridersOf(w)
+	ecs.Each(w, func(e ecs.Entity, t Term) {
+		if dead(w, e) {
+			return
+		}
+		if t.Mod.Dice != "" {
+			riders.extra = append(riders.extra, ExtraDamage{
+				Dice: t.Mod.Dice, Type: t.Mod.Target.DamageType,
+			})
+			ecs.Set(w, e, Suppressed{Why: "é dado extra, e dado não soma na pilha"})
+			return
+		}
+		if c := t.Mod.Condition; c != nil && c.C == "onCritical" {
+			riders.critical[targetKey(t.Mod.Target)] += t.Mod.Amount
+			ecs.Set(w, e, Suppressed{Why: "só vale no crítico, e a pilha não sabe disso"})
+		}
+	})
+	setRiders(w, riders)
 }
 
 // harvestFactors tira os fatores da pilha: eles multiplicam o total, e não são
@@ -237,8 +281,11 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 	}
 	flags, _ := ecs.Get[worldFlags](w, resource)
 	factors, _ := ecs.Get[worldFactors](w, resource)
+	riders := ridersOf(w)
 	return ItemEffects{
-		ByTarget: byTarget, Flags: flags.set, Factors: factors.byTarget, Conditional: conditional,
+		ByTarget: byTarget, Flags: flags.set, Factors: factors.byTarget,
+		ExtraDamage: riders.extra, CriticalBonus: riders.critical,
+		Conditional: conditional,
 	}
 }
 
@@ -277,6 +324,19 @@ func flagsOf(w *ecs.World) map[string]bool {
 	return found
 }
 
+// ridersOf e setRiders: ao contrário do `worldFactors`, cujo mapa se muta no
+// lugar, a lista de parcelas CRESCE — e uma fatia acrescida dentro do `Each`
+// não volta para o componente sozinha. Por isso a leitura e a escrita são duas.
+func ridersOf(w *ecs.World) worldRiders {
+	var found worldRiders
+	ecs.Each(w, func(_ ecs.Entity, r worldRiders) { found = r })
+	return found
+}
+
+func setRiders(w *ecs.World, riders worldRiders) {
+	ecs.Each(w, func(e ecs.Entity, _ worldRiders) { ecs.Set(w, e, riders) })
+}
+
 func factorsOf(w *ecs.World) map[string]Ratio {
 	var found map[string]Ratio
 	ecs.Each(w, func(_ ecs.Entity, f worldFactors) { found = f.byTarget })
@@ -293,8 +353,10 @@ func worldAfterResolving(items []ActiveItem) (int, []string) {
 	resource := w.Spawn()
 	ecs.Set(w, resource, worldFlags{set: map[string]bool{}})
 	ecs.Set(w, resource, worldFactors{byTarget: map[string]Ratio{}})
+	ecs.Set(w, resource, worldRiders{critical: map[string]int{}})
 	ecs.Run(w, explodeIntoTerms(items), raiseFlags, dropWhatTheFlagTurnsOff,
-		deferConditionals, dropWhatTheConditionRefuses, harvestFactors, harvestFlags, resolveStacking)
+		harvestWeaponRiders, deferConditionals, dropWhatTheConditionRefuses,
+		harvestFactors, harvestFlags, resolveStacking)
 
 	total, reasons := 0, []string{}
 	ecs.Each(w, func(e ecs.Entity, _ Term) {

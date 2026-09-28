@@ -7,19 +7,39 @@ package engine
 // (½ nível, FOR, Treino) and the crit string are applied on the front. Per-weapon
 // mods (desbalanceada, Certeira…) already ride the Luta/Pontaria mirror inside
 // effects, so the expertise breakdown carries them — no scope:'this' added here.
+// ExtraDamage é uma parcela de dano de outro tipo, somada por um encanto.
+type ExtraDamage struct {
+	Dice string `json:"dice"` // "1d6"
+	Type string `json:"type"` // "fogo", "frio", "ácido"…
+}
+
 type WeaponCard struct {
-	Name        string             `json:"name"`
-	Skill       string             `json:"skill"`     // "Luta" | "Pontaria"
-	Attribute   string             `json:"attribute"` // the skill perícia's attribute
-	Attack      int                `json:"attack"`
-	Expertise   ExpertiseBreakdown `json:"expertise"`
-	AttackAll   TotalContribs      `json:"attackAll"`
-	Damage      string             `json:"damage"`      // dice, e.g. "1d8"
-	StrDamage   int                `json:"strDamage"`   // Força folded into melee/thrown damage (0 ranged)
-	DamageBonus int                `json:"damageBonus"` // strDamage + damageAll.total
-	DamageAll   TotalContribs      `json:"damageAll"`
-	CritRange   int                `json:"critRange"`
-	CritMult    int                `json:"critMult"`
+	Name      string             `json:"name"`
+	Skill     string             `json:"skill"`     // "Luta" | "Pontaria"
+	Attribute string             `json:"attribute"` // the skill perícia's attribute
+	Attack    int                `json:"attack"`
+	Expertise ExpertiseBreakdown `json:"expertise"`
+	AttackAll TotalContribs      `json:"attackAll"`
+	Damage    string             `json:"damage"` // dice, e.g. "1d8"
+	// ExtraDamage são as parcelas de OUTRO tipo de dano que os encantos somam —
+	// o "+1d6 de fogo" de uma arma flamejante (p336). Elas viajam separadas do
+	// `Damage` por duas razões, e as duas são regra:
+	//
+	//   - no crítico a arma multiplica os dados e a parcela NÃO: "bônus
+	//     numéricos de dano, assim como dados extras, não são multiplicados"
+	//     (p231). Juntá-las na mesma notação dobraria o fogo junto;
+	//   - o TIPO tem de sobreviver até a mesa, porque é ele que dá a
+	//     resistência a fogo onde agir.
+	ExtraDamage []ExtraDamage `json:"extraDamage,omitempty"`
+	// CriticalBonus é o dano que só existe no acerto crítico — os "+10 pontos
+	// de dano" do encanto Dilacerante (p336). É bônus numérico, então não
+	// multiplica, e fora do crítico ele não existe.
+	CriticalBonus int           `json:"criticalBonus,omitempty"`
+	StrDamage     int           `json:"strDamage"`   // Força folded into melee/thrown damage (0 ranged)
+	DamageBonus   int           `json:"damageBonus"` // strDamage + damageAll.total
+	DamageAll     TotalContribs `json:"damageAll"`
+	CritRange     int           `json:"critRange"`
+	CritMult      int           `json:"critMult"`
 }
 
 // ComputeWeaponCards resolves the wielded-weapon cards for a raw Character under
@@ -71,18 +91,20 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 		state.Attribute = attribute
 		ex := expertiseBreakdown(ch, state, effects, load)
 		cards = append(cards, WeaponCard{
-			Name:        it.Name,
-			Skill:       skill,
-			Attribute:   ex.Attribute,
-			Attack:      ex.Total + attackAll.Total,
-			Expertise:   ex,
-			AttackAll:   attackAll,
-			Damage:      w.Damage,
-			StrDamage:   strDamage,
-			DamageBonus: strDamage + damageAll.Total,
-			DamageAll:   damageAll,
-			CritRange:   w.CritRange,
-			CritMult:    w.CritMult,
+			Name:          it.Name,
+			Skill:         skill,
+			Attribute:     ex.Attribute,
+			Attack:        ex.Total + attackAll.Total,
+			Expertise:     ex,
+			AttackAll:     attackAll,
+			Damage:        w.Damage,
+			StrDamage:     strDamage,
+			DamageBonus:   strDamage + damageAll.Total,
+			DamageAll:     damageAll,
+			CritRange:     w.CritRange,
+			CritMult:      w.CritMult,
+			ExtraDamage:   effects.ExtraDamage,
+			CriticalBonus: effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 		})
 		if len(cards) == 2 {
 			break

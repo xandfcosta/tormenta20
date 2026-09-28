@@ -698,6 +698,45 @@ Duas escolhas que valem lembrar, porque errá-las é invisível:
   `TestEveryBonusAnOriginUniquePowerPrintsBecomesAModifier`: lista de
   PERMITIDOS, cada linha dizendo POR QUE não há alvo.
 
+### O DANO TEM TRÊS PARCELAS, e só uma multiplica no crítico
+
+A p231 dá o critério, e ele é o que separa as três:
+
+> "Multiplica os DADOS de dano do ataque (incluindo quaisquer aumentos por
+> passos) pelo multiplicador da arma. Bônus numéricos de dano, **assim como
+> dados extras**, não são multiplicados."
+
+| parcela | onde mora | multiplica? |
+|---|---|---|
+| os dados da ARMA | `WeaponCard.Damage` ("1d8") | **sim** |
+| os dados EXTRAS de um encanto | `WeaponCard.ExtraDamage`, com o TIPO | não |
+| o bônus numérico | `WeaponCard.DamageBonus` | não |
+| o que só vale no crítico | `WeaponCard.CriticalBonus` | não, e fora do crítico nem existe |
+
+O tipo viaja com a parcela extra porque é ele que dá à resistência a fogo onde
+agir — somar o 1d6 no dano da arma apagaria a única coisa que a distingue.
+
+**As duas formas novas do `Modifier` não são parcela da pilha**, e é por isso que
+o `harvestWeaponRiders` as tira do mundo ANTES do `deferConditionals`:
+
+```
+{"target": {"k": "damage", "damageType": "fogo"}, "dice": "1d6"}
+{"target": {"k": "damage"}, "amount": 10, "condition": {"c": "onCritical"}}
+```
+
+O `onCritical` é uma condição que **não se liga**. Deixá-la chegar ao
+`deferConditionals` a ofereceria como interruptor na aba Efeitos, e crítico não
+é escolha de ninguém. E deixar o dado extra virar parcela o somaria como
+`amount` ZERO — um modificador que existe e não faz nada, que é a forma mais
+silenciosa de defeito deste motor. Os dois casos estão presos por sabotagem no
+`weapon_riders_rules_test.go`.
+
+**O que denuncia o erro aritmético é a CONTAGEM de dados, não o total.** Num
+crítico x2 com arma flamejante o certo é 2d8 + 1d6; se o extra multiplicasse
+junto seriam 2d8 + 2d6, e com dados presos os dois totais são plausíveis. Por
+isso o dublê do `attack_rules_test.go` estoura quando a regra pede um dado a
+mais do que o caso preparou.
+
 ### A escala por PATAMAR, e o `default` que engole o `per` desconhecido
 
 `scale.per` tem quatro valores, e `patamar` é o mais novo (ALE-406): o fator é o

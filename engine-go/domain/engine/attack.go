@@ -38,6 +38,14 @@ type AttackTarget struct {
 // existe: uma mesa que vê "8 de dano" e uma que vê "1d8 deu 8, a RD 5 comeu
 // cinco, sobraram 3" são mesas diferentes — a segunda entende a regra sem
 // perguntar, e a primeira desconfia do servidor.
+// ExtraRoll é uma parcela extra já rolada.
+type ExtraRoll struct {
+	Dice  []int  `json:"dice"`
+	Faces int    `json:"faces"`
+	Type  string `json:"type"`
+	Total int    `json:"total"`
+}
+
 type AttackOutcome struct {
 	Roll     int  `json:"roll"`     // o d20 natural
 	Total    int  `json:"total"`    // d20 + bônus de ataque
@@ -49,10 +57,14 @@ type AttackOutcome struct {
 	// Faces é o dado da arma (o 8 de "1d8"). Ele viaja porque a mesa lê a
 	// NOTAÇÃO — "2d8+3" diz de onde os números vieram, e "8+5+3" faz quem olha
 	// reconstruir a arma de cabeça.
-	Faces     int `json:"faces"`
-	RawDamage int `json:"rawDamage"` // dados + bônus, antes da RD
-	Absorbed  int `json:"absorbed"`  // o que a RD comeu
-	Damage    int `json:"damage"`    // o que o alvo perde de PV
+	Faces int `json:"faces"`
+	// Extra são as parcelas de outro tipo — o 1d6 de fogo do encanto. Elas
+	// entram no `RawDamage`, mas viajam DISCRIMINADAS: a mesa lê "1d8 deu 8,
+	// mais 1d6 de fogo deu 4", e um total sozinho apagaria o tipo de dano.
+	Extra     []ExtraRoll `json:"extra,omitempty"`
+	RawDamage int         `json:"rawDamage"` // dados + bônus, antes da RD
+	Absorbed  int         `json:"absorbed"`  // o que a RD comeu
+	Damage    int         `json:"damage"`    // o que o alvo perde de PV
 }
 
 // ResolveAttack rola um ataque contra um alvo e devolve a conta inteira.
@@ -121,7 +133,34 @@ func ResolveAttack(
 		out.Dice = append(out.Dice, value)
 		out.RawDamage += value
 	}
+	// AS PARCELAS EXTRAS ROLAM DEPOIS DA MULTIPLICAÇÃO, e é o que as mantém
+	// fora dela: "bônus numéricos de dano, assim como DADOS EXTRAS, não são
+	// multiplicados" (p231). Uma espada flamejante num crítico x2 causa
+	// 2d8 + 1d6, e não 2d8 + 2d6.
+	for _, extra := range card.ExtraDamage {
+		count, faces, err := parseDiceNotation(extra.Dice)
+		if err != nil {
+			return out, err
+		}
+		rolled := ExtraRoll{Faces: faces, Type: extra.Type}
+		for i := 0; i < count; i++ {
+			value, err := rollDie(faces)
+			if err != nil {
+				return out, err
+			}
+			rolled.Dice = append(rolled.Dice, value)
+			rolled.Total += value
+		}
+		out.Extra = append(out.Extra, rolled)
+		out.RawDamage += rolled.Total
+	}
+
 	out.RawDamage += card.DamageBonus
+	// O bônus que só existe no crítico (Dilacerante, p336). Numérico, então não
+	// multiplica; e fora do crítico ele não entra.
+	if out.Critical {
+		out.RawDamage += card.CriticalBonus
+	}
 
 	// "Se uma criatura com RD 5 sofre um ataque que causa 8 pontos de dano,
 	// perde apenas 3 PV" (p229).
