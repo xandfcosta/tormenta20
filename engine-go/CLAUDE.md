@@ -480,20 +480,21 @@ porta é interface declarada no consumidor, e ela só casa com tipos do consumid
 compartilhamento é ele ser *shared kernel*: pequeno, sem dependências, e de todos
 porque não é de ninguém.
 
-## O motor é ECS em duas fases, e a ENTIDADE muda entre elas
+## O motor é ECS, e a ENTIDADE muda de fase para fase
 
-O pipeline é coleta → resolução → decomposição. As duas primeiras são ECS, e a
-entidade não é a mesma nas duas — porque a pergunta não é a mesma.
+O pipeline da ficha é coleta → resolução → derivação → decomposição, e o ataque
+é um mundo à parte. A entidade não é a mesma em nenhuma delas — porque a
+pergunta não é a mesma.
 
 | fase | entidade | pergunta |
 |---|---|---|
 | **coleta** (`collect_ecs.go`) | a FONTE | quem concede alguma coisa a este personagem? |
 | **resolução** (`resolve_ecs.go`) | o TERMO | quanto vale `defense`, e por quê? |
-| decomposição (`breakdowns.go`) | — | qual é o número final? |
-
 | **derivação** (`derive_ecs.go`) | a FICHA | qual é o número final? |
+| **ataque** (`attack_ecs.go`) | a PARCELA DE DANO | de que se soma este dano, e o que ficou de fora? |
+| decomposição (`breakdowns.go`) | — | como se explica o número na tela? |
 
-A entidade muda porque a pergunta muda, e é essa a lição das três fases.
+A entidade muda porque a pergunta muda, e é essa a lição das fases.
 
 ### A derivação, e o que ela CUSTOU
 
@@ -532,10 +533,35 @@ A ficha existe para responder *"por que 12?"*, e ela ainda não consegue dizer
 "−2 de X, não aplicado por não empilhar" — o número que perdeu não chegava à
 tela. Agora ele está lá para quando a tela pedir.
 
-### A ORDEM dos sistemas é a regra, nas duas fases
+### O ataque em sistemas, e a única ordem que a rede NÃO pegava
 
-Cada fase tem o guarda dela, e os dois nasceram de uma medição de que o oráculo
-NÃO cobre:
+O `ResolveAttack` não mudou de assinatura (ALE-414): o `d20` continua entrando
+por parâmetro e os dados por função, e é isso que mantém cada caso do livro
+sendo um teste com o número escrito à mão. O que mudou é por dentro — nove
+sistemas sobre parcelas, e o `attack.go` ficou só com o vocabulário da
+fronteira e a montagem do mundo.
+
+**A rede de casos do livro já prende três das quatro arestas de ordem**, medido
+por sabotagem: trocar o crítico com o acerto, as parcelas com o descarte do
+erro, e a soma com a RD sai vermelho em quatro casos nomeados. Só o
+`TestEveryAttackSystemWritesItsComponent` é novo, e ele traz o CENÁRIO junto
+com cada sistema — três dos nove só agem numa metade do dado, e um mundo só
+mediria os seis fáceis.
+
+**Suprimir é write-once, e a PRIMEIRA razão é a que fica.** Mais de um sistema
+alcança a mesma parcela: o bônus de crítico de um ataque que ERROU saía da conta
+dizendo *"o ataque não foi um acerto crítico"* — verdade que não explica nada.
+Foi o guarda novo que pegou, nascendo vermelho.
+
+**Uma diferença de comportamento entrou de propósito:** a notação de dano é lida
+antes de se saber se o ataque acertou, porque a parcela precisa existir para ser
+suprimida. Um `"1d"` no catálogo agora falha sempre, e não só nos ataques que
+acertam.
+
+### A ORDEM dos sistemas é a regra, em toda fase
+
+Cada fase tem o guarda dela, e os dois primeiros nasceram de uma medição de que
+o oráculo NÃO cobre:
 
 - **coleta**: `TestEveryCollectorLandsInTheDeclaredOrder`. Sabotando a ordem, 3
   dos 4 pares adjacentes passavam verdes — nenhuma das 18 fixtures tem todas as
