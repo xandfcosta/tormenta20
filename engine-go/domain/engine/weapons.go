@@ -101,8 +101,8 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 			StrDamage:     strDamage,
 			DamageBonus:   strDamage + damageAll.Total,
 			DamageAll:     damageAll,
-			CritRange:     w.CritRange,
-			CritMult:      w.CritMult,
+			CritRange:     threatRangeOf(w.CritRange, effects),
+			CritMult:      w.CritMult + StatFor(effects, ModifierTarget{K: "critMult"}).Total,
 			ExtraDamage:   effects.ExtraDamage,
 			CriticalBonus: effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 		})
@@ -145,4 +145,43 @@ func weaponSkillState(ch Character, name, attribute string) CharacterExpertise {
 		}
 	}
 	return CharacterExpertise{Name: name, Attribute: attribute, Trained: false}
+}
+
+// threatRangeOf aplica à margem de ameaça o que o item declara (ALE-411).
+//
+// Aqui morava `w.CritRange` cru, e o modificador de `critRange` só chegava à
+// ABA EFEITOS: a melhoria Precisa custava 300 PO, imprimia "+1 margem de
+// ameaça" na ficha e o ataque continuava ameaçando em 19. É o defeito da
+// ALE-406 outra vez, e ele só virou regra errada quando a ALE-364 deu ao
+// `critRange` um consumidor.
+//
+// # O FATOR multiplica a LARGURA, e não o número
+//
+// "A margem de ameaça da arma duplica. Por exemplo, uma espada longa ameaçadora
+// tem margem de ameaça 17" (p335). Dobrar o 19 daria 38; o que dobra é quantos
+// resultados ameaçam — a espada longa ameaça em 19 e 20, são dois, dobram para
+// quatro, e quatro resultados a partir de 20 começam em 17.
+//
+// # E a ORDEM é do livro, na mesma frase
+//
+// "Efeitos que duplicam a margem de ameaça são aplicados ANTES de quaisquer
+// efeitos que a aumentem" (p335). Invertida, a espada longa ameaçadora e precisa
+// daria 16 em vez de 15 — dobrar depois de somar dobra o ponto somado junto.
+func threatRangeOf(base int, effects ItemEffects) int {
+	width := 21 - base
+	if factor, has := effects.Factors[targetKey(ModifierTarget{K: "critRange"})]; has {
+		width = factor.Applied(width)
+	}
+	width += StatFor(effects, ModifierTarget{K: "critRange"}).Total
+	// O PISO É 2, e não é arbitrário: "um 1 natural sempre é uma falha" (p221),
+	// então um resultado 1 na faixa é um número que nunca pode ameaçar. Sem o
+	// piso, margem suficiente faria a carta anunciar uma faixa que inclui o
+	// natural 1 — e o `ResolveAttack` a recusaria em silêncio.
+	if width > 19 {
+		width = 19
+	}
+	if width < 1 {
+		width = 1
+	}
+	return 21 - width
 }
