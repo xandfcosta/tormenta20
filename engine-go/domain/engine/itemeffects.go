@@ -23,6 +23,10 @@ type ModifierTarget struct {
 	Attribute string `json:"attribute,omitempty"` // expertiseByAttribute
 	Scope     string `json:"scope,omitempty"`     // attack, damage ('this' | 'all')
 	School    string `json:"school,omitempty"`    // catalyst
+	// DamageType é o TIPO da parcela extra — "fogo", "frio", "ácido". Ele só
+	// faz sentido com `Dice`, e existe para o tipo sobreviver até a mesa: é
+	// ele que dá à resistência a fogo onde agir.
+	DamageType string `json:"damageType,omitempty"`
 }
 
 // ModifierCondition is a condição do modificador, achatada do mesmo jeito.
@@ -114,8 +118,16 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 // Modifier é um modificador de item. O `scale` (maxPv/maxPm) é ignorado pelo
 // motor de resolução e preservado para o despejo de paridade da coleta.
 type Modifier struct {
-	Target    ModifierTarget     `json:"target"`
-	Amount    int                `json:"amount"`
+	Target ModifierTarget `json:"target"`
+	Amount int            `json:"amount"`
+	// Dice é a parcela em DADO — o "+1d6 de fogo" de uma arma flamejante
+	// (p336). Ela existe ao lado do `Amount` e não no lugar dele porque as duas
+	// se comportam diferente no crítico: o bônus numérico e o dado EXTRA não
+	// multiplicam, e só os dados da ARMA multiplicam (p231).
+	//
+	// Vale só para `target.k = damage`, e quem a colhe é o `harvestWeaponRiders`
+	// — ela nunca é parcela da pilha, pela mesma razão que o `Factor` não é.
+	Dice      string             `json:"dice,omitempty"`
 	BonusType string             `json:"bonusType"`
 	Condition *ModifierCondition `json:"condition,omitempty"`
 	Note      string             `json:"note,omitempty"`
@@ -215,8 +227,15 @@ type ItemEffects struct {
 	// Factors é o fator JÁ RESOLVIDO por alvo — o mais severo vence, e eles não
 	// compõem (ver `factor.go`). Quem o APLICA é a decomposição, porque ele age
 	// sobre o total COM a base, e a base não passa por aqui.
-	Factors     map[string]Ratio
-	Conditional []ConditionalEffect
+	Factors map[string]Ratio
+	// ExtraDamage são as parcelas em dado que os encantos somam, na ordem das
+	// fontes. Elas não entram no `ByTarget` porque não são somáveis: quem as
+	// aplica é a carta da arma, que sabe rolá-las.
+	ExtraDamage []ExtraDamage
+	// CriticalBonus é o que só vale no acerto crítico, por alvo. Ele não é
+	// parcela da pilha nem interruptor da tela: crítico não se liga.
+	CriticalBonus map[string]int
+	Conditional   []ConditionalEffect
 }
 
 // ItemEffectsWire é a forma que o ItemEffects assume NO FIO: as flags viram
@@ -356,6 +375,11 @@ func isUnconditional(m Modifier) bool {
 	case "always", "wielded", "vested":
 		return true
 	case "terrain", "against", "context", "flagOn":
+		return false
+	case "onCritical":
+		// Nem soma na pilha nem vira interruptor: o `harvestWeaponRiders` já a
+		// tirou do mundo antes desta pergunta. Se ela chegar aqui, alguma coisa
+		// mudou de ordem — e `true` a somaria no dano de TODO ataque.
 		return false
 	case "flagOff":
 		// Avaliada automaticamente contra as flags já coletadas na passada

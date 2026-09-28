@@ -207,3 +207,74 @@ func TestDamageReductionNeverHeals(t *testing.T) {
 		t.Errorf("absorvido = %d: a RD só absorve o que chegou", out.Absorbed)
 	}
 }
+
+// O DADO EXTRA DE UM ENCANTO NÃO MULTIPLICA NO CRÍTICO, e é a metade da p231
+// que o exemplo trabalhado da p142 não mostra:
+//
+//	"Multiplica os DADOS de dano do ataque (incluindo quaisquer aumentos por
+//	 passos) pelo multiplicador da arma. Bônus numéricos de dano, ASSIM COMO
+//	 DADOS EXTRAS, não são multiplicados." (p231)
+//
+// Uma espada longa flamejante (1d8 mais 1d6 de fogo) num crítico x2 causa
+// 2d8 + 1d6, e não 2d8 + 2d6. O erro é invisível num teste que só olhe o total:
+// com os dados presos em 8, 5 e 4 as duas leituras dão números plausíveis, e só
+// a CONTAGEM de dados pedidos separa uma da outra — por isso o dublê estoura
+// quando pedem um a mais.
+func TestTheEnchantExtraDieDoesNotMultiplyOnACritical(t *testing.T) {
+	flamejante := aWeapon("1d8", 3, 19, 2, 5)
+	flamejante.ExtraDamage = []ExtraDamage{{Dice: "1d6", Type: "fogo"}}
+
+	critico, err := ResolveAttack(flamejante, AttackTarget{Defense: 15}, 19,
+		fixedDice(t, 8, 5, 4))
+	if err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	if !critico.Critical {
+		t.Fatalf("d20 19 com margem 19 é crítico")
+	}
+	// 2d8 = 8+5, o +3 uma vez, e 1d6 de fogo = 4. Escrito à mão: 20.
+	if critico.Damage != 20 {
+		t.Errorf("dano = %d, e 2d8+3 mais 1d6 de fogo com os dados em 8, 5 e 4 é "+
+			"8+5+3+4 = 20. Se veio mais, o dado do encanto multiplicou junto com o "+
+			"da arma, e a p231 diz que dado extra não multiplica", critico.Damage)
+	}
+	// A parcela viaja SEPARADA: a mesa lê "1d8 deu 8 e 5, mais 3, mais 1d6 de
+	// fogo deu 4", e somá-la no total apagaria o tipo de dano — que é o que
+	// resistência a fogo precisa para ter onde agir.
+	if len(critico.Extra) != 1 {
+		t.Fatalf("esperava uma parcela extra e vieram %d", len(critico.Extra))
+	}
+	if critico.Extra[0].Type != "fogo" || critico.Extra[0].Total != 4 {
+		t.Errorf("a parcela extra veio %+v, e o esperado é 4 de fogo", critico.Extra[0])
+	}
+}
+
+// O BÔNUS QUE SÓ EXISTE NO CRÍTICO — o encanto Dilacerante, "+10 pontos de dano
+// quando faz um acerto crítico" (p336).
+//
+// Ele não multiplica (é bônus numérico) e não entra no ataque normal. O segundo
+// caso é o controle: sem ele, um +10 somado sempre passaria verde no primeiro.
+func TestTheCriticalOnlyBonusStaysOutOfTheNormalHit(t *testing.T) {
+	dilacerante := aWeapon("1d8", 3, 19, 2, 5)
+	dilacerante.CriticalBonus = 10
+
+	critico, err := ResolveAttack(dilacerante, AttackTarget{Defense: 15}, 19,
+		fixedDice(t, 8, 5))
+	if err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	if critico.Damage != 26 {
+		t.Errorf("dano = %d, e 2d8+3 com os dados em 8 e 5, mais os 10 do crítico, "+
+			"é 8+5+3+10 = 26", critico.Damage)
+	}
+
+	normal, err := ResolveAttack(dilacerante, AttackTarget{Defense: 15}, 18,
+		fixedDice(t, 8))
+	if err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	if normal.Damage != 11 {
+		t.Errorf("dano = %d no ataque normal, e 1d8+3 com o dado em 8 é 11 — o +10 "+
+			"do Dilacerante só existe no crítico", normal.Damage)
+	}
+}
