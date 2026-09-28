@@ -49,6 +49,16 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), activeConditionals)
 	attackAll := totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"})
 	damageAll := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"})
+	// O `this` é o bônus que uma SOBREPOSIÇÃO dá — a melhoria Cruel, o material.
+	// Ele não tinha leitor nenhum, e por isso a Cruel (+1 dano, 300 PO) e a Atroz
+	// (+2, 3.000 PO) não faziam nada. O par com o ataque é o que escondia: o
+	// `attack:this` da Certeira SOBE o ataque, porque a perícia da arma soma os
+	// efeitos de ataque — e a mesma forma em dano caía no vazio.
+	//
+	// As duas chaves somam entre si de propósito: um +2 global e um +1 desta
+	// arma são bônus de origens diferentes, e o não-empilhamento já agiu DENTRO
+	// de cada uma.
+	damageThis := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "this"})
 	forTotal := effectiveAttribute(ch, "strength", effects)
 	dexTotal := effectiveAttribute(ch, "dexterity", effects)
 	hasFinesse := parseChoiceSet(ch.ClassPowers).has["acuidade-com-arma"]
@@ -99,7 +109,7 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 			AttackAll:     attackAll,
 			Damage:        w.Damage,
 			StrDamage:     strDamage,
-			DamageBonus:   strDamage + damageAll.Total,
+			DamageBonus:   strDamage + damageAll.Total + damageThis.Total,
 			DamageAll:     damageAll,
 			CritRange:     threatRangeOf(w.CritRange, effects),
 			CritMult:      w.CritMult + StatFor(effects, ModifierTarget{K: "critMult"}).Total,

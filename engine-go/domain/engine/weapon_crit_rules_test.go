@@ -57,3 +57,51 @@ func TestTheThreatRangeImprovementReachesTheWeaponCard(t *testing.T) {
 		t.Errorf("a espada longa Maciça multiplica por %d e a p165 diz 3 (x2 mais 1)", got)
 	}
 }
+
+// O BÔNUS DE DANO DE UM ITEM CHEGA À CARTA DA ARMA (ALE-411).
+//
+// Ele não chegava, e o par com o ataque é o que torna o defeito difícil de ver:
+// a melhoria Certeira (`attack` com escopo `this`) SOBE o ataque da carta,
+// porque a perícia da arma soma os efeitos de ataque. A Cruel, com a mesma
+// forma em `damage`, não fazia nada — a carta somava `damage:all` e a Força, e
+// o `damage:this` não tinha leitor em lugar nenhum.
+//
+// São quatro entradas do catálogo inertes por isso: Cruel (+1 dano, 300 PO),
+// Atroz (+2, 3.000 PO), aço-rubi e gelo eterno.
+func TestTheDamageBonusOfAnItemReachesTheWeaponCard(t *testing.T) {
+	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
+	catalogs := primeFromDump(t, dir)
+	ptr := func(s string) *string { return &s }
+
+	var oracle struct {
+		Char Character `json:"char"`
+	}
+	readJSON(t, filepath.Join(dir, "bardo-versatil-nv7.json"), &oracle)
+
+	card := func(improvements string) WeaponCard {
+		ch := oracle.Char
+		ch.Items = []CharacterItem{{
+			CatalogID: ptr("espada-longa"), Name: "Espada longa",
+			Equipped: ptr("wielded"), Improvements: improvements,
+		}}
+		return BookRuleset(catalogs).ComputeWeaponCards(ch, map[string]bool{})[0]
+	}
+
+	nua := card("[]")
+	// O CONTROLE É A CERTEIRA: ela tem a MESMA forma da Cruel, no outro alvo, e
+	// prova que a sobreposição chega ao item. Sem ele, um dano parado seria
+	// igualmente explicado por "a melhoria não foi aplicada ao item nenhum".
+	if certeira := card(`["melhoria-certeira"]`).Attack; certeira != nua.Attack+1 {
+		t.Fatalf("o controle já estava errado: a Certeira deu ataque %d e a arma nua %d, "+
+			"e a p164 diz +1", certeira, nua.Attack)
+	}
+	if got := card(`["melhoria-cruel"]`).DamageBonus; got != nua.DamageBonus+1 {
+		t.Errorf("a espada longa Cruel dá %d de bônus de dano e a arma nua dá %d — "+
+			"a p164 diz +1.\nIgual quer dizer que o `damage` de escopo `this` não tem "+
+			"leitor: a carta soma a Força e o `damage:all`, e nada mais", got, nua.DamageBonus)
+	}
+	if got := card(`["melhoria-cruel", "melhoria-atroz"]`).DamageBonus; got != nua.DamageBonus+2 {
+		t.Errorf("a espada longa Cruel E Atroz dá %d e a nua %d, e o esperado é +2: "+
+			"as duas são bônus de aprimoramento, e o maior vence em vez de somar", got, nua.DamageBonus)
+	}
+}
