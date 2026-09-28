@@ -39,6 +39,9 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import t20pdf as P
 
 # A Tabela 8-8 mora na p336 e os verbetes atravessam as duas páginas.
+# O livro impresso está 6 páginas atrás do PDF, e a conta não é repetida aqui de
+# propósito: ela é do `engine-go/CLAUDE.md`, que é o dono dela.
+OFFSET_DO_PDF = 6
 PAGINA_DA_TABELA = 342
 PAGINAS_DOS_VERBETES = (341, 342)
 
@@ -166,6 +169,7 @@ def verbetes(paginas):
     `P.leitura` entrega.
     """
     achados: dict[str, list[str]] = {}
+    pagina_de: dict[str, int] = {}
     atual = None
     for pagina in paginas:
         prosa = COLUNAS_DA_PROSA[pagina]
@@ -182,6 +186,116 @@ def verbetes(paginas):
             if casa and casa.group(1) not in achados:
                 atual = casa.group(1)
                 achados[atual] = [casa.group(2)]
+                pagina_de[atual] = pagina - OFFSET_DO_PDF
             elif atual is not None:
                 achados[atual].append(texto)
-    return {nome: P.junta(corpo) for nome, corpo in achados.items()}
+    return {nome: (P.junta(corpo), pagina_de[nome]) for nome, corpo in achados.items()}
+
+
+# O PISO DA COBERTURA. A descrição do catálogo é TRANSCRITA do verbete, então
+# ela nasce em 100% — e é por isso que o piso é alto. O que este número prende
+# não é a transcrição de hoje: é o dia em que alguém "melhorar" a frase e ela
+# passar a dizer outra coisa, que foi o defeito da ALE-408 em dois arquivos de
+# Poder Concedido.
+PISO_DA_COBERTURA = 0.95
+
+CATALOGO = P.RAIZ / 'engine-go/domain/catalog/data/items.json'
+CATEGORIA = 'weapon-enchant'
+
+
+def do_catalogo() -> dict:
+    itens = json.loads(CATALOGO.read_text())
+    return {i['name']: i for i in itens if i.get('category') == CATEGORIA}
+
+
+def main() -> int:
+    tabela = list(linha_da_tabela(PAGINA_DA_TABELA))
+    falhas = []
+
+    # ── ÂNCORA 1 contra ÂNCORA 2, antes de o catálogo ser mencionado ──────
+    buraco = faixas_que_nao_fecham(tabela)
+    if buraco:
+        print(f'A TABELA 8-8 NÃO FECHA: {buraco}')
+        print('Nada do que vem abaixo vale — o auditor leu a página errado.')
+        return 1
+
+    da_tabela = {nome: (inicio, fim, efeito)
+                 for inicio, fim, nome, efeito in tabela if nome != NAO_E_ENCANTO}
+    dos_verbetes = verbetes(PAGINAS_DOS_VERBETES)
+
+    print(f'AS DUAS ÂNCORAS  tabela: {len(tabela)} linhas (soma fecha em 100), '
+          f'{len(da_tabela)} encantos + "{NAO_E_ENCANTO}"')
+    print(f'                 verbetes: {len(dos_verbetes)}')
+    so_na_tabela = sorted(set(da_tabela) - set(dos_verbetes))
+    so_no_verbete = sorted(set(dos_verbetes) - set(da_tabela))
+    if so_na_tabela or so_no_verbete:
+        print(f'  AS DUAS DISCORDAM — só na tabela: {so_na_tabela}; '
+              f'só no verbete: {so_no_verbete}')
+        print('  É defeito de LEITURA, e ele vem antes de qualquer correção de catálogo.')
+        return 1
+    print(f'                 as duas dizem os MESMOS {len(da_tabela)} nomes')
+
+    # ── O CATÁLOGO ────────────────────────────────────────────────────────
+    catalogo = do_catalogo()
+    print(f'\nCATÁLOGO         {len(catalogo)} entradas em `{CATEGORIA}`')
+
+    com_modificador, sem_modificador, cobertura_minima = 0, [], (2.0, '')
+    for nome, (inicio, fim, _efeito) in sorted(da_tabela.items()):
+        entrada = catalogo.get(nome)
+        if entrada is None:
+            falhas.append(f'{nome}: está na Tabela 8-8 e não está no catálogo')
+            continue
+        regra, pagina = dos_verbetes[nome]
+
+        quanto, juntas, total = P.cobertura(regra, entrada.get('description', ''))
+        cobertura_minima = min(cobertura_minima, (quanto, nome))
+        if quanto < PISO_DA_COBERTURA:
+            falhas.append(
+                f'{nome}: a descrição do catálogo repete {juntas} das {total} palavras '
+                f'de conteúdo do verbete ({quanto:.0%}) — abaixo do piso de '
+                f'{PISO_DA_COBERTURA:.0%}. Ela deixou de dizer a regra do livro.')
+
+        if (entrada.get('rollMin'), entrada.get('rollMax')) != (inicio, fim):
+            falhas.append(
+                f'{nome}: o catálogo diz d% {entrada.get("rollMin")}-{entrada.get("rollMax")} '
+                f'e a Tabela 8-8 diz {inicio}-{fim}')
+        esperado = 2 if nome in CONTAM_DOBRADO else 1
+        if entrada.get('countsAs') != esperado:
+            falhas.append(
+                f'{nome}: o catálogo conta como {entrada.get("countsAs")} e o livro diz '
+                f'{esperado} (o asterisco da tabela é "conta como dois encantos")')
+        if entrada.get('bookPage') != pagina:
+            falhas.append(f'{nome}: o catálogo cita a p{entrada.get("bookPage")} e o '
+                          f'verbete está na p{pagina}')
+
+        # O DENOMINADOR do que não foi modelado. Ter modificador e ter motivo
+        # são MUTUAMENTE EXCLUSIVOS: um encanto com os dois é um motivo que
+        # envelheceu, e ele mente com cara de registro.
+        tem_modelo = bool(entrada.get('modifiers'))
+        motivo = entrada.get('unmodeled', '')
+        if tem_modelo:
+            com_modificador += 1
+        else:
+            sem_modificador.append((nome, motivo))
+        if not tem_modelo and not motivo:
+            falhas.append(f'{nome}: não tem modificador NEM diz por quê')
+        if tem_modelo and motivo:
+            falhas.append(
+                f'{nome}: tem modificador E diz que não foi modelado ({motivo!r}) — '
+                f'uma das duas coisas envelheceu')
+
+    print(f'  com modificador: {com_modificador}')
+    print(f'  SEM modificador: {len(sem_modificador)}, e cada um diz por quê:')
+    for nome, motivo in sem_modificador:
+        print(f'    {nome:14s} {motivo}')
+    print(f'\n  cobertura mínima: {cobertura_minima[0]:.0%} ({cobertura_minima[1]})')
+
+    print(f'\nFALHAS: {len(falhas)}   (medidos: {len(da_tabela)} encantos, '
+          f'{len(tabela)} linhas de tabela, {len(dos_verbetes)} verbetes)')
+    for f in falhas:
+        print(f'  {f}')
+    return 1 if falhas else 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

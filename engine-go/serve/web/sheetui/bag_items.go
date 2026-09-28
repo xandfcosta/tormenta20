@@ -232,7 +232,7 @@ func rollThatAsksANumber(gain *book.GainRoll) string {
 // thatSaysBook é o bloco de referência da ficha do item.
 func thatSaysBook(catalog book.Item) *bookInfo {
 	info := &bookInfo{
-		Category: writtenCategory(catalog.Category),
+		Category: book.CategoryName(catalog.Category),
 		Price:    sheet.WithComma(catalog.Price),
 		Page:     catalog.BookPage,
 	}
@@ -281,26 +281,6 @@ func damageWrittenKind(kind string) string {
 		return name
 	}
 	return kind
-}
-
-// writtenCategories é o pt-BR de cada categoria do catálogo.
-//
-// Uma categoria sem tradução cai no próprio id, que é feio e VISÍVEL — melhor
-// que sumir da tela, que é o que uma queda para vazio faria.
-var writtenCategories = map[string]string{
-	"animal": "Animal", "apparel": "Vestuário", "armor-heavy": "Armadura pesada",
-	"armor-light": "Armadura leve", "catalyst": "Catalisador", "consumable": "Consumível",
-	"improvement": "Melhoria", "material": "Material", "meal": "Alimentação",
-	"shield": "Escudo", "vehicle": "Veículo", "weapon-exotic": "Arma exótica",
-	"weapon-firearm": "Arma de fogo", "weapon-martial": "Arma marcial",
-	"weapon-simple": "Arma simples",
-}
-
-func writtenCategory(id string) string {
-	if name, found := writtenCategories[id]; found {
-		return name
-	}
-	return id
 }
 
 // appliedImprovements são as sobreposições em vigor, com o que elas fazem.
@@ -367,11 +347,11 @@ func catalogItemRowsOf(query, category string) []catalogItemRow {
 			continue
 		}
 		if term != "" && !strings.Contains(search.Fold(entry.Name), term) &&
-			!strings.Contains(search.Fold(writtenCategory(entry.Category)), term) {
+			!strings.Contains(search.Fold(book.CategoryName(entry.Category)), term) {
 			continue
 		}
 		rows = append(rows, catalogItemRow{
-			ID: entry.ID, Name: entry.Name, Category: writtenCategory(entry.Category),
+			ID: entry.ID, Name: entry.Name, Category: book.CategoryName(entry.Category),
 			Slots: sheet.WithComma(entry.Slots), Price: sheet.WithComma(entry.Price), Page: entry.BookPage,
 		})
 	}
@@ -393,7 +373,7 @@ func catalogCategories(active string) []filterOption {
 	}
 	sort.Strings(ids)
 	for _, id := range ids {
-		options = append(options, filterOption{Value: id, Label: writtenCategory(id), Active: id == active})
+		options = append(options, filterOption{Value: id, Label: book.CategoryName(id), Active: id == active})
 	}
 	return options
 }
