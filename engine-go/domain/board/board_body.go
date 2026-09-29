@@ -54,22 +54,3 @@ func ParseTokenPatch(raw any) TokenPatch {
 	}
 	return patch
 }
-
-// ParseMarkerPatch lê só os campos PRESENTES.
-func ParseMarkerPatch(raw any) MarkerPatch {
-	patch := MarkerPatch{}
-	m, ok := raw.(map[string]any)
-	if !ok {
-		return patch
-	}
-	if text, ok := m["text"].(string); ok {
-		patch.Text = &text
-	}
-	if color, ok := m["color"].(string); ok {
-		patch.Color = &color
-	}
-	if hidden, ok := m["hidden"].(bool); ok {
-		patch.Hidden = &hidden
-	}
-	return patch
-}
