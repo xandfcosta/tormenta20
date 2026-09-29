@@ -1851,13 +1851,15 @@
       "modifiers": [
         {
           "target": {
-            "k": "fearResistance"
+            "k": "resistance"
           },
           "amount": 2,
           "bonusType": "item",
           "condition": {
-            "c": "vested"
-          }
+            "c": "against",
+            "trait": "medo"
+          },
+          "note": "resistência a medo +2"
         }
       ],
       "bookPage": 159,

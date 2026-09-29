@@ -518,7 +518,7 @@ pelo nome, e alvo que sai do `switch` sem sair da lista também.
 não entravam em conta nenhuma (ALE-411). Cada um custou uma medição própria, e
 a forma dos três é a mesma — metade do caminho funciona (o rótulo) e a outra não
 existe. A varredura da ALE-418 achou mais três, somando 28 modificadores que a
-ficha mostra e a conta ignora.
+ficha mostra e a conta ignora. Hoje restam **14**, todos do `maneuver`.
 
 **O rótulo do `effects_labels.go` NÃO conta como leitor**, e essa é a linha que
 faz o guarda valer: ele é exatamente a metade que já funciona no defeito, e
@@ -531,6 +531,13 @@ Duas famílias de inércia, e elas pedem consertos diferentes:
 - **o mecanismo NÃO EXISTE** — o `maneuver` tem 14 modificadores e o motor não
   resolve manobra nenhuma. Não há onde somar o +2 do Derrubar Aprimorado, e o
   conserto é construir o gesto.
+
+E há uma terceira, que só aparece quando se lê o livro: **o alvo não devia
+existir**. O `fearResistance` tinha uma entrada e nenhum leitor, e a p229 mostra
+que ele era o `resistance` com condição — *"uma criatura com resistência a magia
++2 recebe +2 em testes de Fortitude, Reflexos ou Vontade contra habilidades
+mágicas"*. Ele não existe mais, e a entrada virou `resistance` + `against:
+medo`, que é como o catálogo já escrevia a resistência a veneno.
 
 E a lista de inertes **só pode encolher**.
 

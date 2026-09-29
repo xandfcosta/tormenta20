@@ -54,6 +54,7 @@ var alvosQueOMotorAplica = map[string]string{
 	"spellDC":              "breakdowns_magic.go, na CD",
 	"inventorySlots":       "breakdowns_magic.go, nos espaços da mochila",
 	"catalyst":             "bag_improvements.go, no catalisador",
+	"resistance":           "breakdowns.go, nas três perícias de resistência (ALE-418)",
 	"flag":                 "collect.go, como interruptor",
 }
 
@@ -67,10 +68,6 @@ var alvosDeclaradosInertes = map[string]string{
 	"maneuver": "o motor não resolve MANOBRA nenhuma — não há gesto onde somar o " +
 		"+2 do Derrubar Aprimorado. É a forma do `critRange` antes da ALE-364: " +
 		"um número que nada consome",
-	"resistance": "carrega DOIS conceitos do livro — \"testes de resistência\" e " +
-		"\"resistência a magia\" —, e escolher um leitor só faria metade das " +
-		"entradas mentirem. Passa pelo GLOSSARY.md antes do código",
-	"fearResistance": "uma entrada no catálogo e nenhum gesto que teste medo",
 	"tempMp": "DELIBERADO, e escrito no `withTempHp`: o livro tem PM temporário " +
 		"(p106) e este app não o modela — nada os gasta, e desenhar um número " +
 		"que nada consome seria pior que não desenhá-lo",

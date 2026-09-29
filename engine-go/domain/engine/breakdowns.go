@@ -295,6 +295,15 @@ func attributeBreakdown(ch Character, attr string, e ItemEffects) AttributeBreak
 
 var armorPenaltyExpertises = map[string]bool{"Acrobacia": true, "Furtividade": true, "Ladinagem": true}
 
+// savingThrowExpertises são as três perícias que o livro chama de TESTE DE
+// RESISTÊNCIA, e é onde o alvo `resistance` cai.
+//
+// O livro define o termo e já diz onde o bônus pousa: "uma criatura com
+// resistência a magia +2 recebe +2 em testes de Fortitude, Reflexos ou Vontade
+// contra habilidades mágicas" (p229). O "contra magia" não é outro alvo — é a
+// CONDIÇÃO que o modificador carrega, e ela já tem lugar.
+var savingThrowExpertises = map[string]bool{"Fortitude": true, "Reflexos": true, "Vontade": true}
+
 // expertiseBreakdown: ½ nível + atributo + treino + modificadores de item
 // (expertise/expertiseAll/expertiseByAttribute) + penalidade de armadura, que
 // tem duas fontes: a armadura vestida e a sobrecarga.
@@ -310,7 +319,16 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, l
 	stat := StatFor(e, ModifierTarget{K: "expertise", Name: state.Name})
 	allStat := StatFor(e, ModifierTarget{K: "expertiseAll"})
 	byAttrStat := StatFor(e, ModifierTarget{K: "expertiseByAttribute", Attribute: state.Attribute})
-	merged := resolveStack(concatContribs(stat.Contributions, allStat.Contributions, byAttrStat.Contributions))
+	// A RESISTÊNCIA entra só nas três, e entra na MESMA pilha: dois bônus de
+	// aprimoramento em Fortitude — um escrito como `expertise` e outro como
+	// `resistance` — são o mesmo tipo e não somam, que é o que a p226 pede.
+	// Resolver as duas pilhas em separado faria o maior de cada uma sobreviver.
+	resistStat := AggregatedStat{}
+	if savingThrowExpertises[state.Name] {
+		resistStat = StatFor(e, ModifierTarget{K: "resistance"})
+	}
+	merged := resolveStack(concatContribs(
+		stat.Contributions, allStat.Contributions, byAttrStat.Contributions, resistStat.Contributions))
 	itemContribs := withNoteContribs(merged.Contributions)
 
 	armorPenaltyApplied := 0
