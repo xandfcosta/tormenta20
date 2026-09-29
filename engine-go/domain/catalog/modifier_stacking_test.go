@@ -126,6 +126,12 @@ func collectModifierOwners(node any, path string) []modifierOwner {
 // modifierBucket é a identidade que o motor usa para empilhar: alvo + tipo.
 // Espelha o `targetKey` do engine — dois modificadores que caem no mesmo balde
 // somam ou competem, dependendo do tipo.
+//
+// ELE JÁ DIVERGIU DO ORIGINAL, e a ALE-419 mede quanto: a `flag` aqui é lida de
+// `target["flag"]` e o catálogo a escreve em `name`, então os dezoito
+// modificadores de flag caem todos no mesmo balde. Este espelho só existe
+// porque o `targetKey` é privado do `domain/engine`, e duas cópias de uma regra
+// envelhecem em duas velocidades.
 func modifierBucket(m map[string]any) string {
 	target, _ := m["target"].(map[string]any)
 	kind, _ := target["k"].(string)
@@ -143,7 +149,7 @@ func modifierBucket(m map[string]any) string {
 
 	detail := ""
 	switch kind {
-	case "expertise", "expertiseRemovePenalty", "attribute":
+	case "expertise", "attribute":
 		detail, _ = target["name"].(string)
 	case "expertiseByAttribute":
 		detail, _ = target["attribute"].(string)

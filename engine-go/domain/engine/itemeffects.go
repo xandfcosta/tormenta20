@@ -19,7 +19,7 @@ import (
 // são preenchidos (`omitempty` mantém a forma do JSON 1:1).
 type ModifierTarget struct {
 	K         string `json:"k"`
-	Name      string `json:"name,omitempty"`      // expertise, expertiseRemovePenalty, attribute, maneuver, flag
+	Name      string `json:"name,omitempty"`      // expertise, attribute, maneuver, flag
 	Attribute string `json:"attribute,omitempty"` // expertiseByAttribute
 	Scope     string `json:"scope,omitempty"`     // attack, damage ('this' | 'all')
 	School    string `json:"school,omitempty"`    // catalyst
@@ -294,8 +294,6 @@ func targetKey(t ModifierTarget) string {
 		return "expertise:" + t.Name
 	case "expertiseAll":
 		return "expertiseAll"
-	case "expertiseRemovePenalty":
-		return "expertiseRemovePenalty:" + t.Name
 	case "expertiseByAttribute":
 		return "expertiseByAttribute:" + t.Attribute
 	case "attribute":
@@ -308,8 +306,6 @@ func targetKey(t ModifierTarget) string {
 			return "defense:" + t.Scope
 		}
 		return "defense"
-	case "defenseDexCap":
-		return "defenseDexCap"
 	case "resistance":
 		return "resistance"
 	case "fearResistance":
@@ -348,8 +344,6 @@ func targetKey(t ModifierTarget) string {
 		return "flySpeed"
 	case "armorPenalty":
 		return "armorPenalty"
-	case "armorPenaltyExpertises":
-		return "armorPenaltyExpertises"
 	case "tempHp":
 		return "tempHp"
 	case "tempMp":

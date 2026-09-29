@@ -480,6 +480,43 @@ porta é interface declarada no consumidor, e ela só casa com tipos do consumid
 compartilhamento é ele ser *shared kernel*: pequeno, sem dependências, e de todos
 porque não é de ninguém.
 
+## Todo ALVO de modificador é declarado, e o RÓTULO não conta como leitor
+
+O `targetKey` nomeia os alvos que um modificador pode mirar, e cada um está em
+uma de duas listas do `modifier_target_rules_test.go`: os que o motor APLICA,
+com o arquivo que os lê, e os declarados INERTES, com o motivo. As duas juntas
+têm de cobrir exatamente o `switch` — alvo novo sem entrada em nenhuma reprova
+pelo nome, e alvo que sai do `switch` sem sair da lista também.
+
+**Por que existe:** três alvos estavam no catálogo, apareciam na aba Efeitos e
+não entravam em conta nenhuma (ALE-411). Cada um custou uma medição própria, e
+a forma dos três é a mesma — metade do caminho funciona (o rótulo) e a outra não
+existe. A varredura da ALE-418 achou mais três, somando 28 modificadores que a
+ficha mostra e a conta ignora.
+
+**O rótulo do `effects_labels.go` NÃO conta como leitor**, e essa é a linha que
+faz o guarda valer: ele é exatamente a metade que já funciona no defeito, e
+tratá-lo como prova faria o guarda aprovar o que veio medir.
+
+Duas famílias de inércia, e elas pedem consertos diferentes:
+
+- **o mecanismo ESQUECEU** — havia uma conta e ela não olhava o modificador. Foi
+  o `critRange`: uma linha, e o teste nasce vermelho;
+- **o mecanismo NÃO EXISTE** — o `maneuver` tem 14 modificadores e o motor não
+  resolve manobra nenhuma. Não há onde somar o +2 do Derrubar Aprimorado, e o
+  conserto é construir o gesto.
+
+E a lista de inertes **só pode encolher**.
+
+> Duas armadilhas de instrumento no caminho, e as duas deram número plausível.
+> Uma busca por `"armorPenaltyExpertises"` ACHA o nome no `breakdowns.go`, mas
+> ali ele é uma VARIÁVEL — a lista de perícias que a armadura penaliza —, e não
+> leitor do alvo: casar nome não é casar conceito. E somar o despejo com os
+> arquivos embutidos contou cada modificador DUAS vezes, porque as duas cópias
+> são a mesma coisa nas seis coleções que o despejo tem: 28 manobras onde há 14.
+> O guarda lê só os embutidos, que são o conjunto completo, e quem garante que
+> as duas cópias batem é o `TestDumpAgreesWithEmbeddedCatalog`.
+
 ## O motor é ECS, e a ENTIDADE muda de fase para fase
 
 O pipeline da ficha é coleta → resolução → derivação → decomposição, e o ataque
