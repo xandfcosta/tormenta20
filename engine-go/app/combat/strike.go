@@ -32,6 +32,16 @@ type Combatant struct {
 	Defense         int
 	DamageReduction int
 	CritImmune      bool
+	// Melee é o valor de LUTA, e ele existe separado da Defesa porque a MANOBRA
+	// o pede: o teste é oposto, e quem se defende rola Luta mesmo empunhando
+	// arma de disparo (p234). Zero para quem não tem ficha — um bloco escrito à
+	// mão não traz perícia.
+	Melee int
+	// ManeuverOffense e ManeuverDefense são os bônus que os modificadores dão a
+	// cada manobra, por LADO. Dois mapas e não um porque o catálogo os separa: o
+	// `Desejo de Liberdade` ajuda quem está sendo agarrado, não quem agarra.
+	ManeuverOffense map[string]int
+	ManeuverDefense map[string]int
 }
 
 // Combatants é a porta que traduz uma linha da fila em combatente.
@@ -77,6 +87,12 @@ type Request struct {
 	// gateway, CONTRA O BANCO — o cliente não é fonte de posse. É o mesmo campo
 	// e a mesma razão do `board.Mover.OwnsCharacter`.
 	OwnsAttacker bool
+	// Maneuver é a manobra do livro quando o gesto é uma MANOBRA e não um golpe
+	// (p234): agarrar, derrubar, desarmar, empurrar ou quebrar. Vazio é golpe.
+	Maneuver string
+	// OpposedD20 é o d20 de quem se DEFENDE da manobra, e ele existe pelo mesmo
+	// motivo do `D20`: a mesa pode rolar na mão. Nulo é o servidor rolar.
+	OpposedD20 *int
 	// D20 é a rolagem QUE JÁ ACONTECEU na mesa, quando aconteceu.
 	//
 	// Nulo é o servidor rolar. Os dois caminhos existem porque as duas mesas
@@ -148,6 +164,9 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		return live.PendingAttack{}, err
 	}
 	weapon := striker.Weapons[req.Weapon]
+	if req.Maneuver != "" {
+		return s.proposeManeuver(ctx, who, req, attackerEntry, target, striker, victim, weapon, d20)
+	}
 	out, err := engine.ResolveAttack(weapon, engine.AttackTarget{
 		Defense:         victim.Defense,
 		DamageReduction: victim.DamageReduction,
@@ -163,6 +182,49 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		Hit: out.Hit, Critical: out.Critical,
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
 		Damage: out.Damage, ByUserID: who.ID,
+	}
+	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
+		return live.PendingAttack{}, err
+	}
+	return pending, nil
+}
+
+// proposeManeuver resolve o teste OPOSTO da manobra e guarda o provisório.
+//
+// Ele divide com o golpe tudo que vem antes: a vez, a posse, a ação padrão e as
+// duas pontas da fila. O que muda é só a REGRA no meio — e é por isso que ele é
+// um ramo aqui, e não um caso de uso irmão que repetiria sete conferências.
+func (s Strike) proposeManeuver(
+	ctx context.Context, who app.Caller, req Request,
+	attackerEntry, target live.InitiativeEntry,
+	striker, victim Combatant, weapon engine.WeaponCard, d20 int,
+) (live.PendingAttack, error) {
+	// O LUTA DO DEFENSOR, e não a Defesa dele: "mesmo que ela esteja usando uma
+	// arma de ataque à distância, deve fazer o teste usando seu valor de Luta"
+	// (p234). Quem não tem arma empunhada não tem carta, e aí o Luta dele é
+	// zero — um NPC de bloco escrito à mão não traz perícia.
+	defesa := engine.ManeuverSide{Bonus: victim.Melee + victim.ManeuverDefense[req.Maneuver]}
+	ataque := engine.ManeuverSide{
+		Bonus:  weapon.Attack + striker.ManeuverOffense[req.Maneuver],
+		Ranged: weapon.Skill != "Luta",
+	}
+
+	opposed, err := s.d20Of(req.OpposedD20)
+	if err != nil {
+		return live.PendingAttack{}, err
+	}
+	out := engine.ResolveManeuver(req.Maneuver, ataque, defesa, d20, opposed)
+	if out.Refused != "" {
+		return live.PendingAttack{}, fmt.Errorf("%s: %w", out.Refused, app.ErrRefused)
+	}
+
+	pending := live.PendingAttack{
+		AttackerEntryID: attackerEntry.ID, TargetEntryID: target.ID, Weapon: weapon.Name,
+		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID,
+		Maneuver: &live.ManeuverRoll{
+			Kind: out.Kind, Opposed: out.DefenderTotal,
+			Margin: out.Margin, Won: out.Won, AnotherRoll: out.Reroll,
+		},
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err

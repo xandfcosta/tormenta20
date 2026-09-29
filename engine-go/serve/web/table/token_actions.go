@@ -462,6 +462,17 @@ func copyMenuId(tokenID string) string {
 	return "peca-copia-" + tokenID
 }
 
+func maneuverMenuId(tokenID string) string {
+	return "peca-manobra-" + tokenID
+}
+
+// closesTheManeuverMenu fecha a segunda camada da manobra, pela mesma razão do
+// irmão dela: o popover não se fecha sozinho quando o clique é num botão dentro
+// dele.
+func closesTheManeuverMenu(tokenID string) string {
+	return fmt.Sprintf("document.getElementById(%q)?.hidePopover(); ", maneuverMenuId(tokenID))
+}
+
 // closesTheCopyMenu fecha a segunda camada por JS, e ela existe porque escolher
 // um modo tem de fechar as DUAS camadas: o popover não se fecha sozinho quando o
 // clique é num botão dentro dele.

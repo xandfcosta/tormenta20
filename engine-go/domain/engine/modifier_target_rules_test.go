@@ -55,6 +55,7 @@ var alvosQueOMotorAplica = map[string]string{
 	"inventorySlots":       "breakdowns_magic.go, nos espaços da mochila",
 	"catalyst":             "bag_improvements.go, no catalisador",
 	"resistance":           "breakdowns.go, nas três perícias de resistência (ALE-418)",
+	"maneuver":             "maneuver.go, no teste oposto da p234 (ALE-420)",
 	"flag":                 "collect.go, como interruptor",
 }
 
@@ -65,9 +66,6 @@ var alvosQueOMotorAplica = map[string]string{
 // ficha mostra e a conta ignora. O quarto não é: ele está declarado por escrito
 // no `withTempHp`, e a decisão de não desenhar é deliberada.
 var alvosDeclaradosInertes = map[string]string{
-	"maneuver": "o motor não resolve MANOBRA nenhuma — não há gesto onde somar o " +
-		"+2 do Derrubar Aprimorado. É a forma do `critRange` antes da ALE-364: " +
-		"um número que nada consome",
 	"tempMp": "DELIBERADO, e escrito no `withTempHp`: o livro tem PM temporário " +
 		"(p106) e este app não o modela — nada os gasta, e desenhar um número " +
 		"que nada consome seria pior que não desenhá-lo",

@@ -1359,6 +1359,25 @@ templ tokenMenu(v BoardView, p boardToken) {
 				@ui.Icon("CornerUpLeft", "size-4")
 			</button>
 		}
+		// MANOBRA abre uma SEGUNDA CAMADA, e pela mesma razão do duplicar: são
+		// CINCO (p234), e a diferença entre agarrar e derrubar não cabe num ícone.
+		// Cinco ícones lado a lado seriam cinco desenhos parecidos numa fileira de
+		// 28px sobre o mapa.
+		//
+		// Ela aparece junto do Atacar e sob a mesma condição, porque é a mesma
+		// pergunta: manobra É um ataque corpo a corpo, e quem a faz é quem está na
+		// vez contra quem não está.
+		if p.EntryID != "" && !p.OnTurn {
+			<button
+				type="button"
+				aria-label={ "Manobra contra " + p.Label }
+				title="Manobra: escolher qual"
+				popovertarget={ maneuverMenuId(p.ID) }
+				class="board-token-verb"
+			>
+				@ui.Icon("Grab", "size-4")
+			</button>
+		}
 		// ATACAR é o verbo do ALVO, e o menu é o do alvo: quem ataca é quem está
 		// na VEZ. Não há segundo clique onde caberia escolher o atacante, e o
 		// livro concorda — combate acontece em turnos, e age quem está na vez
@@ -1397,6 +1416,9 @@ templ tokenMenu(v BoardView, p boardToken) {
 			@ui.Icon("X", "size-4")
 		</button>
 		@tokenCopyMenu(v, p)
+		if p.EntryID != "" && !p.OnTurn {
+			@tokenManeuverMenu(v, p)
+		}
 	</div>
 }
 
@@ -1454,6 +1476,44 @@ templ tokenCopyMenu(v BoardView, p boardToken) {
 		@tokenClipboardMode(v, p, "junto", "sangrando junto")
 		@tokenClipboardMode(v, p, "peca", "só a peça")
 	</div>
+}
+
+// O SUBMENU DA MANOBRA, irmão do de duplicar e com o mesmo desenho: uma linha
+// por opção, o nome em cima e a CONSEQUÊNCIA embaixo.
+//
+// A frase não é enfeite aqui tampouco. "Agarrar" e "derrubar" são palavras que a
+// mesa conhece do livro, mas o que cada uma FAZ ao alvo é o que decide o clique
+// — e é o que o livro escreve ao lado de cada nome na p234.
+//
+// A ORDEM é a da página, que é alfabética. Não inventei uma ordem "de uso":
+// nenhuma delas é o caso comum, e uma ordem própria faria a mesa procurar.
+templ tokenManeuverMenu(v BoardView, p boardToken) {
+	<div
+		id={ maneuverMenuId(p.ID) }
+		popover
+		aria-label={ "Manobra contra " + p.Label }
+		class="board-token-copy"
+	>
+		@tokenCopyGroup("Teste oposto de manobra")
+		@tokenManeuver(v, p, "agarrar", "Agarrar", "fica desprevenido e imóvel, e você o arrasta")
+		@tokenManeuver(v, p, "derrubar", "Derrubar", "fica caído; por 5 ou mais, também é empurrado")
+		@tokenManeuver(v, p, "desarmar", "Desarmar", "solta o que está segurando")
+		@tokenManeuver(v, p, "empurrar", "Empurrar", "recua 1,5m, e mais 1,5m por cada 5 de diferença")
+		@tokenManeuver(v, p, "quebrar", "Quebrar", "atinge o item que ele está segurando")
+	</div>
+}
+
+// tokenManeuver é uma linha do submenu.
+templ tokenManeuver(v BoardView, p boardToken, kind, name, sentence string) {
+	<button
+		type="button"
+		aria-label={ name + ": " + sentence }
+		data-on:click={ maneuverOnTarget(v, p.ID, p.EntryID, kind) }
+		class="board-token-copy-mode"
+	>
+		<span class="board-token-copy-name">{ name }</span>
+		<span aria-hidden="true" class="board-token-copy-phrase">{ sentence }</span>
+	</button>
 }
 
 // tokenCopyGroup separa as duas metades da camada.

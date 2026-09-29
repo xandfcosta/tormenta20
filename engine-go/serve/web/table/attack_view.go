@@ -47,6 +47,11 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
 		Tally: attackLine(*pa), Mine: pa.ByUserID == userID,
 	}
+	if pa.Maneuver != nil {
+		out.Verdict, out.Class = maneuverVerdict(*pa.Maneuver)
+		out.Tally = maneuverLine(*pa)
+		return out
+	}
 	switch {
 	case pa.Critical:
 		out.Verdict, out.Class = "Crítico", "mesa-ataque-critico"
@@ -56,6 +61,64 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		out.Verdict, out.Class = "Errou", "mesa-ataque-erro"
 	}
 	return out
+}
+
+// maneuverNames são as cinco da p234 como a mesa as lê. O crachá diz a MANOBRA e
+// não "venceu": "Derrubou" responde o que aconteceu, e "Venceu" faria a mesa
+// perguntar o quê.
+var maneuverNames = map[string][2]string{
+	"agarrar":  {"Agarrou", "não agarrou"},
+	"derrubar": {"Derrubou", "não derrubou"},
+	"desarmar": {"Desarmou", "não desarmou"},
+	"empurrar": {"Empurrou", "não empurrou"},
+	"quebrar":  {"Quebrou", "não quebrou"},
+}
+
+// maneuverVerdict é a palavra e a tinta do crachá de uma manobra.
+//
+// O EMPATE DE BÔNUS IGUAIS tem crachá próprio, e não o de derrota: a p234 manda
+// rolar de novo, e anunciar "não derrubou" seria dar por perdida uma manobra que
+// a regra não decidiu. A tinta é a do erro porque nada aconteceu ainda, e a
+// palavra é que diz o que falta.
+func maneuverVerdict(m live.ManeuverRoll) (string, string) {
+	if m.AnotherRoll {
+		return "Empate", "mesa-ataque-erro"
+	}
+	nomes, conhecida := maneuverNames[m.Kind]
+	if !conhecida {
+		nomes = [2]string{"Venceu", "perdeu"}
+	}
+	if m.Won {
+		return nomes[0], "mesa-ataque-acerto"
+	}
+	return capitalize(nomes[1]), "mesa-ataque-erro"
+}
+
+// maneuverLine escreve a conta do teste OPOSTO.
+//
+// A MARGEM aparece só quando ela faz diferença: cinco pontos ou mais dão efeito
+// extra ao derrubar e ao desarmar (p234), e escrever "por 2" numa vitória
+// apertada seria número sem consequência no meio do turno. O empate escreve o
+// que a regra pede em vez de um número.
+//
+//	maneuverLine(...) // "derrubar · 19 vs 10 · por 9"
+func maneuverLine(pa live.PendingAttack) string {
+	m := *pa.Maneuver
+	line := fmt.Sprintf("%s · %d vs %d", m.Kind, pa.Total, m.Opposed)
+	switch {
+	case m.AnotherRoll:
+		return line + " · bônus iguais, role de novo (p234)"
+	case m.Won && m.Margin >= 5:
+		return line + fmt.Sprintf(" · por %d, e cinco ou mais dão efeito extra", m.Margin)
+	}
+	return line
+}
+
+func capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }
 
 // attackLine escreve a conta inteira do ataque.

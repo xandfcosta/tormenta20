@@ -1,6 +1,9 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 // A MANOBRA DE COMBATE (T20 p234).
 //
@@ -122,4 +125,18 @@ func ManeuverBonus(effects ItemEffects, kind string, role ManeuverRole) int {
 	return StatFor(effects, ModifierTarget{
 		K: "maneuver", Name: kind, Scope: string(role),
 	}).Total
+}
+
+// ManeuversOfTheBook são as cinco da p234, em ordem alfabética.
+//
+// Exportada porque quem monta o combatente precisa percorrer as cinco por NOME:
+// um mapa montado a partir dos modificadores que existem devolveria zero para a
+// manobra sem bônus e para a manobra escrita errada do mesmo jeito.
+func ManeuversOfTheBook() []string {
+	fora := make([]string, 0, len(maneuversOfTheBook))
+	for manobra := range maneuversOfTheBook {
+		fora = append(fora, manobra)
+	}
+	sort.Strings(fora)
+	return fora
 }

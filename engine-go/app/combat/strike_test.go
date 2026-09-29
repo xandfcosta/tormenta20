@@ -59,8 +59,12 @@ func aTable(t *testing.T) *queueDouble {
 	return &queueDouble{state: st}
 }
 
+// O `Skill` entra porque a MANOBRA o lê: ela é ataque corpo a corpo (p234), e
+// uma carta sem perícia é recusada — a regra falha no que não reconhece, que é a
+// direção segura. O dublê sem ele mentia por omissão: toda carta de verdade sai
+// do `ComputeWeaponCards` com "Luta" ou "Pontaria".
 func aLongsword() engine.WeaponCard {
-	return engine.WeaponCard{Name: "Espada longa", Damage: "1d8", DamageBonus: 3, Attack: 5, CritRange: 19, CritMult: 2}
+	return engine.WeaponCard{Name: "Espada longa", Skill: "Luta", Damage: "1d8", DamageBonus: 3, Attack: 5, CritRange: 19, CritMult: 2}
 }
 
 func fixedDie(value int) func(int) (int, error) {
@@ -202,5 +206,119 @@ func TestWithoutAWieldedWeaponThereIsNoAttack(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "Arwen") {
 		t.Errorf("a recusa tem de dizer de quem se fala, e veio %q", err)
+	}
+}
+
+// O DEFENSOR DA MANOBRA ROLA LUTA, e não a Defesa (T20 p234).
+//
+// É o caso que separa "funciona" de "funciona por acaso", como o da Defesa
+// acima: o alvo tem Defesa 30 e Luta 2. Um código que lesse a Defesa daria 30 ao
+// outro lado do teste oposto, e a manobra nunca venceria — com o número saindo
+// plausível na faixa, porque 30 é um total possível.
+//
+// A página diz isso por extenso: *"mesmo que ela esteja usando uma arma de
+// ataque à distância, deve fazer o teste usando seu valor de Luta"*.
+func TestTheManeuverDefenderRollsMeleeAndNotDefense(t *testing.T) {
+	table := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Defense: 30},
+		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 30, Melee: 2},
+	}, table, fixedDie(11))
+
+	d20 := 10
+	out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro",
+		D20: &d20, OwnsAttacker: true, Maneuver: "derrubar",
+	})
+	if err != nil {
+		t.Fatalf("propor a manobra: %v", err)
+	}
+	if out.Maneuver == nil {
+		t.Fatal("o provisório saiu sem a conta da manobra")
+	}
+	// O d20 do defensor é o do servidor (11), e o Luta dele é 2: total 13.
+	// Lendo a Defesa daria 41, e a manobra perderia sempre.
+	if out.Maneuver.Opposed != 13 {
+		t.Errorf("o lado do defensor deu %d e a conta é 11 + Luta 2 = 13.\n"+
+			"41 quer dizer que o código leu a DEFESA (30) do alvo, e a p234 manda "+
+			"ele rolar LUTA", out.Maneuver.Opposed)
+	}
+	// 10 + 5 = 15 contra 13: quem tenta vence por 2.
+	if !out.Maneuver.Won || out.Maneuver.Margin != 2 {
+		t.Errorf("15 contra 13 vence por 2, e deu %+v", *out.Maneuver)
+	}
+	if out.Damage != 0 {
+		t.Errorf("a manobra causou %d de dano, e a p234 diz que ela faz algo DIFERENTE "+
+			"de causar dano", out.Damage)
+	}
+}
+
+// O BÔNUS DE MANOBRA DE CADA LADO entra no lado dele, e o do defensor NUNCA no
+// ataque — é a decisão que a ALE-406 tomou pondo o escopo na chave.
+func TestEachSideGetsItsOwnManeuverBonus(t *testing.T) {
+	table := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()},
+			ManeuverOffense: map[string]int{"agarrar": 2}},
+		"ogro": {EntryID: "ogro", Label: "Ogro", Melee: 0,
+			ManeuverDefense: map[string]int{"agarrar": 5}},
+	}, table, fixedDie(10))
+
+	d20 := 10
+	out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro",
+		D20: &d20, OwnsAttacker: true, Maneuver: "agarrar",
+	})
+	if err != nil {
+		t.Fatalf("propor a manobra: %v", err)
+	}
+	// Quem ataca: 10 + 5 do Luta da espada + 2 do bônus de ofensa = 17.
+	if out.Total != 17 {
+		t.Errorf("o lado de quem agarra deu %d e a conta é 10 + 5 + 2 = 17", out.Total)
+	}
+	// Quem defende: 10 + 0 de Luta + 5 do Desejo de Liberdade = 15.
+	if out.Maneuver.Opposed != 15 {
+		t.Errorf("o lado de quem se solta deu %d e a conta é 10 + 0 + 5 = 15.\n"+
+			"Somar o +5 de defesa no ATAQUE daria 22 e a manobra venceria sempre — é o "+
+			"defeito que a ALE-406 consertou pondo o escopo na chave", out.Maneuver.Opposed)
+	}
+}
+
+// O ARCO NÃO DERRUBA NINGUÉM, e a recusa vem desta camada lendo a PERÍCIA da
+// carta (T20 p234: *"não é possível fazer manobras de combate com ataques à
+// distância"*).
+//
+// A regra sabe recusar — o `ResolveManeuver` tem o caso —, mas quem lhe diz que a
+// arma é de disparo é o `Strike`. Sem este caso, um `Ranged: false` fixo passaria
+// verde: o arco derrubaria o ogro e a recusa nunca seria exercida pelo gesto.
+func TestABowCannotManeuver(t *testing.T) {
+	arco := engine.WeaponCard{Name: "Arco longo", Skill: "Pontaria", Damage: "1d8", Attack: 5}
+	table := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{arco}},
+		"ogro":  {EntryID: "ogro", Label: "Ogro", Melee: 0},
+	}, table, fixedDie(10))
+
+	d20 := 20
+	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro",
+		D20: &d20, OwnsAttacker: true, Maneuver: "derrubar",
+	})
+	if err == nil {
+		t.Fatal("o arco derrubou o ogro: a p234 diz que manobra é ataque corpo a corpo")
+	}
+	if !strings.Contains(err.Error(), "corpo a corpo") {
+		t.Errorf("a recusa tinha de dizer o motivo do livro, e veio %q", err)
+	}
+	if table.stored != nil {
+		t.Error("a manobra recusada virou provisório na mesa")
+	}
+	// E O GOLPE COM ARCO CONTINUA VALENDO: a proibição é da MANOBRA, não do
+	// ataque. Sem esta metade, um `Ranged` lido errado proibiria atirar.
+	if _, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro",
+		D20: &d20, OwnsAttacker: true,
+	}); err != nil {
+		t.Errorf("atirar de arco foi recusado (%v), e a p234 só proíbe a MANOBRA", err)
 	}
 }
