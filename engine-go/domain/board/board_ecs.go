@@ -26,28 +26,34 @@ import "t20engine/domain/ecs"
 // gravado e o que viaja no fio não mudam, e por isso os guardas de regime e a
 // redação continuam valendo sem uma linha tocada.
 
-// drawnToken e drawnMarker guardam o ÍNDICE no `BoardState`, e não uma cópia.
+// tokenAt e markerAt guardam o ÍNDICE no `BoardState`, e não uma cópia.
 //
 // O índice basta porque o mundo nasce e morre dentro de uma chamada, e a cópia
 // duplicaria a peça inteira para devolvê-la igual. São dois componentes e não
 // um com discriminador porque a leitura de volta pergunta por espécie, e é
-// assim que o ECS separa: quem tem `drawnToken` é peça.
-type drawnToken struct{ At int }
-type drawnMarker struct{ At int }
+// assim que o ECS separa: quem tem `tokenAt` é peça.
+type tokenAt struct{ Index int }
+type markerAt struct{ Index int }
 
-// tokenWorldOf monta o mundo de uma redação: uma entidade por peça e uma por
-// marcador, na ORDEM em que elas estão no tabuleiro.
+// worldOfTheBoard monta o mundo: uma entidade por peça e uma por marcador, na
+// ORDEM em que elas estão no tabuleiro.
 //
 // A ordem é a do fio, e o `ecs.World` varre por inserção justamente para isto —
 // é a propriedade em volta da qual o núcleo foi desenhado, porque `map` em Go
 // não a tem.
-func tokenWorldOf(b *BoardState) *ecs.World {
+//
+// Ele é UM e serve aos dois gestos que já rodam como sistemas, a redação e a
+// ocupação, porque a ENTIDADE é a mesma nos dois: a peça. O que muda é o
+// componente que cada pipeline escreve — o `body` só existe para quem pergunta
+// quadrado, e o `boundTo` só para quem pergunta fila. Na ficha a entidade
+// TROCA entre as fases, e aqui não troca: a pergunta muda, o sujeito não.
+func worldOfTheBoard(b *BoardState) *ecs.World {
 	w := ecs.NewWorld()
 	for at := range b.Tokens {
-		ecs.Set(w, w.Spawn(), drawnToken{At: at})
+		ecs.Set(w, w.Spawn(), tokenAt{Index: at})
 	}
 	for at := range b.Markers {
-		ecs.Set(w, w.Spawn(), drawnMarker{At: at})
+		ecs.Set(w, w.Spawn(), markerAt{Index: at})
 	}
 	return w
 }
@@ -60,13 +66,13 @@ func tokenWorldOf(b *BoardState) *ecs.World {
 // diferença entre um descuido que vaza e um que não compila.
 func concealWhatTheMasterHid(b *BoardState) ecs.System {
 	return func(w *ecs.World) {
-		ecs.Each(w, func(e ecs.Entity, drawn drawnToken) {
-			if b.Tokens[drawn.At].Hidden {
+		ecs.Each(w, func(e ecs.Entity, drawn tokenAt) {
+			if b.Tokens[drawn.Index].Hidden {
 				w.Despawn(e)
 			}
 		})
-		ecs.Each(w, func(e ecs.Entity, drawn drawnMarker) {
-			if b.Markers[drawn.At].Hidden {
+		ecs.Each(w, func(e ecs.Entity, drawn markerAt) {
+			if b.Markers[drawn.Index].Hidden {
 				w.Despawn(e)
 			}
 		})
@@ -79,17 +85,17 @@ func concealWhatTheMasterHid(b *BoardState) ecs.System {
 // `hpHidden` da iniciativa, onde a linha fica sem os números: aqui a EXISTÊNCIA
 // é a informação.
 func redactBoardForPlayers(b *BoardState) *BoardState {
-	w := tokenWorldOf(b)
+	w := worldOfTheBoard(b)
 	ecs.Run(w, concealWhatTheMasterHid(b))
 
 	out := *b
 	out.Tokens = make([]BoardToken, 0, len(b.Tokens))
-	ecs.Each(w, func(_ ecs.Entity, drawn drawnToken) {
-		out.Tokens = append(out.Tokens, b.Tokens[drawn.At])
+	ecs.Each(w, func(_ ecs.Entity, drawn tokenAt) {
+		out.Tokens = append(out.Tokens, b.Tokens[drawn.Index])
 	})
 	out.Markers = make([]BoardMarker, 0, len(b.Markers))
-	ecs.Each(w, func(_ ecs.Entity, drawn drawnMarker) {
-		out.Markers = append(out.Markers, b.Markers[drawn.At])
+	ecs.Each(w, func(_ ecs.Entity, drawn markerAt) {
+		out.Markers = append(out.Markers, b.Markers[drawn.Index])
 	})
 
 	// O PROVISÓRIO DE QUEM NÃO SOBROU morre junto: um caminho desenhado saindo

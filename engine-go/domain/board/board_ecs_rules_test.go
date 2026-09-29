@@ -1,6 +1,13 @@
 package board
 
-import "testing"
+import (
+	"testing"
+
+	"t20engine/domain/engine"
+)
+
+// engineSquare encurta o quadrado do livro nos casos abaixo.
+func engineSquare(x, y int) engine.Square { return engine.Square{X: x, Y: y} }
 
 // A REDAÇÃO PRESERVA A ORDEM do que sobrou (ALE-413).
 //
@@ -84,5 +91,34 @@ func TestTheRedactionKeepsTheMarkerOrder(t *testing.T) {
 		if visto.Markers[i].ID != id {
 			t.Errorf("o marcador %d é %q e devia ser %q", i, visto.Markers[i].ID, id)
 		}
+	}
+}
+
+// A PEÇA GRAVADA SEM TAMANHO OCUPA UM QUADRADO, e não nenhum (ALE-413).
+//
+// O `AddToken` põe 1 em quem chega com zero, então nenhuma peça CRIADA pelo app
+// tem tamanho zero. Mas o tabuleiro vem do banco como JSON, e linha gravada
+// antes de o campo existir chega com o zero do Go — e o corpo dela sairia
+// VAZIO, cobrindo quadrado nenhum.
+//
+// A consequência é silenciosa e visível: a próxima peça nasce em cima dela, e o
+// mapa mostra uma sobre a outra sem ninguém ter errado um clique.
+//
+// Não estava preso: trocando o `side <= 0` por `side < 0`, a suíte inteira
+// ficava verde — nenhum caso põe uma peça sem tamanho no mapa, porque todos os
+// casos a criam pelo caminho que já a conserta.
+func TestATokenSavedWithoutASizeStillTakesItsSquare(t *testing.T) {
+	// Direto na fatia, e não pelo `AddToken`: é assim que ela chega do banco, e
+	// pelo construtor o defeito é invisível por construção.
+	b := &BoardState{Tokens: []BoardToken{{ID: "antiga", X: 4, Y: 4}}}
+
+	plano := occupancyWorldOf(b)
+	if !squareIsTaken(plano, 4, 4) {
+		t.Fatal("o quadrado (4,4) saiu livre com uma peça em cima dele.\n" +
+			"Peça gravada sem `footprint` chega com zero, e o corpo dela tem de " +
+			"valer UM quadrado — senão a próxima nasce empilhada.")
+	}
+	if ids := TokensInRectangle(b, engineSquare(4, 4), engineSquare(4, 4)); len(ids) != 1 {
+		t.Errorf("o laço em (4,4) pegou %v, e a peça sem tamanho está ali", ids)
 	}
 }

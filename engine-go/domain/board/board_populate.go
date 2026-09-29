@@ -1,6 +1,9 @@
 package board
 
-import "t20engine/domain/live"
+import (
+	"t20engine/domain/ecs"
+	"t20engine/domain/live"
+)
 
 // QUEM ENTRA no tabuleiro quando o combate começa, e em que quadrado cada um
 // nasce.
@@ -19,20 +22,25 @@ import "t20engine/domain/live"
 // montou para aparecer no terceiro turno não deve estar no mapa, e peça que não
 // existe não vaza por bug de redação.
 func PopulateBoard(b *BoardState, st *live.SessionRuntimeState, newID func() string, chosen EntrySelection) int {
+	// O MUNDO NASCE UMA VEZ, e a peça recém-posta entra nele: sem isso a
+	// próxima acharia o mesmo quadrado livre e as duas nasceriam empilhadas.
+	// É a razão de o `clusterSpot` perguntar ao mundo e não ao tabuleiro.
+	plano := occupancyWorldOf(b)
 	placed := 0
 	for _, entry := range st.Initiative {
-		if !chosen.wants(entry.ID) || hasTokenForEntry(b, entry.ID) {
+		if !chosen.wants(entry.ID) || hasTokenForEntry(plano, entry.ID) {
 			continue
 		}
 		token := BoardToken{
 			Label: entry.Label, Kind: entry.Type, Footprint: 1,
 			EntryID: strPtr(entry.ID), CharacterID: entry.CharacterID,
 		}
-		spot := clusterSpot(b, entry.Type == "character")
+		spot := clusterSpot(plano, entry.Type == "character")
 		token.X, token.Y = spot.x, spot.y
 		if err := AddToken(b, token, newID); err != nil {
 			break
 		}
+		spawnTokenBody(plano, token.X, token.Y, token.Footprint)
 		placed++
 	}
 	return placed
@@ -80,24 +88,15 @@ const TopChromeRows = 2
 // O recuo é das DUAS colunas de uma vez, e é por isso que ele não mexe na
 // distância entre os lados: os seis quadrados do alcance curto (p224) são
 // horizontais.
-func clusterSpot(b *BoardState, isParty bool) boardSpot {
+func clusterSpot(w *ecs.World, isParty bool) boardSpot {
 	baseX := enemySideX
 	if isParty {
 		baseX = partySideX
 	}
 	for i := 0; ; i++ {
 		spot := boardSpot{x: baseX + i%clusterCols, y: TopChromeRows + i/clusterCols}
-		if !occupied(b, spot.x, spot.y) {
+		if !squareIsTaken(w, spot.x, spot.y) {
 			return spot
 		}
 	}
-}
-
-func hasTokenForEntry(b *BoardState, entryID string) bool {
-	for _, t := range b.Tokens {
-		if t.EntryID != nil && *t.EntryID == entryID {
-			return true
-		}
-	}
-	return false
 }
