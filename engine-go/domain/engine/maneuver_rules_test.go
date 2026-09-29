@@ -142,3 +142,47 @@ func TestTheManeuverBonusKnowsWhichSideItHelps(t *testing.T) {
 		t.Errorf("a defesa contra derrubar deu %d, e o modificador é de ofensa", got)
 	}
 }
+
+// A MANOBRA QUE VENCE DEIXA A CONDIÇÃO que a página escreve (T20 p234).
+//
+// Duas das cinco impõem condição, e as outras três NÃO são esquecimento: o
+// livro lhes dá efeito de item ou de movimento — o desarmar derruba o que a
+// criatura segura, o empurrar a move, o quebrar atinge um item. Escrever uma
+// condição ali seria inventar.
+func TestOnlyTwoManeuversLeaveAConditionOnTheTarget(t *testing.T) {
+	// "Você deixa o alvo CAÍDO" (p234).
+	if fora := duelo(ManeuverSide{Bonus: 9}, ManeuverSide{}, 15, 1); fora.Imposes != "caido" {
+		t.Errorf("o derrubar vencido impõe %q e a p234 diz caído", fora.Imposes)
+	}
+	// "Uma criatura AGARRADA fica desprevenida e imóvel" (p234).
+	agarrou := ResolveManeuver("agarrar", ManeuverSide{Bonus: 9}, ManeuverSide{}, 15, 1)
+	if agarrou.Imposes != "agarrado" {
+		t.Errorf("o agarrar vencido impõe %q e a p234 diz agarrado", agarrou.Imposes)
+	}
+	for _, manobra := range []string{"desarmar", "empurrar", "quebrar"} {
+		fora := ResolveManeuver(manobra, ManeuverSide{Bonus: 9}, ManeuverSide{}, 15, 1)
+		if fora.Imposes != "" {
+			t.Errorf("o %s vencido impôs %q, e a p234 lhe dá efeito de item ou de "+
+				"movimento — nenhuma condição", manobra, fora.Imposes)
+		}
+	}
+}
+
+// A MANOBRA PERDIDA NÃO IMPÕE NADA, e o EMPATE tampouco.
+//
+// É a metade que importa: um `Imposes` preenchido independentemente do
+// resultado faria a confirmação deixar o alvo caído por ter tentado derrubá-lo.
+func TestALostManeuverLeavesNoCondition(t *testing.T) {
+	if perdida := duelo(ManeuverSide{}, ManeuverSide{Bonus: 9}, 1, 15); perdida.Imposes != "" {
+		t.Errorf("o derrubar PERDIDO impôs %q — tentar não derruba ninguém", perdida.Imposes)
+	}
+	empate := duelo(ManeuverSide{Bonus: 3}, ManeuverSide{Bonus: 3}, 12, 12)
+	if !empate.Reroll {
+		t.Fatal("o controle já estava errado: este caso tinha de ser o empate de bônus iguais")
+	}
+	if empate.Imposes != "" {
+		t.Errorf("o empate impôs %q, e a p234 manda rolar de novo — não há vencedor "+
+			"ainda, e a condição pousaria sobre uma manobra que a regra não decidiu",
+			empate.Imposes)
+	}
+}

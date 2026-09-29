@@ -74,6 +74,27 @@ func (e VitalsChanged) Target() Target {
 	return Target{SessionID: e.SessionID, CharacterID: e.CharacterID}
 }
 
+// ConditionApplied — um combatente ganhou uma condição do livro.
+//
+// Ele carrega `CharacterID` pela MESMA razão do `VitalsChanged`, e não por
+// simetria: quando há ficha atrás da linha, quem ficou caído foi o PERSONAGEM, e
+// a ficha aberta noutra aba tem de saber. NPC entra com zero, e aí o alvo é só a
+// mesa.
+//
+// Evento PRÓPRIO e não um `VitalsChanged` emprestado: o nome do evento é o que
+// alguém lê ao procurar por que a tela piscou, e "vitais mudaram" sobre uma
+// condição manda procurar no lugar errado.
+type ConditionApplied struct {
+	SessionID   int64
+	EntryID     string
+	CharacterID int64
+	Condition   string
+}
+
+func (e ConditionApplied) Target() Target {
+	return Target{SessionID: e.SessionID, CharacterID: e.CharacterID}
+}
+
 // TurnAdvanced — a vez passou para outro combatente, para a frente ou para trás.
 type TurnAdvanced struct {
 	SessionID int64

@@ -224,6 +224,7 @@ func (s Strike) proposeManeuver(
 		Maneuver: &live.ManeuverRoll{
 			Kind: out.Kind, Opposed: out.DefenderTotal,
 			Margin: out.Margin, Won: out.Won, AnotherRoll: out.Reroll,
+			Imposes: out.Imposes,
 		},
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {

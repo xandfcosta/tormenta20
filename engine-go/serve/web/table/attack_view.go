@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"t20engine/domain/book"
 	"t20engine/domain/live"
 )
 
@@ -109,7 +110,18 @@ func maneuverLine(pa live.PendingAttack) string {
 	case m.AnotherRoll:
 		return line + " · bônus iguais, role de novo (p234)"
 	case m.Won && m.Margin >= 5:
-		return line + fmt.Sprintf(" · por %d, e cinco ou mais dão efeito extra", m.Margin)
+		line += fmt.Sprintf(" · por %d, e cinco ou mais dão efeito extra", m.Margin)
+	}
+	// A CONDIÇÃO que a confirmação vai deixar, e ela é dita ANTES: o mestre
+	// decide com ela à vista, e descobrir depois o que o clique fez é o que a
+	// faixa existe para evitar. Nem toda manobra deixa uma — o desarmar derruba
+	// um item —, e por isso ela só aparece quando há.
+	if m.Won && m.Imposes != "" {
+		// O NOME ESCRITO e não o id: "fica caido" é o identificador vazando para
+		// a tela. Quem o traduz é o catálogo, que é onde o nome da condição é
+		// autorado — o `GLOSSARY.md` manda o id em inglês no código e o texto em
+		// português na tela, e uma condição não é exceção.
+		line += " · fica " + strings.ToLower(book.ConditionName(m.Imposes))
 	}
 	return line
 }

@@ -29,6 +29,18 @@ type SheetVitals interface {
 	// ApplyAbsolute grava PV/PM totais. Não drena pool temporário.
 	ApplyAbsolute(ctx context.Context, charID int64, hpCurrent, mpCurrent *int64) (*int64, *int64, error)
 
+	// AddCondition acende uma condição na FICHA, sem apagar as que já estão.
+	//
+	// Ela existe porque a condição de um PERSONAGEM mora na ficha e a de um NPC
+	// mora na linha da fila — a mesma divisa dos vitais, e pela mesma razão: a
+	// ficha é a fonte de quem a tem. Aplicar só na linha daria o caso do NPC
+	// certo e o do PC errado em silêncio, que é a divergência que a fila
+	// espelhada existe para não ter.
+	//
+	// ACRESCENTA e não substitui: o alvo pode já estar caído quando o agarram, e
+	// as duas valem juntas. Repetida, ela não duplica.
+	AddCondition(ctx context.Context, charID int64, condition string) error
+
 	// PoolsOf devolve o poço de cada personagem pedido, para a fila refrescar os
 	// máximos de quem subiu de nível no meio da sessão.
 	//

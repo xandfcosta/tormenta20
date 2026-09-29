@@ -171,8 +171,8 @@ func readerInterests(view View) []events.Interest {
 
 // sheetChanged diz se este evento mexeu na ficha de quem está olhando.
 //
-// São DOIS: a ficha salva pela própria tela do jogador, e o dano que o mestre
-// aplica pela fila — que chega como vital de um combatente COM personagem
+// São TRÊS: a ficha salva pela própria tela do jogador, o dano que o mestre
+// aplica pela fila, e a condição que uma manobra confirmada deixa — que chega como vital de um combatente COM personagem
 // atrás. O `Subscribe` já garantiu que o evento é de quem interessa; aqui a
 // pergunta é só que tipo é.
 func sheetChanged(ev events.Event) bool {
@@ -180,6 +180,10 @@ func sheetChanged(ev events.Event) bool {
 	case events.CharacterChanged:
 		return true
 	case events.VitalsChanged:
+		return e.CharacterID != 0
+	// A CONDIÇÃO da manobra confirmada pousa na ficha quando há personagem
+	// atrás da linha, e a aba aberta dele tem de saber (ALE-421).
+	case events.ConditionApplied:
 		return e.CharacterID != 0
 	}
 	return false
