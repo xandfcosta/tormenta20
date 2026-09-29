@@ -1,8 +1,10 @@
-package catalog
+package engine
 
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"testing"
 )
@@ -37,37 +39,57 @@ import (
 //
 // O que sobra depois dessas duas é o caso real: o MESMO efeito declarado duas
 // vezes.
+//
+// # Por que ele mora AQUI, e não no `domain/catalog`
+//
+// Porque a identidade do balde é o `targetKey`, e o `targetKey` é daqui. Lá ele
+// era ESPELHADO num `switch` próprio, e o espelho divergiu em três pontos
+// (ALE-419): a `flag` era lida de `target["flag"]` e o catálogo a escreve em
+// `name`; o `maneuver` e o `displacement` não separavam por escopo.
+//
+// A divergência era INERTE — medida, ela muda 12 baldes de 108 e nenhum
+// veredito, porque os casos que colidiriam são condicionais e este guarda pula
+// condicional. O que ela não era é segura: um segundo modificador de flag
+// não-condicional na mesma entidade passaria despercebido, e nada acusaria.
+//
+// Aqui não há espelho: o balde sai do `targetKey` de verdade, e do `Modifier`
+// de verdade — o que faz o guarda atravessar o `UnmarshalJSON` junto, que é a
+// fronteira que a ALE-415 pegou quebrada.
 func TestNoEntityStacksWithItself(t *testing.T) {
-	resources := []string{
-		"items", "class-powers", "general-powers", "granted-powers",
-		"race-defs", "origins", "divine-powers", "races", "origins-source",
+	arquivos, err := filepath.Glob(filepath.Join("..", "catalog", "data", "*.json"))
+	if err != nil {
+		t.Fatalf("listar o catálogo: %v", err)
 	}
+	if len(arquivos) < 10 {
+		t.Fatalf("só %d arquivos de catálogo — o guarda mediria quase nada", len(arquivos))
+	}
+
 	total := 0
-	for _, name := range resources {
-		body, ok := Resource(name)
-		if !ok {
-			t.Fatalf("recurso %q não está registrado", name)
+	for _, caminho := range arquivos {
+		bruto, err := os.ReadFile(caminho)
+		if err != nil {
+			t.Fatalf("ler %s: %v", caminho, err)
 		}
 		var tree any
-		if err := json.Unmarshal(body, &tree); err != nil {
-			t.Fatalf("%s.json ilegível: %v", name, err)
+		if err := json.Unmarshal(bruto, &tree); err != nil {
+			t.Fatalf("%s ilegível: %v", caminho, err)
 		}
-		for _, owner := range collectModifierOwners(tree, name) {
+		nome := filepath.Base(caminho)
+		for _, owner := range collectModifierOwners(tree, nome) {
 			total++
-			seen := map[string][]float64{}
-			for _, m := range owner.modifiers {
-				if m["condition"] != nil {
+			seen := map[string][]int{}
+			for _, m := range modifiersOf(t, owner) {
+				if m.Condition != nil {
 					continue
 				}
-				key := modifierBucket(m)
-				amount, _ := m["amount"].(float64)
-				seen[key] = append(seen[key], amount)
+				key := stackingBucket(m)
+				seen[key] = append(seen[key], m.Amount)
 			}
 			for _, key := range sortedKeys(seen) {
 				if len(seen[key]) > 1 {
 					t.Errorf("%s: %q declara %d modificadores não-condicionais em %s (%v) — "+
 						"o motor os SOMA, e a p226 diz que efeitos da mesma habilidade não acumulam",
-						name, owner.id, len(seen[key]), key, seen[key])
+						nome, owner.id, len(seen[key]), key, seen[key])
 				}
 			}
 		}
@@ -76,6 +98,39 @@ func TestNoEntityStacksWithItself(t *testing.T) {
 		t.Fatal("nenhuma entidade com modificadores encontrada — o teste não está olhando nada")
 	}
 	t.Logf("%d entidades com modificadores conferidas", total)
+}
+
+// stackingBucket é a identidade que o motor usa para empilhar: o ALVO, o tipo e
+// a escala.
+//
+// O alvo sai do `targetKey` e não de uma cópia dele. A escala faz parte da
+// identidade porque um bônus plano e um por nível são componentes DIFERENTES da
+// mesma habilidade, não o mesmo efeito repetido.
+func stackingBucket(m Modifier) string {
+	escala := "flat"
+	if s := m.Scale; s != nil {
+		escala = fmt.Sprintf("%s/%s/%d", s.Per, s.Attribute, s.Step)
+	}
+	return fmt.Sprintf("%s [%s] escala=%s", targetKey(m.Target), m.BonusType, escala)
+}
+
+// modifiersOf lê a lista do dono no tipo do MOTOR.
+//
+// Passa pelo JSON de novo porque o caminhador entrega `map[string]any` — ele
+// precisa ser genérico para achar toda lista `modifiers` seja qual for a forma
+// do catálogo. Reconstruir o `Modifier` campo a campo aqui seria uma segunda
+// definição do formato, que é o que este guarda acabou de deixar de ter.
+func modifiersOf(t *testing.T, owner modifierOwner) []Modifier {
+	t.Helper()
+	bruto, err := json.Marshal(owner.modifiers)
+	if err != nil {
+		t.Fatalf("%s: reescrever os modificadores: %v", owner.id, err)
+	}
+	var lidos []Modifier
+	if err := json.Unmarshal(bruto, &lidos); err != nil {
+		t.Fatalf("%s: os modificadores não cabem no `Modifier`: %v", owner.id, err)
+	}
+	return lidos
 }
 
 type modifierOwner struct {
@@ -123,50 +178,7 @@ func collectModifierOwners(node any, path string) []modifierOwner {
 	return out
 }
 
-// modifierBucket é a identidade que o motor usa para empilhar: alvo + tipo.
-// Espelha o `targetKey` do engine — dois modificadores que caem no mesmo balde
-// somam ou competem, dependendo do tipo.
-//
-// ELE JÁ DIVERGIU DO ORIGINAL, e a ALE-419 mede quanto: a `flag` aqui é lida de
-// `target["flag"]` e o catálogo a escreve em `name`, então os dezoito
-// modificadores de flag caem todos no mesmo balde. Este espelho só existe
-// porque o `targetKey` é privado do `domain/engine`, e duas cópias de uma regra
-// envelhecem em duas velocidades.
-func modifierBucket(m map[string]any) string {
-	target, _ := m["target"].(map[string]any)
-	kind, _ := target["k"].(string)
-	bonus, _ := m["bonusType"].(string)
-
-	// A escala faz parte da identidade: um bônus plano e um por nível são
-	// componentes DIFERENTES da mesma habilidade, não o mesmo efeito repetido.
-	scale := "flat"
-	if sc, ok := m["scale"].(map[string]any); ok {
-		per, _ := sc["per"].(string)
-		attr, _ := sc["attribute"].(string)
-		step, _ := sc["step"].(float64)
-		scale = fmt.Sprintf("%s/%s/%g", per, attr, step)
-	}
-
-	detail := ""
-	switch kind {
-	case "expertise", "attribute":
-		detail, _ = target["name"].(string)
-	case "expertiseByAttribute":
-		detail, _ = target["attribute"].(string)
-	case "attack", "damage", "defense":
-		detail, _ = target["scope"].(string)
-	case "catalyst":
-		detail, _ = target["school"].(string)
-	case "flag":
-		detail, _ = target["flag"].(string)
-	}
-	if detail != "" {
-		kind += ":" + detail
-	}
-	return fmt.Sprintf("%s [%s] escala=%s", kind, bonus, scale)
-}
-
-func sortedKeys(m map[string][]float64) []string {
+func sortedKeys(m map[string][]int) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
 		out = append(out, k)
