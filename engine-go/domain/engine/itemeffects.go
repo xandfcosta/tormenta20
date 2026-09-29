@@ -308,8 +308,6 @@ func targetKey(t ModifierTarget) string {
 		return "defense"
 	case "resistance":
 		return "resistance"
-	case "fearResistance":
-		return "fearResistance"
 	case "attack":
 		return "attack:" + t.Scope
 	case "damage":

@@ -1782,12 +1782,18 @@
         "name": "Fortitude",
         "attribute": "constitution",
         "base": 23,
-        "itemBonus": 0,
-        "total": 23,
+        "itemBonus": 10,
+        "total": 33,
         "halfLevel": 10,
         "attrValue": 7,
         "training": 6,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Baluarte +10 (cond.)",
+            "amount": 10,
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -1984,12 +1990,18 @@
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 17,
-        "itemBonus": 0,
-        "total": 17,
+        "itemBonus": 10,
+        "total": 27,
         "halfLevel": 10,
         "attrValue": 1,
         "training": 6,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Baluarte +10 (cond.)",
+            "amount": 10,
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -2020,12 +2032,18 @@
         "name": "Vontade",
         "attribute": "wisdom",
         "base": 19,
-        "itemBonus": 0,
-        "total": 19,
+        "itemBonus": 10,
+        "total": 29,
         "halfLevel": 10,
         "attrValue": 3,
         "training": 6,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Baluarte +10 (cond.)",
+            "amount": 10,
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        ],
         "armorPenaltyApplied": 0
       }
     ],
