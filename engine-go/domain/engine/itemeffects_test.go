@@ -37,7 +37,6 @@ func TestTargetKeyComposition(t *testing.T) {
 		want   string
 	}{
 		{ModifierTarget{K: "expertise", Name: "Atletismo"}, "expertise:Atletismo"},
-		{ModifierTarget{K: "expertiseRemovePenalty", Name: "Furtividade"}, "expertiseRemovePenalty:Furtividade"},
 		{ModifierTarget{K: "expertiseByAttribute", Attribute: "strength"}, "expertiseByAttribute:strength"},
 		{ModifierTarget{K: "attribute", Name: "wisdom"}, "attribute:wisdom"},
 		{ModifierTarget{K: "attack", Scope: "this"}, "attack:this"},

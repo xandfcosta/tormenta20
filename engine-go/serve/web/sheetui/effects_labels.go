@@ -82,16 +82,16 @@ func targetLabel(t engine.ModifierTarget) string {
 	names := map[string]string{
 		"attack": "Ataque", "damage": "Dano", "defense": "Defesa",
 		"expertise": "Perícia", "expertiseAll": "Todas as perícias",
-		"expertiseRemovePenalty": "Remove penalidade em", "expertiseByAttribute": "Perícias de",
-		"attribute": "Atributo", "maxPv": "PV máximo", "maxPm": "PM máximo",
+		"expertiseByAttribute": "Perícias de",
+		"attribute":            "Atributo", "maxPv": "PV máximo", "maxPm": "PM máximo",
 		"displacement": "Deslocamento", "damageReduction": "Redução de dano",
-		"defenseDexCap": "Limite de Des na Defesa", "resistance": "Resistências",
+		"resistance":     "Resistências",
 		"fearResistance": "Resistência a medo", "critRange": "Margem de ameaça",
 		"critMult": "Multiplicador crítico", "pmLimit": "Limite de PM por magia",
 		"pmCost": "Custo em PM", "catalyst": "Catalisador", "spellDC": "CD de magias",
 		"inventorySlots": "Espaços de carga", "flySpeed": "Voo",
-		"armorPenalty": "Penalidade de armadura", "armorPenaltyExpertises": "Penalidade em perícias",
-		"tempHp": "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
+		"armorPenalty": "Penalidade de armadura",
+		"tempHp":       "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
 	}
 	// FLAG é booleana e o rótulo dela é uma frase inteira ("Fadiga ao dormir"),
 	// não um alvo com complemento — por isso ela sai antes do resto.
