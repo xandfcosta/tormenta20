@@ -20,12 +20,26 @@ import (
 // turnos, e quem age é quem está na vez (p231).
 func (s Scene) AttackRoutes(r chi.Router) {
 	r.Post(sessionPattern+"/iniciativa/{entryId}/atacar", s.tableStateCommand(proposesAttack))
+	// A MANOBRA divide os verbos de confirmar e cancelar com o golpe, e só a
+	// proposta é dela: uma manobra É um ataque corpo a corpo (p234), e o
+	// provisório é o mesmo.
+	r.Post(sessionPattern+"/iniciativa/{entryId}/manobra/{kind}", s.tableStateCommand(proposesManeuver))
 	r.Post(sessionPattern+"/ataque/confirmar", s.gmCommand(confirmsAttack))
 	r.Post(sessionPattern+"/ataque/cancelar", s.tableStateCommand(cancelsAttack))
 }
 
 // proposesAttack rola o ataque de quem está na vez contra a linha do caminho.
 func proposesAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
+	return st.proposeStrike(c, "")
+}
+
+// proposeStrike é o que o golpe e a manobra têm em comum, que é tudo menos a
+// regra: a vez, a posse conferida contra o BANCO, e o provisório.
+//
+// A manobra vazia é o golpe. Um ramo aqui, e não dois caminhos: as sete
+// conferências antes da rolagem são as mesmas, e duplicá-las faria a próxima
+// correção acertar uma e esquecer a outra.
+func (st Scene) proposeStrike(c commandCtx, maneuver string) (*live.SessionRuntimeState, error) {
 	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
 	if err != nil {
 		return nil, err
@@ -43,10 +57,21 @@ func proposesAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		AttackerEntryID: onTurn.ID,
 		TargetEntryID:   chi.URLParam(c.R, "entryId"),
 		OwnsAttacker:    onTurn.CharacterID != nil && mine[*onTurn.CharacterID],
+		Maneuver:        maneuver,
 	}); err != nil {
 		return nil, err
 	}
 	return st.deps.Sessions().State(c.R.Context(), c.SessionID)
+}
+
+// proposesManeuver rola a manobra de quem está na vez contra a linha do caminho.
+//
+// Ele divide com o golpe a conferência inteira — a vez, a posse, a ação padrão —
+// e muda só a REGRA no meio, que é o ramo do `Strike`. A MANOBRA vem no caminho
+// e não no corpo porque o gesto é de menu: o mestre escolhe "Derrubar" num item,
+// e um corpo JSON exigiria uma ilha de JS onde há um `@post`.
+func proposesManeuver(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
+	return st.proposeStrike(c, chi.URLParam(c.R, "kind"))
 }
 
 func confirmsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
@@ -67,4 +92,18 @@ func attackCommand(v View, verb string) string {
 func attackOnTarget(v BoardView, entryID string) string {
 	return fmt.Sprintf("@post('%s/iniciativa/%s/atacar')",
 		routes.Session(v.CampaignID, v.SessionID), entryID)
+}
+
+// maneuverOnTarget é o `@post` de uma manobra do menu da peça, com a manobra no
+// CAMINHO — o gesto é de menu, e um corpo JSON pediria uma ilha de JS onde há um
+// `@post`.
+//
+// Ele fecha as DUAS camadas, como o `copyCommand`: escolher a manobra fecha o
+// submenu e o menu da peça, e o popover não se fecha sozinho quando o clique é
+// num botão dentro dele.
+func maneuverOnTarget(v BoardView, tokenID, entryID, kind string) string {
+	return closesTheManeuverMenu(tokenID) +
+		fmt.Sprintf("@post('%s/iniciativa/%s/manobra/%s')",
+			routes.Session(v.CampaignID, v.SessionID), entryID, kind) +
+		"; " + closeMenuToken
 }

@@ -73,11 +73,17 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 	if err != nil {
 		return Combatant{}, err
 	}
+	efeitos := engine.ApplyActiveConditionals(
+		engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)),
+		sheet.ToStringSet(dto.Conditionals))
 	return Combatant{
 		EntryID: e.ID, Label: e.Label,
 		Weapons:         dto.Ruleset.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals)),
 		Defense:         computed.Defense.Total,
 		DamageReduction: computed.DamageReduction.Total,
+		Melee:           meleeOf(computed),
+		ManeuverOffense: maneuverBonuses(efeitos, engine.ManeuverOffense),
+		ManeuverDefense: maneuverBonuses(efeitos, engine.ManeuverDefense),
 	}, nil
 }
 
@@ -112,4 +118,29 @@ func (r Roster) fromBestiary(e live.InitiativeEntry) (Combatant, error) {
 		}
 	}
 	return Combatant{}, fmt.Errorf("o verbete %q não está no bestiário", *e.MonsterID)
+}
+
+// meleeOf acha o LUTA na ficha computada. Ele é a perícia que a manobra opõe
+// (p234), e a ficha já o traz decomposto — reconstruí-lo aqui seria a segunda
+// definição que o oráculo existe para impedir.
+func meleeOf(computed engine.ComputedSheet) int {
+	for _, pericia := range computed.Expertises {
+		if pericia.Name == "Luta" {
+			return pericia.Total
+		}
+	}
+	return 0
+}
+
+// maneuverBonuses colhe o bônus de cada manobra do livro, de um lado.
+//
+// As cinco por nome, e não "as que têm modificador": um mapa montado a partir
+// do que EXISTE devolveria zero para a manobra sem bônus e para a manobra
+// escrita errada do mesmo jeito, e as duas coisas são diferentes.
+func maneuverBonuses(efeitos engine.ItemEffects, lado engine.ManeuverRole) map[string]int {
+	fora := map[string]int{}
+	for _, manobra := range engine.ManeuversOfTheBook() {
+		fora[manobra] = engine.ManeuverBonus(efeitos, manobra, lado)
+	}
+	return fora
 }

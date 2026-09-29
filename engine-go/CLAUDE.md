@@ -506,6 +506,45 @@ ALE-415 pegou quebrada.
 mão e via 189 entidades; o novo varre o diretório e vê 208. Enumerar era a
 armadilha de sempre — a lista que alguém esquece de aumentar.
 
+## A MANOBRA é o primeiro teste OPOSTO do motor
+
+Todo o resto do combate mede um total contra um número parado — a Defesa, a CD
+de uma magia. A manobra (p234) manda os DOIS lados rolarem, e por isso o
+`ResolveManeuver` recebe dois `d20` por parâmetro em vez de um.
+
+Quatro regras da página, e nenhuma é opcional:
+
+1. **oposto**, com a MARGEM viajando porque ela é regra — cinco ou mais dão
+   efeito extra ao derrubar e ao desarmar, e o empurrar ganha 1,5m por cada 5;
+2. **o defensor sempre rola LUTA**, mesmo empunhando arma de disparo. A
+   proibição de ataque à distância é de quem ATACA, e a página diz as duas
+   coisas na mesma frase;
+3. **empate decide pelo BÔNUS**, e não pelo dado;
+4. **bônus iguais pedem OUTRA ROLAGEM** — o resultado não é um vencedor.
+   Tratar o empate como derrota de quem ataca inventaria uma regra que favorece
+   sempre o mesmo lado.
+
+**A manobra divide o provisório com o golpe**, e não tem um irmão: ela É um
+ataque corpo a corpo, a divisa de propor e confirmar é a mesma, e dois
+provisórios simultâneos seriam duas verdades sobre a mesma cena. O
+`proposesAttack` e o `proposesManeuver` delegam ao mesmo `proposeStrike` pela
+mesma razão — as sete conferências antes da rolagem são as mesmas.
+
+E o BÔNUS conhece o LADO: o `Desejo de Liberdade` ajuda quem está sendo
+agarrado, não quem agarra. O escopo entrou na chave do `targetKey` na ALE-406, e
+o caso que prende os dois lados é o que impede a volta daquele defeito.
+
+## O guarda de ÍCONE varre as CENAS, e o `switch` do gerado não tem `default`
+
+Um nome que ninguém gerou rende um `<svg>` VAZIO: sem erro de compilação, sem
+aviso, um buraco do tamanho do ícone. O guarda existia e passava verde com três
+quebrados — ele lia os `.templ` do próprio diretório e casava `@icone("X")`,
+enquanto as cenas moram em `serve/web/*` e escrevem `@ui.Icon("X")`.
+
+Hoje ele varre `serve/` inteiro, casa as duas grafias e tem DENOMINADOR. Quem o
+pegou foi OLHAR a tela (ALE-420) — é a fatura da ALE-319 cobrada de novo, e a
+resposta certa não foi olhar melhor: foi escrever o guarda.
+
 ## Todo ALVO de modificador é declarado, e o RÓTULO não conta como leitor
 
 O `targetKey` nomeia os alvos que um modificador pode mirar, e cada um está em

@@ -46,9 +46,41 @@ type PendingAttack struct {
 	RawDamage int   `json:"rawDamage"`
 	Absorbed  int   `json:"absorbed"`
 	Damage    int   `json:"damage"`
+	// Maneuver é a conta da MANOBRA (p234), e ela é nula num golpe comum.
+	//
+	// Uma manobra É um ataque corpo a corpo — o livro abre a página dizendo isso
+	// —, e por isso ela mora no MESMO provisório em vez de num irmão: a divisa de
+	// quem propõe e quem confirma é a mesma, e os verbos da faixa também. Dois
+	// provisórios simultâneos seriam duas verdades sobre a mesma cena, que é o
+	// que o `ProposeAttack` já existe para não permitir.
+	//
+	// Num golpe, os campos de dano falam e este é nulo; numa manobra, o inverso.
+	// É ele que diz à faixa qual das duas frases escrever.
+	Maneuver *ManeuverRoll `json:"maneuver,omitempty"`
 	// ByUserID é quem rolou. O mestre confirma por qualquer um; quem propôs
 	// cancela o que é dele.
 	ByUserID int64 `json:"byUserId"`
+}
+
+// ManeuverRoll é o teste OPOSTO de uma manobra, do jeito que a mesa lê.
+//
+// Os números de quem ATACA não se repetem aqui: o `Roll` e o `Total` do
+// provisório já são dele. O que falta é o outro lado, e é isso que este tipo
+// acrescenta — a mesma razão pela qual a `Defense` viaja num golpe: a mesa lê a
+// COMPARAÇÃO, e um total sozinho não explica o veredito.
+type ManeuverRoll struct {
+	// Kind é a manobra do livro: agarrar, derrubar, desarmar, empurrar, quebrar.
+	Kind string `json:"kind"`
+	// Opposed é o total de quem se defende, já com o Luta dele.
+	Opposed int `json:"opposed"`
+	// Margin é a diferença, e ela é REGRA: cinco pontos ou mais dão efeito extra
+	// ao derrubar e ao desarmar (p234). Negativa quando quem tentou perdeu.
+	Margin int  `json:"margin"`
+	Won    bool `json:"won"`
+	// AnotherRoll é o empate que a página manda repetir — totais iguais E bônus
+	// iguais. Não é derrota de quem tentou, e a faixa tem de dizer isso em vez
+	// de anunciar um vencedor que a regra não deu.
+	AnotherRoll bool `json:"anotherRoll,omitempty"`
 }
 
 // Attacker descreve quem está agindo sobre o provisório.
