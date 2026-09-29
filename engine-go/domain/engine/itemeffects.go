@@ -94,10 +94,20 @@ func amountInBookUnits(target ModifierTarget, amount int) float64 {
 }
 
 // MarshalJSON emite o modificador na unidade do LIVRO — ver `amountInBookUnits`.
+//
+// AQUI OS CAMPOS FICAM À MÃO, ao contrário do `UnmarshalJSON`, e a razão é a
+// ORDEM: o oráculo de paridade compara byte a byte, e embutir o tipo jogaria o
+// `amount` para o fim — o campo menos profundo é o último na sequência de
+// índices. Seriam 306 modificadores reescritos por causa da forma.
+//
+// O preço é esta lista poder envelhecer, e foi o que aconteceu: a ALE-412 deu
+// `dice` ao `Modifier` e não a ela. Quem a cobra agora é o
+// `TestEveryModifierFieldSurvivesTheCatalogJSON`, que varre o TIPO.
 func (m Modifier) MarshalJSON() ([]byte, error) {
 	type wire struct {
 		Target    ModifierTarget     `json:"target"`
 		Amount    float64            `json:"amount"`
+		Dice      string             `json:"dice,omitempty"`
 		BonusType string             `json:"bonusType"`
 		Condition *ModifierCondition `json:"condition,omitempty"`
 		Note      string             `json:"note,omitempty"`
@@ -107,6 +117,7 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 	return json.Marshal(wire{
 		Target:    m.Target,
 		Amount:    amountInBookUnits(m.Target, m.Amount),
+		Dice:      m.Dice,
 		BonusType: m.BonusType,
 		Condition: m.Condition,
 		Note:      m.Note,
@@ -144,27 +155,29 @@ type Modifier struct {
 // coincidem e o valor passa intocado. O DESLOCAMENTO é a exceção, e ela tem
 // razão própria — ver `amountInEngineUnits`.
 func (m *Modifier) UnmarshalJSON(b []byte) error {
-	var shadow struct {
-		Target    ModifierTarget     `json:"target"`
-		Amount    float64            `json:"amount"`
-		BonusType string             `json:"bonusType"`
-		Condition *ModifierCondition `json:"condition"`
-		Note      string             `json:"note"`
-		Scale     *VitalScale        `json:"scale"`
-		Factor    *Ratio             `json:"factor"`
+	// O TIPO É EMBUTIDO, e não copiado campo a campo.
+	//
+	// Aqui morava uma struct-sombra com os campos escritos à mão, e ela
+	// ENVELHECEU: a ALE-412 deu `dice` ao `Modifier` e não à sombra, e todo dado
+	// extra vindo do catálogo era descartado na leitura — seis encantos e um
+	// material entraram inertes, com a suíte verde.
+	//
+	// Embutindo, o `encoding/json` preenche tudo que o tipo tem, e o campo novo
+	// atravessa sem ninguém precisar lembrar. O alias local é o que mata o
+	// método — sem ele, `UnmarshalJSON` chamaria a si mesmo.
+	//
+	// O `amount` fica de fora porque ele é a única razão de esta função existir:
+	// declarado de novo aqui, ele é o campo MENOS profundo e vence o embutido.
+	type comoOCatalogoEscreve Modifier
+	var lido struct {
+		comoOCatalogoEscreve
+		Amount float64 `json:"amount"`
 	}
-	if err := json.Unmarshal(b, &shadow); err != nil {
+	if err := json.Unmarshal(b, &lido); err != nil {
 		return err
 	}
-	*m = Modifier{
-		Target:    shadow.Target,
-		Amount:    amountInEngineUnits(shadow.Target, shadow.Amount),
-		BonusType: shadow.BonusType,
-		Condition: shadow.Condition,
-		Note:      shadow.Note,
-		Scale:     shadow.Scale,
-		Factor:    shadow.Factor,
-	}
+	*m = Modifier(lido.comoOCatalogoEscreve)
+	m.Amount = amountInEngineUnits(m.Target, lido.Amount)
 	return nil
 }
 

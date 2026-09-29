@@ -1099,6 +1099,58 @@ este verbete":
 | `audit-powers.py` | `general-powers.json`, `tormenta-powers.json` | a tabela de pré-requisitos **e** a linha `Pré-requisito:` do verbete |
 | `audit-granted-powers.py` | `granted-powers.json`, `divine-powers.json` | a coluna "Devoto de X" da Tabela da p127 **e** o rótulo de deus do verbete |
 | `audit-enchants.py` | `items.json` (`weapon-enchant`) | a Tabela 8-8, que é `d%` + encanto + efeito, **e** o verbete `Nome. Regra` |
+| `audit-materials.py` | `items.json` (`material`) | a Tabela 3-9, que é uma MATRIZ de preço **e** o verbete com as metades `Arma.` / `Armadura e Escudo.` / `Esotérico.` |
+
+### O auditor de materiais, e as DUAS armadilhas de ler uma página dividida
+
+A Tabela 3-9 é uma MATRIZ — seis materiais por cinco tipos de item —, e o
+denominador dela é a contagem de células: trinta, duas em travessão. As colunas
+não se acham pelo cabeçalho, porque "Aço-Rubi Adamante" chega num `<line>` só;
+elas se acham pela linha `Arma`, que é a única sem travessão, e toda outra
+célula vai para a mais próxima.
+
+**A prosa ao lado da tabela tem duas armadilhas, e as duas dão resultado
+plausível:**
+
+1. **o BOXE.** "Fabricando Itens Superiores" divide a coluna com o Mitral e mora
+   no x da primeira linha de parágrafo — na ordem de leitura ele cai ENTRE o
+   título do material e as metades dele. O sexto material saía chamado
+   "Fabricando Itens Superiores", com as três metades certas e a contagem certa.
+   Quem denunciou foi a outra âncora. O recorte é pelo **bloco**: a prosa do
+   verbete começa em x=309 e a do boxe em x=326;
+2. **a regra que mora na ABERTURA.** *"Itens de mitral ocupam –1 espaço"* e o
+   *"–2 em perícias de Carisma"* da matéria vermelha não estão em metade
+   nenhuma — estão no parágrafo de sabor. Um leitor que só colhesse as metades
+   perderia as duas em silêncio.
+
+**E o denominador é por METADE, não por material.** Um material com modificador
+não está pronto por isso: o mitral aplica a margem de ameaça e não aplica o
+limite de Destreza da armadura pesada. As duas listas — `modeled` e `unmodeled`
+— são PERMITIDOS, a união tem de dar exatamente as partes do verbete, e uma
+parte pode estar nas duas quando metade dela entra.
+
+### A FRONTEIRA JSON do `Modifier`, e por que ela mentiu
+
+O `Modifier` tem `MarshalJSON` e `UnmarshalJSON` por UMA razão: o `amount` do
+catálogo está na unidade do LIVRO e o motor trabalha em inteiros de quadrado.
+Os dois eram escritos com a lista de campos à mão, e a lista ENVELHECEU — a
+ALE-412 deu `dice` ao tipo e não a elas, e **todo dado extra escrito no catálogo
+era descartado em silêncio na leitura**. Seis encantos e um material entraram
+inertes com a suíte verde.
+
+O que passou por cima disso é a lição: o `TestTheEnchantReachesTheWeaponCard`
+monta o `Modifier` em GO e nunca atravessa o JSON — ele provava a composição por
+cima da fronteira quebrada.
+
+- **na leitura o tipo é EMBUTIDO** — um alias local do próprio `Modifier`, que
+  mata o método e evita a recursão —, e só o `amount` é redeclarado, porque o
+  campo menos profundo vence o embutido. Campo novo atravessa sem ninguém
+  lembrar;
+- **na escrita os campos ficam à mão**, e tem de ser assim: o oráculo compara
+  byte a byte, e embutir jogaria o `amount` para o fim da linha — o campo menos
+  profundo é o último na sequência de índices. Quem cobra essa metade é o
+  `TestEveryModifierFieldSurvivesTheCatalogJSON`, que varre o TIPO por reflexão
+  em vez de repetir a lista num terceiro lugar.
 
 ### O auditor de encantos, e o denominador que ele tem DE GRAÇA
 

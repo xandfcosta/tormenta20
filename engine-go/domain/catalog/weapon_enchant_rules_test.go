@@ -32,29 +32,6 @@ type weaponEnchant struct {
 // não está no catálogo.
 const ultimoEncantoNoDado = 90
 
-func weaponEnchants(t *testing.T) []weaponEnchant {
-	t.Helper()
-	raw, err := files.ReadFile("data/items.json")
-	if err != nil {
-		t.Fatalf("ler items.json: %v", err)
-	}
-	var todos []weaponEnchant
-	if err := json.Unmarshal(raw, &todos); err != nil {
-		t.Fatalf("items.json não é JSON: %v", err)
-	}
-	encantos := []weaponEnchant{}
-	for _, item := range todos {
-		if item.Category == "weapon-enchant" {
-			encantos = append(encantos, item)
-		}
-	}
-	if len(encantos) == 0 {
-		t.Fatal("nenhum encanto de arma no catálogo: não há o que medir, e " +
-			"verde aqui não valeria nada")
-	}
-	return encantos
-}
-
 // A FAIXA DE d% LADRILHA 1..90, e é o denominador de graça desta tabela.
 //
 // Uma lista de encantos não tem como se conferir sozinha — 26 entradas com
@@ -66,7 +43,7 @@ func weaponEnchants(t *testing.T) []weaponEnchant {
 // padrão de número de página — e comeu as faixas de UM valor, a Energética (46)
 // e a Lancinante (64). O relatório saiu com 26 nomes certos e nada reclamou.
 func TestTheWeaponEnchantsTileTheRollRange(t *testing.T) {
-	encantos := weaponEnchants(t)
+	encantos := itemsOfCategory[weaponEnchant](t, "weapon-enchant")
 	sort.Slice(encantos, func(a, b int) bool { return encantos[a].RollMin < encantos[b].RollMin })
 
 	esperado := 1
@@ -99,7 +76,7 @@ func TestTheWeaponEnchantsTileTheRollRange(t *testing.T) {
 // modificador e mantenha o motivo antigo passa a mentir sobre si mesmo, com cara
 // de registro cuidadoso.
 func TestEveryWeaponEnchantEitherAppliesOrSaysWhyNot(t *testing.T) {
-	encantos := weaponEnchants(t)
+	encantos := itemsOfCategory[weaponEnchant](t, "weapon-enchant")
 	comModificador, semModificador := 0, 0
 
 	for _, e := range encantos {
@@ -141,7 +118,7 @@ func TestEveryWeaponEnchantEitherAppliesOrSaysWhyNot(t *testing.T) {
 // é um ponteiro morto que nada mais acusa — o Go não o vê, e a tela mostraria
 // vazio.
 func TestEveryWeaponEnchantPrerequisiteExists(t *testing.T) {
-	encantos := weaponEnchants(t)
+	encantos := itemsOfCategory[weaponEnchant](t, "weapon-enchant")
 	existe := map[string]bool{}
 	for _, e := range encantos {
 		existe[e.ID] = true
