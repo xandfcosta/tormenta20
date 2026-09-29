@@ -4282,6 +4282,703 @@
       "modifiers": [],
       "bookPage": 163,
       "uid": "itm_nbiz27fhv2"
+    },
+    {
+      "id": "encanto-ameacadora",
+      "name": "Ameaçadora",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 1,
+      "rollMax": 5,
+      "countsAs": 1,
+      "description": "A margem de ameaça da arma duplica. Por exemplo, uma espada longa ameaçadora tem margem de ameaça 17. Efeitos que duplicam a margem de ameaça são aplicados antes de quaisquer efeitos que a aumentem.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "critRange"
+          },
+          "factor": {
+            "num": 2,
+            "den": 1
+          },
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "duplica a margem de ameaça"
+        }
+      ],
+      "bookPage": 335,
+      "uid": "itm_axnssdborj"
+    },
+    {
+      "id": "encanto-anticriatura",
+      "name": "Anticriatura",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 6,
+      "rollMax": 10,
+      "countsAs": 1,
+      "description": "A arma é letal contra um tipo de criatura (ou uma raça de humanoides). Uma vez por rodada, quando ataca uma criatura desse tipo, você pode gastar 2 PM. Se fizer isso e acertar o ataque, causa +4d8 de dano. Para determinar o tipo de criatura aleatoriamente, role 1d6: 1) animal; 2) construto; 3) espírito; 4) monstro; 5) morto-vivo; 6) uma raça de humanoides.",
+      "modifiers": [],
+      "bookPage": 335,
+      "unmodeled": "ativação em PM, e o tipo de criatura é escolhido no item — a condição `against` casa TRAÇO, e o alvo não declara tipo",
+      "uid": "itm_xcj4q4ezvq"
+    },
+    {
+      "id": "encanto-arremesso",
+      "name": "Arremesso",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 11,
+      "rollMax": 12,
+      "countsAs": 1,
+      "description": "A arma pode ser arremessada em alcance curto. Caso já pudesse ser arremessada, seu alcance aumenta em uma categoria. Após o ataque, se estiver livre, a arma volta voando para você. Pegá-la é uma reação.",
+      "modifiers": [],
+      "bookPage": 335,
+      "unmodeled": "muda `purpose` e `range` da arma, que são campos da `WeaponStats` e não alvo de modificador",
+      "uid": "itm_4s7jiu7hmg"
+    },
+    {
+      "id": "encanto-assassina",
+      "name": "Assassina",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 13,
+      "rollMax": 14,
+      "countsAs": 1,
+      "description": "A arma aumenta os dados de dano extra de um ataque furtivo para d8. Além disso, quando faz um Ataque Furtivo, você pode gastar 2 PM. Se fizer isso, pode rolar novamente quaisquer resultados 1 nesses dados de dano extra.",
+      "modifiers": [],
+      "bookPage": 335,
+      "unmodeled": "muda o DADO do Ataque Furtivo, que não existe no catálogo",
+      "uid": "itm_lu55qk45zm"
+    },
+    {
+      "id": "encanto-cacadora",
+      "name": "Caçadora",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 15,
+      "rollMax": 16,
+      "countsAs": 1,
+      "description": "A arma persegue o alvo, anulando penalidades por camuflagem leve e total e por cobertura leve. Caso a arma seja de ataque à distância, seu alcance também aumenta em uma categoria.",
+      "modifiers": [],
+      "bookPage": 335,
+      "unmodeled": "anula penalidades de camuflagem e cobertura, que o motor não aplica",
+      "uid": "itm_f7g3gpizbm"
+    },
+    {
+      "id": "encanto-congelante",
+      "name": "Congelante",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 17,
+      "rollMax": 21,
+      "countsAs": 1,
+      "description": "A arma causa +1d6 de dano de frio. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, a vítima fica enredada por uma rodada. Uma arma congelante é coberta por uma camada de gelo e névoa.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "damageType": "frio"
+          },
+          "dice": "1d6",
+          "bonusType": "untyped",
+          "note": "+1d6 de dano de frio"
+        }
+      ],
+      "bookPage": 335,
+      "uid": "itm_qccuvhtwlj"
+    },
+    {
+      "id": "encanto-conjuradora",
+      "name": "Conjuradora",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 22,
+      "rollMax": 23,
+      "countsAs": 1,
+      "description": "Um conjurador pode lançar na arma uma magia que tenha como alvo uma criatura ou que afete uma área. A magia não gera efeito na hora; em vez disso, fica guardada no item. Quando acerta um ataque com a arma, você pode descarregar a magia guardada como uma ação livre e sem pagar seu custo. Ela tem como alvo (ou como ponto de origem de sua área) a criatura ou ponto atingido pelo ataque. Uma vez que a magia seja descarregada, outra pode ser armazenada.",
+      "modifiers": [],
+      "bookPage": 335,
+      "unmodeled": "guarda uma magia no item e a descarrega no acerto — sistema inteiro",
+      "uid": "itm_vyhly7pj7l"
+    },
+    {
+      "id": "encanto-corrosiva",
+      "name": "Corrosiva",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 24,
+      "rollMax": 28,
+      "countsAs": 1,
+      "description": "A arma causa +1d6 de dano de ácido. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, a vítima sofre 4d4 pontos de dano de ácido na próxima rodada. Uma arma corrosiva exala vapores e goteja líquido tóxico.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "damageType": "acido"
+          },
+          "dice": "1d6",
+          "bonusType": "untyped",
+          "note": "+1d6 de dano de acido"
+        }
+      ],
+      "bookPage": 335,
+      "uid": "itm_hsuxgtxyzr"
+    },
+    {
+      "id": "encanto-dancarina",
+      "name": "Dançarina",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 29,
+      "rollMax": 30,
+      "countsAs": 1,
+      "description": "Você pode gastar uma ação de movimento e 1 PM para fazer a arma flutuar e atacar uma criatura em alcance curto a sua escolha, com as mesmas estatísticas que teria se você a estivesse empunhando. Este efeito tem duração sustentada; se parar de sustentá-lo, a arma cai no chão.",
+      "modifiers": [],
+      "bookPage": 335,
+      "unmodeled": "ativação sustentada que faz a arma atacar sozinha",
+      "uid": "itm_3snpkjrnm5"
+    },
+    {
+      "id": "encanto-defensora",
+      "name": "Defensora",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 31,
+      "rollMax": 34,
+      "countsAs": 1,
+      "description": "A arma se movimenta para aparar ataques contra você. Você recebe +2 na Defesa.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "enhancement",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+2 Defesa"
+        }
+      ],
+      "bookPage": 335,
+      "uid": "itm_odbbfhs7hs"
+    },
+    {
+      "id": "encanto-destruidora",
+      "name": "Destruidora",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 35,
+      "rollMax": 36,
+      "countsAs": 1,
+      "description": "Se usada contra construtos e objetos (com a manobra quebrar), a arma fornece +2 no teste de ataque e causa +2d8 de dano.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "this"
+          },
+          "amount": 2,
+          "bonusType": "enhancement",
+          "condition": {
+            "c": "against",
+            "trait": "construtos e objetos"
+          },
+          "note": "+2 atq vs construtos e objetos"
+        }
+      ],
+      "bookPage": 335,
+      "uid": "itm_pvgpffiwwr"
+    },
+    {
+      "id": "encanto-dilacerante",
+      "name": "Dilacerante",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 37,
+      "rollMax": 38,
+      "countsAs": 1,
+      "description": "A arma inflige ferimentos profundos. Quando faz um acerto crítico com a arma, você causa +10 pontos de dano.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "onCritical"
+          },
+          "note": "+10 de dano em acertos críticos"
+        }
+      ],
+      "bookPage": 335,
+      "uid": "itm_eghccfsfki"
+    },
+    {
+      "id": "encanto-drenante",
+      "name": "Drenante",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 39,
+      "rollMax": 40,
+      "countsAs": 1,
+      "description": "Quando você faz um acerto crítico em uma criatura viva, a criatura fica fraca e você ganha 2d10 pontos de vida temporários. Uma arma drenante emite um brilho púrpura.",
+      "modifiers": [],
+      "bookPage": 335,
+      "unmodeled": "impõe condição ao ALVO no crítico e dá PV temporário ao portador (ALE-414, fatia 3)",
+      "uid": "itm_vtcsajfdrl"
+    },
+    {
+      "id": "encanto-eletrica",
+      "name": "Elétrica",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 41,
+      "rollMax": 45,
+      "countsAs": 1,
+      "description": "A arma causa +1d6 de dano de eletricidade. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, um raio atinge outra criatura em alcance curto, causando 3d8 pontos de dano de eletricidade. Uma arma elétrica emite faíscas e é coberta de arcos voltaicos.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "damageType": "eletricidade"
+          },
+          "dice": "1d6",
+          "bonusType": "untyped",
+          "note": "+1d6 de dano de eletricidade"
+        }
+      ],
+      "bookPage": 335,
+      "uid": "itm_l3jc675vvm"
+    },
+    {
+      "id": "encanto-energetica",
+      "name": "Energética",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 46,
+      "rollMax": 46,
+      "countsAs": 2,
+      "description": "A arma tem sua parte perigosa (a lâmina de uma espada, a ponta de uma lança...) transformada em magia pura. Ela fornece +4 em testes de ataque, ignora 20 pontos de redução de dano, converte todo o dano causado para essência e emana luz como uma tocha. Pré-requisito: formidável.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "this"
+          },
+          "amount": 4,
+          "bonusType": "enhancement",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+4 atq"
+        }
+      ],
+      "bookPage": 335,
+      "requires": "encanto-formidavel",
+      "uid": "itm_xjqb24ystq"
+    },
+    {
+      "id": "encanto-excruciante",
+      "name": "Excruciante",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 47,
+      "rollMax": 48,
+      "countsAs": 1,
+      "description": "A arma inflige dor terrível. Uma criatura viva atingida fica fraca. Se já estiver fraca, mesmo por este efeito, fica debilitada (a condição máxima que esta arma pode causar).",
+      "modifiers": [],
+      "bookPage": 335,
+      "unmodeled": "impõe condição ao ALVO, com escada de fraco para debilitado (ALE-414, fatia 3)",
+      "uid": "itm_aulgsi2j2q"
+    },
+    {
+      "id": "encanto-flamejante",
+      "name": "Flamejante",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 49,
+      "rollMax": 53,
+      "countsAs": 1,
+      "description": "A arma causa +1d6 de dano de fogo. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso, em vez do ataque normal você dispara uma bola de fogo contra um alvo em alcance médio. O alvo sofre 6d6 pontos de dano. Um teste de Reflexos (CD For ou Des, à sua escolha) reduz à metade. Uma arma flamejante emana chamas como uma tocha.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "damageType": "fogo"
+          },
+          "dice": "1d6",
+          "bonusType": "untyped",
+          "note": "+1d6 de dano de fogo"
+        }
+      ],
+      "bookPage": 335,
+      "uid": "itm_y2mikujcyk"
+    },
+    {
+      "id": "encanto-formidavel",
+      "name": "Formidável",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 54,
+      "rollMax": 63,
+      "countsAs": 1,
+      "description": "A arma é encantada para desferir golpes precisos. Ela fornece +2 em testes de ataque e rolagens de dano.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "this"
+          },
+          "amount": 2,
+          "bonusType": "enhancement",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+2 atq"
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "this"
+          },
+          "amount": 2,
+          "bonusType": "enhancement",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+2 dano"
+        }
+      ],
+      "bookPage": 336,
+      "uid": "itm_gbbblamz24"
+    },
+    {
+      "id": "encanto-lancinante",
+      "name": "Lancinante",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 64,
+      "rollMax": 64,
+      "countsAs": 2,
+      "description": "A arma inflige ferimentos mortais. Quando faz um acerto crítico com a arma, você causa +10 pontos de dano ou, além de multiplicar os dados de dano, multiplica também quaisquer bônus numéricos, a sua escolha. Este efeito substitui o efeito de dilacerante. Pré-requisito: dilacerante.",
+      "modifiers": [],
+      "bookPage": 336,
+      "requires": "encanto-dilacerante",
+      "unmodeled": "oferece ESCOLHA em tempo de rolagem, e esse instante não tem onde morar",
+      "uid": "itm_gk57ziipiq"
+    },
+    {
+      "id": "encanto-magnifica",
+      "name": "Magnífica",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 65,
+      "rollMax": 72,
+      "countsAs": 2,
+      "description": "A arma é encantada para desferir golpes perfeitos. Ela fornece +4 em testes de ataque e rolagens de dano. Pré-requisito: formidável.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "this"
+          },
+          "amount": 4,
+          "bonusType": "enhancement",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+4 atq"
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "this"
+          },
+          "amount": 4,
+          "bonusType": "enhancement",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+4 dano"
+        }
+      ],
+      "bookPage": 336,
+      "uid": "itm_bycoil75a3",
+      "requires": "encanto-formidavel"
+    },
+    {
+      "id": "encanto-piedosa",
+      "name": "Piedosa",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 73,
+      "rollMax": 74,
+      "countsAs": 1,
+      "description": "A arma causa +1d8 de dano, mas todo o dano causado é não letal. Você pode gastar 1 PM para desativar e ativar este encanto.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage"
+          },
+          "dice": "1d8",
+          "bonusType": "untyped",
+          "note": "+1d8 de dano"
+        }
+      ],
+      "bookPage": 336,
+      "uid": "itm_4tknaar6n6"
+    },
+    {
+      "id": "encanto-profana",
+      "name": "Profana",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 75,
+      "rollMax": 76,
+      "countsAs": 1,
+      "description": "A arma causa +2d8 de dano contra devotos de deuses que canalizam apenas energia positiva e criaturas bondosas (a critério do mestre). Uma arma profana emite luz rubra pulsante.",
+      "modifiers": [],
+      "bookPage": 336,
+      "unmodeled": "dado extra CONDICIONAL: o `harvestWeaponRiders` colhe o dado antes de julgar a condição, e um 2d8 contra devotos do Bem valeria contra todo mundo",
+      "uid": "itm_yn2phwdcls"
+    },
+    {
+      "id": "encanto-sagrada",
+      "name": "Sagrada",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 77,
+      "rollMax": 78,
+      "countsAs": 1,
+      "description": "A arma causa +2d8 de dano contra devotos de deuses que canalizam apenas energia negativa e criaturas malignas (a critério do mestre). Uma arma sagrada emite uma sutil luz pura.",
+      "modifiers": [],
+      "bookPage": 336,
+      "unmodeled": "dado extra CONDICIONAL, pelo mesmo mecanismo da Profana",
+      "uid": "itm_mjwvu6m5ry"
+    },
+    {
+      "id": "encanto-sanguinaria",
+      "name": "Sanguinária",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 79,
+      "rollMax": 80,
+      "countsAs": 1,
+      "description": "Uma criatura viva atingida fica sangrando. A perda de PV por sangramento causada pela arma é cumulativa — uma criatura atingida duas vezes perde 2d6 PV por sangramento por rodada.",
+      "modifiers": [],
+      "bookPage": 336,
+      "unmodeled": "impõe condição ao ALVO (ALE-414, fatia 3)",
+      "uid": "itm_wiooasrn2t"
+    },
+    {
+      "id": "encanto-trovejante",
+      "name": "Trovejante",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 81,
+      "rollMax": 82,
+      "countsAs": 1,
+      "description": "A arma emite um trovão ribombante a cada golpe. Quando você faz um acerto crítico, a vítima fica atordoada por uma rodada (apenas uma vez por cena; Fort CD For ou Des, a sua escolha, evita).",
+      "modifiers": [],
+      "bookPage": 336,
+      "unmodeled": "impõe condição ao ALVO com duração, uma vez por cena e teste de resistência — nenhum dos três existe (ALE-414, fatia 3)",
+      "uid": "itm_h7tyqekffz"
+    },
+    {
+      "id": "encanto-tumular",
+      "name": "Tumular",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 83,
+      "rollMax": 84,
+      "countsAs": 1,
+      "description": "A arma causa +1d8 de dano de trevas. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso, o bônus de dano aumenta para +2d8, mas você perde 1d8 pontos de vida. Uma arma tumular drena o calor ao redor.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "damageType": "trevas"
+          },
+          "dice": "1d8",
+          "bonusType": "untyped",
+          "note": "+1d8 de dano de trevas"
+        }
+      ],
+      "bookPage": 336,
+      "uid": "itm_4y6mvoswho"
+    },
+    {
+      "id": "encanto-veloz",
+      "name": "Veloz",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 85,
+      "rollMax": 88,
+      "countsAs": 1,
+      "description": "Você recebe a habilidade Ataque Extra, do guerreiro, mas só pode usá-la com esta arma. Se já a possui, em vez disso, o custo para usá-la com esta arma diminui em –1 PM.",
+      "modifiers": [],
+      "bookPage": 336,
+      "unmodeled": "concede uma habilidade de CLASSE com escopo de arma",
+      "uid": "itm_3n76whiqqm"
+    },
+    {
+      "id": "encanto-venenosa",
+      "name": "Venenosa",
+      "category": "weapon-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "either",
+      "appliesTo": [
+        "weapon"
+      ],
+      "rollMin": 89,
+      "rollMax": 90,
+      "countsAs": 1,
+      "description": "Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, a vítima fica envenenada, perdendo 1d12 pontos de vida por rodada durante 3 rodadas. Uma arma venenosa verte um líquido verde e viscoso.",
+      "modifiers": [],
+      "bookPage": 336,
+      "unmodeled": "ativação em PM que impõe condição com duração",
+      "uid": "itm_kcpwjnsarb"
     }
   ],
   "races": [

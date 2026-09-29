@@ -1098,6 +1098,35 @@ este verbete":
 | `audit-origins.py` | `origins-source.json`, `origins.json` | Tabela 1-19 **e** o verbete, que é o título com `Benefícios.` abaixo |
 | `audit-powers.py` | `general-powers.json`, `tormenta-powers.json` | a tabela de pré-requisitos **e** a linha `Pré-requisito:` do verbete |
 | `audit-granted-powers.py` | `granted-powers.json`, `divine-powers.json` | a coluna "Devoto de X" da Tabela da p127 **e** o rótulo de deus do verbete |
+| `audit-enchants.py` | `items.json` (`weapon-enchant`) | a Tabela 8-8, que é `d%` + encanto + efeito, **e** o verbete `Nome. Regra` |
+
+### O auditor de encantos, e o denominador que ele tem DE GRAÇA
+
+Os da ALE-391 tinham duas coisas para comparar — o livro e um catálogo que já
+existia. O dos encantos não: o catálogo começou VAZIO, e "transcrevi os
+encantos" e "transcrevi treze dos vinte e oito" têm a mesma cara no terminal.
+
+O que o salva é a Tabela 8-8 ser de ROLAGEM. Uma faixa de `d%` é uma
+DECOMPOSIÇÃO do intervalo, e toda decomposição afirma a SOMA antes das parcelas:
+as 29 linhas têm de ladrilhar 1..100, e as 28 do catálogo, 1..90 — de 91 a 100 a
+tabela manda rolar noutra tabela.
+
+**Foi a soma que pegou o leitor perdendo duas linhas.** O `sem_lixo` do
+`t20pdf.py` descarta o que casa com `^\d{1,3}$`, que é o padrão de NÚMERO DE
+PÁGINA — e comeu as faixas de um valor só, a Energética (46) e a Lancinante
+(64). Saíram 26 linhas com os nomes certos, as faixas certas e dois efeitos
+colados no vizinho de cima. Nada reclamou; a soma não fechou.
+
+O leitor de VERBETE teve o defeito irmão, e o sintoma foi o TAMANHO: sem
+recortar a prosa por coluna, a tabela inteira entrava como corpo da Magnífica e
+um título de seção como corpo da Flamejante — 939 caracteres num verbete de 370.
+Por isso o relatório imprime a cobertura mínima: **um medidor de prosa que não
+diz onde a prosa acaba infla a medida com palavras de outro assunto.**
+
+E o que o motor NÃO aplica sai com DENOMINADOR e não como lista de proibidos:
+todo encanto ou tem modificador, ou diz por que não — nunca os dois, porque um
+motivo ao lado de um modificador é um motivo que envelheceu. Quem cobra sem o
+PDF é o `TestEveryWeaponEnchantEitherAppliesOrSaysWhyNot`.
 
 Escolher a âncora é o trabalho; o resto é regex. E a do auditor de raças é a que
 explica por quê: **não serve o título nem a página.** O bloco de uma raça
