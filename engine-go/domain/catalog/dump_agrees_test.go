@@ -16,7 +16,8 @@ import (
 // `CATALOG_PATH`, lido do disco); o navegador e as validações de schema leem os
 // arquivos embutidos em `catalog/data`. Hoje elas batem byte a byte, e é por
 // isso que nada nunca doeu — mas a invariante anti-auto-acúmulo
-// (`modifier_stacking_test.go`) varre a cópia EMBUTIDA enquanto o motor calcula
+// (`modifier_stacking_rules_test.go`, no `domain/engine`) varre a cópia EMBUTIDA
+// enquanto o motor calcula
 // com a cópia em DISCO: um modificador acrescentado só ao dump escaparia da
 // invariante inteira, verde.
 //

@@ -480,6 +480,32 @@ porta é interface declarada no consumidor, e ela só casa com tipos do consumid
 compartilhamento é ele ser *shared kernel*: pequeno, sem dependências, e de todos
 porque não é de ninguém.
 
+## A regra de EMPILHAMENTO mora onde o `targetKey` mora
+
+O `TestNoEntityStacksWithItself` prende a invariante da p226 — uma entidade não
+declara dois modificadores não-condicionais no mesmo alvo e tipo —, e a
+identidade do balde é o `targetKey`. Ele morava no `domain/catalog`, com um
+`switch` que ESPELHAVA o do motor, porque o `targetKey` é privado daqui.
+
+**O espelho divergiu em três pontos** (ALE-419): a `flag` era lida de
+`target["flag"]` e o catálogo a escreve em `name`; o `maneuver` e o
+`displacement` não separavam por escopo, quando o motor separa pelos dois.
+
+A divergência era INERTE, e medir isso foi o passo antes de consertar: ela muda
+12 baldes de 108 e **nenhum veredito**, porque os casos que colidiriam são
+condicionais e este guarda pula condicional. O que ela não era é segura — um
+segundo modificador de flag não-condicional na mesma entidade passaria
+despercebido, e nada acusaria.
+
+Hoje não há espelho: o guarda mora no `domain/engine`, o balde sai do
+`targetKey` de verdade e os modificadores são lidos no `Modifier` de verdade —
+o que faz o caso atravessar o `UnmarshalJSON` junto, que é a fronteira que a
+ALE-415 pegou quebrada.
+
+**E o denominador cresceu de graça.** O guarda antigo enumerava NOVE recursos à
+mão e via 189 entidades; o novo varre o diretório e vê 208. Enumerar era a
+armadilha de sempre — a lista que alguém esquece de aumentar.
+
 ## Todo ALVO de modificador é declarado, e o RÓTULO não conta como leitor
 
 O `targetKey` nomeia os alvos que um modificador pode mirar, e cada um está em
