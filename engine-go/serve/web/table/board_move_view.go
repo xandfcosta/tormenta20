@@ -148,7 +148,7 @@ func moveTerrain(b *board.BoardState) engine.MoveTerrain {
 // Uma só e não uma lista: a Mesa move uma peça por vez, e com um movimento em
 // curso a resposta é vazia.
 //
-// **Quem responde é o `board.CanMove`, não esta função** — é o mesmo
+// **Quem responde é o `board.CanMoveWith`, não esta função** — é o mesmo
 // `assertMovable` que a ESCRITA usa. Perguntar de outro jeito na tela é como
 // nasce um botão que existe e o servidor recusa. E o estado da sessão tem de ir
 // junto: sem ele o `assertMovable` lê "fora de combate" e libera, e a tela

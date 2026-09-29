@@ -163,10 +163,9 @@ func NextMarkerLetter(markers []BoardMarker) string {
 
 // ── os patches TIPADOS, para quem não fala JSON ──────────────────────────────
 //
-// O `ParseMarkerPatch` monta o patch a partir de um `map[string]any`, que é a
-// forma de um corpo JSON. Os gestos do app levam a intenção no CAMINHO, e montar
-// um mapa só para desmontá-lo em seguida seria atravessar um formato de fio que
-// ninguém está falando.
+// Os gestos do app levam a intenção no CAMINHO, e montar um `map[string]any` só
+// para desmontá-lo em seguida seria atravessar um formato de fio que ninguém
+// está falando. O parser genérico que fazia isso saiu com a API JSON.
 
 // MarkerReveal monta o patch que mostra ou esconde.
 //

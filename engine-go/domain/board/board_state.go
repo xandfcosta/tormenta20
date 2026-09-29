@@ -222,7 +222,7 @@ func DuplicateToken(b *BoardState, tokenID string, loop *live.InitiativeEntry, n
 	}
 	dup.SpeedSquares = original.SpeedSquares
 	dup.Label = nextInstanceLabel(b, original.Label)
-	spot := freeSpotNear(b, boardSpot{x: original.X, y: original.Y})
+	spot := freeSpotNear(occupancyWorldOf(b), boardSpot{x: original.X, y: original.Y})
 	dup.X, dup.Y = spot.x, spot.y
 	return AddToken(b, dup, newID)
 }
@@ -258,34 +258,11 @@ func PasteToken(b *BoardState, template BoardToken, loop *live.InitiativeEntry, 
 	// é o alvo: quem apertou CTRL+V está olhando para aquele quadrado, e sem
 	// esta linha a cópia pousaria na primeira casa do anel de fora.
 	dup.X, dup.Y = x, y
-	if occupied(b, x, y) {
-		spot := freeSpotNear(b, boardSpot{x: x, y: y})
+	if plano := occupancyWorldOf(b); squareIsTaken(plano, x, y) {
+		spot := freeSpotNear(plano, boardSpot{x: x, y: y})
 		dup.X, dup.Y = spot.x, spot.y
 	}
 	return AddToken(b, dup, newID)
-}
-
-// freeSpotNear acha o primeiro quadrado livre em volta de um ponto, em anéis
-// que crescem.
-//
-// AO LADO do original, e não na fileira de entrada: quem duplica o zumbi que
-// está no canto do mapa espera o irmão dele ali do lado, não a dez quadrados de
-// distância no lugar combinado onde as peças avulsas nascem.
-func freeSpotNear(b *BoardState, from boardSpot) boardSpot {
-	for ring := 1; ring <= boardCoordLimit; ring++ {
-		for dy := -ring; dy <= ring; dy++ {
-			for dx := -ring; dx <= ring; dx++ {
-				if abs(dx) != ring && abs(dy) != ring {
-					continue // o miolo já foi visto nos anéis de dentro
-				}
-				spot := boardSpot{x: from.x + dx, y: from.y + dy}
-				if !occupied(b, spot.x, spot.y) {
-					return spot
-				}
-			}
-		}
-	}
-	return from
 }
 
 // RemoveToken tira a peça do tabuleiro. Some em silêncio se ela já não está lá:
@@ -374,19 +351,6 @@ func abs(v int) int {
 
 type boardSpot struct{ x, y int }
 
-func occupied(b *BoardState, x, y int) bool {
-	for _, t := range b.Tokens {
-		side := t.Footprint
-		if side <= 0 {
-			side = 1
-		}
-		if x >= t.X && x < t.X+side && y >= t.Y && y < t.Y+side {
-			return true
-		}
-	}
-	return false
-}
-
 // FindToken devolve o ponteiro para a peça viva (para mutação) ou nil.
 func FindToken(b *BoardState, tokenID string) *BoardToken {
 	for i := range b.Tokens {
@@ -398,51 +362,3 @@ func FindToken(b *BoardState, tokenID string) *BoardToken {
 }
 
 func strPtr(s string) *string { return &s }
-
-// UnbindOrphanTokens desamarra as peças cuja linha da fila não existe mais, e
-// devolve quantas foram. A peça FICA no mapa — só o vínculo sai.
-//
-// # Por que desamarrar, e não remover a peça
-//
-// Porque a peça sobreviver é o desenho, e não um efeito colateral. "Reiniciar o
-// combate" promete na tela que *"a partida CONTINUA no ar"*: o mestre reiniciou
-// o COMBATE, não a CENA, e o mapa que ele montou é trabalho dele (decisão do
-// dono, ALE-377).
-//
-// O que não pode sobreviver é o PONTEIRO. Uma peça apontando para uma linha
-// morta mente de um jeito silencioso: ela continua se anunciando como
-// combatente, com o botão "Atacar" no menu, e o gesto responde 200 sem fazer
-// nada nem recusar. O `EntryID` é `*string` com `omitempty` exatamente para
-// distinguir "sem linha" de "linha vazia" — a peça avulsa (porta, baú, barril)
-// já vive assim.
-//
-// # Ela é a reconciliação das TRÊS fontes
-//
-// Tirar um combatente da fila, reiniciar o combate e reabrir um lugar do acervo
-// noutra sessão deixavam o mesmo estado por três caminhos. Passar o estado da
-// fila que VALE AGORA responde aos três — inclusive ao terceiro, com `st` nulo:
-// no acervo da campanha não existe fila nenhuma, e nenhum `EntryID` de sessão
-// tem sentido lá.
-func UnbindOrphanTokens(b *BoardState, st *live.SessionRuntimeState) int {
-	if b == nil {
-		return 0
-	}
-	alive := map[string]bool{}
-	if st != nil {
-		for i := range st.Initiative {
-			alive[st.Initiative[i].ID] = true
-		}
-	}
-	unbound := 0
-	for i := range b.Tokens {
-		if b.Tokens[i].EntryID == nil || alive[*b.Tokens[i].EntryID] {
-			continue
-		}
-		// O `CharacterID` vai junto: ele é a outra metade do mesmo vínculo, e
-		// uma peça que diz ter ficha sem ter linha desenha barra de PV de um
-		// combatente que não está na mesa.
-		b.Tokens[i].EntryID, b.Tokens[i].CharacterID = nil, nil
-		unbound++
-	}
-	return unbound
-}

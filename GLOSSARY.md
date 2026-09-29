@@ -178,7 +178,7 @@ uma decisão do dono antes do renome.
 **C1 — `cena` carrega quatro conceitos.**
 1. o estado da sessão (`live.Scene`, `session-scene-start/end`);
 2. a **duração de efeito** do livro (`scope: "scene"`, `DeleteEffectsByScope`);
-3. o mapa guardado do tabuleiro (`board-place-scene`, `parseScene` → devolve um `BoardState`);
+3. o mapa guardado de um LUGAR (`PlaceScene`/`SavePlaceScene` → guardam um `BoardState`);
 4. a casca visual da UI (`ui.Layout`, `scene-grimorio`, `scene-nav`).
 
 Consequência medida: `endScene` existe **três vezes** no pacote `api` —
@@ -186,6 +186,11 @@ Consequência medida: `endScene` existe **três vezes** no pacote `api` —
 `table_character_effects.go` limpa a duração "cena" de UMA ficha. Os três nomes
 continuam, e o renome ainda espera decisão do dono.
 
+> E menor de novo na ALE-413: o `board-place-scene` e o `parseScene` que este
+> item citava não existem mais — o comando saiu com a API JSON (ALE-277) e o
+> parser ficou sem chamador desde então. O sentido 3 vive hoje só no
+> `PlaceScene`/`SavePlaceScene`, que é onde o mapa de um lugar é guardado.
+>
 > A colisão ficou MENOR na ALE-233: o sentido 2 (a duração de efeito) ganhou nome
 > próprio na tela — **expirar efeitos de cena** —, então o gesto do mestre deixou
 > de disputar a palavra "recuperar" com o descanso. O identificador continua

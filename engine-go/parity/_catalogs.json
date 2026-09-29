@@ -4010,63 +4010,91 @@
       "id": "material-aco-rubi",
       "name": "Aço-rubi",
       "category": "material",
-      "price": 1000,
+      "price": 6000,
       "slots": 0,
       "equip": "either",
       "appliesTo": [
+        "armor",
+        "esoteric",
+        "shield",
         "weapon"
       ],
-      "modifiers": [
-        {
-          "target": {
-            "k": "damage",
-            "scope": "this"
-          },
-          "amount": 2,
-          "bonusType": "enhancement",
-          "condition": {
-            "c": "wielded"
-          },
-          "note": "+2 dano vs criaturas vivas"
-        }
-      ],
+      "modifiers": [],
       "bookPage": 166,
-      "uid": "itm_pi7iwbfsd4"
+      "uid": "itm_pi7iwbfsd4",
+      "priceByItem": {
+        "weapon": 6000,
+        "armorLight": 3000,
+        "armorHeavy": 6000,
+        "shield": 3000,
+        "esoteric": 6000
+      },
+      "description": "Este metal tem a aparência de vidro avermelhado, mas é duro como aço. Aço-rubi é caríssimo e comercializado apenas por uma guilda de ferreiros de Doherimm. Os anões mantém a origem deste material em segredo, mas suspeita-se de que ele seja minerado das profundezas de uma área de Tormenta. Arma. A arma ignora 10 pontos de redução de dano, além de ignorar a imunidade a crítico de lefeu. Armadura e Escudo. Fornece uma chance de ignorar o dano extra de acertos críticos e ataques furtivos: armaduras leves e escudos, 25% (1 em 1d4); armaduras pesadas, 50% (qualquer valor par em qualquer dado), cumulativas entre si. Esotérico. Quando lança uma magia que causa dano, ela ignora 10 pontos de redução de dano, além de ignorar as imunidades a dano de lefeu.",
+      "modeled": [],
+      "unmodeled": {
+        "abertura": "só sabor: de onde vem o metal",
+        "Arma": "ignorar 10 pontos de RD e a imunidade a crítico de lefeu são propriedades do ATAQUE contra o alvo, e a RD do alvo mora no `AttackTarget` — um `Modifier` só alcança o portador",
+        "Armadura e Escudo": "chance PERCENTUAL de ignorar dano, e a ficha não sorteia",
+        "Esotérico": "a magia ignorar RD é propriedade do efeito, e efeito de magia não passa pelo motor de ficha"
+      }
     },
     {
       "id": "material-adamante",
       "name": "Adamante",
       "category": "material",
-      "price": 5000,
+      "price": 3000,
       "slots": 0,
       "equip": "either",
       "appliesTo": [
-        "weapon",
         "armor",
-        "shield"
+        "esoteric",
+        "shield",
+        "weapon"
       ],
       "modifiers": [],
-      "displayFacts": [
-        {
-          "category": "dr",
-          "text": "Ignora redução de dano não-mágica"
-        }
-      ],
       "bookPage": 166,
-      "uid": "itm_ezemoy6cc3"
+      "uid": "itm_ezemoy6cc3",
+      "priceByItem": {
+        "weapon": 3000,
+        "armorLight": 6000,
+        "armorHeavy": 18000,
+        "shield": 6000,
+        "esoteric": 3000
+      },
+      "description": "Encontrado apenas em meteoritos (e por isso também chamado de “ferro-meteórico”), o adamante é um metal escuro, fosco e mais denso que o aço. Arma. Aumenta o dano em um passo. Armadura e Escudo. Fornece redução de dano: armaduras leves e escudos, RD 2; armaduras pesadas, RD 5. Esotérico. Quando lança uma magia que causa dano, você pode pagar +1 PM para rolar novamente qualquer resultado 1 na rolagem de dano dela.",
+      "modeled": [],
+      "unmodeled": {
+        "abertura": "só sabor: o metal dos meteoritos",
+        "Arma": "\"aumenta o dano em um passo\" pede a tabela de passos de dado, que o motor não tem",
+        "Armadura e Escudo": "a RD ramifica pelo PESO da armadura, e um modificador de sobreposição não sabe ramificar pelo hospedeiro",
+        "Esotérico": "ativação em PM"
+      }
     },
     {
       "id": "material-mitral",
       "name": "Mitral",
       "category": "material",
-      "price": 1000,
+      "price": 1500,
       "slots": 0,
       "equip": "either",
       "appliesTo": [
         "armor",
-        "shield"
+        "esoteric",
+        "shield",
+        "weapon"
       ],
       "modifiers": [
+        {
+          "target": {
+            "k": "critRange"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+1 de margem de ameaça"
+        },
         {
           "target": {
             "k": "armorPenalty"
@@ -4076,20 +4104,40 @@
           "condition": {
             "c": "vested"
           },
-          "note": "reduz penalidade em 2"
+          "note": "reduz a penalidade de armadura em 2"
         }
       ],
       "bookPage": 167,
-      "uid": "itm_ozpewnpb4f"
+      "uid": "itm_ozpewnpb4f",
+      "priceByItem": {
+        "weapon": 1500,
+        "armorLight": 1500,
+        "armorHeavy": 12000,
+        "shield": 1500,
+        "esoteric": 3000
+      },
+      "description": "Metal raro e valioso, o mitral é prateado, brilhante e mais leve que aço. Itens de mitral ocupam –1 espaço (mínimo 1). Arma. Aumenta sua margem de ameaça em 1. Por exemplo, uma espada longa de mitral tem margem de ameaça 18-20. Armadura e Escudo. Tem sua penalidade de armadura diminuída em 2. Armaduras pesadas de mitral permitem que você aplique até dois pontos de sua Destreza na Defesa. Esotérico. Permite que você pague +2 PM ao lançar uma magia para aumentar a CD dela em +2.",
+      "modeled": [
+        "Arma",
+        "Armadura e Escudo"
+      ],
+      "unmodeled": {
+        "abertura": "\"itens de mitral ocupam –1 espaço\" muda o `slots` do item HOSPEDEIRO, e a sobreposição não reescreve campo de quem a carrega",
+        "Armadura e Escudo": "a penalidade entra; o limite de DOIS pontos de Destreza na Defesa de armadura pesada ramifica pelo peso e não",
+        "Esotérico": "ativação em PM"
+      }
     },
     {
       "id": "material-gelo-eterno",
       "name": "Gelo eterno",
       "category": "material",
-      "price": 800,
+      "price": 600,
       "slots": 0,
       "equip": "either",
       "appliesTo": [
+        "armor",
+        "esoteric",
+        "shield",
         "weapon"
       ],
       "modifiers": [
@@ -4098,31 +4146,60 @@
             "k": "damage",
             "scope": "this"
           },
-          "amount": 1,
+          "amount": 2,
           "bonusType": "enhancement",
           "condition": {
             "c": "wielded"
           },
-          "note": "+1d6 frio"
+          "note": "+2 de dano de frio"
         }
       ],
       "bookPage": 166,
-      "uid": "itm_iwuvqyldvo"
+      "uid": "itm_iwuvqyldvo",
+      "priceByItem": {
+        "weapon": 600,
+        "armorLight": 1500,
+        "armorHeavy": 3000,
+        "shield": 1500,
+        "esoteric": 3000
+      },
+      "description": "As gélidas Montanhas Uivantes produzem gelo que nunca derrete. Expedições de aventureiros exploram essa região glacial perigosa à caça deste material fantástico. Arma. Causa +2 pontos de dano por frio. Armadura e Escudo. Fornece redução de fogo: armaduras leves e escudos, redução 5; armaduras pesadas, redução 10. Esotérico. Quando lança uma magia de frio que causa dano, você pode rolar novamente qualquer resultado 1 na rolagem de dano dela.",
+      "modeled": [
+        "Arma"
+      ],
+      "unmodeled": {
+        "abertura": "só sabor: as Montanhas Uivantes",
+        "Armadura e Escudo": "redução de fogo ramifica pelo peso da armadura, e o motor não tem redução por TIPO de dano",
+        "Esotérico": "rolar de novo o resultado 1 de uma magia é regra de rolagem, não de ficha"
+      }
     },
     {
       "id": "material-madeira-tollon",
       "name": "Madeira tollon",
       "category": "material",
-      "price": 600,
+      "price": 1500,
       "slots": 0,
       "equip": "either",
       "appliesTo": [
-        "weapon",
-        "shield"
+        "esoteric",
+        "shield",
+        "weapon"
       ],
       "modifiers": [],
       "bookPage": 167,
-      "uid": "itm_2vlrhofi6u"
+      "uid": "itm_2vlrhofi6u",
+      "priceByItem": {
+        "weapon": 1500,
+        "shield": 1500,
+        "esoteric": 1500
+      },
+      "description": "A Floresta de Tollon produz um tipo de madeira negra, dura como aço e dotada de propriedades mágicas. Apenas armas de madeira — arcos, bordões, clavas, lanças, piques e tacapes —, escudos leves e esotéricos podem ser feitos com madeira Tollon. Arma. Conta como mágica para vencer redução de dano. Além disso, habilidades ativadas ao se fazer um ataque ou usar a ação agredir têm seu custo em PM reduzido em –1. Escudo e Esotérico. Fornece resistência a magia +2.",
+      "modeled": [],
+      "unmodeled": {
+        "abertura": "só sabor: a Floresta de Tollon",
+        "Arma": "\"conta como mágica para vencer RD\" é propriedade do ataque contra o alvo; e o –1 PM vale só para habilidade ativada AO ATACAR, enquanto o alvo `pmCost` é o custo de MAGIA — usá-lo daria desconto em conjuração",
+        "Escudo e Esotérico": "resistência a magia não existe no motor"
+      }
     },
     {
       "id": "material-materia-vermelha",
@@ -4132,13 +4209,100 @@
       "slots": 0,
       "equip": "either",
       "appliesTo": [
-        "weapon",
         "armor",
-        "shield"
+        "esoteric",
+        "shield",
+        "weapon"
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "damageType": "lefeu"
+          },
+          "dice": "1d6",
+          "bonusType": "untyped",
+          "note": "+1d6 de dano extra"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Adestramento"
+          },
+          "amount": -2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "–2 em perícias de Carisma (exceto Intimidação)"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Atuação"
+          },
+          "amount": -2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "–2 em perícias de Carisma (exceto Intimidação)"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Diplomacia"
+          },
+          "amount": -2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "–2 em perícias de Carisma (exceto Intimidação)"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Enganação"
+          },
+          "amount": -2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "–2 em perícias de Carisma (exceto Intimidação)"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Jogatina"
+          },
+          "amount": -2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "–2 em perícias de Carisma (exceto Intimidação)"
+        }
+      ],
       "bookPage": 167,
-      "uid": "itm_evyopcxb72"
+      "uid": "itm_evyopcxb72",
+      "priceByItem": {
+        "weapon": 1500,
+        "armorLight": 6000,
+        "armorHeavy": 18000,
+        "shield": 6000,
+        "esoteric": 3000
+      },
+      "description": "Qualquer material de origem lefeu — desde suas garras e carapaças, até minérios e partes de estruturas encontradas em áreas de Tormenta — apresenta propriedades parecidas, sendo conhecido como “matéria vermelha”. Estes itens assustadores impõem ao usuário penalidade de –2 em perícias baseadas em Carisma (exceto Intimidação). Arma. Causa +1d6 de dano extra. Porém, sempre que você acerta um ataque com a arma, perde 1 ponto de vida. Lefou e lefeu são imunes tanto ao dano extra de matéria vermelha quanto à perda de vida por usar armas desse material. Armadura e Escudo. Por sua aparência “borrada”, fornecem chance de falha para cada ataque: 10% para escudos e armaduras leves, 25% para armaduras pesadas (cumulativas entre si). Lefeu ignoram este efeito. Esotérico. Você e todos os seus inimigos em alcance curto sofrem –2 em testes de resistência contra efeitos mágicos.",
+      "modeled": [
+        "abertura",
+        "Arma"
+      ],
+      "unmodeled": {
+        "Armadura e Escudo": "chance PERCENTUAL de falha, e a ficha não sorteia",
+        "Esotérico": "afeta os INIMIGOS em alcance curto, e um modificador só alcança o portador"
+      }
     },
     {
       "id": "alforje",

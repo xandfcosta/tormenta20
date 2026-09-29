@@ -235,10 +235,15 @@ var inBackticks = regexp.MustCompile(`^[a-z]+[A-Z]\w*$|^[A-Z][a-z]+[A-Z]\w*$`)
 // aProcedenciaDeclarada é o bloco dizendo, ele mesmo, que o nome não vive aqui.
 var aProcedenciaDeclarada = regexp.MustCompile(
 	`\.tsx?\b|\bports\b|\bmirrors\b|\bSPA\b|TypeScript|` +
-		`não veio junto|deixou de existir|não existe mais|morreu com|some junto|` +
+		`não veio junto|não existem? mais|deixa(?:ram|ou) de existir|` +
+		`morre(?:u|ram) com|some(?:m)? junto|` +
 		// GÊNERO E NÚMERO, e não só o feminino singular: "cinco leitores MORTOS"
 		// declara a morte tão bem quanto "a rota morta", e a forma estreita
 		// deixava cinco lápides legítimas reprovando (ALE-363).
+		//
+		// O mesmo vale para o VERBO, e custou duas rodadas na ALE-413: uma
+		// lápide para DOIS símbolos escreve "não existem mais", e a forma
+		// singular a reprovava. Declarar a morte de dois não é menos declarar.
 		`Aqui morava|apagad|mort[oa]s?\b`)
 
 func TestNoCitationNamesAMissingSymbol(t *testing.T) {
