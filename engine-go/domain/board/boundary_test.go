@@ -55,6 +55,16 @@ var permitidos = map[string]bool{
 	// depender dele não cria fronteira errada nenhuma — que é exatamente a
 	// justificativa da `platform`, por outro caminho.
 	"t20engine/infra/events": true,
+	// O NÚCLEO DE ECS é shared kernel, e entra pela MESMA razão do vocabulário
+	// acima: ele não sabe o que é Tormenta — não há atributo, perícia nem peça
+	// nele —, e a redação do tabuleiro roda como sistemas sobre um mundo dele
+	// desde a ALE-413.
+	//
+	// O que impede a porta dos fundos não é confiança: é o
+	// `TestTheCoreImportsNothingOfTheProject`, que recusa QUALQUER import do
+	// projeto dentro de `ecs/`. Enquanto ele for folha, depender dele não cria
+	// fronteira errada nenhuma.
+	"t20engine/domain/ecs": true,
 }
 
 func TestTheBoardDoesNotKnowTheCharacterSheet(t *testing.T) {
