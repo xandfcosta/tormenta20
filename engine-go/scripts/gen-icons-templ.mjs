@@ -46,6 +46,7 @@ const QUERIDOS = [
   'UserPlus',
   'ShieldCheck',
   'LogOut',
+  'ChevronLeft',
   'ChevronRight',
   'Search',
   'Plus',
@@ -147,6 +148,7 @@ const QUERIDOS = [
   'FlaskConical',
   'Utensils',
   'Package',
+  'PackagePlus',
   'AlertTriangle',
   'Coins',
 ]
