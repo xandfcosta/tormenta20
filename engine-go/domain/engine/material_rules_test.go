@@ -80,9 +80,10 @@ func TestTheSpecialMaterialReachesTheWeaponCard(t *testing.T) {
 // verbete e não numa das metades rotuladas — foi por isso que o auditor teve de
 // ler o parágrafo de abertura junto.
 //
-// A exceção é escrita perícia a perícia porque o alvo que a expressaria de uma
-// vez, o `expertiseRemovePenalty`, não tem leitor no motor: ele existe no
-// `targetKey`, tem rótulo na aba Efeitos e ninguém o consome.
+// A exceção é escrita perícia a perícia porque não há alvo que a expresse de
+// uma vez. Havia um candidato, o `expertiseRemovePenalty`, e ele não existe mais
+// — a ALE-418 o cortou justamente por isto: nenhum leitor no motor e nenhuma
+// entrada no catálogo. Ter rótulo na aba Efeitos não é ter leitor.
 func TestTheRedMatterChargesCharismaExceptIntimidation(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	catalogs := primeFromDump(t, dir)
