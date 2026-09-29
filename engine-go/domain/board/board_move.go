@@ -307,7 +307,8 @@ func pendingFor(b *BoardState, by Mover) (*PendingMove, error) {
 	return b.Pending, nil
 }
 
-// CanMove responde "esta pessoa pode mover esta peça agora?" para a TELA.
+// CanMoveWith responde "esta pessoa pode mover esta peça agora, e até onde?"
+// para a TELA.
 //
 // Envelope fino sobre o `assertMovable`, e a razão de existir é que a tela
 // precisa da MESMA resposta que a escrita — perguntar de outro jeito é como
@@ -316,13 +317,10 @@ func pendingFor(b *BoardState, by Mover) (*PendingMove, error) {
 //
 // Não devolve o porquê: quem só desenha não tem o que fazer com a frase, e a
 // frase certa é a que a RECUSA escreve, no instante em que ela acontece.
-func CanMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, by Mover) bool {
-	can, _ := CanMoveWith(b, st, tokenID, by)
-	return can
-}
-
-// CanMoveWith devolve também o ORÇAMENTO, que é o que a tela precisa para
-// desenhar até onde dá para ir (-1 = sem teto).
+//
+// O ORÇAMENTO vem junto porque é a MESMA conta, e -1 é "sem teto". Aqui morava
+// um `CanMove` que jogava o orçamento fora; ele deixou de existir no dia em que
+// a tela passou a desenhar até onde dá para ir, e ficou sem chamador nenhum.
 func CanMoveWith(b *BoardState, st *live.SessionRuntimeState, tokenID string, by Mover) (bool, int) {
 	if b == nil {
 		return false, 0

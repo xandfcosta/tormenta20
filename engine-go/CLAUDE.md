@@ -492,6 +492,8 @@ pergunta não é a mesma.
 | **resolução** (`resolve_ecs.go`) | o TERMO | quanto vale `defense`, e por quê? |
 | **derivação** (`derive_ecs.go`) | a FICHA | qual é o número final? |
 | **ataque** (`attack_ecs.go`) | a PARCELA DE DANO | de que se soma este dano, e o que ficou de fora? |
+| **redação do tabuleiro** (`board_ecs.go`) | a PEÇA | quem olha daqui enxerga isto? |
+| **ocupação do plano** (`board_occupancy_ecs.go`) | a PEÇA | que quadrado está tomado, e quem já tem peça na mesa? |
 | decomposição (`breakdowns.go`) | — | como se explica o número na tela? |
 
 A entidade muda porque a pergunta muda, e é essa a lição das fases.
@@ -557,6 +559,73 @@ Foi o guarda novo que pegou, nascendo vermelho.
 antes de se saber se o ataque acertou, porque a parcela precisa existir para ser
 suprimida. Um `"1d"` no catálogo agora falha sempre, e não só nos ataques que
 acertam.
+
+### O tabuleiro entrou, e foi ele quem devolveu o `Despawn`
+
+O `domain/ecs` perdeu `Alive` e `Despawn` na ALE-381 por falta de chamador, e o
+comentário do `World` deixou escrito onde eles voltariam: *"no dia em que o
+tabuleiro entrar: lá a peça sai do mapa de verdade"*. A REDAÇÃO é esse dia, e é
+o melhor caso possível para eles — o modo de falha que o `Despawn` descreve
+(matar a entidade e deixar os componentes, com a consulta continuando a
+visitar) aqui não é um número errado: é a peça escondida chegando à tela de quem
+não devia vê-la.
+
+**Peça e marcador são a mesma espécie de entidade**, porque a pergunta da
+redação é a mesma para as duas e a resposta também: o que o mestre escondeu SOME
+INTEIRO. Uma coisa "presente porém anônima" entregaria a emboscada do mesmo
+jeito.
+
+**A ENTIDADE NÃO TROCA entre os dois gestos do tabuleiro, e isso é diferente da
+ficha.** Lá ela é a FONTE na coleta e o TERMO na resolução, porque a pergunta
+muda o sujeito. Aqui a pergunta muda e o sujeito não: a peça responde tanto
+"você é vista?" quanto "que quadrado você toma". O que muda é o COMPONENTE que
+cada pipeline escreve — o `body` só existe para quem pergunta quadrado, o
+`boundTo` só para quem pergunta fila —, e é por isso que os dois compartilham um
+construtor de mundo só.
+
+**A ORDEM passou a ser regra prendida aqui, e não era.** Invertendo a ordem em
+que a redação visita as peças, a suíte inteira ficava verde — todos os casos
+afirmavam CONTEÚDO, e conteúdo sobrevive a um embaralhamento. Mas a ordem da
+lista é a ordem de DESENHO (quem vem depois fica por cima) e é ela que decide
+qual peça a tela oferece para mover. É a propriedade em volta da qual o núcleo
+foi desenhado, e ela ganhou guarda no dia em que passou a ter consequência.
+
+**O CORPO da peça estava escrito duas vezes.** "Ela ocupa `footprint ×
+footprint` quadrados a partir da âncora" era a mesma conta no `occupied` e no
+`TokensInRectangle`, com o mesmo conserto de footprint zerado na frente de cada
+uma. Virou um componente, e a regra passou a ter um lugar.
+
+E o conserto do zero ganhou guarda, porque ele não tinha: o `AddToken` põe 1 em
+quem chega com zero, então nenhuma peça CRIADA pelo app tem tamanho zero — e
+toda fixture a cria por ele. A que chega do BANCO não passa por ali. Trocando o
+`side <= 0` por `side < 0`, a suíte inteira ficava verde, e a consequência seria
+a próxima peça nascendo em cima da antiga.
+
+**Montar o mundo UMA vez por gesto é o ponto, e não um detalhe.** O
+`PopulateBoard` põe a peça recém-criada no mundo antes de procurar o quadrado da
+seguinte — sem isso, as duas acham o mesmo lugar livre.
+
+O que NÃO precisou de guarda novo: o `Despawn` pela metade. Sabotado, ele
+reprova em TRÊS casos nomeados do `domain/board` — a peça escondida, o marcador
+escondido e o provisório dela —, que é a camada mais barata que o segura.
+
+### A FRONTEIRA do tabuleiro abriu para o núcleo, e o preço foi um guarda
+
+O `TestTheBoardDoesNotKnowTheCharacterSheet` caiu na primeira compilação, como a
+ALE-413 previu. A lista de permitidos dele vem com um aviso — *acrescentar
+import a ela transforma a porta em enfeite* —, e o `domain/ecs` entrou pela
+MESMA razão do `infra/events`: ele não sabe o que é Tormenta, e depender de uma
+FOLHA não cria fronteira errada nenhuma porque não há para onde a dependência
+vazar.
+
+A diferença é que a folha do `events` tinha guarda e a do `ecs` era só uma frase
+na docstring. Agora tem: o `TestTheCoreImportsNothingOfTheProject`, com uma
+exceção só — o `world_test.go` mora no pacote externo `ecs_test` e importa o
+`ecs` por construção. Os arquivos de teste continuam varridos de propósito: os
+componentes de mentira do núcleo se chamam `label` e `weight` porque *"se uma
+palavra do livro aparecer neste pacote, o desenho vazou"*, e um teste que
+importasse o `domain/engine` para arranjar um componente pronto seria essa
+palavra, com a suíte verde.
 
 ### A ORDEM dos sistemas é a regra, em toda fase
 

@@ -1,10 +1,5 @@
 package board
 
-import (
-	"encoding/json"
-	"fmt"
-)
-
 // QUEM O MESTRE ESCOLHEU mandar para o mapa: o conjunto, e a leitura dele no
 // corpo da mensagem.
 //
@@ -14,6 +9,9 @@ import (
 //
 // Nada aqui sabe por onde o pedido entrou. Quem chama estas funções hoje é a
 // cena da Mesa.
+//
+// Aqui morava um `ParseScene` que remontava o `BoardState` inteiro a partir de
+// um `map[string]any`. Ele ficou sem chamador quando a API JSON saiu (ALE-277).
 
 // EntrySelection nomeia as linhas da iniciativa que o mestre escolheu trazer.
 //
@@ -23,24 +21,6 @@ import (
 type EntrySelection map[string]bool
 
 func (s EntrySelection) wants(entryID string) bool { return s == nil || s[entryID] }
-
-// ParseScene lê a cena montada do corpo da mensagem. Passa pelo JSON de novo
-// porque o corpo chega como `map[string]any` genérico, e reconstruir o
-// `BoardState` campo a campo aqui seria uma segunda definição do formato de fio.
-func ParseScene(raw any) (*BoardState, error) {
-	blob, err := json.Marshal(raw)
-	if err != nil {
-		return nil, fmt.Errorf("cena ilegível: %w", err)
-	}
-	var scene BoardState
-	if err := json.Unmarshal(blob, &scene); err != nil {
-		return nil, fmt.Errorf("cena ilegível: %w", err)
-	}
-	if scene.Tokens == nil {
-		scene.Tokens = []BoardToken{}
-	}
-	return &scene, nil
-}
 
 // ChosenEntries lê do corpo as linhas que o mestre escolheu trazer.
 //

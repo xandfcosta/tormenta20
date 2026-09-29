@@ -42,36 +42,6 @@ func BoardForRole(role string, b *BoardState) *BoardState {
 	return redactBoardForPlayers(b)
 }
 
-// redactBoardForPlayers apaga da cópia do jogador as peças que o mestre
-// escondeu. Some a peça INTEIRA — e essa é a assimetria deliberada em relação ao
-// `hpHidden` da iniciativa, onde a linha fica sem os números: aqui a existência
-// da peça é a informação, e uma peça "presente porém anônima" entregaria a
-// emboscada do mesmo jeito.
-func redactBoardForPlayers(b *BoardState) *BoardState {
-	out := *b
-	out.Tokens = make([]BoardToken, 0, len(b.Tokens))
-	hidden := map[string]bool{}
-	for _, t := range b.Tokens {
-		if t.Hidden {
-			hidden[t.ID] = true
-			continue
-		}
-		out.Tokens = append(out.Tokens, t)
-	}
-	// O marcador escondido some INTEIRO, como a peça: o mestre marca a armadilha
-	// antes da mesa chegar nela, e um marcador "presente porém anônimo" diria à
-	// mesa exatamente onde não pisar.
-	out.Markers = make([]BoardMarker, 0, len(b.Markers))
-	for _, marker := range b.Markers {
-		if marker.Hidden {
-			continue
-		}
-		out.Markers = append(out.Markers, marker)
-	}
-	// O provisório de uma peça escondida entregaria a emboscada por outro
-	// caminho: um caminho desenhado saindo do nada é a peça sem o círculo.
-	if out.Pending != nil && hidden[out.Pending.TokenID] {
-		out.Pending = nil
-	}
-	return &out
-}
+// A REDAÇÃO em si mora no `board_ecs.go`: ela é o primeiro gesto do tabuleiro a
+// rodar como sistemas sobre um mundo, e o que o jogador não enxerga é
+// DESPAWN (ALE-413).

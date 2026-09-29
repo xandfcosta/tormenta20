@@ -24,33 +24,6 @@ import (
 // peça, e o que o grupo dispensa (a regra de deslocamento) é exatamente o que
 // protege o turno dele.
 
-// TokensInRectangle são os ids das peças cujo CORPO toca o retângulo.
-//
-// O corpo e não a âncora: uma Colossal ocupa 6×6 (p107), e marcá-la só quando o
-// laço pega a quina dela faria o mestre desenhar em volta do dragão e não pegar
-// o dragão.
-//
-// Exemplo:
-//
-//	TokensInRectangle(b, engine.Square{}, engine.Square{X: 5, Y: 5})
-//	// → os ids das peças que aparecem no quadrado de (0,0) a (5,5)
-func TokensInRectangle(b *BoardState, de, ate engine.Square) []string {
-	if b == nil {
-		return nil
-	}
-	x0, x1 := min(de.X, ate.X), max(de.X, ate.X)
-	y0, y1 := min(de.Y, ate.Y), max(de.Y, ate.Y)
-	var ids []string
-	for i := range b.Tokens {
-		t := &b.Tokens[i]
-		footprint := max(t.Footprint, 1)
-		if t.X <= x1 && t.X+footprint-1 >= x0 && t.Y <= y1 && t.Y+footprint-1 >= y0 {
-			ids = append(ids, t.ID)
-		}
-	}
-	return ids
-}
-
 // MoveGroup desloca as peças pelo MESMO delta, numa gravação só.
 //
 // Uma gravação porque o gesto é UM: seis `apply` fariam a mesa receber seis
