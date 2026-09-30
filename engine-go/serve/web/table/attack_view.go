@@ -110,7 +110,16 @@ func maneuverLine(pa live.PendingAttack) string {
 	case m.AnotherRoll:
 		return line + " · bônus iguais, role de novo (p234)"
 	case m.Won && m.Margin >= 5:
-		line += fmt.Sprintf(" · por %d, e cinco ou mais dão efeito extra", m.Margin)
+		// SÓ O NÚMERO, e não a regra por extenso. A primeira versão escrevia "por
+		// 9, e cinco ou mais dão efeito extra", e olhar a faixa a 390px mostrou os
+		// dois defeitos: a frase é PROSA no meio de uma linha telegráfica, e ela
+		// empurrava a consequência — que é o que decide o clique — para o fim da
+		// segunda linha.
+		//
+		// E ela prometia o que o app não faz: o efeito extra do derrubar é
+		// empurrar um quadrado, e mover a peça é do tabuleiro (ALE-421). Anunciar
+		// um efeito que ninguém aplica é pior que não anunciar.
+		line += fmt.Sprintf(" · por %d", m.Margin)
 	}
 	// A CONDIÇÃO que a confirmação vai deixar, e ela é dita ANTES: o mestre
 	// decide com ela à vista, e descobrir depois o que o clique fez é o que a

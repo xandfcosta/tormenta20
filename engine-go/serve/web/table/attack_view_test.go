@@ -130,6 +130,13 @@ func TestTheManeuverLineSaysWhatTheConfirmWillDo(t *testing.T) {
 	if strings.Contains(apertado, "por 2") {
 		t.Errorf("a linha %q escreveu uma margem que não dá efeito extra", apertado)
 	}
+	// E A LINHA NÃO EXPLICA A REGRA: ela é telegráfica como a do golpe, e a
+	// explicação por extenso quebrava a faixa em duas a 390px empurrando a
+	// consequência para o fim.
+	if strings.Contains(derrubou, "efeito extra") {
+		t.Errorf("a linha %q explica a regra por extenso — a conta é aritmética, e o "+
+			"efeito extra do derrubar (empurrar um quadrado) o app nem aplica", derrubou)
+	}
 	if !strings.Contains(apertado, "fica caído") {
 		t.Errorf("a linha %q não diz a condição, que é o que a confirmação vai deixar", apertado)
 	}
