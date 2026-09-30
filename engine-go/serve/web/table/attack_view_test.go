@@ -104,3 +104,62 @@ func TestTheVerdictIsOneOfThreeWords(t *testing.T) {
 		t.Errorf("quem NÃO rolou não cancela o que não é dele")
 	}
 }
+
+// A FAIXA DA MANOBRA diz o que a confirmação vai fazer, ANTES do clique.
+//
+// O mestre decide com a consequência à vista: descobrir depois o que o botão
+// fez é exatamente o que uma faixa que mostra a conta inteira existe para
+// evitar. Nem toda manobra deixa condição, e a linha só a escreve quando há.
+func TestTheManeuverLineSaysWhatTheConfirmWillDo(t *testing.T) {
+	derrubou := maneuverLine(live.PendingAttack{
+		Roll: 15, Total: 19,
+		Maneuver: &live.ManeuverRoll{Kind: "derrubar", Opposed: 10, Margin: 9, Won: true, Imposes: "caido"},
+	})
+	for _, pedaco := range []string{"derrubar", "19 vs 10", "por 9", "fica caído"} {
+		if !strings.Contains(derrubou, pedaco) {
+			t.Errorf("a linha %q não diz %q", derrubou, pedaco)
+		}
+	}
+
+	// A MARGEM PEQUENA não vira texto: "por 2" é número sem consequência no meio
+	// do turno, e a condição continua sendo dita porque ela É a consequência.
+	apertado := maneuverLine(live.PendingAttack{
+		Roll: 12, Total: 15,
+		Maneuver: &live.ManeuverRoll{Kind: "derrubar", Opposed: 13, Margin: 2, Won: true, Imposes: "caido"},
+	})
+	if strings.Contains(apertado, "por 2") {
+		t.Errorf("a linha %q escreveu uma margem que não dá efeito extra", apertado)
+	}
+	// E A LINHA NÃO EXPLICA A REGRA: ela é telegráfica como a do golpe, e a
+	// explicação por extenso quebrava a faixa em duas a 390px empurrando a
+	// consequência para o fim.
+	if strings.Contains(derrubou, "efeito extra") {
+		t.Errorf("a linha %q explica a regra por extenso — a conta é aritmética, e o "+
+			"efeito extra do derrubar (empurrar um quadrado) o app nem aplica", derrubou)
+	}
+	if !strings.Contains(apertado, "fica caído") {
+		t.Errorf("a linha %q não diz a condição, que é o que a confirmação vai deixar", apertado)
+	}
+
+	// A MANOBRA PERDIDA não promete condição nenhuma.
+	perdeu := maneuverLine(live.PendingAttack{
+		Roll: 3, Total: 7,
+		Maneuver: &live.ManeuverRoll{Kind: "derrubar", Opposed: 18, Margin: -11},
+	})
+	if strings.Contains(perdeu, "fica") {
+		t.Errorf("a linha da manobra PERDIDA promete condição: %q", perdeu)
+	}
+
+	// O EMPATE diz o que a regra pede, e não um número: a p234 manda rolar de
+	// novo, e anunciar uma margem zero faria a mesa procurar o vencedor.
+	empate := maneuverLine(live.PendingAttack{
+		Roll: 12, Total: 15,
+		Maneuver: &live.ManeuverRoll{Kind: "agarrar", Opposed: 15, AnotherRoll: true},
+	})
+	if !strings.Contains(empate, "role de novo") {
+		t.Errorf("a linha do empate não manda rolar de novo: %q", empate)
+	}
+	if strings.Contains(empate, "fica") {
+		t.Errorf("o empate prometeu condição: %q", empate)
+	}
+}

@@ -52,6 +52,26 @@ type ManeuverOutcome struct {
 	// Refused diz por que a manobra não aconteceu, em português: a recusa é da
 	// REGRA e chega a uma pessoa.
 	Refused string `json:"refused,omitempty"`
+	// Imposes é a condição que a VITÓRIA deixa no alvo, e vazio quando não há.
+	//
+	// Só na vitória: um campo preenchido independentemente do resultado faria a
+	// confirmação deixar o alvo caído por ter TENTADO derrubá-lo. E vazio no
+	// empate de bônus iguais, que a p234 manda repetir — não há vencedor ainda.
+	Imposes string `json:"imposes,omitempty"`
+}
+
+// conditionLeftBy são as manobras que deixam CONDIÇÃO, e são duas das cinco.
+//
+// As outras três não estão aqui porque o livro não lhes dá condição, e não
+// porque alguém esqueceu: o desarmar derruba o item que a criatura segura, o
+// empurrar a move 1,5m e o quebrar atinge um item. Escrever uma condição ali
+// seria inventar regra.
+var conditionLeftBy = map[string]string{
+	// "Uma criatura agarrada fica desprevenida e imóvel, sofre –2 nos testes de
+	// ataque e só pode atacar com armas leves" (p234).
+	"agarrar": "agarrado",
+	// "Você deixa o alvo caído" (p234).
+	"derrubar": "caido",
 }
 
 // maneuversOfTheBook são as cinco da p234, e a lista é fechada porque a página
@@ -92,7 +112,7 @@ func ResolveManeuver(
 	out.Margin = out.AttackerTotal - out.DefenderTotal
 	if out.Margin != 0 {
 		out.Won = out.Margin > 0
-		return out
+		return imposeOnAWin(out)
 	}
 	// "Em caso de empate, o personagem com o maior bônus vence. Se os bônus
 	// forem iguais, outro teste deve ser feito" (p234).
@@ -103,6 +123,13 @@ func ResolveManeuver(
 		out.Won = false
 	default:
 		out.Reroll = true
+	}
+	return imposeOnAWin(out)
+}
+
+func imposeOnAWin(out ManeuverOutcome) ManeuverOutcome {
+	if out.Won {
+		out.Imposes = conditionLeftBy[out.Kind]
 	}
 	return out
 }

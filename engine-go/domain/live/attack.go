@@ -77,6 +77,11 @@ type ManeuverRoll struct {
 	// ao derrubar e ao desarmar (p234). Negativa quando quem tentou perdeu.
 	Margin int  `json:"margin"`
 	Won    bool `json:"won"`
+	// Imposes é a condição que a vitória deixa no alvo, e ela viaja no
+	// provisório porque quem a aplica é a CONFIRMAÇÃO: entre rolar e confirmar
+	// a manobra pode ser cancelada, e uma condição aplicada na proposta ficaria
+	// no alvo de um gesto que não aconteceu.
+	Imposes string `json:"imposes,omitempty"`
 	// AnotherRoll é o empate que a página manda repetir — totais iguais E bônus
 	// iguais. Não é derrota de quem tentou, e a faixa tem de dizer isso em vez
 	// de anunciar um vencedor que a regra não deu.
