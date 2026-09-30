@@ -534,6 +534,34 @@ E o BÔNUS conhece o LADO: o `Desejo de Liberdade` ajuda quem está sendo
 agarrado, não quem agarra. O escopo entrou na chave do `targetKey` na ALE-406, e
 o caso que prende os dois lados é o que impede a volta daquele defeito.
 
+## A CONDIÇÃO de uma manobra pousa na confirmação, e ramifica como o dano
+
+Duas das cinco manobras deixam condição — *"você deixa o alvo CAÍDO"* e *"uma
+criatura AGARRADA fica desprevenida e imóvel"* (p234). As outras três não são
+esquecimento: o livro lhes dá efeito de ITEM ou de MOVIMENTO, e escrever uma
+condição ali seria inventar regra.
+
+**Na confirmação e não na proposta**, pela mesma divisa do dano: entre rolar e
+confirmar a manobra pode ser cancelada, e uma condição aplicada na proposta
+ficaria no alvo de um gesto que não aconteceu.
+
+**E ela ramifica pela FICHA.** Com personagem atrás da linha, a condição mora na
+ficha e a fila ESPELHA; sem, a linha é a fonte, porque ficha ele não tem.
+Aplicar só num dos dois daria o caso do NPC certo e o do PC errado em silêncio —
+é a mesma divisa do `DeltaVitals`, e é por isso que as duas moram juntas no
+`store_sheet_mirror.go`: elas fazem a MESMA pergunta antes de agir.
+
+O evento é PRÓPRIO (`ConditionApplied`) e não um `VitalsChanged` emprestado. Ele
+carrega `CharacterID` pela mesma razão que o outro — a ficha aberta noutra aba
+tem de saber que ficou caída —, mas o nome do evento é o que alguém lê ao
+procurar por que a tela piscou, e "vitais mudaram" sobre uma condição manda
+procurar no lugar errado.
+
+> **O id não vai para a tela.** A primeira versão da faixa escrevia "fica
+> caido" — o identificador vazando. Quem traduz é o `book.ConditionName`, e a
+> regra é a do `GLOSSARY.md`: id em inglês no código, texto em português na
+> tela.
+
 ## O guarda de ÍCONE varre as CENAS, e o `switch` do gerado não tem `default`
 
 Um nome que ninguém gerou rende um `<svg>` VAZIO: sem erro de compilação, sem
