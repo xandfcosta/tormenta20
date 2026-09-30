@@ -260,8 +260,23 @@ func overlayModsWithProvenance(overlay *CatalogItem) []Modifier {
 	return out
 }
 
-// mirrorWeaponAttackMods: a weapon's own {attack,scope:this}
-// mods mirrored onto its Luta/Pontaria perícia (T20 attacks are expertise tests).
+// mirrorWeaponAttackMods espelha o {attack,scope:this} da arma na perícia de
+// Luta/Pontaria dela — no T20 o ataque É um teste de perícia, então é ali que o
+// bônus tem de aparecer para entrar na conta e na decomposição.
+//
+// O ESPELHO PRESERVA O `bonusType`, e isso é regra e não zelo: ele nascia
+// `untyped` fixo, e `untyped` é o único tipo que ACUMULA — então a resolução de
+// pilha morria aqui, e morria de um lado só da carta. O dano passa pelo
+// `StatFor` e disputava; o ataque passa por este espelho e somava.
+//
+// Quem paga isso é o ENCANTO: "bônus por encantos não se acumulam" (p333), e
+// uma espada Formidável (+2) e Magnífica (+4) atacava com +6 e causava dano com
+// +4 — a mesma arma dando duas respostas para a mesma regra (ALE-416).
+//
+// Não confundir com a p226, que fala de DUAS FONTES ("dois itens... não terá
+// +2"). Duas sobreposições de UMA arma não são dois itens, e a p333 é quem
+// resolve dentro de um item: encanto com encanto não acumula, e melhoria com
+// encanto SOMA ("some [...] os bônus fornecidos por melhorias e encantos").
 func mirrorWeaponAttackMods(catalog *CatalogItem, ownMods []Modifier) []Modifier {
 	if catalog == nil || catalog.Weapon == nil {
 		return []Modifier{}
@@ -283,7 +298,7 @@ func mirrorWeaponAttackMods(catalog *CatalogItem, ownMods []Modifier) []Modifier
 		out = append(out, Modifier{
 			Target:    ModifierTarget{K: "expertise", Name: expertise},
 			Amount:    m.Amount,
-			BonusType: "untyped",
+			BonusType: m.BonusType,
 			Condition: condition,
 			Note:      note,
 		})
