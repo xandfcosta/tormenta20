@@ -95,6 +95,15 @@ type Item struct {
 	Shield     *Armor            `json:"shield"`
 	Consumable *Consumable       `json:"consumable"`
 	Modifiers  []engine.Modifier `json:"modifiers"`
+	// CountsAs e Requires são do ENCANTO, e só dele (p334-336). O asterisco da
+	// Tabela 8-8 — "conta como dois encantos" — é regra de TETO, e três dos
+	// vinte e oito o carregam; o `requires` é o "Pré-requisito:" que três
+	// verbetes escrevem. Zero e vazio em tudo que não é encanto.
+	CountsAs int    `json:"countsAs"`
+	Requires string `json:"requires"`
+	// Description é a regra do livro em prosa. Hoje só o encanto a traz, e é ela
+	// que o `audit-enchants.py` mede contra o verbete.
+	Description string `json:"description"`
 }
 
 type Weapon struct {

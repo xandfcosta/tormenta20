@@ -119,7 +119,7 @@ func (p Plays) SaveEquipped(ctx context.Context, itemID int64, place string) err
 // A cena manda a LISTA e o nome do material; a serialização em JSON e a
 // tradução de material vazio para NULL são daqui.
 func (p Plays) SaveItemOverlays(
-	ctx context.Context, itemID int64, improvements []string, material string,
+	ctx context.Context, itemID int64, improvements []string, material string, enchants []string,
 ) error {
 	var column any
 	if material != "" {
@@ -129,7 +129,22 @@ func (p Plays) SaveItemOverlays(
 		"UPDATE character_items SET improvements = ?, material = ? WHERE id = ?",
 		sheet.MarshalStrings(&improvements), column, itemID,
 	); err != nil {
-		return fmt.Errorf("gravar as melhorias do item %d: %w", itemID, err)
+		return err
+	}
+	// O ENCANTO MORA EM TABELA, então gravar é APAGAR E REESCREVER: a cena manda
+	// o conjunto inteiro, como manda a lista de melhorias, e um diff aqui teria
+	// de reimplementar o que o `DELETE` + `INSERT` já faz — sobre um conjunto de
+	// no máximo três (p334).
+	q := sqlcgen.New(p.db)
+	if err := q.ClearItemEnchants(ctx, itemID); err != nil {
+		return err
+	}
+	for _, id := range enchants {
+		if err := q.AddItemEnchant(ctx, sqlcgen.AddItemEnchantParams{
+			Itemid: itemID, Enchantid: id,
+		}); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -80,8 +80,61 @@ func fitsItemImprovement(catalog *book.Item, ids []string, category string) erro
 }
 
 func categoryName(category string) string {
-	if category == "material" {
+	switch category {
+	case "material":
 		return "material"
+	case "weapon-enchant":
+		return "encanto"
 	}
 	return "melhoria"
+}
+
+// slotsDeEncanto é o teto do livro, e ele é o MESMO número que a categoria do
+// item mágico: "um item mágico menor possui um encanto, um médio possui dois e
+// um item mágico maior possui três encantos" (p334), e a p334 ainda chama três
+// de "o máximo possível".
+//
+// Por isso não há tamanho a guardar na arma: a CONTAGEM é a categoria.
+const slotsDeEncanto = 2 + 1
+
+// fitsWeaponEnchants cobra as duas regras que só o encanto tem.
+//
+// O TETO conta por PESO e não por quantidade: três encantos da Tabela 8-8
+// "contam como dois", e o asterisco deles é regra — dois desses já enchem a
+// arma. Contar linhas deixaria passar uma espada com três Magníficas.
+//
+// E o PRÉ-REQUISITO: a Magnífica pede formidável, a Energética também, e a
+// Lancinante pede dilacerante. Ele se confere contra o conjunto ESCOLHIDO, e não
+// contra o que a arma já tinha — a cena manda o conjunto inteiro, e conferir
+// contra o estado anterior deixaria tirar o pré-requisito e manter o dependente.
+func fitsWeaponEnchants(ids []string) error {
+	escolhidos := map[string]bool{}
+	peso := 0
+	for _, id := range ids {
+		encanto := book.ItemByID(id)
+		if encanto == nil {
+			continue // quem não existe já foi recusado pelo `fitsItemImprovement`
+		}
+		escolhidos[id] = true
+		peso += max(encanto.CountsAs, 1)
+	}
+	if peso > slotsDeEncanto {
+		return fmt.Errorf(
+			"são %d encantos de peso numa arma, e o livro dá no máximo %d (p334) — "+
+				"a Energética, a Lancinante e a Magnífica contam como dois",
+			peso, slotsDeEncanto)
+	}
+	for id := range escolhidos {
+		encanto := book.ItemByID(id)
+		if encanto.Requires == "" || escolhidos[encanto.Requires] {
+			continue
+		}
+		pre := book.ItemByID(encanto.Requires)
+		nome := encanto.Requires
+		if pre != nil {
+			nome = pre.Name
+		}
+		return fmt.Errorf("%q exige %q na mesma arma (p335-336)", encanto.Name, nome)
+	}
+	return nil
 }

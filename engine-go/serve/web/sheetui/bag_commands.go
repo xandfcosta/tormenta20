@@ -104,7 +104,14 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, signals Sign
 	if err := fitsItemImprovement(catalog, materials, "material"); err != nil {
 		return err
 	}
-	return s.plays.SaveItemOverlays(r.Context(), item.ID, signals.ItemImprovements, signals.ItemMaterial)
+	if err := fitsItemImprovement(catalog, signals.ItemEnchants, "weapon-enchant"); err != nil {
+		return err
+	}
+	if err := fitsWeaponEnchants(signals.ItemEnchants); err != nil {
+		return err
+	}
+	return s.plays.SaveItemOverlays(
+		r.Context(), item.ID, signals.ItemImprovements, signals.ItemMaterial, signals.ItemEnchants)
 }
 
 // askedQuantity lê a quantidade, com as bordas do formulário.

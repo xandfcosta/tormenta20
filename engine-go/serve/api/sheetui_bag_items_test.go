@@ -292,3 +292,89 @@ func itemImprovements(t *testing.T, f sceneFixture, item int64) string {
 	}
 	return row.Improvements
 }
+
+// OS TRÊS ENCANTOS DA ARMA, e as duas regras que só eles têm (ALE-416).
+//
+// O teto é do livro: "um item mágico menor possui um encanto, um médio possui
+// dois e um item mágico maior possui três encantos" (p334), e a mesma página
+// chama três de "o máximo possível".
+//
+// Ele conta por PESO e não por linha: três encantos da Tabela 8-8 contam como
+// dois. Contar linhas deixaria entrar uma espada com três Magníficas — que pela
+// contagem do livro é uma arma de seis encantos.
+func TestAWeaponTakesNoMoreThanThreeEnchants(t *testing.T) {
+	f, id := fighterFixture(t)
+	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
+
+	// TRÊS DE PESO UM CABEM — este é o controle, e sem ele "nada foi gravado"
+	// se explicaria igualmente bem por "o guarda recusa tudo".
+	cabem := `{"item_enchants":["encanto-flamejante","encanto-congelante","encanto-eletrica"]}`
+	if refusal := improvements(t, f, id, sword, cabem); refusal != "" {
+		t.Fatalf("o controle já estava errado: três encantos de peso um foram recusados: %q", refusal)
+	}
+	if saved := itemEnchants(t, f, sword); len(saved) != 3 {
+		t.Fatalf("os três encantos que cabem viraram %v", saved)
+	}
+
+	// O QUARTO NÃO.
+	quatro := `{"item_enchants":["encanto-flamejante","encanto-congelante","encanto-eletrica","encanto-tumular"]}`
+	if refusal := improvements(t, f, id, sword, quatro); !strings.Contains(refusal, "334") {
+		t.Errorf("o quarto encanto entrou, ou a recusa não cita a página: %q", refusal)
+	}
+
+	// E DOIS QUE CONTAM COMO DOIS JÁ ESTOURAM, apesar de serem só duas linhas.
+	// Sem o peso este pedido passaria: `len` é 2, e o teto é 3.
+	pesados := `{"item_enchants":["encanto-dilacerante","encanto-lancinante","encanto-formidavel","encanto-magnifica"]}`
+	if refusal := improvements(t, f, id, sword, pesados); !strings.Contains(refusal, "peso") {
+		t.Errorf("duas linhas de peso dois entraram numa arma de três encantos: %q", refusal)
+	}
+	// E a arma continua com os três primeiros — recusa não grava pela metade.
+	if saved := itemEnchants(t, f, sword); len(saved) != 3 {
+		t.Errorf("a recusa mexeu no que já estava gravado: %v", saved)
+	}
+}
+
+// O PRÉ-REQUISITO SE CONFERE CONTRA O CONJUNTO ESCOLHIDO.
+//
+// "Pré-requisito: formidável" (p336) para a Magnífica e a Energética,
+// "Pré-requisito: dilacerante" (p335) para a Lancinante. A cena manda o conjunto
+// INTEIRO a cada aplicação, então conferir contra o que a arma já tinha deixaria
+// tirar o pré-requisito e manter o dependente no mesmo pedido.
+func TestAnEnchantWithoutItsPrerequisiteIsRefused(t *testing.T) {
+	f, id := fighterFixture(t)
+	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
+
+	sozinha := `{"item_enchants":["encanto-magnifica"]}`
+	refusal := improvements(t, f, id, sword, sozinha)
+	if !strings.Contains(refusal, "Magnífica") || !strings.Contains(refusal, "Formidável") {
+		t.Errorf("a recusa não nomeia os dois lados: %q", refusal)
+	}
+	if saved := itemEnchants(t, f, sword); len(saved) != 0 {
+		t.Errorf("a Magnífica entrou sem a Formidável: %v", saved)
+	}
+
+	// COM A FORMIDÁVEL JUNTA, no MESMO pedido, ela entra.
+	junta := `{"item_enchants":["encanto-formidavel","encanto-magnifica"]}`
+	if refused := improvements(t, f, id, sword, junta); refused != "" {
+		t.Fatalf("o par legítimo foi recusado: %q", refused)
+	}
+	if saved := itemEnchants(t, f, sword); len(saved) != 2 {
+		t.Errorf("o par legítimo não foi gravado: %v", saved)
+	}
+
+	// E TIRAR A FORMIDÁVEL NO MESMO PEDIDO não deixa a Magnífica órfã: é aqui
+	// que conferir contra o ESTADO ANTERIOR deixaria passar.
+	orfa := `{"item_enchants":["encanto-magnifica"]}`
+	if refused := improvements(t, f, id, sword, orfa); refused == "" {
+		t.Error("a Formidável saiu e a Magnífica ficou sozinha na arma")
+	}
+}
+
+func itemEnchants(t *testing.T, f sceneFixture, item int64) []string {
+	t.Helper()
+	ids, err := f.s.sceneCore().Queries().EnchantsOfItem(context.Background(), item)
+	if err != nil {
+		t.Fatalf("ler os encantos do item: %v", err)
+	}
+	return ids
+}

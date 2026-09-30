@@ -134,12 +134,21 @@ func partialSheetsForPools(
 	if err != nil {
 		return nil, fmt.Errorf("ler os itens de %d fichas: %w", len(ids), err)
 	}
+	encantos, err := q.EnchantsOfCharacters(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("ler os encantos de %d fichas: %w", len(ids), err)
+	}
+	porItem := map[int64][]string{}
+	for _, row := range encantos {
+		porItem[row.Itemid] = append(porItem[row.Itemid], row.Enchantid)
+	}
 	for _, it := range items {
 		dto := partials[it.Characterid]
 		dto.Items = append(dto.Items, ItemDTO{
 			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
+			Enchants: porItem[it.ID],
 		})
 		partials[it.Characterid] = dto
 	}

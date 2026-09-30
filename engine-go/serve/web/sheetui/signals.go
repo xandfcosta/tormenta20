@@ -66,7 +66,11 @@ type Signals struct {
 	// As melhorias escolhidas no diálogo, e o material. Lista e não par de
 	// ids: são até quatro melhorias no mesmo item.
 	ItemImprovements []string `json:"item_improvements"`
-	ItemMaterial     string   `json:"item_material"`
+	// ItemEnchants são os encantos escolhidos para a arma (p335). Sinal PRÓPRIO
+	// e não dentro do de melhorias porque o livro conta e limita as duas coisas
+	// em separado — "quatro melhorias e três encantos" (p334).
+	ItemEnchants []string `json:"item_enchants"`
+	ItemMaterial string   `json:"item_material"`
 	// Os degraus escolhidos ao entrar numa postura que escala com o nível, e a
 	// busca da lista de poderes.
 	PowerSteps  *int64 `json:"stance_degrees"`

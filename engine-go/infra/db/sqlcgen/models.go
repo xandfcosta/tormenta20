@@ -162,6 +162,12 @@ type CharacterItem struct {
 	Improvements string         `json:"improvements"`
 	Material     sql.NullString `json:"material"`
 	Createdat    string         `json:"createdat"`
+	Enchants     string         `json:"enchants"`
+}
+
+type CharacterItemEnchant struct {
+	Itemid    int64  `json:"itemid"`
+	Enchantid string `json:"enchantid"`
 }
 
 type CharacterPowerUse struct {

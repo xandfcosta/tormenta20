@@ -135,6 +135,9 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier
 	if it.Material != nil {
 		own = append(own, overlayModsWithProvenance(r.getCatalogItem(*it.Material))...)
 	}
+	for _, id := range it.Enchants {
+		own = append(own, overlayModsWithProvenance(r.getCatalogItem(id))...)
+	}
 	return own
 }
 
