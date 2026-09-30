@@ -29,6 +29,15 @@ func itemOverlays(item sheet.ItemDTO) []string {
 	for _, entry := range bookOverlays(item) {
 		names = append(names, entry.Name)
 	}
+	// O ENCANTO ENTRA AQUI e não no `bookOverlays`, e a divisão é do DESTINO:
+	// o crachá diz tudo o que a arma É, porque é ele que o jogador olha em
+	// combate; o bloco "Melhorias & material" da ficha do item tem irmão
+	// próprio para o encanto, e pô-lo nos dois o escreveria duas vezes.
+	for _, id := range item.Enchants {
+		if entry := book.ItemByID(id); entry != nil {
+			names = append(names, entry.Name)
+		}
+	}
 	return names
 }
 

@@ -56,6 +56,25 @@ templ itemSheetDialog(v View, sheet itemSheet) {
 				}
 			</div>
 		}
+		// O ENCANTO SÓ SE LÊ AQUI, e o bloco não tem botão de propósito: quem
+		// encanta é o mestre.
+		//
+		// A CAIXA É IGUAL À DA MELHORIA e só a TINTA DO NOME muda. Aqui houve
+		// uma borda arcana também, e olhando a 390px ela não decidia nada: perto
+		// do `grimorio-iron` ela lia como a mesma borda com ruído, e dois sinais
+		// para a mesma distinção em que um deles é ambíguo é pior que um só.
+		// Quem separa os dois blocos é o `arcane-ink` dos nomes, contra o ouro.
+		if len(sheet.Enchants) > 0 {
+			<div class="space-y-1 rounded-sm border border-grimorio-iron p-2">
+				<p class={ ui.FieldLabelClasses("muted", "") }>Encantos</p>
+				for _, enchant := range sheet.Enchants {
+					<p class="text-xs">
+						<span class="font-semibold text-arcane-ink">{ enchant.Name }</span>
+						<span class="ml-2 text-muted-foreground">{ enchant.Effect }</span>
+					</p>
+				}
+			</div>
+		}
 		<div class="flex flex-wrap gap-2 border-t border-grimorio-iron pt-2">
 			if sheet.Overlayable {
 				<button
