@@ -13,16 +13,27 @@ import (
 // itemScreenSheet acha um item pelo nome, para o teste não guardar ids.
 // A FICHA DO ITEM oferece os lugares ALCANÇÁVEIS, e só eles.
 // itemScreenSheet recorta o diálogo de UM item pelo rótulo dele.
+// itemScreenSheet recorta o diálogo de UM item pelo rótulo dele.
+//
+// O CORTE É NO DIÁLOGO SEGUINTE, e não num `</div></div>`. A mochila desenha um
+// `role="dialog"` por item, então o vizinho é a fronteira confiável; o par de
+// fechamentos casava com o PRIMEIRO bloco interno — o de equipar — e devolvia a
+// cabeça do diálogo com cara de diálogo inteiro.
+//
+// Isso fazia toda asserção de AUSÊNCIA passar de graça: o que estivesse depois
+// do bloco de equipar não estava no recorte, então "não contém" era verdade por
+// truncagem. Medido ao acrescentar o bloco de encantos, que nasce no fim
+// (ALE-416).
 func itemScreenSheet(screen, name string) string {
 	start := strings.Index(screen, `aria-label="`+name+`"`)
 	if start < 0 {
 		return ""
 	}
-	end := strings.Index(screen[start:], "</div></div>")
-	if end < 0 {
-		return screen[start:]
+	rest := screen[start:]
+	if next := strings.Index(rest[1:], `role="dialog"`); next >= 0 {
+		return rest[:next+1]
 	}
-	return screen[start : start+end]
+	return rest
 }
 
 func improvementScreenDialog(screen, name string) string {
