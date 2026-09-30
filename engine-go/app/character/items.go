@@ -125,11 +125,58 @@ func (p Plays) SaveItemOverlays(
 	if material != "" {
 		column = material
 	}
-	if _, err := p.db.ExecContext(ctx,
+	_, err := p.db.ExecContext(ctx,
 		"UPDATE character_items SET improvements = ?, material = ? WHERE id = ?",
 		sheet.MarshalStrings(&improvements), column, itemID,
-	); err != nil {
-		return fmt.Errorf("gravar as melhorias do item %d: %w", itemID, err)
+	)
+	return err
+}
+
+// EnchantItem grava os encantos de UMA arma, e é a porta do MESTRE.
+//
+// Ela é separada do `SaveItemOverlays` porque quem chama é outra pessoa: a
+// melhoria e o material o jogador escolhe na mochila dele; o encanto vem do
+// mestre, que é quem entrega o saque (p333 — encanto não se compra, se acha ou
+// se fabrica). Juntá-las num método só daria à cena do jogador um parâmetro que
+// ela nunca pode preencher, e é assim que uma fronteira vira convenção.
+//
+// A REGRA É CONFERIDA AQUI e não na tela do mestre, pela razão de sempre:
+// filtro de tela não recusa nada. `enchants` vazio limpa a arma.
+//
+// @example plays.EnchantItem(ctx, itemID, []string{"encanto-formidavel"})
+func (p Plays) EnchantItem(ctx context.Context, itemID int64, enchants []string) error {
+	row, err := sqlcgen.New(p.db).GetItem(ctx, itemID)
+	if err != nil {
+		return fmt.Errorf("ler o item %d para encantar: %w", itemID, err)
 	}
-	return nil
+	// Item CUSTOM não tem verbete, então não tem arma — e o `FitsWeaponEnchants`
+	// recusa pelo nil, com a frase do livro.
+	var catalog *book.Item
+	if row.Catalogid.Valid {
+		catalog = book.ItemByID(row.Catalogid.String)
+	}
+	if err := book.FitsWeaponEnchants(catalog, enchants); err != nil {
+		return err
+	}
+	// GRAVAR É APAGAR E REESCREVER: quem chama manda o conjunto inteiro, como
+	// manda a lista de melhorias, e um diff aqui teria de reimplementar o que o
+	// `DELETE` + `INSERT` já faz — sobre um conjunto de no máximo três (p334).
+	//
+	// EM TRANSAÇÃO porque são até quatro escritas: sem ela, um `INSERT` que
+	// falhasse no meio deixaria a arma com o conjunto pela METADE, e o `DELETE`
+	// já teria levado os encantos que ela tinha. O estado perdido não é
+	// recuperável — ninguém sabe o que estava lá antes.
+	return p.inTx(ctx, fmt.Sprintf("encantar o item %d", itemID), func(q *sqlcgen.Queries) error {
+		if err := q.ClearItemEnchants(ctx, itemID); err != nil {
+			return err
+		}
+		for _, id := range enchants {
+			if err := q.AddItemEnchant(ctx, sqlcgen.AddItemEnchantParams{
+				Itemid: itemID, Enchantid: id,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

@@ -164,6 +164,11 @@ type CharacterItem struct {
 	Createdat    string         `json:"createdat"`
 }
 
+type CharacterItemEnchant struct {
+	Itemid    int64  `json:"itemid"`
+	Enchantid string `json:"enchantid"`
+}
+
 type CharacterPowerUse struct {
 	Characterid int64  `json:"characterid"`
 	Powerid     string `json:"powerid"`

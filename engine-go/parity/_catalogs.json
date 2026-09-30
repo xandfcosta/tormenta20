@@ -4672,7 +4672,7 @@
             "k": "defense"
           },
           "amount": 2,
-          "bonusType": "enhancement",
+          "bonusType": "enchantment",
           "condition": {
             "c": "wielded"
           },
@@ -4703,7 +4703,7 @@
             "scope": "this"
           },
           "amount": 2,
-          "bonusType": "enhancement",
+          "bonusType": "enchantment",
           "condition": {
             "c": "against",
             "trait": "construtos e objetos"
@@ -4812,7 +4812,7 @@
             "scope": "this"
           },
           "amount": 4,
-          "bonusType": "enhancement",
+          "bonusType": "enchantment",
           "condition": {
             "c": "wielded"
           },
@@ -4891,7 +4891,7 @@
             "scope": "this"
           },
           "amount": 2,
-          "bonusType": "enhancement",
+          "bonusType": "enchantment",
           "condition": {
             "c": "wielded"
           },
@@ -4903,7 +4903,7 @@
             "scope": "this"
           },
           "amount": 2,
-          "bonusType": "enhancement",
+          "bonusType": "enchantment",
           "condition": {
             "c": "wielded"
           },
@@ -4954,7 +4954,7 @@
             "scope": "this"
           },
           "amount": 4,
-          "bonusType": "enhancement",
+          "bonusType": "enchantment",
           "condition": {
             "c": "wielded"
           },
@@ -4966,7 +4966,7 @@
             "scope": "this"
           },
           "amount": 4,
-          "bonusType": "enhancement",
+          "bonusType": "enchantment",
           "condition": {
             "c": "wielded"
           },

@@ -672,3 +672,29 @@ FROM campaign_grants WHERE campaignId = ? ORDER BY id;
 -- name: ListCampaignSilences :many
 -- Os termos que esta mesa nao aplica. Ver a migracao 00018.
 SELECT characterId, term FROM campaign_silences WHERE campaignId = ? ORDER BY term;
+
+-- name: EnchantsOfItem :many
+SELECT enchantId FROM character_item_enchants WHERE itemId = ? ORDER BY enchantId;
+
+-- name: EnchantsOfCharacter :many
+-- Em LOTE e nao uma por item: a ficha monta todos os itens de uma vez, e uma
+-- consulta por arma seria N+1 numa mochila que a tela desenha inteira.
+SELECT e.itemId, e.enchantId
+FROM character_item_enchants e
+JOIN character_items i ON i.id = e.itemId
+WHERE i.characterId = ?
+ORDER BY e.itemId, e.enchantId;
+
+-- name: ClearItemEnchants :exec
+DELETE FROM character_item_enchants WHERE itemId = ?;
+
+-- name: AddItemEnchant :exec
+INSERT INTO character_item_enchants (itemId, enchantId) VALUES (?, ?);
+
+-- name: EnchantsOfCharacters :many
+-- O irmao em lote do `EnchantsOfCharacter`, para o caminho que monta N fichas.
+SELECT i.characterId, e.itemId, e.enchantId
+FROM character_item_enchants e
+JOIN character_items i ON i.id = e.itemId
+WHERE i.characterId IN (sqlc.slice('ids'))
+ORDER BY e.itemId, e.enchantId;

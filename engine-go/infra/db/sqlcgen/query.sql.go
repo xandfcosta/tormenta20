@@ -26,6 +26,20 @@ func (q *Queries) AddCharacterConditional(ctx context.Context, arg AddCharacterC
 	return err
 }
 
+const addItemEnchant = `-- name: AddItemEnchant :exec
+INSERT INTO character_item_enchants (itemId, enchantId) VALUES (?, ?)
+`
+
+type AddItemEnchantParams struct {
+	Itemid    int64  `json:"itemid"`
+	Enchantid string `json:"enchantid"`
+}
+
+func (q *Queries) AddItemEnchant(ctx context.Context, arg AddItemEnchantParams) error {
+	_, err := q.db.ExecContext(ctx, addItemEnchant, arg.Itemid, arg.Enchantid)
+	return err
+}
+
 const bumpCharacterPowerUse = `-- name: BumpCharacterPowerUse :exec
 INSERT INTO character_power_uses (characterId, powerId, scope, used)
 VALUES (?, ?, ?, 1)
@@ -127,6 +141,15 @@ DELETE FROM campaign_ignored_rules WHERE campaignId = ?
 
 func (q *Queries) ClearIgnoredRulesForCampaign(ctx context.Context, campaignid int64) error {
 	_, err := q.db.ExecContext(ctx, clearIgnoredRulesForCampaign, campaignid)
+	return err
+}
+
+const clearItemEnchants = `-- name: ClearItemEnchants :exec
+DELETE FROM character_item_enchants WHERE itemId = ?
+`
+
+func (q *Queries) ClearItemEnchants(ctx context.Context, itemid int64) error {
+	_, err := q.db.ExecContext(ctx, clearItemEnchants, itemid)
 	return err
 }
 
@@ -789,6 +812,114 @@ DELETE FROM users WHERE id = ?
 func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, id)
 	return err
+}
+
+const enchantsOfCharacter = `-- name: EnchantsOfCharacter :many
+SELECT e.itemId, e.enchantId
+FROM character_item_enchants e
+JOIN character_items i ON i.id = e.itemId
+WHERE i.characterId = ?
+ORDER BY e.itemId, e.enchantId
+`
+
+// Em LOTE e nao uma por item: a ficha monta todos os itens de uma vez, e uma
+// consulta por arma seria N+1 numa mochila que a tela desenha inteira.
+func (q *Queries) EnchantsOfCharacter(ctx context.Context, characterid int64) ([]CharacterItemEnchant, error) {
+	rows, err := q.db.QueryContext(ctx, enchantsOfCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterItemEnchant{}
+	for rows.Next() {
+		var i CharacterItemEnchant
+		if err := rows.Scan(&i.Itemid, &i.Enchantid); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const enchantsOfCharacters = `-- name: EnchantsOfCharacters :many
+SELECT i.characterId, e.itemId, e.enchantId
+FROM character_item_enchants e
+JOIN character_items i ON i.id = e.itemId
+WHERE i.characterId IN (/*SLICE:ids*/?)
+ORDER BY e.itemId, e.enchantId
+`
+
+type EnchantsOfCharactersRow struct {
+	Characterid int64  `json:"characterid"`
+	Itemid      int64  `json:"itemid"`
+	Enchantid   string `json:"enchantid"`
+}
+
+// O irmao em lote do `EnchantsOfCharacter`, para o caminho que monta N fichas.
+func (q *Queries) EnchantsOfCharacters(ctx context.Context, ids []int64) ([]EnchantsOfCharactersRow, error) {
+	query := enchantsOfCharacters
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []EnchantsOfCharactersRow{}
+	for rows.Next() {
+		var i EnchantsOfCharactersRow
+		if err := rows.Scan(&i.Characterid, &i.Itemid, &i.Enchantid); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const enchantsOfItem = `-- name: EnchantsOfItem :many
+SELECT enchantId FROM character_item_enchants WHERE itemId = ? ORDER BY enchantId
+`
+
+func (q *Queries) EnchantsOfItem(ctx context.Context, itemid int64) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, enchantsOfItem, itemid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var enchantid string
+		if err := rows.Scan(&enchantid); err != nil {
+			return nil, err
+		}
+		items = append(items, enchantid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const endSession = `-- name: EndSession :one

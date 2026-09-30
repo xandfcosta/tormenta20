@@ -76,7 +76,12 @@ type CharacterItem struct {
 	Slots        float64 `json:"slots"`
 	Equipped     *string `json:"equipped"`
 	Improvements string  `json:"improvements"`
-	Material     *string `json:"material"`
+	// Enchants são os encantos da arma, por id (p335). Eles são SOBREPOSIÇÃO
+	// como a melhoria e o material — o `ownItemMods` colhe os modificadores dos
+	// três pelo mesmo vetor —, e ficam num campo próprio porque o livro os conta
+	// e os limita em separado: "quatro melhorias e três encantos" (p334).
+	Enchants []string `json:"enchants,omitempty"`
+	Material *string  `json:"material"`
 }
 
 // ActiveEffectRow is a consumed scene/day buff carrying a JSON-encoded

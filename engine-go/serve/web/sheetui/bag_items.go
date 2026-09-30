@@ -33,6 +33,11 @@ type itemSheet struct {
 	Book       *bookInfo
 	// Overlays são as melhorias e o material JÁ aplicados, com o que fazem.
 	Overlays []overlayRow
+	// Enchants são os encantos que a arma CARREGA, e a ficha só os LÊ: quem
+	// encanta é o mestre, porque encanto não se compra — se acha ou se fabrica
+	// (p333). Por isso eles não entram no `Overlays` nem viram `overlayChoice`:
+	// a lista do diálogo é de escolha, e esta é de leitura.
+	Enchants []overlayRow
 	// Overlayable diz se o item ACEITA melhoria: não se forja uma poção em
 	// aço-rubi, e um diálogo com duas listas vazias é pior que botão nenhum.
 	Overlayable  bool
@@ -106,6 +111,7 @@ func itemSheetOf(item sheet.ItemDTO, proficiencies map[string]bool) itemSheet {
 		NoProficiency: !proficienteEh(item, proficiencies),
 		Equip:         reachablePlaces(item, catalog),
 		Overlays:      appliedImprovements(item),
+		Enchants:      appliedEnchants(item),
 		Command:       strconv.FormatInt(item.ID, 10),
 	}
 	if catalog == nil {
@@ -289,6 +295,24 @@ func appliedImprovements(item sheet.ItemDTO) []overlayRow {
 	for _, entry := range sortedImprovements(item) {
 		rows = append(rows, overlayRow{Name: entry.Name, Effect: overlaySummary(entry)})
 	}
+	return rows
+}
+
+// appliedEnchants são os encantos que a arma carrega, na ordem do livro.
+//
+// Ordenados pelo NOME e não pela ordem de gravação: o `EnchantsOfItem` devolve
+// por id, e "encanto-ameacadora" antes de "encanto-formidavel" é a ordem do
+// slug, não a que se lê.
+func appliedEnchants(item sheet.ItemDTO) []overlayRow {
+	rows := []overlayRow{}
+	for _, id := range item.Enchants {
+		entry := book.ItemByID(id)
+		if entry == nil {
+			continue
+		}
+		rows = append(rows, overlayRow{Name: entry.Name, Effect: overlaySummary(*entry)})
+	}
+	sort.SliceStable(rows, func(a, b int) bool { return rows[a].Name < rows[b].Name })
 	return rows
 }
 

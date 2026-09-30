@@ -101,7 +101,11 @@ type ItemDTO struct {
 	Slots        float64 `json:"slots"`
 	Equipped     *string `json:"equipped"`
 	Improvements string  `json:"improvements"`
-	Material     *string `json:"material"`
+	// Enchants são os encantos da arma, por id do catálogo (p335). Lista e não
+	// JSON como as melhorias: eles moram numa TABELA, e o que sai de uma tabela
+	// já é lista.
+	Enchants []string `json:"enchants"`
+	Material *string  `json:"material"`
 }
 
 type EffectDTO struct {

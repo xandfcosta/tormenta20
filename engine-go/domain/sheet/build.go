@@ -61,11 +61,18 @@ func Load(
 	if err != nil {
 		return dto, err
 	}
+	// EM LOTE, e não uma consulta por arma: a mochila é desenhada inteira, e
+	// perguntar por item seria N+1 num laço que já existe.
+	enchants, err := enchantsByItem(ctx, q, c.ID)
+	if err != nil {
+		return dto, err
+	}
 	for _, it := range items {
 		dto.Items = append(dto.Items, ItemDTO{
 			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
+			Enchants: enchants[it.ID],
 		})
 	}
 
@@ -272,4 +279,21 @@ func LoadPlayState(ctx context.Context, q *sqlcgen.Queries, id int64, dto *Chara
 		dto.Stances = append(dto.Stances, StanceDTO{Flag: st.Flag, Steps: st.Steps, PmPaid: st.Pmpaid})
 	}
 	return nil
+}
+
+// enchantsByItem agrupa por arma os encantos de um personagem.
+//
+// Devolve mapa e não lista para o laço dos itens ler em O(1): a mochila de um
+// personagem de nível alto tem dezenas de linhas, e procurar na lista a cada
+// uma seria quadrático no que a tela desenha a cada clique.
+func enchantsByItem(ctx context.Context, q *sqlcgen.Queries, charID int64) (map[int64][]string, error) {
+	rows, err := q.EnchantsOfCharacter(ctx, charID)
+	if err != nil {
+		return nil, err
+	}
+	fora := map[int64][]string{}
+	for _, row := range rows {
+		fora[row.Itemid] = append(fora[row.Itemid], row.Enchantid)
+	}
+	return fora, nil
 }

@@ -104,7 +104,12 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, signals Sign
 	if err := fitsItemImprovement(catalog, materials, "material"); err != nil {
 		return err
 	}
-	return s.plays.SaveItemOverlays(r.Context(), item.ID, signals.ItemImprovements, signals.ItemMaterial)
+	// O ENCANTO NÃO PASSA POR AQUI, e a ausência é a regra: quem encanta uma
+	// arma é o MESTRE, e a escrita dele é o `characterPlays.EnchantItem`. Sem
+	// um `ItemEnchants` nos sinais, um pedido montado à mão não tem por onde
+	// entrar — a fronteira é a ausência do campo, não um `if` (ALE-416).
+	return s.plays.SaveItemOverlays(
+		r.Context(), item.ID, signals.ItemImprovements, signals.ItemMaterial)
 }
 
 // askedQuantity lê a quantidade, com as bordas do formulário.
