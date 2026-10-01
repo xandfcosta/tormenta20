@@ -38,11 +38,26 @@ async function aDraftWith(
       data: {
         from: { X: p.x, Y: p.y },
         new_token_name: p.nome,
-        new_token_size: 1,
+        // A CATEGORIA do livro, e não o lado em quadrados: o contrato mudou na
+        // ALE-423, porque o lado não distingue Minúsculo de Médio e a Tab. 5-4
+        // lhes dá Defesa 15 e 10.
+        new_token_size: 'Médio',
         new_token_look: 'object',
       },
     })
+    // O STATUS NÃO BASTA: a rota responde 200 com a recusa dentro do corpo SSE,
+    // num remendo do sinal `command_error`. `ok()` é verdadeiro mesmo quando
+    // nenhuma peça entrou — foi assim que uma troca de contrato chegou como um
+    // `toHaveCount` falhando 30s depois, em vez de uma linha com a frase do
+    // servidor.
+    //
+    // CASA O VALOR E NÃO O NOME: `command_error` aparece em TODA resposta, no
+    // `data-text` do parágrafo que mostra o erro. Procurá-lo cru reprova o
+    // sucesso também — foi o que esta linha fez na primeira tentativa.
+    const resposta = await placed.text()
     expect(placed.ok(), `pôr a peça ${p.nome}: ${placed.status()}`).toBeTruthy()
+    const recusa = resposta.match(/"command_error":"([^"]+)"/)
+    expect(recusa?.[1], `o servidor recusou a peça ${p.nome}`).toBeUndefined()
   }
   await page.goto(url)
   await page.locator('.board-scene').waitFor({ timeout: 10_000 })

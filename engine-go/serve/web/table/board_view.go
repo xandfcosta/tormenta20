@@ -164,6 +164,11 @@ type boardToken struct {
 	// ninguém calcula com ela.
 	LeftFrom  string
 	Footprint int
+	// SizeName é a CATEGORIA do livro, e é ela que o diálogo de editar semeia —
+	// o `Footprint` é derivado dela e não serve para semear um menu de seis
+	// opções. A peça que veio da fila não tem categoria, e aí vale a mais comum
+	// do lado dela (`sizeNameOfToken`).
+	SizeName string
 	// Monogram, Instancia e Matiz: a cor é da ESPÉCIE e o número é da INSTÂNCIA.
 	Monogram string
 	Instance string
@@ -354,6 +359,7 @@ func boardTokenOf(t *board.BoardToken, health map[string]int, withBlock map[stri
 		ID: t.ID, Label: t.Label,
 		X: t.X, Y: t.Y, Where: Coordinate(t.X, t.Y),
 		Footprint: footprint,
+		SizeName:  sizeNameOfToken(t),
 		Monogram:  a.Monogram, Instance: a.Instance, Hue: a.Hue,
 		Hidden:   t.Hidden,
 		CameFrom: t.CameFrom,

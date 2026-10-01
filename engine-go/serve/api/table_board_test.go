@@ -440,7 +440,7 @@ func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 
-	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":-3,"Y":7},"new_token_name":"  Porta da cripta  ","new_token_size":1,"new_token_look":"object"}`)
+	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":-3,"Y":7},"new_token_name":"  Porta da cripta  ","new_token_size":"Médio","new_token_look":"object"}`)
 
 	board := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
 	if len(board.Tokens) != 1 {
@@ -477,9 +477,15 @@ func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	cases := []struct{ name, signals, waits string }{
-		{"sem nome", `{"from":{"X":1,"Y":1},"new_token_name":"   ","new_token_size":1,"new_token_look":"object"}`, "dê um nome"},
-		{"tamanho de nada", `{"from":{"X":1,"Y":1},"new_token_name":"Carroça","new_token_size":4,"new_token_look":"object"}`, "p107"},
-		{"ficha solta", `{"from":{"X":1,"Y":1},"new_token_name":"Falso herói","new_token_size":1,"new_token_look":"character"}`, "aparência"},
+		{"sem nome", `{"from":{"X":1,"Y":1},"new_token_name":"   ","new_token_size":"Médio","new_token_look":"object"}`, "dê um nome"},
+		// O TAMANHO INVÁLIDO mudou de página: a tira escolhe a CATEGORIA desde a
+		// ALE-423, e quem a conhece é a escada da Tab. 5-4. A recusa cita o valor
+		// ofensor, que é o que serve a quem está no meio de uma sessão.
+		{"tamanho de nada", `{"from":{"X":1,"Y":1},"new_token_name":"Carroça","new_token_size":"Gigantesco","new_token_look":"object"}`, "Gigantesco"},
+		// O MATERIAL DE OBJETO não é o material ESPECIAL de um item de ficha
+		// (mitral é p166, madeira é p239) — colisão C10 do GLOSSARY.md.
+		{"material que não dá RD", `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":"Grande","new_token_look":"object","new_token_material":"mitral","new_token_hp":20}`, "mitral"},
+		{"ficha solta", `{"from":{"X":1,"Y":1},"new_token_name":"Falso herói","new_token_size":"Médio","new_token_look":"character"}`, "aparência"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -504,7 +510,7 @@ func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 
-	rec := f.requests(t, f.player, "POST", f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
+	rec := f.requests(t, f.player, "POST", f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":"Médio","new_token_look":"object"}`)
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça e levou %d, queria 403", rec.Code)
@@ -563,6 +569,69 @@ func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 	}
 }
 
+// A PORTA QUE O MESTRE PÕE JÁ CHEGA ATACÁVEL (Tab. 5-4, p239).
+//
+// Integração e não unitário porque o que pode quebrar aqui é a COMPOSIÇÃO: a
+// tira escreve seis sinais, o gesto manda cinco, o handler valida três e o
+// domínio deriva um. Um teste de `tokenFromLooseDraft` provaria a montagem e
+// nada sobre o fio.
+//
+// O FOOTPRINT é a asserção que mais paga: ele não viaja no corpo, e sai 2 porque
+// o motor o derivou do tamanho Grande. Era ele que o mestre escolhia antes, e é
+// a peça do desenho que a Defesa não conseguia carregar.
+func TestTheObjectTheGmPlacesArrivesWithTheStatsOfTheBook(t *testing.T) {
+	f := newSceneFixture(t)
+	f.seedOpenBoard(t, "crypt")
+
+	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/nova",
+		`{"from":{"X":2,"Y":2},"new_token_name":"Porta da cripta","new_token_size":"Grande",`+
+			`"new_token_look":"object","new_token_material":"madeira","new_token_hp":20}`)
+
+	board := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
+	if len(board.Tokens) != 1 {
+		t.Fatalf("o mapa ficou com %d peças; a resposta foi:\n%s", len(board.Tokens), firstRows(body, 6))
+	}
+	porta := board.Tokens[0]
+	if porta.Size != "Grande" || porta.Material != "madeira" {
+		t.Errorf("a porta chegou como %q de %q, e a tira disse Grande de madeira",
+			porta.Size, porta.Material)
+	}
+	if porta.HpMax != 20 || porta.HpCurrent != 20 {
+		t.Errorf("a porta chegou com %d/%d PV, e a Tab. 5-4 dá 20 inteiros",
+			porta.HpCurrent, porta.HpMax)
+	}
+	if porta.Footprint != 2 {
+		t.Errorf("a porta Grande foi desenhada com lado %d — o motor deriva 2 do tamanho "+
+			"(p107), e o lado não viaja no fio", porta.Footprint)
+	}
+	if !porta.HasObjectStats() {
+		t.Errorf("a porta não se diz atacável, e é contra ela que a manobra quebrar rola")
+	}
+}
+
+// CENÁRIO SEM PV continua sendo cenário, e isso é estado legítimo.
+//
+// A mancha de musgo, a marca no chão: o mestre põe para a mesa VER, e o livro
+// não manda atacar o que não tem PV. Sem este caso, exigir material e PV de toda
+// peça de objeto passaria despercebido — e o mestre teria de dizer de que
+// material é feita uma sombra.
+func TestSceneryWithoutHitPointsIsAcceptedAndIsNotAttackable(t *testing.T) {
+	f := newSceneFixture(t)
+	f.seedOpenBoard(t, "crypt")
+
+	f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas/nova",
+		`{"from":{"X":0,"Y":0},"new_token_name":"Musgo","new_token_size":"Médio",`+
+			`"new_token_look":"object","new_token_material":"","new_token_hp":0}`)
+
+	board := boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab))
+	if len(board.Tokens) != 1 {
+		t.Fatalf("o musgo não entrou no mapa: %d peças", len(board.Tokens))
+	}
+	if board.Tokens[0].HasObjectStats() {
+		t.Errorf("o musgo, sem material e sem PV, se diz atacável")
+	}
+}
+
 // A PEÇA DE CENÁRIO SE DESENHA DIFERENTE, e é aqui que o `Kind` ganha leitor.
 //
 // A distinção é a FORMA e não a cor: redondo é criatura em toda mesa de VTT, e
@@ -572,8 +641,8 @@ func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	base := f.tableUrl() + "/tabuleiro/pecas/nova"
-	f.posts(t, f.gm, base, `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
-	f.posts(t, f.gm, base, `{"from":{"X":5,"Y":5},"new_token_name":"Lobo","new_token_size":1,"new_token_look":"npc"}`)
+	f.posts(t, f.gm, base, `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":"Médio","new_token_look":"object"}`)
+	f.posts(t, f.gm, base, `{"from":{"X":5,"Y":5},"new_token_name":"Lobo","new_token_size":"Médio","new_token_look":"npc"}`)
 
 	html := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 

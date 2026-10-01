@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"t20engine/domain/board"
+	"t20engine/domain/engine"
 	"t20engine/serve/web/ui"
 )
 
@@ -330,8 +331,9 @@ templ clipboardStrip(v BoardView) {
 		// `aria-live` porque copiar não navega e não move o foco: sem ele, quem
 		// não vê a tela clica em "copiar para colar" e nada é anunciado.
 		<span aria-live="polite" class="board-area-text">
-			<span aria-hidden="true">@ui.Icon("Copy", "size-4")
-</span>
+			<span aria-hidden="true">
+				@ui.Icon("Copy", "size-4")
+			</span>
 			<span data-text="$area_label + ' · ' + $area_phrase"></span>
 		</span>
 		<button
@@ -1584,9 +1586,9 @@ templ tokenEdit(v BoardView) {
 				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
 			/>
 		</div>
-		// O TAMANHO é uma lista fechada e não um número: o livro define 1, 2, 3 e 6
-		// (p107, Tab. 1-21), e não existe 4 nem 5. Um campo livre deixaria o mestre
-		// desenhar uma peça que nenhuma criatura tem.
+		// O TAMANHO é a CATEGORIA do livro (p107, Tab. 1-21) e não o lado em
+		// quadrados: o lado não distingue Minúsculo de Médio, e a Tab. 5-4 (p239)
+		// lhes dá Defesa 15 e 10. Quem desenha o lado é o motor, a cada mutação.
 		<div class="space-y-1">
 			<label for="token-size" class={ ui.FieldLabelClasses("muted", "block") }>Tamanho</label>
 			<select
@@ -1595,7 +1597,7 @@ templ tokenEdit(v BoardView) {
 				class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 			>
 				for _, t := range tokenSizes {
-					<option value={ fmt.Sprint(t.Side) }>{ t.Label }</option>
+					<option value={ t.ID }>{ t.Label }</option>
 				}
 			</select>
 		</div>
@@ -2133,50 +2135,123 @@ templ newPieceBar(v BoardView) {
 	<div
 		role="status"
 		data-show={ onIsTool(NewPieceTool) }
-		class="board-helper gap-1.5"
+		class="board-helper flex-col items-stretch gap-2"
 	>
-		<label class="flex items-center gap-1.5 text-xs">
-			<span class={ ui.SectionLabelClasses("muted", "") }>Nova peça</span>
-			<input
-				type="text"
-				data-bind="new_token_name"
-				placeholder="Porta da cripta"
-				aria-label="Nome da peça"
-				class="min-h-11 w-40 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm outline-none"
-			/>
-		</label>
-		// O TAMANHO é o do livro (p107, Tab. 1-21), e os quatro são os lados que
-		// ela produz. Botões e não um campo numérico: 4 e 5 não são tamanho de
-		// nada, e um campo livre convidaria a digitá-los para o servidor recusar.
-		for _, t := range piecesFootprints {
-			<button
-				type="button"
-				title={ t.Label + ": " + t.Side + " (p107)" }
-				aria-label={ "Tamanho " + t.Label }
-				data-attr:aria-pressed={ fmt.Sprintf("$new_token_size === %d ? 'true' : 'false'", t.Sides) }
-				data-class={ fmt.Sprintf("{'brush-on': $new_token_size === %d}", t.Sides) }
-				data-on:click={ fmt.Sprintf("$new_token_size = %d", t.Sides) }
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
-			>{ t.Side }</button>
-		}
-		// AS DUAS APARÊNCIAS NÃO SE SEPARAM, e isto é largura e não enfeite: a
-		// `board-helper` quebra linha, e a 390px sobram 308px porque o trilho
-		// come a esquerda. Soltos no fluxo, "Objeto" terminava uma linha e "NPC"
-		// começava a seguinte — e um par de escolha mútua partido ao meio lê
-		// como duas opções independentes.
-		<span role="group" aria-label="Aparência da peça" class="inline-flex shrink-0 items-center gap-1.5">
-			for _, a := range piecesLooks {
-				<button
-					type="button"
-					title={ a.Hint }
-					aria-label={ "Aparência: " + a.Label }
-					data-attr:aria-pressed={ fmt.Sprintf("$new_token_look === %q ? 'true' : 'false'", a.ID) }
-					data-class={ fmt.Sprintf("{'brush-on': $new_token_look === %q}", a.ID) }
-					data-on:click={ fmt.Sprintf("$new_token_look = %q", a.ID) }
-					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
-				>{ a.Label }</button>
-			}
-		</span>
-		<span class="text-xs text-muted-foreground">clique numa casa para pôr</span>
+		// A FAIXA DE CIMA é a IDENTIDADE da peça: o que ela é, para qualquer
+		// aparência. A de baixo é a REGRA, e só o objeto tem uma.
+		<div class="flex flex-wrap items-center gap-1.5">
+			<label class="flex items-center gap-1.5 text-xs">
+				<span class={ ui.SectionLabelClasses("muted", "") }>Nova peça</span>
+				<input
+					type="text"
+					data-bind="new_token_name"
+					placeholder="Porta da cripta"
+					aria-label="Nome da peça"
+					class="min-h-11 w-40 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm outline-none"
+				/>
+			</label>
+			// AS DUAS APARÊNCIAS NÃO SE SEPARAM, e isto é largura e não enfeite: a
+			// `board-helper` quebra linha, e a 390px sobram 308px porque o trilho
+			// come a esquerda. Soltos no fluxo, "Objeto" terminava uma linha e "NPC"
+			// começava a seguinte — e um par de escolha mútua partido ao meio lê
+			// como duas opções independentes.
+			<span role="group" aria-label="Aparência da peça" class="inline-flex shrink-0 items-center gap-1.5">
+				for _, a := range piecesLooks {
+					<button
+						type="button"
+						title={ a.Hint }
+						aria-label={ "Aparência: " + a.Label }
+						data-attr:aria-pressed={ fmt.Sprintf("$new_token_look === %q ? 'true' : 'false'", a.ID) }
+						data-class={ fmt.Sprintf("{'brush-on': $new_token_look === %q}", a.ID) }
+						data-on:click={ fmt.Sprintf("$new_token_look = %q", a.ID) }
+						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
+					>{ a.Label }</button>
+				}
+			</span>
+			// O TAMANHO é a CATEGORIA do livro e não mais o lado em quadrados: o
+			// lado não distingue Minúsculo de Médio, e a Tab. 5-4 lhes dá Defesa
+			// 15 e 10. Quem desenha o lado é o motor, a cada mutação da peça.
+			//
+			// A DEFESA sai do `dataset` da opção, renderizado aqui do Go: a escada
+			// tem UMA grafia, e um mapa repetido em JavaScript seria a segunda.
+			<label class="flex items-center gap-1.5 text-xs">
+				<span class={ ui.SectionLabelClasses("muted", "") }>Tamanho</span>
+				<select
+					data-bind="new_token_size"
+					data-on:change="$new_token_defense = Number(evt.target.selectedOptions[0].dataset.defense)"
+					aria-label="Tamanho da peça"
+					class="min-h-11 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm outline-none"
+				>
+					for _, t := range piecesSizes {
+						<option value={ t.ID } data-defense={ fmt.Sprint(t.Defense) }>{ t.ID + " · " + t.Side }</option>
+					}
+				</select>
+			</label>
+			<span class="ml-auto text-xs text-muted-foreground">clique numa casa para pôr</span>
+		</div>
+		// A FAIXA DA REGRA só existe para OBJETO: um NPC não é feito de madeira, e
+		// a Defesa dele vem do bloco e não do tamanho.
+		<div
+			data-show="$new_token_look === 'object'"
+			class="flex flex-wrap items-center gap-1.5 border-t border-grimorio-iron pt-2"
+		>
+			// OS ONZE DO LIVRO SÃO ATALHO, e a coluna da tabela se chama *Exemplo*:
+			// ela ilustra e não fecha. O braço de estátua que o livro não imprimiu
+			// também é objeto, e é por isso que os três campos continuam editáveis.
+			//
+			// Os três valores viajam no `dataset` da opção em vez de num mapa à
+			// parte, pela mesma razão da Defesa acima: uma grafia só.
+			<label class="flex items-center gap-1.5 text-xs">
+				<span class={ ui.SectionLabelClasses("muted", "hidden sm:inline") }>Do livro</span>
+				<select
+					data-on:change="evt.target.value && ($new_token_size = evt.target.selectedOptions[0].dataset.size, $new_token_material = evt.target.selectedOptions[0].dataset.material, $new_token_hp = Number(evt.target.selectedOptions[0].dataset.hp), $new_token_defense = Number(evt.target.selectedOptions[0].dataset.defense), $new_token_rd = Number(evt.target.selectedOptions[0].dataset.rd), $new_token_name = $new_token_name || evt.target.selectedOptions[0].text)"
+					aria-label="Exemplo da Tabela 5-4"
+					class="min-h-11 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm outline-none"
+				>
+					<option value="">— à mão —</option>
+					for _, e := range engine.ObjectExamplesOfTheBook() {
+						<option
+							value={ e.ID }
+							data-size={ e.Size }
+							data-material={ e.Material }
+							data-hp={ fmt.Sprint(e.HitPoints) }
+							data-defense={ fmt.Sprint(objectDefenseOf(e.Size)) }
+							data-rd={ fmt.Sprint(objectRdOf(e.Material)) }
+						>{ e.Name }</option>
+					}
+				</select>
+			</label>
+			<label class="flex items-center gap-1.5 text-xs">
+				<span class={ ui.SectionLabelClasses("muted", "hidden sm:inline") }>Material</span>
+				<select
+					data-bind="new_token_material"
+					data-on:change="$new_token_rd = Number(evt.target.selectedOptions[0].dataset.rd)"
+					aria-label="Material do objeto"
+					class="min-h-11 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm outline-none"
+				>
+					for _, m := range piecesMaterials {
+						<option value={ m.ID } data-rd={ fmt.Sprint(m.Rd) }>{ fmt.Sprintf("%s · RD %d", m.ID, m.Rd) }</option>
+					}
+				</select>
+			</label>
+			<label class="flex items-center gap-1.5 text-xs">
+				<span class={ ui.SectionLabelClasses("muted", "") }>PV</span>
+				<input
+					type="number"
+					min="1"
+					data-bind="new_token_hp"
+					aria-label="Pontos de vida do objeto"
+					class="min-h-11 w-16 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm tabular-nums outline-none"
+				/>
+			</label>
+			// A CONTA QUE O MESTRE NÃO ESCOLHE, e é esse o ponto: Defesa e RD são
+			// DERIVADAS do que ele escolheu, e mostrá-las aqui é o que impede o
+			// número inventado. PV zero quer dizer "cenário que não se ataca", e a
+			// faixa diz isso em vez de mostrar uma Defesa que não vale.
+			<span
+				class="inline-flex min-h-11 items-center rounded-sm bg-grimorio-panel px-2.5 font-mono text-xs tabular-nums text-grimorio-gold sm:ml-auto"
+				data-text="$new_token_hp > 0 ? `Defesa ${$new_token_defense} · RD ${$new_token_rd}` : 'sem PV: cenário que não se ataca'"
+			></span>
+		</div>
 	</div>
 }

@@ -44,6 +44,9 @@ func ParseTokenPatch(raw any) TokenPatch {
 		side := int(footprint)
 		patch.Footprint = &side
 	}
+	if size, ok := m["size"].(string); ok {
+		patch.Size = &size
+	}
 	if x, ok := wire.IntField(m, "x"); ok {
 		col := int(x)
 		patch.X = &col

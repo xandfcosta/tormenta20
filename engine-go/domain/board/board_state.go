@@ -59,6 +59,62 @@ type BoardToken struct {
 	// de acontecer, e um histórico convidaria a andar para trás na cena com um
 	// botão que não diz até onde vai.
 	CameFrom *engine.Square `json:"deOndeVeio,omitempty"`
+	// AS ESTATÍSTICAS DE OBJETO (Tab. 5-4, p239), e só peça de cenário as tem:
+	// um NPC não é feito de madeira, e a Defesa dele vem do bloco.
+	//
+	// `Size` é a CATEGORIA e não o `Footprint`, porque o footprint não consegue
+	// carregá-la: Minúsculo, Pequeno e Médio ocupam todos 1 quadrado e se
+	// defendem com 15, 12 e 10. Ela é a FONTE, e o `Footprint` passa a ser
+	// derivado dela — ver `keepTheFootprintDerivedFromSize`, que é o único lugar
+	// onde os dois se encontram.
+	//
+	// Defesa e RD NÃO moram aqui: são as duas escadas do `domain/engine`, e
+	// guardá-las na peça seria a segunda grafia de um número que o livro deriva.
+	Size     string `json:"size,omitempty"`
+	Material string `json:"material,omitempty"`
+	// HpMax zero quer dizer "sem estatísticas": o mestre pôs uma peça de cenário
+	// que é só cenário, e ela não pode ser atacada. É estado diferente de
+	// destruída, que é `HpCurrent <= 0` COM `HpMax > 0`.
+	HpMax     int `json:"hpMax,omitempty"`
+	HpCurrent int `json:"hpCurrent,omitempty"`
+}
+
+// HasObjectStats: a peça é objeto E o mestre lhe deu os números da Tab. 5-4.
+//
+// Peça de cenário sem eles continua existindo e continua sendo só cenário — uma
+// mancha de musgo não se ataca. A pergunta tem nome porque três lugares a fazem,
+// e `HpMax > 0` espalhado seria a regra escrita três vezes.
+func (t BoardToken) HasObjectStats() bool {
+	return t.Kind == "object" && t.Size != "" && t.Material != "" && t.HpMax > 0
+}
+
+// IsDestroyed: "um objeto reduzido a 0 ou menos PV é destruído" (p239).
+func (t BoardToken) IsDestroyed() bool {
+	return t.HasObjectStats() && engine.ObjectIsDestroyed(t.HpCurrent)
+}
+
+// keepTheFootprintDerivedFromSize é a ÚNICA costura entre `Size` e `Footprint`.
+//
+// Ela roda no fim de toda mutação que mexe na peça, e não só na criação: o menu
+// da peça deixa o mestre trocar o lado dela depois, e sem isto uma porta
+// Colossal viraria 1×1 no mapa continuando a se defender com 0. O número da
+// tela e o número da regra discordando é o defeito que esta linha existe para
+// tornar impossível — e não um `if` em cada chamador, que é a mesma decisão
+// escrita quatro vezes.
+//
+// SEM RAMO POR `Kind`, e isso é correção e não economia: um NPC Grande também
+// ocupa 2×2 (p107), e a tira passou a perguntar a categoria para as duas
+// aparências. O que a protege de mexer em peça alheia é o `Size` VAZIO — a peça
+// que o `Populate` traz da fila não tem categoria, e sai daqui intocada.
+//
+// A primeira versão tinha o ramo E uma derivação igual no handler, e a sabotagem
+// que trocou a do handler por `Footprint: 1` não deixou nada vermelho: era a
+// mesma decisão escrita duas vezes, com só uma delas valendo.
+func keepTheFootprintDerivedFromSize(t *BoardToken) {
+	if t.Size == "" {
+		return
+	}
+	t.Footprint = engine.FootprintForSize(t.Size)
 }
 
 // BoardState é o tabuleiro vivo de uma sessão. Ausente (sem linha em
@@ -164,6 +220,7 @@ func AddToken(b *BoardState, t BoardToken, newID func() string) error {
 	if t.Footprint <= 0 {
 		t.Footprint = 1
 	}
+	keepTheFootprintDerivedFromSize(&t)
 	if err := AssertSaneCoords(t); err != nil {
 		return err
 	}
@@ -298,6 +355,11 @@ type TokenPatch struct {
 	Footprint *int    `json:"footprint"`
 	X         *int    `json:"x"`
 	Y         *int    `json:"y"`
+	// As da Tab. 5-4. `HpCurrent` entra por aqui porque é ele que o dano move.
+	Size      *string `json:"size"`
+	Material  *string `json:"material"`
+	HpMax     *int    `json:"hpMax"`
+	HpCurrent *int    `json:"hpCurrent"`
 }
 
 // UpdateToken aplica o patch. Não há borda para respeitar — só o guarda contra
@@ -336,6 +398,21 @@ func applyTokenPatch(t *BoardToken, patch TokenPatch) {
 	if patch.Y != nil {
 		t.Y = *patch.Y
 	}
+	if patch.Size != nil {
+		t.Size = *patch.Size
+	}
+	if patch.Material != nil {
+		t.Material = *patch.Material
+	}
+	if patch.HpMax != nil {
+		t.HpMax = *patch.HpMax
+	}
+	if patch.HpCurrent != nil {
+		t.HpCurrent = *patch.HpCurrent
+	}
+	// POR ÚLTIMO, e sempre: o patch pode ter trazido o tamanho, o footprint, ou
+	// os dois. Derivar aqui é o que faz a ordem dos `if` acima não importar.
+	keepTheFootprintDerivedFromSize(t)
 }
 
 // AssertSaneCoords recusa coordenada que só pode ter vindo de cliente quebrado.

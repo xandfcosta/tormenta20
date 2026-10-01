@@ -207,8 +207,25 @@ func ObjectMaterialsOfTheBook() []string {
 	return out
 }
 
-// objectSizesOfTheBook são os seis tamanhos, do menor para o maior — que é a
-// ordem da tabela e a INVERSA da Defesa.
+// SizesOfTheBook são as seis categorias de tamanho do livro (p107, Tab. 1-21),
+// da MENOR para a maior.
+//
+// Elas não são do capítulo 5: o tamanho é propriedade de toda criatura e de todo
+// objeto, e o `FootprintForSize` já as conhecia. Moram neste arquivo porque é
+// aqui que elas estão ENUMERADAS — a escada de Defesa da Tab. 5-4 é chaveada
+// exatamente por elas, e uma segunda lista dos mesmos seis nomes noutro arquivo
+// seria o par que diverge sozinho.
+//
+// Quem valida um tamanho que chegou do fio pergunta ao `ObjectDefense`, que
+// recusa com o valor ofensor; esta lista é para quem precisa OFERECÊ-LAS.
+//
+//	engine.SizesOfTheBook() // → [Minúsculo Pequeno Médio Grande Enorme Colossal]
+func SizesOfTheBook() []string {
+	return []string{"Minúsculo", "Pequeno", "Médio", "Grande", "Enorme", "Colossal"}
+}
+
+// objectSizesOfTheBook são os seis em forma NORMALIZADA, do menor para o maior —
+// é o que a recusa do `ObjectDefense` mostra.
 func objectSizesOfTheBook() []string {
 	out := make([]string, 0, len(defenseByObjectSize))
 	for size := range defenseByObjectSize {

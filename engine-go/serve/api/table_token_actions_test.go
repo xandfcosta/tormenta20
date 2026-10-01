@@ -317,29 +317,38 @@ func TestTheModesThatNeedALineRefuseALoosePiece(t *testing.T) {
 	}
 }
 
-// O livro define 1, 2, 3 e 6 (T20 p107, Tab. 1-21) — não existe 4 nem 5. O
-// número vem do cliente, e uma peça de lado 4 mentiria sobre quem o gabarito pega
-// e sobre onde cabe passar.
+// O diálogo edita a CATEGORIA do livro (p107, Tab. 1-21) e não mais o lado em
+// quadrados, e o valor vem do cliente.
+//
+// A TROCA É DA ALE-423: o lado não distingue Minúsculo de Médio, e a Tab. 5-4
+// (p239) lhes dá Defesa 15 e 10 — um menu que só sabe dizer "1×1" não consegue
+// mudar a Defesa de uma porta minúscula. E ele não pode voltar a mandar o lado:
+// a peça o deriva da categoria a cada mutação, então um patch de footprint seria
+// desfeito, e o mestre veria o diálogo fechar sem nada mudar.
 func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id + "/editar"
 
-	refusal := f.posts(t, f.gm, base, `{"token_name":"Ogro","token_size":4}`)
-	if !strings.Contains(refusal, "1, 2, 3 ou 6") {
-		t.Errorf("o lado 4 não foi recusado:\n%s", refusal)
+	refusal := f.posts(t, f.gm, base, `{"token_name":"Ogro","token_size":"Gigantesco"}`)
+	if !strings.Contains(refusal, "Gigantesco") {
+		t.Errorf("o tamanho inventado não foi recusado pelo nome:\n%s", refusal)
 	}
-	noName := f.posts(t, f.gm, base, `{"token_name":"  ","token_size":1}`)
+	noName := f.posts(t, f.gm, base, `{"token_name":"  ","token_size":"Médio"}`)
 	if !strings.Contains(noName, "precisa de um nome") {
 		t.Errorf("o nome vazio não foi recusado:\n%s", noName)
 	}
 	// E o caso positivo, sem o qual as duas recusas acima seriam verdade também
 	// numa rota que recusa tudo.
-	f.posts(t, f.gm, base, `{"token_name":"Ogro Capitão","token_size":2}`)
+	//
+	// O LADO é a asserção que paga: ele não viaja no corpo, e sai 2 porque o
+	// motor o derivou de "Grande". É a metade que a edição ganhou.
+	f.posts(t, f.gm, base, `{"token_name":"Ogro Capitão","token_size":"Grande"}`)
 	token := board.FindToken(nowBoard(t, f), id)
-	if token.Label != "Ogro Capitão" || token.Footprint != 2 {
-		t.Errorf("a edição válida não pegou: %q, lado %d", token.Label, token.Footprint)
+	if token.Label != "Ogro Capitão" || token.Size != "Grande" || token.Footprint != 2 {
+		t.Errorf("a edição válida não pegou: %q, tamanho %q, lado %d",
+			token.Label, token.Size, token.Footprint)
 	}
 }
 
