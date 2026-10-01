@@ -530,8 +530,19 @@ func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 	for _, chunk := range []string{
 		"Nova peça — o clique escolhe a casa",       // o botão do modo
 		"Nova peça — escolha a casa onde ela nasce", // a camada de clique
-		"new_token_name", // a tira
-		"Colossal",       // o tamanho do livro (p107)
+		// A TIRA, pela marca que SÓ ELA emite.
+		//
+		// Aqui estavam `"new_token_name"` e `"Colossal"`, e as duas eram
+		// satisfeitas por marcação ALHEIA: o primeiro é o `data-signals` da
+		// PÁGINA (o caso diz isso dezoito linhas abaixo, sobre o jogador), e o
+		// segundo vem do menu de tamanho da peça no `token_actions.go`. O caso
+		// ficou VERDE enquanto a `newPieceBar` não tinha chamador nenhum e nunca
+		// chegava à tela — o mestre ligava o modo, clicava numa casa, e o
+		// servidor recusava com "dê um nome à peça" porque o nome vinha vazio.
+		//
+		// `data-bind` é o que PRENDE o campo ao sinal, e não existe sem a tira.
+		`data-bind="new_token_name"`,
+		"Porta da cripta", // o placeholder dela
 	} {
 		if !strings.Contains(forGM, chunk) {
 			t.Errorf("o mestre não recebeu %q", chunk)

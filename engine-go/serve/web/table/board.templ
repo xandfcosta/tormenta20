@@ -16,7 +16,6 @@ import (
 //
 // DOM e não canvas: cada peça é um `<button>` com nome acessível que diz QUEM e
 // ONDE. Num canvas isso viraria um DOM espelho invisível, escrito duas vezes.
-
 templ boardTable(v BoardView) {
 	if !v.Open {
 		// As duas frases são DIFERENTES de propósito: o jogador não tem o que fazer
@@ -331,7 +330,8 @@ templ clipboardStrip(v BoardView) {
 		// `aria-live` porque copiar não navega e não move o foco: sem ele, quem
 		// não vê a tela clica em "copiar para colar" e nada é anunciado.
 		<span aria-live="polite" class="board-area-text">
-			<span aria-hidden="true">@ui.Icon("Copy", "size-4")</span>
+			<span aria-hidden="true">@ui.Icon("Copy", "size-4")
+</span>
 			<span data-text="$area_label + ' · ' + $area_phrase"></span>
 		</span>
 		<button
@@ -472,6 +472,11 @@ templ toolHelpers(v BoardView) {
 	<div class="board-helpers">
 		if v.GM {
 			@partyBar(v)
+			// A TIRA DA PEÇA AVULSA é do MESTRE, e por isso mora DENTRO deste
+			// bloco: o modo não existe para o jogador, e um formulário que
+			// vazasse para o HTML dele seria afordância de um gesto que o
+			// handler recusa com 403.
+			@newPieceBar(v)
 		}
 		@rulerReadingBox()
 		@previewReading()
@@ -781,8 +786,6 @@ templ moveProposed(v BoardView) {
 		</span>
 	</div>
 }
-
-
 
 // planToken é uma peça: monogram da ESPÉCIE, selo da INSTÂNCIA, e a barra de
 // PV quando há número para mostrar.
@@ -1824,8 +1827,8 @@ templ curtainButton(v BoardView) {
 			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.CurtainNotice),
 			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.CurtainNotice) }
 	>
-			@ui.Icon("Theater", "size-5")
-		</button>
+		@ui.Icon("Theater", "size-5")
+	</button>
 }
 
 // clickLayers são as superfícies que recebem o dedo, ENTRE os dois planos:
@@ -2156,17 +2159,24 @@ templ newPieceBar(v BoardView) {
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
 			>{ t.Side }</button>
 		}
-		for _, a := range piecesLooks {
-			<button
-				type="button"
-				title={ a.Hint }
-				aria-label={ "Aparência: " + a.Label }
-				data-attr:aria-pressed={ fmt.Sprintf("$new_token_look === %q ? 'true' : 'false'", a.ID) }
-				data-class={ fmt.Sprintf("{'brush-on': $new_token_look === %q}", a.ID) }
-				data-on:click={ fmt.Sprintf("$new_token_look = %q", a.ID) }
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
-			>{ a.Label }</button>
-		}
+		// AS DUAS APARÊNCIAS NÃO SE SEPARAM, e isto é largura e não enfeite: a
+		// `board-helper` quebra linha, e a 390px sobram 308px porque o trilho
+		// come a esquerda. Soltos no fluxo, "Objeto" terminava uma linha e "NPC"
+		// começava a seguinte — e um par de escolha mútua partido ao meio lê
+		// como duas opções independentes.
+		<span role="group" aria-label="Aparência da peça" class="inline-flex shrink-0 items-center gap-1.5">
+			for _, a := range piecesLooks {
+				<button
+					type="button"
+					title={ a.Hint }
+					aria-label={ "Aparência: " + a.Label }
+					data-attr:aria-pressed={ fmt.Sprintf("$new_token_look === %q ? 'true' : 'false'", a.ID) }
+					data-class={ fmt.Sprintf("{'brush-on': $new_token_look === %q}", a.ID) }
+					data-on:click={ fmt.Sprintf("$new_token_look = %q", a.ID) }
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
+				>{ a.Label }</button>
+			}
+		</span>
 		<span class="text-xs text-muted-foreground">clique numa casa para pôr</span>
 	</div>
 }
