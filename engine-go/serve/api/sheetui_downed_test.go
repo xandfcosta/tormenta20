@@ -23,7 +23,7 @@ func downFixture(t *testing.T) sceneFixture {
 		}
 	}
 	standing := poolsOf(t, f.s, f.charID).HpCurrent
-	if _, err := f.s.sessions.DeltaVitals(context.Background(), f.sessionID, entryID, live.PtrInt64(-(standing + 3)), nil); err != nil {
+	if _, err := f.s.sessions.DeltaVitals(context.Background(), f.sessionID, entryID, live.PtrInt64(-(standing + 3)), nil, 0); err != nil {
 		t.Fatalf("derrubar: %v", err)
 	}
 	if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil {

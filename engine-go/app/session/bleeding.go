@@ -105,7 +105,10 @@ func (st *Store) RollBleedingD6(ctx context.Context, sessionID int64, d6 int) (*
 		return nil, fmt.Errorf("%w (o d6)", ErrNoBleedingCheck)
 	}
 	before := st.hitPointsOf(ctx, check.CharacterID)
-	if _, err := st.DeltaCharacterVitals(ctx, sessionID, check.CharacterID, live.PtrInt64(int64(-d6)), nil); err != nil {
+	if _, err := st.DeltaCharacterVitals(ctx, sessionID, check.CharacterID, live.PtrInt64(int64(-d6)), nil,
+		// O d6 do sangramento é LETAL: quem sangra está perdendo sangue, e a
+		// p236 não dá a ele a piedade da arma.
+		0); err != nil {
 		return nil, fmt.Errorf("tirar o d6 de %s: %w", check.Label, err)
 	}
 	after := st.hitPointsOf(ctx, check.CharacterID)

@@ -30,6 +30,14 @@ type Pools struct {
 	HpCurrent int64
 	MpMax     int64
 	MpCurrent int64
+	// NonLethal é QUANTO do dano acumulado foi não letal (p236). Parcela do
+	// dano e não um poço: ver o `engine/nonlethal.go`.
+	//
+	// A REGRA DO GESTO só a ACRESCENTA — quem bate com arma Piedosa soma aqui.
+	// A subtração é do FUNIL, porque ela não depende do gesto: toda cura paga o
+	// não letal primeiro, e exigir que cada regra se lembrasse disso seria a
+	// mesma decisão escrita em seis lugares.
+	NonLethal int64
 }
 
 // PoolRule decide o atual novo a partir do poço derivado. É a regra do gesto, e
@@ -67,9 +75,14 @@ func ApplyToPools(
 func ApplyToLoadedPools(
 	ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO, rule PoolRule,
 ) (Pools, error) {
+	naoLetal, err := storedNonLethal(ctx, q, dto.ID)
+	if err != nil {
+		return Pools{}, err
+	}
 	before := Pools{
 		HpMax: dto.HpMax, HpCurrent: dto.HpCurrent,
 		MpMax: dto.MpMax, MpCurrent: dto.MpCurrent,
+		NonLethal: naoLetal,
 	}
 	after, err := rule(before)
 	if err != nil {
@@ -81,12 +94,13 @@ func ApplyToLoadedPools(
 	after.HpMax, after.MpMax = before.HpMax, before.MpMax
 	after.HpCurrent = WithinHitPoints(after.HpCurrent, after.HpMax)
 	after.MpCurrent = WithinPool(after.MpCurrent, after.MpMax)
+	after.NonLethal = nonLethalAfter(before, after)
 	dto.HpMax, dto.HpCurrent = after.HpMax, after.HpCurrent
 	dto.MpMax, dto.MpCurrent = after.MpMax, after.MpCurrent
 	if err := savePools(ctx, q, dto.ID, after); err != nil {
 		return after, err
 	}
-	return after, followTheHitPoints(ctx, q, dto, before.HpCurrent, after.HpCurrent)
+	return after, followTheHitPoints(ctx, q, dto, before.HpCurrent, after.HpCurrent, after.NonLethal)
 }
 
 // followTheHitPoints liga e desliga as condições que a mudança de PV pede
@@ -96,8 +110,10 @@ func ApplyToLoadedPools(
 // Ela mora NO FUNIL porque ele é o único caminho de escrita de vital (o
 // `TestEveryVitalWriteGoesThroughTheFunnel` o prende): pancada do mestre, dose,
 // descanso e conjuração passam todos aqui, e nenhum escapa das condições.
-func followTheHitPoints(ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO, before, after int64) error {
-	add, drop := engine.DyingConditionChange(before, after, dto.HpMax)
+func followTheHitPoints(
+	ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO, before, after, nonLethal int64,
+) error {
+	add, drop := engine.DyingConditionChangeWith(before, after, dto.HpMax, nonLethal)
 	if len(add) == 0 && len(drop) == 0 {
 		return nil
 	}
@@ -201,6 +217,9 @@ func savePools(ctx context.Context, q *sqlcgen.Queries, id int64, p Pools) error
 	// atual ao limiar; preso de novo aqui, contra zero, ele voltaria a mentir.
 	hpDamage := p.HpMax - WithinHitPoints(p.HpCurrent, p.HpMax)
 	mpSpent := WithinPool(p.MpMax-p.MpCurrent, p.MpMax)
+	if err := saveNonLethal(ctx, q, id, p.NonLethal); err != nil {
+		return err
+	}
 	saved, err := storedDamage(ctx, q, id)
 	if err != nil {
 		return err
@@ -238,4 +257,55 @@ func storedDamage(
 		return damage, fmt.Errorf("reler o dano da ficha %d: %w", id, err)
 	}
 	return damage, nil
+}
+
+// nonLethalAfter resolve a parcela não letal depois do gesto.
+//
+// DUAS regras, e a primeira é a da p236: toda CURA paga o não letal primeiro.
+// Ela mora aqui e não em cada `PoolRule` porque não depende do gesto — curar é
+// curar, venha de poção, descanso ou magia.
+//
+// A segunda é um TETO: a parcela nunca passa do dano total. Sem ele, curar até
+// o PV cheio deixaria um não letal pendurado sobre dano que não existe mais, e
+// o `lethalHp` daria PV de brinde ao próximo golpe.
+func nonLethalAfter(before, after Pools) int64 {
+	if curado := after.HpCurrent - before.HpCurrent; curado > 0 {
+		resta, _ := engine.HealingSpends(curado, before.NonLethal, 0)
+		return resta
+	}
+	// O `WithinPool` é o clamp da casa, e usá-lo aqui não é só estilo: um
+	// `min(max(…))` escrito à mão é a SEGUNDA GRAFIA de "prenda este vital na
+	// faixa dele", e o `TestNoSecondSpellingOfTheVitalClamp` o reprova por
+	// nome. A faixa da parcela é 0 até o dano total.
+	return WithinPool(after.NonLethal, WithinPool(after.HpMax-after.HpCurrent, after.HpMax))
+}
+
+// storedNonLethal lê a parcela gravada. Ausência de linha é ZERO, como no
+// `character_damage`.
+func storedNonLethal(ctx context.Context, q *sqlcgen.Queries, id int64) (int64, error) {
+	amount, err := q.GetNonLethalDamage(ctx, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, fmt.Errorf("ler o dano não letal da ficha %d: %w", id, err)
+	}
+	return amount, nil
+}
+
+// saveNonLethal grava a parcela, e APAGA a linha quando ela zera — mesma regra
+// do `character_damage`: só quem tem registro precisa de linha.
+func saveNonLethal(ctx context.Context, q *sqlcgen.Queries, id, amount int64) error {
+	if amount <= 0 {
+		if err := q.ClearNonLethalDamage(ctx, id); err != nil {
+			return fmt.Errorf("apagar o dano não letal da ficha %d: %w", id, err)
+		}
+		return nil
+	}
+	if err := q.SaveNonLethalDamage(ctx, sqlcgen.SaveNonLethalDamageParams{
+		Characterid: id, Amount: amount,
+	}); err != nil {
+		return fmt.Errorf("gravar o dano não letal da ficha %d: %w", id, err)
+	}
+	return nil
 }

@@ -206,3 +206,33 @@ func TestTheAttackLineStaysTheSameWithoutSituations(t *testing.T) {
 		t.Errorf("sem situação a prosa veio %q, e ela tem de não existir", motivo)
 	}
 }
+
+// O DANO NÃO LETAL É DITO, porque ele muda o que a mesa faz com o número.
+//
+// "9 de dano" e "9 de dano não letal" levam a mesas diferentes: o segundo
+// derruba e não mata (p236), e o mestre que não souber vai pedir um teste de
+// Constituição que a regra não manda fazer.
+//
+// Ele entra na CONTA e não na prosa das situações, ao contrário da Tabela 5-3:
+// é uma qualificação do DANO, e fica colado nele.
+func TestTheAttackLineSaysWhenTheDamageIsNonLethal(t *testing.T) {
+	line := attackLine(live.PendingAttack{
+		Roll: 15, Total: 20, Defense: 13, Hit: true,
+		Dice: []int{6}, Faces: 8, RawDamage: 9, Damage: 9, NonLethal: 9,
+	})
+	// O ESPERADO USA A MESMA CONSTANTE porque o espaço entre as palavras é
+	// INQUEBRÁVEL — escrevê-lo à mão aqui daria um teste que passa com o espaço
+	// comum, que é exatamente o que o olho reprovou a 390px.
+	if line != "20 vs 13 · 1d8+3 (6) = 9 de dano "+nonLethalWords {
+		t.Errorf("a linha = %q, e a p236 faz do não letal outra coisa", line)
+	}
+	// E O DANO COMUM não ganha palavra nenhuma: "não letal" só aparece onde há
+	// regra, senão a mesa procura o que mudou.
+	comum := attackLine(live.PendingAttack{
+		Roll: 15, Total: 20, Defense: 13, Hit: true,
+		Dice: []int{6}, Faces: 8, RawDamage: 9, Damage: 9,
+	})
+	if comum != "20 vs 13 · 1d8+3 (6) = 9 de dano" {
+		t.Errorf("a linha do dano comum = %q", comum)
+	}
+}

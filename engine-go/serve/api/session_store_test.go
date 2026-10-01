@@ -267,7 +267,7 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	}
 	entryID := stateOf(t, store, sid).Initiative[0].ID
 
-	snap, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(-8), live.PtrInt64(-2))
+	snap, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(-8), live.PtrInt64(-2), 0)
 	if err != nil {
 		t.Fatalf("delta: %v", err)
 	}
@@ -305,7 +305,7 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	}
 	entryID := stateOf(t, store, sid).Initiative[0].ID
 
-	if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(-8), nil); err != nil {
+	if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(-8), nil, 0); err != nil {
 		t.Fatalf("delta: %v", err)
 	}
 
@@ -430,7 +430,7 @@ func TestWithoutManaTheSustainedAbilityEnds(t *testing.T) {
 	entryID := stateOf(t, store, sid).Initiative[0].ID
 	// Zera o mana pelo caminho de verdade, e o CONTROLE vem junto: sem isto o
 	// teste mediria uma ficha cheia e passaria verde sobre nada.
-	if _, err := store.DeltaVitals(context.Background(), sid, entryID, nil, live.PtrInt64(-99)); err != nil {
+	if _, err := store.DeltaVitals(context.Background(), sid, entryID, nil, live.PtrInt64(-99), 0); err != nil {
 		t.Fatalf("zerar o mana: %v", err)
 	}
 	if mp := poolsOf(t, s, charID).MpCurrent; mp != 0 {
@@ -485,7 +485,7 @@ func TestFallingToZeroHitPointsEndsTheSustainedAbilities(t *testing.T) {
 	// A EXATAMENTE 0: desde a ALE-366 o PV desce abaixo de zero, e uma pancada
 	// enorme mataria — o caso aqui é cair, não morrer.
 	standing := poolsOf(t, s, charID).HpCurrent
-	if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(-standing), nil); err != nil {
+	if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(-standing), nil, 0); err != nil {
 		t.Fatalf("derrubar: %v", err)
 	}
 	// O CONTROLE, e ele é a metade que importa: o mana tem de estar CHEIO,

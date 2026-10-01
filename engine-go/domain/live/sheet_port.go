@@ -21,10 +21,14 @@ import "context"
 // sinal de "é dano?", convidaria a confundir as duas — que foi o defeito que a
 // ALE-122 registrou.
 type SheetVitals interface {
-	// ApplyDelta move PV/PM por uma diferença. Devolve os dois valores que a
+	// ApplyDelta move PV/PM por uma diferença, e `nonLethal` diz quanto da
+	// PERDA não conta para sangrar nem para morrer (p236). Zero no caso comum —
+	// só a arma Piedosa e os oito irmãos dela produzem dano não letal.
+	//
+	// Devolve os dois valores que a
 	// entrada da fila deve espelhar, INCLUSIVE o que não mudou: espelhar só o
 	// que mudou faria o rastreador mostrar um número que a ficha não tem.
-	ApplyDelta(ctx context.Context, charID int64, hpDelta, mpDelta *int64) (*int64, *int64, error)
+	ApplyDelta(ctx context.Context, charID int64, hpDelta, mpDelta *int64, nonLethal int64) (*int64, *int64, error)
 
 	// ApplyAbsolute grava PV/PM totais. Não drena pool temporário.
 	ApplyAbsolute(ctx context.Context, charID int64, hpCurrent, mpCurrent *int64) (*int64, *int64, error)

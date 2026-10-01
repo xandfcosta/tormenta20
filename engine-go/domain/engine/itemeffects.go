@@ -312,6 +312,11 @@ func targetKey(t ModifierTarget) string {
 		return "attack:" + t.Scope
 	case "damage":
 		return "damage:" + t.Scope
+	case "nonLethalDamage":
+		// ESCOPO NA CHAVE porque a propriedade é da ARMA e não do personagem: a
+		// Piedosa (p336) torna não letal o dano DELA, e um herói que carregue
+		// uma adaga Piedosa não soca ninguém com piedade.
+		return "nonLethalDamage:" + t.Scope
 	case "critRange":
 		return "critRange"
 	case "critMult":

@@ -219,7 +219,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		Roll: out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
 		Hit: out.Hit, Critical: out.Critical,
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
-		Damage: out.Damage, ByUserID: who.ID,
+		Damage: out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err
