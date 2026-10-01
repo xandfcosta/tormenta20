@@ -41,11 +41,26 @@ func TestTheManeuverRidesTheSamePendingAsTheStrike(t *testing.T) {
 		t.Errorf("a manobra veio com %d de dano e %d dados, e a p234 diz que ela não "+
 			"causa dano", pending.Damage, len(pending.Dice))
 	}
-	// A COMPARAÇÃO tem os dois lados: sem o total de quem se defende, a mesa lê
-	// um número sozinho e não tem como julgar o veredicto.
-	if pending.Total == 0 || pending.Maneuver.Opposed == 0 {
-		t.Errorf("os dois lados do teste oposto vieram %d vs %d, e nenhum pode ser zero "+
-			"num d20 somado ao Luta", pending.Total, pending.Maneuver.Opposed)
+	// A COMPARAÇÃO tem os dois lados: sem o de quem se defende, a mesa lê um
+	// número sozinho e não tem como julgar o veredicto.
+	//
+	// O sentinela é o d20 NATURAL e não o total, e isso é conserto: o total
+	// pode ser zero DE VERDADE — o arcanista do caso não tem proficiência com
+	// espada longa e ataca com −5 (p142), então um d20 de 5 dá exatamente zero.
+	// Com o total como sentinela, este caso reprovava uma vez a cada vinte
+	// corridas dizendo que o campo não fora preenchido, e ele fora.
+	if pending.Roll < 1 || pending.Roll > 20 {
+		t.Errorf("o d20 de quem tentou a manobra veio %d, e um d20 vai de 1 a 20",
+			pending.Roll)
+	}
+	if r := pending.Maneuver.OpposedRoll; r < 1 || r > 20 {
+		t.Errorf("o d20 de quem se defendeu veio %d, e um d20 vai de 1 a 20", r)
+	}
+	// E os totais são a CONTA dos naturais: é isto que prende os dois lados sem
+	// depender de nenhum deles ser diferente de zero.
+	if pending.Total-pending.Roll == 0 && pending.Maneuver.Opposed-pending.Maneuver.OpposedRoll == 0 {
+		t.Error("os dois lados somaram bônus ZERO ao d20, e os dois têm Luta na ficha — " +
+			"o `ManeuverSide.Bonus` não chegou")
 	}
 
 	// E ELA GASTA A PADRÃO pelo mesmo verbo do golpe: manobra é ação de agredir.
