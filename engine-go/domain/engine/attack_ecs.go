@@ -92,11 +92,17 @@ type absorbedTally struct{ Absorbed, Final int }
 type attackFault struct{ Err error }
 
 func attackSystems(
-	card WeaponCard, target AttackTarget, d20 int, rollDie func(faces int) (int, error),
+	card WeaponCard, target AttackTarget, situations []SpecialSituation,
+	d20 int, rollDie func(faces int) (int, error),
 ) []ecs.System {
 	return []ecs.System{
+		spawnTheSituations(situations),
+		dropWhatDoesNotReachThisWeapon(card),
+		forbidTheAttackIfAnyoneSaysSo,
+		tallyTheSituations,
 		judgeTheHit(card, target, d20),
 		judgeTheCritical(card, target, d20),
+		undoTheHitOnConcealment(rollDie),
 		spawnTheDamageParcels(card),
 		dropEverythingIfItMissed,
 		multiplyTheWeaponDice,
@@ -125,14 +131,24 @@ func attackSystems(
 // Defesa alta, e nada acusava.
 func judgeTheHit(card WeaponCard, target AttackTarget, d20 int) ecs.System {
 	return func(w *ecs.World) {
-		total := d20 + card.Attack
+		// A Tabela 5-3 já somou, e ela entra nos DOIS lados: a posição elevada
+		// no ataque, a cobertura na Defesa (p239).
+		situations := resourceOf[situationTally](w)
+		total := d20 + card.Attack + situations.Attack
+		defense := target.Defense + situations.Defense
+		setResource(w, effectiveDefense{Value: defense})
 		setResource(w, hitVerdict{
 			Roll:  d20,
 			Total: total,
-			Hit:   d20 == 20 || (d20 != 1 && total >= target.Defense),
+			Hit:   d20 == 20 || (d20 != 1 && total >= defense),
 		})
 	}
 }
+
+// effectiveDefense é a Defesa que ESTE ataque enfrentou, depois da Tabela 5-3.
+// Ela viaja até a mesa porque "errei por 1" e "errei por 1 porque ele está
+// atrás da carroça" são leituras diferentes do mesmo número.
+type effectiveDefense struct{ Value int }
 
 // judgeTheCritical decide o crítico, e só depois do acerto.
 //
@@ -322,6 +338,7 @@ func outcomeFromWorld(w *ecs.World) AttackOutcome {
 		Roll:      hit.Roll,
 		Total:     hit.Total,
 		Hit:       hit.Hit,
+		Defense:   resourceOf[effectiveDefense](w).Value,
 		Critical:  resourceOf[criticalVerdict](w).Critical,
 		RawDamage: resourceOf[rawTally](w).Raw,
 		Absorbed:  resourceOf[absorbedTally](w).Absorbed,
