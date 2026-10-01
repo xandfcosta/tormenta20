@@ -645,6 +645,7 @@ pergunta não é a mesma.
 | **resolução** (`resolve_ecs.go`) | o TERMO | quanto vale `defense`, e por quê? |
 | **derivação** (`derive_ecs.go`) | a FICHA | qual é o número final? |
 | **ataque** (`attack_ecs.go`) | a PARCELA DE DANO | de que se soma este dano, e o que ficou de fora? |
+| **situação especial** (`special_situations_ecs.go`) | a LINHA da Tabela 5-3 | o que a cena em volta faz com este ataque? |
 | **redação do tabuleiro** (`board_ecs.go`) | a PEÇA | quem olha daqui enxerga isto? |
 | **ocupação do plano** (`board_occupancy_ecs.go`) | a PEÇA | que quadrado está tomado, e quem já tem peça na mesa? |
 | decomposição (`breakdowns.go`) | — | como se explica o número na tela? |

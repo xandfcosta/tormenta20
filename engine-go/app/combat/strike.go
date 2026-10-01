@@ -222,7 +222,7 @@ func (s Strike) proposeManeuver(
 		AttackerEntryID: attackerEntry.ID, TargetEntryID: target.ID, Weapon: weapon.Name,
 		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID,
 		Maneuver: &live.ManeuverRoll{
-			Kind: out.Kind, Opposed: out.DefenderTotal,
+			Kind: out.Kind, OpposedRoll: out.DefenderRoll, Opposed: out.DefenderTotal,
 			Margin: out.Margin, Won: out.Won, AnotherRoll: out.Reroll,
 			Imposes: out.Imposes,
 		},

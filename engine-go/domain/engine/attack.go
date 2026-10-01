@@ -56,6 +56,11 @@ type AttackOutcome struct {
 	Total    int  `json:"total"`    // d20 + bônus de ataque
 	Hit      bool `json:"hit"`      //
 	Critical bool `json:"critical"` //
+	// Defense é a Defesa que ESTE ataque enfrentou, depois da Tabela 5-3 — ela
+	// não é a da ficha quando o alvo está sob cobertura (p239). Viaja porque
+	// "errei por 1" e "errei por 1 porque ele está atrás da carroça" são
+	// leituras diferentes do mesmo número.
+	Defense int `json:"defense"`
 	// Dice são as rolagens de dano na ordem, já na quantidade que o crítico
 	// pediu. Vazio quando o ataque erra: quem erra não rola dano.
 	Dice []int `json:"dice"`
@@ -79,7 +84,25 @@ type AttackOutcome struct {
 func ResolveAttack(
 	card WeaponCard, target AttackTarget, d20 int, rollDie func(faces int) (int, error),
 ) (AttackOutcome, error) {
-	w := attackWorld(card, target, d20, rollDie)
+	return ResolveAttackUnder(card, target, nil, d20, rollDie)
+}
+
+// ResolveAttackUnder é o ataque com as SITUAÇÕES ESPECIAIS da Tabela 5-3 (p239)
+// que valem agora — a cobertura do alvo, a posição elevada do atacante, o
+// flanqueio.
+//
+// Ela é a função de verdade e o `ResolveAttack` é o caso sem situação nenhuma,
+// que continua existindo porque é o caso COMUM: uma mesa sem tabuleiro ataca
+// assim, e os casos do livro são escritos assim.
+//
+// @example ResolveAttackUnder(carta, AttackTarget{Defense: 15},
+//
+//	[]SpecialSituation{TargetUnderLightCover}, 19, rolar)
+func ResolveAttackUnder(
+	card WeaponCard, target AttackTarget, situations []SpecialSituation,
+	d20 int, rollDie func(faces int) (int, error),
+) (AttackOutcome, error) {
+	w := attackWorld(card, target, situations, d20, rollDie)
 	out := outcomeFromWorld(w)
 	if fault, has := ecs.Get[attackFault](w, theResource(w)); has {
 		return out, fault.Err
@@ -91,10 +114,11 @@ func ResolveAttack(
 // porque os guardas precisam do MUNDO e não da conta: o que a fatia comprou —
 // a parcela suprimida que continua lá — não aparece na saída.
 func attackWorld(
-	card WeaponCard, target AttackTarget, d20 int, rollDie func(faces int) (int, error),
+	card WeaponCard, target AttackTarget, situations []SpecialSituation,
+	d20 int, rollDie func(faces int) (int, error),
 ) *ecs.World {
 	w := ecs.NewWorld()
 	ecs.Set(w, w.Spawn(), theAttackResource{})
-	ecs.Run(w, attackSystems(card, target, d20, rollDie)...)
+	ecs.Run(w, attackSystems(card, target, situations, d20, rollDie)...)
 	return w
 }

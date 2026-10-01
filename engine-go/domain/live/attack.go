@@ -71,8 +71,16 @@ type PendingAttack struct {
 type ManeuverRoll struct {
 	// Kind é a manobra do livro: agarrar, derrubar, desarmar, empurrar, quebrar.
 	Kind string `json:"kind"`
-	// Opposed é o total de quem se defende, já com o Luta dele.
-	Opposed int `json:"opposed"`
+	// OpposedRoll é o d20 NATURAL de quem se defende, e Opposed é o total dele
+	// já com o Luta.
+	//
+	// Os dois viajam porque a mesa lê a CONTA: "14 (d20 8 +6) contra 12 (d20 4
+	// +8)" diz quem teve sorte e quem tem perícia, e dois totais sozinhos não.
+	// O natural também é o único sentinela honesto para "este lado foi
+	// rolado" — um TOTAL pode ser zero de verdade, e é: um arcanista sem
+	// proficiência na espada ataca com −5 (p142), e um d20 de 5 dá zero.
+	OpposedRoll int `json:"opposedRoll"`
+	Opposed     int `json:"opposed"`
 	// Margin é a diferença, e ela é REGRA: cinco pontos ou mais dão efeito extra
 	// ao derrubar e ao desarmar (p234). Negativa quando quem tentou perdeu.
 	Margin int  `json:"margin"`
