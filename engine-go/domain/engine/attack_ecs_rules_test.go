@@ -61,7 +61,7 @@ func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 	elevado := attackWorld(card, target, []SpecialSituation{AttackerOnHigherGround}, 12, fixedDice(t, 8))
 	disparo := attackWorld(arco, target, []SpecialSituation{AttackerFlanking}, 12, fixedDice(t, 8))
 	proibido := attackWorld(card, target, []SpecialSituation{TargetUnderTotalCover}, 20, noDice(t))
-	camuflado := attackWorld(card, target, []SpecialSituation{TargetUnderTotalConcealment}, 12, fixedDice(t, 10))
+	camuflado := attackWorld(card, target, []SpecialSituation{TargetUnderTotalConcealment}, 12, fixedDice(t, 3))
 
 	conferencias := []struct {
 		sistema string
@@ -92,7 +92,7 @@ func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 			return has
 		}},
 		{"undoTheHitOnConcealment", camuflado, func(w *ecs.World) bool {
-			// d100 = 10 cai na faixa 1 a 50 da camuflagem total: o acerto que
+			// d10 = 3 cai na faixa "1 a 5" da camuflagem total (p239): o acerto que
 			// havia é DESFEITO, e é o único sistema do ataque que faz isso.
 			return !resourceOf[hitVerdict](w).Hit
 		}},

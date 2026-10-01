@@ -19,8 +19,11 @@ import "t20engine/domain/ecs"
 type shiftsTheAttack struct{ Amount int }
 type shiftsTheDefense struct{ Amount int }
 
-// missChance é a faixa de d% que DESFAZ um acerto que já aconteceu. Ela é o
+// missChance é a faixa do 1d10 que DESFAZ um acerto que já aconteceu. Ela é o
 // mecanismo novo, e a única regra do motor que age depois do veredito.
+//
+// O campo é o resultado do DADO e não um percentual: 2 para a camuflagem leve
+// ("1 ou 2", p238) e 5 para a total ("1 a 5 no d10", p239).
 type missChance struct{ UpTo int }
 
 // forbidsTheAttack é a cobertura total. Separada do `shiftsTheDefense` porque
@@ -127,7 +130,10 @@ func tallyTheSituations(w *ecs.World) {
 // escuridão, e faria a margem de ameaça mentir.
 //
 // Só a MAIOR faixa vale: "aplique apenas o mais severo" é a regra das condições
-// (p394) e aqui ela cai bem — duas camuflagens não dão 70%.
+// (p394) e aqui ela cai bem — duas camuflagens não somam as faixas.
+//
+// UM dado para as duas, e não um por situação: o livro diz "rola 1d10 junto com
+// o d20", singular, e um dado por camuflagem daria duas chances de errar.
 func undoTheHitOnConcealment(rollDie func(faces int) (int, error)) ecs.System {
 	return func(w *ecs.World) {
 		if !resourceOf[hitVerdict](w).Hit {
@@ -142,7 +148,7 @@ func undoTheHitOnConcealment(rollDie func(faces int) (int, error)) ecs.System {
 		if pior == 0 {
 			return
 		}
-		rolled, err := rollDie(100)
+		rolled, err := rollDie(10)
 		if err != nil {
 			setResource(w, attackFault{Err: err})
 			return
