@@ -38,14 +38,18 @@ type PendingAttack struct {
 	// Defense é a Defesa que o ataque enfrentou. Ela viaja porque a mesa lê a
 	// COMPARAÇÃO — "24 vs 17" é o que explica o veredicto, e sem o 17 a faixa
 	// afirma um acerto sem dizer contra o quê.
-	Defense   int   `json:"defense"`
-	Hit       bool  `json:"hit"`
-	Critical  bool  `json:"critical"`
-	Dice      []int `json:"dice,omitempty"`
-	Faces     int   `json:"faces,omitempty"`
-	RawDamage int   `json:"rawDamage"`
-	Absorbed  int   `json:"absorbed"`
-	Damage    int   `json:"damage"`
+	Defense int `json:"defense"`
+	// Situations são os rótulos da Tabela 5-3 que valeram neste ataque, e a
+	// faixa os escreve. Sem eles a mesa lê uma Defesa que a ficha não tem, ou
+	// um ataque que bateu a Defesa e errou (p238), e vai procurar o defeito.
+	Situations []string `json:"situations,omitempty"`
+	Hit        bool     `json:"hit"`
+	Critical   bool     `json:"critical"`
+	Dice       []int    `json:"dice,omitempty"`
+	Faces      int      `json:"faces,omitempty"`
+	RawDamage  int      `json:"rawDamage"`
+	Absorbed   int      `json:"absorbed"`
+	Damage     int      `json:"damage"`
 	// Maneuver é a conta da MANOBRA (p234), e ela é nula num golpe comum.
 	//
 	// Uma manobra É um ataque corpo a corpo — o livro abre a página dizendo isso

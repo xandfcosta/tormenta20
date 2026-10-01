@@ -37,6 +37,14 @@ templ attackProposed(v View) {
 					<span aria-hidden="true">·</span>
 				}
 				<span class="font-mono tabular-nums">{ v.Attack.Tally }</span>
+				// A SITUAÇÃO ESPECIAL FICA FORA DO MONOESPAÇADO, e o olho a 390px
+				// foi quem decidiu: dentro da conta, três situações partiam a linha
+				// em três e empurravam o dano para o fim. Em prosa ela é mais
+				// estreita, e a quebra cai entre o número e o motivo.
+				if v.Attack.Situations != "" {
+					<span aria-hidden="true">·</span>
+					<span>{ v.Attack.Situations }</span>
+				}
 			</p>
 			<span class="ml-auto flex items-center gap-2">
 				// CANCELAR é de quem rolou e do mestre. Oferecer a quem seria

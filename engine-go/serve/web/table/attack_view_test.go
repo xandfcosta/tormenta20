@@ -163,3 +163,46 @@ func TestTheManeuverLineSaysWhatTheConfirmWillDo(t *testing.T) {
 		t.Errorf("o empate prometeu condição: %q", empate)
 	}
 }
+
+// A DEFESA QUE NÃO É A DA FICHA DIZ POR QUÊ (ALE-423).
+//
+// É a mesma razão do "20 natural acerta" que esta linha já nomeia: um número
+// que DESMENTE o que a mesa sabe tem de vir com o motivo. O Goblin tem Defesa
+// 13 na ficha; se a faixa escreve "14 vs 18" e cala, a mesa procura o erro.
+func TestTheAttackLineNamesWhyTheDefenseChanged(t *testing.T) {
+	pa := live.PendingAttack{
+		Roll: 9, Total: 14, Defense: 18, Situations: []string{"cobertura leve"},
+	}
+	// A CONTA fica só com a aritmética — ela é monoespaçada, e prosa dentro
+	// dela parte a linha a 390px.
+	if line := attackLine(pa); line != "14 vs 18" {
+		t.Errorf("a conta = %q, e a prosa não entra nela", line)
+	}
+	if motivo := writtenSituations(pa); motivo != "cobertura leve" {
+		t.Errorf("o motivo = %q, e a Defesa 18 não é a da ficha — a mesa procura o erro "+
+			"se nada disser de onde ela veio", motivo)
+	}
+}
+
+// E A CAMUFLAGEM É O CASO QUE MAIS PRECISA, porque ela desmente a COMPARAÇÃO:
+// o total bateu a Defesa e o ataque errou mesmo assim (p238). Sem o motivo, a
+// faixa escreve "18 vs 13 · ERROU" e parece defeito.
+func TestTheAttackLineNamesTheConcealmentThatUndidTheHit(t *testing.T) {
+	motivo := writtenSituations(live.PendingAttack{
+		Roll: 18, Total: 18, Defense: 13, Situations: []string{"camuflagem leve"},
+	})
+	if !strings.Contains(motivo, "camuflagem leve") {
+		t.Errorf("o motivo = %q: o ataque bateu a Defesa e errou, e nada diz por quê", motivo)
+	}
+}
+
+// SEM SITUAÇÃO não há prosa: o separador só existe quando há o que dizer.
+func TestTheAttackLineStaysTheSameWithoutSituations(t *testing.T) {
+	pa := live.PendingAttack{Roll: 9, Total: 14, Defense: 17}
+	if line := attackLine(pa); line != "14 vs 17" {
+		t.Errorf("a linha = %q, e sem situação ela é a de sempre", line)
+	}
+	if motivo := writtenSituations(pa); motivo != "" {
+		t.Errorf("sem situação a prosa veio %q, e ela tem de não existir", motivo)
+	}
+}

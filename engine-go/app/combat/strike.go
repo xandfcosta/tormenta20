@@ -216,7 +216,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		// A DEFESA do provisório é a que o ataque ENFRENTOU, já com a Tabela
 		// 5-3 — não a da ficha. "Errei por 1" e "errei por 1 porque ele está
 		// atrás da carroça" são leituras diferentes do mesmo número.
-		Roll: out.Roll, Total: out.Total, Defense: out.Defense,
+		Roll: out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
 		Hit: out.Hit, Critical: out.Critical,
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
 		Damage: out.Damage, ByUserID: who.ID,

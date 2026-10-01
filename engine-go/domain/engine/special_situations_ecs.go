@@ -162,3 +162,21 @@ func undoTheHitOnConcealment(rollDie func(faces int) (int, error)) ecs.System {
 		setResource(w, criticalVerdict{})
 	}
 }
+
+// labelsOfTheSituations colhe a procedência do que SOBROU no mundo.
+//
+// Do que sobrou: a situação despachada por não alcançar a arma não é nomeada,
+// porque ela não agiu — escrever "flanqueando" numa linha de ataque à distância
+// diria que o +2 entrou.
+func labelsOfTheSituations(w *ecs.World) []string {
+	out := []string{}
+	ecs.Each(w, func(e ecs.Entity, label situationLabel) {
+		if w.Alive(e) {
+			out = append(out, label.Text)
+		}
+	})
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
