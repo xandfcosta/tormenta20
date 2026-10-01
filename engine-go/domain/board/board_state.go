@@ -115,22 +115,28 @@ type BoardState struct {
 	// existem as poucas que o mestre pintou.
 	//
 	// QUATRO LISTAS IRMÃS e não um `map[string][]Square`, e o motivo é de
-	// DOMÍNIO: as quatro não são variantes de uma coisa só. O difícil muda o
-	// CUSTO DO MOVIMENTO e é consumido por regra (`PathCost`, e o alcance que
-	// acende as casas); os outros três mudam Defesa, chance de falha e ataque, e
-	// hoje não são consumidos por nada — alimentam o OLHO. O ataque se resolve
-	// entre LINHAS DA FILA (`engine.ResolveAttack`, ALE-364) e não sabe em que
-	// casa as peças estão. Um mapa afirmaria que são intercambiáveis, e a
-	// Tabela 5-3 diz que não; e chave de string ainda convida ao erro mudo, com
-	// `"elevated"` contra `"elevado"` virando lista vazia sem estourar.
+	// DOMÍNIO: as quatro não são variantes de uma coisa só, e cada uma entra
+	// numa conta diferente. O difícil muda o CUSTO DO MOVIMENTO (`PathCost`, e
+	// o alcance que acende as casas); os outros três entram no ATAQUE, e cada
+	// um por um mecanismo seu — a cobertura desloca a Defesa, a camuflagem dá
+	// chance de falha em 1d10, e o elevado desloca o ataque de quem está NELA
+	// em vez de proteger quem está. Quem os traduz é o `SituationsBetween`.
 	//
-	// A assimetria é a parte que importa e a que um mapa esconderia: ela é
-	// exatamente o que quem for ligar o terreno ao ataque precisa ver.
+	// Um mapa afirmaria que são intercambiáveis, e a Tabela 5-3 diz que não; e
+	// chave de string ainda convida ao erro mudo, com `"elevated"` contra
+	// `"elevado"` virando lista vazia sem estourar.
+	//
+	// A assimetria é a parte que importa e a que um mapa esconderia.
 	//
 	// A repetição está contida no `listForKind`, que é o único lugar que sabe
 	// qual lista guarda qual espécie.
 	Difficult []engine.Square `json:"difficult,omitempty"`
-	// Cover: +5 na Defesa de quem está nela (p238). Trincheira, árvore estreita.
+	// Cover: +5 na Defesa de quem está nela (p239). Trincheira, árvore estreita.
+	//
+	// "De quem está NELA" é simplificação nossa e anterior à ALE-423: o livro
+	// dá cobertura a quem está "atrás de algo que bloqueia o ataque", e decide
+	// com uma linha entre cantos de quadrado (p239). A trincheira é exatamente
+	// a casa pintada; a árvore ENTRE dois é que fica de fora.
 	Cover []engine.Square `json:"cover,omitempty"`
 	// Concealment: 20% de chance de falha no ataque contra quem está nela
 	// (p238). Folhagens, moitas.
