@@ -12,6 +12,7 @@ import (
 	"fmt"
 
 	"t20engine/app"
+	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 )
@@ -76,7 +77,8 @@ type Tables interface {
 // que faltou. É a mesma linha da leitura da fila (ALE-373) — número errado em
 // silêncio é pior que gesto recusado.
 type Situations interface {
-	Between(ctx context.Context, sessionID int64, attackerEntry, targetEntry string) ([]engine.SpecialSituation, error)
+	Between(ctx context.Context, sessionID int64, attackerEntry string,
+		target board.AttackTargetOnTheBoard) ([]engine.SpecialSituation, error)
 }
 
 // Strike resolve e propõe ataques.
@@ -100,7 +102,8 @@ func (s Strike) specialSituations(ctx context.Context, req Request) ([]engine.Sp
 	if s.situations == nil {
 		return nil, nil
 	}
-	return s.situations.Between(ctx, req.SessionID, req.AttackerEntryID, req.TargetEntryID)
+	return s.situations.Between(ctx, req.SessionID, req.AttackerEntryID,
+		board.AttackTargetOnTheBoard{EntryID: req.TargetEntryID, TokenID: req.TargetObjectTokenID()})
 }
 
 // Request é o pedido de ataque.
@@ -111,6 +114,14 @@ type Request struct {
 	SessionID       int64
 	AttackerEntryID string
 	TargetEntryID   string
+	// TargetObject é a PEÇA DE OBJETO atacada (p239), e é a alternativa ao
+	// `TargetEntryID`: *"para objetos soltos, faça um ataque contra a Defesa do
+	// objeto"*, e um objeto não tem linha na fila porque não tem turno.
+	//
+	// Nula é o caso comum — ataque a criatura. Quem a monta é a cena, lendo a
+	// peça do tabuleiro; a REGRA (a Defesa pelo tamanho, a RD pelo material)
+	// fica aqui, que é onde o motor é chamado.
+	TargetObject *ObjectTarget
 	// Weapon é qual das armas empunhadas, por índice. Zero é a primeira, que é
 	// o caso de quase toda ficha.
 	Weapon int
@@ -135,17 +146,141 @@ type Request struct {
 	D20 *int
 }
 
-// Propose rola o ataque e guarda o provisório. Ninguém perde PV aqui: quem
-// confirma é o mestre, pela mesma divisa do movimento no tabuleiro.
-func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
+// strikerFor confere QUEM ATACA e monta o combatente dele.
+//
+// É tudo o que o golpe contra criatura e o golpe contra objeto dividem — a mesa
+// aberta, a linha da vez, a posse resolvida contra o banco, a ação padrão da
+// p233 e a arma empunhada. O que os separa vem depois, e é só o ALVO.
+//
+// Extraído quando o segundo chamador apareceu: as cinco conferências escritas
+// duas vezes seriam a próxima correção acertando uma e esquecendo a outra.
+func (s Strike) strikerFor(
+	ctx context.Context, role string, req Request,
+) (live.InitiativeEntry, Combatant, error) {
 	state, err := s.tables.State(ctx, req.SessionID)
+	if err != nil {
+		return live.InitiativeEntry{}, Combatant{}, err
+	}
+	if state == nil {
+		return live.InitiativeEntry{}, Combatant{}, fmt.Errorf(
+			"a sessão %d não tem mesa aberta: %w", req.SessionID, app.ErrNotFound)
+	}
+	attackerEntry, err := entryOf(state, req.AttackerEntryID)
+	if err != nil {
+		return live.InitiativeEntry{}, Combatant{}, err
+	}
+	// QUEM ROLA É O DONO, ou o mestre. Sem isto qualquer um na mesa rolaria o
+	// ataque do personagem alheio que estiver na vez — e o provisório sairia com
+	// o nome dele, que é pior do que não deixar atacar.
+	if role != "gm" && !req.OwnsAttacker {
+		return live.InitiativeEntry{}, Combatant{}, fmt.Errorf(
+			"%s não é seu personagem: %w", attackerEntry.Label, app.ErrRefused)
+	}
+	// AGREDIR É AÇÃO PADRÃO (p233), e a pergunta vem ANTES de rolar: um d20
+	// rolado por quem está atordoado, ou já gastou a padrão, é um provisório que
+	// a mesa vê e que nunca poderia ter acontecido.
+	if attackerEntry.CharacterID != nil {
+		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, engine.ActionStandard); err != nil {
+			return live.InitiativeEntry{}, Combatant{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
+		}
+	}
+	striker, err := s.combatants.Of(ctx, req.CampaignID, attackerEntry)
+	if err != nil {
+		return live.InitiativeEntry{}, Combatant{}, err
+	}
+	if len(striker.Weapons) == 0 {
+		return live.InitiativeEntry{}, Combatant{}, fmt.Errorf(
+			"%s não tem arma empunhada com que atacar: %w", striker.Label, app.ErrRefused)
+	}
+	return attackerEntry, striker, nil
+}
+
+// ObjectTarget é a peça de cenário que está sendo atacada, como a cena a lê.
+//
+// Ela traz tamanho e material CRUS e não Defesa e RD prontas: as duas são as
+// escadas da p239, e deixar a cena calculá-las poria a regra do livro numa
+// camada que não é dona dela.
+type ObjectTarget struct {
+	TokenID  string
+	Label    string
+	Size     string
+	Material string
+}
+
+// TargetObjectTokenID é a peça atacada, ou vazio quando o alvo é criatura.
+func (r Request) TargetObjectTokenID() string {
+	if r.TargetObject == nil {
+		return ""
+	}
+	return r.TargetObject.TokenID
+}
+
+// proposeAgainstObject resolve um golpe contra uma PEÇA DE CENÁRIO (p239).
+//
+// Ele é um irmão do `Propose` e não um ramo dentro dele, e a razão é o que ele
+// NÃO faz: não há linha da fila a achar, não há `CharacterID` do alvo, não há
+// condição a impor, e não há `Combatant` a montar — um objeto não tem ficha,
+// bloco nem verbete. Enfiar isso no `Propose` seria quatro `if` de "se o alvo
+// for peça, pule" espalhados por sete conferências.
+//
+// O que ele DIVIDE é o que importa dividir: a vez, a posse, a ação padrão e a
+// arma — e isso vem pelo `strikerFor`, que é o pedaço comum de verdade.
+func (s Strike) proposeAgainstObject(
+	ctx context.Context, who app.Caller, role string, req Request,
+) (live.PendingAttack, error) {
+	attackerEntry, striker, err := s.strikerFor(ctx, role, req)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	if state == nil {
-		return live.PendingAttack{}, fmt.Errorf("a sessão %d não tem mesa aberta: %w", req.SessionID, app.ErrNotFound)
+	alvo, err := engine.ObjectTarget(req.TargetObject.Size, req.TargetObject.Material)
+	if err != nil {
+		return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
 	}
-	attackerEntry, err := entryOf(state, req.AttackerEntryID)
+	d20, err := s.d20Of(req.D20)
+	if err != nil {
+		return live.PendingAttack{}, err
+	}
+	if req.Weapon < 0 || req.Weapon >= len(striker.Weapons) {
+		return live.PendingAttack{}, fmt.Errorf(
+			"%s empunha %d arma(s) e o pedido veio na %d: %w",
+			striker.Label, len(striker.Weapons), req.Weapon, app.ErrRefused)
+	}
+	weapon := striker.Weapons[req.Weapon]
+	situations, err := s.specialSituations(ctx, req)
+	if err != nil {
+		return live.PendingAttack{}, err
+	}
+	out, err := engine.ResolveAttackUnder(weapon, alvo, situations, d20, s.rollDie)
+	if err != nil {
+		return live.PendingAttack{}, err
+	}
+	pending := live.PendingAttack{
+		AttackerEntryID: attackerEntry.ID,
+		TargetTokenID:   req.TargetObject.TokenID,
+		TargetLabel:     req.TargetObject.Label,
+		Weapon:          weapon.Name,
+		Roll:            out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
+		Hit: out.Hit, Critical: out.Critical,
+		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
+		Damage: out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
+	}
+	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
+		return live.PendingAttack{}, err
+	}
+	return pending, nil
+}
+
+// Propose rola o ataque e guarda o provisório. Ninguém perde PV aqui: quem
+// confirma é o mestre, pela mesma divisa do movimento no tabuleiro.
+func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
+	if req.TargetObject != nil {
+		return s.proposeAgainstObject(ctx, who, role, req)
+	}
+	attackerEntry, striker, err := s.strikerFor(ctx, role, req)
+	if err != nil {
+		return live.PendingAttack{}, err
+	}
+	state, err := s.tables.State(ctx, req.SessionID)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
@@ -153,32 +288,8 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	// QUEM ROLA É O DONO, ou o mestre. Sem isto qualquer um na mesa rolaria o
-	// ataque do personagem alheio que estiver na vez — e o provisório sairia com
-	// o nome dele, que é pior do que não deixar atacar.
-	if role != "gm" && !req.OwnsAttacker {
-		return live.PendingAttack{}, fmt.Errorf(
-			"%s não é seu personagem: %w", attackerEntry.Label, app.ErrRefused)
-	}
 	if attackerEntry.ID == target.ID {
 		return live.PendingAttack{}, fmt.Errorf("ninguém ataca a si mesmo: %w", app.ErrRefused)
-	}
-	// AGREDIR É AÇÃO PADRÃO (p233), e a pergunta vem ANTES de rolar: um d20
-	// rolado por quem está atordoado, ou já gastou a padrão, é um provisório que
-	// a mesa vê e que nunca poderia ter acontecido.
-	if attackerEntry.CharacterID != nil {
-		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, engine.ActionStandard); err != nil {
-			return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
-		}
-	}
-
-	striker, err := s.combatants.Of(ctx, req.CampaignID, attackerEntry)
-	if err != nil {
-		return live.PendingAttack{}, err
-	}
-	if len(striker.Weapons) == 0 {
-		return live.PendingAttack{}, fmt.Errorf(
-			"%s não tem arma empunhada com que atacar: %w", striker.Label, app.ErrRefused)
 	}
 	if req.Weapon < 0 || req.Weapon >= len(striker.Weapons) {
 		return live.PendingAttack{}, fmt.Errorf(

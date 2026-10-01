@@ -1383,11 +1383,44 @@ templ tokenMenu(v BoardView, p boardToken) {
 				@ui.Icon("Hand", "size-4")
 			</button>
 		}
+		// O OBJETO APANHA, e desde a ALE-423 tem com o quê: *"para objetos
+		// soltos, faça um ataque contra a Defesa do objeto"* (p239). O verbo é o
+		// mesmo e a ROTA é outra, porque o alvo é de outra espécie — uma peça e
+		// não uma linha da fila.
+		//
+		// Só a peça com estatísticas e ainda de pé: cenário sem PV é estado
+		// legítimo, e oferecer o gesto sobre ele daria um botão que o servidor
+		// recusa.
+		if p.Attackable {
+			<button
+				type="button"
+				aria-label={ "Atacar " + p.Label }
+				title="Atacar com quem está na vez"
+				data-on:click={ attackOnObject(v, p.ID) }
+				class="board-token-verb"
+			>
+				@ui.Icon("Swords", "size-4")
+			</button>
+			// EM MOVIMENTO é o único estado da Tabela 5-3 que o mestre liga à
+			// mão, e tem de ser: *"se o objeto estiver em movimento, recebe +5 na
+			// Defesa"* (p239), e o tabuleiro não consegue derivá-lo — uma peça
+			// arrastada está sendo POSTA noutra casa, que não é a mesma coisa.
+			<button
+				type="button"
+				aria-label={ movingLabel(p) }
+				title={ movingLabel(p) }
+				aria-pressed={ fmt.Sprint(p.Moving) }
+				data-on:click={ tokenCommand(v, p.ID, "movimento") }
+				class={ "board-token-verb", templ.KV("brush-on", p.Moving) }
+			>
+				@ui.Icon("Wind", "size-4")
+			</button>
+		}
 		// ATACAR é o verbo do ALVO, e o menu é o do alvo: quem ataca é quem está
 		// na VEZ. Não há segundo clique onde caberia escolher o atacante, e o
 		// livro concorda — combate acontece em turnos, e age quem está na vez
 		// (p231). Ele só aparece sobre quem tem linha na fila e não está na vez:
-		// objeto de cenário não apanha, e ninguém se ataca.
+		// ninguém se ataca.
 		if p.EntryID != "" && !p.OnTurn {
 			<button
 				type="button"

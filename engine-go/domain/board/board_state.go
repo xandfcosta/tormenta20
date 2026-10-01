@@ -77,6 +77,13 @@ type BoardToken struct {
 	// destruída, que é `HpCurrent <= 0` COM `HpMax > 0`.
 	HpMax     int `json:"hpMax,omitempty"`
 	HpCurrent int `json:"hpCurrent,omitempty"`
+	// Moving: o objeto está EM MOVIMENTO, e "recebe +5 na Defesa" (p239).
+	//
+	// É um estado que só o MESTRE sabe — a carroça descendo a ladeira, o barril
+	// rolando. O tabuleiro não tem como derivá-lo: uma peça arrastada está sendo
+	// POSTA em outra casa, e isso não é a mesma coisa que estar em movimento
+	// durante o ataque.
+	Moving bool `json:"moving,omitempty"`
 }
 
 // HasObjectStats: a peça é objeto E o mestre lhe deu os números da Tab. 5-4.
@@ -357,6 +364,7 @@ type TokenPatch struct {
 	Y         *int    `json:"y"`
 	// As da Tab. 5-4. `HpCurrent` entra por aqui porque é ele que o dano move.
 	Size      *string `json:"size"`
+	Moving    *bool   `json:"moving"`
 	Material  *string `json:"material"`
 	HpMax     *int    `json:"hpMax"`
 	HpCurrent *int    `json:"hpCurrent"`
@@ -401,6 +409,9 @@ func applyTokenPatch(t *BoardToken, patch TokenPatch) {
 	if patch.Size != nil {
 		t.Size = *patch.Size
 	}
+	if patch.Moving != nil {
+		t.Moving = *patch.Moving
+	}
 	if patch.Material != nil {
 		t.Material = *patch.Material
 	}
@@ -413,6 +424,31 @@ func applyTokenPatch(t *BoardToken, patch TokenPatch) {
 	// POR ÚLTIMO, e sempre: o patch pode ter trazido o tamanho, o footprint, ou
 	// os dois. Derivar aqui é o que faz a ordem dos `if` acima não importar.
 	keepTheFootprintDerivedFromSize(t)
+}
+
+// DamageObject tira PV de uma peça de objeto, e é a única escrita no PV dela.
+//
+// NÃO MATA A PEÇA: um objeto destruído continua no mapa, e é o mestre quem o
+// tira. A porta arrombada é cenário que a mesa precisa continuar vendo — e
+// apagá-la sozinha faria o mapa discordar da fila de quem acabou de rolar.
+//
+// O PV desce de ZERO para baixo sem piso: a p239 diz "0 ou menos", e guardar o
+// negativo é o que permite dizer QUANTO o golpe passou do necessário.
+func DamageObject(b *BoardState, tokenID string, amount int) error {
+	for i := range b.Tokens {
+		t := &b.Tokens[i]
+		if t.ID != tokenID {
+			continue
+		}
+		if !t.HasObjectStats() {
+			return fmt.Errorf("a peça %q (%s) não tem estatísticas de objeto: "+
+				"cenário sem PV não se ataca (p239)", t.Label, tokenID)
+		}
+		t.HpCurrent -= amount
+		b.Version++
+		return nil
+	}
+	return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 }
 
 // AssertSaneCoords recusa coordenada que só pode ter vindo de cliente quebrado.

@@ -26,6 +26,7 @@ import (
 func (s Scene) TokenActionRoutes(r chi.Router) {
 	base := sessionPattern + "/tabuleiro/pecas/{tokenId}"
 	r.Post(base+"/visibilidade", s.gmBoardCommand(toggleVisibility))
+	r.Post(base+"/movimento", s.gmBoardCommand(toggleMoving))
 	// TRÊS rotas de duplicar e não uma com parâmetro, porque são três VERBOS na
 	// tela e o endereço é o que o menu escreve. O que muda entre elas é só o
 	// modo — ver o `duplicatesWith`.
@@ -57,6 +58,29 @@ func toggleVisibility(st Scene, c commandCtx) (*board.BoardState, error) {
 	}
 	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
 		board.ParseTokenPatch(map[string]any{"hidden": !token.Hidden}))
+}
+
+// toggleMoving liga e desliga o "em movimento" de uma peça de cenário (p239).
+//
+// O ESTADO VEM DO SERVIDOR e não da tela, pela mesma razão do `toggleVisibility`
+// logo acima: dois cliques rápidos com a resposta atrasada se apagariam, e o
+// resultado do empate seria uma Defesa +5 que ninguém pediu.
+//
+// SÓ PEÇA COM ESTATÍSTICAS: "em movimento" é uma linha da Tabela 5-3 sobre a
+// Defesa de um OBJETO, e marcá-la num ogro não muda nada — um botão que não faz
+// nada é pior que um botão que não existe.
+func toggleMoving(st Scene, c commandCtx) (*board.BoardState, error) {
+	token, err := st.tokenOfCommand(c)
+	if err != nil {
+		return nil, err
+	}
+	if !token.HasObjectStats() {
+		return nil, fmt.Errorf(
+			"%s não tem estatísticas de objeto: o +5 por estar em movimento é da "+
+				"Defesa de um objeto (p239)", token.Label)
+	}
+	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
+		board.ParseTokenPatch(map[string]any{"moving": !token.Moving}))
 }
 
 // OS DUPLICARES, e a diferença entre eles é o que a cópia faz com a LINHA DA
@@ -426,24 +450,6 @@ var tokenSizes = func() []struct {
 	}
 	return out
 }()
-
-// sizeNameOfToken é a categoria que o diálogo mostra ao abrir.
-//
-// A peça que o `Populate` traz da fila não tem categoria — ela nasceu com um
-// LADO —, e abrir o diálogo dela com o campo vazio faria o mestre escolher de
-// novo um tamanho que ele não mudou. A volta é a categoria MAIS COMUM de cada
-// lado, que é o que o menu de quatro significava: lado 1 era "Médio ou menor".
-func sizeNameOfToken(t *board.BoardToken) string {
-	if t.Size != "" {
-		return t.Size
-	}
-	for _, nome := range engine.SizesOfTheBook() {
-		if engine.FootprintForSize(nome) == t.Footprint {
-			return nome
-		}
-	}
-	return "Médio"
-}
 
 // ── as expressões da tela ────────────────────────────────────────────────────
 
