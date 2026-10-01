@@ -619,6 +619,22 @@ E a lista de inertes **só pode encolher**.
 
 ## O motor é ECS, e a ENTIDADE muda de fase para fase
 
+**REGRA NOVA NASCE EM ECS. É o default, e o critério é APRENDER** — decisão do
+dono, a mesma da ALE-378, agora valendo para frente e não só para o que já foi
+convertido. Diante de uma regra do livro a modelar, a pergunta é *"quem é a
+ENTIDADE, que COMPONENTES ela carrega, e que SISTEMA os lê?"* — e não "que campo
+esta struct ganha".
+
+Isso custa, e o preço está escrito duas seções abaixo: sem o compilador como
+escalonador, um sistema que não roda entrega ZERO com cara de conta. **Quem
+escolhe ECS paga o guarda de denominador junto** — o irmão do
+`TestEveryDerivationSystemWritesItsComponent`, com a lista à mão, que é o que
+transforma "o sistema não rodou" de silêncio em vermelho com nome.
+
+A saída é DECIDIR outra coisa quando a regra não tem entidade — um formatador,
+uma consulta, uma tabela fechada que só se lê. ECS para o que COMPÕE; função
+para o que calcula.
+
 O pipeline da ficha é coleta → resolução → derivação → decomposição, e o ataque
 é um mundo à parte. A entidade não é a mesma em nenhuma delas — porque a
 pergunta não é a mesma.
