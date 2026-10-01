@@ -80,7 +80,7 @@ func TestTheDefenseThatMattersIsTheTargetOne(t *testing.T) {
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Defense: 30},
 		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 10},
-	}, table, fixedDie(4))
+	}, table, semTabuleiro{}, fixedDie(4))
 
 	d20 := 10
 	out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
@@ -107,7 +107,7 @@ func TestOnlyTheOwnerOrTheGameMasterRollsTheAttack(t *testing.T) {
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}},
 		"ogro":  {EntryID: "ogro", Defense: 10},
-	}, table, fixedDie(15))
+	}, table, semTabuleiro{}, fixedDie(15))
 	req := Request{SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro"}
 
 	_, err := strike.Propose(context.Background(), app.Caller{ID: 9}, "player", req)
@@ -134,7 +134,7 @@ func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Weapons: []engine.WeaponCard{aLongsword()}},
 		"ogro":  {EntryID: "ogro", Defense: 10},
-	}, table, fixedDie(4))
+	}, table, semTabuleiro{}, fixedDie(4))
 
 	for _, value := range []int{0, 21, -3, 40} {
 		v := value
@@ -157,7 +157,7 @@ func TestWithoutAD20TheServerRollsIt(t *testing.T) {
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Weapons: []engine.WeaponCard{aLongsword()}},
 		"ogro":  {EntryID: "ogro", Defense: 10},
-	}, table, fixedDie(19))
+	}, table, semTabuleiro{}, fixedDie(19))
 
 	out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
 		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", OwnsAttacker: true,
@@ -179,7 +179,7 @@ func TestNobodyAttacksThemselves(t *testing.T) {
 	table := aTable(t)
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Weapons: []engine.WeaponCard{aLongsword()}},
-	}, table, fixedDie(10))
+	}, table, semTabuleiro{}, fixedDie(10))
 
 	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
 		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "heroi", OwnsAttacker: true,
@@ -196,7 +196,7 @@ func TestWithoutAWieldedWeaponThereIsNoAttack(t *testing.T) {
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen"},
 		"ogro":  {EntryID: "ogro", Defense: 10},
-	}, table, fixedDie(10))
+	}, table, semTabuleiro{}, fixedDie(10))
 
 	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
 		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", OwnsAttacker: true,
@@ -223,7 +223,7 @@ func TestTheManeuverDefenderRollsMeleeAndNotDefense(t *testing.T) {
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Defense: 30},
 		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 30, Melee: 2},
-	}, table, fixedDie(11))
+	}, table, semTabuleiro{}, fixedDie(11))
 
 	d20 := 10
 	out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
@@ -262,7 +262,7 @@ func TestEachSideGetsItsOwnManeuverBonus(t *testing.T) {
 			ManeuverOffense: map[string]int{"agarrar": 2}},
 		"ogro": {EntryID: "ogro", Label: "Ogro", Melee: 0,
 			ManeuverDefense: map[string]int{"agarrar": 5}},
-	}, table, fixedDie(10))
+	}, table, semTabuleiro{}, fixedDie(10))
 
 	d20 := 10
 	out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
@@ -297,7 +297,7 @@ func TestABowCannotManeuver(t *testing.T) {
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{arco}},
 		"ogro":  {EntryID: "ogro", Label: "Ogro", Melee: 0},
-	}, table, fixedDie(10))
+	}, table, semTabuleiro{}, fixedDie(10))
 
 	d20 := 20
 	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
@@ -321,4 +321,83 @@ func TestABowCannotManeuver(t *testing.T) {
 	}); err != nil {
 		t.Errorf("atirar de arco foi recusado (%v), e a p234 só proíbe a MANOBRA", err)
 	}
+}
+
+// semTabuleiro é a mesa que não abriu mapa, que é a maior parte de uma sessão.
+//
+// Dublê NOMEADO e não `nil`: o `nil` também passa — o `specialSituations` o
+// trata —, mas ele diz "esqueci de montar" e este diz "esta mesa não tem mapa",
+// que é um caso do livro.
+type semTabuleiro struct{}
+
+func (semTabuleiro) Between(context.Context, int64, string, string) ([]engine.SpecialSituation, error) {
+	return nil, nil
+}
+
+// comTabuleiro devolve as situações que lhe deram, sem olhar quem pergunta.
+type comTabuleiro struct{ situations []engine.SpecialSituation }
+
+func (c comTabuleiro) Between(context.Context, int64, string, string) ([]engine.SpecialSituation, error) {
+	return c.situations, nil
+}
+
+// A SITUAÇÃO DO TABULEIRO CHEGA AO d20, e ela chega pela PORTA.
+//
+// O caso do `serve/api` prende o trajeto inteiro — o mestre pinta, a peça está
+// na casa, a conta muda. Este prende a junta: que o `Propose` PERGUNTA ao
+// tabuleiro e passa a resposta adiante. Sem ele, trocar o `ResolveAttackUnder`
+// de volta pelo `ResolveAttack` deixaria a porta ligada e inerte.
+func TestTheBoardSituationReachesTheRoll(t *testing.T) {
+	table := aTable(t)
+	alvo := sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Defense: 30},
+		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 10},
+	}
+	d20 := 10
+	pedido := Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
+	}
+
+	nua, err := NewStrike(alvo, table, semTabuleiro{}, fixedDie(4)).
+		Propose(context.Background(), app.Caller{ID: 7}, "player", pedido)
+	if err != nil {
+		t.Fatalf("propor sem tabuleiro: %v", err)
+	}
+
+	table = aTable(t) // o provisório anterior fica em pé, e um segundo é recusado
+	coberto, err := NewStrike(alvo, table,
+		comTabuleiro{situations: []engine.SpecialSituation{engine.TargetUnderLightCover}},
+		fixedDie(4)).
+		Propose(context.Background(), app.Caller{ID: 7}, "player", pedido)
+	if err != nil {
+		t.Fatalf("propor com cobertura: %v", err)
+	}
+	if coberto.Defense != nua.Defense+5 {
+		t.Errorf("com a cobertura o ataque enfrentou Defesa %d e sem ela %d — a p239 dá +5",
+			coberto.Defense, nua.Defense)
+	}
+}
+
+// E O ERRO DO TABULEIRO SOBE, em vez de virar uma cobertura que some.
+//
+// Um mapa que não se consegue ler faria o ataque acontecer com +5 a menos e
+// ninguém saberia que faltou. É a mesma linha da leitura da fila (ALE-373):
+// número errado em silêncio é pior que gesto recusado.
+func TestABoardThatCannotBeReadRefusesTheAttack(t *testing.T) {
+	_, err := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Defense: 30},
+		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 10},
+	}, aTable(t), tabuleiroQuebrado{}, fixedDie(4)).
+		Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+			SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", OwnsAttacker: true,
+		})
+	if err == nil {
+		t.Fatal("o ataque aconteceu sobre um tabuleiro que não pôde ser lido")
+	}
+}
+
+type tabuleiroQuebrado struct{}
+
+func (tabuleiroQuebrado) Between(context.Context, int64, string, string) ([]engine.SpecialSituation, error) {
+	return nil, errors.New("o disco sumiu")
 }

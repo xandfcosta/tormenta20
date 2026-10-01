@@ -22,7 +22,7 @@ func underCircumstances(t *testing.T, situations ...SpecialSituation) AttackOutc
 	out, err := ResolveAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5),
 		AttackTarget{Defense: 15},
-		situations, 10, fixedDice(t, 100, 4),
+		situations, 10, fixedDice(t, 10, 4),
 	)
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
@@ -71,47 +71,73 @@ func TestTotalCoverMakesTheTargetUnattackable(t *testing.T) {
 	}
 }
 
-// "Sob camuflagem leve: 20% de chance de falha" e "total: 50%" (p239).
+// A CAMUFLAGEM, e o DADO dela é 1d10 (p238).
+//
+// A Tabela 5-3 escreve "20%" e "50%", e quem diz o dado é a PROSA: "o atacante
+// rola 1d10 junto com o d20 do teste de ataque; se o resultado desse d10 for 1
+// ou 2, o ataque erra" (p238); a total é "1 a 5 no d10" (p239). Os números aqui
+// são do DADO, e rolar d100 contra 20 daria a mesma estatística com o dado
+// errado na mesa.
 //
 // A CHANCE DE FALHA é mecanismo NOVO: ela age DEPOIS de o ataque acertar, e
 // desfaz o acerto. Nenhuma outra regra do motor faz isso — as demais mexem no
 // número antes de comparar.
 func TestConcealmentCanUndoAHitThatLanded(t *testing.T) {
-	// A rolagem percentual é o PRIMEIRO dado, porque a chance de falha é
+	// O 1d10 é o PRIMEIRO dado, porque a chance de falha é
 	// resolvida antes de o dano rolar — o livro não manda rolar dano de um
-	// ataque que a camuflagem desfez. Com 100 nenhuma faixa pega, e é o
+	// ataque que a camuflagem desfez. Com 10 nenhuma faixa pega, e é o
 	// controle.
 	acerta := underCircumstances(t, TargetUnderLightConcealment)
 	if !acerta.Hit {
-		t.Fatalf("o controle já estava errado: com d100 = 100 nenhuma camuflagem falha")
+		t.Fatalf("o controle já estava errado: com d10 = 10 nenhuma camuflagem falha")
 	}
 
-	// Com 20, a camuflagem LEVE pega (1 a 20) e a falha é do atacante. O `4`
+	// Com 2, a camuflagem LEVE pega ("1 ou 2") e a falha é do atacante. O `4`
 	// que sobra no dublê é de propósito: sem ele, um motor que NÃO desfizesse o
 	// acerto estouraria no dado que falta e a falha diria "faltou um dado" em
 	// vez de "a camuflagem não agiu".
 	falha, err := ResolveAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
-		[]SpecialSituation{TargetUnderLightConcealment}, 10, fixedDice(t, 20, 4),
+		[]SpecialSituation{TargetUnderLightConcealment}, 10, fixedDice(t, 2, 4),
 	)
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
 	if falha.Hit || falha.Damage != 0 {
-		t.Errorf("a camuflagem leve não desfez o acerto com d100 = 20 (faixa 1 a 20): "+
+		t.Errorf("a camuflagem leve não desfez o acerto com d10 = 2 (faixa 1 ou 2, p238): "+
 			"hit=%v dano=%d", falha.Hit, falha.Damage)
 	}
 
-	// E a TOTAL pega até 50, onde a leve já não pegaria.
+	// E O DADO É UM d10, não um percentual disfarçado.
+	//
+	// O `fixedDice` IGNORA as faces que lhe pedem — ele devolve o próximo valor
+	// da lista e pronto —, então todo caso acima passa igual com `rollDie(100)`
+	// no lugar de `rollDie(10)`. Medido: trocar o dado na produção não deixou
+	// nada vermelho. O que prende o dado é perguntar quantas faces foram
+	// pedidas, e é só aqui que isso importa.
+	pedidas := []int{}
+	if _, err := ResolveAttackUnder(
+		aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
+		[]SpecialSituation{TargetUnderLightConcealment}, 10,
+		func(faces int) (int, error) { pedidas = append(pedidas, faces); return 10, nil },
+	); err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	if len(pedidas) == 0 || pedidas[0] != 10 {
+		t.Errorf("a camuflagem pediu os dados %v, e a p238 manda rolar 1d10 — um d100 "+
+			"contra 20 dá a mesma estatística e o dado errado na mesa", pedidas)
+	}
+
+	// E a TOTAL pega até 5, onde a leve já não pegaria.
 	total, err := ResolveAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
-		[]SpecialSituation{TargetUnderTotalConcealment}, 10, fixedDice(t, 50, 4),
+		[]SpecialSituation{TargetUnderTotalConcealment}, 10, fixedDice(t, 5, 4),
 	)
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
 	if total.Hit {
-		t.Errorf("a camuflagem total não desfez o acerto com d100 = 50 (faixa 1 a 50)")
+		t.Errorf("a camuflagem total não desfez o acerto com d10 = 5 (faixa 1 a 5, p239)")
 	}
 }
 
@@ -147,7 +173,7 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 	medidos := 0
 	for _, situation := range SpecialSituationsOfTheBook() {
 		w := attackWorld(card, AttackTarget{Defense: 15},
-			[]SpecialSituation{situation}, 10, fixedDice(t, 100, 4))
+			[]SpecialSituation{situation}, 10, fixedDice(t, 10, 4))
 		medidos++
 
 		if countOf[situationLabel](w) != 1 {

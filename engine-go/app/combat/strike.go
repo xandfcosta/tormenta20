@@ -61,15 +61,46 @@ type Tables interface {
 	CharacterActionFits(ctx context.Context, characterID int64, cost engine.ActionCost) error
 }
 
+// Situations é a porta do TABULEIRO, e ela devolve regra em vez de mapa.
+//
+// A pergunta é "que linhas da Tabela 5-3 valem entre estas duas linhas da
+// fila?", e não "onde estão as peças?" — uma porta que devolvesse coordenadas
+// obrigaria este pacote a saber de corpo, de pegada e de qual espécie de casa
+// faz o quê, que é tudo o que o `domain/board` já sabe.
+//
+// VAZIO É LEGÍTIMO e é o caso comum: uma mesa sem tabuleiro ataca sem situação
+// nenhuma, e isso sai como lista vazia sem erro.
+//
+// O ERRO, porém, SOBE. Um tabuleiro que não se consegue ler viraria uma
+// cobertura que some: o ataque aconteceria com +5 a menos e ninguém saberia
+// que faltou. É a mesma linha da leitura da fila (ALE-373) — número errado em
+// silêncio é pior que gesto recusado.
+type Situations interface {
+	Between(ctx context.Context, sessionID int64, attackerEntry, targetEntry string) ([]engine.SpecialSituation, error)
+}
+
 // Strike resolve e propõe ataques.
 type Strike struct {
 	combatants Combatants
 	tables     Tables
+	situations Situations
 	rollDie    func(faces int) (int, error)
 }
 
-func NewStrike(c Combatants, t Tables, rollDie func(faces int) (int, error)) Strike {
-	return Strike{combatants: c, tables: t, rollDie: rollDie}
+func NewStrike(c Combatants, t Tables, s Situations, rollDie func(faces int) (int, error)) Strike {
+	return Strike{combatants: c, tables: t, situations: s, rollDie: rollDie}
+}
+
+// specialSituations pergunta ao tabuleiro, e cala quando não há um.
+//
+// A porta nula é tratada aqui e não em cada chamador: ela é opcional por
+// desenho — o combate existe sem mapa —, e um `if` por sítio seria a mesma
+// decisão escrita três vezes.
+func (s Strike) specialSituations(ctx context.Context, req Request) ([]engine.SpecialSituation, error) {
+	if s.situations == nil {
+		return nil, nil
+	}
+	return s.situations.Between(ctx, req.SessionID, req.AttackerEntryID, req.TargetEntryID)
 }
 
 // Request é o pedido de ataque.
@@ -167,18 +198,25 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 	if req.Maneuver != "" {
 		return s.proposeManeuver(ctx, who, req, attackerEntry, target, striker, victim, weapon, d20)
 	}
-	out, err := engine.ResolveAttack(weapon, engine.AttackTarget{
+	situations, err := s.specialSituations(ctx, req)
+	if err != nil {
+		return live.PendingAttack{}, err
+	}
+	out, err := engine.ResolveAttackUnder(weapon, engine.AttackTarget{
 		Defense:         victim.Defense,
 		DamageReduction: victim.DamageReduction,
 		CritImmune:      victim.CritImmune,
-	}, d20, s.rollDie)
+	}, situations, d20, s.rollDie)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
 
 	pending := live.PendingAttack{
 		AttackerEntryID: attackerEntry.ID, TargetEntryID: target.ID, Weapon: weapon.Name,
-		Roll: out.Roll, Total: out.Total, Defense: victim.Defense,
+		// A DEFESA do provisório é a que o ataque ENFRENTOU, já com a Tabela
+		// 5-3 — não a da ficha. "Errei por 1" e "errei por 1 porque ele está
+		// atrás da carroça" são leituras diferentes do mesmo número.
+		Roll: out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
 		Hit: out.Hit, Critical: out.Critical,
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
 		Damage: out.Damage, ByUserID: who.ID,

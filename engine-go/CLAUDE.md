@@ -648,6 +648,7 @@ pergunta não é a mesma.
 | **situação especial** (`special_situations_ecs.go`) | a LINHA da Tabela 5-3 | o que a cena em volta faz com este ataque? |
 | **redação do tabuleiro** (`board_ecs.go`) | a PEÇA | quem olha daqui enxerga isto? |
 | **ocupação do plano** (`board_occupancy_ecs.go`) | a PEÇA | que quadrado está tomado, e quem já tem peça na mesa? |
+| **terreno sob a peça** (`situations_ecs.go`) | a PEÇA | que terreno ela está pisando, e o que ele faz com o ataque? |
 | decomposição (`breakdowns.go`) | — | como se explica o número na tela? |
 
 A entidade muda porque a pergunta muda, e é essa a lição das fases.

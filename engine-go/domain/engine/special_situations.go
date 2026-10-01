@@ -15,7 +15,8 @@ import "fmt"
 //   - DESLOCAR um número, no ataque ou na Defesa;
 //   - CHANCE DE FALHA, que age DEPOIS de o ataque acertar e desfaz o acerto.
 //     Nenhuma outra regra do motor faz isso — as demais mexem no número antes
-//     de comparar;
+//     de comparar. O dado é 1d10, e o livro é explícito: "independentemente do
+//     resultado do teste de ataque" (p238), o que inclui o 20 natural;
 //   - PROIBIR o ataque, que não é Defesa alta: um 20 natural acerta sempre
 //     (p221), e por trás de uma parede ele não pode.
 
@@ -55,9 +56,16 @@ var specialSituationTable = map[SpecialSituation]situationRule{
 	TargetUnderLightCover: {Label: "cobertura leve", Defense: 5},
 	// "Sob cobertura total: o alvo não pode ser atacado".
 	TargetUnderTotalCover: {Label: "cobertura total", Forbids: true},
-	// "Sob camuflagem leve: 20% de chance de falha"; "total: 50%".
-	TargetUnderLightConcealment: {Label: "camuflagem leve", MissUpTo: 20},
-	TargetUnderTotalConcealment: {Label: "camuflagem total", MissUpTo: 50},
+	// A CAMUFLAGEM ROLA 1d10, e não um percentual: "ao fazer um ataque, o
+	// atacante rola 1d10 junto com o d20 do teste de ataque; se o resultado
+	// desse d10 for 1 ou 2, o ataque erra, independentemente do resultado do
+	// teste de ataque" (p238). A total é "1 a 5 no d10" (p239).
+	//
+	// A Tabela 5-3 escreve "20%" e "50%", e é a PROSA que diz o dado. Escrever
+	// o percentual e rolar d100 dá a mesma estatística e o dado errado na mesa
+	// — e a mesa rola o dado de verdade.
+	TargetUnderLightConcealment: {Label: "camuflagem leve", MissUpTo: 2},
+	TargetUnderTotalConcealment: {Label: "camuflagem total", MissUpTo: 5},
 }
 
 // situationRule é uma linha da tabela. Zero em tudo que a linha não diz.

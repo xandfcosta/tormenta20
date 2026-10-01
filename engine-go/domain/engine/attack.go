@@ -56,6 +56,11 @@ type AttackOutcome struct {
 	Total    int  `json:"total"`    // d20 + bônus de ataque
 	Hit      bool `json:"hit"`      //
 	Critical bool `json:"critical"` //
+	// Situations são os RÓTULOS das linhas da Tabela 5-3 que valeram, na ordem
+	// em que chegaram. Elas viajam porque o número sozinho DESMENTE o que a
+	// mesa sabe: a Defesa não é a da ficha, e um ataque que bateu a Defesa pode
+	// ter errado pela camuflagem (p238). Procedência, não enfeite.
+	Situations []string `json:"situations,omitempty"`
 	// Defense é a Defesa que ESTE ataque enfrentou, depois da Tabela 5-3 — ela
 	// não é a da ficha quando o alvo está sob cobertura (p239). Viaja porque
 	// "errei por 1" e "errei por 1 porque ele está atrás da carroça" são

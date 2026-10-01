@@ -27,7 +27,9 @@ type attackProposal struct {
 	// Conta é a aritmética inteira numa linha. Ela existe porque a mesa
 	// desconfia de número sem origem — "11 de dano" pede "de onde?", e
 	// "24 vs 17 · 2d8+3 (8+5) · RD 5 → 11" não pede nada.
-	Tally string
+	// Situations são os motivos da Tabela 5-3, em prosa e FORA da conta.
+	Situations string
+	Tally      string
 	// Meu diz se quem olha foi quem rolou: só ele cancela o que é dele. O mestre
 	// cancela por qualquer um, e isso é decidido na tela pelo `Mestre` da view.
 	Mine bool
@@ -46,7 +48,8 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	out := &attackProposal{
 		Attacker: entryLabel(st, pa.AttackerEntryID), Target: entryLabel(st, pa.TargetEntryID),
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
-		Tally: attackLine(*pa), Mine: pa.ByUserID == userID,
+		Tally: attackLine(*pa), Situations: writtenSituations(*pa),
+		Mine: pa.ByUserID == userID,
 	}
 	if pa.Maneuver != nil {
 		out.Verdict, out.Class = maneuverVerdict(*pa.Maneuver)
@@ -188,4 +191,20 @@ func entryLabel(st *live.SessionRuntimeState, entryID string) string {
 		return st.Initiative[i].Label
 	}
 	return "quem saiu da fila"
+}
+
+// writtenSituations são as linhas da Tabela 5-3 que valeram, em prosa.
+//
+// FORA DA CONTA, e isso foi o OLHO a 390px que decidiu. Dentro dela o parêntese
+// ficava em monoespaçado no meio da aritmética e, com três situações, partia a
+// linha em três — empurrando o dano, que é o que a mesa veio ler, para o fim da
+// terceira. Em prosa ele é ~30% mais estreito, e a quebra cai no lugar natural:
+// entre o número e o motivo.
+//
+// Elas existem pela mesma razão do "20 natural acerta" que a `attackLine`
+// nomeia: um número que DESMENTE o que a mesa sabe vem com o motivo. A Defesa
+// não é a da ficha quando o alvo está coberto, e a camuflagem desmente a
+// própria comparação — o total bateu a Defesa e o ataque errou (p238).
+func writtenSituations(pa live.PendingAttack) string {
+	return strings.Join(pa.Situations, ", ")
 }

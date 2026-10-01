@@ -205,6 +205,7 @@ func (s *Server) boardGestures() boards.Gestures {
 func (s *Server) combatStrike() combat.Strike {
 	return combat.NewStrike(
 		combat.NewRoster(s.queries, s.catalogs), s.sessions,
+		combat.NewBoardSituations(s.boards),
 		func(faces int) (int, error) {
 			roll, err := engine.RollDie(faces)
 			return roll.Value, err

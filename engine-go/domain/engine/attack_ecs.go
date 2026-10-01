@@ -335,14 +335,15 @@ func absorbWithDamageReduction(target AttackTarget) ecs.System {
 func outcomeFromWorld(w *ecs.World) AttackOutcome {
 	hit := resourceOf[hitVerdict](w)
 	out := AttackOutcome{
-		Roll:      hit.Roll,
-		Total:     hit.Total,
-		Hit:       hit.Hit,
-		Defense:   resourceOf[effectiveDefense](w).Value,
-		Critical:  resourceOf[criticalVerdict](w).Critical,
-		RawDamage: resourceOf[rawTally](w).Raw,
-		Absorbed:  resourceOf[absorbedTally](w).Absorbed,
-		Damage:    resourceOf[absorbedTally](w).Final,
+		Roll:       hit.Roll,
+		Total:      hit.Total,
+		Hit:        hit.Hit,
+		Defense:    resourceOf[effectiveDefense](w).Value,
+		Situations: labelsOfTheSituations(w),
+		Critical:   resourceOf[criticalVerdict](w).Critical,
+		RawDamage:  resourceOf[rawTally](w).Raw,
+		Absorbed:   resourceOf[absorbedTally](w).Absorbed,
+		Damage:     resourceOf[absorbedTally](w).Final,
 	}
 	ecs.Each2(w, func(e ecs.Entity, _ weaponsOwnDice, parcel damageDice) {
 		if dead(w, e) {
