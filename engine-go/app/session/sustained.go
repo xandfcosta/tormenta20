@@ -85,7 +85,7 @@ func (st *Store) payUpkeep(ctx context.Context, u Unit, s *live.SessionRuntimeSt
 	// unidade e a linha espelha o resultado, tudo antes de o retrato ser
 	// gravado (ALE-373).
 	spent := int64(-upkeep.Cost)
-	hp, mp, err := u.Sheet.ApplyDelta(ctx, *entry.CharacterID, nil, &spent)
+	hp, mp, err := u.Sheet.ApplyDelta(ctx, *entry.CharacterID, nil, &spent, 0)
 	if err != nil {
 		return fmt.Errorf("cobrar a manutenção de %s: %w", entry.Label, err)
 	}

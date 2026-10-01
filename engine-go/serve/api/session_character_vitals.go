@@ -105,7 +105,7 @@ func (v sheetVitals) AddCondition(ctx context.Context, charID int64, condition s
 // Dano (PV negativo) passa pela drenagem dos temporários; cura e PM são presos
 // na faixa pelo funil.
 func (v sheetVitals) ApplyDelta(
-	ctx context.Context, charID int64, hpDelta, mpDelta *int64,
+	ctx context.Context, charID int64, hpDelta, mpDelta *int64, nonLethal int64,
 ) (*int64, *int64, error) {
 	return v.applyRule(ctx, charID, func(p sheet.Pools) (sheet.Pools, error) {
 		if hpDelta != nil && *hpDelta < 0 {
@@ -120,6 +120,9 @@ func (v sheetVitals) ApplyDelta(
 		if mpDelta != nil {
 			p.MpCurrent += *mpDelta
 		}
+		// SÓ ACRESCENTA. Quem subtrai é o funil, em toda cura — ver o
+		// `nonLethalAfter`.
+		p.NonLethal += max(nonLethal, 0)
 		return p, nil
 	})
 }

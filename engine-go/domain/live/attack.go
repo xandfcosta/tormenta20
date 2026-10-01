@@ -39,6 +39,11 @@ type PendingAttack struct {
 	// COMPARAÇÃO — "24 vs 17" é o que explica o veredicto, e sem o 17 a faixa
 	// afirma um acerto sem dizer contra o quê.
 	Defense int `json:"defense"`
+	// NonLethal é quanto do `Damage` não conta para sangrar nem para morrer
+	// (p236) — tudo, quando a arma é Piedosa (p336). Viaja no provisório porque
+	// quem aplica é a CONFIRMAÇÃO, e entre rolar e confirmar o ataque pode ser
+	// cancelado.
+	NonLethal int `json:"nonLethal,omitempty"`
 	// Situations são os rótulos da Tabela 5-3 que valeram neste ataque, e a
 	// faixa os escreve. Sem eles a mesa lê uma Defesa que a ficha não tem, ou
 	// um ataque que bateu a Defesa e errou (p238), e vai procurar o defeito.

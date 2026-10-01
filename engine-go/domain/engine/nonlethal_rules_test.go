@@ -1,6 +1,9 @@
 package engine
 
-import "testing"
+import (
+	"path/filepath"
+	"testing"
+)
 
 // O DANO NÃO LETAL (p236), e ele é a única forma de dano que o motor trata de
 // um jeito diferente do resto.
@@ -93,4 +96,78 @@ func temCondicao(xs []string, want string) bool {
 		}
 	}
 	return false
+}
+
+// A PIEDOSA FAZ TODO O DANO DA ARMA SER NÃO LETAL (p336).
+//
+//	"A arma causa +1d8 de dano, mas todo o dano causado é não letal."
+//
+// São DUAS metades, e o catálogo só tinha a primeira: o +1d8 entrou na ALE-411
+// e a outra não tinha como ser escrita — o `Modifier` não sabia dizer "todo o
+// dano desta arma é não letal".
+func TestThePiedosaEnchantMakesTheWholeDamageNonLethal(t *testing.T) {
+	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
+	catalogs := primeFromDump(t, dir)
+	ptr := func(s string) *string { return &s }
+	var oracle struct {
+		Char Character `json:"char"`
+	}
+	readJSON(t, filepath.Join(dir, "bardo-versatil-nv7.json"), &oracle)
+
+	card := func(enchants ...string) WeaponCard {
+		ch := oracle.Char
+		ch.Items = []CharacterItem{{
+			CatalogID: ptr("espada-longa"), Name: "Espada longa",
+			Equipped: ptr("wielded"), Improvements: "[]", Enchants: enchants,
+		}}
+		return BookRuleset(catalogs).ComputeWeaponCards(ch, map[string]bool{})[0]
+	}
+
+	// O CONTROLE: a espada nua causa dano letal, como toda arma.
+	if card().NonLethal {
+		t.Fatal("o controle já estava errado: uma espada longa sem encanto causa dano letal")
+	}
+	piedosa := card("encanto-piedosa")
+	if !piedosa.NonLethal {
+		t.Error("a espada Piedosa causa dano letal, e a p336 diz que TODO o dano dela " +
+			"é não letal")
+	}
+	// E A OUTRA METADE continua lá: o +1d8 não pode ter sumido no caminho.
+	if len(piedosa.ExtraDamage) != 1 || piedosa.ExtraDamage[0].Dice != "1d8" {
+		t.Errorf("a espada Piedosa veio com as parcelas %+v, e a p336 diz +1d8",
+			piedosa.ExtraDamage)
+	}
+}
+
+// E O ATAQUE DIZ QUANTO FOI NÃO LETAL.
+//
+// TUDO, quando a arma é Piedosa: o livro diz "todo o dano causado", e isso
+// inclui o bônus de Força e as parcelas dos outros encantos — a arma é que é
+// piedosa, não um dos dados dela.
+func TestTheAttackReportsHowMuchDamageWasNonLethal(t *testing.T) {
+	weapon := aWeapon("1d8", 3, 20, 2, 5)
+	weapon.NonLethal = true
+
+	out, err := ResolveAttack(weapon, AttackTarget{Defense: 10}, 15, fixedDice(t, 6))
+	if err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	if out.Damage != 9 {
+		t.Fatalf("o controle já estava errado: 1d8 deu 6 mais 3 de bônus é 9, e veio %d",
+			out.Damage)
+	}
+	if out.NonLethal != 9 {
+		t.Errorf("o ataque com arma Piedosa causou %d de dano e disse que %d foi não "+
+			"letal — a p336 diz que TODO o dano dela é", out.Damage, out.NonLethal)
+	}
+
+	// E A ARMA COMUM não reporta nada: o campo existe para o caso raro, e um
+	// número onde não há regra faria a mesa procurar de onde ele saiu.
+	comum, err := ResolveAttack(aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 10}, 15, fixedDice(t, 6))
+	if err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	if comum.NonLethal != 0 {
+		t.Errorf("uma espada comum reportou %d de dano não letal", comum.NonLethal)
+	}
 }

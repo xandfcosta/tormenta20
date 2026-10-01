@@ -52,8 +52,8 @@ func (st *Store) PatchVitals(ctx context.Context, sessionID int64, entryID strin
 // existe, não há o que espelhar e a ficha é a única a mudar — devolver o estado
 // como está é a resposta certa, e não um erro, porque "não está na fila" é o
 // caso comum aqui e não uma falha.
-func (st *Store) DeltaCharacterVitals(ctx context.Context, sessionID, characterID int64, hpDelta, mpDelta *int64) (*live.SessionRuntimeState, error) {
-	hp, mp, err := st.sheet.ApplyDelta(ctx, characterID, hpDelta, mpDelta)
+func (st *Store) DeltaCharacterVitals(ctx context.Context, sessionID, characterID int64, hpDelta, mpDelta *int64, nonLethal int64) (*live.SessionRuntimeState, error) {
+	hp, mp, err := st.sheet.ApplyDelta(ctx, characterID, hpDelta, mpDelta, nonLethal)
 	if err != nil {
 		return nil, err
 	}
@@ -133,13 +133,13 @@ func addEntryCondition(entryID, condition string) func(*live.SessionRuntimeState
 	}
 }
 
-func (st *Store) DeltaVitals(ctx context.Context, sessionID int64, entryID string, hpDelta, mpDelta *int64) (*live.SessionRuntimeState, error) {
+func (st *Store) DeltaVitals(ctx context.Context, sessionID int64, entryID string, hpDelta, mpDelta *int64, nonLethal int64) (*live.SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
 		return st.apply(ctx, sessionID, vitalsEvent(sessionID, entryID, nil),
 			deltaEntryVitals(entryID, hpDelta, mpDelta))
 	}
-	hp, mp, err := st.sheet.ApplyDelta(ctx, *charID, hpDelta, mpDelta)
+	hp, mp, err := st.sheet.ApplyDelta(ctx, *charID, hpDelta, mpDelta, nonLethal)
 	if err != nil {
 		return nil, err
 	}

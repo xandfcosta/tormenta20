@@ -40,6 +40,10 @@ type WeaponCard struct {
 	DamageAll     TotalContribs `json:"damageAll"`
 	CritRange     int           `json:"critRange"`
 	CritMult      int           `json:"critMult"`
+	// NonLethal: TODO o dano desta arma é não letal (p236, p336). É propriedade
+	// da ARMA e não parcela — a Piedosa diz "todo o dano causado", o que inclui
+	// a Força e as parcelas dos outros encantos.
+	NonLethal bool `json:"nonLethal,omitempty"`
 }
 
 // ComputeWeaponCards resolves the wielded-weapon cards for a raw Character under
@@ -113,6 +117,7 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 			DamageAll:     damageAll,
 			CritRange:     threatRangeOf(w.CritRange, effects),
 			CritMult:      w.CritMult + StatFor(effects, ModifierTarget{K: "critMult"}).Total,
+			NonLethal:     StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0,
 			ExtraDamage:   effects.ExtraDamage,
 			CriticalBonus: effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 		})

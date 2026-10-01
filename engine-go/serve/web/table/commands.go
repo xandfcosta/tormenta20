@@ -161,7 +161,7 @@ func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, 
 			return nil, fmt.Errorf("pool %q não existe; a fila mexe em 'hp' e em 'mp'", chi.URLParam(c.R, "pool"))
 		}
 		entryID := chi.URLParam(c.R, "entryId")
-		state, err := st.deps.Sessions().DeltaVitals(c.R.Context(), c.SessionID, entryID, hp, mp)
+		state, err := st.deps.Sessions().DeltaVitals(c.R.Context(), c.SessionID, entryID, hp, mp, 0)
 		// QUANDO HÁ FICHA ATRÁS DA LINHA, quem levou o dano foi o PERSONAGEM e
 		// não o rastreador (ver `DeltaVitals`) — então a ficha de quem está na
 		// mesa mudou, e a tela dele precisa saber. NPC não tem ficha: ali o

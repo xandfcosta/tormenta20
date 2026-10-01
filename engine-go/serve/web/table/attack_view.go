@@ -181,9 +181,10 @@ func attackLine(pa live.PendingAttack) string {
 	// primeira versão desta linha dizia "1d4 (4) = 4 → 4 de dano", e foi olhar a
 	// tela que a pegou. A seta só existe quando há de onde para onde.
 	if pa.Absorbed == 0 {
-		return line + fmt.Sprintf(" = %d de dano", pa.Damage)
+		return line + fmt.Sprintf(" = %d de dano%s", pa.Damage, writtenNonLethal(pa))
 	}
-	return line + fmt.Sprintf(" = %d · RD %d → %d de dano", pa.RawDamage, pa.Absorbed, pa.Damage)
+	return line + fmt.Sprintf(" = %d · RD %d → %d de dano%s",
+		pa.RawDamage, pa.Absorbed, pa.Damage, writtenNonLethal(pa))
 }
 
 func entryLabel(st *live.SessionRuntimeState, entryID string) string {
@@ -208,3 +209,25 @@ func entryLabel(st *live.SessionRuntimeState, entryID string) string {
 func writtenSituations(pa live.PendingAttack) string {
 	return strings.Join(pa.Situations, ", ")
 }
+
+// writtenNonLethal qualifica o dano quando ele não mata (p236).
+//
+// COLADO NO DANO e não na prosa das situações, ao contrário da Tabela 5-3: a
+// situação explica a COMPARAÇÃO e esta qualifica o NÚMERO — "9 de dano" e "9 de
+// dano não letal" levam a mesas diferentes, e o mestre que não souber vai pedir
+// um teste de Constituição que a regra não manda fazer.
+//
+// Só quando é TUDO: o livro não dá meio-termo — ou a arma é Piedosa e todo o
+// dano dela é não letal, ou não é.
+func writtenNonLethal(pa live.PendingAttack) string {
+	if pa.NonLethal > 0 && pa.NonLethal >= pa.Damage {
+		return " " + nonLethalWords
+	}
+	return ""
+}
+
+// nonLethalWords carrega um espaço INQUEBRÁVEL entre as duas palavras, e o olho
+// a 390px foi quem pediu: numa linha com RD e situação, a conta quebrava em
+// "→ 11 de dano não" / "letal", e "dano não" sozinho no fim de uma linha diz o
+// contrário do que a regra diz.
+const nonLethalWords = "não letal"

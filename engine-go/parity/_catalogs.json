@@ -4999,6 +4999,18 @@
           "dice": "1d8",
           "bonusType": "untyped",
           "note": "+1d8 de dano"
+        },
+        {
+          "target": {
+            "k": "nonLethalDamage",
+            "scope": "this"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "todo o dano da arma é não letal"
         }
       ],
       "bookPage": 336,

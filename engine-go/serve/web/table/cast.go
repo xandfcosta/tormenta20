@@ -96,7 +96,7 @@ func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeSta
 		if err != nil {
 			return nil, err
 		}
-		state, err := st.deps.Sessions().DeltaCharacterVitals(c.R.Context(), c.SessionID, chosen.CharacterID, hp, mp)
+		state, err := st.deps.Sessions().DeltaCharacterVitals(c.R.Context(), c.SessionID, chosen.CharacterID, hp, mp, 0)
 		// A ficha de quem está na mesa MUDOU, e a tela dele precisa saber —
 		// aqui sempre há personagem atrás do gesto, ao contrário da fila,
 		// onde o capanga anônimo não tem quem avisar.

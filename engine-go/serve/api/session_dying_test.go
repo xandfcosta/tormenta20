@@ -55,7 +55,7 @@ func TestFallingStabilizingWakingAndDyingFollowTheBook(t *testing.T) {
 	threshold := min(int64(-10), -(pool.HpMax / 2))
 	hit := func(delta int64) int64 {
 		t.Helper()
-		if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(delta), nil); err != nil {
+		if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(delta), nil, 0); err != nil {
 			t.Fatalf("mexer %d no PV: %v", delta, err)
 		}
 		return poolsOf(t, s, charID).HpCurrent
@@ -127,7 +127,7 @@ func fallenCombatant(t *testing.T) (*Server, int64, int64) {
 		}
 	}
 	standing := poolsOf(t, s, charID).HpCurrent
-	if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(-(standing + 3)), nil); err != nil {
+	if _, err := store.DeltaVitals(context.Background(), sid, entryID, live.PtrInt64(-(standing + 3)), nil, 0); err != nil {
 		t.Fatalf("derrubar: %v", err)
 	}
 	if _, err := store.NextTurn(context.Background(), sid); err != nil { // vez do goblin

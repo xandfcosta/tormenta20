@@ -56,7 +56,12 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 	}
 	if attack.Damage > 0 {
 		loss := int64(-attack.Damage)
-		if _, err := st.DeltaVitals(ctx, sessionID, attack.TargetEntryID, &loss, nil); err != nil {
+		// O NÃO LETAL VIAJA COM A PANCADA: a arma Piedosa (p336) causa dano que
+		// derruba e não mata, e é aqui que a parcela entra na ficha. O `min` é
+		// a rede: a RD pode ter comido parte do dano, e a parcela não pode
+		// passar do que o alvo de fato perdeu.
+		if _, err := st.DeltaVitals(ctx, sessionID, attack.TargetEntryID, &loss, nil,
+			int64(min(attack.NonLethal, attack.Damage))); err != nil {
 			return nil, err
 		}
 	}

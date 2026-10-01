@@ -153,6 +153,15 @@ func (q *Queries) ClearItemEnchants(ctx context.Context, itemid int64) error {
 	return err
 }
 
+const clearNonLethalDamage = `-- name: ClearNonLethalDamage :exec
+DELETE FROM character_nonlethal_damage WHERE characterId = ?
+`
+
+func (q *Queries) ClearNonLethalDamage(ctx context.Context, characterid int64) error {
+	_, err := q.db.ExecContext(ctx, clearNonLethalDamage, characterid)
+	return err
+}
+
 const createAccountInvite = `-- name: CreateAccountInvite :one
 
 INSERT INTO account_invites (token, createdBy, createdAt, expiresAt)
@@ -1289,6 +1298,19 @@ func (q *Queries) GetMemberOwners(ctx context.Context, id int64) (GetMemberOwner
 		&i.Characterowner,
 	)
 	return i, err
+}
+
+const getNonLethalDamage = `-- name: GetNonLethalDamage :one
+SELECT amount FROM character_nonlethal_damage WHERE characterId = ?
+`
+
+// Ausencia de linha quer dizer ZERO, como no `character_damage`: so quem levou
+// dano nao letal ganha registro.
+func (q *Queries) GetNonLethalDamage(ctx context.Context, characterid int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getNonLethalDamage, characterid)
+	var amount int64
+	err := row.Scan(&amount)
+	return amount, err
 }
 
 const getPasswordReset = `-- name: GetPasswordReset :one
@@ -2603,6 +2625,43 @@ func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMemb
 	return items, nil
 }
 
+const listNonLethalDamage = `-- name: ListNonLethalDamage :many
+SELECT characterId, amount FROM character_nonlethal_damage WHERE characterId IN (/*SLICE:ids*/?)
+`
+
+func (q *Queries) ListNonLethalDamage(ctx context.Context, ids []int64) ([]CharacterNonlethalDamage, error) {
+	query := listNonLethalDamage
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterNonlethalDamage{}
+	for rows.Next() {
+		var i CharacterNonlethalDamage
+		if err := rows.Scan(&i.Characterid, &i.Amount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOpenAccountInvites = `-- name: ListOpenAccountInvites :many
 SELECT id, token, createdby, createdat, expiresat, usedat, usedby FROM account_invites
 WHERE usedAt IS NULL AND expiresAt > ?1
@@ -3144,6 +3203,21 @@ type SaveCharacterDamageParams struct {
 
 func (q *Queries) SaveCharacterDamage(ctx context.Context, arg SaveCharacterDamageParams) error {
 	_, err := q.db.ExecContext(ctx, saveCharacterDamage, arg.Characterid, arg.Hpdamage, arg.Mpspent)
+	return err
+}
+
+const saveNonLethalDamage = `-- name: SaveNonLethalDamage :exec
+INSERT INTO character_nonlethal_damage (characterId, amount) VALUES (?, ?)
+ON CONFLICT (characterId) DO UPDATE SET amount = excluded.amount
+`
+
+type SaveNonLethalDamageParams struct {
+	Characterid int64 `json:"characterid"`
+	Amount      int64 `json:"amount"`
+}
+
+func (q *Queries) SaveNonLethalDamage(ctx context.Context, arg SaveNonLethalDamageParams) error {
+	_, err := q.db.ExecContext(ctx, saveNonLethalDamage, arg.Characterid, arg.Amount)
 	return err
 }
 

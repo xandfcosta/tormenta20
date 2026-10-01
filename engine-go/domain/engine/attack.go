@@ -78,8 +78,12 @@ type AttackOutcome struct {
 	// mais 1d6 de fogo deu 4", e um total sozinho apagaria o tipo de dano.
 	Extra     []ExtraRoll `json:"extra,omitempty"`
 	RawDamage int         `json:"rawDamage"` // dados + bônus, antes da RD
-	Absorbed  int         `json:"absorbed"`  // o que a RD comeu
-	Damage    int         `json:"damage"`    // o que o alvo perde de PV
+	// NonLethal é quanto do `Damage` não conta para sangrar nem para morrer
+	// (p236). Ou TUDO, quando a arma é Piedosa, ou nada — a propriedade é da
+	// arma, e o livro não dá meio-termo.
+	NonLethal int `json:"nonLethal,omitempty"`
+	Absorbed  int `json:"absorbed"` // o que a RD comeu
+	Damage    int `json:"damage"`   // o que o alvo perde de PV
 }
 
 // ResolveAttack rola um ataque contra um alvo e devolve a conta inteira.
@@ -109,6 +113,16 @@ func ResolveAttackUnder(
 ) (AttackOutcome, error) {
 	w := attackWorld(card, target, situations, d20, rollDie)
 	out := outcomeFromWorld(w)
+	// O NÃO LETAL NÃO É SISTEMA, e a escolha é a que o guia manda fazer: ECS
+	// para o que COMPÕE, função para o que calcula. Aqui não há o que compor —
+	// a propriedade é da ARMA e vale para o dano inteiro, depois da RD. Um
+	// sistema leria um recurso para copiar um número, que é cerimônia.
+	//
+	// DEPOIS da RD de propósito: o alvo perde o que o `Damage` diz, e é esse o
+	// número que não pode fazer sangrar nem matar (p236).
+	if card.NonLethal {
+		out.NonLethal = out.Damage
+	}
 	if fault, has := ecs.Get[attackFault](w, theResource(w)); has {
 		return out, fault.Err
 	}

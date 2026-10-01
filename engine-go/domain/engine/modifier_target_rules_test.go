@@ -41,6 +41,7 @@ var alvosQueOMotorAplica = map[string]string{
 	"attack":               "weapons.go, no ataque da carta",
 	"damage":               "weapons.go e attack_ecs.go, no dano",
 	"critRange":            "weapons.go, na margem de ameaça (ALE-411)",
+	"nonLethalDamage":      "weapons.go, na carta, e attack_ecs.go na parcela (ALE-423)",
 	"critMult":             "weapons.go, no multiplicador (ALE-411)",
 	"damageReduction":      "breakdowns.go, na RD",
 	"armorPenalty":         "breakdowns.go e load.go",

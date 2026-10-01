@@ -698,3 +698,18 @@ FROM character_item_enchants e
 JOIN character_items i ON i.id = e.itemId
 WHERE i.characterId IN (sqlc.slice('ids'))
 ORDER BY e.itemId, e.enchantId;
+
+-- name: GetNonLethalDamage :one
+-- Ausencia de linha quer dizer ZERO, como no `character_damage`: so quem levou
+-- dano nao letal ganha registro.
+SELECT amount FROM character_nonlethal_damage WHERE characterId = ?;
+
+-- name: ListNonLethalDamage :many
+SELECT characterId, amount FROM character_nonlethal_damage WHERE characterId IN (sqlc.slice('ids'));
+
+-- name: SaveNonLethalDamage :exec
+INSERT INTO character_nonlethal_damage (characterId, amount) VALUES (?, ?)
+ON CONFLICT (characterId) DO UPDATE SET amount = excluded.amount;
+
+-- name: ClearNonLethalDamage :exec
+DELETE FROM character_nonlethal_damage WHERE characterId = ?;

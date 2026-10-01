@@ -169,6 +169,11 @@ type CharacterItemEnchant struct {
 	Enchantid string `json:"enchantid"`
 }
 
+type CharacterNonlethalDamage struct {
+	Characterid int64 `json:"characterid"`
+	Amount      int64 `json:"amount"`
+}
+
 type CharacterPowerUse struct {
 	Characterid int64  `json:"characterid"`
 	Powerid     string `json:"powerid"`
