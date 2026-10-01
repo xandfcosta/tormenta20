@@ -143,9 +143,12 @@ type lugarDoAcervo struct {
 type boardToken struct {
 	ID    string
 	Label string
-	// EntryID é a linha da fila desta peça, e é por ele que o ATAQUE viaja: o
-	// alvo de um golpe é um combatente, não um quadrado. Vazio no objeto de
-	// cenário, que não tem turno nem PV.
+	// EntryID é a linha da fila desta peça, e é por ele que o ataque a uma
+	// CRIATURA viaja. Vazio no objeto de cenário, que não tem turno.
+	//
+	// Ele deixou de querer dizer "esta peça não apanha" na ALE-423: o objeto TEM
+	// PV e é atacável (p239), e o golpe contra ele viaja pelo id da PEÇA, por
+	// outra rota. Quem responde "esta peça apanha?" é o `Attackable`.
 	EntryID string
 	// Targeted acende a peça enquanto há um ataque pendurado contra ela. Quem
 	// olha o mapa sabe de quem a faixa fala sem ler a faixa.
