@@ -193,14 +193,24 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 				"que nenhum sistema lê", situation)
 		}
 	}
+	// O DENOMINADOR SÃO DUAS PARCELAS, e somá-las às cegas perderia a conta.
+	//
 	// A TABELA 5-3 TEM TREZE LINHAS, e seis delas são CONDIÇÃO — caído, cego
 	// (nas duas metades), desprevenido e ofuscado chegam pela ficha, não por
 	// aqui. As sete restantes são a relação entre atacante, alvo e terreno.
-	const asQueNaoSaoCondicao = 7
-	if medidos != asQueNaoSaoCondicao {
-		t.Errorf("a varredura mediu %d situações e a p239 tem %d que não são condição.\n"+
-			"Linha nova entra no `specialSituationTable` E neste número: um guarda que "+
-			"percorre o próprio mapa dá verde sobre a linha que ninguém escreveu",
-			medidos, asQueNaoSaoCondicao)
+	//
+	// A OITAVA não é linha de tabela: é a prosa da mesma página dizendo que um
+	// objeto em movimento "recebe +5 na Defesa" (p239). Ela mora neste mapa
+	// porque a FORMA é a da segunda metade da tabela, e está contada em separado
+	// para o número não deixar de responder "a tabela está inteira?".
+	const linhasDaTabela53 = 7
+	const daProsaDaMesmaPagina = 1 // o objeto em movimento
+	esperadas := linhasDaTabela53 + daProsaDaMesmaPagina
+	if medidos != esperadas {
+		t.Errorf("a varredura mediu %d situações, e a p239 dá %d: %d linhas da Tabela 5-3 "+
+			"que não são condição mais %d da prosa.\n"+
+			"Linha nova entra no `specialSituationTable` E numa destas duas parcelas: um "+
+			"guarda que percorre o próprio mapa dá verde sobre a linha que ninguém escreveu",
+			medidos, esperadas, linhasDaTabela53, daProsaDaMesmaPagina)
 	}
 }

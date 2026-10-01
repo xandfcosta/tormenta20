@@ -35,6 +35,13 @@ const (
 	TargetUnderTotalCover       SpecialSituation = "total-cover"
 	TargetUnderLightConcealment SpecialSituation = "light-concealment"
 	TargetUnderTotalConcealment SpecialSituation = "total-concealment"
+	// TargetObjectInMotion não está na Tabela 5-3 — ela é a PROSA da mesma
+	// página: "se o objeto estiver em movimento, recebe +5 na Defesa" (p239).
+	// Mora aqui porque a FORMA é a da segunda metade da tabela ("o alvo
+	// está... modificador na Defesa"), idêntica à da cobertura leve, e um
+	// caso especial no código do objeto poria o mesmo mecanismo em dois
+	// lugares — com só um deles aparecendo na decomposição que a mesa lê.
+	TargetObjectInMotion SpecialSituation = "object-in-motion"
 )
 
 // specialSituationTable é a Tabela 5-3 transcrita, e ela é a FONTE do guarda de
@@ -66,6 +73,10 @@ var specialSituationTable = map[SpecialSituation]situationRule{
 	// — e a mesa rola o dado de verdade.
 	TargetUnderLightConcealment: {Label: "camuflagem leve", MissUpTo: 2},
 	TargetUnderTotalConcealment: {Label: "camuflagem total", MissUpTo: 5},
+	// "Se o objeto estiver em movimento, recebe +5 na Defesa" (p239). Só
+	// objeto: criatura em movimento não ganha nada do livro — quem corre
+	// gasta ação, e é isso que a p238 cobra dela.
+	TargetObjectInMotion: {Label: "objeto em movimento", Defense: 5},
 }
 
 // situationRule é uma linha da tabela. Zero em tudo que a linha não diz.

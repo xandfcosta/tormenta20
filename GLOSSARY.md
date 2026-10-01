@@ -54,6 +54,7 @@ alguém já usou e que não voltam.
 | **tibar** | `tibar`, `T$` | ~~ouro~~, ~~moeda~~, ~~PO~~ | O dinheiro de Arton (p140). Na tela sai como **T$**. Ele é a MESMA coisa que a carga conta em moedas, e é um campo só na ficha: a Forja preenche, a Mochila mexe. São três gestos e não um — receber, gastar e corrigir (ALE-224) —, e o saldo nunca fica negativo, porque dívida viraria carga de moeda negativa. |
 | **melhoria** | `improvements` | ~~upgrade~~, ~~encantamento~~ | O que se forja num item para ele fazer mais: Certeira, Cruel, Reforçada (p165). São até quatro no mesmo item, e cada uma só cabe numa FAMÍLIA — arma, armadura, escudo, vestuário. Quem recusa a que não cabe é o servidor (`aMelhoriaCabeNoItem`, ALE-272); a lista do diálogo é conveniência sobre a mesma regra. **Melhoria soma com encanto** (p333); se ela soma com OUTRA melhoria o livro não diz, e o motor hoje faz o maior vencer. |
 | **material** | `material` | ~~liga~~, ~~matéria-prima~~ | O material especial de que o item é feito — aço-rubi, mitral, adamante (p166). É UM por item, ao contrário da melhoria, e obedece à mesma regra de família. |
+| **objeto** | `BoardToken.Kind == "object"` | ~~cenário~~, ~~prop~~, ~~obstáculo~~ | A porta, o barril, a carroça: o que ocupa casa no tabuleiro, não tem turno e PODE SER ATACADO (p239, Tab. 5-4). Ele traz três coisas e nenhuma delas é escolha livre: o **tamanho**, que dá a Defesa dele (Minúsculo 15 a Colossal 0 — o livro diz *"definida por sua categoria de tamanho"*); o **material**, que dá a RD; e o PV, que é o único número por verbete. Os 11 exemplos da tabela são ATALHO e não lista fechada — a coluna do livro se chama *Exemplo*, e o braço de estátua que ele não imprimiu também é objeto. **Não é criatura**: não entra na fila, não tem ficha nem bloco, e por isso o ataque contra ele não passa por linha de iniciativa. A 0 PV ou menos ele é **destruído** — ver a colisão C10. |
 | **encanto** | `weapon-enchant` | ~~encantamento~~, ~~melhoria mágica~~, ~~enchantment~~ | O que a MAGIA põe numa arma: Flamejante, Formidável, Ameaçadora (p335-336). Não é **melhoria** — a melhoria é forja mundana da p165, e o livro as separa por capítulo. São 28, sorteados numa faixa de d% (uma vez para item menor, duas para médio, três para maior), e três deles *"contam como dois encantos"*. Ele é SOBREPOSIÇÃO como a melhoria e o material — os três dividem o `appliesTo` e o mesmo `ownItemMods` —, mas mora em tabela PRÓPRIA (`character_item_enchants`), porque o livro conta e limita as duas coisas em separado: *"uma espada longa com quatro melhorias e três encantos (o máximo possível)"* (p334). O teto de três conta por PESO, não por linha. E o ACÚMULO tem regra própria, na p333: *"bônus por encantos não se acumulam"* — dois encantos no mesmo número disputam, e o maior vence (por isso a Magnífica exige a Formidável e depois a apaga). Com **melhoria** ele SOMA, e a mesma página manda: *"some [...] os bônus fornecidos por melhorias e encantos"*. São dois baldes de `bonusType` separados no motor — `enchantment` e `enhancement` — e juntá-los quebra uma das duas metades. **Quem põe um encanto é o MESTRE, nunca o jogador**: encanto não se compra, se acha ou se fabrica (p333). A escrita é o `Plays.EnchantItem`; o diálogo de melhorias, que é do jogador, não tem sinal por onde um encanto entre. A ficha do item e a carta da mão o MOSTRAM. |
 | **equipado** | `equipped` | ~~equipar~~ como estado, ~~slot de corpo~~ | Onde o item está: **empunhado** (uma ou duas mãos), **vestido**, ou **guardado** — que é o vazio da coluna. Os tetos são dois e são do livro: no máximo duas mãos ocupadas e quatro vestidos (p141). **Não há casa de corpo** no T20: nada de elmo, botas e anel numa boneca — a tira da Mochila desenha os dois TETOS, e é só isso que o livro tem. |
 | **poder** | `classPowers`, `powers` | ~~habilidade~~ (como escolha), ~~talento~~, ~~feat~~ | O que o personagem TEM e a ficha lista na aba Poderes. Vem de cinco procedências — raça, origem, classe automática, poder de classe escolhido e poder geral — e a mesa não distingue nenhuma delas na hora de usar. **Poder se TEM, perícia se ROLA.** Uma VAGA de poder abre por nível a partir do 2º (p33), e "você sempre pode substituir um poder de classe por um poder geral" — por isso as duas listas viram uma no diálogo de escolher. |
@@ -338,6 +339,24 @@ produto, o terceiro é a palavra da mesa. O identificador é que não pode ser s
 
 Não há renome pendente: a decisão já foi tomada na ALE-387, e está aqui para
 ninguém "arrumar" chamando o segundo de `World` ao ver a palavra na prosa.
+
+**C10 — `material` são dois, e os dois vêm do livro.** Decisão do dono, 2026-10-01.
+1. o **material especial de um ITEM de ficha** (p166): aço-rubi, mitral, adamante.
+   Um por item, obedece a família, e muda o que o item CONCEDE;
+2. de que um **objeto do cenário** é feito (p239): madeira, pedra, metal, papel.
+   Não concede nada — ela dá a **RD** do objeto, e só.
+
+Os dois se chamam `material` no código e na tela, e a razão é que o livro chama
+os dois assim: inventar uma segunda palavra ensinaria o leitor a distinguir
+duas palavras parecidas em vez de duas telas distantes. E elas SÃO distantes —
+(1) é a Mochila da ficha, (2) é a peça no tabuleiro, e não existe cena que
+mostre as duas. Os identificadores moram em structs diferentes
+(`CharacterItem.Material` e o objeto do tabuleiro), então o compilador nunca
+precisa escolher.
+
+**O que NÃO fazer:** unificar as duas listas. Uma porta de mitral não é regra do
+livro, e um escudo de "madeira" já é o que a ausência de material especial quer
+dizer.
 
 ## E-bis. Os contextos do servidor (ALE-254)
 
