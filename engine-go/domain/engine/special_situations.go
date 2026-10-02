@@ -42,6 +42,19 @@ const (
 	// caso especial no código do objeto poria o mesmo mecanismo em dois
 	// lugares — com só um deles aparecendo na decomposição que a mesa lê.
 	TargetObjectInMotion SpecialSituation = "object-in-motion"
+	// AttackerSwitchesTheDamageType é a ESCOLHA de quem ataca, da p236: usar a
+	// arma contra a natureza dela — o fio para derrubar, ou o punho para matar.
+	//
+	// Ela mora aqui pelo mesmo motivo do objeto em movimento: o MECANISMO é o da
+	// Tabela 5-3 — desloca o teste de ataque e a mesa precisa ler por quê. A
+	// regra é SIMÉTRICA, e por isso é UMA linha e não duas: o livro gasta uma
+	// frase inteira dizendo que vale nos dois sentidos, e duas linhas fariam
+	// alguém aplicar só a que lembrou.
+	//
+	// A TROCA DO TIPO não é mecanismo desta tabela e não entrou nela: ela é lida
+	// no `ResolveAttackUnder`, ao lado do `card.NonLethal` que já estava lá. Um
+	// quinto campo no `situationRule` serviria a uma linha só.
+	AttackerSwitchesTheDamageType SpecialSituation = "switched-damage-type"
 )
 
 // specialSituationTable é a Tabela 5-3 transcrita, e ela é a FONTE do guarda de
@@ -77,6 +90,10 @@ var specialSituationTable = map[SpecialSituation]situationRule{
 	// objeto: criatura em movimento não ganha nada do livro — quem corre
 	// gasta ação, e é isso que a p238 cobra dela.
 	TargetObjectInMotion: {Label: "objeto em movimento", Defense: 5},
+	// "Você pode usar uma arma para causar dano não letal [...], mas sofre uma
+	// penalidade de –5 no teste de ataque. [...] Você pode usar esses ataques e
+	// armas para causar dano letal, mas sofre a mesma penalidade" (p236).
+	AttackerSwitchesTheDamageType: {Label: "trocando o tipo de dano", Attack: -5},
 }
 
 // situationRule é uma linha da tabela. Zero em tudo que a linha não diz.

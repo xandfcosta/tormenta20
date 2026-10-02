@@ -193,24 +193,31 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 				"que nenhum sistema lê", situation)
 		}
 	}
-	// O DENOMINADOR SÃO DUAS PARCELAS, e somá-las às cegas perderia a conta.
+	// O DENOMINADOR SÃO TRÊS PARCELAS, e somá-las às cegas perderia a conta.
+	//
+	// Esta tabela deixou de ser "a Tabela 5-3" e virou "o que desloca um teste de
+	// ataque sem ser condição". As três parcelas dizem de ONDE cada linha veio, e
+	// é isso que mantém o número respondendo alguma coisa — um total só diria
+	// quantas linhas há, que é o que o `len` do mapa já diz.
 	//
 	// A TABELA 5-3 TEM TREZE LINHAS, e seis delas são CONDIÇÃO — caído, cego
 	// (nas duas metades), desprevenido e ofuscado chegam pela ficha, não por
 	// aqui. As sete restantes são a relação entre atacante, alvo e terreno.
 	//
-	// A OITAVA não é linha de tabela: é a prosa da mesma página dizendo que um
-	// objeto em movimento "recebe +5 na Defesa" (p239). Ela mora neste mapa
-	// porque a FORMA é a da segunda metade da tabela, e está contada em separado
-	// para o número não deixar de responder "a tabela está inteira?".
+	// As outras duas não são linha de tabela nenhuma: são PROSA, e de páginas
+	// diferentes. A da p239 diz que um objeto em movimento "recebe +5 na Defesa";
+	// a da p236 cobra −5 de quem usa a arma contra a natureza dela. As duas moram
+	// neste mapa porque a FORMA é a da tabela — deslocam o teste e a mesa lê o
+	// rótulo na decomposição.
 	const linhasDaTabela53 = 7
-	const daProsaDaMesmaPagina = 1 // o objeto em movimento
-	esperadas := linhasDaTabela53 + daProsaDaMesmaPagina
+	const daProsaDaP239 = 1 // o objeto em movimento
+	const daProsaDaP236 = 1 // trocar o tipo de dano
+	esperadas := linhasDaTabela53 + daProsaDaP239 + daProsaDaP236
 	if medidos != esperadas {
-		t.Errorf("a varredura mediu %d situações, e a p239 dá %d: %d linhas da Tabela 5-3 "+
-			"que não são condição mais %d da prosa.\n"+
-			"Linha nova entra no `specialSituationTable` E numa destas duas parcelas: um "+
+		t.Errorf("a varredura mediu %d situações, e o livro dá %d: %d linhas da Tabela 5-3 "+
+			"que não são condição, %d da prosa da p239 e %d da prosa da p236.\n"+
+			"Linha nova entra no `specialSituationTable` E numa destas três parcelas: um "+
 			"guarda que percorre o próprio mapa dá verde sobre a linha que ninguém escreveu",
-			medidos, esperadas, linhasDaTabela53, daProsaDaMesmaPagina)
+			medidos, esperadas, linhasDaTabela53, daProsaDaP239, daProsaDaP236)
 	}
 }
