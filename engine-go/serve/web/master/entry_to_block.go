@@ -44,6 +44,13 @@ func CopyOfEntry(v book.Entry) creature.Block {
 		// tem", e ensiná-lo exigiria mexer no struct, no formulário e na
 		// validação. A partir da cópia o bloco é DELE e ele edita; quem guarda a
 		// ausência de verdade é o CATÁLOGO, que é a fonte.
+		//
+		// A PERDA FICOU MAIS CARA NA ALE-423, e vale saber antes de reabrir: a
+		// p228 isenta de MEDO e de efeitos MENTAIS quem tem Inteligência nula, e
+		// a regra lê exatamente este ponteiro. Então o Zumbi do catálogo é imune
+		// a medo e a CÓPIA dele na campanha não é — ela tem Int 0, que é um
+		// número. A imunidade pelo TIPO (cansaço, metabolismo, veneno)
+		// atravessa inteira, porque o `Kind` não se perde.
 		Strength:         orZero(v.Strength),
 		Dexterity:        orZero(v.Dexterity),
 		Constitution:     orZero(v.Constitution),

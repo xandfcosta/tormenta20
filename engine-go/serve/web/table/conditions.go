@@ -2,12 +2,14 @@ package table
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 )
@@ -78,6 +80,14 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	current := state.Initiative[i].Conditions
 	fresh := make([]string, 0, len(current)+1)
 	found := false
+	// A IMUNIDADE só barra o que ENTRA (p228): tirar uma condição de um imune
+	// tem de continuar funcionando, senão uma marcada antes desta regra ficaria
+	// presa na linha para sempre.
+	if !slices.Contains(current, id) {
+		if err := st.refuseIfImmune(c, state.Initiative[i], id); err != nil {
+			return nil, err
+		}
+	}
 	for _, now := range current {
 		if now == id {
 			found = true
@@ -100,6 +110,73 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	// a condição que ele acabou de pôr.
 	c.Signals["row_conditions"] = strings.Join(fresh, ",")
 	return newState, nil
+}
+
+// refuseIfImmune recusa a condição que a criatura não pode receber (p228).
+//
+// A recusa diz QUAL tipo de efeito barrou — "imune a veneno" explica; "imune"
+// manda procurar — e quem ela alcança é só o NPC: um personagem é humanoide com
+// mente, e nenhuma das cinco cláusulas da p228 o toca.
+//
+// AS DUAS PROCEDÊNCIAS NÃO SÃO IGUAIS, e a diferença é do dado e não do desenho.
+// O VERBETE do bestiário guarda a Inteligência como ponteiro, então ele sabe
+// dizer "nula" — é o travessão do livro, e sete das onze criaturas de construto
+// e morto-vivo o têm. O BLOCO que o mestre escreveu guarda um int, e a cópia do
+// verbete para o bloco converte a ausência em ZERO de propósito (ver o
+// `entry_to_block.go`). Então um Zumbi copiado para a campanha continua imune a
+// veneno, pelo TIPO, e deixa de ser imune a medo — e isso é a perda conhecida da
+// cópia, agora com uma consequência que ela não tinha.
+func (st Scene) refuseIfImmune(c commandCtx, entry live.InitiativeEntry, condition string) error {
+	tipo, inteligencia, achou := st.creatureNatureOf(c, entry)
+	if !achou {
+		return nil
+	}
+	porque, imune := engine.ImmuneToCondition(
+		engine.ImmunitiesOfCreature(tipo, inteligencia), conditionTags(condition))
+	if !imune {
+		return nil
+	}
+	return fmt.Errorf("%s é imune a efeitos de %s, e %s é um deles (p228)",
+		entry.Label, porque, book.ConditionName(condition))
+}
+
+// creatureNatureOf devolve o TIPO e a Inteligência da criatura por trás da
+// linha, e `false` quando não há criatura — personagem ou linha digitada à mão.
+func (st Scene) creatureNatureOf(c commandCtx, entry live.InitiativeEntry) (string, *int, bool) {
+	if entry.MonsterID != nil {
+		for _, verbete := range book.Creatures() {
+			if verbete.ID == *entry.MonsterID {
+				return verbete.Kind, verbete.Intelligence, true
+			}
+		}
+		return "", nil, false
+	}
+	if entry.CreatureID == nil {
+		return "", nil, false
+	}
+	_, bloco, err := st.cast.Block(c.R.Context(), st.callerOf(c.R), c.CampaignID, *entry.CreatureID)
+	if err != nil {
+		// SEM BLOCO NÃO SE RECUSA NADA: o id veio do cliente e pode apontar para
+		// o nada (é o que o `initiative.npcEntry` permite de propósito), e
+		// transformar um bloco ilegível numa recusa tiraria do mestre um gesto
+		// que não tem a ver com imunidade nenhuma.
+		return "", nil, false
+	}
+	// O INT DO BLOCO NUNCA É NULO, e por isso ele vai como ponteiro para um
+	// número: o bloco não sabe dizer "não tem", e fingir que o zero é a ausência
+	// daria imunidade a medo a todo NPC que o mestre esqueceu de preencher.
+	inteligencia := bloco.Intelligence
+	return bloco.Kind, &inteligencia, true
+}
+
+// conditionTags são os tipos de efeito desta condição, pelo catálogo.
+func conditionTags(id string) []string {
+	for _, c := range book.Catalogs().Conditions {
+		if c.ID == id {
+			return c.Tags
+		}
+	}
+	return nil
 }
 
 // toggleSheetCondition alterna a condição NA FICHA do personagem da linha.
