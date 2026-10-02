@@ -143,9 +143,12 @@ type lugarDoAcervo struct {
 type boardToken struct {
 	ID    string
 	Label string
-	// EntryID é a linha da fila desta peça, e é por ele que o ATAQUE viaja: o
-	// alvo de um golpe é um combatente, não um quadrado. Vazio no objeto de
-	// cenário, que não tem turno nem PV.
+	// EntryID é a linha da fila desta peça, e é por ele que o ataque a uma
+	// CRIATURA viaja. Vazio no objeto de cenário, que não tem turno.
+	//
+	// Ele deixou de querer dizer "esta peça não apanha" na ALE-423: o objeto TEM
+	// PV e é atacável (p239), e o golpe contra ele viaja pelo id da PEÇA, por
+	// outra rota. Quem responde "esta peça apanha?" é o `Attackable`.
 	EntryID string
 	// Targeted acende a peça enquanto há um ataque pendurado contra ela. Quem
 	// olha o mapa sabe de quem a faixa fala sem ler a faixa.
@@ -164,6 +167,24 @@ type boardToken struct {
 	// ninguém calcula com ela.
 	LeftFrom  string
 	Footprint int
+	// SizeName é a CATEGORIA do livro, e é ela que o diálogo de editar semeia —
+	// o `Footprint` é derivado dela e não serve para semear um menu de seis
+	// opções. A peça que veio da fila não tem categoria, e aí vale a mais comum
+	// do lado dela (`sizeNameOfToken`).
+	SizeName string
+	// Attackable: a peça é objeto COM as estatísticas da Tab. 5-4 e ainda de pé.
+	// Cenário sem PV é estado legítimo — a mancha de musgo — e não apanha.
+	Attackable bool
+	// Destroyed: "um objeto reduzido a 0 ou menos PV é destruído" (p239). Ela
+	// FICA no mapa: quem a tira é o mestre, e uma porta arrombada é cenário que
+	// a mesa precisa continuar vendo.
+	Destroyed bool
+	// Moving: o mestre disse que o objeto está em movimento, e a p239 lhe dá +5
+	// na Defesa. Só ele sabe — peça arrastada está sendo POSTA, que é outra
+	// coisa.
+	Moving bool
+	// ObjectHp é "7/20" para a peça com estatísticas, e vazio para o resto.
+	ObjectHp string
 	// Monogram, Instancia e Matiz: a cor é da ESPÉCIE e o número é da INSTÂNCIA.
 	Monogram string
 	Instance string
@@ -353,8 +374,13 @@ func boardTokenOf(t *board.BoardToken, health map[string]int, withBlock map[stri
 	p := boardToken{
 		ID: t.ID, Label: t.Label,
 		X: t.X, Y: t.Y, Where: Coordinate(t.X, t.Y),
-		Footprint: footprint,
-		Monogram:  a.Monogram, Instance: a.Instance, Hue: a.Hue,
+		Footprint:  footprint,
+		SizeName:   sizeNameOfToken(t),
+		Attackable: t.HasObjectStats() && !t.IsDestroyed(),
+		Destroyed:  t.IsDestroyed(),
+		Moving:     t.Moving,
+		ObjectHp:   objectHpOf(t),
+		Monogram:   a.Monogram, Instance: a.Instance, Hue: a.Hue,
 		Hidden:   t.Hidden,
 		CameFrom: t.CameFrom,
 		IsObject: t.Kind == "object",
@@ -376,54 +402,6 @@ func boardTokenOf(t *board.BoardToken, health map[string]int, withBlock map[stri
 // Num plano sem bordas o "+1" de planilha mente sobre onde a peça está, e é este
 // texto que o leitor de tela recebe — sem ele a peça é um disco anônimo.
 func Coordinate(x, y int) string { return fmt.Sprintf("%d, %d", x, y) }
-
-// blocosDaFila diz quais combatentes têm bloco de criatura do mestre.
-//
-// Mapa por `entryId` como a saúde, e pela mesma razão: não é do tabuleiro, é da
-// FILA, e o tabuleiro só mostra. Ele decide se o menu da peça OFERECE o
-// "com bloco próprio" — oferecer o que o servidor vai recusar é desenhar um erro,
-// que é o que o `sessionConfig` já escreve com todas as letras.
-func blocosDaFila(st *live.SessionRuntimeState) map[string]bool {
-	withBlock := map[string]bool{}
-	if st == nil {
-		return withBlock
-	}
-	for i := range st.Initiative {
-		if st.Initiative[i].CreatureID != nil {
-			withBlock[st.Initiative[i].ID] = true
-		}
-	}
-	return withBlock
-}
-
-// saudeDaFila é quanto de PV resta a cada combatente, em porcentagem.
-//
-// Lê o estado JÁ REDIGIDO: o combatente cujo PV o mestre ocultou chega sem
-// `HpMax`, não entra no mapa, e a peça dele sai sem barra. É assim que a redação
-// por papel alcança o tabuleiro sem uma segunda decisão sobre quem vê o quê.
-func saudeDaFila(st *live.SessionRuntimeState) map[string]int {
-	health := map[string]int{}
-	if st == nil {
-		return health
-	}
-	for i := range st.Initiative {
-		e := &st.Initiative[i]
-		if e.HpMax == nil || *e.HpMax <= 0 {
-			continue
-		}
-		health[e.ID] = tableBarOf(live.DerefOr(e.HpCurrent, 0), *e.HpMax, false).Pct
-	}
-	return health
-}
-
-// turnCombatant é o `entryId` de quem está na vez, ou vazio fora de combate.
-// A peça acende com o MESMO dourado da linha, porque é o mesmo fato.
-func turnCombatant(st *live.SessionRuntimeState) string {
-	if st == nil || st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
-		return ""
-	}
-	return st.Initiative[st.TurnIndex].ID
-}
 
 // posicaoNoPlano escreve o lugar da coisa em variáveis que o CSS multiplica pelo
 // `--quadrado`.

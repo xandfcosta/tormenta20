@@ -46,7 +46,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	}
 	pa := st.PendingAttack
 	out := &attackProposal{
-		Attacker: entryLabel(st, pa.AttackerEntryID), Target: entryLabel(st, pa.TargetEntryID),
+		Attacker: entryLabel(st, pa.AttackerEntryID), Target: targetLabel(*pa, st),
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
 		Tally: attackLine(*pa), Situations: writtenSituations(*pa),
 		Mine: pa.ByUserID == userID,
@@ -185,6 +185,19 @@ func attackLine(pa live.PendingAttack) string {
 	}
 	return line + fmt.Sprintf(" = %d · RD %d → %d de dano%s",
 		pa.RawDamage, pa.Absorbed, pa.Damage, writtenNonLethal(pa))
+}
+
+// targetLabel é o nome do que foi atacado, e ele tem DUAS procedências.
+//
+// A criatura vem da FILA e não do provisório, porque a linha pode ter sido
+// renomeada entre a rolagem e o desenho — o nome que a mesa lê é o de agora. O
+// OBJETO não tem linha, então o nome dele viaja no provisório; é a única coisa
+// que a faixa recebe sobre ele, e sem isso ela diria "acertou" sem dizer o quê.
+func targetLabel(pa live.PendingAttack, st *live.SessionRuntimeState) string {
+	if pa.TargetTokenID != "" {
+		return pa.TargetLabel
+	}
+	return entryLabel(st, pa.TargetEntryID)
 }
 
 func entryLabel(st *live.SessionRuntimeState, entryID string) string {

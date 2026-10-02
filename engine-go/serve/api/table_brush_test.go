@@ -366,7 +366,7 @@ func TestEveryGestureThatReadsPointsRefusesABrokenBody(t *testing.T) {
 		{"/tabuleiro/gabarito", "a origem e a mira do gabarito precisam ser dois pares de números",
 			templateBody("quadrado", "1", 4, 4, 4, 4)},
 		{"/tabuleiro/pecas/nova", "não entendi a peça",
-			`{"from":{"X":4,"Y":3},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`},
+			`{"from":{"X":4,"Y":3},"new_token_name":"Porta","new_token_size":"Médio","new_token_look":"object"}`},
 		{"/tabuleiro/regua", "as paradas da régua não vieram",
 			`{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`},
 		{"/tabuleiro/grupo/mover", "as peças marcadas não vieram",

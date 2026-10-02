@@ -257,16 +257,14 @@ func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
 // draftNewLoosePiece é a peça avulsa: a porta, o baú, o barril.
 //
 // Ela lê a MESMA tira que a mesa lê (`loosePieceSignals`), com as mesmas
-// recusas — nome obrigatório, tamanho do livro (p107), aparência conhecida.
+// recusas — nome obrigatório, tamanho da Tab. 5-4, aparência conhecida — e a
+// MESMA montagem (`tokenFromLooseDraft`), que antes estava escrita duas vezes.
 func draftNewLoosePiece(st Scene, c draftCtx, b *board.BoardState) error {
 	drawing, square, err := loosePieceSignals(c.R)
 	if err != nil {
 		return err
 	}
-	return board.AddToken(b, board.BoardToken{
-		Label: drawing.Name, Kind: drawing.Appearance, Footprint: drawing.Size,
-		X: square.X, Y: square.Y,
-	}, st.deps.Boards().NewID)
+	return board.AddToken(b, tokenFromLooseDraft(drawing, square), st.deps.Boards().NewID)
 }
 
 // draftMovesToken põe a peça na casa, sem proposta e sem custo.
@@ -288,11 +286,12 @@ func draftEditsToken(st Scene, c draftCtx, b *board.BoardState) error {
 	if name == "" {
 		return errors.New("a peça precisa de um nome")
 	}
-	if !tokenSize(signals.Size) {
-		return fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", signals.Size)
+	// A MESMA recusa da mesa: quem conhece as seis categorias é a escada.
+	if _, err := engine.ObjectDefense(signals.Size); err != nil {
+		return err
 	}
 	return board.UpdateToken(b, chi.URLParam(c.R, "id"),
-		board.ParseTokenPatch(map[string]any{"label": name, "footprint": signals.Size}))
+		board.ParseTokenPatch(map[string]any{"label": name, "size": signals.Size}))
 }
 
 func draftDuplicatesToken(st Scene, c draftCtx, b *board.BoardState) error {

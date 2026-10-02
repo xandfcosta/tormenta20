@@ -422,6 +422,21 @@ func (bs *Store) AddToken(ctx context.Context, sessionID int64, boardID string, 
 	})
 }
 
+// DamageObject tira PV de uma peça de cenário (p239).
+//
+// Ela existe porque o dano de um ataque a OBJETO não tem para onde ir no regime:
+// o `DeltaVitals` escreve na LINHA da fila, e um objeto não tem linha. Quem
+// escolhe entre as duas é a CENA, acima dos dois stores — cada um tem trava
+// própria, e um chamando o outro de dentro da sua é como se escreve um abraço
+// mortal (ver o comentário do `bus` acima).
+func (bs *Store) DamageObject(
+	ctx context.Context, sessionID int64, boardID, tokenID string, amount int,
+) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
+		return board.DamageObject(b, tokenID, amount)
+	})
+}
+
 // UnbindTokens desamarra as peças cuja linha da fila não existe mais na fila
 // dada. A peça fica; só o vínculo sai (ALE-377).
 func (bs *Store) UnbindTokens(

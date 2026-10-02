@@ -31,13 +31,13 @@ func NewBoardSituations(b BoardReader) BoardSituations { return BoardSituations{
 // Sem tabuleiro aberto a resposta é VAZIA e não é erro — a maior parte de uma
 // sessão não tem mapa, e o ataque acontece do mesmo jeito.
 //
-// @example combat.NewBoardSituations(store).Between(ctx, 7, "atk", "alvo")
+// @example combat.NewBoardSituations(store).Between(ctx, 7, "atk", board.AttackTargetOnTheBoard{EntryID: "alvo"})
 func (b BoardSituations) Between(
-	ctx context.Context, sessionID int64, attackerEntry, targetEntry string,
+	ctx context.Context, sessionID int64, attackerEntry string, target board.AttackTargetOnTheBoard,
 ) ([]engine.SpecialSituation, error) {
 	state, err := b.boards.Get(ctx, sessionID, "")
 	if err != nil {
 		return nil, fmt.Errorf("ler o tabuleiro da sessão %d para o ataque: %w", sessionID, err)
 	}
-	return board.SituationsBetween(state, attackerEntry, targetEntry), nil
+	return board.SituationsBetween(state, attackerEntry, target), nil
 }

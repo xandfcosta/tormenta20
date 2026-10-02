@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"t20engine/domain/board"
+	"t20engine/domain/engine"
 )
 
 // O TRILHO DE FERRAMENTAS do tabuleiro: uma ferramenta ativa por vez, com o que
@@ -195,22 +196,72 @@ func shortcutName(f mapTool) string {
 	return fmt.Sprintf("%s (tecla %s)", f.Label, f.Shortcut)
 }
 
-// piecesFootprints são os tamanhos que a Tabela 1-21 produz (T20 p107).
+// piecesSizes são os SEIS tamanhos do livro, com o que cada um decide.
 //
-// Quatro e não uma faixa: 4 e 5 não são tamanho de criatura nenhuma. A tira
-// desenha botões por isso — um campo numérico convidaria a digitar o que o
-// servidor vai recusar, e recusa que se descobre clicando é pior que a escolha
-// não existir.
-var piecesFootprints = []struct {
-	Sides int
-	Side  string
-	Label string
-}{
-	{1, "1×1", "Médio"},
-	{2, "2×2", "Grande"},
-	{3, "3×3", "Enorme"},
-	{6, "6×6", "Colossal"},
-}
+// Eram QUATRO, e eram o LADO em quadrados — 1, 2, 3 e 6 (p107, Tab. 1-21). O
+// lado não consegue carregar a categoria: Minúsculo, Pequeno e Médio ocupam
+// todos 1 quadrado, e a Tab. 5-4 (p239) lhes dá Defesa 15, 12 e 10. Uma porta
+// minúscula e um barril médio eram a mesma escolha na tira, e a Defesa de um
+// deles sairia errada.
+//
+// Então a tira passou a escolher a CATEGORIA, e o lado virou derivado — o
+// `engine.FootprintForSize` o produz, e a peça o recalcula a cada mutação. O
+// `Side` aqui é só rótulo: quem decide o desenho é o motor.
+//
+// A DEFESA viaja junto porque é ela que a tira mostra ao escolher, e o número
+// vem do motor — escrevê-lo aqui seria a segunda grafia da escada da p239.
+var piecesSizes = func() []struct {
+	ID      string
+	Side    string
+	Defense int
+} {
+	out := []struct {
+		ID      string
+		Side    string
+		Defense int
+	}{}
+	for _, nome := range engine.SizesOfTheBook() {
+		defesa, err := engine.ObjectDefense(nome)
+		if err != nil {
+			// IMPOSSÍVEL por construção, e por isso explode no nascimento do
+			// processo em vez de servir uma tira com um buraco: a lista acima e a
+			// escada do motor são a mesma seis.
+			panic(fmt.Sprintf("a tira da peça conhece o tamanho %q e o motor não: %v", nome, err))
+		}
+		out = append(out, struct {
+			ID      string
+			Side    string
+			Defense int
+		}{nome, fmt.Sprintf("%d×%d", engine.FootprintForSize(nome), engine.FootprintForSize(nome)), defesa})
+	}
+	return out
+}()
+
+// piecesMaterials são os materiais de OBJETO da Tab. 5-4, com a RD de cada um.
+//
+// Não são os materiais ESPECIAIS do item de ficha (mitral, aço-rubi, p166) — a
+// palavra é a mesma e as coisas não são, e a colisão está registrada como C10 no
+// GLOSSARY.md. A RD vem do motor pela mesma razão que a Defesa acima.
+var piecesMaterials = func() []struct {
+	ID string
+	Rd int
+} {
+	out := []struct {
+		ID string
+		Rd int
+	}{}
+	for _, nome := range engine.ObjectMaterialsOfTheBook() {
+		rd, err := engine.ObjectDamageReduction(nome)
+		if err != nil {
+			panic(fmt.Sprintf("a tira da peça conhece o material %q e o motor não: %v", nome, err))
+		}
+		out = append(out, struct {
+			ID string
+			Rd int
+		}{nome, rd})
+	}
+	return out
+}()
 
 // piecesLooks são as duas aparências que a peça avulsa pode ter.
 //
@@ -224,4 +275,25 @@ var piecesLooks = []struct {
 }{
 	{"object", "Objeto", "Objeto: a porta, o baú, o barril — cenário que ocupa casa"},
 	{"npc", "NPC", "NPC: a criatura que está no mapa e ainda não entrou na fila"},
+}
+
+// objectDefenseOf é a Defesa de um tamanho, para a tira escrever no `dataset` da
+// opção. Ela ENGOLE o erro de propósito, e pode: a lista que a chama é a dos
+// exemplos do próprio motor, e um tamanho fora da escada já teria explodido o
+// `piecesSizes` no nascimento do processo.
+func objectDefenseOf(size string) int {
+	defesa, err := engine.ObjectDefense(size)
+	if err != nil {
+		panic(fmt.Sprintf("o exemplo da Tab. 5-4 traz o tamanho %q, que a escada não tem: %v", size, err))
+	}
+	return defesa
+}
+
+// objectRdOf é a irmã dela para o material.
+func objectRdOf(material string) int {
+	rd, err := engine.ObjectDamageReduction(material)
+	if err != nil {
+		panic(fmt.Sprintf("o exemplo da Tab. 5-4 traz o material %q, que a escada não tem: %v", material, err))
+	}
+	return rd
 }

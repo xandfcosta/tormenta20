@@ -32,9 +32,23 @@ import "fmt"
 type PendingAttack struct {
 	AttackerEntryID string `json:"attackerEntryId"`
 	TargetEntryID   string `json:"targetEntryId"`
-	Weapon          string `json:"weapon"`
-	Roll            int    `json:"roll"`
-	Total           int    `json:"total"`
+	// TargetTokenID é a PEÇA DE OBJETO atacada (p239), e é a alternativa ao
+	// `TargetEntryID`: um objeto não tem linha na fila porque não tem turno.
+	// Exatamente um dos dois vem preenchido.
+	//
+	// É por ele que a CONFIRMAÇÃO sabe onde o dano pousa — na fila, pelo
+	// `DeltaVitals`, ou no tabuleiro, pelo `DamageObject`. Os dois agregados têm
+	// travas próprias, então quem escolhe é a cena, acima dos dois.
+	TargetTokenID string `json:"targetTokenId,omitempty"`
+	// TargetLabel é o nome do que foi atacado, e ele viaja porque a faixa o lê.
+	//
+	// A criatura tem a linha da fila de onde tirá-lo; o objeto não tem nada — o
+	// provisório é a única coisa que a faixa recebe, e sem o nome ela diria
+	// "acertou" sem dizer o quê.
+	TargetLabel string `json:"targetLabel,omitempty"`
+	Weapon      string `json:"weapon"`
+	Roll        int    `json:"roll"`
+	Total       int    `json:"total"`
 	// Defense é a Defesa que o ataque enfrentou. Ela viaja porque a mesa lê a
 	// COMPARAÇÃO — "24 vs 17" é o que explica o veredicto, e sem o 17 a faixa
 	// afirma um acerto sem dizer contra o quê.
@@ -120,8 +134,17 @@ func ProposeAttack(st *SessionRuntimeState, attack PendingAttack) error {
 	if FindEntryIndex(st, attack.AttackerEntryID) < 0 {
 		return fmt.Errorf("quem ataca (%s) não está na fila", attack.AttackerEntryID)
 	}
-	if FindEntryIndex(st, attack.TargetEntryID) < 0 {
+	// O ALVO TEM DUAS ESPÉCIES, e só uma delas está na fila: criatura tem linha
+	// porque tem turno, e OBJETO não (p239). Conferir a fila dos dois recusaria
+	// todo ataque a cenário — e exigir um dos dois é o que impede o provisório
+	// sem alvo nenhum, que a faixa desenharia como "acertou" o quê.
+	if attack.TargetTokenID == "" && FindEntryIndex(st, attack.TargetEntryID) < 0 {
 		return fmt.Errorf("o alvo (%s) não está na fila", attack.TargetEntryID)
+	}
+	if attack.TargetTokenID != "" && attack.TargetEntryID != "" {
+		return fmt.Errorf("o ataque veio com linha (%s) E peça (%s) como alvo, e são "+
+			"endereços da mesma coisa: um deles está errado",
+			attack.TargetEntryID, attack.TargetTokenID)
 	}
 	st.PendingAttack = &attack
 	return nil
@@ -154,7 +177,12 @@ func AttackToCommit(st *SessionRuntimeState, who Attacker) (PendingAttack, error
 	}
 	// O ALVO É CONFERIDO DE NOVO: entre rolar e confirmar ele pode ter saído da
 	// fila, e o que vale é a mesa no instante em que o PV muda.
-	if FindEntryIndex(st, attack.TargetEntryID) < 0 {
+	//
+	// SÓ O ALVO-CRIATURA, porque é só ele que tem fila de onde sair. O OBJETO
+	// (p239) é conferido pelo tabuleiro, por quem escreve o PV dele — e medi-lo
+	// aqui recusaria todo ataque a cenário com uma frase sobre uma fila em que
+	// ele nunca esteve.
+	if attack.TargetTokenID == "" && FindEntryIndex(st, attack.TargetEntryID) < 0 {
 		return PendingAttack{}, fmt.Errorf("o alvo saiu da fila entre a rolagem e a confirmação")
 	}
 	return *attack, nil

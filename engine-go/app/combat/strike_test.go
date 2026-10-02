@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"t20engine/app"
+	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 )
@@ -330,14 +331,14 @@ func TestABowCannotManeuver(t *testing.T) {
 // que é um caso do livro.
 type semTabuleiro struct{}
 
-func (semTabuleiro) Between(context.Context, int64, string, string) ([]engine.SpecialSituation, error) {
+func (semTabuleiro) Between(context.Context, int64, string, board.AttackTargetOnTheBoard) ([]engine.SpecialSituation, error) {
 	return nil, nil
 }
 
 // comTabuleiro devolve as situações que lhe deram, sem olhar quem pergunta.
 type comTabuleiro struct{ situations []engine.SpecialSituation }
 
-func (c comTabuleiro) Between(context.Context, int64, string, string) ([]engine.SpecialSituation, error) {
+func (c comTabuleiro) Between(context.Context, int64, string, board.AttackTargetOnTheBoard) ([]engine.SpecialSituation, error) {
 	return c.situations, nil
 }
 
@@ -398,6 +399,6 @@ func TestABoardThatCannotBeReadRefusesTheAttack(t *testing.T) {
 
 type tabuleiroQuebrado struct{}
 
-func (tabuleiroQuebrado) Between(context.Context, int64, string, string) ([]engine.SpecialSituation, error) {
+func (tabuleiroQuebrado) Between(context.Context, int64, string, board.AttackTargetOnTheBoard) ([]engine.SpecialSituation, error) {
 	return nil, errors.New("o disco sumiu")
 }

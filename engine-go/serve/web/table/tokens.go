@@ -222,18 +222,44 @@ func newLoosePiece(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().AddToken(c.R.Context(), c.SessionID, c.BoardID, board.BoardToken{
-		Label: drawing.Name, Kind: drawing.Appearance, Footprint: drawing.Size,
+	return st.deps.Boards().AddToken(c.R.Context(), c.SessionID, c.BoardID,
+		tokenFromLooseDraft(drawing, square))
+}
+
+// tokenFromLooseDraft monta a peça a partir do que a tira disse.
+//
+// Ela é UMA porque os dois caminhos que criam peça avulsa — a mesa ao vivo e o
+// RASCUNHO de um lugar — leem a mesma tira e tinham a mesma montagem escrita
+// duas vezes. Um campo novo acrescentado num só produziria uma porta com PV na
+// sessão e sem PV no rascunho da mesma cena.
+//
+// O FOOTPRINT NÃO É ESCRITO AQUI: quem o deriva do tamanho é o domínio, no
+// `keepTheFootprintDerivedFromSize`, e escrevê-lo também aqui foi uma repetição
+// que a sabotagem flagrou — trocá-lo por `Footprint: 1` não deixava nada
+// vermelho, porque o invariante corrigia em seguida.
+func tokenFromLooseDraft(drawing loosePieceDraft, square engine.Square) board.BoardToken {
+	peca := board.BoardToken{
+		Label: drawing.Name, Kind: drawing.Appearance, Size: drawing.Size,
 		X: square.X, Y: square.Y,
-	})
+	}
+	// SÓ O OBJETO leva material e PV: um NPC não é feito de madeira, e gravá-los
+	// nele daria uma peça que o `HasObjectStats` aceitaria como alvo da p239.
+	if drawing.Appearance == "object" {
+		peca.Material = drawing.Material
+		peca.HpMax = drawing.HitPoints
+		peca.HpCurrent = drawing.HitPoints
+	}
+	return peca
 }
 
 // loosePieceDraft é o que o mestre escolhe na tira: o nome, o tamanho e a
 // aparência.
 type loosePieceDraft struct {
 	Name       string
-	Size       int
+	Size       string
 	Appearance string
+	Material   string
+	HitPoints  int
 }
 
 // loosePieceSignals lê a tira e RECUSA o que não serve.
@@ -252,8 +278,10 @@ func loosePieceSignals(r *http.Request) (loosePieceDraft, engine.Square, error) 
 	// segundo leitor pega vazio.
 	var signals struct {
 		Name       string             `json:"new_token_name"`
-		Size       int                `json:"new_token_size"`
+		Size       string             `json:"new_token_size"`
 		Appearance string             `json:"new_token_look"`
+		Material   string             `json:"new_token_material"`
+		HitPoints  int                `json:"new_token_hp"`
 		Square     struct{ X, Y int } `json:"from"`
 	}
 	if err := datastar.ReadSignals(r, &signals); err != nil {
@@ -264,24 +292,33 @@ func loosePieceSignals(r *http.Request) (loosePieceDraft, engine.Square, error) 
 	if name == "" {
 		return loosePieceDraft{}, square, errors.New("dê um nome à peça: é ele que aparece no mapa e no laço")
 	}
-	if !footprintsDaCasa[signals.Size] {
-		return loosePieceDraft{}, square, fmt.Errorf(
-			"tamanho %d não é de criatura nenhuma; o livro tem 1 (Médio), 2 (Grande), 3 (Enorme) e 6 (Colossal, p107)",
-			signals.Size)
+	// O TAMANHO é a CATEGORIA, e quem a conhece é a escada da p239 — perguntar a
+	// ela é o que impede uma segunda lista de seis nomes aqui. A recusa carrega o
+	// valor ofensor, que é o que serve a quem está no meio de uma sessão.
+	if _, err := engine.ObjectDefense(signals.Size); err != nil {
+		return loosePieceDraft{}, square, err
 	}
 	if !aparenciasDaPeca[signals.Appearance] {
 		return loosePieceDraft{}, square, fmt.Errorf(
 			"aparência %q não existe; a peça avulsa é objeto ou cenário", signals.Appearance)
 	}
-	return loosePieceDraft{Name: name, Size: signals.Size, Appearance: signals.Appearance}, square, nil
+	rascunho := loosePieceDraft{Name: name, Size: signals.Size, Appearance: signals.Appearance}
+	if signals.Appearance != "object" {
+		return rascunho, square, nil
+	}
+	// PV ZERO É LEGÍTIMO e quer dizer "cenário que não se ataca" — a mancha de
+	// musgo, a marca no chão. Nesse caso o material não é perguntado, e exigi-lo
+	// obrigaria o mestre a dizer de que é feita uma sombra.
+	if signals.HitPoints <= 0 {
+		return rascunho, square, nil
+	}
+	if _, err := engine.ObjectDamageReduction(signals.Material); err != nil {
+		return loosePieceDraft{}, square, err
+	}
+	rascunho.Material = signals.Material
+	rascunho.HitPoints = signals.HitPoints
+	return rascunho, square, nil
 }
-
-// footprintsDaCasa são os lados que a Tabela 1-21 produz (p107).
-//
-// Lista e não faixa: 4 e 5 não são tamanho de nada, e aceitá-los desenharia uma
-// peça que o livro não tem. O `FootprintForSize` do motor produz exatamente
-// estes quatro.
-var footprintsDaCasa = map[int]bool{1: true, 2: true, 3: true, 6: true}
 
 // aparenciasDaPeca são as duas que a peça avulsa pode ter.
 //

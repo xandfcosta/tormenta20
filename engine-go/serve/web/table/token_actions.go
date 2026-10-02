@@ -26,6 +26,7 @@ import (
 func (s Scene) TokenActionRoutes(r chi.Router) {
 	base := sessionPattern + "/tabuleiro/pecas/{tokenId}"
 	r.Post(base+"/visibilidade", s.gmBoardCommand(toggleVisibility))
+	r.Post(base+"/movimento", s.gmBoardCommand(toggleMoving))
 	// TRÊS rotas de duplicar e não uma com parâmetro, porque são três VERBOS na
 	// tela e o endereço é o que o menu escreve. O que muda entre elas é só o
 	// modo — ver o `duplicatesWith`.
@@ -57,6 +58,29 @@ func toggleVisibility(st Scene, c commandCtx) (*board.BoardState, error) {
 	}
 	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
 		board.ParseTokenPatch(map[string]any{"hidden": !token.Hidden}))
+}
+
+// toggleMoving liga e desliga o "em movimento" de uma peça de cenário (p239).
+//
+// O ESTADO VEM DO SERVIDOR e não da tela, pela mesma razão do `toggleVisibility`
+// logo acima: dois cliques rápidos com a resposta atrasada se apagariam, e o
+// resultado do empate seria uma Defesa +5 que ninguém pediu.
+//
+// SÓ PEÇA COM ESTATÍSTICAS: "em movimento" é uma linha da Tabela 5-3 sobre a
+// Defesa de um OBJETO, e marcá-la num ogro não muda nada — um botão que não faz
+// nada é pior que um botão que não existe.
+func toggleMoving(st Scene, c commandCtx) (*board.BoardState, error) {
+	token, err := st.tokenOfCommand(c)
+	if err != nil {
+		return nil, err
+	}
+	if !token.HasObjectStats() {
+		return nil, fmt.Errorf(
+			"%s não tem estatísticas de objeto: o +5 por estar em movimento é da "+
+				"Defesa de um objeto (p239)", token.Label)
+	}
+	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
+		board.ParseTokenPatch(map[string]any{"moving": !token.Moving}))
 }
 
 // OS DUPLICARES, e a diferença entre eles é o que a cópia faz com a LINHA DA
@@ -332,7 +356,7 @@ func wasWhereForTokenBack(st Scene, c commandCtx) (*board.BoardState, error) {
 // tokenSignals é o que o diálogo de editar manda.
 type tokenSignals struct {
 	Name string `json:"token_name"`
-	Size int    `json:"token_size"`
+	Size string `json:"token_size"`
 }
 
 // editsToken muda o NOME e o TAMANHO.
@@ -354,11 +378,14 @@ func editsToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	if name == "" {
 		return nil, fmt.Errorf("a peça precisa de um nome")
 	}
-	if !tokenSize(signals.Size) {
-		return nil, fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", signals.Size)
+	// QUEM VALIDA É A ESCADA, e a recusa dela carrega o valor ofensor.
+	if _, err := engine.ObjectDefense(signals.Size); err != nil {
+		return nil, err
 	}
+	// `size` e não `footprint`: o lado é derivado, e mandá-lo aqui seria um
+	// patch que o invariante desfaz.
 	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
-		board.ParseTokenPatch(map[string]any{"label": name, "footprint": signals.Size}))
+		board.ParseTokenPatch(map[string]any{"label": name, "size": signals.Size}))
 }
 
 // removesToken tira a peça do tabuleiro, e SÓ do tabuleiro.
@@ -395,30 +422,34 @@ func (s Scene) tokenOfCommand(c commandCtx) (*board.BoardToken, error) {
 	return token, nil
 }
 
-// tokenSizes são os lados que o livro define (T20 p107, Tab. 1-21).
+// tokenSizes são as SEIS categorias do livro (p107, Tab. 1-21), e vêm da mesma
+// lista que a tira da peça nova oferece.
 //
-// NÃO existe 4 nem 5, e é por isso que isto é uma lista fechada e não um campo de
-// número: Minúsculo, Pequeno e Médio ocupam 1; Grande 2; Enorme 3; Colossal 6.
-// Um seletor com os números do livro impede a peça de lado 4 que nenhuma criatura
-// tem.
-var tokenSizes = []struct {
-	Side  int
+// Eram os quatro LADOS — 1, 2, 3 e 6 —, e o lado não distingue Minúsculo de
+// Médio. Desde que a peça de objeto carrega a Tab. 5-4 (ALE-423) isso deixou de
+// ser detalhe: as duas se defendem com 15 e 10, e um menu que só sabe dizer
+// "1×1" não consegue mudar a Defesa de uma porta minúscula.
+//
+// E ele NÃO PODE voltar a mandar footprint: a peça deriva o lado do tamanho a
+// cada mutação (`keepTheFootprintDerivedFromSize`), então um patch de footprint
+// numa peça com categoria seria desfeito — um gesto que a mesa vê acontecer e
+// que não muda nada.
+var tokenSizes = func() []struct {
+	ID    string
 	Label string
-}{
-	{1, "Médio ou menor · 1×1"},
-	{2, "Grande · 2×2"},
-	{3, "Enorme · 3×3"},
-	{6, "Colossal · 6×6"},
-}
-
-func tokenSize(side int) bool {
-	for _, t := range tokenSizes {
-		if t.Side == side {
-			return true
-		}
+} {
+	out := []struct {
+		ID    string
+		Label string
+	}{}
+	for _, t := range piecesSizes {
+		out = append(out, struct {
+			ID    string
+			Label string
+		}{t.ID, t.ID + " · " + t.Side})
 	}
-	return false
-}
+	return out
+}()
 
 // ── as expressões da tela ────────────────────────────────────────────────────
 
@@ -543,9 +574,9 @@ func tokenCommand(v BoardView, id, action string) string {
 // mostraria o nome do Zumbi sobre o Ogro — o defeito do link de redefinição de
 // senha, de novo.
 func openEditToken(p boardToken) string {
-	return fmt.Sprintf("$token_edited = %q; $token_name = %q; $token_size = %d; %s; "+
+	return fmt.Sprintf("$token_edited = %q; $token_name = %q; $token_size = %q; %s; "+
 		"document.getElementById('edit-token').showModal()",
-		p.ID, p.Label, p.Footprint, closeMenuToken)
+		p.ID, p.Label, p.SizeName, closeMenuToken)
 }
 
 // saveEditToken manda o formulário para a peça que o gesto de abrir marcou.

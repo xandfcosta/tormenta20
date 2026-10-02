@@ -54,7 +54,12 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 			return nil, err
 		}
 	}
-	if attack.Damage > 0 {
+	// O ALVO-PEÇA NÃO PASSA POR AQUI, e não é esquecimento: o PV de um objeto
+	// mora no TABULEIRO, que é outro agregado com trava própria. Quem o escreve
+	// é a cena, antes de chamar este método — aqui o provisório só é liquidado.
+	// Deixar o `DeltaVitals` rodar com um `TargetEntryID` vazio tiraria PV de
+	// uma linha que não existe, ou de nenhuma, em silêncio.
+	if attack.Damage > 0 && attack.TargetTokenID == "" {
 		loss := int64(-attack.Damage)
 		// O NÃO LETAL VIAJA COM A PANCADA: a arma Piedosa (p336) causa dano que
 		// derruba e não mata, e é aqui que a parcela entra na ficha. O `min` é
@@ -69,7 +74,7 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 	// transforma proposta em consequência é o mestre. Entre rolar e confirmar a
 	// manobra pode ser cancelada, e uma condição aplicada na proposta ficaria no
 	// alvo de um gesto que não aconteceu.
-	if m := attack.Maneuver; m != nil && m.Imposes != "" {
+	if m := attack.Maneuver; m != nil && m.Imposes != "" && attack.TargetTokenID == "" {
 		if _, err := st.ImposeCondition(ctx, sessionID, attack.TargetEntryID, m.Imposes); err != nil {
 			return nil, err
 		}

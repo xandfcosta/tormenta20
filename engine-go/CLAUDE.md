@@ -1324,6 +1324,7 @@ este verbete":
 | `audit-granted-powers.py` | `granted-powers.json`, `divine-powers.json` | a coluna "Devoto de X" da Tabela da p127 **e** o rótulo de deus do verbete |
 | `audit-enchants.py` | `items.json` (`weapon-enchant`) | a Tabela 8-8, que é `d%` + encanto + efeito, **e** o verbete `Nome. Regra` |
 | `audit-materials.py` | `items.json` (`material`) | a Tabela 3-9, que é uma MATRIZ de preço **e** o verbete com as metades `Arma.` / `Armadura e Escudo.` / `Esotérico.` |
+| `audit-objects.py` | `objectExamplesOfTheBook` + as duas escadas (Go!) | a Tabela 5-4, lida por COORDENADA — a p239 tem duas tabelas lado a lado, e `-layout` cola uma na outra |
 
 ### O auditor de materiais, e as DUAS armadilhas de ler uma página dividida
 

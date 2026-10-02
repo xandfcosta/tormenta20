@@ -415,7 +415,8 @@ func clickedSquareNewPiece(v BoardView) string {
 	return fmt.Sprintf(
 		"@post('%s/pecas/nova', {payload: {from: {x: %s, y: %s}, "+
 			"new_token_name: $new_token_name, new_token_size: $new_token_size, "+
-			"new_token_look: $new_token_look}})",
+			"new_token_look: $new_token_look, new_token_material: $new_token_material, "+
+			"new_token_hp: $new_token_hp}})",
 		v.Base, clicouEmX, clicouEmY,
 	)
 }

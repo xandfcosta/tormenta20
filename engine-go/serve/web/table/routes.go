@@ -183,7 +183,17 @@ func tableSignalsExpr() string {
 		// `token_name` e `token_size` JÁ SÃO do diálogo de EDITAR peça, logo
 		// acima, e vivem no mesmo documento: reusá-los faria o gesto de criar
 		// escrever no alvo do gesto de salvar.
-		"new_token_name: '', new_token_size: 1, new_token_look: 'object'",
+		//
+		// `new_token_size` é a CATEGORIA do livro e não mais o lado em quadrados:
+		// o lado não distingue Minúsculo de Médio, e a Tab. 5-4 lhes dá Defesa 15
+		// e 10. O lado passou a ser derivado pela peça.
+		//
+		// `new_token_defense` e `new_token_rd` são LEITURA: ninguém os digita, e
+		// a tira os escreve do `dataset` da opção escolhida. Eles existem para o
+		// mestre ver a consequência do que escolheu ANTES de clicar na casa — e
+		// não viajam para o servidor, que recalcula as duas do motor.
+		"new_token_name: '', new_token_size: 'Médio', new_token_look: 'object'",
+		"new_token_material: 'madeira', new_token_hp: 0, new_token_defense: 10, new_token_rd: 5",
 		// A FILA e os verbos da linha.
 		"rest_quality: 'normal', combatant_form: false",
 		"condition_row: '', row_conditions: '', row_label: ''",
