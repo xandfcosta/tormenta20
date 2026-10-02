@@ -99,6 +99,22 @@ func NewStrike(c Combatants, t Tables, s Situations, rollDie func(faces int) (in
 // desenho — o combate existe sem mapa —, e um `if` por sítio seria a mesma
 // decisão escrita três vezes.
 func (s Strike) specialSituations(ctx context.Context, req Request) ([]engine.SpecialSituation, error) {
+	doTabuleiro, err := s.situationsOnTheBoard(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	// A ESCOLHA DO TIPO DE DANO não vem do mapa: ela é do gesto, e é por isso
+	// que ela se junta à lista AQUI e não no adaptador do tabuleiro. As duas
+	// viajam no mesmo vetor porque o mecanismo é o mesmo — deslocar o teste de
+	// ataque e dizer à mesa por quê.
+	if req.SwitchesDamageType {
+		return append(doTabuleiro, engine.AttackerSwitchesTheDamageType), nil
+	}
+	return doTabuleiro, nil
+}
+
+// situationsOnTheBoard são só as que o MAPA produz, e cala quando não há mapa.
+func (s Strike) situationsOnTheBoard(ctx context.Context, req Request) ([]engine.SpecialSituation, error) {
 	if s.situations == nil {
 		return nil, nil
 	}
@@ -132,6 +148,12 @@ type Request struct {
 	// Maneuver é a manobra do livro quando o gesto é uma MANOBRA e não um golpe
 	// (p234): agarrar, derrubar, desarmar, empurrar ou quebrar. Vazio é golpe.
 	Maneuver string
+	// SwitchesDamageType é a ESCOLHA da p236: usar a arma contra a natureza dela
+	// — o fio para derrubar, ou o punho para matar. Custa −5 nos dois sentidos.
+	//
+	// É do GOLPE e não da manobra: uma manobra não causa dano, então trocar o
+	// tipo dele não significa nada ali.
+	SwitchesDamageType bool
 	// OpposedD20 é o d20 de quem se DEFENDE da manobra, e ele existe pelo mesmo
 	// motivo do `D20`: a mesa pode rolar na mão. Nulo é o servidor rolar.
 	OpposedD20 *int

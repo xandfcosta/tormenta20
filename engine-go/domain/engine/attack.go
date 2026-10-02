@@ -120,7 +120,15 @@ func ResolveAttackUnder(
 	//
 	// DEPOIS da RD de propósito: o alvo perde o que o `Damage` diz, e é esse o
 	// número que não pode fazer sangrar nem matar (p236).
-	if card.NonLethal {
+	// O TIPO DO DANO É UM OU-EXCLUSIVO entre a NATUREZA da arma e a ESCOLHA de
+	// quem ataca (p236): a espada comum mata, a Piedosa não (p336), e trocar
+	// inverte os dois — a espada que derruba e a Piedosa que mata.
+	//
+	// Os −5 da escolha NÃO estão aqui: eles são a linha
+	// `AttackerSwitchesTheDamageType`, porque deslocar o teste de ataque é o
+	// mecanismo da Tabela 5-3 e a mesa lê a situação na decomposição. Aqui fica
+	// só o que a tabela não sabe fazer, que é dizer de que TIPO é o dano.
+	if card.NonLethal != hasSituation(situations, AttackerSwitchesTheDamageType) {
 		out.NonLethal = out.Damage
 	}
 	if fault, has := ecs.Get[attackFault](w, theResource(w)); has {
@@ -140,4 +148,17 @@ func attackWorld(
 	ecs.Set(w, w.Spawn(), theAttackResource{})
 	ecs.Run(w, attackSystems(card, target, situations, d20, rollDie)...)
 	return w
+}
+
+// hasSituation diz se esta linha da Tabela 5-3 vale neste ataque.
+//
+// Um laço e não um `map`: a lista tem no máximo uma mão de linhas, e montar um
+// conjunto para perguntar uma vez é cerimônia mais cara que a varredura.
+func hasSituation(situations []SpecialSituation, want SpecialSituation) bool {
+	for _, s := range situations {
+		if s == want {
+			return true
+		}
+	}
+	return false
 }

@@ -21,6 +21,11 @@ import (
 // turnos, e quem age é quem está na vez (p231).
 func (s Scene) AttackRoutes(r chi.Router) {
 	r.Post(sessionPattern+"/iniciativa/{entryId}/atacar", s.tableStateCommand(proposesAttack))
+	// TROCAR O TIPO DE DANO é rota irmã e não um corpo JSON, pela mesma razão da
+	// manobra: o gesto é de MENU, e um corpo pediria uma ilha de JS onde há um
+	// `@post`.
+	r.Post(sessionPattern+"/iniciativa/{entryId}/atacar/trocando",
+		s.tableStateCommand(proposesAttackSwitchingTheDamageType))
 	// A MANOBRA divide os verbos de confirmar e cancelar com o golpe, e só a
 	// proposta é dela: uma manobra É um ataque corpo a corpo (p234), e o
 	// provisório é o mesmo.
@@ -35,8 +40,22 @@ func (s Scene) AttackRoutes(r chi.Router) {
 
 // proposesAttack rola o ataque de quem está na vez contra a linha do caminho.
 func proposesAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	return st.proposeStrike(c, "")
+	return st.proposeStrike(c, "", semTrocarODano)
 }
+
+// proposesAttackSwitchingTheDamageType é o golpe contra a NATUREZA da arma
+// (p236): o fio para derrubar, ou o punho para matar, por −5 nos dois sentidos.
+func proposesAttackSwitchingTheDamageType(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
+	return st.proposeStrike(c, "", trocandoODano)
+}
+
+// Os dois valores do ramo, nomeados: `proposeStrike(c, "", true)` não diz o que
+// o `true` liga, e é o terceiro argumento booleano de uma função que já tem um
+// ramo de manobra.
+const (
+	semTrocarODano = false
+	trocandoODano  = true
+)
 
 // proposeStrike é o que o golpe e a manobra têm em comum, que é tudo menos a
 // regra: a vez, a posse conferida contra o BANCO, e o provisório.
@@ -44,7 +63,9 @@ func proposesAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // A manobra vazia é o golpe. Um ramo aqui, e não dois caminhos: as sete
 // conferências antes da rolagem são as mesmas, e duplicá-las faria a próxima
 // correção acertar uma e esquecer a outra.
-func (st Scene) proposeStrike(c commandCtx, maneuver string) (*live.SessionRuntimeState, error) {
+func (st Scene) proposeStrike(
+	c commandCtx, maneuver string, switchesDamageType bool,
+) (*live.SessionRuntimeState, error) {
 	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
 	if err != nil {
 		return nil, err
@@ -57,12 +78,13 @@ func (st Scene) proposeStrike(c commandCtx, maneuver string) (*live.SessionRunti
 	// caminho que o `Mover.OwnsCharacter` do tabuleiro usa.
 	_, mine, _ := st.tableRoster(c.R.Context(), c.User, c.CampaignID)
 	if _, err := st.strike.Propose(c.R.Context(), app.Caller{ID: c.User}, c.Role, combat.Request{
-		CampaignID:      c.CampaignID,
-		SessionID:       c.SessionID,
-		AttackerEntryID: onTurn.ID,
-		TargetEntryID:   chi.URLParam(c.R, "entryId"),
-		OwnsAttacker:    onTurn.CharacterID != nil && mine[*onTurn.CharacterID],
-		Maneuver:        maneuver,
+		CampaignID:         c.CampaignID,
+		SessionID:          c.SessionID,
+		AttackerEntryID:    onTurn.ID,
+		TargetEntryID:      chi.URLParam(c.R, "entryId"),
+		OwnsAttacker:       onTurn.CharacterID != nil && mine[*onTurn.CharacterID],
+		Maneuver:           maneuver,
+		SwitchesDamageType: switchesDamageType,
 	}); err != nil {
 		return nil, err
 	}
@@ -76,7 +98,8 @@ func (st Scene) proposeStrike(c commandCtx, maneuver string) (*live.SessionRunti
 // e não no corpo porque o gesto é de menu: o mestre escolhe "Derrubar" num item,
 // e um corpo JSON exigiria uma ilha de JS onde há um `@post`.
 func proposesManeuver(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-	return st.proposeStrike(c, chi.URLParam(c.R, "kind"))
+	// A MANOBRA nunca troca o tipo de dano: ela não causa dano nenhum.
+	return st.proposeStrike(c, chi.URLParam(c.R, "kind"), semTrocarODano)
 }
 
 // proposesAttackOnObject rola o golpe de quem está na vez contra uma PEÇA DE
@@ -186,6 +209,12 @@ func cancelsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // attackCommand escreve o `@post` dos dois verbos da faixa.
 func attackCommand(v View, verb string) string {
 	return fmt.Sprintf("@post('%s/ataque/%s')", routes.Session(v.CampaignID, v.SessionID), verb)
+}
+
+// attackSwitchingTheDamageType é o `@post` do golpe que troca o tipo do dano.
+func attackSwitchingTheDamageType(v BoardView, entryID string) string {
+	return fmt.Sprintf("@post('%s/iniciativa/%s/atacar/trocando')",
+		routes.Session(v.CampaignID, v.SessionID), entryID)
 }
 
 // attackOnObject é o `@post` do ataque a uma PEÇA DE CENÁRIO: a peça no caminho,

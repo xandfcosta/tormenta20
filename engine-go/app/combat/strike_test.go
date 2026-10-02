@@ -402,3 +402,41 @@ type tabuleiroQuebrado struct{}
 func (tabuleiroQuebrado) Between(context.Context, int64, string, board.AttackTargetOnTheBoard) ([]engine.SpecialSituation, error) {
 	return nil, errors.New("o disco sumiu")
 }
+
+// A MANOBRA IGNORA A TROCA DO TIPO DE DANO, e este caso é de DECISÃO e não de
+// encanamento: ele prende o RAMO, afirmando que o mesmo pedido com a flag ligada
+// e desligada dá o mesmo total.
+//
+// A primeira versão dele morava no `serve/api` e era VÁCUA: ela procurava o
+// rótulo "trocando o tipo de dano" no `Situations` do provisório, e a manobra
+// NUNCA preenche esse campo — o laço percorria uma lista vazia e passaria mesmo
+// se a manobra pagasse os −5. Um teste de ausência sem prova de que o canal
+// existiria é a armadilha que o `CLAUDE.md` nomeia.
+//
+// Uma manobra não causa dano, então trocar o TIPO dele não significa nada ali —
+// e uma penalidade sobre um teste sem dano é um número que ninguém consegue
+// explicar na mesa.
+func TestTheManeuverIgnoresTheDamageTypeChoice(t *testing.T) {
+	roll := func(switches bool) int {
+		t.Helper()
+		strike := NewStrike(sheetDouble{
+			"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Melee: 6},
+			"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 10, Melee: 2},
+		}, aTable(t), semTabuleiro{}, fixedDie(4))
+		d20, opposed := 10, 5
+		out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+			SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro",
+			Maneuver: "derrubar", D20: &d20, OpposedD20: &opposed, OwnsAttacker: true,
+			SwitchesDamageType: switches,
+		})
+		if err != nil {
+			t.Fatalf("propor a manobra (trocando=%v): %v", switches, err)
+		}
+		return out.Total
+	}
+	nua, trocada := roll(false), roll(true)
+	if trocada != nua {
+		t.Errorf("a manobra somou %d com a troca ligada e %d sem ela — a p236 cobra os −5 "+
+			"de quem troca o tipo do DANO, e manobra não causa dano", trocada, nua)
+	}
+}

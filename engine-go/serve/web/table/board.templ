@@ -1431,6 +1431,24 @@ templ tokenMenu(v BoardView, p boardToken) {
 			>
 				@ui.Icon("Swords", "size-4")
 			</button>
+			// TROCAR O TIPO DE DANO (p236): o fio para derrubar, ou o punho para
+			// matar. O rótulo diz a REGRA e não o sentido, porque o sentido
+			// depende da arma de quem está na VEZ — e este menu é do ALVO, que
+			// não sabe com o que vai ser golpeado.
+			//
+			// A SETA DE TROCA e não um coração partido: a regra é SIMÉTRICA, e um
+			// ícone que diz "machucar" esconde a metade em que a Piedosa é usada
+			// para MATAR. E ele vem DEPOIS do atacar comum, que é o gesto de
+			// todo turno — a variante não disputa o primeiro lugar com ele.
+			<button
+				type="button"
+				aria-label={ "Atacar " + p.Label + " trocando o tipo de dano: −5 no ataque (p236)" }
+				title="Trocar o tipo de dano: −5 no ataque (p236)"
+				data-on:click={ attackSwitchingTheDamageType(v, p.EntryID) }
+				class="board-token-verb"
+			>
+				@ui.Icon("ArrowLeftRight", "size-4")
+			</button>
 		}
 		<span aria-hidden="true" class="board-token-crease"></span>
 		// TIRAR fica depois do vinco e é o único em vermelho: ele é o que não se

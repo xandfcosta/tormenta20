@@ -34,6 +34,7 @@ const SAIDA = resolve(AQUI, '../serve/web/ui/icons.templ')
 
 /** Os ícones que as cenas pedem. Acrescentar aqui e rodar o gerador. */
 const QUERIDOS = [
+  'ArrowLeftRight',
   'Wind',
   'Users2',
   'Scroll',
