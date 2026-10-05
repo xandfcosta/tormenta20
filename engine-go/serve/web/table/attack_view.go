@@ -52,7 +52,10 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		Mine: pa.ByUserID == userID,
 	}
 	if pa.Maneuver != nil {
-		out.Verdict, out.Class = maneuverVerdict(*pa.Maneuver)
+		// A TINTA DO CRACHÁ É NEUTRA, e é a única que pode ser: as outras três
+		// desta faixa — crítico, acerto, erro — são cor de DESFECHO, e a manobra
+		// não tem um para colorir.
+		out.Verdict, out.Class = maneuverSeal(*pa.Maneuver), "mesa-ataque-comum"
 		out.Tally = maneuverLine(*pa)
 		return out
 	}
@@ -67,73 +70,57 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	return out
 }
 
-// maneuverNames são as cinco da p234 como a mesa as lê. O crachá diz a MANOBRA e
-// não "venceu": "Derrubou" responde o que aconteceu, e "Venceu" faria a mesa
-// perguntar o quê.
-var maneuverNames = map[string][2]string{
-	"agarrar":  {"Agarrou", "não agarrou"},
-	"derrubar": {"Derrubou", "não derrubou"},
-	"desarmar": {"Desarmou", "não desarmou"},
-	"empurrar": {"Empurrou", "não empurrou"},
-	"quebrar":  {"Quebrou", "não quebrou"},
+// maneuverSeal é o crachá de uma manobra, e ele diz QUAL manobra — nunca quem
+// venceu.
+//
+// Ele já disse "Derrubou" e "não derrubou", lendo um `Won` que o motor calculava.
+// Isso saiu: o sistema INFORMA, o mestre DECIDE (ver o `CLAUDE.md` da raiz), e um
+// crachá que anuncia o resultado de um embate é exatamente a forma recusada.
+//
+// O que sobra é o NOME da manobra em curso, que é o que a mesa precisa para ler
+// a linha de baixo — "Derrubar · 19 vs 10" se lê sozinho, e "Manobra · 19 vs 10"
+// faria perguntar qual.
+func maneuverSeal(m live.ManeuverRoll) string {
+	if nome, conhecida := maneuverNames[m.Kind]; conhecida {
+		return nome
+	}
+	return "Manobra"
 }
 
-// maneuverVerdict é a palavra e a tinta do crachá de uma manobra.
+// maneuverNames são as cinco da p234 como a mesa as lê, no INFINITIVO.
 //
-// O EMPATE DE BÔNUS IGUAIS tem crachá próprio, e não o de derrota: a p234 manda
-// rolar de novo, e anunciar "não derrubou" seria dar por perdida uma manobra que
-// a regra não decidiu. A tinta é a do erro porque nada aconteceu ainda, e a
-// palavra é que diz o que falta.
-func maneuverVerdict(m live.ManeuverRoll) (string, string) {
-	if m.AnotherRoll {
-		return "Empate", "mesa-ataque-erro"
-	}
-	nomes, conhecida := maneuverNames[m.Kind]
-	if !conhecida {
-		nomes = [2]string{"Venceu", "perdeu"}
-	}
-	if m.Won {
-		return nomes[0], "mesa-ataque-acerto"
-	}
-	return capitalize(nomes[1]), "mesa-ataque-erro"
+// Eram pares — "Derrubou" / "não derrubou" —, e o passado afirmava um desfecho
+// que o sistema não tem mais como saber. O infinitivo diz o que foi TENTADO, que
+// é o que de fato aconteceu.
+var maneuverNames = map[string]string{
+	"agarrar":  "Agarrar",
+	"derrubar": "Derrubar",
+	"desarmar": "Desarmar",
+	"empurrar": "Empurrar",
+	"quebrar":  "Quebrar",
 }
 
-// maneuverLine escreve a conta do teste OPOSTO.
+// maneuverLine escreve a conta do teste OPOSTO, e ela é a resposta inteira: dois
+// totais e a diferença entre eles.
 //
-// A MARGEM aparece só quando ela faz diferença: cinco pontos ou mais dão efeito
-// extra ao derrubar e ao desarmar (p234), e escrever "por 2" numa vitória
-// apertada seria número sem consequência no meio do turno. O empate escreve o
-// que a regra pede em vez de um número.
+// SEM VEREDICTO. Quem compara os dois números é o mestre — e a diferença aparece
+// porque é a subtração que ele faria de cabeça, não porque alguém venceu.
 //
-//	maneuverLine(...) // "derrubar · 19 vs 10 · por 9"
+//	maneuverLine(...) // "19 vs 10 · diferença +9 · vitória deixa caído"
 func maneuverLine(pa live.PendingAttack) string {
 	m := *pa.Maneuver
-	line := fmt.Sprintf("%s · %d vs %d", m.Kind, pa.Total, m.Opposed)
-	switch {
-	case m.AnotherRoll:
-		return line + " · bônus iguais, role de novo (p234)"
-	case m.Won && m.Margin >= 5:
-		// SÓ O NÚMERO, e não a regra por extenso. A primeira versão escrevia "por
-		// 9, e cinco ou mais dão efeito extra", e olhar a faixa a 390px mostrou os
-		// dois defeitos: a frase é PROSA no meio de uma linha telegráfica, e ela
-		// empurrava a consequência — que é o que decide o clique — para o fim da
-		// segunda linha.
-		//
-		// E ela prometia o que o app não faz: o efeito extra do derrubar é
-		// empurrar um quadrado, e mover a peça é do tabuleiro (ALE-421). Anunciar
-		// um efeito que ninguém aplica é pior que não anunciar.
-		line += fmt.Sprintf(" · por %d", m.Margin)
-	}
-	// A CONDIÇÃO que a confirmação vai deixar, e ela é dita ANTES: o mestre
-	// decide com ela à vista, e descobrir depois o que o clique fez é o que a
-	// faixa existe para evitar. Nem toda manobra deixa uma — o desarmar derruba
+	// O NOME DA MANOBRA NÃO ENTRA AQUI: o crachá ao lado já o diz, e repeti-lo
+	// gastaria o começo da linha — que a 390px é o pedaço mais caro dela.
+	line := fmt.Sprintf("%d vs %d · diferença %+d", pa.Total, m.Opposed, m.Margin)
+	// O QUE O LIVRO PREVÊ, dito SEMPRE e não só na vitória: o sistema não sabe
+	// quem venceu, e esta linha existe justamente para o mestre decidir com a
+	// consequência à vista. Nem toda manobra deixa condição — o desarmar derruba
 	// um item —, e por isso ela só aparece quando há.
-	if m.Won && m.Imposes != "" {
-		// O NOME ESCRITO e não o id: "fica caido" é o identificador vazando para
-		// a tela. Quem o traduz é o catálogo, que é onde o nome da condição é
-		// autorado — o `GLOSSARY.md` manda o id em inglês no código e o texto em
-		// português na tela, e uma condição não é exceção.
-		line += " · fica " + strings.ToLower(book.ConditionName(m.Imposes))
+	//
+	// O NOME ESCRITO e não o id: "fica caido" é o identificador vazando para a
+	// tela. Quem o traduz é o catálogo, que é onde o nome é autorado.
+	if m.ConditionOnAWin != "" {
+		line += " · vitória deixa " + strings.ToLower(book.ConditionName(m.ConditionOnAWin))
 	}
 	return line
 }

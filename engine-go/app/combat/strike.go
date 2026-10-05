@@ -394,8 +394,7 @@ func (s Strike) proposeManeuver(
 		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID,
 		Maneuver: &live.ManeuverRoll{
 			Kind: out.Kind, OpposedRoll: out.DefenderRoll, Opposed: out.DefenderTotal,
-			Margin: out.Margin, Won: out.Won, AnotherRoll: out.Reroll,
-			Imposes: out.Imposes,
+			Margin: out.Margin, ConditionOnAWin: out.ConditionOnAWin,
 		},
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {

@@ -1,12 +1,30 @@
 package engine
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 // A MANOBRA DE COMBATE (T20 p234), com os números do LIVRO.
 //
-// Ela é a primeira coisa no motor que NÃO é "teste ≥ CD": o livro manda um
-// teste OPOSTO, e os dois lados rolam. Nenhum valor esperado aqui é calculado —
-// cada um sai da página ou de uma conta de uma linha feita à mão.
+// Ela é a primeira coisa no motor que NÃO é "teste ≥ CD": o livro manda um teste
+// OPOSTO, e os dois lados rolam. Nenhum valor esperado aqui é calculado — cada um
+// sai da página ou de uma conta de uma linha feita à mão.
+//
+// # O QUE ESTES CASOS DEIXARAM DE PRENDER, e por quê
+//
+// Eles afirmavam `Won`, o desempate por bônus, o pedido de nova rolagem e a
+// condição imposta ao alvo. Tudo isso saiu: **o sistema INFORMA, o mestre
+// DECIDE** (ver o `CLAUDE.md` da raiz), e um motor que anuncia o vencedor de um
+// embate e aplica o efeito é a forma exata que aquela seção recusa.
+//
+// O desempate do livro continua verdadeiro — *"em caso de empate, o personagem
+// com o maior bônus vence; se os bônus forem iguais, outro teste deve ser
+// feito"* —, e continua sendo do mestre. O que o motor devolve são os dois
+// totais, a diferença, e a condição que o livro PREVÊ para a vitória.
+//
+// O caso que fecha isso é o `TestTheManeuverNeverDeclaresAWinner`, no fim: ele
+// existe para que reintroduzir o veredicto reprove com nome.
 
 // duelo encurta os casos: os dois d20 entram prontos, como no ataque.
 func duelo(quemAtaca, quemDefende ManeuverSide, d20Ataque, d20Defesa int) ManeuverOutcome {
@@ -19,9 +37,6 @@ func duelo(quemAtaca, quemDefende ManeuverSide, d20Ataque, d20Defesa int) Maneuv
 func TestTheManeuverIsAnOpposedTest(t *testing.T) {
 	// 15+4 = 19 contra 8+2 = 10. Margem 9.
 	fora := duelo(ManeuverSide{Bonus: 4}, ManeuverSide{Bonus: 2}, 15, 8)
-	if !fora.Won {
-		t.Errorf("19 contra 10 e o atacante perdeu: %+v", fora)
-	}
 	if fora.Margin != 9 {
 		t.Errorf("a margem deu %d e 19 − 10 é 9", fora.Margin)
 	}
@@ -32,41 +47,8 @@ func TestTheManeuverIsAnOpposedTest(t *testing.T) {
 
 	// E o inverso: quem perde perde, e a margem fica NEGATIVA — ela é a
 	// diferença, não o tamanho da vitória.
-	if perdida := duelo(ManeuverSide{Bonus: 0}, ManeuverSide{Bonus: 5}, 5, 18); perdida.Won ||
-		perdida.Margin != -18 {
-		t.Errorf("5 contra 23 devia perder por 18 e deu %+v", perdida)
-	}
-}
-
-// "Em caso de empate, o personagem com o maior BÔNUS vence" (p234).
-//
-// Não é o dado que desempata: dois totais iguais são resolvidos por quem tem o
-// bônus maior, o que faz o treino valer mais que a sorte.
-func TestATieIsBrokenByTheBiggerBonus(t *testing.T) {
-	// 10+5 = 15 e 13+2 = 15. O atacante tem o bônus maior.
-	if fora := duelo(ManeuverSide{Bonus: 5}, ManeuverSide{Bonus: 2}, 10, 13); !fora.Won {
-		t.Errorf("empate em 15 com bônus 5 contra 2: quem ataca vence, e deu %+v", fora)
-	}
-	// E o contrário, que é a metade em que um `>=` distraído erraria: empate com
-	// o bônus do DEFENSOR maior é derrota de quem ataca.
-	if fora := duelo(ManeuverSide{Bonus: 2}, ManeuverSide{Bonus: 5}, 13, 10); fora.Won {
-		t.Errorf("empate em 15 com bônus 2 contra 5: quem ataca PERDE, e deu %+v", fora)
-	}
-}
-
-// "Se os bônus forem iguais, OUTRO TESTE deve ser feito" (p234).
-//
-// O resultado não é um vencedor: é "role de novo". Devolver o empate como
-// derrota de quem ataca seria inventar uma regra que a página não tem, e ela
-// favoreceria sempre o mesmo lado.
-func TestAnEqualTieAsksForAnotherRoll(t *testing.T) {
-	fora := duelo(ManeuverSide{Bonus: 3}, ManeuverSide{Bonus: 3}, 12, 12)
-	if !fora.Reroll {
-		t.Errorf("empate em 15 com os DOIS bônus em 3 pede outra rolagem, e deu %+v", fora)
-	}
-	if fora.Won {
-		t.Error("o empate de bônus iguais não dá vencedor: `Won` tem de ser falso até " +
-			"a rolagem nova chegar")
+	if perdida := duelo(ManeuverSide{Bonus: 0}, ManeuverSide{Bonus: 5}, 5, 18); perdida.Margin != -18 {
+		t.Errorf("5 contra 23 dá diferença −18 e deu %+v", perdida)
 	}
 }
 
@@ -80,8 +62,12 @@ func TestARangedWeaponCannotManeuver(t *testing.T) {
 	if fora.Refused == "" {
 		t.Fatal("o arco derrubou o alvo: a p234 diz que manobra é ataque CORPO A CORPO")
 	}
-	if fora.Won {
-		t.Error("a manobra recusada não pode sair vencida")
+	// A RECUSA NÃO DEIXA NÚMERO ATRÁS. Uma diferença ou uma condição prevista
+	// numa manobra que não aconteceu seria a faixa convidando o mestre a aplicar
+	// o efeito de um ataque que a regra proibiu.
+	if fora.Margin != 0 || fora.ConditionOnAWin != "" {
+		t.Errorf("a manobra recusada saiu com diferença %+d e condição %q",
+			fora.Margin, fora.ConditionOnAWin)
 	}
 	// E o DEFENSOR com arma de disparo NÃO é recusado: "mesmo que ela esteja
 	// usando uma arma de ataque à distância, deve fazer o teste usando seu valor
@@ -151,38 +137,77 @@ func TestTheManeuverBonusKnowsWhichSideItHelps(t *testing.T) {
 // condição ali seria inventar.
 func TestOnlyTwoManeuversLeaveAConditionOnTheTarget(t *testing.T) {
 	// "Você deixa o alvo CAÍDO" (p234).
-	if fora := duelo(ManeuverSide{Bonus: 9}, ManeuverSide{}, 15, 1); fora.Imposes != "caido" {
-		t.Errorf("o derrubar vencido impõe %q e a p234 diz caído", fora.Imposes)
+	if fora := duelo(ManeuverSide{Bonus: 9}, ManeuverSide{}, 15, 1); fora.ConditionOnAWin != "caido" {
+		t.Errorf("o derrubar prevê %q e a p234 diz caído", fora.ConditionOnAWin)
 	}
 	// "Uma criatura AGARRADA fica desprevenida e imóvel" (p234).
 	agarrou := ResolveManeuver("agarrar", ManeuverSide{Bonus: 9}, ManeuverSide{}, 15, 1)
-	if agarrou.Imposes != "agarrado" {
-		t.Errorf("o agarrar vencido impõe %q e a p234 diz agarrado", agarrou.Imposes)
+	if agarrou.ConditionOnAWin != "agarrado" {
+		t.Errorf("o agarrar prevê %q e a p234 diz agarrado", agarrou.ConditionOnAWin)
 	}
 	for _, manobra := range []string{"desarmar", "empurrar", "quebrar"} {
 		fora := ResolveManeuver(manobra, ManeuverSide{Bonus: 9}, ManeuverSide{}, 15, 1)
-		if fora.Imposes != "" {
-			t.Errorf("o %s vencido impôs %q, e a p234 lhe dá efeito de item ou de "+
-				"movimento — nenhuma condição", manobra, fora.Imposes)
+		if fora.ConditionOnAWin != "" {
+			t.Errorf("o %s prevê a condição %q, e a p234 lhe dá efeito de item ou de "+
+				"movimento — nenhuma condição", manobra, fora.ConditionOnAWin)
 		}
 	}
 }
 
-// A MANOBRA PERDIDA NÃO IMPÕE NADA, e o EMPATE tampouco.
+// A CONDIÇÃO VIAJA MESMO QUANDO QUEM TENTOU PERDEU, e este caso é a diferença
+// entre informar e aplicar.
 //
-// É a metade que importa: um `Imposes` preenchido independentemente do
-// resultado faria a confirmação deixar o alvo caído por ter tentado derrubá-lo.
-func TestALostManeuverLeavesNoCondition(t *testing.T) {
-	if perdida := duelo(ManeuverSide{}, ManeuverSide{Bonus: 9}, 1, 15); perdida.Imposes != "" {
-		t.Errorf("o derrubar PERDIDO impôs %q — tentar não derruba ninguém", perdida.Imposes)
+// Antes ela só saía na vitória, porque o motor a IMPUNHA. Hoje ela é o que o
+// livro PREVÊ, e o mestre a lê com os dois totais à frente — inclusive para
+// decidir que a manobra falhou. Um campo que sumisse na derrota obrigaria a
+// faixa a adivinhar quem venceu para saber se mostra, que é o veredicto
+// voltando pela porta dos fundos.
+func TestTheForeseenConditionTravelsEvenWhenTheAttackerRolledLower(t *testing.T) {
+	perdida := duelo(ManeuverSide{Bonus: 0}, ManeuverSide{Bonus: 5}, 5, 18)
+	if perdida.Margin >= 0 {
+		t.Fatalf("o controle já estava errado: 5 contra 23 deu diferença %+d", perdida.Margin)
 	}
-	empate := duelo(ManeuverSide{Bonus: 3}, ManeuverSide{Bonus: 3}, 12, 12)
-	if !empate.Reroll {
-		t.Fatal("o controle já estava errado: este caso tinha de ser o empate de bônus iguais")
+	if perdida.ConditionOnAWin != "caido" {
+		t.Errorf("o derrubar com diferença negativa veio sem a condição prevista (%q) — "+
+			"ela é o que o LIVRO diz, não o que aconteceu", perdida.ConditionOnAWin)
 	}
-	if empate.Imposes != "" {
-		t.Errorf("o empate impôs %q, e a p234 manda rolar de novo — não há vencedor "+
-			"ainda, e a condição pousaria sobre uma manobra que a regra não decidiu",
-			empate.Imposes)
+}
+
+// O MOTOR NÃO DIZ QUEM VENCEU, e este caso existe para que reintroduzir o
+// veredicto reprove com nome.
+//
+// Ele é um guarda de FORMA e não de valor: varre os campos do resultado por
+// reflexão e recusa qualquer um que decida o embate. É o único jeito de prender
+// uma AUSÊNCIA — uma asserção sobre `Won` não compila depois que `Won` sai, e um
+// caso que não compila é um caso que alguém apaga.
+//
+// A regra está no `CLAUDE.md` da raiz: o sistema INFORMA, o mestre DECIDE.
+func TestTheManeuverNeverDeclaresAWinner(t *testing.T) {
+	proibidos := map[string]string{
+		"Won":      "quem venceu é do mestre",
+		"Winner":   "quem venceu é do mestre",
+		"Imposes":  "aplicar a condição é do mestre",
+		"Reroll":   "mandar rolar de novo é do mestre",
+		"Success":  "o desfecho é do mestre",
+		"Verdict":  "o desfecho é do mestre",
+		"Outcome":  "o desfecho é do mestre",
+		"Resolved": "o desfecho é do mestre",
+	}
+	tipo := reflect.TypeOf(ManeuverOutcome{})
+	medidos := 0
+	for i := range tipo.NumField() {
+		medidos++
+		campo := tipo.Field(i).Name
+		if porque, proibido := proibidos[campo]; proibido {
+			t.Errorf("o `ManeuverOutcome` voltou a ter o campo %q: %s.\n"+
+				"A manobra devolve os dois totais, a diferença e a condição que o livro "+
+				"PREVÊ — ver a seção \"O sistema INFORMA; o mestre DECIDE\" do CLAUDE.md "+
+				"da raiz, que foi escrita por causa deste campo.", campo, porque)
+		}
+	}
+	// O DENOMINADOR: uma lista de proibidos subconta em silêncio, e um tipo lido
+	// como vazio daria verde sem olhar nada.
+	if medidos == 0 {
+		t.Fatalf("a varredura não leu campo nenhum do `ManeuverOutcome`")
 	}
 }

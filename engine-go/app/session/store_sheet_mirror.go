@@ -91,48 +91,6 @@ func (st *Store) entryIDForCharacter(ctx context.Context, sessionID, characterID
 // manda é a FICHA: o delta é aplicado na linha do personagem (dano drenando PV
 // temporários, como o endpoint de dano) e a entrada espelha o resultado. NPC não
 // tem ficha — ali o rastreador é o registro.
-// ImposeCondition acende uma condição no alvo, e ela RAMIFICA como os vitais.
-//
-// Quando há FICHA atrás da linha, quem manda é a ficha: a condição de um
-// personagem mora lá, e a fila a espelha. Quando é NPC, a linha é a fonte —
-// ficha ele não tem. Aplicar só num dos dois daria o caso certo e o outro errado
-// em SILÊNCIO, que é a divergência que a fila espelhada existe para não ter, e é
-// o mesmo desenho do `DeltaVitals`.
-//
-// ACRESCENTA e não substitui: o alvo pode já estar caído quando o agarram, e as
-// duas valem juntas (p394). Repetida, não duplica.
-func (st *Store) ImposeCondition(ctx context.Context, sessionID int64, entryID, condition string) (*live.SessionRuntimeState, error) {
-	charID := st.CharacterIDOf(sessionID, entryID)
-	if charID != nil {
-		if err := st.sheet.AddCondition(ctx, *charID, condition); err != nil {
-			return nil, err
-		}
-	}
-	return st.apply(ctx, sessionID, conditionEvent(sessionID, entryID, charID, condition),
-		addEntryCondition(entryID, condition))
-}
-
-// addEntryCondition acrescenta a condição à linha, sem repetir.
-//
-// A LINHA GANHA A CONDIÇÃO NOS DOIS CAMINHOS — com ficha e sem —, porque é ela
-// que a mesa desenha: o crachá do rastreador sai daqui. Com ficha, ela é o
-// ESPELHO do que a ficha passou a ter.
-func addEntryCondition(entryID, condition string) func(*live.SessionRuntimeState) error {
-	return func(s *live.SessionRuntimeState) error {
-		i := live.FindEntryIndex(s, entryID)
-		if i < 0 {
-			return fmt.Errorf("o alvo (%s) saiu da fila antes de a condição pousar", entryID)
-		}
-		for _, c := range s.Initiative[i].Conditions {
-			if c == condition {
-				return nil
-			}
-		}
-		s.Initiative[i].Conditions = append(s.Initiative[i].Conditions, condition)
-		return nil
-	}
-}
-
 func (st *Store) DeltaVitals(ctx context.Context, sessionID int64, entryID string, hpDelta, mpDelta *int64, nonLethal int64) (*live.SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
@@ -229,20 +187,6 @@ func uniqueCharacterIDs(s *live.SessionRuntimeState) []int64 {
 		}
 	}
 	return ids
-}
-
-// vitalsEvent monta o evento do dano ou da cura.
-//
-// O `CharacterID` só entra quando HÁ ficha atrás da linha, e o zero do NPC é
-// significativo: ele é o que impede o dano num ogro de acordar toda ficha do
-// processo, porque um alvo zero casaria com um interesse zero. Ver
-// `TestNpcVitalsWakeNoSheet`.
-func conditionEvent(sessionID int64, entryID string, charID *int64, condition string) events.ConditionApplied {
-	ev := events.ConditionApplied{SessionID: sessionID, EntryID: entryID, Condition: condition}
-	if charID != nil {
-		ev.CharacterID = *charID
-	}
-	return ev
 }
 
 func vitalsEvent(sessionID int64, entryID string, charID *int64) events.VitalsChanged {

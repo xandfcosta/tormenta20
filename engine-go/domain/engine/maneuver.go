@@ -36,28 +36,29 @@ type ManeuverSide struct {
 // A MARGEM viaja porque ela é REGRA e não enfeite: *"se você vencer o teste
 // oposto por 5 pontos ou mais"* dá efeito extra ao Derrubar e ao Desarmar, e o
 // Empurrar ganha 1,5m por cada 5 pontos. Ela é a DIFERENÇA e pode ser negativa
-// — quem perdeu perdeu por quanto.
+// — e é CONTA, não veredicto: a subtração que o mestre faria de cabeça.
 type ManeuverOutcome struct {
 	Kind          string `json:"kind"`
 	AttackerRoll  int    `json:"attackerRoll"`
 	AttackerTotal int    `json:"attackerTotal"`
 	DefenderRoll  int    `json:"defenderRoll"`
 	DefenderTotal int    `json:"defenderTotal"`
-	Won           bool   `json:"won"`
-	Margin        int    `json:"margin"`
-	// Reroll é o empate que a página manda repetir: *"se os bônus forem iguais,
-	// outro teste deve ser feito"*. Ele não é derrota de quem ataca — tratá-lo
-	// assim inventaria uma regra que favorece sempre o mesmo lado.
-	Reroll bool `json:"reroll,omitempty"`
+	// Margin é a DIFERENÇA entre os dois totais, e ela é CONTA e não veredicto:
+	// é a subtração que o mestre faria de cabeça, e a p234 a usa — *"se você
+	// vencer o teste oposto por 5 pontos ou mais"* dá efeito extra ao derrubar e
+	// ao desarmar. Negativa quando quem atacou somou menos.
+	Margin int `json:"margin"`
+	// ConditionOnAWin é a condição que o LIVRO diz que a vitória deixa (p234), e
+	// ela viaja SEMPRE — não só quando alguém vence.
+	//
+	// Isto é informação e não aplicação, e a distinção é a regra da casa: o
+	// sistema INFORMA, o mestre DECIDE. Antes este campo se chamava `Imposes` e
+	// a confirmação do ataque punha a condição no alvo sozinha; hoje ele diz ao
+	// mestre o que o livro prevê, e quem aplica é ele, no gesto que já existe.
+	ConditionOnAWin string `json:"conditionOnAWin,omitempty"`
 	// Refused diz por que a manobra não aconteceu, em português: a recusa é da
 	// REGRA e chega a uma pessoa.
 	Refused string `json:"refused,omitempty"`
-	// Imposes é a condição que a VITÓRIA deixa no alvo, e vazio quando não há.
-	//
-	// Só na vitória: um campo preenchido independentemente do resultado faria a
-	// confirmação deixar o alvo caído por ter TENTADO derrubá-lo. E vazio no
-	// empate de bônus iguais, que a p234 manda repetir — não há vencedor ainda.
-	Imposes string `json:"imposes,omitempty"`
 }
 
 // conditionLeftBy são as manobras que deixam CONDIÇÃO, e são duas das cinco.
@@ -87,8 +88,11 @@ var maneuversOfTheBook = map[string]bool{
 
 // ResolveManeuver resolve o teste oposto de uma manobra.
 //
+// Ela NÃO diz quem venceu — ver o corpo. Devolve os dois totais, a diferença, e a
+// condição que o livro prevê para a vitória; quem decide é o mestre.
+//
 //	fora := ResolveManeuver("derrubar", ManeuverSide{Bonus: 4}, ManeuverSide{Bonus: 2}, 15, 8)
-//	// fora.Won == true, fora.Margin == 9 — e 9 ≥ 5, então o alvo também é empurrado
+//	// fora.Margin == 9, fora.ConditionOnAWin == "caido"
 func ResolveManeuver(
 	kind string, attacker, defender ManeuverSide, attackerD20, defenderD20 int,
 ) ManeuverOutcome {
@@ -110,27 +114,18 @@ func ResolveManeuver(
 	}
 
 	out.Margin = out.AttackerTotal - out.DefenderTotal
-	if out.Margin != 0 {
-		out.Won = out.Margin > 0
-		return imposeOnAWin(out)
-	}
-	// "Em caso de empate, o personagem com o maior bônus vence. Se os bônus
-	// forem iguais, outro teste deve ser feito" (p234).
-	switch {
-	case attacker.Bonus > defender.Bonus:
-		out.Won = true
-	case attacker.Bonus < defender.Bonus:
-		out.Won = false
-	default:
-		out.Reroll = true
-	}
-	return imposeOnAWin(out)
-}
-
-func imposeOnAWin(out ManeuverOutcome) ManeuverOutcome {
-	if out.Won {
-		out.Imposes = conditionLeftBy[out.Kind]
-	}
+	// QUEM VENCEU NÃO SAI DAQUI. O livro tem o desempate — *"em caso de empate, o
+	// personagem com o maior bônus vence; se os bônus forem iguais, outro teste
+	// deve ser feito"* (p234) —, e ele continua sendo verdade; o que mudou é
+	// quem o aplica.
+	//
+	// Esta função já devolveu `Won`, `Reroll` e `Imposes`, e a confirmação punha
+	// a condição no alvo sozinha. Isso é um embate de dados com o sistema
+	// anunciando o vencedor e aplicando o efeito, que é a forma que o
+	// `CLAUDE.md` da raiz recusa por inteiro. O que sobra é o que a mesa precisa
+	// para decidir: os dois totais, a diferença entre eles, e o que o livro diz
+	// que a vitória deixaria.
+	out.ConditionOnAWin = conditionLeftBy[kind]
 	return out
 }
 

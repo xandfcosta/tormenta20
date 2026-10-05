@@ -627,6 +627,15 @@
     color: var(--muted-foreground);
   }
 
+  /* A QUARTA TINTA É A AUSÊNCIA DE TINTA, e ela é da MANOBRA. As três de cima
+   * são cor de DESFECHO — crítico, acerto, erro —, e a manobra não tem um para
+   * colorir: quem julga o embate é o mestre. Então o selo dela diz só QUAL
+   * manobra, na tinta do texto, e pintá-la de verde ou vermelho seria o
+   * veredicto voltando pela cor. */
+  .mesa-ataque-comum {
+    color: var(--foreground);
+  }
+
   /* Hide native number spinners — replaced by the NumberInput buttons. */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {

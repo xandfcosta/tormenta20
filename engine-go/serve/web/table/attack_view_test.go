@@ -105,62 +105,97 @@ func TestTheVerdictIsOneOfThreeWords(t *testing.T) {
 	}
 }
 
-// A FAIXA DA MANOBRA diz o que a confirmação vai fazer, ANTES do clique.
+// A FAIXA DA MANOBRA entrega O EMBATE INTEIRO e NÃO o desfecho dele.
 //
-// O mestre decide com a consequência à vista: descobrir depois o que o botão
-// fez é exatamente o que uma faixa que mostra a conta inteira existe para
-// evitar. Nem toda manobra deixa condição, e a linha só a escreve quando há.
-func TestTheManeuverLineSaysWhatTheConfirmWillDo(t *testing.T) {
-	derrubou := maneuverLine(live.PendingAttack{
-		Roll: 15, Total: 19,
-		Maneuver: &live.ManeuverRoll{Kind: "derrubar", Opposed: 10, Margin: 9, Won: true, Imposes: "caido"},
-	})
-	for _, pedaco := range []string{"derrubar", "19 vs 10", "por 9", "fica caído"} {
-		if !strings.Contains(derrubou, pedaco) {
-			t.Errorf("a linha %q não diz %q", derrubou, pedaco)
+// Este caso afirmava o contrário — "a faixa diz o que a confirmação vai fazer" —,
+// e por baixo dele a faixa escrevia "Derrubou" lendo um vencedor que o motor
+// calculava. A regra que o derrubou é a seção "O sistema INFORMA; o mestre
+// DECIDE" do `CLAUDE.md` da raiz.
+//
+// O que a linha tem de carregar são os três números que o mestre juntaria de
+// cabeça (os dois totais e a subtração) mais a consequência que o LIVRO prevê —
+// que é o que poupa a ida à p234 no meio do turno.
+func TestTheManeuverBandGivesTheWholeContestAndNoVerdict(t *testing.T) {
+	derrubou := live.ManeuverRoll{
+		Kind: "derrubar", Opposed: 10, Margin: 9, ConditionOnAWin: "caido",
+	}
+	linha := maneuverLine(live.PendingAttack{Roll: 15, Total: 19, Maneuver: &derrubou})
+	for _, pedaco := range []string{"19 vs 10", "diferença +9", "deixa caído"} {
+		if !strings.Contains(linha, pedaco) {
+			t.Errorf("a linha %q não diz %q", linha, pedaco)
 		}
 	}
-
-	// A MARGEM PEQUENA não vira texto: "por 2" é número sem consequência no meio
-	// do turno, e a condição continua sendo dita porque ela É a consequência.
-	apertado := maneuverLine(live.PendingAttack{
-		Roll: 12, Total: 15,
-		Maneuver: &live.ManeuverRoll{Kind: "derrubar", Opposed: 13, Margin: 2, Won: true, Imposes: "caido"},
-	})
-	if strings.Contains(apertado, "por 2") {
-		t.Errorf("a linha %q escreveu uma margem que não dá efeito extra", apertado)
-	}
-	// E A LINHA NÃO EXPLICA A REGRA: ela é telegráfica como a do golpe, e a
-	// explicação por extenso quebrava a faixa em duas a 390px empurrando a
-	// consequência para o fim.
-	if strings.Contains(derrubou, "efeito extra") {
-		t.Errorf("a linha %q explica a regra por extenso — a conta é aritmética, e o "+
-			"efeito extra do derrubar (empurrar um quadrado) o app nem aplica", derrubou)
-	}
-	if !strings.Contains(apertado, "fica caído") {
-		t.Errorf("a linha %q não diz a condição, que é o que a confirmação vai deixar", apertado)
+	// O CRACHÁ DIZ QUAL MANOBRA, no infinitivo: ele já disse "Derrubou", e o
+	// passado afirma um desfecho.
+	if selo := maneuverSeal(derrubou); selo != "Derrubar" {
+		t.Errorf("o crachá da manobra diz %q, e o infinitivo é o que não julga", selo)
 	}
 
-	// A MANOBRA PERDIDA não promete condição nenhuma.
+	// A DIFERENÇA NEGATIVA SAI COM SINAL e a condição prevista CONTINUA DITA: o
+	// que a linha escreve é o que o livro reserva à vitória, não o que aconteceu.
+	// Uma condição que sumisse no negativo obrigaria a faixa a saber quem venceu.
 	perdeu := maneuverLine(live.PendingAttack{
 		Roll: 3, Total: 7,
-		Maneuver: &live.ManeuverRoll{Kind: "derrubar", Opposed: 18, Margin: -11},
+		Maneuver: &live.ManeuverRoll{
+			Kind: "derrubar", Opposed: 18, Margin: -11, ConditionOnAWin: "caido",
+		},
 	})
-	if strings.Contains(perdeu, "fica") {
-		t.Errorf("a linha da manobra PERDIDA promete condição: %q", perdeu)
+	if !strings.Contains(perdeu, "diferença -11") {
+		t.Errorf("a linha %q não diz a diferença negativa com sinal", perdeu)
+	}
+	if !strings.Contains(perdeu, "deixa caído") {
+		t.Errorf("a linha %q escondeu a condição porque a diferença é negativa — "+
+			"decidir se a manobra falhou é do mestre, e ele decide com ela à vista", perdeu)
 	}
 
-	// O EMPATE diz o que a regra pede, e não um número: a p234 manda rolar de
-	// novo, e anunciar uma margem zero faria a mesa procurar o vencedor.
-	empate := maneuverLine(live.PendingAttack{
-		Roll: 12, Total: 15,
-		Maneuver: &live.ManeuverRoll{Kind: "agarrar", Opposed: 15, AnotherRoll: true},
+	// A MANOBRA SEM CONDIÇÃO não inventa uma: o desarmar derruba um item.
+	desarmou := maneuverLine(live.PendingAttack{
+		Roll: 15, Total: 19,
+		Maneuver: &live.ManeuverRoll{Kind: "desarmar", Opposed: 10, Margin: 9},
 	})
-	if !strings.Contains(empate, "role de novo") {
-		t.Errorf("a linha do empate não manda rolar de novo: %q", empate)
+	if strings.Contains(desarmou, "deixa") {
+		t.Errorf("a linha do desarmar promete condição: %q", desarmou)
 	}
-	if strings.Contains(empate, "fica") {
-		t.Errorf("o empate prometeu condição: %q", empate)
+}
+
+// NENHUMA PALAVRA DE DESFECHO SOBRA NA FAIXA DA MANOBRA, e este caso varre o
+// TEXTO porque é o texto que a mesa lê.
+//
+// Um campo removido do tipo não compila e o compilador avisa; uma PALAVRA
+// reintroduzida na linha ("venceu", "falhou") passa verde por toda a suíte e
+// chega à mesa como se o sistema tivesse julgado. É a metade que o guarda de
+// forma do motor não alcança.
+func TestNoManeuverTextDeclaresAWinner(t *testing.T) {
+	julgamentos := []string{
+		"venceu", "vence", "perdeu", "perde", "falhou", "falha",
+		"derrubou", "agarrou", "desarmou", "empurrou", "quebrou",
+		"sucesso", "acertou", "errou", "role de novo",
+	}
+	medidas := 0
+	for _, kind := range []string{"derrubar", "agarrar", "desarmar", "empurrar", "quebrar"} {
+		for _, margin := range []int{9, 0, -11} {
+			for _, condicao := range []string{"", "caido", "agarrado"} {
+				m := live.ManeuverRoll{
+					Kind: kind, Opposed: 10, Margin: margin, ConditionOnAWin: condicao,
+				}
+				texto := strings.ToLower(
+					maneuverSeal(m) + " " + maneuverLine(live.PendingAttack{
+						Roll: 15, Total: 10 + margin, Maneuver: &m,
+					}))
+				medidas++
+				for _, palavra := range julgamentos {
+					if strings.Contains(texto, palavra) {
+						t.Errorf("a faixa de %q com diferença %+d escreveu %q:\n  %s\n"+
+							"Quem julga o embate é o mestre — ver \"O sistema INFORMA; o "+
+							"mestre DECIDE\" no CLAUDE.md da raiz.", kind, margin, palavra, texto)
+					}
+				}
+			}
+		}
+	}
+	// O DENOMINADOR: uma varredura que não montasse faixa nenhuma daria verde.
+	if medidas != 45 {
+		t.Fatalf("a varredura leu %d faixas e os casos são 5 × 3 × 3 = 45", medidas)
 	}
 }
 

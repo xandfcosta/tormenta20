@@ -534,28 +534,40 @@ E o BÔNUS conhece o LADO: o `Desejo de Liberdade` ajuda quem está sendo
 agarrado, não quem agarra. O escopo entrou na chave do `targetKey` na ALE-406, e
 o caso que prende os dois lados é o que impede a volta daquele defeito.
 
-## A CONDIÇÃO de uma manobra pousa na confirmação, e ramifica como o dano
+## A MANOBRA ANUNCIA a condição; ela não a aplica
 
 Duas das cinco manobras deixam condição — *"você deixa o alvo CAÍDO"* e *"uma
 criatura AGARRADA fica desprevenida e imóvel"* (p234). As outras três não são
 esquecimento: o livro lhes dá efeito de ITEM ou de MOVIMENTO, e escrever uma
 condição ali seria inventar regra.
 
-**Na confirmação e não na proposta**, pela mesma divisa do dano: entre rolar e
-confirmar a manobra pode ser cancelada, e uma condição aplicada na proposta
-ficaria no alvo de um gesto que não aconteceu.
+**O que o motor devolve é o embate inteiro e nada do desfecho dele:** os dois
+totais, a diferença entre eles, e a condição que o livro RESERVA à vitória. Quem
+compara os dois números e decide se a manobra passou é o mestre — ver a seção "O
+sistema INFORMA; o mestre DECIDE" do [CLAUDE.md da raiz](../CLAUDE.md), que é a
+regra que mandou isto.
 
-**E ela ramifica pela FICHA.** Com personagem atrás da linha, a condição mora na
-ficha e a fila ESPELHA; sem, a linha é a fonte, porque ficha ele não tem.
-Aplicar só num dos dois daria o caso do NPC certo e o do PC errado em silêncio —
-é a mesma divisa do `DeltaVitals`, e é por isso que as duas moram juntas no
-`store_sheet_mirror.go`: elas fazem a MESMA pergunta antes de agir.
+**A condição viaja mesmo quando quem tentou rolou menos.** Ela é o que o LIVRO
+prevê, não o que aconteceu, e um campo que sumisse na diferença negativa
+obrigaria a faixa a adivinhar o vencedor para saber se mostra — o veredicto
+voltando pela porta dos fundos.
 
-O evento é PRÓPRIO (`ConditionApplied`) e não um `VitalsChanged` emprestado. Ele
-carrega `CharacterID` pela mesma razão que o outro — a ficha aberta noutra aba
-tem de saber que ficou caída —, mas o nome do evento é o que alguém lê ao
-procurar por que a tela piscou, e "vitais mudaram" sobre uma condição manda
-procurar no lugar errado.
+Isto já foi o contrário, e três coisas saíram juntas quando ele caiu:
+
+- O `ManeuverOutcome` tinha `Won`, `Reroll` e `Imposes`, e um `switch` que
+  desempatava pelo bônus maior. Hoje ele tem `Margin` e `ConditionOnAWin`, e o
+  `TestTheManeuverNeverDeclaresAWinner` varre os campos por reflexão: é o único
+  jeito de prender uma AUSÊNCIA, porque uma asserção sobre `Won` deixa de
+  compilar quando `Won` sai, e caso que não compila é caso que alguém apaga.
+- O `CommitAttack` chamava um `ImposeCondition` que ramificava pela ficha. Essa
+  função não existe mais, e com ela saiu o evento próprio que ela emitia — quem
+  marca condição hoje é o `toggleCondition` da fila, que é gesto do mestre e
+  sempre foi.
+- O crachá da faixa dizia "Derrubou" / "não derrubou". Hoje ele diz a manobra no
+  INFINITIVO, e o passado não volta porque o `TestNoManeuverTextDeclaresAWinner`
+  varre o TEXTO das 45 faixas possíveis procurando palavra de desfecho — a
+  metade que o guarda de forma do motor não alcança, porque uma palavra
+  reintroduzida na linha compila e chega à mesa.
 
 > **O id não vai para a tela.** A primeira versão da faixa escrevia "fica
 > caido" — o identificador vazando. Quem traduz é o `book.ConditionName`, e a

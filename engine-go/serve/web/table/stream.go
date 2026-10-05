@@ -171,19 +171,20 @@ func readerInterests(view View) []events.Interest {
 
 // sheetChanged diz se este evento mexeu na ficha de quem está olhando.
 //
-// São TRÊS: a ficha salva pela própria tela do jogador, o dano que o mestre
-// aplica pela fila, e a condição que uma manobra confirmada deixa — que chega como vital de um combatente COM personagem
-// atrás. O `Subscribe` já garantiu que o evento é de quem interessa; aqui a
-// pergunta é só que tipo é.
+// São DOIS: a ficha salva pela própria tela do jogador, e o dano que o mestre
+// aplica pela fila — que chega como vital de um combatente COM personagem atrás.
+// O `Subscribe` já garantiu que o evento é de quem interessa; aqui a pergunta é
+// só que tipo é.
+//
+// ERA TRÊS: a condição que uma manobra confirmada deixava tinha evento próprio
+// (`ConditionApplied`, que não existe mais). Ela saiu com o automatismo — hoje quem marca condição é o
+// mestre, pelo gesto da fila, e esse caminho acorda a ficha pelo evento de
+// personagem mexido como qualquer outra edição.
 func sheetChanged(ev events.Event) bool {
 	switch e := ev.(type) {
 	case events.CharacterChanged:
 		return true
 	case events.VitalsChanged:
-		return e.CharacterID != 0
-	// A CONDIÇÃO da manobra confirmada pousa na ficha quando há personagem
-	// atrás da linha, e a aba aberta dele tem de saber (ALE-421).
-	case events.ConditionApplied:
 		return e.CharacterID != 0
 	}
 	return false
