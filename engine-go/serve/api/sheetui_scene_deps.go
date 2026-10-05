@@ -92,7 +92,15 @@ func (h sheetHost) liveSessionsOf(ctx context.Context, characterID int64) []int6
 	}
 	var out []int64
 	for _, c := range campaigns {
-		sessions, err := h.rules.queries.ListSessions(ctx, c.ID)
+		// `Campaignid` E NÃO `ID`: a consulta devolve a linha de
+		// `campaign_members`, então o `ID` dela é o da LINHA DE ELENCO. Ler o
+		// campo errado pede as sessões de outra campanha — ou de nenhuma —, e o
+		// teste rolado some sem erro, sem recusa e sem faixa.
+		//
+		// Passou despercebido porque na bancada a campanha e a linha de elenco
+		// eram as duas a de número 1; quem pegou foi o banco de desenvolvimento,
+		// onde um jogador está em duas campanhas.
+		sessions, err := h.rules.queries.ListSessions(ctx, c.Campaignid)
 		if err != nil {
 			continue
 		}
