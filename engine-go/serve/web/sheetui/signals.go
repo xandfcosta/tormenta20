@@ -60,9 +60,15 @@ type Signals struct {
 	ItemQtd   *int64   `json:"item_qty"`
 	ItemName  *string  `json:"item_name"`
 	ItemSlots *float64 `json:"item_slots"`
-	// O que a MESA rolou ao usar um consumível. A ficha não rola por ninguém.
+	// O que a MESA rolou ao usar um consumível. Para ESTE gesto a ficha continua
+	// não rolando: quem decide quanto um bálsamo cura é quem rolou o dado.
 	ItemHPRoll *int64 `json:"item_roll_hp"`
 	ItemMPRoll *int64 `json:"item_roll_mp"`
+	// ExpertiseD20 é o d20 que a mesa rolou num TESTE DE PERÍCIA, e ele é
+	// OPCIONAL: nulo quer dizer "role por mim" (ALE-423, decisão do dono). É o
+	// único lugar em que a ficha rola, e a faixa da mesa diz de onde veio o
+	// número — sem a marca ninguém sabe se confia no app ou no dado.
+	ExpertiseD20 *int64 `json:"expertise_d20"`
 	// As melhorias escolhidas no diálogo, e o material. Lista e não par de
 	// ids: são até quatro melhorias no mesmo item.
 	ItemImprovements []string `json:"item_improvements"`

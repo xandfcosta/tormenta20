@@ -230,7 +230,10 @@ func (s *Server) characterBirths() character.Births {
 
 // characterPlays são os gestos da ficha em jogo, montados com o mesmo trio.
 func (s *Server) characterPlays() character.Plays {
-	return character.NewPlays(s.db, s.queries, s.catalogs)
+	return character.NewPlays(s.db, s.queries, s.catalogs, func(faces int) (int, error) {
+		roll, err := engine.RollDie(faces)
+		return roll.Value, err
+	})
 }
 
 // sessionAccess é a TRAVA de quem alcança campanha e sessão, montada com o que

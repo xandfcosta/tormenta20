@@ -2,14 +2,13 @@ package table
 
 import (
 	"fmt"
-	"t20engine/serve/web/ui"
 	"t20engine/domain/book"
 	"t20engine/serve/web/sheetui"
+	"t20engine/serve/web/ui"
 )
 
 // A Mesa do jogador desenhada. Nenhuma REGRA aqui: o que decide mora em
 // `view.go`, onde se testa sem HTML.
-
 templ tableScene(v View) {
 	// A largura de leitura é de cada PÁGINA, não da casca: a Mesa é uma coluna e
 	// o admin é uma grade de dois painéis. Sem isto, as linhas da fila esticam
@@ -36,6 +35,7 @@ templ tableScene(v View) {
 		// tem de decidir agora: embaixo do mapa, numa tela de 390px, ele nasceria
 		// fora da dobra no exato momento em que alguém precisa clicar nele.
 		@attackProposed(v)
+		@skillTestRolled(v)
 		// MINHA FICHA fica FORA de `TableRegions` de propósito: o stream nunca a
 		// toca, e quem a mantém em dia são os comandos dela, que remendam o
 		// `#sheet-scene` por conta.
@@ -124,40 +124,40 @@ templ surfaceSelector(v View) {
 // tableHeader é a faixa AO VIVO. Acende em DOURADO na vez do jogador, porque
 // dourado é o que já diz "a vez" na iniciativa e no tabuleiro.
 templ tableHeader(v View) {
-		<div
-			id="table-header"
-			class={ "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-2 py-1 sm:px-3",
+	<div
+		id="table-header"
+		class={ "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-2 py-1 sm:px-3",
 				templ.KV("border-grimorio-gold/60 bg-grimorio-gold/10", v.Turn.Kind == "mine"),
 				templ.KV("border-grimorio-iron bg-grimorio-panel", v.Turn.Kind != "mine") }
-		>
-			<p class="flex items-center gap-2">
-				<span class="relative flex size-2.5">
-					<span class="absolute inline-flex size-full animate-ping rounded-full bg-hp-full opacity-75"></span>
-					<span class="relative inline-flex size-2.5 rounded-full bg-hp-full"></span>
-				</span>
-				<span class={ ui.SectionLabelClasses("herda", "text-hp-full") }>Ao vivo</span>
-				<span class="text-sm text-muted-foreground">· Sessão { fmt.Sprint(v.SessionNum) }</span>
-			</p>
-			// `aria-live` é obrigatório aqui e não é enfeite: num app de morph a vez
-			// muda sem navegação nenhuma, então quem não vê a tela não tem OUTRO
-			// sinal de que chegou a vez dele.
-			@sessionVerbs(v)
-			<div class="flex min-w-0 items-center gap-2 text-sm" aria-live="polite">
-				if v.Turn.Kind != "idle" {
-					<span class="shrink-0 text-muted-foreground">Rodada { fmt.Sprint(v.Round) }</span>
-				}
-				switch v.Turn.Kind {
-					case "mine":
-						<span class="flex shrink-0 animate-pulse items-center gap-1 bg-primary px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-primary-foreground">Sua vez</span>
-					case "idle":
-						<span class="truncate text-muted-foreground">Aguardando iniciativa</span>
-				}
-				// A faixa convive com o "Sua vez" em vez de substituí-lo: aquele é
-				// um ALERTA para quem não está olhando a tela, e esta é uma
-				// leitura.
-				@turnStrip(v)
-			</div>
+	>
+		<p class="flex items-center gap-2">
+			<span class="relative flex size-2.5">
+				<span class="absolute inline-flex size-full animate-ping rounded-full bg-hp-full opacity-75"></span>
+				<span class="relative inline-flex size-2.5 rounded-full bg-hp-full"></span>
+			</span>
+			<span class={ ui.SectionLabelClasses("herda", "text-hp-full") }>Ao vivo</span>
+			<span class="text-sm text-muted-foreground">· Sessão { fmt.Sprint(v.SessionNum) }</span>
+		</p>
+		// `aria-live` é obrigatório aqui e não é enfeite: num app de morph a vez
+		// muda sem navegação nenhuma, então quem não vê a tela não tem OUTRO
+		// sinal de que chegou a vez dele.
+		@sessionVerbs(v)
+		<div class="flex min-w-0 items-center gap-2 text-sm" aria-live="polite">
+			if v.Turn.Kind != "idle" {
+				<span class="shrink-0 text-muted-foreground">Rodada { fmt.Sprint(v.Round) }</span>
+			}
+			switch v.Turn.Kind {
+				case "mine":
+					<span class="flex shrink-0 animate-pulse items-center gap-1 bg-primary px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-primary-foreground">Sua vez</span>
+				case "idle":
+					<span class="truncate text-muted-foreground">Aguardando iniciativa</span>
+			}
+			// A faixa convive com o "Sua vez" em vez de substituí-lo: aquele é
+			// um ALERTA para quem não está olhando a tela, e esta é uma
+			// leitura.
+			@turnStrip(v)
 		</div>
+	</div>
 }
 
 // A FAIXA: agora › depois › depois, com a volta da rodada marcada.
@@ -196,7 +196,6 @@ templ turnStrip(v View) {
 }
 
 // turnStripName escreve "você" no lugar do próprio nome — quando ele é UM.
-//
 // Com dois meus na faixa a palavra deixa de responder e passa a atrapalhar
 // ("você › Tanque › você"), e aí o nome volta. Quem decide isso é o `SaysYou`,
 // que enxerga a faixa inteira; aqui só se escreve o que ele já decidiu.
@@ -359,76 +358,76 @@ templ tableBoard(v View) {
 // O diálogo de editar vem junto porque é dela que ele fala.
 templ tableTracker(v View) {
 	<div id="table-tracker">
-			<section class="space-y-1.5">
-				<div class="flex items-center justify-between gap-2">
-					<h2 class={ ui.SectionLabelClasses("muted", "") }>Iniciativa</h2>
-					// "Adicionar grupo" fica com a LISTA e não com o rodapé: ele
-					// MONTA a fila, e os verbos do rodapé andam com ela pronta.
-					if v.GM != nil {
-						<span class="flex items-center gap-1.5">
-							@addParty(v)
-							// O "+ Combatente" fica ao lado do "Adicionar grupo": os dois
-							// MONTAM a fila, um trazendo o elenco e o outro o capanga que
-							// apareceu agora.
-							//
-							// O `aria-expanded` devolve a STRING e não o booleano: o
-							// `data-attr` do Datastar trata valor booleano como ATRIBUTO
-							// BOOLEANO — verdadeiro vira `aria-expanded=""` e falso REMOVE
-							// o atributo. Para `disabled` isso é o certo; para ARIA é
-							// inválido, e um `aria-expanded=""` não anuncia estado nenhum.
-							// Vale para todo `data-attr:aria-*`.
-							<button
-								type="button"
-								data-on:click="$combatant_form = !$combatant_form"
-								data-attr:aria-expanded="$combatant_form ? 'true' : 'false'"
-								class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
-							>+ Combatente</button>
-							<button
-								type="button"
-								aria-label="Abrir o bestiário"
-								title="Bestiário — trazer uma criatura do livro"
-								data-on:click="document.getElementById('table-bestiary').showModal()"
-								class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent"
-							>
-			@ui.Icon("Skull", "size-5")
-		</button>
-						</span>
-					}
-				</div>
+		<section class="space-y-1.5">
+			<div class="flex items-center justify-between gap-2">
+				<h2 class={ ui.SectionLabelClasses("muted", "") }>Iniciativa</h2>
+				// "Adicionar grupo" fica com a LISTA e não com o rodapé: ele
+				// MONTA a fila, e os verbos do rodapé andam com ela pronta.
 				if v.GM != nil {
-					@formDeCombatente(v)
+					<span class="flex items-center gap-1.5">
+						@addParty(v)
+						// O "+ Combatente" fica ao lado do "Adicionar grupo": os dois
+						// MONTAM a fila, um trazendo o elenco e o outro o capanga que
+						// apareceu agora.
+						//
+						// O `aria-expanded` devolve a STRING e não o booleano: o
+						// `data-attr` do Datastar trata valor booleano como ATRIBUTO
+						// BOOLEANO — verdadeiro vira `aria-expanded=""` e falso REMOVE
+						// o atributo. Para `disabled` isso é o certo; para ARIA é
+						// inválido, e um `aria-expanded=""` não anuncia estado nenhum.
+						// Vale para todo `data-attr:aria-*`.
+						<button
+							type="button"
+							data-on:click="$combatant_form = !$combatant_form"
+							data-attr:aria-expanded="$combatant_form ? 'true' : 'false'"
+							class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
+						>+ Combatente</button>
+						<button
+							type="button"
+							aria-label="Abrir o bestiário"
+							title="Bestiário — trazer uma criatura do livro"
+							data-on:click="document.getElementById('table-bestiary').showModal()"
+							class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent"
+						>
+							@ui.Icon("Skull", "size-5")
+						</button>
+					</span>
 				}
-				// Desenha O QUE CHEGOU, e nada mais. Quem esconde a fila fora de cena
-				// é o servidor, no `redactForPlayers` — repetir a regra aqui num `if
-				// v.SceneActive` seria a MESMA regra em dois lugares, e no dia em que
-				// divergissem a tela mentiria com toda a confiança. Ao template sobra
-				// escolher a FRASE do vazio.
-				if len(v.Queue) == 0 {
-					<p class="border border-dashed border-grimorio-iron p-4 text-center text-sm text-muted-foreground">
-						if v.SceneActive {
-							Em cena · ninguém na fila ainda.
-						} else {
-							Fora de cena. O mestre ainda não começou.
-						}
-					</p>
-				} else {
-					<ol class="space-y-1">
-						for _, l := range v.Queue {
-							@tableRowTracker(v, l)
-						}
-					</ol>
-					// UM diálogo para a fila inteira, e não um por linha: quem
-					// diz em quem ele mexe é o sinal que o número semeia. Um por
-					// linha seriam N ids para colidir e N cópias para o morph
-					// reconciliar a cada remendo.
-					if v.GM != nil {
-						@editarCombatente(v)
-					}
-				}
-			</section>
+			</div>
 			if v.GM != nil {
-				@condicoesDoCombatente(v)
+				@formDeCombatente(v)
 			}
+			// Desenha O QUE CHEGOU, e nada mais. Quem esconde a fila fora de cena
+			// é o servidor, no `redactForPlayers` — repetir a regra aqui num `if
+			// v.SceneActive` seria a MESMA regra em dois lugares, e no dia em que
+			// divergissem a tela mentiria com toda a confiança. Ao template sobra
+			// escolher a FRASE do vazio.
+			if len(v.Queue) == 0 {
+				<p class="border border-dashed border-grimorio-iron p-4 text-center text-sm text-muted-foreground">
+					if v.SceneActive {
+						Em cena · ninguém na fila ainda.
+					} else {
+						Fora de cena. O mestre ainda não começou.
+					}
+				</p>
+			} else {
+				<ol class="space-y-1">
+					for _, l := range v.Queue {
+						@tableRowTracker(v, l)
+					}
+				</ol>
+				// UM diálogo para a fila inteira, e não um por linha: quem
+				// diz em quem ele mexe é o sinal que o número semeia. Um por
+				// linha seriam N ids para colidir e N cópias para o morph
+				// reconciliar a cada remendo.
+				if v.GM != nil {
+					@editarCombatente(v)
+				}
+			}
+		</section>
+		if v.GM != nil {
+			@condicoesDoCombatente(v)
+		}
 	</div>
 }
 
@@ -584,8 +583,10 @@ templ tableRowTracker(v View, l tableRow) {
 		if v.GM != nil {
 			@numberEditable(v, l)
 		} else {
-			<span class={ "w-8 shrink-0 text-center font-mono text-lg font-bold tabular-nums",
-				templ.KV("text-grimorio-gold", l.OnTurn), templ.KV("text-muted-foreground", !l.OnTurn) }>
+			<span
+				class={ "w-8 shrink-0 text-center font-mono text-lg font-bold tabular-nums",
+				templ.KV("text-grimorio-gold", l.OnTurn), templ.KV("text-muted-foreground", !l.OnTurn) }
+			>
 				{ fmt.Sprint(l.Initiative) }
 			</span>
 		}

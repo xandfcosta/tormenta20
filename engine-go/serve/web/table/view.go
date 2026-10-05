@@ -65,7 +65,12 @@ type View struct {
 	// Ele é da CENA e não do tabuleiro: a mesa sem mapa aberto continua tendo
 	// combate, e a faixa tem de aparecer do mesmo jeito.
 	Attack *attackProposal
-	GM     *viewGm
+	// SkillTest é o ÚLTIMO teste rolado na sessão — nil quando ninguém rolou
+	// ainda. Ele é irmão do `Attack` e DIFERENTE num ponto: não tem verbos, e
+	// por isso não tem `Mine` nem precisa saber quem é o mestre. Um teste não
+	// muda nada; ele informa.
+	SkillTest *skillTestBand
+	GM        *viewGm
 	// Notes é o caderno da noite, e ele é DO MESTRE. Vazio para quem não é
 	// mestre, pela mesma trava do resto — a view não tem o que desenhar, em vez
 	// de a tela esconder.

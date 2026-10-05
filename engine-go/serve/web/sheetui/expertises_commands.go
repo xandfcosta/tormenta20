@@ -31,6 +31,41 @@ func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) 
 	return s.plays.ToggleTraining(r.Context(), row.ID, expertiseName(r))
 }
 
+// rollExpertise rola o teste e o põe na MESA (p220-221).
+//
+// O D20 vem do sinal e é OPCIONAL: nulo é o servidor rolar, e um valor é o que a
+// mesa rolou no dado de verdade. Os dois são de primeira classe por decisão do
+// dono, e a faixa da mesa DIZ qual dos dois foi.
+//
+// PUBLICAR É PELA PORTA, e não daqui: a ficha não conhece a mesa e não deve
+// conhecer — quem sabe em que sessão este personagem está é o hospedeiro. É a
+// mesma divisa do `ActionFitsOnTurn`.
+func rollExpertise(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
+	nome := expertiseName(r)
+	daMesa := theDieFromTheTable(sig.ExpertiseD20)
+	teste, err := s.plays.RollExpertise(r.Context(), row, nome, daMesa)
+	if err != nil {
+		return err
+	}
+	return s.deps.PublishSkillTest(r.Context(), row.ID, nome, teste, daMesa != nil)
+}
+
+// theDieFromTheTable estreita o d20 que chegou do fio, e trata o ZERO como
+// "não informado".
+//
+// O zero é a convenção desta cena — os sinais numéricos nascem em 0, como o
+// `item_roll_hp` ao lado —, e aqui ele não é ambíguo: **0 não é face de d20**.
+// Declarar o sinal como nulo seria a alternativa, e ela custa mais do que
+// resolve: um campo numérico vazio devolve `null` em alguns navegadores e `”`
+// noutros, e o `ResolveSkillTest` recusaria os dois com a frase do dado.
+func theDieFromTheTable(n *int64) *int {
+	if n == nil || *n == 0 {
+		return nil
+	}
+	narrowed := int(*n)
+	return &narrowed
+}
+
 // swapAttribute repõe a perícia em outro atributo.
 //
 // O atributo vai no CAMINHO junto do nome: é o valor do `<option>` escolhido, e

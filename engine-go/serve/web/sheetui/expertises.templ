@@ -57,7 +57,7 @@ templ expertisePanelBody(v View) {
 		</div>
 	</section>
 	for _, row := range v.Expertises.Rows {
-		@expertiseDetail(row)
+		@expertiseDetail(v, row)
 	}
 	@craftDialog(v)
 }
@@ -184,7 +184,7 @@ templ trainingButton(v View, row expertiseRow) {
 }
 
 // expertiseDetail é a decomposição de UMA perícia.
-templ expertiseDetail(row expertiseRow) {
+templ expertiseDetail(v View, row expertiseRow) {
 	@overlay(row.Key, row.Name, "Scroll", false) {
 		@breakdownRows(row.Rows)
 		<div class="flex items-center justify-between rounded-none border border-grimorio-iron bg-grimorio-panel-raised px-3 py-2">
@@ -198,6 +198,62 @@ templ expertiseDetail(row expertiseRow) {
 					@ui.Icon("Lock", "size-4 text-warning-ink")
 				}
 				{ row.Total }
+			</span>
+		</div>
+		@rollTheTest(v, row)
+	}
+}
+
+// rollTheTest é o gesto de ROLAR, e ele mora NESTE diálogo de propósito: o lugar
+// que EXPLICA o número é onde se rola ele. A linha da perícia já carrega cinco
+// controles a 390px, e um sexto a quebraria.
+//
+// OS DOIS CAMINHOS DO DADO SÃO IGUAIS, por decisão do dono: o servidor rola, ou
+// a mesa informa o que rolou no dado de verdade. Nenhum dos dois atrás de um
+// interruptor — quem rola na mão não tem de descobrir onde digitar.
+//
+// O ZERO do campo quer dizer "não informado", e é a convenção dos sinais
+// numéricos desta cena. Ele não é ambíguo: 0 não é face de d20.
+//
+// A PERÍCIA COM FALHA AUTOMÁTICA não oferece o gesto: o livro diz que sem
+// treinamento ela "nem se rola" (p115), e um botão que o servidor recusaria é um
+// erro desenhado.
+templ rollTheTest(v View, row expertiseRow) {
+	if !row.Locked {
+		<div class="mt-2 flex flex-wrap items-center gap-2 border-t border-grimorio-iron pt-2">
+			// O RÓTULO NÃO QUEBRA, e o olho a 390px foi quem decidiu: dentro do
+			// diálogo sobram ~366px, e os três controles disputando a linha
+			// partiam o botão em "Rolar o" / "d20" — um verbo cortado ao meio.
+			// Com `whitespace-nowrap` quem desce é o PAR de baixo, inteiro.
+			<button
+				type="button"
+				data-on:click={ "$expertise_d20 = 0; " + sheetPost(v, "/pericias/rolar/"+row.Command) }
+				class="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
+			>
+				@ui.Icon("Dices", "size-4")
+				Rolar o d20
+			</button>
+			// O CAMPO E O "USAR" SÃO UM GRUPO, e não se separam: digitar o dado e
+			// mandá-lo são o mesmo gesto em dois controles, e quebrar entre eles
+			// deixaria um botão órfão numa linha sozinha.
+			<span class="flex shrink-0 items-center gap-1.5">
+				<label class="flex items-center gap-1.5 text-xs">
+					<span class={ ui.SectionLabelClasses("muted", "") }>eu rolei</span>
+					<input
+						type="number"
+						min="1"
+						max="20"
+						data-bind="expertise_d20"
+						aria-label={ "O d20 que você rolou na mesa para " + row.Name }
+						class="min-h-11 w-14 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm tabular-nums outline-none"
+					/>
+				</label>
+				<button
+					type="button"
+					data-on:click={ sheetPost(v, "/pericias/rolar/"+row.Command) }
+					aria-label={ "Usar o d20 que você rolou em " + row.Name }
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent"
+				>Usar</button>
 			</span>
 		</div>
 	}

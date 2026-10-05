@@ -627,6 +627,19 @@
     color: var(--muted-foreground);
   }
 
+  /* O selo do TESTE sem veredicto (p220-221).
+   *
+   * Ele reusa a forma do `.mesa-ataque-selo` e NÃO a cor de nenhum veredicto: a
+   * `.mesa-ataque-acerto` tem exatamente esta cor, e reusá-la poria o nome
+   * "acerto" sobre um teste que ninguém disse se passou — um nome de classe que
+   * mente é defeito entregue, igual a um comentário que mente.
+   *
+   * Sem CD não há passou nem falhou: quem a põe é o mestre, em voz. O que esta
+   * faixa marca é só "houve um teste". */
+  .mesa-teste-selo-comum {
+    color: var(--foreground);
+  }
+
   /* Hide native number spinners — replaced by the NumberInput buttons. */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
