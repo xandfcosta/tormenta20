@@ -37,6 +37,7 @@ func Routes(r chi.Router, s Scene) {
 	// AS PERÍCIAS. O NOME vai no CAMINHO, escapado, e não num sinal: um sinal
 	// aqui seria disputado por uma dezena de botões idênticos.
 	r.Post("/personagens/{id}/pericias/treino/{nome}", s.sheetCommand(toggleTraining))
+	r.Post("/personagens/{id}/pericias/rolar/{nome}", s.sheetCommand(rollExpertise))
 	r.Post("/personagens/{id}/pericias/atributo/{nome}/{atributo}", s.sheetCommand(swapAttribute))
 	r.Post("/personagens/{id}/pericias/remover/{nome}", s.sheetCommand(removeCraft))
 	// A CRIAÇÃO é a única que lê SINAL, porque o nome é texto que a pessoa acabou
@@ -122,7 +123,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 			" catalog_search: '', catalog_category: '', item_qty: 1, item_name: '', item_slots: 1," +
 			" item_roll_hp: 0, item_roll_mp: 0, item_improvements: [], item_material: ''," +
 			" power_search: '', stance_degrees: 0, power: '', show_passives: false," +
-			" power_source: 'raca', race_attributes: []}",
+			" power_source: 'raca', race_attributes: [], expertise_d20: 0}",
 	}, SceneBody(view))
 }
 

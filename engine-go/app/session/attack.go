@@ -21,6 +21,42 @@ func (st *Store) ProposeAttack(ctx context.Context, sessionID int64, attack live
 		func(s *live.SessionRuntimeState) error { return live.ProposeAttack(s, attack) })
 }
 
+// RecordSkillTest guarda o teste rolado para a mesa ver (p220-221).
+//
+// Ele mora neste arquivo e não num irmão porque é a MESMA pergunta que as três
+// mutações do ataque respondem — "o que a mesa acabou de rolar?" —, e a
+// diferença é que este não tem ciclo: não há propor, confirmar nem cancelar.
+//
+// O EVENTO é o do ataque rolado, e isso é deliberado: o que ele diz à mesa é
+// "alguém rolou um dado, redesenhe", e inventar um segundo evento para a mesma
+// frase faria todo ouvinte assinar os dois.
+func (st *Store) RecordSkillTest(
+	ctx context.Context, sessionID int64, roll live.SkillTestRoll,
+) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error { return live.RecordSkillTest(s, roll) })
+}
+
+// PublishCharacterSkillTest põe o teste na mesa onde este personagem está.
+//
+// AS SESSÕES VIVAS e não "a cena de ação", que é a diferença para o
+// `CharacterActionFits` logo abaixo: aquele só cobra turno DENTRO de uma cena
+// que conta rodadas, e um teste acontece o tempo todo — a Percepção que abre a
+// cena é rolada antes de haver cena.
+//
+// SEM SESSÃO NÃO É ERRO: a ficha aberta sozinha rola e mostra o número a quem
+// está olhando; o que não existe é mesa para onde publicar.
+func (st *Store) PublishCharacterSkillTest(
+	ctx context.Context, characterID int64, roll live.SkillTestRoll,
+) error {
+	for _, sessionID := range st.LiveSessionsWithCharacter(characterID) {
+		if _, err := st.RecordSkillTest(ctx, sessionID, roll); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // CommitAttack aplica o dano do provisório e o tira da mesa.
 //
 // O DANO PASSA PELO `DeltaVitals`, e é aí que mora a razão de este método

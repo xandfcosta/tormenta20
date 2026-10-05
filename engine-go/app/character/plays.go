@@ -23,8 +23,19 @@ type Plays struct {
 	db       *sql.DB
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs
+	// rollDie é o DADO, injetado e não escolhido aqui — a mesma razão do
+	// `combat.NewStrike`: é o que torna a regra testável, e em produção ele é o
+	// `engine.RollDie`, com aleatoriedade criptográfica.
+	//
+	// Ele entrou quando a ficha passou a ROLAR (ALE-423). Antes dela a ficha só
+	// recebia o que a mesa tinha rolado, e o comentário dos sinais ainda dizia
+	// "a ficha não rola por ninguém" — deixou de ser verdade.
+	rollDie func(faces int) (int, error)
 }
 
-func NewPlays(db *sql.DB, q *sqlcgen.Queries, catalogs *engine.Catalogs) Plays {
-	return Plays{db: db, queries: q, catalogs: catalogs}
+func NewPlays(
+	db *sql.DB, q *sqlcgen.Queries, catalogs *engine.Catalogs,
+	rollDie func(faces int) (int, error),
+) Plays {
+	return Plays{db: db, queries: q, catalogs: catalogs, rollDie: rollDie}
 }

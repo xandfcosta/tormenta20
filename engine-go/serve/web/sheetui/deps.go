@@ -54,6 +54,17 @@ type Deps interface {
 	// porta. Fora de uma cena de ação nenhuma das duas cobra nem recusa.
 	ActionFitsOnTurn(ctx context.Context, characterID int64, cost engine.ActionCost) error
 	SpendActionOnTurn(ctx context.Context, characterID int64, cost engine.ActionCost) error
+	// PublishSkillTest põe um teste rolado na MESA onde este personagem está
+	// (p220-221), e entra na porta pela mesma razão das duas acima: a ficha sabe
+	// QUAL perícia e QUAL foi a conta, e quem sabe em que sessão o personagem
+	// está é o hospedeiro.
+	//
+	// FORA DE UMA SESSÃO ela não faz nada e não é erro: a ficha aberta sozinha
+	// continua rolando o dado e mostrando o número a quem está olhando — o que
+	// não existe é a mesa para onde publicar. Recusar aqui transformaria "você
+	// não está numa sessão" num defeito do gesto.
+	PublishSkillTest(ctx context.Context, characterID int64, skill string,
+		test engine.SkillTest, byHand bool) error
 	// As ESCRITAS, uma por gesto: a cena decide QUANDO, o hospedeiro sabe COMO.
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)

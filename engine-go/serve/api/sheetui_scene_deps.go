@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"t20engine/domain/engine"
+	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -44,4 +46,61 @@ func (h sheetHost) ActionFitsOnTurn(ctx context.Context, characterID int64, cost
 
 func (h sheetHost) SpendActionOnTurn(ctx context.Context, characterID int64, cost engine.ActionCost) error {
 	return h.rules.sessions.SpendCharacterAction(ctx, characterID, cost)
+}
+
+// PublishSkillTest leva o teste rolado na ficha para a mesa (p220-221).
+//
+// O NOME DE QUEM ROLOU sai daqui e não da cena da ficha: a faixa da mesa diz
+// "Arwen · Atletismo", e a ficha não tem por que montar a frase que outra tela
+// desenha. Quem sabe o nome é o agregado que o hospedeiro já carrega.
+func (h sheetHost) PublishSkillTest(
+	ctx context.Context, characterID int64, skill string, test engine.SkillTest, byHand bool,
+) error {
+	row, err := h.rules.queries.GetCharacter(ctx, characterID)
+	if err != nil {
+		return fmt.Errorf("carregar o personagem %d para publicar o teste: %w", characterID, err)
+	}
+	roll := live.SkillTestRoll{
+		Who: row.Name, Skill: skill,
+		Roll: test.Roll, Modifier: test.Modifier, Total: test.Total,
+		Natural20: test.Natural20, Natural1: test.Natural1,
+		ByHand: byHand,
+	}
+	for _, sessionID := range h.liveSessionsOf(ctx, characterID) {
+		if _, err := h.rules.sessions.RecordSkillTest(ctx, sessionID, roll); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// liveSessionsOf são as sessões EM CURSO das mesas onde este personagem está.
+//
+// PELA CAMPANHA e não pela FILA, e isso é a correção de um buraco que o caso de
+// integração pegou: o `LiveSessionsWithCharacter` do regime só acha sessão onde
+// o personagem tem LINHA NA INICIATIVA, e um teste é rolado fora de combate o
+// tempo todo — a Percepção que abre a cena vem antes de haver cena.
+//
+// SEM SESSÃO NÃO É ERRO e nem lista vazia é defeito: a ficha aberta sozinha rola
+// e mostra o número a quem está olhando; o que não existe é mesa para onde
+// publicar. Pelo mesmo motivo os erros de leitura são ENGOLIDOS — uma campanha
+// ilegível não pode transformar um teste de perícia numa recusa.
+func (h sheetHost) liveSessionsOf(ctx context.Context, characterID int64) []int64 {
+	campaigns, err := h.rules.queries.ListCampaignsForCharacter(ctx, characterID)
+	if err != nil {
+		return nil
+	}
+	var out []int64
+	for _, c := range campaigns {
+		sessions, err := h.rules.queries.ListSessions(ctx, c.ID)
+		if err != nil {
+			continue
+		}
+		for _, s := range sessions {
+			if s.Status == "active" {
+				out = append(out, s.ID)
+			}
+		}
+	}
+	return out
 }

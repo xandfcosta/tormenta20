@@ -339,6 +339,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// depende de QUEM OLHA — só quem rolou cancela o que é dele —, e o
 	// construtor puro não recebe o usuário.
 	view.Attack = attackProposalOf(st, userID)
+	view.SkillTest = skillTestBandOf(st)
 	view.Status = sess.Status
 	if sess.Title.Valid {
 		view.Title = sess.Title.String

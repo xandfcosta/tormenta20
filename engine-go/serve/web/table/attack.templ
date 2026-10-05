@@ -78,3 +78,40 @@ templ attackProposed(v View) {
 		<section id="table-attack" hidden></section>
 	}
 }
+
+// A FAIXA DO TESTE ROLADO (p220-221) — irmã da do ataque, e a diferença é a
+// AUSÊNCIA dos verbos.
+//
+// Um teste não muda nada: ele informa. O ataque tem Confirmar e Cancelar porque
+// alguém tem de transformar a proposta em consequência; aqui não há consequência
+// a transformar, e dois botões inertes seriam pior que nenhum.
+//
+// O SELO diz só o que NÃO depende de CD — os naturais da p221. Quem põe a CD é o
+// mestre, em voz, e um "passou" sem ela seria inventado.
+templ skillTestRolled(v View) {
+	if v.SkillTest != nil {
+		<section
+			id="table-skill-test"
+			role="status"
+			aria-label="Teste rolado"
+			class="mesa-ataque"
+		>
+			<p class="flex min-w-0 flex-wrap items-center gap-2">
+				<span class={ "mesa-ataque-selo", v.SkillTest.Class }>{ v.SkillTest.Seal }</span>
+				<span class="min-w-0 truncate">{ v.SkillTest.Who } · <strong>{ v.SkillTest.Skill }</strong></span>
+			</p>
+			// `aria-live` na CONTA e não na faixa inteira, como no ataque: quem
+			// ouve precisa do resultado, e o selo já é lido no nome acessível.
+			<p aria-live="polite" class="flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-2xs text-muted-foreground">
+				<span class="font-mono tabular-nums">{ v.SkillTest.Tally }</span>
+				// DE ONDE VEIO O DADO fica FORA do monoespaçado, pela mesma razão
+				// da situação especial do ataque: dentro da conta ela parte a
+				// linha a 390px, e em prosa a quebra cai entre o número e o motivo.
+				if v.SkillTest.ByHand {
+					<span aria-hidden="true">·</span>
+					<span>dado rolado na mesa</span>
+				}
+			</p>
+		</section>
+	}
+}
