@@ -62,13 +62,16 @@ E o app **recebe o dado da mesa** tão de primeira classe quanto rola o dele: qu
 rolou na mão digita o número e ganha a conta do mesmo jeito. Tirar o dado de
 quem gosta de rolar seria cobrar o atrito que este guia existe para remover.
 
-> **O ataque e a manobra são anteriores a esta regra, e ficam.** O ataque compara
-> uma rolagem com uma Defesa — é conta, e quem confirma o dano continua sendo o
-> mestre. A manobra é o caso de fronteira: ela resolve um teste OPOSTO, anuncia
-> `Won` e impõe condição sozinha (ALE-420/421), que é a forma que esta seção
-> recusa. Fica registrado em vez de consertado por conta própria — mexer nela é
-> decisão do dono, e desfazer trabalho entregue sem ele pedir é o oposto do que
-> esta seção protege.
+> **O ATAQUE FICA; A MANOBRA FOI CONSERTADA.** O ataque compara uma rolagem com
+> uma Defesa — é conta, e quem confirma o dano continua sendo o mestre. A manobra
+> era a violação: ela resolvia um teste OPOSTO, anunciava o vencedor e impunha a
+> condição sozinha. Hoje devolve os dois totais, a diferença e a condição que o
+> livro PREVÊ, e o desfecho é do mestre (ALE-423).
+>
+> Ela foi o primeiro caso desta seção, e a lição é de ORDEM: a regra nasceu porque
+> uma fatia já entregue a violava, e o conserto só veio depois de o dono mandar.
+> Trabalho entregue não se desfaz por conta própria — registra-se, e espera-se a
+> decisão dele.
 
 ## Antes de mexer
 
