@@ -58,6 +58,11 @@ type powerRow struct {
 	Glyph string
 	// Cost é "LIVRE · 1 PM" — a ação que o uso consome e o que ele custa.
 	Cost string
+	// Action é a chave CRUA do catálogo (`padrao`, `livre`, `reacao`…), e ela
+	// existe para quem AGRUPA: a superfície de Ações põe cada linha no custo que
+	// ela paga, e ler isso do `Cost` já escrito seria um analisador de texto de
+	// tela — o rótulo muda, o grupo muda junto, e em silêncio.
+	Action string
 	// Limit é o crachá do limite: "1/cena", "3/dia". Cobrado só nos dois
 	// primeiros; ver `book.ChargedScope`.
 	Limit string
@@ -140,7 +145,7 @@ func powerRowFor(
 		row.Page = spec.BookPage
 	}
 	row.Limit = limitBadge(*spec)
-	row.Cost = writtenCost(*spec)
+	row.Cost, row.Action = writtenCost(*spec), spec.Action
 	context.UsedThisScene, context.UsedToday = uses[spec.ID].Scene, uses[spec.ID].Day
 	if scope := book.ChargedScope(*spec); scope != "" {
 		row.Spent = writtenSpent(scope, uses[spec.ID])

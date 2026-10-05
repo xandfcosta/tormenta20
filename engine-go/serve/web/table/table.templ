@@ -60,6 +60,13 @@ templ tableScene(v View) {
 			<div data-show={ surface(superficieDaFicha) } class="flex min-h-0 flex-1 flex-col">
 				@sheetui.SceneBody(*v.MySheet)
 			</div>
+			// AS AÇÕES ficam na mesma coluna de leitura da Mesa e não na da
+			// Ficha: a ficha é grade de números e usa a largura toda; esta é uma
+			// lista, e lista larga obriga o olho a atravessar a tela entre o nome
+			// e o número.
+			<div data-show={ surface(superficieDasAcoes) } class="mx-auto min-h-0 w-full max-w-3xl flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
+				@sheetui.ActionsBody(*v.MySheet)
+			</div>
 		}
 		// A MESA: quem está na cena e em que ordem. Rola por dentro, nunca a
 		// página. A largura de leitura mora AQUI e não no `main`: uma coluna de
@@ -106,7 +113,11 @@ templ surfaceSelector(v View) {
 				data-on:click={ pickSurface(layer.ID) }
 				class="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-none border px-2 text-xs uppercase tracking-wide outline-none transition-colors"
 			>
-				@ui.Icon(layer.Icon, "size-4 shrink-0")
+				// O ÍCONE SAI NO TELEFONE. Com QUATRO superfícies a 390px sobram
+				// ~93px por botão, e ícone mais rótulo não cabem: medido, o
+				// "Tabuleiro" saía "TABU…". Some o ícone e não a palavra porque é
+				// a palavra que diz o que o botão faz — o ícone é reforço.
+				@ui.Icon(layer.Icon, "size-4 shrink-0 hidden sm:block")
 				<span class="truncate">{ layer.Label }</span>
 			</button>
 		}

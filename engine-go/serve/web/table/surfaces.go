@@ -8,11 +8,12 @@ import "fmt"
 // entre elas. É a mesma decisão da forma do mestre, do outro lado da mesa: o que
 // está na tela está inteiro.
 //
-// A FICHA só aparece para QUEM TEM personagem na sessão. O mestre não tem
-// "minha ficha" — ele vê a mesa inteira —, e um jogador sem personagem na
-// campanha clicaria numa aba vazia.
+// A FICHA e as AÇÕES só aparecem para QUEM TEM personagem na sessão. O mestre
+// não tem "minha ficha" nem vez para gastar — ele vê a mesa inteira —, e um
+// jogador sem personagem na campanha clicaria numa aba vazia.
 
 const (
+	superficieDasAcoes    = "acoes"
 	superficieDaFicha     = "ficha"
 	superficieDaMesa      = "mesa"
 	superficieDoTabuleiro = "tabuleiro"
@@ -43,10 +44,18 @@ func surfaces(v View) []playerSurface {
 	if v.MySheet == nil {
 		return PlayerSurfaces
 	}
-	// "Ficha" e não "Minha ficha": com três superfícies o telefone dá ~124px
+	// "Ficha" e não "Minha ficha": com QUATRO superfícies o telefone dá ~93px
 	// por botão, e a 390px o rótulo longo sai truncado. A palavra é a do
 	// glossário.
-	withSheet := []playerSurface{{superficieDaFicha, "Ficha", "ScrollText"}}
+	//
+	// AÇÕES VEM ANTES DA FICHA, e a ordem é a do uso: na vez dele o jogador quer
+	// o que dá para fazer, e a ficha é onde ele vai quando a resposta não está
+	// ali. A que ABRE continua sendo a Mesa — quem entra na sessão quer saber de
+	// quem é a vez.
+	withSheet := []playerSurface{
+		{superficieDasAcoes, "Ações", "Swords"},
+		{superficieDaFicha, "Ficha", "ScrollText"},
+	}
 	return append(withSheet, PlayerSurfaces...)
 }
 

@@ -86,6 +86,11 @@ type View struct {
 	// Powers é a aba homônima — a lista de jogo: o que se ativa em cima, o que é
 	// passivo recolhido embaixo.
 	Powers powersPanel
+	// Actions é a superfície AÇÕES, que a MESA desenha e a ficha não: ela é o que
+	// o Combate, os Poderes e as Magias já computaram, reagrupado pelo que a vez
+	// custa. Vem daqui e não do pacote da mesa porque o que ela lê é tudo sheet —
+	// o único pedaço que é da sessão é o orçamento do turno, e quem o tem é lá.
+	Actions actionsPanel
 	// Choices é o diálogo de escolher poderes — a administração da ficha.
 	Choices choicesPanel
 	// Refusal é a frase de uma regra que barrou o gesto — o teto de duas mãos, o
@@ -205,6 +210,10 @@ func (s Scene) Load(
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = panelForCombat(sheet, cards, isCaster(sheet))
 		v.Expertises = expertisePanelFor(dto, sheet, search)
+		// DEPOIS dos três, e não ao lado: o painel de Ações não computa nada —
+		// ele reagrupa o Combate, os Poderes e as Magias, e montá-lo antes
+		// deles o deixaria lendo campos vazios.
+		v.Actions = actionsPanelFrom(sheet, v.Combat, v.Powers, v.Spells)
 	}
 	for _, item := range Tabs() {
 		item.Active = item.Value == aba
