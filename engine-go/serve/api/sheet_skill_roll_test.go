@@ -196,3 +196,64 @@ func TestTheWholeTableSeesTheRolledTest(t *testing.T) {
 		}
 	}
 }
+
+// A MESA É ACHADA PELA CAMPANHA, e o id da campanha NÃO é o id da linha de
+// elenco (ALE-423).
+//
+// O `ListCampaignsForCharacter` devolve a linha de `campaign_members` com o
+// `m.id` no campo `ID` e a campanha no `Campaignid`. Quem lesse `ID` pediria as
+// sessões de uma campanha que é outra — ou de nenhuma —, e o teste rolado
+// simplesmente não chegaria à mesa: sem erro, sem recusa, sem faixa.
+//
+// POR QUE A BANCADA COMUM NÃO PEGA ISSO: nela a campanha é a 1 e a linha de
+// elenco também é a 1, então ler o campo errado dá o número certo. O defeito
+// apareceu no banco de desenvolvimento, onde um jogador está em DUAS campanhas —
+// e foi OLHANDO a tela depois de mesclar, não na suíte.
+//
+// A bancada daqui força a divergência: um segundo personagem entra na primeira
+// campanha, e só então o nosso entra na segunda. A sessão VIVA é a da segunda.
+func TestTheRolledTestReachesTheTableWhenTheMembershipIdIsNotTheCampaignId(t *testing.T) {
+	f := newSceneFixture(t)
+
+	// Outro personagem na campanha 1 empurra o número da linha de elenco.
+	outro := seedCharacterAtLevel(t, f.s, f.player, "Figurante", "Guerreiro", 1, 0, 0)
+	seedMember(t, f.s, f.campaignID, outro)
+
+	segunda := seedCampaign(t, f.s, f.gm)
+	aoVivo := seedSession(t, f.s, segunda)
+	seedMember(t, f.s, segunda, f.charID)
+	if _, err := f.s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
+		StartedAt: sql.NullString{String: dbvalue.NowISO(), Valid: true},
+		UpdatedAt: dbvalue.NowISO(), ID: aoVivo,
+	}); err != nil {
+		t.Fatalf("começar a segunda sessão: %v", err)
+	}
+
+	// O CONTROLE: se os dois ids coincidirem, ler o campo errado dá o número
+	// certo e o caso não mede nada — que é exatamente o que acontecia antes.
+	linhas, err := f.s.queries.ListCampaignsForCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("listar as campanhas do personagem: %v", err)
+	}
+	divergiu := false
+	for _, linha := range linhas {
+		if linha.Campaignid == segunda && linha.ID != linha.Campaignid {
+			divergiu = true
+		}
+	}
+	if !divergiu {
+		t.Fatalf("a bancada não fez os ids divergirem, e o caso não mede nada: %+v", linhas)
+	}
+
+	rolaPericia(t, f, "Iniciativa", 14)
+
+	estado := stateOf(t, f.s.sessions, aoVivo)
+	if estado.LastSkillTest == nil {
+		t.Fatalf("o teste não chegou à mesa VIVA (sessão %d da campanha %d) — a busca "+
+			"pela sessão leu o id da linha de elenco no lugar do id da campanha",
+			aoVivo, segunda)
+	}
+	if estado.LastSkillTest.Roll != 14 {
+		t.Errorf("a faixa da mesa viva diz d20 %d, e a mesa rolou 14", estado.LastSkillTest.Roll)
+	}
+}
