@@ -1,0 +1,102 @@
+package sheetui
+
+import "strconv"
+import "t20engine/serve/web/ui"
+
+// A SUPERFÍCIE AÇÕES desenhada.
+//
+// UMA LISTA e nenhuma grade: a grade da aba Combate existe para seis números que
+// se comparam entre si, e aqui a pergunta é outra — cada linha é um verbo com um
+// número à direita, e o olho desce a coluna de números sem atravessar a tela.
+//
+// NENHUM BOTÃO NESTA FATIA. Ela mostra o que dá para fazer e com que número; os
+// chips de modificador e o Rolar vêm depois (ALE-423). Um botão desenhado antes
+// de existir seria a tela prometendo um gesto que o servidor não tem.
+
+// ActionsBody é a superfície inteira. Exportada porque quem a desenha é a MESA:
+// a ficha não tem esta aba, e o orçamento do turno que a acompanha é da sessão.
+templ ActionsBody(v View) {
+	<div id="actions-scene" class="flex min-h-0 flex-1 flex-col gap-3">
+		if len(v.Actions.Groups) == 0 {
+			<p class="self-center py-8 text-center text-sm italic text-muted-foreground">
+				Esta ficha ainda não tem o que fazer num turno. Empunhe uma arma na Mochila.
+			</p>
+		}
+		for _, group := range v.Actions.Groups {
+			@actionSection(group)
+		}
+		if v.Actions.Passives > 0 {
+			@passiveTally(v.Actions.Passives)
+		}
+	</div>
+}
+
+templ actionSection(group actionGroup) {
+	<section>
+		<p class="mb-1.5 flex flex-wrap items-baseline gap-2">
+			<span class={ ui.SectionLabelClasses("gold", "") }>{ group.Title }</span>
+			if group.Note != "" {
+				<span class={ ui.SectionLabelClasses("muted", "text-3xs") }>{ group.Note }</span>
+			}
+		</p>
+		<ul class="divide-y divide-grimorio-iron rounded-sm border border-grimorio-iron">
+			for _, row := range group.Rows {
+				@actionLine(row)
+			}
+		</ul>
+	</section>
+}
+
+// actionLine é uma coisa que dá para fazer.
+//
+// A LINHA RECUSADA APARECE APAGADA em vez de sumir, e o motivo vai escrito: "a
+// Fúria não está aqui" manda procurar na ficha, e "Fúria — falta PM" responde.
+templ actionLine(row actionRow) {
+	<li class={ "flex items-center justify-between gap-2 px-3 py-2",
+		templ.KV("opacity-60", !row.Can) }>
+		<div class="min-w-0">
+			<p class="flex min-w-0 flex-wrap items-center gap-1.5">
+				<span class="truncate text-sm text-foreground">{ row.Name }</span>
+				if row.Live {
+					<span class="rounded-sm border border-grimorio-gold/60 px-1.5 py-0.5 text-3xs font-semibold uppercase tracking-widest text-grimorio-gold">
+						em curso
+					</span>
+				}
+			</p>
+			// O DETALHE QUEBRA LINHA, e o nome é que trunca.
+			//
+			// Invertido — detalhe truncado — a 390px a Investida saía "…−2 na
+			// Defesa até a sua", cortando a consequência que é a razão de a linha
+			// existir. Um nome cortado custa estética; uma regra cortada custa a
+			// decisão de quem está lendo.
+			if row.Detail != "" {
+				<p class="text-2xs text-muted-foreground">{ row.Detail }</p>
+			}
+			if !row.Can && row.Why != "" {
+				<p class="text-2xs text-penalty-ink">{ row.Why }</p>
+			}
+		</div>
+		<div class="flex shrink-0 items-center gap-2">
+			if row.Cost != "" {
+				<span class="rounded-sm border border-grimorio-iron px-1.5 py-0.5 font-mono text-3xs tabular-nums text-muted-foreground">
+					{ row.Cost }
+				</span>
+			}
+			if row.Value != "" {
+				<span class="font-mono text-base font-bold tabular-nums text-foreground">{ row.Value }</span>
+			}
+		</div>
+	</li>
+}
+
+// passiveTally é a CONTAGEM das passivas, e ela fecha a superfície.
+//
+// Ela não abre nada: quem quer a lista tem a aba Poderes, e duplicá-la aqui
+// daria duas listas da mesma coisa para manter em dia. O que a linha entrega é a
+// garantia de que a superfície não escondeu nada — "você tem mais seis, e elas
+// já estão nos seus números".
+templ passiveTally(count int) {
+	<p class="rounded-sm border border-dashed border-grimorio-iron px-3 py-2 text-2xs text-muted-foreground">
+		Passivas · { strconv.Itoa(count) } · já estão nos seus números, nada a acionar
+	</p>
+}
