@@ -15,6 +15,61 @@ Houve uma SPA em SolidJS (`frontend/`) e um motor compilado para WASM que rodava
 no navegador. Os dois saíram na ALE-272: as cenas são renderizadas no servidor,
 e a regra tem um lugar só.
 
+## O sistema INFORMA; o mestre DECIDE
+
+**Esta é a pergunta que vem antes de "como implementar": a fatia que você está
+prestes a propor TIRA uma decisão do mestre?** Se tira, ela não existe — por mais
+fiel ao livro que seja.
+
+O que o app faz é **levar do ponto A ao ponto B**: do *quero fazer alguma coisa*
+— e aqui está, na mão, o que isso pede — até o *isto foi o que aconteceu* — e
+aqui está, na mão, o que o mestre precisa para aplicar. Ele existe para
+**diminuir atrito de cálculo e de decoreba de livro**, e para nada além disso. O
+que ele compra com esse atrito é tempo de interpretação.
+
+### O que ele DÁ
+
+- **Dado**, no sentido de informação: atributo, perícia, dano de arma, Defesa de
+  escudo, preço de item.
+- **A conta difícil**, pronta e decomposta: o que uma condição faz com as
+  perícias, o que material e melhoria fazem com um item, o que uma habilidade faz
+  com o personagem.
+- **O mapa**, e o que o personagem pode fazer a partir de onde está.
+- **O que foi rolado**, para o jogador saber o que rolar e o mestre saber o que
+  aconteceu.
+
+### O que ele NÃO faz
+
+**Não arbitra.** Um jogador não escolhe outro, os dois rolam e o sistema anuncia
+o vencedor e aplica os efeitos em cada um. Quem diz quem venceu, e o que isso
+causa, é o mestre — na voz.
+
+Isto cortou fatias inteiras que o livro descreve e que seriam fiéis a ele: o
+TESTE OPOSTO e o AJUDAR da p220-221, e os TESTES ESTENDIDOS da p222-223. As três
+pressupõem um turno dentro do sistema com embate de dados e um vencedor
+anunciado, e é exatamente essa a linha. Elas estão registradas como fora de
+escopo na ALE-423, com o motivo, para ninguém as reabrir achando que foram
+esquecidas.
+
+### A fronteira não é "rolar"; é "julgar"
+
+Rolar um d20 e mostrar `d20 14 + 7 = 21` é dar a conta — o 7 é a soma de treino,
+atributo e penalidade de armadura que ninguém quer fazer de cabeça. **Dizer se
+21 passou é que é do mestre**, e é por isso que o teste de perícia não tem CD nem
+veredicto: quem põe a CD a diz em voz, muitas vezes em segredo.
+
+E o app **recebe o dado da mesa** tão de primeira classe quanto rola o dele: quem
+rolou na mão digita o número e ganha a conta do mesmo jeito. Tirar o dado de
+quem gosta de rolar seria cobrar o atrito que este guia existe para remover.
+
+> **O ataque e a manobra são anteriores a esta regra, e ficam.** O ataque compara
+> uma rolagem com uma Defesa — é conta, e quem confirma o dano continua sendo o
+> mestre. A manobra é o caso de fronteira: ela resolve um teste OPOSTO, anuncia
+> `Won` e impõe condição sozinha (ALE-420/421), que é a forma que esta seção
+> recusa. Fica registrado em vez de consertado por conta própria — mexer nela é
+> decisão do dono, e desfazer trabalho entregue sem ele pedir é o oposto do que
+> esta seção protege.
+
 ## Antes de mexer
 
 - **Não assuma.** Se a regra do livro ou a decisão de produto não estiver clara
