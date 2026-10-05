@@ -627,16 +627,25 @@
     color: var(--muted-foreground);
   }
 
-  /* O selo do TESTE sem veredicto (p220-221).
+  /* A QUARTA TINTA É A AUSÊNCIA DE TINTA, e ela serve a TUDO que não tem
+   * veredicto para colorir. As três de cima são cor de DESFECHO — crítico,
+   * acerto, erro —, e duas faixas desta casa não têm um:
    *
-   * Ele reusa a forma do `.mesa-ataque-selo` e NÃO a cor de nenhum veredicto: a
-   * `.mesa-ataque-acerto` tem exatamente esta cor, e reusá-la poria o nome
-   * "acerto" sobre um teste que ninguém disse se passou — um nome de classe que
-   * mente é defeito entregue, igual a um comentário que mente.
+   * - a MANOBRA, porque quem julga o embate é o mestre;
+   * - o TESTE de perícia, porque sem CD não há passou nem falhou, e quem põe a
+   *   CD é o mestre, em voz.
    *
-   * Sem CD não há passou nem falhou: quem a põe é o mestre, em voz. O que esta
-   * faixa marca é só "houve um teste". */
-  .mesa-teste-selo-comum {
+   * UMA classe e não duas. As duas fatias nasceram em paralelo e cada uma criou
+   * a sua — `mesa-teste-selo-comum` e `mesa-ataque-comum` —, com o MESMO corpo.
+   * Duas grafias para um conceito é o que o GLOSSARY.md proíbe, e aqui elas
+   * envelheceriam em velocidades diferentes. O nome que ficou é o da FAMÍLIA do
+   * selo: as duas faixas usam `.mesa-ataque-selo` como base, e as duas já
+   * pintam os naturais com `.mesa-ataque-critico` e `.mesa-ataque-erro`.
+   *
+   * Reusar a `.mesa-ataque-acerto`, que tem exatamente esta cor, poria o nome
+   * "acerto" sobre algo que ninguém disse se acertou — nome de classe que mente
+   * é defeito entregue, igual a comentário que mente. */
+  .mesa-ataque-comum {
     color: var(--foreground);
   }
 

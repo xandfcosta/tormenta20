@@ -106,15 +106,14 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 			return nil, err
 		}
 	}
-	// A CONDIÇÃO DA MANOBRA pousa aqui, junto do dano e pela mesma razão: quem
-	// transforma proposta em consequência é o mestre. Entre rolar e confirmar a
-	// manobra pode ser cancelada, e uma condição aplicada na proposta ficaria no
-	// alvo de um gesto que não aconteceu.
-	if m := attack.Maneuver; m != nil && m.Imposes != "" && attack.TargetTokenID == "" {
-		if _, err := st.ImposeCondition(ctx, sessionID, attack.TargetEntryID, m.Imposes); err != nil {
-			return nil, err
-		}
-	}
+	// A CONDIÇÃO DA MANOBRA NÃO POUSA AQUI, e a ausência é a regra e não um
+	// esquecimento: o sistema INFORMA, o mestre DECIDE (ver o `CLAUDE.md` da
+	// raiz). Este bloco aplicava `m.Imposes` sozinho — um embate de dados em que
+	// o motor anunciava o vencedor e punha a condição no alvo.
+	//
+	// O que o livro prevê continua chegando à mesa: o provisório leva o
+	// `ConditionOnAWin`, a faixa o mostra, e o mestre marca a condição no gesto
+	// que já existe para isso. O conhecimento não sumiu; mudou de dono.
 	return st.apply(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error {
 			// Conferido DE NOVO sob a trava: entre a leitura lá em cima e esta

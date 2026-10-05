@@ -244,9 +244,10 @@ func TestTheManeuverDefenderRollsMeleeAndNotDefense(t *testing.T) {
 			"41 quer dizer que o código leu a DEFESA (30) do alvo, e a p234 manda "+
 			"ele rolar LUTA", out.Maneuver.Opposed)
 	}
-	// 10 + 5 = 15 contra 13: quem tenta vence por 2.
-	if !out.Maneuver.Won || out.Maneuver.Margin != 2 {
-		t.Errorf("15 contra 13 vence por 2, e deu %+v", *out.Maneuver)
+	// 10 + 5 = 15 contra 13: a diferença é +2, e é ela que o provisório leva. Quem
+	// olha os dois números e decide é o mestre.
+	if out.Maneuver.Margin != 2 {
+		t.Errorf("15 contra 13 dá diferença +2, e deu %+v", *out.Maneuver)
 	}
 	if out.Damage != 0 {
 		t.Errorf("a manobra causou %d de dano, e a p234 diz que ela faz algo DIFERENTE "+

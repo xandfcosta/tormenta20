@@ -106,17 +106,16 @@ type ManeuverRoll struct {
 	Opposed     int `json:"opposed"`
 	// Margin é a diferença, e ela é REGRA: cinco pontos ou mais dão efeito extra
 	// ao derrubar e ao desarmar (p234). Negativa quando quem tentou perdeu.
-	Margin int  `json:"margin"`
-	Won    bool `json:"won"`
-	// Imposes é a condição que a vitória deixa no alvo, e ela viaja no
-	// provisório porque quem a aplica é a CONFIRMAÇÃO: entre rolar e confirmar
-	// a manobra pode ser cancelada, e uma condição aplicada na proposta ficaria
-	// no alvo de um gesto que não aconteceu.
-	Imposes string `json:"imposes,omitempty"`
-	// AnotherRoll é o empate que a página manda repetir — totais iguais E bônus
-	// iguais. Não é derrota de quem tentou, e a faixa tem de dizer isso em vez
-	// de anunciar um vencedor que a regra não deu.
-	AnotherRoll bool `json:"anotherRoll,omitempty"`
+	Margin int `json:"margin"`
+	// ConditionOnAWin é a condição que o LIVRO diz que a vitória deixa (p234), e
+	// ela viaja SEMPRE — não só quando alguém vence, porque o sistema não sabe
+	// quem venceu e não é dele dizer.
+	//
+	// Ela substituiu o `Imposes`, que a confirmação do ataque aplicava sozinha.
+	// O conhecimento do livro não sumiu: ele mudou de APLICAÇÃO para INFORMAÇÃO,
+	// e a faixa o entrega ao mestre junto do gesto que já existe para marcar
+	// condição. É a regra da raiz — o sistema INFORMA, o mestre DECIDE.
+	ConditionOnAWin string `json:"conditionOnAWin,omitempty"`
 }
 
 // Attacker descreve quem está agindo sobre o provisório.

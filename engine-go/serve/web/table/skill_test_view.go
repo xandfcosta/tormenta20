@@ -38,7 +38,7 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 	band := &skillTestBand{
 		Who: t.Who, Skill: t.Skill, ByHand: t.ByHand,
 		Tally: fmt.Sprintf("d20 %d %s %d = %d", t.Roll, signOf(t.Modifier), abs(t.Modifier), t.Total),
-		Seal:  "Teste", Class: "mesa-teste-selo-comum",
+		Seal:  "Teste", Class: "mesa-ataque-comum",
 	}
 	// OS NATURAIS SÃO DO DADO (p221), e são o único veredicto que esta fatia
 	// pode dar: "sempre é um sucesso" e "sempre é uma falha" não dependem de CD
