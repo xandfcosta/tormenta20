@@ -160,6 +160,11 @@ func tableSignalsExpr() string {
 		fmt.Sprintf("sheet_tab: '%s', sheet_version: ''", sheetui.AskedTab("")),
 		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
 		"tool: '', marker_chosen: '', map_selection: ''",
+		// O ALVO DA VEZ, escolhido uma vez no topo das Ações e lido por todo
+		// gesto que precisa de um. Ele é SINAL e não estado do servidor porque é
+		// uma INTENÇÃO de quem joga, e não um fato da mesa: escolher contra quem
+		// se vai rolar não muda nada para ninguém até o dado cair.
+		"turn_target: ''",
 		// O MENU DA PEÇA. `token_chosen` é qual menu está aberto e `token_edited`
 		// é qual peça o diálogo está editando: são DOIS porque abrir o diálogo
 		// FECHA o menu, e um sinal só faria o gesto de abrir apagar o alvo do

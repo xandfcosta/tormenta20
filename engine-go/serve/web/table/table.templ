@@ -65,6 +65,7 @@ templ tableScene(v View) {
 			// lista, e lista larga obriga o olho a atravessar a tela entre o nome
 			// e o número.
 			<div data-show={ surface(superficieDasAcoes) } class="mx-auto min-h-0 w-full max-w-3xl flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
+				@turnTargetBar(v)
 				@sheetui.ActionsBody(*v.MySheet)
 			</div>
 		}

@@ -43,6 +43,15 @@ func Routes(r chi.Router, s Scene) {
 	// A CRIAÇÃO é a única que lê SINAL, porque o nome é texto que a pessoa acabou
 	// de digitar e ainda não existe em lugar nenhum para virar caminho.
 	r.Post("/personagens/{id}/pericias/nova", s.sheetCommand(criaOOficio))
+	// AS AÇÕES: os gestos que saem da superfície Ações e terminam na MESA.
+	//
+	// ROTA DE FICHA e não de sessão, e a razão é o remendo: estes botões moram
+	// dentro do `#actions-scene`, que o gateway desta cena redesenha inteiro —
+	// um endereço com campanha e sessão dentro obrigaria a ficha a carregar
+	// coordenada de mesa só para se redesenhar. Quem sabe em que sessão este
+	// personagem está é o hospedeiro, pela porta, como no teste de perícia.
+	r.Post("/personagens/{id}/acoes/atacar/{arma}", s.sheetCommand(rollsAttackOnTheTarget))
+	r.Post("/personagens/{id}/acoes/manobra/{manobra}", s.sheetCommand(rollsManeuverOnTheTarget))
 	// OS EFEITOS: quatro donos de estado, quatro caminhos.
 	r.Post("/personagens/{id}/efeitos/condicao/{cond}", s.sheetCommand(toggleBookCondition))
 	r.Post("/personagens/{id}/efeitos/aplica/{magia}", s.sheetCommand(applySpellBuff))

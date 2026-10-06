@@ -9,21 +9,28 @@ import "t20engine/serve/web/ui"
 // se comparam entre si, e aqui a pergunta é outra — cada linha é um verbo com um
 // número à direita, e o olho desce a coluna de números sem atravessar a tela.
 //
-// NENHUM BOTÃO NESTA FATIA. Ela mostra o que dá para fazer e com que número; os
-// chips de modificador e o Rolar vêm depois (ALE-423). Um botão desenhado antes
-// de existir seria a tela prometendo um gesto que o servidor não tem.
+// O GESTO FICA COLADO NO NÚMERO que ele usa, que é a mesma tese dos chips: o
+// `+8` e o "Rolar" na mesma linha dispensam procurar onde se rola aquilo. Quem
+// precisa de ALVO lê o sinal que a barra da Mesa escreve, e nasce desabilitado
+// até haver um.
 
 // ActionsBody é a superfície inteira. Exportada porque quem a desenha é a MESA:
 // a ficha não tem esta aba, e o orçamento do turno que a acompanha é da sessão.
 templ ActionsBody(v View) {
 	<div id="actions-scene" class="flex min-h-0 flex-1 flex-col gap-3">
+		// A RECUSA MORA NAS DUAS SUPERFÍCIES, e isso não é duplicação de frase: é
+		// o MESMO componente desenhado onde o gesto pode ter saído. Um gesto das
+		// Ações recusado só pelo `#sheet-scene` é recusado dentro de um nó que o
+		// `data-show` está escondendo — o jogador aperta Rolar e a tela dele não
+		// muda nada (medido no navegador, ALE-423).
+		@ruleRefusal(v)
 		if len(v.Actions.Groups) == 0 {
 			<p class="self-center py-8 text-center text-sm italic text-muted-foreground">
 				Esta ficha ainda não tem o que fazer num turno. Empunhe uma arma na Mochila.
 			</p>
 		}
 		for _, group := range v.Actions.Groups {
-			@actionSection(group)
+			@actionSection(v, group)
 		}
 		if v.Actions.Passives > 0 {
 			@passiveTally(v.Actions.Passives)
@@ -31,7 +38,7 @@ templ ActionsBody(v View) {
 	</div>
 }
 
-templ actionSection(group actionGroup) {
+templ actionSection(v View, group actionGroup) {
 	<section>
 		<p class="mb-1.5 flex flex-wrap items-baseline gap-2">
 			<span class={ ui.SectionLabelClasses("gold", "") }>{ group.Title }</span>
@@ -44,7 +51,7 @@ templ actionSection(group actionGroup) {
 		}
 		<ul class="divide-y divide-grimorio-iron rounded-sm border border-grimorio-iron">
 			for _, row := range group.Rows {
-				@actionLine(row)
+				@actionLine(v, row)
 			}
 		</ul>
 	</section>
@@ -54,7 +61,7 @@ templ actionSection(group actionGroup) {
 //
 // A LINHA RECUSADA APARECE APAGADA em vez de sumir, e o motivo vai escrito: "a
 // Fúria não está aqui" manda procurar na ficha, e "Fúria — falta PM" responde.
-templ actionLine(row actionRow) {
+templ actionLine(v View, row actionRow) {
 	<li class={ "px-3 py-2", templ.KV("opacity-60", !row.Can) }>
 		<div class="flex items-center justify-between gap-2">
 		<div class="min-w-0">
@@ -88,9 +95,51 @@ templ actionLine(row actionRow) {
 			if row.Value != "" {
 				<span class="font-mono text-base font-bold tabular-nums text-foreground">{ row.Value }</span>
 			}
+			if len(row.Rolls) == 1 {
+				@rollButton(v, row.Rolls[0], "bg-primary font-semibold text-primary-foreground")
+			}
 		</div>
 		</div>
+		if len(row.Rolls) > 1 {
+			@rollStrip(v, row.Rolls)
+		}
 	</li>
+}
+
+// rollStrip é a tira de verbos de uma linha que oferece MAIS DE UM gesto, que
+// hoje é só a Manobra.
+//
+// EMBAIXO e não à direita do número: cinco botões na coluna da direita
+// empurrariam o nome da linha para fora da tela a 390px, e o que se perde ali é
+// o que a linha É.
+templ rollStrip(v View, rolls []actionRoll) {
+	<div class="mt-2 flex flex-wrap items-center gap-1.5 border-t border-grimorio-iron pt-2">
+		for _, roll := range rolls {
+			@rollButton(v, roll, "border border-grimorio-iron text-muted-foreground")
+		}
+	</div>
+}
+
+// rollButton é o gesto de rolar, nas duas aparências.
+//
+// O QUE PRECISA DE ALVO SÓ EXISTE DENTRO DA SESSÃO, e a trava é não desenhar:
+// fora dela não há fila, o sinal `$turn_target` não foi declarado, e a
+// expressão leria `undefined` — que em JavaScript não é erro, é o botão não
+// fazer nada. O teste de perícia continua desenhado nos dois lugares, porque
+// ele rola igual: sem mesa, o que não acontece é a publicação na faixa.
+templ rollButton(v View, roll actionRoll, look string) {
+	if !roll.NeedsTarget || v.Embedded {
+		<button
+			type="button"
+			data-attr:disabled={ rollWaitsForATarget(roll) }
+			title={ rollTitle(roll) }
+			data-on:click={ sheetPost(v, roll.Path) }
+			class={ "inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm px-3 text-sm outline-none transition-opacity hover:opacity-90 disabled:opacity-40",
+				look }
+		>
+			{ roll.Label }
+		</button>
+	}
 }
 
 // chipStrip é a tira de interruptores ACIMA dos números que eles mudam.

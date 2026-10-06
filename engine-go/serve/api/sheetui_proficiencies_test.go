@@ -220,6 +220,9 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 		"escolha":     "caminho",
 		"valor":       "bruxo",
 		"ascendencia": "aggelus",
+		// Os da superfície Ações.
+		"arma":    "0",
+		"manobra": "derrubar",
 	}
 
 	var visited int

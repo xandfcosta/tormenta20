@@ -19,9 +19,16 @@
 #   indice  — o índice do editor de NPC
 #   passo   — o passo de atributo da forja, que FICA no caminho (ALE-307)
 #   step    — o irmão dele na ficha
-#   kind    — a MANOBRA do livro (agarrar, derrubar…), que fica no caminho pelo
+#   manobra — a MANOBRA do livro (agarrar, derrubar…), que fica no caminho pelo
 #             mesmo motivo do `passo`: o gesto é de MENU, e um corpo JSON pediria
-#             uma ilha de JS onde há um `@post` (ALE-420)
+#             uma ilha de JS onde há um `@post` (ALE-420). Ela se chamava `kind`
+#             em inglês e numa rota só; com o segundo chamador — o Rolar da
+#             superfície Ações —, duas grafias para um conceito seriam a
+#             divergência que o GLOSSARY proíbe (ALE-423)
+#   arma    — QUAL das empunhadas, por índice. O `Propose` escolhe por índice e
+#             já recusa o que não existe; um nome no endereço obrigaria o
+#             servidor a casar texto para achar de volta a mesma arma (ALE-423)
+arma
 ascendencia
 atributo
 beneficio
@@ -40,12 +47,12 @@ estado
 ferramenta
 flag
 id
-kind
 indice
 item
 linha
 lista
 magia
+manobra
 nome
 npcId
 passo
