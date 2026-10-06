@@ -3,6 +3,8 @@ package book
 import (
 	"encoding/json"
 	"sync"
+
+	"t20engine/domain/engine"
 )
 
 type Origin struct {
@@ -39,6 +41,25 @@ type ClassPower struct {
 type GrantByChoice struct {
 	Field string `json:"field"`
 	Value string `json:"value"`
+}
+
+// ForEngine traduz o verbete para a forma que a REGRA DE POSSE lê.
+//
+// A ponte mora aqui e não em quem pergunta porque ela já tinha DOIS lugares
+// para estar — a aba Poderes e o caso de uso que sobe o bônus cumulativo —, e
+// o motor é puro: ele não pode importar este pacote, então alguém tem de
+// atravessar. Um campo novo em `ClassPower` que não atravesse some em silêncio,
+// que é o mesmo defeito que a sombra do `Modifier` já custou.
+func (p ClassPower) ForEngine() *engine.ClassPower {
+	out := &engine.ClassPower{
+		ID: p.ID, ClassName: p.ClassName, Name: p.Name, GrantedAtLevel: p.GrantedAtLevel,
+	}
+	if p.GrantedByChoice != nil {
+		out.GrantedByChoice = &engine.GrantedByChoice{
+			Field: p.GrantedByChoice.Field, Value: p.GrantedByChoice.Value,
+		}
+	}
+	return out
 }
 
 type GeneralPower struct {
