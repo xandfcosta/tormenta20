@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -319,4 +321,98 @@ func TestTheSpellLandsInTheGroupItsExecutionCosts(t *testing.T) {
 	if !strings.Contains(padrao, "Conjurar") {
 		t.Errorf("a magia entrou sem o verbo que as outras linhas têm")
 	}
+}
+
+// ── OS CHIPS DE MODIFICADOR (fatia 2) ────────────────────────────────────────
+//
+// O chip é o interruptor que já existe — a postura dos Poderes, o situacional
+// dos Efeitos — desenhado SOBRE O NÚMERO QUE ELE MUDA, em vez de em outra aba.
+//
+// É a metade da dor que a fatia 1 não cura: ver o `+8` não lembra ninguém de que
+// a Fúria existe. Ligá-la pela aba Poderes exige saber que ela existe, que é o
+// que a pessoa esqueceu.
+
+// A FÚRIA APARECE NO CARTÃO DE ATACAR, porque é o ataque que ela muda.
+//
+// O roteamento lê o ALVO do modificador (`{k: attack}`, `{k: damage}`), nunca o
+// nome do poder: uma lista de "quais poderes vão no ataque" seria uma lista de
+// PROIBIDOS às avessas, que subconta em silêncio a cada poder novo do catálogo.
+func TestTheStanceChipRidesTheNumberItChanges(t *testing.T) {
+	f, _ := barbarianAtTheTable(t, 6)
+
+	painel := superficieDeAcoes(t, acoesDaMesa(t, f))
+	padrao := entre(t, painel, "Ação padrão", "Ação de movimento")
+	if !strings.Contains(padrao, "Fúria") {
+		t.Errorf("a ação padrão não oferece a Fúria, que soma +2 no ataque e no "+
+			"dano (p41):\n%s", recorte(padrao))
+	}
+	// O PREÇO VAI JUNTO: um interruptor que cobra PM sem dizer quanto faz a
+	// pessoa descobrir o custo depois de pagar.
+	if !strings.Contains(padrao, "PM") {
+		t.Errorf("o chip da Fúria não diz o que custa:\n%s", recorte(padrao))
+	}
+	// E ELA NÃO ENTRA NO MOVIMENTO: o deslocamento não é ataque nem dano, e um
+	// interruptor oferecido sobre um número que ele não muda é pior que nenhum.
+	movimento := entre(t, painel, "Ação de movimento", "Ação completa")
+	if strings.Contains(movimento, "Fúria") {
+		t.Errorf("a Fúria apareceu na ação de movimento, e ela não muda "+
+			"deslocamento:\n%s", recorte(movimento))
+	}
+	// UMA VEZ POR GRUPO, e não uma por linha: com ela ligada, por linha seriam
+	// três botões "Encerrar Fúria" idênticos empilhados.
+	if n := strings.Count(padrao, "Fúria"); n != 1 {
+		t.Errorf("a Fúria aparece %d vezes na ação padrão, e o grupo a oferece UMA", n)
+	}
+}
+
+// LIGAR O CHIP MOVE O NÚMERO, e é isto que separa esta fatia de um crachá
+// bonito: o `+8` vira `+10` na mesma tela, e o PM sai do poço.
+//
+// INTEGRAÇÃO pelo gesto de verdade, porque o que pode quebrar é a composição: o
+// chip chama o comando que a aba Poderes já tinha, o motor recomputa com a flag
+// ligada, e a superfície tem de ser REDESENHADA — ela é um nó irmão do
+// `#sheet-scene`, e um comando que remendasse só a ficha deixaria o número velho
+// na tela.
+func TestTurningTheChipOnMovesTheNumberOnTheSameScreen(t *testing.T) {
+	f, id := barbarianAtTheTable(t, 6)
+
+	antes := ataqueDoCartao(t, superficieDeAcoes(t, acoesDaMesa(t, f)))
+
+	rec := f.requests(t, f.player, http.MethodPost,
+		fmt.Sprintf("/personagens/%d/poderes/postura/furia/entra?embutida=1", id),
+		`{"stance_degrees":0}`)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("entrar em Fúria deu %d", rec.Code)
+	}
+	// O REMENDO VOLTA COM A SUPERFÍCIE, e não só com a ficha.
+	if !strings.Contains(rec.Body.String(), `id="actions-scene"`) {
+		t.Errorf("o comando redesenhou a ficha e não a superfície de Ações — o número " +
+			"ficaria velho na tela até alguém recarregar")
+	}
+
+	depois := ataqueDoCartao(t, superficieDeAcoes(t, acoesDaMesa(t, f)))
+	if depois <= antes {
+		t.Errorf("a Fúria foi ligada e o ataque ficou em %+d, vindo de %+d — a p41 dá "+
+			"+2, e o número tem de se mover", depois, antes)
+	}
+}
+
+// ataqueDoCartao lê o número que o cartão de Atacar mostra.
+//
+// Pelo DELTA e não por um número escrito à mão: o bônus de ataque do bárbaro sai
+// de Luta mais atributo mais o que a arma dá, e cravá-lo aqui seria reimplementar
+// a conta da aba Combate — o erro que o `CLAUDE.md` chama de derivar o esperado
+// do código sob teste.
+func ataqueDoCartao(t *testing.T, painel string) int {
+	t.Helper()
+	cartao := entre(t, painel, "Atacar · Machado de batalha", "Manobra")
+	achados := regexp.MustCompile(`>([+-]\d+)<`).FindStringSubmatch(cartao)
+	if achados == nil {
+		t.Fatalf("o cartão de Atacar não mostra número nenhum:\n%s", recorte(cartao))
+	}
+	n, err := strconv.Atoi(achados[1])
+	if err != nil {
+		t.Fatalf("o cartão mostra %q, que não é número", achados[1])
+	}
+	return n
 }

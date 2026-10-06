@@ -1,6 +1,8 @@
 package sheetui
 
 import (
+	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -44,6 +46,15 @@ type actionGroup struct {
 	// Note é o que o título não diz — "abre mão das duas", "não gastam a vez".
 	Note string
 	Rows []actionRow
+	// Chips são os interruptores que mudam ALGUM número deste grupo.
+	//
+	// DO GRUPO E NÃO DA LINHA, e isto foi decidido OLHANDO a tela: por linha, a
+	// Fúria de um bárbaro aparecia três vezes — no Atacar, na Manobra e na
+	// Investida —, e com ela ligada eram três botões "Encerrar Fúria" idênticos
+	// empilhados. No grupo ela aparece uma vez, logo ACIMA dos números que ela
+	// muda, que é a adjacência que o desenho queria; e ela ainda aparece no
+	// grupo da ação completa, porque lá ela muda outro número.
+	Chips []actionChip
 }
 
 // actionRow é uma coisa que dá para fazer.
@@ -69,6 +80,34 @@ type actionRow struct {
 	// Live marca o que está EM CURSO — a postura ligada, a passiva de gatilho com
 	// o gatilho no ar.
 	Live bool
+	// Moves são os NÚMEROS que esta linha mostra, no vocabulário dos alvos de
+	// modificador: `attack`, `damage`, `expertise:Atletismo`. É por eles que o
+	// chip sabe em que linha pousar — e é por isso que eles existem mesmo numa
+	// linha sem chip nenhum.
+	Moves []string
+}
+
+// actionChip é um interruptor sobre o número.
+//
+// Ele é o gesto que JÁ EXISTE — a postura dos Poderes, o situacional dos
+// Efeitos — desenhado onde o número está. Essa é a metade da dor que a lista
+// sozinha não cura: ver `+8` não lembra ninguém de que a Fúria existe, e ligá-la
+// pela aba Poderes exige saber que ela existe, que é o que a pessoa esqueceu.
+type actionChip struct {
+	Label string
+	// Cost é o preço de LIGAR. Um interruptor que cobra PM sem dizer quanto faz
+	// a pessoa descobrir o custo depois de pagar.
+	Cost string
+	On   bool
+	Can  bool
+	Why  string
+	// Note é o que o degrau compra ("+1 no bônus de Fúria"), vindo do catálogo.
+	Note string
+	// Command é o endereço do gesto, e ele é o MESMO das abas Poderes e Efeitos:
+	// um segundo caminho de escrita seria uma segunda regra de validação.
+	Command string
+	// Moves são os números que este chip muda — ver `actionRow.Moves`.
+	Moves []string
 }
 
 // actionsPanelFrom monta a superfície a partir dos painéis JÁ computados.
@@ -77,7 +116,8 @@ type actionRow struct {
 // não gasta a vez por último. O custo negociado fecha a lista porque ele não é
 // um custo — é a mesa decidindo um.
 func actionsPanelFrom(
-	computed engine.ComputedSheet, combat panelCombat, powers powersPanel, spells spellbookPanel,
+	id int64, computed engine.ComputedSheet,
+	combat panelCombat, powers powersPanel, spells spellbookPanel, effects effectsPanel,
 ) actionsPanel {
 	melee := expertiseOrZero(computed, "Luta", "strength").Total + computed.AttackAll.Total
 	byCost := map[engine.ActionCost][]actionRow{
@@ -105,7 +145,117 @@ func actionsPanelFrom(
 		}
 	}
 	panel.Passives = len(powers.Passives)
+	hangChips(&panel, chipsOffered(id, powers, effects.Situational))
 	return panel
+}
+
+// hangChips pendura cada interruptor nos GRUPOS que ele muda.
+func hangChips(panel *actionsPanel, chips []actionChip) {
+	for g := range panel.Groups {
+		group := &panel.Groups[g]
+		numbers := []string{}
+		for _, row := range group.Rows {
+			numbers = append(numbers, row.Moves...)
+		}
+		for _, chip := range chips {
+			if sharesANumber(numbers, chip.Moves) {
+				group.Chips = append(group.Chips, chip)
+			}
+		}
+	}
+}
+
+func sharesANumber(left, right []string) bool {
+	for _, l := range left {
+		if slices.Contains(right, l) {
+			return true
+		}
+	}
+	return false
+}
+
+// chipsOffered junta as duas famílias de interruptor: a POSTURA, que custa PM e
+// dura, e o SITUACIONAL, que é opt-in e não cobra nada.
+//
+// Elas moram em abas diferentes porque são coisas diferentes de ADMINISTRAR;
+// aqui são a mesma coisa de USAR — "um interruptor que muda este número" —, e
+// por isso viram uma lista só.
+func chipsOffered(id int64, powers powersPanel, situational []situationalRow) []actionChip {
+	chips := []actionChip{}
+	for _, power := range powers.Actions {
+		if power.Stance != nil {
+			chips = append(chips, stanceChips(id, power)...)
+		}
+	}
+	for _, row := range situational {
+		chips = append(chips, actionChip{
+			Label: row.Label, On: row.Active, Can: true,
+			Moves: numbersMovedBy(row.Targets),
+			Command: fmt.Sprintf("$status = %q; @post('/personagens/%d/efeitos/situacao?embutida=1')",
+				row.Key, id),
+		})
+	}
+	return chips
+}
+
+// stanceChips é UM chip por postura: entrar, ou encerrar o que está em curso.
+//
+// UM E NÃO UM POR DEGRAU, e a razão foi MEDIDA no navegador, não deduzida. O
+// bárbaro de nível 6 entrou em Fúria pagando o degrau ZERO — `steps=0,
+// pmPaid=2` no banco —, e o ataque subiu de +8 para +11. O bônus veio do +3, que
+// o catálogo concede por NÍVEL (`class.barbaro.furia-3`, `grantedAtLevel: 6`) e
+// o motor resolve por `bonusType: morale`. Os degraus pagos NÃO entram na conta.
+//
+// Então um chip "Fúria 3 PM" cobraria 1 PM a mais pelo mesmo número: a tela
+// oferecendo uma escolha que não muda nada, que é pior do que não oferecer. O
+// contador de degraus continua na aba Poderes, onde ele já estava e onde este
+// slice não encosta — a divergência é do MOTOR, e consertá-la é outra fatia.
+func stanceChips(id int64, power powerRow) []actionChip {
+	stance := power.Stance
+	if stance.Active {
+		return []actionChip{{
+			Label: "Encerrar " + power.Name, On: true, Can: true, Moves: stanceMoves(),
+			Command: fmt.Sprintf("@post('/personagens/%d/efeitos/postura/%s?embutida=1')",
+				id, stance.Flag),
+		}}
+	}
+	return []actionChip{{
+		Label: power.Name,
+		Cost:  strconv.Itoa(stance.BasePm) + " PM",
+		Can:   power.Can, Why: power.Why, Moves: stanceMoves(),
+		Command: fmt.Sprintf("$stance_degrees = 0; @post('/personagens/%d/poderes/postura/%s/entra?embutida=1')",
+			id, stance.Flag),
+	}}
+}
+
+// stanceMoves são os números que uma postura muda.
+//
+// HOJE É UMA LISTA FIXA — ataque e dano —, e o comentário diz por quê: os
+// modificadores de uma postura entram por `condition: {c: "flagOn"}` e NÃO
+// passam pelo `Conditional`, que é de onde o situacional tira os alvos dele.
+// Ler os alvos de verdade exigiria o catálogo de poderes aqui dentro, e o que
+// isso compraria é a postura que mexe em OUTRA coisa — a Inspiração do bardo
+// soma em perícia. Quando a segunda postura chegar, é aqui que ela entra, e o
+// caso que a cobra nasce com ela.
+func stanceMoves() []string {
+	return []string{"attack", "damage"}
+}
+
+// numbersMovedBy traduz alvos de modificador no vocabulário das linhas.
+//
+// Ele colapsa o ESCOPO de propósito: `{k: attack, scope: all}` e
+// `{k: attack, scope: this}` mudam o mesmo número da mesma linha, e distinguir
+// os dois aqui daria dois vocabulários para uma pergunta só.
+func numbersMovedBy(targets []engine.ModifierTarget) []string {
+	out := []string{}
+	for _, t := range targets {
+		if t.K == "expertise" {
+			out = append(out, "expertise:"+t.Name)
+			continue
+		}
+		out = append(out, t.K)
+	}
+	return out
 }
 
 // groupOrder são os grupos na ordem da tela, e QUAIS custos caem em cada um.
@@ -142,6 +292,7 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet) 
 			Detail: weapon.Damage + " · " + weapon.Crit + " · " + weapon.Skill,
 			Value:  weapon.Attack,
 			Can:    true,
+			Moves:  []string{"attack", "damage"},
 		})
 	}
 	// A MANOBRA SÓ EXISTE COM ARMA CORPO A CORPO NA MÃO: *"não é possível fazer
@@ -153,6 +304,7 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet) 
 			Detail: "agarrar, derrubar, desarmar, empurrar, quebrar · p234",
 			Value:  book.WithSign(melee),
 			Can:    true,
+			Moves:  []string{"attack"},
 		})
 	}
 	// FINTAR é teste de Enganação contra os Reflexos do alvo (p234) — é a única
@@ -162,6 +314,7 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet) 
 		Detail: "Enganação contra os Reflexos do alvo · p234",
 		Value:  book.WithSign(expertiseOrZero(computed, "Enganação", "charisma").Total),
 		Can:    true,
+		Moves:  []string{"expertise:Enganação"},
 	})
 	return rows
 }
@@ -193,11 +346,13 @@ func fullRows(melee int, computed engine.ComputedSheet) []actionRow {
 		Detail: "em linha reta · +2 no ataque, −2 na Defesa até a sua vez · p235",
 		Value:  book.WithSign(melee + investidaBonus),
 		Can:    true,
+		Moves:  []string{"attack"},
 	}, {
 		Name:   "Corrida",
 		Detail: "Atletismo · p235",
 		Value:  book.WithSign(expertiseOrZero(computed, "Atletismo", "strength").Total),
 		Can:    true,
+		Moves:  []string{"expertise:Atletismo"},
 	}}
 }
 
@@ -284,4 +439,23 @@ func joinWithDot(left, right string) string {
 		return right
 	}
 	return left + " · " + right
+}
+
+// chipTitle é o que o chip diz ao passar o mouse: o que o degrau compra, ou a
+// razão de ele estar apagado. Um chip desligado e sem explicação manda procurar.
+func chipTitle(chip actionChip) string {
+	if !chip.Can && chip.Why != "" {
+		return chip.Why
+	}
+	return chip.Note
+}
+
+// ariaBool escreve o `aria-pressed` de um interruptor. Ele é "true"/"false" e
+// não a ausência do atributo: um botão que ALTERNA tem estado, e quem lê por
+// leitor de tela precisa dele nos dois sentidos.
+func ariaBool(on bool) string {
+	if on {
+		return "true"
+	}
+	return "false"
 }

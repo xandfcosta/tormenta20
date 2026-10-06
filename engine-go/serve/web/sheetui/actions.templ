@@ -39,6 +39,9 @@ templ actionSection(group actionGroup) {
 				<span class={ ui.SectionLabelClasses("muted", "text-3xs") }>{ group.Note }</span>
 			}
 		</p>
+		if len(group.Chips) > 0 {
+			@chipStrip(group.Chips)
+		}
 		<ul class="divide-y divide-grimorio-iron rounded-sm border border-grimorio-iron">
 			for _, row := range group.Rows {
 				@actionLine(row)
@@ -52,8 +55,8 @@ templ actionSection(group actionGroup) {
 // A LINHA RECUSADA APARECE APAGADA em vez de sumir, e o motivo vai escrito: "a
 // Fúria não está aqui" manda procurar na ficha, e "Fúria — falta PM" responde.
 templ actionLine(row actionRow) {
-	<li class={ "flex items-center justify-between gap-2 px-3 py-2",
-		templ.KV("opacity-60", !row.Can) }>
+	<li class={ "px-3 py-2", templ.KV("opacity-60", !row.Can) }>
+		<div class="flex items-center justify-between gap-2">
 		<div class="min-w-0">
 			<p class="flex min-w-0 flex-wrap items-center gap-1.5">
 				<span class="truncate text-sm text-foreground">{ row.Name }</span>
@@ -86,7 +89,36 @@ templ actionLine(row actionRow) {
 				<span class="font-mono text-base font-bold tabular-nums text-foreground">{ row.Value }</span>
 			}
 		</div>
+		</div>
 	</li>
+}
+
+// chipStrip é a tira de interruptores ACIMA dos números que eles mudam.
+//
+// COM o rótulo "com" na frente: sem ele a tira é uma fileira de botões cuja
+// relação com a lista de baixo o olho tem de adivinhar. Uma palavra de três
+// letras compra essa relação.
+templ chipStrip(chips []actionChip) {
+	<div class="mb-1.5 flex flex-wrap items-center gap-1.5">
+		<span class={ ui.SectionLabelClasses("muted", "text-3xs") }>com</span>
+		for _, chip := range chips {
+			<button
+				type="button"
+				disabled?={ !chip.Can }
+				title={ chipTitle(chip) }
+				aria-pressed={ ariaBool(chip.On) }
+				data-on:click={ chip.Command }
+				class={ "inline-flex min-h-11 items-center gap-1 rounded-sm border px-2.5 text-xs transition-colors",
+					templ.KV("border-2 border-grimorio-gold bg-grimorio-gold/10 font-semibold text-grimorio-gold", chip.On),
+					templ.KV("border-grimorio-iron text-muted-foreground", !chip.On) }
+			>
+				{ chip.Label }
+				if chip.Cost != "" {
+					<span class="font-mono text-3xs tabular-nums">{ chip.Cost }</span>
+				}
+			</button>
+		}
+	</div>
 }
 
 // passiveTally é a CONTAGEM das passivas, e ela fecha a superfície.

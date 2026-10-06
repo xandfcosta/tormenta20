@@ -99,6 +99,10 @@ type situationalRow struct {
 	Folded    bool
 	Modifiers []breakdownRow
 	Command   string
+	// Targets são os alvos CRUS dos modificadores que esta linha liga, e eles
+	// existem para quem ROTEIA: a superfície de Ações põe o interruptor sobre o
+	// número que ele muda, e o `Modifiers` acima já é texto de tela.
+	Targets []engine.ModifierTarget
 }
 
 type alwaysOnRow struct {
@@ -291,6 +295,7 @@ func situationalRowsOf(offered []engine.ConditionalEffect, active map[string]boo
 			row.Modifiers = append(row.Modifiers, breakdownRow{
 				Label: targetLabel(c.Target), Value: book.WithSign(c.Amount),
 			})
+			row.Targets = append(row.Targets, c.Target)
 		}
 		rows = append(rows, row)
 	}

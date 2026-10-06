@@ -201,6 +201,19 @@ func (s Scene) sheetCommand(
 			return
 		}
 		_ = sse.PatchElements(fragment)
+		// A SUPERFÍCIE DE AÇÕES VAI JUNTO, e pelo mesmo motivo que o aviso de
+		// ficha mexida mora neste gateway: ela é um nó IRMÃO do `#sheet-scene`,
+		// e mais de trinta mutações passam por aqui. Um comando que remendasse
+		// só a ficha deixaria o número velho na tela — ligar a Fúria pelos chips
+		// moveria o `+8` da aba Combate e não o `+8` da linha de Atacar.
+		//
+		// Só EMBUTIDA: fora da sessão o `#actions-scene` não existe na página, e
+		// mandar remendo para um id que não está lá é trabalho que ninguém usa.
+		if view.Embedded {
+			if acoes, err := ui.RenderFragment(r.Context(), ActionsBody(view)); err == nil {
+				_ = sse.PatchElements(acoes)
+			}
+		}
 	}
 }
 
