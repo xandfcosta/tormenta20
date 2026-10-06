@@ -456,6 +456,10 @@
           "sceneEffect": true,
           "create": {
             "name": "Bardo Versátil Nv7",
+            "classPowers": [
+              "class.bardo.esgrima-magica",
+              "class.bardo.golpe-magico"
+            ],
             "races": [
               "lefou"
             ],

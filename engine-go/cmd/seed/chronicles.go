@@ -132,10 +132,25 @@ var demoCampaigns = []demoCampaign{
 		},
 	},
 	{
+		// A MESA DO BARDO, e ela tem sessão VIVA de propósito.
+		//
+		// Metade do que o livro dá ao bardo — Inspiração, Golpe Mágico, as
+		// músicas — só acontece numa mesa em curso, e até aqui não havia uma
+		// onde ele estivesse: não dava para OLHAR nada de bardo no navegador.
+		// Ele é o único membro, então a Mesa resolve "quem sou eu" nele sem
+		// ambiguidade (ALE-423).
+		//
+		// OS PAPÉIS SÃO INVERTIDOS nesta crônica, e isso não é descuido: a dona
+		// é a conta `jogador@t20.local`, então quem MESTRA aqui é ela e quem
+		// JOGA é `mestre@t20.local`. Num roteiro de e2e, o `storageState` do
+		// bardo é o `user.json`.
 		name:        "Caçadores de Deheon",
 		ownerEmail:  "jogador@t20.local",
 		description: "Fronteira selvagem de Deheon: contratos, bestas e política nobre.",
 		members:     []demoMember{{"mestre@t20.local", "Bardo Versátil Nv7"}},
+		sessions: []demoSession{
+			{1, "A caçada ao bicho-papão", "active", "2026-08-12T20:00:00.000Z", "", ""},
+		},
 	},
 }
 

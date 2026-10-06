@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"t20engine/domain/book"
 	"t20engine/domain/catalog"
 )
 
@@ -142,6 +143,22 @@ func (c catalogoDaSeed) confereUmPersonagem(where string, ch seedCharacter) []re
 	// da primeira versão.
 	for _, name := range asChavesDe(create, "classChoices") {
 		broken = append(broken, c.confere(where+", create.classChoices{}", name, "classes")...)
+	}
+	// O PODER ESCOLHIDO é referência como qualquer outra, e uma errada é cara
+	// do jeito que o cabeçalho descreve: o personagem nasce SEM o poder e a
+	// ficha abre normal. Class power ou poder geral, que são as duas
+	// procedências que o `chosenExistsPower` da ficha aceita.
+	for _, id := range listaDe(create, "classPowers") {
+		if _, ok := book.ClassPowers()[id]; ok {
+			continue
+		}
+		if _, ok := book.GeneralPowers()[id]; ok {
+			continue
+		}
+		broken = append(broken, referenciaQuebrada{
+			where: where + ", create.classPowers[]", value: id, catalog: "poderes",
+			neighbor: oVizinho(id, idsDosPoderes()),
+		})
 	}
 	for _, id := range osIdsDosItens(create) {
 		if _, ok := catalog.LookupItem(id); !ok {
@@ -283,4 +300,18 @@ func asChavesDe(create map[string]json.RawMessage, field string) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+// idsDosPoderes são todos os ids que o `classPowers` aceita, para o vizinho
+// mais próximo da mensagem de falha.
+func idsDosPoderes() []string {
+	ids := make([]string, 0, len(book.ClassPowers())+len(book.GeneralPowers()))
+	for id := range book.ClassPowers() {
+		ids = append(ids, id)
+	}
+	for id := range book.GeneralPowers() {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	return ids
 }
