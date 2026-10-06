@@ -282,7 +282,7 @@ func (s Strike) proposeAgainstObject(
 		TargetLabel:     req.TargetObject.Label,
 		Weapon:          weapon.Name,
 		Roll:            out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
-		Hit: out.Hit, Critical: out.Critical,
+		Hit: out.Hit, Critical: out.Critical, Melee: weapon.IsMelee(),
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
 		Damage: out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
 	}
@@ -350,7 +350,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		// 5-3 — não a da ficha. "Errei por 1" e "errei por 1 porque ele está
 		// atrás da carroça" são leituras diferentes do mesmo número.
 		Roll: out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
-		Hit: out.Hit, Critical: out.Critical,
+		Hit: out.Hit, Critical: out.Critical, Melee: weapon.IsMelee(),
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
 		Damage: out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
 	}
@@ -377,7 +377,7 @@ func (s Strike) proposeManeuver(
 	defesa := engine.ManeuverSide{Bonus: victim.Melee + victim.ManeuverDefense[req.Maneuver]}
 	ataque := engine.ManeuverSide{
 		Bonus:  weapon.Attack + striker.ManeuverOffense[req.Maneuver],
-		Ranged: weapon.Skill != "Luta",
+		Ranged: !weapon.IsMelee(),
 	}
 
 	opposed, err := s.d20Of(req.OpposedD20)

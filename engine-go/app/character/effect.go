@@ -52,7 +52,7 @@ func (p Plays) ApplySpellBuff(
 // Ela era uma TRANSAÇÃO de quatro passos — listar os efeitos, planejar um
 // "vale-o-maior", apagar/zerar as poças deslocadas, gravar a nova — e virou um
 // `UPSERT` só quando aquela regra deixou de existir (ALE-347). A **p106** manda
-// SOMAR os pontos temporários, e o `domain/sheet/temp_hp.go` explica por que a
+// SOMAR os pontos temporários, e o `domain/sheet/temp_pools.go` explica por que a
 // ordem de drenagem é escolha nossa e o empilhamento é do motor.
 //
 // O `UPSERT` continua fazendo o trabalho que sobrou: reentrar na mesma Fúria

@@ -224,10 +224,16 @@ func (st Scene) raisesTheCumulativeBonus(
 	}
 	depois := hitPointsOf(entryByID(state, pendente.TargetEntryID))
 	caiu := antes != nil && *antes > 0 && depois != nil && *depois <= 0
-	if !pendente.Critical && !caiu {
-		return nil
+	triggers := []string{}
+	if pendente.Critical || caiu {
+		triggers = append(triggers, "criticalOrDrop")
 	}
-	return st.plays.BumpCumulativeBonus(c.R.Context(), *attacker.CharacterID, "criticalOrDrop")
+	// O GOLPE MÁGICO do bardo pede só o acerto, e que ele seja CORPO A CORPO
+	// (p45) — por isso o provisório carrega o `Melee`.
+	if pendente.Melee {
+		triggers = append(triggers, "meleeHit")
+	}
+	return st.plays.BumpCumulativeBonus(c.R.Context(), *attacker.CharacterID, triggers...)
 }
 
 // targetHitPoints é o PV do alvo ANTES da confirmação, ou nulo quando não há

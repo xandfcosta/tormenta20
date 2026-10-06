@@ -382,10 +382,12 @@ templ vitalBar(v View, label string, vital sheetVital, dimmed bool) {
 		// 4,5 porque aqui ele é TINTA e não preenchimento.
 		//
 		// `title` e não só o número: "+70" sozinho não diz de quê, e quem chega
-		// na ficha de outra pessoa no meio da noite merece a frase inteira.
+		// na ficha de outra pessoa no meio da noite merece a frase inteira. Ele
+		// segue o VITAL desde que o PM também tem poça: fixo em "PV
+		// temporários", ele mentiria na fileira de baixo.
 		if vital.Temp != "" {
 			<span
-				title="PV temporários — o dano gasta estes primeiro (p106)"
+				title={ tempReserveTitle(label) }
 				class="shrink-0 font-mono text-sm tabular-nums text-hp-temp"
 			>{ vital.Temp }</span>
 		}

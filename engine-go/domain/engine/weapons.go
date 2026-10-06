@@ -13,6 +13,14 @@ type ExtraDamage struct {
 	Type string `json:"type"` // "fogo", "frio", "ácido"…
 }
 
+// IsMelee diz se esta arma bate CORPO A CORPO.
+//
+// Pela PERÍCIA e não por uma lista de nomes: quem decide é o catálogo, e o
+// cartão já carrega a resposta dele. Ela existe porque `Skill != "Luta"` tinha
+// três sítios — a manobra, o Golpe Mágico e a lista de armas da ficha —, e uma
+// comparação de texto repetida é a que erra a grafia num deles.
+func (w WeaponCard) IsMelee() bool { return w.Skill == "Luta" }
+
 type WeaponCard struct {
 	Name      string             `json:"name"`
 	Skill     string             `json:"skill"`     // "Luta" | "Pontaria"

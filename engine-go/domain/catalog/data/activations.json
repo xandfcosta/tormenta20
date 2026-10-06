@@ -281,7 +281,15 @@
     "pmCost": 0,
     "uses": null,
     "requiresFlag": "inspiracao",
-    "bookPage": 44
+    "cumulative": {
+      "on": "meleeHit",
+      "amount": 2,
+      "capPer": "level",
+      "targets": [
+        { "k": "tempMp" }
+      ]
+    },
+    "bookPage": 45
   },
   {
     "id": "class.bardo.inspiracao-marcial",

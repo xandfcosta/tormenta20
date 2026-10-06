@@ -329,9 +329,10 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// atualizá-lo, em silêncio. Aqui não há o que esquecer: o stream redesenha
 	// por este mesmo `LoadView`, então o que a mesa vê é o que o banco tem.
 	onTable := characterIDsOnTable(st, group)
-	pools, conditions := s.tempHpOf(ctx, onTable), s.sheetConditionsOf(ctx, onTable)
+	pools, conditions := s.tempPoolsOf(ctx, onTable), s.sheetConditionsOf(ctx, onTable)
 	for i := range group {
-		withTempHp(&group[i].PV, pools[group[i].CharacterID])
+		withTempPool(&group[i].PV, pools.Hp[group[i].CharacterID])
+		withTempPool(&group[i].PM, pools.Mp[group[i].CharacterID])
 		markDowned(&group[i].PV, conditions[group[i].CharacterID])
 	}
 	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, group, mine, eu, pools)
@@ -501,7 +502,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 	return group, mine, eu
 }
 
-// tempHpOf lê a reserva de PV temporário de todo personagem que a tela desenha
+// tempPoolsOf lê a reserva de PV temporário de todo personagem que a tela desenha
 // — os da fila e os do Grupo, que o `characterIDsOnTable` junta —, numa
 // consulta só.
 //
@@ -511,25 +512,39 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 // Falha não derruba a tela: sem o mapa as barras saem sem filete, que é o que
 // elas eram antes desta fatia. Mesma escolha do roster logo acima — a
 // iniciativa é o assunto da tela, a reserva é um detalhe dela.
-func (s Scene) tempHpOf(ctx context.Context, ids []int64) map[int64]int64 {
+func (s Scene) tempPoolsOf(ctx context.Context, ids []int64) tempReserves {
+	empty := tempReserves{Hp: map[int64]int64{}, Mp: map[int64]int64{}}
 	if len(ids) == 0 {
-		return map[int64]int64{}
+		return empty
 	}
 	rows, err := s.deps.Queries().ListActiveEffectsByCharacters(ctx, ids)
 	if err != nil {
-		return map[int64]int64{}
+		return empty
 	}
 	blobs := map[int64][]string{}
 	for _, l := range rows {
 		blobs[l.Characterid] = append(blobs[l.Characterid], l.Modifiers)
 	}
-	outside := make(map[int64]int64, len(blobs))
+	out := tempReserves{Hp: map[int64]int64{}, Mp: map[int64]int64{}}
 	for id, b := range blobs {
 		if total := sheet.TempHpTotal(b); total > 0 {
-			outside[id] = int64(total)
+			out.Hp[id] = int64(total)
+		}
+		if total := sheet.TempMpTotal(b); total > 0 {
+			out.Mp[id] = int64(total)
 		}
 	}
-	return outside
+	return out
+}
+
+// tempReserves são as duas poças de cada combatente, lidas de uma vez.
+//
+// Um par e não dois mapas soltos atravessando quatro assinaturas: eles saem da
+// MESMA consulta e são usados no mesmo laço, e separá-los convidaria o próximo
+// a buscar um deles de novo.
+type tempReserves struct {
+	Hp map[int64]int64
+	Mp map[int64]int64
 }
 
 // tableClasses monta "Guerreiro 3 / Ladino 2".

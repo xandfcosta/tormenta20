@@ -30,6 +30,11 @@ type Pools struct {
 	HpCurrent int64
 	MpMax     int64
 	MpCurrent int64
+	// TempMp é a POÇA de PM temporário, e ela é parcela À PARTE do `MpCurrent`
+	// — como a reserva de PV temporário, e pela mesma razão: ela pode passar do
+	// máximo (p106), e o poço não pode. Ninguém a escreve por aqui: a poça mora
+	// nos efeitos ativos, e quem a drena é o `SpendMana`.
+	TempMp int64
 	// NonLethal é QUANTO do dano acumulado foi não letal (p236). Parcela do
 	// dano e não um poço: ver o `engine/nonlethal.go`.
 	//
@@ -82,7 +87,7 @@ func ApplyToLoadedPools(
 	before := Pools{
 		HpMax: dto.HpMax, HpCurrent: dto.HpCurrent,
 		MpMax: dto.MpMax, MpCurrent: dto.MpCurrent,
-		NonLethal: naoLetal,
+		TempMp: int64(dto.TempMp()), NonLethal: naoLetal,
 	}
 	after, err := rule(before)
 	if err != nil {
@@ -92,6 +97,10 @@ func ApplyToLoadedPools(
 	// recusar quem devolvesse um máximo diferente, e isso convidaria o gesto a
 	// tentar. O poço é do catálogo, ponto.
 	after.HpMax, after.MpMax = before.HpMax, before.MpMax
+	// A POÇA da regra é descartada pela razão do máximo: ela não mora aqui. Quem
+	// a muda é o efeito ativo, e deixar um gesto escrevê-la por este caminho
+	// daria dois donos para um número só.
+	after.TempMp = before.TempMp
 	after.HpCurrent = WithinHitPoints(after.HpCurrent, after.HpMax)
 	after.MpCurrent = WithinPool(after.MpCurrent, after.MpMax)
 	after.NonLethal = nonLethalAfter(before, after)
@@ -309,3 +318,8 @@ func saveNonLethal(ctx context.Context, q *sqlcgen.Queries, id, amount int64) er
 	}
 	return nil
 }
+
+// ManaAvailable é quanto de PM este poço pode pagar agora: o poço mais a poça.
+//
+// Ver o `ManaOf`, que é a mesma pergunta feita a partir do agregado.
+func (p Pools) ManaAvailable() int64 { return p.MpCurrent + p.TempMp }

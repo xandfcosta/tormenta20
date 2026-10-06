@@ -155,6 +155,8 @@ func StanceDecision(spec Activation, steps, max, currentPM int) (bool, string) {
 var cumulativeTriggers = map[string]bool{
 	// "quando faz um acerto crítico ou reduz um inimigo a 0 PV" (p42).
 	"criticalOrDrop": true,
+	// "sempre que você acertar um ataque corpo a corpo em um inimigo" (p45).
+	"meleeHit": true,
 }
 
 // CumulativeTriggerIsKnown diz se o motor sabe disparar este gatilho.

@@ -15,7 +15,7 @@ import (
 // das duas toca HTTP, catálogo ou banco. Quem as chama hoje é o
 // `app/character/cast.go`.
 //
-// É a mesma família do `equip.go` e do `temp_hp.go`, que saíram na fatia
+// É a mesma família do `equip.go` e do `temp_pools.go`, que saíram na fatia
 // anterior: regra da ficha hospedada no `api` por acidente de história.
 
 // SpellBasePmCost é a Tabela 4-1, "Custo de Magias" (livro p170).
