@@ -2,9 +2,10 @@ package sheetui
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
+
+	"net/url"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
@@ -85,29 +86,27 @@ type actionRow struct {
 	// chip sabe em que linha pousar — e é por isso que eles existem mesmo numa
 	// linha sem chip nenhum.
 	Moves []string
+	// Rolls são os gestos de ROLAR que esta linha oferece. Vazio na linha que
+	// não rola nada — Mover, um poder de efeito fixo, a Investida.
+	Rolls []actionRoll
 }
 
-// actionChip é um interruptor sobre o número.
+// actionRoll é um gesto de rolar que sai de uma linha.
 //
-// Ele é o gesto que JÁ EXISTE — a postura dos Poderes, o situacional dos
-// Efeitos — desenhado onde o número está. Essa é a metade da dor que a lista
-// sozinha não cura: ver `+8` não lembra ninguém de que a Fúria existe, e ligá-la
-// pela aba Poderes exige saber que ela existe, que é o que a pessoa esqueceu.
-type actionChip struct {
+// É uma LISTA e não um campo porque a MANOBRA tem cinco (p234) e o ataque tem
+// um. Um campo só obrigaria a manobra a virar cinco linhas, e a lista de ações
+// padrão dobraria de tamanho para repetir o mesmo detalhe cinco vezes.
+type actionRoll struct {
+	// Label é o verbo no botão: "Rolar" quando a linha já se nomeia, e o nome da
+	// manobra quando não — cinco botões escritos "Rolar" não dizem qual é qual.
 	Label string
-	// Cost é o preço de LIGAR. Um interruptor que cobra PM sem dizer quanto faz
-	// a pessoa descobrir o custo depois de pagar.
-	Cost string
-	On   bool
-	Can  bool
-	Why  string
-	// Note é o que o degrau compra ("+1 no bônus de Fúria"), vindo do catálogo.
-	Note string
-	// Command é o endereço do gesto, e ele é o MESMO das abas Poderes e Efeitos:
-	// um segundo caminho de escrita seria uma segunda regra de validação.
-	Command string
-	// Moves são os números que este chip muda — ver `actionRow.Moves`.
-	Moves []string
+	// Path é o endereço RELATIVO à ficha. Quem monta o `@post` é o `sheetPost`,
+	// que carrega a aba e a marca de embutida que a URL da página não leva.
+	Path string
+	// NeedsTarget diz que o gesto não acontece sem ALVO escolhido, e o botão
+	// nasce desabilitado até haver um. O servidor recusa de todo jeito; isto é
+	// para o botão não existir só para levar recusa.
+	NeedsTarget bool
 }
 
 // actionsPanelFrom monta a superfície a partir dos painéis JÁ computados.
@@ -149,115 +148,6 @@ func actionsPanelFrom(
 	return panel
 }
 
-// hangChips pendura cada interruptor nos GRUPOS que ele muda.
-func hangChips(panel *actionsPanel, chips []actionChip) {
-	for g := range panel.Groups {
-		group := &panel.Groups[g]
-		numbers := []string{}
-		for _, row := range group.Rows {
-			numbers = append(numbers, row.Moves...)
-		}
-		for _, chip := range chips {
-			if sharesANumber(numbers, chip.Moves) {
-				group.Chips = append(group.Chips, chip)
-			}
-		}
-	}
-}
-
-func sharesANumber(left, right []string) bool {
-	for _, l := range left {
-		if slices.Contains(right, l) {
-			return true
-		}
-	}
-	return false
-}
-
-// chipsOffered junta as duas famílias de interruptor: a POSTURA, que custa PM e
-// dura, e o SITUACIONAL, que é opt-in e não cobra nada.
-//
-// Elas moram em abas diferentes porque são coisas diferentes de ADMINISTRAR;
-// aqui são a mesma coisa de USAR — "um interruptor que muda este número" —, e
-// por isso viram uma lista só.
-func chipsOffered(id int64, powers powersPanel, situational []situationalRow) []actionChip {
-	chips := []actionChip{}
-	for _, power := range powers.Actions {
-		if power.Stance != nil {
-			chips = append(chips, stanceChips(id, power)...)
-		}
-	}
-	for _, row := range situational {
-		chips = append(chips, actionChip{
-			Label: row.Label, On: row.Active, Can: true,
-			Moves: numbersMovedBy(row.Targets),
-			Command: fmt.Sprintf("$status = %q; @post('/personagens/%d/efeitos/situacao?embutida=1')",
-				row.Key, id),
-		})
-	}
-	return chips
-}
-
-// stanceChips é UM chip por postura: entrar, ou encerrar o que está em curso.
-//
-// UM E NÃO UM POR DEGRAU, e a razão foi MEDIDA no navegador, não deduzida. O
-// bárbaro de nível 6 entrou em Fúria pagando o degrau ZERO — `steps=0,
-// pmPaid=2` no banco —, e o ataque subiu de +8 para +11. O bônus veio do +3, que
-// o catálogo concede por NÍVEL (`class.barbaro.furia-3`, `grantedAtLevel: 6`) e
-// o motor resolve por `bonusType: morale`. Os degraus pagos NÃO entram na conta.
-//
-// Então um chip "Fúria 3 PM" cobraria 1 PM a mais pelo mesmo número: a tela
-// oferecendo uma escolha que não muda nada, que é pior do que não oferecer. O
-// contador de degraus continua na aba Poderes, onde ele já estava e onde este
-// slice não encosta — a divergência é do MOTOR, e consertá-la é outra fatia.
-func stanceChips(id int64, power powerRow) []actionChip {
-	stance := power.Stance
-	if stance.Active {
-		return []actionChip{{
-			Label: "Encerrar " + power.Name, On: true, Can: true, Moves: stanceMoves(),
-			Command: fmt.Sprintf("@post('/personagens/%d/efeitos/postura/%s?embutida=1')",
-				id, stance.Flag),
-		}}
-	}
-	return []actionChip{{
-		Label: power.Name,
-		Cost:  strconv.Itoa(stance.BasePm) + " PM",
-		Can:   power.Can, Why: power.Why, Moves: stanceMoves(),
-		Command: fmt.Sprintf("$stance_degrees = 0; @post('/personagens/%d/poderes/postura/%s/entra?embutida=1')",
-			id, stance.Flag),
-	}}
-}
-
-// stanceMoves são os números que uma postura muda.
-//
-// HOJE É UMA LISTA FIXA — ataque e dano —, e o comentário diz por quê: os
-// modificadores de uma postura entram por `condition: {c: "flagOn"}` e NÃO
-// passam pelo `Conditional`, que é de onde o situacional tira os alvos dele.
-// Ler os alvos de verdade exigiria o catálogo de poderes aqui dentro, e o que
-// isso compraria é a postura que mexe em OUTRA coisa — a Inspiração do bardo
-// soma em perícia. Quando a segunda postura chegar, é aqui que ela entra, e o
-// caso que a cobra nasce com ela.
-func stanceMoves() []string {
-	return []string{"attack", "damage"}
-}
-
-// numbersMovedBy traduz alvos de modificador no vocabulário das linhas.
-//
-// Ele colapsa o ESCOPO de propósito: `{k: attack, scope: all}` e
-// `{k: attack, scope: this}` mudam o mesmo número da mesma linha, e distinguir
-// os dois aqui daria dois vocabulários para uma pergunta só.
-func numbersMovedBy(targets []engine.ModifierTarget) []string {
-	out := []string{}
-	for _, t := range targets {
-		if t.K == "expertise" {
-			out = append(out, "expertise:"+t.Name)
-			continue
-		}
-		out = append(out, t.K)
-	}
-	return out
-}
-
 // groupOrder são os grupos na ordem da tela, e QUAIS custos caem em cada um.
 //
 // LIVRE E REAÇÃO dividem um grupo, e a razão é de largura e não de conceito: as
@@ -286,13 +176,19 @@ var groupOrder = []struct {
 // única que se lê sem rolar.
 func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet) []actionRow {
 	rows := make([]actionRow, 0, len(combat.Weapons)+2)
-	for _, weapon := range combat.Weapons {
+	for i, weapon := range combat.Weapons {
 		rows = append(rows, actionRow{
 			Name:   "Atacar · " + weapon.Name,
 			Detail: weapon.Damage + " · " + weapon.Crit + " · " + weapon.Skill,
 			Value:  weapon.Attack,
 			Can:    true,
 			Moves:  []string{"attack", "damage"},
+			// A ARMA VAI NO CAMINHO, pelo ÍNDICE: o `Propose` escolhe por índice
+			// e já recusa o que não existe, e um nome no endereço obrigaria o
+			// servidor a casar texto para achar de volta a mesma arma.
+			Rolls: []actionRoll{{
+				Label: "Rolar", Path: fmt.Sprintf("/acoes/atacar/%d", i), NeedsTarget: true,
+			}},
 		})
 	}
 	// A MANOBRA SÓ EXISTE COM ARMA CORPO A CORPO NA MÃO: *"não é possível fazer
@@ -300,11 +196,15 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet) 
 	// arqueiro seria desenhar um gesto que a regra recusa.
 	if hasMeleeWeapon(combat.Weapons) {
 		rows = append(rows, actionRow{
-			Name:   "Manobra",
-			Detail: "agarrar, derrubar, desarmar, empurrar, quebrar · p234",
+			Name: "Manobra",
+			// O DETALHE DEIXA DE LISTAR as cinco quando elas viram botão: a
+			// mesma lista escrita duas vezes na mesma linha é a segunda que
+			// envelhece.
+			Detail: "teste oposto de Luta · p234",
 			Value:  book.WithSign(melee),
 			Can:    true,
 			Moves:  []string{"attack"},
+			Rolls:  maneuverRolls(),
 		})
 	}
 	// FINTAR é teste de Enganação contra os Reflexos do alvo (p234) — é a única
@@ -315,6 +215,7 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet) 
 		Value:  book.WithSign(expertiseOrZero(computed, "Enganação", "charisma").Total),
 		Can:    true,
 		Moves:  []string{"expertise:Enganação"},
+		Rolls:  []actionRoll{expertiseRoll("Enganação")},
 	})
 	return rows
 }
@@ -353,7 +254,51 @@ func fullRows(melee int, computed engine.ComputedSheet) []actionRow {
 		Value:  book.WithSign(expertiseOrZero(computed, "Atletismo", "strength").Total),
 		Can:    true,
 		Moves:  []string{"expertise:Atletismo"},
+		Rolls:  []actionRoll{expertiseRoll("Atletismo")},
 	}}
+}
+
+// maneuverRolls são as cinco manobras da p234, cada uma um botão.
+//
+// A LISTA VEM DO MOTOR e não é escrita aqui: ela já é fechada em
+// `engine.ManeuversOfTheBook`, e uma segunda cópia erraria um nome no dia em
+// que alguém a editasse de um lado só — o casamento é por TEXTO, e um nome
+// errado vira uma manobra que o servidor recusa sem ninguém entender por quê.
+//
+// O RÓTULO é o nome da manobra e não "Rolar": cinco botões iguais obrigam a
+// contar a posição para saber qual é qual.
+func maneuverRolls() []actionRoll {
+	kinds := engine.ManeuversOfTheBook()
+	rolls := make([]actionRoll, 0, len(kinds))
+	for _, kind := range kinds {
+		rolls = append(rolls, actionRoll{
+			Label:       capitalized(kind),
+			Path:        "/acoes/manobra/" + kind,
+			NeedsTarget: true,
+		})
+	}
+	return rolls
+}
+
+// capitalized sobe a primeira letra. Cópia da irmã do pacote da Mesa, e a cópia
+// é deliberada: três linhas sobre `string[:1]` custam menos que um lugar novo
+// para morar, e as cinco manobras são ASCII.
+func capitalized(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// expertiseRoll é o gesto de rolar uma PERÍCIA, e ele reusa o comando que a aba
+// Perícias já tem.
+//
+// SEM ALVO, e isso não é esquecimento: a finta é um teste de Enganação e a
+// corrida um de Atletismo, e um teste não aponta para ninguém. A CD — e, na
+// finta, os Reflexos do alvo — é de quem mestra, e por isso a faixa do teste não
+// tem veredicto.
+func expertiseRoll(name string) actionRoll {
+	return actionRoll{Label: "Rolar", Path: "/pericias/rolar/" + url.PathEscape(name)}
 }
 
 // investidaBonus é o +2 que a investida dá no ataque (p235). Ele é constante do
@@ -441,21 +386,29 @@ func joinWithDot(left, right string) string {
 	return left + " · " + right
 }
 
-// chipTitle é o que o chip diz ao passar o mouse: o que o degrau compra, ou a
-// razão de ele estar apagado. Um chip desligado e sem explicação manda procurar.
-func chipTitle(chip actionChip) string {
-	if !chip.Can && chip.Why != "" {
-		return chip.Why
+// rollWaitsForATarget é a expressão que DESABILITA o botão enquanto não há
+// alvo escolhido.
+//
+// O SINAL É DA MESA e é lido aqui, e os dois lados disso são de propósito: quem
+// desenha a lista de alvos é a Mesa, porque quem muda a lista é a FILA; quem
+// desenha o botão é a ficha, porque o botão mora colado no número. O sinal é o
+// único canal que atravessa os dois remendos — o do stream e o do gateway da
+// ficha — sem ser trocado por nenhum deles.
+//
+// "false" e não a ausência do atributo: `data-attr` trata valor booleano como
+// ATRIBUTO BOOLEANO, então o falso o REMOVE, que é exatamente o certo aqui.
+func rollWaitsForATarget(roll actionRoll) string {
+	if !roll.NeedsTarget {
+		return "false"
 	}
-	return chip.Note
+	return "$turn_target === ''"
 }
 
-// ariaBool escreve o `aria-pressed` de um interruptor. Ele é "true"/"false" e
-// não a ausência do atributo: um botão que ALTERNA tem estado, e quem lê por
-// leitor de tela precisa dele nos dois sentidos.
-func ariaBool(on bool) string {
-	if on {
-		return "true"
+// rollTitle explica o botão apagado. Um gesto desabilitado e sem motivo manda
+// procurar o que está errado na ficha, e o que falta está na barra acima.
+func rollTitle(roll actionRoll) string {
+	if !roll.NeedsTarget {
+		return ""
 	}
-	return "false"
+	return "Escolha o alvo da vez na barra acima"
 }

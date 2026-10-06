@@ -79,6 +79,11 @@ type Signals struct {
 	PowerSearch string `json:"power_search"`
 	// Os atributos que a raça distribui, escolhidos no diálogo.
 	RaceAttributes []string `json:"race_attributes"`
+	// TurnTarget é o ALVO DA VEZ, e ele é o único sinal desta cena DECLARADO
+	// POR OUTRA: quem o escreve é a barra da Mesa, porque quem muda a lista de
+	// alvos é a fila. Vazio fora de uma sessão — e aí nenhum gesto que o pede
+	// chega a ser desenhado.
+	TurnTarget string `json:"turn_target"`
 }
 
 // augments traduz os seis sinais no que a validação espera.

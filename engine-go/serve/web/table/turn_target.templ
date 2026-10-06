@@ -1,0 +1,38 @@
+package table
+
+import "t20engine/serve/web/ui"
+
+// turnTargetBar é o ALVO DA VEZ desenhado, no topo da superfície Ações.
+//
+// UM ALVO PARA A VEZ INTEIRA, e não um seletor por linha (decisão do dono): o
+// ataque, a manobra e a finta apontam para a mesma criatura no mesmo turno, e
+// três seletores com a mesma resposta são a mesma pergunta feita três vezes.
+//
+// ELA É DA MESA E NÃO DA FICHA, e é isso que a mantém viva. Quem muda a lista de
+// alvos é a FILA, que chega pelo stream; dentro do `#actions-scene` — que o
+// gateway da ficha remenda INTEIRO a cada uma das trinta mutações, com uma view
+// que não tem sessão nenhuma — o ogro que o mestre acabou de pôr na mesa só
+// apareceria no próximo clique, e a barra sumiria no primeiro chip apertado.
+//
+// O ALVO ESCOLHIDO mora num SINAL e não no HTML: os dois remendos que cruzam
+// esta tela trocam elementos, e sinal não é elemento.
+templ turnTargetBar(v View) {
+	<div id="table-turn-target">
+		if len(v.Queue) > 0 {
+			<section class="flex items-center gap-2 rounded-sm border border-grimorio-iron px-3 py-2">
+				<label class="flex min-w-0 flex-1 items-center gap-2">
+					<span class={ ui.SectionLabelClasses("gold", "") }>Contra</span>
+					<select
+						data-bind="turn_target"
+						class="min-h-11 min-w-0 flex-1 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm text-foreground outline-none"
+					>
+						<option value="">escolha um alvo</option>
+						for _, target := range turnTargetsOf(v.Queue) {
+							<option value={ target.EntryID }>{ target.Label }</option>
+						}
+					</select>
+				</label>
+			</section>
+		}
+	</div>
+}

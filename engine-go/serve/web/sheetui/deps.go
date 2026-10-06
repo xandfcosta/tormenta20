@@ -16,9 +16,11 @@ import (
 // A PORTA da FICHA. A cena é a maior do app, e a porta não: as sete abas leem o
 // mesmo personagem e escrevem na mesma linha.
 //
-// **Ela ENCOLHEU de dezoito métodos para oito na ALE-347**, e o mecanismo é o
-// que vale para a próxima cena: os gestos da ficha viraram `character.Plays` e
-// SAÍRAM da porta, em vez de ganharem um adaptador novo. O `app/` está abaixo
+// **Ela ENCOLHEU muito na ALE-347**, e o mecanismo é o que vale para a próxima
+// cena: os gestos da ficha viraram `character.Plays` e SAÍRAM da porta, em vez
+// de ganharem um adaptador novo. Aqui estava a CONTAGEM de antes e depois, e
+// ela já tinha virado mentira sem ninguém mexer nesta linha — um método novo
+// não passa por aqui. O número é do `grep`; o que fica escrito é o mecanismo. O `app/` está abaixo
 // desta cena, então ela o importa direto e recebe o caso de uso por parâmetro —
 // ver o `Scene` no fim deste arquivo.
 //
@@ -65,6 +67,18 @@ type Deps interface {
 	// não está numa sessão" num defeito do gesto.
 	PublishSkillTest(ctx context.Context, characterID int64, skill string,
 		test engine.SkillTest, byHand bool) error
+	// ProposeStrikeOnTable leva o golpe — ou a MANOBRA — rolado na superfície
+	// Ações para a mesa onde este personagem está (p233-234), e ele entra na
+	// porta pela mesma razão do `PublishSkillTest`: a ficha sabe COM O QUE se
+	// ataca e CONTRA QUEM, e quem sabe em que sessão o personagem está é o
+	// hospedeiro.
+	//
+	// FORA DE UMA SESSÃO ela RECUSA, e aqui está a diferença para o teste de
+	// perícia: um teste rolado sozinho ainda mostra um número a quem está
+	// olhando, mas um ataque sem mesa não tem alvo, não tem vez e não tem onde
+	// pousar o provisório. Nada para fazer em silêncio seria o botão não
+	// funcionar.
+	ProposeStrikeOnTable(ctx context.Context, characterID int64, strike ActionStrike) error
 	// As ESCRITAS, uma por gesto: a cena decide QUANDO, o hospedeiro sabe COMO.
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
@@ -81,3 +95,22 @@ type Scene struct {
 }
 
 func New(d Deps, gestures character.Plays) Scene { return Scene{deps: d, plays: gestures} }
+
+// ActionStrike é o gesto de combate que saiu da superfície Ações.
+//
+// Ele é um struct e não quatro parâmetros porque três dos campos são opcionais
+// entre si — manobra OU golpe, e a arma só importa no segundo —, e uma
+// assinatura de quatro posições faz o chamador contar vírgulas.
+//
+// O ATACANTE NÃO ESTÁ AQUI: quem ataca é a VEZ, e quem a resolve é o
+// hospedeiro, contra o banco (p231). Um campo de atacante nesta estrutura seria
+// o cliente escolhendo de quem é o turno.
+type ActionStrike struct {
+	// TargetEntryID é a linha da FILA mirada, e ela vem do sinal que a barra da
+	// Mesa escreve.
+	TargetEntryID string
+	// Weapon é qual das empunhadas, por índice. Zero é a primeira.
+	Weapon int
+	// Maneuver é uma das cinco da p234 quando o gesto é manobra. Vazio é golpe.
+	Maneuver string
+}

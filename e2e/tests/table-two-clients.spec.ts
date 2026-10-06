@@ -137,10 +137,18 @@ test('o que o mestre põe na fila aparece na tela do jogador', async ({ browser 
     await closeTheTracker(gmScreen)
 
     // A tela do jogador não recarrega: o combatente chega pelo stream.
-    await expect(playerScreen.getByText(echo).first()).toBeVisible()
+    //
+    // ESCOPADO À FILA, e não um `getByText` de página inteira com `.first()`:
+    // desde a ALE-423 o nome de um combatente aparece em DOIS lugares na tela
+    // do jogador — a linha da fila e a `<option>` da barra de alvo da vez. O
+    // `.first()` passou a cair na opção, que o navegador esconde dentro de um
+    // `<select>` fechado, e o caso reprovava dizendo "não visível" sobre um nó
+    // que nunca deveria estar visível. O que este caso mede é a FILA.
+    const fila = playerScreen.locator('#table-tracker')
+    await expect(fila.getByText(echo).first()).toBeVisible()
 
     await tiraDaFila(gmScreen, echo)
-    await expect(playerScreen.getByText(echo)).toHaveCount(0)
+    await expect(fila.getByText(echo)).toHaveCount(0)
   } finally {
     await closes()
   }
@@ -164,9 +172,12 @@ test('a condição que o mestre aplica aparece na fila do jogador', async ({ bro
     await playerScreen.getByRole('button', { name: 'Mesa', exact: true }).click()
     await poeNaFila(gmScreen, target)
 
+    // ESCOPADO À FILA — ver o caso acima: o nome do combatente também é uma
+    // `<option>` da barra de alvo, e o navegador a esconde.
+    const fila = playerScreen.locator('#table-tracker')
     // O CONTROLE: a linha chegou limpa antes. Sem ele, uma condição herdada de
     // outra corrida faria o caso passar sem nada ter propagado.
-    await expect(playerScreen.getByText(target).first()).toBeVisible()
+    await expect(fila.getByText(target).first()).toBeVisible()
     await expect(playerScreen.getByTitle(/Abalado|-2 em testes/).first()).toHaveCount(0)
 
     await gmScreen.getByRole('button', { name: `Condições de ${target}` }).click()
@@ -175,10 +186,10 @@ test('a condição que o mestre aplica aparece na fila do jogador', async ({ bro
     await gmScreen.keyboard.press('Escape')
 
     // E a tela do jogador aprende sozinha, sem recarregar. É a issue inteira.
-    await expect(playerScreen.getByText('ABALADO').first()).toBeVisible()
+    await expect(fila.getByText('ABALADO').first()).toBeVisible()
 
     await tiraDaFila(gmScreen, target)
-    await expect(playerScreen.getByText(target)).toHaveCount(0)
+    await expect(fila.getByText(target)).toHaveCount(0)
   } finally {
     await closes()
   }
@@ -200,7 +211,9 @@ test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ brow
     await playerScreen.getByRole('button', { name: 'Mesa', exact: true }).click()
     await poeNaFila(gmScreen, echo)
     await closeTheTracker(gmScreen)
-    await expect(playerScreen.getByText(echo).first()).toBeVisible()
+    // ESCOPADO À FILA — ver o primeiro caso deste arquivo.
+    const fila = playerScreen.locator('#table-tracker')
+    await expect(fila.getByText(echo).first()).toBeVisible()
 
     await gmScreen
       .getByRole('button', { name: 'Encerrar cena' })
@@ -208,7 +221,7 @@ test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ brow
       .first()
       .click()
 
-    await expect(playerScreen.getByText(echo)).toHaveCount(0)
+    await expect(fila.getByText(echo)).toHaveCount(0)
     await openTheTracker(gmScreen)
     await expect(
       gmScreen.locator('#tracker-drawer').getByText(echo).first(),
@@ -218,7 +231,7 @@ test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ brow
 
     // E volta pelo mesmo caminho: a fila estava guardada o tempo todo.
     await garanteACena(gmScreen)
-    await expect(playerScreen.getByText(echo).first()).toBeVisible()
+    await expect(fila.getByText(echo).first()).toBeVisible()
 
     await tiraDaFila(gmScreen, echo)
   } finally {

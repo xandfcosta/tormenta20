@@ -29,7 +29,7 @@ func (s Scene) AttackRoutes(r chi.Router) {
 	// A MANOBRA divide os verbos de confirmar e cancelar com o golpe, e só a
 	// proposta é dela: uma manobra É um ataque corpo a corpo (p234), e o
 	// provisório é o mesmo.
-	r.Post(sessionPattern+"/iniciativa/{entryId}/manobra/{kind}", s.tableStateCommand(proposesManeuver))
+	r.Post(sessionPattern+"/iniciativa/{entryId}/manobra/{manobra}", s.tableStateCommand(proposesManeuver))
 	// O ATAQUE A OBJETO tem rota própria porque o ALVO é de outra espécie: uma
 	// peça e não uma linha da fila. Mesmo verbo, mesmo prefixo de tabuleiro que
 	// os outros gestos de peça.
@@ -99,7 +99,7 @@ func (st Scene) proposeStrike(
 // e um corpo JSON exigiria uma ilha de JS onde há um `@post`.
 func proposesManeuver(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// A MANOBRA nunca troca o tipo de dano: ela não causa dano nenhum.
-	return st.proposeStrike(c, chi.URLParam(c.R, "kind"), semTrocarODano)
+	return st.proposeStrike(c, chi.URLParam(c.R, "manobra"), semTrocarODano)
 }
 
 // proposesAttackOnObject rola o golpe de quem está na vez contra uma PEÇA DE
