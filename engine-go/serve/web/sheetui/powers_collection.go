@@ -127,16 +127,7 @@ func automaticAbilities(dto sheet.CharacterDTO) []ownedPower {
 func automaticOwnership(
 	power book.ClassPower, class sheet.ClassDTO, choices map[string]engine.ClassChoiceSelections,
 ) bool {
-	doMotor := &engine.ClassPower{
-		ID: power.ID, ClassName: power.ClassName, Name: power.Name,
-		GrantedAtLevel: power.GrantedAtLevel,
-	}
-	if power.GrantedByChoice != nil {
-		doMotor.GrantedByChoice = &engine.GrantedByChoice{
-			Field: power.GrantedByChoice.Field, Value: power.GrantedByChoice.Value,
-		}
-	}
-	return engine.OwnsClassPower(doMotor, int(class.Level), nil, choices[class.ClassName])
+	return engine.OwnsClassPower(power.ForEngine(), int(class.Level), nil, choices[class.ClassName])
 }
 
 // chosenPowers são os ids da coluna `classPowers` — poder de classe, poder

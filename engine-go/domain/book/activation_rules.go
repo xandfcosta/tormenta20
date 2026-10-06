@@ -139,3 +139,61 @@ func StanceDecision(spec Activation, steps, max, currentPM int) (bool, string) {
 	}
 	return true, ""
 }
+
+// O BÔNUS CUMULATIVO DE CENA (p42).
+//
+// A regra é de uma linha e mora aqui por isso: ela é do LIVRO — quanto cada
+// gatilho dá e onde ele para —, e quem a chama é o caso de uso, que sabe o
+// valor de agora e o nível. Nada aqui lê banco nem escreve nada.
+
+// cumulativeTriggers é o vocabulário FECHADO dos gatilhos.
+//
+// Fechado pela mesma razão das cinco manobras: o casamento é por TEXTO, e um
+// `on` digitado errado viraria um poder que nunca acumula — calado, como todo
+// defeito de casamento por texto. Quem o cobra é o
+// `TestEveryCumulativeBonusDeclaresATriggerTheEngineKnows`.
+var cumulativeTriggers = map[string]bool{
+	// "quando faz um acerto crítico ou reduz um inimigo a 0 PV" (p42).
+	"criticalOrDrop": true,
+}
+
+// CumulativeTriggerIsKnown diz se o motor sabe disparar este gatilho.
+func CumulativeTriggerIsKnown(on string) bool { return cumulativeTriggers[on] }
+
+// CumulativeCap é o TETO do bônus — *"limitado pelo seu nível"* (p42).
+//
+// Devolve zero quando o teto é de uma espécie que o motor não conhece, e zero
+// é o lado seguro: um teto desconhecido vira "não acumula", em vez de virar
+// "acumula para sempre". É o oposto do `default` do `evalModifierScale`, que
+// engole o `per` desconhecido e some com o bônus — aqui o silêncio também
+// custa, mas custa um poder inerte e não um número inventado.
+func CumulativeCap(spec CumulativeBonus, level int) int {
+	if spec.CapPer == "level" {
+		return level
+	}
+	return 0
+}
+
+// CumulativeNext é quanto o bônus vale DEPOIS de um gatilho, com o teto já
+// aplicado.
+//
+// @example CumulativeNext(spec, 5, 6) // 6, e o próximo gatilho devolve 6 também
+func CumulativeNext(spec CumulativeBonus, current, level int) int {
+	return min(current+spec.Amount, CumulativeCap(spec, level))
+}
+
+// FlagCumulatives são as ativações que ACUMULAM enquanto esta flag está acesa.
+//
+// Irmã da `FlagGrants`, e separada dela porque as duas respondem perguntas
+// diferentes: aquela diz o que a postura concede ao ENTRAR, esta diz o que ela
+// faz crescer DEPOIS. Quem precisa das duas juntas é só o encerramento, que
+// apaga os efeitos das duas famílias.
+func FlagCumulatives(flag string) []Activation {
+	outside := []Activation{}
+	for _, spec := range Activations() {
+		if spec.RequiresFlag == flag && spec.Cumulative != nil {
+			outside = append(outside, spec)
+		}
+	}
+	return outside
+}

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
 )
 
 // O REGISTRO DE ATIVAÇÕES: o que um poder custa para ser usado.
@@ -42,7 +43,34 @@ type Activation struct {
 	RequiresFlag string           `json:"requiresFlag"`
 	Scaling      *ActivationScale `json:"scaling"`
 	Grant        *PowerGrant      `json:"grant"`
-	BookPage     int              `json:"bookPage"`
+	// Cumulative é o bônus que SOBE A CADA GATILHO — ver `CumulativeBonus`.
+	Cumulative *CumulativeBonus `json:"cumulative"`
+	BookPage   int              `json:"bookPage"`
+}
+
+// CumulativeBonus é o bônus que sobe a cada gatilho enquanto a postura dura —
+// o *"bônus cumulativo de +1"* da Sangue dos Inimigos (p42).
+//
+// ELE NÃO É UM `engine.Modifier`, e não poderia ser: o `Modifier` descreve um
+// bônus de valor FIXO, estático ou condicionado por flag, e o catálogo é dado
+// transcrito do livro — não há onde escrever "o valor de agora". O que o
+// catálogo declara aqui é a REGRA de crescimento; o valor corrente é estado de
+// jogo, e mora num efeito ativo de escopo `scene` como qualquer outro.
+//
+// Por isso ele também é irmão do `Grant` e não um campo dele: o `Grant` é
+// aplicado UMA vez, ao entrar na postura, e este é reaplicado a cada gatilho.
+type CumulativeBonus struct {
+	// On é o gatilho, e o vocabulário é FECHADO: um valor que o motor não
+	// conhece não acumula nada, e o `CumulativeTriggerIsKnown` é quem recusa.
+	On string `json:"on"`
+	// Amount é quanto cada gatilho acrescenta.
+	Amount int `json:"amount"`
+	// CapPer é de onde sai o TETO — *"limitado pelo seu nível"* (p42).
+	CapPer string `json:"capPer"`
+	// Targets são os números que ele move, no mesmo vocabulário de alvo que
+	// todo modificador do catálogo usa. Reusado e não inventado: um segundo
+	// vocabulário de alvo divergiria do primeiro no dia seguinte.
+	Targets []engine.ModifierTarget `json:"targets"`
 }
 
 // ActivationScale é a postura que sobe de degrau com o nível.

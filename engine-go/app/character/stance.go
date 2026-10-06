@@ -225,6 +225,14 @@ func (p Plays) grantedEffectIDs(
 	for _, spec := range book.FlagGrants(flag) {
 		fromFlag[spec.ID] = true
 	}
+	// E O QUE A POSTURA ACUMULOU sai com ela (decisão do dono, p42): o bônus
+	// cumulativo da Sangue dos Inimigos é escrito pelo mesmo tipo de efeito e
+	// com o id do mesmo poder, então ele morre pelo mesmo caminho — o que falta
+	// é esta lista saber que ele existe. Sem a linha, o bárbaro sairia da fúria
+	// carregando o +N dela.
+	for _, spec := range book.FlagCumulatives(flag) {
+		fromFlag[spec.ID] = true
+	}
 	if len(fromFlag) == 0 {
 		return nil, nil
 	}

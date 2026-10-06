@@ -235,6 +235,36 @@ func classChoiceSelectionsAreValid(dto CharacterDTO) error {
 	return nil
 }
 
+// OwnsClassPower diz se ESTA ficha tem o poder de classe de id dado.
+//
+// A REGRA é do motor (`engine.OwnsClassPower`) e não se repete aqui: o que esta
+// função acrescenta é o encanamento do DTO — a lista de escolhidos, as escolhas
+// de cada classe e o nível de cada uma. Quem pergunta "eu tenho este poder?"
+// fora da tela da ficha chama por aqui, e não monta a pergunta de novo.
+//
+// CLASSE POR CLASSE porque o poder é de UMA: um bárbaro 3/ladino 2 tem as vagas
+// das duas, e o nível que concede um poder de bárbaro é o de BÁRBARO.
+func OwnsClassPower(dto CharacterDTO, id string) bool {
+	power, found := book.ClassPowers()[id]
+	if !found {
+		return false
+	}
+	chosen := map[string]bool{}
+	for _, c := range UnmarshalStrings(dto.ClassPowers) {
+		chosen[c] = true
+	}
+	choices := ClassChoiceSelections(dto)
+	for _, class := range dto.Classes {
+		if class.ClassName != power.ClassName {
+			continue
+		}
+		if engine.OwnsClassPower(power.ForEngine(), int(class.Level), chosen, choices[class.ClassName]) {
+			return true
+		}
+	}
+	return false
+}
+
 // ClassChoiceSelections lê o blob de `classChoices` por nome de classe.
 func ClassChoiceSelections(dto CharacterDTO) map[string]engine.ClassChoiceSelections {
 	choices := map[string]engine.ClassChoiceSelections{}

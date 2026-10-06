@@ -160,6 +160,15 @@
     "pmCost": 0,
     "uses": null,
     "requiresFlag": "furia",
+    "cumulative": {
+      "on": "criticalOrDrop",
+      "amount": 1,
+      "capPer": "level",
+      "targets": [
+        { "k": "attack", "scope": "all" },
+        { "k": "damage", "scope": "all" }
+      ]
+    },
     "bookPage": 42
   },
   {

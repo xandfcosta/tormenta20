@@ -183,7 +183,84 @@ func confirmsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return nil, err
 		}
 	}
-	return st.deps.Sessions().CommitAttack(c.R.Context(), c.SessionID, live.Attacker{UserID: c.User, Role: c.Role})
+	// O PV DO ALVO ANTES, porque *"reduz um inimigo a 0 PV"* (p42) é uma
+	// TRANSIÇÃO e não um estado: confirmar um golpe contra quem já estava a
+	// zero não reduziu ninguém a nada.
+	antes := targetHitPoints(st, c, pendente)
+	state, err := st.deps.Sessions().CommitAttack(
+		c.R.Context(), c.SessionID, live.Attacker{UserID: c.User, Role: c.Role})
+	if err != nil {
+		return nil, err
+	}
+	return state, st.raisesTheCumulativeBonus(c, state, pendente, antes)
+}
+
+// raisesTheCumulativeBonus sobe o bônus de cena de quem ATACOU, quando o golpe
+// confirmado foi o gatilho que o livro pede (p42).
+//
+// AQUI E NÃO NO `CommitAttack`, e a razão é a mesma que já está escrita acima
+// dele: são agregados com travas próprias, e a cena é o único lugar acima de
+// todos. O regime guarda a fila, o tabuleiro guarda a peça, e a FICHA guarda o
+// efeito — chamar a terceira de dentro da primeira é como se escreve um abraço
+// mortal.
+//
+// DEPOIS DO COMMIT, sempre: um provisório cancelado não aconteceu, e um bônus
+// que subisse na proposta ficaria para trás quando o mestre dissesse não.
+//
+// O ERRO SOBE, mesmo com o dano já pousado. É a escolha ruidosa de propósito:
+// o bônus que não foi gravado é um número que a mesa vai usar errado pelo resto
+// da cena, e calar faria o bárbaro atacar com menos sem ninguém saber por quê.
+// A frase diz o que faltou; a fila já está certa no banco e o próximo tique do
+// stream a redesenha.
+func (st Scene) raisesTheCumulativeBonus(
+	c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack, antes *int64,
+) error {
+	if pendente == nil || !pendente.Hit {
+		return nil
+	}
+	attacker := entryByID(state, pendente.AttackerEntryID)
+	if attacker == nil || attacker.CharacterID == nil {
+		return nil
+	}
+	depois := hitPointsOf(entryByID(state, pendente.TargetEntryID))
+	caiu := antes != nil && *antes > 0 && depois != nil && *depois <= 0
+	if !pendente.Critical && !caiu {
+		return nil
+	}
+	return st.plays.BumpCumulativeBonus(c.R.Context(), *attacker.CharacterID, "criticalOrDrop")
+}
+
+// targetHitPoints é o PV do alvo ANTES da confirmação, ou nulo quando não há
+// alvo de fila — o golpe contra uma PEÇA do cenário não reduz inimigo nenhum.
+func targetHitPoints(st Scene, c commandCtx, pendente *live.PendingAttack) *int64 {
+	if pendente == nil || pendente.TargetEntryID == "" {
+		return nil
+	}
+	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil
+	}
+	return hitPointsOf(entryByID(state, pendente.TargetEntryID))
+}
+
+// entryByID acha a linha da fila, ou nulo.
+func entryByID(state *live.SessionRuntimeState, id string) *live.InitiativeEntry {
+	if state == nil || id == "" {
+		return nil
+	}
+	for i := range state.Initiative {
+		if state.Initiative[i].ID == id {
+			return &state.Initiative[i]
+		}
+	}
+	return nil
+}
+
+func hitPointsOf(entry *live.InitiativeEntry) *int64 {
+	if entry == nil {
+		return nil
+	}
+	return entry.HpCurrent
 }
 
 // pendingAttackOf devolve o provisório em jogo, ou nulo quando não há.
