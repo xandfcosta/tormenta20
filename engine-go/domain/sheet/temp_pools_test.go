@@ -14,8 +14,8 @@ func listEffectRows(modifiers ...string) []sqlcgen.ListActiveEffectsByCharacterR
 	return rows
 }
 
-func pool(EffectID, Amount int, Pure bool) TempHpPool {
-	return TempHpPool{
+func pool(EffectID, Amount int, Pure bool) TempPool {
+	return TempPool{
 		EffectID: int64(EffectID), Amount: Amount, Pure: Pure,
 		Mods: []map[string]any{{"target": map[string]any{"k": "tempHp"}, "amount": float64(Amount)}},
 	}
@@ -34,7 +34,7 @@ func TestPlanDamage(t *testing.T) {
 
 	// Biggest pool drains first; overflow hits HP. Pools 5 + 3, dmg 7:
 	// drains 5 (empty→removed if Pure) then 2 of 3 (→1 left), HP untouched.
-	p := PlanDamage([]TempHpPool{pool(1, 3, true), pool(2, 5, true)}, 20, 7)
+	p := PlanDamage([]TempPool{pool(1, 3, true), pool(2, 5, true)}, 20, 7)
 	if p.HpCurrent != 20 {
 		t.Errorf("HP should be untouched (temp absorbed all), got %d", p.HpCurrent)
 	}
@@ -50,7 +50,7 @@ func TestPlanDamage(t *testing.T) {
 	}
 
 	// Mixed pool (not Pure) emptied → kept with Amount 0, not deleted.
-	mp := PlanDamage([]TempHpPool{pool(9, 4, false)}, 20, 10)
+	mp := PlanDamage([]TempPool{pool(9, 4, false)}, 20, 10)
 	if len(mp.DeleteIDs) != 0 || len(mp.Updates) != 1 {
 		t.Errorf("mixed emptied pool should be updated not deleted: del=%v upd=%v", mp.DeleteIDs, mp.Updates)
 	}

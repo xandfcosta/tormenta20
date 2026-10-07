@@ -30,6 +30,18 @@ type SheetVitals interface {
 	// que mudou faria o rastreador mostrar um número que a ficha não tem.
 	ApplyDelta(ctx context.Context, charID int64, hpDelta, mpDelta *int64, nonLethal int64) (*int64, *int64, error)
 
+	// SpendMana cobra PM de um GASTO da mesa — hoje, a manutenção de sustentada
+	// no giro da vez (p227) —, drenando a poça temporária antes do poço (p106).
+	//
+	// SEPARADA DO `ApplyDelta`, e a divisa é entre GASTAR e CORRIGIR: o ±PM do
+	// rastreador e o da ficha são correção — o mestre acertando um número que
+	// ficou errado — e mexem no poço de verdade (decisão do dono). Drenar a
+	// poça com eles faria "−5" não fazer o que ele quer, e a poça sumiria sem
+	// ninguém ter conjurado nada.
+	//
+	// Devolve os dois vitais para a linha da fila espelhar, como as irmãs.
+	SpendMana(ctx context.Context, charID int64, amount int) (*int64, *int64, error)
+
 	// ApplyAbsolute grava PV/PM totais. Não drena pool temporário.
 	ApplyAbsolute(ctx context.Context, charID int64, hpCurrent, mpCurrent *int64) (*int64, *int64, error)
 
@@ -108,4 +120,11 @@ type VitalPool struct {
 	HpCurrent int64
 	MpMax     int64
 	MpCurrent int64
+	// TempMp é a POÇA de PM temporário, parcela à parte do `MpCurrent` porque
+	// ela pode passar do máximo (p106).
+	TempMp int64
 }
+
+// ManaAvailable é quanto de PM este combatente pode pagar agora: o poço mais a
+// poça. Quem decide se a manutenção de uma sustentada cabe pergunta por aqui.
+func (p VitalPool) ManaAvailable() int64 { return p.MpCurrent + p.TempMp }

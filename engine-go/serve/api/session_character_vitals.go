@@ -53,19 +53,10 @@ func drainTempHpAndHit(
 		return sheet.DamagePlan{}, err
 	}
 	plan := sheet.PlanDamage(sheet.ParseTempHpPools(effects), int(hpCurrent), amount)
-	for _, u := range plan.Updates {
-		if err := q.UpdateEffectModifiers(ctx, sqlcgen.UpdateEffectModifiersParams{
-			Modifiers: u.Modifiers, ID: u.EffectID,
-		}); err != nil {
-			return sheet.DamagePlan{}, err
-		}
-	}
-	for _, delID := range plan.DeleteIDs {
-		if err := q.DeleteEffectByID(ctx, delID); err != nil {
-			return sheet.DamagePlan{}, err
-		}
-	}
-	return plan, nil
+	// O LAÇO DE ESCREVER É DO DOMÍNIO: o dano de PV e o gasto de PM produzem o
+	// mesmo par de listas, e uma segunda cópia dele divergiria no dia em que
+	// uma das duas ganhasse um passo.
+	return plan, sheet.WriteDrain(ctx, q, plan.Updates, plan.DeleteIDs)
 }
 
 // AddCondition acende uma condição na ficha, sem apagar as que já estão.
@@ -127,6 +118,26 @@ func (v sheetVitals) ApplyDelta(
 	})
 }
 
+// SpendMana cobra PM pelo funil de GASTO, que drena a poça temporária primeiro.
+//
+// Ela não passa pelo `applyRule` como as irmãs porque o funil de gasto já é um
+// `ApplyToPools` com a regra dele — embrulhá-lo daria dois funis aninhados
+// sobre a mesma ficha, e o de fora sobrescreveria o poço que o de dentro
+// acabou de decidir.
+func (v sheetVitals) SpendMana(
+	ctx context.Context, charID int64, amount int,
+) (*int64, *int64, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return nil, nil, err
+	}
+	pools, err := sheet.SpendMana(ctx, v.q, v.catalogs(), row, amount)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &pools.HpCurrent, &pools.MpCurrent, nil
+}
+
 // ApplyAbsolute crava PV/PM absolutos no personagem (o "vitals-patch" do
 // rastreador). Um valor absoluto é uma afirmação sobre o total, e não uma
 // pancada, então ele NÃO drena os poços temporários — essa regra é do dano.
@@ -176,7 +187,8 @@ func (v sheetVitals) PoolsOf(
 	fromQueue := make(map[int64]live.VitalPool, len(pools))
 	for id, p := range pools {
 		fromQueue[id] = live.VitalPool{
-			HpMax: p.HpMax, HpCurrent: p.HpCurrent, MpMax: p.MpMax, MpCurrent: p.MpCurrent,
+			HpMax: p.HpMax, HpCurrent: p.HpCurrent,
+			MpMax: p.MpMax, MpCurrent: p.MpCurrent, TempMp: p.TempMp,
 		}
 	}
 	return fromQueue, nil

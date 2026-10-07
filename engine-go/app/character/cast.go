@@ -126,18 +126,14 @@ func (p Plays) Cast(
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}
-	if int64(totalPm) > dto.MpCurrent {
-		return fmt.Errorf("faltam PM: a magia custa %d e restam %d", totalPm, dto.MpCurrent)
+	// O MANA DISPONÍVEL inclui a poça temporária, e as duas metades da p106
+	// andam juntas: se o gasto drena a poça primeiro, a poça CONTA para decidir
+	// se o gasto cabe. Com `dto.MpCurrent` aqui, o bardo de poço vazio e poça
+	// cheia seria recusado — a poça existiria só para ser ignorada.
+	if available := dto.ManaAvailable(); int64(totalPm) > available {
+		return fmt.Errorf("faltam PM: a magia custa %d e restam %d", totalPm, available)
 	}
-	if totalPm == 0 {
-		return nil
-	}
-	_, err = sheet.ApplyToLoadedPools(ctx, p.queries, &dto,
-		func(pools sheet.Pools) (sheet.Pools, error) {
-			pools.MpCurrent -= int64(totalPm)
-			return pools, nil
-		})
-	return err
+	return sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm)
 }
 
 // truqueEscolhido diz se um dos aprimoramentos pedidos é um truque.

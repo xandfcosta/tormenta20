@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
@@ -25,15 +26,30 @@ import (
 // encerrar cena já o varre. Uma coluna nova teria de reaprender as quatro
 // coisas.
 
-// BumpCumulativeBonus sobe o bônus dos poderes deste personagem cujo gatilho
-// acabou de acontecer.
+// BumpCumulativeBonus sobe o bônus dos poderes deste personagem cujos gatilhos
+// acabaram de acontecer.
+//
+// VÁRIOS GATILHOS NUMA CHAMADA porque um golpe confirmado pode ser dois ao
+// mesmo tempo — um crítico que também é corpo a corpo —, e duas chamadas
+// carregariam a mesma ficha duas vezes. Gatilho que o motor não conhece é
+// descartado aqui, em silêncio: quem RECUSA o desconhecido é o guarda do
+// catálogo, e recusar de novo em tempo de jogo derrubaria uma confirmação de
+// ataque por causa de uma linha de catálogo.
 //
 // SILENCIOSA quando não há o que subir, e isso é desenho e não descuido: ela é
 // chamada em TODA confirmação de ataque da mesa, e quase nenhuma envolve um
 // personagem com poder cumulativo. Um erro aqui viraria um ataque recusado por
 // causa de um bônus que não existe.
-func (p Plays) BumpCumulativeBonus(ctx context.Context, characterID int64, trigger string) error {
-	if !book.CumulativeTriggerIsKnown(trigger) {
+func (p Plays) BumpCumulativeBonus(
+	ctx context.Context, characterID int64, triggers ...string,
+) error {
+	fired := make([]string, 0, len(triggers))
+	for _, t := range triggers {
+		if book.CumulativeTriggerIsKnown(t) {
+			fired = append(fired, t)
+		}
+	}
+	if len(fired) == 0 {
 		return nil
 	}
 	row, err := p.queries.GetCharacter(ctx, characterID)
@@ -44,7 +60,7 @@ func (p Plays) BumpCumulativeBonus(ctx context.Context, characterID int64, trigg
 	if err != nil {
 		return fmt.Errorf("montar a ficha %d para subir o bônus cumulativo: %w", characterID, err)
 	}
-	for _, spec := range cumulativesInTheAir(dto, trigger) {
+	for _, spec := range cumulativesInTheAir(dto, fired) {
 		if err := p.raiseOne(ctx, dto, spec); err != nil {
 			return err
 		}
@@ -59,14 +75,14 @@ func (p Plays) BumpCumulativeBonus(ctx context.Context, characterID int64, trigg
 // acumularia; sem a flag, a Sangue dos Inimigos valeria fora da fúria, que é
 // metade do poder; sem o gatilho, um crítico subiria o bônus de um poder que
 // só acumula ao derrubar.
-func cumulativesInTheAir(dto sheet.CharacterDTO, trigger string) []book.Activation {
+func cumulativesInTheAir(dto sheet.CharacterDTO, triggers []string) []book.Activation {
 	flags := map[string]bool{}
 	for _, s := range dto.Stances {
 		flags[s.Flag] = true
 	}
 	outside := []book.Activation{}
 	for _, spec := range book.Activations() {
-		if spec.Cumulative == nil || spec.Cumulative.On != trigger {
+		if spec.Cumulative == nil || !slices.Contains(triggers, spec.Cumulative.On) {
 			continue
 		}
 		if spec.RequiresFlag != "" && !flags[spec.RequiresFlag] {
@@ -86,19 +102,32 @@ func cumulativesInTheAir(dto sheet.CharacterDTO, trigger string) []book.Activati
 // crítico com o mesmo valor carimbaria o `createdAt` de novo, e a linha
 // pareceria recém-nascida a cada golpe de um bárbaro que já parou de crescer.
 func (p Plays) raiseOne(ctx context.Context, dto sheet.CharacterDTO, spec book.Activation) error {
-	current, err := p.cumulativeNow(ctx, dto.ID, spec.ID)
+	amount, gained, err := p.cumulativeNow(ctx, dto.ID, spec.ID)
 	if err != nil {
 		return err
 	}
-	next := book.CumulativeNext(*spec.Cumulative, current, int(dto.Level))
-	if next <= current {
+	// O TETO É DO QUE SE GANHOU NA CENA, não do que está na poça agora.
+	//
+	// A distinção só aparece quando o alvo é CONSUMÍVEL: *"você pode ganhar um
+	// máximo de PM temporários por cena igual ao seu nível"* (p45) — o bardo
+	// que ganhou 4 e gastou 4 não recomeça do zero. Com o teto lido da poça, ele
+	// acumularia a cena inteira, dois PM por golpe, sem limite nenhum.
+	//
+	// Para ataque e dano as duas contagens andam iguais, porque nada as gasta.
+	nextGained := book.CumulativeNext(*spec.Cumulative, gained, int(dto.Level))
+	step := nextGained - gained
+	if step <= 0 {
 		return nil
 	}
 	mods := make([]map[string]any, 0, len(spec.Cumulative.Targets))
 	for _, target := range spec.Cumulative.Targets {
 		mods = append(mods, map[string]any{
 			"target": target,
-			"amount": next,
+			"amount": amount + step,
+			// GAINED viaja no mesmo mapa e NÃO é campo de modificador: o motor o
+			// ignora, e o `withTempAmount` o preserva ao reescrever a poça — ele
+			// guarda o mapa cru justamente para não perder campo que não conhece.
+			"gained": nextGained,
 			// SEM TIPO, e o livro é quem decide: a p42 não dá tipo a este bônus,
 			// e bônus sem tipo SOMA com os outros (p105). Marcá-lo `morale` o
 			// faria disputar com o +3 da própria Fúria, e o maior venceria —
@@ -120,20 +149,24 @@ func (p Plays) raiseOne(ctx context.Context, dto sheet.CharacterDTO, spec book.A
 		Characterid: dto.ID, Source: "power", Catalogid: spec.ID, Scope: "scene",
 		Modifiers: string(blob), Createdat: dbvalue.NowISO(),
 	}); err != nil {
-		return fmt.Errorf("gravar o bônus cumulativo de %q em +%d: %w", spec.ID, next, err)
+		return fmt.Errorf("gravar o bônus cumulativo de %q em +%d: %w", spec.ID, amount+step, err)
 	}
 	return nil
 }
 
-// cumulativeNow é quanto o bônus vale AGORA, lido do efeito em curso.
+// cumulativeNow é o que o efeito em curso guarda: quanto ele VALE agora e
+// quanto já foi GANHO na cena.
 //
-// Zero quando não há linha — é o estado inicial, e não um erro. O valor sai do
-// PRIMEIRO modificador porque todos os alvos do mesmo poder sobem juntos: é um
-// bônus só, escrito em dois lugares porque ele move dois números.
-func (p Plays) cumulativeNow(ctx context.Context, characterID int64, catalogID string) (int, error) {
+// Os dois zerados quando não há linha — é o estado inicial, e não um erro. Os
+// valores saem do PRIMEIRO modificador porque todos os alvos do mesmo poder
+// sobem juntos: é um bônus só, escrito em dois lugares porque ele move dois
+// números.
+func (p Plays) cumulativeNow(
+	ctx context.Context, characterID int64, catalogID string,
+) (amount, gained int, err error) {
 	effects, err := p.queries.ListActiveEffectsByCharacter(ctx, characterID)
 	if err != nil {
-		return 0, fmt.Errorf("ler os efeitos da ficha %d: %w", characterID, err)
+		return 0, 0, fmt.Errorf("ler os efeitos da ficha %d: %w", characterID, err)
 	}
 	for _, e := range effects {
 		if e.Catalogid != catalogID || e.Scope != "scene" {
@@ -141,11 +174,12 @@ func (p Plays) cumulativeNow(ctx context.Context, characterID int64, catalogID s
 		}
 		var mods []struct {
 			Amount int `json:"amount"`
+			Gained int `json:"gained"`
 		}
 		if json.Unmarshal([]byte(e.Modifiers), &mods) != nil || len(mods) == 0 {
-			return 0, nil
+			return 0, 0, nil
 		}
-		return mods[0].Amount, nil
+		return mods[0].Amount, mods[0].Gained, nil
 	}
-	return 0, nil
+	return 0, 0, nil
 }

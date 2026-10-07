@@ -56,22 +56,30 @@ func downed(v sheetVital, activeConditions string) sheetVital {
 	return v
 }
 
-// withTempHp acrescenta ao PV a reserva que os efeitos ativos carregam.
+// withTempPool acrescenta ao vital a reserva que os efeitos ativos carregam.
 //
-// A conta é do `sheet` (`TempHpTotal`), e a leitura NÃO custa consulta: o
-// agregado já traz os efeitos, porque a aba Efeitos os desenha.
+// A conta é do `sheet`, e a leitura NÃO custa consulta: o agregado já traz os
+// efeitos, porque a aba Efeitos os desenha.
 //
-// PM não ganha o mesmo: o livro tem pontos de mana temporários (p106) e este
-// app ainda não os modela — o motor só conhece o alvo `tempMp` como
-// modificador, e nada os gasta. Desenhar um número que nada consome seria pior
-// que não desenhá-lo.
-func withTempHp(v sheetVital, effects []sheet.EffectDTO) sheetVital {
-	blobs := make([]string, 0, len(effects))
-	for _, e := range effects {
-		blobs = append(blobs, e.Modifiers)
-	}
-	if total := sheet.TempHpTotal(blobs); total > 0 {
+// OS DOIS VITAIS, e aqui morava o motivo de só um: *"o livro tem pontos de mana
+// temporários e este app ainda não os modela — nada os gasta"*. Hoje gasta: o
+// `sheet.SpendMana` drena a poça antes do poço em toda cobrança de PM, e o
+// número desenhado é consumido por conjurar, ativar poder e sustentar.
+func withTempPool(v sheetVital, target string, effects []sheet.EffectDTO) sheetVital {
+	if total := sheet.TempTotal(target, sheet.ModifierBlobsOf(effects)); total > 0 {
 		v.Temp = "+" + strconv.Itoa(total)
 	}
 	return v
+}
+
+// tempReserveTitle é a frase que explica a reserva, por vital.
+//
+// DUAS FRASES e não uma com o rótulo interpolado: o verbo é diferente — o PV é
+// gasto pelo DANO que chega, e o PM pelo que a pessoa escolhe fazer —, e é o
+// verbo que diz o que vai acontecer com aquele número.
+func tempReserveTitle(label string) string {
+	if label == "PM" {
+		return "PM temporários — conjurar e ativar poder gastam estes primeiro (p106)"
+	}
+	return "PV temporários — o dano gasta estes primeiro (p106)"
 }

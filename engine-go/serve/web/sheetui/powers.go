@@ -108,7 +108,7 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, query string) powersPanel {
 // powerRowsOf traduz o acervo em linhas de tela, resolvendo a ativação de cada
 // poder e o estado de jogo dele.
 func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
-	context := book.UseContext{CurrentPM: int(dto.MpCurrent), Flags: s.activeFlags(dto)}
+	context := book.UseContext{CurrentPM: int(dto.ManaAvailable()), Flags: s.activeFlags(dto)}
 	uses := character.PowerUses(dto)
 	stances := paidStances(dto)
 	rows := []powerRow{}

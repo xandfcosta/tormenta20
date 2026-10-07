@@ -377,7 +377,7 @@ func tableBarOf(current, max int64, arcane bool) tableBar {
 
 // tableTrackerOf desenha a fila que o jogador recebeu — já redigida.
 func tableTrackerOf(
-	st *live.SessionRuntimeState, mine map[int64]bool, pools map[int64]int64,
+	st *live.SessionRuntimeState, mine map[int64]bool, pools tempReserves,
 ) []tableRow {
 	queue := make([]tableRow, 0, len(st.Initiative))
 	for i := range st.Initiative {
@@ -403,14 +403,15 @@ func tableTrackerOf(
 		//
 		// Para a mesa, o pool escondido volta do `StateForRole` sem números —
 		// o `poolBar` devolve uma barra só com a marca, `Max` zero —, e o
-		// `withTempHp` para aí. Para o MESTRE os números vêm, porque esconder é
+		// `withTempPool` para aí. Para o MESTRE os números vêm, porque esconder é
 		// decisão sobre o que os OUTROS veem: uma trava pela marca cegaria
 		// justamente quem a acionou. Medido: com `!Hidden`, o mestre perdia a
 		// própria reserva de vista.
 		//
 		// Só linha com personagem atrás tem reserva — NPC não tem ficha.
 		if e.CharacterID != nil {
-			withTempHp(row.PV, pools[*e.CharacterID])
+			withTempPool(row.PV, pools.Hp[*e.CharacterID])
+			withTempPool(row.PM, pools.Mp[*e.CharacterID])
 		}
 		queue = append(queue, row)
 	}
@@ -436,11 +437,11 @@ func poolBar(current, max *int64, hidden *bool, arcane bool) *tableBar {
 	return nil
 }
 
-// withTempHp põe a reserva numa barra, e a devolve.
+// withTempPool põe a reserva numa barra, e a devolve.
 //
 // A reserva SÓ CABE onde há máximo: uma linha sem PV rastreado não ganha filete
 // nem número, porque não há de que o filete ser uma fração.
-func withTempHp(b *tableBar, temp int64) {
+func withTempPool(b *tableBar, temp int64) {
 	if b == nil || temp <= 0 || b.Max <= 0 {
 		return
 	}
@@ -456,7 +457,7 @@ func tableViewOf(
 	group []Member,
 	mine map[int64]bool,
 	eu *tableMe,
-	pools map[int64]int64,
+	pools tempReserves,
 ) View {
 	if eu != nil {
 		eu.InQueue = false

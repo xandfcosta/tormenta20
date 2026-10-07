@@ -59,7 +59,10 @@ func (st *Store) payUpkeep(ctx context.Context, u Unit, s *live.SessionRuntimeSt
 		return fmt.Errorf("ler o mana de %s: %w", entry.Label, err)
 	}
 	pool := pools[*entry.CharacterID]
-	mana := int(pool.MpCurrent)
+	// O MANA DISPONÍVEL, e não só o poço: a poça temporária paga a manutenção
+	// como paga qualquer gasto (p106), e lê-la de fora faria o conjurador
+	// derrubar uma sustentada que ele tinha como pagar.
+	mana := int(pool.ManaAvailable())
 	// O INSTANTE é a vez de quem entrou, e PODER AGIR é ter PV: a 0 "você cai
 	// inconsciente" (p236), e o poço do app tem piso em zero, então é aqui que
 	// morrer e sangrar se encontram. O que uma ação LIVRE exige do instante
@@ -84,8 +87,9 @@ func (st *Store) payUpkeep(ctx context.Context, u Unit, s *live.SessionRuntimeSt
 	// segundo cadeado nem segunda transação — a ficha é escrita pela porta da
 	// unidade e a linha espelha o resultado, tudo antes de o retrato ser
 	// gravado (ALE-373).
-	spent := int64(-upkeep.Cost)
-	hp, mp, err := u.Sheet.ApplyDelta(ctx, *entry.CharacterID, nil, &spent, 0)
+	// PELO `SpendMana` e não por um `ApplyDelta` negativo: manutenção é GASTO, e
+	// gasto come a poça temporária antes do poço. O `ApplyDelta` é a correção.
+	hp, mp, err := u.Sheet.SpendMana(ctx, *entry.CharacterID, upkeep.Cost)
 	if err != nil {
 		return fmt.Errorf("cobrar a manutenção de %s: %w", entry.Label, err)
 	}

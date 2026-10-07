@@ -43,7 +43,7 @@ func (p Plays) EnterStance(
 	if spec.Scaling != nil {
 		max = book.LevelSteps(*spec.Scaling, ClassPowerLevel(dto, spec.ID))
 	}
-	if can, reason := book.StanceDecision(*spec, steps, max, int(dto.MpCurrent)); !can {
+	if can, reason := book.StanceDecision(*spec, steps, max, int(dto.ManaAvailable())); !can {
 		return fmt.Errorf("%s: %s", spec.Name, reason)
 	}
 	cost := book.StanceCost(*spec, steps)
@@ -128,7 +128,7 @@ func (p Plays) UsePower(
 	}
 	uses := PowerUses(dto)[spec.ID]
 	can, reason := book.UseDecision(*spec, book.UseContext{
-		CurrentPM: int(dto.MpCurrent), UsedThisScene: uses.Scene, UsedToday: uses.Day,
+		CurrentPM: int(dto.ManaAvailable()), UsedThisScene: uses.Scene, UsedToday: uses.Day,
 		Flags: p.activeFlags(dto),
 	})
 	if !can {
@@ -167,14 +167,11 @@ func chargeMp(
 	if howMuch <= 0 {
 		return nil
 	}
-	if _, err := sheet.ApplyToPools(ctx, q, cat, row,
-		func(pools sheet.Pools) (sheet.Pools, error) {
-			pools.MpCurrent -= int64(howMuch)
-			return pools, nil
-		}); err != nil {
-		return fmt.Errorf("cobrar %d PM da ficha %d: %w", howMuch, row.ID, err)
-	}
-	return nil
+	// PELO FUNIL DE GASTO, que drena a poça temporária antes do poço (p106).
+	// Com `MpCurrent -= n` direto, o bardo com a poça do Golpe Mágico cheia
+	// pagaria a postura com o mana de verdade e ficaria com a poça intocada.
+	_, err := sheet.SpendMana(ctx, q, cat, row, howMuch)
+	return err
 }
 
 // inTx roda o corpo numa transação, e o `which` entra na mensagem de falha: um

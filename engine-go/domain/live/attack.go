@@ -64,11 +64,16 @@ type PendingAttack struct {
 	Situations []string `json:"situations,omitempty"`
 	Hit        bool     `json:"hit"`
 	Critical   bool     `json:"critical"`
-	Dice       []int    `json:"dice,omitempty"`
-	Faces      int      `json:"faces,omitempty"`
-	RawDamage  int      `json:"rawDamage"`
-	Absorbed   int      `json:"absorbed"`
-	Damage     int      `json:"damage"`
+	// Melee diz se o golpe foi CORPO A CORPO, e ele viaja porque há regra que
+	// depende disso DEPOIS da confirmação: o Golpe Mágico do bardo só acumula
+	// *"ao acertar um ataque corpo a corpo"* (p45). A arma não vem junto no
+	// provisório — só o nome dela —, e um nome não responde a pergunta.
+	Melee     bool  `json:"melee,omitempty"`
+	Dice      []int `json:"dice,omitempty"`
+	Faces     int   `json:"faces,omitempty"`
+	RawDamage int   `json:"rawDamage"`
+	Absorbed  int   `json:"absorbed"`
+	Damage    int   `json:"damage"`
 	// Maneuver é a conta da MANOBRA (p234), e ela é nula num golpe comum.
 	//
 	// Uma manobra É um ataque corpo a corpo — o livro abre a página dizendo isso

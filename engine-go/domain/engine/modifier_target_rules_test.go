@@ -49,7 +49,7 @@ var alvosQueOMotorAplica = map[string]string{
 	"flySpeed":             "breakdowns.go, no voo",
 	"maxPv":                "vitals_catalog.go",
 	"maxPm":                "vitals_catalog.go",
-	"tempHp":               "sheet/temp_hp.go, na reserva que o dano gasta antes do PV",
+	"tempHp":               "sheet/temp_pools.go, na reserva que o dano gasta antes do PV",
 	"pmLimit":              "breakdowns_magic.go, no limite de PM por magia",
 	"pmCost":               "breakdowns_magic.go, no custo da magia",
 	"spellDC":              "breakdowns_magic.go, na CD",
@@ -65,9 +65,9 @@ var alvosQueOMotorAplica = map[string]string{
 //
 // Os três primeiros são DEFEITO — há modificador escrito no catálogo que a
 // ficha mostra e a conta ignora. O quarto não é: ele está declarado por escrito
-// no `withTempHp`, e a decisão de não desenhar é deliberada.
+// no `withTempPool`, e a decisão de não desenhar é deliberada.
 var alvosDeclaradosInertes = map[string]string{
-	"tempMp": "DELIBERADO, e escrito no `withTempHp`: o livro tem PM temporário " +
+	"tempMp": "DELIBERADO, e escrito no `withTempPool`: o livro tem PM temporário " +
 		"(p106) e este app não o modela — nada os gasta, e desenhar um número " +
 		"que nada consome seria pior que não desenhá-lo",
 }
