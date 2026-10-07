@@ -214,6 +214,13 @@ func TestLeavingTheStanceTakesTheCumulativeBonusWithIt(t *testing.T) {
 	// caso afirmaria que ela some junto, que é outra regra. Voltando à fúria, o
 	// único que pode ter sobrado é o cumulativo.
 	endsTheRage(t, f, barbaro)
+	// A VEZ VOLTA PARA O BÁRBARO: assumir postura cobra do turno desde a fatia
+	// das Posturas de Combate, e a ação LIVRE da Fúria (p40) continua pedindo
+	// que seja a sua vez — *"você também pode executar qualquer quantidade de
+	// ações livres"* é uma frase sobre o SEU turno (p233).
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
+		t.Fatalf("girar a vez deu %d", rec.Code)
+	}
 	if refused := powerCommand(t, f, barbaro, "postura/furia/entra", ""); refused != "" {
 		t.Fatalf("voltar à fúria: %s", refused)
 	}

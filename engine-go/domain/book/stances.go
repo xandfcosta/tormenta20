@@ -3,6 +3,8 @@ package book
 import (
 	"strconv"
 	"sync"
+
+	"t20engine/domain/engine"
 )
 
 // AS POSTURAS DO CATÁLOGO, ligadas à flag que cada uma acende.
@@ -14,6 +16,13 @@ type Stance struct {
 	Name string
 	PM   int
 	Page int
+	// ID é o do poder que a concede, para quem precisa perguntar a posse.
+	ID string
+	// Group é o conjunto de mutuamente exclusivas — ver `Activation.StanceGroup`.
+	Group string
+	// Action é o que ASSUMI-LA custa do turno: livre na Fúria, padrão na
+	// Inspiração, movimento nas Posturas de Combate (p54).
+	Action string
 }
 
 var (
@@ -28,9 +37,14 @@ var (
 // `activation_rules.go`: quem decide entrar numa postura é o caso de uso, e ele
 // não alcança o `serve/web`.
 //
-// A FLAG NÃO É ADIVINHADA do id: ela sai do poder de MESMO id, lendo o
-// `condition.flag` dos modificadores dele. Derivar do último pedaço do id
-// acertaria as duas de hoje e erraria calado na terceira.
+// A FLAG DECLARADA VENCE, e a derivada é o recuo.
+//
+// A derivação lê o `condition.flag` dos modificadores do poder de mesmo id, e
+// ela existe porque a flag do catálogo e a que os modificadores usam têm de ser
+// a MESMA. Ela continua atendendo a Fúria e a Inspiração, que não declaram
+// nada — e o que a obrigou a ganhar companhia foram as Posturas de Combate
+// (p54): três das seis não têm modificador nenhum, então não há de onde
+// derivar. Ver o campo `Flag` da `Activation`.
 func StancesFromCatalog() map[string]Stance {
 	stancesOnce.Do(func() {
 		stancesByFlag = map[string]Stance{}
@@ -39,17 +53,40 @@ func StancesFromCatalog() map[string]Stance {
 			if a.Kind != "stance" {
 				continue
 			}
-			flag := flags[a.ID]
+			flag := a.Flag
+			if flag == "" {
+				flag = flags[a.ID]
+			}
 			if flag == "" {
 				flag = flags[a.ID+stanceStep(flags, a.ID)]
 			}
 			if flag == "" {
 				continue
 			}
-			stancesByFlag[flag] = Stance{Flag: flag, Name: a.Name, PM: ActivationPm(a), Page: a.BookPage}
+			stancesByFlag[flag] = Stance{
+				Flag: flag, Name: a.Name, PM: ActivationPm(a), Page: a.BookPage,
+				Group: a.StanceGroup, Action: a.Action, ID: a.ID,
+			}
 		}
 	})
 	return stancesByFlag
+}
+
+// StanceSiblings são as OUTRAS posturas do mesmo grupo — as que esta derruba ao
+// ser assumida (p54).
+//
+// Grupo vazio não tem irmã nenhuma: a Fúria não derruba a Inspiração.
+func StanceSiblings(group, flag string) []Stance {
+	if group == "" {
+		return nil
+	}
+	outside := []Stance{}
+	for _, s := range StancesFromCatalog() {
+		if s.Group == group && s.Flag != flag {
+			outside = append(outside, s)
+		}
+	}
+	return outside
 }
 
 // stanceStep acha o sufixo do DEGRAU quando a postura não declara a flag no
@@ -87,4 +124,23 @@ func FlagGrants(flag string) []Activation {
 		}
 	}
 	return outside
+}
+
+// StanceTargets são os alvos de modificador que esta postura move, lidos do
+// PODER que a concede.
+//
+// Eles saem do catálogo e não de uma lista escrita à mão: a Fúria mexe em
+// ataque e dano, a Inspiração em perícia, a Muralha em Defesa e Reflexos, e
+// três das Posturas de Combate não mexem em nada. Uma lista fixa acertava as
+// duas primeiras posturas que existiram e erraria calada em todas as outras.
+func StanceTargets(flag string) []engine.ModifierTarget {
+	out := []engine.ModifierTarget{}
+	for _, p := range ClassPowersWithModifiers() {
+		for _, m := range p.Modifiers {
+			if m.Condition != nil && m.Condition.C == "flagOn" && m.Condition.Flag == flag {
+				out = append(out, m.Target)
+			}
+		}
+	}
+	return out
 }

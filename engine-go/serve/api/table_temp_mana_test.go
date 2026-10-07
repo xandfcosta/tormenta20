@@ -92,9 +92,15 @@ func bardOnTurn(t *testing.T) (sceneFixture, int64, string, string) {
 			t.Fatalf("escolher %s: %s", power, refused)
 		}
 	}
-	startActionSceneWithAGoblin(t, f)
+	// A INSPIRAÇÃO É AÇÃO PADRÃO (p44), então entrar nela PEDE A VEZ — e desde
+	// que assumir postura cobra do turno, a ordem da bancada importa: entra na
+	// postura na vez dele, e só DEPOIS a vez passa para o Goblin.
+	startActionSceneWithTheBardOnTurn(t, f)
 	if refused := powerCommand(t, f, id, "postura/inspiracao/entra", ""); refused != "" {
 		t.Fatalf("entrar em Inspiração: %s", refused)
+	}
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
+		t.Fatalf("passar a vez deu %d", rec.Code)
 	}
 	// O CONTROLE DA BANCADA: a Inspiração está MESMO acesa.
 	if !strings.Contains(sheetTab(t, f, id, "conditionals"), "Inspiração") {
@@ -105,8 +111,9 @@ func bardOnTurn(t *testing.T) (sceneFixture, int64, string, string) {
 	return f, id, bardo, goblin
 }
 
-// startActionSceneWithAGoblin abre a cena de ação com o bardo e um Goblin.
-func startActionSceneWithAGoblin(t *testing.T, f sceneFixture) {
+// startActionSceneWithTheBardOnTurn abre a cena de ação com o bardo NA VEZ e um
+// Goblin esperando.
+func startActionSceneWithTheBardOnTurn(t *testing.T, f sceneFixture) {
 	t.Helper()
 	store := f.s.sessions
 	if _, err := store.State(t.Context(), f.sessionID); err != nil {
@@ -125,8 +132,11 @@ func startActionSceneWithAGoblin(t *testing.T, f sceneFixture) {
 		sheetCombatant("Trovador", 5, f.charID)); err != nil {
 		t.Fatalf("pôr o bardo na fila: %v", err)
 	}
-	if _, err := store.NextTurn(context.Background(), f.sessionID); err != nil {
-		t.Fatalf("girar a vez: %v", err)
+	// DUAS VEZES: a primeira é do Goblin (iniciativa 20), a segunda do bardo.
+	for range 2 {
+		if _, err := store.NextTurn(context.Background(), f.sessionID); err != nil {
+			t.Fatalf("girar a vez: %v", err)
+		}
 	}
 }
 

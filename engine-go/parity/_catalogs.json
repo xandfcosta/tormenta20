@@ -10501,7 +10501,7 @@
     {
       "id": "class.cavaleiro.postura-ariete-implacavel",
       "className": "Cavaleiro",
-      "name": "Postura: Ariete Implacável",
+      "name": "Postura: Aríete Implacável",
       "description": "Aumenta bônus de ataque em investidas em +2 (ou mais por 2 PM). Investida contra construto/objeto = +2d8. Postura de Combate.",
       "uid": "pwr_3pq4oqzt62"
     },
@@ -10524,7 +10524,34 @@
       "className": "Cavaleiro",
       "name": "Postura: Muralha Intransponível",
       "description": "Precisa empunhar escudo. +1 Defesa e Reflexos. Quando sofre efeito que permite Reflexos para reduzir dano à metade, não sofre dano algum se passar. Postura de Combate.",
-      "uid": "pwr_nfjbwamx34"
+      "uid": "pwr_nfjbwamx34",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "postura-muralha",
+            "label": "Postura: Muralha Intransponível"
+          }
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Reflexos"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "postura-muralha",
+            "label": "Postura: Muralha Intransponível"
+          }
+        }
+      ]
     },
     {
       "id": "class.cavaleiro.postura-provocacao-petulante",
@@ -10538,7 +10565,8 @@
       "className": "Cavaleiro",
       "name": "Postura: Torre Inabalável",
       "description": "Imune a qualquer tentativa de tirá-lo do lugar. Soma Constituição na Defesa e pode substituir testes de Reflexos e Vontade por Fortitude. Não pode se deslocar. Postura de Combate.",
-      "uid": "pwr_3xdh4xubvi"
+      "uid": "pwr_3xdh4xubvi",
+      "modifiers": []
     },
     {
       "id": "class.cavaleiro.solidez",

@@ -145,6 +145,7 @@ func actionsPanelFrom(
 	}
 	panel.Passives = len(powers.Passives)
 	hangChips(&panel, chipsOffered(id, powers, effects.Situational))
+	dropRowsTheChipAlreadySays(&panel)
 	return panel
 }
 
@@ -411,4 +412,35 @@ func rollTitle(roll actionRoll) string {
 		return ""
 	}
 	return "Escolha o alvo da vez na barra acima"
+}
+
+// dropRowsTheChipAlreadySays tira a linha que repete um chip do MESMO grupo.
+//
+// A linha de uma postura traz nome e preço; o chip traz nome, preço, ESTADO e
+// o gesto. Quando os dois caem no mesmo grupo, a linha é a metade muda da
+// mesma coisa — e com as Posturas de Combate (p54) isso virou quatro chips e
+// quatro linhas idênticas logo abaixo deles.
+//
+// NO MESMO GRUPO, e é essa a precisão que custou uma volta: cortar toda linha
+// de postura esvaziou o grupo "Livre e reação" do bárbaro, cuja única linha
+// era a Fúria — e o chip dela mora no grupo do ATAQUE, porque é lá que está o
+// número que ela muda. O que o jogador perdia não era a duplicata: era saber
+// que ele tem uma ação livre.
+func dropRowsTheChipAlreadySays(panel *actionsPanel) {
+	for g := range panel.Groups {
+		group := &panel.Groups[g]
+		said := map[string]bool{}
+		for _, chip := range group.Chips {
+			said[chip.Label] = true
+			said[strings.TrimPrefix(chip.Label, "Encerrar ")] = true
+		}
+		kept := make([]actionRow, 0, len(group.Rows))
+		for _, row := range group.Rows {
+			if said[row.Name] {
+				continue
+			}
+			kept = append(kept, row)
+		}
+		group.Rows = kept
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strconv"
 
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 )
 
@@ -35,12 +36,53 @@ type actionChip struct {
 	// Command é o endereço do gesto, e ele é o MESMO das abas Poderes e Efeitos:
 	// um segundo caminho de escrita seria uma segunda regra de validação.
 	Command string
-	// Moves são os números que este chip muda — ver `actionRow.Moves`.
+	// Moves são os números que este chip muda — ver `actionRow.Moves`. Vazio na
+	// POSTURA, que pendura por outro critério (ver `Cost`).
 	Moves []string
+	// GroupCost é o custo de ASSUMIR, e é por ele que a postura acha o grupo.
+	// Vazio no situacional, que não custa nada e pendura pelo número.
+	GroupCost engine.ActionCost
 }
 
 // hangChips pendura cada interruptor nos GRUPOS que ele muda.
+// O NÚMERO VEM PRIMEIRO; O CUSTO É O RECUO.
+//
+// A tese dos chips é a adjacência: *"o interruptor fica em cima do número que
+// ele muda"*. Ela só responde quando o número ESTÁ NESTA TELA — a Fúria mexe
+// em ataque e dano, que são linhas daqui, e o chip dela fica sobre elas.
+//
+// As Posturas de Combate mostraram o outro caso: a Muralha mexe em Defesa e
+// Reflexos, que a superfície não lista, e a Torre e o Foco de Batalha não
+// mexem em número nenhum. Penduradas só pelo número, as três sumiriam — e com
+// elas o gesto de assumi-las.
+//
+// O recuo é o que a superfície já organiza: o que a vez CUSTA. Assumir uma
+// postura custa movimento, e o chip aparece onde a pessoa procura o que fazer
+// com o movimento dela.
 func hangChips(panel *actionsPanel, chips []actionChip) {
+	byNumber := map[string]bool{}
+	for g := range panel.Groups {
+		numbers := []string{}
+		for _, row := range panel.Groups[g].Rows {
+			numbers = append(numbers, row.Moves...)
+		}
+		for _, chip := range chips {
+			if sharesANumber(numbers, chip.Moves) {
+				byNumber[chip.Label] = true
+			}
+		}
+	}
+	for g := range panel.Groups {
+		group := &panel.Groups[g]
+		for _, chip := range chips {
+			if chip.GroupCost == "" || byNumber[chip.Label] {
+				continue
+			}
+			if slices.Contains(groupOrderOf(group.Title), chip.GroupCost) {
+				group.Chips = append(group.Chips, chip)
+			}
+		}
+	}
 	for g := range panel.Groups {
 		group := &panel.Groups[g]
 		numbers := []string{}
@@ -104,7 +146,9 @@ func stanceChips(id int64, power powerRow) []actionChip {
 	stance := power.Stance
 	if stance.Active {
 		return []actionChip{{
-			Label: "Encerrar " + power.Name, On: true, Can: true, Moves: stanceMoves(),
+			Label: "Encerrar " + power.Name, On: true, Can: true,
+			Moves:     numbersMovedBy(book.StanceTargets(stance.Flag)),
+			GroupCost: stanceGroupCost(stance.Flag),
 			Command: fmt.Sprintf("@post('/personagens/%d/efeitos/postura/%s?embutida=1')",
 				id, stance.Flag),
 		}}
@@ -112,23 +156,34 @@ func stanceChips(id int64, power powerRow) []actionChip {
 	return []actionChip{{
 		Label: power.Name,
 		Cost:  strconv.Itoa(stance.BasePm) + " PM",
-		Can:   power.Can, Why: power.Why, Moves: stanceMoves(),
+		Can:   power.Can, Why: power.Why,
+		Moves:     numbersMovedBy(book.StanceTargets(stance.Flag)),
+		GroupCost: stanceGroupCost(stance.Flag),
 		Command: fmt.Sprintf("$stance_degrees = 0; @post('/personagens/%d/poderes/postura/%s/entra?embutida=1')",
 			id, stance.Flag),
 	}}
 }
 
-// stanceMoves são os números que uma postura muda.
+// A POSTURA PENDURA PELO QUE ELA CUSTA, e não pelo que ela muda.
 //
-// HOJE É UMA LISTA FIXA — ataque e dano —, e o comentário diz por quê: os
-// modificadores de uma postura entram por `condition: {c: "flagOn"}` e NÃO
-// passam pelo `Conditional`, que é de onde o situacional tira os alvos dele.
-// Ler os alvos de verdade exigiria o catálogo de poderes aqui dentro, e o que
-// isso compraria é a postura que mexe em OUTRA coisa — a Inspiração do bardo
-// soma em perícia. Quando a segunda postura chegar, é aqui que ela entra, e o
-// caso que a cobra nasce com ela.
-func stanceMoves() []string {
-	return []string{"attack", "damage"}
+// Aqui morava uma lista fixa de ataque e dano, e o comentário dela prometia:
+// *"quando a segunda postura chegar, é aqui que ela entra"*. Chegaram SEIS —
+// as Posturas de Combate do cavaleiro (p54) —, e elas mostraram que a lista
+// não tinha conserto por esse caminho: a Muralha mexe em Defesa e Reflexos, e
+// a Torre e o Foco de Batalha não mexem em número NENHUM. Lendo os alvos de
+// verdade, as duas últimas não teriam grupo e sumiriam da tela — o jogador
+// perderia o gesto de assumi-las.
+//
+// A resposta é a pergunta que a superfície já organiza: ela agrupa pelo que a
+// vez CUSTA, e assumir uma postura custa — livre na Fúria, padrão na
+// Inspiração, movimento nas Posturas de Combate. O chip aparece onde a pessoa
+// procura o que fazer com aquela ação, que é onde ela decide.
+func stanceGroupCost(flag string) engine.ActionCost {
+	spec, found := book.StancesFromCatalog()[flag]
+	if !found || spec.Action == "" {
+		return engine.ActionFree
+	}
+	return engine.ActionCost(spec.Action)
 }
 
 // numbersMovedBy traduz alvos de modificador no vocabulário das linhas.
@@ -165,4 +220,17 @@ func ariaBool(on bool) string {
 		return "true"
 	}
 	return "false"
+}
+
+// groupOrderOf são os custos que caem naquele grupo da tela.
+//
+// Ela lê a MESMA tabela que desenha os grupos, para não haver uma segunda
+// opinião sobre onde o movimento cai.
+func groupOrderOf(title string) []engine.ActionCost {
+	for _, g := range groupOrder {
+		if g.title == title {
+			return g.costs
+		}
+	}
+	return nil
 }

@@ -215,7 +215,21 @@ func confirmsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 func (st Scene) raisesTheCumulativeBonus(
 	c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack, antes *int64,
 ) error {
-	if pendente == nil || !pendente.Hit {
+	if pendente == nil {
+		return nil
+	}
+	if err := st.bumpsTheAttacker(c, state, pendente, antes); err != nil {
+		return err
+	}
+	return st.bumpsTheTarget(c, state, pendente)
+}
+
+// bumpsTheAttacker sobe o que quem GOLPEIA ganha, e os três gatilhos de hoje
+// pedem ACERTO.
+func (st Scene) bumpsTheAttacker(
+	c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack, antes *int64,
+) error {
+	if !pendente.Hit {
 		return nil
 	}
 	attacker := entryByID(state, pendente.AttackerEntryID)
@@ -234,6 +248,26 @@ func (st Scene) raisesTheCumulativeBonus(
 		triggers = append(triggers, "meleeHit")
 	}
 	return st.plays.BumpCumulativeBonus(c.R.Context(), *attacker.CharacterID, triggers...)
+}
+
+// bumpsTheTarget sobe o que quem APANHA ganha — hoje, o Foco de Batalha do
+// cavaleiro: *"sempre que um inimigo atacá-lo, você recebe 1 PM temporário"*
+// (p54).
+//
+// SEM EXIGIR ACERTO, e isso é o livro e não folga: a frase é "atacá-lo", não
+// "acertá-lo". O cavaleiro ganha o ponto pelo golpe que erra também.
+//
+// E SEM PERGUNTAR SE É INIMIGO, porque o app não modela amizade: quem está na
+// fila é um combatente, e quem decide se aquilo foi um ataque de inimigo é o
+// mestre — que é quem acabou de confirmar.
+func (st Scene) bumpsTheTarget(
+	c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack,
+) error {
+	target := entryByID(state, pendente.TargetEntryID)
+	if target == nil || target.CharacterID == nil {
+		return nil
+	}
+	return st.plays.BumpCumulativeBonus(c.R.Context(), *target.CharacterID, "attacked")
 }
 
 // targetHitPoints é o PV do alvo ANTES da confirmação, ou nulo quando não há

@@ -157,6 +157,9 @@ var cumulativeTriggers = map[string]bool{
 	"criticalOrDrop": true,
 	// "sempre que você acertar um ataque corpo a corpo em um inimigo" (p45).
 	"meleeHit": true,
+	// "sempre que um inimigo atacá-lo" (p54) — e o livro NÃO pede acerto: o
+	// cavaleiro ganha o ponto pelo golpe que erra também.
+	"attacked": true,
 }
 
 // CumulativeTriggerIsKnown diz se o motor sabe disparar este gatilho.

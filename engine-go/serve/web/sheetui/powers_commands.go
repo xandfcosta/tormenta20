@@ -39,6 +39,21 @@ func usePower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 // gesto — a decisão, o PM, o registro do pagamento e os condicionais — é do
 // caso de uso, numa transação (ver o `app/character/stance.go`).
 func enterStance(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	flag := chi.URLParam(r, "flag")
+	// ASSUMIR UMA POSTURA CUSTA DO TURNO, e quanto é da postura: livre na Fúria
+	// (p40), padrão na Inspiração (p44), MOVIMENTO nas Posturas de Combate
+	// (p54). Até as Posturas chegarem, as duas que existiam eram livre e
+	// padrão, e a padrão nunca foi cobrada — o custo passou despercebido
+	// porque a livre não cobra nada.
+	//
+	// A HORA É PERGUNTADA ANTES e a ação é cobrada DEPOIS, pela razão que a
+	// conjuração já tem escrita: entrar ainda pode ser recusado pelo PM ou
+	// pelos degraus, e cobrar antes tiraria o movimento de alguém por uma
+	// postura que não subiu.
+	cost := stanceActionCost(flag)
+	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
+		return err
+	}
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
@@ -47,7 +62,23 @@ func enterStance(s Scene, r *http.Request, row sqlcgen.Character, signals Signal
 	if signals.PowerSteps != nil {
 		steps = int(*signals.PowerSteps)
 	}
-	return s.plays.EnterStance(r.Context(), row, dto, chi.URLParam(r, "flag"), steps)
+	if err := s.plays.EnterStance(r.Context(), row, dto, flag, steps); err != nil {
+		return err
+	}
+	return s.deps.SpendActionOnTurn(r.Context(), row.ID, cost)
+}
+
+// stanceActionCost é o que ASSUMIR aquela postura custa do turno.
+//
+// Postura desconhecida cai em LIVRE, que não cobra nada: quem recusa a flag
+// que não existe é o `EnterStance`, com a frase dele, e recusar aqui daria
+// duas mensagens para o mesmo não.
+func stanceActionCost(flag string) engine.ActionCost {
+	spec, found := book.StancesFromCatalog()[flag]
+	if !found || spec.Action == "" {
+		return engine.ActionFree
+	}
+	return engine.ActionCost(spec.Action)
 }
 
 // ── AS ESCOLHAS, e a validação que virou fronteira ───────────────────────────

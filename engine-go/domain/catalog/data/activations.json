@@ -900,56 +900,76 @@
   },
   {
     "id": "class.cavaleiro.postura-ariete-implacavel",
-    "name": "Postura: Ariete Implacável",
-    "kind": "passive",
-    "action": "passivo",
-    "pmCost": 0,
+    "name": "Postura: Aríete Implacável",
+    "kind": "stance",
+    "action": "movimento",
+    "pmCost": 2,
     "uses": null,
+    "flag": "postura-ariete",
+    "stanceGroup": "postura-de-combate",
     "bookPage": 54
   },
   {
     "id": "class.cavaleiro.postura-castigo-de-ferro",
     "name": "Postura: Castigo de Ferro",
-    "kind": "passive",
-    "action": "passivo",
-    "pmCost": 0,
+    "kind": "stance",
+    "action": "movimento",
+    "pmCost": 2,
     "uses": null,
+    "flag": "postura-castigo-de-ferro",
+    "stanceGroup": "postura-de-combate",
     "bookPage": 54
   },
   {
     "id": "class.cavaleiro.postura-foco-de-batalha",
     "name": "Postura: Foco de Batalha",
-    "kind": "passive",
-    "action": "passivo",
-    "pmCost": 0,
+    "kind": "stance",
+    "action": "movimento",
+    "pmCost": 2,
     "uses": null,
+    "flag": "postura-foco-de-batalha",
+    "stanceGroup": "postura-de-combate",
+    "cumulative": {
+      "on": "attacked",
+      "amount": 1,
+      "capPer": "level",
+      "targets": [
+        { "k": "tempMp" }
+      ]
+    },
     "bookPage": 54
   },
   {
     "id": "class.cavaleiro.postura-muralha-intransponivel",
     "name": "Postura: Muralha Intransponível",
-    "kind": "passive",
-    "action": "passivo",
-    "pmCost": 0,
+    "kind": "stance",
+    "action": "movimento",
+    "pmCost": 2,
     "uses": null,
+    "flag": "postura-muralha",
+    "stanceGroup": "postura-de-combate",
     "bookPage": 54
   },
   {
     "id": "class.cavaleiro.postura-provocacao-petulante",
     "name": "Postura: Provocação Petulante",
-    "kind": "passive",
-    "action": "passivo",
-    "pmCost": 0,
+    "kind": "stance",
+    "action": "movimento",
+    "pmCost": 2,
     "uses": null,
-    "bookPage": 55
+    "flag": "postura-provocacao",
+    "stanceGroup": "postura-de-combate",
+    "bookPage": 54
   },
   {
     "id": "class.cavaleiro.postura-torre-inabalavel",
     "name": "Postura: Torre Inabalável",
-    "kind": "passive",
-    "action": "passivo",
-    "pmCost": 0,
+    "kind": "stance",
+    "action": "movimento",
+    "pmCost": 2,
     "uses": null,
+    "flag": "postura-torre",
+    "stanceGroup": "postura-de-combate",
     "bookPage": 55
   },
   {
