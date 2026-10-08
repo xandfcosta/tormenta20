@@ -213,6 +213,42 @@ func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
 	}
 }
 
+// POSTURA DE OUTRO não se assume, e a recusa não cobra nada.
+//
+// O teto de degraus já se lia do nível NA CLASSE (p40), e para quem não tem o
+// poder ele dá zero — então o gesto passava com `steps: 0`: 2 PM cobrados, linha
+// gravada, e a ficha de um bárbaro oferecendo encerrar a Inspiração do bardo
+// (p44). A tela nunca ofereceu isso, e é justamente por isso que o caso existe:
+// a fronteira é o servidor, travar na UI é UX (ALE-423).
+//
+// A INSPIRAÇÃO e não uma flag inventada: a flag que o livro não tem cai na frase
+// do `EnterStance`, que é outra recusa. Esta postura existe, acende número, e o
+// único motivo para o não é a POSSE.
+func TestNobodyEntersAStanceThatIsNotTheirs(t *testing.T) {
+	f, id := barbaro(t, 5)
+
+	before := pm(t, f, id)
+	refusal := powerCommand(t, f, id, "postura/inspiracao/entra", `{"stance_degrees":0}`)
+	if !strings.Contains(refusal, "não tem este poder") {
+		t.Errorf("a recusa não diz que o poder não é dele: %q", refusal)
+	}
+	if after := pm(t, f, id); after != before {
+		t.Errorf("a recusa cobrou assim mesmo: %d → %d", before, after)
+	}
+	stances, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler as posturas: %v", err)
+	}
+	if len(stances) != 0 {
+		t.Errorf("a postura de outra classe subiu assim mesmo: %+v", stances)
+	}
+	// CONTROLE: a postura DELE continua entrando — sem isto, uma recusa que
+	// barrasse toda postura passaria verde aqui.
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); refusal != "" {
+		t.Fatalf("a Fúria do próprio bárbaro foi recusada: %q", refusal)
+	}
+}
+
 // SEM PM NO BOLSO, nem o poder sai nem a postura abre.
 //
 // # Este caso nasceu de uma SABOTAGEM, e vale dizer como

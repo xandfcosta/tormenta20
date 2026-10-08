@@ -41,6 +41,14 @@ func (p Plays) EnterStance(
 	if spec == nil {
 		return fmt.Errorf("%q não é uma postura do livro", flag)
 	}
+	// SÓ ASSUME A POSTURA QUEM A TEM. O teto de degraus já se lia do nível NA
+	// CLASSE (p40) e dá ZERO para quem não tem o poder, então um bárbaro entrava
+	// na Inspiração do bardo (p44) com `steps: 0`: 2 PM cobrados, linha gravada,
+	// e a aba Efeitos oferecendo encerrar. A tela nunca ofereceu o gesto — e é
+	// por isso que a recusa mora aqui, porque travar na UI é UX (ALE-423).
+	if !sheet.OwnsClassPower(dto, spec.ID) {
+		return fmt.Errorf("%s: o personagem não tem este poder", spec.Name)
+	}
 	max := 0
 	if spec.Scaling != nil {
 		max = book.LevelSteps(*spec.Scaling, ClassPowerLevel(dto, spec.ID))
