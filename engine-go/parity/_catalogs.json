@@ -10566,7 +10566,24 @@
       "name": "Postura: Torre Inabalável",
       "description": "Imune a qualquer tentativa de tirá-lo do lugar. Soma Constituição na Defesa e pode substituir testes de Reflexos e Vontade por Fortitude. Não pode se deslocar. Postura de Combate.",
       "uid": "pwr_3xdh4xubvi",
-      "modifiers": []
+      "modifiers": [
+        {
+          "target": {
+            "k": "displacement"
+          },
+          "factor": {
+            "num": 0,
+            "den": 1
+          },
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "postura-torre",
+            "label": "Postura: Torre Inabalável"
+          },
+          "note": "não pode se deslocar"
+        }
+      ]
     },
     {
       "id": "class.cavaleiro.solidez",
