@@ -299,6 +299,7 @@ func conditionalFrom(t Term) ConditionalEffect {
 		Amount:    t.Mod.Amount,
 		Note:      firstNonEmpty(describeCondition(t.Mod), t.Mod.Note),
 		Target:    t.Mod.Target,
+		Factor:    t.Mod.Factor,
 	}
 	if c := t.Mod.Condition; c != nil && c.C == "flagOn" {
 		ce.Flag = c.Flag

@@ -201,32 +201,34 @@ func TestAssumingACombatStanceCostsTheMovementAction(t *testing.T) {
 	}
 }
 
-// A TORRE INABALÁVEL SOBE E NÃO PROMETE NÚMERO NENHUM.
+// A TORRE INABALÁVEL PREGA O CAVALEIRO NO CHÃO — *"você não pode se
+// deslocar"* (p55).
 //
-// O livro dá a ela *"soma sua Constituição na Defesa"* e *"você não pode se
-// deslocar"* (p55), e o motor não alcança nenhum dos dois: `scale` só é lido
-// no caminho dos vitais, e `factor` sob condição é pulado pelo colhedor. Os
-// dois guardas em `domain/catalog/modifier_reach_test.go` impedem que alguém
-// os declare mesmo assim — um modificador que não é lido vira um verbete que
-// cobra 2 PM e não muda nada, que é o defeito que esta família já produziu.
+// O fator dela (`deslocamento × 0`) nasceu inerte: o `harvestFactors` pula
+// todo termo adiado, e todo condicional é adiado. Hoje o
+// `ApplyActiveConditionals` o aplica quando a postura está ligada, e este caso
+// é a prova de ponta a ponta — da linha do catálogo ao metro que a pessoa lê.
 //
-// O QUE ELA FAZ HOJE É INFORMAR, e isso não é pouco: a postura em pé aparece
-// na ficha, o mestre a vê, e os dois efeitos são dele. O caso prende
-// exatamente isso — ela sobe, custa, e NÃO mente sobre a Defesa.
-func TestTheUnshakableTowerStandsWithoutPromisingNumbers(t *testing.T) {
+// A OUTRA METADE DELA AINDA NÃO DESCE: *"soma sua Constituição na Defesa"*
+// precisa de `scale` fora do caminho dos vitais, que o motor não avalia. O
+// caso afirma que a Defesa NÃO se mexe — não porque esteja certo, mas porque é
+// o que o app faz hoje, e no dia em que aprender é aqui que ele vem contar.
+func TestTheUnshakableTowerStopsTheKnightButDoesNotRaiseDefence(t *testing.T) {
 	f, cavaleiro, _, _ := knightOnTurn(t)
 	defesaAntes := defenceOnTheSheet(t, f, cavaleiro)
+	if deslocAntes := strideOnTheActionsSurface(t, f); deslocAntes == "0m" {
+		t.Fatalf("a bancada já começou sem deslocamento: o caso não mede nada")
+	}
 
 	if refused := assumes(t, f, cavaleiro, "postura-torre"); refused != "" {
 		t.Fatalf("assumir a Torre: %s", refused)
 	}
-	if live := liveStances(t, f, cavaleiro); len(live) != 1 || live[0] != "Torre Inabalável" {
-		t.Fatalf("a Torre não subiu: as posturas em pé são %v", live)
+	if desloc := strideOnTheActionsSurface(t, f); desloc != "0m" {
+		t.Errorf("a Torre tinha de zerar o deslocamento, e ele é %q", desloc)
 	}
 	if depois := defenceOnTheSheet(t, f, cavaleiro); depois != defesaAntes {
-		t.Errorf("a Torre mexeu na Defesa (%d → %d) sem o motor saber somar Constituição: "+
-			"ou o motor aprendeu e o `scale` voltou, ou alguém declarou o que ele não lê",
-			defesaAntes, depois)
+		t.Errorf("a Defesa se mexeu (%d → %d): ou o motor aprendeu a escala e este "+
+			"caso virou a notícia, ou alguém declarou o que ele não lê", defesaAntes, depois)
 	}
 }
 

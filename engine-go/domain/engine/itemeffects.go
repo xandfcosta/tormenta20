@@ -229,6 +229,14 @@ type ConditionalEffect struct {
 	Note      string         `json:"note"`
 	Target    ModifierTarget `json:"target"`
 	Flag      string         `json:"flag,omitempty"`
+	// Factor é o multiplicador deste condicional, quando ele tem um — o
+	// "deslocamento vezes zero" da Torre Inabalável (p55).
+	//
+	// Ele viaja porque o `harvestFactors` NÃO o colheu: aquele sistema pula
+	// todo termo adiado, e todo condicional é adiado. Sem este campo o fator
+	// morre na conversão, em silêncio — a postura sobe, a tela mostra o
+	// interruptor ligado, e o número não se mexe.
+	Factor *Ratio `json:"factor,omitempty"`
 }
 
 // ItemEffects são os efeitos já resolvidos. `Flags` é um Set (mapa); o
@@ -587,6 +595,13 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	for key, agg := range effects.ByTarget {
 		buckets[key] = append([]Contribution{}, agg.Contributions...)
 	}
+	// OS FATORES SAEM COPIADOS, porque os ligados entram aqui dentro. Aqui
+	// morava um comentário dizendo que eles atravessavam intactos *"porque
+	// nenhum condicional traz fator hoje"* — e a Torre Inabalável (p55) trouxe.
+	factors := map[string]Ratio{}
+	for k, v := range effects.Factors {
+		factors[k] = v
+	}
 	// Ao contrário do `ComputeItemEffects` acima, esta não precisa ordenar chaves:
 	// ela emite um mapa, e a ordem das contribuições dentro de cada chave já é
 	// estável porque cada balde é uma fatia acrescida na ordem da fonte.
@@ -602,6 +617,15 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 		if c.Target.K == "flag" {
 			continue
 		}
+		if c.Factor != nil {
+			// O FATOR NÃO É PARCELA: ele multiplica o total do alvo, e por isso
+			// vai para o mapa de fatores em vez do balde — a mesma divisa que o
+			// `harvestFactors` aplica no caminho incondicional. `severest`
+			// porque dois fatores no mesmo alvo não se multiplicam entre si:
+			// vale o mais severo, como já vale lá.
+			factors[targetKey(c.Target)] = severest(factors[targetKey(c.Target)], *c.Factor)
+			continue
+		}
 		key := targetKey(c.Target)
 		fold := Contribution{SourceID: c.SourceID, Source: c.Source + " (cond.)", BonusType: c.BonusType, Amount: c.Amount}
 		if c.Note != "" {
@@ -613,10 +637,7 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	for key := range buckets {
 		byTarget[key] = resolveStack(buckets[key])
 	}
-	// Os FATORES atravessam intactos: nenhum condicional traz fator hoje — os
-	// dois que existem vêm da tabela de condições, que os declara sem condição —
-	// e perdê-los aqui faria a ficha com opt-in ligado andar mais que a sem.
 	return ItemEffects{
-		ByTarget: byTarget, Flags: effects.Flags, Factors: effects.Factors, Conditional: remaining,
+		ByTarget: byTarget, Flags: effects.Flags, Factors: factors, Conditional: remaining,
 	}
 }
