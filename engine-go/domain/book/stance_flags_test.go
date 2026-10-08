@@ -1,6 +1,10 @@
 package book
 
-import "testing"
+import (
+	"testing"
+
+	"t20engine/domain/engine"
+)
 
 // A FLAG DECLARADA E A DOS MODIFICADORES SÃO A MESMA.
 //
@@ -62,4 +66,69 @@ func TestEveryStanceGroupHasMoreThanOneStance(t *testing.T) {
 				"ou o grupo não precisa existir", group, n)
 		}
 	}
+}
+
+// O DEGRAU PAGO DE UMA POSTURA TEM DE SER REPRESENTÁVEL, e são duas condições.
+//
+// A `StanceDegreeModifiers` escreve o bônus TOTAL com o `bonusType` da base e
+// conta com o não-empilhamento (p105) para o maior vencer. Isso dá a conta certa
+// enquanto duas coisas valerem, e nenhuma das duas é garantida pelo catálogo:
+//
+//  1. O BÔNUS DA BASE DISPUTA. Um `untyped` SOMA (p105), então o total escrito
+//     por cima dele viraria base+total: a Fúria de um degrau daria +5 em vez de
+//     +3, e o número erraria para MAIS, que é o lado que ninguém reclama.
+//  2. A POSTURA NÃO ACUMULA TAMBÉM. O efeito do degrau e o do bônus cumulativo
+//     são gravados com a mesma chave — o id do poder da postura — e o
+//     `active_effects` é único em (personagem, catálogo, escopo). A segunda
+//     escrita apagaria a primeira, calada.
+//
+// DENOMINADOR: duas posturas escalam hoje (Fúria p41, Inspiração p44). Zero
+// medidas quer dizer que a escala saiu do catálogo e este guarda ficou sem
+// terreno — ver "Guarda vale o que vale o terreno" no CLAUDE.md.
+func TestEveryStanceDegreeRidesANonStackingBonus(t *testing.T) {
+	measured := 0
+	for _, a := range Activations() {
+		if a.Kind != "stance" || a.Scaling == nil {
+			continue
+		}
+		measured++
+		flag := StancesFromCatalog()
+		stance, found := flagOfStance(flag, a.ID)
+		if !found {
+			t.Errorf("%s escala em degraus e não acende flag nenhuma — "+
+				"o degrau pago não tem onde se aplicar", a.ID)
+			continue
+		}
+		if a.Cumulative != nil {
+			t.Errorf("%s tem degraus E bônus cumulativo, e os dois gravam o efeito "+
+				"com a chave %q: um apagaria o outro", a.ID, a.ID)
+		}
+		base := StanceBase(stance)
+		if len(base) == 0 {
+			t.Errorf("%s escala em degraus e não move número nenhum — "+
+				"o PM extra não compraria nada", a.ID)
+			continue
+		}
+		for _, m := range base {
+			if engine.BonusTypeAccumulates(m.BonusType) {
+				t.Errorf("o bônus de %s em %q é %q, que SOMA (p105): o degrau escreve "+
+					"o TOTAL por cima da base, e os dois somados dariam o dobro do degrau",
+					a.ID, m.Target.K, m.BonusType)
+			}
+		}
+	}
+	if measured < 2 {
+		t.Fatalf("o guarda mediu %d posturas que escalam, e o catálogo tem duas "+
+			"(Fúria p41, Inspiração p44)", measured)
+	}
+}
+
+// flagOfStance acha a flag que aquela ativação acende, pelo id dela.
+func flagOfStance(byFlag map[string]Stance, activationID string) (string, bool) {
+	for flag, s := range byFlag {
+		if s.ID == activationID {
+			return flag, true
+		}
+	}
+	return "", false
 }

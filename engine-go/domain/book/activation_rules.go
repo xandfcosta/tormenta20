@@ -132,7 +132,7 @@ func StanceCost(spec Activation, steps int) int {
 // StanceDecision responde se dá para entrar na postura com esses degraus.
 func StanceDecision(spec Activation, steps, max, currentPM int) (bool, string) {
 	if steps < 0 || steps > max {
-		return false, "o nível permite até " + strconv.Itoa(max) + " degraus"
+		return false, "o nível permite até " + writtenDegrees(max)
 	}
 	if cost := StanceCost(spec, steps); cost > currentPM {
 		return false, "PM insuficiente"
@@ -201,4 +201,13 @@ func FlagCumulatives(flag string) []Activation {
 		}
 	}
 	return outside
+}
+
+// writtenDegrees concorda o número com a palavra: a recusa é frase que uma
+// pessoa lê no meio de uma sessão, e "até 1 degraus" é tropeço na leitura.
+func writtenDegrees(howMany int) string {
+	if howMany == 1 {
+		return "1 degrau"
+	}
+	return strconv.Itoa(howMany) + " degraus"
 }

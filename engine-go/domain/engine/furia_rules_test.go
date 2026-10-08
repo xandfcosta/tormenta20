@@ -35,8 +35,11 @@ func TestFuryGivesAttackAndDamageAndNotResistances(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	world := BookRuleset(primeFromDump(t, dir))
 
-	// 10º nível: +2 de base mais um degrau a cada cinco níveis = +3, e os dois
-	// são `morale`, que não empilha.
+	// 10º nível, e a conta é +2: o degrau que a Tabela 1-6 abre no 6º é PAGO ao
+	// entrar na postura, e o motor não sabe de pagamento nenhum — ele vê o livro
+	// puro. O degrau chega como efeito ativo, e quem o prende é o
+	// `TestThePaidDegreeRaisesTheStanceBonus`. Até a ALE-423 o catálogo o dava
+	// de graça por nível, e este caso media +3 sem ninguém ter pagado.
 	ch := Character{
 		Level:   10,
 		Classes: []CharacterClass{{ClassName: "Bárbaro", Level: 10}},
@@ -53,12 +56,12 @@ func TestFuryGivesAttackAndDamageAndNotResistances(t *testing.T) {
 	}
 
 	// O CONTROLE: a Fúria tem de estar fazendo alguma coisa.
-	if got := subiu(ModifierTarget{K: "attack", Scope: "all"}); got != 3 {
-		t.Fatalf("a Fúria subiu o ataque em %d e a p41 dá +3 no 10º nível — "+
+	if got := subiu(ModifierTarget{K: "attack", Scope: "all"}); got != 2 {
+		t.Fatalf("a Fúria subiu o ataque em %d e a p41 dá +2 de base — "+
 			"o caso abaixo estaria medindo uma Fúria que não entrou", got)
 	}
-	if got := subiu(ModifierTarget{K: "damage", Scope: "all"}); got != 3 {
-		t.Errorf("a Fúria subiu o dano em %d e a p41 dá o MESMO +3", got)
+	if got := subiu(ModifierTarget{K: "damage", Scope: "all"}); got != 2 {
+		t.Errorf("a Fúria subiu o dano em %d e a p41 dá o MESMO +2", got)
 	}
 
 	for _, pericia := range []string{"Fortitude", "Vontade"} {

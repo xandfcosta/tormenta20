@@ -119,9 +119,6 @@ class-powers.json	class.barbaro.esquiva-sobrenatural	pwr_mx4gd6prjs
 class-powers.json	class.barbaro.forca-indomavel	pwr_kpgtk3onvs
 class-powers.json	class.barbaro.frenesi	pwr_kyi4avvbl3
 class-powers.json	class.barbaro.furia	pwr_5j67glhldf
-class-powers.json	class.barbaro.furia-3	pwr_7d5aadju4l
-class-powers.json	class.barbaro.furia-4	pwr_fnoz7pantl
-class-powers.json	class.barbaro.furia-5	pwr_xvv72vy47h
 class-powers.json	class.barbaro.furia-da-savana	pwr_mvlz73jbrw
 class-powers.json	class.barbaro.furia-raivosa	pwr_fpb43ngoe5
 class-powers.json	class.barbaro.furia-titanica	pwr_qatlodqwcy
@@ -153,11 +150,7 @@ class-powers.json	class.bardo.estrelato	pwr_kwuqyks5d5
 class-powers.json	class.bardo.fascinar-em-massa	pwr_ktdorfd5vw
 class-powers.json	class.bardo.golpe-elemental	pwr_d2l5qnhzyq
 class-powers.json	class.bardo.golpe-magico	pwr_j34yznjpks
-class-powers.json	class.bardo.inspiracao-1	pwr_ihrxsted5r
-class-powers.json	class.bardo.inspiracao-2	pwr_zcjcpfdpuz
-class-powers.json	class.bardo.inspiracao-3	pwr_xth6n53eto
-class-powers.json	class.bardo.inspiracao-4	pwr_uzcd5q3bpv
-class-powers.json	class.bardo.inspiracao-5	pwr_lp7fvyzkqt
+class-powers.json	class.bardo.inspiracao	pwr_ihrxsted5r
 class-powers.json	class.bardo.inspiracao-marcial	pwr_qzwk3hf3p7
 class-powers.json	class.bardo.lendas-e-historias	pwr_wegsivwhzw
 class-powers.json	class.bardo.magias-1-circulo	pwr_ut3t43qdg4

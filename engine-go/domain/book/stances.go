@@ -1,7 +1,6 @@
 package book
 
 import (
-	"strconv"
 	"sync"
 
 	"t20engine/domain/engine"
@@ -45,6 +44,13 @@ var (
 // nada — e o que a obrigou a ganhar companhia foram as Posturas de Combate
 // (p54): três das seis não têm modificador nenhum, então não há de onde
 // derivar. Ver o campo `Flag` da `Activation`.
+//
+// Havia um TERCEIRO recuo, que procurava a flag num poder de id SUFIXADO
+// (`inspiracao-1`, `-2`, …): o catálogo punha os modificadores da Inspiração
+// nos degraus numerados e deixava o id base sem nenhum. Os degraus numerados
+// eram a divergência que a ALE-423 consertou — eles concediam por NÍVEL o bônus
+// que o livro VENDE —, e com eles fora as duas posturas carregam o bônus no
+// poder de id exato. O recuo deixou de ter o que achar.
 func StancesFromCatalog() map[string]Stance {
 	stancesOnce.Do(func() {
 		stancesByFlag = map[string]Stance{}
@@ -56,9 +62,6 @@ func StancesFromCatalog() map[string]Stance {
 			flag := a.Flag
 			if flag == "" {
 				flag = flags[a.ID]
-			}
-			if flag == "" {
-				flag = flags[a.ID+stanceStep(flags, a.ID)]
 			}
 			if flag == "" {
 				continue
@@ -89,28 +92,6 @@ func StanceSiblings(group, flag string) []Stance {
 	return outside
 }
 
-// stanceStep acha o sufixo do DEGRAU quando a postura não declara a flag no
-// poder de id exato.
-//
-// O catálogo trata as duas posturas de formas DIFERENTES:
-// `class.barbaro.furia` carrega os modificadores no poder de id exato, enquanto
-// `class.bardo.inspiracao` os põe nos degraus numerados (`inspiracao-1`, `-2`,
-// …) e deixa o id base sem modificador nenhum. Ligar só pelo id exato acha UMA
-// das duas, e passa calado: a outra simplesmente não aparece na lista.
-//
-// O sufixo aceito é `-<dígitos>` e MAIS NADA. Um prefixo solto casaria
-// `class.barbaro.furia-da-savana`, que é outro poder — e no dia em que ele
-// ligasse uma flag, a postura errada herdaria a dele.
-func stanceStep(flags map[string]string, base string) string {
-	for i := 1; i <= 9; i++ {
-		suffix := "-" + strconv.Itoa(i)
-		if flags[base+suffix] != "" {
-			return suffix
-		}
-	}
-	return ""
-}
-
 // FlagGrants são as ativações de gatilho daquela flag que CONCEDEM algo.
 //
 // Ela NÃO filtra pelo que o personagem possui, e isso é uma folga deliberada:
@@ -126,21 +107,65 @@ func FlagGrants(flag string) []Activation {
 	return outside
 }
 
-// StanceTargets são os alvos de modificador que esta postura move, lidos do
-// PODER que a concede.
+// StanceBase são os modificadores que esta postura liga no degrau ZERO, lidos
+// do PODER que a concede.
 //
 // Eles saem do catálogo e não de uma lista escrita à mão: a Fúria mexe em
 // ataque e dano, a Inspiração em perícia, a Muralha em Defesa e Reflexos, e
 // três das Posturas de Combate não mexem em nada. Uma lista fixa acertava as
 // duas primeiras posturas que existiram e erraria calada em todas as outras.
-func StanceTargets(flag string) []engine.ModifierTarget {
-	out := []engine.ModifierTarget{}
+func StanceBase(flag string) []engine.Modifier {
+	out := []engine.Modifier{}
 	for _, p := range ClassPowersWithModifiers() {
 		for _, m := range p.Modifiers {
 			if m.Condition != nil && m.Condition.C == "flagOn" && m.Condition.Flag == flag {
-				out = append(out, m.Target)
+				out = append(out, m)
 			}
 		}
+	}
+	return out
+}
+
+// StanceTargets são os alvos que a postura move — o que a tela precisa para
+// dizer QUAIS números um chip mexe, sem o resto do modificador.
+func StanceTargets(flag string) []engine.ModifierTarget {
+	base := StanceBase(flag)
+	out := make([]engine.ModifierTarget, 0, len(base))
+	for _, m := range base {
+		out = append(out, m.Target)
+	}
+	return out
+}
+
+// StanceDegreeModifiers é o que os DEGRAUS PAGOS valem: o bônus de base com o
+// número de degraus somado, uma vez por alvo que a postura move.
+//
+// # O DEGRAU SUBSTITUI O BÔNUS, e não soma com ele
+//
+// O livro diz *"pode gastar +1 PM para aumentar os bônus em +1"* (p41): é UM
+// bônus que fica maior, e não um segundo bônus ao lado do primeiro. Então o
+// degrau sai com o valor TOTAL e com o MESMO `bonusType` da base, e é a regra
+// de não-empilhamento (p105) que faz o maior vencer — o +3 entra e o +2 da base
+// perde a disputa.
+//
+// Um modificador de `+degraus` solto daria o mesmo número hoje e erraria no dia
+// em que outro bônus do MESMO tipo disputasse o alvo: a Inspiração de +3 compete
+// como +3, e não como +1 mais dois avulsos. O `TestEveryStanceDegreeRidesANonStackingBonus`
+// é quem mantém essa substituição representável.
+//
+// SEM A CONDIÇÃO da flag: quem chama grava um efeito ativo que nasce ao entrar
+// na postura e morre ao encerrá-la, então a EXISTÊNCIA da linha já é a condição.
+// Carregá-la de novo faria o mesmo bônus ser diferido e dobrado de volta pelo
+// mesmo interruptor, e a tela mostraria o degrau como uma segunda linha.
+func StanceDegreeModifiers(flag string, steps int) []engine.Modifier {
+	if steps <= 0 {
+		return nil
+	}
+	out := []engine.Modifier{}
+	for _, m := range StanceBase(flag) {
+		m.Amount += steps
+		m.Condition = nil
+		out = append(out, m)
 	}
 	return out
 }

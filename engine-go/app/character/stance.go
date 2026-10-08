@@ -2,11 +2,13 @@ package character
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -85,11 +87,55 @@ func (p Plays) EnterStance(
 		}); err != nil {
 			return fmt.Errorf("ligar a postura %q: %w", flag, err)
 		}
-		return nil
+		return writeStanceDegrees(ctx, q, row.ID, *spec, flag, steps)
 	}); err != nil {
 		return err
 	}
 	return p.applyStanceGrants(ctx, row, flag)
+}
+
+// writeStanceDegrees grava o que os degraus PAGOS valem, num efeito ativo com a
+// chave do poder da postura.
+//
+// # POR QUE UM EFEITO ATIVO, e não uma coluna
+//
+// O `character_stances` já guarda `steps`, e durante três fatias ele foi o
+// único lugar onde o degrau existia: cobrado, gravado, e lido por NINGUÉM. O
+// número vinha de poderes que o catálogo concedia por nível, então pagar o
+// degrau e não pagar davam o mesmo bônus (ALE-423).
+//
+// Fazer o motor ler a coluna seria dar a ele um segundo caminho de entrada só
+// para isto. O efeito ativo é o caminho que JÁ existe para "estado de jogo que
+// vira modificador" — é por ele que passam o bônus cumulativo e a reserva de PV
+// temporários —, e ele vem com o escopo de cena, a aba Efeitos e a expiração de
+// graça.
+//
+// DENTRO DA TRANSAÇÃO, ao contrário das concessões: o degrau é exatamente o que
+// o PM extra comprou. Um commit que cobrasse o PM e perdesse o bônus é o defeito
+// que esta função existe para consertar.
+//
+// ESCOPO CENA porque a postura é de cena: o `EndScene` apaga os efeitos de cena
+// e baixa as posturas no mesmo gesto, então os dois morrem juntos sem ninguém
+// precisar lembrar.
+func writeStanceDegrees(
+	ctx context.Context, q *sqlcgen.Queries, characterID int64,
+	spec book.Activation, flag string, steps int,
+) error {
+	mods := book.StanceDegreeModifiers(flag, steps)
+	if len(mods) == 0 {
+		return nil
+	}
+	blob, err := json.Marshal(mods)
+	if err != nil {
+		return fmt.Errorf("escrever os %d degraus de %q: %w", steps, spec.ID, err)
+	}
+	if _, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+		Characterid: characterID, Source: "power", Catalogid: spec.ID, Scope: "scene",
+		Modifiers: string(blob), Createdat: dbvalue.NowISO(),
+	}); err != nil {
+		return fmt.Errorf("gravar os %d degraus de %q: %w", steps, spec.ID, err)
+	}
+	return nil
 }
 
 // EndStance encerra a postura e leva junto o que ela tinha ligado.
@@ -244,6 +290,13 @@ func (p Plays) grantedEffectIDs(
 	// carregando o +N dela.
 	for _, spec := range book.FlagCumulatives(flag) {
 		fromFlag[spec.ID] = true
+	}
+	// E OS DEGRAUS PAGOS, que moram num efeito de chave igual à do PODER da
+	// postura. É a mesma chave que o bônus cumulativo usa, e as duas nunca
+	// coincidem no mesmo poder — quem mantém isso verdade é o
+	// `TestEveryStanceDegreeRidesANonStackingBonus`.
+	if stance, found := book.StancesFromCatalog()[flag]; found {
+		fromFlag[stance.ID] = true
 	}
 	if len(fromFlag) == 0 {
 		return nil, nil

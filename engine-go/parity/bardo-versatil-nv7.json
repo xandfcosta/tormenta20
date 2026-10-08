@@ -381,8 +381,8 @@
       ]
     },
     {
-      "sourceId": "class.bardo.inspiracao-1",
-      "source": "Inspiração +1",
+      "sourceId": "class.bardo.inspiracao",
+      "source": "Inspiração",
       "equipped": "vested",
       "modifiers": [
         {
@@ -413,25 +413,6 @@
           "scale": {
             "per": "attribute",
             "attribute": "charisma"
-          }
-        }
-      ]
-    },
-    {
-      "sourceId": "class.bardo.inspiracao-2",
-      "source": "Inspiração +2",
-      "equipped": "vested",
-      "modifiers": [
-        {
-          "target": {
-            "k": "expertiseAll"
-          },
-          "amount": 2,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "inspiracao",
-            "label": "Sob Inspiração"
           }
         }
       ]
@@ -519,23 +500,11 @@
     "flags": [],
     "conditional": [
       {
-        "term": "class.bardo.inspiracao-1::expertiseAll::::flagOn///inspiracao",
-        "sourceId": "class.bardo.inspiracao-1",
-        "source": "Inspiração +1",
+        "term": "class.bardo.inspiracao::expertiseAll::::flagOn///inspiracao",
+        "sourceId": "class.bardo.inspiracao",
+        "source": "Inspiração",
         "bonusType": "morale",
         "amount": 1,
-        "note": "Sob Inspiração",
-        "target": {
-          "k": "expertiseAll"
-        },
-        "flag": "inspiracao"
-      },
-      {
-        "term": "class.bardo.inspiracao-2::expertiseAll::::flagOn///inspiracao",
-        "sourceId": "class.bardo.inspiracao-2",
-        "source": "Inspiração +2",
-        "bonusType": "morale",
-        "amount": 2,
         "note": "Sob Inspiração",
         "target": {
           "k": "expertiseAll"
@@ -1020,8 +989,7 @@
     "autoFailExpertises": []
   },
   "activeConditionals": [
-    "class.bardo.inspiracao-1::expertiseAll::::flagOn///inspiracao",
-    "class.bardo.inspiracao-2::expertiseAll::::flagOn///inspiracao"
+    "class.bardo.inspiracao::expertiseAll::::flagOn///inspiracao"
   ],
   "sheetWithConditionals": {
     "defense": {
@@ -1146,15 +1114,15 @@
         "name": "Acrobacia",
         "attribute": "dexterity",
         "base": 7,
-        "itemBonus": 2,
-        "total": 9,
+        "itemBonus": 1,
+        "total": 8,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1164,15 +1132,15 @@
         "name": "Adestramento",
         "attribute": "charisma",
         "base": 8,
-        "itemBonus": 2,
-        "total": 10,
+        "itemBonus": 1,
+        "total": 9,
         "halfLevel": 3,
         "attrValue": 5,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1182,15 +1150,15 @@
         "name": "Atletismo",
         "attribute": "strength",
         "base": 9,
-        "itemBonus": 2,
-        "total": 11,
+        "itemBonus": 1,
+        "total": 10,
         "halfLevel": 3,
         "attrValue": 2,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1200,15 +1168,15 @@
         "name": "Atuação",
         "attribute": "charisma",
         "base": 8,
-        "itemBonus": 2,
-        "total": 10,
+        "itemBonus": 1,
+        "total": 9,
         "halfLevel": 3,
         "attrValue": 5,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1218,15 +1186,15 @@
         "name": "Cavalgar",
         "attribute": "dexterity",
         "base": 7,
-        "itemBonus": 2,
-        "total": 9,
+        "itemBonus": 1,
+        "total": 8,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1236,15 +1204,15 @@
         "name": "Conhecimento",
         "attribute": "intelligence",
         "base": 5,
-        "itemBonus": 2,
-        "total": 7,
+        "itemBonus": 1,
+        "total": 6,
         "halfLevel": 3,
         "attrValue": 2,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1254,15 +1222,15 @@
         "name": "Cura",
         "attribute": "wisdom",
         "base": 4,
-        "itemBonus": 2,
-        "total": 6,
+        "itemBonus": 1,
+        "total": 5,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1272,15 +1240,15 @@
         "name": "Diplomacia",
         "attribute": "charisma",
         "base": 8,
-        "itemBonus": 2,
-        "total": 10,
+        "itemBonus": 1,
+        "total": 9,
         "halfLevel": 3,
         "attrValue": 5,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1290,15 +1258,15 @@
         "name": "Enganação",
         "attribute": "charisma",
         "base": 8,
-        "itemBonus": 2,
-        "total": 10,
+        "itemBonus": 1,
+        "total": 9,
         "halfLevel": 3,
         "attrValue": 5,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1308,15 +1276,15 @@
         "name": "Fortitude",
         "attribute": "constitution",
         "base": 10,
-        "itemBonus": 2,
-        "total": 12,
+        "itemBonus": 1,
+        "total": 11,
         "halfLevel": 3,
         "attrValue": 3,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1326,15 +1294,15 @@
         "name": "Furtividade",
         "attribute": "dexterity",
         "base": 7,
-        "itemBonus": 2,
-        "total": 9,
+        "itemBonus": 1,
+        "total": 8,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1344,15 +1312,15 @@
         "name": "Guerra",
         "attribute": "intelligence",
         "base": 5,
-        "itemBonus": 2,
-        "total": 7,
+        "itemBonus": 1,
+        "total": 6,
         "halfLevel": 3,
         "attrValue": 2,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1362,15 +1330,15 @@
         "name": "Iniciativa",
         "attribute": "dexterity",
         "base": 7,
-        "itemBonus": 2,
-        "total": 9,
+        "itemBonus": 1,
+        "total": 8,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1380,8 +1348,8 @@
         "name": "Intimidação",
         "attribute": "charisma",
         "base": 12,
-        "itemBonus": 3,
-        "total": 15,
+        "itemBonus": 2,
+        "total": 14,
         "halfLevel": 3,
         "attrValue": 5,
         "training": 4,
@@ -1391,8 +1359,8 @@
             "amount": 1
           },
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1402,15 +1370,15 @@
         "name": "Intuição",
         "attribute": "wisdom",
         "base": 4,
-        "itemBonus": 2,
-        "total": 6,
+        "itemBonus": 1,
+        "total": 5,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1420,15 +1388,15 @@
         "name": "Investigação",
         "attribute": "intelligence",
         "base": 9,
-        "itemBonus": 2,
-        "total": 11,
+        "itemBonus": 1,
+        "total": 10,
         "halfLevel": 3,
         "attrValue": 2,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1438,15 +1406,15 @@
         "name": "Jogatina",
         "attribute": "charisma",
         "base": 8,
-        "itemBonus": 2,
-        "total": 10,
+        "itemBonus": 1,
+        "total": 9,
         "halfLevel": 3,
         "attrValue": 5,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1456,15 +1424,15 @@
         "name": "Ladinagem",
         "attribute": "dexterity",
         "base": 7,
-        "itemBonus": 2,
-        "total": 9,
+        "itemBonus": 1,
+        "total": 8,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1474,15 +1442,15 @@
         "name": "Luta",
         "attribute": "strength",
         "base": 9,
-        "itemBonus": 2,
-        "total": 11,
+        "itemBonus": 1,
+        "total": 10,
         "halfLevel": 3,
         "attrValue": 2,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1492,15 +1460,15 @@
         "name": "Misticismo",
         "attribute": "intelligence",
         "base": 9,
-        "itemBonus": 2,
-        "total": 11,
+        "itemBonus": 1,
+        "total": 10,
         "halfLevel": 3,
         "attrValue": 2,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1510,15 +1478,15 @@
         "name": "Nobreza",
         "attribute": "intelligence",
         "base": 5,
-        "itemBonus": 2,
-        "total": 7,
+        "itemBonus": 1,
+        "total": 6,
         "halfLevel": 3,
         "attrValue": 2,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1528,15 +1496,15 @@
         "name": "Ofício",
         "attribute": "intelligence",
         "base": 5,
-        "itemBonus": 2,
-        "total": 7,
+        "itemBonus": 1,
+        "total": 6,
         "halfLevel": 3,
         "attrValue": 2,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1546,15 +1514,15 @@
         "name": "Percepção",
         "attribute": "wisdom",
         "base": 8,
-        "itemBonus": 2,
-        "total": 10,
+        "itemBonus": 1,
+        "total": 9,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1564,15 +1532,15 @@
         "name": "Pilotagem",
         "attribute": "dexterity",
         "base": 7,
-        "itemBonus": 2,
-        "total": 9,
+        "itemBonus": 1,
+        "total": 8,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1582,15 +1550,15 @@
         "name": "Pontaria",
         "attribute": "dexterity",
         "base": 11,
-        "itemBonus": 2,
-        "total": 13,
+        "itemBonus": 1,
+        "total": 12,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1600,15 +1568,15 @@
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 11,
-        "itemBonus": 2,
-        "total": 13,
+        "itemBonus": 1,
+        "total": 12,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1618,15 +1586,15 @@
         "name": "Religião",
         "attribute": "wisdom",
         "base": 4,
-        "itemBonus": 2,
-        "total": 6,
+        "itemBonus": 1,
+        "total": 5,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1636,15 +1604,15 @@
         "name": "Sobrevivência",
         "attribute": "wisdom",
         "base": 4,
-        "itemBonus": 2,
-        "total": 6,
+        "itemBonus": 1,
+        "total": 5,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 0,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1654,15 +1622,15 @@
         "name": "Vontade",
         "attribute": "wisdom",
         "base": 8,
-        "itemBonus": 2,
-        "total": 10,
+        "itemBonus": 1,
+        "total": 9,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],
@@ -1676,20 +1644,20 @@
       "name": "Adaga",
       "skill": "Luta",
       "attribute": "dexterity",
-      "attack": 13,
+      "attack": 12,
       "expertise": {
         "name": "Luta",
         "attribute": "dexterity",
         "base": 11,
-        "itemBonus": 2,
-        "total": 13,
+        "itemBonus": 1,
+        "total": 12,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 4,
         "itemContributions": [
           {
-            "source": "Inspiração +2 (cond.)",
-            "amount": 2,
+            "source": "Inspiração (cond.)",
+            "amount": 1,
             "note": "Sob Inspiração"
           }
         ],

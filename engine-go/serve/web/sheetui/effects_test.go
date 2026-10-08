@@ -67,9 +67,10 @@ func TestStancesComeFromTheCatalogWithThePowerFlag(t *testing.T) {
 	if !found {
 		t.Fatalf("a flag `furia` não saiu do catálogo; saíram %v", chavesDe(stances))
 	}
-	// Os números são do LIVRO e escritos à mão: Bárbaro p40, 2 PM.
-	if fury.Name != "Fúria" || fury.PM != 2 || fury.Page != 40 {
-		t.Errorf("a Fúria saiu como %+v, quer {Fúria 2 PM p40}", fury)
+	// Os números são do LIVRO e escritos à mão: 2 PM, e a p41 — que é onde o
+	// texto da Fúria está, e não a p40 de abertura do capítulo do bárbaro.
+	if fury.Name != "Fúria" || fury.PM != 2 || fury.Page != 41 {
+		t.Errorf("a Fúria saiu como %+v, quer {Fúria 2 PM p41}", fury)
 	}
 	if _, present := stances["inspiracao"]; !present {
 		t.Error("a flag `inspiracao` não saiu do catálogo")
