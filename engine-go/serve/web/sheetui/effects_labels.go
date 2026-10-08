@@ -31,6 +31,14 @@ func effectDisplayName(catalogID string) string {
 	// temporários da Alma de Bronze saía na tela escrita
 	// `class.barbaro.alma-de-bronze` (ALE-351).
 	if spec := book.ActivationOf(catalogID, ""); spec != nil {
+		if spec.Kind == "stance" {
+			// O EFEITO DE UMA POSTURA É O DEGRAU PAGO, e só ele: a postura em si
+			// não é efeito, e já tem a seção "Posturas ativas" logo acima. Sem a
+			// palavra, a mesma tela mostraria "Fúria" duas vezes — uma com o
+			// botão de encerrar e outra com um ✕ que apaga só o degrau, e nada
+			// na linha diria qual é qual.
+			return spec.Name + " · degraus"
+		}
 		return spec.Name
 	}
 	// O recuo para o ID é silencioso por construção — ele devolve algo que

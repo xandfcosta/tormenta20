@@ -558,3 +558,31 @@ func TestTheEndOfTheSceneTakesTheWholeStance(t *testing.T) {
 			"bônus que a tela não mostra e ele não consegue desligar.", before, after)
 	}
 }
+
+// A POSTURA E O DEGRAU NÃO SE CHAMAM IGUAL na mesma tela.
+//
+// A aba Efeitos desenha as duas coisas uma sob a outra: a postura em curso, com
+// o botão de encerrar, e os efeitos ativos, cada um com um ✕. O degrau pago é
+// um efeito ativo — e com o nome do poder, cru, a tela mostrava "Fúria" nos dois
+// lugares. O ✕ do segundo apaga o degrau e deixa a postura em pé, que é
+// exatamente o que nenhuma das duas linhas dizia.
+//
+// Pego no passo de OLHAR, e não por teste — por isso ele existe agora.
+func TestTheStanceAndItsDegreeDoNotShareAName(t *testing.T) {
+	f, id := barbaro(t, 10)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":1}`); refusal != "" {
+		t.Fatalf("entrar na Fúria com um degrau foi recusado: %q", refusal)
+	}
+
+	screen := f.requests(t, f.player, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=conditionals", id), "").Body.String()
+	// O CONTROLE primeiro: sem a seção da postura não há o que confundir, e o
+	// caso passaria verde sobre uma tela que não desenhou nada.
+	if !strings.Contains(screen, "Posturas ativas") {
+		t.Fatal("a aba Efeitos não desenhou a seção das posturas — o resto mediria o nada")
+	}
+	if !strings.Contains(screen, "Fúria · degraus") {
+		t.Error("o efeito do degrau saiu sem dizer que é o degrau: a tela mostra " +
+			"\"Fúria\" duas vezes, e o ✕ de uma delas apaga só o que foi pago a mais")
+	}
+}
