@@ -8176,7 +8176,7 @@
       "id": "class.barbaro.furia",
       "className": "Bárbaro",
       "name": "Fúria",
-      "description": "Gasta 2 PM para invocar fúria. +2 ataque e dano corpo-a-corpo, mas não pode fazer ações que exijam calma (Furtividade, lançar magias). A cada cinco níveis, pode gastar +1 PM para aumentar os bônus em +1. Termina se, ao fim da rodada, não tiver atacado nem sido alvo de efeito hostil.",
+      "description": "Gasta 2 PM para invocar fúria. +2 em testes de ataque e rolagens de dano corpo a corpo, mas não pode fazer ações que exijam calma (Furtividade, lançar magias). A cada cinco níveis (6º, 11º, 16º) pode gastar +1 PM ao entrar para aumentar os bônus em +1. Termina se, ao fim da rodada, não tiver atacado nem sido alvo de efeito hostil.",
       "grantedAtLevel": 1,
       "modifiers": [
         {
@@ -8254,43 +8254,6 @@
       "uid": "pwr_vugztk766c"
     },
     {
-      "id": "class.barbaro.furia-3",
-      "className": "Bárbaro",
-      "name": "Fúria +3",
-      "description": "Bônus base de Fúria sobe para +3 (escala da Fúria).",
-      "grantedAtLevel": 6,
-      "modifiers": [
-        {
-          "target": {
-            "k": "attack",
-            "scope": "all"
-          },
-          "amount": 3,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
-        },
-        {
-          "target": {
-            "k": "damage",
-            "scope": "all"
-          },
-          "amount": 3,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
-        }
-      ],
-      "bookPage": 41,
-      "uid": "pwr_7d5aadju4l"
-    },
-    {
       "id": "class.barbaro.reducao-de-dano-4",
       "className": "Bárbaro",
       "name": "Redução de Dano 4",
@@ -8333,43 +8296,6 @@
       ],
       "bookPage": 42,
       "uid": "pwr_rowik4xbwh"
-    },
-    {
-      "id": "class.barbaro.furia-4",
-      "className": "Bárbaro",
-      "name": "Fúria +4",
-      "description": "Bônus base de Fúria sobe para +4.",
-      "grantedAtLevel": 11,
-      "modifiers": [
-        {
-          "target": {
-            "k": "attack",
-            "scope": "all"
-          },
-          "amount": 4,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
-        },
-        {
-          "target": {
-            "k": "damage",
-            "scope": "all"
-          },
-          "amount": 4,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
-        }
-      ],
-      "bookPage": 41,
-      "uid": "pwr_fnoz7pantl"
     },
     {
       "id": "class.barbaro.reducao-de-dano-6",
@@ -8423,43 +8349,6 @@
       ],
       "bookPage": 42,
       "uid": "pwr_w4bcbcedyh"
-    },
-    {
-      "id": "class.barbaro.furia-5",
-      "className": "Bárbaro",
-      "name": "Fúria +5",
-      "description": "Bônus base de Fúria sobe para +5.",
-      "grantedAtLevel": 16,
-      "modifiers": [
-        {
-          "target": {
-            "k": "attack",
-            "scope": "all"
-          },
-          "amount": 5,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
-        },
-        {
-          "target": {
-            "k": "damage",
-            "scope": "all"
-          },
-          "amount": 5,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "furia",
-            "label": "Em Fúria"
-          }
-        }
-      ],
-      "bookPage": 41,
-      "uid": "pwr_xvv72vy47h"
     },
     {
       "id": "class.barbaro.reducao-de-dano-10",
@@ -8760,10 +8649,10 @@
       "uid": "pwr_nl3dlmwh2f"
     },
     {
-      "id": "class.bardo.inspiracao-1",
+      "id": "class.bardo.inspiracao",
       "className": "Bardo",
-      "name": "Inspiração +1",
-      "description": "Ação padrão + 2 PM: aliados (incluindo bardo) em alcance curto recebem +1 em testes de perícia até fim da cena. A cada 4 níveis pode gastar +2 PM para aumentar bônus em +1.",
+      "name": "Inspiração",
+      "description": "Ação padrão + 2 PM: você e seus aliados em alcance curto recebem +1 em testes de perícia até o fim da cena. A cada quatro níveis (5º, 9º, 13º, 17º) pode gastar +2 PM ao entrar para aumentar o bônus em +1.",
       "grantedAtLevel": 1,
       "modifiers": [
         {
@@ -8813,57 +8702,11 @@
       "uid": "pwr_nltlo3fznb"
     },
     {
-      "id": "class.bardo.inspiracao-2",
-      "className": "Bardo",
-      "name": "Inspiração +2",
-      "description": "Bônus base de Inspiração sobe para +2.",
-      "grantedAtLevel": 5,
-      "modifiers": [
-        {
-          "target": {
-            "k": "expertiseAll"
-          },
-          "amount": 2,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "inspiracao",
-            "label": "Sob Inspiração"
-          }
-        }
-      ],
-      "bookPage": 44,
-      "uid": "pwr_zcjcpfdpuz"
-    },
-    {
       "id": "class.bardo.magias-2-circulo",
       "className": "Bardo",
       "grantedAtLevel": 6,
       "uid": "pwr_izytohq7cz",
       "powerUid": "pwr_3mprtzixls"
-    },
-    {
-      "id": "class.bardo.inspiracao-3",
-      "className": "Bardo",
-      "name": "Inspiração +3",
-      "description": "Bônus base de Inspiração sobe para +3.",
-      "grantedAtLevel": 9,
-      "modifiers": [
-        {
-          "target": {
-            "k": "expertiseAll"
-          },
-          "amount": 3,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "inspiracao",
-            "label": "Sob Inspiração"
-          }
-        }
-      ],
-      "bookPage": 44,
-      "uid": "pwr_xth6n53eto"
     },
     {
       "id": "class.bardo.magias-3-circulo",
@@ -8873,57 +8716,11 @@
       "powerUid": "pwr_v22gvkya4o"
     },
     {
-      "id": "class.bardo.inspiracao-4",
-      "className": "Bardo",
-      "name": "Inspiração +4",
-      "description": "Bônus base de Inspiração sobe para +4.",
-      "grantedAtLevel": 13,
-      "modifiers": [
-        {
-          "target": {
-            "k": "expertiseAll"
-          },
-          "amount": 4,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "inspiracao",
-            "label": "Sob Inspiração"
-          }
-        }
-      ],
-      "bookPage": 44,
-      "uid": "pwr_uzcd5q3bpv"
-    },
-    {
       "id": "class.bardo.magias-4-circulo",
       "className": "Bardo",
       "grantedAtLevel": 14,
       "uid": "pwr_z4kcokw2ac",
       "powerUid": "pwr_cq2yqbaoiy"
-    },
-    {
-      "id": "class.bardo.inspiracao-5",
-      "className": "Bardo",
-      "name": "Inspiração +5",
-      "description": "Bônus base de Inspiração sobe para +5.",
-      "grantedAtLevel": 17,
-      "modifiers": [
-        {
-          "target": {
-            "k": "expertiseAll"
-          },
-          "amount": 5,
-          "bonusType": "morale",
-          "condition": {
-            "c": "flagOn",
-            "flag": "inspiracao",
-            "label": "Sob Inspiração"
-          }
-        }
-      ],
-      "bookPage": 44,
-      "uid": "pwr_lp7fvyzkqt"
     },
     {
       "id": "class.bardo.artista-completo",

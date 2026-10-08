@@ -139,8 +139,37 @@ func (s Scopes) clearScenePlay(ctx context.Context, characterID int64) error {
 	}); err != nil {
 		return fmt.Errorf("zerar os usos de cena do personagem %d: %w", characterID, err)
 	}
+	return s.dropStancesAndTheirSwitches(ctx, characterID)
+}
+
+// dropStancesAndTheirSwitches baixa as posturas E desliga a chave de grupo de
+// cada uma.
+//
+// AS DUAS JUNTAS, porque entrar numa postura escreve nos dois lugares: a linha
+// de `character_stances`, que é o que a tela LÊ, e a chave do grupo em
+// `character_conditionals`, que é o que o motor OBEDECE. Baixar só a primeira
+// produz o pior estado possível — a aba Efeitos não mostra postura nenhuma e o
+// ataque continua com o bônus dela, sem nada na tela para desligar (ALE-423).
+//
+// A chave sai POR POSTURA e não por um `DELETE … LIKE 'flag:%'`: a mesma tabela
+// guarda os situacionais que o jogador ligou à mão, e uma varredura por prefixo
+// apagaria o que ela não veio apagar no dia em que um condicional de flag não
+// vier de postura.
+func (s Scopes) dropStancesAndTheirSwitches(ctx context.Context, characterID int64) error {
+	stances, err := s.queries.ListCharacterStances(ctx, characterID)
+	if err != nil {
+		return fmt.Errorf("ler as posturas do personagem %d: %w", characterID, err)
+	}
 	if err := s.queries.ClearCharacterStances(ctx, characterID); err != nil {
 		return fmt.Errorf("baixar as posturas do personagem %d: %w", characterID, err)
+	}
+	for _, stance := range stances {
+		if err := s.queries.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
+			Characterid: characterID, Conditionalid: engine.FlagGroupID(stance.Flag),
+		}); err != nil {
+			return fmt.Errorf("desligar a postura %q do personagem %d: %w",
+				stance.Flag, characterID, err)
+		}
 	}
 	return nil
 }

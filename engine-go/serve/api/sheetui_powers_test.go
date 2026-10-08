@@ -142,28 +142,36 @@ func TestWithoutActionsTheScreenExplainsInsteadOfShowingAVoid(t *testing.T) {
 	}
 }
 
-// OS DEGRAUS da postura saem do nível NA CLASSE (p40).
+// OS DEGRAUS da postura saem do nível NA CLASSE, e a TABELA é quem diz quais.
+//
+// A Tabela 1-6 (p41) abre "Fúria +3" no 6º, "+4" no 11º e "+5" no 16º — e não
+// no 5º, 10º e 15º, que é onde o *"a cada cinco níveis"* do texto cai se alguém
+// contar a partir do 1º. O 5º nível é o caso que denuncia a conta errada: a
+// linha dele da tabela não tem Fúria nenhuma.
 func TestTheStanceStepsComeFromTheLevelInTheClass(t *testing.T) {
-	// A Fúria abre o primeiro degrau no 5º e ganha outro a cada 5 níveis.
-	noStep, id4 := barbaro(t, 4)
-	if screen := powerScreen(t, noStep, id4); !strings.Contains(screen, "Ativar 2 PM") {
-		t.Error("no 4º nível a Fúria devia entrar num toque só, por 2 PM")
+	for _, level := range []int64{4, 5} {
+		noStep, flat := barbaro(t, level)
+		if screen := powerScreen(t, noStep, flat); !strings.Contains(screen, "Ativar 2 PM") {
+			t.Errorf("no %dº nível a Fúria devia entrar num toque só, por 2 PM — a "+
+				"Tabela 1-6 só abre o primeiro degrau no 6º", level)
+		}
 	}
 
-	withStep, id10 := barbaro(t, 10)
-	page := powerScreen(t, withStep, id10)
+	withStep, id11 := barbaro(t, 11)
+	page := powerScreen(t, withStep, id11)
 	if !strings.Contains(page, "POSTURA · 2+ PM") {
 		t.Error("a postura que escala não avisa o '+' no custo")
 	}
-	// Dois degraus no 10º: o primeiro no 5º, o segundo no 10º.
+	// Dois degraus no 11º: o primeiro no 6º, o segundo no 11º.
 	if !strings.Contains(page, "Math.min(2,") {
-		t.Error("o contador não conhece o teto de dois degraus do 10º nível")
+		t.Error("o contador não conhece o teto de dois degraus do 11º nível")
 	}
 }
 
 // ENTRAR NA POSTURA cobra o PM dos degraus e registra o que foi pago.
 func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
-	f, id := barbaro(t, 10)
+	// 11º e não 10º: dois degraus pedem a linha "Fúria +4" da Tabela 1-6 (p41).
+	f, id := barbaro(t, 11)
 
 	before := pm(t, f, id)
 	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":2}`); refusal != "" {
@@ -191,11 +199,13 @@ func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
 
 // MAIS DEGRAUS DO QUE O NÍVEL DÁ é recusado.
 func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
-	f, id := barbaro(t, 5)
+	f, id := barbaro(t, 6)
 
 	before := pm(t, f, id)
 	refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":3}`)
-	if !strings.Contains(refusal, "1 degraus") {
+	// POR SUFIXO e não por `Contains`: "até 1 degrau" casa dentro de "até 1
+	// degraus", e a recusa é frase que uma pessoa lê.
+	if !strings.HasSuffix(refusal, "até 1 degrau") {
 		t.Errorf("a recusa não diz o teto: %q", refusal)
 	}
 	if after := pm(t, f, id); after != before {
@@ -411,13 +421,15 @@ func TestEnteringTheStanceMovesEveryNumberTheRuleGives(t *testing.T) {
 	}
 	during := combatNumbersOf(t, f, id)
 
-	// +3 no 10º nível: +2 de base (p41) mais um degrau da escala a cada cinco
-	// níveis. Os dois bônus são `morale`, então eles NÃO empilham — vale o maior.
-	if got := during.attack - before.attack; got != 3 {
-		t.Errorf("o ataque subiu %d e a Fúria de um bárbaro de 10º dá +3 (p41)", got)
+	// +2, E O NÍVEL NÃO MUDA ISSO. Um bárbaro de 10º PODE chegar a +3 (Tabela
+	// 1-6, p41), mas o livro cobra por isso — *"pode gastar +1 PM para aumentar
+	// os bônus em +1"* —, e este caso entrou no degrau ZERO. Um +3 aqui é o
+	// catálogo concedendo por nível o que o livro vende.
+	if got := during.attack - before.attack; got != 2 {
+		t.Errorf("o ataque subiu %d e a Fúria de base dá +2 (p41)", got)
 	}
-	if got := during.damage - before.damage; got != 3 {
-		t.Errorf("o dano subiu %d e a Fúria dá o MESMO +3 no dano (p41).\n"+
+	if got := during.damage - before.damage; got != 2 {
+		t.Errorf("o dano subiu %d e a Fúria dá o MESMO +2 no dano (p41).\n"+
 			"Zero aqui com o ataque certo é o interruptor dobrando só o primeiro "+
 			"modificador do grupo — a ficha soma metade da regra.", got)
 	}
@@ -438,6 +450,40 @@ func TestEnteringTheStanceMovesEveryNumberTheRuleGives(t *testing.T) {
 		t.Errorf("encerrar não devolveu a ficha ao que era: antes %+v, depois %+v.\n"+
 			"Sobrou condicional ligado — é o que acontecia quando sair recalculava "+
 			"o conjunto em vez de apagar a chave do grupo.", before, after)
+	}
+}
+
+// O DEGRAU PAGO sobe o bônus, que é o que o PM extra compra (p41).
+//
+// Aqui estava a divergência: os degraus eram cobrados e GRAVADOS, e nada os
+// lia. O número vinha de `class.barbaro.furia-3`, que o catálogo concedia no 6º
+// nível de graça — então o bárbaro de 10º tinha +3 pagando 2 PM, e pagar os 3
+// PM do degrau dava o mesmo +3. A tela oferecia uma escolha que não mudava nada.
+func TestThePaidDegreeRaisesTheStanceBonus(t *testing.T) {
+	f, id := barbaro(t, 10)
+
+	before := combatNumbersOf(t, f, id)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":1}`); refusal != "" {
+		t.Fatalf("entrar na Fúria com um degrau foi recusado: %q", refusal)
+	}
+
+	during := combatNumbersOf(t, f, id)
+	if got := during.attack - before.attack; got != 3 {
+		t.Errorf("o ataque subiu %d, e um degrau pago leva a Fúria de +2 a +3 (p41)", got)
+	}
+	if got := during.damage - before.damage; got != 3 {
+		t.Errorf("o dano subiu %d, e o degrau sobe os DOIS números da Fúria (p41)", got)
+	}
+
+	// E ELE SAI COM A POSTURA. O degrau é um efeito ativo à parte, com a chave
+	// do poder da postura: se o encerrar não o levasse, o bárbaro ficaria com o
+	// +3 fora da fúria — e a asserção que pega isso é a ficha INTEIRA de volta.
+	endTarget := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
+	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, endTarget, "").Body.String()); refusal != "" {
+		t.Fatalf("encerrar a Fúria foi recusado: %q", refusal)
+	}
+	if after := combatNumbersOf(t, f, id); after != before {
+		t.Errorf("encerrar deixou o degrau para trás: antes %+v, depois %+v", before, after)
 	}
 }
 
@@ -468,5 +514,75 @@ func combatNumbersOf(t *testing.T, f sceneFixture, id int64) combatNumbers {
 	return combatNumbers{
 		attack: engine.StatFor(effects, engine.ModifierTarget{K: "attack", Scope: "all"}).Total,
 		damage: engine.StatFor(effects, engine.ModifierTarget{K: "damage", Scope: "all"}).Total,
+	}
+}
+
+// O FIM DA CENA LEVA A POSTURA INTEIRA, e não só a linha dela.
+//
+// Entrar numa postura escreve em TRÊS lugares — a linha de `character_stances`,
+// a chave do grupo em `character_conditionals` e, desde a ALE-423, o efeito dos
+// degraus pagos. O `clearScenePlay` baixava a primeira e o `DeleteEffectsByScope`
+// levava a terceira; a chave do grupo ficava LIGADA.
+//
+// O estado que isso produz é o pior tipo: a tela não mostra postura nenhuma — a
+// aba Efeitos lê `character_stances` — e o ataque continua com o bônus dela. Quem
+// olha não tem o que desligar.
+func TestTheEndOfTheSceneTakesTheWholeStance(t *testing.T) {
+	f, id := barbaro(t, 10)
+
+	before := combatNumbersOf(t, f, id)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":1}`); refusal != "" {
+		t.Fatalf("entrar na Fúria foi recusado: %q", refusal)
+	}
+	// O CONTROLE: sem ele, uma Fúria que nunca entrou passaria verde no fim.
+	if during := combatNumbersOf(t, f, id); during.attack-before.attack != 3 {
+		t.Fatalf("a Fúria com um degrau subiu o ataque em %d, quer 3 — "+
+			"o resto do caso estaria medindo uma postura que não entrou",
+			during.attack-before.attack)
+	}
+
+	if status, err := f.s.tableRules().EndScene(context.Background(), AuthUser{ID: f.player}, id); err != nil {
+		t.Fatalf("expirar a cena respondeu %d: %v", status, err)
+	}
+
+	stances, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler as posturas: %v", err)
+	}
+	if len(stances) != 0 {
+		t.Errorf("a postura sobreviveu ao fim da cena: %+v", stances)
+	}
+	if after := combatNumbersOf(t, f, id); after != before {
+		t.Errorf("a cena acabou e o bônus da Fúria ficou: antes %+v, depois %+v.\n"+
+			"A linha da postura caiu e a chave do grupo não — o jogador fica com um "+
+			"bônus que a tela não mostra e ele não consegue desligar.", before, after)
+	}
+}
+
+// A POSTURA E O DEGRAU NÃO SE CHAMAM IGUAL na mesma tela.
+//
+// A aba Efeitos desenha as duas coisas uma sob a outra: a postura em curso, com
+// o botão de encerrar, e os efeitos ativos, cada um com um ✕. O degrau pago é
+// um efeito ativo — e com o nome do poder, cru, a tela mostrava "Fúria" nos dois
+// lugares. O ✕ do segundo apaga o degrau e deixa a postura em pé, que é
+// exatamente o que nenhuma das duas linhas dizia.
+//
+// Pego no passo de OLHAR, e não por teste — por isso ele existe agora.
+func TestTheStanceAndItsDegreeDoNotShareAName(t *testing.T) {
+	f, id := barbaro(t, 10)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":1}`); refusal != "" {
+		t.Fatalf("entrar na Fúria com um degrau foi recusado: %q", refusal)
+	}
+
+	screen := f.requests(t, f.player, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=conditionals", id), "").Body.String()
+	// O CONTROLE primeiro: sem a seção da postura não há o que confundir, e o
+	// caso passaria verde sobre uma tela que não desenhou nada.
+	if !strings.Contains(screen, "Posturas ativas") {
+		t.Fatal("a aba Efeitos não desenhou a seção das posturas — o resto mediria o nada")
+	}
+	if !strings.Contains(screen, "Fúria · degraus") {
+		t.Error("o efeito do degrau saiu sem dizer que é o degrau: a tela mostra " +
+			"\"Fúria\" duas vezes, e o ✕ de uma delas apaga só o que foi pago a mais")
 	}
 }

@@ -461,7 +461,16 @@ func absInt(n int) int {
 // pode ser, ou ela diverge na primeira vez que alguém mexer num dos dois.
 
 // accumulates diz se o tipo de bônus SOMA em vez de disputar. Só o `untyped`.
-func accumulates(bonusType string) bool { return bonusType == "untyped" }
+func accumulates(bonusType string) bool { return BonusTypeAccumulates(bonusType) }
+
+// BonusTypeAccumulates é a mesma pergunta, para quem está FORA do motor.
+//
+// Ela existe porque quem MONTA um modificador precisa saber se o número que
+// escrever vai somar ou disputar: o degrau de uma postura (p41) aumenta um bônus
+// que já existe, e "aumentar" é escrever o total quando o tipo disputa e a
+// diferença quando ele soma. Sem isto a decisão seria tomada por um `== "untyped"`
+// copiado, que é a segunda cópia da regra de empilhamento do T20.
+func BonusTypeAccumulates(bonusType string) bool { return bonusType == "untyped" }
 
 // strongerThan é o critério da disputa: vence o de maior valor ABSOLUTO — uma
 // penalidade de −3 é mais forte que uma de −1.

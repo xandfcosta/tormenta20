@@ -174,6 +174,36 @@ var demoCampaigns = []demoCampaign{
 			{1, "O cerco à ponte de pedra", "active", "2026-08-18T20:00:00.000Z", "", ""},
 		},
 	},
+	{
+		// A MESA DO BÁRBARO, e ela fecha a terceira classe cuja metade só
+		// acontece em mesa: os DEGRAUS da Fúria (p41) e o bônus cumulativo da
+		// Sangue dos Inimigos (p42), que sobe a cada crítico.
+		//
+		// NÍVEL 6 é escolha, e é o que torna o degrau exercitável num toque: a
+		// Tabela 1-6 abre o primeiro degrau exatamente no 6º, então o contador
+		// da aba Poderes oferece 0 ou 1 e a diferença entre eles é visível no
+		// ataque (+2 contra +3). Num bárbaro de nível 5 o contador nem aparece.
+		//
+		// OS PAPÉIS AQUI SÃO OS NORMAIS, como na "Ordem do Escudo Partido": o
+		// dono é `mestre@t20.local`, então o `user.json` mestra e o `player.json`
+		// joga o bárbaro. E ele é o ÚNICO membro, porque a Mesa resolve "quem sou
+		// eu" no primeiro membro que pertence a quem olha.
+		//
+		// O NOME E A SINOPSE FOGEM DE "tauron", e são os DOIS: a busca de
+		// campanhas casa por SUBSEQUÊNCIA em cada campo, e o `campaign.spec.ts`
+		// afirma que "tauron" acha exatamente três. A primeira sinopse escrita
+		// aqui — *"Bárbaros das Montanhas Sanguinárias: caça a monstros e dívidas
+		// de sangue"* — casava: `mon(t)anhas`, `s(a)nguinárias`, `sang(u)inárias`,
+		// `sangui(n)á(r)ias`, `m(o)nstros`, `sa(n)gue`. Conferir só o nome deixa
+		// passar, e o vermelho sai num spec que não fala de posturas.
+		name:        "Clã do Machado Rubro",
+		ownerEmail:  "mestre@t20.local",
+		description: "Bárbaros do gelo e das brumas: caçadas longas, pactos de sangue.",
+		members:     []demoMember{{"jogador@t20.local", "Bárbaro Furioso Nv6"}},
+		sessions: []demoSession{
+			{1, "A caçada ao urso-coruja", "active", "2026-08-22T20:00:00.000Z", "", ""},
+		},
+	},
 }
 
 // A cena guardada de "O Chamado de Valkaria".

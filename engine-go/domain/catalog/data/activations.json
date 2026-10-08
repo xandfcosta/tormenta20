@@ -3820,10 +3820,10 @@
       "basePm": 2,
       "stepPm": 1,
       "stepLabel": "+1 no bônus de Fúria",
-      "firstStepLevel": 5,
+      "firstStepLevel": 6,
       "stepEveryLevels": 5
     },
-    "bookPage": 40
+    "bookPage": 41
   },
   {
     "id": "class.bardo.inspiracao",

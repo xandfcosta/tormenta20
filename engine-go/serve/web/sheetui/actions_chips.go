@@ -130,18 +130,19 @@ func chipsOffered(id int64, powers powersPanel, situational []situationalRow) []
 	return chips
 }
 
-// stanceChips é UM chip por postura: entrar, ou encerrar o que está em curso.
+// stanceChips é UM chip por postura: entrar no degrau ZERO, ou encerrar o que
+// está em curso.
 //
-// UM E NÃO UM POR DEGRAU, e a razão foi MEDIDA no navegador, não deduzida. O
-// bárbaro de nível 6 entrou em Fúria pagando o degrau ZERO — `steps=0,
-// pmPaid=2` no banco —, e o ataque subiu de +8 para +11. O bônus veio do +3, que
-// o catálogo concede por NÍVEL (`class.barbaro.furia-3`, `grantedAtLevel: 6`) e
-// o motor resolve por `bonusType: morale`. Os degraus pagos NÃO entram na conta.
+// UM E NÃO UM POR DEGRAU, e o motivo mudou de natureza. Ele era uma
+// DIVERGÊNCIA: os degraus eram cobrados e não entravam na conta, então um chip
+// "Fúria 3 PM" cobraria 1 PM a mais pelo mesmo número. A divergência foi
+// consertada (ALE-423) e hoje o degrau pago sobe o bônus de verdade.
 //
-// Então um chip "Fúria 3 PM" cobraria 1 PM a mais pelo mesmo número: a tela
-// oferecendo uma escolha que não muda nada, que é pior do que não oferecer. O
-// contador de degraus continua na aba Poderes, onde ele já estava e onde este
-// slice não encosta — a divergência é do MOTOR, e consertá-la é outra fatia.
+// O que sustenta o chip único agora é o GESTO: na Ações o chip é um toque e
+// entra pelo mínimo, que é o preço que a tela mostra. Escolher quantos degraus
+// é uma decisão com número, e ela mora no contador da aba Poderes, que é onde
+// ela sempre esteve. O custo disso está anotado: quem quer o degrau na mesa sai
+// da Ações, e encerrar NÃO devolve PM — reentrar mais alto cobra o cheio.
 func stanceChips(id int64, power powerRow) []actionChip {
 	stance := power.Stance
 	if stance.Active {
