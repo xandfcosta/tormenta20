@@ -138,6 +138,9 @@ func TestTheEffectsPanelDrawsTheFourBlocks(t *testing.T) {
 // sumia, sem erro nenhum, porque o plano a declarava superada.
 func TestATempHpPoolDoesNotWipeTheOneAlreadyThere(t *testing.T) {
 	f, id := barbaro(t, 5)
+	// A ALMA DE BRONZE É ELETIVA (p41): sem a escolha, entrar em fúria não
+	// concede poça nenhuma e este caso voltaria a medir uma fonte só.
+	choiceCom(t, f, id, `["class.barbaro.alma-de-bronze"]`, `[]`)
 
 	if rec := effect(t, f, id, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)

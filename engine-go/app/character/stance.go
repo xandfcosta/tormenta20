@@ -91,7 +91,7 @@ func (p Plays) EnterStance(
 	}); err != nil {
 		return err
 	}
-	return p.applyStanceGrants(ctx, row, flag)
+	return p.applyStanceGrants(ctx, row, dto, flag)
 }
 
 // writeStanceDegrees grava o que os degraus PAGOS valem, num efeito ativo com a
@@ -279,6 +279,9 @@ func (p Plays) activeFlags(dto sheet.CharacterDTO) map[string]bool {
 func (p Plays) grantedEffectIDs(
 	ctx context.Context, row sqlcgen.Character, flag string,
 ) ([]int64, error) {
+	// SEM PERGUNTAR A POSSE, ao contrário da aplicação: quem desescolheu o poder
+	// com a postura em pé ainda tem a poça gravada, e filtrar aqui a deixaria
+	// para trás — PV temporários de uma fúria encerrada.
 	fromFlag := map[string]bool{}
 	for _, spec := range book.FlagGrants(flag) {
 		fromFlag[spec.ID] = true
@@ -314,11 +317,24 @@ func (p Plays) grantedEffectIDs(
 	return outside, nil
 }
 
-// applyStanceGrants liga o que a flag concede, DEPOIS do commit — ver o
-// cabeçalho do arquivo.
-func (p Plays) applyStanceGrants(ctx context.Context, row sqlcgen.Character, flag string) error {
+// applyStanceGrants liga o que a flag concede A QUEM TEM O PODER, DEPOIS do
+// commit — ver o cabeçalho do arquivo.
+//
+// A POSSE É PERGUNTADA AQUI, e não na `FlagGrants`: aquela lista o que a FLAG
+// concede, e a concessão é um poder à parte da postura. A Alma de Bronze (p41)
+// não tem `grantedAtLevel` — é poder de bárbaro ELETIVO, de vaga —, e o bárbaro
+// que não a escolheu entrava em fúria com a reserva de PV dela (ALE-423).
+//
+// Mesma pergunta e mesma forma do bônus cumulativo, três arquivos ao lado
+// (`cumulative.go`): sem a posse, todo bárbaro acumularia.
+func (p Plays) applyStanceGrants(
+	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, flag string,
+) error {
 	for _, spec := range book.FlagGrants(flag) {
 		if spec.Grant.Kind != "temp-hp" {
+			continue
+		}
+		if !sheet.OwnsClassPower(dto, spec.ID) {
 			continue
 		}
 		howMuch, ok := p.TempHpAmount(ctx, row, spec.Grant.Attribute)

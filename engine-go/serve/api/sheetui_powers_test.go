@@ -350,6 +350,10 @@ func TestAVariableCostCannotBeSpentFromTheSheet(t *testing.T) {
 // pagando.
 func TestTheStanceGrantComesAndGoesWithIt(t *testing.T) {
 	f, id := barbaro(t, 5)
+	// COM O PODER ESCOLHIDO, que é o que a concessão pede: ele é eletivo, de vaga
+	// (p41). Este caso é o lado positivo do
+	// `TestTheStanceGrantSkipsWhoNeverChoseThePower`, logo abaixo.
+	choiceCom(t, f, id, `["class.barbaro.alma-de-bronze"]`, `[]`)
 
 	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); refusal != "" {
 		t.Fatalf("entrar foi recusado: %q", refusal)
@@ -363,6 +367,39 @@ func TestTheStanceGrantComesAndGoesWithIt(t *testing.T) {
 	f.requests(t, f.player, http.MethodPost, target, "")
 	if gotEffects := effects(t, f, id); gotEffects["class.barbaro.alma-de-bronze"] {
 		t.Error("a reserva de PV temporários sobreviveu ao fim da postura")
+	}
+}
+
+// A CONCESSÃO É DE QUEM ESCOLHEU O PODER, e a postura não a traz de brinde.
+//
+// A Alma de Bronze não tem `grantedAtLevel`: ela é um "poder de bárbaro"
+// ELETIVO, de vaga (p41). O bárbaro da semente, com `classPowers: []`, entrava
+// em Fúria e a ficha mostrava `PV 98/98 +10` — nível mais Força de um poder que
+// ninguém escolheu (ALE-423).
+//
+// CONTROLE, e são duas afirmações: o PM saiu e a linha da postura existe. Sem
+// elas "não houve concessão" fica indistinguível de uma fúria que nunca entrou,
+// e uma entrada recusada deixa a tela IDÊNTICA a uma postura em pé.
+func TestTheStanceGrantSkipsWhoNeverChoseThePower(t *testing.T) {
+	f, id := barbaro(t, 5)
+
+	before := pm(t, f, id)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); refusal != "" {
+		t.Fatalf("entrar foi recusado: %q", refusal)
+	}
+	if after := pm(t, f, id); before-after != 2 {
+		t.Fatalf("a Fúria cobrou %d PM (%d → %d), e a base dela é 2: sem a cobrança "+
+			"este caso não testemunha postura nenhuma", before-after, before, after)
+	}
+	stances, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler as posturas: %v", err)
+	}
+	if len(stances) != 1 {
+		t.Fatalf("a Fúria não subiu, e o resto do caso mediria o nada: %+v", stances)
+	}
+	if effects(t, f, id)["class.barbaro.alma-de-bronze"] {
+		t.Error("a Alma de Bronze reservou PV temporários para quem não a escolheu")
 	}
 }
 

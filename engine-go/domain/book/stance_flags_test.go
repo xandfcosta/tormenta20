@@ -132,3 +132,35 @@ func flagOfStance(byFlag map[string]Stance, activationID string) (string, bool) 
 	}
 	return "", false
 }
+
+// TODA CONCESSÃO DE POSTURA PENDE DE UM PODER DE CLASSE, porque é por ele que a
+// posse se pergunta.
+//
+// Quem aplica a concessão filtra com o `sheet.OwnsClassPower`, e ele só responde
+// por poder de CLASSE. Uma concessão de `race.*`, `origin.*` ou `deus.*` que
+// exigisse flag voltaria `false` para todo mundo e nasceria INERTE — o poder
+// estaria na ficha, a postura subiria, e a concessão nunca sairia, sem erro em
+// lugar nenhum. Aqui a chegada dele reprova com o id, e quem a trouxer estende a
+// pergunta da posse em vez de descobrir isso na mesa.
+//
+// DENOMINADOR: uma concessão de flag hoje, a Alma de Bronze (p41). Zero medidas
+// quer dizer que o terreno sumiu — ver "Guarda vale o que vale o terreno" no
+// `CLAUDE.md`.
+func TestEveryFlagGrantHangsOnAClassPower(t *testing.T) {
+	measured := 0
+	for _, a := range Activations() {
+		if a.RequiresFlag == "" || a.Grant == nil {
+			continue
+		}
+		measured++
+		if _, found := ClassPowers()[a.ID]; found {
+			continue
+		}
+		t.Errorf("%s exige a flag %q e CONCEDE algo, e não é poder de classe: a posse "+
+			"dele não tem como ser perguntada, então a concessão não sairia para "+
+			"ninguém", a.ID, a.RequiresFlag)
+	}
+	if measured == 0 {
+		t.Fatal("nenhuma ativação concede por flag — o guarda não mediu nada")
+	}
+}
