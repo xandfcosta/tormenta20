@@ -39,7 +39,28 @@ type Activation struct {
 	PmCost json.RawMessage `json:"pmCost"`
 	// Uses é `null`, "cena", "dia" ou um número — por isso ele é cru: os três
 	// significam coisas diferentes e só dois são cobrados.
-	Uses         json.RawMessage  `json:"uses"`
+	Uses json.RawMessage `json:"uses"`
+	// Flag é a que ESTA postura acende, e ela é DECLARADA.
+	//
+	// Antes ela era derivada dos modificadores do poder de mesmo id, e a razão
+	// era boa: a flag do catálogo e a que os modificadores usam têm de ser a
+	// MESMA, e derivar tornava a divergência impossível. O que quebrou a
+	// derivação foram as Posturas de Combate do cavaleiro (p54): três das seis
+	// não têm modificador NENHUM — o que elas fazem é do mestre —, então não há
+	// de onde derivar, e sem flag elas nem seriam reconhecidas como postura.
+	//
+	// A segurança que a derivação dava não se perdeu: ela desceu para o
+	// `TestEveryDeclaredStanceFlagMatchesItsModifiers`, que prende as duas ao
+	// mesmo valor quando há modificador.
+	Flag string `json:"flag"`
+	// StanceGroup é o conjunto de posturas MUTUAMENTE EXCLUSIVAS a que esta
+	// pertence — *"você só pode manter uma postura por vez"* (p54).
+	//
+	// Vazio quer dizer que ela não exclui ninguém, que é o caso da Fúria e da
+	// Inspiração: elas são de classes diferentes, e um bárbaro/bardo mantém as
+	// duas. A exclusão é do GRUPO e não de toda postura, porque é isso que o
+	// livro diz — a regra está no quadro do cavaleiro, não nas regras gerais.
+	StanceGroup  string           `json:"stanceGroup"`
 	RequiresFlag string           `json:"requiresFlag"`
 	Scaling      *ActivationScale `json:"scaling"`
 	Grant        *PowerGrant      `json:"grant"`

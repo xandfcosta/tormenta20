@@ -152,6 +152,28 @@ var demoCampaigns = []demoCampaign{
 			{1, "A caçada ao bicho-papão", "active", "2026-08-12T20:00:00.000Z", "", ""},
 		},
 	},
+	{
+		// A MESA DO CAVALEIRO, e ela existe pela mesma razão da do bardo: as
+		// Posturas de Combate (p54) custam ação de MOVIMENTO, e ação de turno
+		// só existe numa cena em curso. Sem mesa, metade da classe é
+		// inalcançável pelo navegador.
+		//
+		// OS PAPÉIS AQUI SÃO OS NORMAIS, ao contrário dos "Caçadores de
+		// Deheon": o dono é `mestre@t20.local`, então o `user.json` mestra e o
+		// `player.json` joga o cavaleiro.
+		//
+		// O NOME E A SINOPSE fogem de "tauron" DE PROPÓSITO: a busca de
+		// campanhas casa por SUBSEQUÊNCIA, e o `campaign.spec.ts` afirma que
+		// "tauron" acha exatamente três. Uma crônica nova que casasse por
+		// acaso quebraria um spec que não fala de posturas.
+		name:        "Ordem do Escudo Partido",
+		ownerEmail:  "mestre@t20.local",
+		description: "Cavalaria de fronteira: escolta de comboios e cerco de bandidos nas Sembles.",
+		members:     []demoMember{{"jogador@t20.local", "Cavaleiro Postural Nv6"}},
+		sessions: []demoSession{
+			{1, "O cerco à ponte de pedra", "active", "2026-08-18T20:00:00.000Z", "", ""},
+		},
+	},
 }
 
 // A cena guardada de "O Chamado de Valkaria".

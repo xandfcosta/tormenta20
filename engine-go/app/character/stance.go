@@ -48,6 +48,21 @@ func (p Plays) EnterStance(
 	}
 	cost := book.StanceCost(*spec, steps)
 
+	// UMA POSTURA POR VEZ, no grupo dela — *"você só pode manter uma postura
+	// por vez"* (p54).
+	//
+	// A anterior cai ANTES e FORA da transação de entrar, e as duas coisas são
+	// decisão. Fora porque o `EndStance` abre a transação dele, e aninhar duas
+	// no mesmo gesto é o abraço mortal que o `boards.Store` descreve. Antes
+	// porque a ordem inversa deixaria as duas em pé no intervalo, e é
+	// exatamente esse intervalo que a regra proíbe.
+	//
+	// SEM COBRAR NADA pela saída: o livro cobra para ASSUMIR, e trocar de
+	// postura é um gesto só.
+	if err := p.dropsTheOtherStances(ctx, row, dto, *spec); err != nil {
+		return err
+	}
+
 	if err := p.inTx(ctx, "entrar na postura "+flag, func(q *sqlcgen.Queries) error {
 		if err := chargeMp(ctx, q, p.catalogs, row, cost); err != nil {
 			return err
@@ -260,6 +275,33 @@ func (p Plays) applyStanceGrants(ctx context.Context, row sqlcgen.Character, fla
 		if _, err := p.ApplyTempHpPool(
 			ctx, row.ID, "power", spec.ID, spec.Grant.Scope, howMuch, "PV temporários"); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+// dropsTheOtherStances encerra as posturas do MESMO GRUPO que estejam em pé.
+//
+// Ela lê o que está aceso na ficha e não a lista inteira do grupo: encerrar uma
+// postura que não está em pé é escrita à toa, e a `RemoveCharacterStance` não
+// reclamaria — o gesto ficaria caro e calado.
+func (p Plays) dropsTheOtherStances(
+	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, entrando book.Activation,
+) error {
+	group := entrando.StanceGroup
+	if group == "" {
+		return nil
+	}
+	acesas := map[string]bool{}
+	for _, s := range dto.Stances {
+		acesas[s.Flag] = true
+	}
+	for _, sibling := range book.StanceSiblings(group, entrando.Flag) {
+		if !acesas[sibling.Flag] {
+			continue
+		}
+		if err := p.EndStance(ctx, row, dto, sibling.Flag); err != nil {
+			return fmt.Errorf("trocar de postura: %w", err)
 		}
 	}
 	return nil
