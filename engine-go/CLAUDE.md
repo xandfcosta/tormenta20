@@ -1226,8 +1226,10 @@ campanha dele.
 
 **Quem cobra é o servidor, e a tela esconder não conta.** Medido (ALE-387): o
 `ToggleSituational` gravava a chave crua do sinal do cliente, e um POST com
-`{"conditional":"flag:furia"}` dava ao bárbaro +3 em ataque e dano com o PM
-INTACTO e sem linha de postura. A lista de situacionais nunca ofereceu aquele
+`{"conditional":"flag:furia"}` dava ao bárbaro o bônus de Fúria em ataque e dano
+com o PM INTACTO e sem linha de postura. (O número medido na época era +3,
+porque o catálogo concedia o degrau por nível; hoje são os +2 da base — ver
+`StanceDegreeModifiers`.) A lista de situacionais nunca ofereceu aquele
 interruptor — as posturas são excluídas dela, porque entrar custa PM.
 
 O conjunto aceito é de PERMITIDOS (`character.SituationalGroupsOf`), e ele tem
@@ -1249,8 +1251,9 @@ lado dizia "3 mods". Hoje a chave é o `engine.FlagGroupID`, e "metade ligada"
 deixou de ser representável — o que valia igual para a POSTURA, que gravava uma
 linha por condicional calculada no instante de entrar e recalculada no de sair.
 
-Não era defeito VIVO: as únicas flags do livro são `furia` e `inspiracao`, as
-duas posturas, e a tela de situacionais as exclui. O que o tornou alcançável foi
+Não era defeito VIVO: toda flag do livro é de POSTURA — `furia`, `inspiracao` e
+as seis Posturas de Combate do cavaleiro (p54) —, e a tela de situacionais exclui
+as posturas. O que o tornou alcançável foi
 a emenda de campanha — um mestre que conceda um item com dois modificadores
 `flagOn` cai exatamente ali.
 
