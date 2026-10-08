@@ -516,3 +516,45 @@ func combatNumbersOf(t *testing.T, f sceneFixture, id int64) combatNumbers {
 		damage: engine.StatFor(effects, engine.ModifierTarget{K: "damage", Scope: "all"}).Total,
 	}
 }
+
+// O FIM DA CENA LEVA A POSTURA INTEIRA, e não só a linha dela.
+//
+// Entrar numa postura escreve em TRÊS lugares — a linha de `character_stances`,
+// a chave do grupo em `character_conditionals` e, desde a ALE-423, o efeito dos
+// degraus pagos. O `clearScenePlay` baixava a primeira e o `DeleteEffectsByScope`
+// levava a terceira; a chave do grupo ficava LIGADA.
+//
+// O estado que isso produz é o pior tipo: a tela não mostra postura nenhuma — a
+// aba Efeitos lê `character_stances` — e o ataque continua com o bônus dela. Quem
+// olha não tem o que desligar.
+func TestTheEndOfTheSceneTakesTheWholeStance(t *testing.T) {
+	f, id := barbaro(t, 10)
+
+	before := combatNumbersOf(t, f, id)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":1}`); refusal != "" {
+		t.Fatalf("entrar na Fúria foi recusado: %q", refusal)
+	}
+	// O CONTROLE: sem ele, uma Fúria que nunca entrou passaria verde no fim.
+	if during := combatNumbersOf(t, f, id); during.attack-before.attack != 3 {
+		t.Fatalf("a Fúria com um degrau subiu o ataque em %d, quer 3 — "+
+			"o resto do caso estaria medindo uma postura que não entrou",
+			during.attack-before.attack)
+	}
+
+	if status, err := f.s.tableRules().EndScene(context.Background(), AuthUser{ID: f.player}, id); err != nil {
+		t.Fatalf("expirar a cena respondeu %d: %v", status, err)
+	}
+
+	stances, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler as posturas: %v", err)
+	}
+	if len(stances) != 0 {
+		t.Errorf("a postura sobreviveu ao fim da cena: %+v", stances)
+	}
+	if after := combatNumbersOf(t, f, id); after != before {
+		t.Errorf("a cena acabou e o bônus da Fúria ficou: antes %+v, depois %+v.\n"+
+			"A linha da postura caiu e a chave do grupo não — o jogador fica com um "+
+			"bônus que a tela não mostra e ele não consegue desligar.", before, after)
+	}
+}
