@@ -37,14 +37,7 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 	// O TIPO DA CENA vai no CAMINHO, como o estado da cortina: nesta superfície
 	// o verbo é o caminho, e os três tipos do livro (p252) são três verbos
 	// diferentes — abrir um combate e abrir uma conversa não são o mesmo gesto.
-	r.Post(sessionPattern+"/cena/iniciar/{tipo}", s.gmCommand(
-		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-			kind, err := sceneKindOf(chi.URLParam(c.R, "tipo"))
-			if err != nil {
-				return nil, err
-			}
-			return st.deps.Sessions().StartScene(c.R.Context(), c.SessionID, kind)
-		}))
+	r.Post(sessionPattern+"/cena/iniciar/{tipo}", s.sceneCommand(startsTheScene))
 	r.Post(sessionPattern+"/cena/encerrar", s.sceneCommand(endsTheScene))
 	r.Post(sessionPattern+"/iniciativa/por-no-mapa", s.gmCommand(bringParty))
 	r.Post(sessionPattern+"/iniciativa/adicionar", s.gmCommand(addCombatant))
@@ -457,6 +450,34 @@ type commandCtx struct {
 	// a mutação só escreve neste mapa depois de a sua própria escrita ter dado
 	// certo, então numa recusa ele chega vazio.
 	Signals map[string]any
+}
+
+// startsTheScene é o gesto INTEIRO, e é função nomeada pela mesma razão que o
+// irmão abaixo: ele não chama o `StartScene` do store direto.
+//
+// O store só abre a cena no rastreador, e a Armadura da Honra (p53) acontece na
+// FICHA — *"no início de cada cena, você recebe PV temporários"*. O
+// `Party.StartScene` do `app/rest` é o caminho único que abre a cena E entrega
+// o que começa com ela, e a ordem é dele.
+//
+// O AVISO segue o do encerrar: o que muda é a ficha, e ela não está no estado
+// da fila. (Hoje nada no cliente escuta o `session-rest` — ele é emitido pelos
+// três gestos que mexem em ficha, e quem o consumir um dia cobre os três.)
+func startsTheScene(
+	st Scene, r *http.Request, who app.Caller, campaignID, sessionID int64,
+) (*live.SessionRuntimeState, error) {
+	kind, err := sceneKindOf(chi.URLParam(r, "tipo"))
+	if err != nil {
+		return nil, err
+	}
+	state, err := st.party.StartScene(r.Context(), who, campaignID, sessionID, kind)
+	if err != nil {
+		return nil, err
+	}
+	st.deps.SSE().Emit(sessionID, "", "session-rest", map[string]any{
+		"sessionId": sessionID, "scope": "scene-start",
+	})
+	return state, nil
 }
 
 // endScene é o gesto INTEIRO, e por isso é função nomeada e não um literal na

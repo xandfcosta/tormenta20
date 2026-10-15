@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"t20engine/app"
+	"t20engine/app/character"
 	"t20engine/app/session"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -26,12 +27,65 @@ type Party struct {
 	sessions *session.Store
 	scopes   Scopes
 	access   session.Access
+	// plays entra por fora porque ele precisa do `*sql.DB` para as transações
+	// dele, e este pacote não tem — quem monta os dois é o `serve/api`.
+	plays character.Plays
 }
 
-func NewParty(q *sqlcgen.Queries, sessions *session.Store, catalogs *engine.Catalogs) Party {
+func NewParty(
+	q *sqlcgen.Queries, sessions *session.Store, catalogs *engine.Catalogs, plays character.Plays,
+) Party {
 	return Party{
 		queries: q, sessions: sessions,
-		scopes: NewScopes(q, catalogs), access: session.NewAccess(q),
+		scopes: NewScopes(q, catalogs), access: session.NewAccess(q), plays: plays,
+	}
+}
+
+// StartScene é o gesto "Iniciar cena" INTEIRO: a cena abre E o grupo recebe o
+// que COMEÇA com ela.
+//
+// # A ORDEM é o espelho do encerrar, e pela razão inversa
+//
+// Lá a expiração vem antes porque o estado desligado é o que a mesa vê. Aqui a
+// cena abre PRIMEIRO: ela é o que o botão promete, e uma concessão que falha
+// não pode deixar o mestre sem cena. É a mesma regra que a postura já tem
+// escrita — a concessão que falha não derruba o que foi pago.
+//
+// A entrega é BEST-EFFORT e CONTADA, como o descanso do grupo: uma ficha que
+// falha não pode impedir a cena das outras quatro, e descartar a contagem faria
+// a falha sumir.
+func (p Party) StartScene(
+	ctx context.Context, who app.Caller, campaignID, sessionID int64, kind live.SceneKind,
+) (*live.SessionRuntimeState, error) {
+	if _, err := p.access.GM(ctx, who, campaignID, sessionID); err != nil {
+		return nil, err
+	}
+	state, err := p.sessions.StartScene(ctx, sessionID, kind)
+	if err != nil {
+		return nil, fmt.Errorf("abrir a cena da sessão %d: %w", sessionID, err)
+	}
+	p.grantsWhatBeginsWithTheScene(ctx, campaignID, sessionID)
+	return state, nil
+}
+
+// grantsWhatBeginsWithTheScene percorre o grupo entregando as reservas de
+// início de cena, e registra quem falhou sem derrubar os outros.
+func (p Party) grantsWhatBeginsWithTheScene(ctx context.Context, campaignID, sessionID int64) {
+	sheets, err := p.memberCharacterIDs(ctx, campaignID)
+	if err != nil {
+		log.Printf("sessão %d: listar o grupo para o início da cena falhou (%v)", sessionID, err)
+		return
+	}
+	for _, id := range sheets {
+		row, err := p.queries.GetCharacter(ctx, id)
+		if err != nil {
+			log.Printf("sessão %d: carregar o personagem %d no início da cena falhou (%v)", sessionID, id, err)
+			continue
+		}
+		if _, err := p.plays.GrantSceneStartPools(ctx, row); err != nil {
+			log.Printf("sessão %d: a concessão de início de cena do personagem %d falhou (%v)",
+				sessionID, id, err)
+		}
 	}
 }
 

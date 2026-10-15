@@ -266,7 +266,7 @@ func (s *Server) sessionAccess() session.Access {
 }
 
 func (s *Server) restParty() rest.Party {
-	return rest.NewParty(s.queries, s.sessions, s.catalogs)
+	return rest.NewParty(s.queries, s.sessions, s.catalogs, s.characterPlays())
 }
 
 // sessionLifecycle é o ciclo com TODOS os mapas por sessão do processo: a fila
