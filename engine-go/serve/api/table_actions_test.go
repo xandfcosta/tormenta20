@@ -479,4 +479,13 @@ func TestTheStanceWithNoDegreeToPickStillEntersInOneTouch(t *testing.T) {
 		t.Errorf("o chip promete um degrau que o 5º nível não concede — o primeiro "+
 			"vem no 6º (Tab. 1-6):\n%s", recorte(padrao))
 	}
+	// E O CRACHÁ DA LINHA diz o mesmo. Ele é a OUTRA representação da Fúria
+	// nesta superfície — a que mora no grupo do custo de ação, porque o chip
+	// mora no grupo do número que ela muda —, e as duas têm de prometer a mesma
+	// coisa. O `+` é o aviso de que o preço sobe com o degrau.
+	livre := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)), "Livre e reação", "Passivas")
+	if strings.Contains(livre, "2+ PM") {
+		t.Errorf("a linha da Fúria anuncia um preço que sobe, e o bárbaro de 5º não "+
+			"tem degrau para comprar:\n%s", recorte(livre))
+	}
 }
