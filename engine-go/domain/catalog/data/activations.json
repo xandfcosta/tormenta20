@@ -478,7 +478,7 @@
     "action": "movimento",
     "pmCost": 1,
     "uses": "cena",
-    "bookPage": 47,
+    "bookPage": 48,
     "grant": {
       "kind": "active-effect",
       "scope": "scene",
@@ -2937,12 +2937,7 @@
     "action": "passivo",
     "pmCost": 0,
     "uses": null,
-    "bookPage": 91,
-    "grant": {
-      "kind": "temp-hp",
-      "scope": "scene",
-      "attribute": "charisma"
-    }
+    "bookPage": 92
   },
   {
     "id": "origin.marujo.passagem-de-navio",
