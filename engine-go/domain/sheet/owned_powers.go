@@ -1,0 +1,192 @@
+package sheet
+
+import (
+	"t20engine/domain/book"
+	"t20engine/domain/engine"
+)
+
+// O ACERVO DE PODERES: o que o personagem TEM, nas cinco procedências.
+//
+// Ele morava em `serve/web/sheetui` como função privada, e isso tinha preço: a
+// POSSE também é pergunta do CASO DE USO — usar um poder que não é seu, receber
+// a concessão de um poder que não é seu —, e o `app/` não alcança o `serve/`
+// (ALE-426). Aqui ele tem dois leitores e uma resposta só.
+//
+// O TEXTO continua sendo do catálogo e a decoração é da tela: esta lista diz o
+// que o personagem tem e de onde veio; "Classe · Bárbaro" é frase, e frase mora
+// na cena.
+
+// PowerSource é de onde o poder vem. São as cinco do acervo mais o deus.
+type PowerSource string
+
+const (
+	PowerFromRace     PowerSource = "race"
+	PowerFromOrigin   PowerSource = "origin"
+	PowerFromClass    PowerSource = "class"
+	PowerFromGeneral  PowerSource = "general"
+	PowerFromTormenta PowerSource = "tormenta"
+	PowerFromGod      PowerSource = "god"
+)
+
+// OwnedPower é um poder que o personagem tem.
+type OwnedPower struct {
+	ID     string
+	Name   string
+	Detail string
+	Source PowerSource
+	// Owner é quem concede, quando isso tem nome: a raça, a origem ou a classe.
+	// Vazio no poder geral e no da Tormenta, que não pertencem a ninguém, e no
+	// divino, cuja fonte já vem escrita no catálogo.
+	Owner string
+	Page  int
+}
+
+// OwnedPowers junta as procedências na ordem em que a ficha as mostra.
+//
+// @example OwnedPowers(dto) // [{ID: "dahllan-armadura-de-allihanna", Source: "race", …}, …]
+func OwnedPowers(dto CharacterDTO) []OwnedPower {
+	outside := []OwnedPower{}
+	outside = append(outside, raceAbilitiesOf(dto)...)
+	outside = append(outside, chosenOriginBenefitsOf(dto)...)
+	outside = append(outside, automaticClassPowersOf(dto)...)
+	outside = append(outside, chosenPowersOf(dto)...)
+	return append(outside, godPowerOf(dto)...)
+}
+
+// OwnsActivation diz se a ficha tem o poder daquela ativação.
+//
+// PELO ID OU PELO NOME, e o nome não é folga: cada catálogo escreve o mesmo
+// poder com uma grafia — a Armadura de Allihanna é `dahllan-armadura-de-
+// allihanna` no de raças e `race.dahllan.armadura-de-allihanna` no de
+// ativações, e o Dom da Verdade é `divino.dom-da-verdade` contra
+// `deus.khalmyr.dom-da-verdade`. É o mesmo elo que o `book.ActivationOf` usa na
+// ida, e o que o guarda do poder único de origem já prende.
+func OwnsActivation(dto CharacterDTO, spec book.Activation) bool {
+	for _, owned := range OwnedPowers(dto) {
+		if owned.ID == spec.ID || owned.Name == spec.Name {
+			return true
+		}
+	}
+	return false
+}
+
+// raceAbilitiesOf são as habilidades de cada raça da ficha.
+//
+// Quem lê o catálogo é o `RaceTraitsByKey`, indexado por id E por nome, porque
+// o personagem guarda a raça por um dos dois.
+func raceAbilitiesOf(dto CharacterDTO) []OwnedPower {
+	outside := []OwnedPower{}
+	for _, r := range dto.Races {
+		race, found := book.RaceTraitsByKey()[r.Race]
+		if !found {
+			continue
+		}
+		for _, ability := range race.Abilities {
+			outside = append(outside, OwnedPower{
+				ID: ability.ID, Name: ability.Name, Detail: ability.Description,
+				Source: PowerFromRace, Owner: race.Name,
+			})
+		}
+	}
+	return outside
+}
+
+// chosenOriginBenefitsOf são só os ESCOLHIDOS: a origem oferece mais do que o
+// personagem leva, então listar todos daria como possuído o que ninguém pegou.
+func chosenOriginBenefitsOf(dto CharacterDTO) []OwnedPower {
+	origin, found := book.Origins()[dto.Origin]
+	if !found {
+		return nil
+	}
+	chosen := map[string]bool{}
+	for _, id := range UnmarshalStrings(dto.OriginChoices) {
+		chosen[id] = true
+	}
+	outside := []OwnedPower{}
+	for _, b := range OriginBenefitsOf(origin) {
+		if !chosen[b.ID] {
+			continue
+		}
+		outside = append(outside, OwnedPower{
+			ID: b.ID, Name: b.Name, Detail: b.Description,
+			Source: PowerFromOrigin, Owner: origin.Name, Page: origin.BookPage,
+		})
+	}
+	return outside
+}
+
+// automaticClassPowersOf são as que o NÍVEL concede, sem escolha.
+//
+// Quem decide a posse é o MOTOR, com a mesma regra que a derivação usa para
+// somar os modificadores. A lista de ESCOLHIDOS entra vazia de propósito: quem
+// escolheu já sai em `chosenPowersOf`, e passá-la aqui daria o poder duas vezes.
+func automaticClassPowersOf(dto CharacterDTO) []OwnedPower {
+	choices := ClassChoiceSelections(dto)
+	outside := []OwnedPower{}
+	for _, class := range dto.Classes {
+		for _, power := range book.ClassPowers() {
+			if power.ClassName != class.ClassName {
+				continue
+			}
+			if !engine.OwnsClassPower(power.ForEngine(), int(class.Level), nil, choices[class.ClassName]) {
+				continue
+			}
+			outside = append(outside, OwnedPower{
+				ID: power.ID, Name: power.Name, Detail: power.Description,
+				Source: PowerFromClass, Owner: class.ClassName, Page: power.BookPage,
+			})
+		}
+	}
+	book.SortByName(outside, func(p OwnedPower) string { return p.Name })
+	return outside
+}
+
+// chosenPowersOf são os ids da coluna `classPowers` — poder de classe, poder
+// geral ou poder da Tormenta, nessa ordem de busca.
+//
+// Blob torto vira lista vazia: a ficha não pode deixar de abrir porque uma linha
+// do banco está errada.
+func chosenPowersOf(dto CharacterDTO) []OwnedPower {
+	outside := []OwnedPower{}
+	for _, id := range UnmarshalStrings(dto.ClassPowers) {
+		if power, found := book.ClassPowers()[id]; found {
+			outside = append(outside, OwnedPower{
+				ID: power.ID, Name: power.Name, Detail: power.Description,
+				Source: PowerFromClass, Owner: power.ClassName, Page: power.BookPage,
+			})
+			continue
+		}
+		if power, found := book.GeneralPowers()[id]; found {
+			source := PowerFromGeneral
+			if power.Kind == "tormenta" {
+				source = PowerFromTormenta
+			}
+			outside = append(outside, OwnedPower{
+				ID: power.ID, Name: power.Name, Detail: power.Description,
+				Source: source, Page: power.BookPage,
+			})
+		}
+	}
+	return outside
+}
+
+// godPowerOf é o poder que a devoção concede — UM, guardado pelo NOME.
+//
+// Ele não aparecia no acervo da tela, e a falta ficava calada: o Dom da Verdade
+// (p133) está na ficha de quem é devoto de Khalmyr e não estava na lista que diz
+// o que o personagem tem.
+func godPowerOf(dto CharacterDTO) []OwnedPower {
+	if dto.GodPower == "" {
+		return nil
+	}
+	for _, power := range book.DivinePowers() {
+		if power.Name != dto.GodPower {
+			continue
+		}
+		return []OwnedPower{{
+			ID: power.ID, Name: power.Name, Detail: power.Description,
+			Source: PowerFromGod, Owner: power.Source, Page: power.BookPage,
+		}}
+	}
+	return nil
+}

@@ -106,6 +106,54 @@ func choiceCom(t *testing.T, f sceneFixture, id int64, powers, origin string) {
 	}
 }
 
+// O PODER DO DEUS entra no acervo — ele é da ficha como qualquer outro.
+//
+// A lista mostrava raça, origem, classe e escolhidos, e a devoção ficava de
+// fora: o devoto de Khalmyr tinha o Dom da Verdade (p133) na ficha e não na
+// lista que diz o que ele tem. A falta era calada, e passou a doer quando o
+// caso de uso precisou perguntar a POSSE para deixar o poder sair (ALE-426).
+func TestTheGodPowerIsInTheCollection(t *testing.T) {
+	f, id := barbaro(t, 5)
+	devoteOf(t, f, id, "Khalmyr", "Dom da Verdade")
+
+	screen := powerPanel(powerScreen(t, f, id))
+	if !strings.Contains(screen, "Dom da Verdade") {
+		t.Error("o poder concedido pelo deus não está no acervo")
+	}
+	// O CRACHÁ DIZ O DEUS, e não só que o poder existe: a procedência encurtada
+	// cai em "Geral" para tudo que ela não conhece, e um poder divino carimbado
+	// de geral é a linha mentindo sobre de onde ele veio.
+	if !strings.Contains(powerRowOf(screen, "Dom da Verdade"), "Khalmyr") {
+		t.Errorf("o crachá do poder divino não diz o deus: %q",
+			powerRowOf(screen, "Dom da Verdade"))
+	}
+}
+
+// powerRowOf é a linha daquele poder na lista — o pedaço entre o <li> que o
+// contém e o fim dele. Afirmar sobre a tela inteira casaria o crachá de um
+// poder com o nome de outro.
+func powerRowOf(screen, name string) string {
+	at := strings.Index(screen, name)
+	if at < 0 {
+		return ""
+	}
+	start := strings.LastIndex(screen[:at], "<li")
+	end := strings.Index(screen[at:], "</li>")
+	if start < 0 || end < 0 {
+		return ""
+	}
+	return screen[start : at+end]
+}
+
+func devoteOf(t *testing.T, f sceneFixture, id int64, god, power string) {
+	t.Helper()
+	if _, err := f.s.db.ExecContext(context.Background(),
+		"UPDATE characters SET god = ?, godPower = ? WHERE id = ?", god, power, id,
+	); err != nil {
+		t.Fatalf("semear a devoção: %v", err)
+	}
+}
+
 // AS AÇÕES vêm em cima e ordenadas; as passivas ficam na outra seção.
 func TestActionsComeSortedAndPassivesComeApart(t *testing.T) {
 	f, id := barbaro(t, 5)
@@ -246,6 +294,40 @@ func TestNobodyEntersAStanceThatIsNotTheirs(t *testing.T) {
 	// barrasse toda postura passaria verde aqui.
 	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); refusal != "" {
 		t.Fatalf("a Fúria do próprio bárbaro foi recusada: %q", refusal)
+	}
+}
+
+// PODER DE OUTRO não se usa, e a recusa não cobra nada.
+//
+// Irmão do `TestNobodyEntersAStanceThatIsNotTheirs` (ALE-423): lá era a
+// postura, aqui é o poder instantâneo. O `UsePower` perguntava o PM, os usos e
+// as flags — nunca se o poder era do personagem —, então um bárbaro gastava 1 PM
+// no En Garde do bucaneiro (p48) e queimava o "1/cena" dele.
+//
+// A tela nunca ofereceu o gesto, e é por isso que a recusa é do servidor.
+func TestNobodyUsesAPowerThatIsNotTheirs(t *testing.T) {
+	f, id := barbaro(t, 5)
+
+	before := pm(t, f, id)
+	refusal := powerCommand(t, f, id, "usa/class.bucaneiro.en-garde", "")
+	if !strings.Contains(refusal, "não tem este poder") {
+		t.Errorf("a recusa não diz que o poder não é dele: %q", refusal)
+	}
+	if after := pm(t, f, id); after != before {
+		t.Errorf("a recusa cobrou assim mesmo: %d → %d", before, after)
+	}
+	uses, err := f.s.sceneCore().Queries().ListCharacterPowerUses(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler os usos: %v", err)
+	}
+	if len(uses) != 0 {
+		t.Errorf("a recusa gastou um uso assim mesmo: %+v", uses)
+	}
+	// CONTROLE: o poder DELE continua saindo — sem isto, uma recusa que barrasse
+	// todo poder passaria verde aqui.
+	choiceCom(t, f, id, `["class.barbaro.brado-assustador"]`, `[]`)
+	if refusal := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", ""); refusal != "" {
+		t.Fatalf("o poder do próprio bárbaro foi recusado: %q", refusal)
 	}
 }
 
@@ -565,7 +647,54 @@ type combatNumbers struct{ attack, damage int }
 
 // combatNumbersOf lê os totais pelo MOTOR, do agregado carregado como a cena o
 // carrega. Pela tela seria mais caro e mediria formatação junto.
+// USAR UM PODER QUE CONCEDE escreve a concessão, que é o que o PM comprou.
+//
+// A Armadura de Allihanna (p21) é *"uma ação de movimento e 1 PM para
+// transformar sua pele em casca de árvore, recebendo +2 na Defesa até o fim da
+// cena"*. O `UsePower` cobrava o PM, contava o uso e não escrevia nada: o
+// jogador pagava e a Defesa não mexia.
+//
+// A DAHLLAN e não o bucaneiro: a posse aqui vem da RAÇA, e o elo entre os dois
+// catálogos é o NOME — `dahllan-armadura-de-allihanna` contra
+// `race.dahllan.armadura-de-allihanna`. É o caso em que uma comparação por id
+// passaria calada.
+func TestUsingAGrantingPowerWritesWhatItGrants(t *testing.T) {
+	f, id := barbaro(t, 5)
+	seedRaca(t, f.s, id, "Dahllan")
+
+	before := pm(t, f, id)
+	defenseBefore := defenseOf(t, f, id)
+	if refusal := powerCommand(t, f, id, "usa/race.dahllan.armadura-de-allihanna", ""); refusal != "" {
+		t.Fatalf("usar foi recusado: %q", refusal)
+	}
+	if after := pm(t, f, id); before-after != 1 {
+		t.Fatalf("o uso cobrou %d PM (%d → %d), e o livro cobra 1 — sem a cobrança "+
+			"este caso não testemunha uso nenhum", before-after, before, after)
+	}
+	if !effects(t, f, id)["race.dahllan.armadura-de-allihanna"] {
+		t.Error("a concessão não virou efeito ativo")
+	}
+	if got := defenseOf(t, f, id) - defenseBefore; got != 2 {
+		t.Errorf("a Defesa subiu %d, e a casca de árvore dá +2 (p21)", got)
+	}
+}
+
+// defenseOf é a Defesa que a ficha soma AGORA, com os efeitos em vigor.
+func defenseOf(t *testing.T, f sceneFixture, id int64) int {
+	t.Helper()
+	return statOf(t, f, id, engine.ModifierTarget{K: "defense"})
+}
+
 func combatNumbersOf(t *testing.T, f sceneFixture, id int64) combatNumbers {
+	t.Helper()
+	return combatNumbers{
+		attack: statOf(t, f, id, engine.ModifierTarget{K: "attack", Scope: "all"}),
+		damage: statOf(t, f, id, engine.ModifierTarget{K: "damage", Scope: "all"}),
+	}
+}
+
+// statOf monta a ficha e lê UM alvo com os efeitos em vigor.
+func statOf(t *testing.T, f sceneFixture, id int64, target engine.ModifierTarget) int {
 	t.Helper()
 	ctx := context.Background()
 	row, err := f.s.sceneCore().Queries().GetCharacter(ctx, id)
@@ -584,10 +713,7 @@ func combatNumbersOf(t *testing.T, f sceneFixture, id int64) combatNumbers {
 		engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)),
 		sheet.ToStringSet(dto.Conditionals),
 	)
-	return combatNumbers{
-		attack: engine.StatFor(effects, engine.ModifierTarget{K: "attack", Scope: "all"}).Total,
-		damage: engine.StatFor(effects, engine.ModifierTarget{K: "damage", Scope: "all"}).Total,
-	}
+	return engine.StatFor(effects, target).Total
 }
 
 // O FIM DA CENA LEVA A POSTURA INTEIRA, e não só a linha dela.

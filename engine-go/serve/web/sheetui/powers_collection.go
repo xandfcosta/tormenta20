@@ -5,22 +5,19 @@ import (
 	"strings"
 
 	"t20engine/domain/book"
-	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 )
 
-// O ACERVO DE PODERES de um personagem, numa lista só: as habilidades da RAÇA,
-// os benefícios de ORIGEM escolhidos, as habilidades AUTOMÁTICAS de classe (as
-// que o nível concede), e os poderes ESCOLHIDOS — de classe, gerais e da
-// Tormenta.
+// O ACERVO DE PODERES na tela: a lista que o `domain/sheet` monta, com a
+// procedência escrita como a mesa a lê.
 //
-// # Por que o nome e o texto NÃO vêm do motor
+// # Por que a POSSE não mora mais aqui
 //
-// O `ClassPower` do motor é um subconjunto deliberado: ele carrega o que a
-// derivação lê — id, classe, nível, modificadores — e não a descrição. Quem
-// tem o texto é o catálogo cru, que a vitrine do mestre já lê
-// (`FlattenedPowers`). Então a POSSE é pergunta do motor e o TEXTO é do
-// catálogo; misturar as duas fontes numa struct só é o que este arquivo faz.
+// Ela morava — e, sendo função privada deste pacote, tinha exatamente um
+// chamador. A mesma pergunta é do caso de uso (usar um poder que não é seu,
+// receber a concessão de um poder que não é seu), e o `app/` não alcança o
+// `serve/`. A lista desceu para o `domain/sheet` na ALE-426; aqui ficou a
+// FRASE, que é o que esta camada tem a dizer.
 
 // ownedPower é um poder que o personagem TEM, pronto para a tela.
 type ownedPower struct {
@@ -33,134 +30,42 @@ type ownedPower struct {
 	Page   int
 }
 
-// ownedPowersOf junta as cinco procedências, na ordem em que a tela as mostra.
+// ownedPowersOf veste o acervo da ficha com a procedência escrita.
 func ownedPowersOf(dto sheet.CharacterDTO) []ownedPower {
-	outside := []ownedPower{}
-	outside = append(outside, raceAbilities(dto)...)
-	outside = append(outside, originBenefits(dto)...)
-	outside = append(outside, automaticAbilities(dto)...)
-	outside = append(outside, chosenPowers(dto)...)
-	return outside
-}
-
-// raceAbilities são as habilidades de cada raça da ficha.
-//
-// Quem lê o catálogo é o `RaceTraitsByKey` do dossiê — o MESMO `race-defs.json`, já
-// indexado por id E por nome, porque o personagem guarda a raça por um dos dois.
-// Um segundo leitor aqui seria uma terceira cópia da mesma decisão.
-func raceAbilities(dto sheet.CharacterDTO) []ownedPower {
-	outside := []ownedPower{}
-	for _, r := range dto.Races {
-		race, found := book.RaceTraitsByKey()[r.Race]
-		if !found {
-			continue
-		}
-		for _, ability := range race.Abilities {
-			outside = append(outside, ownedPower{
-				ID: ability.ID, Name: ability.Name, Detail: ability.Description,
-				Source: "Raça · " + race.Name,
-			})
-		}
-	}
-	return outside
-}
-
-// originBenefits são só os ESCOLHIDOS.
-//
-// A origem oferece mais benefícios do que o personagem leva (duas perícias e um
-// poder, de uma lista maior), então listar todos mostraria como possuído o que
-// ninguém escolheu.
-func originBenefits(dto sheet.CharacterDTO) []ownedPower {
-	origin, found := book.Origins()[dto.Origin]
-	if !found {
-		return nil
-	}
-	chosen := map[string]bool{}
-	var ids []string
-	if json.Unmarshal([]byte(dto.OriginChoices), &ids) == nil {
-		for _, id := range ids {
-			chosen[id] = true
-		}
-	}
-	outside := []ownedPower{}
-	for _, b := range sheet.OriginBenefitsOf(origin) {
-		if !chosen[b.ID] {
-			continue
-		}
+	owned := sheet.OwnedPowers(dto)
+	outside := make([]ownedPower, 0, len(owned))
+	for _, p := range owned {
 		outside = append(outside, ownedPower{
-			ID: b.ID, Name: b.Name, Detail: b.Description,
-			Source: "Origem · " + origin.Name, Page: origin.BookPage,
+			ID: p.ID, Name: p.Name, Detail: p.Detail, Page: p.Page,
+			Source: writtenProvenance(p),
 		})
 	}
 	return outside
 }
 
-// automaticAbilities são as que o NÍVEL concede, sem escolha.
+// writtenProvenance é a procedência como a mesa a lê.
 //
-// Quem decide a posse é o MOTOR (`engine.OwnedClassPowerIDs`), com a mesma
-// regra que a derivação usa para somar os modificadores: nível alcançado, id
-// escolhido, ou concedido por uma escolha de classe (o caminho do arcanista, o
-// deus do clérigo). Uma segunda leitura aqui daria uma tela que mostra um poder
-// que a ficha não soma — ou o contrário.
-func automaticAbilities(dto sheet.CharacterDTO) []ownedPower {
-	choices := sheet.ClassChoiceSelections(dto)
-	outside := []ownedPower{}
-	for _, class := range dto.Classes {
-		for _, power := range book.ClassPowers() {
-			if power.ClassName != class.ClassName || !automaticOwnership(power, class, choices) {
-				continue
-			}
-			outside = append(outside, ownedPower{
-				ID: power.ID, Name: power.Name, Detail: power.Description,
-				Source: "Classe · " + class.ClassName, Page: power.BookPage,
-			})
-		}
+// O poder da Tormenta e o geral moram no mesmo catálogo e a mesa os trata como
+// coisas diferentes; o divino já vem com a fonte escrita pelo catálogo, que
+// junta os deuses que concedem o mesmo poder.
+func writtenProvenance(p sheet.OwnedPower) string {
+	switch p.Source {
+	case sheet.PowerFromRace:
+		return "Raça · " + p.Owner
+	case sheet.PowerFromOrigin:
+		return "Origem · " + p.Owner
+	case sheet.PowerFromClass:
+		return "Classe · " + p.Owner
+	case sheet.PowerFromTormenta:
+		return "Poder da Tormenta"
+	case sheet.PowerFromGod:
+		return p.Owner
 	}
-	book.SortByName(outside, func(p ownedPower) string { return p.Name })
-	return outside
+	return "Poder geral"
 }
 
-// automaticOwnership pergunta ao MOTOR se a classe concede este poder.
-//
-// A lista de ESCOLHIDOS entra vazia de propósito: quem escolheu já aparece em
-// `chosenPowers`, e passá-la aqui listaria o mesmo poder duas vezes.
-func automaticOwnership(
-	power book.ClassPower, class sheet.ClassDTO, choices map[string]engine.ClassChoiceSelections,
-) bool {
-	return engine.OwnsClassPower(power.ForEngine(), int(class.Level), nil, choices[class.ClassName])
-}
-
-// chosenPowers são os ids da coluna `classPowers` — poder de classe, poder
-// geral ou poder da Tormenta, nessa ordem de busca.
-//
-// Blob torto vira lista vazia: a aba não pode deixar de abrir porque uma linha
-// do banco está errada.
-func chosenPowers(dto sheet.CharacterDTO) []ownedPower {
-	var ids []string
-	if json.Unmarshal([]byte(dto.ClassPowers), &ids) != nil {
-		return nil
-	}
-	outside := []ownedPower{}
-	for _, id := range ids {
-		if power, found := book.ClassPowers()[id]; found {
-			outside = append(outside, ownedPower{
-				ID: power.ID, Name: power.Name, Detail: power.Description,
-				Source: "Classe · " + power.ClassName, Page: power.BookPage,
-			})
-			continue
-		}
-		if power, found := book.GeneralPowers()[id]; found {
-			outside = append(outside, ownedPower{
-				ID: power.ID, Name: power.Name, Detail: power.Description,
-				Source: powerGeneralSource(power), Page: power.BookPage,
-			})
-		}
-	}
-	return outside
-}
-
-// powerGeneralSource separa o poder da TORMENTA do poder geral comum: eles
-// moram no mesmo catálogo e a mesa os trata como coisas diferentes.
+// powerGeneralSource separa o poder da TORMENTA do poder geral comum para o
+// diálogo de ESCOLHER, que lista o catálogo inteiro e não passa pelo acervo.
 func powerGeneralSource(power book.GeneralPower) string {
 	if power.Kind == "tormenta" {
 		return "Poder da Tormenta"

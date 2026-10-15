@@ -1,8 +1,10 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"strings"
+	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"testing"
 )
@@ -939,4 +941,61 @@ func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
 	if strings.Contains(forPlayer, "/vitais/mp/ferir/") || strings.Contains(forPlayer, "Ocultar os PM de ") {
 		t.Error("os verbos do mana vazaram para o HTML do jogador")
 	}
+}
+
+// O INÍCIO DA CENA ENTREGA O QUE COMEÇA COM ELA.
+//
+// A Armadura da Honra (p53) é *"no início de cada cena, você recebe uma
+// quantidade de pontos de vida temporários igual a seu nível + seu Carisma"* —
+// ela não tem gesto: quem a tem, recebe. Enquanto iniciar a cena só mexia no
+// estado vivo da sessão, o poder não tinha onde acontecer (ALE-426).
+//
+// O CASO PRECISA DE DOIS MEMBROS, e é a segunda metade que pega o defeito
+// interessante: com um só, entregar a poça a QUEM TEM e entregá-la a TODOS dão
+// o mesmo resultado.
+func TestStartingTheSceneGrantsWhatBeginsWithIt(t *testing.T) {
+	f := newSceneFixture(t)
+	knight := seedCharacterAtLevel(t, f.s, f.player, "Cavaleiro", "Cavaleiro", 6, 0, 0)
+	seedMember(t, f.s, f.campaignID, knight)
+	charismaOf(t, f, knight, 3)
+	choiceCom(t, f, knight, `["class.cavaleiro.armadura-da-honra"]`, `[]`)
+
+	// CONTROLE: a poça não existe ANTES do gesto. Sem isto, um efeito que já
+	// estivesse ali passaria por entrega.
+	if effects(t, f, knight)["class.cavaleiro.armadura-da-honra"] {
+		t.Fatal("a poça já estava na ficha antes de a cena começar")
+	}
+
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+
+	if !effects(t, f, knight)["class.cavaleiro.armadura-da-honra"] {
+		t.Error("o início da cena não entregou a Armadura da Honra a quem a tem")
+	}
+	// O VALOR é nível + Carisma: 6 + 3. Afirmar só a presença deixaria passar
+	// uma poça de zero, que é efeito na aba e nada na ficha.
+	if got := tempHpOf(t, f, knight); got != 9 {
+		t.Errorf("a poça é de %d PV temporários, e o cavaleiro de 6º com Carisma 3 recebe 9 (p53)", got)
+	}
+	// E QUEM NÃO TEM O PODER não ganha nada — o arcanista do mesmo grupo.
+	if got := effects(t, f, f.charID); len(got) != 0 {
+		t.Errorf("o início da cena escreveu %v na ficha de quem não tem poder nenhum de cena", got)
+	}
+}
+
+// charismaOf põe o Carisma da ficha, que é o que dimensiona a poça.
+func charismaOf(t *testing.T, f sceneFixture, id int64, howMuch int64) {
+	t.Helper()
+	if _, err := f.s.db.ExecContext(context.Background(),
+		"UPDATE characters SET charisma = ? WHERE id = ?", howMuch, id,
+	); err != nil {
+		t.Fatalf("semear o Carisma: %v", err)
+	}
+}
+
+// tempHpOf é o total de PV temporários que a ficha soma agora.
+func tempHpOf(t *testing.T, f sceneFixture, id int64) int {
+	t.Helper()
+	return statOf(t, f, id, engine.ModifierTarget{K: "tempHp"})
 }

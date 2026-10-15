@@ -845,6 +845,7 @@
           "hpFraction": 0.6,
           "create": {
             "name": "Paladino Sagrado Nv10",
+            "godPower": "Dom da Verdade",
             "races": [
               "suraggel"
             ],
@@ -958,6 +959,7 @@
           "create": {
             "name": "Cavaleiro Postural Nv6",
             "classPowers": [
+              "class.cavaleiro.armadura-da-honra",
               "class.cavaleiro.postura-foco-de-batalha",
               "class.cavaleiro.postura-muralha-intransponivel",
               "class.cavaleiro.postura-torre-inabalavel",

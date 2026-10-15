@@ -211,3 +211,19 @@ func writtenDegrees(howMany int) string {
 	}
 	return strconv.Itoa(howMany) + " degraus"
 }
+
+// SceneStartGrants são as ativações que concedem uma reserva NO INÍCIO DA CENA.
+//
+// Elas são PASSIVAS com concessão: não há gesto que as dispare, e o que as
+// separa das outras concessões é justamente isso — a da postura espera a flag
+// acender, a do poder instantâneo espera o uso, e esta espera a cena começar.
+func SceneStartGrants() []Activation {
+	outside := []Activation{}
+	for _, spec := range Activations() {
+		if spec.Kind != "passive" || spec.Grant == nil || spec.Grant.Kind != "temp-hp" {
+			continue
+		}
+		outside = append(outside, spec)
+	}
+	return outside
+}

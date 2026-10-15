@@ -164,3 +164,72 @@ func TestEveryFlagGrantHangsOnAClassPower(t *testing.T) {
 		t.Fatal("nenhuma ativação concede por flag — o guarda não mediu nada")
 	}
 }
+
+// TODA CONCESSÃO DO CATÁLOGO TEM QUEM A APLIQUE, e as espécies são TRÊS.
+//
+// Cada uma espera um gatilho diferente, e é o par (gatilho, espécie) que diz
+// quem aplica:
+//
+//   - a POSTURA (`requiresFlag` + `temp-hp`) espera a flag acender, e sai no
+//     `applyStanceGrants`;
+//   - o PODER DE USAR (`instant` + `active-effect`) espera o uso, e sai no
+//     `writeGrantedEffect`;
+//   - o INÍCIO DE CENA (`passive` + `temp-hp`) não espera gesto nenhum, e sai
+//     na varredura do `Party.StartScene`.
+//
+// É uma lista de PERMITIDOS e não de proibidos, pela razão que o `CLAUDE.md` já
+// dá: uma lista de proibidos subconta em silêncio. Um par novo — um `instant`
+// que conceda PV temporários, um `passive` que ligue modificadores — reprova
+// aqui com o id, em vez de virar dado inerte no catálogo.
+//
+// Era isso que faltava: CINCO concessões ficaram anos no arquivo sem ninguém
+// que as aplicasse, e nada reclamou (ALE-426).
+func TestEveryGrantHasSomeoneToApplyIt(t *testing.T) {
+	applied := map[string]string{
+		"flag+temp-hp":          "applyStanceGrants, ao entrar na postura",
+		"instant+active-effect": "writeGrantedEffect, ao usar o poder",
+		"passive+temp-hp":       "Party.StartScene, na varredura do início da cena",
+	}
+	measured := 0
+	for _, spec := range Activations() {
+		if spec.Grant == nil {
+			continue
+		}
+		measured++
+		trigger := spec.Kind
+		if spec.RequiresFlag != "" {
+			trigger = "flag"
+		}
+		if _, found := applied[trigger+"+"+spec.Grant.Kind]; found {
+			continue
+		}
+		t.Errorf("%s concede %q com gatilho %q, e ninguém aplica essa combinação: "+
+			"a concessão fica no catálogo e não sai para a mesa, sem erro nenhum. "+
+			"Escreva quem a aplica e acrescente o par aqui", spec.ID, spec.Grant.Kind, trigger)
+	}
+	if measured == 0 {
+		t.Fatal("nenhuma ativação concede nada — o guarda não mediu nada")
+	}
+}
+
+// E TODA CONCESSÃO DE EFEITO ATIVO CARREGA O QUE LIGAR.
+//
+// O `PowerGrant` não tinha o campo `Modifiers` e o catálogo o trazia: a lista
+// era DESCARTADA na leitura, e a concessão aplicada escreveria um efeito vazio
+// — uma linha na aba Efeitos que não move número nenhum, que é pior que a
+// ausência, porque parece que funcionou (ALE-426).
+func TestEveryActiveEffectGrantCarriesItsModifiers(t *testing.T) {
+	measured := 0
+	for _, spec := range Activations() {
+		if spec.Grant == nil || spec.Grant.Kind != "active-effect" {
+			continue
+		}
+		measured++
+		if len(spec.Grant.Modifiers) == 0 {
+			t.Errorf("%s concede um efeito ativo e não diz o que ele liga", spec.ID)
+		}
+	}
+	if measured == 0 {
+		t.Fatal("nenhuma concessão de efeito ativo — o guarda não mediu nada")
+	}
+}
