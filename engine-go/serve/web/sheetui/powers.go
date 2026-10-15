@@ -89,6 +89,10 @@ type stanceState struct {
 	StepPm   int
 	// StepLabel é o que cada degrau compra ("+1 no bônus de Fúria").
 	StepLabel string
+	// BaseBonus é o bônus do degrau ZERO — o +2 da Fúria, o +1 da Inspiração —,
+	// e é com ele que o contador fala a língua do livro. Zero na postura que não
+	// move número; ver `book.StanceBaseBonus`.
+	BaseBonus int
 }
 
 // powersPanelOf monta a aba.
@@ -165,7 +169,10 @@ func stanceStateFor(
 	if flag == "" {
 		return nil
 	}
-	state := &stanceState{Flag: flag, Active: stances[flag], BasePm: book.ActivationPm(spec)}
+	state := &stanceState{
+		Flag: flag, Active: stances[flag],
+		BasePm: book.ActivationPm(spec), BaseBonus: book.StanceBaseBonus(flag),
+	}
 	if spec.Scaling != nil {
 		state.BasePm = spec.Scaling.BasePm
 		state.StepPm = spec.Scaling.StepPm
@@ -453,4 +460,35 @@ func costStancePreview(row powerRow) string {
 	base := strconv.Itoa(row.Stance.BasePm)
 	step := strconv.Itoa(row.Stance.StepPm)
 	return "(" + base + " + " + step + " * $stance_degrees) + ' PM'"
+}
+
+// degreeCounterShows é o que o contador escreve enquanto alguém escolhe: o
+// BÔNUS que a postura vai ter, e não quantos degraus foram somados.
+//
+// O livro nomeia a postura pelo bônus — "Fúria +3" na Tabela 1-6, "Inspiração
+// +2" na 1-8 —, e era isso que a mesa procurava no contador. Ele mostrava "1",
+// que é um número que não aparece em lugar nenhum da ficha depois: nem na linha
+// de ataque, nem na aba Efeitos, nem na boca de quem narra.
+//
+// Recua para a CONTAGEM quando a postura não tem um bônus só (ver
+// `book.StanceBaseBonus`): mostrar o degrau cru é feio e verdadeiro, e escolher
+// um dos dois números seria bonito e mentira.
+func degreeCounterShows(row powerRow) string {
+	if row.Stance.BaseBonus <= 0 {
+		return "$stance_degrees"
+	}
+	return "'+' + (" + strconv.Itoa(row.Stance.BaseBonus) + " + $stance_degrees)"
+}
+
+// degreeRateSays é o que cada degrau custa e compra, dito como TAXA.
+//
+// "cada +1 PM" e não o rótulo cru do catálogo ("+1 no bônus de Fúria"): com o
+// contador mostrando o bônus TOTAL, duas linhas de "+N" empilhadas se parecem, e
+// quem lê rápido pode tomar a segunda pelo preço da primeira. A palavra "cada"
+// separa a taxa do total sem pedir nenhum número novo ao catálogo.
+func degreeRateSays(row powerRow) string {
+	if row.Stance.StepLabel == "" {
+		return ""
+	}
+	return "cada +" + strconv.Itoa(row.Stance.StepPm) + " PM: " + row.Stance.StepLabel
 }

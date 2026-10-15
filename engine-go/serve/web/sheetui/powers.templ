@@ -228,7 +228,7 @@ templ stanceButton(v View, row powerRow) {
 // servidor mandou — é PRÉVIA, e quem cobra é o servidor com a regra inteira.
 templ stanceStepperDialog(v View, row powerRow) {
 	@overlay("postura-"+row.Stance.Flag, row.Name, "Flame", false) {
-		<p class="text-xs text-muted-foreground">{ row.Stance.StepLabel }</p>
+		<p class="text-xs text-muted-foreground">{ degreeRateSays(row) }</p>
 		<div class="flex items-center justify-center gap-3">
 			<button
 				type="button"
@@ -236,7 +236,7 @@ templ stanceStepperDialog(v View, row powerRow) {
 				data-on:click="$stance_degrees = Math.max(0, $stance_degrees - 1)"
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>−</button>
-			<span class="font-mono text-lg text-foreground" data-text="$stance_degrees"></span>
+			<span class="font-mono text-lg text-foreground" data-text={ degreeCounterShows(row) }></span>
 			<button
 				type="button"
 				aria-label="Mais um degrau"
