@@ -212,22 +212,54 @@ func (p Plays) UsePower(
 		return fmt.Errorf("%s: %s", spec.Name, reason)
 	}
 	scope := book.ChargedScope(*spec)
-	if scope == "" {
-		// Sem limite COBRADO não há contador, e sobra uma escrita só: a
-		// transação seria um bloqueio que ninguém pediu.
+	if scope == "" && spec.Grant == nil {
+		// Sem limite COBRADO e sem concessão não há contador nem efeito, e sobra
+		// uma escrita só: a transação seria um bloqueio que ninguém pediu.
 		return chargeMp(ctx, p.queries, p.catalogs, row, book.ActivationPm(*spec))
 	}
 	return p.inTx(ctx, "usar o poder "+spec.ID, func(q *sqlcgen.Queries) error {
 		if err := chargeMp(ctx, q, p.catalogs, row, book.ActivationPm(*spec)); err != nil {
 			return err
 		}
-		if err := q.BumpCharacterPowerUse(ctx, sqlcgen.BumpCharacterPowerUseParams{
-			Characterid: row.ID, Powerid: spec.ID, Scope: scope,
-		}); err != nil {
-			return fmt.Errorf("somar o uso de %q: %w", spec.ID, err)
+		if scope != "" {
+			if err := q.BumpCharacterPowerUse(ctx, sqlcgen.BumpCharacterPowerUseParams{
+				Characterid: row.ID, Powerid: spec.ID, Scope: scope,
+			}); err != nil {
+				return fmt.Errorf("somar o uso de %q: %w", spec.ID, err)
+			}
 		}
-		return nil
+		return writeGrantedEffect(ctx, q, row.ID, *spec)
 	})
+}
+
+// writeGrantedEffect grava o que o poder CONCEDE, num efeito ativo com a chave
+// dele.
+//
+// DENTRO DA TRANSAÇÃO, ao contrário da concessão da postura: lá a reserva que
+// falha não pode derrubar uma postura já paga; aqui o efeito É o que o PM
+// comprou. Um commit que cobrasse o 1 PM da Armadura de Allihanna (p21) e
+// perdesse os +2 na Defesa é o defeito que esta função existe para consertar.
+//
+// Chave igual à do PODER, que é o que faz usar de novo REESCREVER a mesma linha
+// em vez de abrir uma segunda — o `active_effects` é único em (personagem,
+// catálogo, escopo), e o livro não empilha a mesma fonte consigo.
+func writeGrantedEffect(
+	ctx context.Context, q *sqlcgen.Queries, characterID int64, spec book.Activation,
+) error {
+	if spec.Grant == nil || spec.Grant.Kind != "active-effect" || len(spec.Grant.Modifiers) == 0 {
+		return nil
+	}
+	blob, err := json.Marshal(spec.Grant.Modifiers)
+	if err != nil {
+		return fmt.Errorf("escrever a concessão de %q: %w", spec.ID, err)
+	}
+	if _, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+		Characterid: characterID, Source: "power", Catalogid: spec.ID,
+		Scope: spec.Grant.Scope, Modifiers: string(blob), Createdat: dbvalue.NowISO(),
+	}); err != nil {
+		return fmt.Errorf("gravar a concessão de %q: %w", spec.ID, err)
+	}
+	return nil
 }
 
 // chargeMp tira o PM da ficha, sem deixar o saldo abaixo de zero.

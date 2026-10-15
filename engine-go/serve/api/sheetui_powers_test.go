@@ -647,7 +647,54 @@ type combatNumbers struct{ attack, damage int }
 
 // combatNumbersOf lê os totais pelo MOTOR, do agregado carregado como a cena o
 // carrega. Pela tela seria mais caro e mediria formatação junto.
+// USAR UM PODER QUE CONCEDE escreve a concessão, que é o que o PM comprou.
+//
+// A Armadura de Allihanna (p21) é *"uma ação de movimento e 1 PM para
+// transformar sua pele em casca de árvore, recebendo +2 na Defesa até o fim da
+// cena"*. O `UsePower` cobrava o PM, contava o uso e não escrevia nada: o
+// jogador pagava e a Defesa não mexia.
+//
+// A DAHLLAN e não o bucaneiro: a posse aqui vem da RAÇA, e o elo entre os dois
+// catálogos é o NOME — `dahllan-armadura-de-allihanna` contra
+// `race.dahllan.armadura-de-allihanna`. É o caso em que uma comparação por id
+// passaria calada.
+func TestUsingAGrantingPowerWritesWhatItGrants(t *testing.T) {
+	f, id := barbaro(t, 5)
+	seedRaca(t, f.s, id, "Dahllan")
+
+	before := pm(t, f, id)
+	defenseBefore := defenseOf(t, f, id)
+	if refusal := powerCommand(t, f, id, "usa/race.dahllan.armadura-de-allihanna", ""); refusal != "" {
+		t.Fatalf("usar foi recusado: %q", refusal)
+	}
+	if after := pm(t, f, id); before-after != 1 {
+		t.Fatalf("o uso cobrou %d PM (%d → %d), e o livro cobra 1 — sem a cobrança "+
+			"este caso não testemunha uso nenhum", before-after, before, after)
+	}
+	if !effects(t, f, id)["race.dahllan.armadura-de-allihanna"] {
+		t.Error("a concessão não virou efeito ativo")
+	}
+	if got := defenseOf(t, f, id) - defenseBefore; got != 2 {
+		t.Errorf("a Defesa subiu %d, e a casca de árvore dá +2 (p21)", got)
+	}
+}
+
+// defenseOf é a Defesa que a ficha soma AGORA, com os efeitos em vigor.
+func defenseOf(t *testing.T, f sceneFixture, id int64) int {
+	t.Helper()
+	return statOf(t, f, id, engine.ModifierTarget{K: "defense"})
+}
+
 func combatNumbersOf(t *testing.T, f sceneFixture, id int64) combatNumbers {
+	t.Helper()
+	return combatNumbers{
+		attack: statOf(t, f, id, engine.ModifierTarget{K: "attack", Scope: "all"}),
+		damage: statOf(t, f, id, engine.ModifierTarget{K: "damage", Scope: "all"}),
+	}
+}
+
+// statOf monta a ficha e lê UM alvo com os efeitos em vigor.
+func statOf(t *testing.T, f sceneFixture, id int64, target engine.ModifierTarget) int {
 	t.Helper()
 	ctx := context.Background()
 	row, err := f.s.sceneCore().Queries().GetCharacter(ctx, id)
@@ -666,10 +713,7 @@ func combatNumbersOf(t *testing.T, f sceneFixture, id int64) combatNumbers {
 		engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)),
 		sheet.ToStringSet(dto.Conditionals),
 	)
-	return combatNumbers{
-		attack: engine.StatFor(effects, engine.ModifierTarget{K: "attack", Scope: "all"}).Total,
-		damage: engine.StatFor(effects, engine.ModifierTarget{K: "damage", Scope: "all"}).Total,
-	}
+	return engine.StatFor(effects, target).Total
 }
 
 // O FIM DA CENA LEVA A POSTURA INTEIRA, e não só a linha dela.

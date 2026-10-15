@@ -103,12 +103,21 @@ type ActivationScale struct {
 	StepEveryLevels int    `json:"stepEveryLevels"`
 }
 
-// PowerGrant é o que a ativação APLICA na ficha — o único caso hoje é a
-// reserva de PV temporários da Alma de Bronze.
+// PowerGrant é o que a ativação APLICA na ficha, em duas espécies: a RESERVA de
+// PV temporários (`temp-hp`, com o atributo que a dimensiona) e o EFEITO ATIVO
+// (`active-effect`, com os modificadores que ele liga).
+//
+// Os `Modifiers` não existiam aqui, e o catálogo os trazia desde sempre: três
+// concessões escreviam a lista no JSON e o Go a DESCARTAVA na leitura, sem
+// erro nenhum. O En Garde, a Armadura de Allihanna e o Dom da Verdade eram
+// dado inerte por isso, antes mesmo de não haver quem os aplicasse (ALE-426).
 type PowerGrant struct {
 	Kind      string `json:"kind"`
 	Scope     string `json:"scope"`
 	Attribute string `json:"attribute"`
+	// Modifiers é o que o efeito ativo liga. Vazio na reserva de PV, que se
+	// dimensiona pelo `Attribute` e não por lista.
+	Modifiers []engine.Modifier `json:"modifiers"`
 }
 
 var (
