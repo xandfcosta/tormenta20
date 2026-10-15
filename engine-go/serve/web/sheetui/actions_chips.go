@@ -36,6 +36,10 @@ type actionChip struct {
 	// Command é o endereço do gesto, e ele é o MESMO das abas Poderes e Efeitos:
 	// um segundo caminho de escrita seria uma segunda regra de validação.
 	Command string
+	// Asks marca o chip que ABRE uma escolha em vez de fazer o gesto — hoje só a
+	// postura que escala com o nível. O botão ganha `aria-haspopup`, porque quem
+	// lê por leitor de tela precisa saber que o toque vai pedir mais uma coisa.
+	Asks bool
 	// Moves são os números que este chip muda — ver `actionRow.Moves`. Vazio na
 	// POSTURA, que pendura por outro critério (ver `Cost`).
 	Moves []string
@@ -130,19 +134,25 @@ func chipsOffered(id int64, powers powersPanel, situational []situationalRow) []
 	return chips
 }
 
-// stanceChips é UM chip por postura: entrar no degrau ZERO, ou encerrar o que
-// está em curso.
+// stanceChips é UM chip por postura: assumir a que está parada, ou encerrar a
+// que está em curso.
 //
-// UM E NÃO UM POR DEGRAU, e o motivo mudou de natureza. Ele era uma
-// DIVERGÊNCIA: os degraus eram cobrados e não entravam na conta, então um chip
-// "Fúria 3 PM" cobraria 1 PM a mais pelo mesmo número. A divergência foi
-// consertada (ALE-423) e hoje o degrau pago sobe o bônus de verdade.
+// UM E NÃO UM POR DEGRAU. O motivo era uma DIVERGÊNCIA — os degraus eram
+// cobrados e não entravam na conta, então um chip "Fúria 3 PM" cobraria 1 PM a
+// mais pelo mesmo número —, e ela foi consertada (ALE-423). Hoje o motivo é de
+// tela: a Fúria aparece em DOIS grupos (ataque e ação completa), então um chip
+// por degrau daria oito botões de um poder só a 390px, e o grupo deixaria de se
+// ler. O `TestTheStanceChipRidesTheNumberItChanges` conta essa unicidade.
 //
-// O que sustenta o chip único agora é o GESTO: na Ações o chip é um toque e
-// entra pelo mínimo, que é o preço que a tela mostra. Escolher quantos degraus
-// é uma decisão com número, e ela mora no contador da aba Poderes, que é onde
-// ela sempre esteve. O custo disso está anotado: quem quer o degrau na mesa sai
-// da Ações, e encerrar NÃO devolve PM — reentrar mais alto cobra o cheio.
+// O CHIP QUE TEM DEGRAU PARA ESCOLHER NÃO ENTRA: ele ABRE o contador, que é o
+// mesmo da aba Poderes (ALE-427). Entrar pelo mínimo sem perguntar era o app
+// escolhendo pelo jogador, e a escolha não tem volta — o degrau se paga ao
+// INVOCAR (p41, p44), encerrar não devolve PM, e reentrar mais alto cobra a
+// entrada inteira de novo. Medido: 5 PM por um +3 que custa 3.
+//
+// Sem degrau a escolher, segue de um toque — são as seis Posturas de Combate
+// (p54) e todo bárbaro abaixo do 6º. Perguntar ali seria um toque a mais numa
+// pergunta de uma resposta só.
 func stanceChips(id int64, power powerRow) []actionChip {
 	stance := power.Stance
 	if stance.Active {
@@ -154,7 +164,7 @@ func stanceChips(id int64, power powerRow) []actionChip {
 				id, stance.Flag),
 		}}
 	}
-	return []actionChip{{
+	chip := actionChip{
 		Label: power.Name,
 		Cost:  strconv.Itoa(stance.BasePm) + " PM",
 		Can:   power.Can, Why: power.Why,
@@ -162,7 +172,17 @@ func stanceChips(id int64, power powerRow) []actionChip {
 		GroupCost: stanceGroupCost(stance.Flag),
 		Command: fmt.Sprintf("$stance_degrees = 0; @post('/personagens/%d/poderes/postura/%s/entra?embutida=1')",
 			id, stance.Flag),
-	}}
+	}
+	if stance.MaxSteps > 0 {
+		// O `+` é a mesma grafia do crachá da linha ("POSTURA · 2+ PM"), e aqui
+		// ele tem a segunda função de avisar que o toque vai PERGUNTAR: um chip
+		// que anuncia 2 PM e abre um diálogo que cobra 3 é um preço que muda
+		// depois do toque.
+		chip.Cost = strconv.Itoa(stance.BasePm) + "+ PM"
+		chip.Command = fmt.Sprintf("$stance_degrees = 0; $detail = 'postura-%s'", stance.Flag)
+		chip.Asks = true
+	}
+	return []actionChip{chip}
 }
 
 // A POSTURA PENDURA PELO QUE ELA CUSTA, e não pelo que ela muda.
