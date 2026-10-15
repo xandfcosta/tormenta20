@@ -297,6 +297,40 @@ func TestNobodyEntersAStanceThatIsNotTheirs(t *testing.T) {
 	}
 }
 
+// PODER DE OUTRO não se usa, e a recusa não cobra nada.
+//
+// Irmão do `TestNobodyEntersAStanceThatIsNotTheirs` (ALE-423): lá era a
+// postura, aqui é o poder instantâneo. O `UsePower` perguntava o PM, os usos e
+// as flags — nunca se o poder era do personagem —, então um bárbaro gastava 1 PM
+// no En Garde do bucaneiro (p48) e queimava o "1/cena" dele.
+//
+// A tela nunca ofereceu o gesto, e é por isso que a recusa é do servidor.
+func TestNobodyUsesAPowerThatIsNotTheirs(t *testing.T) {
+	f, id := barbaro(t, 5)
+
+	before := pm(t, f, id)
+	refusal := powerCommand(t, f, id, "usa/class.bucaneiro.en-garde", "")
+	if !strings.Contains(refusal, "não tem este poder") {
+		t.Errorf("a recusa não diz que o poder não é dele: %q", refusal)
+	}
+	if after := pm(t, f, id); after != before {
+		t.Errorf("a recusa cobrou assim mesmo: %d → %d", before, after)
+	}
+	uses, err := f.s.sceneCore().Queries().ListCharacterPowerUses(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler os usos: %v", err)
+	}
+	if len(uses) != 0 {
+		t.Errorf("a recusa gastou um uso assim mesmo: %+v", uses)
+	}
+	// CONTROLE: o poder DELE continua saindo — sem isto, uma recusa que barrasse
+	// todo poder passaria verde aqui.
+	choiceCom(t, f, id, `["class.barbaro.brado-assustador"]`, `[]`)
+	if refusal := powerCommand(t, f, id, "usa/class.barbaro.brado-assustador", ""); refusal != "" {
+		t.Fatalf("o poder do próprio bárbaro foi recusado: %q", refusal)
+	}
+}
+
 // SEM PM NO BOLSO, nem o poder sai nem a postura abre.
 //
 // # Este caso nasceu de uma SABOTAGEM, e vale dizer como

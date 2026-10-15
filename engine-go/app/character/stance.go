@@ -195,6 +195,14 @@ func (p Plays) UsePower(
 	if spec.Kind != "instant" {
 		return fmt.Errorf("%q não é um poder de usar", spec.Name)
 	}
+	// SÓ USA O PODER QUEM O TEM. A decisão abaixo pergunta o PM, os usos e as
+	// flags — nenhuma delas é sobre o dono —, então um bárbaro gastava 1 PM no
+	// En Garde do bucaneiro (p48) e queimava o "1/cena" dele. Irmão da recusa
+	// de postura (ALE-423), e pela mesma razão: a tela não oferece o gesto, e a
+	// fronteira é o servidor.
+	if !sheet.OwnsActivation(dto, *spec) {
+		return fmt.Errorf("%s: o personagem não tem este poder", spec.Name)
+	}
 	uses := PowerUses(dto)[spec.ID]
 	can, reason := book.UseDecision(*spec, book.UseContext{
 		CurrentPM: int(dto.ManaAvailable()), UsedThisScene: uses.Scene, UsedToday: uses.Day,
