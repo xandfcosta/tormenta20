@@ -106,6 +106,54 @@ func choiceCom(t *testing.T, f sceneFixture, id int64, powers, origin string) {
 	}
 }
 
+// O PODER DO DEUS entra no acervo — ele é da ficha como qualquer outro.
+//
+// A lista mostrava raça, origem, classe e escolhidos, e a devoção ficava de
+// fora: o devoto de Khalmyr tinha o Dom da Verdade (p133) na ficha e não na
+// lista que diz o que ele tem. A falta era calada, e passou a doer quando o
+// caso de uso precisou perguntar a POSSE para deixar o poder sair (ALE-426).
+func TestTheGodPowerIsInTheCollection(t *testing.T) {
+	f, id := barbaro(t, 5)
+	devoteOf(t, f, id, "Khalmyr", "Dom da Verdade")
+
+	screen := powerPanel(powerScreen(t, f, id))
+	if !strings.Contains(screen, "Dom da Verdade") {
+		t.Error("o poder concedido pelo deus não está no acervo")
+	}
+	// O CRACHÁ DIZ O DEUS, e não só que o poder existe: a procedência encurtada
+	// cai em "Geral" para tudo que ela não conhece, e um poder divino carimbado
+	// de geral é a linha mentindo sobre de onde ele veio.
+	if !strings.Contains(powerRowOf(screen, "Dom da Verdade"), "Khalmyr") {
+		t.Errorf("o crachá do poder divino não diz o deus: %q",
+			powerRowOf(screen, "Dom da Verdade"))
+	}
+}
+
+// powerRowOf é a linha daquele poder na lista — o pedaço entre o <li> que o
+// contém e o fim dele. Afirmar sobre a tela inteira casaria o crachá de um
+// poder com o nome de outro.
+func powerRowOf(screen, name string) string {
+	at := strings.Index(screen, name)
+	if at < 0 {
+		return ""
+	}
+	start := strings.LastIndex(screen[:at], "<li")
+	end := strings.Index(screen[at:], "</li>")
+	if start < 0 || end < 0 {
+		return ""
+	}
+	return screen[start : at+end]
+}
+
+func devoteOf(t *testing.T, f sceneFixture, id int64, god, power string) {
+	t.Helper()
+	if _, err := f.s.db.ExecContext(context.Background(),
+		"UPDATE characters SET god = ?, godPower = ? WHERE id = ?", god, power, id,
+	); err != nil {
+		t.Fatalf("semear a devoção: %v", err)
+	}
+}
+
 // AS AÇÕES vêm em cima e ordenadas; as passivas ficam na outra seção.
 func TestActionsComeSortedAndPassivesComeApart(t *testing.T) {
 	f, id := barbaro(t, 5)

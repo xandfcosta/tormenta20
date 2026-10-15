@@ -386,6 +386,12 @@ func shortSource(source string) string {
 	if name, found := strings.CutPrefix(source, "Classe · "); found {
 		return name
 	}
+	// O DIVINO segue a regra da classe, e pela mesma razão: o que distingue é o
+	// DEUS. Sem esta linha ele caía no "Geral" do fim, e o crachá do Dom da
+	// Verdade dizia que ele era um poder geral (ALE-426).
+	if name, found := strings.CutPrefix(source, "Divino · "); found {
+		return name
+	}
 	if strings.HasPrefix(source, "Raça") {
 		return "Raça"
 	}
