@@ -94,9 +94,15 @@ func StanceSiblings(group, flag string) []Stance {
 
 // FlagGrants são as ativações de gatilho daquela flag que CONCEDEM algo.
 //
-// Ela NÃO filtra pelo que o personagem possui, e isso é uma folga deliberada:
-// quem chega aqui já entrou na postura, e a postura é de uma classe. Filtrar
-// duas vezes daria uma segunda leitura da posse.
+// Ela diz o que a FLAG concede, e não o que ESTA ficha tem: a concessão é um
+// poder à parte da postura, e pode ser eletivo. A premissa escrita aqui era que
+// filtrar seria folga — *"quem chega aqui já entrou na postura, e a postura é de
+// uma classe"* —, e ela vale para a POSTURA e é falsa para a CONCESSÃO: a Alma
+// de Bronze (p41) é poder de bárbaro de vaga, e quem não a escolheu entrava em
+// fúria com a reserva de PV dela (ALE-423).
+//
+// Quem APLICA pergunta a posse (`applyStanceGrants`); quem APAGA, no fim da
+// postura, continua querendo a lista inteira.
 func FlagGrants(flag string) []Activation {
 	outside := []Activation{}
 	for _, spec := range Activations() {

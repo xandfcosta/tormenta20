@@ -915,6 +915,10 @@
         {
           "create": {
             "name": "Bárbaro Furioso Nv6",
+            "classPowers": [
+              "class.barbaro.alma-de-bronze",
+              "class.barbaro.sangue-dos-inimigos"
+            ],
             "races": [
               "anao"
             ],
