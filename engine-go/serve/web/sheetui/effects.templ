@@ -108,8 +108,8 @@ templ stancesBlock(v View) {
 				for _, row := range v.Effects.Stances {
 					<li class="flex items-center gap-2 rounded-sm border border-grimorio-gold/40 bg-grimorio-panel px-2 py-1.5">
 						<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ row.Name }</span>
-						if row.Steps != "" {
-							<span class="shrink-0 font-mono text-2xs text-grimorio-gold">{ row.Steps }</span>
+						if row.Bonus != "" {
+							<span class="shrink-0 font-mono text-2xs text-grimorio-gold">{ row.Bonus }</span>
 						}
 						if row.Paid != "" {
 							<span class="shrink-0 font-mono text-2xs text-muted-foreground">{ row.Paid }</span>

@@ -40,6 +40,10 @@ type actionChip struct {
 	// postura que escala com o nível. O botão ganha `aria-haspopup`, porque quem
 	// lê por leitor de tela precisa saber que o toque vai pedir mais uma coisa.
 	Asks bool
+	// Bonus é o que a postura EM CURSO está dando ("+3"), e ele ocupa o lugar do
+	// `Cost` — um e outro nunca são escritos ao mesmo tempo: antes de subir o que
+	// importa é o preço, depois de subir é o número.
+	Bonus string
 	// Moves são os números que este chip muda — ver `actionRow.Moves`. Vazio na
 	// POSTURA, que pendura por outro critério (ver `Cost`).
 	Moves []string
@@ -158,6 +162,11 @@ func stanceChips(id int64, power powerRow) []actionChip {
 	if stance.Active {
 		return []actionChip{{
 			Label: "Encerrar " + power.Name, On: true, Can: true,
+			// O BÔNUS EM CURSO vai no mesmo lugar onde o preço estava antes de a
+			// postura subir, e ele responde o que o verbo sozinho não responde:
+			// encerrar desfaz um PM que não volta, e quem decide precisa saber o
+			// que vai perder. Era preciso ir à aba Efeitos para descobrir.
+			Bonus:     bonusInEffect(stance),
 			Moves:     numbersMovedBy(book.StanceTargets(stance.Flag)),
 			GroupCost: stanceGroupCost(stance.Flag),
 			Command: fmt.Sprintf("@post('/personagens/%d/efeitos/postura/%s?embutida=1')",
@@ -183,6 +192,20 @@ func stanceChips(id int64, power powerRow) []actionChip {
 		chip.Asks = true
 	}
 	return []actionChip{chip}
+}
+
+// bonusInEffect é o "+3" de uma postura em curso.
+//
+// VAZIO em duas situações, e a segunda foi decidida OLHANDO a tela: quando a
+// postura não tem um número que a descreva (a Torre Inabalável, p55, está em pé
+// ou não está) e quando o número não foi ESCOLHIDO. O "+1" constante da Muralha
+// Intransponível ficava ao lado de um rótulo de 38 caracteres, competindo com o
+// nome por uma informação que a aba Combate já dá na Defesa.
+func bonusInEffect(stance *stanceState) string {
+	if stance.Bonus <= 0 || !book.StanceScales(stance.Flag) {
+		return ""
+	}
+	return book.WithSign(stance.Bonus)
 }
 
 // A POSTURA PENDURA PELO QUE ELA CUSTA, e não pelo que ela muda.

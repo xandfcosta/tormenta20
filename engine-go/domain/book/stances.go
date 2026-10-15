@@ -161,6 +161,39 @@ func StanceBaseBonus(flag string) int {
 	return amount
 }
 
+// StanceBonusInEffect é o bônus que a postura está DANDO agora: a base mais os
+// degraus pagos.
+//
+// É o número pelo qual a mesa chama a postura em curso — "estou em Fúria +3" —,
+// e ele é o mesmo que o contador oferece ao entrar. Zero quando a postura não
+// tem um bônus só (ver `StanceBaseBonus`), e aí a tela não escreve número
+// nenhum: a Torre Inabalável (p55) está em pé ou não está, e não há "+N" que a
+// descreva.
+func StanceBonusInEffect(flag string, steps int) int {
+	base := StanceBaseBonus(flag)
+	if base == 0 {
+		return 0
+	}
+	return base + steps
+}
+
+// StanceScales diz se a postura compra bônus com PM extra — a Fúria (p41) e a
+// Inspiração (p44), e mais nenhuma das oito do catálogo.
+//
+// Quem pergunta é a TELA, para saber se o bônus em curso vale a tinta: num
+// número ESCOLHIDO ele é o que o jogador comprou e o que encerrar vai desfazer;
+// num número constante ele é referência que a ficha já mostra no lugar dele — a
+// Muralha Intransponível (p54) dá +1 na Defesa, e a Defesa está escrita na aba
+// Combate.
+func StanceScales(flag string) bool {
+	stance, found := StancesFromCatalog()[flag]
+	if !found {
+		return false
+	}
+	spec := ActivationOf(stance.ID, "")
+	return spec != nil && spec.Scaling != nil && spec.Scaling.StepPm > 0
+}
+
 // StanceTargets são os alvos que a postura move — o que a tela precisa para
 // dizer QUAIS números um chip mexe, sem o resto do modificador.
 func StanceTargets(flag string) []engine.ModifierTarget {

@@ -70,8 +70,10 @@ type stanceRow struct {
 	Name string
 	// Paid é "2 PM" — o que foi cobrado para entrar. Ele fica visível porque
 	// encerrar não devolve nada, e a pessoa merece saber o que gastou.
-	Paid    string
-	Steps   string
+	Paid string
+	// Bonus é "+3" — o que a postura está DANDO, com os degraus pagos somados à
+	// base. Vazio na postura que não move número nenhum.
+	Bonus   string
 	Command string
 }
 
@@ -208,8 +210,12 @@ func stanceRowsOf(dto sheet.CharacterDTO) []stanceRow {
 		if s.PmPaid > 0 {
 			row.Paid = strconv.FormatInt(s.PmPaid, 10) + " PM"
 		}
-		if s.Steps > 0 {
-			row.Steps = "+" + strconv.FormatInt(s.Steps, 10)
+		// O BÔNUS EM CURSO, e não a contagem de degraus. Os dois saem como "+N" e
+		// são números DIFERENTES — "+1" de um degrau pago é uma Fúria +3 —, então
+		// as duas grafias na mesma tela eram um conceito com duas caras: aqui
+		// "Fúria +1", no contador de entrar "+3", e no ataque o +3 somado.
+		if bonus := book.StanceBonusInEffect(s.Flag, int(s.Steps)); bonus > 0 && book.StanceScales(s.Flag) {
+			row.Bonus = book.WithSign(bonus)
 		}
 		rows = append(rows, row)
 	}

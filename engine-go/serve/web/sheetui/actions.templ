@@ -191,6 +191,9 @@ templ chipStrip(chips []actionChip) {
 				if chip.Cost != "" {
 					<span class="font-mono text-3xs tabular-nums">{ chip.Cost }</span>
 				}
+				if chip.Bonus != "" {
+					<span class="font-mono text-3xs tabular-nums">{ chip.Bonus }</span>
+				}
 			</button>
 		}
 	</div>

@@ -93,6 +93,9 @@ type stanceState struct {
 	// e é com ele que o contador fala a língua do livro. Zero na postura que não
 	// move número; ver `book.StanceBaseBonus`.
 	BaseBonus int
+	// Bonus é o que a postura está dando AGORA: a base mais os degraus pagos.
+	// Só faz sentido com ela em curso, e é o número pelo qual a mesa a chama.
+	Bonus int
 }
 
 // powersPanelOf monta a aba.
@@ -124,7 +127,7 @@ func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
 
 func powerRowFor(
 	dto sheet.CharacterDTO, power ownedPower, context book.UseContext,
-	uses map[string]character.PowerUse, stances map[string]bool,
+	uses map[string]character.PowerUse, stances map[string]int,
 ) powerRow {
 	row := powerRow{
 		ID: power.ID, Name: power.Name, Source: shortSource(power.Source),
@@ -166,14 +169,15 @@ func powerRowFor(
 
 // stanceStateFor resolve a flag, os degraus do nível e se ela está em curso.
 func stanceStateFor(
-	dto sheet.CharacterDTO, spec book.Activation, stances map[string]bool, context book.UseContext,
+	dto sheet.CharacterDTO, spec book.Activation, stances map[string]int, context book.UseContext,
 ) *stanceState {
 	flag := stanceFlag(spec)
 	if flag == "" {
 		return nil
 	}
+	steps, active := stances[flag]
 	state := &stanceState{
-		Flag: flag, Active: stances[flag],
+		Flag: flag, Active: active, Bonus: book.StanceBonusInEffect(flag, steps),
 		BasePm: book.ActivationPm(spec), BaseBonus: book.StanceBaseBonus(flag),
 	}
 	if spec.Scaling != nil {
@@ -259,11 +263,16 @@ func (s Scene) activeFlags(dto sheet.CharacterDTO) map[string]bool {
 	return outside
 }
 
-// paidStances são as posturas com pagamento registrado.
-func paidStances(dto sheet.CharacterDTO) map[string]bool {
-	outside := map[string]bool{}
+// paidStances são as posturas com pagamento registrado, e com QUANTOS DEGRAUS
+// cada uma pagou.
+//
+// Os degraus vêm junto porque a tela diz o bônus EM CURSO, e ele é base mais
+// degraus: a presença da flag responde "está em pé?", e o valor responde "em
+// pé valendo quanto?". Um `map[string]bool` responderia só a primeira.
+func paidStances(dto sheet.CharacterDTO) map[string]int {
+	outside := map[string]int{}
 	for _, p := range dto.Stances {
-		outside[p.Flag] = true
+		outside[p.Flag] = int(p.Steps)
 	}
 	return outside
 }

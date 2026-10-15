@@ -489,3 +489,35 @@ func TestTheStanceWithNoDegreeToPickStillEntersInOneTouch(t *testing.T) {
 			"tem degrau para comprar:\n%s", recorte(livre))
 	}
 }
+
+// A POSTURA EM CURSO DIZ O BÔNUS QUE ELA ESTÁ DANDO (ALE-427).
+//
+// Com a Fúria em pé, a superfície dizia "Encerrar Fúria" e mais nada: o +3 que o
+// jogador acabou de comprar só aparecia somado dentro do ataque, e descobrir em
+// que degrau ele entrou exigia a aba Efeitos. Encerrar é uma decisão — ela
+// desfaz um PM que não volta —, e quem decide precisa saber o que vai perder.
+//
+// O NÚMERO É O BÔNUS e não a contagem de degraus, que é a mesma língua do
+// contador e a do livro ("Fúria +3", Tab. 1-6).
+func TestTheRunningStanceSaysTheBonusItIsGiving(t *testing.T) {
+	f, id := barbarianAtTheTable(t, 6)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":1}`); refusal != "" {
+		t.Fatalf("entrar em Fúria foi recusado: %q", refusal)
+	}
+
+	padrao := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)),
+		"Ação padrão", "Ação de movimento")
+	if !strings.Contains(padrao, "Encerrar Fúria") {
+		t.Fatalf("a Fúria está em pé e o chip não oferece encerrar:\n%s", recorte(padrao))
+	}
+	// DENTRO DO BOTÃO, e não no grupo: a primeira versão desta asserção procurou
+	// "+3" no recorte inteiro e passou VERDE sobre o Fintar, que mostra +3 de
+	// Enganação três linhas abaixo. Um `Contains` numa tela cheia de números
+	// casa qualquer número.
+	chip := entre(t, padrao, "Encerrar Fúria", "</button>")
+	// +3: o +2 da base (p41) mais o degrau pago.
+	if !strings.Contains(chip, "+3") {
+		t.Errorf("o chip da Fúria em curso não diz o bônus que ela dá — o jogador "+
+			"pagou 3 PM por um +3, e o botão mostra só o verbo:\n%s", recorte(chip))
+	}
+}
