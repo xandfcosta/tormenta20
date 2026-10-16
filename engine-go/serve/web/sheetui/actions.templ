@@ -35,6 +35,23 @@ templ ActionsBody(v View) {
 		if v.Actions.Passives > 0 {
 			@passiveTally(v.Actions.Passives)
 		}
+		// OS CONTADORES DE DEGRAU, desenhados TAMBÉM aqui.
+		//
+		// O chip de uma postura que escala não entra: ele ABRE esta
+		// sobreposição. E uma sobreposição que só existisse na aba Poderes
+		// estaria dentro do nó que o `data-show` da Ficha esconde — o toque
+		// escreveria `$detail` e NINGUÉM leria, o que em JavaScript não é erro:
+		// é o botão não fazer nada.
+		//
+		// É o MESMO componente da aba Poderes, então a rota, a prévia do custo e
+		// a validação continuam sendo uma só. As duas cópias convivem quando a
+		// Ficha está aberta na aba Poderes, e a escondida não pinta: ancestral em
+		// `display:none` não desenha sobreposição `fixed` nenhuma.
+		for _, row := range v.Powers.Actions {
+			if row.Stance != nil && row.Stance.MaxSteps > 0 {
+				@stanceStepperDialog(v, row)
+			}
+		}
 	</div>
 }
 
@@ -147,6 +164,11 @@ templ rollButton(v View, roll actionRoll, look string) {
 // COM o rótulo "com" na frente: sem ele a tira é uma fileira de botões cuja
 // relação com a lista de baixo o olho tem de adivinhar. Uma palavra de três
 // letras compra essa relação.
+//
+// O CHIP QUE PERGUNTA NÃO É INTERRUPTOR, e por isso ele troca o `aria-pressed`
+// pelo `aria-haspopup`: "não pressionado" promete que o toque liga alguma
+// coisa, e o toque dele abre um contador. Quem ouve a tela recebe a promessa
+// certa nos dois casos.
 templ chipStrip(chips []actionChip) {
 	<div class="mb-1.5 flex flex-wrap items-center gap-1.5">
 		<span class={ ui.SectionLabelClasses("muted", "text-3xs") }>com</span>
@@ -155,7 +177,11 @@ templ chipStrip(chips []actionChip) {
 				type="button"
 				disabled?={ !chip.Can }
 				title={ chipTitle(chip) }
-				aria-pressed={ ariaBool(chip.On) }
+				if chip.Asks {
+					aria-haspopup="dialog"
+				} else {
+					aria-pressed={ ariaBool(chip.On) }
+				}
 				data-on:click={ chip.Command }
 				class={ "inline-flex min-h-11 items-center gap-1 rounded-sm border px-2.5 text-xs transition-colors",
 					templ.KV("border-2 border-grimorio-gold bg-grimorio-gold/10 font-semibold text-grimorio-gold", chip.On),
@@ -164,6 +190,9 @@ templ chipStrip(chips []actionChip) {
 				{ chip.Label }
 				if chip.Cost != "" {
 					<span class="font-mono text-3xs tabular-nums">{ chip.Cost }</span>
+				}
+				if chip.Bonus != "" {
+					<span class="font-mono text-3xs tabular-nums">{ chip.Bonus }</span>
 				}
 			</button>
 		}

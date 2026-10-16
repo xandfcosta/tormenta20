@@ -416,3 +416,108 @@ func ataqueDoCartao(t *testing.T, painel string) int {
 	}
 	return n
 }
+
+// A POSTURA QUE ESCALA PERGUNTA O DEGRAU NA PRÓPRIA AÇÕES (ALE-427, p41).
+//
+//	"Você pode gastar 2 PM para invocar uma fúria selvagem […] A cada cinco
+//	 níveis, pode gastar +1 PM para aumentar os bônus em +1." (p41)
+//
+// O degrau é parcela do ato de INVOCAR — o livro não dá para subi-lo com a
+// postura em pé, e encerrar não devolve PM. Então entrar pelo mínimo sem
+// perguntar é o app escolhendo pelo jogador: medido, quem tocava o chip e
+// queria o degrau pagava 2 PM, encerrava sem receber nada de volta e pagava 3
+// de novo — 5 PM por um +3 que custa 3.
+//
+// O QUE ESTE CASO PRENDE é a bifurcação, e ela é por personagem: a mesma
+// postura pergunta ou não pergunta conforme o nível NA CLASSE abrir degrau.
+func TestTheStanceThatScalesAsksForTheDegreeOnTheActionsSurface(t *testing.T) {
+	// 6º é onde a Fúria ganha o primeiro degrau (Tab. 1-6: 6º, 11º, 16º).
+	f, _ := barbarianAtTheTable(t, 6)
+
+	painel := superficieDeAcoes(t, acoesDaMesa(t, f))
+	padrao := entre(t, painel, "Ação padrão", "Ação de movimento")
+	if strings.Contains(padrao, "/poderes/postura/furia/entra") {
+		t.Errorf("o chip da Fúria entra direto pelo degrau zero — o bárbaro de 6º "+
+			"tem um degrau para escolher, e escolhê-lo depois custa a entrada "+
+			"inteira de novo:\n%s", recorte(padrao))
+	}
+	// A APÓSTROFE VEM ESCAPADA do templ, como o `&#34;` do recorte da superfície.
+	if !strings.Contains(padrao, "$detail = &#39;postura-furia&#39;") {
+		t.Errorf("o chip da Fúria não abre o contador de degraus:\n%s", recorte(padrao))
+	}
+	// O `+` É O AVISO de que o preço sobe, e ele é a mesma grafia que o crachá
+	// da linha já usa. Sem ele o chip anuncia 2 PM e abre um diálogo que pode
+	// cobrar 3.
+	if !strings.Contains(padrao, "2+ PM") {
+		t.Errorf("o chip da Fúria promete 2 PM e vai perguntar o degrau:\n%s", recorte(padrao))
+	}
+	// E O DIÁLOGO ESTÁ NESTA SUPERFÍCIE. Sem ele o `$detail` não tem leitor
+	// NENHUM aqui — e ler um sinal que ninguém desenhou não é erro em
+	// JavaScript, é o toque não fazer nada.
+	if !strings.Contains(painel, "Confirmar Fúria") {
+		t.Errorf("a superfície de Ações abre um diálogo de degrau que ela não desenha — " +
+			"o toque no chip não faria nada, e em silêncio")
+	}
+}
+
+// E A QUE NÃO ESCALA CONTINUA DE UM TOQUE.
+//
+// O irmão do caso acima, e ele é quem o segura no lugar: perguntar sempre
+// custaria um toque a mais numa pergunta de uma resposta só. São SEIS das oito
+// posturas do catálogo — as Posturas de Combate (p54) não escalam —, mais a
+// Fúria de todo bárbaro abaixo do 6º.
+func TestTheStanceWithNoDegreeToPickStillEntersInOneTouch(t *testing.T) {
+	f, _ := barbarianAtTheTable(t, 5)
+
+	padrao := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)),
+		"Ação padrão", "Ação de movimento")
+	if !strings.Contains(padrao, "/poderes/postura/furia/entra") {
+		t.Errorf("o chip da Fúria do bárbaro de 5º deixou de entrar num toque, e ele "+
+			"não tem degrau nenhum para escolher:\n%s", recorte(padrao))
+	}
+	if strings.Contains(padrao, "2+ PM") {
+		t.Errorf("o chip promete um degrau que o 5º nível não concede — o primeiro "+
+			"vem no 6º (Tab. 1-6):\n%s", recorte(padrao))
+	}
+	// E O CRACHÁ DA LINHA diz o mesmo. Ele é a OUTRA representação da Fúria
+	// nesta superfície — a que mora no grupo do custo de ação, porque o chip
+	// mora no grupo do número que ela muda —, e as duas têm de prometer a mesma
+	// coisa. O `+` é o aviso de que o preço sobe com o degrau.
+	livre := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)), "Livre e reação", "Passivas")
+	if strings.Contains(livre, "2+ PM") {
+		t.Errorf("a linha da Fúria anuncia um preço que sobe, e o bárbaro de 5º não "+
+			"tem degrau para comprar:\n%s", recorte(livre))
+	}
+}
+
+// A POSTURA EM CURSO DIZ O BÔNUS QUE ELA ESTÁ DANDO (ALE-427).
+//
+// Com a Fúria em pé, a superfície dizia "Encerrar Fúria" e mais nada: o +3 que o
+// jogador acabou de comprar só aparecia somado dentro do ataque, e descobrir em
+// que degrau ele entrou exigia a aba Efeitos. Encerrar é uma decisão — ela
+// desfaz um PM que não volta —, e quem decide precisa saber o que vai perder.
+//
+// O NÚMERO É O BÔNUS e não a contagem de degraus, que é a mesma língua do
+// contador e a do livro ("Fúria +3", Tab. 1-6).
+func TestTheRunningStanceSaysTheBonusItIsGiving(t *testing.T) {
+	f, id := barbarianAtTheTable(t, 6)
+	if refusal := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":1}`); refusal != "" {
+		t.Fatalf("entrar em Fúria foi recusado: %q", refusal)
+	}
+
+	padrao := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)),
+		"Ação padrão", "Ação de movimento")
+	if !strings.Contains(padrao, "Encerrar Fúria") {
+		t.Fatalf("a Fúria está em pé e o chip não oferece encerrar:\n%s", recorte(padrao))
+	}
+	// DENTRO DO BOTÃO, e não no grupo: a primeira versão desta asserção procurou
+	// "+3" no recorte inteiro e passou VERDE sobre o Fintar, que mostra +3 de
+	// Enganação três linhas abaixo. Um `Contains` numa tela cheia de números
+	// casa qualquer número.
+	chip := entre(t, padrao, "Encerrar Fúria", "</button>")
+	// +3: o +2 da base (p41) mais o degrau pago.
+	if !strings.Contains(chip, "+3") {
+		t.Errorf("o chip da Fúria em curso não diz o bônus que ela dá — o jogador "+
+			"pagou 3 PM por um +3, e o botão mostra só o verbo:\n%s", recorte(chip))
+	}
+}

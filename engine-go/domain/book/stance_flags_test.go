@@ -233,3 +233,24 @@ func TestEveryActiveEffectGrantCarriesItsModifiers(t *testing.T) {
 		t.Fatal("nenhuma concessão de efeito ativo — o guarda não mediu nada")
 	}
 }
+
+// O BÔNUS QUE A POSTURA DÁ NO DEGRAU ZERO, que é como o livro a nomeia.
+//
+// A Tabela 1-6 escreve "Fúria +2" no 1º nível e "Fúria +3" no 6º; a Tabela 1-8
+// escreve "Inspiração +1" e "+2". É esse número que a tela mostra enquanto
+// alguém escolhe o degrau, e ele é escrito AQUI À MÃO de propósito: derivá-lo
+// do catálogo seria perguntar ao código sob teste quanto ele acha que vale.
+func TestTheStanceBonusIsTheNumberTheBookNamesItBy(t *testing.T) {
+	if bonus := StanceBaseBonus("furia"); bonus != 2 {
+		t.Errorf("a Fúria do degrau zero dá +%d, e a p41 dá +2 em ataque e dano", bonus)
+	}
+	if bonus := StanceBaseBonus("inspiracao"); bonus != 1 {
+		t.Errorf("a Inspiração do degrau zero dá +%d, e a p44 dá +1 em testes de perícia", bonus)
+	}
+	// E A POSTURA QUE NÃO MOVE NÚMERO NÃO TEM BÔNUS: a Torre Inabalável (p55) é
+	// regra que o mestre arbitra, e um "+0" na tela prometeria uma conta que não
+	// existe.
+	if bonus := StanceBaseBonus("postura-torre"); bonus != 0 {
+		t.Errorf("a Torre Inabalável anuncia +%d e não mexe em número nenhum", bonus)
+	}
+}

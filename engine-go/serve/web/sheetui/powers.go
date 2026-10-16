@@ -89,6 +89,13 @@ type stanceState struct {
 	StepPm   int
 	// StepLabel é o que cada degrau compra ("+1 no bônus de Fúria").
 	StepLabel string
+	// BaseBonus é o bônus do degrau ZERO — o +2 da Fúria, o +1 da Inspiração —,
+	// e é com ele que o contador fala a língua do livro. Zero na postura que não
+	// move número; ver `book.StanceBaseBonus`.
+	BaseBonus int
+	// Bonus é o que a postura está dando AGORA: a base mais os degraus pagos.
+	// Só faz sentido com ela em curso, e é o número pelo qual a mesa a chama.
+	Bonus int
 }
 
 // powersPanelOf monta a aba.
@@ -120,7 +127,7 @@ func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
 
 func powerRowFor(
 	dto sheet.CharacterDTO, power ownedPower, context book.UseContext,
-	uses map[string]character.PowerUse, stances map[string]bool,
+	uses map[string]character.PowerUse, stances map[string]int,
 ) powerRow {
 	row := powerRow{
 		ID: power.ID, Name: power.Name, Source: shortSource(power.Source),
@@ -145,27 +152,34 @@ func powerRowFor(
 		row.Page = spec.BookPage
 	}
 	row.Limit = limitBadge(*spec)
-	row.Cost, row.Action = writtenCost(*spec), spec.Action
+	// A POSTURA É RESOLVIDA ANTES DO PREÇO, e a ordem é a correção: o `+` do
+	// "2+ PM" é sobre ESTE personagem, e quem sabe se ele tem degrau a comprar é
+	// o estado da postura.
+	if spec.Kind == "stance" {
+		row.Stance = stanceStateFor(dto, *spec, stances, context)
+	}
+	row.Cost, row.Action = writtenCost(*spec, row.Stance), spec.Action
 	context.UsedThisScene, context.UsedToday = uses[spec.ID].Scene, uses[spec.ID].Day
 	if scope := book.ChargedScope(*spec); scope != "" {
 		row.Spent = writtenSpent(scope, uses[spec.ID])
 	}
 	row.Can, row.Why = book.UseDecision(*spec, context)
-	if spec.Kind == "stance" {
-		row.Stance = stanceStateFor(dto, *spec, stances, context)
-	}
 	return row
 }
 
 // stanceStateFor resolve a flag, os degraus do nível e se ela está em curso.
 func stanceStateFor(
-	dto sheet.CharacterDTO, spec book.Activation, stances map[string]bool, context book.UseContext,
+	dto sheet.CharacterDTO, spec book.Activation, stances map[string]int, context book.UseContext,
 ) *stanceState {
 	flag := stanceFlag(spec)
 	if flag == "" {
 		return nil
 	}
-	state := &stanceState{Flag: flag, Active: stances[flag], BasePm: book.ActivationPm(spec)}
+	steps, active := stances[flag]
+	state := &stanceState{
+		Flag: flag, Active: active, Bonus: book.StanceBonusInEffect(flag, steps),
+		BasePm: book.ActivationPm(spec), BaseBonus: book.StanceBaseBonus(flag),
+	}
 	if spec.Scaling != nil {
 		state.BasePm = spec.Scaling.BasePm
 		state.StepPm = spec.Scaling.StepPm
@@ -249,11 +263,16 @@ func (s Scene) activeFlags(dto sheet.CharacterDTO) map[string]bool {
 	return outside
 }
 
-// paidStances são as posturas com pagamento registrado.
-func paidStances(dto sheet.CharacterDTO) map[string]bool {
-	outside := map[string]bool{}
+// paidStances são as posturas com pagamento registrado, e com QUANTOS DEGRAUS
+// cada uma pagou.
+//
+// Os degraus vêm junto porque a tela diz o bônus EM CURSO, e ele é base mais
+// degraus: a presença da flag responde "está em pé?", e o valor responde "em
+// pé valendo quanto?". Um `map[string]bool` responderia só a primeira.
+func paidStances(dto sheet.CharacterDTO) map[string]int {
+	outside := map[string]int{}
 	for _, p := range dto.Stances {
-		outside[p.Flag] = true
+		outside[p.Flag] = int(p.Steps)
 	}
 	return outside
 }
@@ -332,125 +351,4 @@ func filtradasPorNome(rows []powerRow, term string) []powerRow {
 		}
 	}
 	return outside
-}
-
-// ── o que a TELA escreve ─────────────────────────────────────────────────────
-
-// writtenActions é a economia de ações do livro (p233), em caixa alta porque
-// ela é crachá.
-var writtenActions = map[string]string{
-	"padrao": "PADRÃO", "movimento": "MOVIMENTO", "livre": "LIVRE", "reacao": "REAÇÃO",
-	"gratuita": "GRATUITA", "completa": "COMPLETA", "passivo": "PASSIVA", "varia": "VARIA",
-}
-
-// writtenCost é "LIVRE · 1 PM" — a ação que o uso consome e o preço.
-//
-// A POSTURA escreve outra coisa: "POSTURA · 2+ PM". A economia de ação dela
-// importa menos que o fato de ser postura (ela DURA), e o "+" avisa que o preço
-// sobe com os degraus antes de a pessoa abrir o contador.
-func writtenCost(spec book.Activation) string {
-	if spec.Kind == "stance" {
-		return "POSTURA · " + strconv.Itoa(book.StanceCost(spec, 0)) + stepsMore(spec) + " PM"
-	}
-	action, found := writtenActions[spec.Action]
-	if !found {
-		action = strings.ToUpper(spec.Action)
-	}
-	if book.CostIsVariable(spec) {
-		return action + " · PM variável"
-	}
-	return action + " · " + strconv.Itoa(book.ActivationPm(spec)) + " PM"
-}
-
-func stepsMore(spec book.Activation) string {
-	if spec.Scaling != nil && spec.Scaling.StepPm > 0 {
-		return "+"
-	}
-	return ""
-}
-
-// writtenSpent é "usado 1/1 cena" — o que já se gastou do limite cobrado.
-func writtenSpent(scope string, use character.PowerUse) string {
-	spent, word := use.Day, "dia"
-	if scope == "scene" {
-		spent, word = use.Scene, "cena"
-	}
-	return "usado " + strconv.Itoa(spent) + "/1 " + word
-}
-
-// shortSource encurta a procedência para caber no crachá da linha.
-//
-// "Classe · Bárbaro" vira "Bárbaro" porque a palavra "Classe" é a que se repete
-// em quase toda linha — o que distingue é o nome da classe.
-func shortSource(source string) string {
-	if name, found := strings.CutPrefix(source, "Classe · "); found {
-		return name
-	}
-	// O DIVINO segue a regra da classe, e pela mesma razão: o que distingue é o
-	// DEUS. Sem esta linha ele caía no "Geral" do fim, e o crachá do Dom da
-	// Verdade dizia que ele era um poder geral (ALE-426).
-	if name, found := strings.CutPrefix(source, "Divino · "); found {
-		return name
-	}
-	if strings.HasPrefix(source, "Raça") {
-		return "Raça"
-	}
-	if strings.HasPrefix(source, "Origem") {
-		return "Origem"
-	}
-	if source == "Poder da Tormenta" {
-		return "Tormenta"
-	}
-	return "Geral"
-}
-
-// activationGlyph escolhe o desenho pelo tipo da ativação.
-func activationGlyph(kind string) string {
-	switch kind {
-	case "instant":
-		return "Zap"
-	case "stance":
-		return "Flame"
-	case "triggered-passive":
-		return "Sparkles"
-	}
-	return "BookOpen"
-}
-
-// writtenPowers é "26 poderes", com o singular certo.
-func writtenPowers(n int) string {
-	if n == 1 {
-		return "1 poder"
-	}
-	return strconv.Itoa(n) + " poderes"
-}
-
-// noActionsPhrase explica a seção vazia, e ela DEPENDE de quem lê: mandar às
-// Magias quem não conjura seria mandá-lo a uma aba vazia.
-func noActionsPhrase(casts bool) string {
-	if casts {
-		return "Nenhuma ação ativável — suas magias estão na aba Magias."
-	}
-	return "Nenhuma ação ativável. Suas habilidades são passivas."
-}
-
-// powerBadge é a classe do crachá — a postura sai na tinta arcana, que é a
-// mesma da tripla mágica do Combate.
-func powerBadge(kind string) string {
-	base := "shrink-0 rounded-full border px-1.5 py-px text-3xs font-semibold uppercase tracking-wide"
-	if kind == "stance" {
-		return base + " border-arcane/40 text-arcane-ink"
-	}
-	return base + " border-grimorio-iron text-muted-foreground"
-}
-
-// costStancePreview soma o custo dos degraus na tela.
-//
-// PRÉVIA e não decisão: quem cobra é o servidor, com o teto de degraus do nível
-// e o PM disponível. Escrever a regra aqui daria uma segunda conta do mesmo
-// número.
-func costStancePreview(row powerRow) string {
-	base := strconv.Itoa(row.Stance.BasePm)
-	step := strconv.Itoa(row.Stance.StepPm)
-	return "(" + base + " + " + step + " * $stance_degrees) + ' PM'"
 }

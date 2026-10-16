@@ -132,6 +132,68 @@ func StanceBase(flag string) []engine.Modifier {
 	return out
 }
 
+// StanceBaseBonus é o BÔNUS da postura no degrau zero: o +2 da Fúria (p41), o
+// +1 da Inspiração (p44).
+//
+// Ele existe para a tela poder dizer o que o degrau COMPRA no vocabulário de
+// quem joga. O livro nomeia a postura pelo bônus — a Tabela 1-6 escreve "Fúria
+// +3" no 6º nível —, e um contador que mostra "1" obriga quem está escolhendo a
+// somar de cabeça o que o app existe para somar.
+//
+// ZERO quando a postura não move número nenhum (a Torre Inabalável e o Foco de
+// Batalha, p54-55) e também quando os alvos dela DISCORDAM do valor. Discordar
+// não acontece hoje — a Fúria dá +2 no ataque e +2 no dano, e a Inspiração +1 em
+// todas as perícias —, e é por isso que um número só pode representar o bônus.
+// No dia em que uma postura der +2 num alvo e +1 noutro, "o bônus dela" deixa de
+// ser uma coisa: devolver zero faz a tela cair no degrau cru, que é feio e
+// verdadeiro, em vez de escolher um dos dois e mentir.
+func StanceBaseBonus(flag string) int {
+	base := StanceBase(flag)
+	if len(base) == 0 {
+		return 0
+	}
+	amount := base[0].Amount
+	for _, m := range base[1:] {
+		if m.Amount != amount {
+			return 0
+		}
+	}
+	return amount
+}
+
+// StanceBonusInEffect é o bônus que a postura está DANDO agora: a base mais os
+// degraus pagos.
+//
+// É o número pelo qual a mesa chama a postura em curso — "estou em Fúria +3" —,
+// e ele é o mesmo que o contador oferece ao entrar. Zero quando a postura não
+// tem um bônus só (ver `StanceBaseBonus`), e aí a tela não escreve número
+// nenhum: a Torre Inabalável (p55) está em pé ou não está, e não há "+N" que a
+// descreva.
+func StanceBonusInEffect(flag string, steps int) int {
+	base := StanceBaseBonus(flag)
+	if base == 0 {
+		return 0
+	}
+	return base + steps
+}
+
+// StanceScales diz se a postura compra bônus com PM extra — a Fúria (p41) e a
+// Inspiração (p44), e mais nenhuma das oito do catálogo.
+//
+// Quem pergunta é a TELA, para saber se o bônus em curso vale a tinta: num
+// número ESCOLHIDO ele é o que o jogador comprou e o que encerrar vai desfazer;
+// num número constante ele é referência que a ficha já mostra no lugar dele — a
+// Muralha Intransponível (p54) dá +1 na Defesa, e a Defesa está escrita na aba
+// Combate.
+func StanceScales(flag string) bool {
+	stance, found := StancesFromCatalog()[flag]
+	if !found {
+		return false
+	}
+	spec := ActivationOf(stance.ID, "")
+	return spec != nil && spec.Scaling != nil && spec.Scaling.StepPm > 0
+}
+
 // StanceTargets são os alvos que a postura move — o que a tela precisa para
 // dizer QUAIS números um chip mexe, sem o resto do modificador.
 func StanceTargets(flag string) []engine.ModifierTarget {

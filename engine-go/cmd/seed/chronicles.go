@@ -181,8 +181,9 @@ var demoCampaigns = []demoCampaign{
 		//
 		// NÍVEL 6 é escolha, e é o que torna o degrau exercitável num toque: a
 		// Tabela 1-6 abre o primeiro degrau exatamente no 6º, então o contador
-		// da aba Poderes oferece 0 ou 1 e a diferença entre eles é visível no
-		// ataque (+2 contra +3). Num bárbaro de nível 5 o contador nem aparece.
+		// — o da aba Poderes e o que o chip das Ações abre — oferece Fúria +2 ou
+		// +3, e a diferença entre as duas é visível no ataque. Num bárbaro de
+		// nível 5 não há degrau a escolher, e o chip entra num toque.
 		//
 		// OS PAPÉIS AQUI SÃO OS NORMAIS, como na "Ordem do Escudo Partido": o
 		// dono é `mestre@t20.local`, então o `user.json` mestra e o `player.json`
