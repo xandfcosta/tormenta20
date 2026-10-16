@@ -96,6 +96,10 @@ type stanceState struct {
 	// Bonus é o que a postura está dando AGORA: a base mais os degraus pagos.
 	// Só faz sentido com ela em curso, e é o número pelo qual a mesa a chama.
 	Bonus int
+	// BonusNote avisa que um poder vai MULTIPLICAR este bônus depois da conta —
+	// hoje só a Fúria Titânica (p42). Vazio para quem não tem; ver
+	// `stanceBonusNote`.
+	BonusNote string
 }
 
 // powersPanelOf monta a aba.
@@ -179,6 +183,7 @@ func stanceStateFor(
 	state := &stanceState{
 		Flag: flag, Active: active, Bonus: book.StanceBonusInEffect(flag, steps),
 		BasePm: book.ActivationPm(spec), BaseBonus: book.StanceBaseBonus(flag),
+		BonusNote: stanceBonusNote(dto, spec.ID),
 	}
 	if spec.Scaling != nil {
 		state.BasePm = spec.Scaling.BasePm

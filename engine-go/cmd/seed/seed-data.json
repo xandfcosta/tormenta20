@@ -1049,6 +1049,41 @@
               "prepared": true
             }
           ]
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Bárbaro Titânico Nv20",
+            "races": [
+              "minotauro"
+            ],
+            "origin": "capanga",
+            "classes": [
+              {
+                "className": "Bárbaro",
+                "level": 20
+              }
+            ],
+            "god": "Khalmyr",
+            "strength": 6,
+            "dexterity": 2,
+            "constitution": 5,
+            "intelligence": 0,
+            "wisdom": 1,
+            "charisma": 1,
+            "size": "Médio",
+            "displacement": 9,
+            "items": [
+              {
+                "catalogId": "machado-batalha",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "armadura-couro",
+                "equipped": "vested"
+              }
+            ]
+          }
         }
       ]
     },

@@ -1088,10 +1088,27 @@ zero), e ele vive num campo PRÓPRIO do `Modifier`. Quem tem fator não é parce
 da pilha: o `Amount` fica em zero e o valor sai do `byTarget` para o
 `ItemEffects.Factors`.
 
-**Ele age DEPOIS da soma, e sobre a BASE junto.** Quem diz é o livro: a Alta
-Arcana escreve "reduzido à metade (APÓS aplicar aprimoramentos e outros
-modificadores)". O Lento não corta o bônus de item de ninguém — corta o quanto a
-pessoa anda.
+**São DUAS FAMÍLIAS, e elas se distinguem pelo ALVO.**
+
+O **fator de ALVO** (`{k: displacement}`, `{k: pmCost, scope: arcana}`) age
+DEPOIS da soma, e sobre a BASE junto. Quem diz é o livro: a Alta Arcana escreve
+"reduzido à metade (APÓS aplicar aprimoramentos e outros modificadores)". O
+Lento não corta o bônus de item de ninguém — corta o quanto a pessoa anda.
+
+O **fator de FONTE** (`{k: source, name: <id do poder>}`, ALE-429) age na
+PARCELA daquela fonte, ANTES do empilhamento. A Fúria Titânica (p42) dobra "o
+bônus que você recebe quando usa Fúria", e o exemplo trabalhado é quem separa as
+duas leituras: 5 PM gastos dão +10, e não o dobro do ataque inteiro — dobrar o
+total levaria Luta, Força e a arma junto. Com o degrau pago, o balde `morale`
+tem a base e o degrau, os dois entram dobrados, e o não-empilhamento escolhe o
+maior.
+
+**O fator de fonte tem DOIS sítios de aplicação, e isso é da arquitetura.** O
+`scaleWhatTheSourceFactorHits` cuida do caminho incondicional, no ECS; o
+`ApplyActiveConditionals` multiplica a parcela que ele dobra de volta. Um termo
+DEFERIDO não é multiplicado no ECS — ele volta pelo segundo caminho, e dobrado
+nos dois sairia dobrado duas vezes. O bônus de Fúria é condicional, então ele
+passa justamente pelo segundo.
 
 **Dois fatores no mesmo alvo: vale o MAIS SEVERO, e eles não compõem.** É a
 regra que o livro dá para condição — "aplique apenas o mais severo" (p394) — e
@@ -1116,8 +1133,21 @@ divisão inteira de um total em QUADRADOS é exatamente o "arredonde para baixo
 para o primeiro incremento de 1,5m" que o Lento pede. Não há regra de
 arredondamento escrita à mão em lugar nenhum.
 
-> **O que ainda NÃO cabe:** a Fúria Titânica (p42) dobra o bônus de UMA FONTE,
-> e não o total de um alvo. É outra forma, e ela continua sem representação.
+> **A ISENÇÃO não é uma terceira forma do fator — ela já existe, e por FLAG.**
+> O anão "não tem o deslocamento reduzido por uso de armadura ou excesso de
+> carga" (p20), e quem responde isso é o `DisplacementIgnoresArmorAndLoad`, lido
+> pelo `displacementBreakdown`: a isenção pula a chave `displacement:armor` e a
+> penalidade de carga, e não toca em fator nenhum — uma magia de lentidão
+> continua valendo para o anão.
+>
+> Aqui estava escrito que a terceira forma seria "imunidade a FATOR", pelas
+> Pernas do Mar do bucaneiro. **Era leitura da descrição do catálogo e não da
+> página**: a p48 diz *"quando está se equilibrando ou escalando […] seu
+> deslocamento não é reduzido à metade"*, e esse corte é da CIRCUNSTÂNCIA, que o
+> app não modela. Não há o que isentar. O que falta de verdade são dois poderes
+> que pedem a isenção EXISTENTE em recortes diferentes: o Fanático (p128), só
+> para armadura pesada, e o Acrobático (p129), para terreno difícil — e esse
+> segundo não é da ficha, é do `PathCost` do tabuleiro.
 
 ### Onde a unidade aparece, e onde ela não aparece
 

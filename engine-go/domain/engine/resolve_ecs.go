@@ -91,6 +91,12 @@ func resolveInWorld(items []ActiveItem) ItemEffects {
 		dropWhatTheConditionRefuses,
 		harvestFactors,
 		harvestFlags,
+		// DEPOIS do `harvestFactors`, porque ele precisa do mapa pronto, e
+		// ANTES do empilhamento, porque o que a Fúria Titânica dobra é a
+		// parcela e não o vencedor: com o degrau pago, o balde `morale` tem o
+		// +2 da base e o +5 do degrau, e os dois entram dobrados para o
+		// não-empilhamento escolher o maior (p42).
+		scaleWhatTheSourceFactorHits,
 		resolveStacking,
 	)
 	return effectsFromWorld(w, resource)
@@ -198,6 +204,31 @@ func harvestFactors(w *ecs.World) {
 		key := targetKey(t.Mod.Target)
 		factors[key] = severest(factors[key], *t.Mod.Factor)
 		ecs.Set(w, e, Suppressed{Why: "é fator, e fator não soma"})
+	})
+}
+
+// scaleWhatTheSourceFactorHits multiplica a PARCELA das fontes que têm fator.
+//
+// O fator de alvo opera no TOTAL, depois da soma; o de FONTE opera na parcela,
+// antes dela. A diferença é o que o livro pede: a Fúria Titânica (p42) dobra "o
+// bônus que você recebe quando usa Fúria", e não o ataque inteiro — dobrar o
+// total levaria Luta, Força e o bônus da arma junto.
+//
+// O DEFERIDO FICA DE FORA, e isso não é esquecimento: o termo condicional sai
+// do mundo e volta no `ApplyActiveConditionals`, que o multiplica ao dobrá-lo
+// de volta. Multiplicado aqui também, ele sairia dobrado duas vezes.
+func scaleWhatTheSourceFactorHits(w *ecs.World) {
+	factors := factorsOf(w)
+	ecs.Each(w, func(e ecs.Entity, t Term) {
+		if dead(w, e) || deferred(w, e) {
+			return
+		}
+		scaled := sourceFactorOf(factors, t.SourceID)
+		if !scaled.isSet() {
+			return
+		}
+		t.Mod.Amount = scaled.Applied(t.Mod.Amount)
+		ecs.Set(w, e, t)
 	})
 }
 

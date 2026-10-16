@@ -247,6 +247,13 @@ templ stanceStepperDialog(v View, row powerRow) {
 		<p class="text-center text-xs text-muted-foreground">
 			<span data-text={ costStancePreview(row) }></span>
 		</p>
+		// O DOBRO É DITO, NÃO SOMADO: o contador mostra o que os degraus
+		// compram, e o fator do motor dobra essa parcela depois (p42). Repetir a
+		// conta aqui daria duas implementações da mesma regra — é a mesma saída
+		// do diálogo de conjurar (ALE-428).
+		if row.Stance.BonusNote != "" {
+			<p class="text-center text-2xs text-grimorio-gold">{ row.Stance.BonusNote }</p>
+		}
 		<button
 			type="button"
 			aria-label={ "Confirmar " + row.Name }
