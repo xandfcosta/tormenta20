@@ -308,12 +308,36 @@ func resolvePmCostMod(contribs []Contribution) int {
 // enquanto a conjuração cobra preço cheio.
 //
 // @example SpellPmCostFor(druida20, 3, 0, nil) // 1
-func (r *Ruleset) SpellPmCostFor(ch Character, basePm, augmentPm int, conditionals map[string]bool) int {
+func (r *Ruleset) SpellPmCostFor(
+	ch Character, basePm, augmentPm int, conditionals map[string]bool, tradition string,
+) int {
 	raw := basePm + augmentPm
 	if raw <= 0 {
 		return 0
 	}
 	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), conditionals)
 	mod := resolvePmCostMod(StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions)
-	return max(1, raw+mod)
+	// O FATOR É O ÚLTIMO, e o livro diz a ordem por extenso: a Alta Arcana
+	// reduz à metade "após aplicar aprimoramentos e quaisquer outros efeitos
+	// que reduzam custo" (p39). Antes da soma, o +1 do Alquebrado entraria
+	// depois do corte e a magia de 6 PM sairia por 4 em vez de 3.
+	//
+	// E o PISO continua por último de todos: metade de 1 PM é zero, e a p226
+	// não deixa descer abaixo de 1.
+	return max(1, pmCostFactor(effects, tradition).Applied(raw+mod))
+}
+
+// pmCostFactor é o fator que corta o custo desta magia: o que vale para toda
+// habilidade e o que vale só para a LISTA dela, com o mais severo vencendo.
+//
+// `severest` e não o produto dos dois, pela razão que o `factor.go` já dá: dois
+// fatores no mesmo alvo não compõem. Uma tradição vazia — magia que classe
+// nenhuma do personagem concede — lê só o fator geral, que é o lado seguro:
+// quem não tem lista não ganha o desconto da lista.
+func pmCostFactor(effects ItemEffects, tradition string) Ratio {
+	geral := effects.Factors[targetKey(ModifierTarget{K: "pmCost"})]
+	if tradition == "" {
+		return geral
+	}
+	return severest(geral, effects.Factors[targetKey(ModifierTarget{K: "pmCost", Scope: tradition})])
 }

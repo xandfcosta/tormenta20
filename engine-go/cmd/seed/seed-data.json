@@ -995,6 +995,60 @@
               }
             ]
           }
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Arcanista Pleno Nv20",
+            "races": [
+              "humano"
+            ],
+            "origin": "assistente-de-laboratorio",
+            "classes": [
+              {
+                "className": "Arcanista",
+                "level": 20
+              }
+            ],
+            "god": "Wynna",
+            "strength": 0,
+            "dexterity": 3,
+            "constitution": 3,
+            "intelligence": 6,
+            "wisdom": 2,
+            "charisma": 2,
+            "size": "Médio",
+            "displacement": 9,
+            "classChoices": {
+              "Arcanista": {
+                "caminho": "bruxo"
+              }
+            },
+            "items": [
+              {
+                "catalogId": "adaga",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "bandana",
+                "equipped": "vested"
+              }
+            ]
+          },
+          "spells": [
+            {
+              "id": "luz",
+              "prepared": true
+            },
+            {
+              "id": "bola-de-fogo",
+              "prepared": true
+            },
+            {
+              "id": "chuva-de-meteoros",
+              "prepared": true
+            }
+          ]
         }
       ]
     },

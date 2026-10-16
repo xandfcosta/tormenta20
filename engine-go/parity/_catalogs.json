@@ -7792,7 +7792,20 @@
       "description": "Capstone: custo em PM de magias arcanas reduzido à metade (após aplicar aprimoramentos e outros efeitos).",
       "grantedAtLevel": 20,
       "bookPage": 39,
-      "uid": "pwr_hcvv6pd3dm"
+      "uid": "pwr_hcvv6pd3dm",
+      "modifiers": [
+        {
+          "target": {
+            "k": "pmCost",
+            "scope": "arcana"
+          },
+          "factor": {
+            "num": 1,
+            "den": 2
+          },
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.arcanista.arcano-de-batalha",

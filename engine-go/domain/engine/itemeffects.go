@@ -332,6 +332,14 @@ func targetKey(t ModifierTarget) string {
 	case "pmLimit":
 		return "pmLimit"
 	case "pmCost":
+		// ESCOPO NA CHAVE porque o livro corta por LISTA: a Alta Arcana (p39)
+		// reduz "suas magias arcanas" e não toda habilidade que custa PM, e o
+		// druida do lado paga cheio pela divina dele. Sem chave própria, um
+		// fator de uma lista cairia sobre as duas — a mesma razão que separa o
+		// `displacement:armadura` do deslocamento geral.
+		if t.Scope != "" {
+			return "pmCost:" + t.Scope
+		}
 		return "pmCost"
 	case "damageReduction":
 		return "damageReduction"

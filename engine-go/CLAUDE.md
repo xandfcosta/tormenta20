@@ -1094,10 +1094,22 @@ modificadores)". O Lento não corta o bônus de item de ninguém — corta o qua
 pessoa anda.
 
 **Dois fatores no mesmo alvo: vale o MAIS SEVERO, e eles não compõem.** É a
-regra que o livro já dá para condição — "aplique apenas o mais severo" (p394) —,
-e os dois que existem hoje vêm de condição: Lento mais Imóvel não dá 2,25m, dá
-0m. No dia em que chegar um fator que NÃO seja de condição, é esta linha que se
-revisa.
+regra que o livro dá para condição — "aplique apenas o mais severo" (p394) — e
+também para custo: *"reduções no custo de PM não são cumulativas"* (p226).
+Lento mais Imóvel não dá 2,25m, dá 0m.
+
+**O primeiro fator INCONDICIONAL chegou na ALE-428**, e a linha acima sobreviveu
+a ele: a Alta Arcana é passiva de 20º nível e não pende de interruptor nenhum.
+Aqui estava escrito que todo fator vinha de condição e que esse dia pediria uma
+revisão — o que sustenta o "mais severo" não era a condição, é o livro proibir o
+acúmulo nas duas famílias.
+
+**O fator pode ter ESCOPO, e o custo de magia é o caso.** A Alta Arcana corta
+"suas magias arcanas" (p39) e não toda habilidade que custa PM, então a chave é
+`pmCost:arcana` e o clérigo do multiclasse paga cheio pela divina dele — mesma
+divisa do `displacement:armadura`. Quem responde de que lista a magia vem é a
+`sheet.SpellTradition`, porque **a tradição é da CLASSE e não da magia**: a Luz
+é arcana na mão do arcanista e divina na do clérigo.
 
 Racional e não decimal porque o motor é modelado em inteiros — e porque a
 divisão inteira de um total em QUADRADOS é exatamente o "arredonde para baixo
