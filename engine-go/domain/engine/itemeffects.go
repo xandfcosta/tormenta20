@@ -325,6 +325,13 @@ func targetKey(t ModifierTarget) string {
 		// Piedosa (p336) torna não letal o dano DELA, e um herói que carregue
 		// uma adaga Piedosa não soca ninguém com piedade.
 		return "nonLethalDamage:" + t.Scope
+	case "source":
+		// O ALVO QUE NÃO É UM NÚMERO, e sim uma PARCELA: quem escreve
+		// `{k: source, name: <id do poder>}` não soma em lugar nenhum — ele
+		// multiplica o que aquela fonte contribuiu, onde quer que ela contribua.
+		// A Fúria Titânica (p42) dobra "o bônus da Fúria", que vive em dois
+		// alvos (ataque e dano) e em duas parcelas (a base e o degrau pago).
+		return "source:" + t.Name
 	case "critRange":
 		return "critRange"
 	case "critMult":
@@ -484,6 +491,18 @@ func BonusTypeAccumulates(bonusType string) bool { return bonusType == "untyped"
 // penalidade de −3 é mais forte que uma de −1.
 func strongerThan(amount, than int) bool { return absInt(amount) > absInt(than) }
 
+// sourceFactorOf é o fator que multiplica a PARCELA desta fonte, e vazio para
+// quem não tem um.
+//
+// Fonte sem id não é multiplicável: o `SourceID` é o que endereça o verbete, e
+// uma parcela anônima não pode ser nomeada por fator nenhum.
+func sourceFactorOf(factors map[string]Ratio, sourceID string) Ratio {
+	if sourceID == "" {
+		return Ratio{}
+	}
+	return factors[targetKey(ModifierTarget{K: "source", Name: sourceID})]
+}
+
 // resolveStack aplica a regra de NÃO-EMPILHAMENTO do T20: dentro de um alvo,
 // entradas do mesmo `bonusType` guardam só a de maior valor ABSOLUTO; `untyped`
 // empilha à vontade. A ordem das contribuições segue a de PRIMEIRA APARIÇÃO de
@@ -622,7 +641,14 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	// Ao contrário do `ComputeItemEffects` acima, esta não precisa ordenar chaves:
 	// ela emite um mapa, e a ordem das contribuições dentro de cada chave já é
 	// estável porque cada balde é uma fatia acrescida na ordem da fonte.
+	// DUAS PASSADAS, e a razão é de ORDEM: a segunda multiplica parcela por
+	// fator de FONTE, e um fator que estivesse atrás de um condicional ligado
+	// seria descoberto DEPOIS da parcela que ele deveria dobrar. Numa passada
+	// só, o resultado dependeria da ordem da lista — que é o tipo de defeito
+	// que não reproduz. Nenhum fator de hoje é condicionado; a passada extra
+	// custa um laço e tira a pergunta.
 	remaining := []ConditionalEffect{}
+	ligados := []ConditionalEffect{}
 	for _, c := range effects.Conditional {
 		// LIGADO PELO TERMO ou pelo GRUPO da flag. O grupo é o que faz o
 		// interruptor único da tela ligar a regra INTEIRA: só pelo termo, um
@@ -635,19 +661,26 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 			continue
 		}
 		if c.Factor != nil {
-			// O FATOR NÃO É PARCELA: ele multiplica o total do alvo, e por isso
-			// vai para o mapa de fatores em vez do balde — a mesma divisa que o
+			// O FATOR NÃO É PARCELA: ele multiplica, e por isso vai para o mapa
+			// de fatores em vez do balde — a mesma divisa que o
 			// `harvestFactors` aplica no caminho incondicional. `severest`
 			// porque dois fatores no mesmo alvo não se multiplicam entre si:
 			// vale o mais severo, como já vale lá.
 			factors[targetKey(c.Target)] = severest(factors[targetKey(c.Target)], *c.Factor)
 			continue
 		}
+		ligados = append(ligados, c)
+	}
+	for _, c := range ligados {
 		key := targetKey(c.Target)
 		fold := Contribution{SourceID: c.SourceID, Source: c.Source + " (cond.)", BonusType: c.BonusType, Amount: c.Amount}
 		if c.Note != "" {
 			fold.Note = c.Note
 		}
+		// A PARCELA É MULTIPLICADA AO ENTRAR NA PILHA, uma vez só. As que vieram
+		// pelo caminho incondicional já foram dobradas no ECS (`scaleWhatTheSourceFactorHits`),
+		// e dobrar o balde inteiro aqui as pegaria de novo.
+		fold.Amount = sourceFactorOf(factors, fold.SourceID).Applied(fold.Amount)
 		buckets[key] = append(buckets[key], fold)
 	}
 	byTarget := map[string]AggregatedStat{}

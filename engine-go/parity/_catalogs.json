@@ -8379,7 +8379,20 @@
       "description": "Capstone: bônus de Fúria nos testes de ataque e rolagens de dano é dobrado. Exemplo: 5 PM gastos = bônus de +10 em vez de +5.",
       "grantedAtLevel": 20,
       "bookPage": 42,
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "source",
+            "name": "class.barbaro.furia"
+          },
+          "factor": {
+            "num": 2,
+            "den": 1
+          },
+          "bonusType": "untyped",
+          "note": "dobra o bônus de Fúria"
+        }
+      ],
       "uid": "pwr_qatlodqwcy"
     },
     {
