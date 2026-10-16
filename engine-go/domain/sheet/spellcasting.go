@@ -78,3 +78,36 @@ func IsCasterClass(name string) bool {
 	_, casts := book.SpellProgressions()[name]
 	return casts
 }
+
+// SpellTradition é a LISTA de onde esta magia vem para ESTE personagem:
+// `arcana`, `divina`, ou vazio quando nenhuma classe dele a concede.
+//
+// A tradição não é propriedade da magia — a Luz (p197) é arcana na mão do
+// arcanista e divina na do clérigo, e o catálogo a declara com as quatro
+// classes que a conhecem. Quem tem lista é a CLASSE (`spellcasting.list`), e
+// por isso a pergunta precisa das duas pontas.
+//
+// EMPATE RESOLVE PELO MAIOR NÍVEL, que é a mesma regra que o
+// `engine.SpellPmLimit` já usa para "a classe que fornece a habilidade" (p224):
+// um Arcanista 20/Clérigo 10 que conjura uma magia das duas listas a conjura
+// como arcanista. O app não guarda de qual lista a magia foi aprendida, e
+// inventar uma segunda regra aqui faria a mesma pergunta ter duas respostas na
+// mesma ficha.
+//
+// @example SpellTradition(classes, []string{"Arcanista"}) // "arcana"
+func SpellTradition(classes []ClassDTO, spellClasses []string) string {
+	grants := map[string]bool{}
+	for _, name := range spellClasses {
+		grants[name] = true
+	}
+	progressions := book.SpellProgressions()
+	best, tradition := int64(0), ""
+	for _, entry := range classes {
+		prog, casts := progressions[entry.ClassName]
+		if !casts || !grants[entry.ClassName] || entry.Level <= best {
+			continue
+		}
+		best, tradition = entry.Level, prog.List
+	}
+	return tradition
+}
