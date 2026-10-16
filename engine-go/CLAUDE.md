@@ -1133,10 +1133,21 @@ divisão inteira de um total em QUADRADOS é exatamente o "arredonde para baixo
 para o primeiro incremento de 1,5m" que o Lento pede. Não há regra de
 arredondamento escrita à mão em lugar nenhum.
 
-> **O que ainda NÃO cabe:** a IMUNIDADE a fator. As Pernas do Mar do bucaneiro
-> dizem que o deslocamento dele "não é reduzido à metade" — é uma terceira
-> forma, que cancela um fator em vez de somar ou multiplicar, e ela continua sem
-> representação.
+> **A ISENÇÃO não é uma terceira forma do fator — ela já existe, e por FLAG.**
+> O anão "não tem o deslocamento reduzido por uso de armadura ou excesso de
+> carga" (p20), e quem responde isso é o `DisplacementIgnoresArmorAndLoad`, lido
+> pelo `displacementBreakdown`: a isenção pula a chave `displacement:armor` e a
+> penalidade de carga, e não toca em fator nenhum — uma magia de lentidão
+> continua valendo para o anão.
+>
+> Aqui estava escrito que a terceira forma seria "imunidade a FATOR", pelas
+> Pernas do Mar do bucaneiro. **Era leitura da descrição do catálogo e não da
+> página**: a p48 diz *"quando está se equilibrando ou escalando […] seu
+> deslocamento não é reduzido à metade"*, e esse corte é da CIRCUNSTÂNCIA, que o
+> app não modela. Não há o que isentar. O que falta de verdade são dois poderes
+> que pedem a isenção EXISTENTE em recortes diferentes: o Fanático (p128), só
+> para armadura pesada, e o Acrobático (p129), para terreno difícil — e esse
+> segundo não é da ficha, é do `PathCost` do tabuleiro.
 
 ### Onde a unidade aparece, e onde ela não aparece
 
