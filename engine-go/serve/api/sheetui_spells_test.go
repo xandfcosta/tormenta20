@@ -11,11 +11,16 @@ import (
 	"testing"
 )
 
-func arcanista(t *testing.T) (sceneFixture, int64) {
+func arcanista(t *testing.T) (sceneFixture, int64) { return arcanistaDeNivel(t, 9) }
+
+// arcanistaDeNivel existe porque o NÍVEL é o dado que muda a regra em duas
+// fatias: o 9º é a conjuradora comum, e o 20º é a única que tem a Alta Arcana
+// (p39). Uma bancada por nível daria duas cópias da mesma ficha.
+func arcanistaDeNivel(t *testing.T, level int64) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
-		OwnerId: f.player, Name: "Conjuradora", Origin: "charlatao", Level: 9,
+		OwnerId: f.player, Name: "Conjuradora", Origin: "charlatao", Level: level,
 		Strength: 0, Dexterity: 2, Constitution: 2, Intelligence: 4, Wisdom: 1, Charisma: 1,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
@@ -25,7 +30,7 @@ func arcanista(t *testing.T) (sceneFixture, int64) {
 	if err != nil {
 		t.Fatalf("semear a conjuradora: %v", err)
 	}
-	seedClasse(t, f.s, id, "Arcanista", 9)
+	seedClasse(t, f.s, id, "Arcanista", level)
 	// O poço vem do catálogo e a ficha nasce CHEIA: sem esta passada pelo funil
 	// as quatro colunas ficariam com o que o INSERT inventou, e a tela leria um
 	// número que o agregado não confirma (ALE-355).
@@ -239,5 +244,59 @@ func TestAnAugmentOutOfReachShowsLocked(t *testing.T) {
 	// exclusivos não-truque do livro. Este guarda foi quem acusou a correção.
 	if locked := strings.Count(screen, "exige o"); locked != 3 {
 		t.Errorf("a tela trancou %d aprimoramentos, quer 3 (3º, 3º e 4º círculo)", locked)
+	}
+}
+
+// A ALTA ARCANA CORTA O QUE A CONJURAÇÃO COBRA (ALE-428, p39).
+//
+// O motor tem caso próprio para a REGRA — a ordem das três operações e o piso
+// —, e o que este prende é a LIGAÇÃO: quem conjura precisa dizer de que lista a
+// magia vem, e um chamador que esqueça a tradição faz o capstone sumir sem
+// erro nenhum. É a fronteira entre `app/character/cast.go` e o motor.
+func TestTheHighArcanaCutsWhatTheCastCharges(t *testing.T) {
+	f, id := arcanistaDeNivel(t, 20)
+	spell(t, f, id, "aprende/bola-de-fogo")
+
+	before := pm(t, f, id)
+	if got := spell(t, f, id, "conjura/bola-de-fogo"); got != http.StatusOK {
+		t.Fatalf("conjurar respondeu %d", got)
+	}
+	// Bola de Fogo é de 2º círculo e custa 3 PM (Tabela 4-1, p170). Metade de 3
+	// é 1: a divisão TRUNCA, e o livro pede o arredondamento para baixo.
+	if spent := before - pm(t, f, id); spent != 1 {
+		t.Errorf("a conjuração cobrou %d PM do arcanista de 20º, e a Alta Arcana "+
+			"corta os 3 do 2º círculo pela metade: 1", spent)
+	}
+}
+
+// E O DIÁLOGO DIZ QUEM ESTÁ CORTANDO.
+//
+// A prévia do custo soma `base + aprimoramentos` no cliente e NÃO aplica
+// modificador nenhum — é aproximação declarada, com o servidor como autoridade
+// (ver `costPreview`). Com um fator de metade a diferença passa a ser de 2×, e
+// um número grande que ninguém explica é pior do que um número grande.
+//
+// A saída é INFORMAR e não calcular (decisão do dono, 2026-10-16): a conta
+// continua num lugar só, e a tela diz o que vai acontecer com ela.
+func TestTheCastDialogSaysWhoCutsTheCost(t *testing.T) {
+	f, id := arcanistaDeNivel(t, 20)
+	spell(t, f, id, "aprende/bola-de-fogo")
+
+	tela := spellScreen(t, f, id)
+	if !strings.Contains(tela, "Alta Arcana") {
+		t.Errorf("o diálogo de conjurar anuncia o custo cheio e não diz que a Alta "+
+			"Arcana o corta — o servidor vai cobrar metade:\n%s", recorte(tela))
+	}
+	if !strings.Contains(tela, "pela metade") {
+		t.Errorf("a frase não diz QUANTO o corte vale:\n%s", recorte(tela))
+	}
+
+	// O CONTROLE, e sem ele "verde" e "não mediu" são a mesma cor: a
+	// conjuradora de 9º não tem o capstone, e o diálogo dela não promete corte
+	// nenhum.
+	f9, id9 := arcanistaDeNivel(t, 9)
+	spell(t, f9, id9, "aprende/bola-de-fogo")
+	if tela9 := spellScreen(t, f9, id9); strings.Contains(tela9, "pela metade") {
+		t.Error("o diálogo da conjuradora de 9º promete um corte que ela não tem")
 	}
 }

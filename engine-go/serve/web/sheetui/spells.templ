@@ -147,6 +147,16 @@ templ castSpellDialog(v View, spell learnedSpellRow) {
 			<span class="font-mono text-2xl font-bold text-arcane-ink" data-text={ costPreview(spell) }></span>
 			<span class="ml-auto font-mono text-2xs text-muted-foreground">{ "PM " + strconv.FormatInt(v.Spells.PmCurrent, 10) }</span>
 		</div>
+		// O CORTE É DITO, NÃO SOMADO.
+		//
+		// O número grande continua sendo o custo CHEIO: a prévia soma base mais
+		// aprimoramentos no cliente, e quem aplica fator e piso é o servidor.
+		// Repetir a conta aqui daria duas implementações da mesma regra para
+		// divergir depois; dizer o que vai acontecer com ela custa uma linha
+		// (ALE-428, decisão do dono).
+		if spell.CostCut != "" {
+			<p class="text-2xs text-arcane-ink">{ spell.CostCut }</p>
+		}
 		if len(spell.Augments) > 0 {
 			<div class="space-y-1">
 				<p class={ ui.SectionLabelClasses("muted", "") }>Aprimoramentos</p>

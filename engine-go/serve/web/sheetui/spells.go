@@ -76,6 +76,9 @@ type learnedSpellRow struct {
 	Effect    string
 	Page      int
 	Command   string
+	// CostCut avisa que este custo vai sair cortado, e por quem — ver
+	// `costCutNote`. Vazio quando nada corta.
+	CostCut string
 }
 
 // grantedSpellRow é a magia que um PODER ensinou.
@@ -175,6 +178,7 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			Effect: fromBook.BaseEffect, Page: fromBook.BookPage,
 			Command: learned.CatalogSpellID,
+			CostCut: costCutNote(dto, sheet.SpellTradition(dto.Classes, fromBook.Classes)),
 		})
 	}
 	sort.SliceStable(rows, func(a, b int) bool {
