@@ -5535,32 +5535,98 @@
             {
               "id": "qareen-res-frio",
               "name": "Frio (qareen da água)",
-              "description": "Redução 10 a frio."
+              "description": "Redução 10 a frio.",
+              "modifiers": [
+                {
+                  "target": {
+                    "k": "damageReduction",
+                    "damageType": "frio"
+                  },
+                  "amount": 10,
+                  "bonusType": "untyped",
+                  "note": "redução de frio 10"
+                }
+              ]
             },
             {
               "id": "qareen-res-eletricidade",
               "name": "Eletricidade (do ar)",
-              "description": "Redução 10 a eletricidade."
+              "description": "Redução 10 a eletricidade.",
+              "modifiers": [
+                {
+                  "target": {
+                    "k": "damageReduction",
+                    "damageType": "eletricidade"
+                  },
+                  "amount": 10,
+                  "bonusType": "untyped",
+                  "note": "redução de eletricidade 10"
+                }
+              ]
             },
             {
               "id": "qareen-res-fogo",
               "name": "Fogo (do fogo)",
-              "description": "Redução 10 a fogo."
+              "description": "Redução 10 a fogo.",
+              "modifiers": [
+                {
+                  "target": {
+                    "k": "damageReduction",
+                    "damageType": "fogo"
+                  },
+                  "amount": 10,
+                  "bonusType": "untyped",
+                  "note": "redução de fogo 10"
+                }
+              ]
             },
             {
               "id": "qareen-res-acido",
               "name": "Ácido (da terra)",
-              "description": "Redução 10 a ácido."
+              "description": "Redução 10 a ácido.",
+              "modifiers": [
+                {
+                  "target": {
+                    "k": "damageReduction",
+                    "damageType": "acido"
+                  },
+                  "amount": 10,
+                  "bonusType": "untyped",
+                  "note": "redução de acido 10"
+                }
+              ]
             },
             {
               "id": "qareen-res-luz",
               "name": "Luz (da luz)",
-              "description": "Redução 10 a luz."
+              "description": "Redução 10 a luz.",
+              "modifiers": [
+                {
+                  "target": {
+                    "k": "damageReduction",
+                    "damageType": "luz"
+                  },
+                  "amount": 10,
+                  "bonusType": "untyped",
+                  "note": "redução de luz 10"
+                }
+              ]
             },
             {
               "id": "qareen-res-trevas",
               "name": "Trevas (qareen das trevas)",
-              "description": "Redução 10 a trevas."
+              "description": "Redução 10 a trevas.",
+              "modifiers": [
+                {
+                  "target": {
+                    "k": "damageReduction",
+                    "damageType": "trevas"
+                  },
+                  "amount": 10,
+                  "bonusType": "untyped",
+                  "note": "redução de trevas 10"
+                }
+              ]
             }
           ],
           "uid": "rac_fgbigor4yt"
@@ -5764,7 +5830,36 @@
               "text": "RD 5 a corte, frio e perfuração"
             }
           ],
-          "uid": "rac_4vdeiyhe3c"
+          "uid": "rac_4vdeiyhe3c",
+          "modifiers": [
+            {
+              "target": {
+                "k": "damageReduction",
+                "damageType": "corte"
+              },
+              "amount": 5,
+              "bonusType": "untyped",
+              "note": "redução de corte 5"
+            },
+            {
+              "target": {
+                "k": "damageReduction",
+                "damageType": "frio"
+              },
+              "amount": 5,
+              "bonusType": "untyped",
+              "note": "redução de frio 5"
+            },
+            {
+              "target": {
+                "k": "damageReduction",
+                "damageType": "perfuracao"
+              },
+              "amount": 5,
+              "bonusType": "untyped",
+              "note": "redução de perfuracao 5"
+            }
+          ]
         },
         {
           "id": "osteon-memoria-postuma",
@@ -14951,7 +15046,27 @@
       "effect": "Você recebe redução de frio e trevas 5. Além disso, quando é alvo de um ataque você pode gastar 1 PM para emitir um clarão solar que deixa o atacante ofuscado por uma rodada.",
       "kind": "defesa",
       "bookPage": 134,
-      "uid": "pwr_pxqielmmes"
+      "uid": "pwr_pxqielmmes",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "frio"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "note": "redução de frio 5"
+        },
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "trevas"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "note": "redução de trevas 5"
+        }
+      ]
     },
     {
       "id": "habitante-do-deserto",
@@ -14962,7 +15077,18 @@
       "effect": "Você recebe redução de fogo 10 e pode pagar 1 PM para criar água pura e potável suficiente para um odre (ou outro recipiente pequeno).",
       "kind": "utilidade",
       "bookPage": 134,
-      "uid": "pwr_wdvq3kk3h4"
+      "uid": "pwr_wdvq3kk3h4",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "fogo"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "note": "redução de fogo 10"
+        }
+      ]
     },
     {
       "id": "inimigo-de-tenebra",

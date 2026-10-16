@@ -1,11 +1,29 @@
 package engine
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 // The magic / carrying / damage-reduction / temp-HP breakdowns. Split from
 // breakdowns.go by responsibility: spell + PM economy, carga, RD, PV temporário.
 
 type RdBreakdown struct {
+	Total   int            `json:"total"`
+	Sources []SourceAmount `json:"sources"`
+	// Typed é a RD CONTRA UM TIPO — *"a redução pode ser contra um ou mais
+	// tipos de dano específicos"* (p229). Ela não entra no `Total`, e é de
+	// propósito: as duas alcançam coisas diferentes, e somá-las daria um número
+	// que não vale contra ataque nenhum.
+	//
+	// LISTA e não mapa, ordenada pelo tipo: o oráculo compara JSON, e mapa em Go
+	// não tem ordem.
+	Typed []RdByType `json:"typed,omitempty"`
+}
+
+// RdByType é a redução contra UM tipo de dano, com de onde ela veio.
+type RdByType struct {
+	Type    string         `json:"type"`
 	Total   int            `json:"total"`
 	Sources []SourceAmount `json:"sources"`
 }
@@ -176,10 +194,40 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 		sources = append(sources, SourceAmount{c.Source, c.Amount})
 	}
 
+	typed := typedDamageReduction(e)
 	if len(sources) == 0 {
-		return RdBreakdown{Total: 0, Sources: sources}
+		return RdBreakdown{Total: 0, Sources: sources, Typed: typed}
 	}
-	return RdBreakdown{Total: general + specialization + granted.Total, Sources: sources}
+	return RdBreakdown{
+		Total: general + specialization + granted.Total, Sources: sources, Typed: typed,
+	}
+}
+
+// typedDamageReduction colhe as reduções CONTRA UM TIPO (p229).
+//
+// Duas fontes do mesmo tipo NÃO somam — vale a maior, como vale para a RD geral
+// logo acima: "redução de fogo 10" e "redução de fogo 5" no mesmo personagem
+// são a mesma espécie de proteção, e o livro não empilha espécies iguais. Tipos
+// diferentes convivem, porque cada um alcança outra parcela.
+func typedDamageReduction(e ItemEffects) []RdByType {
+	const prefixo = "damageReduction:"
+	out := []RdByType{}
+	for key, stat := range e.ByTarget {
+		tipo, found := strings.CutPrefix(key, prefixo)
+		if !found || tipo == "" {
+			continue
+		}
+		entry := RdByType{Type: tipo, Sources: []SourceAmount{}}
+		for _, c := range stat.Contributions {
+			entry.Total = max(entry.Total, c.Amount)
+			entry.Sources = append(entry.Sources, SourceAmount{c.Source, c.Amount})
+		}
+		if entry.Total > 0 {
+			out = append(out, entry)
+		}
+	}
+	sort.Slice(out, func(a, b int) bool { return out[a].Type < out[b].Type })
+	return out
 }
 
 // tempHpFromPowers: Alma de Bronze (Bárbaro p41) grants

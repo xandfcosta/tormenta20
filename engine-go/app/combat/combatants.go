@@ -78,12 +78,13 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		sheet.ToStringSet(dto.Conditionals))
 	return Combatant{
 		EntryID: e.ID, Label: e.Label,
-		Weapons:         dto.Ruleset.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals)),
-		Defense:         computed.Defense.Total,
-		DamageReduction: computed.DamageReduction.Total,
-		Melee:           meleeOf(computed),
-		ManeuverOffense: maneuverBonuses(efeitos, engine.ManeuverOffense),
-		ManeuverDefense: maneuverBonuses(efeitos, engine.ManeuverDefense),
+		Weapons:               dto.Ruleset.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals)),
+		Defense:               computed.Defense.Total,
+		DamageReduction:       computed.DamageReduction.Total,
+		DamageReductionByType: reducaoPorTipo(computed.DamageReduction),
+		Melee:                 meleeOf(computed),
+		ManeuverOffense:       maneuverBonuses(efeitos, engine.ManeuverOffense),
+		ManeuverDefense:       maneuverBonuses(efeitos, engine.ManeuverDefense),
 	}, nil
 }
 
@@ -143,4 +144,18 @@ func maneuverBonuses(efeitos engine.ItemEffects, lado engine.ManeuverRole) map[s
 		fora[manobra] = engine.ManeuverBonus(efeitos, manobra, lado)
 	}
 	return fora
+}
+
+// reducaoPorTipo achata a decomposição em "tipo → quanto", que é a forma que a
+// regra de ataque consome. A decomposição guarda as FONTES porque a ficha as
+// mostra; o ataque só precisa do número.
+func reducaoPorTipo(rd engine.RdBreakdown) map[string]int {
+	if len(rd.Typed) == 0 {
+		return nil
+	}
+	out := make(map[string]int, len(rd.Typed))
+	for _, entry := range rd.Typed {
+		out[entry.Type] = entry.Total
+	}
+	return out
 }

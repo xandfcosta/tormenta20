@@ -29,10 +29,15 @@ import "t20engine/domain/ecs"
 type AttackTarget struct {
 	// Defense é a CD do teste de ataque (p230).
 	Defense int
-	// DamageReduction é a RD do alvo (p229). Uma só, já resolvida: qual RD vale
+	// DamageReduction é a RD GERAL do alvo (p229), já resolvida: qual RD vale
 	// quando há várias fontes é decisão do `characterDamageReduction`, e ela não
 	// muda por ataque.
 	DamageReduction int
+	// DamageReductionByType é a RD CONTRA UM TIPO — *"a redução pode ser contra
+	// um ou mais tipos de dano específicos"* (p229). Chaveada pelo mesmo
+	// vocabulário de tipo que a parcela de dano usa ("fogo", "frio", "ácido"),
+	// porque é parcela a parcela que ela decide o que alcança.
+	DamageReductionByType map[string]int
 	// CritImmune: "certas criaturas são imunes a acertos críticos" (p231).
 	CritImmune bool
 }

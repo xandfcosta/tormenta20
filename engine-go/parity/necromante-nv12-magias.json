@@ -378,6 +378,33 @@
           "amount": -1,
           "bonusType": "untyped",
           "note": "Osteon"
+        },
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "corte"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "note": "redução de corte 5"
+        },
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "frio"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "note": "redução de frio 5"
+        },
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "perfuracao"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "note": "redução de perfuracao 5"
         }
       ]
     },
@@ -447,6 +474,42 @@
             "bonusType": "untyped",
             "amount": 1,
             "note": "Osteon"
+          }
+        ]
+      },
+      "damageReduction:corte": {
+        "total": 5,
+        "contributions": [
+          {
+            "sourceId": "osteon",
+            "source": "Raça: Osteon",
+            "bonusType": "untyped",
+            "amount": 5,
+            "note": "redução de corte 5"
+          }
+        ]
+      },
+      "damageReduction:frio": {
+        "total": 5,
+        "contributions": [
+          {
+            "sourceId": "osteon",
+            "source": "Raça: Osteon",
+            "bonusType": "untyped",
+            "amount": 5,
+            "note": "redução de frio 5"
+          }
+        ]
+      },
+      "damageReduction:perfuracao": {
+        "total": 5,
+        "contributions": [
+          {
+            "sourceId": "osteon",
+            "source": "Raça: Osteon",
+            "bonusType": "untyped",
+            "amount": 5,
+            "note": "redução de perfuracao 5"
           }
         ]
       },
@@ -584,7 +647,39 @@
     },
     "damageReduction": {
       "total": 0,
-      "sources": []
+      "sources": [],
+      "typed": [
+        {
+          "type": "corte",
+          "total": 5,
+          "sources": [
+            {
+              "source": "Raça: Osteon",
+              "amount": 5
+            }
+          ]
+        },
+        {
+          "type": "frio",
+          "total": 5,
+          "sources": [
+            {
+              "source": "Raça: Osteon",
+              "amount": 5
+            }
+          ]
+        },
+        {
+          "type": "perfuracao",
+          "total": 5,
+          "sources": [
+            {
+              "source": "Raça: Osteon",
+              "amount": 5
+            }
+          ]
+        }
+      ]
     },
     "tempHpFuria": {
       "total": 0,
@@ -1056,7 +1151,39 @@
     },
     "damageReduction": {
       "total": 0,
-      "sources": []
+      "sources": [],
+      "typed": [
+        {
+          "type": "corte",
+          "total": 5,
+          "sources": [
+            {
+              "source": "Raça: Osteon",
+              "amount": 5
+            }
+          ]
+        },
+        {
+          "type": "frio",
+          "total": 5,
+          "sources": [
+            {
+              "source": "Raça: Osteon",
+              "amount": 5
+            }
+          ]
+        },
+        {
+          "type": "perfuracao",
+          "total": 5,
+          "sources": [
+            {
+              "source": "Raça: Osteon",
+              "amount": 5
+            }
+          ]
+        }
+      ]
     },
     "tempHpFuria": {
       "total": 0,
@@ -1442,6 +1569,7 @@
         "contributions": []
       },
       "damage": "1d4",
+      "damageType": "perfuracao",
       "strDamage": 1,
       "damageBonus": 1,
       "damageAll": {
@@ -1480,6 +1608,7 @@
         "contributions": []
       },
       "damage": "1d4",
+      "damageType": "perfuracao",
       "strDamage": 1,
       "damageBonus": 1,
       "damageAll": {

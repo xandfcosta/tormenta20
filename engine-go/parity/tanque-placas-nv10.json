@@ -1595,6 +1595,7 @@
         "contributions": []
       },
       "damage": "1d8",
+      "damageType": "corte",
       "strDamage": 4,
       "damageBonus": 4,
       "damageAll": {
@@ -1646,6 +1647,7 @@
         "contributions": []
       },
       "damage": "1d8",
+      "damageType": "corte",
       "strDamage": 4,
       "damageBonus": 4,
       "damageAll": {
