@@ -437,7 +437,15 @@
         {
           "target": {
             "k": "flag",
-            "name": "displacement-ignores-armor-and-load"
+            "name": "displacement-ignores-armor"
+          },
+          "amount": 1,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "displacement-ignores-load"
           },
           "amount": 1,
           "bonusType": "untyped"
@@ -577,7 +585,8 @@
     "flags": [
       "armadura-pesada",
       "cannot-apply-dex-to-defense",
-      "displacement-ignores-armor-and-load",
+      "displacement-ignores-armor",
+      "displacement-ignores-load",
       "fatigue-on-sleep"
     ],
     "conditional": []

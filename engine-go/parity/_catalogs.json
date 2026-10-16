@@ -5213,7 +5213,15 @@
             {
               "target": {
                 "k": "flag",
-                "name": "displacement-ignores-armor-and-load"
+                "name": "displacement-ignores-armor"
+              },
+              "amount": 1,
+              "bonusType": "untyped"
+            },
+            {
+              "target": {
+                "k": "flag",
+                "name": "displacement-ignores-load"
               },
               "amount": 1,
               "bonusType": "untyped"
@@ -5943,6 +5951,22 @@
               "amount": -2,
               "bonusType": "untyped",
               "note": "Chassi"
+            },
+            {
+              "target": {
+                "k": "flag",
+                "name": "displacement-ignores-armor"
+              },
+              "amount": 1,
+              "bonusType": "untyped"
+            },
+            {
+              "target": {
+                "k": "flag",
+                "name": "displacement-ignores-load"
+              },
+              "amount": 1,
+              "bonusType": "untyped"
             }
           ],
           "uid": "rac_533hrox6zi"
@@ -14169,7 +14193,18 @@
         }
       ],
       "bookPage": 128,
-      "uid": "pwr_mdo2v7cqnk"
+      "uid": "pwr_mdo2v7cqnk",
+      "modifiers": [
+        {
+          "target": {
+            "k": "flag",
+            "name": "displacement-ignores-armor"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "não é reduzido por armadura pesada"
+        }
+      ]
     },
     {
       "id": "finta-aprimorada",
