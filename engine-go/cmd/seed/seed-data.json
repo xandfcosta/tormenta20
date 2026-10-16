@@ -1084,6 +1084,49 @@
               }
             ]
           }
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Fanático Encouraçado Nv12",
+            "races": [
+              "humano"
+            ],
+            "origin": "soldado",
+            "classes": [
+              {
+                "className": "Guerreiro",
+                "level": 12
+              }
+            ],
+            "god": "Khalmyr",
+            "strength": 4,
+            "dexterity": 1,
+            "constitution": 4,
+            "intelligence": 1,
+            "wisdom": 2,
+            "charisma": 1,
+            "size": "Médio",
+            "displacement": 9,
+            "classPowers": [
+              "encouracado",
+              "fanatico"
+            ],
+            "items": [
+              {
+                "catalogId": "armadura-completa",
+                "equipped": "vested"
+              },
+              {
+                "catalogId": "espada-longa",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "escudo-pesado",
+                "equipped": "wielded2"
+              }
+            ]
+          }
         }
       ]
     },

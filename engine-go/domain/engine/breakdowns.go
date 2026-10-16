@@ -201,11 +201,22 @@ func hasActiveCondition(ch Character, id string) bool {
 // sobrecarga: −3m enquanto a mochila passa do limite (p141). Ela entra como
 // contribuição NOMEADA porque um deslocamento que cai sem dizer por quê é lido
 // como defeito.
-// DisplacementIgnoresArmorAndLoad é o sinal que o "Devagar e Sempre" do anão
-// (p20) pendura. Ele vive no catálogo da raça, como todo modificador de raça —
-// não há um `if raça == "Anão"` no motor, e não deve haver: a próxima raça com
-// a mesma isenção entra pelo catálogo.
-const DisplacementIgnoresArmorAndLoad = "displacement-ignores-armor-and-load"
+// AS DUAS ISENÇÕES DE DESLOCAMENTO, e elas são DUAS porque o livro as vende
+// separadas.
+//
+// O "Devagar e Sempre" do anão (p20) e o Chassi do golem compram as duas de uma
+// vez — *"não é reduzido por uso de armadura ou excesso de carga"* —, e o
+// Fanático (p128) compra só a primeira: *"seu deslocamento não é reduzido por
+// usar armaduras pesadas"*. Com uma flag só, dar a isenção ao Fanático dava
+// junto a da carga, que o livro não dá a ele (ALE-430).
+//
+// Elas vivem no catálogo, como todo modificador — não há um `if raça == "Anão"`
+// no motor, e não deve haver. Quem isentar amanhã entra pelo catálogo, e agora
+// pode escolher QUAL metade.
+const (
+	DisplacementIgnoresArmor = "displacement-ignores-armor"
+	DisplacementIgnoresLoad  = "displacement-ignores-load"
+)
 
 // bookDefaultDisplacement é o deslocamento de quem o catálogo não conhece, em
 // QUADRADOS: nove metros são seis quadrados de 1,5m.
@@ -242,23 +253,24 @@ func squaresOf(metres int) int { return int(math.Round(float64(metres) / SquareM
 // um espelho escrito no nascimento, e ele divergiu: a seed tinha DOIS anões com
 // 9m e um com 6m, com o livro dizendo 6m na p20 para os três.
 func displacementBreakdown(base int, e ItemEffects, load LoadBreakdown) ValueBreakdown {
-	// DEVAGAR E SEMPRE (p20): "seu deslocamento não é reduzido por uso de
-	// armadura ou excesso de carga". São DUAS fontes e elas chegam por caminhos
-	// diferentes — a armadura por modificador de catálogo, a carga pela conta de
-	// espaços —, então a isenção aparece duas vezes aqui. O que ela NÃO isenta é
-	// qualquer outra redução: uma magia de lentidão continua valendo.
-	exempt := e.Flags[DisplacementIgnoresArmorAndLoad]
+	// AS DUAS FONTES CHEGAM POR CAMINHOS DIFERENTES — a armadura por
+	// modificador de catálogo, a carga pela conta de espaços —, e cada uma tem
+	// a isenção dela: o anão (p20) traz as duas, o Fanático (p128) só a da
+	// armadura. O que nenhuma das duas isenta é qualquer OUTRA redução: uma
+	// magia de lentidão continua valendo.
+	exemptArmor := e.Flags[DisplacementIgnoresArmor]
+	exemptLoad := e.Flags[DisplacementIgnoresLoad]
 
 	stat := StatFor(e, ModifierTarget{K: "displacement"})
 	contribs := withNoteContribs(stat.Contributions)
 	bonus := stat.Total
-	if armor := StatFor(e, ModifierTarget{K: "displacement", Scope: "armor"}); !exempt {
+	if armor := StatFor(e, ModifierTarget{K: "displacement", Scope: "armor"}); !exemptArmor {
 		bonus += armor.Total
 		contribs = append(contribs, withNoteContribs(armor.Contributions)...)
 	}
 	// A CARGA fala em METROS — é o que a tela da mochila mostra — e aqui a conta
 	// é em quadrados.
-	if load.DisplacementPenalty != 0 && !exempt {
+	if load.DisplacementPenalty != 0 && !exemptLoad {
 		bonus += squaresOf(load.DisplacementPenalty)
 		contribs = append(contribs, overloadContrib(load.DisplacementPenalty))
 	}

@@ -132,7 +132,7 @@ func exemptedBy(m engine.Modifier, exempt wearerExemptions) string {
 	if m.Target.K != "displacement" || m.Target.Scope != "armor" {
 		return ""
 	}
-	return exempt[engine.DisplacementIgnoresArmorAndLoad]
+	return exempt[engine.DisplacementIgnoresArmor]
 }
 
 // chipsSem tira os repetidos pelo TEXTO, preservando o primeiro — o mesmo que o
@@ -218,13 +218,15 @@ func howEngineItem(catalog *book.Item) *engine.CatalogItem {
 	}
 }
 
-// exemptionsOf colhe as isenções que as RAÇAS do personagem concedem.
+// exemptionsOf colhe as isenções que a RAÇA e os PODERES do personagem
+// concedem.
 //
-// Só raça hoje, e a razão é medida: a única isenção que existe no catálogo é o
-// "Devagar e Sempre" do anão. Classe, origem e poder concedem flags pelo mesmo
-// mecanismo, e quando uma delas isentar alguma coisa esta função cresce — não
-// antes, porque varrer quatro catálogos para achar uma entrada é custo por
-// nada.
+// Aqui estava escrito "só raça hoje, e quando uma classe ou poder isentar
+// alguma coisa esta função cresce". O dia chegou com o Fanático (p128), que é
+// poder GERAL e isenta o deslocamento da armadura pesada — então ela cresceu,
+// e exatamente até onde a medição pediu: raça e poder geral. Classe e origem
+// concedem flag pelo mesmo mecanismo e nenhuma isenta nada hoje; varrer os
+// catálogos delas seria custo por nada.
 func exemptionsOf(dto sheet.CharacterDTO) wearerExemptions {
 	exempt := wearerExemptions{}
 	for _, entry := range dto.Races {
@@ -233,12 +235,26 @@ func exemptionsOf(dto sheet.CharacterDTO) wearerExemptions {
 			continue
 		}
 		for _, ability := range race.Abilities {
-			for _, m := range ability.Modifiers {
-				if m.Target.K == "flag" && m.Target.Name != "" {
-					exempt[m.Target.Name] = ability.Name
-				}
-			}
+			collectFlagNames(exempt, ability.Modifiers, ability.Name)
 		}
 	}
+	byPower := map[string][]engine.Modifier{}
+	for _, p := range book.GeneralPowersWithModifiers() {
+		byPower[p.ID] = p.Modifiers
+	}
+	for _, owned := range ownedPowersOf(dto) {
+		collectFlagNames(exempt, byPower[owned.ID], owned.Name)
+	}
 	return exempt
+}
+
+// collectFlagNames guarda, para cada flag que estes modificadores levantam, o
+// NOME de quem a levantou — é essa procedência que a Mochila escreve ao riscar
+// um modificador, e o motor a perde ao resolver as flags num conjunto.
+func collectFlagNames(into wearerExemptions, mods []engine.Modifier, name string) {
+	for _, m := range mods {
+		if m.Target.K == "flag" && m.Target.Name != "" {
+			into[m.Target.Name] = name
+		}
+	}
 }

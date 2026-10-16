@@ -56,6 +56,17 @@ func ClassPowersWithModifiers() []PowerModifiers {
 	return powers
 }
 
+// GeneralPowersWithModifiers é o mesmo par para os poderes GERAIS, e ele nasceu
+// com a isenção do Fanático (p128): o `book.GeneralPower` é uma visão de TELA —
+// id, nome, descrição, página — e não carrega modificador nenhum, então quem
+// precisa saber o que um poder geral CONCEDE não tinha a quem perguntar.
+//
+// O recurso é lido como ARRAY e sem resolução de apontamento, ao contrário do
+// de classe: `general-powers.json` não tem `powerUid`.
+func GeneralPowersWithModifiers() []PowerModifiers {
+	return ListOf[PowerModifiers]("general-powers")
+}
+
 // PowerTeachingSpells é um poder que ENSINA magia, com o que ele oferece.
 type PowerTeachingSpells struct {
 	ID   string
