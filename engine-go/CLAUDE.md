@@ -1135,10 +1135,12 @@ arredondamento escrita à mão em lugar nenhum.
 
 > **A ISENÇÃO não é uma terceira forma do fator — ela já existe, e por FLAG.**
 > O anão "não tem o deslocamento reduzido por uso de armadura ou excesso de
-> carga" (p20), e quem responde isso é o `DisplacementIgnoresArmorAndLoad`, lido
-> pelo `displacementBreakdown`: a isenção pula a chave `displacement:armor` e a
-> penalidade de carga, e não toca em fator nenhum — uma magia de lentidão
-> continua valendo para o anão.
+> carga" (p20), e quem responde isso são o `DisplacementIgnoresArmor` e o
+> `DisplacementIgnoresLoad`, lidos pelo `displacementBreakdown`: a isenção pula
+> a chave `displacement:armor` e a penalidade de carga, e não toca em fator
+> nenhum — uma magia de lentidão continua valendo para o anão. **São duas flags
+> porque o livro as vende separadas**: o Fanático (p128) compra só a da armadura
+> (ALE-430).
 >
 > Aqui estava escrito que a terceira forma seria "imunidade a FATOR", pelas
 > Pernas do Mar do bucaneiro. **Era leitura da descrição do catálogo e não da
