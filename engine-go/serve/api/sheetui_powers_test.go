@@ -785,3 +785,32 @@ func TestTheStanceAndItsDegreeDoNotShareAName(t *testing.T) {
 			"\"Fúria\" duas vezes, e o ✕ de uma delas apaga só o que foi pago a mais")
 	}
 }
+
+// O CONTADOR DE DEGRAUS DIZ QUEM VAI DOBRAR O BÔNUS (ALE-429, p42).
+//
+// O contador mostra o que os degraus compram — "+5" para 5 PM —, e a Fúria
+// Titânica dobra essa parcela DEPOIS, na conta do motor: quem escolhe 5 PM sai
+// com +10 na ficha. Sem a frase, a diferença seria um número aparecendo do nada
+// na aba Combate.
+//
+// É a mesma saída que o diálogo de conjurar recebeu na ALE-428 — a tela
+// INFORMA, e a conta continua num lugar só.
+func TestTheDegreeCounterSaysWhoDoublesTheBonus(t *testing.T) {
+	f, id := barbaro(t, 20)
+
+	// A TELA INTEIRA, e não o `powerPanel`: aquele recorte termina no ABRIR do
+	// primeiro diálogo, que é exatamente onde o contador mora. A primeira versão
+	// desta asserção procurou a frase no complemento do que queria medir.
+	screen := powerScreen(t, f, id)
+	if !strings.Contains(screen, "Fúria Titânica dobra este bônus") {
+		t.Errorf("o contador de degraus do bárbaro de 20º não diz que a Fúria "+
+			"Titânica dobra o que ele está escolhendo:\n%s", recorte(screen))
+	}
+
+	// O CONTROLE: o de 6º tem degrau para escolher e NÃO tem o capstone — se a
+	// frase aparecer para ele, o que está sendo medido é outra coisa.
+	f6, id6 := barbaro(t, 6)
+	if screen6 := powerScreen(t, f6, id6); strings.Contains(screen6, "dobra este bônus") {
+		t.Error("o bárbaro de 6º lê uma promessa de dobro que só vem no 20º (p42)")
+	}
+}
