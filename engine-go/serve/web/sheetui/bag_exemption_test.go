@@ -26,7 +26,7 @@ func TestTheArmorChipIsStruckForWhoeverIsExemptAndNotForTheRest(t *testing.T) {
 	vested := "vested"
 	item := sheet.ItemDTO{Name: "Armadura completa", CatalogID: &plate, Equipped: &vested}
 
-	anao := wearerExemptions{engine.DisplacementIgnoresArmorAndLoad: "Devagar e Sempre"}
+	anao := wearerExemptions{engine.DisplacementIgnoresArmor: "Devagar e Sempre"}
 
 	for _, caso := range []struct {
 		quem     string
@@ -81,11 +81,26 @@ func TestExemptionsComeFromTheRaceCatalogWithTheAbilityName(t *testing.T) {
 	dto := sheet.CharacterDTO{Races: []sheet.RaceDTO{{Race: "anao"}}}
 	got := exemptionsOf(dto)
 
-	if name := got[engine.DisplacementIgnoresArmorAndLoad]; name != "Devagar e Sempre" {
-		t.Fatalf("a isenção do anão veio como %q, esperava %q — o nome sai do `race-defs.json`",
-			name, "Devagar e Sempre")
+	for _, flag := range []string{engine.DisplacementIgnoresArmor, engine.DisplacementIgnoresLoad} {
+		if name := got[flag]; name != "Devagar e Sempre" {
+			t.Fatalf("a isenção %q do anão veio como %q, esperava %q — o nome sai do `race-defs.json`",
+				flag, name, "Devagar e Sempre")
+		}
 	}
 	if len(exemptionsOf(sheet.CharacterDTO{Races: []sheet.RaceDTO{{Race: "humano"}}})) != 0 {
 		t.Fatal("o humano veio com isenção: o varredor está pegando habilidade que não concede flag")
+	}
+
+	// E O PODER GERAL também concede, desde o Fanático (p128). Ele isenta UMA
+	// das duas metades, e o caso prende as duas pontas: a que ele compra e a que
+	// ele não compra — sem a segunda, reusar a flag larga do anão passaria.
+	fanatico := exemptionsOf(sheet.CharacterDTO{ClassPowers: `["fanatico"]`})
+	if name := fanatico[engine.DisplacementIgnoresArmor]; name != "Fanático" {
+		t.Errorf("a isenção de armadura do Fanático veio como %q — a Mochila risca o "+
+			"modificador dizendo QUEM o anula, e o nome sai do `general-powers.json`", name)
+	}
+	if name := fanatico[engine.DisplacementIgnoresLoad]; name != "" {
+		t.Errorf("o Fanático apareceu isentando a CARGA (por %q), e a p128 só o isenta "+
+			"de armaduras pesadas", name)
 	}
 }
