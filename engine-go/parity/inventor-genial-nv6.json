@@ -1380,6 +1380,7 @@
         "contributions": []
       },
       "damage": "1d6",
+      "damageType": "impacto",
       "strDamage": -1,
       "damageBonus": -1,
       "damageAll": {
@@ -1418,6 +1419,7 @@
         "contributions": []
       },
       "damage": "1d6",
+      "damageType": "impacto",
       "strDamage": -1,
       "damageBonus": -1,
       "damageAll": {

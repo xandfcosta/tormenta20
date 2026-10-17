@@ -1703,6 +1703,7 @@
         "contributions": []
       },
       "damage": "1d6",
+      "damageType": "perfuracao",
       "strDamage": -1,
       "damageBonus": -1,
       "damageAll": {
@@ -1747,6 +1748,7 @@
         "contributions": []
       },
       "damage": "1d6",
+      "damageType": "perfuracao",
       "strDamage": -1,
       "damageBonus": -1,
       "damageAll": {

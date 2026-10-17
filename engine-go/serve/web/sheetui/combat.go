@@ -210,14 +210,44 @@ func defenseTile(sheet engine.ComputedSheet) statTile {
 		Rows:  defenseRows(sheet),
 	}
 	rd := sheet.DamageReduction
-	if rd.Total > 0 {
-		tile.Sub = "RD " + strconv.Itoa(rd.Total)
-		tile.Extra = &extraBlock{
-			Title: "Redução de dano " + strconv.Itoa(rd.Total),
-			Rows:  rowsFromSourceAmounts(rd.Sources),
-		}
+	if rd.Total > 0 || len(rd.Typed) > 0 {
+		tile.Sub = writtenRdSub(rd)
+		tile.Extra = &extraBlock{Title: "Redução de dano", Rows: rdRows(rd)}
 	}
 	return tile
+}
+
+// writtenRdSub é a linha de três caracteres sob a Defesa, e ela cabe num terço
+// de 390px: o número da RD geral, e a palavra para a que é por TIPO.
+//
+// A BARRA ESTÁ PROIBIDA aqui, e não é gosto: "RD 10/mágico" é a notação do
+// livro para a redução que NÃO vale contra aqueles tipos (p229), que é o oposto
+// do que a nossa por tipo faz. Escrever "RD 5/3 tipos" diria ao leitor de T20
+// exatamente o contrário.
+func writtenRdSub(rd engine.RdBreakdown) string {
+	if len(rd.Typed) == 0 {
+		return "RD " + strconv.Itoa(rd.Total)
+	}
+	if rd.Total == 0 {
+		return "RD por tipo"
+	}
+	return "RD " + strconv.Itoa(rd.Total) + " · por tipo"
+}
+
+// rdRows é a decomposição inteira: as fontes da RD geral e, abaixo, uma linha
+// por TIPO com a dela. O tipo entra no rótulo porque é ele que diz o que aquela
+// redução alcança — "5" sozinho não responde "contra o quê".
+func rdRows(rd engine.RdBreakdown) []breakdownRow {
+	rows := rowsFromSourceAmounts(rd.Sources)
+	for _, typed := range rd.Typed {
+		for _, source := range typed.Sources {
+			rows = append(rows, breakdownRow{
+				Label: source.Source + " · " + damageWrittenKind(typed.Type),
+				Value: book.WithSign(source.Amount),
+			})
+		}
+	}
+	return rows
 }
 
 // attackTile é um dos dois ataques, já somado ao que vale para TODOS eles.

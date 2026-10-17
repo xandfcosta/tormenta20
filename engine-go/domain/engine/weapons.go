@@ -29,6 +29,11 @@ type WeaponCard struct {
 	Expertise ExpertiseBreakdown `json:"expertise"`
 	AttackAll TotalContribs      `json:"attackAll"`
 	Damage    string             `json:"damage"` // dice, e.g. "1d8"
+	// DamageType é o tipo do dano da ARMA — "corte", "perfuracao", "impacto" —,
+	// e ele vale para os dados dela e para os bônus numéricos que a acompanham
+	// (a Força, o dano do encanto sem tipo próprio). As parcelas de OUTRO tipo
+	// viajam no `ExtraDamage`, cada uma com o seu.
+	DamageType string `json:"damageType,omitempty"`
 	// ExtraDamage são as parcelas de OUTRO tipo de dano que os encantos somam —
 	// o "+1d6 de fogo" de uma arma flamejante (p336). Elas viajam separadas do
 	// `Damage` por duas razões, e as duas são regra:
@@ -120,6 +125,7 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 			Expertise:     ex,
 			AttackAll:     attackAll,
 			Damage:        w.Damage,
+			DamageType:    w.Type,
 			StrDamage:     strDamage,
 			DamageBonus:   strDamage + damageAll.Total + damageThis.Total,
 			DamageAll:     damageAll,

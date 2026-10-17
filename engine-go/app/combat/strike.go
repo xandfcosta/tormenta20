@@ -32,7 +32,11 @@ type Combatant struct {
 	Weapons         []engine.WeaponCard
 	Defense         int
 	DamageReduction int
-	CritImmune      bool
+	// DamageReductionByType é a RD CONTRA UM TIPO (p229), por tipo de dano. Ela
+	// viaja separada da geral porque alcança outra coisa: a redução de fogo come
+	// a parcela de fogo e nada mais.
+	DamageReductionByType map[string]int
+	CritImmune            bool
 	// Melee é o valor de LUTA, e ele existe separado da Defesa porque a MANOBRA
 	// o pede: o teste é oposto, e quem se defende rola Luta mesmo empunhando
 	// arma de disparo (p234). Zero para quem não tem ficha — um bloco escrito à
@@ -336,9 +340,10 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		return live.PendingAttack{}, err
 	}
 	out, err := engine.ResolveAttackUnder(weapon, engine.AttackTarget{
-		Defense:         victim.Defense,
-		DamageReduction: victim.DamageReduction,
-		CritImmune:      victim.CritImmune,
+		Defense:               victim.Defense,
+		DamageReduction:       victim.DamageReduction,
+		DamageReductionByType: victim.DamageReductionByType,
+		CritImmune:            victim.CritImmune,
 	}, situations, d20, s.rollDie)
 	if err != nil {
 		return live.PendingAttack{}, err

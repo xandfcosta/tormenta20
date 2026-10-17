@@ -2159,6 +2159,7 @@
         ]
       },
       "damage": "2d8",
+      "damageType": "corte",
       "strDamage": 5,
       "damageBonus": 8,
       "damageAll": {
@@ -2213,6 +2214,7 @@
         "contributions": []
       },
       "damage": "2d8",
+      "damageType": "corte",
       "strDamage": 5,
       "damageBonus": 6,
       "damageAll": {
