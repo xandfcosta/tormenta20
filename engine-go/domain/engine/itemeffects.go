@@ -349,6 +349,13 @@ func targetKey(t ModifierTarget) string {
 		}
 		return "pmCost"
 	case "damageReduction":
+		// O TIPO NA CHAVE, pela mesma razão do `displacement:armor`: a redução
+		// contra fogo e a redução geral alcançam coisas diferentes, e uma chave
+		// só faria a específica somar na geral — dando um número que não vale
+		// contra ataque nenhum (p229).
+		if t.DamageType != "" {
+			return "damageReduction:" + t.DamageType
+		}
 		return "damageReduction"
 	case "catalyst":
 		return "catalyst:" + t.School

@@ -273,13 +273,20 @@ func protectionRow(protection book.Armor, isArmor bool) string {
 	return row + " · leve"
 }
 
-// damageWrittenKinds é o pt-BR do tipo de dano da arma.
+// damageWrittenKinds é o pt-BR do tipo de dano.
 //
 // O catálogo guarda a CHAVE sem acento (`perfuracao`), como todo id deste
 // projeto; sem esta tabela o id cru vaza para o jogador ("tipo perfuracao").
+//
+// Os ELEMENTAIS entraram com a redução de dano por tipo (p229): a mesma tabela
+// serve às duas telas — a carta da arma diz de que tipo ela causa, e a Defesa
+// diz contra que tipo o portador reduz. Duas tabelas divergiriam no acento.
 var damageWrittenKinds = map[string]string{
 	"corte": "corte", "perfuracao": "perfuração", "impacto": "impacto",
 	"corte-perfuracao": "corte ou perfuração",
+	"fogo":             "fogo", "frio": "frio", "acido": "ácido",
+	"eletricidade": "eletricidade", "luz": "luz", "trevas": "trevas",
+	"lefeu": "lefeu", "mental": "mental", "essencia": "essência",
 }
 
 func damageWrittenKind(kind string) string {

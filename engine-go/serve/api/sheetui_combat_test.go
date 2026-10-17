@@ -179,3 +179,36 @@ func ligaOCondicional(t *testing.T, f sceneFixture, id int64) {
 		t.Fatalf("ligar o condicional: %v", err)
 	}
 }
+
+// A REDUÇÃO POR TIPO CHEGA NA TELA, e com o tipo escrito (ALE-410, p229).
+//
+//	"Armadura Óssea. Você recebe redução de corte, frio e perfuração 5." (p20)
+//
+// O osteon é a prova de que a RD por tipo não é a geral de outro jeito: ele NÃO
+// tem RD geral nenhuma, e antes desta fatia a caixa da Defesa não dizia nada —
+// a habilidade existia só como texto na aba de Poderes.
+//
+// A BARRA não aparece na linha curta de propósito: "RD 10/mágico" é a notação
+// do livro para a redução que NÃO vale contra aqueles tipos (p229), o oposto
+// desta. Escrever "RD 5/3 tipos" diria ao leitor de T20 exatamente o contrário.
+func TestTheTypedDamageReductionReachesTheDefenseTile(t *testing.T) {
+	f, id := fighterFixture(t)
+	seedRaca(t, f.s, id, "osteon")
+
+	screen := combatScreen(t, f, id)
+	if !strings.Contains(screen, "RD por tipo") {
+		t.Errorf("a caixa da Defesa não anuncia a redução por tipo do osteon:\n%s",
+			recorte(screen))
+	}
+	for _, tipo := range []string{"corte", "frio", "perfuração"} {
+		if !strings.Contains(screen, "Raça: Osteon · "+tipo) {
+			t.Errorf("a decomposição não diz que a redução de %s vem da raça — "+
+				"um \"+5\" sem o tipo não responde contra o quê ele vale", tipo)
+		}
+	}
+	// E O CONTROLE: o guerreiro sem raça nenhuma não ganha promessa.
+	f2, id2 := fighterFixture(t)
+	if screen2 := combatScreen(t, f2, id2); strings.Contains(screen2, "RD por tipo") {
+		t.Error("o guerreiro sem raça de redução lê uma RD por tipo que ele não tem")
+	}
+}

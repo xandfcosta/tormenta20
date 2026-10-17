@@ -37,13 +37,17 @@ type CatalogItem struct {
 func (c *Catalogs) Item(id string) *CatalogItem { return c.itemsByID[id] }
 
 type WeaponStats struct {
-	Purpose   string   `json:"purpose"` // 'melee' | 'thrown' | 'ranged'
-	Hand      string   `json:"hand"`    // 'light' | 'one' | 'two' (finesse gating — ALE-31)
-	Traits    []string `json:"traits"`
-	Damage    string   `json:"damage"`    // dice, e.g. "1d8" (weapon-card display)
-	CritRange int      `json:"critRange"` // lowest natural roll that threatens
-	CritMult  int      `json:"critMult"`
-	Finesse   bool     `json:"finesse"` // inherent Des-on-attack (Adaga) — ALE-31
+	Purpose string   `json:"purpose"` // 'melee' | 'thrown' | 'ranged'
+	Hand    string   `json:"hand"`    // 'light' | 'one' | 'two' (finesse gating — ALE-31)
+	Traits  []string `json:"traits"`
+	Damage  string   `json:"damage"` // dice, e.g. "1d8" (weapon-card display)
+	// Type é o tipo do dano da ARMA — "corte", "perfuracao", "impacto". Ele
+	// chegou com a RD por tipo (ALE-410): sem ele, uma redução de corte não
+	// alcança os dados da espada, que são justamente o corte.
+	Type      string `json:"type"`
+	CritRange int    `json:"critRange"` // lowest natural roll that threatens
+	CritMult  int    `json:"critMult"`
+	Finesse   bool   `json:"finesse"` // inherent Des-on-attack (Adaga) — ALE-31
 }
 
 // RaceDefinition é a raça do catálogo de habilidades, distinta da `Raca` de
