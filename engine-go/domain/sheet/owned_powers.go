@@ -5,7 +5,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// O ACERVO DE PODERES: o que o personagem TEM, nas cinco procedências.
+// O ACERVO DE PODERES: o que o personagem TEM, nas seis procedências.
 //
 // Ele morava em `serve/web/sheetui` como função privada, e isso tinha preço: a
 // POSSE também é pergunta do CASO DE USO — usar um poder que não é seu, receber
@@ -16,7 +16,7 @@ import (
 // que o personagem tem e de onde veio; "Classe · Bárbaro" é frase, e frase mora
 // na cena.
 
-// PowerSource é de onde o poder vem. São as cinco do acervo mais o deus.
+// PowerSource é de onde o poder vem.
 type PowerSource string
 
 const (
@@ -26,6 +26,10 @@ const (
 	PowerFromGeneral  PowerSource = "general"
 	PowerFromTormenta PowerSource = "tormenta"
 	PowerFromGod      PowerSource = "god"
+	// PowerFromItem é a SEXTA, e ela entrou com os itens mágicos (ALE-433): o
+	// encanto ATIVÁVEL de um item equipado é uma coisa que se faz, e o lugar
+	// onde se procura o que fazer é este acervo.
+	PowerFromItem PowerSource = "item"
 )
 
 // OwnedPower é um poder que o personagem tem.
@@ -50,7 +54,47 @@ func OwnedPowers(dto CharacterDTO) []OwnedPower {
 	outside = append(outside, chosenOriginBenefitsOf(dto)...)
 	outside = append(outside, automaticClassPowersOf(dto)...)
 	outside = append(outside, chosenPowersOf(dto)...)
-	return append(outside, godPowerOf(dto)...)
+	outside = append(outside, godPowerOf(dto)...)
+	return append(outside, itemEnchantActivationsOf(dto)...)
+}
+
+// itemEnchantActivationsOf são os encantos ATIVÁVEIS dos itens EQUIPADOS.
+//
+// As duas restrições são regra, e cada uma responde uma pergunta diferente:
+//
+//   - ATIVÁVEL: o acervo é o que a pessoa pode FAZER, e um encanto passivo não
+//     se faz — a Flamejante soma +1d6 de fogo sozinha, e ela já aparece no
+//     cartão da arma e na Mochila. Listá-la aqui seria a mesma coisa duas
+//     vezes. Quem responde "este tem gesto?" é o registro de ativações;
+//   - EQUIPADO: espada guardada na mochila não dança. O gesto pede o item na
+//     mão ou vestido, e é o mesmo critério que os modificadores do encanto já
+//     usam (`condition: wielded`).
+//
+// O ENCANTO É DO ITEM, e por isso o `Owner` é o nome dele: duas espadas
+// encantadas com a mesma coisa viram duas linhas, e sem o dono elas seriam
+// iguais na tela.
+func itemEnchantActivationsOf(dto CharacterDTO) []OwnedPower {
+	outside := []OwnedPower{}
+	for _, item := range dto.Items {
+		if item.Equipped == nil || *item.Equipped == "" {
+			continue
+		}
+		for _, id := range item.Enchants {
+			enchant := book.ItemByID(id)
+			if enchant == nil {
+				continue
+			}
+			spec := book.ActivationOf("item."+id, enchant.Name)
+			if spec == nil {
+				continue
+			}
+			outside = append(outside, OwnedPower{
+				ID: id, Name: enchant.Name, Detail: enchant.Description,
+				Source: PowerFromItem, Owner: item.Name, Page: enchant.BookPage,
+			})
+		}
+	}
+	return outside
 }
 
 // OwnsActivation diz se a ficha tem o poder daquela ativação.

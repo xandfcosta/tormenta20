@@ -1127,6 +1127,50 @@
               }
             ]
           }
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Espadachim Dançarino Nv8",
+            "races": [
+              "humano"
+            ],
+            "origin": "artista",
+            "classes": [
+              {
+                "className": "Guerreiro",
+                "level": 8
+              }
+            ],
+            "god": "Valkaria",
+            "strength": 3,
+            "dexterity": 4,
+            "constitution": 3,
+            "intelligence": 1,
+            "wisdom": 1,
+            "charisma": 2,
+            "size": "Médio",
+            "displacement": 9,
+            "items": [
+              {
+                "catalogId": "espada-longa",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "armadura-couro",
+                "equipped": "vested"
+              }
+            ]
+          },
+          "enchants": [
+            {
+              "item": "espada-longa",
+              "enchants": [
+                "encanto-dancarina",
+                "encanto-flamejante"
+              ]
+            }
+          ]
         }
       ]
     },

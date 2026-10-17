@@ -119,6 +119,12 @@ func (sd Seeder) SetHp(ctx context.Context, id, current int64) error {
 	return sd.plays.SetHpTo(ctx, row, current)
 }
 
+// EnchantItem encanta um item do elenco, pelo mesmo caso de uso do mestre: a
+// recusa do livro (arma, teto de peso, pré-requisito) vale para a seed também.
+func (sd Seeder) EnchantItem(ctx context.Context, itemID int64, enchants []string) error {
+	return sd.plays.EnchantItem(ctx, itemID, enchants)
+}
+
 // ConsumeItem gasta uma dose, para o elenco ter efeito de cena ligado.
 func (sd Seeder) ConsumeItem(ctx context.Context, id, itemID int64) error {
 	row, err := sd.queries.GetCharacter(ctx, id)
