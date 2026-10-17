@@ -110,6 +110,15 @@ func main() {
 		total += len(u.Characters)
 		seeded += seedUserCharacters(square, database, sf.Password, u)
 	}
+	// O DENOMINADOR DO ELENCO, e ele não é zelo: o laço acima LOGA o personagem
+	// que falhou e segue, então o despejo era escrito com um personagem a menos
+	// e a única marca era uma linha de log no meio das vinte e uma da migração.
+	// Semear menos do que o elenco pede é o seed MENTINDO — a forma que o
+	// `validateCatalogRefs` existe para recusar, pela porta de trás.
+	if seeded != total {
+		log.Fatalf("o gerador semeou %d dos %d personagens do elenco: o %s NÃO foi escrito — "+
+			"a causa está na linha de log acima", seeded, total, out)
+	}
 	if err := seedChronicles(database); err != nil {
 		log.Fatalf("chronicles: %v", err)
 	}
