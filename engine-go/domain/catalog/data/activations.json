@@ -3835,5 +3835,14 @@
       "stepEveryLevels": 4
     },
     "bookPage": 44
+  },
+  {
+    "id": "item.encanto-dancarina",
+    "name": "Dançarina",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 335
   }
 ]

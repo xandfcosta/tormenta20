@@ -91,6 +91,11 @@ func shortSource(source string) string {
 	if source == "Poder da Tormenta" {
 		return "Tormenta"
 	}
+	// O ITEM mostra o NOME dele no crachá, como a classe e o deus: o que
+	// distingue dois encantos iguais é de qual arma eles vêm.
+	if name, found := strings.CutPrefix(source, "Item · "); found {
+		return name
+	}
 	return "Geral"
 }
 

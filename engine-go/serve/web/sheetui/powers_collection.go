@@ -60,6 +60,10 @@ func writtenProvenance(p sheet.OwnedPower) string {
 		return "Poder da Tormenta"
 	case sheet.PowerFromGod:
 		return p.Owner
+	case sheet.PowerFromItem:
+		// O ITEM NOMEADO, e não "Item" seco: duas espadas encantadas com a
+		// mesma coisa viram duas linhas iguais sem o nome de cada uma.
+		return "Item · " + p.Owner
 	}
 	return "Poder geral"
 }

@@ -58,8 +58,12 @@ func powerCommand(t *testing.T, f sceneFixture, id int64, path, body string) str
 	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
-// O ACERVO junta as cinco procedências, e SÓ o que o personagem tem.
-func TestTheCollectionJoinsTheFiveOrigins(t *testing.T) {
+// O ACERVO junta as PROCEDÊNCIAS, e SÓ o que o personagem tem.
+//
+// Sem o número no nome de propósito: elas eram quatro, viraram cinco com a
+// devoção (ALE-426) e seis com o encanto de item (ALE-433) — e um número
+// escrito à mão sobre uma família que cresce envelhece sozinho.
+func TestTheCollectionJoinsTheProvenances(t *testing.T) {
 	f, id := barbaro(t, 5)
 	seedRaca(t, f.s, id, "Anão")
 	choiceCom(t, f, id, `["class.barbaro.golpe-poderoso"]`, `["origin-batedor-pericia-sobrevivencia"]`)
