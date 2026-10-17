@@ -53,6 +53,7 @@ type seedUser struct {
 type seedCharacter struct {
 	Create      json.RawMessage `json:"create"`
 	Spells      []seedSpell     `json:"spells"`
+	Enchants    []seedEnchant   `json:"enchants"`
 	Simple      bool            `json:"simple"`
 	SceneEffect bool            `json:"sceneEffect"`
 	HpFraction  *float64        `json:"hpFraction"`
@@ -61,6 +62,16 @@ type seedCharacter struct {
 type seedSpell struct {
 	ID       string `json:"id"`
 	Prepared bool   `json:"prepared"`
+}
+
+// seedEnchant é o conjunto de encantos que UM item do personagem recebe.
+//
+// LISTA e não mapa de `catalogId` para encantos: a ordem de um mapa em Go é
+// aleatória, e o despejo é comparado byte a byte — duas armas encantadas
+// trocariam de lugar no `character_item_enchants` a cada regeneração.
+type seedEnchant struct {
+	Item     string   `json:"item"`
+	Enchants []string `json:"enchants"`
 }
 
 // casaDaSeed é o que este gerador pede do app.
@@ -76,6 +87,10 @@ type casaDaSeed interface {
 	LearnSpell(ctx context.Context, id int64, catalog string, prepared bool) error
 	SetHp(ctx context.Context, id, current int64) error
 	ConsumeItem(ctx context.Context, id, itemID int64) error
+	// EnchantItem escreve os encantos de um item, pela MESMA regra do mestre —
+	// é ele quem encanta no app (ALE-416), e a seed não ganha um caminho
+	// próprio que não recuse o que o livro recusa.
+	EnchantItem(ctx context.Context, itemID int64, enchants []string) error
 }
 
 // standardTrained são as perícias que todo personagem não-simples treina, para a
@@ -224,12 +239,10 @@ func seedCharacterRow(ctx context.Context, square casaDaSeed, ownerID int64, ch 
 			log.Printf("personagem %d, magia %q: %v", id, sp.ID, err)
 		}
 	}
-	if ch.HpFraction != nil || ch.SceneEffect {
-		if err := enrichLiveState(ctx, square, id, ch); err != nil {
-			log.Printf("personagem %d, estado de jogo: %v", id, err)
-		}
+	if ch.HpFraction == nil && !ch.SceneEffect && len(ch.Enchants) == 0 {
+		return nil
 	}
-	return nil
+	return enrichLiveState(ctx, square, id, ch)
 }
 
 // enrichCreate completa o corpo de criação com o que sai do catálogo e das
@@ -299,7 +312,41 @@ func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCh
 		}
 	}
 	if ch.SceneEffect {
-		return applySceneEffect(ctx, square, id, sheet.Items)
+		if err := applySceneEffect(ctx, square, id, sheet.Items); err != nil {
+			return err
+		}
+	}
+	return applyEnchants(ctx, square, id, sheet.Items, ch.Enchants)
+}
+
+// applyEnchants encanta os itens DEPOIS de o personagem nascer.
+//
+// Depois, e não no corpo de criação, porque o encanto mora em tabela própria e
+// quem o grava é o `EnchantItem` — o mesmo caminho que a Mochila percorre, com
+// a conferência do que o livro aceita (p334). O elo é o `catalogId`, porque o
+// id da LINHA só existe depois da criação.
+//
+// Item que o personagem não tem REPROVA o gerador. É a mesma razão do
+// `validateCatalogRefs`: um encanto pendurado em nada produz uma arma comum,
+// com a ficha abrindo normal e o acervo de poderes sem a linha que o seed
+// existia para pôr lá.
+func applyEnchants(ctx context.Context, square casaDaSeed, id int64, items []sheet.ItemDTO, enchants []seedEnchant) error {
+	for _, want := range enchants {
+		line := int64(0)
+		for _, it := range items {
+			if it.CatalogID != nil && *it.CatalogID == want.Item {
+				line = it.ID
+				break
+			}
+		}
+		if line == 0 {
+			return fmt.Errorf("o personagem %d não tem o item %q para encantar com %v: "+
+				"o `enchants` aponta para um `create.items[].catalogId` que não está lá",
+				id, want.Item, want.Enchants)
+		}
+		if err := square.EnchantItem(ctx, line, want.Enchants); err != nil {
+			return fmt.Errorf("encantar o %q do personagem %d: %w", want.Item, id, err)
+		}
 	}
 	return nil
 }

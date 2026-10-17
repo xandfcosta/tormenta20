@@ -118,6 +118,26 @@ func (c catalogoDaSeed) confereUmPersonagem(where string, ch seedCharacter) []re
 			})
 		}
 	}
+	// O ENCANTO aponta para DOIS lados: o item que o recebe (conferido abaixo,
+	// junto com os outros `catalogId`) e o encanto em si, que é verbete de
+	// `items.json` como qualquer outro.
+	for _, want := range ch.Enchants {
+		for _, id := range want.Enchants {
+			if _, ok := catalog.LookupItem(id); ok {
+				continue
+			}
+			broken = append(broken, referenciaQuebrada{
+				where: where + ", enchants[].enchants[]", value: id, catalog: "itens",
+				neighbor: oVizinho(id, catalog.ItemIDs()),
+			})
+		}
+		if _, ok := catalog.LookupItem(want.Item); !ok {
+			broken = append(broken, referenciaQuebrada{
+				where: where + ", enchants[].item", value: want.Item, catalog: "itens",
+				neighbor: oVizinho(want.Item, catalog.ItemIDs()),
+			})
+		}
+	}
 	var create map[string]json.RawMessage
 	if err := json.Unmarshal(ch.Create, &create); err != nil {
 		return append(broken, referenciaQuebrada{

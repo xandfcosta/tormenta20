@@ -42,6 +42,11 @@ var dumpTables = []string{
 	"character_races",
 	"character_expertises",
 	"character_items",
+	// Depois de `character_items`, que é o pai dele pela FK (ALE-433). Sem esta
+	// linha o encanto do seed não ia para o despejo: a arma nascia comum, e o
+	// acervo de poderes abria sem a ativação que o personagem existe para
+	// mostrar.
+	"character_item_enchants",
 	"character_spells",
 	"campaign_members",
 	"sessions",
