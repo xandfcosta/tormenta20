@@ -1171,6 +1171,48 @@
               ]
             }
           ]
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Guerreiro Adamantino Nv20",
+            "races": [
+              "anao"
+            ],
+            "origin": "artesao",
+            "classes": [
+              {
+                "className": "Guerreiro",
+                "level": 20
+              }
+            ],
+            "god": "Khalmyr",
+            "strength": 5,
+            "dexterity": 2,
+            "constitution": 4,
+            "intelligence": 1,
+            "wisdom": 2,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 6,
+            "items": [
+              {
+                "catalogId": "espada-longa",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "armadura-completa",
+                "equipped": "vested"
+              }
+            ]
+          },
+          "overlays": [
+            {
+              "item": "espada-longa",
+              "material": "material-adamante",
+              "improvements": []
+            }
+          ]
         }
       ]
     },

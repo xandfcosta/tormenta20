@@ -138,6 +138,24 @@ func (c catalogoDaSeed) confereUmPersonagem(where string, ch seedCharacter) []re
 			})
 		}
 	}
+	// A SOBREPOSIÇÃO aponta para três coisas: o item que a recebe, o material e
+	// cada melhoria — e todas são verbete de `items.json`.
+	for _, want := range ch.Overlays {
+		ids := append([]string{}, want.Improvements...)
+		if want.Material != "" {
+			ids = append(ids, want.Material)
+		}
+		ids = append(ids, want.Item)
+		for _, id := range ids {
+			if _, ok := catalog.LookupItem(id); ok {
+				continue
+			}
+			broken = append(broken, referenciaQuebrada{
+				where: where + ", overlays[]", value: id, catalog: "itens",
+				neighbor: oVizinho(id, catalog.ItemIDs()),
+			})
+		}
+	}
 	var create map[string]json.RawMessage
 	if err := json.Unmarshal(ch.Create, &create); err != nil {
 		return append(broken, referenciaQuebrada{

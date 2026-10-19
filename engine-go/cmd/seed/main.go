@@ -54,6 +54,7 @@ type seedCharacter struct {
 	Create      json.RawMessage `json:"create"`
 	Spells      []seedSpell     `json:"spells"`
 	Enchants    []seedEnchant   `json:"enchants"`
+	Overlays    []seedOverlay   `json:"overlays"`
 	Simple      bool            `json:"simple"`
 	SceneEffect bool            `json:"sceneEffect"`
 	HpFraction  *float64        `json:"hpFraction"`
@@ -74,6 +75,16 @@ type seedEnchant struct {
 	Enchants []string `json:"enchants"`
 }
 
+// seedOverlay são as SOBREPOSIÇÕES de um item do elenco — melhorias e material.
+//
+// Separada do `seedEnchant` porque o livro as conta em separado (p334) e a
+// escrita é por caso de uso diferente, o mesmo que a Mochila usa.
+type seedOverlay struct {
+	Item         string   `json:"item"`
+	Improvements []string `json:"improvements"`
+	Material     string   `json:"material"`
+}
+
 // casaDaSeed é o que este gerador pede do app.
 //
 // Declarada AQUI e não no `api`, como as portas das cenas: quem escolhe o que
@@ -91,6 +102,10 @@ type casaDaSeed interface {
 	// é ele quem encanta no app (ALE-416), e a seed não ganha um caminho
 	// próprio que não recuse o que o livro recusa.
 	EnchantItem(ctx context.Context, itemID int64, enchants []string) error
+	// SaveItemOverlays escreve melhoria e MATERIAL, pelo mesmo caso de uso do
+	// jogador: o material é o que anda o dado da arma (p166), e o elenco
+	// precisa dele para a mecânica existir na tela.
+	SaveItemOverlays(ctx context.Context, itemID int64, improvements []string, material string) error
 }
 
 // standardTrained são as perícias que todo personagem não-simples treina, para a
@@ -239,7 +254,7 @@ func seedCharacterRow(ctx context.Context, square casaDaSeed, ownerID int64, ch 
 			log.Printf("personagem %d, magia %q: %v", id, sp.ID, err)
 		}
 	}
-	if ch.HpFraction == nil && !ch.SceneEffect && len(ch.Enchants) == 0 {
+	if ch.HpFraction == nil && !ch.SceneEffect && len(ch.Enchants) == 0 && len(ch.Overlays) == 0 {
 		return nil
 	}
 	return enrichLiveState(ctx, square, id, ch)
@@ -316,7 +331,38 @@ func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCh
 			return err
 		}
 	}
-	return applyEnchants(ctx, square, id, sheet.Items, ch.Enchants)
+	if err := applyEnchants(ctx, square, id, sheet.Items, ch.Enchants); err != nil {
+		return err
+	}
+	return applyOverlays(ctx, square, id, sheet.Items, ch.Overlays)
+}
+
+// applyOverlays forja melhoria e material nos itens DEPOIS de o personagem
+// nascer, pelo mesmo motivo do `applyEnchants`: o id da LINHA só existe depois
+// da criação, e o corpo de criação não carrega sobreposição.
+func applyOverlays(ctx context.Context, square casaDaSeed, id int64, items []sheet.ItemDTO, overlays []seedOverlay) error {
+	for _, want := range overlays {
+		line := lineOfCatalogItem(items, want.Item)
+		if line == 0 {
+			return fmt.Errorf("o personagem %d não tem o item %q para forjar em %q: "+
+				"o `overlays` aponta para um `create.items[].catalogId` que não está lá",
+				id, want.Item, want.Material)
+		}
+		if err := square.SaveItemOverlays(ctx, line, want.Improvements, want.Material); err != nil {
+			return fmt.Errorf("forjar o %q do personagem %d: %w", want.Item, id, err)
+		}
+	}
+	return nil
+}
+
+// lineOfCatalogItem acha a LINHA do item daquele verbete, ou zero.
+func lineOfCatalogItem(items []sheet.ItemDTO, catalogID string) int64 {
+	for _, it := range items {
+		if it.CatalogID != nil && *it.CatalogID == catalogID {
+			return it.ID
+		}
+	}
+	return 0
 }
 
 // applyEnchants encanta os itens DEPOIS de o personagem nascer.
@@ -332,13 +378,7 @@ func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCh
 // existia para pôr lá.
 func applyEnchants(ctx context.Context, square casaDaSeed, id int64, items []sheet.ItemDTO, enchants []seedEnchant) error {
 	for _, want := range enchants {
-		line := int64(0)
-		for _, it := range items {
-			if it.CatalogID != nil && *it.CatalogID == want.Item {
-				line = it.ID
-				break
-			}
-		}
+		line := lineOfCatalogItem(items, want.Item)
 		if line == 0 {
 			return fmt.Errorf("o personagem %d não tem o item %q para encantar com %v: "+
 				"o `enchants` aponta para um `create.items[].catalogId` que não está lá",
