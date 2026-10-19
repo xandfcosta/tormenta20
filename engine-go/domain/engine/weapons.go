@@ -117,6 +117,11 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 		state := weaponSkillState(ch, skill, attribute)
 		state.Attribute = attribute
 		ex := expertiseBreakdown(ch, state, effects, load)
+		// O PASSO ANDA O DADO ANTES DE TUDO, e a ordem é da p231: o crítico
+		// multiplica "os dados de dano do ataque (INCLUINDO quaisquer aumentos
+		// por passos)". Andar depois multiplicaria o dado de antes.
+		damage := DamageStep(w.Damage, DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped)+
+			StatFor(effects, ModifierTarget{K: "damageStep", Scope: "all"}).Total)
 		cards = append(cards, WeaponCard{
 			Name:          it.Name,
 			Skill:         skill,
@@ -124,7 +129,7 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 			Attack:        ex.Total + attackAll.Total,
 			Expertise:     ex,
 			AttackAll:     attackAll,
-			Damage:        w.Damage,
+			Damage:        damage,
 			DamageType:    w.Type,
 			StrDamage:     strDamage,
 			DamageBonus:   strDamage + damageAll.Total + damageThis.Total,
@@ -154,6 +159,34 @@ func weaponDexUse(w *WeaponStats, hasFinesse bool, forTotal, dexTotal int) (atta
 	finesse := hasFinesse &&
 		((w.Hand == "light" && w.Purpose == "melee") || w.Purpose == "thrown" || hasTrait(w.Traits, "agil"))
 	return w.Finesse || finesse, finesse
+}
+
+// DamageStepsOf soma os passos que estes modificadores dão À ARMA que os carrega.
+//
+// Do item, e não do acumulado — que é o contrário do `damage:this` logo acima,
+// e de propósito. Aquele soma um BÔNUS, e a imprecisão custa um ponto na carta
+// da arma vizinha; um passo troca o DADO, e um machado comum anunciando 1d12
+// porque a espada da outra mão é de adamante seria a carta mentindo sobre a
+// arma que a pessoa está olhando.
+//
+// A condição é avaliada com o `conditionMet` de sempre: o `wielded` do material
+// vale porque esta arma está na mão, e um passo preso a flag ou a circunstância
+// fica de fora até alguém escrever como ele liga.
+//
+// Exportada porque a MOCHILA pergunta o mesmo: o crachá do cartão diz o dado da
+// arma com as sobreposições DELA, e a conta tem de ser a mesma da carta de
+// combate — duas somas de passo seriam duas respostas para o mesmo dado.
+//
+// @example DamageStepsOf(adamante.Modifiers, &empunhada) // 1
+func DamageStepsOf(own []Modifier, equipped *string) int {
+	steps := 0
+	for _, m := range own {
+		if targetKey(m.Target) != "damageStep:this" || !conditionMet(m, equipped) {
+			continue
+		}
+		steps += m.Amount
+	}
+	return steps
 }
 
 func hasTrait(traits []string, t string) bool {
