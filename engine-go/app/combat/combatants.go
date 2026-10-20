@@ -82,6 +82,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		Defense:               computed.Defense.Total,
 		DamageReduction:       computed.DamageReduction.Total,
 		DamageReductionByType: reducaoPorTipo(computed.DamageReduction),
+		CritExtraIgnoreChance: computed.CritExtraIgnoreChance.Total,
 		Melee:                 meleeOf(computed),
 		ManeuverOffense:       maneuverBonuses(efeitos, engine.ManeuverOffense),
 		ManeuverDefense:       maneuverBonuses(efeitos, engine.ManeuverDefense),

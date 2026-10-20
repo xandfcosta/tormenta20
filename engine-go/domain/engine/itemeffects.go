@@ -368,6 +368,11 @@ func targetKey(t ModifierTarget) string {
 			return "pmCost:" + t.Scope
 		}
 		return "pmCost"
+	case "critExtraIgnoreChance":
+		// A CHANCE do alvo de ignorar o dano EXTRA de um crítico (p166, p338).
+		// Chave única: o livro soma as fontes quando as declara cumulativas, e
+		// as duas que existem — o material e o encanto — dizem isso por escrito.
+		return "critExtraIgnoreChance"
 	case "damageStep":
 		// ESCOPO NA CHAVE, como no dano: o passo do material Adamante é DESTA
 		// arma (`this`) e o do Campeão vale para todo ataque (`all`). Uma chave

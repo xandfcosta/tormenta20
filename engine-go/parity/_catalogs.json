@@ -4021,7 +4021,50 @@
         "shield",
         "weapon"
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "critExtraIgnoreChance"
+          },
+          "amount": 50,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "appliesToCategory": [
+            "armor-heavy"
+          ],
+          "note": "50% de ignorar o extra de crítico"
+        },
+        {
+          "target": {
+            "k": "critExtraIgnoreChance"
+          },
+          "amount": 25,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "appliesToCategory": [
+            "armor-light"
+          ],
+          "note": "25% de ignorar o extra de crítico"
+        },
+        {
+          "target": {
+            "k": "critExtraIgnoreChance"
+          },
+          "amount": 25,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "appliesToCategory": [
+            "shield"
+          ],
+          "note": "25% de ignorar o extra de crítico"
+        }
+      ],
       "bookPage": 166,
       "uid": "itm_pi7iwbfsd4",
       "priceByItem": {
@@ -4032,11 +4075,12 @@
         "esoteric": 6000
       },
       "description": "Este metal tem a aparência de vidro avermelhado, mas é duro como aço. Aço-rubi é caríssimo e comercializado apenas por uma guilda de ferreiros de Doherimm. Os anões mantém a origem deste material em segredo, mas suspeita-se de que ele seja minerado das profundezas de uma área de Tormenta. Arma. A arma ignora 10 pontos de redução de dano, além de ignorar a imunidade a crítico de lefeu. Armadura e Escudo. Fornece uma chance de ignorar o dano extra de acertos críticos e ataques furtivos: armaduras leves e escudos, 25% (1 em 1d4); armaduras pesadas, 50% (qualquer valor par em qualquer dado), cumulativas entre si. Esotérico. Quando lança uma magia que causa dano, ela ignora 10 pontos de redução de dano, além de ignorar as imunidades a dano de lefeu.",
-      "modeled": [],
+      "modeled": [
+        "Armadura e Escudo"
+      ],
       "unmodeled": {
         "abertura": "só sabor: de onde vem o metal",
         "Arma": "ignorar 10 pontos de RD e a imunidade a crítico de lefeu são propriedades do ATAQUE contra o alvo, e a RD do alvo mora no `AttackTarget` — um `Modifier` só alcança o portador",
-        "Armadura e Escudo": "chance PERCENTUAL de ignorar dano, e a ficha não sorteia",
         "Esotérico": "a magia ignorar RD é propriedade do efeito, e efeito de magia não passa pelo motor de ficha"
       }
     },
@@ -5237,6 +5281,55 @@
       ],
       "bookPage": 338,
       "uid": "itm_j5267x35ck"
+    },
+    {
+      "id": "encanto-fortificado",
+      "name": "Fortificado",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 39,
+      "rollMax": 40,
+      "countsAs": 1,
+      "description": "Você recebe 25% de chance (para escudos) e 50% de chance (para armaduras) de ignorar o dano extra de acertos críticos e ataques furtivos.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "critExtraIgnoreChance"
+          },
+          "amount": 50,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "appliesToCategory": [
+            "armor-light",
+            "armor-heavy"
+          ],
+          "note": "50% de ignorar o extra de crítico"
+        },
+        {
+          "target": {
+            "k": "critExtraIgnoreChance"
+          },
+          "amount": 25,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "appliesToCategory": [
+            "shield"
+          ],
+          "note": "25% de ignorar o extra de crítico"
+        }
+      ],
+      "bookPage": 338,
+      "uid": "itm_qpo46n6bne"
     },
     {
       "id": "encanto-sombrio",

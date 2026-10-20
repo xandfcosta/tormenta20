@@ -209,12 +209,53 @@ func defenseTile(sheet engine.ComputedSheet) statTile {
 		Value: book.DefenseLabel(sheet.Defense),
 		Rows:  defenseRows(sheet),
 	}
-	rd := sheet.DamageReduction
-	if rd.Total > 0 || len(rd.Typed) > 0 {
-		tile.Sub = writtenRdSub(rd)
-		tile.Extra = &extraBlock{Title: "Redução de dano", Rows: rdRows(rd)}
+	rd, crit := sheet.DamageReduction, sheet.CritExtraIgnoreChance
+	if rd.Total > 0 || len(rd.Typed) > 0 || crit.Total > 0 {
+		tile.Sub = writtenDefenseSub(rd, crit.Total)
+		tile.Extra = &extraBlock{
+			Title: "Contra o dano recebido",
+			Rows:  append(rdRows(rd), critExtraRows(crit)...),
+		}
 	}
 	return tile
+}
+
+// writtenDefenseSub é a linha pequena sob a Defesa, com o que o alvo tem contra
+// o dano: a redução e a chance de ignorar o extra do crítico.
+//
+// A CHANCE APARECE NA FACE da caixa, e não só no diálogo: ela é do LIVRO
+// (p166, p338) e quem a tem precisa saber que ela existe para dizer ao mestre
+// na hora. Um benefício que só existe dentro de um diálogo é um benefício que
+// ninguém lembra de usar.
+func writtenDefenseSub(rd engine.RdBreakdown, chance int) string {
+	written := writtenRdSub(rd)
+	if rd.Total == 0 && len(rd.Typed) == 0 {
+		written = ""
+	}
+	if chance == 0 {
+		return written
+	}
+	critical := strconv.Itoa(chance) + "% vs crítico"
+	if written == "" {
+		return critical
+	}
+	return written + " · " + critical
+}
+
+// critExtraRows é a chance de ignorar o extra do crítico, por fonte.
+//
+// Em PORCENTO e nunca em dano: a decisão da casa é que o app INFORMA e a mesa
+// ROLA (ALE-436). Um "−9 em média" aqui seria o app arbitrando com cara de
+// conta, e o número que ele daria nenhuma mesa rola.
+func critExtraRows(chance engine.TotalContribs) []breakdownRow {
+	rows := []breakdownRow{}
+	for _, c := range chance.Contributions {
+		rows = append(rows, breakdownRow{
+			Label: c.Source + " · ignora o extra de crítico",
+			Value: strconv.Itoa(c.Amount) + "%",
+		})
+	}
+	return rows
 }
 
 // writtenRdSub é a linha de três caracteres sob a Defesa, e ela cabe num terço

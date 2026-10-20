@@ -44,6 +44,8 @@ var alvosQueOMotorAplica = map[string]string{
 	"nonLethalDamage":      "weapons.go, na carta, e attack_ecs.go na parcela (ALE-423)",
 	"critMult":             "weapons.go, no multiplicador (ALE-411)",
 	"damageReduction":      "breakdowns.go, na RD",
+	"critExtraIgnoreChance": "breakdowns.go, na chance INFORMADA de ignorar o extra " +
+		"do crítico, e attack_ecs.go devolvendo o extra recortável (p166, ALE-436)",
 	"damageStep": "weapons.go, andando o DADO da carta pela Tabela 3-2 (p143, " +
 		"ALE-435)",
 	"armorPenalty": "breakdowns.go e load.go",

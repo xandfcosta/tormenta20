@@ -57,6 +57,7 @@ type (
 		attackAll  TotalContribs
 		damageAll  TotalContribs
 		reduction  RdBreakdown
+		critExtra  TotalContribs
 		tempHpFury TempHpBreakdown
 	}
 	derivedExpertises struct {
@@ -152,6 +153,7 @@ func deriveCombat(w *ecs.World) {
 			attackAll:  totalContribsFor(in.effects, ModifierTarget{K: "attack", Scope: "all"}),
 			damageAll:  totalContribsFor(in.effects, ModifierTarget{K: "damage", Scope: "all"}),
 			reduction:  characterDamageReduction(in.char, in.effects),
+			critExtra:  totalContribsFor(in.effects, ModifierTarget{K: "critExtraIgnoreChance"}),
 			tempHpFury: tempHpFromPowers(in.char, in.effects, true),
 		})
 	})
@@ -182,22 +184,23 @@ func sheetFromWorld(w *ecs.World) ComputedSheet {
 		combat, _ := ecs.Get[derivedCombat](w, e)
 		skills, _ := ecs.Get[derivedExpertises](w, e)
 		out = ComputedSheet{
-			Defense:            def.v,
-			Displacement:       mov.displacement,
-			FlySpeed:           mov.flySpeed,
-			Load:               load.v,
-			Attributes:         attrs.v,
-			PmLimit:            magic.pmLimit,
-			BestBaseSpellCd:    magic.bestBaseCd,
-			SpellCdByAttribute: magic.byAttribute,
-			SpellDCBonus:       magic.dcBonus,
-			PmCostMod:          magic.costMod,
-			AttackAll:          combat.attackAll,
-			DamageAll:          combat.damageAll,
-			DamageReduction:    combat.reduction,
-			TempHpFury:         combat.tempHpFury,
-			Expertises:         skills.rows,
-			AutoFailExpertises: skills.autoFail,
+			Defense:               def.v,
+			Displacement:          mov.displacement,
+			FlySpeed:              mov.flySpeed,
+			Load:                  load.v,
+			Attributes:            attrs.v,
+			PmLimit:               magic.pmLimit,
+			BestBaseSpellCd:       magic.bestBaseCd,
+			SpellCdByAttribute:    magic.byAttribute,
+			SpellDCBonus:          magic.dcBonus,
+			PmCostMod:             magic.costMod,
+			AttackAll:             combat.attackAll,
+			DamageAll:             combat.damageAll,
+			DamageReduction:       combat.reduction,
+			CritExtraIgnoreChance: combat.critExtra,
+			TempHpFury:            combat.tempHpFury,
+			Expertises:            skills.rows,
+			AutoFailExpertises:    skills.autoFail,
 		}
 	})
 	return out
