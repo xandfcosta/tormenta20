@@ -1381,7 +1381,7 @@ este verbete":
 | `audit-origins.py` | `origins-source.json`, `origins.json` | Tabela 1-19 **e** o verbete, que é o título com `Benefícios.` abaixo |
 | `audit-powers.py` | `general-powers.json`, `tormenta-powers.json` | a tabela de pré-requisitos **e** a linha `Pré-requisito:` do verbete |
 | `audit-granted-powers.py` | `granted-powers.json`, `divine-powers.json` | a coluna "Devoto de X" da Tabela da p127 **e** o rótulo de deus do verbete |
-| `audit-enchants.py` | `items.json` (`weapon-enchant`) | a Tabela 8-8, que é `d%` + encanto + efeito, **e** o verbete `Nome. Regra` |
+| `audit-enchants.py` | `items.json` (`weapon-enchant`, `armor-enchant`) | a Tabela 8-8 e a 8-10, que são `d%` + encanto + efeito, **e** o verbete `Nome. Regra` |
 | `audit-materials.py` | `items.json` (`material`) | a Tabela 3-9, que é uma MATRIZ de preço **e** o verbete com as metades `Arma.` / `Armadura e Escudo.` / `Esotérico.` |
 | `audit-objects.py` | `objectExamplesOfTheBook` + as duas escadas (Go!) | a Tabela 5-4, lida por COORDENADA — a p239 tem duas tabelas lado a lado, e `-layout` cola uma na outra |
 
@@ -1438,6 +1438,14 @@ cima da fronteira quebrada.
 
 ### O auditor de encantos, e o denominador que ele tem DE GRAÇA
 
+Ele audita as DUAS tabelas — a 8-8 das armas e a 8-10 das armaduras e escudos —
+como PERFIS do mesmo arquivo (`audit-enchants.py arma|armadura`). Uma segunda
+cópia divergiria na primeira correção de leitura, e correção de leitura é o que
+este auditor mais faz: a 8-10 entrega o nome e o efeito na MESMA célula em duas
+linhas, e a chamada de rodapé vem ora em célula própria, ora grudada no nome
+("Esmagador 1"). As duas âncoras pegaram os três casos antes de o catálogo ser
+mencionado.
+
 Os da ALE-391 tinham duas coisas para comparar — o livro e um catálogo que já
 existia. O dos encantos não: o catálogo começou VAZIO, e "transcrevi os
 encantos" e "transcrevi treze dos vinte e oito" têm a mesma cara no terminal.
@@ -1462,7 +1470,7 @@ diz onde a prosa acaba infla a medida com palavras de outro assunto.**
 E o que o motor NÃO aplica sai com DENOMINADOR e não como lista de proibidos:
 todo encanto ou tem modificador, ou diz por que não — nunca os dois, porque um
 motivo ao lado de um modificador é um motivo que envelheceu. Quem cobra sem o
-PDF é o `TestEveryWeaponEnchantEitherAppliesOrSaysWhyNot`.
+PDF é o `TestEveryEnchantEitherAppliesOrSaysWhyNot`.
 
 Escolher a âncora é o trabalho; o resto é regex. E a do auditor de raças é a que
 explica por quê: **não serve o título nem a página.** O bloco de uma raça
