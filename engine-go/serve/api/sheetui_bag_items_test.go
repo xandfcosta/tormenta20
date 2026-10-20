@@ -520,3 +520,57 @@ func TestThePlayerSeesTheEnchantsOfTheirWeapon(t *testing.T) {
 		t.Errorf("o bloco de encantos oferece um gesto, e o jogador não encanta:\n%s", bloco)
 	}
 }
+
+// O PASSO DO MATERIAL CHEGA ÀS DUAS TELAS, e elas dizem o MESMO dado (ALE-435).
+//
+// "Arma. Aumenta o dano em um passo" (p166): a espada longa de adamante causa
+// 1d10 pela Tabela 3-2 (p143). O caso mede as DUAS superfícies no mesmo
+// personagem porque o risco desta fatia é justamente elas discordarem — o
+// crachá da Mochila lia o dado do catálogo e a carta de Combate lê o do motor,
+// e um número que muda de tela em tela é a fatura da ALE-319 outra vez.
+func TestTheMaterialStepReachesBothTheHandCardAndTheCombatTile(t *testing.T) {
+	f, id := fighterFixture(t)
+	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "wielded")
+
+	// O CONTROLE: antes do material, as duas telas dizem o dado do catálogo.
+	if carta := handCardOf(t, bagScreen(t, f, id)); !strings.Contains(carta, "Dano 1d8") {
+		t.Fatalf("o cartão da mão não diz o dado da espada nua:\n%s", carta)
+	}
+	if tela := combatScreen(t, f, id); !strings.Contains(tela, "Dano 1d8") {
+		t.Fatal("a carta de Combate não diz o dado da espada nua")
+	}
+
+	if err := f.s.characterPlays().SaveItemOverlays(
+		context.Background(), sword, []string{}, "material-adamante",
+	); err != nil {
+		t.Fatalf("forjar a espada em adamante: %v", err)
+	}
+
+	if carta := handCardOf(t, bagScreen(t, f, id)); !strings.Contains(carta, "Dano 1d10") {
+		t.Errorf("o cartão da mão não andou o dado da espada de adamante:\n%s", carta)
+	}
+	if tela := combatScreen(t, f, id); !strings.Contains(tela, "Dano 1d10") {
+		t.Error("a carta de Combate não andou o dado da espada de adamante")
+	}
+}
+
+// handCardOf recorta o cartão da MÃO PRINCIPAL.
+//
+// O recorte vai até o cartão vizinho porque a ficha do item desenha o dado do
+// LIVRO mais abaixo na mesma tela — procurar na tela inteira passaria verde
+// sobre um cartão que não mudou.
+func handCardOf(t *testing.T, tela string) string {
+	t.Helper()
+	inicio := strings.Index(tela, "MÃO PRINCIPAL")
+	if inicio < 0 {
+		inicio = strings.Index(tela, "Mão principal")
+	}
+	if inicio < 0 {
+		t.Fatal("a tira das mãos não saiu na tela")
+	}
+	carta := tela[inicio:]
+	if fim := strings.Index(carta, "Mão secundária"); fim > 0 {
+		carta = carta[:fim]
+	}
+	return carta
+}

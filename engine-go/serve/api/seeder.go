@@ -125,6 +125,12 @@ func (sd Seeder) EnchantItem(ctx context.Context, itemID int64, enchants []strin
 	return sd.plays.EnchantItem(ctx, itemID, enchants)
 }
 
+// SaveItemOverlays forja melhoria e material num item do elenco, pelo mesmo
+// caso de uso do jogador.
+func (sd Seeder) SaveItemOverlays(ctx context.Context, itemID int64, improvements []string, material string) error {
+	return sd.plays.SaveItemOverlays(ctx, itemID, improvements, material)
+}
+
 // ConsumeItem gasta uma dose, para o elenco ter efeito de cena ligado.
 func (sd Seeder) ConsumeItem(ctx context.Context, id, itemID int64) error {
 	row, err := sd.queries.GetCharacter(ctx, id)

@@ -73,6 +73,49 @@ func TestTheSpecialMaterialReachesTheWeaponCard(t *testing.T) {
 	}
 }
 
+// O ADAMANTE ANDA O DADO DA ARMA (p166, pela Tabela 3-2 da p143).
+//
+// "Arma. Aumenta o dano em um passo" — a metade que o verbete escrevia e o
+// motor não tinha como aplicar: até a ALE-435 a falta estava declarada no
+// `unmodeled` do material, por não existir a tabela de passos.
+//
+// A espada longa é o caso que o livro ilustra melhor: 1d8 é uma célula da
+// coluna Normal, e a linha dela dá 1d10 no +1 passo.
+func TestTheAdamantWeaponWalksItsDamageDie(t *testing.T) {
+	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
+	catalogs := primeFromDump(t, dir)
+	ptr := func(s string) *string { return &s }
+
+	card := func(material *string, equipped string) WeaponCard {
+		cards := BookRuleset(catalogs).ComputeWeaponCards(Character{
+			Items: []CharacterItem{{
+				CatalogID: ptr("espada-longa"), Name: "Espada longa",
+				Equipped: ptr(equipped), Improvements: "[]", Material: material,
+			}},
+		}, map[string]bool{})
+		if len(cards) == 0 {
+			t.Fatalf("a espada longa %s não virou carta", equipped)
+		}
+		return cards[0]
+	}
+
+	// O CONTROLE primeiro: sem o material, a carta diz o dado do catálogo.
+	if got := card(nil, "wielded").Damage; got != "1d8" {
+		t.Fatalf("a espada longa nua causa %q, e o catálogo diz 1d8 — o resto deste "+
+			"caso não mediria nada", got)
+	}
+	if got := card(ptr("material-adamante"), "wielded").Damage; got != "1d10" {
+		t.Errorf("a espada longa de adamante causa %q, e a p166 manda andar um passo: "+
+			"1d8 vira 1d10 pela Tabela 3-2 (p143)", got)
+	}
+	// E O PASSO É DA ARMA NA MÃO: o material também vale para armadura, e um
+	// item que não está empunhado não tem carta nenhuma para andar.
+	if got := card(ptr("material-mitral"), "wielded").Damage; got != "1d8" {
+		t.Errorf("a espada longa de mitral causa %q: o mitral não anda passo nenhum "+
+			"(p167), e um passo que valesse para todo material seria regra inventada", got)
+	}
+}
+
 // A MATÉRIA VERMELHA COBRA CARISMA, e a exceção é nomeada.
 //
 // "Estes itens assustadores impõem ao usuário penalidade de –2 em perícias

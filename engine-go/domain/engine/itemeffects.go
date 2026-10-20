@@ -348,6 +348,11 @@ func targetKey(t ModifierTarget) string {
 			return "pmCost:" + t.Scope
 		}
 		return "pmCost"
+	case "damageStep":
+		// ESCOPO NA CHAVE, como no dano: o passo do material Adamante é DESTA
+		// arma (`this`) e o do Campeão vale para todo ataque (`all`). Uma chave
+		// só faria o passo da espada andar o dado do arco na mesma ficha.
+		return "damageStep:" + t.Scope
 	case "damageReduction":
 		// O TIPO NA CHAVE, pela mesma razão do `displacement:armor`: a redução
 		// contra fogo e a redução geral alcançam coisas diferentes, e uma chave

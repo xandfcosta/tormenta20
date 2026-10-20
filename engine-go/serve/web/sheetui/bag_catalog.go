@@ -83,7 +83,7 @@ func thatGrantsItem(item sheet.ItemDTO, exempt wearerExemptions) []itemChip {
 		chips = append(chips, itemChip{Text: base})
 	}
 	if catalog.Weapon != nil {
-		chips = append(chips, itemChip{Text: "Dano " + catalog.Weapon.Damage})
+		chips = append(chips, itemChip{Text: "Dano " + weaponDieOfItem(item, *catalog)})
 	}
 	for _, m := range catalog.Modifiers {
 		chips = append(chips, itemChip{Text: modifierBadge(m)})
@@ -101,6 +101,24 @@ func thatGrantsItem(item sheet.ItemDTO, exempt wearerExemptions) []itemChip {
 		}
 	}
 	return chipsSem(chips)
+}
+
+// weaponDieOfItem é o dado da arma DEPOIS do que as sobreposições dela andam.
+//
+// O crachá descreve o ITEM, então só os passos DELE entram — o material, a
+// melhoria. O passo que vem de quem empunha (o Campeão do guerreiro, p66) fica
+// na carta de Combate, que é a que fala do ataque: uma espada de adamante causa
+// 1d10 na mão de qualquer um, e o passo do capstone é do personagem.
+//
+// Quem soma é o `engine.DamageStepsOf`, o MESMO da carta: duas somas de passo
+// dariam duas respostas para o mesmo dado, e a ALE-319 já cobrou essa fatura
+// uma vez.
+func weaponDieOfItem(item sheet.ItemDTO, catalog book.Item) string {
+	steps := 0
+	for _, overlay := range bookOverlays(item) {
+		steps += engine.DamageStepsOf(overlay.Modifiers, item.Equipped)
+	}
+	return engine.DamageStep(catalog.Weapon.Damage, steps)
 }
 
 // itemChip é um crachá do cartão. `Inactive` é o item concedendo algo que NÃO

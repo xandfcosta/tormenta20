@@ -4053,7 +4053,20 @@
         "shield",
         "weapon"
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageStep",
+            "scope": "this"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+1 passo de dano"
+        }
+      ],
       "bookPage": 166,
       "uid": "itm_ezemoy6cc3",
       "priceByItem": {
@@ -4064,10 +4077,11 @@
         "esoteric": 3000
       },
       "description": "Encontrado apenas em meteoritos (e por isso também chamado de “ferro-meteórico”), o adamante é um metal escuro, fosco e mais denso que o aço. Arma. Aumenta o dano em um passo. Armadura e Escudo. Fornece redução de dano: armaduras leves e escudos, RD 2; armaduras pesadas, RD 5. Esotérico. Quando lança uma magia que causa dano, você pode pagar +1 PM para rolar novamente qualquer resultado 1 na rolagem de dano dela.",
-      "modeled": [],
+      "modeled": [
+        "Arma"
+      ],
       "unmodeled": {
         "abertura": "só sabor: o metal dos meteoritos",
-        "Arma": "\"aumenta o dano em um passo\" pede a tabela de passos de dado, que o motor não tem",
         "Armadura e Escudo": "a RD ramifica pelo PESO da armadura, e um modificador de sobreposição não sabe ramificar pelo hospedeiro",
         "Esotérico": "ativação em PM"
       }
@@ -11334,7 +11348,18 @@
       "id": "class.guerreiro.campeao",
       "className": "Guerreiro",
       "name": "Campeão",
-      "description": "Capstone: dano de todos seus ataques aumenta em um passo. Quando faz Ataque Especial ou Golpe Pessoal e acerta o ataque, recupera PM iguais aos gastos nele.",
+      "description": "No 20º nível, o dano de todos os seus ataques aumenta em um passo. Além disso, sempre que faz um Ataque Especial ou um Golpe Pessoal e acerta o ataque, recupera metade dos PM gastos nele.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageStep",
+            "scope": "all"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "+1 passo de dano em todo ataque"
+        }
+      ],
       "grantedAtLevel": 20,
       "bookPage": 66,
       "uid": "pwr_urjyv4zfjg"
