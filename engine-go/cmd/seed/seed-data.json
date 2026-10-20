@@ -1213,6 +1213,53 @@
               "improvements": []
             }
           ]
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Sentinela Sombria Nv9",
+            "races": [
+              "humano"
+            ],
+            "origin": "guarda",
+            "classes": [
+              {
+                "className": "Guerreiro",
+                "level": 9
+              }
+            ],
+            "god": "Tenebra",
+            "strength": 3,
+            "dexterity": 3,
+            "constitution": 3,
+            "intelligence": 1,
+            "wisdom": 2,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "items": [
+              {
+                "catalogId": "armadura-completa",
+                "equipped": "vested"
+              },
+              {
+                "catalogId": "escudo-pesado",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "espada-longa",
+                "equipped": "wielded2"
+              }
+            ]
+          },
+          "enchants": [
+            {
+              "item": "armadura-completa",
+              "enchants": [
+                "encanto-sombrio"
+              ]
+            }
+          ]
         }
       ]
     },
