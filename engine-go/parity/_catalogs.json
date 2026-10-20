@@ -4065,6 +4065,48 @@
             "c": "wielded"
           },
           "note": "+1 passo de dano"
+        },
+        {
+          "target": {
+            "k": "damageReduction"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "appliesToCategory": [
+            "armor-heavy"
+          ],
+          "note": "RD 5"
+        },
+        {
+          "target": {
+            "k": "damageReduction"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "appliesToCategory": [
+            "armor-light"
+          ],
+          "note": "RD 2"
+        },
+        {
+          "target": {
+            "k": "damageReduction"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "appliesToCategory": [
+            "shield"
+          ],
+          "note": "RD 2"
         }
       ],
       "bookPage": 166,
@@ -4078,11 +4120,11 @@
       },
       "description": "Encontrado apenas em meteoritos (e por isso também chamado de “ferro-meteórico”), o adamante é um metal escuro, fosco e mais denso que o aço. Arma. Aumenta o dano em um passo. Armadura e Escudo. Fornece redução de dano: armaduras leves e escudos, RD 2; armaduras pesadas, RD 5. Esotérico. Quando lança uma magia que causa dano, você pode pagar +1 PM para rolar novamente qualquer resultado 1 na rolagem de dano dela.",
       "modeled": [
-        "Arma"
+        "Arma",
+        "Armadura e Escudo"
       ],
       "unmodeled": {
         "abertura": "só sabor: o metal dos meteoritos",
-        "Armadura e Escudo": "a RD ramifica pelo PESO da armadura, e um modificador de sobreposição não sabe ramificar pelo hospedeiro",
         "Esotérico": "ativação em PM"
       }
     },

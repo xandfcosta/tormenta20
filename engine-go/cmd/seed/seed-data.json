@@ -1211,6 +1211,11 @@
               "item": "espada-longa",
               "material": "material-adamante",
               "improvements": []
+            },
+            {
+              "item": "armadura-completa",
+              "material": "material-adamante",
+              "improvements": []
             }
           ]
         },
