@@ -29,10 +29,16 @@ import (
 // termos no mesmo endereço, a suíte diz o nome da fonte, em vez de o silêncio
 // do mestre matar dois termos de uma vez.
 //
-// Os discriminadores são `scale` e `condition` porque são eles que separam os
-// pares que existem: o anão tem `maxPv +2` e `maxPv +1 por nível`, e a Força da
-// Natureza do druida tem `pmCost -2` e o mesmo `-2` em terreno natural. A PROSA
-// (`note`, `label`) fica de fora: ela é texto que uma errata reescreve.
+// Os discriminadores são `scale`, `condition` e `host` porque são eles que
+// separam os pares que existem: o anão tem `maxPv +2` e `maxPv +1 por nível`, a
+// Força da Natureza do druida tem `pmCost -2` e o mesmo `-2` em terreno
+// natural, e o adamante tem `RD 5` em armadura pesada e `RD 2` em leve e escudo
+// (p166). A PROSA (`note`, `label`) fica de fora: ela é texto que uma errata
+// reescreve.
+//
+// A categoria entrou na ALE-438, e foi o guarda que a pediu: as duas linhas de RD
+// do adamante nasceram com o MESMO endereço, e um silêncio da mesa teria
+// matado as duas de uma vez.
 
 // Silence é um termo que esta mesa não aplica, e a quem o silêncio alcança.
 //
@@ -46,9 +52,21 @@ type Silence struct {
 //
 // @example engine.TermID("medalhao-de-prata", mod) // "medalhao-de-prata::pmLimit::::wielded"
 func TermID(sourceID string, m Modifier) string {
-	return strings.Join([]string{
+	address := []string{
 		sourceID, targetKey(m.Target), scaleAddress(m.Scale), conditionAddress(m.Condition),
-	}, "::")
+	}
+	// A CATEGORIA SÓ ENTRA QUANDO EXISTE, e isso não é economia de bytes: o endereço
+	// é GRAVADO — o opt-in do jogador mora em `character_conditionals` e o
+	// silêncio do mestre em `campaign_silences`. Um segmento a mais em todo
+	// termo mudaria o endereço de cada linha já gravada, e linha que não casa
+	// com nada é lixo invisível: foi o que a migração 00019 teve de apagar
+	// quando o endereço mudou de forma da última vez (ALE-387).
+	//
+	// É a mesma escolha que o `maneuver` fez com o escopo, pela mesma razão.
+	if len(m.AppliesToCategory) > 0 {
+		address = append(address, strings.Join(m.AppliesToCategory, "/"))
+	}
+	return strings.Join(address, "::")
 }
 
 // scaleAddress é a escala como texto, vazia quando não há.

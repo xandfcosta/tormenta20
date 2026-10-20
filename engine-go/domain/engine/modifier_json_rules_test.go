@@ -36,13 +36,14 @@ func TestEveryModifierFieldSurvivesTheCatalogJSON(t *testing.T) {
 			K: "damage", Name: "Luta", Attribute: "strength",
 			Scope: "this", DamageType: "fogo",
 		},
-		Amount:    3,
-		Dice:      "1d6",
-		BonusType: "enhancement",
-		Condition: &ModifierCondition{C: "against", Trait: "mortos-vivos"},
-		Note:      "uma nota",
-		Scale:     &VitalScale{Per: "level", Step: 2},
-		Factor:    &Ratio{Num: 1, Den: 2},
+		Amount:            3,
+		Dice:              "1d6",
+		BonusType:         "enhancement",
+		Condition:         &ModifierCondition{C: "against", Trait: "mortos-vivos"},
+		Note:              "uma nota",
+		Scale:             &VitalScale{Per: "level", Step: 2},
+		Factor:            &Ratio{Num: 1, Den: 2},
+		AppliesToCategory: []string{"armor-heavy"},
 	}
 	// O CONTROLE: o caso preenche TODOS os campos. Sem ele, um campo novo
 	// nasceria zerado dos dois lados e o round-trip passaria sobre o nada.

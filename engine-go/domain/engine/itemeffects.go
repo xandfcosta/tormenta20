@@ -105,24 +105,26 @@ func amountInBookUnits(target ModifierTarget, amount int) float64 {
 // `TestEveryModifierFieldSurvivesTheCatalogJSON`, que varre o TIPO.
 func (m Modifier) MarshalJSON() ([]byte, error) {
 	type wire struct {
-		Target    ModifierTarget     `json:"target"`
-		Amount    float64            `json:"amount"`
-		Dice      string             `json:"dice,omitempty"`
-		BonusType string             `json:"bonusType"`
-		Condition *ModifierCondition `json:"condition,omitempty"`
-		Note      string             `json:"note,omitempty"`
-		Scale     *VitalScale        `json:"scale,omitempty"`
-		Factor    *Ratio             `json:"factor,omitempty"`
+		Target            ModifierTarget     `json:"target"`
+		Amount            float64            `json:"amount"`
+		Dice              string             `json:"dice,omitempty"`
+		BonusType         string             `json:"bonusType"`
+		Condition         *ModifierCondition `json:"condition,omitempty"`
+		Note              string             `json:"note,omitempty"`
+		Scale             *VitalScale        `json:"scale,omitempty"`
+		Factor            *Ratio             `json:"factor,omitempty"`
+		AppliesToCategory []string           `json:"appliesToCategory,omitempty"`
 	}
 	return json.Marshal(wire{
-		Target:    m.Target,
-		Amount:    amountInBookUnits(m.Target, m.Amount),
-		Dice:      m.Dice,
-		BonusType: m.BonusType,
-		Condition: m.Condition,
-		Note:      m.Note,
-		Scale:     m.Scale,
-		Factor:    m.Factor,
+		Target:            m.Target,
+		Amount:            amountInBookUnits(m.Target, m.Amount),
+		Dice:              m.Dice,
+		BonusType:         m.BonusType,
+		Condition:         m.Condition,
+		Note:              m.Note,
+		Scale:             m.Scale,
+		Factor:            m.Factor,
+		AppliesToCategory: m.AppliesToCategory,
 	})
 }
 
@@ -146,6 +148,24 @@ type Modifier struct {
 	// Factor MULTIPLICA o total do alvo, depois da soma — ver `factor.go`. Um
 	// modificador com fator ignora o `Amount`: ele não é parcela da pilha.
 	Factor *Ratio `json:"factor,omitempty"`
+	// AppliesToCategory são as CATEGORIAS de item em que esta linha da
+	// sobreposição vale.
+	//
+	// O livro escreve sobreposição que diz dois números, um por família do
+	// PEÇA que a carrega: *"armaduras leves e escudos, RD 2; armaduras pesadas, RD 5"*
+	// (o adamante, p166). Com o campo, o catálogo escreve as duas linhas e a
+	// COLETA descarta a que não casa com a peça — vazia, ela vale para qualquer
+	// item, que é o caso de quase todo modificador.
+	//
+	// O valor é a CATEGORIA do catálogo (`armor-heavy`, `shield`), e não um
+	// vocabulário novo: uma segunda grafia para "armadura pesada" seria a
+	// terceira do repositório, e as três envelheceriam em velocidades
+	// diferentes.
+	//
+	// Não é CONDIÇÃO, e a diferença importa: a condição é avaliada na resolução
+	// e sobrevive até a aba Efeitos, onde ofereceria um interruptor para uma
+	// pergunta que o catálogo já respondeu quando o item foi lido.
+	AppliesToCategory []string `json:"appliesToCategory,omitempty"`
 }
 
 // UnmarshalJSON leva o `amount` do catálogo para a unidade do MOTOR.
