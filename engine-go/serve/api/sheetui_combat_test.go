@@ -212,3 +212,40 @@ func TestTheTypedDamageReductionReachesTheDefenseTile(t *testing.T) {
 		t.Error("o guerreiro sem raça de redução lê uma RD por tipo que ele não tem")
 	}
 }
+
+// A RD DO MATERIAL RAMIFICA PELA PEÇA, e a caixa da Defesa diz o número certo
+// (p166, ALE-438).
+//
+// "Fornece redução de dano: armaduras leves e escudos, RD 2; armaduras pesadas,
+// RD 5" — o adamante escreve dois números, e até aqui a ficha não mostrava
+// nenhum: o verbete dizia, por escrito no `unmodeled`, que um modificador de
+// sobreposição não sabia ramificar pelo hospedeiro.
+//
+// O caso mede as DUAS pontas no mesmo material, porque uma só passaria verde
+// com um filtro que aceita qualquer peça.
+func TestTheMaterialDamageReductionFollowsTheHostPiece(t *testing.T) {
+	rdOf := func(t *testing.T, item, nome, slot string) string {
+		t.Helper()
+		f, id := fighterFixture(t)
+		linha := itemSemeia(t, f, id, item, nome, slot)
+		if err := f.s.characterPlays().SaveItemOverlays(
+			context.Background(), linha, []string{}, "material-adamante",
+		); err != nil {
+			t.Fatalf("forjar %s em adamante: %v", nome, err)
+		}
+		return combatScreen(t, f, id)
+	}
+
+	if tela := rdOf(t, "armadura-completa", "Armadura completa", "vested"); !strings.Contains(tela, "RD 5") {
+		t.Errorf("a armadura pesada de adamante não anuncia RD 5:\n%s", recorte(tela))
+	}
+	if tela := rdOf(t, "escudo-pesado", "Escudo pesado", "wielded"); !strings.Contains(tela, "RD 2") {
+		t.Errorf("o escudo de adamante não anuncia RD 2:\n%s", recorte(tela))
+	}
+	// E O CONTROLE: sem o material, a mesma armadura não promete RD nenhuma.
+	f, id := fighterFixture(t)
+	itemSemeia(t, f, id, "armadura-completa", "Armadura completa", "vested")
+	if tela := combatScreen(t, f, id); strings.Contains(tela, "RD ") {
+		t.Errorf("a armadura comum anuncia uma RD que ela não tem:\n%s", recorte(tela))
+	}
+}
