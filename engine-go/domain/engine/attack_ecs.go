@@ -70,6 +70,19 @@ type damageTypeOf struct{ Name string }
 // onlyOnCritical marca a parcela que não existe fora do acerto crítico.
 type onlyOnCritical struct{}
 
+// criticalExtra marca a parcela INTEIRA como extra de crítico — é o caso do
+// bônus que só existe nele (a Dilacerante, p336).
+//
+// Ela existe porque o livro dá a um alvo "chance de ignorar o dano extra de
+// acertos críticos" (p166, p338) e a decisão da casa é INFORMAR essa chance em
+// vez de rolá-la: para o mestre ter o que tirar, o número precisa ser
+// recortável do total.
+type criticalExtra struct{}
+
+// criticalMultiplied guarda quantos dados a parcela tinha ANTES de o crítico
+// multiplicar. O que passar de `Base` nas rolagens é extra de crítico.
+type criticalMultiplied struct{ Base int }
+
 // diceRolled é o que o `rollTheDice` escreveu — a única escrita de aleatório
 // do mundo inteiro.
 type diceRolled struct {
@@ -86,6 +99,8 @@ type rawTally struct {
 	// (p229) saber o que alcança. A soma dele é o `Raw` — toda parcela tem tipo,
 	// nem que seja o da própria arma.
 	ByType map[string]int
+	// CriticalExtra é quanto do cru veio do crítico — ver `criticalExtra`.
+	CriticalExtra int
 }
 type absorbedTally struct{ Absorbed, Final int }
 
@@ -217,6 +232,8 @@ func spawnTheDamageParcels(card WeaponCard) ecs.System {
 			parcel := w.Spawn()
 			ecs.Set(w, parcel, damageFlat{Amount: card.CriticalBonus})
 			ecs.Set(w, parcel, onlyOnCritical{})
+			// Ele é EXTRA DE CRÍTICO por definição: fora do crítico não existe.
+			ecs.Set(w, parcel, criticalExtra{})
 		}
 	}
 }
@@ -253,6 +270,15 @@ func multiplyTheWeaponDice(w *ecs.World) {
 	}
 	ecs.Each2(w, func(e ecs.Entity, dice damageDice, _ weaponsOwnDice) {
 		ecs.Set(w, e, damageDice{Count: dice.Count * verdict.Multiplier, Faces: dice.Faces})
+		// QUANTOS DADOS ERAM ANTES, para o extra do crítico ser recortável.
+		//
+		// A marca fica na MESMA parcela, e isso é escolha: uma parcela nova com
+		// os dados acrescentados daria o mesmo total e mudaria a ORDEM do
+		// sorteio — o 1d6 de fogo do encanto passaria a rolar antes do segundo
+		// d8 da espada. Ordem de sorteio é o que a mesa lê ("a espada deu 8 e
+		// 5, o fogo deu 4"), e trocá-la por uma conveniência de recorte seria
+		// mexer no que a pessoa vê para facilitar a vida de quem soma.
+		ecs.Set(w, e, criticalMultiplied{Base: dice.Count})
 	})
 }
 
@@ -312,8 +338,12 @@ func sumTheParcels(card WeaponCard) ecs.System {
 		// recuo, uma redução de corte não alcançaria o dano da arma de corte —
 		// que é o caso da Armadura Óssea do osteon (RD 5 a corte, frio e
 		// perfuração).
+		extra := 0
 		soma := func(e ecs.Entity, amount int) {
 			raw += amount
+			if _, inteira := ecs.Get[criticalExtra](w, e); inteira {
+				extra += amount
+			}
 			tipo := card.DamageType
 			if own, has := ecs.Get[damageTypeOf](w, e); has {
 				tipo = own.Name
@@ -323,8 +353,16 @@ func sumTheParcels(card WeaponCard) ecs.System {
 			}
 		}
 		ecs.Each(w, func(e ecs.Entity, rolled diceRolled) {
-			if !dead(w, e) {
-				soma(e, rolled.Total)
+			if dead(w, e) {
+				return
+			}
+			soma(e, rolled.Total)
+			// O EXCEDENTE da parcela que o crítico multiplicou: o que passa da
+			// contagem de antes é o que ele acrescentou.
+			if before, multiplicada := ecs.Get[criticalMultiplied](w, e); multiplicada {
+				for i := before.Base; i < len(rolled.Values); i++ {
+					extra += rolled.Values[i]
+				}
 			}
 		})
 		ecs.Each(w, func(e ecs.Entity, parcel damageFlat) {
@@ -332,7 +370,7 @@ func sumTheParcels(card WeaponCard) ecs.System {
 				soma(e, parcel.Amount)
 			}
 		})
-		setResource(w, rawTally{Raw: raw, ByType: byType})
+		setResource(w, rawTally{Raw: raw, ByType: byType, CriticalExtra: extra})
 	}
 }
 
@@ -375,8 +413,10 @@ func outcomeFromWorld(w *ecs.World) AttackOutcome {
 		Situations: labelsOfTheSituations(w),
 		Critical:   resourceOf[criticalVerdict](w).Critical,
 		RawDamage:  resourceOf[rawTally](w).Raw,
-		Absorbed:   resourceOf[absorbedTally](w).Absorbed,
-		Damage:     resourceOf[absorbedTally](w).Final,
+
+		CriticalExtra: resourceOf[rawTally](w).CriticalExtra,
+		Absorbed:      resourceOf[absorbedTally](w).Absorbed,
+		Damage:        resourceOf[absorbedTally](w).Final,
 	}
 	ecs.Each2(w, func(e ecs.Entity, _ weaponsOwnDice, parcel damageDice) {
 		if dead(w, e) {

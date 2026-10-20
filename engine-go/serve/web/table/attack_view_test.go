@@ -271,3 +271,32 @@ func TestTheAttackLineSaysWhenTheDamageIsNonLethal(t *testing.T) {
 		t.Errorf("a linha do dano comum = %q", comum)
 	}
 }
+
+// A CHANCE DE IGNORAR O EXTRA DO CRÍTICO É DITA À MESA, com o número que ela
+// tira se a rolagem mandar (p166, p338, ALE-436).
+//
+// O app INFORMA e a mesa ROLA: a linha traz a chance e o quanto o crítico
+// acrescentou, que é exatamente o par que o mestre precisa.
+func TestTheAttackLineTellsTheChanceToIgnoreTheCriticalExtra(t *testing.T) {
+	line := attackLine(live.PendingAttack{
+		Roll: 19, Total: 24, Defense: 17, Hit: true, Critical: true,
+		Dice: []int{8, 5}, Faces: 8, RawDamage: 16, Damage: 16,
+		CriticalExtra: 5, CritExtraIgnoreChance: 50,
+	})
+	if line != "24 vs 17 · 2d8+3 (8+5) = 16 de dano · 50% de ignorar os 5 do crítico" {
+		t.Errorf("a linha = %q", line)
+	}
+}
+
+// E ELA SÓ APARECE QUANDO HÁ O QUE IGNORAR, pela mesma razão da RD: anunciar
+// uma chance num acerto normal manda o mestre rolar por nada.
+func TestTheAttackLineKeepsQuietWhenThereIsNoCriticalExtra(t *testing.T) {
+	line := attackLine(live.PendingAttack{
+		Roll: 14, Total: 19, Defense: 17, Hit: true,
+		Dice: []int{8}, Faces: 8, RawDamage: 8, Damage: 8,
+		CritExtraIgnoreChance: 50,
+	})
+	if line != "19 vs 17 · 1d8 (8) = 8 de dano" {
+		t.Errorf("a linha = %q: sem crítico não há extra, e sem extra não há o que rolar", line)
+	}
+}

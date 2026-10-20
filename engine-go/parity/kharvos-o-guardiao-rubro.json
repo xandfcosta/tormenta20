@@ -1157,6 +1157,10 @@
         }
       ]
     },
+    "critExtraIgnoreChance": {
+      "total": 0,
+      "contributions": []
+    },
     "tempHpFuria": {
       "total": 12,
       "sources": [
@@ -1716,6 +1720,10 @@
           "amount": 2
         }
       ]
+    },
+    "critExtraIgnoreChance": {
+      "total": 0,
+      "contributions": []
     },
     "tempHpFuria": {
       "total": 12,

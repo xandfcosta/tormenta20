@@ -36,6 +36,10 @@ type Combatant struct {
 	// viaja separada da geral porque alcança outra coisa: a redução de fogo come
 	// a parcela de fogo e nada mais.
 	DamageReductionByType map[string]int
+	// CritExtraIgnoreChance é a chance, em porcento, de este combatente ignorar
+	// o dano EXTRA de um crítico (p166, p338). Ela é INFORMADA à mesa, nunca
+	// rolada pelo app.
+	CritExtraIgnoreChance int
 	CritImmune            bool
 	// Melee é o valor de LUTA, e ele existe separado da Defesa porque a MANOBRA
 	// o pede: o teste é oposto, e quem se defende rola Luta mesmo empunhando
@@ -288,6 +292,7 @@ func (s Strike) proposeAgainstObject(
 		Roll:            out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
 		Hit: out.Hit, Critical: out.Critical, Melee: weapon.IsMelee(),
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
+		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
 		Damage: out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
@@ -343,6 +348,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		Defense:               victim.Defense,
 		DamageReduction:       victim.DamageReduction,
 		DamageReductionByType: victim.DamageReductionByType,
+		CritExtraIgnoreChance: victim.CritExtraIgnoreChance,
 		CritImmune:            victim.CritImmune,
 	}, situations, d20, s.rollDie)
 	if err != nil {
@@ -357,6 +363,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		Roll: out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
 		Hit: out.Hit, Critical: out.Critical, Melee: weapon.IsMelee(),
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
+		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
 		Damage: out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {

@@ -38,6 +38,13 @@ type AttackTarget struct {
 	// vocabulário de tipo que a parcela de dano usa ("fogo", "frio", "ácido"),
 	// porque é parcela a parcela que ela decide o que alcança.
 	DamageReductionByType map[string]int
+	// CritExtraIgnoreChance é a chance, em PORCENTO, de este alvo ignorar o
+	// dano EXTRA de um acerto crítico (p166, p338).
+	//
+	// Ela não muda número nenhum: o app INFORMA e a MESA rola (decisão do dono,
+	// ALE-436). Ela viaja para o resultado poder dizer, ao lado do extra
+	// recortado, que existe uma chance de ele não valer.
+	CritExtraIgnoreChance int
 	// CritImmune: "certas criaturas são imunes a acertos críticos" (p231).
 	CritImmune bool
 }
@@ -87,8 +94,19 @@ type AttackOutcome struct {
 	// (p236). Ou TUDO, quando a arma é Piedosa, ou nada — a propriedade é da
 	// arma, e o livro não dá meio-termo.
 	NonLethal int `json:"nonLethal,omitempty"`
-	Absorbed  int `json:"absorbed"` // o que a RD comeu
-	Damage    int `json:"damage"`   // o que o alvo perde de PV
+	// CriticalExtra é quanto do dano veio do CRÍTICO: os dados que o
+	// multiplicador acrescentou mais o bônus que só existe nele (p336).
+	//
+	// Ele viaja recortado porque o livro dá a alguns alvos uma CHANCE de ignorar
+	// justamente essa parte (p166, p338) — e quem rola essa chance é a mesa.
+	CriticalExtra int `json:"criticalExtra,omitempty"`
+	// CritExtraIgnoreChance é a chance do ALVO, em porcento, de ignorar o
+	// `CriticalExtra`. Ela volta no resultado para a frase da mesa ter os dois
+	// números lado a lado: o que o crítico acrescentou e a chance de ele não
+	// valer.
+	CritExtraIgnoreChance int `json:"critExtraIgnoreChance,omitempty"`
+	Absorbed              int `json:"absorbed"` // o que a RD comeu
+	Damage                int `json:"damage"`   // o que o alvo perde de PV
 }
 
 // ResolveAttack rola um ataque contra um alvo e devolve a conta inteira.
@@ -118,6 +136,12 @@ func ResolveAttackUnder(
 ) (AttackOutcome, error) {
 	w := attackWorld(card, target, situations, d20, rollDie)
 	out := outcomeFromWorld(w)
+	// A CHANCE DO ALVO ecoa no resultado, e só quando há extra para ela
+	// alcançar: anunciar "25% de ignorar o extra" num acerto normal mandaria a
+	// mesa rolar por nada.
+	if out.CriticalExtra > 0 {
+		out.CritExtraIgnoreChance = target.CritExtraIgnoreChance
+	}
 	// O NÃO LETAL NÃO É SISTEMA, e a escolha é a que o guia manda fazer: ECS
 	// para o que COMPÕE, função para o que calcula. Aqui não há o que compor —
 	// a propriedade é da ARMA e vale para o dano inteiro, depois da RD. Um

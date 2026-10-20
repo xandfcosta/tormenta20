@@ -1261,7 +1261,8 @@
             {
               "item": "armadura-completa",
               "enchants": [
-                "encanto-sombrio"
+                "encanto-sombrio",
+                "encanto-fortificado"
               ]
             }
           ]

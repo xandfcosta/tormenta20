@@ -249,3 +249,48 @@ func TestTheMaterialDamageReductionFollowsTheHostPiece(t *testing.T) {
 		t.Errorf("a armadura comum anuncia uma RD que ela não tem:\n%s", recorte(tela))
 	}
 }
+
+// A CHANCE DE IGNORAR O EXTRA DO CRÍTICO CHEGA À CAIXA DA DEFESA (p338, ALE-436).
+//
+// O app INFORMA e a mesa rola, então quem tem a chance precisa VER que ela
+// existe: um benefício que só mora dentro de um diálogo é um benefício que
+// ninguém lembra de usar na hora.
+func TestTheChanceToIgnoreTheCriticalExtraReachesTheDefenseTile(t *testing.T) {
+	f, id := fighterFixture(t)
+	armadura := itemSemeia(t, f, id, "armadura-completa", "Armadura completa", "vested")
+	if err := f.s.characterPlays().EnchantItem(
+		context.Background(), armadura, []string{"encanto-fortificado"},
+	); err != nil {
+		t.Fatalf("encantar a armadura: %v", err)
+	}
+
+	screen := combatScreen(t, f, id)
+	// NA FACE DA CAIXA, ao lado do que a RD já dizia.
+	if !strings.Contains(screen, "50% vs crítico") {
+		t.Errorf("a caixa da Defesa não anuncia a chance do Fortificado:\n%s", recorte(screen))
+	}
+	// E NA DECOMPOSIÇÃO, com a fonte e o que ela faz.
+	if !strings.Contains(screen, "ignora o extra de crítico") {
+		t.Error("a decomposição não diz o que a chance alcança")
+	}
+	// O CONTROLE: a mesma armadura sem encanto não promete chance nenhuma.
+	f2, id2 := fighterFixture(t)
+	itemSemeia(t, f2, id2, "armadura-completa", "Armadura completa", "vested")
+	if screen2 := combatScreen(t, f2, id2); strings.Contains(screen2, "50% vs crítico") {
+		t.Error("a armadura comum anuncia uma chance que ela não tem")
+	}
+}
+
+// E A CHANCE SEGUE A PEÇA: o mesmo encanto num ESCUDO dá 25% (p338).
+func TestTheFortifiedChanceFollowsThePieceItIsOn(t *testing.T) {
+	f, id := fighterFixture(t)
+	escudo := itemSemeia(t, f, id, "escudo-pesado", "Escudo pesado", "wielded")
+	if err := f.s.characterPlays().EnchantItem(
+		context.Background(), escudo, []string{"encanto-fortificado"},
+	); err != nil {
+		t.Fatalf("encantar o escudo: %v", err)
+	}
+	if screen := combatScreen(t, f, id); !strings.Contains(screen, "25% vs crítico") {
+		t.Errorf("o escudo Fortificado não anuncia os 25%% da p338:\n%s", recorte(screen))
+	}
+}

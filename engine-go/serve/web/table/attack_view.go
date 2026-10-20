@@ -168,10 +168,25 @@ func attackLine(pa live.PendingAttack) string {
 	// primeira versão desta linha dizia "1d4 (4) = 4 → 4 de dano", e foi olhar a
 	// tela que a pegou. A seta só existe quando há de onde para onde.
 	if pa.Absorbed == 0 {
-		return line + fmt.Sprintf(" = %d de dano%s", pa.Damage, writtenNonLethal(pa))
+		return line + fmt.Sprintf(" = %d de dano%s%s",
+			pa.Damage, writtenNonLethal(pa), writtenCritChance(pa))
 	}
-	return line + fmt.Sprintf(" = %d · RD %d → %d de dano%s",
-		pa.RawDamage, pa.Absorbed, pa.Damage, writtenNonLethal(pa))
+	return line + fmt.Sprintf(" = %d · RD %d → %d de dano%s%s",
+		pa.RawDamage, pa.Absorbed, pa.Damage, writtenNonLethal(pa), writtenCritChance(pa))
+}
+
+// writtenCritChance é a chance de o alvo ignorar o que o crítico acrescentou.
+//
+// Ela vem com o NÚMERO a tirar, porque é esse o par que serve à mesa: o app
+// informa e o mestre rola (ALE-436). E ela só aparece quando há o que ignorar —
+// anunciar uma chance num acerto normal manda rolar por nada, que é a mesma
+// razão de a RD só aparecer quando agiu.
+func writtenCritChance(pa live.PendingAttack) string {
+	if pa.CritExtraIgnoreChance == 0 || pa.CriticalExtra == 0 {
+		return ""
+	}
+	return fmt.Sprintf(" · %d%% de ignorar os %d do crítico",
+		pa.CritExtraIgnoreChance, pa.CriticalExtra)
 }
 
 // targetLabel é o nome do que foi atacado, e ele tem DUAS procedências.

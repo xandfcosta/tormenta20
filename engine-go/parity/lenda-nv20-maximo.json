@@ -1147,6 +1147,10 @@
       "total": 0,
       "sources": []
     },
+    "critExtraIgnoreChance": {
+      "total": 0,
+      "contributions": []
+    },
     "tempHpFuria": {
       "total": 0,
       "sources": []
@@ -1668,6 +1672,10 @@
     "damageReduction": {
       "total": 0,
       "sources": []
+    },
+    "critExtraIgnoreChance": {
+      "total": 0,
+      "contributions": []
     },
     "tempHpFuria": {
       "total": 0,

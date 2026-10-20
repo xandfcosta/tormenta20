@@ -862,6 +862,7 @@ INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (78, 'encanto-dancarina');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (78, 'encanto-flamejante');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (82, 'encanto-sombrio');
+INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (82, 'encanto-fortificado');
 
 INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (1, 2, 'curar-ferimentos', 1, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (2, 2, 'escudo-da-fe', 1, '2026-01-01T00:00:00.000Z');

@@ -102,6 +102,14 @@ type ComputedSheet struct {
 	AttackAll       TotalContribs `json:"attackAll"`
 	DamageAll       TotalContribs `json:"damageAll"`
 	DamageReduction RdBreakdown   `json:"damageReduction"`
+	// CritExtraIgnoreChance é a chance, em PORCENTO, de o alvo ignorar o dano
+	// EXTRA de um acerto crítico (p166, p338).
+	//
+	// Ela é INFORMADA e nunca rolada pelo app (decisão do dono, ALE-436): quem
+	// rola é a mesa, e por isso o resultado do ataque traz o extra separado,
+	// para o mestre ter o que tirar. Um fator que cortasse o dano "em média"
+	// daria um número que nenhuma mesa rola.
+	CritExtraIgnoreChance TotalContribs `json:"critExtraIgnoreChance"`
 	// TempHpFury is tempHpFromPowers with furia active — the interesting branch
 	// (Alma de Bronze). The base sheet (furia off) is always {0, []}.
 	TempHpFury TempHpBreakdown      `json:"tempHpFuria"`

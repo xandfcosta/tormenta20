@@ -72,8 +72,15 @@ type PendingAttack struct {
 	Dice      []int `json:"dice,omitempty"`
 	Faces     int   `json:"faces,omitempty"`
 	RawDamage int   `json:"rawDamage"`
-	Absorbed  int   `json:"absorbed"`
-	Damage    int   `json:"damage"`
+	// CriticalExtra é quanto do dano veio do crítico, e
+	// CritExtraIgnoreChance é a chance do ALVO de ignorar justamente essa
+	// parte (p166, p338). Os dois viajam juntos porque é o PAR que serve à
+	// mesa: a chance sozinha não diz o que tirar, e o extra sozinho não diz
+	// que há algo a rolar. Quem rola é o mestre — o app informa (ALE-436).
+	CriticalExtra         int `json:"criticalExtra,omitempty"`
+	CritExtraIgnoreChance int `json:"critExtraIgnoreChance,omitempty"`
+	Absorbed              int `json:"absorbed"`
+	Damage                int `json:"damage"`
 	// Maneuver é a conta da MANOBRA (p234), e ela é nula num golpe comum.
 	//
 	// Uma manobra É um ataque corpo a corpo — o livro abre a página dizendo isso
