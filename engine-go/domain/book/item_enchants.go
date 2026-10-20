@@ -2,7 +2,7 @@ package book
 
 import "fmt"
 
-// O ENCANTO DA ARMA: quem cabe, quantos cabem, e o que exige o quê (p333-336).
+// O ENCANTO DO ITEM: quem cabe, quantos cabem, e o que exige o quê (p333-339).
 //
 // A regra mora no LIVRO e não numa cena, porque ela tem dois chamadores de
 // naturezas diferentes: o jogador nunca encanta — quem concede é o mestre —, e
@@ -17,10 +17,43 @@ import "fmt"
 // Por isso não há tamanho a guardar na arma: a CONTAGEM é a categoria.
 const slotsDeEncanto = 2 + 1
 
-// FitsWeaponEnchants é a recusa do servidor para um conjunto de encantos.
+// encantoDeItem são as duas categorias de encanto do livro, uma por tabela.
+var encantoDeItem = map[string]bool{"weapon-enchant": true, "armor-enchant": true}
+
+// aceitaEncanto responde se a FAMÍLIA do item é uma das que o encanto aceita.
 //
-// Ela confere quatro coisas: que o item é ARMA, que cada id é encanto do livro,
-// que o conjunto cabe no teto, e que cada pré-requisito está no MESMO conjunto.
+// Quem declara é o próprio encanto, no `appliesTo` que ele já carrega — a mesma
+// lista que a melhoria e o material usam. Uma segunda tabela aqui diria a mesma
+// coisa com outras palavras, e as duas divergiriam.
+func aceitaEncanto(item, encanto Item) bool {
+	for _, familia := range encanto.AppliesTo {
+		switch familia {
+		case "weapon":
+			if item.Weapon != nil {
+				return true
+			}
+		case "armor":
+			if item.Armor != nil {
+				return true
+			}
+		case "shield":
+			if item.Shield != nil {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// FitsItemEnchants é a recusa do servidor para um conjunto de encantos.
+//
+// Ela confere quatro coisas: que a FAMÍLIA do item é uma que aquele encanto
+// aceita, que cada id é encanto do livro, que o conjunto cabe no teto, e que
+// cada pré-requisito está no MESMO conjunto.
+//
+// São DUAS TABELAS, e é isso que a primeira conferência passou a perguntar: a
+// 8-8 é de armas (p335) e a 8-10 é de armaduras e escudos (p338). Um encanto de
+// armadura numa espada não é um encanto a mais — é outro verbete do livro.
 //
 // O TETO conta por PESO e não por quantidade: três encantos da Tabela 8-8
 // "contam como dois", e o asterisco deles é regra — dois desses já enchem a
@@ -31,20 +64,24 @@ const slotsDeEncanto = 2 + 1
 // estado anterior deixaria tirar o pré-requisito e manter o dependente no mesmo
 // pedido.
 //
-// @example book.FitsWeaponEnchants(book.ItemByID("espada-longa"), []string{"encanto-formidavel"})
-func FitsWeaponEnchants(catalog *Item, ids []string) error {
+// @example book.FitsItemEnchants(book.ItemByID("espada-longa"), []string{"encanto-formidavel"})
+func FitsItemEnchants(catalog *Item, ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
-	if catalog == nil || catalog.Weapon == nil {
-		return fmt.Errorf("só arma recebe encanto, e este item não é arma (p333)")
+	if catalog == nil {
+		return fmt.Errorf("item sem verbete não recebe encanto (p333)")
 	}
 	escolhidos := map[string]bool{}
 	peso := 0
 	for _, id := range ids {
 		encanto := ItemByID(id)
-		if encanto == nil || encanto.Category != "weapon-enchant" {
+		if encanto == nil || !encantoDeItem[encanto.Category] {
 			return fmt.Errorf("%q não é um encanto do livro", id)
+		}
+		if !aceitaEncanto(*catalog, *encanto) {
+			return fmt.Errorf("%q não cabe em %q: a tabela dele é de %s (p333-339)",
+				encanto.Name, catalog.Name, CategoryName(encanto.Category))
 		}
 		escolhidos[id] = true
 		peso += max(encanto.CountsAs, 1)

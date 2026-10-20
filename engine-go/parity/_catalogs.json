@@ -5154,6 +5154,92 @@
       "uid": "itm_3n76whiqqm"
     },
     {
+      "id": "encanto-acrobatico",
+      "name": "Acrobático",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 11,
+      "rollMax": 12,
+      "countsAs": 1,
+      "description": "Você recebe +5 em Acrobacia e ignora a penalidade de armadura do item para testes dessa perícia.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Acrobacia"
+          },
+          "amount": 5,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+5 em Acrobacia"
+        },
+        {
+          "target": {
+            "k": "armorPenaltyExempt",
+            "name": "Acrobacia"
+          },
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "Acrobático: a penalidade deste item não se aplica"
+        }
+      ],
+      "bookPage": 338,
+      "uid": "itm_j5267x35ck"
+    },
+    {
+      "id": "encanto-sombrio",
+      "name": "Sombrio",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 87,
+      "rollMax": 88,
+      "countsAs": 1,
+      "description": "Você recebe +5 em Furtividade e ignora a penalidade de armadura do item para testes dessa perícia. Um item sombrio é escuro, fosco e bem lubrificado, para não fazer barulho.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Furtividade"
+          },
+          "amount": 5,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+5 em Furtividade"
+        },
+        {
+          "target": {
+            "k": "armorPenaltyExempt",
+            "name": "Furtividade"
+          },
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "Sombrio: a penalidade deste item não se aplica"
+        }
+      ],
+      "bookPage": 339,
+      "uid": "itm_ksm3djx57k"
+    },
+    {
       "id": "encanto-venenosa",
       "name": "Venenosa",
       "category": "weapon-enchant",

@@ -382,6 +382,14 @@ func targetKey(t ModifierTarget) string {
 		return "flySpeed"
 	case "armorPenalty":
 		return "armorPenalty"
+	case "armorPenaltyExempt":
+		// A PERÍCIA NA CHAVE: a isenção é de UMA — "ignora a penalidade de
+		// armadura do item para testes dessa perícia" (p338) —, e uma chave só
+		// faria a Sombrio isentar a Acrobacia junto.
+		//
+		// O modificador não carrega número: quem diz QUAL item sai da conta é a
+		// FONTE da contribuição, e um `amount` zero a atravessa inteira.
+		return "armorPenaltyExempt:" + t.Name
 	case "tempHp":
 		return "tempHp"
 	case "tempMp":

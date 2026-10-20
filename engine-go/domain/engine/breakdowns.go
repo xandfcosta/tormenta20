@@ -345,7 +345,8 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, l
 
 	armorPenaltyApplied := 0
 	if armorPenaltyExpertises[state.Name] {
-		for _, row := range armorPenaltyContribs(e, load) {
+		exempt := StatFor(e, ModifierTarget{K: "armorPenaltyExempt", Name: state.Name}).Contributions
+		for _, row := range armorPenaltyContribs(e, load, exempt) {
 			armorPenaltyApplied += row.Amount
 			itemContribs = append(itemContribs, row)
 		}
@@ -372,10 +373,39 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, l
 // descreve com essas mesmas palavras — "sofre penalidade de armadura –5". São
 // linhas separadas de propósito: somadas numa só, o jogador não descobre que
 // metade dela some ao largar peso.
-func armorPenaltyContribs(e ItemEffects, load LoadBreakdown) []BreakdownContribution {
+// O `exempt` são as contribuições de `armorPenaltyExempt` desta perícia, e a
+// FONTE de cada uma diz qual item sai da conta: o encanto Sombrio (p339) isenta
+// a peça que o carrega, e um personagem de armadura isenta mais escudo continua
+// pagando a do escudo.
+func armorPenaltyContribs(
+	e ItemEffects, load LoadBreakdown, exempt []Contribution,
+) []BreakdownContribution {
 	out := []BreakdownContribution{}
-	if item := StatFor(e, ModifierTarget{K: "armorPenalty"}).Total; item != 0 {
+	exemptSources := map[string]bool{}
+	for _, c := range exempt {
+		exemptSources[c.SourceID] = true
+	}
+	item, penalized := 0, map[string]bool{}
+	for _, c := range StatFor(e, ModifierTarget{K: "armorPenalty"}).Contributions {
+		penalized[c.SourceID] = true
+		if exemptSources[c.SourceID] {
+			continue
+		}
+		item += c.Amount
+	}
+	if item != 0 {
 		out = append(out, BreakdownContribution{Source: "Penalidade de armadura", Amount: item})
+	}
+	// A LINHA DA ISENÇÃO fica, com o item e o motivo: uma penalidade que some
+	// sem dizer por quê é a ficha escondendo o que a habilidade faz (ALE-430).
+	//
+	// Só para quem de fato penalizava — uma isenção pendurada numa peça sem
+	// penalidade escreveria uma linha sobre coisa nenhuma.
+	for _, c := range exempt {
+		if !penalized[c.SourceID] {
+			continue
+		}
+		out = append(out, BreakdownContribution{Source: c.Source, Note: c.Note})
 	}
 	if load.ArmorPenalty != 0 {
 		out = append(out, overloadContrib(load.ArmorPenalty))

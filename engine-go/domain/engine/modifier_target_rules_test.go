@@ -46,7 +46,9 @@ var alvosQueOMotorAplica = map[string]string{
 	"damageReduction":      "breakdowns.go, na RD",
 	"damageStep": "weapons.go, andando o DADO da carta pela Tabela 3-2 (p143, " +
 		"ALE-435)",
-	"armorPenalty":   "breakdowns.go e load.go",
+	"armorPenalty": "breakdowns.go e load.go",
+	"armorPenaltyExempt": "breakdowns.go, tirando da perícia a penalidade do ITEM " +
+		"que concede a isenção (p338, ALE-437)",
 	"displacement":   "breakdowns.go, no deslocamento",
 	"flySpeed":       "breakdowns.go, no voo",
 	"maxPv":          "vitals_catalog.go",

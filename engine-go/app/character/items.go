@@ -149,13 +149,13 @@ func (p Plays) EnchantItem(ctx context.Context, itemID int64, enchants []string)
 	if err != nil {
 		return fmt.Errorf("ler o item %d para encantar: %w", itemID, err)
 	}
-	// Item CUSTOM não tem verbete, então não tem arma — e o `FitsWeaponEnchants`
-	// recusa pelo nil, com a frase do livro.
+	// Item CUSTOM não tem verbete — e o `FitsItemEnchants` recusa pelo nil, com
+	// a frase do livro.
 	var catalog *book.Item
 	if row.Catalogid.Valid {
 		catalog = book.ItemByID(row.Catalogid.String)
 	}
-	if err := book.FitsWeaponEnchants(catalog, enchants); err != nil {
+	if err := book.FitsItemEnchants(catalog, enchants); err != nil {
 		return err
 	}
 	// GRAVAR É APAGAR E REESCREVER: quem chama manda o conjunto inteiro, como

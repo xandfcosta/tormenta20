@@ -315,3 +315,52 @@ func TestTheSecondCraftWithTheSameNameSaysWhyInsteadOfLeakingTheDriver(t *testin
 		}
 	}
 }
+
+// A ISENÇÃO DA PENALIDADE CHEGA À DECOMPOSIÇÃO DA PERÍCIA (p339, ALE-437).
+//
+// "Você recebe +5 em Furtividade e ignora a penalidade de armadura do item para
+// testes dessa perícia" — o encanto Sombrio. Na tela isso tem de aparecer como
+// as duas coisas que ele faz: o bônus e a penalidade que deixou de pesar.
+//
+// O caso usa ARMADURA e ESCUDO de propósito: a isenção é do item que carrega o
+// encanto, então a do escudo continua valendo. Com uma peça só, uma isenção que
+// apagasse a penalidade inteira passaria verde.
+func TestTheEnchantExemptsOneExpertiseFromTheArmorPenaltyOnScreen(t *testing.T) {
+	f, id := expertiseFixture(t)
+	seedPericia(t, f.s, id, "Furtividade", "dexterity", false)
+	// PROFICIENTE nas duas peças de propósito: sem proficiência o livro cobra
+	// uma penalidade SEPARADA, em TODA perícia (p142), e ela não é a penalidade
+	// de armadura que o encanto isenta. Com ela no meio, os dois números do
+	// caso deixariam de dizer o que o Sombrio faz.
+	if _, err := f.s.db.ExecContext(context.Background(),
+		`UPDATE characters SET proficiencies = ? WHERE id = ?`,
+		`["armaduras-pesadas","escudos"]`, id,
+	); err != nil {
+		t.Fatalf("semear as proficiências: %v", err)
+	}
+	armadura := itemSemeia(t, f, id, "armadura-completa", "Armadura completa", "vested")
+	itemSemeia(t, f, id, "escudo-pesado", "Escudo pesado", "wielded")
+	if err := f.s.characterPlays().EnchantItem(
+		context.Background(), armadura, []string{"encanto-sombrio"},
+	); err != nil {
+		t.Fatalf("encantar a armadura: %v", err)
+	}
+
+	screen := expertiseScreen(t, f, id, "")
+	// O CONTROLE é a Acrobacia: mesma perícia penalizada, sem encanto nenhum, e
+	// ela continua pagando as duas peças.
+	if !strings.Contains(screen, `aria-label="Detalhar Acrobacia -4"`) {
+		t.Fatalf("a Acrobacia não sofreu as duas penalidades: ½ nível 1 + DES 2 − 5 da " +
+			"armadura − 2 do escudo = −4")
+	}
+	// E A FURTIVIDADE: 1 + 2 + 5 do encanto − 2 do escudo = +6. A armadura saiu
+	// da conta, e só ela.
+	if !strings.Contains(screen, `aria-label="Detalhar Furtividade +6"`) {
+		t.Errorf("a Furtividade não ficou em +6 (½ nível 1 + DES 2 + 5 do Sombrio − 2 do escudo)")
+	}
+	// E A LINHA DIZ POR QUÊ: um número que muda sem motivo escrito é a ficha
+	// escondendo o que o item faz (ALE-430).
+	if !strings.Contains(screen, "a penalidade deste item não se aplica") {
+		t.Error("a decomposição não diz que a penalidade da armadura foi isentada")
+	}
+}
