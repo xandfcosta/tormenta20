@@ -424,7 +424,12 @@ var categoryLabel = map[string]string{
 	"meal":           "Alimentação",
 	"catalyst":       "Catalisador",
 	"improvement":    "Melhoria",
-	"weapon-enchant": "Encanto",
+	// Os dois encantos saem com o ALVO no rótulo porque a mesa os distingue: o
+	// livro tem uma tabela para cada um (8-8 e 8-10), com faixas de d% próprias,
+	// e um "Encanto" seco na grade não diria se ele cabe na espada ou na
+	// armadura.
+	"weapon-enchant": "Encanto de arma",
+	"armor-enchant":  "Encanto de armadura",
 	"material":       "Material",
 	"animal":         "Animal",
 	"vehicle":        "Veículo",
