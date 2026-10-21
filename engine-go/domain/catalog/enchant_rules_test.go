@@ -6,12 +6,47 @@ import (
 	"testing"
 )
 
-// OS ENCANTOS DE ARMA, pelo que sobrevive SEM o livro na mão (ALE-411).
+// OS ENCANTOS, pelo que sobrevive SEM o livro na mão (ALE-411, ALE-439).
+//
+// São DUAS TABELAS e os mesmos três guardas: a 8-8 é de armas (p335-336) e a
+// 8-10 é de armaduras e escudos (p338-339). Elas entram como casos de um
+// `t.Run` em vez de dois arquivos — a regra é a mesma e uma cópia divergiria na
+// primeira correção.
 //
 // A conferência contra a página é do `scripts/audit-enchants.py`, que lê o PDF
 // — e o PDF vive fora do repositório, então ele não roda na CI. O que fica aqui
 // é o que o catálogo prova sozinho, e é mais do que parece: a Tabela 8-8 é uma
 // tabela de ROLAGEM, e uma tabela de rolagem tem denominador embutido.
+
+// tabelaDeEncanto é uma das duas tabelas de rolagem do livro.
+type tabelaDeEncanto struct {
+	categoria string
+	tabela    string
+	pagina    string
+	// ultimoNoDado é onde a faixa dos encantos acaba: de lá até 100 as duas
+	// tabelas mandam rolar em OUTRA ("arma específica", "item específico"), e o
+	// livro diz que nesse caso o item PERDE os encantos rolados.
+	ultimoNoDado int
+	// preRequisitos é quantos verbetes da tabela escrevem "Pré-requisito:", e
+	// `quaisPreRequisitos` diz QUAIS — o número sozinho não ensina nada a quem
+	// o vir reprovar.
+	preRequisitos      int
+	quaisPreRequisitos string
+}
+
+var tabelasDeEncanto = []tabelaDeEncanto{
+	{
+		categoria: "weapon-enchant", tabela: "8-8", pagina: "p336", ultimoNoDado: 90,
+		preRequisitos: 3,
+		quaisPreRequisitos: "Energética e Magnífica pedem formidável, e Lancinante " +
+			"pede dilacerante (p335-336)",
+	},
+	{
+		categoria: "armor-enchant", tabela: "8-10", pagina: "p339", ultimoNoDado: 90,
+		preRequisitos:      1,
+		quaisPreRequisitos: "o Guardião pede defensor (p339)",
+	},
+}
 
 type weaponEnchant struct {
 	ID          string          `json:"id"`
@@ -26,12 +61,6 @@ type weaponEnchant struct {
 	Modifiers   json.RawMessage `json:"modifiers"`
 }
 
-// ultimoEncantoNoDado é onde a faixa dos encantos acaba. De 91 a 100 a Tabela
-// 8-8 manda rolar na Tabela 8-9 ("Arma específica"), e o próprio livro diz que
-// nesse caso o item PERDE os encantos rolados — não é um encanto, e por isso
-// não está no catálogo.
-const ultimoEncantoNoDado = 90
-
 // A FAIXA DE d% LADRILHA 1..90, e é o denominador de graça desta tabela.
 //
 // Uma lista de encantos não tem como se conferir sozinha — 26 entradas com
@@ -42,27 +71,31 @@ const ultimoEncantoNoDado = 90
 // de marca d'água do `t20pdf.py` descarta o que casa com `^\d{1,3}$`, que é o
 // padrão de número de página — e comeu as faixas de UM valor, a Energética (46)
 // e a Lancinante (64). O relatório saiu com 26 nomes certos e nada reclamou.
-func TestTheWeaponEnchantsTileTheRollRange(t *testing.T) {
-	encantos := itemsOfCategory[weaponEnchant](t, "weapon-enchant")
-	sort.Slice(encantos, func(a, b int) bool { return encantos[a].RollMin < encantos[b].RollMin })
+func TestTheEnchantsTileTheRollRange(t *testing.T) {
+	for _, tabela := range tabelasDeEncanto {
+		t.Run(tabela.tabela, func(t *testing.T) {
+			encantos := itemsOfCategory[weaponEnchant](t, tabela.categoria)
+			sort.Slice(encantos, func(a, b int) bool { return encantos[a].RollMin < encantos[b].RollMin })
 
-	esperado := 1
-	for _, e := range encantos {
-		if e.RollMin != esperado {
-			t.Fatalf("a faixa de %s começa em %d e a anterior terminou em %d: "+
-				"há um buraco ou uma sobreposição no d%% da Tabela 8-8 (p336)",
-				e.Name, e.RollMin, esperado-1)
-		}
-		if e.RollMax < e.RollMin {
-			t.Fatalf("a faixa de %s vai de %d a %d, de trás para frente",
-				e.Name, e.RollMin, e.RollMax)
-		}
-		esperado = e.RollMax + 1
-	}
-	if esperado-1 != ultimoEncantoNoDado {
-		t.Errorf("as faixas dos %d encantos terminam em %d e deviam terminar em %d — "+
-			"de %d a 100 a tabela manda rolar em OUTRA tabela",
-			len(encantos), esperado-1, ultimoEncantoNoDado, ultimoEncantoNoDado+1)
+			esperado := 1
+			for _, e := range encantos {
+				if e.RollMin != esperado {
+					t.Fatalf("a faixa de %s começa em %d e a anterior terminou em %d: "+
+						"há um buraco ou uma sobreposição no d%% da Tabela %s (%s)",
+						e.Name, e.RollMin, esperado-1, tabela.tabela, tabela.pagina)
+				}
+				if e.RollMax < e.RollMin {
+					t.Fatalf("a faixa de %s vai de %d a %d, de trás para frente",
+						e.Name, e.RollMin, e.RollMax)
+				}
+				esperado = e.RollMax + 1
+			}
+			if esperado-1 != tabela.ultimoNoDado {
+				t.Errorf("as faixas dos %d encantos terminam em %d e deviam terminar em %d — "+
+					"de %d a 100 a tabela manda rolar em OUTRA tabela",
+					len(encantos), esperado-1, tabela.ultimoNoDado, tabela.ultimoNoDado+1)
+			}
+		})
 	}
 }
 
@@ -75,8 +108,15 @@ func TestTheWeaponEnchantsTileTheRollRange(t *testing.T) {
 // A metade inversa vale igual e é a que apodrece sozinha: um encanto que ganhe
 // modificador e mantenha o motivo antigo passa a mentir sobre si mesmo, com cara
 // de registro cuidadoso.
-func TestEveryWeaponEnchantEitherAppliesOrSaysWhyNot(t *testing.T) {
-	encantos := itemsOfCategory[weaponEnchant](t, "weapon-enchant")
+func TestEveryEnchantEitherAppliesOrSaysWhyNot(t *testing.T) {
+	for _, tabela := range tabelasDeEncanto {
+		t.Run(tabela.tabela, func(t *testing.T) { eitherAppliesOrSaysWhyNot(t, tabela) })
+	}
+}
+
+func eitherAppliesOrSaysWhyNot(t *testing.T, tabela tabelaDeEncanto) {
+	t.Helper()
+	encantos := itemsOfCategory[weaponEnchant](t, tabela.categoria)
 	comModificador, semModificador := 0, 0
 
 	for _, e := range encantos {
@@ -100,8 +140,8 @@ func TestEveryWeaponEnchantEitherAppliesOrSaysWhyNot(t *testing.T) {
 			t.Errorf("%s entrou sem a regra do livro em prosa", e.Name)
 		}
 		if e.CountsAs != 1 && e.CountsAs != 2 {
-			t.Errorf("%s conta como %d encantos, e a Tabela 8-8 só tem 1 e 2 "+
-				"(o asterisco é \"conta como dois\")", e.Name, e.CountsAs)
+			t.Errorf("%s conta como %d encantos, e a Tabela %s só tem 1 e 2 "+
+				"(o asterisco é \"conta como dois\")", e.Name, e.CountsAs, tabela.tabela)
 		}
 	}
 	if comModificador+semModificador != len(encantos) {
@@ -117,8 +157,15 @@ func TestEveryWeaponEnchantEitherAppliesOrSaysWhyNot(t *testing.T) {
 // Três verbetes o escrevem ("Pré-requisito: formidável"), e um id que não existe
 // é um ponteiro morto que nada mais acusa — o Go não o vê, e a tela mostraria
 // vazio.
-func TestEveryWeaponEnchantPrerequisiteExists(t *testing.T) {
-	encantos := itemsOfCategory[weaponEnchant](t, "weapon-enchant")
+func TestEveryEnchantPrerequisiteExists(t *testing.T) {
+	for _, tabela := range tabelasDeEncanto {
+		t.Run(tabela.tabela, func(t *testing.T) { prerequisiteExists(t, tabela) })
+	}
+}
+
+func prerequisiteExists(t *testing.T, tabela tabelaDeEncanto) {
+	t.Helper()
+	encantos := itemsOfCategory[weaponEnchant](t, tabela.categoria)
 	existe := map[string]bool{}
 	for _, e := range encantos {
 		existe[e.ID] = true
@@ -137,10 +184,11 @@ func TestEveryWeaponEnchantPrerequisiteExists(t *testing.T) {
 	// verde sobre DOIS pré-requisitos quando a página escreve três — a Magnífica
 	// entrou sem o dela porque eu escrevi a chave sem acento, e um denominador
 	// frouxo não tem como denunciar o que nunca chegou.
-	const osQueOLivroEscreve = 3
-	if medidos != osQueOLivroEscreve {
-		t.Errorf("%d encantos declaram pré-requisito e a p335-336 escreve %d: "+
-			"Energética e Magnífica pedem formidável, e Lancinante pede dilacerante",
-			medidos, osQueOLivroEscreve)
+	//
+	// O número é POR TABELA, e está escrito ao lado de quais são: a 8-8 tem
+	// três e a 8-10 tem um.
+	if medidos != tabela.preRequisitos {
+		t.Errorf("%d encantos da Tabela %s declaram pré-requisito e o livro escreve %d (%s)",
+			medidos, tabela.tabela, tabela.preRequisitos, tabela.quaisPreRequisitos)
 	}
 }

@@ -3845,4 +3845,77 @@
     "uses": null,
     "bookPage": 335
   }
+,
+  {
+    "id": "item.encanto-assustador",
+    "name": "Assustador",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 338
+  },
+  {
+    "id": "item.encanto-caustica",
+    "name": "Cáustica",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 338
+  },
+  {
+    "id": "item.encanto-gelido",
+    "name": "Gélido",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 339
+  },
+  {
+    "id": "item.encanto-hipnotico",
+    "name": "Hipnótico",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 3,
+    "uses": null,
+    "bookPage": 339
+  },
+  {
+    "id": "item.encanto-ilusorio",
+    "name": "Ilusório",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 339
+  },
+  {
+    "id": "item.encanto-incandescente",
+    "name": "Incandescente",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 339
+  },
+  {
+    "id": "item.encanto-relampejante",
+    "name": "Relampejante",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 339
+  },
+  {
+    "id": "item.encanto-reluzente",
+    "name": "Reluzente",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 339
+  }
 ]

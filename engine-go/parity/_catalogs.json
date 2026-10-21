@@ -5240,6 +5240,710 @@
       "uid": "itm_3n76whiqqm"
     },
     {
+      "id": "encanto-abascanto",
+      "name": "Abascanto",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 1,
+      "rollMax": 6,
+      "countsAs": 1,
+      "description": "Você recebe resistência a magia +5.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "against",
+            "trait": "magia"
+          },
+          "note": "+5 contra magia"
+        }
+      ],
+      "bookPage": 338,
+      "uid": "itm_su2zy47osh"
+    },
+    {
+      "id": "encanto-abencoado",
+      "name": "Abençoado",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 7,
+      "rollMax": 10,
+      "countsAs": 1,
+      "description": "Você recebe redução de trevas 10 e +5 em testes de resistência contra efeitos de necromancia. Um item abençoado é decorado com gravuras de símbolos sagrados de deuses do Bem.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "trevas"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "redução de trevas 10"
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "against",
+            "trait": "necromancia"
+          },
+          "note": "+5 contra necromancia"
+        }
+      ],
+      "bookPage": 338,
+      "uid": "itm_al6j7uksow"
+    },
+    {
+      "id": "encanto-alado",
+      "name": "Alado",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 13,
+      "rollMax": 14,
+      "countsAs": 1,
+      "description": "Você pode gastar 2 PM para fazer asas emergirem de suas costas e receber deslocamento de voo 12m com duração sustentada.",
+      "modifiers": [],
+      "bookPage": 338,
+      "unmodeled": "o livro não declara a AÇÃO do gasto, e o voo tem duração sustentada — a sustentação é postura, e o encanto não acende flag nenhuma",
+      "uid": "itm_lygds5yh4t"
+    },
+    {
+      "id": "encanto-animado",
+      "name": "Animado",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "shield"
+      ],
+      "rollMin": 15,
+      "rollMax": 16,
+      "countsAs": 1,
+      "description": "Você pode gastar uma ação de movimento e 1 PM para fazer o escudo flutuar ao seu redor até o fim da cena. Você recebe o mesmo bônus na Defesa que receberia se estivesse empunhando o escudo, mas fica com as duas mãos livres. Você só pode ser protegido por um escudo ao mesmo tempo.",
+      "modifiers": [],
+      "bookPage": 338,
+      "unmodeled": "o escudo passa a proteger SEM ser empunhado, e isso muda a posse do item: o motor lê o bônus pelo `wielded`, e deixar as duas mãos livres é outro estado",
+      "uid": "itm_g5b4dkoaiv"
+    },
+    {
+      "id": "encanto-assustador",
+      "name": "Assustador",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 17,
+      "rollMax": 18,
+      "countsAs": 1,
+      "description": "Você pode gastar uma ação de movimento e 2 PM para gerar uma onda de medo. Inimigos em alcance curto devem passar num teste de Vontade (CD Car) ou ficarão abalados até o fim da cena. Um item assustador possui manchas de sangue, ossos pendurados e outras decorações horripilantes.",
+      "modifiers": [],
+      "bookPage": 338,
+      "unmodeled": "o medo é efeito no ALVO, com teste de resistência e duração — a ativação entra no acervo de poderes (ALE-433) e o desfecho é do mestre",
+      "uid": "itm_6pwn7lxolt"
+    },
+    {
+      "id": "encanto-caustica",
+      "name": "Cáustica",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 19,
+      "rollMax": 22,
+      "countsAs": 1,
+      "description": "Você recebe redução de ácido 10 e pode gastar uma ação de movimento e 2 PM para fazer o item gotejar ácido. Se fizer isso, seus ataques causam +1d4 de dano de ácido até o fim da cena.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "ácido"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "redução de ácido 10"
+        }
+      ],
+      "bookPage": 338,
+      "uid": "itm_bfzjwehvup"
+    },
+    {
+      "id": "encanto-defensor",
+      "name": "Defensor",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 23,
+      "rollMax": 32,
+      "countsAs": 1,
+      "description": "O item é encantado para desviar golpes. O bônus na Defesa do item aumenta em +2.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 Defesa"
+        }
+      ],
+      "bookPage": 338,
+      "uid": "itm_wx7btorb2l"
+    },
+    {
+      "id": "encanto-escorregadio",
+      "name": "Escorregadio",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 33,
+      "rollMax": 34,
+      "countsAs": 1,
+      "description": "Você recebe +10 em testes de Acrobacia para escapar e em testes de manobra contra agarrar. Um item escorregadio parece estar sempre coberto de óleo levemente gorduroso.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Acrobacia"
+          },
+          "amount": 10,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "context",
+            "note": "para escapar"
+          },
+          "note": "+10 para escapar"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "agarrar",
+            "scope": "defense"
+          },
+          "amount": 10,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+10 contra agarrar"
+        }
+      ],
+      "bookPage": 338,
+      "uid": "itm_wse7dererb"
+    },
+    {
+      "id": "encanto-esmagador",
+      "name": "Esmagador",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "shield"
+      ],
+      "rollMin": 35,
+      "rollMax": 36,
+      "countsAs": 1,
+      "description": "Este escudo fornece +2 em ataques e dano e tem seu dano aumentado em um passo.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "this"
+          },
+          "amount": 2,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "wielded"
+          },
+          "appliesToCategory": [
+            "shield"
+          ],
+          "note": "+2 atq"
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "this"
+          },
+          "amount": 2,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "wielded"
+          },
+          "appliesToCategory": [
+            "shield"
+          ],
+          "note": "+2 dano"
+        },
+        {
+          "target": {
+            "k": "damageStep",
+            "scope": "this"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "appliesToCategory": [
+            "shield"
+          ],
+          "note": "+1 passo de dano"
+        }
+      ],
+      "bookPage": 339,
+      "uid": "itm_oxlf6kud5w"
+    },
+    {
+      "id": "encanto-fantasmagorico",
+      "name": "Fantasmagórico",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 37,
+      "rollMax": 38,
+      "countsAs": 1,
+      "description": "Você pode lançar a magia Manto de Sombras. Um item fantasmagórico é cinzento e esfumaçado.",
+      "modifiers": [],
+      "bookPage": 339,
+      "unmodeled": "concede uma MAGIA, e o motor de ficha não aprende magia por item",
+      "uid": "itm_abdlmzim7c"
+    },
+    {
+      "id": "encanto-gelido",
+      "name": "Gélido",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 41,
+      "rollMax": 44,
+      "countsAs": 1,
+      "description": "Você recebe redução de frio 10 e pode gastar uma ação de movimento e 2 PM para se cobrir de gelo até o fim da cena. Se fizer isso, recebe 10 PV temporários. Um item gélido é azulado e frio ao toque.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "frio"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "redução de frio 10"
+        }
+      ],
+      "bookPage": 339,
+      "uid": "itm_5ljgzxitww"
+    },
+    {
+      "id": "encanto-guardiao",
+      "name": "Guardião",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 45,
+      "rollMax": 54,
+      "countsAs": 2,
+      "description": "O item emite um campo de força que desvia ataques. O bônus na Defesa do item aumenta em +4. Pré-requisito: defensor.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 4,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+4 Defesa"
+        }
+      ],
+      "bookPage": 339,
+      "requires": "encanto-defensor",
+      "uid": "itm_h3pgrhs63d"
+    },
+    {
+      "id": "encanto-hipnotico",
+      "name": "Hipnótico",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 55,
+      "rollMax": 56,
+      "countsAs": 1,
+      "description": "Você pode gastar uma ação padrão e 3 PM para emitir luzes coloridas. Inimigos em alcance curto devem passar num teste de Vontade (CD Car) ou ficarão fascinados por 1d6 rodadas. O efeito termina se qualquer criatura afetada for atacada. Um item hipnótico é espalhafatoso e colorido.",
+      "modifiers": [],
+      "bookPage": 339,
+      "unmodeled": "fascinar é efeito no ALVO, com teste de resistência e duração em rodadas — a ativação entra no acervo de poderes (ALE-433) e o desfecho é do mestre",
+      "uid": "itm_e4ai2hspyp"
+    },
+    {
+      "id": "encanto-ilusorio",
+      "name": "Ilusório",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 57,
+      "rollMax": 58,
+      "countsAs": 1,
+      "description": "Você pode gastar uma ação de movimento e 1 PM para fazer o item adquirir a aparência de uma roupa comum, mas mantendo suas propriedades (bônus na Defesa, penalidade de armadura...). A magia Visão da Verdade revela o item disfarçado.",
+      "modifiers": [],
+      "bookPage": 339,
+      "unmodeled": "a aparência do item não é número de ficha; a ativação entra no acervo de poderes (ALE-433)",
+      "uid": "itm_g4s4uptzw3"
+    },
+    {
+      "id": "encanto-incandescente",
+      "name": "Incandescente",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 59,
+      "rollMax": 62,
+      "countsAs": 1,
+      "description": "Você recebe redução de fogo 10 e pode gastar uma ação de movimento e 2 PM para fazer o item emitir labaredas até o fim da cena. Se fizer isso, no início de cada um de seus turnos você causa 1d6 pontos de dano de fogo em todas as criaturas adjacentes. Um item incandescente é avermelhado e quente ao toque.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "fogo"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "redução de fogo 10"
+        }
+      ],
+      "bookPage": 339,
+      "uid": "itm_6tawxozsfd"
+    },
+    {
+      "id": "encanto-invulneravel",
+      "name": "Invulnerável",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 63,
+      "rollMax": 68,
+      "countsAs": 1,
+      "description": "Você recebe redução de dano 2 (para escudos) ou 5 (para armaduras).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "appliesToCategory": [
+            "armor-light",
+            "armor-heavy"
+          ],
+          "note": "RD 5"
+        },
+        {
+          "target": {
+            "k": "damageReduction"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "appliesToCategory": [
+            "shield"
+          ],
+          "note": "RD 2"
+        }
+      ],
+      "bookPage": 339,
+      "uid": "itm_ji3brjiojc"
+    },
+    {
+      "id": "encanto-opaco",
+      "name": "Opaco",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 69,
+      "rollMax": 72,
+      "countsAs": 1,
+      "description": "Você recebe redução de ácido, eletricidade, fogo e frio 10. Um item opaco parece sem cor, totalmente comum e desinteressante.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "ácido"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "redução de ácido 10"
+        },
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "eletricidade"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "redução de eletricidade 10"
+        },
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "fogo"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "redução de fogo 10"
+        },
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "frio"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "redução de frio 10"
+        }
+      ],
+      "bookPage": 339,
+      "uid": "itm_twc4duwy6t"
+    },
+    {
+      "id": "encanto-protetor",
+      "name": "Protetor",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 73,
+      "rollMax": 78,
+      "countsAs": 1,
+      "description": "Você recebe +2 em testes de resistência.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 2,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 em resistências"
+        }
+      ],
+      "bookPage": 339,
+      "uid": "itm_3fz2amrvqk"
+    },
+    {
+      "id": "encanto-refletor",
+      "name": "Refletor",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 79,
+      "rollMax": 80,
+      "countsAs": 1,
+      "description": "Uma vez por rodada, quando você é alvo de uma magia, pode gastar PM igual ao custo dela para refleti-la de volta ao conjurador. As características da magia (efeitos, CD...) se mantêm, mas você toma qualquer decisão exigida por ela. Um item refletor parece espelhado.",
+      "modifiers": [],
+      "bookPage": 339,
+      "unmodeled": "REAÇÃO a ser alvo de uma magia, e o motor não tem gatilho de reação nem devolve efeito de magia ao conjurador",
+      "uid": "itm_zv6c74q4tb"
+    },
+    {
+      "id": "encanto-relampejante",
+      "name": "Relampejante",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 81,
+      "rollMax": 84,
+      "countsAs": 1,
+      "description": "Você recebe redução de eletricidade 10 e pode gastar uma ação de movimento e 2 PM para gerar arcos voltaicos até o fim da cena. Se fizer isso, qualquer criatura que o ataque em corpo a corpo sofre 2d6 pontos de dano de eletricidade. Um item relampejante é decorado com ouro, prata e cobre.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "eletricidade"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "redução de eletricidade 10"
+        }
+      ],
+      "bookPage": 339,
+      "uid": "itm_yoxtblsjk4"
+    },
+    {
+      "id": "encanto-reluzente",
+      "name": "Reluzente",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 85,
+      "rollMax": 86,
+      "countsAs": 1,
+      "description": "Você pode gastar uma ação de movimento e 2 PM para emitir um clarão de luz. Todos os inimigos em alcance curto devem passar num teste de Reflexos (CD Car) ou ficarão cegos por uma rodada. Um item reluzente é polido e brilhante.",
+      "modifiers": [],
+      "bookPage": 339,
+      "unmodeled": "cegar é efeito no ALVO, com teste de resistência — a ativação entra no acervo de poderes (ALE-433) e o desfecho é do mestre",
+      "uid": "itm_g53mabamcu"
+    },
+    {
+      "id": "encanto-zeloso",
+      "name": "Zeloso",
+      "category": "armor-enchant",
+      "price": 0,
+      "slots": 0,
+      "equip": "vested",
+      "appliesTo": [
+        "armor",
+        "shield"
+      ],
+      "rollMin": 89,
+      "rollMax": 90,
+      "countsAs": 1,
+      "description": "Uma vez por rodada, se um aliado adjacente for alvo de um ataque, você pode gastar 1 PM para se tornar o alvo do ataque, que então é resolvido normalmente.",
+      "modifiers": [],
+      "bookPage": 339,
+      "unmodeled": "REAÇÃO que troca o ALVO de um ataque alheio, e nem o gatilho nem a troca de alvo existem no motor",
+      "uid": "itm_yqblkuretz"
+    },
+    {
       "id": "encanto-acrobatico",
       "name": "Acrobático",
       "category": "armor-enchant",
@@ -5328,7 +6032,7 @@
           "note": "25% de ignorar o extra de crítico"
         }
       ],
-      "bookPage": 338,
+      "bookPage": 339,
       "uid": "itm_qpo46n6bne"
     },
     {

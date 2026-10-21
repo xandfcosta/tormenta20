@@ -1266,6 +1266,60 @@
               ]
             }
           ]
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Guardiã Opaca Nv10",
+            "races": [
+              "humano"
+            ],
+            "origin": "guarda",
+            "classes": [
+              {
+                "className": "Cavaleiro",
+                "level": 10
+              }
+            ],
+            "god": "Khalmyr",
+            "strength": 3,
+            "dexterity": 1,
+            "constitution": 4,
+            "intelligence": 1,
+            "wisdom": 2,
+            "charisma": 2,
+            "size": "Médio",
+            "displacement": 9,
+            "items": [
+              {
+                "catalogId": "armadura-completa",
+                "equipped": "vested"
+              },
+              {
+                "catalogId": "escudo-pesado",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "espada-longa",
+                "equipped": "wielded2"
+              }
+            ]
+          },
+          "enchants": [
+            {
+              "item": "armadura-completa",
+              "enchants": [
+                "encanto-opaco",
+                "encanto-defensor"
+              ]
+            },
+            {
+              "item": "escudo-pesado",
+              "enchants": [
+                "encanto-invulneravel"
+              ]
+            }
+          ]
         }
       ]
     },
