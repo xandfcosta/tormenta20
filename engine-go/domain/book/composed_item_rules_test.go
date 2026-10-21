@@ -43,9 +43,10 @@ func TestEveryComposedItemBringsPiecesThatFitIt(t *testing.T) {
 				"sobreposição que cabe", item.Name, item.Category, base.Name, base.Category)
 		}
 
-		// O ENCANTO pela mesma porta do mestre: família certa, tabela certa,
-		// teto de três por PESO e pré-requisito no mesmo conjunto (p333-339).
-		if err := FitsItemEnchants(&item, composed.Enchants); err != nil {
+		// O ENCANTO pela porta do item ACHADO: família certa, tabela certa e
+		// teto de três por PESO — sem o pré-requisito, que é regra de quem
+		// MONTA e que o próprio livro contraria no Cajado do Poder.
+		if err := FitsFoundItemEnchants(&item, composed.Enchants); err != nil {
 			t.Errorf("os encantos de %s não cabem nela: %v", item.Name, err)
 		}
 		for _, id := range composed.Improvements {

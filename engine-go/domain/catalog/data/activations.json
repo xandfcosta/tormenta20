@@ -3926,5 +3926,32 @@
     "pmCost": 6,
     "uses": null,
     "bookPage": 337
+  },
+  {
+    "id": "item.lamina-da-luz",
+    "name": "Luz brilhante",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 338
+  },
+  {
+    "id": "item.lingua-do-deserto",
+    "name": "Lâmina em chamas",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 338
+  },
+  {
+    "id": "item.punhal-sszzaazita",
+    "name": "Objeto inofensivo",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 338
   }
 ]

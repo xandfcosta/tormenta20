@@ -108,13 +108,44 @@ func aceitaEncanto(item, encanto Item) bool {
 //
 // @example book.FitsItemEnchants(book.ItemByID("espada-longa"), []string{"encanto-formidavel"})
 func FitsItemEnchants(catalog *Item, ids []string) error {
+	if err := cabeNaFamiliaEnoTeto(catalog, ids); err != nil {
+		return err
+	}
+	return cumpreOsPreRequisitos(ids)
+}
+
+// FitsFoundItemEnchants é a mesma recusa SEM o pré-requisito, para o item que o
+// livro entrega PRONTO — o específico das Tabelas 8-9 e 8-11 (p337, p340).
+//
+// # Por que o pré-requisito não vale para ele
+//
+// Ele é regra de QUEM MONTA: *"Pré-requisito: formidável"* (p336) diz o que
+// escolher antes do quê, e quem escolhe é o mestre encantando uma arma. Um item
+// específico não foi montado por ninguém — ele foi ACHADO, e o verbete diz do
+// que ele é feito.
+//
+// E o livro se contradiz se a regra for aplicada: o Cajado do Poder é um
+// *"bordão defensor magnífico"*, e a Magnífica conta como DOIS. Acrescentar a
+// Formidável para satisfazer o pré-requisito daria peso 4 num item cujo teto é
+// 3 — a composição que o livro escreve já está exatamente no teto.
+//
+// A FAMÍLIA e o TETO continuam valendo, porque os dois são propriedade do item
+// e não de quem o montou.
+//
+// @example book.FitsFoundItemEnchants(book.ItemByID("cajado-do-poder"), []string{"encanto-defensora", "encanto-magnifica"})
+func FitsFoundItemEnchants(catalog *Item, ids []string) error {
+	return cabeNaFamiliaEnoTeto(catalog, ids)
+}
+
+// cabeNaFamiliaEnoTeto: cada id é encanto do livro, da família do item, e o
+// conjunto cabe nos três slots contados por PESO.
+func cabeNaFamiliaEnoTeto(catalog *Item, ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
 	if catalog == nil {
 		return fmt.Errorf("item sem verbete não recebe encanto (p333)")
 	}
-	escolhidos := map[string]bool{}
 	peso := 0
 	for _, id := range ids {
 		encanto := ItemByID(id)
@@ -125,7 +156,6 @@ func FitsItemEnchants(catalog *Item, ids []string) error {
 			return fmt.Errorf("%q não cabe em %q: a tabela dele é de %s (p333-339)",
 				encanto.Name, catalog.Name, CategoryName(encanto.Category))
 		}
-		escolhidos[id] = true
 		peso += max(encanto.CountsAs, 1)
 	}
 	if peso > slotsDeEncanto {
@@ -134,9 +164,19 @@ func FitsItemEnchants(catalog *Item, ids []string) error {
 				"a Energética, a Lancinante e a Magnífica contam como dois",
 			peso, catalog.Name, slotsDeEncanto)
 	}
-	for id := range escolhidos {
+	return nil
+}
+
+// cumpreOsPreRequisitos: o "Pré-requisito:" de três verbetes da Tabela 8-8,
+// conferido DENTRO do mesmo conjunto.
+func cumpreOsPreRequisitos(ids []string) error {
+	escolhidos := map[string]bool{}
+	for _, id := range ids {
+		escolhidos[id] = true
+	}
+	for _, id := range ids {
 		encanto := ItemByID(id)
-		if encanto.Requires == "" || escolhidos[encanto.Requires] {
+		if encanto == nil || encanto.Requires == "" || escolhidos[encanto.Requires] {
 			continue
 		}
 		nome := encanto.Requires
