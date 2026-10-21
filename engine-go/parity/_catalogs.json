@@ -6365,6 +6365,419 @@
       "unmodeled": "tudo o que o verbete acrescenta vale só para PALADINO — +5 em ataque e dano, −1 PM no Golpe Divino e resistência a magia +5 para você e aliados em alcance curto —, e nenhuma condição do motor pergunta a classe de quem empunha",
       "bookPage": 338,
       "uid": "itm_gz4cbiutrc"
+    },
+    {
+      "id": "azagaia-dos-relampagos",
+      "name": "Azagaia dos relâmpagos",
+      "category": "weapon-simple",
+      "price": 30000,
+      "rollMin": 1,
+      "rollMax": 5,
+      "composedOf": {
+        "base": "azagaia"
+      },
+      "description": "Quando arremessada, esta azagaia se transforma em um Relâmpago (8d6 de dano de eletricidade numa linha com alcance médio; CD For ou Des a sua escolha). Quando atinge o fim do alcance ela volta a ser uma azagaia e volta para você no fim do turno.",
+      "modifiers": [],
+      "unmodeled": "arremessada, a arma VIRA uma magia — 8d6 de eletricidade numa linha de alcance médio — e volta para a mão no fim do turno. O motor tem arma que soma dano, não arma que deixa de ser arma.",
+      "bookPage": 337,
+      "uid": "itm_pckesll5l3"
+    },
+    {
+      "id": "espada-baronial",
+      "name": "Espada baronial",
+      "category": "weapon-martial",
+      "price": 30000,
+      "rollMin": 6,
+      "rollMax": 15,
+      "composedOf": {
+        "base": "espada-longa"
+      },
+      "description": "Esta espada longa de guarda reta fornece +1 em testes de ataque e rolagens de dano. Este bônus aumenta em +1 se você possuir um código de conduta (de honra, do herói...), for devoto de Khalmyr ou for treinado em Nobreza. Os bônus são cumulativos — um personagem com um código de conduta, devoto de Khalmyr e treinado em Nobreza recebe +4 em ataque e dano.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "this"
+          },
+          "amount": 1,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+1 em testes de ataque"
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "this"
+          },
+          "amount": 1,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+1 nas rolagens de dano"
+        }
+      ],
+      "modeled": [
+        "o +1 de ataque e dano"
+      ],
+      "unmodeled": "o bônus SOBE +1 por cada um de três predicados de quem a empunha — código de conduta, devoto de Khalmyr, treinado em Nobreza —, cumulativos até +4. A ficha sabe os três, e nenhuma condição do motor pergunta por eles.",
+      "bookPage": 337,
+      "uid": "itm_zvugpib42u"
+    },
+    {
+      "id": "lamina-da-luz",
+      "name": "Lâmina da luz",
+      "category": "weapon-exotic",
+      "price": 45000,
+      "rollMin": 16,
+      "rollMax": 25,
+      "composedOf": {
+        "base": "espada-bastarda",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "De lâmina prateada e reluzente, esta espada bastarda formidável é concedida a cavaleiros da Luz de honra e virtude comprovadas. Você pode gastar uma ação de movimento e 2 PM para erguer a lâmina da luz acima de sua cabeça. Se fizer isso, ela irradia luz brilhante em alcance médio até o fim da cena. Todos os inimigos dentro da luz ficam ofuscados.",
+      "modifiers": [],
+      "modeled": [
+        "a ação e o custo do gesto"
+      ],
+      "unmodeled": "a luz em alcance médio que deixa OFUSCADO todo inimigo dentro dela até o fim da cena — efeito de área sobre terceiros.",
+      "bookPage": 338,
+      "uid": "itm_b4mx6uvru6"
+    },
+    {
+      "id": "lanca-animalesca",
+      "name": "Lança animalesca",
+      "category": "weapon-simple",
+      "price": 45000,
+      "rollMin": 26,
+      "rollMax": 30,
+      "composedOf": {
+        "base": "lanca",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Espinhos e folhas vivas brotam desta lança formidável. Se você usar a habilidade Forma Selvagem, aplica o bônus de +2 em ataque e dano da lança animalesca em suas armas naturais.",
+      "modifiers": [],
+      "unmodeled": "com Forma Selvagem, o +2 da lança passa para as ARMAS NATURAIS — transferir o bônus de uma arma para outra forma de ataque não tem forma no motor.",
+      "bookPage": 338,
+      "uid": "itm_567wgg4kuj"
+    },
+    {
+      "id": "maca-do-terror",
+      "name": "Maça do terror",
+      "category": "weapon-simple",
+      "price": 45000,
+      "rollMin": 31,
+      "rollMax": 35,
+      "composedOf": {
+        "base": "maca",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Esta maça formidável é feita com um osso e um crânio e permite que você lance a magia Amedrontar (CD For ou Car a sua escolha). Caso já conheça a magia, o custo para lançá-la diminui em –1 PM.",
+      "modifiers": [],
+      "unmodeled": "ela CONCEDE a magia Amedrontar a quem a empunha, e baixa –1 PM para quem já a conhece. Conceder magia não é modificador, e o desconto depende de conhecê-la.",
+      "bookPage": 338,
+      "uid": "itm_bkfyeoawlp"
+    },
+    {
+      "id": "florete-fugaz",
+      "name": "Florete fugaz",
+      "category": "weapon-martial",
+      "price": 50000,
+      "rollMin": 36,
+      "rollMax": 40,
+      "composedOf": {
+        "base": "florete",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Este florete formidável tem o cabo e a guarda trabalhados com prata e pedrarias. Quando usa a ação agredir, você pode gastar 1 PM. Se fizer isso e acertar um crítico no turno, pode fazer um ataque adicional contra a mesma criatura.",
+      "modifiers": [],
+      "unmodeled": "1 PM na ação agredir dá um ataque ADICIONAL se houver crítico no turno. O gesto pega carona na ação de atacar, e o registro de ativações só guarda gesto de ação própria.",
+      "bookPage": 337,
+      "uid": "itm_6y3oczyiwa"
+    },
+    {
+      "id": "cajado-da-destruicao",
+      "name": "Cajado da destruição",
+      "category": "weapon-simple",
+      "price": 60000,
+      "rollMin": 41,
+      "rollMax": 45,
+      "composedOf": {
+        "base": "bordao",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Este bordão formidável escuro e reforçado com ponteiras de metal é procurado por conjuradores de batalha. Conta como um cajado arcano. Além dos benefícios desse esotérico, quando você lança uma magia de dano, ela causa +1 ponto de dano por dado.",
+      "modifiers": [],
+      "unmodeled": "ele CONTA COMO um cajado arcano (um esotérico, que é outra categoria de item) e soma +1 de dano POR DADO da magia. Nenhum dos dois tem forma: o motor não troca a categoria de um item, e dano por dado de magia não é alvo.",
+      "bookPage": 337,
+      "uid": "itm_ns4wn5icp6"
+    },
+    {
+      "id": "cajado-da-vida",
+      "name": "Cajado da vida",
+      "category": "weapon-simple",
+      "price": 60000,
+      "rollMin": 46,
+      "rollMax": 50,
+      "composedOf": {
+        "base": "bordao",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Este bordão formidável branco com runas prateadas é valorizado por curandeiros. Conta como um cajado arcano, mas afeta magias divinas. Além disso, quando você lança uma magia de cura, ela cura +2 pontos de vida por dado.",
+      "modifiers": [],
+      "unmodeled": "ele CONTA COMO um cajado arcano que afeta magias divinas e soma +2 de cura POR DADO. Os dois são a mesma falta de forma do Cajado da Destruição.",
+      "bookPage": 337,
+      "uid": "itm_klnv2kk6a3"
+    },
+    {
+      "id": "machado-silvestre",
+      "name": "Machado silvestre",
+      "category": "weapon-martial",
+      "price": 70000,
+      "rollMin": 51,
+      "rollMax": 55,
+      "composedOf": {
+        "base": "machado-batalha",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "O cabo e a lâmina deste machado de batalha formidável são cobertos de gravuras representando plantas e animais selvagens. Quando você usa o machado silvestre em um ambiente ermo e ao ar livre, causa +1d8 de dano e recebe o poder Trespassar. Caso já possua este poder, pode utilizá-lo sem pagar pontos de mana.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "scope": "this"
+          },
+          "dice": "1d8",
+          "bonusType": "untyped",
+          "condition": {
+            "c": "terrain",
+            "type": "ermo e ao ar livre"
+          },
+          "note": "+1d8 de dano"
+        }
+      ],
+      "modeled": [
+        "o +1d8 em ambiente ermo e ao ar livre"
+      ],
+      "unmodeled": "no mesmo ambiente ele CONCEDE o poder Trespassar (ou o torna gratuito para quem já o tem) — conceder poder não é modificador.",
+      "bookPage": 338,
+      "uid": "itm_v3ohr2qqzx"
+    },
+    {
+      "id": "martelo-de-doherimm",
+      "name": "Martelo de Doherimm",
+      "category": "weapon-martial",
+      "price": 70000,
+      "rollMin": 56,
+      "rollMax": 60,
+      "composedOf": {
+        "base": "martelo-guerra",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Este martelo de guerra formidável é feito de pedra e aço. Quando empunhado por um anão, adquire o encanto arremesso e aumenta seu dano em +1d8 (ou +2d8 se usado contra criaturas Grandes ou maiores).",
+      "modifiers": [],
+      "unmodeled": "na mão de um ANÃO ele ganha o encanto arremesso e +1d8 (+2d8 contra criaturas Grandes ou maiores). Nenhuma condição do motor pergunta a raça de quem empunha.",
+      "bookPage": 338,
+      "uid": "itm_s4r24hzhvi"
+    },
+    {
+      "id": "arco-do-poder",
+      "name": "Arco do poder",
+      "category": "weapon-martial",
+      "price": 90000,
+      "rollMin": 61,
+      "rollMax": 67,
+      "composedOf": {
+        "base": "arco-longo",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "O arco do poder conta como um arco longo formidável, mas parece apenas o corpo de um arco — não tem corda e não aceita flechas. Contudo, quando você o empunha e faz o gesto de puxar a corda inexistente, o arco cria uma corda e uma flecha de energia dourada. O arco do poder é capaz de ler suas intenções, produzindo diferentes tipos de flechas energéticas a sua escolha. • Flecha Normal. 3d8 pontos de dano de essência. • Flecha Piedosa. 4d8 pontos de dano de essência não letal. • Flecha Explosiva. 3d6 pontos de dano de fogo no alvo e em todas as criaturas adjacentes a ele. Essas têm direito a um teste de Reflexos (CD Des) para reduzir o dano à metade. • Flecha-Rede. Não causa dano, mas deixa a vítima agarrada por uma rede de energia. A criatura pode se soltar passando em um teste de Força ou Acrobacia (CD 25). A rede se dissipa quando a criatura se solta ou no fim da cena.",
+      "modifiers": [],
+      "unmodeled": "as QUATRO flechas de energia são modos de disparo com dado próprio — 3d8 de essência, 4d8 não letal, 3d6 de fogo em área, e a rede que agarra sem causar dano. A carta da arma tem um dado só, e trocá-lo por escolha de quem atira é fatia própria.",
+      "bookPage": 336,
+      "uid": "itm_zkqxfq6acs"
+    },
+    {
+      "id": "lingua-do-deserto",
+      "name": "Língua do deserto",
+      "category": "weapon-martial",
+      "price": 90000,
+      "rollMin": 68,
+      "rollMax": 72,
+      "composedOf": {
+        "base": "cimitarra",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Esta cimitarra formidável é originária do Deserto da Perdição. Você pode gastar uma ação de movimento e 1 PM para transformar a lâmina dela em chamas até o fim da cena. Nessa condição, o dano da arma aumenta em um passo e passa a ser do tipo fogo. Você pode gastar uma ação de movimento e 2 PM para fazer as chamas brilharem com muita força. Isso deixa os inimigos em alcance curto desprevenidos por uma rodada.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageStep",
+            "scope": "this"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "com a lâmina em chamas (1 PM)"
+          },
+          "note": "+1 passo de dano"
+        }
+      ],
+      "modeled": [
+        "a ação e o custo do primeiro gesto",
+        "o passo de dano da lâmina em chamas"
+      ],
+      "unmodeled": "a lâmina em chamas também TROCA o tipo de dano para fogo, e o SEGUNDO gesto (movimento, 2 PM) deixa inimigos em alcance curto desprevenidos. O tipo da arma não é alvo, e o registro de ativações guarda um gesto por item.",
+      "bookPage": 338,
+      "uid": "itm_feywkwivua"
+    },
+    {
+      "id": "besta-explosiva",
+      "name": "Besta explosiva",
+      "category": "weapon-martial",
+      "price": 100000,
+      "rollMin": 73,
+      "rollMax": 77,
+      "composedOf": {
+        "base": "besta-pesada",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Esta besta pesada formidável é feita de madeira escurecida, similar a carvão. Quando usa uma besta explosiva, você pode gastar 3 PM para transformar o virote disparado por ela em uma Bola de Fogo. Você pode mirar esta Bola de Fogo em uma criatura ou em um ponto em alcance médio. No primeiro caso, faça um ataque contra o alvo. Se acertar, ele sofre o dano do disparo mais 6d6 de fogo. Além disso, todas as criaturas a até 6m do alvo sofrem 6d6 pontos de dano de fogo (Ref CD Des reduz à metade). Porém, se o ataque errar, o virote se desfaz em uma nuvem de cinzas inofensivas. No segundo caso, ela funciona como a magia de mesmo nome. Nenhum teste de ataque é necessário e todas as criaturas a 6m do ponto escolhido sofrem 6d6 pontos de dano de fogo (Ref reduz à metade).",
+      "modifiers": [],
+      "unmodeled": "3 PM transformam o virote numa Bola de Fogo, com dois modos — mirado numa criatura (ataque, +6d6 nela e 6d6 em área) ou num ponto (a magia, sem ataque). O gesto pega carona no disparo e o efeito é de área sobre terceiros.",
+      "bookPage": 337,
+      "uid": "itm_3ph7g2o6sc"
+    },
+    {
+      "id": "punhal-sszzaazita",
+      "name": "Punhal sszzaazita",
+      "category": "weapon-simple",
+      "price": 100000,
+      "rollMin": 78,
+      "rollMax": 82,
+      "composedOf": {
+        "base": "adaga",
+        "enchants": [
+          "encanto-assassina",
+          "encanto-formidavel",
+          "encanto-venenosa"
+        ]
+      },
+      "description": "Esta adaga assassina formidável venenosa tem lâmina negra e ondulada. Você pode gastar uma ação padrão e 2 PM para transformar o punhal sszzaazita em um objeto inofensivo de tamanho similar, como uma colher ou pena. Nenhuma magia é capaz de detectar essa transformação. Transformar o punhal em arma é uma ação livre.",
+      "modifiers": [],
+      "modeled": [
+        "a ação e o custo do gesto"
+      ],
+      "unmodeled": "o disfarce em si — virar uma colher que magia nenhuma detecta, e voltar a ser arma por ação livre. O motor não troca um item por outro.",
+      "bookPage": 338,
+      "uid": "itm_hbmoahgy4a"
+    },
+    {
+      "id": "espada-sortuda",
+      "name": "Espada sortuda",
+      "category": "weapon-simple",
+      "price": 110000,
+      "rollMin": 83,
+      "rollMax": 87,
+      "composedOf": {
+        "base": "espada-curta",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Esta espada curta formidável é cravejada de brilhantes. Você recebe +2 nos testes de resistência e, quando faz um teste, pode gastar 3 PM para rolá-lo novamente. Se possuir o poder Sortudo, em vez disso seu custo diminui em –1 PM.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 2,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+2 em testes de resistência"
+        }
+      ],
+      "modeled": [
+        "o +2 em testes de resistência"
+      ],
+      "unmodeled": "3 PM para rolar um teste DE NOVO (ou –1 PM no custo, para quem tem o poder Sortudo). Rolar de novo é regra de rolagem, não de ficha.",
+      "bookPage": 337,
+      "uid": "itm_chak54jps4"
+    },
+    {
+      "id": "cajado-do-poder",
+      "name": "Cajado do poder",
+      "category": "weapon-simple",
+      "price": 180000,
+      "rollMin": 93,
+      "rollMax": 95,
+      "composedOf": {
+        "base": "bordao",
+        "enchants": [
+          "encanto-defensora",
+          "encanto-magnifica"
+        ]
+      },
+      "description": "Este bordão defensor magnífico tem cabo reto e liso, com uma joia cintilante na ponta. Conta como um cajado arcano. Além dos benefícios desse esotérico, o custo de suas magias arcanas diminui em –1 PM (cumulativo com Mestre em Escola) e a CD para resistir a elas aumenta em +2 (para um aumento total de +3).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "pmCost",
+            "scope": "arcana"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "–1 PM nas magias arcanas"
+        },
+        {
+          "target": {
+            "k": "spellDC"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "+2 na CD para resistir"
+        }
+      ],
+      "modeled": [
+        "o –1 PM nas magias arcanas",
+        "o +2 na CD"
+      ],
+      "unmodeled": "ele CONTA COMO um cajado arcano, que é outra categoria de item — a mesma falta de forma dos outros dois cajados.",
+      "bookPage": 337,
+      "uid": "itm_uscj3ebb5o"
     }
   ],
   "races": [
