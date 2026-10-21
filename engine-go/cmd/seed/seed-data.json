@@ -50,7 +50,15 @@
                 "quantity": 2
               }
             ]
-          }
+          },
+          "enchants": [
+            {
+              "item": "machado-batalha",
+              "enchants": [
+                "encanto-sanguinaria"
+              ]
+            }
+          ]
         },
         {
           "hpFraction": 0.5,
