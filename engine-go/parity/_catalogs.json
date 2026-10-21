@@ -14818,6 +14818,21 @@
       "kind": "combate",
       "name": "Encouraçado",
       "description": "Usando armadura pesada, +2 na Defesa (cumulativo +2 por poder com Encouraçado como prereq).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagRequired",
+            "flag": "armadura-pesada",
+            "label": "com armadura pesada"
+          },
+          "note": "+2 Defesa"
+        }
+      ],
       "prerequisites": [
         {
           "kind": "note",
@@ -15347,6 +15362,21 @@
       "kind": "combate",
       "name": "Inexpugnável",
       "description": "Usando armadura pesada: +2 em todos os testes de resistência.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagRequired",
+            "flag": "armadura-pesada",
+            "label": "com armadura pesada"
+          },
+          "note": "+2 em resistências"
+        }
+      ],
       "minLevel": 6,
       "prerequisites": [
         {

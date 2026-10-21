@@ -35,8 +35,8 @@ type ModifierCondition struct {
 	Type  string `json:"type,omitempty"`  // terrain
 	Trait string `json:"trait,omitempty"` // against
 	Note  string `json:"note,omitempty"`  // context
-	Flag  string `json:"flag,omitempty"`  // flagOn, flagOff
-	Label string `json:"label,omitempty"` // flagOn, flagOff
+	Flag  string `json:"flag,omitempty"`  // flagOn, flagOff, flagRequired
+	Label string `json:"label,omitempty"` // flagOn, flagOff, flagRequired
 }
 
 // VitalScale é a escala de um vital. Só o coletor de vitais a lê; o motor de
@@ -459,9 +459,11 @@ func isUnconditional(m Modifier) bool {
 		// tirou do mundo antes desta pergunta. Se ela chegar aqui, alguma coisa
 		// mudou de ordem — e `true` a somaria no dano de TODO ataque.
 		return false
-	case "flagOff":
-		// Avaliada automaticamente contra as flags já coletadas na passada
-		// principal — nunca é uma condicional que a pessoa liga.
+	case "flagOff", "flagRequired":
+		// Avaliadas automaticamente contra as flags já coletadas na passada
+		// principal — nunca são condicional que a pessoa liga. O `flagRequired`
+		// é o espelho positivo, e ele existe porque a flag dele é DERIVADA (a
+		// armadura pesada que está vestida) e não postura.
 		return true
 	}
 	return true
@@ -480,8 +482,8 @@ func conditionMet(m Modifier, equipped *string) bool {
 		return isWielded(equipped)
 	case "vested":
 		return equipped != nil && *equipped == "vested"
-	case "flagOff":
-		// O `flagOff` já passou pelo portão de flags no laço principal.
+	case "flagOff", "flagRequired":
+		// As duas já passaram pelo portão de flags no laço principal.
 		return true
 	}
 	return false
@@ -498,7 +500,7 @@ func describeCondition(m Modifier) string {
 		return "contra: " + m.Condition.Trait
 	case "context":
 		return m.Condition.Note
-	case "flagOn", "flagOff":
+	case "flagOn", "flagOff", "flagRequired":
 		return m.Condition.Label
 	}
 	return ""
