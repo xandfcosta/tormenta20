@@ -135,3 +135,65 @@ func TestAStunnedCharacterDoesNotAttack(t *testing.T) {
 		t.Errorf("a recusa tinha de dizer que não dá para agir, e veio %q", refusal)
 	}
 }
+
+// A FAIXA DIZ O QUE O LIVRO RESERVA AO GOLPE, e nada sobre o desfecho (ALE-441).
+//
+// "Uma criatura viva atingida fica sangrando" (p336). O app não aplica nada: ele
+// põe a condição PREVISTA na frente do mestre, que é quem a marca na fila — o
+// mesmo desenho da manobra (ALE-423).
+//
+// O caso é de INTEGRAÇÃO porque o trajeto é o que importa: catálogo → carta da
+// arma → resultado do ataque → provisório → faixa. Um teste sobre a frase
+// sozinha passaria verde com o encanto inerte.
+func TestTheAttackBannerSaysTheConditionTheBookForesees(t *testing.T) {
+	f, goblin := attackOnTurn(t)
+	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("ler os itens: %v", err)
+	}
+	espada := int64(0)
+	for _, item := range itens {
+		if item.Name == "Espada longa" {
+			espada = item.ID
+		}
+	}
+	if espada == 0 {
+		t.Fatal("o personagem da bancada não está com a espada longa")
+	}
+	if err := f.s.characterPlays().EnchantItem(
+		context.Background(), espada, []string{"encanto-sanguinaria"},
+	); err != nil {
+		t.Fatalf("encantar a espada: %v", err)
+	}
+
+	rec := f.requests(t, f.player, http.MethodPost,
+		f.tableUrl()+"/iniciativa/"+goblin+"/atacar", "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("propor o ataque deu %d", rec.Code)
+	}
+	pendente := stateOf(t, f.s.sessions, f.sessionID).PendingAttack
+	if pendente == nil {
+		t.Fatalf("o ataque não virou provisório: %q", tableRefusal(t, rec.Body.String()))
+	}
+	// O ATAQUE PODE TER ERRADO — o d20 é de verdade —, e o anúncio só sai no
+	// acerto. Ler o provisório em vez de insistir no sorteio é o que mantém
+	// este caso determinístico.
+	if !pendente.Hit {
+		if len(pendente.Announces) != 0 {
+			t.Errorf("o ataque errou e a faixa anuncia %+v", pendente.Announces)
+		}
+		return
+	}
+	if len(pendente.Announces) != 1 || pendente.Announces[0].Condition != "sangrando" {
+		t.Fatalf("o acerto com a Sanguinária anuncia %+v, e a p336 reserva sangrando",
+			pendente.Announces)
+	}
+	tela := rec.Body.String()
+	if !strings.Contains(tela, "o livro prevê") || !strings.Contains(tela, "Sangrando") {
+		t.Errorf("a faixa não diz a condição prevista:\n%s", recorte(tela))
+	}
+	// E NENHUM VEREDICTO: a faixa não pode dizer que a criatura FICOU sangrando.
+	if strings.Contains(tela, "fica sangrando") || strings.Contains(tela, "ficou sangrando") {
+		t.Error("a faixa declarou o desfecho, e quem decide é o mestre")
+	}
+}

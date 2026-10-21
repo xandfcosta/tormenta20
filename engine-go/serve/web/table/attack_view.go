@@ -168,11 +168,12 @@ func attackLine(pa live.PendingAttack) string {
 	// primeira versão desta linha dizia "1d4 (4) = 4 → 4 de dano", e foi olhar a
 	// tela que a pegou. A seta só existe quando há de onde para onde.
 	if pa.Absorbed == 0 {
-		return line + fmt.Sprintf(" = %d de dano%s%s",
-			pa.Damage, writtenNonLethal(pa), writtenCritChance(pa))
+		return line + fmt.Sprintf(" = %d de dano%s%s%s",
+			pa.Damage, writtenNonLethal(pa), writtenCritChance(pa), writtenForeseen(pa))
 	}
-	return line + fmt.Sprintf(" = %d · RD %d → %d de dano%s%s",
-		pa.RawDamage, pa.Absorbed, pa.Damage, writtenNonLethal(pa), writtenCritChance(pa))
+	return line + fmt.Sprintf(" = %d · RD %d → %d de dano%s%s%s",
+		pa.RawDamage, pa.Absorbed, pa.Damage, writtenNonLethal(pa), writtenCritChance(pa),
+		writtenForeseen(pa))
 }
 
 // writtenCritChance é a chance de o alvo ignorar o que o crítico acrescentou.
@@ -187,6 +188,31 @@ func writtenCritChance(pa live.PendingAttack) string {
 	}
 	return fmt.Sprintf(" · %d%% de ignorar os %d do crítico",
 		pa.CritExtraIgnoreChance, pa.CriticalExtra)
+}
+
+// writtenForeseen são as condições que o LIVRO reserva a este golpe.
+//
+// "o livro prevê" e não "a vítima fica": a diferença entre as duas frases é a
+// regra da casa inteira — a primeira informa o mestre, a segunda decide por
+// ele. É a mesma escolha de palavra que a faixa da manobra fez ao trocar
+// "Derrubou" pelo infinitivo (ALE-423).
+//
+// O NOME vai traduzido, porque id não vai para a tela, e a NOTA do livro vem
+// junto: sem a duração e o teste que evita, o mestre teria de abrir o verbete
+// no meio do turno.
+func writtenForeseen(pa live.PendingAttack) string {
+	if len(pa.Announces) == 0 {
+		return ""
+	}
+	ditas := make([]string, 0, len(pa.Announces))
+	for _, a := range pa.Announces {
+		dita := book.ConditionName(a.Condition)
+		if a.Note != "" {
+			dita += " (" + a.Note + ")"
+		}
+		ditas = append(ditas, dita)
+	}
+	return " · o livro prevê: " + strings.Join(ditas, ", ")
 }
 
 // targetLabel é o nome do que foi atacado, e ele tem DUAS procedências.

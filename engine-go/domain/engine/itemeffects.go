@@ -273,6 +273,11 @@ type ItemEffects struct {
 	// fontes. Elas não entram no `ByTarget` porque não são somáveis: quem as
 	// aplica é a carta da arma, que sabe rolá-las.
 	ExtraDamage []ExtraDamage
+	// Announced são as condições que os encantos da arma RESERVAM a quem for
+	// atingido (p335-336). Como o dado extra, elas não são parcela de pilha
+	// nenhuma: quem as leva ao mestre é a carta da arma, e o resultado do
+	// ataque as filtra pelo gatilho.
+	Announced []AnnouncedCondition
 	// CriticalBonus é o que só vale no acerto crítico, por alvo. Ele não é
 	// parcela da pilha nem interruptor da tela: crítico não se liga.
 	CriticalBonus map[string]int
@@ -368,6 +373,11 @@ func targetKey(t ModifierTarget) string {
 			return "pmCost:" + t.Scope
 		}
 		return "pmCost"
+	case "announcedCondition":
+		// A CONDIÇÃO NO NOME, porque uma arma pode reservar mais de uma e elas
+		// não se somam: elas são ANÚNCIOS, e dois anúncios diferentes são duas
+		// linhas para o mestre ler.
+		return "announcedCondition:" + t.Name
 	case "critExtraIgnoreChance":
 		// A CHANCE do alvo de ignorar o dano EXTRA de um crítico (p166, p338).
 		// Chave única: o livro soma as fontes quando as declara cumulativas, e
