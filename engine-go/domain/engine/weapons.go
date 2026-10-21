@@ -53,6 +53,10 @@ type WeaponCard struct {
 	DamageAll     TotalContribs `json:"damageAll"`
 	CritRange     int           `json:"critRange"`
 	CritMult      int           `json:"critMult"`
+	// Announces são as condições que o livro prevê para quem for atingido por
+	// esta arma (p335-336). Elas viajam da carta para o resultado do ataque, que
+	// filtra pelo gatilho — o que é só de crítico não sai num acerto normal.
+	Announces []AnnouncedCondition `json:"announces,omitempty"`
 	// NonLethal: TODO o dano desta arma é não letal (p236, p336). É propriedade
 	// da ARMA e não parcela — a Piedosa diz "todo o dano causado", o que inclui
 	// a Força e as parcelas dos outros encantos.
@@ -138,6 +142,7 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 			CritMult:      w.CritMult + StatFor(effects, ModifierTarget{K: "critMult"}).Total,
 			NonLethal:     StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0,
 			ExtraDamage:   effects.ExtraDamage,
+			Announces:     effects.Announced,
 			CriticalBonus: effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 		})
 		if len(cards) == 2 {

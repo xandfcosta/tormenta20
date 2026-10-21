@@ -64,8 +64,9 @@ type worldFactors struct{ byTarget map[string]Ratio }
 // extra de um encanto e o bônus que só existe no crítico. Moram num recurso
 // pelo mesmo motivo dos fatores — são do mundo, não de um termo.
 type worldRiders struct {
-	extra    []ExtraDamage
-	critical map[string]int
+	extra     []ExtraDamage
+	critical  map[string]int
+	announced []AnnouncedCondition
 }
 
 // resolveInWorld dobra as fontes colhidas em `ItemEffects`, em sistemas.
@@ -183,6 +184,19 @@ func harvestWeaponRiders(w *ecs.World) {
 				Dice: t.Mod.Dice, Type: t.Mod.Target.DamageType,
 			})
 			ecs.Set(w, e, Suppressed{Why: "é dado extra, e dado não soma na pilha"})
+			return
+		}
+		if t.Mod.Target.K == "announcedCondition" {
+			// O ANÚNCIO não é número: ele sai da pilha inteiro e vai para a
+			// carta da arma, como o dado extra. Somá-lo daria um modificador
+			// que existe e vale zero, que é a forma mais silenciosa de defeito
+			// deste motor.
+			riders.announced = append(riders.announced, AnnouncedCondition{
+				Condition:  t.Mod.Target.Name,
+				OnCritical: t.Mod.Condition != nil && t.Mod.Condition.C == "onCritical",
+				Note:       t.Mod.Note,
+			})
+			ecs.Set(w, e, Suppressed{Why: "é anúncio de condição, e anúncio não soma"})
 			return
 		}
 		if c := t.Mod.Condition; c != nil && c.C == "onCritical" {
@@ -316,6 +330,7 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 	return ItemEffects{
 		ByTarget: byTarget, Flags: flags.set, Factors: factors.byTarget,
 		ExtraDamage: riders.extra, CriticalBonus: riders.critical,
+		Announced:   riders.announced,
 		Conditional: conditional,
 	}
 }

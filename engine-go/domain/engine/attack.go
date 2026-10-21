@@ -105,8 +105,53 @@ type AttackOutcome struct {
 	// números lado a lado: o que o crítico acrescentou e a chance de ele não
 	// valer.
 	CritExtraIgnoreChance int `json:"critExtraIgnoreChance,omitempty"`
-	Absorbed              int `json:"absorbed"` // o que a RD comeu
-	Damage                int `json:"damage"`   // o que o alvo perde de PV
+	// Announces são as condições que o LIVRO prevê para este golpe — o
+	// sangramento da Sanguinária, o atordoamento da Trovejante (p335-336).
+	//
+	// INFORMAÇÃO e não aplicação, que é a regra da casa e o desenho que a
+	// manobra já usa (p234, ALE-423): o motor diz o que o livro reserva, e quem
+	// põe a condição na criatura é o mestre, no gesto da fila.
+	Announces []AnnouncedCondition `json:"announces,omitempty"`
+	Absorbed  int                  `json:"absorbed"` // o que a RD comeu
+	Damage    int                  `json:"damage"`   // o que o alvo perde de PV
+}
+
+// announcedBy escolhe, entre as condições que a arma reserva, as que o
+// DESFECHO deste golpe alcança.
+func announcedBy(card WeaponCard, out AttackOutcome) []AnnouncedCondition {
+	if !out.Hit {
+		return nil
+	}
+	saem := []AnnouncedCondition{}
+	for _, anuncio := range card.Announces {
+		if anuncio.OnCritical && !out.Critical {
+			continue
+		}
+		saem = append(saem, anuncio)
+	}
+	if len(saem) == 0 {
+		return nil
+	}
+	return saem
+}
+
+// AnnouncedCondition é uma condição que o livro reserva a este golpe.
+//
+// Ela não carrega veredito NENHUM — nem se pegou, nem quantas rodadas dura, nem
+// se o teste de resistência passou. Os três são do mestre, e o
+// `TestTheAnnouncedConditionCarriesNoVerdict` existe para que a próxima pessoa
+// não acrescente um deles sem perceber o que está mudando.
+type AnnouncedCondition struct {
+	// Condition é o id da condição no catálogo (`sangrando`, `atordoado`), e
+	// nunca o texto de tela: quem traduz é o `book.ConditionName`, pela mesma
+	// razão que a faixa da manobra traduz (o id não vai para a tela).
+	Condition string `json:"condition"`
+	// OnCritical diz que o livro só a reserva ao acerto crítico.
+	OnCritical bool `json:"onCritical,omitempty"`
+	// Note é o que o verbete escreve ao lado da condição — duração, teste que
+	// evita, limite por cena. Texto do LIVRO, para o mestre arbitrar com a
+	// regra na frente.
+	Note string `json:"note,omitempty"`
 }
 
 // ResolveAttack rola um ataque contra um alvo e devolve a conta inteira.
@@ -142,6 +187,12 @@ func ResolveAttackUnder(
 	if out.CriticalExtra > 0 {
 		out.CritExtraIgnoreChance = target.CritExtraIgnoreChance
 	}
+	// O ANÚNCIO SAI QUANDO O GATILHO ACONTECEU, e a escolha é consciente: a
+	// manobra anuncia SEMPRE porque lá quem decide o vencedor é o mestre, e o
+	// motor não tem como saber se a condição vale. Aqui ele sabe — o acerto é a
+	// comparação que ele mesmo faz —, e anunciar atordoamento num golpe que
+	// errou mandaria o mestre arbitrar sobre coisa nenhuma.
+	out.Announces = announcedBy(card, out)
 	// O NÃO LETAL NÃO É SISTEMA, e a escolha é a que o guia manda fazer: ECS
 	// para o que COMPÕE, função para o que calcula. Aqui não há o que compor —
 	// a propriedade é da ARMA e vale para o dano inteiro, depois da RD. Um
