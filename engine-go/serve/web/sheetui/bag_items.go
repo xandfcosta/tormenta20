@@ -395,6 +395,13 @@ func catalogItemRowsOf(query, category string) []catalogItemRow {
 		if !carriedCategory[entry.Category] {
 			continue
 		}
+		// O ITEM MÁGICO ESPECÍFICO é do mestre, pela mesma razão do encanto: ele
+		// não se compra, se acha (p333). A composição é o que o marca — não é
+		// preciso uma categoria própria, porque uma Vingadora sagrada É uma
+		// espada longa, e é a categoria dela que diz a proficiência exigida.
+		if entry.ComposedOf != nil {
+			continue
+		}
 		if category != "" && entry.Category != category {
 			continue
 		}

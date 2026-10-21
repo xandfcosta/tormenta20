@@ -99,6 +99,7 @@ func targetLabel(t engine.ModifierTarget) string {
 		"pmCost": "Custo em PM", "catalyst": "Catalisador", "spellDC": "CD de magias",
 		"inventorySlots": "Espaços de carga", "flySpeed": "Voo",
 		"armorPenalty": "Penalidade de armadura",
+		"damageStep":   "Passo de dano",
 		"tempHp":       "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
 	}
 	// FLAG é booleana e o rótulo dela é uma frase inteira ("Fadiga ao dormir"),
@@ -132,6 +133,12 @@ func targetLabel(t engine.ModifierTarget) string {
 // escopos aparecem traduzidos — deixá-los crus poria `all` e `melee` na tela de
 // alguém que joga em português.
 func targetComplement(t engine.ModifierTarget) string {
+	// O TIPO DE DANO vem primeiro porque é ele que decide contra o que o número
+	// vale: uma "Redução de dano +10" sem o "de fogo" promete proteção contra
+	// todo ataque, e a p229 diz o contrário.
+	if t.DamageType != "" {
+		return t.DamageType
+	}
 	if t.Name != "" {
 		return t.Name
 	}

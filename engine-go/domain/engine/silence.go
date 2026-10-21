@@ -66,6 +66,13 @@ func TermID(sourceID string, m Modifier) string {
 	if len(m.AppliesToCategory) > 0 {
 		address = append(address, strings.Join(m.AppliesToCategory, "/"))
 	}
+	// A PEÇA, pela mesma razão e com a mesma regra de só entrar quando existe:
+	// um item COMPOSTO (p337, p340) dobra base, melhoria, material e encanto
+	// numa fonte só, e sem ela o +1 da Reforçada e o +2 do Defensor dividiriam
+	// o endereço dentro do Baluarte anão.
+	if m.From != "" {
+		address = append(address, m.From)
+	}
 	return strings.Join(address, "::")
 }
 

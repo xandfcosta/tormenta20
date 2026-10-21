@@ -63,3 +63,42 @@ func temPassivo(owned []OwnedPower, id string) bool {
 	}
 	return false
 }
+
+// E O ITEM COMPOSTO TEM GESTO PRÓPRIO (p337, ALE-445).
+//
+// A Avalanche não é um encanto ativável: é o VERBETE que diz "gaste uma ação
+// padrão e 6 PM para invocar uma tempestade de gelo". O gesto é do item, e sem
+// ele a aba Poderes não ofereceria nada — a tempestade existiria só na prosa do
+// cartão da Mochila, que é exatamente onde o encanto ativável estava antes da
+// ALE-433.
+func TestTheComposedItemOffersItsOwnGesture(t *testing.T) {
+	wielded := "wielded"
+	avalanche := "avalanche"
+	owned := OwnedPowers(CharacterDTO{Items: []ItemDTO{{
+		Name: "Avalanche", CatalogID: &avalanche, Equipped: &wielded,
+	}}})
+
+	var found *OwnedPower
+	for i := range owned {
+		if owned[i].Name == "Tempestade de gelo" {
+			found = &owned[i]
+		}
+	}
+	if found == nil {
+		t.Fatalf("a tempestade da Avalanche não entrou no acervo. Veio %+v", owned)
+	}
+	if found.Source != PowerFromItem || found.Owner != "Avalanche" {
+		t.Errorf("o gesto veio de %q com dono %q, e ele é do ITEM que a pessoa "+
+			"empunha", found.Source, found.Owner)
+	}
+
+	// E A GUARDADA NÃO INVOCA: o gesto pede o machado na mão.
+	guardada := OwnedPowers(CharacterDTO{Items: []ItemDTO{{
+		Name: "Avalanche", CatalogID: &avalanche,
+	}}})
+	for _, p := range guardada {
+		if p.Name == "Tempestade de gelo" {
+			t.Error("o machado guardado ofereceu a tempestade")
+		}
+	}
+}

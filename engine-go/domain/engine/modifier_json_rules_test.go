@@ -44,6 +44,7 @@ func TestEveryModifierFieldSurvivesTheCatalogJSON(t *testing.T) {
 		Scale:             &VitalScale{Per: "level", Step: 2},
 		Factor:            &Ratio{Num: 1, Den: 2},
 		AppliesToCategory: []string{"armor-heavy"},
+		From:              "melhoria-reforcada",
 	}
 	// O CONTROLE: o caso preenche TODOS os campos. Sem ele, um campo novo
 	// nasceria zerado dos dois lados e o round-trip passaria sobre o nada.

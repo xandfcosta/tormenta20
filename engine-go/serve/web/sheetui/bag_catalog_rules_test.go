@@ -6,13 +6,17 @@ import (
 	"t20engine/domain/book"
 )
 
-// O DIÁLOGO DE ACRESCENTAR SÓ OFERTA O QUE SE CARREGA (ALE-446).
+// O DIÁLOGO DE ACRESCENTAR SÓ OFERTA O QUE SE CARREGA (ALE-446, ALE-445).
 //
-// Ele é do JOGADOR, e a SOBREPOSIÇÃO não cabe nele: melhoria, material e
-// encanto não são itens que se carrega, são coisas que se aplicam a um item.
-// Quem as aplica é o diálogo de melhorias — e, no caso do encanto, o mestre.
-// Ofertá-las aqui deixa a pessoa pôr um "Aço-rubi" ou um "Formidável" solto na
-// mochila.
+// Ele é do JOGADOR, e duas famílias de verbete não cabem nele:
+//
+//   - a SOBREPOSIÇÃO — melhoria, material, encanto — não é item que se carrega,
+//     é coisa que se aplica a um item. Quem as aplica é o diálogo de melhorias
+//     (e, no caso do encanto, o mestre). Ofertá-las aqui deixa a pessoa pôr um
+//     "Aço-rubi" ou um "Formidável" solto na mochila;
+//   - o item COMPOSTO — o específico das Tabelas 8-9 e 8-11 —, porque ele é
+//     mágico: "não se compra, se acha ou se fabrica" (p333). Quem o entrega é o
+//     mestre, pela mesma porta do encanto.
 func TestTheAddDialogOffersOnlyWhatACharacterCarries(t *testing.T) {
 	rows := catalogItemRowsOf("", "")
 	if len(rows) == 0 {
@@ -31,6 +35,10 @@ func TestTheAddDialogOffersOnlyWhatACharacterCarries(t *testing.T) {
 		if !carriedCategory[entry.Category] {
 			t.Errorf("o diálogo oferta %q, que é %q — uma categoria que se APLICA a "+
 				"um item, não uma que se carrega", entry.Name, entry.Category)
+		}
+		if entry.ComposedOf != nil {
+			t.Errorf("o diálogo oferta %q, que é item mágico específico: quem o "+
+				"entrega é o mestre (p333), e o jogador não o compra", entry.Name)
 		}
 	}
 	t.Logf("%d linhas ofertadas, de %d itens no catálogo", len(rows), len(byID))

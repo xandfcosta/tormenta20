@@ -28,6 +28,20 @@ func TestEveryArmorRaisesTheFlagOfItsWeightClass(t *testing.T) {
 				Name string `json:"name"`
 			} `json:"target"`
 		} `json:"modifiers"`
+		// ComposedOf é o item específico (p340), que não declara peso nem
+		// bandeira: ele É uma armadura base com sobreposições, e as duas coisas
+		// se herdam. Aqui a pergunta se transfere para a BASE em vez de o item
+		// sair da conta — sair seria um buraco calado na varredura.
+		ComposedOf *struct {
+			Base string `json:"base"`
+		} `json:"composedOf"`
+	}
+
+	bases := map[string]armorEntry{}
+	for _, category := range []string{"armor-light", "armor-heavy"} {
+		for _, armor := range itemsOfCategory[armorEntry](t, category) {
+			bases[armor.ID] = armor
+		}
 	}
 
 	for _, caso := range []struct {
@@ -41,6 +55,15 @@ func TestEveryArmorRaisesTheFlagOfItsWeightClass(t *testing.T) {
 		medidas := 0
 		for _, armor := range itemsOfCategory[armorEntry](t, caso.category) {
 			medidas++
+			if armor.ComposedOf != nil {
+				base, achada := bases[armor.ComposedOf.Base]
+				if !achada {
+					t.Errorf("%s é composta sobre %q, que não é armadura de categoria "+
+						"nenhuma", armor.Name, armor.ComposedOf.Base)
+					continue
+				}
+				armor = base
+			}
 			// O PESO declarado no verbete tem de concordar com a categoria,
 			// senão as duas metades deste guarda mediriam listas diferentes.
 			if armor.Armor == nil || armor.Armor.Heavy != caso.heavy {

@@ -3917,5 +3917,14 @@
     "pmCost": 2,
     "uses": null,
     "bookPage": 339
+  },
+  {
+    "id": "item.avalanche",
+    "name": "Tempestade de gelo",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 6,
+    "uses": null,
+    "bookPage": 337
   }
 ]
