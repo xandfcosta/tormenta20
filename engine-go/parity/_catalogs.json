@@ -4921,9 +4921,20 @@
       "rollMax": 40,
       "countsAs": 1,
       "description": "Quando você faz um acerto crítico em uma criatura viva, a criatura fica fraca e você ganha 2d10 pontos de vida temporários. Uma arma drenante emite um brilho púrpura.",
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "announcedCondition",
+            "name": "fraco"
+          },
+          "bonusType": "untyped",
+          "note": "em criatura viva",
+          "condition": {
+            "c": "onCritical"
+          }
+        }
+      ],
       "bookPage": 335,
-      "unmodeled": "impõe condição ao ALVO no crítico e dá PV temporário ao portador (ALE-414, fatia 3)",
       "uid": "itm_vtcsajfdrl"
     },
     {
@@ -5000,9 +5011,20 @@
       "rollMax": 48,
       "countsAs": 1,
       "description": "A arma inflige dor terrível. Uma criatura viva atingida fica fraca. Se já estiver fraca, mesmo por este efeito, fica debilitada (a condição máxima que esta arma pode causar).",
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "announcedCondition",
+            "name": "fraco"
+          },
+          "bonusType": "untyped",
+          "note": "em criatura viva; se já estiver fraca, debilitada",
+          "condition": {
+            "c": "wielded"
+          }
+        }
+      ],
       "bookPage": 335,
-      "unmodeled": "impõe condição ao ALVO, com escada de fraco para debilitado (ALE-414, fatia 3)",
       "uid": "itm_aulgsi2j2q"
     },
     {
@@ -5231,9 +5253,20 @@
       "rollMax": 80,
       "countsAs": 1,
       "description": "Uma criatura viva atingida fica sangrando. A perda de PV por sangramento causada pela arma é cumulativa — uma criatura atingida duas vezes perde 2d6 PV por sangramento por rodada.",
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "announcedCondition",
+            "name": "sangrando"
+          },
+          "bonusType": "untyped",
+          "note": "em criatura viva; a perda de PV desta arma é cumulativa",
+          "condition": {
+            "c": "wielded"
+          }
+        }
+      ],
       "bookPage": 336,
-      "unmodeled": "impõe condição ao ALVO (ALE-414, fatia 3)",
       "uid": "itm_wiooasrn2t"
     },
     {
@@ -5250,9 +5283,20 @@
       "rollMax": 82,
       "countsAs": 1,
       "description": "A arma emite um trovão ribombante a cada golpe. Quando você faz um acerto crítico, a vítima fica atordoada por uma rodada (apenas uma vez por cena; Fort CD For ou Des, a sua escolha, evita).",
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "announcedCondition",
+            "name": "atordoado"
+          },
+          "bonusType": "untyped",
+          "note": "por uma rodada, uma vez por cena; Fort (CD For ou Des) evita",
+          "condition": {
+            "c": "onCritical"
+          }
+        }
+      ],
       "bookPage": 336,
-      "unmodeled": "impõe condição ao ALVO com duração, uma vez por cena e teste de resistência — nenhum dos três existe (ALE-414, fatia 3)",
       "uid": "itm_h7tyqekffz"
     },
     {
@@ -6155,9 +6199,21 @@
       "rollMax": 90,
       "countsAs": 1,
       "description": "Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, a vítima fica envenenada, perdendo 1d12 pontos de vida por rodada durante 3 rodadas. Uma arma venenosa verte um líquido verde e viscoso.",
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "announcedCondition",
+            "name": "envenenado"
+          },
+          "bonusType": "untyped",
+          "note": "1d12 PV por rodada, por 3 rodadas",
+          "condition": {
+            "c": "context",
+            "note": "gastando 2 PM ao atacar"
+          }
+        }
+      ],
       "bookPage": 336,
-      "unmodeled": "ativação em PM que impõe condição com duração",
       "uid": "itm_kcpwjnsarb"
     }
   ],

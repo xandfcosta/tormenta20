@@ -77,10 +77,14 @@ type PendingAttack struct {
 	// parte (p166, p338). Os dois viajam juntos porque é o PAR que serve à
 	// mesa: a chance sozinha não diz o que tirar, e o extra sozinho não diz
 	// que há algo a rolar. Quem rola é o mestre — o app informa (ALE-436).
-	CriticalExtra         int `json:"criticalExtra,omitempty"`
-	CritExtraIgnoreChance int `json:"critExtraIgnoreChance,omitempty"`
-	Absorbed              int `json:"absorbed"`
-	Damage                int `json:"damage"`
+	// Announces são as condições que o LIVRO reserva a este golpe (p335-336).
+	// Elas chegam à faixa para o mestre ler, e nenhuma delas foi aplicada —
+	// aplicar é o gesto dele, na fila (ALE-441).
+	Announces             []ForeseenCondition `json:"announces,omitempty"`
+	CriticalExtra         int                 `json:"criticalExtra,omitempty"`
+	CritExtraIgnoreChance int                 `json:"critExtraIgnoreChance,omitempty"`
+	Absorbed              int                 `json:"absorbed"`
+	Damage                int                 `json:"damage"`
 	// Maneuver é a conta da MANOBRA (p234), e ela é nula num golpe comum.
 	//
 	// Uma manobra É um ataque corpo a corpo — o livro abre a página dizendo isso
@@ -95,6 +99,20 @@ type PendingAttack struct {
 	// ByUserID é quem rolou. O mestre confirma por qualquer um; quem propôs
 	// cancela o que é dele.
 	ByUserID int64 `json:"byUserId"`
+}
+
+// ForeseenCondition é uma condição que o livro reserva ao golpe, do jeito que a
+// mesa lê.
+//
+// Ela repete os campos do `engine.AnnouncedCondition` em vez de usá-lo, e a
+// razão é a FRONTEIRA: o regime não conhece o motor, e o guarda do pacote
+// recusa o import (o `ManeuverRoll` logo abaixo existe pela mesma razão). O que
+// atravessa é DADO, copiado por quem monta o provisório.
+type ForeseenCondition struct {
+	// Condition é o id no catálogo de condições; quem o traduz é a cena.
+	Condition string `json:"condition"`
+	// Note é o que o verbete escreve ao lado — duração, teste que evita.
+	Note string `json:"note,omitempty"`
 }
 
 // ManeuverRoll é o teste OPOSTO de uma manobra, do jeito que a mesa lê.

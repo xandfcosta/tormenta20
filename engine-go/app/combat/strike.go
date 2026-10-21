@@ -293,7 +293,8 @@ func (s Strike) proposeAgainstObject(
 		Hit: out.Hit, Critical: out.Critical, Melee: weapon.IsMelee(),
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
 		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
-		Damage: out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
+		Announces: foreseenOf(out),
+		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err
@@ -364,7 +365,8 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		Hit: out.Hit, Critical: out.Critical, Melee: weapon.IsMelee(),
 		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
 		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
-		Damage: out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
+		Announces: foreseenOf(out),
+		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err
@@ -439,4 +441,20 @@ func entryOf(st *live.SessionRuntimeState, entryID string) (live.InitiativeEntry
 		return st.Initiative[i], nil
 	}
 	return live.InitiativeEntry{}, fmt.Errorf("%q não está na fila: %w", entryID, app.ErrNotFound)
+}
+
+// foreseenOf copia as condições que o livro reserva para a forma que o regime
+// entende — ele não conhece o motor, e o DADO é o que atravessa.
+//
+// O `OnCritical` fica para trás de propósito: o resultado já veio filtrado pelo
+// desfecho, então uma condição que chegou aqui é uma que vale para ESTE golpe.
+func foreseenOf(out engine.AttackOutcome) []live.ForeseenCondition {
+	ditas := make([]live.ForeseenCondition, 0, len(out.Announces))
+	for _, a := range out.Announces {
+		ditas = append(ditas, live.ForeseenCondition{Condition: a.Condition, Note: a.Note})
+	}
+	if len(ditas) == 0 {
+		return nil
+	}
+	return ditas
 }

@@ -300,3 +300,46 @@ func TestTheAttackLineKeepsQuietWhenThereIsNoCriticalExtra(t *testing.T) {
 		t.Errorf("a linha = %q: sem crítico não há extra, e sem extra não há o que rolar", line)
 	}
 }
+
+// A LINHA DIZ O QUE O LIVRO RESERVA AO GOLPE, e nada sobre o desfecho (ALE-441).
+//
+// O mesmo desenho da manobra: o app informa a condição PREVISTA e quem a aplica
+// é o mestre, no gesto da fila que já existe.
+func TestTheAttackLineSaysTheConditionTheBookForesees(t *testing.T) {
+	line := attackLine(live.PendingAttack{
+		Roll: 14, Total: 19, Defense: 17, Hit: true,
+		Dice: []int{8}, Faces: 8, RawDamage: 8, Damage: 8,
+		Announces: []live.ForeseenCondition{
+			{Condition: "sangrando", Note: "a perda de PV desta arma é cumulativa"},
+		},
+	})
+	if line != "19 vs 17 · 1d8 (8) = 8 de dano · o livro prevê: Sangrando "+
+		"(a perda de PV desta arma é cumulativa)" {
+		t.Errorf("a linha = %q", line)
+	}
+}
+
+// DUAS CONDIÇÕES saem na mesma linha, e o NOME vai traduzido: o id é do código
+// e a mesa lê português (a faixa da manobra já fazia isso).
+func TestTheAttackLineNamesEveryForeseenConditionInPortuguese(t *testing.T) {
+	line := attackLine(live.PendingAttack{
+		Roll: 19, Total: 24, Defense: 17, Hit: true, Critical: true,
+		Dice: []int{8, 5}, Faces: 8, RawDamage: 16, Damage: 16,
+		Announces: []live.ForeseenCondition{
+			{Condition: "fraco", Note: "em criatura viva"},
+			{Condition: "atordoado", Note: "por uma rodada; Fort evita"},
+		},
+	})
+	for _, escrito := range []string{"Fraco (em criatura viva)", "Atordoado (por uma rodada; Fort evita)"} {
+		if !strings.Contains(line, escrito) {
+			t.Errorf("a linha não diz %q: %s", escrito, line)
+		}
+	}
+	// E NENHUMA PALAVRA DE DESFECHO: "fica", "sofre", "aplicado" diriam que
+	// aconteceu, e quem diz isso é o mestre.
+	for _, proibida := range []string{"fica ", "sofre ", "aplicado", "atordoou"} {
+		if strings.Contains(line, proibida) {
+			t.Errorf("a linha diz %q, e isso é veredicto: %s", proibida, line)
+		}
+	}
+}
