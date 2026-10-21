@@ -150,3 +150,90 @@ func TestTheRedMatterChargesCharismaExceptIntimidation(t *testing.T) {
 			"assustar com um item assustador é o ponto da exceção", got)
 	}
 }
+
+// O GELO ETERNO PROTEGE DE FOGO, e a redução segue a peça (p166, ALE-440).
+//
+// "Armadura e Escudo. Fornece redução de fogo: armaduras leves e escudos,
+// redução 5; armaduras pesadas, redução 10."
+//
+// A metade estava declarada como não modelada por duas razões que ENVELHECERAM:
+// a redução por TIPO entrou na ALE-432 e a ramificação pela peça na ALE-438.
+// Uma nota que diz "o motor não tem" depois de o motor ter é defeito entregue —
+// ela esconde o número de quem forjou o item.
+func TestTheEternalIceReducesFireByThePieceItIsOn(t *testing.T) {
+	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
+	catalogs := primeFromDump(t, dir)
+	ptr := func(s string) *string { return &s }
+	gelo := "material-gelo-eterno"
+
+	fogo := func(item, equipped string) int {
+		ch := Character{Items: []CharacterItem{{
+			CatalogID: ptr(item), Name: item, Equipped: ptr(equipped),
+			Improvements: "[]", Material: &gelo,
+		}}}
+		effects := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(ch))
+		return StatFor(effects, ModifierTarget{K: "damageReduction", DamageType: "fogo"}).Total
+	}
+
+	if got := fogo("armadura-completa", "vested"); got != 10 {
+		t.Errorf("a armadura pesada de gelo eterno reduz %d de fogo e a p166 diz 10", got)
+	}
+	if got := fogo("armadura-couro", "vested"); got != 5 {
+		t.Errorf("a armadura leve de gelo eterno reduz %d de fogo e a p166 diz 5", got)
+	}
+	if got := fogo("escudo-pesado", "wielded"); got != 5 {
+		t.Errorf("o escudo de gelo eterno reduz %d de fogo e a p166 diz 5", got)
+	}
+	// E A ARMA NÃO REDUZ NADA: a metade de arma do verbete causa +2 de dano por
+	// frio, e nada ali protege de fogo.
+	if got := fogo("espada-longa", "wielded"); got != 0 {
+		t.Errorf("a espada de gelo eterno reduz %d de fogo, e a p166 não dá redução a arma", got)
+	}
+}
+
+// A MADEIRA TOLLON DÁ RESISTÊNCIA A MAGIA no escudo e no esotérico (p167).
+//
+// "Escudo e Esotérico. Fornece resistência a magia +2." A nota dizia que
+// "resistência a magia não existe no motor", e ela existe desde a ALE-418: é o
+// alvo `resistance` com a condição `against`, que a p229 define como bônus em
+// TESTE — "uma criatura com resistência a magia +2 recebe +2 em testes de
+// Fortitude, Reflexos ou Vontade contra habilidades mágicas".
+func TestTheTollonWoodGivesMagicResistanceOnShieldAndCatalyst(t *testing.T) {
+	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
+	catalogs := primeFromDump(t, dir)
+	ptr := func(s string) *string { return &s }
+	tollon := "material-madeira-tollon"
+
+	// ELA É CIRCUNSTANCIAL, e por isso chega como OPT-IN e não somada: a p229
+	// define resistência a magia como bônus em teste "contra habilidades
+	// mágicas", e a condição `against` é o interruptor que a pessoa liga quando
+	// a circunstância acontece. Somá-la sempre daria +2 em toda Fortitude.
+	oferecida := func(item, equipped string) (ConditionalEffect, bool) {
+		ch := Character{Items: []CharacterItem{{
+			CatalogID: ptr(item), Name: item, Equipped: ptr(equipped),
+			Improvements: "[]", Material: &tollon,
+		}}}
+		effects := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(ch))
+		for _, c := range effects.Conditional {
+			if c.Target.K == "resistance" {
+				return c, true
+			}
+		}
+		return ConditionalEffect{}, false
+	}
+
+	escudo, achou := oferecida("escudo-leve", "wielded")
+	if !achou {
+		t.Fatalf("o escudo leve de madeira tollon não oferece resistência a magia nenhuma")
+	}
+	if escudo.Amount != 2 {
+		t.Errorf("o escudo leve de madeira tollon oferece %d de resistência e a p167 diz 2",
+			escudo.Amount)
+	}
+	// E A ARMA NÃO DÁ: a metade de arma do verbete fala de vencer RD e de custo
+	// em PM, e nenhuma das duas é resistência.
+	if _, achou := oferecida("espada-longa", "wielded"); achou {
+		t.Error("a espada de madeira tollon oferece resistência, e a p167 só a dá a " +
+			"escudo e esotérico")
+	}
+}

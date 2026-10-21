@@ -4225,7 +4225,7 @@
       ],
       "unmodeled": {
         "abertura": "\"itens de mitral ocupam –1 espaço\" muda o `slots` do item HOSPEDEIRO, e a sobreposição não reescreve campo de quem a carrega",
-        "Armadura e Escudo": "a penalidade entra; o limite de DOIS pontos de Destreza na Defesa de armadura pesada ramifica pelo peso e não",
+        "Armadura e Escudo": "a penalidade entra; falta o TETO — \"armaduras pesadas de mitral permitem que você aplique até dois pontos de sua Destreza na Defesa\" (p167) é um LIMITE, e o motor só sabe somar: a armadura pesada acende a flag que ZERA a Destreza na Defesa, e não há como trocá-la por um teto de 2",
         "Esotérico": "ativação em PM"
       }
     },
@@ -4243,6 +4243,51 @@
         "weapon"
       ],
       "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "fogo"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "appliesToCategory": [
+            "armor-heavy"
+          ],
+          "note": "redução de fogo 10"
+        },
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "fogo"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "appliesToCategory": [
+            "armor-light"
+          ],
+          "note": "redução de fogo 5"
+        },
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "fogo"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "appliesToCategory": [
+            "shield"
+          ],
+          "note": "redução de fogo 5"
+        },
         {
           "target": {
             "k": "damage",
@@ -4267,11 +4312,11 @@
       },
       "description": "As gélidas Montanhas Uivantes produzem gelo que nunca derrete. Expedições de aventureiros exploram essa região glacial perigosa à caça deste material fantástico. Arma. Causa +2 pontos de dano por frio. Armadura e Escudo. Fornece redução de fogo: armaduras leves e escudos, redução 5; armaduras pesadas, redução 10. Esotérico. Quando lança uma magia de frio que causa dano, você pode rolar novamente qualquer resultado 1 na rolagem de dano dela.",
       "modeled": [
-        "Arma"
+        "Arma",
+        "Armadura e Escudo"
       ],
       "unmodeled": {
         "abertura": "só sabor: as Montanhas Uivantes",
-        "Armadura e Escudo": "redução de fogo ramifica pelo peso da armadura, e o motor não tem redução por TIPO de dano",
         "Esotérico": "rolar de novo o resultado 1 de uma magia é regra de rolagem, não de ficha"
       }
     },
@@ -4287,7 +4332,24 @@
         "shield",
         "weapon"
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 2,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "against",
+            "trait": "magia"
+          },
+          "appliesToCategory": [
+            "shield",
+            "catalyst"
+          ],
+          "note": "+2 contra magia"
+        }
+      ],
       "bookPage": 167,
       "uid": "itm_2vlrhofi6u",
       "priceByItem": {
@@ -4296,11 +4358,12 @@
         "esoteric": 1500
       },
       "description": "A Floresta de Tollon produz um tipo de madeira negra, dura como aço e dotada de propriedades mágicas. Apenas armas de madeira — arcos, bordões, clavas, lanças, piques e tacapes —, escudos leves e esotéricos podem ser feitos com madeira Tollon. Arma. Conta como mágica para vencer redução de dano. Além disso, habilidades ativadas ao se fazer um ataque ou usar a ação agredir têm seu custo em PM reduzido em –1. Escudo e Esotérico. Fornece resistência a magia +2.",
-      "modeled": [],
+      "modeled": [
+        "Escudo e Esotérico"
+      ],
       "unmodeled": {
         "abertura": "só sabor: a Floresta de Tollon",
-        "Arma": "\"conta como mágica para vencer RD\" é propriedade do ataque contra o alvo; e o –1 PM vale só para habilidade ativada AO ATACAR, enquanto o alvo `pmCost` é o custo de MAGIA — usá-lo daria desconto em conjuração",
-        "Escudo e Esotérico": "resistência a magia não existe no motor"
+        "Arma": "\"conta como mágica para vencer RD\" é propriedade do ataque contra o alvo; e o –1 PM vale só para habilidade ativada AO ATACAR, enquanto o alvo `pmCost` é o custo de MAGIA — usá-lo daria desconto em conjuração"
       }
     },
     {
