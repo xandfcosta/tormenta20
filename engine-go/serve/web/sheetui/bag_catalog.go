@@ -24,10 +24,21 @@ func catalogItem(item sheet.ItemDTO) *book.Item {
 }
 
 // itemOverlays são os NOMES das melhorias e do material aplicados.
+//
+// O item COMPOSTO entra aqui inteiro (p337, p340): a Avalanche é "um machado de
+// guerra de gelo eterno congelante formidável", e quem olha o crachá tem de ler
+// as três peças — sem elas o item mágico se parece com o mundano.
 func itemOverlays(item sheet.ItemDTO) []string {
 	names := []string{}
 	for _, entry := range bookOverlays(item) {
 		names = append(names, entry.Name)
+	}
+	if catalog := catalogItem(item); catalog != nil && catalog.ComposedOf != nil {
+		for _, id := range catalog.ComposedOf.Overlays() {
+			if piece := book.ItemByID(id); piece != nil {
+				names = append(names, piece.Name)
+			}
+		}
 	}
 	// O ENCANTO ENTRA AQUI e não no `bookOverlays`, e a divisão é do DESTINO:
 	// o crachá diz tudo o que a arma É, porque é ele que o jogador olha em
@@ -86,6 +97,12 @@ func thatGrantsItem(item sheet.ItemDTO, exempt wearerExemptions) []itemChip {
 		chips = append(chips, itemChip{Text: "Dano " + weaponDieOfItem(item, *catalog)})
 	}
 	for _, m := range catalog.Modifiers {
+		// O EIXO DE USO manda: um item COMPOSTO traz as duas metades de uma
+		// sobreposição — o adamante dá passo de dano a quem EMPUNHA e RD a quem
+		// VESTE (p166) —, e o cartão não pode prometer a que não vale aqui.
+		if engine.ContradictsWear(m, item.Equipped) {
+			continue
+		}
 		chips = append(chips, itemChip{Text: modifierBadge(m)})
 		// A habilidade que anula entra como crachá PRÓPRIO, logo depois do que
 		// ela anulou. O par lado a lado é o que ensina: sem ele, ou o número
@@ -190,7 +207,16 @@ func baseItemDefense(catalog book.Item) string {
 // +1" faria a tela prometer uma quantidade que não existe.
 func modifierBadge(m engine.Modifier) string {
 	label := targetLabel(m.Target)
-	if m.Target.K == "flag" || m.Amount == 0 {
+	if m.Target.K == "flag" {
+		return label
+	}
+	// O DADO é a parcela do encanto — "+1d6 de frio" da Congelante (p335) —, e
+	// ela não tem `amount`. Sem esta linha o crachá saía só "Dano", que promete
+	// um número e não diz nenhum.
+	if m.Dice != "" {
+		return label + " +" + m.Dice
+	}
+	if m.Amount == 0 {
 		return label
 	}
 	// O DESLOCAMENTO é contado em QUADRADOS no motor e lido em METROS na mesa

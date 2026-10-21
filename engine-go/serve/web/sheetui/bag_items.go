@@ -122,7 +122,7 @@ func itemSheetOf(item sheet.ItemDTO, proficiencies map[string]bool) itemSheet {
 	character.Overlayable = aceitaMelhoria(*catalog)
 	if character.Overlayable {
 		applied := savedImprovements(item.Improvements)
-		family := itemFamily(*catalog)
+		family := book.ItemFamily(*catalog)
 		character.Improvements = thatFitOverlays("improvement", family, applied)
 		character.Materials = thatFitOverlays("material", family, appliedMaterial(item))
 	}
@@ -360,18 +360,46 @@ func thatFitOverlays(category, family string, applied []string) []overlayChoice 
 	return choices
 }
 
+// carriedCategory são as categorias que uma pessoa CARREGA, e por isso as
+// únicas que o diálogo de acrescentar oferta.
+//
+// # Lista de PERMITIDOS, e a inversão é a regra
+//
+// Aqui havia dois nomes proibidos — `improvement` e `material` —, escritos
+// quando eram as duas únicas espécies de sobreposição. As duas de encanto
+// nasceram depois (Tabelas 8-8 e 8-10) e entraram caladas no diálogo do
+// jogador: dava para pôr um "Formidável" solto na mochila. Uma lista de
+// proibidos subconta em silêncio; esta reprova pelo NOME, no
+// `TestEveryItemCategoryIsEitherCarriedOrApplied`.
+var carriedCategory = map[string]bool{
+	"weapon-simple": true, "weapon-martial": true, "weapon-exotic": true,
+	"weapon-firearm": true, "armor-light": true, "armor-heavy": true,
+	"shield": true, "apparel": true, "catalyst": true, "consumable": true,
+	"meal": true, "animal": true, "vehicle": true,
+}
+
+// appliedCategory são as que se APLICAM a um item em vez de serem carregadas.
+// Quem as oferece é o diálogo de melhorias — e, no caso do encanto, o mestre,
+// porque magia não se compra (p333).
+var appliedCategory = map[string]bool{
+	"improvement": true, "material": true,
+	"weapon-enchant": true, "armor-enchant": true,
+}
+
 // catalogItemRowsOf são as entradas do catálogo que o diálogo de adicionar
 // mostra, já filtradas pela busca e pela categoria.
-//
-// As melhorias e os materiais ficam de FORA: eles não são itens que se carrega,
-// são coisas que se aplicam a um item — e quem as aplica é o diálogo de
-// melhorias, que já filtra pela família. Ofertá-las aqui deixaria a pessoa pôr
-// um "Aço-rubi" solto na mochila.
 func catalogItemRowsOf(query, category string) []catalogItemRow {
 	term := search.Fold(strings.TrimSpace(query))
 	rows := []catalogItemRow{}
 	for _, entry := range book.Catalogs().Items {
-		if entry.Category == "improvement" || entry.Category == "material" {
+		if !carriedCategory[entry.Category] {
+			continue
+		}
+		// O ITEM MÁGICO ESPECÍFICO é do mestre, pela mesma razão do encanto: ele
+		// não se compra, se acha (p333). A composição é o que o marca — não é
+		// preciso uma categoria própria, porque uma Vingadora sagrada É uma
+		// espada longa, e é a categoria dela que diz a proficiência exigida.
+		if entry.ComposedOf != nil {
 			continue
 		}
 		if category != "" && entry.Category != category {
@@ -396,7 +424,7 @@ func catalogCategories(active string) []filterOption {
 	options := []filterOption{{Value: "", Label: "Todas as categorias", Active: active == ""}}
 	ids := []string{}
 	for _, entry := range book.Catalogs().Items {
-		if entry.Category == "improvement" || entry.Category == "material" || seen[entry.Category] {
+		if !carriedCategory[entry.Category] || seen[entry.Category] {
 			continue
 		}
 		seen[entry.Category] = true

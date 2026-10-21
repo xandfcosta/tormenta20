@@ -114,6 +114,7 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		Scale             *VitalScale        `json:"scale,omitempty"`
 		Factor            *Ratio             `json:"factor,omitempty"`
 		AppliesToCategory []string           `json:"appliesToCategory,omitempty"`
+		From              string             `json:"from,omitempty"`
 	}
 	return json.Marshal(wire{
 		Target:            m.Target,
@@ -125,6 +126,7 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		Scale:             m.Scale,
 		Factor:            m.Factor,
 		AppliesToCategory: m.AppliesToCategory,
+		From:              m.From,
 	})
 }
 
@@ -166,6 +168,18 @@ type Modifier struct {
 	// e sobrevive até a aba Efeitos, onde ofereceria um interruptor para uma
 	// pergunta que o catálogo já respondeu quando o item foi lido.
 	AppliesToCategory []string `json:"appliesToCategory,omitempty"`
+	// From é a PEÇA de onde este modificador veio, quando ele chegou por
+	// COMPOSIÇÃO — o `melhoria-reforcada` dentro do Baluarte anão (p340).
+	//
+	// Ele existe por causa do ENDEREÇO: um item composto dobra base, melhoria,
+	// material e encanto numa fonte só, e sem a peça o +1 da Reforçada e o +2
+	// do Defensor dividem `baluarte-anao::defense::::vested`. Calar um mataria
+	// os dois, que é exatamente o que o `TestEveryCatalogTermHasAUniqueAddress`
+	// existe para não deixar acontecer.
+	//
+	// Não é a NOTA com outro nome: a nota é prosa que uma errata reescreve, e
+	// por isso o endereço não a carrega. Isto é identificador.
+	From string `json:"from,omitempty"`
 }
 
 // UnmarshalJSON leva o `amount` do catálogo para a unidade do MOTOR.
@@ -488,6 +502,32 @@ func isUnconditional(m Modifier) bool {
 
 func isWielded(equipped *string) bool {
 	return equipped != nil && (*equipped == "wielded" || *equipped == "wielded2")
+}
+
+// ContradictsWear diz se o EIXO DE USO do item desmente a condição: uma linha
+// de "empunhado" numa peça vestida, e vice-versa.
+//
+// Ela existe para a TELA, não para a conta — a resolução já descarta a linha
+// pela condição. O que ela protege é o cartão da Mochila, que desenha o que o
+// item concede sem avaliar condição nenhuma: o adamante tem uma metade de ARMA
+// (o passo de dano, p166) e uma de ARMADURA, e um item COMPOSTO carrega as
+// duas no mesmo verbete — sem esta pergunta, o Baluarte anão prometia um passo
+// de dano a quem veste uma armadura completa.
+//
+// Item GUARDADO não contradiz nada: o cartão dele descreve o que ele daria.
+//
+// @example engine.ContradictsWear(Modifier{Condition: &ModifierCondition{C: "wielded"}}, &vested) // true
+func ContradictsWear(m Modifier, equipped *string) bool {
+	if equipped == nil || *equipped == "" || m.Condition == nil {
+		return false
+	}
+	switch m.Condition.C {
+	case "wielded":
+		return !isWielded(equipped)
+	case "vested":
+		return *equipped != "vested"
+	}
+	return false
 }
 
 func conditionMet(m Modifier, equipped *string) bool {

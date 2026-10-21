@@ -101,6 +101,10 @@ type Item struct {
 	// verbetes escrevem. Zero e vazio em tudo que não é encanto.
 	CountsAs int    `json:"countsAs"`
 	Requires string `json:"requires"`
+	// ComposedOf é o que o verbete já traz aplicado — o item específico das
+	// Tabelas 8-9 e 8-11 (p337, p340). Quem o resolve é o `expandComposedItems`,
+	// e a regra dele mora no `engine.Composition`.
+	ComposedOf *engine.Composition `json:"composedOf"`
 	// Description é a regra do livro em prosa. Hoje só o encanto a traz, e é ela
 	// que o `audit-enchants.py` mede contra o verbete.
 	Description string `json:"description"`
@@ -173,6 +177,7 @@ func Catalogs() GMCatalogs {
 		})
 
 		acervo.Items = ListOf[Item]("items")
+		expandComposedItems(acervo.Items)
 		slices.SortStableFunc(acervo.Items, func(a, b Item) int {
 			return byName(a.Name, b.Name)
 		})

@@ -130,41 +130,15 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier
 		own = append(own, catalog.Modifiers...)
 	}
 	for _, id := range parseStringArray(it.Improvements) {
-		own = append(own, forThisItemCategory(overlayModsWithProvenance(r.getCatalogItem(id)), catalog)...)
+		own = append(own, overlayModsFor(r.getCatalogItem(id), catalog)...)
 	}
 	if it.Material != nil {
-		own = append(own, forThisItemCategory(overlayModsWithProvenance(r.getCatalogItem(*it.Material)), catalog)...)
+		own = append(own, overlayModsFor(r.getCatalogItem(*it.Material), catalog)...)
 	}
 	for _, id := range it.Enchants {
-		own = append(own, forThisItemCategory(overlayModsWithProvenance(r.getCatalogItem(id)), catalog)...)
+		own = append(own, overlayModsFor(r.getCatalogItem(id), catalog)...)
 	}
 	return own
-}
-
-// forThisItemCategory descarta a linha da sobreposição que é de OUTRA
-// categoria de item.
-//
-// O adamante fornece "RD 2 em armaduras leves e escudos, RD 5 em pesadas"
-// (p166): são duas linhas no catálogo, e aqui fica exatamente a que casa com a
-// peça. Modificador sem categoria declarada vale em qualquer item, que é o caso
-// de quase todos.
-//
-// O descarte é na COLETA porque a resposta já existe: o verbete do hospedeiro
-// está na mão — o verbete do item que recebe a sobreposição. Deixar a pergunta
-// para a resolução ofereceria um interruptor na aba Efeitos para algo que
-// ninguém escolhe.
-func forThisItemCategory(mods []Modifier, item *CatalogItem) []Modifier {
-	out := make([]Modifier, 0, len(mods))
-	for _, m := range mods {
-		if len(m.AppliesToCategory) == 0 {
-			out = append(out, m)
-			continue
-		}
-		if item != nil && contains(m.AppliesToCategory, item.Category) {
-			out = append(out, m)
-		}
-	}
-	return out
 }
 
 // noProficiencies é o conjunto vazio que os sistemas passam para uma função

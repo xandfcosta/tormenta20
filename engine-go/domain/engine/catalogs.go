@@ -30,6 +30,10 @@ type CatalogItem struct {
 	AppliesTo []string     `json:"appliesTo,omitempty"`
 	Weapon    *WeaponStats `json:"weapon,omitempty"`
 	Modifiers []Modifier   `json:"modifiers"`
+	// ComposedOf é o que o VERBETE já traz aplicado — o item específico da
+	// Tabela 8-9 e da 8-11 (p337, p340). Quem o resolve é a primagem, e o
+	// porquê está no `composition.go`.
+	ComposedOf *Composition `json:"composedOf,omitempty"`
 }
 
 // Item devolve o item do catálogo pelo id, ou nulo quando ele não existe — é o
@@ -251,6 +255,9 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	}
 	for i := range p.Items {
 		c.itemsByID[p.Items[i].ID] = &p.Items[i]
+	}
+	if err := c.expandComposedItems(); err != nil {
+		return nil, fmt.Errorf("PrimeEngineCatalogs: %w", err)
 	}
 	for i := range p.Races {
 		c.racesByID[p.Races[i].ID] = &p.Races[i]

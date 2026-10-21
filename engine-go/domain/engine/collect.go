@@ -239,25 +239,18 @@ var conditionModifierTable = map[string][]Modifier{
 	},
 }
 
-// overlayModsWithProvenance: an overlay's modifiers with the
-// overlay NAME folded into each note (so breakdown rows name the melhoria/material).
-func overlayModsWithProvenance(overlay *CatalogItem) []Modifier {
+// overlayModsFor é o que a sobreposição concede AO HOSPEDEIRO: a regra inteira
+// mora no `OverlayModifiers` (composition.go), e aqui ficam só os dois ponteiros
+// que podem ser nulos — item sem verbete e sobreposição com id torto.
+func overlayModsFor(overlay *CatalogItem, host *CatalogItem) []Modifier {
 	if overlay == nil {
 		return []Modifier{}
 	}
-	out := make([]Modifier, 0, len(overlay.Modifiers))
-	for _, m := range overlay.Modifiers {
-		nm := m
-		if !strings.Contains(m.Note, overlay.Name) {
-			if m.Note != "" {
-				nm.Note = overlay.Name + ": " + m.Note
-			} else {
-				nm.Note = overlay.Name
-			}
-		}
-		out = append(out, nm)
+	hostCategory := ""
+	if host != nil {
+		hostCategory = host.Category
 	}
-	return out
+	return OverlayModifiers(hostCategory, overlay.Name, overlay.Modifiers)
 }
 
 // mirrorWeaponAttackMods espelha o {attack,scope:this} da arma na perícia de

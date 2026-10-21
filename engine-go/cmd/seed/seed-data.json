@@ -1219,6 +1219,43 @@
           ]
         },
         {
+          "create": {
+            "name": "Anã do Baluarte Nv12",
+            "races": [
+              "anao"
+            ],
+            "origin": "artesao",
+            "classes": [
+              {
+                "className": "Guerreiro",
+                "level": 12
+              }
+            ],
+            "god": "Tenebra",
+            "strength": 4,
+            "dexterity": 1,
+            "constitution": 4,
+            "intelligence": 1,
+            "wisdom": 2,
+            "charisma": 1,
+            "size": "Médio",
+            "displacement": 6,
+            "items": [
+              {
+                "catalogId": "avalanche",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "baluarte-anao",
+                "equipped": "vested"
+              },
+              {
+                "catalogId": "vingadora-sagrada"
+              }
+            ]
+          }
+        },
+        {
           "sceneEffect": false,
           "create": {
             "name": "Guerreiro Adamantino Nv20",

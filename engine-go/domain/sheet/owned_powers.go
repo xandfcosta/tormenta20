@@ -79,22 +79,57 @@ func itemEnchantActivationsOf(dto CharacterDTO) []OwnedPower {
 		if item.Equipped == nil || *item.Equipped == "" {
 			continue
 		}
-		for _, id := range item.Enchants {
+		// O ITEM COMPOSTO tem gesto PRÓPRIO, e ele não é de encanto nenhum: a
+		// Avalanche (p337) diz "gaste uma ação padrão e 6 PM para invocar uma
+		// tempestade de gelo", e isso é do verbete.
+		if catalog := catalogOf(item); catalog != nil && catalog.ComposedOf != nil {
+			outside = append(outside, activationsOfItem(item, *catalog)...)
+		}
+		for _, id := range enchantsOf(item) {
 			enchant := book.ItemByID(id)
 			if enchant == nil {
 				continue
 			}
-			spec := book.ActivationOf("item."+id, enchant.Name)
-			if spec == nil {
-				continue
-			}
-			outside = append(outside, OwnedPower{
-				ID: id, Name: enchant.Name, Detail: enchant.Description,
-				Source: PowerFromItem, Owner: item.Name, Page: enchant.BookPage,
-			})
+			outside = append(outside, activationsOfItem(item, *enchant)...)
 		}
 	}
 	return outside
+}
+
+// catalogOf é o verbete do item da ficha, ou nil para o item caseiro.
+func catalogOf(item ItemDTO) *book.Item {
+	if item.CatalogID == nil || *item.CatalogID == "" {
+		return nil
+	}
+	return book.ItemByID(*item.CatalogID)
+}
+
+// enchantsOf são os encantos EFETIVOS: os que o mestre pôs na ficha mais os que
+// o verbete já traz (p337, p340).
+//
+// Os dois na mesma lista porque, para quem joga, não há diferença: a arma está
+// encantada, e o gesto que o encanto oferece se faz do mesmo jeito.
+func enchantsOf(item ItemDTO) []string {
+	catalog := catalogOf(item)
+	if catalog == nil || catalog.ComposedOf == nil {
+		return item.Enchants
+	}
+	return append(append([]string{}, catalog.ComposedOf.Enchants...), item.Enchants...)
+}
+
+// activationsOfItem é o gesto que um verbete oferece, se ele tiver um.
+//
+// O `Owner` é o nome do ITEM da ficha, sempre: duas espadas com o mesmo encanto
+// viram duas linhas, e sem o dono elas seriam iguais na tela.
+func activationsOfItem(item ItemDTO, entry book.Item) []OwnedPower {
+	spec := book.ActivationOf("item."+entry.ID, entry.Name)
+	if spec == nil {
+		return nil
+	}
+	return []OwnedPower{{
+		ID: entry.ID, Name: spec.Name, Detail: entry.Description,
+		Source: PowerFromItem, Owner: item.Name, Page: entry.BookPage,
+	}}
 }
 
 // OwnsActivation diz se a ficha tem o poder daquela ativação.

@@ -6270,6 +6270,101 @@
       ],
       "bookPage": 336,
       "uid": "itm_kcpwjnsarb"
+    },
+    {
+      "id": "avalanche",
+      "name": "Avalanche",
+      "category": "weapon-martial",
+      "price": 140000,
+      "rollMin": 88,
+      "rollMax": 92,
+      "composedOf": {
+        "base": "machado-guerra",
+        "material": "material-gelo-eterno",
+        "enchants": [
+          "encanto-congelante",
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Este machado de guerra de gelo eterno congelante formidável fornece redução de fogo 10. Você pode gastar uma ação padrão e 6 PM para brandi-lo acima de sua cabeça e invocar uma tempestade de gelo que afeta alcance curto ao seu redor. Criaturas na área recebem camuflagem leve e sofrem 3d6 pontos de dano de impacto e 3d6 pontos de frio por rodada. Você não sofre os efeitos nocivos da tempestade (o dano e a chance de falha pela camuflagem) e pode gastar 1 PM no início de cada um de seus turnos para mantê-la.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "fogo"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "redução de fogo 10"
+        }
+      ],
+      "modeled": [
+        "a redução de fogo 10",
+        "a ação e o custo da tempestade de gelo"
+      ],
+      "unmodeled": "o que a tempestade FAZ: 3d6 de impacto e 3d6 de frio por rodada em alcance curto, a camuflagem leve na área e a isenção de quem a invoca são efeitos de área por rodada, e o motor não tem onde pousá-los",
+      "bookPage": 337,
+      "uid": "itm_lasvcofqoz"
+    },
+    {
+      "id": "baluarte-anao",
+      "name": "Baluarte anão",
+      "category": "armor-heavy",
+      "price": 50000,
+      "rollMin": 50,
+      "rollMax": 59,
+      "composedOf": {
+        "base": "armadura-completa",
+        "material": "material-adamante",
+        "improvements": [
+          "melhoria-reforcada"
+        ],
+        "enchants": [
+          "encanto-defensor"
+        ]
+      },
+      "description": "Esta armadura completa reforçada defensora de adamante fornece proteção sem igual. Se você não se deslocar em seu turno, a RD que ela fornece aumenta para 10 até seu próximo turno.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "context",
+            "note": "se você não se deslocar no seu turno"
+          },
+          "note": "a RD vai a 10 até o seu próximo turno"
+        }
+      ],
+      "modeled": [
+        "a RD 10 de quem não se desloca"
+      ],
+      "bookPage": 340,
+      "uid": "itm_h7nn2mpdvz"
+    },
+    {
+      "id": "vingadora-sagrada",
+      "name": "Vingadora sagrada",
+      "category": "weapon-martial",
+      "price": 200000,
+      "rollMin": 96,
+      "rollMax": 100,
+      "composedOf": {
+        "base": "espada-longa",
+        "enchants": [
+          "encanto-formidavel"
+        ]
+      },
+      "description": "Esta espada longa formidável revela todo o seu poder apenas quando empunhada por um paladino. Se você for um paladino, recebe +5 em testes de ataque e rolagens de dano, o custo de seu Golpe Divino é reduzido em –1 PM e você e seus aliados em alcance curto recebem resistência a magia +5.",
+      "modifiers": [],
+      "unmodeled": "tudo o que o verbete acrescenta vale só para PALADINO — +5 em ataque e dano, −1 PM no Golpe Divino e resistência a magia +5 para você e aliados em alcance curto —, e nenhuma condição do motor pergunta a classe de quem empunha",
+      "bookPage": 338,
+      "uid": "itm_gz4cbiutrc"
     }
   ],
   "races": [
