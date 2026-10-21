@@ -1384,6 +1384,7 @@ este verbete":
 | `audit-enchants.py` | `items.json` (`weapon-enchant`, `armor-enchant`) | a Tabela 8-8 e a 8-10, que são `d%` + encanto + efeito, **e** o verbete `Nome. Regra` |
 | `audit-materials.py` | `items.json` (`material`) | a Tabela 3-9, que é uma MATRIZ de preço **e** o verbete com as metades `Arma.` / `Armadura e Escudo.` / `Esotérico.` |
 | `audit-objects.py` | `objectExamplesOfTheBook` + as duas escadas (Go!) | a Tabela 5-4, lida por COORDENADA — a p239 tem duas tabelas lado a lado, e `-layout` cola uma na outra |
+| `audit-specific-items.py` | `items.json` (os de `composedOf`) | a Tabela 8-9 e a 8-11 (`d%` + nome + **preço**), o verbete `Nome. Regra`, **e o ITÁLICO dele**, que é a composição do item |
 
 ### O auditor de materiais, e as DUAS armadilhas de ler uma página dividida
 
@@ -1435,6 +1436,36 @@ cima da fronteira quebrada.
   profundo é o último na sequência de índices. Quem cobra essa metade é o
   `TestEveryModifierFieldSurvivesTheCatalogJSON`, que varre o TIPO por reflexão
   em vez de repetir a lista num terceiro lugar.
+
+### O ITÁLICO é dado, e ler estilo pede outro leitor
+
+O verbete de um item específico escreve a composição dele em ITÁLICO — *"este
+machado de guerra **de gelo eterno congelante formidável** fornece redução de
+fogo 10"* (p337) é a base, o material e dois encantos. São 31 verbetes com três
+a cinco peças cada, em letra miúda no meio da prosa: transcrever isso a olho é
+onde o erro entra.
+
+O `-bbox` do `pdftotext`, que é o que todo o resto do `t20pdf` usa, **não marca
+estilo nenhum**. Quem marca é o `pdftohtml -xml`, e ele responde noutra régua —
+148,2 num é 225 no outro. O `t20pdf.italicos_da_pagina` converte pela razão
+entre as alturas que os dois declaram para a MESMA página, e devolve na
+coordenada do resto do módulo; sem isso, quem misturasse as duas leituras
+compararia alturas de réguas diferentes.
+
+**Três coisas vêm em itálico no mesmo verbete, e só a primeira é composição:**
+ela, o nome do próprio item mais adiante (*"quando você usa o machado
+silvestre"*), e o de uma magia (*"se transforma em um Relâmpago"*) ou de um
+encanto que o verbete só concede em certa condição (o Martelo de Doherimm
+*adquire* o arremesso na mão de um anão). Duas perguntas as separam: **a frase é
+CONTÍGUA no verbete?** — o itálico do martelo e o do arremesso caem em linhas
+vizinhas, mas entre eles há meia frase de texto normal — e **ela nomeia peça que
+o catálogo conhece?**
+
+E **ausência de itálico não é ausência de base**: a azagaia dos relâmpagos e a
+espada baronial não têm encanto nenhum, então o livro não italiza nada, e elas
+continuam sendo uma azagaia e uma espada longa. Nesses dois o auditor confere a
+base contra o TEXTO do verbete e exige que o catálogo não declare sobreposição
+nenhuma.
 
 ### O auditor de encantos, e o denominador que ele tem DE GRAÇA
 

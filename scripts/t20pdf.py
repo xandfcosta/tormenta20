@@ -196,6 +196,57 @@ def palavras_da_pagina(pagina: int) -> list[tuple[float, float, str]]:
             for x, y, texto in RE_PALAVRA.findall(xml)]
 
 
+RE_PAGINA_XML = re.compile(r'<page number="\d+"[^>]*height="([\d.]+)" width="([\d.]+)"')
+RE_TEXTO_XML = re.compile(
+    r'<text top="([\d.-]+)" left="([\d.-]+)"[^>]*>(.*?)</text>', re.S)
+RE_ITALICO = re.compile(r'<i>(.*?)</i>', re.S)
+
+
+def italicos_da_pagina(pagina: int) -> list[tuple[float, float, str]]:
+    """(x, y, texto) de cada trecho em ITÁLICO, na coordenada das outras leituras.
+
+    O itálico é DADO neste livro, e não enfeite: o verbete de um item específico
+    escreve a composição dele em itálico — *"este machado de guerra de gelo
+    eterno congelante formidável"* é a base, o material e dois encantos (p337).
+    Lê-lo é a diferença entre transcrever a composição A OLHO e colhê-la.
+
+    Ele vem de OUTRO leitor (`pdftohtml -xml`), porque o `-bbox` do `pdftotext`
+    não marca estilo nenhum. O x e o y voltam convertidos para a mesma escala do
+    resto do módulo — a razão entre as alturas que os dois declaram para a mesma
+    página —, senão quem misturasse as duas leituras compararia alturas de
+    réguas diferentes: 148,2 aqui é 225 lá.
+
+    O trecho vem QUEBRADO como a linha quebra, com a hifenização do livro
+    ("refor-" / "çada"): quem junta é quem lê, porque só ele sabe o que é uma
+    frase.
+    """
+    xml = subprocess.run(
+        ['pdftohtml', '-xml', '-i', '-f', str(pagina), '-l', str(pagina), '-stdout', PDF],
+        capture_output=True, text=True).stdout
+    pagina_xml = RE_PAGINA_XML.search(xml)
+    if not pagina_xml:
+        return []
+    escala = float(pagina_xml.group(1)) / altura_da_pagina(pagina)
+    saida = []
+    for top, left, corpo in RE_TEXTO_XML.findall(xml):
+        for trecho in RE_ITALICO.findall(corpo):
+            texto = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', '', trecho))).strip()
+            if texto:
+                saida.append((float(left) / escala, float(top) / escala, texto))
+    return sorted(saida, key=lambda t: (t[1], t[0]))
+
+
+def altura_da_pagina(pagina: int) -> float:
+    """A altura em pontos, lida do mesmo `-bbox` que todo o resto lê."""
+    xml = subprocess.run(
+        ['pdftotext', '-bbox', '-f', str(pagina), '-l', str(pagina), PDF, '-'],
+        capture_output=True, text=True).stdout
+    m = re.search(r'<page width="([\d.]+)" height="([\d.]+)"', xml)
+    if not m:
+        raise SystemExit(f'a página {pagina} não declarou tamanho')
+    return float(m.group(2))
+
+
 def linhas_com_coordenada(pagina: int) -> list[tuple[float, float, str]]:
     """(x, y, texto) de cada LINHA da página, sem agrupar por bloco.
 
