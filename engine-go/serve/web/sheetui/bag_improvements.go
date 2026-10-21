@@ -2,7 +2,6 @@ package sheetui
 
 import (
 	"fmt"
-	"strings"
 	"t20engine/domain/book"
 )
 
@@ -24,22 +23,6 @@ var categoriesWithoutOverlap = map[string]bool{
 
 func aceitaMelhoria(catalog book.Item) bool {
 	return !categoriesWithoutOverlap[catalog.Category]
-}
-
-// itemFamily é a classificação grossa que o `appliesTo` do catálogo usa.
-//
-// Quatro famílias, e a última é o resto: arma, armadura, escudo e vestuário. Ela
-// é do CATÁLOGO e não do livro, então mora ao lado de quem a consome.
-func itemFamily(catalog book.Item) string {
-	switch {
-	case strings.HasPrefix(catalog.Category, "weapon-"):
-		return "weapon"
-	case strings.HasPrefix(catalog.Category, "armor-"):
-		return "armor"
-	case catalog.Category == "shield":
-		return "shield"
-	}
-	return "apparel"
 }
 
 // aceitaAFamilia diz se a sobreposição serve à família do item.
@@ -66,7 +49,7 @@ func fitsItemImprovement(catalog *book.Item, ids []string, category string) erro
 	if len(ids) > 0 && !aceitaMelhoria(*catalog) {
 		return fmt.Errorf("%q não recebe melhoria nem material", catalog.Name)
 	}
-	family := itemFamily(*catalog)
+	family := book.ItemFamily(*catalog)
 	for _, id := range ids {
 		overlap := book.ItemByID(id)
 		if overlap == nil || overlap.Category != category {

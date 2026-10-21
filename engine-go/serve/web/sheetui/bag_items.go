@@ -122,7 +122,7 @@ func itemSheetOf(item sheet.ItemDTO, proficiencies map[string]bool) itemSheet {
 	character.Overlayable = aceitaMelhoria(*catalog)
 	if character.Overlayable {
 		applied := savedImprovements(item.Improvements)
-		family := itemFamily(*catalog)
+		family := book.ItemFamily(*catalog)
 		character.Improvements = thatFitOverlays("improvement", family, applied)
 		character.Materials = thatFitOverlays("material", family, appliedMaterial(item))
 	}

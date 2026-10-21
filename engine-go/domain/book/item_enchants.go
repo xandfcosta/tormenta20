@@ -1,6 +1,9 @@
 package book
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // O ENCANTO DO ITEM: quem cabe, quantos cabem, e o que exige o quê (p333-339).
 //
@@ -19,6 +22,45 @@ const slotsDeEncanto = 2 + 1
 
 // encantoDeItem são as duas categorias de encanto do livro, uma por tabela.
 var encantoDeItem = map[string]bool{"weapon-enchant": true, "armor-enchant": true}
+
+// ItemFamily é a classificação grossa que o `appliesTo` do catálogo usa:
+// quatro famílias, e a última é o resto — arma, armadura, escudo e vestuário.
+//
+// Ela morava privada na Mochila e ganhou um segundo chamador quando o item
+// COMPOSTO chegou (p337, p340): o guarda da composição pergunta a mesma coisa
+// que o diálogo de melhorias, e a resposta tem de ser uma só.
+//
+// @example book.ItemFamily(*book.ItemByID("espada-longa")) // "weapon"
+func ItemFamily(item Item) string {
+	switch {
+	case strings.HasPrefix(item.Category, "weapon-"):
+		return "weapon"
+	case strings.HasPrefix(item.Category, "armor-"):
+		return "armor"
+	case item.Category == "shield":
+		return "shield"
+	}
+	return "apparel"
+}
+
+// FitsOverlayFamily diz se a SOBREPOSIÇÃO serve à família do item.
+//
+// Sobreposição sem `appliesTo` serve a qualquer um: o catálogo usa o campo para
+// restringir, e a ausência dele é "não restringe".
+//
+// @example book.FitsOverlayFamily(*book.ItemByID("espada-longa"), *book.ItemByID("material-adamante")) // true
+func FitsOverlayFamily(item, overlay Item) bool {
+	if len(overlay.AppliesTo) == 0 {
+		return true
+	}
+	family := ItemFamily(item)
+	for _, accepted := range overlay.AppliesTo {
+		if accepted == family {
+			return true
+		}
+	}
+	return false
+}
 
 // aceitaEncanto responde se a FAMÍLIA do item é uma das que o encanto aceita.
 //
