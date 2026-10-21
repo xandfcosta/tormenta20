@@ -596,7 +596,9 @@
       "base": 10,
       "itemBonus": 12,
       "total": 22,
-      "dexApplied": false,
+      "attribute": "",
+      "attributeAmount": 0,
+      "attributeSource": "",
       "vsMelee": 22,
       "vsRanged": 22,
       "contributions": [
@@ -1091,7 +1093,9 @@
       "base": 10,
       "itemBonus": 12,
       "total": 22,
-      "dexApplied": false,
+      "attribute": "",
+      "attributeAmount": 0,
+      "attributeSource": "",
       "vsMelee": 22,
       "vsRanged": 22,
       "contributions": [

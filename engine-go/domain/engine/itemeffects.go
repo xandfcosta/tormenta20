@@ -447,6 +447,13 @@ func targetKey(t ModifierTarget) string {
 			return "maneuver:" + t.Name + ":" + t.Scope
 		}
 		return "maneuver:" + t.Name
+	case "defenseAttribute":
+		// O ATRIBUTO NO NOME, e a licença não soma nada: quem escreve
+		// `{k: defenseAttribute, name: intelligence}` não dá número à Defesa —
+		// ele AUTORIZA aquele atributo a entrar no lugar da Destreza (p69,
+		// p79). Uma chave por atributo porque a escolha é entre eles, e quem
+		// decide qual entra é a decomposição, pegando a melhor.
+		return "defenseAttribute:" + t.Name
 	case "flag":
 		return "flag:" + t.Name
 	}

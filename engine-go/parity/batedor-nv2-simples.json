@@ -269,6 +269,17 @@
         {
           "target": {
             "k": "flag",
+            "name": "armadura-leve"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
             "name": "cannot-apply-dex-to-defense"
           },
           "amount": 1,
@@ -389,6 +400,7 @@
       }
     },
     "flags": [
+      "armadura-leve",
       "cannot-apply-dex-to-defense"
     ],
     "conditional": []
@@ -398,7 +410,9 @@
       "base": 10,
       "itemBonus": 2,
       "total": 12,
-      "dexApplied": false,
+      "attribute": "",
+      "attributeAmount": 0,
+      "attributeSource": "",
       "vsMelee": 12,
       "vsRanged": 12,
       "contributions": [
@@ -1043,7 +1057,9 @@
       "base": 10,
       "itemBonus": 2,
       "total": 12,
-      "dexApplied": false,
+      "attribute": "",
+      "attributeAmount": 0,
+      "attributeSource": "",
       "vsMelee": 12,
       "vsRanged": 12,
       "contributions": [
@@ -1726,7 +1742,12 @@
     "pvMax": 19,
     "pmMax": 8
   },
-  "equippedFlags": [],
+  "equippedFlags": [
+    {
+      "flag": "armadura-leve",
+      "source": "Armadura de couro"
+    }
+  ],
   "weaponCards": [
     {
       "name": "Espada curta",

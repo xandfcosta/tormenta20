@@ -31,19 +31,6 @@ type SourceAmount struct {
 	Amount int    `json:"amount"`
 }
 
-type DefenseBreakdown struct {
-	Base       int  `json:"base"`
-	ItemBonus  int  `json:"itemBonus"`
-	Total      int  `json:"total"`
-	DexApplied bool `json:"dexApplied"`
-	// Defesa contra ataques corpo a corpo e à distância. Iguais ao Total na
-	// maioria das fichas; separam-se quando algo é DIRECIONAL, hoje só o Caído
-	// (p394: −5 contra corpo a corpo, +5 contra à distância).
-	VsMelee       int                     `json:"vsMelee"`
-	VsRanged      int                     `json:"vsRanged"`
-	Contributions []BreakdownContribution `json:"contributions"`
-}
-
 // ValueBreakdown é a forma {base, itemBonus, total, contributions} compartilhada
 // pelo deslocamento e pelo limite de PM.
 type ValueBreakdown struct {
@@ -138,71 +125,6 @@ func (r *Ruleset) ComputeSheet(ch Character, activeConditionals map[string]bool)
 // effectiveAttribute: o atributo cru mais os modificadores de `attribute`.
 func effectiveAttribute(ch Character, attr string, e ItemEffects) int {
 	return ch.attributeValue(attr) + StatFor(e, ModifierTarget{K: "attribute", Name: attr}).Total
-}
-
-// defenseBreakdown: 10 + Destreza (quando ela se aplica) + modificadores.
-func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
-	stat := StatFor(e, ModifierTarget{K: "defense"})
-	dexApplied := !e.Flags["cannot-apply-dex-to-defense"]
-	base := 10
-	if dexApplied {
-		base += effectiveAttribute(ch, "dexterity", e)
-	}
-	insolence := insolenciaDefense(ch, e)
-	melee := StatFor(e, ModifierTarget{K: "defense", Scope: "melee"})
-	ranged := StatFor(e, ModifierTarget{K: "defense", Scope: "ranged"})
-	total := base + stat.Total + insolence
-	contribs := stat.Contributions
-	if insolence > 0 {
-		contribs = concatContribs(contribs, []Contribution{
-			{Source: "Insolência (p47)", BonusType: "untyped", Amount: insolence},
-		})
-	}
-	return DefenseBreakdown{
-		Base:          base,
-		ItemBonus:     stat.Total + insolence,
-		Total:         total,
-		DexApplied:    dexApplied,
-		VsMelee:       total + melee.Total,
-		VsRanged:      total + ranged.Total,
-		Contributions: withNoteContribs(concatContribs(contribs, melee.Contributions, ranged.Contributions)),
-	}
-}
-
-// insolenciaDefense — Bucaneiro p47: "Você soma seu Carisma na Defesa, limitado
-// pelo seu nível. Esta habilidade exige liberdade de movimentos; você não pode
-// usá-la se estiver de armadura pesada ou na condição imóvel."
-//
-// O teto é o nível NA CLASSE (p226, "Limites de Nível"), com exemplo trabalhado
-// na mesma página: "um bucaneiro de 2º nível com Car 3 soma +2 na Defesa".
-//
-// Vive aqui, e não como modificador de catálogo, porque o motor de itens não
-// avalia `scale` fora de PV/PM e não tem noção de TETO — a Insolência precisa
-// das duas coisas.
-func insolenciaDefense(ch Character, e ItemEffects) int {
-	if e.Flags["armadura-pesada"] || hasActiveCondition(ch, "imovel") {
-		return 0
-	}
-	level := 0
-	for _, entry := range ch.Classes {
-		if entry.ClassName == "Bucaneiro" && entry.Level > level {
-			level = entry.Level
-		}
-	}
-	if level == 0 {
-		return 0
-	}
-	return max(0, min(effectiveAttribute(ch, "charisma", e), level))
-}
-
-// hasActiveCondition reporta se a condição está ligada na ficha.
-func hasActiveCondition(ch Character, id string) bool {
-	for _, active := range parseStringArray(ch.ActiveConditions) {
-		if active == id {
-			return true
-		}
-	}
-	return false
 }
 
 // displacementBreakdown é o deslocamento total (com piso em 0) mais a

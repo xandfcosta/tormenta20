@@ -18,35 +18,37 @@ import (
 // A DESTREZA BLOQUEADA por armadura pesada aparece como linha ZERADA e apagada,
 // em vez de sumir. Sumir seria a resposta errada para a pergunta que o diálogo
 // existe para responder: "por que minha Defesa está baixa?".
+//
+// A SUBTRAÇÃO do atributo existe porque o `Base` do motor e a linha "Base" da
+// tela são coisas DIFERENTES, e confundi-las conta o atributo duas vezes: o
+// motor soma 10 + ele num campo só, enquanto o diálogo mostra o 10 numa linha e
+// o atributo na seguinte. Somar as linhas tem de dar o total, e é isso que
+// `TestTheDefenseRowsAddUpToTheTotal` prende.
 func defenseRows(sheet engine.ComputedSheet) []breakdownRow {
 	rows := []breakdownRow{
-		{Label: "Base", Value: book.WithSign(sheet.Defense.Base - dexInDefense(sheet))},
-		dexterityRow(sheet),
+		{Label: "Base", Value: book.WithSign(sheet.Defense.Base - sheet.Defense.AttributeAmount)},
+		defenseAttributeRow(sheet.Defense),
 	}
 	rows = append(rows, rowsFromContributions(sheet.Defense.Contributions)...)
 	return append(rows, directionalDefenseRows(sheet)...)
 }
 
-// dexInDefense é a Destreza que o MOTOR já embutiu no `Defense.Base`.
+// defenseAttributeRow é a linha do atributo que entrou na Defesa.
 //
-// Ela é subtraída porque o `Base` do motor e a linha "Base" da tela são coisas
-// DIFERENTES, e confundi-las conta a Destreza duas vezes: o motor soma 10 + a
-// Destreza num campo só, enquanto o diálogo mostra o 10 numa linha e a Destreza
-// na seguinte. Somar as linhas tem de dar o total, e é isso que
-// `TestTheDefenseRowsAddUpToTheTotal` prende — a subtração é exata porque o
-// `effectiveAttribute` da defesa e o `Total` do atributo são a mesma expressão.
-func dexInDefense(sheet engine.ComputedSheet) int {
-	if !sheet.Defense.DexApplied {
-		return 0
-	}
-	return sheet.Attributes["dexterity"].Total
-}
-
-func dexterityRow(sheet engine.ComputedSheet) breakdownRow {
-	if !sheet.Defense.DexApplied {
+// Ela diz QUAL atributo é, e de onde saiu a licença quando não foi a Destreza:
+// um "Inteligência +4" solto na decomposição de um inventor de armadura pesada
+// pareceria defeito justamente para quem conhece a p152 ("se usar uma armadura
+// pesada, você não aplica sua Destreza na Defesa"). O nome do poder é o que
+// explica a exceção (p69, p79).
+func defenseAttributeRow(defense engine.DefenseBreakdown) breakdownRow {
+	if defense.Attribute == "" {
 		return breakdownRow{Label: "Destreza (bloqueada por armadura pesada)", Value: "+0", Muted: true}
 	}
-	return breakdownRow{Label: "Destreza", Value: book.WithSign(sheet.Attributes["dexterity"].Total)}
+	label := book.AttributeLabel(defense.Attribute)
+	if defense.AttributeSource != "" {
+		label += " (" + defense.AttributeSource + ")"
+	}
+	return breakdownRow{Label: label, Value: book.WithSign(defense.AttributeAmount)}
 }
 
 // directionalDefenseRows são as duas Defesas DIRECIONAIS, e elas só aparecem

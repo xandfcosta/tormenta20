@@ -27,34 +27,36 @@ import (
 // AS LINHAS DE UM DIÁLOGO SOMAM O TOTAL QUE ELE MOSTRA.
 //
 // É a promessa que um diálogo de decomposição faz, e a mais fácil de quebrar sem
-// perceber: o `Defense.Base` do motor é 10 + Destreza num campo só, enquanto a
-// tela mostra o 10 numa linha e a Destreza na seguinte. Usar o campo cru
-// contaria a Destreza DUAS vezes — a Defesa da caixa continuaria certa e só o
+// perceber: o `Defense.Base` do motor é 10 + o atributo num campo só, enquanto a
+// tela mostra o 10 numa linha e o atributo na seguinte. Usar o campo cru
+// contaria o atributo DUAS vezes — a Defesa da caixa continuaria certa e só o
 // diálogo mentiria, que é o defeito que ninguém vê até alguém somar.
 //
-// Os dois ramos importam: com Destreza aplicada e com ela bloqueada.
+// Os três ramos importam, e o terceiro é a p69/p79: a Destreza aplicada, a
+// Destreza bloqueada por armadura pesada, e OUTRO atributo no lugar dela.
 func TestTheDefenseRowsAddUpToTheTotal(t *testing.T) {
 	cases := []struct {
-		name    string
-		applied bool
+		name      string
+		attribute string
+		amount    int
+		source    string
 	}{
-		{"com a Destreza aplicada", true},
-		{"com a Destreza bloqueada por armadura pesada", false},
+		{name: "com a Destreza aplicada", attribute: "dexterity", amount: 3},
+		{name: "com a Destreza bloqueada por armadura pesada"},
+		{name: "com o Carisma no lugar da Destreza", attribute: "charisma",
+			amount: 4, source: "Autoconfiança"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			// O motor embute o atributo no `Base`, e o total sobe junto.
 			sheet := engine.ComputedSheet{
 				Defense: engine.DefenseBreakdown{
-					Base: 10, Total: 15, VsMelee: 15, VsRanged: 15, DexApplied: tc.applied,
-					Contributions: []engine.BreakdownContribution{{Source: "Armadura", Amount: 5}},
+					Base: 10 + tc.amount, Total: 15 + tc.amount,
+					VsMelee: 15 + tc.amount, VsRanged: 15 + tc.amount,
+					Attribute: tc.attribute, AttributeAmount: tc.amount,
+					AttributeSource: tc.source,
+					Contributions:   []engine.BreakdownContribution{{Source: "Armadura", Amount: 5}},
 				},
-				Attributes: map[string]engine.AttributeBreakdown{"dexterity": {Total: 3}},
-			}
-			if tc.applied {
-				// O motor embute a Destreza no `Base`; o total sobe junto.
-				sheet.Defense.Base = 13
-				sheet.Defense.Total = 18
-				sheet.Defense.VsMelee, sheet.Defense.VsRanged = 18, 18
 			}
 
 			soma := 0
@@ -69,6 +71,34 @@ func TestTheDefenseRowsAddUpToTheTotal(t *testing.T) {
 	}
 }
 
+// E A LINHA DIZ DE ONDE SAIU A LICENÇA (p69, p79, ALE-443).
+//
+// Um "Carisma +4" solto na decomposição de um nobre de armadura pesada se lê
+// como defeito justamente para quem conhece a p152 — "se usar uma armadura
+// pesada, você não aplica sua Destreza na Defesa". O nome do poder é o que
+// explica a exceção, e sem ele a tela dá o número certo com cara de erro.
+func TestTheSubstitutedAttributeRowNamesThePowerThatAllowedIt(t *testing.T) {
+	sheet := engine.ComputedSheet{
+		Defense: engine.DefenseBreakdown{
+			Base: 14, Total: 24, VsMelee: 24, VsRanged: 24,
+			Attribute: "charisma", AttributeAmount: 4,
+			AttributeSource: "Armadura Brilhante",
+			Contributions:   []engine.BreakdownContribution{{Source: "Armadura completa", Amount: 10}},
+		},
+	}
+	linha := defenseRows(sheet)[1]
+	if linha.Label != "Carisma (Armadura Brilhante)" {
+		t.Errorf("a linha do atributo é %q, e ela tem de dizer os dois: o atributo que "+
+			"entrou e o poder que o autorizou", linha.Label)
+	}
+	if linha.Value != "+4" {
+		t.Errorf("a linha do atributo vale %q e o Carisma trocado vale +4", linha.Value)
+	}
+	if linha.Muted {
+		t.Error("a linha está apagada: só a Destreza BLOQUEADA se apaga, e esta entrou na conta")
+	}
+}
+
 // A DESTREZA BLOQUEADA APARECE ZERADA, e não some.
 //
 // Sumir seria a resposta errada para a pergunta que o diálogo existe para
@@ -76,8 +106,7 @@ func TestTheDefenseRowsAddUpToTheTotal(t *testing.T) {
 // a Destreza dele, e uma linha ausente não diz nada.
 func TestBlockedDexterityComesOutAsADimmedRow(t *testing.T) {
 	sheet := engine.ComputedSheet{
-		Defense:    engine.DefenseBreakdown{Base: 10, Total: 10, VsMelee: 10, VsRanged: 10, DexApplied: false},
-		Attributes: map[string]engine.AttributeBreakdown{"dexterity": {Total: 3}},
+		Defense: engine.DefenseBreakdown{Base: 10, Total: 10, VsMelee: 10, VsRanged: 10},
 	}
 	rows := defenseRows(sheet)
 	if len(rows) < 2 {
