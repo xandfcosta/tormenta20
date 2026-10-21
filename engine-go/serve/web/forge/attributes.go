@@ -28,13 +28,6 @@ import (
 // nada: ela pergunta se o espalhamento resultante tem reclamação e, se tiver,
 // não grava.
 
-// attributeLabels são os nomes que a pessoa lê. Ficam aqui porque o motor
-// fala `strength`, que é identificador e não texto de tela.
-var attributeLabels = map[string]string{
-	"strength": "Força", "dexterity": "Destreza", "constitution": "Constituição",
-	"intelligence": "Inteligência", "wisdom": "Sabedoria", "charisma": "Carisma",
-}
-
 // attributesView é a cena inteira.
 type attributesView struct {
 	ID       int64
@@ -186,7 +179,7 @@ func attributeRowOf(
 	key string, spread map[string]int, sheet engine.ComputedSheet, spent int,
 ) attributeRow {
 	return attributeRow{
-		Key: key, Label: attributeLabels[key],
+		Key: key, Label: book.AttributeLabel(key),
 		Base:     spread[key],
 		Total:    sheet.Attributes[key].Total,
 		CanRaise: stepFits(key, spread, +1),

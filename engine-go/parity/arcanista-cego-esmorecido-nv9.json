@@ -656,7 +656,9 @@
       "base": 13,
       "itemBonus": -5,
       "total": 8,
-      "dexApplied": true,
+      "attribute": "dexterity",
+      "attributeAmount": 3,
+      "attributeSource": "",
       "vsMelee": 8,
       "vsRanged": 8,
       "contributions": [
@@ -1275,7 +1277,9 @@
       "base": 13,
       "itemBonus": -5,
       "total": 8,
-      "dexApplied": true,
+      "attribute": "dexterity",
+      "attributeAmount": 3,
+      "attributeSource": "",
       "vsMelee": 8,
       "vsRanged": 8,
       "contributions": [

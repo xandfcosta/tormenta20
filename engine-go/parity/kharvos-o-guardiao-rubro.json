@@ -457,6 +457,17 @@
         },
         {
           "target": {
+            "k": "flag",
+            "name": "armadura-leve"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
             "k": "defense"
           },
           "amount": 1,
@@ -952,7 +963,9 @@
         ]
       }
     },
-    "flags": [],
+    "flags": [
+      "armadura-leve"
+    ],
     "conditional": [
       {
         "term": "machado-taurico::expertise:Luta::::context///",
@@ -1023,7 +1036,9 @@
       "base": 11,
       "itemBonus": 11,
       "total": 22,
-      "dexApplied": true,
+      "attribute": "dexterity",
+      "attributeAmount": 1,
+      "attributeSource": "",
       "vsMelee": 22,
       "vsRanged": 22,
       "contributions": [
@@ -1570,7 +1585,9 @@
       "base": 11,
       "itemBonus": 12,
       "total": 23,
-      "dexApplied": true,
+      "attribute": "dexterity",
+      "attributeAmount": 1,
+      "attributeSource": "",
       "vsMelee": 23,
       "vsRanged": 23,
       "contributions": [
@@ -2192,7 +2209,12 @@
     "pvMax": 67,
     "pmMax": 25
   },
-  "equippedFlags": [],
+  "equippedFlags": [
+    {
+      "flag": "armadura-leve",
+      "source": "Couraça"
+    }
+  ],
   "weaponCards": [
     {
       "name": "Machado táurico",

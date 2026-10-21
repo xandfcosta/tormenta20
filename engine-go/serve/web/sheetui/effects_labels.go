@@ -161,6 +161,7 @@ var itemFlagLabel = map[string]string{
 	"fatigue-on-sleep":            "Fadiga ao dormir",
 	"reach-extends":               "Alcance ampliado",
 	"armadura-pesada":             "Conta como armadura pesada",
+	"armadura-leve":               "Conta como armadura leve",
 	"auto-fail-reflexos":          "Falha automática em Reflexos",
 }
 

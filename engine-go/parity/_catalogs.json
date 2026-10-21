@@ -1022,6 +1022,17 @@
           "condition": {
             "c": "vested"
           }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "armadura-leve"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
         }
       ],
       "bookPage": 154,
@@ -1046,6 +1057,17 @@
           },
           "amount": 2,
           "bonusType": "armor",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "armadura-leve"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
           "condition": {
             "c": "vested"
           }
@@ -1082,6 +1104,17 @@
             "k": "armorPenalty"
           },
           "amount": -1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "armadura-leve"
+          },
+          "amount": 1,
           "bonusType": "untyped",
           "condition": {
             "c": "vested"
@@ -1123,6 +1156,17 @@
           "condition": {
             "c": "vested"
           }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "armadura-leve"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
         }
       ],
       "bookPage": 154,
@@ -1156,6 +1200,17 @@
             "k": "armorPenalty"
           },
           "amount": -4,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "armadura-leve"
+          },
+          "amount": 1,
           "bonusType": "untyped",
           "condition": {
             "c": "vested"
@@ -12902,6 +12957,21 @@
           "id": "class.inventor.couraceiro"
         }
       ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "defenseAttribute",
+            "name": "intelligence"
+          },
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagRequired",
+            "flag": "armadura-pesada",
+            "label": "com armadura pesada"
+          },
+          "note": "Inteligência em vez de Destreza na Defesa"
+        }
+      ],
       "bookPage": 69,
       "uid": "pwr_7iga3fc57j"
     },
@@ -12971,6 +13041,21 @@
         {
           "kind": "note",
           "description": "Treinado em Ofício (armeiro)"
+        }
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "defenseAttribute",
+            "name": "intelligence"
+          },
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagRequired",
+            "flag": "armadura-leve",
+            "label": "com armadura leve"
+          },
+          "note": "Inteligência em vez de Destreza na Defesa"
         }
       ],
       "bookPage": 69,
@@ -14027,6 +14112,21 @@
       "name": "Autoconfiança",
       "description": "Pode usar Carisma em vez de Destreza na Defesa (não soma atributo na Defesa quando usa armadura pesada).",
       "grantedAtLevel": 1,
+      "modifiers": [
+        {
+          "target": {
+            "k": "defenseAttribute",
+            "name": "charisma"
+          },
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOff",
+            "flag": "armadura-pesada",
+            "label": "sem armadura pesada"
+          },
+          "note": "Carisma em vez de Destreza na Defesa"
+        }
+      ],
       "bookPage": 79,
       "uid": "pwr_2vxe4wpcl5"
     },
@@ -14134,6 +14234,21 @@
       "name": "Armadura Brilhante",
       "description": "Pode usar Carisma na Defesa quando usa armadura pesada. Se fizer, não pode somar Destreza.",
       "minLevel": 8,
+      "modifiers": [
+        {
+          "target": {
+            "k": "defenseAttribute",
+            "name": "charisma"
+          },
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagRequired",
+            "flag": "armadura-pesada",
+            "label": "com armadura pesada"
+          },
+          "note": "Carisma em vez de Destreza na Defesa"
+        }
+      ],
       "bookPage": 79,
       "uid": "pwr_bk5ddkfdri"
     },

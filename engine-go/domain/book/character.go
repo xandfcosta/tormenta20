@@ -316,7 +316,26 @@ func CharacterCatalogs() ([]Race, []Class, []God) {
 // `map` em Go é ALEATÓRIA por projeto, então imprimir os modificadores direto do
 // mapa daria uma ordem diferente a cada render — a página mudaria sozinha entre
 // dois pedidos iguais, e qualquer teste sobre o texto seria intermitente.
-var AttributeOrder = []struct{ Key, Abbreviation string }{
-	{"strength", "For"}, {"dexterity", "Des"}, {"constitution", "Con"},
-	{"intelligence", "Int"}, {"wisdom", "Sab"}, {"charisma", "Car"},
+var AttributeOrder = []struct{ Key, Abbreviation, Label string }{
+	{"strength", "For", "Força"}, {"dexterity", "Des", "Destreza"},
+	{"constitution", "Con", "Constituição"}, {"intelligence", "Int", "Inteligência"},
+	{"wisdom", "Sab", "Sabedoria"}, {"charisma", "Car", "Carisma"},
+}
+
+// AttributeLabel é o nome por extenso que a pessoa LÊ — "Destreza", e não
+// `dexterity`, que é identificador.
+//
+// Ele mora na MESMA lista da abreviação porque é a mesma lista vista de outro
+// ângulo: havia uma segunda transcrição dos seis nomes, privada da cena de
+// atributos, e um nome por extenso é exatamente o tipo de texto que uma
+// terceira cena copiaria de novo.
+//
+// @example book.AttributeLabel("charisma") // "Carisma"
+func AttributeLabel(key string) string {
+	for _, attribute := range AttributeOrder {
+		if attribute.Key == key {
+			return attribute.Label
+		}
+	}
+	return key
 }

@@ -464,7 +464,9 @@
       "base": 14,
       "itemBonus": 0,
       "total": 14,
-      "dexApplied": true,
+      "attribute": "dexterity",
+      "attributeAmount": 4,
+      "attributeSource": "",
       "vsMelee": 14,
       "vsRanged": 14,
       "contributions": []
@@ -940,7 +942,9 @@
       "base": 14,
       "itemBonus": 0,
       "total": 14,
-      "dexApplied": true,
+      "attribute": "dexterity",
+      "attributeAmount": 4,
+      "attributeSource": "",
       "vsMelee": 14,
       "vsRanged": 14,
       "contributions": []
