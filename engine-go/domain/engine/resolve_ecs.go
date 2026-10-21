@@ -84,6 +84,9 @@ func resolveInWorld(items []ActiveItem) ItemEffects {
 		// — era a "passada prévia" da função antiga, e aqui ela é um sistema com
 		// nome. A dependência deixou de ser um comentário e virou posição.
 		dropWhatTheFlagTurnsOff,
+		// O ESPELHO do de cima, e no mesmo lugar da sequência: quem EXIGE a
+		// flag também só pode ser julgado com todas elas no ar.
+		dropWhatTheFlagRequires,
 		// ANTES do `deferConditionals`: o dado extra e o bônus de crítico saem
 		// da pilha aqui, ou virariam interruptor na aba Efeitos — e crítico não
 		// se liga.
@@ -139,6 +142,28 @@ func dropWhatTheFlagTurnsOff(w *ecs.World) {
 	ecs.Each(w, func(e ecs.Entity, t Term) {
 		if c := t.Mod.Condition; c != nil && c.C == "flagOff" && flags[c.Flag] {
 			ecs.Set(w, e, Suppressed{Why: "a flag " + c.Flag + " está posta"})
+		}
+	})
+}
+
+// dropWhatTheFlagRequires cala o que só vale ENQUANTO a flag está posta.
+//
+// É o espelho do `dropWhatTheFlagTurnsOff`, e os dois existem porque o livro
+// escreve as duas frases: *"+4 na Defesa se NÃO estiver usando armadura
+// pesada"* (Pele de Ferro, p62) e *"se estiver usando uma armadura pesada, você
+// recebe +2 na Defesa"* (Encouraçado, p125).
+//
+// # Por que não dá para usar o `flagOn` que já existe
+//
+// Ele é OPT-IN, e a flag dele é POSTURA: a Fúria, a Inspiração, as seis do
+// cavaleiro — coisas que a pessoa LIGA na aba Efeitos. A `armadura-pesada` é
+// derivada do que está vestido, e oferecer um interruptor para ela seria
+// perguntar ao jogador o que a ficha já sabe.
+func dropWhatTheFlagRequires(w *ecs.World) {
+	flags := flagsOf(w)
+	ecs.Each(w, func(e ecs.Entity, t Term) {
+		if c := t.Mod.Condition; c != nil && c.C == "flagRequired" && !flags[c.Flag] {
+			ecs.Set(w, e, Suppressed{Why: "a flag " + c.Flag + " não está posta"})
 		}
 	})
 }
