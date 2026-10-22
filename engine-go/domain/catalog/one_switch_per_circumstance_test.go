@@ -35,21 +35,16 @@ func TestNoEntryOffersTwoSwitchesForTheSameCircumstance(t *testing.T) {
 		Modifiers []modifier `json:"modifiers"`
 	}
 
-	// A DÍVIDA NOMEADA, e ela só pode ENCOLHER. Baluarte e Duelo do cavaleiro
-	// têm a mesma forma e desenham a mesma linha dobrada, mas os dois CUSTAM PM
-	// e duram até um marco do turno — convertê-los mexeu nos totais com
-	// condicionais da ficha `lenda-nv20-maximo` (Defesa 32 → 22), o que quer
-	// dizer que a escolha entre `context` e `flagOn` interage com algo que esta
-	// fatia não mediu. Ficam registrados na ALE-400 em vez de arrastados junto.
+	// A LINHA DE BASE ACABOU (ALE-400). Ela nomeava as nove entradas de Baluarte
+	// e Duelo, que ficaram de fora porque convertê-las teria derrubado a Defesa
+	// da `lenda-nv20-maximo` de 32 para 22 — e mudar número de oráculo sem
+	// entender por quê não é conserto.
 	//
-	// Entrada nova com a mesma forma REPROVA: a linha de base não os isenta de
-	// existir, só de bloquear a convenção enquanto a investigação não acontece.
-	divida := map[string]bool{
-		"Baluarte +2": true, "Baluarte +4": true, "Baluarte +6": true,
-		"Baluarte +8": true, "Baluarte +10": true,
-		"Duelo +2": true, "Duelo +3": true, "Duelo +4": true, "Duelo +5": true,
-	}
-	medidos, reprovados, naDivida := 0, 0, 0
+	// A queda NÃO REPRODUZIU. Medida de novo em quatro commits daquela semana e
+	// no de hoje, convertendo o catálogo e o despejo juntos e depois só o
+	// catálogo: a Defesa fica em 32 em todos. A varredura não fica esperando um
+	// número que ninguém consegue produzir de novo.
+	medidos, reprovados := 0, 0
 	for _, recurso := range []string{
 		"granted-powers", "general-powers", "class-powers", "race-defs", "items", "origins",
 	} {
@@ -72,10 +67,6 @@ func TestNoEntryOffersTwoSwitchesForTheSameCircumstance(t *testing.T) {
 			}
 			for nota, n := range porNota {
 				if n < 2 {
-					continue
-				}
-				if divida[e.Name] {
-					naDivida++
 					continue
 				}
 				reprovados++
@@ -101,14 +92,8 @@ func TestNoEntryOffersTwoSwitchesForTheSameCircumstance(t *testing.T) {
 		t.Fatalf("só %d modificadores de `context` no catálogo — eram 31 quando isto "+
 			"foi escrito, e o caso não estaria medindo nada", medidos)
 	}
-	// A dívida também tem denominador: se ela encolher e esta lista não, o caso
-	// avisa — é a mesma catraca do teto de linha.
-	if naDivida != len(divida) {
-		t.Errorf("a linha de base tem %d entradas e só %d ainda dobram a linha — "+
-			"tire da lista as que foram consertadas", len(divida), naDivida)
-	}
 	if reprovados == 0 {
-		t.Logf("interruptores de contexto conferidos: %d | na dívida: %d", medidos, naDivida)
+		t.Logf("interruptores de contexto conferidos: %d", medidos)
 	}
 }
 

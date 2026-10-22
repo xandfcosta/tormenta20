@@ -14070,8 +14070,9 @@
           "amount": 2,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         },
         {
@@ -14081,8 +14082,9 @@
           "amount": 2,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
       ],
@@ -14104,8 +14106,9 @@
           "amount": 2,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+            "c": "flagOn",
+            "flag": "duelo",
+            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         },
         {
@@ -14116,8 +14119,9 @@
           "amount": 2,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+            "c": "flagOn",
+            "flag": "duelo",
+            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         }
       ],
@@ -14138,8 +14142,9 @@
           "amount": 4,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         },
         {
@@ -14149,8 +14154,9 @@
           "amount": 4,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
       ],
@@ -14189,8 +14195,9 @@
           "amount": 3,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+            "c": "flagOn",
+            "flag": "duelo",
+            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         },
         {
@@ -14201,8 +14208,9 @@
           "amount": 3,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+            "c": "flagOn",
+            "flag": "duelo",
+            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         }
       ],
@@ -14223,8 +14231,9 @@
           "amount": 6,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         },
         {
@@ -14234,8 +14243,9 @@
           "amount": 6,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
       ],
@@ -14266,8 +14276,9 @@
           "amount": 4,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+            "c": "flagOn",
+            "flag": "duelo",
+            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         },
         {
@@ -14278,8 +14289,9 @@
           "amount": 4,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+            "c": "flagOn",
+            "flag": "duelo",
+            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         }
       ],
@@ -14300,8 +14312,9 @@
           "amount": 8,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         },
         {
@@ -14311,8 +14324,9 @@
           "amount": 8,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
       ],
@@ -14341,8 +14355,9 @@
           "amount": 10,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         },
         {
@@ -14352,8 +14367,9 @@
           "amount": 10,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "Baluarte — 1 PM, até o início do próximo turno"
+            "c": "flagOn",
+            "flag": "baluarte",
+            "label": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
       ],
@@ -14375,8 +14391,9 @@
           "amount": 5,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+            "c": "flagOn",
+            "flag": "duelo",
+            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         },
         {
@@ -14387,8 +14404,9 @@
           "amount": 5,
           "bonusType": "training",
           "condition": {
-            "c": "context",
-            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+            "c": "flagOn",
+            "flag": "duelo",
+            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         }
       ],
