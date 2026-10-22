@@ -53,6 +53,9 @@ var alvosQueOMotorAplica = map[string]string{
 	"armorPenalty": "breakdowns.go e load.go",
 	"armorPenaltyExempt": "breakdowns.go, tirando da perícia a penalidade do ITEM " +
 		"que concede a isenção (p338, ALE-437)",
+	"armorPenaltyWidened": "breakdowns.go, fazendo a penalidade DAQUELA peça valer " +
+		"nas dez perícias de Força e Destreza em vez das três da coluna da Tabela " +
+		"2-1 — quem não sabe usar (p152, ALE-444)",
 	"defenseAttribute": "breakdowns.go, autorizando um atributo a entrar na Defesa " +
 		"NO LUGAR da Destreza (p69, p79, ALE-443)",
 	"displacement":   "breakdowns.go, no deslocamento",

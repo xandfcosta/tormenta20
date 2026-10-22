@@ -279,6 +279,16 @@ type ConditionalEffect struct {
 type ItemEffects struct {
 	ByTarget map[string]AggregatedStat
 	Flags    map[string]bool
+	// FlagSources nomeia quem acendeu cada bandeira — "Cota de malha" para a
+	// `cannot-apply-dex-to-defense`.
+	//
+	// Ela existe porque a bandeira é a única parcela que a resolução cala antes
+	// de virar contribuição, então o `StatFor` não a enxerga: sem este mapa, a
+	// tela que mostra um atributo calado tem de adivinhar a CAUSA, e foi
+	// adivinhando que ela acusou "armadura pesada" numa ficha de armadura de
+	// couro (ALE-444). Fora do fio de propósito — o `MarshalJSON` emite a forma
+	// do oráculo, e procedência de bandeira não é número de ninguém.
+	FlagSources map[string]string
 	// Factors é o fator JÁ RESOLVIDO por alvo — o mais severo vence, e eles não
 	// compõem (ver `factor.go`). Quem o APLICA é a decomposição, porque ele age
 	// sobre o total COM a base, e a base não passa por aqui.
@@ -439,6 +449,12 @@ func targetKey(t ModifierTarget) string {
 		// O modificador não carrega número: quem diz QUAL item sai da conta é a
 		// FONTE da contribuição, e um `amount` zero a atravessa inteira.
 		return "armorPenaltyExempt:" + t.Name
+	case "armorPenaltyWidened":
+		// SEM NOME E SEM NÚMERO: ele não isenta uma perícia nem soma nada — diz
+		// que a penalidade DESTA fonte vale nas dez perícias de Força e
+		// Destreza, e não só nas três que a coluna da Tabela 2-1 marca (p152).
+		// Quem a fonte é sai da contribuição, como no `armorPenaltyExempt`.
+		return "armorPenaltyWidened"
 	case "tempHp":
 		return "tempHp"
 	case "tempMp":
@@ -798,6 +814,7 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 		byTarget[key] = resolveStack(buckets[key])
 	}
 	return ItemEffects{
-		ByTarget: byTarget, Flags: effects.Flags, Factors: factors, Conditional: remaining,
+		ByTarget: byTarget, Flags: effects.Flags, FlagSources: effects.FlagSources,
+		Factors: factors, Conditional: remaining,
 	}
 }

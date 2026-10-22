@@ -235,7 +235,21 @@ func attributeBreakdown(ch Character, attr string, e ItemEffects) AttributeBreak
 	}
 }
 
+// armorPenaltyExpertises são as três que a coluna "Penalidade de Armadura?" da
+// Tabela 2-1 marca (p115, p153). O `TestTheArmorPenaltyAgreesWithTheBook`
+// costura esta lista com a do catálogo de perícias.
 var armorPenaltyExpertises = map[string]bool{"Acrobacia": true, "Furtividade": true, "Ladinagem": true}
+
+// strengthOrDexterityBased diz se a perícia é "baseada em Força e Destreza"
+// (p152) — que é a OUTRA coluna da Tabela 2-1, a do atributo-chave, com exemplo
+// trabalhado na p114: "nas perícias baseadas em Força, no caso, Atletismo e
+// Luta". São dez, e as três de cima estão entre elas.
+//
+// Ela pergunta ao atributo da LINHA da perícia em vez de carregar uma segunda
+// lista de nomes: o conjunto já está escrito uma vez, e duas listas divergem.
+func strengthOrDexterityBased(attribute string) bool {
+	return attribute == "strength" || attribute == "dexterity"
+}
 
 // savingThrowExpertises são as três perícias que o livro chama de TESTE DE
 // RESISTÊNCIA, e é onde o alvo `resistance` cai.
@@ -274,12 +288,9 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, l
 	itemContribs := withNoteContribs(merged.Contributions)
 
 	armorPenaltyApplied := 0
-	if armorPenaltyExpertises[state.Name] {
-		exempt := StatFor(e, ModifierTarget{K: "armorPenaltyExempt", Name: state.Name}).Contributions
-		for _, row := range armorPenaltyContribs(e, load, exempt) {
-			armorPenaltyApplied += row.Amount
-			itemContribs = append(itemContribs, row)
-		}
+	for _, row := range armorPenaltyContribs(e, state, load) {
+		armorPenaltyApplied += row.Amount
+		itemContribs = append(itemContribs, row)
 	}
 
 	itemBonus := merged.Total
@@ -303,20 +314,42 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, l
 // descreve com essas mesmas palavras — "sofre penalidade de armadura –5". São
 // linhas separadas de propósito: somadas numa só, o jogador não descobre que
 // metade dela some ao largar peso.
-// O `exempt` são as contribuições de `armorPenaltyExempt` desta perícia, e a
-// FONTE de cada uma diz qual item sai da conta: o encanto Sombrio (p339) isenta
-// a peça que o carrega, e um personagem de armadura isenta mais escudo continua
-// pagando a do escudo.
+//
+// # Quem penaliza esta perícia é decidido por FONTE, e não por perícia
+//
+// Uma peça que o portador NÃO SABE USAR penaliza as dez perícias de Força e
+// Destreza em vez das três da coluna (p152) — então a mesma perícia pode levar
+// a penalidade de um item e não a de outro, e é por isso que o laço pergunta
+// por contribuição. A sobrecarga fica de fora do alargamento: ela não é uma
+// armadura que alguém deixou de saber usar.
+//
+// A ISENÇÃO (`armorPenaltyExempt`, p338-339) continua sendo da perícia e do
+// item: o encanto Sombrio isenta a peça que o carrega, e um personagem de
+// armadura isenta mais escudo continua pagando a do escudo.
 func armorPenaltyContribs(
-	e ItemEffects, load LoadBreakdown, exempt []Contribution,
+	e ItemEffects, state CharacterExpertise, load LoadBreakdown,
 ) []BreakdownContribution {
 	out := []BreakdownContribution{}
+	exempt := StatFor(e, ModifierTarget{K: "armorPenaltyExempt", Name: state.Name}).Contributions
 	exemptSources := map[string]bool{}
 	for _, c := range exempt {
 		exemptSources[c.SourceID] = true
 	}
+	widened := map[string]bool{}
+	for _, c := range StatFor(e, ModifierTarget{K: "armorPenaltyWidened"}).Contributions {
+		widened[c.SourceID] = true
+	}
+	penalizes := func(sourceID string) bool {
+		if armorPenaltyExpertises[state.Name] {
+			return true
+		}
+		return widened[sourceID] && strengthOrDexterityBased(state.Attribute)
+	}
 	item, penalized := 0, map[string]bool{}
 	for _, c := range StatFor(e, ModifierTarget{K: "armorPenalty"}).Contributions {
+		if !penalizes(c.SourceID) {
+			continue
+		}
 		penalized[c.SourceID] = true
 		if exemptSources[c.SourceID] {
 			continue
@@ -324,7 +357,15 @@ func armorPenaltyContribs(
 		item += c.Amount
 	}
 	if item != 0 {
-		out = append(out, BreakdownContribution{Source: "Penalidade de armadura", Amount: item})
+		row := BreakdownContribution{Source: "Penalidade de armadura", Amount: item}
+		// FORA DAS TRÊS, a linha diz POR QUE está ali. Um "Penalidade de
+		// armadura −1" solto em Luta se lê como defeito justamente para quem
+		// conhece a Tabela 2-1, que não marca Luta — e quem está fora das três
+		// só chegou aqui por alargamento, então a causa é sempre esta.
+		if !armorPenaltyExpertises[state.Name] {
+			row.Note = "sem proficiência: vale nas perícias de Força e Destreza (p152)"
+		}
+		out = append(out, row)
 	}
 	// A LINHA DA ISENÇÃO fica, com o item e o motivo: uma penalidade que some
 	// sem dizer por quê é a ficha escondendo o que a habilidade faz (ALE-430).
@@ -337,7 +378,7 @@ func armorPenaltyContribs(
 		}
 		out = append(out, BreakdownContribution{Source: c.Source, Note: c.Note})
 	}
-	if load.ArmorPenalty != 0 {
+	if armorPenaltyExpertises[state.Name] && load.ArmorPenalty != 0 {
 		out = append(out, overloadContrib(load.ArmorPenalty))
 	}
 	return out

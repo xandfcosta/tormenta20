@@ -40,9 +40,17 @@ func defenseRows(sheet engine.ComputedSheet) []breakdownRow {
 // pareceria defeito justamente para quem conhece a p152 ("se usar uma armadura
 // pesada, você não aplica sua Destreza na Defesa"). O nome do poder é o que
 // explica a exceção (p69, p79).
+//
+// E QUEM BLOQUEOU É NOMEADO PELO MOTOR. A tela não tem como saber: ela vê um
+// atributo vazio, e não a fonte que o esvaziou. Escrito à mão aqui, o rótulo
+// dizia "bloqueada por armadura pesada" na ficha de um ladino de armadura de
+// COURO — uma causa que a tela afirmava sem conhecer (ALE-444).
 func defenseAttributeRow(defense engine.DefenseBreakdown) breakdownRow {
 	if defense.Attribute == "" {
-		return breakdownRow{Label: "Destreza (bloqueada por armadura pesada)", Value: "+0", Muted: true}
+		return breakdownRow{
+			Label: "Destreza (bloqueada por " + defense.AttributeBlockedBy + ")",
+			Value: "+0", Muted: true,
+		}
 	}
 	label := book.AttributeLabel(defense.Attribute)
 	if defense.AttributeSource != "" {

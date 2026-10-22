@@ -1041,6 +1041,7 @@
       "attribute": "",
       "attributeAmount": 0,
       "attributeSource": "",
+      "attributeBlockedBy": "Armadura completa",
       "vsMelee": 22,
       "vsRanged": 22,
       "contributions": [
@@ -1552,6 +1553,7 @@
       "attribute": "",
       "attributeAmount": 0,
       "attributeSource": "",
+      "attributeBlockedBy": "Armadura completa",
       "vsMelee": 32,
       "vsRanged": 32,
       "contributions": [

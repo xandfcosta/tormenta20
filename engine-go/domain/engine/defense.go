@@ -22,6 +22,15 @@ type DefenseBreakdown struct {
 	// AttributeSource é a procedência da TROCA — "Autoconfiança". Vazia quando
 	// quem entrou foi a Destreza, que não precisa de licença de ninguém.
 	AttributeSource string `json:"attributeSource"`
+	// AttributeBlockedBy é o ITEM que calou a Destreza — "Cota de malha" —, e
+	// vem vazio quando ela entrou.
+	//
+	// Quem o diz é o motor porque a tela não tem como saber: ela vê um
+	// `Attribute` vazio e não a fonte que o esvaziou. Enquanto o rótulo era
+	// escrito à mão, ele dizia "bloqueada por armadura pesada" para uma
+	// armadura de COURO (ALE-444) — e nomear o item é melhor que acertar a
+	// categoria, porque a ficha pode ter mais de uma peça vestida.
+	AttributeBlockedBy string `json:"attributeBlockedBy"`
 	// Defesa contra ataques corpo a corpo e à distância. Iguais ao Total na
 	// maioria das fichas; separam-se quando algo é DIRECIONAL, hoje só o Caído
 	// (p394: −5 contra corpo a corpo, +5 contra à distância).
@@ -45,15 +54,16 @@ func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
 		})
 	}
 	return DefenseBreakdown{
-		Base:            base,
-		ItemBonus:       stat.Total + insolence,
-		Total:           total,
-		Attribute:       attribute.Key,
-		AttributeAmount: attribute.Amount,
-		AttributeSource: attribute.Source,
-		VsMelee:         total + melee.Total,
-		VsRanged:        total + ranged.Total,
-		Contributions:   withNoteContribs(concatContribs(contribs, melee.Contributions, ranged.Contributions)),
+		Base:               base,
+		ItemBonus:          stat.Total + insolence,
+		Total:              total,
+		Attribute:          attribute.Key,
+		AttributeAmount:    attribute.Amount,
+		AttributeSource:    attribute.Source,
+		AttributeBlockedBy: attribute.BlockedBy,
+		VsMelee:            total + melee.Total,
+		VsRanged:           total + ranged.Total,
+		Contributions:      withNoteContribs(concatContribs(contribs, melee.Contributions, ranged.Contributions)),
 	}
 }
 
@@ -64,6 +74,11 @@ type defenseAttributeChoice struct {
 	Key    string
 	Amount int
 	Source string
+	// BlockedBy é a FONTE que acendeu a bandeira que calou a Destreza. Ela fica
+	// escrita mesmo quando um poder abre exceção e outro atributo entra: a
+	// Destreza continua bloqueada, e é ela que a linha apagada do diálogo
+	// explica.
+	BlockedBy string
 }
 
 // defenseAttribute escolhe o atributo da Defesa: a MELHOR entre a Destreza
@@ -88,8 +103,10 @@ type defenseAttributeChoice struct {
 // "pode usar" não obriga ninguém a piorar a própria Defesa.
 func defenseAttribute(ch Character, e ItemEffects) defenseAttributeChoice {
 	best := defenseAttributeChoice{}
-	if !e.Flags["cannot-apply-dex-to-defense"] {
-		best = defenseAttributeChoice{Key: "dexterity", Amount: effectiveAttribute(ch, "dexterity", e)}
+	if e.Flags["cannot-apply-dex-to-defense"] {
+		best.BlockedBy = blockedDexSource(e)
+	} else {
+		best.Key, best.Amount = "dexterity", effectiveAttribute(ch, "dexterity", e)
 	}
 	for _, key := range AttributeKeys {
 		allowed := StatFor(e, ModifierTarget{K: "defenseAttribute", Name: key})
@@ -97,7 +114,8 @@ func defenseAttribute(ch Character, e ItemEffects) defenseAttributeChoice {
 			continue
 		}
 		if amount := effectiveAttribute(ch, key, e); amount > best.Amount {
-			best = defenseAttributeChoice{Key: key, Amount: amount, Source: allowed.Contributions[0].Source}
+			best.Key, best.Amount = key, amount
+			best.Source = allowed.Contributions[0].Source
 		}
 	}
 	return best
@@ -137,4 +155,14 @@ func hasActiveCondition(ch Character, id string) bool {
 		}
 	}
 	return false
+}
+
+// blockedDexSource nomeia a peça que acendeu a bandeira que cala a Destreza.
+//
+// A PRIMEIRA contribuição basta, e é a regra do livro que decide isso: só
+// armadura pesada acende a bandeira (p152) e "não se pode vestir uma armadura
+// sobre outra" (p152), então há no máximo uma. Listar todas pediria uma linha
+// que o diálogo não tem onde pôr.
+func blockedDexSource(e ItemEffects) string {
+	return e.FlagSources["cannot-apply-dex-to-defense"]
 }

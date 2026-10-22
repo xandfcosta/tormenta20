@@ -345,8 +345,19 @@ func vestedEsotericHomebrewMods(equipped *string, catalog *CatalogItem, ownMods 
 	return out
 }
 
-// nonProficiencyPenalties: T20 p142 penalties for using a
-// weapon/armor/shield without the required proficiency.
+// nonProficiencyPenalties: a penalidade da p152 (armadura e escudo) e a da
+// p142 (arma) por usar o que não se sabe usar.
+//
+// A de ARMADURA não dá número nenhum: ela ALARGA o conjunto de perícias em que
+// a penalidade da própria peça entra, de 3 para 10. A frase da p152 é a mesma
+// da p153 — "aplica a penalidade da armadura em…" — trocando só o conjunto, e
+// quem a aplica é o `armorPenaltyContribs`.
+//
+// Escrever o VALOR aqui foi o defeito da ALE-444: o laço procurava um
+// modificador `armorPenalty` no verbete e caía num −1 escrito à mão quando não
+// achava — inventando penalidade para a armadura de couro e a acolchoada, que
+// a Tabela 2-5 dá como 0, e perdendo a da armadura mágica, que herda a sua do
+// `composedOf` e não a declara.
 func nonProficiencyPenalties(catalog *CatalogItem, prof map[string]bool) []Modifier {
 	required := requiredProficiency(catalog)
 	if required == "" || prof[required] {
@@ -355,27 +366,15 @@ func nonProficiencyPenalties(catalog *CatalogItem, prof map[string]bool) []Modif
 	if strings.HasPrefix(catalog.Category, "weapon-") {
 		return weaponNonProficiency(catalog)
 	}
-	basePenalty := -1
-	for _, m := range catalog.Modifiers {
-		if m.Target.K == "armorPenalty" {
-			basePenalty = m.Amount
-			break
-		}
-	}
+	// A CONDIÇÃO SAI DO EIXO DO ITEM, e não de um `vested` escrito à mão:
+	// escudo se EMPUNHA, então um alargamento preso em `vested` deixava todo
+	// escudo que o portador não sabe usar passar de graça (ALE-444).
 	return []Modifier{
 		{
-			Target:    ModifierTarget{K: "flag", Name: "cannot-apply-dex-to-defense"},
-			Amount:    1,
+			Target:    ModifierTarget{K: "armorPenaltyWidened"},
 			BonusType: "untyped",
-			Condition: &ModifierCondition{C: "vested"},
-			Note:      "sem proficiência",
-		},
-		{
-			Target:    ModifierTarget{K: "expertiseAll"},
-			Amount:    basePenalty,
-			BonusType: "untyped",
-			Condition: &ModifierCondition{C: "vested"},
-			Note:      catalog.Name + " sem proficiência",
+			Condition: &ModifierCondition{C: catalog.Equip},
+			Note:      catalog.Name + " sem proficiência: a penalidade vale nas perícias de Força e Destreza (p152)",
 		},
 	}
 }

@@ -42,7 +42,7 @@ func TestTheDefenseRowsAddUpToTheTotal(t *testing.T) {
 		source    string
 	}{
 		{name: "com a Destreza aplicada", attribute: "dexterity", amount: 3},
-		{name: "com a Destreza bloqueada por armadura pesada"},
+		{name: "com a Destreza bloqueada pela armadura pesada"},
 		{name: "com o Carisma no lugar da Destreza", attribute: "charisma",
 			amount: 4, source: "Autoconfiança"},
 	}
@@ -99,22 +99,30 @@ func TestTheSubstitutedAttributeRowNamesThePowerThatAllowedIt(t *testing.T) {
 	}
 }
 
-// A DESTREZA BLOQUEADA APARECE ZERADA, e não some.
+// A DESTREZA BLOQUEADA APARECE ZERADA, E A LINHA NOMEIA O ITEM QUE A CALOU
+// (ALE-444).
 //
 // Sumir seria a resposta errada para a pergunta que o diálogo existe para
 // responder: quem veste armadura pesada quer ver POR QUE a Defesa não subiu com
 // a Destreza dele, e uma linha ausente não diz nada.
+//
+// E o motivo sai do MOTOR. Escrito à mão aqui, ele dizia "bloqueada por
+// armadura pesada" — uma categoria que a tela não tinha como conferir, e que a
+// ficha de um ladino de armadura de COURO desmentia.
 func TestBlockedDexterityComesOutAsADimmedRow(t *testing.T) {
 	sheet := engine.ComputedSheet{
-		Defense: engine.DefenseBreakdown{Base: 10, Total: 10, VsMelee: 10, VsRanged: 10},
+		Defense: engine.DefenseBreakdown{
+			Base: 10, Total: 10, VsMelee: 10, VsRanged: 10,
+			AttributeBlockedBy: "Cota de malha",
+		},
 	}
 	rows := defenseRows(sheet)
 	if len(rows) < 2 {
 		t.Fatalf("a Defesa saiu com %d linhas: nem a base e a Destreza estão lá", len(rows))
 	}
 	dex := rows[1]
-	if !strings.Contains(dex.Label, "bloqueada por armadura pesada") {
-		t.Errorf("a linha da Destreza é %q e não diz que ela está bloqueada", dex.Label)
+	if !strings.Contains(dex.Label, "bloqueada por Cota de malha") {
+		t.Errorf("a linha da Destreza é %q, e ela tem de nomear a peça que a calou", dex.Label)
 	}
 	if dex.Value != "+0" {
 		t.Errorf("a Destreza bloqueada vale %q e devia valer +0: ela não entra na Defesa", dex.Value)
