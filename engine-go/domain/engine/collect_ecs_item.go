@@ -124,11 +124,34 @@ func (r *Ruleset) classifyWornItem(w *ecs.World, e ecs.Entity, it CharacterItem,
 }
 
 // ownItemMods é o estágio 1: o que o verbete e as sobreposições concedem.
+//
+// SEM VERBETE, NADA — nem as sobreposições (ALE-389).
+//
+// A regra do dono é que o item criado pelo JOGADOR é cosmético, e ela valia por
+// ausência: `character_items` não tem coluna de modificador. O buraco da
+// ausência era este laço, que aplicava melhoria, material e encanto mesmo com o
+// verbete nulo — um item caseiro com `material-adamante` e `melhoria-reforcada`
+// gravados entregava Defesa +1 e penalidade de armadura −1.
+//
+// A sobreposição é uma linha que o livro escreve SOBRE um item: ela diz "+1 na
+// Defesa desta armadura", e sem a armadura não há a que ela se aplique. O
+// `overlayModsFor` não tinha como recusar sozinho — ele recebe a CATEGORIA do
+// hospedeiro, e sem hospedeiro ela vem vazia, o que deixa passar tudo o que não
+// é restrito a família nenhuma.
+//
+// Vale também para o item de OUTRO MUNDO: um herói levado a outra mesa não leva
+// o verbete que só a mesa dele conhece, e o `catalogId` que não resolve tem de
+// contribuir zero INTEIRO — não zero do verbete e o resto da sobreposição.
+//
+// A CENA JÁ RECUSA O GESTO (`fitsItemImprovement`: "um item custom não recebe
+// melhoria"), e continua sendo a fronteira dele. Esta porta é da CONTA: linha
+// antiga não passou por aquela recusa.
 func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier {
 	own := []Modifier{}
-	if catalog != nil {
-		own = append(own, catalog.Modifiers...)
+	if catalog == nil {
+		return own
 	}
+	own = append(own, catalog.Modifiers...)
 	for _, id := range parseStringArray(it.Improvements) {
 		own = append(own, overlayModsFor(r.getCatalogItem(id), catalog)...)
 	}
