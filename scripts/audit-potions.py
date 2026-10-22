@@ -39,7 +39,6 @@ X_DO_NOME = 349.8
 X_DO_PRECO = (490.0, 502.0)
 FOLGA = 3.0
 
-RE_FAIXA = re.compile(r'^(\d{1,3})(?:-(\d{1,3}))?$')
 RE_PRECO = re.compile(r'T\$\s*([\d.]+)')
 # "Curar Ferimentos (4d8+4 PV)" → nome e parêntese. O parêntese pode ter duas
 # coisas separadas por ponto e vírgula.
@@ -50,39 +49,10 @@ CATALOGO = P.RAIZ / 'engine-go/domain/catalog/data'
 
 
 def linhas_da_tabela():
-    """(inicio, fim, célula, preço) de cada linha, com a célula REMONTADA.
-
-    A célula do nome QUEBRA EM DUAS LINHAS quando traz aprimoramento — "Escudo
-    da Fé" numa e "(aprimoramento para duração cena)" na seguinte —, e a de
-    baixo não tem `d%` ao lado. Por isso a leitura vai até a próxima faixa, e
-    não até a próxima linha.
-    """
-    celulas = P.linhas_com_coordenada(PAGINA_DA_TABELA)
-    dados = sorted((y, RE_FAIXA.match(t).groups()) for x, y, t in celulas
-                   if X_DO_DADO[0] <= x <= X_DO_DADO[1] and RE_FAIXA.match(t))
-    nomes = sorted((y, t) for x, y, t in celulas if abs(x - X_DO_NOME) < FOLGA)
-    precos = [(y, t) for x, y, t in celulas
-              if X_DO_PRECO[0] <= x <= X_DO_PRECO[1] and RE_PRECO.match(t)]
-
-    for i, (y, (inicio, fim)) in enumerate(dados):
-        proxima = dados[i + 1][0] if i + 1 < len(dados) else 1e9
-        corpo = [t for yn, t in nomes if y - P.MESMA_LINHA < yn < proxima - P.MESMA_LINHA]
-        preco = next((t for yp, t in precos if abs(yp - y) < P.MESMA_LINHA), None)
-        if not corpo or preco is None:
-            continue
-        yield (int(inicio), int(fim or inicio), P.junta(corpo),
-               int(RE_PRECO.match(preco).group(1).replace('.', '')))
-
-
-def faixas_que_nao_fecham(linhas) -> str:
-    coberto = {}
-    for inicio, fim, celula, _preco in linhas:
-        for d in range(inicio, fim + 1):
-            if d in coberto:
-                return f'{d}% aparece duas vezes ({coberto[d]} e {celula})'
-            coberto[d] = celula
-    faltando = [d for d in range(1, 101) if d not in coberto]
-    return f'{len(faltando)} valores sem linha: {faltando[:8]}…' if faltando else ''
+    """As linhas da Tabela 8-12 — a LEITURA mora no `t20pdf`, como nas outras
+    quatro tabelas de saque deste capítulo."""
+    return P.linhas_de_tabela(PAGINA_DA_TABELA, X_DO_DADO, X_DO_NOME,
+                              X_DO_PRECO, FOLGA)
 
 
 def partes_da_celula(celula: str) -> dict:
@@ -116,7 +86,7 @@ def pocoes_do_catalogo():
 def audita() -> int:
     print(f'══ TABELA 8-12 (poções, p{PAGINA_DO_LIVRO}) ' + '═' * 30)
     tabela = list(linhas_da_tabela())
-    buraco = faixas_que_nao_fecham(tabela)
+    buraco = P.faixas_que_nao_fecham(tabela)
     if buraco:
         print(f'A TABELA NÃO FECHA: {buraco}')
         print('Nada do que vem abaixo vale — o auditor leu a página errado.')
