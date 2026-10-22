@@ -447,8 +447,8 @@
       ]
     },
     {
-      "sourceId": "class.cavaleiro.baluarte-2",
-      "source": "Baluarte +2",
+      "sourceId": "class.cavaleiro.baluarte",
+      "source": "Baluarte",
       "equipped": "vested",
       "modifiers": [
         {
@@ -478,8 +478,8 @@
       ]
     },
     {
-      "sourceId": "class.cavaleiro.duelo-2",
-      "source": "Duelo +2",
+      "sourceId": "class.cavaleiro.duelo",
+      "source": "Duelo",
       "equipped": "vested",
       "modifiers": [
         {
@@ -501,229 +501,6 @@
             "scope": "all"
           },
           "amount": 2,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        }
-      ]
-    },
-    {
-      "sourceId": "class.cavaleiro.baluarte-4",
-      "source": "Baluarte +4",
-      "equipped": "vested",
-      "modifiers": [
-        {
-          "target": {
-            "k": "defense"
-          },
-          "amount": 4,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        },
-        {
-          "target": {
-            "k": "resistance"
-          },
-          "amount": 4,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        }
-      ]
-    },
-    {
-      "sourceId": "class.cavaleiro.duelo-3",
-      "source": "Duelo +3",
-      "equipped": "vested",
-      "modifiers": [
-        {
-          "target": {
-            "k": "attack",
-            "scope": "all"
-          },
-          "amount": 3,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        },
-        {
-          "target": {
-            "k": "damage",
-            "scope": "all"
-          },
-          "amount": 3,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        }
-      ]
-    },
-    {
-      "sourceId": "class.cavaleiro.baluarte-6",
-      "source": "Baluarte +6",
-      "equipped": "vested",
-      "modifiers": [
-        {
-          "target": {
-            "k": "defense"
-          },
-          "amount": 6,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        },
-        {
-          "target": {
-            "k": "resistance"
-          },
-          "amount": 6,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        }
-      ]
-    },
-    {
-      "sourceId": "class.cavaleiro.duelo-4",
-      "source": "Duelo +4",
-      "equipped": "vested",
-      "modifiers": [
-        {
-          "target": {
-            "k": "attack",
-            "scope": "all"
-          },
-          "amount": 4,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        },
-        {
-          "target": {
-            "k": "damage",
-            "scope": "all"
-          },
-          "amount": 4,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        }
-      ]
-    },
-    {
-      "sourceId": "class.cavaleiro.baluarte-8",
-      "source": "Baluarte +8",
-      "equipped": "vested",
-      "modifiers": [
-        {
-          "target": {
-            "k": "defense"
-          },
-          "amount": 8,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        },
-        {
-          "target": {
-            "k": "resistance"
-          },
-          "amount": 8,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        }
-      ]
-    },
-    {
-      "sourceId": "class.cavaleiro.baluarte-10",
-      "source": "Baluarte +10",
-      "equipped": "vested",
-      "modifiers": [
-        {
-          "target": {
-            "k": "defense"
-          },
-          "amount": 10,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        },
-        {
-          "target": {
-            "k": "resistance"
-          },
-          "amount": 10,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        }
-      ]
-    },
-    {
-      "sourceId": "class.cavaleiro.duelo-5",
-      "source": "Duelo +5",
-      "equipped": "vested",
-      "modifiers": [
-        {
-          "target": {
-            "k": "attack",
-            "scope": "all"
-          },
-          "amount": 5,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        },
-        {
-          "target": {
-            "k": "damage",
-            "scope": "all"
-          },
-          "amount": 5,
           "bonusType": "training",
           "condition": {
             "c": "flagOn",
@@ -844,9 +621,9 @@
     ],
     "conditional": [
       {
-        "term": "class.cavaleiro.baluarte-2::defense::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-2",
-        "source": "Baluarte +2",
+        "term": "class.cavaleiro.baluarte::defense::::flagOn///baluarte",
+        "sourceId": "class.cavaleiro.baluarte",
+        "source": "Baluarte",
         "bonusType": "training",
         "amount": 2,
         "note": "Baluarte — 1 PM, até o início do próximo turno",
@@ -856,9 +633,9 @@
         "flag": "baluarte"
       },
       {
-        "term": "class.cavaleiro.baluarte-2::resistance::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-2",
-        "source": "Baluarte +2",
+        "term": "class.cavaleiro.baluarte::resistance::::flagOn///baluarte",
+        "sourceId": "class.cavaleiro.baluarte",
+        "source": "Baluarte",
         "bonusType": "training",
         "amount": 2,
         "note": "Baluarte — 1 PM, até o início do próximo turno",
@@ -868,9 +645,9 @@
         "flag": "baluarte"
       },
       {
-        "term": "class.cavaleiro.duelo-2::attack:all::::flagOn///duelo",
-        "sourceId": "class.cavaleiro.duelo-2",
-        "source": "Duelo +2",
+        "term": "class.cavaleiro.duelo::attack:all::::flagOn///duelo",
+        "sourceId": "class.cavaleiro.duelo",
+        "source": "Duelo",
         "bonusType": "training",
         "amount": 2,
         "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
@@ -881,185 +658,11 @@
         "flag": "duelo"
       },
       {
-        "term": "class.cavaleiro.duelo-2::damage:all::::flagOn///duelo",
-        "sourceId": "class.cavaleiro.duelo-2",
-        "source": "Duelo +2",
+        "term": "class.cavaleiro.duelo::damage:all::::flagOn///duelo",
+        "sourceId": "class.cavaleiro.duelo",
+        "source": "Duelo",
         "bonusType": "training",
         "amount": 2,
-        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
-        "target": {
-          "k": "damage",
-          "scope": "all"
-        },
-        "flag": "duelo"
-      },
-      {
-        "term": "class.cavaleiro.baluarte-4::defense::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-4",
-        "source": "Baluarte +4",
-        "bonusType": "training",
-        "amount": 4,
-        "note": "Baluarte — 1 PM, até o início do próximo turno",
-        "target": {
-          "k": "defense"
-        },
-        "flag": "baluarte"
-      },
-      {
-        "term": "class.cavaleiro.baluarte-4::resistance::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-4",
-        "source": "Baluarte +4",
-        "bonusType": "training",
-        "amount": 4,
-        "note": "Baluarte — 1 PM, até o início do próximo turno",
-        "target": {
-          "k": "resistance"
-        },
-        "flag": "baluarte"
-      },
-      {
-        "term": "class.cavaleiro.duelo-3::attack:all::::flagOn///duelo",
-        "sourceId": "class.cavaleiro.duelo-3",
-        "source": "Duelo +3",
-        "bonusType": "training",
-        "amount": 3,
-        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
-        "target": {
-          "k": "attack",
-          "scope": "all"
-        },
-        "flag": "duelo"
-      },
-      {
-        "term": "class.cavaleiro.duelo-3::damage:all::::flagOn///duelo",
-        "sourceId": "class.cavaleiro.duelo-3",
-        "source": "Duelo +3",
-        "bonusType": "training",
-        "amount": 3,
-        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
-        "target": {
-          "k": "damage",
-          "scope": "all"
-        },
-        "flag": "duelo"
-      },
-      {
-        "term": "class.cavaleiro.baluarte-6::defense::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-6",
-        "source": "Baluarte +6",
-        "bonusType": "training",
-        "amount": 6,
-        "note": "Baluarte — 1 PM, até o início do próximo turno",
-        "target": {
-          "k": "defense"
-        },
-        "flag": "baluarte"
-      },
-      {
-        "term": "class.cavaleiro.baluarte-6::resistance::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-6",
-        "source": "Baluarte +6",
-        "bonusType": "training",
-        "amount": 6,
-        "note": "Baluarte — 1 PM, até o início do próximo turno",
-        "target": {
-          "k": "resistance"
-        },
-        "flag": "baluarte"
-      },
-      {
-        "term": "class.cavaleiro.duelo-4::attack:all::::flagOn///duelo",
-        "sourceId": "class.cavaleiro.duelo-4",
-        "source": "Duelo +4",
-        "bonusType": "training",
-        "amount": 4,
-        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
-        "target": {
-          "k": "attack",
-          "scope": "all"
-        },
-        "flag": "duelo"
-      },
-      {
-        "term": "class.cavaleiro.duelo-4::damage:all::::flagOn///duelo",
-        "sourceId": "class.cavaleiro.duelo-4",
-        "source": "Duelo +4",
-        "bonusType": "training",
-        "amount": 4,
-        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
-        "target": {
-          "k": "damage",
-          "scope": "all"
-        },
-        "flag": "duelo"
-      },
-      {
-        "term": "class.cavaleiro.baluarte-8::defense::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-8",
-        "source": "Baluarte +8",
-        "bonusType": "training",
-        "amount": 8,
-        "note": "Baluarte — 1 PM, até o início do próximo turno",
-        "target": {
-          "k": "defense"
-        },
-        "flag": "baluarte"
-      },
-      {
-        "term": "class.cavaleiro.baluarte-8::resistance::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-8",
-        "source": "Baluarte +8",
-        "bonusType": "training",
-        "amount": 8,
-        "note": "Baluarte — 1 PM, até o início do próximo turno",
-        "target": {
-          "k": "resistance"
-        },
-        "flag": "baluarte"
-      },
-      {
-        "term": "class.cavaleiro.baluarte-10::defense::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-10",
-        "source": "Baluarte +10",
-        "bonusType": "training",
-        "amount": 10,
-        "note": "Baluarte — 1 PM, até o início do próximo turno",
-        "target": {
-          "k": "defense"
-        },
-        "flag": "baluarte"
-      },
-      {
-        "term": "class.cavaleiro.baluarte-10::resistance::::flagOn///baluarte",
-        "sourceId": "class.cavaleiro.baluarte-10",
-        "source": "Baluarte +10",
-        "bonusType": "training",
-        "amount": 10,
-        "note": "Baluarte — 1 PM, até o início do próximo turno",
-        "target": {
-          "k": "resistance"
-        },
-        "flag": "baluarte"
-      },
-      {
-        "term": "class.cavaleiro.duelo-5::attack:all::::flagOn///duelo",
-        "sourceId": "class.cavaleiro.duelo-5",
-        "source": "Duelo +5",
-        "bonusType": "training",
-        "amount": 5,
-        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
-        "target": {
-          "k": "attack",
-          "scope": "all"
-        },
-        "flag": "duelo"
-      },
-      {
-        "term": "class.cavaleiro.duelo-5::damage:all::::flagOn///duelo",
-        "sourceId": "class.cavaleiro.duelo-5",
-        "source": "Duelo +5",
-        "bonusType": "training",
-        "amount": 5,
         "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
         "target": {
           "k": "damage",
@@ -1562,36 +1165,22 @@
     "autoFailExpertises": []
   },
   "activeConditionals": [
-    "class.cavaleiro.baluarte-10::defense::::flagOn///baluarte",
-    "class.cavaleiro.baluarte-10::resistance::::flagOn///baluarte",
-    "class.cavaleiro.baluarte-2::defense::::flagOn///baluarte",
-    "class.cavaleiro.baluarte-2::resistance::::flagOn///baluarte",
-    "class.cavaleiro.baluarte-4::defense::::flagOn///baluarte",
-    "class.cavaleiro.baluarte-4::resistance::::flagOn///baluarte",
-    "class.cavaleiro.baluarte-6::defense::::flagOn///baluarte",
-    "class.cavaleiro.baluarte-6::resistance::::flagOn///baluarte",
-    "class.cavaleiro.baluarte-8::defense::::flagOn///baluarte",
-    "class.cavaleiro.baluarte-8::resistance::::flagOn///baluarte",
-    "class.cavaleiro.duelo-2::attack:all::::flagOn///duelo",
-    "class.cavaleiro.duelo-2::damage:all::::flagOn///duelo",
-    "class.cavaleiro.duelo-3::attack:all::::flagOn///duelo",
-    "class.cavaleiro.duelo-3::damage:all::::flagOn///duelo",
-    "class.cavaleiro.duelo-4::attack:all::::flagOn///duelo",
-    "class.cavaleiro.duelo-4::damage:all::::flagOn///duelo",
-    "class.cavaleiro.duelo-5::attack:all::::flagOn///duelo",
-    "class.cavaleiro.duelo-5::damage:all::::flagOn///duelo"
+    "class.cavaleiro.baluarte::defense::::flagOn///baluarte",
+    "class.cavaleiro.baluarte::resistance::::flagOn///baluarte",
+    "class.cavaleiro.duelo::attack:all::::flagOn///duelo",
+    "class.cavaleiro.duelo::damage:all::::flagOn///duelo"
   ],
   "sheetWithConditionals": {
     "defense": {
       "base": 10,
-      "itemBonus": 22,
-      "total": 32,
+      "itemBonus": 14,
+      "total": 24,
       "attribute": "",
       "attributeAmount": 0,
       "attributeSource": "",
       "attributeBlockedBy": "Armadura completa",
-      "vsMelee": 32,
-      "vsRanged": 32,
+      "vsMelee": 24,
+      "vsRanged": 24,
       "contributions": [
         {
           "source": "Armadura completa",
@@ -1602,8 +1191,8 @@
           "amount": 2
         },
         {
-          "source": "Baluarte +10 (cond.)",
-          "amount": 10,
+          "source": "Baluarte (cond.)",
+          "amount": 2,
           "note": "Baluarte — 1 PM, até o início do próximo turno"
         }
       ]
@@ -1692,21 +1281,21 @@
       "contributions": []
     },
     "attackAll": {
-      "total": 5,
+      "total": 2,
       "contributions": [
         {
-          "source": "Duelo +5 (cond.)",
-          "amount": 5,
+          "source": "Duelo (cond.)",
+          "amount": 2,
           "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
         }
       ]
     },
     "damageAll": {
-      "total": 5,
+      "total": 2,
       "contributions": [
         {
-          "source": "Duelo +5 (cond.)",
-          "amount": 5,
+          "source": "Duelo (cond.)",
+          "amount": 2,
           "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
         }
       ]
@@ -1841,15 +1430,15 @@
         "name": "Fortitude",
         "attribute": "constitution",
         "base": 23,
-        "itemBonus": 10,
-        "total": 33,
+        "itemBonus": 2,
+        "total": 25,
         "halfLevel": 10,
         "attrValue": 7,
         "training": 6,
         "itemContributions": [
           {
-            "source": "Baluarte +10 (cond.)",
-            "amount": 10,
+            "source": "Baluarte (cond.)",
+            "amount": 2,
             "note": "Baluarte — 1 PM, até o início do próximo turno"
           }
         ],
@@ -2049,15 +1638,15 @@
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 17,
-        "itemBonus": 10,
-        "total": 27,
+        "itemBonus": 2,
+        "total": 19,
         "halfLevel": 10,
         "attrValue": 1,
         "training": 6,
         "itemContributions": [
           {
-            "source": "Baluarte +10 (cond.)",
-            "amount": 10,
+            "source": "Baluarte (cond.)",
+            "amount": 2,
             "note": "Baluarte — 1 PM, até o início do próximo turno"
           }
         ],
@@ -2091,15 +1680,15 @@
         "name": "Vontade",
         "attribute": "wisdom",
         "base": 19,
-        "itemBonus": 10,
-        "total": 29,
+        "itemBonus": 2,
+        "total": 21,
         "halfLevel": 10,
         "attrValue": 3,
         "training": 6,
         "itemContributions": [
           {
-            "source": "Baluarte +10 (cond.)",
-            "amount": 10,
+            "source": "Baluarte (cond.)",
+            "amount": 2,
             "note": "Baluarte — 1 PM, até o início do próximo turno"
           }
         ],
@@ -2113,7 +1702,7 @@
       "name": "Machado de batalha",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": 26,
+      "attack": 23,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
@@ -2127,11 +1716,11 @@
         "armorPenaltyApplied": 0
       },
       "attackAll": {
-        "total": 5,
+        "total": 2,
         "contributions": [
           {
-            "source": "Duelo +5 (cond.)",
-            "amount": 5,
+            "source": "Duelo (cond.)",
+            "amount": 2,
             "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         ]
@@ -2139,13 +1728,13 @@
       "damage": "1d8",
       "damageType": "corte",
       "strDamage": 5,
-      "damageBonus": 10,
+      "damageBonus": 7,
       "damageAll": {
-        "total": 5,
+        "total": 2,
         "contributions": [
           {
-            "source": "Duelo +5 (cond.)",
-            "amount": 5,
+            "source": "Duelo (cond.)",
+            "amount": 2,
             "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         ]

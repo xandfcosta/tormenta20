@@ -2,8 +2,10 @@ package character
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
+	"t20engine/domain/book"
 	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
@@ -13,9 +15,12 @@ import (
 
 // OS GESTOS DA ABA EFEITOS e o toque nos vitais.
 //
-// Os quatro aqui têm uma escrita cada. Entrar e sair de uma POSTURA são de outra
-// natureza — várias escritas que só fazem sentido juntas — e por isso não moram
-// neste arquivo.
+// Quase todos têm uma escrita cada. A exceção é o situacional cujo poder VENDE
+// degrau (p53): ele liga a flag e grava o bônus pago no mesmo contorno, porque
+// metade do gesto é uma ficha que promete +10 e soma +2.
+//
+// Entrar e sair de uma POSTURA continuam de outra natureza — PM cobrado,
+// registro de pagamento, posturas irmãs derrubadas — e moram no `stance.go`.
 
 // TouchVital move PV ou PM em um passo, preso entre zero e o máximo.
 //
@@ -110,12 +115,28 @@ func (p Plays) EndAppliedEffect(ctx context.Context, characterID, effectID int64
 // O conjunto é de PERMITIDOS, e não uma lista de proibidos com as posturas
 // dentro: uma lista de proibidos subconta em silêncio, e a primeira espécie de
 // chave que alguém inventasse passaria por ela.
-func (p Plays) ToggleSituational(ctx context.Context, dto sheet.CharacterDTO, key string) error {
+// # E O DEGRAU VIAJA COM ELE
+//
+// Um situacional cujo poder VENDE degrau (p53) carrega quantos foram pagos: o
+// Baluarte de um cavaleiro de 20º vale +2 ou até +10, e quem escolhe é quem
+// gastou o PM. Ligar com N degraus grava o bônus total num efeito ativo com a
+// chave do poder; desligar leva o efeito junto. O interruptor é a DURAÇÃO —
+// "até o início do seu próximo turno" não tem relógio neste app, e não ter
+// relógio é o mesmo de "com torcida a seu favor".
+func (p Plays) ToggleSituational(
+	ctx context.Context, dto sheet.CharacterDTO, key string, steps int,
+) error {
 	if key == "" {
 		return fmt.Errorf("o gesto não disse qual efeito situacional alternar")
 	}
 	if err := p.refuseUnofferedSituational(dto, key); err != nil {
 		return err
+	}
+	offer, sold := degreeOfferFor(key)
+	if sold {
+		if err := refuseDegreesAboveTheCeiling(dto, offer, steps); err != nil {
+			return err
+		}
 	}
 	characterID := dto.ID
 	current, err := p.queries.ListCharacterConditionals(ctx, characterID)
@@ -126,6 +147,79 @@ func (p Plays) ToggleSituational(ctx context.Context, dto sheet.CharacterDTO, ke
 		if c != key {
 			continue
 		}
+		return p.turnTheSituationalOff(ctx, characterID, key, offer, sold)
+	}
+	return p.turnTheSituationalOn(ctx, characterID, key, offer, sold, steps)
+}
+
+// SetSituationalDegrees liga o situacional com os degraus escolhidos, sem
+// alternar.
+//
+// Separada do `ToggleSituational` porque o gesto é outro: o interruptor diz
+// "estou nisto ou não", e o seletor diz "paguei tantos PM". Escolher um degrau
+// num Baluarte já ligado tem de mudar o número, e não apagá-lo.
+func (p Plays) SetSituationalDegrees(
+	ctx context.Context, dto sheet.CharacterDTO, key string, steps int,
+) error {
+	if key == "" {
+		return fmt.Errorf("o gesto não disse de qual situacional são os degraus")
+	}
+	if err := p.refuseUnofferedSituational(dto, key); err != nil {
+		return err
+	}
+	offer, sold := degreeOfferFor(key)
+	if !sold {
+		return fmt.Errorf("este efeito situacional não vende degrau")
+	}
+	if err := refuseDegreesAboveTheCeiling(dto, offer, steps); err != nil {
+		return err
+	}
+	return p.turnTheSituationalOn(ctx, dto.ID, key, offer, true, steps)
+}
+
+// turnTheSituationalOn liga o condicional e, quando o poder vende degrau, grava
+// o que os degraus pagos valem.
+//
+// AS DUAS ESCRITAS NUM CONTORNO, ao contrário do situacional simples: o degrau
+// é exatamente o que o interruptor prometeu, e um commit que ligasse a flag e
+// perdesse o bônus daria um Baluarte de +2 a quem escolheu +10.
+func (p Plays) turnTheSituationalOn(
+	ctx context.Context, characterID int64, key string,
+	offer book.DegreeOffer, sold bool, steps int,
+) error {
+	if !sold {
+		if err := p.queries.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
+			Characterid: characterID, Conditionalid: key,
+		}); err != nil {
+			return fmt.Errorf("ligar o condicional %q: %w", key, err)
+		}
+		return nil
+	}
+	return p.inTx(ctx, "ligar o situacional "+key, func(q *sqlcgen.Queries) error {
+		if err := q.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
+			Characterid: characterID, Conditionalid: key,
+		}); err != nil {
+			return fmt.Errorf("ligar o condicional %q: %w", key, err)
+		}
+		// O DEGRAU ANTERIOR SAI PRIMEIRO, e é o que faz DESCER funcionar: o
+		// efeito é gravado por chave do poder, então escolher menos degraus
+		// reescreve a linha — mas escolher ZERO não escreve nada, e sem este
+		// apagar o +10 de antes ficava na ficha com o seletor dizendo +2.
+		// Visto na tela (ALE-454).
+		if err := q.DeleteEffectsByCatalog(ctx, sqlcgen.DeleteEffectsByCatalogParams{
+			Characterid: characterID, Catalogid: offer.PowerID,
+		}); err != nil {
+			return fmt.Errorf("tirar o degrau anterior de %q: %w", offer.PowerID, err)
+		}
+		return writeDegrees(ctx, q, characterID, offer, steps)
+	})
+}
+
+// turnTheSituationalOff desliga o condicional e leva o degrau junto.
+func (p Plays) turnTheSituationalOff(
+	ctx context.Context, characterID int64, key string, offer book.DegreeOffer, sold bool,
+) error {
+	if !sold {
 		if err := p.queries.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
 			Characterid: characterID, Conditionalid: key,
 		}); err != nil {
@@ -133,10 +227,70 @@ func (p Plays) ToggleSituational(ctx context.Context, dto sheet.CharacterDTO, ke
 		}
 		return nil
 	}
-	if err := p.queries.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
-		Characterid: characterID, Conditionalid: key,
+	return p.inTx(ctx, "desligar o situacional "+key, func(q *sqlcgen.Queries) error {
+		if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
+			Characterid: characterID, Conditionalid: key,
+		}); err != nil {
+			return fmt.Errorf("desligar o condicional %q: %w", key, err)
+		}
+		return q.DeleteEffectsByCatalog(ctx, sqlcgen.DeleteEffectsByCatalogParams{
+			Characterid: characterID, Catalogid: offer.PowerID,
+		})
+	})
+}
+
+// writeDegrees grava o que os degraus pagos valem, num efeito ativo com a chave
+// do PODER — a mesma chave e o mesmo caminho que a postura usa, pela mesma
+// razão: o efeito ativo já é por onde passa "estado de jogo que vira
+// modificador", e ele vem com a aba Efeitos de graça.
+//
+// ESCOPO CENA porque não há escopo mais curto que alguém apague: o SQL de
+// expiração só conhece `scene` e `day`. Quem encerra o Baluarte é o
+// interruptor, e o fim da cena é a rede embaixo dele.
+func writeDegrees(
+	ctx context.Context, q *sqlcgen.Queries, characterID int64,
+	offer book.DegreeOffer, steps int,
+) error {
+	mods := book.DegreeModifiers(offer, steps)
+	if len(mods) == 0 {
+		return nil
+	}
+	blob, err := json.Marshal(mods)
+	if err != nil {
+		return fmt.Errorf("escrever os %d degraus de %q: %w", steps, offer.PowerID, err)
+	}
+	if _, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+		Characterid: characterID, Source: "power", Catalogid: offer.PowerID, Scope: "scene",
+		Modifiers: string(blob), Createdat: dbvalue.NowISO(),
 	}); err != nil {
-		return fmt.Errorf("ligar o condicional %q: %w", key, err)
+		return fmt.Errorf("gravar os %d degraus de %q: %w", steps, offer.PowerID, err)
+	}
+	return nil
+}
+
+// degreeOfferFor acha a oferta de degrau pela chave do CONDICIONAL, que é a
+// flag com o prefixo do grupo.
+func degreeOfferFor(key string) (book.DegreeOffer, bool) {
+	for flag, offer := range book.DegreesByFlag() {
+		if engine.FlagGroupID(flag) == key {
+			return offer, true
+		}
+	}
+	return book.DegreeOffer{}, false
+}
+
+// refuseDegreesAboveTheCeiling cobra o teto que o NÍVEL NA CLASSE autoriza.
+//
+// A fronteira é o servidor pela mesma razão da recusa de postura (ALE-423): a
+// tela desenhar só até o teto não é garantia nenhuma, e um cavaleiro de 1º
+// postando `steps: 4` levaria +10 sem ter nível para comprar um degrau.
+func refuseDegreesAboveTheCeiling(dto sheet.CharacterDTO, offer book.DegreeOffer, steps int) error {
+	if steps < 0 {
+		return fmt.Errorf("%s: %d degraus não é um número de degraus", offer.PowerName, steps)
+	}
+	if max := offer.Degrees.MaxDegrees(ClassPowerLevel(dto, offer.PowerID)); steps > max {
+		return fmt.Errorf("%s: o nível permite comprar até %d degraus, e o gesto pediu %d",
+			offer.PowerName, max, steps)
 	}
 	return nil
 }

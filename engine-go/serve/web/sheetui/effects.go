@@ -105,6 +105,30 @@ type situationalRow struct {
 	// existem para quem ROTEIA: a superfície de Ações põe o interruptor sobre o
 	// número que ele muda, e o `Modifiers` acima já é texto de tela.
 	Targets []engine.ModifierTarget
+	// Degrees é a escolha de DEGRAU, quando o poder vende uma (p53). Nula no
+	// situacional comum, que é a maioria.
+	Degrees []degreeOption
+	// DegreesOf é o NOME DO PODER que vende o degrau, e ele existe para o
+	// rótulo acessível do seletor. O `Label` da linha é a nota da CONDIÇÃO —
+	// "contra o alvo do Duelo — 2 PM, até o fim da cena" —, e "Degraus de
+	// contra o alvo do Duelo…" é uma frase que ninguém lê. Visto na tela.
+	DegreesOf string
+}
+
+// degreeOption é um degrau que o nível autoriza comprar, com o que ele custa e
+// quanto ele dá.
+//
+// O PREÇO aparece porque o app NÃO cobra o PM deste gesto: ele informa, e quem
+// paga é a mesa — a mesma divisa de todo situacional, e a razão de o Baluarte
+// não ter virado um botão de "Usar" (decisão do dono, ALE-454).
+type degreeOption struct {
+	Steps int
+	// Label é o bônus TOTAL com este degrau — "+6".
+	Label string
+	// Pm é o preço inteiro, base mais degraus — "3 PM".
+	Pm string
+	// Chosen marca o degrau que está pago agora.
+	Chosen bool
 }
 
 type alwaysOnRow struct {
@@ -146,7 +170,7 @@ func effectsPanelFor(dto sheet.CharacterDTO, offered []engine.ConditionalEffect,
 		Applied:          appliedEffectRowsOf(dto),
 		BuffOptions:      buffOptions(),
 	}
-	panel.Situational, _ = situationalRowsOf(offered, active)
+	panel.Situational, _ = situationalRowsOf(offered, active, dto)
 	panel.AlwaysOn = alwaysOnRowsOf(flags)
 	panel.Count = len(panel.Conditions) + len(panel.Applied) + len(panel.Stances) + activeCountOf(panel.Situational)
 	return panel
@@ -287,7 +311,9 @@ func buffOptions() []pickerOption {
 // uso RECUSA a chave que não estiver nela, e esta tela desenha exatamente o que
 // ele aceita. Duas implementações divergiriam, e a divergência apareceria como
 // a tela escondendo o que o servidor deixa passar (ALE-387).
-func situationalRowsOf(offered []engine.ConditionalEffect, active map[string]bool) ([]situationalRow, []alwaysOnRow) {
+func situationalRowsOf(
+	offered []engine.ConditionalEffect, active map[string]bool, dto sheet.CharacterDTO,
+) ([]situationalRow, []alwaysOnRow) {
 	rows := []situationalRow{}
 	for _, g := range character.SituationalGroupsOf(offered) {
 		head := g.Members[0]
@@ -303,6 +329,7 @@ func situationalRowsOf(offered []engine.ConditionalEffect, active map[string]boo
 			})
 			row.Targets = append(row.Targets, c.Target)
 		}
+		row.Degrees, row.DegreesOf = degreeOptionsFor(g.Key, head, dto)
 		rows = append(rows, row)
 	}
 	return rows, nil
@@ -329,4 +356,83 @@ func alwaysOnRowsOf(flags []engine.EquippedFlag) []alwaysOnRow {
 		rows = append(rows, alwaysOnRow{Label: label, Source: f.Source})
 	}
 	return rows
+}
+
+// degreeOptionsFor são os degraus que o NÍVEL autoriza comprar neste
+// situacional, ou nada quando o poder dele não vende degrau.
+//
+// O ZERO entra na lista, e ele é o bônus de base: o cavaleiro que gastou só o
+// PM da entrada tem +2, e uma lista que começasse no primeiro degrau não teria
+// como dizer isso. O teto sai do nível NA CLASSE, como o da postura.
+//
+// O JÁ PAGO é lido do efeito ativo com a chave do poder — o mesmo lugar onde o
+// gesto o grava. Ler o número de volta em vez de guardá-lo numa segunda coluna
+// mantém uma verdade só.
+func degreeOptionsFor(
+	key string, head engine.ConditionalEffect, dto sheet.CharacterDTO,
+) ([]degreeOption, string) {
+	offer, sold := offerBehind(key, head)
+	if !sold {
+		return nil, ""
+	}
+	base := baseAmountOf(offer)
+	max := offer.Degrees.MaxDegrees(character.ClassPowerLevel(dto, offer.PowerID))
+	if max <= 0 {
+		return nil, ""
+	}
+	chosen := degreesPaidFor(dto, offer, base)
+	options := make([]degreeOption, 0, max+1)
+	for steps := 0; steps <= max; steps++ {
+		options = append(options, degreeOption{
+			Steps:  steps,
+			Label:  book.WithSign(offer.Degrees.Amount(base, steps)),
+			Pm:     strconv.Itoa(offer.Degrees.Cost(steps)) + " PM",
+			Chosen: steps == chosen,
+		})
+	}
+	return options, offer.PowerName
+}
+
+// offerBehind acha a oferta de degrau atrás da chave do grupo ou da flag.
+func offerBehind(key string, head engine.ConditionalEffect) (book.DegreeOffer, bool) {
+	offers := book.DegreesByFlag()
+	if offer, found := offers[head.Flag]; found && head.Flag != "" {
+		return offer, true
+	}
+	for flag, offer := range offers {
+		if engine.FlagGroupID(flag) == key {
+			return offer, true
+		}
+	}
+	return book.DegreeOffer{}, false
+}
+
+// baseAmountOf é o bônus que o verbete concede sem degrau nenhum.
+func baseAmountOf(offer book.DegreeOffer) int {
+	for _, m := range offer.Base {
+		return m.Amount
+	}
+	return 0
+}
+
+// degreesPaidFor lê do efeito ativo quantos degraus estão pagos.
+//
+// Zero quando não há efeito: o situacional ligado sem degrau vale a base, e é
+// esse o estado de quem gastou só o PM de entrada.
+func degreesPaidFor(dto sheet.CharacterDTO, offer book.DegreeOffer, base int) int {
+	step := offer.Degrees.StepAmount
+	if step <= 0 {
+		return 0
+	}
+	for _, effect := range dto.ActiveEffects {
+		if effect.CatalogID != offer.PowerID {
+			continue
+		}
+		var mods []engine.Modifier
+		if json.Unmarshal([]byte(effect.Modifiers), &mods) != nil || len(mods) == 0 {
+			return 0
+		}
+		return max(0, (mods[0].Amount-base)/step)
+	}
+	return 0
 }

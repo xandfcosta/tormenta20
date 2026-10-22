@@ -8,6 +8,7 @@ import (
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 )
 
 // Os guardas do painel de EFEITOS.
@@ -97,7 +98,7 @@ func TestAStanceDoesNotShowInTheConditionalList(t *testing.T) {
 		{Source: "Botas do Bosque", Note: "em terreno de floresta", Amount: 2, BonusType: "untyped",
 			Target: engine.ModifierTarget{K: "expertise", Name: "Furtividade"}},
 	}
-	rows, _ := situationalRowsOf(offered, map[string]bool{})
+	rows, _ := situationalRowsOf(offered, map[string]bool{}, sheet.CharacterDTO{})
 
 	if len(rows) != 1 {
 		t.Fatalf("saíram %d linhas de situação, quer 1: a postura entrou na lista", len(rows))
@@ -118,7 +119,7 @@ func TestModifiersSharingAFlagBecomeOneSwitch(t *testing.T) {
 		{Source: "Manto Caseiro", Note: "com o manto vestido", Amount: 1, Flag: "homebrew-manto",
 			Target: engine.ModifierTarget{K: "expertise", Name: "Furtividade"}},
 	}
-	rows, _ := situationalRowsOf(offered, map[string]bool{})
+	rows, _ := situationalRowsOf(offered, map[string]bool{}, sheet.CharacterDTO{})
 	if len(rows) != 1 {
 		t.Fatalf("saíram %d interruptores, quer 1", len(rows))
 	}

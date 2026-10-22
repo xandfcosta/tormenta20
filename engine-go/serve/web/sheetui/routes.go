@@ -61,6 +61,10 @@ func Routes(r chi.Router, s Scene) {
 	// texto livre do catálogo dentro — por isso ela vai por SINAL e não no
 	// caminho. É a exceção da ficha, e a razão dela é o formato da chave.
 	r.Post("/personagens/{id}/efeitos/situacao", s.sheetCommand(toggleSituational))
+	// O DEGRAU tem rota PRÓPRIA, e não é o mesmo gesto com um sinal a mais:
+	// aquele ALTERNA, e escolher "+6" num Baluarte já ligado o desligaria. Aqui
+	// a semântica é "ligue com estes degraus", que é o que o seletor diz.
+	r.Post("/personagens/{id}/efeitos/situacao/degraus", s.sheetCommand(setSituationalDegrees))
 	// AS MAGIAS.
 	r.Post("/personagens/{id}/magias/aprende/{magia}", s.sheetCommand(learnSpell))
 	r.Post("/personagens/{id}/magias/esquece/{magia}", s.sheetCommand(forgetSpell))
