@@ -61,6 +61,48 @@ func TestTheComposedItemCardSaysWhatItGrants(t *testing.T) {
 	}
 }
 
+// E A BANDEIRA ISENTA SAI RISCADA, com o motivo ao lado (p340, ALE-449).
+//
+// A Cota élfica é uma cota de malha — pesada —, então ela ACENDE a bandeira que
+// zera a Destreza na Defesa e logo em seguida isenta o portador dela. Desenhar o
+// crachá "Não soma Destreza na Defesa" num item cujo verbete existe para desfazer
+// isso seria o cartão contradizendo a ficha, que é a fatura da ALE-319.
+//
+// O par riscado + motivo é o mesmo do deslocamento do anão, e o motivo é a NOTA
+// que o verbete já escreve.
+func TestTheExemptFlagIsStruckThroughWithItsReason(t *testing.T) {
+	vested := "vested"
+	cota := "cota-elfica"
+	chips := thatGrantsItem(sheet.ItemDTO{
+		Name: "Cota élfica", CatalogID: &cota, Equipped: &vested, Improvements: "[]",
+	}, wearerExemptions{})
+
+	var bandeira *itemChip
+	for i := range chips {
+		if chips[i].Text == "Não soma Destreza na Defesa" {
+			bandeira = &chips[i]
+		}
+	}
+	if bandeira == nil {
+		t.Fatalf("o cartão não diz nada sobre a Destreza na Defesa. Veio %v",
+			chipTexts(chips))
+	}
+	if !bandeira.Inactive {
+		t.Error("o crachá da bandeira isenta não está riscado: ele promete uma " +
+			"penalidade que este item existe para tirar")
+	}
+	if !temCracha(chipTexts(chips), "a Destreza se aplica como se fosse armadura leve") {
+		t.Errorf("o motivo da isenção não aparece ao lado. Veio %v", chipTexts(chips))
+	}
+	// E A ISENÇÃO NÃO VIRA CRACHÁ PRÓPRIO de alvo: ela é o motivo, e um
+	// "flagExempt" cru na tela seria identificador aparecendo para quem joga.
+	for _, chip := range chipTexts(chips) {
+		if strings.Contains(chip, "flagExempt") {
+			t.Errorf("o cartão mostra %q, que é identificador", chip)
+		}
+	}
+}
+
 func chipTexts(chips []itemChip) []string {
 	texts := []string{}
 	for _, c := range chips {

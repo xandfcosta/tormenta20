@@ -470,6 +470,12 @@ func targetKey(t ModifierTarget) string {
 		return "defenseAttribute:" + t.Name
 	case "flag":
 		return "flag:" + t.Name
+	case "flagExempt":
+		// A BANDEIRA NO NOME, e o alvo não soma nada: ele APAGA a que outra
+		// fonte acendeu. A Cota élfica (p340) é uma cota de malha — pesada, e
+		// portanto sem Destreza na Defesa —, e o verbete desfaz essa metade e
+		// só ela.
+		return "flagExempt:" + t.Name
 	}
 	return ""
 }

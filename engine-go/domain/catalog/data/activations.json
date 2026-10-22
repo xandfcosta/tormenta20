@@ -3953,5 +3953,41 @@
     "pmCost": 2,
     "uses": null,
     "bookPage": 338
+  },
+  {
+    "id": "item.escudo-espinhoso",
+    "name": "Disparar espinho",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 340
+  },
+  {
+    "id": "item.escudo-do-leao",
+    "name": "Mordida do leão",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 340
+  },
+  {
+    "id": "item.escudo-do-eclipse",
+    "name": "Escuridão",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 340
+  },
+  {
+    "id": "item.escudo-de-azgher",
+    "name": "Luz de Azgher",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 10,
+    "uses": null,
+    "bookPage": 340
   }
 ]

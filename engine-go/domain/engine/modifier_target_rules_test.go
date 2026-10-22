@@ -68,6 +68,8 @@ var alvosQueOMotorAplica = map[string]string{
 	"resistance":     "breakdowns.go, nas três perícias de resistência (ALE-418)",
 	"maneuver":       "maneuver.go, no teste oposto da p234 (ALE-420)",
 	"flag":           "collect.go, como interruptor",
+	"flagExempt": "resolve_ecs.go, APAGANDO a bandeira que outra fonte acendeu — " +
+		"a Cota élfica desfaz a que a cota de malha acende (p340, ALE-449)",
 	"source": "resolve_ecs.go e itemeffects.go, multiplicando a PARCELA " +
 		"daquela fonte nos dois sítios de empilhamento (ALE-429)",
 }
