@@ -1467,6 +1467,14 @@ continuam sendo uma azagaia e uma espada longa. Nesses dois o auditor confere a
 base contra o TEXTO do verbete e exige que o catálogo não declare sobreposição
 nenhuma.
 
+E **a página às vezes PERDE o itálico no meio da frase**: o Escudo do Conjurador
+é *"Este escudo leve defensor…"*, e o estilo não atravessa a quebra de linha —
+`font="4"` numa linha e `font="3"` na seguinte. É deslize de tipografia, não
+regra, e o que o denuncia são os doze irmãos da mesma tabela, que trazem o
+encanto dentro do itálico, e o preço, que acompanha. A exceção fica ESCRITA no
+auditor, com a prova, e sai no relatório — o que muda é de onde vem a composição
+esperada, não se ela é conferida.
+
 ### O auditor de encantos, e o denominador que ele tem DE GRAÇA
 
 Ele audita as DUAS tabelas — a 8-8 das armas e a 8-10 das armaduras e escudos —

@@ -92,7 +92,7 @@ PERFIS = {
         # canto: um corte por "x menor que" acertaria uma e perderia a outra.
         regiao_da_tabela={342: (0.0, 260.0, 0.0, 530.0),
                           343: (300.0, 581.0, 0.0, 380.0)},
-        fim_dos_verbetes='Armaduras',
+        fim_dos_verbetes=('Armaduras',),
     ),
     # ARMADURAS E ESCUDOS: a Tabela 8-11 mora na coluna esquerda da p340, e os
     # verbetes vêm abaixo dela e na coluna direita, em duas seções com título
@@ -100,10 +100,15 @@ PERFIS = {
     'protecao': Perfil(
         chave='protecao', tabela='8-11',
         pagina_da_tabela=346, paginas_dos_verbetes=(346,),
-        x_do_dado=(82.0, 92.0), x_do_nome=118.9, x_do_preco=(250.0, 262.0),
-        colunas_da_prosa={346: ((70.9, 87.9), (289.0, 306.0))},
-        regiao_da_tabela={346: (0.0, 280.0, 0.0, 230.0)},
-        fim_dos_verbetes=None,
+        # Medido: o d% em 59,1 (56,9 na linha colapsada), o nome em 90,7 e o
+        # preço entre 223,7 e 225,9 — a coluna de preço é alinhada à direita e
+        # o número de seis dígitos empurra o começo dela.
+        x_do_dado=(56.0, 60.0), x_do_nome=90.7, x_do_preco=(222.0, 228.0),
+        colunas_da_prosa={346: ((51.0, 68.0), (289.1, 306.1))},
+        regiao_da_tabela={346: (0.0, 250.0, 0.0, 292.0)},
+        # DOIS títulos no meio da lista, um por seção. Sem eles o título entra
+        # no corpo do verbete anterior e a cobertura dele cai sem motivo.
+        fim_dos_verbetes=('Armaduras Específicas', 'Escudos Específicos'),
     ),
 }
 
@@ -171,7 +176,7 @@ def verbetes(perfil: Perfil, nomes_da_tabela):
                 continue
             if limite and limite[0] <= x <= limite[1] and limite[2] <= y <= limite[3]:
                 continue
-            if perfil.fim_dos_verbetes and texto.startswith(perfil.fim_dos_verbetes):
+            if comeca_secao(texto, perfil.fim_dos_verbetes):
                 atual = None
                 continue
             comeco = comeca_verbete(texto, {P.chave(n): n for n in nomes_da_tabela})
@@ -199,6 +204,16 @@ def coluna_de(x: float, colunas):
         if abs(x - corpo) < FOLGA or abs(x - recuo) < FOLGA:
             return (corpo, recuo)
     return None
+
+
+def comeca_secao(texto: str, titulos) -> bool:
+    """A linha é um TÍTULO de seção, e não prosa de verbete.
+
+    Ela corta o verbete em andamento: na p340 a lista tem dois títulos no meio —
+    "Armaduras Específicas" e "Escudos Específicos" —, e sem este corte o título
+    vira a última frase do verbete anterior.
+    """
+    return any(texto.startswith(titulo) for titulo in titulos or ())
 
 
 def comeca_verbete(texto: str, por_chave):
@@ -276,11 +291,19 @@ def sequencias(trechos):
 
 
 def junta_hifenizado(trechos) -> str:
-    """Remonta a frase que a quebra de linha partiu."""
+    """Remonta a frase que a quebra de linha partiu.
+
+    O HÍFEN às vezes vem SOZINHO num trecho — "armadura completa refor" + "-" +
+    "çada defensora de adamante" (Baluarte anão, p340) —, e não só colado no fim
+    de um. Ele é gancho dos dois jeitos: entra sem espaço, e o trecho seguinte
+    cola nele.
+    """
     frase = ''
     for trecho in trechos:
         if frase.endswith('-'):
             frase = frase[:-1] + trecho
+        elif trecho == '-':
+            frase += '-'
         elif frase:
             frase += ' ' + trecho
         else:
@@ -340,14 +363,27 @@ def variantes_de_genero(nome: str):
     (defensor/defensora). Gerar MAIS do que isso traria grafia que não existe e
     daria a ela a chance de casar com outra peça.
     """
-    pares = [('ão', 'ã'), ('or', 'ora'), ('o', 'a')]
     saida = {nome}
-    for um, outro in pares:
-        for fim, troca in ((um, outro), (outro, um)):
-            if nome.lower().endswith(fim):
-                saida.add(nome[: len(nome) - len(fim)] + troca)
-                break
+    palavras = nome.split()
+    # A FLEXÃO CAI NA CABEÇA do nome, e nem sempre ela é a última palavra:
+    # "Banhado a ouro" vira "banhada a ouro" na Couraça do comando (p340). Por
+    # isso as duas pontas são tentadas — a primeira palavra e a última.
+    for i in (0, len(palavras) - 1):
+        for flexionada in flexoes(palavras[i]):
+            troca = list(palavras)
+            troca[i] = flexionada
+            saida.add(' '.join(troca))
     return saida
+
+
+def flexoes(palavra: str):
+    """As grafias de gênero de UMA palavra: três pares, que são os do português
+    e os que o catálogo usa."""
+    for um, outro in (('ão', 'ã'), ('or', 'ora'), ('o', 'a')):
+        for fim, troca in ((um, outro), (outro, um)):
+            if palavra.lower().endswith(fim):
+                return [palavra[: len(palavra) - len(fim)] + troca]
+    return []
 
 
 def compoe(frase: str, pecas) -> dict:
@@ -406,6 +442,22 @@ def escolhe(candidatos, familia: str):
 # tentativas de casar, nunca antes.
 CONECTIVOS = frozenset({'de', 'do', 'da', 'e'})
 
+
+# O ITÁLICO QUE A PÁGINA PERDEU, nomeado um a um e com a prova.
+#
+# O Escudo do Conjurador é *"Este escudo leve defensor tem uma pequena tira…"*, e
+# a página italiza "escudo  leve " e deixa "defensor" em redondo: o estilo não
+# atravessa a quebra de linha, e o XML mostra `font="4"` numa e `font="3"` na
+# seguinte. É deslize de tipografia, não regra — os outros doze verbetes desta
+# tabela trazem o encanto DENTRO do itálico, e o preço acompanha: T$ 45.000 para
+# este escudo LEVE defensor contra T$ 50.000 do escudo PESADO defensor.
+#
+# A exceção é ESCRITA e sai no relatório. O auditor continua conferindo o
+# catálogo contra ela — o que muda é de onde vem a composição esperada, não se
+# ela é conferida.
+ITALICO_QUE_A_PAGINA_PERDEU = {
+    'Escudo do conjurador': ['escudo-leve', 'encanto-defensor'],
+}
 
 # O PISO DA COBERTURA, igual ao do auditor de encantos e pela mesma razão: a
 # descrição do catálogo é TRANSCRITA do verbete, então ela nasce em 100%. O que
@@ -472,12 +524,21 @@ def confere_entrada(perfil, entrada, verbete, nome, preco, pecas):
     # A COMPOSIÇÃO, que é a razão deste auditor existir.
     _frase, achado = composicao_do_verbete(verbete, pecas)
     do_livro = [id_ for id_, _categoria in achado['pecas']]
+    if nome in ITALICO_QUE_A_PAGINA_PERDEU:
+        do_livro = ITALICO_QUE_A_PAGINA_PERDEU[nome]
+        print(f'  ! {nome}: usando a composição ESCRITA À MÃO — a página perde o '
+              f'itálico no meio da frase (ver o comentário)')
     do_catalogo_ = composicao_declarada(entrada)
     texto_do_verbete = P.junta(verbete['corpo'])
     if do_livro:
-        if do_livro != do_catalogo_:
-            falhas.append(f'{nome}: o livro compõe {do_livro} e o catálogo declara '
-                          f'{do_catalogo_}')
+        # CONJUNTO e não lista: a ordem é a da PROSA, e ela varia de verbete
+        # para verbete — "defensora de mitral" põe o material por último e
+        # "de gelo eterno congelante formidável" o põe antes dos encantos. O
+        # que o catálogo guarda é a composição, não a ordem em que o livro a
+        # escreveu.
+        if sorted(do_livro) != sorted(do_catalogo_):
+            falhas.append(f'{nome}: o livro compõe {sorted(do_livro)} e o catálogo '
+                          f'declara {sorted(do_catalogo_)}')
     else:
         # SEM ITÁLICO NÃO É SEM BASE. O item que não tem encanto nenhum — a
         # azagaia dos relâmpagos, a espada baronial — não ganha itálico, e
