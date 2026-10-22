@@ -23,7 +23,7 @@ import (
 // boneca —, e é por isso que a regra conta mãos e vestidos em vez de posições.
 
 const (
-	handsLimit  = 2
+	HandsLimit  = 2
 	VestedLimit = 4
 )
 
@@ -31,7 +31,16 @@ const (
 // cru dizer só empunhado. É regra opcional, ligada por escolha da mesa.
 var homebrewVestedOK = map[string]bool{"medalhao-de-prata": true}
 
-func handsFor(slot string) int {
+// HandsFor são as mãos que um lugar de equipar ocupa: uma para `wielded`, duas
+// para `wielded2`, nenhuma para o resto (p141).
+//
+// Exportada porque a tira da Mochila conta as mãos ocupadas para escrever o
+// "3/2" que denuncia o estouro, e essa conta tem de sair da MESMA tabela que
+// decide a recusa. Um segundo mapa na tela daria um painel que diz caber o que
+// o servidor recusa — ou o contrário.
+//
+// @example HandsFor("wielded2") // 2
+func HandsFor(slot string) int {
 	switch slot {
 	case "wielded":
 		return 1
@@ -90,7 +99,7 @@ func EquipLimitError(otherEquipped []string, incoming string) string {
 		if s == "vested" {
 			vested++
 		}
-		hands += handsFor(s)
+		hands += HandsFor(s)
 	}
 	if incoming == "vested" {
 		vested++
@@ -98,8 +107,8 @@ func EquipLimitError(otherEquipped []string, incoming string) string {
 	if vested > VestedLimit {
 		return fmt.Sprintf("Limite de %d itens vestidos atingido", VestedLimit)
 	}
-	if hands+handsFor(incoming) > handsLimit {
-		return fmt.Sprintf("Limite de %d mãos atingido", handsLimit)
+	if hands+HandsFor(incoming) > HandsLimit {
+		return fmt.Sprintf("Limite de %d mãos atingido", HandsLimit)
 	}
 	return ""
 }
