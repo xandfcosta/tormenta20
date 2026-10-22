@@ -7798,6 +7798,1427 @@
       },
       "bookPage": 341,
       "uid": "itm_tilopmn5ei"
+    },
+    {
+      "id": "anel-do-sustento",
+      "name": "Anel do sustento",
+      "category": "apparel",
+      "price": 3000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 1,
+      "rollMax": 2,
+      "description": "Você não precisa comer ou beber e precisa dormir apenas duas horas por noite para descansar. Os efeitos do anel só se ativam após uma semana de uso.",
+      "modifiers": [],
+      "unmodeled": "não precisar comer, beber nem dormir mais que duas horas é regra de DESCANSO, e o app não modela a rotina do dia",
+      "bookPage": 342,
+      "uid": "itm_qhnnbhamsz"
+    },
+    {
+      "id": "bainha-magica",
+      "name": "Bainha mágica",
+      "category": "apparel",
+      "price": 3000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 3,
+      "rollMax": 7,
+      "description": "Esta bainha de couro curtido e prata muda de tamanho para acomodar qualquer arma corpo a corpo. Você pode lançar Arma Mágica em qualquer arma na bainha sem pagar seu custo em PM.",
+      "modifiers": [],
+      "unmodeled": "ela LANÇA Arma Mágica numa arma guardada, sem pagar PM — conceder magia a um item ainda não tem forma",
+      "bookPage": 342,
+      "uid": "itm_ge27x36rob"
+    },
+    {
+      "id": "corda-da-escalada",
+      "name": "Corda da escalada",
+      "category": "apparel",
+      "price": 3000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 8,
+      "rollMax": 12,
+      "description": "Esta corda de 15m é bastante fina, mas forte o suficiente para suportar até seis criaturas Médias (ou 120 espaços). Com um comando (uma ação de movimento), a corda se move em qualquer direção (incluindo para cima) a 3m por rodada, fixando-se firmemente onde você quiser. Ela pode se desamarrar e voltar da mesma forma.",
+      "modifiers": [],
+      "unmodeled": "a corda se move 3m por rodada com um comando e se fixa onde o portador quiser: é peça de cena, não número de ficha",
+      "bookPage": 343,
+      "uid": "itm_lga5vavqr4"
+    },
+    {
+      "id": "ferraduras-da-velocidade",
+      "name": "Ferraduras da velocidade",
+      "category": "apparel",
+      "price": 3000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 13,
+      "rollMax": 14,
+      "description": "Este conjunto de ferraduras pode ser fixado nos cascos de um cavalo (ou outro parceiro montaria, a critério do mestre) para aumentar seu deslocamento em +3m.",
+      "modifiers": [],
+      "unmodeled": "o +3m é no deslocamento da MONTARIA, e o app não tem ficha de parceiro montaria",
+      "bookPage": 344,
+      "uid": "itm_g5uw4zb3my"
+    },
+    {
+      "id": "garrafa-da-fumaca-eterna",
+      "name": "Garrafa da fumaça eterna",
+      "category": "apparel",
+      "price": 3000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 15,
+      "rollMax": 19,
+      "description": "Você pode abrir a tampa desta ânfora de metal para lançar a magia Névoa sem pagar seu custo em PM. A fumaça persiste até a garrafa ser tampada. Após isso, dissipa-se no fim da cena (ou após 4 rodadas, sob vento forte, ou 1 rodada, sob um vendaval).",
+      "modifiers": [],
+      "unmodeled": "ela LANÇA Névoa sem pagar PM, e a fumaça dura até a garrafa ser tampada",
+      "bookPage": 344,
+      "uid": "itm_2fykfqjvpe"
+    },
+    {
+      "id": "gema-da-luminosidade",
+      "name": "Gema da luminosidade",
+      "category": "apparel",
+      "price": 3000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 20,
+      "rollMax": 24,
+      "description": "Este cristal tem a aparência de um longo prisma. Com um comando, emite luz equivalente a uma tocha ou então um raio brilhante, que deixa uma criatura em alcance curto cega por 1d4 rodadas (Fort CD Car evita).",
+      "modifiers": [],
+      "unmodeled": "a luz de tocha e o raio que CEGA por 1d4 rodadas (Fort CD Car evita) são efeito sobre terceiros",
+      "bookPage": 344,
+      "uid": "itm_sdeldcpm4f"
+    },
+    {
+      "id": "manto-elfico",
+      "name": "Manto élfico",
+      "category": "apparel",
+      "price": 3000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 25,
+      "rollMax": 29,
+      "description": "Indistinguível de um manto cinza comum. Entretanto, quando usado com o capuz cobrindo o rosto, fornece +5 em Furtividade.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Furtividade"
+          },
+          "amount": 5,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+5 em Furtividade"
+        }
+      ],
+      "modeled": [
+        "o +5 em Furtividade"
+      ],
+      "unmodeled": "o bônus exige o CAPUZ cobrindo o rosto, e o app não tem meio-estado de vestir",
+      "bookPage": 345,
+      "uid": "itm_rl65ad5jlk"
+    },
+    {
+      "id": "mochila-de-carga",
+      "name": "Mochila de carga",
+      "category": "apparel",
+      "price": 3000,
+      "slots": 0,
+      "equip": "vested",
+      "rollMin": 30,
+      "rollMax": 34,
+      "description": "Este item, que parece uma simples mochila de pano, está na verdade ligado a um espaço interdimensional — fazendo com que seja maior por dentro do que por fora. A mochila de carga aumenta sua capacidade de carga em 10 espaços (ela própria não gasta um espaço). Se a mochila for rasgada, os objetos em seu interior são destruídos. Criaturas vivas colocadas no interior da mochila podem sobreviver até 10 minutos, mas depois disso ficarão sem ar.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "inventorySlots"
+          },
+          "amount": 10,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+10 espaços de carga"
+        }
+      ],
+      "modeled": [
+        "os +10 espaços"
+      ],
+      "unmodeled": "a mochila guarda criaturas vivas por dez minutos e destrói o conteúdo se for rasgada",
+      "bookPage": 345,
+      "uid": "itm_3orgbwaeea"
+    },
+    {
+      "id": "brincos-da-sagacidade",
+      "name": "Brincos da sagacidade",
+      "category": "apparel",
+      "price": 4500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 35,
+      "rollMax": 40,
+      "description": "Este par de brincos de safira aguça o raciocínio. Você recebe +1 em Inteligência (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "intelligence"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+1 em Inteligência"
+        }
+      ],
+      "modeled": [
+        "o +1 em Inteligência"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 342,
+      "uid": "itm_3yihplnnfn"
+    },
+    {
+      "id": "luvas-da-delicadeza",
+      "name": "Luvas da delicadeza",
+      "category": "apparel",
+      "price": 4500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 41,
+      "rollMax": 46,
+      "description": "Estas luvas de tecido fino permitem manipulação delicada. Você recebe +1 em Destreza (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "dexterity"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+1 em Destreza"
+        }
+      ],
+      "modeled": [
+        "o +1 em Destreza"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 344,
+      "uid": "itm_imc4hzpdj6"
+    },
+    {
+      "id": "manoplas-da-forca-do-ogro",
+      "name": "Manoplas da força do ogro",
+      "category": "apparel",
+      "price": 4500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 47,
+      "rollMax": 52,
+      "description": "Este par de luvas é feito de couro grosso com rebites de ferro. Você recebe +1 em Força (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "strength"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+1 em Força"
+        }
+      ],
+      "modeled": [
+        "o +1 em Força"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 344,
+      "uid": "itm_o7ikuqi65j"
+    },
+    {
+      "id": "manto-da-resistencia",
+      "name": "Manto da resistência",
+      "category": "apparel",
+      "price": 4500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 53,
+      "rollMax": 59,
+      "description": "Este manto de tecido grosso e pesado protege seu usuário. Você recebe +2 em testes de resistência.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 2,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 em testes de resistência"
+        }
+      ],
+      "modeled": [
+        "o +2 em resistências"
+      ],
+      "bookPage": 344,
+      "uid": "itm_pu6cj5lpcf"
+    },
+    {
+      "id": "manto-do-fascinio",
+      "name": "Manto do fascínio",
+      "category": "apparel",
+      "price": 4500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 60,
+      "rollMax": 65,
+      "description": "Este manto de veludo possui bordados de ouro. Você recebe +1 em Carisma (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+1 em Carisma"
+        }
+      ],
+      "modeled": [
+        "o +1 em Carisma"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 344,
+      "uid": "itm_5zsmv6zc6o"
+    },
+    {
+      "id": "pingente-da-sensatez",
+      "name": "Pingente da sensatez",
+      "category": "apparel",
+      "price": 4500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 66,
+      "rollMax": 71,
+      "description": "Esta pequena pérola com uma corrente leve é usada como um colar. Você recebe +1 em Sabedoria (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "wisdom"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+1 em Sabedoria"
+        }
+      ],
+      "modeled": [
+        "o +1 em Sabedoria"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 345,
+      "uid": "itm_o6uts3fd54"
+    },
+    {
+      "id": "torque-do-vigor",
+      "name": "Torque do vigor",
+      "category": "apparel",
+      "price": 4500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 72,
+      "rollMax": 77,
+      "description": "O acabamento deste colar ou bracelete remete a um animal poderoso, como um urso ou lobo. Você recebe +1 em Constituição (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+1 em Constituição"
+        }
+      ],
+      "modeled": [
+        "o +1 em Constituição"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 345,
+      "uid": "itm_vnfbv3mfir"
+    },
+    {
+      "id": "chapeu-do-disfarce",
+      "name": "Chapéu do disfarce",
+      "category": "apparel",
+      "price": 6000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 78,
+      "rollMax": 82,
+      "description": "Você pode lançar Disfarce Ilusório (CD Car), com o aprimoramento que inclui odores e sensações e muda o bônus em Enganação para disfarces para +20, sem pagar seu custo em PM. Você não pode usar outros aprimoramentos. Como parte do disfarce, o chapéu pode mudar para um elmo, faixa, tiara, gorro, touca e assim por diante.",
+      "modifiers": [],
+      "unmodeled": "ele LANÇA Disfarce Ilusório com um aprimoramento fixo, sem pagar PM",
+      "bookPage": 343,
+      "uid": "itm_k3jjoa3wrv"
+    },
+    {
+      "id": "flauta-fantasma",
+      "name": "Flauta fantasma",
+      "category": "apparel",
+      "price": 6000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 83,
+      "rollMax": 84,
+      "description": "Se for treinado em Atuação, você pode lançar Esculpir Sons (CD Car) sem pagar seu custo em PM.",
+      "modifiers": [],
+      "unmodeled": "ela LANÇA Esculpir Sons sem pagar PM, e só para quem é treinado em Atuação",
+      "bookPage": 344,
+      "uid": "itm_xwcxfibinw"
+    },
+    {
+      "id": "lanterna-da-revelacao",
+      "name": "Lanterna da revelação",
+      "category": "apparel",
+      "price": 6000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 85,
+      "rollMax": 89,
+      "description": "Este item funciona como um lampião normal, mas sua luz revela todas as criaturas e objetos invisíveis no alcance.",
+      "modifiers": [],
+      "unmodeled": "a luz REVELA invisíveis no alcance, e invisibilidade não é estado que o app guarde",
+      "bookPage": 344,
+      "uid": "itm_dw4mup7etr"
+    },
+    {
+      "id": "anel-da-protecao",
+      "name": "Anel da proteção",
+      "category": "apparel",
+      "price": 9000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 90,
+      "rollMax": 96,
+      "description": "Este anel desvia ataques contra seu usuário. Você recebe +2 de Defesa.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 na Defesa"
+        }
+      ],
+      "modeled": [
+        "o +2 na Defesa"
+      ],
+      "bookPage": 342,
+      "uid": "itm_2bu7i726ut"
+    },
+    {
+      "id": "anel-do-escudo-mental",
+      "name": "Anel do escudo mental",
+      "category": "apparel",
+      "price": 9000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 97,
+      "rollMax": 98,
+      "description": "Você recebe imunidade a magias de adivinhação.",
+      "modifiers": [],
+      "unmodeled": "imunidade a magias de adivinhação — o app não tem imunidade por escola",
+      "bookPage": 342,
+      "uid": "itm_lt76ls6snc"
+    },
+    {
+      "id": "pingente-da-saude",
+      "name": "Pingente da saúde",
+      "category": "apparel",
+      "price": 9000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 99,
+      "rollMax": 100,
+      "description": "O usuário desta joia verde em um cordão de prata recebe imunidade a doenças e venenos. Os efeitos só se ativam após uma semana de uso.",
+      "modifiers": [],
+      "unmodeled": "imunidade a doenças e venenos, e só depois de uma SEMANA de uso",
+      "bookPage": 345,
+      "uid": "itm_3vpnhv7hvd"
+    },
+    {
+      "id": "anel-de-telecinesia",
+      "name": "Anel de telecinesia",
+      "category": "apparel",
+      "price": 10500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 1,
+      "rollMax": 4,
+      "description": "Você pode lançar Telecinesia (CD Int). Caso já conheça a magia, o custo para lançá-la diminui em –1 PM.",
+      "modifiers": [],
+      "unmodeled": "ele LANÇA Telecinesia, e baixa −1 PM para quem já conhece a magia",
+      "bookPage": 342,
+      "uid": "itm_ku2z6muucl"
+    },
+    {
+      "id": "bola-de-cristal",
+      "name": "Bola de cristal",
+      "category": "apparel",
+      "price": 10500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 5,
+      "rollMax": 8,
+      "description": "Esta pequena esfera revela pessoas e lugares distantes. Olhar através dela é uma ação completa e gera a magia Vidência (CD Sab).",
+      "modifiers": [],
+      "unmodeled": "olhar através dela é ação completa e GERA a magia Vidência",
+      "bookPage": 342,
+      "uid": "itm_ev5nivwa43"
+    },
+    {
+      "id": "caveira-maldita",
+      "name": "Caveira maldita",
+      "category": "apparel",
+      "price": 10500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 9,
+      "rollMax": 10,
+      "description": "Esta pedra esculpida em formato de crânio gera o efeito da magia Profanar, com o crânio como ponto de origem. Mortos-vivos e devotos de deuses que canalizam apenas energia negativa na área de efeito recebem +2 em testes e Defesa.",
+      "modifiers": [],
+      "unmodeled": "ela gera a magia Profanar com o crânio como origem, e dá +2 a mortos-vivos e devotos de energia negativa na área",
+      "bookPage": 343,
+      "uid": "itm_ugepg53eec"
+    },
+    {
+      "id": "botas-aladas",
+      "name": "Botas aladas",
+      "category": "apparel",
+      "price": 15000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 11,
+      "rollMax": 14,
+      "description": "Você pode gastar 2 PM para fazer asas brotarem dos calcanhares destas botas e receber deslocamento de voo 12m por uma rodada. Você pode gastar 1 PM no início de cada um de seus turnos para manter esse efeito.",
+      "modifiers": [],
+      "modeled": [
+        "a ação e o custo do gesto"
+      ],
+      "unmodeled": "o voo 12m por rodada, e o 1 PM por turno para mantê-lo",
+      "bookPage": 342,
+      "uid": "itm_wxea5cod33"
+    },
+    {
+      "id": "braceletes-de-bronze",
+      "name": "Braceletes de bronze",
+      "category": "apparel",
+      "price": 16500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 15,
+      "rollMax": 18,
+      "description": "Estes braceletes geram um campo de força invisível, porém tangível. Você recebe +4 na Defesa, cumulativo com outros itens mágicos, mas não com armaduras.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 4,
+          "bonusType": "armor",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+4 na Defesa"
+        }
+      ],
+      "modeled": [
+        "o +4 na Defesa"
+      ],
+      "bookPage": 342,
+      "uid": "itm_k7r2or4pzl"
+    },
+    {
+      "id": "anel-da-energia",
+      "name": "Anel da energia",
+      "category": "apparel",
+      "price": 21000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 19,
+      "rollMax": 24,
+      "description": "Você recebe +5 PM (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 5,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+5 PM"
+        }
+      ],
+      "modeled": [
+        "os +5 PM"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 342,
+      "uid": "itm_cicyxdz2qx"
+    },
+    {
+      "id": "anel-da-vitalidade",
+      "name": "Anel da vitalidade",
+      "category": "apparel",
+      "price": 21000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 25,
+      "rollMax": 30,
+      "description": "Você recebe +10 PV (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPv"
+          },
+          "amount": 10,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+10 PV"
+        }
+      ],
+      "modeled": [
+        "os +10 PV"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 342,
+      "uid": "itm_k7rhvtqwlc"
+    },
+    {
+      "id": "anel-de-invisibilidade",
+      "name": "Anel de invisibilidade",
+      "category": "apparel",
+      "price": 21000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 31,
+      "rollMax": 34,
+      "description": "Ao colocar este anel de prata, você fica sob efeito de Invisibilidade. O efeito termina se você fizer um ataque ou lançar uma magia ofensiva, mas você pode tirar e recolocar o anel (uma ação padrão) para que ele volte a funcionar.",
+      "modifiers": [],
+      "unmodeled": "ele põe o portador sob Invisibilidade até o primeiro ataque ou magia ofensiva",
+      "bookPage": 342,
+      "uid": "itm_mhc3v5fncj"
+    },
+    {
+      "id": "bracadeiras-do-arqueiro",
+      "name": "Braçadeiras do arqueiro",
+      "category": "apparel",
+      "price": 21000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 35,
+      "rollMax": 38,
+      "description": "Você recebe +2 em rolagens de dano com armas de ataque à distância (cumulativo com outros itens).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "scope": "ranged"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 de dano à distância"
+        }
+      ],
+      "modeled": [
+        "o +2 de dano à distância"
+      ],
+      "bookPage": 342,
+      "uid": "itm_re5qxbtlzd"
+    },
+    {
+      "id": "brincos-de-marah",
+      "name": "Brincos de Marah",
+      "category": "apparel",
+      "price": 21000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 39,
+      "rollMax": 42,
+      "description": "Este par de brincos brancos é abençoado pela Deusa da Paz. A primeira criatura que o atacar em uma cena deve fazer um teste de Vontade (CD Car). Se falhar, perderá a ação. Se você atacar uma criatura, o efeito dos brincos é cancelado por um dia. Se você possuir Aparência Inofensiva (ou um poder similar) os efeitos acumulam, afetando as duas primeiras criaturas que o atacarem em uma cena.",
+      "modifiers": [],
+      "unmodeled": "a primeira criatura que atacar o portador numa cena perde a ação se falhar em Vontade — é efeito sobre terceiros, e o mestre o aplica",
+      "bookPage": 343,
+      "uid": "itm_wmgta2x5o6"
+    },
+    {
+      "id": "faixas-do-pugilista",
+      "name": "Faixas do pugilista",
+      "category": "apparel",
+      "price": 21000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 43,
+      "rollMax": 46,
+      "description": "Estas faixas surradas são amarradas nos punhos, nos braços ou na testa. Você recebe +2 em testes de ataque e rolagens de dano com ataques desarmados (cumulativo com outros itens).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "unarmed"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 em ataque desarmado"
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "unarmed"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 de dano desarmado"
+        }
+      ],
+      "modeled": [
+        "o +2 de ataque e dano desarmado"
+      ],
+      "bookPage": 344,
+      "uid": "itm_2houv54gh5"
+    },
+    {
+      "id": "manto-da-aranha",
+      "name": "Manto da aranha",
+      "category": "apparel",
+      "price": 21000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 47,
+      "rollMax": 50,
+      "description": "Este manto é feito de seda negra com fios de prata bordados. Você recebe deslocamento de escalada igual ao seu deslocamento terrestre, +5 em testes de resistência contra venenos e imunidade a teias mundanas ou mágicas. Além disso, pode lançar Teia (CD Des). Caso já conheça a magia, o custo para lançá-la diminui em –1 PM.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+5 contra veneno"
+        }
+      ],
+      "modeled": [
+        "o +5 em resistência contra veneno"
+      ],
+      "unmodeled": "o deslocamento de escalada, a imunidade a teias e o lançar Teia não têm forma",
+      "bookPage": 344,
+      "uid": "itm_uin73cvckv"
+    },
+    {
+      "id": "vassoura-voadora",
+      "name": "Vassoura voadora",
+      "category": "apparel",
+      "price": 21000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 51,
+      "rollMax": 54,
+      "description": "Como um tapete voador, mas pode carregar duas pessoas (ou 40 espaços).",
+      "modifiers": [],
+      "unmodeled": "ela voa e carrega duas pessoas — deslocamento de voo de um VEÍCULO, não do portador",
+      "bookPage": 345,
+      "uid": "itm_xx622d2wo4"
+    },
+    {
+      "id": "simbolo-abencoado",
+      "name": "Símbolo abençoado",
+      "category": "apparel",
+      "price": 21000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 55,
+      "rollMax": 58,
+      "description": "Conta como um símbolo sagrado. Se você for devoto do deus, o custo de suas magias divinas diminui em –1 PM (cumulativo com o poder Símbolo Sagrado Energizado). Apenas devotos desse deus podem fabricar um símbolo abençoado.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "pmCost",
+            "scope": "divina"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "−1 PM nas magias divinas"
+        }
+      ],
+      "modeled": [
+        "o −1 PM nas magias divinas"
+      ],
+      "unmodeled": "ele conta como um símbolo sagrado, e só vale para devoto do deus que o abençoou",
+      "bookPage": 345,
+      "uid": "itm_fum32sizut"
+    },
+    {
+      "id": "amuleto-da-robustez",
+      "name": "Amuleto da robustez",
+      "category": "apparel",
+      "price": 25500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 59,
+      "rollMax": 64,
+      "description": "Este disco com corrente de ouro é usado como um colar. Você recebe +2 em Constituição (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": 2,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 em Constituição"
+        }
+      ],
+      "modeled": [
+        "o +2 em Constituição"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 342,
+      "uid": "itm_6z4b7ubsgl"
+    },
+    {
+      "id": "botas-velozes",
+      "name": "Botas velozes",
+      "category": "apparel",
+      "price": 25500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 65,
+      "rollMax": 68,
+      "description": "Você recebe +3m em seu deslocamento e pode lançar Velocidade (apenas sobre você mesmo).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "displacement"
+          },
+          "amount": 3,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+3m de deslocamento"
+        }
+      ],
+      "modeled": [
+        "os +3m de deslocamento"
+      ],
+      "unmodeled": "ela também LANÇA Velocidade sobre o portador",
+      "bookPage": 342,
+      "uid": "itm_vhgkatz44x"
+    },
+    {
+      "id": "cinto-da-forca-do-gigante",
+      "name": "Cinto da força do gigante",
+      "category": "apparel",
+      "price": 25500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 69,
+      "rollMax": 74,
+      "description": "Este cinto largo é feito de couro com rebites de ferro. Você recebe +2 em Força (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "strength"
+          },
+          "amount": 2,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 em Força"
+        }
+      ],
+      "modeled": [
+        "o +2 em Força"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 343,
+      "uid": "itm_3kkizr5sl4"
+    },
+    {
+      "id": "coroa-majestosa",
+      "name": "Coroa majestosa",
+      "category": "apparel",
+      "price": 25500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 75,
+      "rollMax": 80,
+      "description": "Esta coroa de ouro possui dezenas de pedras preciosas. Você recebe +2 em Carisma (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 2,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 em Carisma"
+        }
+      ],
+      "modeled": [
+        "o +2 em Carisma"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 344,
+      "uid": "itm_ic2dl3ibjz"
+    },
+    {
+      "id": "estola-da-serenidade",
+      "name": "Estola da serenidade",
+      "category": "apparel",
+      "price": 25500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 81,
+      "rollMax": 86,
+      "description": "Esta faixa de pano com inscrições mágicas é usada sobre a nuca, com as duas extremidades caindo na frente do corpo. Você recebe +2 em Sabedoria (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "wisdom"
+          },
+          "amount": 2,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 em Sabedoria"
+        }
+      ],
+      "modeled": [
+        "o +2 em Sabedoria"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 344,
+      "uid": "itm_k5selwcrl3"
+    },
+    {
+      "id": "manto-do-morcego",
+      "name": "Manto do morcego",
+      "category": "apparel",
+      "price": 25500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 87,
+      "rollMax": 88,
+      "description": "Este manto marrom escuro ou negro fornece +5 em Furtividade e permite que você fique pendurado de ponta-cabeça no teto, como um morcego. Além disso, você pode gastar uma ação padrão para segurar as pontas do manto e se transformar em um morcego. Seu tamanho muda para Minúsculo e você recebe deslocamento de voo 12m e uma arma natural de mordida (dano 1d4, perfuração). Em outros aspectos, isso funciona como a Forma Selvagem do druida. Você só pode se transformar em morcego à noite ou em ambientes escuros.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Furtividade"
+          },
+          "amount": 5,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+5 em Furtividade"
+        }
+      ],
+      "modeled": [
+        "o +5 em Furtividade"
+      ],
+      "unmodeled": "pendurar-se de cabeça para baixo e virar MORCEGO (voo 12m, mordida 1d4) só à noite não tem forma",
+      "bookPage": 344,
+      "uid": "itm_rfbbww4ecm"
+    },
+    {
+      "id": "pulseiras-da-celeridade",
+      "name": "Pulseiras da celeridade",
+      "category": "apparel",
+      "price": 25500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 89,
+      "rollMax": 94,
+      "description": "Esta pulseira de platina aguça todos os seus movimentos. Você recebe +2 em Destreza (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "dexterity"
+          },
+          "amount": 2,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 em Destreza"
+        }
+      ],
+      "modeled": [
+        "o +2 em Destreza"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 345,
+      "uid": "itm_6mkpuxrjwa"
+    },
+    {
+      "id": "tiara-da-sapiencia",
+      "name": "Tiara da sapiência",
+      "category": "apparel",
+      "price": 25500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 95,
+      "rollMax": 100,
+      "description": "Esta tiara delicada possui uma gema que descansa sobre a testa. Você recebe +2 em Inteligência (somente após um dia de uso).",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "intelligence"
+          },
+          "amount": 2,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+2 em Inteligência"
+        }
+      ],
+      "modeled": [
+        "o +2 em Inteligência"
+      ],
+      "unmodeled": "o bônus só vale depois de UM DIA de uso, e o app não conta dias — ele soma assim que o item é vestido",
+      "bookPage": 345,
+      "uid": "itm_2cs2ze2p52"
+    },
+    {
+      "id": "elmo-do-teletransporte",
+      "name": "Elmo do teletransporte",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 1,
+      "rollMax": 2,
+      "description": "Você pode lançar Salto Dimensional e Teletransporte, mas apenas em você mesmo. Caso já conheça as magias, o custo para lançá-las diminui em –1 PM.",
+      "modifiers": [],
+      "unmodeled": "ele LANÇA Salto Dimensional e Teletransporte, só no portador, e baixa −1 PM para quem já as conhece",
+      "bookPage": 344,
+      "uid": "itm_nmzyjowjb2"
+    },
+    {
+      "id": "gema-da-telepatia",
+      "name": "Gema da telepatia",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 3,
+      "rollMax": 4,
+      "description": "Você pode lançar Compreensão e Enfeitiçar (CD Car) sem pagar seu custo em PM.",
+      "modifiers": [],
+      "unmodeled": "ela LANÇA Compreensão e Enfeitiçar sem pagar PM",
+      "bookPage": 344,
+      "uid": "itm_y4scs6br73"
+    },
+    {
+      "id": "gema-elemental",
+      "name": "Gema elemental",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 5,
+      "rollMax": 9,
+      "description": "Você pode lançar Conjurar Elemental sem pagar seu custo em PM.",
+      "modifiers": [],
+      "unmodeled": "ela LANÇA Conjurar Elemental sem pagar PM",
+      "bookPage": 344,
+      "uid": "itm_65burjuc6h"
+    },
+    {
+      "id": "manual-da-saude-corporal",
+      "name": "Manual da saúde corporal",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 10,
+      "rollMax": 15,
+      "description": "Este tomo volumoso contém exercícios de resistência e dietas saudáveis, mas suas palavras trazem um poderoso efeito mágico. Funciona como um Manual do Bom Exercício, mas fornece +1 de Constituição.",
+      "modifiers": [],
+      "unmodeled": "ler o livro AUMENTA a Constituição em +1 permanentemente, e depois ele vira item mundano — mudança de ficha, não modificador de item",
+      "bookPage": 345,
+      "uid": "itm_nvzomdfmml"
+    },
+    {
+      "id": "manual-do-bom-exercicio",
+      "name": "Manual do bom exercício",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 16,
+      "rollMax": 21,
+      "description": "Este tomo volumoso contém exercícios de musculação, mas escondido entre as palavras há um poderoso efeito mágico. Ler o livro leva uma semana e aumenta seu valor de Força em +1 permanentemente (o atributo só pode ser aumentado uma vez com um Manual). Assim que o livro é lido, a magia desaparece de suas páginas e ele se torna um item mundano.",
+      "modifiers": [],
+      "unmodeled": "ler o livro AUMENTA a Força em +1 permanentemente, e depois ele vira item mundano — mudança de ficha, não modificador de item",
+      "bookPage": 345,
+      "uid": "itm_i4r435cvmq"
+    },
+    {
+      "id": "manual-dos-movimentos-precisos",
+      "name": "Manual dos movimentos precisos",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 22,
+      "rollMax": 27,
+      "description": "Este tomo volumoso descreve exercícios de coordenação e equilíbrio, mas mesclado às palavras há um poderoso efeito mágico. Funciona como um Manual do Bom Exercício, mas fornece +1 de Destreza.",
+      "modifiers": [],
+      "unmodeled": "ler o livro AUMENTA a Destreza em +1 permanentemente, e depois ele vira item mundano",
+      "bookPage": 345,
+      "uid": "itm_zzd2vheq45"
+    },
+    {
+      "id": "medalhao-de-lena",
+      "name": "Medalhão de Lena",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 28,
+      "rollMax": 34,
+      "description": "Quando você é reduzido a 0 ou menos PV, esta joia emite uma explosão de energia positiva que cura 100 PV (antes que você caia). Este poder só se ativa uma vez por dia.",
+      "modifiers": [],
+      "unmodeled": "a 0 PV ele cura 100 PV, uma vez por dia, ANTES de o portador cair",
+      "bookPage": 345,
+      "uid": "itm_argwxaxcs6"
+    },
+    {
+      "id": "tomo-da-compreensao",
+      "name": "Tomo da compreensão",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 35,
+      "rollMax": 40,
+      "description": "Este livro volumoso contém ensinamentos para tornar o leitor mais centrado e aguçar sua percepção, mas também possui um poderoso efeito mágico. Funciona como um Manual do Bom Exercício, mas fornece +1 de Sabedoria.",
+      "modifiers": [],
+      "unmodeled": "ler o livro AUMENTA a Sabedoria em +1 permanentemente, e depois ele vira item mundano",
+      "bookPage": 345,
+      "uid": "itm_gngvedij4c"
+    },
+    {
+      "id": "tomo-da-lideranca-e-influencia",
+      "name": "Tomo da liderança e influência",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 41,
+      "rollMax": 46,
+      "description": "Este livro de encadernação luxuosa contém instruções detalhadas para convencer e inspirar os demais, mas as páginas escondem um poderoso efeito mágico. Funciona como um Manual do Bom Exercício, mas fornece +1 de Carisma.",
+      "modifiers": [],
+      "unmodeled": "ler o livro AUMENTA o Carisma em +1 permanentemente, e depois ele vira item mundano",
+      "bookPage": 345,
+      "uid": "itm_f6svuhn77k"
+    },
+    {
+      "id": "tomo-dos-grandes-pensamentos",
+      "name": "Tomo dos grandes pensamentos",
+      "category": "apparel",
+      "price": 30000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 47,
+      "rollMax": 52,
+      "description": "Este livro pesado contém exercícios para aprimorar o raciocínio e a memória, mas mesclado às palavras há um poderoso efeito mágico. Funciona como um Manual do Bom Exercício, mas fornece +1 de Inteligência.",
+      "modifiers": [],
+      "unmodeled": "ler o livro AUMENTA a Inteligência em +1 permanentemente, e depois ele vira item mundano",
+      "bookPage": 345,
+      "uid": "itm_megqovfgev"
+    },
+    {
+      "id": "anel-refletor",
+      "name": "Anel refletor",
+      "category": "apparel",
+      "price": 51000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 53,
+      "rollMax": 57,
+      "description": "Este aro de platina é poderoso contra conjuradores. Uma vez por rodada, quando você é alvo de uma magia, pode gastar PM igual ao custo dela para refleti-la de volta ao seu conjurador. As características da magia (efeitos, CD...) se mantêm, mas você toma qualquer decisão exigida por ela.",
+      "modifiers": [],
+      "unmodeled": "uma vez por rodada, gastar PM igual ao custo da magia REFLETE ela de volta ao conjurador",
+      "bookPage": 342,
+      "uid": "itm_igmhecyxzw"
+    },
+    {
+      "id": "cinto-do-campeao",
+      "name": "Cinto do campeão",
+      "category": "apparel",
+      "price": 51000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 58,
+      "rollMax": 60,
+      "description": "Este cinturão de ouro é cravejado de joias e possui gravuras de gladiadores e pugilistas minotauros. Você recebe +1 em Força e a habilidade Briga (veja a página 76; somente após um dia de uso). Caso já a possua, seu dano desarmado será calculado como se você possuísse quatro níveis de lutador a mais (máximo 2d12). Por fim, caso possua o poder Torcida, o bônus que você recebe por ele aumenta para +3. Estes cintos eram dados aos vencedores dos jogos gladiatoriais do Império de Tauron. A cada ano, diversos combatentes de Arton viajavam a Tiberus para competir e ter uma chance de ganhar um destes itens.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "strength"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+1 em Força"
+        }
+      ],
+      "modeled": [
+        "o +1 em Força"
+      ],
+      "unmodeled": "ele também concede a habilidade Briga, melhora o dano desarmado de quem já a tem e sobe o bônus do poder Torcida para +3",
+      "bookPage": 343,
+      "uid": "itm_oum3dwreni"
+    },
+    {
+      "id": "colar-guardiao",
+      "name": "Colar guardião",
+      "category": "apparel",
+      "price": 51000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 61,
+      "rollMax": 67,
+      "description": "Este diamante lapidado preso em uma corrente de platina deflete ataques contra seu usuário. Você recebe +5 na Defesa.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 5,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+5 na Defesa"
+        }
+      ],
+      "modeled": [
+        "o +5 na Defesa"
+      ],
+      "bookPage": 343,
+      "uid": "itm_wy6qh7qrnm"
+    },
+    {
+      "id": "estatueta-animista",
+      "name": "Estatueta animista",
+      "category": "apparel",
+      "price": 51000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 68,
+      "rollMax": 72,
+      "description": "Esta estatueta de pedra é esculpida na forma de um animal. Quando é atirada no chão e a palavra de comando é proferida, transforma-se no animal correspondente. O animal fornece os benefícios de um parceiro veterano até o fim da cena, quando então volta à sua forma de estatueta. O tipo de parceiro é definido pelo animal: raposa (ajudante; perícias definidas na fabricação do item), onça (assassino), águia (atirador), lobo (combatente), leão (fortão) ou urso (guardião).",
+      "modifiers": [],
+      "unmodeled": "atirada no chão, ela vira um PARCEIRO veterano até o fim da cena — o app não tem ficha de parceiro",
+      "bookPage": 344,
+      "uid": "itm_b5iyfvzpoq"
+    },
+    {
+      "id": "anel-da-liberdade",
+      "name": "Anel da liberdade",
+      "category": "apparel",
+      "price": 60000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 73,
+      "rollMax": 77,
+      "description": "Forjado em ouro, este anel é uma relíquia da Igreja de Valkaria. Você fica permanentemente sob efeito de Libertação.",
+      "modifiers": [],
+      "unmodeled": "o portador fica permanentemente sob Libertação",
+      "bookPage": 342,
+      "uid": "itm_7lkuivme2i"
+    },
+    {
+      "id": "tapete-voador",
+      "name": "Tapete voador",
+      "category": "apparel",
+      "price": 60000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 78,
+      "rollMax": 82,
+      "description": "Com um comando, este tapete flutua, fornecendo deslocamento de voo 12m. O tapete tem 3m x 3m e pode carregar seis criaturas Médias (ou 120 espaços). Se você estiver em alcance longo do tapete, pode comandar o voo dele.",
+      "modifiers": [],
+      "unmodeled": "ele voa 12m e carrega seis criaturas Médias — é veículo, não bônus de ficha",
+      "bookPage": 345,
+      "uid": "itm_xg6pkwe2qj"
+    },
+    {
+      "id": "braceletes-de-ouro",
+      "name": "Braceletes de ouro",
+      "category": "apparel",
+      "price": 64500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 83,
+      "rollMax": 87,
+      "description": "Como braceletes de bronze, mas fornece +8 na Defesa , não cumulativo com braceletes de bronze.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 8,
+          "bonusType": "armor",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+8 na Defesa"
+        }
+      ],
+      "modeled": [
+        "o +8 na Defesa"
+      ],
+      "bookPage": 342,
+      "uid": "itm_e3jawv4fgy"
+    },
+    {
+      "id": "espelho-da-oposicao",
+      "name": "Espelho da oposição",
+      "category": "apparel",
+      "price": 75000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 88,
+      "rollMax": 89,
+      "description": "Este item lembra um espelho normal com cerca de 1m de comprimento e 1,5m de altura. Pode ser fixado em qualquer superfície e ativado (ou desativado) com um comando. Quando uma criatura observa seu reflexo, o espelho cria uma cópia sua, com as mesmas habilidades e equipamento. A duplicata ataca a criatura original; quando um dos dois é derrotado, a duplicata e seus itens desaparecem.",
+      "modifiers": [],
+      "unmodeled": "ele cria uma CÓPIA de quem se olha nele, com as mesmas habilidades, e a cópia ataca o original",
+      "bookPage": 344,
+      "uid": "itm_m3ia2z7nt5"
+    },
+    {
+      "id": "robe-do-arquimago",
+      "name": "Robe do arquimago",
+      "category": "apparel",
+      "price": 90000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 90,
+      "rollMax": 94,
+      "description": "Este traje pesado alinha-se com as energias arcanas emitidas por seu usuário para gerar um campo protetor. Se você for um conjurador arcano, recebe um bônus na Defesa igual a 5 + o círculo de magia mais alto que puder lançar e um bônus em testes de resistência igual à metade do bônus na Defesa. Assim, um arcanista de 9º nível (capaz de lançar magias de 3º círculo) recebe +8 na Defesa e +4 em testes de resistência.",
+      "modifiers": [],
+      "unmodeled": "a Defesa dele é 5 + o CÍRCULO mais alto que o portador lança, e a resistência é metade disso — número que escala por círculo não tem forma",
+      "bookPage": 345,
+      "uid": "itm_nmy7whos6z"
+    },
+    {
+      "id": "orbe-das-tempestades",
+      "name": "Orbe das tempestades",
+      "category": "apparel",
+      "price": 97500,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 95,
+      "rollMax": 96,
+      "description": "Esta esfera de vidro com 20cm de diâmetro contém fumaça e raios em seu interior. Você pode lançar Controlar o Clima e Fúria do Panteão (CD Sab). Caso já conheça as magias, o custo para lançá-las diminui em –1 PM. Além disso, você e todos os seus aliados adjacentes ficam sob efeito de Suporte Ambiental.",
+      "modifiers": [],
+      "unmodeled": "ele LANÇA Controlar o Clima e Fúria do Panteão, e põe o portador e os aliados adjacentes sob Suporte Ambiental",
+      "bookPage": 345,
+      "uid": "itm_km3d7gus3a"
+    },
+    {
+      "id": "anel-da-regeneracao",
+      "name": "Anel da regeneração",
+      "category": "apparel",
+      "price": 150000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 97,
+      "rollMax": 98,
+      "description": "Você recebe Cura Acelerada 5 (somente após um dia de uso).",
+      "modifiers": [],
+      "unmodeled": "Cura Acelerada 5 é regeneração por rodada, e o app não tem relógio de combate para aplicá-la",
+      "bookPage": 342,
+      "uid": "itm_7h5m5kzvlo"
+    },
+    {
+      "id": "espelho-do-aprisionamento",
+      "name": "Espelho do aprisionamento",
+      "category": "apparel",
+      "price": 150000,
+      "slots": 1,
+      "equip": "vested",
+      "rollMin": 99,
+      "rollMax": 100,
+      "description": "Este item de cristal, com 1,5m de altura e moldura de metal, pode ser fixado em qualquer superfície e ativado (ou desativado) com um comando. Qualquer criatura que se aproxime a alcance curto do espelho do aprisionamento e enxergue seu próprio reflexo deve passar em um teste de Reflexos (CD Int) ou será transportada magicamente para um espaço extradimensional dentro do espelho, ficando presa ali. O tamanho da criatura não importa — mas construtos, mortos-vivos e objetos não podem ser transportados. Com um comando, é possível conversar com uma criatura presa no espelho ou libertá-la. Se o espelho for quebrado, todas as criaturas dentro dele são libertadas.",
+      "modifiers": [],
+      "unmodeled": "quem se vê nele é transportado para dentro do espelho se falhar em Reflexos",
+      "bookPage": 344,
+      "uid": "itm_weho6su7ch"
     }
   ],
   "races": [

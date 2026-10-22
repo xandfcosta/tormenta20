@@ -247,6 +247,140 @@ def altura_da_pagina(pagina: int) -> float:
     return float(m.group(2))
 
 
+# ─── A TABELA DE SAQUE: `d%` + nome + preço ──────────────────────────────────
+#
+# CINCO tabelas do capítulo de Recompensas têm a mesma forma — a 8-9 e a 8-11
+# (itens específicos), a 8-12 (poções) e as 8-13/14/15 (acessórios) —, e o
+# terceiro auditor ia copiar a leitura delas pela terceira vez. É a mesma razão
+# que fez este módulo nascer.
+#
+# As três armadilhas que elas compartilham moram aqui, e não em cada auditor:
+#
+#   - **a linha se monta pelo Y.** As três células são blocos DIFERENTES, e o
+#     que diz que "88-92", "Avalanche" e "T$ 140.000" são a mesma linha é a
+#     altura das três ser igual. Parear por índice erra na primeira célula que
+#     quebra em duas;
+#   - **a última linha vem COLAPSADA** num `<line>` só ("96-100 Vingadora
+#     sagrada"), em QUATRO das cinco tabelas. Por isso o padrão aceita cauda;
+#   - **a célula do d% é alinhada à DIREITA**, então "97-100" começa dois pontos
+#     à esquerda de "80" — o x é FAIXA, e a borda de baixo já custou a última
+#     linha de duas tabelas.
+
+RE_FAIXA_DE_DADO = re.compile(r'^(\d{1,3})(?:-(\d{1,3}))?(?:\s+(.*))?$')
+RE_PRECO_DO_LIVRO = re.compile(r'T\$\s*([\d.]+)')
+
+
+def linhas_de_tabela(pagina: int, x_do_dado, x_do_nome: float, x_do_preco,
+                     folga: float = 3.0):
+    """(inicio, fim, nome, preço) de cada linha de uma tabela de saque.
+
+    A célula do NOME quebra em duas linhas quando é longa — "Escudo da Fé" numa
+    e "(aprimoramento para duração cena)" na seguinte —, e a de baixo não tem
+    `d%` ao lado. Por isso o nome é lido até a PRÓXIMA FAIXA, e não até a
+    próxima linha.
+
+    @example P.linhas_de_tabela(343, (313.0, 320.0), 348.7, (480.0, 490.0))
+    """
+    celulas = linhas_com_coordenada(pagina)
+    dados = sorted((y, RE_FAIXA_DE_DADO.match(t).groups()) for x, y, t in celulas
+                   if x_do_dado[0] <= x <= x_do_dado[1] and RE_FAIXA_DE_DADO.match(t))
+    nomes = sorted((y, t) for x, y, t in celulas if abs(x - x_do_nome) < folga)
+    precos = [(y, t) for x, y, t in celulas
+              if x_do_preco[0] <= x <= x_do_preco[1] and RE_PRECO_DO_LIVRO.match(t)]
+
+    for i, (y, (inicio, fim, cauda)) in enumerate(dados):
+        proxima = dados[i + 1][0] if i + 1 < len(dados) else 1e9
+        corpo = [t for yn, t in nomes if y - MESMA_LINHA < yn < proxima - MESMA_LINHA]
+        nome = cauda or (junta(corpo) if corpo else None)
+        if nome is None:
+            continue
+        preco = next((t for yp, t in precos if abs(yp - y) < MESMA_LINHA), None)
+        valor = (int(RE_PRECO_DO_LIVRO.match(preco).group(1).replace('.', ''))
+                 if preco else None)
+        yield int(inicio), int(fim or inicio), nome.strip(), valor
+
+
+def verbetes_por_nome(paginas, colunas_por_pagina, regioes_por_pagina, nomes,
+                      titulos=(), offset: int = 6, folga: float = 3.0):
+    """Os verbetes `Nome. Regra` das páginas, PROCURADOS por nome conhecido.
+
+    Quem diz o que procurar é a TABELA que acompanha o verbete: um nome de três
+    palavras com preposição no meio — "Azagaia dos Relâmpagos", "Garrafa da
+    Fumaça Eterna" — não se acha com "palavra maiúscula seguida de ponto", que
+    casaria com qualquer frase terminada em nome próprio. Procurar pelos nomes
+    conhecidos é o que transforma as duas âncoras numa CONFERÊNCIA: nome de
+    tabela sem verbete sai nomeado, e verbete sem linha de tabela também.
+
+    Devolve, por nome: o corpo em linhas, a página do LIVRO, e onde o verbete
+    COMEÇA (página do PDF, coluna e faixa de altura) — que é o que um leitor de
+    itálico precisa para saber onde olhar.
+
+    As três coisas que a página faz e que esta função trata:
+
+      - **a coluna é um PAR** (corpo, recuo), porque a primeira linha de um
+        parágrafo é recuada — e é justamente ela que abre o verbete;
+      - **a tabela divide a página com a prosa**, e as regiões dela entram como
+        retângulos a pular, um ou mais por página;
+      - **o título de seção corta** o verbete em andamento ("Escudos
+        Específicos" no meio da lista), senão ele vira a última frase do
+        anterior.
+
+    @example P.verbetes_por_nome((343, 344), colunas, regioes, ["Avalanche"])
+    """
+    por_chave = {chave(n): n for n in nomes}
+    achados, atual = {}, None
+    for pagina in paginas:
+        regioes = regioes_por_pagina.get(pagina, ())
+        for x, y, texto in leitura(pagina):
+            coluna = coluna_do_par(x, colunas_por_pagina[pagina], folga)
+            if coluna is None or dentro_de_alguma(x, y, regioes):
+                continue
+            if any(texto.startswith(titulo) for titulo in titulos):
+                atual = None
+                continue
+            cabeca, ponto, resto = texto.partition('. ')
+            nome = por_chave.get(chave(cabeca)) if ponto else None
+            if nome:
+                atual = nome
+                achados[nome] = {'corpo': [resto], 'pagina': pagina - offset,
+                                 'pdf': pagina, 'coluna': coluna, 'y0': y, 'y1': y}
+            elif atual is not None:
+                achados[atual]['corpo'].append(texto)
+                if pagina == achados[atual]['pdf'] and coluna == achados[atual]['coluna']:
+                    achados[atual]['y1'] = y
+    return achados
+
+
+def coluna_do_par(x: float, colunas, folga: float = 3.0):
+    """O par (corpo, recuo) em que esta linha está, ou None se ela está fora."""
+    for corpo, recuo in colunas:
+        if abs(x - corpo) < folga or abs(x - recuo) < folga:
+            return (corpo, recuo)
+    return None
+
+
+def dentro_de_alguma(x: float, y: float, regioes) -> bool:
+    """O ponto cai em algum retângulo (x0, x1, y0, y1) de tabela."""
+    return any(x0 <= x <= x1 and y0 <= y <= y1 for x0, x1, y0, y1 in regioes)
+
+
+def faixas_que_nao_fecham(linhas) -> str:
+    """O denominador DE GRAÇA destas tabelas: o `d%` tila 1..100.
+
+    Uma leitura que perca uma linha não fecha, e o auditor para antes de
+    encostar no catálogo — foi assim que a Vingadora sagrada apareceu faltando
+    duas vezes, em dois auditores diferentes.
+    """
+    coberto = {}
+    for inicio, fim, nome, _preco in linhas:
+        for d in range(inicio, fim + 1):
+            if d in coberto:
+                return f'{d}% aparece duas vezes ({coberto[d]} e {nome})'
+            coberto[d] = nome
+    faltando = [d for d in range(1, 101) if d not in coberto]
+    return f'{len(faltando)} valores de d% sem linha: {faltando[:8]}…' if faltando else ''
+
+
 def linhas_com_coordenada(pagina: int) -> list[tuple[float, float, str]]:
     """(x, y, texto) de cada LINHA da página, sem agrupar por bloco.
 

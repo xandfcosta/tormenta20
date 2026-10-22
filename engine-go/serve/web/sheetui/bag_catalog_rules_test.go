@@ -36,9 +36,11 @@ func TestTheAddDialogOffersOnlyWhatACharacterCarries(t *testing.T) {
 			t.Errorf("o diálogo oferta %q, que é %q — uma categoria que se APLICA a "+
 				"um item, não uma que se carrega", entry.Name, entry.Category)
 		}
-		if entry.ComposedOf != nil {
-			t.Errorf("o diálogo oferta %q, que é item mágico específico: quem o "+
-				"entrega é o mestre (p333), e o jogador não o compra", entry.Name)
+		// O QUE SE SORTEIA é mágico, e o mágico PERMANENTE é do mestre (p333).
+		// A poção é a exceção da mesma página: uso único, e se FABRICA.
+		if entry.RollMax > 0 && entry.Consumable == nil {
+			t.Errorf("o diálogo oferta %q, que é item mágico permanente (sai numa "+
+				"tabela de saque): quem o entrega é o mestre (p333)", entry.Name)
 		}
 	}
 	t.Logf("%d linhas ofertadas, de %d itens no catálogo", len(rows), len(byID))

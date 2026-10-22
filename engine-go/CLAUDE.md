@@ -1386,6 +1386,7 @@ este verbete":
 | `audit-objects.py` | `objectExamplesOfTheBook` + as duas escadas (Go!) | a Tabela 5-4, lida por COORDENADA — a p239 tem duas tabelas lado a lado, e `-layout` cola uma na outra |
 | `audit-specific-items.py` | `items.json` (os de `composedOf`) | a Tabela 8-9 e a 8-11 (`d%` + nome + **preço**), o verbete `Nome. Regra`, **e o ITÁLICO dele**, que é a composição do item |
 | `audit-potions.py` | `items.json` (os de `consumable.spell`) | a Tabela 8-12 (`d%` + **a MAGIA** + preço), resolvida contra o catálogo de magias — a poção não tem verbete, porque a regra dela é a da magia |
+| `audit-accessories.py` | `items.json` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15 (três tabelas, UMA lista alfabética de verbetes atravessando quatro páginas) |
 
 ### O auditor de materiais, e as DUAS armadilhas de ler uma página dividida
 
@@ -1437,6 +1438,25 @@ cima da fronteira quebrada.
   profundo é o último na sequência de índices. Quem cobra essa metade é o
   `TestEveryModifierFieldSurvivesTheCatalogJSON`, que varre o TIPO por reflexão
   em vez de repetir a lista num terceiro lugar.
+
+### A LEITURA de tabela e de verbete mora no `t20pdf`
+
+Cinco tabelas do capítulo de Recompensas têm a mesma forma — `d%` + nome +
+preço — e três auditores as leem. Na terceira cópia, a leitura virou módulo
+(`P.linhas_de_tabela`, `P.faixas_que_nao_fecham`, `P.verbetes_por_nome`), que é a
+mesma razão que fez o `t20pdf` nascer.
+
+O que mora lá e não em cada auditor são as armadilhas que as cinco dividem: a
+linha se monta pelo **Y** (as três células são blocos diferentes), a última
+linha vem **colapsada** num `<line>` só em quatro das cinco, a célula do `d%` é
+alinhada à **direita** (então "97-100" começa dois pontos à esquerda de "80", e
+a borda de baixo do x já custou a última linha de duas tabelas), e a **margem
+muda de página par para ímpar**.
+
+> A extração foi provada sem fé: os relatórios dos dois auditores que já
+> existiam saíram BYTE A BYTE iguais antes e depois. Um refactor de leitura que
+> mude um número é indistinguível de uma correção, e o diff é o que separa os
+> dois.
 
 ### O ITÁLICO é dado, e ler estilo pede outro leitor
 
