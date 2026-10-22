@@ -959,6 +959,18 @@
               {
                 "catalogId": "balsamo-restaurador",
                 "quantity": 2
+              },
+              {
+                "catalogId": "pocao-de-curar-ferimentos-2d8-2-pv",
+                "quantity": 3
+              },
+              {
+                "catalogId": "granada-de-bola-de-fogo",
+                "quantity": 1
+              },
+              {
+                "catalogId": "oleo-de-arma-magica",
+                "quantity": 1
               }
             ]
           }

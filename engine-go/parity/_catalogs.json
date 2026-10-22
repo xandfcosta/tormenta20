@@ -7080,6 +7080,724 @@
       "unmodeled": "a RD é IGUAL AO CARISMA de quem a veste, e só para quem tem código de conduta ou é devoto de divindade de energia positiva. São as duas coisas que faltam juntas: número que escala por atributo fora de PV/PM, e condição sobre quem veste.",
       "bookPage": 340,
       "uid": "itm_idhnfoko6n"
+    },
+    {
+      "id": "oleo-de-abencoar-alimentos",
+      "name": "Óleo de Abençoar Alimentos",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 1,
+      "rollMax": 1,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "abencoar-alimentos",
+        "kind": "oleo"
+      },
+      "bookPage": 341,
+      "uid": "itm_mubpxohsay"
+    },
+    {
+      "id": "granada-de-area-escorregadia",
+      "name": "Granada de Área Escorregadia",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 2,
+      "rollMax": 3,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "area-escorregadia",
+        "kind": "granada"
+      },
+      "bookPage": 341,
+      "uid": "itm_z2lmpc4fg3"
+    },
+    {
+      "id": "oleo-de-arma-magica",
+      "name": "Óleo de Arma Mágica",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 4,
+      "rollMax": 6,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "arma-magica",
+        "kind": "oleo"
+      },
+      "bookPage": 341,
+      "uid": "itm_bhbbuzwk4o"
+    },
+    {
+      "id": "pocao-de-compreensao",
+      "name": "Poção de Compreensão",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 7,
+      "rollMax": 7,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "compreensao",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_4yaiab5hkh"
+    },
+    {
+      "id": "pocao-de-curar-ferimentos-2d8-2-pv",
+      "name": "Poção de Curar Ferimentos (2d8+2 PV)",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 8,
+      "rollMax": 15,
+      "modifiers": [],
+      "consumable": {
+        "scope": "instant",
+        "spell": "curar-ferimentos",
+        "kind": "pocao",
+        "augment": "2d8+2 PV",
+        "instant": {
+          "hp": {
+            "dice": "2d8",
+            "bonus": 2
+          }
+        }
+      },
+      "bookPage": 341,
+      "uid": "itm_2oppeofdos"
+    },
+    {
+      "id": "pocao-de-disfarce-ilusorio",
+      "name": "Poção de Disfarce Ilusório",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 16,
+      "rollMax": 18,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "disfarce-ilusorio",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_hj3cre7ric"
+    },
+    {
+      "id": "oleo-de-escuridao",
+      "name": "Óleo de Escuridão",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 19,
+      "rollMax": 20,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "escuridao",
+        "kind": "oleo"
+      },
+      "bookPage": 341,
+      "uid": "itm_27zncj5t57"
+    },
+    {
+      "id": "oleo-de-luz",
+      "name": "Óleo de Luz",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 21,
+      "rollMax": 22,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "luz",
+        "kind": "oleo"
+      },
+      "bookPage": 341,
+      "uid": "itm_pnsjfmt4bt"
+    },
+    {
+      "id": "granada-de-nevoa",
+      "name": "Granada de Névoa",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 23,
+      "rollMax": 24,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "nevoa",
+        "kind": "granada"
+      },
+      "bookPage": 341,
+      "uid": "itm_em2c42zhz4"
+    },
+    {
+      "id": "pocao-de-primor-atletico",
+      "name": "Poção de Primor Atlético",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 25,
+      "rollMax": 26,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "primor-atletico",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_umutudf3wd"
+    },
+    {
+      "id": "pocao-de-protecao-divina",
+      "name": "Poção de Proteção Divina",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 27,
+      "rollMax": 28,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "protecao-divina",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_4xqxrt3bfp"
+    },
+    {
+      "id": "pocao-de-resistencia-a-energia",
+      "name": "Poção de Resistência a Energia",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 29,
+      "rollMax": 30,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "resistencia-a-energia",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_7azzakjl2r"
+    },
+    {
+      "id": "pocao-de-sono",
+      "name": "Poção de Sono",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 31,
+      "rollMax": 32,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "sono",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_yd6spd3kvi"
+    },
+    {
+      "id": "pocao-de-suporte-ambiental",
+      "name": "Poção de Suporte Ambiental",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 33,
+      "rollMax": 33,
+      "modifiers": [],
+      "consumable": {
+        "scope": "day",
+        "spell": "suporte-ambiental",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_n456lh7g5z"
+    },
+    {
+      "id": "oleo-de-tranca-arcana",
+      "name": "Óleo de Tranca Arcana",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 34,
+      "rollMax": 34,
+      "modifiers": [],
+      "consumable": {
+        "scope": "instant",
+        "spell": "tranca-arcana",
+        "kind": "oleo"
+      },
+      "bookPage": 341,
+      "uid": "itm_evbxhtfu3r"
+    },
+    {
+      "id": "pocao-de-visao-mistica",
+      "name": "Poção de Visão Mística",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 35,
+      "rollMax": 35,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "visao-mistica",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_fhekcdjptx"
+    },
+    {
+      "id": "pocao-de-vitalidade-fantasma",
+      "name": "Poção de Vitalidade Fantasma",
+      "category": "consumable",
+      "price": 30,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 36,
+      "rollMax": 36,
+      "modifiers": [],
+      "consumable": {
+        "scope": "instant",
+        "spell": "vitalidade-fantasma",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_dpmvflnpbc"
+    },
+    {
+      "id": "pocao-de-escudo-da-fe-duracao-cena",
+      "name": "Poção de Escudo da Fé (duração cena)",
+      "category": "consumable",
+      "price": 120,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 37,
+      "rollMax": 38,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "escudo-da-fe",
+        "kind": "pocao",
+        "augment": "aprimoramento para duração cena"
+      },
+      "bookPage": 341,
+      "uid": "itm_v4v4ggcvxc"
+    },
+    {
+      "id": "pocao-de-alterar-tamanho",
+      "name": "Poção de Alterar Tamanho",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 39,
+      "rollMax": 40,
+      "modifiers": [],
+      "consumable": {
+        "scope": "day",
+        "spell": "alterar-tamanho",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_izgmtt4jir"
+    },
+    {
+      "id": "pocao-de-aparencia-perfeita",
+      "name": "Poção de Aparência Perfeita",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 41,
+      "rollMax": 42,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "aparencia-perfeita",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_4ydkggt2o4"
+    },
+    {
+      "id": "oleo-de-armamento-da-natureza",
+      "name": "Óleo de Armamento da Natureza",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 43,
+      "rollMax": 43,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "armamento-da-natureza",
+        "kind": "oleo"
+      },
+      "bookPage": 341,
+      "uid": "itm_dxaggovsge"
+    },
+    {
+      "id": "granada-de-bola-de-fogo",
+      "name": "Granada de Bola de Fogo",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 44,
+      "rollMax": 49,
+      "modifiers": [],
+      "consumable": {
+        "scope": "instant",
+        "spell": "bola-de-fogo",
+        "kind": "granada"
+      },
+      "bookPage": 341,
+      "uid": "itm_tiujv5bper"
+    },
+    {
+      "id": "pocao-de-camuflagem-ilusoria",
+      "name": "Poção de Camuflagem Ilusória",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 50,
+      "rollMax": 51,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "camuflagem-ilusoria",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_qxyp4tugxu"
+    },
+    {
+      "id": "pocao-de-concentracao-de-combate-duracao-cena",
+      "name": "Poção de Concentração de Combate (duração cena)",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 52,
+      "rollMax": 53,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "concentracao-de-combate",
+        "kind": "pocao",
+        "augment": "aprimoramento para duração cena"
+      },
+      "bookPage": 341,
+      "uid": "itm_g6cavi3amt"
+    },
+    {
+      "id": "pocao-de-curar-ferimentos-4d8-4-pv",
+      "name": "Poção de Curar Ferimentos (4d8+4 PV)",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 54,
+      "rollMax": 62,
+      "modifiers": [],
+      "consumable": {
+        "scope": "instant",
+        "spell": "curar-ferimentos",
+        "kind": "pocao",
+        "augment": "4d8+4 PV",
+        "instant": {
+          "hp": {
+            "dice": "4d8",
+            "bonus": 4
+          }
+        }
+      },
+      "bookPage": 341,
+      "uid": "itm_g6cw42u73c"
+    },
+    {
+      "id": "pocao-de-fisico-divino",
+      "name": "Poção de Físico Divino",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 63,
+      "rollMax": 66,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "fisico-divino",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_6zv6tq3dhq"
+    },
+    {
+      "id": "pocao-de-mente-divina",
+      "name": "Poção de Mente Divina",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 67,
+      "rollMax": 68,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "mente-divina",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_5cgzxt737s"
+    },
+    {
+      "id": "pocao-de-metamorfose",
+      "name": "Poção de Metamorfose",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 69,
+      "rollMax": 70,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "metamorfose",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_nhu5h7kfvw"
+    },
+    {
+      "id": "pocao-de-purificacao",
+      "name": "Poção de Purificação",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 71,
+      "rollMax": 75,
+      "modifiers": [],
+      "consumable": {
+        "scope": "instant",
+        "spell": "purificacao",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_jtjyqbmvli"
+    },
+    {
+      "id": "pocao-de-velocidade",
+      "name": "Poção de Velocidade",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 76,
+      "rollMax": 77,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "velocidade",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_3eknejwnsy"
+    },
+    {
+      "id": "oleo-de-vestimenta-da-fe",
+      "name": "Óleo de Vestimenta da Fé",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 78,
+      "rollMax": 79,
+      "modifiers": [],
+      "consumable": {
+        "scope": "day",
+        "spell": "vestimenta-da-fe",
+        "kind": "oleo"
+      },
+      "bookPage": 341,
+      "uid": "itm_jl5yeg6gvx"
+    },
+    {
+      "id": "pocao-de-voz-divina",
+      "name": "Poção de Voz Divina",
+      "category": "consumable",
+      "price": 270,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 80,
+      "rollMax": 80,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "voz-divina",
+        "kind": "pocao"
+      },
+      "bookPage": 341,
+      "uid": "itm_ge7qt64pc6"
+    },
+    {
+      "id": "oleo-de-arma-magica-bonus-3",
+      "name": "Óleo de Arma Mágica (bônus +3)",
+      "category": "consumable",
+      "price": 750,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 81,
+      "rollMax": 82,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "arma-magica",
+        "kind": "oleo",
+        "augment": "aprimoramento para bônus +3"
+      },
+      "bookPage": 341,
+      "uid": "itm_mkof7dnanl"
+    },
+    {
+      "id": "pocao-de-curar-ferimentos-7d8-7-pv",
+      "name": "Poção de Curar Ferimentos (7d8+7 PV)",
+      "category": "consumable",
+      "price": 1080,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 83,
+      "rollMax": 88,
+      "modifiers": [],
+      "consumable": {
+        "scope": "instant",
+        "spell": "curar-ferimentos",
+        "kind": "pocao",
+        "augment": "7d8+7 PV",
+        "instant": {
+          "hp": {
+            "dice": "7d8",
+            "bonus": 7
+          }
+        }
+      },
+      "bookPage": 341,
+      "uid": "itm_7ga7g7fykc"
+    },
+    {
+      "id": "pocao-de-fisico-divino-tres-atributos",
+      "name": "Poção de Físico Divino (três atributos)",
+      "category": "consumable",
+      "price": 1080,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 89,
+      "rollMax": 89,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "fisico-divino",
+        "kind": "pocao",
+        "augment": "aprimoramento para três atributos"
+      },
+      "bookPage": 341,
+      "uid": "itm_447wxvphfw"
+    },
+    {
+      "id": "pocao-de-invisibilidade-duracao-cena",
+      "name": "Poção de Invisibilidade (duração cena)",
+      "category": "consumable",
+      "price": 1080,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 90,
+      "rollMax": 92,
+      "modifiers": [],
+      "consumable": {
+        "scope": "scene",
+        "spell": "invisibilidade",
+        "kind": "pocao",
+        "augment": "aprimoramento para duração cena"
+      },
+      "bookPage": 341,
+      "uid": "itm_nqyz3simtz"
+    },
+    {
+      "id": "granada-de-bola-de-fogo-10d6-de-dano",
+      "name": "Granada de Bola de Fogo (10d6 de dano)",
+      "category": "consumable",
+      "price": 1470,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 93,
+      "rollMax": 96,
+      "modifiers": [],
+      "consumable": {
+        "scope": "instant",
+        "spell": "bola-de-fogo",
+        "kind": "granada",
+        "augment": "aprimoramento para 10d6 de dano"
+      },
+      "bookPage": 341,
+      "uid": "itm_tvh6ojteln"
+    },
+    {
+      "id": "pocao-de-curar-ferimentos-11d8-11-pv",
+      "name": "Poção de Curar Ferimentos (11d8+11 PV)",
+      "category": "consumable",
+      "price": 3000,
+      "slots": 0.5,
+      "equip": "either",
+      "rollMin": 97,
+      "rollMax": 100,
+      "modifiers": [],
+      "consumable": {
+        "scope": "instant",
+        "spell": "curar-ferimentos",
+        "kind": "pocao",
+        "augment": "11d8+11 PV",
+        "instant": {
+          "hp": {
+            "dice": "11d8",
+            "bonus": 11
+          }
+        }
+      },
+      "bookPage": 341,
+      "uid": "itm_tilopmn5ei"
     }
   ],
   "races": [

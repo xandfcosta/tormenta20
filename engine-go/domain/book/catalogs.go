@@ -130,6 +130,12 @@ type Armor struct {
 type Consumable struct {
 	Scope   string         `json:"scope"`
 	Instant *ImmediateGain `json:"instant"`
+	// Spell, Kind e Augment são a poção (p341) — a magia que o frasco contém,
+	// como ela se ativa, e o aprimoramento que aquela linha da tabela compra.
+	// A regra mora no `domain/catalog`, que é quem o motor lê.
+	Spell   string `json:"spell"`
+	Kind    string `json:"kind"`
+	Augment string `json:"augment"`
 }
 
 // ImmediateGain é o PV/PM que um consumível devolve na hora. O `Dice` é a

@@ -121,6 +121,18 @@ type Consumable struct {
 	OncePerDay bool            `json:"oncePerDay"`
 	Instant    *Instant        `json:"instant"`
 	Modifiers  json.RawMessage `json:"modifiers"`
+	// Spell é a magia que o frasco CONTÉM (p341). Uma poção não TEM regra: ela
+	// aponta para uma — "geram o efeito dessa magia e então desaparecem".
+	Spell string `json:"spell"`
+	// Kind é como ela entrega o efeito: `pocao` se bebe, `oleo` se aplica num
+	// objeto, `granada` se arremessa. É o que o parêntese da Tabela 8-12
+	// escreve, e muda a AÇÃO de ativar.
+	Kind string `json:"kind"`
+	// Augment é o aprimoramento que AQUELA linha da tabela compra, na frase do
+	// livro — "aprimoramento para duração cena", "4d8+4 PV". Ele é texto e não
+	// um id porque o catálogo de magias guarda aprimoramento como lista sem
+	// identidade: casar por índice quebraria na primeira reordenação.
+	Augment string `json:"augment"`
 }
 
 type Instant struct {
