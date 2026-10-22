@@ -1386,6 +1386,7 @@ este verbete":
 | `audit-objects.py` | `objectExamplesOfTheBook` + as duas escadas (Go!) | a Tabela 5-4, lida por COORDENADA — a p239 tem duas tabelas lado a lado, e `-layout` cola uma na outra |
 | `audit-specific-items.py` | `items.json` (os de `composedOf`) | a Tabela 8-9 e a 8-11 (`d%` + nome + **preço**), o verbete `Nome. Regra`, **e o ITÁLICO dele**, que é a composição do item |
 | `audit-potions.py` | `items.json` (os de `consumable.spell`) | a Tabela 8-12 (`d%` + **a MAGIA** + preço), resolvida contra o catálogo de magias — a poção não tem verbete, porque a regra dela é a da magia |
+| `audit-accessories.py` | `items.json` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15 (três tabelas, UMA lista alfabética de verbetes atravessando quatro páginas) |
 
 ### O auditor de materiais, e as DUAS armadilhas de ler uma página dividida
 
