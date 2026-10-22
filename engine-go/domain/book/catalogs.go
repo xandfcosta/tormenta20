@@ -95,6 +95,11 @@ type Item struct {
 	Shield     *Armor            `json:"shield"`
 	Consumable *Consumable       `json:"consumable"`
 	Modifiers  []engine.Modifier `json:"modifiers"`
+	// RollMin e RollMax são a faixa de `d%` da tabela de SAQUE que sorteia este
+	// item (p335-345). Só item MÁGICO tem uma: é ela que separa a espada longa
+	// da Vingadora sagrada no catálogo, sem precisar de um campo "é mágico".
+	RollMin int `json:"rollMin"`
+	RollMax int `json:"rollMax"`
 	// CountsAs e Requires são do ENCANTO, e só dele (p334-336). O asterisco da
 	// Tabela 8-8 — "conta como dois encantos" — é regra de TETO, e três dos
 	// vinte e oito o carregam; o `requires` é o "Pré-requisito:" que três

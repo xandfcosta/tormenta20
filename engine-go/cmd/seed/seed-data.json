@@ -1138,6 +1138,14 @@
               {
                 "catalogId": "espada-longa",
                 "equipped": "wielded"
+              },
+              {
+                "catalogId": "coroa-majestosa",
+                "equipped": "vested"
+              },
+              {
+                "catalogId": "anel-da-protecao",
+                "equipped": "vested"
               }
             ]
           }

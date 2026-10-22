@@ -139,11 +139,18 @@ func targetComplement(t engine.ModifierTarget) string {
 	if t.DamageType != "" {
 		return t.DamageType
 	}
+	// O ATRIBUTO vem como CHAVE DO MOTOR — `charisma` —, nos dois campos que o
+	// carregam: o `name` do alvo `attribute` e o `attribute` do
+	// `expertiseByAttribute`. Quem joga lê "Carisma", e deixar a chave crua é o
+	// mesmo defeito do alvo sem rótulo.
+	if t.K == "attribute" && t.Name != "" {
+		return book.AttributeLabel(t.Name)
+	}
 	if t.Name != "" {
 		return t.Name
 	}
 	if t.Attribute != "" {
-		return t.Attribute
+		return book.AttributeLabel(t.Attribute)
 	}
 	if t.School != "" {
 		return t.School

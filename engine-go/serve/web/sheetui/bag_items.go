@@ -424,6 +424,20 @@ var appliedCategory = map[string]bool{
 	"weapon-enchant": true, "armor-enchant": true,
 }
 
+// masterOnly diz se o item é dos que só o MESTRE entrega.
+//
+// A regra é uma: **o que se SORTEIA numa tabela de saque é mágico**, e item
+// mágico permanente não se compra, se acha (p333) — a Vingadora sagrada, a Cota
+// élfica, o Anel da proteção. A faixa de `d%` é o que os marca, e ela já está
+// no catálogo: nenhuma espada longa tem uma.
+//
+// A POÇÃO é a exceção escrita na mesma página: ela é item de USO ÚNICO e se
+// FABRICA — "para fabricar uma poção ou pergaminho, escolha uma magia que você
+// conheça" —, então ela fica no diálogo do jogador.
+func masterOnly(entry book.Item) bool {
+	return entry.RollMax > 0 && entry.Consumable == nil
+}
+
 // catalogItemRowsOf são as entradas do catálogo que o diálogo de adicionar
 // mostra, já filtradas pela busca e pela categoria.
 func catalogItemRowsOf(query, category string) []catalogItemRow {
@@ -433,11 +447,7 @@ func catalogItemRowsOf(query, category string) []catalogItemRow {
 		if !carriedCategory[entry.Category] {
 			continue
 		}
-		// O ITEM MÁGICO ESPECÍFICO é do mestre, pela mesma razão do encanto: ele
-		// não se compra, se acha (p333). A composição é o que o marca — não é
-		// preciso uma categoria própria, porque uma Vingadora sagrada É uma
-		// espada longa, e é a categoria dela que diz a proficiência exigida.
-		if entry.ComposedOf != nil {
+		if masterOnly(entry) {
 			continue
 		}
 		if category != "" && entry.Category != category {

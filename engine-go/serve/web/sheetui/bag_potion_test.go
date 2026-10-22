@@ -58,3 +58,27 @@ func TestThePotionSheetNamesTheSpellItHolds(t *testing.T) {
 		}
 	}
 }
+
+// O ATRIBUTO APARECE EM PORTUGUÊS NO CRACHÁ (ALE-452).
+//
+// O alvo `attribute` guarda a chave do MOTOR — `charisma` —, e o crachá a
+// mostrava crua: "Atributo (charisma) +2" na Coroa majestosa. Identificador na
+// tela é o mesmo defeito do `damageStep` cru, e ele só apareceu quando um item
+// passou a somar atributo (a Couraça do comando e os quinze acessórios que
+// somam +1 ou +2).
+func TestTheAttributeBadgeSpeaksPortuguese(t *testing.T) {
+	coroa := book.ItemByID("coroa-majestosa")
+	if coroa == nil {
+		t.Fatal("o catálogo não tem a Coroa majestosa")
+	}
+	linhas := thatSaysBook(*coroa).Rows
+	if !temCracha(linhas, "Atributo (Carisma) +2") {
+		t.Errorf("a ficha da Coroa majestosa não diz \"Atributo (Carisma) +2\". "+
+			"Veio %v", linhas)
+	}
+	for _, linha := range linhas {
+		if strings.Contains(linha, "charisma") {
+			t.Errorf("a ficha mostra %q, que é a chave do motor", linha)
+		}
+	}
+}
