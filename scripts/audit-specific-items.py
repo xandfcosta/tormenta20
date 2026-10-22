@@ -40,10 +40,6 @@ import t20pdf as P
 OFFSET_DO_PDF = 6
 FOLGA = 3.0
 
-# A ÚLTIMA LINHA da tabela vem COLAPSADA num `<line>` só — "96-100 Vingadora
-# sagrada" —, e é por isso que o padrão aceita cauda. É a mesma armadilha das
-# duas tabelas de encanto, na mesma posição.
-RE_FAIXA = re.compile(r'^(\d{1,3})(?:-(\d{1,3}))?(?:\s+(.*))?$')
 # O verbete de um item específico tem nome COMPOSTO — "Azagaia dos Relâmpagos",
 # "Cajado do Poder" —, então ele não se acha por regex de uma palavra: quem diz
 # o que procurar é a TABELA, que é a outra âncora.
@@ -114,115 +110,19 @@ PERFIS = {
 
 
 def linhas_da_tabela(perfil: Perfil):
-    """As linhas da tabela do perfil: (inicio, fim, nome, preço).
-
-    A linha se monta pelo Y, como no auditor de encantos: as três células são
-    blocos diferentes, e o que diz que "88-92", "Avalanche" e "T$ 140.000" são a
-    mesma linha é a altura das três ser igual.
-    """
-    celulas = P.linhas_com_coordenada(perfil.pagina_da_tabela)
-    dados = [(y, RE_FAIXA.match(t).groups()) for x, y, t in celulas
-             if perfil.x_do_dado[0] <= x <= perfil.x_do_dado[1] and RE_FAIXA.match(t)]
-    # A célula do dado é alinhada à DIREITA, então "96-100" começa mais à
-    # esquerda que "93-95": o x é uma FAIXA, e não um ponto.
-    nomes = [(y, t) for x, y, t in celulas if abs(x - perfil.x_do_nome) < FOLGA]
-    precos = [(y, t) for x, y, t in celulas
-              if perfil.x_do_preco[0] <= x <= perfil.x_do_preco[1] and RE_PRECO.match(t)]
-
-    for y, (inicio, fim, cauda) in sorted(dados):
-        nome = cauda or next((t for yn, t in nomes if abs(yn - y) < P.MESMA_LINHA), None)
-        preco = next((t for yp, t in precos if abs(yp - y) < P.MESMA_LINHA), None)
-        if nome is None:
-            continue
-        valor = int(RE_PRECO.match(preco).group(1).replace('.', '')) if preco else None
-        yield int(inicio), int(fim or inicio), nome.strip(), valor
-
-
-def faixas_que_nao_fecham(linhas) -> str:
-    """A tilagem de 1 a 100, que é o denominador de graça desta página."""
-    coberto = {}
-    for inicio, fim, nome, _preco in linhas:
-        for d in range(inicio, fim + 1):
-            if d in coberto:
-                return f'{d}% aparece duas vezes ({coberto[d]} e {nome})'
-            coberto[d] = nome
-    faltando = [d for d in range(1, 101) if d not in coberto]
-    if faltando:
-        return f'{len(faltando)} valores de d% sem linha: {faltando[:8]}…'
-    return ''
+    """As linhas da tabela do perfil — a LEITURA mora no `t20pdf`, porque cinco
+    tabelas deste capítulo têm a mesma forma e esta foi a terceira a copiá-la."""
+    return P.linhas_de_tabela(perfil.pagina_da_tabela, perfil.x_do_dado,
+                              perfil.x_do_nome, perfil.x_do_preco, FOLGA)
 
 
 def verbetes(perfil: Perfil, nomes_da_tabela):
-    """Os verbetes das páginas, com o texto, a página e onde ele COMEÇA.
-
-    Quem diz o que procurar é a TABELA: o nome de um item específico tem três
-    palavras e preposição no meio, e um regex de "palavra maiúscula seguida de
-    ponto" acharia qualquer frase que termine em nome próprio. Procurar pelos
-    nomes conhecidos é o que transforma as duas âncoras numa conferência — nome
-    da tabela sem verbete sai NOMEADO no relatório.
-
-    O COMEÇO é guardado para o itálico: a composição está na primeira frase, e
-    quem a procura precisa saber em que página, em que coluna e entre que
-    alturas olhar. Um verbete que atravessa a virada de página tem o começo numa
-    e o resto na outra — e só a primeira interessa.
-    """
-    achados = {}
-    atual = None
-    for pagina in perfil.paginas_dos_verbetes:
-        limite = perfil.regiao_da_tabela.get(pagina)
-        for x, y, texto in P.leitura(pagina):
-            coluna = coluna_de(x, perfil.colunas_da_prosa[pagina])
-            if coluna is None:
-                continue
-            if limite and limite[0] <= x <= limite[1] and limite[2] <= y <= limite[3]:
-                continue
-            if comeca_secao(texto, perfil.fim_dos_verbetes):
-                atual = None
-                continue
-            comeco = comeca_verbete(texto, {P.chave(n): n for n in nomes_da_tabela})
-            if comeco:
-                nome, resto = comeco
-                atual = nome
-                achados[nome] = {'corpo': [resto], 'pagina': pagina - OFFSET_DO_PDF,
-                                 'pdf': pagina, 'coluna': coluna, 'y0': y, 'y1': y}
-            elif atual is not None:
-                achados[atual]['corpo'].append(texto)
-                if pagina == achados[atual]['pdf'] and coluna == achados[atual]['coluna']:
-                    achados[atual]['y1'] = y
-    return achados
-
-
-def coluna_de(x: float, colunas):
-    """O par (corpo, recuo) em que esta linha está, ou None se ela está fora.
-
-    A coluna é um PAR porque a primeira linha de um parágrafo é recuada: o
-    corpo da esquerda da p337 começa em 70,9 e o recuo em 87,9. Quem compara com
-    um x só perde uma das duas — e perder a RECUADA é perder justamente a linha
-    que abre o verbete.
-    """
-    for corpo, recuo in colunas:
-        if abs(x - corpo) < FOLGA or abs(x - recuo) < FOLGA:
-            return (corpo, recuo)
-    return None
-
-
-def comeca_secao(texto: str, titulos) -> bool:
-    """A linha é um TÍTULO de seção, e não prosa de verbete.
-
-    Ela corta o verbete em andamento: na p340 a lista tem dois títulos no meio —
-    "Armaduras Específicas" e "Escudos Específicos" —, e sem este corte o título
-    vira a última frase do verbete anterior.
-    """
-    return any(texto.startswith(titulo) for titulo in titulos or ())
-
-
-def comeca_verbete(texto: str, por_chave):
-    """(nome da tabela, resto da linha) quando a linha ABRE um verbete."""
-    cabeca, ponto, resto = texto.partition('. ')
-    if not ponto:
-        return None
-    nome = por_chave.get(P.chave(cabeca))
-    return (nome, resto) if nome else None
+    """Os verbetes das páginas do perfil — a LEITURA mora no `t20pdf`, que é
+    quem sabe que coluna é par, que tabela divide a página e que título corta."""
+    regioes = {pagina: (regiao,) for pagina, regiao in perfil.regiao_da_tabela.items()}
+    return P.verbetes_por_nome(perfil.paginas_dos_verbetes, perfil.colunas_da_prosa,
+                               regioes, nomes_da_tabela,
+                               perfil.fim_dos_verbetes or (), OFFSET_DO_PDF, FOLGA)
 
 
 def composicao_do_verbete(verbete, pecas) -> tuple:
@@ -472,7 +372,7 @@ def audita(perfil: Perfil) -> int:
     tabela = list(linhas_da_tabela(perfil))
 
     # ── ÂNCORA 1 contra si mesma, antes de o catálogo ser mencionado ─────
-    buraco = faixas_que_nao_fecham(tabela)
+    buraco = P.faixas_que_nao_fecham(tabela)
     if buraco:
         print(f'A TABELA {perfil.tabela} NÃO FECHA: {buraco}')
         print('Nada do que vem abaixo vale — o auditor leu a página errado.')

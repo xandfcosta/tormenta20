@@ -1438,6 +1438,25 @@ cima da fronteira quebrada.
   `TestEveryModifierFieldSurvivesTheCatalogJSON`, que varre o TIPO por reflexão
   em vez de repetir a lista num terceiro lugar.
 
+### A LEITURA de tabela e de verbete mora no `t20pdf`
+
+Cinco tabelas do capítulo de Recompensas têm a mesma forma — `d%` + nome +
+preço — e três auditores as leem. Na terceira cópia, a leitura virou módulo
+(`P.linhas_de_tabela`, `P.faixas_que_nao_fecham`, `P.verbetes_por_nome`), que é a
+mesma razão que fez o `t20pdf` nascer.
+
+O que mora lá e não em cada auditor são as armadilhas que as cinco dividem: a
+linha se monta pelo **Y** (as três células são blocos diferentes), a última
+linha vem **colapsada** num `<line>` só em quatro das cinco, a célula do `d%` é
+alinhada à **direita** (então "97-100" começa dois pontos à esquerda de "80", e
+a borda de baixo do x já custou a última linha de duas tabelas), e a **margem
+muda de página par para ímpar**.
+
+> A extração foi provada sem fé: os relatórios dos dois auditores que já
+> existiam saíram BYTE A BYTE iguais antes e depois. Um refactor de leitura que
+> mude um número é indistinguível de uma correção, e o diff é o que separa os
+> dois.
+
 ### O ITÁLICO é dado, e ler estilo pede outro leitor
 
 O verbete de um item específico escreve a composição dele em ITÁLICO — *"este
