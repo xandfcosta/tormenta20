@@ -60,6 +60,17 @@ type PendingMove struct {
 	Stops []engine.Square `json:"stops,omitempty"`
 }
 
+// TokenMovement são as propriedades de MOVIMENTO que a ficha computa e a peça
+// guarda: o orçamento em quadrados e a isenção de terreno difícil (p129).
+//
+// Um tipo e não dois mapas paralelos: dois mapas com as mesmas chaves divergem
+// no dia em que alguém preencher um e esquecer o outro, e aí a peça anda com o
+// orçamento de uma ficha e a isenção de outra.
+type TokenMovement struct {
+	Squares          int
+	IgnoresDifficult bool
+}
+
 // boardDefaultSpeedSquares é o orçamento de quem não declarou deslocamento: 9m,
 // o padrão do livro (T20 p106), que são 6 quadrados. Vale para o capanga que o
 // mestre digitou à mão — inventar zero o deixaria pregado no chão, e inventar
@@ -157,7 +168,7 @@ func ProposeMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, pa
 	if path[0].X != token.X || path[0].Y != token.Y {
 		return fmt.Errorf("o caminho começa em (%d,%d) e a peça está em (%d,%d)", path[0].X, path[0].Y, token.X, token.Y)
 	}
-	cost := engine.PathCost(path, moveTerrainOf(b), budget)
+	cost := engine.PathCost(path, moveTerrainFor(b, token), budget)
 	// O DESLOCAMENTO não recusa nada, nem aqui nem no `CommitMove`.
 	//
 	// Propor é DESENHAR, e o desenho é o produto: o do jogador é sempre visual —

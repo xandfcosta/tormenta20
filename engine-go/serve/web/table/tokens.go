@@ -336,37 +336,41 @@ var aparenciasDaPeca = map[string]bool{"object": true, "npc": true}
 // montada com o `Queries` e o `Catalogs` que a cena já recebe, como a Defesa do
 // Grupo. A REGRA é do motor: desde a ALE-390 ele já conta em QUADRADOS, e esta
 // cena só repassa.
-func (s Scene) speedsForBoard(ctx context.Context, boardState *board.BoardState) map[string]int {
-	squares := map[string]int{}
+func (s Scene) speedsForBoard(ctx context.Context, boardState *board.BoardState) map[string]board.TokenMovement {
+	moves := map[string]board.TokenMovement{}
 	if boardState == nil {
-		return squares
+		return moves
 	}
 	for _, token := range boardState.Tokens {
 		if token.CharacterID == nil || token.SpeedSquares > 0 {
 			continue
 		}
-		if n := s.speedSquaresOf(ctx, *token.CharacterID); n > 0 {
-			squares[token.ID] = n
+		if n, ignores := s.movementOf(ctx, *token.CharacterID); n > 0 {
+			moves[token.ID] = board.TokenMovement{Squares: n, IgnoresDifficult: ignores}
 		}
 	}
-	return squares
+	return moves
 }
 
-// speedSquaresOf converte o deslocamento da ficha computada em quadrados.
+// movementOf lê da ficha computada as DUAS coisas que o desenho do movimento
+// pede: o orçamento em quadrados e se o terreno difícil cobra desta criatura.
+//
+// As duas juntas porque saem da MESMA ficha, e computá-la duas vezes para ler
+// dois campos seria pagar o caro por nada.
 //
 // Falha em silêncio de propósito: a peça sem deslocamento medido desenha sem a
 // prévia, e derrubar o gesto inteiro por causa de um número deixaria o mestre
 // sem as peças que já nasceram.
-func (s Scene) speedSquaresOf(ctx context.Context, characterID int64) int {
+func (s Scene) movementOf(ctx context.Context, characterID int64) (int, bool) {
 	row, err := s.deps.Queries().GetCharacter(ctx, characterID)
 	if err != nil {
-		return 0
+		return 0, false
 	}
 	character, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
 	if err != nil {
 		log.Printf("tabuleiro: ficha do personagem %d não computada (%v)", characterID, err)
-		return 0
+		return 0, false
 	}
 	// Já vem em QUADRADOS do motor (ALE-390); não há o que converter.
-	return character.Displacement.Total
+	return character.Displacement.Total, character.IgnoresDifficultTerrain
 }

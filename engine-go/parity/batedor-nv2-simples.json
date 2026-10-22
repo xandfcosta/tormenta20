@@ -417,6 +417,7 @@
       "contributions": []
     },
     "flySpeed": 0,
+    "ignoresDifficultTerrain": false,
     "carga": {
       "items": 3,
       "coins": 0,
@@ -891,6 +892,7 @@
       "contributions": []
     },
     "flySpeed": 0,
+    "ignoresDifficultTerrain": false,
     "carga": {
       "items": 3,
       "coins": 0,

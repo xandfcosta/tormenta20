@@ -543,11 +543,12 @@ func (bs *Store) Populate(
 // SetSpeeds grava o orçamento de várias peças de uma vez. Uma mutação só, e um
 // broadcast só: um `board.UpdateToken` por peça faria a mesa receber seis tabuleiros
 // seguidos ao trazer o grupo.
-func (bs *Store) SetSpeeds(ctx context.Context, sessionID int64, boardID string, speeds map[string]int) (*board.BoardState, error) {
+func (bs *Store) SetSpeeds(ctx context.Context, sessionID int64, boardID string, speeds map[string]board.TokenMovement) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
 		for i := range b.Tokens {
-			if squares, ok := speeds[b.Tokens[i].ID]; ok && squares > 0 {
-				b.Tokens[i].SpeedSquares = squares
+			if movement, ok := speeds[b.Tokens[i].ID]; ok && movement.Squares > 0 {
+				b.Tokens[i].SpeedSquares = movement.Squares
+				b.Tokens[i].IgnoresDifficult = movement.IgnoresDifficult
 			}
 		}
 		b.Version++

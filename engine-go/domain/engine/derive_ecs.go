@@ -45,6 +45,8 @@ type (
 	derivedMovement   struct {
 		displacement ValueBreakdown
 		flySpeed     int
+		// ignoresDifficult: o terreno difícil não cobra nada desta criatura.
+		ignoresDifficult bool
 	}
 	derivedMagic struct {
 		pmLimit     ValueBreakdown
@@ -129,8 +131,9 @@ func deriveMovement(w *ecs.World) {
 	onSheet(w, func(e ecs.Entity, in sheetInput) {
 		load, _ := ecs.Get[derivedLoad](w, e)
 		ecs.Set(w, e, derivedMovement{
-			displacement: displacementBreakdown(in.raceSquares, in.effects, load.v),
-			flySpeed:     flySpeedTotal(in.effects),
+			displacement:     displacementBreakdown(in.raceSquares, in.effects, load.v),
+			flySpeed:         flySpeedTotal(in.effects),
+			ignoresDifficult: in.effects.Flags[MovementIgnoresDifficult],
 		})
 	})
 }
@@ -184,23 +187,24 @@ func sheetFromWorld(w *ecs.World) ComputedSheet {
 		combat, _ := ecs.Get[derivedCombat](w, e)
 		skills, _ := ecs.Get[derivedExpertises](w, e)
 		out = ComputedSheet{
-			Defense:               def.v,
-			Displacement:          mov.displacement,
-			FlySpeed:              mov.flySpeed,
-			Load:                  load.v,
-			Attributes:            attrs.v,
-			PmLimit:               magic.pmLimit,
-			BestBaseSpellCd:       magic.bestBaseCd,
-			SpellCdByAttribute:    magic.byAttribute,
-			SpellDCBonus:          magic.dcBonus,
-			PmCostMod:             magic.costMod,
-			AttackAll:             combat.attackAll,
-			DamageAll:             combat.damageAll,
-			DamageReduction:       combat.reduction,
-			CritExtraIgnoreChance: combat.critExtra,
-			TempHpFury:            combat.tempHpFury,
-			Expertises:            skills.rows,
-			AutoFailExpertises:    skills.autoFail,
+			Defense:                 def.v,
+			Displacement:            mov.displacement,
+			FlySpeed:                mov.flySpeed,
+			IgnoresDifficultTerrain: mov.ignoresDifficult,
+			Load:                    load.v,
+			Attributes:              attrs.v,
+			PmLimit:                 magic.pmLimit,
+			BestBaseSpellCd:         magic.bestBaseCd,
+			SpellCdByAttribute:      magic.byAttribute,
+			SpellDCBonus:            magic.dcBonus,
+			PmCostMod:               magic.costMod,
+			AttackAll:               combat.attackAll,
+			DamageAll:               combat.damageAll,
+			DamageReduction:         combat.reduction,
+			CritExtraIgnoreChance:   combat.critExtra,
+			TempHpFury:              combat.tempHpFury,
+			Expertises:              skills.rows,
+			AutoFailExpertises:      skills.autoFail,
 		}
 	})
 	return out

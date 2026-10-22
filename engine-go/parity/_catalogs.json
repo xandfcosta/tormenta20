@@ -18394,6 +18394,17 @@
           "min": 2
         }
       ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "flag",
+            "name": "movement-ignores-difficult"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "terreno difícil não reduz o deslocamento"
+        }
+      ],
       "bookPage": 129,
       "uid": "pwr_wdf3wshjub"
     },
