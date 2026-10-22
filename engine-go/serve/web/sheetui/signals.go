@@ -34,6 +34,11 @@ type Signals struct {
 	// sinal e não pelo caminho porque é um encadeado com `::` e texto livre do
 	// catálogo dentro — um `PathEscape` daquilo funciona e é ilegível no log.
 	Status *string `json:"conditional"`
+	// ConditionalDegrees são os DEGRAUS pagos do situacional que o gesto liga
+	// — o Baluarte de um cavaleiro vale +2 ou até +10, e quem escolhe é quem
+	// gastou o PM (p53). Ausente quer dizer zero: o situacional comum não vende
+	// degrau nenhum.
+	ConditionalDegrees *int `json:"conditional_degrees"`
 	// Aprimoramentos são as pilhas escolhidas no diálogo de conjurar, uma por
 	// índice. Seis porque é o máximo do catálogo (Conjurar Monstro).
 	Aug0 *int `json:"augment0"`

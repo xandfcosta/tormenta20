@@ -225,6 +225,9 @@ templ situationalToggle(v View, row situationalRow) {
 				<span class="block truncate text-2xs text-muted-foreground">{ row.Source }</span>
 			</span>
 		</button>
+		if len(row.Degrees) > 0 {
+			@degreePicker(v, row)
+		}
 		if row.Folded {
 			<button
 				type="button"
@@ -235,6 +238,31 @@ templ situationalToggle(v View, row situationalRow) {
 			>{ strconv.Itoa(len(row.Modifiers)) + " mods" }</button>
 		}
 	</div>
+}
+
+// degreePicker escolhe quantos DEGRAUS do poder estão pagos (p53).
+//
+// O PREÇO VAI EM CADA OPÇÃO porque o app não cobra o PM deste gesto: ele diz
+// quanto custa e a mesa paga. Um seletor que só mostrasse "+6" obrigaria quem
+// joga a montar a conta de cabeça, que é justamente o atrito que a ficha existe
+// para tirar.
+//
+// Ele ESCOLHE E LIGA de uma vez: escolher um degrau é dizer que o PM foi gasto,
+// e um seletor que não ligasse o situacional deixaria o número escolhido e o
+// bônus desligado — duas metades da mesma frase.
+templ degreePicker(v View, row situationalRow) {
+	<select
+		aria-label={ "Degraus de " + row.DegreesOf }
+		data-on:change={ "$conditional = '" + row.Key + "'; $conditional_degrees = parseInt(evt.target.value); " +
+			sheetPost(v, "/efeitos/situacao/degraus") }
+		class="shrink-0 rounded-sm border border-grimorio-iron bg-grimorio-panel px-1 py-0.5 font-mono text-3xs text-foreground outline-none"
+	>
+		for _, option := range row.Degrees {
+			<option value={ strconv.Itoa(option.Steps) } selected?={ option.Chosen }>
+				{ option.Label + " · " + option.Pm }
+			</option>
+		}
+	</select>
 }
 
 // appliedEffectDetail diz o que um efeito em curso está fazendo.

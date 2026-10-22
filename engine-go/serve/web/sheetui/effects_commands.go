@@ -77,5 +77,29 @@ func toggleSituational(s Scene, r *http.Request, row sqlcgen.Character, signals 
 	if err != nil {
 		return err
 	}
-	return s.plays.ToggleSituational(r.Context(), dto, key)
+	degrees := 0
+	if signals.ConditionalDegrees != nil {
+		degrees = *signals.ConditionalDegrees
+	}
+	return s.plays.ToggleSituational(r.Context(), dto, key, degrees)
+}
+
+// setSituationalDegrees escolhe quantos degraus do poder estão pagos, e LIGA o
+// situacional com eles (p53).
+//
+// Ele não alterna: escolher um degrau é dizer que o PM foi gasto, e alternar
+// faria o seletor desligar o que ele acabou de escolher.
+func setSituationalDegrees(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	key, degrees := "", 0
+	if signals.Status != nil {
+		key = *signals.Status
+	}
+	if signals.ConditionalDegrees != nil {
+		degrees = *signals.ConditionalDegrees
+	}
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	return s.plays.SetSituationalDegrees(r.Context(), dto, key, degrees)
 }

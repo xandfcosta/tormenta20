@@ -41,6 +41,13 @@ func effectDisplayName(catalogID string) string {
 		}
 		return spec.Name
 	}
+	// E O PODER DE CLASSE, que foi a terceira procedência a aparecer: o degrau
+	// pago do Baluarte é gravado com a chave do PODER, e o cavaleiro não tem
+	// ativação nenhuma — a aba mostrava `class.cavaleiro.baluarte` cru, que é a
+	// mesma família de defeito que a ALE-453 varreu nos alvos (ALE-454).
+	if power, known := book.ClassPowers()[catalogID]; known {
+		return power.Name
+	}
 	// O recuo para o ID é silencioso por construção — ele devolve algo que
 	// parece um nome para quem lê o código, e não para quem lê a tela. Ele fica
 	// porque a alternativa é a linha sem texto nenhum, mas toda procedência
