@@ -3,6 +3,7 @@ package sheetui
 import (
 	"fmt"
 	"strconv"
+	"t20engine/domain/sheet"
 	"t20engine/serve/web/ui"
 )
 
@@ -81,49 +82,47 @@ templ moneyHeadline(v View) {
 }
 
 // equippedStrip é a tira de Mãos e Vestidos.
+//
+// As duas percorrem a MESMA lista de posições, sem ramo nenhum: um `if` que
+// escolhesse entre dois campos jogaria fora o que não coubesse no escolhido, e
+// foi o que fez um escudo sumir da tela inteira (ALE-450).
 templ equippedStrip(v View) {
 	<div class="grid gap-2 sm:grid-cols-[1fr_2fr]">
-		@poolBox("Mãos", v.Bag.HandsUsed, 2) {
-			if v.Bag.Hands.TwoHand != nil {
-				@equippedCardItem(v, v.Bag.Hands.TwoHand, true)
-			} else {
-				for i, card := range v.Bag.Hands.Wielded {
-					@handSlot(v, card, handLabel(i))
-				}
+		@poolBox("Mãos", v.Bag.HandsUsed, sheet.HandsLimit) {
+			for _, position := range v.Bag.Hands {
+				@equippedSlot(v, position)
 			}
 		}
-		@poolBox("Vestidos", v.Bag.VestedUsed, 4) {
-			for _, card := range v.Bag.Vested {
-				@vestedSlot(v, card)
+		@poolBox("Vestidos", v.Bag.VestedUsed, sheet.VestedLimit) {
+			for _, position := range v.Bag.Vested {
+				@equippedSlot(v, position)
 			}
 		}
 	</div>
 }
 
-// handSlot desenha a mão, cheia ou vazia.
-templ handSlot(v View, card *equippedCard, label string) {
-	if card != nil {
-		@equippedCardItem(v, card, false)
+// equippedSlot desenha a posição, cheia ou vazia.
+templ equippedSlot(v View, position equippedPosition) {
+	if position.Card != nil {
+		@equippedCardItem(v, position.Card, position.Label, position.Wide)
 	} else {
-		@emptySlot(label, false)
-	}
-}
-
-templ vestedSlot(v View, card *equippedCard) {
-	if card != nil {
-		@equippedCardItem(v, card, false)
-	} else {
-		@emptySlot("Vestido", false)
+		@emptySlot(position.Label, position.Wide)
 	}
 }
 
 // poolBox é um teto do livro com o contador x/max.
+//
+// O CONTADOR ACIMA DO TETO é `penalty-ink`, a mesma tinta com que a carga
+// denuncia a sobrecarga: cheio e estourado precisam se parecer diferentes, e
+// enquanto os dois eram `text-foreground` a tela mostrava "3/2" com a mesma
+// cara de "2/2" — o número denunciava e o desenho desmentia.
 templ poolBox(title string, used, ceiling int) {
 	<div class="space-y-1.5">
 		<div class="flex items-baseline justify-between">
 			<h3 class={ ui.SectionLabelClasses("gold", "") }>{ title }</h3>
 			<span
-				class={ "font-mono text-xs", templ.KV("text-foreground", used >= ceiling),
+				class={ "font-mono text-xs", templ.KV("text-penalty-ink", used > ceiling),
+					templ.KV("text-foreground", used == ceiling),
 					templ.KV("text-muted-foreground", used < ceiling) }
 			>{ strconv.Itoa(used) + "/" + strconv.Itoa(ceiling) }</span>
 		</div>
@@ -134,7 +133,7 @@ templ poolBox(title string, used, ceiling int) {
 }
 
 // equippedCardItem é o cartão de um item equipado.
-templ equippedCardItem(v View, card *equippedCard, wide bool) {
+templ equippedCardItem(v View, card *equippedCard, label string, wide bool) {
 	<div
 		class={ "relative min-h-[3.75rem] rounded-none border border-grimorio-gold/40 bg-grimorio-panel-raised px-2 py-1.5",
 			templ.KV("col-span-2", wide) }
@@ -146,7 +145,7 @@ templ equippedCardItem(v View, card *equippedCard, wide bool) {
 			data-on:click={ "$detail = 'item-" + card.Command + "'" }
 			class="block w-[calc(100%-1.5rem)] text-left outline-none"
 		>
-			<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ card.Label }</p>
+			<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ label }</p>
 			<p class="truncate text-sm font-semibold text-grimorio-gold">{ card.Name }</p>
 			if card.NoProficiency {
 				// O motor já cobra a penalidade da p142; o crachá existe para

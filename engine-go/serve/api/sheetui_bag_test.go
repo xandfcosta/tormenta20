@@ -39,6 +39,17 @@ func itemSemeia(t *testing.T, f sceneFixture, id int64, catalog, name string, eq
 	return item.ID
 }
 
+// cardInStrip diz se o item tem CARTÃO na tira de equipados.
+//
+// Ancorar no NOME não serve, e isso custou um caso verde sobre nada: o nome
+// aparece de novo no diálogo da ficha daquele item, desenhado logo depois do
+// painel — procurar na tela inteira acha justamente o que a tira escondeu. É a
+// mesma armadilha que o `screenSaved` recorta na grade, e aqui o âncora é o
+// botão de GUARDAR, que só o cartão da tira tem.
+func cardInStrip(screen, name string) bool {
+	return strings.Contains(screen, `aria-label="Guardar `+name+`"`)
+}
+
 // equipped lê a coluna direto do banco — o teste não pergunta à tela o que
 // aconteceu no banco.
 func equipped(t *testing.T, f sceneFixture, itemID int64) string {
@@ -91,8 +102,15 @@ func TestAnItemAboveTheCeilingDoesNotVanishFromTheScreen(t *testing.T) {
 	itemSemeia(t, f, id, "escudo-leve", "Escudo leve", "wielded")
 
 	screen := bagScreen(t, f, id)
-	if !strings.Contains(screen, "Escudo leve") {
-		t.Error("o terceiro item empunhado sumiu da tela")
+	// O CONTROLE vem primeiro: os dois primeiros têm cartão. Sem ele, um
+	// âncora que não casasse com nada diria "sumiu" sobre uma tira inteira.
+	for _, nome := range []string{"Espada longa", "Adaga"} {
+		if !cardInStrip(screen, nome) {
+			t.Fatalf("o controle já estava errado: %q não tem cartão na tira", nome)
+		}
+	}
+	if !cardInStrip(screen, "Escudo leve") {
+		t.Error("o terceiro item empunhado sumiu da tira")
 	}
 	if !strings.Contains(screen, "Acima do limite") {
 		t.Error("o item fora do teto não é nomeado como tal")
@@ -101,6 +119,90 @@ func TestAnItemAboveTheCeilingDoesNotVanishFromTheScreen(t *testing.T) {
 	// um cartão a mais.
 	if !strings.Contains(screen, "3/2") {
 		t.Error("o contador das mãos não mostra que passou do teto")
+	}
+}
+
+// O ITEM DE UMA MÃO NÃO SOME ATRÁS DO DE DUAS (ALE-450).
+//
+// É o irmão do caso de cima, e o que o separa dele é o SLOT: `wielded` vale uma
+// mão e `wielded2` vale as duas — é o que o diálogo oferece ("Empunhar (1 mão)"
+// e "Empunhar (2 mãos)"). Com um item em cada, a tira escolhia UM dos dois e o
+// escudo sumia da tela, enquanto a Defesa continuava somando o +2 dele.
+//
+// O servidor recusa chegar nesse estado (`EquipLimitError`, p141), e é por isso
+// que o caso semeia direto no banco: quem está assim veio de linha antiga, e o
+// painel é a última coisa que pode denunciá-lo.
+func TestTheOneHandedItemDoesNotVanishBehindTheTwoHandedOne(t *testing.T) {
+	f, id := fighterFixture(t)
+	itemSemeia(t, f, id, "escudo-leve", "Escudo leve", "wielded")
+	itemSemeia(t, f, id, "espada-longa", "Espada longa", "wielded2")
+
+	screen := bagScreen(t, f, id)
+	for _, nome := range []string{"Escudo leve", "Espada longa"} {
+		if !cardInStrip(screen, nome) {
+			t.Errorf("%q não tem cartão na tira: ela escolheu um dos dois slots", nome)
+		}
+	}
+	if !strings.Contains(screen, "Acima do limite") {
+		t.Error("o item fora do teto não é nomeado como tal")
+	}
+	// O CONTADOR denuncia junto, e é ele que explica o cartão a mais: uma mão do
+	// escudo e duas da espada são TRÊS, e dizer 2/2 esconde o estouro com a
+	// mesma eficácia com que a tira escondia o item.
+	if !strings.Contains(screen, "3/2") {
+		t.Error("o contador das mãos não mostra que passou do teto")
+	}
+}
+
+// E DOIS ITENS DE DUAS MÃOS TAMBÉM NÃO SE ENGOLEM (ALE-450).
+//
+// O campo que os recebia era um PONTEIRO, então o segundo substituía o
+// primeiro — o mesmo defeito do caso de cima com outra aritmética: quatro mãos.
+func TestTwoTwoHandedItemsDoNotSwallowEachOther(t *testing.T) {
+	f, id := fighterFixture(t)
+	itemSemeia(t, f, id, "espada-longa", "Espada longa", "wielded2")
+	itemSemeia(t, f, id, "machado-batalha", "Machado de batalha", "wielded2")
+
+	screen := bagScreen(t, f, id)
+	for _, nome := range []string{"Espada longa", "Machado de batalha"} {
+		if !cardInStrip(screen, nome) {
+			t.Errorf("%q não tem cartão na tira: o segundo item de duas mãos "+
+				"substituiu o primeiro", nome)
+		}
+	}
+	if !strings.Contains(screen, "4/2") {
+		t.Error("o contador das mãos não conta as quatro que dois itens de duas mãos pedem")
+	}
+}
+
+// E O QUINTO VESTIDO TAMBÉM NÃO SOME (ALE-450).
+//
+// A tira de Vestidos tinha o MESMO corte com outro nome: ela completava a lista
+// até quatro posições e devolvia `cards[:4]`, jogando fora o que passasse. O
+// contador já dizia 5/4 — ele é contado antes do corte —, então a tela
+// denunciava o estouro e escondia o item que o causava.
+func TestTheFifthVestedItemDoesNotVanishFromTheScreen(t *testing.T) {
+	f, id := fighterFixture(t)
+	for _, peca := range [][2]string{
+		{"armadura-couro", "Armadura de couro"}, {"bandana", "Bandana"},
+		{"coroa-majestosa", "Coroa majestosa"}, {"anel-da-protecao", "Anel da proteção"},
+		{"manto-da-noite", "Manto da noite"},
+	} {
+		itemSemeia(t, f, id, peca[0], peca[1], "vested")
+	}
+
+	screen := bagScreen(t, f, id)
+	// O CONTROLE: os quatro que cabem têm cartão.
+	for _, nome := range []string{"Armadura de couro", "Bandana", "Coroa majestosa", "Anel da proteção"} {
+		if !cardInStrip(screen, nome) {
+			t.Fatalf("o controle já estava errado: %q não tem cartão na tira", nome)
+		}
+	}
+	if !cardInStrip(screen, "Manto da noite") {
+		t.Error("o quinto vestido sumiu da tira: ela cortou em quatro posições")
+	}
+	if !strings.Contains(screen, "5/4") {
+		t.Error("o contador dos vestidos não mostra que passou do teto")
 	}
 }
 
