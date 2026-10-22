@@ -6778,6 +6778,308 @@
       "unmodeled": "ele CONTA COMO um cajado arcano, que é outra categoria de item — a mesma falta de forma dos outros dois cajados.",
       "bookPage": 337,
       "uid": "itm_uscj3ebb5o"
+    },
+    {
+      "id": "cota-elfica",
+      "name": "Cota élfica",
+      "category": "armor-heavy",
+      "price": 30000,
+      "rollMin": 1,
+      "rollMax": 10,
+      "composedOf": {
+        "base": "cota-malha",
+        "material": "material-mitral",
+        "enchants": [
+          "encanto-defensor"
+        ]
+      },
+      "description": "Composta de anéis finíssimos, esta cota de malha defensora de mitral parece ser feita de seda. Ela permite que você aplique sua Destreza na Defesa como se fosse uma armadura leve.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "flagExempt",
+            "name": "cannot-apply-dex-to-defense"
+          },
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "a Destreza se aplica como se fosse armadura leve"
+        }
+      ],
+      "modeled": [
+        "a Destreza aplicada na Defesa"
+      ],
+      "bookPage": 340,
+      "uid": "itm_ihbjoj5uan"
+    },
+    {
+      "id": "couro-de-monstro",
+      "name": "Couro de monstro",
+      "category": "armor-light",
+      "price": 36000,
+      "rollMin": 11,
+      "rollMax": 20,
+      "composedOf": {
+        "base": "gibao-peles",
+        "enchants": [
+          "encanto-defensor"
+        ]
+      },
+      "description": "Usado por chefes bárbaros das Montanhas Sanguinárias, este gibão de peles defensor é feito do couro de monstros, como basiliscos e serpes. Se você usar o poder Ataque Poderoso ou fizer uma investida, recebe um bônus de +2d6 nas rolagens de dano.",
+      "modifiers": [],
+      "unmodeled": "o +2d6 de dano depende de OUTRO gesto do portador — o poder Ataque Poderoso ou a investida —, e o motor não tem condição que pergunte o que a pessoa fez no turno.",
+      "bookPage": 340,
+      "uid": "itm_56yryg2iov"
+    },
+    {
+      "id": "escudo-do-conjurador",
+      "name": "Escudo do conjurador",
+      "category": "shield",
+      "price": 45000,
+      "rollMin": 21,
+      "rollMax": 25,
+      "composedOf": {
+        "base": "escudo-leve",
+        "enchants": [
+          "encanto-defensor"
+        ]
+      },
+      "description": "Este escudo leve defensor tem uma pequena tira de couro na parte interna, sobre a qual um conjurador pode lançar uma magia. A magia não surte efeito na hora; em vez disso, fica inscrita na tira. A tira pode então ser lida como um pergaminho, descarregando a magia em seus alvos/área. Uma vez que a magia seja descarregada, outra pode ser armazenada.",
+      "modifiers": [],
+      "unmodeled": "ele GUARDA uma magia lançada nele e a devolve como pergaminho. O motor não tem onde pousar uma magia armazenada num item.",
+      "bookPage": 340,
+      "uid": "itm_ilnzdjzdu5"
+    },
+    {
+      "id": "loriga-do-centuriao",
+      "name": "Loriga do centurião",
+      "category": "armor-heavy",
+      "price": 45000,
+      "rollMin": 26,
+      "rollMax": 32,
+      "composedOf": {
+        "base": "loriga-segmentada",
+        "enchants": [
+          "encanto-defensor"
+        ]
+      },
+      "description": "Esta loriga segmentada defensora é dourada com detalhes em vermelho e possui o símbolo de Tauron, antigo Deus da Força, gravado no peitoral. Se estiver liderando uma ou mais criaturas (em termos de jogo, se estiver usando o poder Comandar ou similar), seus ataques corpo a corpo causam +2d6 de fogo.",
+      "modifiers": [],
+      "unmodeled": "os +2d6 de fogo valem enquanto o portador estiver LIDERANDO — usando o poder Comandar ou similar —, e isso é condição sobre outro poder, que o motor não pergunta.",
+      "bookPage": 340,
+      "uid": "itm_apaey2oy7j"
+    },
+    {
+      "id": "manto-da-noite",
+      "name": "Manto da noite",
+      "category": "armor-light",
+      "price": 45000,
+      "rollMin": 33,
+      "rollMax": 42,
+      "composedOf": {
+        "base": "couro-batido",
+        "improvements": [
+          "melhoria-ajustada"
+        ],
+        "enchants": [
+          "encanto-defensor",
+          "encanto-sombrio"
+        ]
+      },
+      "description": "Este couro batido ajustado defensor sombrio é negro com partes metálicas foscas. Quando usa esta armadura, você não sofre penalidade em testes de Furtividade por se mover em seu deslocamento normal e a penalidade que você sofre em testes de Furtividade por atacar diminui para –10.",
+      "modifiers": [],
+      "unmodeled": "as duas penalidades de Furtividade que ele desfaz — a de se mover no deslocamento normal e a de atacar, que cai para −10 — são regras da PERÍCIA em situação (p119), e o motor não as aplica para desfazê-las.",
+      "bookPage": 340,
+      "uid": "itm_c2ilcnjs33"
+    },
+    {
+      "id": "couraca-do-comando",
+      "name": "Couraça do comando",
+      "category": "armor-light",
+      "price": 45000,
+      "rollMin": 43,
+      "rollMax": 49,
+      "composedOf": {
+        "base": "couraca",
+        "improvements": [
+          "melhoria-banhado-a-ouro",
+          "melhoria-sob-medida"
+        ],
+        "enchants": [
+          "encanto-defensor"
+        ]
+      },
+      "description": "Esta couraça banhada a ouro sob medida defensora irradia uma aura de autoridade. Você recebe +1 em Carisma. Se usar o poder Comandar, o bônus fornecido aumenta para +2.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 1,
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "+1 em Carisma"
+        }
+      ],
+      "modeled": [
+        "o +1 em Carisma"
+      ],
+      "unmodeled": "com o poder Comandar o bônus sobe para +2, e isso é condição sobre outro poder.",
+      "bookPage": 340,
+      "uid": "itm_mia3emrv3w"
+    },
+    {
+      "id": "escudo-espinhoso",
+      "name": "Escudo espinhoso",
+      "category": "shield",
+      "price": 50000,
+      "rollMin": 60,
+      "rollMax": 66,
+      "composedOf": {
+        "base": "escudo-pesado",
+        "enchants": [
+          "encanto-defensor"
+        ]
+      },
+      "description": "Este escudo pesado defensor é coberto de espinhos. Você pode gastar uma ação de movimento e 2 PM para disparar um espinho em um alvo em alcance curto. O espinho acerta automaticamente e causa 1d10+2 pontos de dano de perfuração.",
+      "modifiers": [],
+      "modeled": [
+        "a ação e o custo do gesto"
+      ],
+      "unmodeled": "o espinho em si: ele ACERTA automaticamente e causa 1d10+2 de perfuração em alcance curto — um ataque que não rola ataque não é a carta de arma que o motor tem.",
+      "bookPage": 340,
+      "uid": "itm_k3pnnntywd"
+    },
+    {
+      "id": "escudo-do-leao",
+      "name": "Escudo do leão",
+      "category": "shield",
+      "price": 50000,
+      "rollMin": 67,
+      "rollMax": 76,
+      "composedOf": {
+        "base": "escudo-pesado",
+        "enchants": [
+          "encanto-defensor"
+        ]
+      },
+      "description": "Este escudo pesado defensor é forjado como uma cabeça de leão rugindo. Uma vez por rodada, você pode gastar 2 PM para fazer a cabeça criar vida e morder uma criatura adjacente. A mordida acerta automaticamente e causa 2d6+2 pontos de dano de perfuração.",
+      "modifiers": [],
+      "modeled": [
+        "a ação e o custo do gesto"
+      ],
+      "unmodeled": "a mordida: ela acerta automaticamente, causa 2d6+2 e vale UMA VEZ POR RODADA — o acerto automático e o limite por rodada não têm forma.",
+      "bookPage": 340,
+      "uid": "itm_jda3u35gbf"
+    },
+    {
+      "id": "carapaca-demoniaca",
+      "name": "Carapaça demoníaca",
+      "category": "armor-heavy",
+      "price": 63000,
+      "rollMin": 77,
+      "rollMax": 83,
+      "composedOf": {
+        "base": "armadura-completa",
+        "improvements": [
+          "melhoria-macabro",
+          "melhoria-reforcada"
+        ],
+        "enchants": [
+          "encanto-guardiao"
+        ]
+      },
+      "description": "Esta armadura completa macabra reforçada guardiã é forjada para fazer com que o usuário pareça um demônio — o elmo tem o formato de uma cabeça demoníaca com chifres e o usuário enxerga através da boca aberta e repleta de dentes. Se você for devoto de uma divindade que canaliza apenas energia negativa, os seus ataques corpo a corpo causam +1d8 de dano de trevas.",
+      "modifiers": [],
+      "unmodeled": "o +1d8 de trevas vale só para DEVOTO de divindade que canaliza energia negativa. A ficha sabe o deus, e nenhuma condição do motor pergunta por ele.",
+      "bookPage": 340,
+      "uid": "itm_wwejwgx6ws"
+    },
+    {
+      "id": "escudo-do-eclipse",
+      "name": "Escudo do eclipse",
+      "category": "shield",
+      "price": 70000,
+      "rollMin": 84,
+      "rollMax": 88,
+      "composedOf": {
+        "base": "escudo-pesado",
+        "enchants": [
+          "encanto-defensor"
+        ]
+      },
+      "description": "Este escudo pesado defensor é completamente negro e parece absorver a luz. Ele fornece redução de trevas 10 e causa +1d8 de dano de trevas num ataque. Além disso, você pode gastar uma ação de movimento e 2 PM para lançar Escuridão.",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "trevas"
+          },
+          "amount": 10,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          },
+          "note": "redução de trevas 10"
+        }
+      ],
+      "modeled": [
+        "a redução de trevas 10",
+        "a ação e o custo do gesto"
+      ],
+      "unmodeled": "o +1d8 de trevas \"num ataque\" é do ESCUDO e cai no ataque da outra mão: a parcela extra é da carta da arma, e um escudo não tem carta.",
+      "bookPage": 340,
+      "uid": "itm_od3xjzohaa"
+    },
+    {
+      "id": "escudo-de-azgher",
+      "name": "Escudo de Azgher",
+      "category": "shield",
+      "price": 140000,
+      "rollMin": 89,
+      "rollMax": 93,
+      "composedOf": {
+        "base": "escudo-pesado",
+        "enchants": [
+          "encanto-guardiao"
+        ]
+      },
+      "description": "Este escudo pesado guardião é forjado na forma de um sol estilizado. Você pode gastar uma ação padrão e 10 PM para fazê-lo emitir uma luz brilhante e quente num cone com alcance curto. A luz gera os efeitos da magia Visão da Verdade e causa 6d6 pontos de dano de fogo em todos os seus inimigos (mortos-vivos e criaturas vulneráveis a luz solar sofrem 6d8 pontos de dano). Você pode gastar 1 PM no início de cada um de seus turnos para manter a luz.",
+      "modifiers": [],
+      "modeled": [
+        "a ação e o custo do gesto"
+      ],
+      "unmodeled": "a luz em cone: os efeitos da magia Visão da Verdade, 6d6 de fogo em todo inimigo (6d8 em morto-vivo ou vulnerável a luz solar) e o 1 PM por turno para mantê-la.",
+      "bookPage": 340,
+      "uid": "itm_rd5kh76mbi"
+    },
+    {
+      "id": "armadura-da-luz",
+      "name": "Armadura da luz",
+      "category": "armor-heavy",
+      "price": 150000,
+      "rollMin": 94,
+      "rollMax": 100,
+      "composedOf": {
+        "base": "armadura-completa",
+        "improvements": [
+          "melhoria-banhado-a-ouro",
+          "melhoria-reforcada"
+        ],
+        "enchants": [
+          "encanto-guardiao",
+          "encanto-zeloso"
+        ]
+      },
+      "description": "Esta armadura completa banhada a ouro reforçada guardiã zelosa possui o símbolo de Khalmyr gravado no peitoral. Se você possuir um código de conduta (de honra, do herói...) ou for devoto de uma divindade que canaliza apenas energia positiva, recebe redução de dano igual ao seu Carisma.",
+      "modifiers": [],
+      "unmodeled": "a RD é IGUAL AO CARISMA de quem a veste, e só para quem tem código de conduta ou é devoto de divindade de energia positiva. São as duas coisas que faltam juntas: número que escala por atributo fora de PV/PM, e condição sobre quem veste.",
+      "bookPage": 340,
+      "uid": "itm_idhnfoko6n"
     }
   ],
   "races": [

@@ -80,6 +80,9 @@ func resolveInWorld(items []ActiveItem) ItemEffects {
 	ecs.Run(w,
 		explodeIntoTerms(items),
 		raiseFlags,
+		// DEPOIS de acender e ANTES de qualquer um que leia flag: uma bandeira
+		// apagada não pode continuar calando o que ela calava.
+		eraseExemptFlags,
 		// O `flagOff` só pode ser julgado DEPOIS de todas as flags estarem no ar
 		// — era a "passada prévia" da função antiga, e aqui ela é um sistema com
 		// nome. A dependência deixou de ser um comentário e virou posição.
@@ -131,6 +134,45 @@ func raiseFlags(w *ecs.World) {
 	ecs.Each(w, func(_ ecs.Entity, t Term) {
 		if t.Mod.Target.K == "flag" && conditionMet(t.Mod, t.Wear) {
 			flags[t.Mod.Target.Name] = true
+		}
+	})
+}
+
+// eraseExemptFlags apaga a bandeira de que uma fonte ISENTA o portador (p340).
+//
+// Ele é o oposto do `raiseFlags`, e existe porque uma composição só sabia
+// ACRESCENTAR: a Cota élfica é uma *"cota de malha defensora de mitral"*, a cota
+// de malha é pesada e acende a bandeira que zera a Destreza na Defesa, e o
+// verbete desfaz exatamente essa metade — *"permite que você aplique sua
+// Destreza na Defesa como se fosse uma armadura leve"*.
+//
+// # Por que é um SISTEMA e não uma condição
+//
+// A isenção não fala do modificador dela mesma: ela fala do MUNDO. Escrita como
+// condição, ela teria de ser avaliada dentro de cada termo que consulta a
+// bandeira — e a ordem entre "acende" e "isenta" viraria a ordem em que os
+// termos aparecem, que é a ordem dos itens da ficha.
+func eraseExemptFlags(w *ecs.World) {
+	isentas := map[string]bool{}
+	ecs.Each(w, func(_ ecs.Entity, t Term) {
+		if t.Mod.Target.K == "flagExempt" && conditionMet(t.Mod, t.Wear) {
+			isentas[t.Mod.Target.Name] = true
+		}
+	})
+	if len(isentas) == 0 {
+		return
+	}
+	flags := flagsOf(w)
+	for nome := range isentas {
+		delete(flags, nome)
+	}
+	// E O TERMO QUE A ACENDE SAI JUNTO. Apagar só do mapa não basta: o
+	// `harvestFlags`, lá no fim da sequência, varre os termos de novo e
+	// REACENDE toda flag que não esteja calada — foi o que este sistema fez na
+	// primeira versão, e a bandeira voltava sem ninguém ver.
+	ecs.Each(w, func(e ecs.Entity, t Term) {
+		if t.Mod.Target.K == "flag" && isentas[t.Mod.Target.Name] {
+			ecs.Set(w, e, Suppressed{Why: "a bandeira " + t.Mod.Target.Name + " está isenta"})
 		}
 	})
 }

@@ -96,6 +96,7 @@ func thatGrantsItem(item sheet.ItemDTO, exempt wearerExemptions) []itemChip {
 	if catalog.Weapon != nil {
 		chips = append(chips, itemChip{Text: "Dano " + weaponDieOfItem(item, *catalog)})
 	}
+	isentas := flagsThisItemExempts(*catalog, item.Equipped)
 	for _, m := range catalog.Modifiers {
 		// O EIXO DE USO manda: um item COMPOSTO traz as duas metades de uma
 		// sobreposição — o adamante dá passo de dano a quem EMPUNHA e RD a quem
@@ -103,7 +104,20 @@ func thatGrantsItem(item sheet.ItemDTO, exempt wearerExemptions) []itemChip {
 		if engine.ContradictsWear(m, item.Equipped) {
 			continue
 		}
+		// A ISENÇÃO não vira crachá de alvo: ela é o MOTIVO do crachá riscado
+		// logo abaixo, e um "flagExempt" cru seria identificador na tela.
+		if m.Target.K == "flagExempt" {
+			continue
+		}
 		chips = append(chips, itemChip{Text: modifierBadge(m)})
+		// A BANDEIRA QUE O PRÓPRIO ITEM ISENTA sai riscada, com o que o verbete
+		// diz ao lado: a Cota élfica ACENDE a bandeira da armadura pesada (ela é
+		// uma cota de malha) e logo em seguida isenta o portador dela. Prometer
+		// a penalidade seria o cartão contradizer a ficha.
+		if motivo, isenta := isentas[m.Target.Name]; isenta && m.Target.K == "flag" {
+			chips[len(chips)-1].Inactive = true
+			chips = append(chips, itemChip{Text: motivo, Reason: true})
+		}
 		// A habilidade que anula entra como crachá PRÓPRIO, logo depois do que
 		// ela anulou. O par lado a lado é o que ensina: sem ele, ou o número
 		// mente (era o defeito) ou ele some e ninguém fica sabendo que existe
@@ -168,6 +182,27 @@ func exemptedBy(m engine.Modifier, exempt wearerExemptions) string {
 		return ""
 	}
 	return exempt[engine.DisplacementIgnoresArmor]
+}
+
+// flagsThisItemExempts são as bandeiras de que o PRÓPRIO item isenta, com o
+// motivo que o verbete escreve — a nota do modificador.
+//
+// Ela é a irmã do `exemptedBy`, e a diferença é de QUEM isenta: lá é uma
+// habilidade do portador (o "Devagar e Sempre" do anão), aqui é o item sobre si
+// mesmo (p340).
+func flagsThisItemExempts(catalog book.Item, equipped *string) map[string]string {
+	isentas := map[string]string{}
+	for _, m := range catalog.Modifiers {
+		if m.Target.K != "flagExempt" || engine.ContradictsWear(m, equipped) {
+			continue
+		}
+		motivo := m.Note
+		if motivo == "" {
+			motivo = "isento por este item"
+		}
+		isentas[m.Target.Name] = motivo
+	}
+	return isentas
 }
 
 // chipsSem tira os repetidos pelo TEXTO, preservando o primeiro — o mesmo que o
