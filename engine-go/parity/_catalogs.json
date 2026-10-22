@@ -14057,10 +14057,10 @@
       "uid": "pwr_fnyyittoeo"
     },
     {
-      "id": "class.cavaleiro.baluarte-2",
+      "id": "class.cavaleiro.baluarte",
       "className": "Cavaleiro",
-      "name": "Baluarte +2",
-      "description": "Quando sofre ataque ou faz teste de resistência, gasta 1 PM para +2 Defesa e testes de resistência até início do próximo turno. A cada 4 níveis pode gastar +1 PM para aumentar bônus em +2.",
+      "name": "Baluarte",
+      "description": "Quando sofre um ataque ou faz um teste de resistência, você pode gastar 1 PM para receber +2 na Defesa e nos testes de resistência até o início do seu próximo turno. A cada quatro níveis, pode gastar +1 PM para aumentar o bônus em +2.",
       "grantedAtLevel": 1,
       "modifiers": [
         {
@@ -14088,14 +14088,22 @@
           }
         }
       ],
+      "degrees": {
+        "basePm": 1,
+        "stepPm": 1,
+        "stepAmount": 2,
+        "firstStepLevel": 5,
+        "stepEveryLevels": 4,
+        "stepLabel": "+2 no bônus de Baluarte"
+      },
       "bookPage": 53,
       "uid": "pwr_7fxkweog2o"
     },
     {
-      "id": "class.cavaleiro.duelo-2",
+      "id": "class.cavaleiro.duelo",
       "className": "Cavaleiro",
-      "name": "Duelo +2",
-      "description": "Gasta 2 PM para escolher oponente em alcance curto. +2 nos testes de ataque e rolagens de dano contra ele até fim da cena. Se atacar outro oponente, bônus termina.",
+      "name": "Duelo",
+      "description": "A partir do 2º nível, você pode gastar 2 PM para escolher um oponente em alcance curto e receber +2 em testes de ataque e rolagens de dano contra ele até o fim da cena. Se atacar outro oponente, o bônus termina. A cada cinco níveis, você pode gastar +1 PM para aumentar o bônus em +1.",
       "grantedAtLevel": 2,
       "modifiers": [
         {
@@ -14125,44 +14133,18 @@
           }
         }
       ],
+      "degrees": {
+        "basePm": 2,
+        "stepPm": 1,
+        "stepAmount": 1,
+        "firstStepLevel": 7,
+        "stepEveryLevels": 5,
+        "stepLabel": "+1 no bônus de Duelo"
+      },
       "bookPage": 53,
       "uid": "pwr_nd67horosn"
     },
-    {
-      "id": "class.cavaleiro.baluarte-4",
-      "className": "Cavaleiro",
-      "name": "Baluarte +4",
-      "description": "Bônus de Baluarte sobe para +4.",
-      "grantedAtLevel": 5,
-      "modifiers": [
-        {
-          "target": {
-            "k": "defense"
-          },
-          "amount": 4,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        },
-        {
-          "target": {
-            "k": "resistance"
-          },
-          "amount": 4,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        }
-      ],
-      "bookPage": 53,
-      "uid": "pwr_2df46hcq7y"
-    },
+    
     {
       "id": "class.cavaleiro.caminho-do-cavaleiro",
       "className": "Cavaleiro",
@@ -14180,78 +14162,8 @@
       "grantedAtLevel": 7,
       "uid": "pwr_oazz44hwxh"
     },
-    {
-      "id": "class.cavaleiro.duelo-3",
-      "className": "Cavaleiro",
-      "name": "Duelo +3",
-      "description": "Bônus de Duelo sobe para +3.",
-      "grantedAtLevel": 7,
-      "modifiers": [
-        {
-          "target": {
-            "k": "attack",
-            "scope": "all"
-          },
-          "amount": 3,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        },
-        {
-          "target": {
-            "k": "damage",
-            "scope": "all"
-          },
-          "amount": 3,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        }
-      ],
-      "bookPage": 53,
-      "uid": "pwr_r5eqawgv5y"
-    },
-    {
-      "id": "class.cavaleiro.baluarte-6",
-      "className": "Cavaleiro",
-      "name": "Baluarte +6",
-      "description": "Bônus de Baluarte sobe para +6.",
-      "grantedAtLevel": 9,
-      "modifiers": [
-        {
-          "target": {
-            "k": "defense"
-          },
-          "amount": 6,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        },
-        {
-          "target": {
-            "k": "resistance"
-          },
-          "amount": 6,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        }
-      ],
-      "bookPage": 53,
-      "uid": "pwr_6vjpqan27l"
-    },
+    
+    
     {
       "id": "class.cavaleiro.resoluto",
       "className": "Cavaleiro",
@@ -14261,78 +14173,8 @@
       "bookPage": 55,
       "uid": "pwr_dxzxjqsjyh"
     },
-    {
-      "id": "class.cavaleiro.duelo-4",
-      "className": "Cavaleiro",
-      "name": "Duelo +4",
-      "description": "Bônus de Duelo sobe para +4.",
-      "grantedAtLevel": 12,
-      "modifiers": [
-        {
-          "target": {
-            "k": "attack",
-            "scope": "all"
-          },
-          "amount": 4,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        },
-        {
-          "target": {
-            "k": "damage",
-            "scope": "all"
-          },
-          "amount": 4,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        }
-      ],
-      "bookPage": 53,
-      "uid": "pwr_aacoqurehn"
-    },
-    {
-      "id": "class.cavaleiro.baluarte-8",
-      "className": "Cavaleiro",
-      "name": "Baluarte +8",
-      "description": "Bônus de Baluarte sobe para +8.",
-      "grantedAtLevel": 13,
-      "modifiers": [
-        {
-          "target": {
-            "k": "defense"
-          },
-          "amount": 8,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        },
-        {
-          "target": {
-            "k": "resistance"
-          },
-          "amount": 8,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        }
-      ],
-      "bookPage": 53,
-      "uid": "pwr_mbsfo6fe3t"
-    },
+    
+    
     {
       "id": "class.cavaleiro.baluarte-aliados-em-alcance-curto",
       "className": "Cavaleiro",
@@ -14341,78 +14183,8 @@
       "grantedAtLevel": 15,
       "uid": "pwr_vbtwjlnffd"
     },
-    {
-      "id": "class.cavaleiro.baluarte-10",
-      "className": "Cavaleiro",
-      "name": "Baluarte +10",
-      "description": "Bônus de Baluarte sobe para +10.",
-      "grantedAtLevel": 17,
-      "modifiers": [
-        {
-          "target": {
-            "k": "defense"
-          },
-          "amount": 10,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        },
-        {
-          "target": {
-            "k": "resistance"
-          },
-          "amount": 10,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "baluarte",
-            "label": "Baluarte — 1 PM, até o início do próximo turno"
-          }
-        }
-      ],
-      "bookPage": 53,
-      "uid": "pwr_6ga5tly7hf"
-    },
-    {
-      "id": "class.cavaleiro.duelo-5",
-      "className": "Cavaleiro",
-      "name": "Duelo +5",
-      "description": "Bônus de Duelo sobe para +5.",
-      "grantedAtLevel": 17,
-      "modifiers": [
-        {
-          "target": {
-            "k": "attack",
-            "scope": "all"
-          },
-          "amount": 5,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        },
-        {
-          "target": {
-            "k": "damage",
-            "scope": "all"
-          },
-          "amount": 5,
-          "bonusType": "training",
-          "condition": {
-            "c": "flagOn",
-            "flag": "duelo",
-            "label": "contra o alvo do Duelo — 2 PM, até o fim da cena"
-          }
-        }
-      ],
-      "bookPage": 53,
-      "uid": "pwr_repkx7keen"
-    },
+    
+    
     {
       "id": "class.cavaleiro.bravura-final",
       "className": "Cavaleiro",

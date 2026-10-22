@@ -231,11 +231,7 @@ class-powers.json	class.cacador.rastreador	pwr_tiom2s43ko
 class-powers.json	class.cavaleiro.armadura-da-honra	pwr_r476a4kld6
 class-powers.json	class.cavaleiro.aumento-de-atributo	pwr_jqgtevs5dw
 class-powers.json	class.cavaleiro.autoridade-feudal	pwr_x7ryumhqpa
-class-powers.json	class.cavaleiro.baluarte-10	pwr_6ga5tly7hf
-class-powers.json	class.cavaleiro.baluarte-2	pwr_7fxkweog2o
-class-powers.json	class.cavaleiro.baluarte-4	pwr_2df46hcq7y
-class-powers.json	class.cavaleiro.baluarte-6	pwr_6vjpqan27l
-class-powers.json	class.cavaleiro.baluarte-8	pwr_mbsfo6fe3t
+class-powers.json	class.cavaleiro.baluarte	pwr_7fxkweog2o
 class-powers.json	class.cavaleiro.baluarte-aliados-adjacentes	pwr_oazz44hwxh
 class-powers.json	class.cavaleiro.baluarte-aliados-em-alcance-curto	pwr_vbtwjlnffd
 class-powers.json	class.cavaleiro.bravura-final	pwr_7jx6gneaj7
@@ -244,10 +240,7 @@ class-powers.json	class.cavaleiro.caminho-do-cavaleiro	pwr_2crumkwx55
 class-powers.json	class.cavaleiro.caminho-montaria	pwr_dybhg3xfdi
 class-powers.json	class.cavaleiro.codigo-de-honra	pwr_fnyyittoeo
 class-powers.json	class.cavaleiro.desprezar-os-covardes	pwr_idiec6h2sr
-class-powers.json	class.cavaleiro.duelo-2	pwr_nd67horosn
-class-powers.json	class.cavaleiro.duelo-3	pwr_r5eqawgv5y
-class-powers.json	class.cavaleiro.duelo-4	pwr_aacoqurehn
-class-powers.json	class.cavaleiro.duelo-5	pwr_repkx7keen
+class-powers.json	class.cavaleiro.duelo	pwr_nd67horosn
 class-powers.json	class.cavaleiro.escudeiro	pwr_aazt7dqvg3
 class-powers.json	class.cavaleiro.especializacao-em-armadura	pwr_s5cdpwu7mj
 class-powers.json	class.cavaleiro.estandarte	pwr_xiws6noxt5
