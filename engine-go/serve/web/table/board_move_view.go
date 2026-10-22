@@ -110,7 +110,7 @@ func moveBoard(b *board.BoardState, st *live.SessionRuntimeState, m board.Mover)
 	// dobras e do MESMO terreno: é o que faz o número escrito sobre a linha
 	// explicar a cor dela em vez de contradizê-la.
 	folds := moveFolds(p)
-	costs := legsCosts(folds, moveTerrain(b))
+	costs := legsCosts(folds, moveTerrain(b, token))
 	v.Wire, v.SecondWire, v.BeyondWire = moveWires(folds, costs, p.Budget)
 	v.Legs = moveLegs(folds, costs)
 	// As paradas INTERMEDIÁRIAS: a última é onde a peça pousou e a primeira é de
@@ -127,12 +127,21 @@ func moveBoard(b *board.BoardState, st *live.SessionRuntimeState, m board.Mover)
 	return v
 }
 
-// moveTerrain traduz o terreno difícil do tabuleiro para o motor.
+// moveTerrain traduz o terreno difícil do tabuleiro para o motor, DO PONTO DE
+// VISTA de quem anda.
 //
-// Existe porque o `moveTerrainOf` do pacote `board` é privado, e duplicar a
+// Existe porque o `moveTerrainFor` do pacote `board` é privado, e duplicar a
 // TRADUÇÃO é barato — duplicar a REGRA não seria. Se um dia ela virar três
 // linhas, ela sobe para lá.
-func moveTerrain(b *board.BoardState) engine.MoveTerrain {
+//
+// QUEM IGNORA O TERRENO DIFÍCIL ANDA NUM MAPA SEM ELE (p129): é a mesma linha
+// que o `moveTerrainFor` tem, e ela está nas duas porque a PRÉVIA e a MEDIÇÃO
+// têm de concordar — uma seta dourada sobre um caminho que o servidor cobra em
+// vermelho é pior que não desenhar seta nenhuma.
+func moveTerrain(b *board.BoardState, mover *board.BoardToken) engine.MoveTerrain {
+	if mover != nil && mover.IgnoresDifficult {
+		return engine.MoveTerrain{}
+	}
 	if len(b.Difficult) == 0 {
 		return engine.MoveTerrain{}
 	}
@@ -167,9 +176,14 @@ func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, who board
 	// e o alcance sai de onde ela está com o orçamento inteiro.
 	de := []engine.Square(nil)
 	budget := 0
+	// O MOVEDOR viaja junto porque o terreno é o DELE: quem ignora terreno
+	// difícil (p129) tem um alcance maior, e desenhá-lo com o mapa de todo
+	// mundo pintaria dourado onde ele anda de graça — ou o contrário.
+	var mover *board.BoardToken
 	if p := b.Pending; p != nil && (who.Role == "gm" || p.ByUserID == who.UserID) {
 		if token := board.FindToken(b, p.TokenID); token != nil {
 			target, label, de, budget = p.TokenID, token.Label, p.Path, p.Budget
+			mover = token
 		}
 	}
 	if target == "" && b.Pending == nil {
@@ -190,14 +204,14 @@ func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, who board
 			}
 			target, label = b.Tokens[i].ID, b.Tokens[i].Label
 			de = []engine.Square{{X: b.Tokens[i].X, Y: b.Tokens[i].Y}}
-			budget = herBudget
+			budget, mover = herBudget, &b.Tokens[i]
 			break
 		}
 	}
 	if target == "" {
 		return boardReach{}
 	}
-	inside, segundo, remaining := engine.ReachFromStops(de, budget, moveTerrain(b))
+	inside, segundo, remaining := engine.ReachFromStops(de, budget, moveTerrain(b, mover))
 	return boardReach{
 		Target: target, Label: label, Remaining: remaining,
 		Inside: screenSquares(inside), Segundo: screenSquares(segundo),

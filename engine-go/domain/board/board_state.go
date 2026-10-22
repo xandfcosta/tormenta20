@@ -48,6 +48,13 @@ type BoardToken struct {
 	// re-sincronizado do motor a cada proposta, como o `RefreshCharacterVitals`
 	// faz com o `hpMax`. Zero = nunca medido; vale o padrão do livro.
 	SpeedSquares int `json:"speedSquares,omitempty"`
+	// IgnoresDifficult: o terreno difícil não cobra nada desta peça (p129).
+	//
+	// Mora na PEÇA pela mesma razão que o `SpeedSquares`: a tela precisa dela
+	// ANTES de propor, para desenhar o alcance certo, e ela é re-sincronizada
+	// do motor junto com o deslocamento. É propriedade de QUEM ANDA, não
+	// relação entre peças — o tabuleiro continua mostrador (ALE-431).
+	IgnoresDifficult bool `json:"ignoresDifficult,omitempty"`
 	// CameFrom é onde a peça estava ANTES do último movimento confirmado, e é
 	// o que dá ao mestre o "voltar para onde estava".
 	//

@@ -222,6 +222,9 @@ var itemFlagLabel = map[string]string{
 	// reduzido por uso de armadura ou excesso de carga".
 	"displacement-ignores-armor": "Deslocamento ignora a armadura",
 	"displacement-ignores-load":  "Deslocamento ignora a carga",
+	// A do Acrobático (p129), e ela fala do CAMINHO e não do deslocamento: o
+	// metro continua o mesmo, o que muda é o que cada casa cobra.
+	"movement-ignores-difficult": "Terreno difícil não custa nada",
 }
 
 // itemFlagExemptLabel é a frase de cada ISENÇÃO de bandeira, e ela é

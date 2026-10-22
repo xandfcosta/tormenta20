@@ -116,7 +116,7 @@ func dragPreview(b *board.BoardState, st *live.SessionRuntimeState, tokenID stri
 	}
 	folds := append(progressStops(b, tokenID, token), destination)
 	_, budget := board.CanMoveWith(b, st, tokenID, who)
-	costs := legsCosts(folds, moveTerrain(b))
+	costs := legsCosts(folds, moveTerrain(b, token))
 	fits, segundo, beyond := moveWires(folds, costs, budget)
 	return map[string]any{
 		"preview_arrow_fits":   fits,

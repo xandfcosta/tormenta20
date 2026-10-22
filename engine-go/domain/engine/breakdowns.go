@@ -73,6 +73,16 @@ type ComputedSheet struct {
 	// leitor antigo ler 6 onde lia 9, sem erro em lugar nenhum.
 	Displacement ValueBreakdown `json:"displacementSquares"`
 	FlySpeed     int            `json:"flySpeed"`
+	// IgnoresDifficultTerrain é a p129 vista pelo TABULEIRO: "terreno difícil
+	// não reduz seu deslocamento" (Acrobático). Ela sai na ficha, e não numa
+	// consulta à parte, porque é quem desenha o movimento que precisa dela —
+	// e é pelo mesmo caminho do `Displacement` que ela chega lá.
+	//
+	// O MOTOR DE CAMINHO não a conhece, e isso é desenho: o `PathCost` recebe
+	// o TERRENO, e um terreno sem casa difícil é o que "não reduz" quer dizer.
+	// Dar personagem ao cálculo do caminho faria do tabuleiro um resolvedor
+	// tático, que é a linha que a casa não cruza (ALE-423, ALE-431).
+	IgnoresDifficultTerrain bool `json:"ignoresDifficultTerrain"`
 	// Load é a p141 inteira — os espaços ocupados, o limite e a sobrecarga.
 	Load            LoadBreakdown                 `json:"carga"`
 	Attributes      map[string]AttributeBreakdown `json:"attributes"`
@@ -144,6 +154,12 @@ func effectiveAttribute(ch Character, attr string, e ItemEffects) int {
 // no motor, e não deve haver. Quem isentar amanhã entra pelo catálogo, e agora
 // pode escolher QUAL metade.
 const (
+	// MovementIgnoresDifficult: "terreno difícil não reduz seu deslocamento"
+	// (Acrobático, p129). Irmã das duas de cima pelo nome e pela forma, e
+	// diferente delas no destino: aquelas isentam o deslocamento de uma
+	// REDUÇÃO, e esta isenta o CAMINHO de um custo.
+	MovementIgnoresDifficult = "movement-ignores-difficult"
+
 	DisplacementIgnoresArmor = "displacement-ignores-armor"
 	DisplacementIgnoresLoad  = "displacement-ignores-load"
 )
