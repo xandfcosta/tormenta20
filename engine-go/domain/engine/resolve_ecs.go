@@ -51,13 +51,13 @@ type Suppressed struct{ Why string }
 // lista de condicionais para o jogador ligar.
 type Deferred struct{}
 
-// worldFlags e worldFactors são os dois acumuladores da resolução, guardados
+// worldFactors é um dos dois acumuladores da resolução — o outro é o
+// `worldFlags`, que mora no `resolve_ecs_flag.go` —, e os dois são guardados
 // numa entidade SINGLETON.
 //
 // É o idioma de "recurso" do ECS: um dado que é do mundo inteiro, e não de uma
 // entidade em particular. Sem ele, um sistema teria de escrever numa variável
 // capturada — e aí ele deixaria de ser função do mundo, que é o contrato.
-type worldFlags struct{ set map[string]bool }
 type worldFactors struct{ byTarget map[string]Ratio }
 
 // worldRiders são as parcelas que a CARTA DA ARMA aplica, e não a pilha: o dado
@@ -73,7 +73,7 @@ type worldRiders struct {
 func resolveInWorld(items []ActiveItem) ItemEffects {
 	w := ecs.NewWorld()
 	resource := w.Spawn()
-	ecs.Set(w, resource, worldFlags{set: map[string]bool{}})
+	ecs.Set(w, resource, worldFlags{set: map[string]bool{}, source: map[string]string{}})
 	ecs.Set(w, resource, worldFactors{byTarget: map[string]Ratio{}})
 	ecs.Set(w, resource, worldRiders{critical: map[string]int{}})
 
@@ -126,88 +126,6 @@ func explodeIntoTerms(items []ActiveItem) ecs.System {
 			}
 		}
 	}
-}
-
-// raiseFlags acende toda flag de termo que cumpre a própria condição.
-func raiseFlags(w *ecs.World) {
-	flags := flagsOf(w)
-	ecs.Each(w, func(_ ecs.Entity, t Term) {
-		if t.Mod.Target.K == "flag" && conditionMet(t.Mod, t.Wear) {
-			flags[t.Mod.Target.Name] = true
-		}
-	})
-}
-
-// eraseExemptFlags apaga a bandeira de que uma fonte ISENTA o portador (p340).
-//
-// Ele é o oposto do `raiseFlags`, e existe porque uma composição só sabia
-// ACRESCENTAR: a Cota élfica é uma *"cota de malha defensora de mitral"*, a cota
-// de malha é pesada e acende a bandeira que zera a Destreza na Defesa, e o
-// verbete desfaz exatamente essa metade — *"permite que você aplique sua
-// Destreza na Defesa como se fosse uma armadura leve"*.
-//
-// # Por que é um SISTEMA e não uma condição
-//
-// A isenção não fala do modificador dela mesma: ela fala do MUNDO. Escrita como
-// condição, ela teria de ser avaliada dentro de cada termo que consulta a
-// bandeira — e a ordem entre "acende" e "isenta" viraria a ordem em que os
-// termos aparecem, que é a ordem dos itens da ficha.
-func eraseExemptFlags(w *ecs.World) {
-	isentas := map[string]bool{}
-	ecs.Each(w, func(_ ecs.Entity, t Term) {
-		if t.Mod.Target.K == "flagExempt" && conditionMet(t.Mod, t.Wear) {
-			isentas[t.Mod.Target.Name] = true
-		}
-	})
-	if len(isentas) == 0 {
-		return
-	}
-	flags := flagsOf(w)
-	for nome := range isentas {
-		delete(flags, nome)
-	}
-	// E O TERMO QUE A ACENDE SAI JUNTO. Apagar só do mapa não basta: o
-	// `harvestFlags`, lá no fim da sequência, varre os termos de novo e
-	// REACENDE toda flag que não esteja calada — foi o que este sistema fez na
-	// primeira versão, e a bandeira voltava sem ninguém ver.
-	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if t.Mod.Target.K == "flag" && isentas[t.Mod.Target.Name] {
-			ecs.Set(w, e, Suppressed{Why: "a bandeira " + t.Mod.Target.Name + " está isenta"})
-		}
-	})
-}
-
-// dropWhatTheFlagTurnsOff cala o passivo do livro que se desliga enquanto a
-// flag está posta.
-func dropWhatTheFlagTurnsOff(w *ecs.World) {
-	flags := flagsOf(w)
-	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if c := t.Mod.Condition; c != nil && c.C == "flagOff" && flags[c.Flag] {
-			ecs.Set(w, e, Suppressed{Why: "a flag " + c.Flag + " está posta"})
-		}
-	})
-}
-
-// dropWhatTheFlagRequires cala o que só vale ENQUANTO a flag está posta.
-//
-// É o espelho do `dropWhatTheFlagTurnsOff`, e os dois existem porque o livro
-// escreve as duas frases: *"+4 na Defesa se NÃO estiver usando armadura
-// pesada"* (Pele de Ferro, p62) e *"se estiver usando uma armadura pesada, você
-// recebe +2 na Defesa"* (Encouraçado, p125).
-//
-// # Por que não dá para usar o `flagOn` que já existe
-//
-// Ele é OPT-IN, e a flag dele é POSTURA: a Fúria, a Inspiração, as seis do
-// cavaleiro — coisas que a pessoa LIGA na aba Efeitos. A `armadura-pesada` é
-// derivada do que está vestido, e oferecer um interruptor para ela seria
-// perguntar ao jogador o que a ficha já sabe.
-func dropWhatTheFlagRequires(w *ecs.World) {
-	flags := flagsOf(w)
-	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if c := t.Mod.Condition; c != nil && c.C == "flagRequired" && !flags[c.Flag] {
-			ecs.Set(w, e, Suppressed{Why: "a flag " + c.Flag + " não está posta"})
-		}
-	})
 }
 
 // deferConditionals separa o que o jogador LIGA do que vale sozinho.
@@ -313,18 +231,6 @@ func scaleWhatTheSourceFactorHits(w *ecs.World) {
 	})
 }
 
-// harvestFlags tira as flags da pilha: elas são interruptor, não número.
-func harvestFlags(w *ecs.World) {
-	flags := flagsOf(w)
-	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if dead(w, e) || deferred(w, e) || t.Mod.Target.K != "flag" {
-			return
-		}
-		flags[t.Mod.Target.Name] = true
-		ecs.Set(w, e, Suppressed{Why: "é flag, e flag não soma"})
-	})
-}
-
 // resolveStacking cala quem perde o empilhamento (T20 p107: bônus do mesmo tipo
 // não se somam, vale o maior; `untyped` é a exceção e acumula).
 //
@@ -395,7 +301,8 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 	factors, _ := ecs.Get[worldFactors](w, resource)
 	riders := ridersOf(w)
 	return ItemEffects{
-		ByTarget: byTarget, Flags: flags.set, Factors: factors.byTarget,
+		ByTarget: byTarget, Flags: flags.set, FlagSources: flags.source,
+		Factors:     factors.byTarget,
 		ExtraDamage: riders.extra, CriticalBonus: riders.critical,
 		Announced:   riders.announced,
 		Conditional: conditional,
@@ -432,12 +339,6 @@ func deferred(w *ecs.World, e ecs.Entity) bool {
 	return has
 }
 
-func flagsOf(w *ecs.World) map[string]bool {
-	var found map[string]bool
-	ecs.Each(w, func(_ ecs.Entity, f worldFlags) { found = f.set })
-	return found
-}
-
 // ridersOf e setRiders: ao contrário do `worldFactors`, cujo mapa se muta no
 // lugar, a lista de parcelas CRESCE — e uma fatia acrescida dentro do `Each`
 // não volta para o componente sozinha. Por isso a leitura e a escrita são duas.
@@ -465,7 +366,7 @@ func factorsOf(w *ecs.World) map[string]Ratio {
 func worldAfterResolving(items []ActiveItem) (int, []string) {
 	w := ecs.NewWorld()
 	resource := w.Spawn()
-	ecs.Set(w, resource, worldFlags{set: map[string]bool{}})
+	ecs.Set(w, resource, worldFlags{set: map[string]bool{}, source: map[string]string{}})
 	ecs.Set(w, resource, worldFactors{byTarget: map[string]Ratio{}})
 	ecs.Set(w, resource, worldRiders{critical: map[string]int{}})
 	ecs.Run(w, explodeIntoTerms(items), raiseFlags, dropWhatTheFlagTurnsOff,

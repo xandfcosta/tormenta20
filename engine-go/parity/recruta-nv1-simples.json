@@ -437,6 +437,7 @@
       "attribute": "dexterity",
       "attributeAmount": 3,
       "attributeSource": "",
+      "attributeBlockedBy": "",
       "vsMelee": 10,
       "vsRanged": 10,
       "contributions": [
@@ -1059,6 +1060,7 @@
       "attribute": "dexterity",
       "attributeAmount": 3,
       "attributeSource": "",
+      "attributeBlockedBy": "",
       "vsMelee": 10,
       "vsRanged": 10,
       "contributions": [

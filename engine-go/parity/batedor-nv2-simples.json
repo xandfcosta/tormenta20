@@ -279,26 +279,14 @@
         },
         {
           "target": {
-            "k": "flag",
-            "name": "cannot-apply-dex-to-defense"
+            "k": "armorPenaltyWidened"
           },
-          "amount": 1,
+          "amount": 0,
           "bonusType": "untyped",
           "condition": {
             "c": "vested"
           },
-          "note": "sem proficiência"
-        },
-        {
-          "target": {
-            "k": "expertiseAll"
-          },
-          "amount": -1,
-          "bonusType": "untyped",
-          "condition": {
-            "c": "vested"
-          },
-          "note": "Armadura de couro sem proficiência"
+          "note": "Armadura de couro sem proficiência: a penalidade vale nas perícias de Força e Destreza (p152)"
         }
       ]
     },
@@ -339,6 +327,18 @@
   ],
   "itemEffects": {
     "byTarget": {
+      "armorPenaltyWidened": {
+        "total": 0,
+        "contributions": [
+          {
+            "sourceId": "armadura-couro",
+            "source": "Armadura de couro",
+            "bonusType": "untyped",
+            "amount": 0,
+            "note": "Armadura de couro sem proficiência: a penalidade vale nas perícias de Força e Destreza (p152)"
+          }
+        ]
+      },
       "attribute:charisma": {
         "total": 2,
         "contributions": [
@@ -385,36 +385,24 @@
             "amount": 2
           }
         ]
-      },
-      "expertiseAll": {
-        "total": -1,
-        "contributions": [
-          {
-            "sourceId": "armadura-couro",
-            "source": "Armadura de couro",
-            "bonusType": "untyped",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ]
       }
     },
     "flags": [
-      "armadura-leve",
-      "cannot-apply-dex-to-defense"
+      "armadura-leve"
     ],
     "conditional": []
   },
   "sheet": {
     "defense": {
-      "base": 10,
+      "base": 15,
       "itemBonus": 2,
-      "total": 12,
-      "attribute": "",
-      "attributeAmount": 0,
+      "total": 17,
+      "attribute": "dexterity",
+      "attributeAmount": 5,
       "attributeSource": "",
-      "vsMelee": 12,
-      "vsRanged": 12,
+      "attributeBlockedBy": "",
+      "vsMelee": 17,
+      "vsRanged": 17,
       "contributions": [
         {
           "source": "Armadura de couro",
@@ -530,522 +518,348 @@
         "name": "Acrobacia",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Adestramento",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Atletismo",
         "attribute": "strength",
         "base": 0,
-        "itemBonus": -1,
-        "total": -1,
+        "itemBonus": 0,
+        "total": 0,
         "halfLevel": 1,
         "attrValue": -1,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Atuação",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Cavalgar",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Conhecimento",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Cura",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Diplomacia",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Enganação",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Fortitude",
         "attribute": "constitution",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Furtividade",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Guerra",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Iniciativa",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Intimidação",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Intuição",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Investigação",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Jogatina",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Ladinagem",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Luta",
         "attribute": "strength",
         "base": 0,
-        "itemBonus": -1,
-        "total": -1,
+        "itemBonus": 0,
+        "total": 0,
         "halfLevel": 1,
         "attrValue": -1,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Misticismo",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Nobreza",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Ofício",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Percepção",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Pilotagem",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Pontaria",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Religião",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Sobrevivência",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Vontade",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       }
     ],
@@ -1054,14 +868,15 @@
   "activeConditionals": [],
   "sheetWithConditionals": {
     "defense": {
-      "base": 10,
+      "base": 15,
       "itemBonus": 2,
-      "total": 12,
-      "attribute": "",
-      "attributeAmount": 0,
+      "total": 17,
+      "attribute": "dexterity",
+      "attributeAmount": 5,
       "attributeSource": "",
-      "vsMelee": 12,
-      "vsRanged": 12,
+      "attributeBlockedBy": "",
+      "vsMelee": 17,
+      "vsRanged": 17,
       "contributions": [
         {
           "source": "Armadura de couro",
@@ -1177,522 +992,348 @@
         "name": "Acrobacia",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Adestramento",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Atletismo",
         "attribute": "strength",
         "base": 0,
-        "itemBonus": -1,
-        "total": -1,
+        "itemBonus": 0,
+        "total": 0,
         "halfLevel": 1,
         "attrValue": -1,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Atuação",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Cavalgar",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Conhecimento",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Cura",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Diplomacia",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Enganação",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Fortitude",
         "attribute": "constitution",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Furtividade",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Guerra",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Iniciativa",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Intimidação",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Intuição",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Investigação",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Jogatina",
         "attribute": "charisma",
         "base": 4,
-        "itemBonus": -1,
-        "total": 3,
+        "itemBonus": 0,
+        "total": 4,
         "halfLevel": 1,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Ladinagem",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Luta",
         "attribute": "strength",
         "base": 0,
-        "itemBonus": -1,
-        "total": -1,
+        "itemBonus": 0,
+        "total": 0,
         "halfLevel": 1,
         "attrValue": -1,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Misticismo",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Nobreza",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Ofício",
         "attribute": "intelligence",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Percepção",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Pilotagem",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Pontaria",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": -1,
-        "total": 5,
+        "itemBonus": 0,
+        "total": 6,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Religião",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Sobrevivência",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Vontade",
         "attribute": "wisdom",
         "base": 3,
-        "itemBonus": -1,
-        "total": 2,
+        "itemBonus": 0,
+        "total": 3,
         "halfLevel": 1,
         "attrValue": 2,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       }
     ],
@@ -1703,23 +1344,17 @@
       "name": "Espada curta",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": -1,
+      "attack": 0,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
         "base": 0,
-        "itemBonus": -1,
-        "total": -1,
+        "itemBonus": 0,
+        "total": 0,
         "halfLevel": 1,
         "attrValue": -1,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       "attackAll": {
@@ -1753,23 +1388,17 @@
       "name": "Espada curta",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": -1,
+      "attack": 0,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
         "base": 0,
-        "itemBonus": -1,
-        "total": -1,
+        "itemBonus": 0,
+        "total": 0,
         "halfLevel": 1,
         "attrValue": -1,
         "training": 0,
-        "itemContributions": [
-          {
-            "source": "Armadura de couro",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       "attackAll": {
