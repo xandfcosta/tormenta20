@@ -100,12 +100,31 @@ func targetLabel(t engine.ModifierTarget) string {
 		"inventorySlots": "Espaços de carga", "flySpeed": "Voo",
 		"armorPenalty": "Penalidade de armadura",
 		"damageStep":   "Passo de dano",
-		"tempHp":       "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
+		// OS SETE QUE FALTAVAM (ALE-453). Cada um reusa a palavra que a casa já
+		// escolheu para o conceito, e não uma segunda: "ignora o extra de
+		// crítico" é a do `critExtraRows`, e "o livro prevê" é a da faixa de
+		// ataque da mesa, escolhida de propósito por INFORMAR em vez de decidir.
+		"critExtraIgnoreChance": "Ignora o extra de crítico",
+		"announcedCondition":    "O livro prevê",
+		"defenseAttribute":      "Atributo da Defesa",
+		"armorPenaltyExempt":    "Ignora a penalidade de armadura",
+		"nonLethalDamage":       "Dano não letal",
+		"source":                "Multiplica o que a fonte dá",
+		"tempHp":                "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
 	}
 	// FLAG é booleana e o rótulo dela é uma frase inteira ("Fadiga ao dormir"),
 	// não um alvo com complemento — por isso ela sai antes do resto.
 	if t.K == "flag" {
 		if label, known := itemFlagLabel[t.Name]; known {
+			return label
+		}
+		return t.Name
+	}
+	// A ISENÇÃO DE BANDEIRA também é uma frase inteira, e ela é AFIRMATIVA:
+	// "Isento de: Não soma Destreza na Defesa" é uma negação dupla que o
+	// jogador tem de desfazer de cabeça, e o verbete não fala assim.
+	if t.K == "flagExempt" {
+		if label, known := itemFlagExemptLabel[t.Name]; known {
 			return label
 		}
 		return t.Name
@@ -146,6 +165,20 @@ func targetComplement(t engine.ModifierTarget) string {
 	if t.K == "attribute" && t.Name != "" {
 		return book.AttributeLabel(t.Name)
 	}
+	// OS OUTROS TRÊS CAMPOS `name` QUE NÃO SÃO TEXTO DE TELA, e cada um tem o
+	// seu tradutor: o atributo que a Defesa pode usar no lugar da Destreza
+	// (p69, p79), a condição que o encanto reserva (p335-336) e a FONTE cujo
+	// fator o poder dobra. Devolvidos crus, os três põem `intelligence`,
+	// `sangrando` e `class.barbaro.furia` na ficha de alguém.
+	if t.K == "defenseAttribute" && t.Name != "" {
+		return book.AttributeLabel(t.Name)
+	}
+	if t.K == "announcedCondition" && t.Name != "" {
+		return book.ConditionName(t.Name)
+	}
+	if t.K == "source" && t.Name != "" {
+		return effectDisplayName(t.Name)
+	}
 	if t.Name != "" {
 		return t.Name
 	}
@@ -177,6 +210,22 @@ var itemFlagLabel = map[string]string{
 	"armadura-pesada":             "Conta como armadura pesada",
 	"armadura-leve":               "Conta como armadura leve",
 	"auto-fail-reflexos":          "Falha automática em Reflexos",
+	// As DUAS do Devagar e Sempre do anão (p20) e do Chassi do golem (p31),
+	// com a voz afirmativa dos vizinhos: o livro diz "seu deslocamento não é
+	// reduzido por uso de armadura ou excesso de carga".
+	"displacement-ignores-armor": "Deslocamento ignora a armadura",
+	"displacement-ignores-load":  "Deslocamento ignora a carga",
+}
+
+// itemFlagExemptLabel é a frase de cada ISENÇÃO de bandeira, e ela é
+// AFIRMATIVA.
+//
+// Não é "isento de" mais o rótulo da bandeira: "Isento de: Não soma Destreza na
+// Defesa" é uma negação dupla que o jogador desfaz de cabeça, e o verbete não
+// fala assim — a Cota élfica diz "permite que você aplique sua Destreza na
+// Defesa como se fosse uma armadura leve" (p340).
+var itemFlagExemptLabel = map[string]string{
+	"cannot-apply-dex-to-defense": "Soma a Destreza na Defesa mesmo assim",
 }
 
 // conditionalLabel é a frase que descreve QUANDO o modificador vale.
