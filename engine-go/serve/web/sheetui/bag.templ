@@ -179,8 +179,14 @@ templ equippedCardItem(v View, card *equippedCard, label string, wide bool) {
 							// A 390px ele truncava em "isento por Devagar e
 							// Se…" — exatamente no nome da habilidade, que é o
 							// que este crachá existe para dizer. Ele é o único
-							// que pode crescer em altura: os outros são rótulos
-							// curtos e o corte neles nunca comeu informação.
+							// que pode crescer em altura.
+							//
+							// Os outros CORTAM, e desde a ALE-453 o corte come
+							// informação: "Ignora a penalidade de armadura
+							// (Furtividade)" vira "Ignora a penalidade de …" a
+							// 390px, e a perícia é a metade que importa. O
+							// `title` de cada crachá continua com o texto
+							// inteiro; o desenho é a ALE-447.
 							<span
 								title={ chip.Text }
 								class="max-w-full whitespace-normal rounded-2xl border border-grimorio-iron bg-muted px-1.5 py-0.5 text-3xs text-muted-foreground"

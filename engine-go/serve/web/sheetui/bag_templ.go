@@ -760,14 +760,14 @@ func equippedCardItem(v View, card *equippedCard, label string, wide bool) templ
 						return templ_7745c5c3_Err
 					}
 				} else if chip.Reason {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "      <span title=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "            <span title=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var39 string
 					templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(chip.Text)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 185, Col: 25}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 191, Col: 25}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 					if templ_7745c5c3_Err != nil {
@@ -780,7 +780,7 @@ func equippedCardItem(v View, card *equippedCard, label string, wide bool) templ
 					var templ_7745c5c3_Var40 string
 					templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(chip.Text)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 187, Col: 19}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 193, Col: 19}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 					if templ_7745c5c3_Err != nil {
@@ -798,7 +798,7 @@ func equippedCardItem(v View, card *equippedCard, label string, wide bool) templ
 					var templ_7745c5c3_Var41 string
 					templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue(chip.Text)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 190, Col: 25}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 196, Col: 25}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 					if templ_7745c5c3_Err != nil {
@@ -811,7 +811,7 @@ func equippedCardItem(v View, card *equippedCard, label string, wide bool) templ
 					var templ_7745c5c3_Var42 string
 					templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(chip.Text)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 192, Col: 19}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 198, Col: 19}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 					if templ_7745c5c3_Err != nil {
@@ -835,7 +835,7 @@ func equippedCardItem(v View, card *equippedCard, label string, wide bool) templ
 		var templ_7745c5c3_Var43 string
 		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.ResolveAttributeValue("Guardar " + card.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 200, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 206, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 		if templ_7745c5c3_Err != nil {
@@ -848,7 +848,7 @@ func equippedCardItem(v View, card *equippedCard, label string, wide bool) templ
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/itens/"+card.Command+"/guarda"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 201, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 207, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 		if templ_7745c5c3_Err != nil {
@@ -940,7 +940,7 @@ func emptySlot(label string, wide bool) templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 215, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 221, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1005,7 +1005,7 @@ func stowedBlock(v View) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(writtenItems(v.Bag.StowedTotal))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 225, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 231, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -1032,7 +1032,7 @@ func stowedBlock(v View) templ.Component {
 				var templ_7745c5c3_Var55 string
 				templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs("Nenhum item para esse filtro.")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 232, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 238, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 				if templ_7745c5c3_Err != nil {
@@ -1042,7 +1042,7 @@ func stowedBlock(v View) templ.Component {
 				var templ_7745c5c3_Var56 string
 				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs("Mochila vazia.")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 234, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 240, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 				if templ_7745c5c3_Err != nil {
@@ -1110,7 +1110,7 @@ func loadBar(v View) templ.Component {
 		var templ_7745c5c3_Var58 string
 		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Bag.Load.Used)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 257, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 263, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 		if templ_7745c5c3_Err != nil {
@@ -1123,7 +1123,7 @@ func loadBar(v View) templ.Component {
 		var templ_7745c5c3_Var59 string
 		templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(v.Bag.Load.Limit))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 259, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 265, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var59)
 		if templ_7745c5c3_Err != nil {
@@ -1159,7 +1159,7 @@ func loadBar(v View) templ.Component {
 		var templ_7745c5c3_Var62 string
 		templ_7745c5c3_Var62, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width: %d%%", v.Bag.Load.Percent))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 265, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 271, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 		if templ_7745c5c3_Err != nil {
@@ -1177,7 +1177,7 @@ func loadBar(v View) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(overloadNotice(v.Bag.Load))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 273, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 279, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 			if templ_7745c5c3_Err != nil {
@@ -1225,7 +1225,7 @@ func bagFiltersBody(v View) templ.Component {
 		var templ_7745c5c3_Var65 string
 		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetGet(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 285, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 291, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 		if templ_7745c5c3_Err != nil {
@@ -1238,7 +1238,7 @@ func bagFiltersBody(v View) templ.Component {
 		var templ_7745c5c3_Var66 string
 		templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Bag.Search)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 286, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 292, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var66)
 		if templ_7745c5c3_Err != nil {
@@ -1263,7 +1263,7 @@ func bagFiltersBody(v View) templ.Component {
 			var templ_7745c5c3_Var68 string
 			templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(badge.Active))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 295, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 301, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 			if templ_7745c5c3_Err != nil {
@@ -1276,7 +1276,7 @@ func bagFiltersBody(v View) templ.Component {
 			var templ_7745c5c3_Var69 string
 			templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue("$item_category = '" + badge.Value + "'; " + sheetGet(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 296, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 302, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 			if templ_7745c5c3_Err != nil {
@@ -1302,7 +1302,7 @@ func bagFiltersBody(v View) templ.Component {
 			var templ_7745c5c3_Var71 string
 			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(badge.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 300, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 306, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 			if templ_7745c5c3_Err != nil {
@@ -1350,7 +1350,7 @@ func stowedTileItem(tile stowedTile) templ.Component {
 		var templ_7745c5c3_Var73 string
 		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir " + tile.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 310, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 316, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var73)
 		if templ_7745c5c3_Err != nil {
@@ -1363,7 +1363,7 @@ func stowedTileItem(tile stowedTile) templ.Component {
 		var templ_7745c5c3_Var74 string
 		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = 'item-" + tile.Command + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 312, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 318, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var74)
 		if templ_7745c5c3_Err != nil {
@@ -1381,7 +1381,7 @@ func stowedTileItem(tile stowedTile) templ.Component {
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs("×" + strconv.FormatInt(tile.Quantity, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 317, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 323, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 			if templ_7745c5c3_Err != nil {
@@ -1403,7 +1403,7 @@ func stowedTileItem(tile stowedTile) templ.Component {
 		var templ_7745c5c3_Var76 string
 		templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(tile.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 321, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 327, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 		if templ_7745c5c3_Err != nil {
@@ -1421,7 +1421,7 @@ func stowedTileItem(tile stowedTile) templ.Component {
 			var templ_7745c5c3_Var77 string
 			templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(juntoComPonto(tile.Overlays))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 323, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 329, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 			if templ_7745c5c3_Err != nil {
@@ -1483,7 +1483,7 @@ func moneyDialog(v View) templ.Component {
 			var templ_7745c5c3_Var80 string
 			templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs("Você tem T$ " + v.Bag.Money.Tibar + ".")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 334, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 340, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 			if templ_7745c5c3_Err != nil {
@@ -1501,7 +1501,7 @@ func moneyDialog(v View) templ.Component {
 				var templ_7745c5c3_Var81 string
 				templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibar_mode = '" + mode.Value + "'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 340, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 346, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var81)
 				if templ_7745c5c3_Err != nil {
@@ -1514,7 +1514,7 @@ func moneyDialog(v View) templ.Component {
 				var templ_7745c5c3_Var82 string
 				templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibar_mode === '" + mode.Value + "' ? 'true' : 'false'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 341, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 347, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var82)
 				if templ_7745c5c3_Err != nil {
@@ -1527,7 +1527,7 @@ func moneyDialog(v View) templ.Component {
 				var templ_7745c5c3_Var83 string
 				templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(mode.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 343, Col: 17}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 349, Col: 17}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 				if templ_7745c5c3_Err != nil {
@@ -1576,7 +1576,7 @@ func moneyDialog(v View) templ.Component {
 			var templ_7745c5c3_Var87 string
 			templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/dinheiro") + "; $detail = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 358, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/bag.templ`, Line: 364, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var87)
 			if templ_7745c5c3_Err != nil {

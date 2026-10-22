@@ -2,6 +2,7 @@ package sheetui
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
@@ -259,6 +260,18 @@ func modifierBadge(m engine.Modifier) string {
 	// armadura completa diria "−2" onde o livro diz "−3m".
 	if m.Target.K == "displacement" {
 		return label + " " + book.MetresWithSign(float64(m.Amount)*engine.SquareMetres)
+	}
+	// A CHANCE É EM PORCENTO, e é a mesma armadilha do deslocamento com outro
+	// número: "Ignora o extra de crítico +50" promete cinquenta de quê, e a
+	// resposta — por cento — é o que decide se o crachá vale alguma coisa.
+	//
+	// A FRASE É A DO CATÁLOGO, palavra por palavra: o Aço-rubi e o Fortificado
+	// já escrevem "50% de ignorar o extra de crítico" na nota, e o painel de
+	// melhorias a desenha logo abaixo deste crachá. Duas grafias para o mesmo
+	// conceito no mesmo cartão é o que o GLOSSARY existe para não deixar
+	// acontecer (ALE-453).
+	if m.Target.K == "critExtraIgnoreChance" {
+		return strconv.Itoa(m.Amount) + "% de ignorar o extra de crítico"
 	}
 	return label + " " + book.WithSign(m.Amount)
 }
