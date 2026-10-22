@@ -255,11 +255,49 @@ func thatSaysBook(catalog book.Item) *bookInfo {
 	if protection := catalog.Shield; protection != nil {
 		info.Rows = append(info.Rows, protectionRow(*protection, false))
 	}
+	info.Rows = append(info.Rows, spellInTheFlask(catalog)...)
 	for _, m := range catalog.Modifiers {
 		info.Rows = append(info.Rows, modifierBadge(m))
 	}
 	info.Rows = repetidosSem(info.Rows)
 	return info
+}
+
+// spellInTheFlask é a referência da poção: a magia que ela CONTÉM, o círculo
+// dela e como o frasco entrega o efeito (p341).
+//
+// Sem isso o cartão de uma poção é um nome e um preço — ela não tem
+// modificador para desenhar, porque a regra dela é a da magia. E o app INFORMA
+// e não resolve: a área da Bola de Fogo e o alvo do Sono são do mestre; o que a
+// ficha deve é dizer o que está no frasco.
+func spellInTheFlask(catalog book.Item) []string {
+	if catalog.Consumable == nil || catalog.Consumable.Spell == "" {
+		return nil
+	}
+	magia := spellOfBook(catalog.Consumable.Spell)
+	linha := "contém " + magia.Name
+	if magia.Circle > 0 {
+		linha += " · " + circleLabel(magia.Circle)
+	}
+	if entrega := writtenFlask(catalog.Consumable.Kind); entrega != "" {
+		linha += " · " + entrega
+	}
+	rows := []string{linha}
+	if augment := catalog.Consumable.Augment; augment != "" {
+		rows = append(rows, augment)
+	}
+	return rows
+}
+
+// writtenFlask é a palavra da mesa para o tipo de frasco. O livro as nomeia na
+// p341: "poções que afetam objetos também são chamadas de óleos e poções que
+// geram efeito em área também são chamadas de granadas".
+var flaskKinds = map[string]string{
+	"pocao": "poção", "oleo": "óleo", "granada": "granada",
+}
+
+func writtenFlask(kind string) string {
+	return flaskKinds[kind]
 }
 
 func protectionRow(protection book.Armor, isArmor bool) string {
