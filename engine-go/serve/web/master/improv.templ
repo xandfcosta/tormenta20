@@ -5,7 +5,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O IMPROVISO — as tabelas do Cap 6 e o esqueleto de masmorra.
+// O IMPROVISO — as tabelas do Cap 6, o esqueleto de masmorra, e o Baralho.
 //
 // AS PÁGINAS DAQUI FORAM CONFERIDAS CONTRA O PDF, uma a uma:
 //
@@ -13,11 +13,17 @@ import (
 //	Tabela 6-5         p274
 //	Tabela 6-2         p263
 //	Tabela 6-7         p279
+//	Baralho do Caos    p347   (Cap 8 — é a regra própria de um ARTEFATO)
 //
 // A 6-7 é a armadilha: a p278 é onde o texto MENCIONA a tabela ("usando a
 // Tabela 6-7: Consequências de Buscas"), e o corpo dela começa na p279. Citação
 // de tabela aponta para onde a tabela ESTÁ, e não para onde o livro fala dela —
 // quem segue a citação quer conferir um resultado.
+//
+// O Baralho é de OUTRO capítulo, e por isso tem faixa própria em vez de entrar
+// na grade do Cap 6: a faixa é o que diz ao mestre que aquela tabela só vale
+// quando o artefato está na mesa. Sem ela, "Baralho do Caos" ao lado de
+// "Perseguição" leria como quinta ferramenta de improviso.
 //
 // Três tabelas lado a lado e a masmorra embaixo, como o original. A grade é
 // `sm:2 xl:3` e não a `.collection-in-columns` dos catálogos: aqui os cartões são
@@ -50,6 +56,14 @@ templ improvScene(v improvView) {
 				<div class="grid items-start gap-3 sm:grid-cols-2">
 					@rollingTable("ideias", "Ideias de masmorra", "d20", "Tabela 6-2 · p263", v.Ideas)
 					@dungeonPlanner(v)
+				</div>
+			</div>
+			<div class="border-t border-grimorio-iron pt-4">
+				@ui.SectionLabel("muted", "mb-2") {
+					Artefato
+				}
+				<div class="grid items-start gap-3 sm:grid-cols-2">
+					@rollingTable("baralho", "Baralho do Caos — carta", "1d%", "p347", v.Chaos)
 				</div>
 			</div>
 		</div>

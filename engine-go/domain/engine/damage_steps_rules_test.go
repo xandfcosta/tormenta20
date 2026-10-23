@@ -129,8 +129,10 @@ func TestWhatTheTableDoesNotPrintComesBackUntouched(t *testing.T) {
 //
 // Um passo que não acha a notação devolve o dado original — silêncio com cara
 // de "não tem modificador". Este guarda pergunta o contrário: existe arma no
-// catálogo que a Tabela 3-2 não alcança? A rede (dano "0") é a exceção, e ela
-// está nomeada.
+// catálogo que a Tabela 3-2 não alcança? As exceções são PERMITIDOS, uma a uma,
+// e cada uma carrega o motivo na própria tabela: um conjunto novo de notação
+// inalcançável reprova com o id da arma, que é o que diferencia "é a exceção
+// conhecida" de "ninguém olhou".
 func TestEveryWeaponInTheCatalogCanWalkTheTable(t *testing.T) {
 	bruto, err := os.ReadFile(filepath.Join("..", "catalog", "data", "items.json"))
 	if err != nil {
@@ -145,14 +147,22 @@ func TestEveryWeaponInTheCatalogCanWalkTheTable(t *testing.T) {
 	if err := json.Unmarshal(bruto, &itens); err != nil {
 		t.Fatalf("itens.json: %v", err)
 	}
-	semDado := map[string]bool{"0": true}
+	// As notações que a Tabela 3-2 genuinamente não imprime, com o motivo —
+	// são as duas em que "volta intacto" é a resposta CERTA, e não um buraco.
+	foraDaTabela := map[string]string{
+		"0":    "a rede não causa dano, e inventar um degrau para ela inventaria regra",
+		"2d12": "é o dano da Espada-Deus (p346), e a Tabela 3-2 não tem nenhuma célula com 2d12: a linha de cima vai de 2d6 a 4d12 e pula o 2d12. Artefato forjado por um deus não anda pela escada de fabricação",
+	}
 	medidas := 0
 	for _, item := range itens {
-		if item.Weapon == nil || semDado[item.Weapon.Damage] {
+		if item.Weapon == nil {
 			continue
 		}
 		medidas++
 		for _, ponta := range strings.Split(item.Weapon.Damage, "/") {
+			if _, conhecida := foraDaTabela[ponta]; conhecida {
+				continue
+			}
 			if DamageStep(ponta, 1) == ponta {
 				t.Errorf("a arma %s causa %s e a Tabela 3-2 não a alcança: um passo nela "+
 					"devolveria o mesmo dado, em silêncio", item.ID, ponta)

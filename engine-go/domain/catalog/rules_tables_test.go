@@ -231,6 +231,7 @@ func TestGmRollTablesCoverTheirRange(t *testing.T) {
 		RewardPunishment []rollRow         `json:"rewardCastigo"`
 		RewardLabels     map[string]string `json:"rewardLabels"`
 		PunishmentLabels map[string]string `json:"castigoLabels"`
+		ChaosDeck        []rollRow         `json:"chaosDeck"`
 	}](t, "gm-tables")
 
 	for _, tt := range []struct {
@@ -240,6 +241,10 @@ func TestGmRollTablesCoverTheirRange(t *testing.T) {
 		{"ruina", tables.Ruin},
 		{"chaseEvents", tables.ChaseEvents},
 		{"rewardCastigo", tables.RewardPunishment},
+		// O Baralho é a tabela mais fácil de escrever errado das quatro: 22
+		// faixas à mão de 01 a 100, e um dígito perdido abre um vão que só
+		// aparece quando o mestre tira justamente aquele número.
+		{"chaosDeck", tables.ChaosDeck},
 	} {
 		assertContiguousRolls(t, tt.name, tt.rows)
 	}

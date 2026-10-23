@@ -16,7 +16,12 @@ import (
 //     "Aço-rubi" ou um "Formidável" solto na mochila;
 //   - o item COMPOSTO — o específico das Tabelas 8-9 e 8-11 —, porque ele é
 //     mágico: "não se compra, se acha ou se fabrica" (p333). Quem o entrega é o
-//     mestre, pela mesma porta do encanto.
+//     mestre, pela mesma porta do encanto;
+//   - o ARTEFATO (p346-349), e ele é o caso que a faixa de `d%` NÃO pega. Os
+//     outros mágicos se reconhecem por sair numa tabela de saque; o artefato não
+//     sai em nenhuma — "não há tabelas para geração aleatória de artefatos" —, e
+//     é justamente por isso que ele é o mais do mestre de todos: "esses itens
+//     devem entrar em uma campanha apenas por decisão deliberada do mestre".
 func TestTheAddDialogOffersOnlyWhatACharacterCarries(t *testing.T) {
 	rows := catalogItemRowsOf("", "")
 	if len(rows) == 0 {
@@ -42,8 +47,24 @@ func TestTheAddDialogOffersOnlyWhatACharacterCarries(t *testing.T) {
 			t.Errorf("o diálogo oferta %q, que é item mágico permanente (sai numa "+
 				"tabela de saque): quem o entrega é o mestre (p333)", entry.Name)
 		}
+		// E O ARTEFATO, que a linha acima não alcança por não ter faixa.
+		if entry.Artifact {
+			t.Errorf("o diálogo oferta %q, que é ARTEFATO: a p346 o põe na mesa "+
+				"\"apenas por decisão deliberada do mestre\", e ele não tem faixa de "+
+				"saque para a asserção de cima reconhecê-lo", entry.Name)
+		}
 	}
-	t.Logf("%d linhas ofertadas, de %d itens no catálogo", len(rows), len(byID))
+	artefatos := 0
+	for _, entry := range byID {
+		if entry.Artifact {
+			artefatos++
+		}
+	}
+	if artefatos == 0 {
+		t.Error("nenhum artefato no catálogo: o ramo do artefato ficou verde sobre nada")
+	}
+	t.Logf("%d linhas ofertadas, de %d itens no catálogo (%d artefatos)",
+		len(rows), len(byID), artefatos)
 }
 
 // E TODA CATEGORIA DO CATÁLOGO ESTÁ CLASSIFICADA.

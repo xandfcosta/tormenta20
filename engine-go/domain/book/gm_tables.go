@@ -52,6 +52,21 @@ type RewardRow struct {
 
 func (l RewardRow) Covers(r int) bool { return l.Roll == r }
 
+// ChaosCard é uma carta do BARALHO DO CAOS (p347), que casa por faixa de 1d%.
+//
+// Ela é a única das tabelas daqui que não é do Capítulo 6: o Baralho é um
+// ARTEFATO, e as 22 cartas são a regra própria do verbete dele. Mora aqui pela
+// mesma razão que as outras — é tabela que o MESTRE rola, e o Improviso é o
+// lugar onde se procura uma tabela para rolar.
+type ChaosCard struct {
+	RollMin int    `json:"rollMin"`
+	RollMax int    `json:"rollMax"`
+	Card    string `json:"card"`
+	Effect  string `json:"effect"`
+}
+
+func (c ChaosCard) Covers(r int) bool { return r >= c.RollMin && r <= c.RollMax }
+
 // DungeonIdea é uma linha da tabela de ideias de masmorra, casando por face.
 type DungeonIdea struct {
 	Roll  int    `json:"roll"`
@@ -70,13 +85,14 @@ type DungeonSize struct {
 	MaxSecondaryObjectives int    `json:"maxSecondaryObjectives"`
 }
 
-// GMTables é o recurso `gm-tables` inteiro: as três tabelas que se rola.
+// GMTables é o recurso `gm-tables` inteiro: as quatro tabelas que se rola.
 type GMTables struct {
 	Ruin             []RuinRow         `json:"ruina"`
 	ChaseEvents      []ChaseRow        `json:"chaseEvents"`
 	RewardPunishment []RewardRow       `json:"rewardCastigo"`
 	RewardLabels     map[string]string `json:"rewardLabels"`
 	PunishmentLabels map[string]string `json:"castigoLabels"`
+	ChaosDeck        []ChaosCard       `json:"chaosDeck"`
 }
 
 // DungeonDesign é o recurso `dungeon-design`: o esqueleto de masmorra.

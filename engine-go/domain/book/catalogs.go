@@ -96,10 +96,20 @@ type Item struct {
 	Consumable *Consumable       `json:"consumable"`
 	Modifiers  []engine.Modifier `json:"modifiers"`
 	// RollMin e RollMax são a faixa de `d%` da tabela de SAQUE que sorteia este
-	// item (p335-345). Só item MÁGICO tem uma: é ela que separa a espada longa
-	// da Vingadora sagrada no catálogo, sem precisar de um campo "é mágico".
+	// item (p335-345). Quase todo item mágico tem uma: é ela que separa a
+	// espada longa da Vingadora sagrada, e é por ela que o `masterOnly`
+	// reconhece o que só o mestre entrega.
 	RollMin int `json:"rollMin"`
 	RollMax int `json:"rollMax"`
+	// Artifact é o ARTEFATO (p346-348), e ele existe porque a faixa de `d%`
+	// deixou de bastar: o livro diz que "não há tabelas para geração aleatória
+	// de artefatos, nem custo para fabricá-los. Esses itens devem entrar em uma
+	// campanha apenas por decisão deliberada do mestre".
+	//
+	// Ou seja, o artefato é o item mágico que NÃO se sorteia — e sem este campo
+	// ele cairia no diálogo de adicionar do JOGADOR, que é o oposto do que a
+	// página manda. São três no livro inteiro, e nenhum tem preço nem faixa.
+	Artifact bool `json:"artifact"`
 	// CountsAs e Requires são do ENCANTO, e só dele (p334-336). O asterisco da
 	// Tabela 8-8 — "conta como dois encantos" — é regra de TETO, e três dos
 	// vinte e oito o carregam; o `requires` é o "Pré-requisito:" que três
