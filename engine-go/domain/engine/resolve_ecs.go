@@ -165,6 +165,15 @@ func harvestWeaponRiders(w *ecs.World) {
 			return
 		}
 		if t.Mod.Dice != "" {
+			// SÓ O INCONDICIONAL SAI AQUI. O dado sob condição que a pessoa
+			// LIGA — o "+1d8 em ermo ao ar livre" do Machado silvestre (p338) —
+			// segue para o `deferConditionals` e vira interruptor, como
+			// qualquer outro condicional. Colhê-lo aqui o fazia valer SEMPRE, e
+			// a marca `Suppressed` ainda tirava dele a chance de ser oferecido:
+			// o dado valia de graça e não havia como desligá-lo (ALE-457).
+			if !isUnconditional(t.Mod) {
+				return
+			}
 			riders.extra = append(riders.extra, ExtraDamage{
 				Dice: t.Mod.Dice, Type: t.Mod.Target.DamageType,
 			})
@@ -320,6 +329,7 @@ func conditionalFrom(t Term) ConditionalEffect {
 		Note:      firstNonEmpty(describeCondition(t.Mod), t.Mod.Note),
 		Target:    t.Mod.Target,
 		Factor:    t.Mod.Factor,
+		Dice:      t.Mod.Dice,
 	}
 	if c := t.Mod.Condition; c != nil && c.C == "flagOn" {
 		ce.Flag = c.Flag

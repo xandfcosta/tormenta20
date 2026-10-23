@@ -271,6 +271,14 @@ type ConditionalEffect struct {
 	// morre na conversão, em silêncio — a postura sobe, a tela mostra o
 	// interruptor ligado, e o número não se mexe.
 	Factor *Ratio `json:"factor,omitempty"`
+	// Dice é o dado extra deste condicional — o "+1d8 em ambiente ermo e ao ar
+	// livre" do Machado silvestre (p338).
+	//
+	// Ele viaja pela MESMA razão do `Factor` logo acima, e o defeito era o
+	// espelho daquele: o `harvestWeaponRiders` colhia o dado ANTES de julgar a
+	// condição, então em vez de sumir ele valia SEMPRE — e, saindo marcado
+	// `Suppressed`, nem interruptor sobrava para desligá-lo (ALE-457).
+	Dice string `json:"dice,omitempty"`
 }
 
 // ItemEffects são os efeitos já resolvidos. `Flags` é um Set (mapa); o
@@ -773,6 +781,17 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	// só, o resultado dependeria da ordem da lista — que é o tipo de defeito
 	// que não reproduz. Nenhum fator de hoje é condicionado; a passada extra
 	// custa um laço e tira a pergunta.
+	// AS TRÊS PARCELAS QUE NÃO SOMAM saem copiadas, e o `return` lá embaixo as
+	// devolve. Elas atravessavam por acaso — o atalho do topo devolve `effects`
+	// INTEIRO quando nada está ligado —, e sumiam no instante em que a pessoa
+	// ligava qualquer interruptor: o +1d6 de fogo da Flamejante, a condição que
+	// o Excruciante anuncia e o +10 do Dilacerante no crítico iam todos para o
+	// chão, sem nada acusar (ALE-457).
+	//
+	// É a segunda vez que esta remontagem esquece um campo — o `Factors` foi a
+	// primeira, com a Torre Inabalável. O `return` agora cita o struct inteiro
+	// por isso.
+	extra := append([]ExtraDamage{}, effects.ExtraDamage...)
 	remaining := []ConditionalEffect{}
 	ligados := []ConditionalEffect{}
 	for _, c := range effects.Conditional {
@@ -784,6 +803,12 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 			continue
 		}
 		if c.Target.K == "flag" {
+			continue
+		}
+		if c.Dice != "" {
+			// O DADO NÃO É PARCELA, pela mesma divisa do fator: ele vai para a
+			// carta da arma, que sabe rolá-lo, e não para um balde que soma.
+			extra = append(extra, ExtraDamage{Dice: c.Dice, Type: c.Target.DamageType})
 			continue
 		}
 		if c.Factor != nil {
@@ -816,5 +841,7 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	return ItemEffects{
 		ByTarget: byTarget, Flags: effects.Flags, FlagSources: effects.FlagSources,
 		Factors: factors, Conditional: remaining,
+		ExtraDamage: extra, Announced: effects.Announced,
+		CriticalBonus: effects.CriticalBonus,
 	}
 }
