@@ -1,14 +1,35 @@
 #!/usr/bin/env python3
-"""Confere os APRIMORAMENTOS das magias contra o livro, magia por magia (ALE-340).
+"""Confere as magias contra o livro: a COBERTURA e os APRIMORAMENTOS (ALE-340, ALE-456).
 
 Rodar é ATO DELIBERADO, como o `genoracle` e o `audit-bestiary.py`: a ferramenta
 PROPÕE, o diff se revisa contra o PDF, e é a revisão que decide.
 
-    python3 scripts/audit-spells.py                 # relatório de todas
+    python3 scripts/audit-spells.py                 # cobertura + todas
+    python3 scripts/audit-spells.py --cobertura     # só "falta alguma?"
     python3 scripts/audit-spells.py --suspeitas     # só as 32 da ALE-340
     python3 scripts/audit-spells.py --magia luz     # uma, com o texto do livro
 
 Ele NÃO escreve no catálogo. A correção é humana, e a razão está abaixo.
+
+São DUAS perguntas, e por muito tempo só uma tinha quem a fizesse
+------------------------------------------------------------------
+**"As magias que eu tenho estão certas?"** é o resto deste arquivo, e ele
+percorre o CATÁLOGO. **"O livro tem alguma que eu não tenho?"** é a COBERTURA, e
+ela percorre o LIVRO — denominador invertido, como as outras fatias da ALE-410.
+
+A diferença não era visível: uma corrida com `0 divergentes` parecia dizer que o
+catálogo estava completo, e não dizia nada sobre isso. A épica carregou por
+semanas um "199 magias no livro contra 198 no app — falta conferir 1" que
+NINGUÉM tinha medido, e nenhuma corrida verde deste arquivo podia desmenti-lo.
+
+Medido (ALE-456): são **198**, e as três contagens fecham — o índice, o título
+dos verbetes e o catálogo. **Não falta magia nenhuma**, e o 199 era a premissa.
+
+De onde ele veio não dá para afirmar, e por isso não se afirma aqui. O que se
+sabe é que CONTAR ENTRADAS DE ÍNDICE não dá o número de magias: as duas listas
+somam 226 entradas (124 arcanas + 102 divinas) e 28 magias estão nas DUAS, o que
+leva às 198. Qualquer contagem que não trate essa sobreposição erra, e erra para
+cima.
 
 Como ele sabe que está lendo a magia certa
 ------------------------------------------
@@ -52,14 +73,152 @@ from collections import Counter
 # A leitura do PDF é do `t20pdf`, compartilhada com os outros auditores
 # (ALE-391).
 from t20pdf import (  # noqa: E402
-    LIXO, RAIZ, chave, linhas_da_pagina, normaliza_frase)
+    LIXO, RAIZ, chave, linhas_da_pagina, links_em_negrito, normaliza_frase,
+    trechos_com_estilo)
 
 SPELLS = str(RAIZ / 'engine-go/domain/catalog/data/spells.json')
 PRIMEIRA, ULTIMA = 184, 217
 OFFSET = 6
+
+# ─── A COBERTURA: as duas âncoras que o livro oferece ────────────────────────
+#
+# O ÍNDICE, p174-177 (PDF 180-183): "Lista de Magias Arcanas" e, depois dela, a
+# divina. Cada magia é um LINK EM NEGRITO apontando para o verbete.
+INDICE_PRIMEIRA, INDICE_ULTIMA = 180, 183
+# O TÍTULO do verbete é `Tormenta20` a 24 pontos — o corpo é `IowanOldStyle` a
+# 13, a linha de círculo é 14 e "Descrição das magias" é 39.
+TAMANHO_DO_TITULO = 24
+FAMILIA_DO_TITULO = 'Tormenta20'
+# Título longo quebra em duas linhas ("Abençoar" / "Alimentos"). Junta-se o
+# trecho seguinte quando ele está na MESMA coluna e na linha de baixo; a coluna
+# entra na conta porque dois títulos de colunas vizinhas na mesma altura não são
+# um título — foi esse o erro que fez uma contagem dar 247 (ALE-456).
+MESMA_COLUNA = 30.0
+LINHA_SEGUINTE = 32.0
+LARGURA_DA_COLUNA = 120.0
 RE_LISTA = re.compile(r'^(Arcana|Divina|Universal)\s+(\d)\s+\(([^)]+)\)\s*$', re.I)
 RE_EXECUCAO = re.compile(r'^Execução:')
 RE_AUGMENT = re.compile(r'^(?:\+(\d+)\s*PM(?:\s*\(Apenas\s+([^)]+)\))?|Truque)\s*:\s*(.*)$')
+
+def indiceDoLivro() -> dict:
+    """{chave: (nome, página do verbete)} das duas listas de magias (p174-177).
+
+    O link dá o DESTINO de graça, então esta âncora confere o `bookPage` do
+    catálogo sem ninguém transcrever página nenhuma.
+
+    Uma magia pode estar nas DUAS listas — são 28 —, e por isso o retorno é por
+    nome e não uma contagem: somar as linhas das duas listas dá 231 e conta as
+    28 duas vezes. É a explicação mais barata para um "199" que nunca foi
+    medido, e foi ela que esta fatia veio conferir (ALE-456).
+    """
+    fora = {}
+    for pagina in range(INDICE_PRIMEIRA, INDICE_ULTIMA + 1):
+        for texto, destino in links_em_negrito(pagina):
+            nome = texto.rstrip('.').strip()
+            if nome:
+                fora.setdefault(chave(nome), (nome, destino - OFFSET))
+    return fora
+
+
+def titulosDosVerbetes() -> dict:
+    """{chave: (nome, página)} do título de cada verbete (p178-211).
+
+    É a SEGUNDA âncora, e ela é independente da primeira: o índice é uma lista
+    de links e isto é o tipo em que o livro desenha o título. As duas têm de dar
+    o mesmo conjunto — se uma leitura quebrar, a outra a denuncia, e nenhuma das
+    duas precisa de um número escrito à mão para isso.
+    """
+    fora = {}
+    for pagina in range(PRIMEIRA, ULTIMA + 1):
+        brutos = [t for t in trechos_com_estilo(pagina)
+                  if t.tamanho == TAMANHO_DO_TITULO and FAMILIA_DO_TITULO in t.familia]
+        brutos.sort(key=lambda t: (round(t.x / LARGURA_DA_COLUNA), t.y))
+        atual, ancora = None, None
+        for trecho in brutos:
+            emendado = (atual is not None
+                        and abs(trecho.x - ancora.x) < MESMA_COLUNA
+                        and 0 < trecho.y - ancora.y < LINHA_SEGUINTE)
+            if emendado:
+                atual = atual + ' ' + trecho.texto
+            else:
+                if atual:
+                    fora.setdefault(chave(atual), (atual, pagina - OFFSET))
+                atual = trecho.texto
+            ancora = trecho
+        if atual:
+            fora.setdefault(chave(atual), (atual, pagina - OFFSET))
+    return fora
+
+
+def relatorioDeCobertura(cat: dict) -> int:
+    """Quantas magias o LIVRO tem contra quantas entraram. Devolve as falhas.
+
+    Esta é a metade que faltava, e a ausência dela não era visível: o resto do
+    auditor percorre o CATÁLOGO e pergunta "cada magia que eu tenho existe no
+    livro?". Uma corrida com `0 divergentes` dizia nada sobre uma magia que o
+    livro tem e o catálogo não — a pergunta inversa, que é a de COBERTURA, não
+    tinha quem a fizesse (ALE-456).
+    """
+    indice = indiceDoLivro()
+    verbetes = titulosDosVerbetes()
+    nocat = {chave(m['name']): sid for sid, m in cat.items()}
+    falhas = []
+
+    print('══ COBERTURA ' + '═' * 46)
+    print(f'  índice do livro (p{INDICE_PRIMEIRA - OFFSET}-{INDICE_ULTIMA - OFFSET}, '
+          f'links em negrito): {len(indice)}')
+    print(f'  verbetes (p{PRIMEIRA - OFFSET}-{ULTIMA - OFFSET}, título a '
+          f'{TAMANHO_DO_TITULO}pt):        {len(verbetes)}')
+    print(f'  no catálogo:                                 {len(cat)}')
+
+    # AS DUAS ÂNCORAS PRIMEIRO, UMA CONTRA A OUTRA. Se elas discordam, a leitura
+    # está torta e nada do que vem depois vale — é o mesmo "a tabela não fecha"
+    # dos auditores de saque, que param antes de encostar no catálogo.
+    for k, (nome, _p) in sorted(indice.items()):
+        if k not in verbetes:
+            falhas.append(f'{nome}: está no índice e não tem título de verbete — '
+                          'uma das duas leituras está torta')
+    for k, (nome, _p) in sorted(verbetes.items()):
+        if k not in indice:
+            falhas.append(f'{nome}: tem verbete e não está no índice — '
+                          'uma das duas leituras está torta')
+    if falhas:
+        print('\n  AS DUAS ÂNCORAS DISCORDAM, e por isso o catálogo nem foi conferido:')
+        for f in falhas:
+            print(f'   ✗ {f}')
+        return len(falhas)
+
+    # A PÁGINA SAI DO TÍTULO, e NÃO do destino do link.
+    #
+    # O link parecia o instrumento melhor — ele vem de graça e não depende de
+    # medir tipo. Medido: ele erra em duas das 198. A âncora de destino do PDF
+    # aponta para o começo do QUADRO, e quando o verbete nasce no pé de uma
+    # coluna o destino cai na página seguinte: a Dificultar Detecção e a
+    # Esculpir Sons saem uma página adiante de onde o título está desenhado.
+    #
+    # Duas falhas em 198 é pouco o bastante para parecer defeito do catálogo, e
+    # foi assim que elas chegaram — como três queixas, das quais só UMA era
+    # real (a Tranca Arcana, que o catálogo citava na p210 e cujo verbete abre
+    # na p209). O link fica valendo para a PRESENÇA, que é o que ele mede bem.
+    for k, (nome, _destino) in sorted(indice.items()):
+        sid = nocat.get(k)
+        if sid is None:
+            falhas.append(f'{nome}: o livro tem e o catálogo não')
+            continue
+        pagina = verbetes[k][1]
+        if cat[sid].get('bookPage') != pagina:
+            falhas.append(f'{nome}: o catálogo cita p{cat[sid].get("bookPage")} e o '
+                          f'título do verbete está desenhado na p{pagina}')
+    for k, sid in sorted(nocat.items()):
+        if k not in indice:
+            falhas.append(f'{cat[sid]["name"]}: está no catálogo e o livro não tem')
+
+    if not falhas:
+        print(f'\n  as três fecham em {len(cat)}: nada falta e nada sobra')
+    for f in falhas:
+        print(f'   ✗ {f}')
+    return len(falhas)
+
 
 def catalogo() -> dict:
     with open(SPELLS, encoding='utf-8') as f:
@@ -306,9 +465,20 @@ def main() -> None:
                    help='só as magias que divergem')
     p.add_argument('--orfaos', action='store_true',
                    help='procura cada aprimoramento faltante no catálogo INTEIRO')
+    p.add_argument('--cobertura', action='store_true',
+                   help='só a cobertura: quantas o livro tem × quantas entraram')
     args = p.parse_args()
 
     cat = catalogo()
+
+    # A COBERTURA VEM PRIMEIRO, e sempre. Ela responde "falta alguma?", e o
+    # resto do auditor responde "as que eu tenho estão certas?" — perguntas
+    # diferentes, e durante um bom tempo só a segunda tinha quem a fizesse.
+    if args.cobertura:
+        raise SystemExit(min(1, relatorioDeCobertura(cat)))
+    if not args.magia and not args.orfaos:
+        relatorioDeCobertura(cat)
+        print()
     nomes = {chave(s['name']): sid for sid, s in cat.items()}
     lidas = magias_do_livro(nomes)
 
