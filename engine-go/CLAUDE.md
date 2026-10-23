@@ -1387,6 +1387,7 @@ este verbete":
 | `audit-specific-items.py` | `items.json` (os de `composedOf`) | a Tabela 8-9 e a 8-11 (`d%` + nome + **preço**), o verbete `Nome. Regra`, **e o ITÁLICO dele**, que é a composição do item |
 | `audit-potions.py` | `items.json` (os de `consumable.spell`) | a Tabela 8-12 (`d%` + **a MAGIA** + preço), resolvida contra o catálogo de magias — a poção não tem verbete, porque a regra dela é a da magia |
 | `audit-accessories.py` | `items.json` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15 (três tabelas, UMA lista alfabética de verbetes atravessando quatro páginas) |
+| `audit-artifacts.py` | `items.json` (`artifact`), `gm-tables.json` (`chaosDeck`) | NENHUMA tabela — é o único do Capítulo 8 sem o denominador de graça, porque a p346 tira o artefato da geração aleatória. O denominador vem do TIPO: o cabeçalho de seção é desenhado a 22,281 pontos e o corpo a 16,2, e dentro das p346-349 não há outra seção |
 
 ### O auditor de materiais, e as DUAS armadilhas de ler uma página dividida
 
