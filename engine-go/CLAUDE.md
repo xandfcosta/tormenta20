@@ -1371,7 +1371,7 @@ este verbete":
 | auditor | catálogo | âncora |
 |---|---|---|
 | `audit-bestiary.py` | `bestiary.json` | Defesa + Pontos de Vida |
-| `audit-spells.py` | `spells.json` | nome + escola |
+| `audit-spells.py` | `spells.json` | nome + escola, para os APRIMORAMENTOS — e, para a COBERTURA, duas âncoras de uma vez: os links em negrito do índice (p174-177) e o título do verbete, que é `Tormenta20` a 24pt. As duas fecham uma contra a outra antes de qualquer uma encostar no catálogo |
 | `audit-classes.py` | `classes.json`, `class-powers.json` | nome na prosa, ou nível na tabela |
 | `audit-equipment.py` | `items.json` | nome + preço na tabela |
 | `audit-races.py` | `races.json` | linha de atributos, ligada por semântica |
