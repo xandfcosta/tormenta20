@@ -23,6 +23,7 @@ import os
 import pathlib
 import re
 import subprocess
+from typing import NamedTuple
 import unicodedata
 from collections import Counter
 
@@ -234,6 +235,80 @@ def italicos_da_pagina(pagina: int) -> list[tuple[float, float, str]]:
             if texto:
                 saida.append((float(left) / escala, float(top) / escala, texto))
     return sorted(saida, key=lambda t: (t[1], t[0]))
+
+
+# ─── O ESTILO: tamanho, família e LINK ───────────────────────────────────────
+
+RE_FONTSPEC = re.compile(r'<fontspec id="(\d+)" size="(\d+)" family="([^"]+)"')
+RE_TEXTO_COM_FONTE = re.compile(
+    r'<text top="(-?[\d.]+)" left="(-?[\d.]+)"[^>]*font="(\d+)"[^>]*>(.*?)</text>', re.S)
+RE_LINK_NEGRITO = re.compile(r'<a href="[^"#]*#(\d+)"><b>(.*?)</b></a>', re.S)
+
+
+class Trecho(NamedTuple):
+    """Um pedaço de texto com o ESTILO em que o livro o desenhou."""
+    x: float
+    y: float
+    tamanho: int
+    familia: str
+    texto: str
+
+
+def trechos_com_estilo(pagina: int) -> list[Trecho]:
+    """Cada trecho da página com o TAMANHO e a FAMÍLIA do tipo.
+
+    O `-bbox` do `pdftotext` não marca estilo nenhum, e neste livro o estilo é
+    DADO: o título de uma magia é `Tormenta20` a 24, o cabeçalho de seção do
+    Capítulo 8 é 22,281 pontos, e o corpo é `IowanOldStyle` a 13. Perguntar "que
+    tamanho tem este trecho?" é como se enumera uma seção sem escrever a lista
+    dela à mão — que é o que uma lista escrita à mão sempre deixa envelhecer.
+
+    O x e o y voltam na escala do resto do módulo, como no `italicos_da_pagina`.
+
+    O trecho vem QUEBRADO como a linha quebra: um título de duas linhas são dois
+    trechos, e juntá-los é de quem lê, porque só ele sabe o que é um título.
+
+    @example [t for t in P.trechos_com_estilo(184) if t.tamanho == 24]  # as magias da p178
+    """
+    xml = subprocess.run(
+        ['pdftohtml', '-xml', '-i', '-f', str(pagina), '-l', str(pagina), '-stdout', PDF],
+        capture_output=True, text=True).stdout
+    pagina_xml = RE_PAGINA_XML.search(xml)
+    if not pagina_xml:
+        return []
+    escala = float(pagina_xml.group(1)) / altura_da_pagina(pagina)
+    fontes = {i: (int(tam), fam) for i, tam, fam in RE_FONTSPEC.findall(xml)}
+    fora = []
+    for top, left, fonte, corpo in RE_TEXTO_COM_FONTE.findall(xml):
+        tamanho, familia = fontes.get(fonte, (0, ''))
+        texto = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', '', corpo))).strip()
+        if texto:
+            fora.append(Trecho(float(left) / escala, float(top) / escala,
+                               tamanho, familia, texto))
+    return sorted(fora, key=lambda t: (t.y, t.x))
+
+
+def links_em_negrito(pagina: int) -> list[tuple[str, int]]:
+    """(texto, página do PDF de destino) de cada link em NEGRITO da página.
+
+    É o índice de magias das p174-177 — cada magia da "Lista de Magias Arcanas"
+    é um link em negrito que aponta para o verbete dela. O destino é um brinde:
+    ele confere a página que o catálogo cita, sem ninguém transcrever nada.
+
+    Negrito SEM link não entra, e a ausência é a regra: o cabeçalho de página
+    ("Capítulo Quatro") e o boxe lateral da p177 ("Gradda, a Pútrida") também
+    são negrito, e contá-los inflou o índice de 198 para 203 numa medição
+    (ALE-456).
+    """
+    xml = subprocess.run(
+        ['pdftohtml', '-xml', '-i', '-f', str(pagina), '-l', str(pagina), '-stdout', PDF],
+        capture_output=True, text=True).stdout
+    fora = []
+    for destino, corpo in RE_LINK_NEGRITO.findall(xml):
+        texto = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', '', corpo))).strip()
+        if texto:
+            fora.append((texto, int(destino)))
+    return fora
 
 
 def altura_da_pagina(pagina: int) -> float:
