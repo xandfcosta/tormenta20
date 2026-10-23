@@ -308,6 +308,7 @@ def audita(perfil: Perfil) -> int:
     print(f'\nCATÁLOGO         {len(catalogo)} entradas em `{perfil.categoria}`')
 
     com_modificador, sem_modificador, cobertura_minima = 0, [], (2.0, '')
+    em_parte = []
     faltando = []
     for nome, (inicio, fim, _efeito) in sorted(da_tabela.items()):
         entrada = catalogo.get(nome)
@@ -338,26 +339,41 @@ def audita(perfil: Perfil) -> int:
             falhas.append(f'{nome}: o catálogo cita a p{entrada.get("bookPage")} e o '
                           f'verbete está na p{pagina}')
 
-        # O DENOMINADOR do que não foi modelado. Ter modificador e ter motivo
-        # são MUTUAMENTE EXCLUSIVOS: um encanto com os dois é um motivo que
-        # envelheceu, e ele mente com cara de registro.
+        # O DENOMINADOR do que o motor aplica, em TRÊS baldes e não dois.
+        #
+        # Aqui ter modificador e ter motivo eram mutuamente exclusivos, pela
+        # premissa de que um encanto cabe inteiro no motor ou não cabe nada
+        # dele. Ela é falsa em dez dos vinte e oito — a Flamejante soma o +1d6
+        # de fogo E tem um gesto de 6d6 que o motor não resolve —, e o efeito
+        # da exclusividade era SILÊNCIO: escrever a nota honesta reprovava,
+        # então a metade que não entrou não era escrita (ALE-459).
+        #
+        # Quem aplica EM PARTE diz as duas coisas, e é o `modeled` que impede a
+        # nota de virar desculpa: ele nomeia a metade que entrou.
         tem_modelo = bool(entrada.get('modifiers'))
         motivo = entrada.get('unmodeled', '')
-        if tem_modelo:
+        modelado = entrada.get('modeled') or []
+        if tem_modelo and motivo:
+            em_parte.append((nome, modelado, motivo))
+        elif tem_modelo:
             com_modificador += 1
         else:
             sem_modificador.append((nome, motivo))
         if not tem_modelo and not motivo:
             falhas.append(f'{nome}: não tem modificador NEM diz por quê')
-        if tem_modelo and motivo:
+        if tem_modelo and motivo and not modelado:
             falhas.append(
-                f'{nome}: tem modificador E diz que não foi modelado ({motivo!r}) — '
-                f'uma das duas coisas envelheceu')
+                f'{nome}: aplica alguma coisa, diz o que NÃO entrou ({motivo!r}) e não '
+                f'diz o que ENTROU — sem o `modeled` a nota parece falar do encanto inteiro')
 
     print(f'  no catálogo:     {len(da_tabela) - len(faltando)} de {len(da_tabela)}')
     if faltando:
         print(f'  FALTAM {len(faltando)}: {", ".join(faltando)}')
-    print(f'  com modificador: {com_modificador}')
+    print(f'  INTEIROS:        {com_modificador}')
+    print(f'  EM PARTE:        {len(em_parte)}, e cada um diz as duas metades:')
+    for nome, modelado, motivo in em_parte:
+        print(f'    {nome:16s} entrou: {"; ".join(modelado)}')
+        print(f'    {"":16s}   ficou: {motivo}')
     print(f'  SEM modificador: {len(sem_modificador)}, e cada um diz por quê:')
     for nome, motivo in sem_modificador:
         print(f'    {nome:16s} {motivo}')
