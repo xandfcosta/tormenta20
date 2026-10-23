@@ -167,8 +167,21 @@ templ situationalBlock(v View) {
 		<section class="space-y-2 rounded-none border border-grimorio-iron p-3">
 			<h3 class={ ui.SectionTitleClasses("painel", "", "") }>Situação — opt-in por contexto</h3>
 			@alwaysOnList(v)
-			for _, row := range v.Effects.Situational {
-				@situationalToggle(v, row)
+			// O GRUPO DO OPT-IN TEM RÓTULO PRÓPRIO, e sem ele as duas listas
+			// eram irmãs sem divisa: o único rótulo da seção era "Sempre
+			// ativos", e toda linha que a pessoa LIGA aparecia debaixo dele.
+			//
+			// Nunca tinha aparecido porque nenhuma ficha da semente tinha as
+			// duas coisas ao mesmo tempo — a Batedora do Ermo é a primeira, com
+			// a flag da armadura de couro e o terreno do Machado silvestre
+			// (ALE-457). Visto na tela, não pela suíte.
+			if len(v.Effects.Situational) > 0 {
+				<div class="space-y-1">
+					<p class={ ui.FieldLabelClasses("muted", "") }>Você liga quando a situação pede</p>
+					for _, row := range v.Effects.Situational {
+						@situationalToggle(v, row)
+					}
+				</div>
 			}
 		</section>
 	} else {
