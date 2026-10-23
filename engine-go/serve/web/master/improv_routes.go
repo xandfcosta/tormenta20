@@ -98,38 +98,48 @@ var improvRolls = map[string]func() (roll, error){
 	"perseguicao": rollChase,
 	"recompensa":  rollReward,
 	"ideias":      rollIdea,
+	"baralho":     rollChaosCard,
 }
 
-// clearTable apaga o histórico de uma tabela e deixa as outras três intactas.
-func clearTable(v improvView, table string) improvView {
+// historyOf aponta para o histórico de UMA tabela, e é o único lugar que liga o
+// nome dela ao campo da cena.
+//
+// Aqui havia dois `switch` com os mesmos quatro nomes — um para empilhar e um
+// para limpar —, e o nome que faltasse num deles não daria erro: o botão de
+// limpar ficaria sem efeito, calado. Um ponteiro resolve os dois de uma vez, e
+// a quinta tabela entrou numa linha em vez de três (ALE-455).
+func historyOf(v *improvView, table string) *[]roll {
 	switch table {
 	case "ruina":
-		v.Ruin = nil
+		return &v.Ruin
 	case "perseguicao":
-		v.Chase = nil
+		return &v.Chase
 	case "recompensa":
-		v.Reward = nil
+		return &v.Reward
 	case "ideias":
-		v.Ideas = nil
+		return &v.Ideas
+	case "baralho":
+		return &v.Chaos
+	}
+	return nil
+}
+
+// clearTable apaga o histórico de uma tabela e deixa as outras intactas.
+func clearTable(v improvView, table string) improvView {
+	if history := historyOf(&v, table); history != nil {
+		*history = nil
 	}
 	return v
 }
 
 func pushOnto(v improvView, table string, s roll) improvView {
-	switch table {
-	case "ruina":
-		v.Ruin = push(v.Ruin, s)
-	case "perseguicao":
-		v.Chase = push(v.Chase, s)
-	case "recompensa":
-		v.Reward = push(v.Reward, s)
-	case "ideias":
-		v.Ideas = push(v.Ideas, s)
+	if history := historyOf(&v, table); history != nil {
+		*history = push(*history, s)
 	}
 	return v
 }
 
-// improvFromRequest lê os quatro históricos e o número de salas dos SINAIS.
+// improvFromRequest lê os cinco históricos e o número de salas dos SINAIS.
 //
 // Aqui não há caminho pela URL, e é diferente das outras cenas de propósito: um
 // histórico de rolagens não é endereço — ninguém cola "os cinco dados que eu
@@ -141,6 +151,7 @@ func improvFromRequest(r *http.Request) improvView {
 		Chase  []roll `json:"perseguicao"`
 		Reward []roll `json:"recompensa"`
 		Ideas  []roll `json:"ideias"`
+		Chaos  []roll `json:"baralho"`
 		Rooms  *int   `json:"rooms"`
 	}{}
 	v := improvView{Rooms: salasPadrao}
@@ -149,6 +160,7 @@ func improvFromRequest(r *http.Request) improvView {
 	}
 	v.Ruin, v.Chase = signals.Ruin, signals.Chase
 	v.Reward, v.Ideas = signals.Reward, signals.Ideas
+	v.Chaos = signals.Chaos
 	if signals.Rooms != nil {
 		v.Rooms = *signals.Rooms
 	}

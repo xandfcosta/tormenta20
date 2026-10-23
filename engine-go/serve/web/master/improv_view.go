@@ -35,7 +35,7 @@ type roll struct {
 // fora no instante da segunda rolagem.
 const historyDepth = 5
 
-// improvView é a cena inteira. Os quatro históricos são separados porque as
+// improvView é a cena inteira. Os cinco históricos são separados porque as
 // tabelas são independentes — rolar ruína não pode empurrar o evento de
 // perseguição para fora da tela.
 type improvView struct {
@@ -43,6 +43,7 @@ type improvView struct {
 	Chase  []roll
 	Reward []roll
 	Ideas  []roll
+	Chaos  []roll
 	// A masmorra não é sorteio: é uma conta sobre o número de salas.
 	Rooms   int
 	Size    *book.DungeonSize
@@ -87,7 +88,7 @@ func push(history []roll, novo roll) []roll {
 	return outside
 }
 
-// ── as quatro rolagens ───────────────────────────────────────────────────────
+// ── as cinco rolagens ────────────────────────────────────────────────────────
 
 // rollRuin: Tabela 6-4, d6, p272.
 func rollRuin() (roll, error) {
@@ -183,6 +184,31 @@ func rollIdea() (roll, error) {
 	return roll{Roll: d.Value, Text: row.Label}, nil
 }
 
+// rollChaosCard: o Baralho do Caos, 1d%, p347.
+//
+// É a única tabela desta cena que não é do Capítulo 6 — ela é a regra própria de
+// um ARTEFATO (ALE-455). Ela está aqui porque o livro manda rolar 1d% numa
+// tabela de 22 faixas, uma por carta, e achar a faixa à mão é exatamente o
+// atrito que esta cena existe para remover.
+//
+// A CARTA é a manchete e o EFEITO é o detalhe, pela mesma razão da perseguição:
+// a primeira pergunta do mestre é "qual carta saiu?", porque é o nome dela que
+// a mesa reconhece. O efeito é o parágrafo do livro, inteiro — metade das
+// cartas muda a ficha para sempre, e um resumo de cinco palavras mandaria o
+// mestre abrir o livro no meio da cena, que é o oposto do que a cena faz.
+func rollChaosCard() (roll, error) {
+	t, _ := book.ImprovTables()
+	d, err := engine.RollDie(100)
+	if err != nil {
+		return roll{}, err
+	}
+	row, err := engine.RowForRoll(t.ChaosDeck, d.Value, "chaosDeck")
+	if err != nil {
+		return roll{}, err
+	}
+	return roll{Roll: d.Value, Text: row.Card, Detail: row.Effect}, nil
+}
+
 func labelOrRaw(board map[string]string, key string) string {
 	if r, ok := board[key]; ok {
 		return r
@@ -200,7 +226,7 @@ var pacingLabel = map[string]string{
 
 func pacingName(p string) string { return labelOrRaw(pacingLabel, p) }
 
-// improvSignals: os quatro históricos e o número de salas. Nada mais — o
+// improvSignals: os cinco históricos e o número de salas. Nada mais — o
 // que se vê chega desenhado.
 func improvSignals(v improvView) string {
 	j := func(s []roll) string {
@@ -210,6 +236,7 @@ func improvSignals(v improvView) string {
 		b, _ := json.Marshal(s)
 		return string(b)
 	}
-	return fmt.Sprintf(`{ruina: %s, perseguicao: %s, recompensa: %s, ideias: %s, rooms: %d}`,
-		j(v.Ruin), j(v.Chase), j(v.Reward), j(v.Ideas), v.Rooms)
+	return fmt.Sprintf(
+		`{ruina: %s, perseguicao: %s, recompensa: %s, ideias: %s, baralho: %s, rooms: %d}`,
+		j(v.Ruin), j(v.Chase), j(v.Reward), j(v.Ideas), j(v.Chaos), v.Rooms)
 }

@@ -14,7 +14,7 @@ import (
 // da linha do livro para a tela — que é onde um campo trocado passa por dado
 // plausível.
 
-// TODA face do dado cai numa linha, nas quatro tabelas.
+// TODA face do dado cai numa linha, nas cinco tabelas.
 //
 // É a única forma honesta de testar tabela de rolagem: em vez de repetir a
 // tabela num `expect` por linha — que é a transcrição que o guia proíbe —,
@@ -23,7 +23,8 @@ import (
 // falta no meio de uma sessão.
 func TestEveryDieFaceHitsARow(t *testing.T) {
 	tab, dungeon := book.ImprovTables()
-	if len(tab.Ruin) == 0 || len(tab.ChaseEvents) == 0 || len(dungeon.Ideas) == 0 {
+	if len(tab.Ruin) == 0 || len(tab.ChaseEvents) == 0 || len(dungeon.Ideas) == 0 ||
+		len(tab.ChaosDeck) == 0 {
 		t.Fatal("tabelas vazias: o catálogo não carregou, e verde aqui não valeria nada")
 	}
 	for face := 1; face <= 6; face++ {
@@ -40,6 +41,22 @@ func TestEveryDieFaceHitsARow(t *testing.T) {
 		}
 		if _, err := linhaOuErro(dungeon.Ideas, face); err != nil {
 			t.Errorf("ideias: %v", err)
+		}
+	}
+	// O 1d% do Baralho: cem faces, 22 faixas, e o vão é o defeito que só
+	// aparece no número que ninguém tirou ainda.
+	for face := 1; face <= 100; face++ {
+		carta, err := linhaOuErro(tab.ChaosDeck, face)
+		if err != nil {
+			t.Errorf("baralho do caos: %v", err)
+			continue
+		}
+		// Cada carta chega com as DUAS metades que a tela mostra. Faixa certa e
+		// efeito vazio sairia como um número e uma linha em branco, que é a
+		// tabela plausível com o número errado da seção "O INSTRUMENTO MENTE".
+		if carta.Card == "" || carta.Effect == "" {
+			t.Errorf("a face %d do Baralho cai numa carta sem nome ou sem efeito: %+v",
+				face, carta)
 		}
 	}
 }
