@@ -30,6 +30,18 @@ func catalogItem(item sheet.ItemDTO) *book.Item {
 // guerra de gelo eterno congelante formidável", e quem olha o crachá tem de ler
 // as três peças — sem elas o item mágico se parece com o mundano.
 func itemOverlays(item sheet.ItemDTO) []string {
+	// SEM VERBETE, SEM SOBREPOSIÇÃO NO CRACHÁ. O item que o mundo não conhece
+	// contribui zero (`ownItemMods`, ALE-389), e um crachá "Adamante" sobre um
+	// item que não dá passo de dano nenhum promete o que a ficha não soma.
+	//
+	// SOME em vez de sair riscado, e a diferença é o que o risco significa
+	// aqui: ele diz "o item concede, mas não a ESTE portador" (ALE-384), e há
+	// uma isenção agindo a favor da pessoa para mostrar. Aqui não há isenção —
+	// não há item a que a linha se aplique, e desenhá-la riscada inventaria uma
+	// regra que ninguém escreveu.
+	if catalogItem(item) == nil {
+		return []string{}
+	}
 	names := []string{}
 	for _, entry := range bookOverlays(item) {
 		names = append(names, entry.Name)
