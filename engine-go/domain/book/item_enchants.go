@@ -129,34 +129,67 @@ func FitsItemEnchants(catalog *Item, ids []string) error {
 // Formidável para satisfazer o pré-requisito daria peso 4 num item cujo teto é
 // 3 — a composição que o livro escreve já está exatamente no teto.
 //
-// A FAMÍLIA e o TETO continuam valendo, porque os dois são propriedade do item
-// e não de quem o montou.
+// A FAMÍLIA continua valendo sempre, porque ela é propriedade do ITEM e não de
+// quem o montou. O TETO vale para todo item achado MENOS o artefato, e o motivo
+// está abaixo.
+//
+// # O artefato não tem teto, e isso é da p334
+//
+// O três não é um limite de potência: é o fim de uma tabela de PREÇO. A p334
+// escreve "um item mágico menor possui um encanto, um médio possui dois e um
+// item mágico maior possui três encantos. O preço e a CD do teste de Ofício
+// aumentam de acordo com o número de encantos" — o teto é o último degrau da
+// escada de fabricação, e o "o máximo possível" da página aparece dentro de uma
+// conta de T$ e de CD de Ofício.
+//
+// O artefato não está nessa escada. A p346 é explícita: "não há tabelas para
+// geração aleatória de artefatos, NEM CUSTO PARA FABRICÁ-LOS". Sem preço e sem
+// teste de Ofício, o eixo pelo qual o teto cresce não existe para ele — e a
+// Espada-Deus, que a p346 escreve como "espada longa atroz precisa pungente
+// ameaçadora magnífica veloz", tem peso 4 porque a Magnífica conta dois. Aplicar
+// o teto a ela seria recusar o item que o livro escreveu.
+//
+// É a MESMA forma do pré-requisito logo acima: uma regra de quem FABRICA, que
+// não alcança quem não foi fabricado.
 //
 // @example book.FitsFoundItemEnchants(book.ItemByID("cajado-do-poder"), []string{"encanto-defensora", "encanto-magnifica"})
 func FitsFoundItemEnchants(catalog *Item, ids []string) error {
+	if catalog != nil && catalog.Artifact {
+		_, err := cabeNaFamilia(catalog, ids)
+		return err
+	}
 	return cabeNaFamiliaEnoTeto(catalog, ids)
 }
 
-// cabeNaFamiliaEnoTeto: cada id é encanto do livro, da família do item, e o
-// conjunto cabe nos três slots contados por PESO.
-func cabeNaFamiliaEnoTeto(catalog *Item, ids []string) error {
+// cabeNaFamilia: cada id é encanto do livro e da família do item. Devolve o
+// PESO do conjunto, que é a única coisa que o teto precisa saber depois.
+func cabeNaFamilia(catalog *Item, ids []string) (int, error) {
 	if len(ids) == 0 {
-		return nil
+		return 0, nil
 	}
 	if catalog == nil {
-		return fmt.Errorf("item sem verbete não recebe encanto (p333)")
+		return 0, fmt.Errorf("item sem verbete não recebe encanto (p333)")
 	}
 	peso := 0
 	for _, id := range ids {
 		encanto := ItemByID(id)
 		if encanto == nil || !encantoDeItem[encanto.Category] {
-			return fmt.Errorf("%q não é um encanto do livro", id)
+			return 0, fmt.Errorf("%q não é um encanto do livro", id)
 		}
 		if !aceitaEncanto(*catalog, *encanto) {
-			return fmt.Errorf("%q não cabe em %q: a tabela dele é de %s (p333-339)",
+			return 0, fmt.Errorf("%q não cabe em %q: a tabela dele é de %s (p333-339)",
 				encanto.Name, catalog.Name, CategoryName(encanto.Category))
 		}
 		peso += max(encanto.CountsAs, 1)
+	}
+	return peso, nil
+}
+
+// cabeNaFamiliaEnoTeto: a família, mais os três slots contados por PESO.
+func cabeNaFamiliaEnoTeto(catalog *Item, ids []string) error {
+	peso, err := cabeNaFamilia(catalog, ids)
+	if err != nil {
+		return err
 	}
 	if peso > slotsDeEncanto {
 		return fmt.Errorf(

@@ -426,16 +426,24 @@ var appliedCategory = map[string]bool{
 
 // masterOnly diz se o item é dos que só o MESTRE entrega.
 //
-// A regra é uma: **o que se SORTEIA numa tabela de saque é mágico**, e item
-// mágico permanente não se compra, se acha (p333) — a Vingadora sagrada, a Cota
-// élfica, o Anel da proteção. A faixa de `d%` é o que os marca, e ela já está
-// no catálogo: nenhuma espada longa tem uma.
+// São DUAS marcas, e a segunda chegou com os artefatos (ALE-455).
 //
-// A POÇÃO é a exceção escrita na mesma página: ela é item de USO ÚNICO e se
-// FABRICA — "para fabricar uma poção ou pergaminho, escolha uma magia que você
-// conheça" —, então ela fica no diálogo do jogador.
+// A primeira: **o que se SORTEIA numa tabela de saque é mágico**, e item mágico
+// permanente não se compra, se acha (p333) — a Vingadora sagrada, a Cota
+// élfica, o Anel da proteção. A faixa de `d%` é o que os marca.
+//
+// A segunda: **o ARTEFATO não se sorteia**, e por isso não tem faixa. Aqui
+// morava "a faixa de `d%` é o que os marca, e ela já está no catálogo", e a
+// frase deixou de ser verdade no dia em que a Espada-Deus entrou: ela é o item
+// mais poderoso do livro e cairia no diálogo do jogador por não ter d%. A p346
+// é explícita — "esses itens devem entrar em uma campanha apenas por decisão
+// deliberada do mestre".
+//
+// A POÇÃO é a exceção escrita na p333: ela é item de USO ÚNICO e se FABRICA —
+// "para fabricar uma poção ou pergaminho, escolha uma magia que você conheça"
+// —, então ela fica no diálogo do jogador.
 func masterOnly(entry book.Item) bool {
-	return entry.RollMax > 0 && entry.Consumable == nil
+	return (entry.RollMax > 0 || entry.Artifact) && entry.Consumable == nil
 }
 
 // catalogItemRowsOf são as entradas do catálogo que o diálogo de adicionar
