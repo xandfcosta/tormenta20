@@ -1077,6 +1077,7 @@ INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (3, 'encanto-sanguinaria');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (85, 'encanto-dancarina');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (85, 'encanto-flamejante');
+INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (85, 'encanto-profana');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (102, 'encanto-sombrio');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (102, 'encanto-fortificado');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (105, 'encanto-opaco');
