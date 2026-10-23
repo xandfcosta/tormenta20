@@ -1369,6 +1369,40 @@
         },
         {
           "create": {
+            "name": "Batedora do Ermo Nv10",
+            "races": [
+              "humano"
+            ],
+            "origin": "batedor",
+            "classes": [
+              {
+                "className": "Guerreiro",
+                "level": 10
+              }
+            ],
+            "god": "Allihanna",
+            "strength": 4,
+            "dexterity": 3,
+            "constitution": 3,
+            "intelligence": 1,
+            "wisdom": 2,
+            "charisma": 1,
+            "size": "Médio",
+            "displacement": 9,
+            "items": [
+              {
+                "catalogId": "machado-silvestre",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "armadura-couro",
+                "equipped": "vested"
+              }
+            ]
+          }
+        },
+        {
+          "create": {
             "name": "Sentinela Élfica Nv8",
             "races": [
               "elfo"
