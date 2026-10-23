@@ -4927,10 +4927,25 @@
             "trait": "construtos e objetos"
           },
           "note": "+2 atq vs construtos e objetos"
+        },
+        {
+          "target": {
+            "k": "damage"
+          },
+          "dice": "2d8",
+          "bonusType": "enchantment",
+          "condition": {
+            "c": "against",
+            "trait": "construtos e objetos"
+          },
+          "note": "+2d8 de dano vs construtos e objetos"
         }
       ],
       "bookPage": 335,
-      "uid": "itm_pvgpffiwwr"
+      "uid": "itm_pvgpffiwwr",
+      "modeled": [
+        "o +2 no ataque e o +2d8 de dano, ambos contra construtos e objetos"
+      ]
     },
     {
       "id": "encanto-dilacerante",
@@ -5270,10 +5285,25 @@
       "rollMax": 76,
       "countsAs": 1,
       "description": "A arma causa +2d8 de dano contra devotos de deuses que canalizam apenas energia positiva e criaturas bondosas (a critério do mestre). Uma arma profana emite luz rubra pulsante.",
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage"
+          },
+          "dice": "2d8",
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "criaturas bondosas e devotos de energia positiva"
+          },
+          "note": "+2d8 contra devotos do Bem e criaturas bondosas"
+        }
+      ],
       "bookPage": 336,
-      "unmodeled": "dado extra CONDICIONAL: o `harvestWeaponRiders` colhe o dado antes de julgar a condição, e um 2d8 contra devotos do Bem valeria contra todo mundo",
-      "uid": "itm_yn2phwdcls"
+      "uid": "itm_yn2phwdcls",
+      "modeled": [
+        "o +2d8 contra criaturas bondosas e devotos de energia positiva"
+      ]
     },
     {
       "id": "encanto-sagrada",
@@ -5289,10 +5319,25 @@
       "rollMax": 78,
       "countsAs": 1,
       "description": "A arma causa +2d8 de dano contra devotos de deuses que canalizam apenas energia negativa e criaturas malignas (a critério do mestre). Uma arma sagrada emite uma sutil luz pura.",
-      "modifiers": [],
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage"
+          },
+          "dice": "2d8",
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "criaturas malignas e devotos de energia negativa"
+          },
+          "note": "+2d8 contra devotos do Mal e criaturas malignas"
+        }
+      ],
       "bookPage": 336,
-      "unmodeled": "dado extra CONDICIONAL, pelo mesmo mecanismo da Profana",
-      "uid": "itm_mjwvu6m5ry"
+      "uid": "itm_mjwvu6m5ry",
+      "modeled": [
+        "o +2d8 contra criaturas malignas e devotos de energia negativa"
+      ]
     },
     {
       "id": "encanto-sanguinaria",
