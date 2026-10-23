@@ -264,6 +264,20 @@ func modifierBadge(m engine.Modifier) string {
 	if m.Dice != "" {
 		return label + " +" + m.Dice
 	}
+	// O FATOR é a outra forma de parcela sem `amount`, e o sintoma era o mesmo
+	// do dado: a Espada-Deus chegou à tela com um crachá "Margem de ameaça"
+	// pelado, porque a Ameaçadora DUPLICA a margem em vez de somar a ela
+	// (`{num:2, den:1}`, p335). Um rótulo que promete número e não diz nenhum é
+	// pior que crachá nenhum — quem lê conclui que o encanto não faz nada.
+	//
+	// São quatro fatores no catálogo inteiro e só este é de item, mas a forma
+	// cobre os quatro: `×2`, e `×1/2` quando o denominador não é 1.
+	if m.Factor != nil && m.Factor.Den != 0 {
+		if m.Factor.Den == 1 {
+			return label + " ×" + strconv.Itoa(m.Factor.Num)
+		}
+		return label + " ×" + strconv.Itoa(m.Factor.Num) + "/" + strconv.Itoa(m.Factor.Den)
+	}
 	if m.Amount == 0 {
 		return label
 	}

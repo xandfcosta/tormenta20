@@ -16,7 +16,10 @@ import (
 //   - o passo de dano do adamante aparecia numa ARMADURA, onde ele nunca vale;
 //   - o dado do encanto saía como um crachá "Dano" sem número;
 //   - a redução de fogo saía como "Redução de dano", sem o tipo — que é o que
-//     decide contra o que ela vale (p229).
+//     decide contra o que ela vale (p229);
+//   - e o FATOR saía pelado, que é a quarta da mesma família: a Ameaçadora
+//     DUPLICA a margem de ameaça em vez de somar a ela, e o crachá dizia
+//     "Margem de ameaça" e mais nada (ALE-455).
 func TestTheComposedItemCardSaysWhatItGrants(t *testing.T) {
 	wielded, vested := "wielded", "vested"
 	avalanche, baluarte := "avalanche", "baluarte-anao"
@@ -118,4 +121,45 @@ func temCracha(chips []string, text string) bool {
 		}
 	}
 	return false
+}
+
+// E O FATOR TEM DE APARECER, que é a quarta forma de parcela (ALE-455).
+//
+// As três que o caso acima prende são `amount`, `dice` e o tipo da redução. A
+// quarta é o FATOR, e ela chegou com os artefatos: a Espada-Deus é a única
+// composição do livro que traz a Ameaçadora, e a Ameaçadora duplica a margem de
+// ameaça (`{num:2, den:1}`, p335) em vez de somar a ela.
+//
+// O sintoma é o do dado, com a mesma consequência: um crachá "Margem de ameaça"
+// sem número promete um valor e não diz nenhum, e quem lê conclui que o encanto
+// não faz nada. Este caso nasceu VERMELHO — o cartão foi visto na tela com o
+// crachá pelado antes de a linha do fator existir.
+func TestTheCardSaysTheFactorAndNotJustItsTarget(t *testing.T) {
+	wielded := "wielded"
+	espadaDeus := "espada-deus"
+
+	chips := chipTexts(thatGrantsItem(sheet.ItemDTO{
+		Name: "Espada-Deus", CatalogID: &espadaDeus, Equipped: &wielded, Improvements: "[]",
+	}, wearerExemptions{}))
+
+	for _, esperado := range []string{
+		"Margem de ameaça ×2", // Ameaçadora (p335), que é FATOR
+		"Margem de ameaça +1", // Precisa (p166), que é número — as duas convivem
+		"Dano 2d12",           // o dado que o verbete do artefato declara (p346)
+		"Ataque +4",           // Magnífica (p335)
+	} {
+		if !temCracha(chips, esperado) {
+			t.Errorf("o cartão da Espada-Deus não diz %q. Veio %v", esperado, chips)
+		}
+	}
+
+	// O CONTROLE do crachá pelado: o rótulo sozinho não pode estar na lista.
+	// Sem ele, a asserção de cima passaria com os DOIS crachás presentes — o
+	// certo e o quebrado —, que é o estado que a tela tinha.
+	for _, chip := range chips {
+		if strings.TrimSpace(chip) == "Margem de ameaça" {
+			t.Error("o cartão traz um crachá \"Margem de ameaça\" sem número: " +
+				"é o fator da Ameaçadora chegando pelado")
+		}
+	}
 }
