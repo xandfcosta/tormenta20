@@ -24,7 +24,7 @@ import (
 // não uma cópia por descuido.
 //
 // São dois olhares sobre o MESMO arquivo, cada um com o seu tipo, e não duas
-// fontes de verdade: o `catalog/data/race-defs.json` continua autorado num lugar
+// fontes de verdade: o `transcript.RaceDefinitions` continua autorado num lugar
 // só.
 
 // RaceAbility é o que o dossiê mostra: nome e uma linha.
@@ -53,7 +53,7 @@ type AbilityVariant struct {
 	Name string `json:"name"`
 }
 
-// Lido UMA vez: o conteúdo vem de `go:embed` e não muda enquanto o binário for o
+// Lido UMA vez: o livro é compilado no binário e não muda enquanto ele for o
 // mesmo — o custo é de carga, não de pedido.
 var (
 	raceTraitsOnce sync.Once

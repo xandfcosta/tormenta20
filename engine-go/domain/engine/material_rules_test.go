@@ -8,7 +8,7 @@ import (
 // OS MATERIAIS ESPECIAIS, na carta da arma (ALE-415).
 //
 // Cinco dos seis divergiam do livro, e nenhum teste os cobria: o
-// `audit-equipment.py` confere PREÇO por tabela do capítulo 3, e os seis saem
+// `cmd/audit/equipment` confere PREÇO por tabela do capítulo 3, e os seis saem
 // dele na lista de "NÃO MEDIDOS". A regra de um material nunca foi medida.
 //
 // O que este caso prende é o trajeto inteiro — catálogo, sobreposição, carta —

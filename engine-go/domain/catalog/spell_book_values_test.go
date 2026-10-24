@@ -16,7 +16,7 @@ import (
 // Eles são de duas naturezas, e a segunda é a mais cara:
 //
 //   - CUSTO DE PM errado, quatro casos. O jogador paga menos do que o livro
-//     cobra. O `audit-spells.py` os achou comparando o TEXTO de cada
+//     cobra. O `cmd/audit/spells` os achou comparando o TEXTO de cada
 //     aprimoramento par a par — uma contagem não os veria, porque a contagem
 //     bate: um aprimoramento no livro, um no catálogo.
 //   - CÍRCULO errado, dois casos, e este é pior que um aprimoramento faltando:
@@ -27,7 +27,7 @@ import (
 // O resto das divergências que o auditor acusa — 16 magias, com 44
 // aprimoramentos faltando — não está aqui de propósito: elas ainda não foram
 // conferidas contra o livro, e prender número não conferido é transcrever o
-// palpite. Rode `python3 scripts/audit-spells.py` para o relatório.
+// palpite. Rode `go run ./cmd/audit/spells` para o relatório.
 type spellValueRow struct {
 	Circle   int `json:"circle"`
 	BookPage int `json:"bookPage"`
@@ -182,7 +182,7 @@ func TestEveryMovedAugmentIsOnTheRightSpell(t *testing.T) {
 //
 // A issue pedia este guarda desde o começo, e ele não podia existir antes: o
 // catálogo divergia do livro em catorze magias, e prender número não conferido
-// é transcrever o palpite num segundo lugar. Com o `audit-spells.py` fechando em
+// é transcrever o palpite num segundo lugar. Com o `cmd/audit/spells` fechando em
 // **198 de 198 casadas, zero divergências**, o total passou a ser um fato
 // conferido — e é o total que se prende, não a tabela.
 //
@@ -218,7 +218,7 @@ func TestTheSpellCatalogKeepsWhatTheBookGives(t *testing.T) {
 
 	if total != 516 {
 		t.Errorf("o catálogo tem %d aprimoramentos, e o livro dá 516 às 198 magias.\n"+
-			"Rode `python3 scripts/audit-spells.py` — ele diz QUAL magia e de que lado.", total)
+			"Rode `go run ./cmd/audit/spells` — ele diz QUAL magia e de que lado.", total)
 	}
 	// EXCLUSIVO: "não pode ser usado em conjunto com outros aprimoramentos"
 	// (p171). São 16 — os 14 truques, que são exclusivos por definição, MAIS
@@ -238,7 +238,7 @@ func TestTheSpellCatalogKeepsWhatTheBookGives(t *testing.T) {
 	// "REQUER Nº CÍRCULO" é o que a tela desenha com cadeado em vez de esconder.
 	//
 	// O 143 foi CONTADO NO LIVRO pelo leitor por coordenada do
-	// `audit-spells.py`, e não deduzido do catálogo — que é o que este guarda
+	// `cmd/audit/spells`, e não deduzido do catálogo — que é o que este guarda
 	// existe para conferir. O `pdftotext` liso conta 120, porque ele quebra
 	// "Requer 2º círculo" entre duas linhas e perde 23; os dois lados desta
 	// comparação têm de ser medidos pelo MESMO instrumento.

@@ -11,7 +11,7 @@ import (
 
 // A PORTA do trilho do mestre: DOIS métodos, e o tamanho é o que a cena É. As
 // treze unidades do `/mestre/*` desenham o LIVRO, que é igual para todo mundo e
-// chega por `go:embed` — não há banco, campanha nem personagem.
+// vem compilado no binário — não há banco, campanha nem personagem.
 type Deps interface {
 	// WritePage é a montagem da casca (ver `web/ui`).
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)

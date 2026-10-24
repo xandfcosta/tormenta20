@@ -26,7 +26,7 @@ import (
 //
 // Este guarda não precisa do PDF do livro, que é gitignorado: ele compara as duas
 // cópias UMA COM A OUTRA e roda na CI. O que precisa do livro é o
-// `scripts/audit-origins.py`, e é lá que a comparação contra a página mora.
+// `cmd/audit/origins`, e é lá que a comparação contra a página mora.
 func TestEveryOriginSaysTheSameThingInBothFiles(t *testing.T) {
 	fonte, achatado := lerAsDuasCopiasDeOrigem(t)
 	for slug, deLa := range fonte {

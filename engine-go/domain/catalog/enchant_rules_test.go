@@ -13,7 +13,7 @@ import (
 // `t.Run` em vez de dois arquivos — a regra é a mesma e uma cópia divergiria na
 // primeira correção.
 //
-// A conferência contra a página é do `scripts/audit-enchants.py`, que lê o PDF
+// A conferência contra a página é do `cmd/audit/enchants`, que lê o PDF
 // — e o PDF vive fora do repositório, então ele não roda na CI. O que fica aqui
 // é o que o catálogo prova sozinho, e é mais do que parece: a Tabela 8-8 é uma
 // tabela de ROLAGEM, e uma tabela de rolagem tem denominador embutido.
@@ -69,7 +69,7 @@ type weaponEnchant struct {
 // tem: ela é uma DECOMPOSIÇÃO do intervalo, e a soma das parcelas tem de fechar.
 //
 // Foi exatamente isto que pegou o leitor do PDF perdendo duas linhas: a limpeza
-// de marca d'água do `t20pdf.py` descarta o que casa com `^\d{1,3}$`, que é o
+// de marca d'água do `bookpdf` descarta o que casa com `^\d{1,3}$`, que é o
 // padrão de número de página — e comeu as faixas de UM valor, a Energética (46)
 // e a Lancinante (64). O relatório saiu com 26 nomes certos e nada reclamou.
 func TestTheEnchantsTileTheRollRange(t *testing.T) {

@@ -184,8 +184,8 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 	// Os dois trazem o mesmo `items.json`, mas o `s.deps.Catalogs()` é um campo
 	// que a bancada troca, e há fixture que o prima vazio. Uma regra que se
 	// DESLIGA sozinha com o catálogo vazio não é uma regra — um escudo passaria
-	// a ser vestível. O `catalog.Resource` é `go:embed`: ele existe sempre que
-	// o binário existe.
+	// a ser vestível. O `catalog.Resource` é o livro compilado: ele existe
+	// sempre que o binário existe.
 	if _, refusal := sheet.EquipAxisError(howEngineItem(book.ItemByID(itemCatalog(item))), slot); refusal != "" {
 		return fmt.Errorf("%s", refusal)
 	}

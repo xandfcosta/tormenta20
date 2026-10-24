@@ -25,7 +25,7 @@ type Condition struct {
 	UpgradesTo string `json:"upgradesTo,omitempty"`
 	// BookPage é a página IMPRESSA do verbete, derivada do Índice Remissivo do
 	// próprio livro e conferida contra o texto da página
-	// (`scripts/book-pages.py`). ZERO significa "o catálogo não sabe", e a
+	// (`cmd/bookpages`). ZERO significa "o catálogo não sabe", e a
 	// tela não desenha selo nenhum — mentir a página é pior que não mostrá-la.
 	BookPage int `json:"bookPage"`
 }
@@ -121,7 +121,7 @@ type Item struct {
 	// e a regra dele mora no `engine.Composition`.
 	ComposedOf *engine.Composition `json:"composedOf"`
 	// Description é a regra do livro em prosa. Hoje só o encanto a traz, e é ela
-	// que o `audit-enchants.py` mede contra o verbete.
+	// que o `cmd/audit/enchants` mede contra o verbete.
 	Description string `json:"description"`
 }
 

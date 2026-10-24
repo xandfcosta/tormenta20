@@ -42,7 +42,7 @@ type verbete struct {
 // segunda tabela de escopo.
 //
 // Quais arquivos e quais caminhos têm verbete é declarado uma vez só, no
-// `scripts/mint-uids.py`. Repetir essa tabela aqui criaria exatamente a segunda
+// `cmd/mintuids`. Repetir essa tabela aqui criaria exatamente a segunda
 // verdade que o uid existe para remover — e ela já divergiu uma vez: a versão
 // anterior deste caso usava "objeto com nome e descrição", e reprovou 126 itens
 // que a cunhagem não alcançava porque `"modifiers": []` é falso em Python e
@@ -138,7 +138,7 @@ func TestNoUidEverChanges(t *testing.T) {
 			sumiram++
 			t.Errorf("%s/%s perdeu o `uid`, ou saiu do catálogo. As duas caem aqui "+
 				"porque o caso só enxerga quem TEM uid: se o verbete ainda existe, "+
-				"rode `python3 scripts/mint-uids.py --aplicar`; se foi apagado de "+
+				"rode `go run ./cmd/mintuids --aplicar`; se foi apagado de "+
 				"propósito, tire a linha da base", partes[0], partes[1])
 			continue
 		}

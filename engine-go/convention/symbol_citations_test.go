@@ -33,7 +33,8 @@ import (
 // enumerar é remendo, e a lista envelheceria a cada arquivo novo:
 //
 //  1. **chave de fio**: a tag `json:` e a coluna do `.sql`;
-//  2. **chave de catálogo**: o que os `catalog/data/*.json` declaram;
+//  2. **chave de catálogo**: as chaves de todo `.json` da árvore (o livro
+//     transcrito declara as dele como tag `json:`, que é o item 1);
 //  3. **literal de string**: nome de sinal do Datastar, id de poder, chave de
 //     modificador. Se o código escreve `"X"`, então `X` existe — é contrato;
 //  4. **API chamada**: qualquer `.X(` no código do repositório. Isso cobre a

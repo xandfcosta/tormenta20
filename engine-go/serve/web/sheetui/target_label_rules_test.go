@@ -89,8 +89,8 @@ func echoesARawName(target engine.ModifierTarget, label string) bool {
 // embutidos declaram — a chave mais os campos que o rótulo usa.
 //
 // Pelo `catalog.Resource` e não por caminho de arquivo: o que importa é o que
-// o BINÁRIO serve, e um glob em `../../../domain/catalog/data` quebraria no dia
-// em que este pacote mudasse de lugar — em silêncio, devolvendo zero alvos.
+// o BINÁRIO serve, e um caminho relativo quebraria no dia em que este pacote
+// mudasse de lugar — em silêncio, devolvendo zero alvos.
 func targetsTheCatalogWrites(t *testing.T) []engine.ModifierTarget {
 	t.Helper()
 	seen := map[string]bool{}

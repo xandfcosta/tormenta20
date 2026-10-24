@@ -59,7 +59,7 @@ var defenseByObjectSize = map[string]int{
 //
 // Quem a defende é o `TestEveryPrintedRowOfTheObjectTableIsReproduced`, que
 // confere os cinco degraus contra as 11 linhas do livro e reprova nomeando a
-// linha que discordar. O auditor `scripts/audit-objects.py` relê a página.
+// linha que discordar. O auditor `cmd/audit/objects` relê a página.
 //
 // PAPEL E FIBRA são dois degraus no mesmo zero, e não um degrau ausente: o
 // pergaminho e a corda têm RD 0 impressa, e um mapa sem eles obrigaria o mestre
@@ -149,10 +149,11 @@ type ObjectExample struct {
 
 // objectExamplesOfTheBook é a primeira metade da Tab. 5-4, transcrita.
 //
-// Em Go e não em JSON, pela mesma razão da `specialSituationTable` ao lado: a
-// lista existe sobretudo como EVIDÊNCIA das duas escadas — é ela que o caso de
-// decomposição percorre —, e um catálogo em `domain/catalog/data/` pediria
-// carregador, esquema e auditor para onze linhas cujo outro leitor é um menu.
+// Aqui e não no livro transcrito, pela mesma razão da `specialSituationTable`
+// ao lado: a lista existe sobretudo como EVIDÊNCIA das duas escadas — é ela que
+// o caso de decomposição percorre —, e um recurso no `catalog/transcript`
+// pediria registro, serialização e auditor para onze linhas cujo outro leitor é
+// um menu.
 //
 // A SEGUNDA METADE da tabela (armas, armaduras e escudos) não está aqui, e a
 // ausência é escopo e não esquecimento: ela é o alvo da manobra QUEBRAR, que

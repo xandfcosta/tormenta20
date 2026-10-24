@@ -129,7 +129,7 @@ func TestSlowHalvesTheDisplacementAndImmobileZeroesIt(t *testing.T) {
 // cumpria (ALE-398). Uma convenção só foi adotada depois de varrida, e prender
 // a família inteira aqui é o que faz a varredura existir.
 //
-// Quem acha a família é o `scripts/audit-conditions.py`: ele compara a herança
+// Quem acha a família é o `cmd/audit/conditions`: ele compara a herança
 // que o verbete declara com a que o `conditionModifierTable` referencia.
 func TestEveryConditionTheBookSlowsOrStopsMovesLess(t *testing.T) {
 	world := BookRuleset(primeBook(t))

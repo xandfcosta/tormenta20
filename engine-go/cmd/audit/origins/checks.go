@@ -125,11 +125,11 @@ func checkBothCatalogs(sources map[string]transcript.OriginSource, flat map[stri
 		f, inSource := sources[slug]
 		a, inFlat := flat[slug]
 		if !inFlat {
-			out = append(out, slug+": está em origins-source.json e não em origins.json")
+			out = append(out, slug+": está em transcript.OriginSources e não em transcript.Origins")
 			continue
 		}
 		if !inSource {
-			out = append(out, slug+": está em origins.json e não em origins-source.json")
+			out = append(out, slug+": está em transcript.Origins e não em transcript.OriginSources")
 			continue
 		}
 		if f.Name != a.Name {

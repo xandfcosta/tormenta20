@@ -18,10 +18,11 @@ Cinco grupos, e a pergunta que cada um responde:
 
 ```
 engine-go/
-├── cmd/          os binários: o servidor, a seed, o gerador do oráculo
+├── cmd/          os binários: o servidor, a seed, o gerador do oráculo, os
+│                 auditores do catálogo (`audit/`) e quem grava nele
 ├── domain/       O QUE O JOGO É — nada aqui sabe de HTTP
 │   ├── engine/   as regras do livro, PURAS (só a stdlib)
-│   ├── catalog/  o livro transcrito, embutido por go:embed
+│   ├── catalog/  o livro transcrito (`transcript/`, em Go) e quem o serve
 │   ├── book/     o catálogo tipado, lido por treze famílias
 │   ├── sheet/  board/  live/   o domínio COM estado
 │   └── campaign/ account/ creature/ search/ markdown/
@@ -40,6 +41,7 @@ engine-go/
 ├── infra/        O QUE NÃO É DOMÍNIO
 │   ├── db/       migrações e as consultas do sqlc
 │   ├── config/   o que o ambiente diz, lido no boot
+│   ├── bookpdf/  a leitura do PDF do livro por coordenada, para os auditores
 │   ├── httpio/   a borda HTTP: responder, ler corpo, comprimir
 │   ├── wire/     a fronteira SEM transporte — é o que o domain alcança
 │   └── events/   o barramento tipado
@@ -820,7 +822,7 @@ duas espécies fora de lugar.
 
 ### O PODER é uma coisa; a CONCESSÃO dele é outra
 
-O `class-powers.json` tem duas espécies de linha desde a ALE-403:
+O `transcript.ClassPowers` tem duas espécies de linha desde a ALE-403:
 
 - o **verbete**, sem `className`, com a regra — nome, descrição, página, bloco
   de escolha;
@@ -850,8 +852,8 @@ primeiro modificador. Quem prende agora que o ponteiro chega à ficha é o
 > `PowerCatalogs`, o `ClassPowerFlags` e o `PowersThatTeachSpells` — e o
 > `FlattenedPowers`, que monta o acervo do mestre, só apareceu quando o
 > `TestPowersComeFromTheThreeCatalogs` reprovou com "o poder não diz de onde
-> veio". E havia um QUINTO fora do Go: o `scripts/audit-classes.py`, que
-> estourou em `KeyError: 'name'`. A lição não é "mapear com mais cuidado": é
+> veio". E havia um QUINTO, que na época era Python: o auditor de classes
+> (hoje `cmd/audit/classes`), que estourou em `KeyError: 'name'`. A lição não é "mapear com mais cuidado": é
 > que `grep -rn '"class-powers"'` responde em um segundo o que a memória
 > responde errado.
 
@@ -868,14 +870,14 @@ primeiro modificador. Quem prende agora que o ponteiro chega à ficha é o
 O `uid` é opaco de propósito. Um identificador derivável do nome volta a mudar
 no dia em que alguém "corrigir" a derivação, e aí ele não identifica nada.
 
-Cunhar é `python3 scripts/mint-uids.py --aplicar`, e ela só CRIA: um verbete
+Cunhar é `go run ./cmd/mintuids --aplicar` (de `engine-go/`), e ela só CRIA: um verbete
 que já tem uid nunca é tocado. O escopo — quais arquivos e quais caminhos têm
 verbete — é declarado uma vez só, lá dentro, e **não se repete em Go**: três
 guardas em `domain/catalog/uid_rules_test.go` conferem o que a cunhagem
 produziu contra uma linha de base, sem precisar saber o escopo. A primeira
-versão deles repetia o predicado e as duas cópias divergiram na hora: lista
-vazia é falsa em Python e presente em Go, e 126 itens ficaram de fora de um
-lado só.
+versão deles repetia o predicado e as duas cópias divergiram na hora — a
+cunhagem ainda era Python, onde lista vazia é falsa —, e 126 itens ficaram de
+fora de um lado só.
 
 Verbete NOVO nasce com uid e entra na base quando alguém a regerar. O que
 reprova é um uid EXISTENTE mudar — e a mensagem diz por que isso importa: o
@@ -1173,15 +1175,33 @@ nenhum.
 rota que o sirva.
 
 A regra que governa quem o lê: **uma vez e guardado**, não por requisição, porque
-o conteúdo vem de `go:embed` e não muda enquanto o binário for o mesmo. É o que
-o `race_traits.go` faz com `sync.Once`.
+o livro é compilado no binário e não muda enquanto ele for o mesmo. É o que o
+`race_traits.go` faz com `sync.Once`.
 
-`domain/catalog/data/*.json` é embutido no binário. **O LIVRO é autorado num
-lugar só** — mudar uma magia é editar um arquivo só, e a cena, o motor e os
-testes leem o mesmo arquivo.
+**O LIVRO é código Go**, em `domain/catalog/transcript` (ALE-498): cada verbete é
+um literal tipado, e é ali que uma regra transcrita se edita. Ele é autorado num
+lugar só — a cena, o motor e os testes leem o mesmo valor, e o `catalog.Resource`
+o serializa para os leitores que decodificam JSON (o `transcript.ResourceJSON`).
+Era JSON até a ALE-498, e virou Go para o compilador cobrar o que o JSON deixava
+passar calado: uma chave escrita errado era ignorada por quem lia.
+
+- **A forma dos arquivos de dados é CANÔNICA**, e quem a escreve é o emissor
+  (`transcript.WriteSource`). O `TestTheTranscriptIsInCanonicalForm` reprova o
+  arquivo que saiu dela; depois de editar à mão, `go run ./cmd/transcriptfmt`.
+  É isso que deixa as ferramentas que gravam no catálogo (`cmd/mintuids`,
+  `cmd/bookpages`, `cmd/audit/bestiary --aplicar`) mudarem o VALOR e
+  reescreverem o arquivo, sem uma cirurgia de AST por ferramenta.
+- **Comentário dentro de um literal não sobrevive à reescrita**, e isso é a
+  regra: o porquê de um verbete mora no `modeled`/`unmodeled` dele, que a ficha
+  lê, ou na issue.
+- **Os tipos (`*_types.go`) e o registro (`layout.go`) se escrevem à mão**; o
+  emissor não os toca. Recurso novo é uma linha no `layout.go`.
+- **`Modifier.Amount`, `Item.Price` e `Item.Slots` não distinguem ausente de
+  zero**: todo leitor Go já os decodificava como número simples, e a diferença
+  só existia para os scripts Python que vieram para Go junto.
 
 **O que uma CAMPANHA acrescenta ao livro não mora ali, e nem podia** (ALE-387):
-ele é `go:embed`, e a mesa autora a dela em tempo de execução. A `emenda de
+ele é compilado no binário, e a mesa autora a dela em tempo de execução. A `emenda de
 catálogo` vive em `campaign_items`, ACRESCENTA modificador a um verbete
 existente e nunca o substitui — ver a linha dela no
 [GLOSSARY.md](../GLOSSARY.md).
@@ -1302,7 +1322,7 @@ as posturas. O que o tornou alcançável foi
 a emenda de campanha — um mestre que conceda um item com dois modificadores
 `flagOn` cai exatamente ali.
 
-**O `items.json` chega ao processo por dois caminhos, e só um é sempre
+**O `transcript.Items` chega ao processo por dois caminhos, e só um é sempre
 inteiro.** O `catalog.Resource` é `go:embed` — existe sempre que o binário
 existe. O `s.catalogs` é o mesmo arquivo indexado pelo motor
 (`book.EngineCatalogs`), mas é um CAMPO que a bancada troca: há fixture que
@@ -1347,15 +1367,20 @@ verde o tempo todo, porque um inteiro no lugar de outro inteiro é um schema
 válido. Contra isso só serve conferir contra o livro:
 
 ```
-python3 scripts/audit-bestiary.py            # relatório
-python3 scripts/audit-bestiary.py --aplicar  # escreve as correções
+cd engine-go
+go run ./cmd/audit/bestiary            # relatório
+go run ./cmd/audit/bestiary --aplicar  # escreve as correções
 ```
 
-Os caminhos são da RAIZ do repositório, e não do `engine-go`. A leitura do PDF
-mora em `scripts/t20pdf.py`, compartilhada por todos os auditores: ela nasceu no
-do bestiário, foi copiada para o de magias, e virou módulo quando o terceiro ia
-copiá-la (ALE-391) — as duas cópias já tinham divergido na docstring, e uma
-delas descrevia uma tupla de três valores onde o código devolve quatro.
+Cada auditor é um comando em `cmd/audit/<nome>`, e o livro (gitignorado) se
+acha sozinho — `T20_BOOK_PDF`, um `t20-book.pdf` subindo do diretório, ou o do
+checkout principal quando se está numa worktree. A leitura do PDF mora em
+`infra/bookpdf`, compartilhada por todos: ela nasceu no do bestiário, foi
+copiada para o de magias, e virou módulo quando o terceiro ia copiá-la
+(ALE-391) — as duas cópias já tinham divergido. Os auditores nasceram em Python
+e viraram Go na ALE-498, com a saída provada igual linha a linha; o `bookpdf`
+reproduz de propósito as classes de caractere do Python (`\s` e `\w` Unicode),
+porque o livro tem espaço não separável.
 
 Rodar é **ato deliberado**, como o `genoracle`, e pela mesma razão: a ferramenta
 PROPÕE lendo o PDF, e é o diff revisado contra o livro que decide. Ela só aceita
@@ -1373,26 +1398,26 @@ este verbete":
 
 | auditor | catálogo | âncora |
 |---|---|---|
-| `audit-bestiary.py` | `bestiary.json` | Defesa + Pontos de Vida |
-| `audit-spells.py` | `spells.json` | nome + escola, para os APRIMORAMENTOS — e, para a COBERTURA, duas âncoras de uma vez: os links em negrito do índice (p174-177) e o título do verbete, que é `Tormenta20` a 24pt. As duas fecham uma contra a outra antes de qualquer uma encostar no catálogo |
-| `audit-classes.py` | `classes.json`, `class-powers.json` | nome na prosa, ou nível na tabela |
-| `audit-equipment.py` | `items.json` | nome + preço na tabela |
-| `audit-races.py` | `races.json` | linha de atributos, ligada por semântica |
-| `audit-expertises.py` | `expertises.json` | Tabela 2-1 **e** a linha de estado do verbete |
-| `audit-gods.py` | `gods.json` | Tabela 1-20 **e** os campos rotulados do verbete |
-| `audit-conditions.py` | `conditionModifierTable` (Go!) | a HERANÇA que a primeira frase do verbete declara |
-| `audit-origins.py` | `origins-source.json`, `origins.json` | Tabela 1-19 **e** o verbete, que é o título com `Benefícios.` abaixo |
-| `audit-powers.py` | `general-powers.json`, `tormenta-powers.json` | a tabela de pré-requisitos **e** a linha `Pré-requisito:` do verbete |
-| `audit-granted-powers.py` | `granted-powers.json`, `divine-powers.json` | a coluna "Devoto de X" da Tabela da p127 **e** o rótulo de deus do verbete |
-| `audit-enchants.py` | `items.json` (`weapon-enchant`, `armor-enchant`) | a Tabela 8-8 e a 8-10, que são `d%` + encanto + efeito, **e** o verbete `Nome. Regra` |
-| `audit-materials.py` | `items.json` (`material`) | a Tabela 3-9, que é uma MATRIZ de preço **e** o verbete com as metades `Arma.` / `Armadura e Escudo.` / `Esotérico.` |
-| `audit-objects.py` | `objectExamplesOfTheBook` + as duas escadas (Go!) | a Tabela 5-4, lida por COORDENADA — a p239 tem duas tabelas lado a lado, e `-layout` cola uma na outra |
-| `audit-specific-items.py` | `items.json` (os de `composedOf`) | a Tabela 8-9 e a 8-11 (`d%` + nome + **preço**), o verbete `Nome. Regra`, **e o ITÁLICO dele**, que é a composição do item |
-| `audit-potions.py` | `items.json` (os de `consumable.spell`) | a Tabela 8-12 (`d%` + **a MAGIA** + preço), resolvida contra o catálogo de magias — a poção não tem verbete, porque a regra dela é a da magia |
-| `audit-accessories.py` | `items.json` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15 (três tabelas, UMA lista alfabética de verbetes atravessando quatro páginas) |
-| `audit-artifacts.py` | `items.json` (`artifact`), `gm-tables.json` (`chaosDeck`) | NENHUMA tabela — é o único do Capítulo 8 sem o denominador de graça, porque a p346 tira o artefato da geração aleatória. O denominador vem do TIPO: o cabeçalho de seção é desenhado a 22,281 pontos e o corpo a 16,2, e dentro das p346-349 não há outra seção |
+| `cmd/audit/bestiary` | `transcript.Bestiary` | Defesa + Pontos de Vida |
+| `cmd/audit/spells` | `transcript.Spells` | nome + escola, para os APRIMORAMENTOS — e, para a COBERTURA, duas âncoras de uma vez: os links em negrito do índice (p174-177) e o título do verbete, que é `Tormenta20` a 24pt. As duas fecham uma contra a outra antes de qualquer uma encostar no catálogo |
+| `cmd/audit/classes` | `transcript.Classes`, `transcript.ClassPowers` | nome na prosa, ou nível na tabela |
+| `cmd/audit/equipment` | `transcript.Items` | nome + preço na tabela |
+| `cmd/audit/races` | `transcript.Races` | linha de atributos, ligada por semântica |
+| `cmd/audit/expertises` | `transcript.Expertises` | Tabela 2-1 **e** a linha de estado do verbete |
+| `cmd/audit/gods` | `transcript.Gods` | Tabela 1-20 **e** os campos rotulados do verbete |
+| `cmd/audit/conditions` | `conditionModifierTable` (Go!) | a HERANÇA que a primeira frase do verbete declara |
+| `cmd/audit/origins` | `transcript.OriginSources`, `transcript.Origins` | Tabela 1-19 **e** o verbete, que é o título com `Benefícios.` abaixo |
+| `cmd/audit/powers` | `transcript.GeneralPowers`, `transcript.TormentaPowers` | a tabela de pré-requisitos **e** a linha `Pré-requisito:` do verbete |
+| `cmd/audit/grantedpowers` | `transcript.GrantedPowers`, `transcript.DivinePowers` | a coluna "Devoto de X" da Tabela da p127 **e** o rótulo de deus do verbete |
+| `cmd/audit/enchants` | `transcript.Items` (`weapon-enchant`, `armor-enchant`) | a Tabela 8-8 e a 8-10, que são `d%` + encanto + efeito, **e** o verbete `Nome. Regra` |
+| `cmd/audit/materials` | `transcript.Items` (`material`) | a Tabela 3-9, que é uma MATRIZ de preço **e** o verbete com as metades `Arma.` / `Armadura e Escudo.` / `Esotérico.` |
+| `cmd/audit/objects` | `objectExamplesOfTheBook` + as duas escadas (Go!) | a Tabela 5-4, lida por COORDENADA — a p239 tem duas tabelas lado a lado, e `-layout` cola uma na outra |
+| `cmd/audit/specificitems` | `transcript.Items` (os de `composedOf`) | a Tabela 8-9 e a 8-11 (`d%` + nome + **preço**), o verbete `Nome. Regra`, **e o ITÁLICO dele**, que é a composição do item |
+| `cmd/audit/potions` | `transcript.Items` (os de `consumable.spell`) | a Tabela 8-12 (`d%` + **a MAGIA** + preço), resolvida contra o catálogo de magias — a poção não tem verbete, porque a regra dela é a da magia |
+| `cmd/audit/accessories` | `transcript.Items` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15 (três tabelas, UMA lista alfabética de verbetes atravessando quatro páginas) |
+| `cmd/audit/artifacts` | `transcript.Items` (`artifact`), `transcript.GMTables` (`chaosDeck`) | NENHUMA tabela — é o único do Capítulo 8 sem o denominador de graça, porque a p346 tira o artefato da geração aleatória. O denominador vem do TIPO: o cabeçalho de seção é desenhado a 22,281 pontos e o corpo a 16,2, e dentro das p346-349 não há outra seção |
 
-**E um que não lê o livro: `audit-coverage.py`.** Os de cima conferem o catálogo
+**E um que não lê o livro: `cmd/audit/coverage`.** Os de cima conferem o catálogo
 contra a PÁGINA; este confere os verbetes de raça, classe e origem contra o
 MOTOR — quanto de cada um vira número, gesto ou nota do mestre. O balde é
 DECLARADO no verbete (`modeled`/`unmodeled`, como nos encantos), e a nota cita a
@@ -1451,12 +1476,12 @@ cima da fronteira quebrada.
   `TestEveryModifierFieldSurvivesTheCatalogJSON`, que varre o TIPO por reflexão
   em vez de repetir a lista num terceiro lugar.
 
-### A LEITURA de tabela e de verbete mora no `t20pdf`
+### A LEITURA de tabela e de verbete mora no `bookpdf`
 
 Cinco tabelas do capítulo de Recompensas têm a mesma forma — `d%` + nome +
 preço — e três auditores as leem. Na terceira cópia, a leitura virou módulo
 (`P.linhas_de_tabela`, `P.faixas_que_nao_fecham`, `P.verbetes_por_nome`), que é a
-mesma razão que fez o `t20pdf` nascer.
+mesma razão que fez o `bookpdf` nascer.
 
 O que mora lá e não em cada auditor são as armadilhas que as cinco dividem: a
 linha se monta pelo **Y** (as três células são blocos diferentes), a última
@@ -1478,9 +1503,9 @@ fogo 10"* (p337) é a base, o material e dois encantos. São 31 verbetes com tr�
 a cinco peças cada, em letra miúda no meio da prosa: transcrever isso a olho é
 onde o erro entra.
 
-O `-bbox` do `pdftotext`, que é o que todo o resto do `t20pdf` usa, **não marca
+O `-bbox` do `pdftotext`, que é o que todo o resto do `bookpdf` usa, **não marca
 estilo nenhum**. Quem marca é o `pdftohtml -xml`, e ele responde noutra régua —
-148,2 num é 225 no outro. O `t20pdf.italicos_da_pagina` converte pela razão
+148,2 num é 225 no outro. O `bookpdf.Italics` converte pela razão
 entre as alturas que os dois declaram para a MESMA página, e devolve na
 coordenada do resto do módulo; sem isso, quem misturasse as duas leituras
 compararia alturas de réguas diferentes.
@@ -1511,7 +1536,7 @@ esperada, não se ela é conferida.
 ### O auditor de encantos, e o denominador que ele tem DE GRAÇA
 
 Ele audita as DUAS tabelas — a 8-8 das armas e a 8-10 das armaduras e escudos —
-como PERFIS do mesmo arquivo (`audit-enchants.py arma|armadura`). Uma segunda
+como PERFIS do mesmo comando (`cmd/audit/enchants arma|armadura`). Uma segunda
 cópia divergiria na primeira correção de leitura, e correção de leitura é o que
 este auditor mais faz: a 8-10 entrega o nome e o efeito na MESMA célula em duas
 linhas, e a chamada de rodapé vem ora em célula própria, ora grudada no nome
@@ -1528,7 +1553,7 @@ as 29 linhas têm de ladrilhar 1..100, e as 28 do catálogo, 1..90 — de 91 a 1
 tabela manda rolar noutra tabela.
 
 **Foi a soma que pegou o leitor perdendo duas linhas.** O `sem_lixo` do
-`t20pdf.py` descarta o que casa com `^\d{1,3}$`, que é o padrão de NÚMERO DE
+`bookpdf` descarta o que casa com `^\d{1,3}$`, que é o padrão de NÚMERO DE
 PÁGINA — e comeu as faixas de um valor só, a Energética (46) e a Lancinante
 (64). Saíram 26 linhas com os nomes certos, as faixas certas e dois efeitos
 colados no vizinho de cima. Nada reclamou; a soma não fechou.
@@ -1578,7 +1603,7 @@ página anterior) dá ao "Trabalhador" um verbete que não é o dele.
 Os de ORIGENS e de PODERES comparam PROSA, e só porque têm como: a descrição
 carrega a regra, e três dimensões mecanizáveis a cercam — os números que ela
 imprime, as perícias que ela nomeia, e a cobertura de palavras de conteúdo (o
-`cobertura` do `t20pdf`). As duas primeiras não bastaram: os números do "Vendedor
+`bookpdf.Coverage`). As duas primeiras não bastaram: os números do "Vendedor
 de Carcaças" coincidiram por acaso e seis regras trocadas passaram verdes
 (ALE-405). O veredito sobre a frase continua humano, e é por isso que as duas
 saem impressas lado a lado.
@@ -1596,7 +1621,7 @@ todo verbete que o livro ilustra com exemplo trabalhado (ALE-407).
 E ele lê por PALAVRA, não por linha, porque agrupar por linha junta o que não
 tem relação: na p119 o elemento `<line>` traz `Furtividade Des • Armadura
 Iniciativa` — título, estado, e o título da perícia da COLUNA VIZINHA na mesma
-altura. O `palavras_da_pagina` do `t20pdf.py` é o degrau para esses casos.
+altura. O `Words` do `bookpdf` é o degrau para esses casos.
 
 O de deuses acrescenta a terceira forma de âncora, e ela vale lembrar: **um
 campo pode não morar no verbete que o declara.** O `paladinoEligible` e o
@@ -1609,7 +1634,7 @@ existe.
 
 E a marca d'água do PDF **cola no texto vizinho** em vez de ocupar linha
 própria: "Golpista Divino. Mateus Santos mateush.santos42@gmail.com" chegou como
-o nome do último poder de uma lista. O filtro é o `sem_lixo` do `t20pdf.py` —
+o nome do último poder de uma lista. O filtro é o `WithoutJunk` do `bookpdf` —
 ele morava em três auditores e as três cópias já tinham divergido.
 
 ### E o buraco INVERSO: o valor existe, mas não se confere que ele APONTA

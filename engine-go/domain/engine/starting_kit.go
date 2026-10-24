@@ -16,7 +16,7 @@ package engine
 // brunea", então quem usa pesadas escolhe entre QUATRO e não recebe uma —
 // trocar as três leves pela brunea tiraria do guerreiro o gibão de peles.
 
-// Os itens do kit são IDs do catálogo (`catalog/data/items.json`) e não nomes:
+// Os itens do kit são IDs do catálogo (`transcript.Items`) e não nomes:
 // o item nasce na Mochila ligado à sua linha do livro, com os espaços e o preço
 // que o catálogo já sabe. Nome solto viraria item inventado.
 var (

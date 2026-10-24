@@ -20,7 +20,7 @@ import (
 // na p129. Uma página plausível e errada não estoura em lugar nenhum: ela só
 // manda quem for conferir a regra para o capítulo errado.
 //
-// Ele NÃO substitui o `scripts/audit-powers.py`, que compara a página exata do
+// Ele NÃO substitui o `cmd/audit/powers`, que compara a página exata do
 // verbete. Este aqui é a metade que roda na CI, onde o PDF do livro não existe
 // por ser gitignorado.
 func TestEveryPowerOfTheChapterCitesAPageInsideIt(t *testing.T) {

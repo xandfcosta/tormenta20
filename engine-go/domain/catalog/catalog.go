@@ -1,8 +1,9 @@
 // Package catalog serve o dado de referência transcrito do livro: magias,
 // bestiário, itens, raças, origens, poderes.
 //
-// Ele é EMBUTIDO no binário (`go:embed`), então o servidor carrega o livro
-// consigo e um deploy é um arquivo só.
+// O livro em si mora no `transcript`, como código Go compilado no binário: o
+// servidor carrega o livro consigo e um deploy é um arquivo só. Este pacote o
+// serve na forma JSON em que os leitores sempre o decodificaram.
 package catalog
 
 import (
@@ -240,11 +241,11 @@ var resources = []string{
 	"class-expertises", "devotee-terms", "gm-tables", "dungeon-design",
 	// `classes` tem três campos — id, nome e página do livro. As classes existiam
 	// só como uma lista de NOMES dentro de `options.json`, e sem lugar para a
-	// página não havia botão para o livro. Ver `scripts/book-pages.py`.
+	// página não havia botão para o livro. Ver `cmd/bookpages`.
 	"classes",
 	// `effect-types` existe pelo mesmo motivo de `classes`: a condição CITA o tipo
 	// ("Abalado … Medo.") e não havia para onde o elo apontar. As definições saem
-	// do texto da p228, extraídas pelo `scripts/book-pages.py`.
+	// do texto da p228, extraídas pelo `cmd/bookpages`.
 	"effect-types",
 	// `spell-schools`, idem: a magia CITA a escola e não havia para onde o elo
 	// apontar — o nome dela nem aparecia no cartão. As oito definições saem do

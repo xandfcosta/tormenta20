@@ -31,7 +31,7 @@ func check(p power, fromTable, fromEntry stringSet, page *int, rule string, expe
 					p.name, pyfmt.List(shapeOnly(fromTable).sorted()), pyfmt.List(shapeOnly(fromEntry).sorted())))
 			}
 		case isDeclared(selfDisagreement, p.name):
-			bookSelf = append(bookSelf, p.name+": a discordância declarada NÃO acontece mais — tire a linha de DISCORDANCIA_DECLARADA")
+			bookSelf = append(bookSelf, p.name+": a discordância declarada NÃO acontece mais — tire a linha de `selfDisagreement` (cmd/audit/powers)")
 		case !fromTable.equal(fromEntry):
 			notes = append(notes, fmt.Sprintf("%s: tabela %s × verbete %s", p.name,
 				pyfmt.List(fromTable.minus(fromEntry).sorted()), pyfmt.List(fromEntry.minus(fromTable).sorted())))

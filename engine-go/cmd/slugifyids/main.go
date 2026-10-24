@@ -77,8 +77,8 @@ func run(check bool) error {
 	// `id` e `raceId` na definição de raça; `id` na origem. Os campos da FICHA
 	// (`race`, `origin`) valem para as fichas de paridade.
 	counts := map[string]int{}
-	raceLabel := "engine-go/domain/catalog/data/race-defs.json"
-	originLabel := "engine-go/domain/catalog/data/origins.json"
+	raceLabel := "engine-go/domain/catalog/transcript (RaceDefinitions)"
+	originLabel := "engine-go/domain/catalog/transcript (Origins)"
 	counts[raceLabel] = renamer{map[string]bool{"id": true, "raceId": true}, raceRenames}.
 		value(reflect.ValueOf(transcript.RaceDefinitions))
 	counts[originLabel] = renamer{map[string]bool{"id": true}, merged(originRenames, benefitRenames)}.

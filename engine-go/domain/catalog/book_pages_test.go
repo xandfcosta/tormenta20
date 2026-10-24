@@ -184,7 +184,7 @@ func TestTheThreeBlocksThatOpenOnePageLater(t *testing.T) {
 }
 
 // Os tipos de efeito e as escolas de magia são EXTRAÍDOS do PDF pelo
-// `scripts/book-pages.py`, e as duas formas de sujeira que o extrator já deixou
+// `cmd/bookpages`, e as duas formas de sujeira que o extrator já deixou
 // passar estão aqui — as duas vistas na tela, nenhuma detectada por ele:
 //
 //   - o HÍFEN de quebra de linha, que virou "impede convoca- ções";

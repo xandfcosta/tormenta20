@@ -35,7 +35,7 @@ type actionsPanel struct {
 	// Passives é a CONTAGEM das passivas, nunca as linhas delas: não há gesto a
 	// fazer com uma passiva, e uma linha por passiva encheria a tela. Que ela
 	// esteja nos números da ficha é OUTRA pergunta, e a resposta é "nem sempre"
-	// — quem diz quais entram é o `scripts/audit-coverage.py` (ALE-482).
+	// — quem diz quais entram é o `cmd/audit/coverage` (ALE-482).
 	Passives int
 }
 

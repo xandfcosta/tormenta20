@@ -139,7 +139,7 @@ func main() {
 	// A ausência é DITA: recurso que ninguém declarou nem excluiu sai nomeado,
 	// em vez de simplesmente não ser cunhado.
 	for _, n := range undeclared {
-		fmt.Printf("  NÃO DECLARADO %s: nem em ESCOPO nem em FORA — decida e volte\n", n)
+		fmt.Printf("  NÃO DECLARADO %s: nem em `scope` nem em `outOfScope` (cmd/mintuids/scope.go) — decida e volte\n", n)
 	}
 	if len(undeclared) > 0 {
 		os.Exit(1)

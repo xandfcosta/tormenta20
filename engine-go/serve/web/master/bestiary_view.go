@@ -14,7 +14,7 @@ import (
 
 // O BESTIÁRIO como dado.
 //
-// O catálogo fica em memória no servidor por `go:embed`, e o que atravessa a
+// O catálogo fica em memória no servidor, compilado no binário, e o que atravessa a
 // rede é a lista JÁ FILTRADA.
 //
 // Sem LISTA VIRTUALIZADA, de propósito: virtualização é maquinaria para lista
