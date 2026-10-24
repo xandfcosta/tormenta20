@@ -64,10 +64,11 @@ func TestDifferentAttributesStillStack(t *testing.T) {
 	attrs := map[string]int{"charisma": 3, "wisdom": 2}
 
 	_, pm := BookRuleset(c).sumVitalGrants(VitalContext{
-		Level: 4,
+		// Caçador 3: o Elo com a Natureza pede o 3º nível de caçador (p50).
+		Level: 5,
 		Classes: []ClassEntry{
 			{ClassName: "Bardo", Level: 2},
-			{ClassName: "Caçador", Level: 2},
+			{ClassName: "Caçador", Level: 3},
 		},
 		PowerIDs:   []string{"class.cacador.elo-com-a-natureza"},
 		AttrTotals: attrs,

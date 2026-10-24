@@ -420,12 +420,13 @@ var classPowersPart01 = []ClassPower{
 	},
 	{
 		ID:             "class.barbaro.reducao-de-dano",
-		Modeled:        []string{"a RD por nível sai do `barbaroRdForLevel`, lido pelo NOME da classe (ALE-486)"},
+		Modeled:        []string{"a RD 2, que disputa com os outros degraus da mesma habilidade"},
 		ClassName:      "Bárbaro",
 		Name:           "Redução de Dano",
 		Description:    "Recebe RD 2 contra dano físico. Sobe +2 a cada 3 níveis (RD 4 em L8, RD 6 em L11, RD 8 em L14, RD 10 em L17).",
 		GrantedAtLevel: 5,
-		BookPage:       229,
+		BookPage:       42,
 		UID:            "pwr_vugztk766c",
+		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "damageReduction"}, Amount: 2, BonusType: "training"}},
 	},
 }

@@ -155,7 +155,7 @@ func deriveCombat(w *ecs.World) {
 		ecs.Set(w, e, derivedCombat{
 			attackAll:  totalContribsFor(in.effects, ModifierTarget{K: "attack", Scope: "all"}),
 			damageAll:  totalContribsFor(in.effects, ModifierTarget{K: "damage", Scope: "all"}),
-			reduction:  characterDamageReduction(in.char, in.effects),
+			reduction:  characterDamageReduction(in.effects),
 			critExtra:  totalContribsFor(in.effects, ModifierTarget{K: "critExtraIgnoreChance"}),
 			tempHpFury: tempHpFromPowers(in.char, in.effects, true),
 		})

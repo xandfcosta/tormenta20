@@ -122,85 +122,24 @@ func pmCostMod(e ItemEffects) TotalContribs {
 	return totalContribsFor(e, ModifierTarget{K: "pmCost"})
 }
 
-// characterDamageReduction aggregates the character's passive damage reduction.
+// characterDamageReduction é a RD geral do personagem, com a fonte de cada
+// parcela.
 //
-// Book sources, all verified:
-//   - Bárbaro, p42: passive, RD 2 at 5th, +2 every three levels, cap 10 at 17th.
-//   - Cavaleiro "Bastião", p55: chosen path at 5th, RD 5 with heavy armour.
-//   - "Especialização em Armadura": a CHOSEN power requiring 12th level in the
-//     class, RD 5 with heavy armour — Cavaleiro p54, Guerreiro p65. Both texts
-//     say it is cumulative with Bastião, hence it adds on top instead of
-//     competing.
-//
-// General RD takes the max (two sources of the same kind don't add);
-// Especialização stacks on top, which is the book's own wording.
-func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
-	heavy := e.Flags["armadura-pesada"]
-	chosen := parseChoiceSet(ch.ClassPowers)
-	// Class-qualified: the power id is `class.<classe>.<poder>`, and matching by
-	// bare suffix would let a Guerreiro's pick satisfy the Cavaleiro's branch in
-	// a multiclasse.
-	hasPower := func(class, power string) bool {
-		want := "class." + class + "." + power
-		for _, id := range chosen.list {
-			if id == want || id == power {
-				return true
-			}
-		}
-		return false
-	}
-
-	sources := []SourceAmount{}
-	for _, entry := range ch.Classes {
-		switch {
-		case entry.ClassName == "Bárbaro":
-			if rd := barbaroRdForLevel(entry.Level); rd > 0 {
-				sources = append(sources, SourceAmount{"Bárbaro (p42)", rd})
-			}
-		case entry.ClassName == "Guerreiro" && heavy:
-			// p65: poder ESCOLHIDO, 12º nível. Não é passivo e não escala — não
-			// confundir com a progressão do Bárbaro.
-			if entry.Level >= especializacaoArmaduraLevel && hasPower("guerreiro", "especializacao-em-armadura") {
-				sources = append(sources, SourceAmount{"Especialização em Armadura", especializacaoArmaduraRd})
-			}
-		case entry.ClassName == "Cavaleiro" && heavy:
-			if entry.Level >= 5 && hasPower("cavaleiro", "caminho-bastiao") {
-				sources = append(sources, SourceAmount{"Bastião — armadura pesada", cavaleiroBastiaoRd})
-			}
-			// p54: também 12º nível, e o texto diz explicitamente que é
-			// cumulativa com o Bastião.
-			if entry.Level >= especializacaoArmaduraLevel && hasPower("cavaleiro", "especializacao-em-armadura") {
-				sources = append(sources, SourceAmount{"Especialização em Armadura", especializacaoArmaduraRd})
-			}
-		}
-	}
-	// As de CLASSE competem entre si (duas RD gerais não somam), com a
-	// Especialização por cima porque as duas descrições dizem que é cumulativa.
-	specialization, general := 0, 0
-	for _, s := range sources {
-		if s.Source == "Especialização em Armadura" {
-			specialization += s.Amount
-			continue
-		}
-		general = max(general, s.Amount)
-	}
-
-	// RD concedida por MODIFICADOR — hoje só a do Petrificado (p394). Soma por
-	// cima em vez de competir: a p226 diz que efeitos de origens diferentes
-	// acumulam, e uma estátua de bárbaro tem as duas. Entre si já vêm resolvidas
-	// pelo `bonusType` compartilhado, então duas condições não dobram.
+// Toda ela vem de MODIFICADOR (ALE-486): as linhas do Bárbaro (p42), o Bastião
+// (p55), a Especialização em Armadura (p54, p65) e a condição Petrificado
+// (p394). O empilhamento é o de qualquer número da ficha (p226): habilidades
+// diferentes acumulam, e os degraus da MESMA habilidade dividem um `bonusType`
+// e disputam — é assim que a RD 10 do Bárbaro no 17º nível não soma com a 8 do
+// 14º. Ela morava aqui em Go, lida pelo NOME da classe, e fazia a RD do
+// Bárbaro e a do Bastião disputarem — o contrário do que a p226 diz (decisão do
+// dono na ALE-486).
+func characterDamageReduction(e ItemEffects) RdBreakdown {
 	granted := StatFor(e, ModifierTarget{K: "damageReduction"})
+	sources := []SourceAmount{}
 	for _, c := range granted.Contributions {
 		sources = append(sources, SourceAmount{c.Source, c.Amount})
 	}
-
-	typed := typedDamageReduction(e)
-	if len(sources) == 0 {
-		return RdBreakdown{Total: 0, Sources: sources, Typed: typed}
-	}
-	return RdBreakdown{
-		Total: general + specialization + granted.Total, Sources: sources, Typed: typed,
-	}
+	return RdBreakdown{Total: granted.Total, Sources: sources, Typed: typedDamageReduction(e)}
 }
 
 // typedDamageReduction colhe as reduções CONTRA UM TIPO (p229).

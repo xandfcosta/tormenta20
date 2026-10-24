@@ -697,6 +697,20 @@
       ]
     },
     {
+      "sourceId": "class.barbaro.reducao-de-dano",
+      "source": "Redução de Dano",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction"
+          },
+          "amount": 2,
+          "bonusType": "training"
+        }
+      ]
+    },
+    {
       "sourceId": "class.barbaro.pele-de-ferro",
       "source": "Pele de Ferro",
       "equipped": "vested",
@@ -836,6 +850,17 @@
             "source": "Instinto Selvagem +1",
             "bonusType": "enhancement",
             "amount": 1
+          }
+        ]
+      },
+      "damageReduction": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "class.barbaro.reducao-de-dano",
+            "source": "Redução de Dano",
+            "bonusType": "training",
+            "amount": 2
           }
         ]
       },
@@ -1198,7 +1223,7 @@
       "total": 2,
       "sources": [
         {
-          "source": "Bárbaro (p42)",
+          "source": "Redução de Dano",
           "amount": 2
         }
       ]
@@ -1825,7 +1850,7 @@
       "total": 2,
       "sources": [
         {
-          "source": "Bárbaro (p42)",
+          "source": "Redução de Dano",
           "amount": 2
         }
       ]
