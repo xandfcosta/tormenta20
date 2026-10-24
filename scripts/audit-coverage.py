@@ -19,8 +19,11 @@ nas quatro, sempre por um instrumento que inferia o balde de fora — a última
 contou as 125 passivas sem `grant` como gesto. O balde agora é DECLARADO no
 verbete, nos mesmos termos dos encantos (ALE-459):
 
-* tem efeito no motor (`modifiers`, variante com `modifiers`, `powerUid`, ou
-  ativação com `grant`) ou `modeled` dizendo por onde ele entra → INTEIRO;
+* tem efeito no motor (`modifiers`, variante com `modifiers`, ou ativação com
+  `grant`) ou `modeled` dizendo por onde ele entra → INTEIRO;
+* só tem `powerUid` → APONTA: a regra é a do verbete apontado, e é ele que
+  carrega o balde. Contar o ponteiro como efeito deu "inteiro" a 31 entradas
+  de classe cujo alvo não aplicava nada (ALE-491);
 * tem efeito E `unmodeled` → EM PARTE, e aí o `modeled` é obrigatório: sem ele a
   nota parece falar do verbete inteiro;
 * ativação que não é `passive` e não tem `grant` → GESTO: o app cobra o PM e
@@ -64,7 +67,7 @@ def balde(verbete):
     """(balde, falha ou None) de um verbete."""
     ativacao = ATIVACOES.get(verbete['id'])
     efeito = bool(
-        verbete.get('modifiers') or verbete.get('powerUid')
+        verbete.get('modifiers')
         or any(v.get('modifiers') for v in verbete.get('variants', []))
         or (ativacao and ativacao.get('grant')))
     modelado, motivo = verbete.get('modeled'), verbete.get('unmodeled')
@@ -74,6 +77,8 @@ def balde(verbete):
         return 'em parte', None
     if efeito or modelado:
         return 'inteiro', None
+    if verbete.get('powerUid'):
+        return 'aponta', None
     if ativacao and ativacao['kind'] != 'passive':
         return 'gesto', None
     if motivo:
@@ -122,7 +127,7 @@ def audita(perfil, por_destino):
                 por_destino[destino].append((perfil, rotulo, b, motivo))
     total = sum(contagem.values())
     print(f'\n{perfil.upper()} — {total} verbetes')
-    for b in ('inteiro', 'em parte', 'gesto', 'só nota'):
+    for b in ('inteiro', 'em parte', 'gesto', 'só nota', 'aponta'):
         print(f'  {b:9s} {contagem[b]:4d}')
     if perfil == 'origem':
         tipos = beneficios_de_origem()
