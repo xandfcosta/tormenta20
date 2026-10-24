@@ -93,7 +93,7 @@ func conditionAddress(c *ModifierCondition) string {
 	if c == nil {
 		return ""
 	}
-	return strings.Join([]string{c.C, c.Type, c.Trait, c.Flag}, "/")
+	return strings.Join([]string{c.C, c.Type, c.Trait, strings.Join(c.AllFlags(), "+")}, "/")
 }
 
 // applySilences tira de cada fonte os termos que esta mesa calou para ESTE

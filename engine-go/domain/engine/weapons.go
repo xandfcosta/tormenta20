@@ -74,6 +74,31 @@ type WeaponCard struct {
 //	WeaponDamageScope("espada-longa") // "weapon:espada-longa"
 func WeaponDamageScope(catalogID string) string { return "weapon:" + catalogID }
 
+// Os escopos de dano por TIPO de arma, com os nomes que o livro dá a eles.
+const (
+	// MeleeLightOrAgileScope: "uma arma corpo a corpo leve ou ágil"
+	// (Esgrimista, p48).
+	MeleeLightOrAgileScope = "melee-light-or-agile"
+	// RangedScope: "uma arma de ataque à distância" (Arqueiro, p50), que o
+	// livro divide em arremesso e disparo (p142) — as duas entram.
+	RangedScope = "ranged"
+)
+
+// weaponKindScopes são os escopos de dano por TIPO em que esta arma cai.
+//
+// O tipo é o PROPÓSITO que o catálogo dá à arma, um só: a machadinha é de
+// arremesso, então o Esgrimista não soma nela nem quando ela é usada corpo a
+// corpo. É a mesma leitura que decide se a Força entra no dano.
+func weaponKindScopes(w *WeaponStats) []string {
+	switch {
+	case w.Purpose == "ranged" || w.Purpose == "thrown":
+		return []string{RangedScope}
+	case w.Purpose == "melee" && (w.Hand == "light" || hasTrait(w.Traits, "agil")):
+		return []string{MeleeLightOrAgileScope}
+	}
+	return nil
+}
+
 // ownDamageOf junta as parcelas que valem só para esta arma, numa decomposição.
 func ownDamageOf(parts ...TotalContribs) TotalContribs {
 	out := TotalContribs{Contributions: []BreakdownContribution{}}
@@ -88,7 +113,7 @@ func ownDamageOf(parts ...TotalContribs) TotalContribs {
 // the given active conditionals (Fúria's global attack/damage mods land in
 // attackAll/damageAll). Only catalog weapons in a hand slot, capped at two.
 func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string]bool) []WeaponCard {
-	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), activeConditionals)
+	effects := r.sheetEffects(ch, activeConditionals)
 	attackAll := totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"})
 	damageAll := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"})
 	// O `this` é o bônus que uma SOBREPOSIÇÃO dá — a melhoria Cruel, o material.
@@ -122,8 +147,12 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 			continue
 		}
 		w := catalog.Weapon
-		own := ownDamageOf(damageThis, totalContribsFor(effects,
-			ModifierTarget{K: "damage", Scope: WeaponDamageScope(*it.CatalogID)}))
+		parts := []TotalContribs{damageThis, totalContribsFor(effects,
+			ModifierTarget{K: "damage", Scope: WeaponDamageScope(*it.CatalogID)})}
+		for _, scope := range weaponKindScopes(w) {
+			parts = append(parts, totalContribsFor(effects, ModifierTarget{K: "damage", Scope: scope}))
+		}
+		own := ownDamageOf(parts...)
 		skill, attribute := "Luta", "strength"
 		strDamage := forTotal
 		if w.Purpose == "ranged" {

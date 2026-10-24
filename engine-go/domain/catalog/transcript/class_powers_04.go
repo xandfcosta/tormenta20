@@ -3,13 +3,22 @@ package transcript
 // Parte 4 de 13 de `ClassPowers` (class_powers.go).
 var classPowersPart04 = []ClassPower{
 	{
-		ID:            "class.bucaneiro.esgrimista",
-		ClassName:     "Bucaneiro",
-		Name:          "Esgrimista",
-		Description:   "Quando usa arma corpo-a-corpo leve ou ágil, soma Inteligência nas rolagens de dano (limitado pelo seu nível).",
-		BookPage:      48,
-		UID:           "pwr_o6a7r56ttm",
-		Unmodeled:     "soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		ID: "class.bucaneiro.esgrimista",
+		Modeled: []string{
+			"a Inteligência no dano das armas corpo a corpo leves ou ágeis, limitada pelo nível na classe",
+		},
+		ClassName:   "Bucaneiro",
+		Name:        "Esgrimista",
+		Description: "Quando usa arma corpo-a-corpo leve ou ágil, soma Inteligência nas rolagens de dano (limitado pelo seu nível).",
+		BookPage:    48,
+		UID:         "pwr_o6a7r56ttm",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "melee-light-or-agile"},
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "intelligence", Cap: "classLevel"},
+			},
+		},
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "intelligence", Min: 1}},
 	},
 	{
@@ -77,13 +86,21 @@ var classPowersPart04 = []ClassPower{
 		Unmodeled:   "a proficiência e o +2 no dano com armas de fogo: o dano não tem escopo por CATEGORIA de arma, sem fatia",
 	},
 	{
-		ID:            "class.bucaneiro.presenca-paralisante",
-		ClassName:     "Bucaneiro",
-		Name:          "Presença Paralisante",
-		Description:   "Soma Carisma em Iniciativa. Se for primeiro a agir, ganha ação padrão extra na primeira rodada.",
-		BookPage:      48,
-		UID:           "pwr_4v4mgfn2rn",
-		Unmodeled:     "o Carisma na Iniciativa; a ação extra é prosa: soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		ID:          "class.bucaneiro.presenca-paralisante",
+		Modeled:     []string{"o Carisma na Iniciativa, sem teto (o verbete não o limita)"},
+		ClassName:   "Bucaneiro",
+		Name:        "Presença Paralisante",
+		Description: "Soma Carisma em Iniciativa. Se for primeiro a agir, ganha ação padrão extra na primeira rodada.",
+		BookPage:    48,
+		UID:         "pwr_4v4mgfn2rn",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "expertise", Name: "Iniciativa"},
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "charisma"},
+			},
+		},
+		Unmodeled:     "a ação padrão extra na primeira rodada: é prosa do mestre",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "charisma", Min: 1}},
 		MinLevel:      4,
 	},
@@ -269,13 +286,22 @@ var classPowersPart04 = []ClassPower{
 		MinLevel: 5,
 	},
 	{
-		ID:            "class.cacador.arqueiro",
-		ClassName:     "Caçador",
-		Name:          "Arqueiro",
-		Description:   "Em arma de ataque à distância, soma Sabedoria nas rolagens de dano (limitado pelo seu nível).",
-		BookPage:      50,
-		UID:           "pwr_3e2kv3a5pz",
-		Unmodeled:     "soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		ID: "class.cacador.arqueiro",
+		Modeled: []string{
+			"a Sabedoria no dano das armas de ataque à distância (arremesso e disparo, p142), limitada pelo nível na classe",
+		},
+		ClassName:   "Caçador",
+		Name:        "Arqueiro",
+		Description: "Em arma de ataque à distância, soma Sabedoria nas rolagens de dano (limitado pelo seu nível).",
+		BookPage:    50,
+		UID:         "pwr_3e2kv3a5pz",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "ranged"},
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "wisdom", Cap: "classLevel"},
+			},
+		},
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "wisdom", Min: 1}},
 	},
 	{

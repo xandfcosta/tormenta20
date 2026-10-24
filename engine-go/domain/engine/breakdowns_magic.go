@@ -306,7 +306,7 @@ func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
 func (r *Ruleset) SpellPmLimitFor(
 	ch Character, conditionals map[string]bool, spellClasses []string,
 ) int {
-	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), conditionals)
+	effects := r.sheetEffects(ch, conditionals)
 	return SpellPmLimit(ch, pmLimitBreakdown(ch, effects).ItemBonus, spellClasses)
 }
 
@@ -363,7 +363,7 @@ func (r *Ruleset) SpellPmCostFor(
 	if raw <= 0 {
 		return 0
 	}
-	effects := ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), conditionals)
+	effects := r.sheetEffects(ch, conditionals)
 	mod := resolvePmCostMod(StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions)
 	// O FATOR É O ÚLTIMO, e o livro diz a ordem por extenso: a Alta Arcana
 	// reduz à metade "após aplicar aprimoramentos e quaisquer outros efeitos

@@ -36,7 +36,22 @@ type ModifierCondition struct {
 	Trait string `json:"trait,omitempty"` // against
 	Note  string `json:"note,omitempty"`  // context
 	Flag  string `json:"flag,omitempty"`  // flagOn, flagOff, flagRequired
-	Label string `json:"label,omitempty"` // flagOn, flagOff, flagRequired
+	// Flags são as flags A MAIS de um `flagOff`/`flagRequired`, para a frase do
+	// livro que nomeia duas travas: a Insolência não vale "de armadura pesada
+	// OU na condição imóvel" (p47), e os Braços Calejados não valem com armadura
+	// nenhuma, leve ou pesada (p76). O `flagOff` cala se QUALQUER uma estiver
+	// posta; o `flagRequired` pede TODAS. Ver `ModifierCondition.AllFlags`.
+	Flags []string `json:"flags,omitempty"`
+	Label string   `json:"label,omitempty"` // flagOn, flagOff, flagRequired
+}
+
+// AllFlags são a `Flag` e as `Flags` juntas, sem a vazia.
+func (c ModifierCondition) AllFlags() []string {
+	out := make([]string, 0, 1+len(c.Flags))
+	if c.Flag != "" {
+		out = append(out, c.Flag)
+	}
+	return append(out, c.Flags...)
 }
 
 // VitalScale é a escala de um vital. Só o coletor de vitais a lê; o motor de
@@ -47,6 +62,11 @@ type VitalScale struct {
 	Step      int    `json:"step,omitempty"`
 	Round     string `json:"round,omitempty"`
 	Attribute string `json:"attribute,omitempty"`
+	// Cap é o TETO de um `per: attribute`: `classLevel` limita o atributo ao
+	// nível na classe que concede o poder (p226, "Limites de Nível"). Vazio é
+	// sem teto — a p226 diz que ALGUMAS habilidades são limitadas, e só as que
+	// o escrevem. Ver `resolveAttributeSums`.
+	Cap string `json:"cap,omitempty"`
 }
 
 // amountInEngineUnits converte o valor do catálogo para a unidade do motor.
@@ -191,6 +211,10 @@ type Modifier struct {
 	// Não é a NOTA com outro nome: a nota é prosa que uma errata reescreve, e
 	// por isso o endereço não a carrega. Isto é identificador.
 	From string `json:"from,omitempty"`
+	// classLevel é o nível na classe que concedeu o poder, anotado pela coleta
+	// (`classActiveItems`) para o teto `classLevel` de um `scale` por atributo.
+	// Fora do fio: é procedência da ficha, e não dado do catálogo.
+	classLevel int
 }
 
 // UnmarshalJSON leva o `amount` do catálogo para a unidade do MOTOR.

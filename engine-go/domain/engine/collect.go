@@ -111,9 +111,13 @@ func condFactor(target ModifierTarget, num, den int) Modifier {
 //	(arredonde para baixo para o primeiro incremento de 1,5m)" (p395)
 //	"IMÓVEL. Todas as formas de deslocamento do personagem são reduzidas a 0m."
 //	(p394)
+//
+// O imóvel também levanta a flag `imovel`, porque o livro o cita como TRAVA: a
+// Insolência "não pode [ser usada] na condição imóvel" (p47). Ela viaja junto
+// com o paralisado e o agarrado, que o livro diz que deixam imóvel.
 var (
 	lentoMods  = []Modifier{condFactor(ModifierTarget{K: "displacement"}, 1, 2)}
-	imovelMods = []Modifier{condFactor(ModifierTarget{K: "displacement"}, 0, 1)}
+	imovelMods = []Modifier{condFactor(ModifierTarget{K: "displacement"}, 0, 1), condFlag("imovel")}
 )
 
 func condFlag(name string) Modifier {
