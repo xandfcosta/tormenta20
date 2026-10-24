@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -198,6 +199,32 @@ func (c catalogoDaSeed) confereUmPersonagem(where string, ch seedCharacter) []re
 			neighbor: oVizinho(id, idsDosPoderes()),
 		})
 	}
+	// A ESCOLHA DO PODER aponta duas vezes: a chave é o poder, e o valor é a
+	// opção que ele oferece — um atributo, ou o id de uma ARMA do catálogo na
+	// Especialização em Arma (ALE-491). Opção errada nasce como um +2 que não
+	// cai em arma nenhuma, com a ficha abrindo normal.
+	for _, powerID := range asChavesDe(create, "powerChoices") {
+		power, known := book.ClassPowers()[powerID]
+		if !known || power.Choice == nil {
+			broken = append(broken, referenciaQuebrada{
+				where: where + ", create.powerChoices{}", value: powerID, catalog: "poderes com escolha",
+				neighbor: oVizinho(powerID, idsDosPoderes()),
+			})
+			continue
+		}
+		offered := []string{}
+		for _, o := range power.Choice.Offered() {
+			offered = append(offered, o.ID)
+		}
+		for _, pick := range escolhasDe(create, powerID) {
+			if !slices.Contains(offered, pick) {
+				broken = append(broken, referenciaQuebrada{
+					where: where + ", create.powerChoices." + powerID, value: pick,
+					catalog: "opções de " + power.Name, neighbor: oVizinho(pick, offered),
+				})
+			}
+		}
+	}
 	for _, id := range osIdsDosItens(create) {
 		if _, ok := catalog.LookupItem(id); !ok {
 			broken = append(broken, referenciaQuebrada{
@@ -338,6 +365,15 @@ func asChavesDe(create map[string]json.RawMessage, field string) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+// escolhasDe são as escolhas gravadas para um poder no `powerChoices`.
+func escolhasDe(create map[string]json.RawMessage, powerID string) []string {
+	var picks map[string][]string
+	if json.Unmarshal(create["powerChoices"], &picks) != nil {
+		return nil
+	}
+	return picks[powerID]
 }
 
 // idsDosPoderes são todos os ids que o `classPowers` aceita, para o vizinho

@@ -29,6 +29,7 @@ func TestTheSeedRefusesEveryUnknownCatalogReference(t *testing.T) {
 		{"godPower", "Benção do Mana", "godPower"},
 		{"spell", "bola-de-fog", "magia"},
 		{"item", "machado-de-batalha", "item"},
+		{"powerChoice", "espada-curtaa", "opções de Especialização em Arma"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.field, func(t *testing.T) {
@@ -129,6 +130,8 @@ func sujaOCriar(t *testing.T, create map[string]json.RawMessage, field, wrong st
 		return trocaNoItem(t, create, wrong)
 	case "className":
 		return trocaNaClasse(t, create, wrong)
+	case "powerChoice":
+		return trocaNaEscolhaDaArma(t, create, wrong)
 	default: // origin, god, godPower — todos strings simples
 		if _, found := create[field]; !found {
 			return false
@@ -204,5 +207,25 @@ func trocaNoItem(t *testing.T, create map[string]json.RawMessage, wrong string) 
 		t.Fatalf("marshal dos itens: %v", err)
 	}
 	create["items"] = novo
+	return true
+}
+
+// trocaNaEscolhaDaArma suja a arma escolhida na Especialização em Arma.
+func trocaNaEscolhaDaArma(t *testing.T, create map[string]json.RawMessage, wrong string) bool {
+	t.Helper()
+	var picks map[string][]string
+	if json.Unmarshal(create["powerChoices"], &picks) != nil {
+		return false
+	}
+	const poder = "class.guerreiro.especializacao-em-arma"
+	if len(picks[poder]) == 0 {
+		return false
+	}
+	picks[poder][0] = wrong
+	raw, err := json.Marshal(picks)
+	if err != nil {
+		t.Fatalf("remontar o powerChoices: %v", err)
+	}
+	create["powerChoices"] = raw
 	return true
 }

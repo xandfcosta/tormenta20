@@ -746,6 +746,18 @@
                 "constitution"
               ]
             },
+            "classPowers": [
+              "class.guerreiro.aumento-de-atributo",
+              "class.guerreiro.especializacao-em-arma"
+            ],
+            "powerChoices": {
+              "class.guerreiro.aumento-de-atributo": [
+                "strength"
+              ],
+              "class.guerreiro.especializacao-em-arma": [
+                "espada-curta"
+              ]
+            },
             "items": [
               {
                 "catalogId": "espada-curta",
