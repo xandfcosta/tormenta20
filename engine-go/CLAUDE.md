@@ -834,16 +834,18 @@ quatorze cópias byte a byte iguais. Elas não tinham divergido, e nada as
 impedia — é o caminho que `general-powers` × `origins` percorreu até ter
 dezenove poderes com duas regras.
 
-**Quem resolve é o `domain/book`**, num ponto só (`classPowersResolved`), e os
-quatro leitores passam por lá. O MOTOR não resolve, e isso é deliberado: ele lê
-o despejo cru e, para poder de classe, só olha `Modifiers` — e nenhum dos nove
-verbetes tem modificador. Compartilhar a resolução com ele exigiria uma aresta
-entre `domain/engine` e `domain/catalog`, que hoje não se conhecem.
+**Quem resolve são DOIS pontos, um por leitor.** O `domain/book` resolve para
+a tela, em `classPowersResolved`, e os quatro leitores dele passam por lá. O
+MOTOR resolve na carga do despejo, em `resolveClassPowerPointers`: a concessão
+sem modificador próprio herda os do verbete. Os dois não compartilham código
+porque isso exigiria uma aresta entre `domain/engine` e `domain/catalog`, que
+não se conhecem; o que cada um faz é pouco — copiar a regra de um `uid` para
+outro do mesmo catálogo.
 
-Essa escolha tem um guarda, porque ela é uma coincidência feliz e não uma
-garantia: `TestNoClassPowerEntryCarriesModifiersTheEngineWouldIgnore` reprova
-se alguém der um modificador a um verbete. Sem ele, a tela mostraria o bônus e
-a ficha não o teria.
+Até a ALE-491 o motor não resolvia, e um guarda proibia modificador em
+verbete. Ele não existe mais: caiu quando o Aumento de Atributo precisou do
+primeiro modificador. Quem prende agora que o ponteiro chega à ficha é o
+`TestTheAttributeIncreaseLandsOnTheChosenAttribute`, que passa por ele.
 
 > **O quarto leitor não estava na minha lista.** Mapeei três — o
 > `PowerCatalogs`, o `ClassPowerFlags` e o `PowersThatTeachSpells` — e o
@@ -1327,7 +1329,10 @@ poderes num personagem de nível 1, e o motor somava os modificadores de todos. 
 validação é
 `sheet.WithChoicesValid`, ela roda nas DUAS portas (o endpoint JSON e os
 comandos da ficha), e é **estrita**: a escrita tem de deixar a ficha VÁLIDA, e
-não só "não piorar". Decisão do dono, com a razão registrada — o projeto ainda
+não só "não piorar". Desde a ALE-491 ela confere também o `powerChoices`:
+escolha só de poder que a ficha tem, só opção que o livro oferece, mais de uma
+só no poder repetível — e o repetível ocupa uma vaga por ESCOLHA
+(`sheet.UsedPowerSlots`), não uma por poder. Decisão do dono, com a razão registrada — o projeto ainda
 não foi usado numa mesa real, então não há ficha antiga fora da conta para
 proteger. O preço apareceu na hora: dois testes tinham fixtures ilegais pelo
 livro (um poder inventado, e um personagem sem classe com um poder escolhido).

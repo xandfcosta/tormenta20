@@ -102,7 +102,8 @@ func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 	if card.Skill == "Luta" {
 		damage = append(damage, breakdownRow{Label: "FOR", Value: book.WithSign(card.StrDamage)})
 	}
-	return attack, append(damage, rowsFromContributions(card.DamageAll.Contributions)...)
+	damage = append(damage, rowsFromContributions(card.DamageAll.Contributions)...)
+	return attack, append(damage, rowsFromContributions(card.DamageOwn.Contributions)...)
 }
 
 // pmLimitRows é o teto de PM por magia.

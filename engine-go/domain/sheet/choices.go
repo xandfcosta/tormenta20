@@ -151,9 +151,14 @@ func chosenFitPowers(dto CharacterDTO) error {
 			return err
 		}
 	}
-	if len(chosen) > slots {
+	// A escolha inválida antes da vaga: "Sorte não é atributo" diz o que
+	// consertar, e "3 poderes para 2 vagas" sobre a mesma escolha não diz.
+	if err := powerPicksFit(dto); err != nil {
+		return err
+	}
+	if used := UsedPowerSlots(dto); used > slots {
 		return fmt.Errorf("são %d poderes escolhidos para %s",
-			len(chosen), writtenSlots(slots))
+			used, writtenSlots(slots))
 	}
 	return nil
 }

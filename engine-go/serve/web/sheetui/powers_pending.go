@@ -98,7 +98,7 @@ func originPending(dto sheet.CharacterDTO) []pendencia {
 
 func classPendings(dto sheet.CharacterDTO) []pendencia {
 	choices := sheet.ClassChoiceSelections(dto)
-	used := len(sheet.UnmarshalStrings(dto.ClassPowers))
+	used := sheet.UsedPowerSlots(dto)
 	outside := []pendencia{}
 	for _, class := range dto.Classes {
 		if missing := sheet.PowerSlots(class.Level) - used; missing > 0 {

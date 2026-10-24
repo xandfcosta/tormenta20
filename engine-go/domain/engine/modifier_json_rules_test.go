@@ -38,6 +38,7 @@ func TestEveryModifierFieldSurvivesTheCatalogJSON(t *testing.T) {
 		},
 		Amount:            3,
 		Dice:              "1d6",
+		FromChoice:        "name",
 		BonusType:         "enhancement",
 		Condition:         &ModifierCondition{C: "against", Trait: "mortos-vivos"},
 		Note:              "uma nota",

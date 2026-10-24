@@ -267,3 +267,106 @@ func TestWritingOneChoiceDoesNotEraseTheOthers(t *testing.T) {
 		t.Errorf("a distribuição não foi gravada: %s", row.Raceattributechoices)
 	}
 }
+
+// O PODER REPETÍVEL OCUPA UMA VAGA POR ESCOLHA (p38, ALE-491).
+//
+// "Você pode escolher este poder várias vezes" — e cada vez é um atributo. O
+// gesto grava a escolha junto do poder: "Aumento: Força" e "Aumento:
+// Sabedoria" são duas vagas, o poder aparece UMA vez em `classPowers` e as
+// duas escolhas em `powerChoices`. A terceira escolha num bárbaro de nível 3,
+// que tem duas vagas, é recusada.
+func TestARepeatablePowerTakesOneSlotPerChoice(t *testing.T) {
+	f, id := barbaro(t, 3)
+	const poder = "class.barbaro.aumento-de-atributo"
+
+	for _, opcao := range []string{"strength", "wisdom"} {
+		if refusal := powerCommand(t, f, id, "escolha/"+poder+"/"+opcao, ""); refusal != "" {
+			t.Fatalf("escolher Aumento de Atributo em %s foi recusado: %q", opcao, refusal)
+		}
+	}
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler o personagem: %v", err)
+	}
+	if row.Classpowers != `["`+poder+`"]` {
+		t.Errorf("o poder repetível devia entrar UMA vez em classPowers, e ficou %s", row.Classpowers)
+	}
+	if row.Powerchoices != `{"`+poder+`":["strength","wisdom"]}` {
+		t.Errorf("as duas escolhas deviam estar em powerChoices, e ficou %s", row.Powerchoices)
+	}
+
+	// As duas escolhas ocupam as duas vagas: o terceiro poder não cabe.
+	if refused := powerCommand(t, f, id, "escolhe/class.barbaro.golpe-poderoso", ""); !strings.Contains(refused, "2 vagas") {
+		t.Errorf("com o Aumento tomado duas vezes, um terceiro poder coube em 2 vagas: %q", refused)
+	}
+	if page := powerScreen(t, f, id); strings.Contains(page, "poder por escolher") || strings.Contains(page, "poderes por escolher") {
+		t.Error("a pendência ainda pede poder com as duas vagas ocupadas pelo Aumento")
+	}
+
+	// UMA OPÇÃO QUE O LIVRO NÃO TEM é recusada, dizendo quais são.
+	if refused := powerCommand(t, f, id, "escolha/"+poder+"/sorte", ""); !strings.Contains(refused, "Força") {
+		t.Errorf("um atributo inventado não foi recusado com as opções: %q", refused)
+	}
+
+	// TIRAR uma escolha devolve a vaga; tirar a última tira o poder.
+	powerCommand(t, f, id, "escolha/"+poder+"/strength/tira", "")
+	powerCommand(t, f, id, "escolha/"+poder+"/wisdom/tira", "")
+	if saved := chosen(t, f, id); strings.Contains(saved, "aumento") {
+		t.Errorf("sem nenhuma escolha, o Aumento continuou em classPowers: %s", saved)
+	}
+}
+
+// O DIÁLOGO OFERECE AS OPÇÕES DO PODER QUE PEDE ESCOLHA (ALE-491).
+//
+// O Aumento de Atributo não é um interruptor: cada atributo é um gesto, e o
+// que já foi escolhido diz quantas vezes e oferece o de tirar. Sem isto a
+// regra existia no motor e nenhuma tela a alcançava.
+func TestTheDialogOffersTheOptionsOfAPowerThatAsksForAChoice(t *testing.T) {
+	f, id := barbaro(t, 3)
+	const poder = "class.barbaro.aumento-de-atributo"
+
+	screen := powerScreen(t, f, id)
+	for _, opcao := range []string{"strength", "dexterity", "charisma"} {
+		if !strings.Contains(screen, "/poderes/escolha/"+poder+"/"+opcao) {
+			t.Errorf("o diálogo não oferece o Aumento de Atributo em %s", opcao)
+		}
+	}
+	if strings.Contains(screen, "/poderes/escolha/"+poder+"/strength/tira") {
+		t.Fatal("o controle já estava errado: sem escolha, o diálogo oferece tirar Força")
+	}
+
+	powerCommand(t, f, id, "escolha/"+poder+"/strength", "")
+	powerCommand(t, f, id, "escolha/"+poder+"/strength", "")
+	screen = powerScreen(t, f, id)
+	if !strings.Contains(screen, "/poderes/escolha/"+poder+"/strength/tira") {
+		t.Error("com Força escolhida, o diálogo não oferece tirá-la")
+	}
+	if !strings.Contains(screen, "Força ×2") {
+		t.Error("Força escolhida duas vezes não diz ×2 no diálogo")
+	}
+}
+
+// A ARMA DA ESPECIALIZAÇÃO É ESCOLHIDA PELO DIÁLOGO, e só arma do catálogo
+// entra (p65, ALE-491).
+func TestTheWeaponSpecializationIsChosenFromTheWeaponCatalog(t *testing.T) {
+	f, id := fighterFixture(t)
+	const poder = "class.guerreiro.especializacao-em-arma"
+
+	screen := powerScreen(t, f, id)
+	if !strings.Contains(screen, "/poderes/escolha/"+poder+"/espada-longa") {
+		t.Error("o diálogo não oferece a espada longa à Especialização em Arma")
+	}
+	// "Escolha uma arma" é o TIPO de arma. A Avalanche é um item mágico
+	// específico (p337), feito sobre um martelo de guerra, e não uma arma
+	// que se escolhe.
+	if strings.Contains(screen, "/poderes/escolha/"+poder+"/avalanche") {
+		t.Error("o diálogo oferece a Avalanche, uma arma específica do capítulo 8, à Especialização")
+	}
+	if refusal := powerCommand(t, f, id, "escolha/"+poder+"/espada-longa", ""); refusal != "" {
+		t.Fatalf("escolher a espada longa foi recusado: %q", refusal)
+	}
+	// Um item que não é arma não entra.
+	if refused := powerCommand(t, f, id, "escolha/"+poder+"/mochila", ""); !strings.Contains(refused, "Adaga") {
+		t.Errorf("um item que não é arma não foi recusado com as opções: %q", refused)
+	}
+}

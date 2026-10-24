@@ -36,6 +36,47 @@ type ClassPower struct {
 	GrantedAtLevel  *int           `json:"grantedAtLevel"`
 	GrantedByChoice *GrantByChoice `json:"grantedByChoice"`
 	BookPage        int            `json:"bookPage"`
+	// Choice é a escolha que o poder pede — o atributo do Aumento de Atributo
+	// (p38), o animal do Totem. Ela chega pela concessão que APONTA, porque o
+	// `classPowersResolved` funde o verbete nela.
+	Choice *PowerChoice `json:"choice"`
+}
+
+// PowerChoice é a escolha de um poder, como o catálogo a escreve.
+type PowerChoice struct {
+	Kind  string `json:"kind"`
+	Label string `json:"label"`
+	// Repeatable é o "você pode escolher este poder várias vezes" do livro.
+	Repeatable bool                `json:"repeatable"`
+	Options    []PowerChoiceOption `json:"options"`
+}
+
+type PowerChoiceOption struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// Offered são as opções que a escolha oferece. A lista do catálogo, quando ele
+// a escreve; para a escolha de ARMA (Especialização em Arma, p65), as armas do
+// catálogo de itens — escrevê-las de novo no verbete seria a segunda cópia de
+// uma lista que já tem dono.
+//
+//	ClassPowers()["class.guerreiro.especializacao-em-arma"].Choice.Offered()
+//	// [{adaga Adaga} {alabarda Alabarda} …]
+func (c PowerChoice) Offered() []PowerChoiceOption {
+	if len(c.Options) > 0 || c.Kind != "weapon" {
+		return c.Options
+	}
+	out := []PowerChoiceOption{}
+	for _, item := range Catalogs().Items {
+		// O item COMPOSTO é a arma específica do capítulo 8 (a Avalanche, p337):
+		// ela herda a forma da arma mundana e por isso tem `Weapon`, mas "escolha
+		// uma arma" é o tipo — a espada longa, e não uma espada encantada.
+		if item.Weapon != nil && item.ComposedOf == nil {
+			out = append(out, PowerChoiceOption{ID: item.ID, Name: item.Name})
+		}
+	}
+	return out
 }
 
 type GrantByChoice struct {

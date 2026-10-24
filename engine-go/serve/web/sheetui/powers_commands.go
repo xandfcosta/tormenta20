@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/go-chi/chi/v5"
 
@@ -92,6 +93,42 @@ func pickPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error
 	id := chi.URLParam(r, "poder")
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
 		dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
+		// O poder que SAI leva as escolhas dele: escolha de poder que a ficha
+		// não tem é recusada pelo `WithChoicesValid`.
+		if !slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
+			dto.PowerChoices = sheet.WithoutPowerPicksOf(dto.PowerChoices, id)
+		}
+	})
+}
+
+// pickPowerOption grava uma escolha do poder — "Aumento de Atributo: Força" —
+// e põe o poder na ficha se ele ainda não estava (ALE-491).
+//
+// No repetível, cada toque é mais uma escolha e mais uma vaga; no que não se
+// repete, a escolha nova troca a antiga.
+func pickPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	id, option := chi.URLParam(r, "poder"), chi.URLParam(r, "opcao")
+	power, known := book.ClassPowers()[id]
+	if !known || power.Choice == nil {
+		return fmt.Errorf("o poder %q não pede escolha", id)
+	}
+	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		if !slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
+			dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
+		}
+		dto.PowerChoices = sheet.WithPowerPick(dto.PowerChoices, id, option, power.Choice.Repeatable)
+	})
+}
+
+// dropPowerOption tira UMA escolha do poder; sem nenhuma, o poder sai da ficha.
+func dropPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	id, option := chi.URLParam(r, "poder"), chi.URLParam(r, "opcao")
+	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		picks, left := sheet.WithoutPowerPick(dto.PowerChoices, id, option)
+		dto.PowerChoices = picks
+		if left == 0 && slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
+			dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
+		}
 	})
 }
 
@@ -199,6 +236,9 @@ func (s Scene) saveTheChoices(
 	}
 	if dto.RaceAbilityChoices != before.RaceAbilityChoices {
 		writes.RaceAbilityChoices, moved = &dto.RaceAbilityChoices, true
+	}
+	if dto.PowerChoices != before.PowerChoices {
+		writes.PowerChoices, moved = &dto.PowerChoices, true
 	}
 	if !moved {
 		return nil

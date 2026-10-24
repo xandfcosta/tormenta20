@@ -62,6 +62,16 @@ func parseEffectModifiers(raw string) []Modifier {
 	return mods
 }
 
+// parsePowerChoices: o `powerChoices` da ficha, as escolhas de cada poder pelo
+// id dele. JSON ruim degrada para "nenhuma escolha", como os irmãos.
+func parsePowerChoices(raw string) map[string][]string {
+	var m map[string][]string
+	if err := json.Unmarshal([]byte(raw), &m); err != nil {
+		return map[string][]string{}
+	}
+	return m
+}
+
 // parseClassChoices: the classChoices JSON keyed by className.
 // Arrays / bad JSON → empty map.
 func parseClassChoices(raw string) map[string]ClassChoiceSelections {

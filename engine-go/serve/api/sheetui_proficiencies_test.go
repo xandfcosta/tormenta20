@@ -215,6 +215,7 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 		"catalogo": "adaga",
 		// Os dos Poderes — a `flag` já entrou com os Efeitos.
 		"poder":       "class.barbaro.brado-assustador",
+		"opcao":       "strength",
 		"beneficio":   "origin-batedor-pericia-furtividade",
 		"variante":    "suraggel-aggelus",
 		"escolha":     "caminho",
