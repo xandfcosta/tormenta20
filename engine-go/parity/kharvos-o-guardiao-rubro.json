@@ -588,6 +588,24 @@
       ]
     },
     {
+      "sourceId": "lefou",
+      "source": "Raça: Lefou",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "lefeu e a Tormenta"
+          }
+        }
+      ]
+    },
+    {
       "sourceId": "refugiado",
       "source": "Origem: Refugiado",
       "equipped": "vested",
@@ -1002,6 +1020,17 @@
           "k": "defense"
         },
         "flag": "homebrew-vestido-medalhao-de-prata"
+      },
+      {
+        "term": "lefou::resistance::::against//lefeu e a Tormenta/",
+        "sourceId": "lefou",
+        "source": "Raça: Lefou",
+        "bonusType": "untyped",
+        "amount": 5,
+        "note": "contra: lefeu e a Tormenta",
+        "target": {
+          "k": "resistance"
+        }
       },
       {
         "term": "class.barbaro.furia::attack:all::::flagOn///furia",
@@ -1636,6 +1665,7 @@
   "activeConditionals": [
     "class.barbaro.furia::attack:all::::flagOn///furia",
     "class.barbaro.furia::damage:all::::flagOn///furia",
+    "lefou::resistance::::against//lefeu e a Tormenta/",
     "machado-taurico::expertise:Luta::::context///",
     "medalhao-de-prata::defense::::flagOn///homebrew-vestido-medalhao-de-prata",
     "medalhao-de-prata::pmLimit::::flagOn///homebrew-vestido-medalhao-de-prata"
@@ -1949,14 +1979,20 @@
         "name": "Fortitude",
         "attribute": "constitution",
         "base": 8,
-        "itemBonus": 0,
-        "total": 8,
+        "itemBonus": 5,
+        "total": 13,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 4,
         "trained": true,
         "trainedBy": [],
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Raça: Lefou (cond.)",
+            "amount": 5,
+            "note": "contra: lefeu e a Tormenta"
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -2199,8 +2235,8 @@
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 4,
-        "itemBonus": 1,
-        "total": 5,
+        "itemBonus": 6,
+        "total": 10,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 0,
@@ -2210,6 +2246,11 @@
           {
             "source": "Instinto Selvagem +1",
             "amount": 1
+          },
+          {
+            "source": "Raça: Lefou (cond.)",
+            "amount": 5,
+            "note": "contra: lefeu e a Tormenta"
           }
         ],
         "armorPenaltyApplied": 0
@@ -2246,8 +2287,8 @@
         "name": "Vontade",
         "attribute": "wisdom",
         "base": 8,
-        "itemBonus": 2,
-        "total": 10,
+        "itemBonus": 7,
+        "total": 15,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 4,
@@ -2257,6 +2298,11 @@
           {
             "source": "Origem: Refugiado",
             "amount": 2
+          },
+          {
+            "source": "Raça: Lefou (cond.)",
+            "amount": 5,
+            "note": "contra: lefeu e a Tormenta"
           }
         ],
         "armorPenaltyApplied": 0

@@ -377,6 +377,17 @@
           "amount": -1,
           "bonusType": "untyped",
           "note": "Lefou"
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "lefeu e a Tormenta"
+          }
         }
       ]
     },
@@ -499,6 +510,17 @@
     },
     "flags": [],
     "conditional": [
+      {
+        "term": "lefou::resistance::::against//lefeu e a Tormenta/",
+        "sourceId": "lefou",
+        "source": "Raça: Lefou",
+        "bonusType": "untyped",
+        "amount": 5,
+        "note": "contra: lefeu e a Tormenta",
+        "target": {
+          "k": "resistance"
+        }
+      },
       {
         "term": "class.bardo.inspiracao::expertiseAll::::flagOn///inspiracao",
         "sourceId": "class.bardo.inspiracao",
@@ -1055,7 +1077,8 @@
     "autoFailExpertises": []
   },
   "activeConditionals": [
-    "class.bardo.inspiracao::expertiseAll::::flagOn///inspiracao"
+    "class.bardo.inspiracao::expertiseAll::::flagOn///inspiracao",
+    "lefou::resistance::::against//lefeu e a Tormenta/"
   ],
   "sheetWithConditionals": {
     "defense": {
@@ -1368,8 +1391,8 @@
         "name": "Fortitude",
         "attribute": "constitution",
         "base": 10,
-        "itemBonus": 1,
-        "total": 11,
+        "itemBonus": 6,
+        "total": 16,
         "halfLevel": 3,
         "attrValue": 3,
         "training": 4,
@@ -1380,6 +1403,11 @@
             "source": "Inspiração (cond.)",
             "amount": 1,
             "note": "Sob Inspiração"
+          },
+          {
+            "source": "Raça: Lefou (cond.)",
+            "amount": 5,
+            "note": "contra: lefeu e a Tormenta"
           }
         ],
         "armorPenaltyApplied": 0
@@ -1692,8 +1720,8 @@
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 11,
-        "itemBonus": 1,
-        "total": 12,
+        "itemBonus": 6,
+        "total": 17,
         "halfLevel": 3,
         "attrValue": 4,
         "training": 4,
@@ -1704,6 +1732,11 @@
             "source": "Inspiração (cond.)",
             "amount": 1,
             "note": "Sob Inspiração"
+          },
+          {
+            "source": "Raça: Lefou (cond.)",
+            "amount": 5,
+            "note": "contra: lefeu e a Tormenta"
           }
         ],
         "armorPenaltyApplied": 0
@@ -1752,8 +1785,8 @@
         "name": "Vontade",
         "attribute": "wisdom",
         "base": 8,
-        "itemBonus": 1,
-        "total": 9,
+        "itemBonus": 6,
+        "total": 14,
         "halfLevel": 3,
         "attrValue": 1,
         "training": 4,
@@ -1764,6 +1797,11 @@
             "source": "Inspiração (cond.)",
             "amount": 1,
             "note": "Sob Inspiração"
+          },
+          {
+            "source": "Raça: Lefou (cond.)",
+            "amount": 5,
+            "note": "contra: lefeu e a Tormenta"
           }
         ],
         "armorPenaltyApplied": 0

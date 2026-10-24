@@ -771,7 +771,8 @@ func FlagGroupID(flag string) string { return "flag:" + flag }
 
 // ApplyActiveConditionals dobra de volta em `byTarget` os efeitos condicionais
 // cujos ids estão em `activeIds`, refazendo a resolução de não-empilhamento por
-// alvo. Condicionais de FLAG são ignoradas (ainda não há tela para ligá-las).
+// alvo. O id é o do TERMO ou o do GRUPO da flag (`FlagGroupID`): o grupo liga
+// de uma vez todos os modificadores que dividem a flag.
 func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) ItemEffects {
 	if len(activeIds) == 0 {
 		return effects

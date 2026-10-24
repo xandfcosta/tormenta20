@@ -9498,7 +9498,35 @@
               "text": "Visão no escuro"
             }
           ],
-          "uid": "rac_b6rsjnvbzc"
+          "uid": "rac_b6rsjnvbzc",
+          "modifiers": [
+            {
+              "target": {
+                "k": "expertise",
+                "name": "Percepção"
+              },
+              "amount": 2,
+              "bonusType": "untyped",
+              "condition": {
+                "c": "flagOn",
+                "flag": "subterraneo",
+                "label": "no subterrâneo"
+              }
+            },
+            {
+              "target": {
+                "k": "expertise",
+                "name": "Sobrevivência"
+              },
+              "amount": 2,
+              "bonusType": "untyped",
+              "condition": {
+                "c": "flagOn",
+                "flag": "subterraneo",
+                "label": "no subterrâneo"
+              }
+            }
+          ]
         },
         {
           "id": "anao-devagar-e-sempre",
@@ -9677,7 +9705,21 @@
           "raceId": "goblin",
           "name": "Engenhoso",
           "description": "Você não sofre penalidades em testes de perícia por não usar ferramentas. Se usar a ferramenta necessária, recebe +2 no teste de perícia.",
-          "uid": "rac_mdfpptz3vo"
+          "uid": "rac_mdfpptz3vo",
+          "modifiers": [
+            {
+              "target": {
+                "k": "expertiseAll"
+              },
+              "amount": 2,
+              "bonusType": "untyped",
+              "condition": {
+                "c": "flagOn",
+                "flag": "ferramenta-necessaria",
+                "label": "com a ferramenta necessária"
+              }
+            }
+          ]
         },
         {
           "id": "goblin-espelunqueiro",
@@ -9744,7 +9786,20 @@
           "raceId": "lefou",
           "name": "Cria da Tormenta",
           "description": "Você é uma criatura do tipo monstro e recebe +5 em testes de resistência contra efeitos causados por lefeu e pela Tormenta.",
-          "uid": "rac_jqrbr6pho5"
+          "uid": "rac_jqrbr6pho5",
+          "modifiers": [
+            {
+              "target": {
+                "k": "resistance"
+              },
+              "amount": 5,
+              "bonusType": "untyped",
+              "condition": {
+                "c": "against",
+                "trait": "lefeu e a Tormenta"
+              }
+            }
+          ]
         },
         {
           "id": "lefou-deformidade",
@@ -10217,7 +10272,20 @@
           "raceId": "medusa",
           "name": "Natureza Venenosa",
           "description": "Recebe resistência a veneno +5 e pode gastar uma ação de movimento e 1 PM para envenenar uma arma. A arma causa perda de 1d12 PV adicional. Veneno dura até acertar um ataque ou fim da cena.",
-          "uid": "rac_3dyes2cszk"
+          "uid": "rac_3dyes2cszk",
+          "modifiers": [
+            {
+              "target": {
+                "k": "resistance"
+              },
+              "amount": 5,
+              "bonusType": "untyped",
+              "condition": {
+                "c": "against",
+                "trait": "veneno"
+              }
+            }
+          ]
         },
         {
           "id": "medusa-olhar-atordoante",
@@ -10454,6 +10522,19 @@
               "amount": 1,
               "bonusType": "untyped",
               "note": "Reptiliano"
+            },
+            {
+              "target": {
+                "k": "expertise",
+                "name": "Furtividade"
+              },
+              "amount": 5,
+              "bonusType": "untyped",
+              "condition": {
+                "c": "flagOn",
+                "flag": "reptiliano",
+                "label": "sem armadura nem roupas pesadas"
+              }
             }
           ],
           "uid": "rac_7seadwuucv"
@@ -12318,12 +12399,42 @@
     },
     {
       "id": "class.arcanista.envolto-em-misterio",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
       "className": "Arcanista",
       "name": "Envolto em Mistério",
       "description": "Aparência assombrosa: +5 Enganação e Intimidação contra pessoas não treinadas em Conhecimento ou Misticismo.",
       "bookPage": 38,
-      "uid": "pwr_5ib5cgqatp"
+      "uid": "pwr_5ib5cgqatp",
+      "modeled": [
+        "o +5 em Enganação e Intimidação, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Enganação"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "envolto-em-misterio",
+            "label": "contra quem não é treinado em Conhecimento ou Misticismo"
+          }
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intimidação"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "envolto-em-misterio",
+            "label": "contra quem não é treinado em Conhecimento ou Misticismo"
+          }
+        }
+      ]
     },
     {
       "id": "class.arcanista.escriba-arcano",
@@ -12437,13 +12548,25 @@
     },
     {
       "id": "class.arcanista.fortalecimento-arcano",
-      "unmodeled": "a CD +1, e +2 com 4º círculo: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "+2 em vez de +1 quando lança magias de 4º círculo: o círculo não é condição de modificador, sem fatia",
       "className": "Arcanista",
       "name": "Fortalecimento Arcano",
       "description": "CD para resistir a suas magias +1. Se pode lançar magias de 4° círculo, sobe para +2.",
       "minLevel": 5,
       "bookPage": 38,
-      "uid": "pwr_fmxf6ytyki"
+      "uid": "pwr_fmxf6ytyki",
+      "modeled": [
+        "o +1 na CD das magias"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "spellDC"
+          },
+          "amount": 1,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.arcanista.heranca-aprimorada",
@@ -12972,13 +13095,24 @@
     },
     {
       "id": "class.barbaro.furia-da-savana",
-      "unmodeled": "o +3m de deslocamento; o bônus da Fúria no arremesso é condicional: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "o bônus da Fúria também em armas de arremesso: a Fúria soma em ataque e dano gerais, e não por arma, sem fatia",
       "className": "Bárbaro",
       "name": "Fúria da Savana",
       "description": "Deslocamento aumenta em +3m. Em fúria, bônus aplica também a armas de arremesso.",
       "bookPage": 42,
-      "modifiers": [],
-      "uid": "pwr_mvlz73jbrw"
+      "modifiers": [
+        {
+          "target": {
+            "k": "displacement"
+          },
+          "amount": 3,
+          "bonusType": "untyped"
+        }
+      ],
+      "uid": "pwr_mvlz73jbrw",
+      "modeled": [
+        "o +3m de deslocamento"
+      ]
     },
     {
       "id": "class.barbaro.furia-raivosa",
@@ -13073,12 +13207,27 @@
     },
     {
       "id": "class.barbaro.supersticao",
-      "unmodeled": "a resistência a magia +5: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
       "className": "Bárbaro",
       "name": "Superstição",
       "description": "Odeia magia: recebe resistência a magia +5.",
       "bookPage": 42,
-      "uid": "pwr_y3suhrp6t5"
+      "uid": "pwr_y3suhrp6t5",
+      "modeled": [
+        "a resistência a magia +5"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "magia"
+          }
+        }
+      ]
     },
     {
       "id": "class.barbaro.totem-espiritual",
@@ -13297,7 +13446,7 @@
     },
     {
       "id": "class.bardo.estrelato",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
+      "unmodeled": "o +5 nas perícias de Carisma ao impressionar uma plateia: ele SOBE o bônus que a Atuação concede, e o uso de Atuação para impressionar é regra do capítulo 2 (ALE-474)",
       "className": "Bardo",
       "name": "Estrelato",
       "description": "+5 em perícias baseadas em Carisma para impressionar plateia. Pode ser difícil passar despercebido em cidades grandes.",
@@ -13727,7 +13876,6 @@
     },
     {
       "id": "class.bucaneiro.abusar-dos-fracos",
-      "unmodeled": "um passo de dano contra quem está com medo: é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
       "className": "Bucaneiro",
       "name": "Abusar dos Fracos",
       "description": "Ao atacar criatura sob condição de medo, dano aumenta em um passo.",
@@ -13738,7 +13886,25 @@
         }
       ],
       "bookPage": 47,
-      "uid": "pwr_ry4hpwyury"
+      "uid": "pwr_ry4hpwyury",
+      "modeled": [
+        "o passo de dano, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageStep",
+            "scope": "all"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "abusar-dos-fracos",
+            "label": "contra criatura sob condição de medo"
+          }
+        }
+      ]
     },
     {
       "id": "class.bucaneiro.amigos-no-porto",
@@ -13788,12 +13954,42 @@
     },
     {
       "id": "class.bucaneiro.ataque-acrobatico",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
       "className": "Bucaneiro",
       "name": "Ataque Acrobático",
       "description": "Ao se aproximar com salto/pirueta (Atletismo/Acrobacia para mover) e atacar no mesmo turno, recebe +2 nesse teste e na rolagem de dano.",
       "bookPage": 47,
-      "uid": "pwr_5qi4bfwkmk"
+      "uid": "pwr_5qi4bfwkmk",
+      "modeled": [
+        "o +2 no ataque e no dano, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "ataque-acrobatico",
+            "label": "depois de saltar ou fazer pirueta até o inimigo"
+          }
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "ataque-acrobatico",
+            "label": "depois de saltar ou fazer pirueta até o inimigo"
+          }
+        }
+      ]
     },
     {
       "id": "class.bucaneiro.aumento-de-atributo",
@@ -13871,7 +14067,7 @@
     },
     {
       "id": "class.bucaneiro.foliao",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
+      "unmodeled": "a atitude das pessoas uma categoria acima: é prosa do mestre",
       "className": "Bucaneiro",
       "name": "Folião",
       "description": "Em festas/tavernas/bailes, +2 em testes de perícias baseadas em Carisma. Atitude das pessoas em relação a você melhora 1 categoria.",
@@ -13883,7 +14079,25 @@
         }
       ],
       "bookPage": 48,
-      "uid": "pwr_3mbpitqttm"
+      "uid": "pwr_3mbpitqttm",
+      "modeled": [
+        "o +2 nas perícias de Carisma, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseByAttribute",
+            "attribute": "charisma"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "foliao",
+            "label": "em festas, tavernas e bailes"
+          }
+        }
+      ]
     },
     {
       "id": "class.bucaneiro.grudar-o-cano",
@@ -13906,16 +14120,37 @@
     },
     {
       "id": "class.bucaneiro.pernas-do-mar",
-      "unmodeled": "o +2 em Acrobacia e Atletismo; o resto é prosa: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "não ficar desprevenido nem lento ao se equilibrar ou escalar: é prosa do mestre",
       "className": "Bucaneiro",
       "name": "Pernas do Mar",
       "description": "+2 Acrobacia e Atletismo. Não fica desprevenido quando se equilibrando ou escalando. Deslocamento não reduzido à metade.",
       "bookPage": 48,
-      "uid": "pwr_w2hsukqwof"
+      "uid": "pwr_w2hsukqwof",
+      "modeled": [
+        "o +2 em Acrobacia e Atletismo"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Acrobacia"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Atletismo"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.bucaneiro.pistoleiro",
-      "unmodeled": "a proficiência e o +2 no dano com arma de fogo: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "a proficiência e o +2 no dano com armas de fogo: o dano não tem escopo por CATEGORIA de arma, sem fatia",
       "className": "Bucaneiro",
       "name": "Pistoleiro",
       "description": "Proficiência com armas de fogo. +2 nas rolagens de dano com armas de fogo.",
@@ -14322,7 +14557,7 @@
     },
     {
       "id": "class.cacador.escaramuca",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
+      "unmodeled": "não vale com armadura pesada, e o dano é só corpo a corpo e alcance curto: o interruptor não confere, sem fatia",
       "className": "Caçador",
       "name": "Escaramuça",
       "description": "Quando se move 6m ou mais, +2 Defesa e Reflexos e +1d8 nas rolagens de dano em alcance curto até início do próximo turno. Não funciona em armadura pesada.",
@@ -14335,11 +14570,55 @@
         }
       ],
       "bookPage": 51,
-      "uid": "pwr_4slsoftmuq"
+      "uid": "pwr_4slsoftmuq",
+      "modeled": [
+        "o +2 na Defesa e em Reflexos e o +1d8 no dano, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "escaramuca",
+            "label": "depois de se mover 6m ou mais"
+          }
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Reflexos"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "escaramuca",
+            "label": "depois de se mover 6m ou mais"
+          }
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 0,
+          "dice": "1d8",
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "escaramuca",
+            "label": "depois de se mover 6m ou mais"
+          }
+        }
+      ]
     },
     {
       "id": "class.cacador.escaramuca-superior",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
+      "unmodeled": "os bônus da Escaramuça \"aumentam para\" +5 e +1d12: é troca de número, e o interruptor não troca um condicional por outro, sem fatia",
       "className": "Caçador",
       "name": "Escaramuça Superior",
       "description": "Bônus de Escaramuça sobe para +5 Defesa/Reflexos e +1d12 dano.",
@@ -14577,21 +14856,74 @@
     },
     {
       "id": "class.cavaleiro.desprezar-os-covardes",
-      "unmodeled": "RD 5 contra quem está caído, desprevenido ou flanqueado: é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
       "className": "Cavaleiro",
       "name": "Desprezar os Covardes",
       "description": "Redução de dano 5 contra ataques de oponentes caídos, desprevenidos ou flanqueados.",
       "bookPage": 54,
-      "uid": "pwr_idiec6h2sr"
+      "uid": "pwr_idiec6h2sr",
+      "modeled": [
+        "a RD 5 quando o jogador liga a situação"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "desprezar-os-covardes",
+            "label": "caído, desprevenido ou flanqueado"
+          }
+        }
+      ]
     },
     {
       "id": "class.cavaleiro.escudeiro",
-      "unmodeled": "o parceiro; o +1 no dano e na Defesa é número (ALE-484): é parceiro, e a regra de parceiros é da p260 (ALE-425)",
+      "unmodeled": "o escudeiro é parceiro, e a ação de movimento por 1 PM é gesto: a regra de parceiros é da p260 (ALE-425)",
       "className": "Cavaleiro",
       "name": "Escudeiro",
       "description": "Recebe parceiro escudeiro que cuida do equipamento. Suas armas recebem +1 nas rolagens de dano e armadura concede +1 Defesa. Pode gastar 1 PM para ação de movimento extra (levantar/sacar/etc).",
       "bookPage": 54,
-      "uid": "pwr_aazt7dqvg3"
+      "uid": "pwr_aazt7dqvg3",
+      "modeled": [
+        "o +1 no dano das armas e o +1 de Defesa com armadura vestida"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 1,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagRequired",
+            "flag": "armadura-leve",
+            "label": "com armadura"
+          }
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagRequired",
+            "flag": "armadura-pesada",
+            "label": "com armadura"
+          }
+        }
+      ]
     },
     {
       "id": "class.cavaleiro.especializacao-em-armadura",
@@ -14623,12 +14955,33 @@
     },
     {
       "id": "class.cavaleiro.etiqueta",
-      "unmodeled": "o +2 em Diplomacia e Nobreza; o 1 PM para rolar de novo é gesto (ALE-492): é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "rolar de novo por 1 PM: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
       "className": "Cavaleiro",
       "name": "Etiqueta",
       "description": "+2 Diplomacia e Nobreza. Em teste dessas perícias, gasta 1 PM para rolá-lo novamente.",
-      "bookPage": 121,
-      "uid": "pwr_52jxrisrhe"
+      "bookPage": 54,
+      "uid": "pwr_52jxrisrhe",
+      "modeled": [
+        "o +2 em Diplomacia e Nobreza"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Diplomacia"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Nobreza"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.cavaleiro.investida-destruidora",
@@ -14655,12 +15008,25 @@
     },
     {
       "id": "class.cavaleiro.pajem",
-      "unmodeled": "o parceiro; o +2 em Diplomacia é número (ALE-484) e o descanso, ALE-488: é parceiro, e a regra de parceiros é da p260 (ALE-425)",
+      "unmodeled": "o pajem é parceiro, e a regra de parceiros é da p260 (ALE-425); o descanso uma categoria acima é da ALE-488",
       "className": "Cavaleiro",
       "name": "Pajem",
       "description": "Recebe parceiro pajem. +2 Diplomacia (sempre aprumado). Condição de descanso 1 categoria acima.",
       "bookPage": 54,
-      "uid": "pwr_ccdr6egoow"
+      "uid": "pwr_ccdr6egoow",
+      "modeled": [
+        "o +2 em Diplomacia"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Diplomacia"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.cavaleiro.postura-ariete-implacavel",
@@ -14926,7 +15292,7 @@
     },
     {
       "id": "class.clerigo.autoridade-eclesiastica",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
+      "unmodeled": "a metade do preço em itens e serviços da igreja: é prosa do mestre",
       "className": "Clérigo",
       "name": "Autoridade Eclesiástica",
       "description": "Posição formal em igreja. +5 em testes de Diplomacia ou Intimidação com devotos. Metade do preço em itens alquímicos/poções/serviços em templos da divindade.",
@@ -14962,7 +15328,38 @@
         }
       ],
       "bookPage": 57,
-      "uid": "pwr_dnruhvgfuu"
+      "uid": "pwr_dnruhvgfuu",
+      "modeled": [
+        "o +5 em Diplomacia e Intimidação, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Diplomacia"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "autoridade-eclesiastica",
+            "label": "ao lidar com devotos de sua divindade"
+          }
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intimidação"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "autoridade-eclesiastica",
+            "label": "ao lidar com devotos de sua divindade"
+          }
+        }
+      ]
     },
     {
       "id": "class.clerigo.canalizar-energia-positiva-negativa",
@@ -15266,12 +15663,25 @@
     },
     {
       "id": "class.druida.aspecto-do-inverno",
-      "unmodeled": "a magia aprendida; a RD 5 a frio é número (ALE-484): é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
+      "unmodeled": "a magia aprendida e o +1 por dado nas magias de frio: é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
       "className": "Druida",
       "name": "Aspecto do Inverno",
       "description": "Aprende magia de evocação (arcana ou divina) de qualquer círculo que possa lançar. Recebe RD 5 contra frio. Suas magias de frio causam +1 dano por dado.",
       "bookPage": 61,
-      "uid": "pwr_zxfzumnqtx"
+      "uid": "pwr_zxfzumnqtx",
+      "modeled": [
+        "a redução de frio 5"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction",
+            "damageType": "frio"
+          },
+          "amount": 5,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.druida.aumento-de-atributo",
@@ -15493,12 +15903,25 @@
     },
     {
       "id": "class.druida.liberdade-da-pradaria",
-      "unmodeled": "o +2 em Reflexos; o alcance da magia é do cap. 4: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "o alcance da magia um passo acima ao ar livre: é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
       "className": "Druida",
       "name": "Liberdade da Pradaria",
       "description": "+2 Reflexos. Se for ar livre, ao lançar magia paga 1 PM para aumentar alcance um passo.",
       "bookPage": 62,
-      "uid": "pwr_t65preiztf"
+      "uid": "pwr_t65preiztf",
+      "modeled": [
+        "o +2 em Reflexos"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Reflexos"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.druida.magia-natural",
@@ -16705,12 +17128,40 @@
     },
     {
       "id": "class.ladino.escapista",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
       "className": "Ladino",
       "name": "Escapista",
       "description": "+5 Acrobacia para escapar/passar por espaço apertado/passar por inimigo, e testes para resistir a efeitos de movimento.",
       "bookPage": 73,
-      "uid": "pwr_amkxvijlhf"
+      "uid": "pwr_amkxvijlhf",
+      "modeled": [
+        "o +5 em Acrobacia e a resistência contra efeitos de movimento, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Acrobacia"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "escapista",
+            "label": "para escapar, passar por espaço apertado ou por inimigo"
+          }
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "efeitos de movimento"
+          }
+        }
+      ]
     },
     {
       "id": "class.ladino.fuga-formidavel",
@@ -16729,12 +17180,25 @@
     },
     {
       "id": "class.ladino.gatuno",
-      "unmodeled": "o +2 em Atletismo; escalar sem desprevenido é prosa: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "escalar sem ficar desprevenido e no deslocamento normal: é prosa do mestre",
       "className": "Ladino",
       "name": "Gatuno",
       "description": "+2 Atletismo. Quando escala, não fica desprevenido e avança deslocamento normal em vez de metade.",
       "bookPage": 74,
-      "uid": "pwr_plzing6mru"
+      "uid": "pwr_plzing6mru",
+      "modeled": [
+        "o +2 em Atletismo"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Atletismo"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.ladino.ladrao-arcano",
@@ -16754,7 +17218,7 @@
     },
     {
       "id": "class.ladino.mao-na-boca",
-      "unmodeled": "o +2 em agarrar; o agarrar livre é gesto: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "o agarrar livre depois do ataque furtivo: é uma forma de ataque que o motor ainda não tem, sem fatia",
       "className": "Ladino",
       "name": "Mão na Boca",
       "description": "+2 em testes de agarrar. Quando acerta AF em criatura desprevenida, faz teste de agarrar como ação livre. Criatura agarrada não pode falar.",
@@ -16765,7 +17229,20 @@
         }
       ],
       "bookPage": 74,
-      "uid": "pwr_34c3ink4nw"
+      "uid": "pwr_34c3ink4nw",
+      "modeled": [
+        "o +2 em testes de agarrar"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "agarrar"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.ladino.maos-rapidas",
@@ -16843,7 +17320,7 @@
     },
     {
       "id": "class.ladino.saqueador-de-tumbas",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
+      "unmodeled": "desabilitar mecanismo com uma ação padrão: é prosa do mestre",
       "className": "Ladino",
       "name": "Saqueador de Tumbas",
       "description": "+5 Investigação para encontrar armadilhas + testes de resistência contra elas. Gasta ação padrão para desabilitar mecanismos em 1d4 rodadas (em vez do tempo normal).",
@@ -16855,11 +17332,40 @@
         }
       ],
       "bookPage": 74,
-      "uid": "pwr_tnyzlzpd2q"
+      "uid": "pwr_tnyzlzpd2q",
+      "modeled": [
+        "o +5 em Investigação e a resistência contra armadilhas, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Investigação"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "saqueador-de-tumbas",
+            "label": "para encontrar armadilhas"
+          }
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "armadilhas"
+          }
+        }
+      ]
     },
     {
       "id": "class.ladino.sombra",
-      "unmodeled": "o +2 em Furtividade; o resto é prosa: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "mover-se sem penalidade e a penalidade por ação chamativa em –10: é prosa do mestre",
       "className": "Ladino",
       "name": "Sombra",
       "description": "+2 Furtividade. Não sofre penalidade em testes para se mover em deslocamento normal. Reduz penalidade para atacar/ações chamativas para -10.",
@@ -16870,7 +17376,20 @@
         }
       ],
       "bookPage": 74,
-      "uid": "pwr_m7qznlzvee"
+      "uid": "pwr_m7qznlzvee",
+      "modeled": [
+        "o +2 em Furtividade"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Furtividade"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.ladino.truque-magico",
@@ -17139,7 +17658,7 @@
     },
     {
       "id": "class.lutador.ate-acertar",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
+      "unmodeled": "o +2 cumulativo a cada erro contra o mesmo oponente: é contagem de rodadas, sem fatia",
       "className": "Lutador",
       "name": "Até Acertar",
       "description": "Quando erra ataque desarmado, recebe +2 cumulativo em ataque e dano desarmado contra mesmo oponente até acertar ou fim cena.",
@@ -17202,12 +17721,38 @@
     },
     {
       "id": "class.lutador.convencido",
-      "unmodeled": "a resistência a medo e mental +5: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
       "className": "Lutador",
       "name": "Convencido",
       "description": "Desdém por artes mais sofisticadas. Resistência a medo e mental +5.",
       "bookPage": 76,
-      "uid": "pwr_ytcrlqmycc"
+      "uid": "pwr_ytcrlqmycc",
+      "modeled": [
+        "a resistência a medo e a efeitos mentais +5"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "medo"
+          }
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "against",
+            "trait": "efeitos mentais"
+          }
+        }
+      ]
     },
     {
       "id": "class.lutador.golpe-baixo",
@@ -17262,12 +17807,33 @@
     },
     {
       "id": "class.lutador.lutador-de-chao",
-      "unmodeled": "o +2 em agarrar e derrubar; a manobra livre por 1 PM é gesto: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "a manobra derrubar livre por 1 PM: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
       "className": "Lutador",
       "name": "Lutador de Chão",
       "description": "+2 em testes de ataque para agarrar e derrubar. Quando agarra criatura, gasta 1 PM para manobra derrubar como ação livre.",
       "bookPage": 77,
-      "uid": "pwr_g7er7hgr7m"
+      "uid": "pwr_g7er7hgr7m",
+      "modeled": [
+        "o +2 em agarrar e derrubar"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "agarrar"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "derrubar"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.lutador.nome-na-arena",
@@ -17690,12 +18256,29 @@
     },
     {
       "id": "class.nobre.lingua-rapida",
-      "unmodeled": "a penalidade de –5 em vez de –10: é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
       "className": "Nobre",
       "name": "Língua Rápida",
       "description": "Em teste de Diplomacia para mudar atitude como ação completa, sofre penalidade de -5 em vez de -10.",
       "bookPage": 80,
-      "uid": "pwr_ufw5auh4n7"
+      "uid": "pwr_ufw5auh4n7",
+      "modeled": [
+        "o +5 que desfaz metade da penalidade, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Diplomacia"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "lingua-rapida",
+            "label": "mudar atitude como ação completa (–5 em vez de –10)"
+          }
+        }
+      ]
     },
     {
       "id": "class.nobre.presenca-majestosa",
@@ -17724,12 +18307,33 @@
     },
     {
       "id": "class.nobre.voz-poderosa",
-      "unmodeled": "o +2 em Diplomacia e Intimidação; o alcance médio é prosa: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "as habilidades de nobre em alcance médio: é prosa do mestre",
       "className": "Nobre",
       "name": "Voz Poderosa",
       "description": "+2 Diplomacia e Intimidação. Habilidades de nobre com alcance curto passam a alcance médio.",
       "bookPage": 80,
-      "uid": "pwr_4dhquwacar"
+      "uid": "pwr_4dhquwacar",
+      "modeled": [
+        "o +2 em Diplomacia e Intimidação"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Diplomacia"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intimidação"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
     },
     {
       "id": "class.paladino.abencoado",
@@ -18068,11 +18672,29 @@
     },
     {
       "id": "class.paladino.virtude-paladinesca-castidade",
-      "unmodeled": "a imunidade a encantamento e o +5 em Intuição contra blefe: é um número num alvo que o motor já soma, e ainda não está no catálogo (ALE-484)",
+      "unmodeled": "a imunidade a encantamento: é uma forma que o motor ainda não tem, sem fatia",
       "className": "Paladino",
       "name": "Virtude Paladinesca: Castidade",
       "description": "Imune a efeitos de encantamento. +5 Intuição para perceber blefes.",
-      "uid": "pwr_u2k5arnc7z"
+      "uid": "pwr_u2k5arnc7z",
+      "modeled": [
+        "o +5 em Intuição para perceber blefes"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intuição"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "castidade",
+            "label": "para perceber blefes"
+          }
+        }
+      ]
     },
     {
       "id": "class.paladino.virtude-paladinesca-compaixao",
@@ -18252,11 +18874,41 @@
     },
     {
       "id": "poder.valentao",
-      "unmodeled": "é um número que vale numa situação, e cabe no efeito condicional que o jogador liga (ALE-484)",
       "bookPage": 66,
       "description": "+2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos.",
       "name": "Valentão",
-      "uid": "pwr_hpf2masdfi"
+      "uid": "pwr_hpf2masdfi",
+      "modeled": [
+        "o +2 no ataque e no dano, que o jogador liga"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "valentao",
+            "label": "contra caído, desprevenido, flanqueado ou indefeso"
+          }
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "valentao",
+            "label": "contra caído, desprevenido, flanqueado ou indefeso"
+          }
+        }
+      ]
     }
   ],
   "generalPowers": [

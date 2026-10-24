@@ -117,10 +117,17 @@ func resolveClassPowerPointers(powers []*ClassPower) {
 	}
 	for _, p := range powers {
 		target, points := byUid[p.PowerUid]
-		if !points || len(p.Modifiers) > 0 {
+		if !points {
 			continue
 		}
-		p.Modifiers = target.Modifiers
+		// O NOME também: a concessão que aponta não o escreve, e é ele que a
+		// ficha mostra como fonte do número ("Valentão +2").
+		if p.Name == "" {
+			p.Name = target.Name
+		}
+		if len(p.Modifiers) == 0 {
+			p.Modifiers = target.Modifiers
+		}
 	}
 }
 
