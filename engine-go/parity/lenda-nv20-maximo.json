@@ -413,6 +413,32 @@
         },
         {
           "target": {
+            "k": "expertise",
+            "name": "Percepção"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "subterraneo",
+            "label": "no subterrâneo"
+          }
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Sobrevivência"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "subterraneo",
+            "label": "no subterrâneo"
+          }
+        },
+        {
+          "target": {
             "k": "flag",
             "name": "displacement-ignores-armor"
           },
@@ -620,6 +646,32 @@
       "fatigue-on-sleep"
     ],
     "conditional": [
+      {
+        "term": "anao::expertise:Percepção::::flagOn///subterraneo",
+        "sourceId": "anao",
+        "source": "Raça: Anão",
+        "bonusType": "untyped",
+        "amount": 2,
+        "note": "no subterrâneo",
+        "target": {
+          "k": "expertise",
+          "name": "Percepção"
+        },
+        "flag": "subterraneo"
+      },
+      {
+        "term": "anao::expertise:Sobrevivência::::flagOn///subterraneo",
+        "sourceId": "anao",
+        "source": "Raça: Anão",
+        "bonusType": "untyped",
+        "amount": 2,
+        "note": "no subterrâneo",
+        "target": {
+          "k": "expertise",
+          "name": "Sobrevivência"
+        },
+        "flag": "subterraneo"
+      },
       {
         "term": "class.cavaleiro.baluarte::defense::::flagOn///baluarte",
         "sourceId": "class.cavaleiro.baluarte",
@@ -1224,6 +1276,8 @@
     "autoFailExpertises": []
   },
   "activeConditionals": [
+    "anao::expertise:Percepção::::flagOn///subterraneo",
+    "anao::expertise:Sobrevivência::::flagOn///subterraneo",
     "class.cavaleiro.baluarte::defense::::flagOn///baluarte",
     "class.cavaleiro.baluarte::resistance::::flagOn///baluarte",
     "class.cavaleiro.duelo::attack:all::::flagOn///duelo",
@@ -1706,14 +1760,20 @@
         "name": "Percepção",
         "attribute": "wisdom",
         "base": 19,
-        "itemBonus": 0,
-        "total": 19,
+        "itemBonus": 2,
+        "total": 21,
         "halfLevel": 10,
         "attrValue": 3,
         "training": 6,
         "trained": true,
         "trainedBy": [],
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Raça: Anão (cond.)",
+            "amount": 2,
+            "note": "no subterrâneo"
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -1782,14 +1842,20 @@
         "name": "Sobrevivência",
         "attribute": "wisdom",
         "base": 13,
-        "itemBonus": 0,
-        "total": 13,
+        "itemBonus": 2,
+        "total": 15,
         "halfLevel": 10,
         "attrValue": 3,
         "training": 0,
         "trained": false,
         "trainedBy": [],
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Raça: Anão (cond.)",
+            "amount": 2,
+            "note": "no subterrâneo"
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
