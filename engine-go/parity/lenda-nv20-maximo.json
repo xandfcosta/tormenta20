@@ -1859,6 +1859,10 @@
           }
         ]
       },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
       "critRange": 20,
       "critMult": 3
     }
@@ -1910,6 +1914,10 @@
       "strDamage": 5,
       "damageBonus": 5,
       "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
         "total": 0,
         "contributions": []
       },

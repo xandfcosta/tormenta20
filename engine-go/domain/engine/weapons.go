@@ -51,8 +51,13 @@ type WeaponCard struct {
 	StrDamage     int           `json:"strDamage"`   // Força folded into melee/thrown damage (0 ranged)
 	DamageBonus   int           `json:"damageBonus"` // strDamage + damageAll.total
 	DamageAll     TotalContribs `json:"damageAll"`
-	CritRange     int           `json:"critRange"`
-	CritMult      int           `json:"critMult"`
+	// DamageOwn são as parcelas que valem só para ESTA arma: o `this` da
+	// sobreposição (a melhoria Cruel) e o `weapon:<id>` da arma escolhida num
+	// poder (a Especialização em Arma, p65). Elas entravam no `DamageBonus` sem
+	// linha na decomposição, e a soma das linhas não fechava (ALE-491).
+	DamageOwn TotalContribs `json:"damageOwn"`
+	CritRange int           `json:"critRange"`
+	CritMult  int           `json:"critMult"`
 	// Announces são as condições que o livro prevê para quem for atingido por
 	// esta arma (p335-336). Elas viajam da carta para o resultado do ataque, que
 	// filtra pelo gatilho — o que é só de crítico não sai num acerto normal.
@@ -61,6 +66,22 @@ type WeaponCard struct {
 	// da ARMA e não parcela — a Piedosa diz "todo o dano causado", o que inclui
 	// a Força e as parcelas dos outros encantos.
 	NonLethal bool `json:"nonLethal,omitempty"`
+}
+
+// WeaponDamageScope é o escopo de dano de UMA arma do catálogo — onde cai o
+// +2 da Especialização em Arma escolhida (p65).
+//
+//	WeaponDamageScope("espada-longa") // "weapon:espada-longa"
+func WeaponDamageScope(catalogID string) string { return "weapon:" + catalogID }
+
+// ownDamageOf junta as parcelas que valem só para esta arma, numa decomposição.
+func ownDamageOf(parts ...TotalContribs) TotalContribs {
+	out := TotalContribs{Contributions: []BreakdownContribution{}}
+	for _, p := range parts {
+		out.Total += p.Total
+		out.Contributions = append(out.Contributions, p.Contributions...)
+	}
+	return out
 }
 
 // ComputeWeaponCards resolves the wielded-weapon cards for a raw Character under
@@ -101,6 +122,8 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 			continue
 		}
 		w := catalog.Weapon
+		own := ownDamageOf(damageThis, totalContribsFor(effects,
+			ModifierTarget{K: "damage", Scope: WeaponDamageScope(*it.CatalogID)}))
 		skill, attribute := "Luta", "strength"
 		strDamage := forTotal
 		if w.Purpose == "ranged" {
@@ -136,8 +159,9 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 			Damage:        damage,
 			DamageType:    w.Type,
 			StrDamage:     strDamage,
-			DamageBonus:   strDamage + damageAll.Total + damageThis.Total,
+			DamageBonus:   strDamage + damageAll.Total + own.Total,
 			DamageAll:     damageAll,
+			DamageOwn:     own,
 			CritRange:     threatRangeOf(w.CritRange, effects),
 			CritMult:      w.CritMult + StatFor(effects, ModifierTarget{K: "critMult"}).Total,
 			NonLethal:     StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0,

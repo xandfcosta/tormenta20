@@ -1961,6 +1961,10 @@
         "total": 0,
         "contributions": []
       },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
       "critRange": 20,
       "critMult": 3
     }
@@ -2017,6 +2021,10 @@
       "strDamage": 4,
       "damageBonus": 4,
       "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
         "total": 0,
         "contributions": []
       },

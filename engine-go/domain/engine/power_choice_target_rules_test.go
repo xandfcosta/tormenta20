@@ -67,3 +67,58 @@ func TestTheAttributeIncreaseLandsOnTheChosenAttribute(t *testing.T) {
 			"diferentes), e o esperado é 4", f)
 	}
 }
+
+// A ESPECIALIZAÇÃO EM ARMA SOMA +2 NO DANO DA ARMA ESCOLHIDA (p65, ALE-491).
+//
+//	"Especialização em Arma. Escolha uma arma. Você recebe +2 em rolagens de
+//	 dano com essa arma. Você pode escolher este poder outras vezes para armas
+//	 diferentes."
+//
+// O alvo é o ESCOPO do dano, e a escolha o preenche: `damage:weapon:<id>`. O
+// predicado é a arma — a espada longa escolhida ganha +2, e a adaga na outra mão
+// não ganha nada. E a decomposição da carta diz quem deu o +2: a parcela tem
+// de aparecer nomeada, ou a soma das linhas não fecha no total.
+func TestWeaponSpecializationAddsDamageOnlyToTheChosenWeapon(t *testing.T) {
+	world := BookRuleset(primeFromDump(t, filepath.Clean(
+		filepath.Join(mustWd(t), "..", "..", "parity"))))
+
+	espada, adaga := "espada-longa", "adaga"
+	maoPrincipal, outraMao := "wielded", "wielded2"
+	const poder = "class.guerreiro.especializacao-em-arma"
+	ch := Character{
+		Level: 5, Strength: 3,
+		Classes:      []CharacterClass{{ClassName: "Guerreiro", Level: 5}},
+		ClassPowers:  `["` + poder + `"]`,
+		PowerChoices: `{"` + poder + `":["espada-longa"]}`,
+		Items: []CharacterItem{
+			{CatalogID: &espada, Name: "Espada longa", Quantity: 1, Equipped: &maoPrincipal},
+			{CatalogID: &adaga, Name: "Adaga", Quantity: 1, Equipped: &outraMao},
+		},
+	}
+	bonus := map[string]WeaponCard{}
+	for _, card := range world.ComputeWeaponCards(ch, nil) {
+		bonus[card.Name] = card
+	}
+	if len(bonus) != 2 {
+		t.Fatalf("esperava as cartas da espada e da adaga, e vieram %d", len(bonus))
+	}
+
+	// Força 3 no dano das duas; a espada escolhida soma +2.
+	if got := bonus["Espada longa"].DamageBonus; got != 5 {
+		t.Errorf("a espada longa escolhida na Especialização somou %d no dano; "+
+			"Força 3 + 2 da p65 dão 5", got)
+	}
+	if got := bonus["Adaga"].DamageBonus; got != 3 {
+		t.Errorf("a adaga, que não foi escolhida, somou %d no dano; só a Força 3 vale", got)
+	}
+
+	soma := bonus["Espada longa"].StrDamage
+	for _, c := range append(bonus["Espada longa"].DamageAll.Contributions,
+		bonus["Espada longa"].DamageOwn.Contributions...) {
+		soma += c.Amount
+	}
+	if soma != bonus["Espada longa"].DamageBonus {
+		t.Errorf("as parcelas do dano da espada somam %d e o total é %d: a decomposição "+
+			"esconde uma parcela", soma, bonus["Espada longa"].DamageBonus)
+	}
+}

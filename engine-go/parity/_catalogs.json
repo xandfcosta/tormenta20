@@ -15727,7 +15727,20 @@
     },
     {
       "id": "class.guerreiro.especializacao-em-arma",
-      "unmodeled": "o +2 no dano com a arma escolhida: o alvo do número é uma escolha do jogador, e o motor não lê a escolha (ALE-491)",
+      "modeled": [
+        "o +2 no dano da arma escolhida, pelo escopo `weapon:<id>` (`fromChoice: scope`)"
+      ],
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "scope": "weapon:"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "fromChoice": "scope"
+        }
+      ],
       "className": "Guerreiro",
       "name": "Especialização em Arma",
       "description": "Escolha uma arma. +2 nas rolagens de dano com essa arma. Pode escolher várias vezes para armas diferentes.",

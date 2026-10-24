@@ -209,7 +209,13 @@ func expandChoiceModifiers(mods []Modifier, picks []string) []Modifier {
 		for _, pick := range picks {
 			copied := m
 			copied.FromChoice = ""
-			copied.Target.Name = pick
+			// `scope` é PREFIXO + escolha: a Especialização em Arma escreve
+			// `weapon:` e a escolha completa com o id da arma (p65).
+			if m.FromChoice == "scope" {
+				copied.Target.Scope = m.Target.Scope + pick
+			} else {
+				copied.Target.Name = pick
+			}
 			out = append(out, copied)
 		}
 	}
