@@ -187,7 +187,13 @@ templ trainingButton(v View, row expertiseRow) {
 			templ.KV("border-grimorio-gold/60 text-grimorio-gold", row.Trained),
 			templ.KV("border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40", !row.Trained) }
 	>
-		@ui.Icon("Dumbbell", "size-3")
+		// O CADEADO é o que diz "não adianta tocar" no celular, onde o `title`
+		// não aparece.
+		if row.TrainedBy != "" {
+			@ui.Icon("Lock", "size-3")
+		} else {
+			@ui.Icon("Dumbbell", "size-3")
+		}
 		Treino
 	</button>
 }

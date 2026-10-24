@@ -794,9 +794,16 @@ func trainingButton(v View, row expertiseRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.Icon("Dumbbell", "size-3").Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		if row.TrainedBy != "" {
+			templ_7745c5c3_Err = ui.Icon("Lock", "size-3").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = ui.Icon("Dumbbell", "size-3").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "Treino</button>")
 		if templ_7745c5c3_Err != nil {
@@ -903,7 +910,7 @@ func expertiseDetail(v View, row expertiseRow) templ.Component {
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(row.Total)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 209, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 215, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 			if templ_7745c5c3_Err != nil {
@@ -970,7 +977,7 @@ func rollTheTest(v View, row expertiseRow) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue("$expertise_d20 = 0; " + sheetPost(v, "/pericias/rolar/"+row.Command))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 239, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 245, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 			if templ_7745c5c3_Err != nil {
@@ -1013,7 +1020,7 @@ func rollTheTest(v View, row expertiseRow) templ.Component {
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue("O d20 que você rolou na mesa para " + row.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 256, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 262, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 			if templ_7745c5c3_Err != nil {
@@ -1026,7 +1033,7 @@ func rollTheTest(v View, row expertiseRow) templ.Component {
 			var templ_7745c5c3_Var55 string
 			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/pericias/rolar/"+row.Command))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 262, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 268, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 			if templ_7745c5c3_Err != nil {
@@ -1039,7 +1046,7 @@ func rollTheTest(v View, row expertiseRow) templ.Component {
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue("Usar o d20 que você rolou em " + row.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 263, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 269, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 			if templ_7745c5c3_Err != nil {
@@ -1190,7 +1197,7 @@ func craftDialog(v View) templ.Component {
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue(option.Key)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 332, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 338, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 			if templ_7745c5c3_Err != nil {
@@ -1203,7 +1210,7 @@ func craftDialog(v View) templ.Component {
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(option.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 332, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 338, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 			if templ_7745c5c3_Err != nil {
@@ -1230,7 +1237,7 @@ func craftDialog(v View) templ.Component {
 		var templ_7745c5c3_Var68 string
 		templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/pericias/nova") + "; $craft = false")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 338, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 344, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 		if templ_7745c5c3_Err != nil {
