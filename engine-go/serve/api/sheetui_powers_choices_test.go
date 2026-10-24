@@ -267,3 +267,51 @@ func TestWritingOneChoiceDoesNotEraseTheOthers(t *testing.T) {
 		t.Errorf("a distribuição não foi gravada: %s", row.Raceattributechoices)
 	}
 }
+
+// O PODER REPETÍVEL OCUPA UMA VAGA POR ESCOLHA (p38, ALE-491).
+//
+// "Você pode escolher este poder várias vezes" — e cada vez é um atributo. O
+// gesto grava a escolha junto do poder: "Aumento: Força" e "Aumento:
+// Sabedoria" são duas vagas, o poder aparece UMA vez em `classPowers` e as
+// duas escolhas em `powerChoices`. A terceira escolha num bárbaro de nível 3,
+// que tem duas vagas, é recusada.
+func TestARepeatablePowerTakesOneSlotPerChoice(t *testing.T) {
+	f, id := barbaro(t, 3)
+	const poder = "class.barbaro.aumento-de-atributo"
+
+	for _, opcao := range []string{"strength", "wisdom"} {
+		if refusal := powerCommand(t, f, id, "escolha/"+poder+"/"+opcao, ""); refusal != "" {
+			t.Fatalf("escolher Aumento de Atributo em %s foi recusado: %q", opcao, refusal)
+		}
+	}
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler o personagem: %v", err)
+	}
+	if row.Classpowers != `["`+poder+`"]` {
+		t.Errorf("o poder repetível devia entrar UMA vez em classPowers, e ficou %s", row.Classpowers)
+	}
+	if row.Powerchoices != `{"`+poder+`":["strength","wisdom"]}` {
+		t.Errorf("as duas escolhas deviam estar em powerChoices, e ficou %s", row.Powerchoices)
+	}
+
+	// As duas escolhas ocupam as duas vagas: o terceiro poder não cabe.
+	if refused := powerCommand(t, f, id, "escolhe/class.barbaro.golpe-poderoso", ""); !strings.Contains(refused, "2 vagas") {
+		t.Errorf("com o Aumento tomado duas vezes, um terceiro poder coube em 2 vagas: %q", refused)
+	}
+	if page := powerScreen(t, f, id); strings.Contains(page, "poder por escolher") || strings.Contains(page, "poderes por escolher") {
+		t.Error("a pendência ainda pede poder com as duas vagas ocupadas pelo Aumento")
+	}
+
+	// UMA OPÇÃO QUE O LIVRO NÃO TEM é recusada, dizendo quais são.
+	if refused := powerCommand(t, f, id, "escolha/"+poder+"/sorte", ""); !strings.Contains(refused, "Força") {
+		t.Errorf("um atributo inventado não foi recusado com as opções: %q", refused)
+	}
+
+	// TIRAR uma escolha devolve a vaga; tirar a última tira o poder.
+	powerCommand(t, f, id, "escolha/"+poder+"/strength/tira", "")
+	powerCommand(t, f, id, "escolha/"+poder+"/wisdom/tira", "")
+	if saved := chosen(t, f, id); strings.Contains(saved, "aumento") {
+		t.Errorf("sem nenhuma escolha, o Aumento continuou em classPowers: %s", saved)
+	}
+}

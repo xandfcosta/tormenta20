@@ -54,6 +54,7 @@ lista
 magia
 manobra
 nome
+opcao
 npcId
 passo
 placeId

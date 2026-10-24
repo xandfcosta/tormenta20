@@ -88,6 +88,8 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/poderes/postura/{flag}/entra", s.sheetCommand(enterStance))
 	// AS ESCOLHAS do diálogo.
 	r.Post("/personagens/{id}/poderes/escolhe/{poder}", s.sheetCommand(pickPower))
+	r.Post("/personagens/{id}/poderes/escolha/{poder}/{opcao}", s.sheetCommand(pickPowerOption))
+	r.Post("/personagens/{id}/poderes/escolha/{poder}/{opcao}/tira", s.sheetCommand(dropPowerOption))
 	r.Post("/personagens/{id}/poderes/origem/{beneficio}", s.sheetCommand(pickOriginBenefit))
 	r.Post("/personagens/{id}/poderes/variante/{variante}", s.sheetCommand(pickRaceVariant))
 	r.Post("/personagens/{id}/poderes/classe/{classe}/{escolha}/{valor}", s.sheetCommand(pickClassChoice))

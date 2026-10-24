@@ -36,6 +36,24 @@ type ClassPower struct {
 	GrantedAtLevel  *int           `json:"grantedAtLevel"`
 	GrantedByChoice *GrantByChoice `json:"grantedByChoice"`
 	BookPage        int            `json:"bookPage"`
+	// Choice é a escolha que o poder pede — o atributo do Aumento de Atributo
+	// (p38), o animal do Totem. Ela chega pela concessão que APONTA, porque o
+	// `classPowersResolved` funde o verbete nela.
+	Choice *PowerChoice `json:"choice"`
+}
+
+// PowerChoice é a escolha de um poder, como o catálogo a escreve.
+type PowerChoice struct {
+	Kind  string `json:"kind"`
+	Label string `json:"label"`
+	// Repeatable é o "você pode escolher este poder várias vezes" do livro.
+	Repeatable bool                `json:"repeatable"`
+	Options    []PowerChoiceOption `json:"options"`
+}
+
+type PowerChoiceOption struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type GrantByChoice struct {
