@@ -323,6 +323,114 @@
           "note": "Sílfide"
         }
       ]
+    },
+    {
+      "sourceId": "tamanho-minusculo",
+      "source": "Tamanho: Minúsculo",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Furtividade"
+          },
+          "amount": 5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "agarrar"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "agarrar",
+            "scope": "defense"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "derrubar"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "derrubar",
+            "scope": "defense"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "desarmar"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "desarmar",
+            "scope": "defense"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "empurrar"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "empurrar",
+            "scope": "defense"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "quebrar"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maneuver",
+            "name": "quebrar",
+            "scope": "defense"
+          },
+          "amount": -5,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "damageStep",
+            "scope": "all"
+          },
+          "amount": -1,
+          "bonusType": "untyped"
+        }
+      ]
     }
   ],
   "itemEffects": {
@@ -375,6 +483,17 @@
           }
         ]
       },
+      "damageStep:all": {
+        "total": -1,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -1
+          }
+        ]
+      },
       "defense": {
         "total": 2,
         "contributions": [
@@ -383,6 +502,127 @@
             "source": "Armadura de couro",
             "bonusType": "armor",
             "amount": 2
+          }
+        ]
+      },
+      "expertise:Furtividade": {
+        "total": 5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": 5
+          }
+        ]
+      },
+      "maneuver:agarrar": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
+          }
+        ]
+      },
+      "maneuver:agarrar:defense": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
+          }
+        ]
+      },
+      "maneuver:derrubar": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
+          }
+        ]
+      },
+      "maneuver:derrubar:defense": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
+          }
+        ]
+      },
+      "maneuver:desarmar": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
+          }
+        ]
+      },
+      "maneuver:desarmar:defense": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
+          }
+        ]
+      },
+      "maneuver:empurrar": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
+          }
+        ]
+      },
+      "maneuver:empurrar:defense": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
+          }
+        ]
+      },
+      "maneuver:quebrar": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
+          }
+        ]
+      },
+      "maneuver:quebrar:defense": {
+        "total": -5,
+        "contributions": [
+          {
+            "sourceId": "tamanho-minusculo",
+            "source": "Tamanho: Minúsculo",
+            "bonusType": "untyped",
+            "amount": -5
           }
         ]
       }
@@ -659,14 +899,19 @@
         "name": "Furtividade",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "itemBonus": 5,
+        "total": 11,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
         "trained": false,
         "trainedBy": [],
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Tamanho: Minúsculo",
+            "amount": 5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -1192,14 +1437,19 @@
         "name": "Furtividade",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "itemBonus": 5,
+        "total": 11,
         "halfLevel": 1,
         "attrValue": 5,
         "training": 0,
         "trained": false,
         "trainedBy": [],
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Tamanho: Minúsculo",
+            "amount": 5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -1481,7 +1731,7 @@
         "total": 0,
         "contributions": []
       },
-      "damage": "1d6",
+      "damage": "1d4",
       "damageType": "perfuracao",
       "strDamage": -1,
       "damageBonus": -1,
@@ -1531,7 +1781,7 @@
         "total": 0,
         "contributions": []
       },
-      "damage": "1d6",
+      "damage": "1d4",
       "damageType": "perfuracao",
       "strDamage": -1,
       "damageBonus": -1,

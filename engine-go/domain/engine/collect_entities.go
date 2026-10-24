@@ -47,6 +47,9 @@ func (r *Ruleset) raceActiveItems(ch Character) []ActiveItem {
 			Modifiers: mods,
 		})
 	}
+	if size := r.raceSizeItem(ch); size != nil {
+		result = append(result, *size)
+	}
 	return result
 }
 
