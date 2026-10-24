@@ -122,3 +122,40 @@ func TestWeaponSpecializationAddsDamageOnlyToTheChosenWeapon(t *testing.T) {
 			"esconde uma parcela", soma, bonus["Espada longa"].DamageBonus)
 	}
 }
+
+// O MESTRE EM ARMA SOBE UM PASSO NO DANO DA ARMA ESCOLHIDA (p66, ALE-491).
+//
+//	"Mestre em Arma. Escolha uma arma. Com esta arma, seu dano aumenta em um
+//	 passo […]"
+//
+// A mesma forma da Especialização, no alvo `damageStep`. O predicado é a arma:
+// a espada longa (1d8) passa a 1d10, e a adaga na outra mão fica em 1d4.
+func TestWeaponMasteryStepsUpOnlyTheChosenWeapon(t *testing.T) {
+	world := BookRuleset(primeFromDump(t, filepath.Clean(
+		filepath.Join(mustWd(t), "..", "..", "parity"))))
+
+	espada, adaga := "espada-longa", "adaga"
+	maoPrincipal, outraMao := "wielded", "wielded2"
+	const poder = "class.guerreiro.mestre-em-arma"
+	ch := Character{
+		Level: 12, Strength: 3,
+		Classes:      []CharacterClass{{ClassName: "Guerreiro", Level: 12}},
+		ClassPowers:  `["` + poder + `"]`,
+		PowerChoices: `{"` + poder + `":["espada-longa"]}`,
+		Items: []CharacterItem{
+			{CatalogID: &espada, Name: "Espada longa", Quantity: 1, Equipped: &maoPrincipal},
+			{CatalogID: &adaga, Name: "Adaga", Quantity: 1, Equipped: &outraMao},
+		},
+	}
+	dado := map[string]string{}
+	for _, card := range world.ComputeWeaponCards(ch, nil) {
+		dado[card.Name] = card.Damage
+	}
+	if dado["Espada longa"] != "1d10" {
+		t.Errorf("a espada longa do Mestre em Arma rola %q; um passo acima de 1d8 é 1d10 (p66)",
+			dado["Espada longa"])
+	}
+	if dado["Adaga"] != "1d4" {
+		t.Errorf("a adaga, que não foi escolhida, rola %q; ela fica em 1d4", dado["Adaga"])
+	}
+}

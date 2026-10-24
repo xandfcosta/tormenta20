@@ -148,7 +148,8 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 		// multiplica "os dados de dano do ataque (INCLUINDO quaisquer aumentos
 		// por passos)". Andar depois multiplicaria o dado de antes.
 		damage := DamageStep(w.Damage, DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped)+
-			StatFor(effects, ModifierTarget{K: "damageStep", Scope: "all"}).Total)
+			StatFor(effects, ModifierTarget{K: "damageStep", Scope: "all"}).Total+
+			StatFor(effects, ModifierTarget{K: "damageStep", Scope: WeaponDamageScope(*it.CatalogID)}).Total)
 		cards = append(cards, WeaponCard{
 			Name:          it.Name,
 			Skill:         skill,

@@ -15797,7 +15797,25 @@
     },
     {
       "id": "class.guerreiro.mestre-em-arma",
-      "unmodeled": "um passo de dano na arma escolhida; rolar de novo por 2 PM é gesto: o alvo do número é uma escolha do jogador, e o motor não lê a escolha (ALE-491)",
+      "modeled": [
+        "o passo de dano na arma escolhida, pelo escopo `weapon:<id>` (`fromChoice: scope`)"
+      ],
+      "unmodeled": "rolar de novo o ataque por 2 PM: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+      "choice": {
+        "kind": "weapon",
+        "label": "Arma"
+      },
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageStep",
+            "scope": "weapon:"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "fromChoice": "scope"
+        }
+      ],
       "className": "Guerreiro",
       "name": "Mestre em Arma",
       "description": "Com arma escolhida, dano aumenta em um passo. Quando faz teste de ataque, gasta 2 PM para rolá-lo novamente.",
