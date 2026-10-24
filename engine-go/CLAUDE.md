@@ -1329,7 +1329,10 @@ poderes num personagem de nível 1, e o motor somava os modificadores de todos. 
 validação é
 `sheet.WithChoicesValid`, ela roda nas DUAS portas (o endpoint JSON e os
 comandos da ficha), e é **estrita**: a escrita tem de deixar a ficha VÁLIDA, e
-não só "não piorar". Decisão do dono, com a razão registrada — o projeto ainda
+não só "não piorar". Desde a ALE-491 ela confere também o `powerChoices`:
+escolha só de poder que a ficha tem, só opção que o livro oferece, mais de uma
+só no poder repetível — e o repetível ocupa uma vaga por ESCOLHA
+(`sheet.UsedPowerSlots`), não uma por poder. Decisão do dono, com a razão registrada — o projeto ainda
 não foi usado numa mesa real, então não há ficha antiga fora da conta para
 proteger. O preço apareceu na hora: dois testes tinham fixtures ilegais pelo
 livro (um poder inventado, e um personagem sem classe com um poder escolhido).
