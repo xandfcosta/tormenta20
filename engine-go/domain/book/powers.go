@@ -69,7 +69,10 @@ func (c PowerChoice) Offered() []PowerChoiceOption {
 	}
 	out := []PowerChoiceOption{}
 	for _, item := range Catalogs().Items {
-		if item.Weapon != nil {
+		// O item COMPOSTO é a arma específica do capítulo 8 (a Avalanche, p337):
+		// ela herda a forma da arma mundana e por isso tem `Weapon`, mas "escolha
+		// uma arma" é o tipo — a espada longa, e não uma espada encantada.
+		if item.Weapon != nil && item.ComposedOf == nil {
 			out = append(out, PowerChoiceOption{ID: item.ID, Name: item.Name})
 		}
 	}

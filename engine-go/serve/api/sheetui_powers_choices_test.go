@@ -352,8 +352,15 @@ func TestTheWeaponSpecializationIsChosenFromTheWeaponCatalog(t *testing.T) {
 	f, id := fighterFixture(t)
 	const poder = "class.guerreiro.especializacao-em-arma"
 
-	if !strings.Contains(powerScreen(t, f, id), "/poderes/escolha/"+poder+"/espada-longa") {
+	screen := powerScreen(t, f, id)
+	if !strings.Contains(screen, "/poderes/escolha/"+poder+"/espada-longa") {
 		t.Error("o diálogo não oferece a espada longa à Especialização em Arma")
+	}
+	// "Escolha uma arma" é o TIPO de arma. A Avalanche é um item mágico
+	// específico (p337), feito sobre um martelo de guerra, e não uma arma
+	// que se escolhe.
+	if strings.Contains(screen, "/poderes/escolha/"+poder+"/avalanche") {
+		t.Error("o diálogo oferece a Avalanche, uma arma específica do capítulo 8, à Especialização")
 	}
 	if refusal := powerCommand(t, f, id, "escolha/"+poder+"/espada-longa", ""); refusal != "" {
 		t.Fatalf("escolher a espada longa foi recusado: %q", refusal)
