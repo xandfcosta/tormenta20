@@ -126,20 +126,24 @@ func (b *Book) htmlXML(page int) string    { return b.run("pdftohtml", page, "-x
 // RE2 do Go `\s` e `\w` são ASCII. O livro tem espaço não separável e letra
 // acentuada, e trocar a classe trocaria o que casa sem erro nenhum.
 
-const pySpace = `[\t\n\v\f\r \x{1c}-\x{1f}\x{85}\p{Z}]`
-const pyWord = `[\p{L}\p{N}_]`
+// PySpace é o `\s` do Python: Unicode, ao contrário do do RE2.
+const PySpace = `[\t\n\v\f\r \x{1c}-\x{1f}\x{85}\p{Z}]`
 
-var spaces = regexp.MustCompile(pySpace + `+`)
+// PyWord é o `\w` do Python: letra, número ou sublinhado de qualquer escrita.
+const PyWord = `[\p{L}\p{N}_]`
+
+var spaces = regexp.MustCompile(PySpace + `+`)
 
 // Collapse troca cada sequência de espaço por um espaço só, e apara as pontas.
 func Collapse(s string) string { return Strip(spaces.ReplaceAllString(s, " ")) }
 
 // Strip apara o espaço das pontas, com a definição de espaço do Python.
 func Strip(s string) string {
-	return strings.TrimFunc(s, isPySpace)
+	return strings.TrimFunc(s, IsPySpace)
 }
 
-func isPySpace(r rune) bool {
+// IsPySpace diz se o caractere é espaço para o Python (`str.isspace`).
+func IsPySpace(r rune) bool {
 	return unicode.IsSpace(r) || unicode.Is(unicode.Z, r) || (r >= 0x1c && r <= 0x1f)
 }
 
@@ -318,7 +322,7 @@ func Num(t string) (int, error) {
 	return strconv.Atoi(strings.ReplaceAll(s, "+", ""))
 }
 
-var hyphenBreak = regexp.MustCompile(`(` + pyWord + `)-` + pySpace + `+(` + pyWord + `)`)
+var hyphenBreak = regexp.MustCompile(`(` + PyWord + `)-` + PySpace + `+(` + PyWord + `)`)
 
 // Join junta linhas DESFAZENDO a hifenização de quebra ("subter-" / "râneos"),
 // senão um `find` pelo nome de uma habilidade não acha a habilidade que está lá.
