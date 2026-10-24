@@ -87,10 +87,7 @@ func TestEveryCatalogIdIsASlug(t *testing.T) {
 // A pergunta é POR ARQUIVO de propósito: `acrobacia` é uma perícia e um poder
 // geral, e as duas URLs são diferentes porque o recurso é diferente.
 func TestNoSlugAddressesTwoTopLevelEntries(t *testing.T) {
-	arquivos, err := filepath.Glob("data/*.json")
-	if err != nil || len(arquivos) == 0 {
-		t.Fatalf("não achei os catálogos em data/*.json: %v", err)
-	}
+	arquivos := resourceFileNames()
 
 	medidos := 0
 	for _, caminho := range arquivos {
@@ -128,10 +125,7 @@ type entradaComId struct {
 
 func lerIds(t *testing.T) (todos []entradaComId) {
 	t.Helper()
-	arquivos, err := filepath.Glob("data/*.json")
-	if err != nil || len(arquivos) == 0 {
-		t.Fatalf("não achei os catálogos em data/*.json: %v", err)
-	}
+	arquivos := resourceFileNames()
 	for _, caminho := range arquivos {
 		nome := strings.TrimSuffix(filepath.Base(caminho), ".json")
 		raw, ok := catalog.Resource(nome)

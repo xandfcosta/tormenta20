@@ -103,8 +103,8 @@ func carregaOCatalogo() (catalogoDaSeed, error) {
 	if len(empty) > 0 {
 		sort.Strings(empty)
 		return catalogoDaSeed{}, fmt.Errorf(
-			"o catálogo embutido não carregou (%s vieram vazios): o defeito é do build e não do seed — "+
-				"conferir se `catalog/data/*.json` foi para o binário", strings.Join(empty, ", "))
+			"o catálogo não carregou (%s vieram vazios): o defeito é do livro transcrito e não do seed — "+
+				"conferir o registro em `catalog/transcript/layout.go`", strings.Join(empty, ", "))
 	}
 	return catalogoDaSeed{lists: lists}, nil
 }

@@ -3,7 +3,7 @@ package book
 // AS PROFICIÊNCIAS QUE A CLASSE CONCEDE.
 //
 // Elas moram aqui e não na ficha nem na forja porque a tabela é lida do
-// `catalog/data/classes.json`: a pergunta é do LIVRO, e as telas só recebem a
+// `transcript.Classes`: a pergunta é do LIVRO, e as telas só recebem a
 // resposta.
 
 // grantedProficiencies ports characterProficiencies(...).filter(granted): the
@@ -83,7 +83,7 @@ func ProficiencyKeys() []string {
 
 // ProficienciesByClass é a tabela do livro, lida do catálogo de classes.
 //
-// Ela sai de `catalog/data/classes.json` e não de um `map` escrito em Go pelo
+// Ela sai de `transcript.Classes` e não de um `map` escrito em Go pelo
 // mesmo motivo das perícias de classe: é DADO TRANSCRITO — a linha
 // "Proficiências." de cada classe, p36–83 — e dado transcrito mora no catálogo,
 // onde a validação de schema o alcança.

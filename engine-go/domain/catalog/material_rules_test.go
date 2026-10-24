@@ -8,7 +8,7 @@ import (
 
 // OS MATERIAIS ESPECIAIS, pelo que sobrevive SEM o livro na mão (ALE-415).
 //
-// A conferência contra a p166-167 é do `scripts/audit-materials.py`, que lê o
+// A conferência contra a p166-167 é do `cmd/audit/materials`, que lê o
 // PDF e não roda na CI. O que fica aqui é a coerência INTERNA da entrada — e
 // ela é mais do que parece, porque o preço de um material é uma MATRIZ e o
 // catálogo guarda a matriz junto do número que a tela mostra. Dois lugares

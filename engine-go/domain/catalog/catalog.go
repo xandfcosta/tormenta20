@@ -1,20 +1,30 @@
 // Package catalog serve o dado de referência transcrito do livro: magias,
 // bestiário, itens, raças, origens, poderes.
 //
-// Ele é EMBUTIDO no binário (`go:embed`), então o servidor carrega o livro
-// consigo e um deploy é um arquivo só.
+// O livro em si mora no `transcript`, como código Go compilado no binário: o
+// servidor carrega o livro consigo e um deploy é um arquivo só. Este pacote o
+// serve na forma JSON em que os leitores sempre o decodificaram.
 package catalog
 
 import (
-	"embed"
 	"encoding/json"
+	"fmt"
 	"log"
 	"sort"
 	"sync"
+
+	"t20engine/domain/catalog/transcript"
 )
 
-//go:embed data/*.json
-var files embed.FS
+// resourceJSON é um recurso do livro transcrito (`transcript`), na forma JSON
+// em que todo leitor deste pacote o decodifica.
+func resourceJSON(name string) ([]byte, error) {
+	raw, ok := transcript.ResourceJSON(name)
+	if !ok {
+		return nil, fmt.Errorf("catalog: o livro transcrito não tem o recurso %q (os nomes estão em transcript.Resources)", name)
+	}
+	return raw, nil
+}
 
 // Spell is the subset of a SPELL_CATALOG entry the API's cast/apply paths read.
 type Spell struct {
@@ -99,7 +109,7 @@ var (
 func LookupSpell(id string) (Spell, bool) {
 	spellsOnce.Do(func() {
 		spellsByID = map[string]Spell{}
-		if b, err := files.ReadFile("data/spells.json"); err == nil {
+		if b, err := resourceJSON("spells"); err == nil {
 			_ = json.Unmarshal(b, &spellsByID)
 		}
 	})
@@ -154,7 +164,7 @@ var (
 func LookupItem(id string) (Item, bool) {
 	itemsOnce.Do(func() {
 		itemsByID = map[string]Item{}
-		if b, err := files.ReadFile("data/items.json"); err == nil {
+		if b, err := resourceJSON("items"); err == nil {
 			var items []Item
 			if json.Unmarshal(b, &items) == nil {
 				for _, it := range items {
@@ -199,7 +209,7 @@ func ActivationsLoaded() bool {
 func LookupActivation(id string) (Activation, bool) {
 	activationsOnce.Do(func() {
 		activationsByID = map[string]Activation{}
-		b, err := files.ReadFile("data/activations.json")
+		b, err := resourceJSON("activations")
 		if err != nil {
 			log.Printf("catalog: read activations.json failed: %v", err)
 			return
@@ -231,11 +241,11 @@ var resources = []string{
 	"class-expertises", "devotee-terms", "gm-tables", "dungeon-design",
 	// `classes` tem três campos — id, nome e página do livro. As classes existiam
 	// só como uma lista de NOMES dentro de `options.json`, e sem lugar para a
-	// página não havia botão para o livro. Ver `scripts/book-pages.py`.
+	// página não havia botão para o livro. Ver `cmd/bookpages`.
 	"classes",
 	// `effect-types` existe pelo mesmo motivo de `classes`: a condição CITA o tipo
 	// ("Abalado … Medo.") e não havia para onde o elo apontar. As definições saem
-	// do texto da p228, extraídas pelo `scripts/book-pages.py`.
+	// do texto da p228, extraídas pelo `cmd/bookpages`.
 	"effect-types",
 	// `spell-schools`, idem: a magia CITA a escola e não havia para onde o elo
 	// apontar — o nome dela nem aparecia no cartão. As oito definições saem do
@@ -263,7 +273,7 @@ func Resource(name string) ([]byte, bool) {
 	if !valid[name] {
 		return nil, false
 	}
-	b, err := files.ReadFile("data/" + name + ".json")
+	b, err := resourceJSON(name)
 	if err != nil {
 		return nil, false
 	}
@@ -272,7 +282,7 @@ func Resource(name string) ([]byte, bool) {
 
 // Options returns the character-creation option lists JSON (/personagens/options).
 func Options() ([]byte, error) {
-	return files.ReadFile("data/options.json")
+	return resourceJSON("options")
 }
 
 // SpellIDs e ItemIDs existem para a SUGESTÃO de vizinho: recusar um id
@@ -326,7 +336,7 @@ var (
 func OptionList(kind string) []string {
 	optionsOnce.Do(func() {
 		optionLists = map[string][]string{}
-		if b, err := files.ReadFile("data/options.json"); err == nil {
+		if b, err := resourceJSON("options"); err == nil {
 			_ = json.Unmarshal(b, &optionLists)
 		}
 		optionLists["races"] = idsDoRecurso("races")
@@ -405,7 +415,7 @@ func GrantedPowerNames() []string {
 		var list []struct {
 			Name string `json:"name"`
 		}
-		b, err := files.ReadFile("data/divine-powers.json")
+		b, err := resourceJSON("divine-powers")
 		if err != nil || json.Unmarshal(b, &list) != nil {
 			return
 		}
@@ -434,7 +444,7 @@ var (
 func IsCondition(id string) bool {
 	conditionsOnce.Do(func() {
 		conditionIDSet = map[string]bool{}
-		b, err := files.ReadFile("data/conditions.json")
+		b, err := resourceJSON("conditions")
 		if err != nil {
 			return
 		}

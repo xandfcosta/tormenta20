@@ -23,7 +23,7 @@ import (
 //
 // Schema valida FORMA: dois modificadores a mais, bem formados, são um schema
 // válido. Só conferir contra a página pega isto — e quem o pegou foi o
-// `scripts/audit-classes.py`, que exige o ALVO de cada modificador ser nomeado
+// `cmd/audit/classes`, que exige o ALVO de cada modificador ser nomeado
 // no texto do livro.
 //
 // # O controle está no mesmo caso

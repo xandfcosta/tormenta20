@@ -40,7 +40,7 @@ func TestEveryComposedItemSaysWhatItDoesOrWhyNot(t *testing.T) {
 	// tipo — o `unmodeled` é TEXTO aqui e no encanto, e um MAPA por metade no
 	// material. Quem não é composto nem chega a ser decodificado.
 	todos := []composedItem{}
-	raw, err := files.ReadFile("data/items.json")
+	raw, err := resourceJSON("items")
 	if err != nil {
 		t.Fatalf("ler items.json: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestEveryComposedItemSaysWhatItDoesOrWhyNot(t *testing.T) {
 		todos = append(todos, item)
 	}
 	var ativacoes []activation
-	rawAtivacoes, err := files.ReadFile("data/activations.json")
+	rawAtivacoes, err := resourceJSON("activations")
 	if err != nil {
 		t.Fatalf("ler activations.json: %v", err)
 	}

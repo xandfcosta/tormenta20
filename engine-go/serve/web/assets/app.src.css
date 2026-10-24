@@ -33,6 +33,14 @@
  * variável de tema dela só na segunda — e quem rodar o script UMA vez commita
  * uma folha que o CI vai recusar por obsoleta. */
 @source not "./static";
+/* O CÓDIGO QUE NÃO DESENHA TELA também sai da varredura: a detecção automática
+ * lê todo o `engine-go/`, e uma conta como `start-2` no leitor de PDF
+ * (`infra/bookpdf`) virou a utilidade `.start-2` na folha (ALE-498). Os
+ * auditores (`cmd/`) e o livro transcrito, com o texto inteiro do livro, são a
+ * mesma armadilha esperando. */
+@source not "../../../infra";
+@source not "../../../cmd";
+@source not "../../../domain/catalog/transcript";
 
 @source "../*.templ";
 @source "../../web/ui/*.templ";

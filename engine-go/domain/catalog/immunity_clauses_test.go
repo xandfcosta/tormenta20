@@ -40,7 +40,7 @@ type effectTypeEntry struct {
 var falaEmImunidade = regexp.MustCompile(`(?i)imun`)
 
 func TestEveryImmunityClauseOfTheEffectTypesIsInTheEngine(t *testing.T) {
-	bruto, err := files.ReadFile("data/effect-types.json")
+	bruto, err := resourceJSON("effect-types")
 	if err != nil {
 		t.Fatalf("ler os tipos de efeito: %v", err)
 	}

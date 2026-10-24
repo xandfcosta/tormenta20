@@ -16,7 +16,7 @@ import (
 // @example materiais := itemsOfCategory[specialMaterial](t, "material")
 func itemsOfCategory[T any](t *testing.T, category string) []T {
 	t.Helper()
-	raw, err := files.ReadFile("data/items.json")
+	raw, err := resourceJSON("items")
 	if err != nil {
 		t.Fatalf("ler items.json: %v", err)
 	}

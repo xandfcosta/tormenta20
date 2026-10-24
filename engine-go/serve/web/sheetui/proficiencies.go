@@ -11,7 +11,7 @@ import (
 //
 // A tabela de "que classe sabe usar o quê" é dado transcrito do livro, então
 // mora onde o dado transcrito mora: o campo `proficiencies` de
-// `catalog/data/classes.json`, ao lado da página. O que sobra aqui é só a
+// `transcript.Classes`, ao lado da página. O que sobra aqui é só a
 // RESOLUÇÃO — juntar as classes do personagem, aplicar as duas linhas de base e
 // dizer quais categorias ele tem.
 //

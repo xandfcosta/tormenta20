@@ -20,7 +20,7 @@ import (
 //
 // # A lista, e por que cada um está nela
 var permitidos = map[string]bool{
-	// O catálogo é a FONTE: o livro tipa o que o `catalog/data/*.json` guarda.
+	// O catálogo é a FONTE: o livro tipa o que o `catalog/transcript` guarda.
 	"t20engine/domain/catalog": true,
 	// Os tipos do motor aparecem nas entradas que carregam regra — o item que
 	// tem efeito, a magia que tem custo.

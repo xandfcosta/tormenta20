@@ -2,8 +2,6 @@ package engine
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -292,10 +290,7 @@ func TestIndefesoReplacesTheDesprevenidoDefense(t *testing.T) {
 // não esteja no catálogo nunca aparece na tela; uma do catálogo sem
 // modificadores é só lembrete (Lento, Imóvel), o que é legítimo.
 func TestModelledConditionsExistInTheServedCatalog(t *testing.T) {
-	raw, err := os.ReadFile(filepath.Join(mustWd(t), "..", "catalog", "data", "conditions.json"))
-	if err != nil {
-		t.Fatalf("ler o catálogo de condições: %v", err)
-	}
+	raw := bookResource(t, "conditions")
 	var catalog map[string]struct {
 		Name string `json:"name"`
 	}

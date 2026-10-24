@@ -305,7 +305,7 @@ func CharacterCatalogs() ([]Race, []Class, []God) {
 //
 // A CLASSE é o caso especial e vale dizer o que ela NÃO tem: três campos apenas
 // — id, nome e página. PV, PM e proficiências são transcrição de tabela, e
-// transcrever à mão é o que o `scripts/book-pages.py` existe para não fazer. O
+// transcrever à mão é o que o `cmd/bookpages` existe para não fazer. O
 // que a tela mostra além do nome ela DERIVA do que já está no repositório: as
 // perícias treinadas saem de `class-expertises`, a conta de poderes sai de
 // `class-powers`. Quem quiser o bloco inteiro tem o botão do livro ao lado.

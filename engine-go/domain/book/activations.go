@@ -10,7 +10,7 @@ import (
 
 // O REGISTRO DE ATIVAÇÕES: o que um poder custa para ser usado.
 //
-// A tabela vem do `catalog/data/activations.json` — 411 entradas — e é o que
+// A tabela vem do `transcript.Activations`, e é o que
 // responde "este poder se ativa, e com quê". Ela mora aqui e não na cena porque
 // **o destino de uma função é a DEPENDÊNCIA dela**: quem lê o catálogo é do
 // livro.

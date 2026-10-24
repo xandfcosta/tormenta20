@@ -53,14 +53,14 @@ var enginePayloadKeys = map[string]string{
 func assembleEnginePayload() ([]byte, error) {
 	out := make(map[string]json.RawMessage, len(enginePayloadKeys)+1)
 	for key, resource := range enginePayloadKeys {
-		raw, err := files.ReadFile("data/" + resource + ".json")
+		raw, err := resourceJSON(resource)
 		if err != nil {
 			return nil, fmt.Errorf("catalog.EnginePayload: recurso %q (chave %q): %w", resource, key, err)
 		}
 		out[key] = raw
 	}
 	// O motor só pergunta "este poder é da Tormenta?", então leva os ids.
-	raw, err := files.ReadFile("data/tormenta-powers.json")
+	raw, err := resourceJSON("tormenta-powers")
 	if err != nil {
 		return nil, fmt.Errorf("catalog.EnginePayload: recurso \"tormenta-powers\": %w", err)
 	}

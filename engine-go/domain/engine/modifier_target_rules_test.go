@@ -5,11 +5,11 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"testing"
+
+	"t20engine/domain/catalog/transcript"
 )
 
 // O CATÁLOGO SÓ USA ALVO QUE O MOTOR APLICA (ALE-418).
@@ -192,10 +192,7 @@ func alvosQueOTargetKeyNomeia(t *testing.T) []string {
 // ficha pelo efeito consumido.
 func alvosQueOCatalogoUsa(t *testing.T) map[string]int {
 	t.Helper()
-	arquivos, err := filepath.Glob(filepath.Join("..", "catalog", "data", "*.json"))
-	if err != nil {
-		t.Fatalf("listar o catálogo: %v", err)
-	}
+	arquivos := transcript.Resources
 	if len(arquivos) < 10 {
 		t.Fatalf("só %d arquivos de catálogo — o guarda mediria quase nada", len(arquivos))
 	}
@@ -220,10 +217,7 @@ func alvosQueOCatalogoUsa(t *testing.T) map[string]int {
 		}
 	}
 	for _, caminho := range arquivos {
-		bruto, err := os.ReadFile(caminho)
-		if err != nil {
-			t.Fatalf("ler %s: %v", caminho, err)
-		}
+		bruto := bookResource(t, caminho)
 		var qualquer any
 		if err := json.Unmarshal(bruto, &qualquer); err != nil {
 			t.Fatalf("%s não é JSON: %v", caminho, err)

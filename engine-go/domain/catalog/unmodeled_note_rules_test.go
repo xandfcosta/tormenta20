@@ -60,7 +60,7 @@ type notaDeVerbete struct{ onde, nota string }
 // texto no encanto e mapa por metade no material.
 func todasAsNotas(t *testing.T) []notaDeVerbete {
 	t.Helper()
-	raw, err := files.ReadFile("data/items.json")
+	raw, err := resourceJSON("items")
 	if err != nil {
 		t.Fatalf("ler items.json: %v", err)
 	}

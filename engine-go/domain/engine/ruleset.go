@@ -25,7 +25,7 @@ import (
 //
 // # `Catalogs` é O LIVRO, e ele continua imutável
 //
-// Ele é primado uma vez por processo, de `go:embed`, e é compartilhado por
+// Ele é primado uma vez por processo, do livro transcrito, e é compartilhado por
 // todas as mesas. O `Ruleset` é uma VISTA dele: struct rasa, mapas do livro
 // compartilhados, uma alocação por campanha. Nada aqui escreve no livro.
 

@@ -76,7 +76,7 @@ func TestEveryPotionHoldsASpellTheBookHas(t *testing.T) {
 // mapOf decodifica um recurso guardado como OBJETO por id.
 func mapOf[T any](t *testing.T, resource string) map[string]T {
 	t.Helper()
-	raw, err := files.ReadFile("data/" + resource + ".json")
+	raw, err := resourceJSON(resource)
 	if err != nil {
 		t.Fatalf("ler %s.json: %v", resource, err)
 	}
@@ -94,7 +94,7 @@ func mapOf[T any](t *testing.T, resource string) map[string]T {
 // pedida é SEMPRE parcial, com os campos que a pergunta usa.
 func listOf[T any](t *testing.T, resource string) []T {
 	t.Helper()
-	raw, err := files.ReadFile("data/" + resource + ".json")
+	raw, err := resourceJSON(resource)
 	if err != nil {
 		t.Fatalf("ler %s.json: %v", resource, err)
 	}

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 
 	"t20engine/domain/catalog"
+	"t20engine/domain/catalog/transcript"
 )
 
 // O `uid` É A IDENTIDADE QUE NÃO MUDA (ALE-402).
@@ -41,7 +42,7 @@ type verbete struct {
 // segunda tabela de escopo.
 //
 // Quais arquivos e quais caminhos têm verbete é declarado uma vez só, no
-// `scripts/mint-uids.py`. Repetir essa tabela aqui criaria exatamente a segunda
+// `cmd/mintuids`. Repetir essa tabela aqui criaria exatamente a segunda
 // verdade que o uid existe para remover — e ela já divergiu uma vez: a versão
 // anterior deste caso usava "objeto com nome e descrição", e reprovou 126 itens
 // que a cunhagem não alcançava porque `"modifiers": []` é falso em Python e
@@ -137,7 +138,7 @@ func TestNoUidEverChanges(t *testing.T) {
 			sumiram++
 			t.Errorf("%s/%s perdeu o `uid`, ou saiu do catálogo. As duas caem aqui "+
 				"porque o caso só enxerga quem TEM uid: se o verbete ainda existe, "+
-				"rode `python3 scripts/mint-uids.py --aplicar`; se foi apagado de "+
+				"rode `go run ./cmd/mintuids --aplicar`; se foi apagado de "+
 				"propósito, tire a linha da base", partes[0], partes[1])
 			continue
 		}
@@ -161,10 +162,7 @@ func TestNoUidEverChanges(t *testing.T) {
 
 func lerVerbetes(t *testing.T) (todos []verbete) {
 	t.Helper()
-	arquivos, err := filepath.Glob("data/*.json")
-	if err != nil || len(arquivos) == 0 {
-		t.Fatalf("não achei os catálogos em data/*.json: %v", err)
-	}
+	arquivos := resourceFileNames()
 	for _, caminho := range arquivos {
 		raw, ok := catalog.Resource(strings.TrimSuffix(filepath.Base(caminho), ".json"))
 		if !ok {
@@ -235,4 +233,15 @@ func identidadeDe(no map[string]any) string {
 	}
 	nome, _ := no["name"].(string)
 	return nome
+}
+
+// resourceFileNames são os recursos do livro com o nome que eles tinham como
+// arquivo (`items.json`): as linhas de base dos guardas de slug e de uid estão
+// escritas nessa forma, e o nome continua identificando o recurso.
+func resourceFileNames() []string {
+	out := make([]string, len(transcript.Resources))
+	for i, name := range transcript.Resources {
+		out[i] = name + ".json"
+	}
+	return out
 }

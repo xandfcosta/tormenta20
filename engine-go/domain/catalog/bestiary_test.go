@@ -55,7 +55,7 @@ type monsterRow struct {
 
 func lerBestiario(t *testing.T) []monsterRow {
 	t.Helper()
-	raw, err := files.ReadFile("data/bestiary.json")
+	raw, err := resourceJSON("bestiary")
 	if err != nil {
 		t.Fatalf("ler bestiary.json: %v", err)
 	}
