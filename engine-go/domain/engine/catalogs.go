@@ -94,6 +94,11 @@ type OriginBenefit struct {
 	PowerUid  string     `json:"powerUid,omitempty"`
 	Modifiers []Modifier `json:"modifiers"`
 	PowerPick string     `json:"powerPick,omitempty"` // 'combate' | 'tormenta'
+	// Expertise é a perícia que o benefício de perícia TREINA (p85: "você se
+	// torna treinado na perícia escolhida"). Ela vira um modificador `trained`
+	// no `originModifiers`, gerado daqui e não transcrito: o catálogo já diz a
+	// perícia uma vez, e um `modifiers` ao lado seria a segunda grafia.
+	Expertise string `json:"expertise,omitempty"`
 }
 
 // ClassPower é o poder de classe, nos campos que esta camada lê.

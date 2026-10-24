@@ -37,6 +37,7 @@ var alvosQueOMotorAplica = map[string]string{
 	"expertise":            "breakdowns.go, no total da perícia",
 	"expertiseAll":         "breakdowns.go, em toda perícia",
 	"expertiseByAttribute": "breakdowns.go, nas perícias do atributo",
+	"trained":              "breakdowns.go, no treino da perícia — o benefício de perícia da origem (ALE-490)",
 	"defense":              "breakdowns.go, na Defesa",
 	"attack":               "weapons.go, no ataque da carta",
 	"damage":               "weapons.go e attack_ecs.go, no dano",

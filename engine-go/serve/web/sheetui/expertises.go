@@ -56,7 +56,12 @@ type expertiseRow struct {
 	Command   string
 	Attribute string
 	Total     string
-	Trained   bool
+	// Trained é o VEREDITO do motor, e não a coluna da ficha: a perícia que a
+	// origem treina (p85) chega treinada sem a coluna marcada (ALE-490).
+	Trained bool
+	// TrainedBy é quem treinou além da coluna — "Treinada pela Origem: Soldado".
+	// Vazio quando só a coluna treina, e aí o interruptor é o gesto que a muda.
+	TrainedBy string
 	// TrainedOnly é a perícia que o livro marca como "só treinada" (p115): sem
 	// treinamento, nem se rola.
 	TrainedOnly bool
@@ -184,14 +189,25 @@ func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedS
 		Command:     url.PathEscape(entry.Name),
 		Attribute:   entry.Attribute,
 		Total:       book.WithSign(breaks.Total),
-		Trained:     entry.Trained,
+		Trained:     breaks.Trained,
+		TrainedBy:   trainedByText(breaks.TrainedBy),
 		TrainedOnly: trainedOnly,
-		Locked:      trainedOnly && !entry.Trained,
+		Locked:      trainedOnly && !breaks.Trained,
 		AutoFail:    autoFails(sheet, entry.Name),
 		Custom:      entry.Custom,
 		Rows:        expertiseBreakdownRows(breaks),
 	}
 	return row
+}
+
+// trainedByText diz quem treinou a perícia fora da coluna da ficha.
+//
+//	trainedByText([]string{"Origem: Soldado"}) // "Treinada pela Origem: Soldado"
+func trainedByText(sources []string) string {
+	if len(sources) == 0 {
+		return ""
+	}
+	return "Treinada pela " + strings.Join(sources, " e pela ")
 }
 
 // trainedOnlyByBook lê a Tabela 2-1 pelo CATÁLOGO, e não por uma lista aqui.
@@ -229,7 +245,7 @@ func expertiseBreakdownRows(ex engine.ExpertiseBreakdown) []breakdownRow {
 	rows := []breakdownRow{
 		{Label: "½ nível", Value: book.WithSign(ex.HalfLevel)},
 		{Label: "Atributo (" + attributeAbbr[ex.Attribute] + ")", Value: book.WithSign(ex.AttrValue)},
-		{Label: "Treino", Value: book.WithSign(ex.Training)},
+		{Label: "Treino", Value: book.WithSign(ex.Training), Note: trainedByText(ex.TrainedBy)},
 		{Label: "Outros", Value: book.WithSign(ex.ItemBonus)},
 	}
 	for _, c := range ex.ItemContributions {

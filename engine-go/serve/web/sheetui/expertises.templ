@@ -167,18 +167,33 @@ templ attributePicker(v View, row expertiseRow) {
 }
 
 // trainingButton liga e desliga o treino.
+//
+// O treino que vem de FORA da coluna (a origem, p85) trava o interruptor: o
+// gesto alterna a coluna, e com a origem treinando, alternar não muda nada.
 templ trainingButton(v View, row expertiseRow) {
 	<button
 		type="button"
 		role="switch"
 		aria-checked={ fmt.Sprintf("%t", row.Trained) }
+		if row.TrainedBy != "" {
+			aria-disabled="true"
+			title={ row.TrainedBy }
+		}
 		aria-label={ row.Name + " treinada" }
-		data-on:click={ sheetPost(v, "/pericias/treino/"+row.Command) }
+		if row.TrainedBy == "" {
+			data-on:click={ sheetPost(v, "/pericias/treino/"+row.Command) }
+		}
 		class={ ui.BadgeClasses("inline-flex shrink-0 items-center gap-1 text-3xs uppercase tracking-wider"),
 			templ.KV("border-grimorio-gold/60 text-grimorio-gold", row.Trained),
 			templ.KV("border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40", !row.Trained) }
 	>
-		@ui.Icon("Dumbbell", "size-3")
+		// O CADEADO é o que diz "não adianta tocar" no celular, onde o `title`
+		// não aparece.
+		if row.TrainedBy != "" {
+			@ui.Icon("Lock", "size-3")
+		} else {
+			@ui.Icon("Dumbbell", "size-3")
+		}
 		Treino
 	</button>
 }

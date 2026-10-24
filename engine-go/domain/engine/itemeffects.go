@@ -359,6 +359,10 @@ func targetKey(t ModifierTarget) string {
 		return "expertise:" + t.Name
 	case "expertiseAll":
 		return "expertiseAll"
+	case "trained":
+		// Um ESTADO e não um número: quem o lê pergunta "alguém treinou?" e
+		// quem, nunca quanto — duas fontes não treinam duas vezes (p114).
+		return "trained:" + t.Name
 	case "expertiseByAttribute":
 		return "expertiseByAttribute:" + t.Attribute
 	case "attribute":

@@ -565,6 +565,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -582,6 +584,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -599,6 +603,8 @@
         "halfLevel": 0,
         "attrValue": 4,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -616,6 +622,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -633,6 +641,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -650,6 +660,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -667,6 +679,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -684,6 +698,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -701,6 +717,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -718,6 +736,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -735,6 +755,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -752,6 +774,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -769,6 +793,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -786,6 +812,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -803,6 +831,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -820,6 +850,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -837,6 +869,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -854,6 +888,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -871,6 +907,8 @@
         "halfLevel": 0,
         "attrValue": 4,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -888,6 +926,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -905,6 +945,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -922,6 +964,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -939,6 +983,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -956,6 +1002,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -973,6 +1021,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -990,6 +1040,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1007,6 +1059,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1024,6 +1078,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1041,6 +1097,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1189,6 +1247,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1206,6 +1266,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1223,6 +1285,8 @@
         "halfLevel": 0,
         "attrValue": 4,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1240,6 +1304,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1257,6 +1323,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1274,6 +1342,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1291,6 +1361,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1308,6 +1380,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1325,6 +1399,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1342,6 +1418,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1359,6 +1437,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1376,6 +1456,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1393,6 +1475,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1410,6 +1494,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1427,6 +1513,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1444,6 +1532,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1461,6 +1551,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1478,6 +1570,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1495,6 +1589,8 @@
         "halfLevel": 0,
         "attrValue": 4,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1512,6 +1608,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1529,6 +1627,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1546,6 +1646,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1563,6 +1665,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1580,6 +1684,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1597,6 +1703,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1614,6 +1722,8 @@
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1631,6 +1741,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1648,6 +1760,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1665,6 +1779,8 @@
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1691,6 +1807,8 @@
         "halfLevel": 0,
         "attrValue": 4,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",
@@ -1740,6 +1858,8 @@
         "halfLevel": 0,
         "attrValue": 4,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Condições",

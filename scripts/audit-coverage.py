@@ -48,10 +48,9 @@ import sys
 DADOS = pathlib.Path(__file__).resolve().parent.parent / 'engine-go/domain/catalog/data'
 RE_ISSUE = re.compile(r'ALE-\d+')
 
-# O benefício de PERÍCIA da origem não tem marca por verbete: são 94, todos com
-# o mesmo motivo, e escrever a mesma frase 94 vezes é ruído. A regra vale para o
-# TIPO, e mora aqui uma vez.
-PERICIA_DE_ORIGEM = 'escolher o benefício não treina a perícia no motor (ALE-490)'
+# O benefício de PERÍCIA da origem não tem marca por verbete: são 94, e todos
+# entram pela mesma forma. A regra vale para o TIPO, e mora aqui uma vez.
+PERICIA_DE_ORIGEM = 'treina a perícia pelo modificador `trained` que o `originModifiers` gera (ALE-490)'
 
 
 def ler(nome):

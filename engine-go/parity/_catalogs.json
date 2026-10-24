@@ -17532,7 +17532,9 @@
     },
     {
       "id": "class.nobre.educacao-privilegiada",
-      "unmodeled": "escolher a perícia não a treina no motor (ALE-490)",
+      "modeled": [
+        "as duas perícias escolhidas se marcam treinadas na coluna da ficha, que é o lugar da escolha livre"
+      ],
       "className": "Nobre",
       "name": "Educação Privilegiada",
       "description": "Torna-se treinado em duas perícias de nobre a sua escolha.",
