@@ -32,10 +32,10 @@ import (
 // actionsPanel é a superfície Ações pronta para desenhar.
 type actionsPanel struct {
 	Groups []actionGroup
-	// Passives é a CONTAGEM das passivas, nunca as linhas delas: elas já estão
-	// dentro dos números da ficha — a Defesa já traz a Esquiva Sobrenatural — e
-	// uma linha por passiva encheria a tela de coisas sobre as quais não há o que
-	// fazer. São 238 das 411 ativações do catálogo.
+	// Passives é a CONTAGEM das passivas, nunca as linhas delas: não há gesto a
+	// fazer com uma passiva, e uma linha por passiva encheria a tela. Que ela
+	// esteja nos números da ficha é OUTRA pergunta, e a resposta é "nem sempre"
+	// — quem diz quais entram é o `scripts/audit-coverage.py` (ALE-482).
 	Passives int
 }
 
