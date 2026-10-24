@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"t20engine/infra/db/sqlcgen"
 	"testing"
@@ -362,5 +363,53 @@ func TestTheEnchantExemptsOneExpertiseFromTheArmorPenaltyOnScreen(t *testing.T) 
 	// escondendo o que o item faz (ALE-430).
 	if !strings.Contains(screen, "a penalidade deste item não se aplica") {
 		t.Error("a decomposição não diz que a penalidade da armadura foi isentada")
+	}
+}
+
+// O BENEFÍCIO DE PERÍCIA DA ORIGEM TREINA, E A ABA DIZ QUEM TREINOU (p85, ALE-490).
+//
+// O gesto é o da aba Poderes, pela rota de verdade, e o esperado é escrito à
+// mão: o combatente soldado de nível 3 tem Fortitude ½ nível 1 + Constituição 3
+// = +4, e escolhendo o benefício passa a +6 com o treino.
+//
+// A coluna `trained` NÃO muda — quem treina é a origem —, e por isso o
+// interruptor fica marcado e travado: alternar a coluna não mudaria nada, e um
+// interruptor que não muda nada mente.
+func TestTheOriginSkillBenefitTrainsAndTheTabSaysWhoTrainedIt(t *testing.T) {
+	f, id := expertiseFixture(t)
+	if !strings.Contains(expertiseScreen(t, f, id, ""), `aria-label="Detalhar Fortitude +4"`) {
+		t.Fatal("o controle já estava errado: sem o benefício, a Fortitude não é +4")
+	}
+
+	target := fmt.Sprintf("/personagens/%d/poderes/origem/origin-soldado-pericia-fortitude?tab=powers", id)
+	if rec := f.requests(t, f.player, http.MethodPost, target, ""); rec.Code != http.StatusOK {
+		t.Fatalf("escolher o benefício respondeu %d: %s", rec.Code, rec.Body.String())
+	}
+	screen := expertiseScreen(t, f, id, "")
+
+	if !strings.Contains(screen, `aria-label="Detalhar Fortitude +6"`) {
+		t.Error("o soldado que escolhe a perícia Fortitude não ficou com +6 (1 + 3 + treino 2)")
+	}
+	// A TAG do interruptor inteira, e não um trecho dela: a ordem dos atributos
+	// é do `templ`, e ninguém a prometeu.
+	button := regexp.MustCompile(`<button[^>]*aria-label="Fortitude treinada"[^>]*>`).FindString(screen)
+	if button == "" {
+		t.Fatal("a aba não desenhou o interruptor de treino da Fortitude")
+	}
+	for _, want := range []string{`aria-checked="true"`, `aria-disabled="true"`} {
+		if !strings.Contains(button, want) {
+			t.Errorf("o interruptor da Fortitude não tem %s: a tela diz que ela não é "+
+				"treinada, ou deixa alternar, enquanto o total soma o treino da origem\n    %s", want, button)
+		}
+	}
+	if strings.Contains(button, "data-on:click") {
+		t.Errorf("o interruptor travado ainda manda o gesto, que alternaria a coluna sem efeito\n    %s", button)
+	}
+	if !strings.Contains(screen, "Treinada pela Origem: Soldado") {
+		t.Error("a aba não diz de onde veio o treino da Fortitude")
+	}
+	if trained, _ := training(t, f, id, "Fortitude"); trained {
+		t.Error("escolher o benefício escreveu a coluna `trained`: quem treina é a origem, " +
+			"e a coluna é das perícias da classe e das escolhas livres")
 	}
 }
