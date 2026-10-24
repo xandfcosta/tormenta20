@@ -5002,7 +5002,7 @@
             "name": "fraco"
           },
           "bonusType": "untyped",
-          "note": "em criatura viva",
+          "note": "em criatura viva; quem atacou ganha 2d10 PV temporários",
           "condition": {
             "c": "onCritical"
           }
@@ -5010,9 +5010,9 @@
       ],
       "bookPage": 335,
       "uid": "itm_vtcsajfdrl",
-      "unmodeled": "os 2d10 PONTOS DE VIDA TEMPORÁRIOS que o crítico dá ao portador. A condição no alvo já sai pelo `announcedCondition`; o PV temporário é outra espécie de parcela — ele não soma no máximo nem no atual, e o motor não tem a terceira caixa",
+      "unmodeled": "os 2d10 PV temporários são ANUNCIADOS e não entram na poça de quem atacou: quem os põe é o mestre, que também julga se a vítima é criatura viva — o livro não define quais tipos são vivos, e não há gesto de PV temporário à mão",
       "modeled": [
-        "a condição que o crítico anuncia no alvo"
+        "a condição fraco e os 2d10 PV temporários de quem atacou, os dois anunciados na faixa do crítico"
       ]
     },
     {
