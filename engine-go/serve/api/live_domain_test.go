@@ -4,12 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
-	"os"
-	"path/filepath"
-	"sync"
 	"t20engine/app"
 	"t20engine/app/initiative"
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/config"
@@ -79,31 +76,15 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	return srv
 }
 
-// primedCatalogs lê e prima o catálogo de verdade, UMA vez por processo.
-//
-// Em cache porque são 134 servidores de teste neste pacote, e reler e analisar o
-// despejo em cada um custava mais que tudo o que eles fazem juntos. O valor é
-// só de leitura depois de primado.
-var (
-	catalogosUmaVez sync.Once
-	catalogosPrimos *engine.Catalogs
-	catalogosErro   error
-)
-
+// primedCatalogs é o catálogo de verdade, o embutido — primado uma vez por
+// processo pelo `book.EngineCatalogs`, e só de leitura depois disso.
 func primedCatalogs(t *testing.T) *engine.Catalogs {
 	t.Helper()
-	catalogosUmaVez.Do(func() {
-		raw, err := os.ReadFile(filepath.Join("..", "..", "parity", "_catalogs.json"))
-		if err != nil {
-			catalogosErro = fmt.Errorf("ler catálogos: %w (gere com `go run ./cmd/genoracle`)", err)
-			return
-		}
-		catalogosPrimos, catalogosErro = engine.PrimeEngineCatalogs(raw)
-	})
-	if catalogosErro != nil {
-		t.Fatalf("preparar catálogo: %v", catalogosErro)
+	catalogs, err := book.EngineCatalogs()
+	if err != nil {
+		t.Fatalf("preparar catálogo: %v", err)
 	}
-	return catalogosPrimos
+	return catalogs
 }
 
 func seedUser(t *testing.T, s *Server, email string) int64 {

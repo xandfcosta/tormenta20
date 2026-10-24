@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -23,8 +22,7 @@ import (
 // que a `ClassPowers` não cita a tem do mesmo jeito. O primeiro caso deste
 // guarda nasceu assim e mediu o poder contra o próprio poder.
 func TestTheDefenseTakesTheBestAttributeThePowersAllow(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	// Des 1 contra Car 4 e Int 2: a troca MUDA o número em toda linha abaixo,
@@ -116,8 +114,7 @@ func TestTheDefenseTakesTheBestAttributeThePowersAllow(t *testing.T) {
 // permitam" (Blindagem, p69). Um personagem com Destreza alta e o poder não
 // pode ter os dois — e, pela mesma razão, ele fica com a MAIOR das duas.
 func TestTheAlternativeAttributeReplacesDexterityInsteadOfAddingToIt(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	// O nobre AO CONTRÁRIO do caso de cima: Destreza 4 contra Carisma 2.

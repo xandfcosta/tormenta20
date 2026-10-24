@@ -30,6 +30,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 )
 
@@ -65,7 +66,7 @@ func main() {
 	if err != nil {
 		fail(err)
 	}
-	catalogs, err := primeCatalogs(dir)
+	catalogs, err := book.EngineCatalogs()
 	if err != nil {
 		fail(err)
 	}
@@ -146,14 +147,6 @@ func readFixtures(dir string) ([]fixture, error) {
 		return nil, fmt.Errorf("_fixtures.json não trouxe personagem nenhum")
 	}
 	return out, nil
-}
-
-func primeCatalogs(dir string) (*engine.Catalogs, error) {
-	raw, err := os.ReadFile(filepath.Join(dir, "_catalogs.json"))
-	if err != nil {
-		return nil, fmt.Errorf("ler os catálogos: %w", err)
-	}
-	return engine.PrimeEngineCatalogs(raw)
 }
 
 func parityDir() (string, error) {

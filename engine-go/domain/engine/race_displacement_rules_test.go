@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -17,8 +16,7 @@ import (
 // por isso que o caso crava o número errado de propósito em vez de deixá-lo
 // zerado: zero passaria por "ninguém preencheu".
 func TestDisplacementComesFromTheRaceAndNotTheColumn(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 
 	for _, caso := range []struct {
 		race   string
@@ -54,8 +52,7 @@ func TestDisplacementComesFromTheRaceAndNotTheColumn(t *testing.T) {
 // Cair na coluna seria manter o espelho vivo por uma porta dos fundos: bastaria
 // uma raça nova ainda não transcrita para o número errado voltar a valer.
 func TestUnknownRaceFallsBackToTheBookDefault(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 
 	ch := Character{Displacement: 42, Races: []CharacterRace{{Race: "raca-inventada"}}}
 	if got := BookRuleset(catalogs).ComputeSheet(ch, nil).Displacement.Base; got != 6 {
@@ -78,8 +75,7 @@ func TestUnknownRaceFallsBackToTheBookDefault(t *testing.T) {
 // 3m. Sem ele, uma isenção aplicada a todo mundo passaria por "o anão está
 // certo".
 func TestDwarfIgnoresArmorSlowdownAndTheHumanDoesNot(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 
 	vested := "vested"
 	plateID := "armadura-completa"

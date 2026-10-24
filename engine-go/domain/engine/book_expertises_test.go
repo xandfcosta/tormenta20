@@ -16,7 +16,7 @@ import (
 // As duas fontes concordam hoje. Este teste é a costura que impede a divergência
 // silenciosa: se alguém corrigir a tabela do catálogo e esquecer o motor — ou o
 // contrário —, a ficha passaria a calcular com uma regra e a tela a mostrar
-// outra. É a mesma família do `TestDumpAgreesWithEmbeddedCatalog`.
+// outra.
 //
 // Vive em `engine/` e não em `api/` porque o dono da regra é o motor: é ele que
 // aplica a penalidade no cálculo.

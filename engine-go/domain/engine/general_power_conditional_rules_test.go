@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -18,8 +17,7 @@ import (
 // exigisse opt-in valeria de menos, e um bônus de circunstância sem opt-in
 // valeria sempre. Os dois erros são invisíveis num teste que só some números.
 func TestTheManeuverPowersNeedNoSwitchAndTheSituationalOnesDo(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	efeitosDe := func(id string) ItemEffects {
 		return ComputeItemEffects(world.ActiveItemsFor(

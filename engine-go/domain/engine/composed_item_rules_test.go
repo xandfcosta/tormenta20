@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -24,8 +23,7 @@ import (
 // na ficha copiaria o que o livro diz, e cópia não segue correção (a migração
 // 00016 já nomeou esta armadilha).
 func TestTheComposedWeaponBringsTheOverlaysTheBookWroteInItalics(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	ch := Character{
@@ -97,8 +95,7 @@ func TestTheComposedWeaponBringsTheOverlaysTheBookWroteInItalics(t *testing.T) {
 // uma melhoria, um encanto e um material sobre a base — e a regra própria é
 // condicional, que é a terceira natureza que um verbete específico tem.
 func TestTheComposedArmorStacksTheBaseTheImprovementAndTheEnchant(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	ch := Character{

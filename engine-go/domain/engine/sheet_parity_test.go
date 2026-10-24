@@ -22,7 +22,7 @@ import (
 //	cd engine-go && go run ./cmd/genoracle
 func TestSheetParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	withConditionals := 0
 
 	for _, slug := range parityOracleSlugs(t, dir) {

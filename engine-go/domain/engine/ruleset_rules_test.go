@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -26,8 +25,7 @@ import (
 // o que o oráculo compara byte a byte, e uma emenda que entrasse na frente
 // mudaria a decomposição de todo item emendado.
 func TestTheCampaignAmendmentAddsToTheBookEntryWithoutReplacingIt(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	book := primeFromDump(t, dir)
+	book := primeBook(t)
 
 	doLivro := book.Item("medalhao-de-prata")
 	if doLivro == nil || len(doLivro.Modifiers) != 1 {
@@ -75,8 +73,7 @@ func TestTheCampaignAmendmentAddsToTheBookEntryWithoutReplacingIt(t *testing.T) 
 // é o MUNDO em que a ficha é computada. Um caso que passasse os modificadores
 // pelo personagem provaria o transporte que esta fatia justamente trocou.
 func TestTheCampaignAmendmentReachesTheComputedSheet(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	book := primeFromDump(t, dir)
+	book := primeBook(t)
 
 	wielded := "wielded"
 	id := "medalhao-de-prata"
@@ -141,8 +138,7 @@ func TestTheCampaignAmendmentRefusesModifiersItCannotRead(t *testing.T) {
 // específica e a de mesa dão o mesmo resultado, e o guarda mediria a metade em
 // que o defeito é invisível por construção.
 func TestACampaignGrantReachesOnlyWhoTheSelectorNames(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	book := primeFromDump(t, dir)
+	book := primeBook(t)
 
 	heroi := func(id int) Character {
 		return Character{ID: id, Expertises: []CharacterExpertise{{Name: "Luta", Attribute: "strength"}}}

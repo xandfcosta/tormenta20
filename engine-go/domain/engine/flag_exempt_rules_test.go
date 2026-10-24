@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -25,8 +24,7 @@ import (
 // reduzido, a fadiga ao dormir e a própria bandeira `armadura-pesada`. O livro
 // diz "como se fosse leve" sobre a DESTREZA, e não sobre o item.
 func TestTheExemptionErasesTheFlagTheBaseRaises(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	vestindo := func(item string) ComputedSheet {

@@ -3,14 +3,13 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"path/filepath"
 	"t20engine/domain/sheet"
 	"t20engine/infra/config"
 	"t20engine/infra/db/dbvalue"
 	"testing"
 
-	"t20engine/domain/engine"
+	"t20engine/domain/book"
 	"t20engine/infra/db"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -36,11 +35,7 @@ func newCastServer(t *testing.T) *Server {
 		t.Fatalf("abrir banco: %v", err)
 	}
 	t.Cleanup(func() { _ = database.Close() })
-	raw, err := os.ReadFile(filepath.Join("..", "..", "parity", "_catalogs.json"))
-	if err != nil {
-		t.Fatalf("ler catálogos: %v (gere com `go run ./cmd/genoracle`)", err)
-	}
-	catalogs, err := engine.PrimeEngineCatalogs(raw)
+	catalogs, err := book.EngineCatalogs()
 	if err != nil {
 		t.Fatalf("primar catálogos: %v", err)
 	}

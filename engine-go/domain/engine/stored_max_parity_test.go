@@ -38,7 +38,7 @@ import (
 // o `char` daria zero divergências e passaria dizendo que está tudo certo.
 func TestTheStoredMaxMatchesTheDerivedMax(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	compared := 0
 
 	for _, slug := range parityOracleSlugs(t, dir) {

@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -22,8 +21,7 @@ import (
 // O deslocamento é contado em QUADRADOS de 1,5m: a armadura pesada tira 3m, que
 // são dois quadrados.
 func TestTheFanaticIgnoresHeavyArmorAndNotTheLoad(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 	vested := "vested"
 	completa := "armadura-completa"
 	pedras := "pedra-funda"

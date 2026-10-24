@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -29,8 +28,7 @@ import (
 // p114: "um personagem de 3º nível com Força 4 terá um valor de +5 nas perícias
 // baseadas em Força, no caso, Atletismo e Luta".
 func TestLackingProficiencyWidensTheArmorPenaltyInsteadOfBlockingDexterity(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	// Couro batido (−1, VESTIDO) e escudo leve (−1, EMPUNHADO). O escudo está
@@ -132,8 +130,7 @@ func TestLackingProficiencyWidensTheArmorPenaltyInsteadOfBlockingDexterity(t *te
 // É o caso do Batedor Nv2 da semente — ladino de armadura de couro, que a ficha
 // mostrava com −1 em 29 perícias e sem Destreza na Defesa.
 func TestArmorWithoutPenaltyCostsNothingToWhoCannotUseIt(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	sheet := BookRuleset(catalogs).ComputeSheet(Character{

@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -14,8 +13,7 @@ import (
 // Guardar em metros obrigava a arredondar na fronteira do JSON, e meio metro não
 // sobrevivia a isso.
 func TestTheReinforcedBootsGiveOneSquareAndNotTwoMetres(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	book := primeFromDump(t, dir)
+	book := primeBook(t)
 
 	item := book.Item("botas-reforcadas")
 	if item == nil || len(item.Modifiers) != 1 {
@@ -35,8 +33,7 @@ func TestTheReinforcedBootsGiveOneSquareAndNotTwoMetres(t *testing.T) {
 // O caso existe para o de cima não passar sozinho com uma conversão que só
 // acerta o 1,5: −3m tem de virar −2, e não −3 nem −2,5 arredondado.
 func TestArmourCostsTwoSquares(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	book := primeFromDump(t, dir)
+	book := primeBook(t)
 
 	for _, id := range []string{"armadura-completa", "cota-malha", "brunea"} {
 		item := book.Item(id)
@@ -62,8 +59,7 @@ func TestArmourCostsTwoSquares(t *testing.T) {
 // O DESLOCAMENTO DA RAÇA também é convertido, senão a base e os modificadores
 // estariam em unidades diferentes — que é a pior forma de errar uma conta.
 func TestTheRaceBaseIsInSquaresToo(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	world := BookRuleset(primeFromDump(t, dir))
+	world := BookRuleset(primeBook(t))
 
 	// O humano anda 9m (6 quadrados); o anão, 6m (4) — "é 6m EM VEZ DE 9m" (p20).
 	casos := map[string]int{"humano": 6, "anao": 4}
@@ -90,8 +86,7 @@ func TestTheRaceBaseIsInSquaresToo(t *testing.T) {
 // só somava. Em quadrados a metade é divisão inteira, que É o arredondamento
 // que a condição pede.
 func TestSlowHalvesTheDisplacementAndImmobileZeroesIt(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	world := BookRuleset(primeFromDump(t, dir))
+	world := BookRuleset(primeBook(t))
 
 	andar := func(condicoes string) int {
 		ch := Character{Races: []CharacterRace{{Race: "humano"}}, ActiveConditions: condicoes}
@@ -137,8 +132,7 @@ func TestSlowHalvesTheDisplacementAndImmobileZeroesIt(t *testing.T) {
 // Quem acha a família é o `scripts/audit-conditions.py`: ele compara a herança
 // que o verbete declara com a que o `conditionModifierTable` referencia.
 func TestEveryConditionTheBookSlowsOrStopsMovesLess(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	world := BookRuleset(primeFromDump(t, dir))
+	world := BookRuleset(primeBook(t))
 
 	andar := func(condicao string) int {
 		ch := Character{
@@ -179,8 +173,7 @@ func TestEveryConditionTheBookSlowsOrStopsMovesLess(t *testing.T) {
 // do `displacementBreakdown` já dizia: "o que ela NÃO isenta é qualquer outra
 // redução: uma magia de lentidão continua valendo".
 func TestTheDwarfExemptionDoesNotCoverBeingSlowed(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	world := BookRuleset(primeFromDump(t, dir))
+	world := BookRuleset(primeBook(t))
 
 	ch := Character{Races: []CharacterRace{{Race: "anao"}}}
 	if base := world.ComputeSheet(ch, nil).Displacement.Total; base != 4 {

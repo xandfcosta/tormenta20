@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -19,7 +18,7 @@ import (
 // irmão da sobrecarga: o defeito que ele mira não é a conta, é ela chegar (ou
 // deixar de chegar) ao deslocamento e às perícias.
 func TestLoadTurnedOffPenalizesNeitherDisplacementNorExpertises(t *testing.T) {
-	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity")))
+	catalogs := primeBook(t)
 	expertises := []CharacterExpertise{{Name: "Furtividade", Attribute: "dexterity"}}
 	// Força 0 ⇒ limite 10; onze espaços ultrapassam com folga.
 	overloaded := func(ignored bool) ComputedSheet {

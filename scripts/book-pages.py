@@ -474,36 +474,6 @@ def processa(livro, catalogo, gravar):
     return len(mudou), len(sem)
 
 
-# O catálogo existe em DUAS cópias, e quem mexe numa tem de mexer na outra.
-#
-# O motor resolve regras a partir de `parity/_catalogs.json` (lido do disco, é o
-# `CATALOG_PATH`); o navegador e os testes de schema leem os arquivos embutidos
-# em `catalog/data`. O `TestDumpAgreesWithEmbeddedCatalog` existe justamente para
-# as duas nunca divergirem — e foi ele que acusou este script na primeira
-# gravação. A mensagem dele manda regenerar com `cmd/genoracle`, mas o genoracle
-# LÊ o dump, não o escreve: o produtor era o `t20-data`, que foi apagado na
-# ALE-104. Então o dump é artefato commitado, e sincronizá-lo é trabalho de quem
-# edita o catálogo.
-GEMEOS = {"items": "items.json", "classPowers": "class-powers.json",
-          "generalPowers": "general-powers.json", "racas": "races.json"}
-
-
-def sincroniza_o_dump():
-    """Copia para o dump do motor o que mudou nos arquivos embutidos."""
-    caminho = os.path.join(RAIZ, "engine-go", "parity", "_catalogs.json")
-    with open(caminho, encoding="utf-8") as f:
-        dump = json.load(f)
-    for chave, arquivo in GEMEOS.items():
-        if chave in dump:
-            dump[chave] = carrega(arquivo)
-    # `indent=2` porque é o formato em que ele está: reescrevê-lo minificado
-    # trocaria um diff de páginas por um diff do arquivo inteiro.
-    with open(caminho, "w", encoding="utf-8") as f:
-        json.dump(dump, f, ensure_ascii=False, indent=2)
-        f.write("\n")
-    print(f"dump do motor sincronizado: {', '.join(GEMEOS)}")
-
-
 # ── as CLASSES, que não tinham catálogo ──────────────────────────────────────
 
 def cria_o_catalogo_de_classes(livro):
@@ -936,7 +906,6 @@ def main():
         cria_o_catalogo_de_efeitos(livro)
         cria_o_catalogo_de_escolas(livro)
         cria_o_catalogo_de_pericias(livro)
-        sincroniza_o_dump()
     print(f"\n{mudadas} páginas mudadas · {faltando} entradas sem página")
     print("GRAVADO" if gravar else "nada gravado (use --gravar)")
 

@@ -16,7 +16,7 @@ import (
 // aplicar.
 func TestTheSpecialMaterialReachesTheWeaponCard(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	var oracle struct {
@@ -82,8 +82,7 @@ func TestTheSpecialMaterialReachesTheWeaponCard(t *testing.T) {
 // A espada longa é o caso que o livro ilustra melhor: 1d8 é uma célula da
 // coluna Normal, e a linha dela dá 1d10 no +1 passo.
 func TestTheAdamantWeaponWalksItsDamageDie(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	card := func(material *string, equipped string) WeaponCard {
@@ -128,8 +127,7 @@ func TestTheAdamantWeaponWalksItsDamageDie(t *testing.T) {
 // — a ALE-418 o cortou justamente por isto: nenhum leitor no motor e nenhuma
 // entrada no catálogo. Ter rótulo na aba Efeitos não é ter leitor.
 func TestTheRedMatterChargesCharismaExceptIntimidation(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 	vermelha := "material-materia-vermelha"
 
@@ -161,8 +159,7 @@ func TestTheRedMatterChargesCharismaExceptIntimidation(t *testing.T) {
 // Uma nota que diz "o motor não tem" depois de o motor ter é defeito entregue —
 // ela esconde o número de quem forjou o item.
 func TestTheEternalIceReducesFireByThePieceItIsOn(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 	gelo := "material-gelo-eterno"
 
@@ -199,8 +196,7 @@ func TestTheEternalIceReducesFireByThePieceItIsOn(t *testing.T) {
 // TESTE — "uma criatura com resistência a magia +2 recebe +2 em testes de
 // Fortitude, Reflexos ou Vontade contra habilidades mágicas".
 func TestTheTollonWoodGivesMagicResistanceOnShieldAndCatalyst(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 	tollon := "material-madeira-tollon"
 

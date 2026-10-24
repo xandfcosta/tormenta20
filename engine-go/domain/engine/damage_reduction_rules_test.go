@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -62,8 +61,7 @@ func TestBarbaroRdStepsEveryThreeLevels(t *testing.T) {
 // livro: todo Guerreiro de 5 a 11 ficaria com RD que não devia ter, e do 12º em
 // diante com o valor errado.
 func TestEspecializacaoEmArmadura(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 
 	rd := func(class string, level int, powers string, heavy bool) int {
 		ch := Character{

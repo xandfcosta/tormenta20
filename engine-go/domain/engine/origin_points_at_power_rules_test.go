@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -30,8 +29,7 @@ import (
 // perícia treinada da origem (a Guarda treina Investigação) passaria por mérito
 // do poder, e o caso ficaria verde sobre nada.
 func TestTheOriginPointsAtTheGeneralPowerInsteadOfCopyingIt(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	const benefício = "origin-guarda-poder-investigador"
 	base := Character{

@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -15,8 +14,7 @@ import (
 // quando o item é lido, e uma condição sobreviveria até a resolução oferecendo
 // um interruptor para o que ninguém escolhe.
 func TestAnOverlayOnlyLandsOnTheHostFamilyItNames(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 	adamante := "material-adamante"
 

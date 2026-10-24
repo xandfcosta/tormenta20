@@ -28,8 +28,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"t20engine/domain/book"
 	"t20engine/domain/catalog"
-	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/config"
 	"t20engine/infra/db"
@@ -196,11 +196,7 @@ func freshServer(adminEmails []string) (casaDaSeed, *sql.DB, func()) {
 	if cfg.JWTSecret == "" {
 		cfg.JWTSecret = "seedgen"
 	}
-	raw, err := os.ReadFile(cfg.CatalogPath)
-	if err != nil {
-		log.Fatalf("catalogs %q: %v", cfg.CatalogPath, err)
-	}
-	catalogs, err := engine.PrimeEngineCatalogs(raw)
+	catalogs, err := book.EngineCatalogs()
 	if err != nil {
 		log.Fatalf("prime catalogs: %v", err)
 	}

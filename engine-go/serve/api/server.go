@@ -27,7 +27,7 @@ type Server struct {
 	cfg      config.Config
 	db       *sql.DB
 	queries  *sqlcgen.Queries
-	catalogs *engine.Catalogs       // nulo se o despejo do catálogo não carregou
+	catalogs *engine.Catalogs       // nulo só na bancada que o desliga de propósito
 	sessions *session.Store         // a fila e a cena de cada sessão, em memória
 	boards   *boards.Store          // os tabuleiros táticos vivos por sessão
 	presence *live.PresenceRegistry // quem está online em cada sala

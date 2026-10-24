@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -22,8 +21,7 @@ import (
 // manobra vale para os DOIS lados do teste oposto (p234) — o goblin pequeno
 // derruba pior E resiste pior a ser derrubado.
 func TestTheRaceSizeShowsInStealthManeuversAndWeaponDamage(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	espada, mao := "espada-curta", "wielded"
 	of := func(race string) Character {

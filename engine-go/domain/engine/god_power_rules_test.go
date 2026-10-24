@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -33,8 +32,7 @@ import (
 // outro lugar — raça, classe, origem — passaria por mérito do poder concedido,
 // e o teste ficaria verde sobre nada.
 func TestTheGodPowerReachesTheSheet(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	pericias := []CharacterExpertise{
 		{Name: "Fortitude", Attribute: "constitution"},

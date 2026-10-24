@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -18,8 +17,7 @@ import (
 // UNITÁRIO porque é REGRA: a ordem de três operações e o piso do livro. A
 // composição com a tela tem caso próprio na aba Magias.
 func TestTheHighArcanaHalvesTheSpellCostLast(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 	arcanista20 := Character{
 		Level: 20, Classes: []CharacterClass{{ClassName: "Arcanista", Level: 20}},
 	}

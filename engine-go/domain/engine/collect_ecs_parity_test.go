@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -35,8 +34,7 @@ import (
 // O CONTROLE POSITIVO está no mesmo caso: o efeito que TEM modificador precisa
 // aparecer. Sem ele, um coletor que não roda passaria por "filtrou certo".
 func TestEffectWithoutModifiersIsNotCollected(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 
 	ch := Character{ActiveEffects: []ActiveEffectRow{
 		{CatalogID: "vazio", Scope: "scene", Modifiers: "[]"},

@@ -623,11 +623,10 @@ E a lista de inertes **só pode encolher**.
 > Duas armadilhas de instrumento no caminho, e as duas deram número plausível.
 > Uma busca por `"armorPenaltyExpertises"` ACHA o nome no `breakdowns.go`, mas
 > ali ele é uma VARIÁVEL — a lista de perícias que a armadura penaliza —, e não
-> leitor do alvo: casar nome não é casar conceito. E somar o despejo com os
-> arquivos embutidos contou cada modificador DUAS vezes, porque as duas cópias
-> são a mesma coisa nas seis coleções que o despejo tem: 28 manobras onde há 14.
-> O guarda lê só os embutidos, que são o conjunto completo, e quem garante que
-> as duas cópias batem é o `TestDumpAgreesWithEmbeddedCatalog`.
+> leitor do alvo: casar nome não é casar conceito. E somar o despejo que o motor
+> lia com os arquivos embutidos contou cada modificador DUAS vezes, porque eram
+> cópias: 28 manobras onde há 14. Desde a ALE-494 o motor lê os embutidos, e o
+> despejo não existe mais.
 
 ## O motor é ECS, e a ENTIDADE muda de fase para fase
 
@@ -836,7 +835,7 @@ dezenove poderes com duas regras.
 
 **Quem resolve são DOIS pontos, um por leitor.** O `domain/book` resolve para
 a tela, em `classPowersResolved`, e os quatro leitores dele passam por lá. O
-MOTOR resolve na carga do despejo, em `resolveClassPowerPointers`: a concessão
+MOTOR resolve na carga do catálogo, em `resolveClassPowerPointers`: a concessão
 sem modificador próprio herda os do verbete. Os dois não compartilham código
 porque isso exigiria uma aresta entre `domain/engine` e `domain/catalog`, que
 não se conhecem; o que cada um faz é pouco — copiar a regra de um `uid` para
@@ -1303,14 +1302,13 @@ as posturas. O que o tornou alcançável foi
 a emenda de campanha — um mestre que conceda um item com dois modificadores
 `flagOn` cai exatamente ali.
 
-**E há DUAS fontes do mesmo `items.json` no processo, com durabilidades
-diferentes.** O `catalog.Resource` é `go:embed` — existe sempre que o binário
-existe. O `s.catalogs` é primado de um arquivo por caminho de configuração, e o
-`primeCatalogs` diz em log o que faz quando ele falta: "mutation validators
-disabled". Regra que se desliga sozinha quando um arquivo some não é regra, e a
-bancada mostrou o preço na ALE-272 — um escudo foi VESTIDO num teste porque o
-catálogo do fixture está vazio. **Validação de regra lê o embutido**; o
-`s.catalogs` fica para o motor, que é primado pelo mesmo caminho que o oráculo.
+**O `items.json` chega ao processo por dois caminhos, e só um é sempre
+inteiro.** O `catalog.Resource` é `go:embed` — existe sempre que o binário
+existe. O `s.catalogs` é o mesmo arquivo indexado pelo motor
+(`book.EngineCatalogs`), mas é um CAMPO que a bancada troca: há fixture que
+prima `{"items":[]}` de propósito, e a bancada mostrou o preço na ALE-272 — um
+escudo foi VESTIDO num teste porque o catálogo do fixture estava vazio. **Validação
+de regra lê o embutido**; o `s.catalogs` fica para o motor.
 
 **Regra que só a TELA sabe é fronteira aberta, e o sintoma é sempre o mesmo: a
 tela tranca e o servidor não.** Três já morderam — a progressão de círculo (em
@@ -1661,8 +1659,8 @@ erro:
   desconhecido como completo.
 
 Nos dois casos o guarda ficou verde afirmando o contrário do que mede. O fixture
-agora lê o mesmo `parity/_catalogs.json` que o servidor lê, como o
-`newTestServer` do `character_cast_rules_test.go` já fazia.
+agora prima o mesmo catálogo embutido que o servidor carrega
+(`book.EngineCatalogs`), como o `newTestServer` do `character_cast_rules_test.go`.
 
 **A regra geral: catálogo vazio no fixture é validação desligada em silêncio.**
 Quando uma checagem responde "não sei" para o que não está no catálogo — e é o

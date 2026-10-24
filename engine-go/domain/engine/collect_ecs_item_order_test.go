@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -37,8 +36,7 @@ import (
 // não é arma e não exige proficiência. Com os itens de hoje, a posição daquele
 // sistema é INOBSERVÁVEL — e dizer isso é mais honesto que fingir um caso.
 func TestTheFourItemRulesLandInOrder(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 
 	wielded := "wielded"
 	axe := "machado-taurico"

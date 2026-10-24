@@ -1,24 +1,25 @@
 package engine
 
 import (
-	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"t20engine/domain/catalog"
 )
 
 // TestActiveItemsParity proves the ported collection layer (ActiveItemsFor) on
-// real data: for each seed character it primes the catalogs from _catalogs.json,
+// real data: for each seed character it primes the embedded catalogs,
 // re-collects the raw Character, and asserts the []ActiveItem match o oráculo
 // (`activeItems`, gerado por `go run ./cmd/genoracle`) semantically. This is
 // slice 2's target — the resolution test (slice 1) covers the downstream half.
 //
-// Regenere o oráculo e o despejo de catálogo quando a regra mudar:
+// Regenere o oráculo quando a regra mudar:
 //
 //	cd engine-go && go run ./cmd/genoracle
 func TestActiveItemsParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 
 	slugs := parityOracleSlugs(t, dir)
 
@@ -39,17 +40,16 @@ func TestActiveItemsParity(t *testing.T) {
 	}
 }
 
-// primeFromDump loads engine-go/parity/_catalogs.json into an indexed Catalogs —
-// the same data ensureCatalogs primes the frontend caches with.
-func primeFromDump(t *testing.T, dir string) *Catalogs {
+// primeBook prima o motor com o catálogo embutido — o mesmo que o servidor
+// carrega. Um motor novo por chamada, para nenhum teste ver o que outro fez.
+//
+// É o único import de `catalog` no pacote, e é de TESTE: em produção quem junta
+// os dois é o `book.EngineCatalogs`, que este pacote não pode importar.
+func primeBook(t *testing.T) *Catalogs {
 	t.Helper()
-	raw, err := os.ReadFile(filepath.Join(dir, "_catalogs.json"))
+	catalogs, err := PrimeEngineCatalogs(catalog.EnginePayload())
 	if err != nil {
-		t.Fatalf("read _catalogs.json: %v (gere com `go run ./cmd/genoracle`)", err)
-	}
-	catalogs, err := PrimeEngineCatalogs(raw)
-	if err != nil {
-		t.Fatalf("prime catalogs: %v", err)
+		t.Fatalf("primar o catálogo embutido: %v", err)
 	}
 	return catalogs
 }

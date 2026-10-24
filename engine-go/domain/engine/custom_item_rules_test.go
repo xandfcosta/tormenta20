@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -35,8 +34,7 @@ import (
 // e a regra do dono é sobre o que a FICHA soma, não sobre o que o formulário
 // aceita. Travar na UI é UX; a fronteira é o servidor, e a conta é do motor.
 func TestAnItemTheWorldDoesNotKnowContributesNothing(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 	adamante := "material-adamante"
 
@@ -81,8 +79,7 @@ func TestAnItemTheWorldDoesNotKnowContributesNothing(t *testing.T) {
 // perde o item, porque o `catalogId` não resolve fora do mundo dele. O que
 // faltava era isso valer com sobreposição gravada.
 func TestAnItemFromAnotherWorldContributesNothing(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 	adamante := "material-adamante"
 

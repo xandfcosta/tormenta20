@@ -181,12 +181,11 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 	}
 	// O EIXO sai do catálogo EMBUTIDO, e não do `s.deps.Catalogs()`.
 	//
-	// Os dois trazem o mesmo `items.json`, mas o `s.deps.Catalogs()` é primado
-	// de um arquivo por caminho de configuração, e o `primeCatalogs` diz o que
-	// acontece quando ele falta: "mutation validators disabled". Uma regra que
-	// se DESLIGA sozinha quando um arquivo some não é uma regra — com o
-	// catálogo vazio, um escudo passa a ser vestível. O `catalog.Resource` é
-	// `go:embed`: ele existe sempre que o binário existe.
+	// Os dois trazem o mesmo `items.json`, mas o `s.deps.Catalogs()` é um campo
+	// que a bancada troca, e há fixture que o prima vazio. Uma regra que se
+	// DESLIGA sozinha com o catálogo vazio não é uma regra — um escudo passaria
+	// a ser vestível. O `catalog.Resource` é `go:embed`: ele existe sempre que
+	// o binário existe.
 	if _, refusal := sheet.EquipAxisError(howEngineItem(book.ItemByID(itemCatalog(item))), slot); refusal != "" {
 		return fmt.Errorf("%s", refusal)
 	}

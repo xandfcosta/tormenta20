@@ -185,8 +185,7 @@ func TestEveryWeaponInTheCatalogCanWalkTheTable(t *testing.T) {
 // verde com o verbete do catálogo inerte — que é o defeito que o guarda de
 // alvos existe para não deixar acontecer.
 func TestTheChampionWalksTheDieOfEveryWeapon(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	cardAtLevel := func(level int) WeaponCard {

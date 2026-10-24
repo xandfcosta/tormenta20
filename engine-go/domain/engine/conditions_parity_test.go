@@ -11,7 +11,7 @@ import (
 // deltas + the "aplique o mais severo" non-stacking rule Go-side.
 func TestConditionEffects(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	none := map[string]bool{}
 
 	var oracle struct {

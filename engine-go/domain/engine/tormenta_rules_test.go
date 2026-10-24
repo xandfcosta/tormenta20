@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -86,7 +85,7 @@ func TestDeformidadeSkillIDs(t *testing.T) {
 // raça sem a habilidade não pode ganhar o bônus de tabela por ter a escolha gravada
 // na ficha.
 func TestRaceWithDeformidade(t *testing.T) {
-	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity")))
+	catalogs := primeBook(t)
 
 	if got := catalogs.raceWithDeformidade("lefou"); got != "lefou" {
 		t.Errorf("raça primária: got=%q, queria Lefou", got)
