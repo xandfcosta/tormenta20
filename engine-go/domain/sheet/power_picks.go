@@ -118,18 +118,18 @@ func powerPicksFit(dto CharacterDTO) error {
 }
 
 // picksAreOptions recusa a escolha que o livro não oferece, dizendo quais são.
-// Poder sem lista fechada (a arma da Especialização em Arma) aceita qualquer
-// valor: quem a fecha é o catálogo de armas, e não este verbete.
+// A lista é a do `Offered`: a do verbete, ou as armas do catálogo.
 func picksAreOptions(power book.ClassPower, picks []string) error {
-	if len(power.Choice.Options) == 0 {
-		return nil
+	offered := power.Choice.Offered()
+	if len(offered) == 0 {
+		return fmt.Errorf("%s pede escolha e não oferece opção nenhuma", power.Name)
 	}
-	names := make([]string, 0, len(power.Choice.Options))
-	for _, o := range power.Choice.Options {
+	names := make([]string, 0, len(offered))
+	for _, o := range offered {
 		names = append(names, o.Name)
 	}
 	for _, pick := range picks {
-		if !slices.ContainsFunc(power.Choice.Options, func(o book.PowerChoiceOption) bool { return o.ID == pick }) {
+		if !slices.ContainsFunc(offered, func(o book.PowerChoiceOption) bool { return o.ID == pick }) {
 			return fmt.Errorf("%q não é opção de %s: as opções são %s",
 				pick, power.Name, strings.Join(names, ", "))
 		}

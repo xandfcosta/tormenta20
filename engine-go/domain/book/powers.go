@@ -56,6 +56,26 @@ type PowerChoiceOption struct {
 	Name string `json:"name"`
 }
 
+// Offered são as opções que a escolha oferece. A lista do catálogo, quando ele
+// a escreve; para a escolha de ARMA (Especialização em Arma, p65), as armas do
+// catálogo de itens — escrevê-las de novo no verbete seria a segunda cópia de
+// uma lista que já tem dono.
+//
+//	ClassPowers()["class.guerreiro.especializacao-em-arma"].Choice.Offered()
+//	// [{adaga Adaga} {alabarda Alabarda} …]
+func (c PowerChoice) Offered() []PowerChoiceOption {
+	if len(c.Options) > 0 || c.Kind != "weapon" {
+		return c.Options
+	}
+	out := []PowerChoiceOption{}
+	for _, item := range Catalogs().Items {
+		if item.Weapon != nil {
+			out = append(out, PowerChoiceOption{ID: item.ID, Name: item.Name})
+		}
+	}
+	return out
+}
+
 type GrantByChoice struct {
 	Field string `json:"field"`
 	Value string `json:"value"`

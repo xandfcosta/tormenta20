@@ -345,3 +345,21 @@ func TestTheDialogOffersTheOptionsOfAPowerThatAsksForAChoice(t *testing.T) {
 		t.Error("Força escolhida duas vezes não diz ×2 no diálogo")
 	}
 }
+
+// A ARMA DA ESPECIALIZAÇÃO É ESCOLHIDA PELO DIÁLOGO, e só arma do catálogo
+// entra (p65, ALE-491).
+func TestTheWeaponSpecializationIsChosenFromTheWeaponCatalog(t *testing.T) {
+	f, id := fighterFixture(t)
+	const poder = "class.guerreiro.especializacao-em-arma"
+
+	if !strings.Contains(powerScreen(t, f, id), "/poderes/escolha/"+poder+"/espada-longa") {
+		t.Error("o diálogo não oferece a espada longa à Especialização em Arma")
+	}
+	if refusal := powerCommand(t, f, id, "escolha/"+poder+"/espada-longa", ""); refusal != "" {
+		t.Fatalf("escolher a espada longa foi recusado: %q", refusal)
+	}
+	// Um item que não é arma não entra.
+	if refused := powerCommand(t, f, id, "escolha/"+poder+"/mochila", ""); !strings.Contains(refused, "Adaga") {
+		t.Errorf("um item que não é arma não foi recusado com as opções: %q", refused)
+	}
+}

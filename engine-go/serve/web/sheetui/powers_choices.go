@@ -96,8 +96,8 @@ type powerChoice struct {
 	Source string
 	Chosen bool
 	// Options são as escolhas que o poder pede, com quantas vezes cada uma já
-	// foi feita (ALE-491). Vazio no poder sem escolha — e no de escolha sem
-	// lista fechada, que segue como interruptor.
+	// foi feita (ALE-491). Vazio no poder sem escolha, que segue como
+	// interruptor.
 	Options []powerOption
 }
 
@@ -122,8 +122,9 @@ func optionsOf(p book.ClassPower, picks []string) []powerOption {
 	if p.Choice == nil {
 		return nil
 	}
-	out := make([]powerOption, 0, len(p.Choice.Options))
-	for _, o := range p.Choice.Options {
+	offered := p.Choice.Offered()
+	out := make([]powerOption, 0, len(offered))
+	for _, o := range offered {
 		count := 0
 		for _, pick := range picks {
 			if pick == o.ID {
