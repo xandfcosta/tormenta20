@@ -3,6 +3,8 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 // The non-item ActiveItem sources: race, origin, class powers, general powers,
@@ -189,6 +191,7 @@ func (r *Ruleset) classActiveItems(ch Character) []ActiveItem {
 			}
 			for i := range mods {
 				mods[i].classLevel = entry.Level
+				mods[i] = growDice(mods[i])
 			}
 			out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: mods})
 		}
@@ -321,4 +324,26 @@ func jsonStringArray(raw json.RawMessage) []string {
 		}
 	}
 	return out
+}
+
+// growDice resolve o DADO QUE CRESCE com o nível na classe: o "1d6 de dano
+// extra; a cada dois níveis, +1d6" do Ataque Furtivo (p73) é um modificador
+// só, `dice: 1d6` com `scale: {per: levelStep, step: 2, round: up}`, e o número
+// de dados é o de degraus — 1d6 no 1º nível, 2d6 no 3º, 10d6 no 19º.
+//
+// Na coleta, e não na ficha, porque o nível na classe já está aqui e o dado não
+// depende de mais nada; o modificador sai sem `scale`, como se o catálogo
+// tivesse escrito o número do nível.
+func growDice(m Modifier) Modifier {
+	if m.Dice == "" || m.Scale == nil || (m.Scale.Per != "level" && m.Scale.Per != "levelStep") {
+		return m
+	}
+	count, faces, ok := strings.Cut(m.Dice, "d")
+	n, err := strconv.Atoi(count)
+	if !ok || err != nil {
+		return m
+	}
+	m.Dice = strconv.Itoa(evalModifierScale(n, m.Scale, m.classLevel, nil)) + "d" + faces
+	m.Scale = nil
+	return m
 }

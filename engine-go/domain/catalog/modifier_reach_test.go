@@ -10,9 +10,9 @@ import (
 
 // O QUE O CATÁLOGO DECLARA, O MOTOR TEM DE LER (ALE-423).
 //
-// O `scale` tem DOIS leitores: o caminho dos VITAIS (`evalModifierScale`) e a
+// O `scale` tem TRÊS leitores: o caminho dos VITAIS (`evalModifierScale`), a
 // SOMA DE ATRIBUTO (`per: attribute`, resolvida pelo `sheetEffects` desde a
-// ALE-485). Fora deles ele é IGNORADO e o modificador vale o `amount` cru — não
+// ALE-485) e o DADO QUE CRESCE de um poder de classe (`growDice`, ALE-486). Fora deles ele é IGNORADO e o modificador vale o `amount` cru — não
 // estoura, não avisa, e o verbete passa a prometer um número que ninguém soma.
 // Foi assim que o "+Constituição na Defesa" da Torre Inabalável (p55) virou +1.
 //
@@ -26,10 +26,14 @@ import (
 var vitalTargets = map[string]bool{"maxPv": true, "maxPm": true, "tempHp": true, "tempMp": true}
 
 type modifierSlice struct {
+	// resource é de onde a linha veio: o dado que cresce só é lido na coleta
+	// dos poderes de CLASSE, que é onde o nível na classe existe.
+	resource  string
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Modifiers []struct {
 		Target    map[string]any `json:"target"`
+		Dice      string         `json:"dice"`
 		Scale     map[string]any `json:"scale"`
 		Factor    map[string]any `json:"factor"`
 		Condition map[string]any `json:"condition"`
@@ -52,8 +56,9 @@ func everyModifier(t *testing.T) ([]modifierSlice, int) {
 		if json.Unmarshal(raw, &entries) != nil {
 			continue
 		}
-		for _, e := range entries {
-			total += len(e.Modifiers)
+		for i := range entries {
+			entries[i].resource = resource
+			total += len(entries[i].Modifiers)
 		}
 		all = append(all, entries...)
 	}
@@ -63,7 +68,7 @@ func everyModifier(t *testing.T) ([]modifierSlice, int) {
 	return all, total
 }
 
-// NENHUM `scale` FORA DOS DOIS LEITORES, porque fora deles ele não é lido.
+// NENHUM `scale` FORA DOS TRÊS LEITORES, porque fora deles ele não é lido.
 func TestNoModifierScalesWhereNobodyReadsTheScale(t *testing.T) {
 	entries, measured := everyModifier(t)
 	for _, e := range entries {
@@ -72,12 +77,17 @@ func TestNoModifierScalesWhereNobodyReadsTheScale(t *testing.T) {
 				continue
 			}
 			k, _ := m.Target["k"].(string)
-			if per, _ := m.Scale["per"].(string); per == "attribute" && k != "attribute" {
+			per, _ := m.Scale["per"].(string)
+			if per == "attribute" && k != "attribute" {
+				continue
+			}
+			// O DADO QUE CRESCE com o nível na classe (`growDice`, ALE-486).
+			if e.resource == "class-powers" && m.Dice != "" && (per == "level" || per == "levelStep") {
 				continue
 			}
 			if !vitalTargets[k] {
-				t.Errorf("%s declara `scale` num alvo %q, e só os vitais e a soma de atributo "+
-					"leem escala: o modificador vale o `amount` cru e o resto some em silêncio", e.ID, k)
+				t.Errorf("%s declara `scale` num alvo %q, e só os vitais, a soma de atributo e "+
+					"o dado de classe leem escala: o modificador vale o `amount` cru e o resto some em silêncio", e.ID, k)
 			}
 		}
 	}
@@ -95,6 +105,7 @@ func TestTheModifierReachGuardCatchesASabotagedEntry(t *testing.T) {
 		ID: "teste.sabotado",
 		Modifiers: []struct {
 			Target    map[string]any `json:"target"`
+			Dice      string         `json:"dice"`
 			Scale     map[string]any `json:"scale"`
 			Factor    map[string]any `json:"factor"`
 			Condition map[string]any `json:"condition"`
