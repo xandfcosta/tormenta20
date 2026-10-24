@@ -5636,9 +5636,9 @@
       ],
       "bookPage": 338,
       "uid": "itm_bfzjwehvup",
-      "unmodeled": "o GESTO de 2 PM, e o +1d4 de ácido que ele põe nos ataques do portador até o fim da cena. Este é o mais perto de caber: o dado é do PORTADOR e já existe forma para dado condicional (ALE-457). O que falta é o gatilho — a ativação é `instant`, e um gesto instantâneo não liga um efeito de duração",
       "modeled": [
-        "a redução de ácido 10"
+        "a redução de ácido 10",
+        "o +1d4 de ácido nos ataques, pelo gesto de 2 PM, até o fim da cena"
       ]
     },
     {
