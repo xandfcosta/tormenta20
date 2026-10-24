@@ -95,6 +95,44 @@ type powerChoice struct {
 	// Source é "Classe" ou "Geral", para a lista dizer de onde o poder vem.
 	Source string
 	Chosen bool
+	// Options são as escolhas que o poder pede, com quantas vezes cada uma já
+	// foi feita (ALE-491). Vazio no poder sem escolha — e no de escolha sem
+	// lista fechada, que segue como interruptor.
+	Options []powerOption
+}
+
+// powerOption é uma opção da escolha de um poder — "Força" no Aumento.
+type powerOption struct {
+	Value string
+	Label string
+	Count int
+}
+
+// Written é o rótulo da ficha: "Força", ou "Força ×2" quando o poder repetível
+// a tomou duas vezes.
+func (o powerOption) Written() string {
+	if o.Count > 1 {
+		return o.Label + " ×" + strconv.Itoa(o.Count)
+	}
+	return o.Label
+}
+
+// optionsOf monta as opções do poder com a contagem do que já foi escolhido.
+func optionsOf(p book.ClassPower, picks []string) []powerOption {
+	if p.Choice == nil {
+		return nil
+	}
+	out := make([]powerOption, 0, len(p.Choice.Options))
+	for _, o := range p.Choice.Options {
+		count := 0
+		for _, pick := range picks {
+			if pick == o.ID {
+				count++
+			}
+		}
+		out = append(out, powerOption{Value: o.ID, Label: o.Name, Count: count})
+	}
+	return out
 }
 
 // pickerChoice é uma escolha de valor único — caminho ou devoto.
@@ -217,8 +255,8 @@ func classChoiceCards(dto sheet.CharacterDTO, search string) []classChoiceCard {
 		card := classChoiceCard{
 			ClassName: class.ClassName, Level: class.Level,
 			Slots:  sheet.PowerSlots(class.Level),
-			Used:   len(chosen),
-			Powers: thatChoosePowers(class.ClassName, chosen, search),
+			Used:   sheet.UsedPowerSlots(dto),
+			Powers: thatChoosePowers(class.ClassName, chosen, sheet.PowerPicks(dto.PowerChoices), search),
 		}
 		if options := sheet.LevelPaths(class.ClassName, class.Level); len(options) > 0 {
 			card.Path = markedPicker(options, choices[class.ClassName].Path)
@@ -250,7 +288,7 @@ func markedPicker(options []sheet.ChoiceOption, chosen string) *pickerChoice {
 //
 // "Você sempre pode substituir um poder de classe por um poder geral" (p33), e
 // por isso as duas listas viram uma só — a vaga é a mesma.
-func thatChoosePowers(class string, chosen []string, query string) []powerChoice {
+func thatChoosePowers(class string, chosen []string, picks map[string][]string, query string) []powerChoice {
 	term := search.Fold(strings.TrimSpace(query))
 	outside := []powerChoice{}
 	for _, p := range book.ClassPowers() {
@@ -259,7 +297,7 @@ func thatChoosePowers(class string, chosen []string, query string) []powerChoice
 		}
 		outside = append(outside, powerChoice{
 			ID: p.ID, Name: p.Name, Detail: p.Description, Source: "Classe",
-			Chosen: contemTraco(chosen, p.ID),
+			Chosen: contemTraco(chosen, p.ID), Options: optionsOf(p, picks[p.ID]),
 		})
 	}
 	for _, p := range book.GeneralPowers() {

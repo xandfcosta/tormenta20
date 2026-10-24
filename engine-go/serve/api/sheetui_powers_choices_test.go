@@ -315,3 +315,33 @@ func TestARepeatablePowerTakesOneSlotPerChoice(t *testing.T) {
 		t.Errorf("sem nenhuma escolha, o Aumento continuou em classPowers: %s", saved)
 	}
 }
+
+// O DIÁLOGO OFERECE AS OPÇÕES DO PODER QUE PEDE ESCOLHA (ALE-491).
+//
+// O Aumento de Atributo não é um interruptor: cada atributo é um gesto, e o
+// que já foi escolhido diz quantas vezes e oferece o de tirar. Sem isto a
+// regra existia no motor e nenhuma tela a alcançava.
+func TestTheDialogOffersTheOptionsOfAPowerThatAsksForAChoice(t *testing.T) {
+	f, id := barbaro(t, 3)
+	const poder = "class.barbaro.aumento-de-atributo"
+
+	screen := powerScreen(t, f, id)
+	for _, opcao := range []string{"strength", "dexterity", "charisma"} {
+		if !strings.Contains(screen, "/poderes/escolha/"+poder+"/"+opcao) {
+			t.Errorf("o diálogo não oferece o Aumento de Atributo em %s", opcao)
+		}
+	}
+	if strings.Contains(screen, "/poderes/escolha/"+poder+"/strength/tira") {
+		t.Fatal("o controle já estava errado: sem escolha, o diálogo oferece tirar Força")
+	}
+
+	powerCommand(t, f, id, "escolha/"+poder+"/strength", "")
+	powerCommand(t, f, id, "escolha/"+poder+"/strength", "")
+	screen = powerScreen(t, f, id)
+	if !strings.Contains(screen, "/poderes/escolha/"+poder+"/strength/tira") {
+		t.Error("com Força escolhida, o diálogo não oferece tirá-la")
+	}
+	if !strings.Contains(screen, "Força ×2") {
+		t.Error("Força escolhida duas vezes não diz ×2 no diálogo")
+	}
+}

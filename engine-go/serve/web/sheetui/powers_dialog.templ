@@ -203,24 +203,63 @@ templ classChoicesBlock(v View) {
 			/>
 			<div class="max-h-[40vh] space-y-1 overflow-y-auto">
 				for _, power := range card.Powers {
-					<button
-						type="button"
-						role="switch"
-						aria-checked={ ui.AriaBool(power.Chosen) }
-						aria-label={ power.Name }
-						data-on:click={ sheetPost(v, "/poderes/escolhe/"+power.ID) }
-						class={ "flex w-full items-baseline gap-2 rounded-sm border px-2 py-1 text-left text-xs outline-none transition-colors",
-							templ.KV("border-grimorio-gold/60 bg-accent", power.Chosen),
-							templ.KV("border-grimorio-iron", !power.Chosen) }
-					>
-						<span class="font-semibold text-foreground">{ power.Name }</span>
-						<span class="min-w-0 flex-1 truncate text-muted-foreground">{ power.Detail }</span>
-						<span class="shrink-0 text-3xs text-muted-foreground">{ power.Source }</span>
-					</button>
+					if len(power.Options) > 0 {
+						@powerWithOptions(v, power)
+					} else {
+						<button
+							type="button"
+							role="switch"
+							aria-checked={ ui.AriaBool(power.Chosen) }
+							aria-label={ power.Name }
+							data-on:click={ sheetPost(v, "/poderes/escolhe/"+power.ID) }
+							class={ "flex w-full items-baseline gap-2 rounded-sm border px-2 py-1 text-left text-xs outline-none transition-colors",
+								templ.KV("border-grimorio-gold/60 bg-accent", power.Chosen),
+								templ.KV("border-grimorio-iron", !power.Chosen) }
+						>
+							<span class="font-semibold text-foreground">{ power.Name }</span>
+							<span class="min-w-0 flex-1 truncate text-muted-foreground">{ power.Detail }</span>
+							<span class="shrink-0 text-3xs text-muted-foreground">{ power.Source }</span>
+						</button>
+					}
 				}
 			</div>
 		</section>
 	}
+}
+
+// powerWithOptions é o poder que pede escolha (ALE-491): uma ficha por opção, e
+// o "−" ao lado do que já foi escolhido. Não é um interruptor porque o
+// Aumento de Atributo se toma várias vezes, cada vez num atributo.
+templ powerWithOptions(v View, power powerChoice) {
+	<div
+		class={ "space-y-1 rounded-sm border px-2 py-1 text-xs",
+			templ.KV("border-grimorio-gold/60 bg-accent", power.Chosen),
+			templ.KV("border-grimorio-iron", !power.Chosen) }
+	>
+		<div class="flex items-baseline gap-2">
+			<span class="font-semibold text-foreground">{ power.Name }</span>
+			<span class="min-w-0 flex-1 truncate text-muted-foreground">{ power.Detail }</span>
+			<span class="shrink-0 text-3xs text-muted-foreground">{ power.Source }</span>
+		</div>
+		<div class="flex flex-wrap gap-1">
+			for _, o := range power.Options {
+				<button
+					type="button"
+					aria-label={ power.Name + ": " + o.Label }
+					data-on:click={ sheetPost(v, "/poderes/escolha/"+power.ID+"/"+o.Value) }
+					class={ choiceChip(o.Count > 0) }
+				>{ o.Written() }</button>
+				if o.Count > 0 {
+					<button
+						type="button"
+						aria-label={ "Tirar " + o.Label + " de " + power.Name }
+						data-on:click={ sheetPost(v, "/poderes/escolha/"+power.ID+"/"+o.Value+"/tira") }
+						class={ choiceChip(false) }
+					>−</button>
+				}
+			}
+		</div>
+	</div>
 }
 
 // classPicker é uma escolha de valor único — caminho ou devoto.
