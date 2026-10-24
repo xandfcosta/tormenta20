@@ -1389,6 +1389,14 @@ este verbete":
 | `audit-accessories.py` | `items.json` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15 (três tabelas, UMA lista alfabética de verbetes atravessando quatro páginas) |
 | `audit-artifacts.py` | `items.json` (`artifact`), `gm-tables.json` (`chaosDeck`) | NENHUMA tabela — é o único do Capítulo 8 sem o denominador de graça, porque a p346 tira o artefato da geração aleatória. O denominador vem do TIPO: o cabeçalho de seção é desenhado a 22,281 pontos e o corpo a 16,2, e dentro das p346-349 não há outra seção |
 
+**E um que não lê o livro: `audit-coverage.py`.** Os de cima conferem o catálogo
+contra a PÁGINA; este confere os verbetes de raça, classe e origem contra o
+MOTOR — quanto de cada um vira número, gesto ou nota do mestre. O balde é
+DECLARADO no verbete (`modeled`/`unmodeled`, como nos encantos), e a nota cita a
+issue da fatia que a resolve: `--destino` dá quantos verbetes cada fatia espera.
+Verbete de raça, classe ou origem sem efeito no motor e sem `unmodeled`
+reprova. Não tem guarda em Go, por decisão do dono (ALE-482).
+
 ### O auditor de materiais, e as DUAS armadilhas de ler uma página dividida
 
 A Tabela 3-9 é uma MATRIZ — seis materiais por cinco tipos de item —, e o
