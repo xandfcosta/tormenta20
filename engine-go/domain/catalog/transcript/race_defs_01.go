@@ -20,11 +20,11 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				Modeled: []string{
 					"as duas perícias escolhidas se marcam treinadas na coluna da ficha, que é o lugar da escolha livre",
 				},
-				Unmodeled:   "a troca de uma delas por um poder geral, que se escolhe à mão; e o motor não confere quantas foram marcadas",
 				RaceID:      "humano",
 				Name:        "Versátil",
 				Description: "Você se torna treinado em duas perícias a sua escolha (não precisam ser da sua classe). Pode trocar uma dessas perícias por um poder geral a sua escolha.",
 				UID:         "rac_r4izqcoo75",
+				Unmodeled:   "a troca de uma delas por um poder geral, que se escolhe à mão; e o motor não confere quantas foram marcadas",
 			},
 		},
 		UID: "rac_lamjkhw3wn",
@@ -43,8 +43,8 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "anao",
 				Name:        "Conhecimento das Rochas",
 				Description: "Recebe visão no escuro e +2 em testes de Percepção e Sobrevivência realizados no subterrâneo.",
-				Facts:       []Fact{{Category: "sense", Text: "Visão no escuro"}},
 				UID:         "rac_b6rsjnvbzc",
+				Facts:       []Fact{{Category: "sense", Text: "Visão no escuro"}},
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "expertise", Name: "Percepção"},
@@ -65,6 +65,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "anao",
 				Name:        "Devagar e Sempre",
 				Description: "Seu deslocamento é 6m (em vez de 9m). Porém, seu deslocamento não é reduzido por uso de armadura ou excesso de carga.",
+				UID:         "rac_rfij7r42uu",
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "flag", Name: "displacement-ignores-armor"},
@@ -77,13 +78,13 @@ var raceDefinitionsPart01 = []RaceDefinition{
 						BonusType: "untyped",
 					},
 				},
-				UID: "rac_rfij7r42uu",
 			},
 			{
 				ID:          "anao-duro-como-pedra",
 				RaceID:      "anao",
 				Name:        "Duro como Pedra",
 				Description: "Você recebe +3 pontos de vida no 1º nível e +1 por nível seguinte.",
+				UID:         "rac_trflpocluh",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "maxPv"}, Amount: 2, BonusType: "untyped"},
 					{
@@ -93,15 +94,14 @@ var raceDefinitionsPart01 = []RaceDefinition{
 						Scale:     &ModifierScale{Per: "level"},
 					},
 				},
-				UID: "rac_trflpocluh",
 			},
 			{
 				ID:          "anao-tradicao-de-heredrimm",
-				Unmodeled:   "machado, martelo, marreta e picareta como armas simples, com +2 no ataque: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 				RaceID:      "anao",
 				Name:        "Tradição de Heredrimm",
 				Description: "Você é perito nas armas tradicionais anãs. Para você, todos os machados, martelos, marretas e picaretas são armas simples. Recebe +2 em ataques com essas armas.",
 				UID:         "rac_6yvby3oao3",
+				Unmodeled:   "machado, martelo, marreta e picareta como armas simples, com +2 no ataque: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 			},
 		},
 		UID: "rac_hg27fnvss3",
@@ -113,27 +113,27 @@ var raceDefinitionsPart01 = []RaceDefinition{
 		Abilities: []RaceAbility{
 			{
 				ID:          "dahllan-amiga-das-plantas",
-				Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 				RaceID:      "dahllan",
 				Name:        "Amiga das Plantas",
 				Description: "Você pode lançar a magia Controlar Plantas (atributo-chave Sabedoria). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
 				UID:         "rac_zdkffv2kws",
+				Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 			},
 			{
 				ID:          "dahllan-armadura-de-allihanna",
-				Unmodeled:   "1 PM por +2 na Defesa até o fim da cena: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 				RaceID:      "dahllan",
 				Name:        "Armadura de Allihanna",
 				Description: "Você pode gastar uma ação de movimento e 1 PM para transformar sua pele em casca de árvore, recebendo +2 na Defesa até o fim da cena.",
 				UID:         "rac_z62ya34txk",
+				Unmodeled:   "1 PM por +2 na Defesa até o fim da cena: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 			},
 			{
 				ID:          "dahllan-empatia-selvagem",
-				Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 				RaceID:      "dahllan",
 				Name:        "Empatia Selvagem",
 				Description: "Você pode se comunicar com animais por meio de linguagem corporal e vocalizações. Pode usar Adestramento para mudar atitude e persuasão com animais. Caso receba esta habilidade novamente, recebe +2 em Adestramento.",
 				UID:         "rac_lzc3gcrbqm",
+				Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 			},
 		},
 		UID: "rac_rxqoqutcio",
@@ -156,6 +156,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "elfo",
 				Name:        "Sangue Mágico",
 				Description: "Você recebe +1 ponto de mana por nível.",
+				UID:         "rac_ci2yeskjol",
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "maxPm"},
@@ -164,19 +165,18 @@ var raceDefinitionsPart01 = []RaceDefinition{
 						Scale:     &ModifierScale{Per: "level"},
 					},
 				},
-				UID: "rac_ci2yeskjol",
 			},
 			{
 				ID:          "elfo-sentidos-elficos",
 				RaceID:      "elfo",
 				Name:        "Sentidos Élficos",
 				Description: "Você recebe visão na penumbra e +2 em Misticismo e Percepção.",
+				UID:         "rac_thyp2fbhlb",
 				Facts:       []Fact{{Category: "sense", Text: "Visão na penumbra"}},
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "expertise", Name: "Misticismo"}, Amount: 2, BonusType: "untyped"},
 					{Target: ModifierTarget{Kind: "expertise", Name: "Percepção"}, Amount: 2, BonusType: "untyped"},
 				},
-				UID: "rac_thyp2fbhlb",
 			},
 		},
 		UID: "rac_siykfr2udr",
@@ -188,12 +188,12 @@ var raceDefinitionsPart01 = []RaceDefinition{
 		Abilities: []RaceAbility{
 			{
 				ID:          "goblin-engenhoso",
-				Unmodeled:   "não sofrer penalidade por não ter ferramenta: é prosa do mestre",
+				Modeled:     []string{"o +2 com a ferramenta, que o jogador liga"},
 				RaceID:      "goblin",
 				Name:        "Engenhoso",
 				Description: "Você não sofre penalidades em testes de perícia por não usar ferramentas. Se usar a ferramenta necessária, recebe +2 no teste de perícia.",
 				UID:         "rac_mdfpptz3vo",
-				Modeled:     []string{"o +2 com a ferramenta, que o jogador liga"},
+				Unmodeled:   "não sofrer penalidade por não ter ferramenta: é prosa do mestre",
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "expertiseAll"},
@@ -210,15 +210,15 @@ var raceDefinitionsPart01 = []RaceDefinition{
 			{
 				ID:          "goblin-espelunqueiro",
 				Modeled:     []string{"a visão no escuro e a escalada aparecem como fato"},
-				Unmodeled:   "o deslocamento de escalada: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 				RaceID:      "goblin",
 				Name:        "Espelunqueiro",
 				Description: "Você recebe visão no escuro e deslocamento de escalada igual ao seu deslocamento terrestre.",
+				UID:         "rac_ijbtrkclx6",
+				Unmodeled:   "o deslocamento de escalada: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
 					{Category: "movement", Text: "Escalada = deslocamento terrestre"},
 				},
-				UID: "rac_ijbtrkclx6",
 			},
 			{
 				ID: "goblin-peste-esguia",
@@ -234,24 +234,22 @@ var raceDefinitionsPart01 = []RaceDefinition{
 			{
 				ID:          "goblin-rato-das-ruas",
 				Modeled:     []string{"o +2 em Fortitude"},
-				Unmodeled:   "muda o descanso, e o descanso não lê habilidade (ALE-488)",
 				RaceID:      "goblin",
 				Name:        "Rato das Ruas",
 				Description: "Você recebe +2 em Fortitude e sua recuperação de PV e PM nunca é inferior ao seu nível.",
+				UID:         "rac_vonfvat6ok",
+				Unmodeled:   "muda o descanso, e o descanso não lê habilidade (ALE-488)",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "expertise", Name: "Fortitude"}, Amount: 2, BonusType: "untyped"},
 				},
-				UID: "rac_vonfvat6ok",
 			},
 		},
 		UID: "rac_auksdcz3ym",
 	},
 	{
-		ID:                   "lefou",
-		Name:                 "Lefou",
-		AttributeBonuses:     OrderedMap[int]{{"charisma", -1}},
-		GrantsTormentaPowers: true,
-		HasDeformity:         true,
+		ID:               "lefou",
+		Name:             "Lefou",
+		AttributeBonuses: OrderedMap[int]{{"charisma", -1}},
 		Abilities: []RaceAbility{
 			{
 				ID:          "lefou-tres-atributos",
@@ -263,12 +261,12 @@ var raceDefinitionsPart01 = []RaceDefinition{
 			},
 			{
 				ID:          "lefou-cria-da-tormenta",
-				Unmodeled:   "monstro: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
+				Modeled:     []string{"a resistência contra lefeu e a Tormenta +5"},
 				RaceID:      "lefou",
 				Name:        "Cria da Tormenta",
 				Description: "Você é uma criatura do tipo monstro e recebe +5 em testes de resistência contra efeitos causados por lefeu e pela Tormenta.",
 				UID:         "rac_jqrbr6pho5",
-				Modeled:     []string{"a resistência contra lefeu e a Tormenta +5"},
+				Unmodeled:   "monstro: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "resistance"},
@@ -280,14 +278,16 @@ var raceDefinitionsPart01 = []RaceDefinition{
 			},
 			{
 				ID:          "lefou-deformidade",
-				Unmodeled:   "o +2 em duas perícias escolhidas, ou o poder da Tormenta no lugar: a escolha de habilidade de raça não tem onde morar (ALE-493)",
 				RaceID:      "lefou",
 				Name:        "Deformidade",
 				Description: "Recebe +2 em duas perícias a sua escolha (contam como poder da Tormenta, exceto para perda de Carisma). Pode trocar um desses bônus por um poder da Tormenta a sua escolha.",
 				UID:         "rac_fkjq7hg3b5",
+				Unmodeled:   "o +2 em duas perícias escolhidas, ou o poder da Tormenta no lugar: a escolha de habilidade de raça não tem onde morar (ALE-493)",
 			},
 		},
-		UID: "rac_re62lwdmhj",
+		UID:                  "rac_re62lwdmhj",
+		GrantsTormentaPowers: true,
+		HasDeformity:         true,
 	},
 	{
 		ID:               "minotauro",
@@ -296,37 +296,37 @@ var raceDefinitionsPart01 = []RaceDefinition{
 		Abilities: []RaceAbility{
 			{
 				ID:          "minotauro-chifres",
-				Unmodeled:   "a arma natural e o ataque extra por 1 PM: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 				RaceID:      "minotauro",
 				Name:        "Chifres",
 				Description: "Arma natural de chifres (dano 1d6, crítico x2, perfuração). Uma vez por rodada, ao usar agredir com outra arma, pode gastar 1 PM para fazer um ataque corpo a corpo extra com os chifres.",
 				UID:         "rac_ufu4k272et",
+				Unmodeled:   "a arma natural e o ataque extra por 1 PM: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 			},
 			{
 				ID:          "minotauro-couro-rigido",
 				RaceID:      "minotauro",
 				Name:        "Couro Rígido",
 				Description: "Sua pele é dura como a de um touro. Você recebe +1 na Defesa.",
+				UID:         "rac_mbrhxx3gi4",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "defense"}, Amount: 1, BonusType: "untyped", Note: "Couro Rígido"},
 				},
-				UID: "rac_mbrhxx3gi4",
 			},
 			{
 				ID:          "minotauro-faro",
-				Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 				RaceID:      "minotauro",
 				Name:        "Faro",
 				Description: "Você tem olfato apurado. Contra inimigos em alcance curto que não possa perceber, não fica desprevenido e camuflagem total lhe causa apenas 20% de chance de falha.",
 				UID:         "rac_zffbu4bjdi",
+				Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 			},
 			{
 				ID:          "minotauro-medo-de-altura",
-				Unmodeled:   "fica abalado perto de queda de 3m, e quem liga a condição é o mestre: é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 				RaceID:      "minotauro",
 				Name:        "Medo de Altura",
 				Description: "Se estiver adjacente a uma queda de 3m ou mais de altura (como um buraco ou penhasco), você fica abalado.",
 				UID:         "rac_gwa5247uhv",
+				Unmodeled:   "fica abalado perto de queda de 3m, e quem liga a condição é o mestre: é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 			},
 		},
 		UID: "rac_nubjjli57n",

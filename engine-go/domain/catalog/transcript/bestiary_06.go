@@ -107,8 +107,8 @@ var bestiaryPart06 = []Creature{
 		Initiative: 8,
 		Perception: 6,
 		Treasure:   "Padrão",
-		PM:         35,
 		UID:        "cre_kdcrcve7px",
+		PM:         35,
 	},
 	{
 		ID:           "cultista-de-sszzaas",
@@ -148,8 +148,8 @@ var bestiaryPart06 = []Creature{
 		Initiative: 11,
 		Perception: 12,
 		Treasure:   "Padrão",
-		PM:         40,
 		UID:        "cre_tb2wfzudaz",
+		PM:         40,
 	},
 	{
 		ID:           "lagash",
@@ -255,8 +255,8 @@ var bestiaryPart06 = []Creature{
 		Initiative: 9,
 		Perception: 5,
 		Treasure:   "Dobro",
-		PM:         35,
 		UID:        "cre_pkphy5jycx",
+		PM:         35,
 	},
 	{
 		ID:           "ganchador",
@@ -409,7 +409,7 @@ var bestiaryPart06 = []Creature{
 		Initiative: 16,
 		Perception: 22,
 		Treasure:   "Dobro e 4 peças de couro de dragão (CD 30 para extrair, veja o quadro ao lado)",
-		PM:         97,
 		UID:        "cre_ribu4vrdws",
+		PM:         97,
 	},
 }

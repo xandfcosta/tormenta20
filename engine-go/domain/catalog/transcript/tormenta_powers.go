@@ -103,18 +103,18 @@ var TormentaPowers = []TormentaPower{
 		Name:                "Larva Explosiva",
 		Description:         "Se criatura que sofreu dano de sua mordida na cena é reduzida a 0 PV ou menos, explode em chuva cáustica (morre) causando 4d4 ácido em criaturas adjacentes. +2d4 por dois outros poderes da Tormenta. Imune a esse dano.",
 		RequiresOtherPowers: 0,
-		RequiresPower:       "dentes-afiados",
 		BookPage:            137,
 		UID:                 "pwr_2gvwf5gvax",
+		RequiresPower:       "dentes-afiados",
 	},
 	{
 		ID:                  "legiao-aberrante",
 		Name:                "Legião Aberrante",
 		Description:         "Corpo se transforma em massa de insetos rubros. Atravessa espaços por onde passa moeda (esses espaços contam como terreno difícil). +1 em testes contra manobras e resistência a efeitos direcionados a você (não área). Bônus aumenta +1 para cada dois outros poderes da Tormenta.",
 		RequiresOtherPowers: 3,
-		RequiresPower:       "anatomia-insana",
 		BookPage:            137,
 		UID:                 "pwr_kunfvbc7f6",
+		RequiresPower:       "anatomia-insana",
 	},
 	{
 		ID:                  "maos-membranosas",
@@ -180,14 +180,4 @@ var TormentaPowers = []TormentaPower{
 		BookPage:            137,
 		UID:                 "pwr_xu2tbc3ugd",
 	},
-}
-
-type TormentaPower struct {
-	ID                  string `json:"id"`
-	Name                string `json:"name"`
-	Description         string `json:"description"`
-	RequiresOtherPowers int    `json:"requiresOtherPowers"`
-	BookPage            int    `json:"bookPage"`
-	UID                 string `json:"uid"`
-	RequiresPower       string `json:"requiresPower,omitempty"`
 }

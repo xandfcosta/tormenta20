@@ -159,13 +159,13 @@ var activationsPart01 = []Activation{
 		PMCost:       PMCost{Fixed: 0},
 		Uses:         nil,
 		RequiresFlag: "furia",
+		BookPage:     42,
 		Cumulative: &CumulativeGrant{
 			On:      "criticalOrDrop",
 			Amount:  1,
 			CapPer:  "level",
 			Targets: []ModifierTarget{{Kind: "attack", Scope: "all"}, {Kind: "damage", Scope: "all"}},
 		},
-		BookPage: 42,
 	},
 	{
 		ID:       "class.barbaro.supersticao",
@@ -277,13 +277,13 @@ var activationsPart01 = []Activation{
 		PMCost:       PMCost{Fixed: 0},
 		Uses:         nil,
 		RequiresFlag: "inspiracao",
+		BookPage:     45,
 		Cumulative: &CumulativeGrant{
 			On:      "meleeHit",
 			Amount:  2,
 			CapPer:  "level",
 			Targets: []ModifierTarget{{Kind: "tempMp"}},
 		},
-		BookPage: 45,
 	},
 	{
 		ID:       "class.bardo.inspiracao-marcial",

@@ -130,6 +130,7 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você recebe +10 em testes de resistência contra efeitos da Tormenta, de suas criaturas e de devotos de Aharadak. Além disso, seu primeiro poder da Tormenta não conta para perda de Carisma.",
 		Kind:     "defesa",
 		BookPage: 132,
+		UID:      "pwr_yxx4gkm5mm",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "resistance"},
@@ -138,7 +139,6 @@ var grantedPowersPart01 = []GrantedPower{
 				Condition: &ModifierCondition{Kind: "against", Trait: "tormenta"},
 			},
 		},
-		UID: "pwr_yxx4gkm5mm",
 	},
 	{
 		ID:       "extase-da-loucura",
@@ -165,6 +165,7 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você recebe resistência a magia divina +5.",
 		Kind:     "defesa",
 		BookPage: 135,
+		UID:      "pwr_t4orgpdmtq",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "resistance"},
@@ -173,7 +174,6 @@ var grantedPowersPart01 = []GrantedPower{
 				Condition: &ModifierCondition{Kind: "against", Trait: "magia divina"},
 			},
 		},
-		UID: "pwr_t4orgpdmtq",
 	},
 	{
 		ID:       "compreender-os-ermos",
@@ -182,10 +182,10 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você recebe +2 em Sobrevivência e pode usar Sabedoria para Adestramento (em vez de Carisma).",
 		Kind:     "utilidade",
 		BookPage: 132,
+		UID:      "pwr_czlixl3jxa",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Sobrevivência"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_czlixl3jxa",
 	},
 	{
 		ID:       "dedo-verde",
@@ -239,12 +239,12 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você recebe +2 em Enganação, Jogatina e Ladinagem.",
 		Kind:     "social",
 		BookPage: 134,
+		UID:      "pwr_3vkhqerkaw",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Enganação"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Jogatina"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Ladinagem"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_3vkhqerkaw",
 	},
 	{
 		ID:       "forma-de-macaco",
@@ -271,11 +271,11 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você recebe +2 na Defesa e em Fortitude.",
 		Kind:     "defesa",
 		BookPage: 133,
+		UID:      "pwr_cfia2kspsu",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "defense"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Fortitude"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_cfia2kspsu",
 	},
 	{
 		ID:       "presas-primordiais",
@@ -347,12 +347,12 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você recebe +2 em Iniciativa, Percepção e Vontade.",
 		Kind:     "defesa",
 		BookPage: 134,
+		UID:      "pwr_75fi7b3jz5",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Iniciativa"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Percepção"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Vontade"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_75fi7b3jz5",
 	},
 	{
 		ID:       "tradicao-de-lin-wu",
@@ -361,6 +361,7 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você considera a katana uma arma simples e, se for proficiente em armas marciais, recebe +1 na margem de ameaça com ela.",
 		Kind:     "ataque",
 		BookPage: 135,
+		UID:      "pwr_l5xaj5gwqo",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "critRange"},
@@ -369,7 +370,6 @@ var grantedPowersPart01 = []GrantedPower{
 				Condition: &ModifierCondition{Kind: "context", Note: "com a katana, se for proficiente em armas marciais"},
 			},
 		},
-		UID: "pwr_l5xaj5gwqo",
 	},
 	{
 		ID:       "aura-de-paz",
@@ -387,6 +387,7 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você recebe +1 PM a cada nível ímpar.",
 		Kind:     "magia",
 		BookPage: 132,
+		UID:      "pwr_zc3oimlgee",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "maxPm"},
@@ -395,7 +396,6 @@ var grantedPowersPart01 = []GrantedPower{
 				Scale:     &ModifierScale{Per: "levelStep", Step: 2, Round: "up"},
 			},
 		},
-		UID: "pwr_zc3oimlgee",
 	},
 	{
 		ID:       "astucia-da-serpente",
@@ -404,12 +404,12 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você recebe +2 em Enganação, Furtividade e Intuição.",
 		Kind:     "utilidade",
 		BookPage: 132,
+		UID:      "pwr_kq7j4zl6nl",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Enganação"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Furtividade"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Intuição"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_kq7j4zl6nl",
 	},
 	{
 		ID:       "mente-analitica",
@@ -418,11 +418,11 @@ var grantedPowersPart01 = []GrantedPower{
 		Effect:   "Você recebe +2 em Intuição, Investigação e Vontade.",
 		Kind:     "utilidade",
 		BookPage: 134,
+		UID:      "pwr_inye63fvwe",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Intuição"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Investigação"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Vontade"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_inye63fvwe",
 	},
 }

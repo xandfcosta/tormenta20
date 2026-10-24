@@ -32,7 +32,6 @@ var spellsPart11 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo", "Clérigo", "Druida", "Paladino"},
 		BaseEffect: "Pele de rocha: RD 5.",
-		Buff:       &SpellBuff{Modifiers: []Modifier{}, Facts: []Fact{{Category: "dr", Text: "RD 5"}}},
 		Augments: []SpellAugment{
 			{PMCost: 1, Kind: "muda", Description: "Muda o alcance para toque e o alvo para 1 criatura."},
 			{PMCost: 4, Kind: "muda", Description: "Muda a duração para 1 dia."},
@@ -47,6 +46,7 @@ var spellsPart11 = []Spell{
 		},
 		BookPage: 201,
 		UID:      "spl_3ud5u5scs5",
+		Buff:     &SpellBuff{Modifiers: []Modifier{}, Facts: []Fact{{Category: "dr", Text: "RD 5"}}},
 	},
 	{
 		ID:         "perdicao",
@@ -134,6 +134,17 @@ var spellsPart11 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Paladino"},
 		BaseEffect: "Canaliza divindade: +1 categoria de tamanho (equipamento ajusta), Força +4, RD 10. Não pode lançar magias enquanto ativa.",
+		Augments: []SpellAugment{
+			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o bônus de Força em +1."},
+			{PMCost: 5, Kind: "aumenta", Description: "Aumenta a RD em +5."},
+			{
+				PMCost:      2,
+				Kind:        "muda",
+				Description: "Muda alcance para toque e alvo para 1 criatura. Falha se conjurador e alvo não forem devotos da mesma divindade.",
+			},
+		},
+		BookPage: 201,
+		UID:      "spl_surbybg6me",
 		Buff: &SpellBuff{
 			Modifiers: []Modifier{
 				{
@@ -149,17 +160,6 @@ var spellsPart11 = []Spell{
 				{Category: "other", Text: "Não pode lançar magias"},
 			},
 		},
-		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o bônus de Força em +1."},
-			{PMCost: 5, Kind: "aumenta", Description: "Aumenta a RD em +5."},
-			{
-				PMCost:      2,
-				Kind:        "muda",
-				Description: "Muda alcance para toque e alvo para 1 criatura. Falha se conjurador e alvo não forem devotos da mesma divindade.",
-			},
-		},
-		BookPage: 201,
-		UID:      "spl_surbybg6me",
 	},
 	{
 		ID:         "premonicao",
@@ -198,22 +198,6 @@ var spellsPart11 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "1 criatura: +9m deslocamento + +10 Atletismo.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{
-				{
-					Target:    ModifierTarget{Kind: "displacement"},
-					Amount:    9,
-					BonusType: "untyped",
-					Note:      "Primor Atlético",
-				},
-				{
-					Target:    ModifierTarget{Kind: "expertise", Name: "Atletismo"},
-					Amount:    10,
-					BonusType: "untyped",
-					Note:      "Primor Atlético",
-				},
-			},
-		},
 		Augments: []SpellAugment{
 			{PMCost: 1, Kind: "aumenta", Description: "Além do normal, +20 Atletismo para saltar (total +30)."},
 			{
@@ -235,6 +219,22 @@ var spellsPart11 = []Spell{
 		},
 		BookPage: 201,
 		UID:      "spl_3pczhmrx3i",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "displacement"},
+					Amount:    9,
+					BonusType: "untyped",
+					Note:      "Primor Atlético",
+				},
+				{
+					Target:    ModifierTarget{Kind: "expertise", Name: "Atletismo"},
+					Amount:    10,
+					BonusType: "untyped",
+					Note:      "Primor Atlético",
+				},
+			},
+		},
 	},
 	{
 		ID:         "profanar",
@@ -306,17 +306,6 @@ var spellsPart11 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Paladino"},
 		BaseEffect: "1 criatura: +5 em testes de resistência contra magias.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{
-				{
-					Target:    ModifierTarget{Kind: "resistance"},
-					Amount:    5,
-					BonusType: "untyped",
-					Condition: &ModifierCondition{Kind: "against", Trait: "magia"},
-					Note:      "Proteção Contra Magia",
-				},
-			},
-		},
 		Augments: []SpellAugment{
 			{PMCost: 4, Kind: "muda", Description: "Muda o bônus para +10.", RequiresCircle: 4},
 			{
@@ -334,6 +323,17 @@ var spellsPart11 = []Spell{
 		},
 		BookPage: 202,
 		UID:      "spl_jdecbr4rq7",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "resistance"},
+					Amount:    5,
+					BonusType: "untyped",
+					Note:      "Proteção Contra Magia",
+					Condition: &ModifierCondition{Kind: "against", Trait: "magia"},
+				},
+			},
+		},
 	},
 	{
 		ID:         "protecao-divina",
@@ -348,16 +348,6 @@ var spellsPart11 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Druida", "Paladino"},
 		BaseEffect: "Barreira mística: 1 criatura recebe +2 em testes de resistência.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{
-				{
-					Target:    ModifierTarget{Kind: "resistance"},
-					Amount:    2,
-					BonusType: "untyped",
-					Note:      "Proteção Divina",
-				},
-			},
-		},
 		Augments: []SpellAugment{
 			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o bônus concedido em +1."},
 			{
@@ -379,6 +369,16 @@ var spellsPart11 = []Spell{
 		},
 		BookPage: 202,
 		UID:      "spl_ombisieetf",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "resistance"},
+					Amount:    2,
+					BonusType: "untyped",
+					Note:      "Proteção Divina",
+				},
+			},
+		},
 	},
 	{
 		ID:         "purificacao",

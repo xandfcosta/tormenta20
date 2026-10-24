@@ -24,8 +24,8 @@ var itemsPart03 = []Item{
 				Target:    ModifierTarget{Kind: "attack", Scope: "this"},
 				Amount:    -2,
 				BonusType: "untyped",
-				Condition: &ModifierCondition{Kind: "wielded"},
 				Note:      "desbalanceada: -2 em ataque",
+				Condition: &ModifierCondition{Kind: "wielded"},
 			},
 		},
 		BookPage: 149,
@@ -104,7 +104,6 @@ var itemsPart03 = []Item{
 		Price:    5,
 		Slots:    2,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 1, Penalty: 0, Heavy: false},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -127,6 +126,7 @@ var itemsPart03 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_6uer3vvqqc",
+		Armor:    &ArmorStats{Defense: 1, Penalty: 0, Heavy: false},
 	},
 	{
 		ID:       "armadura-couro",
@@ -135,7 +135,6 @@ var itemsPart03 = []Item{
 		Price:    20,
 		Slots:    2,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 2, Penalty: 0, Heavy: false},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -152,6 +151,7 @@ var itemsPart03 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_666hw2c7kk",
+		Armor:    &ArmorStats{Defense: 2, Penalty: 0, Heavy: false},
 	},
 	{
 		ID:       "couro-batido",
@@ -160,7 +160,6 @@ var itemsPart03 = []Item{
 		Price:    35,
 		Slots:    2,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 3, Penalty: -1, Heavy: false},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -183,6 +182,7 @@ var itemsPart03 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_alkbxzo665",
+		Armor:    &ArmorStats{Defense: 3, Penalty: -1, Heavy: false},
 	},
 	{
 		ID:       "gibao-peles",
@@ -191,7 +191,6 @@ var itemsPart03 = []Item{
 		Price:    25,
 		Slots:    2,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 4, Penalty: -3, Heavy: false},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -214,6 +213,7 @@ var itemsPart03 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_eoegndqtb6",
+		Armor:    &ArmorStats{Defense: 4, Penalty: -3, Heavy: false},
 	},
 	{
 		ID:       "couraca",
@@ -222,7 +222,6 @@ var itemsPart03 = []Item{
 		Price:    500,
 		Slots:    2,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 5, Penalty: -4, Heavy: false},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -245,6 +244,7 @@ var itemsPart03 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_7odmyko7u7",
+		Armor:    &ArmorStats{Defense: 5, Penalty: -4, Heavy: false},
 	},
 	{
 		ID:       "brunea",
@@ -253,7 +253,6 @@ var itemsPart03 = []Item{
 		Price:    50,
 		Slots:    5,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 5, Penalty: -2, Heavy: true},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -294,6 +293,7 @@ var itemsPart03 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_v5hkffiduc",
+		Armor:    &ArmorStats{Defense: 5, Penalty: -2, Heavy: true},
 	},
 	{
 		ID:       "cota-malha",
@@ -302,7 +302,6 @@ var itemsPart03 = []Item{
 		Price:    150,
 		Slots:    5,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 6, Penalty: -2, Heavy: true},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -343,6 +342,7 @@ var itemsPart03 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_hisuz2imh2",
+		Armor:    &ArmorStats{Defense: 6, Penalty: -2, Heavy: true},
 	},
 	{
 		ID:       "loriga-segmentada",
@@ -351,7 +351,6 @@ var itemsPart03 = []Item{
 		Price:    250,
 		Slots:    5,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 7, Penalty: -3, Heavy: true},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -392,5 +391,6 @@ var itemsPart03 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_mhbnfa33fh",
+		Armor:    &ArmorStats{Defense: 7, Penalty: -3, Heavy: true},
 	},
 }

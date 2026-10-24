@@ -39,8 +39,8 @@ var bestiaryPart07 = []Creature{
 		Initiative: 9,
 		Perception: 10,
 		Treasure:   "Dobro",
-		PM:         62,
 		UID:        "cre_7i32ego3xy",
+		PM:         62,
 	},
 	{
 		ID:           "maniaco-lefou",
@@ -140,8 +140,8 @@ var bestiaryPart07 = []Creature{
 		Initiative: 3,
 		Perception: 10,
 		Treasure:   "Padrão",
-		PM:         56,
 		UID:        "cre_cpmh6yrjtv",
+		PM:         56,
 	},
 	{
 		ID:           "geraktril",

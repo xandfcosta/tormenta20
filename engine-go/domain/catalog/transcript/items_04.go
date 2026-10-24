@@ -9,7 +9,6 @@ var itemsPart04 = []Item{
 		Price:    600,
 		Slots:    5,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 8, Penalty: -4, Heavy: true},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -50,6 +49,7 @@ var itemsPart04 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_3uuecq5q3x",
+		Armor:    &ArmorStats{Defense: 8, Penalty: -4, Heavy: true},
 	},
 	{
 		ID:       "armadura-completa",
@@ -58,7 +58,6 @@ var itemsPart04 = []Item{
 		Price:    3000,
 		Slots:    5,
 		Equip:    "vested",
-		Armor:    &ArmorStats{Defense: 10, Penalty: -5, Heavy: true},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -99,6 +98,7 @@ var itemsPart04 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_2rbpbcbbbm",
+		Armor:    &ArmorStats{Defense: 10, Penalty: -5, Heavy: true},
 	},
 	{
 		ID:       "escudo-leve",
@@ -108,7 +108,6 @@ var itemsPart04 = []Item{
 		Slots:    1,
 		Equip:    "wielded",
 		Hands:    1,
-		Shield:   &ArmorStats{Defense: 1, Penalty: -1, Heavy: false},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -125,6 +124,7 @@ var itemsPart04 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_mwgx7wu33d",
+		Shield:   &ArmorStats{Defense: 1, Penalty: -1, Heavy: false},
 	},
 	{
 		ID:       "escudo-pesado",
@@ -134,7 +134,6 @@ var itemsPart04 = []Item{
 		Slots:    2,
 		Equip:    "wielded",
 		Hands:    1,
-		Shield:   &ArmorStats{Defense: 2, Penalty: -2, Heavy: true},
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
@@ -151,6 +150,7 @@ var itemsPart04 = []Item{
 		},
 		BookPage: 154,
 		UID:      "itm_uhc32gz4ob",
+		Shield:   &ArmorStats{Defense: 2, Penalty: -2, Heavy: true},
 	},
 	{
 		ID:       "andrajos-aldeao",
@@ -314,8 +314,8 @@ var itemsPart04 = []Item{
 				Target:    ModifierTarget{Kind: "resistance"},
 				Amount:    2,
 				BonusType: "item",
-				Condition: &ModifierCondition{Kind: "against", Trait: "medo"},
 				Note:      "resistência a medo +2",
+				Condition: &ModifierCondition{Kind: "against", Trait: "medo"},
 			},
 		},
 		BookPage: 159,

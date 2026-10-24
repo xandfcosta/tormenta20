@@ -15,13 +15,6 @@ var spellsPart05 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo"},
 		BaseEffect: "Emana aura brilhante em esfera de 9m de raio. Conjurador + aliados devotos da mesma divindade: imunes a encantamento, +10 Defesa e testes de resistência. Aliados não devotos: +5 Defesa e resistência. Inimigos que entrem: Vontade — falha = uma condição à escolha entre esmorecido/debilitado/lento até fim da cena. Teste refeito ao reentrar.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{
-				{Target: ModifierTarget{Kind: "defense"}, Amount: 10, BonusType: "untyped", Note: "Aura Divina"},
-				{Target: ModifierTarget{Kind: "resistance"}, Amount: 10, BonusType: "untyped", Note: "Aura Divina"},
-			},
-			Facts: []Fact{{Category: "immunity", Text: "Imune a encantamento (você e aliados devotos)"}},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:      2,
@@ -31,6 +24,13 @@ var spellsPart05 = []Spell{
 		},
 		BookPage: 182,
 		UID:      "spl_rcie5vjkwe",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{
+				{Target: ModifierTarget{Kind: "defense"}, Amount: 10, BonusType: "untyped", Note: "Aura Divina"},
+				{Target: ModifierTarget{Kind: "resistance"}, Amount: 10, BonusType: "untyped", Note: "Aura Divina"},
+			},
+			Facts: []Fact{{Category: "immunity", Text: "Imune a encantamento (você e aliados devotos)"}},
+		},
 	},
 	{
 		ID:         "aviso",
@@ -126,6 +126,20 @@ var spellsPart05 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Druida", "Paladino"},
 		BaseEffect: "Aliados no alcance recebem +1 em testes de ataque e rolagens de dano. Anula Perdição.",
+		Augments: []SpellAugment{
+			{
+				PMCost:      1,
+				Kind:        "muda",
+				Description: "Muda o alvo para 1 cadáver e a duração para 1 semana. Cadáver não se decompõe nem vira morto-vivo.",
+			},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o bônus em +1 (bônus máximo limitado pelo círculo máximo).",
+			},
+		},
+		BookPage: 182,
+		UID:      "spl_e56sgzupqd",
 		Buff: &SpellBuff{
 			Modifiers: []Modifier{
 				{
@@ -142,40 +156,26 @@ var spellsPart05 = []Spell{
 				},
 			},
 		},
-		Augments: []SpellAugment{
-			{
-				PMCost:      1,
-				Kind:        "muda",
-				Description: "Muda o alvo para 1 cadáver e a duração para 1 semana. Cadáver não se decompõe nem vira morto-vivo.",
-			},
-			{
-				PMCost:      2,
-				Kind:        "aumenta",
-				Description: "Aumenta o bônus em +1 (bônus máximo limitado pelo círculo máximo).",
-			},
-		},
-		BookPage: 182,
-		UID:      "spl_e56sgzupqd",
 	},
 	{
-		ID:           "buraco-negro",
-		Name:         "Buraco Negro",
-		Circle:       5,
-		School:       "convocacao",
-		Execution:    "completa",
-		Range:        "longo",
-		Duration:     "definida",
-		DurationNote: "3 rodadas",
-		SaveType:     "fortitude",
-		Resistance:   ptr("parcial"),
-		Components:   []string{"verbal", "gestual"},
-		Classes:      []string{"Arcanista", "Clérigo"},
-		BaseEffect:   "Vácuo em espaço desocupado. Início de cada um dos 3 turnos seguintes: criaturas em alcance longo (incl. conjurador) fazem Fortitude. Falha = caído + puxado 30m. Objetos soltos também são puxados. Ação de movimento para se segurar em objeto fixo dá +2 na resistência. Criatura/objeto que inicia turno no espaço do buraco: gasta ação de movimento + Fortitude para se arrastar 1,5m. Falha = perde ação (pode gastar outra). Terminar turno no espaço = sugado, desaparece para sempre. Destino desconhecido (Sombria?).",
+		ID:         "buraco-negro",
+		Name:       "Buraco Negro",
+		Circle:     5,
+		School:     "convocacao",
+		Execution:  "completa",
+		Range:      "longo",
+		Duration:   "definida",
+		SaveType:   "fortitude",
+		Resistance: ptr("parcial"),
+		Components: []string{"verbal", "gestual"},
+		Classes:    []string{"Arcanista", "Clérigo"},
+		BaseEffect: "Vácuo em espaço desocupado. Início de cada um dos 3 turnos seguintes: criaturas em alcance longo (incl. conjurador) fazem Fortitude. Falha = caído + puxado 30m. Objetos soltos também são puxados. Ação de movimento para se segurar em objeto fixo dá +2 na resistência. Criatura/objeto que inicia turno no espaço do buraco: gasta ação de movimento + Fortitude para se arrastar 1,5m. Falha = perde ação (pode gastar outra). Terminar turno no espaço = sugado, desaparece para sempre. Destino desconhecido (Sombria?).",
 		Augments: []SpellAugment{
 			{PMCost: 5, Kind: "muda", Description: "Muda o efeito para que o conjurador não seja afetado."},
 		},
-		BookPage: 182,
-		UID:      "spl_isy365uk3n",
+		BookPage:     182,
+		UID:          "spl_isy365uk3n",
+		DurationNote: "3 rodadas",
 	},
 	{
 		ID:         "campo-antimagia",
@@ -207,19 +207,24 @@ var spellsPart05 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Película protetora: 30 PV temporários.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{
-				{Target: ModifierTarget{Kind: "tempHp"}, Amount: 30, BonusType: "untyped", Note: "Campo de Força"},
-			},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:      1,
 				Kind:        "muda",
 				Description: "Muda execução para reação e duração para instantânea. Em vez do normal, RD 30 contra o próximo dano.",
 			},
-			{PMCost: 3, Kind: "muda", Description: "Muda os PV temporários ou a RD para 50.", RequiresCircle: 3},
-			{PMCost: 7, Kind: "muda", Description: "Muda os PV temporários ou a RD para 70.", RequiresCircle: 4},
+			{
+				PMCost:         3,
+				Kind:           "muda",
+				Description:    "Muda os PV temporários ou a RD para 50.",
+				RequiresCircle: 3,
+			},
+			{
+				PMCost:         7,
+				Kind:           "muda",
+				Description:    "Muda os PV temporários ou a RD para 70.",
+				RequiresCircle: 4,
+			},
 			{
 				PMCost:         7,
 				Kind:           "muda",
@@ -235,6 +240,11 @@ var spellsPart05 = []Spell{
 		},
 		BookPage: 183,
 		UID:      "spl_uiszw2qsbw",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{
+				{Target: ModifierTarget{Kind: "tempHp"}, Amount: 30, BonusType: "untyped", Note: "Campo de Força"},
+			},
+		},
 	},
 	{
 		ID:         "camuflagem-ilusoria",
@@ -249,10 +259,6 @@ var spellsPart05 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Alvo (1 criatura) fica com imagem nublada — recebe efeitos de camuflagem leve.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{},
-			Facts:     []Fact{{Category: "other", Text: "Camuflagem leve (chance de errar)"}},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:      3,
@@ -268,6 +274,10 @@ var spellsPart05 = []Spell{
 		},
 		BookPage: 183,
 		UID:      "spl_zjil65ppms",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{},
+			Facts:     []Fact{{Category: "other", Text: "Camuflagem leve (chance de errar)"}},
+		},
 	},
 	{
 		ID:         "chuva-de-meteoros",
@@ -283,7 +293,11 @@ var spellsPart05 = []Spell{
 		Classes:    []string{"Arcanista"},
 		BaseEffect: "Meteoros caem em quadrado 18m de lado. Criaturas: 15d6 impacto + 15d6 fogo + caídas + agarradas (escombros). Sucesso = metade do dano total, sem cair/agarrar. Escapar dos escombros: ação padrão + Atletismo. Área vira terreno difícil coberto de escombros + nuvem de poeira (camuflagem leve). Só a céu aberto.",
 		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o número de meteoros: +2d6 impacto e +2d6 fogo."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o número de meteoros: +2d6 impacto e +2d6 fogo.",
+			},
 		},
 		BookPage: 183,
 		UID:      "spl_katvkvnurv",
@@ -330,7 +344,6 @@ var spellsPart05 = []Spell{
 		Execution:    "padrao",
 		Range:        "curto",
 		Duration:     "definida",
-		DurationNote: "5 rodadas",
 		SaveType:     "none",
 		Resistance:   nil,
 		Components:   []string{"verbal", "gestual"},
@@ -339,6 +352,7 @@ var spellsPart05 = []Spell{
 		Augments:     []SpellAugment{{PMCost: 2, Kind: "aumenta", Description: "Aumenta a regeneração de PV em 1d8+1."}},
 		BookPage:     184,
 		UID:          "spl_cxw5txn33a",
+		DurationNote: "5 rodadas",
 	},
 	{
 		ID:         "colera-de-azgher",
@@ -387,24 +401,24 @@ var spellsPart05 = []Spell{
 		UID:      "spl_htmzfktzr2",
 	},
 	{
-		ID:           "comando",
-		Name:         "Comando",
-		Circle:       1,
-		School:       "encantamento",
-		Execution:    "padrao",
-		Range:        "curto",
-		Duration:     "definida",
-		DurationNote: "1 rodada",
-		SaveType:     "vontade",
-		Resistance:   ptr("anula"),
-		Components:   []string{"verbal", "gestual"},
-		Classes:      []string{"Clérigo", "Druida", "Paladino"},
-		BaseEffect:   "Ordem irresistível (1 humanoide deve ouvir; não precisa entender). Falha na resistência = obedece no próprio turno. Escolha: Fuja (afasta usando todas ações), Largue (solta itens, ação livre, não pega até próximo turno), Pare (pasmo, uma vez/cena), Senta (senta ou desce ao chão, não levanta até próximo turno), Venha (aproxima usando todas ações).",
+		ID:         "comando",
+		Name:       "Comando",
+		Circle:     1,
+		School:     "encantamento",
+		Execution:  "padrao",
+		Range:      "curto",
+		Duration:   "definida",
+		SaveType:   "vontade",
+		Resistance: ptr("anula"),
+		Components: []string{"verbal", "gestual"},
+		Classes:    []string{"Clérigo", "Druida", "Paladino"},
+		BaseEffect: "Ordem irresistível (1 humanoide deve ouvir; não precisa entender). Falha na resistência = obedece no próprio turno. Escolha: Fuja (afasta usando todas ações), Largue (solta itens, ação livre, não pega até próximo turno), Pare (pasmo, uma vez/cena), Senta (senta ou desce ao chão, não levanta até próximo turno), Venha (aproxima usando todas ações).",
 		Augments: []SpellAugment{
 			{PMCost: 1, Kind: "muda", Description: "Muda o alvo para 1 criatura."},
 			{PMCost: 2, Kind: "aumenta", Description: "Aumenta a quantidade de alvos em +1."},
 		},
-		BookPage: 184,
-		UID:      "spl_73leam3wng",
+		BookPage:     184,
+		UID:          "spl_73leam3wng",
+		DurationNote: "1 rodada",
 	},
 }

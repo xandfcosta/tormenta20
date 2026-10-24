@@ -347,8 +347,8 @@ var originsPart04 = []Origin{
 				Name:        "Poder de Combate (escolha)",
 				Kind:        "poder",
 				Description: "Você recebe um poder de combate a sua escolha. Pré-requisitos do poder se aplicam.",
-				PowerPick:   "combate",
 				UID:         "org_e6xpbdt2v4",
+				PowerPick:   "combate",
 			},
 		},
 		UniquePower: OriginUniquePower{

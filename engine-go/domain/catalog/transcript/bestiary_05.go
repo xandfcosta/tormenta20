@@ -32,8 +32,8 @@ var bestiaryPart05 = []Creature{
 		Initiative: 9,
 		Perception: 9,
 		Treasure:   "Dobro",
-		PM:         55,
 		UID:        "cre_dfznnpv5jb",
+		PM:         55,
 	},
 	{
 		ID:           "falange",
@@ -165,8 +165,8 @@ var bestiaryPart05 = []Creature{
 		Initiative: 5,
 		Perception: 8,
 		Treasure:   "Padrão",
-		PM:         26,
 		UID:        "cre_o2qlku2opi",
+		PM:         26,
 	},
 	{
 		ID:           "hobgoblin-mago-batalha",
@@ -201,8 +201,8 @@ var bestiaryPart05 = []Creature{
 		Initiative: 5,
 		Perception: 4,
 		Treasure:   "Padrão",
-		PM:         35,
 		UID:        "cre_z7fluv73rs",
+		PM:         35,
 	},
 	{
 		ID:           "engenho-guerra-goblin",

@@ -60,7 +60,6 @@ var ClassExpertises = OrderedMap[ClassExpertiseRule]{
 	}},
 	{"Bucaneiro", ClassExpertiseRule{
 		Fixed:       []string{"Reflexos"},
-		EitherOr:    &ExpertiseEitherOr{Options: []string{"Luta", "Pontaria"}},
 		ChooseCount: 4,
 		ChoosePool: []string{
 			"Acrobacia",
@@ -78,10 +77,10 @@ var ClassExpertises = OrderedMap[ClassExpertiseRule]{
 			"Pilotagem",
 			"Pontaria",
 		},
+		EitherOr: &ExpertiseEitherOr{Options: []string{"Luta", "Pontaria"}},
 	}},
 	{"Caçador", ClassExpertiseRule{
 		Fixed:       []string{"Sobrevivência"},
-		EitherOr:    &ExpertiseEitherOr{Options: []string{"Luta", "Pontaria"}},
 		ChooseCount: 6,
 		ChoosePool: []string{
 			"Adestramento",
@@ -98,6 +97,7 @@ var ClassExpertises = OrderedMap[ClassExpertiseRule]{
 			"Pontaria",
 			"Reflexos",
 		},
+		EitherOr: &ExpertiseEitherOr{Options: []string{"Luta", "Pontaria"}},
 	}},
 	{"Cavaleiro", ClassExpertiseRule{
 		Fixed:       []string{"Fortitude", "Luta"},
@@ -152,7 +152,6 @@ var ClassExpertises = OrderedMap[ClassExpertiseRule]{
 	}},
 	{"Guerreiro", ClassExpertiseRule{
 		Fixed:       []string{"Fortitude"},
-		EitherOr:    &ExpertiseEitherOr{Options: []string{"Luta", "Pontaria"}},
 		ChooseCount: 2,
 		ChoosePool: []string{
 			"Adestramento",
@@ -167,6 +166,7 @@ var ClassExpertises = OrderedMap[ClassExpertiseRule]{
 			"Pontaria",
 			"Reflexos",
 		},
+		EitherOr: &ExpertiseEitherOr{Options: []string{"Luta", "Pontaria"}},
 	}},
 	{"Inventor", ClassExpertiseRule{
 		Fixed:       []string{"Ofício", "Vontade"},
@@ -228,7 +228,6 @@ var ClassExpertises = OrderedMap[ClassExpertiseRule]{
 	}},
 	{"Nobre", ClassExpertiseRule{
 		Fixed:       []string{"Vontade"},
-		EitherOr:    &ExpertiseEitherOr{Options: []string{"Diplomacia", "Intimidação"}},
 		ChooseCount: 4,
 		ChoosePool: []string{
 			"Adestramento",
@@ -250,6 +249,7 @@ var ClassExpertises = OrderedMap[ClassExpertiseRule]{
 			"Percepção",
 			"Pontaria",
 		},
+		EitherOr: &ExpertiseEitherOr{Options: []string{"Diplomacia", "Intimidação"}},
 	}},
 	{"Paladino", ClassExpertiseRule{
 		Fixed:       []string{"Luta", "Vontade"},
@@ -269,15 +269,4 @@ var ClassExpertises = OrderedMap[ClassExpertiseRule]{
 			"Religião",
 		},
 	}},
-}
-
-type ClassExpertiseRule struct {
-	Fixed       []string           `json:"fixed"`
-	ChooseCount int                `json:"chooseCount"`
-	ChoosePool  []string           `json:"choosePool"`
-	EitherOr    *ExpertiseEitherOr `json:"eitherOr,omitempty"`
-}
-
-type ExpertiseEitherOr struct {
-	Options []string `json:"options"`
 }

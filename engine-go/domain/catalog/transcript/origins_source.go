@@ -28,11 +28,11 @@ var OriginSources = []OriginSource{
 		Expertises:    []string{},
 		Powers:        []string{"Lembranças Graduais"},
 		UniquePower:   "Lembranças Graduais",
-		RequiredPower: "Lembranças Graduais",
-		GMDriven:      true,
 		StartingItems: []string{"Itens variados (até T$ 500, aprovados pelo mestre)"},
 		BookPage:      86,
 		UID:           "org_wtydx73jnx",
+		RequiredPower: "Lembranças Graduais",
+		GMDriven:      true,
 	},
 	{
 		ID:            "aristocrata",
@@ -70,10 +70,10 @@ var OriginSources = []OriginSource{
 		Expertises:          []string{"Ofício (alquimista)", "Misticismo"},
 		Powers:              []string{"Esse Cheiro...", "Venefício"},
 		UniquePower:         "Esse Cheiro...",
-		PowerChoiceCategory: "tormenta",
 		StartingItems:       []string{"Instrumentos de Ofício (alquimista)"},
 		BookPage:            87,
 		UID:                 "org_kdyk5ldvdd",
+		PowerChoiceCategory: "tormenta",
 	},
 	{
 		ID:            "batedor",
@@ -91,10 +91,10 @@ var OriginSources = []OriginSource{
 		Expertises:          []string{"Luta", "Intimidação"},
 		Powers:              []string{"Confissão"},
 		UniquePower:         "Confissão",
-		PowerChoiceCategory: "combate",
 		StartingItems:       []string{"Tatuagem/adereço de gangue (+1 em Intimidação)", "Arma simples corpo a corpo"},
 		BookPage:            88,
 		UID:                 "org_euultxi3gx",
+		PowerChoiceCategory: "combate",
 	},
 	{
 		ID:            "charlatao",
@@ -201,10 +201,10 @@ var OriginSources = []OriginSource{
 		Expertises:          []string{"Atuação", "Luta"},
 		Powers:              []string{"Atraente", "Pão e Circo", "Torcida"},
 		UniquePower:         "Pão e Circo",
-		PowerChoiceCategory: "combate",
 		StartingItems:       []string{"Arma marcial ou exótica", "Item sem valor de admirador"},
 		BookPage:            90,
 		UID:                 "org_nkium7tsbv",
+		PowerChoiceCategory: "combate",
 	},
 	{
 		ID:                  "guarda",
@@ -212,10 +212,10 @@ var OriginSources = []OriginSource{
 		Expertises:          []string{"Investigação", "Luta", "Percepção"},
 		Powers:              []string{"Detetive", "Investigador"},
 		UniquePower:         "Detetive",
-		PowerChoiceCategory: "combate",
 		StartingItems:       []string{"Apito", "Insígnia da milícia", "Arma marcial"},
 		BookPage:            91,
 		UID:                 "org_lwvgitgjzg",
+		PowerChoiceCategory: "combate",
 	},
 	{
 		ID:            "herdeiro",
@@ -343,10 +343,10 @@ var OriginSources = []OriginSource{
 		Expertises:          []string{"Fortitude", "Guerra", "Luta", "Pontaria"},
 		Powers:              []string{"Influência Militar"},
 		UniquePower:         "Influência Militar",
-		PowerChoiceCategory: "combate",
 		StartingItems:       []string{"Arma marcial", "Uniforme militar", "Insígnia de seu exército"},
 		BookPage:            94,
 		UID:                 "org_keq6j3iudc",
+		PowerChoiceCategory: "combate",
 	},
 	{
 		ID:          "taverneiro",
@@ -374,18 +374,4 @@ var OriginSources = []OriginSource{
 		BookPage:      95,
 		UID:           "org_n2y5ngk6cd",
 	},
-}
-
-type OriginSource struct {
-	ID                  string   `json:"id"`
-	Name                string   `json:"name"`
-	Expertises          []string `json:"pericias"`
-	Powers              []string `json:"poderes"`
-	UniquePower         string   `json:"poderUnico"`
-	StartingItems       []string `json:"itensIniciais"`
-	BookPage            int      `json:"bookPage"`
-	UID                 string   `json:"uid"`
-	RequiredPower       string   `json:"poderObrigatorio,omitempty"`
-	GMDriven            bool     `json:"gmDriven,omitempty"`
-	PowerChoiceCategory string   `json:"poderChoiceCategory,omitempty"`
 }

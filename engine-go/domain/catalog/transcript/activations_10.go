@@ -16,9 +16,9 @@ var activationsPart10 = []Activation{
 			Modifiers: []Modifier{
 				{
 					Target:    ModifierTarget{Kind: "damage", DamageType: "ácido"},
-					Dice:      "1d4",
 					BonusType: "untyped",
 					Note:      "Cáustica",
+					Dice:      "1d4",
 				},
 			},
 		},

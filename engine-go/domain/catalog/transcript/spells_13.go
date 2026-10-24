@@ -31,19 +31,18 @@ var spellsPart13 = []Spell{
 		UID:      "spl_3mhciqfqlx",
 	},
 	{
-		ID:           "servo-divino",
-		Name:         "Servo Divino",
-		Circle:       3,
-		School:       "convocacao",
-		Execution:    "padrao",
-		Range:        "curto",
-		Duration:     "definida",
-		DurationNote: "cena ou até ser descarregada",
-		SaveType:     "none",
-		Resistance:   nil,
-		Components:   []string{"verbal", "gestual", "material"},
-		Classes:      []string{"Clérigo", "Paladino"},
-		BaseEffect:   "Divindade envia espírito para tarefa até 1h (\"nos leve ao topo da montanha\", \"escolte esses camponeses\"). Descarregada ao cumprir. Tipo escolhido pelo mestre. Componente material: T$ 100 pagamento (doação/item mágico/ouro).",
+		ID:         "servo-divino",
+		Name:       "Servo Divino",
+		Circle:     3,
+		School:     "convocacao",
+		Execution:  "padrao",
+		Range:      "curto",
+		Duration:   "definida",
+		SaveType:   "none",
+		Resistance: nil,
+		Components: []string{"verbal", "gestual", "material"},
+		Classes:    []string{"Clérigo", "Paladino"},
+		BaseEffect: "Divindade envia espírito para tarefa até 1h (\"nos leve ao topo da montanha\", \"escolte esses camponeses\"). Descarregada ao cumprir. Tipo escolhido pelo mestre. Componente material: T$ 100 pagamento (doação/item mágico/ouro).",
 		Augments: []SpellAugment{
 			{
 				PMCost:      4,
@@ -56,8 +55,9 @@ var spellsPart13 = []Spell{
 				Description: "Muda duração para 1 semana ou até ser descarregada. Tarefa até 1 semana. Pagamento sobe para T$ 1.000.",
 			},
 		},
-		BookPage: 205,
-		UID:      "spl_ulg7tppojc",
+		BookPage:     205,
+		UID:          "spl_ulg7tppojc",
+		DurationNote: "cena ou até ser descarregada",
 	},
 	{
 		ID:         "servo-morto-vivo",
@@ -229,19 +229,18 @@ var spellsPart13 = []Spell{
 		UID:      "spl_wyjeugidg2",
 	},
 	{
-		ID:           "sonho",
-		Name:         "Sonho",
-		Circle:       4,
-		School:       "adivinhacao",
-		Execution:    "completa",
-		Range:        "ilimitado",
-		Duration:     "definida",
-		DurationNote: "veja texto",
-		SaveType:     "none",
-		Resistance:   nil,
-		Components:   []string{"verbal", "gestual"},
-		Classes:      []string{"Arcanista", "Bardo"},
-		BaseEffect:   "Entra no sonho de 1 criatura viva; conversa até ela acordar. Se não dormindo, entra em transe até adormecer (indefeso/sem consciência dos arredores; sai voluntariamente = magia termina).",
+		ID:         "sonho",
+		Name:       "Sonho",
+		Circle:     4,
+		School:     "adivinhacao",
+		Execution:  "completa",
+		Range:      "ilimitado",
+		Duration:   "definida",
+		SaveType:   "none",
+		Resistance: nil,
+		Components: []string{"verbal", "gestual"},
+		Classes:    []string{"Arcanista", "Bardo"},
+		BaseEffect: "Entra no sonho de 1 criatura viva; conversa até ela acordar. Se não dormindo, entra em transe até adormecer (indefeso/sem consciência dos arredores; sai voluntariamente = magia termina).",
 		Augments: []SpellAugment{
 			{
 				PMCost:      2,
@@ -254,8 +253,9 @@ var spellsPart13 = []Spell{
 				Description: "Aumenta o número de alvos em +1. Compartilham sonho/pesadelo entre si e com o conjurador.",
 			},
 		},
-		BookPage: 207,
-		UID:      "spl_7yvq2mqfug",
+		BookPage:     207,
+		UID:          "spl_7yvq2mqfug",
+		DurationNote: "veja texto",
 	},
 	{
 		ID:         "sopro-da-salvacao",
@@ -295,13 +295,6 @@ var spellsPart13 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Druida", "Paladino"},
 		BaseEffect: "1 criatura fica imune a calor/frio extremos; respira na água (ou vice-versa); não sufoca em fumaça densa.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{},
-			Facts: []Fact{
-				{Category: "immunity", Text: "Imune a calor/frio extremos"},
-				{Category: "other", Text: "Respira na água; não sufoca em fumaça"},
-			},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:      5,
@@ -311,6 +304,13 @@ var spellsPart13 = []Spell{
 		},
 		BookPage: 207,
 		UID:      "spl_oewzwkik2t",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{},
+			Facts: []Fact{
+				{Category: "immunity", Text: "Imune a calor/frio extremos"},
+				{Category: "other", Text: "Respira na água; não sufoca em fumaça"},
+			},
+		},
 	},
 	{
 		ID:         "sussurros-insanos",
@@ -371,7 +371,11 @@ var spellsPart13 = []Spell{
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Fibras entrelaçadas pegajosas em cubo 6m. Falha em Reflexos = enredada. Libertar: ação padrão + Acrobacia/Atletismo. Área = terreno difícil. Inflamável — dano de fogo destrói e liberta criaturas em chamas.",
 		Augments: []SpellAugment{
-			{PMCost: 1, Kind: "aumenta", Description: "Além do normal, falha em Reflexos também deixa imóvel."},
+			{
+				PMCost:      1,
+				Kind:        "aumenta",
+				Description: "Além do normal, falha em Reflexos também deixa imóvel.",
+			},
 			{
 				PMCost:         2,
 				Kind:           "aumenta",

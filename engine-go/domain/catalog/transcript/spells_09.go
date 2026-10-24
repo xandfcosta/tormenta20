@@ -15,6 +15,9 @@ var spellsPart09 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Paladino"},
 		BaseEffect: "Alvo: 1 criatura. Imbui com coragem e valentia. Fica imune a medo, recebe 40 PV temporários e +4 em testes de ataque e rolagens de dano contra o inimigo de maior ND na cena.",
+		Augments:   []SpellAugment{{PMCost: 2, Kind: "muda", Description: "Muda o bônus para +6."}},
+		BookPage:   194,
+		UID:        "spl_tvftlfwum2",
 		Buff: &SpellBuff{
 			Modifiers: []Modifier{
 				{Target: ModifierTarget{Kind: "tempHp"}, Amount: 40, BonusType: "untyped", Note: "Heroísmo"},
@@ -33,24 +36,20 @@ var spellsPart09 = []Spell{
 			},
 			Facts: []Fact{{Category: "immunity", Text: "Imune a medo"}},
 		},
-		Augments: []SpellAugment{{PMCost: 2, Kind: "muda", Description: "Muda o bônus para +6."}},
-		BookPage: 194,
-		UID:      "spl_tvftlfwum2",
 	},
 	{
-		ID:           "hipnotismo",
-		Name:         "Hipnotismo",
-		Circle:       1,
-		School:       "encantamento",
-		Execution:    "padrao",
-		Range:        "curto",
-		Duration:     "definida",
-		DurationNote: "1d4 rodadas",
-		SaveType:     "vontade",
-		Resistance:   ptr("anula"),
-		Components:   []string{"verbal", "gestual"},
-		Classes:      []string{"Arcanista", "Bardo"},
-		BaseEffect:   "Alvos: 1 animal ou humanoide. Palavras e movimentos ritmados deixam o alvo fascinado. Só afeta criaturas que possam perceber o conjurador. Em combate, o alvo recebe +5 na resistência. Se passar, fica imune por um dia.",
+		ID:         "hipnotismo",
+		Name:       "Hipnotismo",
+		Circle:     1,
+		School:     "encantamento",
+		Execution:  "padrao",
+		Range:      "curto",
+		Duration:   "definida",
+		SaveType:   "vontade",
+		Resistance: ptr("anula"),
+		Components: []string{"verbal", "gestual"},
+		Classes:    []string{"Arcanista", "Bardo"},
+		BaseEffect: "Alvos: 1 animal ou humanoide. Palavras e movimentos ritmados deixam o alvo fascinado. Só afeta criaturas que possam perceber o conjurador. Em combate, o alvo recebe +5 na resistência. Se passar, fica imune por um dia.",
 		Augments: []SpellAugment{
 			{
 				PMCost:      0,
@@ -79,8 +78,9 @@ var spellsPart09 = []Spell{
 				RequiresCircle: 3,
 			},
 		},
-		BookPage: 194,
-		UID:      "spl_p44xe23e2q",
+		BookPage:     194,
+		UID:          "spl_p44xe23e2q",
+		DurationNote: "1d4 rodadas",
 	},
 	{
 		ID:         "ilusao-lacerante",
@@ -165,7 +165,6 @@ var spellsPart09 = []Spell{
 		Execution:    "completa",
 		Range:        "ilimitado",
 		Duration:     "definida",
-		DurationNote: "veja texto",
 		SaveType:     "none",
 		Resistance:   nil,
 		Components:   []string{"verbal", "gestual"},
@@ -174,6 +173,7 @@ var spellsPart09 = []Spell{
 		Augments:     []SpellAugment{},
 		BookPage:     195,
 		UID:          "spl_5xnswejba6",
+		DurationNote: "veja texto",
 	},
 	{
 		ID:         "lagrimas-de-wynna",
@@ -320,13 +320,6 @@ var spellsPart09 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo", "Clérigo", "Druida"},
 		BaseEffect: "Alvo (1 criatura) imune a efeitos de movimento; ignora restrições de deslocamento. Usa habilidades de liberdade de movimentos mesmo com armadura/escudo.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{},
-			Facts: []Fact{
-				{Category: "immunity", Text: "Imune a efeitos de movimento"},
-				{Category: "movement", Text: "Ignora restrições de deslocamento"},
-			},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:      2,
@@ -344,6 +337,13 @@ var spellsPart09 = []Spell{
 		},
 		BookPage: 196,
 		UID:      "spl_jk4jmmcldd",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{},
+			Facts: []Fact{
+				{Category: "immunity", Text: "Imune a efeitos de movimento"},
+				{Category: "movement", Text: "Ignora restrições de deslocamento"},
+			},
+		},
 	},
 	{
 		ID:         "ligacao-sombria",
@@ -414,7 +414,11 @@ var spellsPart09 = []Spell{
 				Exclusive:   true,
 				Cantrip:     true,
 			},
-			{PMCost: 5, Kind: "aumenta", Description: "Aumenta a área em fator de 10 (90m→900m, 900m→9km etc)."},
+			{
+				PMCost:      5,
+				Kind:        "aumenta",
+				Description: "Aumenta a área em fator de 10 (90m→900m, 900m→9km etc).",
+			},
 		},
 		BookPage: 197,
 		UID:      "spl_tf7b75vewq",

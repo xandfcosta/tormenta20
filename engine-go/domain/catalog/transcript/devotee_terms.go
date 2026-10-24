@@ -36,8 +36,3 @@ var DevoteeTerms = DevoteeTermTable{
 		{"Trogs", []string{"Trog"}},
 	},
 }
-
-type DevoteeTermTable struct {
-	OpenTerms   []string             `json:"openTerms"`
-	TermToNames OrderedMap[[]string] `json:"termToNames"`
-}

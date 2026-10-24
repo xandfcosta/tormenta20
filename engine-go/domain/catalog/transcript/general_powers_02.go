@@ -9,10 +9,10 @@ var generalPowersPart02 = []GeneralPower{
 		Description:   "+2 em testes de ataque para quebrar. Ao reduzir PV de arma a 0 ou menos, gasta 1 PM para ataque extra contra o usuário (mesmos valores; dados rolam de novo).",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "ataque-poderoso"}},
 		BookPage:      129,
+		UID:           "pwr_5cnonoqzhs",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "maneuver", Name: "quebrar"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_5cnonoqzhs",
 	},
 	{
 		ID:            "trespassar",
@@ -29,6 +29,8 @@ var generalPowersPart02 = []GeneralPower{
 		Name:          "Acrobático",
 		Description:   "Usa Des em vez de For em Atletismo; terreno difícil não reduz deslocamento nem impede investidas.",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "dexterity", Min: 2}},
+		BookPage:      129,
+		UID:           "pwr_wdf3wshjub",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "flag", Name: "movement-ignores-difficult"},
@@ -37,8 +39,6 @@ var generalPowersPart02 = []GeneralPower{
 				Note:      "terreno difícil não reduz o deslocamento",
 			},
 		},
-		BookPage: 129,
-		UID:      "pwr_wdf3wshjub",
 	},
 	{
 		ID:            "aparencia-inofensiva",
@@ -55,12 +55,12 @@ var generalPowersPart02 = []GeneralPower{
 		Name:          "Atlético",
 		Description:   "+2 em Atletismo e +3m no deslocamento.",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 2}},
+		BookPage:      130,
+		UID:           "pwr_x4zxg223af",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Atletismo"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "displacement"}, Amount: 3, BonusType: "untyped"},
 		},
-		BookPage: 130,
-		UID:      "pwr_x4zxg223af",
 	},
 	{
 		ID:            "atraente",
@@ -69,6 +69,7 @@ var generalPowersPart02 = []GeneralPower{
 		Description:   "+2 em perícias baseadas em Carisma contra criaturas que possam se sentir atraídas.",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "charisma", Min: 1}},
 		BookPage:      130,
+		UID:           "pwr_hxirqb2acl",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "expertiseByAttribute", Attribute: "charisma"},
@@ -77,7 +78,6 @@ var generalPowersPart02 = []GeneralPower{
 				Condition: &ModifierCondition{Kind: "against", Trait: "criaturas que possam se sentir atraídas por você"},
 			},
 		},
-		UID: "pwr_hxirqb2acl",
 	},
 	{
 		ID:            "comandar",
@@ -103,6 +103,7 @@ var generalPowersPart02 = []GeneralPower{
 		Name:        "Lobo Solitário",
 		Description: "+1 em perícia e Defesa quando sem aliados em alcance curto; sem penalidade ao usar Cura em si mesmo.",
 		BookPage:    130,
+		UID:         "pwr_4jhbuquahz",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "expertiseAll"},
@@ -125,7 +126,6 @@ var generalPowersPart02 = []GeneralPower{
 				},
 			},
 		},
-		UID: "pwr_4jhbuquahz",
 	},
 	{
 		ID:            "medicina",
@@ -145,11 +145,11 @@ var generalPowersPart02 = []GeneralPower{
 			{Kind: "attribute", Attr: "wisdom", Min: 1},
 			{Kind: "trained", Expertise: "Percepção"},
 		},
+		BookPage: 130,
+		UID:      "pwr_ezgehku7wx",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Percepção"}, Amount: 2, BonusType: "untyped"},
 		},
-		BookPage: 130,
-		UID:      "pwr_ezgehku7wx",
 	},
 	{
 		ID:          "sortudo",
@@ -174,6 +174,7 @@ var generalPowersPart02 = []GeneralPower{
 		Description:   "+2 em perícia e Defesa quando tem torcida a seu favor.",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "charisma", Min: 1}},
 		BookPage:      131,
+		UID:           "pwr_ul7sy4jjx6",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "expertiseAll"},
@@ -188,7 +189,6 @@ var generalPowersPart02 = []GeneralPower{
 				Condition: &ModifierCondition{Kind: "flagOn", Flag: "torcida", Label: "com torcida a seu favor"},
 			},
 		},
-		UID: "pwr_ul7sy4jjx6",
 	},
 	{
 		ID:          "treinamento-em-pericia",
@@ -204,6 +204,8 @@ var generalPowersPart02 = []GeneralPower{
 		Name:          "Vontade de Ferro",
 		Description:   "+1 PM a cada dois níveis e +2 em Vontade.",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "wisdom", Min: 1}},
+		BookPage:      131,
+		UID:           "pwr_47dtscyybu",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Vontade"}, Amount: 2, BonusType: "untyped"},
 			{
@@ -213,17 +215,15 @@ var generalPowersPart02 = []GeneralPower{
 				Scale:     &ModifierScale{Per: "levelStep", Step: 2, Round: "down"},
 			},
 		},
-		BookPage: 131,
-		UID:      "pwr_47dtscyybu",
 	},
 	{
 		ID:          "ao-sabor-do-destino",
 		Kind:        "destino",
 		Name:        "Ao Sabor do Destino",
 		Description: "Abre mão de usar itens mágicos (exceto poções); em troca ganha bônus por patamar por tabela (L6 +2 perícia, L7 +1 Defesa, L8 +1 dano, L9 +1 atributo, L11 +2 perícia, L12 +2 Defesa, L13 +2 dano, L14 +1 atributo, L16 +2 perícia, L17 +3 Defesa, L18 +3 dano, L19 +1 atributo). Bônus não cumulativos — atributo e perícia devem ser diferentes a cada vez. Usar item mágico voluntariamente perde o benefício até o fim da aventura.",
-		MinLevel:    6,
 		BookPage:    129,
 		UID:         "pwr_vevmc3dpe5",
+		MinLevel:    6,
 	},
 	{
 		ID:          "costas-largas",
@@ -252,18 +252,17 @@ var generalPowersPart02 = []GeneralPower{
 		Name:          "Investigador",
 		Description:   "+2 em Investigação e soma Inteligência em Intuição.",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "intelligence", Min: 1}},
+		BookPage:      130,
+		UID:           "pwr_5je6hd4up5",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Investigação"}, Amount: 2, BonusType: "untyped"},
 		},
-		BookPage: 130,
-		UID:      "pwr_5je6hd4up5",
 	},
 	{
 		ID:          "parceiro-poder",
 		Kind:        "destino",
 		Name:        "Parceiro",
 		Description: "Ganha um parceiro iniciante (tipo à escolha; ver p260). Obedece às suas ordens e se arrisca para ajudá-lo, mas pode parar de segui-lo se for maltratado (a critério do GM). Se perder o parceiro, recebe outro no início da próxima aventura.",
-		MinLevel:    5,
 		Prerequisites: []Prerequisite{
 			{
 				Kind:        "note",
@@ -272,6 +271,7 @@ var generalPowersPart02 = []GeneralPower{
 		},
 		BookPage: 130,
 		UID:      "pwr_rfwcggytmi",
+		MinLevel: 5,
 	},
 	{
 		ID:            "veneficio",
@@ -287,10 +287,10 @@ var generalPowersPart02 = []GeneralPower{
 		Kind:          "magia",
 		Name:          "Celebrar Ritual",
 		Description:   "Lança magias como rituais: dobra o limite de PM, execução 1h, custa T$ 10 por PM gasto.",
-		MinLevel:      8,
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Lançar magias; treinado em Misticismo ou Religião"}},
 		BookPage:      131,
 		UID:           "pwr_pdfv2jmuwm",
+		MinLevel:      8,
 	},
 	{
 		ID:            "escrever-pergaminho",

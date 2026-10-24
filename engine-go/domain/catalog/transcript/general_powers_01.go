@@ -35,12 +35,12 @@ var generalPowersPart01 = []GeneralPower{
 		Name:          "Esquiva",
 		Description:   "+2 na Defesa e em Reflexos.",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "dexterity", Min: 1}},
+		BookPage:      125,
+		UID:           "pwr_5t5swxi3ax",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "defense"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Reflexos"}, Amount: 2, BonusType: "untyped"},
 		},
-		BookPage: 125,
-		UID:      "pwr_5t5swxi3ax",
 	},
 	{
 		ID:            "reflexos-de-combate",
@@ -52,22 +52,22 @@ var generalPowersPart01 = []GeneralPower{
 		UID:           "pwr_u6z67r5lo2",
 	},
 	{
-		ID:          "encouracado",
-		Kind:        "combate",
-		Name:        "Encouraçado",
-		Description: "Usando armadura pesada, +2 na Defesa (cumulativo +2 por poder com Encouraçado como prereq).",
+		ID:            "encouracado",
+		Kind:          "combate",
+		Name:          "Encouraçado",
+		Description:   "Usando armadura pesada, +2 na Defesa (cumulativo +2 por poder com Encouraçado como prereq).",
+		Prerequisites: []Prerequisite{{Kind: "note", Description: "Proficiência com armaduras pesadas"}},
+		BookPage:      125,
+		UID:           "pwr_jr4ntvwt3c",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "defense"},
 				Amount:    2,
 				BonusType: "untyped",
-				Condition: &ModifierCondition{Kind: "flagRequired", Flag: "armadura-pesada", Label: "com armadura pesada"},
 				Note:      "+2 Defesa",
+				Condition: &ModifierCondition{Kind: "flagRequired", Flag: "armadura-pesada", Label: "com armadura pesada"},
 			},
 		},
-		Prerequisites: []Prerequisite{{Kind: "note", Description: "Proficiência com armaduras pesadas"}},
-		BookPage:      125,
-		UID:           "pwr_jr4ntvwt3c",
 	},
 	{
 		ID:          "estilo-de-arma-e-escudo",
@@ -167,11 +167,11 @@ var generalPowersPart01 = []GeneralPower{
 		Name:          "Saque Rápido",
 		Description:   "+2 em Iniciativa; saca/guarda itens como ação livre; recarga diminui uma categoria.",
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Iniciativa"}},
+		BookPage:      129,
+		UID:           "pwr_4ki2tgful6",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Iniciativa"}, Amount: 2, BonusType: "untyped"},
 		},
-		BookPage: 129,
-		UID:      "pwr_4ki2tgful6",
 	},
 	{
 		ID:            "vitalidade",
@@ -179,6 +179,8 @@ var generalPowersPart01 = []GeneralPower{
 		Name:          "Vitalidade",
 		Description:   "+1 PV por nível e +2 em Fortitude.",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "constitution", Min: 1}},
+		BookPage:      129,
+		UID:           "pwr_dpopbaajg4",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Fortitude"}, Amount: 2, BonusType: "untyped"},
 			{
@@ -188,8 +190,6 @@ var generalPowersPart01 = []GeneralPower{
 				Scale:     &ModifierScale{Per: "level"},
 			},
 		},
-		BookPage: 129,
-		UID:      "pwr_dpopbaajg4",
 	},
 	{
 		ID:            "arma-secundaria-grande",
@@ -276,10 +276,10 @@ var generalPowersPart01 = []GeneralPower{
 		Description:   "+2 em testes de ataque para derrubar. Ao derrubar com essa manobra, gasta 1 PM para ataque extra contra o alvo.",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "combate-defensivo"}},
 		BookPage:      125,
+		UID:           "pwr_zgafgkcslc",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "maneuver", Name: "derrubar"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_zgafgkcslc",
 	},
 	{
 		ID:            "desarmar-aprimorado",
@@ -288,10 +288,10 @@ var generalPowersPart01 = []GeneralPower{
 		Description:   "+2 em testes de ataque para desarmar. Ao desarmar, gasta 1 PM para arremessar a arma para longe (direção 1d8, distância 1d6×1,5m).",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "combate-defensivo"}},
 		BookPage:      125,
+		UID:           "pwr_2dx4clo5dn",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "maneuver", Name: "desarmar"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_2dx4clo5dn",
 	},
 	{
 		ID:            "disparo-preciso",
@@ -330,6 +330,7 @@ var generalPowersPart01 = []GeneralPower{
 		Description:   "+2 em testes de ataque com armas alongadas e pode atacar alvos adjacentes com essas armas.",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 1}, {Kind: "trained", Expertise: "Luta"}},
 		BookPage:      125,
+		UID:           "pwr_pycnhbir7l",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "attack", Scope: "all"},
@@ -338,14 +339,12 @@ var generalPowersPart01 = []GeneralPower{
 				Condition: &ModifierCondition{Kind: "context", Note: "com armas alongadas"},
 			},
 		},
-		UID: "pwr_pycnhbir7l",
 	},
 	{
 		ID:            "fanatico",
 		Kind:          "combate",
 		Name:          "Fanático",
 		Description:   "Deslocamento não é reduzido por usar armaduras pesadas.",
-		MinLevel:      12,
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "encouracado"}},
 		BookPage:      128,
 		UID:           "pwr_mdo2v7cqnk",
@@ -357,6 +356,7 @@ var generalPowersPart01 = []GeneralPower{
 				Note:      "não é reduzido por armadura pesada",
 			},
 		},
+		MinLevel: 12,
 	},
 	{
 		ID:            "finta-aprimorada",
@@ -365,6 +365,7 @@ var generalPowersPart01 = []GeneralPower{
 		Description:   "+2 em testes de Enganação para fintar e pode fintar como ação de movimento.",
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Enganação"}},
 		BookPage:      128,
+		UID:           "pwr_vzi2v5iiuq",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "expertise", Name: "Enganação"},
@@ -373,26 +374,25 @@ var generalPowersPart01 = []GeneralPower{
 				Condition: &ModifierCondition{Kind: "context", Note: "para fintar"},
 			},
 		},
-		UID: "pwr_vzi2v5iiuq",
 	},
 	{
-		ID:          "inexpugnavel",
-		Kind:        "combate",
-		Name:        "Inexpugnável",
-		Description: "Usando armadura pesada: +2 em todos os testes de resistência.",
+		ID:            "inexpugnavel",
+		Kind:          "combate",
+		Name:          "Inexpugnável",
+		Description:   "Usando armadura pesada: +2 em todos os testes de resistência.",
+		Prerequisites: []Prerequisite{{Kind: "power", ID: "encouracado"}},
+		BookPage:      128,
+		UID:           "pwr_7varjlo7wk",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "resistance"},
 				Amount:    2,
 				BonusType: "untyped",
-				Condition: &ModifierCondition{Kind: "flagRequired", Flag: "armadura-pesada", Label: "com armadura pesada"},
 				Note:      "+2 em resistências",
+				Condition: &ModifierCondition{Kind: "flagRequired", Flag: "armadura-pesada", Label: "com armadura pesada"},
 			},
 		},
-		MinLevel:      6,
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "encouracado"}},
-		BookPage:      128,
-		UID:           "pwr_7varjlo7wk",
+		MinLevel: 6,
 	},
 	{
 		ID:            "mira-apurada",

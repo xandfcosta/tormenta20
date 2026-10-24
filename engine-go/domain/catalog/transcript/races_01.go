@@ -113,7 +113,10 @@ var racesPart01 = []Race{
 			{Name: "Engenhoso", Summary: "Sem penalidade por não usar ferramenta; +2 se usar a correta."},
 			{Name: "Espelunqueiro", Summary: "Visão no escuro + deslocamento de escalada igual ao terrestre."},
 			{Name: "Peste Esguia", Summary: "Pequeno mas deslocamento permanece 9m."},
-			{Name: "Rato das Ruas", Summary: "+2 em Fortitude; recuperação de PV/PM nunca inferior ao nível."},
+			{
+				Name:    "Rato das Ruas",
+				Summary: "+2 em Fortitude; recuperação de PV/PM nunca inferior ao nível.",
+			},
 		},
 		BookPage: 23,
 		UID:      "rac_tk5vtohabz",
@@ -185,7 +188,6 @@ var racesPart01 = []Race{
 		Displacement:   9,
 		Darkvision:     false,
 		LowLightVision: false,
-		Ancestries:     []string{"água", "ar", "fogo", "terra", "luz", "trevas"},
 		Abilities: []RaceAbilitySummary{
 			{
 				Name:    "Desejos",
@@ -200,8 +202,9 @@ var racesPart01 = []Race{
 				Summary: "Lança uma magia de 1º círculo livre (atrib-chave Car); −1 PM se aprender de novo.",
 			},
 		},
-		BookPage: 26,
-		UID:      "rac_h2gjm5ixw4",
+		BookPage:   26,
+		UID:        "rac_h2gjm5ixw4",
+		Ancestries: []string{"água", "ar", "fogo", "terra", "luz", "trevas"},
 	},
 	{
 		ID:   "golem",
@@ -215,7 +218,6 @@ var racesPart01 = []Race{
 		Displacement:   6,
 		Darkvision:     true,
 		LowLightVision: false,
-		Ancestries:     []string{"água", "ar", "fogo", "terra"},
 		Abilities: []RaceAbilitySummary{
 			{
 				Name:    "Chassi",
@@ -231,8 +233,9 @@ var racesPart01 = []Race{
 			},
 			{Name: "Propósito de Criação", Summary: "Sem origem; recebe um poder geral livre."},
 		},
-		BookPage: 27,
-		UID:      "rac_h2a5pxw5tr",
+		BookPage:   27,
+		UID:        "rac_h2a5pxw5tr",
+		Ancestries: []string{"água", "ar", "fogo", "terra"},
 	},
 	{
 		ID:   "hynne",
@@ -380,7 +383,10 @@ var racesPart01 = []Race{
 				Name:    "Asas de Borboleta",
 				Summary: "Minúsculo; paira a 1,5m; ignora terreno difícil; imune a dano por queda; 1 PM/rodada: voo 12m.",
 			},
-			{Name: "Espírito da Natureza", Summary: "Espírito; visão na penumbra; fala com animais livremente."},
+			{
+				Name:    "Espírito da Natureza",
+				Summary: "Espírito; visão na penumbra; fala com animais livremente.",
+			},
 			{
 				Name:    "Magia das Fadas",
 				Summary: "Lança 2 dentre Criar Ilusão/Enfeitiçar/Luz (arcana)/Sono (atrib-chave Car); −1 PM se aprender de novo.",
@@ -404,7 +410,6 @@ var racesPart01 = []Race{
 		Displacement:   9,
 		Darkvision:     true,
 		LowLightVision: false,
-		Ancestries:     []string{"aggelus", "sulfure"},
 		Abilities: []RaceAbilitySummary{
 			{Name: "Herança Divina", Summary: "Espírito; visão no escuro."},
 			{
@@ -416,7 +421,8 @@ var racesPart01 = []Race{
 				Summary: "+2 em Enganação/Furtividade; lança Escuridão (divina, atrib-chave Int); −1 PM se aprender de novo.",
 			},
 		},
-		BookPage: 30,
-		UID:      "rac_pwiy6o6ifd",
+		BookPage:   30,
+		UID:        "rac_pwiy6o6ifd",
+		Ancestries: []string{"aggelus", "sulfure"},
 	},
 }

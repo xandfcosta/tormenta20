@@ -4,11 +4,11 @@ package transcript
 var classPowersPart06 = []ClassPower{
 	{
 		ID:          "class.cavaleiro.caminho-montaria",
-		Unmodeled:   "é parceiro, e a regra de parceiros é da p260 (ALE-425)",
 		ClassName:   "Cavaleiro",
 		Name:        "Caminho: Montaria",
 		Description: "Recebe cavalo de guerra. +5 em testes de Adestramento e Cavalgar com ela. L11 vira parceiro mestre. Se morrer, pode comprar/treinar outra (1 semana).",
-		MinLevel:    5,
+		UID:         "pwr_dybhg3xfdi",
+		Unmodeled:   "é parceiro, e a regra de parceiros é da p260 (ALE-425)",
 		Prerequisites: []Prerequisite{
 			{
 				Kind:    "classChoice",
@@ -18,17 +18,17 @@ var classPowersPart06 = []ClassPower{
 				Allowed: []string{"montaria"},
 			},
 		},
-		UID: "pwr_dybhg3xfdi",
+		MinLevel: 5,
 	},
 	{
 		ID:             "class.clerigo.devoto-fiel",
-		Unmodeled:      "os DOIS poderes concedidos se escolhem à mão: é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 		ClassName:      "Clérigo",
 		Name:           "Devoto Fiel",
 		Description:    "Devoto de deus maior. Recebe DOIS poderes concedidos por se tornar devoto (em vez de um). Alternativa: cultuar o Panteão (não recebe Poder Concedido; só pode usar maças). Atributo-chave para magias: Sabedoria.",
 		GrantedAtLevel: 1,
 		BookPage:       61,
 		UID:            "pwr_5b7m4pkkg5",
+		Unmodeled:      "os DOIS poderes concedidos se escolhem à mão: é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},
 	{
 		ID:             "class.clerigo.magias-1-circulo",
@@ -36,6 +36,7 @@ var classPowersPart06 = []ClassPower{
 		Name:           "Magias (1° círculo)",
 		Description:    "Pode lançar magias divinas de 1° círculo. Soma Sabedoria no PM total.",
 		GrantedAtLevel: 1,
+		UID:            "pwr_xlx5zcqffp",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "maxPm"},
@@ -44,7 +45,6 @@ var classPowersPart06 = []ClassPower{
 				Scale:     &ModifierScale{Per: "attribute", Attribute: "wisdom"},
 			},
 		},
-		UID: "pwr_xlx5zcqffp",
 	},
 	{
 		ID:             "class.clerigo.magias-2-circulo",
@@ -84,13 +84,13 @@ var classPowersPart06 = []ClassPower{
 	},
 	{
 		ID:             "class.clerigo.mao-da-divindade",
-		Unmodeled:      "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 		ClassName:      "Clérigo",
 		Name:           "Mão da Divindade",
 		Description:    "Capstone: ação completa + 15 PM. Lança 3 magias divinas (qualquer círculo, incluindo magias que não conhece), uma como ação livre e sem gastar PM (paga outros custos). Depois fica atordoado 1d4 rodadas.",
 		GrantedAtLevel: 20,
 		BookPage:       58,
 		UID:            "pwr_wgt4bexopw",
+		Unmodeled:      "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 	},
 	{
 		ID:          "class.clerigo.abencoar-arma",
@@ -108,11 +108,35 @@ var classPowersPart06 = []ClassPower{
 	},
 	{
 		ID:          "class.clerigo.autoridade-eclesiastica",
-		Unmodeled:   "a metade do preço em itens e serviços da igreja: é prosa do mestre",
+		Modeled:     []string{"o +5 em Diplomacia e Intimidação, que o jogador liga"},
 		ClassName:   "Clérigo",
 		Name:        "Autoridade Eclesiástica",
 		Description: "Posição formal em igreja. +5 em testes de Diplomacia ou Intimidação com devotos. Metade do preço em itens alquímicos/poções/serviços em templos da divindade.",
-		MinLevel:    5,
+		BookPage:    57,
+		UID:         "pwr_dnruhvgfuu",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "expertise", Name: "Diplomacia"},
+				Amount:    5,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "autoridade-eclesiastica",
+					Label: "ao lidar com devotos de sua divindade",
+				},
+			},
+			{
+				Target:    ModifierTarget{Kind: "expertise", Name: "Intimidação"},
+				Amount:    5,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "autoridade-eclesiastica",
+					Label: "ao lidar com devotos de sua divindade",
+				},
+			},
+		},
+		Unmodeled: "a metade do preço em itens e serviços da igreja: é prosa do mestre",
 		Prerequisites: []Prerequisite{
 			{
 				Kind:  "classChoice",
@@ -143,31 +167,7 @@ var classPowersPart06 = []ClassPower{
 				},
 			},
 		},
-		BookPage: 57,
-		UID:      "pwr_dnruhvgfuu",
-		Modeled:  []string{"o +5 em Diplomacia e Intimidação, que o jogador liga"},
-		Modifiers: []Modifier{
-			{
-				Target:    ModifierTarget{Kind: "expertise", Name: "Diplomacia"},
-				Amount:    5,
-				BonusType: "untyped",
-				Condition: &ModifierCondition{
-					Kind:  "flagOn",
-					Flag:  "autoridade-eclesiastica",
-					Label: "ao lidar com devotos de sua divindade",
-				},
-			},
-			{
-				Target:    ModifierTarget{Kind: "expertise", Name: "Intimidação"},
-				Amount:    5,
-				BonusType: "untyped",
-				Condition: &ModifierCondition{
-					Kind:  "flagOn",
-					Flag:  "autoridade-eclesiastica",
-					Label: "ao lidar com devotos de sua divindade",
-				},
-			},
-		},
+		MinLevel: 5,
 	},
 	{
 		ID:          "class.clerigo.canalizar-energia-positiva-negativa",
@@ -178,39 +178,39 @@ var classPowersPart06 = []ClassPower{
 	},
 	{
 		ID:            "class.clerigo.canalizar-amplo",
-		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		ClassName:     "Clérigo",
 		Name:          "Canalizar Amplo",
 		Description:   "Quando usa Canalizar Energia, gasta +2 PM para aumentar alcance para médio.",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.clerigo.canalizar-energia-positiva-negativa"}},
 		BookPage:      58,
 		UID:           "pwr_4klchyaoc2",
+		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.clerigo.canalizar-energia-positiva-negativa"}},
 	},
 	{
 		ID:          "class.clerigo.comunhao-vital",
-		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 		ClassName:   "Clérigo",
 		Name:        "Comunhão Vital",
 		Description: "Quando lança magia que cura criatura, paga +2 PM para outra criatura em alcance curto (incluindo você mesmo) recuperar PV iguais à metade da cura original.",
 		BookPage:    58,
 		UID:         "pwr_zmygypvcvf",
+		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 	},
 	{
 		ID:          "class.clerigo.conhecimento-magico",
-		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 		ClassName:   "Clérigo",
 		Name:        "Conhecimento Mágico",
 		Description: "Aprende 2 magias de qualquer círculo que possa lançar. Pode escolher várias vezes.",
 		BookPage:    38,
 		UID:         "pwr_zd46ja7apu",
+		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 	},
 	{
 		ID:            "class.clerigo.expulsar-comandar-mortos-vivos",
 		ClassName:     "Clérigo",
 		Name:          "Expulsar/Comandar Mortos-Vivos",
 		Description:   "Ação padrão + 3 PM: expulsa (energia positiva) ou comanda (energia negativa) todos mortos-vivos em alcance curto. Expulsos ficam apavorados por 1d6 rodadas. Comandados não inteligentes seguem ordens por 1 dia. Vontade CD Sab evita.",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.clerigo.canalizar-energia-positiva-negativa"}},
 		UID:           "pwr_p3gtr7qdxl",
+		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.clerigo.canalizar-energia-positiva-negativa"}},
 	},
 	{
 		ID:          "class.clerigo.liturgia-magica",
@@ -222,20 +222,21 @@ var classPowersPart06 = []ClassPower{
 	},
 	{
 		ID:          "class.clerigo.magia-sagrada-profana",
-		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 		ClassName:   "Clérigo",
 		Name:        "Magia Sagrada/Profana",
 		Description: "Quando lança magia divina que causa dano, paga +1 PM para mudar tipo do dano da magia para luz (energia positiva) ou trevas (energia negativa).",
 		BookPage:    58,
 		UID:         "pwr_swg3ujr2je",
+		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 	},
 	{
 		ID:          "class.clerigo.mestre-celebrante",
-		Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 		ClassName:   "Clérigo",
 		Name:        "Mestre Celebrante",
 		Description: "Quantidade de pessoas afetadas por suas missas aumenta em 10x e benefícios dobram.",
-		MinLevel:    12,
+		BookPage:    58,
+		UID:         "pwr_sjwuaiss6h",
+		Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 		Prerequisites: []Prerequisite{
 			{
 				Kind: "anyPower",
@@ -248,8 +249,7 @@ var classPowersPart06 = []ClassPower{
 				},
 			},
 		},
-		BookPage: 58,
-		UID:      "pwr_sjwuaiss6h",
+		MinLevel: 12,
 	},
 	{
 		ID:          "class.clerigo.missa-bencao-da-vida",
@@ -288,12 +288,12 @@ var classPowersPart06 = []ClassPower{
 	},
 	{
 		ID:          "class.clerigo.prece-de-combate",
-		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 		ClassName:   "Clérigo",
 		Name:        "Prece de Combate",
 		Description: "Quando lança magia divina com tempo de conjuração de ação padrão em si mesmo, paga +2 PM para lançá-la como ação de movimento.",
 		BookPage:    58,
 		UID:         "pwr_qwfo7ekgcu",
+		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 	},
 	{
 		ID:          "class.clerigo.simbolo-sagrado-energizado",
@@ -305,23 +305,23 @@ var classPowersPart06 = []ClassPower{
 	},
 	{
 		ID:             "class.druida.devoto-fiel",
-		Unmodeled:      "os DOIS poderes concedidos se escolhem à mão: é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 		ClassName:      "Druida",
 		Name:           "Devoto Fiel",
 		Description:    "Torna-se devoto de deus disponível para druidas (Allihanna, Megalokk ou Oceano). Recebe DOIS poderes concedidos.",
 		GrantedAtLevel: 1,
 		BookPage:       61,
 		UID:            "pwr_g7ocrjqrqd",
+		Unmodeled:      "os DOIS poderes concedidos se escolhem à mão: é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},
 	{
 		ID:             "class.druida.empatia-selvagem",
-		Unmodeled:      "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 		ClassName:      "Druida",
 		Name:           "Empatia Selvagem",
 		Description:    "Pode se comunicar com animais via linguagem corporal e vocalizações. Pode usar Adestramento com animais para mudar atitude e persuasão (como Diplomacia).",
 		GrantedAtLevel: 1,
 		BookPage:       21,
 		UID:            "pwr_t3v7zdnzjp",
+		Unmodeled:      "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},
 	{
 		ID:             "class.druida.magias-1-circulo",
@@ -329,6 +329,7 @@ var classPowersPart06 = []ClassPower{
 		Name:           "Magias (1° círculo)",
 		Description:    "Escolha 3 escolas de magia (permanente). Pode lançar magias divinas de 1° círculo pertencentes a essas escolas. Atributo-chave: Sabedoria. Soma Sabedoria no PM total.",
 		GrantedAtLevel: 1,
+		UID:            "pwr_djv4npe35r",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "maxPm"},
@@ -337,17 +338,16 @@ var classPowersPart06 = []ClassPower{
 				Scale:     &ModifierScale{Per: "attribute", Attribute: "wisdom"},
 			},
 		},
-		UID: "pwr_djv4npe35r",
 	},
 	{
 		ID:             "class.druida.caminho-dos-ermos",
-		Unmodeled:      "terreno difícil natural sem redução: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 		ClassName:      "Druida",
 		Name:           "Caminho dos Ermos",
 		Description:    "Pode atravessar terrenos difíceis sem redução em seu deslocamento. CD para rastreá-lo aumenta em +10. Só em terrenos naturais.",
 		GrantedAtLevel: 2,
 		BookPage:       63,
 		UID:            "pwr_6uiwktxrwi",
+		Unmodeled:      "terreno difícil natural sem redução: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 	},
 	{
 		ID:             "class.druida.magias-2-circulo",
@@ -382,6 +382,8 @@ var classPowersPart06 = []ClassPower{
 		Name:           "Força da Natureza",
 		Description:    "Capstone: custo em PM de suas magias diminui em -2 PM e CD delas aumenta em +2. Bônus dobram (-4 PM e +4 CD) se em terreno natural.",
 		GrantedAtLevel: 20,
+		BookPage:       63,
+		UID:            "pwr_r4fjyexfx4",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "pmCost"}, Amount: -2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "spellDC"}, Amount: 2, BonusType: "untyped"},
@@ -398,17 +400,15 @@ var classPowersPart06 = []ClassPower{
 				Condition: &ModifierCondition{Kind: "terrain", Type: "natural"},
 			},
 		},
-		BookPage: 63,
-		UID:      "pwr_r4fjyexfx4",
 	},
 	{
 		ID:          "class.druida.aspecto-da-primavera",
-		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 		ClassName:   "Druida",
 		Name:        "Aspecto da Primavera",
 		Description: "Aprende magia de encantamento ou ilusão (arcana ou divina) de qualquer círculo que possa lançar. Custo dessas magias -1 PM, mais reduzido em +1 por cada PM ate Cha (mín 1).",
 		BookPage:    61,
 		UID:         "pwr_jogziekxvd",
+		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 	},
 	{
 		ID:          "class.druida.aspecto-do-verao",

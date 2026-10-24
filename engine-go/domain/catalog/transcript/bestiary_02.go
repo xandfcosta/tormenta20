@@ -105,8 +105,8 @@ var bestiaryPart02 = []Creature{
 		Initiative: 11,
 		Perception: 11,
 		Treasure:   "Dobro e 2 peças de couro de dragão (CD 22 para extrair, veja o quadro na página 312)",
-		PM:         15,
 		UID:        "cre_vvnk4zqhmu",
+		PM:         15,
 	},
 	{
 		ID:           "golem-de-ferro",
@@ -178,8 +178,8 @@ var bestiaryPart02 = []Creature{
 		Initiative: 12,
 		Perception: 15,
 		Treasure:   "Dobro e 4 peças de couro de dragão (CD 26 para extrair, veja o quadro na página 312)",
-		PM:         70,
 		UID:        "cre_iaxjt6seai",
+		PM:         70,
 	},
 	{
 		ID:           "hidra",
@@ -232,7 +232,12 @@ var bestiaryPart02 = []Creature{
 		Will:         20,
 		Displacement: "18m, escalar 18m",
 		Attacks: []CreatureAttack{
-			{Name: "Espada longa x2", AttackBonus: 36, Damage: "2d8+25 mais 2d10 trevas", Special: "crítico 17"},
+			{
+				Name:        "Espada longa x2",
+				AttackBonus: 36,
+				Damage:      "2d8+25 mais 2d10 trevas",
+				Special:     "crítico 17",
+			},
 			{Name: "Garra", AttackBonus: 36, Damage: "2d6+25 mais 2d10 trevas"},
 		},
 		SpecialAbilities: []string{
@@ -294,8 +299,8 @@ var bestiaryPart02 = []Creature{
 		Initiative: 19,
 		Perception: 27,
 		Treasure:   "Dobro e 6 peças couro de dragão (CD 35 para extrair, veja o quadro na página 312)",
-		PM:         128,
 		UID:        "cre_vncqqzxajy",
+		PM:         128,
 	},
 	{
 		ID:               "glop",

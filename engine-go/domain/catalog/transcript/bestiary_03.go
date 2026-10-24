@@ -257,8 +257,8 @@ var bestiaryPart03 = []Creature{
 		Initiative: 4,
 		Perception: 8,
 		Treasure:   "Metade",
-		PM:         20,
 		UID:        "cre_mp75bcsurm",
+		PM:         20,
 	},
 	{
 		ID:           "gnoll-saqueador",

@@ -12,10 +12,15 @@ var Gods = []God{
 		Energy:          "negativa",
 		Symbol:          "Olho macabro de pupila vertical cercado de espinhos",
 		FavoredWeapon:   ptr("Corrente de espinhos"),
-		GrantedPowers:   []string{"Afinidade com a Tormenta", "Êxtase da Loucura", "Percepção Temporal", "Rejeição Divina"},
-		Devotees:        []string{"Quaisquer"},
-		BookPage:        96,
-		UID:             "god_ice6ligxwv",
+		GrantedPowers: []string{
+			"Afinidade com a Tormenta",
+			"Êxtase da Loucura",
+			"Percepção Temporal",
+			"Rejeição Divina",
+		},
+		Devotees: []string{"Quaisquer"},
+		BookPage: 96,
+		UID:      "god_ice6ligxwv",
 	},
 	{
 		ID:              "allihanna",
@@ -365,20 +370,4 @@ var Gods = []God{
 		BookPage:        105,
 		UID:             "god_5e5cv3vr7t",
 	},
-}
-
-type God struct {
-	ID              string   `json:"id"`
-	Name            string   `json:"name"`
-	Major           bool     `json:"major"`
-	PaladinEligible bool     `json:"paladinoEligible"`
-	DruidEligible   bool     `json:"druidaEligible"`
-	Portfolio       string   `json:"portfolio"`
-	Energy          string   `json:"energia"`
-	Symbol          string   `json:"simbolo"`
-	FavoredWeapon   *string  `json:"armaPreferida"`
-	GrantedPowers   []string `json:"poderesConcedidos"`
-	Devotees        []string `json:"devotos"`
-	BookPage        int      `json:"bookPage"`
-	UID             string   `json:"uid"`
 }

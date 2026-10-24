@@ -159,19 +159,18 @@ var spellsPart04 = []Spell{
 		UID:      "spl_2p35htxjij",
 	},
 	{
-		ID:           "anular-a-luz",
-		Name:         "Anular a Luz",
-		Circle:       3,
-		School:       "necromancia",
-		Execution:    "padrao",
-		Range:        "pessoal",
-		Duration:     "definida",
-		DurationNote: "ver texto (aura persistente até fim da cena; enjôo 1d4 rodadas)",
-		SaveType:     "none",
-		Resistance:   nil,
-		Components:   []string{"verbal", "gestual"},
-		Classes:      []string{"Clérigo", "Druida"},
-		BaseEffect:   "Onda de escuridão em esfera de 6m de raio. Dissipa magias até 3º círculo na área (Religião oposto por CD). Aliados na área: aura sombria, +4 Defesa até fim da cena. Inimigos ficam enjoados 1d4 rodadas (uma vez por cena). Anula Dispersar as Trevas (instantâneo).",
+		ID:         "anular-a-luz",
+		Name:       "Anular a Luz",
+		Circle:     3,
+		School:     "necromancia",
+		Execution:  "padrao",
+		Range:      "pessoal",
+		Duration:   "definida",
+		SaveType:   "none",
+		Resistance: nil,
+		Components: []string{"verbal", "gestual"},
+		Classes:    []string{"Clérigo", "Druida"},
+		BaseEffect: "Onda de escuridão em esfera de 6m de raio. Dissipa magias até 3º círculo na área (Religião oposto por CD). Aliados na área: aura sombria, +4 Defesa até fim da cena. Inimigos ficam enjoados 1d4 rodadas (uma vez por cena). Anula Dispersar as Trevas (instantâneo).",
 		Augments: []SpellAugment{
 			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o bônus na Defesa em +1."},
 			{
@@ -187,8 +186,9 @@ var spellsPart04 = []Spell{
 				RequiresCircle: 5,
 			},
 		},
-		BookPage: 180,
-		UID:      "spl_i43d2otvwo",
+		BookPage:     180,
+		UID:          "spl_i43d2otvwo",
+		DurationNote: "ver texto (aura persistente até fim da cena; enjôo 1d4 rodadas)",
 	},
 	{
 		ID:         "aparencia-perfeita",
@@ -203,6 +203,11 @@ var spellsPart04 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Rosto idealizado, porte garboso, voz melodiosa. CAR 5+ recebe +2 no atributo; senão vira 5 (conta como bônus). +5 em Diplomacia e Enganação. Ao terminar, observadores suspeitam; pessoas que viram o alvo sob a magia sentem \"algo errado\" em condições normais. Ao fim da cena, gastar novamente os PM como ação livre mantém ativa. Não fornece PV/PM adicionais.",
+		Augments: []SpellAugment{
+			{PMCost: 1, Kind: "muda", Description: "Muda o alcance para toque e o alvo para 1 humanoide."},
+		},
+		BookPage: 180,
+		UID:      "spl_jsxx5k4dku",
 		Buff: &SpellBuff{
 			Modifiers: []Modifier{
 				{
@@ -226,11 +231,6 @@ var spellsPart04 = []Spell{
 			},
 			Facts: []Fact{{Category: "other", Text: "CAR abaixo de 5 vira 5"}},
 		},
-		Augments: []SpellAugment{
-			{PMCost: 1, Kind: "muda", Description: "Muda o alcance para toque e o alvo para 1 humanoide."},
-		},
-		BookPage: 180,
-		UID:      "spl_jsxx5k4dku",
 	},
 	{
 		ID:         "aprisionamento",
@@ -320,6 +320,21 @@ var spellsPart04 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo", "Clérigo", "Druida"},
 		BaseEffect: "1 arma empunhada vira mágica; +1 em ataque e dano (bônus de encanto). Se o conjurador empunhar, pode usar atributo-chave de magias em vez do original em ataque (não cumulativo).",
+		Augments: []SpellAugment{
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o bônus em +1 (bônus máximo limitado pelo círculo máximo).",
+			},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Arma causa +1d6 de dano de ácido, eletricidade, fogo ou frio (escolhido ao lançar). Uma vez apenas.",
+			},
+			{PMCost: 3, Kind: "muda", Description: "Muda o bônus de dano acima para +2d6."},
+		},
+		BookPage: 181,
+		UID:      "spl_ia5aqut25o",
 		Buff: &SpellBuff{
 			Modifiers: []Modifier{
 				{
@@ -336,21 +351,6 @@ var spellsPart04 = []Spell{
 				},
 			},
 		},
-		Augments: []SpellAugment{
-			{
-				PMCost:      2,
-				Kind:        "aumenta",
-				Description: "Aumenta o bônus em +1 (bônus máximo limitado pelo círculo máximo).",
-			},
-			{
-				PMCost:      2,
-				Kind:        "aumenta",
-				Description: "Arma causa +1d6 de dano de ácido, eletricidade, fogo ou frio (escolhido ao lançar). Uma vez apenas.",
-			},
-			{PMCost: 3, Kind: "muda", Description: "Muda o bônus de dano acima para +2d6."},
-		},
-		BookPage: 181,
-		UID:      "spl_ia5aqut25o",
 	},
 	{
 		ID:         "armamento-da-natureza",
@@ -365,10 +365,6 @@ var spellsPart04 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Druida"},
 		BaseEffect: "Fortalece arma mundana primitiva (sem custo T$: bordão, clava, funda, tacape), arma natural ou ataque desarmado. Dano +1 passo, considerada mágica. Ao lançar, pode mudar tipo de dano (corte, impacto ou perfuração).",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{},
-			Facts:     []Fact{{Category: "other", Text: "Dano +1 passo; arma considerada mágica"}},
-		},
 		Augments: []SpellAugment{
 			{PMCost: 1, Kind: "aumenta", Description: "Fornece +1 nos testes de ataque com a arma."},
 			{PMCost: 2, Kind: "muda", Description: "Muda a execução para ação de movimento."},
@@ -377,6 +373,10 @@ var spellsPart04 = []Spell{
 		},
 		BookPage: 181,
 		UID:      "spl_nsj7u57y4p",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{},
+			Facts:     []Fact{{Category: "other", Text: "Dano +1 passo; arma considerada mágica"}},
+		},
 	},
 	{
 		ID:           "assassino-fantasmagorico",
@@ -386,7 +386,6 @@ var spellsPart04 = []Spell{
 		Execution:    "padrao",
 		Range:        "longo",
 		Duration:     "definida",
-		DurationNote: "cena, até ser descarregada",
 		SaveType:     "vontade",
 		Resistance:   ptr("anula"),
 		Components:   []string{"verbal", "gestual"},
@@ -395,6 +394,7 @@ var spellsPart04 = []Spell{
 		Augments:     []SpellAugment{},
 		BookPage:     181,
 		UID:          "spl_qrzkc75fgd",
+		DurationNote: "cena, até ser descarregada",
 	},
 	{
 		ID:         "augurio",

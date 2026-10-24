@@ -271,8 +271,8 @@ var originsPart01 = []Origin{
 				Name:        "Poder da Tormenta (escolha)",
 				Kind:        "poder",
 				Description: "Você recebe um poder da Tormenta a sua escolha. Pré-requisitos do poder se aplicam.",
-				PowerPick:   "tormenta",
 				UID:         "org_icztz4kobu",
+				PowerPick:   "tormenta",
 			},
 		},
 		UniquePower: OriginUniquePower{
@@ -318,8 +318,8 @@ var originsPart01 = []Origin{
 				ID:       "poder-estilo-de-disparo",
 				Name:     "Estilo de Disparo",
 				Kind:     "poder",
-				PowerUID: "pwr_nerh6ajpdd",
 				UID:      "org_zvgr5yycvf",
+				PowerUID: "pwr_nerh6ajpdd",
 			},
 			{
 				ID:       "poder-sentidos-agucados",
@@ -363,8 +363,8 @@ var originsPart01 = []Origin{
 				Name:        "Poder de Combate (escolha)",
 				Kind:        "poder",
 				Description: "Você recebe um poder de combate a sua escolha. Pré-requisitos do poder se aplicam.",
-				PowerPick:   "combate",
 				UID:         "org_4ervdlci3m",
+				PowerPick:   "combate",
 			},
 		},
 		UniquePower: OriginUniquePower{

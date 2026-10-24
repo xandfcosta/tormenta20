@@ -10,7 +10,6 @@ var spellsPart14 = []Spell{
 		Execution:    "padrao",
 		Range:        "longo",
 		Duration:     "definida",
-		DurationNote: "1 rodada",
 		SaveType:     "reflexos",
 		Resistance:   ptr("parcial"),
 		Components:   []string{"verbal", "gestual"},
@@ -19,6 +18,7 @@ var spellsPart14 = []Spell{
 		Augments:     []SpellAugment{},
 		BookPage:     209,
 		UID:          "spl_mu7ko6oz3n",
+		DurationNote: "1 rodada",
 	},
 	{
 		ID:         "toque-chocante",
@@ -116,6 +116,20 @@ var spellsPart14 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Máquina de combate: +6 Defesa/ataque/dano corpo a corpo + 30 PV temporários. Não pode lançar magias. Proficiente em todas as armas.",
+		Augments: []SpellAugment{
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta os bônus (Defesa/ataque/dano) em +1 e PV temporários em +10.",
+			},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Adiciona componente material (barra de adamante T$ 100). Forma metálica: RD 10 + imunidade a atordoamento e efeitos de cansaço/encantamento/metabolismo/trevas/veneno + não respira.",
+			},
+		},
+		BookPage: 210,
+		UID:      "spl_nroxqgjpie",
 		Buff: &SpellBuff{
 			Modifiers: []Modifier{
 				{
@@ -148,20 +162,6 @@ var spellsPart14 = []Spell{
 				{Category: "other", Text: "Não pode lançar magias"},
 			},
 		},
-		Augments: []SpellAugment{
-			{
-				PMCost:      2,
-				Kind:        "aumenta",
-				Description: "Aumenta os bônus (Defesa/ataque/dano) em +1 e PV temporários em +10.",
-			},
-			{
-				PMCost:      2,
-				Kind:        "aumenta",
-				Description: "Adiciona componente material (barra de adamante T$ 100). Forma metálica: RD 10 + imunidade a atordoamento e efeitos de cansaço/encantamento/metabolismo/trevas/veneno + não respira.",
-			},
-		},
-		BookPage: 210,
-		UID:      "spl_nroxqgjpie",
 	},
 	{
 		ID:         "transmutar-objetos",
@@ -219,17 +219,6 @@ var spellsPart14 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Druida", "Paladino"},
 		BaseEffect: "1 armadura/escudo ganha +1 Defesa. Vestuário passa a oferecer +2 Defesa (não cumulativo com armadura). Conta como bônus de encanto.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{
-				{
-					Target:    ModifierTarget{Kind: "defense"},
-					Amount:    1,
-					BonusType: "enhancement",
-					Note:      "Vestimenta da Fé",
-				},
-			},
-			Facts: []Fact{{Category: "other", Text: "Alternativa: vestuário +2 Defesa (não cumulativo com armadura)"}},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:         3,
@@ -242,6 +231,19 @@ var spellsPart14 = []Spell{
 		},
 		BookPage: 210,
 		UID:      "spl_2qvpwd6pmf",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "defense"},
+					Amount:    1,
+					BonusType: "enhancement",
+					Note:      "Vestimenta da Fé",
+				},
+			},
+			Facts: []Fact{
+				{Category: "other", Text: "Alternativa: vestuário +2 Defesa (não cumulativo com armadura)"},
+			},
+		},
 	},
 	{
 		ID:         "viagem-arborea",
@@ -298,10 +300,6 @@ var spellsPart14 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo", "Clérigo", "Druida", "Paladino"},
 		BaseEffect: "Enxerga através de camuflagem/escuridão (normal e mágica) + efeitos de ilusão e transmutação (verdade translúcida ou sobreposta).",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{},
-			Facts:     []Fact{{Category: "sense", Text: "Vê através de camuflagem, escuridão e ilusões"}},
-		},
 		Augments: []SpellAugment{
 			{PMCost: 1, Kind: "muda", Description: "Muda alcance para toque e alvo para 1 criatura."},
 			{
@@ -322,6 +320,10 @@ var spellsPart14 = []Spell{
 		},
 		BookPage: 211,
 		UID:      "spl_of5k6jubrr",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{},
+			Facts:     []Fact{{Category: "sense", Text: "Vê através de camuflagem, escuridão e ilusões"}},
+		},
 	},
 	{
 		ID:         "vitalidade-fantasma",
@@ -336,11 +338,6 @@ var spellsPart14 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Suga energia vital da terra: 2d10 PV temporários. Desaparecem ao fim da cena.",
-		Buff: &SpellBuff{
-			DefaultScope: "scene",
-			Modifiers:    []Modifier{},
-			Facts:        []Fact{{Category: "other", Text: "PV temporários 2d10 (até fim da cena)"}},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:      2,
@@ -356,5 +353,10 @@ var spellsPart14 = []Spell{
 		},
 		BookPage: 211,
 		UID:      "spl_ik44qscatq",
+		Buff: &SpellBuff{
+			Modifiers:    []Modifier{},
+			Facts:        []Fact{{Category: "other", Text: "PV temporários 2d10 (até fim da cena)"}},
+			DefaultScope: "scene",
+		},
 	},
 }

@@ -234,10 +234,6 @@ var spellsPart08 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Druida", "Paladino"},
 		BaseEffect: "Alvo (1 criatura) recebe +2 em Força, Destreza ou Constituição à escolha. Sem PV/PM adicionais.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{},
-			Facts:     []Fact{{Category: "other", Text: "+2 em Força, Destreza ou Constituição (à escolha)"}},
-		},
 		Augments: []SpellAugment{
 			{PMCost: 3, Kind: "muda", Description: "Muda alcance para curto e alvo para criaturas escolhidas."},
 			{PMCost: 3, Kind: "muda", Description: "+2 nos três atributos físicos.", RequiresCircle: 3},
@@ -246,6 +242,10 @@ var spellsPart08 = []Spell{
 		},
 		BookPage: 193,
 		UID:      "spl_gcfw6hnesc",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{},
+			Facts:     []Fact{{Category: "other", Text: "+2 em Força, Destreza ou Constituição (à escolha)"}},
+		},
 	},
 	{
 		ID:         "flecha-acida",
@@ -285,13 +285,6 @@ var spellsPart08 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista"},
 		BaseEffect: "Transporta conjurador + equipamento para o plano etéreo. Vira fantasma (mas viva): invisível (alterna ação livre), incorpórea, move em qualquer direção. Enxerga material em cinza; visão/audição reduzidas a 18m. Só abjuração/essência afetam etéreas. Etérea não ataca material. Etéreas se afetam. Materializar: ação de movimento encerra magia. Materializar em espaço ocupado = joga para o não-ocupado mais próximo + 1d6 impacto por 1,5m.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{},
-			Facts: []Fact{
-				{Category: "movement", Text: "Incorpóreo/etéreo — move em qualquer direção"},
-				{Category: "other", Text: "Invisível; só abjuração/essência afeta"},
-			},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:         5,
@@ -302,6 +295,13 @@ var spellsPart08 = []Spell{
 		},
 		BookPage: 193,
 		UID:      "spl_yjcoyqbget",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{},
+			Facts: []Fact{
+				{Category: "movement", Text: "Incorpóreo/etéreo — move em qualquer direção"},
+				{Category: "other", Text: "Invisível; só abjuração/essência afeta"},
+			},
+		},
 	},
 	{
 		ID:         "furia-do-panteao",
@@ -388,7 +388,6 @@ var spellsPart08 = []Spell{
 		Execution:    "padrao",
 		Range:        "curto",
 		Duration:     "definida",
-		DurationNote: "cena ou até ser descarregado",
 		SaveType:     "none",
 		Resistance:   nil,
 		Components:   []string{"verbal", "gestual"},
@@ -397,5 +396,6 @@ var spellsPart08 = []Spell{
 		Augments:     []SpellAugment{},
 		BookPage:     194,
 		UID:          "spl_3zwtn4bont",
+		DurationNote: "cena ou até ser descarregado",
 	},
 }

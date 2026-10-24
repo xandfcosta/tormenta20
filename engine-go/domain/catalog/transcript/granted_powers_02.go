@@ -9,12 +9,12 @@ var grantedPowersPart02 = []GrantedPower{
 		Effect:   "Você recebe +2 em Acrobacia, Atuação e Diplomacia.",
 		Kind:     "social",
 		BookPage: 135,
+		UID:      "pwr_mxuz65xum4",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Acrobacia"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Atuação"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Diplomacia"}, Amount: 2, BonusType: "untyped"},
 		},
-		UID: "pwr_mxuz65xum4",
 	},
 	{
 		ID:       "armas-da-ambicao",
@@ -23,6 +23,7 @@ var grantedPowersPart02 = []GrantedPower{
 		Effect:   "Você recebe +1 em testes de ataque e na margem de ameaça com armas nas quais é proficiente.",
 		Kind:     "utilidade",
 		BookPage: 132,
+		UID:      "pwr_xfd2x2ta5a",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "attack", Scope: "all"},
@@ -45,7 +46,6 @@ var grantedPowersPart02 = []GrantedPower{
 				},
 			},
 		},
-		UID: "pwr_xfd2x2ta5a",
 	},
 	{
 		ID:       "arsenal-das-profundezas",
@@ -54,6 +54,7 @@ var grantedPowersPart02 = []GrantedPower{
 		Effect:   "Você recebe +2 nas rolagens de dano com azagaias, lanças e tridentes e seu multiplicador de crítico com essas armas aumenta em +1.",
 		Kind:     "utilidade",
 		BookPage: 132,
+		UID:      "pwr_aivhbbbd5a",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "damage", Scope: "all"},
@@ -76,7 +77,6 @@ var grantedPowersPart02 = []GrantedPower{
 				},
 			},
 		},
-		UID: "pwr_aivhbbbd5a",
 	},
 	{
 		ID:       "sangue-ofidico",
@@ -85,6 +85,7 @@ var grantedPowersPart02 = []GrantedPower{
 		Effect:   "Você recebe resistência a veneno +5 e a CD para resistir aos seus venenos aumenta em +2.",
 		Kind:     "utilidade",
 		BookPage: 135,
+		UID:      "pwr_rrvxgfr3tt",
 		Modifiers: []Modifier{
 			{
 				Target:    ModifierTarget{Kind: "resistance"},
@@ -93,6 +94,5 @@ var grantedPowersPart02 = []GrantedPower{
 				Condition: &ModifierCondition{Kind: "against", Trait: "veneno"},
 			},
 		},
-		UID: "pwr_rrvxgfr3tt",
 	},
 }

@@ -231,7 +231,7 @@ var originsPart02 = []Origin{
 			Description: "Ninguém voltará a torná-lo um escravo: você recebe +5 em testes contra a manobra agarrar e efeitos de movimento.",
 			Modifiers: []Modifier{
 				{
-					Target:    ModifierTarget{Kind: "maneuver", Name: "agarrar", Scope: "defense"},
+					Target:    ModifierTarget{Kind: "maneuver", Scope: "defense", Name: "agarrar"},
 					Amount:    5,
 					BonusType: "untyped",
 				},

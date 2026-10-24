@@ -75,10 +75,6 @@ var spellsPart03 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Três cópias ilusórias suas aparecem e imitam suas ações. +6 na Defesa. Cada ataque que erra destrói uma cópia (1 cópia = +4 Defesa, 0 = +2). Oponente precisa ver as cópias para se confundir.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{},
-			Facts:     []Fact{{Category: "other", Text: "+6 Defesa (3 cópias ilusórias; cai conforme são destruídas)"}},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:      2,
@@ -94,6 +90,10 @@ var spellsPart03 = []Spell{
 		},
 		BookPage: 195,
 		UID:      "spl_5h2neg7ds6",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{},
+			Facts:     []Fact{{Category: "other", Text: "+6 Defesa (3 cópias ilusórias; cai conforme são destruídas)"}},
+		},
 	},
 	{
 		ID:         "sopro-das-uivantes",
@@ -147,19 +147,18 @@ var spellsPart03 = []Spell{
 		UID:      "spl_kg7f26xbhh",
 	},
 	{
-		ID:           "tranca-arcana",
-		Name:         "Tranca Arcana",
-		Circle:       1,
-		School:       "abjuracao",
-		Execution:    "padrao",
-		Range:        "toque",
-		Duration:     "definida",
-		DurationNote: "permanente",
-		SaveType:     "none",
-		Resistance:   nil,
-		Components:   []string{"verbal", "gestual", "material"},
-		Classes:      []string{"Arcanista"},
-		BaseEffect:   "Tranca porta ou item que possa ser aberto/fechado (baú, caixa). CD para abrir com Força ou Ladinagem +10. Você abre livremente sua própria tranca. Componente material: chave de bronze T$ 25.",
+		ID:         "tranca-arcana",
+		Name:       "Tranca Arcana",
+		Circle:     1,
+		School:     "abjuracao",
+		Execution:  "padrao",
+		Range:      "toque",
+		Duration:   "definida",
+		SaveType:   "none",
+		Resistance: nil,
+		Components: []string{"verbal", "gestual", "material"},
+		Classes:    []string{"Arcanista"},
+		BaseEffect: "Tranca porta ou item que possa ser aberto/fechado (baú, caixa). CD para abrir com Força ou Ladinagem +10. Você abre livremente sua própria tranca. Componente material: chave de bronze T$ 25.",
 		Augments: []SpellAugment{
 			{
 				PMCost:      0,
@@ -181,8 +180,9 @@ var spellsPart03 = []Spell{
 				RequiresCircle: 3,
 			},
 		},
-		BookPage: 209,
-		UID:      "spl_4w445luipi",
+		BookPage:     209,
+		UID:          "spl_4w445luipi",
+		DurationNote: "permanente",
 	},
 	{
 		ID:         "velocidade",
@@ -197,13 +197,6 @@ var spellsPart03 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Alvo (1 criatura) pode realizar uma ação padrão ou de movimento adicional por turno. Não pode lançar magias nem ativar engenhocas.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{},
-			Facts: []Fact{
-				{Category: "action", Text: "+1 ação (padrão ou movimento) por turno"},
-				{Category: "other", Text: "Não pode lançar magias nem ativar engenhocas"},
-			},
-		},
 		Augments: []SpellAugment{
 			{
 				PMCost:      0,
@@ -225,6 +218,13 @@ var spellsPart03 = []Spell{
 		},
 		BookPage: 210,
 		UID:      "spl_x5xijmk7gz",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{},
+			Facts: []Fact{
+				{Category: "action", Text: "+1 ação (padrão ou movimento) por turno"},
+				{Category: "other", Text: "Não pode lançar magias nem ativar engenhocas"},
+			},
+		},
 	},
 	{
 		ID:         "voo",
@@ -239,11 +239,6 @@ var spellsPart03 = []Spell{
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Recebe deslocamento de voo 12m. Voar é simples como andar — pode atacar e lançar magias normalmente. Quando termina, desce lentamente como Queda Suave.",
-		Buff: &SpellBuff{
-			Modifiers: []Modifier{
-				{Target: ModifierTarget{Kind: "flySpeed"}, Amount: 12, BonusType: "untyped", Note: "Voo"},
-			},
-		},
 		Augments: []SpellAugment{
 			{PMCost: 1, Kind: "muda", Description: "Muda alcance para toque e alvo para 1 criatura."},
 			{PMCost: 4, Kind: "muda", Description: "Muda duração para um dia.", RequiresCircle: 4},
@@ -256,6 +251,11 @@ var spellsPart03 = []Spell{
 		},
 		BookPage: 211,
 		UID:      "spl_4ur2n65fu4",
+		Buff: &SpellBuff{
+			Modifiers: []Modifier{
+				{Target: ModifierTarget{Kind: "flySpeed"}, Amount: 12, BonusType: "untyped", Note: "Voo"},
+			},
+		},
 	},
 	{
 		ID:         "abencoar-alimentos",
@@ -309,7 +309,12 @@ var spellsPart03 = []Spell{
 				Description: "Muda o alvo para 1 monstro ou espírito com Inteligência -5 ou -4.",
 			},
 			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o número de alvos em +1."},
-			{PMCost: 5, Kind: "muda", Description: "Muda o alvo para 1 monstro ou espírito.", RequiresCircle: 3},
+			{
+				PMCost:         5,
+				Kind:           "muda",
+				Description:    "Muda o alvo para 1 monstro ou espírito.",
+				RequiresCircle: 3,
+			},
 		},
 		BookPage: 178,
 		UID:      "spl_uagm5wahph",
