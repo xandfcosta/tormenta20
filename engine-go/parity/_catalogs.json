@@ -18136,7 +18136,20 @@
     },
     {
       "id": "poder.aumento-de-atributo",
-      "unmodeled": "o +1 no atributo escolhido: o alvo do número é uma escolha do jogador, e o motor não lê a escolha (ALE-491)",
+      "modeled": [
+        "o +1 em cada atributo escolhido, uma cópia por escolha (`fromChoice`)"
+      ],
+      "unmodeled": "\"apenas uma vez por patamar para um mesmo atributo\": o motor não confere, sem fatia",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "fromChoice": "name"
+        }
+      ],
       "bookPage": 38,
       "choice": {
         "kind": "attribute",

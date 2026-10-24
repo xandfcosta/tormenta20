@@ -108,6 +108,7 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		Target            ModifierTarget     `json:"target"`
 		Amount            float64            `json:"amount"`
 		Dice              string             `json:"dice,omitempty"`
+		FromChoice        string             `json:"fromChoice,omitempty"`
 		BonusType         string             `json:"bonusType"`
 		Condition         *ModifierCondition `json:"condition,omitempty"`
 		Note              string             `json:"note,omitempty"`
@@ -120,6 +121,7 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		Target:            m.Target,
 		Amount:            amountInBookUnits(m.Target, m.Amount),
 		Dice:              m.Dice,
+		FromChoice:        m.FromChoice,
 		BonusType:         m.BonusType,
 		Condition:         m.Condition,
 		Note:              m.Note,
@@ -142,11 +144,17 @@ type Modifier struct {
 	//
 	// Vale só para `target.k = damage`, e quem a colhe é o `harvestWeaponRiders`
 	// — ela nunca é parcela da pilha, pela mesma razão que o `Factor` não é.
-	Dice      string             `json:"dice,omitempty"`
-	BonusType string             `json:"bonusType"`
-	Condition *ModifierCondition `json:"condition,omitempty"`
-	Note      string             `json:"note,omitempty"`
-	Scale     *VitalScale        `json:"scale,omitempty"`
+	Dice string `json:"dice,omitempty"`
+	// FromChoice diz qual campo do ALVO a escolha do jogador preenche — hoje só
+	// `name`. O Aumento de Atributo (p38) é "+1 em um atributo", e o atributo é
+	// a escolha gravada em `powerChoices`: o catálogo escreve o +1 uma vez, e o
+	// coletor faz uma cópia por escolha (`expandChoiceModifiers`). Sem escolha
+	// o modificador não vale em lugar nenhum.
+	FromChoice string             `json:"fromChoice,omitempty"`
+	BonusType  string             `json:"bonusType"`
+	Condition  *ModifierCondition `json:"condition,omitempty"`
+	Note       string             `json:"note,omitempty"`
+	Scale      *VitalScale        `json:"scale,omitempty"`
 	// Factor MULTIPLICA o total do alvo, depois da soma — ver `factor.go`. Um
 	// modificador com fator ignora o `Amount`: ele não é parcela da pilha.
 	Factor *Ratio `json:"factor,omitempty"`

@@ -101,9 +101,38 @@ type OriginBenefit struct {
 	Expertise string `json:"expertise,omitempty"`
 }
 
+// resolveClassPowerPointers dá a cada entrada que APONTA a regra do verbete
+// apontado (ALE-491).
+//
+// Sem isto, as 31 entradas de classe que apontam — o Aumento de Atributo, a
+// Evasão, o Ímpeto — chegavam ao coletor sem modificador nenhum, e qualquer
+// regra escrita no verbete genérico ficava fora da ficha. A tela já seguia o
+// ponteiro (`book.classPowersResolved`); o motor não.
+func resolveClassPowerPointers(powers []*ClassPower) {
+	byUid := map[string]*ClassPower{}
+	for _, p := range powers {
+		if p.Uid != "" {
+			byUid[p.Uid] = p
+		}
+	}
+	for _, p := range powers {
+		target, points := byUid[p.PowerUid]
+		if !points || len(p.Modifiers) > 0 {
+			continue
+		}
+		p.Modifiers = target.Modifiers
+	}
+}
+
 // ClassPower é o poder de classe, nos campos que esta camada lê.
 type ClassPower struct {
-	ID              string           `json:"id"`
+	ID string `json:"id"`
+	// Uid e PowerUid são o APONTAMENTO: a entrada da classe que só diz "este
+	// poder, neste nível" aponta para o verbete que carrega a regra — o
+	// Aumento de Atributo das catorze classes aponta para um verbete só. O
+	// motor segue o ponteiro na carga (`resolveClassPowerPointers`).
+	Uid             string           `json:"uid"`
+	PowerUid        string           `json:"powerUid,omitempty"`
 	ClassName       string           `json:"className"`
 	Name            string           `json:"name"`
 	GrantedAtLevel  *int             `json:"grantedAtLevel"`
@@ -273,6 +302,7 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	for i := range p.ClassPowers {
 		c.classPowers = append(c.classPowers, &p.ClassPowers[i])
 	}
+	resolveClassPowerPointers(c.classPowers)
 	for i := range p.GeneralPowers {
 		c.generalByID[p.GeneralPowers[i].ID] = &p.GeneralPowers[i]
 		if uid := p.GeneralPowers[i].Uid; uid != "" {

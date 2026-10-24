@@ -175,14 +175,42 @@ func (r *Ruleset) originPickedPowerIds(ch Character) []string {
 func (r *Ruleset) classActiveItems(ch Character) []ActiveItem {
 	chosen := parseChoiceSet(ch.ClassPowers)
 	choices := parseClassChoices(ch.ClassChoices)
+	picks := parsePowerChoices(ch.PowerChoices)
 	out := []ActiveItem{}
 	for _, entry := range ch.Classes {
 		owned := r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName])
 		for _, power := range owned {
-			if len(power.Modifiers) == 0 {
+			mods := expandChoiceModifiers(power.Modifiers, picks[power.ID])
+			if len(mods) == 0 {
 				continue
 			}
-			out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: power.Modifiers})
+			out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: mods})
+		}
+	}
+	return out
+}
+
+// expandChoiceModifiers troca cada modificador `fromChoice` por uma cópia por
+// escolha, com a escolha no alvo (ALE-491).
+//
+// Duas escolhas são o poder tomado duas vezes (p38: "você pode escolher este
+// poder várias vezes"), e por isso viram duas cópias e não uma com o dobro: o
+// atributo de cada uma pode ser outro.
+//
+//	expandChoiceModifiers([+1 atributo ← escolha], ["strength", "wisdom"])
+//	// [+1 strength, +1 wisdom]
+func expandChoiceModifiers(mods []Modifier, picks []string) []Modifier {
+	out := make([]Modifier, 0, len(mods))
+	for _, m := range mods {
+		if m.FromChoice == "" {
+			out = append(out, m)
+			continue
+		}
+		for _, pick := range picks {
+			copied := m
+			copied.FromChoice = ""
+			copied.Target.Name = pick
+			out = append(out, copied)
 		}
 	}
 	return out
