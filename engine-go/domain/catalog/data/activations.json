@@ -3862,7 +3862,22 @@
     "action": "movimento",
     "pmCost": 2,
     "uses": null,
-    "bookPage": 338
+    "bookPage": 338,
+    "grant": {
+      "kind": "active-effect",
+      "scope": "scene",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "damageType": "ácido"
+          },
+          "dice": "1d4",
+          "bonusType": "untyped",
+          "note": "Cáustica"
+        }
+      ]
+    }
   },
   {
     "id": "item.encanto-gelido",

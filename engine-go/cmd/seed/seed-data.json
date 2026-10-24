@@ -1400,7 +1400,15 @@
                 "equipped": "vested"
               }
             ]
-          }
+          },
+          "enchants": [
+            {
+              "item": "armadura-couro",
+              "enchants": [
+                "encanto-caustica"
+              ]
+            }
+          ]
         },
         {
           "create": {
