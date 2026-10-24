@@ -3,6 +3,7 @@ package engine
 import (
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -135,5 +136,45 @@ func TestTheAnnouncedConditionCrossesTheCatalog(t *testing.T) {
 	if porCondicao["atordoado"].Note == "" {
 		t.Error("o atordoamento da Trovejante chegou sem a nota do livro (duração, " +
 			"teste que evita, limite por cena)")
+	}
+}
+
+// A DRENANTE ANUNCIA OS DOIS EFEITOS DO CRÍTICO, como uma frase só (p335, ALE-461).
+//
+//	"Quando você faz um acerto crítico em uma criatura viva, a criatura fica
+//	fraca e você ganha 2d10 pontos de vida temporários."
+//
+// A condição já era anunciada; os 2d10 eram a metade calada da ALE-459. Eles
+// viajam na MESMA nota porque no livro são a mesma frase, com o mesmo gatilho —
+// e quem julga o "criatura viva" dos dois é o mestre, que o livro não ajuda: a
+// expressão aparece quinze vezes e não é definida em nenhuma (decisão do dono).
+//
+// O caso atravessa o despejo de propósito, pela razão do de cima: é o catálogo
+// de verdade que a faixa lê.
+func TestTheDrainingCriticalAnnouncesTheTempHpAlongWithTheCondition(t *testing.T) {
+	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
+	catalogs := primeFromDump(t, dir)
+	ptr := func(s string) *string { return &s }
+
+	cards := BookRuleset(catalogs).ComputeWeaponCards(Character{
+		Items: []CharacterItem{{
+			CatalogID: ptr("espada-longa"), Name: "Espada longa",
+			Equipped: ptr("wielded"), Improvements: "[]",
+			Enchants: []string{"encanto-drenante"},
+		}},
+	}, map[string]bool{})
+	if len(cards) == 0 || len(cards[0].Announces) != 1 {
+		t.Fatalf("a Drenante tinha de anunciar UMA coisa, e a carta traz %+v", cards)
+	}
+	fraco := cards[0].Announces[0]
+	if fraco.Condition != "fraco" || !fraco.OnCritical {
+		t.Fatalf("a Drenante anuncia %+v, e a p335 dá fraco no crítico", fraco)
+	}
+	// AS DUAS METADES DA FRASE, cada uma escrita à mão a partir da página.
+	for _, quer := range []string{"criatura viva", "2d10 PV temporários", "quem atacou"} {
+		if !strings.Contains(fraco.Note, quer) {
+			t.Errorf("a nota do crítico da Drenante não diz %q — o mestre lê a faixa e não "+
+				"fica sabendo do efeito. Veio: %q", quer, fraco.Note)
+		}
 	}
 }
