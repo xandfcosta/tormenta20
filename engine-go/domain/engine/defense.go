@@ -43,19 +43,13 @@ func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
 	stat := StatFor(e, ModifierTarget{K: "defense"})
 	attribute := defenseAttribute(ch, e)
 	base := 10 + attribute.Amount
-	insolence := insolenciaDefense(ch, e)
 	melee := StatFor(e, ModifierTarget{K: "defense", Scope: "melee"})
 	ranged := StatFor(e, ModifierTarget{K: "defense", Scope: "ranged"})
-	total := base + stat.Total + insolence
+	total := base + stat.Total
 	contribs := stat.Contributions
-	if insolence > 0 {
-		contribs = concatContribs(contribs, []Contribution{
-			{Source: "Insolência (p47)", BonusType: "untyped", Amount: insolence},
-		})
-	}
 	return DefenseBreakdown{
 		Base:               base,
-		ItemBonus:          stat.Total + insolence,
+		ItemBonus:          stat.Total,
 		Total:              total,
 		Attribute:          attribute.Key,
 		AttributeAmount:    attribute.Amount,
@@ -119,42 +113,6 @@ func defenseAttribute(ch Character, e ItemEffects) defenseAttributeChoice {
 		}
 	}
 	return best
-}
-
-// insolenciaDefense — Bucaneiro p47: "Você soma seu Carisma na Defesa, limitado
-// pelo seu nível. Esta habilidade exige liberdade de movimentos; você não pode
-// usá-la se estiver de armadura pesada ou na condição imóvel."
-//
-// O teto é o nível NA CLASSE (p226, "Limites de Nível"), com exemplo trabalhado
-// na mesma página: "um bucaneiro de 2º nível com Car 3 soma +2 na Defesa".
-//
-// Vive aqui, e não como modificador de catálogo, porque o motor de itens não
-// avalia `scale` fora de PV/PM e não tem noção de TETO — a Insolência precisa
-// das duas coisas.
-func insolenciaDefense(ch Character, e ItemEffects) int {
-	if e.Flags["armadura-pesada"] || hasActiveCondition(ch, "imovel") {
-		return 0
-	}
-	level := 0
-	for _, entry := range ch.Classes {
-		if entry.ClassName == "Bucaneiro" && entry.Level > level {
-			level = entry.Level
-		}
-	}
-	if level == 0 {
-		return 0
-	}
-	return max(0, min(effectiveAttribute(ch, "charisma", e), level))
-}
-
-// hasActiveCondition reporta se a condição está ligada na ficha.
-func hasActiveCondition(ch Character, id string) bool {
-	for _, active := range parseStringArray(ch.ActiveConditions) {
-		if active == id {
-			return true
-		}
-	}
-	return false
 }
 
 // blockedDexSource nomeia a peça que acendeu a bandeira que cala a Destreza.

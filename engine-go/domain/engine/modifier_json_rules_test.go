@@ -52,6 +52,11 @@ func TestEveryModifierFieldSurvivesTheCatalogJSON(t *testing.T) {
 	tipo := reflect.TypeOf(cheio)
 	valor := reflect.ValueOf(cheio)
 	for i := 0; i < tipo.NumField(); i++ {
+		// O campo não exportado é anotação da ficha (o `classLevel` que a
+		// coleta põe), e não viaja no fio de propósito.
+		if !tipo.Field(i).IsExported() {
+			continue
+		}
 		if valor.Field(i).IsZero() {
 			t.Fatalf("o campo %s não foi preenchido neste caso: um campo no zero dos dois "+
 				"lados atravessa o JSON sem provar nada.\nPreencha-o aqui junto de "+
@@ -69,6 +74,9 @@ func TestEveryModifierFieldSurvivesTheCatalogJSON(t *testing.T) {
 	}
 
 	for i := 0; i < tipo.NumField(); i++ {
+		if !tipo.Field(i).IsExported() {
+			continue
+		}
 		nome := tipo.Field(i).Name
 		// O `Amount` é o único que MUDA de propósito, e só para deslocamento —
 		// aqui o alvo é `damage`, então ele atravessa intocado.

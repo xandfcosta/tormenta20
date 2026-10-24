@@ -23,12 +23,15 @@ type Modifier struct {
 }
 
 type ModifierCondition struct {
-	Kind  string `json:"c"`
-	Note  string `json:"note,omitempty"`
-	Flag  string `json:"flag,omitempty"`
-	Label string `json:"label,omitempty"`
-	Trait string `json:"trait,omitempty"`
-	Type  string `json:"type,omitempty"`
+	Kind string `json:"c"`
+	Note string `json:"note,omitempty"`
+	Flag string `json:"flag,omitempty"`
+	// Flags são as travas A MAIS de um `flagOff`/`flagRequired`: o `flagOff`
+	// cala se qualquer uma estiver posta, o `flagRequired` pede todas.
+	Flags []string `json:"flags,omitempty"`
+	Label string   `json:"label,omitempty"`
+	Trait string   `json:"trait,omitempty"`
+	Type  string   `json:"type,omitempty"`
 }
 
 type PMScaling struct {
@@ -65,6 +68,9 @@ type ModifierScale struct {
 	Attribute string `json:"attribute,omitempty"`
 	Step      int    `json:"step,omitempty"`
 	Round     string `json:"round,omitempty"`
+	// Cap é o teto de um `per: attribute`: `classLevel` é o nível na classe
+	// que concede o poder (p226). Vazio é sem teto.
+	Cap string `json:"cap,omitempty"`
 }
 
 type Fact struct {

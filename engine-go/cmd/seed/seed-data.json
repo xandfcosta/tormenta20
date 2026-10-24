@@ -1562,6 +1562,51 @@
               ]
             }
           ]
+        },
+        {
+          "create": {
+            "name": "Bucaneira Insolente Nv5",
+            "races": [
+              "humano"
+            ],
+            "origin": "marujo",
+            "classes": [
+              {
+                "className": "Bucaneiro",
+                "level": 5
+              }
+            ],
+            "god": "Nimb",
+            "strength": 0,
+            "dexterity": 3,
+            "constitution": 1,
+            "intelligence": 3,
+            "wisdom": 0,
+            "charisma": 4,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": [
+                "dexterity",
+                "intelligence",
+                "charisma"
+              ]
+            },
+            "classPowers": [
+              "class.bucaneiro.esgrimista",
+              "class.bucaneiro.presenca-paralisante"
+            ],
+            "items": [
+              {
+                "catalogId": "adaga",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "armadura-couro",
+                "equipped": "vested"
+              }
+            ]
+          }
         }
       ]
     },
