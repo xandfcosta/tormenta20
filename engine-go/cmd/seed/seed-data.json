@@ -748,7 +748,8 @@
             },
             "classPowers": [
               "class.guerreiro.aumento-de-atributo",
-              "class.guerreiro.especializacao-em-arma"
+              "class.guerreiro.especializacao-em-arma",
+              "class.guerreiro.valentao"
             ],
             "powerChoices": {
               "class.guerreiro.aumento-de-atributo": [
