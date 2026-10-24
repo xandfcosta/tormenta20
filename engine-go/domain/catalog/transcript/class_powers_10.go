@@ -86,13 +86,14 @@ var classPowersPart10 = []ClassPower{
 	},
 	{
 		ID:             "class.lutador.briga-1d6",
+		Modeled:        []string{"o dado do ataque desarmado (1d6), que pode ser letal"},
 		ClassName:      "Lutador",
 		Name:           "Briga (1d6)",
 		Description:    "Ataques desarmados causam 1d6 dano e podem ser letais ou não letais (sem penalidades). A cada 4 níveis, dano desarmado aumenta. Médias 1d6, Pequenas/Minúsculas diminuem 1 passo, Grandes/Enormes aumentam, Colossais 2 passos.",
 		GrantedAtLevel: 1,
 		BookPage:       76,
 		UID:            "pwr_7d5voa4zvc",
-		Unmodeled:      "é um dado que cresce com o nível (ALE-486)",
+		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "unarmedDamage"}, BonusType: "training", Dice: "1d6"}},
 	},
 	{
 		ID:             "class.lutador.golpe-relampago",
@@ -126,16 +127,18 @@ var classPowersPart10 = []ClassPower{
 	},
 	{
 		ID:             "class.lutador.briga-1d8",
+		Modeled:        []string{"o dado do ataque desarmado (1d8), que pode ser letal"},
 		ClassName:      "Lutador",
 		Name:           "Briga (1d8)",
 		Description:    "Dano desarmado sobe para 1d8.",
 		GrantedAtLevel: 5,
 		BookPage:       76,
 		UID:            "pwr_7djuipxa7n",
-		Unmodeled:      "é um dado que cresce com o nível (ALE-486)",
+		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "unarmedDamage"}, BonusType: "training", Dice: "1d8"}},
 	},
 	{
 		ID:             "class.lutador.golpe-cruel",
+		Modeled:        []string{"a margem de ameaça +1, só na carta do ataque desarmado"},
 		ClassName:      "Lutador",
 		Name:           "Golpe Cruel",
 		Description:    "Margem de ameaça com ataques desarmados aumenta em +1.",
@@ -143,12 +146,7 @@ var classPowersPart10 = []ClassPower{
 		BookPage:       77,
 		UID:            "pwr_wbycuimise",
 		Modifiers: []Modifier{
-			{
-				Target:    ModifierTarget{Kind: "critRange"},
-				Amount:    1,
-				BonusType: "untyped",
-				Condition: &ModifierCondition{Kind: "context", Note: "com ataques desarmados"},
-			},
+			{Target: ModifierTarget{Kind: "critRange", Scope: "unarmed"}, Amount: 1, BonusType: "untyped"},
 		},
 	},
 	{
@@ -162,16 +160,18 @@ var classPowersPart10 = []ClassPower{
 	},
 	{
 		ID:             "class.lutador.briga-1d10",
+		Modeled:        []string{"o dado do ataque desarmado (1d10), que pode ser letal"},
 		ClassName:      "Lutador",
 		Name:           "Briga (1d10)",
 		Description:    "Dano desarmado sobe para 1d10.",
 		GrantedAtLevel: 9,
 		BookPage:       76,
 		UID:            "pwr_ee5o3ciu4v",
-		Unmodeled:      "é um dado que cresce com o nível (ALE-486)",
+		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "unarmedDamage"}, BonusType: "training", Dice: "1d10"}},
 	},
 	{
 		ID:             "class.lutador.golpe-violento",
+		Modeled:        []string{"o multiplicador de crítico +1, só na carta do ataque desarmado"},
 		ClassName:      "Lutador",
 		Name:           "Golpe Violento",
 		Description:    "Multiplicador de crítico com ataques desarmados aumenta em +1.",
@@ -179,12 +179,7 @@ var classPowersPart10 = []ClassPower{
 		BookPage:       77,
 		UID:            "pwr_6mlpofpa62",
 		Modifiers: []Modifier{
-			{
-				Target:    ModifierTarget{Kind: "critMult"},
-				Amount:    1,
-				BonusType: "untyped",
-				Condition: &ModifierCondition{Kind: "context", Note: "com ataques desarmados"},
-			},
+			{Target: ModifierTarget{Kind: "critMult", Scope: "unarmed"}, Amount: 1, BonusType: "untyped"},
 		},
 	},
 	{
@@ -198,13 +193,14 @@ var classPowersPart10 = []ClassPower{
 	},
 	{
 		ID:             "class.lutador.briga-2d6",
+		Modeled:        []string{"o dado do ataque desarmado (2d6), que pode ser letal"},
 		ClassName:      "Lutador",
 		Name:           "Briga (2d6)",
 		Description:    "Dano desarmado sobe para 2d6.",
 		GrantedAtLevel: 13,
 		BookPage:       76,
 		UID:            "pwr_v2xyns7o2u",
-		Unmodeled:      "é um dado que cresce com o nível (ALE-486)",
+		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "unarmedDamage"}, BonusType: "training", Dice: "2d6"}},
 	},
 	{
 		ID:             "class.lutador.casca-grossa-con-3",
@@ -217,13 +213,14 @@ var classPowersPart10 = []ClassPower{
 	},
 	{
 		ID:             "class.lutador.briga-2d8",
+		Modeled:        []string{"o dado do ataque desarmado (2d8), que pode ser letal"},
 		ClassName:      "Lutador",
 		Name:           "Briga (2d8)",
 		Description:    "Dano desarmado sobe para 2d8.",
 		GrantedAtLevel: 17,
 		BookPage:       76,
 		UID:            "pwr_adstxnqzs6",
-		Unmodeled:      "é um dado que cresce com o nível (ALE-486)",
+		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "unarmedDamage"}, BonusType: "training", Dice: "2d8"}},
 	},
 	{
 		ID:             "class.lutador.casca-grossa-con-4",
@@ -236,13 +233,14 @@ var classPowersPart10 = []ClassPower{
 	},
 	{
 		ID:             "class.lutador.dono-da-rua-2d10",
+		Modeled:        []string{"o dado do ataque desarmado (2d10), que pode ser letal"},
 		ClassName:      "Lutador",
 		Name:           "Dono da Rua (2d10)",
 		Description:    "Capstone: dano desarmado sobe para 2d10. Quando usa ação agredir para ataque desarmado, faz dois ataques (podendo usar Golpe Relâmpago para terceiro).",
 		GrantedAtLevel: 20,
 		BookPage:       77,
 		UID:            "pwr_4o2lgaicbw",
-		Unmodeled:      "é um dado que cresce com o nível (ALE-486)",
+		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "unarmedDamage"}, BonusType: "training", Dice: "2d10"}},
 	},
 	{
 		ID:          "class.lutador.arma-improvisada",

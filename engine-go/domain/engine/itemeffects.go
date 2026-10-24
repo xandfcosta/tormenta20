@@ -428,10 +428,14 @@ func targetKey(t ModifierTarget) string {
 		// A Fúria Titânica (p42) dobra "o bônus da Fúria", que vive em dois
 		// alvos (ataque e dano) e em duas parcelas (a base e o degrau pago).
 		return "source:" + t.Name
-	case "critRange":
-		return "critRange"
-	case "critMult":
-		return "critMult"
+	case "critRange", "critMult":
+		// O escopo entra na chave só quando existe: a margem do Golpe Cruel é
+		// do desarmado (`critRange:unarmed`, p77), e a global continua sendo a
+		// chave sem sufixo que o oráculo já guardava.
+		if t.Scope == "" {
+			return t.K
+		}
+		return t.K + ":" + t.Scope
 	case "pmLimit":
 		return "pmLimit"
 	case "pmCost":
@@ -539,6 +543,8 @@ func targetKey(t ModifierTarget) string {
 		// portanto sem Destreza na Defesa —, e o verbete desfaz essa metade e
 		// só ela.
 		return "flagExempt:" + t.Name
+	case "unarmedDamage":
+		return "unarmedDamage"
 	}
 	return ""
 }

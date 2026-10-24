@@ -21,14 +21,14 @@ func TestTheSneakAttackDiceGrowEveryTwoRogueLevels(t *testing.T) {
 		dice  string
 	}{{1, "1d6"}, {2, "1d6"}, {3, "2d6"}, {5, "3d6"}, {10, "5d6"}, {19, "10d6"}, {20, "10d6"}} {
 		rogue := wielding(attributeSumHero("Ladino", tt.level, `[]`), "adaga")
-		off := world.ComputeWeaponCards(rogue, nil)
+		off := wieldedCards(world.ComputeWeaponCards(rogue, nil))
 		if len(off) != 1 {
 			t.Fatalf("Ladino %d com adaga virou %d cartas", tt.level, len(off))
 		}
 		if len(off[0].ExtraDamage) != 0 {
 			t.Errorf("Ladino %d: o Ataque Furtivo entrou sem ser ligado: %+v", tt.level, off[0].ExtraDamage)
 		}
-		cards := world.ComputeWeaponCards(rogue, on)
+		cards := wieldedCards(world.ComputeWeaponCards(rogue, on))
 		if len(cards[0].ExtraDamage) != 1 || cards[0].ExtraDamage[0].Dice != tt.dice {
 			t.Errorf("Ladino %d, ligado: a adaga traz %+v, want um dado extra de %s", tt.level, cards[0].ExtraDamage, tt.dice)
 		}
@@ -37,7 +37,7 @@ func TestTheSneakAttackDiceGrowEveryTwoRogueLevels(t *testing.T) {
 	// Multiclasse: o dado é do nível de LADINO.
 	multi := wielding(attributeSumHero("Ladino", 10, `[]`), "adaga")
 	multi.Classes = []CharacterClass{{ClassName: "Guerreiro", Level: 7}, {ClassName: "Ladino", Level: 3}}
-	if got := world.ComputeWeaponCards(multi, on)[0].ExtraDamage; len(got) != 1 || got[0].Dice != "2d6" {
+	if got := wieldedCards(world.ComputeWeaponCards(multi, on))[0].ExtraDamage; len(got) != 1 || got[0].Dice != "2d6" {
 		t.Errorf("Guerreiro 7 / Ladino 3, ligado: %+v, want 2d6 — é o nível NA CLASSE", got)
 	}
 }

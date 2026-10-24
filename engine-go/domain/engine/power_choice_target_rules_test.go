@@ -93,7 +93,7 @@ func TestWeaponSpecializationAddsDamageOnlyToTheChosenWeapon(t *testing.T) {
 		},
 	}
 	bonus := map[string]WeaponCard{}
-	for _, card := range world.ComputeWeaponCards(ch, nil) {
+	for _, card := range wieldedCards(world.ComputeWeaponCards(ch, nil)) {
 		bonus[card.Name] = card
 	}
 	if len(bonus) != 2 {
@@ -144,7 +144,7 @@ func TestWeaponMasteryStepsUpOnlyTheChosenWeapon(t *testing.T) {
 		},
 	}
 	dado := map[string]string{}
-	for _, card := range world.ComputeWeaponCards(ch, nil) {
+	for _, card := range wieldedCards(world.ComputeWeaponCards(ch, nil)) {
 		dado[card.Name] = card.Damage
 	}
 	if dado["Espada longa"] != "1d10" {

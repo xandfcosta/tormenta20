@@ -73,8 +73,10 @@ func acidOnTheSword(t *testing.T, f sceneFixture, id int64) []engine.ExtraDamage
 		t.Fatalf("converter para o motor: %v", err)
 	}
 	cards := dto.Ruleset.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals))
-	if len(cards) != 1 {
-		t.Fatalf("a espada empunhada virou %d cartas", len(cards))
+	// A espada e, depois dela, a carta do ataque desarmado, que é de todo mundo
+	// (p143, ALE-486).
+	if len(cards) != 2 || cards[1].Name != engine.UnarmedName {
+		t.Fatalf("esperava a espada e o desarmado, e vieram %d cartas", len(cards))
 	}
 	return cards[0].ExtraDamage
 }

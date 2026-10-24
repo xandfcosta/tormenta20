@@ -1853,6 +1853,51 @@
       },
       "critRange": 19,
       "critMult": 2
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 10,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 9,
+        "itemBonus": 1,
+        "total": 10,
+        "halfLevel": 3,
+        "attrValue": 2,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [
+          {
+            "source": "Inspiração (cond.)",
+            "amount": 1,
+            "note": "Sob Inspiração"
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d3",
+      "damageType": "impacto",
+      "strDamage": 2,
+      "damageBonus": 2,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ],
   "vitals": {
@@ -1898,6 +1943,45 @@
       },
       "critRange": 19,
       "critMult": 2
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 9,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 9,
+        "itemBonus": 0,
+        "total": 9,
+        "halfLevel": 3,
+        "attrValue": 2,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d3",
+      "damageType": "impacto",
+      "strDamage": 2,
+      "damageBonus": 2,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ]
 }

@@ -2035,6 +2035,50 @@
       },
       "critRange": 20,
       "critMult": 3
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 8,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 13,
+        "itemBonus": -5,
+        "total": 8,
+        "halfLevel": 5,
+        "attrValue": 4,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d3",
+      "damageType": "impacto",
+      "strDamage": 4,
+      "damageBonus": 4,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ],
   "vitals": {
@@ -2098,6 +2142,50 @@
       },
       "critRange": 20,
       "critMult": 3
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 8,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 13,
+        "itemBonus": -5,
+        "total": 8,
+        "halfLevel": 5,
+        "attrValue": 4,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d3",
+      "damageType": "impacto",
+      "strDamage": 4,
+      "damageBonus": 4,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ]
 }

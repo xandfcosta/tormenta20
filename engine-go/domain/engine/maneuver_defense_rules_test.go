@@ -34,7 +34,7 @@ func TestTheDefensiveManeuverBonusNeverReachesTheAttack(t *testing.T) {
 	comPoder.OriginChoices = `["origin-escravo-unique"]`
 
 	ataqueDe := func(ch Character) int {
-		cards := world.ComputeWeaponCards(ch, nil)
+		cards := wieldedCards(world.ComputeWeaponCards(ch, nil))
 		if len(cards) != 1 {
 			t.Fatalf("esperava uma carta de arma e vieram %d — sem ela o caso não "+
 				"mede o vazamento que existe para pegar", len(cards))
