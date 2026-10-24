@@ -732,6 +732,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Penalidade de armadura",
@@ -749,6 +751,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -761,6 +765,8 @@
         "halfLevel": 5,
         "attrValue": 4,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -773,6 +779,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -785,6 +793,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -797,6 +807,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -809,6 +821,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -821,6 +835,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -833,6 +849,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -845,6 +863,8 @@
         "halfLevel": 5,
         "attrValue": 6,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -857,6 +877,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Penalidade de armadura",
@@ -874,6 +896,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -886,6 +910,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -898,6 +924,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -910,6 +938,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -922,6 +952,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -934,6 +966,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -946,6 +980,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Penalidade de armadura",
@@ -963,6 +999,8 @@
         "halfLevel": 5,
         "attrValue": 4,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -975,6 +1013,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -987,6 +1027,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -999,6 +1041,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1011,6 +1055,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1023,6 +1069,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1035,6 +1083,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1047,6 +1097,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1059,6 +1111,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1071,6 +1125,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1083,6 +1139,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       }
@@ -1231,6 +1289,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Penalidade de armadura",
@@ -1248,6 +1308,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1260,6 +1322,8 @@
         "halfLevel": 5,
         "attrValue": 4,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1272,6 +1336,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1284,6 +1350,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1296,6 +1364,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1308,6 +1378,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1320,6 +1392,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1332,6 +1406,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1344,6 +1420,8 @@
         "halfLevel": 5,
         "attrValue": 6,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1356,6 +1434,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Penalidade de armadura",
@@ -1373,6 +1453,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1385,6 +1467,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1397,6 +1481,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1409,6 +1495,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1421,6 +1509,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1433,6 +1523,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1445,6 +1537,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [
           {
             "source": "Penalidade de armadura",
@@ -1462,6 +1556,8 @@
         "halfLevel": 5,
         "attrValue": 4,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1474,6 +1570,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1486,6 +1584,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1498,6 +1598,8 @@
         "halfLevel": 5,
         "attrValue": 1,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1510,6 +1612,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1522,6 +1626,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1534,6 +1640,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1546,6 +1654,8 @@
         "halfLevel": 5,
         "attrValue": 0,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1558,6 +1668,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1570,6 +1682,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 0,
+        "trained": false,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1582,6 +1696,8 @@
         "halfLevel": 5,
         "attrValue": 3,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       }
@@ -1603,6 +1719,8 @@
         "halfLevel": 5,
         "attrValue": 4,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },
@@ -1655,6 +1773,8 @@
         "halfLevel": 5,
         "attrValue": 4,
         "training": 4,
+        "trained": true,
+        "trainedBy": [],
         "itemContributions": [],
         "armorPenaltyApplied": 0
       },

@@ -60,6 +60,8 @@ type ExpertiseBreakdown struct {
 	HalfLevel           int                     `json:"halfLevel"`
 	AttrValue           int                     `json:"attrValue"`
 	Training            int                     `json:"training"`
+	Trained             bool                    `json:"trained"`
+	TrainedBy           []string                `json:"trainedBy"`
 	ItemContributions   []BreakdownContribution `json:"itemContributions"`
 	ArmorPenaltyApplied int                     `json:"armorPenaltyApplied"`
 }
@@ -282,8 +284,17 @@ var savingThrowExpertises = map[string]bool{"Fortitude": true, "Reflexos": true,
 func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, load LoadBreakdown) ExpertiseBreakdown {
 	halfLevel := ch.Level / 2
 	attrValue := effectiveAttribute(ch, state.Attribute, e)
+	// O treino tem DUAS fontes: a coluna da ficha (as perícias da classe e as
+	// escolhas livres) e o modificador `trained`, que é o benefício de perícia
+	// da origem (p85, ALE-490). Treinar é um estado — as duas juntas dão o
+	// mesmo +2 que uma só.
+	trainedBy := []string{}
+	for _, c := range StatFor(e, ModifierTarget{K: "trained", Name: state.Name}).Contributions {
+		trainedBy = append(trainedBy, c.Source)
+	}
+	trained := state.Trained || len(trainedBy) > 0
 	training := 0
-	if state.Trained {
+	if trained {
 		training = trainingBonusForLevel(ch.Level)
 	}
 	base := halfLevel + attrValue + training
@@ -318,6 +329,8 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, l
 		Total:               base + itemBonus + armorPenaltyApplied,
 		HalfLevel:           halfLevel,
 		AttrValue:           attrValue,
+		Trained:             trained,
+		TrainedBy:           trainedBy,
 		Training:            training,
 		ItemContributions:   itemContribs,
 		ArmorPenaltyApplied: armorPenaltyApplied,

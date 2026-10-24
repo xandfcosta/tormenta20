@@ -60,6 +60,11 @@ func originModifiers(
 			}
 			continue
 		}
+		if benefit.Expertise != "" {
+			out = append(out, Modifier{
+				Target: ModifierTarget{K: "trained", Name: benefit.Expertise}, Amount: 1, BonusType: "untyped",
+			})
+		}
 		out = append(out, benefit.Modifiers...)
 	}
 	return out
