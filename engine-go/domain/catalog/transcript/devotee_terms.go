@@ -1,0 +1,43 @@
+package transcript
+
+// DevoteeTerms são os termos com que os deuses nomeiam quem pode ser devoto.
+var DevoteeTerms = DevoteeTermTable{
+	OpenTerms: []string{"Quaisquer", "Aventureiros (todas as classes)"},
+	TermToNames: OrderedMap[[]string]{
+		{"Aggelus", []string{"Suraggel"}},
+		{"Sulfure", []string{"Suraggel"}},
+		{"Qualquer duyshidakk", []string{"Goblin"}},
+		{"Anões", []string{"Anão"}},
+		{"Arcanistas", []string{"Arcanista"}},
+		{"Bárbaros", []string{"Bárbaro"}},
+		{"Bardos", []string{"Bardo"}},
+		{"Bucaneiros", []string{"Bucaneiro"}},
+		{"Caçadores", []string{"Caçador"}},
+		{"Cavaleiros", []string{"Cavaleiro"}},
+		{"Dahllan", []string{"Dahllan"}},
+		{"Druidas", []string{"Druida"}},
+		{"Elfos", []string{"Elfo"}},
+		{"Goblins", []string{"Goblin"}},
+		{"Golens", []string{"Golem"}},
+		{"Guerreiros", []string{"Guerreiro"}},
+		{"Hynne", []string{"Hynne"}},
+		{"Inventores", []string{"Inventor"}},
+		{"Kliren", []string{"Kliren"}},
+		{"Ladinos", []string{"Ladino"}},
+		{"Lutadores", []string{"Lutador"}},
+		{"Medusas", []string{"Medusa"}},
+		{"Minotauros", []string{"Minotauro"}},
+		{"Nobres", []string{"Nobre"}},
+		{"Osteon", []string{"Osteon"}},
+		{"Paladinos", []string{"Paladino"}},
+		{"Qareen", []string{"Qareen"}},
+		{"Sereias/Tritões", []string{"Sereia/Tritão"}},
+		{"Sílfides", []string{"Sílfide"}},
+		{"Trogs", []string{"Trog"}},
+	},
+}
+
+type DevoteeTermTable struct {
+	OpenTerms   []string             `json:"openTerms"`
+	TermToNames OrderedMap[[]string] `json:"termToNames"`
+}

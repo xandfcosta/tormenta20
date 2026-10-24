@@ -2,8 +2,6 @@ package engine
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -134,10 +132,7 @@ func TestWhatTheTableDoesNotPrintComesBackUntouched(t *testing.T) {
 // inalcançável reprova com o id da arma, que é o que diferencia "é a exceção
 // conhecida" de "ninguém olhou".
 func TestEveryWeaponInTheCatalogCanWalkTheTable(t *testing.T) {
-	bruto, err := os.ReadFile(filepath.Join("..", "catalog", "data", "items.json"))
-	if err != nil {
-		t.Fatalf("ler o catálogo de itens: %v", err)
-	}
+	bruto := bookResource(t, "items")
 	var itens []struct {
 		ID     string `json:"id"`
 		Weapon *struct {

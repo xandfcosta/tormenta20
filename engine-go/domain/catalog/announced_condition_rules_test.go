@@ -16,7 +16,7 @@ import (
 // aponta para nada, e nada mais acusa.
 func TestEveryAnnouncedConditionExistsInTheConditionTable(t *testing.T) {
 	condicoes := map[string]json.RawMessage{}
-	raw, err := files.ReadFile("data/conditions.json")
+	raw, err := resourceJSON("conditions")
 	if err != nil {
 		t.Fatalf("ler conditions.json: %v", err)
 	}
@@ -28,7 +28,7 @@ func TestEveryAnnouncedConditionExistsInTheConditionTable(t *testing.T) {
 			len(condicoes))
 	}
 
-	itens, err := files.ReadFile("data/items.json")
+	itens, err := resourceJSON("items")
 	if err != nil {
 		t.Fatalf("ler items.json: %v", err)
 	}

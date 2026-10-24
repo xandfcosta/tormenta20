@@ -2,9 +2,10 @@ package catalog
 
 import (
 	"encoding/json"
-	"io/fs"
 	"strings"
 	"testing"
+
+	"t20engine/domain/catalog/transcript"
 )
 
 // O guarda das PÁGINAS DO LIVRO.
@@ -25,17 +26,14 @@ const ultimaDeConteudo = 395
 // Varre TODO catálogo embutido por AMOSTRAGEM: quem passar a ter `bookPage`
 // amanhã nasce medido, sem entrada nova aqui.
 func TestNoPageFallsOutsideTheContent(t *testing.T) {
-	fileNames, err := fs.Glob(files, "data/*.json")
-	if err != nil {
-		t.Fatalf("listar catálogos: %v", err)
-	}
+	fileNames := transcript.Resources
 	if len(fileNames) < 10 {
 		t.Fatalf("só %d catálogos embutidos — o guarda mediria quase nada", len(fileNames))
 	}
 
 	withPage := 0
 	for _, file := range fileNames {
-		raw, err := files.ReadFile(file)
+		raw, err := resourceJSON(file)
 		if err != nil {
 			t.Fatalf("%s: %v", file, err)
 		}

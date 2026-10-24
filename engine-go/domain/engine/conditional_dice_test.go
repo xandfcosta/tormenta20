@@ -2,9 +2,9 @@ package engine
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"testing"
+
+	"t20engine/domain/catalog/transcript"
 )
 
 // O DADO EXTRA DE UM CONDICIONAL SÓ VALE COM A CONDIÇÃO (p338, ALE-457).
@@ -145,21 +145,14 @@ func TestSwitchingSomethingOnDoesNotEraseAnotherEnchantsDice(t *testing.T) {
 // real: um `+2d6 no crítico` precisa de um `riders` próprio, porque não é
 // parcela somável nem interruptor.
 func TestNoDiceInTheCatalogIsTriggeredByACritical(t *testing.T) {
-	arquivos, err := filepath.Glob(filepath.Join("..", "catalog", "data", "*.json"))
-	if err != nil {
-		t.Fatalf("achar os catálogos: %v", err)
-	}
 	medidos := 0
-	for _, arquivo := range arquivos {
-		bruto, err := os.ReadFile(arquivo)
-		if err != nil {
-			t.Fatalf("ler %s: %v", arquivo, err)
-		}
+	for _, arquivo := range transcript.Resources {
+		bruto := bookResource(t, arquivo)
 		var cru any
 		if err := json.Unmarshal(bruto, &cru); err != nil {
 			t.Fatalf("%s não é JSON: %v", arquivo, err)
 		}
-		medidos += dadosNoCritico(t, filepath.Base(arquivo), cru)
+		medidos += dadosNoCritico(t, arquivo+".json", cru)
 	}
 	// O DENOMINADOR: um `Glob` que deixasse de casar, ou uma varredura que
 	// parasse de descer, diria "nenhum dado no crítico" sobre nada.

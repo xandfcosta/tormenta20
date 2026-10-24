@@ -41,7 +41,7 @@ type spellValueRow struct {
 
 func readSpells(t *testing.T) map[string]spellValueRow {
 	t.Helper()
-	raw, err := files.ReadFile("data/spells.json")
+	raw, err := resourceJSON("spells")
 	if err != nil {
 		t.Fatalf("ler spells.json: %v", err)
 	}

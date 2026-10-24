@@ -3,10 +3,10 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 	"testing"
+
+	"t20engine/domain/catalog/transcript"
 )
 
 // A INVARIANTE que faz o empilhamento por `bonusType` corresponder à p226.
@@ -56,25 +56,19 @@ import (
 // de verdade — o que faz o guarda atravessar o `UnmarshalJSON` junto, que é a
 // fronteira que a ALE-415 pegou quebrada.
 func TestNoEntityStacksWithItself(t *testing.T) {
-	arquivos, err := filepath.Glob(filepath.Join("..", "catalog", "data", "*.json"))
-	if err != nil {
-		t.Fatalf("listar o catálogo: %v", err)
-	}
+	arquivos := transcript.Resources
 	if len(arquivos) < 10 {
 		t.Fatalf("só %d arquivos de catálogo — o guarda mediria quase nada", len(arquivos))
 	}
 
 	total := 0
 	for _, caminho := range arquivos {
-		bruto, err := os.ReadFile(caminho)
-		if err != nil {
-			t.Fatalf("ler %s: %v", caminho, err)
-		}
+		bruto := bookResource(t, caminho)
 		var tree any
 		if err := json.Unmarshal(bruto, &tree); err != nil {
 			t.Fatalf("%s ilegível: %v", caminho, err)
 		}
-		nome := filepath.Base(caminho)
+		nome := caminho + ".json"
 		for _, owner := range collectModifierOwners(tree, nome) {
 			total++
 			seen := map[string][]int{}

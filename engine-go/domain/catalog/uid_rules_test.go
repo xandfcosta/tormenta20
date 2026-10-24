@@ -13,6 +13,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 
 	"t20engine/domain/catalog"
+	"t20engine/domain/catalog/transcript"
 )
 
 // O `uid` É A IDENTIDADE QUE NÃO MUDA (ALE-402).
@@ -161,10 +162,7 @@ func TestNoUidEverChanges(t *testing.T) {
 
 func lerVerbetes(t *testing.T) (todos []verbete) {
 	t.Helper()
-	arquivos, err := filepath.Glob("data/*.json")
-	if err != nil || len(arquivos) == 0 {
-		t.Fatalf("não achei os catálogos em data/*.json: %v", err)
-	}
+	arquivos := resourceFileNames()
 	for _, caminho := range arquivos {
 		raw, ok := catalog.Resource(strings.TrimSuffix(filepath.Base(caminho), ".json"))
 		if !ok {
@@ -235,4 +233,15 @@ func identidadeDe(no map[string]any) string {
 	}
 	nome, _ := no["name"].(string)
 	return nome
+}
+
+// resourceFileNames são os recursos do livro com o nome que eles tinham como
+// arquivo (`items.json`): as linhas de base dos guardas de slug e de uid estão
+// escritas nessa forma, e o nome continua identificando o recurso.
+func resourceFileNames() []string {
+	out := make([]string, len(transcript.Resources))
+	for i, name := range transcript.Resources {
+		out[i] = name + ".json"
+	}
+	return out
 }

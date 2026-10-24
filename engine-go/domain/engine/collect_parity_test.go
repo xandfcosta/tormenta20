@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"t20engine/domain/catalog"
+	"t20engine/domain/catalog/transcript"
 )
 
 // TestActiveItemsParity proves the ported collection layer (ActiveItemsFor) on
@@ -38,6 +39,17 @@ func TestActiveItemsParity(t *testing.T) {
 			}
 		})
 	}
+}
+
+// bookResource é um recurso do livro transcrito na forma JSON, para os guardas
+// que varrem o catálogo inteiro sem depender dos tipos do motor.
+func bookResource(t *testing.T, name string) []byte {
+	t.Helper()
+	raw, ok := transcript.ResourceJSON(name)
+	if !ok {
+		t.Fatalf("o livro transcrito não tem o recurso %q", name)
+	}
+	return raw
 }
 
 // primeBook prima o motor com o catálogo embutido — o mesmo que o servidor

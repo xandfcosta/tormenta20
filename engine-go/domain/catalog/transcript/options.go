@@ -1,0 +1,88 @@
+package transcript
+
+// CreationOptions são as listas de criação de personagem.
+var CreationOptions = CreationOptionLists{
+	Classes: []string{
+		"Arcanista",
+		"Bárbaro",
+		"Bardo",
+		"Bucaneiro",
+		"Caçador",
+		"Cavaleiro",
+		"Clérigo",
+		"Druida",
+		"Guerreiro",
+		"Inventor",
+		"Ladino",
+		"Lutador",
+		"Nobre",
+		"Paladino",
+	},
+	Gods: []string{
+		"Tauron",
+		"Aharadak",
+		"Allihanna",
+		"Arsenal",
+		"Azgher",
+		"Hyninn",
+		"Kallyadranoch",
+		"Khalmyr",
+		"Lena",
+		"Lin-Wu",
+		"Marah",
+		"Megalokk",
+		"Nimb",
+		"Oceano",
+		"Sszzaas",
+		"Tanna-Toh",
+		"Tenebra",
+		"Thwor",
+		"Thyatis",
+		"Valkaria",
+		"Wynna",
+	},
+	Sizes: []string{"Minúsculo", "Pequeno", "Médio", "Grande", "Enorme", "Colossal"},
+	Expertises: []ExpertiseOption{
+		{Name: "Acrobacia", Attribute: "dexterity"},
+		{Name: "Adestramento", Attribute: "charisma"},
+		{Name: "Atletismo", Attribute: "strength"},
+		{Name: "Atuação", Attribute: "charisma"},
+		{Name: "Cavalgar", Attribute: "dexterity"},
+		{Name: "Conhecimento", Attribute: "intelligence"},
+		{Name: "Cura", Attribute: "wisdom"},
+		{Name: "Diplomacia", Attribute: "charisma"},
+		{Name: "Enganação", Attribute: "charisma"},
+		{Name: "Fortitude", Attribute: "constitution"},
+		{Name: "Furtividade", Attribute: "dexterity"},
+		{Name: "Guerra", Attribute: "intelligence"},
+		{Name: "Iniciativa", Attribute: "dexterity"},
+		{Name: "Intimidação", Attribute: "charisma"},
+		{Name: "Intuição", Attribute: "wisdom"},
+		{Name: "Investigação", Attribute: "intelligence"},
+		{Name: "Jogatina", Attribute: "charisma"},
+		{Name: "Ladinagem", Attribute: "dexterity"},
+		{Name: "Luta", Attribute: "strength"},
+		{Name: "Misticismo", Attribute: "intelligence"},
+		{Name: "Nobreza", Attribute: "intelligence"},
+		{Name: "Ofício", Attribute: "intelligence"},
+		{Name: "Percepção", Attribute: "wisdom"},
+		{Name: "Pilotagem", Attribute: "dexterity"},
+		{Name: "Pontaria", Attribute: "dexterity"},
+		{Name: "Reflexos", Attribute: "dexterity"},
+		{Name: "Religião", Attribute: "wisdom"},
+		{Name: "Sobrevivência", Attribute: "wisdom"},
+		{Name: "Vontade", Attribute: "wisdom"},
+	},
+}
+
+type CreationOptionLists struct {
+	Classes    []string          `json:"classes"`
+	Gods       []string          `json:"gods"`
+	Sizes      []string          `json:"sizes"`
+	Expertises []ExpertiseOption `json:"expertises"`
+}
+
+type ExpertiseOption struct {
+	Name      string `json:"name"`
+	Attribute string `json:"attribute"`
+}
