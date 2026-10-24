@@ -14,7 +14,7 @@ import (
 // `Catalogs` — nunca lido de um cache no nível do pacote, para um teste poder
 // primar o próprio sem tocar em estado global.
 
-// ─── O formato que o despejo de catálogo traz ────────────────────────────────
+// ─── O formato que o catálogo traz ───────────────────────────────────────────
 
 // CatalogItem é a entrada de item: só os campos que esta camada lê são
 // tipados.
@@ -261,8 +261,8 @@ type Catalogs struct {
 	tormentaIDs   map[string]bool
 }
 
-// enginePayload é a forma JSON que o `cmd/genoracle` despeja em
-// `engine-go/parity/_catalogs.json`.
+// enginePayload é a forma JSON que o `catalog.EnginePayload` monta a partir dos
+// arquivos embutidos.
 type enginePayload struct {
 	Items         []CatalogItem      `json:"items"`
 	Races         []RaceDefinition   `json:"races"`

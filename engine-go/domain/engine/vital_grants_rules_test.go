@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -20,7 +19,7 @@ import (
 
 func vitalCatalogs(t *testing.T) *Catalogs {
 	t.Helper()
-	return primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity")))
+	return primeBook(t)
 }
 
 // O exemplo trabalhado do próprio livro. O catálogo dá a `magias-1-circulo` ao

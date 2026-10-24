@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -22,8 +21,7 @@ import (
 // duas escolhas são o poder tomado duas vezes, e as duas somam. E o poder sem
 // escolha não soma nada — um +1 sem alvo não é +1 em lugar nenhum.
 func TestTheAttributeIncreaseLandsOnTheChosenAttribute(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	const poder = "class.guerreiro.aumento-de-atributo"
 	base := Character{
@@ -79,8 +77,7 @@ func TestTheAttributeIncreaseLandsOnTheChosenAttribute(t *testing.T) {
 // não ganha nada. E a decomposição da carta diz quem deu o +2: a parcela tem
 // de aparecer nomeada, ou a soma das linhas não fecha no total.
 func TestWeaponSpecializationAddsDamageOnlyToTheChosenWeapon(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	espada, adaga := "espada-longa", "adaga"
 	maoPrincipal, outraMao := "wielded", "wielded2"
@@ -131,8 +128,7 @@ func TestWeaponSpecializationAddsDamageOnlyToTheChosenWeapon(t *testing.T) {
 // A mesma forma da Especialização, no alvo `damageStep`. O predicado é a arma:
 // a espada longa (1d8) passa a 1d10, e a adaga na outra mão fica em 1d4.
 func TestWeaponMasteryStepsUpOnlyTheChosenWeapon(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	espada, adaga := "espada-longa", "adaga"
 	maoPrincipal, outraMao := "wielded", "wielded2"

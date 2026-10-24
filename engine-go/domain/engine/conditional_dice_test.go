@@ -209,8 +209,7 @@ func dadosNoCritico(t *testing.T, arquivo string, no any) int {
 // verdade e pergunta o que o chamador recebe, que é a faixa onde os defeitos de
 // COMPOSIÇÃO moram.
 func TestTheWeaponCardOnlyGetsTheDiceWithTheTerrainOn(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	ch := Character{

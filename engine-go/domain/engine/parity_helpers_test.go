@@ -21,7 +21,7 @@ import (
 const parityOracleCount = 18
 
 // parityOracleSlugs lista os arquivos de oráculo em ordem estável. Os
-// `_`-prefixados são entrada compartilhada (`_catalogs.json`), não oráculo.
+// `_`-prefixados são entrada compartilhada (`_fixtures.json`), não oráculo.
 //
 // A contagem é verificada aqui porque o modo de falha silencioso é o oposto do
 // esperado: uma fixture nova do lado TS sem regenerar não quebra nada, ela

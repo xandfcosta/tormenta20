@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -21,8 +20,7 @@ import (
 // DERIVADA do que está vestido: oferecer um interruptor para ela seria
 // perguntar ao jogador o que a ficha já sabe.
 func TestTheModifierThatRequiresAFlagOnlyAppliesWhileItIsRaised(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	comArmadura := func(item string) ItemEffects {

@@ -387,7 +387,7 @@ quantos olhou. Sem isso, **"verde" e "não mediu" são a mesma cor**.
   forma de DOM que ninguém prometeu, teste que redescobre o esperado rodando a
   implementação, teste sobre código morto ou fora do bundle. Teste verde sobre
   código que ninguém usa é a pior dívida — cobra manutenção e não protege nada.
-- Dado transcrito do livro (catálogos) é validado por SCHEMA no despejo, não por
+- Dado transcrito do livro (catálogos) é validado por SCHEMA, não por
   um `expect` por campo repetindo o mesmo número. Prenda a *exceção* (a armadilha
   da tabela), nunca a tabela inteira.
 - Troque I/O externo (API, banco, sistema de arquivos) por classes dublê nomeadas, não por stub inline. Testes F.I.R.S.T: rápidos, independentes,

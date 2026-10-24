@@ -70,20 +70,10 @@ WORKDIR /app
 # a folha, as ilhas e as fontes estão DENTRO do binário desde que a SPA saiu.
 COPY --from=build /out/t20-api /app/t20-api
 
-# O CATÁLOGO NÃO É OPCIONAL, e essa é a linha mais fácil de esquecer aqui.
-#
-# Sem o arquivo, o `primeCatalogs` devolve nulo, escreve "mutation validators
-# disabled" numa linha de log e o app SOBE — degradado. A Defesa vira travessão,
-# os cartões de arma somem e a aba de Combate fica vazia. É falha em silêncio com
-# cara de app quebrado, e é por isso que ele viaja dentro da imagem em vez de
-# depender de um caminho relativo que só existe na árvore do repositório.
-COPY --from=build /src/engine-go/parity/_catalogs.json /app/catalogs.json
-
 # O BANCO e os BACKUPS moram em volume (ver `docker-compose.yml`).
 ENV APP_ENV=production \
     PORT=3001 \
     DATABASE_URL=file:/app/data/t20.db \
-    CATALOG_PATH=/app/catalogs.json \
     BACKUP_DIR=/app/backups
 
 EXPOSE 3001

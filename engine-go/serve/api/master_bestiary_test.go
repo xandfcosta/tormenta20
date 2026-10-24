@@ -12,7 +12,7 @@ import (
 
 // O bestiário do livro lido pelo servidor.
 //
-// O guia manda validar catálogo por SCHEMA no despejo e prender só a EXCEÇÃO —
+// O guia manda validar catálogo por SCHEMA e prender só a EXCEÇÃO —
 // a armadilha da tabela —, nunca repetir a tabela inteira num `expect` por
 // campo. Aqui a exceção é o TRAVESSÃO, e ele merece guarda porque a perda dele
 // é invisível: um `int` recebendo `null` vira 0, "+0" é um número plausível, e

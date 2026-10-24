@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"slices"
 	"testing"
 )
@@ -23,8 +22,7 @@ import (
 // E a PROCEDÊNCIA: a ficha diz que quem treinou foi a origem, porque um treino
 // que aparece sem a coluna marcada e sem dizer de onde veio é lido como defeito.
 func TestTheChosenOriginSkillBenefitTrainsTheSkill(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	base := Character{
 		Level: 1, Origin: "acolito", Wisdom: 2,
@@ -77,8 +75,7 @@ func TestTheChosenOriginSkillBenefitTrainsTheSkill(t *testing.T) {
 // origem tem +2, não +4. A coluna `trained` segue sendo a fonte das perícias da
 // classe e das escolhas livres; a origem só se junta a ela.
 func TestTrainingFromTheColumnAndFromTheOriginDoesNotStack(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	ch := Character{
 		Level: 1, Origin: "acolito", Wisdom: 2,

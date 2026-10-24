@@ -130,19 +130,11 @@ def main() -> int:
     # `id` e `raceId` no catálogo de raça; `id` no de origem. Os campos da
     # FICHA (`race`, `origin`) valem para os arquivos de paridade, onde a ficha
     # guardada mora.
-    todos_os_ids = renome_raca | renome_origem | renome_beneficio
     alvos: list[tuple[Path, set[str], dict[str, str]]] = [
         (DADOS / "race-defs.json", {"id", "raceId"}, renome_raca),
         (DADOS / "origins.json", {"id"}, renome_origem | renome_beneficio),
-        # O `_catalogs.json` é DESPEJO DE CATÁLOGO e não ficha: ele repete os
-        # mesmos verbetes, e o `TestDumpAgreesWithEmbeddedCatalog` os compara
-        # campo a campo. Tratá-lo como as fichas deixou os ids de ORIGEM para
-        # trás e o guarda acusou — as raças tinham passado e as origens não.
-        (PARIDADE / "_catalogs.json", {"id", "raceId"}, todos_os_ids),
     ]
     for fixture in sorted(PARIDADE.glob("*.json")):
-        if fixture.name == "_catalogs.json":
-            continue
         alvos.append((fixture, {"race", "origin"}, renome_raca | renome_origem))
 
     total = 0

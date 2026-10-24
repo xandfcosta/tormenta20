@@ -68,8 +68,7 @@ func TestEveryCollectorLandsInTheDeclaredOrder(t *testing.T) {
 // silêncio rodar depois dela. Rodando antes, ele não acharia o que calar e a
 // concessão sobreviveria inteira.
 func TestTheSilenceRunsAfterEverythingItCanSilence(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	book := primeFromDump(t, dir)
+	book := primeBook(t)
 	ch := everyCollectorCharacter()
 
 	daMesa := Modifier{Target: ModifierTarget{K: "attack", Scope: "all"}, Amount: 1, BonusType: "untyped"}
@@ -128,7 +127,7 @@ func everyCollectorCharacter() Character {
 
 func everyCollectorWorld(t *testing.T, dir string) *Ruleset {
 	t.Helper()
-	return RulesetOf(primeFromDump(t, dir), Amendments{Grants: []CampaignGrant{{
+	return RulesetOf(primeBook(t), Amendments{Grants: []CampaignGrant{{
 		ID: "g1", Applies: EveryoneIn(), Label: "Bênção da mesa",
 		Modifiers: []Modifier{{Target: ModifierTarget{K: "attack", Scope: "all"}, Amount: 1, BonusType: "untyped"}},
 	}}})

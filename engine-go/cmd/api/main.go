@@ -19,6 +19,7 @@ import (
 	"syscall"
 	"time"
 
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/infra/config"
 	"t20engine/infra/db"
@@ -69,7 +70,7 @@ func main() {
 	}
 	defer func() { _ = database.Close() }()
 
-	srv := api.NewServer(cfg, database, primeCatalogs(cfg.CatalogPath))
+	srv := api.NewServer(cfg, database, primeCatalogs())
 	// UM roteador: as cenas, os estáticos, as fontes, a saúde e a API em `/api`
 	// saem todos do `WebRouter`. O `cmd` não monta rota nenhuma — ele abre o
 	// banco, prima os catálogos e escuta.
@@ -178,17 +179,16 @@ func escutar(server *http.Server, cfg config.Config) error {
 // É a mesma classe de falha do `cfg.Validate()` acima, e pela mesma razão: um
 // processo que sobe servindo ficha errada em silêncio é pior que um processo
 // que não sobe.
-func primeCatalogs(path string) *engine.Catalogs {
-	raw, err := os.ReadFile(path)
+//
+// O catálogo vem embutido no binário desde a ALE-494, então o arquivo ausente
+// deixou de ser um caso; o que ainda derruba é um catálogo que não se indexa.
+func primeCatalogs() *engine.Catalogs {
+	catalogs, err := book.EngineCatalogs()
 	if err != nil {
-		log.Fatalf("catalogs: %v — o PV máximo é derivado do catálogo, e sem ele "+
-			"toda ficha sairia errada em silêncio (CATALOG_PATH=%s)", err, path)
+		log.Fatalf("catalogs: prime failed: %v — o PV máximo é derivado do "+
+			"catálogo, e sem ele toda ficha sairia errada em silêncio", err)
 	}
-	catalogs, err := engine.PrimeEngineCatalogs(raw)
-	if err != nil {
-		log.Fatalf("catalogs: prime failed: %v (CATALOG_PATH=%s)", err, path)
-	}
-	log.Printf("catalogs primed from %s", path)
+	log.Printf("catalogs primed from the embedded book")
 	return catalogs
 }
 

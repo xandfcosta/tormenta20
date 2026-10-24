@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -37,8 +36,7 @@ import (
 // segunda passaria com um modificador incondicional, que é justamente o defeito
 // que ele existe para impedir.
 func TestTheConditionalGodPowersOfferTheirSwitch(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	for _, caso := range []struct {
 		poder  string

@@ -60,10 +60,6 @@ type Config struct {
 	// ligadas é todo site do mundo. `CORS_ORIGIN` no `.env` volta a montar o
 	// middleware com a lista que se escrever.
 	CORSOrigins []string
-	// CatalogPath é o despejo de catálogos (itens, raças, …) que a API carrega na
-	// subida para os validadores de mutação. O padrão é o instantâneo
-	// versionado.
-	CatalogPath string
 	// BackupDir é onde a tela de admin escreve os instantâneos — a mesma pasta do
 	// script `pnpm db:backup`, para um backup feito de qualquer um dos dois jeitos
 	// aparecer nos dois lugares. Relativa a `engine-go/`, que é o CWD do
@@ -124,7 +120,6 @@ func LoadConfig() (Config, error) {
 		BackupDir:      env("BACKUP_DIR", "../backups"),
 		BackupEvery:    envDuration("BACKUP_EVERY", 24*time.Hour),
 		BackupKeep:     envInt("BACKUP_KEEP", 7),
-		CatalogPath:    env("CATALOG_PATH", "parity/_catalogs.json"),
 		TLSCertFile:    os.Getenv("TLS_CERT_FILE"),
 		TLSKeyFile:     os.Getenv("TLS_KEY_FILE"),
 		BookPDF:        env("LIVRO_PDF", ""),

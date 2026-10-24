@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"strconv"
 	"testing"
 )
@@ -46,8 +45,7 @@ func raceCase(race string) Character {
 func expertise(name string) ModifierTarget { return ModifierTarget{K: "expertise", Name: name} }
 
 func TestTheNumberOnlyAbilitiesAddWhatTheBookSays(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 
 	resistance := ModifierTarget{K: "resistance"}
 	attackAll := ModifierTarget{K: "attack", Scope: "all"}

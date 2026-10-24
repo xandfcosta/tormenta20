@@ -69,7 +69,7 @@ func TestTheEnchantReachesTheWeaponCard(t *testing.T) {
 // nenhuma arma poder carregá-los.
 func TestTheChosenEnchantReachesTheWeaponCard(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	var oracle struct {

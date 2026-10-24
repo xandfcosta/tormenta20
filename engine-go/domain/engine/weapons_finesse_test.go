@@ -11,7 +11,7 @@ import (
 // the branches directly Go-side, incl. the Acuidade path no fixture exercises.
 func TestWeaponFinesse(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	none := map[string]bool{}
 
 	ptr := func(s string) *string { return &s }

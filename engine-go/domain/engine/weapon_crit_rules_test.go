@@ -18,7 +18,7 @@ import (
 // `ResolveAttack` o lê, e o número inerte virou regra errada.
 func TestTheThreatRangeImprovementReachesTheWeaponCard(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	var oracle struct {
@@ -70,7 +70,7 @@ func TestTheThreatRangeImprovementReachesTheWeaponCard(t *testing.T) {
 // Atroz (+2, 3.000 PO), aço-rubi e gelo eterno.
 func TestTheDamageBonusOfAnItemReachesTheWeaponCard(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	var oracle struct {

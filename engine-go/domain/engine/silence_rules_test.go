@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -22,8 +21,7 @@ import (
 func TestEveryCatalogTermHasAUniqueAddress(t *testing.T) {
 	const wantAtLeast = 200
 
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	book := primeFromDump(t, dir)
+	book := primeBook(t)
 
 	medidos := 0
 	visto := map[string]string{} // endereço -> a descrição do primeiro que o ocupou
@@ -140,8 +138,7 @@ func itoaForTest(n int) string {
 // calar a fonte inteira dão o mesmo resultado, e o guarda mediria a metade em
 // que o defeito é invisível.
 func TestSilencingOneTermLeavesTheOthersOfTheSameSource(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	book := primeFromDump(t, dir)
+	book := primeBook(t)
 
 	wielded := "wielded"
 	id := "medalhao-de-prata"
@@ -186,8 +183,7 @@ func TestSilencingOneTermLeavesTheOthersOfTheSameSource(t *testing.T) {
 
 // O SILÊNCIO TAMBÉM TEM ESCOPO, e o vizinho de mesa continua com o termo.
 func TestASilenceReachesOnlyWhoTheSelectorNames(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	book := primeFromDump(t, dir)
+	book := primeBook(t)
 
 	umaLuta := Modifier{Target: ModifierTarget{K: "expertise", Name: "Luta"}, Amount: 1, BonusType: "untyped"}
 	mundo := RulesetOf(book, Amendments{

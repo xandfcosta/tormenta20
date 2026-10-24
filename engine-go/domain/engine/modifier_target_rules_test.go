@@ -187,16 +187,9 @@ func alvosQueOTargetKeyNomeia(t *testing.T) []string {
 
 // alvosQueOCatalogoUsa conta os `target.k` que o catálogo escreve.
 //
-// Ele lê os arquivos EMBUTIDOS, e não o despejo. A razão é a contagem: as duas
-// cópias do catálogo são a MESMA coisa para as seis coleções que o despejo tem,
-// e somar os dois contava cada modificador duas vezes — 28 manobras onde há 14,
-// com cara de resultado.
-//
-// Os embutidos são o conjunto COMPLETO: o despejo não tem magias, e os
-// modificadores delas chegam à ficha pelo efeito consumido. Que as seis
-// coleções compartilhadas batem entre as duas cópias é o que o
-// `TestDumpAgreesWithEmbeddedCatalog` garante — sem ele, ler só um lado deixaria
-// o outro fora do denominador.
+// Ele varre TODOS os arquivos embutidos, e não só os sete que o motor indexa: as
+// magias ficam de fora do `engine.Catalogs`, e os modificadores delas chegam à
+// ficha pelo efeito consumido.
 func alvosQueOCatalogoUsa(t *testing.T) map[string]int {
 	t.Helper()
 	arquivos, err := filepath.Glob(filepath.Join("..", "catalog", "data", "*.json"))
@@ -238,7 +231,7 @@ func alvosQueOCatalogoUsa(t *testing.T) map[string]int {
 		desce(qualquer)
 	}
 	if len(contagem) == 0 {
-		t.Fatal("nenhum alvo lido do despejo — o guarda ficou cego")
+		t.Fatal("nenhum alvo lido do catálogo — o guarda ficou cego")
 	}
 	return contagem
 }

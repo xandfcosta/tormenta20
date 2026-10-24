@@ -107,7 +107,7 @@ func temCondicao(xs []string, want string) bool {
 // dano desta arma é não letal".
 func TestThePiedosaEnchantMakesTheWholeDamageNonLethal(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 	var oracle struct {
 		Char Character `json:"char"`

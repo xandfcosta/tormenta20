@@ -17,7 +17,7 @@ import (
 //	cd engine-go && go run ./cmd/genoracle
 func TestEquippedFlagsParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 
 	slugs := parityOracleSlugs(t, dir)
 

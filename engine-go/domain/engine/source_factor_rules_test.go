@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -17,8 +16,7 @@ import (
 // dobrariam junto — ou a PARCELA da Fúria. O livro responde com números: 5 PM
 // gastos dão +10, e não o dobro do ataque inteiro.
 func TestTheTitanicFuryDoublesTheFuryParcelAndNothingElse(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 	furiaLigada := map[string]bool{FlagGroupID("furia"): true}
 	ataqueDe := func(ch Character, ligados map[string]bool) int {
 		efeitos := ApplyActiveConditionals(ComputeItemEffects(world.ActiveItemsFor(ch)), ligados)

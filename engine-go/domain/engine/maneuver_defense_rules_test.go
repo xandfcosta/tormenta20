@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -21,8 +20,7 @@ import (
 // não alimenta número nenhum da ficha (nem o de ofensa alimenta): a manobra é um
 // bônus que a PESSOA aplica na mesa, e o que a ficha deve é dizer qual é.
 func TestTheDefensiveManeuverBonusNeverReachesTheAttack(t *testing.T) {
-	world := BookRuleset(primeFromDump(t, filepath.Clean(
-		filepath.Join(mustWd(t), "..", "..", "parity"))))
+	world := BookRuleset(primeBook(t))
 	adaga, empunhada := "adaga", "wielded"
 	base := Character{
 		Level:      1,

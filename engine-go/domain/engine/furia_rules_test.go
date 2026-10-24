@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -32,8 +31,7 @@ import (
 // Ele afirma que ataque e dano CONTINUAM subindo. Sem isso, apagar a Fúria
 // inteira passaria verde.
 func TestFuryGivesAttackAndDamageAndNotResistances(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	world := BookRuleset(primeFromDump(t, dir))
+	world := BookRuleset(primeBook(t))
 
 	// 10º nível, e a conta é +2: o degrau que a Tabela 1-6 abre no 6º é PAGO ao
 	// entrar na postura, e o motor não sabe de pagamento nenhum — ele vê o livro

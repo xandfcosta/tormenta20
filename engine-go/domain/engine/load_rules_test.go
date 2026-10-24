@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -95,7 +94,7 @@ func TestMoneyLoadCountsWholeThousands(t *testing.T) {
 // p153: a penalidade de armadura vale em "testes de Acrobacia, Furtividade e
 // Ladinagem".
 func TestOverloadPenalizesDisplacementAndArmorExpertises(t *testing.T) {
-	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity")))
+	catalogs := primeBook(t)
 	expertises := []CharacterExpertise{
 		{Name: "Furtividade", Attribute: "dexterity"},
 		{Name: "Diplomacia", Attribute: "charisma"},

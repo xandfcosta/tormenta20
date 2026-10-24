@@ -20,7 +20,7 @@ import (
 //	cd engine-go && go run ./cmd/genoracle
 func TestWeaponCardsParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 
 	for _, slug := range parityOracleSlugs(t, dir) {
 		slug := slug

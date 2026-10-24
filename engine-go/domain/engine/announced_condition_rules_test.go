@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -99,8 +98,7 @@ func anuncioType() reflect.Type { return reflect.TypeOf(AnnouncedCondition{}) }
 // montar o `Modifier` em Go prova a composição POR CIMA da fronteira JSON, e
 // foi assim que seis encantos entraram inertes com a suíte verde (ALE-412).
 func TestTheAnnouncedConditionCrossesTheCatalog(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	cards := BookRuleset(catalogs).ComputeWeaponCards(Character{
@@ -149,11 +147,10 @@ func TestTheAnnouncedConditionCrossesTheCatalog(t *testing.T) {
 // e quem julga o "criatura viva" dos dois é o mestre, que o livro não ajuda: a
 // expressão aparece quinze vezes e não é definida em nenhuma (decisão do dono).
 //
-// O caso atravessa o despejo de propósito, pela razão do de cima: é o catálogo
-// de verdade que a faixa lê.
+// O caso prima o catálogo embutido de propósito, pela razão do de cima: é o
+// catálogo de verdade que a faixa lê.
 func TestTheDrainingCriticalAnnouncesTheTempHpAlongWithTheCondition(t *testing.T) {
-	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
-	catalogs := primeFromDump(t, dir)
+	catalogs := primeBook(t)
 	ptr := func(s string) *string { return &s }
 
 	cards := BookRuleset(catalogs).ComputeWeaponCards(Character{
