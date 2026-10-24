@@ -4849,7 +4849,11 @@
         }
       ],
       "bookPage": 335,
-      "uid": "itm_hsuxgtxyzr"
+      "uid": "itm_hsuxgtxyzr",
+      "unmodeled": "o GESTO de 2 PM, e o 4d4 que ele deixa para a rodada seguinte: dano que acontece no turno de OUTRA criatura, e o motor de ficha não tem turno nem alvo",
+      "modeled": [
+        "o +1d6 de dano de ácido"
+      ]
     },
     {
       "id": "encanto-dancarina",
@@ -5005,7 +5009,11 @@
         }
       ],
       "bookPage": 335,
-      "uid": "itm_vtcsajfdrl"
+      "uid": "itm_vtcsajfdrl",
+      "unmodeled": "os 2d10 PONTOS DE VIDA TEMPORÁRIOS que o crítico dá ao portador. A condição no alvo já sai pelo `announcedCondition`; o PV temporário é outra espécie de parcela — ele não soma no máximo nem no atual, e o motor não tem a terceira caixa",
+      "modeled": [
+        "a condição que o crítico anuncia no alvo"
+      ]
     },
     {
       "id": "encanto-eletrica",
@@ -5033,7 +5041,11 @@
         }
       ],
       "bookPage": 335,
-      "uid": "itm_l3jc675vvm"
+      "uid": "itm_l3jc675vvm",
+      "unmodeled": "o GESTO de 2 PM, e o 3d8 que ele põe em OUTRA criatura em alcance curto — um segundo alvo, que não é nem o portador nem quem ele atacou",
+      "modeled": [
+        "o +1d6 de dano de eletricidade"
+      ]
     },
     {
       "id": "encanto-energetica",
@@ -5123,7 +5135,11 @@
         }
       ],
       "bookPage": 335,
-      "uid": "itm_y2mikujcyk"
+      "uid": "itm_y2mikujcyk",
+      "unmodeled": "o GESTO de 2 PM, que TROCA o ataque por uma bola de fogo de 6d6 em alcance médio. Não é parcela somada ao golpe: é outro ataque, com outro alcance e outra área, e a carta da arma descreve um só",
+      "modeled": [
+        "o +1d6 de dano de fogo"
+      ]
     },
     {
       "id": "encanto-formidavel",
@@ -5367,7 +5383,11 @@
         }
       ],
       "bookPage": 336,
-      "uid": "itm_wiooasrn2t"
+      "uid": "itm_wiooasrn2t",
+      "unmodeled": "o 2d6 da ACUMULAÇÃO: a arma anuncia o sangramento, e o livro diz que duas feridas dobram a perda por rodada. Contar quantas vezes o mesmo alvo foi atingido é estado do ALVO entre turnos, e a ficha não o tem",
+      "modeled": [
+        "o sangramento que a arma anuncia no alvo"
+      ]
     },
     {
       "id": "encanto-trovejante",
@@ -5425,7 +5445,11 @@
         }
       ],
       "bookPage": 336,
-      "uid": "itm_4y6mvoswho"
+      "uid": "itm_4y6mvoswho",
+      "unmodeled": "o GESTO de 2 PM, que sobe o bônus de +1d8 para +2d8 e COBRA 1d8 de PV de quem o usa. São duas trocas num gesto só, e a segunda tira vida do portador — o motor não tem custo em PV",
+      "modeled": [
+        "o +1d8 de dano de trevas"
+      ]
     },
     {
       "id": "encanto-veloz",
@@ -5611,7 +5635,11 @@
         }
       ],
       "bookPage": 338,
-      "uid": "itm_bfzjwehvup"
+      "uid": "itm_bfzjwehvup",
+      "unmodeled": "o GESTO de 2 PM, e o +1d4 de ácido que ele põe nos ataques do portador até o fim da cena. Este é o mais perto de caber: o dado é do PORTADOR e já existe forma para dado condicional (ALE-457). O que falta é o gatilho — a ativação é `instant`, e um gesto instantâneo não liga um efeito de duração",
+      "modeled": [
+        "a redução de ácido 10"
+      ]
     },
     {
       "id": "encanto-defensor",
@@ -5908,7 +5936,11 @@
         }
       ],
       "bookPage": 339,
-      "uid": "itm_6tawxozsfd"
+      "uid": "itm_6tawxozsfd",
+      "unmodeled": "o GESTO de 2 PM, e o 1d6 que ele causa em TODAS as criaturas adjacentes no início de cada turno do portador, até o fim da cena: dano em área, repetido por rodada, e nenhuma das duas coisas existe no motor de ficha",
+      "modeled": [
+        "a redução de fogo 10"
+      ]
     },
     {
       "id": "encanto-invulneravel",
@@ -6108,7 +6140,11 @@
         }
       ],
       "bookPage": 339,
-      "uid": "itm_yoxtblsjk4"
+      "uid": "itm_yoxtblsjk4",
+      "unmodeled": "o GESTO de 2 PM, e o 2d6 que ele devolve a QUEM ATACAR o portador em corpo a corpo até o fim da cena: dano de reação, disparado pelo ataque de outra criatura — e o motor não tem gatilho de reação",
+      "modeled": [
+        "a redução de eletricidade 10"
+      ]
     },
     {
       "id": "encanto-reluzente",
@@ -6314,7 +6350,11 @@
         }
       ],
       "bookPage": 336,
-      "uid": "itm_kcpwjnsarb"
+      "uid": "itm_kcpwjnsarb",
+      "unmodeled": "o GESTO de 2 PM, e o 1d12 por rodada durante 3 rodadas que ele impõe à vítima: dano com duração no ALVO, que é a mesma falta do `announcedCondition` — o anúncio sai, mas não o relógio",
+      "modeled": [
+        "o gesto, no acervo de poderes"
+      ]
     },
     {
       "id": "avalanche",

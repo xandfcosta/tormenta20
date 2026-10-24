@@ -58,6 +58,7 @@ type weaponEnchant struct {
 	Description string          `json:"description"`
 	Requires    string          `json:"requires"`
 	Unmodeled   string          `json:"unmodeled"`
+	Modeled     []string        `json:"modeled"`
 	Modifiers   json.RawMessage `json:"modifiers"`
 }
 
@@ -99,15 +100,28 @@ func TestTheEnchantsTileTheRollRange(t *testing.T) {
 	}
 }
 
-// TER MODIFICADOR E DIZER POR QUE NÃO FOI MODELADO SÃO EXCLUSIVOS.
+// TODO ENCANTO DIZ O QUE ENTROU E O QUE NÃO ENTROU.
 //
-// É o denominador do que o motor NÃO aplica, e ele é escrito como um PERMITIDOS
-// e não como uma lista de proibidos: todo encanto sem modificador diz o motivo,
-// e quem entrar amanhã sem nenhum dos dois reprova pelo nome.
+// É o denominador do que o motor aplica, escrito como PERMITIDOS e não como
+// lista de proibidos: quem entrar amanhã sem dizer nada reprova pelo nome.
 //
-// A metade inversa vale igual e é a que apodrece sozinha: um encanto que ganhe
-// modificador e mantenha o motivo antigo passa a mentir sobre si mesmo, com cara
-// de registro cuidadoso.
+// # O ALL-OR-NOTHING ERA FALSO, e foi ele que calou dez verbetes
+//
+// Este caso exigia EXCLUSIVIDADE — ou modificador, ou motivo, nunca os dois —,
+// e a premissa é que um encanto cabe inteiro no motor ou não cabe nada dele.
+// Ela é falsa em dez dos vinte e oito: a Flamejante soma o +1d6 de fogo E tem
+// um gesto de 2 PM que troca o ataque por uma bola de fogo de 6d6; a
+// Destruidora dá +2 no ataque E +2d8 de dano.
+//
+// O efeito do XOR não era registro cuidadoso, era SILÊNCIO: escrever a nota
+// honesta quebrava o caso, então a metade que não entrou não era escrita em
+// lugar nenhum. A Destruidora atravessou assim, com metade do verbete ausente
+// e nada acusando (ALE-458, ALE-459).
+//
+// A forma certa é a que o `TestEveryComposedItemSaysWhatItDoesOrWhyNot` já
+// usava: quem aplica EM PARTE diz as duas coisas — `modeled` nomeia a metade
+// que entrou, e `unmodeled` a que ficou de fora. A exclusividade some; o que
+// fica é que ninguém pode calar.
 func TestEveryEnchantEitherAppliesOrSaysWhyNot(t *testing.T) {
 	for _, tabela := range tabelasDeEncanto {
 		t.Run(tabela.tabela, func(t *testing.T) { eitherAppliesOrSaysWhyNot(t, tabela) })
@@ -117,24 +131,26 @@ func TestEveryEnchantEitherAppliesOrSaysWhyNot(t *testing.T) {
 func eitherAppliesOrSaysWhyNot(t *testing.T, tabela tabelaDeEncanto) {
 	t.Helper()
 	encantos := itemsOfCategory[weaponEnchant](t, tabela.categoria)
-	comModificador, semModificador := 0, 0
+	inteiro, emParte, soNota := 0, 0, 0
 
 	for _, e := range encantos {
 		aplica := len(e.Modifiers) > 2 // "[]" é o vazio
 		switch {
-		case aplica && e.Unmodeled != "":
-			t.Errorf("%s tem modificador E diz que não foi modelado (%q) — "+
-				"uma das duas coisas envelheceu, e a que mente é o texto",
-				e.Name, e.Unmodeled)
+		case aplica && e.Unmodeled != "" && len(e.Modeled) == 0:
+			t.Errorf("%s aplica alguma coisa, diz o que NÃO entrou (%q) e não diz o "+
+				"que ENTROU — sem o `modeled`, a nota ao lado parece falar do encanto "+
+				"inteiro", e.Name, e.Unmodeled)
 		case !aplica && e.Unmodeled == "":
 			t.Errorf("%s não tem modificador NEM diz por quê.\n"+
 				"Encanto que o motor não aplica entra com o MOTIVO escrito: sem ele, "+
 				"\"transcrevi os encantos\" e \"transcrevi treze dos vinte e oito\" "+
 				"têm a mesma cara.", e.Name)
+		case aplica && e.Unmodeled != "":
+			emParte++
 		case aplica:
-			comModificador++
+			inteiro++
 		default:
-			semModificador++
+			soNota++
 		}
 		if e.Description == "" {
 			t.Errorf("%s entrou sem a regra do livro em prosa", e.Name)
@@ -144,12 +160,12 @@ func eitherAppliesOrSaysWhyNot(t *testing.T, tabela tabelaDeEncanto) {
 				"(o asterisco é \"conta como dois\")", e.Name, e.CountsAs, tabela.tabela)
 		}
 	}
-	if comModificador+semModificador != len(encantos) {
-		t.Fatalf("o denominador não fecha: %d encantos, %d com modificador, %d sem",
-			len(encantos), comModificador, semModificador)
+	if inteiro+emParte+soNota != len(encantos) {
+		t.Fatalf("o denominador não fecha: %d encantos, %d inteiros, %d em parte, %d só nota",
+			len(encantos), inteiro, emParte, soNota)
 	}
-	t.Logf("encantos medidos: %d — %d o motor aplica, %d dizem por que não",
-		len(encantos), comModificador, semModificador)
+	t.Logf("encantos medidos: %d — %d o motor aplica inteiros, %d em parte, %d só dizem por que não",
+		len(encantos), inteiro, emParte, soNota)
 }
 
 // O PRÉ-REQUISITO APONTA PARA UM ENCANTO QUE EXISTE.
