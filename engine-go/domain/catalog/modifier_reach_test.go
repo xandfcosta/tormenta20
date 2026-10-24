@@ -10,15 +10,11 @@ import (
 
 // O QUE O CATÁLOGO DECLARA, O MOTOR TEM DE LER (ALE-423).
 //
-// O `scale` é avaliado pelo `evalModifierScale`, e ele tem UM chamador: o
-// caminho dos VITAIS. Num alvo que não seja vital ele é IGNORADO e o
-// modificador vale o `amount` cru — não estoura, não avisa, e o verbete passa
-// a prometer um número que ninguém soma. Foi assim que o "+Constituição na
-// Defesa" da Torre Inabalável (p55) virou +1.
-//
-// ESTE GUARDA É A LÁPIDE DISSO, e ele sai no dia em que o motor alcançar o
-// campo — o `insolenciaDefense` é a terceira ocorrência da mesma falta, e o
-// comentário dele já a nomeia por escrito.
+// O `scale` tem DOIS leitores: o caminho dos VITAIS (`evalModifierScale`) e a
+// SOMA DE ATRIBUTO (`per: attribute`, resolvida pelo `sheetEffects` desde a
+// ALE-485). Fora deles ele é IGNORADO e o modificador vale o `amount` cru — não
+// estoura, não avisa, e o verbete passa a prometer um número que ninguém soma.
+// Foi assim que o "+Constituição na Defesa" da Torre Inabalável (p55) virou +1.
 //
 // O IRMÃO DELE JÁ SAIU: havia aqui um guarda contra `factor` sob condição, e o
 // defeito que ele descrevia foi consertado — o `ApplyActiveConditionals` passa
@@ -44,10 +40,13 @@ type modifierSlice struct {
 func everyModifier(t *testing.T) ([]modifierSlice, int) {
 	t.Helper()
 	all, total := []modifierSlice{}, 0
-	for _, resource := range []string{"classPowers", "generalPowers", "items", "races", "origins"} {
+	// Os nomes são os do registro, e um nome errado é FALHA: este guarda varreu
+	// meses só itens e origens porque pedia `classPowers` e `generalPowers`, que
+	// não existem, e o `continue` engolia a ausência.
+	for _, resource := range []string{"class-powers", "general-powers", "granted-powers", "items", "origins"} {
 		raw, ok := catalog.Resource(resource)
 		if !ok {
-			continue
+			t.Fatalf("o recurso %q não existe no catálogo — o guarda deixaria de medi-lo", resource)
 		}
 		var entries []modifierSlice
 		if json.Unmarshal(raw, &entries) != nil {
@@ -64,8 +63,8 @@ func everyModifier(t *testing.T) ([]modifierSlice, int) {
 	return all, total
 }
 
-// NENHUM `scale` FORA DO CAMINHO DOS VITAIS, porque lá ele não é lido.
-func TestNoModifierScalesOutsideTheVitalsPath(t *testing.T) {
+// NENHUM `scale` FORA DOS DOIS LEITORES, porque fora deles ele não é lido.
+func TestNoModifierScalesWhereNobodyReadsTheScale(t *testing.T) {
 	entries, measured := everyModifier(t)
 	for _, e := range entries {
 		for _, m := range e.Modifiers {
@@ -73,9 +72,12 @@ func TestNoModifierScalesOutsideTheVitalsPath(t *testing.T) {
 				continue
 			}
 			k, _ := m.Target["k"].(string)
+			if per, _ := m.Scale["per"].(string); per == "attribute" && k != "attribute" {
+				continue
+			}
 			if !vitalTargets[k] {
-				t.Errorf("%s declara `scale` num alvo %q, e só os vitais leem escala: "+
-					"o modificador vale o `amount` cru e o resto some em silêncio", e.ID, k)
+				t.Errorf("%s declara `scale` num alvo %q, e só os vitais e a soma de atributo "+
+					"leem escala: o modificador vale o `amount` cru e o resto some em silêncio", e.ID, k)
 			}
 		}
 	}

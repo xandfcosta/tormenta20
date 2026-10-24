@@ -187,6 +187,9 @@ func (r *Ruleset) classActiveItems(ch Character) []ActiveItem {
 			if len(mods) == 0 {
 				continue
 			}
+			for i := range mods {
+				mods[i].classLevel = entry.Level
+			}
 			out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: mods})
 		}
 	}

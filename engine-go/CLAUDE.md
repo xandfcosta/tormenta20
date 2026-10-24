@@ -1027,6 +1027,28 @@ como os outros auditores fazem. Pior: procurar o nome no texto do capítulo
 inteiro cai na TABELA de pré-requisitos, que vem antes dos verbetes; procure
 dentro da página que o catálogo declara, o que de quebra confere a página.
 
+### A SOMA DE ATRIBUTO: o `scale` fora dos vitais (ALE-485)
+
+"Você soma seu X em Y" é um modificador com `scale: {per: attribute, attribute}`
+num alvo qualquer — Defesa, dano, perícia —, e o `cap: classLevel` o limita ao
+nível NA CLASSE que concede o poder (p226). O teto só entra onde o verbete
+escreve "limitado pelo seu nível": a p226 diz que ALGUMAS habilidades são
+limitadas, e a Presença Paralisante e a Mente Criminosa não são.
+
+- **Ela se resolve numa SEGUNDA passada** (`sheetEffects`), porque o número é o
+  atributo EFETIVO, com os itens, e esse só existe depois da primeira. Por isso
+  uma soma não pode mirar um atributo (`TestNoAttributeSumTargetsAnAttribute`),
+  e por isso toda decomposição da ficha lê o `sheetEffects`, e não o
+  `ComputeItemEffects` direto.
+- **O atributo negativo SUBTRAI** (decisão do dono): o livro não tem regra
+  própria, e o uso dele é somar o valor como é — "10 + sua Destreza" (p106).
+- **A trava que nomeia duas coisas usa `flags`**: o `flagOff` cala se QUALQUER
+  uma estiver posta ("de armadura pesada ou na condição imóvel", p47), e o
+  `flagRequired` pede todas. A condição Imóvel (e quem a contém) levanta a flag
+  `imovel` para isso.
+- **O dano por TIPO de arma** cai nos escopos `melee-light-or-agile` e `ranged`
+  (arremesso e disparo, p142), lidos pela carta da arma junto do `DamageOwn`.
+
 ### A devoção só chegava ao PV e ao PM
 
 Antes da ALE-397 o `GodPower` entrava no motor por **uma porta só** — o

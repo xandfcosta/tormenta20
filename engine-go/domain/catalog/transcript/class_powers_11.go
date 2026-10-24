@@ -9,7 +9,7 @@ var classPowersPart11 = []ClassPower{
 		Description: "Esculpido à exaustão. Soma Constituição nas rolagens de dano desarmado.",
 		BookPage:    77,
 		UID:         "pwr_hqy3dis4km",
-		Unmodeled:   "a Constituição no dano desarmado: soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		Unmodeled:   "a Constituição no dano desarmado: o motor ainda não tem ataque desarmado, que chega com a Briga (ALE-486)",
 		Prerequisites: []Prerequisite{
 			{Kind: "attribute", Attr: "constitution", Min: 3},
 			{Kind: "power", ID: "class.lutador.sarado"},

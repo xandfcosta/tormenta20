@@ -129,7 +129,7 @@ type ComputedSheet struct {
 func (r *Ruleset) ComputeSheet(ch Character, activeConditionals map[string]bool) ComputedSheet {
 	return deriveSheet(sheetInput{
 		char:        ch,
-		effects:     ApplyActiveConditionals(ComputeItemEffects(r.ActiveItemsFor(ch)), activeConditionals),
+		effects:     r.sheetEffects(ch, activeConditionals),
 		raceSquares: r.raceDisplacement(ch),
 	})
 }

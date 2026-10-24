@@ -147,14 +147,29 @@ var classPowersPart03 = []ClassPower{
 		Unmodeled:      "2 PM para somar Carisma: mexe num teste de perícia na hora de rolar (ALE-489)",
 	},
 	{
-		ID:             "class.bucaneiro.insolencia",
-		Modeled:        []string{"o Carisma na Defesa, com teto no nível, sai do `insolenciaDefense` (ALE-485)"},
+		ID: "class.bucaneiro.insolencia",
+		Modeled: []string{
+			"o Carisma na Defesa, limitado pelo nível na classe, sem armadura pesada nem a condição imóvel",
+		},
 		ClassName:      "Bucaneiro",
 		Name:           "Insolência",
 		Description:    "Soma Carisma na Defesa, limitado pelo nível. Exige liberdade de movimentos (não funciona em armadura pesada ou imóvel).",
 		GrantedAtLevel: 1,
 		BookPage:       47,
 		UID:            "pwr_fun76vimmc",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "defense"},
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOff",
+					Flag:  "armadura-pesada",
+					Flags: []string{"imovel"},
+					Label: "sem armadura pesada e sem estar imóvel",
+				},
+				Scale: &ModifierScale{Per: "attribute", Attribute: "charisma", Cap: "classLevel"},
+			},
+		},
 	},
 	{
 		ID:             "class.bucaneiro.evasao",

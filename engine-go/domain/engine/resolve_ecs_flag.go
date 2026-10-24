@@ -90,8 +90,15 @@ func eraseExemptFlags(w *ecs.World) {
 func dropWhatTheFlagTurnsOff(w *ecs.World) {
 	flags := flagsOf(w)
 	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if c := t.Mod.Condition; c != nil && c.C == "flagOff" && flags.set[c.Flag] {
-			ecs.Set(w, e, Suppressed{Why: "a flag " + c.Flag + " está posta"})
+		c := t.Mod.Condition
+		if c == nil || c.C != "flagOff" {
+			return
+		}
+		for _, flag := range c.AllFlags() {
+			if flags.set[flag] {
+				ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " está posta"})
+				return
+			}
 		}
 	})
 }
@@ -112,8 +119,15 @@ func dropWhatTheFlagTurnsOff(w *ecs.World) {
 func dropWhatTheFlagRequires(w *ecs.World) {
 	flags := flagsOf(w)
 	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if c := t.Mod.Condition; c != nil && c.C == "flagRequired" && !flags.set[c.Flag] {
-			ecs.Set(w, e, Suppressed{Why: "a flag " + c.Flag + " não está posta"})
+		c := t.Mod.Condition
+		if c == nil || c.C != "flagRequired" {
+			return
+		}
+		for _, flag := range c.AllFlags() {
+			if !flags.set[flag] {
+				ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " não está posta"})
+				return
+			}
 		}
 	})
 }

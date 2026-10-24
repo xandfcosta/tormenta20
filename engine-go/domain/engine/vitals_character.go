@@ -5,7 +5,10 @@ package engine
 // conditionals). The server-side vitals recompute (backend buildVitalContext +
 // vitals-sync) uses it to re-derive PV/PM máximos after a level/class change.
 func (r *Ruleset) VitalContextFor(ch Character) VitalContext {
-	effects := ComputeItemEffects(r.ActiveItemsFor(ch))
+	// Sem as somas de atributo: elas não miram vital nenhum, e resolvê-las aqui
+	// seria uma passada a mais para nada.
+	plain, _ := splitAttributeSums(r.ActiveItemsFor(ch))
+	effects := ComputeItemEffects(plain)
 	attrTotals := map[string]int{}
 	for _, a := range AttributeKeys {
 		attrTotals[a] = effectiveAttribute(ch, a, effects)

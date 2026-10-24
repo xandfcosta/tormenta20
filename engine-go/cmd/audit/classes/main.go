@@ -246,7 +246,7 @@ func main() {
 				continue
 			}
 			f := finding{"ALVO", c, p.Name, fmt.Sprintf("%s '%s' %s não é nomeado no livro",
-				m.Target.Kind, terms[0], signed(m.Amount))}
+				m.Target.Kind, terms[0], amountOf(m))}
 			if mentionsReference(text) {
 				references = append(references, f)
 			} else {
@@ -297,4 +297,13 @@ func intList(xs []int) string {
 		parts[i] = strconv.Itoa(x)
 	}
 	return "[" + strings.Join(parts, ", ") + "]"
+}
+
+// amountOf é o número do modificador como o relatório o escreve: a soma de
+// atributo (ALE-485) não tem `amount`, e "+0" diria que ela não soma nada.
+func amountOf(m transcript.Modifier) string {
+	if m.Scale != nil && m.Scale.Per == "attribute" {
+		return "+" + m.Scale.Attribute
+	}
+	return signed(m.Amount)
 }

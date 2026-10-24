@@ -105,13 +105,24 @@ var classPowersPart10 = []ClassPower{
 		Unmodeled:      "1 PM por um ataque desarmado adicional: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
-		ID:             "class.lutador.casca-grossa-con",
+		ID: "class.lutador.casca-grossa-con",
+		Modeled: []string{
+			"a Constituição na Defesa, limitada pelo nível na classe, sem armadura pesada",
+			"o +1 a cada quatro níveis, nas linhas Con+1 a Con+4",
+		},
 		ClassName:      "Lutador",
 		Name:           "Casca Grossa (Con)",
 		Description:    "Soma Constituição na Defesa, limitado pelo seu nível e apenas se não estiver usando armadura pesada. A cada 4 níveis (L7/11/15/19) recebe +1 na Defesa.",
 		GrantedAtLevel: 3,
 		UID:            "pwr_3zmaimq7iy",
-		Unmodeled:      "a Constituição na Defesa sem armadura pesada: soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "defense"},
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagOff", Flag: "armadura-pesada", Label: "sem armadura pesada"},
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "constitution", Cap: "classLevel"},
+			},
+		},
 	},
 	{
 		ID:             "class.lutador.briga-1d8",
@@ -259,12 +270,25 @@ var classPowersPart10 = []ClassPower{
 	},
 	{
 		ID:          "class.lutador.bracos-calejados",
+		Modeled:     []string{"a Força na Defesa, limitada pelo nível na classe, sem armadura nenhuma"},
 		ClassName:   "Lutador",
 		Name:        "Braços Calejados",
 		Description: "Se não estiver usando armadura, soma Força na Defesa, limitado pelo nível.",
 		BookPage:    76,
 		UID:         "pwr_gwojty2tgl",
-		Unmodeled:   "a Força na Defesa sem armadura: soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "defense"},
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOff",
+					Flag:  "armadura-leve",
+					Flags: []string{"armadura-pesada"},
+					Label: "sem armadura",
+				},
+				Scale: &ModifierScale{Per: "attribute", Attribute: "strength", Cap: "classLevel"},
+			},
+		},
 	},
 	{
 		ID:          "class.lutador.cabecada",

@@ -311,13 +311,22 @@ var classPowersPart07 = []ClassPower{
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "dexterity", Min: 2}},
 	},
 	{
-		ID:            "class.guerreiro.arqueiro",
-		ClassName:     "Guerreiro",
-		Name:          "Arqueiro",
-		Description:   "Em arma de ataque à distância, soma Sabedoria nas rolagens de dano (limitado pelo nível).",
-		BookPage:      50,
-		UID:           "pwr_7emb3yellb",
-		Unmodeled:     "soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		ID: "class.guerreiro.arqueiro",
+		Modeled: []string{
+			"a Sabedoria no dano das armas de ataque à distância (arremesso e disparo, p142), limitada pelo nível na classe",
+		},
+		ClassName:   "Guerreiro",
+		Name:        "Arqueiro",
+		Description: "Em arma de ataque à distância, soma Sabedoria nas rolagens de dano (limitado pelo nível).",
+		BookPage:    50,
+		UID:         "pwr_7emb3yellb",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "ranged"},
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "wisdom", Cap: "classLevel"},
+			},
+		},
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "wisdom", Min: 1}},
 	},
 	{
@@ -355,13 +364,22 @@ var classPowersPart07 = []ClassPower{
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 1}},
 	},
 	{
-		ID:            "class.guerreiro.esgrimista",
-		ClassName:     "Guerreiro",
-		Name:          "Esgrimista",
-		Description:   "Quando usa arma corpo-a-corpo leve ou ágil, soma Inteligência nas rolagens de dano (limitado pelo nível).",
-		BookPage:      48,
-		UID:           "pwr_its2svjrtz",
-		Unmodeled:     "soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		ID: "class.guerreiro.esgrimista",
+		Modeled: []string{
+			"a Inteligência no dano das armas corpo a corpo leves ou ágeis, limitada pelo nível na classe",
+		},
+		ClassName:   "Guerreiro",
+		Name:        "Esgrimista",
+		Description: "Quando usa arma corpo-a-corpo leve ou ágil, soma Inteligência nas rolagens de dano (limitado pelo nível).",
+		BookPage:    48,
+		UID:         "pwr_its2svjrtz",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "melee-light-or-agile"},
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "intelligence", Cap: "classLevel"},
+			},
+		},
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "intelligence", Min: 1}},
 	},
 	{

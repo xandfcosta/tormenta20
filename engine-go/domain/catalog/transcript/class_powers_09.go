@@ -377,13 +377,25 @@ var classPowersPart09 = []ClassPower{
 		},
 	},
 	{
-		ID:            "class.ladino.mente-criminosa",
-		ClassName:     "Ladino",
-		Name:          "Mente Criminosa",
-		Description:   "Soma Inteligência em Ladinagem e Furtividade.",
-		BookPage:      74,
-		UID:           "pwr_cmj4ez3nfh",
-		Unmodeled:     "a Inteligência em Ladinagem e Furtividade: soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		ID:          "class.ladino.mente-criminosa",
+		Modeled:     []string{"a Inteligência em Ladinagem e Furtividade, sem teto (o verbete não o limita)"},
+		ClassName:   "Ladino",
+		Name:        "Mente Criminosa",
+		Description: "Soma Inteligência em Ladinagem e Furtividade.",
+		BookPage:    74,
+		UID:         "pwr_cmj4ez3nfh",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "expertise", Name: "Ladinagem"},
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "intelligence"},
+			},
+			{
+				Target:    ModifierTarget{Kind: "expertise", Name: "Furtividade"},
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "intelligence"},
+			},
+		},
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "intelligence", Min: 1}},
 	},
 	{
