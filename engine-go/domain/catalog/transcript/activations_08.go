@@ -3,6 +3,15 @@ package transcript
 // Parte 8 de 10 de `Activations` (activations.go).
 var activationsPart08 = []Activation{
 	{
+		ID:       "origin.pivete.quebra-galho",
+		Name:     "Quebra-Galho",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		BookPage: 93,
+	},
+	{
 		ID:       "origin.refugiado.estoico",
 		Name:     "Estoico",
 		Kind:     "passive",
@@ -414,15 +423,6 @@ var activationsPart08 = []Activation{
 		Kind:     "passive",
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
-		BookPage: 134,
-	},
-	{
-		ID:       "deus.marah.palavras-de-bondade",
-		Name:     "Palavras de Bondade",
-		Kind:     "instant",
-		Action:   "varia",
-		PMCost:   PMCost{Written: "variavel"},
 		Uses:     nil,
 		BookPage: 134,
 	},

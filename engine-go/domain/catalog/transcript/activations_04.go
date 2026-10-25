@@ -3,6 +3,15 @@ package transcript
 // Parte 4 de 10 de `Activations` (activations.go).
 var activationsPart04 = []Activation{
 	{
+		ID:       "class.druida.forma-primal",
+		Name:     "Forma Primal",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		BookPage: 62,
+	},
+	{
 		ID:       "class.druida.forma-selvagem",
 		Name:     "Forma Selvagem",
 		Kind:     "instant",
@@ -410,15 +419,6 @@ var activationsPart04 = []Activation{
 	{
 		ID:       "class.inventor.ferreiro",
 		Name:     "Ferreiro",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
-		BookPage: 70,
-	},
-	{
-		ID:       "class.inventor.granadeiro",
-		Name:     "Granadeiro",
 		Kind:     "passive",
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},

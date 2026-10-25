@@ -39,6 +39,9 @@ templ powersPanelSection(v View) {
 		if row.Stance != nil && row.Stance.MaxSteps > 0 {
 			@stanceStepperDialog(v, row)
 		}
+		if row.Degrees != nil && row.Degrees.MaxSteps > 0 {
+			@useStepperDialog(v, row)
+		}
 	}
 	@choicesDialog(v)
 }
@@ -172,7 +175,10 @@ templ powerActionSlot(v View, row powerRow) {
 				aria-label={ "Usar " + row.Name }
 				disabled?={ !row.Can }
 				title={ row.Why }
-				data-on:click={ sheetPost(v, "/poderes/usa/"+row.Command) }
+				if row.Degrees != nil && row.Degrees.MaxSteps > 0 {
+					aria-haspopup="dialog"
+				}
+				data-on:click={ useCommand(v, row) }
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 			>
 				@ui.Icon("Zap", "size-3")
@@ -219,6 +225,36 @@ templ stanceButton(v View, row powerRow) {
 			@ui.Icon("Flame", "size-3")
 			{ "Ativar " + strconv.Itoa(row.Stance.BasePm) + " PM" }
 		</button>
+	}
+}
+
+// useStepperDialog escolhe quantos degraus pagar num USO — a Marca da Presa,
+// cujo degrau troca o dado (p50). Irmão do da postura, com o rótulo do que o
+// degrau compra em vez do "+N" do bônus.
+templ useStepperDialog(v View, row powerRow) {
+	@overlay(useDialogID(row.Command), row.Name, "Zap", false) {
+		<p class="text-xs text-muted-foreground">{ "Cada +" + strconv.Itoa(row.Degrees.StepPm) + " PM compra " + row.Degrees.StepLabel + "." }</p>
+		<div class="flex items-center justify-center gap-3">
+			<button
+				type="button"
+				aria-label="Menos um degrau"
+				data-on:click="$stance_degrees = Math.max(0, $stance_degrees - 1)"
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
+			>−</button>
+			<span class="font-mono text-lg text-foreground" data-text={ useCounterExpr(*row.Degrees) }></span>
+			<button
+				type="button"
+				aria-label="Mais um degrau"
+				data-on:click={ "$stance_degrees = Math.min(" + strconv.Itoa(row.Degrees.MaxSteps) + ", $stance_degrees + 1)" }
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
+			>+</button>
+		</div>
+		<button
+			type="button"
+			aria-label={ "Confirmar " + row.Name }
+			data-on:click={ sheetPost(v, "/poderes/usa/"+row.Command) + "; $detail = ''" }
+			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
+		>Usar</button>
 	}
 }
 

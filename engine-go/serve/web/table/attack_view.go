@@ -30,6 +30,9 @@ type attackProposal struct {
 	// Situations são os motivos da Tabela 5-3, em prosa e FORA da conta.
 	Situations string
 	Tally      string
+	// Boost é o impulso de PM que o golpe leva e o que a confirmação cobra —
+	// "Golpe Divino · 3 PM ao confirmar" (ALE-487).
+	Boost string
 	// Meu diz se quem olha foi quem rolou: só ele cancela o que é dele. O mestre
 	// cancela por qualquer um, e isso é decidido na tela pelo `Mestre` da view.
 	Mine bool
@@ -49,7 +52,8 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		Attacker: entryLabel(st, pa.AttackerEntryID), Target: targetLabel(*pa, st),
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
 		Tally: attackLine(*pa), Situations: writtenSituations(*pa),
-		Mine: pa.ByUserID == userID,
+		Boost: writtenBoost(*pa),
+		Mine:  pa.ByUserID == userID,
 	}
 	if pa.Maneuver != nil {
 		// A TINTA DO CRACHÁ É NEUTRA, e é a única que pode ser: as outras três
@@ -233,6 +237,18 @@ func entryLabel(st *live.SessionRuntimeState, entryID string) string {
 		return st.Initiative[i].Label
 	}
 	return "quem saiu da fila"
+}
+
+// writtenBoost é o impulso do golpe com o PM que a confirmação cobra, ou "".
+func writtenBoost(pa live.PendingAttack) string {
+	if pa.BoostPowerID == "" {
+		return ""
+	}
+	name := pa.BoostPowerID
+	if power, known := book.ClassPowers()[pa.BoostPowerID]; known {
+		name = power.Name
+	}
+	return fmt.Sprintf("%s · %d PM ao confirmar", name, pa.BoostPM)
 }
 
 // writtenSituations são as linhas da Tabela 5-3 que valeram, em prosa.

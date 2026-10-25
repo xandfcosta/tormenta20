@@ -36,6 +36,13 @@ templ attackProposed(v View) {
 					<span class="text-foreground">{ v.Attack.Weapon }</span>
 					<span aria-hidden="true">·</span>
 				}
+				// O IMPULSO vem antes da conta porque ele a explica — o +1d8 do
+				// Golpe Divino está dentro do dano —, e com o PM que a confirmação
+				// vai cobrar: o mestre que confirma precisa saber que custa.
+				if v.Attack.Boost != "" {
+					<span class="text-grimorio-gold">{ v.Attack.Boost }</span>
+					<span aria-hidden="true">·</span>
+				}
 				<span class="font-mono tabular-nums">{ v.Attack.Tally }</span>
 				// A SITUAÇÃO ESPECIAL FICA FORA DO MONOESPAÇADO, e o olho a 390px
 				// foi quem decidiu: dentro da conta, três situações partiam a linha

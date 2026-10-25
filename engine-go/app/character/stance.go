@@ -49,14 +49,10 @@ func (p Plays) EnterStance(
 	if !sheet.OwnsClassPower(dto, spec.ID) {
 		return fmt.Errorf("%s: o personagem não tem este poder", spec.Name)
 	}
-	max := 0
-	if spec.Scaling != nil {
-		max = book.LevelSteps(*spec.Scaling, ClassPowerLevel(dto, spec.ID))
+	cost, err := scaledPrice(dto, *spec, steps)
+	if err != nil {
+		return err
 	}
-	if can, reason := book.StanceDecision(*spec, steps, max, int(dto.ManaAvailable())); !can {
-		return fmt.Errorf("%s: %s", spec.Name, reason)
-	}
-	cost := book.StanceCost(*spec, steps)
 
 	// UMA POSTURA POR VEZ, no grupo dela — *"você só pode manter uma postura
 	// por vez"* (p54).
@@ -180,13 +176,31 @@ func (p Plays) EndStance(
 	})
 }
 
+// scaledPrice é o PM de pagar os degraus pedidos, ou a recusa que diz por que
+// não dá: acima do teto que o nível NA CLASSE abre (p40), ou sem PM para o total.
+// Poder que não vende degrau tem teto zero.
+func scaledPrice(dto sheet.CharacterDTO, spec book.Activation, steps int) (int, error) {
+	max := 0
+	if spec.Scaling != nil {
+		max = book.LevelSteps(*spec.Scaling, ClassPowerLevel(dto, spec.ID))
+	}
+	if can, reason := book.ScaledDecision(spec, steps, max, int(dto.ManaAvailable())); !can {
+		return 0, fmt.Errorf("%s: %s", spec.Name, reason)
+	}
+	return book.ScaledCost(spec, steps), nil
+}
+
 // UsePower gasta um uso de um poder instantâneo: cobra o PM e soma o contador.
+//
+// Os `steps` são os degraus A MAIS que o jogador pagou, no poder que os vende —
+// a Marca da Presa (p50) troca o dado pela linha seguinte da tabela a cada um.
+// Zero no poder que não vende degrau.
 //
 // As duas escritas são de coisas diferentes — o PM é da ficha, o contador é do
 // estado de jogo — e a ordem importa: o PM primeiro, porque é ele que pode
 // faltar. Somar o uso antes deixaria um uso gasto por um poder que não saiu.
 func (p Plays) UsePower(
-	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, powerID string,
+	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, powerID string, steps int,
 ) error {
 	spec := book.ActivationOf(powerID, "")
 	if spec == nil {
@@ -211,14 +225,18 @@ func (p Plays) UsePower(
 	if !can {
 		return fmt.Errorf("%s: %s", spec.Name, reason)
 	}
+	cost, err := scaledPrice(dto, *spec, steps)
+	if err != nil {
+		return err
+	}
 	scope := book.ChargedScope(*spec)
 	if scope == "" && spec.Grant == nil {
 		// Sem limite COBRADO e sem concessão não há contador nem efeito, e sobra
 		// uma escrita só: a transação seria um bloqueio que ninguém pediu.
-		return chargeMp(ctx, p.queries, p.catalogs, row, book.ActivationPm(*spec))
+		return chargeMp(ctx, p.queries, p.catalogs, row, cost)
 	}
 	return p.inTx(ctx, "usar o poder "+spec.ID, func(q *sqlcgen.Queries) error {
-		if err := chargeMp(ctx, q, p.catalogs, row, book.ActivationPm(*spec)); err != nil {
+		if err := chargeMp(ctx, q, p.catalogs, row, cost); err != nil {
 			return err
 		}
 		if scope != "" {
@@ -228,7 +246,7 @@ func (p Plays) UsePower(
 				return fmt.Errorf("somar o uso de %q: %w", spec.ID, err)
 			}
 		}
-		return writeGrantedEffect(ctx, q, row.ID, *spec)
+		return writeGrantedEffect(ctx, q, row.ID, *spec, steps)
 	})
 }
 
@@ -244,12 +262,12 @@ func (p Plays) UsePower(
 // em vez de abrir uma segunda — o `active_effects` é único em (personagem,
 // catálogo, escopo), e o livro não empilha a mesma fonte consigo.
 func writeGrantedEffect(
-	ctx context.Context, q *sqlcgen.Queries, characterID int64, spec book.Activation,
+	ctx context.Context, q *sqlcgen.Queries, characterID int64, spec book.Activation, steps int,
 ) error {
 	if spec.Grant == nil || spec.Grant.Kind != "active-effect" || len(spec.Grant.Modifiers) == 0 {
 		return nil
 	}
-	blob, err := json.Marshal(spec.Grant.Modifiers)
+	blob, err := json.Marshal(book.ScaledGrantModifiers(spec, steps))
 	if err != nil {
 		return fmt.Errorf("escrever a concessão de %q: %w", spec.ID, err)
 	}
@@ -422,4 +440,24 @@ func (p Plays) dropsTheOtherStances(
 		}
 	}
 	return nil
+}
+
+// PayAttackBoost cobra o PM do impulso que um golpe CONFIRMADO levou — o Golpe
+// Divino, o Ataque Especial (ALE-487).
+//
+// Ele mora com os outros gastos de PM da ficha e passa pelo mesmo funil, que
+// drena a poça temporária antes do poço (p106). Quem o chama é a confirmação do
+// mestre, depois de o golpe pousar: a proposta só confere se a ficha PODE
+// pagar, e o provisório cancelado não chega aqui.
+func (p Plays) PayAttackBoost(ctx context.Context, characterID int64, pm int) error {
+	if pm <= 0 {
+		return nil
+	}
+	row, err := p.queries.GetCharacter(ctx, characterID)
+	if err != nil {
+		return fmt.Errorf("carregar o personagem %d para cobrar o impulso: %w", characterID, err)
+	}
+	return p.inTx(ctx, "cobrar o impulso do golpe", func(q *sqlcgen.Queries) error {
+		return chargeMp(ctx, q, p.catalogs, row, pm)
+	})
 }

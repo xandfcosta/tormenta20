@@ -3,6 +3,15 @@ package transcript
 // Parte 6 de 10 de `Activations` (activations.go).
 var activationsPart06 = []Activation{
 	{
+		ID:       "class.lutador.sarado",
+		Name:     "Sarado",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		BookPage: 77,
+	},
+	{
 		ID:       "class.lutador.sequencia-destruidora",
 		Name:     "Sequência Destruidora",
 		Kind:     "instant",
@@ -414,15 +423,6 @@ var activationsPart06 = []Activation{
 		Action:   "completa",
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     ptr("cena"),
-		BookPage: 84,
-	},
-	{
-		ID:       "class.paladino.virtude-temperanca",
-		Name:     "Virtude Paladinesca: Temperança",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
 		BookPage: 84,
 	},
 }

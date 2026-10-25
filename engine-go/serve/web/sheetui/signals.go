@@ -80,7 +80,14 @@ type Signals struct {
 	ItemMaterial     string   `json:"item_material"`
 	// Os degraus escolhidos ao entrar numa postura que escala com o nível, e a
 	// busca da lista de poderes.
-	PowerSteps  *int64 `json:"stance_degrees"`
+	PowerSteps *int64 `json:"stance_degrees"`
+	// O impulso de PM escolhido na linha de ataque — ver `attack_boost.go`. A
+	// arma vem junto porque a escolha é DAQUELA linha: o impulso ligado na
+	// espada não viaja no golpe do arco.
+	BoostWeapon *int64 `json:"boost_weapon"`
+	BoostPower  string `json:"boost_power"`
+	BoostSteps  int64  `json:"boost_steps"`
+	BoostSplit  string `json:"boost_split"`
 	PowerSearch string `json:"power_search"`
 	// Os atributos que a raça distribui, escolhidos no diálogo.
 	RaceAttributes []string `json:"race_attributes"`

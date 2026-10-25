@@ -4,12 +4,12 @@ package transcript
 var classPowersPart12 = []ClassPower{
 	{
 		ID:             "class.paladino.golpe-divino-2d8",
+		Modeled:        []string{"o degrau: quem paga e soma é o Golpe Divino, +1 PM por +1d8"},
 		ClassName:      "Paladino",
 		Name:           "Golpe Divino (+2d8)",
 		Description:    "Dano base do Golpe Divino sobe para +2d8.",
 		GrantedAtLevel: 5,
 		UID:            "pwr_76to7ocjnq",
-		Unmodeled:      "é gastar PM no ataque por bônus (ALE-487)",
 	},
 	{
 		ID:             "class.paladino.cura-pelas-maos-2d8-2-pv",
@@ -23,12 +23,12 @@ var classPowersPart12 = []ClassPower{
 	},
 	{
 		ID:             "class.paladino.golpe-divino-3d8",
+		Modeled:        []string{"o degrau: quem paga e soma é o Golpe Divino, +1 PM por +1d8"},
 		ClassName:      "Paladino",
 		Name:           "Golpe Divino (+3d8)",
 		Description:    "Dano base do Golpe Divino sobe para +3d8.",
 		GrantedAtLevel: 9,
 		UID:            "pwr_jdnubmtqpr",
-		Unmodeled:      "é gastar PM no ataque por bônus (ALE-487)",
 	},
 	{
 		ID:             "class.paladino.cura-pelas-maos-3d8-3-pv",
@@ -42,12 +42,12 @@ var classPowersPart12 = []ClassPower{
 	},
 	{
 		ID:             "class.paladino.golpe-divino-4d8",
+		Modeled:        []string{"o degrau: quem paga e soma é o Golpe Divino, +1 PM por +1d8"},
 		ClassName:      "Paladino",
 		Name:           "Golpe Divino (+4d8)",
 		Description:    "Dano base do Golpe Divino sobe para +4d8.",
 		GrantedAtLevel: 13,
 		UID:            "pwr_pwmk5lxfob",
-		Unmodeled:      "é gastar PM no ataque por bônus (ALE-487)",
 	},
 	{
 		ID:             "class.paladino.cura-pelas-maos-4d8-4-pv",
@@ -61,12 +61,12 @@ var classPowersPart12 = []ClassPower{
 	},
 	{
 		ID:             "class.paladino.golpe-divino-5d8",
+		Modeled:        []string{"o degrau: quem paga e soma é o Golpe Divino, +1 PM por +1d8"},
 		ClassName:      "Paladino",
 		Name:           "Golpe Divino (+5d8)",
 		Description:    "Dano base do Golpe Divino sobe para +5d8.",
 		GrantedAtLevel: 17,
 		UID:            "pwr_gxo55dq7pf",
-		Unmodeled:      "é gastar PM no ataque por bônus (ALE-487)",
 	},
 	{
 		ID:             "class.paladino.cura-pelas-maos-5d8-5-pv",

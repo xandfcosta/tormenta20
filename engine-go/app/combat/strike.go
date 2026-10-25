@@ -51,6 +51,13 @@ type Combatant struct {
 	// `Desejo de Liberdade` ajuda quem está sendo agarrado, não quem agarra.
 	ManeuverOffense map[string]int
 	ManeuverDefense map[string]int
+	// Boost são as cartas com o impulso de PM pedido, e o PM que ele custa
+	// (`engine.BoostedWeaponCards`). Nulo para quem não tem ficha — o bloco de
+	// criatura não paga PM no golpe.
+	Boost func(engine.BoostChoice) ([]engine.WeaponCard, int, error)
+	// ManaAvailable é o PM que a ficha pode gastar AGORA, poças temporárias
+	// incluídas: o impulso que custa mais que isso é recusado na proposta.
+	ManaAvailable int
 }
 
 // Combatants é a porta que traduz uma linha da fila em combatente.
@@ -162,6 +169,9 @@ type Request struct {
 	// É do GOLPE e não da manobra: uma manobra não causa dano, então trocar o
 	// tipo dele não significa nada ali.
 	SwitchesDamageType bool
+	// Boost é o impulso de PM que o jogador pediu para ESTE golpe — o Golpe
+	// Divino, o Ataque Especial (ALE-487). Vazio é golpe sem impulso.
+	Boost engine.BoostChoice
 	// OpposedD20 é o d20 de quem se DEFENDE da manobra, e ele existe pelo mesmo
 	// motivo do `D20`: a mesa pode rolar na mão. Nulo é o servidor rolar.
 	OpposedD20 *int
@@ -270,12 +280,10 @@ func (s Strike) proposeAgainstObject(
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	if req.Weapon < 0 || req.Weapon >= len(striker.Weapons) {
-		return live.PendingAttack{}, fmt.Errorf(
-			"%s empunha %d arma(s) e o pedido veio na %d: %w",
-			striker.Label, len(striker.Weapons), req.Weapon, app.ErrRefused)
+	weapon, boost, err := weaponFor(striker, req)
+	if err != nil {
+		return live.PendingAttack{}, err
 	}
-	weapon := striker.Weapons[req.Weapon]
 	situations, err := s.specialSituations(ctx, req)
 	if err != nil {
 		return live.PendingAttack{}, err
@@ -295,6 +303,7 @@ func (s Strike) proposeAgainstObject(
 		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
 		Announces: foreseenOf(out),
 		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
+		BoostPowerID: boost.powerID, BoostPM: boost.pm,
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err
@@ -323,10 +332,14 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 	if attackerEntry.ID == target.ID {
 		return live.PendingAttack{}, fmt.Errorf("ninguém ataca a si mesmo: %w", app.ErrRefused)
 	}
-	if req.Weapon < 0 || req.Weapon >= len(striker.Weapons) {
-		return live.PendingAttack{}, fmt.Errorf(
-			"%s empunha %d arma(s) e o pedido veio na %d: %w",
-			striker.Label, len(striker.Weapons), req.Weapon, app.ErrRefused)
+	if req.Maneuver != "" && req.Boost.PowerID != "" {
+		// O IMPULSO É DO GOLPE: a manobra não rola dano, e o Golpe Divino e o
+		// Ataque Especial vendem bônus num ataque que fere (p65, p82).
+		return live.PendingAttack{}, fmt.Errorf("o impulso de PM é do golpe, e não da manobra: %w", app.ErrRefused)
+	}
+	weapon, boost, err := weaponFor(striker, req)
+	if err != nil {
+		return live.PendingAttack{}, err
 	}
 	victim, err := s.combatants.Of(ctx, req.CampaignID, target)
 	if err != nil {
@@ -337,7 +350,6 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	weapon := striker.Weapons[req.Weapon]
 	if req.Maneuver != "" {
 		return s.proposeManeuver(ctx, who, req, attackerEntry, target, striker, victim, weapon, d20)
 	}
@@ -367,6 +379,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
 		Announces: foreseenOf(out),
 		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
+		BoostPowerID: boost.powerID, BoostPM: boost.pm,
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err

@@ -192,7 +192,28 @@ func confirmsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := st.chargesTheBoost(c, state, pendente); err != nil {
+		return state, err
+	}
 	return state, st.raisesTheCumulativeBonus(c, state, pendente, antes)
+}
+
+// chargesTheBoost cobra o PM do impulso que o golpe confirmado levou
+// (ALE-487). DEPOIS do commit pela razão do bônus cumulativo logo abaixo: o
+// provisório cancelado não aconteceu, e o PM cobrado na proposta ficaria pago
+// por um golpe que o mestre disse que não houve.
+//
+// O ERRO SOBE, mesmo com o dano já pousado, pela mesma razão de lá: o PM que
+// não saiu é um número que a mesa usaria errado pelo resto da cena.
+func (st Scene) chargesTheBoost(c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack) error {
+	if pendente == nil || pendente.BoostPM <= 0 {
+		return nil
+	}
+	attacker := entryByID(state, pendente.AttackerEntryID)
+	if attacker == nil || attacker.CharacterID == nil {
+		return nil
+	}
+	return st.plays.PayAttackBoost(c.R.Context(), *attacker.CharacterID, pendente.BoostPM)
 }
 
 // raisesTheCumulativeBonus sobe o bônus de cena de quem ATACOU, quando o golpe

@@ -33,7 +33,7 @@ var writtenActions = map[string]string{
 // sobe com os degraus antes de a pessoa abrir o contador.
 func writtenCost(spec book.Activation, stance *stanceState) string {
 	if spec.Kind == "stance" {
-		return "POSTURA · " + strconv.Itoa(book.StanceCost(spec, 0)) + stepsMore(stance) + " PM"
+		return "POSTURA · " + strconv.Itoa(book.ScaledCost(spec, 0)) + stepsMore(stance) + " PM"
 	}
 	action, found := writtenActions[spec.Action]
 	if !found {

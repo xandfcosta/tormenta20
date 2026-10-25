@@ -89,6 +89,10 @@ type actionRow struct {
 	// Rolls são os gestos de ROLAR que esta linha oferece. Vazio na linha que
 	// não rola nada — Mover, um poder de efeito fixo, a Investida.
 	Rolls []actionRoll
+	// Weapon e Boosts são da linha de ATAQUE: o índice da arma e os impulsos de
+	// PM que este golpe pode levar (ver `attack_boost.go`).
+	Weapon int
+	Boosts []attackBoost
 }
 
 // actionRoll é um gesto de rolar que sai de uma linha.
@@ -107,6 +111,21 @@ type actionRoll struct {
 	// nasce desabilitado até haver um. O servidor recusa de todo jeito; isto é
 	// para o botão não existir só para levar recusa.
 	NeedsTarget bool
+	// Command, quando escrito, substitui o `@post` do `Path`: é o toque que
+	// ABRE o contador de degraus do poder. Before vem antes do `@post` — o
+	// poder que vende degrau zera o contador antes de usar.
+	Command string
+	Before  string
+	// Opens marca o gesto que abre uma escolha, para o `aria-haspopup`.
+	Opens string
+}
+
+// rollCommand é a expressão do toque num gesto da superfície.
+func rollCommand(v View, roll actionRoll, after string) string {
+	if roll.Command != "" {
+		return roll.Command
+	}
+	return roll.Before + sheetPost(v, roll.Path) + after
 }
 
 // actionsPanelFrom monta a superfície a partir dos painéis JÁ computados.
@@ -117,10 +136,11 @@ type actionRoll struct {
 func actionsPanelFrom(
 	id int64, computed engine.ComputedSheet,
 	combat panelCombat, powers powersPanel, spells spellbookPanel, effects effectsPanel,
+	boosts [][]attackBoost,
 ) actionsPanel {
 	melee := expertiseOrZero(computed, "Luta", "strength").Total + computed.AttackAll.Total
 	byCost := map[engine.ActionCost][]actionRow{
-		engine.ActionStandard: standardRows(combat, melee, computed),
+		engine.ActionStandard: standardRows(combat, melee, computed, boosts),
 		engine.ActionMovement: {movementRow(computed)},
 		engine.ActionFull:     fullRows(melee, computed),
 	}
@@ -175,10 +195,16 @@ var groupOrder = []struct {
 // O ATAQUE VEM PRIMEIRO, e o livro diz por quê: *"fazer um ataque ou lançar uma
 // magia são as ações padrão mais comuns"* (p233). A 390px a primeira linha é a
 // única que se lê sem rolar.
-func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet) []actionRow {
+func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, boosts [][]attackBoost) []actionRow {
 	rows := make([]actionRow, 0, len(combat.Weapons)+2)
 	for i, weapon := range combat.Weapons {
+		var offered []attackBoost
+		if i < len(boosts) {
+			offered = boosts[i]
+		}
 		rows = append(rows, actionRow{
+			Weapon: i,
+			Boosts: offered,
 			Name:   "Atacar · " + weapon.Name,
 			Detail: weapon.Damage + " · " + weapon.Crit + " · " + weapon.Skill,
 			Value:  weapon.Attack,
@@ -346,6 +372,20 @@ func rowFromPower(power powerRow) actionRow {
 	}
 	if power.Stance != nil {
 		row.Live = power.Stance.Active
+	}
+	// O INSTANTÂNEO QUE VENDE DEGRAU ganha o gesto aqui (a Marca da Presa,
+	// p50, ALE-487), e com o que está dando quando em curso. Os outros
+	// instantâneos continuam sem botão nesta superfície — usar é da aba Poderes.
+	if power.Degrees != nil {
+		row.Live = power.InEffect != ""
+		if row.Live {
+			row.Detail = power.InEffect + " em curso"
+		}
+		roll := actionRoll{Label: "Usar", Path: "/poderes/usa/" + power.Command, Before: "$stance_degrees = 0; "}
+		if power.Degrees.MaxSteps > 0 {
+			roll.Command, roll.Opens = useOpensCommand(power.Command), useDialogID(power.Command)
+		}
+		row.Rolls = []actionRoll{roll}
 	}
 	return row
 }

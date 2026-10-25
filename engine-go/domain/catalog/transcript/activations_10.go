@@ -3,6 +3,15 @@ package transcript
 // Parte 10 de 10 de `Activations` (activations.go).
 var activationsPart10 = []Activation{
 	{
+		ID:       "item.encanto-assustador",
+		Name:     "Assustador",
+		Kind:     "instant",
+		Action:   "movimento",
+		PMCost:   PMCost{Fixed: 2},
+		Uses:     nil,
+		BookPage: 338,
+	},
+	{
 		ID:       "item.encanto-caustica",
 		Name:     "Cáustica",
 		Kind:     "instant",
