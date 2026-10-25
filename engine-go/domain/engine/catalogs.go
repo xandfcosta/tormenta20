@@ -145,6 +145,10 @@ type ClassPower struct {
 	GrantedAtLevel  *int             `json:"grantedAtLevel"`
 	GrantedByChoice *GrantedByChoice `json:"grantedByChoice"`
 	Modifiers       []Modifier       `json:"modifiers"`
+	// Boost é o que o poder vende NO ATAQUE, por PM — fora dos `Modifiers`
+	// porque ele não vale na ficha: só no golpe em que o jogador o paga (ver
+	// `BoostedWeaponCards`).
+	Boost *ClassPowerBoost `json:"boost,omitempty"`
 }
 
 type GrantedByChoice struct {

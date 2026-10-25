@@ -392,14 +392,35 @@ var classPowersPart11 = []ClassPower{
 		Unmodeled:      "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},
 	{
-		ID:             "class.paladino.golpe-divino-1d8",
+		ID: "class.paladino.golpe-divino-1d8",
+		Modeled: []string{
+			"o impulso no ataque corpo a corpo: 2 PM somam o Carisma no ataque e +1d8 no dano, e cada degrau (+1 PM) mais +1d8",
+		},
 		ClassName:      "Paladino",
-		Name:           "Golpe Divino (+1d8)",
+		Name:           "Golpe Divino",
 		Description:    "Em ataque corpo-a-corpo, gasta 2 PM para desferir golpe destruidor. Soma Carisma no teste de ataque e +1d8 na rolagem de dano. A cada 4 níveis, pode gastar +1 PM para aumentar dano em +1d8.",
 		GrantedAtLevel: 1,
 		BookPage:       82,
 		UID:            "pwr_2memeemhqp",
-		Unmodeled:      "é gastar PM no ataque por bônus (ALE-487)",
+		Boost: &ClassPowerBoost{
+			Degrees: PMScaling{
+				BasePM:          2,
+				StepPM:          1,
+				StepLabel:       "+1d8 no dano",
+				FirstStepLevel:  5,
+				StepEveryLevels: 4,
+				StepAmount:      1,
+			},
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "attack", Scope: "all"},
+					BonusType: "untyped",
+					Scale:     &ModifierScale{Per: "attribute", Attribute: "charisma"},
+				},
+				{Target: ModifierTarget{Kind: "damage", Scope: "all"}, BonusType: "untyped", Dice: "1d8"},
+			},
+			MeleeOnly: true,
+		},
 	},
 	{
 		ID:             "class.paladino.cura-pelas-maos-1d8-1-pv",

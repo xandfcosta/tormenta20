@@ -115,10 +115,7 @@ type UseContext struct {
 // O nível é o da CLASSE e não o do personagem (p40): um bárbaro 5/ladino 5 tem
 // a Fúria de um bárbaro de nível 5, e não a de um personagem de nível 10.
 func LevelSteps(scale ActivationScale, classLevel int) int {
-	if scale.StepEveryLevels <= 0 || classLevel < scale.FirstStepLevel {
-		return 0
-	}
-	return 1 + (classLevel-scale.FirstStepLevel)/scale.StepEveryLevels
+	return engine.StepsAt(scale.FirstStepLevel, scale.StepEveryLevels, classLevel)
 }
 
 // StanceCost é o que entrar custa com os degraus escolhidos.
