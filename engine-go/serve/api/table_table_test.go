@@ -6,17 +6,24 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"t20engine/domain/live"
 	"t20engine/infra/events"
 	"testing"
 )
 
+var assetStamp = regexp.MustCompile(`\?v=[0-9a-f]+`)
+
 func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
 	body := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	// O CARIMBO DOS ESTÁTICOS sai antes da busca: é um hash hexadecimal, e o
+	// `app.css?v=03951307386e` de uma folha reconstruída tinha "130" dentro —
+	// o caso acusou vazamento num número que não era PV (ALE-487).
+	body = assetStamp.ReplaceAllString(body, "")
 
 	if !strings.Contains(body, "Ogro cansado") {
 		t.Fatal("o ogro sumiu da fila do jogador — ele deve ver QUEM está lá")
