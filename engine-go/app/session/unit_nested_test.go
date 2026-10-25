@@ -47,6 +47,8 @@ func (n *nestingEffects) ExpireTurnEffects(ctx context.Context, _ int64) error {
 	})
 }
 
+func (n *nestingEffects) ExpireOwnTurnEffects(context.Context, int64) error { return nil }
+
 func (n *nestingEffects) ConditionsOf(context.Context, int64) ([]string, error) { return nil, nil }
 
 func (n *nestingEffects) ConstitutionOf(context.Context, int64) (int, error) { return 0, nil }

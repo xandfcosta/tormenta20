@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 	"strings"
+	"t20engine/domain/engine"
 
 	"t20engine/domain/book"
 	"t20engine/domain/live"
@@ -33,6 +34,10 @@ type attackProposal struct {
 	// Boost é o impulso de PM que o golpe leva e o que a confirmação cobra —
 	// "Golpe Divino · 3 PM ao confirmar" (ALE-487).
 	Boost string
+	// Guard é a guarda que a investida abre em quem investiu — "Furioso: –2 na
+	// Defesa até a próxima vez" (p235, ALE-499). Para o NPC, que não tem ficha
+	// onde a penalidade more, a frase é o que o mestre aplica.
+	Guard string
 	// Meu diz se quem olha foi quem rolou: só ele cancela o que é dele. O mestre
 	// cancela por qualquer um, e isso é decidido na tela pelo `Mestre` da view.
 	Mine bool
@@ -53,6 +58,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
 		Tally: attackLine(*pa), Situations: writtenSituations(*pa),
 		Boost: writtenBoost(*pa),
+		Guard: writtenGuard(*pa, entryLabel(st, pa.AttackerEntryID)),
 		Mine:  pa.ByUserID == userID,
 	}
 	if pa.Maneuver != nil {
@@ -249,6 +255,15 @@ func writtenBoost(pa live.PendingAttack) string {
 		name = power.Name
 	}
 	return fmt.Sprintf("%s · %d PM ao confirmar", name, pa.BoostPM)
+}
+
+// writtenGuard é a penalidade que a investida deixa, ou "".
+func writtenGuard(pa live.PendingAttack, attacker string) string {
+	penalty := engine.ChargeDefensePenalty(pa.Charge)
+	if penalty == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%s: –%d na Defesa até a próxima vez", attacker, -penalty)
 }
 
 // writtenSituations são as linhas da Tabela 5-3 que valeram, em prosa.

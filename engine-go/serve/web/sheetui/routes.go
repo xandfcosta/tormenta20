@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"t20engine/domain/engine"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -52,6 +53,8 @@ func Routes(r chi.Router, s Scene) {
 	// personagem está é o hospedeiro, pela porta, como no teste de perícia.
 	r.Post("/personagens/{id}/acoes/atacar/{arma}", s.sheetCommand(rollsAttackOnTheTarget))
 	r.Post("/personagens/{id}/acoes/manobra/{manobra}", s.sheetCommand(rollsManeuverOnTheTarget))
+	r.Post("/personagens/{id}/acoes/investida/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargePlain)))
+	r.Post("/personagens/{id}/acoes/investida-imprudente/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargeReckless)))
 	// OS EFEITOS: quatro donos de estado, quatro caminhos.
 	r.Post("/personagens/{id}/efeitos/condicao/{cond}", s.sheetCommand(toggleBookCondition))
 	r.Post("/personagens/{id}/efeitos/aplica/{magia}", s.sheetCommand(applySpellBuff))

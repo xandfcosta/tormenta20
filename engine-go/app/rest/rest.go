@@ -134,6 +134,13 @@ func (s Scopes) clearScenePlay(ctx context.Context, characterID int64) error {
 	}); err != nil {
 		return fmt.Errorf("expirar os efeitos de turno do personagem %d: %w", characterID, err)
 	}
+	// E O QUE DURAVA ATÉ A PRÓXIMA VEZ (a guarda aberta da investida, p235):
+	// fora de combate não há próxima vez, e a cena é a rede embaixo dela.
+	if err := s.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
+		Characterid: characterID, Scope: engine.OwnTurnScope(),
+	}); err != nil {
+		return fmt.Errorf("expirar os efeitos até a próxima vez do personagem %d: %w", characterID, err)
+	}
 	if err := s.queries.ClearCharacterPowerUsesByScope(ctx, sqlcgen.ClearCharacterPowerUsesByScopeParams{
 		Characterid: characterID, Scope: "scene",
 	}); err != nil {

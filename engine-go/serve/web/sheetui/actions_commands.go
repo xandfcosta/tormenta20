@@ -33,6 +33,20 @@ func rollsAttackOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig
 	return s.proposeOnTheTable(r, row, strike, sig)
 }
 
+// chargesTheTarget rola a investida (p235) — ou a Imprudente (p42) — da vez
+// contra o alvo escolhido. Um handler por espécie, e a espécie no ENDEREÇO: são
+// dois botões, e um sinal a mais seria um estado de tela para um gesto de um
+// toque. O impulso não viaja aqui: a tira dele é da linha de ataque.
+func chargesTheTarget(charge string) func(Scene, *http.Request, sqlcgen.Character, Signals) error {
+	return func(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
+		weapon, err := strconv.Atoi(chi.URLParam(r, "arma"))
+		if err != nil {
+			return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
+		}
+		return s.proposeOnTheTable(r, row, ActionStrike{Weapon: weapon, Charge: charge}, sig)
+	}
+}
+
 // rollsManeuverOnTheTarget rola a manobra da vez contra o alvo escolhido
 // (p234).
 //

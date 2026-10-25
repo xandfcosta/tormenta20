@@ -55,6 +55,10 @@ const (
 	// no `ResolveAttackUnder`, ao lado do `card.NonLethal` que já estava lá. Um
 	// quinto campo no `situationRule` serviria a uma linha só.
 	AttackerSwitchesTheDamageType SpecialSituation = "switched-damage-type"
+	// AttackerCharging e AttackerChargingRecklessly são a investida (p235) e a
+	// Investida Imprudente (p42) — escolha do gesto, como a troca de tipo.
+	AttackerCharging           SpecialSituation = "charging"
+	AttackerChargingRecklessly SpecialSituation = "charging-recklessly"
 )
 
 // specialSituationTable é a Tabela 5-3 transcrita, e ela é a FONTE do guarda de
@@ -94,6 +98,11 @@ var specialSituationTable = map[SpecialSituation]situationRule{
 	// penalidade de –5 no teste de ataque. [...] Você pode usar esses ataques e
 	// armas para causar dano letal, mas sofre a mesma penalidade" (p236).
 	AttackerSwitchesTheDamageType: {Label: "trocando o tipo de dano", Attack: -5},
+	// "Você recebe +2 no teste de ataque" (p235). A Imprudente é a MESMA
+	// investida, com outro nome na mesa: a troca dela é Defesa por dano, e o
+	// ataque não muda (p42). Ver `charge.go`.
+	AttackerCharging:           {Label: "investida", Attack: ChargeAttackBonus, MeleeOnly: true},
+	AttackerChargingRecklessly: {Label: "investida imprudente", Attack: ChargeAttackBonus, MeleeOnly: true},
 }
 
 // situationRule é uma linha da tabela. Zero em tudo que a linha não diz.

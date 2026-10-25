@@ -78,15 +78,16 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 	if err != nil {
 		return nil, err
 	}
-	// AGREDIR É AÇÃO PADRÃO (p233), cobrada de quem ataca SE ele ainda está na
-	// vez — a mesma regra do movimento: o mestre confirma fora de hora o tempo
-	// todo, e cobrar do turno de outro tiraria a ação de quem não atacou. A
+	// AGREDIR É AÇÃO PADRÃO (p233), e a investida completa (p235), cobrada de
+	// quem ataca SE ele ainda está na vez — a mesma regra do movimento: o
+	// mestre confirma fora de hora o tempo todo, e cobrar do turno de outro
+	// tiraria a ação de quem não atacou. A
 	// CONFERÊNCIA vem antes do dano e a COBRANÇA depois, pela razão do
 	// `ActionFits`: entre propor e confirmar o jogador pode ter conjurado, e o
 	// dano de um ataque que não cabia mais não pode pousar.
 	onTurn := attackerIsOnTurn(state, attack)
 	if onTurn {
-		if err := st.ActionFits(ctx, sessionID, engine.ActionStandard); err != nil {
+		if err := st.ActionFits(ctx, sessionID, engine.StrikeAction(attack.Charge)); err != nil {
 			return nil, err
 		}
 	}
@@ -125,7 +126,7 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 			if !onTurn {
 				return nil
 			}
-			return chargeTurn(s, engine.ActionStandard)
+			return chargeTurn(s, engine.StrikeAction(attack.Charge))
 		})
 }
 

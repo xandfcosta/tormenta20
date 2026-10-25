@@ -195,6 +195,9 @@ func confirmsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err := st.chargesTheBoost(c, state, pendente); err != nil {
 		return state, err
 	}
+	if err := st.opensTheGuard(c, state, pendente); err != nil {
+		return state, err
+	}
 	return state, st.raisesTheCumulativeBonus(c, state, pendente, antes)
 }
 
@@ -214,6 +217,21 @@ func (st Scene) chargesTheBoost(c commandCtx, state *live.SessionRuntimeState, p
 		return nil
 	}
 	return st.plays.PayAttackBoost(c.R.Context(), *attacker.CharacterID, pendente.BoostPM)
+}
+
+// opensTheGuard deixa em quem INVESTIU a penalidade na Defesa até a vez dele
+// voltar (p235, ALE-499). Depois do commit pela razão do impulso logo acima: o
+// golpe cancelado não abriu a guarda de ninguém. O NPC que investe não tem
+// ficha onde a penalidade more, e a faixa a diz ao mestre.
+func (st Scene) opensTheGuard(c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack) error {
+	if pendente == nil || pendente.Charge == "" {
+		return nil
+	}
+	attacker := entryByID(state, pendente.AttackerEntryID)
+	if attacker == nil || attacker.CharacterID == nil {
+		return nil
+	}
+	return st.plays.OpenTheGuard(c.R.Context(), *attacker.CharacterID, pendente.Charge)
 }
 
 // raisesTheCumulativeBonus sobe o bônus de cena de quem ATACOU, quando o golpe

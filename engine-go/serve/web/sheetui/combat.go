@@ -102,8 +102,11 @@ type weaponTile struct {
 	Name   string
 	Skill  string
 	Attack string
-	Damage string
-	Crit   string
+	// AttackTotal é o mesmo ataque como número, para quem soma nele — a
+	// investida da aba Ações (+2, p235).
+	AttackTotal int
+	Damage      string
+	Crit        string
 	// AttackRows e DamageRows são duas seções ROTULADAS no diálogo, e não uma
 	// lista com um total: uma arma não tem "total", tem duas contas.
 	AttackRows []breakdownRow
@@ -374,14 +377,15 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 	for i, card := range cards {
 		attackRows, damageRows := weaponRows(card)
 		tiles = append(tiles, weaponTile{
-			Key:        "weapon-" + strconv.Itoa(i),
-			Name:       card.Name,
-			Skill:      card.Skill,
-			Attack:     book.WithSign(card.Attack),
-			Damage:     damageLabel(card),
-			Crit:       critLabel(card),
-			AttackRows: attackRows,
-			DamageRows: damageRows,
+			Key:         "weapon-" + strconv.Itoa(i),
+			Name:        card.Name,
+			Skill:       card.Skill,
+			Attack:      book.WithSign(card.Attack),
+			AttackTotal: card.Attack,
+			Damage:      damageLabel(card),
+			Crit:        critLabel(card),
+			AttackRows:  attackRows,
+			DamageRows:  damageRows,
 		})
 	}
 	return tiles

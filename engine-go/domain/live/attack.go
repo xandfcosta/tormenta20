@@ -63,6 +63,9 @@ type PendingAttack struct {
 	// cobra o PM, depois de o golpe pousar: o provisório cancelado não custa.
 	BoostPowerID string `json:"boostPowerId,omitempty"`
 	BoostPM      int    `json:"boostPm,omitempty"`
+	// Charge é a investida que levou ao golpe (p235, p42): a confirmação cobra
+	// a ação COMPLETA dela e abre a guarda de quem investiu (ALE-499).
+	Charge string `json:"charge,omitempty"`
 	// Situations são os rótulos da Tabela 5-3 que valeram neste ataque, e a
 	// faixa os escreve. Sem eles a mesa lê uma Defesa que a ficha não tem, ou
 	// um ataque que bateu a Defesa e errou (p238), e vai procurar o defeito.

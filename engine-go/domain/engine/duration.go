@@ -160,6 +160,17 @@ func TurnScope() string {
 	return Duration{Kind: DurationFixed, Amount: 1, Unit: UnitTurn}.Stored()
 }
 
+// OwnTurnScope é o "até o seu próximo turno" do livro — a guarda aberta da
+// investida (p235). Ele NÃO é o `TurnScope`: aquele cai na próxima virada de
+// vez, de quem for, e a penalidade da investida tem de valer justamente nas
+// vezes dos OUTROS. Este cai quando a vez da própria ficha começa de novo, e
+// no fim da cena (ALE-499).
+//
+// @example OwnTurnScope() // "own-turn"
+func OwnTurnScope() string {
+	return "own-turn"
+}
+
 // SpellDuration é a duração da magia COM a medida, quando há medida.
 //
 // A espécie vem do campo `duration` e a medida vem do `durationNote`, que é

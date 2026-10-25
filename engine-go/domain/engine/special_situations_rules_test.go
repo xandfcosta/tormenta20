@@ -193,10 +193,10 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 				"que nenhum sistema lê", situation)
 		}
 	}
-	// O DENOMINADOR SÃO TRÊS PARCELAS, e somá-las às cegas perderia a conta.
+	// O DENOMINADOR SÃO PARCELAS, e somá-las às cegas perderia a conta.
 	//
 	// Esta tabela deixou de ser "a Tabela 5-3" e virou "o que desloca um teste de
-	// ataque sem ser condição". As três parcelas dizem de ONDE cada linha veio, e
+	// ataque sem ser condição". As parcelas dizem de ONDE cada linha veio, e
 	// é isso que mantém o número respondendo alguma coisa — um total só diria
 	// quantas linhas há, que é o que o `len` do mapa já diz.
 	//
@@ -209,15 +209,20 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 	// a da p236 cobra −5 de quem usa a arma contra a natureza dela. As duas moram
 	// neste mapa porque a FORMA é a da tabela — deslocam o teste e a mesa lê o
 	// rótulo na decomposição.
+	//
+	// A INVESTIDA é a quarta parcela, e são duas linhas: a da p235 e a
+	// Imprudente da p42, que é a mesma investida com outro nome na mesa
+	// (ALE-499).
 	const linhasDaTabela53 = 7
 	const daProsaDaP239 = 1 // o objeto em movimento
 	const daProsaDaP236 = 1 // trocar o tipo de dano
-	esperadas := linhasDaTabela53 + daProsaDaP239 + daProsaDaP236
+	const daInvestida = 2   // a investida (p235) e a Imprudente (p42)
+	esperadas := linhasDaTabela53 + daProsaDaP239 + daProsaDaP236 + daInvestida
 	if medidos != esperadas {
 		t.Errorf("a varredura mediu %d situações, e o livro dá %d: %d linhas da Tabela 5-3 "+
-			"que não são condição, %d da prosa da p239 e %d da prosa da p236.\n"+
-			"Linha nova entra no `specialSituationTable` E numa destas três parcelas: um "+
+			"que não são condição, %d da prosa da p239, %d da prosa da p236 e %d da investida.\n"+
+			"Linha nova entra no `specialSituationTable` E numa destas quatro parcelas: um "+
 			"guarda que percorre o próprio mapa dá verde sobre a linha que ninguém escreveu",
-			medidos, esperadas, linhasDaTabela53, daProsaDaP239, daProsaDaP236)
+			medidos, esperadas, linhasDaTabela53, daProsaDaP239, daProsaDaP236, daInvestida)
 	}
 }

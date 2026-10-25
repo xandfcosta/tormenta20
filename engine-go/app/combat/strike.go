@@ -55,6 +55,8 @@ type Combatant struct {
 	// (`engine.BoostedWeaponCards`). Nulo para quem não tem ficha — o bloco de
 	// criatura não paga PM no golpe.
 	Boost func(engine.BoostChoice) ([]engine.WeaponCard, int, error)
+	// ChargesRecklessly diz que a ficha tem a Investida Imprudente (p42).
+	ChargesRecklessly bool
 	// ManaAvailable é o PM que a ficha pode gastar AGORA, poças temporárias
 	// incluídas: o impulso que custa mais que isso é recusado na proposta.
 	ManaAvailable int
@@ -122,6 +124,9 @@ func (s Strike) specialSituations(ctx context.Context, req Request) ([]engine.Sp
 	// que ela se junta à lista AQUI e não no adaptador do tabuleiro. As duas
 	// viajam no mesmo vetor porque o mecanismo é o mesmo — deslocar o teste de
 	// ataque e dizer à mesa por quê.
+	if charging, is := engine.ChargeSituation(req.Charge); is {
+		doTabuleiro = append(doTabuleiro, charging)
+	}
 	if req.SwitchesDamageType {
 		return append(doTabuleiro, engine.AttackerSwitchesTheDamageType), nil
 	}
@@ -172,6 +177,9 @@ type Request struct {
 	// Boost é o impulso de PM que o jogador pediu para ESTE golpe — o Golpe
 	// Divino, o Ataque Especial (ALE-487). Vazio é golpe sem impulso.
 	Boost engine.BoostChoice
+	// Charge é a investida que leva a este golpe (`ChargePlain`,
+	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.
+	Charge string
 	// OpposedD20 é o d20 de quem se DEFENDE da manobra, e ele existe pelo mesmo
 	// motivo do `D20`: a mesa pode rolar na mão. Nulo é o servidor rolar.
 	OpposedD20 *int
@@ -216,11 +224,12 @@ func (s Strike) strikerFor(
 		return live.InitiativeEntry{}, Combatant{}, fmt.Errorf(
 			"%s não é seu personagem: %w", attackerEntry.Label, app.ErrRefused)
 	}
-	// AGREDIR É AÇÃO PADRÃO (p233), e a pergunta vem ANTES de rolar: um d20
+	// AGREDIR É AÇÃO PADRÃO (p233), e a INVESTIDA é completa (p235). A
+	// pergunta vem ANTES de rolar: um d20
 	// rolado por quem está atordoado, ou já gastou a padrão, é um provisório que
 	// a mesa vê e que nunca poderia ter acontecido.
 	if attackerEntry.CharacterID != nil {
-		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, engine.ActionStandard); err != nil {
+		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, engine.StrikeAction(req.Charge)); err != nil {
 			return live.InitiativeEntry{}, Combatant{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
 		}
 	}
@@ -284,6 +293,9 @@ func (s Strike) proposeAgainstObject(
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
+	if weapon, err = chargedWeapon(striker, req, weapon); err != nil {
+		return live.PendingAttack{}, err
+	}
 	situations, err := s.specialSituations(ctx, req)
 	if err != nil {
 		return live.PendingAttack{}, err
@@ -303,7 +315,7 @@ func (s Strike) proposeAgainstObject(
 		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
 		Announces: foreseenOf(out),
 		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
-		BoostPowerID: boost.powerID, BoostPM: boost.pm,
+		BoostPowerID: boost.powerID, BoostPM: boost.pm, Charge: req.Charge,
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err
@@ -339,6 +351,9 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 	}
 	weapon, boost, err := weaponFor(striker, req)
 	if err != nil {
+		return live.PendingAttack{}, err
+	}
+	if weapon, err = chargedWeapon(striker, req, weapon); err != nil {
 		return live.PendingAttack{}, err
 	}
 	victim, err := s.combatants.Of(ctx, req.CampaignID, target)
@@ -379,7 +394,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
 		Announces: foreseenOf(out),
 		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
-		BoostPowerID: boost.powerID, BoostPM: boost.pm,
+		BoostPowerID: boost.powerID, BoostPM: boost.pm, Charge: req.Charge,
 	}
 	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
 		return live.PendingAttack{}, err

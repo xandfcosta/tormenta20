@@ -233,6 +233,12 @@ func (v sheetVitals) ExpireTurnEffects(ctx context.Context, charID int64) error 
 	})
 }
 
+func (v sheetVitals) ExpireOwnTurnEffects(ctx context.Context, charID int64) error {
+	return v.q.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
+		Characterid: charID, Scope: engine.OwnTurnScope(),
+	})
+}
+
 // ConditionsOf lê as condições ligadas na ficha.
 func (v sheetVitals) ConditionsOf(ctx context.Context, charID int64) ([]string, error) {
 	row, err := v.q.GetCharacter(ctx, charID)
