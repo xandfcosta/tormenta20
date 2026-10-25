@@ -1607,6 +1607,48 @@
               }
             ]
           }
+        },
+        {
+          "create": {
+            "name": "Caçadora da Marca Nv9",
+            "races": [
+              "humano"
+            ],
+            "origin": "batedor",
+            "classes": [
+              {
+                "className": "Caçador",
+                "level": 9
+              }
+            ],
+            "god": "Allihanna",
+            "strength": 1,
+            "dexterity": 4,
+            "constitution": 2,
+            "intelligence": 0,
+            "wisdom": 3,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": [
+                "dexterity",
+                "wisdom",
+                "constitution"
+              ]
+            },
+            "classPowers": [],
+            "items": [
+              {
+                "catalogId": "espada-longa",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "armadura-couro",
+                "equipped": "vested"
+              }
+            ]
+          }
         }
       ]
     },
