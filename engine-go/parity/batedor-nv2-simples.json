@@ -431,6 +431,28 @@
           "bonusType": "untyped"
         }
       ]
+    },
+    {
+      "sourceId": "class.ladino.ataque-furtivo-1d6",
+      "source": "Ataque Furtivo",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 0,
+          "dice": "1d6",
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "ataque-furtivo",
+            "label": "contra desprevenido (corpo a corpo ou alcance curto) ou flanqueado"
+          },
+          "note": "uma vez por rodada; quem é imune a crítico é imune a furtivo"
+        }
+      ]
     }
   ],
   "itemEffects": {
@@ -630,7 +652,22 @@
     "flags": [
       "armadura-leve"
     ],
-    "conditional": []
+    "conditional": [
+      {
+        "term": "class.ladino.ataque-furtivo-1d6::damage:all::::flagOn///ataque-furtivo",
+        "sourceId": "class.ladino.ataque-furtivo-1d6",
+        "source": "Ataque Furtivo",
+        "bonusType": "untyped",
+        "amount": 0,
+        "note": "contra desprevenido (corpo a corpo ou alcance curto) ou flanqueado",
+        "target": {
+          "k": "damage",
+          "scope": "all"
+        },
+        "flag": "ataque-furtivo",
+        "dice": "1d6"
+      }
+    ]
   },
   "sheet": {
     "defense": {
@@ -1169,7 +1206,9 @@
     ],
     "autoFailExpertises": []
   },
-  "activeConditionals": [],
+  "activeConditionals": [
+    "class.ladino.ataque-furtivo-1d6::damage:all::::flagOn///ataque-furtivo"
+  ],
   "sheetWithConditionals": {
     "defense": {
       "base": 15,
@@ -1733,6 +1772,12 @@
       },
       "damage": "1d4",
       "damageType": "perfuracao",
+      "extraDamage": [
+        {
+          "dice": "1d6",
+          "type": ""
+        }
+      ],
       "strDamage": -1,
       "damageBonus": -1,
       "damageAll": {
@@ -1745,6 +1790,51 @@
       },
       "critRange": 19,
       "critMult": 2
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 0,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 0,
+        "itemBonus": 0,
+        "total": 0,
+        "halfLevel": 1,
+        "attrValue": -1,
+        "training": 0,
+        "trained": false,
+        "trainedBy": [],
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d2",
+      "damageType": "impacto",
+      "extraDamage": [
+        {
+          "dice": "1d6",
+          "type": ""
+        }
+      ],
+      "strDamage": -1,
+      "damageBonus": -1,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ],
   "vitals": {
@@ -1795,6 +1885,45 @@
       },
       "critRange": 19,
       "critMult": 2
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 0,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 0,
+        "itemBonus": 0,
+        "total": 0,
+        "halfLevel": 1,
+        "attrValue": -1,
+        "training": 0,
+        "trained": false,
+        "trainedBy": [],
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d2",
+      "damageType": "impacto",
+      "strDamage": -1,
+      "damageBonus": -1,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ]
 }

@@ -45,7 +45,7 @@ func TestTheRaceSizeShowsInStealthManeuversAndWeaponDamage(t *testing.T) {
 		return ManeuverBonus(ComputeItemEffects(world.ActiveItemsFor(ch)), "derrubar", lado)
 	}
 	dado := func(ch Character) string {
-		cards := world.ComputeWeaponCards(ch, nil)
+		cards := wieldedCards(world.ComputeWeaponCards(ch, nil))
 		if len(cards) != 1 {
 			t.Fatalf("esperava a carta da espada curta, e vieram %d", len(cards))
 		}

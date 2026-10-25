@@ -697,6 +697,20 @@
       ]
     },
     {
+      "sourceId": "class.barbaro.reducao-de-dano",
+      "source": "Redução de Dano",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "damageReduction"
+          },
+          "amount": 2,
+          "bonusType": "training"
+        }
+      ]
+    },
+    {
       "sourceId": "class.barbaro.pele-de-ferro",
       "source": "Pele de Ferro",
       "equipped": "vested",
@@ -836,6 +850,17 @@
             "source": "Instinto Selvagem +1",
             "bonusType": "enhancement",
             "amount": 1
+          }
+        ]
+      },
+      "damageReduction": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "class.barbaro.reducao-de-dano",
+            "source": "Redução de Dano",
+            "bonusType": "training",
+            "amount": 2
           }
         ]
       },
@@ -1198,7 +1223,7 @@
       "total": 2,
       "sources": [
         {
-          "source": "Bárbaro (p42)",
+          "source": "Redução de Dano",
           "amount": 2
         }
       ]
@@ -1825,7 +1850,7 @@
       "total": 2,
       "sources": [
         {
-          "source": "Bárbaro (p42)",
+          "source": "Redução de Dano",
           "amount": 2
         }
       ]
@@ -2375,6 +2400,72 @@
       },
       "critRange": 20,
       "critMult": 3
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 14,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 3,
+        "attrValue": 5,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [
+          {
+            "source": "Machado táurico",
+            "amount": -2,
+            "note": "desbalanceada: -2 em ataque"
+          },
+          {
+            "source": "Machado táurico (cond.)",
+            "amount": 2,
+            "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Fúria (cond.)",
+            "amount": 2,
+            "note": "Em Fúria"
+          }
+        ]
+      },
+      "damage": "1d3",
+      "damageType": "impacto",
+      "strDamage": 5,
+      "damageBonus": 8,
+      "damageAll": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "amount": 1
+          },
+          {
+            "source": "Fúria (cond.)",
+            "amount": 2,
+            "note": "Em Fúria"
+          }
+        ]
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ],
   "vitals": {
@@ -2436,6 +2527,56 @@
       },
       "critRange": 20,
       "critMult": 3
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 10,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 12,
+        "itemBonus": -2,
+        "total": 10,
+        "halfLevel": 3,
+        "attrValue": 5,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [
+          {
+            "source": "Machado táurico",
+            "amount": -2,
+            "note": "desbalanceada: -2 em ataque"
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d3",
+      "damageType": "impacto",
+      "strDamage": 5,
+      "damageBonus": 6,
+      "damageAll": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "amount": 1
+          }
+        ]
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ]
 }

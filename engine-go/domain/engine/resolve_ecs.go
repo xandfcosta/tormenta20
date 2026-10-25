@@ -164,6 +164,13 @@ func harvestWeaponRiders(w *ecs.World) {
 		if dead(w, e) {
 			return
 		}
+		if t.Mod.Target.K == "unarmedDamage" {
+			// O DADO DA BRIGA não é dano extra de ataque nenhum: ele É o dado
+			// do ataque desarmado, que a carta lê dos poderes (`brawlDie`).
+			// Colhido como extra, cada degrau somaria em toda arma.
+			ecs.Set(w, e, Suppressed{Why: "é o dado do ataque desarmado, e quem o lê é a carta"})
+			return
+		}
 		if t.Mod.Dice != "" {
 			// SÓ O INCONDICIONAL SAI AQUI. O dado sob condição que a pessoa
 			// LIGA — o "+1d8 em ermo ao ar livre" do Machado silvestre (p338) —

@@ -144,7 +144,11 @@ type ClassPower struct {
 	Name            string           `json:"name"`
 	GrantedAtLevel  *int             `json:"grantedAtLevel"`
 	GrantedByChoice *GrantedByChoice `json:"grantedByChoice"`
-	Modifiers       []Modifier       `json:"modifiers"`
+	// MinLevel é o "Pré-requisito: Nº nível de <classe>" de um poder escolhido.
+	// Ele vale DEPOIS da escolha também: quem desce de nível perde o poder até
+	// voltar a ele (Especialização em Armadura, p54/p65).
+	MinLevel  int        `json:"minLevel,omitempty"`
+	Modifiers []Modifier `json:"modifiers"`
 	// Boost é o que o poder vende NO ATAQUE, por PM — fora dos `Modifiers`
 	// porque ele não vale na ficha: só no golpe em que o jogador o paga (ver
 	// `BoostedWeaponCards`).

@@ -36,7 +36,7 @@ func TestTheComposedWeaponBringsTheOverlaysTheBookWroteInItalics(t *testing.T) {
 			Equipped: ptr("wielded"), Improvements: "[]",
 		}},
 	}
-	cards := BookRuleset(catalogs).ComputeWeaponCards(ch, map[string]bool{})
+	cards := wieldedCards(BookRuleset(catalogs).ComputeWeaponCards(ch, map[string]bool{}))
 	if len(cards) != 1 {
 		t.Fatalf("a Avalanche empunhada virou %d cartas de arma", len(cards))
 	}

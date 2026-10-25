@@ -65,6 +65,7 @@ INSERT INTO characters ("id", "ownerId", "name", "origin", "god", "godPower", "t
 INSERT INTO characters ("id", "ownerId", "name", "origin", "god", "godPower", "tibar", "level", "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma", "size", "displacement", "proficiencies", "raceAbilityChoices", "raceAttributeChoices", "secondaryRaceChoices", "originChoices", "classPowers", "classChoices", "powerChoices", "activeConditions", "createdAt", "updatedAt", "sourceCharacterId", "campaignId") VALUES (29, 2, 'Guardiã Opaca Nv10', 'guarda', 'Khalmyr', '', 0, 10, 3, 1, 4, 1, 2, 2, 'Médio', 9, '["armas-simples","armas-marciais","armaduras-leves","armaduras-pesadas","escudos"]', '[]', '{}', '[]', '[]', '[]', '{}', '{}', '[]', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z', NULL, NULL);
 INSERT INTO characters ("id", "ownerId", "name", "origin", "god", "godPower", "tibar", "level", "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma", "size", "displacement", "proficiencies", "raceAbilityChoices", "raceAttributeChoices", "secondaryRaceChoices", "originChoices", "classPowers", "classChoices", "powerChoices", "activeConditions", "createdAt", "updatedAt", "sourceCharacterId", "campaignId") VALUES (30, 2, 'Bucaneira Insolente Nv5', 'marujo', 'Nimb', '', 0, 5, 0, 3, 1, 3, 0, 4, 'Médio', 9, '["armas-simples","armas-marciais"]', '[]', '{"floatingPicks":["dexterity","intelligence","charisma"]}', '[]', '[]', '["class.bucaneiro.esgrimista","class.bucaneiro.presenca-paralisante"]', '{}', '{}', '[]', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z', NULL, NULL);
 INSERT INTO characters ("id", "ownerId", "name", "origin", "god", "godPower", "tibar", "level", "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma", "size", "displacement", "proficiencies", "raceAbilityChoices", "raceAttributeChoices", "secondaryRaceChoices", "originChoices", "classPowers", "classChoices", "powerChoices", "activeConditions", "createdAt", "updatedAt", "sourceCharacterId", "campaignId") VALUES (31, 2, 'Caçadora da Marca Nv9', 'batedor', 'Allihanna', '', 0, 9, 1, 4, 2, 0, 3, 0, 'Médio', 9, '["armas-simples","armas-marciais","escudos"]', '[]', '{"floatingPicks":["dexterity","wisdom","constitution"]}', '[]', '[]', '[]', '{}', '{}', '[]', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z', NULL, NULL);
+INSERT INTO characters ("id", "ownerId", "name", "origin", "god", "godPower", "tibar", "level", "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma", "size", "displacement", "proficiencies", "raceAbilityChoices", "raceAttributeChoices", "secondaryRaceChoices", "originChoices", "classPowers", "classChoices", "powerChoices", "activeConditions", "createdAt", "updatedAt", "sourceCharacterId", "campaignId") VALUES (32, 2, 'Lutador de Rua Nv10', 'gladiador', 'Khalmyr', '', 0, 10, 4, 2, 4, 0, 1, 0, 'Médio', 9, '["armas-simples"]', '[]', '{"floatingPicks":["strength","dexterity","constitution"]}', '[]', '[]', '["class.lutador.bracos-calejados","class.lutador.sarado","class.lutador.trincado"]', '{}', '{}', '[]', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z', NULL, NULL);
 
 INSERT INTO character_classes ("id", "characterId", "className", "level") VALUES (1, 1, 'Guerreiro', 10);
 INSERT INTO character_classes ("id", "characterId", "className", "level") VALUES (2, 2, 'Clérigo', 8);
@@ -98,6 +99,7 @@ INSERT INTO character_classes ("id", "characterId", "className", "level") VALUES
 INSERT INTO character_classes ("id", "characterId", "className", "level") VALUES (30, 29, 'Cavaleiro', 10);
 INSERT INTO character_classes ("id", "characterId", "className", "level") VALUES (31, 30, 'Bucaneiro', 5);
 INSERT INTO character_classes ("id", "characterId", "className", "level") VALUES (32, 31, 'Caçador', 9);
+INSERT INTO character_classes ("id", "characterId", "className", "level") VALUES (33, 32, 'Lutador', 10);
 
 INSERT INTO character_races ("id", "characterId", "race") VALUES (1, 1, 'anao');
 INSERT INTO character_races ("id", "characterId", "race") VALUES (2, 2, 'elfo');
@@ -129,6 +131,7 @@ INSERT INTO character_races ("id", "characterId", "race") VALUES (27, 28, 'human
 INSERT INTO character_races ("id", "characterId", "race") VALUES (28, 29, 'humano');
 INSERT INTO character_races ("id", "characterId", "race") VALUES (29, 30, 'humano');
 INSERT INTO character_races ("id", "characterId", "race") VALUES (30, 31, 'humano');
+INSERT INTO character_races ("id", "characterId", "race") VALUES (31, 32, 'humano');
 
 INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (1, 1, 'Acrobacia', 'dexterity', 0, 0);
 INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (2, 1, 'Adestramento', 'charisma', 0, 0);
@@ -1029,6 +1032,35 @@ INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "tra
 INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (897, 31, 'Religião', 'wisdom', 0, 0);
 INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (898, 31, 'Sobrevivência', 'wisdom', 0, 0);
 INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (899, 31, 'Vontade', 'wisdom', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (900, 32, 'Acrobacia', 'dexterity', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (901, 32, 'Adestramento', 'charisma', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (902, 32, 'Atletismo', 'strength', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (903, 32, 'Atuação', 'charisma', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (904, 32, 'Cavalgar', 'dexterity', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (905, 32, 'Conhecimento', 'intelligence', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (906, 32, 'Cura', 'wisdom', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (907, 32, 'Diplomacia', 'charisma', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (908, 32, 'Enganação', 'charisma', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (909, 32, 'Fortitude', 'constitution', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (910, 32, 'Furtividade', 'dexterity', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (911, 32, 'Guerra', 'intelligence', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (912, 32, 'Iniciativa', 'dexterity', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (913, 32, 'Intimidação', 'charisma', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (914, 32, 'Intuição', 'wisdom', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (915, 32, 'Investigação', 'intelligence', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (916, 32, 'Jogatina', 'charisma', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (917, 32, 'Ladinagem', 'dexterity', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (918, 32, 'Luta', 'strength', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (919, 32, 'Misticismo', 'intelligence', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (920, 32, 'Nobreza', 'intelligence', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (921, 32, 'Ofício', 'intelligence', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (922, 32, 'Percepção', 'wisdom', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (923, 32, 'Pilotagem', 'dexterity', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (924, 32, 'Pontaria', 'dexterity', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (925, 32, 'Reflexos', 'dexterity', 1, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (926, 32, 'Religião', 'wisdom', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (927, 32, 'Sobrevivência', 'wisdom', 0, 0);
+INSERT INTO character_expertises ("id", "characterId", "name", "attribute", "trained", "custom") VALUES (928, 32, 'Vontade', 'wisdom', 1, 0);
 
 INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (1, 1, 'armadura-completa', 'Armadura completa', 1, 5, 'vested', '[]', NULL, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (2, 1, 'escudo-pesado', 'Escudo pesado', 1, 2, 'wielded', '[]', NULL, '2026-01-01T00:00:00.000Z');

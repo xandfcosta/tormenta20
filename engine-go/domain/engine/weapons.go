@@ -119,8 +119,7 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 // weaponCardsWith são as cartas com fontes a mais — ver `sheetEffectsWith`.
 func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bool, extra []ActiveItem) []WeaponCard {
 	effects := r.sheetEffectsWith(ch, activeConditionals, extra)
-	attackAll := totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"})
-	damageAll := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"})
+	shared := newCardBasis(ch, effects)
 	// O `this` é o bônus que uma SOBREPOSIÇÃO dá — a melhoria Cruel, o material.
 	// Ele não tinha leitor nenhum, e por isso a Cruel (+1 dano, 300 PO) e a Atroz
 	// (+2, 3.000 PO) não faziam nada. O par com o ataque é o que escondia: o
@@ -131,13 +130,6 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 	// arma são bônus de origens diferentes, e o não-empilhamento já agiu DENTRO
 	// de cada uma.
 	damageThis := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "this"})
-	forTotal := effectiveAttribute(ch, "strength", effects)
-	dexTotal := effectiveAttribute(ch, "dexterity", effects)
-	hasFinesse := parseChoiceSet(ch.ClassPowers).has["acuidade-com-arma"]
-	// A carta de arma resolve Luta/Pontaria, que a penalidade de armadura nunca
-	// alcança (p153) — a carga entra por completude, para esta chamada não
-	// depender de saber quais perícias ficam de fora.
-	load := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
 
 	cards := []WeaponCard{}
 	for _, it := range ch.Items {
@@ -152,63 +144,103 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			continue
 		}
 		w := catalog.Weapon
-		parts := []TotalContribs{damageThis, totalContribsFor(effects,
-			ModifierTarget{K: "damage", Scope: WeaponDamageScope(*it.CatalogID)})}
-		for _, scope := range weaponKindScopes(w) {
-			parts = append(parts, totalContribsFor(effects, ModifierTarget{K: "damage", Scope: scope}))
-		}
-		own := ownDamageOf(parts...)
-		skill, attribute := "Luta", "strength"
-		strDamage := forTotal
-		if w.Purpose == "ranged" {
-			skill, attribute = "Pontaria", "dexterity"
-			strDamage = 0
-		} else {
-			// Finesse (Adaga / Acuidade com Arma): use Destreza when it beats Força.
-			dexAttack, dexDamage := weaponDexUse(w, hasFinesse, forTotal, dexTotal)
-			if dexAttack {
-				attribute = "dexterity"
-			}
-			if dexDamage {
-				strDamage = dexTotal
-			}
-		}
-		// weaponSkillState returns the stored Luta row (attribute strength); force
-		// the resolved attribute so a finessed melee attack sums Destreza (ALE-31).
-		state := weaponSkillState(ch, skill, attribute)
-		state.Attribute = attribute
-		ex := expertiseBreakdown(ch, state, effects, load)
+		weaponScope := WeaponDamageScope(*it.CatalogID)
 		// O PASSO ANDA O DADO ANTES DE TUDO, e a ordem é da p231: o crítico
 		// multiplica "os dados de dano do ataque (INCLUINDO quaisquer aumentos
 		// por passos)". Andar depois multiplicaria o dado de antes.
-		damage := DamageStep(w.Damage, DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped)+
-			StatFor(effects, ModifierTarget{K: "damageStep", Scope: "all"}).Total+
-			StatFor(effects, ModifierTarget{K: "damageStep", Scope: WeaponDamageScope(*it.CatalogID)}).Total)
-		cards = append(cards, WeaponCard{
-			Name:          it.Name,
-			Skill:         skill,
-			Attribute:     ex.Attribute,
-			Attack:        ex.Total + attackAll.Total,
-			Expertise:     ex,
-			AttackAll:     attackAll,
-			Damage:        damage,
-			DamageType:    w.Type,
-			StrDamage:     strDamage,
-			DamageBonus:   strDamage + damageAll.Total + own.Total,
-			DamageAll:     damageAll,
-			DamageOwn:     own,
-			CritRange:     threatRangeOf(w.CritRange, effects),
-			CritMult:      w.CritMult + StatFor(effects, ModifierTarget{K: "critMult"}).Total,
-			NonLethal:     StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0,
-			ExtraDamage:   effects.ExtraDamage,
-			Announces:     effects.Announced,
-			CriticalBonus: effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
-		})
+		steps := DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped) +
+			StatFor(effects, ModifierTarget{K: "damageStep", Scope: weaponScope}).Total
+		nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0
+		cards = append(cards, shared.card(ch, it.Name, w,
+			append([]string{weaponScope}, weaponKindScopes(w)...), damageThis, steps, nonLethal))
 		if len(cards) == 2 {
 			break
 		}
 	}
-	return cards
+	return append(cards, r.unarmedCard(ch, shared))
+}
+
+// cardBasis é o que toda carta da ficha divide: os bônus globais e os atributos
+// que decidem Luta, Pontaria e o dano.
+type cardBasis struct {
+	effects    ItemEffects
+	attackAll  TotalContribs
+	damageAll  TotalContribs
+	forTotal   int
+	dexTotal   int
+	hasFinesse bool
+	load       LoadBreakdown
+}
+
+func newCardBasis(ch Character, effects ItemEffects) cardBasis {
+	return cardBasis{
+		effects:    effects,
+		attackAll:  totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"}),
+		damageAll:  totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"}),
+		forTotal:   effectiveAttribute(ch, "strength", effects),
+		dexTotal:   effectiveAttribute(ch, "dexterity", effects),
+		hasFinesse: parseChoiceSet(ch.ClassPowers).has["acuidade-com-arma"],
+		// A carta de arma resolve Luta/Pontaria, que a penalidade de armadura
+		// nunca alcança (p153) — a carga entra por completude, para esta chamada
+		// não depender de saber quais perícias ficam de fora.
+		load: loadBreakdownOf(ch, inventorySlotsTotal(ch, effects)),
+	}
+}
+
+// card monta uma carta: a arma, os ESCOPOS que valem só para ela (o id do
+// catálogo, o tipo de arma, o desarmado) e os passos que já são dela.
+func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []string,
+	own TotalContribs, steps int, nonLethal bool) WeaponCard {
+	parts := []TotalContribs{own}
+	for _, scope := range scopes {
+		parts = append(parts, totalContribsFor(b.effects, ModifierTarget{K: "damage", Scope: scope}))
+	}
+	ownDamage := ownDamageOf(parts...)
+	skill, attribute := "Luta", "strength"
+	strDamage := b.forTotal
+	if w.Purpose == "ranged" {
+		skill, attribute = "Pontaria", "dexterity"
+		strDamage = 0
+	} else {
+		// Finesse (Adaga / Acuidade com Arma): use Destreza when it beats Força.
+		dexAttack, dexDamage := weaponDexUse(w, b.hasFinesse, b.forTotal, b.dexTotal)
+		if dexAttack {
+			attribute = "dexterity"
+		}
+		if dexDamage {
+			strDamage = b.dexTotal
+		}
+	}
+	// weaponSkillState returns the stored Luta row (attribute strength); force
+	// the resolved attribute so a finessed melee attack sums Destreza (ALE-31).
+	state := weaponSkillState(ch, skill, attribute)
+	state.Attribute = attribute
+	ex := expertiseBreakdown(ch, state, b.effects, b.load)
+	damage := DamageStep(w.Damage, steps+StatFor(b.effects, ModifierTarget{K: "damageStep", Scope: "all"}).Total)
+	critMult := w.CritMult + StatFor(b.effects, ModifierTarget{K: "critMult"}).Total
+	for _, scope := range scopes {
+		critMult += StatFor(b.effects, ModifierTarget{K: "critMult", Scope: scope}).Total
+	}
+	return WeaponCard{
+		Name:          name,
+		Skill:         skill,
+		Attribute:     ex.Attribute,
+		Attack:        ex.Total + b.attackAll.Total,
+		Expertise:     ex,
+		AttackAll:     b.attackAll,
+		Damage:        damage,
+		DamageType:    w.Type,
+		StrDamage:     strDamage,
+		DamageBonus:   strDamage + b.damageAll.Total + ownDamage.Total,
+		DamageAll:     b.damageAll,
+		DamageOwn:     ownDamage,
+		CritRange:     threatRangeOf(w.CritRange, b.effects, scopes),
+		CritMult:      critMult,
+		NonLethal:     nonLethal,
+		ExtraDamage:   b.effects.ExtraDamage,
+		Announces:     b.effects.Announced,
+		CriticalBonus: b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
+	}
 }
 
 // weaponDexUse mirrors weapon-cards.ts weaponDexUse: whether a wielded weapon may
@@ -293,12 +325,17 @@ func weaponSkillState(ch Character, name, attribute string) CharacterExpertise {
 // "Efeitos que duplicam a margem de ameaça são aplicados ANTES de quaisquer
 // efeitos que a aumentem" (p335). Invertida, a espada longa ameaçadora e precisa
 // daria 16 em vez de 15 — dobrar depois de somar dobra o ponto somado junto.
-func threatRangeOf(base int, effects ItemEffects) int {
+func threatRangeOf(base int, effects ItemEffects, scopes []string) int {
 	width := 21 - base
 	if factor, has := effects.Factors[targetKey(ModifierTarget{K: "critRange"})]; has {
 		width = factor.Applied(width)
 	}
 	width += StatFor(effects, ModifierTarget{K: "critRange"}).Total
+	// A margem que vale só para UM tipo de ataque — o Golpe Cruel, "com ataques
+	// desarmados" (p77) — entra só na carta desse tipo.
+	for _, scope := range scopes {
+		width += StatFor(effects, ModifierTarget{K: "critRange", Scope: scope}).Total
+	}
 	// O PISO É 2, e não é arbitrário: "um 1 natural sempre é uma falha" (p221),
 	// então um resultado 1 na faixa é um número que nunca pode ameaçar. Sem o
 	// piso, margem suficiente faria a carta anunciar uma faixa que inclui o

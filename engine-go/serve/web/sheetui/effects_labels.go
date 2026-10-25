@@ -107,6 +107,8 @@ func targetLabel(t engine.ModifierTarget) string {
 		"inventorySlots": "Espaços de carga", "flySpeed": "Voo",
 		"armorPenalty": "Penalidade de armadura",
 		"damageStep":   "Passo de dano",
+		// O DADO da Briga não soma em nada: ele É o dado do ataque desarmado.
+		"unarmedDamage": "Dado do ataque desarmado",
 		// OS SETE QUE FALTAVAM (ALE-453). Cada um reusa a palavra que a casa já
 		// escolheu para o conceito, e não uma segunda: "ignora o extra de
 		// crítico" é a do `critExtraRows`, e "o livro prevê" é a da faixa de

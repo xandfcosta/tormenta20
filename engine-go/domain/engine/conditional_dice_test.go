@@ -215,7 +215,7 @@ func TestTheWeaponCardOnlyGetsTheDiceWithTheTerrainOn(t *testing.T) {
 	}
 	regra := BookRuleset(catalogs)
 
-	desligado := regra.ComputeWeaponCards(ch, map[string]bool{})
+	desligado := wieldedCards(regra.ComputeWeaponCards(ch, map[string]bool{}))
 	if len(desligado) != 1 {
 		t.Fatalf("o Machado empunhado virou %d cartas", len(desligado))
 	}
@@ -230,7 +230,7 @@ func TestTheWeaponCardOnlyGetsTheDiceWithTheTerrainOn(t *testing.T) {
 	if len(efeitos.Conditional) != 1 {
 		t.Fatalf("o Machado não ofereceu o opt-in do terreno: %d", len(efeitos.Conditional))
 	}
-	ligado := regra.ComputeWeaponCards(ch, map[string]bool{efeitos.Conditional[0].Term: true})
+	ligado := wieldedCards(regra.ComputeWeaponCards(ch, map[string]bool{efeitos.Conditional[0].Term: true}))
 	if len(ligado[0].ExtraDamage) != 1 {
 		t.Fatalf("o terreno ligado não pôs o dado na carta: %+v", ligado[0].ExtraDamage)
 	}

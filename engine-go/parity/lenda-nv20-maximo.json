@@ -1931,6 +1931,57 @@
       },
       "critRange": 20,
       "critMult": 3
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 23,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 21,
+        "itemBonus": 0,
+        "total": 21,
+        "halfLevel": 10,
+        "attrValue": 5,
+        "training": 6,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Duelo (cond.)",
+            "amount": 2,
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        ]
+      },
+      "damage": "1d3",
+      "damageType": "impacto",
+      "strDamage": 5,
+      "damageBonus": 7,
+      "damageAll": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Duelo (cond.)",
+            "amount": 2,
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        ]
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ],
   "vitals": {
@@ -1989,6 +2040,45 @@
       },
       "critRange": 20,
       "critMult": 3
+    },
+    {
+      "name": "Ataque desarmado",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 21,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 21,
+        "itemBonus": 0,
+        "total": 21,
+        "halfLevel": 10,
+        "attrValue": 5,
+        "training": 6,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d3",
+      "damageType": "impacto",
+      "strDamage": 5,
+      "damageBonus": 5,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2,
+      "nonLethal": true
     }
   ]
 }

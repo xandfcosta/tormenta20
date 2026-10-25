@@ -246,13 +246,21 @@ var classPowersPart05 = []ClassPower{
 	},
 	{
 		ID:          "class.cavaleiro.especializacao-em-armadura",
-		Modeled:     []string{"a RD 5 com armadura pesada sai do `characterDamageReduction`, lida pelo id"},
+		Modeled:     []string{"a RD 5 com armadura pesada, que acumula com as de outras habilidades (p226)"},
 		ClassName:   "Cavaleiro",
 		Name:        "Especialização em Armadura",
 		Description: "Em armadura pesada, RD 5 (cumulativa com RD por Bastião).",
 		BookPage:    54,
 		UID:         "pwr_s5cdpwu7mj",
-		MinLevel:    12,
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damageReduction"},
+				Amount:    5,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagRequired", Flag: "armadura-pesada", Label: "com armadura pesada"},
+			},
+		},
+		MinLevel: 12,
 	},
 	{
 		ID:            "class.cavaleiro.estandarte",
@@ -413,12 +421,20 @@ var classPowersPart05 = []ClassPower{
 	},
 	{
 		ID:          "class.cavaleiro.caminho-bastiao",
-		Modeled:     []string{"a RD 5 com armadura pesada sai do `characterDamageReduction`, lida pelo id"},
+		Modeled:     []string{"a RD 5 com armadura pesada, que acumula com as de outras habilidades (p226)"},
 		ClassName:   "Cavaleiro",
 		Name:        "Caminho: Bastião",
 		Description: "Em armadura pesada, recebe Redução de Dano 5 (cumulativa com Especialização em Armadura).",
 		BookPage:    55,
 		UID:         "pwr_gbmrzx4qim",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damageReduction"},
+				Amount:    5,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagRequired", Flag: "armadura-pesada", Label: "com armadura pesada"},
+			},
+		},
 		Prerequisites: []Prerequisite{
 			{
 				Kind:    "classChoice",

@@ -4,12 +4,19 @@ package transcript
 var classPowersPart11 = []ClassPower{
 	{
 		ID:          "class.lutador.trincado",
+		Modeled:     []string{"a Constituição no dano desarmado, sem teto (o verbete não o limita)"},
 		ClassName:   "Lutador",
 		Name:        "Trincado",
 		Description: "Esculpido à exaustão. Soma Constituição nas rolagens de dano desarmado.",
 		BookPage:    77,
 		UID:         "pwr_hqy3dis4km",
-		Unmodeled:   "a Constituição no dano desarmado: o motor ainda não tem ataque desarmado, que chega com a Briga (ALE-486)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "unarmed"},
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "constitution"},
+			},
+		},
 		Prerequisites: []Prerequisite{
 			{Kind: "attribute", Attr: "constitution", Min: 3},
 			{Kind: "power", ID: "class.lutador.sarado"},

@@ -419,13 +419,21 @@ var classPowersPart07 = []ClassPower{
 	},
 	{
 		ID:          "class.guerreiro.especializacao-em-armadura",
-		Modeled:     []string{"a RD 5 com armadura pesada sai do `characterDamageReduction`, lida pelo id"},
+		Modeled:     []string{"a RD 5 com armadura pesada, que acumula com as de outras habilidades (p226)"},
 		ClassName:   "Guerreiro",
 		Name:        "Especialização em Armadura",
 		Description: "Redução de Dano 5 se usando armadura pesada.",
-		BookPage:    54,
+		BookPage:    65,
 		UID:         "pwr_k3fno67e43",
-		MinLevel:    12,
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damageReduction"},
+				Amount:    5,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagRequired", Flag: "armadura-pesada", Label: "com armadura pesada"},
+			},
+		},
+		MinLevel: 12,
 	},
 	{
 		ID:          "class.guerreiro.golpe-de-raspao",

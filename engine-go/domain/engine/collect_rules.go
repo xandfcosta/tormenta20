@@ -185,7 +185,8 @@ func OwnsClassPower(
 	return ownsClassPower(power, classLevel, chosen, choice)
 }
 
-// ownsClassPower: automático pelo nível, eletivo pelo id escolhido, ou concedido
+// ownsClassPower: automático pelo nível, eletivo pelo id escolhido (desde que a
+// classe tenha o nível mínimo do poder), ou concedido
 // por um valor casado em `classChoices`.
 func ownsClassPower(
 	power *ClassPower,
@@ -197,7 +198,7 @@ func ownsClassPower(
 		return true
 	}
 	if chosen[power.ID] {
-		return true
+		return classLevel >= power.MinLevel
 	}
 	if power.GrantedByChoice == nil {
 		return false

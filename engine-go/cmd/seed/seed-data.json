@@ -1649,6 +1649,43 @@
               }
             ]
           }
+        },
+        {
+          "create": {
+            "name": "Lutador de Rua Nv10",
+            "races": [
+              "humano"
+            ],
+            "origin": "gladiador",
+            "classes": [
+              {
+                "className": "Lutador",
+                "level": 10
+              }
+            ],
+            "god": "Khalmyr",
+            "strength": 4,
+            "dexterity": 2,
+            "constitution": 4,
+            "intelligence": 0,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": [
+                "strength",
+                "dexterity",
+                "constitution"
+              ]
+            },
+            "classPowers": [
+              "class.lutador.bracos-calejados",
+              "class.lutador.sarado",
+              "class.lutador.trincado"
+            ],
+            "items": []
+          }
         }
       ]
     },
