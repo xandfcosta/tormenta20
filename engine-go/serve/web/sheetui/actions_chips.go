@@ -129,7 +129,7 @@ func chipsOffered(id int64, powers powersPanel, situational []situationalRow) []
 	}
 	for _, row := range situational {
 		chips = append(chips, actionChip{
-			Label: row.Label, On: row.Active, Can: true,
+			Label: row.Label, On: row.Active, Can: true, Bonus: row.Dice,
 			Moves: numbersMovedBy(row.Targets),
 			Command: fmt.Sprintf("$status = %q; @post('/personagens/%d/efeitos/situacao?embutida=1')",
 				row.Key, id),

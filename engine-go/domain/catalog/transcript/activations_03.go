@@ -3,6 +3,15 @@ package transcript
 // Parte 3 de 10 de `Activations` (activations.go).
 var activationsPart03 = []Activation{
 	{
+		ID:       "class.cavaleiro.investida-destruidora",
+		Name:     "Investida Destruidora",
+		Kind:     "instant",
+		Action:   "livre",
+		PMCost:   PMCost{Fixed: 2},
+		Uses:     nil,
+		BookPage: 54,
+	},
+	{
 		ID:       "class.cavaleiro.montaria-corajosa",
 		Name:     "Montaria Corajosa",
 		Kind:     "passive",
@@ -413,15 +422,6 @@ var activationsPart03 = []Activation{
 		Kind:     "instant",
 		Action:   "reacao",
 		PMCost:   PMCost{Written: "variavel"},
-		Uses:     nil,
-		BookPage: 62,
-	},
-	{
-		ID:       "class.druida.forma-primal",
-		Name:     "Forma Primal",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
 		BookPage: 62,
 	},

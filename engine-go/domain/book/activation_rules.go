@@ -115,29 +115,50 @@ type UseContext struct {
 // O nível é o da CLASSE e não o do personagem (p40): um bárbaro 5/ladino 5 tem
 // a Fúria de um bárbaro de nível 5, e não a de um personagem de nível 10.
 func LevelSteps(scale ActivationScale, classLevel int) int {
-	if scale.StepEveryLevels <= 0 || classLevel < scale.FirstStepLevel {
-		return 0
-	}
-	return 1 + (classLevel-scale.FirstStepLevel)/scale.StepEveryLevels
+	return engine.StepsAt(scale.FirstStepLevel, scale.StepEveryLevels, classLevel)
 }
 
-// StanceCost é o que entrar custa com os degraus escolhidos.
-func StanceCost(spec Activation, steps int) int {
+// ScaledCost é o que entrar na postura, ou usar o poder, custa com os degraus
+// escolhidos.
+func ScaledCost(spec Activation, steps int) int {
 	if spec.Scaling == nil {
 		return ActivationPm(spec)
 	}
 	return spec.Scaling.BasePm + steps*spec.Scaling.StepPm
 }
 
-// StanceDecision responde se dá para entrar na postura com esses degraus.
-func StanceDecision(spec Activation, steps, max, currentPM int) (bool, string) {
+// ScaledDecision responde se dá para pagar esses degraus: dentro do teto do
+// nível, e com PM para o total.
+func ScaledDecision(spec Activation, steps, max, currentPM int) (bool, string) {
 	if steps < 0 || steps > max {
 		return false, "o nível permite até " + writtenDegrees(max)
 	}
-	if cost := StanceCost(spec, steps); cost > currentPM {
+	if cost := ScaledCost(spec, steps); cost > currentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
+}
+
+// ScaledGrantModifiers são os modificadores que a concessão grava com os
+// degraus pagos.
+//
+// O degrau que TROCA o dado (`StepDice`) põe a linha da tabela no lugar do dado
+// de base: a Marca da Presa com dois degraus é 1d12, e não 1d4 com dois dados a
+// mais (p50).
+//
+//	ScaledGrantModifiers(*ActivationOf("class.cacador.marca-da-presa-1d4", ""), 1) // dano 1d8
+func ScaledGrantModifiers(spec Activation, steps int) []engine.Modifier {
+	if spec.Grant == nil {
+		return nil
+	}
+	out := make([]engine.Modifier, 0, len(spec.Grant.Modifiers))
+	for _, m := range spec.Grant.Modifiers {
+		if steps > 0 && m.Dice != "" && spec.Scaling != nil && steps <= len(spec.Scaling.StepDice) {
+			m.Dice = spec.Scaling.StepDice[steps-1]
+		}
+		out = append(out, m)
+	}
+	return out
 }
 
 // O BÔNUS CUMULATIVO DE CENA (p42).

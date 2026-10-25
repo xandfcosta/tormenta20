@@ -113,7 +113,12 @@ func ownDamageOf(parts ...TotalContribs) TotalContribs {
 // the given active conditionals (Fúria's global attack/damage mods land in
 // attackAll/damageAll). Only catalog weapons in a hand slot, capped at two.
 func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string]bool) []WeaponCard {
-	effects := r.sheetEffects(ch, activeConditionals)
+	return r.weaponCardsWith(ch, activeConditionals, nil)
+}
+
+// weaponCardsWith são as cartas com fontes a mais — ver `sheetEffectsWith`.
+func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bool, extra []ActiveItem) []WeaponCard {
+	effects := r.sheetEffectsWith(ch, activeConditionals, extra)
 	shared := newCardBasis(ch, effects)
 	// O `this` é o bônus que uma SOBREPOSIÇÃO dá — a melhoria Cruel, o material.
 	// Ele não tinha leitor nenhum, e por isso a Cruel (+1 dano, 300 PO) e a Atroz

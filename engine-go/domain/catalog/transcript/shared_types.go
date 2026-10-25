@@ -41,6 +41,10 @@ type PMScaling struct {
 	FirstStepLevel  int    `json:"firstStepLevel"`
 	StepEveryLevels int    `json:"stepEveryLevels"`
 	StepAmount      int    `json:"stepAmount,omitempty"`
+	// StepDice é o dado de cada degrau quando o degrau TROCA o dado por outro
+	// da tabela da classe, em vez de somar: a Marca da Presa vai de 1d4 a 1d8,
+	// 1d12, 2d8 e 2d10 (p50).
+	StepDice []string `json:"stepDice,omitempty"`
 }
 
 type ModifierFactor struct {

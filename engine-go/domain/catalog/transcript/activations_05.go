@@ -3,6 +3,15 @@ package transcript
 // Parte 5 de 10 de `Activations` (activations.go).
 var activationsPart05 = []Activation{
 	{
+		ID:       "class.inventor.granadeiro",
+		Name:     "Granadeiro",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		BookPage: 70,
+	},
+	{
 		ID:       "class.inventor.homunculo",
 		Name:     "Homúnculo",
 		Kind:     "passive",
@@ -413,15 +422,6 @@ var activationsPart05 = []Activation{
 		Kind:     "instant",
 		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
-		Uses:     nil,
-		BookPage: 77,
-	},
-	{
-		ID:       "class.lutador.sarado",
-		Name:     "Sarado",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
 		BookPage: 77,
 	},

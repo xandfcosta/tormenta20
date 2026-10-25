@@ -86,6 +86,10 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		Melee:                 meleeOf(computed),
 		ManeuverOffense:       maneuverBonuses(efeitos, engine.ManeuverOffense),
 		ManeuverDefense:       maneuverBonuses(efeitos, engine.ManeuverDefense),
+		Boost: func(choice engine.BoostChoice) ([]engine.WeaponCard, int, error) {
+			return dto.Ruleset.BoostedWeaponCards(ec, sheet.ToStringSet(dto.Conditionals), choice)
+		},
+		ManaAvailable: int(dto.ManaAvailable()),
 	}, nil
 }
 

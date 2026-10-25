@@ -101,6 +101,9 @@ type ActivationScale struct {
 	StepLabel       string `json:"stepLabel"`
 	FirstStepLevel  int    `json:"firstStepLevel"`
 	StepEveryLevels int    `json:"stepEveryLevels"`
+	// StepDice é o dado que cada degrau compra quando ele troca de linha na
+	// tabela da classe — ver `ScaledGrantModifiers`.
+	StepDice []string `json:"stepDice,omitempty"`
 }
 
 // PowerGrant é o que a ativação APLICA na ficha, em duas espécies: a RESERVA de

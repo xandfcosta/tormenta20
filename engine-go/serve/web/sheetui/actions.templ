@@ -51,6 +51,9 @@ templ ActionsBody(v View) {
 			if row.Stance != nil && row.Stance.MaxSteps > 0 {
 				@stanceStepperDialog(v, row)
 			}
+			if row.Degrees != nil && row.Degrees.MaxSteps > 0 {
+				@useStepperDialog(v, row)
+			}
 		}
 	</div>
 }
@@ -96,7 +99,9 @@ templ actionLine(v View, row actionRow) {
 			// Defesa até a sua", cortando a consequência que é a razão de a linha
 			// existir. Um nome cortado custa estética; uma regra cortada custa a
 			// decisão de quem está lendo.
-			if row.Detail != "" {
+			if row.Detail != "" && len(row.Boosts) > 0 {
+				<p class="text-2xs text-muted-foreground" data-text={ boostPreviewExpr(row.Weapon, row.Boosts, "detail", row.Detail) }>{ row.Detail }</p>
+			} else if row.Detail != "" {
 				<p class="text-2xs text-muted-foreground">{ row.Detail }</p>
 			}
 			if !row.Can && row.Why != "" {
@@ -109,16 +114,32 @@ templ actionLine(v View, row actionRow) {
 					{ row.Cost }
 				</span>
 			}
-			if row.Value != "" {
+			if len(row.Boosts) > 0 {
+				<span
+					data-show={ boostOnExpr(row.Weapon) }
+					data-text={ boostCostExpr(row.Weapon, row.Boosts) }
+					class="rounded-sm border border-grimorio-iron px-1.5 py-0.5 font-mono text-3xs tabular-nums text-muted-foreground"
+				></span>
+				<span
+					data-text={ boostPreviewExpr(row.Weapon, row.Boosts, "attack", row.Value) }
+					data-class={ chosenLookExpr("text-grimorio-gold", "text-foreground", boostOnExpr(row.Weapon)) }
+					class="font-mono text-base font-bold tabular-nums text-foreground"
+				>{ row.Value }</span>
+			} else if row.Value != "" {
 				<span class="font-mono text-base font-bold tabular-nums text-foreground">{ row.Value }</span>
 			}
-			if len(row.Rolls) == 1 {
-				@rollButton(v, row.Rolls[0], "bg-primary font-semibold text-primary-foreground")
+			if len(row.Rolls) == 1 && len(row.Boosts) > 0 {
+				@rollButton(v, row.Rolls[0], "bg-primary font-semibold text-primary-foreground", rollClearsTheBoost())
+			} else if len(row.Rolls) == 1 {
+				@rollButton(v, row.Rolls[0], "bg-primary font-semibold text-primary-foreground", "")
 			}
 		</div>
 		</div>
 		if len(row.Rolls) > 1 {
 			@rollStrip(v, row.Rolls)
+		}
+		if len(row.Boosts) > 0 {
+			@boostStrip(row)
 		}
 	</li>
 }
@@ -132,7 +153,7 @@ templ actionLine(v View, row actionRow) {
 templ rollStrip(v View, rolls []actionRoll) {
 	<div class="mt-2 flex flex-wrap items-center gap-1.5 border-t border-grimorio-iron pt-2">
 		for _, roll := range rolls {
-			@rollButton(v, roll, "border border-grimorio-iron text-muted-foreground")
+			@rollButton(v, roll, "border border-grimorio-iron text-muted-foreground", "")
 		}
 	</div>
 }
@@ -144,19 +165,84 @@ templ rollStrip(v View, rolls []actionRoll) {
 // expressão leria `undefined` — que em JavaScript não é erro, é o botão não
 // fazer nada. O teste de perícia continua desenhado nos dois lugares, porque
 // ele rola igual: sem mesa, o que não acontece é a publicação na faixa.
-templ rollButton(v View, roll actionRoll, look string) {
+//
+// O `after` roda DEPOIS de mandar o gesto — o ataque zera o impulso escolhido.
+templ rollButton(v View, roll actionRoll, look string, after string) {
 	if !roll.NeedsTarget || v.Embedded {
 		<button
 			type="button"
 			data-attr:disabled={ rollWaitsForATarget(roll) }
 			title={ rollTitle(roll) }
-			data-on:click={ sheetPost(v, roll.Path) }
+			if roll.Opens != "" {
+				aria-haspopup="dialog"
+			}
+			data-on:click={ rollCommand(v, roll, after) }
 			class={ "inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm px-3 text-sm outline-none transition-opacity hover:opacity-90 disabled:opacity-40",
 				look }
 		>
 			{ roll.Label }
 		</button>
 	}
+}
+
+// boostStrip é a tira do impulso de PM, embaixo da linha de ataque — no lugar
+// da tira da Manobra, e pela mesma razão: na coluna da direita ela empurraria o
+// nome da arma para fora a 390px. Ver `attack_boost.go`.
+templ boostStrip(row actionRow) {
+	<div class="mt-2 flex flex-wrap items-center gap-1.5 border-t border-grimorio-iron pt-2">
+		<span class={ ui.SectionLabelClasses("muted", "text-3xs") }>com</span>
+		for _, boost := range row.Boosts {
+			<button
+				type="button"
+				disabled?={ !boost.Can }
+				title={ boost.Why }
+				data-attr:aria-pressed={ ariaBoolExpr(boostChosenExpr(row.Weapon, boost.PowerID)) }
+				data-on:click={ boostToggleCommand(row.Weapon, boost) }
+				data-class={ chosenLookExpr("border-2 border-grimorio-gold bg-grimorio-gold/10 font-semibold text-grimorio-gold",
+					"border-grimorio-iron text-muted-foreground", boostChosenExpr(row.Weapon, boost.PowerID)) }
+				class="inline-flex min-h-11 items-center gap-1 rounded-sm border border-grimorio-iron px-2.5 text-xs text-muted-foreground transition-colors disabled:opacity-40"
+			>
+				{ boost.Name }
+				<span class="font-mono text-3xs tabular-nums" data-show={ "!(" + boostChosenExpr(row.Weapon, boost.PowerID) + ")" }>
+					{ strconv.Itoa(boost.BasePM) + " PM" }
+				</span>
+			</button>
+			<span class="inline-flex flex-wrap items-center gap-1.5" data-show={ boostChosenExpr(row.Weapon, boost.PowerID) }>
+				if boost.MaxSteps > 0 {
+					<button
+						type="button"
+						aria-label={ "Menos um degrau de " + boost.Name }
+						data-on:click={ boostStepCommand(boost, -1) }
+						class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-grimorio-iron text-foreground"
+					>−</button>
+				}
+				<span class="whitespace-nowrap font-mono text-sm tabular-nums text-foreground" data-text={ boostStepLabelExpr(boost) }></span>
+				if boost.MaxSteps > 0 {
+					<button
+						type="button"
+						aria-label={ "Mais um degrau de " + boost.Name }
+						data-on:click={ boostStepCommand(boost, 1) }
+						class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-grimorio-iron text-foreground"
+					>+</button>
+				}
+				if boost.Split {
+					<span role="radiogroup" aria-label={ "Para onde vai o bônus de " + boost.Name } class="inline-flex overflow-hidden rounded-sm border border-grimorio-iron">
+						for _, side := range boostSplits {
+							<button
+								type="button"
+								role="radio"
+								data-attr:aria-checked={ ariaBoolExpr(boostSplitIsExpr(side.Value)) }
+								data-on:click={ boostSplitCommand(side.Value) }
+								data-class={ chosenLookExpr("bg-grimorio-gold/10 font-semibold text-grimorio-gold",
+									"text-muted-foreground", boostSplitIsExpr(side.Value)) }
+								class="min-h-11 whitespace-nowrap px-2.5 text-xs text-muted-foreground"
+							>{ side.Label }</button>
+						}
+					</span>
+				}
+			</span>
+		}
+	</div>
 }
 
 // chipStrip é a tira de interruptores ACIMA dos números que eles mudam.

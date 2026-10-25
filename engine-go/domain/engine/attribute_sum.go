@@ -27,7 +27,14 @@ package engine
 //
 //	effects := r.sheetEffects(ch, activeConditionals)
 func (r *Ruleset) sheetEffects(ch Character, activeConditionals map[string]bool) ItemEffects {
-	items := r.ActiveItemsFor(ch)
+	return r.sheetEffectsWith(ch, activeConditionals, nil)
+}
+
+// sheetEffectsWith são os efeitos da ficha com fontes A MAIS que não moram nela
+// — o impulso de PM de UM ataque (`BoostedWeaponCards`), que vale para aquele
+// golpe e some depois.
+func (r *Ruleset) sheetEffectsWith(ch Character, activeConditionals map[string]bool, extra []ActiveItem) ItemEffects {
+	items := append(r.ActiveItemsFor(ch), extra...)
 	plain, sums := splitAttributeSums(items)
 	first := ApplyActiveConditionals(ComputeItemEffects(plain), activeConditionals)
 	if len(sums) == 0 {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"t20engine/domain/engine"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -25,7 +26,11 @@ func rollsAttackOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig
 	if err != nil {
 		return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
 	}
-	return s.proposeOnTheTable(r, row, ActionStrike{Weapon: weapon}, sig)
+	strike := ActionStrike{Weapon: weapon}
+	if sig.BoostPower != "" && sig.BoostWeapon != nil && int(*sig.BoostWeapon) == weapon {
+		strike.Boost = engine.BoostChoice{PowerID: sig.BoostPower, Steps: int(sig.BoostSteps), Split: sig.BoostSplit}
+	}
+	return s.proposeOnTheTable(r, row, strike, sig)
 }
 
 // rollsManeuverOnTheTarget rola a manobra da vez contra o alvo escolhido
