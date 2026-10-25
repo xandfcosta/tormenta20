@@ -3,6 +3,15 @@ package transcript
 // Parte 7 de 10 de `Activations` (activations.go).
 var activationsPart07 = []Activation{
 	{
+		ID:       "class.paladino.virtude-temperanca",
+		Name:     "Virtude Paladinesca: Temperança",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		BookPage: 84,
+	},
+	{
 		ID:       "class.paladino.caminho-egide-sagrada",
 		Name:     "Caminho: Égide Sagrada",
 		Kind:     "instant",
@@ -413,15 +422,6 @@ var activationsPart07 = []Activation{
 	{
 		ID:       "origin.nomade.mochileiro",
 		Name:     "Mochileiro",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
-		BookPage: 93,
-	},
-	{
-		ID:       "origin.pivete.quebra-galho",
-		Name:     "Quebra-Galho",
 		Kind:     "passive",
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},

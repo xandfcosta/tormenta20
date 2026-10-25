@@ -21,17 +21,35 @@ import (
 // Usar um poder e entrar numa postura são as duas escritas que a mesa faz nesta
 // aba; encerrar mora nos Efeitos, onde a postura em curso aparece.
 
-// usePower gasta um uso de um poder instantâneo: cobra o PM e soma o contador.
+// usePower gasta um uso de um poder instantâneo: cobra o PM, soma o contador e
+// cobra do turno a ação que o poder pede — a Marca da Presa custa movimento
+// (p50), pela mesma pergunta-antes-e-cobrança-depois do `enterStance`.
 //
-// As duas escritas são de coisas diferentes — o PM é da ficha, o contador é do
-// estado de jogo — e a ordem importa: o PM primeiro, porque é ele que pode
-// faltar. Somar o uso antes deixaria um uso gasto por um poder que não saiu.
-func usePower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+// OS DEGRAUS SÓ VALEM NO PODER QUE OS VENDE: o sinal é o mesmo do diálogo de
+// postura, e um valor que sobrou dele não pode virar recusa num poder sem
+// degrau.
+func usePower(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	id := chi.URLParam(r, "poder")
+	spec := book.ActivationOf(id, "")
+	cost := engine.ActionFree
+	steps := 0
+	if spec != nil && spec.Action != "" {
+		cost = engine.ActionCost(spec.Action)
+	}
+	if spec != nil && spec.Scaling != nil && signals.PowerSteps != nil {
+		steps = int(*signals.PowerSteps)
+	}
+	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
+		return err
+	}
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
-	return s.plays.UsePower(r.Context(), row, dto, chi.URLParam(r, "poder"))
+	if err := s.plays.UsePower(r.Context(), row, dto, id, steps); err != nil {
+		return err
+	}
+	return s.deps.SpendActionOnTurn(r.Context(), row.ID, cost)
 }
 
 // enterStance entra numa postura, com os DEGRAUS que o diálogo escolheu.

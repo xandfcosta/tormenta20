@@ -3,6 +3,15 @@ package transcript
 // Parte 9 de 10 de `Activations` (activations.go).
 var activationsPart09 = []Activation{
 	{
+		ID:       "deus.marah.palavras-de-bondade",
+		Name:     "Palavras de Bondade",
+		Kind:     "instant",
+		Action:   "varia",
+		PMCost:   PMCost{Written: "variavel"},
+		Uses:     nil,
+		BookPage: 134,
+	},
+	{
 		ID:       "deus.marah.talento-artistico",
 		Name:     "Talento Artístico",
 		Kind:     "passive",
@@ -411,14 +420,5 @@ var activationsPart09 = []Activation{
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
 		BookPage: 335,
-	},
-	{
-		ID:       "item.encanto-assustador",
-		Name:     "Assustador",
-		Kind:     "instant",
-		Action:   "movimento",
-		PMCost:   PMCost{Fixed: 2},
-		Uses:     nil,
-		BookPage: 338,
 	},
 }
