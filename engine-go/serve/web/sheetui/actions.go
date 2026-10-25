@@ -111,6 +111,21 @@ type actionRoll struct {
 	// nasce desabilitado até haver um. O servidor recusa de todo jeito; isto é
 	// para o botão não existir só para levar recusa.
 	NeedsTarget bool
+	// Command, quando escrito, substitui o `@post` do `Path`: é o toque que
+	// ABRE o contador de degraus do poder. Before vem antes do `@post` — o
+	// poder que vende degrau zera o contador antes de usar.
+	Command string
+	Before  string
+	// Opens marca o gesto que abre uma escolha, para o `aria-haspopup`.
+	Opens string
+}
+
+// rollCommand é a expressão do toque num gesto da superfície.
+func rollCommand(v View, roll actionRoll, after string) string {
+	if roll.Command != "" {
+		return roll.Command
+	}
+	return roll.Before + sheetPost(v, roll.Path) + after
 }
 
 // actionsPanelFrom monta a superfície a partir dos painéis JÁ computados.
@@ -357,6 +372,20 @@ func rowFromPower(power powerRow) actionRow {
 	}
 	if power.Stance != nil {
 		row.Live = power.Stance.Active
+	}
+	// O INSTANTÂNEO QUE VENDE DEGRAU ganha o gesto aqui (a Marca da Presa,
+	// p50, ALE-487), e com o que está dando quando em curso. Os outros
+	// instantâneos continuam sem botão nesta superfície — usar é da aba Poderes.
+	if power.Degrees != nil {
+		row.Live = power.InEffect != ""
+		if row.Live {
+			row.Detail = power.InEffect + " em curso"
+		}
+		roll := actionRoll{Label: "Usar", Path: "/poderes/usa/" + power.Command, Before: "$stance_degrees = 0; "}
+		if power.Degrees.MaxSteps > 0 {
+			roll.Command, roll.Opens = useOpensCommand(power.Command), useDialogID(power.Command)
+		}
+		row.Rolls = []actionRoll{roll}
 	}
 	return row
 }

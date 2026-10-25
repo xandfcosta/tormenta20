@@ -162,3 +162,19 @@ func loadedCharacter(t *testing.T, f sceneFixture, id int64) (sheet.CharacterDTO
 	}
 	return dto, ec
 }
+
+// O DEGRAU QUE SOBROU DE OUTRO DIÁLOGO NÃO RECUSA o poder que não vende degrau.
+// O sinal é o mesmo da postura e vive na página inteira; lido num poder sem
+// escala, ele viraria "o nível permite até zero degraus" num gesto legítimo.
+func TestAPowerWithoutDegreesIgnoresALeftoverDegreeSignal(t *testing.T) {
+	f, id := fighterFixture(t)
+	armor := itemSemeia(t, f, id, "armadura-couro", "Armadura de couro", "vested")
+	if err := f.s.characterPlays().EnchantItem(
+		context.Background(), armor, []string{"encanto-caustica"},
+	); err != nil {
+		t.Fatalf("encantar a armadura: %v", err)
+	}
+	if refusal := powerCommand(t, f, id, "usa/item.encanto-caustica", `{"stance_degrees":3}`); refusal != "" {
+		t.Errorf("a Cáustica foi recusada por um degrau que ela não vende: %q", refusal)
+	}
+}

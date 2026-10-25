@@ -100,7 +100,10 @@ type situationalRow struct {
 	// metade do efeito ligado.
 	Folded    bool
 	Modifiers []breakdownRow
-	Command   string
+	// Dice é o dado que o interruptor liga ("+1d12"), quando liga um — o chip
+	// das Ações o escreve ao lado do nome.
+	Dice    string
+	Command string
 	// Targets são os alvos CRUS dos modificadores que esta linha liga, e eles
 	// existem para quem ROTEIA: a superfície de Ações põe o interruptor sobre o
 	// número que ele muda, e o `Modifiers` acima já é texto de tela.
@@ -324,8 +327,16 @@ func situationalRowsOf(
 			Command: g.Key,
 		}
 		for _, c := range g.Members {
+			// O DADO é o valor do condicional que rola — a Marca da Presa, o
+			// encanto contra construtos —, e o `Amount` dele é zero: escrito
+			// pelo número, a linha dizia "+0".
+			value := book.WithSign(c.Amount)
+			if c.Dice != "" {
+				value = "+" + c.Dice
+				row.Dice = value
+			}
 			row.Modifiers = append(row.Modifiers, breakdownRow{
-				Label: targetLabel(c.Target), Value: book.WithSign(c.Amount),
+				Label: targetLabel(c.Target), Value: value,
 			})
 			row.Targets = append(row.Targets, c.Target)
 		}

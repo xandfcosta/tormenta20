@@ -72,8 +72,13 @@ type powerRow struct {
 	Can bool
 	Why string
 	// Stance é o estado da postura, quando a linha é uma.
-	Stance  *stanceState
-	Command string
+	Stance *stanceState
+	// Degrees são os degraus de USO do instantâneo que os vende (a Marca da
+	// Presa), e InEffect o que a concessão dele dá agora ("+1d12"), quando em
+	// curso. Ver `powers_degrees.go`.
+	Degrees  *useDegrees
+	InEffect string
+	Command  string
 }
 
 // stanceState é o que a tela precisa saber de uma postura.
@@ -162,6 +167,8 @@ func powerRowFor(
 	if spec.Kind == "stance" {
 		row.Stance = stanceStateFor(dto, *spec, stances, context)
 	}
+	row.Degrees = useDegreesFor(dto, *spec)
+	row.InEffect = grantInEffect(dto, spec.ID)
 	row.Cost, row.Action = writtenCost(*spec, row.Stance), spec.Action
 	context.UsedThisScene, context.UsedToday = uses[spec.ID].Scene, uses[spec.ID].Day
 	if scope := book.ChargedScope(*spec); scope != "" {
@@ -207,13 +214,6 @@ func stanceFlag(spec book.Activation) string {
 	return ""
 }
 
-// classPowerLevel é o nível NA CLASSE que concede o poder, e não o do
-// personagem (p40): um bárbaro 5/ladino 5 tem a Fúria de um bárbaro 5.
-//
-// A classe sai do id da ativação (`class.barbaro.furia`), que é a convenção do
-// catálogo. Sem casar, o nível é o do personagem — o que é generoso, e é a
-// escolha certa entre errar para menos e errar para mais numa tela que só
-// OFERECE degraus: quem paga é o servidor, que cobra pelo que foi escolhido.
 // limitBadge é o que a TELA escreve do limite: "1/cena", "3/dia", ou "".
 //
 // Ele ficou na cena quando as regras de ativação subiram para o `domain/book`

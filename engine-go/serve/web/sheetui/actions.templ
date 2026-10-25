@@ -51,6 +51,9 @@ templ ActionsBody(v View) {
 			if row.Stance != nil && row.Stance.MaxSteps > 0 {
 				@stanceStepperDialog(v, row)
 			}
+			if row.Degrees != nil && row.Degrees.MaxSteps > 0 {
+				@useStepperDialog(v, row)
+			}
 		}
 	</div>
 }
@@ -170,7 +173,10 @@ templ rollButton(v View, roll actionRoll, look string, after string) {
 			type="button"
 			data-attr:disabled={ rollWaitsForATarget(roll) }
 			title={ rollTitle(roll) }
-			data-on:click={ sheetPost(v, roll.Path) + after }
+			if roll.Opens != "" {
+				aria-haspopup="dialog"
+			}
+			data-on:click={ rollCommand(v, roll, after) }
 			class={ "inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm px-3 text-sm outline-none transition-opacity hover:opacity-90 disabled:opacity-40",
 				look }
 		>
