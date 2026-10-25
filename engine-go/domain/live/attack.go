@@ -58,6 +58,11 @@ type PendingAttack struct {
 	// quem aplica é a CONFIRMAÇÃO, e entre rolar e confirmar o ataque pode ser
 	// cancelado.
 	NonLethal int `json:"nonLethal,omitempty"`
+	// BoostPowerID e BoostPM são o impulso de PM que o golpe levou (o Golpe
+	// Divino, o Ataque Especial — ALE-487) e o que ele custa. A CONFIRMAÇÃO
+	// cobra o PM, depois de o golpe pousar: o provisório cancelado não custa.
+	BoostPowerID string `json:"boostPowerId,omitempty"`
+	BoostPM      int    `json:"boostPm,omitempty"`
 	// Situations são os rótulos da Tabela 5-3 que valeram neste ataque, e a
 	// faixa os escreve. Sem eles a mesa lê uma Defesa que a ficha não tem, ou
 	// um ataque que bateu a Defesa e errou (p238), e vai procurar o defeito.

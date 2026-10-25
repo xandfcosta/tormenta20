@@ -423,3 +423,23 @@ func (p Plays) dropsTheOtherStances(
 	}
 	return nil
 }
+
+// PayAttackBoost cobra o PM do impulso que um golpe CONFIRMADO levou — o Golpe
+// Divino, o Ataque Especial (ALE-487).
+//
+// Ele mora com os outros gastos de PM da ficha e passa pelo mesmo funil, que
+// drena a poça temporária antes do poço (p106). Quem o chama é a confirmação do
+// mestre, depois de o golpe pousar: a proposta só confere se a ficha PODE
+// pagar, e o provisório cancelado não chega aqui.
+func (p Plays) PayAttackBoost(ctx context.Context, characterID int64, pm int) error {
+	if pm <= 0 {
+		return nil
+	}
+	row, err := p.queries.GetCharacter(ctx, characterID)
+	if err != nil {
+		return fmt.Errorf("carregar o personagem %d para cobrar o impulso: %w", characterID, err)
+	}
+	return p.inTx(ctx, "cobrar o impulso do golpe", func(q *sqlcgen.Queries) error {
+		return chargeMp(ctx, q, p.catalogs, row, pm)
+	})
+}
