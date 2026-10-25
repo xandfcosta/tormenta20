@@ -165,6 +165,12 @@ func tableSignalsExpr() string {
 		// uma INTENÇÃO de quem joga, e não um fato da mesa: escolher contra quem
 		// se vai rolar não muda nada para ninguém até o dado cair.
 		"turn_target: ''",
+		// OS SINAIS DA FICHA QUE A ABA AÇÕES LÊ, com o TIPO certo: o contador de
+		// degraus (postura e Marca da Presa) e a tira do impulso de PM. Sem a
+		// declaração eles nascem texto vazio, e a leitura do `Signals` da ficha
+		// falha INTEIRA — o golpe chegava sem o `turn_target` (ALE-499). Quem
+		// cobra é o `TestEveryTypedSignalTheActionsSurfaceReadsIsDeclaredByTheTable`.
+		"stance_degrees: 0, boost_weapon: -1, boost_power: '', boost_steps: 0, boost_split: ''",
 		// O MENU DA PEÇA. `token_chosen` é qual menu está aberto e `token_edited`
 		// é qual peça o diálogo está editando: são DOIS porque abrir o diálogo
 		// FECHA o menu, e um sinal só faria o gesto de abrir apagar o alvo do
