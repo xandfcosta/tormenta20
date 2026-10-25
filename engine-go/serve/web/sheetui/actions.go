@@ -89,6 +89,10 @@ type actionRow struct {
 	// Rolls são os gestos de ROLAR que esta linha oferece. Vazio na linha que
 	// não rola nada — Mover, um poder de efeito fixo, a Investida.
 	Rolls []actionRoll
+	// Weapon e Boosts são da linha de ATAQUE: o índice da arma e os impulsos de
+	// PM que este golpe pode levar (ver `attack_boost.go`).
+	Weapon int
+	Boosts []attackBoost
 }
 
 // actionRoll é um gesto de rolar que sai de uma linha.
@@ -117,10 +121,11 @@ type actionRoll struct {
 func actionsPanelFrom(
 	id int64, computed engine.ComputedSheet,
 	combat panelCombat, powers powersPanel, spells spellbookPanel, effects effectsPanel,
+	boosts [][]attackBoost,
 ) actionsPanel {
 	melee := expertiseOrZero(computed, "Luta", "strength").Total + computed.AttackAll.Total
 	byCost := map[engine.ActionCost][]actionRow{
-		engine.ActionStandard: standardRows(combat, melee, computed),
+		engine.ActionStandard: standardRows(combat, melee, computed, boosts),
 		engine.ActionMovement: {movementRow(computed)},
 		engine.ActionFull:     fullRows(melee, computed),
 	}
@@ -175,10 +180,16 @@ var groupOrder = []struct {
 // O ATAQUE VEM PRIMEIRO, e o livro diz por quê: *"fazer um ataque ou lançar uma
 // magia são as ações padrão mais comuns"* (p233). A 390px a primeira linha é a
 // única que se lê sem rolar.
-func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet) []actionRow {
+func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, boosts [][]attackBoost) []actionRow {
 	rows := make([]actionRow, 0, len(combat.Weapons)+2)
 	for i, weapon := range combat.Weapons {
+		var offered []attackBoost
+		if i < len(boosts) {
+			offered = boosts[i]
+		}
 		rows = append(rows, actionRow{
+			Weapon: i,
+			Boosts: offered,
 			Name:   "Atacar · " + weapon.Name,
 			Detail: weapon.Damage + " · " + weapon.Crit + " · " + weapon.Skill,
 			Value:  weapon.Attack,

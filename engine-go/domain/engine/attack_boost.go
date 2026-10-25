@@ -105,6 +105,50 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	return boosted, boost.Degrees.BasePM + choice.Steps*boost.Degrees.StepPM, nil
 }
 
+// BoostOffer é um impulso que a ficha pode pagar num golpe, com o teto de
+// degraus que o nível na classe abre — o que a tela precisa para oferecê-lo.
+type BoostOffer struct {
+	PowerID   string
+	Name      string
+	BasePM    int
+	StepPM    int
+	MaxSteps  int
+	Split     bool
+	MeleeOnly bool
+	// Buys é o que o impulso compra com N degraus a mais, de zero ao teto:
+	// "+1d8", "+2d8"… no Golpe Divino, "+4", "+8"… no Ataque Especial. É o
+	// rótulo do contador, saído dos mesmos modificadores que a carta soma.
+	Buys []string
+}
+
+// BoostOffers são os impulsos de PM que a ficha tem, na ordem das classes.
+//
+//	world.BoostOffers(paladin) // [{PowerID: "class.paladino.golpe-divino-1d8", BasePM: 2, …}]
+func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
+	chosen := parseChoiceSet(ch.ClassPowers)
+	choices := parseClassChoices(ch.ClassChoices)
+	out := []BoostOffer{}
+	for _, entry := range ch.Classes {
+		for _, power := range r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName]) {
+			if power.Boost == nil {
+				continue
+			}
+			d := power.Boost.Degrees
+			offer := BoostOffer{
+				PowerID: power.ID, Name: power.Name, BasePM: d.BasePM, StepPM: d.StepPM,
+				MaxSteps:  StepsAt(d.FirstStepLevel, d.StepEveryLevels, entry.Level),
+				Split:     power.Boost.Split,
+				MeleeOnly: power.Boost.MeleeOnly,
+			}
+			for steps := 0; steps <= offer.MaxSteps; steps++ {
+				offer.Buys = append(offer.Buys, boostBuys(power.Boost, 1+steps))
+			}
+			out = append(out, offer)
+		}
+	}
+	return out
+}
+
 // ownedBoostPower é o poder de impulso que a ficha tem com esse id, e o nível na
 // classe dele.
 func (r *Ruleset) ownedBoostPower(ch Character, id string) (*ClassPower, int) {
@@ -153,6 +197,22 @@ func boostModifiers(boost *ClassPowerBoost, degrees int, split string, classLeve
 		out = append(out, m)
 	}
 	return out
+}
+
+// boostBuys é o que `degrees` degraus pagos compram, escrito: o dado ou o
+// número do primeiro modificador que cresce com o degrau. No impulso que se
+// divide, é o bônus inteiro, antes de escolher o lado.
+func boostBuys(boost *ClassPowerBoost, degrees int) string {
+	for _, m := range boostModifiers(boost, degrees, BoostToAttack, 0) {
+		if m.Scale != nil {
+			continue
+		}
+		if m.Dice != "" {
+			return "+" + m.Dice
+		}
+		return "+" + strconv.Itoa(m.Amount)
+	}
+	return ""
 }
 
 // multiplyDice escreve "NdF" com N vezes `by` — 1d8 com 3 degraus é 3d8.

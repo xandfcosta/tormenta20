@@ -213,7 +213,8 @@ func (s Scene) Load(
 		// DEPOIS dos três, e não ao lado: o painel de Ações não computa nada —
 		// ele reagrupa o Combate, os Poderes e as Magias, e montá-lo antes
 		// deles o deixaria lendo campos vazios.
-		v.Actions = actionsPanelFrom(dto.ID, sheet, v.Combat, v.Powers, v.Spells, v.Effects)
+		v.Actions = actionsPanelFrom(dto.ID, sheet, v.Combat, v.Powers, v.Spells, v.Effects,
+			attackBoostsFor(dto, cards))
 	}
 	for _, item := range Tabs() {
 		item.Active = item.Value == aba

@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -50,5 +51,19 @@ func TestCancellingTheAttackChargesNothing(t *testing.T) {
 	}
 	if after := mpOf(t, f.s, f.charID); after != before {
 		t.Errorf("PM depois de cancelar: %d, want %d — o golpe cancelado não aconteceu", after, before)
+	}
+}
+
+// A FAIXA DIZ O IMPULSO E O PREÇO antes de o mestre confirmar: confirmar cobra
+// PM da ficha, e quem confirma precisa saber quanto.
+func TestTheStripSaysTheBoostAndWhatConfirmingCharges(t *testing.T) {
+	f, _ := boostedProposal(t, 2)
+	page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	// O CONTROLE: a faixa está na página, senão a ausência abaixo não diz nada.
+	if !strings.Contains(page, "mesa-ataque-selo") {
+		t.Fatal("a página da mesa não desenhou a faixa do provisório")
+	}
+	if !strings.Contains(page, "Ataque Especial · 2 PM ao confirmar") {
+		t.Error("a faixa não diz o impulso do golpe nem o PM que a confirmação cobra")
 	}
 }

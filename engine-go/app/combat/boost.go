@@ -7,8 +7,8 @@ import (
 	"t20engine/domain/engine"
 )
 
-// paidBoost é o impulso que o golpe leva: o poder, o rótulo para a mesa e o PM
-// que a confirmação cobra.
+// paidBoost é o impulso que o golpe leva: o poder e o PM que a confirmação
+// cobra.
 type paidBoost struct {
 	powerID string
 	pm      int

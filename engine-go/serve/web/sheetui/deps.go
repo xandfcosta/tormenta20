@@ -113,4 +113,6 @@ type ActionStrike struct {
 	Weapon int
 	// Maneuver é uma das cinco da p234 quando o gesto é manobra. Vazio é golpe.
 	Maneuver string
+	// Boost é o impulso de PM pedido para este golpe; o poder vazio é sem.
+	Boost engine.BoostChoice
 }
