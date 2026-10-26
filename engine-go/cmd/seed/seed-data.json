@@ -1654,7 +1654,13 @@
                 "catalogId": "armadura-couro",
                 "equipped": "vested"
               }
-            ]
+            ],
+            "powerChoices": {
+              "class.cacador.explorador": [
+                "floresta",
+                "floresta"
+              ]
+            }
           }
         },
         {
