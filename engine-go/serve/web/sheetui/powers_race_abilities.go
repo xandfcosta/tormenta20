@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"t20engine/domain/book"
+	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
 
@@ -26,18 +27,47 @@ type raceAbilityBlock struct {
 	Swaps []powerOption
 	// NoCraft diz que a escolha é de Ofício e a ficha não tem nenhum.
 	NoCraft bool
+	// PowerGroups são os poderes gerais da Memória Póstuma, por grupo (p130),
+	// já filtrados pela busca (ALE-502).
+	PowerGroups []powerGroup
+	Search      string
+}
+
+// powerGroup é um grupo de poder geral — Combate, Destino, Magia, Tormenta.
+type powerGroup struct {
+	Title   string
+	Options []powerOption
+}
+
+// generalPowerGroups são os quatro grupos que a Memória Póstuma aceita, na
+// ordem do livro (p130). Os Concedidos ficam de fora: pedem devoção.
+var generalPowerGroups = []struct{ Kind, Title string }{
+	{"combate", "Combate"}, {"destino", "Destino"}, {"magia", "Magia"}, {"tormenta", "Tormenta"},
 }
 
 // Full diz que não cabe mais nenhuma: as não escolhidas se apagam.
 func (b raceAbilityBlock) Full() bool { return b.Chosen >= b.Count }
+
+// SkillsLabel é o rótulo das perícias quando há outra lista embaixo: o +2 da
+// Deformidade, o treino da Memória Póstuma.
+func (b raceAbilityBlock) SkillsLabel() string {
+	switch {
+	case len(b.Swaps) > 0:
+		return "Perícias · +2"
+	case b.PowerGroups != nil || b.Search != "":
+		return "Uma perícia · fica treinada"
+	}
+	return ""
+}
 
 // Written é "1 de 2".
 func (b raceAbilityBlock) Written() string {
 	return strconv.Itoa(b.Chosen) + " de " + strconv.Itoa(b.Count)
 }
 
-// raceAbilityBlocksOf monta os blocos da raça `race`.
-func raceAbilityBlocksOf(dto sheet.CharacterDTO, race string) []raceAbilityBlock {
+// raceAbilityBlocksOf monta os blocos da raça `race`. A busca filtra os
+// poderes gerais da Memória Póstuma.
+func raceAbilityBlocksOf(dto sheet.CharacterDTO, race, query string) []raceAbilityBlock {
 	out := []raceAbilityBlock{}
 	for _, choice := range sheet.RaceAbilityChoices(dto) {
 		if choice.Race != race {
@@ -56,6 +86,10 @@ func raceAbilityBlocksOf(dto sheet.CharacterDTO, race string) []raceAbilityBlock
 			for _, power := range tormentaPowers() {
 				block.Swaps = append(block.Swaps, pickedOption(power.ID, power.Name, choice.Picks))
 			}
+		}
+		if sheet.IsTrainedOrPower(*ability.Choice) {
+			block.Search = query
+			block.PowerGroups = generalPowerGroupsOf(choice.Picks, query)
 		}
 		out = append(out, block)
 	}
@@ -103,4 +137,25 @@ func pickedOption(value, label string, picks []string) powerOption {
 		count = 1
 	}
 	return powerOption{Value: value, Label: label, Count: count}
+}
+
+// generalPowerGroupsOf são os poderes gerais por grupo, os que casam com a
+// busca — o escolhido sempre aparece, para poder ser tirado.
+func generalPowerGroupsOf(picks []string, query string) []powerGroup {
+	term := search.Fold(strings.TrimSpace(query))
+	out := []powerGroup{}
+	for _, g := range generalPowerGroups {
+		group := powerGroup{Title: g.Title}
+		for _, p := range book.GeneralPowers() {
+			if p.Kind != g.Kind || (!casaComABusca(p.Name, term) && !slices.Contains(picks, p.ID)) {
+				continue
+			}
+			group.Options = append(group.Options, pickedOption(p.ID, p.Name, picks))
+		}
+		sort.Slice(group.Options, func(a, b int) bool { return group.Options[a].Label < group.Options[b].Label })
+		if len(group.Options) > 0 {
+			out = append(out, group)
+		}
+	}
+	return out
 }
