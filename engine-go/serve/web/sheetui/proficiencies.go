@@ -45,8 +45,20 @@ type sheetProficiency struct {
 	// para o jogador distinguir um ajuste deliberado do que veio de fábrica: sem
 	// isso, uma proficiência tirada na mão parece defeito da conta.
 	FromClass bool
-	// Sources são as classes que concedem, para a etiqueta explicar de onde vem.
+	// FromRace marca a concessão que é SÓ da raça — o Vanguardista do kliren
+	// (ALE-493) —, para o selo dizer "raça" e não "classe".
+	FromRace bool
+	// Sources são as classes e raças que concedem, para a etiqueta explicar de
+	// onde vem.
 	Sources []string
+}
+
+// Badge é o selo de fábrica: "classe", ou "raça" quando só a raça concede.
+func (p sheetProficiency) Badge() string {
+	if p.FromRace {
+		return "raça"
+	}
+	return "classe"
 }
 
 // proficiencyGroup é um dos dois blocos do painel.
@@ -59,6 +71,7 @@ type proficiencyGroup struct {
 func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 	found := savedProficiencies(dto.Proficiencies)
 	sources := proficiencySources(dto)
+	byRace := raceProficiencySources(dto)
 
 	byGroup := map[string]*proficiencyGroup{}
 	order := []string{book.WeaponGroup, book.ArmorGroup}
@@ -72,7 +85,8 @@ func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 			Label:     cat.Label,
 			Has:       found[cat.Key],
 			FromClass: len(sources[cat.Key]) > 0,
-			Sources:   sources[cat.Key],
+			FromRace:  len(sources[cat.Key]) == 0 && len(byRace[cat.Key]) > 0,
+			Sources:   append(append([]string{}, sources[cat.Key]...), byRace[cat.Key]...),
 		})
 	}
 	return []proficiencyGroup{*byGroup[book.WeaponGroup], *byGroup[book.ArmorGroup]}
@@ -137,13 +151,25 @@ func repetirSem(names []string) []string {
 	return unique
 }
 
-// classDefault é o alvo do "Restaurar padrão de classe": tudo o que as
-// classes concedem, e nada do que foi acrescentado na mão.
+// raceProficiencySources diz, por categoria, QUAIS raças a concedem.
+func raceProficiencySources(dto sheet.CharacterDTO) map[string][]string {
+	out := map[string][]string{}
+	for _, r := range dto.Races {
+		for _, key := range book.RaceProficiencies(r.Race) {
+			out[key] = append(out[key], book.RaceLabel(r.Race))
+		}
+	}
+	return out
+}
+
+// classDefault é o alvo do "Restaurar padrão": tudo o que as classes e as
+// raças concedem, e nada do que foi acrescentado na mão.
 func classDefault(dto sheet.CharacterDTO) []string {
 	sources := proficiencySources(dto)
+	byRace := raceProficiencySources(dto)
 	standard := make([]string, 0, len(sources))
 	for _, cat := range book.ProficiencyCategories {
-		if len(sources[cat.Key]) > 0 {
+		if len(sources[cat.Key]) > 0 || len(byRace[cat.Key]) > 0 {
 			standard = append(standard, cat.Key)
 		}
 	}

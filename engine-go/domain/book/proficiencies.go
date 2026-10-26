@@ -6,9 +6,12 @@ package book
 // `transcript.Classes`: a pergunta é do LIVRO, e as telas só recebem a
 // resposta.
 
-// grantedProficiencies ports characterProficiencies(...).filter(granted): the
-// default proficiency categories for a class set, in catalog order.
-func GrantedProficiencies(classNames []string) []string {
+// GrantedProficiencies é o PADRÃO de proficiências de uma ficha: o que as
+// classes e as raças concedem, na ordem do catálogo. A raça entrou com o
+// Vanguardista do kliren (armas de fogo, p28, ALE-493).
+//
+//	GrantedProficiencies([]string{"Inventor"}, []string{"kliren"}) // [armas-simples armas-de-fogo]
+func GrantedProficiencies(classNames, races []string) []string {
 	granted := map[string]bool{"armas-simples": true}
 	byClass := ProficienciesByClass()
 	for _, cls := range classNames {
@@ -17,6 +20,11 @@ func GrantedProficiencies(classNames []string) []string {
 			if cat == "armaduras-pesadas" {
 				granted["armaduras-leves"] = true
 			}
+		}
+	}
+	for _, race := range races {
+		for _, cat := range RaceProficiencies(race) {
+			granted[cat] = true
 		}
 	}
 	out := []string{}
@@ -94,4 +102,17 @@ func ProficienciesByClass() map[string][]string {
 		table[c.Name] = c.Proficiencies
 	}
 	return table
+}
+
+// RaceProficiencies são as proficiências que as habilidades de uma raça dão.
+func RaceProficiencies(race string) []string {
+	traits, found := RaceTraitsByKey()[race]
+	if !found {
+		return nil
+	}
+	out := []string{}
+	for _, ability := range traits.Abilities {
+		out = append(out, ability.GrantsProficiency...)
+	}
+	return out
 }

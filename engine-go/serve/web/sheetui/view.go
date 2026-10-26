@@ -433,7 +433,7 @@ func proficiencyCommand(v View, key string) string {
 	return sheetPost(v, "/proficiencias/alterna/"+key)
 }
 
-// defaultClassCommand escreve o `@post` do "Restaurar padrão de classe".
+// defaultClassCommand escreve o `@post` do "Restaurar padrão".
 func defaultClassCommand(v View) string {
 	return sheetPost(v, "/proficiencias/padrao")
 }

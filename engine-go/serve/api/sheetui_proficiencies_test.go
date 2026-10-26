@@ -350,3 +350,26 @@ func TestNoSheetCommandLosesTheTab(t *testing.T) {
 			"a expressão parou de casar com o HTML", seen, 12*len(sheetui.Tabs()))
 	}
 }
+
+// A RAÇA TAMBÉM CONCEDE (p28 Vanguardista: armas de fogo; ALE-493). A etiqueta
+// diz que vem da raça, e restaurar o padrão a traz de volta.
+func TestTheRaceGrantedProficiencyIsPartOfTheDefault(t *testing.T) {
+	f := newSceneFixture(t)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Kliren", "Inventor", 3, 0, 0)
+	seedRaca(t, f.s, id, "kliren")
+	saveHand(t, f, id, `["armas-simples"]`)
+
+	screen := f.requests(t, f.player, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=proficiencies", id), "").Body.String()
+	if !strings.Contains(screen, "Padrão: Kliren") || !strings.Contains(screen, ">raça</span>") {
+		t.Error("a etiqueta de armas de fogo não diz que vem da raça kliren")
+	}
+	rec := f.requests(t, f.player, http.MethodPost,
+		fmt.Sprintf("/personagens/%d/proficiencias/padrao", id), "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("restaurar deu %d: %s", rec.Code, rec.Body.String())
+	}
+	if !saved(t, f, id)["armas-de-fogo"] {
+		t.Error("restaurar o padrão deixou o kliren sem armas de fogo")
+	}
+}
