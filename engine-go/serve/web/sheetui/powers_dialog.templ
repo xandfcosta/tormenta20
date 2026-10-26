@@ -149,6 +149,13 @@ templ raceAbilityChoiceBlock(v View, block raceAbilityBlock) {
 				@raceAbilityChips(v, block, group.Options)
 			}
 		}
+		if len(block.RaceGroups) > 0 {
+			<p class={ ui.FieldLabelClasses("muted", "pt-1") }>Ou uma habilidade de outra raça humanoide · herda o tamanho dela</p>
+			for _, group := range block.RaceGroups {
+				<p class={ ui.FieldLabelClasses("muted", "") }>{ group.Title }</p>
+				@raceAbilityChips(v, block, group.Options)
+			}
+		}
 	</div>
 }
 

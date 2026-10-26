@@ -52,6 +52,7 @@ func OwnedPowers(dto CharacterDTO) []OwnedPower {
 	outside := []OwnedPower{}
 	outside = append(outside, raceAbilitiesOf(dto)...)
 	outside = append(outside, raceHeldPowersOf(dto)...)
+	outside = append(outside, borrowedAbilitiesOf(dto)...)
 	outside = append(outside, chosenOriginBenefitsOf(dto)...)
 	outside = append(outside, automaticClassPowersOf(dto)...)
 	outside = append(outside, chosenPowersOf(dto)...)
@@ -148,6 +149,20 @@ func OwnsActivation(dto CharacterDTO, spec book.Activation) bool {
 		}
 	}
 	return false
+}
+
+// borrowedAbilitiesOf são as habilidades que a Memória Póstuma tomou de outra
+// raça (p29, ALE-504): da ficha, com a raça de origem como dona.
+func borrowedAbilitiesOf(dto CharacterDTO) []OwnedPower {
+	outside := []OwnedPower{}
+	for _, b := range borrowedAbilities(dto) {
+		outside = append(outside, OwnedPower{
+			ID: b.ability.ID, Name: b.ability.Name, Detail: b.ability.Description,
+			Source: PowerFromRace, Owner: b.from.Name + " (Memória Póstuma)",
+		})
+	}
+	book.SortByName(outside, func(p OwnedPower) string { return p.Name })
+	return outside
 }
 
 // raceHeldPowersOf são os poderes que uma habilidade de raça deu: o da Tormenta
