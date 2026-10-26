@@ -31,16 +31,27 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				},
 			},
 			{
-				ID:          "golem-criatura-artificial",
-				Modeled:     []string{"a visão no escuro e as imunidades aparecem como fato"},
+				ID: "golem-criatura-artificial",
+				Modeled: []string{
+					"a visão no escuro e as imunidades aparecem como fato",
+					"descansa sempre em condição normal",
+				},
 				RaceID:      "golem",
 				Name:        "Criatura Artificial",
 				Description: "Você é uma criatura do tipo construto. Visão no escuro e imunidade a cansaço, metabólicos e veneno. Não respira, alimenta-se ou dorme, mas não se beneficia de cura mundana ou itens de alimentação. Precisa ficar inerte 8h por dia para recarregar (descansa em condições normais sempre).",
 				UID:         "rac_enocpcdpss",
-				Unmodeled:   "construto; sem cura mundana, e descansa sempre em condição normal (ALE-488): é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
+				Unmodeled:   "construto e sem cura mundana: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
 					{Category: "immunity", Text: "Imune a cansaço, metabólicos e veneno"},
+				},
+				Modifiers: []Modifier{
+					{
+						Target:    ModifierTarget{Kind: "flag", Name: "rest-always-normal"},
+						Amount:    1,
+						BonusType: "untyped",
+						Note:      "descansa sempre em condição normal",
+					},
 				},
 			},
 			{

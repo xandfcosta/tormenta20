@@ -222,7 +222,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Transformação Anfíbia",
 				Description: "Pode respirar debaixo d’água e possui cauda com deslocamento de natação 12m. Fora d’água, a cauda dá lugar a pernas (deslocamento 9m). Mais de um dia sem contato com água impede recuperação de PM por descanso.",
 				UID:         "rac_axjfztusy3",
-				Unmodeled:   "natação de 12m; e sem água não recupera PM (ALE-488): é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+				Unmodeled:   "natação de 12m: é uma forma de movimento que o motor ainda não tem, sem fatia; e o PM sem água é do mestre, que sabe se houve água (decisão do dono, ALE-488)",
 			},
 		},
 		UID: "rac_kcyddre5st",
@@ -293,12 +293,22 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				},
 			},
 			{
-				ID:          "osteon-preco-da-nao-vida",
+				ID: "osteon-preco-da-nao-vida",
+				Modeled: []string{
+					"descansa sempre em condição normal; as oito horas sob as estrelas são supostas cumpridas, e a fome é do mestre (decisão do dono, ALE-488)",
+				},
 				RaceID:      "osteon",
 				Name:        "Preço da Não Vida",
 				Description: "Precisa passar oito horas sob luz de estrelas ou no subterrâneo. Se fizer isso, recupera PV e PM por descanso normalmente. Caso contrário, sofre efeitos de fome.",
 				UID:         "rac_ffhjotbnr5",
-				Unmodeled:   "muda o descanso, e o descanso não lê habilidade (ALE-488)",
+				Modifiers: []Modifier{
+					{
+						Target:    ModifierTarget{Kind: "flag", Name: "rest-always-normal"},
+						Amount:    1,
+						BonusType: "untyped",
+						Note:      "descansa sempre em condição normal",
+					},
+				},
 			},
 		},
 		UID: "rac_qqg3zuo5ec",

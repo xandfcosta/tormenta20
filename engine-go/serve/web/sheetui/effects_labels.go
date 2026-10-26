@@ -6,6 +6,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 )
 
 // O QUE A ABA EFEITOS ESCREVE.
@@ -236,6 +237,10 @@ var itemFlagLabel = map[string]string{
 	// A do Acrobático (p129), e ela fala do CAMINHO e não do deslocamento: o
 	// metro continua o mesmo, o que muda é o que cada casa cobra.
 	"movement-ignores-difficult": "Terreno difícil não custa nada",
+	// As TRÊS do descanso da noite (p106, ALE-488), na voz do livro.
+	sheet.FlagRestOneCategoryUp:   "Descansa uma categoria acima",
+	sheet.FlagRestNeverBelowLevel: "Descanso nunca rende menos que o nível",
+	sheet.FlagRestAlwaysNormal:    "Descansa sempre em condição normal",
 }
 
 // itemFlagExemptLabel é a frase de cada ISENÇÃO de bandeira, e ela é

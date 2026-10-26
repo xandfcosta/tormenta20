@@ -193,13 +193,17 @@ func (s Scopes) NightRest(
 	if err != nil {
 		return sheet.RestedVitals{}, err
 	}
+	traits, err := s.restTraitsOf(ctx, row)
+	if err != nil {
+		return sheet.RestedVitals{}, err
+	}
 	// A conta do livro recebe o poço DERIVADO e não a coluna: o descanso devolve
 	// uma fração do máximo, e com o máximo velho um personagem que subiu de nível
 	// recuperaria pelo teto de ontem.
 	var after sheet.RestedVitals
 	if _, err := sheet.ApplyToPools(ctx, s.queries, s.catalogs, row,
 		func(pools sheet.Pools) (sheet.Pools, error) {
-			after = sheet.AfterNightRest(row.Level, condition,
+			after = sheet.AfterNightRest(row.Level, condition, traits,
 				sheet.RestedVitals{HpCurrent: pools.HpCurrent, MpCurrent: pools.MpCurrent},
 				pools.HpMax, pools.MpMax)
 			pools.HpCurrent, pools.MpCurrent = after.HpCurrent, after.MpCurrent
@@ -208,4 +212,24 @@ func (s Scopes) NightRest(
 		return sheet.RestedVitals{}, fmt.Errorf("gravar os vitais do personagem %d: %w", characterID, err)
 	}
 	return after, nil
+}
+
+// restTraitsOf são as características de descanso da ficha — Estoico, Rato das
+// Ruas, golem… (p106, ALE-488) —, lidas das flags que o catálogo levanta.
+//
+// O ERRO SOBE: sem a ficha computada não dá para saber se o goblin recupera o
+// nível inteiro, e descansar assim mesmo é afirmar que ele não tem nada.
+func (s Scopes) restTraitsOf(ctx context.Context, row sqlcgen.Character) (sheet.RestTraits, error) {
+	dto, err := sheet.Load(ctx, s.queries, s.catalogs, row)
+	if err != nil {
+		return sheet.RestTraits{}, fmt.Errorf("montar a ficha %d para o descanso: %w", row.ID, err)
+	}
+	if dto.Ruleset == nil {
+		return sheet.RestTraits{}, nil
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return sheet.RestTraits{}, fmt.Errorf("converter a ficha %d para o descanso: %w", row.ID, err)
+	}
+	return sheet.RestTraitsOf(engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Flags), nil
 }

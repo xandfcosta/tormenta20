@@ -203,10 +203,17 @@ var originsPart04 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-refugiado-unique",
-			Unmodeled:   "muda o descanso, e o descanso não lê habilidade (ALE-488)",
 			Name:        "Estoico",
 			Kind:        "poder",
 			Description: "Sua condição de descanso é uma categoria acima do padrão pela situação (normal em condições ruins, confortável em condições normais e luxuosa em condições confortáveis ou melhores).",
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "flag", Name: "rest-one-category-up"},
+					Amount:    1,
+					BonusType: "untyped",
+					Note:      "condição de descanso uma categoria acima",
+				},
+			},
 		},
 		UID: "org_qpgnux37xo",
 	},
@@ -299,10 +306,18 @@ var originsPart04 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-selvagem-unique",
-			Unmodeled:   "a recuperação nunca abaixo do nível; e a imunidade a ingeríveis é prosa: muda o descanso, e o descanso não lê habilidade (ALE-488)",
+			Unmodeled:   "a imunidade a efeitos prejudiciais de itens ingeríveis é prosa do mestre",
 			Name:        "Vida Rústica",
 			Kind:        "poder",
 			Description: "Você é imune a efeitos prejudiciais de itens ingeríveis e consegue descansar nos lugares mais desconfortáveis: mesmo dormindo ao relento, sua recuperação de PV e PM nunca é inferior a seu próprio nível.",
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "flag", Name: "rest-never-below-level"},
+					Amount:    1,
+					BonusType: "untyped",
+					Note:      "recuperação nunca inferior ao nível",
+				},
+			},
 		},
 		UID: "org_dvyyu74qm5",
 	},

@@ -233,14 +233,19 @@ var raceDefinitionsPart01 = []RaceDefinition{
 			},
 			{
 				ID:          "goblin-rato-das-ruas",
-				Modeled:     []string{"o +2 em Fortitude"},
+				Modeled:     []string{"o +2 em Fortitude", "a recuperação da noite nunca abaixo do nível"},
 				RaceID:      "goblin",
 				Name:        "Rato das Ruas",
 				Description: "Você recebe +2 em Fortitude e sua recuperação de PV e PM nunca é inferior ao seu nível.",
 				UID:         "rac_vonfvat6ok",
-				Unmodeled:   "muda o descanso, e o descanso não lê habilidade (ALE-488)",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "expertise", Name: "Fortitude"}, Amount: 2, BonusType: "untyped"},
+					{
+						Target:    ModifierTarget{Kind: "flag", Name: "rest-never-below-level"},
+						Amount:    1,
+						BonusType: "untyped",
+						Note:      "recuperação nunca inferior ao nível",
+					},
 				},
 			},
 		},
