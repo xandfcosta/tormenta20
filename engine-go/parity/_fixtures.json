@@ -777,7 +777,7 @@
       "proficiencies": "[\"armas-simples\",\"armas-marciais\",\"escudos\",\"armaduras-leves\",\"armas-exoticas\"]",
       "raceAbilityChoices": "[]",
       "raceAttributeChoices": "{\"floatingPicks\":[]}",
-      "secondaryRaceChoices": "[{\"race\":\"lefou\",\"floatingPicks\":[],\"deformidade\":{\"pericias\":[],\"tormentaPower\":\"olhos-vermelhos\"}}]",
+      "secondaryRaceChoices": "[{\"race\":\"lefou\",\"floatingPicks\":[],\"abilityPicks\":{\"lefou-deformidade\":[\"olhos-vermelhos\"]}}]",
       "originChoices": "[\"poder-vontade-de-ferro\",\"origin-refugiado-unique\"]",
       "classPowers": "[\"class.barbaro.alma-de-bronze\",\"class.barbaro.destruidor\",\"class.barbaro.golpe-poderoso\",\"class.barbaro.pele-de-ferro\",\"class.barbaro.totem-espiritual\"]",
       "classChoices": "{}",
@@ -1156,11 +1156,7 @@
       ],
       "raceAbilityChoices": [],
       "classChoices": {},
-      "activeConditions": [],
-      "deformidade": {
-        "pericias": [],
-        "tormentaPower": "olhos-vermelhos"
-      }
+      "activeConditions": []
     }
   },
   {

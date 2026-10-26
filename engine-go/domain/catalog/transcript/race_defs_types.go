@@ -7,7 +7,6 @@ type RaceDefinition struct {
 	Abilities            []RaceAbility   `json:"abilities"`
 	UID                  string          `json:"uid"`
 	GrantsTormentaPowers bool            `json:"grantsTormentaPowers,omitempty"`
-	HasDeformity         bool            `json:"hasDeformidade,omitempty"`
 }
 
 type RaceAbility struct {
@@ -21,6 +20,10 @@ type RaceAbility struct {
 	Facts       []Fact               `json:"facts,omitempty"`
 	Modifiers   []Modifier           `json:"modifiers,omitempty"`
 	Variants    []RaceAbilityVariant `json:"variants,omitempty"`
+	Choice      *PowerChoice         `json:"choice,omitempty"`
+	// GrantsProficiency são as proficiências que a habilidade dá (o
+	// Vanguardista, armas de fogo).
+	GrantsProficiency []string `json:"grantsProficiency,omitempty"`
 }
 
 type RaceAbilityVariant struct {

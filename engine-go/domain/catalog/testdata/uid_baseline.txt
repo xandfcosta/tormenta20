@@ -1244,11 +1244,11 @@ race-defs.json	hynne	rac_76vs5luayw
 race-defs.json	hynne-arremessador	rac_rdh4sutt2c
 race-defs.json	hynne-pequeno-e-rechonchudo	rac_eief7ymkwz
 race-defs.json	hynne-sorte-salvadora	rac_fljkqob7lk
-race-defs.json	kiiren-engenhosidade	rac_xse6geohcx
-race-defs.json	kiiren-hibrido	rac_e7iz2ymt7d
-race-defs.json	kiiren-ossos-frageis	rac_bvxnjgjfnv
-race-defs.json	kiiren-vanguardista	rac_nswmnwe2uc
 race-defs.json	kliren	rac_fmeindoywi
+race-defs.json	kliren-engenhosidade	rac_xse6geohcx
+race-defs.json	kliren-hibrido	rac_e7iz2ymt7d
+race-defs.json	kliren-ossos-frageis	rac_bvxnjgjfnv
+race-defs.json	kliren-vanguardista	rac_nswmnwe2uc
 race-defs.json	lefou	rac_re62lwdmhj
 race-defs.json	lefou-cria-da-tormenta	rac_jqrbr6pho5
 race-defs.json	lefou-deformidade	rac_fkjq7hg3b5

@@ -38,6 +38,11 @@ type RaceAbility struct {
 	// os modificadores num conjunto de flags e perde a procedência no caminho —
 	// "quem me isentou" é pergunta de apresentação, e é aqui que ela se responde.
 	Modifiers []engine.Modifier `json:"modifiers,omitempty"`
+	// Choice é a escolha da habilidade — as perícias da Deformidade, o Ofício
+	// do Vanguardista (ALE-493). Ela mora no blob da raça, pelo id.
+	Choice *PowerChoice `json:"choice,omitempty"`
+	// GrantsProficiency entra no PADRÃO da ficha, como a da classe.
+	GrantsProficiency []string `json:"grantsProficiency,omitempty"`
 }
 
 type RaceForScreen struct {

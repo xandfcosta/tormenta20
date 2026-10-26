@@ -287,12 +287,20 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				Name:        "Deformidade",
 				Description: "Recebe +2 em duas perícias a sua escolha (contam como poder da Tormenta, exceto para perda de Carisma). Pode trocar um desses bônus por um poder da Tormenta a sua escolha.",
 				UID:         "rac_fkjq7hg3b5",
-				Unmodeled:   "o +2 em duas perícias escolhidas, ou o poder da Tormenta no lugar: a escolha de habilidade de raça não tem onde morar (ALE-493)",
+				Modifiers: []Modifier{
+					{
+						Target:     ModifierTarget{Kind: "expertise"},
+						Amount:     2,
+						BonusType:  "untyped",
+						Note:       "Deformidade",
+						FromChoice: "name",
+					},
+				},
+				Choice: &PowerChoice{Kind: "expertise", Label: "Perícias", Count: 2, SwapFor: "tormenta-power"},
 			},
 		},
 		UID:                  "rac_re62lwdmhj",
 		GrantsTormentaPowers: true,
-		HasDeformity:         true,
 	},
 	{
 		ID:               "minotauro",

@@ -57,7 +57,6 @@ type CharacterInput struct {
 	GodPower           string                 `json:"godPower"`
 	Origin             string                 `json:"origin"`
 	OriginChoices      []string               `json:"originChoices"`
-	Deformity          *Deformidade           `json:"deformidade"`
 	ActiveConditions   []string               `json:"activeConditions"`
 }
 
@@ -75,11 +74,6 @@ type ClassChoice struct {
 type ClassEntry struct {
 	ClassName string `json:"className"`
 	Level     int    `json:"level"`
-}
-
-type Deformidade struct {
-	Expertises    []string `json:"pericias"`
-	TormentaPower string   `json:"tormentaPower"`
 }
 
 type CharacterEquipment struct {

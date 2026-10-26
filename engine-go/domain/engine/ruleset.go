@@ -202,10 +202,6 @@ func (r *Ruleset) raceEntryByID(id string) *RaceAttributeEntry {
 	return r.book.raceEntryByID(id)
 }
 
-func (r *Ruleset) raceWithDeformidade(ids ...string) string {
-	return r.book.raceWithDeformidade(ids...)
-}
-
 func (r *Ruleset) isTormentaPower(id string) bool { return r.book.isTormentaPower(id) }
 
 func (r *Ruleset) ownedClassPowers(

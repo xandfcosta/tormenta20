@@ -61,12 +61,15 @@ type RaceDefinition struct {
 	Name             string         `json:"name"`
 	AttributeBonuses map[string]int `json:"attributeBonuses"`
 	Abilities        []RaceAbility  `json:"abilities"`
-	HasDeformity     bool           `json:"hasDeformidade"`
 }
 
 type RaceAbility struct {
+	ID        string               `json:"id"`
 	Modifiers []Modifier           `json:"modifiers"`
 	Variants  []RaceAbilityVariant `json:"variants"`
+	// Choice é a escolha da habilidade (a Deformidade, o Vanguardista); o
+	// motor só precisa saber que ela existe — o que vale é o `abilityPicks`.
+	Choice *struct{} `json:"choice"`
 }
 
 type RaceAbilityVariant struct {
@@ -386,22 +389,6 @@ func (c *Catalogs) getOriginBenefit(benefitID string) *OriginBenefit {
 // raceEntryByID acha a entrada de atributo de uma raça pelo slug. O mapa é
 // montado uma vez, quando os catálogos são primados.
 func (c *Catalogs) raceEntryByID(id string) *RaceAttributeEntry { return c.raceAttrsByID[id] }
-
-// raceWithDeformidade devolve o primeiro slug que tem Deformidade (Lefou p23).
-func (c *Catalogs) raceWithDeformidade(ids ...string) string {
-	owners := map[string]bool{}
-	for _, r := range c.racesByID {
-		if r.HasDeformity {
-			owners[r.ID] = true
-		}
-	}
-	for _, id := range ids {
-		if owners[id] {
-			return id
-		}
-	}
-	return ""
-}
 
 // isTormentaPower diz se o id é de um poder da Tormenta.
 func (c *Catalogs) isTormentaPower(id string) bool { return c.tormentaIDs[id] }

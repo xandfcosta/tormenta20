@@ -53,6 +53,10 @@ type PowerChoice struct {
 	// quantas: o atributo sem temporários, mínimo 1 — as perícias do
 	// Especialista, p73 (ALE-501).
 	CountAttribute string `json:"countAttribute"`
+	// Count é o número fixo de opções (as duas perícias da Deformidade), e
+	// SwapFor o que pode tomar o lugar de UMA delas ("tormenta-power", p24).
+	Count   int    `json:"count"`
+	SwapFor string `json:"swapFor"`
 }
 
 type PowerChoiceOption struct {

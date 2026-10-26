@@ -24,6 +24,11 @@ func raceModifiers(race *RaceDefinition, variantChoices map[string]bool) []Modif
 		})
 	}
 	for _, ability := range race.Abilities {
+		// A habilidade com escolha só soma pelo que foi escolhido
+		// (`abilityChoiceModifiers`): o molde dela não tem alvo.
+		if ability.Choice != nil {
+			continue
+		}
 		out = append(out, ability.Modifiers...)
 		if len(ability.Variants) == 0 {
 			continue
