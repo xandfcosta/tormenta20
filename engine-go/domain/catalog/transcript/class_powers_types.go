@@ -26,6 +26,7 @@ type PowerChoice struct {
 	Repeatable           bool                `json:"repeatable,omitempty"`
 	Options              []PowerChoiceOption `json:"options,omitempty"`
 	GrantsSpellAttribute string              `json:"grantsSpellAttribute,omitempty"`
+	CountAttribute       string              `json:"countAttribute,omitempty"`
 }
 
 type PowerChoiceOption struct {

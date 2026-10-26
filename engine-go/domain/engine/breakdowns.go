@@ -462,3 +462,14 @@ func autoFailExpertises(e ItemEffects) []string {
 	}
 	return out
 }
+
+// PermanentAttribute é o atributo "exceto bônus temporários" (Especialista,
+// p73): a mesma conta do `attributeBreakdown`, sem os efeitos aplicados e sem
+// as condições. Item vestido, raça, poder e concessão da mesa ficam — decisão
+// do dono na ALE-501.
+//
+//	ruleset.PermanentAttribute(ch, "intelligence") // 3
+func (r *Ruleset) PermanentAttribute(ch Character, attr string) int {
+	ch.ActiveEffects, ch.ActiveConditions = nil, "[]"
+	return attributeBreakdown(ch, attr, ComputeItemEffects(r.ActiveItemsFor(ch))).Total
+}

@@ -60,6 +60,9 @@ const (
 	SpendSwap = "swap"
 	// SpendTwoDice rola dois d20 e usa o melhor (ALE-500).
 	SpendTwoDice = "two-dice"
+	// SpendDoubleTraining soma o treino de novo, nas perícias que o poder
+	// escolheu (Especialista, p73, ALE-501).
+	SpendDoubleTraining = "double-training"
 )
 
 // SkillSpendTarget é o que a oferta precisa saber da perícia e da ficha.
@@ -77,6 +80,9 @@ type SkillSpendTarget struct {
 	Totals    map[string]int
 	TrainedIn map[string]bool
 	Flags     map[string]bool
+	// PowerPicks é o `powerChoices` da ficha: as perícias que o Especialista
+	// escolheu, pelo id do poder.
+	PowerPicks map[string][]string
 }
 
 // SkillSpendOffer é um gasto que a ficha pode fazer NESTE teste.
@@ -159,6 +165,11 @@ func SkillSpendOffers(owned []Activation, target SkillSpendTarget) []SkillSpendO
 				continue
 			}
 			offer.Context = spend.Context
+		case SpendDoubleTraining:
+			if !target.Trained || !slices.Contains(target.PowerPicks[a.ID], target.Skill) {
+				continue
+			}
+			offer.Bonus = target.TrainingBonus
 		default:
 			continue
 		}

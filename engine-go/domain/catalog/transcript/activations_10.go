@@ -3,6 +3,15 @@ package transcript
 // Parte 10 de 10 de `Activations` (activations.go).
 var activationsPart10 = []Activation{
 	{
+		ID:       "deus.wynna.centelha-magica",
+		Name:     "Centelha Mágica",
+		Kind:     "instant",
+		Action:   "varia",
+		PMCost:   PMCost{Written: "variavel"},
+		Uses:     nil,
+		BookPage: 135,
+	},
+	{
 		ID:       "deus.wynna.escudo-magico",
 		Name:     "Escudo Mágico",
 		Kind:     "instant",

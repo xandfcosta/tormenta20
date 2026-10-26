@@ -3,6 +3,15 @@ package transcript
 // Parte 9 de 10 de `Activations` (activations.go).
 var activationsPart09 = []Activation{
 	{
+		ID:       "deus.lin-wu.coragem-total",
+		Name:     "Coragem Total",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		BookPage: 134,
+	},
+	{
 		ID:       "deus.lin-wu.kiai-divino",
 		Name:     "Kiai Divino",
 		Kind:     "instant",
@@ -395,15 +404,6 @@ var activationsPart09 = []Activation{
 		Kind:     "passive",
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
-		BookPage: 135,
-	},
-	{
-		ID:       "deus.wynna.centelha-magica",
-		Name:     "Centelha Mágica",
-		Kind:     "instant",
-		Action:   "varia",
-		PMCost:   PMCost{Written: "variavel"},
 		Uses:     nil,
 		BookPage: 135,
 	},

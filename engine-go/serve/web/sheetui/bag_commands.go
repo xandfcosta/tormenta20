@@ -64,6 +64,9 @@ func removeItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 	if err != nil {
 		return err
 	}
+	if err := s.keepsChosenExpertises(r, row, withoutItem(item.ID)); err != nil {
+		return err
+	}
 	return s.plays.RemoveItem(r.Context(), item.ID)
 }
 
@@ -161,7 +164,7 @@ func stowItem(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 	if err != nil {
 		return err
 	}
-	return saveEquipped(r, s, item.ID, "")
+	return saveEquipped(r, s, row, item.ID, "")
 }
 
 // equipItemFromSheet põe o item na mão ou no corpo.
@@ -196,15 +199,23 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 	if refusal := sheet.EquipLimitErrorOver(equipped, item.ID, slot); refusal != "" {
 		return fmt.Errorf("%s", refusal)
 	}
-	return saveEquipped(r, s, item.ID, slot)
+	return saveEquipped(r, s, row, item.ID, slot)
 }
 
 // saveEquipped põe o item num lugar do corpo, e o VAZIO o guarda de volta.
 //
 // A cena diz o LUGAR e nada mais: que o vazio vira NULL, e que
 // `character_items` não tem carimbo para tocar, é do caso de uso. Ela sabe que
-// o item foi para a mão.
-func saveEquipped(r *http.Request, s Scene, itemID int64, place string) error {
+// o item foi para a mão — e confere antes que a ficha não sai da escolha do
+// Especialista, porque o item vestido conta no N (ALE-501).
+func saveEquipped(r *http.Request, s Scene, row sqlcgen.Character, itemID int64, place string) error {
+	var wear *string
+	if place != "" {
+		wear = &place
+	}
+	if err := s.keepsChosenExpertises(r, row, equippedAs(itemID, wear)); err != nil {
+		return err
+	}
 	return s.plays.SaveEquipped(r.Context(), itemID, place)
 }
 

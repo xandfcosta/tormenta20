@@ -3,6 +3,15 @@ package transcript
 // Parte 6 de 10 de `Activations` (activations.go).
 var activationsPart06 = []Activation{
 	{
+		ID:       "class.lutador.lingua-dos-becos",
+		Name:     "Língua dos Becos",
+		Kind:     "instant",
+		Action:   "livre",
+		PMCost:   PMCost{Fixed: 1},
+		Uses:     nil,
+		BookPage: 77,
+	},
+	{
 		ID:       "class.lutador.lutador-de-chao",
 		Name:     "Lutador de Chão",
 		Kind:     "passive",
@@ -414,15 +423,6 @@ var activationsPart06 = []Activation{
 		Kind:     "instant",
 		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
-		Uses:     nil,
-		BookPage: 84,
-	},
-	{
-		ID:       "class.paladino.julgamento-zelo",
-		Name:     "Julgamento Divino: Zelo",
-		Kind:     "instant",
-		Action:   "livre",
-		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
 		BookPage: 84,
 	},

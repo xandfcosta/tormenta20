@@ -137,7 +137,7 @@ var classPowersPart09 = []ClassPower{
 		GrantedAtLevel: 1,
 		BookPage:       73,
 		UID:            "pwr_hm5uud6p5s",
-		Unmodeled:      "1 PM para dobrar o treino nas perícias escolhidas: mexe num teste de perícia na hora de rolar (ALE-501)",
+		Choice:         &PowerChoice{Kind: "trained-expertise", Label: "Perícias", CountAttribute: "intelligence"},
 	},
 	{
 		ID:             "class.ladino.evasao",

@@ -101,6 +101,9 @@ func (s Scene) stepAttribute(r *http.Request) (refusal string, status int, err e
 	if notices := engine.PointBuyWarnings(spread); len(notices) > 0 {
 		return purchaseRefusal(notices[0]), http.StatusOK, nil
 	}
+	if refusal, err := s.leavesChosenExpertises(r, row, spread); err != nil || refusal != "" {
+		return refusal, http.StatusOK, err
+	}
 	if err := s.births.SpreadAttributes(r.Context(), row.ID, spread); err != nil {
 		return "", http.StatusInternalServerError, err
 	}
@@ -129,6 +132,28 @@ func heroSpread(row sqlcgen.Character) map[string]int {
 		"constitution": int(row.Constitution), "intelligence": int(row.Intelligence),
 		"wisdom": int(row.Wisdom), "charisma": int(row.Charisma),
 	}
+}
+
+// leavesChosenExpertises recusa o espalhamento que baixaria a Inteligência
+// abaixo das perícias escolhidas no Especialista (p73, ALE-501). A recusa é
+// frase da cena, como a da compra de pontos.
+func (s Scene) leavesChosenExpertises(r *http.Request, row sqlcgen.Character, spread map[string]int) (string, error) {
+	if !sheet.HasCountedChoice(row.Powerchoices) {
+		return "", nil
+	}
+	dto, err := sheet.Load(r.Context(), s.deps.Queries(), s.deps.Catalogs(), row)
+	if err != nil {
+		return "", err
+	}
+	refused := sheet.ChangeKeepsChosenExpertises(dto, func(d *sheet.CharacterDTO) {
+		d.Strength, d.Dexterity = int64(spread["strength"]), int64(spread["dexterity"])
+		d.Constitution, d.Intelligence = int64(spread["constitution"]), int64(spread["intelligence"])
+		d.Wisdom, d.Charisma = int64(spread["wisdom"]), int64(spread["charisma"])
+	})
+	if refused != nil {
+		return refused.Error(), nil
+	}
+	return "", nil
 }
 
 // heroOfTheForge acha o herói e confere a POSSE — o mesmo gargalo da ficha:
