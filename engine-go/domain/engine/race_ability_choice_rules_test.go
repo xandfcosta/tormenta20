@@ -64,3 +64,22 @@ func TestTheVanguardistAddsTwoToTheChosenCraft(t *testing.T) {
 		t.Errorf("Ofício escolhido no Vanguardista = +%d, esperava +2", got)
 	}
 }
+
+// p29 Memória Póstuma: "recebe um poder geral a sua escolha". O poder vale
+// como se escolhido — e um da Tormenta CONTA na perda de Carisma: a isenção é
+// só da troca da Deformidade (ALE-502).
+func TestTheMemoryGivesAGeneralPowerThatCountsLikeAnyOther(t *testing.T) {
+	r := BookRuleset(primeBook(t))
+	osteon := Character{
+		Races:                []CharacterRace{{Race: "osteon"}},
+		RaceAttributeChoices: `{"abilityPicks":{"osteon-memoria-postuma":["vontade-de-ferro"]}}`,
+		ClassPowers:          "[]",
+	}
+	if got := expertiseBonus(t, r, osteon, "Vontade"); got != 2 {
+		t.Errorf("Vontade de Ferro pela Memória Póstuma deu +%d em Vontade, esperava +2", got)
+	}
+	osteon.RaceAttributeChoices = `{"abilityPicks":{"osteon-memoria-postuma":["antenas"]}}`
+	if got := charismaFromTormenta(r, osteon); got != -1 {
+		t.Errorf("Antenas pela Memória Póstuma tirou %d de Carisma, esperava −1 (p136)", got)
+	}
+}
