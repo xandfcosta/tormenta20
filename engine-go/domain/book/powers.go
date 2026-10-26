@@ -49,6 +49,10 @@ type PowerChoice struct {
 	// Repeatable é o "você pode escolher este poder várias vezes" do livro.
 	Repeatable bool                `json:"repeatable"`
 	Options    []PowerChoiceOption `json:"options"`
+	// CountAttribute diz que a escolha toma VÁRIAS opções sem gastar vaga, e
+	// quantas: o atributo sem temporários, mínimo 1 — as perícias do
+	// Especialista, p73 (ALE-501).
+	CountAttribute string `json:"countAttribute"`
 }
 
 type PowerChoiceOption struct {

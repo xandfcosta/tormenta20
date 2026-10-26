@@ -104,3 +104,19 @@ func TestASwapIsAloneAndDoesNotMixWithPaidTraining(t *testing.T) {
 		t.Errorf("Alpinista sozinho: %+v (%v), want troca por Enganação (+2)", paid, err)
 	}
 }
+
+// O ESPECIALISTA também é treino da perícia original (p73): dobrá-lo e trocar
+// de perícia no mesmo teste é recusado, como o Eclético (ALE-501).
+func TestASwapDoesNotMixWithTheSpecialist(t *testing.T) {
+	owned := spendsOf(t, "origin.charlatao.alpinista-social", "class.ladino.especialista")
+	target := swapTarget("Diplomacia", "charisma")
+	target.Trained, target.TrainingBonus = true, 4
+	target.PowerPicks = map[string][]string{"class.ladino.especialista": {"Diplomacia"}}
+	offers := SkillSpendOffers(owned, target)
+	if len(offers) != 2 {
+		t.Fatalf("Diplomacia escolhida e treinada: esperava a troca e o Especialista, veio %+v", offers)
+	}
+	if _, err := PaySkillSpends(offers, []SkillSpendChoice{{Key: "alpinista_social", PM: 1}, {Key: "especialista", PM: 1}}); err == nil {
+		t.Error("troca com Especialista passou — o treino dobrado é da perícia original")
+	}
+}

@@ -36,7 +36,7 @@ func SkillSpendOffersFor(dto sheet.CharacterDTO, computed engine.ComputedSheet, 
 		Skill: skill, Trained: isTrained(computed, skill), TrainedOnly: trainedOnly(skill),
 		TrainingBonus: engine.TrainingBonusForLevel(int(dto.Level)), Attributes: attributes,
 		Attribute: bookAttributeOf(computed, skill), Totals: totals, TrainedIn: trainedIn,
-		Flags: sheetFlags(dto),
+		Flags: sheetFlags(dto), PowerPicks: sheet.PowerPicks(dto.PowerChoices),
 	})
 }
 

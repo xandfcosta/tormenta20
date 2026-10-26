@@ -30,6 +30,8 @@ func TestTheSeedRefusesEveryUnknownCatalogReference(t *testing.T) {
 		{"spell", "bola-de-fog", "magia"},
 		{"item", "machado-de-batalha", "item"},
 		{"powerChoice", "espada-curtaa", "opções de Especialização em Arma"},
+		// A opção do Especialista é perícia TREINADA da própria ficha (ALE-501).
+		{"specialistChoice", "Diplomacia", "opções de Especialista"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.field, func(t *testing.T) {
@@ -132,6 +134,8 @@ func sujaOCriar(t *testing.T, create map[string]json.RawMessage, field, wrong st
 		return trocaNaClasse(t, create, wrong)
 	case "powerChoice":
 		return trocaNaEscolhaDaArma(t, create, wrong)
+	case "specialistChoice":
+		return specialistPickSwapped(t, create, wrong)
 	default: // origin, god, godPower — todos strings simples
 		if _, found := create[field]; !found {
 			return false
@@ -207,6 +211,27 @@ func trocaNoItem(t *testing.T, create map[string]json.RawMessage, wrong string) 
 		t.Fatalf("marshal dos itens: %v", err)
 	}
 	create["items"] = novo
+	return true
+}
+
+// specialistPickSwapped troca uma perícia escolhida no Especialista por uma que
+// a ficha não treinou.
+func specialistPickSwapped(t *testing.T, create map[string]json.RawMessage, wrong string) bool {
+	t.Helper()
+	var picks map[string][]string
+	if json.Unmarshal(create["powerChoices"], &picks) != nil {
+		return false
+	}
+	const power = "class.ladino.especialista"
+	if len(picks[power]) == 0 {
+		return false
+	}
+	picks[power][0] = wrong
+	raw, err := json.Marshal(picks)
+	if err != nil {
+		t.Fatalf("remontar o powerChoices: %v", err)
+	}
+	create["powerChoices"] = raw
 	return true
 }
 

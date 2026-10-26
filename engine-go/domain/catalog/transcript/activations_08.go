@@ -3,6 +3,15 @@ package transcript
 // Parte 8 de 10 de `Activations` (activations.go).
 var activationsPart08 = []Activation{
 	{
+		ID:       "origin.marujo.passagem-de-navio",
+		Name:     "Passagem de Navio",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		BookPage: 92,
+	},
+	{
 		ID:       "origin.mateiro.vendedor-de-carcacas",
 		Name:     "Vendedor de Carcaças",
 		Kind:     "passive",
@@ -422,14 +431,5 @@ var activationsPart08 = []Activation{
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
 		BookPage: 133,
-	},
-	{
-		ID:       "deus.lin-wu.coragem-total",
-		Name:     "Coragem Total",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
-		BookPage: 134,
 	},
 }

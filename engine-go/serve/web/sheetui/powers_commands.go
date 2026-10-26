@@ -125,22 +125,24 @@ func pickPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error
 // No repetível, cada toque é mais uma escolha e mais uma vaga; no que não se
 // repete, a escolha nova troca a antiga.
 func pickPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	id, option := chi.URLParam(r, "poder"), chi.URLParam(r, "opcao")
+	id, option := chi.URLParam(r, "poder"), pathParam(r, "opcao")
 	power, known := book.ClassPowers()[id]
 	if !known || power.Choice == nil {
 		return fmt.Errorf("o poder %q não pede escolha", id)
 	}
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
-		if !slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
+		// O poder CONCEDIDO pelo nível não entra na lista: ele não é escolha e
+		// não ocupa vaga — o Especialista (ALE-501).
+		if power.GrantedAtLevel == nil && !slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
 			dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
 		}
-		dto.PowerChoices = sheet.WithPowerPick(dto.PowerChoices, id, option, power.Choice.Repeatable)
+		dto.PowerChoices = sheet.WithPowerPick(dto.PowerChoices, id, option, *power.Choice)
 	})
 }
 
 // dropPowerOption tira UMA escolha do poder; sem nenhuma, o poder sai da ficha.
 func dropPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	id, option := chi.URLParam(r, "poder"), chi.URLParam(r, "opcao")
+	id, option := chi.URLParam(r, "poder"), pathParam(r, "opcao")
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
 		picks, left := sheet.WithoutPowerPick(dto.PowerChoices, id, option)
 		dto.PowerChoices = picks
@@ -211,7 +213,7 @@ func pickRaceAttributes(s Scene, r *http.Request, row sqlcgen.Character, signals
 			}
 		}
 	}
-	return s.saveRaceAttributeChoice(r, row.ID, string(blob))
+	return s.saveRaceAttributeChoice(r, row, string(blob))
 }
 
 // pickRaceAscendencia grava a metade escolhida de uma raça de ascendência.
@@ -220,7 +222,7 @@ func pickRaceAscendencia(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 	if err != nil {
 		return err
 	}
-	return s.saveRaceAttributeChoice(r, row.ID, string(blob))
+	return s.saveRaceAttributeChoice(r, row, string(blob))
 }
 
 // saveTheChoices aplica a mudança e CONFERE a ficha inteira antes de gravar.
@@ -268,8 +270,11 @@ func (s Scene) saveTheChoices(
 //
 // Ela é a única escolha que se grava SOZINHA — as outras quatro passam pelo
 // `saveTheChoices`, que confere a ficha inteira antes.
-func (s Scene) saveRaceAttributeChoice(r *http.Request, id int64, value string) error {
-	return s.plays.SaveChoices(r.Context(), id, character.ChoiceWrite{RaceAttributeChoices: &value})
+func (s Scene) saveRaceAttributeChoice(r *http.Request, row sqlcgen.Character, value string) error {
+	if err := s.keepsChosenExpertises(r, row, func(dto *sheet.CharacterDTO) { dto.RaceAttributeChoices = value }); err != nil {
+		return err
+	}
+	return s.plays.SaveChoices(r.Context(), row.ID, character.ChoiceWrite{RaceAttributeChoices: &value})
 }
 
 // idToggledCom liga ou desliga um id numa lista guardada como blob.

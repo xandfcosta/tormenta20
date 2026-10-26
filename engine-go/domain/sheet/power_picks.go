@@ -59,12 +59,19 @@ func UsedPowerSlots(dto CharacterDTO) int {
 }
 
 // WithPowerPick acrescenta uma escolha ao poder. No poder que NÃO se repete, a
-// escolha nova substitui a antiga: o Totem Espiritual tem um animal só.
-func WithPowerPick(blob, power, option string, repeatable bool) string {
+// escolha nova substitui a antiga: o Totem Espiritual tem um animal só. A
+// escolha contada por atributo acumula opções DISTINTAS — as perícias do
+// Especialista —, e quem a limita é o `ChosenExpertisesFit`.
+func WithPowerPick(blob, power, option string, choice book.PowerChoice) string {
 	picks := PowerPicks(blob)
-	if repeatable {
+	switch {
+	case choice.Repeatable:
 		picks[power] = append(picks[power], option)
-	} else {
+	case choice.CountAttribute != "":
+		if !slices.Contains(picks[power], option) {
+			picks[power] = append(picks[power], option)
+		}
+	default:
 		picks[power] = []string{option}
 	}
 	return marshalPowerPicks(picks)
@@ -95,17 +102,25 @@ func WithoutPowerPicksOf(blob, power string) string {
 	return marshalPowerPicks(picks)
 }
 
-// powerPicksFit confere as escolhas: só de poder que a ficha tem, só opção que o
-// livro oferece, e mais de uma só no poder repetível.
+// powerPicksFit confere as escolhas: só de poder que a ficha tem — escolhido ou
+// concedido pelo nível —, só opção que o livro oferece, e mais de uma só no
+// poder repetível. A escolha contada por atributo tem conferência própria, que
+// depende da ficha (`ChosenExpertisesFit`).
 func powerPicksFit(dto CharacterDTO) error {
-	owned := UnmarshalStrings(dto.ClassPowers)
+	owned := map[string]bool{}
+	for _, p := range OwnedPowers(dto) {
+		owned[p.ID] = true
+	}
 	for id, picks := range PowerPicks(dto.PowerChoices) {
 		power, known := book.ClassPowers()[id]
 		if !known || power.Choice == nil {
 			return fmt.Errorf("o poder %q não pede escolha", id)
 		}
-		if !slices.Contains(owned, id) {
+		if !owned[id] {
 			return fmt.Errorf("há escolha de %q, e a ficha não tem o poder", power.Name)
+		}
+		if power.Choice.CountAttribute != "" {
+			continue
 		}
 		if len(picks) > 1 && !power.Choice.Repeatable {
 			return fmt.Errorf("%q se escolhe uma vez só, e há %d escolhas", power.Name, len(picks))

@@ -1784,6 +1784,74 @@
               }
             ]
           }
+        },
+        {
+          "create": {
+            "name": "Ladina Especialista Nv5",
+            "races": [
+              "humano"
+            ],
+            "origin": "batedor",
+            "classes": [
+              {
+                "className": "Ladino",
+                "level": 5
+              }
+            ],
+            "strength": 0,
+            "dexterity": 3,
+            "constitution": 1,
+            "intelligence": 2,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": [
+                "dexterity",
+                "intelligence",
+                "wisdom"
+              ]
+            },
+            "originChoices": [
+              "origin-batedor-pericia-furtividade",
+              "origin-batedor-pericia-percepcao"
+            ],
+            "trainedExpertises": [
+              "Ladinagem",
+              "Reflexos",
+              "Acrobacia",
+              "Furtividade",
+              "Percepção",
+              "Enganação",
+              "Iniciativa",
+              "Atletismo",
+              "Investigação",
+              "Intuição",
+              "Pontaria"
+            ],
+            "powerChoices": {
+              "class.ladino.especialista": [
+                "Ladinagem",
+                "Furtividade",
+                "Enganação"
+              ]
+            },
+            "items": [
+              {
+                "catalogId": "brincos-da-sagacidade",
+                "equipped": "vested"
+              },
+              {
+                "catalogId": "adaga",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "armadura-couro",
+                "equipped": "vested"
+              }
+            ]
+          }
         }
       ]
     },

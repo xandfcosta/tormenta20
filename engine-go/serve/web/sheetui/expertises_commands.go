@@ -22,15 +22,23 @@ import (
 // ofício novo vem dos dois campos do diálogo.
 
 // expertiseName lê o nome do caminho, desescapando como a API JSON fazia.
-func expertiseName(r *http.Request) string {
-	name := chi.URLParam(r, "nome")
-	if decoded, err := url.PathUnescape(name); err == nil {
+func expertiseName(r *http.Request) string { return pathParam(r, "nome") }
+
+// pathParam é o pedaço do caminho DESESCAPADO: nome de perícia tem acento,
+// espaço e parêntese ("Ofício (alquimista)"), e é também opção de escolha — as
+// perícias do Especialista (ALE-501).
+func pathParam(r *http.Request, key string) string {
+	raw := chi.URLParam(r, key)
+	if decoded, err := url.PathUnescape(raw); err == nil {
 		return decoded
 	}
-	return name
+	return raw
 }
 
 func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	if err := s.keepsChosenExpertises(r, row, trainingToggled(expertiseName(r))); err != nil {
+		return err
+	}
 	return s.plays.ToggleTraining(r.Context(), row.ID, expertiseName(r))
 }
 
@@ -102,6 +110,9 @@ func swapAttribute(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) e
 }
 
 func removeCraft(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	if err := s.keepsChosenExpertises(r, row, craftRemoved(expertiseName(r))); err != nil {
+		return err
+	}
 	return s.plays.RemoveCraft(r.Context(), row.ID, expertiseName(r))
 }
 

@@ -104,3 +104,26 @@ func TestASpendTheSheetDoesNotHaveIsRefused(t *testing.T) {
 		t.Error("o Orgulho de quem não o tem passou")
 	}
 }
+
+// p73 Especialista: "Ao fazer um teste de uma dessas perícias, você pode gastar
+// 1 PM para dobrar seu bônus de treinamento." Só nas ESCOLHIDAS, e só se ainda
+// treinadas; o bônus é o treino de novo (ALE-501).
+func TestTheSpecialistDoublesTrainingOnlyInTheChosenSkills(t *testing.T) {
+	owned := spendsOf(t, "class.ladino.especialista")
+	picks := map[string][]string{"class.ladino.especialista": {"Ladinagem", "Furtividade"}}
+
+	chosen := SkillSpendOffers(owned, SkillSpendTarget{Skill: "Ladinagem", Trained: true, TrainingBonus: 4, PowerPicks: picks})
+	offer, found := offerOf(chosen, "class.ladino.especialista")
+	if !found {
+		t.Fatalf("Ladinagem escolhida e treinada: o Especialista devia ser oferecido, e as ofertas são %+v", chosen)
+	}
+	if offer.Bonus != 4 || offer.PM != 1 {
+		t.Errorf("Especialista em Ladinagem no nível 7: esperava +4 por 1 PM, veio +%d por %d PM", offer.Bonus, offer.PM)
+	}
+	if other := SkillSpendOffers(owned, SkillSpendTarget{Skill: "Acrobacia", Trained: true, TrainingBonus: 4, PowerPicks: picks}); len(other) != 0 {
+		t.Errorf("Acrobacia não foi escolhida, e o Especialista foi oferecido: %+v", other)
+	}
+	if lost := SkillSpendOffers(owned, SkillSpendTarget{Skill: "Furtividade", TrainingBonus: 4, PowerPicks: picks}); len(lost) != 0 {
+		t.Errorf("Furtividade escolhida e SEM treino: não há treino para dobrar, e o Especialista foi oferecido: %+v", lost)
+	}
+}

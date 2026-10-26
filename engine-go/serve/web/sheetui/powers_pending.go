@@ -123,6 +123,21 @@ func classPendings(dto sheet.CharacterDTO) []pendencia {
 			})
 		}
 	}
+	for _, counted := range sheet.CountedChoices(dto) {
+		// O que falta é o que AINDA cabe: com menos treinadas que o limite, a
+		// pendência seria impossível de resolver.
+		missing := min(counted.Limit, len(counted.Offered)) - len(counted.Picks)
+		if missing <= 0 {
+			continue
+		}
+		word := " perícias por escolher"
+		if missing == 1 {
+			word = " perícia por escolher"
+		}
+		outside = append(outside, pendencia{
+			Source: "classe", Label: counted.Power.Name + ": " + strconv.Itoa(missing) + word,
+		})
+	}
 	return outside
 }
 

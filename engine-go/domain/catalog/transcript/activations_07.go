@@ -3,6 +3,15 @@ package transcript
 // Parte 7 de 10 de `Activations` (activations.go).
 var activationsPart07 = []Activation{
 	{
+		ID:       "class.paladino.julgamento-zelo",
+		Name:     "Julgamento Divino: Zelo",
+		Kind:     "instant",
+		Action:   "livre",
+		PMCost:   PMCost{Fixed: 1},
+		Uses:     nil,
+		BookPage: 84,
+	},
+	{
 		ID:       "class.paladino.orar",
 		Name:     "Orar",
 		Kind:     "instant",
@@ -442,15 +451,6 @@ var activationsPart07 = []Activation{
 	{
 		ID:       "origin.heroi-campones.coracao-heroico",
 		Name:     "Coração Heroico",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
-		BookPage: 92,
-	},
-	{
-		ID:       "origin.marujo.passagem-de-navio",
-		Name:     "Passagem de Navio",
 		Kind:     "passive",
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
