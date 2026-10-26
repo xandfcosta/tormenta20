@@ -124,14 +124,30 @@ templ raceAbilityChoiceBlock(v View, block raceAbilityBlock) {
 		if block.NoCraft {
 			<p class="text-3xs italic text-muted-foreground">A ficha não tem Ofício. Crie um na aba Perícias.</p>
 		} else {
-			if len(block.Swaps) > 0 {
-				<p class={ ui.FieldLabelClasses("muted", "") }>Perícias · +2</p>
+			if block.SkillsLabel() != "" {
+				<p class={ ui.FieldLabelClasses("muted", "") }>{ block.SkillsLabel() }</p>
 			}
 			@raceAbilityChips(v, block, block.Skills)
 		}
 		if len(block.Swaps) > 0 {
 			<p class={ ui.FieldLabelClasses("muted", "pt-1") }>Ou troque um bônus por um poder da Tormenta · não conta na perda de Carisma</p>
 			@raceAbilityChips(v, block, block.Swaps)
+		}
+		if block.PowerGroups != nil || block.Search != "" {
+			<p class={ ui.FieldLabelClasses("muted", "pt-1") }>Ou um poder geral</p>
+			<input
+				type="search"
+				data-bind:power_search
+				data-on:input__debounce.250ms={ sheetGet(v) }
+				value={ block.Search }
+				placeholder="Buscar poder geral…"
+				aria-label={ "Buscar poder geral de " + block.Name }
+				class="h-8 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground"
+			/>
+			for _, group := range block.PowerGroups {
+				<p class={ ui.FieldLabelClasses("muted", "") }>{ group.Title }</p>
+				@raceAbilityChips(v, block, group.Options)
+			}
 		}
 	</div>
 }

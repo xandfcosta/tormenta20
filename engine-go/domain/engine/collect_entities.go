@@ -97,8 +97,9 @@ func (r *Ruleset) appliedRaces(ch Character) []appliedRace {
 }
 
 // abilityChoiceModifiers são os modificadores das habilidades que pedem
-// escolha, um por perícia escolhida. O poder da Tormenta que a Deformidade
-// troca por um dos bônus não é perícia, e fica de fora (`RaceHeldPowers`).
+// escolha, um por perícia escolhida. O poder escolhido — o da Tormenta que a
+// Deformidade troca por um bônus, o geral da Memória Póstuma — não é perícia,
+// e fica de fora (`RaceHeldPowers`).
 func (r *Ruleset) abilityChoiceModifiers(race *RaceDefinition, picks map[string][]string) []Modifier {
 	out := []Modifier{}
 	for _, ability := range race.Abilities {
@@ -107,7 +108,7 @@ func (r *Ruleset) abilityChoiceModifiers(race *RaceDefinition, picks map[string]
 		}
 		skills := []string{}
 		for _, pick := range picks[ability.ID] {
-			if !r.isTormentaPower(pick) {
+			if !r.isPower(pick) {
 				skills = append(skills, pick)
 			}
 		}
@@ -116,22 +117,46 @@ func (r *Ruleset) abilityChoiceModifiers(race *RaceDefinition, picks map[string]
 	return out
 }
 
-// RaceHeldPowers são os poderes da Tormenta que a Deformidade trocou por um
-// bônus (p24). A ficha os TEM, e eles não contam para a perda de Carisma.
+// RaceHeldPowers são os poderes que uma habilidade de raça deu à ficha: o da
+// Tormenta que a Deformidade trocou por um bônus (p24), o geral da Memória
+// Póstuma (p29).
 //
 //	r.RaceHeldPowers(lefou) // ["olhos-vermelhos"]
 func (r *Ruleset) RaceHeldPowers(ch Character) []string {
 	out := []string{}
+	for _, held := range r.raceHeld(ch) {
+		out = append(out, held.id)
+	}
+	return out
+}
+
+// heldPower é um poder dado por habilidade de raça, e se ele está isento da
+// perda de Carisma — só a troca da Deformidade está (p24).
+type heldPower struct {
+	id             string
+	charismaExempt bool
+}
+
+func (r *Ruleset) raceHeld(ch Character) []heldPower {
+	out := []heldPower{}
 	for _, applied := range r.appliedRaces(ch) {
 		for _, ability := range applied.race.Abilities {
+			if ability.Choice == nil {
+				continue
+			}
 			for _, pick := range applied.choice.abilityPicks[ability.ID] {
-				if ability.Choice != nil && r.isTormentaPower(pick) {
-					out = append(out, pick)
+				if r.isPower(pick) {
+					out = append(out, heldPower{id: pick, charismaExempt: ability.isTormentaSwap()})
 				}
 			}
 		}
 	}
 	return out
+}
+
+// isPower diz se a escolha é um poder geral ou da Tormenta, e não perícia.
+func (r *Ruleset) isPower(id string) bool {
+	return r.isTormentaPower(id) || r.getGeneralPower(id) != nil
 }
 
 // originActiveItem: chosen origin benefits' modifiers, plus the
@@ -284,6 +309,13 @@ func flagChoiceModifiers(m Modifier, picks []string, names map[string]string) []
 // stored in the classPowers blob by bare id. Iterates in stored order.
 func (r *Ruleset) generalPowerActiveItem(ch Character) []ActiveItem {
 	chosen := parseChoiceSet(ch.ClassPowers)
+	// O poder geral que a Memória Póstuma deu vale como escolhido (ALE-502).
+	for _, id := range r.RaceHeldPowers(ch) {
+		if !chosen.has[id] {
+			chosen.list = append(chosen.list, id)
+			chosen.has[id] = true
+		}
+	}
 	out := []ActiveItem{}
 	for _, id := range chosen.list {
 		power := r.getGeneralPower(id)
@@ -331,14 +363,19 @@ func (r *Ruleset) tormentaCarismaItem(ch Character) *ActiveItem {
 	for _, id := range r.originPickedPowerIds(ch) {
 		uniq.add(id)
 	}
+	// O poder que uma habilidade de raça deu conta como os outros — menos a
+	// troca da Deformidade, que "também não conta para perda de Carisma" (p24).
+	for _, held := range r.raceHeld(ch) {
+		if !held.charismaExempt {
+			uniq.add(held.id)
+		}
+	}
 	picked := []string{}
 	for _, id := range uniq.list {
 		if r.isTormentaPower(id) {
 			picked = append(picked, id)
 		}
 	}
-	// O poder que a Deformidade trocou NÃO entra: "ele também não conta para
-	// perda de Carisma" (p24, ALE-493).
 	count := len(picked)
 	if count == 0 {
 		return nil

@@ -157,13 +157,33 @@ func dropPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 func pickRaceAbility(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	ability, option := chi.URLParam(r, "habilidade"), pathParam(r, "opcao")
 	var picked error
+	toTrain := ""
 	err := s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		// A Memória Póstuma TREINA a perícia escolhida (p29): a conferência
+		// vê a ficha já treinada, e o treino é gravado depois da escolha.
+		if toTrain = sheet.TrainsOnPick(*dto, ability, option); toTrain != "" {
+			dto.Expertises = trainedCopy(dto.Expertises, toTrain)
+		}
 		picked = sheet.WithRaceAbilityPick(dto, ability, option)
 	})
 	if picked != nil {
 		return picked
 	}
-	return err
+	if err != nil || toTrain == "" {
+		return err
+	}
+	return s.plays.ToggleTraining(r.Context(), row.ID, toTrain)
+}
+
+// trainedCopy é a lista de perícias com `skill` treinada, numa cópia.
+func trainedCopy(expertises []sheet.ExpertiseDTO, skill string) []sheet.ExpertiseDTO {
+	out := slices.Clone(expertises)
+	for i := range out {
+		if out[i].Name == skill {
+			out[i].Trained = true
+		}
+	}
+	return out
 }
 
 // pickOriginBenefit liga ou desliga um benefício da origem.

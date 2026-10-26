@@ -67,9 +67,20 @@ type RaceAbility struct {
 	ID        string               `json:"id"`
 	Modifiers []Modifier           `json:"modifiers"`
 	Variants  []RaceAbilityVariant `json:"variants"`
-	// Choice é a escolha da habilidade (a Deformidade, o Vanguardista); o
-	// motor só precisa saber que ela existe — o que vale é o `abilityPicks`.
-	Choice *struct{} `json:"choice"`
+	// Choice é a escolha da habilidade (a Deformidade, o Vanguardista, a
+	// Memória Póstuma). O que vale é o `abilityPicks`; daqui o motor só lê se a
+	// escolha é a TROCA por poder da Tormenta, que não custa Carisma (p24).
+	Choice *RaceAbilityChoice `json:"choice"`
+}
+
+// RaceAbilityChoice é o que o motor lê da escolha de uma habilidade de raça.
+type RaceAbilityChoice struct {
+	SwapFor string `json:"swapFor"`
+}
+
+// isTormentaSwap diz se a escolha é a troca da Deformidade (p24).
+func (a RaceAbility) isTormentaSwap() bool {
+	return a.Choice != nil && a.Choice.SwapFor == "tormenta-power"
 }
 
 type RaceAbilityVariant struct {

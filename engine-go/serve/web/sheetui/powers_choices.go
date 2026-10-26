@@ -214,18 +214,18 @@ type pickerChoice struct {
 // choicesPanelOf monta o diálogo.
 func (s Scene) choicesPanelOf(dto sheet.CharacterDTO, search string) choicesPanel {
 	panel := choicesPanel{Pending: s.sheetPendings(dto)}
-	panel.Races = s.raceChoices(dto)
+	panel.Races = s.raceChoices(dto, search)
 	panel.Origin = originChoice(dto)
 	panel.Classes = classChoiceCards(dto, search)
 	return panel
 }
 
-func (s Scene) raceChoices(dto sheet.CharacterDTO) []raceChoiceCard {
+func (s Scene) raceChoices(dto sheet.CharacterDTO, query string) []raceChoiceCard {
 	cards := []raceChoiceCard{}
 	for _, r := range dto.Races {
 		card := raceChoiceCard{
 			Race: book.RaceLabel(r.Race), Variants: raceVariants(dto, r.Race),
-			Abilities: raceAbilityBlocksOf(dto, r.Race),
+			Abilities: raceAbilityBlocksOf(dto, r.Race, query),
 		}
 		card.Attribute = s.attributeRaceBonus(dto, r.Race)
 		if card.Attribute == nil && len(card.Variants) == 0 && len(card.Abilities) == 0 {
