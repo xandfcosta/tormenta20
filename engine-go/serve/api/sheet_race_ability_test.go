@@ -102,3 +102,33 @@ func TestTheVanguardistPicksACraftTheSheetHas(t *testing.T) {
 		t.Errorf("apagar o Ofício escolhido no Vanguardista não foi recusado: %q", refusal)
 	}
 }
+
+// O DIÁLOGO DE ESCOLHAS mostra a Deformidade no cartão do lefou: as perícias,
+// os poderes da Tormenta da troca, e quantas de quantas.
+func TestTheChoicesDialogShowsTheDeformity(t *testing.T) {
+	f, id := lefouWithSpread(t)
+	if refusal := raceAbilityCommand(t, f, id, "lefou-deformidade", "Furtividade"); refusal != "" {
+		t.Fatalf("escolher Furtividade: %q", refusal)
+	}
+	screen := powerScreen(t, f, id)
+	for _, want := range []string{
+		"1 de 2",
+		"Lefou: Deformidade: 1 escolha por fazer",
+		`aria-label="Tirar Furtividade de Deformidade"`,
+		`aria-label="Deformidade: Percepção"`,
+		`aria-label="Deformidade: Olhos Vermelhos"`,
+	} {
+		if !strings.Contains(screen, want) {
+			t.Errorf("a tela não tem %q", want)
+		}
+	}
+}
+
+// SEM OFÍCIO NA FICHA, o Vanguardista manda criar um.
+func TestTheVanguardistWithoutCraftSaysToCreateOne(t *testing.T) {
+	f, id := barbaro(t, 3)
+	seedRaca(t, f.s, id, "kliren")
+	if !strings.Contains(powerScreen(t, f, id), "A ficha não tem Ofício. Crie um na aba Perícias.") {
+		t.Error("o kliren sem Ofício não é mandado criar um")
+	}
+}

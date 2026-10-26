@@ -100,9 +100,68 @@ templ raceChoicesBlock(v View) {
 						</div>
 					</div>
 				}
+				for _, ability := range card.Abilities {
+					@raceAbilityChoiceBlock(v, ability)
+				}
 			</section>
 		}
 	}
+}
+
+// raceAbilityChoiceBlock é a escolha de uma habilidade de raça (ALE-493): as
+// perícias, e embaixo os poderes da Tormenta que trocam um dos bônus (p24).
+templ raceAbilityChoiceBlock(v View, block raceAbilityBlock) {
+	<div
+		class={ "space-y-1 rounded-sm border px-2 py-1 text-xs",
+			templ.KV("border-grimorio-gold/60 bg-accent", block.Full()),
+			templ.KV("border-grimorio-iron", !block.Full()) }
+	>
+		<div class="flex items-baseline gap-2">
+			<span class="font-semibold text-foreground">{ block.Name }</span>
+			<span class="min-w-0 flex-1 truncate text-muted-foreground">{ block.Detail }</span>
+			<span class="shrink-0 font-mono text-2xs text-muted-foreground">{ block.Written() }</span>
+		</div>
+		if block.NoCraft {
+			<p class="text-3xs italic text-muted-foreground">A ficha não tem Ofício. Crie um na aba Perícias.</p>
+		} else {
+			if len(block.Swaps) > 0 {
+				<p class={ ui.FieldLabelClasses("muted", "") }>Perícias · +2</p>
+			}
+			@raceAbilityChips(v, block, block.Skills)
+		}
+		if len(block.Swaps) > 0 {
+			<p class={ ui.FieldLabelClasses("muted", "pt-1") }>Ou troque um bônus por um poder da Tormenta · não conta na perda de Carisma</p>
+			@raceAbilityChips(v, block, block.Swaps)
+		}
+	</div>
+}
+
+// raceAbilityChips são as opções: um toque escolhe, outro tira; cheia, as não
+// escolhidas se apagam, e tocá-las traz a recusa que diz o porquê.
+templ raceAbilityChips(v View, block raceAbilityBlock, options []powerOption) {
+	<div class="flex flex-wrap gap-1">
+		for _, o := range options {
+			if o.Count > 0 {
+				<button
+					type="button"
+					role="switch"
+					aria-checked="true"
+					aria-label={ "Tirar " + o.Label + " de " + block.Name }
+					data-on:click={ sheetPost(v, "/poderes/raca/"+block.ID+"/"+url.PathEscape(o.Value)) }
+					class={ choiceChip(true) }
+				>{ o.Label }</button>
+			} else {
+				<button
+					type="button"
+					role="switch"
+					aria-checked="false"
+					aria-label={ block.Name + ": " + o.Label }
+					data-on:click={ sheetPost(v, "/poderes/raca/"+block.ID+"/"+url.PathEscape(o.Value)) }
+					class={ choiceChip(false), templ.KV("opacity-60", block.Full()) }
+				>{ o.Label }</button>
+			}
+		}
+	</div>
 }
 
 // attributeChoiceBlock distribui o bônus da raça.

@@ -41,6 +41,9 @@ type raceChoiceCard struct {
 	// escolhe ascendência, como o suraggel.
 	Attribute *attributeChoice
 	Variants  []variantChoice
+	// Abilities são as habilidades com escolha — a Deformidade, o
+	// Vanguardista (ALE-493).
+	Abilities []raceAbilityBlock
 }
 
 // attributeChoice é o bônus de atributo que a raça deixa escolher.
@@ -204,9 +207,12 @@ func (s Scene) choicesPanelOf(dto sheet.CharacterDTO, search string) choicesPane
 func (s Scene) raceChoices(dto sheet.CharacterDTO) []raceChoiceCard {
 	cards := []raceChoiceCard{}
 	for _, r := range dto.Races {
-		card := raceChoiceCard{Race: book.RaceLabel(r.Race), Variants: raceVariants(dto, r.Race)}
+		card := raceChoiceCard{
+			Race: book.RaceLabel(r.Race), Variants: raceVariants(dto, r.Race),
+			Abilities: raceAbilityBlocksOf(dto, r.Race),
+		}
 		card.Attribute = s.attributeRaceBonus(dto, r.Race)
-		if card.Attribute == nil && len(card.Variants) == 0 {
+		if card.Attribute == nil && len(card.Variants) == 0 && len(card.Abilities) == 0 {
 			continue
 		}
 		cards = append(cards, card)
