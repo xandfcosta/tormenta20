@@ -14,6 +14,15 @@ type Activation struct {
 	Flag         string           `json:"flag,omitempty"`
 	StanceGroup  string           `json:"stanceGroup,omitempty"`
 	Scaling      *PMScaling       `json:"scaling,omitempty"`
+	SkillSpend   *SkillSpend      `json:"skillSpend,omitempty"`
+}
+
+type SkillSpend struct {
+	Kind      string `json:"kind"`
+	Attribute string `json:"attribute,omitempty"`
+	Amount    int    `json:"amount,omitempty"`
+	SkillsOf  string `json:"skillsOf,omitempty"`
+	Group     string `json:"group,omitempty"`
 }
 
 type ActivationGrant struct {

@@ -3,6 +3,24 @@ package transcript
 // Parte 4 de 10 de `Activations` (activations.go).
 var activationsPart04 = []Activation{
 	{
+		ID:       "class.druida.espirito-dos-solsticios",
+		Name:     "Espírito dos Solstícios",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 4},
+		Uses:     nil,
+		BookPage: 62,
+	},
+	{
+		ID:       "class.druida.forca-dos-penhascos",
+		Name:     "Força dos Penhascos",
+		Kind:     "instant",
+		Action:   "reacao",
+		PMCost:   PMCost{Written: "variavel"},
+		Uses:     nil,
+		BookPage: 62,
+	},
+	{
 		ID:       "class.druida.forma-primal",
 		Name:     "Forma Primal",
 		Kind:     "passive",
@@ -401,24 +419,6 @@ var activationsPart04 = []Activation{
 	{
 		ID:       "class.inventor.engenhoqueiro",
 		Name:     "Engenhoqueiro",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
-		BookPage: 70,
-	},
-	{
-		ID:       "class.inventor.farmaceutico",
-		Name:     "Farmacêutico",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Written: "variavel"},
-		Uses:     nil,
-		BookPage: 70,
-	},
-	{
-		ID:       "class.inventor.ferreiro",
-		Name:     "Ferreiro",
 		Kind:     "passive",
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},

@@ -372,12 +372,14 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				UID:         "rac_e7iz2ymt7d",
 			},
 			{
-				ID:          "kiiren-engenhosidade",
+				ID: "kiiren-engenhosidade",
+				Modeled: []string{
+					"o gasto no diálogo do teste: 2 PM somam a Inteligência, e 1 PM para quem a recebe de novo",
+				},
 				RaceID:      "kliren",
 				Name:        "Engenhosidade",
 				Description: "Quando faz um teste de perícia, pode gastar 2 PM para somar sua Inteligência no teste. Não pode usar em testes de ataque. Caso receba esta habilidade novamente, seu custo é reduzido em –1 PM.",
 				UID:         "rac_xse6geohcx",
-				Unmodeled:   "2 PM para somar Inteligência: mexe num teste de perícia na hora de rolar (ALE-489)",
 			},
 			{
 				ID:          "kiiren-ossos-frageis",

@@ -78,7 +78,7 @@ var classPowersPart03 = []ClassPower{
 		Description: "Dissimulado e atento: em teste Investigação para interrogar ou Enganação para intriga, rola 2x e usa melhor. Pode fazer em 1 min em ambientes sociais.",
 		BookPage:    45,
 		UID:         "pwr_xifcmymile",
-		Unmodeled:   "rolar duas vezes: mexe num teste de perícia na hora de rolar (ALE-489)",
+		Unmodeled:   "rolar duas vezes: mexe num teste de perícia na hora de rolar (ALE-500)",
 		Prerequisites: []Prerequisite{
 			{Kind: "attribute", Attr: "charisma", Min: 1},
 			{Kind: "trained", Expertise: "Enganação"},
@@ -138,13 +138,13 @@ var classPowersPart03 = []ClassPower{
 	},
 	{
 		ID:             "class.bucaneiro.audacia",
+		Modeled:        []string{"o gasto no diálogo do teste: 2 PM somam o Carisma"},
 		ClassName:      "Bucaneiro",
 		Name:           "Audácia",
 		Description:    "Em teste de perícia, gasta 2 PM para somar Carisma no teste. Não vale para testes de ataque.",
 		GrantedAtLevel: 1,
 		BookPage:       47,
 		UID:            "pwr_ejx3pfxplg",
-		Unmodeled:      "2 PM para somar Carisma: mexe num teste de perícia na hora de rolar (ALE-489)",
 	},
 	{
 		ID: "class.bucaneiro.insolencia",

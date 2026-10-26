@@ -3,6 +3,24 @@ package transcript
 // Parte 3 de 10 de `Activations` (activations.go).
 var activationsPart03 = []Activation{
 	{
+		ID:       "class.cavaleiro.estandarte",
+		Name:     "Estandarte",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     ptr("cena"),
+		BookPage: 54,
+	},
+	{
+		ID:       "class.cavaleiro.etiqueta",
+		Name:     "Etiqueta",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		BookPage: 54,
+	},
+	{
 		ID:       "class.cavaleiro.investida-destruidora",
 		Name:     "Investida Destruidora",
 		Kind:     "instant",
@@ -405,24 +423,6 @@ var activationsPart03 = []Activation{
 		Action:   "livre",
 		PMCost:   PMCost{Fixed: 4},
 		Uses:     ptr("cena"),
-		BookPage: 62,
-	},
-	{
-		ID:       "class.druida.espirito-dos-solsticios",
-		Name:     "Espírito dos Solstícios",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 4},
-		Uses:     nil,
-		BookPage: 62,
-	},
-	{
-		ID:       "class.druida.forca-dos-penhascos",
-		Name:     "Força dos Penhascos",
-		Kind:     "instant",
-		Action:   "reacao",
-		PMCost:   PMCost{Written: "variavel"},
-		Uses:     nil,
 		BookPage: 62,
 	},
 }

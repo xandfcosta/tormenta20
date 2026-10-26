@@ -4,6 +4,14 @@ package engine
 // CD + caster attribute, and the class RD tables. Distinct from the MVP skill
 // model in skills.go — the real derive uses a level-based training bonus.
 
+// TrainingBonusForLevel é o bônus de treino do nível (p114): +2, +4 no 7º e
+// +6 no 15º. Exportado para o Eclético, que o empresta num teste (p45).
+//
+//	TrainingBonusForLevel(7) // 4
+func TrainingBonusForLevel(level int) int {
+	return trainingBonusForLevel(level)
+}
+
 // trainingBonusForLevel: +2 / +4 (7º) / +6 (15º).
 func trainingBonusForLevel(level int) int {
 	if level >= 15 {

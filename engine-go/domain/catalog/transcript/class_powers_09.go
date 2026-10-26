@@ -137,7 +137,7 @@ var classPowersPart09 = []ClassPower{
 		GrantedAtLevel: 1,
 		BookPage:       73,
 		UID:            "pwr_hm5uud6p5s",
-		Unmodeled:      "1 PM para dobrar o treino nas perícias escolhidas: mexe num teste de perícia na hora de rolar (ALE-489)",
+		Unmodeled:      "1 PM para dobrar o treino nas perícias escolhidas: mexe num teste de perícia na hora de rolar (ALE-500)",
 	},
 	{
 		ID:             "class.ladino.evasao",
@@ -265,13 +265,14 @@ var classPowersPart09 = []ClassPower{
 	},
 	{
 		ID:             "class.ladino.a-pessoa-certa-para-o-trabalho",
+		Modeled:        []string{"o gasto no diálogo do teste: 5 PM por +10 numa perícia da lista de ladino"},
 		ClassName:      "Ladino",
 		Name:           "A Pessoa Certa para o Trabalho",
 		Description:    "Capstone: mestre da ladinagem. Em ataque furtivo ou perícia da lista de ladino, gasta 5 PM para +10 no teste.",
 		GrantedAtLevel: 20,
 		BookPage:       74,
 		UID:            "pwr_ikmucwh2b7",
-		Unmodeled:      "5 PM por +10: mexe num teste de perícia na hora de rolar (ALE-489)",
+		Unmodeled:      "o mesmo +10 no ataque furtivo: é gastar PM no ataque, que a perícia não cobre",
 	},
 	{
 		ID:          "class.ladino.assassinar",

@@ -369,7 +369,7 @@ var originsPart01 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-capanga-unique",
-			Unmodeled:   "usar Intimidação para interrogar: mexe num teste de perícia na hora de rolar (ALE-489)",
+			Unmodeled:   "usar Intimidação para interrogar: mexe num teste de perícia na hora de rolar (ALE-500)",
 			Name:        "Confissão",
 			Kind:        "poder",
 			Description: "Você pode usar Intimidação para interrogar sem custo e em um minuto (veja Investigação).",
@@ -413,7 +413,7 @@ var originsPart01 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-charlatao-unique",
-			Unmodeled:   "Enganação no lugar de Diplomacia: mexe num teste de perícia na hora de rolar (ALE-489)",
+			Unmodeled:   "Enganação no lugar de Diplomacia: mexe num teste de perícia na hora de rolar (ALE-500)",
 			Name:        "Alpinista Social",
 			Kind:        "poder",
 			Description: "Você pode substituir testes de Diplomacia por testes de Enganação.",

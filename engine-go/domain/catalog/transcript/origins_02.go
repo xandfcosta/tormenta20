@@ -277,7 +277,7 @@ var originsPart02 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-estudioso-unique",
-			Unmodeled:   "2 PM para trocar a perícia por Conhecimento: mexe num teste de perícia na hora de rolar (ALE-489)",
+			Unmodeled:   "2 PM para trocar a perícia por Conhecimento: mexe num teste de perícia na hora de rolar (ALE-500)",
 			Name:        "Palpite Fundamentado",
 			Kind:        "poder",
 			Description: "Quando vai fazer um teste de perícia originalmente baseada em Inteligência ou Sabedoria, você pode gastar 2 PM para substituí-la por Conhecimento.",
@@ -375,7 +375,6 @@ var originsPart02 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-forasteiro-unique",
-			Unmodeled:   "1 PM para ignorar a exigência de treino: mexe num teste de perícia na hora de rolar (ALE-489)",
 			Name:        "Cultura Exótica",
 			Kind:        "poder",
 			Description: "Por sua diferente visão de mundo, você encontra soluções inesperadas. Quando vai fazer um teste de perícia que requer treinamento, você pode gastar 1 PM para ignorar esse requerimento para esse teste.",

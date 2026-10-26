@@ -63,7 +63,10 @@ type Activation struct {
 	StanceGroup  string           `json:"stanceGroup"`
 	RequiresFlag string           `json:"requiresFlag"`
 	Scaling      *ActivationScale `json:"scaling"`
-	Grant        *PowerGrant      `json:"grant"`
+	// SkillSpend é o PM que se paga NUM TESTE DE PERÍCIA para mexer nele —
+	// Audácia, Orgulho, Eclético… (ALE-489). Ver `skill_spend.go`.
+	SkillSpend *SkillSpend `json:"skillSpend,omitempty"`
+	Grant      *PowerGrant `json:"grant"`
 	// Cumulative é o bônus que SOBE A CADA GATILHO — ver `CumulativeBonus`.
 	Cumulative *CumulativeBonus `json:"cumulative"`
 	BookPage   int              `json:"bookPage"`

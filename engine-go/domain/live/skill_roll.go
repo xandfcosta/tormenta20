@@ -39,6 +39,16 @@ type SkillTestRoll struct {
 	ByHand bool `json:"byHand,omitempty"`
 	// ByUserID é quem rolou.
 	ByUserID int64 `json:"byUserId"`
+	// Spends são os gastos de PM que entraram no teste (ALE-489), já somados no
+	// `Modifier`: a faixa diz de onde veio o número e o que custou.
+	Spends []SkillTestPaid `json:"spends,omitempty"`
+}
+
+// SkillTestPaid é um gasto do teste como a mesa lê: "Audácia +3 · 2 PM".
+type SkillTestPaid struct {
+	Name  string `json:"name"`
+	Bonus int    `json:"bonus"`
+	PM    int    `json:"pm"`
 }
 
 // RecordSkillTest guarda o teste rolado, substituindo o anterior.

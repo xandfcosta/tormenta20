@@ -102,6 +102,12 @@ type Class struct {
 type ClassExpertises struct {
 	Fixed       []string `json:"fixed"`
 	ChooseCount int      `json:"chooseCount"`
+	// ChoosePool e EitherOr completam a LISTA da classe — "uma perícia da
+	// lista de ladino" (p74) é a fixa, a piscina e a escolha entre duas.
+	ChoosePool []string `json:"choosePool"`
+	EitherOr   *struct {
+		Options []string `json:"options"`
+	} `json:"eitherOr,omitempty"`
 }
 
 // ── perícia ──────────────────────────────────────────────────────────────────
