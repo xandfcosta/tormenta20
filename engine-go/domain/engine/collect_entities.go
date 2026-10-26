@@ -26,6 +26,7 @@ func (r *Ruleset) raceActiveItems(ch Character) []ActiveItem {
 			}
 		}
 		mods = append(mods, r.abilityChoiceModifiers(race, choice.abilityPicks)...)
+		mods = append(mods, r.borrowedModifiers(race, choice.abilityPicks)...)
 		if len(mods) == 0 {
 			continue
 		}
@@ -94,69 +95,6 @@ func (r *Ruleset) appliedRaces(ch Character) []appliedRace {
 		}
 	}
 	return out
-}
-
-// abilityChoiceModifiers são os modificadores das habilidades que pedem
-// escolha, um por perícia escolhida. O poder escolhido — o da Tormenta que a
-// Deformidade troca por um bônus, o geral da Memória Póstuma — não é perícia,
-// e fica de fora (`RaceHeldPowers`).
-func (r *Ruleset) abilityChoiceModifiers(race *RaceDefinition, picks map[string][]string) []Modifier {
-	out := []Modifier{}
-	for _, ability := range race.Abilities {
-		if ability.Choice == nil {
-			continue
-		}
-		skills := []string{}
-		for _, pick := range picks[ability.ID] {
-			if !r.isPower(pick) {
-				skills = append(skills, pick)
-			}
-		}
-		out = append(out, expandChoiceModifiers(ability.Modifiers, skills, nil)...)
-	}
-	return out
-}
-
-// RaceHeldPowers são os poderes que uma habilidade de raça deu à ficha: o da
-// Tormenta que a Deformidade trocou por um bônus (p24), o geral da Memória
-// Póstuma (p29).
-//
-//	r.RaceHeldPowers(lefou) // ["olhos-vermelhos"]
-func (r *Ruleset) RaceHeldPowers(ch Character) []string {
-	out := []string{}
-	for _, held := range r.raceHeld(ch) {
-		out = append(out, held.id)
-	}
-	return out
-}
-
-// heldPower é um poder dado por habilidade de raça, e se ele está isento da
-// perda de Carisma — só a troca da Deformidade está (p24).
-type heldPower struct {
-	id             string
-	charismaExempt bool
-}
-
-func (r *Ruleset) raceHeld(ch Character) []heldPower {
-	out := []heldPower{}
-	for _, applied := range r.appliedRaces(ch) {
-		for _, ability := range applied.race.Abilities {
-			if ability.Choice == nil {
-				continue
-			}
-			for _, pick := range applied.choice.abilityPicks[ability.ID] {
-				if r.isPower(pick) {
-					out = append(out, heldPower{id: pick, charismaExempt: ability.isTormentaSwap()})
-				}
-			}
-		}
-	}
-	return out
-}
-
-// isPower diz se a escolha é um poder geral ou da Tormenta, e não perícia.
-func (r *Ruleset) isPower(id string) bool {
-	return r.isTormentaPower(id) || r.getGeneralPower(id) != nil
 }
 
 // originActiveItem: chosen origin benefits' modifiers, plus the
