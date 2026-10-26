@@ -461,3 +461,27 @@ func (p Plays) PayAttackBoost(ctx context.Context, characterID int64, pm int) er
 		return chargeMp(ctx, q, p.catalogs, row, pm)
 	})
 }
+
+// OpenTheGuard grava a penalidade na Defesa que a investida CONFIRMADA deixa em
+// quem investiu: –2, ou –5 na Imprudente, "até o seu próximo turno" (p235,
+// p42, ALE-499). Quem a expira é a virada da vez dele, ou o fim da cena.
+//
+// Chave única por ficha (`engine.ChargeEffectID`): investir de novo reescreve
+// a linha, e duas guardas abertas não somam — é a mesma guarda.
+func (p Plays) OpenTheGuard(ctx context.Context, characterID int64, charge string) error {
+	mods := engine.ChargeGuardModifiers(charge)
+	if len(mods) == 0 {
+		return nil
+	}
+	blob, err := json.Marshal(mods)
+	if err != nil {
+		return fmt.Errorf("escrever a guarda aberta da investida %q: %w", charge, err)
+	}
+	if _, err := p.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+		Characterid: characterID, Source: "rule", Catalogid: engine.ChargeEffectID,
+		Scope: engine.OwnTurnScope(), Modifiers: string(blob), Createdat: dbvalue.NowISO(),
+	}); err != nil {
+		return fmt.Errorf("gravar a guarda aberta do personagem %d: %w", characterID, err)
+	}
+	return nil
+}

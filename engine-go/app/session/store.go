@@ -219,6 +219,9 @@ func (st *Store) NextTurn(ctx context.Context, sessionID int64) (*live.SessionRu
 			return err
 		}
 		live.AdvanceTurn(s)
+		if err := st.expireOwnTurnEffects(ctx, u, s); err != nil {
+			return err
+		}
 		return st.payUpkeep(ctx, u, s)
 	})
 }

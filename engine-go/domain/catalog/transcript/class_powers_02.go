@@ -208,13 +208,15 @@ var classPowersPart02 = []ClassPower{
 		PowerUID:  "pwr_ycwgrnb6oa",
 	},
 	{
-		ID:          "class.barbaro.investida-imprudente",
+		ID: "class.barbaro.investida-imprudente",
+		Modeled: []string{
+			"o gesto Imprudente da investida na aba Ações: +1d12 no dano deste ataque, e –5 na Defesa até a próxima vez quando o mestre confirma",
+		},
 		ClassName:   "Bárbaro",
 		Name:        "Investida Imprudente",
 		Description: "Em investida, pode aumentar penalidade de Defesa para -5 para receber +1d12 na rolagem de dano deste ataque.",
 		BookPage:    42,
 		UID:         "pwr_cvdcf5egoa",
-		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
 	},
 	{
 		ID:          "class.barbaro.pele-de-aco",

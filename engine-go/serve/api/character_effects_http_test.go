@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"t20engine/domain/engine"
 	"t20engine/infra/db/dbvalue"
 	"testing"
 
@@ -96,6 +97,26 @@ func TestEndSceneRouteClearsSceneOnly(t *testing.T) {
 	}
 	if got := effectScopes(t, s, char); len(got) != 1 || got[0] != "day" {
 		t.Errorf("remaining scopes = %v, want [day]", got)
+	}
+}
+
+// O FIM DA CENA LEVA A GUARDA ABERTA DA INVESTIDA (p235, ALE-499): ela dura
+// "até o seu próximo turno", e fora de combate não há próxima vez — a cena é a
+// rede embaixo dela. O efeito de dia é o controle de que o corte não é largo.
+func TestEndSceneTakesWhatLastedUntilTheNextTurn(t *testing.T) {
+	s := newTestServer(t)
+	gmID := seedUser(t, s, "gm@t.com")
+	ownerID := seedUser(t, s, "dono@t.com")
+	char := seedCharacter(t, s, ownerID, "PC")
+	seedEffect(t, s, char, engine.ChargeEffectID, engine.OwnTurnScope())
+	seedEffect(t, s, char, "buff-b", "day")
+	seedLiveSession(t, s, gmID, char)
+
+	if rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: gmID}), "/fim-de-cena", char); rec.Code != http.StatusOK {
+		t.Fatalf("status = %d (body %q)", rec.Code, rec.Body.String())
+	}
+	if got := effectScopes(t, s, char); len(got) != 1 || got[0] != "day" {
+		t.Errorf("sobraram %v; o fim da cena leva a guarda aberta e deixa o dia", got)
 	}
 }
 

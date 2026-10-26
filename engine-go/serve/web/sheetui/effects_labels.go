@@ -30,6 +30,11 @@ func effectDisplayName(catalogID string) string {
 	// E os PODERES, que é de onde vêm as concessões de postura: a reserva de PV
 	// temporários da Alma de Bronze saía na tela escrita
 	// `class.barbaro.alma-de-bronze` (ALE-351).
+	// A GUARDA ABERTA da investida não vem de catálogo nenhum: é regra do
+	// livro (p235), e a chave dela é do motor (ALE-499).
+	if catalogID == engine.ChargeEffectID {
+		return "Investida · guarda aberta"
+	}
 	if spec := book.ActivationOf(catalogID, ""); spec != nil {
 		if spec.Kind == "stance" {
 			// O EFEITO DE UMA POSTURA É O DEGRAU PAGO, e só ele: a postura em si
@@ -80,6 +85,10 @@ func scopeLabel(scope string) string {
 		// com a vez EM CURSO, que pode não ser a de quem carrega o efeito —
 		// ela chega por reação, e reação acontece fora da sua vez (p233).
 		return "até o fim da vez"
+	case engine.OwnTurnScope():
+		// A DE QUEM CARREGA, e é a diferença para a de cima: a guarda aberta da
+		// investida vale nas vezes dos outros e cai quando a sua volta (p235).
+		return "até a sua próxima vez"
 	}
 	return scope
 }

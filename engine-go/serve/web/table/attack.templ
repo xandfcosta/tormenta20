@@ -52,6 +52,12 @@ templ attackProposed(v View) {
 					<span aria-hidden="true">·</span>
 					<span>{ v.Attack.Situations }</span>
 				}
+				// A GUARDA ABERTA vem depois da conta porque é CONSEQUÊNCIA dela, e
+				// pousa só quando o mestre confirma (p235).
+				if v.Attack.Guard != "" {
+					<span aria-hidden="true">·</span>
+					<span class="text-penalty-ink">{ v.Attack.Guard }</span>
+				}
 			</p>
 			<span class="ml-auto flex items-center gap-2">
 				// CANCELAR é de quem rolou e do mestre. Oferecer a quem seria

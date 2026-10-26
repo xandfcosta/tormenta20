@@ -91,6 +91,9 @@ type SheetTurnEffects interface {
 	// a primeira tem efeito guardado: um lote exigiria montar a lista de ids
 	// duas vezes, aqui e do lado de lá.
 	ExpireTurnEffects(ctx context.Context, charID int64) error
+	// ExpireOwnTurnEffects derruba o que durava "até o seu próximo turno" — a
+	// guarda aberta da investida (p235). Chamado só para quem ENTRA na vez.
+	ExpireOwnTurnEffects(ctx context.Context, charID int64) error
 	// ConditionsOf devolve as condições ligadas na ficha. O instante de quem
 	// age sai delas — o inconsciente não reage, o atordoado não age —, e é
 	// nelas que o sangramento da p236 mora.

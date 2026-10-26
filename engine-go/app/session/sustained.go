@@ -134,3 +134,25 @@ func (st *Store) expireTurnEffects(ctx context.Context, u Unit, s *live.SessionR
 	}
 	return nil
 }
+
+// expireOwnTurnEffects derruba, de quem ACABOU DE ENTRAR na vez, o que durava
+// "até o seu próximo turno" — a guarda aberta da investida (p235, ALE-499).
+//
+// Só dele, e é a diferença para o `expireTurnEffects`: a penalidade da
+// investida tem de valer nas vezes dos outros, que é quando eles atacam.
+func (st *Store) expireOwnTurnEffects(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
+	if !s.Scene.CountsRounds() || u.TurnEffects == nil {
+		return nil
+	}
+	if s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
+		return nil
+	}
+	entry := s.Initiative[s.TurnIndex]
+	if entry.CharacterID == nil {
+		return nil
+	}
+	if err := u.TurnEffects.ExpireOwnTurnEffects(ctx, *entry.CharacterID); err != nil {
+		return fmt.Errorf("expirar o que durava até a vez de %s: %w", entry.Label, err)
+	}
+	return nil
+}

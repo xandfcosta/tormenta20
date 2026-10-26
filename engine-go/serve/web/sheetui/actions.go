@@ -1,13 +1,9 @@
 package sheetui
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
-	"net/url"
-
-	"t20engine/domain/book"
 	"t20engine/domain/engine"
 )
 
@@ -142,7 +138,7 @@ func actionsPanelFrom(
 	byCost := map[engine.ActionCost][]actionRow{
 		engine.ActionStandard: standardRows(combat, melee, computed, boosts),
 		engine.ActionMovement: {movementRow(computed)},
-		engine.ActionFull:     fullRows(melee, computed),
+		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID)),
 	}
 	panel := actionsPanel{}
 	for _, row := range powers.Actions {
@@ -188,163 +184,6 @@ var groupOrder = []struct {
 		[]engine.ActionCost{engine.ActionFree, engine.ActionReaction}},
 	{"Custo que a mesa decide", "o livro não fixa um",
 		[]engine.ActionCost{engine.ActionVaries}},
-}
-
-// standardRows são as ações padrão que toda ficha de combate tem.
-//
-// O ATAQUE VEM PRIMEIRO, e o livro diz por quê: *"fazer um ataque ou lançar uma
-// magia são as ações padrão mais comuns"* (p233). A 390px a primeira linha é a
-// única que se lê sem rolar.
-func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, boosts [][]attackBoost) []actionRow {
-	rows := make([]actionRow, 0, len(combat.Weapons)+2)
-	for i, weapon := range combat.Weapons {
-		var offered []attackBoost
-		if i < len(boosts) {
-			offered = boosts[i]
-		}
-		rows = append(rows, actionRow{
-			Weapon: i,
-			Boosts: offered,
-			Name:   "Atacar · " + weapon.Name,
-			Detail: weapon.Damage + " · " + weapon.Crit + " · " + weapon.Skill,
-			Value:  weapon.Attack,
-			Can:    true,
-			Moves:  []string{"attack", "damage"},
-			// A ARMA VAI NO CAMINHO, pelo ÍNDICE: o `Propose` escolhe por índice
-			// e já recusa o que não existe, e um nome no endereço obrigaria o
-			// servidor a casar texto para achar de volta a mesma arma.
-			Rolls: []actionRoll{{
-				Label: "Rolar", Path: fmt.Sprintf("/acoes/atacar/%d", i), NeedsTarget: true,
-			}},
-		})
-	}
-	// A MANOBRA SÓ EXISTE COM ARMA CORPO A CORPO NA MÃO: *"não é possível fazer
-	// manobras de combate com ataques à distância"* (p234). Oferecê-la ao
-	// arqueiro seria desenhar um gesto que a regra recusa.
-	if hasMeleeWeapon(combat.Weapons) {
-		rows = append(rows, actionRow{
-			Name: "Manobra",
-			// O DETALHE DEIXA DE LISTAR as cinco quando elas viram botão: a
-			// mesma lista escrita duas vezes na mesma linha é a segunda que
-			// envelhece.
-			Detail: "teste oposto de Luta · p234",
-			Value:  book.WithSign(melee),
-			Can:    true,
-			Moves:  []string{"attack"},
-			Rolls:  maneuverRolls(),
-		})
-	}
-	// FINTAR é teste de Enganação contra os Reflexos do alvo (p234) — é a única
-	// ação padrão do livro que não sai de Luta nem de Pontaria.
-	rows = append(rows, actionRow{
-		Name:   "Fintar",
-		Detail: "Enganação contra os Reflexos do alvo · p234",
-		Value:  book.WithSign(expertiseOrZero(computed, "Enganação", "charisma").Total),
-		Can:    true,
-		Moves:  []string{"expertise:Enganação"},
-		Rolls:  []actionRoll{expertiseRoll("Enganação")},
-	})
-	return rows
-}
-
-// movementRow é o deslocamento, em METROS.
-//
-// O motor o guarda em QUADRADOS de 1,5m porque é assim que o tabuleiro conta, e
-// a tela diz metros porque é assim que a mesa fala — a conversão mora aqui, de um
-// lado só.
-func movementRow(computed engine.ComputedSheet) actionRow {
-	meters := float64(computed.Displacement.Total) * 1.5
-	written := strconv.FormatFloat(meters, 'f', -1, 64)
-	return actionRow{
-		Name:   "Mover",
-		Detail: "percorrer o seu deslocamento · p233",
-		Value:  strings.Replace(written, ".", ",", 1) + "m",
-		Can:    true,
-	}
-}
-
-// fullRows são as duas completas que saem de número que a ficha já tem.
-//
-// O GOLPE DE MISERICÓRDIA fica de fora apesar de ser a terceira da p235: ele não
-// tem teste nem número — é crítico automático mais uma chance de morte que o
-// mestre rola —, e a decisão do dono é que linha sem número nem botão não entra.
-func fullRows(melee int, computed engine.ComputedSheet) []actionRow {
-	return []actionRow{{
-		Name:   "Investida",
-		Detail: "em linha reta · +2 no ataque, −2 na Defesa até a sua vez · p235",
-		Value:  book.WithSign(melee + investidaBonus),
-		Can:    true,
-		Moves:  []string{"attack"},
-	}, {
-		Name:   "Corrida",
-		Detail: "Atletismo · p235",
-		Value:  book.WithSign(expertiseOrZero(computed, "Atletismo", "strength").Total),
-		Can:    true,
-		Moves:  []string{"expertise:Atletismo"},
-		Rolls:  []actionRoll{expertiseRoll("Atletismo")},
-	}}
-}
-
-// maneuverRolls são as cinco manobras da p234, cada uma um botão.
-//
-// A LISTA VEM DO MOTOR e não é escrita aqui: ela já é fechada em
-// `engine.ManeuversOfTheBook`, e uma segunda cópia erraria um nome no dia em
-// que alguém a editasse de um lado só — o casamento é por TEXTO, e um nome
-// errado vira uma manobra que o servidor recusa sem ninguém entender por quê.
-//
-// O RÓTULO é o nome da manobra e não "Rolar": cinco botões iguais obrigam a
-// contar a posição para saber qual é qual.
-func maneuverRolls() []actionRoll {
-	kinds := engine.ManeuversOfTheBook()
-	rolls := make([]actionRoll, 0, len(kinds))
-	for _, kind := range kinds {
-		rolls = append(rolls, actionRoll{
-			Label:       capitalized(kind),
-			Path:        "/acoes/manobra/" + kind,
-			NeedsTarget: true,
-		})
-	}
-	return rolls
-}
-
-// capitalized sobe a primeira letra. Cópia da irmã do pacote da Mesa, e a cópia
-// é deliberada: três linhas sobre `string[:1]` custam menos que um lugar novo
-// para morar, e as cinco manobras são ASCII.
-func capitalized(s string) string {
-	if s == "" {
-		return s
-	}
-	return strings.ToUpper(s[:1]) + s[1:]
-}
-
-// expertiseRoll é o gesto de rolar uma PERÍCIA, e ele reusa o comando que a aba
-// Perícias já tem.
-//
-// SEM ALVO, e isso não é esquecimento: a finta é um teste de Enganação e a
-// corrida um de Atletismo, e um teste não aponta para ninguém. A CD — e, na
-// finta, os Reflexos do alvo — é de quem mestra, e por isso a faixa do teste não
-// tem veredicto.
-func expertiseRoll(name string) actionRoll {
-	return actionRoll{Label: "Rolar", Path: "/pericias/rolar/" + url.PathEscape(name)}
-}
-
-// investidaBonus é o +2 que a investida dá no ataque (p235). Ele é constante do
-// livro e não entra no motor: a investida ainda não é um gesto que o app resolva,
-// e um modificador no `ComputeSheet` sem ninguém para ligá-lo seria regra sem
-// produtor.
-const investidaBonus = 2
-
-// hasMeleeWeapon pergunta pela PERÍCIA do cartão, que é "Luta" ou "Pontaria".
-//
-// Pela perícia e não por uma lista de nomes de arma: quem decide se a arma é
-// corpo a corpo é o catálogo, e o cartão já carrega a resposta dele.
-func hasMeleeWeapon(weapons []weaponTile) bool {
-	for _, weapon := range weapons {
-		if weapon.Skill == "Luta" {
-			return true
-		}
-	}
-	return false
 }
 
 // rowFromPower traduz uma linha da aba Poderes.

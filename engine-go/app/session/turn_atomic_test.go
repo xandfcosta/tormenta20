@@ -14,6 +14,7 @@ import (
 type turnEffectsDouble struct {
 	refuseExpire error
 	expired      []int64
+	ownExpired   []int64
 }
 
 func (d *turnEffectsDouble) SustainedOf(context.Context, int64) ([]live.SustainedEffect, error) {
@@ -27,6 +28,11 @@ func (d *turnEffectsDouble) ExpireTurnEffects(_ context.Context, charID int64) e
 		return d.refuseExpire
 	}
 	d.expired = append(d.expired, charID)
+	return nil
+}
+
+func (d *turnEffectsDouble) ExpireOwnTurnEffects(_ context.Context, charID int64) error {
+	d.ownExpired = append(d.ownExpired, charID)
 	return nil
 }
 
