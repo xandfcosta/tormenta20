@@ -1687,6 +1687,42 @@
             ],
             "items": []
           }
+        },
+        {
+          "create": {
+            "name": "Goblin Rato das Ruas Nv4",
+            "races": [
+              "goblin"
+            ],
+            "origin": "batedor",
+            "classes": [
+              {
+                "className": "Ladino",
+                "level": 4
+              }
+            ],
+            "god": "Hyninn",
+            "strength": 0,
+            "dexterity": 4,
+            "constitution": 2,
+            "intelligence": 2,
+            "wisdom": 0,
+            "charisma": 0,
+            "size": "Pequeno",
+            "displacement": 9,
+            "raceAttributeChoices": {},
+            "classPowers": [],
+            "items": [
+              {
+                "catalogId": "adaga",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "armadura-couro",
+                "equipped": "vested"
+              }
+            ]
+          }
         }
       ]
     },
