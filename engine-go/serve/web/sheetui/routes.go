@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -283,6 +285,18 @@ func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 		target := cl.Level + int64(step)
 		if target < 1 {
 			return fmt.Errorf("%s está no nível 1: descer apagaria a classe", class)
+		}
+		// A escolha contada por NÍVEL (os terrenos do Explorador) tem de caber
+		// no nível novo: descer com escolha a mais é recusado (ALE-503).
+		lowered := dto
+		lowered.Classes = slices.Clone(dto.Classes)
+		for i := range lowered.Classes {
+			if lowered.Classes[i].ClassName == class {
+				lowered.Classes[i].Level = target
+			}
+		}
+		if err := sheet.LevelCountedChoicesFit(lowered); err != nil {
+			return err
 		}
 		return s.plays.LevelClass(r.Context(), row, class, target)
 	}

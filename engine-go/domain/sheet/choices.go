@@ -159,6 +159,9 @@ func chosenFitPowers(dto CharacterDTO) error {
 	if err := ChosenExpertisesFit(dto); err != nil {
 		return err
 	}
+	if err := LevelCountedChoicesFit(dto); err != nil {
+		return err
+	}
 	if used := UsedPowerSlots(dto); used > slots {
 		return fmt.Errorf("são %d poderes escolhidos para %s",
 			used, writtenSlots(slots))

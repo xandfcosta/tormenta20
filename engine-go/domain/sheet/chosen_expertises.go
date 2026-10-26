@@ -117,16 +117,25 @@ func ChangeKeepsChosenExpertises(dto CharacterDTO, change func(*CharacterDTO)) e
 	return ChosenExpertisesFit(dto)
 }
 
-// CountedChoice é uma escolha contada por atributo que a ficha TEM: o poder, o
-// que foi escolhido, o limite e o que se pode escolher — as perícias
-// treinadas, na ordem da ficha.
+// CountedChoice é uma escolha contada que a ficha TEM — por atributo (as
+// perícias do Especialista) ou por nível (os terrenos do Explorador): o poder,
+// o que foi escolhido, o limite e o que se pode escolher.
 type CountedChoice struct {
 	Power book.ClassPower
 	Picks []string
-	// Value é o atributo sem temporários; Limit, o mesmo com o mínimo 1.
-	Value   int
-	Limit   int
+	// Value é o que dá o limite — o atributo sem temporários, ou o nível da
+	// classe —, e Basis o nome dele na tela ("Int", "nível").
+	Value int
+	Basis string
+	Limit int
+	// Offered são as opções, e Labels o nome de cada uma quando ele não é o
+	// próprio id (os terrenos).
 	Offered []string
+	Labels  map[string]string
+	// Repeats diz que a mesma opção pode ser escolhida de novo (o terreno
+	// repetido soma +2, p50); Noun é o que se escolhe ("perícia", "terreno").
+	Repeats bool
+	Noun    string
 }
 
 // CountedChoices são as escolhas contadas por atributo dos poderes que a ficha
@@ -143,14 +152,42 @@ func CountedChoices(dto CharacterDTO) []CountedChoice {
 	out := []CountedChoice{}
 	for _, owned := range OwnedPowers(dto) {
 		power, known := book.ClassPowers()[owned.ID]
-		if owned.Source != PowerFromClass || !known || power.Choice == nil || power.Choice.CountAttribute == "" {
+		if owned.Source != PowerFromClass || !known || power.Choice == nil {
+			continue
+		}
+		if len(power.Choice.CountLevels) > 0 {
+			out = append(out, levelCountedChoice(dto, power, picks[power.ID]))
+			continue
+		}
+		if power.Choice.CountAttribute == "" {
 			continue
 		}
 		value, err := countAttributeValue(dto, *power.Choice)
 		if err != nil {
 			continue
 		}
-		out = append(out, CountedChoice{Power: power, Picks: picks[power.ID], Value: value, Limit: max(1, value), Offered: trained})
+		out = append(out, CountedChoice{
+			Power: power, Picks: picks[power.ID], Value: value, Limit: max(1, value), Offered: trained,
+			Basis: book.AttributeAbbrev(power.Choice.CountAttribute), Noun: "perícia",
+		})
 	}
 	return out
+}
+
+// levelCountedChoice monta a escolha contada por nível: as opções que o nível
+// da classe já alcança, com o nome de cada uma.
+func levelCountedChoice(dto CharacterDTO, power book.ClassPower, picks []string) CountedChoice {
+	limit, level := levelChoiceLimit(dto, power)
+	choice := CountedChoice{
+		Power: power, Picks: picks, Value: level, Limit: limit, Basis: "nível",
+		Labels: map[string]string{}, Repeats: true, Noun: "terreno",
+	}
+	for _, o := range power.Choice.Options {
+		if o.MinLevel > level {
+			continue
+		}
+		choice.Offered = append(choice.Offered, o.ID)
+		choice.Labels[o.ID] = o.Name
+	}
+	return choice
 }

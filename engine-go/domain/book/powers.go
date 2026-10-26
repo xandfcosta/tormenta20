@@ -58,11 +58,16 @@ type PowerChoice struct {
 	// SwapFor o que pode tomar o lugar de UMA delas ("tormenta-power", p24).
 	Count   int    `json:"count"`
 	SwapFor string `json:"swapFor"`
+	// CountLevels são os níveis da classe em que se ganha uma escolha, e cada
+	// opção pode se repetir — o Explorador (p50, ALE-503).
+	CountLevels []int `json:"countLevels"`
 }
 
 type PowerChoiceOption struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+	// MinLevel é o nível da classe a partir do qual a opção vale.
+	MinLevel int `json:"minLevel"`
 }
 
 // Offered são as opções que a escolha oferece. A lista do catálogo, quando ele
