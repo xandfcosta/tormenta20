@@ -629,6 +629,15 @@
             "step": 2,
             "round": "down"
           }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "rest-one-category-up"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "condição de descanso uma categoria acima"
         }
       ]
     },
@@ -1007,7 +1016,8 @@
       }
     },
     "flags": [
-      "armadura-leve"
+      "armadura-leve",
+      "rest-one-category-up"
     ],
     "conditional": [
       {

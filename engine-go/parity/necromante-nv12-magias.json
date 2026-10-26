@@ -405,6 +405,15 @@
           "amount": 5,
           "bonusType": "untyped",
           "note": "redução de perfuracao 5"
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "rest-always-normal"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "descansa sempre em condição normal"
         }
       ]
     },
@@ -536,7 +545,9 @@
         ]
       }
     },
-    "flags": [],
+    "flags": [
+      "rest-always-normal"
+    ],
     "conditional": []
   },
   "sheet": {

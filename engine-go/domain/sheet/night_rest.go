@@ -44,6 +44,76 @@ func NightRestGain(level int64, condition string) int64 {
 	return int64(math.Floor(float64(level) * factor))
 }
 
+// RestTraits são o que a FICHA muda na noite (ALE-488) — três regras, cada uma
+// escrita em mais de um verbete do livro. Quem as acende são as flags do
+// catálogo (`RestTraitsOf`).
+type RestTraits struct {
+	// OneCategoryUp: "sua condição de descanso é uma categoria acima do padrão
+	// pela situação" — Estoico (p94) e Pajem (p54). Não acumula: os dois
+	// verbetes descrevem o MESMO efeito (decisão do dono).
+	OneCategoryUp bool
+	// NeverBelowLevel: "sua recuperação de PV e PM nunca é inferior ao seu
+	// nível" — Rato das Ruas (p23) e Vida Rústica (p94).
+	NeverBelowLevel bool
+	// AlwaysNormal: recupera "em condições normais", e "não são afetados por
+	// condições boas ou ruins de descanso" — golem (p27) e osteon (p29). Vence a
+	// categoria a mais: a frase do livro é que a condição NÃO o afeta. A
+	// condição do osteon (oito horas sob as estrelas) é suposta cumprida, e o
+	// mestre corrige se não foi (decisão do dono).
+	AlwaysNormal bool
+}
+
+// As flags que o catálogo levanta para cada característica.
+const (
+	FlagRestOneCategoryUp   = "rest-one-category-up"
+	FlagRestNeverBelowLevel = "rest-never-below-level"
+	FlagRestAlwaysNormal    = "rest-always-normal"
+)
+
+// RestTraitsOf lê as características das flags da ficha computada.
+func RestTraitsOf(flags map[string]bool) RestTraits {
+	return RestTraits{
+		OneCategoryUp:   flags[FlagRestOneCategoryUp],
+		NeverBelowLevel: flags[FlagRestNeverBelowLevel],
+		AlwaysNormal:    flags[FlagRestAlwaysNormal],
+	}
+}
+
+// restCategories são as condições da p106, da pior para a melhor.
+var restCategories = []string{"ruim", "normal", "confortavel", "luxuosa"}
+
+// NightRestGainFor é o ganho da noite para QUEM dorme: a condição que a ficha
+// muda, e o piso no nível depois da conta.
+//
+//	sheet.NightRestGainFor(7, "ruim", sheet.RestTraits{OneCategoryUp: true}) // 7
+func NightRestGainFor(level int64, condition string, traits RestTraits) int64 {
+	switch {
+	case traits.AlwaysNormal:
+		condition = "normal"
+	case traits.OneCategoryUp:
+		condition = oneCategoryAbove(condition)
+	}
+	gain := NightRestGain(level, condition)
+	if traits.NeverBelowLevel && gain < level {
+		return level
+	}
+	return gain
+}
+
+// oneCategoryAbove sobe um degrau, parando no luxo. Condição desconhecida cai
+// em normal antes de subir, como no `NightRestGain`.
+func oneCategoryAbove(condition string) string {
+	for i, c := range restCategories {
+		if c == condition && i+1 < len(restCategories) {
+			return restCategories[i+1]
+		}
+		if c == condition {
+			return c
+		}
+	}
+	return "confortavel"
+}
+
 // RestedVitals são os PV e PM ATUAIS em que uma noite de descanso deixa a ficha.
 type RestedVitals struct {
 	HpCurrent int64
@@ -57,12 +127,12 @@ type RestedVitals struct {
 // banco — que é exatamente o acoplamento que tirou esta regra do domínio até
 // agora.
 //
-//	sheet.AfterNightRest(7, "normal", sheet.RestedVitals{HpCurrent: 10, MpCurrent: 2}, 20, 5)
+//	sheet.AfterNightRest(7, "normal", sheet.RestTraits{}, sheet.RestedVitals{HpCurrent: 10, MpCurrent: 2}, 20, 5)
 //	// {17, 5} — o PM bateu no teto de 5
 func AfterNightRest(
-	level int64, condition string, current RestedVitals, hpMax, mpMax int64,
+	level int64, condition string, traits RestTraits, current RestedVitals, hpMax, mpMax int64,
 ) RestedVitals {
-	gain := NightRestGain(level, condition)
+	gain := NightRestGainFor(level, condition, traits)
 	return RestedVitals{
 		HpCurrent: min(hpMax, current.HpCurrent+gain),
 		MpCurrent: min(mpMax, current.MpCurrent+gain),

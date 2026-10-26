@@ -40,7 +40,7 @@ func TestEachLodgingHasItsFactor(t *testing.T) {
 
 // O TETO é do livro: "não pode ultrapassar seu máximo".
 func TestTheNightNeverGoesPastTheMaximum(t *testing.T) {
-	after := AfterNightRest(7, "luxuosa", RestedVitals{HpCurrent: 10, MpCurrent: 2}, 20, 5)
+	after := AfterNightRest(7, "luxuosa", RestTraits{}, RestedVitals{HpCurrent: 10, MpCurrent: 2}, 20, 5)
 	if after.HpCurrent != 20 {
 		t.Errorf("o PV parou em %d, e o máximo é 20", after.HpCurrent)
 	}
@@ -51,7 +51,7 @@ func TestTheNightNeverGoesPastTheMaximum(t *testing.T) {
 
 // Ficha ferida que não chega ao máximo recebe o ganho inteiro.
 func TestAWoundedSheetGetsTheWholeGain(t *testing.T) {
-	after := AfterNightRest(7, "normal", RestedVitals{HpCurrent: 1, MpCurrent: 0}, 40, 40)
+	after := AfterNightRest(7, "normal", RestTraits{}, RestedVitals{HpCurrent: 1, MpCurrent: 0}, 40, 40)
 	if after.HpCurrent != 8 || after.MpCurrent != 7 {
 		t.Errorf("deu %+v, e o caso pede 8 PV e 7 PM", after)
 	}

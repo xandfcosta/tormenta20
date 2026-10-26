@@ -307,7 +307,7 @@ var classPowersPart05 = []ClassPower{
 	},
 	{
 		ID:          "class.cavaleiro.pajem",
-		Modeled:     []string{"o +2 em Diplomacia"},
+		Modeled:     []string{"o +2 em Diplomacia", "a condição de descanso uma categoria acima"},
 		ClassName:   "Cavaleiro",
 		Name:        "Pajem",
 		Description: "Recebe parceiro pajem. +2 Diplomacia (sempre aprumado). Condição de descanso 1 categoria acima.",
@@ -315,8 +315,14 @@ var classPowersPart05 = []ClassPower{
 		UID:         "pwr_ccdr6egoow",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Diplomacia"}, Amount: 2, BonusType: "untyped"},
+			{
+				Target:    ModifierTarget{Kind: "flag", Name: "rest-one-category-up"},
+				Amount:    1,
+				BonusType: "untyped",
+				Note:      "condição de descanso uma categoria acima",
+			},
 		},
-		Unmodeled: "o pajem é parceiro, e a regra de parceiros é da p260 (ALE-425); o descanso uma categoria acima é da ALE-488",
+		Unmodeled: "o pajem é parceiro, e a regra de parceiros é da p260 (ALE-425)",
 	},
 	{
 		ID:          "class.cavaleiro.postura-ariete-implacavel",
