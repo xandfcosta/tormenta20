@@ -5,6 +5,7 @@ var raceDefinitionsPart03 = []RaceDefinition{
 	{
 		ID:               "golem",
 		Name:             "Golem",
+		Type:             "construto",
 		AttributeBonuses: OrderedMap[int]{{"strength", 2}, {"constitution", 1}, {"charisma", -1}},
 		Abilities: []RaceAbility{
 			{
@@ -82,6 +83,7 @@ var raceDefinitionsPart03 = []RaceDefinition{
 	{
 		ID:               "trog",
 		Name:             "Trog",
+		Type:             "monstro",
 		AttributeBonuses: OrderedMap[int]{{"constitution", 2}, {"strength", 1}, {"intelligence", -1}},
 		Abilities: []RaceAbility{
 			{
