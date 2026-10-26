@@ -297,10 +297,12 @@ templ rollTheTest(v View, row expertiseRow) {
 // total soma tem de aparecer de onde veio (ALE-489).
 templ spentRows(row expertiseRow) {
 	for _, spend := range row.Spends {
-		<div data-show={ spendSignal(spend.Key) + " > 0" } class="flex items-center justify-between gap-2 border-b border-grimorio-iron pb-1 text-grimorio-gold">
-			<span class="truncate">{ spend.Name }</span>
-			<span class="shrink-0 font-mono" data-text={ "'+' + " + spendBonusExpr(spend) }></span>
-		</div>
+		if spendShowsARow(spend) {
+			<div data-show={ spendSignal(spend.Key) + " > 0" } class="flex items-center justify-between gap-2 border-b border-grimorio-iron pb-1 text-grimorio-gold">
+				<span class="truncate">{ spendRowLabel(spend) }</span>
+				<span class="shrink-0 font-mono" data-text={ "(" + spendBonusExpr(spend) + " >= 0 ? '+' : '') + " + spendBonusExpr(spend) }></span>
+			</div>
+		}
 	}
 }
 
@@ -316,7 +318,10 @@ templ spendBox(row expertiseRow) {
 					<button
 						type="button"
 						data-attr:aria-pressed={ "String(" + spendSignal(spend.Key) + " > 0)" }
-						data-on:click={ spendToggleCommand(spend) }
+						if spend.Context != "" {
+							title={ spend.Name + ": " + spend.Context + " — quem julga o contexto é o mestre" }
+						}
+						data-on:click={ spendToggleCommand(row, spend) }
 						data-class={ chosenLookExpr("border-2 border-grimorio-gold bg-grimorio-gold/10 font-semibold text-grimorio-gold",
 							"border-grimorio-iron text-muted-foreground", spendSignal(spend.Key)+" > 0") }
 						class="inline-flex min-h-11 items-center gap-1 rounded-sm border border-grimorio-iron px-2.5 text-xs text-muted-foreground transition-colors"
