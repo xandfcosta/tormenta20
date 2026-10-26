@@ -171,6 +171,9 @@ func tableSignalsExpr() string {
 		// falha INTEIRA — o golpe chegava sem o `turn_target` (ALE-499). Quem
 		// cobra é o `TestEveryTypedSignalTheActionsSurfaceReadsIsDeclaredByTheTable`.
 		"stance_degrees: 0, boost_weapon: -1, boost_power: '', boost_steps: 0, boost_split: ''",
+		// E os gastos de PM do teste de perícia (ALE-489), pela mesma razão: o
+		// diálogo da perícia também é desenhado dentro da Mesa.
+		sheetui.ExpertiseSpendsDeclaration(),
 		// O MENU DA PEÇA. `token_chosen` é qual menu está aberto e `token_edited`
 		// é qual peça o diálogo está editando: são DOIS porque abrir o diálogo
 		// FECHA o menu, e um sinal só faria o gesto de abrir apagar o alvo do
