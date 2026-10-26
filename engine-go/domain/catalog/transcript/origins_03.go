@@ -100,7 +100,6 @@ var originsPart03 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-guarda-unique",
-			Unmodeled:   "1 PM para trocar Percepção e Intuição por Investigação até o fim da cena: mexe num teste de perícia na hora de rolar (ALE-500)",
 			Name:        "Detetive",
 			Kind:        "poder",
 			Description: "Você pode gastar 1 PM para substituir testes de Percepção e Intuição por testes de Investigação até o fim da cena.",
@@ -353,7 +352,7 @@ var originsPart03 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-guilda-unique",
-			Unmodeled:   "usar Diplomacia para interrogar: mexe num teste de perícia na hora de rolar (ALE-500)",
+			Unmodeled:   "interrogar sem custo e em um minuto (veja Investigação) é prosa do mestre",
 			Name:        "Rede de Contatos",
 			Kind:        "poder",
 			Description: "Graças à influência de sua guilda, você pode usar Diplomacia para interrogar sem custo e em um minuto (veja Investigação).",

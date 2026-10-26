@@ -241,6 +241,8 @@ var itemFlagLabel = map[string]string{
 	sheet.FlagRestOneCategoryUp:   "Descansa uma categoria acima",
 	sheet.FlagRestNeverBelowLevel: "Descanso nunca rende menos que o nível",
 	sheet.FlagRestAlwaysNormal:    "Descansa sempre em condição normal",
+	// A cena paga do Detetive (p91, ALE-500).
+	"detective-scene": "Investigação no lugar de Percepção e Intuição",
 }
 
 // itemFlagExemptLabel é a frase de cada ISENÇÃO de bandeira, e ela é

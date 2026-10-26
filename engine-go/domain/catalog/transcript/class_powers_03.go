@@ -73,12 +73,13 @@ var classPowersPart03 = []ClassPower{
 	},
 	{
 		ID:          "class.bardo.mestre-dos-sussurros",
+		Modeled:     []string{"o interruptor no diálogo de Investigação e Enganação: dois d20, vale o maior"},
 		ClassName:   "Bardo",
 		Name:        "Mestre dos Sussurros",
 		Description: "Dissimulado e atento: em teste Investigação para interrogar ou Enganação para intriga, rola 2x e usa melhor. Pode fazer em 1 min em ambientes sociais.",
 		BookPage:    45,
 		UID:         "pwr_xifcmymile",
-		Unmodeled:   "rolar duas vezes: mexe num teste de perícia na hora de rolar (ALE-500)",
+		Unmodeled:   "fazer esses testes em ambientes sociais sem custo e em um minuto é prosa do mestre",
 		Prerequisites: []Prerequisite{
 			{Kind: "attribute", Attr: "charisma", Min: 1},
 			{Kind: "trained", Expertise: "Enganação"},

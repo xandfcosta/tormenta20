@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"t20engine/domain/live"
@@ -41,9 +42,14 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 	t := st.LastSkillTest
 	band := &skillTestBand{
 		Who: t.Who, Skill: t.Skill, ByHand: t.ByHand,
-		Tally: fmt.Sprintf("d20 %d %s %d = %d", t.Roll, signOf(t.Modifier), abs(t.Modifier), t.Total),
+		Tally: fmt.Sprintf("d20 %s %s %d = %d", writtenDice(t), signOf(t.Modifier), abs(t.Modifier), t.Total),
 		Seal:  "Teste", Class: "mesa-ataque-comum",
 		Paid: writtenPaid(t.Spends),
+	}
+	// A TROCA aparece no nome: "Diplomacia com Enganação" — o número da conta é
+	// o da outra perícia, e sem isso a mesa estranharia o total.
+	if t.UsedSkill != "" {
+		band.Skill = t.Skill + " com " + t.UsedSkill
 	}
 	// OS NATURAIS SÃO DO DADO (p221), e são o único veredicto que esta fatia
 	// pode dar: "sempre é um sucesso" e "sempre é uma falha" não dependem de CD
@@ -57,8 +63,17 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 	return band
 }
 
+// writtenDice é o d20 da conta, e os DOIS quando se rolaram dois: "14 (de 14 e
+// 6)" — o melhor vale, e a mesa vê o que ficou de fora (p45).
+func writtenDice(t *live.SkillTestRoll) string {
+	if len(t.Rolls) < 2 {
+		return strconv.Itoa(t.Roll)
+	}
+	return fmt.Sprintf("%d (de %d e %d)", t.Roll, t.Rolls[0], t.Rolls[1])
+}
+
 // writtenPaid escreve os gastos do teste: "Audácia +5 · 2 PM, Orgulho +4 ·
-// 2 PM".
+// 2 PM". A troca grátis sai sem PM.
 func writtenPaid(spends []live.SkillTestPaid) string {
 	parts := make([]string, 0, len(spends))
 	for _, s := range spends {

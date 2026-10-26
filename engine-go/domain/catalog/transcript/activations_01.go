@@ -334,11 +334,16 @@ var activationsPart01 = []Activation{
 	{
 		ID:       "class.bardo.mestre-dos-sussurros",
 		Name:     "Mestre dos Sussurros",
-		Kind:     "passive",
+		Kind:     "skill-spend",
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
 		BookPage: 45,
+		SkillSpend: &SkillSpend{
+			Kind:    "two-dice",
+			Skills:  []string{"Investigação", "Enganação"},
+			Context: "ao interrogar (Investigação) ou na intriga (Enganação)",
+		},
 	},
 	{
 		ID:       "class.bardo.musica-balada-fascinante",

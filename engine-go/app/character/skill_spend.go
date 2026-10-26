@@ -28,10 +28,45 @@ func SkillSpendOffersFor(dto sheet.CharacterDTO, computed engine.ComputedSheet, 
 	for key, attr := range computed.Attributes {
 		attributes[key] = attr.Total
 	}
+	totals, trainedIn := map[string]int{}, map[string]bool{}
+	for _, e := range computed.Expertises {
+		totals[e.Name], trainedIn[e.Name] = e.Total, e.Trained
+	}
 	return book.SkillSpendOffers(owned, book.SkillSpendTarget{
 		Skill: skill, Trained: isTrained(computed, skill), TrainedOnly: trainedOnly(skill),
 		TrainingBonus: engine.TrainingBonusForLevel(int(dto.Level)), Attributes: attributes,
+		Attribute: bookAttributeOf(computed, skill), Totals: totals, TrainedIn: trainedIn,
+		Flags: sheetFlags(dto),
 	})
+}
+
+// bookAttributeOf é o atributo da perícia no LIVRO — o Palpite Fundamentado
+// fala da perícia "originalmente baseada" em Int ou Sab (p90), e não do
+// atributo que a ficha trocou. A perícia inventada usa o dela.
+func bookAttributeOf(computed engine.ComputedSheet, skill string) string {
+	for _, e := range book.Expertises() {
+		if e.Name == skill {
+			return e.Attribute
+		}
+	}
+	for _, e := range computed.Expertises {
+		if e.Name == skill {
+			return e.Attribute
+		}
+	}
+	return ""
+}
+
+// sheetFlags são as flags acesas na ficha — a cena paga do Detetive (p91).
+func sheetFlags(dto sheet.CharacterDTO) map[string]bool {
+	if dto.Ruleset == nil {
+		return nil
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return nil
+	}
+	return engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Flags
 }
 
 // trainedOnly diz se o livro só deixa rolar a perícia com treino (p115). O

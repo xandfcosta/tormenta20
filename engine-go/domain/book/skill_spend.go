@@ -35,6 +35,18 @@ type SkillSpend struct {
 	// Group junta o mesmo poder recebido de duas fontes: "caso receba esta
 	// habilidade novamente, seu custo é reduzido em –1 PM" (kliren, p28).
 	Group string `json:"group,omitempty"`
+	// Skills e Attributes dizem ONDE a troca e os dois d20 valem: nestas
+	// perícias, ou nas perícias deste atributo do LIVRO (Palpite Fundamentado:
+	// "originalmente baseada em Inteligência ou Sabedoria", p90).
+	Skills     []string `json:"skills,omitempty"`
+	Attributes []string `json:"attributes,omitempty"`
+	// SwapTo é a perícia que o teste passa a usar (`swap`).
+	SwapTo string `json:"swapTo,omitempty"`
+	// RequiresFlag é a flag que um GESTO levantou e pagou — o Detetive (p91)
+	// paga 1 PM uma vez e troca de graça até o fim da cena.
+	RequiresFlag string `json:"requiresFlag,omitempty"`
+	// Context é o quando do livro que o mestre julga ("para interrogar").
+	Context string `json:"context,omitempty"`
 }
 
 // As formas de gasto.
@@ -44,6 +56,10 @@ const (
 	SpendFlat           = "flat"
 	SpendAsTrained      = "as-trained"
 	SpendIgnoreTraining = "ignore-training"
+	// SpendSwap usa o total de OUTRA perícia no teste (ALE-500).
+	SpendSwap = "swap"
+	// SpendTwoDice rola dois d20 e usa o melhor (ALE-500).
+	SpendTwoDice = "two-dice"
 )
 
 // SkillSpendTarget é o que a oferta precisa saber da perícia e da ficha.
@@ -54,6 +70,13 @@ type SkillSpendTarget struct {
 	// TrainingBonus é o +2/+4/+6 do nível, que o Eclético empresta (p45).
 	TrainingBonus int
 	Attributes    map[string]int
+	// Attribute é o atributo da perícia no LIVRO; Totals e TrainedIn são o
+	// total e o treino de cada perícia da ficha, para a troca; Flags são as
+	// flags acesas (a cena do Detetive).
+	Attribute string
+	Totals    map[string]int
+	TrainedIn map[string]bool
+	Flags     map[string]bool
 }
 
 // SkillSpendOffer é um gasto que a ficha pode fazer NESTE teste.
@@ -72,6 +95,9 @@ type SkillSpendOffer struct {
 	Bonus int
 	// Unlocks diz que o gasto deixa rolar a perícia só para treinados.
 	Unlocks bool
+	// SwapTo é a perícia que a troca usa; Context, o quando do livro.
+	SwapTo  string
+	Context string
 }
 
 // SkillSpendOffers são os gastos que as ativações POSSUÍDAS oferecem para esta
@@ -118,6 +144,21 @@ func SkillSpendOffers(owned []Activation, target SkillSpendTarget) []SkillSpendO
 				continue
 			}
 			offer.Unlocks = true
+		case SpendSwap:
+			if !appliesTo(*spend, target) || !swapUsable(spend.SwapTo, target) {
+				continue
+			}
+			if spend.RequiresFlag != "" {
+				// O PM foi do gesto que acendeu a flag.
+				offer.PM = 0
+			}
+			offer.SwapTo, offer.Context, offer.Unlocks = spend.SwapTo, spend.Context, true
+			offer.Bonus = target.Totals[spend.SwapTo] - target.Totals[target.Skill]
+		case SpendTwoDice:
+			if !appliesTo(*spend, target) {
+				continue
+			}
+			offer.Context = spend.Context
 		default:
 			continue
 		}
@@ -127,6 +168,32 @@ func SkillSpendOffers(owned []Activation, target SkillSpendTarget) []SkillSpendO
 		out = append(out, offer)
 	}
 	return out
+}
+
+// appliesTo diz se a troca ou os dois d20 valem nesta perícia, e se a flag que
+// eles pedem está acesa.
+func appliesTo(spend SkillSpend, target SkillSpendTarget) bool {
+	if spend.RequiresFlag != "" && !target.Flags[spend.RequiresFlag] {
+		return false
+	}
+	if target.Skill == spend.SwapTo {
+		return false
+	}
+	return slices.Contains(spend.Skills, target.Skill) || slices.Contains(spend.Attributes, target.Attribute)
+}
+
+// swapUsable diz se a perícia de destino existe na ficha e pode ser rolada: a
+// só para treinados, sem treino, não serve de troca (p115).
+func swapUsable(skill string, target SkillSpendTarget) bool {
+	if _, found := target.Totals[skill]; !found {
+		return false
+	}
+	for _, e := range Expertises() {
+		if e.Name == skill && e.TrainedOnly {
+			return target.TrainedIn[skill]
+		}
+	}
+	return true
 }
 
 // SkillSpendChoice é um gasto pedido: a chave e, no `per-pm`, quantos PM.
@@ -150,11 +217,18 @@ type PaidSkillSpends struct {
 	PM       int
 	Unlocked bool
 	Parts    []SpentPart
+	// SwapTo é a perícia que o teste usou no lugar; TwoDice, que se rolam dois
+	// d20 e vale o melhor.
+	SwapTo  string
+	TwoDice bool
+	// trainingPaid marca o treino pago, que a troca recusa.
+	trainingPaid bool
 }
 
 // SpentPart é um gasto escrito para a mesa — "Audácia +3 · 2 PM".
 type SpentPart struct {
 	Name  string
+	Kind  string
 	Bonus int
 	PM    int
 }
@@ -175,17 +249,34 @@ func PaySkillSpends(offers []SkillSpendOffer, chosen []SkillSpendChoice) (PaidSk
 			return PaidSkillSpends{}, fmt.Errorf("o gasto %q não vale neste teste — ou a ficha não o tem, ou a perícia não o aceita", c.Key)
 		}
 		offer := offers[i]
-		part := SpentPart{Name: offer.Name, Bonus: offer.Bonus, PM: offer.PM}
+		part := SpentPart{Name: offer.Name, Kind: offer.Kind, Bonus: offer.Bonus, PM: offer.PM}
 		if offer.Kind == SpendPerPM {
 			if c.PM < 1 || c.PM > offer.MaxPM {
 				return PaidSkillSpends{}, fmt.Errorf("%s: %d PM pedidos, e o limite é de 1 a %d", offer.Name, c.PM, offer.MaxPM)
 			}
 			part.Bonus, part.PM = offer.Bonus*c.PM, offer.PM*c.PM
 		}
+		switch offer.Kind {
+		case SpendSwap:
+			if paid.SwapTo != "" {
+				return PaidSkillSpends{}, fmt.Errorf("duas trocas de perícia no mesmo teste (%s e %s): o teste usa uma perícia só",
+					paid.SwapTo, offer.SwapTo)
+			}
+			paid.SwapTo = offer.SwapTo
+		case SpendTwoDice:
+			paid.TwoDice = true
+		}
 		paid.Bonus += part.Bonus
 		paid.PM += part.PM
 		paid.Unlocked = paid.Unlocked || offer.Unlocks
 		paid.Parts = append(paid.Parts, part)
+		paid.trainingPaid = paid.trainingPaid || offer.Kind == SpendAsTrained || offer.Kind == SpendIgnoreTraining
+	}
+	// A TROCA NÃO SE MISTURA COM TREINO PAGO: o Eclético diz "treinado NESSA
+	// perícia" (p45), e a troca muda qual perícia é.
+	if paid.SwapTo != "" && paid.trainingPaid {
+		return PaidSkillSpends{}, fmt.Errorf("a troca por %s não combina com treino pago: o treino é da perícia original",
+			paid.SwapTo)
 	}
 	return paid, nil
 }

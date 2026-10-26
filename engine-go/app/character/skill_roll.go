@@ -63,12 +63,32 @@ func (p Plays) RollExpertise(
 	if err != nil {
 		return engine.SkillTest{}, err
 	}
+	// DOIS d20, VALE O MELHOR (Mestre dos Sussurros, p45). Quem rola na mão
+	// rola os dois na mesa e informa o melhor (decisão do dono), então o
+	// segundo só sai quando o servidor rola.
+	var rolls []int
+	if paid.TwoDice && d20 == nil {
+		second, err := p.dieFor(nil)
+		if err != nil {
+			return engine.SkillTest{}, err
+		}
+		rolls = []int{rolled, second}
+		rolled = max(rolled, second)
+	}
 	test, err := engine.ResolveSkillTest(modifier+paid.Bonus, rolled)
 	if err != nil {
 		return engine.SkillTest{}, err
 	}
+	test.UsedSkill, test.Rolls = paid.SwapTo, rolls
 	for _, part := range paid.Parts {
-		test.Spends = append(test.Spends, engine.SkillTestSpend{Name: part.Name, Bonus: part.Bonus, PM: part.PM})
+		spent := engine.SkillTestSpend{Name: part.Name, Bonus: part.Bonus, PM: part.PM}
+		// A TROCA não soma um bônus: ela troca a perícia, e a faixa já diz
+		// "Diplomacia com Enganação". O número seria a diferença entre as duas,
+		// que ninguém na mesa reconhece.
+		if part.Kind == book.SpendSwap {
+			spent.Bonus = 0
+		}
+		test.Spends = append(test.Spends, spent)
 	}
 	// O PM SAI AO ROLAR (decisão do dono): o teste de perícia não tem
 	// confirmação do mestre, e o número com o bônus já é o que aconteceu.

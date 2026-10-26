@@ -277,7 +277,6 @@ var originsPart02 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-estudioso-unique",
-			Unmodeled:   "2 PM para trocar a perícia por Conhecimento: mexe num teste de perícia na hora de rolar (ALE-500)",
 			Name:        "Palpite Fundamentado",
 			Kind:        "poder",
 			Description: "Quando vai fazer um teste de perícia originalmente baseada em Inteligência ou Sabedoria, você pode gastar 2 PM para substituí-la por Conhecimento.",
