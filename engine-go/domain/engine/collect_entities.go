@@ -111,7 +111,7 @@ func (r *Ruleset) abilityChoiceModifiers(race *RaceDefinition, picks map[string]
 				skills = append(skills, pick)
 			}
 		}
-		out = append(out, expandChoiceModifiers(ability.Modifiers, skills)...)
+		out = append(out, expandChoiceModifiers(ability.Modifiers, skills, nil)...)
 	}
 	return out
 }
@@ -191,7 +191,7 @@ func (r *Ruleset) classActiveItems(ch Character) []ActiveItem {
 	for _, entry := range ch.Classes {
 		owned := r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName])
 		for _, power := range owned {
-			mods := expandChoiceModifiers(power.Modifiers, picks[power.ID])
+			mods := expandChoiceModifiers(power.Modifiers, picks[power.ID], power.choiceNames())
 			if len(mods) == 0 {
 				continue
 			}
@@ -212,13 +212,17 @@ func (r *Ruleset) classActiveItems(ch Character) []ActiveItem {
 // poder várias vezes"), e por isso viram duas cópias e não uma com o dobro: o
 // atributo de cada uma pode ser outro.
 //
-//	expandChoiceModifiers([+1 atributo ← escolha], ["strength", "wisdom"])
+//	expandChoiceModifiers([+1 atributo ← escolha], ["strength", "wisdom"], nil)
 //	// [+1 strength, +1 wisdom]
-func expandChoiceModifiers(mods []Modifier, picks []string) []Modifier {
+func expandChoiceModifiers(mods []Modifier, picks []string, names map[string]string) []Modifier {
 	out := make([]Modifier, 0, len(mods))
 	for _, m := range mods {
 		if m.FromChoice == "" {
 			out = append(out, m)
+			continue
+		}
+		if m.FromChoice == "flag" {
+			out = append(out, flagChoiceModifiers(m, picks, names)...)
 			continue
 		}
 		for _, pick := range picks {
@@ -233,6 +237,45 @@ func expandChoiceModifiers(mods []Modifier, picks []string) []Modifier {
 			}
 			out = append(out, copied)
 		}
+	}
+	return out
+}
+
+// flagChoiceModifiers faz UM interruptor por escolha distinta: a escolha entra
+// na flag e no rótulo, e cada repetição soma o `repeatBonus` (ALE-503).
+//
+// "Escolha outro tipo de terreno para receber o bônus ou aumente o bônus em um
+// tipo de terreno já escolhido em +2" (Explorador, p50): floresta duas vezes é
+// UMA floresta com +2, e não duas.
+//
+//	flagChoiceModifiers(+Sab na Defesa ← terreno, ["floresta", "floresta"], nomes)
+//	// [+Sab+2 na Defesa, flag explorador:floresta, "no terreno: Floresta"]
+func flagChoiceModifiers(m Modifier, picks []string, names map[string]string) []Modifier {
+	order, times := []string{}, map[string]int{}
+	for _, pick := range picks {
+		if times[pick] == 0 {
+			order = append(order, pick)
+		}
+		times[pick]++
+	}
+	out := make([]Modifier, 0, len(order))
+	for _, pick := range order {
+		copied := m
+		copied.FromChoice = ""
+		condition := *m.Condition
+		condition.Flag = m.Condition.Flag + ":" + pick
+		label := names[pick]
+		if label == "" {
+			label = pick
+		}
+		condition.Label = m.Condition.Label + label
+		copied.Condition = &condition
+		if m.Scale != nil {
+			scale := *m.Scale
+			scale.plus = scale.RepeatBonus * (times[pick] - 1)
+			copied.Scale = &scale
+		}
+		out = append(out, copied)
 	}
 	return out
 }

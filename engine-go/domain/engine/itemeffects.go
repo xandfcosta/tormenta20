@@ -67,6 +67,11 @@ type VitalScale struct {
 	// sem teto — a p226 diz que ALGUMAS habilidades são limitadas, e só as que
 	// o escrevem. Ver `resolveAttributeSums`.
 	Cap string `json:"cap,omitempty"`
+	// Min e RepeatBonus: ver o `ModifierScale` do catálogo (p50). O `plus` é o
+	// que as repetições somaram, posto na expansão da escolha.
+	Min         int `json:"min,omitempty"`
+	RepeatBonus int `json:"repeatBonus,omitempty"`
+	plus        int
 }
 
 // amountInEngineUnits converte o valor do catálogo para a unidade do motor.

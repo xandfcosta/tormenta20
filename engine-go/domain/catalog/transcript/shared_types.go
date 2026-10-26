@@ -75,6 +75,10 @@ type ModifierScale struct {
 	// Cap é o teto de um `per: attribute`: `classLevel` é o nível na classe
 	// que concede o poder (p226). Vazio é sem teto.
 	Cap string `json:"cap,omitempty"`
+	// Min é o piso do `per: attribute` ("Sabedoria (mínimo +1)", p50), e
+	// RepeatBonus o que cada escolha REPETIDA soma ("+2", p50).
+	Min         int `json:"min,omitempty"`
+	RepeatBonus int `json:"repeatBonus,omitempty"`
 }
 
 type Fact struct {
