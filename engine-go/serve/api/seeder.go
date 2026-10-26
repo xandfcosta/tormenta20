@@ -80,7 +80,7 @@ func (sd Seeder) CreateCharacter(
 		classes[i] = c.ClassName
 	}
 	id, err := sd.births.Create(ctx, ownerID, body.Name, body, totalLevel,
-		book.GrantedProficiencies(classes), sheet.ToStringSet(body.TrainedExpertises))
+		book.GrantedProficiencies(classes, body.Races), sheet.ToStringSet(body.TrainedExpertises))
 	if err != nil {
 		return 0, err
 	}

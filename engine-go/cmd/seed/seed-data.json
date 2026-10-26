@@ -491,7 +491,13 @@
                 "strength",
                 "dexterity",
                 "constitution"
-              ]
+              ],
+              "abilityPicks": {
+                "lefou-deformidade": [
+                  "Atuação",
+                  "olhos-vermelhos"
+                ]
+              }
             },
             "items": [
               {

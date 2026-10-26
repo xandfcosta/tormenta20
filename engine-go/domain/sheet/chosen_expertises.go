@@ -37,8 +37,9 @@ func countAttributeValue(dto CharacterDTO, choice book.PowerChoice) (int, error)
 	return dto.Ruleset.PermanentAttribute(ec, choice.CountAttribute), nil
 }
 
-// ChosenExpertisesFit confere as escolhas contadas por atributo contra a ficha
-// como ela está: cabem no limite, e toda perícia escolhida é treinada.
+// ChosenExpertisesFit confere as escolhas que nomeiam perícias contra a ficha
+// como ela está: as contadas por atributo cabem no limite e são treinadas, e as
+// das habilidades de raça apontam perícia e Ofício que existem (ALE-493).
 func ChosenExpertisesFit(dto CharacterDTO) error {
 	picks := PowerPicks(dto.PowerChoices)
 	ids := make([]string, 0, len(picks))
@@ -55,7 +56,9 @@ func ChosenExpertisesFit(dto CharacterDTO) error {
 			return err
 		}
 	}
-	return nil
+	// As habilidades de raça também nomeiam perícias: o Ofício do
+	// Vanguardista, as da Deformidade (ALE-493).
+	return raceAbilityPicksFit(dto)
 }
 
 func expertisePicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {

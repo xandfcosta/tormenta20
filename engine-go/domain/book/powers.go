@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"sync"
 
+	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 )
 
@@ -53,6 +54,10 @@ type PowerChoice struct {
 	// quantas: o atributo sem temporários, mínimo 1 — as perícias do
 	// Especialista, p73 (ALE-501).
 	CountAttribute string `json:"countAttribute"`
+	// Count é o número fixo de opções (as duas perícias da Deformidade), e
+	// SwapFor o que pode tomar o lugar de UMA delas ("tormenta-power", p24).
+	Count   int    `json:"count"`
+	SwapFor string `json:"swapFor"`
 }
 
 type PowerChoiceOption struct {
@@ -150,9 +155,15 @@ func PowerCatalogs() {
 		for _, p := range ListOf[GeneralPower]("general-powers") {
 			poderesGeraisPorID[p.ID] = p
 		}
-		for _, p := range ListOf[GeneralPower]("tormenta-powers") {
-			p.Kind = "tormenta"
-			poderesGeraisPorID[p.ID] = p
+		// O recurso da Tormenta é um MAPA por id, e não lista: lido com
+		// `ListOf`, ele voltava vazio em silêncio (ALE-493).
+		var tormenta map[string]GeneralPower
+		if raw, ok := catalog.Resource("tormenta-powers"); ok {
+			_ = json.Unmarshal(raw, &tormenta)
+		}
+		for id, p := range tormenta {
+			p.ID, p.Kind = id, "tormenta"
+			poderesGeraisPorID[id] = p
 		}
 	})
 }

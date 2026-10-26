@@ -46,6 +46,7 @@ escolha
 estado
 ferramenta
 flag
+habilidade
 id
 indice
 item

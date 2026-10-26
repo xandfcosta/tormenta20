@@ -32,7 +32,7 @@ templ proficiencyPanel(v View) {
 				title="Marca exatamente o que as classes concedem e descarta os ajustes manuais"
 				data-on:click={ defaultClassCommand(v) }
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
-			>Restaurar padrão de classe</button>
+			>Restaurar padrão</button>
 		</div>
 		<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">
 			for _, group := range v.Proficiencies {
@@ -70,14 +70,14 @@ templ proficiencyRow(v View, row sheetProficiency) {
 			<span class={ templ.KV("text-foreground", row.Has), templ.KV("text-muted-foreground line-through", !row.Has) }>
 				{ row.Label }
 			</span>
-			// "classe" marca o que vem de fábrica, para o jogador distinguir um
-			// ajuste deliberado da conta — sem ela, uma proficiência tirada na
-			// mão parece defeito.
-			if row.FromClass {
+			// O selo marca o que vem de fábrica — da classe ou da raça —, para o
+			// jogador distinguir um ajuste deliberado da conta: sem ele, uma
+			// proficiência tirada na mão parece defeito.
+			if row.FromClass || row.FromRace {
 				<span
 					title={ sourceTag(row) }
 					class="ml-1 rounded-md bg-muted px-1 text-3xs uppercase tracking-[0.14em] text-muted-foreground"
-				>classe</span>
+				>{ row.Badge() }</span>
 			}
 		}
 	</li>

@@ -40,6 +40,7 @@ type pendencia struct {
 func (s Scene) sheetPendings(dto sheet.CharacterDTO) []pendencia {
 	outside := []pendencia{}
 	outside = append(outside, s.attributeRacePending(dto)...)
+	outside = append(outside, raceAbilityPendings(dto)...)
 	outside = append(outside, originPending(dto)...)
 	outside = append(outside, classPendings(dto)...)
 	return outside
@@ -64,6 +65,29 @@ func (s Scene) attributeRacePending(dto sheet.CharacterDTO) []pendencia {
 		outside = append(outside, pendencia{
 			Source: "raca", Label: "Raça: distribuir o bônus de atributo de " + book.RaceLabel(r.Race),
 		})
+	}
+	return outside
+}
+
+// raceAbilityPendings são as escolhas de habilidade de raça que faltam: "Lefou:
+// Deformidade, 1 escolha por fazer", "Kliren: Vanguardista: escolher o Ofício".
+func raceAbilityPendings(dto sheet.CharacterDTO) []pendencia {
+	outside := []pendencia{}
+	for _, block := range sheet.RaceAbilityChoices(dto) {
+		missing := block.Ability.Choice.Count - len(block.Picks)
+		if missing <= 0 {
+			continue
+		}
+		label := book.RaceLabel(block.Race) + ": " + block.Ability.Name + ": "
+		switch {
+		case block.Ability.Choice.Kind == "craft":
+			label += "escolher o Ofício"
+		case missing == 1:
+			label += "1 escolha por fazer"
+		default:
+			label += strconv.Itoa(missing) + " escolhas por fazer"
+		}
+		outside = append(outside, pendencia{Source: "raca", Label: label})
 	}
 	return outside
 }

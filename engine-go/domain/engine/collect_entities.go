@@ -16,29 +16,16 @@ import (
 // race's own attribute mods (fixed-race duplicates) are stripped.
 func (r *Ruleset) raceActiveItems(ch Character) []ActiveItem {
 	variantChoices := parseChoiceSet(ch.RaceAbilityChoices).has
-	primary := parseRaceAttributeChoices(ch.RaceAttributeChoices)
-	secondaries := parseSecondaryRaceChoices(ch.SecondaryRaceChoices)
 	result := []ActiveItem{}
-	for i, entry := range ch.Races {
-		choice := primary
-		if i != 0 {
-			sec, ok := secondaries[entry.Race]
-			if !ok {
-				continue // non-applied secondary → no mechanics
-			}
-			choice = sec
-		}
-		race := r.getRace(entry.Race)
-		if race == nil {
-			continue
-		}
-		mods := r.raceAttributeMods(entry.Race, choice)
+	for _, applied := range r.appliedRaces(ch) {
+		race, choice := applied.race, applied.choice
+		mods := r.raceAttributeMods(race.ID, choice)
 		for _, m := range raceModifiers(race, variantChoices) {
 			if m.Target.K != "attribute" {
 				mods = append(mods, m)
 			}
 		}
-		mods = append(mods, r.deformidadeModifiers(entry.Race, choice.deformity)...)
+		mods = append(mods, r.abilityChoiceModifiers(race, choice.abilityPicks)...)
 		if len(mods) == 0 {
 			continue
 		}
@@ -82,50 +69,69 @@ func (r *Ruleset) raceAttributeMods(raceID string, choice raceAttrChoice) []Modi
 	return out
 }
 
-// deformidadeModifiers: Deformidade (Lefou p23) as +2 on each
-// chosen perícia. The Carisma loss is emitted separately (tormentaCarismaItem).
-func (r *Ruleset) deformidadeModifiers(raceID string, draft *deformidadeStored) []Modifier {
-	if draft == nil || r.raceWithDeformidade(raceID) == "" {
-		return []Modifier{}
-	}
-	out := []Modifier{}
-	for _, n := range draft.expertises {
-		if !expertiseNamesSet[n] {
-			continue
+// appliedRace é uma raça que conta na ficha, com a escolha dela: a primária
+// sempre, a secundária só quando aplicada.
+type appliedRace struct {
+	race   *RaceDefinition
+	choice raceAttrChoice
+}
+
+func (r *Ruleset) appliedRaces(ch Character) []appliedRace {
+	primary := parseRaceAttributeChoices(ch.RaceAttributeChoices)
+	secondaries := parseSecondaryRaceChoices(ch.SecondaryRaceChoices)
+	out := []appliedRace{}
+	for i, entry := range ch.Races {
+		choice := primary
+		if i != 0 {
+			sec, ok := secondaries[entry.Race]
+			if !ok {
+				continue // non-applied secondary → no mechanics
+			}
+			choice = sec
 		}
-		out = append(out, Modifier{
-			Target:    ModifierTarget{K: "expertise", Name: n},
-			Amount:    deformidadeExpertiseBonus,
-			BonusType: "untyped",
-			Note:      "Deformidade",
-		})
+		if race := r.getRace(entry.Race); race != nil {
+			out = append(out, appliedRace{race: race, choice: choice})
+		}
 	}
 	return out
 }
 
-// deformidadeHeldPower: the Deformidade-swapped poder da
-// Tormenta, from either race blob.
-func (r *Ruleset) deformidadeHeldPower(ch Character) string {
-	if len(ch.Races) > 0 {
-		primaryRace := ch.Races[0].Race
-		primary := parseRaceAttributeChoices(ch.RaceAttributeChoices)
-		if r.raceWithDeformidade(primaryRace) != "" && heldTormenta(primary.deformity) != "" {
-			return heldTormenta(primary.deformity)
+// abilityChoiceModifiers são os modificadores das habilidades que pedem
+// escolha, um por perícia escolhida. O poder da Tormenta que a Deformidade
+// troca por um dos bônus não é perícia, e fica de fora (`RaceHeldPowers`).
+func (r *Ruleset) abilityChoiceModifiers(race *RaceDefinition, picks map[string][]string) []Modifier {
+	out := []Modifier{}
+	for _, ability := range race.Abilities {
+		if ability.Choice == nil {
+			continue
 		}
-	}
-	for race, choice := range parseSecondaryRaceChoices(ch.SecondaryRaceChoices) {
-		if r.raceWithDeformidade(race) != "" && heldTormenta(choice.deformity) != "" {
-			return heldTormenta(choice.deformity)
+		skills := []string{}
+		for _, pick := range picks[ability.ID] {
+			if !r.isTormentaPower(pick) {
+				skills = append(skills, pick)
+			}
 		}
+		out = append(out, expandChoiceModifiers(ability.Modifiers, skills)...)
 	}
-	return ""
+	return out
 }
 
-func heldTormenta(d *deformidadeStored) string {
-	if d == nil {
-		return ""
+// RaceHeldPowers são os poderes da Tormenta que a Deformidade trocou por um
+// bônus (p24). A ficha os TEM, e eles não contam para a perda de Carisma.
+//
+//	r.RaceHeldPowers(lefou) // ["olhos-vermelhos"]
+func (r *Ruleset) RaceHeldPowers(ch Character) []string {
+	out := []string{}
+	for _, applied := range r.appliedRaces(ch) {
+		for _, ability := range applied.race.Abilities {
+			for _, pick := range applied.choice.abilityPicks[ability.ID] {
+				if ability.Choice != nil && r.isTormentaPower(pick) {
+					out = append(out, pick)
+				}
+			}
+		}
 	}
-	return d.tormentaPower
+	return out
 }
 
 // originActiveItem: chosen origin benefits' modifiers, plus the
@@ -272,8 +278,8 @@ func (r *Ruleset) godPowerActiveItem(ch Character) *ActiveItem {
 	}
 }
 
-// tormentaCarismaItem: the escalating Carisma loss over the
-// TOTAL count of real poderes da Tormenta (picked + the Deformidade-held one).
+// tormentaCarismaItem: the escalating Carisma loss over the count of real
+// poderes da Tormenta picked.
 func (r *Ruleset) tormentaCarismaItem(ch Character) *ActiveItem {
 	uniq := newOrderedSet()
 	for _, id := range parseChoiceSet(ch.ClassPowers).list {
@@ -288,11 +294,9 @@ func (r *Ruleset) tormentaCarismaItem(ch Character) *ActiveItem {
 			picked = append(picked, id)
 		}
 	}
-	held := r.deformidadeHeldPower(ch)
+	// O poder que a Deformidade trocou NÃO entra: "ele também não conta para
+	// perda de Carisma" (p24, ALE-493).
 	count := len(picked)
-	if held != "" && !contains(picked, held) {
-		count++
-	}
 	if count == 0 {
 		return nil
 	}

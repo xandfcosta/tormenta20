@@ -362,7 +362,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 		AttributeBonuses: OrderedMap[int]{{"intelligence", 2}, {"charisma", 1}, {"strength", -1}},
 		Abilities: []RaceAbility{
 			{
-				ID: "kiiren-hibrido",
+				ID: "kliren-hibrido",
 				Modeled: []string{
 					"a perícia escolhida se marca treinada na coluna da ficha, que é o lugar da escolha livre",
 				},
@@ -372,7 +372,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				UID:         "rac_e7iz2ymt7d",
 			},
 			{
-				ID: "kiiren-engenhosidade",
+				ID: "kliren-engenhosidade",
 				Modeled: []string{
 					"o gasto no diálogo do teste: 2 PM somam a Inteligência, e 1 PM para quem a recebe de novo",
 				},
@@ -382,7 +382,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				UID:         "rac_xse6geohcx",
 			},
 			{
-				ID:          "kiiren-ossos-frageis",
+				ID:          "kliren-ossos-frageis",
 				RaceID:      "kliren",
 				Name:        "Ossos Frágeis",
 				Description: "Você sofre 1 ponto de dano adicional por dado de dano de impacto.",
@@ -390,12 +390,22 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Unmodeled:   "+1 de dano por dado de impacto sofrido: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 			},
 			{
-				ID:          "kiiren-vanguardista",
+				ID:          "kliren-vanguardista",
 				RaceID:      "kliren",
 				Name:        "Vanguardista",
 				Description: "Recebe proficiência em armas de fogo e +2 em Ofício (um qualquer, a sua escolha).",
 				UID:         "rac_nswmnwe2uc",
-				Unmodeled:   "a proficiência em armas de fogo e o +2 no Ofício escolhido: a escolha de habilidade de raça não tem onde morar (ALE-493)",
+				Modifiers: []Modifier{
+					{
+						Target:     ModifierTarget{Kind: "expertise"},
+						Amount:     2,
+						BonusType:  "untyped",
+						Note:       "Vanguardista",
+						FromChoice: "name",
+					},
+				},
+				Choice:            &PowerChoice{Kind: "craft", Label: "Ofício", Count: 1},
+				GrantsProficiency: []string{"armas-de-fogo"},
 			},
 		},
 		UID: "rac_fmeindoywi",

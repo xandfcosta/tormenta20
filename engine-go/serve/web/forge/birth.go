@@ -177,7 +177,7 @@ func (s Scene) birthHero(r *http.Request, ownerID int64, stylesheet forgeAnswers
 		return 0, err
 	}
 	id, err := s.births.Create(r.Context(), ownerID, body.Name, body, 1,
-		book.GrantedProficiencies([]string{class.Name}), sheet.ToStringSet(body.TrainedExpertises))
+		book.GrantedProficiencies([]string{class.Name}, body.Races), sheet.ToStringSet(body.TrainedExpertises))
 	if err != nil {
 		return 0, err
 	}

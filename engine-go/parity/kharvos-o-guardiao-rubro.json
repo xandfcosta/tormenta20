@@ -24,7 +24,7 @@
     "proficiencies": "[\"armas-simples\",\"armas-marciais\",\"escudos\",\"armaduras-leves\",\"armas-exoticas\"]",
     "raceAbilityChoices": "[]",
     "raceAttributeChoices": "{\"floatingPicks\":[]}",
-    "secondaryRaceChoices": "[{\"race\":\"lefou\",\"floatingPicks\":[],\"deformidade\":{\"pericias\":[],\"tormentaPower\":\"olhos-vermelhos\"}}]",
+    "secondaryRaceChoices": "[{\"race\":\"lefou\",\"floatingPicks\":[],\"abilityPicks\":{\"lefou-deformidade\":[\"olhos-vermelhos\"]}}]",
     "originChoices": "[\"poder-vontade-de-ferro\",\"origin-refugiado-unique\"]",
     "classPowers": "[\"class.barbaro.alma-de-bronze\",\"class.barbaro.destruidor\",\"class.barbaro.golpe-poderoso\",\"class.barbaro.pele-de-ferro\",\"class.barbaro.totem-espiritual\"]",
     "classChoices": "{}",
@@ -755,21 +755,6 @@
           }
         }
       ]
-    },
-    {
-      "source": "Poderes da Tormenta",
-      "equipped": "vested",
-      "modifiers": [
-        {
-          "target": {
-            "k": "attribute",
-            "name": "charisma"
-          },
-          "amount": -1,
-          "bonusType": "untyped",
-          "note": "1 poder(es) da Tormenta (p136)"
-        }
-      ]
     }
   ],
   "itemEffects": {
@@ -801,17 +786,6 @@
             "bonusType": "untyped",
             "amount": -2,
             "note": "desbalanceada: -2 em ataque"
-          }
-        ]
-      },
-      "attribute:charisma": {
-        "total": -1,
-        "contributions": [
-          {
-            "source": "Poderes da Tormenta",
-            "bonusType": "untyped",
-            "amount": -1,
-            "note": "1 poder(es) da Tormenta (p136)"
           }
         ]
       },
@@ -1149,13 +1123,8 @@
     },
     "attributes": {
       "charisma": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Poderes da Tormenta",
-            "amount": -1
-          }
-        ]
+        "total": 2,
+        "contributions": []
       },
       "constitution": {
         "total": 1,
@@ -1201,7 +1170,7 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "charisma": 14,
+      "charisma": 15,
       "constitution": 14,
       "dexterity": 14,
       "intelligence": 12,
@@ -1274,11 +1243,11 @@
       {
         "name": "Adestramento",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -1302,11 +1271,11 @@
       {
         "name": "Atuação",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -1358,11 +1327,11 @@
       {
         "name": "Diplomacia",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -1372,11 +1341,11 @@
       {
         "name": "Enganação",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -1447,11 +1416,11 @@
       {
         "name": "Intimidação",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -1489,11 +1458,11 @@
       {
         "name": "Jogatina",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -1759,13 +1728,8 @@
     },
     "attributes": {
       "charisma": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Poderes da Tormenta",
-            "amount": -1
-          }
-        ]
+        "total": 2,
+        "contributions": []
       },
       "constitution": {
         "total": 1,
@@ -1817,7 +1781,7 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "charisma": 14,
+      "charisma": 15,
       "constitution": 14,
       "dexterity": 14,
       "intelligence": 12,
@@ -1901,11 +1865,11 @@
       {
         "name": "Adestramento",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -1929,11 +1893,11 @@
       {
         "name": "Atuação",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -1985,11 +1949,11 @@
       {
         "name": "Diplomacia",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -1999,11 +1963,11 @@
       {
         "name": "Enganação",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -2080,11 +2044,11 @@
       {
         "name": "Intimidação",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],
@@ -2122,11 +2086,11 @@
       {
         "name": "Jogatina",
         "attribute": "charisma",
-        "base": 4,
+        "base": 5,
         "itemBonus": 0,
-        "total": 4,
+        "total": 5,
         "halfLevel": 3,
-        "attrValue": 1,
+        "attrValue": 2,
         "training": 0,
         "trained": false,
         "trainedBy": [],

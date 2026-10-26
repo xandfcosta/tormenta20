@@ -152,6 +152,20 @@ func dropPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 	})
 }
 
+// pickRaceAbility liga ou desliga uma opção da escolha de uma habilidade de
+// raça — a Deformidade, o Vanguardista (ALE-493).
+func pickRaceAbility(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	ability, option := chi.URLParam(r, "habilidade"), pathParam(r, "opcao")
+	var picked error
+	err := s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		picked = sheet.WithRaceAbilityPick(dto, ability, option)
+	})
+	if picked != nil {
+		return picked
+	}
+	return err
+}
+
 // pickOriginBenefit liga ou desliga um benefício da origem.
 func pickOriginBenefit(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	id := chi.URLParam(r, "beneficio")
@@ -197,7 +211,9 @@ func pickClassChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 // depois seria aceitar uma ficha inválida por um instante.
 func pickRaceAttributes(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	choices := signals.RaceAttributes
-	blob, err := json.Marshal(map[string]any{"floatingPicks": choices})
+	// MESCLA, e não regrava: as escolhas das habilidades da raça moram no mesmo
+	// blob (ALE-493).
+	blob, err := sheet.WithRaceAttributeKey(row.Raceattributechoices, "floatingPicks", choices)
 	if err != nil {
 		return err
 	}
@@ -205,7 +221,7 @@ func pickRaceAttributes(s Scene, r *http.Request, row sqlcgen.Character, signals
 	if err != nil {
 		return err
 	}
-	dto.RaceAttributeChoices = string(blob)
+	dto.RaceAttributeChoices = blob
 	if s.deps.Catalogs() != nil {
 		for _, race := range dto.Races {
 			if !s.deps.Catalogs().RaceAttributeChoiceIsComplete(race.Race, dto.RaceAttributeChoices) {
@@ -213,16 +229,16 @@ func pickRaceAttributes(s Scene, r *http.Request, row sqlcgen.Character, signals
 			}
 		}
 	}
-	return s.saveRaceAttributeChoice(r, row, string(blob))
+	return s.saveRaceAttributeChoice(r, row, blob)
 }
 
 // pickRaceAscendencia grava a metade escolhida de uma raça de ascendência.
 func pickRaceAscendencia(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	blob, err := json.Marshal(map[string]any{"ascendencia": chi.URLParam(r, "ascendencia")})
+	blob, err := sheet.WithRaceAttributeKey(row.Raceattributechoices, "ascendencia", chi.URLParam(r, "ascendencia"))
 	if err != nil {
 		return err
 	}
-	return s.saveRaceAttributeChoice(r, row, string(blob))
+	return s.saveRaceAttributeChoice(r, row, blob)
 }
 
 // saveTheChoices aplica a mudança e CONFERE a ficha inteira antes de gravar.
@@ -259,6 +275,12 @@ func (s Scene) saveTheChoices(
 	}
 	if dto.PowerChoices != before.PowerChoices {
 		writes.PowerChoices, moved = &dto.PowerChoices, true
+	}
+	if dto.RaceAttributeChoices != before.RaceAttributeChoices {
+		writes.RaceAttributeChoices, moved = &dto.RaceAttributeChoices, true
+	}
+	if dto.SecondaryRaceChoices != before.SecondaryRaceChoices {
+		writes.SecondaryRaceChoices, moved = &dto.SecondaryRaceChoices, true
 	}
 	if !moved {
 		return nil

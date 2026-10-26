@@ -27,6 +27,8 @@ type PowerChoice struct {
 	Options              []PowerChoiceOption `json:"options,omitempty"`
 	GrantsSpellAttribute string              `json:"grantsSpellAttribute,omitempty"`
 	CountAttribute       string              `json:"countAttribute,omitempty"`
+	Count                int                 `json:"count,omitempty"`
+	SwapFor              string              `json:"swapFor,omitempty"`
 }
 
 type PowerChoiceOption struct {
