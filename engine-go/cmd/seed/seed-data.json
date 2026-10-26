@@ -1723,6 +1723,67 @@
               }
             ]
           }
+        },
+        {
+          "create": {
+            "name": "Bardo Sussurrante Nv6",
+            "races": [
+              "humano"
+            ],
+            "origin": "charlatao",
+            "classes": [
+              {
+                "className": "Bardo",
+                "level": 6
+              }
+            ],
+            "god": "Hyninn",
+            "strength": 0,
+            "dexterity": 2,
+            "constitution": 1,
+            "intelligence": 2,
+            "wisdom": 1,
+            "charisma": 4,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": [
+                "charisma",
+                "dexterity",
+                "intelligence"
+              ]
+            },
+            "originChoices": [
+              "origin-charlatao-pericia-enganacao",
+              "origin-charlatao-unique"
+            ],
+            "trainedExpertises": [
+              "Luta",
+              "Atletismo",
+              "Pontaria",
+              "Reflexos",
+              "Fortitude",
+              "Vontade",
+              "Percepção",
+              "Intimidação",
+              "Investigação",
+              "Misticismo",
+              "Enganação"
+            ],
+            "classPowers": [
+              "class.bardo.mestre-dos-sussurros"
+            ],
+            "items": [
+              {
+                "catalogId": "espada-curta",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "armadura-couro",
+                "equipped": "vested"
+              }
+            ]
+          }
         }
       ]
     },

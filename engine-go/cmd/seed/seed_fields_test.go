@@ -31,7 +31,7 @@ func TestEveryCreateFieldOfTheSeedIsClassified(t *testing.T) {
 	fromCatalog := map[string]bool{
 		"races": true, "origin": true, "classes": true, "god": true,
 		"godPower": true, "items": true, "size": true, "classChoices": true,
-		"classPowers": true, "powerChoices": true,
+		"classPowers": true, "powerChoices": true, "originChoices": true, "trainedExpertises": true,
 	}
 	// NÃO apontam: são números, texto livre do dono, ou nomes de ATRIBUTO, que
 	// são do motor e não do catálogo.

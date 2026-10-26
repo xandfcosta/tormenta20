@@ -9,6 +9,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
+	"t20engine/domain/catalog/transcript"
 )
 
 // A CONFERÊNCIA DE TODA REFERÊNCIA AO CATÁLOGO, num lugar só.
@@ -198,7 +199,28 @@ func (c catalogoDaSeed) confereUmPersonagem(where string, ch seedCharacter) []re
 			where: where + ", create.classPowers[]", value: id, catalog: "poderes",
 			neighbor: oVizinho(id, idsDosPoderes()),
 		})
+	} // O BENEFÍCIO DE ORIGEM escolhido e a PERÍCIA treinada também são
+	// referência: um id errado faz a ficha nascer sem o benefício, e um nome
+	// errado, sem o treino — e as duas abrem normais (ALE-500).
+	benefits := originBenefitIDs()
+	for _, id := range listaDe(create, "originChoices") {
+		if !slices.Contains(benefits, id) {
+			broken = append(broken, referenciaQuebrada{
+				where: where + ", create.originChoices[]", value: id, catalog: "benefícios de origem",
+				neighbor: oVizinho(id, benefits),
+			})
+		}
 	}
+	expertises := expertiseNames()
+	for _, name := range listaDe(create, "trainedExpertises") {
+		if !slices.Contains(expertises, name) {
+			broken = append(broken, referenciaQuebrada{
+				where: where + ", create.trainedExpertises[]", value: name, catalog: "perícias",
+				neighbor: oVizinho(name, expertises),
+			})
+		}
+	}
+
 	// A ESCOLHA DO PODER aponta duas vezes: a chave é o poder, e o valor é a
 	// opção que ele oferece — um atributo, ou o id de uma ARMA do catálogo na
 	// Especialização em Arma (ALE-491). Opção errada nasce como um +2 que não
@@ -388,4 +410,28 @@ func idsDosPoderes() []string {
 	}
 	sort.Strings(ids)
 	return ids
+}
+
+// originBenefitIDs são os ids que um `originChoices` pode escolher: os
+// benefícios de cada origem e o poder único dela.
+func originBenefitIDs() []string {
+	ids := []string{}
+	for _, o := range transcript.Origins {
+		for _, b := range o.Benefits {
+			ids = append(ids, b.ID)
+		}
+		ids = append(ids, o.UniquePower.ID)
+	}
+	sort.Strings(ids)
+	return ids
+}
+
+// expertiseNames são as 29 perícias do livro.
+func expertiseNames() []string {
+	names := []string{}
+	for _, e := range book.Expertises() {
+		names = append(names, e.Name)
+	}
+	sort.Strings(names)
+	return names
 }
