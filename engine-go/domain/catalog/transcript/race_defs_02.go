@@ -277,7 +277,8 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Memória Póstuma",
 				Description: "Você se torna treinado em uma perícia (não precisa ser da sua classe) ou recebe um poder geral a sua escolha. Alternativamente, escolha uma habilidade de outra raça humanoide (que não humano); herda também o tamanho dessa raça se diferente de Médio.",
 				UID:         "rac_ewrcutxhsw",
-				Unmodeled:   "o poder geral ou a habilidade de outra raça, e o tamanho dela: a escolha de habilidade de raça não tem onde morar (ALE-493)",
+				Unmodeled:   "a habilidade de outra raça humanoide, e o tamanho dela: o catálogo não diz o tipo de criatura das raças (ALE-504)",
+				Choice:      &PowerChoice{Kind: "trained-or-power", Label: "Perícia ou poder geral", Count: 1},
 			},
 			{
 				ID:          "osteon-natureza-esqueletica",

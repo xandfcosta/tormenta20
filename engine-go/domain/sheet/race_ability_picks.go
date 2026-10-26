@@ -122,8 +122,12 @@ func abilityPicksFit(dto CharacterDTO, ability book.RaceAbility, picks []string)
 		if slices.Contains(picks[:i], pick) {
 			return fmt.Errorf("%s escolheu %s duas vezes", ability.Name, pick)
 		}
-		if choice.SwapFor == tormentaSwap && isTormentaPower(pick) {
-			swaps++
+		powerPick := (choice.SwapFor == tormentaSwap && isTormentaPower(pick)) ||
+			(choice.Kind == trainedOrPower && isGeneralPower(pick))
+		if powerPick {
+			if choice.SwapFor == tormentaSwap {
+				swaps++
+			}
 			if slices.Contains(UnmarshalStrings(dto.ClassPowers), pick) {
 				return fmt.Errorf("%s: %s já é poder escolhido desta ficha", ability.Name, book.GeneralPowers()[pick].Name)
 			}
@@ -131,6 +135,11 @@ func abilityPicksFit(dto CharacterDTO, ability book.RaceAbility, picks []string)
 		}
 		if err := pickIsSkill(dto, ability, choice.Kind, pick); err != nil {
 			return err
+		}
+		// "Você se torna treinado" (p29): a escolhida FICA treinada, e
+		// destreinar é recusado enquanto ela for a escolhida (decisão do dono).
+		if choice.Kind == trainedOrPower && !trainedIn(dto, pick) {
+			return fmt.Errorf("%s escolheu %s, e ela não seria treinada: tire-a da escolha antes", ability.Name, pick)
 		}
 	}
 	if swaps > 1 {
@@ -145,8 +154,8 @@ func pickIsSkill(dto CharacterDTO, ability book.RaceAbility, kind, pick string) 
 	onSheet := slices.ContainsFunc(dto.Expertises, func(e ExpertiseDTO) bool { return e.Name == pick })
 	if kind == "craft" {
 		if !onSheet || !strings.HasPrefix(pick, "Ofício") {
-			return fmt.Errorf("%s escolhe um Ofício que a ficha tem, e %q não seria um — crie-o na aba Perícias, ou tire-o do %s antes",
-				ability.Name, pick, ability.Name)
+			return fmt.Errorf("%s escolhe um Ofício que a ficha tem, e %q não seria um — crie-o na aba Perícias, ou tire-o da escolha antes",
+				ability.Name, pick)
 		}
 		return nil
 	}
@@ -155,6 +164,19 @@ func pickIsSkill(dto CharacterDTO, ability book.RaceAbility, kind, pick string) 
 		return fmt.Errorf("%q não é perícia do livro nem desta ficha (%s)", pick, ability.Name)
 	}
 	return nil
+}
+
+// trainedOrPower é a escolha da Memória Póstuma (p29): uma perícia, que fica
+// treinada, ou um poder geral — Combate, Destino, Magia ou Tormenta (decisão
+// do dono; os Concedidos pedem devoção e moram em outro catálogo).
+const trainedOrPower = "trained-or-power"
+
+// IsTrainedOrPower diz se a escolha é a da Memória Póstuma.
+func IsTrainedOrPower(choice book.PowerChoice) bool { return choice.Kind == trainedOrPower }
+
+func isGeneralPower(id string) bool {
+	_, found := book.GeneralPowers()[id]
+	return found
 }
 
 func isTormentaPower(id string) bool {
@@ -281,4 +303,19 @@ func RaceAbilityChoices(dto CharacterDTO) []RaceAbilityChoice {
 		}
 	}
 	return out
+}
+
+// TrainsOnPick diz se escolher `option` na habilidade TREINA a perícia — a
+// Memória Póstuma (p29): "você se torna treinado". Devolve o nome da perícia a
+// treinar, ou "" quando não há o que treinar (poder, perícia já treinada, ou a
+// escolha que sai).
+func TrainsOnPick(dto CharacterDTO, abilityID, option string) string {
+	ability, known := raceAbilitiesWithChoice(dto)[abilityID]
+	if !known || ability.Choice.Kind != trainedOrPower || isGeneralPower(option) || trainedIn(dto, option) {
+		return ""
+	}
+	if slices.Contains(RaceAbilityPicks(dto)[abilityID], option) {
+		return ""
+	}
+	return option
 }
