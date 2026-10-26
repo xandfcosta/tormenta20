@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"strings"
 
 	"t20engine/domain/live"
 )
@@ -27,6 +28,9 @@ type skillTestBand struct {
 	// ByHand diz que o d20 veio da mesa. Sem a marca ninguém sabe se confia no
 	// app ou no dado que rolou na mão.
 	ByHand bool
+	// Paid são os gastos de PM do teste, escritos — "Audácia +5 · 2 PM"
+	// (ALE-489). Eles já estão no modificador; aqui a mesa lê de onde vieram.
+	Paid string
 }
 
 // skillTestBandOf traduz o teste do regime na faixa, ou nil quando não há.
@@ -39,6 +43,7 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 		Who: t.Who, Skill: t.Skill, ByHand: t.ByHand,
 		Tally: fmt.Sprintf("d20 %d %s %d = %d", t.Roll, signOf(t.Modifier), abs(t.Modifier), t.Total),
 		Seal:  "Teste", Class: "mesa-ataque-comum",
+		Paid: writtenPaid(t.Spends),
 	}
 	// OS NATURAIS SÃO DO DADO (p221), e são o único veredicto que esta fatia
 	// pode dar: "sempre é um sucesso" e "sempre é uma falha" não dependem de CD
@@ -50,6 +55,23 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 		band.Seal, band.Class = "1 natural", "mesa-ataque-erro"
 	}
 	return band
+}
+
+// writtenPaid escreve os gastos do teste: "Audácia +5 · 2 PM, Orgulho +4 ·
+// 2 PM".
+func writtenPaid(spends []live.SkillTestPaid) string {
+	parts := make([]string, 0, len(spends))
+	for _, s := range spends {
+		part := s.Name
+		if s.Bonus != 0 {
+			part += fmt.Sprintf(" %s%d", signOf(s.Bonus), abs(s.Bonus))
+		}
+		if s.PM > 0 {
+			part += fmt.Sprintf(" · %d PM", s.PM)
+		}
+		parts = append(parts, part)
+	}
+	return strings.Join(parts, ", ")
 }
 
 // signOf e abs escrevem o modificador como a mesa o lê — "d20 14 − 3 = 11" e

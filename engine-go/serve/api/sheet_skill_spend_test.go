@@ -99,3 +99,15 @@ func TestEclecticLetsTheBardRollATrainedOnlySkill(t *testing.T) {
 		t.Errorf("o teste com Eclético não chegou à mesa: %+v", got)
 	}
 }
+
+// A FAIXA DIZ O QUE FOI PAGO (o que a ALE-489 prometeu e não desenhava).
+func TestTheBandSaysWhatTheTestPaid(t *testing.T) {
+	f, id := spenderAtTheTable(t, "Bucaneiro", 5, 3)
+	if refusal := rollsWith(t, f, id, "Diplomacia", `{"expertise_d20":10,"expertise_spends":{"audacia":2}}`); refusal != "" {
+		t.Fatalf("Audácia: %q", refusal)
+	}
+	page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(page, "Audácia +3 · 2 PM") {
+		t.Error("a faixa do teste não diz \"Audácia +3 · 2 PM\"")
+	}
+}
