@@ -190,3 +190,25 @@ func TestTheRaceSpreadDoesNotLeaveTheSpecialistChoice(t *testing.T) {
 		t.Errorf("tirar o +1 da Inteligência com duas perícias escolhidas não foi recusado: %q", refusal)
 	}
 }
+
+// O DIÁLOGO DE ESCOLHAS mostra o Especialista no cartão do Ladino: quantas de
+// quantas, as perícias TREINADAS como opção, e a pendência do que falta.
+func TestTheChoicesDialogShowsTheSpecialist(t *testing.T) {
+	f, id := specialist(t, 2)
+	picksSpecialist(t, f, id, "Ladinagem")
+
+	screen := powerScreen(t, f, id)
+	for _, want := range []string{
+		"1 de 2 · Int 2",
+		"Especialista: 1 perícia por escolher",
+		`aria-label="Especialista: Furtividade"`,
+		`aria-label="Tirar Ladinagem de Especialista"`,
+	} {
+		if !strings.Contains(screen, want) {
+			t.Errorf("a tela não tem %q", want)
+		}
+	}
+	if strings.Contains(screen, `aria-label="Especialista: Diplomacia"`) {
+		t.Error("Diplomacia não é treinada e aparece como opção do Especialista")
+	}
+}

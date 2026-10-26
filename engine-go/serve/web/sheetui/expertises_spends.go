@@ -133,9 +133,7 @@ func spendToggleCommand(row expertiseRow, s expertiseSpend) string {
 
 // conflicts diz se os dois gastos não cabem no mesmo teste.
 func conflicts(a, b expertiseSpend) bool {
-	trainingPaid := func(x expertiseSpend) bool {
-		return x.Kind == book.SpendAsTrained || x.Kind == book.SpendIgnoreTraining
-	}
+	trainingPaid := func(x expertiseSpend) bool { return book.PaysTraining(x.Kind) }
 	switch {
 	case a.Kind == book.SpendSwap:
 		return b.Kind == book.SpendSwap || trainingPaid(b)

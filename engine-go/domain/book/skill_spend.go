@@ -11,11 +11,12 @@ import (
 
 // O PM QUE SE PAGA NUM TESTE DE PERÍCIA (ALE-489).
 //
-// Seis verbetes do livro vendem bônus no teste: Audácia (+Carisma, p47),
+// Os verbetes que vendem bônus no teste: Audácia (+Carisma, p47),
 // Engenhosidade (+Inteligência, p68 e o kliren), Orgulho (+2 por PM, até o
 // Carisma, p79), A Pessoa Certa para o Trabalho (+10, só na lista de ladino,
-// p74), Eclético (treinado neste teste, p45) e Cultura Exótica (ignora a
-// exigência de treino, p90). O verbete escreve a forma no bloco `skillSpend` da
+// p74), Eclético (treinado neste teste, p45), Cultura Exótica (ignora a
+// exigência de treino, p90) e Especialista (dobra o treino nas perícias
+// escolhidas, p73). As trocas e os dois d20 vieram na ALE-500. O verbete escreve a forma no bloco `skillSpend` da
 // ativação, e esta é a conta: o que cada um oferece para UMA perícia, e o que o
 // jogador pagou.
 //
@@ -207,6 +208,13 @@ func swapUsable(skill string, target SkillSpendTarget) bool {
 	return true
 }
 
+// PaysTraining diz se o gasto mexe no TREINO da perícia original — contar como
+// treinado, ignorar o treino, dobrá-lo (Especialista, ALE-501). É o que a troca
+// de perícia recusa.
+func PaysTraining(kind string) bool {
+	return kind == SpendAsTrained || kind == SpendIgnoreTraining || kind == SpendDoubleTraining
+}
+
 // SkillSpendChoice é um gasto pedido: a chave e, no `per-pm`, quantos PM.
 type SkillSpendChoice struct {
 	Key string
@@ -281,7 +289,7 @@ func PaySkillSpends(offers []SkillSpendOffer, chosen []SkillSpendChoice) (PaidSk
 		paid.PM += part.PM
 		paid.Unlocked = paid.Unlocked || offer.Unlocks
 		paid.Parts = append(paid.Parts, part)
-		paid.trainingPaid = paid.trainingPaid || offer.Kind == SpendAsTrained || offer.Kind == SpendIgnoreTraining
+		paid.trainingPaid = paid.trainingPaid || PaysTraining(offer.Kind)
 	}
 	// A TROCA NÃO SE MISTURA COM TREINO PAGO: o Eclético diz "treinado NESSA
 	// perícia" (p45), e a troca muda qual perícia é.

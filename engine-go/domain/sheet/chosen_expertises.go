@@ -21,6 +21,12 @@ import (
 //
 //	ChoiceLimit(dto, *book.ClassPowers()["class.ladino.especialista"].Choice) // 2
 func ChoiceLimit(dto CharacterDTO, choice book.PowerChoice) (int, error) {
+	value, err := countAttributeValue(dto, choice)
+	return max(1, value), err
+}
+
+// countAttributeValue é o atributo que conta a escolha, sem temporários.
+func countAttributeValue(dto CharacterDTO, choice book.PowerChoice) (int, error) {
 	if dto.Ruleset == nil {
 		return 0, fmt.Errorf("a ficha %d chegou sem o mundo dela; quem a montou não passou pelo `sheet.Load`", dto.ID)
 	}
@@ -28,7 +34,7 @@ func ChoiceLimit(dto CharacterDTO, choice book.PowerChoice) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return max(1, dto.Ruleset.PermanentAttribute(ec, choice.CountAttribute)), nil
+	return dto.Ruleset.PermanentAttribute(ec, choice.CountAttribute), nil
 }
 
 // ChosenExpertisesFit confere as escolhas contadas por atributo contra a ficha
@@ -106,4 +112,42 @@ func ChangeKeepsChosenExpertises(dto CharacterDTO, change func(*CharacterDTO)) e
 	dto.Items = slices.Clone(dto.Items)
 	change(&dto)
 	return ChosenExpertisesFit(dto)
+}
+
+// CountedChoice é uma escolha contada por atributo que a ficha TEM: o poder, o
+// que foi escolhido, o limite e o que se pode escolher — as perícias
+// treinadas, na ordem da ficha.
+type CountedChoice struct {
+	Power book.ClassPower
+	Picks []string
+	// Value é o atributo sem temporários; Limit, o mesmo com o mínimo 1.
+	Value   int
+	Limit   int
+	Offered []string
+}
+
+// CountedChoices são as escolhas contadas por atributo dos poderes que a ficha
+// tem, para o diálogo e a pendência. Ficha sem o mundo não tem limite a dizer,
+// e fica sem elas.
+func CountedChoices(dto CharacterDTO) []CountedChoice {
+	picks := PowerPicks(dto.PowerChoices)
+	trained := []string{}
+	for _, e := range dto.Expertises {
+		if e.Trained {
+			trained = append(trained, e.Name)
+		}
+	}
+	out := []CountedChoice{}
+	for _, owned := range OwnedPowers(dto) {
+		power, known := book.ClassPowers()[owned.ID]
+		if owned.Source != PowerFromClass || !known || power.Choice == nil || power.Choice.CountAttribute == "" {
+			continue
+		}
+		value, err := countAttributeValue(dto, *power.Choice)
+		if err != nil {
+			continue
+		}
+		out = append(out, CountedChoice{Power: power, Picks: picks[power.ID], Value: value, Limit: max(1, value), Offered: trained})
+	}
+	return out
 }

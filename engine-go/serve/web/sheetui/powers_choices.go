@@ -2,6 +2,7 @@ package sheetui
 
 import (
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -85,6 +86,55 @@ type classChoiceCard struct {
 	Powers  []powerChoice
 	Path    *pickerChoice
 	Devotee *pickerChoice
+	// Counted são as escolhas contadas por atributo dos poderes que a classe
+	// CONCEDEU — as perícias do Especialista (ALE-501).
+	Counted []countedChoice
+}
+
+// countedChoice é o bloco do Especialista: as perícias treinadas, quantas de
+// quantas, e o atributo que dá o limite.
+type countedChoice struct {
+	ID      string
+	Name    string
+	Detail  string
+	Options []powerOption
+	Chosen  int
+	Limit   int
+	// Attribute é a abreviatura ("Int") e Value o atributo sem temporários.
+	Attribute string
+	Value     int
+}
+
+// Full diz que não cabe mais nenhuma: as não escolhidas se apagam.
+func (c countedChoice) Full() bool { return c.Chosen >= c.Limit }
+
+// Written é "1 de 2 · Int 2".
+func (c countedChoice) Written() string {
+	return strconv.Itoa(c.Chosen) + " de " + strconv.Itoa(c.Limit) + " · " + c.Attribute + " " + strconv.Itoa(c.Value)
+}
+
+// countedChoicesOf monta os blocos da classe a partir do que a ficha tem.
+func countedChoicesOf(dto sheet.CharacterDTO, class string) []countedChoice {
+	out := []countedChoice{}
+	for _, counted := range sheet.CountedChoices(dto) {
+		if counted.Power.ClassName != class {
+			continue
+		}
+		block := countedChoice{
+			ID: counted.Power.ID, Name: counted.Power.Name, Detail: counted.Power.Description,
+			Chosen: len(counted.Picks), Limit: counted.Limit, Value: counted.Value,
+			Attribute: book.AttributeAbbrev(counted.Power.Choice.CountAttribute),
+		}
+		for _, skill := range counted.Offered {
+			count := 0
+			if slices.Contains(counted.Picks, skill) {
+				count = 1
+			}
+			block.Options = append(block.Options, powerOption{Value: skill, Label: skill, Count: count})
+		}
+		out = append(out, block)
+	}
+	return out
 }
 
 // powerChoice é um poder que dá para escolher.
@@ -255,9 +305,10 @@ func classChoiceCards(dto sheet.CharacterDTO, search string) []classChoiceCard {
 	for _, class := range dto.Classes {
 		card := classChoiceCard{
 			ClassName: class.ClassName, Level: class.Level,
-			Slots:  sheet.PowerSlots(class.Level),
-			Used:   sheet.UsedPowerSlots(dto),
-			Powers: thatChoosePowers(class.ClassName, chosen, sheet.PowerPicks(dto.PowerChoices), search),
+			Slots:   sheet.PowerSlots(class.Level),
+			Used:    sheet.UsedPowerSlots(dto),
+			Powers:  thatChoosePowers(class.ClassName, chosen, sheet.PowerPicks(dto.PowerChoices), search),
+			Counted: countedChoicesOf(dto, class.ClassName),
 		}
 		if options := sheet.LevelPaths(class.ClassName, class.Level); len(options) > 0 {
 			card.Path = markedPicker(options, choices[class.ClassName].Path)

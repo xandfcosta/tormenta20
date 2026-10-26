@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"net/url"
 	"strconv"
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/ui"
@@ -192,6 +193,9 @@ templ classChoicesBlock(v View) {
 			if card.Devotee != nil {
 				@classPicker(v, card.ClassName, "devoto", "Devoto", *card.Devotee)
 			}
+			for _, counted := range card.Counted {
+				@countedChoiceBlock(v, counted)
+			}
 			<input
 				type="search"
 				data-bind:power_search
@@ -259,6 +263,47 @@ templ powerWithOptions(v View, power powerChoice) {
 				}
 			}
 		</div>
+	</div>
+}
+
+// countedChoiceBlock é a escolha do poder CONCEDIDO contada por atributo — as
+// perícias do Especialista (ALE-501). Um toque escolhe, outro tira; cheia, as
+// não escolhidas se apagam, e tocá-las traz a recusa que diz o porquê.
+templ countedChoiceBlock(v View, counted countedChoice) {
+	<div
+		class={ "space-y-1 rounded-sm border px-2 py-1 text-xs",
+			templ.KV("border-grimorio-gold/60 bg-accent", counted.Full()),
+			templ.KV("border-grimorio-iron", !counted.Full()) }
+	>
+		<div class="flex items-baseline gap-2">
+			<span class="font-semibold text-foreground">{ counted.Name }</span>
+			<span class="min-w-0 flex-1 truncate text-muted-foreground">{ counted.Detail }</span>
+			<span class="shrink-0 font-mono text-2xs text-muted-foreground">{ counted.Written() }</span>
+		</div>
+		<div class="flex flex-wrap gap-1">
+			for _, o := range counted.Options {
+				if o.Count > 0 {
+					<button
+						type="button"
+						role="switch"
+						aria-checked="true"
+						aria-label={ "Tirar " + o.Label + " de " + counted.Name }
+						data-on:click={ sheetPost(v, "/poderes/escolha/"+counted.ID+"/"+url.PathEscape(o.Value)+"/tira") }
+						class={ choiceChip(true) }
+					>{ o.Label }</button>
+				} else {
+					<button
+						type="button"
+						role="switch"
+						aria-checked="false"
+						aria-label={ counted.Name + ": " + o.Label }
+						data-on:click={ sheetPost(v, "/poderes/escolha/"+counted.ID+"/"+url.PathEscape(o.Value)) }
+						class={ choiceChip(false), templ.KV("opacity-60", counted.Full()) }
+					>{ o.Label }</button>
+				}
+			}
+		</div>
+		<p class="text-3xs text-muted-foreground">Só as perícias treinadas.</p>
 	</div>
 }
 
