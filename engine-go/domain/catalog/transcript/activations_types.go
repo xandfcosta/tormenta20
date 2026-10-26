@@ -18,11 +18,16 @@ type Activation struct {
 }
 
 type SkillSpend struct {
-	Kind      string `json:"kind"`
-	Attribute string `json:"attribute,omitempty"`
-	Amount    int    `json:"amount,omitempty"`
-	SkillsOf  string `json:"skillsOf,omitempty"`
-	Group     string `json:"group,omitempty"`
+	Kind         string   `json:"kind"`
+	Attribute    string   `json:"attribute,omitempty"`
+	Amount       int      `json:"amount,omitempty"`
+	SkillsOf     string   `json:"skillsOf,omitempty"`
+	Group        string   `json:"group,omitempty"`
+	Skills       []string `json:"skills,omitempty"`
+	Attributes   []string `json:"attributes,omitempty"`
+	SwapTo       string   `json:"swapTo,omitempty"`
+	RequiresFlag string   `json:"requiresFlag,omitempty"`
+	Context      string   `json:"context,omitempty"`
 }
 
 type ActivationGrant struct {

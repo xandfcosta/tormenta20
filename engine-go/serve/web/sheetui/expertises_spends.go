@@ -29,6 +29,11 @@ type expertiseSpend struct {
 	MaxPM int
 	// Unlocks destrava a perícia só para treinados.
 	Unlocks bool
+	// Kind, SwapTo e Context vêm da oferta: a troca diz a perícia que usa e o
+	// quando do livro ("para interrogar"), e os dois d20 não somam nada.
+	Kind    string
+	SwapTo  string
+	Context string
 }
 
 // withSpends pendura na linha os gastos que valem nela. O teto do Orgulho é o
@@ -39,6 +44,7 @@ func (row *expertiseRow) withSpends(offers []book.SkillSpendOffer, mana int) {
 		spend := expertiseSpend{
 			Key: o.Key, Name: o.Name, PM: o.PM, Bonus: o.Bonus,
 			PerPM: o.Kind == book.SpendPerPM, Unlocks: o.Unlocks,
+			Kind: o.Kind, SwapTo: o.SwapTo, Context: o.Context,
 		}
 		if spend.PerPM {
 			spend.MaxPM = min(o.MaxPM, mana)
@@ -109,8 +115,49 @@ func spendsUnlockedExpr(row expertiseRow) string {
 }
 
 // spendToggleCommand marca ou desmarca o gasto. O Orgulho nasce com 1 PM.
-func spendToggleCommand(s expertiseSpend) string {
-	return fmt.Sprintf("%s = %s > 0 ? 0 : 1", spendSignal(s.Key), spendSignal(s.Key))
+//
+// UMA TROCA POR TESTE, e ela não se mistura com treino pago (o servidor recusa
+// os dois casos): marcar uma troca desmarca as outras trocas e o treino pago,
+// e marcar treino pago desmarca a troca. A tela evita a recusa, e quem decide
+// continua sendo o servidor.
+func spendToggleCommand(row expertiseRow, s expertiseSpend) string {
+	clears := ""
+	for _, other := range row.Spends {
+		if other.Key != s.Key && conflicts(s, other) {
+			clears += spendSignal(other.Key) + " = 0; "
+		}
+	}
+	return fmt.Sprintf("if (%s > 0) { %s = 0 } else { %s%s = 1 }",
+		spendSignal(s.Key), spendSignal(s.Key), clears, spendSignal(s.Key))
+}
+
+// conflicts diz se os dois gastos não cabem no mesmo teste.
+func conflicts(a, b expertiseSpend) bool {
+	trainingPaid := func(x expertiseSpend) bool {
+		return x.Kind == book.SpendAsTrained || x.Kind == book.SpendIgnoreTraining
+	}
+	switch {
+	case a.Kind == book.SpendSwap:
+		return b.Kind == book.SpendSwap || trainingPaid(b)
+	case trainingPaid(a):
+		return b.Kind == book.SpendSwap
+	}
+	return false
+}
+
+// spendRowLabel é o nome do gasto na decomposição: a troca diz a perícia que
+// entrou no lugar, e o resto o nome do poder.
+func spendRowLabel(s expertiseSpend) string {
+	if s.Kind == book.SpendSwap {
+		return s.SwapTo + " no lugar (" + s.Name + ")"
+	}
+	return s.Name
+}
+
+// spendShowsARow diz se o gasto vira linha da decomposição: o que não soma
+// nada (os dois d20, a Cultura Exótica) não ganha um "+0".
+func spendShowsARow(s expertiseSpend) bool {
+	return s.PerPM || s.Kind == book.SpendSwap || s.Bonus != 0
 }
 
 // spendStepCommand anda o Orgulho em `delta`, entre 1 e o teto.
@@ -124,16 +171,27 @@ func spendStepLabelExpr(s expertiseSpend) string {
 	return fmt.Sprintf("'+' + %s + ' · ' + %s + ' PM'", spendBonusExpr(s), spendCostExpr(s))
 }
 
-// spendChipCost é o que o chip diz antes de tocar: "+5 · 2 PM", ou "+2 por PM"
-// no Orgulho, ou "destrava · 1 PM" na Cultura Exótica.
+// spendChipCost é o que o chip diz antes de tocar: "+5 · 2 PM", "+2 por PM"
+// no Orgulho, "destrava · 1 PM" na Cultura Exótica, "usar Enganação · grátis"
+// na troca e "dois d20, vale o maior" no Mestre dos Sussurros.
 func spendChipCost(s expertiseSpend) string {
+	price := "grátis"
+	if s.PM > 0 {
+		price = fmt.Sprintf("%d PM", s.PM)
+	}
 	switch {
+	case s.Kind == book.SpendSwap && s.Context != "":
+		return fmt.Sprintf("usar %s %s · %s", s.SwapTo, s.Context, price)
+	case s.Kind == book.SpendSwap:
+		return fmt.Sprintf("usar %s · %s", s.SwapTo, price)
+	case s.Kind == book.SpendTwoDice:
+		return "dois d20, vale o maior"
 	case s.PerPM:
 		return fmt.Sprintf("+%d por PM", s.Bonus)
 	case s.Bonus == 0:
-		return fmt.Sprintf("destrava · %d PM", s.PM)
+		return fmt.Sprintf("destrava · %s", price)
 	}
-	return fmt.Sprintf("+%d · %d PM", s.Bonus, s.PM)
+	return fmt.Sprintf("+%d · %s", s.Bonus, price)
 }
 
 // spendsResetCommand zera os gastos desta perícia ao abrir o diálogo: nada fica

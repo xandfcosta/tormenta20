@@ -120,6 +120,10 @@ templ skillTestRolled(v View) {
 				// DE ONDE VEIO O DADO fica FORA do monoespaçado, pela mesma razão
 				// da situação especial do ataque: dentro da conta ela parte a
 				// linha a 390px, e em prosa a quebra cai entre o número e o motivo.
+				if v.SkillTest.Paid != "" {
+					<span aria-hidden="true">·</span>
+					<span class="text-grimorio-gold">{ v.SkillTest.Paid }</span>
+				}
 				if v.SkillTest.ByHand {
 					<span aria-hidden="true">·</span>
 					<span>dado rolado na mesa</span>

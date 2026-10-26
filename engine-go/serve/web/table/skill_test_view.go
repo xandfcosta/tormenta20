@@ -2,6 +2,8 @@ package table
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"t20engine/domain/live"
 )
@@ -27,6 +29,9 @@ type skillTestBand struct {
 	// ByHand diz que o d20 veio da mesa. Sem a marca ninguém sabe se confia no
 	// app ou no dado que rolou na mão.
 	ByHand bool
+	// Paid são os gastos de PM do teste, escritos — "Audácia +5 · 2 PM"
+	// (ALE-489). Eles já estão no modificador; aqui a mesa lê de onde vieram.
+	Paid string
 }
 
 // skillTestBandOf traduz o teste do regime na faixa, ou nil quando não há.
@@ -37,8 +42,14 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 	t := st.LastSkillTest
 	band := &skillTestBand{
 		Who: t.Who, Skill: t.Skill, ByHand: t.ByHand,
-		Tally: fmt.Sprintf("d20 %d %s %d = %d", t.Roll, signOf(t.Modifier), abs(t.Modifier), t.Total),
+		Tally: fmt.Sprintf("d20 %s %s %d = %d", writtenDice(t), signOf(t.Modifier), abs(t.Modifier), t.Total),
 		Seal:  "Teste", Class: "mesa-ataque-comum",
+		Paid: writtenPaid(t.Spends),
+	}
+	// A TROCA aparece no nome: "Diplomacia com Enganação" — o número da conta é
+	// o da outra perícia, e sem isso a mesa estranharia o total.
+	if t.UsedSkill != "" {
+		band.Skill = t.Skill + " com " + t.UsedSkill
 	}
 	// OS NATURAIS SÃO DO DADO (p221), e são o único veredicto que esta fatia
 	// pode dar: "sempre é um sucesso" e "sempre é uma falha" não dependem de CD
@@ -50,6 +61,32 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 		band.Seal, band.Class = "1 natural", "mesa-ataque-erro"
 	}
 	return band
+}
+
+// writtenDice é o d20 da conta, e os DOIS quando se rolaram dois: "14 (de 14 e
+// 6)" — o melhor vale, e a mesa vê o que ficou de fora (p45).
+func writtenDice(t *live.SkillTestRoll) string {
+	if len(t.Rolls) < 2 {
+		return strconv.Itoa(t.Roll)
+	}
+	return fmt.Sprintf("%d (de %d e %d)", t.Roll, t.Rolls[0], t.Rolls[1])
+}
+
+// writtenPaid escreve os gastos do teste: "Audácia +5 · 2 PM, Orgulho +4 ·
+// 2 PM". A troca grátis sai sem PM.
+func writtenPaid(spends []live.SkillTestPaid) string {
+	parts := make([]string, 0, len(spends))
+	for _, s := range spends {
+		part := s.Name
+		if s.Bonus != 0 {
+			part += fmt.Sprintf(" %s%d", signOf(s.Bonus), abs(s.Bonus))
+		}
+		if s.PM > 0 {
+			part += fmt.Sprintf(" · %d PM", s.PM)
+		}
+		parts = append(parts, part)
+	}
+	return strings.Join(parts, ", ")
 }
 
 // signOf e abs escrevem o modificador como a mesa o lê — "d20 14 − 3 = 11" e

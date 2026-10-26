@@ -14,11 +14,17 @@ var activationsPart08 = []Activation{
 	{
 		ID:       "origin.membro-de-guilda.rede-de-contatos",
 		Name:     "Rede de Contatos",
-		Kind:     "passive",
+		Kind:     "skill-spend",
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
 		BookPage: 92,
+		SkillSpend: &SkillSpend{
+			Kind:    "swap",
+			Skills:  []string{"Investigação"},
+			SwapTo:  "Diplomacia",
+			Context: "para interrogar",
+		},
 	},
 	{
 		ID:       "origin.mercador.negociacao",

@@ -48,6 +48,10 @@ type SkillTest struct {
 	// Spends são os gastos de PM que entraram no teste (ALE-489), já somados no
 	// `Modifier` — a lista existe para a mesa ler de onde veio o número.
 	Spends []SkillTestSpend `json:"spends,omitempty"`
+	// UsedSkill é a perícia que o teste usou no lugar (a troca, ALE-500), e
+	// Rolls os dois d20 quando se rolaram dois e valeu o melhor.
+	UsedSkill string `json:"usedSkill,omitempty"`
+	Rolls     []int  `json:"rolls,omitempty"`
 }
 
 // SkillTestSpend é um gasto escrito para a mesa: "Audácia +3 · 2 PM".

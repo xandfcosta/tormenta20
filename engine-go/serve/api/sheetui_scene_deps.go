@@ -72,7 +72,7 @@ func (h sheetHost) PublishSkillTest(
 		Who: row.Name, Skill: skill,
 		Roll: test.Roll, Modifier: test.Modifier, Total: test.Total,
 		Natural20: test.Natural20, Natural1: test.Natural1,
-		ByHand: byHand,
+		ByHand: byHand, UsedSkill: test.UsedSkill, Rolls: test.Rolls,
 	}
 	for _, spent := range test.Spends {
 		roll.Spends = append(roll.Spends, live.SkillTestPaid{Name: spent.Name, Bonus: spent.Bonus, PM: spent.PM})
