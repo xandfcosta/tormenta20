@@ -20,6 +20,7 @@ type ChoiceWrite struct {
 	RaceAbilityChoices   *string
 	RaceAttributeChoices *string
 	PowerChoices         *string
+	SecondaryRaceChoices *string
 }
 
 // SaveChoices grava só as escolhas que MUDARAM.
@@ -33,7 +34,7 @@ type ChoiceWrite struct {
 //
 // `COALESCE(?, coluna)` diz a MESMA coisa numa instrução FIXA: o parâmetro nulo
 // devolve o valor que já está lá. Não há concatenação, não há supressão, e as
-// seis colunas estão escritas à vista. As seis são `TEXT NOT NULL`, então
+// sete colunas estão escritas à vista. As sete são `TEXT NOT NULL`, então
 // nenhuma delas pode ser nula no banco e o `COALESCE` nunca cai num terceiro
 // caso.
 //
@@ -53,11 +54,12 @@ func (p Plays) SaveChoices(ctx context.Context, id int64, choices ChoiceWrite) e
 		raceAbilityChoices   = COALESCE(?, raceAbilityChoices),
 		raceAttributeChoices = COALESCE(?, raceAttributeChoices),
 		powerChoices         = COALESCE(?, powerChoices),
+		secondaryRaceChoices = COALESCE(?, secondaryRaceChoices),
 		updatedAt            = ?
 		WHERE id = ?`,
 		choices.ClassPowers, choices.OriginChoices, choices.ClassChoices,
 		choices.RaceAbilityChoices, choices.RaceAttributeChoices, choices.PowerChoices,
-		dbvalue.NowISO(), id,
+		choices.SecondaryRaceChoices, dbvalue.NowISO(), id,
 	); err != nil {
 		return fmt.Errorf("gravar as escolhas da ficha %d: %w", id, err)
 	}

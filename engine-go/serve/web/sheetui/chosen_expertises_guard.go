@@ -15,7 +15,8 @@ import (
 // ofício, item vestido e atributo de raça. Usar item, melhoria e material não
 // mudam a Inteligência permanente — a poção é efeito aplicado, que já não conta.
 func (s Scene) keepsChosenExpertises(r *http.Request, row sqlcgen.Character, change func(*sheet.CharacterDTO)) error {
-	if !sheet.HasCountedChoice(row.Powerchoices) {
+	if !sheet.HasCountedChoice(row.Powerchoices) &&
+		!sheet.HasRaceAbilityPicks(row.Raceattributechoices, row.Secondaryracechoices) {
 		return nil
 	}
 	dto, err := s.deps.LoadCharacter(r.Context(), row)

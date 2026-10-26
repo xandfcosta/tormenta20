@@ -55,7 +55,9 @@ func ChosenExpertisesFit(dto CharacterDTO) error {
 			return err
 		}
 	}
-	return nil
+	// As habilidades de raça também nomeiam perícias: o Ofício do
+	// Vanguardista, as da Deformidade (ALE-493).
+	return raceAbilityPicksFit(dto)
 }
 
 func expertisePicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {

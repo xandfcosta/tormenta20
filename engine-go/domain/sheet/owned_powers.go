@@ -51,6 +51,7 @@ type OwnedPower struct {
 func OwnedPowers(dto CharacterDTO) []OwnedPower {
 	outside := []OwnedPower{}
 	outside = append(outside, raceAbilitiesOf(dto)...)
+	outside = append(outside, raceHeldPowersOf(dto)...)
 	outside = append(outside, chosenOriginBenefitsOf(dto)...)
 	outside = append(outside, automaticClassPowersOf(dto)...)
 	outside = append(outside, chosenPowersOf(dto)...)
@@ -147,6 +148,30 @@ func OwnsActivation(dto CharacterDTO, spec book.Activation) bool {
 		}
 	}
 	return false
+}
+
+// raceHeldPowersOf são os poderes da Tormenta que a Deformidade trocou por um
+// bônus (p24, ALE-493): a ficha os TEM, e o dono é a raça.
+func raceHeldPowersOf(dto CharacterDTO) []OwnedPower {
+	outside := []OwnedPower{}
+	abilities := raceAbilitiesWithChoice(dto)
+	for id, picks := range RaceAbilityPicks(dto) {
+		ability, known := abilities[id]
+		if !known {
+			continue
+		}
+		for _, pick := range picks {
+			power, found := book.GeneralPowers()[pick]
+			if !found || power.Kind != "tormenta" {
+				continue
+			}
+			outside = append(outside, OwnedPower{
+				ID: power.ID, Name: power.Name, Detail: power.Description,
+				Source: PowerFromTormenta, Owner: ability.Name, Page: power.BookPage,
+			})
+		}
+	}
+	return outside
 }
 
 // raceAbilitiesOf são as habilidades de cada raça da ficha.
