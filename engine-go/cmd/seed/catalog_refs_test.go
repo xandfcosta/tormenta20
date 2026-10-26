@@ -32,6 +32,8 @@ func TestTheSeedRefusesEveryUnknownCatalogReference(t *testing.T) {
 		{"powerChoice", "espada-curtaa", "opções de Especialização em Arma"},
 		// A opção do Especialista é perícia TREINADA da própria ficha (ALE-501).
 		{"specialistChoice", "Diplomacia", "opções de Especialista"},
+		// A escolha de habilidade de raça aponta perícia ou poder (ALE-493).
+		{"raceAbilityPick", "Atuaçao", "opções de Deformidade"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.field, func(t *testing.T) {
@@ -136,6 +138,8 @@ func sujaOCriar(t *testing.T, create map[string]json.RawMessage, field, wrong st
 		return trocaNaEscolhaDaArma(t, create, wrong)
 	case "specialistChoice":
 		return specialistPickSwapped(t, create, wrong)
+	case "raceAbilityPick":
+		return raceAbilityPickSwapped(t, create, wrong)
 	default: // origin, god, godPower — todos strings simples
 		if _, found := create[field]; !found {
 			return false
@@ -232,6 +236,31 @@ func specialistPickSwapped(t *testing.T, create map[string]json.RawMessage, wron
 		t.Fatalf("remontar o powerChoices: %v", err)
 	}
 	create["powerChoices"] = raw
+	return true
+}
+
+// raceAbilityPickSwapped suja a primeira escolha da Deformidade.
+func raceAbilityPickSwapped(t *testing.T, create map[string]json.RawMessage, wrong string) bool {
+	t.Helper()
+	var blob map[string]json.RawMessage
+	if json.Unmarshal(create["raceAttributeChoices"], &blob) != nil {
+		return false
+	}
+	var picks map[string][]string
+	if json.Unmarshal(blob["abilityPicks"], &picks) != nil || len(picks["lefou-deformidade"]) == 0 {
+		return false
+	}
+	picks["lefou-deformidade"][0] = wrong
+	rawPicks, err := json.Marshal(picks)
+	if err != nil {
+		t.Fatalf("remontar o abilityPicks: %v", err)
+	}
+	blob["abilityPicks"] = rawPicks
+	raw, err := json.Marshal(blob)
+	if err != nil {
+		t.Fatalf("remontar o raceAttributeChoices: %v", err)
+	}
+	create["raceAttributeChoices"] = raw
 	return true
 }
 
