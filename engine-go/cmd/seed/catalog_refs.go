@@ -238,6 +238,11 @@ func (c catalogoDaSeed) confereUmPersonagem(where string, ch seedCharacter) []re
 		for _, o := range power.Choice.Offered() {
 			offered = append(offered, o.ID)
 		}
+		// A escolha contada por atributo oferece as perícias TREINADAS desta
+		// ficha — as do Especialista (ALE-501).
+		if power.Choice.CountAttribute != "" {
+			offered = listaDe(create, "trainedExpertises")
+		}
 		for _, pick := range escolhasDe(create, powerID) {
 			if !slices.Contains(offered, pick) {
 				broken = append(broken, referenciaQuebrada{
