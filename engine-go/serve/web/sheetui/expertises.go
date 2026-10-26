@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/app/character"
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/search"
@@ -73,6 +74,15 @@ type expertiseRow struct {
 	// Custom é o ofício do jogador, o único que pode ser removido.
 	Custom bool
 	Rows   []breakdownRow
+	// TotalValue é o `Total` como número, para a prévia do total com os gastos.
+	TotalValue int
+	// Spends são os gastos de PM que valem NESTE teste (ALE-489), e
+	// SpendsUnlock diz que algum deles destrava a perícia trancada. Ver
+	// `expertises_spends.go`.
+	Spends       []expertiseSpend
+	SpendsUnlock bool
+	// Mana é o PM que a ficha tem, para a prévia dizer quanto sobra.
+	Mana int
 }
 
 // attributeOption é uma entrada do seletor de atributo.
@@ -89,7 +99,7 @@ var theSaveNames = map[string]bool{"Fortitude": true, "Reflexos": true, "Vontade
 // expertisePanelFor monta a aba inteira.
 func expertisePanelFor(dto sheet.CharacterDTO, computed engine.ComputedSheet, term string) expertisePanel {
 	panel := expertisePanel{
-		TrainingBonus: book.WithSign(trainingBonusFor(dto.Level)),
+		TrainingBonus: book.WithSign(engine.TrainingBonusForLevel(int(dto.Level))),
 		HalfLevel:     strconv.FormatInt(dto.Level/2, 10),
 		Search:        term,
 		Attributes:    attributeOptions(computed),
@@ -98,26 +108,11 @@ func expertisePanelFor(dto sheet.CharacterDTO, computed engine.ComputedSheet, te
 		if !matchesSearch(entry.Name, term) {
 			continue
 		}
-		panel.Rows = append(panel.Rows, expertiseRowFor(i, entry, computed))
+		row := expertiseRowFor(i, entry, computed)
+		row.withSpends(character.SkillSpendOffersFor(dto, computed, entry.Name), int(dto.ManaAvailable()))
+		panel.Rows = append(panel.Rows, row)
 	}
 	return panel
-}
-
-// trainingBonusFor é o treino por nível — +2, +4 no 7º, +6 no 15º.
-//
-// Ele é reescrito aqui porque o motor o guarda minúsculo e o cabeçalho precisa
-// do número para DIZER a regra antes de a pessoa abrir um diálogo. A regra tem
-// teste no `engine`, com a página; aqui o
-// `TestTheHeaderSaysTheTrainingForTheLevel` prende os três degraus.
-func trainingBonusFor(level int64) int {
-	switch {
-	case level >= 15:
-		return 6
-	case level >= 7:
-		return 4
-	default:
-		return 2
-	}
 }
 
 // sortedExpertises devolve as perícias na ordem da tela.
@@ -189,6 +184,7 @@ func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedS
 		Command:     url.PathEscape(entry.Name),
 		Attribute:   entry.Attribute,
 		Total:       book.WithSign(breaks.Total),
+		TotalValue:  breaks.Total,
 		Trained:     breaks.Trained,
 		TrainedBy:   trainedByText(breaks.TrainedBy),
 		TrainedOnly: trainedOnly,

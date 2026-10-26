@@ -3,6 +3,25 @@ package transcript
 // Parte 2 de 10 de `Activations` (activations.go).
 var activationsPart02 = []Activation{
 	{
+		ID:       "class.bucaneiro.ataque-acrobatico",
+		Name:     "Ataque Acrobático",
+		Kind:     "passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		BookPage: 47,
+	},
+	{
+		ID:         "class.bucaneiro.audacia",
+		Name:       "Audácia",
+		Kind:       "skill-spend",
+		Action:     "livre",
+		PMCost:     PMCost{Fixed: 2},
+		Uses:       nil,
+		BookPage:   47,
+		SkillSpend: &SkillSpend{Kind: "add-attribute", Attribute: "charisma"},
+	},
+	{
 		ID:       "class.bucaneiro.aumento-de-atributo",
 		Name:     "Aumento de Atributo",
 		Kind:     "passive",
@@ -433,23 +452,5 @@ var activationsPart02 = []Activation{
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
 		BookPage: 53,
-	},
-	{
-		ID:       "class.cavaleiro.estandarte",
-		Name:     "Estandarte",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     ptr("cena"),
-		BookPage: 54,
-	},
-	{
-		ID:       "class.cavaleiro.etiqueta",
-		Name:     "Etiqueta",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
-		BookPage: 54,
 	},
 }

@@ -90,7 +90,7 @@ templ expertiseRowBody(v View, row expertiseRow) {
 			templ.KV("bg-grimorio-panel", row.Trained) }
 	>
 		@expertiseTotal(row)
-		@ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + row.Name, "data-on:click": "$detail = '" + row.Key + "'"}) {
+		@ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + row.Name, "data-on:click": spendsResetCommand(row) + "$detail = '" + row.Key + "'"}) {
 			{ row.Name }
 		}
 		if row.TrainedOnly {
@@ -117,7 +117,7 @@ templ expertiseTotal(row expertiseRow) {
 		type="button"
 		aria-label={ totalLabel(row) }
 		aria-haspopup="dialog"
-		data-on:click={ "$detail = '" + row.Key + "'" }
+		data-on:click={ spendsResetCommand(row) + "$detail = '" + row.Key + "'" }
 		class={ "flex size-11 shrink-0 items-center justify-center rounded-none border font-mono text-lg font-bold outline-none",
 			templ.KV("border-destructive/60 bg-destructive/10 text-penalty-ink", row.AutoFail),
 			templ.KV("border-dashed border-grimorio-iron text-muted-foreground", row.Locked && !row.AutoFail),
@@ -202,6 +202,7 @@ templ trainingButton(v View, row expertiseRow) {
 templ expertiseDetail(v View, row expertiseRow) {
 	@overlay(row.Key, row.Name, "Scroll", false) {
 		@breakdownRows(row.Rows)
+		@spentRows(row)
 		<div class="flex items-center justify-between rounded-none border border-grimorio-iron bg-grimorio-panel-raised px-3 py-2">
 			<span class={ ui.SectionLabelClasses("muted", "") }>Total</span>
 			<span
@@ -209,12 +210,21 @@ templ expertiseDetail(v View, row expertiseRow) {
 					templ.KV("text-muted-foreground", row.Locked),
 					templ.KV("text-grimorio-gold", !row.Locked) }
 			>
-				if row.Locked {
+				if row.Locked && row.SpendsUnlock {
+					<span data-show={ "!" + spendsUnlockedExpr(row) }>
+						@ui.Icon("Lock", "size-4 text-warning-ink")
+					</span>
+				} else if row.Locked {
 					@ui.Icon("Lock", "size-4 text-warning-ink")
 				}
-				{ row.Total }
+				if len(row.Spends) > 0 {
+					<span data-text={ spendsTotalExpr(row) }>{ row.Total }</span>
+				} else {
+					{ row.Total }
+				}
 			</span>
 		</div>
+		@spendBox(row)
 		@rollTheTest(v, row)
 	}
 }
@@ -233,8 +243,11 @@ templ expertiseDetail(v View, row expertiseRow) {
 // A PERÍCIA COM FALHA AUTOMÁTICA não oferece o gesto: o livro diz que sem
 // treinamento ela "nem se rola" (p115), e um botão que o servidor recusaria é um
 // erro desenhado.
+//
+// A PERÍCIA TRANCADA QUE UM GASTO DESTRAVA (Eclético, Cultura Exótica) mostra
+// os botões apagados, e eles acendem quando o gasto é marcado (ALE-489).
 templ rollTheTest(v View, row expertiseRow) {
-	if !row.Locked {
+	if !row.Locked || row.SpendsUnlock {
 		<div class="mt-2 flex flex-wrap items-center gap-2 border-t border-grimorio-iron pt-2">
 			// O RÓTULO NÃO QUEBRA, e o olho a 390px foi quem decidiu: dentro do
 			// diálogo sobram ~366px, e os três controles disputando a linha
@@ -242,8 +255,11 @@ templ rollTheTest(v View, row expertiseRow) {
 			// Com `whitespace-nowrap` quem desce é o PAR de baixo, inteiro.
 			<button
 				type="button"
+				if row.Locked {
+					data-attr:disabled={ "!" + spendsUnlockedExpr(row) }
+				}
 				data-on:click={ "$expertise_d20 = 0; " + sheetPost(v, "/pericias/rolar/"+row.Command) }
-				class="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
+				class="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 disabled:opacity-40"
 			>
 				@ui.Icon("Dices", "size-4")
 				Rolar o d20
@@ -265,11 +281,75 @@ templ rollTheTest(v View, row expertiseRow) {
 				</label>
 				<button
 					type="button"
+					if row.Locked {
+						data-attr:disabled={ "!" + spendsUnlockedExpr(row) }
+					}
 					data-on:click={ sheetPost(v, "/pericias/rolar/"+row.Command) }
 					aria-label={ "Usar o d20 que você rolou em " + row.Name }
-					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent"
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent disabled:opacity-40"
 				>Usar</button>
 			</span>
+		</div>
+	}
+}
+
+// spentRows são os gastos marcados como linhas da decomposição: o número que o
+// total soma tem de aparecer de onde veio (ALE-489).
+templ spentRows(row expertiseRow) {
+	for _, spend := range row.Spends {
+		<div data-show={ spendSignal(spend.Key) + " > 0" } class="flex items-center justify-between gap-2 border-b border-grimorio-iron pb-1 text-grimorio-gold">
+			<span class="truncate">{ spend.Name }</span>
+			<span class="shrink-0 font-mono" data-text={ "'+' + " + spendBonusExpr(spend) }></span>
+		</div>
+	}
+}
+
+// spendBox é a faixa "gastar PM neste teste": um chip por gasto que vale nesta
+// perícia, o contador do Orgulho e o custo do que está marcado. Só existe
+// quando há o que oferecer.
+templ spendBox(row expertiseRow) {
+	if len(row.Spends) > 0 {
+		<div class="mt-2 border-t border-grimorio-iron pt-2">
+			<p class={ ui.SectionLabelClasses("muted", "mb-1.5") }>gastar PM neste teste</p>
+			<div class="flex flex-wrap items-center gap-1.5">
+				for _, spend := range row.Spends {
+					<button
+						type="button"
+						data-attr:aria-pressed={ "String(" + spendSignal(spend.Key) + " > 0)" }
+						data-on:click={ spendToggleCommand(spend) }
+						data-class={ chosenLookExpr("border-2 border-grimorio-gold bg-grimorio-gold/10 font-semibold text-grimorio-gold",
+							"border-grimorio-iron text-muted-foreground", spendSignal(spend.Key)+" > 0") }
+						class="inline-flex min-h-11 items-center gap-1 rounded-sm border border-grimorio-iron px-2.5 text-xs text-muted-foreground transition-colors"
+					>
+						{ spend.Name }
+						<span class="font-mono text-3xs tabular-nums">{ spendChipCost(spend) }</span>
+					</button>
+					if spend.PerPM {
+						<span class="inline-flex items-center gap-1.5" data-show={ spendSignal(spend.Key) + " > 0" }>
+							<button
+								type="button"
+								aria-label={ "Menos um PM de " + spend.Name }
+								data-on:click={ spendStepCommand(spend, -1) }
+								class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-grimorio-iron text-foreground"
+							>−</button>
+							<span class="whitespace-nowrap font-mono text-sm tabular-nums text-foreground" data-text={ spendStepLabelExpr(spend) }></span>
+							<button
+								type="button"
+								aria-label={ "Mais um PM de " + spend.Name }
+								data-on:click={ spendStepCommand(spend, 1) }
+								class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-grimorio-iron text-foreground"
+							>+</button>
+						</span>
+					}
+				}
+			</div>
+			<p class="mt-1.5 text-xs text-muted-foreground" data-show={ spendsCostExpr(row) + " > 0" }>
+				custa <span class="font-semibold text-foreground" data-text={ spendsCostExpr(row) + " + ' PM'" }></span> ao rolar ·
+				sobram <span data-text={ spendsLeftExpr(row) }></span>
+			</p>
+			if row.Locked && row.SpendsUnlock {
+				<p class="mt-1.5 text-xs text-warning-ink">{ row.Name + " só se rola com treino (p115) — um gasto marcado destrava este teste." }</p>
+			}
 		</div>
 	}
 }

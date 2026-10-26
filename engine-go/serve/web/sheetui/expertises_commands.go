@@ -1,12 +1,15 @@
 package sheetui
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -43,11 +46,34 @@ func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) 
 func rollExpertise(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
 	nome := expertiseName(r)
 	daMesa := theDieFromTheTable(sig.ExpertiseD20)
-	teste, err := s.plays.RollExpertise(r.Context(), row, nome, daMesa)
+	teste, err := s.plays.RollExpertise(r.Context(), row, nome, daMesa, spendChoicesFrom(sig.ExpertiseSpends))
 	if err != nil {
 		return err
 	}
 	return s.deps.PublishSkillTest(r.Context(), row.ID, nome, teste, daMesa != nil)
+}
+
+// spendChoicesFrom lê os gastos marcados: chave → PM, e só o que é número
+// positivo. Ordenados pela chave, para a recusa ser a mesma a cada pedido.
+func spendChoicesFrom(raw json.RawMessage) []book.SkillSpendChoice {
+	var marked map[string]json.RawMessage
+	if len(raw) == 0 || json.Unmarshal(raw, &marked) != nil {
+		return nil
+	}
+	keys := make([]string, 0, len(marked))
+	for key := range marked {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	out := []book.SkillSpendChoice{}
+	for _, key := range keys {
+		var pm float64
+		if json.Unmarshal(marked[key], &pm) != nil || pm < 1 {
+			continue
+		}
+		out = append(out, book.SkillSpendChoice{Key: key, PM: int(pm)})
+	}
+	return out
 }
 
 // theDieFromTheTable estreita o d20 que chegou do fio, e trata o ZERO como

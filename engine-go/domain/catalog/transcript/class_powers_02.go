@@ -352,14 +352,16 @@ var classPowersPart02 = []ClassPower{
 		},
 	},
 	{
-		ID:             "class.bardo.ecletico",
+		ID: "class.bardo.ecletico",
+		Modeled: []string{
+			"o gasto no diálogo do teste: 1 PM conta como treinado neste teste, e destrava a perícia só para treinados",
+		},
 		ClassName:      "Bardo",
 		Name:           "Eclético",
 		Description:    "Ao fazer teste de perícia, gasta 1 PM para receber benefícios de ser treinado nessa perícia para este teste. Não consome slot de poder.",
 		GrantedAtLevel: 2,
 		BookPage:       45,
 		UID:            "pwr_nltlo3fznb",
-		Unmodeled:      "1 PM para contar como treinado: mexe num teste de perícia na hora de rolar (ALE-489)",
 	},
 	{
 		ID:             "class.bardo.magias-2-circulo",

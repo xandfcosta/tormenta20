@@ -85,13 +85,13 @@ var classPowersPart11 = []ClassPower{
 	},
 	{
 		ID:             "class.nobre.orgulho",
+		Modeled:        []string{"o gasto no diálogo do teste: +2 por PM, até o Carisma"},
 		ClassName:      "Nobre",
 		Name:           "Orgulho",
 		Description:    "Em teste de perícia, gasta PM (limitado por Car). Para cada PM, recebe +2 no teste.",
 		GrantedAtLevel: 1,
 		BookPage:       79,
 		UID:            "pwr_y25kwy3de5",
-		Unmodeled:      "PM por +2 cada: mexe num teste de perícia na hora de rolar (ALE-489)",
 	},
 	{
 		ID:             "class.nobre.palavras-afiadas-2d6",

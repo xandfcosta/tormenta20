@@ -45,6 +45,16 @@ type SkillTest struct {
 	// Natural20 e Natural1 são do DADO (p221). Nunca os dois.
 	Natural20 bool `json:"natural20,omitempty"`
 	Natural1  bool `json:"natural1,omitempty"`
+	// Spends são os gastos de PM que entraram no teste (ALE-489), já somados no
+	// `Modifier` — a lista existe para a mesa ler de onde veio o número.
+	Spends []SkillTestSpend `json:"spends,omitempty"`
+}
+
+// SkillTestSpend é um gasto escrito para a mesa: "Audácia +3 · 2 PM".
+type SkillTestSpend struct {
+	Name  string `json:"name"`
+	Bonus int    `json:"bonus"`
+	PM    int    `json:"pm"`
 }
 
 // ResolveSkillTest resolve um teste de 1d20 + modificador (p220).

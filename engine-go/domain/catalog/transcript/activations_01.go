@@ -232,6 +232,16 @@ var activationsPart01 = []Activation{
 		BookPage: 44,
 	},
 	{
+		ID:         "class.bardo.ecletico",
+		Name:       "Eclético",
+		Kind:       "skill-spend",
+		Action:     "livre",
+		PMCost:     PMCost{Fixed: 1},
+		Uses:       nil,
+		BookPage:   45,
+		SkillSpend: &SkillSpend{Kind: "as-trained"},
+	},
+	{
 		ID:           "class.bardo.esgrima-magica",
 		Name:         "Esgrima Mágica",
 		Kind:         "triggered-passive",
@@ -418,15 +428,6 @@ var activationsPart01 = []Activation{
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     ptr("dia"),
-		BookPage: 47,
-	},
-	{
-		ID:       "class.bucaneiro.ataque-acrobatico",
-		Name:     "Ataque Acrobático",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
 		BookPage: 47,
 	},
 }

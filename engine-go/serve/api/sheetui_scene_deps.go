@@ -74,6 +74,9 @@ func (h sheetHost) PublishSkillTest(
 		Natural20: test.Natural20, Natural1: test.Natural1,
 		ByHand: byHand,
 	}
+	for _, spent := range test.Spends {
+		roll.Spends = append(roll.Spends, live.SkillTestPaid{Name: spent.Name, Bonus: spent.Bonus, PM: spent.PM})
+	}
 	for _, sessionID := range h.liveSessionsOf(ctx, characterID) {
 		if _, err := h.rules.sessions.RecordSkillTest(ctx, sessionID, roll); err != nil {
 			return err

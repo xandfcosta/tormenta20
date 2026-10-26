@@ -68,13 +68,13 @@ var classPowersPart08 = []ClassPower{
 	},
 	{
 		ID:             "class.inventor.engenhosidade",
+		Modeled:        []string{"o gasto no diálogo do teste: 2 PM somam a Inteligência"},
 		ClassName:      "Inventor",
 		Name:           "Engenhosidade",
 		Description:    "Em teste de perícia, gasta 2 PM para somar Inteligência no teste. Não vale para testes de ataque.",
 		GrantedAtLevel: 1,
 		BookPage:       68,
 		UID:            "pwr_fmm2klyusb",
-		Unmodeled:      "2 PM para somar Inteligência: mexe num teste de perícia na hora de rolar (ALE-489)",
 	},
 	{
 		ID:             "class.inventor.prototipo",

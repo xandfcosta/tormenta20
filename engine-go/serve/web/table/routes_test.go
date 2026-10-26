@@ -61,12 +61,44 @@ func TestNoTableSignalIsDeclaredTwice(t *testing.T) {
 // Sinal lido por constante (`const brushSignal = "pincelando"`, usada como
 // `"$"+…`) é invisível para um inventário por `$nome` — cinco sinais vivos
 // apareceriam como órfãos sem este canal.
-func TestEverySignalTheTableDeclaresHasAReader(t *testing.T) {
+// topLevelSignals são as chaves de PRIMEIRO NÍVEL da declaração. Dentro de um
+// objeto (`draft: {…}`, `expertise_spends: {audacia: 0, …}`) as chaves são
+// parte do sinal de cima, e o leitor delas é o leitor do pai — `$draft.nome`,
+// `"$expertise_spends." + chave` montado em Go (ALE-489). Contá-las como sinais
+// soltos as acusaria de órfãs; o `draft` só passava porque as chaves dele
+// coincidem com tags JSON do servidor.
+func topLevelSignals(expr string) []string {
 	signalName := regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9_]*)\s*:`)
-	var declared []string
-	for _, found := range signalName.FindAllStringSubmatch(tableSignalsExpr(), -1) {
-		declared = append(declared, found[1])
+	depthAt := make([]int, len(expr)+1)
+	depth := 0
+	inString := byte(0)
+	for i := 0; i < len(expr); i++ {
+		depthAt[i] = depth
+		c := expr[i]
+		switch {
+		case inString != 0:
+			if c == inString {
+				inString = 0
+			}
+		case c == '\'' || c == '"':
+			inString = c
+		case c == '{' || c == '[':
+			depth++
+		case c == '}' || c == ']':
+			depth--
+		}
 	}
+	var out []string
+	for _, m := range signalName.FindAllStringSubmatchIndex(expr, -1) {
+		if depthAt[m[0]] == 1 {
+			out = append(out, expr[m[2]:m[3]])
+		}
+	}
+	return out
+}
+
+func TestEverySignalTheTableDeclaresHasAReader(t *testing.T) {
+	declared := topLevelSignals(tableSignalsExpr())
 
 	root := filepath.Join("..", "..", "..", "..")
 	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",

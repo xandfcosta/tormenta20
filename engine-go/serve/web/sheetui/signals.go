@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"encoding/json"
 	"net/http"
 	"t20engine/domain/sheet"
 
@@ -74,6 +75,12 @@ type Signals struct {
 	// único lugar em que a ficha rola, e a faixa da mesa diz de onde veio o
 	// número — sem a marca ninguém sabe se confia no app ou no dado.
 	ExpertiseD20 *int64 `json:"expertise_d20"`
+	// ExpertiseSpends são os gastos de PM marcados no diálogo do teste
+	// (ALE-489), pela chave de cada um (`book.SpendKey`) e o PM pedido. CRU de
+	// propósito: um valor que não seja número tem de virar "não pedido", e não
+	// derrubar a leitura de TODOS os sinais — que é o defeito da ALE-499. Ver
+	// `spendChoicesFrom`.
+	ExpertiseSpends json.RawMessage `json:"expertise_spends"`
 	// As melhorias escolhidas no diálogo, e o material. Lista e não par de
 	// ids: são até quatro melhorias no mesmo item.
 	ItemImprovements []string `json:"item_improvements"`
