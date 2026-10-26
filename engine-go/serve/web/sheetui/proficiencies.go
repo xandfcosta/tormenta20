@@ -12,8 +12,9 @@ import (
 // A tabela de "que classe sabe usar o quê" é dado transcrito do livro, então
 // mora onde o dado transcrito mora: o campo `proficiencies` de
 // `transcript.Classes`, ao lado da página. O que sobra aqui é só a
-// RESOLUÇÃO — juntar as classes do personagem, aplicar as duas linhas de base e
-// dizer quais categorias ele tem.
+// RESOLUÇÃO — juntar as classes e as raças do personagem (o Vanguardista do
+// kliren dá armas de fogo, ALE-493), aplicar as duas linhas de base e dizer
+// quais categorias ele tem.
 //
 // Ser proficiente ou não é o que a Mochila lê para avisar "sem proficiência"
 // (p142: −5 no ataque; a penalidade da armadura nas perícias de Força e

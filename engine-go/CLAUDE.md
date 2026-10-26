@@ -918,8 +918,8 @@ todas `id`, `sourceId`, `raceId`, `race` ou `origin`.
 
 E há um canal que nenhuma varredura de campo alcança: a ficha guarda escolha
 como **JSON dentro de uma string**, e o `"race":"Lefou"` do
-`secondaryRaceChoices` não se parece com ponteiro. Quem o achou foi o Kharvos
-perdendo o −1 de Carisma da Deformidade.
+`secondaryRaceChoices` não se parece com ponteiro. Quem o achou foi o Kharvos,
+cuja escolha da Deformidade deixou de ser lida — e o número do oráculo mudou.
 
 ### O bônus CIRCUNSTANCIAL já tem vocabulário — não invente um
 
