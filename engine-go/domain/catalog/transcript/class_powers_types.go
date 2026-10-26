@@ -28,13 +28,19 @@ type PowerChoice struct {
 	GrantsSpellAttribute string              `json:"grantsSpellAttribute,omitempty"`
 	CountAttribute       string              `json:"countAttribute,omitempty"`
 	Count                int                 `json:"count,omitempty"`
-	SwapFor              string              `json:"swapFor,omitempty"`
+	// CountLevels são os níveis da classe em que se ganha uma escolha — o
+	// Explorador, no 3º e a cada quatro (p50).
+	CountLevels []int  `json:"countLevels,omitempty"`
+	SwapFor     string `json:"swapFor,omitempty"`
 }
 
 type PowerChoiceOption struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	Note string `json:"note,omitempty"`
+	// MinLevel é o nível da classe a partir do qual a opção vale — a área de
+	// Tormenta do Explorador, no 11º (p50).
+	MinLevel int `json:"minLevel,omitempty"`
 }
 
 type ChoiceGrant struct {

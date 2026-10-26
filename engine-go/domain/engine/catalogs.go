@@ -167,6 +167,28 @@ type ClassPower struct {
 	// porque ele não vale na ficha: só no golpe em que o jogador o paga (ver
 	// `BoostedWeaponCards`).
 	Boost *ClassPowerBoost `json:"boost,omitempty"`
+	// Choice traz os NOMES das opções, para o rótulo do interruptor que a
+	// escolha cria ("no terreno: Floresta", ALE-503).
+	Choice *ClassPowerChoice `json:"choice,omitempty"`
+}
+
+// ClassPowerChoice é o que o motor lê da escolha de um poder de classe.
+type ClassPowerChoice struct {
+	Options []struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"options"`
+}
+
+// choiceNames são os nomes das opções, pelo id.
+func (p ClassPower) choiceNames() map[string]string {
+	names := map[string]string{}
+	if p.Choice != nil {
+		for _, o := range p.Choice.Options {
+			names[o.ID] = o.Name
+		}
+	}
+	return names
 }
 
 type GrantedByChoice struct {

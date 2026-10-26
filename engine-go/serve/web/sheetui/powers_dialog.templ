@@ -357,7 +357,9 @@ templ countedChoiceBlock(v View, counted countedChoice) {
 		</div>
 		<div class="flex flex-wrap gap-1">
 			for _, o := range counted.Options {
-				if o.Count > 0 {
+				if counted.Repeats {
+					@repeatedChoiceChips(v, counted, o)
+				} else if o.Count > 0 {
 					<button
 						type="button"
 						role="switch"
@@ -378,8 +380,28 @@ templ countedChoiceBlock(v View, counted countedChoice) {
 				}
 			}
 		</div>
-		<p class="text-3xs text-muted-foreground">Só as perícias treinadas.</p>
+		<p class="text-3xs text-muted-foreground">{ counted.Hint() }</p>
 	</div>
+}
+
+// repeatedChoiceChips é a opção que pode ser escolhida de novo (o terreno do
+// Explorador, ALE-503): tocar soma uma escolha, e o "−" tira — o padrão do
+// Aumento de Atributo.
+templ repeatedChoiceChips(v View, counted countedChoice, o powerOption) {
+	<button
+		type="button"
+		aria-label={ counted.Name + ": " + o.Label }
+		data-on:click={ sheetPost(v, "/poderes/escolha/"+counted.ID+"/"+url.PathEscape(o.Value)) }
+		class={ choiceChip(o.Count > 0), templ.KV("opacity-60", counted.Full() && o.Count == 0) }
+	>{ o.Written() }</button>
+	if o.Count > 0 {
+		<button
+			type="button"
+			aria-label={ "Tirar " + o.Label + " de " + counted.Name }
+			data-on:click={ sheetPost(v, "/poderes/escolha/"+counted.ID+"/"+url.PathEscape(o.Value)+"/tira") }
+			class={ choiceChip(false) }
+		>−</button>
+	}
 }
 
 // classPicker é uma escolha de valor único — caminho ou devoto.

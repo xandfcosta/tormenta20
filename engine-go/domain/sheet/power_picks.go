@@ -65,7 +65,7 @@ func UsedPowerSlots(dto CharacterDTO) int {
 func WithPowerPick(blob, power, option string, choice book.PowerChoice) string {
 	picks := PowerPicks(blob)
 	switch {
-	case choice.Repeatable:
+	case choice.Repeatable || len(choice.CountLevels) > 0:
 		picks[power] = append(picks[power], option)
 	case choice.CountAttribute != "":
 		if !slices.Contains(picks[power], option) {
@@ -122,7 +122,7 @@ func powerPicksFit(dto CharacterDTO) error {
 		if power.Choice.CountAttribute != "" {
 			continue
 		}
-		if len(picks) > 1 && !power.Choice.Repeatable {
+		if len(picks) > 1 && !power.Choice.Repeatable && len(power.Choice.CountLevels) == 0 {
 			return fmt.Errorf("%q se escolhe uma vez só, e há %d escolhas", power.Name, len(picks))
 		}
 		if err := picksAreOptions(power, picks); err != nil {

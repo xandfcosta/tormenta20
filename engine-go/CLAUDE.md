@@ -1379,7 +1379,10 @@ treinada, no máximo o atributo sem temporários (`Ruleset.PermanentAttribute`),
 mínimo 1. Por isso ela é conferida também FORA do diálogo: todo gesto que mexe
 no N ou no treino (treino, ofício, guardar/vestir/remover item, distribuição da
 raça, atributo na forja) aplica a mudança numa cópia e chama
-`sheet.ChangeKeepsChosenExpertises` antes de gravar. Decisão do dono, com a razão registrada — o projeto ainda
+`sheet.ChangeKeepsChosenExpertises` antes de gravar. A escolha CONTADA POR
+NÍVEL (`countLevels`, os terrenos do Explorador, p50, ALE-503) repete opção sem
+gastar vaga, e o gesto de descer o nível confere `sheet.LevelCountedChoicesFit`
+no nível novo. Decisão do dono, com a razão registrada — o projeto ainda
 não foi usado numa mesa real, então não há ficha antiga fora da conta para
 proteger. O preço apareceu na hora: dois testes tinham fixtures ilegais pelo
 livro (um poder inventado, e um personagem sem classe com um poder escolhido).

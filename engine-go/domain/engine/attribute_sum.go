@@ -92,7 +92,12 @@ func resolveAttributeSums(ch Character, sums []ActiveItem, effects ItemEffects) 
 			if m.Scale.Cap == "classLevel" {
 				amount = min(amount, m.classLevel)
 			}
-			m.Amount = amount
+			// O PISO vem antes da parcela: "Sabedoria (mínimo +1)", e depois o +2
+			// de cada repetição (p50).
+			if m.Scale.Min != 0 {
+				amount = max(amount, m.Scale.Min)
+			}
+			m.Amount = amount + m.Scale.plus
 			m.Scale = nil
 			resolved.Modifiers[j] = m
 		}
