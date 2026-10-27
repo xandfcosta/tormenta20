@@ -1269,7 +1269,8 @@
             "classPowers": [
               "foco-em-arma",
               "foco-em-pericia",
-              "treinamento-em-pericia"
+              "treinamento-em-pericia",
+              "proficiencia"
             ],
             "powerChoices": {
               "foco-em-arma": [
@@ -1280,6 +1281,9 @@
               ],
               "treinamento-em-pericia": [
                 "Acrobacia"
+              ],
+              "proficiencia": [
+                "armas-de-fogo"
               ]
             },
             "items": [
