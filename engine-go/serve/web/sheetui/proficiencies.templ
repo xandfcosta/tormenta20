@@ -70,10 +70,10 @@ templ proficiencyRow(v View, row sheetProficiency) {
 			<span class={ templ.KV("text-foreground", row.Has), templ.KV("text-muted-foreground line-through", !row.Has) }>
 				{ row.Label }
 			</span>
-			// O selo marca o que vem de fábrica — da classe ou da raça —, para o
-			// jogador distinguir um ajuste deliberado da conta: sem ele, uma
-			// proficiência tirada na mão parece defeito.
-			if row.FromClass || row.FromRace {
+			// O selo marca o que tem ORIGEM — a classe, a raça ou o poder
+			// Proficiência —, para o jogador distinguir o que se marca na mão do
+			// que só sai com a origem (ALE-510).
+			if row.FromClass || row.FromRace || row.FromPower {
 				<span
 					title={ sourceTag(row) }
 					class="ml-1 rounded-md bg-muted px-1 text-3xs uppercase tracking-[0.14em] text-muted-foreground"

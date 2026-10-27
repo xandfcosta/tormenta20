@@ -190,15 +190,18 @@ func (o powerOption) Written() string {
 //
 // A escolha de perícia TREINADA oferece só as treinadas da ficha: o Foco em
 // Perícia pede o treino como pré-requisito (p130), e oferecer a sem treino é
-// desenhar uma recusa.
-func optionsOf(p book.ClassPower, picks []string, trained map[string]bool) []powerOption {
+// desenhar uma recusa. As que DÃO o que falta — o Treinamento em Perícia e a
+// Proficiência — oferecem só o que a ficha ainda não tem, mais o que elas
+// mesmas deram, para poder ser tirado. `owned` é o que a ficha já tem: as
+// perícias treinadas e as proficiências (`ownedOptionsOf`).
+func optionsOf(p book.ClassPower, picks []string, owned map[string]bool) []powerOption {
 	if p.Choice == nil {
 		return nil
 	}
 	offered := p.Choice.Offered()
 	out := make([]powerOption, 0, len(offered))
 	for _, o := range offered {
-		if p.Choice.Kind == "trained-expertise" && !trained[o.ID] {
+		if p.Choice.Kind == "trained-expertise" && !owned[o.ID] {
 			continue
 		}
 		count := 0
@@ -207,8 +210,8 @@ func optionsOf(p book.ClassPower, picks []string, trained map[string]bool) []pow
 				count++
 			}
 		}
-		// A que o próprio Treinamento treinou fica, para poder ser tirada.
-		if p.Choice.Kind == "untrained-expertise" && trained[o.ID] && count == 0 {
+		gives := p.Choice.Kind == "untrained-expertise" || p.Choice.Kind == "proficiency"
+		if gives && owned[o.ID] && count == 0 {
 			continue
 		}
 		out = append(out, powerOption{Value: o.ID, Label: o.Name, Count: count})
@@ -340,7 +343,7 @@ func classChoiceCards(dto sheet.CharacterDTO, search string) []classChoiceCard {
 			ClassName: class.ClassName, Level: class.Level,
 			Slots:   sheet.PowerSlots(class.Level),
 			Used:    sheet.UsedPowerSlots(dto),
-			Powers:  thatChoosePowers(class.ClassName, chosen, sheet.PowerPicks(dto.PowerChoices), trainedSkillsOf(dto), search),
+			Powers:  thatChoosePowers(class.ClassName, chosen, sheet.PowerPicks(dto.PowerChoices), ownedOptionsOf(dto), search),
 			Counted: countedChoicesOf(dto, class.ClassName),
 		}
 		if options := sheet.LevelPaths(class.ClassName, class.Level); len(options) > 0 {
@@ -374,7 +377,7 @@ func markedPicker(options []sheet.ChoiceOption, chosen string) *pickerChoice {
 // "Você sempre pode substituir um poder de classe por um poder geral" (p33), e
 // por isso as duas listas viram uma só — a vaga é a mesma.
 func thatChoosePowers(
-	class string, chosen []string, picks map[string][]string, trained map[string]bool, query string,
+	class string, chosen []string, picks map[string][]string, owned map[string]bool, query string,
 ) []powerChoice {
 	term := search.Fold(strings.TrimSpace(query))
 	outside := []powerChoice{}
@@ -384,7 +387,7 @@ func thatChoosePowers(
 		}
 		outside = append(outside, powerChoice{
 			ID: p.ID, Name: p.Name, Detail: p.Description, Source: "Classe",
-			Chosen: contemTraco(chosen, p.ID), Options: optionsOf(p, picks[p.ID], trained),
+			Chosen: contemTraco(chosen, p.ID), Options: optionsOf(p, picks[p.ID], owned),
 		})
 	}
 	for _, p := range book.GeneralPowers() {
@@ -398,7 +401,7 @@ func thatChoosePowers(
 		// O poder geral que pede escolha (Foco em Perícia, Foco em Arma) se
 		// escolhe pela opção, como o de classe (ALE-510).
 		if withChoice, chooses := book.PowerWithChoice(p.ID); chooses {
-			choice.Options = optionsOf(withChoice, picks[p.ID], trained)
+			choice.Options = optionsOf(withChoice, picks[p.ID], owned)
 		}
 		outside = append(outside, choice)
 	}
@@ -474,9 +477,11 @@ func thatTogglesAttributeGesture(attribute string) string {
 		"$race_attributes = escolhidos"
 }
 
-// trainedSkillsOf são as perícias treinadas da ficha.
-func trainedSkillsOf(dto sheet.CharacterDTO) map[string]bool {
-	out := map[string]bool{}
+// ownedOptionsOf é o que a ficha já tem entre as opções de escolha: as perícias
+// treinadas e as proficiências. As duas famílias não colidem — "Luta" e
+// "armas-marciais" —, então um conjunto só serve às duas.
+func ownedOptionsOf(dto sheet.CharacterDTO) map[string]bool {
+	out := sheet.ToStringSet(sheet.UnmarshalStrings(dto.Proficiencies))
 	for _, e := range dto.Expertises {
 		if e.Trained {
 			out[e.Name] = true

@@ -307,7 +307,7 @@ func proficiencyRow(v View, row sheetProficiency) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if row.FromClass || row.FromRace {
+			if row.FromClass || row.FromRace || row.FromPower {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<span title=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

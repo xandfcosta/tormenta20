@@ -135,11 +135,19 @@ func pickPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 	// ficha já treinada, e o treino é gravado depois da escolha, como na
 	// Memória Póstuma. A perícia que já é treinada não tem o que ganhar.
 	toTrain := ""
-	var alreadyTrained error
+	var alreadyHas error
+	var saved sheet.CharacterDTO
 	err := s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		// O poder Proficiência (p129) dá o que a ficha ainda não tem.
+		if power.Choice.Kind == "proficiency" && slices.Contains(sheet.UnmarshalStrings(dto.Proficiencies), option) {
+			alreadyHas = fmt.Errorf("esta ficha já sabe usar %s; o %s dá uma proficiência que ela ainda não tem",
+				book.ProficiencyLabel(option), power.Name)
+			return
+		}
+		defer func() { saved = *dto }()
 		if power.Choice.Kind == "untrained-expertise" {
 			if slices.ContainsFunc(dto.Expertises, func(e sheet.ExpertiseDTO) bool { return e.Name == option && e.Trained }) {
-				alreadyTrained = fmt.Errorf("%s já é treinada; o %s treina uma perícia que ainda não é", option, power.Name)
+				alreadyHas = fmt.Errorf("%s já é treinada; o %s treina uma perícia que ainda não é", option, power.Name)
 				return
 			}
 			toTrain = option
@@ -156,25 +164,49 @@ func pickPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 			dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
 		}
 	})
-	if alreadyTrained != nil {
-		return alreadyTrained
+	if alreadyHas != nil {
+		return alreadyHas
 	}
-	if err != nil || toTrain == "" {
+	if err != nil {
 		return err
+	}
+	if power.Choice.Kind == "proficiency" {
+		return s.plays.SaveProficiencies(r.Context(), row.ID,
+			append(sheet.UnmarshalStrings(saved.Proficiencies), sheet.PowerProficiencies(saved.PowerChoices)...))
+	}
+	if toTrain == "" {
+		return nil
 	}
 	return s.plays.ToggleTraining(r.Context(), row.ID, toTrain)
 }
 
 // dropPowerOption tira UMA escolha do poder; sem nenhuma, o poder sai da ficha.
+//
+// A proficiência que o poder Proficiência dava SAI junto, se nenhuma outra
+// origem a conceder: ela não se desmarca na mão (ALE-510).
 func dropPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	id, option := chi.URLParam(r, "poder"), pathParam(r, "opcao")
-	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+	var before, after sheet.CharacterDTO
+	err := s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		before = *dto
 		picks, left := sheet.WithoutPowerPick(dto.PowerChoices, id, option)
 		dto.PowerChoices = picks
 		if left == 0 && slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
 			dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
 		}
+		after = *dto
 	})
+	if err != nil || slices.Equal(sheet.PowerProficiencies(before.PowerChoices), sheet.PowerProficiencies(after.PowerChoices)) {
+		return err
+	}
+	kept := []string{}
+	for _, key := range sheet.UnmarshalStrings(after.Proficiencies) {
+		lost := slices.Contains(sheet.PowerProficiencies(before.PowerChoices), key)
+		if !lost || len(grantersOf(after, key)) > 0 {
+			kept = append(kept, key)
+		}
+	}
+	return s.plays.SaveProficiencies(r.Context(), row.ID, kept)
 }
 
 // pickRaceAbility liga ou desliga uma opção da escolha de uma habilidade de

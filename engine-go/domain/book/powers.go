@@ -76,8 +76,9 @@ type PowerChoiceOption struct {
 
 // Offered são as opções que a escolha oferece. A lista do catálogo, quando ele
 // a escreve; para a escolha de ARMA (Especialização em Arma, p65), as armas do
-// catálogo de itens — escrevê-las de novo no verbete seria a segunda cópia de
-// uma lista que já tem dono.
+// catálogo de itens; para a de perícia, as perícias do livro; para a de
+// proficiência, as categorias do livro — escrevê-las de novo no verbete seria a
+// segunda cópia de uma lista que já tem dono.
 //
 //	ClassPowers()["class.guerreiro.especializacao-em-arma"].Choice.Offered()
 //	// [{adaga Adaga} {alabarda Alabarda} …]
@@ -87,6 +88,17 @@ func (c PowerChoice) Offered() []PowerChoiceOption {
 		for _, e := range Expertises() {
 			if !slices.Contains(c.Exclude, e.Name) {
 				out = append(out, PowerChoiceOption{ID: e.Name, Name: e.Name})
+			}
+		}
+		return out
+	}
+	// A de PROFICIÊNCIA (p129) sai das categorias do livro, menos as que o
+	// verbete não oferece.
+	if c.Kind == "proficiency" {
+		out := []PowerChoiceOption{}
+		for _, cat := range ProficiencyCategories {
+			if !slices.Contains(c.Exclude, cat.Key) {
+				out = append(out, PowerChoiceOption{ID: cat.Key, Name: cat.Label})
 			}
 		}
 		return out
