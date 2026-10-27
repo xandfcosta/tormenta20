@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 5 de 10 de `Activations` (activations.go).
+// Parte 5 de 11 de `Activations` (activations.go).
 var activationsPart05 = []Activation{
 	{
 		ID:         "class.inventor.engenhosidade",
@@ -15,11 +15,11 @@ var activationsPart05 = []Activation{
 	{
 		ID:       "class.inventor.farmaceutico",
 		Name:     "Farmacêutico",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Written: "variavel"},
 		Uses:     nil,
-		BookPage: 70,
+		BookPage: 69,
 	},
 	{
 		ID:       "class.inventor.ferreiro",
@@ -51,11 +51,11 @@ var activationsPart05 = []Activation{
 	{
 		ID:       "class.inventor.invencao-potente",
 		Name:     "Invenção Potente",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
-		BookPage: 70,
+		BookPage: 69,
 	},
 	{
 		ID:       "class.inventor.maestria-em-pericia",
@@ -96,11 +96,11 @@ var activationsPart05 = []Activation{
 	{
 		ID:       "class.inventor.mistura-fervilhante",
 		Name:     "Mistura Fervilhante",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
-		BookPage: 71,
+		BookPage: 69,
 	},
 	{
 		ID:       "class.inventor.oficina-de-campo",
@@ -160,8 +160,8 @@ var activationsPart05 = []Activation{
 	{
 		ID:       "class.ladino.contatos-no-submundo",
 		Name:     "Contatos no Submundo",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
 		BookPage: 73,
@@ -215,10 +215,10 @@ var activationsPart05 = []Activation{
 	{
 		ID:       "class.ladino.ladrao-arcano",
 		Name:     "Ladrão Arcano",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Written: "variavel"},
-		Uses:     ptr("cena"),
+		Uses:     nil,
 		BookPage: 74,
 	},
 	{

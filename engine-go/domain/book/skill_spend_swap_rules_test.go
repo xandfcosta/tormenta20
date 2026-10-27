@@ -120,3 +120,16 @@ func TestASwapDoesNotMixWithTheSpecialist(t *testing.T) {
 		t.Error("troca com Especialista passou — o treino dobrado é da perícia original")
 	}
 }
+
+// p133 Fé Guerreira (Arsenal): "em combate, quando vai fazer um teste de
+// perícia, você pode gastar 2 PM para substituí-lo por um teste de Guerra
+// (exceto para testes de ataque)" — vale em QUALQUER perícia (ALE-492).
+func TestTheWarriorFaithSwapsAnySkillForWar(t *testing.T) {
+	faith := spendsOf(t, "deus.arsenal.fe-guerreira")
+	target := swapTarget("Percepção", "wisdom")
+	target.Totals["Guerra"], target.TrainedIn = 8, map[string]bool{"Guerra": true}
+	offers := SkillSpendOffers(faith, target)
+	if len(offers) != 1 || offers[0].SwapTo != "Guerra" || offers[0].PM != 2 {
+		t.Fatalf("Fé Guerreira em Percepção: %+v, esperava a troca por Guerra a 2 PM", offers)
+	}
+}

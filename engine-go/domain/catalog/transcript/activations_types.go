@@ -28,6 +28,7 @@ type SkillSpend struct {
 	SwapTo       string   `json:"swapTo,omitempty"`
 	RequiresFlag string   `json:"requiresFlag,omitempty"`
 	Context      string   `json:"context,omitempty"`
+	AnySkill     bool     `json:"anySkill,omitempty"`
 }
 
 type ActivationGrant struct {

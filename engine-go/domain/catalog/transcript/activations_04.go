@@ -1,12 +1,12 @@
 package transcript
 
-// Parte 4 de 10 de `Activations` (activations.go).
+// Parte 4 de 11 de `Activations` (activations.go).
 var activationsPart04 = []Activation{
 	{
 		ID:       "class.druida.espirito-dos-solsticios",
 		Name:     "Espírito dos Solstícios",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 4},
 		Uses:     nil,
 		BookPage: 62,
@@ -59,11 +59,11 @@ var activationsPart04 = []Activation{
 	{
 		ID:       "class.druida.liberdade-da-pradaria",
 		Name:     "Liberdade da Pradaria",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
-		BookPage: 63,
+		BookPage: 62,
 	},
 	{
 		ID:       "class.druida.magia-natural",
@@ -140,8 +140,8 @@ var activationsPart04 = []Activation{
 	{
 		ID:       "class.guerreiro.bater-e-correr",
 		Name:     "Bater e Correr",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
 		BookPage: 65,
@@ -221,8 +221,8 @@ var activationsPart04 = []Activation{
 	{
 		ID:       "class.guerreiro.mestre-em-arma",
 		Name:     "Mestre em Arma",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
 		BookPage: 66,
@@ -239,11 +239,11 @@ var activationsPart04 = []Activation{
 	{
 		ID:       "class.guerreiro.romper-resistencias",
 		Name:     "Romper Resistências",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
-		BookPage: 67,
+		BookPage: 66,
 	},
 	{
 		ID:       "class.guerreiro.solidez",
@@ -275,8 +275,8 @@ var activationsPart04 = []Activation{
 	{
 		ID:       "class.inventor.agite-antes-de-usar",
 		Name:     "Agite Antes de Usar",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Written: "variavel"},
 		Uses:     nil,
 		BookPage: 68,
@@ -320,11 +320,11 @@ var activationsPart04 = []Activation{
 	{
 		ID:       "class.inventor.ativacao-rapida",
 		Name:     "Ativação Rápida",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     ptr("rodada"),
-		BookPage: 69,
+		BookPage: 68,
 	},
 	{
 		ID:       "class.inventor.aumento-de-atributo",

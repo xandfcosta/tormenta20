@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 8 de 10 de `Activations` (activations.go).
+// Parte 8 de 11 de `Activations` (activations.go).
 var activationsPart08 = []Activation{
 	{
 		ID:       "origin.marujo.passagem-de-navio",
@@ -218,11 +218,17 @@ var activationsPart08 = []Activation{
 	{
 		ID:       "deus.arsenal.fe-guerreira",
 		Name:     "Fé Guerreira",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "skill-spend",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
-		BookPage: 132,
+		BookPage: 133,
+		SkillSpend: &SkillSpend{
+			Kind:     "swap",
+			SwapTo:   "Guerra",
+			Context:  "em combate, exceto teste de ataque",
+			AnySkill: true,
+		},
 	},
 	{
 		ID:       "deus.arsenal.sangue-de-ferro",
