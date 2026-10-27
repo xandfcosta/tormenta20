@@ -122,34 +122,38 @@ var raceDefinitionsPart02 = []RaceDefinition{
 		Abilities: []RaceAbility{
 			{
 				ID:          "suraggel-heranca",
+				Modeled:     []string{"a visão no escuro aparece como fato; o tipo espírito é o `tipo` da raça"},
 				RaceID:      "suraggel",
 				Name:        "Herança Divina",
-				Description: "Escolha sua ascendência: aggelus (celestial) ou sulfure (abissal). A escolha define seus bônus de atributo e habilidades adicionais.",
+				Description: "Você é uma criatura do tipo espírito e recebe visão no escuro.",
 				UID:         "rac_w6lwa7527h",
-				Variants: []RaceAbilityVariant{
-					{
-						ID:          "suraggel-aggelus",
-						Name:        "Aggelus",
-						Description: "Sabedoria +2, Carisma +1. Luz Sagrada: +2 em Diplomacia e Intuição; pode lançar Luz (magia divina, atributo-chave Carisma).",
-						Modifiers: []Modifier{
-							{Target: ModifierTarget{Kind: "attribute", Name: "wisdom"}, Amount: 2, BonusType: "untyped"},
-							{Target: ModifierTarget{Kind: "attribute", Name: "charisma"}, Amount: 1, BonusType: "untyped"},
-							{Target: ModifierTarget{Kind: "expertise", Name: "Diplomacia"}, Amount: 2, BonusType: "untyped"},
-							{Target: ModifierTarget{Kind: "expertise", Name: "Intuição"}, Amount: 2, BonusType: "untyped"},
-						},
-					},
-					{
-						ID:          "suraggel-sulfure",
-						Name:        "Sulfure",
-						Description: "Destreza +2, Inteligência +1. Sombras Profanas: +2 em Enganação e Furtividade; pode lançar Escuridão (magia divina, atributo-chave Inteligência).",
-						Modifiers: []Modifier{
-							{Target: ModifierTarget{Kind: "attribute", Name: "dexterity"}, Amount: 2, BonusType: "untyped"},
-							{Target: ModifierTarget{Kind: "attribute", Name: "intelligence"}, Amount: 1, BonusType: "untyped"},
-							{Target: ModifierTarget{Kind: "expertise", Name: "Enganação"}, Amount: 2, BonusType: "untyped"},
-							{Target: ModifierTarget{Kind: "expertise", Name: "Furtividade"}, Amount: 2, BonusType: "untyped"},
-						},
-					},
+				Facts:       []Fact{{Category: "sense", Text: "Visão no escuro"}},
+			},
+			{
+				ID:          "suraggel-luz-sagrada",
+				RaceID:      "suraggel",
+				Name:        "Luz Sagrada",
+				Description: "Aggelus. Você recebe +2 em Diplomacia e Intuição. Além disso, pode lançar Luz (como uma magia divina; atributo-chave Carisma). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
+				UID:         "rac_6kb2436pvi",
+				Unmodeled:   "lançar Luz como magia divina: o motor de magia (ALE-465)",
+				Modifiers: []Modifier{
+					{Target: ModifierTarget{Kind: "expertise", Name: "Diplomacia"}, Amount: 2, BonusType: "untyped"},
+					{Target: ModifierTarget{Kind: "expertise", Name: "Intuição"}, Amount: 2, BonusType: "untyped"},
 				},
+				Ancestry: "aggelus",
+			},
+			{
+				ID:          "suraggel-sombras-profanas",
+				RaceID:      "suraggel",
+				Name:        "Sombras Profanas",
+				Description: "Sulfure. Você recebe +2 em Enganação e Furtividade. Além disso, pode lançar Escuridão (como uma magia divina; atributo-chave Inteligência). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
+				UID:         "rac_mdpv3zhlwj",
+				Unmodeled:   "lançar Escuridão como magia divina: o motor de magia (ALE-465)",
+				Modifiers: []Modifier{
+					{Target: ModifierTarget{Kind: "expertise", Name: "Enganação"}, Amount: 2, BonusType: "untyped"},
+					{Target: ModifierTarget{Kind: "expertise", Name: "Furtividade"}, Amount: 2, BonusType: "untyped"},
+				},
+				Ancestry: "sulfure",
 			},
 		},
 		UID: "rac_jfdp3txvv4",

@@ -20,7 +20,7 @@ func (r *Ruleset) raceActiveItems(ch Character) []ActiveItem {
 	for _, applied := range r.appliedRaces(ch) {
 		race, choice := applied.race, applied.choice
 		mods := r.raceAttributeMods(race.ID, choice)
-		for _, m := range raceModifiers(race, variantChoices) {
+		for _, m := range raceModifiers(race, variantChoices, choice.ancestry) {
 			if m.Target.K != "attribute" {
 				mods = append(mods, m)
 			}

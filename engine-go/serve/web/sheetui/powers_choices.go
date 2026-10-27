@@ -60,7 +60,7 @@ type attributeChoice struct {
 }
 
 // variantChoice é uma habilidade de raça com opções — a Resistência Elemental
-// do qareen, a Herança Divina do suraggel.
+// do qareen.
 type variantChoice struct {
 	AbilityID string
 	Name      string

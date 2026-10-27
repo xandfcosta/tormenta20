@@ -11,13 +11,10 @@ import (
 // um gesto escrito para ninguém, e o erro de digitação nasce calado.
 //
 // O encanto de item (`item.*`) fica de fora: o dono dele é o item equipado.
-var orphanActivations = map[string]string{
-	// O catálogo modela a Herança Divina do suraggel como a ascendência, e
-	// Luz Sagrada e Sombras Profanas como variantes dela; no livro (p31) são
-	// habilidades. Registrado na ALE-504.
-	"race.suraggel.luz-sagrada":      "Herança Divina modelada como ascendência",
-	"race.suraggel.sombras-profanas": "Herança Divina modelada como ascendência",
-}
+// A lista nasceu com as duas ativações do suraggel, órfãs pela Herança Divina
+// modelada como ascendência, e esvaziou com o conserto (ALE-505). Ela fica para
+// o próximo caso ter onde se registrar com o motivo.
+var orphanActivations = map[string]string{}
 
 func TestEveryActivationHasAnOwner(t *testing.T) {
 	owners := map[string]bool{}

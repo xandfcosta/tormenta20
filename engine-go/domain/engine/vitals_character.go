@@ -28,6 +28,7 @@ func (r *Ruleset) VitalContextFor(ch Character) VitalContext {
 		Classes:            classes,
 		RaceID:             raceID,
 		RaceAbilityChoices: parseChoiceSet(ch.RaceAbilityChoices).list,
+		RaceAncestry:       parseRaceAttributeChoices(ch.RaceAttributeChoices).ancestry,
 		PowerIDs:           parseChoiceSet(ch.ClassPowers).list,
 		ClassChoices:       parseClassChoices(ch.ClassChoices),
 		GodPower:           ch.GodPower,

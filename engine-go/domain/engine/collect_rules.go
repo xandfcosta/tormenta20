@@ -9,7 +9,7 @@ import "fmt"
 
 // raceModifiers monta os bônus de atributo como mods `attribute`, e depois os
 // modificadores de cada habilidade mais os da variante escolhida.
-func raceModifiers(race *RaceDefinition, variantChoices map[string]bool) []Modifier {
+func raceModifiers(race *RaceDefinition, variantChoices map[string]bool, ancestry string) []Modifier {
 	out := []Modifier{}
 	for _, attr := range AttributeKeys {
 		amount, ok := race.AttributeBonuses[attr]
@@ -27,6 +27,10 @@ func raceModifiers(race *RaceDefinition, variantChoices map[string]bool) []Modif
 		// A habilidade com escolha só soma pelo que foi escolhido
 		// (`abilityChoiceModifiers`): o molde dela não tem alvo.
 		if ability.Choice != nil {
+			continue
+		}
+		// A habilidade da OUTRA ascendência não vale (p31, ALE-505).
+		if ability.Ancestry != "" && ability.Ancestry != ancestry {
 			continue
 		}
 		out = append(out, ability.Modifiers...)
