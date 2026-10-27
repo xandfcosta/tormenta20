@@ -30,8 +30,9 @@ type PowerChoice struct {
 	Count                int                 `json:"count,omitempty"`
 	// CountLevels são os níveis da classe em que se ganha uma escolha — o
 	// Explorador, no 3º e a cada quatro (p50).
-	CountLevels []int  `json:"countLevels,omitempty"`
-	SwapFor     string `json:"swapFor,omitempty"`
+	CountLevels []int    `json:"countLevels,omitempty"`
+	SwapFor     string   `json:"swapFor,omitempty"`
+	Exclude     []string `json:"exclude,omitempty"`
 }
 
 type PowerChoiceOption struct {

@@ -187,13 +187,20 @@ func (o powerOption) Written() string {
 }
 
 // optionsOf monta as opções do poder com a contagem do que já foi escolhido.
-func optionsOf(p book.ClassPower, picks []string) []powerOption {
+//
+// A escolha de perícia TREINADA oferece só as treinadas da ficha: o Foco em
+// Perícia pede o treino como pré-requisito (p130), e oferecer a sem treino é
+// desenhar uma recusa.
+func optionsOf(p book.ClassPower, picks []string, trained map[string]bool) []powerOption {
 	if p.Choice == nil {
 		return nil
 	}
 	offered := p.Choice.Offered()
 	out := make([]powerOption, 0, len(offered))
 	for _, o := range offered {
+		if p.Choice.Kind == "trained-expertise" && !trained[o.ID] {
+			continue
+		}
 		count := 0
 		for _, pick := range picks {
 			if pick == o.ID {
@@ -329,7 +336,7 @@ func classChoiceCards(dto sheet.CharacterDTO, search string) []classChoiceCard {
 			ClassName: class.ClassName, Level: class.Level,
 			Slots:   sheet.PowerSlots(class.Level),
 			Used:    sheet.UsedPowerSlots(dto),
-			Powers:  thatChoosePowers(class.ClassName, chosen, sheet.PowerPicks(dto.PowerChoices), search),
+			Powers:  thatChoosePowers(class.ClassName, chosen, sheet.PowerPicks(dto.PowerChoices), trainedSkillsOf(dto), search),
 			Counted: countedChoicesOf(dto, class.ClassName),
 		}
 		if options := sheet.LevelPaths(class.ClassName, class.Level); len(options) > 0 {
@@ -362,7 +369,9 @@ func markedPicker(options []sheet.ChoiceOption, chosen string) *pickerChoice {
 //
 // "Você sempre pode substituir um poder de classe por um poder geral" (p33), e
 // por isso as duas listas viram uma só — a vaga é a mesma.
-func thatChoosePowers(class string, chosen []string, picks map[string][]string, query string) []powerChoice {
+func thatChoosePowers(
+	class string, chosen []string, picks map[string][]string, trained map[string]bool, query string,
+) []powerChoice {
 	term := search.Fold(strings.TrimSpace(query))
 	outside := []powerChoice{}
 	for _, p := range book.ClassPowers() {
@@ -371,17 +380,23 @@ func thatChoosePowers(class string, chosen []string, picks map[string][]string, 
 		}
 		outside = append(outside, powerChoice{
 			ID: p.ID, Name: p.Name, Detail: p.Description, Source: "Classe",
-			Chosen: contemTraco(chosen, p.ID), Options: optionsOf(p, picks[p.ID]),
+			Chosen: contemTraco(chosen, p.ID), Options: optionsOf(p, picks[p.ID], trained),
 		})
 	}
 	for _, p := range book.GeneralPowers() {
 		if !casaComABusca(p.Name, term) {
 			continue
 		}
-		outside = append(outside, powerChoice{
+		choice := powerChoice{
 			ID: p.ID, Name: p.Name, Detail: p.Description, Source: powerGeneralSource(p),
-			Chosen: contemTraco(chosen, p.ID),
-		})
+			Chosen: contemTraco(chosen, p.ID) || len(picks[p.ID]) > 0,
+		}
+		// O poder geral que pede escolha (Foco em Perícia, Foco em Arma) se
+		// escolhe pela opção, como o de classe (ALE-510).
+		if withChoice, chooses := book.PowerWithChoice(p.ID); chooses {
+			choice.Options = optionsOf(withChoice, picks[p.ID], trained)
+		}
+		outside = append(outside, choice)
 	}
 	sort.SliceStable(outside, func(a, b int) bool {
 		if outside[a].Chosen != outside[b].Chosen {
@@ -453,4 +468,15 @@ func thatTogglesAttributeGesture(attribute string) string {
 	return "const escolhidos = [...$race_attributes]; const onde = escolhidos.indexOf('" + attribute + "'); " +
 		"if (onde >= 0) { escolhidos.splice(onde, 1) } else { escolhidos.push('" + attribute + "') }; " +
 		"$race_attributes = escolhidos"
+}
+
+// trainedSkillsOf são as perícias treinadas da ficha.
+func trainedSkillsOf(dto sheet.CharacterDTO) map[string]bool {
+	out := map[string]bool{}
+	for _, e := range dto.Expertises {
+		if e.Trained {
+			out[e.Name] = true
+		}
+	}
+	return out
 }

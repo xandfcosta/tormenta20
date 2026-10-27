@@ -43,7 +43,43 @@ func (s Scene) sheetPendings(dto sheet.CharacterDTO) []pendencia {
 	outside = append(outside, raceAbilityPendings(dto)...)
 	outside = append(outside, originPending(dto)...)
 	outside = append(outside, classPendings(dto)...)
+	outside = append(outside, generalChoicePendings(dto)...)
 	return outside
+}
+
+// generalChoicePendings é o poder geral que pede escolha e não tem nenhuma —
+// o Foco em Perícia que veio da origem (Membro de Guilda) sem a perícia
+// (ALE-510). O que se escolhe na lista de poderes já nasce com a escolha.
+func generalChoicePendings(dto sheet.CharacterDTO) []pendencia {
+	picks := sheet.PowerPicks(dto.PowerChoices)
+	outside := []pendencia{}
+	seen := map[string]bool{}
+	for _, owned := range sheet.OwnedPowers(dto) {
+		id := generalPowerIDOf(owned)
+		power, chooses := book.PowerWithChoice(id)
+		if id == "" || !chooses || seen[id] || len(picks[id]) > 0 {
+			continue
+		}
+		seen[id] = true
+		outside = append(outside, pendencia{
+			Source: "classe", Label: power.Name + ": escolher " + strings.ToLower(power.Choice.Label),
+		})
+	}
+	return outside
+}
+
+// generalPowerIDOf é o id do poder geral que a linha possuída é — pelo id, ou
+// pelo nome quando ela veio da origem com o id do benefício.
+func generalPowerIDOf(owned sheet.OwnedPower) string {
+	if _, found := book.GeneralPowers()[owned.ID]; found {
+		return owned.ID
+	}
+	for id, power := range book.GeneralPowers() {
+		if power.Name == owned.Name {
+			return id
+		}
+	}
+	return ""
 }
 
 // attributeRacePending é o `+1 ×3` do humano e a ascendência do suraggel.

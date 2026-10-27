@@ -57,6 +57,9 @@ type SkillSpend struct {
 	// ChosenWeapon diz que o rolar de novo é do TESTE DE ATAQUE com a arma
 	// que o poder escolheu (Mestre em Arma, p66, ALE-508).
 	ChosenWeapon bool `json:"chosenWeapon,omitempty"`
+	// ChosenSkill diz que o gasto vale nas perícias que o PODER escolheu — o
+	// Foco em Perícia (p130, ALE-510).
+	ChosenSkill bool `json:"chosenSkill,omitempty"`
 }
 
 // As formas de gasto.
@@ -180,7 +183,10 @@ func SkillSpendOffers(owned []Activation, target SkillSpendTarget) []SkillSpendO
 			offer.SwapTo, offer.Context, offer.Unlocks = spend.SwapTo, spend.Context, true
 			offer.Bonus = target.Totals[spend.SwapTo] - target.Totals[target.Skill]
 		case SpendTwoDice:
-			if !appliesTo(*spend, target) {
+			if spend.ChosenSkill && !slices.Contains(target.PowerPicks[a.ID], target.Skill) {
+				continue
+			}
+			if !spend.ChosenSkill && !appliesTo(*spend, target) {
 				continue
 			}
 			offer.Context = spend.Context

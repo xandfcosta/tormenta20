@@ -10,4 +10,5 @@ type GeneralPower struct {
 	UID           string         `json:"uid"`
 	Modifiers     []Modifier     `json:"modifiers,omitempty"`
 	MinLevel      int            `json:"minLevel,omitempty"`
+	Choice        *PowerChoice   `json:"choice,omitempty"`
 }

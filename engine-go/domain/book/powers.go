@@ -2,6 +2,7 @@ package book
 
 import (
 	"encoding/json"
+	"slices"
 	"sync"
 
 	"t20engine/domain/catalog"
@@ -61,6 +62,9 @@ type PowerChoice struct {
 	// CountLevels são os níveis da classe em que se ganha uma escolha, e cada
 	// opção pode se repetir — o Explorador (p50, ALE-503).
 	CountLevels []int `json:"countLevels"`
+	// Exclude são as opções que o livro tira da lista — Luta e Pontaria no
+	// Foco em Perícia (p130).
+	Exclude []string `json:"exclude"`
 }
 
 type PowerChoiceOption struct {
@@ -78,6 +82,15 @@ type PowerChoiceOption struct {
 //	ClassPowers()["class.guerreiro.especializacao-em-arma"].Choice.Offered()
 //	// [{adaga Adaga} {alabarda Alabarda} …]
 func (c PowerChoice) Offered() []PowerChoiceOption {
+	if len(c.Options) == 0 && (c.Kind == "expertise" || c.Kind == "trained-expertise") {
+		out := []PowerChoiceOption{}
+		for _, e := range Expertises() {
+			if !slices.Contains(c.Exclude, e.Name) {
+				out = append(out, PowerChoiceOption{ID: e.Name, Name: e.Name})
+			}
+		}
+		return out
+	}
 	if len(c.Options) > 0 || c.Kind != "weapon" {
 		return c.Options
 	}
@@ -123,6 +136,28 @@ type GeneralPower struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	BookPage    int    `json:"bookPage"`
+	// Choice é a escolha que o poder geral pede — a perícia do Foco em Perícia,
+	// a arma do Foco em Arma (p128-130, ALE-510).
+	Choice *PowerChoice `json:"choice"`
+}
+
+// PowerWithChoice é o poder de id dado quando ele pede escolha, de CLASSE ou
+// GERAL, na forma que a máquina de escolha lê: o nome, a escolha e o nível que
+// o concede. O geral nunca é concedido por nível.
+//
+//	PowerWithChoice("foco-em-pericia") // {Name: "Foco em Perícia", Choice: perícia treinada}
+func PowerWithChoice(id string) (ClassPower, bool) {
+	if power, found := ClassPowers()[id]; found {
+		return power, power.Choice != nil
+	}
+	general, found := GeneralPowers()[id]
+	if !found || general.Choice == nil {
+		return ClassPower{}, false
+	}
+	return ClassPower{
+		ID: general.ID, Name: general.Name, Description: general.Description,
+		BookPage: general.BookPage, Choice: general.Choice,
+	}, true
 }
 
 var (
