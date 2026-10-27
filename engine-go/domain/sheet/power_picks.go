@@ -118,6 +118,10 @@ func spellPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) erro
 		if !slices.ContainsFunc(dto.Spells, func(s SpellDTO) bool { return s.CatalogSpellID == pick }) {
 			return fmt.Errorf("%s escolhe uma magia que a ficha possa lançar, e %s não está no grimório", power.Name, book.SpellName(pick))
 		}
+		if !CanCastCircleOf(dto, pick) {
+			return fmt.Errorf("%s escolhe uma magia que a ficha possa lançar, e %s é de um círculo que ela ainda não alcança",
+				power.Name, book.SpellName(pick))
+		}
 	}
 	return nil
 }

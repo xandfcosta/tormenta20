@@ -50,8 +50,12 @@ func optionsOf(p book.ClassPower, picks []string, owned map[string]bool) []power
 // serve a todas.
 func ownedOptionsOf(dto sheet.CharacterDTO) map[string]bool {
 	out := sheet.ToStringSet(sheet.UnmarshalStrings(dto.Proficiencies))
+	// A magia conta como "tida" quando a ficha a LANÇA: a do grimório acima do
+	// círculo alcançado fica fora do Foco em Magia (p131).
 	for _, spell := range dto.Spells {
-		out[spell.CatalogSpellID] = true
+		if sheet.CanCastCircleOf(dto, spell.CatalogSpellID) {
+			out[spell.CatalogSpellID] = true
+		}
 	}
 	for _, e := range dto.Expertises {
 		if e.Trained {

@@ -73,6 +73,13 @@ func HighestCastableCircle(classes []ClassDTO, spellCircle int) int {
 	return best
 }
 
+// CanCastCircleOf diz se a ficha alcança o círculo da magia — "uma magia que
+// possa lançar" (Foco em Magia, p131). Magia desconhecida não alcança.
+func CanCastCircleOf(dto CharacterDTO, spellID string) bool {
+	spell, found := book.SpellByID(spellID)
+	return found && spell.Circle <= HighestCastableCircle(dto.Classes, 0)
+}
+
 // IsCasterClass diz se a classe conjura.
 func IsCasterClass(name string) bool {
 	_, casts := book.SpellProgressions()[name]
