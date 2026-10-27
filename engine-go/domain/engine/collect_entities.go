@@ -106,9 +106,10 @@ func (r *Ruleset) originActiveItem(ch Character) *ActiveItem {
 	}
 	choices := parseChoiceSet(ch.OriginChoices)
 	mods := originModifiers(origin, choices.has, r.generalPowerByUid)
+	picks := parsePowerChoices(ch.PowerChoices)
 	for _, id := range r.originPickedPowerIds(ch) {
 		if p := r.getGeneralPower(id); p != nil {
-			mods = append(mods, p.Modifiers...)
+			mods = append(mods, expandChoiceModifiers(p.Modifiers, picks[p.ID], nil)...)
 		}
 	}
 	if len(mods) == 0 {
@@ -254,13 +255,17 @@ func (r *Ruleset) generalPowerActiveItem(ch Character) []ActiveItem {
 			chosen.has[id] = true
 		}
 	}
+	// A ESCOLHA do poder geral entra como a do de classe: o Foco em Arma vira
+	// +2 no `weapon:<arma escolhida>` (p128, ALE-510).
+	picks := parsePowerChoices(ch.PowerChoices)
 	out := []ActiveItem{}
 	for _, id := range chosen.list {
 		power := r.getGeneralPower(id)
 		if power == nil || len(power.Modifiers) == 0 {
 			continue
 		}
-		out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: power.Modifiers})
+		mods := expandChoiceModifiers(power.Modifiers, picks[power.ID], nil)
+		out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: mods})
 	}
 	return out
 }

@@ -143,6 +143,15 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Proficiência com a arma escolhida"}},
 		BookPage:      128,
 		UID:           "pwr_rw25txtbj4",
+		Modifiers: []Modifier{
+			{
+				Target:     ModifierTarget{Kind: "attack", Scope: "weapon:"},
+				Amount:     2,
+				BonusType:  "untyped",
+				FromChoice: "scope",
+			},
+		},
+		Choice: &PowerChoice{Kind: "weapon", Label: "Arma", Repeatable: true},
 	},
 	{
 		ID:            "ginete",

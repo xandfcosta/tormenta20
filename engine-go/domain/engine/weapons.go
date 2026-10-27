@@ -32,7 +32,9 @@ type WeaponCard struct {
 	Attack    int                `json:"attack"`
 	Expertise ExpertiseBreakdown `json:"expertise"`
 	AttackAll TotalContribs      `json:"attackAll"`
-	Damage    string             `json:"damage"` // dice, e.g. "1d8"
+	// AttackOwn é o ataque que vale só para esta arma — o Foco em Arma.
+	AttackOwn TotalContribs `json:"attackOwn,omitzero"`
+	Damage    string        `json:"damage"` // dice, e.g. "1d8"
 	// DamageType é o tipo do dano da ARMA — "corte", "perfuracao", "impacto" —,
 	// e ele vale para os dados dela e para os bônus numéricos que a acompanham
 	// (a Força, o dano do encanto sem tipo próprio). As parcelas de OUTRO tipo
@@ -103,8 +105,9 @@ func weaponKindScopes(w *WeaponStats) []string {
 	return nil
 }
 
-// ownDamageOf junta as parcelas que valem só para esta arma, numa decomposição.
-func ownDamageOf(parts ...TotalContribs) TotalContribs {
+// ownContribsOf junta as parcelas que valem só para esta arma, numa decomposição
+// — do dano ou do ataque.
+func ownContribsOf(parts ...TotalContribs) TotalContribs {
 	out := TotalContribs{Contributions: []BreakdownContribution{}}
 	for _, p := range parts {
 		out.Total += p.Total
@@ -201,7 +204,18 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 	for _, scope := range scopes {
 		parts = append(parts, totalContribsFor(b.effects, ModifierTarget{K: "damage", Scope: scope}))
 	}
-	ownDamage := ownDamageOf(parts...)
+	ownDamage := ownContribsOf(parts...)
+	// O ATAQUE DESTA ARMA, pelos mesmos escopos do dano: o Foco em Arma é +2 no
+	// `weapon:<id>` escolhido (p128, ALE-510).
+	attackParts := []TotalContribs{}
+	for _, scope := range scopes {
+		attackParts = append(attackParts, totalContribsFor(b.effects, ModifierTarget{K: "attack", Scope: scope}))
+	}
+	ownAttack := ownContribsOf(attackParts...)
+	if len(ownAttack.Contributions) == 0 {
+		// Nulo e não vazio: a carta sem ataque próprio sai do fio como antes.
+		ownAttack = TotalContribs{}
+	}
 	skill, attribute := "Luta", "strength"
 	strDamage := b.forTotal
 	if w.Purpose == "ranged" {
@@ -231,7 +245,8 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		Name:          name,
 		Skill:         skill,
 		Attribute:     ex.Attribute,
-		Attack:        ex.Total + b.attackAll.Total,
+		Attack:        ex.Total + b.attackAll.Total + ownAttack.Total,
+		AttackOwn:     ownAttack,
 		Expertise:     ex,
 		AttackAll:     b.attackAll,
 		Damage:        damage,

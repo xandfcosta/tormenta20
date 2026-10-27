@@ -1050,6 +1050,8 @@ limitadas, e a Presença Paralisante e a Mente Criminosa não são.
   `imovel` para isso.
 - **O dano por TIPO de arma** cai nos escopos `melee-light-or-agile` e `ranged`
   (arremesso e disparo, p142), lidos pela carta da arma junto do `DamageOwn`.
+  O ATAQUE por escopo de arma (o `weapon:<id>` do Foco em Arma) é o `AttackOwn`,
+  e a decomposição da tela o soma (ALE-510).
 
 ### A devoção só chegava ao PV e ao PM
 
@@ -1374,7 +1376,9 @@ validação é
 não só "não piorar". Desde a ALE-491 ela confere também o `powerChoices`:
 escolha só de poder que a ficha tem, só opção que o livro oferece, mais de uma
 só no poder repetível — e o repetível ocupa uma vaga por ESCOLHA
-(`sheet.UsedPowerSlots`), não uma por poder. A escolha CONTADA POR ATRIBUTO
+(`sheet.UsedPowerSlots`), não uma por poder. O poder GERAL que pede escolha (Foco em
+Perícia, Foco em Arma) entra na mesma máquina pelo `book.PowerWithChoice`, e a
+escolha dele que veio da origem não ocupa vaga (`sheet.FreePicks`, ALE-510). A escolha CONTADA POR ATRIBUTO
 (`countAttribute`, as perícias do Especialista, p73, ALE-501) não ocupa vaga,
 vale em poder concedido pelo nível, e tem regra que depende da ficha — perícia
 treinada, no máximo o atributo sem temporários (`Ruleset.PermanentAttribute`),
