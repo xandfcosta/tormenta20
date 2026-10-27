@@ -121,7 +121,7 @@ func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 		}},
 	}
 
-	sistemas := attackSystems(card, target, nil, 12, fixedDice(t, 8))
+	sistemas := attackSystems(card, target, nil, attackDie{Rolled: 12, Natural: 12}, fixedDice(t, 8))
 	if len(conferencias) != len(sistemas) {
 		t.Fatalf("são %d sistemas de ataque e %d conferências.\n"+
 			"Sistema novo entra nesta lista JUNTO, com o CENÁRIO em que ele age — "+

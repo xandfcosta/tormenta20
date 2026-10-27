@@ -151,6 +151,24 @@ func TestTheNaturalTwentyAlwaysHitsAndTheNaturalOneAlwaysMisses(t *testing.T) {
 	}
 }
 
+// p48 Sorte de Nimb: "Qualquer resultado 11 ou mais na segunda rolagem será
+// considerado um 20 natural." O 13 soma 13 no total, e acerta e critica como o
+// 20 (ALE-508).
+func TestADieCountedAsANaturalTwentyHitsAndCritsWithTheRolledTotal(t *testing.T) {
+	weapon := aWeapon("1d8", 3, 19, 2, 0)
+	out, err := ResolveAttackCountingAsNaturalTwenty(weapon, AttackTarget{Defense: 25}, nil, 13, fixedDice(t, 8, 8))
+	if err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	if out.Roll != 13 || out.Total != 13 {
+		t.Errorf("d20 %d, total %d; o dado rolado é 13 e é ele que soma", out.Roll, out.Total)
+	}
+	if !out.Hit || !out.Critical || out.Damage != 19 {
+		t.Errorf("acertou %v, crítico %v, dano %d; o 20 natural acerta, critica, e 2d8+3 em 8 e 8 é 19",
+			out.Hit, out.Critical, out.Damage)
+	}
+}
+
 // "Um alvo imune a acertos críticos ainda sofre o dano de um ataque normal"
 // (p231) — um dado, não dois.
 func TestATargetImmuneToCriticalsStillTakesTheNormalDamage(t *testing.T) {
