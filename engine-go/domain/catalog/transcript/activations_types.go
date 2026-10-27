@@ -39,6 +39,7 @@ type SkillSpend struct {
 	AnySkill     bool     `json:"anySkill,omitempty"`
 	NaturalFrom  int      `json:"naturalFrom,omitempty"`
 	ChosenWeapon bool     `json:"chosenWeapon,omitempty"`
+	ChosenSkill  bool     `json:"chosenSkill,omitempty"`
 }
 
 type ActivationGrant struct {

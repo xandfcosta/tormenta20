@@ -96,6 +96,12 @@ var generalPowersPart02 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Treinado na perícia escolhida"}},
 		BookPage:      130,
 		UID:           "pwr_soosqyxcbl",
+		Choice: &PowerChoice{
+			Kind:       "trained-expertise",
+			Label:      "Perícia",
+			Repeatable: true,
+			Exclude:    []string{"Luta", "Pontaria"},
+		},
 	},
 	{
 		ID:          "lobo-solitario",

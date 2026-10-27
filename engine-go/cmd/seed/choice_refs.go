@@ -18,8 +18,8 @@ func choiceRefs(create map[string]json.RawMessage, where string, expertises []st
 	// Especialização em Arma (ALE-491). Opção errada nasce como um +2 que não
 	// cai em arma nenhuma, com a ficha abrindo normal.
 	for _, powerID := range asChavesDe(create, "powerChoices") {
-		power, known := book.ClassPowers()[powerID]
-		if !known || power.Choice == nil {
+		power, known := book.PowerWithChoice(powerID)
+		if !known {
 			broken = append(broken, referenciaQuebrada{
 				where: where + ", create.powerChoices{}", value: powerID, catalog: "poderes com escolha",
 				neighbor: oVizinho(powerID, idsDosPoderes()),
@@ -31,9 +31,14 @@ func choiceRefs(create map[string]json.RawMessage, where string, expertises []st
 			offered = append(offered, o.ID)
 		}
 		// A escolha contada por atributo oferece as perícias TREINADAS desta
-		// ficha — as do Especialista (ALE-501).
-		if power.Choice.CountAttribute != "" {
-			offered = listaDe(create, "trainedExpertises")
+		// ficha — as do Especialista (ALE-501) —, e a de perícia treinada
+		// também — o Foco em Perícia (ALE-510).
+		if power.Choice.CountAttribute != "" || power.Choice.Kind == "trained-expertise" {
+			// Sem a lista, a ficha nasce com as treinadas PADRÃO do elenco
+			// (o `enrichCreate`), e é delas que a escolha sai.
+			if offered = listaDe(create, "trainedExpertises"); len(offered) == 0 {
+				offered = standardTrained
+			}
 		}
 		for _, pick := range escolhasDe(create, powerID) {
 			if !slices.Contains(offered, pick) {

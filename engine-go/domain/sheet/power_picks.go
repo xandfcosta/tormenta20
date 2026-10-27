@@ -48,14 +48,28 @@ func UsedPowerSlots(dto CharacterDTO) int {
 	picks := PowerPicks(dto.PowerChoices)
 	used := 0
 	for _, id := range UnmarshalStrings(dto.ClassPowers) {
-		power := book.ClassPowers()[id]
-		if power.Choice != nil && power.Choice.Repeatable && len(picks[id]) > 1 {
-			used += len(picks[id])
+		power, chooses := book.PowerWithChoice(id)
+		if chooses && power.Choice.Repeatable && len(picks[id]) > 1 {
+			used += max(1, len(picks[id])-FreePicks(dto, power))
 			continue
 		}
 		used++
 	}
 	return used
+}
+
+// FreePicks são as escolhas do poder que NÃO custam vaga, porque o poder veio
+// de fora da lista de escolhidos: o Foco em Perícia do Membro de Guilda (p92),
+// o poder geral da Memória Póstuma (ALE-510). Uma por fonte.
+func FreePicks(dto CharacterDTO, power book.ClassPower) int {
+	free := 0
+	for _, owned := range OwnedPowers(dto) {
+		if owned.Source != PowerFromClass && owned.Source != PowerFromGeneral &&
+			(owned.ID == power.ID || owned.Name == power.Name) {
+			free++
+		}
+	}
+	return free
 }
 
 // WithPowerPick acrescenta uma escolha ao poder. No poder que NÃO se repete, a
@@ -107,16 +121,18 @@ func WithoutPowerPicksOf(blob, power string) string {
 // poder repetível. A escolha contada por atributo tem conferência própria, que
 // depende da ficha (`ChosenExpertisesFit`).
 func powerPicksFit(dto CharacterDTO) error {
+	// A POSSE é pelo id ou pelo NOME: o Foco em Perícia que a origem dá tem o
+	// id do benefício, e a escolha mora no id do poder (ALE-510).
 	owned := map[string]bool{}
 	for _, p := range OwnedPowers(dto) {
-		owned[p.ID] = true
+		owned[p.ID], owned["name:"+p.Name] = true, true
 	}
 	for id, picks := range PowerPicks(dto.PowerChoices) {
-		power, known := book.ClassPowers()[id]
-		if !known || power.Choice == nil {
+		power, chooses := book.PowerWithChoice(id)
+		if !chooses {
 			return fmt.Errorf("o poder %q não pede escolha", id)
 		}
-		if !owned[id] {
+		if !owned[id] && !owned["name:"+power.Name] {
 			return fmt.Errorf("há escolha de %q, e a ficha não tem o poder", power.Name)
 		}
 		if power.Choice.CountAttribute != "" {
@@ -127,6 +143,26 @@ func powerPicksFit(dto CharacterDTO) error {
 		}
 		if err := picksAreOptions(power, picks); err != nil {
 			return err
+		}
+		if power.Choice.Kind == "trained-expertise" {
+			if err := trainedPicksFit(dto, power, picks); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// trainedPicksFit confere a escolha de perícia TREINADA que se repete: cada
+// vez é uma perícia diferente, e treinada — "Pré-requisito: treinado na
+// perícia escolhida" (Foco em Perícia, p130).
+func trainedPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {
+	for i, pick := range picks {
+		if slices.Contains(picks[:i], pick) {
+			return fmt.Errorf("%s já escolheu %s; cada vez é uma perícia diferente", power.Name, pick)
+		}
+		if !trainedIn(dto, pick) {
+			return fmt.Errorf("%s pede perícia treinada, e %s não é treinada nesta ficha", power.Name, pick)
 		}
 	}
 	return nil

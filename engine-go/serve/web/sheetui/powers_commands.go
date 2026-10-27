@@ -127,17 +127,21 @@ func pickPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error
 // repete, a escolha nova troca a antiga.
 func pickPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	id, option := chi.URLParam(r, "poder"), pathParam(r, "opcao")
-	power, known := book.ClassPowers()[id]
-	if !known || power.Choice == nil {
+	power, chooses := book.PowerWithChoice(id)
+	if !chooses {
 		return fmt.Errorf("o poder %q não pede escolha", id)
 	}
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		dto.PowerChoices = sheet.WithPowerPick(dto.PowerChoices, id, option, *power.Choice)
 		// O poder CONCEDIDO pelo nível não entra na lista: ele não é escolha e
-		// não ocupa vaga — o Especialista (ALE-501).
-		if power.GrantedAtLevel == nil && !slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
+		// não ocupa vaga — o Especialista (ALE-501). Nem o que veio de FORA da
+		// lista enquanto as escolhas couberem nele: o Foco em Perícia do Membro
+		// de Guilda escolhe a perícia sem gastar vaga (ALE-510).
+		picked := len(sheet.PowerPicks(dto.PowerChoices)[id])
+		if power.GrantedAtLevel == nil && picked > sheet.FreePicks(*dto, power) &&
+			!slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
 			dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
 		}
-		dto.PowerChoices = sheet.WithPowerPick(dto.PowerChoices, id, option, *power.Choice)
 	})
 }
 

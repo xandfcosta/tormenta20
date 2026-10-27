@@ -98,7 +98,7 @@ func expertiseRows(ex engine.ExpertiseBreakdown, all *engine.TotalContribs) []br
 // A linha de FOR sai no dano de corpo a corpo e de arremesso (as duas rolam
 // Luta) e NUNCA no de arma de disparo, onde o motor já devolve `StrDamage` zero.
 func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
-	attack = expertiseRows(card.Expertise, &card.AttackAll)
+	attack = append(expertiseRows(card.Expertise, &card.AttackAll), rowsFromContributions(card.AttackOwn.Contributions)...)
 	if card.Skill == "Luta" {
 		damage = append(damage, breakdownRow{Label: "FOR", Value: book.WithSign(card.StrDamage)})
 	}

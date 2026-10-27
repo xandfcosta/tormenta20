@@ -254,6 +254,6 @@ var activationsPart13 = []Activation{
 		PMCost:     PMCost{Fixed: 1},
 		Uses:       nil,
 		BookPage:   130,
-		SkillSpend: &SkillSpend{Kind: "two-dice", Context: "na perícia escolhida no Foco em Perícia", AnySkill: true},
+		SkillSpend: &SkillSpend{Kind: "two-dice", ChosenSkill: true},
 	},
 }
