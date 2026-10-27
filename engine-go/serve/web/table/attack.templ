@@ -128,7 +128,38 @@ templ skillTestRolled(v View) {
 					<span aria-hidden="true">·</span>
 					<span>dado rolado na mesa</span>
 				}
+				if v.SkillTest.Rerolled != "" {
+					<span aria-hidden="true">·</span>
+					<span class="text-grimorio-gold">{ v.SkillTest.Rerolled }</span>
+				}
 			</p>
+			// O ROLAR DE NOVO é de QUEM ROLOU (p226, ALE-507): o mestre e os outros
+			// jogadores veem a mesma faixa, sem os botões. Quem rolou na mão rola
+			// de novo na mão, e o campo do dado aparece só para ele.
+			if len(v.SkillTest.Offers) > 0 {
+				<span class="ml-auto flex flex-wrap items-center gap-2">
+					if v.SkillTest.ByHand {
+						<label class="flex items-center gap-2 text-2xs text-muted-foreground">
+							Eu rolei
+							<input
+								type="number"
+								min="1"
+								max="20"
+								data-bind:reroll_d20
+								aria-label="O d20 que você rolou de novo na mesa"
+								class="h-11 w-14 rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground"
+							/>
+						</label>
+					}
+					for _, offer := range v.SkillTest.Offers {
+						<button
+							type="button"
+							data-on:click={ offer.Command }
+							class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-foreground"
+						>{ offer.Label }</button>
+					}
+				</span>
+			}
 		</section>
 	}
 }

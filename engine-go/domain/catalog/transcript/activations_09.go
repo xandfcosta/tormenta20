@@ -131,11 +131,16 @@ var activationsPart09 = []Activation{
 	{
 		ID:       "deus.nimb.sorte-dos-loucos",
 		Name:     "Sorte dos Loucos",
-		Kind:     "instant",
+		Kind:     "skill-spend",
 		Action:   "livre",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
 		BookPage: 134,
+		SkillSpend: &SkillSpend{
+			Kind:     "reroll",
+			Context:  "pode repetir; se ainda falhar, perde 1d6 PM por uso",
+			AnySkill: true,
+		},
 	},
 	{
 		ID:       "deus.nimb.transmissao-da-loucura",

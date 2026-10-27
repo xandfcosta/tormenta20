@@ -32,6 +32,10 @@ type skillTestBand struct {
 	// Paid são os gastos de PM do teste, escritos — "Audácia +5 · 2 PM"
 	// (ALE-489). Eles já estão no modificador; aqui a mesa lê de onde vieram.
 	Paid string
+	// Rerolled diz os "rolar de novo" pagos e o dado que saiu (ALE-507).
+	Rerolled string
+	// Offers são os "rolar de novo" de QUEM ROLOU, e só ele os vê.
+	Offers []rerollOffer
 }
 
 // skillTestBandOf traduz o teste do regime na faixa, ou nil quando não há.
@@ -44,7 +48,7 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 		Who: t.Who, Skill: t.Skill, ByHand: t.ByHand,
 		Tally: fmt.Sprintf("d20 %s %s %d = %d", writtenDice(t), signOf(t.Modifier), abs(t.Modifier), t.Total),
 		Seal:  "Teste", Class: "mesa-ataque-comum",
-		Paid: writtenPaid(t.Spends),
+		Paid: writtenPaid(t.Spends), Rerolled: writtenRerolls(t),
 	}
 	// A TROCA aparece no nome: "Diplomacia com Enganação" — o número da conta é
 	// o da outra perícia, e sem isso a mesa estranharia o total.
