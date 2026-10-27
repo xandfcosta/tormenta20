@@ -196,7 +196,7 @@ func stanceStateFor(
 		state.BasePm = spec.Scaling.BasePm
 		state.StepPm = spec.Scaling.StepPm
 		state.StepLabel = spec.Scaling.StepLabel
-		state.MaxSteps = book.LevelSteps(*spec.Scaling, character.ClassPowerLevel(dto, spec.ID))
+		state.MaxSteps = character.PowerMaxSteps(dto, spec)
 	}
 	return state
 }

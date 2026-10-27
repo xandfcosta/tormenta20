@@ -118,6 +118,32 @@ func LevelSteps(scale ActivationScale, classLevel int) int {
 	return engine.StepsAt(scale.FirstStepLevel, scale.StepEveryLevels, classLevel)
 }
 
+// MaxSteps é quantos degraus o poder deixa pagar.
+//
+// Dois modos. A escala que SOBE POR NÍVEL (a Inspiração, a Marca da Presa)
+// abre degraus nos níveis dela. A que não sobe é o CUSTO VARIÁVEL, e o teto é
+// o da p224 — o nível na classe que fornece a habilidade, ou o do personagem —
+// apertado pelo que o verbete escreve (o atributo, um número). "Você sempre
+// pode usar a habilidade em seu custo mínimo": o teto nunca fica abaixo dele.
+//
+//	MaxSteps(ActivationScale{BasePm: 1, StepPm: 1, CapAttribute: "charisma"}, 4, map[string]int{"charisma": 3}) // 2: até 3 PM
+func MaxSteps(scale ActivationScale, classLevel int, attributes map[string]int) int {
+	if scale.FirstStepLevel > 0 {
+		return LevelSteps(scale, classLevel)
+	}
+	capPM := classLevel
+	if scale.CapAttribute != "" {
+		capPM = min(capPM, attributes[scale.CapAttribute])
+	}
+	if scale.CapPm > 0 {
+		capPM = min(capPM, scale.CapPm)
+	}
+	if scale.StepPm <= 0 {
+		return 0
+	}
+	return max(0, (capPM-scale.BasePm)/scale.StepPm)
+}
+
 // ScaledCost é o que entrar na postura, ou usar o poder, custa com os degraus
 // escolhidos.
 func ScaledCost(spec Activation, steps int) int {
@@ -131,7 +157,7 @@ func ScaledCost(spec Activation, steps int) int {
 // nível, e com PM para o total.
 func ScaledDecision(spec Activation, steps, max, currentPM int) (bool, string) {
 	if steps < 0 || steps > max {
-		return false, "o nível permite até " + writtenDegrees(max)
+		return false, "o teto permite até " + writtenDegrees(max)
 	}
 	if cost := ScaledCost(spec, steps); cost > currentPM {
 		return false, "PM insuficiente"

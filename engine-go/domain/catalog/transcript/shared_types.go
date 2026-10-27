@@ -45,6 +45,10 @@ type PMScaling struct {
 	// da tabela da classe, em vez de somar: a Marca da Presa vai de 1d4 a 1d8,
 	// 1d12, 2d8 e 2d10 (p50).
 	StepDice []string `json:"stepDice,omitempty"`
+	// CapAttribute e CapPm: o teto do custo variável que o verbete escreve,
+	// abaixo do teto de nível da p224 (ALE-506).
+	CapAttribute string `json:"capAttribute,omitempty"`
+	CapPm        int    `json:"capPm,omitempty"`
 }
 
 type ModifierFactor struct {

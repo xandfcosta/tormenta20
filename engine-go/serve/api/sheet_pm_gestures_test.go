@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
@@ -42,17 +43,26 @@ func TestAGeneralPowerThatSpendsPmHasAGesture(t *testing.T) {
 }
 
 // p80 Gritar Ordens: "uma quantidade de PM a sua escolha (limitado pelo seu
-// Carisma)". O custo é VARIÁVEL: o gesto aparece, e não cobra um número que
-// ninguém escolheu.
-func TestAVariableCostGestureIsShownAndNotCharged(t *testing.T) {
+// Carisma)", e a p224 limita pelo nível de nobre. Com Carisma 3 no nível 4, o
+// teto é 3 PM: 1 de base e dois degraus (ALE-506).
+func TestShoutingOrdersPaysUpToTheCharisma(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Generala", "Nobre", 4, 0, 0)
+	if _, err := f.s.db.ExecContext(context.Background(), "UPDATE characters SET charisma = 3 WHERE id = ?", id); err != nil {
+		t.Fatal(err)
+	}
 
 	before := pm(t, f, id)
-	if refusal := powerCommand(t, f, id, "usa/class.nobre.gritar-ordens", ""); !strings.Contains(refusal, "variável") {
-		t.Errorf("usar Gritar Ordens não disse que o custo é variável: %q", refusal)
+	if refusal := powerCommand(t, f, id, "usa/class.nobre.gritar-ordens", `{"stance_degrees":3}`); refusal == "" {
+		t.Error("Gritar Ordens com 4 PM foi aceito, e o Carisma 3 limita a 3")
 	}
 	if pm(t, f, id) != before {
-		t.Error("o gesto de custo variável cobrou PM")
+		t.Fatal("o gesto recusado cobrou PM")
+	}
+	if refusal := powerCommand(t, f, id, "usa/class.nobre.gritar-ordens", `{"stance_degrees":2}`); refusal != "" {
+		t.Fatalf("Gritar Ordens com 3 PM: %q", refusal)
+	}
+	if spent := before - pm(t, f, id); spent != 3 {
+		t.Errorf("Gritar Ordens com dois degraus cobrou %d PM, esperava 3", spent)
 	}
 }

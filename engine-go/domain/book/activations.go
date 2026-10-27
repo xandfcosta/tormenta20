@@ -107,6 +107,12 @@ type ActivationScale struct {
 	// StepDice é o dado que cada degrau compra quando ele troca de linha na
 	// tabela da classe — ver `ScaledGrantModifiers`.
 	StepDice []string `json:"stepDice,omitempty"`
+	// CapAttribute e CapPm são o teto do custo VARIÁVEL que o verbete escreve
+	// — "limitado pelo seu Carisma" (Gritar Ordens, p80), "até o 4º círculo"
+	// (Ladrão Arcano, p74) —, por baixo do teto de nível da p224. A escala que
+	// não sobe por nível (`FirstStepLevel` zero) é deste modo (ALE-506).
+	CapAttribute string `json:"capAttribute,omitempty"`
+	CapPm        int    `json:"capPm,omitempty"`
 }
 
 // PowerGrant é o que a ativação APLICA na ficha, em duas espécies: a RESERVA de
