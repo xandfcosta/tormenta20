@@ -82,7 +82,7 @@ type PowerChoiceOption struct {
 //	ClassPowers()["class.guerreiro.especializacao-em-arma"].Choice.Offered()
 //	// [{adaga Adaga} {alabarda Alabarda} …]
 func (c PowerChoice) Offered() []PowerChoiceOption {
-	if len(c.Options) == 0 && (c.Kind == "expertise" || c.Kind == "trained-expertise") {
+	if len(c.Options) == 0 && (c.Kind == "expertise" || c.Kind == "trained-expertise" || c.Kind == "untrained-expertise") {
 		out := []PowerChoiceOption{}
 		for _, e := range Expertises() {
 			if !slices.Contains(c.Exclude, e.Name) {

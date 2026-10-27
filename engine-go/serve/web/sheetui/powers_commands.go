@@ -131,7 +131,20 @@ func pickPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 	if !chooses {
 		return fmt.Errorf("o poder %q não pede escolha", id)
 	}
-	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+	// O Treinamento em Perícia TREINA a escolhida (p131): a conferência vê a
+	// ficha já treinada, e o treino é gravado depois da escolha, como na
+	// Memória Póstuma. A perícia que já é treinada não tem o que ganhar.
+	toTrain := ""
+	var alreadyTrained error
+	err := s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		if power.Choice.Kind == "untrained-expertise" {
+			if slices.ContainsFunc(dto.Expertises, func(e sheet.ExpertiseDTO) bool { return e.Name == option && e.Trained }) {
+				alreadyTrained = fmt.Errorf("%s já é treinada; o %s treina uma perícia que ainda não é", option, power.Name)
+				return
+			}
+			toTrain = option
+			dto.Expertises = trainedCopy(dto.Expertises, toTrain)
+		}
 		dto.PowerChoices = sheet.WithPowerPick(dto.PowerChoices, id, option, *power.Choice)
 		// O poder CONCEDIDO pelo nível não entra na lista: ele não é escolha e
 		// não ocupa vaga — o Especialista (ALE-501). Nem o que veio de FORA da
@@ -143,6 +156,13 @@ func pickPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 			dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
 		}
 	})
+	if alreadyTrained != nil {
+		return alreadyTrained
+	}
+	if err != nil || toTrain == "" {
+		return err
+	}
+	return s.plays.ToggleTraining(r.Context(), row.ID, toTrain)
 }
 
 // dropPowerOption tira UMA escolha do poder; sem nenhuma, o poder sai da ficha.

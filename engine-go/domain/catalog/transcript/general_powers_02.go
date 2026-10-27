@@ -203,6 +203,7 @@ var generalPowersPart02 = []GeneralPower{
 		Description: "Torna-se treinado em uma perícia à escolha. Pode ser pego várias vezes.",
 		BookPage:    131,
 		UID:         "pwr_gro2ltfit2",
+		Choice:      &PowerChoice{Kind: "untrained-expertise", Label: "Perícia", Repeatable: true},
 	},
 	{
 		ID:            "vontade-de-ferro",

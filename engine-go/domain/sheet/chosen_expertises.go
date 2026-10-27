@@ -39,7 +39,7 @@ func countAttributeValue(dto CharacterDTO, choice book.PowerChoice) (int, error)
 
 // ChosenExpertisesFit confere as escolhas que nomeiam perícias contra a ficha
 // como ela está: as contadas por atributo cabem no limite e são treinadas, as
-// do Foco em Perícia são treinadas (ALE-510), e as
+// do Foco em Perícia e do Treinamento em Perícia são treinadas (ALE-510), e as
 // das habilidades de raça apontam perícia e Ofício que existem (ALE-493).
 func ChosenExpertisesFit(dto CharacterDTO) error {
 	picks := PowerPicks(dto.PowerChoices)
@@ -59,7 +59,7 @@ func ChosenExpertisesFit(dto CharacterDTO) error {
 			}
 			continue
 		}
-		if power.Choice.Kind == "trained-expertise" {
+		if power.Choice.Kind == "trained-expertise" || power.Choice.Kind == "untrained-expertise" {
 			if err := trainedPicksFit(dto, power, picks[id]); err != nil {
 				return err
 			}
@@ -92,7 +92,8 @@ func expertisePicksFit(dto CharacterDTO, power book.ClassPower, picks []string) 
 }
 
 // trainedPicksFit confere a escolha de perícia que se repete: cada vez é uma
-// perícia diferente, e treinada — o pré-requisito do Foco em Perícia (p130).
+// perícia diferente, e treinada — o pré-requisito do Foco em Perícia (p130), e
+// o que o Treinamento em Perícia gravou ao ser escolhido (p131).
 func trainedPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {
 	for i, pick := range picks {
 		if slices.Contains(picks[:i], pick) {
@@ -118,8 +119,8 @@ func trainedIn(dto CharacterDTO, skill string) bool {
 }
 
 // HasExpertiseChoice diz se o `powerChoices` guarda alguma escolha que depende
-// do treino ou do atributo da ficha — a contada por atributo e a do Foco em
-// Perícia. É o atalho que poupa carregar a ficha
+// do treino ou do atributo da ficha — a contada por atributo, a do Foco em
+// Perícia e a do Treinamento em Perícia. É o atalho que poupa carregar a ficha
 // inteira nos gestos que só PODERIAM tirá-la da escolha.
 func HasExpertiseChoice(blob string) bool {
 	for id := range PowerPicks(blob) {
@@ -128,7 +129,7 @@ func HasExpertiseChoice(blob string) bool {
 			continue
 		}
 		kind := power.Choice.Kind
-		if power.Choice.CountAttribute != "" || kind == "trained-expertise" {
+		if power.Choice.CountAttribute != "" || kind == "trained-expertise" || kind == "untrained-expertise" {
 			return true
 		}
 	}

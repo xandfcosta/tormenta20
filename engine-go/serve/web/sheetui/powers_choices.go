@@ -207,6 +207,10 @@ func optionsOf(p book.ClassPower, picks []string, trained map[string]bool) []pow
 				count++
 			}
 		}
+		// A que o próprio Treinamento treinou fica, para poder ser tirada.
+		if p.Choice.Kind == "untrained-expertise" && trained[o.ID] && count == 0 {
+			continue
+		}
 		out = append(out, powerOption{Value: o.ID, Label: o.Name, Count: count})
 	}
 	return out

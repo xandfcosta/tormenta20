@@ -9,7 +9,7 @@ import (
 
 // keepsChosenExpertises recusa o gesto que tiraria a ficha de uma escolha que
 // nomeia perícia — o Especialista (p73, ALE-501), o Ofício do Vanguardista
-// (p28, ALE-493), o Foco em Perícia (p130, ALE-510): a mudança é aplicada numa cópia e conferida ANTES de gravar.
+// (p28, ALE-493), o Foco e o Treinamento em Perícia (p130-131, ALE-510): a mudança é aplicada numa cópia e conferida ANTES de gravar.
 // Ficha sem essas escolhas não paga a carga.
 //
 // Os gestos que passam por aqui são os que mexem no N ou no treino: treino,
